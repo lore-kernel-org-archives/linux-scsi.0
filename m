@@ -1,114 +1,125 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 07/07] scsi: consolidate scsi_cmd_retry() calls
-Date: Tue, 12 Apr 2005 21:52:56 +0900 (KST)
-Message-ID: <20050412125219.424C8BE3@htj.dyndns.org>
-References: <20050412125219.88E5C1F6@htj.dyndns.org>
+Subject: Re: [PATCH scsi-misc-2.6 02/04] scsi: move request preps in other places into prep_fn()
+Date: Tue, 12 Apr 2005 19:32:58 +0900 (KST)
+Message-ID: <20050412103128.FF558BA4@htj.dyndns.org>
+References: <20050412103128.69172FEB@htj.dyndns.org>
 Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262401AbVDLNy4@vger.kernel.org>
-In-Reply-To: <20050412125219.88E5C1F6@htj.dyndns.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262246AbVDLLPV@vger.kernel.org>
+In-Reply-To: <20050412103128.69172FEB@htj.dyndns.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@steeleye.com, axboe@suse.de, Christoph Hellwig <hch@infradead.org>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-07_scsi_requeue_consolidate_setup_cmd_retry_calls_in_eh.patch
+02_scsi_reqfn_move_preps_to_prep_fn.patch
 
-	scsi_setup_cmd_retry() is needed because scsi eh may alter
-	scsi_cmnd to issue eh commands.  Consolidate calls to
-	scsi_setup_cmd_retry() to one place in scsi_eh_flush_done_q().
-	This change makes scsi_retry_command() more symmetrical with
-	scsi_finish_command().
+	Move request preparations scattered in scsi_request_fn() and
+	scsi_dispatch_cmd() into scsi_prep_fn()
+
+	* CDB_SIZE check in scsi_dispatch_cmd()
+	* SCSI-2 LUN preparation in scsi_dispatch_cmd()
+
+	No invalid request reaches scsi_request_fn() anymore.
+
+	Note that scsi_init_cmd_errh() is still left in
+	scsi_request_fn().  As all requeued requests need its sense
+	buffer and result value cleared, we can't move this to
+	prep_fn() yet.  This is moved into prep_fn in the following
+	requeue path consoildation patchset.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
- scsi.c       |    5 -----
- scsi_error.c |   31 +++++++------------------------
- 2 files changed, 7 insertions(+), 29 deletions(-)
+ scsi.c     |   30 ------------------------------
+ scsi_lib.c |   17 +++++++++++++++++
+ 2 files changed, 17 insertions(+), 30 deletions(-)
 
 Index: scsi-reqfn-export/drivers/scsi/scsi.c
 ===================================================================
---- scsi-reqfn-export.orig/drivers/scsi/scsi.c	2005-04-12 21:50:12.000000000 +0900
-+++ scsi-reqfn-export/drivers/scsi/scsi.c	2005-04-12 21:50:12.000000000 +0900
-@@ -677,11 +677,6 @@ void scsi_retry_command(struct scsi_cmnd
- 	scsi_device_unbusy(cmd->device);
+--- scsi-reqfn-export.orig/drivers/scsi/scsi.c	2005-04-12 19:27:54.000000000 +0900
++++ scsi-reqfn-export/drivers/scsi/scsi.c	2005-04-12 19:27:55.000000000 +0900
+@@ -79,15 +79,6 @@
+ #define MIN_RESET_PERIOD (15*HZ)
  
- 	/*
--	 * Restore the SCSI command state.
--	 */
--	scsi_setup_cmd_retry(cmd);
+ /*
+- * Macro to determine the size of SCSI command. This macro takes vendor
+- * unique commands into account. SCSI commands in groups 6 and 7 are
+- * vendor unique and we will depend upon the command length being
+- * supplied correctly in cmd_len.
+- */
+-#define CDB_SIZE(cmd)	(((((cmd)->cmnd[0] >> 5) & 7) < 6) ? \
+-				COMMAND_SIZE((cmd)->cmnd[0]) : (cmd)->cmd_len)
 -
+-/*
+  * Note - the initial logging level can be set here to log events at boot time.
+  * After the system is up, you may enable logging via the /proc interface.
+  */
+@@ -566,14 +557,6 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
+ 		goto out;
+ 	}
+ 
+-	/* 
+-	 * If SCSI-2 or lower, store the LUN value in cmnd.
+-	 */
+-	if (cmd->device->scsi_level <= SCSI_2) {
+-		cmd->cmnd[1] = (cmd->cmnd[1] & 0x1f) |
+-			       (cmd->device->lun << 5 & 0xe0);
+-	}
+-
+ 	/*
+ 	 * We will wait MIN_RESET_DELAY clock ticks after the last reset so
+ 	 * we can avoid the drive not being ready.
+@@ -614,19 +597,6 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
+ 
+ 	atomic_inc(&cmd->device->iorequest_cnt);
+ 
 -	/*
- 	 * Zero the sense information and result code from the last
- 	 * time we tried this command.
- 	 */
-Index: scsi-reqfn-export/drivers/scsi/scsi_error.c
+-	 * Before we queue this command, check if the command
+-	 * length exceeds what the host adapter can handle.
+-	 */
+-	if (CDB_SIZE(cmd) > cmd->device->host->max_cmd_len) {
+-		SCSI_LOG_MLQUEUE(3,
+-				printk("queuecommand : command too long.\n"));
+-		cmd->result = (DID_ABORT << 16);
+-
+-		scsi_done(cmd);
+-		goto out;
+-	}
+-
+ 	spin_lock_irqsave(host->host_lock, flags);
+ 	scsi_cmd_get_serial(host, cmd); 
+ 
+Index: scsi-reqfn-export/drivers/scsi/scsi_lib.c
 ===================================================================
---- scsi-reqfn-export.orig/drivers/scsi/scsi_error.c	2005-04-12 21:50:11.000000000 +0900
-+++ scsi-reqfn-export/drivers/scsi/scsi_error.c	2005-04-12 21:50:12.000000000 +0900
-@@ -586,11 +586,6 @@ static int scsi_request_sense(struct scs
+--- scsi-reqfn-export.orig/drivers/scsi/scsi_lib.c	2005-04-12 19:27:55.000000000 +0900
++++ scsi-reqfn-export/drivers/scsi/scsi_lib.c	2005-04-12 19:27:55.000000000 +0900
+@@ -28,6 +28,14 @@
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
  
- 	kfree(scsi_result);
++/*
++ * Macro to determine the size of SCSI command. This macro takes vendor
++ * unique commands into account. SCSI commands in groups 6 and 7 are
++ * vendor unique and we will depend upon the command length being
++ * supplied correctly in cmd_len.
++ */
++#define CDB_SIZE(cmd)	(((((cmd)->cmnd[0] >> 5) & 7) < 6) ? \
++				COMMAND_SIZE((cmd)->cmnd[0]) : (cmd)->cmd_len)
  
--	/*
--	 * when we eventually call scsi_finish, we really wish to complete
--	 * the original request, so let's restore the original data. (db)
--	 */
--	scsi_setup_cmd_retry(scmd);
- 	scmd->result = saved_result;
- 	return rtn;
- }
-@@ -612,14 +607,7 @@ static void scsi_eh_finish_cmd(struct sc
- {
- 	scmd->device->host->host_failed--;
- 	scmd->state = SCSI_STATE_BHQUEUE;
--
- 	scsi_eh_eflags_clr_all(scmd);
--
--	/*
--	 * set this back so that the upper level can correctly free up
--	 * things.
--	 */
--	scsi_setup_cmd_retry(scmd);
- 	list_move_tail(&scmd->eh_entry, done_q);
- }
+ #define SG_MEMPOOL_NR		(sizeof(scsi_sg_pools)/sizeof(struct scsi_host_sg_pool))
+ #define SG_MEMPOOL_SIZE		32
+@@ -1160,6 +1168,15 @@ static int scsi_prep_fn(struct request_q
+ 			goto kill;
+ 	}
  
-@@ -756,12 +744,6 @@ retry_tur:
- 	rtn = scsi_send_eh_cmnd(scmd, SENSE_TIMEOUT);
- 
- 	/*
--	 * when we eventually call scsi_finish, we really wish to complete
--	 * the original request, so let's restore the original data. (db)
--	 */
--	scsi_setup_cmd_retry(scmd);
--
--	/*
- 	 * hey, we are done.  let's look to see what happened.
- 	 */
- 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: scmd %p rtn %x\n",
-@@ -884,12 +866,6 @@ static int scsi_eh_try_stu(struct scsi_c
- 	rtn = scsi_send_eh_cmnd(scmd, START_UNIT_TIMEOUT);
- 
- 	/*
--	 * when we eventually call scsi_finish, we really wish to complete
--	 * the original request, so let's restore the original data. (db)
--	 */
--	scsi_setup_cmd_retry(scmd);
--
--	/*
- 	 * hey, we are done.  let's look to see what happened.
- 	 */
- 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: scmd %p rtn %x\n",
-@@ -1515,6 +1491,13 @@ static void scsi_eh_flush_done_q(struct 
- 	list_for_each_safe(lh, lh_sf, done_q) {
- 		scmd = list_entry(lh, struct scsi_cmnd, eh_entry);
- 		list_del_init(lh);
++	/* Check command length. */
++	if (CDB_SIZE(cmd) > sdev->host->max_cmd_len)
++		goto kill;
 +
-+		/*
-+		 * Restore the SCSI command state such that we retry
-+		 * or finish the original command.
-+		 */
-+		scsi_setup_cmd_retry(scmd);
++	/* If SCSI-2 or lower, store the LUN value in cmnd. */
++	if (cmd->device->scsi_level <= SCSI_2)
++		cmd->cmnd[1] = (cmd->cmnd[1] & 0x1f) |
++			(cmd->device->lun << 5 & 0xe0);
 +
- 		if (scsi_device_online(scmd->device) &&
- 		    !blk_noretry_request(scmd->request) &&
- 		    (++scmd->retries < scmd->allowed)) {
+ 	/*
+ 	 * The request is now prepped, no need to come back here
+ 	 */
