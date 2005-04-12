@@ -1,40 +1,45 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [patch 062/198] ahci: AHCI mode SATA patch for Intel ESB2
-Date: Tue, 12 Apr 2005 14:32:03 -0400
-Message-ID: <20050412183203.GA16564@havoc.gtf.org>
-References: <200504121031.j3CAVexS005372@shell0.pdx.osdl.net>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: evaluation of scsi_cmnd->resid
+Date: Wed, 13 Apr 2005 07:38:47 +1000
+Message-ID: <425C3FE7.4040308@torque.net>
+References: <20050412180443.GA7395@lion28.boeblingen.de.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atlmail.prod.rxgsys.com ([64.74.124.160]:61158 "EHLO
-	bastet.signetmail.com") by vger.kernel.org with ESMTP
-	id S262407AbVDLScR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Apr 2005 14:32:17 -0400
-Content-Disposition: inline
-In-Reply-To: <200504121031.j3CAVexS005372@shell0.pdx.osdl.net>
+Received: from zorg.st.net.au ([203.16.233.9]:42447 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S263005AbVDLVmt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Apr 2005 17:42:49 -0400
+In-Reply-To: <20050412180443.GA7395@lion28.boeblingen.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@osdl.org
-Cc: torvalds@osdl.org, linux-kernel@vger.kernel.org, jason.d.gaston@intel.com, linux-scsi@vger.kernel.org
+To: Andreas Herrmann <aherrman@de.ibm.com>
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>
 
-On Tue, Apr 12, 2005 at 03:31:34AM -0700, akpm@osdl.org wrote:
+Andreas Herrmann wrote:
+> Hi,
 > 
-> From: Jason Gaston <jason.d.gaston@intel.com>
+> Am I right in the assumption that scsi_cmnd->resid is just of use for
+> requests initiated by sg?
 > 
-> This patch adds the Intel ESB2 DID's to the ahci.c file for AHCI mode SATA
-> support.
+> How does the SCSI-stack handle normal (non-sg) requests for SCSI disks
+> for which a scsi_cmnd->resid is set?  AFAIK, resid is ignored by
+> sd. So, such requests are returned to the block layer although the
+> amount of data transferred is less the amount of data that should have
+> been transferred.  For FCP-drivers this means that some error situations
+> cannot be handled by just using scsi_cmnd->resid.
+> 
+> What am I missing here?
 
-Please don't send libata stuff directly to Linus.
+Andreas,
+sd, sr, st, ch and osst (and the mid level when it issues
+SCSI commands) need to be modified to use resid.
 
-Even a patch that appears as simple as this has complications:
-The Intel ICH7 combined mode still needs sorting out; combined mode and
-another BIOS option (IDE/AHCI) can change the PCI IDs that the
-southbridge exports.
+resid is initialized to zero (by the mid level). So older
+LLDs that do not set resid will not change the current
+situation for the ULDs mentioned above :-)
 
-I don't want to commit support for -half- the configurations, which
-oh-by-the-way will fail if even those users tweak the BIOS options.
-
-	Jeff
-
-
+Doug Gilbert
 
