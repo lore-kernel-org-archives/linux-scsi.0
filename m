@@ -1,61 +1,39 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 03/04] scsi: make scsi_requeue_request() use blk_requeue_request()
-Date: Tue, 12 Apr 2005 19:44:10 +0900
-Message-ID: <20050412104410.GB23571@htj.dyndns.org>
-References: <20050411034451.B75F3870@htj.dyndns.org> <20050411034451.6204E57B@htj.dyndns.org> <20050411124419.GA13747@infradead.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [PATCH] mptscsih: MODULE_PARM() -> module_param()
+Date: Tue, 12 Apr 2005 11:38:19 -0500
+Message-ID: <1113323900.5774.35.camel@mulgrave>
+References: <91888D455306F94EBD4D168954A9457C01DBBC2C@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.197]:63220 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262320AbVDLKoS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Apr 2005 06:44:18 -0400
-Received: by rproxy.gmail.com with SMTP id 34so32960rns
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2005 03:44:14 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20050411124419.GA13747@infradead.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:3717 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262458AbVDLQif (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Apr 2005 12:38:35 -0400
+In-Reply-To: <91888D455306F94EBD4D168954A9457C01DBBC2C@nacos172.co.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, James.Bottomley@steeleye.com, axboe@suse.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Cc: Magnus Damm <damm@opensource.se>, SCSI Mailing List <linux-scsi@vger.kernel.org>, mpt_linux_developer@lsil.com
 
- Hello, Christoph Hellwig.
-
-On Mon, Apr 11, 2005 at 01:44:19PM +0100, Christoph Hellwig wrote:
-> > +	cmd->request->flags |= REQ_SOFTBARRIER;
-> > +
-> > +	spin_lock_irqsave(q->queue_lock, flags);
-> > +	blk_requeue_request(q, cmd->request);
-> > +	spin_unlock_irqrestore(q->queue_lock, flags);
-> >  
-> >  	scsi_run_queue(q);
+On Tue, 2005-04-05 at 14:30 -0600, Moore, Eric Dean wrote:
+> Ok fine - This fix is already there in the series of patches
+> I provided a week ago for splitting the mpt fusion drivers
+> into seperate bus type drivers.
 > 
-> This exact code sequence is duplicated in the previous patch, maybe time
-> for a
-> 
-> void scsi_requeue_request(struct request *rq)
-> {
-> 	struct request_queue *q = rq->q;
-> 	unsigned long flags;
-> 
-> 	rq->flags |= REQ_SOFTBARRIER;
-> 
-> 	spin_lock_irqsave(q->queue_lock, flags);
-> 	blk_requeue_request(q, rq);
-> 	spin_unlock_irqrestore(q->queue_lock, flags);
->   
->   	scsi_run_queue(q);
-> }
+> James any word on whether those series of patches will get
+> approved?
 
- The duplicated code path is in scsi_queue_insert(), and the the
-function is removed by later requeue path consolidation patchset.  So,
-I don't think separating out scsi_requeue_request() is necessary.
-However, I'm thinking about setting REQ_SOFTBARRIER right after
-allocating cmd in prep_fn().  So that we don't have to set
-REQ_SOFTBARRIER in three different places.  Also, IMHO, it better
-represents the purpose of REQ_SOFTBARRIER.
+The patches themselves look fine.  However, there's a problem which I
+just discovered on putting it together and taking it for a test spin:
+the MODULE_DEVICE_TABLE directive is still in mptbase.  This means that
+the udev/hotplug system thinks that when it's loaded mptbase
+everything's done, which now means that everyone loses their devices
+since the upper drivers aren't loaded.  To make this all work and keep
+the distros happy, the MODULE_DEVICE_TABLE has to be split out and
+placed into the mptspi or mptfc components.
 
- Thanks a lot for your input.  :-)
+James
 
--- 
-tejun
 
