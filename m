@@ -1,84 +1,56 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 03/04] scsi: reimplement scsi_request_fn()
-Date: Tue, 12 Apr 2005 19:37:50 +0900
-Message-ID: <20050412103750.GA23571@htj.dyndns.org>
-References: <20050412103128.69172FEB@htj.dyndns.org> <20050412103128.5C5F0B72@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.202]:7964 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262315AbVDLKh4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Apr 2005 06:37:56 -0400
-Received: by wproxy.gmail.com with SMTP id 68so2902992wra
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Apr 2005 03:37:55 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20050412103128.5C5F0B72@htj.dyndns.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: Re: [PATCH scsi-misc-2.6 04/04] scsi: remove unnecessary scsi_wait_req_end_io()
+Date: Tue, 12 Apr 2005 19:33:08 +0900 (KST)
+Message-ID: <20050412103128.66BBB7B1@htj.dyndns.org>
+References: <20050412103128.69172FEB@htj.dyndns.org>
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262324AbVDLKwQ@vger.kernel.org>
+In-Reply-To: <20050412103128.69172FEB@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@steeleye.com, axboe@suse.de, Christoph Hellwig <hch@infradead.org>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
- Oops, I forgot to mention that reqfn is reformatted mostly as
-suggested by Chritoph Hellwig.  Sorry.
+04_scsi_reqfn_remove_wait_req_end_io.patch
 
-On Tue, Apr 12, 2005 at 07:33:03PM +0900, Tejun Heo wrote:
-> 03_scsi_reqfn_reimplementation.patch
-> 
-> 	This patch rewrites scsi_request_fn().	scsi_dispatch_cmd() is
-> 	merged into scsi_request_fn().	Goals are
-> 
-> 	* Remove unnecessary operations (host_lock unlocking/locking,
-> 	  recursing into scsi_run_queue(), ...)
-> 	* Consolidate defer/kill paths.
-> 	* Be concise.
-> 
-> 	The following bugs are fixed.
-> 
-> 	* All killed requests now get fully prep'ed and pass through
-> 	  __scsi_done().  This is the only kill path.
-> 		- scsi_cmnd leak in offline-kill path removed
-> 		- unfinished request bug in
-> 		  scsi_dispatch_cmd():SDEV_DEL-kill path removed.
-> 		- commands are never terminated directly from blk
-> 		  layer unless they are invalid, so no need to supply
-> 		  req->end_io callback for special requests.
-> 	* Timer is added while holding host_lock, after all conditions
-> 	  are checked and serial number is assigned.  This guarantees
-> 	  that until host_lock is released, the scsi_cmnd pointed to
-> 	  by cmd isn't released.  That didn't hold in the original
-> 	  code and, theoretically, the original code could access
-> 	  already released cmd.
-> 	* For the same reason, if shost->hostt->queuecommand() fails,
-> 	  we try to delete the timer before releasing host_lock.
-> 
-> 	Other changes/notes
-> 
-> 	* host_lock is acquired and released only once.
-> 	  enter (qlocked) -> enter loop -> dev-prep -> switch to hlock -\
-> 			  ^---- switch to qlock <- issue <- host-prep <-/
-> 	* unnecessary if () on get_device() removed.
-> 	* loop on elv_next_request() instead of blk_queue_plugged().
-> 	  We now explicitly break out of loop when we plug and check if
-> 	  the queue has been plugged underneath us at the end of loop.
-> 	* All device/host state checks are done in this function and
-> 	  done only once while holding qlock/host_lock respectively.
-> 	* Requests which get deferred during dev-prep are never
-> 	  removed from request queue, so deferring is achieved by
-> 	  simply breaking out of the loop and returning.
-> 	* Failure of blk_queue_start_tag() on tagged queue is a BUG
-> 	  now.	This condition should have been catched by
-> 	  scsi_dev_queue_ready().
-> 	* req->special == NULL test removed.  This just can't happen,
-> 	  and even if it ever happens, scsi_request_fn() will
-> 	  deterministically oops.
-> 	* Requests which gets deferred during host-prep are requeued
-> 	  using blk_requeue_request().	This is the only requeue path.
-> 
-> 	Note that scsi_kill_requests() still terminates requests using
-> 	blk layer.  The path is circular-ref workaround and soon to be
-> 	replaced, so ignore it for now.
+	As all requests are now terminated via scsi midlayer, we don't
+	need to set end_io for special reqs, remove it.
 
--- 
-tejun
+	Note that scsi_kill_requests() still terminates requests using
+	blk layer.  The path is circular-ref workaround and soon to be
+	replaced, so ignore it for now.
 
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+
+ scsi_lib.c |   11 -----------
+ 1 files changed, 11 deletions(-)
+
+Index: scsi-reqfn-export/drivers/scsi/scsi_lib.c
+===================================================================
+--- scsi-reqfn-export.orig/drivers/scsi/scsi_lib.c	2005-04-12 19:27:55.000000000 +0900
++++ scsi-reqfn-export/drivers/scsi/scsi_lib.c	2005-04-12 19:27:56.000000000 +0900
+@@ -260,16 +260,6 @@ static void scsi_wait_done(struct scsi_c
+ 		complete(req->waiting);
+ }
+ 
+-/* This is the end routine we get to if a command was never attached
+- * to the request.  Simply complete the request without changing
+- * rq_status; this will cause a DRIVER_ERROR. */
+-static void scsi_wait_req_end_io(struct request *req)
+-{
+-	BUG_ON(!req->waiting);
+-
+-	complete(req->waiting);
+-}
+-
+ void scsi_wait_req(struct scsi_request *sreq, const void *cmnd, void *buffer,
+ 		   unsigned bufflen, int timeout, int retries)
+ {
+@@ -277,7 +267,6 @@ void scsi_wait_req(struct scsi_request *
+ 	
+ 	sreq->sr_request->waiting = &wait;
+ 	sreq->sr_request->rq_status = RQ_SCSI_BUSY;
+-	sreq->sr_request->end_io = scsi_wait_req_end_io;
+ 	scsi_do_req(sreq, cmnd, buffer, bufflen, scsi_wait_done,
+ 			timeout, retries);
+ 	wait_for_completion(&wait);
