@@ -1,68 +1,122 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 02/07] scsi: make scsi_retry_command() use scsi_requeue_command()
-Date: Tue, 12 Apr 2005 21:52:31 +0900 (KST)
-Message-ID: <20050412125219.9CE3E027@htj.dyndns.org>
+Subject: Re: [PATCH scsi-misc-2.6 04/07] scsi: remove scsi_queue_insert()
+Date: Tue, 12 Apr 2005 21:52:41 +0900 (KST)
+Message-ID: <20050412125219.62897F6C@htj.dyndns.org>
 References: <20050412125219.88E5C1F6@htj.dyndns.org>
 Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262444AbVDLM66@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262329AbVDLNr3@vger.kernel.org>
 In-Reply-To: <20050412125219.88E5C1F6@htj.dyndns.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@steeleye.com, axboe@suse.de, Christoph Hellwig <hch@infradead.org>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-02_scsi_requeue_use_scsi_requeue_command_in_scsi_retry_command.patch
+04_scsi_requeue_remove_scsi_queue_insert.patch
 
-	scsi_retry_command() orignally used scsi_queue_insert() for
-	requeueing.  This patch makes it use scsi_retry_command()
-	instead.  Adding a call to scsi_device_unbusy() is sufficient
-	and the change also makes scsi_retry_command() symmetric with
-	scsi_finish_command() in how it unbusies the command.  Also as
-	there's nothing to return, make the function void.
+	scsi_queue_insert() now has no user left.  Kill it.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
- scsi.c      |    8 ++++++--
- scsi_priv.h |    2 +-
- 2 files changed, 7 insertions(+), 3 deletions(-)
+ scsi_lib.c  |   76 ------------------------------------------------------------
+ scsi_priv.h |    1 
+ 2 files changed, 77 deletions(-)
 
-Index: scsi-reqfn-export/drivers/scsi/scsi.c
+Index: scsi-reqfn-export/drivers/scsi/scsi_lib.c
 ===================================================================
---- scsi-reqfn-export.orig/drivers/scsi/scsi.c	2005-04-12 21:50:11.000000000 +0900
-+++ scsi-reqfn-export/drivers/scsi/scsi.c	2005-04-12 21:50:11.000000000 +0900
-@@ -669,8 +669,12 @@ static void scsi_softirq(struct softirq_
-  *              level drivers should not become re-entrant as a result of
-  *              this.
-  */
--int scsi_retry_command(struct scsi_cmnd *cmd)
-+void scsi_retry_command(struct scsi_cmnd *cmd)
- {
-+	SCSI_LOG_MLQUEUE(1, printk("Retrying command %p\n", cmd));
-+
-+	scsi_device_unbusy(cmd->device);
-+
- 	/*
- 	 * Restore the SCSI command state.
- 	 */
-@@ -682,7 +686,7 @@ int scsi_retry_command(struct scsi_cmnd 
-          */
- 	memset(cmd->sense_buffer, 0, sizeof(cmd->sense_buffer));
- 
--	return scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY);
-+	scsi_requeue_command(cmd);
+--- scsi-reqfn-export.orig/drivers/scsi/scsi_lib.c	2005-04-12 21:50:11.000000000 +0900
++++ scsi-reqfn-export/drivers/scsi/scsi_lib.c	2005-04-12 21:50:11.000000000 +0900
+@@ -106,82 +106,6 @@ int scsi_insert_special_req(struct scsi_
+ 	return 0;
  }
  
+-static void scsi_run_queue(struct request_queue *q);
+-
+-/*
+- * Function:    scsi_queue_insert()
+- *
+- * Purpose:     Insert a command in the midlevel queue.
+- *
+- * Arguments:   cmd    - command that we are adding to queue.
+- *              reason - why we are inserting command to queue.
+- *
+- * Lock status: Assumed that lock is not held upon entry.
+- *
+- * Returns:     Nothing.
+- *
+- * Notes:       We do this for one of two cases.  Either the host is busy
+- *              and it cannot accept any more commands for the time being,
+- *              or the device returned QUEUE_FULL and can accept no more
+- *              commands.
+- * Notes:       This could be called either from an interrupt context or a
+- *              normal process context.
+- */
+-int scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
+-{
+-	struct Scsi_Host *host = cmd->device->host;
+-	struct scsi_device *device = cmd->device;
+-	struct request_queue *q = device->request_queue;
+-	unsigned long flags;
+-
+-	SCSI_LOG_MLQUEUE(1,
+-		 printk("Inserting command %p into mlqueue\n", cmd));
+-
+-	/*
+-	 * Set the appropriate busy bit for the device/host.
+-	 *
+-	 * If the host/device isn't busy, assume that something actually
+-	 * completed, and that we should be able to queue a command now.
+-	 *
+-	 * Note that the prior mid-layer assumption that any host could
+-	 * always queue at least one command is now broken.  The mid-layer
+-	 * will implement a user specifiable stall (see
+-	 * scsi_host.max_host_blocked and scsi_device.max_device_blocked)
+-	 * if a command is requeued with no other commands outstanding
+-	 * either for the device or for the host.
+-	 */
+-	if (reason == SCSI_MLQUEUE_HOST_BUSY)
+-		host->host_blocked = host->max_host_blocked;
+-	else if (reason == SCSI_MLQUEUE_DEVICE_BUSY)
+-		device->device_blocked = device->max_device_blocked;
+-
+-	/*
+-	 * Register the fact that we own the thing for now.
+-	 */
+-	cmd->state = SCSI_STATE_MLQUEUE;
+-	cmd->owner = SCSI_OWNER_MIDLEVEL;
+-
+-	/*
+-	 * Decrement the counters, since these commands are no longer
+-	 * active on the host/device.
+-	 */
+-	scsi_device_unbusy(device);
+-
+-	/*
+-	 * Requeue the command.  Turn on REQ_SOFTBARRIER to prevent
+-	 * other requests from passing this request.
+-	 */
+-	cmd->request->flags |= REQ_SOFTBARRIER;
+-
+-	spin_lock_irqsave(q->queue_lock, flags);
+-	blk_requeue_request(q, cmd->request);
+-	spin_unlock_irqrestore(q->queue_lock, flags);
+-
+-	scsi_run_queue(q);
+-
+-	return 0;
+-}
+-
  /*
+  * Function:    scsi_do_req
+  *
 Index: scsi-reqfn-export/drivers/scsi/scsi_priv.h
 ===================================================================
 --- scsi-reqfn-export.orig/drivers/scsi/scsi_priv.h	2005-04-12 21:50:11.000000000 +0900
 +++ scsi-reqfn-export/drivers/scsi/scsi_priv.h	2005-04-12 21:50:11.000000000 +0900
-@@ -60,7 +60,7 @@ extern void scsi_exit_hosts(void);
- extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
- extern void scsi_destroy_command_freelist(struct Scsi_Host *shost);
- extern void scsi_done(struct scsi_cmnd *cmd);
--extern int scsi_retry_command(struct scsi_cmnd *cmd);
-+extern void scsi_retry_command(struct scsi_cmnd *cmd);
- extern int scsi_insert_special_req(struct scsi_request *sreq, int);
- extern void scsi_init_cmd_from_req(struct scsi_cmnd *cmd,
- 		struct scsi_request *sreq);
+@@ -94,7 +94,6 @@ extern int scsi_eh_scmd_add(struct scsi_
+ extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
+ extern void scsi_setup_cmd_retry(struct scsi_cmnd *cmd);
+ extern void scsi_device_unbusy(struct scsi_device *sdev);
+-extern int scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
+ extern void scsi_requeue_command(struct scsi_cmnd *cmd);
+ extern void scsi_next_command(struct scsi_cmnd *cmd);
+ extern void scsi_run_host_queues(struct Scsi_Host *shost);
