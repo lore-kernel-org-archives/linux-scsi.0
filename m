@@ -1,21 +1,32 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: Re: aacraid: kernel NULL pointer dereference
-Date: Wed, 13 Apr 2005 09:58:46 -0700
-Message-ID: <1113411526.1509.14.camel@markh1.pdx.osdl.net>
-References: <200504131802.52341@bj-ig.de>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: aacraid: kernel NULL pointer dereference
+Date: Wed, 13 Apr 2005 13:24:30 -0400
+Message-ID: <60807403EABEB443939A5A7AA8A7458B010AA69D@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:739 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261364AbVDMQ6w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Apr 2005 12:58:52 -0400
-In-Reply-To: <200504131802.52341@bj-ig.de>
+Received: from magic.adaptec.com ([216.52.22.17]:64469 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261155AbVDMRYe convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Apr 2005 13:24:34 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ralf =?ISO-8859-1?Q?M=FCller?= <ralf@bj-ig.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: Mark Haverkamp <markh@osdl.org>, =?iso-8859-1?Q?Ralf_M=FCller?= <ralf@bj-ig.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
+
+This is a can't happen, as aac_cfg_open should have reported an (-ENODE=
+V) error when it found no matching controller device ...
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+=46rom: Mark Haverkamp [mailto:markh@osdl.org]=20
+Sent: Wednesday, April 13, 2005 12:59 PM
+To: Ralf M=FCller
+Cc: linux-scsi; Salyzyn, Mark
+Subject: Re: aacraid: kernel NULL pointer dereference
 
 On Wed, 2005-04-13 at 18:02 +0200, Ralf M=FCller wrote:
 > I currently try to set up a server with an Adaptec 2810SA RAID contro=
