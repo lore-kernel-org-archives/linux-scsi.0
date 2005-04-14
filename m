@@ -1,30 +1,25 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [linux-iscsi-devel] [ANNOUNCE] open-iscsi and linux-iscsi project teams have merged!
-Date: Thu, 14 Apr 2005 18:19:56 +0200
-Message-ID: <20050414161956.GA29737@lst.de>
-References: <425B32E2.9010404@lists.sourceforge.net> <20050414111624.GA24570@lst.de> <1113495512.13939.75.camel@beastie>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Announce] Emulex lpfcdriver v8.0.28 available
+Date: Thu, 14 Apr 2005 17:27:55 +0100
+Message-ID: <20050414162755.GA3848@infradead.org>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AB99@xbl3.ad.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:47510 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S261506AbVDNQVe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Apr 2005 12:21:34 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:16772 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261531AbVDNQ2A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Apr 2005 12:28:00 -0400
 Content-Disposition: inline
-In-Reply-To: <1113495512.13939.75.camel@beastie>
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AB99@xbl3.ad.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dmitry Yusupov <dmitry_yus@yahoo.com>
-Cc: linux-iscsi development team <linux-iscsi-devel@lists.sourceforge.net>, linux-iscsi-users@lists.sourceforge.net, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, iscsitarget-devel@lists.sourceforge.net, itn780@yahoo.com, mikenc@us.ibm.com, cnitin@cisco.com, smithan@cisco.com, coughlan@redhat.com, alewis@redhat.com, mbasavai@cisco.com, andmike@us.ibm.com, Ming Zhang <mingz@ele.uri.edu>
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Apr 14, 2005 at 09:18:32AM -0700, Dmitry Yusupov wrote:
-> Consider linux-iscsi-5.x CVS branch as a "mainline". Current open-iscsi
-> SVN repository is the place where all hard-core development will happen
-> at least for the nearest future.
-> 
-> I really hope sf.net will provide SVN hosting very soon. than we will
-> see how it goes. and may be we might just migrate current berlios.de
-> hosting to the sf.net.
+> We have been working with Christoph over the last few weeks to address
+> some last comments, and believe that this release is ready for
+> inclusion with the upstream kernel.
 
-sf.net hosting is total crap for all services.  I'd really prefer to see
-things hosted somewhere sane..
+A first look at it looks nice indeed.  Care to submit it in patch form?
+
