@@ -1,25 +1,28 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Announce] Emulex lpfcdriver v8.0.28 available
-Date: Thu, 14 Apr 2005 17:27:55 +0100
-Message-ID: <20050414162755.GA3848@infradead.org>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AB99@xbl3.ad.emulex.com>
+From: James.Smart@Emulex.Com
+Subject: Heads up on 2.6.12-rc1 and later
+Date: Thu, 14 Apr 2005 12:29:01 -0400
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AB9C@xbl3.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:16772 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261531AbVDNQ2A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Apr 2005 12:28:00 -0400
-Content-Disposition: inline
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AB99@xbl3.ad.emulex.com>
+Received: from emulex.emulex.com ([138.239.112.1]:61869 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S261533AbVDNQ3G convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Apr 2005 12:29:06 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> We have been working with Christoph over the last few weeks to address
-> some last comments, and believe that this release is ready for
-> inclusion with the upstream kernel.
+Folks,
 
-A first look at it looks nice indeed.  Care to submit it in patch form?
+FYI:
 
+In testing with 2.6.12-rc1 and -rc2, we've been encountering an issue on SMP machines with the loading of scsi_mod and sd_mod modules. The sd_mod load fails with unresolved symbols. It appears to be a race condition based on how quickly the modules load. This works fine on uni systems and on 2.6.11.
+
+Evidently, this problem has been before and is resolved by a short delay between module loads. http://seclists.org/lists/linux-kernel/2005/Apr/0383.html
+
+Given it's been around for 2 -rc itterations, I expect it needed some highlighting.
+
+-- james s
