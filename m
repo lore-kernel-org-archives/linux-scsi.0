@@ -1,41 +1,121 @@
-From: Lee Revell <rlrevell@joe-job.com>
-Subject: Re: [linux-iscsi-devel] [ANNOUNCE] open-iscsi and linux-iscsi
-	project teams have merged!
-Date: Thu, 14 Apr 2005 12:48:31 -0400
-Message-ID: <1113497311.18871.5.camel@mindpipe>
-References: <425B32E2.9010404@lists.sourceforge.net>
-	 <20050414111624.GA24570@lst.de> <1113495512.13939.75.camel@beastie>
-	 <20050414161956.GA29737@lst.de>
+From: Tom Duffy <tduffy@sun.com>
+Subject: Re: Heads up on 2.6.12-rc1 and later
+Date: Thu, 14 Apr 2005 09:54:51 -0700
+Message-ID: <1113497691.13402.4.camel@duffman>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AB9C@xbl3.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from viper.oldcity.dca.net ([216.158.38.4]:5061 "HELO
-	viper.oldcity.dca.net") by vger.kernel.org with SMTP
-	id S261538AbVDNQsd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Apr 2005 12:48:33 -0400
-In-Reply-To: <20050414161956.GA29737@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-ZElOV1wJJHl1Afbrvy5b"
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261549AbVDNQza@vger.kernel.org>
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AB9C@xbl3.ad.emulex.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Dmitry Yusupov <dmitry_yus@yahoo.com>, linux-iscsi development team <linux-iscsi-devel@lists.sourceforge.net>, linux-iscsi-users@lists.sourceforge.net, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dm-devel@redhat.com, iscsitarget-devel@lists.sourceforge.net, itn780@yahoo.com, mikenc@us.ibm.com, cnitin@cisco.com, smithan@cisco.com, coughlan@redhat.com, alewis@redhat.com, mbasavai@cisco.com, andmike@us.ibm.com, Ming Zhang <mingz@ele.uri.edu>
 
-On Thu, 2005-04-14 at 18:19 +0200, Christoph Hellwig wrote:
-> On Thu, Apr 14, 2005 at 09:18:32AM -0700, Dmitry Yusupov wrote:
-> > Consider linux-iscsi-5.x CVS branch as a "mainline". Current open-iscsi
-> > SVN repository is the place where all hard-core development will happen
-> > at least for the nearest future.
-> > 
-> > I really hope sf.net will provide SVN hosting very soon. than we will
-> > see how it goes. and may be we might just migrate current berlios.de
-> > hosting to the sf.net.
-> 
-> sf.net hosting is total crap for all services.  I'd really prefer to see
-> things hosted somewhere sane..
 
-FWIW, Sourceforge sent out an email just the other day announcing that
-they've replaced the CVS servers, and promising that these issues will
-go away.  We'll see how that works out...
+--=-ZElOV1wJJHl1Afbrvy5b
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Lee
+On Thu, 2005-04-14 at 12:29 -0400, James.Smart@Emulex.Com wrote:
+> In testing with 2.6.12-rc1 and -rc2, we've been encountering an issue
+> on SMP machines with the loading of scsi_mod and sd_mod modules. The
+> sd_mod load fails with unresolved symbols. It appears to be a race
+> condition based on how quickly the modules load. This works fine on
+> uni systems and on 2.6.11.
+>=20
+> Evidently, this problem has been before and is resolved by a short
+> delay between module loads.
+> http://seclists.org/lists/linux-kernel/2005/Apr/0383.html
+>=20
+> Given it's been around for 2 -rc itterations, I expect it needed some
+> highlighting.
 
+Ah, so it is not just me (thought I was going crazy -- couldn't get a
+kernel to boot on my SMP system):
+
+Mounting sysfs
+Creating /dev
+Starting udev
+Loading scsi_modSCSI subsystem initialized
+.ko module
+LoadFusion MPT base driver 3.01.20
+ing sd_mod.ko momptscsih: Unknown symbol mpt_deregister
+mptscsih: Unknown symbol mpt_reset_deregister
+mptscsih: Unknown symbol mpt_config
+mptscsih: Unknown symbol mpt_device_driver_deregister
+mptscsih: Unknown symbol mpt_free_msg_frame
+mptscsih: Unknown symbol scsi_remove_host
+mptscsih: Unknown symbol mpt_print_ioc_summary
+mptscsih: Unknown symbol mpt_GetIocState
+mptscsih: Unknown symbol mpt_put_msg_frame
+mptscsih: Unknown symbol mpt_register
+mptscsih: Unknown symbol mpt_add_sge
+mptscsih: Unknown symbol mpt_event_deregister
+mptscsih: Unknown symbol scsi_host_put
+mptscsih: Unknown symbol mpt_read_ioc_pg_3
+mptscsih: Unknown symbol scsi_scan_host
+mptscsih: Unknown symbol mpt_event_register
+mptscsih: Unknown symbol mpt_send_handshake_request
+mptscsih: Unknown symbol scsi_add_host
+mptscsih: Unknown symbol mpt_device_driver_register
+mptscsih: Unknown symbol scsi_adjust_queue_depth
+mptscsih: Unknown symbol mpt_get_msg_frame
+mptscsih: Unknown symbol mpt_reset_register
+mptscsih: Unknown symbol mpt_HardResetHandler
+mptscsih: Unknown symbol scsi_host_alloc
+mptscsih: Unknown symbol ioc_list
+dule
+Loading mpinput: ImPS/2 Generic Wheel Mouse on isa0060/serio1
+sd_mod: Unknown symbol scsi_device_get
+sd_mod: Unknown symbol scsi_wait_req
+sd_mod: Unknown symbol scsi_get_sense_info_fld
+sd_mod: Unknown symbol scsicam_bios_param
+sd_mod: Unknown symbol scsi_command_normalize_sense
+sd_mod: Unknown symbol scsi_test_unit_ready
+sd_mod: Unknown symbol scsi_block_when_processing_errors
+sd_mod: Unknown symbol scsi_register_driver
+sd_mod: Unknown symbol scsi_ioctl
+sd_mod: Unknown symbol scsi_nonblockable_ioctl
+sd_mod: Unknown symbol scsi_device_put
+sd_mod: Unknown symbol scsi_request_normalize_sense
+sd_mod: Unknown symbol __scsi_mode_sense
+sd_mod: Unknown symbol scsi_logging_level
+sd_mod: Unknown symbol scsi_print_req_sense
+sd_mod: Unknown symbol scsi_release_request
+sd_mod: Unknown symbol scsi_print_sense
+sd_mod: Unknown symbol scsi_allocate_request
+sd_mod: Unknown symbol scsi_io_completion
+sd_mod: Unknown symbol scsi_set_medium_removal
+
+Loading mptscsiCopyright (c) 1999-2004 LSI Logic Corporation
+h.ko module
+LoaACPI: PCI Interrupt 0000:05:05.0[A] -> ding dm-mod.ko mGSI 72 (level,
+low) -> IRQ 185
+odule
+Loading jmptbase: Initiating ioc0 bringup
+bd.ko module
+Lodevice-mapper: 4.4.0-ioctl (2005-01-12) initialised:
+dm-devel@redhat.com
+ading ext3.ko moext3: Unknown symbol journal_force_commit
+dule
+insmod: erext3: Unknown symbol journal_dirty_data
+ror inserting '/<ex0>tK3e:r Unenkl npowann iscy -m bonlo t
+jsouynrncailn_gf: oArctete_mcopmtemdit t_no eskitledl
+iniext!t3
+  Unknown symbol journal_init_dev
+
+
+--=-ZElOV1wJJHl1Afbrvy5b
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQBCXqBbdY502zjzwbwRAl8ZAJ9DRHeilF0F9Zey6/hqVI8Z59dpVACeMUSK
+zciGiW1TW2knlsz0EG/Ec+U=
+=GcNb
+-----END PGP SIGNATURE-----
+
+--=-ZElOV1wJJHl1Afbrvy5b--
