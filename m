@@ -1,118 +1,310 @@
-From: "K.R. Foley" <kr@cybsft.com>
-Subject: Re: Heads up on 2.6.12-rc1 and later
-Date: Thu, 14 Apr 2005 12:13:12 -0500
-Message-ID: <425EA4A8.6040106@cybsft.com>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AB9C@xbl3.ad.emulex.com> <1113497691.13402.4.camel@duffman>
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: [RFC][PATCH 2.6.11-rc2] Linux SCSI hotplug infrastructure
+Date: Thu, 14 Apr 2005 13:24:33 -0500
+Message-ID: <20050414182433.GA24698@lists.us.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail4.utc.com ([192.249.46.193]:50890 "EHLO mail4.utc.com")
-	by vger.kernel.org with ESMTP id S261560AbVDNRNW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Apr 2005 13:13:22 -0400
-In-Reply-To: <1113497691.13402.4.camel@duffman>
+Received: from ausc60pc101.us.dell.com ([143.166.85.206]:51803 "EHLO
+	ausc60pc101.us.dell.com") by vger.kernel.org with ESMTP
+	id S261190AbVDNSYj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Apr 2005 14:24:39 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tom Duffy <tduffy@sun.com>
-Cc: James.Smart@Emulex.Com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Tom Duffy wrote:
-> On Thu, 2005-04-14 at 12:29 -0400, James.Smart@Emulex.Com wrote:
-> 
->>In testing with 2.6.12-rc1 and -rc2, we've been encountering an issue
->>on SMP machines with the loading of scsi_mod and sd_mod modules. The
->>sd_mod load fails with unresolved symbols. It appears to be a race
->>condition based on how quickly the modules load. This works fine on
->>uni systems and on 2.6.11.
->>
->>Evidently, this problem has been before and is resolved by a short
->>delay between module loads.
->>http://seclists.org/lists/linux-kernel/2005/Apr/0383.html
+I posted this back in February, with no response (good or bad).
+I still think this is useful, and would appreciate feedback.
 
-BTW. I haven't had time to debug this any further myself, but for me 
-adding a one second delay between module loads DOES NOT WORK for me.
+Thanks,
+Matt
 
->>
->>Given it's been around for 2 -rc itterations, I expect it needed some
->>highlighting.
-> 
-> 
-> Ah, so it is not just me (thought I was going crazy -- couldn't get a
-> kernel to boot on my SMP system):
-> 
-> Mounting sysfs
-> Creating /dev
-> Starting udev
-> Loading scsi_modSCSI subsystem initialized
-> .ko module
-> LoadFusion MPT base driver 3.01.20
-> ing sd_mod.ko momptscsih: Unknown symbol mpt_deregister
-> mptscsih: Unknown symbol mpt_reset_deregister
-> mptscsih: Unknown symbol mpt_config
-> mptscsih: Unknown symbol mpt_device_driver_deregister
-> mptscsih: Unknown symbol mpt_free_msg_frame
-> mptscsih: Unknown symbol scsi_remove_host
-> mptscsih: Unknown symbol mpt_print_ioc_summary
-> mptscsih: Unknown symbol mpt_GetIocState
-> mptscsih: Unknown symbol mpt_put_msg_frame
-> mptscsih: Unknown symbol mpt_register
-> mptscsih: Unknown symbol mpt_add_sge
-> mptscsih: Unknown symbol mpt_event_deregister
-> mptscsih: Unknown symbol scsi_host_put
-> mptscsih: Unknown symbol mpt_read_ioc_pg_3
-> mptscsih: Unknown symbol scsi_scan_host
-> mptscsih: Unknown symbol mpt_event_register
-> mptscsih: Unknown symbol mpt_send_handshake_request
-> mptscsih: Unknown symbol scsi_add_host
-> mptscsih: Unknown symbol mpt_device_driver_register
-> mptscsih: Unknown symbol scsi_adjust_queue_depth
-> mptscsih: Unknown symbol mpt_get_msg_frame
-> mptscsih: Unknown symbol mpt_reset_register
-> mptscsih: Unknown symbol mpt_HardResetHandler
-> mptscsih: Unknown symbol scsi_host_alloc
-> mptscsih: Unknown symbol ioc_list
-> dule
-> Loading mpinput: ImPS/2 Generic Wheel Mouse on isa0060/serio1
-> sd_mod: Unknown symbol scsi_device_get
-> sd_mod: Unknown symbol scsi_wait_req
-> sd_mod: Unknown symbol scsi_get_sense_info_fld
-> sd_mod: Unknown symbol scsicam_bios_param
-> sd_mod: Unknown symbol scsi_command_normalize_sense
-> sd_mod: Unknown symbol scsi_test_unit_ready
-> sd_mod: Unknown symbol scsi_block_when_processing_errors
-> sd_mod: Unknown symbol scsi_register_driver
-> sd_mod: Unknown symbol scsi_ioctl
-> sd_mod: Unknown symbol scsi_nonblockable_ioctl
-> sd_mod: Unknown symbol scsi_device_put
-> sd_mod: Unknown symbol scsi_request_normalize_sense
-> sd_mod: Unknown symbol __scsi_mode_sense
-> sd_mod: Unknown symbol scsi_logging_level
-> sd_mod: Unknown symbol scsi_print_req_sense
-> sd_mod: Unknown symbol scsi_release_request
-> sd_mod: Unknown symbol scsi_print_sense
-> sd_mod: Unknown symbol scsi_allocate_request
-> sd_mod: Unknown symbol scsi_io_completion
-> sd_mod: Unknown symbol scsi_set_medium_removal
-> 
-> Loading mptscsiCopyright (c) 1999-2004 LSI Logic Corporation
-> h.ko module
-> LoaACPI: PCI Interrupt 0000:05:05.0[A] -> ding dm-mod.ko mGSI 72 (level,
-> low) -> IRQ 185
-> odule
-> Loading jmptbase: Initiating ioc0 bringup
-> bd.ko module
-> Lodevice-mapper: 4.4.0-ioctl (2005-01-12) initialised:
-> dm-devel@redhat.com
-> ading ext3.ko moext3: Unknown symbol journal_force_commit
-> dule
-> insmod: erext3: Unknown symbol journal_dirty_data
-> ror inserting '/<ex0>tK3e:r Unenkl npowann iscy -m bonlo t
-> jsouynrncailn_gf: oArctete_mcopmtemdit t_no eskitledl
-> iniext!t3
->   Unknown symbol journal_init_dev
-> 
+Date: Mon, 7 Feb 2005 12:27:53 -0600
+From: Matt Domsch <Matt_Domsch@dell.com>
+To: linux-scsi@vger.kernel.org, linux-hotplug-devel@lists.sourceforge.net
+Subject: [RFC][PATCH 2.6.11-rc2] Linux SCSI hotplug infrastructure
 
+Below is a patch to add some hotplug infrastructure to the Linux SCSI
+subsystem.
+
+New files:
+include/scsi/scsi_hotplug.h
+drivers/scsi/scsi_hotplug.c
+implements a new exported function:
+
+extern int scsi_topology_hctl_action(struct Scsi_Host *shost, unsigned int channel,
+			      unsigned int id, unsigned int lun, enum scsi_topology_action action);
+
+which invokes kobject_hotplug() on a temporary "scsi_topology"
+device.  This device represents a target that exists on a topology
+(i.e. was just inserted into a hot plug enclosure, or was just created
+by a RAID controller management application) but is not yet hooked
+into the kernel.
+
+Modified files:
+drivers/scsi/Kconfig
+drivers/scsi/Makefile
+drivers/scsi/megaraid/megaraid_mbox.c
+ (will follow in a separate patch)
+ is the user of this new function.
+
+In addition, two more infrastructure pieces are necessary:
+udev-050-scsi_topology.patch - adds the subsystem name "scsi_topology"
+to the list of devices *not* to wait for the creation of files in
+sysfs for - scsi_topology devices aren't to be registered in sysfs.
+
+/etc/hotplug/scsi_topology.agent
+ handles the hotplug call, and invokes /sys/class/scsi_host/hostX/scan
+ and /sys/class/scsi_device/H:C:T:L:/device/delete as appropriate.
+
+
+The flow is as follows:
+
+# echo "2" > /sys/class/scsi_host/host2/logical_drive_created
+(to be done by a management application that knows it just created
+logical drive #2 on the controller)
+
+megaraid_mbox.c sysfs method converts logical drive number to HCTL
+value, calls scsi_topology_hctl_action().
+
+scsi_topology_hctl_action() invokes kobject_hotplug() with a
+scsi_topology subsystem device.
+
+kobject_hotplug() calls /sbin/hotplug or /sbin/udevsend (more likely
+the latter), which invokes /etc/hotplug/scsi_topology.agent with the
+ACTION={add,remove}.
+
+scsi_topology.agent invokes /sys/class/scsi_host/hostX/scan or
+ /sys/class/scsi_device/H:C:T:L:/device/delete as appropriate.
+
+>From this point, we're back into known territory, with the device
+being made known, or deleted from, the kernel's view.
+
+Thoughts?
+
+Signed-off-by: Matt Domsch <Matt_Domsch@dell.com>
 
 -- 
-    kr
+Matt Domsch
+Software Architect
+Dell Linux Solutions linux.dell.com & www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
+
+===== drivers/scsi/Kconfig 1.95 vs edited =====
+--- 1.95/drivers/scsi/Kconfig	2005-01-28 11:14:29 -06:00
++++ edited/drivers/scsi/Kconfig	2005-02-05 13:58:45 -06:00
+@@ -185,6 +185,16 @@
+ 	  there should be no noticeable performance impact as long as you have
+ 	  logging turned off.
+ 
++config SCSI_HOTPLUG
++	bool "Hot Plug SCSI devices"
++	depends on SCSI && EXPERIMENTAL
++	default y
++	help
++	  If your driver or management applications know about
++	  device hot plugging (insertion/removal of physical disks in
++	  a topology, or creation/deletion of logical disks on a RAID
++	  controller), say Y here.  Otherwise, say N.
++
+ menu "SCSI Transport Attributes"
+ 	depends on SCSI
+ 
+===== drivers/scsi/Makefile 1.72 vs edited =====
+--- 1.72/drivers/scsi/Makefile	2004-11-20 14:26:17 -06:00
++++ edited/drivers/scsi/Makefile	2005-02-05 13:58:15 -06:00
+@@ -147,6 +147,7 @@
+ 				   scsi_devinfo.o
+ scsi_mod-$(CONFIG_SYSCTL)	+= scsi_sysctl.o
+ scsi_mod-$(CONFIG_SCSI_PROC_FS)	+= scsi_proc.o
++scsi_mod-$(CONFIG_SCSI_HOTPLUG)	+= scsi_hotplug.o
+ 
+ sd_mod-objs	:= sd.o
+ sr_mod-objs	:= sr.o sr_ioctl.o sr_vendor.o
+--- /dev/null	Thu Apr 11 09:25:15 2002
++++ include/scsi/scsi_hotplug.h	Sun Feb  6 23:29:51 2005
+@@ -0,0 +1,41 @@
++/*
++ *  SCSI Hotplug
++ *
++ *  Copyright (c) 2005 Dell, Inc <Matt_Domsch@dell.com>
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or
++ *  (at your option) any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with this program; if not, write to the Free Software
++ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++#ifndef _SCSI_SCSI_HOTPLUG_H
++#define _SCSI_SCSI_HOTPLUG_H
++
++#include <linux/config.h>
++#include <scsi/scsi_host.h>
++#include <scsi/scsi_device.h>
++
++enum scsi_topology_action {
++	SCSI_TOPOLOGY_ADDED    = 1,  /* device added in the topology */
++	SCSI_TOPOLOGY_REMOVED  = 2,  /* device removed from the topology */
++};
++
++#if defined (CONFIG_SCSI_HOTPLUG) || defined(CONFIG_SCSI_HOTPLUG_MODULE)
++extern int scsi_topology_hctl_action(struct Scsi_Host *shost, unsigned int channel,
++			      unsigned int id, unsigned int lun, enum scsi_topology_action action);
++#else
++static inline int scsi_topology_hctl_action(struct Scsi_Host *shost, unsigned int channel,
++				    unsigned int id, unsigned int lun, enum scsi_topology_action action)
++{return -ENOSYS;}
++#endif
++
++#endif /* _SCSI_SCSI_HOTPLUG_H */
+--- /dev/null	Thu Apr 11 09:25:15 2002
++++ drivers/scsi/scsi_hotplug.c	Sun Feb  6 23:42:21 2005
+@@ -0,0 +1,138 @@
++/*
++ *  SCSI Hotplug
++ *
++ *  Copyright (c) 2005 Dell, Inc <Matt_Domsch@dell.com>
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or
++ *  (at your option) any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with this program; if not, write to the Free Software
++ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++
++#include <linux/config.h>
++#include <linux/module.h>
++#include <linux/kobject.h>
++#include <scsi/scsi_hotplug.h>
++
++/*
++ * TODO:
++ * - if CONFIG_SCSI_HOTPLUG=y and CONFIG_SCSI=y, then the exported
++ * functions here get dropped by the vmlinux linker, as there are no
++ * vmlinux users of them (only modules).
++ *
++ */
++
++/* This belongs in include/device.h, as drivers/base/core.c defines it too */
++#define to_dev(obj) container_of(obj, struct device, kobj)
++
++static int scsi_topology_device_hotplug(struct kset *kset, struct kobject *kobj, char **envp,
++			       int num_envp, char *buffer, int buffer_size)
++{
++
++	struct device *dev = to_dev(kobj);
++	struct device *parent_dev = dev->parent;
++	struct scsi_device *sdev = to_scsi_device(dev);
++	struct Scsi_Host *shost = dev_to_shost(parent_dev);
++	int length = 0;
++	int i = 0;
++
++	add_hotplug_env_var(envp, num_envp, &i, buffer, buffer_size, &length,
++			    "SCSI_TOPOLOGY_EVENT=1");
++	add_hotplug_env_var(envp, num_envp, &i, buffer, buffer_size, &length,
++			    "SCSI_TOPOLOGY_EVENT_HCTL=1");
++	add_hotplug_env_var(envp, num_envp, &i, buffer, buffer_size, &length,
++			    "SCSI_HOST=%u", shost->host_no);
++	add_hotplug_env_var(envp, num_envp, &i, buffer, buffer_size, &length,
++			    "SCSI_CHANNEL=%u", sdev->channel);
++	add_hotplug_env_var(envp, num_envp, &i, buffer, buffer_size, &length,
++			    "SCSI_ID=%u", sdev->id);
++	add_hotplug_env_var(envp, num_envp, &i, buffer, buffer_size, &length,
++			    "SCSI_LUN=%u", sdev->lun);
++
++	envp[i] = NULL;
++	return 0;
++}
++
++static struct kset_hotplug_ops scsi_topology_device_kset_ops =
++{
++	.hotplug = scsi_topology_device_hotplug,
++};
++
++static struct kset scsi_topology_device_kset = {
++	.hotplug_ops = &scsi_topology_device_kset_ops,
++	.kobj = {
++		.name = "scsi_topology",
++	},
++};
++
++static void scsi_topology_device_release(struct device *dev)
++{
++	put_device(dev->parent);
++}
++
++static int scsi_topology_device_init(struct scsi_device *sdev,
++				     struct Scsi_Host *shost,
++				     unsigned int channel,
++				     unsigned int id,
++				     unsigned int lun)
++{
++	struct device *dev;
++	memset(sdev, 0, sizeof(*sdev));
++	dev = &sdev->sdev_gendev;
++	snprintf(dev->bus_id, BUS_ID_SIZE, "topology-%u:%u:%u:%u",
++		 shost->host_no, channel, id, lun);
++	dev->parent     = get_device(&shost->shost_gendev);
++	dev->release    = scsi_topology_device_release;
++	sdev->channel = channel;
++	sdev->id = id;
++	sdev->lun = lun;
++	device_initialize(dev);
++	kobject_set_name(&dev->kobj, "%s", dev->bus_id);
++	dev->kobj.parent = &dev->parent->kobj;
++	dev->kobj.kset  = &scsi_topology_device_kset;
++	return 0;
++}
++
++static inline enum kobject_action scsi_topology_action_to_kobject_action(enum scsi_topology_action action)
++{
++	enum kobject_action kaction = KOBJ_CHANGE; /* should there be a KOBJ_NOOP? */
++	switch (action)	{
++	case SCSI_TOPOLOGY_ADDED:
++		kaction = KOBJ_ADD;
++		break;
++	case SCSI_TOPOLOGY_REMOVED:
++		kaction = KOBJ_REMOVE;
++		break;
++	}
++	return kaction;
++}
++
++
++int scsi_topology_hctl_action(struct Scsi_Host *shost, unsigned int channel,
++			      unsigned int id, unsigned int lun, enum scsi_topology_action action)
++{
++	struct scsi_device *sdev;
++	enum kobject_action kaction;
++	int error;
++
++	sdev = kmalloc(sizeof(*sdev), GFP_KERNEL);
++	if (!sdev)
++		return -ENOMEM;
++	error = scsi_topology_device_init(sdev, shost, channel, id, lun);
++	if (error)
++		return error;
++	kaction = scsi_topology_action_to_kobject_action(action);
++	kobject_hotplug(&sdev->sdev_gendev.kobj, kaction);
++	kfree(sdev);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(scsi_topology_hctl_action);
+-
