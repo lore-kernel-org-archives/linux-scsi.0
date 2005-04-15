@@ -1,187 +1,51 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/gdth.c: cleanups
-Date: Fri, 15 Apr 2005 17:10:29 +0200
-Message-ID: <20050415151029.GF5456@stusta.de>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: Question about scsi_device_online() usage in mptscsih
+Date: Fri, 15 Apr 2005 10:11:44 -0600
+Message-ID: <91888D455306F94EBD4D168954A9457C01F7CD79@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:29458 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261833AbVDOPKa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Apr 2005 11:10:30 -0400
-Content-Disposition: inline
+Received: from mail0.lsil.com ([147.145.40.20]:11656 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261854AbVDOQM3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Apr 2005 12:12:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: achim_leubner@adaptec.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Christoph Hellwig <hch@infradead.org>
 
-This patch contains the following cleanups:
-- make some needlessly global functions static
-- remove one more kernel 2.2 #ifdef
+On Friday, April 15, 2005 8:30 AM, James Bottomley wrote:
+> 
+> On Fri, 2005-04-15 at 19:13 +0900, Masao Fukuchi wrote:
+> > The sequence is: 
+> > 1.Host issues SCSI command to fusion MPT driver.
+> > 2.Mid layer detects command timeout and then performs 
+> >   error recovery sequence. 
+> >   But the sequence fails and it causes device offline.
+> >   (fusion MPT driver still hold the command)
+> > 4.Fusion MPT driver activates host reset and calls
+> >   mptscsih_flush_running_cmds().
+> 
+> Well, this is the error:  The Fusion host reset should be 
+> activated from
+> the eh_host_reset_handler.
+> 
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Since I removed the eh timers, this is not going to happen.
+The driver is always waiting for task management request 
+to complete before returning control back to the mid-layer.
+Before when the driver used timers, the eh thread returned
+immediately back to the mid-layer, and the actual
+task management request to the firmware was delayed and 
+completed later. If the task management request didn't 
+complete, the timer would expire, and host reset would be called,
+and it was possible to opps as Fukuchi has indicated.
 
----
+Thus I think its safe to say, we can remove the 
+scsi_device_online from mptscsih_flush_running_cmds.
+Right??
 
-This patch was already sent on:
-- 28 Feb 2005
-
- drivers/scsi/gdth.c |   24 ++++++++++++------------
- drivers/scsi/gdth.h |   41 -----------------------------------------
- 2 files changed, 12 insertions(+), 53 deletions(-)
-
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/gdth.h.old	2005-02-28 18:25:09.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/gdth.h	2005-02-28 18:31:38.000000000 +0100
-@@ -1029,51 +1029,10 @@
- 
- /* function prototyping */
- 
--int gdth_detect(Scsi_Host_Template *);
--int gdth_release(struct Scsi_Host *);
--int gdth_queuecommand(Scsi_Cmnd *,void (*done)(Scsi_Cmnd *));
--const char *gdth_info(struct Scsi_Host *);
--
- #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
--int gdth_bios_param(struct scsi_device *,struct block_device *,sector_t,int *);
- int gdth_proc_info(struct Scsi_Host *, char *,char **,off_t,int,int);
--#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
--int gdth_bios_param(Disk *,kdev_t,int *);
--int gdth_proc_info(char *,char **,off_t,int,int,int);
- #else
--int gdth_bios_param(Disk *,kdev_t,int *);
--extern struct proc_dir_entry proc_scsi_gdth;
- int gdth_proc_info(char *,char **,off_t,int,int,int);
--int gdth_abort(Scsi_Cmnd *);
--int gdth_reset(Scsi_Cmnd *,unsigned int); 
--#define GDTH { proc_dir:        &proc_scsi_gdth,                 \
--               proc_info:       gdth_proc_info,                  \
--               name:            "GDT SCSI Disk Array Controller",\
--               detect:          gdth_detect,                     \
--               release:         gdth_release,                    \
--               info:            gdth_info,                       \
--               command:         NULL,                            \
--               queuecommand:    gdth_queuecommand,               \
--               eh_abort_handler: gdth_eh_abort,                  \
--               eh_device_reset_handler: gdth_eh_device_reset,    \
--               eh_bus_reset_handler: gdth_eh_bus_reset,          \
--               eh_host_reset_handler: gdth_eh_host_reset,        \
--               abort:           gdth_abort,                      \
--               reset:           gdth_reset,                      \
--               bios_param:      gdth_bios_param,                 \
--               can_queue:       GDTH_MAXCMDS,                    \
--               this_id:         -1,                              \
--               sg_tablesize:    GDTH_MAXSG,                      \
--               cmd_per_lun:     GDTH_MAXC_P_L,                   \
--               present:         0,                               \
--               unchecked_isa_dma: 1,                             \
--               use_clustering:  ENABLE_CLUSTERING,               \
--               use_new_eh_code: 1       /* use new error code */ }    
- #endif
- 
--int gdth_eh_abort(Scsi_Cmnd *scp);
--int gdth_eh_device_reset(Scsi_Cmnd *scp);
--int gdth_eh_bus_reset(Scsi_Cmnd *scp);
--int gdth_eh_host_reset(Scsi_Cmnd *scp);
--
- #endif
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/gdth.c.old	2005-02-28 18:25:50.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/gdth.c	2005-02-28 18:44:14.000000000 +0100
-@@ -4034,7 +4034,7 @@
- }
- 
- #ifdef GDTH_STATISTICS
--void gdth_timeout(ulong data)
-+static void gdth_timeout(ulong data)
- {
-     ulong32 i;
-     Scsi_Cmnd *nscp;
-@@ -4062,7 +4062,7 @@
- }
- #endif
- 
--void __init internal_setup(char *str,int *ints)
-+static void __init internal_setup(char *str,int *ints)
- {
-     int i, argc;
-     char *cur_str, *argv;
-@@ -4153,7 +4153,7 @@
-     return 1;
- }
- 
--int __init gdth_detect(Scsi_Host_Template *shtp)
-+static int __init gdth_detect(Scsi_Host_Template *shtp)
- {
-     struct Scsi_Host *shp;
-     gdth_pci_str pcistr[MAXHA];
-@@ -4604,7 +4604,7 @@
- }
- 
- 
--int gdth_release(struct Scsi_Host *shp)
-+static int gdth_release(struct Scsi_Host *shp)
- {
-     int hanum;
-     gdth_ha_str *ha;
-@@ -4691,7 +4691,7 @@
-     return("");
- }
- 
--const char *gdth_info(struct Scsi_Host *shp)
-+static const char *gdth_info(struct Scsi_Host *shp)
- {
-     int hanum;
-     gdth_ha_str *ha;
-@@ -4704,19 +4704,19 @@
- }
- 
- /* new error handling */
--int gdth_eh_abort(Scsi_Cmnd *scp)
-+static int gdth_eh_abort(Scsi_Cmnd *scp)
- {
-     TRACE2(("gdth_eh_abort()\n"));
-     return FAILED;
- }
- 
--int gdth_eh_device_reset(Scsi_Cmnd *scp)
-+static int gdth_eh_device_reset(Scsi_Cmnd *scp)
- {
-     TRACE2(("gdth_eh_device_reset()\n"));
-     return FAILED;
- }
- 
--int gdth_eh_bus_reset(Scsi_Cmnd *scp)
-+static int gdth_eh_bus_reset(Scsi_Cmnd *scp)
- {
-     int i, hanum;
-     gdth_ha_str *ha;
-@@ -4770,7 +4770,7 @@
-     return SUCCESS;
- }
- 
--int gdth_eh_host_reset(Scsi_Cmnd *scp)
-+static int gdth_eh_host_reset(Scsi_Cmnd *scp)
- {
-     TRACE2(("gdth_eh_host_reset()\n"));
-     return FAILED;
-@@ -4778,9 +4778,9 @@
- 
- 
- #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
--int gdth_bios_param(struct scsi_device *sdev,struct block_device *bdev,sector_t cap,int *ip)
-+static int gdth_bios_param(struct scsi_device *sdev,struct block_device *bdev,sector_t cap,int *ip)
- #else
--int gdth_bios_param(Disk *disk,kdev_t dev,int *ip)
-+static int gdth_bios_param(Disk *disk,kdev_t dev,int *ip)
- #endif
- {
-     unchar b, t;
-@@ -4818,7 +4818,7 @@
- }
- 
- 
--int gdth_queuecommand(Scsi_Cmnd *scp,void (*done)(Scsi_Cmnd *))
-+static int gdth_queuecommand(Scsi_Cmnd *scp,void (*done)(Scsi_Cmnd *))
- {
-     int hanum;
-     int priority;
+Eric Moore
+LSI Logic
 
