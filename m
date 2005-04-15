@@ -1,41 +1,44 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [GIT PATCH] scsi updates for 2.6.12-rc2
-Date: Fri, 15 Apr 2005 09:08:03 -0500
-Message-ID: <1113574084.5009.1.camel@mulgrave>
-References: <1113442034.4933.53.camel@mulgrave>
-	 <20050415103646.GB1797@elf.ucw.cz>  <20050415112556.GA6086@elf.ucw.cz>
+Subject: Re: Question about scsi_device_online() usage in mptscsih
+Date: Fri, 15 Apr 2005 09:30:26 -0500
+Message-ID: <1113575426.5009.11.camel@mulgrave>
+References: <91888D455306F94EBD4D168954A9457C01F7C9F9@nacos172.co.lsil.com>
+	 <200504151013.AA04188@fukuchi.jp.fujitsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:6330 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:35514 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261822AbVDOOIV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Apr 2005 10:08:21 -0400
-In-Reply-To: <20050415112556.GA6086@elf.ucw.cz>
+	id S261745AbVDOOai (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Apr 2005 10:30:38 -0400
+In-Reply-To: <200504151013.AA04188@fukuchi.jp.fujitsu.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Masao Fukuchi <fukuchi.masao@jp.fujitsu.com>
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Christoph Hellwig <hch@infradead.org>
 
-On Fri, 2005-04-15 at 13:25 +0200, Pavel Machek wrote:
-> Okay, so du -s is:
-> 
-> root@amd:~# du -sh /tmp/delme.git/
-> 109M    /tmp/delme.git/
-> 
-> Not as bad as I expected, but still quite a lot of data for few
-> changes.
+On Fri, 2005-04-15 at 19:13 +0900, Masao Fukuchi wrote:
+> The sequence is: 
+> 1.Host issues SCSI command to fusion MPT driver.
+> 2.Mid layer detects command timeout and then performs 
+>   error recovery sequence. 
+>   But the sequence fails and it causes device offline.
+>   (fusion MPT driver still hold the command)
+> 4.Fusion MPT driver activates host reset and calls
+>   mptscsih_flush_running_cmds().
 
-Erm, but that's why it's an rsync archive.  You're supposed to have a
-copy of the kernel archive already.  The one at
+Well, this is the error:  The Fusion host reset should be activated from
+the eh_host_reset_handler.
 
-rsync://www.kernel.org/pub/linux/kernel/people/torvalds/kernel-test.git
+> 5.In mptscsih_flush_running_cmds(), pci_unmap_sg() is called
+>   for all SCSI cmds.
+>   But the buffer had already freed and this causes oops.
 
-Then, the few additional files I have rsync across very fast.
-
-Take a look at how git works:  files, once added to the object tree by
-sha1 hash stay there forever.
+If you do the above, the command will still be valid.  If you wait until
+after the device is offlined, of course the mid-layer throws away the
+commands, since it's up to the driver to clean them up during the reset
+sequences.
 
 James
 
