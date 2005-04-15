@@ -1,51 +1,127 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: RE: Question about scsi_device_online() usage in mptscsih
-Date: Thu, 14 Apr 2005 14:28:11 -0600
-Message-ID: <91888D455306F94EBD4D168954A9457C01F7C9F9@nacos172.co.lsil.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/scsi/dpt*: remove version.h dependencies
+Date: Fri, 15 Apr 2005 02:48:30 +0200
+Message-ID: <20050415004830.GF20400@stusta.de>
+References: <20050327143421.GF4285@stusta.de> <1112449778.5786.7.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:33681 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261445AbVDNU3O (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Apr 2005 16:29:14 -0400
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:58887 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S261687AbVDOAsc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Apr 2005 20:48:32 -0400
+Content-Disposition: inline
+In-Reply-To: <1112449778.5786.7.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: fukuchi.masao@jp.fujitsu.com
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Tejun Heo <htejun@gmail.com>, Christoph Hellwig <hch@infradead.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Markus.Lidel@shadowconnect.com, Mark_Salyzyn@adaptec.com
 
-Masao Fukuchi reported an issue when the
-outstanding mf queue was being flushed in
-contents of slave_destroy, the scsi dev was 
-offlined already by the mid-layer.
-
-They may not be an issue anymore since I removed
-the error handling timers from mptscsih.
-
-Masao can you validate this pls?
-
-Christoph Hellwig, wrote:
+On Sat, Apr 02, 2005 at 07:49:38AM -0600, James Bottomley wrote:
+> On Sun, 2005-03-27 at 16:34 +0200, Adrian Bunk wrote:
+> > This patch removes #if's for kernel 2.2 .
 > 
-> On Sat, Apr 02, 2005 at 02:35:57PM +0900, Tejun Heo wrote:
-> >  Hello, Eric.
-> >  Hello, James.
-> > 
-> >  I've been working on new SCSI state model and was checking on
-> > scsi_device_online() users.  As the state model is going to 
-> change, I
-> > need to audit device state usages in lldd's and I'm having difficult
-> > time understanding why scsi_device_online() is used in mptscsih.
-> > 
-> >  In mptscsih.c, mptscsih_flush_running_cmds() uses
-> > scsi_device_online() to determine whether or not dma-unmap data area
-> > of active commands.  This was added in the changeset 1.1371.776.1 by
-> > Eric Moore with the comment "MPT Fusion add back FC909 
-> support".  Can
-> > you please explain me why and how scsi_device_online() condition is
-> > used here?
+> this one looks like it's not quite complete:
 > 
-> I brought that issue up a while ago, but we didn't really get 
-> anywhere,
-> see the "fix dma mapping leak in fusion" thread on linux-scsi.
+> > -#ifndef LINUX_VERSION_CODE
+> >  #include <linux/version.h>
+> > -#endif
 > 
+> Once there are no more KERNEL_VERSION dependencies in a file, it's
+> inclusion of linux/version.h can be removed also (and that should
+> prevent it getting rebuilt every time the kernel version changes).
+> 
+> So it looks like there's an additional KERNEL_VERSION to remove in
+> dpt/dpti_i2o.h version.h includes in dpti_i2o.h and dpt_i2o.c
+
+Is the patch below what you want, or do I misunderstand your comment?
+
+> Then when you have a final patch, could you cc Markus Lidel
+> <Markus.Lidel@shadowconnect.com> and  
+> 
+> Mark_Salyzyn@adaptec.com
+> 
+> Thanks,
+> 
+> James
+
+cu
+Adrian
+
+
+<--  snip  -->
+
+
+This patch removes version.h dependencies.
+
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+ drivers/scsi/dpt/sys_info.h |    4 ----
+ drivers/scsi/dpt_i2o.c      |    5 -----
+ drivers/scsi/dpti.h         |   12 ------------
+ 3 files changed, 21 deletions(-)
+
+--- linux-2.6.12-rc2-mm3-full/drivers/scsi/dpti.h.old	2005-04-15 01:21:04.000000000 +0200
++++ linux-2.6.12-rc2-mm3-full/drivers/scsi/dpti.h	2005-04-15 01:21:26.000000000 +0200
+@@ -20,15 +20,7 @@
+ #ifndef _DPT_H
+ #define _DPT_H
+ 
+-#ifndef LINUX_VERSION_CODE
+-#include <linux/version.h>
+-#endif
+-
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,00)
+-#define MAX_TO_IOP_MESSAGES   (210)
+-#else
+ #define MAX_TO_IOP_MESSAGES   (255)
+-#endif
+ #define MAX_FROM_IOP_MESSAGES (255)
+ 
+ 
+@@ -321,10 +313,6 @@
+ static void adpt_delay(int millisec);
+ #endif
+ 
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+-static struct pci_dev* adpt_pci_find_device(uint vendor, struct pci_dev* from);
+-#endif
+-
+ #if defined __ia64__ 
+ static void adpt_ia64_info(sysInfo_S* si);
+ #endif
+--- linux-2.6.12-rc2-mm3-full/drivers/scsi/dpt/sys_info.h.old	2005-04-15 01:23:52.000000000 +0200
++++ linux-2.6.12-rc2-mm3-full/drivers/scsi/dpt/sys_info.h	2005-04-15 01:24:13.000000000 +0200
+@@ -146,10 +146,6 @@
+    uSHORT       flags;                  /* See bit definitions above */
+    uSHORT       conventionalMemSize;    /* in KB */
+    uLONG        extendedMemSize;        /* in KB */
+-   uLONG        osType;                 /* Same as DPTSIG's definition */
+-   uCHAR        osMajorVersion;
+-   uCHAR        osMinorVersion;         /* The OS version */
+-   uCHAR        osRevision;
+ #ifdef _SINIX_ADDON
+    uCHAR        busType;                /* See defininitions above */
+    uSHORT       osSubRevision;
+--- linux-2.6.12-rc2-mm3-full/drivers/scsi/dpt_i2o.c.old	2005-04-15 01:21:48.000000000 +0200
++++ linux-2.6.12-rc2-mm3-full/drivers/scsi/dpt_i2o.c	2005-04-15 01:25:20.000000000 +0200
+@@ -34,7 +34,6 @@
+ 
+ #define ADDR32 (0)
+ 
+-#include <linux/version.h>
+ #include <linux/module.h>
+ 
+ MODULE_AUTHOR("Deanna Bonds, with _lots_ of help from Mark Salyzyn");
+@@ -1824,10 +1823,6 @@
+ 
+ 	memset(&si, 0, sizeof(si));
+ 
+-	si.osType = OS_LINUX;
+-	si.osMajorVersion = (u8) (LINUX_VERSION_CODE >> 16);
+-	si.osMinorVersion = (u8) (LINUX_VERSION_CODE >> 8 & 0x0ff);
+-	si.osRevision =     (u8) (LINUX_VERSION_CODE & 0x0ff);
+ 	si.busType = SI_PCI_BUS;
+ 	si.processorFamily = DPTI_sig.dsProcessorFamily;
+ 
+
