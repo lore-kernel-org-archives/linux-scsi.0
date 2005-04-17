@@ -1,44 +1,104 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: PATCH [2/5]  qla2xxx: add remote port codes...
-Date: Sun, 17 Apr 2005 10:18:21 -0500
-Message-ID: <1113751101.5011.5.camel@mulgrave>
-References: <20050413191824.GK9703@plap.qlogic.org>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/scsi/dpt*: remove version.h dependencies
+Date: Sun, 17 Apr 2005 20:19:42 +0200
+Message-ID: <20050417181942.GA3625@stusta.de>
+References: <60807403EABEB443939A5A7AA8A7458B010AAA69@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:62680 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261324AbVDQPSf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 17 Apr 2005 11:18:35 -0400
-In-Reply-To: <20050413191824.GK9703@plap.qlogic.org>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:37905 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S261396AbVDQSTs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 17 Apr 2005 14:19:48 -0400
+Content-Disposition: inline
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458B010AAA69@otce2k01.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Markus.Lidel@shadowconnect.com
 
-On Wed, 2005-04-13 at 12:18 -0700, Andrew Vasquez wrote:
->  drivers/scsi/qla2xxx/qla_attr.c |  323 ++++++++++++++++++++++++++++++++++++++++
+On Fri, Apr 15, 2005 at 08:56:25AM -0400, Salyzyn, Mark wrote:
+> 
+> You can not remove the entries in sys_info.h (osMajorVersion & friends),
+> this communicates information to the application via the ioctls and the
+> structure shape is important. Change the code to zero the values, leave
+> osType set to OS_LINUX.
 
-This file uses vmalloc but doesn't appear to include linux/vmalloc.h
-causing a compiler warning in my build env.  It also includes
-linux/version.h, which it doesn't appear to need.
+Sorry, my fault.
 
-I'll stick this patch in to correct the problem.
+Corrected patch below.
 
-James
+> Sincerely -- Mark Salyzyn
 
-===== drivers/scsi/qla2xxx/qla_attr.c 1.2 vs edited =====
---- 1.2/drivers/scsi/qla2xxx/qla_attr.c	2005-04-13 10:45:53 -05:00
-+++ edited/drivers/scsi/qla2xxx/qla_attr.c	2005-04-17 09:41:13 -05:00
-@@ -18,7 +18,7 @@
-  */
- #include "qla_def.h"
+cu
+Adrian
+
+
+<--  snip  -->
+
+
+This patch removes version.h dependencies.
+
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+ drivers/scsi/dpt/sys_info.h |    4 ----
+ drivers/scsi/dpt_i2o.c      |    5 -----
+ drivers/scsi/dpti.h         |   12 ------------
+ 3 files changed, 21 deletions(-)
+
+--- linux-2.6.12-rc2-mm3-full/drivers/scsi/dpti.h.old	2005-04-15 01:21:04.000000000 +0200
++++ linux-2.6.12-rc2-mm3-full/drivers/scsi/dpti.h	2005-04-15 01:21:26.000000000 +0200
+@@ -20,15 +20,7 @@
+ #ifndef _DPT_H
+ #define _DPT_H
+ 
+-#ifndef LINUX_VERSION_CODE
+-#include <linux/version.h>
+-#endif
+-
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,00)
+-#define MAX_TO_IOP_MESSAGES   (210)
+-#else
+ #define MAX_TO_IOP_MESSAGES   (255)
+-#endif
+ #define MAX_FROM_IOP_MESSAGES (255)
+ 
+ 
+@@ -321,10 +313,6 @@
+ static void adpt_delay(int millisec);
+ #endif
+ 
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+-static struct pci_dev* adpt_pci_find_device(uint vendor, struct pci_dev* from);
+-#endif
+-
+ #if defined __ia64__ 
+ static void adpt_ia64_info(sysInfo_S* si);
+ #endif
+--- linux-2.6.12-rc2-mm3-full/drivers/scsi/dpt_i2o.c.old	2005-04-15 01:21:48.000000000 +0200
++++ linux-2.6.12-rc2-mm3-full/drivers/scsi/dpt_i2o.c	2005-04-15 01:25:20.000000000 +0200
+@@ -34,7 +34,6 @@
+ 
+ #define ADDR32 (0)
  
 -#include <linux/version.h>
-+#include <linux/vmalloc.h>
- #include <scsi/scsi_transport_fc.h>
+ #include <linux/module.h>
  
- /* SYSFS attributes --------------------------------------------------------- */
+ MODULE_AUTHOR("Deanna Bonds, with _lots_ of help from Mark Salyzyn");
+@@ -1824,10 +1823,10 @@
+ 
+ 	memset(&si, 0, sizeof(si));
+ 
+ 	si.osType = OS_LINUX;
+-	si.osMajorVersion = (u8) (LINUX_VERSION_CODE >> 16);
+-	si.osMinorVersion = (u8) (LINUX_VERSION_CODE >> 8 & 0x0ff);
+-	si.osRevision =     (u8) (LINUX_VERSION_CODE & 0x0ff);
++	si.osMajorVersion = 0;
++	si.osMinorVersion = 0;
++	si.osRevision = 0;
+ 	si.busType = SI_PCI_BUS;
+ 	si.processorFamily = DPTI_sig.dsProcessorFamily;
+ 
+
 
 
