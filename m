@@ -1,16 +1,16 @@
 From: folkert@vanheusden.com
 Subject: Re: [ANNOUNCE] sdparm 0.90
-Date: Mon, 18 Apr 2005 21:50:11 +0200
-Message-ID: <20050418195009.GU30729@vanheusden.com>
+Date: Mon, 18 Apr 2005 21:52:47 +0200
+Message-ID: <20050418195245.GV30729@vanheusden.com>
 References: <4263B56B.2010905@torque.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="z+AhoeLdLI498vdY"
+	protocol="application/pgp-signature"; boundary="finhkSr2yyrWw3ow"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from keetweej.xs4all.nl ([213.84.46.114]:22727 "EHLO
+Received: from keetweej.xs4all.nl ([213.84.46.114]:49080 "EHLO
 	keetweej.vanheusden.com") by vger.kernel.org with ESMTP
-	id S262184AbVDRTuM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Apr 2005 15:50:12 -0400
+	id S262186AbVDRTwt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Apr 2005 15:52:49 -0400
 Content-Disposition: inline
 In-Reply-To: <4263B56B.2010905@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -19,48 +19,13 @@ To: Douglas Gilbert <dougg@torque.net>
 Cc: linux-scsi@vger.kernel.org
 
 
---z+AhoeLdLI498vdY
+--finhkSr2yyrWw3ow
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-keetweej:/usr/src# sdparm  -a /dev/sda
-SG_IO (inquiry) error: Invalid argument
-SCSI INQUIRY command failed on /dev/sda
-keetweej:/usr/src# sdparm   /dev/sda
-SG_IO (inquiry) error: Invalid argument
-SCSI INQUIRY command failed on /dev/sda
-
-Feb 21 12:58:10 keetweej kernel: SCSI subsystem driver Revision: 1.00
-Feb 21 12:58:10 keetweej kernel: scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI =
-HBA DRIVER, Rev 6.2.36
-Feb 21 12:58:10 keetweej kernel:         <Adaptec aic7880 Ultra SCSI adapte=
-r>
-Feb 21 12:58:10 keetweej kernel:         aic7880: Ultra Wide Channel A, SCS=
-I Id=3D7, 16/253 SCBs
-Feb 21 12:58:10 keetweej kernel:
-Feb 21 12:58:10 keetweej kernel:   Vendor: RICOH     Model: MP6200S        =
-   Rev: 2.20
-Feb 21 12:58:10 keetweej kernel:   Type:   CD-ROM                          =
-   ANSI SCSI revision: 02
-Feb 21 12:58:10 keetweej kernel: (scsi0:A:6): 5.813MB/s transfers (5.813MHz=
-, offset 15)
-Feb 21 12:58:10 keetweej kernel:   Vendor: IBM       Model: DCAS-34330     =
-   Rev: S65A
-Feb 21 12:58:10 keetweej kernel:   Type:   Direct-Access                   =
-   ANSI SCSI revision: 02
-Feb 21 12:58:10 keetweej kernel: scsi0:A:6:0: Tagged Queuing enabled.  Dept=
-h 32
-Feb 21 12:58:10 keetweej kernel: Attached scsi disk sda at scsi0, channel 0=
-, id 6, lun 0
-Feb 21 12:58:10 keetweej kernel: SCSI device sda: 8467200 512-byte hdwr sec=
-tors (4335 MB)
-Feb 21 12:58:10 keetweej kernel:  /dev/scsi/host0/bus0/target6/lun0: p1 p2
-
-0000:00:06.0 SCSI storage controller: Adaptec AIC-7880U
-keetweej:/var/log# lspci -n | grep 0000:00:06.0
-0000:00:06.0 0100: 9004:8078
-
+oh wait, 2.6 yes?
+then forget my bugreport (running 2.4.26-NANO)
 
 On Mon, Apr 18, 2005 at 11:26:03PM +1000, Douglas Gilbert wrote:
 > sdparm is a new command line utility designed to get and set
@@ -163,7 +128,7 @@ Op zoek naar een IT of Finance baan? Mail me voor de mogelijkheden.
 Phone: +31-6-41278122, PGP-key: 1F28D8AE
 Get your PGP/GPG key signed at www.biglumber.com!
 
---z+AhoeLdLI498vdY
+--finhkSr2yyrWw3ow
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 Content-Disposition: inline
@@ -171,10 +136,10 @@ Content-Disposition: inline
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.0 (GNU/Linux)
 
-iIMEARECAEMFAkJkD3E8Gmh0dHA6Ly93d3cudmFuaGV1c2Rlbi5jb20vZGF0YS1z
-aWduaW5nLXdpdGgtcGdwLXBvbGljeS5odG1sAAoJEDAZDowfKNiuUd0AoJ+lSk7l
-Ofd7LXiZ9deYJOyVil32AJ98RfC2UkDoJqoj2/f5ErvbMyVkkQ==
-=uP59
+iIMEARECAEMFAkJkEA08Gmh0dHA6Ly93d3cudmFuaGV1c2Rlbi5jb20vZGF0YS1z
+aWduaW5nLXdpdGgtcGdwLXBvbGljeS5odG1sAAoJEDAZDowfKNiuTcUAn39Ofe2H
+khmNr7GT4QfyT0HsRwmDAJ4kZaAf1/l/WmRgrgUPLXkR6DvHlg==
+=I9gT
 -----END PGP SIGNATURE-----
 
---z+AhoeLdLI498vdY--
+--finhkSr2yyrWw3ow--
