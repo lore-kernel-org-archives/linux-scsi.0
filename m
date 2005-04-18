@@ -1,41 +1,62 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: SCSI trees, merges and git status
-Date: Mon, 18 Apr 2005 18:14:51 -0500
-Message-ID: <1113866092.4998.92.camel@mulgrave>
-References: <1113856118.4998.70.camel@mulgrave>
-	 <Pine.LNX.4.58.0504181429570.15725@ppc970.osdl.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH scsi-misc-2.6 02/07] scsi: make scsi_send_eh_cmnd use
+ its own timer instead of scmd->eh_timeout
+Date: Tue, 19 Apr 2005 08:25:22 +0900
+Message-ID: <426441E2.1010900@gmail.com>
+References: <20050410184214.4AAD0992@htj.dyndns.org>	 <20050410184214.B68C4CBA@htj.dyndns.org>	 <1113838401.4998.27.camel@mulgrave> <20050418223114.GA32478@htj.dyndns.org> <1113864917.4998.89.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=EUC-KR
 Content-Transfer-Encoding: 7bit
-Return-path: <git-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.58.0504181429570.15725@ppc970.osdl.org>
-Sender: git-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: git@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rproxy.gmail.com ([64.233.170.204]:3766 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261191AbVDRXZ3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Apr 2005 19:25:29 -0400
+Received: by rproxy.gmail.com with SMTP id j1so1094728rnf
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Apr 2005 16:25:29 -0700 (PDT)
+In-Reply-To: <1113864917.4998.89.camel@mulgrave>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jens Axboe <axboe@suse.de>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Mon, 2005-04-18 at 14:39 -0700, Linus Torvalds wrote:
-> > Linus, the rc-fixes repo is ready for applying ... it's the same one I
-> > announced on linux-scsi and lkml a while ago just with the git date
-> > information updated to be correct (the misc one should wait until after
-> > 2.6.12 is final).
+James Bottomley wrote:
+> On Tue, 2005-04-19 at 07:31 +0900, Tejun Heo wrote:
 > 
-> Ok. Can you verify? I did a "git diff" between your old head and my new
-> head, and it did not show any SCSI files (only the expected arm etc stuff
-> that you didn't have in your), so it all _looks_ good. But hey, just to
-> make sure that I didn't do anything stupid..
+>> The original code also uses timer pending status as a signal that
+>>command completed normally in scsi_eh_done() function, and the same
+>>race also exists in the original code, no matter what we do, unless we
+>>make timer expiration and removal of the command atomic, there will be
+>>a window in which command completes normally but considered to have
+>>timed out as long as we use timer pending status as tie breaker.
+> 
+> 
+> True enough; it's a race between the driver calling scsi_done() and the
+> timer expiring.  However, that's an acceptable race, since the timer
+> values are usually in the order of a few seconds and the command usually
+> completes in milliseconds.  the done function is called in interrupt
+> context after command completion, so it's as close as possible to the
+> actual command completion
+> 
+> 
+>> The patch moves the test out of scsi_eh_done() into
+>>scsi_send_eh_cmnd() and this does widen the window by delaying removal
+>>of timer until after the original thread gets scheduled, but usually
+>>not by much and that's how timers are done in many cases (through out
+>>the kernel, timer removals are done with intervening scheduling and no
+>>one considers those incorrect).  So...
+> 
+> 
+> The time between a thread being marked ready to run and actually running
+> has been measured in seconds on a heavily loaded system.  That makes the
+> race window potentially as wide as the timer, which is unacceptable.
 
-Actually, the verify fails, according to bitkeeper.
+ Hmm, okay, agreed.  I'll rework it.  I think I can do it by just adding
+a private struct scsi_eh_timer_arg to pass along the timer and the cmd
+pointer.  I'll repost the patchset soon.
 
-It looks like the merge tree has contamination from the scsi-misc-2.6
-tree ... possibly because the hosting system got the merged objects when
-I pushed.
+ Thanks a lot.
 
-Could you strip it back and I'll check out the repos on www.parisc-
-linux.org?
-
-Thanks,
-
-James
-
+-- 
+tejun
 
