@@ -1,33 +1,32 @@
-From: "Miller, Mike (OS Dev)" <mike.miller@hp.com>
-Subject: RE: [RFC 1 of 9] patches to add diskdump functionality to block layer
-Date: Mon, 18 Apr 2005 12:14:06 -0500
-Message-ID: <D4CFB69C345C394284E4B78B876C1CF107DC050F@cceexc23.americas.cpqcorp.net>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [ANNOUNCE] sdparm 0.90
+Date: Mon, 18 Apr 2005 13:42:33 -0400
+Message-ID: <4263F189.3000700@pobox.com>
+References: <4263B56B.2010905@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ccerelbas03.cce.hp.com ([161.114.21.106]:7643 "EHLO
-	ccerelbas03.cce.hp.com") by vger.kernel.org with ESMTP
-	id S262141AbVDRRO6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Apr 2005 13:14:58 -0400
-Content-class: urn:content-classes:message
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:1951 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S262141AbVDRRms (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Apr 2005 13:42:48 -0400
+In-Reply-To: <4263B56B.2010905@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, marcelo.tosatti@cyclades.com
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-> From: Christoph Hellwig [mailto:hch@infradead.org] 
-> 
-> This looks like a patch for Linux 2.4.  Such major changes for the
-> 2.4 tree don't make sense anymore, especially for 
-> functionality not even in Linux 2.6.
-> 
-This is for 2.4, I should have specified that in the Subject line. We
-did this work because of customer demand and a request from a vendor. 
-Marcelo, is this something that you be interested in adding to 2.4? If
-not, I'll just submit this directly to the vendor.
+Douglas Gilbert wrote:
+> sdparm is a new command line utility designed to get and set
+> SCSI disk parameters (cf hdparm for ATA disks). More generally
+> it gets and sets mode page information on SCSI devices or devices
+> that use a SCSI command set (e.g. CD/DVD drives (any transport)
+> and SCSI tape drives).
 
-Thanks,
-mikem
-> 
+I'm biased, but I would prefer to use blktool for this sort of thing...
+
+	Jeff
+
+
+
