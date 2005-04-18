@@ -1,32 +1,36 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [ANNOUNCE] sdparm 0.90
-Date: Mon, 18 Apr 2005 13:42:33 -0400
-Message-ID: <4263F189.3000700@pobox.com>
-References: <4263B56B.2010905@torque.net>
+From: Peter Missel <peter.missel@onlinehome.de>
+Subject: Re: SYM8xx_2 driver ignores certain EEPROM settings
+Date: Mon, 18 Apr 2005 19:55:27 +0200
+Message-ID: <200504181955.28178.peter.missel@onlinehome.de>
+References: <200412311343.42484.peter.missel@onlinehome.de> <20050409140218.GC8669@parcelfarce.linux.theplanet.co.uk> <200504092344.41310.peter.missel@onlinehome.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:1951 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262141AbVDRRms (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Apr 2005 13:42:48 -0400
-In-Reply-To: <4263B56B.2010905@torque.net>
+Received: from moutng.kundenserver.de ([212.227.126.187]:42228 "EHLO
+	moutng.kundenserver.de") by vger.kernel.org with ESMTP
+	id S261164AbVDRR4F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Apr 2005 13:56:05 -0400
+In-Reply-To: <200504092344.41310.peter.missel@onlinehome.de>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
+To: Matthew Wilcox <matthew@wil.cx>
 Cc: linux-scsi@vger.kernel.org
 
-Douglas Gilbert wrote:
-> sdparm is a new command line utility designed to get and set
-> SCSI disk parameters (cf hdparm for ATA disks). More generally
-> it gets and sets mode page information on SCSI devices or devices
-> that use a SCSI command set (e.g. CD/DVD drives (any transport)
-> and SCSI tape drives).
+Hello?
 
-I'm biased, but I would prefer to use blktool for this sort of thing...
-
-	Jeff
-
-
-
+> Back to the original topic ... do you have any news with regard to putting
+> the code back into the sym8xx driver that reads the user configured
+> channel/device negotiation settings (transfer speed and width limits,
+> timeouts, disconnect, etc. etc.) from the EEPROM? This is really causing
+> headaches here with those setups that use external devices, slightly buggy
+> devices, long cables and similar stuff where the auto-detected defaults
+> aren't working.
+>
+> Many thanks!
+>
+> regards,
+> Peter
+>
