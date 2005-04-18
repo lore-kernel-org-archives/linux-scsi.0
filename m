@@ -1,74 +1,51 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 02/07] scsi: make scsi_send_eh_cmnd use its own timer instead of scmd->eh_timeout
-Date: Tue, 19 Apr 2005 07:31:14 +0900
-Message-ID: <20050418223114.GA32478@htj.dyndns.org>
-References: <20050410184214.4AAD0992@htj.dyndns.org> <20050410184214.B68C4CBA@htj.dyndns.org> <1113838401.4998.27.camel@mulgrave>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH scsi-misc-2.6 02/07] scsi: make scsi_send_eh_cmnd use
+	its own timer instead of scmd->eh_timeout
+Date: Mon, 18 Apr 2005 17:55:16 -0500
+Message-ID: <1113864917.4998.89.camel@mulgrave>
+References: <20050410184214.4AAD0992@htj.dyndns.org>
+	 <20050410184214.B68C4CBA@htj.dyndns.org>
+	 <1113838401.4998.27.camel@mulgrave> <20050418223114.GA32478@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.193]:17245 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261195AbVDRWbT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Apr 2005 18:31:19 -0400
-Received: by rproxy.gmail.com with SMTP id j1so1088642rnf
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Apr 2005 15:31:19 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1113838401.4998.27.camel@mulgrave>
+Received: from stat16.steeleye.com ([209.192.50.48]:14720 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261182AbVDRWze (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Apr 2005 18:55:34 -0400
+In-Reply-To: <20050418223114.GA32478@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Tejun Heo <htejun@gmail.com>
 Cc: Jens Axboe <axboe@suse.de>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
- Hello, James.
+On Tue, 2005-04-19 at 07:31 +0900, Tejun Heo wrote:
+>  The original code also uses timer pending status as a signal that
+> command completed normally in scsi_eh_done() function, and the same
+> race also exists in the original code, no matter what we do, unless we
+> make timer expiration and removal of the command atomic, there will be
+> a window in which command completes normally but considered to have
+> timed out as long as we use timer pending status as tie breaker.
 
-On Mon, Apr 18, 2005 at 10:33:21AM -0500, James Bottomley wrote:
-> On Mon, 2005-04-11 at 03:45 +0900, Tejun Heo wrote:
-> > 	scmd->eh_timeout is used to resolve the race between command
-> > 	completion and timeout.  However, during error handling,
-> > 	scsi_send_eh_cmnd uses scmd->eh_timeout.  This creates a race
-> > 	condition between eh and normal completion for a request which
-> > 	has timed out and in the process of error handling.  If the
-> > 	request completes while scmd->eh_timeout is being used by eh,
-> > 	eh timeout is lost and the command will be handled by both eh
-> > 	and completion path.  This patch fixes the race by making
-> > 	scsi_send_eh_cmnd() use its own timer.
-> > 
-> > Signed-off-by: Tejun Heo <htejun@gmail.com>
-> 
-> The logic is wrong in there.
-> 
-> The problem is you cannot rely on the timer being pending as a signal
-> that the command completed normally.  The kernel doesn't define the
-> elapsed time between the eh_action semaphore going up and the process
-> waiting for it being scheduled.  If the timer fires within that
-> undefined interval, you'll think the command timed out when it, in fact,
-> completed normally.
+True enough; it's a race between the driver calling scsi_done() and the
+timer expiring.  However, that's an acceptable race, since the timer
+values are usually in the order of a few seconds and the command usually
+completes in milliseconds.  the done function is called in interrupt
+context after command completion, so it's as close as possible to the
+actual command completion
 
- The original code also uses timer pending status as a signal that
-command completed normally in scsi_eh_done() function, and the same
-race also exists in the original code, no matter what we do, unless we
-make timer expiration and removal of the command atomic, there will be
-a window in which command completes normally but considered to have
-timed out as long as we use timer pending status as tie breaker.
+>  The patch moves the test out of scsi_eh_done() into
+> scsi_send_eh_cmnd() and this does widen the window by delaying removal
+> of timer until after the original thread gets scheduled, but usually
+> not by much and that's how timers are done in many cases (through out
+> the kernel, timer removals are done with intervening scheduling and no
+> one considers those incorrect).  So...
 
- The patch moves the test out of scsi_eh_done() into
-scsi_send_eh_cmnd() and this does widen the window by delaying removal
-of timer until after the original thread gets scheduled, but usually
-not by much and that's how timers are done in many cases (through out
-the kernel, timer removals are done with intervening scheduling and no
-one considers those incorrect).  So...
+The time between a thread being marked ready to run and actually running
+has been measured in seconds on a heavily loaded system.  That makes the
+race window potentially as wide as the timer, which is unacceptable.
 
- * If you're worried about the race itself, it was there before,
-   it shouldn't cause any problem, and we really can't help it.
- * If you're worried about the widening of the window, practically,
-   it wouldn't cause problem, and it's how timers are done in many
-   other places.
+James
 
- But if you still don't like it, I can rework it (maybe I'll need to
-add a field to Scsi_Host or scsi_cmnd).  So, please let me know.
-
- Thanks a lot.
-
--- 
-tejun
 
