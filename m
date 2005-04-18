@@ -1,52 +1,74 @@
-From: Linus Torvalds <torvalds@osdl.org>
-Subject: Re: SCSI trees, merges and git status
-Date: Mon, 18 Apr 2005 14:39:09 -0700 (PDT)
-Message-ID: <Pine.LNX.4.58.0504181429570.15725@ppc970.osdl.org>
-References: <1113856118.4998.70.camel@mulgrave>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH scsi-misc-2.6 02/07] scsi: make scsi_send_eh_cmnd use its own timer instead of scmd->eh_timeout
+Date: Tue, 19 Apr 2005 07:31:14 +0900
+Message-ID: <20050418223114.GA32478@htj.dyndns.org>
+References: <20050410184214.4AAD0992@htj.dyndns.org> <20050410184214.B68C4CBA@htj.dyndns.org> <1113838401.4998.27.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <git-owner@vger.kernel.org>
-In-Reply-To: <1113856118.4998.70.camel@mulgrave>
-Sender: git-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: git@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rproxy.gmail.com ([64.233.170.193]:17245 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261195AbVDRWbT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Apr 2005 18:31:19 -0400
+Received: by rproxy.gmail.com with SMTP id j1so1088642rnf
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Apr 2005 15:31:19 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1113838401.4998.27.camel@mulgrave>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jens Axboe <axboe@suse.de>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
+ Hello, James.
 
-
-On Mon, 18 Apr 2005, James Bottomley wrote:
->
-> As of today, I have two SCSI git trees operational:
+On Mon, Apr 18, 2005 at 10:33:21AM -0500, James Bottomley wrote:
+> On Mon, 2005-04-11 at 03:45 +0900, Tejun Heo wrote:
+> > 	scmd->eh_timeout is used to resolve the race between command
+> > 	completion and timeout.  However, during error handling,
+> > 	scsi_send_eh_cmnd uses scmd->eh_timeout.  This creates a race
+> > 	condition between eh and normal completion for a request which
+> > 	has timed out and in the process of error handling.  If the
+> > 	request completes while scmd->eh_timeout is being used by eh,
+> > 	eh timeout is lost and the command will be handled by both eh
+> > 	and completion path.  This patch fixes the race by making
+> > 	scsi_send_eh_cmnd() use its own timer.
+> > 
+> > Signed-off-by: Tejun Heo <htejun@gmail.com>
 > 
-> rsync://www.parisc-linux.org/~jejb/scsi-rc-fixes-2.6.git
+> The logic is wrong in there.
+> 
+> The problem is you cannot rely on the timer being pending as a signal
+> that the command completed normally.  The kernel doesn't define the
+> elapsed time between the eh_action semaphore going up and the process
+> waiting for it being scheduled.  If the timer fires within that
+> undefined interval, you'll think the command timed out when it, in fact,
+> completed normally.
 
-Merged. Here's the command line history:
+ The original code also uses timer pending status as a signal that
+command completed normally in scsi_eh_done() function, and the same
+race also exists in the original code, no matter what we do, unless we
+make timer expiration and removal of the command atomic, there will be
+a window in which command completes normally but considered to have
+timed out as long as we use timer pending status as tie breaker.
 
-	~/git/git-pull-script rsync://www.parisc-linux.org/~jejb/scsi-rc-fixes-2.6.git
-	merge-cache ~/git/git-merge-one-file-script -a
-	write-tree 
-	commit-tree 2c8de70faf92af971667a26a6a397052fc572add -p $(cat .git/HEAD) -p $(cat .git/MERGE_HEAD)
+ The patch moves the test out of scsi_eh_done() into
+scsi_send_eh_cmnd() and this does widen the window by delaying removal
+of timer until after the original thread gets scheduled, but usually
+not by much and that's how timers are done in many cases (through out
+the kernel, timer removals are done with intervening scheduling and no
+one considers those incorrect).  So...
 
-ie the "git-pull-script" failed due to the content merge (I didn't trust 
-the merge-cache stuff enough to put that into it), but then doing the 
-automated merge was successful without any editing, so I just wrote the 
-tree and committed it.
+ * If you're worried about the race itself, it was there before,
+   it shouldn't cause any problem, and we really can't help it.
+ * If you're worried about the widening of the window, practically,
+   it wouldn't cause problem, and it's how timers are done in many
+   other places.
 
-Again, if anybody wants to reproduce this, you'll need to then do the
+ But if you still don't like it, I can rework it (maybe I'll need to
+add a field to Scsi_Host or scsi_cmnd).  So, please let me know.
 
-	checkout-cache -f -a
-	update-cace --refresh
+ Thanks a lot.
 
-afterwards to make your working area match the merged tree.
+-- 
+tejun
 
-> Linus, the rc-fixes repo is ready for applying ... it's the same one I
-> announced on linux-scsi and lkml a while ago just with the git date
-> information updated to be correct (the misc one should wait until after
-> 2.6.12 is final).
-
-Ok. Can you verify? I did a "git diff" between your old head and my new
-head, and it did not show any SCSI files (only the expected arm etc stuff
-that you didn't have in your), so it all _looks_ good. But hey, just to
-make sure that I didn't do anything stupid..
-
-		Linus
