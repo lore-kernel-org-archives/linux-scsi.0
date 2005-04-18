@@ -1,104 +1,81 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/dpt*: remove version.h dependencies
-Date: Sun, 17 Apr 2005 20:19:42 +0200
-Message-ID: <20050417181942.GA3625@stusta.de>
-References: <60807403EABEB443939A5A7AA8A7458B010AAA69@otce2k01.adaptec.com>
+From: James.Smart@Emulex.Com
+Subject: RE: [Announce] Emulex lpfcdriver v8.0.28 available
+Date: Sun, 17 Apr 2005 22:25:37 -0400
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C20628AA@xbl3.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:37905 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261396AbVDQSTs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 17 Apr 2005 14:19:48 -0400
-Content-Disposition: inline
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458B010AAA69@otce2k01.adaptec.com>
+Received: from emulex.emulex.com ([138.239.112.1]:35537 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S261607AbVDRCZp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 17 Apr 2005 22:25:45 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Markus.Lidel@shadowconnect.com
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Apr 15, 2005 at 08:56:25AM -0400, Salyzyn, Mark wrote:
+James,
+
+Sorry, we were in the midst of cutting the patch and testing it. Looks you beat us to it. Let me know if you need anything further from us.
+
+Thanks.
+
+-- James S
+
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
+> Sent: Sunday, April 17, 2005 11:16 AM
+> To: Smart, James
+> Cc: SCSI Mailing List
+> Subject: Re: [Announce] Emulex lpfcdriver v8.0.28 available
 > 
-> You can not remove the entries in sys_info.h (osMajorVersion & friends),
-> this communicates information to the application via the ioctls and the
-> structure shape is important. Change the code to zero the values, leave
-> osType set to OS_LINUX.
-
-Sorry, my fault.
-
-Corrected patch below.
-
-> Sincerely -- Mark Salyzyn
-
-cu
-Adrian
-
-
-<--  snip  -->
-
-
-This patch removes version.h dependencies.
-
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
- drivers/scsi/dpt/sys_info.h |    4 ----
- drivers/scsi/dpt_i2o.c      |    5 -----
- drivers/scsi/dpti.h         |   12 ------------
- 3 files changed, 21 deletions(-)
-
---- linux-2.6.12-rc2-mm3-full/drivers/scsi/dpti.h.old	2005-04-15 01:21:04.000000000 +0200
-+++ linux-2.6.12-rc2-mm3-full/drivers/scsi/dpti.h	2005-04-15 01:21:26.000000000 +0200
-@@ -20,15 +20,7 @@
- #ifndef _DPT_H
- #define _DPT_H
- 
--#ifndef LINUX_VERSION_CODE
--#include <linux/version.h>
--#endif
--
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,00)
--#define MAX_TO_IOP_MESSAGES   (210)
--#else
- #define MAX_TO_IOP_MESSAGES   (255)
--#endif
- #define MAX_FROM_IOP_MESSAGES (255)
- 
- 
-@@ -321,10 +313,6 @@
- static void adpt_delay(int millisec);
- #endif
- 
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
--static struct pci_dev* adpt_pci_find_device(uint vendor, struct pci_dev* from);
--#endif
--
- #if defined __ia64__ 
- static void adpt_ia64_info(sysInfo_S* si);
- #endif
---- linux-2.6.12-rc2-mm3-full/drivers/scsi/dpt_i2o.c.old	2005-04-15 01:21:48.000000000 +0200
-+++ linux-2.6.12-rc2-mm3-full/drivers/scsi/dpt_i2o.c	2005-04-15 01:25:20.000000000 +0200
-@@ -34,7 +34,6 @@
- 
- #define ADDR32 (0)
- 
--#include <linux/version.h>
- #include <linux/module.h>
- 
- MODULE_AUTHOR("Deanna Bonds, with _lots_ of help from Mark Salyzyn");
-@@ -1824,10 +1823,10 @@
- 
- 	memset(&si, 0, sizeof(si));
- 
- 	si.osType = OS_LINUX;
--	si.osMajorVersion = (u8) (LINUX_VERSION_CODE >> 16);
--	si.osMinorVersion = (u8) (LINUX_VERSION_CODE >> 8 & 0x0ff);
--	si.osRevision =     (u8) (LINUX_VERSION_CODE & 0x0ff);
-+	si.osMajorVersion = 0;
-+	si.osMinorVersion = 0;
-+	si.osRevision = 0;
- 	si.busType = SI_PCI_BUS;
- 	si.processorFamily = DPTI_sig.dsProcessorFamily;
- 
-
-
-
+> 
+> On Thu, 2005-04-14 at 08:39 -0400, James.Smart@Emulex.Com wrote:
+> > We have been working with Christoph over the last few weeks 
+> to address
+> > some last comments, and believe that this release is ready for
+> > inclusion with the upstream kernel.
+> 
+> As Christoph said, you could have made my job quite a bit easier by
+> having a patch for the kernel tree as well...
+> 
+> However, this is the form I chose:
+> 
+>  Documentation/scsi/ChangeLog.lpfc  | 1865 +++++++++++++++++++++
+>  Documentation/scsi/lpfc.txt        |   83 
+>  drivers/scsi/Kconfig               |    8 
+>  drivers/scsi/Makefile              |    1 
+>  drivers/scsi/lpfc/Makefile         |   32 
+>  drivers/scsi/lpfc/lpfc.h           |  384 ++++
+>  drivers/scsi/lpfc/lpfc_attr.c      | 1291 ++++++++++++++
+>  drivers/scsi/lpfc/lpfc_compat.h    |   97 +
+>  drivers/scsi/lpfc/lpfc_crtn.h      |  216 ++
+>  drivers/scsi/lpfc/lpfc_ct.c        | 1237 ++++++++++++++
+>  drivers/scsi/lpfc/lpfc_disc.h      |  206 ++
+>  drivers/scsi/lpfc/lpfc_els.c       | 3258 
+> +++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/lpfc/lpfc_hbadisc.c   | 2537 
+> ++++++++++++++++++++++++++++
+>  drivers/scsi/lpfc/lpfc_hw.h        | 2687 
+> ++++++++++++++++++++++++++++++
+>  drivers/scsi/lpfc/lpfc_init.c      | 1739 +++++++++++++++++++
+>  drivers/scsi/lpfc/lpfc_logmsg.h    |   41 
+>  drivers/scsi/lpfc/lpfc_mbox.c      |  646 +++++++
+>  drivers/scsi/lpfc/lpfc_mem.c       |  179 ++
+>  drivers/scsi/lpfc/lpfc_nportdisc.c | 1842 ++++++++++++++++++++
+>  drivers/scsi/lpfc/lpfc_scsi.c      | 1246 ++++++++++++++
+>  drivers/scsi/lpfc/lpfc_scsi.h      |  157 +
+>  drivers/scsi/lpfc/lpfc_sli.c       | 2885 
+> ++++++++++++++++++++++++++++++++
+>  drivers/scsi/lpfc/lpfc_sli.h       |  216 ++
+>  drivers/scsi/lpfc/lpfc_version.h   |   32 
+>  24 files changed, 22885 insertions(+)
+> 
+> We can fix up any remaining issues in-tree.
+> 
+> James
+> 
+> 
+> 
