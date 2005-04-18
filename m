@@ -1,92 +1,23 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Fibre Channel state of the union
-Date: Mon, 18 Apr 2005 17:40:07 +0200
-Message-ID: <20050418154007.GA32225@lst.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC 1 of 9] patches to add diskdump functionality to block layer
+Date: Mon, 18 Apr 2005 16:42:26 +0100
+Message-ID: <20050418154226.GA26503@infradead.org>
+References: <20050418153644.GA25409@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:42180 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S262115AbVDRPkL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Apr 2005 11:40:11 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:9943 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261401AbVDRPma (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Apr 2005 11:42:30 -0400
 Content-Disposition: inline
+In-Reply-To: <20050418153644.GA25409@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: mike.miller@hp.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, marcelo.tosatti@cyclades.com
 
+This looks like a patch for Linux 2.4.  Such major changes for the
+2.4 tree don't make sense anymore, especially for functionality not
+even in Linux 2.6.
 
-With the upcoming merge of the current SCSI development branch (probably
-after the 2.6.12 release), Linux will have more advanced Fibre Channel
-support than any currently available operating system.
-
-The new Fibre Channel (FC) transport class offers two major advantages
-over traditional standalone drivers:
-
- (1) It provides an easy to use library to deal with most aspects of FC
-     remote port management and its integration into SAM and the Linux
-     SCSI layer.
-
-      - a remote port object that sits between the host and the target
-	in the Linux SCSI layer object model
-      - support for remote port based LUN scanning, including live
-	rescanning on fabric topology changes and stable remove port to
-	SCSI target id mappings
-      - a queue freeze facility to handle temporary cable unplugs without
-	generating I/O errors
-     
- (2) a common userspace interface to transport specific and management
-     information in sysfs.  The information provided is based on a sane
-     subset of the SNIA HBA API specification.
- 
-This reduces the burden of writing and maintaining an FC HBA driver
-substantially, for example the recent conversion of the qla2xxx driver to
-use these facilities removes over 3000 lines of code (about 1/5 of the overall
-driver size) while adding new features and a userspace management interface.
-The FC transport class thus allows hardware vendors to concentrate on
-interfacing with the hardware and support their unique features, freeing
-them from the burden of reimplementing basic infrastructure in every driver
-and designing ad hoc management interfaces.
-
-We now have two drivers supporting this infrastructure fully:
-
-  - qla2xxx for Qlogic 2100/2200/23xx HBAs
-  - lpfc for all Emulex SLI2 HBAs
-
-Two drivers for modern hardware don't fully use this infrastructure yet,
-but we are working with the maintainers and expect the drivers to be
-updated to take advantage of the new FC transport class soon.
-
-  - zfcp for the Fibre Channel attachment on the IBM zSeries mainframes
-  - mptfusion for the LSI "Fusion" 909/919(X)/929(X) HBAs
-
-Still missing is an Open Source tool application utilizing our APIs.
-The currently available proprietary applications are inflexible, available
-only for very few of the architectures supported by Linux, and tied to
-specific HBAs. The common API and hardware independence provide a great
-opportunity for the Hardware vendors to collaborate on a single Open Source
-management application and leverage the cost savings of an open development
-method.
-
-We are also looking forward to a bridge from the Linux
-management interfaces to the "industry-standard" SNIA HBA API,
-allowing various management applications to work out of the box with our
-stack.
-
-To make these new features available to Enterprise users and reduce the
-fragmentation in driver and management space we will be working with the
-major players in the Storage Industry and the Linux Distribution vendors
-to support and certify this stack in the near future.
-
-Special thanks go to Emulex and James Smart in particular for implementing
-the majority of the new Fibre Channel transport class.  We also want to
-thank Andrew Vasquez at Qlogic for providing valuable input on the
-transport class design and for updating the qla2xx driver to use the new
-facilities quickly.
-
-The Linux SCSI community plans to provide a similar framework for
-Serial Attached SCSI (SAS) transports in the near future.
-
-
-Thanks to Arjan van de Ven, Peter Jones, Randy Dunlap, Rik van Riel,
-Nikita Danilov and James Bottomley for reviewing this document and
-suggesting various improvements.
