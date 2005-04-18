@@ -1,81 +1,102 @@
-From: James.Smart@Emulex.Com
-Subject: RE: [Announce] Emulex lpfcdriver v8.0.28 available
-Date: Sun, 17 Apr 2005 22:25:37 -0400
-Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C20628AA@xbl3.ad.emulex.com>
+From: sai narasimhamurthy <sai_narasi@yahoo.com>
+Subject: Re: increasing scsi_max_sg / max_segments for scsi writes/reads
+Date: Sun, 17 Apr 2005 23:17:23 -0700 (PDT)
+Message-ID: <20050418061723.49716.qmail@web54105.mail.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:35537 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S261607AbVDRCZp convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 17 Apr 2005 22:25:45 -0400
-Content-class: urn:content-classes:message
+Received: from web54105.mail.yahoo.com ([206.190.37.240]:32905 "HELO
+	web54105.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S261695AbVDRGRY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Apr 2005 02:17:24 -0400
+In-Reply-To: 6667
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
+To: "Randy.Dunlap" <rddunlap@osdl.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-James,
+Hi , 
+I tried working on scsi_malloc to increase burst size
+, but to no avail ..all I got was hanged system every
+time I started data transfers! 
+Has anyone worked on scsi_malloc , I am still trying
+to figure out what changes were made in 2.6 to
+overcome this problem of limited bursts. 
 
-Sorry, we were in the midst of cutting the patch and testing it. Looks you beat us to it. Let me know if you need anything further from us.
+Any pointers are very greatly welcome...I have never
+worked on this part of the code before .
 
-Thanks.
 
--- James S
+Sai
 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
-> Sent: Sunday, April 17, 2005 11:16 AM
-> To: Smart, James
-> Cc: SCSI Mailing List
-> Subject: Re: [Announce] Emulex lpfcdriver v8.0.28 available
+
+
+
+
+
+
+
+
+
+--- "Randy.Dunlap" <rddunlap@osdl.org> wrote:
+> On Sat, 9 Apr 2005 19:35:52 -0700 (PDT) sai
+> narasimhamurthy wrote:
 > 
+> | Hi, 
+> | I had posted a question on increasing the scsi
+> | read/write sectors  per command. I figured out
+> some of
+> | the things, but many questions still exist. 
+> | 
+> | I was wondering why the maximum writes I could get
+> | from a single scsi write command could never
+> exceed
+> | 204 
+> | 4096B  segments . I traced it to :  
+> | 
+> | static const int scsi_max_sg = PAGE_SIZE /
+> | sizeof(struct scatterlist)
+> | 
+> | in scsi_merge.c .(which amounts to 204)  
+> | 
+> | Is this the limit of the maximum blocks we can
+> | read/write through a single scsi command, atleast
+> for
+> | the given kernel (2.4.29) ? How can I increase
+> | it??????
+> | 
+> | I am on a P3 Dell poweredgde 2400 . 
 > 
-> On Thu, 2005-04-14 at 08:39 -0400, James.Smart@Emulex.Com wrote:
-> > We have been working with Christoph over the last few weeks 
-> to address
-> > some last comments, and believe that this release is ready for
-> > inclusion with the upstream kernel.
+> Did you read the comment immediately above that
+> calculation?
 > 
-> As Christoph said, you could have made my job quite a bit easier by
-> having a patch for the kernel tree as well...
+> /*
+>  * scsi_malloc() can only dish out items of
+> PAGE_SIZE or less, so we cannot
+>  * build a request that requires an sg table
+> allocation of more than that.
+>  */
 > 
-> However, this is the form I chose:
+> so scsi_malloc() would need some reworking to handle
+> more.
 > 
->  Documentation/scsi/ChangeLog.lpfc  | 1865 +++++++++++++++++++++
->  Documentation/scsi/lpfc.txt        |   83 
->  drivers/scsi/Kconfig               |    8 
->  drivers/scsi/Makefile              |    1 
->  drivers/scsi/lpfc/Makefile         |   32 
->  drivers/scsi/lpfc/lpfc.h           |  384 ++++
->  drivers/scsi/lpfc/lpfc_attr.c      | 1291 ++++++++++++++
->  drivers/scsi/lpfc/lpfc_compat.h    |   97 +
->  drivers/scsi/lpfc/lpfc_crtn.h      |  216 ++
->  drivers/scsi/lpfc/lpfc_ct.c        | 1237 ++++++++++++++
->  drivers/scsi/lpfc/lpfc_disc.h      |  206 ++
->  drivers/scsi/lpfc/lpfc_els.c       | 3258 
-> +++++++++++++++++++++++++++++++++++++
->  drivers/scsi/lpfc/lpfc_hbadisc.c   | 2537 
-> ++++++++++++++++++++++++++++
->  drivers/scsi/lpfc/lpfc_hw.h        | 2687 
-> ++++++++++++++++++++++++++++++
->  drivers/scsi/lpfc/lpfc_init.c      | 1739 +++++++++++++++++++
->  drivers/scsi/lpfc/lpfc_logmsg.h    |   41 
->  drivers/scsi/lpfc/lpfc_mbox.c      |  646 +++++++
->  drivers/scsi/lpfc/lpfc_mem.c       |  179 ++
->  drivers/scsi/lpfc/lpfc_nportdisc.c | 1842 ++++++++++++++++++++
->  drivers/scsi/lpfc/lpfc_scsi.c      | 1246 ++++++++++++++
->  drivers/scsi/lpfc/lpfc_scsi.h      |  157 +
->  drivers/scsi/lpfc/lpfc_sli.c       | 2885 
-> ++++++++++++++++++++++++++++++++
->  drivers/scsi/lpfc/lpfc_sli.h       |  216 ++
->  drivers/scsi/lpfc/lpfc_version.h   |   32 
->  24 files changed, 22885 insertions(+)
+> OTOH, it appears that this is all removed in
+> 2.6.10++, so moving to
+> 2.6.recent is probably your best choice.
 > 
-> We can fix up any remaining issues in-tree.
+> ---
+> ~Randy
+> -
+> To unsubscribe from this list: send the line
+> "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at 
+> http://vger.kernel.org/majordomo-info.html
 > 
-> James
-> 
-> 
-> 
+
+
+		
+__________________________________ 
+Do you Yahoo!? 
+Yahoo! Small Business - Try our new resources site!
+http://smallbusiness.yahoo.com/resources/ 
