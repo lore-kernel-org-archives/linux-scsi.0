@@ -1,105 +1,34 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: SCSI trees, merges and git status
-Date: Mon, 18 Apr 2005 19:13:14 -0500
-Message-ID: <1113869594.4998.103.camel@mulgrave>
-References: <1113856118.4998.70.camel@mulgrave>
-	 <Pine.LNX.4.58.0504181429570.15725@ppc970.osdl.org>
-	 <1113866092.4998.92.camel@mulgrave>
-	 <Pine.LNX.4.58.0504181651241.15725@ppc970.osdl.org>
+From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Subject: Re: [RFC 1 of 9] patches to add diskdump functionality to block layer
+Date: Mon, 18 Apr 2005 16:40:20 -0300
+Message-ID: <20050418194020.GB759@logos.cnet>
+References: <D4CFB69C345C394284E4B78B876C1CF107DC050F@cceexc23.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <git-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.58.0504181651241.15725@ppc970.osdl.org>
-Sender: git-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: git@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:7645 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261212AbVDSA1W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Apr 2005 20:27:22 -0400
+Content-Disposition: inline
+In-Reply-To: <D4CFB69C345C394284E4B78B876C1CF107DC050F@cceexc23.americas.cpqcorp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Miller, Mike (OS Dev)" <mike.miller@hp.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, 2005-04-18 at 17:03 -0700, Linus Torvalds wrote:
-> The patches from you I have in my tree are:
-> 
-> 	scsi: add DID_REQUEUE to the error handling
-> 	zfcp: add point-2-point support
-> 	[PATCH] Convert i2o to compat_ioctl
-> 	[PATCH] kill old EH constants
-> 	[PATCH] scsi: remove meaningless scsi_cmnd->serial_number_at_timeout field
-> 	[PATCH] scsi: remove unused scsi_cmnd->internal_timeout field
-> 	[PATCH] remove outdated print_* functions
-> 	[PATCH] consolidate timeout defintions in scsi.h
+On Mon, Apr 18, 2005 at 12:14:06PM -0500, Miller, Mike (OS Dev) wrote:
+> > From: Christoph Hellwig [mailto:hch@infradead.org] 
+> > 
+> > This looks like a patch for Linux 2.4.  Such major changes for the
+> > 2.4 tree don't make sense anymore, especially for 
+> > functionality not even in Linux 2.6.
+> > 
+> This is for 2.4, I should have specified that in the Subject line. We
+> did this work because of customer demand and a request from a vendor. 
+> Marcelo, is this something that you be interested in adding to 2.4? If
+> not, I'll just submit this directly to the vendor.
 
-Those are a subset of patches from my scsi-misc-2.6 tree .. that's the
-problem.  The actual patches should be:
+Mike,
 
-  o zfcp: convert to compat_ioctl
-  o sg.c: update
-  o updates for CFQ oops fix
-  o finally fix 53c700 to use the generic iomem infrastructure
-  o fix NMI lockup with CFQ scheduler
-
-I've redone the scsi-rc-fixes-2.6 tree to remove all the contamination
-and reset the head correctly.
-
-I've verified that if I strip your tree back to 
-
-54ff646c589dcc35182d01c5b557806759301aa3
-
-and then do a 
-
-git-pull-script rsync://www.parisc-linux.org/~jejb/scsi-rc-fixes-2.6.git
-
-Then the git-pull... script actually does the merge and the resulting
-tree checks out against BK
-
-Sorry for the screw up.
-
-James
-
-
-> or at least that's what they claim in their changelogs.
-> 
-> Oh, and here's the diffstat that matches "scsi":
-> 
->  drivers/block/scsi_ioctl.c                 |    5 -
->  drivers/s390/scsi/zfcp_aux.c               |    4 -
->  drivers/s390/scsi/zfcp_def.h               |    5 +
->  drivers/s390/scsi/zfcp_erp.c               |   20 +++++
->  drivers/s390/scsi/zfcp_fsf.c               |   38 ++++++++--
->  drivers/s390/scsi/zfcp_fsf.h               |    6 +
->  drivers/s390/scsi/zfcp_sysfs_adapter.c     |    6 +
->  drivers/scsi/53c7xx.c                      |   23 +++---
->  drivers/scsi/BusLogic.c                    |    7 -
->  drivers/scsi/NCR5380.c                     |    9 +-
->  drivers/scsi/advansys.c                    |    7 -
->  drivers/scsi/aha152x.c                     |   17 ++--
->  drivers/scsi/arm/acornscsi.c               |    9 +-
->  drivers/scsi/arm/fas216.c                  |    9 +-
->  drivers/scsi/arm/scsi.h                    |    2 
->  drivers/scsi/atari_NCR5380.c               |    9 +-
->  drivers/scsi/constants.c                   |    2 
->  drivers/scsi/ips.c                         |    7 -
->  drivers/scsi/ncr53c8xx.c                   |   14 ---
->  drivers/scsi/pci2000.c                     |    4 -
->  drivers/scsi/qla2xxx/qla_dbg.c             |    6 -
->  drivers/scsi/scsi.c                        |    5 -
->  drivers/scsi/scsi.h                        |   43 -----------
->  drivers/scsi/scsi_error.c                  |   11 ---
->  drivers/scsi/scsi_ioctl.c                  |    5 -
->  drivers/scsi/scsi_lib.c                    |    2 
->  drivers/scsi/scsi_obsolete.h               |  106 -----------------------------
->  drivers/scsi/scsi_priv.h                   |    5 -
->  drivers/scsi/seagate.c                     |    5 -
->  drivers/scsi/sg.c                          |    3 
->  drivers/scsi/sun3_NCR5380.c                |    9 +-
->  drivers/scsi/sym53c8xx_2/sym_glue.c        |    6 -
->  drivers/scsi/ultrastor.c                   |    4 -
-> 
-> so it doesn't look like there's a _lot_ wrong. Send in a patch to revert 
-> anything that needs reverting..
-> 
-> 		Linus
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Nope, that does not look suitable for v2.4.x.
