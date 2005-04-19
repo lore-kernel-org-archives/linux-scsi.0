@@ -1,87 +1,105 @@
-From: Linus Torvalds <torvalds@osdl.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: SCSI trees, merges and git status
-Date: Mon, 18 Apr 2005 17:03:44 -0700 (PDT)
-Message-ID: <Pine.LNX.4.58.0504181651241.15725@ppc970.osdl.org>
-References: <1113856118.4998.70.camel@mulgrave>  <Pine.LNX.4.58.0504181429570.15725@ppc970.osdl.org>
- <1113866092.4998.92.camel@mulgrave>
+Date: Mon, 18 Apr 2005 19:13:14 -0500
+Message-ID: <1113869594.4998.103.camel@mulgrave>
+References: <1113856118.4998.70.camel@mulgrave>
+	 <Pine.LNX.4.58.0504181429570.15725@ppc970.osdl.org>
+	 <1113866092.4998.92.camel@mulgrave>
+	 <Pine.LNX.4.58.0504181651241.15725@ppc970.osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <git-owner@vger.kernel.org>
-In-Reply-To: <1113866092.4998.92.camel@mulgrave>
+In-Reply-To: <Pine.LNX.4.58.0504181651241.15725@ppc970.osdl.org>
 Sender: git-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Linus Torvalds <torvalds@osdl.org>
 Cc: git@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-On Mon, 18 Apr 2005, James Bottomley wrote:
+On Mon, 2005-04-18 at 17:03 -0700, Linus Torvalds wrote:
+> The patches from you I have in my tree are:
 > 
-> It looks like the merge tree has contamination from the scsi-misc-2.6
-> tree ... possibly because the hosting system got the merged objects when
-> I pushed.
+> 	scsi: add DID_REQUEUE to the error handling
+> 	zfcp: add point-2-point support
+> 	[PATCH] Convert i2o to compat_ioctl
+> 	[PATCH] kill old EH constants
+> 	[PATCH] scsi: remove meaningless scsi_cmnd->serial_number_at_timeout field
+> 	[PATCH] scsi: remove unused scsi_cmnd->internal_timeout field
+> 	[PATCH] remove outdated print_* functions
+> 	[PATCH] consolidate timeout defintions in scsi.h
 
-Nope, the way I merge, if I get a few objects it shouldn't matter at all. 
-I'll just look at your HEAD, and merge with the objects that represents.
+Those are a subset of patches from my scsi-misc-2.6 tree .. that's the
+problem.  The actual patches should be:
 
-Afterwards, if I have extra objects, I'll see them with fsck-cache. 
+  o zfcp: convert to compat_ioctl
+  o sg.c: update
+  o updates for CFQ oops fix
+  o finally fix 53c700 to use the generic iomem infrastructure
+  o fix NMI lockup with CFQ scheduler
 
-> Could you strip it back and I'll check out the repos on www.parisc-
-> linux.org?
+I've redone the scsi-rc-fixes-2.6 tree to remove all the contamination
+and reset the head correctly.
 
-Git does work like BK in the way that you cannot remove history when you
-have distributed it. Once it's there, it's there.
+I've verified that if I strip your tree back to 
 
-The patches from you I have in my tree are:
+54ff646c589dcc35182d01c5b557806759301aa3
 
-	scsi: add DID_REQUEUE to the error handling
-	zfcp: add point-2-point support
-	[PATCH] Convert i2o to compat_ioctl
-	[PATCH] kill old EH constants
-	[PATCH] scsi: remove meaningless scsi_cmnd->serial_number_at_timeout field
-	[PATCH] scsi: remove unused scsi_cmnd->internal_timeout field
-	[PATCH] remove outdated print_* functions
-	[PATCH] consolidate timeout defintions in scsi.h
+and then do a 
 
-or at least that's what they claim in their changelogs.
+git-pull-script rsync://www.parisc-linux.org/~jejb/scsi-rc-fixes-2.6.git
 
-Oh, and here's the diffstat that matches "scsi":
+Then the git-pull... script actually does the merge and the resulting
+tree checks out against BK
 
- drivers/block/scsi_ioctl.c                 |    5 -
- drivers/s390/scsi/zfcp_aux.c               |    4 -
- drivers/s390/scsi/zfcp_def.h               |    5 +
- drivers/s390/scsi/zfcp_erp.c               |   20 +++++
- drivers/s390/scsi/zfcp_fsf.c               |   38 ++++++++--
- drivers/s390/scsi/zfcp_fsf.h               |    6 +
- drivers/s390/scsi/zfcp_sysfs_adapter.c     |    6 +
- drivers/scsi/53c7xx.c                      |   23 +++---
- drivers/scsi/BusLogic.c                    |    7 -
- drivers/scsi/NCR5380.c                     |    9 +-
- drivers/scsi/advansys.c                    |    7 -
- drivers/scsi/aha152x.c                     |   17 ++--
- drivers/scsi/arm/acornscsi.c               |    9 +-
- drivers/scsi/arm/fas216.c                  |    9 +-
- drivers/scsi/arm/scsi.h                    |    2 
- drivers/scsi/atari_NCR5380.c               |    9 +-
- drivers/scsi/constants.c                   |    2 
- drivers/scsi/ips.c                         |    7 -
- drivers/scsi/ncr53c8xx.c                   |   14 ---
- drivers/scsi/pci2000.c                     |    4 -
- drivers/scsi/qla2xxx/qla_dbg.c             |    6 -
- drivers/scsi/scsi.c                        |    5 -
- drivers/scsi/scsi.h                        |   43 -----------
- drivers/scsi/scsi_error.c                  |   11 ---
- drivers/scsi/scsi_ioctl.c                  |    5 -
- drivers/scsi/scsi_lib.c                    |    2 
- drivers/scsi/scsi_obsolete.h               |  106 -----------------------------
- drivers/scsi/scsi_priv.h                   |    5 -
- drivers/scsi/seagate.c                     |    5 -
- drivers/scsi/sg.c                          |    3 
- drivers/scsi/sun3_NCR5380.c                |    9 +-
- drivers/scsi/sym53c8xx_2/sym_glue.c        |    6 -
- drivers/scsi/ultrastor.c                   |    4 -
+Sorry for the screw up.
 
-so it doesn't look like there's a _lot_ wrong. Send in a patch to revert 
-anything that needs reverting..
+James
 
-		Linus
+
+> or at least that's what they claim in their changelogs.
+> 
+> Oh, and here's the diffstat that matches "scsi":
+> 
+>  drivers/block/scsi_ioctl.c                 |    5 -
+>  drivers/s390/scsi/zfcp_aux.c               |    4 -
+>  drivers/s390/scsi/zfcp_def.h               |    5 +
+>  drivers/s390/scsi/zfcp_erp.c               |   20 +++++
+>  drivers/s390/scsi/zfcp_fsf.c               |   38 ++++++++--
+>  drivers/s390/scsi/zfcp_fsf.h               |    6 +
+>  drivers/s390/scsi/zfcp_sysfs_adapter.c     |    6 +
+>  drivers/scsi/53c7xx.c                      |   23 +++---
+>  drivers/scsi/BusLogic.c                    |    7 -
+>  drivers/scsi/NCR5380.c                     |    9 +-
+>  drivers/scsi/advansys.c                    |    7 -
+>  drivers/scsi/aha152x.c                     |   17 ++--
+>  drivers/scsi/arm/acornscsi.c               |    9 +-
+>  drivers/scsi/arm/fas216.c                  |    9 +-
+>  drivers/scsi/arm/scsi.h                    |    2 
+>  drivers/scsi/atari_NCR5380.c               |    9 +-
+>  drivers/scsi/constants.c                   |    2 
+>  drivers/scsi/ips.c                         |    7 -
+>  drivers/scsi/ncr53c8xx.c                   |   14 ---
+>  drivers/scsi/pci2000.c                     |    4 -
+>  drivers/scsi/qla2xxx/qla_dbg.c             |    6 -
+>  drivers/scsi/scsi.c                        |    5 -
+>  drivers/scsi/scsi.h                        |   43 -----------
+>  drivers/scsi/scsi_error.c                  |   11 ---
+>  drivers/scsi/scsi_ioctl.c                  |    5 -
+>  drivers/scsi/scsi_lib.c                    |    2 
+>  drivers/scsi/scsi_obsolete.h               |  106 -----------------------------
+>  drivers/scsi/scsi_priv.h                   |    5 -
+>  drivers/scsi/seagate.c                     |    5 -
+>  drivers/scsi/sg.c                          |    3 
+>  drivers/scsi/sun3_NCR5380.c                |    9 +-
+>  drivers/scsi/sym53c8xx_2/sym_glue.c        |    6 -
+>  drivers/scsi/ultrastor.c                   |    4 -
+> 
+> so it doesn't look like there's a _lot_ wrong. Send in a patch to revert 
+> anything that needs reverting..
+> 
+> 		Linus
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
