@@ -1,51 +1,58 @@
 From: "Barry K. Nathan" <barryn@pobox.com>
-Subject: [PATCH] fix ultrastor.c compile error
-Date: Tue, 19 Apr 2005 06:00:36 -0700
-Message-ID: <20050419130036.GC8541@ip68-4-98-123.oc.oc.cox.net>
+Subject: [PATCH] fix aic7xxx_osm.c compile failure (gcc 2.95.x only)
+Date: Tue, 19 Apr 2005 06:31:24 -0700
+Message-ID: <20050419133123.GD8541@ip68-4-98-123.oc.oc.cox.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from orb.pobox.com ([207.8.226.5]:30085 "EHLO orb.pobox.com")
-	by vger.kernel.org with ESMTP id S261494AbVDSNAj (ORCPT
+Received: from orb.pobox.com ([207.8.226.5]:44168 "EHLO orb.pobox.com")
+	by vger.kernel.org with ESMTP id S261516AbVDSNb0 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Apr 2005 09:00:39 -0400
+	Tue, 19 Apr 2005 09:31:26 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-This is against linux-2.6 head 9d469ee9f21c680c41dbffe5b0f36ab5010ca8b1:
+I get this compile error on linux-2.6 head
+9d469ee9f21c680c41dbffe5b0f36ab5010ca8b1, but only with gcc 2.95.3, not
+gcc 3.4.3:
 
-  CC [M]  drivers/scsi/ultrastor.o
-drivers/scsi/ultrastor.c: In function `ultrastor_queuecommand':
-drivers/scsi/ultrastor.c:302: warning: matching constraint does not
-allow a register
-drivers/scsi/ultrastor.c:302: warning: matching constraint does not
-allow a register
-drivers/scsi/ultrastor.c: In function `ultrastor_abort':
-drivers/scsi/ultrastor.c:948: error: `FAILURE' undeclared (first use in
+  CC [M]  drivers/scsi/aic7xxx/aic7xxx_osm.o
+drivers/scsi/aic7xxx/aic7xxx_osm.c: In function `ahc_linux_init':
+drivers/scsi/aic7xxx/aic7xxx_osm.c:3608: parse error before `int'
+drivers/scsi/aic7xxx/aic7xxx_osm.c:3609: `rc' undeclared (first use in
 this function)
-drivers/scsi/ultrastor.c:948: error: (Each undeclared identifier is
+drivers/scsi/aic7xxx/aic7xxx_osm.c:3609: (Each undeclared identifier is
 reported only once
-drivers/scsi/ultrastor.c:948: error: for each function it appears in.)
-make[2]: *** [drivers/scsi/ultrastor.o] Error 1
+drivers/scsi/aic7xxx/aic7xxx_osm.c:3609: for each function it appears
+in.)
+drivers/scsi/aic7xxx/aic7xxx_osm.c: At top level:
+drivers/scsi/aic7xxx/aic7xxx_osm.c:744: warning: `ahc_linux_detect'
+defined but not used
+make[3]: *** [drivers/scsi/aic7xxx/aic7xxx_osm.o] Error 1
+make[2]: *** [drivers/scsi/aic7xxx] Error 2
 make[1]: *** [drivers/scsi] Error 2
 make: *** [drivers] Error 2
 
-This patch fixes the compile error, but not the warning. I have
-compile-tested this patch but I do not have the hardware so I don't
-believe I can execute this code.
+This patch fixes the compile error. I've compile-tested this but I
+haven't actually run it.
 
 Signed-off-by: Barry K. Nathan <barryn@pobox.com>
 
---- linux-2.6.12-rc2-9d469ee9f21c680c41dbffe5b0f36ab5010ca8b1-bkn1/drivers/scsi/ultrastor.c	2005-04-19 00:46:13.689904927 -0700
-+++ linux-2.6.12-rc2-9d469ee9f21c680c41dbffe5b0f36ab5010ca8b1-bkn2/drivers/scsi/ultrastor.c	2005-04-19 05:56:12.135432363 -0700
-@@ -945,7 +945,7 @@
- 	       config.mscp[mscp_index].SCint, SCpnt);
- #endif
-     if (config.mscp[mscp_index].SCint == 0)
--	return FAILURE;
-+	return FAILED;
- 
-     if (config.mscp[mscp_index].SCint != SCpnt) panic("Bad abort");
-     config.mscp[mscp_index].SCint = NULL;
+--- linux-2.6.12-rc2-9d469ee9f21c680c41dbffe5b0f36ab5010ca8b1-bkn2/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-04-19 00:46:11.666064007 -0700
++++ linux-2.6.12-rc2-9d469ee9f21c680c41dbffe5b0f36ab5010ca8b1-bkn3/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-04-19 06:23:00.099780019 -0700
+@@ -3602,10 +3602,12 @@
+ ahc_linux_init(void)
+ {
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
++	int rc;
++
+ 	ahc_linux_transport_template = spi_attach_transport(&ahc_linux_transport_functions);
+ 	if (!ahc_linux_transport_template)
+ 		return -ENODEV;
+-	int rc = ahc_linux_detect(&aic7xxx_driver_template);
++	rc = ahc_linux_detect(&aic7xxx_driver_template);
+ 	if (rc)
+ 		return rc;
+ 	spi_release_transport(ahc_linux_transport_template);
