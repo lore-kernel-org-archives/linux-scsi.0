@@ -1,49 +1,36 @@
-From: Jesper Juhl <juhl-lkml@dif.dk>
-Subject: test of 'good_bytes' in scsi_io_completion is always true (in
- drivers/scsi/scsi_lib.c)
-Date: Wed, 20 Apr 2005 00:38:27 +0200 (CEST)
-Message-ID: <Pine.LNX.4.62.0504200030180.2074@dragon.hyggekrogen.localhost>
+From: Dheeraj Pandey <dheeraj@gmail.com>
+Subject: writev to SCSI disks: Does sg work?
+Date: Tue, 19 Apr 2005 16:09:40 -0700
+Message-ID: <363f92a80504191609b2bc1e2@mail.gmail.com>
+Reply-To: Dheeraj Pandey <dheeraj@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dif.dk ([193.138.115.101]:54920 "EHLO saerimmer.dif.dk")
-	by vger.kernel.org with ESMTP id S261705AbVDSWfZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Apr 2005 18:35:25 -0400
+Received: from rproxy.gmail.com ([64.233.170.199]:61164 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261739AbVDSXJm convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Apr 2005 19:09:42 -0400
+Received: by rproxy.gmail.com with SMTP id a41so66642rng
+        for <linux-scsi@vger.kernel.org>; Tue, 19 Apr 2005 16:09:40 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, Eric Youngdale <eric@andante.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+Hi!
 
-in drivers/scsi/scsi_lib.c::scsi_io_completion() 'good_bytes' is tested 
-for being >= 0, but 'good_bytes' is an unsigned int, so that test is 
-always true. My *guess* is that what was intended was to test if 
-good_bytes is > 0, but I don't know this code well enough to be sure. 
-The patch below makes the change to test if it's > 0, but if the code in 
-the 'if' really wants to run if it's >= 0, then we might as well just 
-remove the 'if'.
+I was wondering if I did a simple writev to a SCSI disk, does it take
+the sg path to the device? I am guessing this sg (REQ_SPECIAL) is only
+true for character devices (and ioctl's) and not block devices.
 
-In any case, the current code looks fishy.
+These are my questions:
+   - Is sg a common feature among SCSI disks these days? How do I know
+what disks support this feature?
+   - How does one make writev work for SCSI disk (as a block device)
+in direct_io?
+   - If I use SCSI disks as character device, can I use writev on the
+character device file, and will sg codepath be taken?
 
-
-Signed-off-by: Jesper Juhl <juhl-lkml@dif.dk>
-
---- linux-2.6.12-rc2-mm3-orig/drivers/scsi/scsi_lib.c	2005-04-11 21:20:49.000000000 +0200
-+++ linux-2.6.12-rc2-mm3/drivers/scsi/scsi_lib.c	2005-04-20 00:29:14.000000000 +0200
-@@ -766,7 +766,7 @@ void scsi_io_completion(struct scsi_cmnd
- 	 * Next deal with any sectors which we were able to correctly
- 	 * handle.
- 	 */
--	if (good_bytes >= 0) {
-+	if (good_bytes > 0) {
- 		SCSI_LOG_HLCOMPLETE(1, printk("%ld sectors total, %d bytes done.\n",
- 					      req->nr_sectors, good_bytes));
- 		SCSI_LOG_HLCOMPLETE(1, printk("use_sg is %d\n", cmd->use_sg));
-
-
-
-
-Please keep me on CC:
-
-
+Thanks
+Dheeraj
