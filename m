@@ -1,30 +1,46 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Can a non-sg scsi write command be more than PAGE_SIZE length?
-Date: Tue, 19 Apr 2005 10:29:26 +0100
-Message-ID: <20050419092926.GA9785@infradead.org>
-References: <20050419084730.GA96767@dspnet.fr.eu.org> <20050419085008.GA9194@infradead.org> <20050419092431.GA98975@dspnet.fr.eu.org>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Regarding posted scsi midlyaer patchsets
+Date: Tue, 19 Apr 2005 14:34:41 +0200
+Message-ID: <20050419123436.GA2827@suse.de>
+References: <20050417224101.GA2344@htj.dyndns.org> <1113833744.4998.13.camel@mulgrave> <4263CB26.2070609@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:33256 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261419AbVDSJ31 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Apr 2005 05:29:27 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:28891 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261235AbVDSMer (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Apr 2005 08:34:47 -0400
 Content-Disposition: inline
-In-Reply-To: <20050419092431.GA98975@dspnet.fr.eu.org>
+In-Reply-To: <4263CB26.2070609@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Olivier Galibert <galibert@pobox.com>, "Hack inc." <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
 
-On Tue, Apr 19, 2005 at 11:24:31AM +0200, Olivier Galibert wrote:
-> > Yes, it's allowed.
+On Mon, Apr 18 2005, Tejun Heo wrote:
+>  And, James, regarding REQ_SOFTBARRIER, if the REQ_SOFTBARRIER thing can
+> be removed from SCSI midlayer, do you agree to change REQ_SPECIAL to
+> mean special requests?  If so, I have three proposals.
 > 
-> Thanks.  Pages in that case are continuous then, right?
+>  * move REQ_SOFTBARRIER setting to right after the allocation of
+> scsi_cmnd in scsi_prep_fn().  This will be the only place where
+> REQ_SOFTBARRIER is used in SCSI midlayer, making it less pervasive.
+>  * Or, make another API which sets REQ_SOFTBARRIER on requeue.  maybe
+> blk_requeue_ordered_request()?
+>  * Or, make blk_insert_request() not set REQ_SPECIAL on requeue.  IMHO,
+> this is a bit too subtle.
+> 
+>  I like #1 or #2.  Jens, what do you think?  Do you agree to remove
+> requeue feature from blk_insert_request()?
 
-Good question actually.  I know XFS does passed vmalloc'ed memory down
-the block I/O path, but that's as a scatter/gather request.  All non-s/g
-request should be contingous I think.
+#2 is the best, imho. We really want to maintain ordering on requeue
+always, marking it softbarrier automatically in the block layer means
+the io schedulers don't have to do anything specific to handle it.
 
-We really need to write down the rules about what memory can be passed
-down the block I/O path - XFS for example sends kmalloced memory down
-which all the iSCSI implementations don't like at all.
+I have no problem with removing the requeue stuff from
+blk_insert_request(). That function is horribly weird as it is, it is
+supposed to look generic but is really just a scsi special case.
+
+-- 
+Jens Axboe
+
