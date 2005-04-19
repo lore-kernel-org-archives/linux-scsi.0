@@ -1,41 +1,42 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 02/05] scsi: remove REQ_SPECIAL in scsi_init_io()
-Date: Wed, 20 Apr 2005 08:15:49 +0900 (KST)
-Message-ID: <20050419231435.EB64B601@htj.dyndns.org>
-References: <20050419231435.D85F89C0@htj.dyndns.org>
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261747AbVDSXXJ@vger.kernel.org>
-In-Reply-To: <20050419231435.D85F89C0@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@steeleye.com, axboe@suse.de, Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: streamlining the sym2 io submission path
+Date: Wed, 20 Apr 2005 00:43:23 +0100
+Message-ID: <20050419234323.GA31352@parcelfarce.linux.theplanet.co.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:10125 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261254AbVDSXnS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Apr 2005 19:43:18 -0400
+Received: from willy by parcelfarce.linux.theplanet.co.uk with local (Exim 4.43)
+	id 1DO2NH-0000vj-V4
+	for linux-scsi@vger.kernel.org; Wed, 20 Apr 2005 00:43:23 +0100
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-02_scsi_REQ_SPECIAL_semantic_scsi_init_io.patch
 
-	scsi_init_io() used to set REQ_SPECIAL when it fails sg
-	allocation before requeueing the request by returning
-	BLKPREP_DEFER.  REQ_SPECIAL is being updated to mean special
-	requests.  So, remove REQ_SPECIAL setting.
+I've been looking at speeding up sym2's queuecommand method.  In my
+current development tree, I've removed most of sym_queue_command()
+and inlined the remains into sym53c8xx_queuecommand().  There's some
+funny stuff I wouldn't mind some advice with:
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+We fail the first command to the device if the device is marked as
+NOSCAN or the lun is non-0 and the device isn't marked as SCAN LUNS.
+I think the first part should be moved to slave_alloc(); it's a little
+weird, but supportable.  The second part troubles me a little -- is the
+blacklist in the midlayer good enough to handle this, or should I leave
+this mechanism in?
 
- scsi_lib.c |    4 +---
- 1 files changed, 1 insertion(+), 3 deletions(-)
+The driver currently fails commands sent to the lun of the host adapter.
+Is this the correct behaviour?  What should the driver do?
 
-Index: scsi-reqfn-export/drivers/scsi/scsi_lib.c
-===================================================================
---- scsi-reqfn-export.orig/drivers/scsi/scsi_lib.c	2005-04-20 08:13:33.000000000 +0900
-+++ scsi-reqfn-export/drivers/scsi/scsi_lib.c	2005-04-20 08:13:34.000000000 +0900
-@@ -935,10 +935,8 @@ static int scsi_init_io(struct scsi_cmnd
- 	 * if sg table allocation fails, requeue request later.
- 	 */
- 	sgpnt = scsi_alloc_sgtable(cmd, GFP_ATOMIC);
--	if (unlikely(!sgpnt)) {
--		req->flags |= REQ_SPECIAL;
-+	if (unlikely(!sgpnt))
- 		return BLKPREP_DEFER;
--	}
- 
- 	cmd->request_buffer = (char *) sgpnt;
- 	cmd->request_bufflen = req->nr_sectors << 9;
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
