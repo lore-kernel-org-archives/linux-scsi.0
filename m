@@ -1,44 +1,65 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH] remove some dead code in qla2xxx
-Date: Tue, 19 Apr 2005 00:32:40 -0700
-Message-ID: <20050419073240.GE5999@plap.qlogic.org>
-References: <20050418130334.GA30034@lst.de>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [ANNOUNCE] sdparm 0.90
+Date: Tue, 19 Apr 2005 10:33:14 +1000
+Message-ID: <426451CA.1040301@torque.net>
+References: <4263B56B.2010905@torque.net> <4263F189.3000700@pobox.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch01.qlogic.com ([198.70.193.200]:7590 "EHLO
-	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S261376AbVDSHcm
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Apr 2005 03:32:42 -0400
-Content-Disposition: inline
-In-Reply-To: <20050418130334.GA30034@lst.de>
+Received: from zorg.st.net.au ([203.16.233.9]:38609 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261389AbVDSILu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Apr 2005 04:11:50 -0400
+In-Reply-To: <4263F189.3000700@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
+To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Mon, 18 Apr 2005, Christoph Hellwig wrote:
-
+Jeff Garzik wrote:
+> Douglas Gilbert wrote:
 > 
-> ===== drivers/scsi/qla2xxx/qla_dbg.c 1.12 vs edited =====
-> --- 1.12/drivers/scsi/qla2xxx/qla_dbg.c	2005-04-13 17:45:53 +02:00
-> +++ edited/drivers/scsi/qla2xxx/qla_dbg.c	2005-04-18 16:22:48 +02:00
-> @@ -1063,8 +1063,7 @@
->  		return;
->  
->  	printk("  sp flags=0x%x\n", sp->flags);
-> -	printk("  r_start=0x%lx, u_start=0x%lx, f_start=0x%lx, state=%d\n",
-> -	    sp->r_start, sp->u_start, sp->f_start, sp->state);
-> +	printk("  state=%d\n", sp->state);
->  }
->  
-...
+>> sdparm is a new command line utility designed to get and set
+>> SCSI disk parameters (cf hdparm for ATA disks). More generally
+>> it gets and sets mode page information on SCSI devices or devices
+>> that use a SCSI command set (e.g. CD/DVD drives (any transport)
+>> and SCSI tape drives).
+> 
+> 
+> I'm biased, but I would prefer to use blktool for this sort of thing...
 
-Good stuff, I had a (more conservative) patchset in the queue which
-began to prune most of the stuff you've wacked with your patch.
+Jeff,
+There is definitely some overlap on the most important
+parameters for disks (e.g. write caching). blktool covers
+near end (HBA), transport and device settings. sdparm
+concentrates on the far end device settings (and in some
+cases transport settings from the point of view of that
+device) for devices that use a SCSI command set.
 
-Seems reasonable, I'll run it through my test ring tomorrow and ACK
-when all looks good.
+sdparm assumes some knowledge of SCSI mode page structure
+and what facilities are available. Figures and descriptions
+of mode pages are found in product manuals and SCSI
+standards (e.g. SPC-3 and SBC-2). Beyond primary settings
+such as write caching, there are many interesting
+settings.
 
-Thanks,
-Andrew Vasquez
+For example, SCSI disks recovered from (hardware)
+RAIDs (>= 3) often have the Automatic Read/Write Reallocation
+bits (ARRE and AWRE) clear. This is not the manufacturer's
+default. I assume this is to generate medium errors at the
+first sign of trouble so the parity disk is brought into
+play. When such a disk is used stand alone, a user would probably
+want those bits on (and of course they should be using
+smartmontools or similar to gauge the health of the disk).
+sdparm can set a mode page back to its manufacturer's
+default settings.
+Another example is the tuning mode that Seagate has
+introduced for its disks (i.e. server or desktop mode).
+See sdparm.8 for further information.
+
+IMO blktool and sdparm complement one another.
+
+Doug Gilbert
+
