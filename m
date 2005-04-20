@@ -1,100 +1,40 @@
-From: "Duane Grigsby" <duane.grigsby@qlogic.com>
-Subject: RE: 5.x branch mainline kernel push in two weeks?
-Date: Wed, 20 Apr 2005 13:37:08 -0700
-Message-ID: <41EBA11203419D4CA8EB4C6140D8B4010295B402@AVEXCH01.qlogic.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: writev to scsi disks
+Date: Wed, 20 Apr 2005 17:15:31 -0400
+Message-ID: <1114031732.5933.7.camel@mulgrave>
+References: <363f92a8050420080112dec5db@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch01.qlogic.com ([198.70.193.200]:61888 "EHLO
-	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S261807AbVDTUhI convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Apr 2005 16:37:08 -0400
-content-class: urn:content-classes:message
+Received: from stat16.steeleye.com ([209.192.50.48]:19622 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261816AbVDTVPe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Apr 2005 17:15:34 -0400
+In-Reply-To: <363f92a8050420080112dec5db@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dmitry Yusupov <dmitry_yus@yahoo.com>
-Cc: Christoph Hellwig <hch@lst.de>, open-iscsi@googlegroups.com, linux-iscsi development team <linux-iscsi-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
+To: Dheeraj Pandey <dheeraj@gmail.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Ok, I'll get on those discussions.
+On Wed, 2005-04-20 at 08:01 -0700, Dheeraj Pandey wrote:
+> I was wondering if I did a simple writev to a SCSI disk, does it take
+> the sg path to the device? I am guessing sg (REQ_SPECIAL) is only
+> true for character devices (and ioctl's) and not block devices.
 
------Original Message-----
-From: Dmitry Yusupov [mailto:dmitry_yus@yahoo.com] 
-Sent: Wednesday, April 20, 2005 11:50 AM
-To: Duane Grigsby
-Cc: Christoph Hellwig; open-iscsi@googlegroups.com; linux-iscsi
-development team; linux-scsi@vger.kernel.org
-Subject: RE: 5.x branch mainline kernel push in two weeks?
+?  I think you misunderstand how writev works.  It's design is to take a
+list of scattered buffers in a user program and consolidate them into a
+single write.  This (in the current implementation) is a separate entity
+from the block level Scatter Gather.
 
-On Wed, 2005-04-20 at 11:29 -0700, Duane Grigsby wrote:
-> No, that's not true; we are TOTALLY committed to getting all of our
-> drivers in the upstream kernel. I have been working on the ISCSI
-driver
-> cleanup to the level of our Fibre Channel driver as Andrew has done.
-I'm
-> making it conform to the current linux-scsi API, ISCSI transport, and
-> stripping out all of the failover baggage. My goal is the have
-something
-> upstream in 2 - 3 weeks, if not before.   
+If by sg write path, if you mean scatter-gather write path, then yes,
+that single write would be split up again into a sg list based on the
+device parameters if you mean does the writev sg list control where on
+the disk the data ends up, then no, if you use a disk device as a simple
+file, writev consolidates all writes to the current file position.
 
-But don't you think it is better to have integrated solution for all
-iSCSI transports including QLogic's HBA and have unified user-space set
-of tools? How about collaborate on this issue and come up with somewhat
-generic which will fit with ongoing efforts we have today:
- 
-1) iSCSI/TCP
-2) your QLogic's HBA
-3) iSER/IB
+James
 
-I think those three projects combined could come up with generic iSCSI
-solution(including user-space tools and API) which will really fit for
-everyone else on the planet.
 
-It would be really nice if you would participate in ongoing interface
-discussion on next mailing lists:
-
-1) linux-iscsi-devel@lists.sourceforge.net
-2) open-iscsi@googlegroups.com
-3) iscsitarget-devel@lists.sourceforge.net
-
-Thanks!
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Christoph
-Hellwig
-> Sent: Wednesday, April 20, 2005 1:49 AM
-> To: open-iscsi@googlegroups.com
-> Cc: linux-iscsi development team; linux-scsi@vger.kernel.org
-> Subject: Re: 5.x branch mainline kernel push in two weeks?
-> 
-> On Wed, Apr 20, 2005 at 01:29:11AM -0700, Mike Christie wrote:
-> > Are you going to try and push someone like qla4010 which has a
-similar
-> 
-> > interface to qla2xxx (it uses the msg box interface) to use the
-> netlink 
-> > interface? With a lot of the iscsi stuff masked away it seems a
-little
-> 
-> > difficult to go the extent open-iscsi did?
-> 
-> I'm not sure we should care too much about the qla4xxx driver.  It's
-> never been posted to linux-scsi, and the driver they pushed to SuSE
-> ignores everything we've said about scsi low-level drivers.  It looks
-> like the iSCSI part of Qlogic simply doesn't care about Linux (that is
-> upstream, not the major forks)
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
