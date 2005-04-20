@@ -1,47 +1,119 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Fibre Channel state of the union
-Date: Wed, 20 Apr 2005 23:51:22 +0100
-Message-ID: <20050420225122.GA8292@infradead.org>
-References: <48D2F90F2962FC48852540179EC444F605E699C0@tayexc18.americas.cpqcorp.net>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH scsi-misc-2.6 01/05] scsi: make blk layer set	REQ_SOFTBARRIER
+ when a request is dispatched
+Date: Thu, 21 Apr 2005 07:58:59 +0900
+Message-ID: <4266DEB3.4020502@gmail.com>
+References: <20050419231435.D85F89C0@htj.dyndns.org> <20050419231435.2DEBE102@htj.dyndns.org> <20050420063009.GB9371@suse.de> <20050420074026.GA11228@htj.dyndns.org> <1113983899.5074.111.camel@npiggin-nld.site> <426614B7.5010204@gmail.com> <20050420083853.GB6558@suse.de> <42661B2C.1020100@yahoo.com.au> <20050420091428.GH6558@suse.de> <42661FDB.7030409@yahoo.com.au> <20050420094417.GI6558@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:9631 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261821AbVDTWvX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Apr 2005 18:51:23 -0400
-Content-Disposition: inline
-In-Reply-To: <48D2F90F2962FC48852540179EC444F605E699C0@tayexc18.americas.cpqcorp.net>
+Received: from rproxy.gmail.com ([64.233.170.207]:36071 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261723AbVDTW7H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Apr 2005 18:59:07 -0400
+Received: by rproxy.gmail.com with SMTP id z35so289033rne
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2005 15:59:06 -0700 (PDT)
+In-Reply-To: <20050420094417.GI6558@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Bhat, Vinod" <vinod.bhat@hp.com>
-Cc: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Nick Piggin <nickpiggin@yahoo.com.au>, James.Bottomley@steeleye.com, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 
-On Wed, Apr 20, 2005 at 02:43:23PM -0400, Bhat, Vinod wrote:
-> Hi,
+
+  Hello, guys.
+
+Jens Axboe wrote:
+> On Wed, Apr 20 2005, Nick Piggin wrote:
 > 
-> Here are few thoughts. On sourceforge there is a hbaapi project.
-> http://sourceforge.net/projects/hbaapi/ This is old project. Is it
-> possible to update that one or create a new project for hbaapi?
-
-first major problem is that it's licensed under an SNIA opensource license
-which it links to but doesn't exist anymore on their website.  To be
-easily redistributable for Linux Distribution it should be licensed
-under the LGPL or a BSDish license.
-
-Also it contains lots of unessecary bloat like the dlopen-based plugin
-loading and windows support that wouldn't be nessecary for something
-that's simply a shim from the SNIA apis to the Linux native mechanisms.
-
-> If we have a open source project and supported by major HBA vendors, we
-> can build tools(open source) on this project. That will help bigger
-> community. Here is the SN Ping and Traceroute project proposal. This is
-> one example.
+>>Jens Axboe wrote:
+>>
+>>>On Wed, Apr 20 2005, Nick Piggin wrote:
+>>>
+>>
+>>>>I guess this could be one use of 'reordering' after a requeue.
+>>>
+>>>
+>>>Yeah, or perhaps the io scheduler might determine that a request has
+>>>higher prio than a requeued one.  I'm not sure what semantics to place
+>>
+>>I guess this is possible. It is often only a single request
+>>that is on the dispatch list though, so I don't know if it
+>>would make sense to reorder it by priority again.
 > 
-> http://www.t11.org/ftp/t11/admin/project_proposals/05-225v0.pdf
-> http://www.t11.org/ftp/t11/admin/project_proposals/05-177v1.txt 
+> 
+> Depends entirely on the io scheduler. CFQ may put several on the
+> dispatch list.
+> 
+> 
+>>>on soft-barrier, I've always taken it to mean 'maintain ordering if
+>>>convenient' where the hard-barrier must be followed.
+>>>
+>>
+>>I've thought it was SOFTBARRIER ensures the device driver (and
+>>hardware?) sees the request in this order, and HARDBARRIER ensures
+>>it reaches stable storage in this order.
+>>
+>>Not exactly sure why you would want a softbarrier and not a
+>>hardbarrier. Maybe for special commands.
+> 
+> 
+> It is the cleaner interpretation. CFQ marks requests as requeued
+> internally and gives preference to them for reissue, but it may return
+> another first (actually, I think it even checks for ->requeued on
+> dispatch sort, so it wont right now).
+> 
+> 
+>>>>I'm not sure this would need a REQ_SOFTBARRIER either though, really.
+>>>>
+>>>>Your basic io scheduler framework - ie. a FIFO dispatch list which
+>>>>can have requests requeued on the front models pretty well what the
+>>>>block layer needs of the elevator.
+>>>>
+>>>>Considering all requeues and all elv_next_request but not dequeued
+>>>>requests would have this REQ_SOFTBARRIER bit set, any other model
+>>>>that theoretically would allow reordering would degenerate to this
+>>>>dispatch list behaviour, right?
+>>>
+>>>
+>>>Not sure I follow this - I don't want REQ_SOFTBARRIER set automatically
+>>>on elv_next_request() return, it should only happen on requeues.
+>>>REQ_STARTED implies that you should not pass this request, since the io
+>>>scheduler is required to return this request again until dequeue is
+>>>called. But the result is the same, correct.
+>>>
+>>
+>>OK - but I'm wondering would it ever make sense to do it any
+>>other way? I would have thought no, in which case we can document
+>>that requests seen by 'elv_next_request', and those requeued back
+>>into the device will not be reordered, and so Tejun does not need
+>>to set REQ_SOFTBARRIER.
+>>
+>>But I'm not so sure now... it isn't really that big a deal ;)
+>>So whatever you're happy with is fine. Sorry for the nose.
+> 
+> 
+> It's not noise, it would be nice to have this entirely documented so
+> that there isn't any confusion on what is guaranteed vs what currently
+> happens in most places.
+> 
+> But I don't want to document that they are never reordered. For requeues
+> it make sense to maintain ordering in most cases, but it also may make
+> sense to reorder for higher priority io. If the driver does _not_ want a
+> particular request reordered for data integrity reasons, then that needs
+> to be explicitly specified.
+> 
 
-These are good ideas for an fc-tools package or something like that.
-I'd rather write them directly to native APIs instead of going through
-the needless complication and obsfucations of the SNIA APIs.
+  So, I guess this is settled now.  James, what do you think about the 
+rest of this patchset?  If you're okay, I think we can proceed merging 
+as there doesn't seem to be any issue left.  Do we put this into the 
+SCSI tree?  Or separate out blk and SCSI changes?
+
+  Once we're done merging this patchset, I'll regenerate & repost the 
+reqfn reimpl patchset.
+
+  Thanks a lot. :-)
+
+-- 
+tejun
 
