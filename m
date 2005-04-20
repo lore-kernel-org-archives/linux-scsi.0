@@ -1,21 +1,22 @@
 From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: [PATCH 3/7] mptfusion: mptctl Remove credits and update copyright
-Date: Wed, 20 Apr 2005 11:43:56 -0600
-Message-ID: <91888D455306F94EBD4D168954A9457C020C435E@nacos172.co.lsil.com>
+Subject: [PATCH 1/7] mptfusion: Kconfig Adding new bus type drivers for fu
+	sion drivers.
+Date: Wed, 20 Apr 2005 11:43:52 -0600
+Message-ID: <91888D455306F94EBD4D168954A9457C020C435C@nacos172.co.lsil.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_000_01C545D0.86D33570"
+	boundary="----_=_NextPart_000_01C545D0.84221F30"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:48601 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S261748AbVDTRoG (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:46041 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261752AbVDTRn5 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Apr 2005 13:44:06 -0400
+	Wed, 20 Apr 2005 13:43:57 -0400
 Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id j3KHf46U013260
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2005 10:41:04 -0700 (PDT)
+	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id j3KHer6U013247
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2005 10:40:53 -0700 (PDT)
 Received: from nacos172.ad.lsil.com (cos1.co.lsil.com [172.21.35.122])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id j3KHi3po020843
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2005 10:44:03 -0700
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id j3KHhrHi020794
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2005 10:43:53 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -23,163 +24,198 @@ To: linux-scsi@vger.kernel.org
 This message is in MIME format. Since your mail reader does not understand
 this format, some or all of this message may not be legible.
 
-------_=_NextPart_000_01C545D0.86D33570
+------_=_NextPart_000_01C545D0.84221F30
 Content-Type: text/plain;
 	charset="iso-8859-1"
 
-mptfusion patch 3/7:
+mptfusion patch 1/7:
 
 This patch can also be found at this URL:
 ftp://ftp.lsil.com/HostAdapterDrivers/linux/FiberChannel/2.6-kernel/3.03.00/
 
 Changelog:
 
-(1) mptctl.c: Remove credits and update copyright
-(2) mptctl.c: cleanup in get_iocinfo
+(1) Kconfig - added new mptspi and mptfc scsi lld drivers
+(2) Kconfig - increased MAX_SGE from 40 to 128 
+(2) Makefile - compilation support for split drivers
+(3) Makefile - cleaned up debug defines; e.g. removed obsolete, added others
+
+
 
 Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
 
- 
 
 
-------_=_NextPart_000_01C545D0.86D33570
+------_=_NextPart_000_01C545D0.84221F30
 Content-Type: application/octet-stream;
-	name="patch-3-mptctl.patch"
+	name="patch-1-kconfig.patch"
 Content-Transfer-Encoding: quoted-printable
 Content-Disposition: attachment;
-	filename="patch-3-mptctl.patch"
+	filename="patch-1-kconfig.patch"
 
---- b/drivers/message/fusion/mptctl.c	2005-04-19 08:37:22.000000000 =
--0600=0A=
-+++ a/drivers/message/fusion/mptctl.c	2005-04-19 14:13:52.000000000 =
--0600=0A=
-@@ -1,40 +1,12 @@=0A=
- /*=0A=
-  *  linux/drivers/message/fusion/mptctl.c=0A=
-- *      Fusion MPT misc device (ioctl) driver.=0A=
-- *      For use with PCI chip/adapter(s):=0A=
-- *          LSIFC9xx/LSI409xx Fibre Channel=0A=
-+ *      mpt Ioctl driver.=0A=
-+ *      For use with LSI Logic PCI chip/adapters=0A=
-  *      running LSI Logic Fusion MPT (Message Passing Technology) =
-firmware.=0A=
-  *=0A=
-- *  Credits:=0A=
-- *      This driver would not exist if not for Alan Cox's =
-development=0A=
-- *      of the linux i2o driver.=0A=
-- *=0A=
-- *      A special thanks to Pamela Delaney (LSI Logic) for tons of =
-work=0A=
-- *      and countless enhancements while adding support for the =
-1030=0A=
-- *      chip family.  Pam has been instrumental in the development =
-of=0A=
-- *      of the 2.xx.xx series fusion drivers, and her contributions =
-are=0A=
-- *      far too numerous to hope to list in one place.=0A=
-- *=0A=
-- *      A huge debt of gratitude is owed to David S. Miller (DaveM)=0A=
-- *      for fixing much of the stupid and broken stuff in the early=0A=
-- *      driver while porting to sparc64 platform.  THANK YOU!=0A=
-- *=0A=
-- *      A big THANKS to Eddie C. Dost for fixing the ioctl path=0A=
-- *      and most importantly f/w download on sparc64 platform!=0A=
-- *      (plus Eddie's other helpful hints and insights)=0A=
-- *=0A=
-- *      Thanks to Arnaldo Carvalho de Melo for finding and patching=0A=
-- *      a potential memory leak in mptctl_do_fw_download(),=0A=
-- *      and for some kmalloc insight:-)=0A=
-- *=0A=
-- *      (see also mptbase.c)=0A=
-- *=0A=
-- *  Copyright (c) 1999-2004 LSI Logic Corporation=0A=
-- *  Originally By: Steven J. Ralston, Noah Romer=0A=
-- *  (mailto:sjralston1@netscape.net)=0A=
-+ *  Copyright (c) 1999-2005 LSI Logic Corporation=0A=
-  *  (mailto:mpt_linux_developer@lsil.com)=0A=
-  *=0A=
-- *  $Id: mptctl.c,v 1.63 2002/12/03 21:26:33 pdelaney Exp $=0A=
-  */=0A=
- =
-/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D*/=0A=
- /*=0A=
-@@ -95,8 +67,8 @@=0A=
- #include <scsi/scsi_host.h>=0A=
- #include <scsi/scsi_tcq.h>=0A=
- =0A=
--#define COPYRIGHT	"Copyright (c) 1999-2004 LSI Logic Corporation"=0A=
--#define MODULEAUTHOR	"Steven J. Ralston, Noah Romer, Pamela =
-Delaney"=0A=
-+#define COPYRIGHT	"Copyright (c) 1999-2005 LSI Logic Corporation"=0A=
-+#define MODULEAUTHOR	"LSI Logic Corporation"=0A=
- #include "mptbase.h"=0A=
- #include "mptctl.h"=0A=
- =0A=
-@@ -1119,7 +1091,7 @@=0A=
- 	int			numDevices =3D 0;=0A=
- 	unsigned int		max_id;=0A=
- 	int			ii;=0A=
--	int			port;=0A=
-+	unsigned int		port;=0A=
- 	int			cim_rev;=0A=
- 	u8			revision;=0A=
- =0A=
-@@ -1162,9 +1134,7 @@=0A=
- 		return -ENODEV;=0A=
- 	}=0A=
- =0A=
--	/* Verify the data transfer size is correct.=0A=
--	 * Ignore the port setting.=0A=
--	 */=0A=
-+	/* Verify the data transfer size is correct. */=0A=
- 	if (karg->hdr.maxDataSize !=3D data_size) {=0A=
- 		printk(KERN_ERR "%s@%d::mptctl_getiocinfo - "=0A=
- 			"Structure size mismatch. Command not completed.\n",=0A=
-@@ -1181,6 +1151,8 @@=0A=
- 	else=0A=
- 		karg->adapterType =3D MPT_IOCTL_INTERFACE_SCSI;=0A=
- =0A=
-+	if (karg->hdr.port > 1)=0A=
-+		return -EINVAL;=0A=
- 	port =3D karg->hdr.port;=0A=
- =0A=
- 	karg->port =3D port;=0A=
---- b/drivers/message/fusion/mptctl.h	2005-03-02 00:38:09.000000000 =
+--- b/drivers/message/fusion/Kconfig	2005-03-02 00:38:38.000000000 =
 -0700=0A=
-+++ a/drivers/message/fusion/mptctl.h	2005-04-19 14:13:52.000000000 =
++++ a/drivers/message/fusion/Kconfig	2005-04-19 14:13:19.000000000 =
 -0600=0A=
-@@ -5,22 +5,9 @@=0A=
-  *          LSIFC9xx/LSI409xx Fibre Channel=0A=
-  *      running LSI Logic Fusion MPT (Message Passing Technology) =
-firmware.=0A=
-  *=0A=
-- *  Credits:=0A=
-- *      This driver would not exist if not for Alan Cox's =
-development=0A=
-- *      of the linux i2o driver.=0A=
-- *=0A=
-- *      A huge debt of gratitude is owed to David S. Miller (DaveM)=0A=
-- *      for fixing much of the stupid and broken stuff in the early=0A=
-- *      driver while porting to sparc64 platform.  THANK YOU!=0A=
-- *=0A=
-- *      (see also mptbase.c)=0A=
-- *=0A=
-- *  Copyright (c) 1999-2004 LSI Logic Corporation=0A=
-- *  Originally By: Steven J. Ralston=0A=
-- *  (mailto:sjralston1@netscape.net)=0A=
-+ *  Copyright (c) 1999-2005 LSI Logic Corporation=0A=
-  *  (mailto:mpt_linux_developer@lsil.com)=0A=
-  *=0A=
-- *  $Id: mptctl.h,v 1.13 2002/12/03 21:26:33 pdelaney Exp $=0A=
-  */=0A=
+@@ -1,35 +1,50 @@=0A=
+ =0A=
+ menu "Fusion MPT device support"=0A=
+ =0A=
+-config FUSION=0A=
+-	tristate "Fusion MPT (base + ScsiHost) drivers"=0A=
++config FUSION_SPI=0A=
++	tristate "Fusion MPT ScsiHost drivers for SPI"=0A=
+ 	depends on PCI && SCSI=0A=
+ 	---help---=0A=
+-	  LSI Logic Fusion(TM) Message Passing Technology (MPT) device =
+support=0A=
+-	  provides high performance SCSI host initiator, and LAN [1] =
+interface=0A=
+-	  services to a host system.  The Fusion architecture is capable =
+of=0A=
+-	  duplexing these protocols on high-speed Fibre Channel=0A=
+-	  (up to 2 GHz x 2 ports =3D 4 GHz) and parallel SCSI (up to =
+Ultra-320)=0A=
+-	  physical medium.=0A=
++	  SCSI HOST support for a parallel SCSI host adapters.=0A=
+ =0A=
+-	  [1] LAN is not supported on parallel SCSI medium.=0A=
++	  List of supported controllers:=0A=
++=0A=
++	  LSI53C1020=0A=
++	  LSI53C1020A=0A=
++	  LSI53C1030=0A=
++	  LSI53C1035=0A=
++=0A=
++config FUSION_FC=0A=
++	tristate "Fusion MPT ScsiHost drivers for FC"=0A=
++	depends on PCI && SCSI=0A=
++	---help---=0A=
++	  SCSI HOST support for a Fiber Channel host adapters.=0A=
++=0A=
++	  List of supported controllers:=0A=
++=0A=
++	  LSIFC909=0A=
++	  LSIFC919=0A=
++	  LSIFC919X=0A=
++	  LSIFC929=0A=
++	  LSIFC929X=0A=
++	  LSIFC929XL=0A=
+ =0A=
+ config FUSION_MAX_SGE=0A=
+ 	int "Maximum number of scatter gather entries"=0A=
+-	depends on FUSION=0A=
+-	default "40"=0A=
++	depends on FUSION_SPI || FUSION_FC=0A=
++	default "128"=0A=
+ 	help=0A=
+ 	  This option allows you to specify the maximum number of scatter-=0A=
+ 	  gather entries per I/O. The driver defaults to 40, a reasonable =
+number=0A=
+ 	  for most systems. However, the user may increase this up to 128.=0A=
+-	  Increasing this parameter will require significantly more memory =
+=0A=
++	  Increasing this parameter will require significantly more memory=0A=
+ 	  on a per controller instance. Increasing the parameter is not=0A=
+-	  necessary (or recommended) unless the user will be running =0A=
++	  necessary (or recommended) unless the user will be running=0A=
+ 	  large I/O's via the raw interface.=0A=
+ =0A=
+ config FUSION_CTL=0A=
+ 	tristate "Fusion MPT misc device (ioctl) driver"=0A=
+-	depends on FUSION=0A=
++	depends on FUSION_SPI || FUSION_FC=0A=
+ 	---help---=0A=
+ 	  The Fusion MPT misc device driver provides specialized control=0A=
+ 	  of MPT adapters via system ioctl calls.  Use of ioctl calls to=0A=
+@@ -48,7 +63,7 @@=0A=
+ =0A=
+ config FUSION_LAN=0A=
+ 	tristate "Fusion MPT LAN driver"=0A=
+-	depends on FUSION && NET_FC=0A=
++	depends on FUSION_FC && NET_FC=0A=
+ 	---help---=0A=
+ 	  This module supports LAN IP traffic over Fibre Channel port(s)=0A=
+ 	  on Fusion MPT compatible hardware (LSIFC9xx chips).=0A=
+--- b/drivers/message/fusion/Makefile	2005-03-02 00:38:13.000000000 =
+-0700=0A=
++++ a/drivers/message/fusion/Makefile	2005-04-19 14:13:19.000000000 =
+-0600=0A=
+@@ -1,52 +1,38 @@=0A=
+-#=0A=
+-# Makefile for the LSI Logic Fusion MPT (Message Passing Technology) =
+drivers.=0A=
+-#=0A=
+-# Note! If you want to turn on various debug defines for an extended =
+period of=0A=
+-# time but don't want them lingering around in the Makefile when you =
+pass it on=0A=
+-# to someone else, use the MPT_CFLAGS env variable (thanks Steve). =
+-nromer=0A=
+-=0A=
+-#=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-{ LSI_LOGIC=0A=
+-=0A=
+-#  Architecture-specific...=0A=
+-#			# intel=0A=
+-#EXTRA_CFLAGS +=3D -g=0A=
+-#			# sparc64=0A=
+-#EXTRA_CFLAGS +=3D -gstabs+=0A=
+-=0A=
+-EXTRA_CFLAGS +=3D ${MPT_CFLAGS}=0A=
+-=0A=
+ # Fusion MPT drivers; recognized debug defines...=0A=
+ #  MPT general:=0A=
+-#EXTRA_CFLAGS +=3D -DMPT_DEBUG_SCSI=0A=
+ #EXTRA_CFLAGS +=3D -DMPT_DEBUG=0A=
+ #EXTRA_CFLAGS +=3D -DMPT_DEBUG_MSG_FRAME=0A=
+ #EXTRA_CFLAGS +=3D -DMPT_DEBUG_SG=0A=
++#EXTRA_CFLAGS +=3D -DMPT_DEBUG_EVENTS=0A=
++#EXTRA_CFLAGS +=3D -DMPT_DEBUG_INIT=0A=
++#EXTRA_CFLAGS +=3D -DMPT_DEBUG_EXIT=0A=
++#EXTRA_CFLAGS +=3D -DMPT_DEBUG_FAIL=0A=
++=0A=
+ =0A=
+ #=0A=
+ # driver/module specifics...=0A=
+ #=0A=
+ #  For mptbase:=0A=
+ #CFLAGS_mptbase.o +=3D -DMPT_DEBUG_HANDSHAKE=0A=
++#CFLAGS_mptbase.o +=3D -DMPT_DEBUG_CONFIG=0A=
++#CFLAGS_mptbase.o +=3D -DMPT_DEBUG_DL=0A=
+ #CFLAGS_mptbase.o +=3D -DMPT_DEBUG_IRQ=0A=
++#CFLAGS_mptbase.o +=3D -DMPT_DEBUG_RESET=0A=
+ #=0A=
+ #  For mptscsih:=0A=
+-#CFLAGS_mptscsih.o +=3D -DMPT_DEBUG_SCANDV=0A=
+-#CFLAGS_mptscsih.o +=3D -DMPT_DEBUG_RESET=0A=
+-#CFLAGS_mptscsih.o +=3D -DMPT_DEBUG_NEH=0A=
++#CFLAGS_mptscsih.o +=3D -DMPT_DEBUG_DV=0A=
++#CFLAGS_mptscsih.o +=3D -DMPT_DEBUG_NEGO=0A=
++#CFLAGS_mptscsih.o +=3D -DMPT_DEBUG_TM=0A=
++#CFLAGS_mptscsih.o +=3D -DMPT_DEBUG_SCSI=0A=
++#CFLAGS_mptscsih.o +=3D -DMPT_DEBUG_REPLY=0A=
+ #=0A=
+ #  For mptctl:=0A=
+ #CFLAGS_mptctl.o +=3D -DMPT_DEBUG_IOCTL=0A=
+ #=0A=
+-#  For mptlan:=0A=
+-#CFLAGS_mptlan.o +=3D -DMPT_LAN_IO_DEBUG=0A=
+-#=0A=
+-#  For isense:=0A=
+-=0A=
+-#  EXP...=0A=
+-##mptscsih-objs	:=3D scsihost.o scsiherr.o=0A=
+ =0A=
  =
-/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D*/=0A=
- /*=0A=
+#=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-} LSI_LOGIC=0A=
+ =0A=
+-obj-$(CONFIG_FUSION)		+=3D mptbase.o mptscsih.o=0A=
++obj-$(CONFIG_FUSION_SPI)	+=3D mptspi.o mptscsih.o mptbase.o=0A=
++obj-$(CONFIG_FUSION_FC)		+=3D mptfc.o mptscsih.o mptbase.o=0A=
+ obj-$(CONFIG_FUSION_CTL)	+=3D mptctl.o=0A=
+ obj-$(CONFIG_FUSION_LAN)	+=3D mptlan.o=0A=
 
-------_=_NextPart_000_01C545D0.86D33570--
+------_=_NextPart_000_01C545D0.84221F30--
