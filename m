@@ -1,62 +1,44 @@
-From: Yum Rayan <yum.rayan@gmail.com>
-Subject: [PATCH]megaraid_sas: Reduce stack usage in megasas_probe_one()
-Date: Wed, 20 Apr 2005 00:59:43 -0700
-Message-ID: <df35dfeb0504200059279a4417@mail.gmail.com>
-Reply-To: Yum Rayan <yum.rayan@gmail.com>
+From: Andreas Herrmann <aherrman@de.ibm.com>
+Subject: Re: fastfail operation and retries
+Date: Wed, 20 Apr 2005 10:10:59 +0200
+Message-ID: <OF6A9F67A4.5AB6B6C0-ONC1256FE9.002CC792-C1256FE9.002D0981@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.198]:49978 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261470AbVDTH7q convert rfc822-to-8bit
+Received: from mtagate1.de.ibm.com ([195.212.29.150]:28579 "EHLO
+	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP id S261481AbVDTILB
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Apr 2005 03:59:46 -0400
-Received: by wproxy.gmail.com with SMTP id 68so82257wri
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2005 00:59:43 -0700 (PDT)
-Content-Disposition: inline
+	Wed, 20 Apr 2005 04:11:01 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate1.de.ibm.com (8.12.10/8.12.10) with ESMTP id j3K8B00Q119854
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2005 08:11:00 GMT
+Received: from d12av04.megacenter.de.ibm.com (d12av04.megacenter.de.ibm.com [9.149.165.229])
+	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j3K8B0n8277734
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2005 10:11:00 +0200
+Received: from d12av04.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av04.megacenter.de.ibm.com (8.12.11/8.12.11) with ESMTP id j3K8B0Bs001254
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2005 10:11:00 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sreenivas.Bagalkote@lsil.com
-Cc: linux-scsi@vger.kernel.org
+To: =?GB2312?B?08nUqM+8?= <yxyou@yahoo.com.cn>
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>
 
-This patch reduces stack usage in megasas_probe_one() from to 2200 to
-156. A patched version of gcc 3.4.3 with -fno-unit-at-a-time disabled
-was used on i386 platform.
+        ??? <yxyou@yahoo.com.cn> wrote:
+        20.04.2005 03:17
+ 
+> what multipath are you using? Software, or hardware,
+> or both?
 
-Signed-off-by: Yum Rayan <yum.rayan@gmail.com>
+We are using udm with evms (Linux on zSeries).
+Hardware setup is:
+- switched fabric FC-SAN,
+- 4 paths to each FC-LUN on the ESS 800
 
---- linux-2.6.12-rc2-mm3.a/drivers/scsi/megaraid/megaraid_sas.c	2005-04-14
-22:15:44.000000000 -0700
-+++ linux-2.6.12-rc2-mm3.b/drivers/scsi/megaraid/megaraid_sas.c	2005-04-20
-00:26:01.000000000 -0700
-@@ -731,7 +731,7 @@
- 	struct megasas_register_set*	reg_set;
- 
- 	struct megasas_cmd*		cmd;
--	struct megasas_ctrl_info	ctrl_info;
-+	struct megasas_ctrl_info	*ctrl_info;
- 
- 	struct megasas_init_frame*	init_frame;
- 	struct megasas_init_queue_info*	initq_info;
-@@ -846,15 +846,19 @@
- 
- 	megasas_return_cmd( instance, cmd );
- 
-+	ctrl_info = kmalloc(sizeof(struct megasas_ctrl_info), GFP_KERNEL);
-+
- 	/*
- 	 * Gather misc FW related information
- 	 */
--	if (!megasas_get_ctrl_info( instance, &ctrl_info ))
--		instance->max_sectors_per_req = ctrl_info.max_request_size;
-+	if (ctrl_info && !megasas_get_ctrl_info( instance, ctrl_info ))
-+		instance->max_sectors_per_req = ctrl_info->max_request_size;
- 	else
- 		instance->max_sectors_per_req = instance->max_num_sge *
- 						PAGE_SIZE / 512;
- 
-+	kfree(ctrl_info);
-+
- 	return 0;
- 
- fail_fw_init:
+All 4 paths are "failing fast" during operations on
+the ESS and our stress test tool encounteres I/O-errors.
+
+
+Regards,
+
+Andreas
+
