@@ -1,44 +1,83 @@
-From: Andreas Herrmann <aherrman@de.ibm.com>
-Subject: Re: fastfail operation and retries
-Date: Wed, 20 Apr 2005 10:10:59 +0200
-Message-ID: <OF6A9F67A4.5AB6B6C0-ONC1256FE9.002CC792-C1256FE9.002D0981@de.ibm.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH scsi-misc-2.6 01/05] scsi: make blk layer set	REQ_SOFTBARRIER
+ when a request is dispatched
+Date: Wed, 20 Apr 2005 17:37:11 +0900
+Message-ID: <426614B7.5010204@gmail.com>
+References: <20050419231435.D85F89C0@htj.dyndns.org>	 <20050419231435.2DEBE102@htj.dyndns.org> <20050420063009.GB9371@suse.de>	 <20050420074026.GA11228@htj.dyndns.org> <1113983899.5074.111.camel@npiggin-nld.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=EUC-KR
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.de.ibm.com ([195.212.29.150]:28579 "EHLO
-	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP id S261481AbVDTILB
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Apr 2005 04:11:01 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate1.de.ibm.com (8.12.10/8.12.10) with ESMTP id j3K8B00Q119854
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2005 08:11:00 GMT
-Received: from d12av04.megacenter.de.ibm.com (d12av04.megacenter.de.ibm.com [9.149.165.229])
-	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j3K8B0n8277734
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2005 10:11:00 +0200
-Received: from d12av04.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av04.megacenter.de.ibm.com (8.12.11/8.12.11) with ESMTP id j3K8B0Bs001254
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2005 10:11:00 +0200
+Received: from rproxy.gmail.com ([64.233.170.199]:47029 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261329AbVDTIhT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Apr 2005 04:37:19 -0400
+Received: by rproxy.gmail.com with SMTP id a41so60297rng
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2005 01:37:18 -0700 (PDT)
+In-Reply-To: <1113983899.5074.111.camel@npiggin-nld.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?GB2312?B?08nUqM+8?= <yxyou@yahoo.com.cn>
-Cc: Linux SCSI <linux-scsi@vger.kernel.org>
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+Cc: Jens Axboe <axboe@suse.de>, James.Bottomley@steeleye.com, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 
-        ??? <yxyou@yahoo.com.cn> wrote:
-        20.04.2005 03:17
- 
-> what multipath are you using? Software, or hardware,
-> or both?
+Nick Piggin wrote:
+> On Wed, 2005-04-20 at 16:40 +0900, Tejun Heo wrote:
+> 
+>> Hello, Jens.
+>>
+>>On Wed, Apr 20, 2005 at 08:30:10AM +0200, Jens Axboe wrote:
+>>
+>>>Do it on requeue, please - not on the initial spotting of the request.
+>>
+>> This is the reworked version of the patch.  It sets REQ_SOFTBARRIER
+>>in two places - in elv_next_request() on BLKPREP_DEFER and in
+>>blk_requeue_request().
+>>
+>> Other patches apply cleanly with this patch or the original one and
+>>the end result is the same, so take your pick.  :-)
+>>
+> 
+> 
+> I'm not sure that you need *either* one.
+> 
+> As far as I'm aware, REQ_SOFTBARRIER is used when feeding requests
+> into the top of the block layer, and is used to guarantee the device
+> driver gets the requests in a specific ordering.
+> 
+> When dealing with the requests at the other end (ie.
+> elevator_next_req_fn, blk_requeue_request), then ordering does not
+> change.
+> 
+> That is - if you call elevator_next_req_fn and don't dequeue the
+> request, then that's the same request you'll get next time.
+> 
+> And blk_requeue_request will push the request back onto the end of
+> the queue in a LIFO manner.
+> 
+> So I think adding barriers, apart from not doing anything, confuses
+> the issue because it suggests there *could* be reordering without
+> them.
+> 
+> Or am I completely wrong? It's been a while since I last got into
+> the code.
 
-We are using udm with evms (Linux on zSeries).
-Hardware setup is:
-- switched fabric FC-SAN,
-- 4 paths to each FC-LUN on the ESS 800
+ Well, yeah, all schedulers have dispatch queue (noop has only the
+dispatch queue) and use them to defer/requeue, so no reordering will
+happen, but I'm not sure they are required to be like this or just
+happen to be implemented so.
 
-All 4 paths are "failing fast" during operations on
-the ESS and our stress test tool encounteres I/O-errors.
+ Hmm, well, it seems that setting REQ_SOFTBARRIER on requeue path isn't
+necessary as we have INSERT_FRONT policy on requeue, and if
+elv_next_req_fn() is required to return the same request when the
+request isn't dequeued, you're right and we don't need this patch at
+all.  We are guaranteed that all requeued requests are served in LIFO
+manner.
 
+ BTW, the same un-dequeued request rule is sort of already broken as
+INSERT_FRONT request passes a returned but un-dequeued request, but,
+then again, we need this behavior as we have to favor fully-prepped
+requests over partially-prepped one.
 
-Regards,
-
-Andreas
+-- 
+tejun
 
