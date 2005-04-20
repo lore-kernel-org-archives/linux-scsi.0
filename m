@@ -1,31 +1,43 @@
-From: Dheeraj Pandey <dheeraj@gmail.com>
-Subject: writev to scsi disks
-Date: Wed, 20 Apr 2005 08:01:53 -0700
-Message-ID: <363f92a8050420080112dec5db@mail.gmail.com>
-Reply-To: Dheeraj Pandey <dheeraj@gmail.com>
+From: "Randy.Dunlap" <rddunlap@osdl.org>
+Subject: Re: [PATCH]megaraid_sas: Reduce stack usage in megasas_probe_one()
+Date: Wed, 20 Apr 2005 09:26:57 -0700
+Message-ID: <20050420092657.10bce1f7.rddunlap@osdl.org>
+References: <df35dfeb0504200059279a4417@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.205]:5424 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261641AbVDTPBy convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Apr 2005 11:01:54 -0400
-Received: by rproxy.gmail.com with SMTP id a41so126863rng
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2005 08:01:54 -0700 (PDT)
-Content-Disposition: inline
+Received: from fire.osdl.org ([65.172.181.4]:40621 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S261712AbVDTQ1J (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Apr 2005 12:27:09 -0400
+In-Reply-To: <df35dfeb0504200059279a4417@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Yum Rayan <yum.rayan@gmail.com>
+Cc: Sreenivas.Bagalkote@lsil.com, linux-scsi@vger.kernel.org
 
-I was wondering if I did a simple writev to a SCSI disk, does it take
-the sg path to the device? I am guessing sg (REQ_SPECIAL) is only
-true for character devices (and ioctl's) and not block devices.
+On Wed, 20 Apr 2005 00:59:43 -0700 Yum Rayan wrote:
 
-These are my questions:
-  - Is sg a common feature among SCSI disks these days? How do I know
-what disks support this feature (any capabilities published by the driver)?
-  - How does one make writev work for SCSI disk (as a block device)
-in direct_io?
-  - If I use SCSI disks as character device, can I simply use writev on the
-character device file, and will sg codepath be taken?
+| This patch reduces stack usage in megasas_probe_one() from to 2200 to
+| 156. A patched version of gcc 3.4.3 with -fno-unit-at-a-time disabled
+| was used on i386 platform.
+
+Hi Yum,
+
+In the future, please use "diff -up" (or even more options,
+but please add the 'p') so that we can easily see what functions
+or structs the modifications are in.
+
+Check Documentation/SubmittingPatches:
+
+1) "diff -up"
+------------
+Use "diff -up" or "diff -uprN" to create patches.
+
+
+diffstat output would also be a good addition.
+
+Thanks,
+---
+~Randy
