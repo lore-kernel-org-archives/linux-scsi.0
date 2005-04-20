@@ -1,56 +1,53 @@
-From: wolf2k5 <wolf2k5@gmail.com>
-Subject: Swapping HDs with HW RAID 1 or cloning HDs over the network?
-Date: Wed, 20 Apr 2005 20:12:27 +0200
-Message-ID: <8d8ba2bb050420111256646ec5@mail.gmail.com>
-Reply-To: wolf2k5 <wolf2k5@gmail.com>
+From: "Duane Grigsby" <duane.grigsby@qlogic.com>
+Subject: RE: 5.x branch mainline kernel push in two weeks?
+Date: Wed, 20 Apr 2005 11:29:12 -0700
+Message-ID: <41EBA11203419D4CA8EB4C6140D8B4010295B3C5@AVEXCH01.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.204]:42178 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261708AbVDTSM1 convert rfc822-to-8bit
+Received: from avexch01.qlogic.com ([198.70.193.200]:42686 "EHLO
+	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S261788AbVDTS3S convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Apr 2005 14:12:27 -0400
-Received: by zproxy.gmail.com with SMTP id 13so191532nzp
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2005 11:12:27 -0700 (PDT)
-Content-Disposition: inline
+	Wed, 20 Apr 2005 14:29:18 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, open-iscsi@googlegroups.com
+Cc: linux-iscsi development team <linux-iscsi-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
 
-Hi all,
+No, that's not true; we are TOTALLY committed to getting all of our
+drivers in the upstream kernel. I have been working on the ISCSI driver
+cleanup to the level of our Fibre Channel driver as Andrew has done. I'm
+making it conform to the current linux-scsi API, ISCSI transport, and
+stripping out all of the failover baggage. My goal is the have something
+upstream in 2 - 3 weeks, if not before.   
 
-I have a Dell PowerEdge 1650 with a PERC 3/Di and a PowerEdge 1655MC
-with a PERC 4/IM.
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Christoph Hellwig
+Sent: Wednesday, April 20, 2005 1:49 AM
+To: open-iscsi@googlegroups.com
+Cc: linux-iscsi development team; linux-scsi@vger.kernel.org
+Subject: Re: 5.x branch mainline kernel push in two weeks?
 
-Both servers are running Red Hat Enterprise Linux 3 and hardware RAID
-1 (mirroring).
+On Wed, Apr 20, 2005 at 01:29:11AM -0700, Mike Christie wrote:
+> Are you going to try and push someone like qla4010 which has a similar
 
-'fdisk' output is slightly different on the two servers:
+> interface to qla2xxx (it uses the msg box interface) to use the
+netlink 
+> interface? With a lot of the iscsi stuff masked away it seems a little
 
-PE1650
-Disk /dev/sda: 36.3 GB, 36397645824 bytes
-255 heads, 63 sectors/track, 4425 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
+> difficult to go the extent open-iscsi did?
 
-PE1655MC
-Disk /dev/sda: 36.3 GB, 36362519040 bytes
-255 heads, 63 sectors/track, 4420 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
+I'm not sure we should care too much about the qla4xxx driver.  It's
+never been posted to linux-scsi, and the driver they pushed to SuSE
+ignores everything we've said about scsi low-level drivers.  It looks
+like the iSCSI part of Qlogic simply doesn't care about Linux (that is
+upstream, not the major forks)
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I need to migrate PE1655MC's applications and data to the PE1650 asap.
-
-Can I just swap the 1655MC's two hard drives with 1650's ones?
-I am not sure how the PERC 3/Di and PERC 4/IM handle RAID 1 and if
-each RAID controller will be able to read the data written by the
-other one.
-
-I am only interested in migrating PE1655MC's data and application to
-the PE1650, I don't care if PE1650's data and application get lost in
-the migration.
-
-If the swapping the HDs won't work, what is the best way to clone
-PE1655MC's HDs to PE1650's ones over the network? Is there any special
-Linux distribution that can be booted off the network (PXE) for it?
-
-Thanks a lot.
