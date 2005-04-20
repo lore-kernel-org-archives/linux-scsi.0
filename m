@@ -1,126 +1,81 @@
-From: "Bhat, Vinod" <vinod.bhat@hp.com>
-Subject: Re: Fibre Channel state of the union
-Date: Wed, 20 Apr 2005 14:43:23 -0400
-Message-ID: <48D2F90F2962FC48852540179EC444F605E699C0@tayexc18.americas.cpqcorp.net>
+From: Dmitry Yusupov <dmitry_yus@yahoo.com>
+Subject: RE: 5.x branch mainline kernel push in two weeks?
+Date: Wed, 20 Apr 2005 11:50:08 -0700
+Message-ID: <1114023008.14522.30.camel@beastie>
+References: <41EBA11203419D4CA8EB4C6140D8B4010295B3C5@AVEXCH01.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tayrelbas04.tay.hp.com ([161.114.80.247]:62639 "EHLO
-	tayrelbas04.tay.hp.com") by vger.kernel.org with ESMTP
-	id S261796AbVDTSnY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Apr 2005 14:43:24 -0400
-Received: from tayexg12.americas.cpqcorp.net (tayexg12.americas.cpqcorp.net [16.103.130.127])
-	by tayrelbas04.tay.hp.com (Postfix) with ESMTP id 23E34200014B
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Apr 2005 14:43:24 -0400 (EDT)
-Content-class: urn:content-classes:message
+Received: from smtp108.mail.sc5.yahoo.com ([66.163.170.6]:8035 "HELO
+	smtp108.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S261650AbVDTSuK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Apr 2005 14:50:10 -0400
+In-Reply-To: <41EBA11203419D4CA8EB4C6140D8B4010295B3C5@AVEXCH01.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Duane Grigsby <duane.grigsby@qlogic.com>
+Cc: Christoph Hellwig <hch@lst.de>, open-iscsi@googlegroups.com, linux-iscsi development team <linux-iscsi-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
 
-Hi,
+On Wed, 2005-04-20 at 11:29 -0700, Duane Grigsby wrote:
+> No, that's not true; we are TOTALLY committed to getting all of our
+> drivers in the upstream kernel. I have been working on the ISCSI driver
+> cleanup to the level of our Fibre Channel driver as Andrew has done. I'm
+> making it conform to the current linux-scsi API, ISCSI transport, and
+> stripping out all of the failover baggage. My goal is the have something
+> upstream in 2 - 3 weeks, if not before.   
 
-Here are few thoughts. On sourceforge there is a hbaapi project.
-http://sourceforge.net/projects/hbaapi/ This is old project. Is it
-possible to update that one or create a new project for hbaapi? I
-believe hbaapi support FC-HBA version 1 and 2. Now we are currently
-working on SM-HBA. This is based on FC-HBA. Currently this include SAS.
-Once SM-HBA became standard, we can add SM-HBA to existing project.
-
-If we have a open source project and supported by major HBA vendors, we
-can build tools(open source) on this project. That will help bigger
-community. Here is the SN Ping and Traceroute project proposal. This is
-one example.
-
-http://www.t11.org/ftp/t11/admin/project_proposals/05-225v0.pdf
-http://www.t11.org/ftp/t11/admin/project_proposals/05-177v1.txt 
-
-Thanks,
--Vinod Bhat
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Christoph Hellwig
-Sent: Monday, April 18, 2005 11:40 AM
-To: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: Fibre Channel state of the union
-
-With the upcoming merge of the current SCSI development branch (probably
-after the 2.6.12 release), Linux will have more advanced Fibre Channel
-support than any currently available operating system.
-
-The new Fibre Channel (FC) transport class offers two major advantages
-over traditional standalone drivers:
-
-(1) It provides an easy to use library to deal with most aspects of FC
-remote port management and its integration into SAM and the Linux SCSI
-layer.
-
-      - a remote port object that sits between the host and the target
-in the Linux SCSI layer object model
-      - support for remote port based LUN scanning, including live
-rescanning on fabric topology changes and stable remove port to SCSI
-target id mappings
-      - a queue freeze facility to handle temporary cable unplugs
-without generating I/O errors
-     
-(2) a common userspace interface to transport specific and management
-information in sysfs.  The information provided is based on a sane
-subset of the SNIA HBA API specification.
+But don't you think it is better to have integrated solution for all
+iSCSI transports including QLogic's HBA and have unified user-space set
+of tools? How about collaborate on this issue and come up with somewhat
+generic which will fit with ongoing efforts we have today:
  
-This reduces the burden of writing and maintaining an FC HBA driver
-substantially, for example the recent conversion of the qla2xxx driver
-to use these facilities removes over 3000 lines of code (about 1/5 of
-the overall driver size) while adding new features and a userspace
-management interface.
-The FC transport class thus allows hardware vendors to concentrate on
-interfacing with the hardware and support their unique features, freeing
-them from the burden of reimplementing basic infrastructure in every
-driver and designing ad hoc management interfaces.
- 
-We now have two drivers supporting this infrastructure fully:
+1) iSCSI/TCP
+2) your QLogic's HBA
+3) iSER/IB
 
-  - qla2xxx for Qlogic 2100/2200/23xx HBAs
-  - lpfc for all Emulex SLI2 HBAs
+I think those three projects combined could come up with generic iSCSI
+solution(including user-space tools and API) which will really fit for
+everyone else on the planet.
 
-Two drivers for modern hardware don't fully use this infrastructure yet,
-but we are working with the maintainers and expect the drivers to be
-updated to take advantage of the new FC transport class soon.
+It would be really nice if you would participate in ongoing interface
+discussion on next mailing lists:
 
-  - zfcp for the Fibre Channel attachment on the IBM zSeries mainframes
-  - mptfusion for the LSI "Fusion" 909/919(X)/929(X) HBAs
- 
-Still missing is an Open Source tool application utilizing our APIs. The
-currently available proprietary applications are inflexible, available
-only for very few of the architectures supported by Linux, and tied to
-specific HBAs. The common API and hardware independence provide a great
-opportunity for the Hardware vendors to collaborate on a single Open
-Source management application and leverage the cost savings of an open
-development method.
+1) linux-iscsi-devel@lists.sourceforge.net
+2) open-iscsi@googlegroups.com
+3) iscsitarget-devel@lists.sourceforge.net
 
-We are also looking forward to a bridge from the Linux management
-interfaces to the "industry-standard" SNIA HBA API, allowing various
-management applications to work out of the box with our stack.
- 
-To make these new features available to Enterprise users and reduce the
-fragmentation in driver and management space we will be working with the
-major players in the Storage Industry and the Linux Distribution vendors
-to support and certify this stack in the near future.
+Thanks!
 
-Special thanks go to Emulex and James Smart in particular for
-implementing the majority of the new Fibre Channel transport class. We
-also want to thank Andrew Vasquez at Qlogic for providing valuable input
-on the transport class design and for updating the qla2xx driver to use
-the new facilities quickly.
- 
-The Linux SCSI community plans to provide a similar framework for Serial
-Attached SCSI (SAS) transports in the near future.
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Christoph Hellwig
+> Sent: Wednesday, April 20, 2005 1:49 AM
+> To: open-iscsi@googlegroups.com
+> Cc: linux-iscsi development team; linux-scsi@vger.kernel.org
+> Subject: Re: 5.x branch mainline kernel push in two weeks?
+> 
+> On Wed, Apr 20, 2005 at 01:29:11AM -0700, Mike Christie wrote:
+> > Are you going to try and push someone like qla4010 which has a similar
+> 
+> > interface to qla2xxx (it uses the msg box interface) to use the
+> netlink 
+> > interface? With a lot of the iscsi stuff masked away it seems a little
+> 
+> > difficult to go the extent open-iscsi did?
+> 
+> I'm not sure we should care too much about the qla4xxx driver.  It's
+> never been posted to linux-scsi, and the driver they pushed to SuSE
+> ignores everything we've said about scsi low-level drivers.  It looks
+> like the iSCSI part of Qlogic simply doesn't care about Linux (that is
+> upstream, not the major forks)
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Thanks to Arjan van de Ven, Peter Jones, Randy Dunlap, Rik van Riel,
-Nikita Danilov and James Bottomley for reviewing this document and
-suggesting various improvements.
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org More majordomo info
-at  http://vger.kernel.org/majordomo-info.html
