@@ -1,36 +1,79 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH] drivers/scsi/st.c: decrement in_use under the lock in
- st_open
-Date: Thu, 21 Apr 2005 19:40:18 +0300 (EEST)
-Message-ID: <Pine.LNX.4.61.0504211920520.6548@kai.makisara.local>
-References: <31176667.1114096111445.JavaMail.root@vms064.mailsrvcs.net>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: fastfail operation and retries
+Date: Thu, 21 Apr 2005 09:42:05 -0700
+Message-ID: <20050421164205.GA20482@us.ibm.com>
+References: <20050419171953.GA8444@lion28.boeblingen.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep01-0.kolumbus.fi ([193.229.0.41]:3552 "EHLO
-	fep01-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S261512AbVDUQiN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Apr 2005 12:38:13 -0400
-In-Reply-To: <31176667.1114096111445.JavaMail.root@vms064.mailsrvcs.net>
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:218 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261534AbVDUQmS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Apr 2005 12:42:18 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e3.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j3LGgHEd029212
+	for <linux-scsi@vger.kernel.org>; Thu, 21 Apr 2005 12:42:17 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j3LGgHax092762
+	for <linux-scsi@vger.kernel.org>; Thu, 21 Apr 2005 12:42:17 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j3LGgH8P015102
+	for <linux-scsi@vger.kernel.org>; Thu, 21 Apr 2005 11:42:17 -0500
+Content-Disposition: inline
+In-Reply-To: <20050419171953.GA8444@lion28.boeblingen.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nate Dailey <nhdailey@verizon.net>
-Cc: linux-scsi@vger.kernel.org
+To: Andreas Herrmann <aherrman@de.ibm.com>
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>, dm-devel@redhat.com
 
-On Thu, 21 Apr 2005, Nate Dailey wrote:
-
-> Hi, this patch changes the err_out case in st_open to decrement STp->in_use under the st_dev_arr_lock.
+On Tue, Apr 19, 2005 at 07:19:53PM +0200, Andreas Herrmann wrote:
+> Hi,
 > 
-> I'm just basing this on looking at the code (I didn't run into an actual 
-> problem here), but it seems like the right thing to do; st_open and 
-> release hold the lock when adjusting in_use in other places.
+> I have question(s) regarding the fastfail operation of the SCSI stack.
 > 
-I don't think it is necessary hold the lock when setting STp->in_use to 
-zero. The problem is that the usage is not consistent in st. Either this  
-patch should be included or the locking should be removed from st_release. 
-I don't have any strong opinions about the best solution.
+> Performing multipath-tests with an IBM ESS I encountered problems.
+> During certain operations on an ESS (quiesce/resume and such) requests
+> on all paths fail temporarily with an data underrun (resid is set in
+> the FCP-response).  In another situation abort sequences happen (see
+> FC-FS).
+> 
+> In both cases it is not a path failure but the device (ESS) reports
+> error conditions temporarily (some seconds).
+> 
+> Now on error on the first path the multipath layer initiates failover
+> to other available path(s) where requests will immediately fail.
+> 
+> Using linux-2.4 and LVM such problems did not occure. There were
+> enough retries (5 for each path) to handle such situations.
+> 
+> Now if the FASTFAIL flag is set the SCSI stack prevents retries for
+> failed SCSI commands.
+> 
+> Problem is that the multipath layer cannot distinguish between path
+> and device failures (and won't do any retries for the failed request
+> on the same path anyway).
+> 
+> How can an lld force the SCSI stack to retry a failed scsi-command
+> (without using DID_REQUEUE or DID_IMM_RETRY, which both do not change
+> the retry counter).
+> 
+> What about a DID_FORCE_RETRY ?  Or is there any outlook when there
+> will be a better interface between the SCSI stack and the multipath
+> layer to properly handle retries.
 
-Thanks for pointing out this inconsistency.
+We need a patch like Mike Christie had, this:
 
--- 
-Kai
+http://marc.theaimsgroup.com/?l=linux-kernel&m=107961883914541&w=2
+
+The scsi core should decode the sense data and pass up the result, then dm
+need not decode sense data, and we don't need sense data passed around via
+the block layer.
+
+scsi core could be changed to handle device specific decoding via sense
+tables that can be modified via sysfs, similar to devinfo code (well,
+devinfo still lacks a sysfs interface).
+
+For ESS, you probably also need the BLIST_RETRY_HWERROR that is in
+current 2.6.12 rc.
+
+-- Patrick Mansfield
