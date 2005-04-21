@@ -1,69 +1,38 @@
-From: Andreas Herrmann <aherrman@de.ibm.com>
-Subject: [PATCH] zfcp: fix compile error
-Date: Thu, 21 Apr 2005 14:42:32 +0200
-Message-ID: <20050421124232.GA27754@lion28.boeblingen.de.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH scsi-misc-2.6 03/05] scsi: make scsi_queue_insert() use
+	blk_requeue_request()
+Date: Thu, 21 Apr 2005 08:45:28 -0400
+Message-ID: <1114087528.5054.2.camel@mulgrave>
+References: <20050419231435.D85F89C0@htj.dyndns.org>
+	 <20050419231435.329FA30B@htj.dyndns.org>
+	 <1114039446.5933.17.camel@mulgrave>  <20050421061026.GE9371@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.de.ibm.com ([195.212.29.153]:34981 "EHLO
-	mtagate4.de.ibm.com") by vger.kernel.org with ESMTP id S261333AbVDUMlm
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Apr 2005 08:41:42 -0400
-Content-Disposition: inline
+Received: from stat16.steeleye.com ([209.192.50.48]:54448 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261334AbVDUMph (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Apr 2005 08:45:37 -0400
+In-Reply-To: <20050421061026.GE9371@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Dittmer <jdittmer@ppp0.net>, James Bottomley <jejb@steeleye.com>
-Cc: Linux SCSI <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: Tejun Heo <htejun@gmail.com>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-	Jan Dittmer <jdittmer@ppp0.net> wrote:
-	21.04.2005 10:49
+On Thu, 2005-04-21 at 08:10 +0200, Jens Axboe wrote:
+> I wondered about this action recently myself. What is the point in
+> requeueing this request, only to call scsi_run_queue() ->
+> blk_run_queue() -> issue same request. If the point really is to reissue
+> the request immediately, I can think of many ways more efficient than
+> this :-)
 
-> > aherrman@de.ibm.com:
-> >     [PATCH] zfcp: convert to compat_ioctl
+Well ... that's because the logic that decides whether to plug the queue
+or simply exit is in the scsi_request_fn().  That's what the comment is
+about.  We could abstract the check into a function, but (unless you
+have any suggestions on rewording it) I thought the comment made what
+was going on reasonably clear.
 
-> This does not seem to compile anymore with defconfig:
+James
 
->   CC      drivers/s390/scsi/zfcp_aux.o
-> /usr/src/ctest/rc/kernel/drivers/s390/scsi/zfcp_aux.c:63: warning: initialization from incompatible pointer type
-> /usr/src/ctest/rc/kernel/drivers/s390/scsi/zfcp_aux.c:366: error: conflicting types for `zfcp_cfdc_dev_ioctl'
-
-
-Oops. Submitted patch was incorrect.
-Attached patch (against 2.6.12-rc3) will fix the problem.
-Sorry, for any inconvenience.
-
-
-Regards,
-
-Andreas
-
-
-zfcp: fix compile error
-
-Signed-off-by: Andreas Herrmann <aherrman@de.ibm.com>
-
-
-diff -bBrauN linux-2.6.x/drivers/s390/scsi-orig/zfcp_aux.c linux-2.6.x/drivers/s390/scsi/zfcp_aux.c
---- linux-2.6.x/drivers/s390/scsi-orig/zfcp_aux.c	2005-04-21 12:36:44.000000000 +0200
-+++ linux-2.6.x/drivers/s390/scsi/zfcp_aux.c	2005-04-21 12:40:48.000000000 +0200
-@@ -52,7 +52,7 @@
- static inline int zfcp_sg_list_copy_to_user(void __user *,
- 					    struct zfcp_sg_list *, size_t);
- 
--static int zfcp_cfdc_dev_ioctl(struct file *, unsigned int, unsigned long);
-+static long zfcp_cfdc_dev_ioctl(struct file *, unsigned int, unsigned long);
- 
- #define ZFCP_CFDC_IOC_MAGIC                     0xDD
- #define ZFCP_CFDC_IOC \
-diff -bBrauN linux-2.6.x/drivers/s390/scsi-orig/zfcp_def.h linux-2.6.x/drivers/s390/scsi/zfcp_def.h
---- linux-2.6.x/drivers/s390/scsi-orig/zfcp_def.h	2005-04-21 12:36:44.000000000 +0200
-+++ linux-2.6.x/drivers/s390/scsi/zfcp_def.h	2005-04-21 12:41:56.000000000 +0200
-@@ -61,7 +61,6 @@
- #include <linux/mempool.h>
- #include <linux/syscalls.h>
- #include <linux/ioctl.h>
--#include <linux/ioctl32.h>
- 
- /************************ DEBUG FLAGS *****************************************/
- 
 
