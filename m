@@ -1,73 +1,56 @@
-From: oliver@windfinder.com
-Subject: Raid1 on Dell Poweredge with Perc4e/Di Raid Controller running Debian
-	Sarge (3.1)
-Date: Thu, 21 Apr 2005 10:30:55 +0200
-Message-ID: <200504211030.56948.oliver@windfinder.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH] kill old EH constants
+Date: Thu, 21 Apr 2005 11:58:12 +0200 (CEST)
+Message-ID: <Pine.LNX.4.62.0504211155440.13231@numbat.sonytel.be>
+References: <200504210608.j3L682Br002585@hera.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-poweredge-bounces@dell.com>
-Content-Disposition: inline
-List-Unsubscribe: <http://lists.us.dell.com/mailman/listinfo/linux-poweredge>,
-	<mailto:linux-poweredge-request@dell.com?subject=unsubscribe>
-List-Archive: <http://lists.us.dell.com/pipermail/linux-poweredge>
-List-Post: <mailto:linux-poweredge@dell.com>
-List-Help: <mailto:linux-poweredge-request@dell.com?subject=help>
-List-Subscribe: <http://lists.us.dell.com/mailman/listinfo/linux-poweredge>,
-	<mailto:linux-poweredge-request@dell.com?subject=subscribe>
-Sender: linux-poweredge-bounces@dell.com
-Errors-To: linux-poweredge-bounces@dell.com
-To: Matt_Domsch@dell.com, linux-poweredge@dell.com, linux-scsi@vger.kernel.org
-Cc: Thomas Glas <thomas.glas@hanse.net>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from witte.sonytel.be ([80.88.33.193]:40357 "EHLO witte.sonytel.be")
+	by vger.kernel.org with ESMTP id S261234AbVDUJ6R (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Apr 2005 05:58:17 -0400
+In-Reply-To: <200504210608.j3L682Br002585@hera.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>
+Cc: Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Linux/m68k <linux-m68k@vger.kernel.org>
 
-Hello,
-I would like to use Raid1 on the Dell Poweredge with Perc4e/Di Raid Control=
-ler =
+On Wed, 20 Apr 2005, Linux Kernel Mailing List wrote:
+> tree 932c6f9689fd08a7a9d689cfbec8682ccde8175d
+> parent 84011ae88da62a20b3ae7b48e2ae3b1ef0fc810a
+> author <hch@lst.de> Mon, 11 Apr 2005 08:19:25 -0500
+> committer James Bottomley <jejb@titanic> Sun, 17 Apr 2005 06:14:52 -0500
+> 
+> [PATCH] kill old EH constants
+> 
+> Fix up two drivers that incorrectly were using the old return values for
+> their new-style EH methods and kill off scsi_obsolete.h that defined the
+> constants.  The initio driver has all these constansts defined locally
+> and uses them internally, I'll fix that up some time later.
+> 
+> Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
 
-and two 2 73 GB drives running Debian Sarge (3.1).
+sun3_NCR5380.c still uses the following:
 
-At http://linux.dell.com/storage.shtml I read that the Powerege 2850 Perc4e=
-/Di =
+  - SCSI_ABORT_SUCCESS
+  - SCSI_ABORT_ERROR
+  - SCSI_ABORT_SNOOZE
+  - SCSI_ABORT_BUSY
+  - SCSI_ABORT_NOT_RUNNING
+  - SCSI_RESET_SUCCESS
+  - SCSI_RESET_BUS_RESET
 
-requires megaraid2 driver 2.00.3 or higher on 2.4.x kernel. On 2.6.x kernel=
-s =
+causing the driver to fail to build in 2.6.12-rc3. What should I replace them
+by?
 
-(x < 9) there is no driver for these adapters. On 2.6.x (x >=3D 9) use the =
+Gr{oetje,eeting}s,
 
-'megaraid_mbox' and 'megaraid_mm' drivers.
+						Geert
 
-Problem: The Debian Installers offers only to install:
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-- 2.4.x (which seems to be okay for the raid) OR =
-
-- 2.6.8 (which would not allow the use of the Raid)
-
-Solution:
-Is there a megaraid driver for the 2.6.8 kernel? If so, where?
-
-If not, should I use 2.4.x kernel or try to install a 2.6.9 kernel on Debia=
-n =
-
-Sarge?
-
--- =
-
-Oliver K=F6nig
-
-Windfinder.com
-Knorrstr. 24 Hinterhaus
-24106 Kiel
-Germany
-phone +49 431-8008643
-VoIP +49 1801-7775558229
-fax +49 431-8008644
-Mobile +49 177-4933362
-oliver@windfinder.com
-www.windfinder.com
-
-_______________________________________________
-Linux-PowerEdge mailing list
-Linux-PowerEdge@dell.com
-http://lists.us.dell.com/mailman/listinfo/linux-poweredge
-Please read the FAQ at http://lists.us.dell.com/faq
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
