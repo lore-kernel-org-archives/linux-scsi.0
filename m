@@ -1,46 +1,36 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: Perform uncached reads on SCSI drives?
-Date: Thu, 21 Apr 2005 09:14:21 -0700
-Message-ID: <20050421161421.GA20143@us.ibm.com>
-References: <66F9227F7417874C8DB3CEB0577274170450EE@MILEX0.Miltope.local>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCH] drivers/scsi/st.c: decrement in_use under the lock in
+ st_open
+Date: Thu, 21 Apr 2005 19:40:18 +0300 (EEST)
+Message-ID: <Pine.LNX.4.61.0504211920520.6548@kai.makisara.local>
+References: <31176667.1114096111445.JavaMail.root@vms064.mailsrvcs.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:31925 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S261503AbVDUQOe
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Apr 2005 12:14:34 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e33.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j3LGEW4I140844
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Apr 2005 12:14:33 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j3LGEWax050224
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Apr 2005 12:14:32 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j3LGEWd3027531
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Apr 2005 11:14:32 -0500
-Content-Disposition: inline
-In-Reply-To: <66F9227F7417874C8DB3CEB0577274170450EE@MILEX0.Miltope.local>
+Received: from fep01-0.kolumbus.fi ([193.229.0.41]:3552 "EHLO
+	fep01-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S261512AbVDUQiN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Apr 2005 12:38:13 -0400
+In-Reply-To: <31176667.1114096111445.JavaMail.root@vms064.mailsrvcs.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Drew Winstel <DWinstel@Miltope.com>
-Cc: "Linux-scsi (E-mail)" <linux-scsi@vger.kernel.org>
+To: Nate Dailey <nhdailey@verizon.net>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Apr 21, 2005 at 10:44:23AM -0500, Drew Winstel wrote:
-> It has been a busy week, I know, but does anyone have any tips?
+On Thu, 21 Apr 2005, Nate Dailey wrote:
 
-You could try setting read cache disable, I don't know if that setting
-must be honored, or how ATA/SATA handle it. See mode page 8 for SCSI block
-commands. 
+> Hi, this patch changes the err_out case in st_open to decrement STp->in_use under the st_dev_arr_lock.
+> 
+> I'm just basing this on looking at the code (I didn't run into an actual 
+> problem here), but it seems like the right thing to do; st_open and 
+> release hold the lock when adjusting in_use in other places.
+> 
+I don't think it is necessary hold the lock when setting STp->in_use to 
+zero. The problem is that the usage is not consistent in st. Either this  
+patch should be included or the locking should be removed from st_release. 
+I don't have any strong opinions about the best solution.
 
-The sg utilities sg_modes can probably set it.
+Thanks for pointing out this inconsistency.
 
-Better yet, do IO to more locations on the disk, not just the very
-beginning and the very end.
-
-> The reads we're calling are getting cached.  If we call 100 reads--50 to the 
-> beginning of the drive alternating with 50 to the end--the first read will 
-> sometimes appear to have a realistic result, then the rest will all complete 
-> in the neighborhood of 10 microseconds.  
-
--- Patrick Mansfield
+-- 
+Kai
