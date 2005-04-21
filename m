@@ -1,48 +1,43 @@
-From: Nate Dailey <nhdailey@verizon.net>
-Subject: [PATCH] drivers/scsi/sr_ioctl.c: check for failed allocation
-Date: Thu, 21 Apr 2005 09:45:22 -0500 (CDT)
-Message-ID: <5385768.1114094722652.JavaMail.root@vms064.mailsrvcs.net>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: FW: [RFC] SAS domain layout for Linux sysfs
+Date: Thu, 21 Apr 2005 11:04:35 -0400
+Message-ID: <4267C103.8060304@adaptec.com>
+References: <D4CFB69C345C394284E4B78B876C1CF107DC053F@cceexc23.americas.cpqcorp.net> <20050421145020.GA23934@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vms040pub.verizon.net ([206.46.252.40]:10405 "EHLO
-	vms040pub.verizon.net") by vger.kernel.org with ESMTP
-	id S261400AbVDUOpX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Apr 2005 10:45:23 -0400
-Received: from vms064.mailsrvcs.net ([192.168.1.1])
- by vms040.mailsrvcs.net (Sun Java System Messaging Server 6.2 HotFix 0.04
- (built Dec 24 2004)) with ESMTPA id <0IFA001I0WZM5MP1@vms040.mailsrvcs.net> for
- linux-scsi@vger.kernel.org; Thu, 21 Apr 2005 09:45:22 -0500 (CDT)
+Received: from magic.adaptec.com ([216.52.22.17]:4233 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261420AbVDUPEk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Apr 2005 11:04:40 -0400
+In-Reply-To: <20050421145020.GA23934@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@suse.de
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Miller, Mike (OS Dev)" <mike.miller@hp.com>, James Bottomley <James.Bottomley@SteelEye.com>, "Patterson, Andrew D (Linux R&D)" <andrew.patterson@hp.com>, "Nagshain, Madhuresh" <Madhuresh_Nagshain@adaptec.com>, "Ganguly, Sukanta" <Sukanta_Ganguly@adaptec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Douglas Gilbert <dougg@torque.net>, "Moore, Eric Dean" <Eric.Moore@lsil.com>
 
-Hi,
+On 04/21/05 10:50, Christoph Hellwig wrote:
+> On Thu, Apr 21, 2005 at 09:13:17AM -0500, Miller, Mike (OS Dev) wrote:
+> 
+>>Hi Christoph and James,
+>>Luben submitted this RFC back on Apr 13. There have been no responses
+>>either public or private. Does this proposal seem adequate? Is there
+>>something else that should be added?
+>>I'm trying to write a spec for interfacing with this SAS domain and was
+>>hoping for some type of feedback.
+> 
+> 
+> No, I don't like it at all.  I don't want to comment before I have
+> understood all the implications and some good suggestion, though.
+> 
+> Hopefully this weekend.
 
-I noticed a case in sr_ioctl.c's sr_get_mcn where a buffer is allocated, but the pointer isn't checked for null.
+Hi Christoph,
 
-This patch against 2.6.12-rc2 adds a check.
+Do you mind telling us, why you "don't like it at all"?
+Initial thoughts would suffice.
 
-Nate Dailey
-Stratus Technologies
-
-
-Signed-off-by: Nate Dailey <nate.dailey@stratus.com>
-
-
---- linux-2.6.12-rc2/drivers/scsi/sr_ioctl.c.orig	2005-04-20 11:31:27.000000000 -0400
-+++ linux-2.6.12-rc2/drivers/scsi/sr_ioctl.c	2005-04-20 11:33:58.000000000 -0400
-@@ -281,6 +281,9 @@ int sr_get_mcn(struct cdrom_device_info 
- 	char *buffer = kmalloc(32, GFP_KERNEL | SR_GFP_DMA(cd));
- 	int result;
- 
-+	if (!buffer)
-+		return -ENOMEM;
-+
- 	memset(&cgc, 0, sizeof(struct packet_command));
- 	cgc.cmd[0] = GPCMD_READ_SUBCHANNEL;
- 	cgc.cmd[2] = 0x40;	/* I do want the subchannel info */
-
+Thanks,
+	Luben
 
