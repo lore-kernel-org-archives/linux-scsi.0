@@ -1,52 +1,70 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: The future of host_scribble
-Date: Thu, 21 Apr 2005 01:23:33 +0100
-Message-ID: <20050421002333.GA8556@parcelfarce.linux.theplanet.co.uk>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH scsi-misc-2.6 03/05] scsi: make scsi_queue_insert() use
+	blk_requeue_request()
+Date: Wed, 20 Apr 2005 22:16:32 -0400
+Message-ID: <1114049793.5000.4.camel@mulgrave>
+References: <20050419231435.D85F89C0@htj.dyndns.org>
+	 <20050419231435.329FA30B@htj.dyndns.org>
+	 <1114039446.5933.17.camel@mulgrave>  <4266F1D0.2060003@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:44503 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261860AbVDUAX1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Apr 2005 20:23:27 -0400
-Received: from willy by parcelfarce.linux.theplanet.co.uk with local (Exim 4.43)
-	id 1DOPTh-0006Xi-HD
-	for linux-scsi@vger.kernel.org; Thu, 21 Apr 2005 01:23:33 +0100
-Content-Disposition: inline
+Received: from stat16.steeleye.com ([209.192.50.48]:56489 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261163AbVDUCQl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Apr 2005 22:16:41 -0400
+In-Reply-To: <4266F1D0.2060003@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <axboe@suse.de>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+
+On Thu, 2005-04-21 at 09:20 +0900, Tejun Heo wrote:
+>   Hello, James.
+> 
+> James Bottomley wrote:
+> > On Wed, 2005-04-20 at 08:15 +0900, Tejun Heo wrote:
+> > 
+> >>-	 * Insert this command at the head of the queue for it's device.
+> >>-	 * It will go before all other commands that are already in the queue.
+> >>-	 *
+> >>-	 * NOTE: there is magic here about the way the queue is plugged if
+> >>-	 * we have no outstanding commands.
+> >>-	 * 
+> >>-	 * Although this *doesn't* plug the queue, it does call the request
+> >>-	 * function.  The SCSI request function detects the blocked condition
+> >>-	 * and plugs the queue appropriately.
+> > 
+> > 
+> > This comment still looks appropriate to me ... why do you want to remove
+> > it?
+> > 
+> 
+>   Well, the thing is that we don't really care what exactly happens to 
+> the queue or how the queue is plugged or not.  All we need to do are to 
+> requeue the request and kick the queue in the ass.  Hmmm, maybe I should 
+> keep the comment about how the request will be put at the head of the 
+> queue, but the second part about plugging doesn't really belong here, I 
+> think.
+
+Really?  We do care greatly.  If you requeue with no other outstanding
+commands to the device, the block queue will never restart unless it's
+plugged, and the device will hang. The comment is explaining how this
+happens.
+
+>   Yes, that will be more efficient but I don't think it would make
+> any 
+> noticeable difference.  IMO, universally using scsi_run_queue() to
+> kick 
+> scsi request queues is better than mixing blk_run_queue() and 
+> scsi_run_queue() for probably unnoticeable optimization.  If we start
+> to 
+> mix'em, we need to rationalize why specific one is chosen in specific 
+> places and that's just unnecessary.
+
+Fair enough.
+
+James
 
 
-In scsi_cmnd there's an element called host_scribble.  The name and the
-comment by it were sufficiently confusing that I didn't realise that this
-field is basically for the host's private data.  Any objections to something
-like this, assuming I also submit a patch that converts all the drivers?
-
-+++ include/scsi/scsi_cmnd.h    2005-04-20 20:16:41.562034944 -0400
-@@ -129,13 +129,8 @@
-         */
-        struct scsi_pointer SCp;        /* Scratchpad used by some host adapters */
- 
--       unsigned char *host_scribble;   /* The host adapter is allowed to
--                                          * call scsi_malloc and get some memory
--                                          * and hang it here.     The host adapter
--                                          * is also expected to call scsi_free
--                                          * to release this memory.  (The memory
--                                          * obtained by scsi_malloc is guaranteed
--                                          * to be at an address < 16Mb). */
-+       void *host_data;        /* Pointer to the host's data structure
-+                                * associated with this command. */
- 
-        int result;             /* Status code from lower level driver */
- 
-(the only remaining references to scsi_malloc are in comments ... I'll
-submit a different patch to remove those too)
-
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
