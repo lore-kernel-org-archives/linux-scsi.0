@@ -1,43 +1,47 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: FW: [RFC] SAS domain layout for Linux sysfs
-Date: Thu, 21 Apr 2005 11:04:35 -0400
-Message-ID: <4267C103.8060304@adaptec.com>
-References: <D4CFB69C345C394284E4B78B876C1CF107DC053F@cceexc23.americas.cpqcorp.net> <20050421145020.GA23934@infradead.org>
+From: Nate Dailey <nhdailey@verizon.net>
+Subject: [PATCH] drivers/scsi/st.c: decrement in_use under the lock in st_open
+Date: Thu, 21 Apr 2005 10:08:31 -0500 (CDT)
+Message-ID: <31176667.1114096111445.JavaMail.root@vms064.mailsrvcs.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:4233 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261420AbVDUPEk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Apr 2005 11:04:40 -0400
-In-Reply-To: <20050421145020.GA23934@infradead.org>
+Received: from vms046pub.verizon.net ([206.46.252.46]:11396 "EHLO
+	vms046pub.verizon.net") by vger.kernel.org with ESMTP
+	id S261422AbVDUPIb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Apr 2005 11:08:31 -0400
+Received: from vms064.mailsrvcs.net ([192.168.1.1])
+ by vms046.mailsrvcs.net (Sun Java System Messaging Server 6.2 HotFix 0.04
+ (built Dec 24 2004)) with ESMTPA id <0IFA00FQ1Y271284@vms046.mailsrvcs.net> for
+ linux-scsi@vger.kernel.org; Thu, 21 Apr 2005 10:08:31 -0500 (CDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Miller, Mike (OS Dev)" <mike.miller@hp.com>, James Bottomley <James.Bottomley@SteelEye.com>, "Patterson, Andrew D (Linux R&D)" <andrew.patterson@hp.com>, "Nagshain, Madhuresh" <Madhuresh_Nagshain@adaptec.com>, "Ganguly, Sukanta" <Sukanta_Ganguly@adaptec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Douglas Gilbert <dougg@torque.net>, "Moore, Eric Dean" <Eric.Moore@lsil.com>
+To: Kai.Makisara@kolumbus.fi
+Cc: linux-scsi@vger.kernel.org
 
-On 04/21/05 10:50, Christoph Hellwig wrote:
-> On Thu, Apr 21, 2005 at 09:13:17AM -0500, Miller, Mike (OS Dev) wrote:
-> 
->>Hi Christoph and James,
->>Luben submitted this RFC back on Apr 13. There have been no responses
->>either public or private. Does this proposal seem adequate? Is there
->>something else that should be added?
->>I'm trying to write a spec for interfacing with this SAS domain and was
->>hoping for some type of feedback.
-> 
-> 
-> No, I don't like it at all.  I don't want to comment before I have
-> understood all the implications and some good suggestion, though.
-> 
-> Hopefully this weekend.
+Hi, this patch changes the err_out case in st_open to decrement STp->in_use under the st_dev_arr_lock.
 
-Hi Christoph,
+I'm just basing this on looking at the code (I didn't run into an actual problem here), but it seems like the right thing to do; st_open and release hold the lock when adjusting in_use in other places.
 
-Do you mind telling us, why you "don't like it at all"?
-Initial thoughts would suffice.
+This is against kernel 2.6.12-rc2.
 
-Thanks,
-	Luben
+Nate Dailey
+Stratus Technologies
+
+
+Signed-off-by: Nate Dailey <nate.dailey@stratus.com>
+
+
+--- linux-2.6.12-rc2/drivers/scsi/st.c.orig	2005-04-20 11:28:39.000000000 -0400
++++ linux-2.6.12-rc2/drivers/scsi/st.c	2005-04-20 11:30:08.000000000 -0400
+@@ -1115,7 +1115,9 @@ static int st_open(struct inode *inode, 
+ 
+  err_out:
+ 	normalize_buffer(STp->buffer);
++	write_lock(&st_dev_arr_lock);
+ 	STp->in_use = 0;
++	write_unlock(&st_dev_arr_lock);
+ 	scsi_device_put(STp->device);
+ 	return retval;
+ 
 
