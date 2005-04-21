@@ -1,47 +1,107 @@
-From: Nate Dailey <nhdailey@verizon.net>
-Subject: [PATCH] drivers/scsi/st.c: decrement in_use under the lock in st_open
-Date: Thu, 21 Apr 2005 10:08:31 -0500 (CDT)
-Message-ID: <31176667.1114096111445.JavaMail.root@vms064.mailsrvcs.net>
+From: "Drew Winstel" <DWinstel@Miltope.com>
+Subject: RE: Perform uncached reads on SCSI drives?
+Date: Thu, 21 Apr 2005 10:44:23 -0500
+Message-ID: <66F9227F7417874C8DB3CEB0577274170450EE@MILEX0.Miltope.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vms046pub.verizon.net ([206.46.252.46]:11396 "EHLO
-	vms046pub.verizon.net") by vger.kernel.org with ESMTP
-	id S261422AbVDUPIb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Apr 2005 11:08:31 -0400
-Received: from vms064.mailsrvcs.net ([192.168.1.1])
- by vms046.mailsrvcs.net (Sun Java System Messaging Server 6.2 HotFix 0.04
- (built Dec 24 2004)) with ESMTPA id <0IFA00FQ1Y271284@vms046.mailsrvcs.net> for
- linux-scsi@vger.kernel.org; Thu, 21 Apr 2005 10:08:31 -0500 (CDT)
+Received: from firewall.miltope.com ([208.12.184.221]:40626 "EHLO
+	smtp.miltope.com") by vger.kernel.org with ESMTP id S261457AbVDUPnr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Apr 2005 11:43:47 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai.Makisara@kolumbus.fi
-Cc: linux-scsi@vger.kernel.org
+To: "Linux-scsi (E-mail)" <linux-scsi@vger.kernel.org>
 
-Hi, this patch changes the err_out case in st_open to decrement STp->in_use under the st_dev_arr_lock.
+It has been a busy week, I know, but does anyone have any tips?
 
-I'm just basing this on looking at the code (I didn't run into an actual problem here), but it seems like the right thing to do; st_open and release hold the lock when adjusting in_use in other places.
+Thanks, 
 
-This is against kernel 2.6.12-rc2.
+Drew
 
-Nate Dailey
-Stratus Technologies
+---------------------------------------------------------------------------
+Is there a way to perform large quantities of uncached reads on a drive 
+connected to a SCSI controller under Linux 2.6.x?
 
+Here's a little about the rationale behind such a move:
+Previously, we had been testing hard drives using full-capacity, 1/3-capacity, 
+and random stroke using the SCSI Seek 10 command with SCSI drives and the 
+WIN_SEEK command for 'true' IDE drives (i.e. drives accessed via /dev/hd[a-t]) 
+as part of our process for ensuring drives meet customer performance and 
+reliability requirements.  Thanks to the emergence of SATA and the resulting 
+inquiries from technical minds, we have begun to test those drives using the 
+same benchmarks.
 
-Signed-off-by: Nate Dailey <nate.dailey@stratus.com>
+This is where we run into problems.  
 
+Since libata-scsi.c simulates (basically a no-op; see libata-scsi.c) the SEEK 
+6 and SEEK 10 commands, we have attempted to switch to calling reads to the 
+beginning/middle/end/wherever as necessary.  
 
---- linux-2.6.12-rc2/drivers/scsi/st.c.orig	2005-04-20 11:28:39.000000000 -0400
-+++ linux-2.6.12-rc2/drivers/scsi/st.c	2005-04-20 11:30:08.000000000 -0400
-@@ -1115,7 +1115,9 @@ static int st_open(struct inode *inode, 
- 
-  err_out:
- 	normalize_buffer(STp->buffer);
-+	write_lock(&st_dev_arr_lock);
- 	STp->in_use = 0;
-+	write_unlock(&st_dev_arr_lock);
- 	scsi_device_put(STp->device);
- 	return retval;
- 
+The reads we're calling are getting cached.  If we call 100 reads--50 to the 
+beginning of the drive alternating with 50 to the end--the first read will 
+sometimes appear to have a realistic result, then the rest will all complete 
+in the neighborhood of 10 microseconds.  
 
+Here is a sample SG_IO header we're passing via ioctl():
+interface_id = 83
+dxfer_direction = -3
+cmd_len = 10 
+mx_sb_len = 32 
+iovec_count = 0
+dxfer_len = 512
+dxferp = 0xbfffedc0
+cmdp = 0xbfffed60 
+sbp = 0x80786a8 
+timeout = 20000
+flags = 3
+pack_id = 0
+usr_ptr = 0x0
+status = 0 
+masked_status = 0 
+msg_status = 0 
+sb_len_wr = 0 
+host_status = 0
+driver_status = 0
+resid = 0
+duration = 0
+info = 0
+
+Hardware tested:
+Silicon Image SiI 3512 (sata_sil driver)
+Promise SATA150 TX4 (sata_promise)
+Promise Ultra133 TX2 (PDC20269 chip; pata_pdc2027x driver)
+
+Drives:
+Fujitsu MHT2080BH (80 GB 2.5" SATA)
+Seagate ST3200822AS (200 GB 3.5" SATA)
+Seagate ST3400832AS (400 GB SATA)
+Fujitsu MHT2080AH (80 GB 2.5" PATA)
+Toshiba MK4019GAX (40 GB 2.5" PATA)
+
+Kernel versions tested:
+2.6.7
+2.6.11 with libata-dev as of March 11
+
+Only the large Seagate drive was tested with the Promise SATA controller (and 
+vice versa).  Only the sata_sil driver was tested with 2.6.7. All other 
+combinations (keeping SATA with SATA and PATA with PATA, of course) were tested 
+with the same results, leading me to believe libata was to blame, unless by some
+chance we're missing a magic flag in our command block.
+
+Just to make sure this was not a libata-specific issue, I tested this same read 
+sequence with a Seagate ST336706LC Cheetah and a Seagate ST973401LC Savvio 
+connected to an Adaptec 29160 (aic7xxx driver) Ultra160 controller.  Lo and 
+behold, this produced the same results, hence me posting here instead of 
+linux-ide.  
+
+Any help would be greatly appreciated.
+
+Thanks,
+Drew
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
