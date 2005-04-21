@@ -1,56 +1,32 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH scsi-misc-2.6 03/05] scsi: make scsi_queue_insert() use blk_requeue_request()
-Date: Thu, 21 Apr 2005 08:10:26 +0200
-Message-ID: <20050421061026.GE9371@suse.de>
-References: <20050419231435.D85F89C0@htj.dyndns.org> <20050419231435.329FA30B@htj.dyndns.org> <1114039446.5933.17.camel@mulgrave>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: The future of host_scribble
+Date: Thu, 21 Apr 2005 08:46:42 +0100
+Message-ID: <20050421074641.GA17184@infradead.org>
+References: <20050421002333.GA8556@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:45037 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261888AbVDUGKi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Apr 2005 02:10:38 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:2474 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261489AbVDUHqr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Apr 2005 03:46:47 -0400
 Content-Disposition: inline
-In-Reply-To: <1114039446.5933.17.camel@mulgrave>
+In-Reply-To: <20050421002333.GA8556@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Tejun Heo <htejun@gmail.com>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Apr 20 2005, James Bottomley wrote:
-> On Wed, 2005-04-20 at 08:15 +0900, Tejun Heo wrote:
-> > -	 * Insert this command at the head of the queue for it's device.
-> > -	 * It will go before all other commands that are already in the queue.
-> > -	 *
-> > -	 * NOTE: there is magic here about the way the queue is plugged if
-> > -	 * we have no outstanding commands.
-> > -	 * 
-> > -	 * Although this *doesn't* plug the queue, it does call the request
-> > -	 * function.  The SCSI request function detects the blocked condition
-> > -	 * and plugs the queue appropriately.
+On Thu, Apr 21, 2005 at 01:23:33AM +0100, Matthew Wilcox wrote:
 > 
-> This comment still looks appropriate to me ... why do you want to remove
-> it?
-> 
-> > +	 * Requeue the command.
-> >  	 */
-> > -	blk_insert_request(device->request_queue, cmd->request, 1, cmd, 1);
-> > +	spin_lock_irqsave(q->queue_lock, flags);
-> > +	blk_requeue_request(q, cmd->request);
-> > +	spin_unlock_irqrestore(q->queue_lock, flags);
-> > +
-> > +	scsi_run_queue(q);
-> 
-> Really, wouldn't it be much more efficient simply to call blk_run_queue
-> ()? since the blocked flags were set above, that's pretty much what
-> scsi_run_queue() collapses to.
+> In scsi_cmnd there's an element called host_scribble.  The name and the
+> comment by it were sufficiently confusing that I didn't realise that this
+> field is basically for the host's private data.  Any objections to something
+> like this, assuming I also submit a patch that converts all the drivers?
 
-I wondered about this action recently myself. What is the point in
-requeueing this request, only to call scsi_run_queue() ->
-blk_run_queue() -> issue same request. If the point really is to reissue
-the request immediately, I can think of many ways more efficient than
-this :-)
-
--- 
-Jens Axboe
-
+Actually the situation about private data in scsi_cmnd is worse, there's
+another private data, that's the scsi_pointer structure embedded as SCp
+member.  If we're going to fix up naming we should find a way to fixup
+both an have a sensible name for both embedded and out of struct private
+data.  I somehow doubt it's going to happen before we drop support for
+gcc 2.95 and thus can use anonymous unions :)
