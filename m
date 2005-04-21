@@ -1,37 +1,69 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] kill old EH constants
-Date: Thu, 21 Apr 2005 11:09:33 +0100
-Message-ID: <20050421100933.GA19586@infradead.org>
-References: <200504210608.j3L682Br002585@hera.kernel.org> <Pine.LNX.4.62.0504211155440.13231@numbat.sonytel.be>
+From: Andreas Herrmann <aherrman@de.ibm.com>
+Subject: [PATCH] zfcp: fix compile error
+Date: Thu, 21 Apr 2005 14:42:32 +0200
+Message-ID: <20050421124232.GA27754@lion28.boeblingen.de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:49580 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261250AbVDUKJf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Apr 2005 06:09:35 -0400
+Received: from mtagate4.de.ibm.com ([195.212.29.153]:34981 "EHLO
+	mtagate4.de.ibm.com") by vger.kernel.org with ESMTP id S261333AbVDUMlm
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Apr 2005 08:41:42 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.62.0504211155440.13231@numbat.sonytel.be>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Linux/m68k <linux-m68k@vger.kernel.org>
+To: Jan Dittmer <jdittmer@ppp0.net>, James Bottomley <jejb@steeleye.com>
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Thu, Apr 21, 2005 at 11:58:12AM +0200, Geert Uytterhoeven wrote:
-> sun3_NCR5380.c still uses the following:
-> 
->   - SCSI_ABORT_SUCCESS
->   - SCSI_ABORT_ERROR
->   - SCSI_ABORT_SNOOZE
->   - SCSI_ABORT_BUSY
->   - SCSI_ABORT_NOT_RUNNING
->   - SCSI_RESET_SUCCESS
->   - SCSI_RESET_BUS_RESET
-> 
-> causing the driver to fail to build in 2.6.12-rc3. What should I replace them
-> by?
+	Jan Dittmer <jdittmer@ppp0.net> wrote:
+	21.04.2005 10:49
 
-You must replace NCR5380_abort and NCR5380_bus_reset with real new-style
-EH routines.  I'd suggest copying them from NCR5380.c or even better
-scrapping sun3_NCR5380.c in favour of that one completely.
+> > aherrman@de.ibm.com:
+> >     [PATCH] zfcp: convert to compat_ioctl
+
+> This does not seem to compile anymore with defconfig:
+
+>   CC      drivers/s390/scsi/zfcp_aux.o
+> /usr/src/ctest/rc/kernel/drivers/s390/scsi/zfcp_aux.c:63: warning: initialization from incompatible pointer type
+> /usr/src/ctest/rc/kernel/drivers/s390/scsi/zfcp_aux.c:366: error: conflicting types for `zfcp_cfdc_dev_ioctl'
+
+
+Oops. Submitted patch was incorrect.
+Attached patch (against 2.6.12-rc3) will fix the problem.
+Sorry, for any inconvenience.
+
+
+Regards,
+
+Andreas
+
+
+zfcp: fix compile error
+
+Signed-off-by: Andreas Herrmann <aherrman@de.ibm.com>
+
+
+diff -bBrauN linux-2.6.x/drivers/s390/scsi-orig/zfcp_aux.c linux-2.6.x/drivers/s390/scsi/zfcp_aux.c
+--- linux-2.6.x/drivers/s390/scsi-orig/zfcp_aux.c	2005-04-21 12:36:44.000000000 +0200
++++ linux-2.6.x/drivers/s390/scsi/zfcp_aux.c	2005-04-21 12:40:48.000000000 +0200
+@@ -52,7 +52,7 @@
+ static inline int zfcp_sg_list_copy_to_user(void __user *,
+ 					    struct zfcp_sg_list *, size_t);
+ 
+-static int zfcp_cfdc_dev_ioctl(struct file *, unsigned int, unsigned long);
++static long zfcp_cfdc_dev_ioctl(struct file *, unsigned int, unsigned long);
+ 
+ #define ZFCP_CFDC_IOC_MAGIC                     0xDD
+ #define ZFCP_CFDC_IOC \
+diff -bBrauN linux-2.6.x/drivers/s390/scsi-orig/zfcp_def.h linux-2.6.x/drivers/s390/scsi/zfcp_def.h
+--- linux-2.6.x/drivers/s390/scsi-orig/zfcp_def.h	2005-04-21 12:36:44.000000000 +0200
++++ linux-2.6.x/drivers/s390/scsi/zfcp_def.h	2005-04-21 12:41:56.000000000 +0200
+@@ -61,7 +61,6 @@
+ #include <linux/mempool.h>
+ #include <linux/syscalls.h>
+ #include <linux/ioctl.h>
+-#include <linux/ioctl32.h>
+ 
+ /************************ DEBUG FLAGS *****************************************/
+ 
 
