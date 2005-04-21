@@ -1,53 +1,48 @@
-From: Sam Creasey <sammy@sammy.net>
-Subject: Re: [PATCH] kill old EH constants
-Date: Thu, 21 Apr 2005 09:41:25 -0400 (EDT)
-Message-ID: <Pine.LNX.4.40.0504210938260.972-100000@sun3>
-References: <20050421100933.GA19586@infradead.org>
+From: Nate Dailey <nhdailey@verizon.net>
+Subject: [PATCH] drivers/scsi/sr_ioctl.c: check for failed allocation
+Date: Thu, 21 Apr 2005 09:45:22 -0500 (CDT)
+Message-ID: <5385768.1114094722652.JavaMail.root@vms064.mailsrvcs.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sun3.sammy.net ([68.162.198.6]:62477 "HELO sun3.sammy.net")
-	by vger.kernel.org with SMTP id S261377AbVDUNla (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Apr 2005 09:41:30 -0400
-In-Reply-To: <20050421100933.GA19586@infradead.org>
+Received: from vms040pub.verizon.net ([206.46.252.40]:10405 "EHLO
+	vms040pub.verizon.net") by vger.kernel.org with ESMTP
+	id S261400AbVDUOpX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Apr 2005 10:45:23 -0400
+Received: from vms064.mailsrvcs.net ([192.168.1.1])
+ by vms040.mailsrvcs.net (Sun Java System Messaging Server 6.2 HotFix 0.04
+ (built Dec 24 2004)) with ESMTPA id <0IFA001I0WZM5MP1@vms040.mailsrvcs.net> for
+ linux-scsi@vger.kernel.org; Thu, 21 Apr 2005 09:45:22 -0500 (CDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Linux/m68k <linux-m68k@vger.kernel.org>
+To: axboe@suse.de
+Cc: linux-scsi@vger.kernel.org
+
+Hi,
+
+I noticed a case in sr_ioctl.c's sr_get_mcn where a buffer is allocated, but the pointer isn't checked for null.
+
+This patch against 2.6.12-rc2 adds a check.
+
+Nate Dailey
+Stratus Technologies
 
 
+Signed-off-by: Nate Dailey <nate.dailey@stratus.com>
 
-On Thu, 21 Apr 2005, Christoph Hellwig wrote:
 
-> On Thu, Apr 21, 2005 at 11:58:12AM +0200, Geert Uytterhoeven wrote:
-> > sun3_NCR5380.c still uses the following:
-> >
-> >   - SCSI_ABORT_SUCCESS
-> >   - SCSI_ABORT_ERROR
-> >   - SCSI_ABORT_SNOOZE
-> >   - SCSI_ABORT_BUSY
-> >   - SCSI_ABORT_NOT_RUNNING
-> >   - SCSI_RESET_SUCCESS
-> >   - SCSI_RESET_BUS_RESET
-> >
-> > causing the driver to fail to build in 2.6.12-rc3. What should I replace them
-> > by?
->
-> You must replace NCR5380_abort and NCR5380_bus_reset with real new-style
-> EH routines.  I'd suggest copying them from NCR5380.c or even better
-> scrapping sun3_NCR5380.c in favour of that one completely.
-
-Trust me, there's reasons we don't use NCR5380.c.... (primarily, this has
-to due with the order of operations necessary to keep the DMA controller
-happpy, which required changing the flow of several functions
-(admittedly, I haven't looked into this again since the "new-style"
-driver change)).
-
-That being said, it seems the first option needs done.  I suppose I'll
-add fixing those two routines to my long list of backlogged sun3 stuff
-which needs doing.
-
--- Sam
+--- linux-2.6.12-rc2/drivers/scsi/sr_ioctl.c.orig	2005-04-20 11:31:27.000000000 -0400
++++ linux-2.6.12-rc2/drivers/scsi/sr_ioctl.c	2005-04-20 11:33:58.000000000 -0400
+@@ -281,6 +281,9 @@ int sr_get_mcn(struct cdrom_device_info 
+ 	char *buffer = kmalloc(32, GFP_KERNEL | SR_GFP_DMA(cd));
+ 	int result;
+ 
++	if (!buffer)
++		return -ENOMEM;
++
+ 	memset(&cgc, 0, sizeof(struct packet_command));
+ 	cgc.cmd[0] = GPCMD_READ_SUBCHANNEL;
+ 	cgc.cmd[2] = 0x40;	/* I do want the subchannel info */
 
 
