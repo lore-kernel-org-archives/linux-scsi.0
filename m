@@ -1,16 +1,15 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: Lars Marowsky-Bree <lmb@suse.de>
 Subject: Re: Re: fastfail operation and retries
-Date: Thu, 21 Apr 2005 15:13:16 -0700
-Message-ID: <20050421221316.GA21963@us.ibm.com>
-References: <20050419171953.GA8444@lion28.boeblingen.de.ibm.com>
-	<20050421164205.GA20482@us.ibm.com>
-	<20050421195435.GP17315@marowsky-bree.de>
+Date: Fri, 22 Apr 2005 00:16:15 +0200
+Message-ID: <20050421221614.GX17315@marowsky-bree.de>
+References: <C2EEB4E538D3DC48BF57F391F422779321A927@SRMANNING.eng.emc.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: quoted-printable
 Return-path: <dm-devel-bounces@redhat.com>
 Content-Disposition: inline
-In-Reply-To: <20050421195435.GP17315@marowsky-bree.de>
+In-Reply-To: <C2EEB4E538D3DC48BF57F391F422779321A927@SRMANNING.eng.emc.com>
 List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -20,81 +19,79 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=subscribe>
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
-To: Lars Marowsky-Bree <lmb@suse.de>
-Cc: device-mapper development <dm-devel@redhat.com>, Linux SCSI <linux-scsi@vger.kernel.org>, Andreas Herrmann <aherrman@de.ibm.com>
+To: device-mapper development <dm-devel@redhat.com>, Andreas Herrmann <aherrman@de.ibm.com>
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Apr 21, 2005 at 09:54:35PM +0200, Lars Marowsky-Bree wrote:
+On 2005-04-21T18:01:04, "goggin, edward" <egoggin@emc.com> wrote:
 
-> > We need a patch like Mike Christie had, this:
-> > 
-> > http://marc.theaimsgroup.com/?l=linux-kernel&m=107961883914541&w=2
-> > 
-> > The scsi core should decode the sense data and pass up the result, then dm
-> > need not decode sense data, and we don't need sense data passed around via
-> > the block layer.
-> 
-> The most recent udm patchset has a patch by Jens Axboe and myself to
-> pass up sense data / error codes in the bio so the dm mpath module can
-> deal with it.  
+> > If we can't differentiate in the kernel where we have the IO error
+> > details available, then how would user-space? You're not solving the
+> > problem ;-)
+> Maybe not completely, but at least an inquiry of page 83 will not trip
+> over media errors.  Also, why use a different test for determining path
+> success than the one used for path failure?
 
-But the scmd->result is not passed back.
+If the kernel sees an error, it needs to take action. It has immediate
+knowledge of the error, while the further user-space diagnosis (or even
+further in-kernel diagnosis; where this is actually implemented doesn't
+matter) obviously lags behind.
 
-If we passed it back there would be enough information available, but then
-you still need to add the same decoding as already found in scsi core
-(scsi_decide_disposition and more).
+I think the aim is to immediately react and re-route IO to reduce the
+interruption to upper layers. In principle, if we have healthy paths,
+rerouting is always safe; only if we know for sure it's a media error
+(as indicated by appropriate sense data) do we immediately report IO
+error to upper layers, or switch pgs instead of failing the path etc.
+This is a pessimistic approach: take a potentially failed path out of
+service asap.
 
-Better to decode the error once, and then pass that data back to the
-blk layer.
+What also happens though is that an event is sent to user-space, and
+user-space "immediately" retests the path, and if it finds it healthy,
+will reinstate it.
 
-> Only issue still is that the SCSI midlayer does only generate a single
-> "EIO" code also for timeouts; however, that pretty much means it's a
-> transport error, because if it was a media error, we'd be getting sense
-> data ;-)
+I believe this is correct behaviour.
 
-How does lack of sense data imply that there was no media/device error? A
-timeout could be a failure anywhere, in the transport or because of
-target/media/LUN problems. Or not a real error at all, just a busy device
-or too short a timeout setting.
+> > According to my docs, the only EMC array which does fail all paths
+> > during a software update (by doing a "Warm Reboot") is a FC4500 array=
+.
+> > Not sure whether this also includes the AX-series, though, my doc
+> > doesn't mention it. The FC4500 might not respond to IO for upto 50
+> > seconds; in which case the queue_if_no_path and user-space retesting
+> > provides adequate (as good as possible) coverage to reinstate=20
+> > the paths.
+>=20
+> I am seeing all-paths-down time period whenever I perfrom an NDU
+> for a CX300 while running 1 (async write behind) dd thread per
+> mapped device for 16 mapped devices.
 
-Currently scsi core does not fastfail time outs ...
+Are you already running the code with the sense data decoding enabled,
+for example a _very_ recent SLES9 SP2 beta kernel (basically, as of a
+couple hours ago) or one with all patches applied from the multipath
+bugzilla + multipath-tools pre18, and are you connected to both SPs?
 
-Does path checker take paths permanently offline after multiple failures?
+If not, it's possible that that combo kernel didn't correctly handle
+that case, because it didn't know about triggering a switch_pg etc.
 
-If a timeout causes a path failure (means today that scsi core already
-retried the command), and path checker re-enables the path (for example,
-path checker can send a test unit ready with no failure; this also means
-scsi core has already retried the command), this could lead to retrying
-that IO (or even another IO) and hitting a timeout again on that path.
+And, if the CX300 indeed fails all paths during NDU at the same time, it
+is behaving contrary to the published CX-series specification; in which
+case it is an EMC (and not ours! ;-) bug and needs to be fixed in the
+firmware ;-)
 
-Also a SCSI failure (command made it to the media/device, but got some
-error) can happen without sense data, like any SCSI errors other than
-a CHECK_CONDITION that are not requeued by scsi core (see
-scsi_decide_disposition switch cases for status_byte(scmd->result)).
+> > (The fact that no write/reads complete should automatically throttle
+> > the IO, too; however, this might not be true for certain write
+> > patterns, and in particular async IO (how could we possible throttle
+> > _that_?). IO throttling in this case remains a problem which we
+> > might need to address.)
+> This is the problem I am refering to.
 
-It's probably OK to just fail the path for all driver/transport errors
-(and non-sense errors) even if they are retryable: path checker will just
-re-enable the path (maybe immediately). But, we end up with different and
-potentially significant behaviour for some error cases with/without fastfail.
+Well, I don't think so. This is an additional problem, but not one you
+should be running into.
 
-So though I don't like the approach: distinguishing timeouts or ensuring
-that path checker won't continually reenable a path might be good enough,
-as long as there are no other error cases (driver or SCSI) that could lead
-to long lasting failures.
 
-> > scsi core could be changed to handle device specific decoding via sense
-> > tables that can be modified via sysfs, similar to devinfo code (well,
-> > devinfo still lacks a sysfs interface).
-> 
-> dm-path's capabilities go a bit beyond just the error decoding (which
-> for generic devices is also provided for in a generic
-> dm_scsi_err_handler()); for example you can code special initialization
-> commands and behaviour an array might need.
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
 
-Yes, but that doesn't mean we should decode SCSI sense or scsi core error
-errors (i.e. scmd->result) in dm space.
-
-Also, non-scsi drivers would like to use dm multipath, like DASD. Using
-extended blk errors allows simpler support for such devices and drivers.
-
--- Patrick Mansfield
+--=20
+High Availability & Clustering
+SUSE Labs, Research and Development
+SUSE LINUX Products GmbH - A Novell Business
