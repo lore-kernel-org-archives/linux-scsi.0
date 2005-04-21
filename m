@@ -1,32 +1,73 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: The future of host_scribble
-Date: Thu, 21 Apr 2005 08:46:42 +0100
-Message-ID: <20050421074641.GA17184@infradead.org>
-References: <20050421002333.GA8556@parcelfarce.linux.theplanet.co.uk>
+From: oliver@windfinder.com
+Subject: Raid1 on Dell Poweredge with Perc4e/Di Raid Controller running Debian
+	Sarge (3.1)
+Date: Thu, 21 Apr 2005 10:30:55 +0200
+Message-ID: <200504211030.56948.oliver@windfinder.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:2474 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261489AbVDUHqr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Apr 2005 03:46:47 -0400
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-poweredge-bounces@dell.com>
 Content-Disposition: inline
-In-Reply-To: <20050421002333.GA8556@parcelfarce.linux.theplanet.co.uk>
-Sender: linux-scsi-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.us.dell.com/mailman/listinfo/linux-poweredge>,
+	<mailto:linux-poweredge-request@dell.com?subject=unsubscribe>
+List-Archive: <http://lists.us.dell.com/pipermail/linux-poweredge>
+List-Post: <mailto:linux-poweredge@dell.com>
+List-Help: <mailto:linux-poweredge-request@dell.com?subject=help>
+List-Subscribe: <http://lists.us.dell.com/mailman/listinfo/linux-poweredge>,
+	<mailto:linux-poweredge-request@dell.com?subject=subscribe>
+Sender: linux-poweredge-bounces@dell.com
+Errors-To: linux-poweredge-bounces@dell.com
+To: Matt_Domsch@dell.com, linux-poweredge@dell.com, linux-scsi@vger.kernel.org
+Cc: Thomas Glas <thomas.glas@hanse.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
 
-On Thu, Apr 21, 2005 at 01:23:33AM +0100, Matthew Wilcox wrote:
-> 
-> In scsi_cmnd there's an element called host_scribble.  The name and the
-> comment by it were sufficiently confusing that I didn't realise that this
-> field is basically for the host's private data.  Any objections to something
-> like this, assuming I also submit a patch that converts all the drivers?
+Hello,
+I would like to use Raid1 on the Dell Poweredge with Perc4e/Di Raid Control=
+ler =
 
-Actually the situation about private data in scsi_cmnd is worse, there's
-another private data, that's the scsi_pointer structure embedded as SCp
-member.  If we're going to fix up naming we should find a way to fixup
-both an have a sensible name for both embedded and out of struct private
-data.  I somehow doubt it's going to happen before we drop support for
-gcc 2.95 and thus can use anonymous unions :)
+and two 2 73 GB drives running Debian Sarge (3.1).
+
+At http://linux.dell.com/storage.shtml I read that the Powerege 2850 Perc4e=
+/Di =
+
+requires megaraid2 driver 2.00.3 or higher on 2.4.x kernel. On 2.6.x kernel=
+s =
+
+(x < 9) there is no driver for these adapters. On 2.6.x (x >=3D 9) use the =
+
+'megaraid_mbox' and 'megaraid_mm' drivers.
+
+Problem: The Debian Installers offers only to install:
+
+- 2.4.x (which seems to be okay for the raid) OR =
+
+- 2.6.8 (which would not allow the use of the Raid)
+
+Solution:
+Is there a megaraid driver for the 2.6.8 kernel? If so, where?
+
+If not, should I use 2.4.x kernel or try to install a 2.6.9 kernel on Debia=
+n =
+
+Sarge?
+
+-- =
+
+Oliver K=F6nig
+
+Windfinder.com
+Knorrstr. 24 Hinterhaus
+24106 Kiel
+Germany
+phone +49 431-8008643
+VoIP +49 1801-7775558229
+fax +49 431-8008644
+Mobile +49 177-4933362
+oliver@windfinder.com
+www.windfinder.com
+
+_______________________________________________
+Linux-PowerEdge mailing list
+Linux-PowerEdge@dell.com
+http://lists.us.dell.com/mailman/listinfo/linux-poweredge
+Please read the FAQ at http://lists.us.dell.com/faq
