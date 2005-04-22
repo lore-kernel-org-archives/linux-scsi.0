@@ -1,122 +1,83 @@
-From: oliver@windfinder.com
-Subject: Re: Raid1 on Dell Poweredge with Perc4e/Di Raid Controller runnin g Debian Sarge (3.1)
-Date: Fri, 22 Apr 2005 21:07:49 +0200
-Message-ID: <200504222107.50290.oliver@windfinder.com>
-References: <0E3FA95632D6D047BA649F95DAB60E5703662801@exa-atlanta>
+From: Lan <transter@gmail.com>
+Subject: Re: Re: fastfail operation and retries
+Date: Fri, 22 Apr 2005 12:13:53 -0700
+Message-ID: <ac71172a050422121365a32cc3@mail.gmail.com>
+References: <OF8721F851.2661040F-ONC1256FEA.0076595E-C1256FEA.00768C46@de.ibm.com>
+	<20050421222409.GY17315@marowsky-bree.de>
+Reply-To: tranlan@us.ibm.com,
+	device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.windfinder.de ([81.201.107.60]:23726 "HELO windfinder.com")
-	by vger.kernel.org with SMTP id S262111AbVDVTIe convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Apr 2005 15:08:34 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703662801@exa-atlanta>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20050421222409.GY17315@marowsky-bree.de>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>, aherrman@de.ibm.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Ju, Seokmann" <sju@lsil.com>, aschultz@warp10.net, Matt_Domsch@dell.com, linux-poweredge@dell.com, linux-scsi@vger.kernel.org, Jonas Kaufmann <me@j0nes.de>, Thomas Glas <thomas.glas@hanse.net>, Sebastian Kamp <sebastian.kamp@ottogroup.com>
 
-Hello Ju,
-thanks for your help. I am a total newbie but I managed to compile a ne=
-w=20
-kernel with your patch:
-
-/boot/vmlinuz-2.6.8-1
-
-Then I did:
-server:/boot # mkinitrd -o /boot/initrd.img-2.6.8-1 2.6.8-1
-=46atal: Module megaraid2 not found.
-Warning: This failure MAY indicate that your kernel will not boot!=20
-but it can also be triggered by needed modules being compiled into the =
-kernel.
-
-Does this mean, that you patch is not working or did I make a mistake?
-
-Best regards,
-Oliver
-
-
-
-On Friday 22 April 2005 15:30, you wrote:
-> On Thursday, April 21, 2005 4:31 AM, Oliver wrote,
+On 4/21/05, Lars Marowsky-Bree <lmb@suse.de> wrote:
+> On 2005-04-21T23:33:57, Andreas Herrmann <aherrman@de.ibm.com> wrote:
+>=20
+> > Well, there are various situations when all paths to the ESS are
+> > "temporarily unavailable". In some cases TASK_SET_FULL/BUSY is
+> > reported as it should be.
+>=20
+> Not sure whether this sense data is decoded and handled correctly in
+> dm-mpath yet. I don't have detailed specs, nor a feature request to
+> allocate time to work on making sure it really does. I recommend that
+> someone at IBM takes the real specs for the ESS and makes sure that it
+> all works, by a combination of the right defaults in the multipath-tool=
+s
+> hwtable and, if need be, a dm-ess plugin to handle this.
+>=20
+> This would be much appreciated.
 >
-> > Is there a megaraid driver for the 2.6.8 kernel? If so, where?
->
-> Try attached. It has driver source with one patch file (2.6.8-24.patc=
-h).
-> Please make sure to apply the patch before compile.
->
-> Thank you.
->
-> > -----Original Message-----
-> > From: oliver@windfinder.com [mailto:oliver@windfinder.com]
-> > Sent: Thursday, April 21, 2005 4:31 AM
-> > To: Matt_Domsch@dell.com; linux-poweredge@dell.com;
-> > linux-scsi@vger.kernel.org
-> > Cc: Thomas Glas
-> > Subject: Raid1 on Dell Poweredge with Perc4e/Di Raid
-> > Controller running Debian Sarge (3.1)
-> >
-> > Hello,
-> > I would like to use Raid1 on the Dell Poweredge with
-> > Perc4e/Di Raid Controller
-> > and two 2 73 GB drives running Debian Sarge (3.1).
-> >
-> > At http://linux.dell.com/storage.shtml I read that the
-> > Powerege 2850 Perc4e/Di
-> > requires megaraid2 driver 2.00.3 or higher on 2.4.x kernel.
-> > On 2.6.x kernels
-> > (x < 9) there is no driver for these adapters. On 2.6.x (x >=3D
-> > 9) use the
-> > 'megaraid_mbox' and 'megaraid_mm' drivers.
-> >
-> > Problem: The Debian Installers offers only to install:
-> >
-> > - 2.4.x (which seems to be okay for the raid) OR
-> > - 2.6.8 (which would not allow the use of the Raid)
-> >
-> > Solution:
-> > Is there a megaraid driver for the 2.6.8 kernel? If so, where?
-> >
-> > If not, should I use 2.4.x kernel or try to install a 2.6.9
-> > kernel on Debian
-> > Sarge?
-> >
-> > --
-> > Oliver K=C3=B6nig
-> >
-> > Windfinder.com
-> > Knorrstr. 24 Hinterhaus
-> > 24106 Kiel
-> > Germany
-> > phone +49 431-8008643
-> > VoIP +49 1801-7775558229
-> > fax +49 431-8008644
-> > Mobile +49 177-4933362
-> > oliver@windfinder.com
-> > www.windfinder.com
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe
-> > linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
---=20
-Oliver K=C3=B6nig
+Please correct me if my assumption is wrong, but I would think that
+transient errors are expected, especially in a SAN, from both the
+fabric and media. A storage device may have to return retryable status
+conditions at certain points, and that such retryable conditions are
+not necessarily specific to a storage device. For example, a
+QUEUE_FULL or BUSY, implying that the device is congested. Wouldn't
+most storage devices reasonably expect I/O failed due to this
+condition will be retried? [Such a congestion handling mechanism, I
+would think, would not have to be storage-specific, although the
+policy for handling congestion might be?]  So  in order to deal with
+transient conditions given that failfast flag is set, the
+queue_if_no_path must be used; I'm not sure why any dm-multipath
+storage users would not want to turn on queue_if_no_path by default?
 
-Windfinder.com
-Knorrstr. 24 Hinterhaus
-24106 Kiel
-Germany
-phone +49 431-8008643
-VoIP +49 1801-7775558229
-fax +49 431-8008644
-Mobile +49 177-4933362
-oliver@windfinder.com
-www.windfinder.com
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+As far as I know, ESS does not require any special handing of special
+sense information, besides various sense data status conditions that
+it expects would be retried. (Arent' data underruns also an expected
+retryable condition?).  I'm not so familiar with all the various
+possible transport and media errors/conditions, but I would think that
+most could/would want to be handled generically by storage devices
+(which is why the scsi core has generic error handling i'd imagine).
+But I agree that more testing should be done with ESS and its spec to
+verify that a special dm-ess error handler is actually not needed.=20
+And at the least, a hw entry should be added to dm to turn on
+queue_if_no_path by default for ESS, and any other necessary defaults.
+ Although, it seems need to add to multipath-tools the ability to set
+a timeout limit on how long an I/O is queued and retried (otherwise in
+a permanent failure, I think the I/O  could be queued for a quite
+awhile, e.g. until system runs out of memory).
+=20
+Also, what do you think about allowing a configurable threshold on I/O
+failures in dm-multipath before deciding to set a path dead; 1 is
+kinda low, and has no tolerance at all for transient errors. I think
+it will lessen the dependency on waiting for multipath-tools to
+reinstate a path that has been set dead due to a transient condition.
+
+Thanks!
+Lan
