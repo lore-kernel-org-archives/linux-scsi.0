@@ -1,41 +1,50 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH scsi-misc-2.6 03/05] scsi: make scsi_queue_insert() use blk_requeue_request()
-Date: Fri, 22 Apr 2005 13:37:50 +0200
-Message-ID: <20050422113749.GZ9371@suse.de>
-References: <20050419231435.D85F89C0@htj.dyndns.org> <20050419231435.329FA30B@htj.dyndns.org> <1114039446.5933.17.camel@mulgrave> <20050421061026.GE9371@suse.de> <1114087528.5054.2.camel@mulgrave>
+From: Klaus Steinberger <Klaus.Steinberger@physik.uni-muenchen.de>
+Subject: Re: Kernel OOPS with aacraid driver
+Date: Fri, 22 Apr 2005 13:57:14 +0200
+Message-ID: <200504221357.14159.Klaus.Steinberger@physik.uni-muenchen.de>
+References: <df35dfeb050422000856c882d6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:6098 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S262004AbVDVLiB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Apr 2005 07:38:01 -0400
+Received: from mail.physik.uni-muenchen.de ([192.54.42.129]:19891 "EHLO
+	mail.physik.uni-muenchen.de") by vger.kernel.org with ESMTP
+	id S262025AbVDVL5X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Apr 2005 07:57:23 -0400
+Received: from localhost (unknown [127.0.0.1])
+	by mail.physik.uni-muenchen.de (Postfix) with ESMTP id 8A1F520015
+	for <linux-scsi@vger.kernel.org>; Fri, 22 Apr 2005 13:57:22 +0200 (CEST)
+Received: from mail.physik.uni-muenchen.de ([127.0.0.1])
+ by localhost (mail.physik.uni-muenchen.de [127.0.0.1]) (amavisd-new, port 10024)
+ with LMTP id 19795-01-13 for <linux-scsi@vger.kernel.org>;
+ Fri, 22 Apr 2005 13:57:21 +0200 (CEST)
+Received: from [192.168.1.10] (b6.lmu.vpn.lrz-muenchen.de [141.84.30.6])
+	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
+	(No client certificate requested)
+	by mail.physik.uni-muenchen.de (Postfix) with ESMTP id 00C0E2000C
+	for <linux-scsi@vger.kernel.org>; Fri, 22 Apr 2005 13:57:21 +0200 (CEST)
+In-Reply-To: <df35dfeb050422000856c882d6@mail.gmail.com>
 Content-Disposition: inline
-In-Reply-To: <1114087528.5054.2.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Tejun Heo <htejun@gmail.com>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Thu, Apr 21 2005, James Bottomley wrote:
-> On Thu, 2005-04-21 at 08:10 +0200, Jens Axboe wrote:
-> > I wondered about this action recently myself. What is the point in
-> > requeueing this request, only to call scsi_run_queue() ->
-> > blk_run_queue() -> issue same request. If the point really is to reissue
-> > the request immediately, I can think of many ways more efficient than
-> > this :-)
-> 
-> Well ... that's because the logic that decides whether to plug the queue
-> or simply exit is in the scsi_request_fn().  That's what the comment is
-> about.  We could abstract the check into a function, but (unless you
-> have any suggestions on rewording it) I thought the comment made what
-> was going on reasonably clear.
-> 
+Hello Rayan,
 
-Looks fine, I just missed enough code context in the patch to see this.
-Since requeuing probably isn't all that uncommon, it may make sense to
-optimize this a little though.
+> Seems to me like someone is issuing IOCTL's against devices that do
+> not exist. Does this patch against linux-2.6.12-rc3 make sense and
+> applicable to you?
+
+Sounds good. I have an kernel build on the way, and will test it on Monday.
+
+Sincerly,
+Klaus
 
 -- 
-Jens Axboe
+Klaus Steinberger         Maier-Leibnitz Labor
+Phone: (+49 89)289 14287  Am Coulombwall 6, D-85748 Garching, Germany
+FAX:   (+49 89)289 14280  EMail: Klaus.Steinberger@Physik.Uni-Muenchen.DE
+URL: http://www.physik.uni-muenchen.de/~k2/
 
+In a world without Walls and Fences, who needs Windows and Gates
