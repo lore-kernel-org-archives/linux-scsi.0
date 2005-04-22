@@ -1,39 +1,44 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: RE: Kernel OOPS with aacraid driver
-Date: Fri, 22 Apr 2005 08:42:09 -0700
-Message-ID: <1114184529.18887.3.camel@markh1.pdx.osdl.net>
-References: <df35dfeb050422000856c882d6@mail.gmail.com>
+From: oliver@windfinder.com
+Subject: config file Linux Kernel 2.6.8 (for Dell Poweredge)
+Date: Fri, 22 Apr 2005 18:45:36 +0200
+Message-ID: <200504221845.36521.oliver@windfinder.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:52412 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261880AbVDVPmP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Apr 2005 11:42:15 -0400
-In-Reply-To: <df35dfeb050422000856c882d6@mail.gmail.com>
+Received: from www.windfinder.de ([81.201.107.60]:28328 "HELO windfinder.com")
+	by vger.kernel.org with SMTP id S262064AbVDVQqR convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Apr 2005 12:46:17 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Yum Rayan <yum.rayan@gmail.com>
-Cc: Klaus.Steinberger@physik.uni-muenchen.de, linux-scsi <linux-scsi@vger.kernel.org>, "Randy.Dunlap" <rddunlap@osdl.org>
+To: aschultz@warp10.net, Matt_Domsch@dell.com, linux-poweredge@dell.com, linux-scsi@vger.kernel.org
 
-On Fri, 2005-04-22 at 00:08 -0700, Yum Rayan wrote:
-> > > BTW, this says that this is the second oops:  "[#2]".
-> > > What was the first one?
-> > Apr 21 10:53:27 www adaptec-smbe: aiomgrd startup succeeded
-> > Apr 21 10:53:27 www kernel: Unable to handle kernel NULL 
-> > pointer dereference 
-> > at virtual address 00000034
-> 
-> Seems to me like someone is issuing IOCTL's against devices that do
-> not exist. Does this patch against linux-2.6.12-rc3 make sense and
-> applicable to you?
-> 
-A fix for this was submitted to the list last week.
+Hello,
+can anyone send me his /usr/src/linux/.config file for Kernel 2.6.8 or =
+similar=20
+kernel that he or she is using on a Dell PE 1850 or 2850. This would ma=
+ke it=20
+a lot easier for me to compile a new kernel. Thanks a lot!
 
-Mark.
+Regards,
+--
+=20
+Oliver K=F6nig
 
-
--- 
-Mark Haverkamp <markh@osdl.org>
-
+Windfinder.com
+Knorrstr. 24 Hinterhaus
+24106 Kiel
+Germany
+phone +49 431-8008643
+VoIP +49 1801-7775558229
+fax +49 431-8008644
+Mobile +49 177-4933362
+oliver@windfinder.com
+www.windfinder.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
