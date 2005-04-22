@@ -1,49 +1,28 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: PATCH [6/5]  qla2xxx: update version :)
-Date: Fri, 22 Apr 2005 00:22:00 -0700
-Message-ID: <20050422072200.GD5069@plap.qlogic.org>
-References: <20050413205007.GA14857@plap.qlogic.org> <1113425828.4933.39.camel@mulgrave> <20050413212436.GC14857@plap.qlogic.org> <20050419211519.GB20234@infradead.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Removing a disk from the qla2xxx driver.
+Date: Fri, 22 Apr 2005 08:49:03 +0100
+Message-ID: <20050422074903.GA25920@infradead.org>
+References: <267988DEACEC5A4D86D5FCD780313FBB0732C84F@exch-03.noida.hcltech.com> <20050422071054.GC5069@plap.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch02.qlogic.com ([198.70.193.200]:730 "EHLO
-	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S262004AbVDVHWC
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Apr 2005 03:22:02 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:12227 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261212AbVDVHtE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Apr 2005 03:49:04 -0400
 Content-Disposition: inline
-In-Reply-To: <20050419211519.GB20234@infradead.org>
+In-Reply-To: <20050422071054.GC5069@plap.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Rajat  Jain, Noida" <rajatj@noida.hcltech.com>, linux-scsi@vger.kernel.org
 
-On Tue, 19 Apr 2005, Christoph Hellwig wrote:
-
-> On Wed, Apr 13, 2005 at 02:24:36PM -0700, Andrew Vasquez wrote:
-> > Ok, here's the deal -- QLogic's standard 8.01.00 driver contains the
-> > following major additions:
-> > 
-> > * support for 4Gb ISPs
-> > * FCIP support
+On Fri, Apr 22, 2005 at 12:10:54AM -0700, Andrew Vasquez wrote:
+> Another alternative to forcing a LIP (and subsequently cause a
+> rescan), would be to initiate a bus-reset via sg_reset:
 > 
-> Btw, any plans to do proper FCIP support integrated with the transport
-> class code?
->
+> 	# sg_reset -b /dev/sg0
+> 
+> The only downside is the /dev/sg0 device-node requirement.
 
-Ok, I'll bite (since this is the second time I've heard about FCIP
-being 'integrated' with the transport classes) -- what did you have in
-mind?  There's already a clear set of mature networking interface with
-which a networking card's driver uses to interface with the stack.
+This should work with the "normal" scsi devices nodes these days.
 
-Are you looking to generalize those interfaces
-(open/hard_xmit/stop/etc.) into helpers transport helpers?
-
->
-> (and finally fixing the damn NAA bug violating RFC 2625 ;-))
-> -
-
-Yes, I'll see what I can do from this side on getting this addressed
-once and for all.
-
---
-av
