@@ -1,267 +1,174 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] dc395x: Fix support for highmem
-Date: Sat, 23 Apr 2005 12:06:13 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0504231159260.8537@poirot.grange>
-References: <20050321075531.GC23911@suse.de> <7044.1111398919@www16.gmx.net>
- <Pine.LNX.4.56.0503211111290.20956@pcgl.dsa-ac.de> <20050321104419.GH23911@suse.de>
- <Pine.LNX.4.56.0503211147420.20956@pcgl.dsa-ac.de>
- <Pine.LNX.4.60.0503302318250.9431@poirot.grange> <1112220802.9435.1.camel@mulgrave>
- <Pine.LNX.4.56.0503311051290.20956@pcgl.dsa-ac.de>
- <Pine.LNX.4.60.0504100035110.4283@poirot.grange> <Pine.LNX.4.60.0504212341390.6761@poirot.grange>
- <20050422113654.GY9371@suse.de> <Pine.LNX.4.60.0504222203190.5348@poirot.grange>
+From: oliver@windfinder.com
+Subject: Re: Raid1 on Dell Poweredge with Perc4e/Di Raid Controller running Debian Sarge (3.1)
+Date: Sat, 23 Apr 2005 12:26:03 +0200
+Message-ID: <200504231226.04522.oliver@windfinder.com>
+References: <B12F824A463BE441AB91C9AF3582F6BE02A41F@KAN-MAIL.corp.kanoodle.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:9143 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S261527AbVDWKG5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Apr 2005 06:06:57 -0400
-In-Reply-To: <Pine.LNX.4.60.0504222203190.5348@poirot.grange>
+Received: from www.windfinder.de ([81.201.107.60]:18396 "HELO windfinder.com")
+	by vger.kernel.org with SMTP id S261535AbVDWK05 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Apr 2005 06:26:57 -0400
+In-Reply-To: <B12F824A463BE441AB91C9AF3582F6BE02A41F@KAN-MAIL.corp.kanoodle.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <matthew@wil.cx>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Kurt Garloff <garloff@suse.de>
+To: Dennis Ruzeski <dennisr@corp.kanoodle.com>, "Ju, Seokmann" <sju@lsil.com>, aschultz@warp10.net, Matt_Domsch@dell.com, linux-poweredge@dell.com, linux-scsi@vger.kernel.org
+Cc: Jonas Kaufmann <me@j0nes.de>, Thomas Glas <thomas.glas@hanse.net>, Sebastian Kamp <sebastian.kamp@ottogroup.com>
 
-Hm, it is sometimes a good idea to at least compile-test ones patches... 
-So, the one below at least compiles.
+Hello Denis,
+this is what I just did
 
-One more thing I wanted to ask - what can one assume about request 
-buffers? If it is a sg, I guess, each segment is within one page frame, 
-right? And if sg is not used, is request_buffer also guaranteed to be 
-within one page or not?
+cd /usr/src/kernel-image-2.6.8
+patch -l < ./megaraid-v2.20.4.6/2.6.8-24.patch
+cd /boot
+cp config-2.6.8-24.14-default /usr/src/linux/.config
+cd /usr/src/linux
+make oldconfig=20
+make
+make modules_install
+cp /usr/src/linux/arch/i386/boot/bzImage /boot/vmlinuz-2.6.8
+cp System.map /usr/src/linux/System.map /boot/System.map-2.6.8
+[Edited /boot/grub/menu.lst]
+[Added the line megaraid_mbox to /etc/modules.conf Note: there war no e=
+ntry=20
+megaraid2 or similar in this file]
+server:/boot # mkinitrd -o /boot/initrd.img-2.6.8-1 2.6.8-1
+=46atal:
+=46atal: Module megaraid2 not found.
+Warning: This failure MAY indicate that your kernel will not boot!
+but it can also be triggered by needed modules being compiled into the
+kernel.
 
-On Sat, 23 Apr 2005, Guennadi Liakhovetski wrote:
+Any ideas? Please help! Thanks!
 
-> On Fri, 22 Apr 2005, Jens Axboe wrote:
-> 
-> > On Thu, Apr 21 2005, Guennadi Liakhovetski wrote:
-> > > +static void dc390_kunmap_atomic_sg(void *virt)
-> > > +{
-> > > +	kunmap_atomic(virt_to_page(virt), KM_BIO_SRC_IRQ);
-> > > +}
-> > 
-> > Please remember to test this with highmem debug. The above is buggy,
-> > kunmap_atomic() takes the mapped pointer, not the page structure.
-> 
-> Oops... Thanks. Sure, I'd like to test it - the problem been, I don't know 
-> how to get the damn thing to execute that place. I'll keep thinking about 
-> testing possibilities. So far on both my test machines with HDs, CD-ROM, 
-> tape and an external ZIP it didn't hit that path. Below is an updated 
-> patch.
-> 
-> By highmem debug do you mean just enabling the respective option under 
-> kernel debugging or one still needs that patch from Andrea you mentioned 
-> earlier to test it on low mem machines?
+Regards,
+Oliver
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+On Friday 22 April 2005 21:14, you wrote:
+> For that you'll need to edit /etc/modules.conf and change the megarai=
+d2
+> entry to megaraid_mbox. Also, make sure you have the latest version o=
+f
+> mkinitrd (to recognize the .ko module extension).
+>
+> Good luck,
+> Dennis
+>
+>
+>
+> -----Original Message-----
+> From: linux-poweredge-bounces@dell.com
+> [mailto:linux-poweredge-bounces@dell.com] On Behalf Of
+> oliver@windfinder.com Sent: Friday, April 22, 2005 3:08 PM
+> To: Ju, Seokmann; aschultz@warp10.net; Matt_Domsch@dell.com;
+> linux-poweredge@dell.com; linux-scsi@vger.kernel.org; Jonas Kaufmann;
+> Thomas Glas; Sebastian Kamp Subject: Re: Raid1 on Dell Poweredge with
+> Perc4e/Di Raid Controller runnin gDebian Sarge (3.1)
+>
+> Hello Ju,
+> thanks for your help. I am a total newbie but I managed to compile a =
+new
+> kernel with your patch:
+>
+> /boot/vmlinuz-2.6.8-1
+>
+> Then I did:
+> server:/boot # mkinitrd -o /boot/initrd.img-2.6.8-1 2.6.8-1
+> Fatal: Module megaraid2 not found.
+> Warning: This failure MAY indicate that your kernel will not boot!
+> but it can also be triggered by needed modules being compiled into th=
+e
+> kernel.
+>
+> Does this mean, that you patch is not working or did I make a mistake=
+?
+>
+> Best regards,
+> Oliver
+>
+> On Friday 22 April 2005 15:30, you wrote:
+> > On Thursday, April 21, 2005 4:31 AM, Oliver wrote,
+> >
+> > > Is there a megaraid driver for the 2.6.8 kernel? If so, where?
+> >
+> > Try attached. It has driver source with one patch file (2.6.8-24.pa=
+tch).
+> > Please make sure to apply the patch before compile.
+> >
+> > Thank you.
+> >
+> > > -----Original Message-----
+> > > From: oliver@windfinder.com [mailto:oliver@windfinder.com]
+> > > Sent: Thursday, April 21, 2005 4:31 AM
+> > > To: Matt_Domsch@dell.com; linux-poweredge@dell.com;
+> > > linux-scsi@vger.kernel.org
+> > > Cc: Thomas Glas
+> > > Subject: Raid1 on Dell Poweredge with Perc4e/Di Raid
+> > > Controller running Debian Sarge (3.1)
+> > >
+> > > Hello,
+> > > I would like to use Raid1 on the Dell Poweredge with
+> > > Perc4e/Di Raid Controller
+> > > and two 2 73 GB drives running Debian Sarge (3.1).
+> > >
+> > > At http://linux.dell.com/storage.shtml I read that the
+> > > Powerege 2850 Perc4e/Di
+> > > requires megaraid2 driver 2.00.3 or higher on 2.4.x kernel.
+> > > On 2.6.x kernels
+> > > (x < 9) there is no driver for these adapters. On 2.6.x (x >=3D
+> > > 9) use the
+> > > 'megaraid_mbox' and 'megaraid_mm' drivers.
+> > >
+> > > Problem: The Debian Installers offers only to install:
+> > >
+> > > - 2.4.x (which seems to be okay for the raid) OR
+> > > - 2.6.8 (which would not allow the use of the Raid)
+> > >
+> > > Solution:
+> > > Is there a megaraid driver for the 2.6.8 kernel? If so, where?
+> > >
+> > > If not, should I use 2.4.x kernel or try to install a 2.6.9
+> > > kernel on Debian
+> > > Sarge?
+> > >
+> > > --
+> > > Oliver K=F6nig
+> > >
+> > > Windfinder.com
+> > > Knorrstr. 24 Hinterhaus
+> > > 24106 Kiel
+> > > Germany
+> > > phone +49 431-8008643
+> > > VoIP +49 1801-7775558229
+> > > fax +49 431-8008644
+> > > Mobile +49 177-4933362
+> > > oliver@windfinder.com
+> > > www.windfinder.com
+> > > -
+> > > To unsubscribe from this list: send the line "unsubscribe
+> > > linux-scsi" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.htm=
+l
 
-diff -u a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
---- a/drivers/scsi/tmscsim.c	13 Jan 2005 21:10:01
-+++ b/drivers/scsi/tmscsim.c	23 Apr 2005 09:56:50
-@@ -856,8 +856,8 @@
- 		pSRB->pSegmentList++;
- 		psgl = pSRB->pSegmentList;
- 
--		pSRB->SGBusAddr = cpu_to_le32(pci_dma_lo32(sg_dma_address(psgl)));
--		pSRB->SGToBeXferLen = cpu_to_le32(sg_dma_len(psgl));
-+		pSRB->SGBusAddr = sg_dma_address(psgl);
-+		pSRB->SGToBeXferLen = sg_dma_len(psgl);
- 	    }
- 	    else
- 		pSRB->SGToBeXferLen = 0;
-@@ -882,10 +882,44 @@
-     }	    
- }
- 
-+
-+/**
-+ * dc390_kmap_atomic_sg - find and atomically map an sg-elemnt
-+ * @sg:		scatter-gather list
-+ * @sg_count:	number of segments in sg
-+ * @offset:	offset in bytes into sg, on return offset into mapped area
-+ * @len:	on return number of bytes mapped
-+ *
-+ * Returns virtual address of the start of the mapped page
-+ */
-+static void *dc390_kmap_atomic_sg(struct scatterlist *sg, int sg_count, size_t *offset, size_t *len)
-+{
-+	int i;
-+	size_t sg_len = 0;
-+
-+	for (i = 0; i < sg_count; i++) {
-+		sg_len += sg[i].length;
-+		if (sg_len > *offset)
-+			break;
-+	}
-+
-+	BUG_ON(i == sg_count);
-+
-+	*len = sg_len - *offset;
-+	*offset = sg[i].offset + sg[i].length - *len;
-+
-+	return kmap_atomic(sg[i].page, KM_BIO_SRC_IRQ);
-+}
-+
-+static void dc390_kunmap_atomic_sg(void *virt)
-+{
-+	kunmap_atomic(virt, KM_BIO_SRC_IRQ);
-+}
-+
- static void
- dc390_DataIn_0( struct dc390_acb* pACB, struct dc390_srb* pSRB, u8 *psstatus)
- {
--    u8   sstatus, residual, bval;
-+    u8   sstatus;
-     struct scatterlist *psgl;
-     u32    ResidCnt, i;
-     unsigned long   xferCnt;
-@@ -931,16 +965,17 @@
- 		pSRB->pSegmentList++;
- 		psgl = pSRB->pSegmentList;
- 
--		pSRB->SGBusAddr = cpu_to_le32(pci_dma_lo32(sg_dma_address(psgl)));
--		pSRB->SGToBeXferLen = cpu_to_le32(sg_dma_len(psgl));
-+		pSRB->SGBusAddr = sg_dma_address(psgl);
-+		pSRB->SGToBeXferLen = sg_dma_len(psgl);
- 	    }
- 	    else
- 		pSRB->SGToBeXferLen = 0;
- 	}
- 	else	/* phase changed */
- 	{
--	    residual = 0;
--	    bval = DC390_read8 (Current_Fifo);
-+	    u8 residual = 0;
-+	    u8 bval = DC390_read8 (Current_Fifo);
-+
- 	    while( bval & 0x1f )
- 	    {
- 		DEBUG1(printk (KERN_DEBUG "Check for residuals,"));
-@@ -988,10 +1023,24 @@
- 
- 	    if( residual )
- 	    {
-+		size_t count = 1;
-+		unsigned long flags;
-+		size_t offset = pSRB->TotalXferredLen;
-+		struct scsi_cmnd *pcmd = pSRB->pcmd;
-+		struct scatterlist *sg = pcmd->use_sg ?
-+			(struct scatterlist *)pcmd->request_buffer : &pSRB->Segmentx;
-+
- 		bval = DC390_read8 (ScsiFifo);	    /* get one residual byte */
--		ptr = (u8 *) bus_to_virt( pSRB->SGBusAddr );
--		*ptr = bval;
--		pSRB->SGBusAddr++; xferCnt++;
-+
-+		local_irq_save(flags);
-+		ptr = (u8*)dc390_kmap_atomic_sg(sg, pSRB->SGcount, &offset, &count);
-+
-+		*(ptr + offset) = bval;
-+		dc390_kunmap_atomic_sg(ptr);
-+		local_irq_restore(flags);
-+
-+		pSRB->SGBusAddr++;
-+		xferCnt++;
- 		pSRB->TotalXferredLen++;
- 		pSRB->SGToBeXferLen--;
- 	    }
-@@ -1212,32 +1261,31 @@
- {
-     struct scsi_cmnd *pcmd = pSRB->pcmd;
-     struct scatterlist *psgl;
-+
-     pSRB->TotalXferredLen = 0;
-     pSRB->SGIndex = 0;
-     if (pcmd->use_sg) {
-+	unsigned long last_xfer;
-+
- 	pSRB->pSegmentList = (struct scatterlist *)pcmd->request_buffer;
--	psgl = pSRB->pSegmentList;
--	//dc390_pci_sync(pSRB);
- 
--	while (pSRB->TotalXferredLen + (unsigned long) sg_dma_len(psgl) < pSRB->Saved_Ptr)
--	{
--	    pSRB->TotalXferredLen += (unsigned long) sg_dma_len(psgl);
--	    pSRB->SGIndex++;
--	    if( pSRB->SGIndex < pSRB->SGcount )
--	    {
--		pSRB->pSegmentList++;
--		psgl = pSRB->pSegmentList;
--		pSRB->SGBusAddr = cpu_to_le32(pci_dma_lo32(sg_dma_address(psgl)));
--		pSRB->SGToBeXferLen = cpu_to_le32(sg_dma_len(psgl));
--	    }
--	    else
--		pSRB->SGToBeXferLen = 0;
-+	for (psgl = pSRB->pSegmentList; pSRB->TotalXferredLen + sg_dma_len(psgl) < pSRB->Saved_Ptr; psgl++) {
-+		pSRB->TotalXferredLen += sg_dma_len(psgl);
-+		pSRB->SGIndex++;
- 	}
--	pSRB->SGToBeXferLen -= (pSRB->Saved_Ptr - pSRB->TotalXferredLen);
--	pSRB->SGBusAddr += (pSRB->Saved_Ptr - pSRB->TotalXferredLen);
--	printk (KERN_INFO "DC390: Pointer restored. Segment %i, Total %li, Bus %08lx\n",
--		pSRB->SGIndex, pSRB->Saved_Ptr, pSRB->SGBusAddr);
- 
-+	BUG_ON(pSRB->SGIndex >= pSRB->SGcount);
-+
-+	last_xfer = pSRB->Saved_Ptr - pSRB->TotalXferredLen;
-+
-+	pSRB->pSegmentList += pSRB->SGIndex;
-+	pSRB->SGBusAddr = sg_dma_address(psgl) + last_xfer;
-+	pSRB->SGToBeXferLen = sg_dma_len(psgl) - last_xfer;
-+
-+	//dc390_pci_sync(pSRB);
-+
-+	DEBUG0(printk(KERN_INFO "DC390: Pointer restored. Segment %i, Total %li, Bus %08lx\n",
-+		      pSRB->SGIndex, pSRB->Saved_Ptr, pSRB->SGBusAddr));
-     } else if(pcmd->request_buffer) {
- 	//dc390_pci_sync(pSRB);
- 
-@@ -1245,11 +1293,11 @@
- 	pSRB->SGcount = 1;
- 	pSRB->pSegmentList = (struct scatterlist *) &pSRB->Segmentx;
-     } else {
--	 pSRB->SGcount = 0;
--	 printk (KERN_INFO "DC390: RESTORE_PTR message for Transfer without Scatter-Gather ??\n");
-+	pSRB->SGcount = 0;
-+	printk (KERN_INFO "DC390: RESTORE_PTR message for Transfer without Scatter-Gather ??\n");
-     }
- 
--  pSRB->TotalXferredLen = pSRB->Saved_Ptr;
-+    pSRB->TotalXferredLen = pSRB->Saved_Ptr;
- }
- 
- 
-@@ -1385,8 +1433,8 @@
- 	if( !pSRB->SGToBeXferLen )
- 	{
- 	    psgl = pSRB->pSegmentList;
--	    pSRB->SGBusAddr = cpu_to_le32(pci_dma_lo32(sg_dma_address(psgl)));
--	    pSRB->SGToBeXferLen = cpu_to_le32(sg_dma_len(psgl));
-+	    pSRB->SGBusAddr = sg_dma_address(psgl);
-+	    pSRB->SGToBeXferLen = sg_dma_len(psgl);
- 	    DEBUG1(printk (KERN_DEBUG " DC390: Next SG segment."));
- 	}
- 	lval = pSRB->SGToBeXferLen;
-@@ -1397,8 +1445,8 @@
- 	lval >>= 8;
- 	DC390_write8 (CtcReg_High, (u8) lval);
- 
--	DC390_write32 (DMA_XferCnt, pSRB->SGToBeXferLen);
--	DC390_write32 (DMA_XferAddr, pSRB->SGBusAddr);
-+	DC390_write32 (DMA_XferCnt, cpu_to_le32(pSRB->SGToBeXferLen));
-+	DC390_write32 (DMA_XferAddr, cpu_to_le32((u32)pSRB->SGBusAddr));
- 
- 	//DC390_write8 (DMA_Cmd, DMA_IDLE_CMD | ioDir); /* | DMA_INT; */
- 	pSRB->SRBState = SRB_DATA_XFER;
-@@ -2036,7 +2084,7 @@
- 
-     if (pSRB) 
-     {
--	printk ("DC390: SRB: Xferred %08lx, Remain %08lx, State %08x, Phase %02x\n",
-+	printk ("DC390: SRB: Xferred %08lx, Remain %08x, State %08x, Phase %02x\n",
- 		pSRB->TotalXferredLen, pSRB->SGToBeXferLen, pSRB->SRBState,
- 		pSRB->ScsiPhase);
- 	printk ("DC390: AdpaterStatus: %02x, SRB Status %02x\n", pSRB->AdaptStatus, pSRB->SRBStatus);
+--=20
+Oliver K=F6nig
+
+Windfinder.com
+Knorrstr. 24 Hinterhaus
+24106 Kiel
+Germany
+phone +49 431-8008643
+VoIP +49 1801-7775558229
+fax +49 431-8008644
+Mobile +49 177-4933362
+oliver@windfinder.com
+www.windfinder.com
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
