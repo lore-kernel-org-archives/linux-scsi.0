@@ -1,87 +1,53 @@
-From: Benoit Boissinot <benoit.boissinot@ens-lyon.org>
-Subject: [2.6 PATCH] drivers/scsi/dpt_i2o.c: cleanup useless code
-Date: Sat, 23 Apr 2005 20:11:58 +0200
-Message-ID: <20050423181158.GF8057@ens-lyon.fr>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] dc395x: Fix support for highmem
+Date: Sat, 23 Apr 2005 15:01:44 -0400
+Message-ID: <1114282904.5068.19.camel@mulgrave>
+References: <20050321075531.GC23911@suse.de> <7044.1111398919@www16.gmx.net>
+	 <Pine.LNX.4.56.0503211111290.20956@pcgl.dsa-ac.de>
+	 <20050321104419.GH23911@suse.de>
+	 <Pine.LNX.4.56.0503211147420.20956@pcgl.dsa-ac.de>
+	 <Pine.LNX.4.60.0503302318250.9431@poirot.grange>
+	 <1112220802.9435.1.camel@mulgrave>
+	 <Pine.LNX.4.56.0503311051290.20956@pcgl.dsa-ac.de>
+	 <Pine.LNX.4.60.0504100035110.4283@poirot.grange>
+	 <Pine.LNX.4.60.0504212341390.6761@poirot.grange>
+	 <20050422113654.GY9371@suse.de>
+	 <Pine.LNX.4.60.0504222203190.5348@poirot.grange>
+	 <Pine.LNX.4.60.0504231159260.8537@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bernache.ens-lyon.fr ([140.77.167.10]:8584 "EHLO
-	bernache.ens-lyon.fr") by vger.kernel.org with ESMTP
-	id S261647AbVDWSMV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Apr 2005 14:12:21 -0400
-Content-Disposition: inline
+Received: from stat16.steeleye.com ([209.192.50.48]:36825 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261699AbVDWTB5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Apr 2005 15:01:57 -0400
+In-Reply-To: <Pine.LNX.4.60.0504231159260.8537@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Markus Lidel <Markus.Lidel@shadowconnect.com>, Mark_Salyzyn@adaptec.com
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: Jens Axboe <axboe@suse.de>, Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <matthew@wil.cx>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Kurt Garloff <garloff@suse.de>
 
-This patch removes the array 'hbas' as it seems to be useless
-and redundant with the linked list hbas_chain.
+On Sat, 2005-04-23 at 12:06 +0200, Guennadi Liakhovetski wrote:
+> Hm, it is sometimes a good idea to at least compile-test ones patches... 
+> So, the one below at least compiles.
+> 
+> One more thing I wanted to ask - what can one assume about request 
+> buffers? If it is a sg, I guess, each segment is within one page frame, 
+> right? And if sg is not used, is request_buffer also guaranteed to be 
+> within one page or not?
 
-Signed-off-by: Benoit Boissinot <benoit.boissinot@ens-lyon.org>
+No to the first one if you've enabled clustering or have an IOMMU and no
+to the second one.
 
---- ./drivers/scsi/dpt_i2o.c.orig	2005-04-23 20:07:46.000000000 +0200
-+++ ./drivers/scsi/dpt_i2o.c	2005-04-23 20:08:10.000000000 +0200
-@@ -113,7 +113,6 @@ static struct i2o_sys_tbl *sys_tbl = NUL
- static int sys_tbl_ind = 0;
- static int sys_tbl_len = 0;
- 
--static adpt_hba* hbas[DPTI_MAX_HBA];
- static adpt_hba* hba_chain = NULL;
- static int hba_count = 0;
- 
-@@ -875,7 +874,6 @@ static int adpt_install_hba(struct scsi_
- 	void __iomem *msg_addr_virt = NULL;
- 
- 	int raptorFlag = FALSE;
--	int i;
- 
- 	if(pci_enable_device(pDev)) {
- 		return -EINVAL;
-@@ -935,12 +933,6 @@ static int adpt_install_hba(struct scsi_
- 	memset(pHba, 0, sizeof(adpt_hba));
- 
- 	down(&adpt_configuration_lock);
--	for(i=0;i<DPTI_MAX_HBA;i++) {
--		if(hbas[i]==NULL) {
--			hbas[i]=pHba;
--			break;
--		}
--	}
- 
- 	if(hba_chain != NULL){
- 		for(p = hba_chain; p->next; p = p->next);
-@@ -950,7 +942,7 @@ static int adpt_install_hba(struct scsi_
- 	}
- 	pHba->next = NULL;
- 	pHba->unit = hba_count;
--	sprintf(pHba->name, "dpti%d", i);
-+	sprintf(pHba->name, "dpti%d", hba_count);
- 	hba_count++;
- 	
- 	up(&adpt_configuration_lock);
-@@ -1015,11 +1007,6 @@ static void adpt_i2o_delete_hba(adpt_hba
- 	if(pHba->host){
- 		free_irq(pHba->host->irq, pHba);
- 	}
--	for(i=0;i<DPTI_MAX_HBA;i++) {
--		if(hbas[i]==pHba) {
--			hbas[i] = NULL;
--		}
--	}
- 	p2 = NULL;
- 	for( p1 = hba_chain; p1; p2 = p1,p1=p1->next){
- 		if(p1 == pHba) {
-@@ -1076,12 +1063,7 @@ static void adpt_i2o_delete_hba(adpt_hba
- 
- static int adpt_init(void)
- {
--	int i;
--
- 	printk("Loading Adaptec I2O RAID: Version " DPT_I2O_VERSION "\n");
--	for (i = 0; i < DPTI_MAX_HBA; i++) {
--		hbas[i] = NULL;
--	}
- #ifdef REBOOT_NOTIFIER
- 	register_reboot_notifier(&adpt_reboot_notifier);
- #endif
+As long as the sg list hasn't gone through dma_map_sg, then you can rely
+on its elements being contiguous in physical space.  Once it's gone
+through dma_map_sg, it's elements are contiguous in the bus space beyond
+the IOMMU, so no longer (possibly) even physically contiguous.
+
+The request_buffer for no sg cases is guaranteed to be both physically
+and virtually contiguous.
+
+James
+
+
