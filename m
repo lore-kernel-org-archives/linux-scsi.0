@@ -1,70 +1,67 @@
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Subject: Re: [PATCH] dc395x: Fix support for highmem
-Date: Sat, 23 Apr 2005 11:35:01 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0504222203190.5348@poirot.grange>
+Date: Sat, 23 Apr 2005 12:06:13 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0504231159260.8537@poirot.grange>
 References: <20050321075531.GC23911@suse.de> <7044.1111398919@www16.gmx.net>
  <Pine.LNX.4.56.0503211111290.20956@pcgl.dsa-ac.de> <20050321104419.GH23911@suse.de>
  <Pine.LNX.4.56.0503211147420.20956@pcgl.dsa-ac.de>
  <Pine.LNX.4.60.0503302318250.9431@poirot.grange> <1112220802.9435.1.camel@mulgrave>
  <Pine.LNX.4.56.0503311051290.20956@pcgl.dsa-ac.de>
  <Pine.LNX.4.60.0504100035110.4283@poirot.grange> <Pine.LNX.4.60.0504212341390.6761@poirot.grange>
- <20050422113654.GY9371@suse.de>
+ <20050422113654.GY9371@suse.de> <Pine.LNX.4.60.0504222203190.5348@poirot.grange>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imap.gmx.net ([213.165.64.20]:50871 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S261525AbVDWJgA (ORCPT
+Received: from mail.gmx.net ([213.165.64.20]:9143 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261527AbVDWKG5 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Apr 2005 05:36:00 -0400
-In-Reply-To: <20050422113654.GY9371@suse.de>
+	Sat, 23 Apr 2005 06:06:57 -0400
+In-Reply-To: <Pine.LNX.4.60.0504222203190.5348@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@suse.de>
 Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <matthew@wil.cx>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Kurt Garloff <garloff@suse.de>
 
-On Fri, 22 Apr 2005, Jens Axboe wrote:
+Hm, it is sometimes a good idea to at least compile-test ones patches... 
+So, the one below at least compiles.
 
-> On Thu, Apr 21 2005, Guennadi Liakhovetski wrote:
-> > +static void dc390_kunmap_atomic_sg(void *virt)
-> > +{
-> > +	kunmap_atomic(virt_to_page(virt), KM_BIO_SRC_IRQ);
-> > +}
+One more thing I wanted to ask - what can one assume about request 
+buffers? If it is a sg, I guess, each segment is within one page frame, 
+right? And if sg is not used, is request_buffer also guaranteed to be 
+within one page or not?
+
+On Sat, 23 Apr 2005, Guennadi Liakhovetski wrote:
+
+> On Fri, 22 Apr 2005, Jens Axboe wrote:
 > 
-> Please remember to test this with highmem debug. The above is buggy,
-> kunmap_atomic() takes the mapped pointer, not the page structure.
-
-Oops... Thanks. Sure, I'd like to test it - the problem been, I don't know 
-how to get the damn thing to execute that place. I'll keep thinking about 
-testing possibilities. So far on both my test machines with HDs, CD-ROM, 
-tape and an external ZIP it didn't hit that path. Below is an updated 
-patch.
-
-By highmem debug do you mean just enabling the respective option under 
-kernel debugging or one still needs that patch from Andrea you mentioned 
-earlier to test it on low mem machines?
+> > On Thu, Apr 21 2005, Guennadi Liakhovetski wrote:
+> > > +static void dc390_kunmap_atomic_sg(void *virt)
+> > > +{
+> > > +	kunmap_atomic(virt_to_page(virt), KM_BIO_SRC_IRQ);
+> > > +}
+> > 
+> > Please remember to test this with highmem debug. The above is buggy,
+> > kunmap_atomic() takes the mapped pointer, not the page structure.
+> 
+> Oops... Thanks. Sure, I'd like to test it - the problem been, I don't know 
+> how to get the damn thing to execute that place. I'll keep thinking about 
+> testing possibilities. So far on both my test machines with HDs, CD-ROM, 
+> tape and an external ZIP it didn't hit that path. Below is an updated 
+> patch.
+> 
+> By highmem debug do you mean just enabling the respective option under 
+> kernel debugging or one still needs that patch from Andrea you mentioned 
+> earlier to test it on low mem machines?
 
 Thanks
 Guennadi
 ---
 Guennadi Liakhovetski
 
-Index: drivers/scsi/tmscsim.c
-===================================================================
-RCS file: /usr/src/cvs/linux-2_6/drivers/scsi/tmscsim.c,v
-retrieving revision 1.1.1.8
-diff -u -r1.1.1.8 tmscsim.c
---- drivers/scsi/tmscsim.c	13 Jan 2005 21:10:01 -0000	1.1.1.8
-+++ drivers/scsi/tmscsim.c	23 Apr 2005 09:04:34 -0000
-@@ -461,6 +461,8 @@
- 	return error;
- }
- 
-+static int debug_kmap;
-+
- /* Remove pci mapping */
- static void dc390_pci_unmap (struct dc390_srb* pSRB)
- {
-@@ -856,8 +858,8 @@
+diff -u a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
+--- a/drivers/scsi/tmscsim.c	13 Jan 2005 21:10:01
++++ b/drivers/scsi/tmscsim.c	23 Apr 2005 09:56:50
+@@ -856,8 +856,8 @@
  		pSRB->pSegmentList++;
  		psgl = pSRB->pSegmentList;
  
@@ -75,7 +72,7 @@ diff -u -r1.1.1.8 tmscsim.c
  	    }
  	    else
  		pSRB->SGToBeXferLen = 0;
-@@ -882,10 +884,44 @@
+@@ -882,10 +882,44 @@
      }	    
  }
  
@@ -121,7 +118,7 @@ diff -u -r1.1.1.8 tmscsim.c
      struct scatterlist *psgl;
      u32    ResidCnt, i;
      unsigned long   xferCnt;
-@@ -931,16 +967,17 @@
+@@ -931,16 +965,17 @@
  		pSRB->pSegmentList++;
  		psgl = pSRB->pSegmentList;
  
@@ -143,7 +140,7 @@ diff -u -r1.1.1.8 tmscsim.c
  	    while( bval & 0x1f )
  	    {
  		DEBUG1(printk (KERN_DEBUG "Check for residuals,"));
-@@ -988,10 +1025,24 @@
+@@ -988,10 +1023,24 @@
  
  	    if( residual )
  	    {
@@ -152,7 +149,7 @@ diff -u -r1.1.1.8 tmscsim.c
 +		size_t offset = pSRB->TotalXferredLen;
 +		struct scsi_cmnd *pcmd = pSRB->pcmd;
 +		struct scatterlist *sg = pcmd->use_sg ?
-+			(struct scatterlist *)pcmd->request_buffer : &pSRB->pSegmentx;
++			(struct scatterlist *)pcmd->request_buffer : &pSRB->Segmentx;
 +
  		bval = DC390_read8 (ScsiFifo);	    /* get one residual byte */
 -		ptr = (u8 *) bus_to_virt( pSRB->SGBusAddr );
@@ -171,7 +168,7 @@ diff -u -r1.1.1.8 tmscsim.c
  		pSRB->TotalXferredLen++;
  		pSRB->SGToBeXferLen--;
  	    }
-@@ -1212,32 +1263,31 @@
+@@ -1212,32 +1261,31 @@
  {
      struct scsi_cmnd *pcmd = pSRB->pcmd;
      struct scatterlist *psgl;
@@ -222,7 +219,7 @@ diff -u -r1.1.1.8 tmscsim.c
      } else if(pcmd->request_buffer) {
  	//dc390_pci_sync(pSRB);
  
-@@ -1245,11 +1295,11 @@
+@@ -1245,11 +1293,11 @@
  	pSRB->SGcount = 1;
  	pSRB->pSegmentList = (struct scatterlist *) &pSRB->Segmentx;
      } else {
@@ -237,7 +234,7 @@ diff -u -r1.1.1.8 tmscsim.c
  }
  
  
-@@ -1385,8 +1435,8 @@
+@@ -1385,8 +1433,8 @@
  	if( !pSRB->SGToBeXferLen )
  	{
  	    psgl = pSRB->pSegmentList;
@@ -248,7 +245,7 @@ diff -u -r1.1.1.8 tmscsim.c
  	    DEBUG1(printk (KERN_DEBUG " DC390: Next SG segment."));
  	}
  	lval = pSRB->SGToBeXferLen;
-@@ -1397,8 +1447,8 @@
+@@ -1397,8 +1445,8 @@
  	lval >>= 8;
  	DC390_write8 (CtcReg_High, (u8) lval);
  
@@ -259,3 +256,12 @@ diff -u -r1.1.1.8 tmscsim.c
  
  	//DC390_write8 (DMA_Cmd, DMA_IDLE_CMD | ioDir); /* | DMA_INT; */
  	pSRB->SRBState = SRB_DATA_XFER;
+@@ -2036,7 +2084,7 @@
+ 
+     if (pSRB) 
+     {
+-	printk ("DC390: SRB: Xferred %08lx, Remain %08lx, State %08x, Phase %02x\n",
++	printk ("DC390: SRB: Xferred %08lx, Remain %08x, State %08x, Phase %02x\n",
+ 		pSRB->TotalXferredLen, pSRB->SGToBeXferLen, pSRB->SRBState,
+ 		pSRB->ScsiPhase);
+ 	printk ("DC390: AdpaterStatus: %02x, SRB Status %02x\n", pSRB->AdaptStatus, pSRB->SRBStatus);
