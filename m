@@ -1,172 +1,205 @@
-From: oliver@windfinder.com
-Subject: Re: Raid1 on Dell Poweredge with Perc4e/Di Raid Controller running Debian Sarge (3.1)
-Date: Sat, 23 Apr 2005 12:26:03 +0200
-Message-ID: <200504231226.04522.oliver@windfinder.com>
-References: <B12F824A463BE441AB91C9AF3582F6BE02A41F@KAN-MAIL.corp.kanoodle.com>
+From: Benoit Boissinot <benoit.boissinot@ens-lyon.org>
+Subject: [2.6 PATCH] drivers/scsi/dpt_i2o.c: fix compile warnings
+Date: Sat, 23 Apr 2005 20:03:55 +0200
+Message-ID: <20050423180355.GD8057@ens-lyon.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.windfinder.de ([81.201.107.60]:18396 "HELO windfinder.com")
-	by vger.kernel.org with SMTP id S261535AbVDWK05 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Apr 2005 06:26:57 -0400
-In-Reply-To: <B12F824A463BE441AB91C9AF3582F6BE02A41F@KAN-MAIL.corp.kanoodle.com>
+Received: from bernache.ens-lyon.fr ([140.77.167.10]:5768 "EHLO
+	bernache.ens-lyon.fr") by vger.kernel.org with ESMTP
+	id S261642AbVDWSEU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Apr 2005 14:04:20 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dennis Ruzeski <dennisr@corp.kanoodle.com>, "Ju, Seokmann" <sju@lsil.com>, aschultz@warp10.net, Matt_Domsch@dell.com, linux-poweredge@dell.com, linux-scsi@vger.kernel.org
-Cc: Jonas Kaufmann <me@j0nes.de>, Thomas Glas <thomas.glas@hanse.net>, Sebastian Kamp <sebastian.kamp@ottogroup.com>
+To: Andrew Morton <akpm@osdl.org>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Markus Lidel <Markus.Lidel@shadowconnect.com>, Mark_Salyzyn@adaptec.com
 
-Hello Denis,
-this is what I just did
+This patch fixes the following warnings:
 
-cd /usr/src/kernel-image-2.6.8
-patch -l < ./megaraid-v2.20.4.6/2.6.8-24.patch
-cd /boot
-cp config-2.6.8-24.14-default /usr/src/linux/.config
-cd /usr/src/linux
-make oldconfig=20
-make
-make modules_install
-cp /usr/src/linux/arch/i386/boot/bzImage /boot/vmlinuz-2.6.8
-cp System.map /usr/src/linux/System.map /boot/System.map-2.6.8
-[Edited /boot/grub/menu.lst]
-[Added the line megaraid_mbox to /etc/modules.conf Note: there war no e=
-ntry=20
-megaraid2 or similar in this file]
-server:/boot # mkinitrd -o /boot/initrd.img-2.6.8-1 2.6.8-1
-=46atal:
-=46atal: Module megaraid2 not found.
-Warning: This failure MAY indicate that your kernel will not boot!
-but it can also be triggered by needed modules being compiled into the
-kernel.
+drivers/scsi/dpt_i2o.c: In function =E2=80=98adpt_isr=E2=80=99:
+drivers/scsi/dpt_i2o.c:2030: warning: passing argument 1 of =E2=80=98re=
+adl=E2=80=99 makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2031: warning: passing argument 1 of =E2=80=98re=
+adl=E2=80=99 makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2042: warning: passing argument 1 of =E2=80=98re=
+adl=E2=80=99 makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2043: warning: passing argument 2 of =E2=80=98wr=
+itel=E2=80=99 makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2046: warning: passing argument 1 of =E2=80=98re=
+adl=E2=80=99 makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2048: warning: passing argument 1 of =E2=80=98re=
+adl=E2=80=99 makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2055: warning: passing argument 1 of =E2=80=98re=
+adl=E2=80=99 makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2062: warning: passing argument 1 of =E2=80=98re=
+adl=E2=80=99 makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2069: warning: passing argument 1 of =E2=80=98re=
+adl=E2=80=99 makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c: In function =E2=80=98adpt_i2o_to_scsi=E2=80=99:=
+ drivers/scsi/dpt_i2o.c:2239: warning: passing argument 1 of =E2=80=98r=
+eadl=E2=80=99 makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2243: warning: passing argument 1 of =E2=80=98re=
+adl=E2=80=99 makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2248: warning: passing argument 1 of =E2=80=98re=
+adl=E2=80=99 makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2259: warning: passing argument 1 of =E2=80=98re=
+adl=E2=80=99 makes pointer from integer without a cast
 
-Any ideas? Please help! Thanks!
+It define variables which are only used with a type of 'void __iomem *'
+with this type instead of the incorrect 'unsigned long' type.
+It also remove pointless casts.
 
-Regards,
-Oliver
+Signed-off-by: Benoit Boissinot <benoit.boissinot@ens-lyon.org>
 
-On Friday 22 April 2005 21:14, you wrote:
-> For that you'll need to edit /etc/modules.conf and change the megarai=
-d2
-> entry to megaraid_mbox. Also, make sure you have the latest version o=
-f
-> mkinitrd (to recognize the .ko module extension).
->
-> Good luck,
-> Dennis
->
->
->
-> -----Original Message-----
-> From: linux-poweredge-bounces@dell.com
-> [mailto:linux-poweredge-bounces@dell.com] On Behalf Of
-> oliver@windfinder.com Sent: Friday, April 22, 2005 3:08 PM
-> To: Ju, Seokmann; aschultz@warp10.net; Matt_Domsch@dell.com;
-> linux-poweredge@dell.com; linux-scsi@vger.kernel.org; Jonas Kaufmann;
-> Thomas Glas; Sebastian Kamp Subject: Re: Raid1 on Dell Poweredge with
-> Perc4e/Di Raid Controller runnin gDebian Sarge (3.1)
->
-> Hello Ju,
-> thanks for your help. I am a total newbie but I managed to compile a =
-new
-> kernel with your patch:
->
-> /boot/vmlinuz-2.6.8-1
->
-> Then I did:
-> server:/boot # mkinitrd -o /boot/initrd.img-2.6.8-1 2.6.8-1
-> Fatal: Module megaraid2 not found.
-> Warning: This failure MAY indicate that your kernel will not boot!
-> but it can also be triggered by needed modules being compiled into th=
-e
-> kernel.
->
-> Does this mean, that you patch is not working or did I make a mistake=
-?
->
-> Best regards,
-> Oliver
->
-> On Friday 22 April 2005 15:30, you wrote:
-> > On Thursday, April 21, 2005 4:31 AM, Oliver wrote,
-> >
-> > > Is there a megaraid driver for the 2.6.8 kernel? If so, where?
-> >
-> > Try attached. It has driver source with one patch file (2.6.8-24.pa=
-tch).
-> > Please make sure to apply the patch before compile.
-> >
-> > Thank you.
-> >
-> > > -----Original Message-----
-> > > From: oliver@windfinder.com [mailto:oliver@windfinder.com]
-> > > Sent: Thursday, April 21, 2005 4:31 AM
-> > > To: Matt_Domsch@dell.com; linux-poweredge@dell.com;
-> > > linux-scsi@vger.kernel.org
-> > > Cc: Thomas Glas
-> > > Subject: Raid1 on Dell Poweredge with Perc4e/Di Raid
-> > > Controller running Debian Sarge (3.1)
-> > >
-> > > Hello,
-> > > I would like to use Raid1 on the Dell Poweredge with
-> > > Perc4e/Di Raid Controller
-> > > and two 2 73 GB drives running Debian Sarge (3.1).
-> > >
-> > > At http://linux.dell.com/storage.shtml I read that the
-> > > Powerege 2850 Perc4e/Di
-> > > requires megaraid2 driver 2.00.3 or higher on 2.4.x kernel.
-> > > On 2.6.x kernels
-> > > (x < 9) there is no driver for these adapters. On 2.6.x (x >=3D
-> > > 9) use the
-> > > 'megaraid_mbox' and 'megaraid_mm' drivers.
-> > >
-> > > Problem: The Debian Installers offers only to install:
-> > >
-> > > - 2.4.x (which seems to be okay for the raid) OR
-> > > - 2.6.8 (which would not allow the use of the Raid)
-> > >
-> > > Solution:
-> > > Is there a megaraid driver for the 2.6.8 kernel? If so, where?
-> > >
-> > > If not, should I use 2.4.x kernel or try to install a 2.6.9
-> > > kernel on Debian
-> > > Sarge?
-> > >
-> > > --
-> > > Oliver K=F6nig
-> > >
-> > > Windfinder.com
-> > > Knorrstr. 24 Hinterhaus
-> > > 24106 Kiel
-> > > Germany
-> > > phone +49 431-8008643
-> > > VoIP +49 1801-7775558229
-> > > fax +49 431-8008644
-> > > Mobile +49 177-4933362
-> > > oliver@windfinder.com
-> > > www.windfinder.com
-> > > -
-> > > To unsubscribe from this list: send the line "unsubscribe
-> > > linux-scsi" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.htm=
-l
 
---=20
-Oliver K=F6nig
+diff -Naup tmp.orig/dpt_i2o.c tmp/dpt_i2o.c
+--- tmp.orig/drivers/scsi/dpt_i2o.c	2005-04-22 19:26:51.000000000 +0200
++++ tmp/drivers/scsi/dpt_i2o.c	2005-04-23 16:21:50.000000000 +0200
+@@ -691,7 +691,7 @@ static int adpt_device_reset(struct scsi
+ 	u32 msg[4];
+ 	u32 rcode;
+ 	int old_state;
+-	struct adpt_device* d =3D (void*) cmd->device->hostdata;
++	struct adpt_device* d =3D cmd->device->hostdata;
+=20
+ 	pHba =3D (void*) cmd->device->host->hostdata[0];
+ 	printk(KERN_INFO"%s: Trying to reset device\n",pHba->name);
+@@ -707,7 +707,7 @@ static int adpt_device_reset(struct scsi
+=20
+ 	old_state =3D d->state;
+ 	d->state |=3D DPTI_DEV_RESET;
+-	if( (rcode =3D adpt_i2o_post_wait(pHba, (void*)msg,sizeof(msg), FOREV=
+ER)) ){
++	if( (rcode =3D adpt_i2o_post_wait(pHba, msg,sizeof(msg), FOREVER)) ){
+ 		d->state =3D old_state;
+ 		if(rcode =3D=3D -EOPNOTSUPP ){
+ 			printk(KERN_INFO"%s: Device reset not supported\n",pHba->name);
+@@ -737,7 +737,7 @@ static int adpt_bus_reset(struct scsi_cm
+ 	msg[1] =3D (I2O_HBA_BUS_RESET<<24|HOST_TID<<12|pHba->channel[cmd->dev=
+ice->channel].tid);
+ 	msg[2] =3D 0;
+ 	msg[3] =3D 0;
+-	if(adpt_i2o_post_wait(pHba, (void*)msg,sizeof(msg), FOREVER) ){
++	if(adpt_i2o_post_wait(pHba, msg,sizeof(msg), FOREVER) ){
+ 		printk(KERN_WARNING"%s: Bus reset failed.\n",pHba->name);
+ 		return FAILED;
+ 	} else {
+@@ -1454,7 +1454,7 @@ static int adpt_i2o_parse_lct(adpt_hba*=20
+ 			return -ENOMEM;
+ 		}
+ 	=09
+-		d->controller =3D (void*)pHba;
++		d->controller =3D pHba;
+ 		d->next =3D NULL;
+=20
+ 		memcpy(&d->lct_data, &lct->lct_entry[i], sizeof(i2o_lct_entry));
+@@ -2000,7 +2000,7 @@ static irqreturn_t adpt_isr(int irq, voi
+ 	struct scsi_cmnd* cmd;
+ 	adpt_hba* pHba =3D dev_id;
+ 	u32 m;
+-	ulong reply;
++	void __iomem *reply;
+ 	u32 status=3D0;
+ 	u32 context;
+ 	ulong flags =3D 0;
+@@ -2025,11 +2025,11 @@ static irqreturn_t adpt_isr(int irq, voi
+ 				goto out;
+ 			}
+ 		}
+-		reply =3D (ulong)bus_to_virt(m);
++		reply =3D bus_to_virt(m);
+=20
+ 		if (readl(reply) & MSG_FAIL) {
+ 			u32 old_m =3D readl(reply+28);=20
+-			ulong msg;
++			void __iomem *msg;
+ 			u32 old_context;
+ 			PDEBUG("%s: Failed message\n",pHba->name);
+ 			if(old_m >=3D 0x100000){
+@@ -2038,16 +2038,16 @@ static irqreturn_t adpt_isr(int irq, voi
+ 				continue;
+ 			}
+ 			// Transaction context is 0 in failed reply frame
+-			msg =3D (ulong)(pHba->msg_addr_virt + old_m);
++			msg =3D pHba->msg_addr_virt + old_m;
+ 			old_context =3D readl(msg+12);
+ 			writel(old_context, reply+12);
+ 			adpt_send_nop(pHba, old_m);
+ 		}=20
+ 		context =3D readl(reply+8);
+ 		if(context & 0x40000000){ // IOCTL
+-			ulong p =3D (ulong)(readl(reply+12));
+-			if( p !=3D 0) {
+-				memcpy((void*)p, (void*)reply, REPLY_FRAME_SIZE * 4);
++			void *p =3D (void *)readl(reply+12);
++			if( p !=3D NULL) {
++				memcpy_fromio(p, reply, REPLY_FRAME_SIZE * 4);
+ 			}
+ 			// All IOCTLs will also be post wait
+ 		}
+@@ -2231,7 +2231,7 @@ static s32 adpt_scsi_register(adpt_hba*=20
+ }
+=20
+=20
+-static s32 adpt_i2o_to_scsi(ulong reply, struct scsi_cmnd* cmd)
++static s32 adpt_i2o_to_scsi(void __iomem *reply, struct scsi_cmnd* cmd=
+)
+ {
+ 	adpt_hba* pHba;
+ 	u32 hba_status;
+@@ -2323,7 +2323,7 @@ static s32 adpt_i2o_to_scsi(ulong reply,
+ 			u32 len =3D sizeof(cmd->sense_buffer);
+ 			len =3D (len > 40) ?  40 : len;
+ 			// Copy over the sense data
+-			memcpy(cmd->sense_buffer, (void*)(reply+28) , len);
++			memcpy_fromio(cmd->sense_buffer, (reply+28) , len);
+ 			if(cmd->sense_buffer[0] =3D=3D 0x70 /* class 7 */ &&=20
+ 			   cmd->sense_buffer[2] =3D=3D DATA_PROTECT ){
+ 				/* This is to handle an array failed */
+@@ -2438,7 +2438,7 @@ static s32 adpt_i2o_reparse_lct(adpt_hba
+ 					return -ENOMEM;
+ 				}
+ 			=09
+-				d->controller =3D (void*)pHba;
++				d->controller =3D pHba;
+ 				d->next =3D NULL;
+=20
+ 				memcpy(&d->lct_data, &lct->lct_entry[i], sizeof(i2o_lct_entry));
+@@ -2985,8 +2985,8 @@ static int adpt_i2o_build_sys_table(void
+ 		sys_tbl->iops[count].frame_size =3D pHba->status_block->inbound_fram=
+e_size;
+ 		sys_tbl->iops[count].last_changed =3D sys_tbl_ind - 1; // ??
+ 		sys_tbl->iops[count].iop_capabilities =3D pHba->status_block->iop_ca=
+pabilities;
+-		sys_tbl->iops[count].inbound_low =3D (u32)virt_to_bus((void*)pHba->p=
+ost_port);
+-		sys_tbl->iops[count].inbound_high =3D (u32)((u64)virt_to_bus((void*)=
+pHba->post_port)>>32);
++		sys_tbl->iops[count].inbound_low =3D (u32)virt_to_bus(pHba->post_por=
+t);
++		sys_tbl->iops[count].inbound_high =3D (u32)((u64)virt_to_bus(pHba->p=
+ost_port)>>32);
+=20
+ 		count++;
+ 	}
+diff -Naup tmp.orig/dpti.h tmp/dpti.h
+--- tmp.orig/drivers/scsi/dpti.h	2005-04-22 19:24:32.000000000 +0200
++++ tmp/drivers/scsi/dpti.h	2005-04-23 16:22:44.000000000 +0200
+@@ -296,7 +296,7 @@ static s32 adpt_i2o_status_get(adpt_hba*
+ static s32 adpt_i2o_init_outbound_q(adpt_hba* pHba);
+ static s32 adpt_i2o_hrt_get(adpt_hba* pHba);
+ static s32 adpt_scsi_to_i2o(adpt_hba* pHba, struct scsi_cmnd* cmd, str=
+uct adpt_device* dptdevice);
+-static s32 adpt_i2o_to_scsi(ulong reply, struct scsi_cmnd* cmd);
++static s32 adpt_i2o_to_scsi(void __iomem *reply, struct scsi_cmnd* cmd=
+);
+ static s32 adpt_scsi_register(adpt_hba* pHba,struct scsi_host_template=
+ * sht);
+ static s32 adpt_hba_reset(adpt_hba* pHba);
+ static s32 adpt_i2o_reset_hba(adpt_hba* pHba);
 
-Windfinder.com
-Knorrstr. 24 Hinterhaus
-24106 Kiel
-Germany
-phone +49 431-8008643
-VoIP +49 1801-7775558229
-fax +49 431-8008644
-Mobile +49 177-4933362
-oliver@windfinder.com
-www.windfinder.com
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
