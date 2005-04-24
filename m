@@ -1,229 +1,271 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] lpfc: hgp/pgp cleanups
-Date: Sun, 24 Apr 2005 14:18:45 +0200
-Message-ID: <20050424121845.GA14439@lst.de>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [PATCH] dc395x: Fix support for highmem
+Date: Sun, 24 Apr 2005 16:31:06 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0504241627140.5774@poirot.grange>
+References: <20050321075531.GC23911@suse.de> <7044.1111398919@www16.gmx.net>
+  <Pine.LNX.4.56.0503211111290.20956@pcgl.dsa-ac.de>  <20050321104419.GH23911@suse.de>
+  <Pine.LNX.4.56.0503211147420.20956@pcgl.dsa-ac.de>
+ <Pine.LNX.4.60.0503302318250.9431@poirot.grange>  <1112220802.9435.1.camel@mulgrave>
+  <Pine.LNX.4.56.0503311051290.20956@pcgl.dsa-ac.de>
+ <Pine.LNX.4.60.0504100035110.4283@poirot.grange>  <Pine.LNX.4.60.0504212341390.6761@poirot.grange>
+  <20050422113654.GY9371@suse.de>  <Pine.LNX.4.60.0504222203190.5348@poirot.grange>
+  <Pine.LNX.4.60.0504231159260.8537@poirot.grange> <1114282904.5068.19.camel@mulgrave>
+ <Pine.LNX.4.60.0504240212090.13715@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:1440 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S262313AbVDXMSw (ORCPT
+Received: from pop.gmx.de ([213.165.64.20]:41115 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S262283AbVDXObt (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Apr 2005 08:18:52 -0400
-Content-Disposition: inline
+	Sun, 24 Apr 2005 10:31:49 -0400
+In-Reply-To: <Pine.LNX.4.60.0504240212090.13715@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jens Axboe <axboe@suse.de>, Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <matthew@wil.cx>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Kurt Garloff <garloff@suse.de>
 
- - rename PGP/HPH to lpfc_pgp/lpfc_hgp
- - use __le32 types for the members to start fixing sparse -Wbitwise
-   issues
- - remove lpfc_sli.MBhostaddr, we can always use the pointer from
-   SLI2_DESC directly
+On Sun, 24 Apr 2005, Guennadi Liakhovetski wrote:
 
+> On Sat, 23 Apr 2005, James Bottomley wrote:
+> 
+> > As long as the sg list hasn't gone through dma_map_sg, then you can rely
+> > on its elements being contiguous in physical space.  Once it's gone
+> > through dma_map_sg, it's elements are contiguous in the bus space beyond
+> > the IOMMU, so no longer (possibly) even physically contiguous.
+> 
+> Thanks for the info. Let me see, if I got you right. Say, we've got an sg 
+> with 2 elements: first 2 * PAGE_SIZE long, offset 0, pointing to page #0, 
+> second PAGE_SIZE long, offset 0, page #3. Say, dma_map_sg returned 1, so, 
+> it mapped all those 3 (physically discontiguous) pages to a contiguous bus 
+> address range. And now sg_dma_len() returns 3 * PAGE_SIZE. But, I hope, 
+> the .page, .length, and .offset elements stayed unchanged, so, one can 
+> still walk elements 0 and 1, calculating a sum of sg[i].length and thus 
+> arrive to the required page, right?
+> 
+> I'll redo the patch.
 
---- 1.1/drivers/scsi/lpfc/lpfc_hw.h	2005-04-17 17:05:02 +02:00
-+++ edited/drivers/scsi/lpfc/lpfc_hw.h	2005-04-24 13:05:57 +02:00
-@@ -2214,20 +2214,20 @@
-  * SLI-2 specific structures
-  */
+If my assumption above is right, the patch below should cover bigger than 
+page sg-elements too.
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
+
+Clean up endianness conversions, don't use bus_to_virt(), map atomically 
+instead.
+
+Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+
+diff -u a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
+--- a/drivers/scsi/tmscsim.c	13 Jan 2005 21:10:01
++++ b/drivers/scsi/tmscsim.c	24 Apr 2005 12:59:36
+@@ -856,8 +856,8 @@
+ 		pSRB->pSegmentList++;
+ 		psgl = pSRB->pSegmentList;
  
--typedef struct {
--	uint32_t cmdPutInx;
--	uint32_t rspGetInx;
--} HGP;
-+struct lpfc_hgp {
-+	__le32 cmdPutInx;
-+	__le32 rspGetInx;
-+};
+-		pSRB->SGBusAddr = cpu_to_le32(pci_dma_lo32(sg_dma_address(psgl)));
+-		pSRB->SGToBeXferLen = cpu_to_le32(sg_dma_len(psgl));
++		pSRB->SGBusAddr = sg_dma_address(psgl);
++		pSRB->SGToBeXferLen = sg_dma_len(psgl);
+ 	    }
+ 	    else
+ 		pSRB->SGToBeXferLen = 0;
+@@ -882,10 +882,48 @@
+     }	    
+ }
  
--typedef struct {
--	uint32_t cmdGetInx;
--	uint32_t rspPutInx;
--} PGP;
-+struct lpfc_pgp {
-+	__le32 cmdGetInx;
-+	__le32 rspPutInx;
-+};
- 
- typedef struct _SLI2_DESC {
--	HGP host[MAX_RINGS];
-+	struct lpfc_hgp host[MAX_RINGS];
- 	uint32_t unused1[16];
--	PGP port[MAX_RINGS];
-+	struct lpfc_pgp port[MAX_RINGS];
- } SLI2_DESC;
- 
- typedef union {
-===== drivers/scsi/lpfc/lpfc_mbox.c 1.1 vs edited =====
---- 1.1/drivers/scsi/lpfc/lpfc_mbox.c	2005-04-17 17:05:05 +02:00
-+++ edited/drivers/scsi/lpfc/lpfc_mbox.c	2005-04-24 13:04:52 +02:00
-@@ -422,7 +422,6 @@
- 	uint32_t iocbCnt;
- 	int i;
- 
--	psli->MBhostaddr = (uint32_t *)&phba->slim2p->mbx;
- 	pcbp->maxRing = (psli->num_rings - 1);
- 
- 	iocbCnt = 0;
-@@ -528,7 +527,7 @@
- 	dma_addr_t pdma_addr;
- 	uint32_t bar_low, bar_high;
- 	size_t offset;
--	HGP hgp;
-+	struct lpfc_hgp hgp;
- 	void __iomem *to_slim;
- 
- 	memset(pmb, 0, sizeof(LPFC_MBOXQ_t));
-@@ -584,9 +583,9 @@
- 	else
- 		phba->slim2p->pcb.hgpAddrHigh = 0;
- 	/* write HGP data to SLIM at the required longword offset */
--	memset(&hgp, 0, sizeof(HGP));
-+	memset(&hgp, 0, sizeof(struct lpfc_hgp));
- 	to_slim = phba->MBslimaddr + (SLIMOFF*sizeof (uint32_t));
--	lpfc_memcpy_to_slim(to_slim, &hgp, sizeof (HGP));
-+	lpfc_memcpy_to_slim(to_slim, &hgp, sizeof(struct lpfc_hgp));
- 
- 	/* Setup Port Group ring pointer */
- 	offset = (uint8_t *)&phba->slim2p->mbx.us.s2.port -
-===== drivers/scsi/lpfc/lpfc_sli.c 1.1 vs edited =====
---- 1.1/drivers/scsi/lpfc/lpfc_sli.c	2005-04-17 17:05:12 +02:00
-+++ edited/drivers/scsi/lpfc/lpfc_sli.c	2005-04-24 13:03:13 +02:00
-@@ -225,8 +225,7 @@
- static IOCB_t *
- lpfc_sli_next_iocb_slot (struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
- {
--	MAILBOX_t *mbox = (MAILBOX_t *)phba->sli.MBhostaddr;
--	PGP *pgp = (PGP *)&mbox->us.s2.port[pring->ringno];
-+	struct lpfc_pgp *pgp = &phba->slim2p->mbx.us.s2.port[pring->ringno];
- 	uint32_t  max_cmd_idx = pring->numCiocb;
- 	IOCB_t *iocb = NULL;
- 
-@@ -411,9 +410,7 @@
++
++/**
++ * dc390_kmap_atomic_sg - find and atomically map an sg-elemnt
++ * @sg:		scatter-gather list
++ * @sg_count:	number of segments in sg
++ * @offset:	offset in bytes into sg, on return offset into the mapped area
++ * @len:	on return number of bytes mapped
++ *
++ * Returns virtual address of the start of the mapped page
++ */
++static void *dc390_kmap_atomic_sg(struct scatterlist *sg, int sg_count, size_t *offset, size_t *len)
++{
++	int i;
++	size_t sg_len = 0;
++	struct page *page;
++
++	for (i = 0; i < sg_count; i++) {
++		sg_len += sg[i].length;
++		if (sg_len > *offset)
++			break;
++	}
++
++	BUG_ON(i == sg_count);
++
++	*len = sg_len - *offset;
++	*offset = sg[i].offset + sg[i].length - *len;
++
++	page = sg[i].page + (*offset >> PAGE_SHIFT);
++	*offset &= ~PAGE_MASK;
++
++	return kmap_atomic(page, KM_BIO_SRC_IRQ);
++}
++
++static void dc390_kunmap_atomic_sg(void *virt)
++{
++	kunmap_atomic(virt, KM_BIO_SRC_IRQ);
++}
++
  static void
- lpfc_sli_turn_on_ring(struct lpfc_hba * phba, int ringno)
+ dc390_DataIn_0( struct dc390_acb* pACB, struct dc390_srb* pSRB, u8 *psstatus)
  {
--	PGP *pgp =
--		((PGP *) &
--		 (((MAILBOX_t *)phba->sli.MBhostaddr)->us.s2.port[ringno]));
-+	struct lpfc_pgp *pgp = &phba->slim2p->mbx.us.s2.port[ringno];
+-    u8   sstatus, residual, bval;
++    u8   sstatus;
+     struct scatterlist *psgl;
+     u32    ResidCnt, i;
+     unsigned long   xferCnt;
+@@ -931,16 +969,17 @@
+ 		pSRB->pSegmentList++;
+ 		psgl = pSRB->pSegmentList;
  
- 	/* If the ring is active, flag it */
- 	if (phba->sli.ring[ringno].cmdringaddr) {
-@@ -537,7 +534,7 @@
- 	/* Get a Mailbox buffer to setup mailbox commands for callback */
- 	if ((pmb = phba->sli.mbox_active)) {
- 		pmbox = &pmb->mb;
--		mbox = (MAILBOX_t *) phba->sli.MBhostaddr;
-+		mbox = &phba->slim2p->mbx;
+-		pSRB->SGBusAddr = cpu_to_le32(pci_dma_lo32(sg_dma_address(psgl)));
+-		pSRB->SGToBeXferLen = cpu_to_le32(sg_dma_len(psgl));
++		pSRB->SGBusAddr = sg_dma_address(psgl);
++		pSRB->SGToBeXferLen = sg_dma_len(psgl);
+ 	    }
+ 	    else
+ 		pSRB->SGToBeXferLen = 0;
+ 	}
+ 	else	/* phase changed */
+ 	{
+-	    residual = 0;
+-	    bval = DC390_read8 (Current_Fifo);
++	    u8 residual = 0;
++	    u8 bval = DC390_read8 (Current_Fifo);
++
+ 	    while( bval & 0x1f )
+ 	    {
+ 		DEBUG1(printk (KERN_DEBUG "Check for residuals,"));
+@@ -988,10 +1027,25 @@
  
- 		/* First check out the status word */
- 		lpfc_sli_pcimem_bcopy(mbox, pmbox, sizeof (uint32_t));
-@@ -905,10 +902,10 @@
- lpfc_sli_handle_fast_ring_event(struct lpfc_hba * phba,
- 				struct lpfc_sli_ring * pring, uint32_t mask)
+ 	    if( residual )
+ 	    {
++		size_t count = 1;
++		unsigned long flags;
++		size_t offset = pSRB->TotalXferredLen;
++		struct scsi_cmnd *pcmd = pSRB->pcmd;
++		int sg_count = pcmd->use_sg ? : 1;
++		struct scatterlist *sg = pcmd->use_sg ?
++			(struct scatterlist *)pcmd->request_buffer : &pSRB->Segmentx;
++
+ 		bval = DC390_read8 (ScsiFifo);	    /* get one residual byte */
+-		ptr = (u8 *) bus_to_virt( pSRB->SGBusAddr );
+-		*ptr = bval;
+-		pSRB->SGBusAddr++; xferCnt++;
++
++		local_irq_save(flags);
++		ptr = (u8*)dc390_kmap_atomic_sg(sg, sg_count, &offset, &count);
++
++		*(ptr + offset) = bval;
++		dc390_kunmap_atomic_sg(ptr);
++		local_irq_restore(flags);
++
++		pSRB->SGBusAddr++;
++		xferCnt++;
+ 		pSRB->TotalXferredLen++;
+ 		pSRB->SGToBeXferLen--;
+ 	    }
+@@ -1212,32 +1266,31 @@
  {
-+	struct lpfc_pgp *pgp = &phba->slim2p->mbx.us.s2.port[pring->ringno];
- 	IOCB_t *irsp = NULL;
- 	struct lpfc_iocbq *cmdiocbq = NULL;
- 	struct lpfc_iocbq rspiocbq;
--	PGP *pgp;
- 	uint32_t status;
- 	uint32_t portRspPut, portRspMax;
- 	int rc = 1;
-@@ -920,10 +917,6 @@
- 	spin_lock_irqsave(phba->host->host_lock, iflag);
- 	pring->stats.iocb_event++;
+     struct scsi_cmnd *pcmd = pSRB->pcmd;
+     struct scatterlist *psgl;
++
+     pSRB->TotalXferredLen = 0;
+     pSRB->SGIndex = 0;
+     if (pcmd->use_sg) {
++	unsigned long last_xfer;
++
+ 	pSRB->pSegmentList = (struct scatterlist *)pcmd->request_buffer;
+-	psgl = pSRB->pSegmentList;
+-	//dc390_pci_sync(pSRB);
  
--	/* The driver assumes SLI-2 mode */
--	pgp = (PGP *) &((MAILBOX_t *) phba->sli.MBhostaddr)
--		->us.s2.port[pring->ringno];
--
- 	/*
- 	 * The next available response entry should never exceed the maximum
- 	 * entries.  If it does, treat it as an adapter hardware error.
-@@ -1075,9 +1068,7 @@
- 	struct lpfc_iocbq *cmdiocbp;
- 	struct lpfc_iocbq *saveq;
- 	struct list_head *lpfc_iocb_list = &phba->lpfc_iocb_list;
--	HGP *hgp;
--	PGP *pgp;
--	MAILBOX_t *mbox;
-+	struct lpfc_pgp *pgp = &phba->slim2p->mbx.us.s2.port[pring->ringno];
- 	uint8_t iocb_cmd_type;
- 	lpfc_iocb_type type;
- 	uint32_t status, free_saveq;
-@@ -1089,11 +1080,6 @@
- 	spin_lock_irqsave(phba->host->host_lock, iflag);
- 	pring->stats.iocb_event++;
+-	while (pSRB->TotalXferredLen + (unsigned long) sg_dma_len(psgl) < pSRB->Saved_Ptr)
+-	{
+-	    pSRB->TotalXferredLen += (unsigned long) sg_dma_len(psgl);
+-	    pSRB->SGIndex++;
+-	    if( pSRB->SGIndex < pSRB->SGcount )
+-	    {
+-		pSRB->pSegmentList++;
+-		psgl = pSRB->pSegmentList;
+-		pSRB->SGBusAddr = cpu_to_le32(pci_dma_lo32(sg_dma_address(psgl)));
+-		pSRB->SGToBeXferLen = cpu_to_le32(sg_dma_len(psgl));
+-	    }
+-	    else
+-		pSRB->SGToBeXferLen = 0;
++	for (psgl = pSRB->pSegmentList; pSRB->TotalXferredLen + sg_dma_len(psgl) < pSRB->Saved_Ptr; psgl++) {
++		pSRB->TotalXferredLen += sg_dma_len(psgl);
++		pSRB->SGIndex++;
+ 	}
+-	pSRB->SGToBeXferLen -= (pSRB->Saved_Ptr - pSRB->TotalXferredLen);
+-	pSRB->SGBusAddr += (pSRB->Saved_Ptr - pSRB->TotalXferredLen);
+-	printk (KERN_INFO "DC390: Pointer restored. Segment %i, Total %li, Bus %08lx\n",
+-		pSRB->SGIndex, pSRB->Saved_Ptr, pSRB->SGBusAddr);
  
--	/* The driver assumes SLI-2 mode */
--	mbox = (MAILBOX_t *) phba->sli.MBhostaddr;
--	pgp = (PGP *) & mbox->us.s2.port[pring->ringno];
--	hgp = (HGP *) & mbox->us.s2.host[pring->ringno];
--
- 	/*
- 	 * The next available response entry should never exceed the maximum
- 	 * entries.  If it does, treat it as an adapter hardware error.
-@@ -1771,7 +1757,6 @@
- int
- lpfc_sli_issue_mbox(struct lpfc_hba * phba, LPFC_MBOXQ_t * pmbox, uint32_t flag)
- {
--	MAILBOX_t *mbox;
- 	MAILBOX_t *mb;
- 	struct lpfc_sli *psli;
- 	uint32_t status, evtctr;
-@@ -1901,15 +1886,13 @@
- 	mb->mbxOwner = OWN_CHIP;
++	BUG_ON(pSRB->SGIndex >= pSRB->SGcount);
++
++	last_xfer = pSRB->Saved_Ptr - pSRB->TotalXferredLen;
++
++	pSRB->pSegmentList += pSRB->SGIndex;
++	pSRB->SGBusAddr = sg_dma_address(psgl) + last_xfer;
++	pSRB->SGToBeXferLen = sg_dma_len(psgl) - last_xfer;
++
++	//dc390_pci_sync(pSRB);
++
++	DEBUG0(printk(KERN_INFO "DC390: Pointer restored. Segment %i, Total %li, Bus %08lx\n",
++		      pSRB->SGIndex, pSRB->Saved_Ptr, pSRB->SGBusAddr));
+     } else if(pcmd->request_buffer) {
+ 	//dc390_pci_sync(pSRB);
  
- 	if (psli->sli_flag & LPFC_SLI2_ACTIVE) {
--
- 		/* First copy command data to host SLIM area */
--		mbox = (MAILBOX_t *) psli->MBhostaddr;
--		lpfc_sli_pcimem_bcopy(mb, mbox, MAILBOX_CMD_SIZE);
-+		lpfc_sli_pcimem_bcopy(mb, &phba->slim2p->mbx, MAILBOX_CMD_SIZE);
- 	} else {
- 		if (mb->mbxCommand == MBX_CONFIG_PORT) {
- 			/* copy command data into host mbox for cmpl */
--			mbox = (MAILBOX_t *) psli->MBhostaddr;
--			lpfc_sli_pcimem_bcopy(mb, mbox, MAILBOX_CMD_SIZE);
-+			lpfc_sli_pcimem_bcopy(mb, &phba->slim2p->mbx,
-+					MAILBOX_CMD_SIZE);
- 		}
+@@ -1245,11 +1298,11 @@
+ 	pSRB->SGcount = 1;
+ 	pSRB->pSegmentList = (struct scatterlist *) &pSRB->Segmentx;
+     } else {
+-	 pSRB->SGcount = 0;
+-	 printk (KERN_INFO "DC390: RESTORE_PTR message for Transfer without Scatter-Gather ??\n");
++	pSRB->SGcount = 0;
++	printk (KERN_INFO "DC390: RESTORE_PTR message for Transfer without Scatter-Gather ??\n");
+     }
  
- 		/* First copy mbox command data to HBA SLIM, skip past first
-@@ -1946,8 +1929,7 @@
- 		psli->mbox_active = NULL;
- 		if (psli->sli_flag & LPFC_SLI2_ACTIVE) {
- 			/* First read mbox status word */
--			mbox = (MAILBOX_t *) psli->MBhostaddr;
--			word0 = *((volatile uint32_t *)mbox);
-+			word0 = *((volatile uint32_t *)&phba->slim2p->mbx);
- 			word0 = le32_to_cpu(word0);
- 		} else {
- 			/* First read mbox status word */
-@@ -1984,8 +1966,8 @@
+-  pSRB->TotalXferredLen = pSRB->Saved_Ptr;
++    pSRB->TotalXferredLen = pSRB->Saved_Ptr;
+ }
  
- 			if (psli->sli_flag & LPFC_SLI2_ACTIVE) {
- 				/* First copy command data */
--				mbox = (MAILBOX_t *) psli->MBhostaddr;
--				word0 = *((volatile uint32_t *)mbox);
-+				word0 = *((volatile uint32_t *)
-+						&phba->slim2p->mbx);
- 				word0 = le32_to_cpu(word0);
- 				if (mb->mbxCommand == MBX_CONFIG_PORT) {
- 					MAILBOX_t *slimmb;
-@@ -2009,10 +1991,9 @@
- 		}
  
- 		if (psli->sli_flag & LPFC_SLI2_ACTIVE) {
--			/* First copy command data */
--			mbox = (MAILBOX_t *) psli->MBhostaddr;
- 			/* copy results back to user */
--			lpfc_sli_pcimem_bcopy(mbox, mb, MAILBOX_CMD_SIZE);
-+			lpfc_sli_pcimem_bcopy(&phba->slim2p->mbx, mb,
-+					MAILBOX_CMD_SIZE);
- 		} else {
- 			/* First copy command data */
- 			lpfc_memcpy_from_slim(mb, phba->MBslimaddr,
+@@ -1385,8 +1438,8 @@
+ 	if( !pSRB->SGToBeXferLen )
+ 	{
+ 	    psgl = pSRB->pSegmentList;
+-	    pSRB->SGBusAddr = cpu_to_le32(pci_dma_lo32(sg_dma_address(psgl)));
+-	    pSRB->SGToBeXferLen = cpu_to_le32(sg_dma_len(psgl));
++	    pSRB->SGBusAddr = sg_dma_address(psgl);
++	    pSRB->SGToBeXferLen = sg_dma_len(psgl);
+ 	    DEBUG1(printk (KERN_DEBUG " DC390: Next SG segment."));
+ 	}
+ 	lval = pSRB->SGToBeXferLen;
+@@ -1397,8 +1450,8 @@
+ 	lval >>= 8;
+ 	DC390_write8 (CtcReg_High, (u8) lval);
+ 
+-	DC390_write32 (DMA_XferCnt, pSRB->SGToBeXferLen);
+-	DC390_write32 (DMA_XferAddr, pSRB->SGBusAddr);
++	DC390_write32 (DMA_XferCnt, cpu_to_le32(pSRB->SGToBeXferLen));
++	DC390_write32 (DMA_XferAddr, cpu_to_le32((u32)pSRB->SGBusAddr));
+ 
+ 	//DC390_write8 (DMA_Cmd, DMA_IDLE_CMD | ioDir); /* | DMA_INT; */
+ 	pSRB->SRBState = SRB_DATA_XFER;
+@@ -2036,7 +2089,7 @@
+ 
+     if (pSRB) 
+     {
+-	printk ("DC390: SRB: Xferred %08lx, Remain %08lx, State %08x, Phase %02x\n",
++	printk ("DC390: SRB: Xferred %08lx, Remain %08x, State %08x, Phase %02x\n",
+ 		pSRB->TotalXferredLen, pSRB->SGToBeXferLen, pSRB->SRBState,
+ 		pSRB->ScsiPhase);
+ 	printk ("DC390: AdpaterStatus: %02x, SRB Status %02x\n", pSRB->AdaptStatus, pSRB->SRBStatus);
