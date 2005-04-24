@@ -1,54 +1,65 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: PATCH [6/5]  qla2xxx: update version :)
-Date: Sun, 24 Apr 2005 11:53:38 +0100
-Message-ID: <20050424105338.GA22699@infradead.org>
-References: <20050413205007.GA14857@plap.qlogic.org> <1113425828.4933.39.camel@mulgrave> <20050413212436.GC14857@plap.qlogic.org> <20050419211519.GB20234@infradead.org> <20050422072200.GD5069@plap.qlogic.org>
+Subject: Re: [RFC] SAS domain layout for Linux sysfs
+Date: Sun, 24 Apr 2005 12:19:08 +0100
+Message-ID: <20050424111908.GA23010@infradead.org>
+References: <425D392F.2080702@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:36994 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:62338 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S262308AbVDXKxj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Apr 2005 06:53:39 -0400
+	id S262312AbVDXLTP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Apr 2005 07:19:15 -0400
 Content-Disposition: inline
-In-Reply-To: <20050422072200.GD5069@plap.qlogic.org>
+In-Reply-To: <425D392F.2080702@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, andrew.patterson@hp.com, Eric.Moore@lsil.com, mike.miller@hp.com, dougg@torque.net, Madhuresh_Nagshain@adaptec.com, Sukanta_Ganguly@adaptec.com
 
-On Fri, Apr 22, 2005 at 12:22:00AM -0700, Andrew Vasquez wrote:
-> > Btw, any plans to do proper FCIP support integrated with the transport
-> > class code?
-> >
+On Wed, Apr 13, 2005 at 11:22:23AM -0400, Luben Tuikov wrote:
+> SAS domain layout for Linux sysfs
+> =================================
 > 
-> Ok, I'll bite (since this is the second time I've heard about FCIP
-> being 'integrated' with the transport classes) -- what did you have in
-> mind?  There's already a clear set of mature networking interface with
-> which a networking card's driver uses to interface with the stack.
+> 0. Introduction
 > 
-> Are you looking to generalize those interfaces
-> (open/hard_xmit/stop/etc.) into helpers transport helpers?
+> The use of SAS address and WWN are used interchangeably.
+> 
+> There are two domains which we want to represent in sysfs, in
+> order to eliminate redundancies.
+> 
+>             |     /-------------------\
+> +-------+   |    /  SAS_ADDR0          \
+> |ha0 [] =---|---(                       )
+> +---||||+   |    \                     /
+>             |     |       SAS_ADDR2   |
+> +-------+   |    /                     \
+> |ha1 [] =---|---(      SAS_ADDR1        )
+> +---||||+   |    \                     /
+>             |     \___________________/
+>             |
+> Host domain |         SAS Domain
+> 
+>      Figure 1. Domains represented by sysfs
+> 
+> The host domain (/sys/class/sas_ha/ha0/, etc) shows the SAS
+> domain as seen by the Host Adapter.  The sysfs SAS domain
+> (/sys/bus/sas/ ), shows the SAS domain as it exists
+> irrespectively of which HA (Host Adapter) you use to connect
+> to it (to a device).
 
-First we have a little bit of FC networking common code that's unfortunately
-not used a lot in net/802/fc.c.  Some of may need a little updating as it's
-been without love for more than five years.  Note that this means the
-network device is presented as native fibre channel devices and not like
-a fake ethernet device as in the current Qlogic IP driver.  Not faking
-ethernet also makes the send and receive code quite a bit simpler.
+This is contrary to any sysfs topology I know about, especially any
+existing transport class (SPI, FC, iSCSI).  We only ever care about
+what's seen from a HA, e.g. if you have muliple SPI cards that are
+on a single parallel bus you'll have the same bus represented twice,
+similarly if you have two fibre channel HBAs connected to the same
+SAN you'll have the SAN topology duplicated in both sub-topologies.
+This matches the internal data structure of the scsi subsystem and
+the transport class, e.g. we have a scsi_device object for every lun
+that's seen from a hba, linked to the HBAs Scsi_Host object and not
+one shared by multiple HBAs.  Dito for fibre channel remote ports.
 
-Putting ->open/->stop into common code doesn't make a lot of sense as
-there's very little non-trivial things in there besides poking the hardware.
-Of the net_device methods only the noop stubs should go into common code
-(net/802/fc.c).
 
-Other candidates for common code are things like qla2x00_convert_to_arp and
-qla2x00_get_ip_loopid.  In general I'd prefer the actual FC over IP drivers
-to not have to poke into higherlevel (SNAP, ARP, IP) protocol headers at
-all, or having to iterate over fc remote port structures themselves.
-
-Actual transport class integration is very little.  First a proper interface
-for the IP over FC driver to get called back on IP remote ports instead of
-various odd hand crafted methods, second a link in sysfs from the FC remote
-to the netdevice to make managment easier.  Also some of the ethtool methods
-could probably be implemented ontop of the information we already have in
-the transport class.
+One note to this proposal:  it probably doesn't make a lot of sense to
+try to flesh out the sysfs topology before doing the kernel internal
+object model as the former pretty much follows the latter.
