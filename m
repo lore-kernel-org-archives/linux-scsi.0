@@ -1,30 +1,53 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [2.6 patch] drivers/scsi/FlashPoint.c: cleanups
-Date: Sun, 24 Apr 2005 08:26:10 +0100
-Message-ID: <20050424072610.GA13662@infradead.org>
-References: <20050423221712.GJ4355@stusta.de>
+From: Klaus Steinberger <Klaus.Steinberger@physik.uni-muenchen.de>
+Subject: Re: Kernel OOPS with aacraid driver
+Date: Sun, 24 Apr 2005 11:41:07 +0200
+Message-ID: <200504241141.08081.Klaus.Steinberger@physik.uni-muenchen.de>
+References: <df35dfeb050422000856c882d6@mail.gmail.com> <200504221357.14159.Klaus.Steinberger@physik.uni-muenchen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:65005 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S262279AbVDXH0O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Apr 2005 03:26:14 -0400
+Received: from mail.physik.uni-muenchen.de ([192.54.42.129]:60288 "EHLO
+	mail.physik.uni-muenchen.de") by vger.kernel.org with ESMTP
+	id S261793AbVDXJpL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Apr 2005 05:45:11 -0400
+Received: from localhost (unknown [127.0.0.1])
+	by mail.physik.uni-muenchen.de (Postfix) with ESMTP id 1C6A220013
+	for <linux-scsi@vger.kernel.org>; Sun, 24 Apr 2005 11:45:11 +0200 (CEST)
+Received: from mail.physik.uni-muenchen.de ([127.0.0.1])
+ by localhost (mail.physik.uni-muenchen.de [127.0.0.1]) (amavisd-new, port 10024)
+ with LMTP id 11510-02-12 for <linux-scsi@vger.kernel.org>;
+ Sun, 24 Apr 2005 11:45:09 +0200 (CEST)
+Received: from [192.168.1.10] (a136.lmu.vpn.lrz-muenchen.de [141.84.28.136])
+	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
+	(No client certificate requested)
+	by mail.physik.uni-muenchen.de (Postfix) with ESMTP id 653D42000A
+	for <linux-scsi@vger.kernel.org>; Sun, 24 Apr 2005 11:45:09 +0200 (CEST)
+In-Reply-To: <200504221357.14159.Klaus.Steinberger@physik.uni-muenchen.de>
 Content-Disposition: inline
-In-Reply-To: <20050423221712.GJ4355@stusta.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sun, Apr 24, 2005 at 12:17:12AM +0200, Adrian Bunk wrote:
-> This patch contains cleanups including the following:
-> - remove #ifdef'ed code for other OS's
-> - remove other unused code
-> - make needlessly global code static
+Am Freitag 22 April 2005 13:57 schrieb Klaus Steinberger:
+> Hello Rayan,
+>
+> > Seems to me like someone is issuing IOCTL's against devices that do
+> > not exist. Does this patch against linux-2.6.12-rc3 make sense and
+> > applicable to you?
+>
+> Sounds good. I have an kernel build on the way, and will test it on Monday.
 
-I'd rather not touch this file currently.  It's glued toghether from
-lots of separate files in the original code.  Before doing cleanups
-I'd rather split it into all these files first as the file is a huge
-mess as-is.
+Yep I got by occasion a test window today, the fix works fine.
 
+Sincerly,
+Klaus
+
+-- 
+Klaus Steinberger         Maier-Leibnitz Labor
+Phone: (+49 89)289 14287  Am Coulombwall 6, D-85748 Garching, Germany
+FAX:   (+49 89)289 14280  EMail: Klaus.Steinberger@Physik.Uni-Muenchen.DE
+URL: http://www.physik.uni-muenchen.de/~k2/
+
+In a world without Walls and Fences, who needs Windows and Gates
