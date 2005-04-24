@@ -1,54 +1,62 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH scsi-misc-2.6 01/04] scsi: make scsi_send_eh_cmnd use
-	its own timer instead of scmd->eh_timeout
-Date: Sun, 24 Apr 2005 18:22:22 -0400
-Message-ID: <1114381342.4786.17.camel@mulgrave>
-References: <20050419143100.E231523D@htj.dyndns.org>
-	 <20050419143100.0F9A8C3B@htj.dyndns.org>
+Subject: Re: [PATCH] dc395x: Fix support for highmem
+Date: Sun, 24 Apr 2005 18:11:58 -0400
+Message-ID: <1114380718.4786.10.camel@mulgrave>
+References: <20050321075531.GC23911@suse.de> <7044.1111398919@www16.gmx.net>
+	 <Pine.LNX.4.56.0503211111290.20956@pcgl.dsa-ac.de>
+	 <20050321104419.GH23911@suse.de>
+	 <Pine.LNX.4.56.0503211147420.20956@pcgl.dsa-ac.de>
+	 <Pine.LNX.4.60.0503302318250.9431@poirot.grange>
+	 <1112220802.9435.1.camel@mulgrave>
+	 <Pine.LNX.4.56.0503311051290.20956@pcgl.dsa-ac.de>
+	 <Pine.LNX.4.60.0504100035110.4283@poirot.grange>
+	 <Pine.LNX.4.60.0504212341390.6761@poirot.grange>
+	 <20050422113654.GY9371@suse.de>
+	 <Pine.LNX.4.60.0504222203190.5348@poirot.grange>
+	 <Pine.LNX.4.60.0504231159260.8537@poirot.grange>
+	 <1114282904.5068.19.camel@mulgrave>
+	 <Pine.LNX.4.60.0504240212090.13715@poirot.grange>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:55019 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:55787 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262479AbVDXX03 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Apr 2005 19:26:29 -0400
-In-Reply-To: <20050419143100.0F9A8C3B@htj.dyndns.org>
+	id S262480AbVDXX0l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Apr 2005 19:26:41 -0400
+In-Reply-To: <Pine.LNX.4.60.0504240212090.13715@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: Jens Axboe <axboe@suse.de>, Christoph Hellwig <hch@infradead.org>, Matthew Wilcox <matthew@wil.cx>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Kurt Garloff <garloff@suse.de>
 
-On Tue, 2005-04-19 at 23:31 +0900, Tejun Heo wrote:
-> 	scmd->eh_timeout is used to resolve the race between command
-> 	completion and timeout.  However, during error handling,
-> 	scsi_send_eh_cmnd uses scmd->eh_timeout.  This creates a race
-> 	condition between eh and normal completion for a request which
-> 	has timed out and in the process of error handling.  If the
-> 	request completes while scmd->eh_timeout is being used by eh,
-> 	eh timeout is lost and the command will be handled by both eh
-> 	and completion path.  This patch fixes the race by making
-> 	scsi_send_eh_cmnd() use its own timer.
-> 
-> 	This patch adds shost->eh_timeout field.  The name of the
-> 	field equals scmd->eh_timeout which is used for normal command
-> 	timeout.  As this can be confusing, renaming scmd->eh_timeout
-> 	to something like scmd->cmd_timeout would be good.
-> 
-> 	Reworked such that timeout race window is kept at minimal
-> 	level as pointed out by James Bottomley.
+On Sun, 2005-04-24 at 02:22 +0200, Guennadi Liakhovetski wrote:
+> Thanks for the info. Let me see, if I got you right. Say, we've got an sg 
+> with 2 elements: first 2 * PAGE_SIZE long, offset 0, pointing to page #0, 
+> second PAGE_SIZE long, offset 0, page #3. Say, dma_map_sg returned 1, so, 
+> it mapped all those 3 (physically discontiguous) pages to a contiguous bus 
+> address range. And now sg_dma_len() returns 3 * PAGE_SIZE.
 
-This looks fine in principle.  However, three comments
+Yes, that's true.
 
-1. If you're doing this, there's no further use for eh_timeout, so
-remove it (and preferably fix gdth_proc.c; however, it's better to break
-the compile of that driver than have it rely on a now defunct field).
-2. Use of eh_action is private to scsi_error.c, so you don't need to add
-a new field to the host, just make eh_action a pointer to a private
-eh_action structure which contains the timer and the semaphore.
-3. To close a really tiny window where the running timer could race with
-the del_timer, it should probably be del_timer_sync().  The practical
-effect of this is nil, but it would be correct programming.
+>  But, I hope, 
+> the .page, .length, and .offset elements stayed unchanged, so, one can 
+> still walk elements 0 and 1, calculating a sum of sg[i].length and thus 
+> arrive to the required page, right?
+
+This, I'm not entirely sure about.  There are some weird iommu mapping
+implementations out there.  The only absolute requirement is that the
+map_sg unmap_sg map_sg actually work.  There was some debate over
+whether unmap_sg was supposed to return the sg list to its original
+form, but x86_64 got beaten up in the argument, so this is true too.
+
+So ... I think the answer to your question is "yes", at least for all
+the iommu implementations I know about.  However, nothing in the
+published API actually requires this.
+
+What I think all this means is that you can get away with what you're
+proposing.  However, the proper route would be to unmap the sglist
+before you start feeding the leftovers via pio.
 
 James
 
