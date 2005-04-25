@@ -1,83 +1,48 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 01/04] scsi: make scsi_send_eh_cmnd use
- its own timer instead of scmd->eh_timeout
-Date: Mon, 25 Apr 2005 08:46:11 +0900
-Message-ID: <426C2FC3.4090105@gmail.com>
-References: <20050419143100.E231523D@htj.dyndns.org>	 <20050419143100.0F9A8C3B@htj.dyndns.org> <1114381342.4786.17.camel@mulgrave>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Wireless transport?
+Date: Sun, 24 Apr 2005 18:07:24 -0700
+Message-ID: <20050425010723.GA2734@us.ibm.com>
+References: <Pine.LNX.4.60.0504242111090.3098@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.201]:60372 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262483AbVDXXqR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Apr 2005 19:46:17 -0400
-Received: by rproxy.gmail.com with SMTP id a41so823331rng
-        for <linux-scsi@vger.kernel.org>; Sun, 24 Apr 2005 16:46:16 -0700 (PDT)
-In-Reply-To: <1114381342.4786.17.camel@mulgrave>
+Received: from e34.co.us.ibm.com ([32.97.110.132]:18364 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S262392AbVDYBHr
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Apr 2005 21:07:47 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e34.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j3P17keE512504
+	for <linux-scsi@vger.kernel.org>; Sun, 24 Apr 2005 21:07:46 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j3P17kpf260384
+	for <linux-scsi@vger.kernel.org>; Sun, 24 Apr 2005 19:07:46 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.12.11) with ESMTP id j3P17jPl017428
+	for <linux-scsi@vger.kernel.org>; Sun, 24 Apr 2005 19:07:45 -0600
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.60.0504242111090.3098@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: linux-scsi@vger.kernel.org
 
-
-  Hi, James.
-
-James Bottomley wrote:
-> On Tue, 2005-04-19 at 23:31 +0900, Tejun Heo wrote:
+On Sun, Apr 24, 2005 at 09:24:53PM +0200, Guennadi Liakhovetski wrote:
+> Hi
 > 
->>	scmd->eh_timeout is used to resolve the race between command
->>	completion and timeout.  However, during error handling,
->>	scsi_send_eh_cmnd uses scmd->eh_timeout.  This creates a race
->>	condition between eh and normal completion for a request which
->>	has timed out and in the process of error handling.  If the
->>	request completes while scmd->eh_timeout is being used by eh,
->>	eh timeout is lost and the command will be handled by both eh
->>	and completion path.  This patch fixes the race by making
->>	scsi_send_eh_cmnd() use its own timer.
->>
->>	This patch adds shost->eh_timeout field.  The name of the
->>	field equals scmd->eh_timeout which is used for normal command
->>	timeout.  As this can be confusing, renaming scmd->eh_timeout
->>	to something like scmd->cmd_timeout would be good.
->>
->>	Reworked such that timeout race window is kept at minimal
->>	level as pointed out by James Bottomley.
+> An idle curiousity - some time ago I asked myself what would be the next 
+> transport - wireless? Then a few weeks ago I saw a "wireless hard-drive" 
+> in a local computer store. Didn't look at it closely, but I assume it 
+> comes with an ad-hoc win driver.
 > 
-> 
-> This looks fine in principle.  However, three comments
-> 
-> 1. If you're doing this, there's no further use for eh_timeout, so
-> remove it (and preferably fix gdth_proc.c; however, it's better to break
-> the compile of that driver than have it rely on a now defunct field).
+> So, the question is - is it happening? Any standards appearing? Any 
+> drivers being developed? If there's anything - it would be logical to 
+> assume that it would implement a SCSI protocol, would it become a new 
+> transport?
 
-  If you're talking about scmd->eh_timeout, it's our main timer for 
-normal command timeouts.  If you're suggesting renaming it to something 
-more apparant, I agree.  Maybe just scmd->timeout will do.
+No, just use iSCSI on top of the network.
 
-> 2. Use of eh_action is private to scsi_error.c, so you don't need to add
-> a new field to the host, just make eh_action a pointer to a private
-> eh_action structure which contains the timer and the semaphore.
+You still need a hardware transport for the actual disks on the back end,
+but SATA or IDE could be used over iSCSI via iSCSI software target (export
+a block device, or file system file as a LUN).
 
-  Sure.
-
-> 3. To close a really tiny window where the running timer could race with
-> the del_timer, it should probably be del_timer_sync().  The practical
-> effect of this is nil, but it would be correct programming.
-
-  Sorry, but, AFAICT, that wouldn't close any window.  We use timer 
-pending for tie-breaker.  When scsi_eh_done() wins, timer never gets to 
-run, and if scsi_eh_times_out() wins, the eh thread is woken up only 
-after the last reference to the timer/eh is finished (up operation).  If 
-I'm missing something, please point out.
-
-  BTW, are you still keeping the bk tree up-to-date?  And, if so, until 
-when are you gonna keep the bk tree?  I'm painfully trying to follow and 
-convert all my trees to git, but I _really_ miss changeset browsing of 
-bk.  Call me lazy but it was just too nice browsing the changesets only 
-with mouse.  One way or the other, it's a shame.
-
-  Thanks.
-
--- 
-tejun
+-- Patrick Mansfield
