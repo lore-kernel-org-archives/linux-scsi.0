@@ -1,189 +1,230 @@
 From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [2.6 patch] drivers/scsi/aacraid/: make some functions static
-Date: Mon, 25 Apr 2005 07:51:51 -0400
-Message-ID: <60807403EABEB443939A5A7AA8A7458B0112CFE3@otce2k01.adaptec.com>
+Subject: RE: [2.6 PATCH] drivers/scsi/dpt_i2o.c: fix compile warnings
+Date: Mon, 25 Apr 2005 08:04:47 -0400
+Message-ID: <60807403EABEB443939A5A7AA8A7458B0112CFE7@otce2k01.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:26281 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262570AbVDYLvx convert rfc822-to-8bit
+Received: from magic.adaptec.com ([216.52.22.17]:9655 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262569AbVDYMEv convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Apr 2005 07:51:53 -0400
+	Mon, 25 Apr 2005 08:04:51 -0400
 content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>, linux-scsi@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org
+To: Benoit Boissinot <benoit.boissinot@ens-lyon.org>, Andrew Morton <akpm@osdl.org>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Markus Lidel <Markus.Lidel@shadowconnect.com>
 
-I approve, original was applied to Adaptec Branch on November 24th 2004.
-
-Why is this one taking so long to propagate?
+I approve. Some of this was already embodied in the Adaptec Branch,
+patched to match.
 
 Sincerely -- Mark Salyzyn
 
 -----Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Adrian Bunk
-Sent: Saturday, April 23, 2005 6:07 PM
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com; linux-kernel@vger.kernel.org
-Subject: [2.6 patch] drivers/scsi/aacraid/: make some functions static
+From: Benoit Boissinot [mailto:benoit.boissinot@ens-lyon.org] 
+Sent: Saturday, April 23, 2005 2:04 PM
+To: Andrew Morton
+Cc: James.Bottomley@steeleye.com; linux-scsi@vger.kernel.org;
+linux-kernel@vger.kernel.org; Markus Lidel; Salyzyn, Mark
+Subject: [2.6 PATCH] drivers/scsi/dpt_i2o.c: fix compile warnings
 
-This patch makes some needlessly global functions static.
+This patch fixes the following warnings:
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+drivers/scsi/dpt_i2o.c: In function 'adpt_isr':
+drivers/scsi/dpt_i2o.c:2030: warning: passing argument 1 of 'readl'
+makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2031: warning: passing argument 1 of 'readl'
+makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2042: warning: passing argument 1 of 'readl'
+makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2043: warning: passing argument 2 of 'writel'
+makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2046: warning: passing argument 1 of 'readl'
+makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2048: warning: passing argument 1 of 'readl'
+makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2055: warning: passing argument 1 of 'readl'
+makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2062: warning: passing argument 1 of 'readl'
+makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2069: warning: passing argument 1 of 'readl'
+makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c: In function 'adpt_i2o_to_scsi':
+drivers/scsi/dpt_i2o.c:2239: warning: passing argument 1 of 'readl'
+makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2243: warning: passing argument 1 of 'readl'
+makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2248: warning: passing argument 1 of 'readl'
+makes pointer from integer without a cast
+drivers/scsi/dpt_i2o.c:2259: warning: passing argument 1 of 'readl'
+makes pointer from integer without a cast
 
----
+It define variables which are only used with a type of 'void __iomem *'
+with this type instead of the incorrect 'unsigned long' type.
+It also remove pointless casts.
 
- drivers/scsi/aacraid/aachba.c   |   10 +++++-----
- drivers/scsi/aacraid/aacraid.h  |    1 -
- drivers/scsi/aacraid/commctrl.c |    4 ++--
- drivers/scsi/aacraid/comminit.c |    2 +-
- drivers/scsi/aacraid/commsup.c  |    2 +-
- drivers/scsi/aacraid/linit.c    |    2 +-
- drivers/scsi/aacraid/sa.c       |    2 +-
- 7 files changed, 11 insertions(+), 12 deletions(-)
+Signed-off-by: Benoit Boissinot <benoit.boissinot@ens-lyon.org>
 
-This patch contains the following cleanups:
-- make needlessly global functions static
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
----
-
- drivers/scsi/aacraid/aachba.c   |   10 +++++-----
- drivers/scsi/aacraid/aacraid.h  |    2 --
- drivers/scsi/aacraid/commctrl.c |    4 ++--
- drivers/scsi/aacraid/comminit.c |    2 +-
- drivers/scsi/aacraid/commsup.c  |    7 +------
- drivers/scsi/aacraid/linit.c    |    2 +-
- drivers/scsi/aacraid/sa.c       |    2 +-
- 7 files changed, 11 insertions(+), 18 deletions(-)
-
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/aachba.c.old
-2005-02-27 01:05:38.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/aachba.c
-2005-02-27 01:06:18.000000000 +0100
-@@ -560,10 +560,10 @@
- 	inqstrcpy ("V1.0", str->prl);
+diff -Naup tmp.orig/dpt_i2o.c tmp/dpt_i2o.c
+--- tmp.orig/drivers/scsi/dpt_i2o.c	2005-04-22 19:26:51.000000000
++0200
++++ tmp/drivers/scsi/dpt_i2o.c	2005-04-23 16:21:50.000000000 +0200
+@@ -691,7 +691,7 @@ static int adpt_device_reset(struct scsi
+ 	u32 msg[4];
+ 	u32 rcode;
+ 	int old_state;
+-	struct adpt_device* d = (void*) cmd->device->hostdata;
++	struct adpt_device* d = cmd->device->hostdata;
+ 
+ 	pHba = (void*) cmd->device->host->hostdata[0];
+ 	printk(KERN_INFO"%s: Trying to reset device\n",pHba->name);
+@@ -707,7 +707,7 @@ static int adpt_device_reset(struct scsi
+ 
+ 	old_state = d->state;
+ 	d->state |= DPTI_DEV_RESET;
+-	if( (rcode = adpt_i2o_post_wait(pHba, (void*)msg,sizeof(msg),
+FOREVER)) ){
++	if( (rcode = adpt_i2o_post_wait(pHba, msg,sizeof(msg), FOREVER))
+){
+ 		d->state = old_state;
+ 		if(rcode == -EOPNOTSUPP ){
+ 			printk(KERN_INFO"%s: Device reset not
+supported\n",pHba->name);
+@@ -737,7 +737,7 @@ static int adpt_bus_reset(struct scsi_cm
+ 	msg[1] =
+(I2O_HBA_BUS_RESET<<24|HOST_TID<<12|pHba->channel[cmd->device->channel].
+tid);
+ 	msg[2] = 0;
+ 	msg[3] = 0;
+-	if(adpt_i2o_post_wait(pHba, (void*)msg,sizeof(msg), FOREVER) ){
++	if(adpt_i2o_post_wait(pHba, msg,sizeof(msg), FOREVER) ){
+ 		printk(KERN_WARNING"%s: Bus reset
+failed.\n",pHba->name);
+ 		return FAILED;
+ 	} else {
+@@ -1454,7 +1454,7 @@ static int adpt_i2o_parse_lct(adpt_hba* 
+ 			return -ENOMEM;
+ 		}
+ 		
+-		d->controller = (void*)pHba;
++		d->controller = pHba;
+ 		d->next = NULL;
+ 
+ 		memcpy(&d->lct_data, &lct->lct_entry[i],
+sizeof(i2o_lct_entry));
+@@ -2000,7 +2000,7 @@ static irqreturn_t adpt_isr(int irq, voi
+ 	struct scsi_cmnd* cmd;
+ 	adpt_hba* pHba = dev_id;
+ 	u32 m;
+-	ulong reply;
++	void __iomem *reply;
+ 	u32 status=0;
+ 	u32 context;
+ 	ulong flags = 0;
+@@ -2025,11 +2025,11 @@ static irqreturn_t adpt_isr(int irq, voi
+ 				goto out;
+ 			}
+ 		}
+-		reply = (ulong)bus_to_virt(m);
++		reply = bus_to_virt(m);
+ 
+ 		if (readl(reply) & MSG_FAIL) {
+ 			u32 old_m = readl(reply+28); 
+-			ulong msg;
++			void __iomem *msg;
+ 			u32 old_context;
+ 			PDEBUG("%s: Failed message\n",pHba->name);
+ 			if(old_m >= 0x100000){
+@@ -2038,16 +2038,16 @@ static irqreturn_t adpt_isr(int irq, voi
+ 				continue;
+ 			}
+ 			// Transaction context is 0 in failed reply
+frame
+-			msg = (ulong)(pHba->msg_addr_virt + old_m);
++			msg = pHba->msg_addr_virt + old_m;
+ 			old_context = readl(msg+12);
+ 			writel(old_context, reply+12);
+ 			adpt_send_nop(pHba, old_m);
+ 		} 
+ 		context = readl(reply+8);
+ 		if(context & 0x40000000){ // IOCTL
+-			ulong p = (ulong)(readl(reply+12));
+-			if( p != 0) {
+-				memcpy((void*)p, (void*)reply,
+REPLY_FRAME_SIZE * 4);
++			void *p = (void *)readl(reply+12);
++			if( p != NULL) {
++				memcpy_fromio(p, reply, REPLY_FRAME_SIZE
+* 4);
+ 			}
+ 			// All IOCTLs will also be post wait
+ 		}
+@@ -2231,7 +2231,7 @@ static s32 adpt_scsi_register(adpt_hba* 
  }
  
--void set_sense(u8 *sense_buf, u8 sense_key, u8 sense_code,
--		    u8 a_sense_code, u8 incorrect_length,
--		    u8 bit_pointer, u16 field_pointer,
--		    u32 residue)
-+static void set_sense(u8 *sense_buf, u8 sense_key, u8 sense_code,
-+		      u8 a_sense_code, u8 incorrect_length,
-+		      u8 bit_pointer, u16 field_pointer,
-+		      u32 residue)
- {
- 	sense_buf[0] = 0xF0;	/* Sense data valid, err code 70h
-(current error) */
- 	sense_buf[1] = 0;	/* Segment number, always zero */
-@@ -807,7 +807,7 @@
- 	aac_io_done(scsicmd);
- }
  
--int aac_read(struct scsi_cmnd * scsicmd, int cid)
-+static int aac_read(struct scsi_cmnd * scsicmd, int cid)
+-static s32 adpt_i2o_to_scsi(ulong reply, struct scsi_cmnd* cmd)
++static s32 adpt_i2o_to_scsi(void __iomem *reply, struct scsi_cmnd* cmd)
  {
- 	u32 lba;
- 	u32 count;
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/commctrl.c.old
-2005-02-27 01:06:31.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/commctrl.c
-2005-02-27 01:07:03.000000000 +0100
-@@ -403,7 +403,7 @@
-  *
-  */
- 
--int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
-+static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- {
- 	struct fib* srbfib;
- 	int status;
-@@ -621,7 +621,7 @@
- };
- 
- 
--int aac_get_pci_info(struct aac_dev* dev, void __user *arg)
-+static int aac_get_pci_info(struct aac_dev* dev, void __user *arg)
- {
-         struct aac_pci_info pci_info;
- 
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/comminit.c.old
-2005-02-27 01:07:25.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/comminit.c
-2005-02-27 01:07:34.000000000 +0100
-@@ -204,7 +204,7 @@
-  *		0 - If there were errors initing. This is a fatal error.
-  */
-  
--int aac_comm_init(struct aac_dev * dev)
-+static int aac_comm_init(struct aac_dev * dev)
- {
- 	unsigned long hdrsize = (sizeof(u32) * NUMBER_OF_COMM_QUEUES) *
-2;
- 	unsigned long queuesize = sizeof(struct aac_entry) *
-TOTAL_QUEUE_ENTRIES;
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/commsup.c.old
-2005-02-27 01:08:23.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/commsup.c
-2005-02-27 01:09:11.000000000 +0100
-@@ -210,7 +210,7 @@
-  *	caller.
-  */
-  
--void fib_dealloc(struct fib * fibptr)
-+static void fib_dealloc(struct fib * fibptr)
- {
- 	struct hw_fib *hw_fib = fibptr->hw_fib;
- 	if(hw_fib->header.StructType != FIB_MAGIC) 
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/linit.c.old
-2005-02-27 01:09:30.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/linit.c
-2005-02-27 01:09:38.000000000 +0100
-@@ -215,7 +215,7 @@
-  *	Returns a static string describing the device in question
-  */
- 
--const char *aac_info(struct Scsi_Host *shost)
-+static const char *aac_info(struct Scsi_Host *shost)
- {
- 	struct aac_dev *dev = (struct aac_dev *)shost->hostdata;
- 	return aac_drivers[dev->cardtype].name;
---- linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/sa.c.old
-2005-02-27 01:09:56.000000000 +0100
-+++ linux-2.6.11-rc4-mm1-full/drivers/scsi/aacraid/sa.c	2005-02-27
-01:10:05.000000000 +0100
-@@ -89,7 +89,7 @@
-  *	Notify the adapter of an event
-  */
-  
--void aac_sa_notify_adapter(struct aac_dev *dev, u32 event)
-+static void aac_sa_notify_adapter(struct aac_dev *dev, u32 event)
- {
- 	switch (event) {
- 
+ 	adpt_hba* pHba;
+ 	u32 hba_status;
+@@ -2323,7 +2323,7 @@ static s32 adpt_i2o_to_scsi(ulong reply,
+ 			u32 len = sizeof(cmd->sense_buffer);
+ 			len = (len > 40) ?  40 : len;
+ 			// Copy over the sense data
+-			memcpy(cmd->sense_buffer, (void*)(reply+28) ,
+len);
++			memcpy_fromio(cmd->sense_buffer, (reply+28) ,
+len);
+ 			if(cmd->sense_buffer[0] == 0x70 /* class 7 */ &&
 
---- linux-2.6.12-rc2-mm3-full/drivers/scsi/aacraid/aacraid.h.old
-2005-04-23 21:51:56.000000000 +0200
-+++ linux-2.6.12-rc2-mm3-full/drivers/scsi/aacraid/aacraid.h
-2005-04-23 21:52:06.000000000 +0200
-@@ -1597,7 +1597,6 @@
- void fib_map_free(struct aac_dev *dev);
- void fib_free(struct fib * context);
- void fib_init(struct fib * context);
--void fib_dealloc(struct fib * context);
- void aac_printf(struct aac_dev *dev, u32 val);
- int fib_send(u16 command, struct fib * context, unsigned long size, int
-priority, int wait, int reply, fib_callback callback, void *ctxt);
- int aac_consumer_get(struct aac_dev * dev, struct aac_queue * q, struct
-aac_entry **entry);
+ 			   cmd->sense_buffer[2] == DATA_PROTECT ){
+ 				/* This is to handle an array failed */
+@@ -2438,7 +2438,7 @@ static s32 adpt_i2o_reparse_lct(adpt_hba
+ 					return -ENOMEM;
+ 				}
+ 				
+-				d->controller = (void*)pHba;
++				d->controller = pHba;
+ 				d->next = NULL;
+ 
+ 				memcpy(&d->lct_data, &lct->lct_entry[i],
+sizeof(i2o_lct_entry));
+@@ -2985,8 +2985,8 @@ static int adpt_i2o_build_sys_table(void
+ 		sys_tbl->iops[count].frame_size =
+pHba->status_block->inbound_frame_size;
+ 		sys_tbl->iops[count].last_changed = sys_tbl_ind - 1; //
+??
+ 		sys_tbl->iops[count].iop_capabilities =
+pHba->status_block->iop_capabilities;
+-		sys_tbl->iops[count].inbound_low =
+(u32)virt_to_bus((void*)pHba->post_port);
+-		sys_tbl->iops[count].inbound_high =
+(u32)((u64)virt_to_bus((void*)pHba->post_port)>>32);
++		sys_tbl->iops[count].inbound_low =
+(u32)virt_to_bus(pHba->post_port);
++		sys_tbl->iops[count].inbound_high =
+(u32)((u64)virt_to_bus(pHba->post_port)>>32);
+ 
+ 		count++;
+ 	}
+diff -Naup tmp.orig/dpti.h tmp/dpti.h
+--- tmp.orig/drivers/scsi/dpti.h	2005-04-22 19:24:32.000000000
++0200
++++ tmp/drivers/scsi/dpti.h	2005-04-23 16:22:44.000000000 +0200
+@@ -296,7 +296,7 @@ static s32 adpt_i2o_status_get(adpt_hba*
+ static s32 adpt_i2o_init_outbound_q(adpt_hba* pHba);
+ static s32 adpt_i2o_hrt_get(adpt_hba* pHba);
+ static s32 adpt_scsi_to_i2o(adpt_hba* pHba, struct scsi_cmnd* cmd,
+struct adpt_device* dptdevice);
+-static s32 adpt_i2o_to_scsi(ulong reply, struct scsi_cmnd* cmd);
++static s32 adpt_i2o_to_scsi(void __iomem *reply, struct scsi_cmnd*
+cmd);
+ static s32 adpt_scsi_register(adpt_hba* pHba,struct scsi_host_template
+* sht);
+ static s32 adpt_hba_reset(adpt_hba* pHba);
+ static s32 adpt_i2o_reset_hba(adpt_hba* pHba);
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
