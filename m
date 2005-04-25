@@ -1,67 +1,45 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [2.6 patch] drivers/scsi/aacraid/: make some functions static
-Date: Mon, 25 Apr 2005 14:38:41 -0400
-Message-ID: <60807403EABEB443939A5A7AA8A7458B0112D180@otce2k01.adaptec.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: RE: Wireless transport?
+Date: Mon, 25 Apr 2005 22:08:32 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0504252157150.9503@poirot.grange>
+References: <Pine.LNX.4.60.0504242111090.3098@poirot.grange>
+ <20050425010723.GA2734@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:29644 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262702AbVDYSir convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Apr 2005 14:38:47 -0400
-content-class: urn:content-classes:message
+Received: from mail.gmx.de ([213.165.64.20]:31151 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S262770AbVDYUL3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Apr 2005 16:11:29 -0400
+In-Reply-To: <20050425010723.GA2734@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Adrian Bunk <bunk@stusta.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Guy <bugzilla@watkins-home.com>, Patrick Mansfield <patmans@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org
 
-:-)
+Thanks for the replies
 
-Ah, but you misunderstand, there was no mind reading (nor is there any
-ill will or serious admonition of the people or the process). I saw the
-patch on the list by Adrian in November and applied it to my branch of
-the aacraid driver in anticipation of its acceptance. This is a case of
-the patch dropping on the floor and I am wondering where it got lost 'in
-the system'.
+On Sun, 24 Apr 2005, Guy wrote:
 
-Adrian did the right thing by resending it. However, resending it also
-shows that the community was denied a patch for 5 months.
+> My guess is the thing is a SAMBA server or similar.
 
-Maybe we should institute a procedure where the 'Signed-off-by' person
-is privately mailed an ACK or NAK at each stage of acceptance of a patch
-they authored? But that does not deal with patches that are dropped on
-the floor though.
+Yeah, logical:-) Didn't think about that.
 
-Sincerely -- Mark Salyzyn
+On Sun, 24 Apr 2005, Patrick Mansfield wrote:
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of James Bottomley
-Sent: Monday, April 25, 2005 2:17 PM
-To: Salyzyn, Mark
-Cc: Adrian Bunk; SCSI Mailing List; Linux Kernel
-Subject: RE: [2.6 patch] drivers/scsi/aacraid/: make some functions
-static
+> No, just use iSCSI on top of the network.
 
-On Mon, 2005-04-25 at 07:51 -0400, Salyzyn, Mark wrote:
-> I approve, original was applied to Adaptec Branch on November 24th
-2004.
-> 
-> Why is this one taking so long to propagate?
+Sure, that'd be doable. Just have no idea - isn't it too much overhead? 
+Say, over bluetooth, IP is already pretty high on the stack. OTOH, one 
+could, possibly, take advantage of some features natively present in lower 
+wireless levels, that don't get exported over IP?
 
-I'm sorry, owing to interference from the American Institute of
-Parapsychology, the telepathic patch transmission service into the SCSI
-tree has been discontinued.  The upshot is that if you apply a patch to
-your tree, it doesn't actually appear in mine unless you actually send
-it to the SCSI list and shepherd its progress.
+Disclaimer: I am quite ignorant about wireless as well as iSCSI internals, 
+so, feel free to ignore me, if I am talking nonsense, however, would be 
+grateful for any education:-)
 
-James
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
