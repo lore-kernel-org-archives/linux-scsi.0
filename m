@@ -1,41 +1,67 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC] SAS domain layout for Linux sysfs
-Date: Mon, 25 Apr 2005 19:18:31 +0100
-Message-ID: <20050425181831.GA14190@infradead.org>
-References: <425D392F.2080702@adaptec.com> <20050424111908.GA23010@infradead.org> <426D1572.70508@adaptec.com> <20050425161411.GA11938@infradead.org> <426D2723.8070308@adaptec.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [2.6 patch] drivers/scsi/aacraid/: make some functions static
+Date: Mon, 25 Apr 2005 14:38:41 -0400
+Message-ID: <60807403EABEB443939A5A7AA8A7458B0112D180@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:61088 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S262713AbVDYSSk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Apr 2005 14:18:40 -0400
-Content-Disposition: inline
-In-Reply-To: <426D2723.8070308@adaptec.com>
+Received: from magic.adaptec.com ([216.52.22.17]:29644 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262702AbVDYSir convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Apr 2005 14:38:47 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, andrew.patterson@hp.com, Eric.Moore@lsil.com, mike.miller@hp.com, dougg@torque.net, Madhuresh_Nagshain@adaptec.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Adrian Bunk <bunk@stusta.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Mon, Apr 25, 2005 at 01:21:39PM -0400, Luben Tuikov wrote:
-> You're are stating that:
-> 1) You "only ever care about what's seen from a HA",
-> 2) "if you have muliple SPI cards that are on a single parallel
->     bus you'll have the same bus represented twice"
-> 3) "we have a scsi_device object for every lun
->     that's seen from a hba, linked to the HBAs Scsi_Host object
->     and not one shared by multiple HBAs"
+:-)
+
+Ah, but you misunderstand, there was no mind reading (nor is there any
+ill will or serious admonition of the people or the process). I saw the
+patch on the list by Adrian in November and applied it to my branch of
+the aacraid driver in anticipation of its acceptance. This is a case of
+the patch dropping on the floor and I am wondering where it got lost 'in
+the system'.
+
+Adrian did the right thing by resending it. However, resending it also
+shows that the community was denied a patch for 5 months.
+
+Maybe we should institute a procedure where the 'Signed-off-by' person
+is privately mailed an ACK or NAK at each stage of acceptance of a patch
+they authored? But that does not deal with patches that are dropped on
+the floor though.
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of James Bottomley
+Sent: Monday, April 25, 2005 2:17 PM
+To: Salyzyn, Mark
+Cc: Adrian Bunk; SCSI Mailing List; Linux Kernel
+Subject: RE: [2.6 patch] drivers/scsi/aacraid/: make some functions
+static
+
+On Mon, 2005-04-25 at 07:51 -0400, Salyzyn, Mark wrote:
+> I approve, original was applied to Adaptec Branch on November 24th
+2004.
 > 
-> So in effect, you _want_ duplication, right?  This is perfectly OK.
-> In fact it is desirable (and has never been under question).
+> Why is this one taking so long to propagate?
 
-Yes.
+I'm sorry, owing to interference from the American Institute of
+Parapsychology, the telepathic patch transmission service into the SCSI
+tree has been discontinued.  The upshot is that if you apply a patch to
+your tree, it doesn't actually appear in mine unless you actually send
+it to the SCSI list and shepherd its progress.
 
-> This isn't directly related to the RFC.  The RFC basically
-> outlines the result of *a SAS discovery process*.  The discovery
-> process/LLDD can register the LU many times.  This has *never* been an
-> issue of discussion.
+James
 
-The point is that discovery must happen for each HBA separately because
-we absolutely do not want to have global state.
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
