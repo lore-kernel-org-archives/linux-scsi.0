@@ -1,30 +1,36 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: regarding 2.6.9-6 diskdump driver
-Date: Tue, 26 Apr 2005 14:55:14 +0100
-Message-ID: <20050426135514.GA2140@infradead.org>
-References: <009917BCC3B63543BA9BCD212F9D177401BF95DB@bgeexc01.asiapacific.cpqcorp.net>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [RFC] SAS domain layout for Linux sysfs
+Date: Tue, 26 Apr 2005 11:18:07 -0400
+Message-ID: <426E5BAF.4040003@adaptec.com>
+References: <425D392F.2080702@adaptec.com> <20050424111908.GA23010@infradead.org> <426D1572.70508@adaptec.com> <20050425161411.GA11938@infradead.org> <426D2723.8070308@adaptec.com> <20050425181831.GA14190@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:44981 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261370AbVDZNzR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Apr 2005 09:55:17 -0400
-Content-Disposition: inline
-In-Reply-To: <009917BCC3B63543BA9BCD212F9D177401BF95DB@bgeexc01.asiapacific.cpqcorp.net>
+Received: from magic.adaptec.com ([216.52.22.17]:18903 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261568AbVDZPVQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Apr 2005 11:21:16 -0400
+In-Reply-To: <20050425181831.GA14190@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Jayashree, . (STSD)" <jayashree@hp.com>
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, andrew.patterson@hp.com, Eric.Moore@lsil.com, mike.miller@hp.com, dougg@torque.net, Madhuresh_Nagshain@adaptec.com
 
-On Tue, Apr 26, 2005 at 06:20:46PM +0530, Jayashree, . (STSD) wrote:
-> Hi,
-> 
-> Currently I want to use diskdump functionality of aic7xxx.o driver.  I
-> am using RHEL 4 Update 1 (kernel 2.6.9-6.37). I am getting an error
-> while dumping the core.  I have few issues, please help me out resolving
-> the following issues or let me know whether I am using correct version
-> of drivers.
+On 04/25/05 14:18, Christoph Hellwig wrote:
+> The point is that discovery must happen for each HBA separately because
+> we absolutely do not want to have global state.
 
-Please report such errors to Red Hat.
+OK.
 
+Can you please define "global state"?
+
+In SAS, when the domain changes, the controller(s) connected to the
+domain get notification and pass it to the discovery process, which
+will run again.
+
+Overall, since the discovery process gets (internally) a "picture"
+of the domain out there, it would be appropriate to show this
+"picture" to the user.
+
+	Luben
