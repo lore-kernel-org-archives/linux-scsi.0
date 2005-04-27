@@ -1,46 +1,47 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: [RFC] SAS domain layout for Linux sysfs
-Date: Wed, 27 Apr 2005 11:38:33 -0400
-Message-ID: <426FB1F9.9010401@adaptec.com>
-References: <425D392F.2080702@adaptec.com> <20050424111908.GA23010@infradead.org> <426D1572.70508@adaptec.com> <20050425161411.GA11938@infradead.org> <426D2723.8070308@adaptec.com> <20050425181831.GA14190@infradead.org> <426E5BAF.4040003@adaptec.com> <426F86D3.4070909@torque.net>
+Date: Wed, 27 Apr 2005 11:52:11 -0400
+Message-ID: <426FB52B.7080907@adaptec.com>
+References: <OF4CE413A0.DAB8B74B-ONC1256FF0.00505593-C1256FF0.0052A229@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:56794 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261627AbVD0Pig (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:43493 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261629AbVD0PwQ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Apr 2005 11:38:36 -0400
-In-Reply-To: <426F86D3.4070909@torque.net>
+	Wed, 27 Apr 2005 11:52:16 -0400
+In-Reply-To: <OF4CE413A0.DAB8B74B-ONC1256FF0.00505593-C1256FF0.0052A229@de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, andrew.patterson@hp.com, Eric.Moore@lsil.com, mike.miller@hp.com, Madhuresh_Nagshain@adaptec.com
+To: Martin Peschke3 <MPESCHKE@de.ibm.com>
+Cc: dougg@torque.net, andrew.patterson@hp.com, Eric.Moore@lsil.com, Christoph Hellwig <hch@infradead.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Madhuresh_Nagshain@adaptec.com, mike.miller@hp.com
 
-On 04/27/05 08:34, Douglas Gilbert wrote:
-> Once the SAS discovery algorithm has been run should we
-> show its results in sysfs?? We probably want to know
-> about SCSI target devices (like we do for other transports).
-> The SAS discovery algorithm may have found other interesting
-> things:
->     - other expanders (beyond what the silicon has seen)
->     - other initiators (implies a multi initiator environment)
->     - miswired SAS domains (since SAS expander routing rules
->       have restrictions)
+On 04/27/05 10:54, Martin Peschke3 wrote:
+> Douglas Gilbert wrote
+> 
+>>It has been stated that the SAS discovery algorithm (i.e. the
+>>recursive use of SMP) should be implemented once in the SAS
+>>transport layer so that all SAS LLDs can use it. Putting
+>>the SAS discovery algorithm in the user space may be
+>>even more politically correct.
+> 
+> 
+> Similarly, in the case of Fibre Channel, a common N_Port or
+> SCSI target device discovery, preferably in user space, seems
+> to be desirable. This would require some CT and / or ELS
+> passthrough interface, for example in order to issue queries
+> to fabric switches.
 
-Yes, I think we should know about those other devices, part
-of SAS SDS.
- 
-> Other tools may want to access SMP (and SCSI log pages
-> in SCSI target devices) to identify bottlenecks and access
-> vendor extensions.
+This is exactly what this RFC is all about.  Having
+such a representation of "what is out there", for SAS,
+in sysfs, you can "address" such devices via their
+sysfs file, send SMP frames to their ports, etc.
 
-Yes, very true.  I can imagine user space apps sending SMP
-and what not to expanders/RAID devices/enclosures past
-expanders, to control the storage network.
-
-A sysfs representation of the discovery result could make this
-easy, since as you pointed out expanders are not SAS devices,
-and thus do not fit the linux-scsi HCTL space.
+BTW, it is possible for a boot device to be on
+the SAS domain.  I think it may be most convenient for
+discovery (at least a basic one) to be contained in the kernel.
+Implications are security, reliability, immediate access, etc.
 
 	Luben
+
