@@ -1,43 +1,25 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [06/07] [PATCH] SCSI tape security: require CAP_ADMIN for SG_IO etc.
-Date: Wed, 27 Apr 2005 11:26:11 -0700
-Message-ID: <20050427182610.GA4400@suse.de>
-References: <20050427171446.GA3195@kroah.com> <20050427171649.GG3195@kroah.com> <1114619928.18809.118.camel@localhost.localdomain>
+From: mike.miller@hp.com
+Subject: [Question] Does the kernel ignore errors writng to disk?
+Date: Wed, 27 Apr 2005 13:40:22 -0500
+Message-ID: <20050427184022.GA16129@beardog.cca.cpqcorp.net>
+Reply-To: mike.miller@hp.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lyle.provo.novell.com ([137.65.81.174]:42414 "EHLO
-	lyle.provo.novell.com") by vger.kernel.org with ESMTP
-	id S261935AbVD0S0l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Apr 2005 14:26:41 -0400
+Received: from ccerelbas04.cce.hp.com ([161.114.21.107]:650 "EHLO
+	ccerelbas04.cce.hp.com") by vger.kernel.org with ESMTP
+	id S261944AbVD0Sj7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Apr 2005 14:39:59 -0400
 Content-Disposition: inline
-In-Reply-To: <1114619928.18809.118.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Kai.Makisara@kolumbus.fi, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, stable@kernel.org, Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Cliff White <cliffw@osdl.org>, Theodore Ts'o <tytso@mit.edu>, "Randy.Dunlap" <rddunlap@osdl.org>, Chuck Wolber <chuckw@quantumlinux.com>, torvalds@osdl.org, akpm@osdl.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, brace@hp.com
 
-On Wed, Apr 27, 2005 at 05:38:49PM +0100, Alan Cox wrote:
-> On Mer, 2005-04-27 at 18:16, Greg KH wrote:
-> > -stable review patch.  If anyone has any objections, please let us know.
-> 
-> This patch is just wrong on so many different levels its hard to know
-> where to begin.
+Hello All,
+I have observed some behavior under certain failure conditions that seems as if the kernel may be ignoring write errors to disk. 
+During very heavy read/write io if we force a disk to fail requests continue to be submitted until the controllers queue is full. Ultimately, the requests are timed out by the controller. When this happens we see filesystem corruption. Sometimes it's the file data, other times it's filesystem metadata that has been timed out and failed. Either way its obviously undesirable behavior.
+It looks like the OS/filesystem (ext2/3 and reiserfs) does not wait for for a successful completion. Is this assumption correct?
 
-But that is what is now in mainline, right?  If so, all of these
-questions still pertain to the current tree...
-
-> 1. The auth for arbitary commands is CAP_SYS_RAWIO
-> 2. "The SCSI command permissions were discussed widely on the linux
-> lists but this did not result in any useful refinement of the
-> permissions." - this is false. The process was refined, a table setup
-> was added and debugged. Someone even wrote an fs for managing it that is
-> not yet merged. Perhaps the patch author would care to re-read the
-> archives and submit a new patch if one is even needed
-> 3. Pleas explain *what* the specific consistency problems are
-> 
-> And then please fix the same mess in 12rc.
-
-thanks,
-
-greg k-h
+Thanks,
+mikem
