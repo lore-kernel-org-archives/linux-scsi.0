@@ -1,56 +1,119 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 01/04] scsi: make scsi_send_eh_cmnd use
- its own timer instead of scmd->eh_timeout
-Date: Wed, 27 Apr 2005 20:50:39 +0900
-Message-ID: <426F7C8F.8010105@gmail.com>
-References: <20050419143100.E231523D@htj.dyndns.org>	 <20050419143100.0F9A8C3B@htj.dyndns.org>	 <1114381342.4786.17.camel@mulgrave>  <426C2FC3.4090105@gmail.com>	 <1114452544.5000.11.camel@mulgrave>  <426EF781.6040403@gmail.com> <1114580059.5039.6.camel@mulgrave>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [RFC] SAS domain layout for Linux sysfs
+Date: Wed, 27 Apr 2005 22:34:27 +1000
+Message-ID: <426F86D3.4070909@torque.net>
+References: <425D392F.2080702@adaptec.com> <20050424111908.GA23010@infradead.org> <426D1572.70508@adaptec.com> <20050425161411.GA11938@infradead.org> <426D2723.8070308@adaptec.com> <20050425181831.GA14190@infradead.org> <426E5BAF.4040003@adaptec.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.207]:19414 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261470AbVD0Luq (ORCPT
+Received: from zorg.st.net.au ([203.16.233.9]:37581 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261536AbVD0MiI (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Apr 2005 07:50:46 -0400
-Received: by rproxy.gmail.com with SMTP id a41so136274rng
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2005 04:50:44 -0700 (PDT)
-In-Reply-To: <1114580059.5039.6.camel@mulgrave>
+	Wed, 27 Apr 2005 08:38:08 -0400
+In-Reply-To: <426E5BAF.4040003@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, andrew.patterson@hp.com, Eric.Moore@lsil.com, mike.miller@hp.com, Madhuresh_Nagshain@adaptec.com
 
-  Hello, James.
+The SAS/sysfs discussion seems to have run aground
+so I'll try a different example in order to find
+some common ground.
 
-James Bottomley wrote:
-> On Wed, 2005-04-27 at 11:22 +0900, Tejun Heo wrote:
-> 
->> * A command is passed to lldd and starts execution
->> * It times out.
->> * eh runs
->> * abort isn't implemented or fails
->> * eh issues eh cmd (TUL, STU...)
->> * The command miraculously & stupidly completes just now.
-> 
-> 
-> This should be impossible.  The error handler API requirement is that
-> the driver relinquish a command once it returns success from any error
-> handling callback ... and if it never returns success, we simply offline
-> the device and never use it again.  This is the principle behind the
-> command reuse: we only try an additional command *after* error handling
-> succeeds, so the error handler now owns the command absolutely.
-> 
+Below is a diagram with one SAS HBA (also known as
+HA) with two phys in use. One is connected directly
+to a SAS dual ported disk and the other phy goes via
+a SAS expander to the other "side" of the same disk:
 
-  Hmmm, yeah, it currently cannot happen, and if what you're describing 
-is a requirement, everything should be okay.  But, I still think that 
-using separate timer will be better as it won't add any overhead (with 
-the change you proposed) and it makes the somewhat unobivous requirement 
-go away.  Or at least add BUG_ON() test or something to make the 
-requirement clear.
 
-  What do you think?
++---------+  |                     |  +-----------+
+|scsi0 [] =--|---------------------|--= sda       |
+|         |  |                     |  |           |
+|         |  |    +-----+          |  |           |
+|scsi1 [] =--|----= ex1 =----------|--= sdb       |
++-----||||+  |    +-----+          |  +-----------+
+              |                     |
+1 HBA(HA)    | 2 service delivery  |   1 dual ported
+                subsystems              SAS disk
+               (2 SAS domains)
 
-  Thanks.
+SCSI analysis
+-------------
+Even though there is one HBA and one SCSI initiator
+we have two SCSI initiator ports. In Linux we name
+initiator ports (according to scsi_mid_low_api.txt)
+rather than an initiator device, hence scsi0 and scsi1.
+Each SCSI initiator port is connected to an independent
+service delivery subsystem. There is one target device
+which contains two ports and one lu (lun=0). Those target
+ports are connected to separate service delivery subsystems.
 
--- 
-tejun
+Since we name by path, the dual ported disk has two linux
+device names: sda and sdb. The tuple for sda is
+<scsi0,0,upper_target_port_sas_address,0>. The third element
+is a 64 bit SAS address which may need to be mapped to
+small integer to fit the linux scsi subsystem.
+
+The VPD device identification page will show that the lu
+name of both sda and sdb is the same. This becomes the
+responsibility of multipath-tools to sort out.
+
+SAS analysis
+------------
+The two phys in the HBA do _not_ form a wide port since
+the other ends have different SAS addresses (sda's port
+address is different from the ex1's address). Hence we
+have 2 narrow ports (where 1 phy corresponds to 1 initiator
+port).
+
+Dual ported SAS disks have different SAS addresses on
+each phy so that each phy will be a (narrow) target
+port.
+
+With or without the expander (ex1) there would be two
+SAS domains. From the initiator's point of view the
+difference between its two ports is that the silicon
+state machines can see sda but not sdb (scsi1's state
+machine sees ex1 instead).
+
+sysfs and SAS discovery
+-----------------------
+It seems reasonable that sda should be visible in sysfs
+since the silicon in the HBA (for scsi0) knows about it.
+However the silicon for scsi1 knows about ex1 (and
+nothing beyond that). SAS defines the Serial Management
+Protocol (SMP) for the purpose of probing what (else) is
+connected to an expander. SMP is similar to a SCSI command
+set and SMP frames need to be sent via scsi1 to ex1.
+Note that ex1 is _not_ a SCSI device (it is
+part of the service delivery subsystem) and we have no
+representation currently for it in sysfs. [Fibre channel
+switches are architecturally similar to SAS expanders.]
+
+It has been stated that the SAS discovery algorithm (i.e. the
+recursive use of SMP) should be implemented once in the SAS
+transport layer so that all SAS LLDs can use it. Putting
+the SAS discovery algorithm in the user space may be
+even more politically correct.
+
+Once the SAS discovery algorithm has been run should we
+show its results in sysfs?? We probably want to know
+about SCSI target devices (like we do for other transports).
+The SAS discovery algorithm may have found other interesting
+things:
+    - other expanders (beyond what the silicon has seen)
+    - other initiators (implies a multi initiator environment)
+    - miswired SAS domains (since SAS expander routing rules
+      have restrictions)
+
+Other tools may want to access SMP (and SCSI log pages
+in SCSI target devices) to identify bottlenecks and access
+vendor extensions.
+
+
+Are there disagreements with the example and its analysis?
+Other comments?
+
+Doug Gilbert
