@@ -1,66 +1,43 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: compile new kernel in order to install DEll OMSA software on Dell
-	Poweredge 2850 with PERC 4e Raid Controller
-Date: Wed, 27 Apr 2005 13:21:41 -0500
-Message-ID: <20050427182141.GA23203@lists.us.dell.com>
-References: <200504271835.30826.oliver@windfinder.com>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [06/07] [PATCH] SCSI tape security: require CAP_ADMIN for SG_IO etc.
+Date: Wed, 27 Apr 2005 11:26:11 -0700
+Message-ID: <20050427182610.GA4400@suse.de>
+References: <20050427171446.GA3195@kroah.com> <20050427171649.GG3195@kroah.com> <1114619928.18809.118.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-poweredge-bounces@dell.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from lyle.provo.novell.com ([137.65.81.174]:42414 "EHLO
+	lyle.provo.novell.com") by vger.kernel.org with ESMTP
+	id S261935AbVD0S0l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Apr 2005 14:26:41 -0400
 Content-Disposition: inline
-In-Reply-To: <200504271835.30826.oliver@windfinder.com>
-List-Unsubscribe: <http://lists.us.dell.com/mailman/listinfo/linux-poweredge>,
-	<mailto:linux-poweredge-request@dell.com?subject=unsubscribe>
-List-Archive: <http://lists.us.dell.com/pipermail/linux-poweredge>
-List-Post: <mailto:linux-poweredge@dell.com>
-List-Help: <mailto:linux-poweredge-request@dell.com?subject=help>
-List-Subscribe: <http://lists.us.dell.com/mailman/listinfo/linux-poweredge>,
-	<mailto:linux-poweredge-request@dell.com?subject=subscribe>
-Sender: linux-poweredge-bounces@dell.com
-Errors-To: linux-poweredge-bounces@dell.com
-To: oliver@windfinder.com
-Cc: linux-poweredge@dell.com, linux-scsi@vger.kernel.org, aschultz@warp10.net, "Ju, Seokmann" <sju@lsil.com>, Alexander Klein <ak@jenomics.de>, Thomas Glas <thomas.glas@hanse.net>, Jay Wineinger <jay@ffsi.com>, Jonas Kaufmann <me@j0nes.de>
+In-Reply-To: <1114619928.18809.118.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Kai.Makisara@kolumbus.fi, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, stable@kernel.org, Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Cliff White <cliffw@osdl.org>, Theodore Ts'o <tytso@mit.edu>, "Randy.Dunlap" <rddunlap@osdl.org>, Chuck Wolber <chuckw@quantumlinux.com>, torvalds@osdl.org, akpm@osdl.org
 
-On Wed, Apr 27, 2005 at 06:35:30PM +0200, oliver@windfinder.com wrote:
-> Hello,
-> I followed the instructions from Jay Wineinger at 
-> http://shadsplace.org/PE2650/ with the only difference that I used a 
-> different config file (see below) because I have different hardware. 
+On Wed, Apr 27, 2005 at 05:38:49PM +0100, Alan Cox wrote:
+> On Mer, 2005-04-27 at 18:16, Greg KH wrote:
+> > -stable review patch.  If anyone has any objections, please let us know.
 > 
-> After havinf compiled the new kernel and rebooting into the new kernel I get:
+> This patch is just wrong on so many different levels its hard to know
+> where to begin.
+
+But that is what is now in mainline, right?  If so, all of these
+questions still pertain to the current tree...
+
+> 1. The auth for arbitary commands is CAP_SYS_RAWIO
+> 2. "The SCSI command permissions were discussed widely on the linux
+> lists but this did not result in any useful refinement of the
+> permissions." - this is false. The process was refined, a table setup
+> was added and debugged. Someone even wrote an fs for managing it that is
+> not yet merged. Perhaps the patch author would care to re-read the
+> archives and submit a new patch if one is even needed
+> 3. Pleas explain *what* the specific consistency problems are
 > 
-> This is the the what happened after booting into the new kernel:
-> [..]
-> kmod: failed to exec /sbin/modprobe -s -k block-major-8, errno = 2
+> And then please fix the same mess in 12rc.
 
-errno=2 is "No such file or directory".  Meaning modprobe isn't in
-your initial ramdisk.  You're using an initial ramdisk, right, as your
-SCSI subsystem (scsi_mod) and your SCSI device drivers are all modular.
+thanks,
 
-
-> VFS: Cannot open root device "sda2" or 08:02
-> Please append append correct "root=" boot option
-> Kernel panic: VFS: Unable to mount root fs on 08:02
-
-which is expected, as you don't have any SCSI drivers loaded.
-
-
-Either use an initrd, or change all the CONFIG_SCSI* entries you care
-about to =y.
-
-Thanks,
-Matt
-
--- 
-Matt Domsch
-Software Architect
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
-
-_______________________________________________
-Linux-PowerEdge mailing list
-Linux-PowerEdge@dell.com
-http://lists.us.dell.com/mailman/listinfo/linux-poweredge
-Please read the FAQ at http://lists.us.dell.com/faq
+greg k-h
