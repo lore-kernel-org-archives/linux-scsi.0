@@ -1,92 +1,82 @@
-From: Mike Christie <mikenc@us.ibm.com>
-Subject: Re: [PATCH] scsi_transport_iscsi.c contexts
-Date: Wed, 27 Apr 2005 20:11:05 -0700
-Message-ID: <42705449.1030706@us.ibm.com>
-References: <1114646147.20844.37.camel@haakon>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [06/07] [PATCH] SCSI tape security: require CAP_ADMIN for SG_IO
+ etc.
+Date: Thu, 28 Apr 2005 08:43:21 +0300 (EEST)
+Message-ID: <Pine.LNX.4.61.0504280810140.12812@kai.makisara.local>
+References: <20050427171446.GA3195@kroah.com>  <20050427171649.GG3195@kroah.com>
+ <1114619928.18809.118.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:32509 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S261837AbVD1DLR
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Apr 2005 23:11:17 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e35.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j3S3BDLg122950
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2005 23:11:13 -0400
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j3S3BCtY370286
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2005 21:11:13 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j3S3BCUV003112
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2005 21:11:12 -0600
-In-Reply-To: <1114646147.20844.37.camel@haakon>
+Received: from fep31-0.kolumbus.fi ([193.229.0.35]:62813 "EHLO
+	fep31-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S262024AbVD1FlK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Apr 2005 01:41:10 -0400
+In-Reply-To: <1114619928.18809.118.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nick@pyxtechnologies.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Greg KH <gregkh@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, stable@kernel.org, Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Cliff White <cliffw@osdl.org>, Theodore Ts'o <tytso@mit.edu>, "Randy.Dunlap" <rddunlap@osdl.org>, Chuck Wolber <chuckw@quantumlinux.com>, torvalds@osdl.org, Andrew Morton <akpm@osdl.org>
 
-Nicholas A. Bellinger wrote:
-> This patch against 2.6.12-rc3 is the first step for scsi_transport_iscsi
-> getting iSCSI Keys defined in RFC 3720 Section 12 and other values not
-> defined in this section as keys, but need to be exported out via sysfs
-> into the correct connection/session contexts.
+On Wed, 27 Apr 2005, Alan Cox wrote:
+
+> On Mer, 2005-04-27 at 18:16, Greg KH wrote:
+> > -stable review patch.  If anyone has any objections, please let us know.
 > 
-> Currently, scsi_transport_iscsi.[c,h] assume that all values are on a
-> per session basis.  These changes have been tested with the upcoming
-> iSCSI transport class enabled release of iscsi-initiator-core
-> (1.6.2.0-rc2), and should hopefully be 'breakage-free' with sfnet.
+> This patch is just wrong on so many different levels its hard to know
+> where to begin.
 > 
-> Comments?
-> 
-> 
-> 
-> ------------------------------------------------------------------------
-> 
-> diff -urN linux-2.6.12-rc3/drivers/scsi/scsi_transport_iscsi.c linux-2.6.12-rc3-iscsi/drivers/scsi/scsi_transport_iscsi.c
-> --- linux-2.6.12-rc3/drivers/scsi/scsi_transport_iscsi.c	2005-04-27 15:02:03.000000000 -0700
-> +++ linux-2.6.12-rc3-iscsi/drivers/scsi/scsi_transport_iscsi.c	2005-04-27 17:36:20.000000000 -0700
-> @@ -3,6 +3,8 @@
->   *
->   * Copyright (C) IBM Corporation, 2004
->   * Copyright (C) Mike Christie, 2004
-> + * Copyright (C) PyX Technologies, 2005
-> + * Copyright (C) Nicholas A. Bellinger <nab@kernel.org>
->   *
->   * This program is free software; you can redistribute it and/or modify
->   * it under the terms of the GNU General Public License as published by
-> @@ -25,7 +27,8 @@
->  #include <scsi/scsi_transport.h>
->  #include <scsi/scsi_transport_iscsi.h>
->  
-> -#define ISCSI_SESSION_ATTRS 20
-> +#define ISCSI_CONNECTION_ATTRS 9
-> +#define ISCSI_SESSION_ATTRS 15
->  #define ISCSI_HOST_ATTRS 2
->  
->  struct iscsi_internal {
-> @@ -34,6 +37,7 @@
->  	/*
->  	 * We do not have any private or other attrs.
->  	 */
-> +	struct class_device_attribute *connection_attrs[ISCSI_CONNECTION_ATTRS + 1];
+> 1. The auth for arbitary commands is CAP_SYS_RAWIO
 
-How are these attrs getting set up? By the LLD? Patch does not work for me;
-nothing shows up btw.
+Valid complaint.
 
-The reason all the settings are stuck on the session was becuase we couldn't
-come to an agreement on the layout. We wanted to do something like this:
+> 2. "The SCSI command permissions were discussed widely on the linux
+> lists but this did not result in any useful refinement of the
+> permissions." - this is false. The process was refined, a table setup
+> was added and debugged.
 
-/sys/class/iscsi_session/iscsi_connection
+Any user having write access to the device is still allowed to send MODE 
+SELECT (and some other commands useful for CD/DVD writers but being 
+potentially dangerous to other). The assumption that _any_ command needed 
+for burning CDs/DVDs is safe for all device types is ridiculous. This is 
+why I don't consider the refinements useful.
 
-or even
+Controlling high-level access and pass-through with the same permissions 
+is not a very good model.
 
-/sys/class/iscsi_session
-/sys/class/iscsi_connection
+> Someone even wrote an fs for managing it that is
+> not yet merged.
 
-with some symlinks to glue them together for the latter (I could probably do a better
-picture but you get the idea right). It depends on if people allowed us to stick kobjects
-in structs to make the dirs (could use a attribute group too I guess) or if they wanted
-seperate devices. It might make some sense to figure out the layout while seperating
-things out.
+Yes. So we should wait for a miracle happen and it get merged? My patch 
+is meant to fix the problems at low level until a more general fix is 
+merged (if that ever happens).
 
+> Perhaps the patch author would care to re-read the
+> archives and submit a new patch if one is even needed
+> 3. Pleas explain *what* the specific consistency problems are
+
+OK. Once again....
+
+Using MODE SELECT you can change the drive behaviour so that it may become 
+practically useless for other users (and even break very quickly). A 
+simple method is to disable drive buffering. The inconsistency here is 
+that to the users the drive status is not what the system managers meant 
+it to be.
+
+Another inconsistency comes from using commands moving the tape so that 
+the tape driver does not know it. The tape driver provides users some 
+status information about the tape head location (file and block number, 
+BOT, EOF, etc.). This information is not valid if tape is moved using 
+pass-through. The basic problem is that the driver for this kind of a 
+sequential access device has to maintain some state information and it 
+gets distorted if pass-through is used. One solution would, of course, be 
+to interpret the commands and statuses going to/coming from pass-through 
+but this is a quite heavy solution.
+
+
+OK. If the Linux solution to these kind of security problems in the not so 
+central areas of kernel is to wait and see if the problem disappears 
+without any action, I have to accept that. But I have tried...
+
+-- 
+Kai
