@@ -1,30 +1,38 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] - mptfusion - fix panic loading driver statically compile d
-Date: Thu, 28 Apr 2005 23:27:39 +0100
-Message-ID: <20050428222739.GA26015@infradead.org>
-References: <91888D455306F94EBD4D168954A9457C0225D199@nacos172.co.lsil.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [Question] Does the kernel ignore errors writng to disk?
+Date: Thu, 28 Apr 2005 23:43:40 +0100
+Message-ID: <1114728218.18355.245.camel@localhost.localdomain>
+References: <OFDD96A309.D5D89999-ON88256FF1.0062E298-88256FF1.00645C51@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:13195 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S262235AbVD1W1l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Apr 2005 18:27:41 -0400
-Content-Disposition: inline
-In-Reply-To: <91888D455306F94EBD4D168954A9457C0225D199@nacos172.co.lsil.com>
+Received: from clock-tower.bc.nu ([81.2.110.250]:32977 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S262314AbVD1WpP
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Apr 2005 18:45:15 -0400
+In-Reply-To: <OFDD96A309.D5D89999-ON88256FF1.0062E298-88256FF1.00645C51@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, akpm@osdl.org
+To: Bryan Henderson <hbryan@us.ibm.com>
+Cc: brace@hp.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, mike.miller@hp.com
 
-On Thu, Apr 28, 2005 at 04:15:23PM -0600, Moore, Eric Dean wrote:
-> This patch can also be found at this URL:
-> ftp://ftp.lsil.com/HostAdapterDrivers/linux/FiberChannel/2.6-kernel/3.03.01/
-> 
-> Changelog:
-> (1) For statically linked drivers, fusion_init was not called,
-> added call from mpt_register so its called when one of the scsi lld load.
+On Iau, 2005-04-28 at 19:14, Bryan Henderson wrote:
+> Probably the most common way to get the simple but slow write function 
+> where the write() call actually writes to stable storage, and fails if it 
+> can't, is the O_SYNC open flag.
 
-please find the real cause for this.  The kernel does call all module_init
-handlers.  Is your link order incorrect maybe?
+O_SYNC doesn't work completely on several file systems and only on the
+latest kernels with some of the common ones.
+
+> But even that, in some versions of Linux, can miss write errors.  It's not 
+> easy for Linux to catch them because the code that sees the I/O fail 
+> doesn't know if it's part of some synchronous procedure where the user 
+> will eventually find out about the error or the more common case where the 
+> application has optimistically walked away and nothing can be done but 
+> write off the loss.
+
+Or because the error is reported out of order and there are ordering
+guarantees in the fs. SCSI is ok here other controllers are not always
+right.
 
