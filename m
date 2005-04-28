@@ -1,70 +1,48 @@
-From: "K.R. Foley" <kr@cybsft.com>
-Subject: Re: 2.6.12-rc3 won't boot from aic7899
-Date: Thu, 28 Apr 2005 15:26:27 -0500
-Message-ID: <427146F3.5060605@cybsft.com>
-References: <4269C60C.3070700@cybsft.com> <1114716611.5022.6.camel@mulgrave>	 <4271413F.70809@cybsft.com> <1114719624.5022.14.camel@mulgrave>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: latest mpt-fusion oopses
+Date: Thu, 28 Apr 2005 14:43:10 -0700
+Message-ID: <20050428144310.40024a82.akpm@osdl.org>
+References: <91888D455306F94EBD4D168954A9457C0225D051@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail4.utc.com ([192.249.46.193]:2211 "EHLO mail4.utc.com")
-	by vger.kernel.org with ESMTP id S262151AbVD1U0r (ORCPT
+Received: from fire.osdl.org ([65.172.181.4]:9124 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S262235AbVD1Vnp (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Apr 2005 16:26:47 -0400
-In-Reply-To: <1114719624.5022.14.camel@mulgrave>
+	Thu, 28 Apr 2005 17:43:45 -0400
+In-Reply-To: <91888D455306F94EBD4D168954A9457C0225D051@nacos172.co.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com
 
-James Bottomley wrote:
-> On Thu, 2005-04-28 at 15:02 -0500, K.R. Foley wrote:
-> 
->>I am attaching the relevant part of the successful boot log from 
->>2.6.12-rc2. I don't have a 2.6.11 boot log handy. I can boot it when I 
->>get home if it will help. I don't know if it is worth mentioning or not, 
->>but I have had to compile in the SCSI drivers since 2.6.12-rc1. Don't 
->>know if it's related to this or not.
->>
->>One other note: I spent enough time tracing this to find that the 
->>message "target1:0:0: Beginning Domain Validation" seems to be generated 
->>by code that is in aic79xx_osm. Is this common code or should this code 
->>not be getting executed for aic7899 cards?
-> 
-> 
-> Actually, the code is in the scsi_transport_spi class.  aic79xx still
-> has its own internal domain validation.
-> 
-> 
->>I'll be happy to try this when I get home.
-> 
-> 
-> Thanks ... it may not work; I don't have access to any drives with the
-> problem yours exhibits.
-> 
-> 
->>Apr 24 23:23:30 porky kernel: scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
->>Apr 24 23:23:30 porky kernel:         <Adaptec aic7899 Ultra160 SCSI adapter>
->>Apr 24 23:23:30 porky kernel:         aic7899: Ultra160 Wide Channel B, SCSI Id=7, 32/253 SCBs
->>Apr 24 23:23:30 porky kernel: 
->>Apr 24 23:23:30 porky kernel: (scsi1:A:0): 20.000MB/s transfers (20.000MHz, offset 15)
->>Apr 24 23:23:31 porky kernel:   Vendor: SEAGATE   Model: SX118273LC        Rev: 6679
-> 
-> 
-> Yes, that's what I suspected.  Here the internal aic7xxx DV has silently
-> configured the drive to be narrow.  Probably because of cable damage or
-> something else.
-> 
-Sorry I missed this before. The reason it is doing this is because this 
-drive is connected using an adapter that converts an LC/LV (is this 
-correct, off the top of my head) interface into a standard SCSI (narrow) 
-interface. Could this be HELPING me here? :)
+"Moore, Eric Dean" <Eric.Moore@lsil.com> wrote:
+>
+> Ok - The problem is the module_init entry point for
+> mptbase.ko is not being called when the driver is statically
+> compiled into the kernel.
 
-> James
-> 
-> 
-> 
+That doesn't sound right.  The kernel will call that module_init() function
+for statically linked things.
 
+This came out:
 
--- 
-    kr
+	"Fusion MPT SPI Host driver 3.03.00"
+
+So fusion_init() is being called.  Maybe the problem is that fusion_init()
+is being called at the wrong time.
+
+That doesn't sound right either.  This:
+
+	"SCSI subsystem initialized"
+
+is coming out earlier on, as one would expect with a subsys_initcall().
+
+Ho-hum.  You'll work it out ;)
+
+> I guess I will have to have the scsi lld drivers registering the pci ids
+> call mptbase.c module_init function, and maintain a flag so
+> its not called more that once.
+
+You can shuffle the ordering of these things with late_initcall(), etc.
