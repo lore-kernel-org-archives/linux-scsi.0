@@ -1,38 +1,63 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [Question] Does the kernel ignore errors writng to disk?
-Date: Thu, 28 Apr 2005 23:43:40 +0100
-Message-ID: <1114728218.18355.245.camel@localhost.localdomain>
-References: <OFDD96A309.D5D89999-ON88256FF1.0062E298-88256FF1.00645C51@us.ibm.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH] - mptfusion - fix panic loading driver statically
+ compile d
+Date: Thu, 28 Apr 2005 15:48:40 -0700
+Message-ID: <20050428154840.24b51549.akpm@osdl.org>
+References: <91888D455306F94EBD4D168954A9457C0225D199@nacos172.co.lsil.com>
+	<1114727284.5022.25.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:32977 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S262314AbVD1WpP
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Apr 2005 18:45:15 -0400
-In-Reply-To: <OFDD96A309.D5D89999-ON88256FF1.0062E298-88256FF1.00645C51@us.ibm.com>
+Received: from fire.osdl.org ([65.172.181.4]:44219 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S262313AbVD1WsT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Apr 2005 18:48:19 -0400
+In-Reply-To: <1114727284.5022.25.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bryan Henderson <hbryan@us.ibm.com>
-Cc: brace@hp.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, mike.miller@hp.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Eric.Moore@lsil.com, linux-scsi@vger.kernel.org
 
-On Iau, 2005-04-28 at 19:14, Bryan Henderson wrote:
-> Probably the most common way to get the simple but slow write function 
-> where the write() call actually writes to stable storage, and fails if it 
-> can't, is the O_SYNC open flag.
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
+>
+> On Thu, 2005-04-28 at 16:15 -0600, Moore, Eric Dean wrote:
+> > This patch can also be found at this URL:
+> > ftp://ftp.lsil.com/HostAdapterDrivers/linux/FiberChannel/2.6-kernel/3.03.01/
+> > 
+> > Changelog:
+> > (1) For statically linked drivers, fusion_init was not called,
+> > added call from mpt_register so its called when one of the scsi lld load.
+> > (2) little endian fix in mpt_put_msg_frame/mpt_get_msg_frame
+> > (3) Clarify help desc in Kconfig for FUSION_MAX_SGE.
+> 
+> Surely this is just a simple link order problem?  Can't we solve it like
+> the attached?
+> 
+> James
+> 
+> --- k/drivers/message/fusion/Makefile  (mode:100644)
+> +++ l/drivers/message/fusion/Makefile  (mode:100644)
+> @@ -32,7 +32,7 @@
+>  
+>  #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-} LSI_LOGIC
+>  
+> -obj-$(CONFIG_FUSION_SPI)	+= mptspi.o mptscsih.o mptbase.o
+> -obj-$(CONFIG_FUSION_FC)		+= mptfc.o mptscsih.o mptbase.o
+> +obj-$(CONFIG_FUSION_SPI)	+=  mptbase.o mptspi.o mptscsih.o
+> +obj-$(CONFIG_FUSION_FC)		+=  mptbase.o mptfc.o mptscsih.o
+>  obj-$(CONFIG_FUSION_CTL)	+= mptctl.o
+>  obj-$(CONFIG_FUSION_LAN)	+= mptlan.o
 
-O_SYNC doesn't work completely on several file systems and only on the
-latest kernels with some of the common ones.
+That would be a last resort :( I seem to recall people saying that this
+might not work over all extant binutilses, too.
 
-> But even that, in some versions of Linux, can miss write errors.  It's not 
-> easy for Linux to catch them because the code that sees the I/O fail 
-> doesn't know if it's part of some synchronous procedure where the user 
-> will eventually find out about the error or the more common case where the 
-> application has optimistically walked away and nothing can be done but 
-> write off the loss.
+Doing something explicit via initcall levels sounds nicer.
 
-Or because the error is reported out of order and there are ordering
-guarantees in the fs. SCSI is ok here other controllers are not always
-right.
+I agree that we don't understand what's going on yet - fusion_init() should
+have been called *sometime*, no matter what the linkage order is, and no
+matter what the chosen initcall levels.
+
+Booting with `initcall_debug' will tell us which initcalls are being
+called, and in which order.
 
