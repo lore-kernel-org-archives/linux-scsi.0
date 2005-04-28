@@ -1,35 +1,70 @@
-From: Bryan Henderson <hbryan@us.ibm.com>
-Subject: Re: [Question] Does the kernel ignore errors writng to disk?
-Date: Thu, 28 Apr 2005 11:14:53 -0700
-Message-ID: <OFDD96A309.D5D89999-ON88256FF1.0062E298-88256FF1.00645C51@us.ibm.com>
-References: <1114700283.24687.193.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: 2.6.12-rc3 won't boot from aic7899
+Date: Thu, 28 Apr 2005 12:30:11 -0700
+Message-ID: <1114716611.5022.6.camel@mulgrave>
+References: <4269C60C.3070700@cybsft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:3242 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262215AbVD1SP3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Apr 2005 14:15:29 -0400
-In-Reply-To: <1114700283.24687.193.camel@localhost.localdomain>
+Received: from stat16.steeleye.com ([209.192.50.48]:18884 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262246AbVD1TaS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Apr 2005 15:30:18 -0400
+In-Reply-To: <4269C60C.3070700@cybsft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: brace@hp.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, mike.miller@hp.com
+To: "K.R. Foley" <kr@cybsft.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
->See man fsync
->and also O_DIRECT if you need specific "to disk" support
+On Fri, 2005-04-22 at 22:50 -0500, K.R. Foley wrote:
+> scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+>         <Adaptec aic7899 Ultra160 SCSI adapter>
+>         aic7899: Ultra160 Wide Channel B, SCSI Id=7, 32/253 SCBs
+> 
+>   Vendor: SEAGATE   Model: SX118273LC        Rev: 6679
+>   Type:   Direct-Access                      ANSI SCSI revision: 02
+> scsi1:A:0:0: Tagged Queuing enabled.  Depth 32
+>  target1:0:0: Beginning Domain Validation
+> (scsi1:A:0): 6.600MB/s transfers (16bit)
+> (scsi1:A:0:0): parity error detected in Data-in phase. SEQADDR(0x6b)
+> SCSIRATE(0x80)
 
-Probably the most common way to get the simple but slow write function 
-where the write() call actually writes to stable storage, and fails if it 
-can't, is the O_SYNC open flag.
 
-But even that, in some versions of Linux, can miss write errors.  It's not 
-easy for Linux to catch them because the code that sees the I/O fail 
-doesn't know if it's part of some synchronous procedure where the user 
-will eventually find out about the error or the more common case where the 
-application has optimistically walked away and nothing can be done but 
-write off the loss.
+I assume it just locks up after this?
 
---
-Bryan Henderson                          IBM Almaden Research Center
-San Jose CA                              Filesystems
+It looks like the parity error isn't propagating upwards like it should.
+What did a 2.6.11 boot sequence show for this (i.e. did the internal
+aic7xxx DV configure the device narrow)?
+
+I suspect the attached patch might fix this in the core driver, if you
+could try it out.
+
+Thanks,
+
+James
+
+--- k/drivers/scsi/aic7xxx/aic7xxx_core.c  (mode:100644)
++++ l/drivers/scsi/aic7xxx/aic7xxx_core.c  (mode:100644)
+@@ -1125,16 +1125,9 @@ ahc_handle_scsiint(struct ahc_softc *ahc
+ 			else
+ 				ahc_outb(ahc, MSG_OUT, mesg_out);
+ 		}
+-		/*
+-		 * Force a renegotiation with this target just in
+-		 * case we are out of sync for some external reason
+-		 * unknown (or unreported) by the target.
+-		 */
+-		ahc_fetch_devinfo(ahc, &devinfo);
+-		ahc_force_renegotiation(ahc, &devinfo);
+-
+-		ahc_outb(ahc, CLRINT, CLRSCSIINT);
+-		ahc_unpause(ahc);
++		if (scb != NULL)
++			ahc_set_transaction_status(scb, CAM_UNCOR_PARITY);
++		ahc_reset_channel(ahc, devinfo.channel, TRUE);
+ 	} else if ((status & SELTO) != 0) {
+ 		u_int	scbptr;
+ 
+
+
