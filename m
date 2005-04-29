@@ -1,108 +1,117 @@
-From: "Nicholas A. Bellinger" <nick@pyxtechnologies.com>
-Subject: Re: [PATCH] scsi_transport_iscsi.c contexts
-Date: Fri, 29 Apr 2005 15:13:32 -0700
-Message-ID: <1114812812.19139.23.camel@haakon>
-References: <1114646147.20844.37.camel@haakon> <42705449.1030706@us.ibm.com>
-	 <1114803919.16658.8.camel@haakon>  <4272A506.7020405@us.ibm.com>
+From: Alex Deucher <alexdeucher@gmail.com>
+Subject: Re: Emulex fibre channel HBA support and SAN connection
+Date: Fri, 29 Apr 2005 18:41:44 -0400
+Message-ID: <a728f9f9050429154158fa2718@mail.gmail.com>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201ABC8@xbl3.ad.emulex.com>
+	 <a728f9f90504291311178728bd@mail.gmail.com>
+Reply-To: Alex Deucher <alexdeucher@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp811.mail.sc5.yahoo.com ([66.163.170.81]:55631 "HELO
-	smtp811.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S263030AbVD2WXX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Apr 2005 18:23:23 -0400
-In-Reply-To: <4272A506.7020405@us.ibm.com>
+Received: from rproxy.gmail.com ([64.233.170.203]:8056 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S263041AbVD2Wlq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Apr 2005 18:41:46 -0400
+Received: by rproxy.gmail.com with SMTP id a41so632257rng
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Apr 2005 15:41:44 -0700 (PDT)
+In-Reply-To: <a728f9f90504291311178728bd@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <mikenc@us.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, iscsi-initiator-core-devel <iscsi-initiator-core-devel@iscsi-initiator-core.org>
+To: "James.Smart@emulex.com" <James.Smart@emulex.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, 2005-04-29 at 14:20 -0700, Mike Christie wrote:
-> >>The reason all the settings are stuck on the session was becuase we couldn't
-> >>come to an agreement on the layout. We wanted to do something like this:
-> >>
-> >>/sys/class/iscsi_session/iscsi_connection
-> >>
-> >>or even
-> >>
-> >>/sys/class/iscsi_session
-> >>/sys/class/iscsi_connection
-> >>
-> > 
-> > 
-> > I am still thinking on this one.  First and foremost I think that we
-> > need to get move towards a single class for iSCSI Initiators instead of
-> > what is currently registered (/sys/class/iscsi_transport
-> > and /sys/class/iscsi_host).  Let me keep working on this some more and I
-> > will draft up a prosposal in the near future.  Any futher input is
-> > welcomed. :-)
-> > 
+FWIW, this seems to be a sparc64 issue.  after upgrading the firmware
+and testing in a x86 box, all is well, at least on x86.  I'll test on
+AMD64 next week.
+
+Alex
+
+On 4/29/05, Alex Deucher <alexdeucher@gmail.com> wrote:
+> On 4/29/05, James.Smart@emulex.com <James.Smart@emulex.com> wrote:
+> > Based on the "Unknown IOCB command data" message, this appears to be out of date firmware on the adapter. See http://www.emulex.com/ts/indexemu.html.  There are some hints on downloading firmware at the tail end of  http://sourceforge.net/forum/forum.php?thread_id=1130082&forum_id=355154.
+> >
+> > Note: lpfc issues are best posted to the help areas on http://sourceforge.net/projects/lpfcxxxx/
 > 
-> get everyone to agree (or force them) on how to set the initiarname and alias
-> and the iscsi_host can be chopped. the iscsi_host is only there becuase sfnet
-> used a /etc file and I think you can set the initiatorname on some HW cards
-> from a BIOS/OF prompt (or you will not have control over it) so if they ever
-> end up on the same box and wanted to konw what each one ended up as you could.
+> James,
 > 
-
-Ok, one possible solution is when the iSCSI Template structure gets
-registered with the iSCSI Transport, the LLD can tell the transport what
-values are already defined.  I think this point really goes back to
-previous points about different class attributes need to be dynamicly
-registered within the iSCSI Stack when certain events occur.
-
-Considering the following:
-
-1) iscsi_attach_transport() is called when the iSCSI Stack is loaded:
-
-   /sys/class/iscsi_transport/	
-
-	a) Initiator[Name,Alias] is not set.
-
-		The stack will set this value later.
-
-	b) Initiator[Name,Alais] is set.
-		
-		Assume that ->get_initiator_[name,alias]() will return 
-		values from hardware
-
-2) struct iscsi_channel_class *iscsi_attach_channel(struct
-scsi_transport_template)
-
-   /sys/class/iscsi_transport/iscsi_$CHANNEL_ID.
-
-	Note that for management purposes that $CHANNEL_ID needs to be a
-	value that does not change.  ie: not the SCSI Host ID.
-
-	This registers ALL of the sysfs attributes for both session and 
-	connection contexts.  These values are read/write as these are
-        values that are used as the defaults when sessions/connections
-        are started on said iSCSI Channel.
-
-3) struct iscsi_session_class *iscsi_attach_session(struct
-iscsi_channel_class)
-
-   /sys/class/iscsi_transport/iscsi_$CHANNEL_ID/
-
-	This contains the read only attributes that where negoitated 
-	after successful session establishment.  Note that some of these
-	values need to be write as well. (InitiatorAlias can be changed 
-	after the session is up)
-
-4) struct iscsi_connection_class *iscsi_attach_connection(struct
-iscsi_session_class *, unsigned short cid)
-
-   /sys/class/iscsi_transport/iscsi_$CHANNEL_ID/session/connection_$CID
-
-	This contains the read only attributes that where negoitated
-	after successful connection establishment.  Note that some of
-	these values need to be write as well. 
-	(MaxRecvDataSegmentLength can be changed after the connection
-	up).
-
-Of course the names would probable get changed around a bit, but I think you get the idea.
-
--- 
-Nicholas A. Bellinger <nick@pyxtechnologies.com>
-
+>     I just upgraded to the latest firmware on the Emulex website
+> (3.92a2) and I still get the same error:
+> Emulex LightPulse Fibre Channel SCSI driver 8.0.28
+> scsi2 :  on PCI bus 00 device 20 irq 8132864
+> lpfc 0001:00:04.0: 0:1303 Link Up Event x1 received Data: x1 xf7 x8 x0
+> lpfc 0001:00:04.0: 0:0321 Unknown IOCB command Data: x0, xa2 x0 x600 x2900
+> lpfc 0001:00:04.0: 0:0327 Rsp ring 0 error -  command completion for
+> iotag x0 not found
+> ...
+> lpfc 0001:00:04.0: 0:0748 abort handler timed out waiting for abort to
+> complete. Data: x0 x0 x0 x1
+> lpfc 0001:00:04.0: 0:0327 Rsp ring 0 error -  command completion for
+> iotag x700 not found
+> lpfc 0001:00:04.0: 0:0327 Rsp ring 0 error -  command completion for
+> iotag x0 not found
+> 
+> Any ideas?
+> 
+> >
+> > Thanks.
+> >
+> > -- James Smart
+> >    Emulex
+> >
+> > > -----Original Message-----
+> > > From: linux-scsi-owner@vger.kernel.org
+> > > [mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Alex Deucher
+> > > Sent: Thursday, April 28, 2005 6:03 PM
+> > > To: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
+> > > Subject: Emulex fibre channel HBA support and SAN connection
+> > >
+> > >
+> > > Can someone point me to some documentation on setting up a fibre
+> > > channel HBA in linux?  I can't seem to find any useful information.  I
+> > > have a Sun 220R running 2.6.12-rc3 with an emulex LP9000 HBA connected
+> > > to a Nexsan ATABEAST SAN.  I'm using the HBA driver included with the
+> > > 2.6.12rc3 kernel.  I cannot find any information about the GPLed
+> > > emulex driver as far as configuration goes.  The driver seems to come
+> > > up ok, but then I get a series of error codes:
+> > >
+> > > Emulex LightPulse Fibre Channel SCSI driver 8.0.28
+> > > scsi0 :  on PCI bus 00 device 20 irq 8255744
+> > > lpfc 0001:00:04.0: 0:1303 Link Up Event x1 received Data: x1 x1 x8 x2
+> > > lpfc 0001:00:04.0: 0:0321 Unknown IOCB command Data: x0, xa2
+> > > x0 x900 x2600
+> > > ...
+> > > lpfc 0001:00:04.0: 0:0748 abort handler timed out waiting for abort to
+> > > complete. Data: x0 x0 x0 x1
+> > > lpfc 0001:00:04.0: 0:0327 Rsp ring 0 error -  command completion for
+> > > iotag xa00 not found
+> > > lpfc 0001:00:04.0: 0:0327 Rsp ring 0 error -  command completion for
+> > > iotag x0 not found
+> > > lpfc 0001:00:04.0: 0:0713 SCSI layer issued LUN reset (0, 0)
+> > > Data: x2 x0 x0
+> > > lpfc 0001:00:04.0: 0:0327 Rsp ring 0 error -  command completion for
+> > > iotag xb00 not found
+> > > lpfc 0001:00:04.0: 0:0327 Rsp ring 0 error -  command completion for
+> > > iotag x0 not found
+> > > lpfc 0001:00:04.0: 0:0714 SCSI layer issued Bus Reset Data: x2003
+> > > scsi: Device offlined - not ready after error recovery: host 0 channel
+> > > 0 id 0 lun 0
+> > > lpfc 0001:00:04.0: 0:0327 Rsp ring 0 error -  command completion for
+> > > iotag x0 not found
+> > >
+> > > I noticed here:
+> > > http://marc.theaimsgroup.com/?l=linux-scsi&m=111383889908554&w=2
+> > > that there is a new FC API. Was this merged into rc3 or will this
+> > > happen after 2.6.12?  If it's not supported yet in rc3, how does one
+> > > go about configuring it?  I'm willing to test any available tools.
+> > >
+> > > Any help will be greatly appreciated.  I'll be able to test on SPARC64
+> > > right now and on AMD64 in the next few days.
+> > >
+> > > Thanks,
+> > >
+> > > Alex
+> > >
+> > > PS, please CC: me as I'm not subscribed.
+>
