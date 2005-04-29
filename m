@@ -1,43 +1,35 @@
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [RFC] SAS domain layout for Linux sysfs
-Date: Fri, 29 Apr 2005 11:08:48 +0100
-Message-ID: <20050429100848.GB3342@infradead.org>
-References: <425D392F.2080702@adaptec.com> <20050424111908.GA23010@infradead.org> <426D1572.70508@adaptec.com> <20050425161411.GA11938@infradead.org> <426D2723.8070308@adaptec.com> <20050425181831.GA14190@infradead.org> <426E5BAF.4040003@adaptec.com> <426F86D3.4070909@torque.net>
+Date: Fri, 29 Apr 2005 11:11:01 +0100
+Message-ID: <20050429101101.GC3342@infradead.org>
+References: <OF4CE413A0.DAB8B74B-ONC1256FF0.00505593-C1256FF0.0052A229@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:63382 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:2711 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S262244AbVD2KIw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Apr 2005 06:08:52 -0400
+	id S262244AbVD2KLP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Apr 2005 06:11:15 -0400
 Content-Disposition: inline
-In-Reply-To: <426F86D3.4070909@torque.net>
+In-Reply-To: <OF4CE413A0.DAB8B74B-ONC1256FF0.00505593-C1256FF0.0052A229@de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, andrew.patterson@hp.com, Eric.Moore@lsil.com, mike.miller@hp.com, Madhuresh_Nagshain@adaptec.com
+To: Martin Peschke3 <MPESCHKE@de.ibm.com>
+Cc: dougg@torque.net, andrew.patterson@hp.com, Eric.Moore@lsil.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, Luben Tuikov <luben_tuikov@adaptec.com>, Madhuresh_Nagshain@adaptec.com, mike.miller@hp.com
 
-> sysfs and SAS discovery
-> -----------------------
-> It seems reasonable that sda should be visible in sysfs
-> since the silicon in the HBA (for scsi0) knows about it.
-> However the silicon for scsi1 knows about ex1 (and
-> nothing beyond that). SAS defines the Serial Management
-> Protocol (SMP) for the purpose of probing what (else) is
-> connected to an expander. SMP is similar to a SCSI command
-> set and SMP frames need to be sent via scsi1 to ex1.
-> Note that ex1 is _not_ a SCSI device (it is
-> part of the service delivery subsystem) and we have no
-> representation currently for it in sysfs. [Fibre channel
-> switches are architecturally similar to SAS expanders.]
+On Wed, Apr 27, 2005 at 04:54:53PM +0200, Martin Peschke3 wrote:
+> Similarly, in the case of Fibre Channel, a common N_Port or
+> SCSI target device discovery, preferably in user space, seems
+> to be desirable.
 
-Note that the current scsi code allows to create custom per-transport
-objects below the target object.  We're using that in the fibre channel
-transport class for the concept of remote ports.
+Did I tell you zfcp needs some updates to use all features of the FC
+transport class?
 
-> Once the SAS discovery algorithm has been run should we
-> show its results in sysfs??
+> This would require some CT and / or ELS
+> passthrough interface, for example in order to issue queries
+> to fabric switches.
 
-I think so, yes.  Similar to how we have all fibre channel remote ports
-in sysfs, even if they are not scsi targets.
+Emulex plans to contribute such interfaces to the FC transport class.
+It would be nice if zfcp could catch up on full usage of the transport
+class, or did I mention that already? ;-)
 
