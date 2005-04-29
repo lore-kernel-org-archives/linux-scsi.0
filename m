@@ -1,60 +1,108 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [Question] Does the kernel ignore errors writng to disk?
-Date: Fri, 29 Apr 2005 23:00:37 +0100
-Message-ID: <1114812035.18330.396.camel@localhost.localdomain>
-References: <OF48BA3721.BD4798AD-ON88256FF2.00680E7E-88256FF2.0069814F@us.ibm.com>
+From: "Nicholas A. Bellinger" <nick@pyxtechnologies.com>
+Subject: Re: [PATCH] scsi_transport_iscsi.c contexts
+Date: Fri, 29 Apr 2005 15:13:32 -0700
+Message-ID: <1114812812.19139.23.camel@haakon>
+References: <1114646147.20844.37.camel@haakon> <42705449.1030706@us.ibm.com>
+	 <1114803919.16658.8.camel@haakon>  <4272A506.7020405@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:8154 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S263023AbVD2WC5
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Apr 2005 18:02:57 -0400
-In-Reply-To: <OF48BA3721.BD4798AD-ON88256FF2.00680E7E-88256FF2.0069814F@us.ibm.com>
+Received: from smtp811.mail.sc5.yahoo.com ([66.163.170.81]:55631 "HELO
+	smtp811.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S263030AbVD2WXX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Apr 2005 18:23:23 -0400
+In-Reply-To: <4272A506.7020405@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bryan Henderson <hbryan@us.ibm.com>
-Cc: Anton Altaparmakov <aia21@cam.ac.uk>, aia21@hermes.cam.ac.uk, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, mike.miller@hp.com
+To: Mike Christie <mikenc@us.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, iscsi-initiator-core-devel <iscsi-initiator-core-devel@iscsi-initiator-core.org>
 
-On Gwe, 2005-04-29 at 20:11, Bryan Henderson wrote:
-> So I view it as correct even if fsync() does nothing on a disk-based 
-> filesystem because the programmer was lazy (or because the user wants to 
-> defeat the performance-busting behavior of some paranoid application). But 
-> when Alan speaks of a "not completely correct" version of synchronization, 
-> which makes me think of something that doesn't implement any consistent 
-> form of "stable," I want to hear more.
+On Fri, 2005-04-29 at 14:20 -0700, Mike Christie wrote:
+> >>The reason all the settings are stuck on the session was becuase we couldn't
+> >>come to an agreement on the layout. We wanted to do something like this:
+> >>
+> >>/sys/class/iscsi_session/iscsi_connection
+> >>
+> >>or even
+> >>
+> >>/sys/class/iscsi_session
+> >>/sys/class/iscsi_connection
+> >>
+> > 
+> > 
+> > I am still thinking on this one.  First and foremost I think that we
+> > need to get move towards a single class for iSCSI Initiators instead of
+> > what is currently registered (/sys/class/iscsi_transport
+> > and /sys/class/iscsi_host).  Let me keep working on this some more and I
+> > will draft up a prosposal in the near future.  Any futher input is
+> > welcomed. :-)
+> > 
+> 
+> get everyone to agree (or force them) on how to set the initiarname and alias
+> and the iscsi_host can be chopped. the iscsi_host is only there becuase sfnet
+> used a /etc file and I think you can set the initiatorname on some HW cards
+> from a BIOS/OF prompt (or you will not have control over it) so if they ever
+> end up on the same box and wanted to konw what each one ended up as you could.
+> 
 
-On the main fs's people use with a current kernel fsync guarantees the
-data went somewhere. What it guarantees beyond that depends on the fs
-properties, the driver properties and the media properties.
+Ok, one possible solution is when the iSCSI Template structure gets
+registered with the iSCSI Transport, the LLD can tell the transport what
+values are already defined.  I think this point really goes back to
+previous points about different class attributes need to be dynamicly
+registered within the iSCSI Stack when certain events occur.
 
-So ext3 journal=data or jffs which are the strongest guarantee cases
-mean that your fsync() data should be on media and stable. Ditto I
-believe default ext3 behaviour because fsync has stronger rules than
-fdatasync.
+Considering the following:
 
-The next question is what the I/O device does with the data. SCSI disks
-will cache but the scsi layer uses tags and if neccessary turns the
-cache off on the drive. In other words you should get that behaviour
-correctly on SCSI media.
+1) iscsi_attach_transport() is called when the iSCSI Stack is loaded:
 
-The default IDE behaviour doesn't turn write cache off and the IDE
-device may re-order writes and ack them before they hit storage. IDE
-lacks tags, and tends to have poor performance on cache flush commands.
-With the barrier support on the right thing should occur, or with hdparm
-used to turn the write cache off.
+   /sys/class/iscsi_transport/	
 
-Raid controllers will cache data in their writeback caches, they will
-also write and rewrite stripes which can mean a critical failure loses
-the cache or involves a whole stripe loss, but that is very unlikely in
-most modes. The good ones either write through or have battery backed
-caches. The really good ones even let you put the battery/ram unit onto
-another card.
+	a) Initiator[Name,Alias] is not set.
 
-Underlying all of this is the fact that disks aren't really disks any
-more but NAS devices on funky cables, that can mean you can lose blocks
-to drive faults that might not be the block you are currently writing.
+		The stack will set this value later.
 
-Alan
+	b) Initiator[Name,Alais] is set.
+		
+		Assume that ->get_initiator_[name,alias]() will return 
+		values from hardware
+
+2) struct iscsi_channel_class *iscsi_attach_channel(struct
+scsi_transport_template)
+
+   /sys/class/iscsi_transport/iscsi_$CHANNEL_ID.
+
+	Note that for management purposes that $CHANNEL_ID needs to be a
+	value that does not change.  ie: not the SCSI Host ID.
+
+	This registers ALL of the sysfs attributes for both session and 
+	connection contexts.  These values are read/write as these are
+        values that are used as the defaults when sessions/connections
+        are started on said iSCSI Channel.
+
+3) struct iscsi_session_class *iscsi_attach_session(struct
+iscsi_channel_class)
+
+   /sys/class/iscsi_transport/iscsi_$CHANNEL_ID/
+
+	This contains the read only attributes that where negoitated 
+	after successful session establishment.  Note that some of these
+	values need to be write as well. (InitiatorAlias can be changed 
+	after the session is up)
+
+4) struct iscsi_connection_class *iscsi_attach_connection(struct
+iscsi_session_class *, unsigned short cid)
+
+   /sys/class/iscsi_transport/iscsi_$CHANNEL_ID/session/connection_$CID
+
+	This contains the read only attributes that where negoitated
+	after successful connection establishment.  Note that some of
+	these values need to be write as well. 
+	(MaxRecvDataSegmentLength can be changed after the connection
+	up).
+
+Of course the names would probable get changed around a bit, but I think you get the idea.
+
+-- 
+Nicholas A. Bellinger <nick@pyxtechnologies.com>
 
