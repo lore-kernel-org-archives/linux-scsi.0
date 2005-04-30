@@ -1,117 +1,54 @@
-From: Alex Deucher <alexdeucher@gmail.com>
-Subject: Re: Emulex fibre channel HBA support and SAN connection
-Date: Fri, 29 Apr 2005 18:41:44 -0400
-Message-ID: <a728f9f9050429154158fa2718@mail.gmail.com>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201ABC8@xbl3.ad.emulex.com>
-	 <a728f9f90504291311178728bd@mail.gmail.com>
-Reply-To: Alex Deucher <alexdeucher@gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: [PATCH] call correct scsi_done function in scsi_dispatch_cmd
+Date: Fri, 29 Apr 2005 17:20:13 -0700
+Message-ID: <4272CF3D.80808@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/mixed;
+ boundary="------------050009030105020206040109"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.203]:8056 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S263041AbVD2Wlq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Apr 2005 18:41:46 -0400
-Received: by rproxy.gmail.com with SMTP id a41so632257rng
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Apr 2005 15:41:44 -0700 (PDT)
-In-Reply-To: <a728f9f90504291311178728bd@mail.gmail.com>
-Content-Disposition: inline
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:36839 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S263078AbVD3AUU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Apr 2005 20:20:20 -0400
+Received: from [192.168.0.2] ([199.108.226.254])
+	(authenticated bits=0)
+	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id j3U0KJDJ020252
+	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 29 Apr 2005 19:20:19 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James.Smart@emulex.com" <James.Smart@emulex.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-FWIW, this seems to be a sparc64 issue.  after upgrading the firmware
-and testing in a x86 box, all is well, at least on x86.  I'll test on
-AMD64 next week.
+This is a multi-part message in MIME format.
+--------------050009030105020206040109
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Alex
+scsi_dispatch_cmd currently calls scsi_done when the device is in the 
+SDEV_DEL state, but at this point the command has not had a timer added 
+to it (this is done a couple lines down) so scsi_done just returns and 
+the command is lost. The attached patch made against 2.6.12-rc3 calls 
+__scsi_done in this case so the comamnd will be returned upwards.
 
-On 4/29/05, Alex Deucher <alexdeucher@gmail.com> wrote:
-> On 4/29/05, James.Smart@emulex.com <James.Smart@emulex.com> wrote:
-> > Based on the "Unknown IOCB command data" message, this appears to be out of date firmware on the adapter. See http://www.emulex.com/ts/indexemu.html.  There are some hints on downloading firmware at the tail end of  http://sourceforge.net/forum/forum.php?thread_id=1130082&forum_id=355154.
-> >
-> > Note: lpfc issues are best posted to the help areas on http://sourceforge.net/projects/lpfcxxxx/
-> 
-> James,
-> 
->     I just upgraded to the latest firmware on the Emulex website
-> (3.92a2) and I still get the same error:
-> Emulex LightPulse Fibre Channel SCSI driver 8.0.28
-> scsi2 :  on PCI bus 00 device 20 irq 8132864
-> lpfc 0001:00:04.0: 0:1303 Link Up Event x1 received Data: x1 xf7 x8 x0
-> lpfc 0001:00:04.0: 0:0321 Unknown IOCB command Data: x0, xa2 x0 x600 x2900
-> lpfc 0001:00:04.0: 0:0327 Rsp ring 0 error -  command completion for
-> iotag x0 not found
-> ...
-> lpfc 0001:00:04.0: 0:0748 abort handler timed out waiting for abort to
-> complete. Data: x0 x0 x0 x1
-> lpfc 0001:00:04.0: 0:0327 Rsp ring 0 error -  command completion for
-> iotag x700 not found
-> lpfc 0001:00:04.0: 0:0327 Rsp ring 0 error -  command completion for
-> iotag x0 not found
-> 
-> Any ideas?
-> 
-> >
-> > Thanks.
-> >
-> > -- James Smart
-> >    Emulex
-> >
-> > > -----Original Message-----
-> > > From: linux-scsi-owner@vger.kernel.org
-> > > [mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Alex Deucher
-> > > Sent: Thursday, April 28, 2005 6:03 PM
-> > > To: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
-> > > Subject: Emulex fibre channel HBA support and SAN connection
-> > >
-> > >
-> > > Can someone point me to some documentation on setting up a fibre
-> > > channel HBA in linux?  I can't seem to find any useful information.  I
-> > > have a Sun 220R running 2.6.12-rc3 with an emulex LP9000 HBA connected
-> > > to a Nexsan ATABEAST SAN.  I'm using the HBA driver included with the
-> > > 2.6.12rc3 kernel.  I cannot find any information about the GPLed
-> > > emulex driver as far as configuration goes.  The driver seems to come
-> > > up ok, but then I get a series of error codes:
-> > >
-> > > Emulex LightPulse Fibre Channel SCSI driver 8.0.28
-> > > scsi0 :  on PCI bus 00 device 20 irq 8255744
-> > > lpfc 0001:00:04.0: 0:1303 Link Up Event x1 received Data: x1 x1 x8 x2
-> > > lpfc 0001:00:04.0: 0:0321 Unknown IOCB command Data: x0, xa2
-> > > x0 x900 x2600
-> > > ...
-> > > lpfc 0001:00:04.0: 0:0748 abort handler timed out waiting for abort to
-> > > complete. Data: x0 x0 x0 x1
-> > > lpfc 0001:00:04.0: 0:0327 Rsp ring 0 error -  command completion for
-> > > iotag xa00 not found
-> > > lpfc 0001:00:04.0: 0:0327 Rsp ring 0 error -  command completion for
-> > > iotag x0 not found
-> > > lpfc 0001:00:04.0: 0:0713 SCSI layer issued LUN reset (0, 0)
-> > > Data: x2 x0 x0
-> > > lpfc 0001:00:04.0: 0:0327 Rsp ring 0 error -  command completion for
-> > > iotag xb00 not found
-> > > lpfc 0001:00:04.0: 0:0327 Rsp ring 0 error -  command completion for
-> > > iotag x0 not found
-> > > lpfc 0001:00:04.0: 0:0714 SCSI layer issued Bus Reset Data: x2003
-> > > scsi: Device offlined - not ready after error recovery: host 0 channel
-> > > 0 id 0 lun 0
-> > > lpfc 0001:00:04.0: 0:0327 Rsp ring 0 error -  command completion for
-> > > iotag x0 not found
-> > >
-> > > I noticed here:
-> > > http://marc.theaimsgroup.com/?l=linux-scsi&m=111383889908554&w=2
-> > > that there is a new FC API. Was this merged into rc3 or will this
-> > > happen after 2.6.12?  If it's not supported yet in rc3, how does one
-> > > go about configuring it?  I'm willing to test any available tools.
-> > >
-> > > Any help will be greatly appreciated.  I'll be able to test on SPARC64
-> > > right now and on AMD64 in the next few days.
-> > >
-> > > Thanks,
-> > >
-> > > Alex
-> > >
-> > > PS, please CC: me as I'm not subscribed.
->
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+
+--------------050009030105020206040109
+Content-Type: text/x-patch;
+ name="call-correct-done.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="call-correct-done.patch"
+
+--- linux-2.6.12-rc3/drivers/scsi/scsi.c.orig	2005-04-29 17:05:01.323994458 -0700
++++ linux-2.6.12-rc3/drivers/scsi/scsi.c	2005-04-29 17:05:18.406145282 -0700
+@@ -542,7 +542,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
+ 		 * that the device is no longer present */
+ 		cmd->result = DID_NO_CONNECT << 16;
+ 		atomic_inc(&cmd->device->iorequest_cnt);
+-		scsi_done(cmd);
++		__scsi_done(cmd);
+ 		/* return 0 (because the command has been processed) */
+ 		goto out;
+ 	}
+
+--------------050009030105020206040109--
