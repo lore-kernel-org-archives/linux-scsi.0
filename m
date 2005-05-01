@@ -1,39 +1,40 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: [PATCH 2.6.12-rc3] qla1280.c - fix result for device Busy and Queue Full
-Date: Sat, 30 Apr 2005 22:18:48 -0700
-Message-ID: <20050501051847.GA1147569@sgi.com>
+From: Mogens Valentin <monz@danbbs.dk>
+Subject: Re: [Question] Does the kernel ignore errors writng to disk?
+Date: Sun, 01 May 2005 11:01:38 +0200
+Message-ID: <42749AF2.3010107@danbbs.dk>
+References: <OF48BA3721.BD4798AD-ON88256FF2.00680E7E-88256FF2.0069814F@us.ibm.com> <1114812035.18330.396.camel@localhost.localdomain>
+Reply-To: monz@danbbs.dk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx3-ext.sgi.com ([192.48.171.20]:36529 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S261527AbVEAFS4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 May 2005 01:18:56 -0400
-Content-Disposition: inline
+Received: from pfepc.post.tele.dk ([195.41.46.237]:27702 "EHLO
+	pfepc.post.tele.dk") by vger.kernel.org with ESMTP id S261566AbVEAJAt
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 May 2005 05:00:49 -0400
+In-Reply-To: <1114812035.18330.396.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jes@wildopensource.com, hch@lst.de
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Bryan Henderson <hbryan@us.ibm.com>, Anton Altaparmakov <aia21@cam.ac.uk>, aia21@hermes.cam.ac.uk, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, mike.miller@hp.com
 
-I discovered that the qla1280 driver does not send the correct status
-to the midlayer when it gets Queue Full or Busy from a device.
+Alan Cox wrote:
+> The next question is what the I/O device does with the data. SCSI disks
+> will cache but the scsi layer uses tags and if neccessary turns the
+> cache off on the drive. In other words you should get that behaviour
+> correctly on SCSI media.
+> 
+> The default IDE behaviour doesn't turn write cache off and the IDE
+> device may re-order writes and ack them before they hit storage. IDE
+> lacks tags, and tends to have poor performance on cache flush commands.
+> With the barrier support on the right thing should occur, or with hdparm
+> used to turn the write cache off.
 
-Signed-off-by: Jeremy Higdon <jeremy@sgi.com>
+Is this IDE behaviour confined to IDE drives only?
+SATA, when using libata, will solemnly be part of the SCSI chain, and 
+hense not subject to your mentioned write cache problem, right?
 
---- drivers/scsi/qla1280.c.orig	2005-04-30 02:21:08.000000000 -0700
-+++ drivers/scsi/qla1280.c	2005-04-30 21:57:21.000000000 -0700
-@@ -4038,11 +4038,10 @@
- 			scsi_status, handle);
- 	}
- 
--	/* Target busy */
--	if (scsi_status & SS_BUSY_CONDITION &&
--	    scsi_status != SS_RESERVE_CONFLICT) {
--		CMD_RESULT(cmd) =
--			DID_BUS_BUSY << 16 | (scsi_status & 0xff);
-+	/* Target busy or queue full */
-+	if ((scsi_status & 0xFF) == SAM_STAT_TASK_SET_FULL ||
-+	    (scsi_status & 0xFF) == SAM_STAT_BUSY) {
-+		CMD_RESULT(cmd) = scsi_status & 0xff;
- 	} else {
- 
- 		/* Save ISP completion status */
+-- 
+Kind regards,
+Mogens Valentin
+
