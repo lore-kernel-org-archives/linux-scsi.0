@@ -1,64 +1,61 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Mogens Valentin <monz@danbbs.dk>
 Subject: Re: 2.6.12-rc3 won't boot from aic7899
-Date: Sun, 01 May 2005 15:29:58 -0500
-Message-ID: <1114979399.4788.31.camel@mulgrave>
-References: <4269C60C.3070700@cybsft.com> <1114716611.5022.6.camel@mulgrave>
-	 <4271413F.70809@cybsft.com> <1114719624.5022.14.camel@mulgrave>
-	 <42721252.2070902@cybsft.com>
+Date: Mon, 02 May 2005 01:35:07 +0200
+Message-ID: <427567AB.8060904@danbbs.dk>
+References: <4269C60C.3070700@cybsft.com> <1114716611.5022.6.camel@mulgrave>	 <4271413F.70809@cybsft.com> <1114719624.5022.14.camel@mulgrave> <427146F3.5060605@cybsft.com>
+Reply-To: monz@danbbs.dk
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:30088 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262663AbVEAUaF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 May 2005 16:30:05 -0400
-In-Reply-To: <42721252.2070902@cybsft.com>
+Received: from pfepb.post.tele.dk ([195.41.46.236]:44069 "EHLO
+	pfepb.post.tele.dk") by vger.kernel.org with ESMTP id S261426AbVEAXeS
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 May 2005 19:34:18 -0400
+In-Reply-To: <427146F3.5060605@cybsft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "K.R. Foley" <kr@cybsft.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: "K.R. Foley" <kr@cybsft.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Fri, 2005-04-29 at 05:54 -0500, K.R. Foley wrote:
-> I tried the patch that you sent. It looks like its blowing up now in 
-> ahc_send_async. At least now we have an oops to look at. I started 
-> trying to trace through this, but ran out of time. I am sending it on to 
-> you in hopes that you'll be able to figure this out much quicker than I can.
+K.R. Foley wrote:
 
-Well ... there's odd news from this.  I can simulate this pretty well
-just by cutting the upper 8 bits from a wide cable (Which I got right on
-the second attempt; silly me for assuming that the strands in a ribbon
-cable would be numbered 1,2,3 etc. 1,35,2,36 is much more logical ...)
-
-However, when I do this, I get:
-
-  Vendor: HP 36.4G  Model: ST336607LW        Rev: HPC3
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-scsi11:A:1:0: Tagged Queuing enabled.  Depth 32
- target11:0:1: Beginning Domain Validation
-(scsi11:A:1): 6.600MB/s transfers (16bit)
-(scsi11:A:1:0): parity error detected in Data-in phase. SEQADDR(0x84) SCSIRATE(0x80)
- target11:0:1: Wide Transfers Fail
-(scsi11:A:1): 3.300MB/s transfers
-(scsi11:A:1): 40.000MB/s transfers (40.000MHz, offset 63)
- target11:0:1: Ending Domain Validation
-
-Which is what I expected, and also shows that it's not as simple as I
-was thinking: the aic7xxx not propagating the errors and trying to fix
-up on its own.
-
-However, it could be the command is getting lost in error recovery.
-Could you enable logging and boot with the parameter 
-
-scsi_logging_level=0xffff
-
-to give me a better trace of what's going on?
-
-Thanks,
-
-James
+ > James Bottomley wrote:
+ >
+ >>
+ >>> Apr 24 23:23:30 porky kernel: scsi1 : Adaptec AIC7XXX EISA/VLB/PCI 
+SCSI HBA DRIVER, Rev 6.2.36
+ >>> Apr 24 23:23:30 porky kernel:         <Adaptec aic7899 Ultra160 
+SCSI adapter>
+ >>> Apr 24 23:23:30 porky kernel:         aic7899: Ultra160 Wide 
+Channel B, SCSI Id=7, 32/253 SCBs
+ >>> Apr 24 23:23:30 porky kernel: Apr 24 23:23:30 porky kernel: 
+(scsi1:A:0): 20.000MB/s transfers (20.000MHz, offset 15)
+ >>> Apr 24 23:23:31 porky kernel:   Vendor: SEAGATE   Model: SX118273LC 
+        Rev: 6679
+ >>
+ >>
+ >> Yes, that's what I suspected.  Here the internal aic7xxx DV has silently
+ >> configured the drive to be narrow.  Probably because of cable damage or
+ >> something else.
+ >>
+ > Sorry I missed this before. The reason it is doing this is because 
+this drive is connected using an adapter that converts an LC/LV (is this 
+correct, off the top of my head) interface into a standard SCSI (narrow) 
+interface. Could this be HELPING me here?
 
 
-James
+Probably the opposite, but thats what you meant anyway, right :-
 
+I saw this on two Intel 440LX dual pIII 500/550 mobos, a bit different 
+in age and scsi composition.
+I didn't install on either, but neither mobos wouldn't recognize _any_ 
+disks to better than 20MB/s, if at all, using some unnamed converter.
+Same disks (IBM 18G DDYS 10K + 9G DNES 7200) worked just fine with same 
+converter and a 29160 controller.
+
+
+-- 
+Kind regards,
+Mogens Valentin
 
