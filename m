@@ -1,87 +1,64 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: [PATCH 2.6] SCSI tape: fix permissions for SG_IO, etc.
-Date: Sun, 1 May 2005 21:11:55 +0300 (EEST)
-Message-ID: <Pine.LNX.4.61.0505012110050.6783@kai.makisara.local>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: 2.6.12-rc3 won't boot from aic7899
+Date: Sun, 01 May 2005 15:29:58 -0500
+Message-ID: <1114979399.4788.31.camel@mulgrave>
+References: <4269C60C.3070700@cybsft.com> <1114716611.5022.6.camel@mulgrave>
+	 <4271413F.70809@cybsft.com> <1114719624.5022.14.camel@mulgrave>
+	 <42721252.2070902@cybsft.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep31-0.kolumbus.fi ([193.229.0.35]:59629 "EHLO
-	fep31-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S262635AbVEASJm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 May 2005 14:09:42 -0400
-Received: from kai.makisara.local ([84.231.181.72])
-          by fep31-app.kolumbus.fi with ESMTP
-          id <20050501180941.HXTB15588.fep31-app.kolumbus.fi@kai.makisara.local>
-          for <linux-scsi@vger.kernel.org>; Sun, 1 May 2005 21:09:41 +0300
+Received: from stat16.steeleye.com ([209.192.50.48]:30088 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262663AbVEAUaF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 May 2005 16:30:05 -0400
+In-Reply-To: <42721252.2070902@cybsft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "K.R. Foley" <kr@cybsft.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-This patch is against 2.6.12-rc3 + linus-patch from April 30. The patch
-contains the following fixes:
+On Fri, 2005-04-29 at 05:54 -0500, K.R. Foley wrote:
+> I tried the patch that you sent. It looks like its blowing up now in 
+> ahc_send_async. At least now we have an oops to look at. I started 
+> trying to trace through this, but ran out of time. I am sending it on to 
+> you in hopes that you'll be able to figure this out much quicker than I can.
 
-- CAP_SYS_RAWIO is used instead of CAP_SYS_ADMIN; fix from Alan Cox
-- only direct sending of SCSI commands requires this permission
-- the st status is modified is successful unload is performed using
-  SCSI_IOCTL_STOP_UNIT
+Well ... there's odd news from this.  I can simulate this pretty well
+just by cutting the upper 8 bits from a wide cable (Which I got right on
+the second attempt; silly me for assuming that the strands in a ribbon
+cable would be numbered 1,2,3 etc. 1,35,2,36 is much more logical ...)
 
-Signed-off-by: Kai Makisara <kai.makisara@kolumbus.fi>
+However, when I do this, I get:
 
---- linux-2.6.12-rc3-300405/drivers/scsi/st.c	2005-04-05 22:36:16.000000000 +0300
-+++ linux-2.6.12-rc3-300405-k1/drivers/scsi/st.c	2005-05-01 20:45:27.000000000 +0300
-@@ -17,7 +17,7 @@
-    Last modified: 18-JAN-1998 Richard Gooch <rgooch@atnf.csiro.au> Devfs support
-  */
- 
--static char *verstr = "20050312";
-+static char *verstr = "20050501";
- 
- #include <linux/module.h>
- 
-@@ -29,6 +29,7 @@ static char *verstr = "20050312";
- #include <linux/string.h>
- #include <linux/errno.h>
- #include <linux/mtio.h>
-+#include <linux/cdrom.h>
- #include <linux/ioctl.h>
- #include <linux/fcntl.h>
- #include <linux/spinlock.h>
-@@ -50,6 +51,7 @@ static char *verstr = "20050312";
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_ioctl.h>
- #include <scsi/scsi_request.h>
-+#include <scsi/sg.h>
- 
- 
- /* The driver prints some debugging information on the console if DEBUG
-@@ -3463,7 +3465,10 @@ static int st_ioctl(struct inode *inode,
- 		case SCSI_IOCTL_GET_BUS_NUMBER:
- 			break;
- 		default:
--			if (!capable(CAP_SYS_ADMIN))
-+			if ((cmd_in == SG_IO ||
-+			     cmd_in == SCSI_IOCTL_SEND_COMMAND ||
-+			     cmd_in == CDROM_SEND_PACKET) &&
-+			    !capable(CAP_SYS_RAWIO))
- 				i = -EPERM;
- 			else
- 				i = scsi_cmd_ioctl(file, STp->disk, cmd_in, p);
-@@ -3471,10 +3476,12 @@ static int st_ioctl(struct inode *inode,
- 				return i;
- 			break;
- 	}
--	if (!capable(CAP_SYS_ADMIN) &&
--	    (cmd_in == SCSI_IOCTL_START_UNIT || cmd_in == SCSI_IOCTL_STOP_UNIT))
--		return -EPERM;
--	return scsi_ioctl(STp->device, cmd_in, p);
-+	retval = scsi_ioctl(STp->device, cmd_in, p);
-+	if (!retval && cmd_in == SCSI_IOCTL_STOP_UNIT) { /* unload */
-+		STp->rew_at_close = 0;
-+		STp->ready = ST_NO_TAPE;
-+	}
-+	return retval;
- 
-  out:
- 	up(&STp->lock);
+  Vendor: HP 36.4G  Model: ST336607LW        Rev: HPC3
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+scsi11:A:1:0: Tagged Queuing enabled.  Depth 32
+ target11:0:1: Beginning Domain Validation
+(scsi11:A:1): 6.600MB/s transfers (16bit)
+(scsi11:A:1:0): parity error detected in Data-in phase. SEQADDR(0x84) SCSIRATE(0x80)
+ target11:0:1: Wide Transfers Fail
+(scsi11:A:1): 3.300MB/s transfers
+(scsi11:A:1): 40.000MB/s transfers (40.000MHz, offset 63)
+ target11:0:1: Ending Domain Validation
+
+Which is what I expected, and also shows that it's not as simple as I
+was thinking: the aic7xxx not propagating the errors and trying to fix
+up on its own.
+
+However, it could be the command is getting lost in error recovery.
+Could you enable logging and boot with the parameter 
+
+scsi_logging_level=0xffff
+
+to give me a better trace of what's going on?
+
+Thanks,
+
+James
+
+
+James
 
 
