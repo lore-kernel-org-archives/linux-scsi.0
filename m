@@ -1,45 +1,53 @@
-From: "K.R. Foley" <kr@cybsft.com>
-Subject: Re: [PATCH] fix command retries in spi_transport class
-Date: Mon, 02 May 2005 09:20:30 -0500
-Message-ID: <4276372E.7020706@cybsft.com>
-References: <1114991896.4788.44.camel@mulgrave>	 <4276353D.7080204@cybsft.com> <1115043492.5006.0.camel@mulgrave>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [RFC] SAS domain layout for Linux sysfs
+Date: Mon, 02 May 2005 10:30:13 -0400
+Message-ID: <42763975.8010103@adaptec.com>
+References: <425D392F.2080702@adaptec.com> <20050424111908.GA23010@infradead.org> <426D1572.70508@adaptec.com> <20050425161411.GA11938@infradead.org> <426D2723.8070308@adaptec.com> <20050425181831.GA14190@infradead.org> <426E5BAF.4040003@adaptec.com> <20050429100525.GA3342@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail3.utc.com ([192.249.46.192]:21230 "EHLO mail3.utc.com")
-	by vger.kernel.org with ESMTP id S261270AbVEBOUj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2005 10:20:39 -0400
-In-Reply-To: <1115043492.5006.0.camel@mulgrave>
+Received: from magic.adaptec.com ([216.52.22.17]:744 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261271AbVEBOaV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2005 10:30:21 -0400
+In-Reply-To: <20050429100525.GA3342@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, andrew.patterson@hp.com, Eric.Moore@lsil.com, mike.miller@hp.com, dougg@torque.net, Madhuresh_Nagshain@adaptec.com
 
-James Bottomley wrote:
-> On Mon, 2005-05-02 at 09:12 -0500, K.R. Foley wrote:
+On 04/29/05 06:05, Christoph Hellwig wrote:
+> Sure, quoting your initial mail:
 > 
->> [<c0266489>] ahc_set_width+0x109/0x1a0
->> [<c026e661>] ahc_reset_channel+0x301/0x530
->> [<c02646b0>] ahc_handle_scsiint+0x180/0xf80
->> [<c0278208>] ahc_linux_isr+0x218/0x2e0
->> [<c013c80e>] handle_IRQ_event+0x3e/0x90
->> [<c013c937>] __do_IRQ+0xd7/0x160
->> [<c0105666>] do_IRQ+0x26/0x40
->> [<c0103946>] common_interrupt+0x1a/0x20
->> [<c0100c8e>] cpu_idle+0x4e/0x90
->> [<00000000>] 0x0
->> [<dff03fbc>] 0xdff03fbc
+> /----------------------------------------------------------------------
+> | 2. Sysfs SAS Domain
+> | -------------------
+> |
+> | Represent everything which "sits out there" in the SAS
+> | domain, irrespective of how you connect to it.
+> |
+> | /sys/bus/sas/
+> | /sys/bus/sas/<WWN_ta0>/
+> | /sys/bus/sas/<WWN_ta0>/phys/
+> |
+> | ...
+> \----------------------------------------------------------------------
 > 
-> 
-> Actually, you need to reverse the bogus patch to aic7xxx_core.c as
-> well ...  that's what's causing the oops.
-> 
-> James
-> 
-> 
-> 
-Arggg :-) I will try that and report back.
+> Here you have a global hiearchy.  We are not interested in that, though -
+> we only care for what's visible from a certain HBA.
 
--- 
-    kr
+True, it is a "global" hierarchy.  But visiblity from a single HBA
+is also present in /sys/class/sas_ha/... .
+ 
+>>Overall, since the discovery process gets (internally) a "picture"
+>>of the domain out there, it would be appropriate to show this
+>>"picture" to the user.
+> 
+> Absolutely. 
+
+Ok, so then we want some kind of "global" representation?
+Since the discover process (in its attempt to discover topology
+errors) would have to know little or less about the "global" outlook.
+
+	Luben
+
