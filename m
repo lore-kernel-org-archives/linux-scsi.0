@@ -1,44 +1,48 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [RFC] SAS domain layout for Linux sysfs
-Date: Mon, 02 May 2005 10:35:13 -0400
-Message-ID: <42763AA1.7040508@adaptec.com>
-References: <425D392F.2080702@adaptec.com> <20050424111908.GA23010@infradead.org> <426D1572.70508@adaptec.com> <20050425161411.GA11938@infradead.org> <426D2723.8070308@adaptec.com> <20050425181831.GA14190@infradead.org> <426E5BAF.4040003@adaptec.com> <426F86D3.4070909@torque.net> <20050429100848.GB3342@infradead.org>
+From: "K.R. Foley" <kr@cybsft.com>
+Subject: Re: [PATCH] fix command retries in spi_transport class
+Date: Mon, 02 May 2005 09:44:47 -0500
+Message-ID: <42763CDF.7060302@cybsft.com>
+References: <1114991896.4788.44.camel@mulgrave>	 <4276353D.7080204@cybsft.com> <1115043492.5006.0.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:16877 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261272AbVEBOfT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2005 10:35:19 -0400
-In-Reply-To: <20050429100848.GB3342@infradead.org>
+Received: from mail4.utc.com ([192.249.46.193]:37094 "EHLO mail4.utc.com")
+	by vger.kernel.org with ESMTP id S261290AbVEBOo4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2005 10:44:56 -0400
+In-Reply-To: <1115043492.5006.0.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Douglas Gilbert <dougg@torque.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, andrew.patterson@hp.com, Eric.Moore@lsil.com, mike.miller@hp.com, Madhuresh_Nagshain@adaptec.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 04/29/05 06:08, Christoph Hellwig wrote:
-> Note that the current scsi code allows to create custom per-transport
-> objects below the target object.  We're using that in the fibre channel
-> transport class for the concept of remote ports.
-
-Yes, I've been meaning to ask about this... since a SAS host adapter
-(class) has ports (class?) which has phys (class), so there's this
-hierarchy between those to-be transport classes.
-
-Is this doable given the current infrastructure?
-
-(I guess when it comes down to it one can represent a sub-class as
- an "attribute" or even as a linked list...) 
- 
->>Once the SAS discovery algorithm has been run should we
->>show its results in sysfs??
+James Bottomley wrote:
+> On Mon, 2005-05-02 at 09:12 -0500, K.R. Foley wrote:
+> 
+>> [<c0266489>] ahc_set_width+0x109/0x1a0
+>> [<c026e661>] ahc_reset_channel+0x301/0x530
+>> [<c02646b0>] ahc_handle_scsiint+0x180/0xf80
+>> [<c0278208>] ahc_linux_isr+0x218/0x2e0
+>> [<c013c80e>] handle_IRQ_event+0x3e/0x90
+>> [<c013c937>] __do_IRQ+0xd7/0x160
+>> [<c0105666>] do_IRQ+0x26/0x40
+>> [<c0103946>] common_interrupt+0x1a/0x20
+>> [<c0100c8e>] cpu_idle+0x4e/0x90
+>> [<00000000>] 0x0
+>> [<dff03fbc>] 0xdff03fbc
 > 
 > 
-> I think so, yes.  Similar to how we have all fibre channel remote ports
-> in sysfs, even if they are not scsi targets.
+> Actually, you need to reverse the bogus patch to aic7xxx_core.c as
+> well ...  that's what's causing the oops.
+> 
+> James
 
-Ok, we can show this from each HA (/sys/class/sas_ha/...) but you do not
-want the existence of /sys/bus/sas/... where things are consolidated.
-I guess that's ok, and if needed, it can always be implemented later.
+James,
 
-	Luben
+All I can tell you for sure is that it didn't boot. I will have to look 
+at this evening when I get home.
+
+Thanks,
+
+-- 
+    kr
