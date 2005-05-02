@@ -1,52 +1,71 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/sym53c416.c: fix a wrong check
-Date: Mon, 2 May 2005 03:47:10 +0200
-Message-ID: <20050502014710.GA3592@stusta.de>
+From: "Ju, Seokmann" <sju@lsil.com>
+Subject: RE: LSI Logic's Ultra320 320-4X RAID adapter
+Date: Mon, 2 May 2005 08:56:10 -0400
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E5703662836@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:39184 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261667AbVEBBrM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 1 May 2005 21:47:12 -0400
-Content-Disposition: inline
+Received: from [147.145.40.20] ([147.145.40.20]:1187 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261212AbVEBM4p (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2005 08:56:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: lw_linux@hotmail.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "'kallol@nucleodyne.com'" <kallol@nucleodyne.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: "Ju, Seokmann" <sju@lsil.com>
 
-The Coverity checker found that this for loop was wrong.
+On Saturday, April 30, 2005 9:02 PM, Kallol wrote:
+> The memory space PCI register access can not be used.
+I'm not sure what this means. Can you please add more details on it?
 
-This patch changes it to what seems to be intended.
+> Question #1: Does 320-4X support IO Space device register access?
+No, the controller does not support IO mapped I/O.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> Question #2: Do we have a linux driver for it that supports 
+> IO ports also?
+Yes, to support LSI MegaRAID controllers (typically old controllers), driver
+on the 2.4 kernel supports I/O mapped I/O.
 
----
+Thank you.
 
-This patch was already sent on:
-- 10 Apr 2005
+Seokmann
+LSI Logic Corporation.
 
---- linux-2.6.12-rc2-mm2-full/drivers/scsi/sym53c416.c.old	2005-04-09 22:16:04.000000000 +0200
-+++ linux-2.6.12-rc2-mm2-full/drivers/scsi/sym53c416.c	2005-04-09 22:16:28.000000000 +0200
-@@ -803,19 +803,19 @@
- static int sym53c416_host_reset(Scsi_Cmnd *SCpnt)
- {
- 	int base;
- 	int scsi_id = -1;	
- 	int i;
- 
- 	/* printk("sym53c416_reset\n"); */
- 	base = SCpnt->device->host->io_port;
- 	/* search scsi_id - fixme, we shouldnt need to iterate for this! */
--	for(i = 0; i < host_index && scsi_id != -1; i++)
-+	for(i = 0; i < host_index && scsi_id == -1; i++)
- 		if(hosts[i].base == base)
- 			scsi_id = hosts[i].scsi_id;
- 	outb(RESET_CHIP, base + COMMAND_REG);
- 	outb(NOOP | PIO_MODE, base + COMMAND_REG);
- 	outb(RESET_SCSI_BUS, base + COMMAND_REG);
- 	sym53c416_init(base, scsi_id);
- 	return SUCCESS;
- }
- 
-
+> -----Original Message-----
+> From: kallol@nucleodyne.com [mailto:kallol@nucleodyne.com] 
+> Sent: Saturday, April 30, 2005 9:02 PM
+> To: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: LSI Logic's Ultra320 320-4X RAID adapter
+> 
+> 
+> 
+> Hello,
+>       We have been evaluting different IO adapters for a 
+> storage system vendor.
+> 
+> LSI logic's 320-4X RAID controller seems to be a good choice.
+> 
+> There is an issue with the system on which we are measuring 
+> performance.
+> The memory space PCI register access can not be used.
+> 
+> Question #1: Does 320-4X support IO Space device register access?
+> Question #2: Do we have a linux driver for it that supports 
+> IO ports also?
+> 
+> The megaraid linux driver seems to check the BAR0, if it is 
+> memory bar then mem
+> space is used otherwise IO space.
+> 
+> May be the adapter supporting memory space also support IO 
+> space access.
+> 
+> 
+> Thanks,
+> Kallol
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
