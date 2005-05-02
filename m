@@ -1,48 +1,92 @@
-From: "K.R. Foley" <kr@cybsft.com>
-Subject: Re: [PATCH] fix command retries in spi_transport class
-Date: Mon, 02 May 2005 09:44:47 -0500
-Message-ID: <42763CDF.7060302@cybsft.com>
-References: <1114991896.4788.44.camel@mulgrave>	 <4276353D.7080204@cybsft.com> <1115043492.5006.0.camel@mulgrave>
+From: Kallol Biswas <kallol@nucleodyne.com>
+Subject: RE: LSI Logic's Ultra320 320-4X RAID adapter
+Date: 02 May 2005 09:17:37 -0700
+Message-ID: <1115050656.31377.4.camel@driver>
+References: <0E3FA95632D6D047BA649F95DAB60E5703662836@exa-atlanta>
+Reply-To: kallol@nucleodyne.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail4.utc.com ([192.249.46.193]:37094 "EHLO mail4.utc.com")
-	by vger.kernel.org with ESMTP id S261290AbVEBOo4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2005 10:44:56 -0400
-In-Reply-To: <1115043492.5006.0.camel@mulgrave>
+Received: from rwcrmhc12.comcast.net ([216.148.227.85]:60387 "EHLO
+	rwcrmhc12.comcast.net") by vger.kernel.org with ESMTP
+	id S261417AbVEBQ2C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 May 2005 12:28:02 -0400
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703662836@exa-atlanta>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Ju, Seokmann" <sju@lsil.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-James Bottomley wrote:
-> On Mon, 2005-05-02 at 09:12 -0500, K.R. Foley wrote:
+The system's PCI bridge is broken,  MEM Mapped IO does not work.
+
+Only we can use IO mapped IO to access PCI devices(inb, outb) those are
+behind the bridge.
+
+I am looking for a LSI mega raid adapter (SCSI, SATA or SAS) that
+supports IO mapped IO and has a  linux driver for it.
+
+
+
+On Mon, 2005-05-02 at 05:56, Ju, Seokmann wrote:
+> On Saturday, April 30, 2005 9:02 PM, Kallol wrote:
+> > The memory space PCI register access can not be used.
+> I'm not sure what this means. Can you please add more details on it?
 > 
->> [<c0266489>] ahc_set_width+0x109/0x1a0
->> [<c026e661>] ahc_reset_channel+0x301/0x530
->> [<c02646b0>] ahc_handle_scsiint+0x180/0xf80
->> [<c0278208>] ahc_linux_isr+0x218/0x2e0
->> [<c013c80e>] handle_IRQ_event+0x3e/0x90
->> [<c013c937>] __do_IRQ+0xd7/0x160
->> [<c0105666>] do_IRQ+0x26/0x40
->> [<c0103946>] common_interrupt+0x1a/0x20
->> [<c0100c8e>] cpu_idle+0x4e/0x90
->> [<00000000>] 0x0
->> [<dff03fbc>] 0xdff03fbc
+> > Question #1: Does 320-4X support IO Space device register access?
+> No, the controller does not support IO mapped I/O.
 > 
+> > Question #2: Do we have a linux driver for it that supports 
+> > IO ports also?
+> Yes, to support LSI MegaRAID controllers (typically old controllers), driver
+> on the 2.4 kernel supports I/O mapped I/O.
 > 
-> Actually, you need to reverse the bogus patch to aic7xxx_core.c as
-> well ...  that's what's causing the oops.
+> Thank you.
 > 
-> James
+> Seokmann
+> LSI Logic Corporation.
+> 
+> > -----Original Message-----
+> > From: kallol@nucleodyne.com [mailto:kallol@nucleodyne.com] 
+> > Sent: Saturday, April 30, 2005 9:02 PM
+> > To: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+> > Subject: LSI Logic's Ultra320 320-4X RAID adapter
+> > 
+> > 
+> > 
+> > Hello,
+> >       We have been evaluting different IO adapters for a 
+> > storage system vendor.
+> > 
+> > LSI logic's 320-4X RAID controller seems to be a good choice.
+> > 
+> > There is an issue with the system on which we are measuring 
+> > performance.
+> > The memory space PCI register access can not be used.
+> > 
+> > Question #1: Does 320-4X support IO Space device register access?
+> > Question #2: Do we have a linux driver for it that supports 
+> > IO ports also?
+> > 
+> > The megaraid linux driver seems to check the BAR0, if it is 
+> > memory bar then mem
+> > space is used otherwise IO space.
+> > 
+> > May be the adapter supporting memory space also support IO 
+> > space access.
+> > 
+> > 
+> > Thanks,
+> > Kallol
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe 
+> > linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
-James,
-
-All I can tell you for sure is that it didn't boot. I will have to look 
-at this evening when I get home.
-
-Thanks,
-
--- 
-    kr
