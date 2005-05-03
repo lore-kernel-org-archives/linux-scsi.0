@@ -1,67 +1,48 @@
-From: Paulo Marques <pmarques@grupopie.com>
-Subject: Re: Empty partition nodes not created (was device node issues with
- recent mm's and udev)
-Date: Tue, 03 May 2005 11:55:56 +0100
-Message-ID: <427758BC.1090906@grupopie.com>
-References: <d4757e6005050219514ece0c0a@mail.gmail.com>	<20050503031421.GA528@kroah.com> <20050502202620.04467bbd.rddunlap@osdl.org>
+From: Lars Marowsky-Bree <lmb@suse.de>
+Subject: Re: Re: fastfail operation and retries
+Date: Tue, 3 May 2005 13:11:02 +0200
+Message-ID: <20050503111102.GJ1285@marowsky-bree.de>
+References: <OF8721F851.2661040F-ONC1256FEA.0076595E-C1256FEA.00768C46@de.ibm.com>
+	<20050421222409.GY17315@marowsky-bree.de>
+	<ac71172a050422121365a32cc3@mail.gmail.com>
+	<eada2a070504251656762a8625@mail.gmail.com>
+	<20050427144406.GK4431@marowsky-bree.de>
+	<eada2a0705042715573dd04ab1@mail.gmail.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [195.23.16.24] ([195.23.16.24]:37778 "EHLO
-	bipbip.comserver-pie.com") by vger.kernel.org with ESMTP
-	id S261449AbVECK4u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 May 2005 06:56:50 -0400
-In-Reply-To: <20050502202620.04467bbd.rddunlap@osdl.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <eada2a0705042715573dd04ab1@mail.gmail.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Tim Pepper <tpepper@gmail.com>, device-mapper development <dm-devel@redhat.com>
+Cc: tranlan@us.ibm.com, Linux SCSI <linux-scsi@vger.kernel.org>, aherrman@de.ibm.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rddunlap@osdl.org>
-Cc: Greg KH <greg@kroah.com>, joecool1029@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org
 
-Randy.Dunlap wrote:
-> On Mon, 2 May 2005 20:14:21 -0700 Greg KH wrote:
-> 
-> | On Mon, May 02, 2005 at 10:51:24PM -0400, Joe wrote:
-> | > Ok, first off I'd like to say, I am on 2.6.12-rc3-mm2, and this issue
-> | > is not fixed at all.  Secondly, I'd like to say that I've pinpointed
-> | > it a bit more.  It appears only Empty partitions (type 0 in fdisk) do
-> | > not create device nodes.
-> | > 
-> | > Here is the partition table from fdisk, fdisk does run fine.. its just
-> | > the fact this node is not created that threw me off before.
-> | > 
-> | >    Device Boot      Start         End      Blocks   Id  System
-> | > /dev/sdb1   *           1           2       16033+   0  Empty
-> | > /dev/sdb2   *           6        2431    19486845    b  W95 FAT32
-> | > /dev/sdb3               3           5       24097+  83  Linux
-> | > 
-> | > 
-> | > Notice, /dev/sdb1 is a Empty partition... in /dev I only have sdb,
-> | > sdb2, and sdb3.  No sdb1.  Any help would be appreciated.
-> | 
-> | Looks like it might be a scsi issue.  Redirecting to that mailing list
-> | now.  Anyone here have a clue?
-> 
-> Could this 2.6.11.8 -stable patch fix it?
-> Subject: [04/07] partitions/msdos.c fix
-> 
-> Joe, can you test 2.6.11.8, please?
+On 2005-04-27T15:57:09, Tim Pepper <tpepper@gmail.com> wrote:
 
-It seems to me that this exactly the other way around. The patch is 
-probably already in -mm and is doing what it is supposed to do: don't 
-report partitions whose system ID == 0.
+> > User-space needs to take action and tell us when to stop queuing.
+> Is there any risk of priority inversion?
 
-Can you try to give the empty partition a type different than zero? You 
-don't need to make a file system on it or anything, just change the type.
+That risk of course always exists (and it'd exist in the kernel too).
+The code in question needs to be auditted to make sure this case is
+taken care of.
 
-Or check if the patch Randy is pointing to is already in your tree and 
-revert it.
 
-I think this is a good argument not to include this patch on the -stable 
-release...
+Sincerely,
+    Lars Marowsky-Br=E9e <lmb@suse.de>
 
--- 
-Paulo Marques - www.grupopie.com
-
-All that is necessary for the triumph of evil is that good men do nothing.
-Edmund Burke (1729 - 1797)
+--=20
+High Availability & Clustering
+SUSE Labs, Research and Development
+SUSE LINUX Products GmbH - A Novell Business	 -- Charles Darwin
+"Ignorance more frequently begets confidence than does knowledge"
