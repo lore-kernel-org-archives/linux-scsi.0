@@ -1,57 +1,57 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [PATCH 2.6.11.8] SCSI tape security: require CAP_SYS_RAWIO for SG_IO etc.
-Date: Tue, 3 May 2005 14:02:47 -0700
-Message-ID: <20050503204614.GA15976@suse.de>
-References: <Pine.LNX.4.61.0504301055500.21122@kai.makisara.local> <Pine.LNX.4.61.0505012051300.6783@kai.makisara.local>
+From: Joe <joecool1029@gmail.com>
+Subject: Re: Empty partition nodes not created (was device node issues with recent mm's and udev)
+Date: Tue, 3 May 2005 19:34:24 -0400
+Message-ID: <d4757e60050503163472dacf5a@mail.gmail.com>
+References: <d4757e6005050219514ece0c0a@mail.gmail.com>
+	 <20050503031421.GA528@kroah.com>
+	 <20050502202620.04467bbd.rddunlap@osdl.org>
+	 <427758BC.1090906@grupopie.com>
+Reply-To: Joe <joecool1029@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lyle.provo.novell.com ([137.65.81.174]:602 "EHLO
-	lyle.provo.novell.com") by vger.kernel.org with ESMTP
-	id S261700AbVECVCu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 May 2005 17:02:50 -0400
+Received: from rproxy.gmail.com ([64.233.170.193]:25315 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261920AbVECXe1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 May 2005 19:34:27 -0400
+Received: by rproxy.gmail.com with SMTP id a41so61590rng
+        for <linux-scsi@vger.kernel.org>; Tue, 03 May 2005 16:34:27 -0700 (PDT)
+In-Reply-To: <427758BC.1090906@grupopie.com>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.61.0505012051300.6783@kai.makisara.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: Paulo Marques <pmarques@grupopie.com>, "Randy.Dunlap" <rddunlap@osdl.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Greg KH <greg@kroah.com>
 
-On Sun, May 01, 2005 at 08:56:06PM +0300, Kai Makisara wrote:
-> On Sat, 30 Apr 2005, Kai Makisara wrote:
+On 5/3/05, Paulo Marques <pmarques@grupopie.com> wrote:
+> Randy.Dunlap wrote:
+> > Could this 2.6.11.8 -stable patch fix it?
+> > Subject: [04/07] partitions/msdos.c fix
+> >
+> > Joe, can you test 2.6.11.8, please?
 > 
-> > The patch at the end is against 2.6.11.8.
-> > 
-> > The kernel currently allows any user permitted to access the tape device file
-> > to send the tape drive commands that may either make the tape drivers internal
-> ...
-> > filtering. This patch solves the problem for tapes and no more elaborate
-> > patches are needed. If those are merged to the kernel, this patch can be reversed.
-> > 
-> > Signed-off-by: Kai Makisara <kai.makisara@kolumbus.fi>
-> > 
-> > --- linux-2.6.11.8/drivers/scsi/st.c	2005-03-03 21:10:36.000000000 +0200
-> > +++ linux-2.6.11.8-k1/drivers/scsi/st.c	2005-04-30 09:57:21.000000000 +0300
-> > @@ -3414,7 +3414,10 @@ static int st_ioctl(struct inode *inode,
-> >  		case SCSI_IOCTL_GET_BUS_NUMBER:
-> >  			break;
-> >  		default:
-> > -			i = scsi_cmd_ioctl(file, STp->disk, cmd_in, p);
-> > +			if (!capable(CAP_SYS_RAWIO))
-> > +				i = -EPERM;
-> > +			else
-> > +				i = scsi_cmd_ioctl(file, STp->disk, cmd_in, p);
-> >  			if (i != -ENOTTY)
-> >  				return i;
-> >  			break;
+> It seems to me that this exactly the other way around. The patch is
+> probably already in -mm and is doing what it is supposed to do: don't
+> report partitions whose system ID == 0.
 > 
-> Please hold this patch. Testing the corresponding patch for 2.6.12-rc
-> showed that this is too restrictive. Best to wait until the next versions 
-> will be reviewed on the linux-scsi list and merged into -rc.
+> Can you try to give the empty partition a type different than zero? You
+> don't need to make a file system on it or anything, just change the type.
+> 
+> Or check if the patch Randy is pointing to is already in your tree and
+> revert it.
+> 
+> I think this is a good argument not to include this patch on the -stable
+> release...
+> 
+> --
+> Paulo Marques - www.grupopie.com
+> 
+> All that is necessary for the triumph of evil is that good men do nothing.
+> Edmund Burke (1729 - 1797)
+> 
 
-Ok, when you come up with something that is acceptable, care to email it
-also to the stable@kernel.org people?
+You would be correct.. that patch is already in MM.. so this issue
+continues, more input necessary.
 
-thanks,
-
-greg k-h
+Joe
