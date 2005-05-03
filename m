@@ -1,42 +1,41 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: LSI Logic's Ultra320 320-4X RAID adapter
-Date: Mon, 2 May 2005 22:32:33 -0500
-Message-ID: <20050503033233.GA31387@lists.us.dell.com>
-References: <0E3FA95632D6D047BA649F95DAB60E5703662836@exa-atlanta> <1115050656.31377.4.camel@driver>
+From: Joe <joecool1029@gmail.com>
+Subject: Re: Empty partition nodes not created (was device node issues with recent mm's and udev)
+Date: Tue, 3 May 2005 00:18:05 -0400
+Message-ID: <d4757e600505022118131ec083@mail.gmail.com>
+References: <d4757e6005050219514ece0c0a@mail.gmail.com>
+	 <20050503031421.GA528@kroah.com>
+	 <20050502202620.04467bbd.rddunlap@osdl.org>
+Reply-To: Joe <joecool1029@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausc60ps301.us.dell.com ([143.166.148.206]:14503 "EHLO
-	ausc60ps301.us.dell.com") by vger.kernel.org with ESMTP
-	id S261343AbVECDcr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 May 2005 23:32:47 -0400
+Received: from rproxy.gmail.com ([64.233.170.201]:5527 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261373AbVECESL convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 May 2005 00:18:11 -0400
+Received: by rproxy.gmail.com with SMTP id a41so1014760rng
+        for <linux-scsi@vger.kernel.org>; Mon, 02 May 2005 21:18:07 -0700 (PDT)
+In-Reply-To: <20050502202620.04467bbd.rddunlap@osdl.org>
 Content-Disposition: inline
-In-Reply-To: <1115050656.31377.4.camel@driver>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kallol Biswas <kallol@nucleodyne.com>
-Cc: "Ju, Seokmann" <sju@lsil.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Randy.Dunlap" <rddunlap@osdl.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>, Greg KH <greg@kroah.com>
 
-On Mon, May 02, 2005 at 09:17:37AM -0700, Kallol Biswas wrote:
-> The system's PCI bridge is broken,  MEM Mapped IO does not work.
+On 5/2/05, Randy.Dunlap <rddunlap@osdl.org> wrote:
+> Could this 2.6.11.8 -stable patch fix it?
+> Subject: [04/07] partitions/msdos.c fix
 > 
-> Only we can use IO mapped IO to access PCI devices(inb, outb) those are
-> behind the bridge.
+> Joe, can you test 2.6.11.8, please?
 > 
-> I am looking for a LSI mega raid adapter (SCSI, SATA or SAS) that
-> supports IO mapped IO and has a  linux driver for it.
+> ---
+> ~Randy
+> 
 
-that would be an extremely old (>6 years old, fast wide scsi at best)
-controller, which only the 2.6 kernel 'megaraid' driver (not
-megaraid_mbox) currently supports.
-
-Perhaps consider a different system with a working PCI bridge?
+Randy, Can't run vanilla at the moment on this setup, any way you can
+get the patch seperate?  I also don't think that will fix it because
+this is an empty, not a msdos partition.
 
 Thanks,
-Matt
-
--- 
-Matt Domsch
-Software Architect
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+Joe
