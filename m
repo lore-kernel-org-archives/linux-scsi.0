@@ -1,37 +1,67 @@
-From: "Ulrich Windl" <ulrich.windl@rz.uni-regensburg.de>
-Subject: For free: Two Adaptec AHA 2742 (Dual Channel EISA Controller with floppy controller)
-Date: Tue, 03 May 2005 09:14:24 +0200
-Message-ID: <427740F0.15175.13B51A67@rkdvmks1.ngate.uni-regensburg.de>
+From: Paulo Marques <pmarques@grupopie.com>
+Subject: Re: Empty partition nodes not created (was device node issues with
+ recent mm's and udev)
+Date: Tue, 03 May 2005 11:55:56 +0100
+Message-ID: <427758BC.1090906@grupopie.com>
+References: <d4757e6005050219514ece0c0a@mail.gmail.com>	<20050503031421.GA528@kroah.com> <20050502202620.04467bbd.rddunlap@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rrzmta2.rz.uni-regensburg.de ([132.199.1.17]:42987 "EHLO
-	rrzmta2.rz.uni-regensburg.de") by vger.kernel.org with ESMTP
-	id S261413AbVECHPK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 May 2005 03:15:10 -0400
-Received: from rrzmta2.rz.uni-regensburg.de (localhost [127.0.0.1])
-	by localhost (Postfix) with SMTP id 25A0614AA7
-	for <linux-scsi@vger.kernel.org>; Tue,  3 May 2005 09:15:11 +0200 (CEST)
-Received: from mailgate.dvm.klinik.uni-regensburg.de (kgate2.klinik.uni-regensburg.de [132.199.176.19])
-	by rrzmta2.rz.uni-regensburg.de (Postfix) with ESMTP id 2151A14A77
-	for <linux-scsi@vger.kernel.org>; Tue,  3 May 2005 09:15:11 +0200 (CEST)
-Received: from rkdvmks1.ngate.uni-regensburg.de (rkdvmks1.dvm.klinik.uni-regensburg.de [132.199.176.1])
-	by mailgate.dvm.klinik.uni-regensburg.de (8.13.1/8.13.1/20050204MT-1) with ESMTP id j437EpB2018078
-	for <linux-scsi@vger.kernel.org>; Tue, 3 May 2005 09:15:06 +0200
-Content-description: Mail message body
+Received: from [195.23.16.24] ([195.23.16.24]:37778 "EHLO
+	bipbip.comserver-pie.com") by vger.kernel.org with ESMTP
+	id S261449AbVECK4u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 May 2005 06:56:50 -0400
+In-Reply-To: <20050502202620.04467bbd.rddunlap@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Randy.Dunlap" <rddunlap@osdl.org>
+Cc: Greg KH <greg@kroah.com>, joecool1029@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org
 
-Hi,
+Randy.Dunlap wrote:
+> On Mon, 2 May 2005 20:14:21 -0700 Greg KH wrote:
+> 
+> | On Mon, May 02, 2005 at 10:51:24PM -0400, Joe wrote:
+> | > Ok, first off I'd like to say, I am on 2.6.12-rc3-mm2, and this issue
+> | > is not fixed at all.  Secondly, I'd like to say that I've pinpointed
+> | > it a bit more.  It appears only Empty partitions (type 0 in fdisk) do
+> | > not create device nodes.
+> | > 
+> | > Here is the partition table from fdisk, fdisk does run fine.. its just
+> | > the fact this node is not created that threw me off before.
+> | > 
+> | >    Device Boot      Start         End      Blocks   Id  System
+> | > /dev/sdb1   *           1           2       16033+   0  Empty
+> | > /dev/sdb2   *           6        2431    19486845    b  W95 FAT32
+> | > /dev/sdb3               3           5       24097+  83  Linux
+> | > 
+> | > 
+> | > Notice, /dev/sdb1 is a Empty partition... in /dev I only have sdb,
+> | > sdb2, and sdb3.  No sdb1.  Any help would be appreciated.
+> | 
+> | Looks like it might be a scsi issue.  Redirecting to that mailing list
+> | now.  Anyone here have a clue?
+> 
+> Could this 2.6.11.8 -stable patch fix it?
+> Subject: [04/07] partitions/msdos.c fix
+> 
+> Joe, can you test 2.6.11.8, please?
 
-I would donate two Adaptec EISA 2742 dual channel SCSI controllers (with optional 
-floppy controller onboard) for developers or any interested user. However you 
-would have to pay postal fees (shipping).
+It seems to me that this exactly the other way around. The patch is 
+probably already in -mm and is doing what it is supposed to do: don't 
+report partitions whose system ID == 0.
 
-If you are interested, please reply to me.
+Can you try to give the empty partition a type different than zero? You 
+don't need to make a file system on it or anything, just change the type.
 
-Regards,
-Ulrich
+Or check if the patch Randy is pointing to is already in your tree and 
+revert it.
 
+I think this is a good argument not to include this patch on the -stable 
+release...
+
+-- 
+Paulo Marques - www.grupopie.com
+
+All that is necessary for the triumph of evil is that good men do nothing.
+Edmund Burke (1729 - 1797)
