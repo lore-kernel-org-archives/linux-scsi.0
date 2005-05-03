@@ -1,109 +1,37 @@
-From: "Randy.Dunlap" <rddunlap@osdl.org>
-Subject: Re: Empty partition nodes not created (was device node issues with
- recent mm's and udev)
-Date: Mon, 2 May 2005 22:16:07 -0700
-Message-ID: <20050502221607.0db797d2.rddunlap@osdl.org>
-References: <d4757e6005050219514ece0c0a@mail.gmail.com>
-	<20050503031421.GA528@kroah.com>
-	<20050502202620.04467bbd.rddunlap@osdl.org>
-	<d4757e600505022118131ec083@mail.gmail.com>
+From: "Ulrich Windl" <ulrich.windl@rz.uni-regensburg.de>
+Subject: For free: Two Adaptec AHA 2742 (Dual Channel EISA Controller with floppy controller)
+Date: Tue, 03 May 2005 09:14:24 +0200
+Message-ID: <427740F0.15175.13B51A67@rkdvmks1.ngate.uni-regensburg.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:2011 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261392AbVECFQS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 May 2005 01:16:18 -0400
-In-Reply-To: <d4757e600505022118131ec083@mail.gmail.com>
+Received: from rrzmta2.rz.uni-regensburg.de ([132.199.1.17]:42987 "EHLO
+	rrzmta2.rz.uni-regensburg.de") by vger.kernel.org with ESMTP
+	id S261413AbVECHPK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 May 2005 03:15:10 -0400
+Received: from rrzmta2.rz.uni-regensburg.de (localhost [127.0.0.1])
+	by localhost (Postfix) with SMTP id 25A0614AA7
+	for <linux-scsi@vger.kernel.org>; Tue,  3 May 2005 09:15:11 +0200 (CEST)
+Received: from mailgate.dvm.klinik.uni-regensburg.de (kgate2.klinik.uni-regensburg.de [132.199.176.19])
+	by rrzmta2.rz.uni-regensburg.de (Postfix) with ESMTP id 2151A14A77
+	for <linux-scsi@vger.kernel.org>; Tue,  3 May 2005 09:15:11 +0200 (CEST)
+Received: from rkdvmks1.ngate.uni-regensburg.de (rkdvmks1.dvm.klinik.uni-regensburg.de [132.199.176.1])
+	by mailgate.dvm.klinik.uni-regensburg.de (8.13.1/8.13.1/20050204MT-1) with ESMTP id j437EpB2018078
+	for <linux-scsi@vger.kernel.org>; Tue, 3 May 2005 09:15:06 +0200
+Content-description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe <joecool1029@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org, greg@kroah.com
+To: linux-scsi@vger.kernel.org
 
-On Tue, 3 May 2005 00:18:05 -0400 Joe wrote:
+Hi,
 
-| On 5/2/05, Randy.Dunlap <rddunlap@osdl.org> wrote:
-| > Could this 2.6.11.8 -stable patch fix it?
-| > Subject: [04/07] partitions/msdos.c fix
-| > 
-| > Joe, can you test 2.6.11.8, please?
-| > 
-| > ---
-| > ~Randy
-| > 
-| 
-| Randy, Can't run vanilla at the moment on this setup, any way you can
-| get the patch seperate?  I also don't think that will fix it because
-| this is an empty, not a msdos partition.
+I would donate two Adaptec EISA 2742 dual channel SCSI controllers (with optional 
+floppy controller onboard) for developers or any interested user. However you 
+would have to pay postal fees (shipping).
 
-Yeah, I could be way off on this.  Anyway, the patch is below.
+If you are interested, please reply to me.
 
----
-~Randy
+Regards,
+Ulrich
 
-
-
-------------------
-
-Erik reports this fixes an oops on boot for him.
-
-From: Andries Brouwer <Andries.Brouwer@cwi.nl>
-
-A well-known kernel bug is that it guesses at the partition type and the
-partitions on any disk it encounters.  This is bad because needless I/O is
-done, slowing down the boot, sometimes quite a lot, especially when I/O
-errors occur.  And it is bad because sometimes we guess wrong.
-
-In other words, we need the user space command `partition', where
-"partition -t dos /dev/sda" reads a DOS-type partition table.  (And
-"partition /dev/sda" tries all known heuristics to decide what type of
-partitioning might be present.) The two variants are: (i) partition tells
-the kernel to do the partition table reading, and (ii) partition uses partx
-to read the partition table and tells the kernel one-by-one about the
-partitions found this way.
-
-Since this is a fundamental change, a long transition period is needed, and
-that period could start with a kernel boot parameter telling the kernel not
-to do partition table parsing on a particular disk, or a particular type of
-disks, or all disks.
-
-This could have been the intro to a patch doing that, but is not.  (It is
-just an RFC.)
-
-The tiny patch below prompted the above - it was suggested by Uwe Bonnes
-who encountered USB devices without partition table where our present
-heuristics did not suffice to stop partition table parsing.  It causes the
-kernel to ignore partitions of type 0.  A band-aid.
-
-I think nobody uses such partitions seriously, but nevertheless this should
-probably live in -mm for a while to see if anybody complains.
-
-Signed-off-by: Andrew Morton <akpm@osdl.org>
-Signed-off-by: Linus Torvalds <torvalds@osdl.org>
-Signed-off-by: Chris Wright <chrisw@osdl.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
----
-
-===== fs/partitions/msdos.c 1.26 vs 1.27 =====
---- 1.26/fs/partitions/msdos.c	2004-11-09 12:43:17 -08:00
-+++ 1.27/fs/partitions/msdos.c	2005-03-07 20:41:42 -08:00
-@@ -114,6 +114,9 @@ parse_extended(struct parsed_partitions 
- 		 */
- 		for (i=0; i<4; i++, p++) {
- 			u32 offs, size, next;
-+
-+			if (SYS_IND(p) == 0)
-+				continue;
- 			if (!NR_SECTS(p) || is_extended_partition(p))
- 				continue;
- 
-@@ -430,6 +433,8 @@ int msdos_partition(struct parsed_partit
- 	for (slot = 1 ; slot <= 4 ; slot++, p++) {
- 		u32 start = START_SECT(p)*sector_size;
- 		u32 size = NR_SECTS(p)*sector_size;
-+		if (SYS_IND(p) == 0)
-+			continue;
- 		if (!size)
- 			continue;
- 		if (is_extended_partition(p)) {
--
