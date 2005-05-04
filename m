@@ -1,30 +1,71 @@
-From: Grant Coady <grant_lkml@dodo.com.au>
-Subject: Re: Empty partition nodes not created (was device node issues with recent mm's and udev)
-Date: Wed, 04 May 2005 14:47:35 +1000
-Message-ID: <5nkg71dhkkvbsam7o0b0r828cvadnr4adb@4ax.com>
-References: <3ZVNP-5cq-7@gated-at.bofh.it> <E1DTAgo-0002uD-F0@be1.7eggert.dyndns.org> <d4757e600505032049716c811b@mail.gmail.com>
+From: Anton Blanchard <anton@samba.org>
+Subject: LPFC issue with 2.6.12-rc3-git
+Date: Wed, 4 May 2005 15:59:43 +1000
+Message-ID: <20050504055943.GL13590@krispykreme>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [202.136.32.45] ([202.136.32.45]:16604 "EHLO
-	relay02.mail-hub.dodo.com.au") by vger.kernel.org with ESMTP
-	id S262017AbVEDErt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 May 2005 00:47:49 -0400
-In-Reply-To: <d4757e600505032049716c811b@mail.gmail.com>
+Received: from ozlabs.org ([203.10.76.45]:28604 "EHLO ozlabs.org")
+	by vger.kernel.org with ESMTP id S262038AbVEDGC5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2005 02:02:57 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe <joecool1029@gmail.com>
-Cc: 7eggert@gmx.de, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 3 May 2005 23:49:55 -0400, Joe <joecool1029@gmail.com> wrote:
->
->Actually, yes there is.. its a firmware partition that would normally
->not be mounted, but in order to dd new firmware versions to it, I
->depended on the node... which has ceased to exist.
 
-If it is firmware, looks unallocated to other systems, bad things 
-might happen if device plugged into windows box?  (Assuming USB) 
-You still have 255 numbers to choose from for partition type? :)
+Hi James,
 
---Grant.
+I tried a latest git build and managed to wedge lpfc. This is a ppc64 box,
+and the cable was unplugged and replugged. Looks like we are stuck waiting
+for a scsi timeout and the other two threads are blocking on it. I waited
+15 minutes to make sure it wouldnt clear itself.
+
+Anton
+
+scsi_wq_3     D 0000000000000000 11984   866      6           878   864 (L-TLB)
+Call Trace:
+[c0000000000120f0] .__switch_to+0xd0/0x160
+[c00000000043a6a8] .schedule+0x488/0xe50
+[c00000000043b638] .wait_for_completion+0xc8/0x150
+[c0000000002efd60] .scsi_wait_req+0x90/0x100
+[c0000000002f2ddc] .scsi_probe_and_add_lun+0x23c/0xa50
+[c0000000002f3d04] .scsi_scan_target+0x164/0x540
+[c0000000002fb5fc] .fc_scsi_scan_rport+0x2c/0x40
+[c00000000006d354] .worker_thread+0x224/0x320
+[c000000000074588] .kthread+0x178/0x190
+[c000000000014988] .kernel_thread+0x4c/0x6c
+
+lpfc_worker_1 D 0000000000000000 11552   864      6           866   705 (L-TLB)
+Call Trace:
+[c0000000000120f0] .__switch_to+0xd0/0x160
+[c00000000043a6a8] .schedule+0x488/0xe50
+[c00000000006db84] .flush_cpu_workqueue+0xc4/0x2a0
+[c0000000002ea91c] .scsi_flush_work+0x2c/0x80
+[c0000000002fd458] .fc_rport_tgt_remove+0xd8/0x110
+[c0000000002fd4e0] .fc_rport_terminate+0x50/0xf0
+[d00000000008673c] .lpfc_nlp_remove+0x40c/0x450 [lpfc]
+[d000000000090050] .lpfc_disc_state_machine+0x1c0/0x1d0 [lpfc]
+[d000000000089710] .lpfc_do_work+0x620/0xc00 [lpfc]
+[c000000000074588] .kthread+0x178/0x190
+[c000000000014988] .kernel_thread+0x4c/0x6c
+
+rmmod         D 000000000ff50640 10368  4127   4071                     (NOTLB)
+Call Trace:
+[c0000000000120f0] .__switch_to+0xd0/0x160
+[c00000000043a6a8] .schedule+0x488/0xe50
+[c00000000006db84] .flush_cpu_workqueue+0xc4/0x2a0
+[c0000000002ea91c] .scsi_flush_work+0x2c/0x80
+[c0000000002fd458] .fc_rport_tgt_remove+0xd8/0x110
+[c0000000002fd4e0] .fc_rport_terminate+0x50/0xf0
+[c0000000002fd5c4] .fc_remove_host+0x44/0xd0
+[d00000000008a650] .lpfc_pci_remove_one+0x90/0x2e0 [lpfc]
+[c0000000001e87f0] .pci_device_remove+0x50/0x80
+[c00000000025c194] .device_release_driver+0xa4/0xd0
+[c00000000025c53c] .bus_remove_driver+0xcc/0x180
+[c00000000025d038] .driver_unregister+0x18/0x40
+[c0000000001e8620] .pci_unregister_driver+0x30/0xd0
+[d0000000000968ec] .lpfc_exit+0x1c/0x2450 [lpfc]
+[c00000000007e1c0] .sys_delete_module+0x240/0x330
+[c00000000000d800] syscall_exit+0x0/0x18
