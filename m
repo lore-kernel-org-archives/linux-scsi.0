@@ -1,61 +1,54 @@
-From: Bodo Eggert <7eggert@gmx.de>
-Subject: Re: Empty partition nodes not created (was device node issues with
- recent mm's and udev)
-Date: Wed, 4 May 2005 13:42:34 +0200 (CEST)
-Message-ID: <Pine.LNX.4.58.0505041337110.12821@be1.lrz>
-References: <3ZVNP-5cq-7@gated-at.bofh.it>  <E1DTAgo-0002uD-F0@be1.7eggert.dyndns.org>
- <d4757e600505032049716c811b@mail.gmail.com>
+From: kylin <fierykylin@gmail.com>
+Subject: PCI express equipment
+Date: Wed, 4 May 2005 19:51:12 +0800
+Message-ID: <87ab37ab05050404516a2bcc40@mail.gmail.com>
+Reply-To: kylin <fierykylin@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-in-05.arcor-online.net ([151.189.21.45]:20450 "EHLO
-	mail-in-05.arcor-online.net") by vger.kernel.org with ESMTP
-	id S261594AbVEDLmj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 May 2005 07:42:39 -0400
-In-Reply-To: <d4757e600505032049716c811b@mail.gmail.com>
+Received: from zproxy.gmail.com ([64.233.162.195]:38054 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261627AbVEDLvM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 May 2005 07:51:12 -0400
+Received: by zproxy.gmail.com with SMTP id 18so256742nzp
+        for <linux-scsi@vger.kernel.org>; Wed, 04 May 2005 04:51:12 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe <joecool1029@gmail.com>
-Cc: 7eggert@gmx.de, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: linux-scsi@vger.kernel.org
 
-On Tue, 3 May 2005, Joe wrote:
+On one hand ,hardwarely,as it is always said, PCIE provides the
+superexcellent performance
 
-> On 5/3/05, Bodo Eggert <harvested.in.lkml@posting.7eggert.dyndns.org>
-> <7eggert@gmx.de> wrote:
-> > Joe <joecool1029@gmail.com> wrote:
-> > 
-> > > Here is the partition table from fdisk, fdisk does run fine.. its just
-> > > the fact this node is not created that threw me off before.
-> > >
-> > >    Device Boot      Start         End      Blocks   Id  System
-> > > /dev/sdb1   *           1           2       16033+   0  Empty
-> > > /dev/sdb2   *           6        2431    19486845    b  W95 FAT32
-> > > /dev/sdb3               3           5       24097+  83  Linux
-> > >
-> > > Notice, /dev/sdb1 is a Empty partition... in /dev I only have sdb,
-> > > sdb2, and sdb3.  No sdb1.  Any help would be appreciated.
-> > 
-> > Some vendors depend on empty partitions not showing up. That's why this
-> > patch was introduced.
-> 
-> It would be interesting to see just how important it is to hide this. 
+comparing with the PCI and PCI -X 
+On the other ,softwarely,in most the application scenarios i have met
+, the PCIE equipment will
 
-The size and position values were quite random, and the useless extra
-partition caused some problems.
+have to use the pci-compatible driver first in linux.
+because the Configuration head is pci compatible in the first 256 byte ,
+it is allowed and really works. 
+i know if we use the conventional Device Driver for pcie equipment,
+the advanced option such as MSI ,Flow Control ,TC ,VC and hotplug are
+unavailable, i also know
 
-> > BTW: Is there a special reason you why choose "empty"?
-> > Is this partition showing up in other systems at all?
-> 
-> Actually, yes there is.. its a firmware partition that would normally
-> not be mounted, but in order to dd new firmware versions to it, I
-> depended on the node... which has ceased to exist.
+that the speed is mainly the problem of Bandwidth and Clocking. Still
+i know that the Trafic
 
-So it isn't empty.-) I asume it will be in a custom system, so you can
-hijack the compaq partition type (which was used for a similar purpose).
+control mechanism is good for the arbitration and thus improve the
+performance just like the
 
-BTW: If you can do that, you should move the partition to the end of the
-disk into the slower area of he disk.
+TCP protocol ways.
+So my conclusion is :
+the conventional Device driver will not be the bottle neck of the PCIE
+performance as long as
+
+only speed is concerned ,and the advanced options are only
+Application-related.
+here allow me just compare it with the network protocol ,
+oh ,i just use the IP protocol ,with out the TCP /UDP way.
+is that right ?or any wise can give some advice and  
+
 
 -- 
-"Bravery is being the only one who knows you're afraid."
--David Hackworth
+we who r about to die,salute u!
