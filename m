@@ -1,96 +1,122 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: patch (was Usage question)
-Date: Wed, 04 May 2005 23:19:50 +0200
-Message-ID: <42793C76.5010807@s5r6.in-berlin.de>
-References: <1112394885.6487.9.camel@localhost.localdomain>	 <424DFE79.4080003@s5r6.in-berlin.de>  <1112450118.5518.3.camel@defiant> <1112492302.20936.12.camel@kino.dennedy.org>
+From: Peter Missel <peter.missel@onlinehome.de>
+Subject: SYM8xx_2 sync speed negotiation
+Date: Wed, 4 May 2005 23:47:30 +0200
+Message-ID: <200505042347.31251.peter.missel@onlinehome.de>
+References: <200412311343.42484.peter.missel@onlinehome.de> <20050409140218.GC8669@parcelfarce.linux.theplanet.co.uk> <200504092344.41310.peter.missel@onlinehome.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:63974 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S261623AbVEDVUA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 May 2005 17:20:00 -0400
-In-Reply-To: <1112492302.20936.12.camel@kino.dennedy.org>
+Received: from moutng.kundenserver.de ([212.227.126.188]:33529 "EHLO
+	moutng.kundenserver.de") by vger.kernel.org with ESMTP
+	id S261699AbVEDVrx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 May 2005 17:47:53 -0400
+In-Reply-To: <200504092344.41310.peter.missel@onlinehome.de>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux1394-user@lists.sourceforge.net
+Cc: Matthew Wilcox <matthew@wil.cx>
 
-Dan Dennedy wrote on 2005-04-03:
-> On Sat, 2005-04-02 at 15:55 +0200, Matthias Bl=E4sing wrote:
-[hotplugging of SBP-2 CD-ROMs]
->>There was a patch for the kernel on this list, which work quite good =
-for
->>me (sr.c and sr_ioctl.c have to be modified - Olaf Hering on
->>24.10.2004). I couldn't find any bad side effects of this.
->=20
-> Thanks, I located the message on the linux1394-devel list:
-> http://marc.theaimsgroup.com/?l=3Dlinux1394-devel&m=3D109862922621832=
-&w=3D2
->=20
-> There is a very good report response to Olaf's little patch.
-> http://marc.theaimsgroup.com/?l=3Dlinux1394-devel&m=3D109925711513542=
-&w=3D2
->=20
-> Please, others, try it as well. I'm going to....
+... is getting worse.
 
-I tried it with up to two different CD-RWs and a HDD on the same FireWi=
-re
-bus. Works for me. There have been other positive reports on linux1394-=
-user
-as well. Quote from Olaf's posting:
+Having just tried kernel 2.6.12-rc3 for unrelated reasons, I have found that 
+this cannot run my 2nd SCSI chain AT ALL. The driver is stuck in an endless 
+loop of resets:
 
-| The trouble starts in register_cdrom(), it sets the ->exit() function=
- if
-| the CD can do CDC_MRW_W.
-| On unregister, it tries to send a packet to the device which is alrea=
-dy
-| gone.
-|
-| How about this patch?
+May  4 23:23:28 Earth kernel: sym0: PCI STATUS = 0x2000
+May  4 23:23:28 Earth kernel: sym0: SCSI BUS reset detected.
+May  4 23:23:28 Earth kernel: sym0: SCSI BUS has been reset.
+May  4 23:23:31 Earth kernel: sym0:1: ERROR (20:0) (0-a3-0) (0/7/0) @ (mem 
+f000e810:00000000).
+May  4 23:23:31 Earth kernel: sym0: regdump: da 10 c0 07 47 00 01 02 70 00 00 
+a3 80 01 0b 00 00 c8 94 1f 08 00
+ 00 00.
+May  4 23:23:31 Earth kernel: sym0: PCI STATUS = 0x2000
+May  4 23:23:31 Earth kernel: sym0: SCSI BUS reset detected.
+May  4 23:23:31 Earth kernel: sym0: SCSI BUS has been reset.
+May  4 23:23:35 Earth kernel: sym0:1: ERROR (20:0) (0-a3-0) (0/7/0) @ (mem 
+f000e810:00000000).
+May  4 23:23:35 Earth kernel: sym0: regdump: da 10 c0 07 47 00 01 02 70 00 00 
+a3 80 01 0b 00 00 30 b8 0e 08 00
+ 00 00.
+May  4 23:23:35 Earth kernel: sym0: PCI STATUS = 0x2000
+May  4 23:23:35 Earth kernel: sym0: SCSI BUS reset detected.
+May  4 23:23:35 Earth kernel: sym0: SCSI BUS has been reset.
+May  4 23:23:38 Earth kernel: sym0:1: ERROR (20:0) (0-a3-0) (0/7/0) @ (mem 
+f000e810:00000000).
+May  4 23:23:38 Earth kernel: sym0: regdump: da 10 c0 07 47 00 01 02 70 00 00 
+a3 80 01 0b 00 00 c0 94 1f 08 00
+ 00 00.
+May  4 23:23:38 Earth kernel: sym0: PCI STATUS = 0x2000
+May  4 23:23:38 Earth kernel: sym0: SCSI BUS reset detected.
+May  4 23:23:38 Earth kernel: sym0: SCSI BUS has been reset.
+May  4 23:23:42 Earth kernel: sym0:1: ERROR (20:0) (0-a3-0) (0/7/0) @ (mem 
+f000e810:00000000).
+May  4 23:23:42 Earth kernel: sym0: regdump: da 10 c0 07 47 00 01 02 70 00 00 
+a3 80 01 0b 00 00 c8 94 1f 08 00
+ 00 00.
 
-diff -purN linux-2.6.9.orig/drivers/scsi/sr.c linux-2.6.9-olh/drivers/s=
-csi/sr.c
---- linux-2.6.9.orig/drivers/scsi/sr.c	2004-10-22 19:02:43.545400072 +0=
-200
-+++ linux-2.6.9-olh/drivers/scsi/sr.c	2004-10-24 16:32:10.765682704 +02=
-00
-@@ -916,6 +918,7 @@ static void sr_kref_release(struct kref
-  	struct gendisk *disk =3D cd->disk;
+... ad infinitum.
 
-  	spin_lock(&sr_index_lock);
-+	cd->use =3D 0;
-  	clear_bit(disk->first_minor, sr_index_bits);
-  	spin_unlock(&sr_index_lock);
+The root cause of course still is that the driver does its sync negotiation 
+without considering that the user might have set a speed limit. The driver 
+could (and has been) reading this from the configuration parameters from SCSI 
+BIOS (in the controller's I2C EEPROM) - before someone decided the feature is 
+nothing but clutter and deleted it.
 
-diff -purN linux-2.6.9.orig/drivers/scsi/sr_ioctl.c linux-2.6.9-olh/dri=
-vers/scsi/sr_ioctl.c
---- linux-2.6.9.orig/drivers/scsi/sr_ioctl.c	2004-10-22 19:02:43.547399=
-768 +0200
-+++ linux-2.6.9-olh/drivers/scsi/sr_ioctl.c	2004-10-24 16:31:05.9215405=
-12 +0200
-@@ -86,6 +86,11 @@ int sr_do_ioctl(Scsi_CD *cd, struct pack
-          struct request *req;
-  	int result, err =3D 0, retries =3D 0;
+Given the plethora of single-ended SCSI setups with long cables and/or buggy 
+drives, I do not share this opinion.
 
-+	if(!cd->use) {
-+		err =3D -ENODEV;
-+		goto out;
-+	}
-+
-  	SDev =3D cd->device;
-  	SRpnt =3D scsi_allocate_request(SDev, GFP_KERNEL);
-          if (!SRpnt) {
+Domain-validate and negotiate as much as you please, but never, ever, set up a 
+sync speed higher than the limit set in SCSI BIOS (for the device or the 
+entire channel).
 
+best regards,
+Peter
 
---=20
-Stefan Richter
--=3D=3D=3D=3D=3D-=3D-=3D-=3D -=3D-=3D --=3D--
-http://arcgraph.de/sr/
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Saturday 09 April 2005 23:44, Peter Missel wrote:
+> Hi Matthew!
+>
+> I see ... so there is an alternate method for the kernel to find its system
+> volume by not using the dynamically built /dev/sdX names? I'll dig into
+> that, thanks for the pointer!
+>
+> Back to the original topic ... do you have any news with regard to putting
+> the code back into the sym8xx driver that reads the user configured
+> channel/device negotiation settings (transfer speed and width limits,
+> timeouts, disconnect, etc. etc.) from the EEPROM? This is really causing
+> headaches here with those setups that use external devices, slightly buggy
+> devices, long cables and similar stuff where the auto-detected defaults
+> aren't working.
+>
+> Many thanks!
+>
+> regards,
+> Peter
+>
+> On Saturday 09 April 2005 16:02, Matthew Wilcox wrote:
+> > On Sat, Apr 09, 2005 at 12:57:22AM +0200, Peter Missel wrote:
+> > > It also makes the driver ignore the adapter ordering in
+> > > multiple-channel setups. This machine here has an LSI 21002, where the
+> > > LVD channel is on device function 1 and the UW channel is on 0.
+> > > Naturally the user will set the adapter order in BIOS such that the
+> > > system HDD (on the LVD channel) becomes /dev/sda regardless of other
+> > > drives on the UW channel. Now, with the latest driver releases ignoring
+> > > this BIOS adjustment, the channels are scanned in order of appearance
+> > > on the PCI bus rather than in the order the user wants ... in this
+> > > case, the LVD channel ends up becoming sym1, which means that whenever
+> > > I connect my external MO drive to the U/UW channel, I get a kernel
+> > > panic because Linux can't find its system volume.
+> >
+> > This is an inevitable consequence of conversion to the pci_driver model.
+> > So it's a choice: either support this or support hotplug.  I chose to
+> > support hotplug.  This isn't a problem specific to sym2, it's something
+> > that all scsi systems face.  The intended way to solve this is to use
+> > a UUID or label to mount your root fs.  Unfortunately, this means you
+> > have to use an initrd.
+> >
+> > Yes, this sucks and isn't nearly as easy to configure as it needs to be.
+> > But there really is no way around it -- I can't control what order the
+> > devices are discovered in.
