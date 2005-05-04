@@ -1,42 +1,61 @@
-From: Anton Blanchard <anton@samba.org>
-Subject: Re: LPFC issue with 2.6.12-rc3-git
-Date: Wed, 4 May 2005 17:38:43 +1000
-Message-ID: <20050504073843.GM13590@krispykreme>
-References: <20050504055943.GL13590@krispykreme>
+From: Bodo Eggert <7eggert@gmx.de>
+Subject: Re: Empty partition nodes not created (was device node issues with
+ recent mm's and udev)
+Date: Wed, 4 May 2005 13:42:34 +0200 (CEST)
+Message-ID: <Pine.LNX.4.58.0505041337110.12821@be1.lrz>
+References: <3ZVNP-5cq-7@gated-at.bofh.it>  <E1DTAgo-0002uD-F0@be1.7eggert.dyndns.org>
+ <d4757e600505032049716c811b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:24000 "EHLO ozlabs.org")
-	by vger.kernel.org with ESMTP id S262059AbVEDHix (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2005 03:38:53 -0400
-Content-Disposition: inline
-In-Reply-To: <20050504055943.GL13590@krispykreme>
+Received: from mail-in-05.arcor-online.net ([151.189.21.45]:20450 "EHLO
+	mail-in-05.arcor-online.net") by vger.kernel.org with ESMTP
+	id S261594AbVEDLmj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 May 2005 07:42:39 -0400
+In-Reply-To: <d4757e600505032049716c811b@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org
+To: Joe <joecool1029@gmail.com>
+Cc: 7eggert@gmx.de, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
+On Tue, 3 May 2005, Joe wrote:
 
-Hi James,
+> On 5/3/05, Bodo Eggert <harvested.in.lkml@posting.7eggert.dyndns.org>
+> <7eggert@gmx.de> wrote:
+> > Joe <joecool1029@gmail.com> wrote:
+> > 
+> > > Here is the partition table from fdisk, fdisk does run fine.. its just
+> > > the fact this node is not created that threw me off before.
+> > >
+> > >    Device Boot      Start         End      Blocks   Id  System
+> > > /dev/sdb1   *           1           2       16033+   0  Empty
+> > > /dev/sdb2   *           6        2431    19486845    b  W95 FAT32
+> > > /dev/sdb3               3           5       24097+  83  Linux
+> > >
+> > > Notice, /dev/sdb1 is a Empty partition... in /dev I only have sdb,
+> > > sdb2, and sdb3.  No sdb1.  Any help would be appreciated.
+> > 
+> > Some vendors depend on empty partitions not showing up. That's why this
+> > patch was introduced.
+> 
+> It would be interesting to see just how important it is to hide this. 
 
-Im also getting these errors:
+The size and position values were quite random, and the useless extra
+partition caused some problems.
 
-lpfc 0004:21:01.0: 0:0327 Rsp ring 0 error - command completion for iotag x0 not found
-lpfc 0004:21:01.0: 0:0713 SCSI layer issued LUN reset (0, 0) Data: x2 x0 x0
-lpfc 0004:21:01.0: 0:0317 Rsp ring 0 get: iotag x1700 greater then configured max x1000 wd0 x9032
-lpfc 0004:21:01.0: 0:0327 Rsp ring 0 error -  command completion for iotag x0 not found
-lpfc 0004:21:01.0: 0:0317 Rsp ring 0 get: iotag x1800 greater then configured max x1000 wd0 x9032
+> > BTW: Is there a special reason you why choose "empty"?
+> > Is this partition showing up in other systems at all?
+> 
+> Actually, yes there is.. its a firmware partition that would normally
+> not be mounted, but in order to dd new firmware versions to it, I
+> depended on the node... which has ceased to exist.
 
-Which looks a lot like the problem last week which was solved with a
-firmware update. I'll look into that.
+So it isn't empty.-) I asume it will be in a custom system, so you can
+hijack the compaq partition type (which was used for a similar purpose).
 
-In the end the partition locked up with the following backtrace:
+BTW: If you can do that, you should move the partition to the end of the
+disk into the slower area of he disk.
 
-d000000000078198 .lpfc_sli_validate_iocb_cmd+0x58/0xe0
-d000000000079e80 .lpfc_sli_abort_iocb+0xd0/0x230
-d000000000092e40 .lpfc_reset_bus_handler+0x210/0x470
-c0000000002ee50c .scsi_try_bus_reset+0x7c/0x160
-c0000000002ef774 .scsi_error_handler+0x924/0xb20
-c000000000014988 .kernel_thread+0x4c/0x6c
-
-Anton
+-- 
+"Bravery is being the only one who knows you're afraid."
+-David Hackworth
