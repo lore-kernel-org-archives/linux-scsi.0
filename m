@@ -1,95 +1,69 @@
-From: James.Smart@Emulex.Com
-Subject: RE: LPFC issue with 2.6.12-rc3-git
-Date: Wed, 4 May 2005 09:40:52 -0400
-Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C20629C9@xbl3.ad.emulex.com>
+From: kylin <fierykylin@gmail.com>
+Subject: Re: PCI express equipment
+Date: Thu, 5 May 2005 00:28:17 +0800
+Message-ID: <87ab37ab05050409283d26dcab@mail.gmail.com>
+References: <87ab37ab05050404516a2bcc40@mail.gmail.com>
+	 <20050504121420.GH19678@parcelfarce.linux.theplanet.co.uk>
+Reply-To: kylin <fierykylin@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:38314 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S261820AbVEDNk6 convert rfc822-to-8bit
+Received: from zproxy.gmail.com ([64.233.162.206]:64313 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261913AbVEDQ2S convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 May 2005 09:40:58 -0400
-Content-class: urn:content-classes:message
+	Wed, 4 May 2005 12:28:18 -0400
+Received: by zproxy.gmail.com with SMTP id 18so360364nzp
+        for <linux-scsi@vger.kernel.org>; Wed, 04 May 2005 09:28:18 -0700 (PDT)
+In-Reply-To: <20050504121420.GH19678@parcelfarce.linux.theplanet.co.uk>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: anton@samba.org
+To: Matthew Wilcox <matthew@wil.cx>
 Cc: linux-scsi@vger.kernel.org
 
-Anton,
+On 5/4/05, Matthew Wilcox <matthew@wil.cx> wrote:
+> On Wed, May 04, 2005 at 07:51:12PM +0800, kylin wrote:
+> > On one hand ,hardwarely,as it is always said, PCIE provides the
+> > superexcellent performance
+> >
+> > comparing with the PCI and PCI -X
+> > On the other ,softwarely,in most the application scenarios i have met
+> > , the PCIE equipment will
+> >
+> > have to use the pci-compatible driver first in linux.
+> > because the Configuration head is pci compatible in the first 256 byte ,
+> > it is allowed and really works.
+> > i know if we use the conventional Device Driver for pcie equipment,
+> > the advanced option such as MSI ,Flow Control ,TC ,VC and hotplug are
+> 
+> rubbish.  MSI and Hotplug are independent of PCI Express and are used
+> by conventional PCI drivers today.  Flow control, TC and VC are all part
+> of the same thing.
+sorry for my innocence,but all i want to say here is if the unMSI and
+unHotplug device driver would influence the normal speed in ONE 
+common  scenarios
+> > unavailable, i also know
+> >
+> > that the speed is mainly the problem of Bandwidth and Clocking. Still
+> > i know that the Trafic
+> >
+> > control mechanism is good for the arbitration and thus improve the
+> > performance just like the
+> >
+> > TCP protocol ways.
+> 
+> Um, no, not really.  There's very little hardware support for VC/TC at the
+> moment, so having software support for it isn't a priority. 
+yeah ,even the bios will rarely support this
 
-Thanks. Interesting traces.  We'll take a look at it.
+> In addition,
+> it really depends how deep your PCI bus hierarchy is whether VC/TC will
+> have any effect on performance at all.
+have you seen the E7520 chipset ,sir? 
+> Why is this question on linux-scsi anyway?
+because myu SCSI interface is connecting to the pcie bus:),love it and
+love the dog :)
 
--- james s
-
-
-> -----Original Message-----
-> From: Anton Blanchard [mailto:anton@samba.org]
-> Sent: Wednesday, May 04, 2005 2:00 AM
-> To: Smart, James
-> Cc: linux-scsi@vger.kernel.org
-> Subject: LPFC issue with 2.6.12-rc3-git
-> 
-> 
-> 
-> Hi James,
-> 
-> I tried a latest git build and managed to wedge lpfc. This is 
-> a ppc64 box,
-> and the cable was unplugged and replugged. Looks like we are 
-> stuck waiting
-> for a scsi timeout and the other two threads are blocking on 
-> it. I waited
-> 15 minutes to make sure it wouldnt clear itself.
-> 
-> Anton
-> 
-> scsi_wq_3     D 0000000000000000 11984   866      6           
-> 878   864 (L-TLB)
-> Call Trace:
-> [c0000000000120f0] .__switch_to+0xd0/0x160
-> [c00000000043a6a8] .schedule+0x488/0xe50
-> [c00000000043b638] .wait_for_completion+0xc8/0x150
-> [c0000000002efd60] .scsi_wait_req+0x90/0x100
-> [c0000000002f2ddc] .scsi_probe_and_add_lun+0x23c/0xa50
-> [c0000000002f3d04] .scsi_scan_target+0x164/0x540
-> [c0000000002fb5fc] .fc_scsi_scan_rport+0x2c/0x40
-> [c00000000006d354] .worker_thread+0x224/0x320
-> [c000000000074588] .kthread+0x178/0x190
-> [c000000000014988] .kernel_thread+0x4c/0x6c
-> 
-> lpfc_worker_1 D 0000000000000000 11552   864      6           
-> 866   705 (L-TLB)
-> Call Trace:
-> [c0000000000120f0] .__switch_to+0xd0/0x160
-> [c00000000043a6a8] .schedule+0x488/0xe50
-> [c00000000006db84] .flush_cpu_workqueue+0xc4/0x2a0
-> [c0000000002ea91c] .scsi_flush_work+0x2c/0x80
-> [c0000000002fd458] .fc_rport_tgt_remove+0xd8/0x110
-> [c0000000002fd4e0] .fc_rport_terminate+0x50/0xf0
-> [d00000000008673c] .lpfc_nlp_remove+0x40c/0x450 [lpfc]
-> [d000000000090050] .lpfc_disc_state_machine+0x1c0/0x1d0 [lpfc]
-> [d000000000089710] .lpfc_do_work+0x620/0xc00 [lpfc]
-> [c000000000074588] .kthread+0x178/0x190
-> [c000000000014988] .kernel_thread+0x4c/0x6c
-> 
-> rmmod         D 000000000ff50640 10368  4127   4071           
->           (NOTLB)
-> Call Trace:
-> [c0000000000120f0] .__switch_to+0xd0/0x160
-> [c00000000043a6a8] .schedule+0x488/0xe50
-> [c00000000006db84] .flush_cpu_workqueue+0xc4/0x2a0
-> [c0000000002ea91c] .scsi_flush_work+0x2c/0x80
-> [c0000000002fd458] .fc_rport_tgt_remove+0xd8/0x110
-> [c0000000002fd4e0] .fc_rport_terminate+0x50/0xf0
-> [c0000000002fd5c4] .fc_remove_host+0x44/0xd0
-> [d00000000008a650] .lpfc_pci_remove_one+0x90/0x2e0 [lpfc]
-> [c0000000001e87f0] .pci_device_remove+0x50/0x80
-> [c00000000025c194] .device_release_driver+0xa4/0xd0
-> [c00000000025c53c] .bus_remove_driver+0xcc/0x180
-> [c00000000025d038] .driver_unregister+0x18/0x40
-> [c0000000001e8620] .pci_unregister_driver+0x30/0xd0
-> [d0000000000968ec] .lpfc_exit+0x1c/0x2450 [lpfc]
-> [c00000000007e1c0] .sys_delete_module+0x240/0x330
-> [c00000000000d800] syscall_exit+0x0/0x18
-> 
+-- 
+we who r about to die,salute u!
