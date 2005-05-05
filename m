@@ -1,42 +1,54 @@
-From: YOSHIFUJI Hideaki / =?iso-2022-jp?B?GyRCNUhGIzFRTEAbKEI=?=
-	<yoshfuji@linux-ipv6.org>
-Subject: Re: [PATCH 2/3] add open iscsi netlink interface to iscsi
- transport class
-Date: Thu, 05 May 2005 20:55:30 +0900 (JST)
-Message-ID: <20050505.205530.107537707.yoshfuji@linux-ipv6.org>
-References: <20050505.185503.78606493.yoshfuji@linux-ipv6.org>
-	<E1DTehn-0005gJ-00@gondolin.me.apana.org.au>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 2/3] add open iscsi netlink interface to iscsi transport class
+Date: Thu, 5 May 2005 13:22:04 +0100
+Message-ID: <20050505122204.GL19678@parcelfarce.linux.theplanet.co.uk>
+References: <42798AC1.2010308@cs.wisc.edu> <20050505.185503.78606493.yoshfuji@linux-ipv6.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from yue.linux-ipv6.org ([203.178.140.15]:63494 "EHLO
-	yue.st-paulia.net") by vger.kernel.org with ESMTP id S262054AbVEELww
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 May 2005 07:52:52 -0400
-In-Reply-To: <E1DTehn-0005gJ-00@gondolin.me.apana.org.au>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:31461 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S262075AbVEEMVi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 May 2005 08:21:38 -0400
+Content-Disposition: inline
+In-Reply-To: <20050505.185503.78606493.yoshfuji@linux-ipv6.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: herbert@gondor.apana.org.au
-Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, netdev@oss.sgi.com, linux-kernel@vger.kernel.org, yoshfuji@linux-ipv6.org
+To: "YOSHIFUJI Hideaki / ?$B5HF#1QL@" <yoshfuji@linux-ipv6.org>
+Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, netdev@oss.sgi.com, linux-kernel@vger.kernel.org
 
-In article <E1DTehn-0005gJ-00@gondolin.me.apana.org.au> (at Thu, 05 May 2005 21:39:47 +1000), Herbert Xu <herbert@gondor.apana.org.au> says:
-
-> YOSHIFUJI Hideaki / ???? <yoshfuji@linux-ipv6.org> wrote:
-> > In article <42798AC1.2010308@cs.wisc.edu> (at Wed, 04 May 2005 19:53:53 -0700), Mike Christie <michaelc@cs.wisc.edu> says:
-> > 
-> >> +struct iscsi_uevent {
-> > :
-> >> +} __attribute__ ((aligned (sizeof(unsigned long))));
-> > 
-> > I think it'd be better to use sizeof(uint64_t) or something.
+On Thu, May 05, 2005 at 06:55:03PM +0900, YOSHIFUJI Hideaki / ?$B5HF#1QL@ wrote:
+> In article <42798AC1.2010308@cs.wisc.edu> (at Wed, 04 May 2005 19:53:53 -0700), Mike Christie <michaelc@cs.wisc.edu> says:
 > 
-> Is there a benefit in aligning on 64-bit boundaries for 32-bit platforms?
+> > +struct iscsi_uevent {
+> :
+> > +} __attribute__ ((aligned (sizeof(unsigned long))));
+> 
+> I think it'd be better to use sizeof(uint64_t) or something.
 
-Well, this if for avoiding inconsistency between kernel and userspace.
-If you use unsigned long, sizeof(unsigned long) may be inconssitent
-between kernel and userland like this:
-  kernel:    sizeof(unsigned long) == 8
-  userspace: sizeof(unsigned long) == 4
+Actually, it's completely unnecessary.  iscsi_uevent contains a uint64_t
+element, and the GCC docs (in the 'Type attribute' section, documenting
+aligned) say:
 
---yoshfuji
+     Note that the alignment of any given `struct' or `union' type is
+     required by the ISO C standard to be at least a perfect multiple of
+     the lowest common multiple of the alignments of all of the members
+     of the `struct' or `union' in question.  This means that you _can_
+
+So best to just delete it.  It has no effect.
+
+> Please check other spots, too. e.g.:
+> 
+> > +	struct iscsi_stats_custom custom[0]
+> > +		__attribute__ ((aligned (sizeof(unsigned long))));
+
+This one's probably useless too, but it's hard to tell since the patches
+weren't sent inline thus making them difficult to cross-reference.
+
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
