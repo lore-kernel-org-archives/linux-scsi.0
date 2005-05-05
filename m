@@ -1,54 +1,53 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 2/3] add open iscsi netlink interface to iscsi transport class
-Date: Thu, 5 May 2005 13:22:04 +0100
-Message-ID: <20050505122204.GL19678@parcelfarce.linux.theplanet.co.uk>
-References: <42798AC1.2010308@cs.wisc.edu> <20050505.185503.78606493.yoshfuji@linux-ipv6.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] fix command retries in spi_transport class
+Date: Thu, 05 May 2005 09:57:27 -0500
+Message-ID: <1115305048.5060.2.camel@mulgrave>
+References: <1114991896.4788.44.camel@mulgrave>
+	 <4276DC27.9030403@cybsft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:31461 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262075AbVEEMVi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 May 2005 08:21:38 -0400
-Content-Disposition: inline
-In-Reply-To: <20050505.185503.78606493.yoshfuji@linux-ipv6.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:53962 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262123AbVEEO5b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 May 2005 10:57:31 -0400
+In-Reply-To: <4276DC27.9030403@cybsft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "YOSHIFUJI Hideaki / ?$B5HF#1QL@" <yoshfuji@linux-ipv6.org>
-Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, netdev@oss.sgi.com, linux-kernel@vger.kernel.org
+To: "K.R. Foley" <kr@cybsft.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, May 05, 2005 at 06:55:03PM +0900, YOSHIFUJI Hideaki / ?$B5HF#1QL@ wrote:
-> In article <42798AC1.2010308@cs.wisc.edu> (at Wed, 04 May 2005 19:53:53 -0700), Mike Christie <michaelc@cs.wisc.edu> says:
-> 
-> > +struct iscsi_uevent {
-> :
-> > +} __attribute__ ((aligned (sizeof(unsigned long))));
-> 
-> I think it'd be better to use sizeof(uint64_t) or something.
+On Mon, 2005-05-02 at 21:04 -0500, K.R. Foley wrote: 
+>   Vendor: SEAGATE   Model: SX118273LC        Rev: 6679
+>   Type:   Direct-Access                      ANSI SCSI revision: 02
+> scsi1:A:0:0: Tagged Queuing enabled.  Depth 32
+>  target1:0:0: Beginning Domain Validation
+> (scsi1:A:0): 6.600MB/s transfers (16bit)
+> (scsi1:A:0:0): parity error detected in Data-in phase. SEQADDR(0x6a) SCSIRATE(0x80)
+> (scsi1:A:0:0): parity error detected in Data-in phase. SEQADDR(0x83) SCSIRATE(0x80)
+> (scsi1:A:0:0): parity error detected in Data-in phase. SEQADDR(0x83) SCSIRATE(0x80)
+> (scsi1:A:0:0): parity error detected in Data-in phase. SEQADDR(0x1a6) SCSIRATE(0x80)
+> (scsi1:A:0:0): parity error detected in Command phase. SEQADDR(0x1a6) SCSIRATE(0x80)
+>  target1:0:0: Wide Transfers Fail
 
-Actually, it's completely unnecessary.  iscsi_uevent contains a uint64_t
-element, and the GCC docs (in the 'Type attribute' section, documenting
-aligned) say:
+This means that the driver is now correctly returning an error.
 
-     Note that the alignment of any given `struct' or `union' type is
-     required by the ISO C standard to be at least a perfect multiple of
-     the lowest common multiple of the alignments of all of the members
-     of the `struct' or `union' in question.  This means that you _can_
+> (scsi1:A:0): 3.300MB/s transfers
 
-So best to just delete it.  It has no effect.
+Here we set the correct transfer parameters (narrow), which means all
+the parity errors should go away.
 
-> Please check other spots, too. e.g.:
-> 
-> > +	struct iscsi_stats_custom custom[0]
-> > +		__attribute__ ((aligned (sizeof(unsigned long))));
+I'm at a loss to either duplicate this or figure out from the code what
+might be going on, so I really need a trace to help out.
 
-This one's probably useless too, but it's hard to tell since the patches
-weren't sent inline thus making them difficult to cross-reference.
+If you can't set the kernel boot line options, you can just edit scsi.c
+to set the variable scsi_logging_level to 0xffff (and remove the
+module_param lines for it, just in case).  Remember that
+CONFIG_SCSI_LOGGING must be set as well.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Thanks,
+
+James
+
+
