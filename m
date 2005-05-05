@@ -1,53 +1,47 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] fix command retries in spi_transport class
-Date: Thu, 05 May 2005 09:57:27 -0500
-Message-ID: <1115305048.5060.2.camel@mulgrave>
-References: <1114991896.4788.44.camel@mulgrave>
-	 <4276DC27.9030403@cybsft.com>
+From: gdnixon1@enterate.com.ar
+Subject: Inquiry From Gerald
+Date: Thu,  5 May 2005 19:26:53 -0300
+Message-ID: <1115332013.427a9dad1bfe8__16709.1475370855$1115331372$gmane$org@mail.enterate.com.ar>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:53962 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262123AbVEEO5b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 May 2005 10:57:31 -0400
-In-Reply-To: <4276DC27.9030403@cybsft.com>
+Received: from customer79-105.iplannetworks.net ([200.68.68.105]:34433 "EHLO
+	mail.enterate.com.ar") by vger.kernel.org with ESMTP
+	id S262086AbVEEWSO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 May 2005 18:18:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "K.R. Foley" <kr@cybsft.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, 2005-05-02 at 21:04 -0500, K.R. Foley wrote: 
->   Vendor: SEAGATE   Model: SX118273LC        Rev: 6679
->   Type:   Direct-Access                      ANSI SCSI revision: 02
-> scsi1:A:0:0: Tagged Queuing enabled.  Depth 32
->  target1:0:0: Beginning Domain Validation
-> (scsi1:A:0): 6.600MB/s transfers (16bit)
-> (scsi1:A:0:0): parity error detected in Data-in phase. SEQADDR(0x6a) SCSIRATE(0x80)
-> (scsi1:A:0:0): parity error detected in Data-in phase. SEQADDR(0x83) SCSIRATE(0x80)
-> (scsi1:A:0:0): parity error detected in Data-in phase. SEQADDR(0x83) SCSIRATE(0x80)
-> (scsi1:A:0:0): parity error detected in Data-in phase. SEQADDR(0x1a6) SCSIRATE(0x80)
-> (scsi1:A:0:0): parity error detected in Command phase. SEQADDR(0x1a6) SCSIRATE(0x80)
->  target1:0:0: Wide Transfers Fail
+Dear Friend,
+I am Mr. Gerald Nixon, I write to inform you of my desire to acquire properties 
+Hence i am contacting you if you would agree to assist me in other to actualize 
+this transaction. the funds to carry out this proposed investments is presently 
+lodged in a finance security firm i honestly request your assistance to provide 
+for me a safe account in your country to receive the money before we can put 
+the funds into use. The total sum is 4.5Million Great Britain Pounds.  
+As soon as the amount mentioned above is successfully transferred into your 
+account, you can go ahead in buying the properties. It might interest you to 
+note that transaction of such may raise suspicion of irrationality but i assure 
+you it will be executed safely without breaching our limited personal integrity 
+that we have in one way or the other aspire to protect. So let us allow trust 
+to play a very minimal role until performance is seen.  Thank you in 
+anticipation of your co-operation.
+Best Regards,
+Mr. Gerald Nixon
 
-This means that the driver is now correctly returning an error.
+Note: I have set aside 25% of this fund to consult your assistance.
 
-> (scsi1:A:0): 3.300MB/s transfers
 
-Here we set the correct transfer parameters (narrow), which means all
-the parity errors should go away.
 
-I'm at a loss to either duplicate this or figure out from the code what
-might be going on, so I really need a trace to help out.
 
-If you can't set the kernel boot line options, you can just edit scsi.c
-to set the variable scsi_logging_level to 0xffff (and remove the
-module_param lines for it, just in case).  Remember that
-CONFIG_SCSI_LOGGING must be set as well.
+* Este mensaje fue enviado desde http://www.enterate.com.ar/ 
+____________________________________________________________ 
 
-Thanks,
-
-James
-
+* Conectate GRATIS a Internet desde Enterate ! 
+Usuario   : enterate@enterate.com.ar 
+Clave     : enterate 
+desde Buenos Aires : 4004-8007 
+desde otras ciudades, consulta en : 
+http://www.enterate.com.ar/InternetGratis.htm 
 
