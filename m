@@ -1,34 +1,146 @@
-From: YOSHIFUJI Hideaki / =?iso-2022-jp?B?GyRCNUhGIzFRTEAbKEI=?=
-	<yoshfuji@linux-ipv6.org>
-Subject: Re: [PATCH 2/3] add open iscsi netlink interface to iscsi
- transport class
-Date: Thu, 05 May 2005 18:55:03 +0900 (JST)
-Message-ID: <20050505.185503.78606493.yoshfuji@linux-ipv6.org>
-References: <42798AC1.2010308@cs.wisc.edu>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/3] add open iscsi netlink interface to iscsi transport class
+Date: Thu, 5 May 2005 12:37:34 +0100
+Message-ID: <20050505113734.GA8985@infradead.org>
+References: <42798ADD.5070803@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from yue.linux-ipv6.org ([203.178.140.15]:60422 "EHLO
-	yue.st-paulia.net") by vger.kernel.org with ESMTP id S262005AbVEEJwZ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 May 2005 05:52:25 -0400
-In-Reply-To: <42798AC1.2010308@cs.wisc.edu>
+Received: from pentafluge.infradead.org ([213.146.154.40]:5320 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S262039AbVEELhf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 May 2005 07:37:35 -0400
+Content-Disposition: inline
+In-Reply-To: <42798ADD.5070803@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, netdev@oss.sgi.com, linux-kernel@vger.kernel.org, yoshfuji@linux-ipv6.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, netdev <netdev@oss.sgi.com>
 
-In article <42798AC1.2010308@cs.wisc.edu> (at Wed, 04 May 2005 19:53:53 -0700), Mike Christie <michaelc@cs.wisc.edu> says:
+[Mike, can you please insert the patches inline?  I hate needing to save
+ attachment first to be able to comment on the patch]
 
-> +struct iscsi_uevent {
-:
-> +} __attribute__ ((aligned (sizeof(unsigned long))));
+- * Copyright (C) Mike Christie, 2004
++ * Copyright (C) Mike Christie, Dmitry Yusupov, Alex Aizman, 2004 - 2005
 
-I think it'd be better to use sizeof(uint64_t) or something.
-Please check other spots, too. e.g.:
+should probably be separate Copyright lines for everyone involved.
 
-> +	struct iscsi_stats_custom custom[0]
-> +		__attribute__ ((aligned (sizeof(unsigned long))));
++static struct iscsi_transport *transport_table[ISCSI_TRANSPORT_MAX];
 
---yoshfuji
+please avoid static limits for the number of transports, e.g. use the
+lib/idr.c helpers.
+
++static DECLARE_MUTEX(callsema);
+
+horrible name for a lock, even a static one.
+
++
++struct mempool_zone {
++	mempool_t *pool;
++	volatile int allocated;
+
+don't use volatile, either atomic_t or if it's properly locked just int
+
++
++#define Z_SIZE_REPLY	NLMSG_SPACE(sizeof(struct iscsi_uevent))
++#define Z_MAX_REPLY	8
++#define Z_HIWAT_REPLY	6
++
++#define Z_SIZE_PDU	NLMSG_SPACE(sizeof(struct iscsi_uevent) + \
++				    sizeof(struct iscsi_hdr) + \
++				    DEFAULT_MAX_RECV_DATA_SEGMENT_LENGTH)
++#define Z_MAX_PDU	8
++#define Z_HIWAT_PDU	6
++
++#define Z_SIZE_ERROR	NLMSG_SPACE(sizeof(struct iscsi_uevent))
++#define Z_MAX_ERROR	16
++#define Z_HIWAT_ERROR	12
+
+At least the *_Z_SIZE defines are unneeded, just pass them to the functions
+directly.  And please add some explanations for the MAX and HIWAT defines.
+
++struct iscsi_if_cnx {
++	struct list_head item;		/* item in cnxlist */
++	struct list_head snxitem;	/* item in snx->connections */
+
+please rename cnx to conn and snx to session everywhere, keeps the code
+a lot more readable.
+
++	iscsi_cnx_t cnxh;
++	volatile int active;
+
+volatile usage again
+
++#define H_TYPE_TRANS	1
++#define H_TYPE_HOST	2
++static struct iscsi_if_cnx*
++iscsi_if_find_cnx(uint64_t key, int type)
++{
++	unsigned long flags;
++	struct iscsi_if_cnx *cnx;
++
++	spin_lock_irqsave(&cnxlock, flags);
++	list_for_each_entry(cnx, &cnxlist, item) {
++		if ((type == H_TYPE_TRANS && cnx->cnxh == key) ||
++		    (type == H_TYPE_HOST && cnx->host == iscsi_ptr(key))) {
++			spin_unlock_irqrestore(&cnxlock, flags);
++			return cnx;
++		}
++	}
++	spin_unlock_irqrestore(&cnxlock, flags);
++	return NULL;
+ }
+
+please use two separate helpers for transport/host instead of the H_TYPE
+thing.
+ 
++			list_del((void*)&skb->cb);
+
+please add some inline helpers for using skb->cb as list instead of
+spreading the casts all over.
+
++static int zone_init(struct mempool_zone *zp, unsigned max,
++		     unsigned size, unsigned hiwat)
+
+should probably become mempool_zone_init to match the other functions
+operating on struct mempool_zone.
+
++static int
++iscsi_if_destroy_snx(struct iscsi_transport *transport, struct iscsi_uevent *ev)
++{
++	struct Scsi_Host *shost;
++	struct iscsi_if_snx *snx;
++	unsigned long flags;
++	struct iscsi_if_cnx *cnx;
++
++	shost = scsi_host_lookup(ev->u.d_session.sid);
++	if (shost == ERR_PTR(-ENXIO))
++		return -EEXIST;
++	scsi_host_put(shost);
+
+you must keep the reference until you're done.
+
++	spin_unlock_irqrestore(&cnxlock, flags);
++
++	scsi_remove_host(shost);
++	transport->destroy_session(ev->u.d_session.session_handle);
+
+can we please move the scsi_remove_host into the individual ->destroy_session
+methods?  dito for the scsi_host_add
+
++static int
++iscsi_if_create_cnx(struct iscsi_transport *transport, struct iscsi_uevent *ev)
++{
++	struct iscsi_if_snx *snx;
++	struct Scsi_Host *shost;
++	struct iscsi_if_cnx *cnx;
++	unsigned long flags;
++	int error;
++
++	shost = scsi_host_lookup(ev->u.c_cnx.sid);
++	if (shost == ERR_PTR(-ENXIO))
++		return -EEXIST;
++	scsi_host_put(shost);
+
+again, please keep the reference until you're done.
+
