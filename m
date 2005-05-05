@@ -1,47 +1,37 @@
-From: gdnixon1@enterate.com.ar
-Subject: Inquiry From Gerald
-Date: Thu,  5 May 2005 19:26:53 -0300
-Message-ID: <1115332013.427a9dad1bfe8__16709.1475370855$1115331372$gmane$org@mail.enterate.com.ar>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH 2/3] add open iscsi netlink interface to iscsi
+	transport class
+Date: Thu, 05 May 2005 07:45:47 -0400
+Message-ID: <1115293547.6052.1.camel@localhost.localdomain>
+References: <E1DTehn-0005gJ-00@gondolin.me.apana.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from customer79-105.iplannetworks.net ([200.68.68.105]:34433 "EHLO
-	mail.enterate.com.ar") by vger.kernel.org with ESMTP
-	id S262086AbVEEWSO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 May 2005 18:18:14 -0400
+Received: from s-utl01-nypop.stsn.com ([199.106.90.52]:61099 "HELO
+	s-utl01-nypop.stsn.com") by vger.kernel.org with SMTP
+	id S261944AbVEEXxV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 May 2005 19:53:21 -0400
+In-Reply-To: <E1DTehn-0005gJ-00@gondolin.me.apana.org.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: YOSHIFUJI Hideaki / ???? <yoshfuji@linux-ipv6.org>, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, netdev@oss.sgi.com, linux-kernel@vger.kernel.org
 
-Dear Friend,
-I am Mr. Gerald Nixon, I write to inform you of my desire to acquire properties 
-Hence i am contacting you if you would agree to assist me in other to actualize 
-this transaction. the funds to carry out this proposed investments is presently 
-lodged in a finance security firm i honestly request your assistance to provide 
-for me a safe account in your country to receive the money before we can put 
-the funds into use. The total sum is 4.5Million Great Britain Pounds.  
-As soon as the amount mentioned above is successfully transferred into your 
-account, you can go ahead in buying the properties. It might interest you to 
-note that transaction of such may raise suspicion of irrationality but i assure 
-you it will be executed safely without breaching our limited personal integrity 
-that we have in one way or the other aspire to protect. So let us allow trust 
-to play a very minimal role until performance is seen.  Thank you in 
-anticipation of your co-operation.
-Best Regards,
-Mr. Gerald Nixon
-
-Note: I have set aside 25% of this fund to consult your assistance.
+On Thu, 2005-05-05 at 21:39 +1000, Herbert Xu wrote:
+> YOSHIFUJI Hideaki / ???? <yoshfuji@linux-ipv6.org> wrote:
+> > In article <42798AC1.2010308@cs.wisc.edu> (at Wed, 04 May 2005 19:53:53 -0700), Mike Christie <michaelc@cs.wisc.edu> says:
+> > 
+> >> +struct iscsi_uevent {
+> > :
+> >> +} __attribute__ ((aligned (sizeof(unsigned long))));
+> > 
+> > I think it'd be better to use sizeof(uint64_t) or something.
+> 
+> Is there a benefit in aligning on 64-bit boundaries for 32-bit platforms?
 
 
+why align at all as opposed to just letting the compiler figure it out.
 
 
-* Este mensaje fue enviado desde http://www.enterate.com.ar/ 
-____________________________________________________________ 
-
-* Conectate GRATIS a Internet desde Enterate ! 
-Usuario   : enterate@enterate.com.ar 
-Clave     : enterate 
-desde Buenos Aires : 4004-8007 
-desde otras ciudades, consulta en : 
-http://www.enterate.com.ar/InternetGratis.htm 
 
