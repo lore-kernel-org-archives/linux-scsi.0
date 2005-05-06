@@ -1,28 +1,31 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: Empty partition nodes not created (was device node issues with recent mm's and udev)
-Date: Fri, 6 May 2005 08:50:21 -0700
-Message-ID: <20050506155020.GA6904@kroah.com>
-References: <d4757e6005050219514ece0c0a@mail.gmail.com> <20050503031421.GA528@kroah.com> <20050502202620.04467bbd.rddunlap@osdl.org> <20050506080056.GD4604@pclin040.win.tue.nl> <20050506081009.GX23013@shell0.pdx.osdl.net>
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: Re: Empty partition nodes not created (was device node issues with recent
+ mm's and udev)
+Date: Fri, 6 May 2005 09:43:37 -0700
+Message-ID: <OF36D48B29.45D85BB9-ON88256FF9.005B311E-88256FF9.005BEEB7@us.ibm.com>
+References: <20050506080437.GE4604@pclin040.win.tue.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kroah.org ([69.55.234.183]:59361 "EHLO perch.kroah.org")
-	by vger.kernel.org with ESMTP id S261200AbVEFPua (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2005 11:50:30 -0400
-Content-Disposition: inline
-In-Reply-To: <20050506081009.GX23013@shell0.pdx.osdl.net>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:54421 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261157AbVEFQnz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2005 12:43:55 -0400
+In-Reply-To: <20050506080437.GE4604@pclin040.win.tue.nl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Wright <chrisw@osdl.org>
-Cc: Andries Brouwer <aebr@win.tue.nl>, "Randy.Dunlap" <rddunlap@osdl.org>, joecool1029@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org
+To: Andries Brouwer <aebr@win.tue.nl>
+Cc: Andrew Morton <akpm@osdl.org>, Greg KH <greg@kroah.com>, Joe <joecool1029@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Randy.Dunlap" <rddunlap@osdl.org>
 
-On Fri, May 06, 2005 at 01:10:09AM -0700, Chris Wright wrote:
-> * Andries Brouwer (aebr@win.tue.nl) wrote:
-> > No, there is no problem but an intentional change in behaviour in -mm
-> > and now also in 2.6.11.8.
-> 
-> I think this should be backed out of -stable.
+>There is a misunderstanding in terminology here.
+>"DOS-type partition table" is for most Linux users the only type
+>they have ever seen. The msdos in this context does not refer
+>to a particular filesystem, like the fat or msdos filesystem.
 
-I agree, I'll go do it in the tree right now, sorry about this.
+As long as we're talking terminology: fat and msdos aren't particular 
+filesystems.  They're particular filesystem types.  The contents of a 
+particular DOS-fomatted floppy disk would be an example of a particular 
+filesystem.
 
-greg k-h
+--
+Bryan Henderson                          IBM Almaden Research Center
+San Jose CA                              Filesystems
