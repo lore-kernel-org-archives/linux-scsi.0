@@ -1,8 +1,8 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Kay Sievers <kay.sievers@vrfy.org>
 Subject: Re: Empty partition nodes not created (was device node issues with
 	recent mm's and udev)
-Date: Fri, 06 May 2005 09:12:47 -0500
-Message-ID: <1115388767.4989.2.camel@mulgrave>
+Date: Fri, 06 May 2005 16:18:22 +0200
+Message-ID: <1115389102.32065.11.camel@localhost.localdomain>
 References: <d4757e6005050219514ece0c0a@mail.gmail.com>
 	 <20050503031421.GA528@kroah.com>
 	 <20050502202620.04467bbd.rddunlap@osdl.org>
@@ -13,18 +13,39 @@ References: <d4757e6005050219514ece0c0a@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:22236 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261203AbVEFON1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 May 2005 10:13:27 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261240AbVEFOT1@vger.kernel.org>
 In-Reply-To: <20050506020518.0b0afdc3.akpm@osdl.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Andries Brouwer <Andries.Brouwer@cwi.nl>, chrisw@osdl.org, aebr@win.tue.nl, rddunlap@osdl.org, greg@kroah.com, joecool1029@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, dwmw2@infradead.org
-Cc: Andries Brouwer <Andries.Brouwer@cwi.nl>, chrisw@osdl.org, aebr@win.tue.nl, "Randy.Dunlap" <rddunlap@osdl.org>, Greg KH <greg@kroah.com>, joecool1029@gmail.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
 On Fri, 2005-05-06 at 02:05 -0700, Andrew Morton wrote:
+> Andries Brouwer <Andries.Brouwer@cwi.nl> wrote:
+> >
+> > On Fri, May 06, 2005 at 01:10:09AM -0700, Chris Wright wrote:
+> > > * Andries Brouwer (aebr@win.tue.nl) wrote:
+> > > > No, there is no problem but an intentional change in behaviour in -mm
+> > > > and now also in 2.6.11.8.
+> > > 
+> > > I think this should be backed out of -stable.
+> > 
+> > I was surprised to find it in, after I had written
+> > 
+> > ============
+> > Date: Sat, 30 Apr 2005 21:58:07 +0200
+> > 
+> > For the time being, although I do not object to the patch,
+> > obviously, since it is my own, I cannot see any reason to
+> > add it to the "fixed" release.
+> > ============
+> > 
+> > but maybe including it was done by mistake?
+> > It wasn't mentioned, I think, in the changelog.
+> > 
+> > There was a report that it fixed an oops,
+> > but the report is unconfirmed and ununderstood.
+> > 
 > > Should it be backed out of 2.6.11.8? Possibly - but if it will be
 > > part of 2.6.12 or 2.6.13 then I would be inclined to leave it.
 > > 
@@ -34,12 +55,9 @@ On Fri, 2005-05-06 at 02:05 -0700, Andrew Morton wrote:
 > you find out that sort of info using git?  Generating a full log is
 > cheating).
 
-Well, moving offtopic, but it is of relevance to people who use git.
-The answer is that the information exists (we can use the commit tree to
-reconstruct the file data) but that no-one has yet come up with a file
-history viewing tool.  I think David Woodhouse is the closest to
-producing one of these, David?
+You can get the commit-history for a file out of the web interface.
+Here's another example, cause this change is not in the repository: 
+  http://www.kernel.org/git/gitweb.cgi?p=linux/kernel/git/torvalds/linux-2.6.git;a=history;f=lib/kobject.c
 
-James
- 
-
+Thanks,
+Kay
