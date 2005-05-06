@@ -1,37 +1,42 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH 2/3] add open iscsi netlink interface to iscsi
-	transport class
-Date: Thu, 05 May 2005 07:45:47 -0400
-Message-ID: <1115293547.6052.1.camel@localhost.localdomain>
-References: <E1DTehn-0005gJ-00@gondolin.me.apana.org.au>
+From: Andries Brouwer <aebr@win.tue.nl>
+Subject: Re: Empty partition nodes not created (was device node issues with recent mm's and udev)
+Date: Fri, 6 May 2005 09:58:40 +0200
+Message-ID: <20050506075840.GC4604@pclin040.win.tue.nl>
+References: <d4757e6005050219514ece0c0a@mail.gmail.com> <20050503031421.GA528@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from s-utl01-nypop.stsn.com ([199.106.90.52]:61099 "HELO
-	s-utl01-nypop.stsn.com") by vger.kernel.org with SMTP
-	id S261944AbVEEXxV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 May 2005 19:53:21 -0400
-In-Reply-To: <E1DTehn-0005gJ-00@gondolin.me.apana.org.au>
+Received: from pastinakel.tue.nl ([131.155.2.7]:29967 "EHLO pastinakel.tue.nl")
+	by vger.kernel.org with ESMTP id S261168AbVEFH6o (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2005 03:58:44 -0400
+Content-Disposition: inline
+In-Reply-To: <20050503031421.GA528@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: YOSHIFUJI Hideaki / ???? <yoshfuji@linux-ipv6.org>, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, netdev@oss.sgi.com, linux-kernel@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Joe <joecool1029@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-On Thu, 2005-05-05 at 21:39 +1000, Herbert Xu wrote:
-> YOSHIFUJI Hideaki / ???? <yoshfuji@linux-ipv6.org> wrote:
-> > In article <42798AC1.2010308@cs.wisc.edu> (at Wed, 04 May 2005 19:53:53 -0700), Mike Christie <michaelc@cs.wisc.edu> says:
+On Mon, May 02, 2005 at 08:14:21PM -0700, Greg KH wrote:
+> On Mon, May 02, 2005 at 10:51:24PM -0400, Joe wrote:
+> > Ok, first off I'd like to say, I am on 2.6.12-rc3-mm2, and this issue
+> > is not fixed at all.  Secondly, I'd like to say that I've pinpointed
+> > it a bit more.  It appears only Empty partitions (type 0 in fdisk) do
+> > not create device nodes.
 > > 
-> >> +struct iscsi_uevent {
-> > :
-> >> +} __attribute__ ((aligned (sizeof(unsigned long))));
+> > Here is the partition table from fdisk, fdisk does run fine.. its just
+> > the fact this node is not created that threw me off before.
 > > 
-> > I think it'd be better to use sizeof(uint64_t) or something.
+> >    Device Boot      Start         End      Blocks   Id  System
+> > /dev/sdb1   *           1           2       16033+   0  Empty
+> > /dev/sdb2   *           6        2431    19486845    b  W95 FAT32
+> > /dev/sdb3               3           5       24097+  83  Linux
+> > 
+> > 
+> > Notice, /dev/sdb1 is a Empty partition... in /dev I only have sdb,
+> > sdb2, and sdb3.  No sdb1.  Any help would be appreciated.
 > 
-> Is there a benefit in aligning on 64-bit boundaries for 32-bit platforms?
+> Looks like it might be a scsi issue.  Redirecting to that mailing list
+> now.  Anyone here have a clue?
 
-
-why align at all as opposed to just letting the compiler figure it out.
-
-
-
+Hmm - you even put this in 2.6.11.8, if I understand correctly.
+Was that by mistake?
