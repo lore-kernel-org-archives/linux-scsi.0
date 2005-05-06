@@ -1,32 +1,50 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH][RESEND]drivers/scsi/megaraid/megaraid_{mm,mbox}
-Date: Fri, 06 May 2005 15:05:21 -0500
-Message-ID: <1115409921.4989.53.camel@mulgrave>
-References: <0E3FA95632D6D047BA649F95DAB60E57060CCE54@exa-atlanta>
+From: Thomas Backlund <tmb@mandriva.org>
+Subject: Re: WARNING : kernel 2.6.11.7 (others) kills megaraid 4e/Si dead
+Date: Sat, 07 May 2005 01:08:31 +0300
+Message-ID: <427BEADF.9040606@mandriva.org>
+References: <20050503151532.GA1316@thumper2> <20050503190005.GS23013@shell0.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:19681 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261284AbVEFUFa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 May 2005 16:05:30 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57060CCE54@exa-atlanta>
+Received: from mbox1.netikka.net ([213.250.81.202]:13992 "EHLO
+	mbox1.netikka.net") by vger.kernel.org with ESMTP id S261303AbVEFWIa
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 May 2005 18:08:30 -0400
+In-Reply-To: <20050503190005.GS23013@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "Ju, Seokmann" <sju@lsil.com>
+To: Chris Wright <chrisw@osdl.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, 2005-05-06 at 15:43 -0400, Bagalkote, Sreenivas wrote:
-> I am resending a patch sent by Seokmann Ju on Mar 17, 2005.
+Chris Wright wrote:
+> * Andy (genanr@emsphone.com) wrote:
+> 
+>>cross posted due to the severity of this issue.
+>>
+>>I have killed two Dell 1850 (x86_64) with megaraid 4e/SI servers using
+>>kernel 2.6.11.7.  When the system boots, it looks like it does not see the
+>>megaraid controller (because it never prints anything about it) and hangs
+>>when it tries to mount root.  When rebooted, the system says no firmware
+>>present for embedded raid controller.  I then try to flash it, the flash
+>>program says the firmware is corrupt and flashes the controller.  However,
+>>upon reboot I still get the no firmware present, thus the machine can no
+>>longer boot off the raid.
+> 
+> 
+> Not good.  There were no megaraid changes in the -stable series.  What's
+> the last kernel.org kernel that worked for you?
+> 
 
-The patch is malformed ... your mailer is breaking lines past 80
-characters.
+Any news on this ??
 
-Also, I asked for a fix up of the patch on 17 March because it didn't
-apply without rejections, so this better contain those fixups rather
-than be a simple resend.
+I'm about to load linux on one PE1850 and two PE2850 with that
+controller, but now I'm afraid of doing so...
 
-James
+--
+Regards
 
+Thomas
+
+PS. Please CC me as I'm not subscribed...
 
