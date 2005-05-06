@@ -1,50 +1,66 @@
-From: Thomas Backlund <tmb@mandriva.org>
-Subject: Re: WARNING : kernel 2.6.11.7 (others) kills megaraid 4e/Si dead
-Date: Sat, 07 May 2005 01:08:31 +0300
-Message-ID: <427BEADF.9040606@mandriva.org>
-References: <20050503151532.GA1316@thumper2> <20050503190005.GS23013@shell0.pdx.osdl.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [GIT PATCH] scsi bug fixes for 2.6.12-rc3
+Date: Fri, 06 May 2005 17:47:18 -0500
+Message-ID: <1115419638.4989.57.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mbox1.netikka.net ([213.250.81.202]:13992 "EHLO
-	mbox1.netikka.net") by vger.kernel.org with ESMTP id S261303AbVEFWIa
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 May 2005 18:08:30 -0400
-In-Reply-To: <20050503190005.GS23013@shell0.pdx.osdl.net>
+Received: from stat16.steeleye.com ([209.192.50.48]:18659 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261305AbVEFWr3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 May 2005 18:47:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Wright <chrisw@osdl.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Chris Wright wrote:
-> * Andy (genanr@emsphone.com) wrote:
-> 
->>cross posted due to the severity of this issue.
->>
->>I have killed two Dell 1850 (x86_64) with megaraid 4e/SI servers using
->>kernel 2.6.11.7.  When the system boots, it looks like it does not see the
->>megaraid controller (because it never prints anything about it) and hangs
->>when it tries to mount root.  When rebooted, the system says no firmware
->>present for embedded raid controller.  I then try to flash it, the flash
->>program says the firmware is corrupt and flashes the controller.  However,
->>upon reboot I still get the no firmware present, thus the machine can no
->>longer boot off the raid.
-> 
-> 
-> Not good.  There were no megaraid changes in the -stable series.  What's
-> the last kernel.org kernel that worked for you?
-> 
+This is the dump of the current crop of SCSI bugfixes.
 
-Any news on this ??
+The patch is available at
 
-I'm about to load linux on one PE1850 and two PE2850 with that
-controller, but now I'm afraid of doing so...
+rsync://www.parisc-linux.org/~jejb/git/scsi-for-linus-2.6.git
 
---
-Regards
+The short changelog is:
 
-Thomas
 
-PS. Please CC me as I'm not subscribed...
+Andreas Herrmann:
+  o zfcp: fix compile error
+
+Andrew Vasquez:
+  o qla2xxx: remove a transport #include
+
+Christoph Hellwig:
+  o aic7xxx: remove inquiry sniffing leftovers
+
+James Bottomley:
+  o correct the sym2 period setting routines
+  o fix command retries in spi_transport class
+
+Mark Haverkamp:
+  o aacraid: Fix adapter open error
+
+Mike Christie:
+  o call correct scsi_done function in scsi_dispatch_cmd
+
+Nate Dailey:
+  o drivers/scsi/sr_ioctl.c: check for failed allocation
+
+And the diffstat is:
+
+ drivers/s390/scsi/zfcp_aux.c        |    2 -
+ drivers/s390/scsi/zfcp_def.h        |    1 
+ drivers/scsi/aacraid/linit.c        |    2 -
+ drivers/scsi/aic7xxx/aic7xxx_osm.c  |    2 -
+ drivers/scsi/aic7xxx/aic7xxx_osm.h  |    6 ----
+ drivers/scsi/qla2xxx/qla_attr.c     |    8 -----
+ drivers/scsi/qla2xxx/qla_gbl.h      |    4 +-
+ drivers/scsi/qla2xxx/qla_os.c       |    3 +-
+ drivers/scsi/scsi.c                 |    2 -
+ drivers/scsi/scsi_transport_spi.c   |   49 ++++++++++++++++++++++++------------
+ drivers/scsi/sr_ioctl.c             |    3 ++
+ drivers/scsi/sym53c8xx_2/sym_glue.c |    5 ++-
+ 12 files changed, 48 insertions(+), 39 deletions(-)
+
+James
 
