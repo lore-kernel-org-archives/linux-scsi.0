@@ -1,42 +1,40 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [ANNOUNCE] sdparm 0.91
-Date: Sat, 07 May 2005 13:36:54 +1000
-Message-ID: <427C37D6.3080507@torque.net>
-Reply-To: dougg@torque.net
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: aha2940 on 2.6.9
+Date: Sat, 07 May 2005 10:30:39 -0500
+Message-ID: <1115479839.5094.2.camel@mulgrave>
+References: <20041117.142325.74756248.chamas@h4.dion.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:22755 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S262644AbVEGDkS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 May 2005 23:40:18 -0400
+Received: from stat16.steeleye.com ([209.192.50.48]:65005 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262614AbVEGPao (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 7 May 2005 11:30:44 -0400
+In-Reply-To: <20041117.142325.74756248.chamas@h4.dion.ne.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Ken-ichirou MATSUZAWA <chamas@h4.dion.ne.jp>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-sdparm is a command line utility designed to get and set
-SCSI disk parameters (cf hdparm for ATA disks). More generally
-it gets and sets mode page information on SCSI devices or devices
-that use a SCSI command set (e.g. CD/DVD drives (any transport)
-and SCSI tape drives). It also can list device identification
-descriptors from VPD pages.
+On Wed, 2004-11-17 at 14:23 +0900, Ken-ichirou MATSUZAWA wrote:
+>  Hello, I'm using kernel-2.6 with aha2940.
+> until 2.6.8.1 it works fine but since 2.6.9, I've been getting message:
+> 
+>   Nov 17 13:45:48 plath kernel: FAILED
+>   Nov 17 13:45:48 plath kernel:   status = 1, message = 00, host = 0, driver = 08
+>   Nov 17 13:45:48 plath kernel:   Current sd: sense = 70  5
+>   Nov 17 13:45:48 plath kernel: ASC=20 ASCQ= 0
+>   Nov 17 13:45:48 plath kernel: Raw sense data:0x70 0x00 0x05 0x00 0x00 0x00 0x00 0x0a 0x00 0x00 0x00 0x00 0x20 0x00 0x00 0x00 0x00 0x00 
 
-For more information and downloads (tarball, rpms and deb
-packages) see:
-http://www.torque.net/sg/sdparm.html
+The error is coming from the device, and has nothing to do with the
+driver.  It's ILLEGAL REQUEST, INVALID COMMAND OPERATION CODE.
 
-This utility overlaps in functionality somewhat with
-blktool by Jeff Garzik.
+That means that something sent the device a SCSI command it didn't
+understand.  Without knowing what the command was it's hard to say, but
+my best guess would be that some userland program is sending commands to
+the device and got one wrong.
 
-sdparm 0.90 was the original version released.
-ChangeLog for sdparm-0.91 [20050506]
-   - if lk 2.4 detected, map primary SCSI node to sg node for
-     ease of use
-   - add support for '--inquiry' (VPD pages, defaults to
-     device identification)
-   - decode format and rigid disk mode pages (sbc2)
-     [both pages are obsolete but common]
+James
 
 
-Doug Gilbert
