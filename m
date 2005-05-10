@@ -1,43 +1,45 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Problems with the sym53c8xxx V2
-Date: Tue, 10 May 2005 14:36:56 +0100
-Message-ID: <20050510133656.GB10567@parcelfarce.linux.theplanet.co.uk>
-References: <1960007539@web.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: sg driver and the error handler
+Date: Tue, 10 May 2005 14:51:44 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0505101433520.5058-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:38113 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261643AbVEJNgs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 May 2005 09:36:48 -0400
-Content-Disposition: inline
-In-Reply-To: <1960007539@web.de>
+Received: from iolanthe.rowland.org ([192.131.102.54]:1152 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261738AbVEJSvp
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 May 2005 14:51:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Danny_Schneider_Hessen@web.de
-Cc: groudier@free.fr, matthew@wil.cx, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Doug Gilbert <dgilbert@interlog.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, May 10, 2005 at 10:06:20AM +0200, Danny_Schneider_Hessen@web.de wrote:
-> Please read the attached pdf
+I don't know who the right person is to handle this, but maybe someone can 
+help...
 
-Never do this again.  I seriously considered deleting this without
-reading it.  Plain text is appropriate for emails.  PDFs are not.
+When a command injected through the sg driver encounters any sort of
+error, the usual retry mechanism and error handler are brought into play.  
+Since sg sets the number of retries to 0 by default, the retry mechanism
+shouldn't cause any difficulty.  But the error handler does.  IMO it
+should never get involved with requests coming through sg -- sg should
+provide access that is as transparent as possible so that userspace
+programs will have a clean shot at managing their device.
 
-To summarise your pdf: "I have the same bug that's already reported in the
-kernel bug tracker and several distro bug trackers".  If it's assigned
-to me, then I already know about it.  If it isn't, then please tell me
-which bug number.  If you have new information that isn't already covered,
-please add it to the bug report.  If you're not sure, then report a new
-bug and I'll merge it if they're the same.
+Consider a case that just came up.  A USB CD drive causes a phase error
+when it receives a certain READ BUFFER command (buggy firmware on the
+drive, never mind that now).  You would expect the user program to receive
+from sg a host_status value indicating DID_ERROR or something of the sort.
 
-Gerard doesn't maintain the sym2 driver, and hasn't for over 2 years.
-Please cc linux-scsi on correspondence about sym2 in the future.
-Thank you.
+Instead the error handler takes charge and sends out one or two TEST UNIT 
+READY commands.  The status information finally received by the user 
+program is the status from the TEST UNIT READY, not from the failed READ 
+BUFFER!  How's a program supposed to cope with that sort of obfuscation?
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Something in the SCSI stack (scsi_io_completion ?) should check for 
+requests coming in via sg and should know to complete the requests 
+immediately.  No requeuing and no error handling.
+
+Does this sound like a feasible thing to implement?
+
+Alan Stern
+
