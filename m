@@ -1,144 +1,74 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: sg driver and the error handler
-Date: Tue, 10 May 2005 15:58:31 -0700
-Message-ID: <20050510225831.GA4181@us.ibm.com>
-References: <Pine.LNX.4.44L0.0505101433520.5058-100000@iolanthe.rowland.org>
+From: Dmitry Yusupov <dmitry_yus@yahoo.com>
+Subject: Re: Re[2]: ata over ethernet question
+Date: Tue, 10 May 2005 16:14:35 -0700
+Message-ID: <1115766875.25161.101.camel@beastie>
+References: <1416215015.20050504193114@dns.toxicfilms.tv>
+	 <1115236116.7761.19.camel@dhollis-lnx.sunera.com>
+	 <1104082357.20050504231722@dns.toxicfilms.tv>
+	 <1115305794.3071.5.camel@dhollis-lnx.sunera.com>
+	 <20050507150538.GA800@favonius>
+	 <Pine.LNX.4.60.0505102352430.9008@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:43224 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S261839AbVEJW6i
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 May 2005 18:58:38 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e35.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j4AMwbT9629278
-	for <linux-scsi@vger.kernel.org>; Tue, 10 May 2005 18:58:37 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j4AMwb6d252532
-	for <linux-scsi@vger.kernel.org>; Tue, 10 May 2005 16:58:37 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j4AMwa4b027371
-	for <linux-scsi@vger.kernel.org>; Tue, 10 May 2005 16:58:37 -0600
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0505101433520.5058-100000@iolanthe.rowland.org>
+Received: from smtp107.mail.sc5.yahoo.com ([66.163.169.227]:61063 "HELO
+	smtp107.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S261808AbVEJXOk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 May 2005 19:14:40 -0400
+In-Reply-To: <Pine.LNX.4.60.0505102352430.9008@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Doug Gilbert <dgilbert@interlog.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: Sander <sander@humilis.net>, David Hollis <dhollis@davehollis.com>, Maciej Soltysiak <solt2@dns.toxicfilms.tv>, linux-scsi@vger.kernel.org, iet-dev <iscsitarget-devel@lists.sourceforge.net>
 
-Hi Alan -
+I'll redirect this question to iSCSI Target folks, so they will lead
+some light on current IET limitations and advantages comparing to NBD.
 
-On Tue, May 10, 2005 at 02:51:44PM -0400, Alan Stern wrote:
-> When a command injected through the sg driver encounters any sort of
-> error, the usual retry mechanism and error handler are brought into play.  
-> Since sg sets the number of retries to 0 by default, the retry mechanism
-> shouldn't cause any difficulty.  But the error handler does.  IMO it
-> should never get involved with requests coming through sg -- sg should
-> provide access that is as transparent as possible so that userspace
-> programs will have a clean shot at managing their device.
-
-The error handler is mainly a timeout handler, so it has to run to cancel
-the timed out command, we can't complete the timed out command back to the
-upper level until we know the HBA is no longer using it.
-
-> Consider a case that just came up.  A USB CD drive causes a phase error
-> when it receives a certain READ BUFFER command (buggy firmware on the
-> drive, never mind that now).  You would expect the user program to receive
-> from sg a host_status value indicating DID_ERROR or something of the sort.
+On Wed, 2005-05-11 at 00:00 +0200, Guennadi Liakhovetski wrote:
+> Hi
 > 
-> Instead the error handler takes charge and sends out one or two TEST UNIT 
-> READY commands.  The status information finally received by the user 
-> program is the status from the TEST UNIT READY, not from the failed READ 
-> BUFFER!  How's a program supposed to cope with that sort of obfuscation?
+> On Sat, 7 May 2005, Sander wrote:
+> 
+> > David Hollis wrote (ao):
+> > > There seem to be a few iSCSI implementations floating around for
+> > > Linux, hopefully one will be added to mainline soon. Most of those
+> > > implementations are for the client side though there is at least one
+> > > target implementation that allows you to provide local storage to
+> > > iSCSI clients. I don't remember the name of it or if it's still
+> > > maintained or not.
+> > 
+> > Quite active even:
+> > 
+> > http://sourceforge.net/projects/iscsitarget/
+> > 
+> > The "Quick Guide to iSCSI on Linux" is a good starting point btw.
+> > 
+> > Also check out http://www.open-iscsi.org/ (the client, aka 'initiator').
+> 
+> A follow up question - I recently used nbd to access a CD-ROM. It worked 
+> nice, but, I had to read in 7 CDs, so, each time I had to replace a CD, I 
+> had to stop the client, the server, then replace the CD, re-start the 
+> server, re-start the client... I thought about extending NBD to (better) 
+> support removable media, but then you start thinking about all those 
+> features that your local block device has that don't get exported over 
+> NBD...
+> 
+> Now, my understanding (sorry, without looking at any docs - yet) is, that 
+> iSCSI is (or at least should be) free from these limitations. So, does it 
+> make any sense at all extending NBD or just switch to iSCSI? Should NBD be 
+> just kept simple as it is or would it be completely superseeded by iSCSI, 
+> or is there still something that NBD does that iSCSI wouldn't (easily) do?
+> 
+> Or am I completely misunderstanding what iSCSI target does?
+> 
+> Thanks
+> Guennadi
+> ---
+> Guennadi Liakhovetski
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-:-(
-
-> Something in the SCSI stack (scsi_io_completion ?) should check for 
-> requests coming in via sg and should know to complete the requests 
-> immediately.  No requeuing and no error handling.
-
-> Does this sound like a feasible thing to implement?
-
-No per above. I think there are still some cases where sg or SG_IO
-commands are not immediately returned, I think for some certain ASC codes,
-some of those probably should be retried, as should cases like QUEUE FULL.
-
-As you say, what you really want is the correct result going back to the
-user, not the result of the TUR.
-
-So save and restore the result in scsi_eh_tur, and also in scsi_eh_try_stu.
-The request sense one already saves and restores it.
-
-And always set result |= (DRIVER_TIMEOUT << 24) if we are not requeueing
-the IO.
-
-Like (only compile tested) this, against scsi-misc git tree of a few days
-ago. Hopefully, sg or SG_IO programs can handle DRIVER_TIMEOUT :-/ but it
-is certainly better than returning as if no error occurred.
-
-What do you think?
-
-diff -uprN -X /home/patman/dontdiff scsi-misc-2.6.git/drivers/scsi/scsi_error.c to-res-scsi-misc-2.6.git/drivers/scsi/scsi_error.c
---- scsi-misc-2.6.git/drivers/scsi/scsi_error.c	2005-05-09 14:19:41.000000000 -0700
-+++ to-res-scsi-misc-2.6.git/drivers/scsi/scsi_error.c	2005-05-10 15:49:01.000000000 -0700
-@@ -770,6 +770,7 @@ static int scsi_eh_tur(struct scsi_cmnd 
- {
- 	static unsigned char tur_command[6] = {TEST_UNIT_READY, 0, 0, 0, 0, 0};
- 	int retry_cnt = 1, rtn;
-+	int saved_result;
- 
- retry_tur:
- 	memcpy(scmd->cmnd, tur_command, sizeof(tur_command));
-@@ -780,6 +781,7 @@ retry_tur:
- 	 */
- 	memset(scmd->sense_buffer, 0, sizeof(scmd->sense_buffer));
- 
-+	saved_result = scmd->result;
- 	scmd->request_buffer = NULL;
- 	scmd->request_bufflen = 0;
- 	scmd->use_sg = 0;
-@@ -794,6 +796,7 @@ retry_tur:
- 	 * the original request, so let's restore the original data. (db)
- 	 */
- 	scsi_setup_cmd_retry(scmd);
-+	scmd->result = saved_result;
- 
- 	/*
- 	 * hey, we are done.  let's look to see what happened.
-@@ -896,6 +899,7 @@ static int scsi_eh_try_stu(struct scsi_c
- {
- 	static unsigned char stu_command[6] = {START_STOP, 0, 0, 0, 1, 0};
- 	int rtn;
-+	int saved_result;
- 
- 	if (!scmd->device->allow_restart)
- 		return 1;
-@@ -908,6 +912,7 @@ static int scsi_eh_try_stu(struct scsi_c
- 	 */
- 	memset(scmd->sense_buffer, 0, sizeof(scmd->sense_buffer));
- 
-+	saved_result = scmd->result;
- 	scmd->request_buffer = NULL;
- 	scmd->request_bufflen = 0;
- 	scmd->use_sg = 0;
-@@ -922,6 +927,7 @@ static int scsi_eh_try_stu(struct scsi_c
- 	 * the original request, so let's restore the original data. (db)
- 	 */
- 	scsi_setup_cmd_retry(scmd);
-+	scmd->result = saved_result;
- 
- 	/*
- 	 * hey, we are done.  let's look to see what happened.
-@@ -1561,8 +1567,7 @@ static void scsi_eh_flush_done_q(struct 
- 							  scmd));
- 				scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY);
- 		} else {
--			if (!scmd->result)
--				scmd->result |= (DRIVER_TIMEOUT << 24);
-+			scmd->result |= (DRIVER_TIMEOUT << 24);
- 			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: flush finish"
- 							" cmd: %p\n",
- 							current->comm, scmd));
-
-
--- Patrick Mansfield
