@@ -1,54 +1,43 @@
-From: Andreas Moroder <andreas.moroder@sb-brixen.it>
-Subject: Machine locked up after cat /proc/scsi/dpt_i2o/0
-Date: Mon, 09 May 2005 17:25:42 +0200
-Message-ID: <d5nv1n$t1f$1@sea.gmane.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Problems with the sym53c8xxx V2
+Date: Tue, 10 May 2005 14:36:56 +0100
+Message-ID: <20050510133656.GB10567@parcelfarce.linux.theplanet.co.uk>
+References: <1960007539@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:63461 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S261450AbVEIRaA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 May 2005 13:30:00 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1DVB2E-0003i4-6P
-	for linux-scsi@vger.kernel.org; Mon, 09 May 2005 18:23:19 +0200
-Received: from merlin2.provinz.bz.it ([62.101.0.30])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Mon, 09 May 2005 18:23:00 +0200
-Received: from andreas.moroder by merlin2.provinz.bz.it with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Mon, 09 May 2005 18:23:00 +0200
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:38113 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261643AbVEJNgs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 May 2005 09:36:48 -0400
+Content-Disposition: inline
+In-Reply-To: <1960007539@web.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Danny_Schneider_Hessen@web.de
+Cc: groudier@free.fr, matthew@wil.cx, linux-scsi@vger.kernel.org
 
-Hello,
+On Tue, May 10, 2005 at 10:06:20AM +0200, Danny_Schneider_Hessen@web.de wrote:
+> Please read the attached pdf
 
-as posted in another post i added two disks to a dpt_i2o raid system an 
-dconfigured them as RAID
+Never do this again.  I seriously considered deleting this without
+reading it.  Plain text is appropriate for emails.  PDFs are not.
 
-I type
-cat /proc/scsi/dpt_io2/0
-and the machine freezed completely.
+To summarise your pdf: "I have the same bug that's already reported in the
+kernel bug tracker and several distro bug trackers".  If it's assigned
+to me, then I already know about it.  If it isn't, then please tell me
+which bug number.  If you have new information that isn't already covered,
+please add it to the bug report.  If you're not sure, then report a new
+bug and I'll merge it if they're the same.
 
-We did restart the maschine and now linux lists the new drives.
+Gerard doesn't maintain the sym2 driver, and hasn't for over 2 years.
+Please cc linux-scsi on correspondence about sym2 in the future.
+Thank you.
 
-The last entry in /var/log/messages was
-
-May  9 16:51:47 galileost kernel: scsi singledevice 1 0 0 0
-May  9 16:51:47 galileost kernel: blk: queue e01b0018, I/O limit 4095Mb 
-(mask 0xffffffff)
-May  9 16:51:47 galileost kernel: scsi singledevice 1 0 1 0
-May  9 16:51:48 galileost kernel: scsi singledevice 1 0 2 0
-May  9 16:51:48 galileost kernel: scsi singledevice 1 0 3 0
-May  9 16:51:48 galileost kernel: scsi singledevice 1 0 4 0
-
-... ( many of them )
-
-Is this a bug in the dpt_i2o driver of 2.4.19-64GB-SMP
-( SLES 8 )
-
-Regards
-Andreas
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
