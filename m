@@ -1,71 +1,50 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: sg driver and the error handler
-Date: Wed, 11 May 2005 15:43:23 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0505111531250.2981-100000@iolanthe.rowland.org>
-References: <4282345B.4010102@adaptec.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: several messages
+Date: Wed, 11 May 2005 23:26:20 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0505112309430.8122@poirot.grange>
+References: <1416215015.20050504193114@dns.toxicfilms.tv>
+ <1115236116.7761.19.camel@dhollis-lnx.sunera.com> <1104082357.20050504231722@dns.toxicfilms.tv>
+ <1115305794.3071.5.camel@dhollis-lnx.sunera.com> <20050507150538.GA800@favonius>
+ <Pine.LNX.4.60.0505102352430.9008@poirot.grange> <4281C8A3.20804@vlnb.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:40832 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261277AbVEKTnY
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 May 2005 15:43:24 -0400
-In-Reply-To: <4282345B.4010102@adaptec.com>
+Received: from pop.gmx.net ([213.165.64.20]:62641 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261515AbVEKWMg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 May 2005 18:12:36 -0400
+In-Reply-To: <4281C8A3.20804@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: dougg@torque.net, Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: iscsitarget-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, dmitry_yus@yahoo.com, Sander <sander@humilis.net>, David Hollis <dhollis@davehollis.com>, Maciej Soltysiak <solt2@dns.toxicfilms.tv>, linux-kernel@vger.kernel.org
 
-On Wed, 11 May 2005, Luben Tuikov wrote:
+Hello and thanks for the replies
 
-> I think Alan even wants to see the QUEUEFULL status not being
-> retried.
-> 
-> That is, other than reclaiming the command from the LLDD, the
-> eh code should not retry or do anything with the command, just
-> pass it back to the user process who sent it via sg.
+On Wed, 11 May 2005, FUJITA Tomonori wrote:
+> The iSCSI protocol simply encapsulates the SCSI protocol into the
+> TCP/IP protocol, and carries packets over IP networks. You can handle
+...
 
-Yes.
+On Wed, 11 May 2005, Vladislav Bolkhovitin wrote:
+> Actually, this is property not of iSCSI target itself, but of any SCSI target.
+> So, we implemented it as part of our SCSI target mid-level (SCST,
+> http://scst.sourceforge.net), therefore any target driver working over it will
+> automatically benefit from this feature. Unfortunately, currently available
+> only target drivers for Qlogic 2x00 cards and for poor UNH iSCSI target (that
+> works not too reliable and only with very specific initiators). The published
+...
 
-> Maybe the application client has other tricks up its sleeve
-> on QUEUEFULL coming from the device.
-> 
-> I think scsi generic as a passthrough, where minimal logic
-> from SCSI Core is applied and most is left to the application
-> client.
+The above confirms basically my understanding apart from one "minor" 
+confusion - I thought, that parallel to hardware solutions pure software 
+implementations were possible / being developed, like a driver, that 
+implements a SCSI LDD API on one side, and forwards packets to an IP 
+stack, say, over an ethernet card - on the initiator side. And a counter 
+part on the target side. Similarly to the USB mass-storage and storage 
+gadget drivers?
 
-That's how I think of it too.
-
-> I think he even wants the stronger condition -- after the command is reclaimed
-> from the LLDD, just send back the result to the application client.  And let
-> the application client decide whether they want to send TUR or something else.
-
-Absolutely correct.
-
-Now, I have no idea how applications will handle exotic errors like 
-QUEUEFULL.  And it might make sense to have the core retry errors like 
-that when they come from the LLDD and not from the device.  But when an 
-error does come from the device, it certainly should be passed directly 
-back to the sg client.  The error handler shouldn't do anything more than 
-abort and clean up after a timed-out command.
-
-
-On Wed, 11 May 2005, Patrick Mansfield wrote:
-
-> The TUR is part of the error recovery, and so it should be sent
-> independent of the timed out command.
-
-Or shouldn't be sent, as the case may be.  If the error handler isn't
-going to do error recovery and is going to leave it up to the application,
-then there's no reason to send the TUR.
-
-> I know we want to have transport specific error (or timeout) handling and
-> recovery. But for current usage, we should return the result of the
-> timeout to the upper level driver (and implicitly to the application).
-
-Right.  Ultimately I don't know how transport-specific issues need to be
-handled.  It would be best if they can be limited to minimal cleanup so
-that the application can do device-related error recovery.
-
-Alan Stern
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
