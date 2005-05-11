@@ -1,41 +1,71 @@
-From: Doug Maxey <dwm@maxeymade.com>
-Subject: Re: [RFC] mode pages for ATA/ATAPI devices via libata
-Date: Wed, 11 May 2005 13:42:17 -0500
-Message-ID: <200505111842.j4BIgHY8019500@falcon30.maxeymade.com>
-References: <200505111801.j4BI1P5C019280@falcon30.maxeymade.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: sg driver and the error handler
+Date: Wed, 11 May 2005 15:43:23 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0505111531250.2981-100000@iolanthe.rowland.org>
+References: <4282345B.4010102@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from falcon30.maxeymade.com ([24.173.215.190]:30597 "EHLO
-	falcon30.maxeymade.com") by vger.kernel.org with ESMTP
-	id S262017AbVEKSmn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 May 2005 14:42:43 -0400
-In-reply-to: <200505111801.j4BI1P5C019280@falcon30.maxeymade.com> 
+Received: from iolanthe.rowland.org ([192.131.102.54]:40832 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261277AbVEKTnY
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 May 2005 15:43:24 -0400
+In-Reply-To: <4282345B.4010102@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Maxey <dwm@maxeymade.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, Doug Gilbert <dgilbert@interlog.com>, Albert CC Lee <albertcc@tw.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: dougg@torque.net, Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-ahem, the neural pathways are not just worn, they have become ruts. =) 
+On Wed, 11 May 2005, Luben Tuikov wrote:
 
-s/mode/vpd/.
+> I think Alan even wants to see the QUEUEFULL status not being
+> retried.
+> 
+> That is, other than reclaiming the command from the LLDD, the
+> eh code should not retry or do anything with the command, just
+> pass it back to the user process who sent it via sg.
 
-On Wed, 11 May 2005 13:01:25 CDT, Doug Maxey wrote:
->Howdy,
->
->When a ATA/ATAPI device is attached via libata, what should the handling 
->be for mode pages that do not exist in the device?
->
->Assuming the page being asked for is 0x83, should libata fake up the
->page from the IDENTIFY (PACKET) DEVICE data?  Or should it just respond
->there is no page 0x83 as it does now in INQUIRY?  Likewise for 0x80?
->
->++doug
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Yes.
 
+> Maybe the application client has other tricks up its sleeve
+> on QUEUEFULL coming from the device.
+> 
+> I think scsi generic as a passthrough, where minimal logic
+> from SCSI Core is applied and most is left to the application
+> client.
+
+That's how I think of it too.
+
+> I think he even wants the stronger condition -- after the command is reclaimed
+> from the LLDD, just send back the result to the application client.  And let
+> the application client decide whether they want to send TUR or something else.
+
+Absolutely correct.
+
+Now, I have no idea how applications will handle exotic errors like 
+QUEUEFULL.  And it might make sense to have the core retry errors like 
+that when they come from the LLDD and not from the device.  But when an 
+error does come from the device, it certainly should be passed directly 
+back to the sg client.  The error handler shouldn't do anything more than 
+abort and clean up after a timed-out command.
+
+
+On Wed, 11 May 2005, Patrick Mansfield wrote:
+
+> The TUR is part of the error recovery, and so it should be sent
+> independent of the timed out command.
+
+Or shouldn't be sent, as the case may be.  If the error handler isn't
+going to do error recovery and is going to leave it up to the application,
+then there's no reason to send the TUR.
+
+> I know we want to have transport specific error (or timeout) handling and
+> recovery. But for current usage, we should return the result of the
+> timeout to the upper level driver (and implicitly to the application).
+
+Right.  Ultimately I don't know how transport-specific issues need to be
+handled.  It would be best if they can be limited to minimal cleanup so
+that the application can do device-related error recovery.
+
+Alan Stern
 
