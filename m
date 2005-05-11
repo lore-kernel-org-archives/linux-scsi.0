@@ -1,59 +1,183 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: sg driver and the error handler
-Date: Wed, 11 May 2005 10:45:49 -0700
-Message-ID: <20050511174549.GB9286@us.ibm.com>
-References: <Pine.LNX.4.44L0.0505101433520.5058-100000@iolanthe.rowland.org> <20050510225831.GA4181@us.ibm.com> <4281F396.2030607@torque.net> <4282345B.4010102@adaptec.com>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: [PATCH 3/5] fusion - Adding pci recog support for Fibre 949X and
+	939X chips
+Date: Wed, 11 May 2005 11:46:52 -0600
+Message-ID: <91888D455306F94EBD4D168954A9457C0247DCBC@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_000_01C55651.6A8A10A0"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:3060 "EHLO e32.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262005AbVEKRqG (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:49384 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S262018AbVEKRrC (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 May 2005 13:46:06 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e32.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j4BHk40c591042
-	for <linux-scsi@vger.kernel.org>; Wed, 11 May 2005 13:46:04 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j4BHk4Ap304310
-	for <linux-scsi@vger.kernel.org>; Wed, 11 May 2005 11:46:04 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j4BHk3ou028569
-	for <linux-scsi@vger.kernel.org>; Wed, 11 May 2005 11:46:03 -0600
-Content-Disposition: inline
-In-Reply-To: <4282345B.4010102@adaptec.com>
+	Wed, 11 May 2005 13:47:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: dougg@torque.net, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, jejb@steeleye.com
 
-On Wed, May 11, 2005 at 12:35:39PM -0400, Luben Tuikov wrote:
+This message is in MIME format. Since your mail reader does not understand
+this format, some or all of this message may not be legible.
 
-> I think Alan even wants to see the QUEUEFULL status not being
-> retried.
-> 
-> That is, other than reclaiming the command from the LLDD, the
-> eh code should not retry or do anything with the command, just
-> pass it back to the user process who sent it via sg.
-> 
-> Maybe the application client has other tricks up its sleeve
-> on QUEUEFULL coming from the device.
-> 
-> I think scsi generic as a passthrough, where minimal logic
-> from SCSI Core is applied and most is left to the application
-> client.
+------_=_NextPart_000_01C55651.6A8A10A0
+Content-Type: text/plain;
+	charset="iso-8859-1"
 
-IMO, normal sg/SG_IO usage wants scsi core to requeue the request, they
-want the command to be processed by the LUN.
+mptfusion patch 3/5:
 
-And user space does not have the information available in scsi core
-(status of other outstanding IO to the same LUN), and can't retry in a
-timely manner, possibly avoid starvation issues.
+This patch can also be found at this URL:
+ftp://ftp.lsil.com/HostAdapterDrivers/linux/Fusion-MPT/2.6-kernel/3.03.02/
 
-Maybe fast fail should be used to modify QUEUE FULL re-queue behaviours.
+Changelog:
+* adding pci id support for new Fibre chips, 949X and 939X
+* adding errata workaround - disabling PIO access except during fwdlb.
 
-It might be a bit odd in some cases and maybe hardware specific (for multi
-path io, does QUEUE FULL mean a storage port/controller is full, or the
-LUN is full? if port, then you want to send back to the upper level, but
-if LUN, you might want to let scsi core requeue it). 
+Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
--- Patrick Mansfield
+
+
+
+
+
+
+
+
+
+------_=_NextPart_000_01C55651.6A8A10A0
+Content-Type: application/octet-stream;
+	name="fc949x-3.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="fc949x-3.patch"
+
+--- b/drivers/message/fusion/mptfc.c	2005-05-05 10:19:45.000000000 =
+-0600=0A=
++++ a/drivers/message/fusion/mptfc.c	2005-05-10 14:59:11.000000000 =
+-0600=0A=
+@@ -134,6 +134,10 @@=0A=
+ 		PCI_ANY_ID, PCI_ANY_ID },=0A=
+ 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC929X,=0A=
+ 		PCI_ANY_ID, PCI_ANY_ID },=0A=
++	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC939X,=0A=
++		PCI_ANY_ID, PCI_ANY_ID },=0A=
++	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FC949X,=0A=
++		PCI_ANY_ID, PCI_ANY_ID },=0A=
+ 	{0}	/* Terminating entry */=0A=
+ };=0A=
+ MODULE_DEVICE_TABLE(pci, mptfc_pci_table);=0A=
+--- b/drivers/message/fusion/mptbase.c	2005-05-10 14:27:13.000000000 =
+-0600=0A=
++++ a/drivers/message/fusion/mptbase.c	2005-05-11 10:51:26.000000000 =
+-0600=0A=
+@@ -186,6 +186,26 @@=0A=
+ #define CHIPREG_PIO_WRITE32(addr,val)	outl(val, (unsigned =
+long)addr)=0A=
+ #define CHIPREG_PIO_READ32(addr) 	inl((unsigned long)addr)=0A=
+ =0A=
++static void=0A=
++pci_disable_io_access(struct pci_dev *pdev)=0A=
++{=0A=
++	u16 command_reg;=0A=
++=0A=
++	pci_read_config_word(pdev, PCI_COMMAND, &command_reg);=0A=
++	command_reg &=3D ~1;=0A=
++	pci_write_config_word(pdev, PCI_COMMAND, command_reg);=0A=
++}=0A=
++=0A=
++static void=0A=
++pci_enable_io_access(struct pci_dev *pdev)=0A=
++{=0A=
++	u16 command_reg;=0A=
++=0A=
++	pci_read_config_word(pdev, PCI_COMMAND, &command_reg);=0A=
++	command_reg |=3D 1;=0A=
++	pci_write_config_word(pdev, PCI_COMMAND, command_reg);=0A=
++}=0A=
++=0A=
+ =
+/*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
+-=3D-=3D*/=0A=
+ /*=0A=
+  *	mpt_interrupt - MPT adapter (IOC) specific interrupt handler.=0A=
+@@ -1161,6 +1181,16 @@=0A=
+ 		pcixcmd &=3D 0x8F;=0A=
+ 		pci_write_config_byte(pdev, 0x6a, pcixcmd);=0A=
+ 	}=0A=
++	else if (pdev->device =3D=3D MPI_MANUFACTPAGE_DEVICEID_FC939X) {=0A=
++		ioc->prod_name =3D "LSIFC939X";=0A=
++		ioc->bus_type =3D FC;=0A=
++		ioc->errata_flag_1064 =3D 1;=0A=
++	}=0A=
++	else if (pdev->device =3D=3D MPI_MANUFACTPAGE_DEVICEID_FC949X) {=0A=
++		ioc->prod_name =3D "LSIFC949X";=0A=
++		ioc->bus_type =3D FC;=0A=
++		ioc->errata_flag_1064 =3D 1;=0A=
++	}=0A=
+ 	else if (pdev->device =3D=3D MPI_MANUFACTPAGE_DEVID_53C1030) {=0A=
+ 		ioc->prod_name =3D "LSI53C1030";=0A=
+ 		ioc->bus_type =3D SCSI;=0A=
+@@ -1179,6 +1209,9 @@=0A=
+ 		ioc->bus_type =3D SCSI;=0A=
+ 	}=0A=
+ =0A=
++	if (ioc->errata_flag_1064)=0A=
++		pci_disable_io_access(pdev);=0A=
++=0A=
+ 	sprintf(ioc->name, "ioc%d", ioc->id);=0A=
+ =0A=
+ 	spin_lock_init(&ioc->FreeQlock);=0A=
+@@ -2660,7 +2693,7 @@=0A=
+ 	/* prevent a second downloadboot and memory free with alt_ioc */=0A=
+ 	if (ioc->alt_ioc && ioc->alt_ioc->cached_fw)=0A=
+ 		ioc->alt_ioc->cached_fw =3D NULL;=0A=
+-	=0A=
++=0A=
+ 	CHIPREG_WRITE32(&ioc->chip->WriteSequence, 0xFF);=0A=
+ 	CHIPREG_WRITE32(&ioc->chip->WriteSequence, =
+MPI_WRSEQ_1ST_KEY_VALUE);=0A=
+ 	CHIPREG_WRITE32(&ioc->chip->WriteSequence, =
+MPI_WRSEQ_2ND_KEY_VALUE);=0A=
+@@ -2718,6 +2751,9 @@=0A=
+ 	/* Write the LoadStartAddress to the DiagRw Address Register=0A=
+ 	 * using Programmed IO=0A=
+ 	 */=0A=
++	if (ioc->errata_flag_1064)=0A=
++		pci_enable_io_access(ioc->pcidev);=0A=
++=0A=
+ 	CHIPREG_PIO_WRITE32(&ioc->pio_chip->DiagRwAddress, =
+pFwHeader->LoadStartAddress);=0A=
+ 	ddlprintk((MYIOC_s_INFO_FMT "LoadStart addr written 0x%x \n",=0A=
+ 		ioc->name, pFwHeader->LoadStartAddress));=0A=
+@@ -2764,6 +2800,9 @@=0A=
+ 	CHIPREG_PIO_WRITE32(&ioc->pio_chip->DiagRwAddress, 0x3F000000);=0A=
+ 	CHIPREG_PIO_WRITE32(&ioc->pio_chip->DiagRwData, diagRwData);=0A=
+ =0A=
++	if (ioc->errata_flag_1064)=0A=
++		pci_disable_io_access(ioc->pcidev);=0A=
++=0A=
+ 	diag0val =3D CHIPREG_READ32(&ioc->chip->Diagnostic);=0A=
+ 	ddlprintk((MYIOC_s_INFO_FMT "downloadboot diag0val=3D%x, turning off =
+PREVENT_IOC_BOOT, DISABLE_ARM\n",=0A=
+ 		ioc->name, diag0val));=0A=
+--- b/drivers/message/fusion/mptbase.h	2005-05-05 10:19:45.000000000 =
+-0600=0A=
++++ a/drivers/message/fusion/mptbase.h	2005-05-10 15:09:56.000000000 =
+-0600=0A=
+@@ -562,6 +562,13 @@=0A=
+ 	FCPortPage0_t		 fc_port_page0[2];=0A=
+ 	LANPage0_t		 lan_cnfg_page0;=0A=
+ 	LANPage1_t		 lan_cnfg_page1;=0A=
++	/*  =0A=
++	 * Description: errata_flag_1064=0A=
++	 * If a PCIX read occurs within 1 or 2 cycles after the chip =
+receives=0A=
++	 * a split completion for a read data, an internal address pointer =
+incorrectly=0A=
++	 * increments by 32 bytes=0A=
++	 */=0A=
++	int			 errata_flag_1064;	=0A=
+ 	u8			 FirstWhoInit;=0A=
+ 	u8			 upload_fw;	/* If set, do a fw upload */=0A=
+ 	u8			 reload_fw;	/* Force a FW Reload on next reset */=0A=
+
+------_=_NextPart_000_01C55651.6A8A10A0--
