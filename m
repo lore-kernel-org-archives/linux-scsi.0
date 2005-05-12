@@ -1,77 +1,58 @@
-From: Dmitry Yusupov <dmitry_yus@yahoo.com>
-Subject: Re: several messages
-Date: Thu, 12 May 2005 11:32:12 -0700
-Message-ID: <1115922732.25161.143.camel@beastie>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Re[2]: ata over ethernet question
+Date: Thu, 12 May 2005 14:52:07 -0400
+Message-ID: <1115923927.5042.18.camel@mulgrave>
 References: <1416215015.20050504193114@dns.toxicfilms.tv>
 	 <1115236116.7761.19.camel@dhollis-lnx.sunera.com>
 	 <1104082357.20050504231722@dns.toxicfilms.tv>
 	 <1115305794.3071.5.camel@dhollis-lnx.sunera.com>
 	 <20050507150538.GA800@favonius>
-	 <Pine.LNX.4.60.0505102352430.9008@poirot.grange> <4281C8A3.20804@vlnb.net>
-	 <Pine.LNX.4.60.0505112309430.8122@poirot.grange>
-	 <1115864176.5513.37.camel@localhost.localdomain>
+	 <Pine.LNX.4.60.0505102352430.9008@poirot.grange>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp110.mail.sc5.yahoo.com ([66.163.170.8]:612 "HELO
-	smtp110.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S262108AbVELScT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 May 2005 14:32:19 -0400
-In-Reply-To: <1115864176.5513.37.camel@localhost.localdomain>
+Received: from stat16.steeleye.com ([209.192.50.48]:20441 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261267AbVELSwX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 May 2005 14:52:23 -0400
+In-Reply-To: <Pine.LNX.4.60.0505102352430.9008@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mingz@ele.uri.edu
-Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Vladislav Bolkhovitin <vst@vlnb.net>, iet-dev <iscsitarget-devel@lists.sourceforge.net>, linux-scsi <linux-scsi@vger.kernel.org>, Sander <sander@humilis.net>, David Hollis <dhollis@davehollis.com>, Maciej Soltysiak <solt2@dns.toxicfilms.tv>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: Sander <sander@humilis.net>, David Hollis <dhollis@davehollis.com>, Maciej Soltysiak <solt2@dns.toxicfilms.tv>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 2005-05-11 at 22:16 -0400, Ming Zhang wrote:
-> iscsi is scsi over ip.
+On Wed, 2005-05-11 at 00:00 +0200, Guennadi Liakhovetski wrote:
+> A follow up question - I recently used nbd to access a CD-ROM. It worked 
+> nice, but, I had to read in 7 CDs, so, each time I had to replace a CD, I 
+> had to stop the client, the server, then replace the CD, re-start the 
+> server, re-start the client... I thought about extending NBD to (better) 
+> support removable media, but then you start thinking about all those 
+> features that your local block device has that don't get exported over 
+> NBD...
 
-correction. iSCSI today has RFC at least for two transports - TCP/IP and
-iSER/RDMA(in finalized progress) with RDMA over Infiniband or RNIC. And
-I think people start writing initial draft for SCTP/IP transport...
+That's correct; NBD is basically just a remote data pipe type block
+device.  It doesn't understand arbitrary packet commands.
 
->From this perspective, iSCSI certainly more advanced and matured
-comparing to NBD variations. 
+> Now, my understanding (sorry, without looking at any docs - yet) is, that 
+> iSCSI is (or at least should be) free from these limitations. So, does it 
+> make any sense at all extending NBD or just switch to iSCSI? Should NBD be 
+> just kept simple as it is or would it be completely superseeded by iSCSI, 
+> or is there still something that NBD does that iSCSI wouldn't (easily) do?
 
-> usb disk is scsi over usb.
-> so just a different transport.
-> u are rite. ;)
-> 
-> ming
-> 
-> On Wed, 2005-05-11 at 23:26 +0200, Guennadi Liakhovetski wrote:
-> > Hello and thanks for the replies
-> > 
-> > On Wed, 11 May 2005, FUJITA Tomonori wrote:
-> > > The iSCSI protocol simply encapsulates the SCSI protocol into the
-> > > TCP/IP protocol, and carries packets over IP networks. You can handle
-> > ...
-> > 
-> > On Wed, 11 May 2005, Vladislav Bolkhovitin wrote:
-> > > Actually, this is property not of iSCSI target itself, but of any SCSI target.
-> > > So, we implemented it as part of our SCSI target mid-level (SCST,
-> > > http://scst.sourceforge.net), therefore any target driver working over it will
-> > > automatically benefit from this feature. Unfortunately, currently available
-> > > only target drivers for Qlogic 2x00 cards and for poor UNH iSCSI target (that
-> > > works not too reliable and only with very specific initiators). The published
-> > ...
-> > 
-> > The above confirms basically my understanding apart from one "minor" 
-> > confusion - I thought, that parallel to hardware solutions pure software 
-> > implementations were possible / being developed, like a driver, that 
-> > implements a SCSI LDD API on one side, and forwards packets to an IP 
-> > stack, say, over an ethernet card - on the initiator side. And a counter 
-> > part on the target side. Similarly to the USB mass-storage and storage 
-> > gadget drivers?
-> > 
-> > Thanks
-> > Guennadi
-> > ---
-> > Guennadi Liakhovetski
-> > 
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Caveat: I've done quite a bit of work on nbd, so I'm biased.  However,
+for what it does, nbd is extremely small, simple and efficient, so I
+think we'd want a hole in our head to replace it with something as
+complex and bloated as iSCSI---remember we'd need both a target and an
+initiator to do what nbd does today.
+
+However, there is room for improvement in nbd, notably the handling of
+packet commands, which looks to be eminently doable in the current
+infrastructure (this would basically make nbd a replicator for the linux
+block system, and would probably necessitate some client side changes to
+achieve).  If you have any thoughts in this direction, you could drop an
+email to the maintainer.
+
+James
+
 
