@@ -1,37 +1,94 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Re[2]: ata over ethernet question
-Date: Fri, 13 May 2005 09:16:17 +0100
-Message-ID: <20050513081617.GC32546@infradead.org>
-References: <1416215015.20050504193114@dns.toxicfilms.tv> <1115236116.7761.19.camel@dhollis-lnx.sunera.com> <1104082357.20050504231722@dns.toxicfilms.tv> <1115305794.3071.5.camel@dhollis-lnx.sunera.com> <20050507150538.GA800@favonius> <Pine.LNX.4.60.0505102352430.9008@poirot.grange> <1115923927.5042.18.camel@mulgrave> <1115924747.25161.150.camel@beastie> <1115925312.5042.24.camel@mulgrave> <1115927058.25161.166.camel@beastie>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: SCSI/ISCSI, hardware/software
+Date: Fri, 13 May 2005 14:34:09 +0400
+Message-ID: <428482A1.5090107@vlnb.net>
+References: <OFB07C63BD.91DCFD73-ON88256FFF.0065D9AA-88256FFF.006C4709@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:17628 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S262295AbVEMIQ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 May 2005 04:16:27 -0400
-Content-Disposition: inline
-In-Reply-To: <1115927058.25161.166.camel@beastie>
+Received: from smtpout.azz.ru ([81.176.69.27]:28573 "HELO smtpout.azz.ru")
+	by vger.kernel.org with SMTP id S262327AbVEMKci (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 May 2005 06:32:38 -0400
+In-Reply-To: <OFB07C63BD.91DCFD73-ON88256FFF.0065D9AA-88256FFF.006C4709@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dmitry Yusupov <dmitry_yus@yahoo.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Sander <sander@humilis.net>, David Hollis <dhollis@davehollis.com>, Maciej Soltysiak <solt2@dns.toxicfilms.tv>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Bryan Henderson <hbryan@us.ibm.com>
+Cc: David Hollis <dhollis@davehollis.com>, dmitry_yus@yahoo.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, iscsitarget-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Sander <sander@humilis.net>, Maciej Soltysiak <solt2@dns.toxicfilms.tv>
 
-On Thu, May 12, 2005 at 12:44:18PM -0700, Dmitry Yusupov wrote:
-> i'm just reacting on "bloated" wording. It really depends on
-> implementation and design. If you were talking about amount of code in
-> the kernel, than take a look on open-iscsi(just one file iscsi_tcp.c)
-> and IET where we doing a lot of management stuff in user-space. It is
-> not that much code in the kernel, really, but it is doing x10 times more
-> useful things comparing to nbd and yet compliant with RFC.
+Bryan Henderson wrote:
+>>There is some confusion in the SCSI world between SCSI as a transport 
+>>and SCSI as a commands set and software communication protocol, which 
+>>works above the transport. So, you can implement SCSI transport at any 
+>>software (eg iSCSI) or hardware (parallel SCSI, Fibre Channel, SATA, 
+>>etc.) way, but if the SCSI message passing protocol is used overall 
+>>system remains SCSI with all protocol obligations like task management. 
+> 
+> 
+> The above doesn't really resolve the confusion, since it uses some 
+> ambiguous terms and constructions.  I'm not sure what it's supposed to 
+> say, but let me try to state in the terminology of the SCSI standards what 
+> SCSI is:
+> 
+> SCSI is a family of separate specifications.  Some are specifications of 
+> transports, and others are specifications of command sets (a layer above 
+> the transports).  A SCSI device must implement a SCSI transport spec and a 
+> SCSI command set spec -- and also contain a piece that actually does the 
+> work (e.g. a disk drive), the details of which aren't specified by SCSI.
+> 
+> Examples of SCSI transport specification are (I'm paraphrasing the names) 
+> parallel SCSI, Fibre Channel, and ISCSI.  Examples of command sets are the 
+> disk device command set and the tape device command set.
 
-Keeping code out of the kernel is really nice, but that doesn't meant it
-isn't bloat - the bloat is just in userland.
+This is exactly what I wanted to say. Thanks for clarification
 
-> yeah, generic transport, recovery levels, direct data placement for HW
-> HBAs, etc, etc... it is all *must* features for enterprise's SAN
-> deployment. So, yes, there is a price as usual.
+>>So, pure software SCSI solution is possible. BTW, there are pure 
+>>hardware iSCSI implementations as well.
+> 
+> 
+> I don't think it's even meaningful to talk about whether an implementation 
+> is hardware or software.  The "pure hardware" implementations contain 
+> megabytes of software, which was written in languages like C, contains 
+> operating systems like Linux, and can be transmitted across a network and 
+> updated easily.  The "pure software" implementation involve kilograms of 
+> hardware in every SCSI command -- CPUs, power supplies, etc.
+> 
+> Not only that, but the "all hardware" ISCSI initiators people talk about, 
+> which are PCI cards with Ethernet jacks, are not complete initiators.  The 
+> computer you plug the card into, on which you run Linux and some 
+> application programs, is the initiator.  The card is just the 
+> ISCSI-specific core of it.
 
-I'm sure your marketing department can use all these buzzwords to sell
-NICs to CTOs and CEOs, but else..
+Such iSCSI card from a user point of view as well as for system running 
+on a computer with it is just another SCSI card, not matter which 
+transport it uses and how much software it runs onboard, so for they it 
+doesn't differ from FC or parallel SCSI one, which I think you would not 
+call a software unit. As usually, you only need appropriate driver for 
+_SCSI_ subsystem.
+
+> There's really two distinctions people mean to make when talking about 
+> hardware vs software:
+> 
+> 1) Is it preassembled?  Can you lift it out of box whole, or do you have 
+> to acquire some special software and some more generic parts separately 
+> and manage their combination?
+> 
+> 2) Does it involve a general purpose computing system, particularly one 
+> that you share with some other computing, or a faster special purpose 
+> dedicated one?
+> 
+> In the context of a Linux SCSI discussion, I'd just talk about how much of 
+> the implementation is in or above the Linux kernel, and how much is below. 
+>  And then we can say that ISCSI-specific function (initiator or target) 
+> can be implemented 1) entirely above the Linux kernel; 2) entirely inside 
+> the Linux kernel; 3) entirely below the Linux kernel; or 4) a combination 
+> of these.
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
 
