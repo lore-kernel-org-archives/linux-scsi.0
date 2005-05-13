@@ -1,101 +1,34 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [RFC] mode pages for ATA/ATAPI devices via libata
-Date: Fri, 13 May 2005 18:10:32 +1000
-Message-ID: <428460F8.6090607@torque.net>
-References: <200505130603.j4D63jCX020390@falcon30.maxeymade.com>
-Reply-To: dougg@torque.net
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: several messages
+Date: Fri, 13 May 2005 09:12:30 +0100
+Message-ID: <20050513081230.GA32546@infradead.org>
+References: <1416215015.20050504193114@dns.toxicfilms.tv> <1115236116.7761.19.camel@dhollis-lnx.sunera.com> <1104082357.20050504231722@dns.toxicfilms.tv> <1115305794.3071.5.camel@dhollis-lnx.sunera.com> <20050507150538.GA800@favonius> <Pine.LNX.4.60.0505102352430.9008@poirot.grange> <4281C8A3.20804@vlnb.net> <Pine.LNX.4.60.0505112309430.8122@poirot.grange> <1115864176.5513.37.camel@localhost.localdomain> <1115922732.25161.143.camel@beastie>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:52909 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S262288AbVEMIKj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 May 2005 04:10:39 -0400
-In-Reply-To: <200505130603.j4D63jCX020390@falcon30.maxeymade.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:7132 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S262295AbVEMIMq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 May 2005 04:12:46 -0400
+Content-Disposition: inline
+In-Reply-To: <1115922732.25161.143.camel@beastie>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Maxey <dwm@maxeymade.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, Albert CC Lee <albertcc@tw.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Dmitry Yusupov <dmitry_yus@yahoo.com>
+Cc: mingz@ele.uri.edu, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Vladislav Bolkhovitin <vst@vlnb.net>, iet-dev <iscsitarget-devel@lists.sourceforge.net>, linux-scsi <linux-scsi@vger.kernel.org>, Sander <sander@humilis.net>, David Hollis <dhollis@davehollis.com>, Maciej Soltysiak <solt2@dns.toxicfilms.tv>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Doug Maxey wrote:
-> On Fri, 13 May 2005 15:19:39 +1000, Douglas Gilbert wrote:
+On Thu, May 12, 2005 at 11:32:12AM -0700, Dmitry Yusupov wrote:
+> On Wed, 2005-05-11 at 22:16 -0400, Ming Zhang wrote:
+> > iscsi is scsi over ip.
 > 
->>Doug Maxey wrote:
->>
->>>ahem, the neural pathways are not just worn, they have become ruts. =) 
->>>
->>>s/mode/vpd/.
->>>
->>>On Wed, 11 May 2005 13:01:25 CDT, Doug Maxey wrote:
->>>
->>>
->>>>Howdy,
->>>>
->>>>When a ATA/ATAPI device is attached via libata, what should the handling 
->>>>be for mode pages that do not exist in the device?
->>>>
->>>>Assuming the page being asked for is 0x83, should libata fake up the
->>>>page from the IDENTIFY (PACKET) DEVICE data?  Or should it just respond
->>>>there is no page 0x83 as it does now in INQUIRY?  Likewise for 0x80?
->>
->>Doug,
->>For ATAPI, the packet interface is almost always
->>carrying a SCSI command set (exceptions anybody??),
+> correction. iSCSI today has RFC at least for two transports - TCP/IP and
+> iSER/RDMA(in finalized progress) with RDMA over Infiniband or RNIC. And
+> I think people start writing initial draft for SCTP/IP transport...
 > 
-> 
-> call it 95% SCSI, and I will agree.
-> 
-> 
->>typically MMC (for CD/DVD drives). Recent SPC-3 drafts
->>(to which MMC-4,5 should comply) have made the device
->>identification VPD page (0x83) mandatory. I haven't
->>seen any compliance yet (or for that matter a drive that
->>implements feature 0x108: LU serial number).
-> 
-> 
-> I have recently been looking at the specs for a rebranded Panasonic
-> Slimline DVD/RAM/+R/+RW drive.  The EVPD bit on the inquiry page is marked
-> as optional, but returns CHECK CONDITION if set, and you get a 5/24/00
-> back. :-/  So even if the device had the pages, we can't get to them.
-> Nowhere in the device spec is there an indication they even exist.
+> >From this perspective, iSCSI certainly more advanced and matured
+> comparing to NBD variations. 
 
-Getting compliance via the SAM/SPC/device_type_command_set
-route takes a long time. So I'm happy to report that
-recent SAS 1.1 drafts (soon to be set in stone) have a new
-section telling firmware engineers exactly what they
-"shall" support in the device identification VPD page.
+It's for certainly much more complicated (in marketing speak that's usually
+called advanced) but far less mature.
 
-> Of the few ATAPI drive specs I have seen, this seems to be the standard 
-> behavior.  The data (serial number, anyway), is ostensibly available 
-> from the IDENTIFY DEVICE data.  However, the bytes available are 
-> invariably smashed to a sequence of 0x20.
-> 
-> Lastly, looking at a recent version of MtFuji 6.08, support for the EVPD bit
-> is optional.  I just suspect it's one of those things that is interpreted
-> as a MUST NOT implement in the cost conscious manufacturing environment. 
-> Nor are there any references to VPD data other than the Standard 
-> INQUIRY data.
-> 
-> 
->>For ATA, work is being done on a SCSI-ATA Translation
->>draft standard see:
->>http://www.t10.org/ftp/t10/drafts/sat/sat-r03.pdf
->>section 8.1.3.3 .
->>
-> 
-> 
-> Ah yes, the other 90% of ATA.  But that is just for disks.
-
-Probably true yet the SAT draft has a "14 Translation for
-ATAPI devices" section.
-
-> The optical drive vendors seem to pretty closely follow
-> ftp://ftp.avc-pioneer.com/Mtfuji_6/Spec/Fuji6r08.pdf
-
-Thanks, I'll look at this document.
-
-BTW I know that the libata implementers are keeping a
-close eye on SAT.
-
-Doug Gilbert
+If you want network storage to just work use nbd.
