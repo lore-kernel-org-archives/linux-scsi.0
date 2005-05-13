@@ -1,110 +1,139 @@
-From: Garnet Ulrich <garnet.ulrich@gmx.net>
-Subject: bugs in 2.6 scsi
-Date: Fri, 13 May 2005 08:52:50 -0400
-Message-ID: <1115988771.5281.27.camel@garnetd600>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] SCSI: make code static
+Date: Fri, 13 May 2005 16:00:46 +0200
+Message-ID: <20050513140046.GD16549@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tomts10.bellnexxia.net ([209.226.175.54]:27039 "EHLO
-	tomts10-srv.bellnexxia.net") by vger.kernel.org with ESMTP
-	id S262353AbVEMMww (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 May 2005 08:52:52 -0400
-Received: from [10.10.10.100] ([199.243.73.69])
-          by tomts10-srv.bellnexxia.net
-          (InterMail vM.5.01.06.10 201-253-122-130-110-20040306) with ESMTP
-          id <20050513125251.KLLX26102.tomts10-srv.bellnexxia.net@[10.10.10.100]>
-          for <linux-scsi@vger.kernel.org>; Fri, 13 May 2005 08:52:51 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262376AbVEMOCs@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-I am experiencing problems due to at least two bugs in linux scsi and am
-hoping someone could advise me as to whether this is the correct forum
-to outline the problems and maybe someone will be interested in fixing
-them.  These are 100% reproducible.
+This patch makes some needlessly global code static.
 
-I have opened bugzilla entries with redhat as these problems are on an
-FC3 system but they really seem to be scsi problems.  In short:
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-Problem 1: My LG 5120d DVD burner that works flawlessly in RH9/2.4 has
-some kind of scsi problem in FC3/2.6.  Burner and cable work great on
-RH9 or windows.
+---
 
-Problem 2: When problem 1 occurs with the DVD burner USB attached, my
-1394 hard drive starts reporting scsi errors.  I would expect that a
-problem with my USB device should not cause scsi errors on my firewire
-device, correct?
+This patch was already sent on:
+- 24 Apr 2005
 
-I am not a coder so I can not fix this myself but am willing to go to
-great lengths to do/test whatever someone else needs to fix this problem
-with scsi in 2.6 kernels.
+ drivers/scsi/hosts.c      |    2 +-
+ drivers/scsi/scsi.c       |    6 ++++--
+ drivers/scsi/scsi_debug.c |    2 +-
+ drivers/scsi/scsi_lib.c   |    2 +-
+ drivers/scsi/scsi_priv.h  |    4 ----
+ drivers/scsi/scsi_sysfs.c |    4 ++--
+ 6 files changed, 9 insertions(+), 11 deletions(-)
 
-I'll provide a little output here in case anyone has any hints or there
-are already some known patches that may help.
-
-bugzilla reference: https://bugzilla.redhat.com/bugzilla/show_bug.cgi?
-id=157311
-
-I start by running with the firewire hard drive error free for days.
-Then turn on the usb attached DVD burner and try burning a CD or DVD.
-The firewire hard drive starts generating scsi errors immediately and
-eventually gets offlined.
-
-# cat /proc/scsi/scsi
-Attached devices:
-Host: scsi0 Channel: 00 Id: 00 Lun: 00
-  Vendor: DMI      Model: SAMSUNG SV0602H  Rev: 4.38
-  Type:   Direct-Access                    ANSI SCSI revision: 02
-Host: scsi1 Channel: 00 Id: 00 Lun: 00
-  Vendor: HL-DT-ST Model: DVDRAM GSA-5120D Rev: A115
-  Type:   CD-ROM                           ANSI SCSI revision: 02
-# uname -r
-2.6.11-1.14_FC3
-# lsusb
-Bus 004 Device 001: ID 0000:0000
-Bus 003 Device 001: ID 0000:0000
-Bus 002 Device 004: ID 0d62:001c Darfon Electronics Corp.
-Bus 002 Device 003: ID 046d:c016 Logitech, Inc.
-Bus 002 Device 002: ID 05e3:0604 Genesys Logic, Inc.
-Bus 002 Device 001: ID 0000:0000
-Bus 001 Device 003: ID 152e:e001
-Bus 001 Device 001: ID 0000:0000
-
-note: the 1394 hard drive was scsi1 when the output below was generated:
-May 10 09:33:58 garnetd600 kernel: ieee1394: sbp2: aborting sbp2 command
-May 10 09:33:58 garnetd600 kernel: Test Unit Ready 00 00 00 00 00 00
-May 10 09:34:08 garnetd600 kernel: ieee1394: sbp2: aborting sbp2 command
-May 10 09:34:08 garnetd600 kernel: Test Unit Ready 00 00 00 00 00 00
-May 10 09:34:18 garnetd600 kernel: ieee1394: sbp2: aborting sbp2 command
-May 10 09:34:18 garnetd600 kernel: Test Unit Ready 00 00 00 00 00 00
-May 10 09:34:28 garnetd600 kernel: ieee1394: sbp2: aborting sbp2 command
-May 10 09:34:28 garnetd600 kernel: Test Unit Ready 00 00 00 00 00 00
-May 10 09:34:38 garnetd600 kernel: ieee1394: sbp2: aborting sbp2 command
-May 10 09:34:38 garnetd600 kernel: Test Unit Ready 00 00 00 00 00 00
-May 10 09:34:38 garnetd600 kernel: scsi: Device offlined - not ready after error
-recovery: host 1 channel 0 id 0 lun 0
-May 10 09:34:38 garnetd600 last message repeated 7 times
-May 10 09:34:38 garnetd600 kernel: SCSI error : <1 0 0 0> return code = 0x50000
-May 10 09:34:38 garnetd600 kernel: end_request: I/O error, dev sda, sector 9684799
-May 10 09:34:38 garnetd600 kernel: scsi1 (0:0): rejecting I/O to offline device
-May 10 09:34:38 garnetd600 last message repeated 5 times
-May 10 09:34:38 garnetd600 kernel: Buffer I/O error on device sda1, logical
-block 6657142
-May 10 09:34:38 garnetd600 kernel: lost page write due to I/O error on sda1
-May 10 09:34:38 garnetd600 kernel: scsi1 (0:0): rejecting I/O to offline device
-May 10 09:34:38 garnetd600 kernel: scsi1 (0:0): rejecting I/O to offline device
-May 10 09:34:38 garnetd600 kernel: Buffer I/O error on device sda1, logical
-block 6688828
-
-At this point, cat /proc/scsi/scsi will lock up and reboot is required.
-I know there is a patch for this lockup but as I read it, this won't
-really solve the real problems I'm having (burner having scsi problem
-and usb based scsi problem causing hosing of firewire drive).  
-
-Help anyone?
-
-
-
-
-
+--- linux-2.6.11-rc4-mm1-full/drivers/scsi/hosts.c.old	2005-02-28 18:33:14.000000000 +0100
++++ linux-2.6.11-rc4-mm1-full/drivers/scsi/hosts.c	2005-03-01 00:58:19.000000000 +0100
+@@ -56,7 +56,7 @@
+  * @shost:	pointer to struct Scsi_Host
+  * recovery:	recovery requested to run.
+  **/
+-void scsi_host_cancel(struct Scsi_Host *shost, int recovery)
++static void scsi_host_cancel(struct Scsi_Host *shost, int recovery)
+ {
+ 	struct scsi_device *sdev;
+ 
+--- linux-2.6.11-rc4-mm1-full/drivers/scsi/scsi_priv.h.old	2005-02-28 19:59:30.000000000 +0100
++++ linux-2.6.11-rc4-mm1-full/drivers/scsi/scsi_priv.h	2005-03-01 00:58:19.000000000 +0100
+@@ -66,8 +66,6 @@
+ extern int scsi_dispatch_cmd(struct scsi_cmnd *cmd);
+ extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
+ extern void scsi_destroy_command_freelist(struct Scsi_Host *shost);
+-extern void scsi_done(struct scsi_cmnd *cmd);
+-extern int scsi_retry_command(struct scsi_cmnd *cmd);
+ extern int scsi_insert_special_req(struct scsi_request *sreq, int);
+ extern void scsi_init_cmd_from_req(struct scsi_cmnd *cmd,
+ 		struct scsi_request *sreq);
+@@ -141,7 +139,6 @@
+ #endif /* CONFIG_SYSCTL */
+ 
+ /* scsi_sysfs.c */
+-extern void scsi_device_dev_release(struct device *);
+ extern int scsi_sysfs_add_sdev(struct scsi_device *);
+ extern int scsi_sysfs_add_host(struct Scsi_Host *);
+ extern int scsi_sysfs_register(void);
+@@ -150,7 +147,6 @@
+ extern int scsi_sysfs_target_initialize(struct scsi_device *);
+ extern struct scsi_transport_template blank_transport_template;
+ 
+-extern struct class sdev_class;
+ extern struct bus_type scsi_bus_type;
+ 
+ /* 
+--- linux-2.6.11-rc4-mm1-full/drivers/scsi/scsi.c.old	2005-02-28 19:59:56.000000000 +0100
++++ linux-2.6.11-rc4-mm1-full/drivers/scsi/scsi.c	2005-03-01 00:58:19.000000000 +0100
+@@ -68,6 +68,8 @@
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
+ 
++static void scsi_done(struct scsi_cmnd *cmd);
++static int scsi_retry_command(struct scsi_cmnd *cmd);
+ 
+ /*
+  * Definitions and constants.
+@@ -733,7 +735,7 @@
+  *
+  * This function is interrupt context safe.
+  */
+-void scsi_done(struct scsi_cmnd *cmd)
++static void scsi_done(struct scsi_cmnd *cmd)
+ {
+ 	/*
+ 	 * We don't have to worry about this one timing out any more.
+@@ -829,7 +831,7 @@
+  *              level drivers should not become re-entrant as a result of
+  *              this.
+  */
+-int scsi_retry_command(struct scsi_cmnd *cmd)
++static int scsi_retry_command(struct scsi_cmnd *cmd)
+ {
+ 	/*
+ 	 * Restore the SCSI command state.
+--- linux-2.6.11-rc4-mm1-full/drivers/scsi/scsi_debug.c.old	2005-02-28 20:22:08.000000000 +0100
++++ linux-2.6.11-rc4-mm1-full/drivers/scsi/scsi_debug.c	2005-03-01 00:58:19.000000000 +0100
+@@ -1783,7 +1783,7 @@
+ device_initcall(scsi_debug_init);
+ module_exit(scsi_debug_exit);
+ 
+-void pseudo_0_release(struct device * dev)
++static void pseudo_0_release(struct device * dev)
+ {
+ 	if (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts)
+ 		printk(KERN_INFO "scsi_debug: pseudo_0_release() called\n");
+--- linux-2.6.11-rc4-mm1-full/drivers/scsi/scsi_lib.c.old	2005-02-28 20:14:23.000000000 +0100
++++ linux-2.6.11-rc4-mm1-full/drivers/scsi/scsi_lib.c	2005-03-01 00:58:19.000000000 +0100
+@@ -44,7 +44,7 @@
+ #endif
+ 
+ #define SP(x) { x, "sgpool-" #x } 
+-struct scsi_host_sg_pool scsi_sg_pools[] = { 
++static struct scsi_host_sg_pool scsi_sg_pools[] = { 
+ 	SP(8),
+ 	SP(16),
+ 	SP(32),
+--- linux-2.6.11-rc4-mm1-full/drivers/scsi/scsi_sysfs.c.old	2005-02-28 20:19:41.000000000 +0100
++++ linux-2.6.11-rc4-mm1-full/drivers/scsi/scsi_sysfs.c	2005-03-01 00:58:19.000000000 +0100
+@@ -150,7 +150,7 @@
+ 	put_device(&sdev->sdev_gendev);
+ }
+ 
+-void scsi_device_dev_release(struct device *dev)
++static void scsi_device_dev_release(struct device *dev)
+ {
+ 	struct scsi_device *sdev;
+ 	struct device *parent;
+@@ -188,7 +188,7 @@
+ 		put_device(parent);
+ }
+ 
+-struct class sdev_class = {
++static struct class sdev_class = {
+ 	.name		= "scsi_device",
+ 	.release	= scsi_device_cls_release,
+ };
