@@ -1,39 +1,43 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFC] mode pages for ATA/ATAPI devices via libata
-Date: Fri, 13 May 2005 13:06:10 -0400
-Message-ID: <4284DE82.7020808@pobox.com>
-References: <200505111801.j4BI1P5C019280@falcon30.maxeymade.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: iSCSI vs. NBD (was Re: ata over ethernet question)
+Date: Fri, 13 May 2005 20:50:18 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0505132040400.8052@poirot.grange>
+References: <1416215015.20050504193114@dns.toxicfilms.tv>
+ <1115236116.7761.19.camel@dhollis-lnx.sunera.com>  <1104082357.20050504231722@dns.toxicfilms.tv>
+  <1115305794.3071.5.camel@dhollis-lnx.sunera.com>  <20050507150538.GA800@favonius>
+  <Pine.LNX.4.60.0505102352430.9008@poirot.grange> <1115923927.5042.18.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:56789 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S262435AbVEMRG2 (ORCPT
+Received: from mail.gmx.de ([213.165.64.20]:44263 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S262474AbVEMUJz (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 May 2005 13:06:28 -0400
-In-Reply-To: <200505111801.j4BI1P5C019280@falcon30.maxeymade.com>
+	Fri, 13 May 2005 16:09:55 -0400
+In-Reply-To: <1115923927.5042.18.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Maxey <dwm@maxeymade.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Doug Gilbert <dgilbert@interlog.com>, Albert CC Lee <albertcc@tw.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Sander <sander@humilis.net>, David Hollis <dhollis@davehollis.com>, Maciej Soltysiak <solt2@dns.toxicfilms.tv>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Doug Maxey wrote:
-> Howdy,
-> 
-> When a ATA/ATAPI device is attached via libata, what should the handling 
-> be for mode pages that do not exist in the device?
-> 
-> Assuming the page being asked for is 0x83, should libata fake up the
-> page from the IDENTIFY (PACKET) DEVICE data?  Or should it just respond
-> there is no page 0x83 as it does now in INQUIRY?  Likewise for 0x80?
+On Thu, 12 May 2005, James Bottomley wrote:
 
-For ATA, it should be emulated according to T10 SCT.
+> However, there is room for improvement in nbd, notably the handling of
+> packet commands, which looks to be eminently doable in the current
+> infrastructure (this would basically make nbd a replicator for the linux
+> block system, and would probably necessitate some client side changes to
+> achieve).  If you have any thoughts in this direction, you could drop an
+> email to the maintainer.
 
-For ATAPI, it should be passed through to the device in almost all 
-cases.  I'm not terribly interested even in adding support for the T10 
-SCT-suggested stuff for ATAPI.
+Thanks, James
 
-	Jeff
+I'll try to get some (thoughts):-) BTW, who is the maintainer of nbd? No 
+one in MAINTAINERS, in nbd.c only
+ * Copyright 1997-2000 Pavel Machek <pavel@ucw.cz>
+ * Parts copyright 2001 Steven Whitehouse <steve@chygwyn.com>
+Is it Pavel then?
 
-
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
