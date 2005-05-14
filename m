@@ -1,56 +1,63 @@
-From: Bryan Henderson <hbryan@us.ibm.com>
-Subject: Re: SCSI/ISCSI, hardware/software
-Date: Fri, 13 May 2005 16:58:59 -0700
-Message-ID: <OF7E993A36.0D88FEC0-ON88257000.0082C701-88257000.0083CAAD@us.ibm.com>
-References: <428482A1.5090107@vlnb.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Return-path: <iscsitarget-devel-admin@lists.sourceforge.net>
-In-Reply-To: <428482A1.5090107@vlnb.net>
-Sender: iscsitarget-devel-admin@lists.sourceforge.net
-Errors-To: iscsitarget-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
-List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=iscsitarget-devel>
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: David Hollis <dhollis@davehollis.com>, dmitry_yus@yahoo.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, iscsitarget-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Sander <sander@humilis.net>, Maciej Soltysiak <solt2@dns.toxicfilms.tv>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH scsi-misc-2.6 00/03] scsi: misc timer fixes (again)
+Date: Sat, 14 May 2005 09:46:03 +0900 (KST)
+Message-ID: <20050514004601.783910E3@htj.dyndns.org>
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rproxy.gmail.com ([64.233.170.203]:37542 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262640AbVENAqI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 May 2005 20:46:08 -0400
+Received: by rproxy.gmail.com with SMTP id i8so283404rne
+        for <linux-scsi@vger.kernel.org>; Fri, 13 May 2005 17:46:08 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->Such iSCSI card from a user point of view as well as for system running 
->on a computer with it is just another SCSI card, not matter which 
->transport it uses and how much software it runs onboard, so for they it 
->doesn't differ from FC or parallel SCSI one, which I think you would not 
->call a software unit.  As usually, you only need appropriate driver for 
->_SCSI_ subsystem.
+ Hello, James.
 
-The point I'd like to make is that _I_ would not call it a software unit 
-or a hardware unit, because I don't think in most contexts (including that 
-of this thread), it makes any difference which technology is used in the 
-implementation.  What _does_ matter is 1) this card comes preassembled.  I 
-don't have to find and load independently produced software onto it, or 
-worry about interoperability.  2) It's below the Linux kernel, which means 
-I won't need to mess with Linux applications or kernels except to load a 
-low level SCSI driver.  It also means it doesn't place any load on my main 
-CPU and probably goes faster than something implemented in or above my 
-Linux kernel would.
+ It's been a while, but I'm finally settled with git. :-)
 
-And there's the separate point that it would be a misnomer to say that 
-this card is an ISCSI initiator (it's only part of one); so even if the 
-card itself can be called hardware, that still doesn't mean you can say 
-you have a hardware ISCSI initiator.  Same is true of a parallel SCSI host 
-adapter card.
+ This is repost of the previous scsi timer patchset.  After thinking
+about it a while, the first patch seemed unnecessary as you told, so
+it's dropped and the others are regenerated.
 
---
-Bryan Henderson                          IBM Almaden Research Center
-San Jose CA                              Filesystems
+ aic79xx_osm.c DV still uses eh_timeout.  Is it gonna be updated like
+aic7xxx_osm.c is updated?  If not, I have a patch to fix the eh timer
+part.  I have a patcheset waiting for it to be clared - unexporting
+SCSI timer as the semantics is very specific and nothing good can come
+from tempering with it.  Once aic79xx_osm.c is cleared, I'll post the
+patches.
 
+[ Start of patch descriptions ]
 
--------------------------------------------------------
-This SF.Net email is sponsored by Oracle Space Sweepstakes
-Want to be the first software developer in space?
-Enter now for the Oracle Space Sweepstakes!
-http://ads.osdn.com/?ad_id=7393&alloc_id=16281&op=click
+01_scsi_timer_dispatch_race_fix.patch
+	: remove a timer race in scsi_queue_insert()
+
+	scsi_queue_insert() has four callers.  Three callers call with
+	timer disabled and one (the second invocation in
+	scsi_dispatch_cmd()) calls with timer activated.
+	scsi_queue_insert() used to always call scsi_delete_timer()
+	and ignore the return value.  This results in race with timer
+	expiration.  Remove scsi_delete_timer() call from
+	scsi_queue_insert() and make the caller delete timer and check
+	the return value.
+
+02_scsi_timer_remove_delete_timer_from_reset_provider.patch
+	: remove unnecessary scsi_delete_timer() call in scsi_reset_provider()
+
+	scsi_reset_provider() calls scsi_delete_timer() on exit which
+	isn't necessary.  Remove it.
+
+03_scsi_timer_eh_timer_remove_spurious_if.patch
+	: remove spurious if tests from scsi_eh_{times_out|done}
+
+	'if' tests which check if eh_action isn't NULL in both
+	functions are always true.  Remove the redundant if's as it
+	can give wrong impressions.
+
+[ End of patch descriptions ]
+
+ Thanks.
+
