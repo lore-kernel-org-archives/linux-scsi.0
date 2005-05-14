@@ -1,47 +1,43 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 04/04] scsi: remove unnecessary scsi_wait_req_end_io()
-Date: Sun, 15 May 2005 00:47:33 +0900
-Message-ID: <20050514154733.GA5557@htj.dyndns.org>
-References: <20050514135610.81030F26@htj.dyndns.org> <20050514135610.50606F9C@htj.dyndns.org> <1116084383.5049.18.camel@mulgrave>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH scsi-misc-2.6 04/04] scsi: remove unnecessary
+	scsi_wait_req_end_io()
+Date: Sat, 14 May 2005 12:19:07 -0400
+Message-ID: <1116087547.5049.25.camel@mulgrave>
+References: <20050514135610.81030F26@htj.dyndns.org>
+	 <20050514135610.50606F9C@htj.dyndns.org>
+	 <1116084383.5049.18.camel@mulgrave>  <20050514154733.GA5557@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.193]:63611 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262787AbVENPrl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 May 2005 11:47:41 -0400
-Received: by rproxy.gmail.com with SMTP id a41so528127rng
-        for <linux-scsi@vger.kernel.org>; Sat, 14 May 2005 08:47:38 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1116084383.5049.18.camel@mulgrave>
+Received: from stat16.steeleye.com ([209.192.50.48]:56971 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262791AbVENQTO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 May 2005 12:19:14 -0400
+In-Reply-To: <20050514154733.GA5557@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Tejun Heo <htejun@gmail.com>
 Cc: Jens Axboe <axboe@suse.de>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
- Hello, James.
+On Sun, 2005-05-15 at 00:47 +0900, Tejun Heo wrote:
+>  BLKPREP_KILL is only used to kill illegal (unpreparable, way-off)
+> requests.  Actually, for special requests, the only tests performed
+> are req->flags and CDB_SIZE tests.  I don't think anyone does/will
+> submit that illegal requests via scsi_wait_req().  And if so, it will
+> be a bug.
 
-On Sat, May 14, 2005 at 11:26:23AM -0400, James Bottomley wrote:
-> On Sat, 2005-05-14 at 22:57 +0900, Tejun Heo wrote:
-> > 	As all requests are now terminated via scsi midlayer, we don't
-> > 	need to set end_io for special reqs, remove it.
-> 
-> This statement is untrue as long as the prep function can return
-> BLKPREP_KILL, which it still does even after your patch set, so the
-> scsi_wait_req_end_io() is still necessary to catch this case.
+True, but without the code you're removing it will simply hang the
+system, which isn't a correct response to a detected bug.  And if I had
+a shilling for every time someone's predicated a code change on "oh,
+users will never do this" ... I'd be reasonably rich.
 
- BLKPREP_KILL is only used to kill illegal (unpreparable, way-off)
-requests.  Actually, for special requests, the only tests performed
-are req->flags and CDB_SIZE tests.  I don't think anyone does/will
-submit that illegal requests via scsi_wait_req().  And if so, it will
-be a bug.
+This also leads naturally into the next observation:  Checking in the
+request function should be done.  However, it makes little sense wasting
+resources preparing requests we know are going to be killed, so the
+correct thing to do seems to be to abstract the checks and do them in
+both prep_fn and request_fn.
 
- I don't feel strong against keeping the end_io routine but, if you
-decide to keep the routine, please consider adding a comment
-explaining the peculiar path the routine might be used, such that
-other people don't have to wander through the code.
+James
 
- Thanks.
 
--- 
-tejun
