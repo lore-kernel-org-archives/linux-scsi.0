@@ -1,77 +1,114 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 01/03] scsi: remove a timer race in scsi_queue_insert()
-Date: Sat, 14 May 2005 09:46:08 +0900 (KST)
-Message-ID: <20050514004601.9B37DCE8@htj.dyndns.org>
-References: <20050514004601.783910E3@htj.dyndns.org>
+Subject: Re: [PATCH scsi-misc-2.6 01/04] scsi: consolidate error handling out of scsi_init_io() into scsi_prep_fn()
+Date: Sat, 14 May 2005 22:57:38 +0900 (KST)
+Message-ID: <20050514135610.536D5170@htj.dyndns.org>
+References: <20050514135610.81030F26@htj.dyndns.org>
 Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rproxy.gmail.com ([64.233.170.204]:37211 "EHLO rproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S262648AbVENAqM (ORCPT
+Received: from rproxy.gmail.com ([64.233.170.199]:23971 "EHLO rproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S262649AbVENN5n (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 May 2005 20:46:12 -0400
-Received: by rproxy.gmail.com with SMTP id a41so476288rng
-        for <linux-scsi@vger.kernel.org>; Fri, 13 May 2005 17:46:11 -0700 (PDT)
-In-Reply-To: <20050514004601.783910E3@htj.dyndns.org>
+	Sat, 14 May 2005 09:57:43 -0400
+Received: by rproxy.gmail.com with SMTP id i8so326376rne
+        for <linux-scsi@vger.kernel.org>; Sat, 14 May 2005 06:57:43 -0700 (PDT)
+In-Reply-To: <20050514135610.81030F26@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
+To: James.Bottomley@steeleye.com, axboe@suse.de, Christoph Hellwig <hch@infradead.org>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-01_scsi_timer_dispatch_race_fix.patch
+01_scsi_reqfn_consolidate_error_handling.patch
 
-	scsi_queue_insert() has four callers.  Three callers call with
-	timer disabled and one (the second invocation in
-	scsi_dispatch_cmd()) calls with timer activated.
-	scsi_queue_insert() used to always call scsi_delete_timer()
-	and ignore the return value.  This results in race with timer
-	expiration.  Remove scsi_delete_timer() call from
-	scsi_queue_insert() and make the caller delete timer and check
-	the return value.
+	This patch fixes a queue stall bug which occurred when sgtable
+	allocation failed and device_busy == 0.  When scsi_init_io()
+	returns BLKPREP_DEFER or BLKPREP_KILL, it's supposed to free
+	resources itself.  This patch consolidates defer and kill
+	handling into scsi_prep_fn().
+
+	Note that this patch doesn't consolidate state defer/kill
+	handlings in scsi_prep_fn() as all state checks will be moved
+	into scsi_reques_fn() by the following reqfn_reimpl patch.
+
+	ret value checking was changed to switch() as in James's
+	patch.  Also, kill: comment is copied from James's patch.
 
 Signed-off-by: Tejun Heo <htejun@gmail.com>
 
- scsi.c     |   10 ++++++----
- scsi_lib.c |    8 +-------
- 2 files changed, 7 insertions(+), 11 deletions(-)
+ scsi_lib.c |   40 ++++++++++++++++++++++++++++------------
+ 1 files changed, 28 insertions(+), 12 deletions(-)
 
-Index: scsi-reqfn-export/drivers/scsi/scsi.c
-===================================================================
---- scsi-reqfn-export.orig/drivers/scsi/scsi.c	2005-05-14 09:43:18.000000000 +0900
-+++ scsi-reqfn-export/drivers/scsi/scsi.c	2005-05-14 09:45:59.000000000 +0900
-@@ -638,10 +638,12 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
- 	}
- 	spin_unlock_irqrestore(host->host_lock, flags);
- 	if (rtn) {
--		atomic_inc(&cmd->device->iodone_cnt);
--		scsi_queue_insert(cmd,
--				(rtn == SCSI_MLQUEUE_DEVICE_BUSY) ?
--				 rtn : SCSI_MLQUEUE_HOST_BUSY);
-+		if (scsi_delete_timer(cmd)) {
-+			atomic_inc(&cmd->device->iodone_cnt);
-+			scsi_queue_insert(cmd,
-+					  (rtn == SCSI_MLQUEUE_DEVICE_BUSY) ?
-+					  rtn : SCSI_MLQUEUE_HOST_BUSY);
-+		}
- 		SCSI_LOG_MLQUEUE(3,
- 		    printk("queuecommand : request rejected\n"));
- 	}
 Index: scsi-reqfn-export/drivers/scsi/scsi_lib.c
 ===================================================================
---- scsi-reqfn-export.orig/drivers/scsi/scsi_lib.c	2005-05-14 09:43:18.000000000 +0900
-+++ scsi-reqfn-export/drivers/scsi/scsi_lib.c	2005-05-14 09:45:59.000000000 +0900
-@@ -128,13 +128,7 @@ int scsi_queue_insert(struct scsi_cmnd *
- 		 printk("Inserting command %p into mlqueue\n", cmd));
+--- scsi-reqfn-export.orig/drivers/scsi/scsi_lib.c	2005-05-14 22:35:18.000000000 +0900
++++ scsi-reqfn-export/drivers/scsi/scsi_lib.c	2005-05-14 22:35:18.000000000 +0900
+@@ -977,9 +977,6 @@ static int scsi_init_io(struct scsi_cmnd
+ 	printk(KERN_ERR "req nr_sec %lu, cur_nr_sec %u\n", req->nr_sectors,
+ 			req->current_nr_sectors);
+ 
+-	/* release the command and kill it */
+-	scsi_release_buffers(cmd);
+-	scsi_put_command(cmd);
+ 	return BLKPREP_KILL;
+ }
+ 
+@@ -1147,18 +1144,24 @@ static int scsi_prep_fn(struct request_q
+ 		 * required).
+ 		 */
+ 		ret = scsi_init_io(cmd);
+-		if (ret)	/* BLKPREP_KILL return also releases the command */
+-			return ret;
++		switch (ret) {
++		case 0:
++			/* Successful initialization. */
++			break;
++		case BLKPREP_DEFER:
++			goto defer;
++		default:
++			/* Unknown return value, fall through. */
++		case BLKPREP_KILL:
++			goto kill;
++		}
+ 		
+ 		/*
+ 		 * Initialize the actual SCSI command for this request.
+ 		 */
+ 		drv = *(struct scsi_driver **)req->rq_disk->private_data;
+-		if (unlikely(!drv->init_command(cmd))) {
+-			scsi_release_buffers(cmd);
+-			scsi_put_command(cmd);
+-			return BLKPREP_KILL;
+-		}
++		if (unlikely(!drv->init_command(cmd)))
++			goto kill;
+ 	}
  
  	/*
--	 * We are inserting the command into the ml queue.  First, we
--	 * cancel the timer, so it doesn't time out.
--	 */
--	scsi_delete_timer(cmd);
--
--	/*
--	 * Next, set the appropriate busy bit for the device/host.
-+	 * Set the appropriate busy bit for the device/host.
- 	 *
- 	 * If the host/device isn't busy, assume that something actually
- 	 * completed, and that we should be able to queue a command now.
+@@ -1168,12 +1171,25 @@ static int scsi_prep_fn(struct request_q
+ 	return BLKPREP_OK;
+ 
+  defer:
+-	/* If we defer, the elv_next_request() returns NULL, but the
++	/*
++	 * If we defer, the elv_next_request() returns NULL, but the
+ 	 * queue must be restarted, so we plug here if no returning
+-	 * command will automatically do that. */
++	 * command will automatically do that.
++	 */
+ 	if (sdev->device_busy == 0)
+ 		blk_plug_device(q);
+ 	return BLKPREP_DEFER;
++
++ kill:
++	/*
++	 * Here we have to release every resource associated with the
++	 * request because this will complete at the request level
++	 * (req->end_io), not the scsi command level, so no scsi
++	 * routine will get to free the associated resources.
++	 */
++	scsi_release_buffers(cmd);
++	scsi_put_command(cmd);
++	return BLKPREP_KILL;
+ }
+ 
+ /*
 
