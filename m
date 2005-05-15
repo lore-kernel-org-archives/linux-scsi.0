@@ -1,54 +1,236 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: 53C8XX /sys/devices/pci*/*/config revisited
-Date: Sun, 15 May 2005 15:48:59 +0100
-Message-ID: <20050515144859.GB11071@parcelfarce.linux.theplanet.co.uk>
-References: <m3br7c4ur6.fsf@merlin.emma.line.org> <1116155603.6270.16.camel@laptopd505.fenrus.org> <1116156415.6270.19.camel@laptopd505.fenrus.org> <20050515125658.GA17625@merlin.emma.line.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] remove Documentation/DocBook/scsidrivers.tmpl
+Date: Sun, 15 May 2005 19:20:56 +0200
+Message-ID: <20050515172056.GA27132@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:26076 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S262832AbVEOOsl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 15 May 2005 10:48:41 -0400
+Received: from verein.lst.de ([213.95.11.210]:45010 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S261157AbVEORVJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 15 May 2005 13:21:09 -0400
 Content-Disposition: inline
-In-Reply-To: <20050515125658.GA17625@merlin.emma.line.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, gregkh@kroah.com
+To: jejb@steeleye.com, dgilbert@interlog.com
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, May 15, 2005 at 02:56:59PM +0200, Matthias Andree wrote:
-> On Sun, 15 May 2005, Arjan van de Ven wrote:
-> > > if hal reads more than 64 bytes of config space (heck if it reads config
-> > > space at all) then it's terminally broken.
-> > 
-> > this brings up a bug in the kernel though....
-> > the config file is user readable! That's just plain dangerous and imo it
-> > should be a root-only file as a result.
+This document is rather rudimentary and totally outdated.  Fortunately
+Documentation/scsi/scsi_mid_low_api.txt replaces it quite nicely.
 
-The same is true of /proc/bus/pci.  Otherwise lspci doesn't work for non-root.
 
-> The user can access only the first 64 bytes, but hald is apparently
-> meant to run as root so it can hack /etc/fstab for subfs file systems
-> and such. SUSE Linux 9.3 runs hald as root.
-> 
-> BTW, - note I have little clue of how PCI works - if the PCI
-> configuration space is only 64 bytes tall, then why the f* is the sysfs
-> .../config file listed as 256 bytes in the first place, even for root?
-
-PCI has 256 bytes of config space.  However, not all vendors do sane
-things with it (even though they're required to).  It's a bug in hald
-that it reads more than it needs to ...
-
-> Relevant pointers to free copies of the PCI standard (the old 32 bit 33
-> MHz variant is sufficient) welcome, if such are available.
-
-While they are not freely available, knowing that the name of the file is
-"pci22.pdf" might help one locate non-legitimate copies.
-
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Index: scsi-misc-2.6/Documentation/DocBook/scsidrivers.tmpl
+===================================================================
+--- scsi-misc-2.6.orig/Documentation/DocBook/scsidrivers.tmpl	2005-05-15 19:04:25.000000000 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,193 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+-	"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" []>
+-
+-<book id="scsidrivers">
+- <bookinfo>
+-  <title>SCSI Subsystem Interfaces</title>
+-  
+-  <authorgroup>
+-   <author>
+-    <firstname>Douglas</firstname>
+-    <surname>Gilbert</surname>
+-    <affiliation>
+-     <address>
+-      <email>dgilbert@interlog.com</email>
+-     </address>
+-    </affiliation>
+-   </author>
+-  </authorgroup>
+-  <pubdate>2003-08-11</pubdate>
+-
+-  <copyright>
+-   <year>2002</year>
+-   <year>2003</year>
+-   <holder>Douglas Gilbert</holder>
+-  </copyright>
+-
+-  <legalnotice>
+-   <para>
+-     This documentation is free software; you can redistribute
+-     it and/or modify it under the terms of the GNU General Public
+-     License as published by the Free Software Foundation; either
+-     version 2 of the License, or (at your option) any later
+-     version.
+-   </para>
+-      
+-   <para>
+-     This program is distributed in the hope that it will be
+-     useful, but WITHOUT ANY WARRANTY; without even the implied
+-     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+-     See the GNU General Public License for more details.
+-   </para>
+-      
+-   <para>
+-     You should have received a copy of the GNU General Public
+-     License along with this program; if not, write to the Free
+-     Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+-     MA 02111-1307 USA
+-   </para>
+-      
+-   <para>
+-     For more details see the file COPYING in the source
+-     distribution of Linux.
+-   </para>
+-  </legalnotice>
+-
+- </bookinfo>
+-
+-<toc></toc>
+-
+-  <chapter id="intro">
+-      <title>Introduction</title>
+-  <para>
+-This document outlines the interface between the Linux scsi mid level
+-and lower level drivers. Lower level drivers are variously called HBA
+-(host bus adapter) drivers, host drivers (HD) or pseudo adapter drivers.
+-The latter alludes to the fact that a lower level driver may be a
+-bridge to another IO subsystem (and the "ide-scsi" driver is an example
+-of this). There can be many lower level drivers active in a running
+-system, but only one per hardware type. For example, the aic7xxx driver
+-controls adaptec controllers based on the 7xxx chip series. Most lower
+-level drivers can control one or more scsi hosts (a.k.a. scsi initiators).
+-  </para>
+-<para>
+-This document can been found in an ASCII text file in the linux kernel 
+-source: <filename>Documentation/scsi/scsi_mid_low_api.txt</filename> .
+-It currently hold a little more information than this document. The
+-<filename>drivers/scsi/hosts.h</filename> and <filename>
+-drivers/scsi/scsi.h</filename> headers contain descriptions of members
+-of important structures for the scsi subsystem.
+-</para>
+-  </chapter>
+-
+-  <chapter id="driver-struct">
+-      <title>Driver structure</title>
+-  <para>
+-Traditionally a lower level driver for the scsi subsystem has been
+-at least two files in the drivers/scsi directory. For example, a
+-driver called "xyz" has a header file "xyz.h" and a source file
+-"xyz.c". [Actually there is no good reason why this couldn't all
+-be in one file.] Some drivers that have been ported to several operating
+-systems (e.g. aic7xxx which has separate  files for generic and
+-OS-specific code) have more than two files. Such drivers tend to have
+-their own directory under the drivers/scsi directory.
+-  </para>
+-  <para>
+-scsi_module.c is normally included at the end of a lower
+-level driver. For it to work a declaration like this is needed before
+-it is included:
+-<programlisting>
+-    static Scsi_Host_Template driver_template = DRIVER_TEMPLATE;
+-    /* DRIVER_TEMPLATE should contain pointers to supported interface
+-       functions. Scsi_Host_Template is defined hosts.h */
+-    #include "scsi_module.c"
+-</programlisting>
+-  </para>
+-  <para>
+-The scsi_module.c assumes the name "driver_template" is appropriately
+-defined. It contains 2 functions:
+-<orderedlist>
+-<listitem><para>
+-     init_this_scsi_driver() called during builtin and module driver
+-     initialization: invokes mid level's scsi_register_host()
+-</para></listitem>
+-<listitem><para>
+-     exit_this_scsi_driver() called during closedown: invokes
+-     mid level's scsi_unregister_host()
+-</para></listitem>
+-</orderedlist>
+-  </para>
+-<para>
+-When a new, lower level driver is being added to Linux, the following 
+-files (all found in the drivers/scsi directory) will need some attention: 
+-Makefile, Config.help and Config.in . It is probably best to look at what 
+-an existing lower level driver does in this regard.
+-</para>
+-  </chapter>
+-
+-  <chapter id="intfunctions">
+-     <title>Interface Functions</title>
+-!EDocumentation/scsi/scsi_mid_low_api.txt
+-  </chapter>
+-
+-  <chapter id="locks">
+-     <title>Locks</title>
+-<para>
+-Each Scsi_Host instance has a spin_lock called Scsi_Host::default_lock
+-which is initialized in scsi_register() [found in hosts.c]. Within the
+-same function the Scsi_Host::host_lock pointer is initialized to point
+-at default_lock with the scsi_assign_lock() function. Thereafter
+-lock and unlock operations performed by the mid level use the
+-Scsi_Host::host_lock pointer.
+-</para>
+-<para>
+-Lower level drivers can override the use of Scsi_Host::default_lock by
+-using scsi_assign_lock(). The earliest opportunity to do this would
+-be in the detect() function after it has invoked scsi_register(). It
+-could be replaced by a coarser grain lock (e.g. per driver) or a
+-lock of equal granularity (i.e. per host). Using finer grain locks
+-(e.g. per scsi device) may be possible by juggling locks in
+-queuecommand().
+-</para>
+-  </chapter>
+-
+-  <chapter id="changes">
+-     <title>Changes since lk 2.4 series</title>
+-<para>
+-io_request_lock has been replaced by several finer grained locks. The lock
+-relevant to lower level drivers is Scsi_Host::host_lock and there is one
+-per scsi host.
+-</para>
+-<para>
+-The older error handling mechanism has been removed. This means the
+-lower level interface functions abort() and reset() have been removed.
+-</para>
+-<para>
+-In the 2.4 series the scsi subsystem configuration descriptions were
+-aggregated with the configuration descriptions from all other Linux
+-subsystems in the Documentation/Configure.help file. In the 2.5 series,
+-the scsi subsystem now has its own (much smaller) drivers/scsi/Config.help
+-file.
+-</para>
+-  </chapter>
+-
+-  <chapter id="credits">
+-     <title>Credits</title>
+-<para>
+-The following people have contributed to this document:
+-<orderedlist>
+-<listitem><para>
+-Mike Anderson <email>andmike@us.ibm.com</email>
+-</para></listitem>
+-<listitem><para>
+-James Bottomley <email>James.Bottomley@steeleye.com</email>
+-</para></listitem>
+-<listitem><para>
+-Patrick Mansfield <email>patmans@us.ibm.com</email>
+-</para></listitem>
+-</orderedlist>
+-</para>
+-  </chapter>
+-
+-</book>
+Index: scsi-misc-2.6/Documentation/DocBook/Makefile
+===================================================================
+--- scsi-misc-2.6.orig/Documentation/DocBook/Makefile	2005-05-15 19:04:25.000000000 +0200
++++ scsi-misc-2.6/Documentation/DocBook/Makefile	2005-05-15 19:18:40.000000000 +0200
+@@ -9,9 +9,9 @@
+ DOCBOOKS := wanbook.xml z8530book.xml mcabook.xml videobook.xml \
+ 	    kernel-hacking.xml kernel-locking.xml via-audio.xml \
+ 	    deviceiobook.xml procfs-guide.xml tulip-user.xml \
+-	    writing_usb_driver.xml scsidrivers.xml sis900.xml \
+-	    kernel-api.xml journal-api.xml lsm.xml usb.xml \
+-	    gadget.xml libata.xml mtdnand.xml librs.xml
++	    writing_usb_driver.xml sis900.xml kernel-api.xml \
++	    journal-api.xml lsm.xml usb.xml gadget.xml libata.xml \
++	    mtdnand.xml librs.xml
+ 
+ ###
+ # The build process is as follows (targets):
