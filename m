@@ -1,34 +1,40 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: 53C8XX /sys/devices/pci*/*/config revisited
-Date: Sun, 15 May 2005 10:57:30 -0700
-Message-ID: <20050515175730.GA3898@kroah.com>
-References: <m3br7c4ur6.fsf@merlin.emma.line.org> <1116155603.6270.16.camel@laptopd505.fenrus.org> <1116156415.6270.19.camel@laptopd505.fenrus.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: [PATCH 1/3] add open iscsi netlink interface to iscsi transport
+	class
+Date: Sun, 15 May 2005 12:29:57 -0700
+Message-ID: <1116185397.17312.10.camel@mina>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kroah.org ([69.55.234.183]:12221 "EHLO perch.kroah.org")
-	by vger.kernel.org with ESMTP id S261157AbVEOR5g (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:48844 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S261210AbVEOTaG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 15 May 2005 13:57:36 -0400
-Content-Disposition: inline
-In-Reply-To: <1116156415.6270.19.camel@laptopd505.fenrus.org>
+	Sun, 15 May 2005 15:30:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Matthias Andree <matthias.andree@gmx.de>, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, gregkh@kroah.com
+To: open-iscsi@googlegroups.com, netdev@oss.sgi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, inux-iscsi-devel@lists.sourceforge.netl
 
-On Sun, May 15, 2005 at 01:26:55PM +0200, Arjan van de Ven wrote:
-> 
-> > if hal reads more than 64 bytes of config space (heck if it reads config
-> > space at all) then it's terminally broken.
-> 
-> this brings up a bug in the kernel though....
-> the config file is user readable! That's just plain dangerous and imo it
-> should be a root-only file as a result.
+include/linux/netlink.h changes (added new protocol NETLINK_ISCSI)
 
-No, it's safe (or it should be), just like /proc/bus/pci is readable by
-anyone for libpci.
+Thanks,
 
-thanks,
+Linux-iscsi Team
 
-greg k-h
+Signed-off-by: Alex Aizman <itn780@yahoo.com>
+Signed-off-by: Dmitry Yusupov <dmitry_yus@yahoo.com>
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+
+
+--- linux-2.6.12-rc3.orig/include/linux/netlink.h	2005-04-20 17:03:16.000000000 -0700
++++ linux-2.6.12-rc3/include/linux/netlink.h	2005-05-04 18:06:44.000000000 -0700
+@@ -14,6 +14,7 @@
+ #define NETLINK_SELINUX		7	/* SELinux event notifications */
+ #define NETLINK_ARPD		8
+ #define NETLINK_AUDIT		9	/* auditing */
++#define NETLINK_ISCSI		10	/* iSCSI Open Interface */
+ #define NETLINK_ROUTE6		11	/* af_inet6 route comm channel */
+ #define NETLINK_IP6_FW		13
+ #define NETLINK_DNRTMSG		14	/* DECnet routing messages */
+
+
