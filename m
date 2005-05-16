@@ -1,45 +1,63 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH scsi-misc-2.6 04/04] scsi: remove unnecessary
-	scsi_wait_req_end_io()
-Date: Mon, 16 May 2005 11:07:32 -0500
-Message-ID: <1116259652.5040.17.camel@mulgrave>
-References: <20050514135610.81030F26@htj.dyndns.org>
-	 <20050514135610.50606F9C@htj.dyndns.org>
-	 <1116084383.5049.18.camel@mulgrave> <20050514154733.GA5557@htj.dyndns.org>
-	 <1116087547.5049.25.camel@mulgrave> <20050515011532.GA26421@htj.dyndns.org>
+Subject: Re: [gregoire.favre@gmail.com: What breaks aic7xxx in post
+	2.6.12-rc2 ?]
+Date: Mon, 16 May 2005 11:33:32 -0500
+Message-ID: <1116261212.5040.23.camel@mulgrave>
+References: <20050516152607.GA27989@infradead.org>
+	 <1116258401.5040.14.camel@mulgrave>  <20050516155409.GE9558@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:60589 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:16302 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261723AbVEPQHq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 May 2005 12:07:46 -0400
-In-Reply-To: <20050515011532.GA26421@htj.dyndns.org>
+	id S261735AbVEPQdg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 May 2005 12:33:36 -0400
+In-Reply-To: <20050516155409.GE9558@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <axboe@suse.de>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: =?ISO-8859-1?Q?Gr=E9goire?= Favre <gregoire.favre@gmail.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sun, 2005-05-15 at 10:15 +0900, Tejun Heo wrote:
->  I've made two new versions of the same patch.  The first one just
-> BUG() such cases, and the second one makes scsi_prep_fn() tell
-> scsi_request_fn() to kill requests instead of doing itself w/
-> BLKPREP_KILL.  In both cases, I made req->flags error case a BUG().
-> If you don't like it, feel free to drop that part.
-> 
->  Oh... one more thing.  I forgot to mention the scsi_kill_requests()
-> path.  As it's a temporary fix, I just left it as it is (terminate
-> commands w/ end_that_*).  I guess this patch should be pushed after
-> removal of that kludge.  But with or without this patch, that path
-> will leak resources.
+On Mon, 2005-05-16 at 17:54 +0200, Gr=E9goire Favre wrote:
+> What's DV ?
 
-I suppose it's not surprising that I don't like either.
+Domain Validation ... it's a way of probing the SCSI bus to check that
+the transport parameters for the device are correct (and that nothing o=
+n
+the bus is interfering with the transmissions).
 
-You remove the code that handles the BLKPREP_KILL case and then contort
-the request functions to try not to do it.  We have to handle this case,
-it's not optional, so just leave the code that does it in.
+> Host: scsi1 Channel: 00 Id: 01 Lun: 00
+>   Vendor: TOSHIBA  Model: DVD-ROM SD-M1201 Rev: 1R08
+>   Type:   CD-ROM                           ANSI SCSI revision: 02
+
+Aha, this wouldn't be the first DVD to screw up in domain validation.
+The first such problem was because the device lied about having an echo
+buffer ... I suspect that may be the case here too.
+
+The initial fix was just to disbelieve the device if it didn't support
+ppr.  Could you try the attached?  It expands the check to disbelieve
+the return for all CD type devices.
+
+Thanks,
 
 James
 
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -799,7 +799,7 @@ spi_dv_device_internal(struct scsi_reque
+ 	 * do the SPI pattern write tests */
+=20
+ 	len =3D 0;
+-	if (sdev->ppr)
++	if (sdev->ppr && sdev->type !=3D TYPE_ROM)
+ 		len =3D spi_dv_device_get_echo_buffer(sreq, buffer);
+=20
+  retry:
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
