@@ -1,50 +1,81 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH scsi-misc-2.6 04/04] scsi: remove unnecessary	scsi_wait_req_end_io()
-Date: Tue, 17 May 2005 01:56:48 +0900
-Message-ID: <4288D0D0.7070903@gmail.com>
-References: <20050514135610.81030F26@htj.dyndns.org>	 <20050514135610.50606F9C@htj.dyndns.org>	 <1116084383.5049.18.camel@mulgrave> <20050514154733.GA5557@htj.dyndns.org>	 <1116087547.5049.25.camel@mulgrave> <20050515011532.GA26421@htj.dyndns.org> <1116259652.5040.17.camel@mulgrave>
+From: Jesper Juhl <juhl-lkml@dif.dk>
+Subject: Re: test of 'good_bytes' in scsi_io_completion is always true (in
+ drivers/scsi/scsi_lib.c)
+Date: Mon, 16 May 2005 19:03:11 +0200 (CEST)
+Message-ID: <Pine.LNX.4.62.0505161902330.3101@dragon.hyggekrogen.localhost>
+References: <Pine.LNX.4.62.0504200030180.2074@dragon.hyggekrogen.localhost>
+ <Pine.LNX.4.62.0505161852550.3101@dragon.hyggekrogen.localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.204]:45211 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261753AbVEPQ4z (ORCPT
+Received: from mail.dif.dk ([193.138.115.101]:18376 "EHLO saerimmer.dif.dk")
+	by vger.kernel.org with ESMTP id S261756AbVEPQ7I (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 May 2005 12:56:55 -0400
-Received: by zproxy.gmail.com with SMTP id 16so1958693nzp
-        for <linux-scsi@vger.kernel.org>; Mon, 16 May 2005 09:56:54 -0700 (PDT)
-In-Reply-To: <1116259652.5040.17.camel@mulgrave>
+	Mon, 16 May 2005 12:59:08 -0400
+In-Reply-To: <Pine.LNX.4.62.0505161852550.3101@dragon.hyggekrogen.localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jens Axboe <axboe@suse.de>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Jesper Juhl <juhl-lkml@dif.dk>
+Cc: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, linux-kernel <linux-kernel@vger.kernel.org>, Eric Youngdale <eric@andante.org>, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Sun, 2005-05-15 at 10:15 +0900, Tejun Heo wrote:
-> 
->> I've made two new versions of the same patch.  The first one just
->>BUG() such cases, and the second one makes scsi_prep_fn() tell
->>scsi_request_fn() to kill requests instead of doing itself w/
->>BLKPREP_KILL.  In both cases, I made req->flags error case a BUG().
->>If you don't like it, feel free to drop that part.
->>
->> Oh... one more thing.  I forgot to mention the scsi_kill_requests()
->>path.  As it's a temporary fix, I just left it as it is (terminate
->>commands w/ end_that_*).  I guess this patch should be pushed after
->>removal of that kludge.  But with or without this patch, that path
->>will leak resources.
+On Mon, 16 May 2005, Jesper Juhl wrote:
+
+> (please keep me on the CC list when replying)
 > 
 > 
-> I suppose it's not surprising that I don't like either.
+> Hi James,
 > 
-> You remove the code that handles the BLKPREP_KILL case and then contort
-> the request functions to try not to do it.  We have to handle this case,
-> it's not optional, so just leave the code that does it in.
+> I never got any response to the mail below, so I'll try again :)
+> Should we just get rid of the code in the 'if' since it'll never trigger, 
 
- IMHO, as special request BLKPREP_KILL path is a kernel bug, code that
-try to handle it normally is unnecessary, but it's your call.
+I mean get rid of the "if", not "the code in the if" of course..
 
- Thanks.
 
--- 
-tejun
+> or was the intention actually to test  if (good_bytes > 0)  ?  If so, then 
+> the patch should make good sense...
+> 
+> Comments ?
+> 
+> -- 
+> Jesper Juhl
+> 
+> 
+> On Wed, 20 Apr 2005, Jesper Juhl wrote:
+> 
+> > 
+> > in drivers/scsi/scsi_lib.c::scsi_io_completion() 'good_bytes' is tested 
+> > for being >= 0, but 'good_bytes' is an unsigned int, so that test is 
+> > always true. My *guess* is that what was intended was to test if 
+> > good_bytes is > 0, but I don't know this code well enough to be sure. 
+> > The patch below makes the change to test if it's > 0, but if the code in 
+> > the 'if' really wants to run if it's >= 0, then we might as well just 
+> > remove the 'if'.
+> > 
+> > In any case, the current code looks fishy.
+> > 
+> > 
+> > Signed-off-by: Jesper Juhl <juhl-lkml@dif.dk>
+> > 
+> > --- linux-2.6.12-rc2-mm3-orig/drivers/scsi/scsi_lib.c	2005-04-11 21:20:49.000000000 +0200
+> > +++ linux-2.6.12-rc2-mm3/drivers/scsi/scsi_lib.c	2005-04-20 00:29:14.000000000 +0200
+> > @@ -766,7 +766,7 @@ void scsi_io_completion(struct scsi_cmnd
+> >  	 * Next deal with any sectors which we were able to correctly
+> >  	 * handle.
+> >  	 */
+> > -	if (good_bytes >= 0) {
+> > +	if (good_bytes > 0) {
+> >  		SCSI_LOG_HLCOMPLETE(1, printk("%ld sectors total, %d bytes done.\n",
+> >  					      req->nr_sectors, good_bytes));
+> >  		SCSI_LOG_HLCOMPLETE(1, printk("use_sg is %d\n", cmd->use_sg));
+> > 
+> > 
+> > 
+> > 
+> > Please keep me on CC:
+> > 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
