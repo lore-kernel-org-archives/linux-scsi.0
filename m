@@ -1,68 +1,57 @@
-From: Jesper Juhl <juhl-lkml@dif.dk>
-Subject: Re: test of 'good_bytes' in scsi_io_completion is always true (in
- drivers/scsi/scsi_lib.c)
-Date: Mon, 16 May 2005 18:55:41 +0200 (CEST)
-Message-ID: <Pine.LNX.4.62.0505161852550.3101@dragon.hyggekrogen.localhost>
-References: <Pine.LNX.4.62.0504200030180.2074@dragon.hyggekrogen.localhost>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH][RESEND]drivers/scsi/megaraid/megaraid_{mm,mbox}
+Date: Mon, 16 May 2005 11:52:52 -0500
+Message-ID: <1116262372.5040.37.camel@mulgrave>
+References: <0E3FA95632D6D047BA649F95DAB60E570366289D@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dif.dk ([193.138.115.101]:57799 "EHLO saerimmer.dif.dk")
-	by vger.kernel.org with ESMTP id S261747AbVEPQvi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 May 2005 12:51:38 -0400
-In-Reply-To: <Pine.LNX.4.62.0504200030180.2074@dragon.hyggekrogen.localhost>
+Received: from stat16.steeleye.com ([209.192.50.48]:34478 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261742AbVEPQxD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 May 2005 12:53:03 -0400
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570366289D@exa-atlanta>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, Eric Youngdale <eric@andante.org>, linux-scsi@vger.kernel.org
+To: "Ju, Seokmann" <sju@lsil.com>
+Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-(please keep me on the CC list when replying)
+On Mon, 2005-05-16 at 11:08 -0400, Ju, Seokmann wrote:
+> Resending patch for megaraid driver.
+> The patch has been recreated against 2.6.11.8.
+> Please review the patch to previous driver.
+> Attached file is same patch for convenience.
+
+Look:
+
+patching file Documentation/scsi/ChangeLog.megaraid
+patching file drivers/scsi/megaraid/mega_common.h
+patching file drivers/scsi/megaraid/megaraid_mbox.c
+patching file drivers/scsi/megaraid/megaraid_mbox.h
+patching file drivers/scsi/megaraid/megaraid_mm.c
+Hunk #2 FAILED at 43.
+Hunk #4 FAILED at 70.
+Hunk #5 FAILED at 1217.
+Hunk #6 FAILED at 1225.
+Hunk #7 FAILED at 1246.
+5 out of 7 hunks FAILED -- saving rejects to file
+drivers/scsi/megaraid/megaraid_mm.c.rej
+patching file drivers/scsi/megaraid/megaraid_mm.h
 
 
-Hi James,
+I'm getting tired of telling you this same patch doesn't apply. The
+rejections are all in your compat_ioctl changes.
 
-I never got any response to the mail below, so I'll try again :)
-Should we just get rid of the code in the 'if' since it'll never trigger, 
-or was the intention actually to test  if (good_bytes > 0)  ?  If so, then 
-the patch should make good sense...
+The removal of struct file * from your compat ioctl signature has
+already been done ... it had to be otherwise the driver would have no
+longer compiled.
 
-Comments ?
+Please get the latest kernel from kernel.org and prepare your patch
+against that.
 
--- 
-Jesper Juhl
+Thanks,
+
+James
 
 
-On Wed, 20 Apr 2005, Jesper Juhl wrote:
-
-> 
-> in drivers/scsi/scsi_lib.c::scsi_io_completion() 'good_bytes' is tested 
-> for being >= 0, but 'good_bytes' is an unsigned int, so that test is 
-> always true. My *guess* is that what was intended was to test if 
-> good_bytes is > 0, but I don't know this code well enough to be sure. 
-> The patch below makes the change to test if it's > 0, but if the code in 
-> the 'if' really wants to run if it's >= 0, then we might as well just 
-> remove the 'if'.
-> 
-> In any case, the current code looks fishy.
-> 
-> 
-> Signed-off-by: Jesper Juhl <juhl-lkml@dif.dk>
-> 
-> --- linux-2.6.12-rc2-mm3-orig/drivers/scsi/scsi_lib.c	2005-04-11 21:20:49.000000000 +0200
-> +++ linux-2.6.12-rc2-mm3/drivers/scsi/scsi_lib.c	2005-04-20 00:29:14.000000000 +0200
-> @@ -766,7 +766,7 @@ void scsi_io_completion(struct scsi_cmnd
->  	 * Next deal with any sectors which we were able to correctly
->  	 * handle.
->  	 */
-> -	if (good_bytes >= 0) {
-> +	if (good_bytes > 0) {
->  		SCSI_LOG_HLCOMPLETE(1, printk("%ld sectors total, %d bytes done.\n",
->  					      req->nr_sectors, good_bytes));
->  		SCSI_LOG_HLCOMPLETE(1, printk("use_sg is %d\n", cmd->use_sg));
-> 
-> 
-> 
-> 
-> Please keep me on CC:
-> 
