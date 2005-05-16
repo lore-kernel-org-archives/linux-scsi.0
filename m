@@ -1,47 +1,58 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] saved and restore result for timed out commands
-Date: Mon, 16 May 2005 15:42:34 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0505161535380.5370-100000@iolanthe.rowland.org>
-References: <20050516174215.GA23974@us.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [gregoire.favre@gmail.com: What breaks aic7xxx in post
+	2.6.12-rc2 ?]
+Date: Mon, 16 May 2005 16:07:24 -0500
+Message-ID: <1116277644.5040.45.camel@mulgrave>
+References: <20050516152607.GA27989@infradead.org>
+	 <1116258401.5040.14.camel@mulgrave> <20050516155409.GE9558@gmail.com>
+	 <1116261212.5040.23.camel@mulgrave>  <20050516180531.GA9144@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:50828 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261851AbVEPTmk
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 May 2005 15:42:40 -0400
-In-Reply-To: <20050516174215.GA23974@us.ibm.com>
+Received: from stat16.steeleye.com ([209.192.50.48]:44722 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261879AbVEPVHe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 May 2005 17:07:34 -0400
+In-Reply-To: <20050516180531.GA9144@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Doug Gilbert <dgilbert@interlog.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: =?ISO-8859-1?Q?Gr=E9goire?= Favre <gregoire.favre@gmail.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, 16 May 2005, Patrick Mansfield wrote:
+On Mon, 2005-05-16 at 20:05 +0200, Gr=E9goire Favre wrote:
+> Unfortunately, it don't seems to change anything, 2.6.12-rc4-mm1 is i=
+n a
+> infinite loop :
 
-> Save and restore the scmd->result, so that timed out commands do not
-> return the result of the TEST UNIT READY or the start/stop commands. Code
-> is already in place to save and restore the result for the request sense
-> case.
-> 
-> The previous version of this patch erroneously removed the "if" check,
-> instead add a comment as to why the "if" is needed.
+Actually, the loop's not infinite; it's dropping the transfer parameter=
+s
+each time it goes around ... it should exit after 8 or so.
 
-I can confirm that this patch does help; the correct status is now
-returned to the sg user.  However there are still a few things that should
-be fixed up:
+> aic7xxx_abort returns 0x2002
+> scsi1:0:1:0: Attempting to queue an ABORT message
+> CDB: 0x0 0x0 0x0 0x0 0x0 0x0
+> scsi1:0:1:0: Command found on device queue
+> aic7xxx_abort returns 0x2002
+> scsi: Device offlined - not ready after error recovery: host 1 channe=
+l 0
+>  target1:0:1: domain Validation detected failure, dropping back
+> scsi1:0:1:0: Attempting to queue an ABORT message
 
-First, this doesn't erase the sense data after error recovery.  I tried it 
-with two different scenarios, one where the command returned a phase error 
-and one where the command timed out.  In both cases the sg user got back a 
-buffer with valid sense data, from the TUR commands issued by the error 
-handler.  This could be highly misleading.
+I'm fairly certain it's something to do with the DVD settings.  Could
+you send me the output of
 
-Second, as Patrick has noted, this doesn't prevent the error handler from 
-issuing those TURs in the first place.  If some sort of Unit Attention 
-came up, the sg user wouldn't be able to handle it correctly because the 
-error handler would have swallowed it.  Of course, once this is fixed the 
-first problem will no longer be an issue (no TUR, hence no unsolicited 
-sense data).
+/proc/scsi/aic7xxx/1
 
-Alan Stern
+With the earlier version of the kernel
 
+Thanks,
+
+James
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
