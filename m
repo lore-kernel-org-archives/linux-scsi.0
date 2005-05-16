@@ -1,81 +1,101 @@
-From: Jesper Juhl <juhl-lkml@dif.dk>
-Subject: Re: test of 'good_bytes' in scsi_io_completion is always true (in
- drivers/scsi/scsi_lib.c)
-Date: Mon, 16 May 2005 19:03:11 +0200 (CEST)
-Message-ID: <Pine.LNX.4.62.0505161902330.3101@dragon.hyggekrogen.localhost>
-References: <Pine.LNX.4.62.0504200030180.2074@dragon.hyggekrogen.localhost>
- <Pine.LNX.4.62.0505161852550.3101@dragon.hyggekrogen.localhost>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: [PATCH] saved and restore result for timed out commands
+Date: Mon, 16 May 2005 10:42:15 -0700
+Message-ID: <20050516174215.GA23974@us.ibm.com>
+References: <Pine.LNX.4.44L0.0505101433520.5058-100000@iolanthe.rowland.org> <20050510225831.GA4181@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dif.dk ([193.138.115.101]:18376 "EHLO saerimmer.dif.dk")
-	by vger.kernel.org with ESMTP id S261756AbVEPQ7I (ORCPT
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:40889 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261460AbVEPRmv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 May 2005 12:59:08 -0400
-In-Reply-To: <Pine.LNX.4.62.0505161852550.3101@dragon.hyggekrogen.localhost>
+	Mon, 16 May 2005 13:42:51 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e4.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j4GHgpku027734
+	for <linux-scsi@vger.kernel.org>; Mon, 16 May 2005 13:42:51 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j4GHgpV8136622
+	for <linux-scsi@vger.kernel.org>; Mon, 16 May 2005 13:42:51 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j4GHgom0024199
+	for <linux-scsi@vger.kernel.org>; Mon, 16 May 2005 13:42:51 -0400
+Content-Disposition: inline
+In-Reply-To: <20050510225831.GA4181@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jesper Juhl <juhl-lkml@dif.dk>
-Cc: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, linux-kernel <linux-kernel@vger.kernel.org>, Eric Youngdale <eric@andante.org>, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Doug Gilbert <dgilbert@interlog.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, 16 May 2005, Jesper Juhl wrote:
+Save and restore the scmd->result, so that timed out commands do not
+return the result of the TEST UNIT READY or the start/stop commands. Code
+is already in place to save and restore the result for the request sense
+case.
 
-> (please keep me on the CC list when replying)
-> 
-> 
-> Hi James,
-> 
-> I never got any response to the mail below, so I'll try again :)
-> Should we just get rid of the code in the 'if' since it'll never trigger, 
+The previous version of this patch erroneously removed the "if" check,
+instead add a comment as to why the "if" is needed.
 
-I mean get rid of the "if", not "the code in the if" of course..
+Signed-off-by: Patrick Mansfield <patmans@us.ibm.com>
 
-
-> or was the intention actually to test  if (good_bytes > 0)  ?  If so, then 
-> the patch should make good sense...
-> 
-> Comments ?
-> 
-> -- 
-> Jesper Juhl
-> 
-> 
-> On Wed, 20 Apr 2005, Jesper Juhl wrote:
-> 
-> > 
-> > in drivers/scsi/scsi_lib.c::scsi_io_completion() 'good_bytes' is tested 
-> > for being >= 0, but 'good_bytes' is an unsigned int, so that test is 
-> > always true. My *guess* is that what was intended was to test if 
-> > good_bytes is > 0, but I don't know this code well enough to be sure. 
-> > The patch below makes the change to test if it's > 0, but if the code in 
-> > the 'if' really wants to run if it's >= 0, then we might as well just 
-> > remove the 'if'.
-> > 
-> > In any case, the current code looks fishy.
-> > 
-> > 
-> > Signed-off-by: Jesper Juhl <juhl-lkml@dif.dk>
-> > 
-> > --- linux-2.6.12-rc2-mm3-orig/drivers/scsi/scsi_lib.c	2005-04-11 21:20:49.000000000 +0200
-> > +++ linux-2.6.12-rc2-mm3/drivers/scsi/scsi_lib.c	2005-04-20 00:29:14.000000000 +0200
-> > @@ -766,7 +766,7 @@ void scsi_io_completion(struct scsi_cmnd
-> >  	 * Next deal with any sectors which we were able to correctly
-> >  	 * handle.
-> >  	 */
-> > -	if (good_bytes >= 0) {
-> > +	if (good_bytes > 0) {
-> >  		SCSI_LOG_HLCOMPLETE(1, printk("%ld sectors total, %d bytes done.\n",
-> >  					      req->nr_sectors, good_bytes));
-> >  		SCSI_LOG_HLCOMPLETE(1, printk("use_sg is %d\n", cmd->use_sg));
-> > 
-> > 
-> > 
-> > 
-> > Please keep me on CC:
-> > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+diff -uprN -X /home/patman/dontdiff scsi-misc-2.6.git/drivers/scsi/scsi_error.c to-res-scsi-misc-2.6.git/drivers/scsi/scsi_error.c
+--- scsi-misc-2.6.git/drivers/scsi/scsi_error.c	2005-05-09 14:19:41.000000000 -0700
++++ to-res-scsi-misc-2.6.git/drivers/scsi/scsi_error.c	2005-05-16 10:01:11.000000000 -0700
+@@ -770,6 +770,7 @@ static int scsi_eh_tur(struct scsi_cmnd 
+ {
+ 	static unsigned char tur_command[6] = {TEST_UNIT_READY, 0, 0, 0, 0, 0};
+ 	int retry_cnt = 1, rtn;
++	int saved_result;
+ 
+ retry_tur:
+ 	memcpy(scmd->cmnd, tur_command, sizeof(tur_command));
+@@ -780,6 +781,7 @@ retry_tur:
+ 	 */
+ 	memset(scmd->sense_buffer, 0, sizeof(scmd->sense_buffer));
+ 
++	saved_result = scmd->result;
+ 	scmd->request_buffer = NULL;
+ 	scmd->request_bufflen = 0;
+ 	scmd->use_sg = 0;
+@@ -794,6 +796,7 @@ retry_tur:
+ 	 * the original request, so let's restore the original data. (db)
+ 	 */
+ 	scsi_setup_cmd_retry(scmd);
++	scmd->result = saved_result;
+ 
+ 	/*
+ 	 * hey, we are done.  let's look to see what happened.
+@@ -896,6 +899,7 @@ static int scsi_eh_try_stu(struct scsi_c
+ {
+ 	static unsigned char stu_command[6] = {START_STOP, 0, 0, 0, 1, 0};
+ 	int rtn;
++	int saved_result;
+ 
+ 	if (!scmd->device->allow_restart)
+ 		return 1;
+@@ -908,6 +912,7 @@ static int scsi_eh_try_stu(struct scsi_c
+ 	 */
+ 	memset(scmd->sense_buffer, 0, sizeof(scmd->sense_buffer));
+ 
++	saved_result = scmd->result;
+ 	scmd->request_buffer = NULL;
+ 	scmd->request_bufflen = 0;
+ 	scmd->use_sg = 0;
+@@ -922,6 +927,7 @@ static int scsi_eh_try_stu(struct scsi_c
+ 	 * the original request, so let's restore the original data. (db)
+ 	 */
+ 	scsi_setup_cmd_retry(scmd);
++	scmd->result = saved_result;
+ 
+ 	/*
+ 	 * hey, we are done.  let's look to see what happened.
+@@ -1561,6 +1567,11 @@ static void scsi_eh_flush_done_q(struct 
+ 							  scmd));
+ 				scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY);
+ 		} else {
++			/*
++			 * If just we got sense for the device (called
++			 * scsi_eh_get_sense), scmd->result is already
++			 * set, do not set DRIVER_TIMEOUT.
++			 */
+ 			if (!scmd->result)
+ 				scmd->result |= (DRIVER_TIMEOUT << 24);
+ 			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: flush finish"
