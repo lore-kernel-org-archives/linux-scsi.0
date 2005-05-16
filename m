@@ -1,65 +1,68 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: [PATCH 2.6.12-rc4-mm1 4/4] megaraid_sas: updating the driver
-Date: Mon, 16 May 2005 15:55:16 +0100
-Message-ID: <20050516145516.GB25156@infradead.org>
-References: <0E3FA95632D6D047BA649F95DAB60E57060CCE7D@exa-atlanta>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] 2.6 aacraid: Variable FIB size
+Date: Mon, 16 May 2005 10:09:24 -0500
+Message-ID: <1116256165.5040.10.camel@mulgrave>
+References: <1115763750.10955.5.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:943 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261676AbVEPOzU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 May 2005 10:55:20 -0400
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57060CCE7D@exa-atlanta>
+Received: from stat16.steeleye.com ([209.192.50.48]:3501 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261696AbVEPPJf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 May 2005 11:09:35 -0400
+In-Reply-To: <1115763750.10955.5.camel@markh1.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'Matt_Domsch@Dell.com'" <Matt_Domsch@Dell.com>, Andrew Morton <akpm@osdl.org>, 'Christoph Hellwig' <hch@infradead.org>, 'James Bottomley' <James.Bottomley@SteelEye.com>
+To: Mark Haverkamp <markh@osdl.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-On Mon, May 16, 2005 at 02:59:44AM -0400, Bagalkote, Sreenivas wrote:
-> +#include <linux/ioctl32.h>
+On Tue, 2005-05-10 at 15:22 -0700, Mark Haverkamp wrote:
+>  	rcode = fib_send(RequestAdapterInfo,
+> -			fibptr, 
+> -			sizeof(struct aac_adapter_info),
+> -			FsaNormal, 
+> -			1, 1, 
+> -			NULL, 
+> +		fibptr, 
+> +		sizeof(*info),
+> +		FsaNormal, 
+> +		1, 1, 
+> +		NULL, 
+> +		NULL);
 
-this isn't needed in any driver these days.
+This is a formatting change that makes the driver harder to read.  If
+you want one argument per line, they should at least line up with the
+opening bracket of the function.
 
-> +/*
-> + * All MFI register set macros accept megasas_register_set*
-> + */
-> +#define RD_OB_MSG_0(regs)	readl((void*)(&(regs)->outbound_msg_0))
-> +#define WR_IN_MSG_0(v, regs)	writel((v),(void*)(&(regs)->inbound_msg_0))
-> +#define WR_IN_DOORBELL(v, regs)
-> writel((v),(void*)(&(regs)->inbound_doorbell))
-> +#define WR_IN_QPORT(v, regs)
-> writel((v),(void*)(&(regs)->inbound_queue_port))
-> +
-> +#define RD_OB_INTR_STATUS(regs)
-> readl((void*)(&(regs)->outbound_intr_status))
-> +#define WR_OB_INTR_STATUS(v, regs)
-> writel((v),(&(regs)->outbound_intr_status))
+>  		for (i = 0; i < sg_count; i++) {
+> -			psg->sg[i].addr = cpu_to_le32(sg_dma_address(sg));
+> -			psg->sg[i].count = cpu_to_le32(sg_dma_len(sg));
+> -			byte_count += sg_dma_len(sg);
+> +			int count = sg_dma_len(sg);
+> +			u32 addr = sg_dma_address(sg);
+> +			if (host->max_sectors < AAC_MAX_32BIT_SGBCOUNT)
+> +			while (count > 65536) {
+> +				psg->sg[i].addr = cpu_to_le32(addr);
+> +				psg->sg[i].count = cpu_to_le32(65536);
+> +				++i;
+> +				if (++sg_count > host->sg_tablesize) {
+> +					BUG();
+> +				}
+> +				byte_count += 65536;
+> +				addr += 65536;
+> +				count -= 65536;
+> +			}
 
-The void * casats are not okay.  Please make sure all your variable
-holding the I/O address are of type void __iomem * and use sparse to check
-it.  I would have sent you sparse output if your mailer didn't mangle
-the patch so it couldn't be applied..
+This is wrong.  You're basically assuming the block layer is returning
+something that goes over your segment descriptor size.
 
-Also the driver might be a lot more readable if you just removed this
-macros.
+There's no API for this in SCSI, but what you should be doing is
 
-> +#define SCP2HOST(scp)		(scp)->device->host	// to host
-> +#define SCP2HOSTDATA(scp)	SCP2HOST(scp)->hostdata	// to soft state
-> +#define SCP2CHANNEL(scp)	(scp)->device->channel	// to channel
-> +#define SCP2TARGET(scp)		(scp)->device->id	// to target
-> +#define SCP2LUN(scp)		(scp)->device->lun	// to LUN
+blk_queue_max_segment_size(sdev->request_queue, 65536);
 
-Please remove all these macros.
+in your slave_configure routine.
 
-> +#define SCSIHOST2ADAP(host)	(((caddr_t *)(host->hostdata))[0])
-> +#define SCP2ADAPTER(scp)	(struct
-> megasas_instance*)SCSIHOST2ADAP(SCP2HOST(scp))
-
-please don't use caddr_t.
+James
 
 
-Also I can't find any endianess handling.  You should probably declare
-all hardware structures __le* and use proper le*_to_cpu/cpu_to_le* when
-accessing them.  sparse -Wbitwise helps finding errors in endianess handling
