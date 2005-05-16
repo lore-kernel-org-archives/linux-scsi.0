@@ -1,34 +1,33 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: Fwd: how to map virtual addresses for multipage SG list
-Date: Mon, 16 May 2005 10:23:49 +0200
-Message-ID: <1116231829.6274.22.camel@laptopd505.fenrus.org>
-References: <1116223080.396680.208400@g44g2000cwa.googlegroups.com>
-	 <20050516060026.3ED465FA34@attila.bofh.it>
-	 <918ebc94050516010338a4d16f@mail.gmail.com>
-	 <918ebc9405051601165469a611@mail.gmail.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 2.6.12-rc4-mm1 3/4] megaraid_sas: updating the driver
+Date: Mon, 16 May 2005 09:18:03 -0500
+Message-ID: <1116253084.5040.1.camel@mulgrave>
+References: <0E3FA95632D6D047BA649F95DAB60E57060CCE7C@exa-atlanta>
+	 <1116230776.6274.20.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:48038 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261470AbVEPIXx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 May 2005 04:23:53 -0400
-In-Reply-To: <918ebc9405051601165469a611@mail.gmail.com>
+Received: from stat16.steeleye.com ([209.192.50.48]:12716 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261659AbVEPOS2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 May 2005 10:18:28 -0400
+In-Reply-To: <1116230776.6274.20.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Naveen karthick <naveenkc@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'Matt_Domsch@Dell.com'" <Matt_Domsch@Dell.com>, Andrew Morton <akpm@osdl.org>, 'Christoph Hellwig' <hch@infradead.org>
 
-On Mon, 2005-05-16 at 13:46 +0530, Naveen karthick wrote:
+On Mon, 2005-05-16 at 10:06 +0200, Arjan van de Ven wrote:
+> > +			spin_lock( instance->host_lock );
+> > +			cmd->scmd->scsi_done( cmd->scmd );
+> > +			spin_unlock( instance->host_lock );
 > 
-> I'm writing a SCSI LLD in which i have a requirement to
-> copy the SCSI mid-layer supplied request_buffer(as a SG list) in the
-> Scsi_Cmnd structure to a local buffer in the LLD. Hence i need the
-> virtual address of the mapped SGs but attempt to mapping results in a
-> panic.
+> are you really sure you don't want to use spin_lock_irqsave() here ?
 
-you haven't posted the url to the full sourcecode of the driver... so
-how can we see what your bug is ?
+Actually, don't bother with the lock at all.  scsi_done() is designed to
+be called locklessly.
+
+James
 
 
