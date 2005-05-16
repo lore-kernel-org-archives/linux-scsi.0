@@ -1,28 +1,318 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] remove Documentation/DocBook/scsidrivers.tmpl
-Date: Mon, 16 May 2005 10:40:36 +1000
-Message-ID: <4287EC04.4080900@torque.net>
-References: <20050515172056.GA27132@lst.de>
-Reply-To: dougg@torque.net
+From: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
+Subject: TYPE_RBC cache fixes (sbp2.c affected)
+Date: Mon, 16 May 2005 02:59:55 +0100
+Message-ID: <20050516015955.GL1150@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:57755 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S261194AbVEPAkh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 15 May 2005 20:40:37 -0400
-In-Reply-To: <20050515172056.GA27132@lst.de>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:63377 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261234AbVEPB7g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 15 May 2005 21:59:36 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jejb@steeleye.com, dgilbert@interlog.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux1394-devel@lists.sourceforge.net
 
-Christoph Hellwig wrote:
-> This document is rather rudimentary and totally outdated.  Fortunately
-> Documentation/scsi/scsi_mid_low_api.txt replaces it quite nicely.
+	a) TYPE_SDAD renamed to TYPE_RBC and taken to scsi.h
+	b) in sbp2.c remapping of TYPE_RPB to TYPE_DISK turned off
+	c) relevant places in midlayer and sd.c taught to accept TYPE_RBC
+	d) sd.c::sd_read_cache_type() looks into page 6 when dealing with
+TYPE_RBC - these guys have writeback cache flag there and are not guaranteed
+to have page 8 at all.
+	e) sd_read_cache_type() got an extra sanity check - it checks that
+it got the page it asked for before using its contents.  And screams if
+mismatch had happened.  Rationale: there are broken devices out there that
+are "helpful" enough to go for "I don't have a page you've asked for, here,
+have another one".  For example, PL3507 had been caught doing just that...
+	f) sbp2 sets sdev->use_10_for_rw and sdev->use_10_for_ms instead
+of bothering to remap READ6/WRITE6/MOD_SENSE, so most of the conversions
+in there are gone now.
 
-Christoph,
-The patch looks fine to me.
-
-Doug Gilbert
+	Incidentally, I wonder if USB storage devices that have no
+mode page 8 are simply RBC ones.  I haven't touched that, but it might
+be interesting to check...
+	
+Signed-off-by: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
+----
+diff -urN RC12-rc4-base/drivers/ieee1394/sbp2.c RC12-rc4-rbc/drivers/ieee1394/sbp2.c
+--- RC12-rc4-base/drivers/ieee1394/sbp2.c	2005-05-07 04:04:56.000000000 -0400
++++ RC12-rc4-rbc/drivers/ieee1394/sbp2.c	2005-05-15 12:17:39.716295613 -0400
+@@ -1070,7 +1070,7 @@
+ static __inline__ int sbp2_command_conversion_device_type(u8 device_type)
+ {
+ 	return (((device_type == TYPE_DISK) ||
+-		 (device_type == TYPE_SDAD) ||
++		 (device_type == TYPE_RBC) ||
+ 		 (device_type == TYPE_ROM)) ? 1:0);
+ }
+ 
+@@ -2111,102 +2111,6 @@
+  */
+ static void sbp2_check_sbp2_command(struct scsi_id_instance_data *scsi_id, unchar *cmd)
+ {
+-	unchar new_cmd[16];
+-	u8 device_type = SBP2_DEVICE_TYPE (scsi_id->sbp2_device_type_and_lun);
+-
+-	SBP2_DEBUG("sbp2_check_sbp2_command");
+-
+-	switch (*cmd) {
+-
+-		case READ_6:
+-
+-			if (sbp2_command_conversion_device_type(device_type)) {
+-
+-				SBP2_DEBUG("Convert READ_6 to READ_10");
+-
+-				/*
+-				 * Need to turn read_6 into read_10
+-				 */
+-				new_cmd[0] = 0x28;
+-				new_cmd[1] = (cmd[1] & 0xe0);
+-				new_cmd[2] = 0x0;
+-				new_cmd[3] = (cmd[1] & 0x1f);
+-				new_cmd[4] = cmd[2];
+-				new_cmd[5] = cmd[3];
+-				new_cmd[6] = 0x0;
+-				new_cmd[7] = 0x0;
+-				new_cmd[8] = cmd[4];
+-				new_cmd[9] = cmd[5];
+-
+-				memcpy(cmd, new_cmd, 10);
+-
+-			}
+-
+-			break;
+-
+-		case WRITE_6:
+-
+-			if (sbp2_command_conversion_device_type(device_type)) {
+-
+-				SBP2_DEBUG("Convert WRITE_6 to WRITE_10");
+-
+-				/*
+-				 * Need to turn write_6 into write_10
+-				 */
+-				new_cmd[0] = 0x2a;
+-				new_cmd[1] = (cmd[1] & 0xe0);
+-				new_cmd[2] = 0x0;
+-				new_cmd[3] = (cmd[1] & 0x1f);
+-				new_cmd[4] = cmd[2];
+-				new_cmd[5] = cmd[3];
+-				new_cmd[6] = 0x0;
+-				new_cmd[7] = 0x0;
+-				new_cmd[8] = cmd[4];
+-				new_cmd[9] = cmd[5];
+-
+-				memcpy(cmd, new_cmd, 10);
+-
+-			}
+-
+-			break;
+-
+-		case MODE_SENSE:
+-
+-			if (sbp2_command_conversion_device_type(device_type)) {
+-
+-				SBP2_DEBUG("Convert MODE_SENSE_6 to MODE_SENSE_10");
+-
+-				/*
+-				 * Need to turn mode_sense_6 into mode_sense_10
+-				 */
+-				new_cmd[0] = 0x5a;
+-				new_cmd[1] = cmd[1];
+-				new_cmd[2] = cmd[2];
+-				new_cmd[3] = 0x0;
+-				new_cmd[4] = 0x0;
+-				new_cmd[5] = 0x0;
+-				new_cmd[6] = 0x0;
+-				new_cmd[7] = 0x0;
+-				new_cmd[8] = cmd[4];
+-				new_cmd[9] = cmd[5];
+-
+-				memcpy(cmd, new_cmd, 10);
+-
+-			}
+-
+-			break;
+-
+-		case MODE_SELECT:
+-
+-			/*
+-			 * TODO. Probably need to change mode select to 10 byte version
+-			 */
+-
+-		default:
+-			break;
+-	}
+-
+-	return;
+ }
+ 
+ /*
+@@ -2272,14 +2176,6 @@
+ 			}
+ 
+ 			/*
+-			 * Check for Simple Direct Access Device and change it to TYPE_DISK
+-			 */
+-			if ((scsi_buf[0] & 0x1f) == TYPE_SDAD) {
+-				SBP2_DEBUG("Changing TYPE_SDAD to TYPE_DISK");
+-				scsi_buf[0] &= 0xe0;
+-			}
+-
+-			/*
+ 			 * Fix ansi revision and response data format
+ 			 */
+ 			scsi_buf[2] |= 2;
+@@ -2287,27 +2183,6 @@
+ 
+ 			break;
+ 
+-		case MODE_SENSE:
+-
+-			if (sbp2_command_conversion_device_type(device_type)) {
+-
+-				SBP2_DEBUG("Modify mode sense response (10 byte version)");
+-
+-				scsi_buf[0] = scsi_buf[1];	/* Mode data length */
+-				scsi_buf[1] = scsi_buf[2];	/* Medium type */
+-				scsi_buf[2] = scsi_buf[3];	/* Device specific parameter */
+-				scsi_buf[3] = scsi_buf[7];	/* Block descriptor length */
+-				memcpy(scsi_buf + 4, scsi_buf + 8, scsi_buf[0]);
+-			}
+-
+-			break;
+-
+-		case MODE_SELECT:
+-
+-			/*
+-			 * TODO. Probably need to change mode select to 10 byte version
+-			 */
+-
+ 		default:
+ 			break;
+ 	}
+@@ -2690,7 +2565,8 @@
+ static int sbp2scsi_slave_configure (struct scsi_device *sdev)
+ {
+ 	blk_queue_dma_alignment(sdev->request_queue, (512 - 1));
+-
++	sdev->use_10_for_rw = 1;
++	sdev->use_10_for_ms = 1;
+ 	return 0;
+ }
+ 
+diff -urN RC12-rc4-base/drivers/ieee1394/sbp2.h RC12-rc4-rbc/drivers/ieee1394/sbp2.h
+--- RC12-rc4-base/drivers/ieee1394/sbp2.h	2005-05-07 04:04:56.000000000 -0400
++++ RC12-rc4-rbc/drivers/ieee1394/sbp2.h	2005-05-15 12:17:39.716295613 -0400
+@@ -266,10 +266,6 @@
+ #define SBP2_MAX_UDS_PER_NODE		16	/* Maximum scsi devices per node */
+ #define SBP2_MAX_SECTORS		255	/* Max sectors supported */
+ 
+-#ifndef TYPE_SDAD
+-#define TYPE_SDAD			0x0e	/* simplified direct access device */
+-#endif
+-
+ /*
+  * SCSI direction table...
+  * (now used as a back-up in case the direction passed down from above is "unknown")
+diff -urN RC12-rc4-base/drivers/scsi/scsi_scan.c RC12-rc4-rbc/drivers/scsi/scsi_scan.c
+--- RC12-rc4-base/drivers/scsi/scsi_scan.c	2005-05-07 04:05:00.000000000 -0400
++++ RC12-rc4-rbc/drivers/scsi/scsi_scan.c	2005-05-15 12:17:39.717295419 -0400
+@@ -625,6 +625,7 @@
+ 	case TYPE_MEDIUM_CHANGER:
+ 	case TYPE_ENCLOSURE:
+ 	case TYPE_COMM:
++	case TYPE_RBC:
+ 		sdev->writeable = 1;
+ 		break;
+ 	case TYPE_WORM:
+diff -urN RC12-rc4-base/drivers/scsi/sd.c RC12-rc4-rbc/drivers/scsi/sd.c
+--- RC12-rc4-base/drivers/scsi/sd.c	2005-05-07 04:05:00.000000000 -0400
++++ RC12-rc4-rbc/drivers/scsi/sd.c	2005-05-15 12:30:38.769387199 -0400
+@@ -1368,17 +1368,26 @@
+  */
+ static void
+ sd_read_cache_type(struct scsi_disk *sdkp, char *diskname,
+-		   struct scsi_request *SRpnt, unsigned char *buffer) {
++		   struct scsi_request *SRpnt, unsigned char *buffer)
++{
+ 	int len = 0, res;
+ 
+-	const int dbd = 0;	   /* DBD */
+-	const int modepage = 0x08; /* current values, cache page */
++	int dbd;
++	int modepage;
+ 	struct scsi_mode_data data;
+ 	struct scsi_sense_hdr sshdr;
+ 
+ 	if (sdkp->device->skip_ms_page_8)
+ 		goto defaults;
+ 
++	if (sdkp->device->type == TYPE_RBC) {
++		modepage = 6;
++		dbd = 8;
++	} else {
++		modepage = 8;
++		dbd = 0;
++	}
++
+ 	/* cautiously ask */
+ 	res = sd_do_mode_sense(SRpnt, dbd, modepage, buffer, 4, &data);
+ 
+@@ -1409,11 +1418,20 @@
+ 			"write back, no read (daft)"
+ 		};
+ 		int ct = 0;
+-		int offset = data.header_length +
+-			data.block_descriptor_length + 2;
++		int offset = data.header_length + data.block_descriptor_length;
+ 
+-		sdkp->WCE = ((buffer[offset] & 0x04) != 0);
+-		sdkp->RCD = ((buffer[offset] & 0x01) != 0);
++		if ((buffer[offset] & 0x3f) != modepage) {
++			printk(KERN_ERR "%s: got wrong page\n", diskname);
++			goto defaults;
++		}
++
++		if (modepage == 8) {
++			sdkp->WCE = ((buffer[offset + 2] & 0x04) != 0);
++			sdkp->RCD = ((buffer[offset + 2] & 0x01) != 0);
++		} else {
++			sdkp->WCE = ((buffer[offset + 2] & 0x01) == 0);
++			sdkp->RCD = 0;
++		}
+ 
+ 		ct =  sdkp->RCD + 2*sdkp->WCE;
+ 
+@@ -1533,7 +1551,7 @@
+ 	int error;
+ 
+ 	error = -ENODEV;
+-	if ((sdp->type != TYPE_DISK) && (sdp->type != TYPE_MOD))
++	if (sdp->type != TYPE_DISK && sdp->type != TYPE_MOD && sdp->type != TYPE_RBC)
+ 		goto out;
+ 
+ 	SCSI_LOG_HLQUEUE(3, printk("sd_attach: scsi device: <%d,%d,%d,%d>\n", 
+@@ -1570,7 +1588,7 @@
+ 	sdkp->openers = 0;
+ 
+ 	if (!sdp->timeout) {
+-		if (sdp->type == TYPE_DISK)
++		if (sdp->type != TYPE_MOD)
+ 			sdp->timeout = SD_TIMEOUT;
+ 		else
+ 			sdp->timeout = SD_MOD_TIMEOUT;
+diff -urN RC12-rc4-base/include/scsi/scsi.h RC12-rc4-rbc/include/scsi/scsi.h
+--- RC12-rc4-base/include/scsi/scsi.h	2005-05-07 04:05:05.000000000 -0400
++++ RC12-rc4-rbc/include/scsi/scsi.h	2005-05-15 12:17:39.718295225 -0400
+@@ -210,6 +210,7 @@
+ #define TYPE_COMM           0x09    /* Communications device */
+ #define TYPE_ENCLOSURE      0x0d    /* Enclosure Services Device */
+ #define TYPE_RAID           0x0c
++#define TYPE_RBC	    0x0e
+ #define TYPE_NO_LUN         0x7f
+ 
+ /*
