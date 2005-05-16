@@ -1,58 +1,58 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [gregoire.favre@gmail.com: What breaks aic7xxx in post
-	2.6.12-rc2 ?]
-Date: Mon, 16 May 2005 16:07:24 -0500
-Message-ID: <1116277644.5040.45.camel@mulgrave>
-References: <20050516152607.GA27989@infradead.org>
-	 <1116258401.5040.14.camel@mulgrave> <20050516155409.GE9558@gmail.com>
-	 <1116261212.5040.23.camel@mulgrave>  <20050516180531.GA9144@gmail.com>
+From: mike.miller@hp.com
+Subject: [PATCH 2.4] cciss: fix for passthru ioctls
+Date: Mon, 16 May 2005 15:16:31 -0500
+Message-ID: <20050516201631.GA6725@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:44722 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261879AbVEPVHe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 May 2005 17:07:34 -0400
-In-Reply-To: <20050516180531.GA9144@gmail.com>
+Received: from atlrel7.hp.com ([156.153.255.213]:60873 "EHLO atlrel7.hp.com")
+	by vger.kernel.org with ESMTP id S261905AbVEPVQE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 May 2005 17:16:04 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?ISO-8859-1?Q?Gr=E9goire?= Favre <gregoire.favre@gmail.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: marcelo.tosatti@cyclades.com, axboe@suse.de
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, 2005-05-16 at 20:05 +0200, Gr=E9goire Favre wrote:
-> Unfortunately, it don't seems to change anything, 2.6.12-rc4-mm1 is i=
-n a
-> infinite loop :
+The following patch fixes a problem in our passthru ioctls. I added a memset to
+zero out buffers before doing a read. Seems like I had a curly brace out of place.
 
-Actually, the loop's not infinite; it's dropping the transfer parameter=
-s
-each time it goes around ... it should exit after 8 or so.
+Thanks to Stanislav Semakin for pointing this out.
 
-> aic7xxx_abort returns 0x2002
-> scsi1:0:1:0: Attempting to queue an ABORT message
-> CDB: 0x0 0x0 0x0 0x0 0x0 0x0
-> scsi1:0:1:0: Command found on device queue
-> aic7xxx_abort returns 0x2002
-> scsi: Device offlined - not ready after error recovery: host 1 channe=
-l 0
->  target1:0:1: domain Validation detected failure, dropping back
-> scsi1:0:1:0: Attempting to queue an ABORT message
+Please consider this for inclusion.
 
-I'm fairly certain it's something to do with the DVD settings.  Could
-you send me the output of
-
-/proc/scsi/aic7xxx/1
-
-With the earlier version of the kernel
-
-Thanks,
-
-James
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+---------------------------------------------------------------------------------------
+diff -burNp lx2431-pre2.orig/drivers/block/cciss.c lx2431-pre2/drivers/block/cciss.c
+--- lx2431-pre2.orig/drivers/block/cciss.c	2004-11-17 05:54:21.000000000 -0600
++++ lx2431-pre2/drivers/block/cciss.c	2005-05-16 14:08:18.189638408 -0500
+@@ -975,10 +975,10 @@ static int cciss_ioctl(struct inode *ino
+ 			{
+ 				kfree(buff);
+ 				return -EFAULT;
+-			} else {
+-				memset(buff, 0, iocommand.buf_size);
+ 			}
+ 		}
++		else 
++			memset(buff, 0, iocommand.buf_size);
+ 		if ((c = cmd_alloc(h , 0)) == NULL) {
+ 			kfree(buff);
+ 			return -ENOMEM;
+@@ -1099,12 +1099,12 @@ static int cciss_ioctl(struct inode *ino
+ 				   /* Copy the data into the buffer created */
+ 				   if (copy_from_user(buff[sg_used], data_ptr, 
+ 						buff_size[sg_used])) {
+-					status = -ENOMEM;
++					status = -EFAULT;
+ 					goto cleanup1;			
+-				   } else {
+-					memset(buff[sg_used], 0, buff_size[sg_used]);
+ 				   }
+ 				   }
++				else
++					memset(buff[sg_used], 0, buff_size[sg_used]);
+ 				size_left_alloc -= buff_size[sg_used];
+ 				data_ptr += buff_size[sg_used];
+ 				sg_used++;
