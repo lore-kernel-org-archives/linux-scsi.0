@@ -1,48 +1,186 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH] 2.6+2.4 dpt_i2o driver timing out during tape erase operations
-Date: Tue, 17 May 2005 16:00:29 -0400
-Message-ID: <60807403EABEB443939A5A7AA8A7458B0132AAF0@otce2k01.adaptec.com>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH] 2.6 aacraid: Add sysfs files for aacraid adapter
+	information (re-diff)
+Date: Tue, 17 May 2005 13:34:57 -0700
+Message-ID: <1116362098.5838.2.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:2998 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261724AbVEQUA3 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 May 2005 16:00:29 -0400
-Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j4HK0Sc32028
-	for <linux-scsi@vger.kernel.org>; Tue, 17 May 2005 13:00:28 -0700
-Received: from otce2k01.adaptec.com (otce2k01.adaptec.com [10.12.1.83])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j4HK0Sg03969
-	for <linux-scsi@vger.kernel.org>; Tue, 17 May 2005 13:00:28 -0700
-content-class: urn:content-classes:message
+Received: from fire.osdl.org ([65.172.181.4]:49045 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S261938AbVEQUfC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 May 2005 16:35:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-Tape operation (erase) timeouts are overridden by the driver, the
-purpose of the override was because disk drives and arrays on the
-dpt_i2o based controllers could take up to 5 minutes to complete. The
-override should only apply to disk drives and arrays (both appear as
-DASD devices from the driver's perspective).
+Re-send of the patch diffed against the latest scsi-misc-2.6 git tree.
 
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+This patch adds some files into the /sys/class/scsi_host/hostN
+directories for aacraid adapters.  The file names are pretty much self-
+explanitory:
 
---- a/drivers/scsi/dpt_i2o.c	Mon Apr  4 09:39:17 2005
-+++ b/drivers/scsi/dpt_i2o.c	Mon Apr 25 07:21:50 2005
-@@ -420,8 +420,9 @@
- 		return 1;
- 	}
+aac_driver_version: Driver version and date
+aac_bios_version: Adapter's bios version
+aac_kernel_version: Adapter's kernel version
+aac_monitor_version: Adapter's monitor version
+aac_model: Adapter's model name/number
+aac_serial_number: Adapter's serial number
+
+This is information that used to be supplied by the /proc interface.
+
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
+
+
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -533,6 +533,135 @@ static long aac_compat_cfg_ioctl(struct 
+ }
+ #endif
  
--	if(cmd->eh_state != SCSI_STATE_QUEUED){
--		// If we are not doing error recovery
-+	if ((cmd->eh_state != SCSI_STATE_QUEUED)
-+	 && (cmd->device->type == TYPE_DISK)) {
-+		/* If the controller is doing error recovery */
- 		mod_timer(&cmd->eh_timeout, timeout);
- 	}
++static ssize_t aac_show_host_version(struct class_device *class_dev,
++		char *buf)
++{
++	int len;
++
++	len = snprintf(buf, PAGE_SIZE, "Adaptec Raid Controller: %s %s\n",
++		  AAC_DRIVER_VERSION,
++		  AAC_DRIVER_BUILD_DATE);
++	return len;
++}
++
++static ssize_t aac_show_model(struct class_device *class_dev,
++		char *buf)
++{
++	struct aac_dev *dev = (struct aac_dev*)class_to_shost(class_dev)->hostdata;
++	int len;
++
++	len = snprintf(buf, PAGE_SIZE, "Vendor: %s Model: %s\n",
++		  aac_drivers[dev->cardtype].vname,
++		  aac_drivers[dev->cardtype].model);
++	return len;
++}
++
++static ssize_t aac_show_kernel_version(struct class_device *class_dev,
++		char *buf)
++{
++	struct aac_dev *dev = (struct aac_dev*)class_to_shost(class_dev)->hostdata;
++	int len, tmp;
++
++	tmp = le32_to_cpu(dev->adapter_info.kernelrev);
++	len = snprintf(buf, PAGE_SIZE, "kernel: %d.%d-%d[%d]\n", 
++	  tmp >> 24, (tmp >> 16) & 0xff, tmp & 0xff,
++	  le32_to_cpu(dev->adapter_info.kernelbuild));
++	return len;
++}
++
++static ssize_t aac_show_monitor_version(struct class_device *class_dev,
++		char *buf)
++{
++	struct aac_dev *dev = (struct aac_dev*)class_to_shost(class_dev)->hostdata;
++	int len, tmp;
++
++	tmp = le32_to_cpu(dev->adapter_info.monitorrev);
++	len = snprintf(buf, PAGE_SIZE, "monitor: %d.%d-%d[%d]\n", 
++	  tmp >> 24, (tmp >> 16) & 0xff, tmp & 0xff,
++	  le32_to_cpu(dev->adapter_info.monitorbuild));
++	return len;
++}
++
++static ssize_t aac_show_bios_version(struct class_device *class_dev,
++		char *buf)
++{
++	struct aac_dev *dev = (struct aac_dev*)class_to_shost(class_dev)->hostdata;
++	int len, tmp;
++
++	tmp = le32_to_cpu(dev->adapter_info.biosrev);
++	len = snprintf(buf, PAGE_SIZE, "bios: %d.%d-%d[%d]\n", 
++	  tmp >> 24, (tmp >> 16) & 0xff, tmp & 0xff,
++	  le32_to_cpu(dev->adapter_info.biosbuild));
++	return len;
++}
++
++static ssize_t aac_show_serial_number(struct class_device *class_dev,
++		char *buf)
++{
++	struct aac_dev *dev = (struct aac_dev*)class_to_shost(class_dev)->hostdata;
++	int len = 0;
++
++	if (le32_to_cpu(dev->adapter_info.serial[0]) != 0xBAD0)
++		len = snprintf(buf, PAGE_SIZE, "serial: %x\n",
++		  le32_to_cpu(dev->adapter_info.serial[0]));
++	return len;
++}
++
++
++static struct class_device_attribute aac_host_version = {
++	.attr = {
++		.name = "aac_driver_version",
++		.mode = S_IRUGO,
++	},
++	.show = aac_show_host_version,
++};
++static struct class_device_attribute aac_model = {
++	.attr = {
++		.name = "aac_model",
++		.mode = S_IRUGO,
++	},
++	.show = aac_show_model,
++};
++static struct class_device_attribute aac_kernel_version = {
++	.attr = {
++		.name = "aac_kernel_version",
++		.mode = S_IRUGO,
++	},
++	.show = aac_show_kernel_version,
++};
++static struct class_device_attribute aac_monitor_version = {
++	.attr = {
++		.name = "aac_monitor_version",
++		.mode = S_IRUGO,
++	},
++	.show = aac_show_monitor_version,
++};
++static struct class_device_attribute aac_bios_version = {
++	.attr = {
++		.name = "aac_bios_version",
++		.mode = S_IRUGO,
++	},
++	.show = aac_show_bios_version,
++};
++static struct class_device_attribute aac_serial_number = {
++	.attr = {
++		.name = "aac_serial_number",
++		.mode = S_IRUGO,
++	},
++	.show = aac_show_serial_number,
++};
++
++static struct class_device_attribute *aac_attrs[] = {
++	&aac_host_version,
++	&aac_model,
++	&aac_kernel_version,
++	&aac_monitor_version,
++	&aac_bios_version,
++	&aac_serial_number,
++	NULL
++};
++
++
+ static struct file_operations aac_cfg_fops = {
+ 	.owner		= THIS_MODULE,
+ 	.ioctl		= aac_cfg_ioctl,
+@@ -553,6 +682,7 @@ static struct scsi_host_template aac_dri
+ #endif
+ 	.queuecommand   		= aac_queuecommand,
+ 	.bios_param     		= aac_biosparm,	
++	.shost_attrs			= aac_attrs,
+ 	.slave_configure		= aac_slave_configure,
+ 	.eh_abort_handler		= aac_eh_abort,
+ 	.eh_host_reset_handler		= aac_eh_reset,
 
+-- 
+Mark Haverkamp <markh@osdl.org>
 
-Sincerely -- Mark Salyzyn
