@@ -1,39 +1,46 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
-Date: Tue, 17 May 2005 13:16:01 -0500
-Message-ID: <1116353761.4989.33.camel@mulgrave>
+Date: Tue, 17 May 2005 13:34:53 -0500
+Message-ID: <1116354894.4989.42.camel@mulgrave>
 References: <20050516085832.GA9558@gmail.com>
 	 <20050517071307.GA4794@in.ibm.com> <20050517002908.005a9ba7.akpm@osdl.org>
-	 <1116340465.4989.2.camel@mulgrave> <20050517155731.GA9590@gmail.com>
-	 <1116347914.4989.24.camel@mulgrave>  <20050517165255.GD9590@gmail.com>
+	 <1116340465.4989.2.camel@mulgrave>  <20050517170824.GA3931@in.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:24269 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:23247 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261233AbVEQSQO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 May 2005 14:16:14 -0400
-In-Reply-To: <20050517165255.GD9590@gmail.com>
+	id S261898AbVEQSfK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 May 2005 14:35:10 -0400
+In-Reply-To: <20050517170824.GA3931@in.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?ISO-8859-1?Q?Gr=E9goire?= Favre <gregoire.favre@gmail.com>
-Cc: Andrew Morton <akpm@osdl.org>, dino@in.ibm.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: dino@in.ibm.com
+Cc: Andrew Morton <akpm@osdl.org>, gregoire.favre@gmail.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2005-05-17 at 18:52 +0200, Gr=E9goire Favre wrote:
-> I just did some copy, and I didn't swap hardware ???
->=20
-> What does that mean ?
+On Tue, 2005-05-17 at 22:38 +0530, Dinakar Guniguntala wrote:
+> May  9 12:03:32 llm09 kernel:   Vendor: IBM CORP  Model: GEM312 V002       Rev: 4.1b
+> May  9 12:03:32 llm09 kernel:   Type:   Processor                          ANSI SCSI revision: 02
 
-I think the bug report that Andrew forwarded to linux-scsi with the
-above Subject: is from dino@in.ibm.com (at least, his information
-matches the trace).
+OK, that's roughly what I was expecting.  These processor chips tend to
+be rather basic when it comes to rates and widths.
+
+The root cause, I think, is that the aic7xxx isn't starting out at async
+narrow for the first inquiry (because the original DV code I removed did
+this, and I didn't add an equivalent back).  The latest aic7xxx patch
+should sort this out.
+
+So, to get all of these changes, could you start with vanilla linus
+kernel 2.6.12-rc4 (or tree based on this, but not -mm which already has
+some of the SCSI tree included) and then apply the SCSI patch at
+
+http://parisc-linux.org/~jejb/scsi_diffs/scsi-misc-2.6.diff
+
+and see if it works?
+
+Thanks,
 
 James
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
