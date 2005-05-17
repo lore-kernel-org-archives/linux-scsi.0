@@ -1,31 +1,30 @@
-From: =?iso-8859-1?Q?Gr=E9goire?= Favre <gregoire.favre@gmail.com>
-Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
-Date: Wed, 18 May 2005 00:09:48 +0200
-Message-ID: <20050517220948.GF9121@gmail.com>
-References: <20050516085832.GA9558@gmail.com> <20050517071307.GA4794@in.ibm.com> <20050517002908.005a9ba7.akpm@osdl.org> <1116340465.4989.2.camel@mulgrave> <20050517170824.GA3931@in.ibm.com> <1116354894.4989.42.camel@mulgrave> <20050517192636.GB9121@gmail.com> <1116359432.4989.48.camel@mulgrave> <20050517195650.GC9121@gmail.com> <1116363971.4989.51.camel@mulgrave>
+From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Subject: RE: [PATCH 2.6.12-rc4-mm1 3/4] megaraid_sas: updating the driver
+Date: Tue, 17 May 2005 18:13:49 -0400
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57060CCE96@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262031AbVEQWP3@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1116363971.4989.51.camel@mulgrave>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262024AbVEQWQ7@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: dino@in.ibm.com, Andrew Morton <akpm@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>, Arjan van de Ven <arjan@infradead.org>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'Matt_Domsch@Dell.com'" <Matt_Domsch@Dell.com>, Andrew Morton <akpm@osdl.org>, 'Christoph Hellwig' <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, May 17, 2005 at 04:06:11PM -0500, James Bottomley wrote:
+>
+>On Mon, 2005-05-16 at 10:06 +0200, Arjan van de Ven wrote:
+>> > +			spin_lock( instance->host_lock );
+>> > +			cmd->scmd->scsi_done( cmd->scmd );
+>> > +			spin_unlock( instance->host_lock );
+>> 
+>> are you really sure you don't want to use spin_lock_irqsave() here ?
+>
+>Actually, don't bother with the lock at all.  scsi_done() is 
+>designed to
+>be called locklessly.
+>
+>James
 
-> Well, the attached is what I'd like you to try, capturing the
-> information from the initial inquiry on ... it will be quite a bit.
->=20
-> Hopefully it will give me a clearer idea of what's going on.
+Okay. I will remove that.
 
-Could I just take some pictures of the boot process and send them to
-you ?
-
-Or is there any way to use an usb palm to catch the console output ?
-
-Thank you very much,
---=20
-	Gr=E9goire Favre
+Thanks,
+Sreenivas
