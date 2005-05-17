@@ -1,55 +1,92 @@
-From: =?iso-8859-1?Q?Gr=E9goire?= Favre <gregoire.favre@gmail.com>
+From: Dinakar Guniguntala <dino@in.ibm.com>
 Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
-Date: Tue, 17 May 2005 18:52:55 +0200
-Message-ID: <20050517165255.GD9590@gmail.com>
-References: <20050516085832.GA9558@gmail.com> <20050517071307.GA4794@in.ibm.com> <20050517002908.005a9ba7.akpm@osdl.org> <1116340465.4989.2.camel@mulgrave> <20050517155731.GA9590@gmail.com> <1116347914.4989.24.camel@mulgrave>
+Date: Tue, 17 May 2005 22:38:24 +0530
+Message-ID: <20050517170824.GA3931@in.ibm.com>
+References: <20050516085832.GA9558@gmail.com> <20050517071307.GA4794@in.ibm.com> <20050517002908.005a9ba7.akpm@osdl.org> <1116340465.4989.2.camel@mulgrave>
+Reply-To: dino@in.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.192]:36368 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261816AbVEQQxA (ORCPT
+Received: from e35.co.us.ibm.com ([32.97.110.133]:2045 "EHLO e35.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261854AbVEQQ6k (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 May 2005 12:53:00 -0400
-Received: by wproxy.gmail.com with SMTP id 69so2056961wra
-        for <linux-scsi@vger.kernel.org>; Tue, 17 May 2005 09:52:59 -0700 (PDT)
+	Tue, 17 May 2005 12:58:40 -0400
 Content-Disposition: inline
-In-Reply-To: <1116347914.4989.24.camel@mulgrave>
+In-Reply-To: <1116340465.4989.2.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@osdl.org>, dino@in.ibm.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Andrew Morton <akpm@osdl.org>, gregoire.favre@gmail.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, May 17, 2005 at 11:38:34AM -0500, James Bottomley wrote:
-> On Tue, 2005-05-17 at 17:57 +0200, Gr=E9goire Favre wrote:
-> > On this controler I have :
-> >=20
-> > Host: scsi0 Channel: 00 Id: 00 Lun: 00
-> >   Vendor: IBM      Model: DDRS-39130D      Rev: DC1B
-> >   Type:   Direct-Access                    ANSI SCSI revision: 02
-> > Host: scsi0 Channel: 00 Id: 15 Lun: 00
-> >   Vendor: SEAGATE  Model: ST336706LW       Rev: 0108
-> >   Type:   Direct-Access                    ANSI SCSI revision: 03
->=20
-> Erm, that doesn't square with the bug report:
->=20
-> >   Vendor: IBM-PSG   Model: ST39103LC     !#  Rev: B227
-> >   Type:   Direct-Access                      ANSI SCSI revision: 02
-> > scsi0:A:0:0: Tagged Queuing enabled.  Depth 32
-> [...]
-> >   Vendor: IBM-PSG   Model: ST39103LC     !#  Rev: B227
-> >   Type:   Direct-Access                      ANSI SCSI revision: 02
-> > scsi0:A:1:0: Tagged Queuing enabled.  Depth 32
+On Tue, May 17, 2005 at 09:34:25AM -0500, James Bottomley wrote:
+> > >  target0:0:1: Ending Domain Validation
+> > > (scsi0:A:15:0): refuses WIDE negotiation.  Using 8bit transfers   <============
+> > > scsi0:0:15:0: Attempting to queue an ABORT message
+> > > CDB: 0x12 0x0 0x0 0x0 0x36 0x0
+> 
+> Actually, this isn't a me too.  The previous one looks like some strange
+> DV failure.  This is a problem with the initial inquiry.  What's the
+> device at target 15?
 
-Well,
+Not sure what is it that you want, but here is the lspci -vv
+(It is a IBM x370 box)
 
-I just did some copy, and I didn't swap hardware ???
+00:0e.0 SCSI storage controller: Adaptec AIC-7896U2/7897U2
+        Subsystem: Adaptec: Unknown device 080f
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr+ Stepping- SERR+ FastB2B-
+        Status: Cap+ 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+        Latency: 100 (9750ns min, 6250ns max), cache line size 08
+        Interrupt: pin A routed to IRQ 51
+        BIST result: 00
+        Region 0: I/O ports at 2200 [disabled] [size=256]
+        Region 1: Memory at f9ffd000 (64-bit, non-prefetchable) [size=4K]
+        Expansion ROM at <unassigned> [disabled] [size=128K]
+        Capabilities: [dc] Power Management version 1
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
 
-What does that mean ?
---=20
-	Gr=E9goire Favre
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+And here is the output when it boots up fine without the warnings on 2.6.12-rc2
+
+May  9 12:03:32 llm09 kernel: scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+May  9 12:03:32 llm09 kernel:         <Adaptec aic7896/97 Ultra2 SCSI adapter>
+May  9 12:03:32 llm09 kernel:         aic7896/97: Ultra2 Wide Channel B, SCSI Id=7, 32/253 SCBs
+May  9 12:03:32 llm09 kernel:
+May  9 12:03:32 llm09 kernel: (scsi0:A:0): 80.000MB/s transfers (40.000MHz, offset 15, 16bit)
+May  9 12:03:32 llm09 kernel:   Vendor: IBM-PSG   Model: ST39103LC     !#  Rev: B227
+May  9 12:03:32 llm09 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 02
+May  9 12:03:32 llm09 kernel: scsi0:A:0:0: Tagged Queuing enabled.  Depth 32
+May  9 12:03:32 llm09 kernel: ACPI: No ACPI bus support for 0:0:0:0
+May  9 12:03:32 llm09 kernel: (scsi0:A:1): 80.000MB/s transfers (40.000MHz, offset 15, 16bit)
+May  9 12:03:32 llm09 kernel:   Vendor: IBM-PSG   Model: ST39103LC     !#  Rev: B227
+May  9 12:03:32 llm09 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 02
+May  9 12:03:32 llm09 kernel: scsi0:A:1:0: Tagged Queuing enabled.  Depth 32
+May  9 12:03:32 llm09 kernel: ACPI: No ACPI bus support for 0:0:1:0
+May  9 12:03:32 llm09 kernel:   Vendor: IBM CORP  Model: GEM312 V002       Rev: 4.1b
+May  9 12:03:32 llm09 kernel:   Type:   Processor                          ANSI SCSI revision: 02
+May  9 12:03:32 llm09 kernel: ACPI: No ACPI bus support for 0:0:15:0
+May  9 12:03:32 llm09 kernel: scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+May  9 12:03:32 llm09 kernel:         <Adaptec aic7896/97 Ultra2 SCSI adapter>
+May  9 12:03:33 llm09 kernel:         aic7896/97: Ultra2 Wide Channel A, SCSI Id=7, 32/253 SCBs
+May  9 12:03:33 llm09 kernel:
+May  9 12:03:33 llm09 kernel: SCSI device sda: 17774160 512-byte hdwr sectors (9100 MB)
+May  9 12:03:33 llm09 kernel: SCSI device sda: drive cache: write through
+May  9 12:03:33 llm09 kernel: SCSI device sda: 17774160 512-byte hdwr sectors (9100 MB)
+May  9 12:03:33 llm09 kernel: SCSI device sda: drive cache: write through
+May  9 12:03:33 llm09 kernel:  sda: sda1 sda2 sda3
+May  9 12:03:33 llm09 kernel: Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+May  9 12:03:33 llm09 kernel: SCSI device sdb: 17774160 512-byte hdwr sectors (9100 MB)
+May  9 12:03:33 llm09 kernel: SCSI device sdb: drive cache: write through
+May  9 12:03:33 llm09 kernel: SCSI device sdb: 17774160 512-byte hdwr sectors (9100 MB)
+May  9 12:03:33 llm09 kernel: SCSI device sdb: drive cache: write through
+May  9 12:03:33 llm09 kernel:  sdb: sdb1
+May  9 12:03:33 llm09 kernel: Attached scsi disk sdb at scsi0, channel 0, id 1, lun 0
+May  9 12:03:33 llm09 kernel: Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
+May  9 12:03:33 llm09 kernel: Attached scsi generic sg1 at scsi0, channel 0, id 1, lun 0,  type 0
+May  9 12:03:33 llm09 kernel: Attached scsi generic sg2 at scsi0, channel 0, id 15, lun 0,  type 3
+
+
+Hope this helps
+
+	-Dinakar	
+
