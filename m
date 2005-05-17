@@ -1,214 +1,51 @@
-From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Subject: RE: [PATCH 2.6.12-rc4-mm1 4/4] megaraid_sas: updating the driver
-Date: Tue, 17 May 2005 18:12:56 -0400
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57060CCE95@exa-atlanta>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
+Date: Tue, 17 May 2005 17:14:57 -0500
+Message-ID: <1116368097.4989.59.camel@mulgrave>
+References: <20050516085832.GA9558@gmail.com>
+	 <20050517071307.GA4794@in.ibm.com> <20050517002908.005a9ba7.akpm@osdl.org>
+	 <1116340465.4989.2.camel@mulgrave> <20050517170824.GA3931@in.ibm.com>
+	 <1116354894.4989.42.camel@mulgrave> <20050517192636.GB9121@gmail.com>
+	 <1116359432.4989.48.camel@mulgrave> <20050517195650.GC9121@gmail.com>
+	 <1116363971.4989.51.camel@mulgrave>  <20050517220948.GF9121@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262035AbVEQWUq@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: 'Arjan van de Ven' <arjan@infradead.org>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'Matt_Domsch@Dell.com'" <Matt_Domsch@Dell.com>, Andrew Morton <akpm@osdl.org>, 'Christoph Hellwig' <hch@infradead.org>, 'James Bottomley' <James.Bottomley@SteelEye.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:23782 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262029AbVEQWPP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 May 2005 18:15:15 -0400
+In-Reply-To: <20050517220948.GF9121@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?ISO-8859-1?Q?Gr=E9goire?= Favre <gregoire.favre@gmail.com>
+Cc: dino@in.ibm.com, Andrew Morton <akpm@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Arjan, thank you for the feedback.
+On Wed, 2005-05-18 at 00:09 +0200, Gr=E9goire Favre wrote:
+> Could I just take some pictures of the boot process and send them to
+> you ?
 
->On Mon, 2005-05-16 at 02:59 -0400, Bagalkote, Sreenivas wrote:
->> + *		This program is free software; you can redistribute it
->> and/or
->
->your mailer corrupts patches
+Not really, the messages I need will be embedded in a lot of other
+output and will likely scroll off the screen
 
-Sorry about that.
+> Or is there any way to use an usb palm to catch the console output ?
 
->> +
->> +/**
->> + * MegaRAID SAS supported controllers
->> + */
->> +#define	PCI_DEVICE_LSI_1064			0x0411
->> +
->> +#define PCI_DEVICE_ID_DELL_PERC5		0x0015
->> +#define PCI_DEVICE_ID_DELL_SAS5			0x0054
->> +
->> +#define PCI_SUBSYSTEM_DELL_PERC5E		0x1F01
->> +#define PCI_SUBSYSTEM_DELL_PERC5I		0x1F02
->> +#define PCI_SUBSYSTEM_DELL_PERC5I_INTEGRATED	0x1F03
->> +#define PCI_SUBSYSTEM_DELL_SAS5I		0x1F05
->> +#define PCI_SUBSYSTEM_DELL_SAS5I_INTEGRATED	0x1F06
->> +
->> +#define PCI_SUB_DEVICEID_FSC			0x1081
->> +#define PCI_SUB_VENDORID_FSC			0x1734
->
->these really need to go into the generic pci id header
+If it has a serial port, sure, just use a serial console.
 
-Does pci_ids.h accept subsystem device ids too?
+If it doesn't, try removing the DVD during boot, then plug it back in
+again and trigger a device add
 
->> +/*
->> + * SAS controller information
->> + */
->> +struct megasas_ctrl_info {
->> +
->> +	/*
->> +	 * PCI device information
->> +	 */
->> +	struct {
->> +
->> +		u16	vendor_id;
->> +		u16	device_id;
->> +		u16	sub_vendor_id;
->> +		u16	sub_device_id;
->> +		u8	reserved[24];
->> +
->> +	} __attribute__ ((packed)) pci;
->
->I hope you're not going to store pci config space into this; you really
->need to use the pci-> versions of these. Not doing so doesn't allow the
->kernel to compensate for quirks (like chipsets byteswapping config
->space ;)
+echo scsi add-single-device <n> 0 1 0 > /proc/scsi/scsi
 
-No, I don't. I use this fw returned structure to get the maximum IO size.
+where <n> is whatever SCSI number the rest of your CD-ROM's appear on
+(it was 1 in your first trace).
 
->
->> +	u32	current_fw_time;
->
->what is this for ?
+James
 
-I don't look at any other values. Please see my comment above.
 
->
->> + * All MFI register set macros accept megasas_register_set*
->> + */
->> +#define RD_OB_MSG_0(regs)	readl((void*)(&(regs)->outbound_msg_0))
->> +#define WR_IN_MSG_0(v, regs)	
->writel((v),(void*)(&(regs)->inbound_msg_0))
->> +#define WR_IN_DOORBELL(v, regs)
->> writel((v),(void*)(&(regs)->inbound_doorbell))
->> +#define WR_IN_QPORT(v, regs)
->> writel((v),(void*)(&(regs)->inbound_queue_port))
->> +
->> +#define RD_OB_INTR_STATUS(regs)
->> readl((void*)(&(regs)->outbound_intr_status))
->> +#define WR_OB_INTR_STATUS(v, regs)
->> writel((v),(&(regs)->outbound_intr_status))
->
->why these (wrapped) abstractions ?
-
-I will remove them.
-
->
->> +#define MFI_ENABLE_INTR(regs)
->> writel(1,(void*)(&(regs)->outbound_intr_mask))
->
->
->> +
->> +#define MFI_DISABLE_INTR(regs)				
->		\
->> +{								
->	\
->> +	u32 disable = ~0x00000001;				
->	\
->> +	u32 mask = readl((void*)(&(regs)->outbound_intr_mask));	\
->> +	mask &= disable;					
->	\
->> +	writel(mask, (void*)(&(regs)->outbound_intr_mask));	
->	\
->> +}
->
->you most likely want a PCI posting flush in this macro.
->Also I would actually suggest you make this an (inline) function.. much
->nicer. It's 4 lines already after all.
->
-
-I will convert them into inline functions. I didn't understand your comment
-about "PCI posting flush". Are you referring to memory barriers?
-
->
->> +
->> +
->> +struct megasas_register_set {
->> +
->> +	u32	reserved_0[4];			/*0000h*/
->> +
->> +	u32	inbound_msg_0;			/*0010h*/
->> +	u32	inbound_msg_1;			/*0014h*/
->> +	u32	outbound_msg_0;			/*0018h*/
->> +	u32	outbound_msg_1;			/*001Ch*/
->> +
->> +	u32	inbound_doorbell;		/*0020h*/
->> +	u32	inbound_intr_status;		/*0024h*/
->> +	u32	inbound_intr_mask;		/*0028h*/
->> +
->> +	u32	outbound_doorbell;		/*002Ch*/
->> +	u32	outbound_intr_status;		/*0030h*/
->> +	u32	outbound_intr_mask;		/*0034h*/
->> +
->> +	u32	reserved_1[2];			/*0038h*/
->> +
->> +	u32	inbound_queue_port;		/*0040h*/
->> +	u32	outbound_queue_port;		/*0044h*/
->> +
->> +	u32	reserved_2;			/*004Ch*/
->> +
->> +	u32	index_registers[1004];		/*0050h*/
->> +
->> +} __attribute__ ((packed));
->
->I guess these are shared with the hardware... isn't it better to use
->le32/be32 types then to have them have declared endianness ?
->
-
-You are saying I should use __le32 instead of u32 (our HW is little
-endian) for all these data types. Have I understood you correctly?
-
->
->> +
->> +struct megasas_sge32 {
->> +
->> +	u32	phys_addr;
->> +	u32	length;
->> +
->> +} __attribute__ ((packed));
->
->same here and for all other hardware-shared structs
->
-
-Please see my question above.
-
->> +
->> +/*
->> + * Various conversion macros from SCSI command
->> + */
->
->ehhhh why? to make the driver unreadable ?
->
-
-Same driver runs on 2.4 kernels. These macros minimize the differences
-between both versions.
-
->> +#define SCP2HOST(scp)		(scp)->device->host	
->// to host
->> +#define SCP2HOSTDATA(scp)	SCP2HOST(scp)->hostdata	// to soft state
->> +#define SCP2CHANNEL(scp)	(scp)->device->channel	// to channel
->> +#define SCP2TARGET(scp)		(scp)->device->id	
->// to target
->> +#define SCP2LUN(scp)		(scp)->device->lun	
->// to LUN
->> +
->> +#define SCSIHOST2ADAP(host)	(((caddr_t *)(host->hostdata))[0])
->
->please don't use caddr_t in kerenl mode
->
-
-Okay.
-
->> +#define SCP2ADAPTER(scp)	(struct
->> megasas_instance*)SCSIHOST2ADAP(SCP2HOST(scp))
->
->please if you think you need casts consider an inline function which
->supports proper typing of it's argument. Casting is a *great* way to
->hide bugs otherwise
->
-
-Okay. I will make it an inline function.
-
-Thanks,
-Sreenivas
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
