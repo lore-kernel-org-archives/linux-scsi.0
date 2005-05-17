@@ -1,42 +1,48 @@
-From: =?iso-8859-1?Q?Gr=E9goire?= Favre <gregoire.favre@gmail.com>
-Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
-Date: Tue, 17 May 2005 21:56:50 +0200
-Message-ID: <20050517195650.GC9121@gmail.com>
-References: <20050516085832.GA9558@gmail.com> <20050517071307.GA4794@in.ibm.com> <20050517002908.005a9ba7.akpm@osdl.org> <1116340465.4989.2.camel@mulgrave> <20050517170824.GA3931@in.ibm.com> <1116354894.4989.42.camel@mulgrave> <20050517192636.GB9121@gmail.com> <1116359432.4989.48.camel@mulgrave>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: [PATCH] 2.6+2.4 dpt_i2o driver timing out during tape erase operations
+Date: Tue, 17 May 2005 16:00:29 -0400
+Message-ID: <60807403EABEB443939A5A7AA8A7458B0132AAF0@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.201]:60630 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261357AbVEQT4x (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 May 2005 15:56:53 -0400
-Received: by wproxy.gmail.com with SMTP id 68so3045166wri
-        for <linux-scsi@vger.kernel.org>; Tue, 17 May 2005 12:56:52 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1116359432.4989.48.camel@mulgrave>
+Received: from magic.adaptec.com ([216.52.22.17]:2998 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261724AbVEQUA3 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 May 2005 16:00:29 -0400
+Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j4HK0Sc32028
+	for <linux-scsi@vger.kernel.org>; Tue, 17 May 2005 13:00:28 -0700
+Received: from otce2k01.adaptec.com (otce2k01.adaptec.com [10.12.1.83])
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j4HK0Sg03969
+	for <linux-scsi@vger.kernel.org>; Tue, 17 May 2005 13:00:28 -0700
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: dino@in.ibm.com, Andrew Morton <akpm@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, May 17, 2005 at 02:50:31PM -0500, James Bottomley wrote:
+Tape operation (erase) timeouts are overridden by the driver, the
+purpose of the override was because disk drives and arrays on the
+dpt_i2o based controllers could take up to 5 minutes to complete. The
+override should only apply to disk drives and arrays (both appear as
+DASD devices from the driver's perspective).
 
-> Right, but the problem I think it will fix is the initial inquiry bei=
-ng
-> sent with the wrong transport parameters.
->=20
-> You have a different problem, I think ... it looks like your Toshiba =
-DVD
-> does somthing strange during Domain Validation ... the question I don=
-'t
-> have an answer to yet, is what.
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 
-Oh, sorry, thank you for the patch :-)
---=20
-	Gr=E9goire Favre
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--- a/drivers/scsi/dpt_i2o.c	Mon Apr  4 09:39:17 2005
++++ b/drivers/scsi/dpt_i2o.c	Mon Apr 25 07:21:50 2005
+@@ -420,8 +420,9 @@
+ 		return 1;
+ 	}
+ 
+-	if(cmd->eh_state != SCSI_STATE_QUEUED){
+-		// If we are not doing error recovery
++	if ((cmd->eh_state != SCSI_STATE_QUEUED)
++	 && (cmd->device->type == TYPE_DISK)) {
++		/* If the controller is doing error recovery */
+ 		mod_timer(&cmd->eh_timeout, timeout);
+ 	}
+
+
+Sincerely -- Mark Salyzyn
