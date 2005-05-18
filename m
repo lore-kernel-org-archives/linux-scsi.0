@@ -1,181 +1,141 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] Sanitize PQ3 device handling
-Date: Wed, 18 May 2005 11:43:41 +0200
-Message-ID: <428B0E4D.50505@suse.de>
+From: 'Christoph Hellwig' <hch@infradead.org>
+Subject: Re: [PATCH 2.6.12-rc4-mm1 3/4] megaraid_sas: updating the driver
+Date: Wed, 18 May 2005 14:53:09 +0100
+Message-ID: <20050518135308.GA22003@infradead.org>
+References: <0E3FA95632D6D047BA649F95DAB60E57060CCE99@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060300010804090903010405"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:25487 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S262140AbVERJnv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 May 2005 05:43:51 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:56548 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S262194AbVERNxW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 May 2005 09:53:22 -0400
+Content-Disposition: inline
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57060CCE99@exa-atlanta>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'Matt_Domsch@Dell.com'" <Matt_Domsch@Dell.com>, Andrew Morton <akpm@osdl.org>, 'James Bottomley' <James.Bottomley@SteelEye.com>
 
-This is a multi-part message in MIME format.
---------------060300010804090903010405
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+> >> +
+> >> +MODULE_LICENSE		("GPL");
+> >> +MODULE_VERSION		(MEGASAS_VERSION);
+> >> +MODULE_AUTHOR		("sreenivas.bagalkote@lsil.com");
+> >> +MODULE_DESCRIPTION	("LSI Logic MegaRAID SAS Driver");
+> >
+> >Normal style would be:
+> >
+> >MODULE_LICENSE("GPL");
+> >MODULE_VERSION(MEGASAS_VERSION);
+> >MODULE_AUTHOR("sreenivas.bagalkote@lsil.com");
+> >MODULE_DESCRIPTION("LSI Logic MegaRAID SAS Driver");
+> >
+> 
+> I will remove the alignment. I am curious however, to know
+> why this is less readable or against the normal style.
 
-Hi James,
+I find it more readable.  And apparently many core kernel hackers thing
+the same.
 
-the attached patch sanitzes the handling of devices with a periperal
-qualifier of 3. As we don't set non-existing devices offline anymore
-there is no real sense in distinguishing between PQ 1 and PQ3, as the
-net effect (no available device) is identical. However, we really want
-to have access to the target via sg.
+> I will change the * placement. But does the alignment (of data types and
+> variables) offend Linux coding style? If it does, I will remove that.
 
-Please apply.
+If you look at core code we generally don't do it.  It's not a hard
+requirement, but it makes reading the driver and thus finding and fixing
+bugs much easier for core developers.
 
-Cheers,
+> >> +static int
+> >> +megasas_issue_polled(struct megasas_instance* instance, 
+> >struct megasas_cmd*
+> >> cmd)
+> >> +{
+> >> +	int	i;
+> >> +	u32	msecs = MFI_POLL_TIMEOUT_SECS * 1000;
+> >> +
+> >> +	struct megasas_header* frame_hdr = (struct
+> >> megasas_header*)cmd->frame;
+> >
+> >megasas_header is one of the member of union megasas_frame, 
+> >which is the
+> >type of cmd->frame.  Please use Cs static typing.
+> >
+> 
+> Could you please elaborate this point? Are you saying use:
+> struct megasas_header* frame_hdr = &cmd->frame->hdr instead of what
+> I have above? If that's what you have in mind, then yes, I will do that.
 
-Hannes
--- 
-Dr. Hannes Reinecke			hare@suse.de
-SuSE Linux AG				S390 & zSeries
-Maxfeldstraße 5				+49 911 74053 688
-90409 Nürnberg				http://www.suse.de
+Yes.  In general most places you have to use casts in C are bugs - either
+in your code or in the API (e.g. in the Linux timer APIs)
 
---------------060300010804090903010405
-Content-Type: text/plain;
- name="linux-2.6.12-rc4-scsi-scan-sparse-luns"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="linux-2.6.12-rc4-scsi-scan-sparse-luns"
+> >> +	for( i=0; i < msecs && (frame_hdr->cmd_status == 0xff); i++ ) {
+> >> +		rmb();
+> >> +		msleep(1);
+> >> +	}
+> >
+> >who is supposed to change frame_hdr->cmd_status while this 
+> >loop is running?
+> 
+> In the previous statement, I am issuing the frame to the FW. FW will
+> change the cmd_status. I will add a comment.
 
-diff -pur linux-2.6.12-rc4.orig/drivers/scsi/scsi_scan.c linux-2.6.12-rc4/drivers/scsi/scsi_scan.c
---- linux-2.6.12-rc4.orig/drivers/scsi/scsi_scan.c	2005-05-07 07:20:31.000000000 +0200
-+++ linux-2.6.12-rc4/drivers/scsi/scsi_scan.c	2005-05-18 11:29:47.000000000 +0200
-@@ -579,6 +579,8 @@ static void scsi_probe_lun(struct scsi_r
-  *
-  * Return:
-  *     SCSI_SCAN_NO_RESPONSE: could not allocate or setup a Scsi_Device
-+ *     SCSI_SCAN_TARGET_PRESENT: a Scsi_Device was allocated and initialized
-+ *                               however there is (currently) no LUN connected.
-  *     SCSI_SCAN_LUN_PRESENT: a new Scsi_Device was allocated and initialized
-  **/
- static int scsi_add_lun(struct scsi_device *sdev, char *inq_result, int *bflags)
-@@ -651,6 +653,11 @@ static int scsi_add_lun(struct scsi_devi
- 	 * Don't set the device offline here; rather let the upper
- 	 * level drivers eval the PQ to decide whether they should
- 	 * attach. So remove ((inq_result[0] >> 5) & 7) == 1 check.
-+	 *
-+	 * Since we don't set the device offline anymore there is
-+	 * no sense at all in treating PQ 1 and PQ 3 differently
-+	 * as both do not have a device attached. If a PQ 1 target
-+	 * ever get it's device back we need to rescan it anyway.
- 	 */ 
- 
- 	sdev->inq_periph_qual = (inq_result[0] >> 5) & 7;
-@@ -739,7 +746,16 @@ static int scsi_add_lun(struct scsi_devi
- 	 */
- 	scsi_sysfs_add_sdev(sdev);
- 
--	return SCSI_SCAN_LUN_PRESENT;
-+	/*
-+	 * Targets with a PQ of 1 or 3 do not have
-+	 * a device attached; tell the upper layers
-+	 * about it.
-+	 */
-+	if (((inq_result[0] >> 5) & 7) == 1 ||
-+	    ((inq_result[0] >> 5) & 7) == 3)
-+		return SCSI_SCAN_TARGET_PRESENT;
-+	else
-+		return SCSI_SCAN_LUN_PRESENT;
- }
- 
- /**
-@@ -812,26 +828,8 @@ static int scsi_probe_and_add_lun(struct
- 	/*
- 	 * result contains valid SCSI INQUIRY data.
- 	 */
--	if ((result[0] >> 5) == 3) {
--		/*
--		 * For a Peripheral qualifier 3 (011b), the SCSI
--		 * spec says: The device server is not capable of
--		 * supporting a physical device on this logical
--		 * unit.
--		 *
--		 * For disks, this implies that there is no
--		 * logical disk configured at sdev->lun, but there
--		 * is a target id responding.
--		 */
--		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
--					"scsi scan: peripheral qualifier of 3,"
--					" no device added\n"));
--		res = SCSI_SCAN_TARGET_PRESENT;
--		goto out_free_result;
--	}
--
- 	res = scsi_add_lun(sdev, result, &bflags);
--	if (res == SCSI_SCAN_LUN_PRESENT) {
-+	if (res != SCSI_SCAN_NO_RESPONSE) {
- 		if (bflags & BLIST_KEY) {
- 			sdev->lockable = 0;
- 			scsi_unlock_floptical(sreq, result);
-@@ -845,7 +843,7 @@ static int scsi_probe_and_add_lun(struct
-  out_free_sreq:
- 	scsi_release_request(sreq);
-  out_free_sdev:
--	if (res == SCSI_SCAN_LUN_PRESENT) {
-+	if (res != SCSI_SCAN_NO_RESPONSE) {
- 		if (sdevp) {
- 			scsi_device_get(sdev);
- 			*sdevp = sdev;
-@@ -1199,7 +1197,7 @@ struct scsi_device *__scsi_add_device(st
- 
- 	down(&shost->scan_mutex);
- 	res = scsi_probe_and_add_lun(starget, lun, NULL, &sdev, 1, hostdata);
--	if (res != SCSI_SCAN_LUN_PRESENT)
-+	if (res == SCSI_SCAN_NO_RESPONSE)
- 		sdev = ERR_PTR(-ENODEV);
- 	up(&shost->scan_mutex);
- 	scsi_target_reap(starget);
-@@ -1279,23 +1277,29 @@ void scsi_scan_target(struct device *par
- 	 * would not configure LUN 0 until all LUNs are scanned.
- 	 */
- 	res = scsi_probe_and_add_lun(starget, 0, &bflags, &sdev, rescan, NULL);
--	if (res == SCSI_SCAN_LUN_PRESENT) {
--		if (scsi_report_lun_scan(sdev, bflags, rescan) != 0)
-+	if (res != SCSI_SCAN_NO_RESPONSE) {
-+		if (scsi_report_lun_scan(sdev, bflags, rescan) != 0) {
- 			/*
- 			 * The REPORT LUN did not scan the target,
- 			 * do a sequential scan.
- 			 */
-+			if (res == SCSI_SCAN_TARGET_PRESENT)
-+				/*
-+				 * There's a target here, but lun 0 is 
-+				 * offline so we can't use the report_lun
-+				 * scan.  Fall back to a sequential lun scan
-+				 * with a bflags of SPARSELUN.
-+				 *
-+				 * The old code also used a default scsi level
-+				 * of SCSI_2 which seems a bit spurious. Any
-+				 * misbehaving device should rather be added
-+				 * to the blacklist.
-+				 */
-+				bflags |= BLIST_SPARSELUN;
-+
- 			scsi_sequential_lun_scan(starget, bflags,
- 				       	res, sdev->scsi_level, rescan);
--	} else if (res == SCSI_SCAN_TARGET_PRESENT) {
--		/*
--		 * There's a target here, but lun 0 is offline so we
--		 * can't use the report_lun scan.  Fall back to a
--		 * sequential lun scan with a bflags of SPARSELUN and
--		 * a default scsi level of SCSI_2
--		 */
--		scsi_sequential_lun_scan(starget, BLIST_SPARSELUN,
--				SCSI_SCAN_TARGET_PRESENT, SCSI_2, rescan);
-+		}
- 	}
- 	if (sdev)
- 		scsi_device_put(sdev);
-Only in linux-2.6.12-rc4/drivers/scsi: scsi_scan.c~
-Only in linux-2.6.12-rc4/drivers/scsi: scsi_scan.c.orig
+So the frame_hdr is somewhere in iomremapped space?  If so you need to
+use the proper interfaces (read* or ioread*) to access it.
 
---------------060300010804090903010405--
+> I will change here also.
+> 
+> >> +	cmd = megasas_build_cmd( instance, scmd, &frame_count );
+> >> +
+> >> +	if (!cmd) {
+> >> +		done(scmd);
+> >> +		return 0;
+> >
+> >I think this should return HOST_BUSY?
+> >
+> 
+> I will add a readable comment here. I return NULL cmd when I can complete
+> the command from queue routine itself.
+
+I'd have to look over the patch in detail again, but IIRC this is a
+resource shortage, in which case not completing the command but returning
+busy is the right thing to do.  Let's look over it again in the next
+revision.
+
+> >I don't think you should implement an abort handler at all if you
+> >don't do anything.
+> >
+> 
+> My reset handler will still get called, won't it be?
+
+Yes.
+
+> Moreover, isn't
+> it a good diagnostic message to be printed from abort handler? Please
+> consider.
+
+Don't think so.  You'll get a message about the resets from the midlayer
+anyway.
+
+> >please allocate the scsi_host directly and early in your probe routing,
+> >so you can allocate your private data directly through scsi_host_alloc
+> >
+> 
+> The instance is allocated on DMA memory. scsi_host_alloc uses kmalloc().
+> I allocate instance on DMA memory because some of its members get their
+> values refreshed from FW. Currently only producer and consumer are used. But
+> in near future, we will have more such members.
+
+Okay.  I'd suggest putting those DMAable members into a separate struct
+that is kmalloced so we have them nicely separated.
+
+> >> +	instance->host_lock = &instance->lock;
+> >
+> >please avoid using the host_lock pointer.
+> >
+> 
+> Okay. Am I allowed to use scsi host's per-host lock inside my
+> reset handler? Is my usage of lock inside the reset_handler correct?
+
+->queuemand and the ->eh_*handler routines are called with the midlayers
+per-host lock held.  You can of course release and reaquire them inside
+these routines (with spin_unlock_irq / spin_lock_irq)
+
