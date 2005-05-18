@@ -1,68 +1,35 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] Sanitize PQ3 device handling
-Date: Wed, 18 May 2005 16:05:36 +0200
-Message-ID: <428B4BB0.9040306@suse.de>
-References: <428B0E4D.50505@suse.de> <20050518140140.GA22570@infradead.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
+Date: Wed, 18 May 2005 09:12:39 -0500
+Message-ID: <1116425559.5027.1.camel@mulgrave>
+References: <20050516085832.GA9558@gmail.com>
+	 <20050517071307.GA4794@in.ibm.com> <20050517002908.005a9ba7.akpm@osdl.org>
+	 <1116340465.4989.2.camel@mulgrave> <20050517170824.GA3931@in.ibm.com>
+	 <1116354894.4989.42.camel@mulgrave>  <20050518090722.GA3937@in.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:22748 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S262218AbVEROFp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 May 2005 10:05:45 -0400
-In-Reply-To: <20050518140140.GA22570@infradead.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:29658 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261194AbVEROM5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 May 2005 10:12:57 -0400
+In-Reply-To: <20050518090722.GA3937@in.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: dino@in.ibm.com
+Cc: Andrew Morton <akpm@osdl.org>, gregoire.favre@gmail.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig wrote:
->> 	res =3D scsi_probe_and_add_lun(starget, 0, &bflags, &sdev, rescan, =
-NULL);
->>-	if (res =3D=3D SCSI_SCAN_LUN_PRESENT) {
->>-		if (scsi_report_lun_scan(sdev, bflags, rescan) !=3D 0)
->>+	if (res !=3D SCSI_SCAN_NO_RESPONSE) {
->>+		if (scsi_report_lun_scan(sdev, bflags, rescan) !=3D 0) {
->> 			/*
->> 			 * The REPORT LUN did not scan the target,
->> 			 * do a sequential scan.
->> 			 */
->>+			if (res =3D=3D SCSI_SCAN_TARGET_PRESENT)
->>+				/*
->>+				 * There's a target here, but lun 0 is=20
->>+				 * offline so we can't use the report_lun
->>+				 * scan.  Fall back to a sequential lun scan
->>+				 * with a bflags of SPARSELUN.
->>+				 *
->>+				 * The old code also used a default scsi level
->>+				 * of SCSI_2 which seems a bit spurious. Any
->>+				 * misbehaving device should rather be added
->>+				 * to the blacklist.
->>+				 */
->>+				bflags |=3D BLIST_SPARSELUN;
->>+
->> 			scsi_sequential_lun_scan(starget, bflags,
->> 				       	res, sdev->scsi_level, rescan);
->=20
-> If scsi_probe_and_add_lun returns SCSI_SCAN_TARGET_PRESENT sdev isn't=
- valid at
-> this point.  You should probably default to SCSI_2 for that case.
->=20
-How so? This is exactly the behaviour I've removed. sdev is valid even
-for SCSI_SCAN_TARGET_PRESENT.
-If not please show me.
+On Wed, 2005-05-18 at 14:37 +0530, Dinakar Guniguntala wrote:
+> It works !! Thanks.
+> 
+> So are these patches getting into -mm first or -rc5 ??
 
-Cheers,
+Damn, I knew you were going to ask that ... the problem is it's the last
+in a long line of invasive adaptec patches that sit in my scsi-misc-2.6
+tree ... I suppose we can't have the aic driver slightly hosed for
+2.6.12; I'll see if I can extract them.
 
-Hannes
---=20
-Dr. Hannes Reinecke			hare@suse.de
-SuSE Linux AG				S390 & zSeries
-Maxfeldstra=DFe 5				+49 911 74053 688
-90409 N=FCrnberg				http://www.suse.de
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James
+
+
