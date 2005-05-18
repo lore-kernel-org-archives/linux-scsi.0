@@ -1,438 +1,109 @@
-From: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Subject: RE: [PATCH 2.6.12-rc4-mm1 3/4] megaraid_sas: updating the driver
-Date: Tue, 17 May 2005 19:51:14 -0400
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57060CCE99@exa-atlanta>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [OOPS] 2.6.12-rc4 oops
+Date: Tue, 17 May 2005 18:08:47 -0700
+Message-ID: <20050517180847.6fb0e204.akpm@osdl.org>
+References: <1116345116.8079.12.camel@sauron.oktetlabs.ru>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:668 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S262043AbVEQX4Q (ORCPT
+Received: from fire.osdl.org ([65.172.181.4]:2534 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S262045AbVERBJh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 May 2005 19:56:16 -0400
+	Tue, 17 May 2005 21:09:37 -0400
+In-Reply-To: <1116345116.8079.12.camel@sauron.oktetlabs.ru>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Christoph Hellwig' <hch@infradead.org>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'Matt_Domsch@Dell.com'" <Matt_Domsch@Dell.com>, Andrew Morton <akpm@osdl.org>, 'James Bottomley' <James.Bottomley@SteelEye.com>
+To: dedekind@infradead.org
+Cc: linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-scsi@vger.kernel.org
 
-Christoph, thank you for your extensive review.
+"Artem B. Bityuckiy" <dedekind@infradead.org> wrote:
+>
+> When I copied a lot of data (>10GB) from ext3 partition to reiserfs
+>  partition and compiled linux on the ext3 partition at the same time i
+>  got the following oops:
+> 
+>  ata1: command 0x25 timeout, stat 0xd0 host_stat 0x21
+>  ata1: status=0xd0 { Busy }
+>  end_request: I/O error, dev sda, sector 49947775
+>  ATA: abnormal status 0xD0 on port 0xEFE7
+>  ATA: abnormal status 0xD0 on port 0xEFE7
+>  ATA: abnormal status 0xD0 on port 0xEFE7
+> ...
+>  ata1: command 0x25 timeout, stat 0xd0 host_stat 0x21
+>  ata1: status=0xd0 { Busy }
+>  end_request: I/O error, dev sda, sector 53178303
+>  ATA: abnormal status 0xD0 on port 0xEFE7
+>  ATA: abnormal status 0xD0 on port 0xEFE7
+>  ATA: abnormal status 0xD0 on port 0xEFE7
+>  ata1: command 0x25 timeout, stat 0xd0 host_stat 0x21
+>  ata1: status=0xd0 { Busy }
+>  end_request: I/O error, dev sda, sector 2621519
+>  EXT3-fs error (device sda1): ext3_get_inode_loc: unable to read inode
+>  block - inode=161624, block=327682
+>  Aborting journal on device sda1.
+>  ATA: abnormal status 0xD0 on port 0xEFE7
+>  ATA: abnormal status 0xD0 on port 0xEFE7
+>  ATA: abnormal status 0xD0 on port 0xEFE7
+>  ata1: command 0x25 timeout, stat 0xd0 host_stat 0x21
+>  ata1: status=0xd0 { Busy }
+>  end_request: I/O error, dev sda, sector 2621535
+>  ATA: abnormal status 0xD0 on port 0xEFE7
+>  ATA: abnormal status 0xD0 on port 0xEFE7
+>  ATA: abnormal status 0xD0 on port 0xEFE7
+>  EXT3-fs error (device sda1): ext3_get_inode_loc: unable to read inode
+>  block - inode=161685, block=327684
+>  ata1: command 0x25 timeout, stat 0xd0 host_stat 0x21
+>  ata1: status=0xd0 { Busy }
+>  end_request: I/O error, dev sda, sector 2967775
+>  EXT3-fs error (device sda1): ext3_find_entry: reading directory #181451
+>  offset 0
+>  ATA: abnormal status 0xD0 on port 0xEFE7
+>  ATA: abnormal status 0xD0 on port 0xEFE7
+>  ATA: abnormal status 0xD0 on port 0xEFE7
+>  Unable to handle kernel paging request at virtual address d3562eac
+>   printing eip:
+>  e0853769
+>  *pde = 00000000
+>  Oops: 0002 [#1]
+>  PREEMPT SMP DEBUG_PAGEALLOC
+>  Modules linked in: reiserfs nfsd exportfs md5 ipv6 autofs4 nfs lockd
+>  sunrpc sk98lin microcode uhci_hcd ehci_hcd video button battery ac sd
+>  _mod sr_mod ext3 jbd dm_mod ata_piix libata scsi_mod
+>  CPU:    0
+>  EIP:    0060:[<e0853769>]    Not tainted VLI
+>  EFLAGS: 00010002   (2.6.12-rc4-smp-preempt)
+>  EIP is at scsi_eh_scmd_add+0x59/0x90 [scsi_mod]
+>  eax: dfc1205c   ebx: 00000001   ecx: d3562eac   edx: d3e61eac
+>  esi: d3e61e94   edi: dfc12000   ebp: c03d1efc   esp: c03d1eec
+>  ds: 007b   es: 007b   ss: 0068
+>  Process swapper (pid: 0, threadinfo=c03d0000 task=c036cc40)
+>  Stack: 00000286 d3e61e94 00000101 c1405ee0 c03d1f1c e08538ec c1405e80
+>  c03d1f18
+>         c03d1f1c 00000286 c03d1f1c d3e61e94 c03d1f58 c012add6 c03d1f2c
+>  c031d0a2
+>         c03d1f38 c036cc40 c03d1f40 c03d0000 e08538a0 c03d1f40 c03d1f40
+>  000f4354
+>  Call Trace:
+>   [<c010412a>] show_stack+0x7a/0x90
+>   [<c01042b6>] show_registers+0x156/0x1c0
+>   [<c01044d0>] die+0x100/0x180
+>   [<c0119026>] do_page_fault+0x356/0x6dd
+>   [<c0103d7b>] error_code+0x4f/0x54
+>   [<e08538ec>] scsi_times_out+0x4c/0xc0 [scsi_mod]
+>   [<c012add6>] run_timer_softirq+0xe6/0x1b0
+>   [<c0126c3b>] __do_softirq+0xdb/0x100
+>   [<c0126cad>] do_softirq+0x4d/0x50
+>   [<c0126dae>] irq_exit+0x4e/0x50
+>   [<c0103cd4>] apic_timer_interrupt+0x1c/0x24
+>   [<c0101121>] cpu_idle+0x71/0x90
+>   [<c03d29bc>] start_kernel+0x18c/0x1d0
+>   [<c010020e>] 0xc010020e
+>  Code: 89 f6 8b 47 3c e8 78 95 ac df 09 5e 24 8d 56 18 89 45 f0 8d 47 5c
+>  66 c7 46 0a 03 01 66 c7 46 08 02 10 8b 48 04 89 46 18 89 50 04 <89
+>  > 11 89 4a 04 f0 0f ba af 0c 01 00 00 03 ff 87 98 00 00 00 89
+>   <0>Kernel panic - not syncing: Fatal exception in interrupt
 
->
->On Mon, May 16, 2005 at 02:57:15AM -0400, Bagalkote, Sreenivas wrote:
->> +#include "megaraid_sas.h"
->
->Please put most of the system includes in here, not megaraid_sas.h.
->megaraid_sas.h should only include the headers absolutely 
->nessecary for it
->top compile.
->
+Please describe the I/O setup.  Serial ATA?  Which driver, what type of
+hardware?
 
-Okay.
-
->> +
->> +MODULE_LICENSE		("GPL");
->> +MODULE_VERSION		(MEGASAS_VERSION);
->> +MODULE_AUTHOR		("sreenivas.bagalkote@lsil.com");
->> +MODULE_DESCRIPTION	("LSI Logic MegaRAID SAS Driver");
->
->Normal style would be:
->
->MODULE_LICENSE("GPL");
->MODULE_VERSION(MEGASAS_VERSION);
->MODULE_AUTHOR("sreenivas.bagalkote@lsil.com");
->MODULE_DESCRIPTION("LSI Logic MegaRAID SAS Driver");
->
-
-I will remove the alignment. I am curious however, to know
-why this is less readable or against the normal style.
-
->> +
->> +/*
->> + * PCI ID table for all supported controllers
->> + */
->> +static struct pci_device_id megasas_pci_table_g[] = {
->
->can be const
-
-Okay. I will make it a constant.
-
->
->> +static	int				megasas_mgmt_majorno;
->> +static	struct megasas_mgmt_info	megasas_mgmt_info;
->> +static	struct fasync_struct*		megasas_async_queue;
->> +static	DECLARE_MUTEX			
->(megasas_async_queue_mutex);
->
->simiar a kind odd style.  especially the * placement is very odd as
->* is a mofifier on the variable and not the type in C (you have that
->a few times more below).  should be more like:
->
->static int megasas_mgmt_majorno;
->static struct megasas_mgmt_info	megasas_mgmt_info;
->static struct fasync_struct *megasas_async_queue;
->static DECLARE_MUTEX(megasas_async_queue_mutex);
->
-
-I will change the * placement. But does the alignment (of data types and
-variables) offend Linux coding style? If it does, I will remove that.
-
->or better not at all.  As this is all part of your rather questionable
->managment interface that will need some major work to sort out.
->
->While we're at it, is there a chance you could submit a basic driver
->without managment functionality after fixing up the review comments
->so that we can have it in when starting to design a better managment
->interface?
->
-
-I will respond to all your comments about management interface in my next
-post.
-
->> +/**
->> + * megasas_get_cmd -	Get a command from the free pool
->> + * @instance:		Adapter soft state
->> + *
->> + * Returns a free command from the pool
->> + */
->> +static inline struct megasas_cmd*
->> +megasas_get_cmd( struct megasas_instance* instance )
->> +{
->> +	unsigned long		flags;
->> +	struct megasas_cmd*	cmd;
->> +
->> +	spin_lock_irqsave(&instance->cmd_pool_lock, flags);
->> +
->> +	if ( list_empty(&instance->cmd_pool)) {
->> +		spin_unlock_irqrestore(&instance->cmd_pool_lock, flags);
->> +		return NULL;
->> +	}
->> +
->> +	cmd = list_entry((&instance->cmd_pool)->next, struct 
->megasas_cmd,
->> list);
->> +
->> +	list_del_init( &cmd->list );
->> +
->> +	spin_unlock_irqrestore( &instance->cmd_pool_lock, flags );
->> +
->> +	return cmd;
->> +}
->
->Again this is very different style from normal linux.  Please 
->read through
->Documentation/CodingStyle and look at some other drivers, e.g.
->drivers/net/tg3.c for how Linux code is written.  This function should
->for example look like:
->
->/**
-> * megasas_get_cmd -	Get a command from the free pool
-> * @instance:		Adapter soft state
-> *
-> * Returns a free command from the pool
-> */
->static inline struct megasas_cmd *
->megasas_get_cmd(struct megasas_instance *instance)
->{
->	struct megasas_cmd *cmd = NULL;
->	unsigned long flags;
->
->	spin_lock_irqsave(&instance->cmd_pool_lock, flags);
->	if (!list_empty(&instance->cmd_pool)) {
->		cmd = list_entry(instance->cmd_pool.next,
->				 struct megasas_cmd, list);
->		list_del_init(&cmd->list);
->	}
->	spin_unlock_irqrestore(&instance->cmd_pool_lock, flags);
->	return cmd;
->}
->
-
-Not that you pointed it out, it looks obvious. I will change all
-such occurences. Thank you.
-
->> +static int
->> +megasas_issue_polled(struct megasas_instance* instance, 
->struct megasas_cmd*
->> cmd)
->> +{
->> +	int	i;
->> +	u32	msecs = MFI_POLL_TIMEOUT_SECS * 1000;
->> +
->> +	struct megasas_header* frame_hdr = (struct
->> megasas_header*)cmd->frame;
->
->megasas_header is one of the member of union megasas_frame, 
->which is the
->type of cmd->frame.  Please use Cs static typing.
->
-
-Could you please elaborate this point? Are you saying use:
-struct megasas_header* frame_hdr = &cmd->frame->hdr instead of what
-I have above? If that's what you have in mind, then yes, I will do that.
-
->> +	for( i=0; i < msecs && (frame_hdr->cmd_status == 0xff); i++ ) {
->> +		rmb();
->> +		msleep(1);
->> +	}
->
->who is supposed to change frame_hdr->cmd_status while this 
->loop is running?
-
-In the previous statement, I am issuing the frame to the FW. FW will
-change the cmd_status. I will add a comment.
-
->
->> +	if (!scp->use_sg) {
->> +		page	= virt_to_page( scp->request_buffer );
->> +		offset	= ((unsigned long)scp->request_buffer & 
->~PAGE_MASK);
->> +
->> +		mfi_sgl->sge32[0].phys_addr	=
->> pci_map_page(instance->pdev,
->> +							page, offset,
->
->please use pci_map_single and avoid all the black magic on the virtual
->address.
->
-
-Okay. I will change this.
-
->> +		page	= virt_to_page( scp->request_buffer );
->> +		offset	= ((unsigned long)scp->request_buffer & 
->~PAGE_MASK);
->> +
->> +		mfi_sgl->sge64[0].phys_addr	=
->> pci_map_page(instance->pdev,
->> +							page, offset,
->> +
->> scp->request_bufflen,
->> +
->> scp->sc_data_direction);
->
->dito.
->
-
-I will change here also.
-
->> +	cmd = megasas_build_cmd( instance, scmd, &frame_count );
->> +
->> +	if (!cmd) {
->> +		done(scmd);
->> +		return 0;
->
->I think this should return HOST_BUSY?
->
-
-I will add a readable comment here. I return NULL cmd when I can complete
-the command from queue routine itself.
-
->> +/**
->> + * megasas_abort_handler -	Abort entry point
->> + * @scmd:			SCSI command to be aborted
->> + */
->> +static int
->> +megasas_abort_handler( struct scsi_cmnd* scmd )
->> +{
->> +	printk( KERN_NOTICE "megasas: ABORT -%ld cmd=%x <c=%d 
->t=%d l=%d>\n",
->> +		scmd->serial_number, scmd->cmnd[0], SCP2CHANNEL(scmd),
->> +		SCP2TARGET(scmd), SCP2LUN(scmd));
->> +
->> +	return FAILED;
->> +}
->
->I don't think you should implement an abort handler at all if you
->don't do anything.
->
-
-My reset handler will still get called, won't it be? Moreover, isn't
-it a good diagnostic message to be printed from abort handler? Please
-consider.
-
->> +/*
->> + * Scsi host template for megaraid_sas driver
->> + */
->> +static struct scsi_host_template megasas_template_g = {
->
->please remove the _g postix.
->
-
-Okay.
-
->> +
->> +	.module				= THIS_MODULE,
->> +	.name				= "LSI Logic SAS based MegaRAID
->> driver",
->> +	.queuecommand			= megasas_queue_command,
->> +	.eh_abort_handler		= megasas_abort_handler,
->> +	.eh_device_reset_handler	= megasas_reset_device,
->> +	.eh_bus_reset_handler		= megasas_reset_bus_host,
->> +	.eh_host_reset_handler		= megasas_reset_bus_host,
->> +	.use_clustering			= ENABLE_CLUSTERING,
->> +	.shost_attrs			= megasas_shost_attrs,
->> +};
->
->> +static inline void
->> +megasas_sync_buffers(struct megasas_instance* instance, 
->struct megasas_cmd*
->
->
->this is a really odd name for a function that calls the dma unmapping
->functions.
->
-
-Okay, I will change the name.
-
->> +			spin_lock( instance->host_lock );
->> +			cmd->scmd->scsi_done( cmd->scmd );
->> +			spin_unlock( instance->host_lock );
->
->no need to lock around ->scsi_done
->
-
-Thanks. I will remove the lock.
-
->> +	/*
->> +	 * instance->cmd_list is an array of struct megasas_cmd 
->pointers.
->> +	 * Allocate the dynamic array first and then allocate individual
->> +	 * commands.
->> +	 */
->> +	instance->cmd_list = kmalloc( sizeof(struct 
->megasas_cmd*) * max_cmd,
->> +								
->GFP_KERNEL
->> );
->> +
->> +	if (!instance->cmd_list) {
->> +		printk( KERN_DEBUG "megasas: out of memory\n" );
->> +		return -ENOMEM;
->> +	}
->> +
->> +	memset( instance->cmd_list, 0, sizeof(struct 
->megasas_cmd*) * max_cmd
->
->you can use kcalloc here
->
-
-Okay.
-
->> +/**
->> + * megasas_io_attach -	Attaches this driver to SCSI mid-layer
->> + * @instance:		Adapter soft state
->> + */
->> +static int
->> +megasas_io_attach( struct megasas_instance* instance )
->> +{
->> +	struct Scsi_Host* host;
->> +
->> +	host = scsi_host_alloc(&megasas_template_g, sizeof(void*));
->> +
->> +	if (!host) {
->> +		printk( KERN_DEBUG "megasas: scsi_host_alloc 
->failed\n" );
->> +		return -ENODEV;
->> +	}
->
->please allocate the scsi_host directly and early in your probe routing,
->so you can allocate your private data directly through scsi_host_alloc
->
-
-The instance is allocated on DMA memory. scsi_host_alloc uses kmalloc().
-I allocate instance on DMA memory because some of its members get their
-values refreshed from FW. Currently only producer and consumer are used. But
-in near future, we will have more such members.
-
->> +	SCSIHOST2ADAP(host)	= (caddr_t) instance;
->
->please don't use caddr_t in kernel code.
->
-
-Okay.
-
->> +	instance->host		= host;
->> +
->> +	/*
->> +	 * Export parameters required by SCSI mid-layer
->> +	 */
->> +	scsi_assign_lock( host, instance->host_lock );
->
->never use scsi_assign_lock in new drivers.
->
-
-Yes, of course. Thanks.
-
->> +	scsi_set_device( host, &instance->pdev->dev );
->
->not needed, as it's done by scsi_add_host
->
-
-Okay. This will be removed.
-
->> +	/*
->> +	 * Notify the mid-layer about the new controller
->> +	 */
->> +	if (scsi_add_host(host, &instance->pdev->dev)) {
->
->this should be done at the end of your probe routine.
->
-
-It is indeed being done at the end of the probe routine.
-
->> +/**
->> + * megasas_io_detach -	Detach the driver from SCSI mid-layer
->> + * @instance:		Adapter soft state
->> + */
->> +static void
->> +megasas_io_detach( struct megasas_instance* instance )
->> +{
->> +	if (instance->host)
->> +		scsi_remove_host( instance->host );
->> +}
->
->please avoid that wrapper.  Also you shouldn't need the if
->
-
-Okay. I will remove megasas_io_detach() function.
-
->> +	instance->host_lock = &instance->lock;
->
->please avoid using the host_lock pointer.
->
-
-Okay. Am I allowed to use scsi host's per-host lock inside my
-reset handler? Is my usage of lock inside the reset_handler correct?
-
->> + * @device:		Generic device structure
->> + */
->> +static void
->> +megasas_shutdown( struct device* device )
->> +{
->> +	int				i;
->> +	struct megasas_instance*	instance;
->> +
->> +	for( i = 0; i < megasas_mgmt_info.max_index; i++ ) {
->> +		instance = megasas_mgmt_info.instance[i];
->> +
->> +		if (instance)
->> +			megasas_shutdown_controller( instance );
->> +	}
->
->this doesn't make any sense.  you must only shutdown the instance you
->were called for.  Use drv_get_drvdata to get it from the 
->devices private
->data.
->
-
-Okay. I will change that. That was dumb.
-
->> +/**
->> + * megasas_mgmt_ioctl -	char node ioctl entry point
->> + *
-
-Please allow me to respond to your comments about management interface in
-later post.
-
-Thank you very much.
-
-Sincerely,
-Sreenivas Bagalkote
