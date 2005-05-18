@@ -1,35 +1,34 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
-Date: Wed, 18 May 2005 09:12:39 -0500
-Message-ID: <1116425559.5027.1.camel@mulgrave>
-References: <20050516085832.GA9558@gmail.com>
-	 <20050517071307.GA4794@in.ibm.com> <20050517002908.005a9ba7.akpm@osdl.org>
-	 <1116340465.4989.2.camel@mulgrave> <20050517170824.GA3931@in.ibm.com>
-	 <1116354894.4989.42.camel@mulgrave>  <20050518090722.GA3937@in.ibm.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Sanitize PQ3 device handling
+Date: Wed, 18 May 2005 15:14:59 +0100
+Message-ID: <20050518141459.GA22916@infradead.org>
+References: <428B0E4D.50505@suse.de> <20050518140140.GA22570@infradead.org> <428B4BB0.9040306@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:29658 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261194AbVEROM5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 May 2005 10:12:57 -0400
-In-Reply-To: <20050518090722.GA3937@in.ibm.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:34021 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S262197AbVEROPH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 May 2005 10:15:07 -0400
+Content-Disposition: inline
+In-Reply-To: <428B4BB0.9040306@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dino@in.ibm.com
-Cc: Andrew Morton <akpm@osdl.org>, gregoire.favre@gmail.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 2005-05-18 at 14:37 +0530, Dinakar Guniguntala wrote:
-> It works !! Thanks.
-> 
-> So are these patches getting into -mm first or -rc5 ??
+On Wed, May 18, 2005 at 04:05:36PM +0200, Hannes Reinecke wrote:
+> > If scsi_probe_and_add_lun returns SCSI_SCAN_TARGET_PRESENT sdev isn't valid at
+> > this point.  You should probably default to SCSI_2 for that case.
+> > 
+> How so? This is exactly the behaviour I've removed. sdev is valid even
+> for SCSI_SCAN_TARGET_PRESENT.
+> If not please show me.
 
-Damn, I knew you were going to ask that ... the problem is it's the last
-in a long line of invasive adaptec patches that sit in my scsi-misc-2.6
-tree ... I suppose we can't have the aic driver slightly hosed for
-2.6.12; I'll see if I can extract them.
+Indeed, you replaced the check at the end of scsi_probe_and_add_lun.  I don't
+think it makes a lot of sense to leave around the stale scsi_dev for PQ3, though.
 
-James
-
+Doing a REPORT_LUNS for SCSI_SCAN_TARGET_PRESENT does OTOH make a lot of sense,
+there's nothing in the spec against it.  So what about dropping that device
+after we're done with REPORT_LUNS?
 
