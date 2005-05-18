@@ -1,141 +1,62 @@
 From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: [PATCH 2.6.12-rc4-mm1 3/4] megaraid_sas: updating the driver
-Date: Wed, 18 May 2005 14:53:09 +0100
-Message-ID: <20050518135308.GA22003@infradead.org>
-References: <0E3FA95632D6D047BA649F95DAB60E57060CCE99@exa-atlanta>
+Subject: Re: [PATCH 2.6.12-rc4-mm1 4/4] megaraid_sas: updating the driver
+Date: Wed, 18 May 2005 14:58:20 +0100
+Message-ID: <20050518135820.GB22003@infradead.org>
+References: <0E3FA95632D6D047BA649F95DAB60E57060CCE9A@exa-atlanta>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:56548 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:3813 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S262194AbVERNxW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 May 2005 09:53:22 -0400
+	id S262204AbVERN6V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 May 2005 09:58:21 -0400
 Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57060CCE99@exa-atlanta>
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57060CCE9A@exa-atlanta>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Cc: 'Christoph Hellwig' <hch@infradead.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'Matt_Domsch@Dell.com'" <Matt_Domsch@Dell.com>, Andrew Morton <akpm@osdl.org>, 'James Bottomley' <James.Bottomley@SteelEye.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'Matt_Domsch@Dell.com'" <Matt_Domsch@Dell.com>, Andrew Morton <akpm@osdl.org>, 'James Bottomley' <James.Bottomley@SteelEye.com>
 
-> >> +
-> >> +MODULE_LICENSE		("GPL");
-> >> +MODULE_VERSION		(MEGASAS_VERSION);
-> >> +MODULE_AUTHOR		("sreenivas.bagalkote@lsil.com");
-> >> +MODULE_DESCRIPTION	("LSI Logic MegaRAID SAS Driver");
-> >
-> >Normal style would be:
-> >
-> >MODULE_LICENSE("GPL");
-> >MODULE_VERSION(MEGASAS_VERSION);
-> >MODULE_AUTHOR("sreenivas.bagalkote@lsil.com");
-> >MODULE_DESCRIPTION("LSI Logic MegaRAID SAS Driver");
+On Tue, May 17, 2005 at 10:59:13PM -0400, Bagalkote, Sreenivas wrote:
+> >The void * casats are not okay.  Please make sure all your variable
+> >holding the I/O address are of type void __iomem * and use 
+> >sparse to check
+> >it.  I would have sent you sparse output if your mailer didn't mangle
+> >the patch so it couldn't be applied..
 > >
 > 
-> I will remove the alignment. I am curious however, to know
-> why this is less readable or against the normal style.
+> I will remove these macros. What is sparse output?
 
-I find it more readable.  And apparently many core kernel hackers thing
-the same.
+sparse is a tool written by Linus that allows stricter type checking.
+We use to verify that drivers don't directly dereference pointers to
+userspace or I/O memory and that we always perform byte swapping on
+hardware structures that have a defined endianess.
 
-> I will change the * placement. But does the alignment (of data types and
-> variables) offend Linux coding style? If it does, I will remove that.
+Unfortunately Linus doesn't seem to release tarballs of it, but Al Viro
+has a semi-recent version at
 
-If you look at core code we generally don't do it.  It's not a hard
-requirement, but it makes reading the driver and thus finding and fixing
-bugs much easier for core developers.
+    ftp://ftp.linux.org.uk/pub/people/viro/sparse.tar.bz2
 
-> >> +static int
-> >> +megasas_issue_polled(struct megasas_instance* instance, 
-> >struct megasas_cmd*
-> >> cmd)
-> >> +{
-> >> +	int	i;
-> >> +	u32	msecs = MFI_POLL_TIMEOUT_SECS * 1000;
-> >> +
-> >> +	struct megasas_header* frame_hdr = (struct
-> >> megasas_header*)cmd->frame;
+To use it on a kernel tree build and install it and then compile your
+driver with make C=1.  This doesn't check endianess yet, for that check
+you need to edit the toplevel Makefile and add -Wbitwise to the
+CHECKFLAGS line.
+
+> >> +#define SCP2HOST(scp)		(scp)->device->host	
+> >// to host
+> >> +#define SCP2HOSTDATA(scp)	SCP2HOST(scp)->hostdata	// to soft state
+> >> +#define SCP2CHANNEL(scp)	(scp)->device->channel	// to channel
+> >> +#define SCP2TARGET(scp)		(scp)->device->id	
+> >// to target
+> >> +#define SCP2LUN(scp)		(scp)->device->lun	
+> >// to LUN
 > >
-> >megasas_header is one of the member of union megasas_frame, 
-> >which is the
-> >type of cmd->frame.  Please use Cs static typing.
-> >
+> >Please remove all these macros.
 > 
-> Could you please elaborate this point? Are you saying use:
-> struct megasas_header* frame_hdr = &cmd->frame->hdr instead of what
-> I have above? If that's what you have in mind, then yes, I will do that.
+> Christoph, I use these macros to have commonality between 2.4 and 2.6
+> kernels. Please consider retaining them. 
 
-Yes.  In general most places you have to use casts in C are bugs - either
-in your code or in the API (e.g. in the Linux timer APIs)
-
-> >> +	for( i=0; i < msecs && (frame_hdr->cmd_status == 0xff); i++ ) {
-> >> +		rmb();
-> >> +		msleep(1);
-> >> +	}
-> >
-> >who is supposed to change frame_hdr->cmd_status while this 
-> >loop is running?
-> 
-> In the previous statement, I am issuing the frame to the FW. FW will
-> change the cmd_status. I will add a comment.
-
-So the frame_hdr is somewhere in iomremapped space?  If so you need to
-use the proper interfaces (read* or ioread*) to access it.
-
-> I will change here also.
-> 
-> >> +	cmd = megasas_build_cmd( instance, scmd, &frame_count );
-> >> +
-> >> +	if (!cmd) {
-> >> +		done(scmd);
-> >> +		return 0;
-> >
-> >I think this should return HOST_BUSY?
-> >
-> 
-> I will add a readable comment here. I return NULL cmd when I can complete
-> the command from queue routine itself.
-
-I'd have to look over the patch in detail again, but IIRC this is a
-resource shortage, in which case not completing the command but returning
-busy is the right thing to do.  Let's look over it again in the next
-revision.
-
-> >I don't think you should implement an abort handler at all if you
-> >don't do anything.
-> >
-> 
-> My reset handler will still get called, won't it be?
-
-Yes.
-
-> Moreover, isn't
-> it a good diagnostic message to be printed from abort handler? Please
-> consider.
-
-Don't think so.  You'll get a message about the resets from the midlayer
-anyway.
-
-> >please allocate the scsi_host directly and early in your probe routing,
-> >so you can allocate your private data directly through scsi_host_alloc
-> >
-> 
-> The instance is allocated on DMA memory. scsi_host_alloc uses kmalloc().
-> I allocate instance on DMA memory because some of its members get their
-> values refreshed from FW. Currently only producer and consumer are used. But
-> in near future, we will have more such members.
-
-Okay.  I'd suggest putting those DMAable members into a separate struct
-that is kmalloced so we have them nicely separated.
-
-> >> +	instance->host_lock = &instance->lock;
-> >
-> >please avoid using the host_lock pointer.
-> >
-> 
-> Okay. Am I allowed to use scsi host's per-host lock inside my
-> reset handler? Is my usage of lock inside the reset_handler correct?
-
-->queuemand and the ->eh_*handler routines are called with the midlayers
-per-host lock held.  You can of course release and reaquire them inside
-these routines (with spin_unlock_irq / spin_lock_irq)
+While Linux 2.4 offers getting the host, id and lun from the scsi_cmnd
+directly you can also get them from the scsi_device, so you can use
+the above variants directly for both 2.4 and 2.6
 
