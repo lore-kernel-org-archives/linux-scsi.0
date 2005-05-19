@@ -1,55 +1,54 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH] Sanitize PQ3 device handling
-Date: Wed, 18 May 2005 13:06:10 -0400
-Message-ID: <428B7602.2060201@adaptec.com>
-References: <428B0E4D.50505@suse.de> <20050518140140.GA22570@infradead.org> <428B4BB0.9040306@suse.de> <20050518141459.GA22916@infradead.org> <428B5239.5090502@suse.de>
+From: "K.R. Foley" <kr@cybsft.com>
+Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
+Date: Wed, 18 May 2005 22:07:58 -0500
+Message-ID: <428C030E.8030102@cybsft.com>
+References: <20050516085832.GA9558@gmail.com>	 <20050517071307.GA4794@in.ibm.com> <20050517002908.005a9ba7.akpm@osdl.org>	 <1116340465.4989.2.camel@mulgrave>  <20050517170824.GA3931@in.ibm.com> <1116354894.4989.42.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:15514 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262377AbVERRGO (ORCPT
+Received: from relay03.pair.com ([209.68.5.17]:40210 "HELO relay03.pair.com")
+	by vger.kernel.org with SMTP id S262457AbVESDH7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 May 2005 13:06:14 -0400
-In-Reply-To: <428B5239.5090502@suse.de>
+	Wed, 18 May 2005 23:07:59 -0400
+In-Reply-To: <1116354894.4989.42.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: dino@in.ibm.com, Andrew Morton <akpm@osdl.org>, gregoire.favre@gmail.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 05/18/05 10:33, Hannes Reinecke wrote:
-> Christoph Hellwig wrote:
+James Bottomley wrote:
+> On Tue, 2005-05-17 at 22:38 +0530, Dinakar Guniguntala wrote:
 > 
->>On Wed, May 18, 2005 at 04:05:36PM +0200, Hannes Reinecke wrote:
->>
->>>>If scsi_probe_and_add_lun returns SCSI_SCAN_TARGET_PRESENT sdev isn't valid at
->>>>this point.  You should probably default to SCSI_2 for that case.
->>>>
->>>
->>>How so? This is exactly the behaviour I've removed. sdev is valid even
->>>for SCSI_SCAN_TARGET_PRESENT.
->>>If not please show me.
->>
->>Indeed, you replaced the check at the end of scsi_probe_and_add_lun.  I don't
->>think it makes a lot of sense to leave around the stale scsi_dev for PQ3, though.
+>>May  9 12:03:32 llm09 kernel:   Vendor: IBM CORP  Model: GEM312 V002       Rev: 4.1b
+>>May  9 12:03:32 llm09 kernel:   Type:   Processor                          ANSI SCSI revision: 02
 > 
-> Why not? sg connects to it and you can ask it to provide lots of useless
-> information. Eg doing an report_luns by hand if the configuration of the
-> SAN has changed; PQ3 only states that _this_ device will never have a
-> LUN attached.
 > 
->>Doing a REPORT_LUNS for SCSI_SCAN_TARGET_PRESENT does OTOH make a lot of sense,
->>there's nothing in the spec against it.  So what about dropping that device
->>after we're done with REPORT_LUNS?
->>
+> OK, that's roughly what I was expecting.  These processor chips tend to
+> be rather basic when it comes to rates and widths.
 > 
-> See above. I'd like to have them around to be able to send commands to it.
+> The root cause, I think, is that the aic7xxx isn't starting out at async
+> narrow for the first inquiry (because the original DV code I removed did
+> this, and I didn't add an equivalent back).  The latest aic7xxx patch
+> should sort this out.
+> 
+> So, to get all of these changes, could you start with vanilla linus
+> kernel 2.6.12-rc4 (or tree based on this, but not -mm which already has
+> some of the SCSI tree included) and then apply the SCSI patch at
+> 
+> http://parisc-linux.org/~jejb/scsi_diffs/scsi-misc-2.6.diff
+> 
+> and see if it works?
+> 
+> Thanks,
+> 
+> James
+> 
 
-I like this (Hannes') patch.  It makes those targets "addressable".
+James,
 
-We do not necessarily want to care only about "live sdevs" -- a quiet SCSI
-target sitting in the domain should be addressable as Hannes points out.
-We should be able to send commands to it and get back responses as it
-may cater other services, not as apparent as a block device.
+This also solves my problem that I reported in this thread
+http://marc.theaimsgroup.com/?l=linux-scsi&m=111422854418964&w=2
 
-	Luben
+-- 
+   kr
