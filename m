@@ -1,237 +1,179 @@
-From: "K.R. Foley" <kr@cybsft.com>
-Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
-Date: Thu, 19 May 2005 06:27:44 -0500
-Message-ID: <428C7830.5070302@cybsft.com>
-References: <20050516085832.GA9558@gmail.com>	 <20050517071307.GA4794@in.ibm.com> <20050517002908.005a9ba7.akpm@osdl.org>	 <1116340465.4989.2.camel@mulgrave>  <20050517170824.GA3931@in.ibm.com>	 <1116354894.4989.42.camel@mulgrave>  <428C030E.8030102@cybsft.com> <1116476630.5867.2.camel@mulgrave>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: "pg@atlavia.it" <pg@atlavia.it>
+Subject: megaraid Error 40005 on cluster
+Date: Thu, 19 May 2005 14:11:43 +0000
+Message-ID: <151.92.176.3.1249009224.1116511903@webmail.atlavia.it>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay01.pair.com ([209.68.5.15]:6405 "HELO relay01.pair.com")
-	by vger.kernel.org with SMTP id S262439AbVESL1q (ORCPT
+Received: from fe-6c.inet.it ([213.92.5.112]:34549 "EHLO fe-6c.inet.it")
+	by vger.kernel.org with ESMTP id S262506AbVESOLp (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 May 2005 07:27:46 -0400
-In-Reply-To: <1116476630.5867.2.camel@mulgrave>
+	Thu, 19 May 2005 10:11:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: dino@in.ibm.com, Andrew Morton <akpm@osdl.org>, gregoire.favre@gmail.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Wed, 2005-05-18 at 22:07 -0500, K.R. Foley wrote: 
-> 
->>This also solves my problem that I reported in this thread
->>http://marc.theaimsgroup.com/?l=linux-scsi&m=111422854418964&w=2
-> 
-> 
-> OK, I think the patch below is the extract of this.  Could you see if it
-> works by simply patching vanilla 2.6.12-rc4 with no other SCSI patches
-> (if it does, I'll push it for 2.6.12 final).
-> 
-> James
-<snip>
+I exerienced the following error on a RedHat cluster configuration with Dell hardware (Perc 3/DC controller and PowerVault 220 disk array).
+When the error occurs the cluster manager shutdown the cluster node, but the filesystem is corruped and the other node cannot mount it until a manual fsck.
 
-James,
-
-Below is what I get WHEN IT BOOTS. There are also a couple more logs and
-notes in between.
-
-#########################################################################
-May 19 06:04:22 porky kernel: scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI
-HBA DRIVER, Rev 6.2.36
-May 19 06:04:22 porky kernel:         <Adaptec aic7899 Ultra160 SCSI
-adapter>
-May 19 06:04:22 porky kernel:         aic7899: Ultra160 Wide Channel A,
-SCSI Id=7, 32/253 SCBs
-May 19 06:04:22 porky kernel:
-May 19 06:04:22 porky kernel:   Vendor: QUANTUM   Model:
-ATLAS10K2-TY092L  Rev: DA40
-May 19 06:04:22 porky kernel:   Type:   Direct-Access
-   ANSI SCSI revision: 03
-May 19 06:04:22 porky kernel: scsi0:A:0:0: Tagged Queuing enabled.  Depth 32
-May 19 06:04:22 porky kernel:  target0:0:0: Beginning Domain Validation
-May 19 06:04:22 porky kernel: (scsi0:A:0): 6.600MB/s transfers (16bit)
-May 19 06:04:22 porky kernel: (scsi0:A:0): 80.000MB/s transfers
-(40.000MHz, offset 127, 16bit)
-May 19 06:04:22 porky kernel:  target0:0:0: Ending Domain Validation
-May 19 06:04:22 porky kernel: scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI
-HBA DRIVER, Rev 6.2.36
-May 19 06:04:22 porky kernel:         <Adaptec aic7899 Ultra160 SCSI
-adapter>
-May 19 06:04:22 porky kernel:         aic7899: Ultra160 Wide Channel B,
-SCSI Id=7, 32/253 SCBs
-May 19 06:04:22 porky kernel:
-May 19 06:04:22 porky kernel:   Vendor: SEAGATE   Model: SX118273LC
-   Rev: 6679
-May 19 06:04:22 porky kernel:   Type:   Direct-Access
-   ANSI SCSI revision: 02
-May 19 06:04:22 porky kernel: scsi1:A:0:0: Tagged Queuing enabled.  Depth 32
-May 19 06:04:22 porky kernel:  target1:0:0: Beginning Domain Validation
-May 19 06:04:22 porky kernel: (scsi1:A:0): 6.600MB/s transfers (16bit)
-May 19 06:04:22 porky kernel: (scsi1:A:0:0): parity error detected in
-Data-in phase. SEQADDR(0x1a6) SCSIRATE(0x80)
-May 19 06:04:22 porky kernel: (scsi1:A:0:0): parity error detected in
-Message-in phase. SEQADDR(0x1a6) SCSIRATE(0x80)
-May 19 06:04:22 porky kernel: (scsi1:A:0:0): Unexpected busfree in
-Message-out phase
-May 19 06:04:22 porky kernel: SEQADDR == 0x16b
-May 19 06:04:22 porky kernel:  target1:0:0: Wide Transfers Fail
-May 19 06:04:22 porky kernel: (scsi1:A:0): 3.300MB/s transfers
-May 19 06:04:22 porky kernel:  target1:0:0: Domain Validation skipping
-write tests
-May 19 06:04:22 porky kernel: (scsi1:A:0): 20.000MB/s transfers
-(20.000MHz, offset 15)
-May 19 06:04:22 porky kernel:  target1:0:0: Ending Domain Validation
-May 19 06:04:22 porky kernel: SCSI device sda: 17783239 512-byte hdwr
-sectors (9105 MB)
-May 19 06:04:22 porky kernel: SCSI device sda: drive cache: write back
-May 19 06:04:22 porky kernel: SCSI device sda: 17783239 512-byte hdwr
-sectors (9105 MB)
-May 19 06:04:22 porky kernel: SCSI device sda: drive cache: write back
-May 19 06:04:22 porky kernel:  sda: sda1 sda2 sda3
-May 19 06:04:22 porky kernel: Attached scsi disk sda at scsi0, channel
-0, id 0, lun 0
-May 19 06:04:22 porky kernel: SCSI device sdb: 35566480 512-byte hdwr
-sectors (18210 MB)
-May 19 06:04:22 porky kernel: SCSI device sdb: drive cache: write through
-May 19 06:04:22 porky kernel: SCSI device sdb: 35566480 512-byte hdwr
-sectors (18210 MB)
-May 19 06:04:22 porky kernel: SCSI device sdb: drive cache: write through
-May 19 01:04:03 porky rc.sysinit: -e
-May 19 06:04:22 porky kernel:  sdb: sdb1
-May 19 01:04:04 porky udevsend[1251]: starting udevd daemon
-May 19 06:04:22 porky kernel: Attached scsi disk sdb at scsi1, channel
-0, id 0, lun 0
-May 19 01:04:05 porky scsi.agent[1263]: disk at
-/devices/pci0000:00/0000:00:1e.0/0000:04:05.0/host0/target0:0:0/0:0:0:0
-May 19 06:04:23 porky kernel: Attached scsi generic sg0 at scsi0,
-channel 0, id 0, lun 0,  type 0
-May 19 01:04:05 porky scsi.agent[1288]: disk at
-/devices/pci0000:00/0000:00:1e.0/0000:04:05.1/host1/target1:0:0/1:0:0:0
-May 19 06:04:23 porky kernel: Attached scsi generic sg1 at scsi1,
-channel 0, id 0, lun 0,  type 0
-
-###############################################################################
-
-Even with the patch that you posted last night something still isn't
-quite right. Notice in the output below that the faster drive is setup
-at 80MB/s instead of 160MB/s. It's like going back to the days before
-U160 stuff worked properly :)
-
-###############################################################################
-May 18 21:56:25 porky kernel: scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI
-HBA DRIVER, Rev 6.2.36
-May 18 21:56:25 porky kernel:         <Adaptec aic7899 Ultra160 SCSI
-adapter>
-May 18 21:56:25 porky kernel:         aic7899: Ultra160 Wide Channel A,
-SCSI Id=7, 32/253 SCBs
-May 18 21:56:25 porky kernel:
-May 18 21:56:25 porky kernel:   Vendor: QUANTUM   Model:
-ATLAS10K2-TY092L  Rev: DA40
-May 18 21:56:25 porky kernel:   Type:   Direct-Access
-   ANSI SCSI revision: 03
-May 18 21:56:25 porky kernel: scsi0:A:0:0: Tagged Queuing enabled.  Depth 32
-May 18 21:56:25 porky kernel:  target0:0:0: Beginning Domain Validation
-May 18 21:56:25 porky kernel: WIDTH IS 1
-May 18 21:56:25 porky kernel: (scsi0:A:0): 6.600MB/s transfers (16bit)
-May 18 21:56:25 porky kernel: (scsi0:A:0): 80.000MB/s transfers
-(40.000MHz, offset 127, 16bit)
-May 18 21:56:25 porky kernel:  target0:0:0: Ending Domain Validation
-May 18 21:56:25 porky kernel: scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI
-HBA DRIVER, Rev 6.2.36
-May 18 21:56:25 porky kernel:         <Adaptec aic7899 Ultra160 SCSI
-adapter>
-May 18 21:56:25 porky kernel:         aic7899: Ultra160 Wide Channel B,
-SCSI Id=7, 32/253 SCBs
-May 18 21:56:25 porky kernel:
-May 18 21:56:25 porky kernel:   Vendor: SEAGATE   Model: SX118273LC
-   Rev: 6679
-May 18 21:56:25 porky kernel:   Type:   Direct-Access
-   ANSI SCSI revision: 02
-May 18 21:56:25 porky kernel: scsi1:A:0:0: Tagged Queuing enabled.  Depth 32
-May 18 21:56:25 porky kernel:  target1:0:0: Beginning Domain Validation
-May 18 21:56:25 porky kernel:  target1:0:0: Domain Validation skipping
-write tests
-May 18 21:56:25 porky kernel: (scsi1:A:0): 20.000MB/s transfers
-(20.000MHz, offset 15)
-May 18 21:56:25 porky kernel:  target1:0:0: Ending Domain Validation
-May 18 21:56:25 porky kernel: SCSI device sda: 17783239 512-byte hdwr
-sectors (9105 MB)
-May 18 21:56:25 porky kernel: SCSI device sda: drive cache: write back
-May 18 21:56:25 porky kernel: SCSI device sda: 17783239 512-byte hdwr
-sectors (9105 MB)
-May 18 21:56:25 porky kernel: SCSI device sda: drive cache: write back
-May 18 21:56:25 porky kernel:  sda: sda1 sda2 sda3
-May 18 21:56:25 porky kernel: Attached scsi disk sda at scsi0, channel
-0, id 0, lun 0
-May 18 21:56:25 porky kernel: SCSI device sdb: 35566480 512-byte hdwr
-sectors (18210 MB)
-May 18 21:56:25 porky kernel: SCSI device sdb: drive cache: write through
-May 18 16:56:04 porky rc.sysinit: -e
-May 18 21:56:25 porky kernel: SCSI device sdb: 35566480 512-byte hdwr
-sectors (18210 MB)
-May 18 16:56:06 porky udevsend[1281]: starting udevd daemon
-May 18 21:56:25 porky kernel: SCSI device sdb: drive cache: write through
-May 18 16:56:06 porky scsi.agent[1293]: disk at
-/devices/pci0000:00/0000:00:1e.0/0000:04:05.0/host0/target0:0:0/0:0:0:0
-May 18 21:56:25 porky kernel:  sdb: sdb1
-May 18 16:56:06 porky scsi.agent[1318]: disk at
-/devices/pci0000:00/0000:00:1e.0/0000:04:05.1/host1/target1:0:0/1:0:0:0
-May 18 21:56:25 porky kernel: Attached scsi disk sdb at scsi1, channel
-0, id 0, lun 0
-May 18 16:56:06 porky udevsend[1334]: starting udevd daemon
-May 18 21:56:25 porky kernel: Attached scsi generic sg0 at scsi0,
-channel 0, id 0, lun 0,  type 0
-May 18 16:56:11 porky start_udev: Starting udev:  succeeded
-May 18 21:56:25 porky kernel: Attached scsi generic sg1 at scsi1,
-channel 0, id 0, lun 0,  type 0
-
-#################################################################################
-
-And then finally the output this morning of booting 2.6.12-rc2 (with RT
-patches applied, which is irrelevant to this conversation). This one
-does properly setup all of the drives.
-
-#################################################################################
-May 19 05:52:00 porky kernel: scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI
-HBA DRIVER, Rev 6.2.36
-May 19 05:52:00 porky kernel:         <Adaptec aic7899 Ultra160 SCSI
-adapter>
-May 19 05:52:00 porky kernel:         aic7899: Ultra160 Wide Channel A,
-SCSI Id=7, 32/253 SCBs
-May 19 05:52:00 porky kernel:
-May 19 05:52:00 porky kernel: (scsi0:A:0): 160.000MB/s transfers
-(80.000MHz DT, offset 127, 16bit)
-May 19 05:52:00 porky kernel:   Vendor: QUANTUM   Model:
-ATLAS10K2-TY092L  Rev: DA40
-May 19 05:52:00 porky kernel:   Type:   Direct-Access
-   ANSI SCSI revision: 03
-May 19 05:52:00 porky kernel: scsi0:A:0:0: Tagged Queuing enabled.  Depth 32
-May 19 05:52:00 porky kernel: scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI
-HBA DRIVER, Rev 6.2.36
-May 19 05:52:00 porky kernel:         <Adaptec aic7899 Ultra160 SCSI
-adapter>
-May 19 05:52:00 porky kernel:         aic7899: Ultra160 Wide Channel B,
-SCSI Id=7, 32/253 SCBs
-May 19 05:52:00 porky kernel:
-May 19 05:52:00 porky kernel: (scsi1:A:0): 20.000MB/s transfers
-(20.000MHz, offset 15)
-May 19 05:52:00 porky kernel:   Vendor: SEAGATE   Model: SX118273LC
-   Rev: 6679
-May 19 05:52:00 porky netfs: Mounting other filesystems:  succeeded
-May 19 05:52:00 porky kernel:   Type:   Direct-Access
-   ANSI SCSI revision: 02
-May 19 05:52:00 porky kernel: scsi1:A:0:0: Tagged Queuing enabled.  Depth 32
-May 19 05:52:00 porky kernel: SCSI device sda: 17783239 512-byte hdwr
-sectors (9105 MB)
-May 19 05:52:00 porky kernel: SCSI device sda: drive cache: write back
-May 19 05:52:00 porky kernel: SCSI device sda: 17783239 512-byte hdwr
-sectors (9105 MB)
-May 19 05:52:00 porky kernel: SCSI device sda: drive cache: write back
-May 19 05:52:00 porky kernel:  sda: sda1 sda2 sda3
-May 19 05:52:00 porky kernel: Attached scsi disk sda at scsi0, channel
-0, id 0, lun 0
+Any idea?
 
 
--- 
-   kr
+SCSI and system configuration
+--------------------------------
+
+Redhat AS 2.1 + Cluster Manager
+DELL PowerEdge 2650 with PERC 3/DC
+DELL PowerVault 220s - cluster configuration
+
+
+# uname -a
+Linux myHost 2.4.9-e.40smp #1 SMP Thu Apr 8 16:53:29 EDT 2004 i686 unknown
+
+# cat /etc/modules.conf
+options scsi_mod max_scsi_luns=255 
+alias scsi_hostadapter aacraid
+alias scsi_hostadapter1 megaraid_2009
+....
+
+# cat /proc/scsi/scsi 
+Attached devices: 
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+  Vendor: DELL     Model: PERCRAID Mirror  Rev: V1.0
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+Host: scsi1 Channel: 00 Id: 00 Lun: 00
+  Vendor: MegaRAID Model: LD 0 RAID1   34G Rev: 1.92
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+Host: scsi1 Channel: 00 Id: 01 Lun: 00
+  Vendor: MegaRAID Model: LD 1 RAID5   69G Rev: 1.92
+  Type:   Direct-Access                    ANSI SCSI revision: 02
+Host: scsi1 Channel: 04 Id: 07 Lun: 00
+  Vendor: DELL     Model: PERC 3/DC        Rev: 1.92
+  Type:   Processor                        ANSI SCSI revision: 02
+Host: scsi1 Channel: 04 Id: 15 Lun: 00
+  Vendor: DELL     Model: PV22XS           Rev: E.14
+  Type:   Processor                        ANSI SCSI revision: 03
+
+# cat /proc/scsi/megaraid/1 
+LSI Logic MegaRAID 1.92 254 commands 16 targs 5 chans 7 luns
+
+# cat /proc/megaraid/hba1/config 
+v2.00.9 (Release Date: Thu Sep  4 17:49:42 EDT 2003)
+PERC 3/DC
+Controller Type: 438/466/467/471/493/518/520/531/532
+Controller Supports 40 Logical Drives
+Controller capable of 64-bit memory addressing
+Controller using 64-bit memory addressing
+Base = f9030000, Irq = 16, Logical Drives = 2, Channels = 2
+Version =1.92:3.31, DRAM = 128Mb
+Controller Queue Depth = 254, Driver Queue Depth = 126
+support_ext_cdb    = 1
+support_random_del = 1
+boot_ldrv_enabled  = 1
+boot_ldrv          = 0
+boot_pdrv_enabled  = 0
+boot_pdrv_ch       = 0
+boot_pdrv_tgt      = 0
+quiescent          = 0
+has_cluster        = 1
+
+Module Parameters:
+max_cmd_per_lun    = 63
+max_sectors_per_io = 128
+
+# cat /proc/megaraid/hba1/diskdrives-ch0 
+Channel: 0 Id: 0 State: Online.
+  Vendor: FUJITSU   Model: MAP3367NC         Rev: 5605
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+Channel: 0 Id: 1 State: Online.
+  Vendor: FUJITSU   Model: MAP3367NC         Rev: 5605
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+Channel: 0 Id: 2 State: Hot spare.
+  Vendor: FUJITSU   Model: MAP3367NC         Rev: 5605
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+Channel: 0 Id: 3 State: Online.
+  Vendor: FUJITSU   Model: MAP3367NC         Rev: 5605
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+Channel: 0 Id: 4 State: Online.
+  Vendor: FUJITSU   Model: MAP3367NC         Rev: 5605
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+Channel: 0 Id: 5 State: Online.
+  Vendor: FUJITSU   Model: MAP3367NC         Rev: 5605
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+
+# cat /proc/megaraid/hba1/raiddrives-0-9
+Logical drive: 0:, state: optimal
+Span depth:  1, RAID level:  1, Stripe size: 64, Row size:  2
+Read Policy: No read ahead, Write Policy: Write thru, Cache Policy: Direct IO
+
+Logical drive: 1:, state: optimal
+Span depth:  1, RAID level:  5, Stripe size: 64, Row size:  3
+Read Policy: No read ahead, Write Policy: Write thru, Cache Policy: Direct IO
+
+------------------------------------
+Error report
+------------------------------------
+
+May 13 05:31:27 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:27 clu2a kernel:  I/O error: dev 08:21, sector 2290456
+May 13 05:31:27 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:27 clu2a kernel:  I/O error: dev 08:21, sector 2290464
+May 13 05:31:27 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:27 clu2a kernel:  I/O error: dev 08:21, sector 11488
+May 13 05:31:27 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:27 clu2a kernel:  I/O error: dev 08:21, sector 11496
+May 13 05:31:27 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:27 clu2a kernel:  I/O error: dev 08:21, sector 11504
+May 13 05:31:27 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:27 clu2a kernel:  I/O error: dev 08:21, sector 528528
+May 13 05:31:27 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:27 clu2a kernel:  I/O error: dev 08:21, sector 2283712
+May 13 05:31:27 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:27 clu2a kernel:  I/O error: dev 08:21, sector 2283720
+May 13 05:31:28 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:28 clu2a kernel:  I/O error: dev 08:21, sector 2283728
+May 13 05:31:28 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:28 clu2a kernel:  I/O error: dev 08:21, sector 2283736
+May 13 05:31:28 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:28 clu2a kernel:  I/O error: dev 08:21, sector 2281160
+May 13 05:31:28 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:28 clu2a kernel:  I/O error: dev 08:21, sector 2281168
+May 13 05:31:28 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:28 clu2a kernel:  I/O error: dev 08:21, sector 2281176
+May 13 05:31:28 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:28 clu2a kernel:  I/O error: dev 08:21, sector 2281184
+May 13 05:31:28 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:28 clu2a kernel:  I/O error: dev 08:22, sector 1052480
+May 13 05:31:28 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:28 clu2a kernel:  I/O error: dev 08:22, sector 2363240
+May 13 05:31:28 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:29 clu2a kernel:  I/O error: dev 08:22, sector 266776
+May 13 05:31:29 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:29 clu2a kernel:  I/O error: dev 08:22, sector 266776
+May 13 05:31:29 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:29 clu2a kernel:  I/O error: dev 08:22, sector 3673920
+May 13 05:31:29 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:29 clu2a kernel:  I/O error: dev 08:22, sector 3670072
+May 13 05:31:29 clu2a kernel: EXT3-fs error (device sd(8,34)): ext3_get_inode_loc: unable to read inode block - inode=216936, block=458759
+May 13 05:31:29 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:29 clu2a kernel:  I/O error: dev 08:22, sector 0
+May 13 05:31:29 clu2a kernel: EXT3-fs error (device sd(8,34)) in ext3_reserve_inode_write: IO failure
+May 13 05:31:29 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:29 clu2a kernel:  I/O error: dev 08:22, sector 0
+May 13 05:31:29 clu2a kernel: EXT3-fs error (device sd(8,34)) in ext3_new_inode: IO failure
+May 13 05:31:29 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:29 clu2a kernel:  I/O error: dev 08:22, sector 0
+May 13 05:31:29 clu2a kernel: SCSI disk error : host 1 channel 0 id 0 lun 0 return code = 40005
+May 13 05:31:29 clu2a kernel:  I/O error: dev 08:11, sector 8
+May 13 05:31:29 clu2a kernel: SCSI disk error : host 1 channel 0 id 0 lun 0 return code = 40005
+May 13 05:31:29 clu2a kernel:  I/O error: dev 08:11, sector 8
+May 13 05:31:29 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:29 clu2a kernel:  I/O error: dev 08:21, sector 3670080
+May 13 05:31:29 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:30 clu2a kernel:  I/O error: dev 08:22, sector 2359352
+May 13 05:31:30 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:30 clu2a kernel:  I/O error: dev 08:21, sector 3670064
+May 13 05:31:30 clu2a kernel: SCSI disk error : host 1 channel 0 id 1 lun 0 return code = 40005
+May 13 05:31:30 clu2a kernel:  I/O error: dev 08:21, sector 3674152
+[...]
+
