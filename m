@@ -1,67 +1,741 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Dinakar Guniguntala <dino@in.ibm.com>
 Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
-Date: Wed, 18 May 2005 23:23:50 -0500
-Message-ID: <1116476630.5867.2.camel@mulgrave>
-References: <20050516085832.GA9558@gmail.com>
-	 <20050517071307.GA4794@in.ibm.com> <20050517002908.005a9ba7.akpm@osdl.org>
-	 <1116340465.4989.2.camel@mulgrave>  <20050517170824.GA3931@in.ibm.com>
-	 <1116354894.4989.42.camel@mulgrave>  <428C030E.8030102@cybsft.com>
+Date: Thu, 19 May 2005 15:21:43 +0530
+Message-ID: <20050519095143.GA3972@in.ibm.com>
+References: <20050516085832.GA9558@gmail.com> <20050517071307.GA4794@in.ibm.com> <20050517002908.005a9ba7.akpm@osdl.org> <1116340465.4989.2.camel@mulgrave> <20050517170824.GA3931@in.ibm.com> <1116354894.4989.42.camel@mulgrave> <428C030E.8030102@cybsft.com> <1116476630.5867.2.camel@mulgrave>
+Reply-To: dino@in.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:61889 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262472AbVESEYa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 May 2005 00:24:30 -0400
-In-Reply-To: <428C030E.8030102@cybsft.com>
+Received: from e33.co.us.ibm.com ([32.97.110.131]:33179 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S262475AbVESJmO
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 May 2005 05:42:14 -0400
+Content-Disposition: inline
+In-Reply-To: <1116476630.5867.2.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "K.R. Foley" <kr@cybsft.com>
-Cc: dino@in.ibm.com, Andrew Morton <akpm@osdl.org>, gregoire.favre@gmail.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "K.R. Foley" <kr@cybsft.com>, Andrew Morton <akpm@osdl.org>, gregoire.favre@gmail.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 2005-05-18 at 22:07 -0500, K.R. Foley wrote: 
-> This also solves my problem that I reported in this thread
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=111422854418964&w=2
+On Wed, May 18, 2005 at 11:23:50PM -0500, James Bottomley wrote:
+> 
+> OK, I think the patch below is the extract of this.  Could you see if it
+> works by simply patching vanilla 2.6.12-rc4 with no other SCSI patches
+> (if it does, I'll push it for 2.6.12 final).
+> 
 
-OK, I think the patch below is the extract of this.  Could you see if it
-works by simply patching vanilla 2.6.12-rc4 with no other SCSI patches
-(if it does, I'll push it for 2.6.12 final).
+This doesn't seem to fix the problem :(
+I tried both 2.6.12-rc4+patch and 2.6.4-rc4-mm1+patch
 
-James
+This is what I get
 
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -2300,6 +2300,30 @@ ahc_linux_alloc_target(struct ahc_softc 
- 	targ->target = target;
- 	targ->ahc = ahc;
- 	ahc->platform_data->targets[target_offset] = targ;
-+
-+	/* FIXME: This code is just for a bug workaround in 2.6.12
-+	 * The correct fix will be in 2.6.13 */
-+	{
-+		struct ahc_devinfo devinfo;
-+		struct ahc_initiator_tinfo *tinfo;
-+		struct ahc_tmode_tstate *tstate;
-+		char my_channel = channel + 'A';
-+		unsigned int our_id = ahc->our_id;
-+		
-+		if (channel)
-+			our_id = ahc->our_id_b;
-+
-+		tinfo = ahc_fetch_transinfo(ahc, my_channel, ahc->our_id,
-+					    targ->target, &tstate);
-+		ahc_compile_devinfo(&devinfo, our_id, targ->target,
-+				    CAM_LUN_WILDCARD, my_channel,
-+				    ROLE_INITIATOR);
-+		ahc_set_syncrate(ahc, &devinfo, NULL, 0, 0, 0,
-+				 AHC_TRANS_GOAL, /*paused*/FALSE);
-+		ahc_set_width(ahc, &devinfo, MSG_EXT_WDTR_BUS_8_BIT,
-+			      AHC_TRANS_GOAL, /*paused*/FALSE);
-+	}
-+
- 	return (targ);
- }
- 
+===========================================================================
 
+scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+        <Adaptec aic7896/97 Ultra2 SCSI adapter>
+        aic7896/97: Ultra2 Wide Channel B, SCSI Id=7, 32/253 SCBs
 
+  Vendor: IBM-PSG   Model: ST39103LC     !#  Rev: B227
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+scsi0:A:0:0: Tagged Queuing enabled.  Depth 32
+ target0:0:0: Beginning Domain Validation
+(scsi0:A:0): 6.600MB/s transfers (16bit)
+ target0:0:0: Domain Validation skipping write tests
+(scsi0:A:0): 80.000MB/s transfers (40.000MHz, offset 15, 16bit)
+ target0:0:0: Ending Domain Validation
+  Vendor: IBM-PSG   Model: ST39103LC     !#  Rev: B227
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+scsi0:A:1:0: Tagged Queuing enabled.  Depth 32
+ target0:0:1: Beginning Domain Validation
+(scsi0:A:1): 6.600MB/s transfers (16bit)
+ target0:0:1: Domain Validation skipping write tests
+(scsi0:A:1): 80.000MB/s transfers (40.000MHz, offset 15, 16bit)
+ target0:0:1: Ending Domain Validation
+(scsi0:A:15:0): refuses WIDE negotiation.  Using 8bit transfers
+scsi0:0:15:0: Attempting to queue an ABORT message
+CDB: 0x12 0x0 0x0 0x0 0x36 0x0
+scsi0: At time of recovery, card was not paused
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State in Data-in phase, at SEQADDR 0x1a1
+Card was paused
+ACCUM = 0x40, SINDEX = 0xa, DINDEX = 0xe4, ARG_2 = 0x0
+HCNT = 0x36 SCBPTR = 0x0
+SCSISIGI[0x46]:(REQI|BSYI|IOI) ERROR[0x0] SCSIBUSL[0x3]
+LASTPHASE[0x40]:(IOI) SCSISEQ[0x12]:(ENAUTOATNP|ENRSELI)
+SBLKCTL[0xa]:(SELWIDE|SELBUSB) SCSIRATE[0x0] SEQCTL[0x10]:(FASTMODE)
+SEQ_FLAGS[0x20]:(DPHASE) SSTAT0[0x0] SSTAT1[0x2]:(PHASECHG)
+SSTAT2[0x40]:(SHVALID) SSTAT3[0x0] SIMODE0[0x8]:(ENSWRAP)
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO)
+SXFRCTL0[0x80]:(DFON) DFCNTRL[0x28]:(HDMAEN|SCSIEN)
+DFSTATUS[0x80]:(PRELOAD_AVAIL)
+STACK: 0x83 0x0 0x160 0x176
+SCB count = 4
+Kernel NEXTQSCB = 3
+Card NEXTQSCB = 3
+QINFIFO entries:
+Waiting Queue entries:
+Disconnected Queue entries:
+QOUTFIFO entries:
+Sequencer Free SCB List: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
+Sequencer SCB Info:
+  0 SCB_CONTROL[0x40]:(DISCENB) SCB_SCSIID[0xf7]:(TWIN_CHNLB|TWIN_TID)
+SCB_LUN[0x0] SCB_TAG[0x2]
+  1 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  2 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  3 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  4 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  5 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  6 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  7 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  8 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  9 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 10 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 11 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 12 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 13 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 14 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 15 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 16 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 17 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 18 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 19 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 20 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 21 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 22 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 23 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 24 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 25 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 26 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 27 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 28 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 29 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 30 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 31 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+Pending list:
+  2 SCB_CONTROL[0x40]:(DISCENB) SCB_SCSIID[0xf7]:(TWIN_CHNLB|TWIN_TID)
+SCB_LUN[0x0]
+Kernel Free SCB list: 1 0
+Untagged Q(15): 2
+DevQ(0:0:0): 0 waiting
+DevQ(0:1:0): 0 waiting
+DevQ(0:15:0): 0 waiting
+
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0:0:15:0: Device is active, asserting ATN
+Recovery code sleeping
+Recovery code awake
+Timer Expired
+aic7xxx_abort returns 0x2003
+scsi0:0:15:0: Attempting to queue a TARGET RESET message
+CDB: 0x12 0x0 0x0 0x0 0x36 0x0
+aic7xxx_dev_reset returns 0x2003
+Recovery SCB completes
+(scsi0:A:15:0): refuses WIDE negotiation.  Using 8bit transfers
+(scsi0:A:15:0): refuses WIDE negotiation.  Using 8bit transfers
+scsi0:0:15:0: Attempting to queue an ABORT message
+CDB: 0x12 0x0 0x0 0x0 0x36 0x0
+scsi0: At time of recovery, card was not paused
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State in Data-in phase, at SEQADDR 0x85
+Card was paused
+ACCUM = 0x40, SINDEX = 0xa, DINDEX = 0xe4, ARG_2 = 0x0
+HCNT = 0x36 SCBPTR = 0x0
+SCSISIGI[0x46]:(REQI|BSYI|IOI) ERROR[0x0] SCSIBUSL[0x3]
+LASTPHASE[0x40]:(IOI) SCSISEQ[0x12]:(ENAUTOATNP|ENRSELI)
+SBLKCTL[0xa]:(SELWIDE|SELBUSB) SCSIRATE[0x0] SEQCTL[0x10]:(FASTMODE)
+SEQ_FLAGS[0x20]:(DPHASE) SSTAT0[0x0] SSTAT1[0x2]:(PHASECHG)
+SSTAT2[0x40]:(SHVALID) SSTAT3[0x0] SIMODE0[0x8]:(ENSWRAP)
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO)
+SXFRCTL0[0x80]:(DFON) DFCNTRL[0x28]:(HDMAEN|SCSIEN)
+DFSTATUS[0x80]:(PRELOAD_AVAIL)
+STACK: 0x83 0x160 0x176 0x83
+SCB count = 4
+Kernel NEXTQSCB = 2
+Card NEXTQSCB = 2
+QINFIFO entries:
+Waiting Queue entries:
+Disconnected Queue entries:
+QOUTFIFO entries:
+Sequencer Free SCB List: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
+Sequencer SCB Info:
+  0 SCB_CONTROL[0x40]:(DISCENB) SCB_SCSIID[0xf7]:(TWIN_CHNLB|TWIN_TID)
+SCB_LUN[0x0] SCB_TAG[0x3]
+  1 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  2 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  3 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  4 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  5 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  6 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  7 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  8 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  9 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 10 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 11 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 12 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 13 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 14 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 15 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 16 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 17 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 18 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 19 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 20 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 21 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 22 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 23 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 24 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 25 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 26 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 27 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 28 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 29 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 30 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 31 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+Pending list:
+  3 SCB_CONTROL[0x40]:(DISCENB) SCB_SCSIID[0xf7]:(TWIN_CHNLB|TWIN_TID)
+SCB_LUN[0x0]
+Kernel Free SCB list: 1 0
+Untagged Q(15): 3
+DevQ(0:0:0): 0 waiting
+DevQ(0:1:0): 0 waiting
+DevQ(0:15:0): 0 waiting
+
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0:0:15:0: Device is active, asserting ATN
+Recovery code sleeping
+Recovery code awake
+Timer Expired
+aic7xxx_abort returns 0x2003
+scsi0:0:15:0: Attempting to queue a TARGET RESET message
+CDB: 0x12 0x0 0x0 0x0 0x36 0x0
+aic7xxx_dev_reset returns 0x2003
+Recovery SCB completes
+(scsi0:A:15:0): refuses WIDE negotiation.  Using 8bit transfers
+(scsi0:A:15:0): refuses WIDE negotiation.  Using 8bit transfers
+scsi0:0:15:0: Attempting to queue an ABORT message
+CDB: 0x12 0x0 0x0 0x0 0x36 0x0
+scsi0: At time of recovery, card was not paused
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State in Data-in phase, at SEQADDR 0x54
+Card was paused
+ACCUM = 0x40, SINDEX = 0xa, DINDEX = 0xe4, ARG_2 = 0x0
+HCNT = 0x36 SCBPTR = 0x0
+SCSISIGI[0x46]:(REQI|BSYI|IOI) ERROR[0x0] SCSIBUSL[0x3]
+LASTPHASE[0x40]:(IOI) SCSISEQ[0x12]:(ENAUTOATNP|ENRSELI)
+SBLKCTL[0xa]:(SELWIDE|SELBUSB) SCSIRATE[0x0] SEQCTL[0x10]:(FASTMODE)
+SEQ_FLAGS[0x20]:(DPHASE) SSTAT0[0x0] SSTAT1[0x2]:(PHASECHG)
+SSTAT2[0x40]:(SHVALID) SSTAT3[0x0] SIMODE0[0x8]:(ENSWRAP)
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO)
+SXFRCTL0[0x80]:(DFON) DFCNTRL[0x28]:(HDMAEN|SCSIEN)
+DFSTATUS[0x80]:(PRELOAD_AVAIL)
+STACK: 0x83 0x83 0x160 0x176
+SCB count = 4
+Kernel NEXTQSCB = 3
+Card NEXTQSCB = 3
+QINFIFO entries:
+Waiting Queue entries:
+Disconnected Queue entries:
+QOUTFIFO entries:
+Sequencer Free SCB List: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
+Sequencer SCB Info:
+  0 SCB_CONTROL[0x40]:(DISCENB) SCB_SCSIID[0xf7]:(TWIN_CHNLB|TWIN_TID)
+SCB_LUN[0x0] SCB_TAG[0x2]
+  1 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  2 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  3 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  4 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  5 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  6 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  7 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  8 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  9 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 10 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 11 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 12 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 13 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 14 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 15 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 16 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 17 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 18 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 19 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 20 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 21 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 22 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 23 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 24 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 25 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 26 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 27 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 28 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 29 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 30 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 31 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+Pending list:
+  2 SCB_CONTROL[0x40]:(DISCENB) SCB_SCSIID[0xf7]:(TWIN_CHNLB|TWIN_TID)
+SCB_LUN[0x0]
+Kernel Free SCB list: 1 0
+Untagged Q(15): 2
+DevQ(0:0:0): 0 waiting
+DevQ(0:1:0): 0 waiting
+DevQ(0:15:0): 0 waiting
+
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0:0:15:0: Device is active, asserting ATN
+Recovery code sleeping
+Recovery code awake
+Timer Expired
+aic7xxx_abort returns 0x2003
+scsi0:0:15:0: Attempting to queue a TARGET RESET message
+CDB: 0x12 0x0 0x0 0x0 0x36 0x0
+aic7xxx_dev_reset returns 0x2003
+Recovery SCB completes
+(scsi0:A:15:0): refuses WIDE negotiation.  Using 8bit transfers
+scsi scan: 54 byte inquiry failed.  Consider BLIST_INQUIRY_36 for this device
+(scsi0:A:15:0): refuses WIDE negotiation.  Using 8bit transfers
+scsi0:0:15:0: Attempting to queue an ABORT message
+CDB: 0x12 0x0 0x0 0x0 0x24 0x0
+scsi0: At time of recovery, card was not paused
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State in Data-in phase, at SEQADDR 0x84
+Card was paused
+ACCUM = 0x40, SINDEX = 0xa, DINDEX = 0xe4, ARG_2 = 0x0
+HCNT = 0x24 SCBPTR = 0x0
+SCSISIGI[0x46]:(REQI|BSYI|IOI) ERROR[0x0] SCSIBUSL[0x3]
+LASTPHASE[0x40]:(IOI) SCSISEQ[0x12]:(ENAUTOATNP|ENRSELI)
+SBLKCTL[0xa]:(SELWIDE|SELBUSB) SCSIRATE[0x0] SEQCTL[0x10]:(FASTMODE)
+SEQ_FLAGS[0x20]:(DPHASE) SSTAT0[0x0] SSTAT1[0x2]:(PHASECHG)
+SSTAT2[0x40]:(SHVALID) SSTAT3[0x0] SIMODE0[0x8]:(ENSWRAP)
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO)
+SXFRCTL0[0x80]:(DFON) DFCNTRL[0x28]:(HDMAEN|SCSIEN)
+DFSTATUS[0x80]:(PRELOAD_AVAIL)
+STACK: 0x83 0x160 0x176 0x83
+SCB count = 4
+Kernel NEXTQSCB = 2
+Card NEXTQSCB = 2
+QINFIFO entries:
+Waiting Queue entries:
+Disconnected Queue entries:
+QOUTFIFO entries:
+Sequencer Free SCB List: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
+Sequencer SCB Info:
+  0 SCB_CONTROL[0x40]:(DISCENB) SCB_SCSIID[0xf7]:(TWIN_CHNLB|TWIN_TID)
+SCB_LUN[0x0] SCB_TAG[0x3]
+  1 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  2 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  3 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  4 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  5 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  6 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  7 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  8 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  9 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 10 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 11 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 12 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 13 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 14 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 15 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 16 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 17 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 18 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 19 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 20 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 21 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 22 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 23 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 24 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 25 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 26 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 27 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 28 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 29 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 30 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 31 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+Pending list:
+  3 SCB_CONTROL[0x40]:(DISCENB) SCB_SCSIID[0xf7]:(TWIN_CHNLB|TWIN_TID)
+SCB_LUN[0x0]
+Kernel Free SCB list: 1 0
+Untagged Q(15): 3
+DevQ(0:0:0): 0 waiting
+DevQ(0:1:0): 0 waiting
+DevQ(0:15:0): 0 waiting
+
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0:0:15:0: Device is active, asserting ATN
+Recovery code sleeping
+Recovery code awake
+Timer Expired
+aic7xxx_abort returns 0x2003
+scsi0:0:15:0: Attempting to queue a TARGET RESET message
+CDB: 0x12 0x0 0x0 0x0 0x24 0x0
+aic7xxx_dev_reset returns 0x2003
+Recovery SCB completes
+(scsi0:A:15:0): refuses WIDE negotiation.  Using 8bit transfers
+(scsi0:A:15:0): refuses WIDE negotiation.  Using 8bit transfers
+scsi0:0:15:0: Attempting to queue an ABORT message
+CDB: 0x12 0x0 0x0 0x0 0x24 0x0
+scsi0: At time of recovery, card was not paused
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State in Data-in phase, at SEQADDR 0x54
+Card was paused
+ACCUM = 0x40, SINDEX = 0xa, DINDEX = 0xe4, ARG_2 = 0x0
+HCNT = 0x24 SCBPTR = 0x0
+SCSISIGI[0x46]:(REQI|BSYI|IOI) ERROR[0x0] SCSIBUSL[0x3]
+LASTPHASE[0x40]:(IOI) SCSISEQ[0x12]:(ENAUTOATNP|ENRSELI)
+SBLKCTL[0xa]:(SELWIDE|SELBUSB) SCSIRATE[0x0] SEQCTL[0x10]:(FASTMODE)
+SEQ_FLAGS[0x20]:(DPHASE) SSTAT0[0x0] SSTAT1[0x2]:(PHASECHG)
+SSTAT2[0x40]:(SHVALID) SSTAT3[0x0] SIMODE0[0x8]:(ENSWRAP)
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO)
+SXFRCTL0[0x80]:(DFON) DFCNTRL[0x28]:(HDMAEN|SCSIEN)
+DFSTATUS[0x80]:(PRELOAD_AVAIL)
+STACK: 0x83 0x83 0x160 0x176
+SCB count = 4
+Kernel NEXTQSCB = 3
+Card NEXTQSCB = 3
+QINFIFO entries:
+Waiting Queue entries:
+Disconnected Queue entries:
+QOUTFIFO entries:
+Sequencer Free SCB List: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
+Sequencer SCB Info:
+  0 SCB_CONTROL[0x40]:(DISCENB) SCB_SCSIID[0xf7]:(TWIN_CHNLB|TWIN_TID)
+SCB_LUN[0x0] SCB_TAG[0x2]
+  1 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  2 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  3 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  4 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  5 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  6 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  7 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  8 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  9 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 10 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 11 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 12 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 13 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 14 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 15 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 16 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 17 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 18 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 19 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 20 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 21 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 22 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 23 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 24 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 25 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 26 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 27 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 28 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 29 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 30 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 31 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+Pending list:
+  2 SCB_CONTROL[0x40]:(DISCENB) SCB_SCSIID[0xf7]:(TWIN_CHNLB|TWIN_TID)
+SCB_LUN[0x0]
+Kernel Free SCB list: 1 0
+Untagged Q(15): 2
+DevQ(0:0:0): 0 waiting
+DevQ(0:1:0): 0 waiting
+DevQ(0:15:0): 0 waiting
+
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0:0:15:0: Device is active, asserting ATN
+Recovery code sleeping
+Recovery code awake
+Timer Expired
+aic7xxx_abort returns 0x2003
+scsi0:0:15:0: Attempting to queue a TARGET RESET message
+CDB: 0x12 0x0 0x0 0x0 0x24 0x0
+aic7xxx_dev_reset returns 0x2003
+Recovery SCB completes
+(scsi0:A:15:0): refuses WIDE negotiation.  Using 8bit transfers
+(scsi0:A:15:0): refuses WIDE negotiation.  Using 8bit transfers
+scsi0:0:15:0: Attempting to queue an ABORT message
+CDB: 0x12 0x0 0x0 0x0 0x24 0x0
+scsi0: At time of recovery, card was not paused
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State in Data-in phase, at SEQADDR 0x54
+Card was paused
+ACCUM = 0x40, SINDEX = 0xa, DINDEX = 0xe4, ARG_2 = 0x0
+HCNT = 0x24 SCBPTR = 0x0
+SCSISIGI[0x46]:(REQI|BSYI|IOI) ERROR[0x0] SCSIBUSL[0x3]
+LASTPHASE[0x40]:(IOI) SCSISEQ[0x12]:(ENAUTOATNP|ENRSELI)
+SBLKCTL[0xa]:(SELWIDE|SELBUSB) SCSIRATE[0x0] SEQCTL[0x10]:(FASTMODE)
+SEQ_FLAGS[0x20]:(DPHASE) SSTAT0[0x0] SSTAT1[0x2]:(PHASECHG)
+SSTAT2[0x40]:(SHVALID) SSTAT3[0x0] SIMODE0[0x8]:(ENSWRAP)
+SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO)
+SXFRCTL0[0x80]:(DFON) DFCNTRL[0x28]:(HDMAEN|SCSIEN)
+DFSTATUS[0x80]:(PRELOAD_AVAIL)
+STACK: 0x83 0x83 0x160 0x176
+SCB count = 4
+Kernel NEXTQSCB = 2
+Card NEXTQSCB = 2
+QINFIFO entries:
+Waiting Queue entries:
+Disconnected Queue entries:
+QOUTFIFO entries:
+Sequencer Free SCB List: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31
+Sequencer SCB Info:
+  0 SCB_CONTROL[0x40]:(DISCENB) SCB_SCSIID[0xf7]:(TWIN_CHNLB|TWIN_TID)
+SCB_LUN[0x0] SCB_TAG[0x3]
+  1 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  2 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  3 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  4 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  5 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  6 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  7 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  8 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+  9 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 10 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 11 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 12 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 13 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 14 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 15 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 16 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 17 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 18 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 19 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 20 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 21 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 22 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 23 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 24 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 25 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 26 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 27 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 28 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 29 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 30 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 31 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+Pending list:
+  3 SCB_CONTROL[0x40]:(DISCENB) SCB_SCSIID[0xf7]:(TWIN_CHNLB|TWIN_TID)
+SCB_LUN[0x0]
+Kernel Free SCB list: 1 0
+Untagged Q(15): 3
+DevQ(0:0:0): 0 waiting
+DevQ(0:1:0): 0 waiting
+DevQ(0:15:0): 0 waiting
+
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+scsi0:0:15:0: Device is active, asserting ATN
+Recovery code sleeping
+Recovery code awake
+Timer Expired
+aic7xxx_abort returns 0x2003
+scsi0:0:15:0: Attempting to queue a TARGET RESET message
+CDB: 0x12 0x0 0x0 0x0 0x24 0x0
+aic7xxx_dev_reset returns 0x2003
+Recovery SCB completes
+(scsi0:A:15:0): refuses WIDE negotiation.  Using 8bit transfers
+scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+        <Adaptec aic7896/97 Ultra2 SCSI adapter>
+        aic7896/97: Ultra2 Wide Channel A, SCSI Id=7, 32/253 SCBs
+
+SCSI device sda: 17774160 512-byte hdwr sectors (9100 MB)
+SCSI device sda: drive cache: write through
+SCSI device sda: 17774160 512-byte hdwr sectors (9100 MB)
+SCSI device sda: drive cache: write through
+ sda: sda1 sda2 sda3
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+SCSI device sdb: 17774160 512-byte hdwr sectors (9100 MB)
+SCSI device sdb: drive cache: write through
+SCSI device sdb: 17774160 512-byte hdwr sectors (9100 MB)
+SCSI device sdb: drive cache: write through
+ sdb: sdb1
+Attached scsi disk sdb at scsi0, channel 0, id 1, lun 0
+Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
+Attached scsi generic sg1 at scsi0, channel 0, id 1, lun 0,  type 0
+
+===========================================================================
