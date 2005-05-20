@@ -1,116 +1,74 @@
-From: "K.R. Foley" <kr@cybsft.com>
-Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
-Date: Thu, 19 May 2005 22:06:09 -0500
-Message-ID: <428D5421.1080406@cybsft.com>
-References: <20050516085832.GA9558@gmail.com>	 <20050517071307.GA4794@in.ibm.com> <20050517002908.005a9ba7.akpm@osdl.org>	 <1116340465.4989.2.camel@mulgrave> <20050517170824.GA3931@in.ibm.com>	 <1116354894.4989.42.camel@mulgrave> <428C030E.8030102@cybsft.com>	 <1116476630.5867.2.camel@mulgrave>  <20050519095143.GA3972@in.ibm.com>	 <1116546970.5037.137.camel@mulgrave>  <428D37CF.5070903@cybsft.com>	 <1116551853.5037.145.camel@mulgrave>  <428D3E1C.2020802@cybsft.com>	 <1116553229.5037.155.camel@mulgrave>  <428D4371.6020809@cybsft.com> <1116556213.5037.161.camel@mulgrave>
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: PATCH [2/5]  qla2xxx: add remote port codes...
+Date: Thu, 19 May 2005 23:17:37 -0700
+Message-ID: <20050520061736.GA11551@sgi.com>
+References: <20050413191548.GI9703@plap.qlogic.org> <20050413191824.GK9703@plap.qlogic.org> <20050413214023.GA18161@infradead.org> <20050419072751.GD5999@plap.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay00.pair.com ([209.68.1.20]:3855 "HELO relay.pair.com")
-	by vger.kernel.org with SMTP id S261163AbVETDGK (ORCPT
+Received: from omx3-ext.sgi.com ([192.48.171.20]:10694 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S261359AbVETGRx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 May 2005 23:06:10 -0400
-In-Reply-To: <1116556213.5037.161.camel@mulgrave>
+	Fri, 20 May 2005 02:17:53 -0400
+Content-Disposition: inline
+In-Reply-To: <20050419072751.GD5999@plap.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: dino@in.ibm.com, Andrew Morton <akpm@osdl.org>, gregoire.favre@gmail.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: andrew.vasquez@qlogic.com, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> On Thu, 2005-05-19 at 20:54 -0500, K.R. Foley wrote:
+On Tue, Apr 19, 2005 at 12:27:51AM -0700, Andrew Vasquez wrote:
+> On Wed, 13 Apr 2005, Christoph Hellwig wrote:
 > 
->>the dt setting is 0. can't set it to 1, at least not so that you can see
->>it stay that way. tried setting period to 12.5, stays at 25. min_period
->>is set to 12.5 but doesn't seem to matter. what's next :)
+> > >  	atomic_set(&fcport->state, FCS_ONLINE);
+> > > +	if (ha->flags.init_done)
+> > > +		qla2x00_reg_remote_port(ha, fcport);
+> > >  }
+> > 
+> > ...
+> > 
+> > > -		goto probe_failed;
+> > > +		goto probe_alloc_failed;
+> > >  	}
+> > >  
+> > > +	pci_set_drvdata(pdev, ha);
+> > > +	host->this_id = 255;
+> > > +	host->cmd_per_lun = 3;
+> > > +	host->unique_id = ha->instance;
+> > > +	host->max_cmd_len = MAX_CMDSZ;
+> > > +	host->max_channel = ha->ports - 1;
+> > > +	host->max_id = ha->max_targets;
+> > > +	host->max_lun = ha->max_luns;
+> > > +	host->transportt = qla2xxx_transport_template;
+> > > +	if (scsi_add_host(host, &pdev->dev))
+> > > +		goto probe_alloc_failed;
+> > > +
+> > > +	qla2x00_alloc_sysfs_attr(ha);
+> > > +
+> > >  	if (qla2x00_initialize_adapter(ha) &&
+> > >  	    !(ha->device_flags & DFLG_NO_CABLE)) {
+> > 
+> > Now this I don't undersant.  You're moving the host registration earlier,
+> > maybe too earlier but I haven't checked that yet,
+> >
 > 
-> 
-> Well, I think it's my fault.  I naively assumed the aic7xxx core setting
-> code would do the right thing with coupled parameters, which, as I read
-> through it, apparently it doesn't do.
-> 
-> My excuse is that I can't test any of this because my fastest aic7xxx
-> card is only a U2 ...
-> 
-> Could you try this, I think it does the correct thing with the coupled
-> parameters.
-> 
-> Thanks,
-> 
-> James
-> 
+> Yeah, that hunk is a residual of some other (trashy) changes I made
+> during early fc_rport integration and really should be reverted back
+> to the original...
 
-James,
+In fact, it seems to break probing for luns other than zero.
 
-Looks like a winner this time. If there is something else I can test,
-just let me know.
+You initialize ha->max_luns in qla2x00_nvram_config(), which is called form
+qla2x00_initialize_adapter().  So we're currently seeing messages like
+this during ISP2312 initialization:
 
+<4>scsi: host 1 channel 0 id 0 lun1 has a LUN larger than allowed by the host adapter
+<4>scsi: host 1 channel 0 id 0 lun2 has a LUN larger than allowed by the host adapter
+<4>scsi: host 1 channel 0 id 0 lun3 has a LUN larger than allowed by the host adapter
+<4>scsi: host 1 channel 0 id 0 lun4 has a LUN larger than allowed by the host adapter
+<4>scsi: host 1 channel 0 id 0 lun5 has a LUN larger than allowed by the host adapter
+<4>scsi: host 1 channel 0 id 0 lun6 has a LUN larger than allowed by the host adapter
+<4>scsi: host 1 channel 0 id 0 lun7 has a LUN larger than allowed by the host adapter
+<4>scsi: host 1 channel 0 id 0 lun8 has a LUN larger than allowed by the host adapter
+<4>scsi: host 1 channel 0 id 0 lun9 has a LUN larger than allowed by the host adapter
 
-May 19 21:46:43 porky kernel: scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI
-HBA DRIVER, Rev 6.2.36
-May 19 21:46:43 porky kernel:         <Adaptec aic7899 Ultra160 SCSI
-adapter>
-May 19 21:46:43 porky kernel:         aic7899: Ultra160 Wide Channel A,
-SCSI Id=7, 32/253 SCBs
-May 19 21:46:43 porky kernel:
-May 19 21:46:43 porky kernel:   Vendor: QUANTUM   Model:
-ATLAS10K2-TY092L  Rev: DA40
-May 19 21:46:43 porky kernel:   Type:   Direct-Access
-   ANSI SCSI revision: 03
-May 19 21:46:43 porky kernel: scsi0:A:0:0: Tagged Queuing enabled.  Depth 32
-May 19 21:46:43 porky kernel:  target0:0:0: Beginning Domain Validation
-May 19 21:46:43 porky kernel: WIDTH IS 1
-May 19 21:46:43 porky kernel: (scsi0:A:0): 6.600MB/s transfers (16bit)
-May 19 21:46:43 porky kernel: (scsi0:A:0): 160.000MB/s transfers
-(80.000MHz DT, offset 127, 16bit)
-May 19 21:46:43 porky kernel:  target0:0:0: Ending Domain Validation
-May 19 21:46:43 porky kernel: scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI
-HBA DRIVER, Rev 6.2.36
-May 19 21:46:43 porky kernel:         <Adaptec aic7899 Ultra160 SCSI
-adapter>
-May 19 21:46:43 porky kernel:         aic7899: Ultra160 Wide Channel B,
-SCSI Id=7, 32/253 SCBs
-May 19 21:46:43 porky kernel:
-May 19 21:46:43 porky kernel:   Vendor: SEAGATE   Model: SX118273LC
-   Rev: 6679
-May 19 21:46:43 porky kernel:   Type:   Direct-Access
-   ANSI SCSI revision: 02
-May 19 21:46:43 porky kernel: scsi1:A:0:0: Tagged Queuing enabled.  Depth 32
-May 19 21:46:43 porky kernel:  target1:0:0: Beginning Domain Validation
-May 19 21:46:43 porky kernel:  target1:0:0: Domain Validation skipping
-write tests
-May 19 21:46:44 porky kernel: (scsi1:A:0): 20.000MB/s transfers
-(20.000MHz, offset 15)
-May 19 21:46:44 porky kernel:  target1:0:0: Ending Domain Validation
-May 19 21:46:44 porky kernel: SCSI device sda: 17783239 512-byte hdwr
-sectors (9105 MB)
-May 19 21:46:44 porky kernel: SCSI device sda: drive cache: write back
-May 19 21:46:44 porky kernel: SCSI device sda: 17783239 512-byte hdwr
-sectors (9105 MB)
-May 19 21:46:44 porky kernel: SCSI device sda: drive cache: write back
-May 19 21:46:44 porky kernel:  sda: sda1 sda2 sda3
-May 19 21:46:44 porky kernel: Attached scsi disk sda at scsi0, channel
-0, id 0, lun 0
-May 19 21:46:44 porky kernel: SCSI device sdb: 35566480 512-byte hdwr
-sectors (18210 MB)
-May 19 21:46:44 porky kernel: SCSI device sdb: drive cache: write through
-May 19 21:46:44 porky kernel: SCSI device sdb: 35566480 512-byte hdwr
-sectors (18210 MB)
-May 19 21:46:44 porky kernel: SCSI device sdb: drive cache: write through
-May 19 21:46:44 porky kernel:  sdb: sdb1
-May 19 16:46:23 porky rc.sysinit: -e
-May 19 21:46:44 porky kernel: Attached scsi disk sdb at scsi1, channel
-0, id 0, lun 0
-May 19 16:46:25 porky udevsend[1281]: starting udevd daemon
-May 19 21:46:44 porky kernel: Attached scsi generic sg0 at scsi0,
-channel 0, id 0, lun 0,  type 0
-May 19 16:46:25 porky scsi.agent[1293]: disk at
-/devices/pci0000:00/0000:00:1e.0/0000:04:05.0/host0/target0:0:0/0:0:0:0
-May 19 21:46:44 porky kernel: Attached scsi generic sg1 at scsi1,
-channel 0, id 0, lun 0,  type 0
-May 19 16:46:25 porky scsi.agent[1318]: disk at
-/devices/pci0000:00/0000:00:1e.0/0000:04:05.1/host1/target1:0:0/1:0:0:0
-
-
--- 
-   kr
+jeremy
