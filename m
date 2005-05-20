@@ -1,399 +1,219 @@
-From: James.Smart@Emulex.Com
-Subject: RE: Connection to SAN times out after a few days
-Date: Fri, 20 May 2005 09:14:26 -0400
-Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AC1E@xbl3.ad.emulex.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: PATCH [2/5]  qla2xxx: add remote port codes...
+Date: Fri, 20 May 2005 08:15:42 -0700
+Message-ID: <20050520151542.GA17419@plap.qlogic.org>
+References: <20050413191548.GI9703@plap.qlogic.org> <20050413191824.GK9703@plap.qlogic.org> <20050413214023.GA18161@infradead.org> <20050419072751.GD5999@plap.qlogic.org> <20050520061736.GA11551@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:41379 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S261461AbVETNO7 convert rfc822-to-8bit
+Received: from avexch02.qlogic.com ([198.70.193.200]:57496 "EHLO
+	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S261479AbVETPPp
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 May 2005 09:14:59 -0400
-Content-class: urn:content-classes:message
+	Fri, 20 May 2005 11:15:45 -0400
+Content-Disposition: inline
+In-Reply-To: <20050520061736.GA11551@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: alexdeucher@gmail.com, patmans@us.ibm.com
-Cc: linux-scsi@vger.kernel.org
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
 
-All,
+On Thu, 19 May 2005, Jeremy Higdon wrote:
 
-Here's a summary of what we have seen:
-
-After 4-5 days, we start to see i/o timing out to the device. The abort handlers are kicking in, and the device is not responding to the abort requests as well. As the aborts fail, the midlayer is resetting the lun and taking it offline. (Note: ignore the "Rsp ring 0 error" messages, this is a known issue and has no side effect. The patch for this will be arriving shortly).  We have looked at the FC side, and have seen no notification that the device has gone away. The device is simply no longer responding.
-
-We have seen several devices enter similar states under heavy loads. In many cases, raising the default i/o timeout from 30 (very low for busy SAN arrays) to 60 seconds significantly helps the system survive. However, we have seen some arrays that simply drop i/o so it doesn't matter what the timeout is.  What's different in this scenario is that the Abort requests aren't responded to as well.
-
-Does anyone have any experience with the robustness of the "Nexsan ATAbeast" array ?
-
-We are still actively working this issue with Alex, and tracking status on our SourceForge project.
-
--- James S
-
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org
-> [mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Alex Deucher
-> Sent: Thursday, May 19, 2005 4:00 PM
-> To: Patrick Mansfield
-> Cc: linux-scsi@vger.kernel.org
-> Subject: Re: Connection to SAN times out after a few days
-> 
-> 
-> On 5/19/05, Patrick Mansfield <patmans@us.ibm.com> wrote:
-> > On Thu, May 19, 2005 at 03:26:11PM -0400, Alex Deucher wrote:
-> > > I have Nexsan ATAbeast SAN connected to an AMD64 (sun v20z) and
-> > > SPARC64 (sun 220R) server using lpfc HBAs (using the in 
-> kernel lpfc
-> > > driver, kernel 2.6.12-rc4).  About once every 4-5 days, the server
-> > > loses its connection to the SAN and I get these messages 
-> in my log:
-> > > May 19 09:01:08 nutcracker scsi1 (0:0): rejecting I/O to 
-> offline device
-> > > May 19 09:01:08 nutcracker metapage_read_end_io: I/O error
-> > > May 19 09:01:08 nutcracker scsi1 (0:0): rejecting I/O to 
-> offline device
-> > > May 19 09:01:08 nutcracker metapage_read_end_io: I/O error
-> > > May 19 09:01:08 nutcracker ERROR: (device dm-4): 
-> DT_GETPAGE: dtree page corrupt
-> > > May 19 09:01:09 nutcracker scsi1 (0:0): rejecting I/O to 
-> offline device
-> > > May 19 09:01:09 nutcracker metapage_read_end_io: I/O error
-> > > May 19 09:01:09 nutcracker ERROR: (device dm-4): 
-> DT_GETPAGE: dtree page corrupt
+> On Tue, Apr 19, 2005 at 12:27:51AM -0700, Andrew Vasquez wrote:
+> > On Wed, 13 Apr 2005, Christoph Hellwig wrote:
+> > 
+> > > >  	atomic_set(&fcport->state, FCS_ONLINE);
+> > > > +	if (ha->flags.init_done)
+> > > > +		qla2x00_reg_remote_port(ha, fcport);
+> > > >  }
+> > > 
+> > > ...
+> > > 
+> > > > -		goto probe_failed;
+> > > > +		goto probe_alloc_failed;
+> > > >  	}
+> > > >  
+> > > > +	pci_set_drvdata(pdev, ha);
+> > > > +	host->this_id = 255;
+> > > > +	host->cmd_per_lun = 3;
+> > > > +	host->unique_id = ha->instance;
+> > > > +	host->max_cmd_len = MAX_CMDSZ;
+> > > > +	host->max_channel = ha->ports - 1;
+> > > > +	host->max_id = ha->max_targets;
+> > > > +	host->max_lun = ha->max_luns;
+> > > > +	host->transportt = qla2xxx_transport_template;
+> > > > +	if (scsi_add_host(host, &pdev->dev))
+> > > > +		goto probe_alloc_failed;
+> > > > +
+> > > > +	qla2x00_alloc_sysfs_attr(ha);
+> > > > +
+> > > >  	if (qla2x00_initialize_adapter(ha) &&
+> > > >  	    !(ha->device_flags & DFLG_NO_CABLE)) {
+> > > 
+> > > Now this I don't undersant.  You're moving the host registration earlier,
+> > > maybe too earlier but I haven't checked that yet,
 > > >
-> > > Nothing unusual shows up in the SAN logs.  I've already 
-> adjusted the
-> > > cache flushing on the SAN and changed the scsi timeouts 
-> to 45 seconds.
-> > >  I asked emulex about it, but I'm wondering if this is 
-> something in
-> > > the scsi layer.  Has anyone else had similar problems or 
-> know what the
-> > > problem may be?
 > > 
-> > Yes, could be a timeout, but the device would not go 
-> offline unless we
-> > could not talk to it at all after the timeout (TUR failed, 
-> or of course
-> > some bug).
-> > 
-> > There should be earlier errors about the device being 
-> offline, look for
-> > and post those.
-> > 
+> > Yeah, that hunk is a residual of some other (trashy) changes I made
+> > during early fc_rport integration and really should be reverted back
+> > to the original...
 > 
-> Sorry, I missed these earlier:
+> In fact, it seems to break probing for luns other than zero.
 > 
-> May 18 19:25:26 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x304 not found
-> May 18 19:26:52 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag xa6 not found
-> May 18 19:27:54 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a0fa
-> May 18 19:28:56 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a0fb
-> May 18 19:29:58 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a0fc
-> May 18 19:31:00 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a0fd
-> May 18 19:32:02 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a0fe
-> May 18 19:33:04 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a0ff
-> May 18 19:34:06 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a100
-> May 18 19:35:08 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a101
-> May 18 19:36:10 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a102
-> May 18 19:37:12 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a103
-> May 18 19:38:14 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a104
-> May 18 19:39:16 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a105
-> May 18 19:40:18 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a106
-> May 18 19:41:20 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a107
-> May 18 19:42:22 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a108
-> May 18 19:43:24 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a109
-> May 18 19:44:26 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a10a
-> May 18 19:45:28 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a10b
-> May 18 19:46:30 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a10c
-> May 18 19:47:32 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a10d
-> May 18 19:48:34 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a10e
-> May 18 19:49:36 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a10f
-> May 18 19:50:38 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a110
-> May 18 19:51:40 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a111
-> May 18 19:52:42 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a112
-> May 18 19:53:44 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a113
-> May 18 19:54:46 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a114
-> May 18 19:55:48 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a115
-> May 18 19:56:50 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a116
-> May 18 19:57:52 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a117
-> May 18 19:58:54 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a118
-> May 18 19:59:56 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a119
-> May 18 20:00:58 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a11a
-> May 18 20:02:00 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a11b
-> May 18 20:03:02 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a11c
-> May 18 20:04:04 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a11d
-> May 18 20:05:06 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a11e
-> May 18 20:06:08 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a11f
-> May 18 20:07:10 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a120
-> May 18 20:08:12 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a121
-> May 18 20:09:14 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a122
-> May 18 20:10:16 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a123
-> May 18 20:11:18 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a124
-> May 18 20:12:20 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a125
-> May 18 20:13:22 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a126
-> May 18 20:14:24 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a127
-> May 18 20:15:26 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a128
-> May 18 20:16:28 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a129
-> May 18 20:17:30 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a12a
-> May 18 20:18:32 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a12b
-> May 18 20:19:34 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a12c
-> May 18 20:20:36 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a12d
-> May 18 20:21:38 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a12e
-> May 18 20:22:40 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a12f
-> May 18 20:23:42 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a130
-> May 18 20:24:44 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a131
-> May 18 20:25:46 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a132
-> May 18 20:26:48 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a133
-> May 18 20:27:50 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a134
-> May 18 20:28:52 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a135
-> May 18 20:29:54 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a136
-> May 18 20:30:56 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a137
-> May 18 20:31:58 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a138
-> May 18 20:33:00 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a139
-> May 18 20:34:02 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a13a
-> May 18 20:35:04 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a13b
-> May 18 20:36:06 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a13c
-> May 18 20:37:08 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a13d
-> May 18 20:38:10 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a13e
-> May 18 20:39:12 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a13f
-> May 18 20:40:14 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a140
-> May 18 20:41:16 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a141
-> May 18 20:42:18 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a142
-> May 18 20:43:20 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a143
-> May 18 20:44:22 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a144
-> May 18 20:45:24 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a145
-> May 18 20:46:26 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a146
-> May 18 20:47:28 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a147
-> May 18 20:48:30 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a148
-> May 18 20:49:32 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a149
-> May 18 20:50:34 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a14a
-> May 18 20:51:36 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a14b
-> May 18 20:52:38 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a14c
-> May 18 20:53:40 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a14d
-> May 18 20:54:42 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a14e
-> May 18 20:55:44 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a14f
-> May 18 20:56:46 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a150
-> May 18 20:57:48 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a151
-> May 18 20:58:50 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a152
-> May 18 20:59:51 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a153
-> May 18 21:00:53 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a154
-> May 18 21:01:55 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a155
-> May 18 21:02:57 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a156
-> May 18 21:03:59 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a157
-> May 18 21:05:01 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a158
-> May 18 21:06:03 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a159
-> May 18 21:07:05 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a15a
-> May 18 21:08:07 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a15b
-> May 18 21:09:09 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a15c
-> May 18 21:10:11 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a15d
-> May 18 21:11:13 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a15e
-> May 18 21:12:15 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a15f
-> May 18 21:13:17 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a160
-> May 18 21:14:19 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a161
-> May 18 21:15:21 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a162
-> May 18 21:16:23 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a163
-> May 18 21:17:25 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a164
-> May 18 21:18:27 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a165
-> May 18 21:19:29 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a166
-> May 18 21:20:31 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x3 xf0a167
-> May 18 21:21:33 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a168
-> May 18 21:22:35 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a169
-> May 18 21:23:37 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a16a
-> May 18 21:24:39 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a16b
-> May 18 21:25:41 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x2 xf0a16c
-> May 18 21:26:43 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a16d
-> May 18 21:27:45 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a16e
-> May 18 21:28:47 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x0 xf0a16f
-> May 18 21:29:49 nutcracker lpfc 0000:03:01.0: 0:0748 abort handler
-> timed out waiting for abort to complete. Data: x0 x0 x1 xf0a170
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x11e not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x11f not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x120 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x121 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x122 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x123 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x124 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x125 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x126 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x127 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x128 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x129 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x12a not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x12b not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x12c not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x12d not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x12e not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x12f not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x130 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x131 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x132 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x133 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x134 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x135 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x136 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x137 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x138 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x139 not found
-> May 18 21:30:50 nutcracker lpfc 0000:03:01.0: 0:0327 Rsp ring 0 error
-> -  command completion for iotag x13a not found
-> May 18 21:31:52 nutcracker lpfc 0000:03:01.0: 0:0713 SCSI layer issued
-> LUN reset (0, 0) Data: x2002 x3 x2
+> You initialize ha->max_luns in qla2x00_nvram_config(), which is called form
+> qla2x00_initialize_adapter().  So we're currently seeing messages like
+> this during ISP2312 initialization:
 > 
-> Thanks,
-> 
-> Alex
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> <4>scsi: host 1 channel 0 id 0 lun1 has a LUN larger than allowed by the host adapter
+
+Jeremy, could you try this patch out.
+
+James, please apply.
+
+
+[PATCH] Pull-down scsi-host-addition to follow board initialization.
+
+Return to previous held-logic of calling scsi_add_host() only after
+the board has been completely initialized.  Also return pci_*()
+error-codes during probe failure paths.
+
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+
+drivers/scsi/qla2xxx/qla_os.c: 7f8d747bd5e546e3b753ce06e3568f32d0a0ec07
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1106,7 +1106,7 @@ iospace_error_exit:
+  */
+ int qla2x00_probe_one(struct pci_dev *pdev, struct qla_board_info *brd_info)
+ {
+-	int	ret;
++	int	ret = -ENODEV;
+ 	device_reg_t __iomem *reg;
+ 	struct Scsi_Host *host;
+ 	scsi_qla_host_t *ha;
+@@ -1117,7 +1117,7 @@ int qla2x00_probe_one(struct pci_dev *pd
+ 	fc_port_t *fcport;
+ 
+ 	if (pci_enable_device(pdev))
+-		return -1;
++		goto probe_out;
+ 
+ 	host = scsi_host_alloc(&qla2x00_driver_template,
+ 	    sizeof(scsi_qla_host_t));
+@@ -1139,9 +1139,8 @@ int qla2x00_probe_one(struct pci_dev *pd
+ 
+ 	/* Configure PCI I/O space */
+ 	ret = qla2x00_iospace_config(ha);
+-	if (ret != 0) {
+-		goto probe_alloc_failed;
+-	}
++	if (ret)
++		goto probe_failed;
+ 
+ 	/* Sanitize the information from PCI BIOS. */
+ 	host->irq = pdev->irq;
+@@ -1204,22 +1203,10 @@ int qla2x00_probe_one(struct pci_dev *pd
+ 		qla_printk(KERN_WARNING, ha,
+ 		    "[ERROR] Failed to allocate memory for adapter\n");
+ 
+-		goto probe_alloc_failed;
++		ret = -ENOMEM;
++		goto probe_failed;
+ 	}
+ 
+-	pci_set_drvdata(pdev, ha);
+-	host->this_id = 255;
+-	host->cmd_per_lun = 3;
+-	host->unique_id = ha->instance;
+-	host->max_cmd_len = MAX_CMDSZ;
+-	host->max_channel = ha->ports - 1;
+-	host->max_lun = MAX_LUNS;
+-	host->transportt = qla2xxx_transport_template;
+-	if (scsi_add_host(host, &pdev->dev))
+-		goto probe_alloc_failed;
+-
+-	qla2x00_alloc_sysfs_attr(ha);
+-
+ 	if (qla2x00_initialize_adapter(ha) &&
+ 	    !(ha->device_flags & DFLG_NO_CABLE)) {
+ 
+@@ -1230,11 +1217,10 @@ int qla2x00_probe_one(struct pci_dev *pd
+ 		    "Adapter flags %x.\n",
+ 		    ha->host_no, ha->device_flags));
+ 
++		ret = -ENODEV;
+ 		goto probe_failed;
+ 	}
+ 
+-	qla2x00_init_host_attr(ha);
+-
+ 	/*
+ 	 * Startup the kernel thread for this host adapter
+ 	 */
+@@ -1244,17 +1230,26 @@ int qla2x00_probe_one(struct pci_dev *pd
+ 		qla_printk(KERN_WARNING, ha,
+ 		    "Unable to start DPC thread!\n");
+ 
++		ret = -ENODEV;
+ 		goto probe_failed;
+ 	}
+ 	wait_for_completion(&ha->dpc_inited);
+ 
++	host->this_id = 255;
++	host->cmd_per_lun = 3;
++	host->unique_id = ha->instance;
++	host->max_cmd_len = MAX_CMDSZ;
++	host->max_channel = ha->ports - 1;
++	host->max_lun = MAX_LUNS;
++	host->transportt = qla2xxx_transport_template;
++
+ 	if (IS_QLA2100(ha) || IS_QLA2200(ha))
+ 		ret = request_irq(host->irq, qla2100_intr_handler,
+ 		    SA_INTERRUPT|SA_SHIRQ, ha->brd_info->drv_name, ha);
+ 	else
+ 		ret = request_irq(host->irq, qla2300_intr_handler,
+ 		    SA_INTERRUPT|SA_SHIRQ, ha->brd_info->drv_name, ha);
+-	if (ret != 0) {
++	if (ret) {
+ 		qla_printk(KERN_WARNING, ha,
+ 		    "Failed to reserve interrupt %d already in use.\n",
+ 		    host->irq);
+@@ -1308,9 +1303,18 @@ int qla2x00_probe_one(struct pci_dev *pd
+ 		msleep(10);
+ 	}
+ 
++	pci_set_drvdata(pdev, ha);
+ 	ha->flags.init_done = 1;
+ 	num_hosts++;
+ 
++	ret = scsi_add_host(host, &pdev->dev);
++	if (ret)
++		goto probe_failed;
++
++	qla2x00_alloc_sysfs_attr(ha);
++
++	qla2x00_init_host_attr(ha);
++
+ 	qla_printk(KERN_INFO, ha, "\n"
+ 	    " QLogic Fibre Channel HBA Driver: %s\n"
+ 	    "  QLogic %s - %s\n"
+@@ -1329,9 +1333,6 @@ int qla2x00_probe_one(struct pci_dev *pd
+ probe_failed:
+ 	fc_remove_host(ha->host);
+ 
+-	scsi_remove_host(host);
+-
+-probe_alloc_failed:
+ 	qla2x00_free_device(ha);
+ 
+ 	scsi_host_put(host);
+@@ -1339,7 +1340,8 @@ probe_alloc_failed:
+ probe_disable_device:
+ 	pci_disable_device(pdev);
+ 
+-	return -1;
++probe_out:
++	return ret;
+ }
+ EXPORT_SYMBOL_GPL(qla2x00_probe_one);
+ 
