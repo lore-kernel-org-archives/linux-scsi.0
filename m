@@ -1,55 +1,63 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: [ANNOUNCE] sdparm 0.92
-Date: Fri, 20 May 2005 21:12:51 +1000
-Message-ID: <428DC633.5050403@torque.net>
+Subject: Re: Perform uncached reads on SCSI drives?
+Date: Fri, 20 May 2005 22:16:57 +1000
+Message-ID: <428DD539.8070901@torque.net>
+References: <66F9227F7417874C8DB3CEB0577274170450FD@MILEX0.Miltope.local>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:26037 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S261376AbVETLMt (ORCPT
+Received: from zorg.st.net.au ([203.16.233.9]:15291 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261446AbVETMQx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 May 2005 07:12:49 -0400
+	Fri, 20 May 2005 08:16:53 -0400
+In-Reply-To: <66F9227F7417874C8DB3CEB0577274170450FD@MILEX0.Miltope.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Drew Winstel <DWinstel@Miltope.com>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, "Linux-scsi (E-mail)" <linux-scsi@vger.kernel.org>
 
-sdparm is a command line utility designed to get and set
-SCSI disk parameters (cf hdparm for ATA disks). More generally
-it gets and sets mode page information on SCSI devices or devices
-that use a SCSI command set (e.g. CD/DVD drives (any transport)
-and SCSI tape drives). It also can list VPD pages including
-the device identification page.
+Drew Winstel wrote:
+> Hello, Patrick, and thanks for the reply.
+> 
+> 
+>>You could try setting read cache disable, I don't know if that setting
+>>must be honored, or how ATA/SATA handle it. See mode page 8 for SCSI block
+>>commands. 
+> 
+> 
+> Hmm, that's definitely worth a shot.  I'll try it and let you know how it
+> works.
+> 
+> 
+>>The sg utilities sg_modes can probably set it.
+> 
+> 
+> As would the new sdparm, I imagine.
 
-For more information and downloads (tarball, rpm and deb
-packages) see:
-http://www.torque.net/sg/sdparm.html
+Drew,
+sg_modes only reads mode pages. They can be changed with
+sginfo (or scsiinfo) and sg_wr_mode. The simplest is
+probably:
+   sdparm --set=RCD /dev/sda
 
-There are now more than 150 parameters accessed by sdparm.
-Thanks to Kai Makisara for interface and sanity checking
-suggestions.
+or, if you want the change to survive the next disk
+power cycle:
+   sdparm --set=RCD --save /dev/sda
 
-ChangeLog for sdparm-0.92 [20050520]
-   - add data compression and device configuration mode
-     pages (ssc3)
-   - add timeout + protect plus write parameters mode
-     pages (mmc5)
-   - add XOR control mode page (sbc2)
-   - add SES management mode page (ses2)
-   - discriminate mode pages based on device's peripheral
-     device type
-   - disallow set/clear acronyms whose pdt doesn't match
-     current device
-   - with option "-ll" decode more of INQUIRY standard
-     response
-   - improve error checking when getting non-existent
-     fields
-   - use double fetch technique when fetching mode pages
-   - add RBC device parameters mode page (rbc)
-   - add '--flexible' option for mode sense 6/10 response
-     mixup
-   - '--inquiry -all' now outputs supported VPD pages page
+If /dev/sda is really a ATA/SATA disk then I don't
+think the read cache can be disabled (judging from
+the SAT document).
+
+BTW If the sd driver sees a disk with WCE=1 and RCD=1
+it outputs: "driver cache: write back, no read (daft)".
+IMO the "daft" bit is itself daft. It is logically valid
+(i.e. a read of a block in the write cache will cause
+that block to be written to the media, then read back)
+and reserves the cache exclusively for writing. When
+copying one disk (or partition) to another, caching
+reads seems futile.
 
 Doug Gilbert
+
