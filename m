@@ -1,41 +1,74 @@
-From: "K.R. Foley" <kr@cybsft.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
-Date: Thu, 19 May 2005 20:54:57 -0500
-Message-ID: <428D4371.6020809@cybsft.com>
-References: <20050516085832.GA9558@gmail.com>	 <20050517071307.GA4794@in.ibm.com> <20050517002908.005a9ba7.akpm@osdl.org>	 <1116340465.4989.2.camel@mulgrave> <20050517170824.GA3931@in.ibm.com>	 <1116354894.4989.42.camel@mulgrave> <428C030E.8030102@cybsft.com>	 <1116476630.5867.2.camel@mulgrave>  <20050519095143.GA3972@in.ibm.com>	 <1116546970.5037.137.camel@mulgrave>  <428D37CF.5070903@cybsft.com>	 <1116551853.5037.145.camel@mulgrave>  <428D3E1C.2020802@cybsft.com> <1116553229.5037.155.camel@mulgrave>
+Date: Thu, 19 May 2005 21:30:13 -0500
+Message-ID: <1116556213.5037.161.camel@mulgrave>
+References: <20050516085832.GA9558@gmail.com>
+	 <20050517071307.GA4794@in.ibm.com> <20050517002908.005a9ba7.akpm@osdl.org>
+	 <1116340465.4989.2.camel@mulgrave> <20050517170824.GA3931@in.ibm.com>
+	 <1116354894.4989.42.camel@mulgrave> <428C030E.8030102@cybsft.com>
+	 <1116476630.5867.2.camel@mulgrave>  <20050519095143.GA3972@in.ibm.com>
+	 <1116546970.5037.137.camel@mulgrave>  <428D37CF.5070903@cybsft.com>
+	 <1116551853.5037.145.camel@mulgrave>  <428D3E1C.2020802@cybsft.com>
+	 <1116553229.5037.155.camel@mulgrave>  <428D4371.6020809@cybsft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay00.pair.com ([209.68.1.20]:29454 "HELO relay.pair.com")
-	by vger.kernel.org with SMTP id S261261AbVETBy6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 May 2005 21:54:58 -0400
-In-Reply-To: <1116553229.5037.155.camel@mulgrave>
+Received: from stat16.steeleye.com ([209.192.50.48]:12756 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261323AbVETCaf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 May 2005 22:30:35 -0400
+In-Reply-To: <428D4371.6020809@cybsft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: "K.R. Foley" <kr@cybsft.com>
 Cc: dino@in.ibm.com, Andrew Morton <akpm@osdl.org>, gregoire.favre@gmail.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> On Thu, 2005-05-19 at 20:32 -0500, K.R. Foley wrote:
-> 
->>Any idea why I can't set the period to 12.5? I am going to see if
->>anything jumps out at me.
-> 
-> 
-> what's the dt setting? if it's zero, try setting it to one and then
-> lowering the period to 12.5 but don't trigger a revalidate this time,
-> try reading or writing to the disk and then see what the settings come
-> back as.
-> 
-> James
-> 
-> 
-> 
-the dt setting is 0. can't set it to 1, at least not so that you can see
-it stay that way. tried setting period to 12.5, stays at 25. min_period
-is set to 12.5 but doesn't seem to matter. what's next :)
+On Thu, 2005-05-19 at 20:54 -0500, K.R. Foley wrote:
+> the dt setting is 0. can't set it to 1, at least not so that you can see
+> it stay that way. tried setting period to 12.5, stays at 25. min_period
+> is set to 12.5 but doesn't seem to matter. what's next :)
 
--- 
-   kr
+Well, I think it's my fault.  I naively assumed the aic7xxx core setting
+code would do the right thing with coupled parameters, which, as I read
+through it, apparently it doesn't do.
+
+My excuse is that I can't test any of this because my fastest aic7xxx
+card is only a U2 ...
+
+Could you try this, I think it does the correct thing with the coupled
+parameters.
+
+Thanks,
+
+James
+
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -2679,6 +2679,11 @@ static void ahc_linux_set_period(struct 
+ 	if (offset == 0)
+ 		offset = MAX_OFFSET;
+ 
++	if (period < 9)
++		period = 9;	/* 12.5ns is our minimum */
++	if (period == 9)
++		ppr_options |= MSG_EXT_PPR_DT_REQ;
++
+ 	ahc_compile_devinfo(&devinfo, shost->this_id, starget->id, 0,
+ 			    starget->channel + 'A', ROLE_INITIATOR);
+ 
+@@ -2764,6 +2769,12 @@ static void ahc_linux_set_dt(struct scsi
+ 	unsigned long flags;
+ 	struct ahc_syncrate *syncrate;
+ 
++	if (dt) {
++		period = 9;	/* 12.5ns is the only period valid for DT */
++		ppr_options |= MSG_EXT_PPR_DT_REQ;
++	} else if (period == 9)
++		period = 10;	/* if resetting DT, period must be >= 25ns */
++
+ 	ahc_compile_devinfo(&devinfo, shost->this_id, starget->id, 0,
+ 			    starget->channel + 'A', ROLE_INITIATOR);
+ 	syncrate = ahc_find_syncrate(ahc, &period, &ppr_options,AHC_SYNCRATE_DT);
+
+
