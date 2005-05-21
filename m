@@ -1,37 +1,36 @@
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH] aic7xxx: unmix declarations and code
-Date: Sat, 21 May 2005 17:04:13 +0400
-Message-ID: <200505211704.13874.adobriyan@gmail.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: TYPE_RBC cache fixes (sbp2.c affected)
+Date: Sat, 21 May 2005 10:01:38 -0500
+Message-ID: <1116687698.4999.3.camel@mulgrave>
+References: <20050516015955.GL1150@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.196]:36243 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261733AbVEUNAA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 21 May 2005 09:00:00 -0400
-Received: by wproxy.gmail.com with SMTP id 69so187845wri
-        for <linux-scsi@vger.kernel.org>; Sat, 21 May 2005 05:59:59 -0700 (PDT)
-Content-Disposition: inline
+Received: from stat16.steeleye.com ([209.192.50.48]:50127 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261591AbVEUPBy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 21 May 2005 11:01:54 -0400
+In-Reply-To: <20050516015955.GL1150@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
+To: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net
 
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+On Mon, 2005-05-16 at 02:59 +0100, Al Viro wrote:
 
---- linux-20050521140543-000/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-05-21 14:11:06.000000000 +0400
-+++ linux-20050521140543-001/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-05-21 16:49:32.000000000 +0400
-@@ -659,8 +659,10 @@ ahc_linux_slave_alloc(struct scsi_device
- 	ahc_lock(ahc, &flags);
- 	targ = ahc->platform_data->targets[target_offset];
- 	if (targ == NULL) {
-+		struct seeprom_config *sc;
-+
- 		targ = ahc_linux_alloc_target(ahc, starget->channel, starget->id);
--		struct seeprom_config *sc = ahc->seep_config;
-+		sc = ahc->seep_config;
- 		if (targ == NULL)
- 			goto out;
- 
+>  static int sbp2scsi_slave_configure (struct scsi_device *sdev)
+>  {
+>  	blk_queue_dma_alignment(sdev->request_queue, (512 - 1));
+> -
+> +	sdev->use_10_for_rw = 1;
+> +	sdev->use_10_for_ms = 1;
+>  	return 0;
+>  }
+
+This looks wrong.  The RBC standard only specifies the six byte commands
+to be mandatory ... so shouldn't this be sdev->use_10_for_ms = 0?
+
+James
+
+
