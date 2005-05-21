@@ -1,86 +1,57 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH RFC 2/2] implement transport scan callout for iscsi
-Date: Sat, 21 May 2005 14:39:48 -0700
-Message-ID: <1116711588.6289.32.camel@mina>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: TYPE_RBC cache fixes (sbp2.c affected)
+Date: Sun, 22 May 2005 08:06:50 +1000
+Message-ID: <428FB0FA.7040302@torque.net>
+References: <20050516015955.GL1150@parcelfarce.linux.theplanet.co.uk>	 <1116687698.4999.3.camel@mulgrave> <428F55F1.3090006@pobox.com>	 <1116691256.4999.16.camel@mulgrave>	 <20050521162220.GU29811@parcelfarce.linux.theplanet.co.uk> <1116699144.4999.37.camel@mulgrave>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:30696 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S261632AbVEUVjz (ORCPT
+Received: from zorg.st.net.au ([203.16.233.9]:53721 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261652AbVEUWGv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 21 May 2005 17:39:55 -0400
+	Sat, 21 May 2005 18:06:51 -0400
+In-Reply-To: <1116699144.4999.37.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: open-iscsi <open-iscsi@googlegroups.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>, Jeff Garzik <jgarzik@pobox.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net
 
-Implement transport specific scanning function for open-iscsi.
-This fixes the sysfs layout so it looks like this:
+James Bottomley wrote:
+> On Sat, 2005-05-21 at 17:22 +0100, Al Viro wrote:
+> 
+>>Tell that to firmware authors, why don't you?
+> 
+> 
+> I do ... but they don't listen ...
+>  
+> 
+>>>Does anyone actually have one of these RBC devices and does it reject
+>>>the six byte mode sense commands?
+>>
+>>Yes, will check and do not expect the results to apply to other devices...
+> 
+> 
+> Thanks ... I'd be surprised if the entire class of RBC devices simply
+> ignored the standard; I wouldn't be surprised to find one or two that
+> are out of spec.
+> 
+> James
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-[root@mina host1]# tree
-.
-`-- session1
-    |-- connection1:0
-    `-- target1:0:0
-        |-- 1:0:0:0
+James,
+Perhaps __scsi_mode_sense() could do a simple sanity
+check: for any valid mode page [after the header and
+block descriptor(s) are stepped over]:
+      ((mpage[0] & 3f) == page_num)
 
-representing the relationship between a session and a target.
-open-iscsi/linux-iscsi-5 uses struct devices and driver mode transport
-classes like in past sumbitted patches here
-http://marc.theaimsgroup.com/?l=linux-scsi&m=111618626124050&w=2
+If a response fails that test, we don't believe it.
 
-This patches against the subversion source found at
-open-iscsi.org or the currect release
-http://www.open-iscsi.org/bits/open-iscsi-0.3rc4-325.tar.gz
-open-iscsi is not in mainline, but we are trying :). I only
-post this to show an example of the callout usage since I do not
-have access to a box (or really the serial line to reboot it) with
-FC to fix the fc transport class today, and to make sure open-iscsi
-is even doing the correct sysfs layout wrt to struct devices and
-transport_classes and what should link to what.
-
-
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-
-
-diff -aurp open-iscsi/kernel/scsi_transport_iscsi.c open-iscsi.work/kernel/scsi_transport_iscsi.c
---- open-iscsi/kernel/scsi_transport_iscsi.c	2005-05-21 14:03:04.000000000 -0700
-+++ open-iscsi.work/kernel/scsi_transport_iscsi.c	2005-05-21 14:21:00.000000000 -0700
-@@ -887,6 +887,15 @@ iscsi_if_rx(struct sock *sk, int len)
- 	up(&rx_queue_sema);
- }
- 
-+static int
-+iscsi_scan(struct Scsi_Host *shost, unsigned int channel, unsigned int id,
-+	   unsigned int lun, int rescan)
-+{
-+	struct iscsi_if_session *session = hostdata_session(shost->hostdata);
-+	scsi_scan_target(&session->dev, channel, id, lun, rescan);
-+	return 0;
-+}
-+
- /*
-  * iSCSI connection attrs
-  */
-@@ -1039,6 +1048,7 @@ int iscsi_register_transport(struct iscs
- 	INIT_LIST_HEAD(&priv->sessions);
- 	spin_lock_init(&priv->session_lock);
- 	priv->iscsi_transport = tt;
-+	priv->t.scan = iscsi_scan;
- 
- 	/* setup parameters mask */
- 	priv->param_mask = 0xFFFFFFFF;
-diff -aurp open-iscsi/usr/initiator.c open-iscsi.work/usr/initiator.c
---- open-iscsi/usr/initiator.c	2005-05-21 14:03:05.000000000 -0700
-+++ open-iscsi.work/usr/initiator.c	2005-05-21 14:03:50.000000000 -0700
-@@ -181,7 +181,7 @@ __session_scan_host(iscsi_session_t *ses
- 		/* child */
- 		log_debug(4, "scanning host%d using %s",session->id,
- 			  sysfs_file);
--		write(fd, "- - -", 5);
-+		write(fd, "0 0 -", 5);
- 		close(fd);
- 		exit(0);
- 	}
-
+Doug Gilbert
 
