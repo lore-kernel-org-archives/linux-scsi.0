@@ -1,57 +1,44 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: TYPE_RBC cache fixes (sbp2.c affected)
-Date: Sat, 21 May 2005 10:24:37 -0500
-Message-ID: <1116689077.4999.9.camel@mulgrave>
-References: <20050516015955.GL1150@parcelfarce.linux.theplanet.co.uk>
+Date: Sat, 21 May 2005 11:38:25 -0400
+Message-ID: <428F55F1.3090006@pobox.com>
+References: <20050516015955.GL1150@parcelfarce.linux.theplanet.co.uk> <1116687698.4999.3.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:2258 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261595AbVEUPYx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 21 May 2005 11:24:53 -0400
-In-Reply-To: <20050516015955.GL1150@parcelfarce.linux.theplanet.co.uk>
+Received: from mail.dvmed.net ([216.237.124.58]:50110 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261737AbVEUPia (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 21 May 2005 11:38:30 -0400
+In-Reply-To: <1116687698.4999.3.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net
 
-Here's a tiny update that means we print the correct ASCII type
-information
+James Bottomley wrote:
+> On Mon, 2005-05-16 at 02:59 +0100, Al Viro wrote:
+> 
+> 
+>> static int sbp2scsi_slave_configure (struct scsi_device *sdev)
+>> {
+>> 	blk_queue_dma_alignment(sdev->request_queue, (512 - 1));
+>>-
+>>+	sdev->use_10_for_rw = 1;
+>>+	sdev->use_10_for_ms = 1;
+>> 	return 0;
+>> }
+> 
+> 
+> This looks wrong.  The RBC standard only specifies the six byte commands
+> to be mandatory ... so shouldn't this be sdev->use_10_for_ms = 0?
 
-James
+That's why its in sbp2-specific code...
 
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -111,6 +111,7 @@ const char *const scsi_device_types[MAX_
- 	"Unknown          ",
- 	"RAID             ",
- 	"Enclosure        ",
-+	"Direct-Access-RBC",
- };
- EXPORT_SYMBOL(scsi_device_types);
- 
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -28,7 +28,7 @@ extern const unsigned char scsi_command_
-  *	SCSI device types
-  */
- 
--#define MAX_SCSI_DEVICE_CODE 14
-+#define MAX_SCSI_DEVICE_CODE 15
- extern const char *const scsi_device_types[MAX_SCSI_DEVICE_CODE];
- 
- /*
-@@ -211,8 +211,8 @@ static inline int scsi_status_is_good(in
- 				     * - treated as TYPE_DISK */
- #define TYPE_MEDIUM_CHANGER 0x08
- #define TYPE_COMM           0x09    /* Communications device */
--#define TYPE_ENCLOSURE      0x0d    /* Enclosure Services Device */
- #define TYPE_RAID           0x0c
-+#define TYPE_ENCLOSURE      0x0d    /* Enclosure Services Device */
- #define TYPE_RBC	    0x0e
- #define TYPE_NO_LUN         0x7f
- 
+The above code certainly applies to real-world cases, at least.  Just 
+look at the code that was removed...  MS(10) handling.
+
+	Jeff
 
 
