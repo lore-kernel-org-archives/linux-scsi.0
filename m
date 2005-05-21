@@ -1,71 +1,86 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH RFC 1/2] add transport scan callout to fix sysfs layout
-	when scanning from userspace
-Date: Sat, 21 May 2005 14:37:11 -0700
-Message-ID: <1116711431.6285.28.camel@mina>
+Subject: [PATCH RFC 2/2] implement transport scan callout for iscsi
+Date: Sat, 21 May 2005 14:39:48 -0700
+Message-ID: <1116711588.6289.32.camel@mina>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:29928 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S261629AbVEUVhT (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:30696 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S261632AbVEUVjz (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 21 May 2005 17:37:19 -0400
+	Sat, 21 May 2005 17:39:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: open-iscsi <open-iscsi@googlegroups.com>, linux-scsi@vger.kernel.org
 
-When scanning hosts that implement FC rport support and
-open-iscsi/linux-iscsi-5 hosts from userspace the sysfs
-layout will end up placing the target's parent as the host
-instead of some transport specific object. For FC the
-target's parent should be the rport and for open-iscsi the
-parent should be a session (that is if for open-iscsi our
-using struct devices and our sysfs layout is correct).
+Implement transport specific scanning function for open-iscsi.
+This fixes the sysfs layout so it looks like this:
 
-The problem is due to the scsi host scan attribute calling
-scsi_scan_host_selected, but the transports calling
-scsi_scan_target. To further complicate matters iscsi does
-not use a work queue for scanning since it initiates the
-scanning from usersapce and it manages its channel and target
-numbers from userspace. And, FC rport support is the opposite.
+[root@mina host1]# tree
+.
+`-- session1
+    |-- connection1:0
+    `-- target1:0:0
+        |-- 1:0:0:0
 
-To fix this the inlined patch just adds a scan callout onto
-the scsi_transport_template so scsi_sysfs can call it if set.
+representing the relationship between a session and a target.
+open-iscsi/linux-iscsi-5 uses struct devices and driver mode transport
+classes like in past sumbitted patches here
+http://marc.theaimsgroup.com/?l=linux-scsi&m=111618626124050&w=2
+
+This patches against the subversion source found at
+open-iscsi.org or the currect release
+http://www.open-iscsi.org/bits/open-iscsi-0.3rc4-325.tar.gz
+open-iscsi is not in mainline, but we are trying :). I only
+post this to show an example of the callout usage since I do not
+have access to a box (or really the serial line to reboot it) with
+FC to fix the fc transport class today, and to make sure open-iscsi
+is even doing the correct sysfs layout wrt to struct devices and
+transport_classes and what should link to what.
+
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
-diff -aurp linux-2.6.12-rc4/drivers/scsi/scsi_sysfs.c linux-2.6.12-rc4.work/drivers/scsi/scsi_sysfs.c
---- linux-2.6.12-rc4/drivers/scsi/scsi_sysfs.c	2005-05-06 22:20:31.000000000 -0700
-+++ linux-2.6.12-rc4.work/drivers/scsi/scsi_sysfs.c	2005-05-20 23:08:08.000000000 -0700
-@@ -80,7 +80,11 @@ static int scsi_scan(struct Scsi_Host *s
- 		return -EINVAL;
- 	if (check_set(&lun, s3))
- 		return -EINVAL;
--	res = scsi_scan_host_selected(shost, channel, id, lun, 1);
-+
-+	if (shost->transportt->scan)
-+		res = shost->transportt->scan(shost, channel, id, lun, 1);
-+	else
-+		res = scsi_scan_host_selected(shost, channel, id, lun, 1);
- 	return res;
+
+diff -aurp open-iscsi/kernel/scsi_transport_iscsi.c open-iscsi.work/kernel/scsi_transport_iscsi.c
+--- open-iscsi/kernel/scsi_transport_iscsi.c	2005-05-21 14:03:04.000000000 -0700
++++ open-iscsi.work/kernel/scsi_transport_iscsi.c	2005-05-21 14:21:00.000000000 -0700
+@@ -887,6 +887,15 @@ iscsi_if_rx(struct sock *sk, int len)
+ 	up(&rx_queue_sema);
  }
  
-diff -aurp linux-2.6.12-rc4/include/scsi/scsi_transport.h linux-2.6.12-rc4.work/include/scsi/scsi_transport.h
---- linux-2.6.12-rc4/include/scsi/scsi_transport.h	2005-05-06 22:20:31.000000000 -0700
-+++ linux-2.6.12-rc4.work/include/scsi/scsi_transport.h	2005-05-20 23:12:38.000000000 -0700
-@@ -39,6 +39,12 @@ struct scsi_transport_template {
- 	 * True if the transport wants to use a host-based work-queue
- 	 */
- 	unsigned int create_work_queue : 1;
++static int
++iscsi_scan(struct Scsi_Host *shost, unsigned int channel, unsigned int id,
++	   unsigned int lun, int rescan)
++{
++	struct iscsi_if_session *session = hostdata_session(shost->hostdata);
++	scsi_scan_target(&session->dev, channel, id, lun, rescan);
++	return 0;
++}
 +
-+	/*
-+	 * optional transport specific scanning function
-+	 */
-+	int (* scan)(struct Scsi_Host *, unsigned int, unsigned int,
-+		     unsigned int, int);
- };
+ /*
+  * iSCSI connection attrs
+  */
+@@ -1039,6 +1048,7 @@ int iscsi_register_transport(struct iscs
+ 	INIT_LIST_HEAD(&priv->sessions);
+ 	spin_lock_init(&priv->session_lock);
+ 	priv->iscsi_transport = tt;
++	priv->t.scan = iscsi_scan;
  
- #define transport_class_to_shost(tc) \
+ 	/* setup parameters mask */
+ 	priv->param_mask = 0xFFFFFFFF;
+diff -aurp open-iscsi/usr/initiator.c open-iscsi.work/usr/initiator.c
+--- open-iscsi/usr/initiator.c	2005-05-21 14:03:05.000000000 -0700
++++ open-iscsi.work/usr/initiator.c	2005-05-21 14:03:50.000000000 -0700
+@@ -181,7 +181,7 @@ __session_scan_host(iscsi_session_t *ses
+ 		/* child */
+ 		log_debug(4, "scanning host%d using %s",session->id,
+ 			  sysfs_file);
+-		write(fd, "- - -", 5);
++		write(fd, "0 0 -", 5);
+ 		close(fd);
+ 		exit(0);
+ 	}
 
 
