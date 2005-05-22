@@ -1,82 +1,105 @@
 From: Douglas Gilbert <dougg@torque.net>
 Subject: Re: TYPE_RBC cache fixes (sbp2.c affected)
-Date: Sun, 22 May 2005 15:08:06 +1000
-Message-ID: <429013B6.3010505@torque.net>
-References: <20050516015955.GL1150@parcelfarce.linux.theplanet.co.uk>	 <1116687698.4999.3.camel@mulgrave> <428F55F1.3090006@pobox.com>	 <1116691256.4999.16.camel@mulgrave>	 <20050521162220.GU29811@parcelfarce.linux.theplanet.co.uk> <1116699144.4999.37.camel@mulgrave> <428FB0FA.7040302@torque.net>
+Date: Sun, 22 May 2005 16:31:26 +1000
+Message-ID: <4290273E.6050306@torque.net>
+References: <20050516015955.GL1150@parcelfarce.linux.theplanet.co.uk>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-admin@lists.sourceforge.net>
-In-Reply-To: <428FB0FA.7040302@torque.net>
-Sender: linux1394-devel-admin@lists.sourceforge.net
-Errors-To: linux1394-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-To: dougg@torque.net
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Al Viro <viro@parcelfarce.linux.theplanet.co.uk>, Jeff Garzik <jgarzik@pobox.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zorg.st.net.au ([203.16.233.9]:9870 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261727AbVEVGbV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 May 2005 02:31:21 -0400
+In-Reply-To: <20050516015955.GL1150@parcelfarce.linux.theplanet.co.uk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>, James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net, jgarzik@pobox.com
 
-Douglas Gilbert wrote:
-> James Bottomley wrote:
-> 
->> On Sat, 2005-05-21 at 17:22 +0100, Al Viro wrote:
->>
->>> Tell that to firmware authors, why don't you?
->>
->>
->>
->> I do ... but they don't listen ...
->>  
->>
->>>> Does anyone actually have one of these RBC devices and does it reject
->>>> the six byte mode sense commands?
->>>
->>>
->>> Yes, will check and do not expect the results to apply to other 
->>> devices...
->>
->>
->>
->> Thanks ... I'd be surprised if the entire class of RBC devices simply
->> ignored the standard; I wouldn't be surprised to find one or two that
->> are out of spec.
->>
->> James
-> 
-> James,
-> Perhaps __scsi_mode_sense() could do a simple sanity
-> check: for any valid mode page [after the header and
-> block descriptor(s) are stepped over]:
->      ((mpage[0] & 3f) == page_num)
-> 
-> If a response fails that test, we don't believe it.
+Al + James,
+Some comments about the original patch:
 
-A bit more accurate sanity check:
-     if ((page_num > 0) && (page_num < 0x3f) &&
-         ((mpage[0] & 3f) == page_num))
-	// page looks ok (even if subpage_num was 0xff)
-     else
-	// nah
+<snip>
+> diff -urN RC12-rc4-base/drivers/scsi/sd.c RC12-rc4-rbc/drivers/scsi/sd.c
+> --- RC12-rc4-base/drivers/scsi/sd.c	2005-05-07 04:05:00.000000000 -0400
+> +++ RC12-rc4-rbc/drivers/scsi/sd.c	2005-05-15 12:30:38.769387199 -0400
+> @@ -1368,17 +1368,26 @@
+>   */
+>  static void
+>  sd_read_cache_type(struct scsi_disk *sdkp, char *diskname,
+> -		   struct scsi_request *SRpnt, unsigned char *buffer) {
+> +		   struct scsi_request *SRpnt, unsigned char *buffer)
+> +{
+>  	int len = 0, res;
+>  
+> -	const int dbd = 0;	   /* DBD */
+> -	const int modepage = 0x08; /* current values, cache page */
+> +	int dbd;
+> +	int modepage;
+>  	struct scsi_mode_data data;
+>  	struct scsi_sense_hdr sshdr;
+>  
+>  	if (sdkp->device->skip_ms_page_8)
+>  		goto defaults;
+>  
+> +	if (sdkp->device->type == TYPE_RBC) {
+> +		modepage = 6;
+> +		dbd = 8;
 
-Mode page number 0 is the unit attention vendor specific
-page which is not necessarily in "mode page format".
-The vendor that I know does use it, does at least follow
-mode page format.
-A requested page_num of 0x3f and a requested subpage_num
-of 0xff are wildcards.
+Al,
+In my experience setting the DBD flag only increases the
+chance of failure (from devices that don't understand the
+DBD (i.e. disable block descriptors) bit. Also dbd should
+be set (to 1) or cleared; not set to 8. Best to leave it clear
+(the default) as the offset calculation below takes into
+account any returned block descriptors.
+
+James,
+scsi_lib.c::__scsi_mode_sense() has a bug in it.
+If dbd is set then both the DBD and LLBA bits in the
+MODE SENSE cdb are set. However LLBA is not defined for
+MODE SENSE 6 (in SPC or RBC). That may be why Al's
+hardware doesn't like MODE SENSE 6 cdbs issued by the
+SCSI mid level :-)
+
+> +	} else {
+> +		modepage = 8;
+> +		dbd = 0;
+> +	}
+> +
+>  	/* cautiously ask */
+>  	res = sd_do_mode_sense(SRpnt, dbd, modepage, buffer, 4, &data);
+>  
+> @@ -1409,11 +1418,20 @@
+>  			"write back, no read (daft)"
+>  		};
+>  		int ct = 0;
+> -		int offset = data.header_length +
+> -			data.block_descriptor_length + 2;
+> +		int offset = data.header_length + data.block_descriptor_length;
+>  
+> -		sdkp->WCE = ((buffer[offset] & 0x04) != 0);
+> -		sdkp->RCD = ((buffer[offset] & 0x01) != 0);
+> +		if ((buffer[offset] & 0x3f) != modepage) {
+> +			printk(KERN_ERR "%s: got wrong page\n", diskname);
+> +			goto defaults;
+> +		}
+
+So here is the sanity check that I have been talking
+about. On my hardware since a MODE SENSE 10 was issued,
+the response is corrupt (actually the response for the
+corresponding MODE SENSE 6 is returned) so the exercise
+becomes futile. Note that my hardware complies with
+the RBC standard in properly supporting MODE SENSE 6.
+[The RBC standard doesn't say anything about what should
+happen when MODE SENSE 10 is issued :-)]
+
+To work on my hardware the next move would be to
+"sdev->use_10_for_ms = 0;" and try again (and if
+that fails give up).
+
+<snip>
 
 Doug Gilbert
-
-
-
--------------------------------------------------------
-This SF.Net email is sponsored by Oracle Space Sweepstakes
-Want to be the first software developer in space?
-Enter now for the Oracle Space Sweepstakes!
-http://ads.osdn.com/?ad_id=7412&alloc_id=16344&op=click
