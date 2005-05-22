@@ -1,115 +1,128 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: TYPE_RBC cache fixes (sbp2.c affected)
-Date: Sun, 22 May 2005 09:06:15 -0500
-Message-ID: <1116770775.5002.21.camel@mulgrave>
-References: <20050516015955.GL1150@parcelfarce.linux.theplanet.co.uk>
-	 <4290273E.6050306@torque.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] 2.6 aacraid: Add sysfs files for aacraid adapter information (re-diff)
+Date: Sun, 22 May 2005 17:54:43 +0100
+Message-ID: <20050522165443.GA31638@infradead.org>
+References: <1116362098.5838.2.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:59306 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261808AbVEVOG4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 May 2005 10:06:56 -0400
-In-Reply-To: <4290273E.6050306@torque.net>
+Received: from pentafluge.infradead.org ([213.146.154.40]:63195 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261830AbVEVQys (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 22 May 2005 12:54:48 -0400
+Content-Disposition: inline
+In-Reply-To: <1116362098.5838.2.camel@markh1.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net, Jeff Garzik <jgarzik@pobox.com>
+To: Mark Haverkamp <markh@osdl.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-On Sun, 2005-05-22 at 16:31 +1000, Douglas Gilbert wrote:
-> In my experience setting the DBD flag only increases the
-> chance of failure (from devices that don't understand the
-> DBD (i.e. disable block descriptors) bit. Also dbd should
-> be set (to 1) or cleared; not set to 8. Best to leave it clear
-> (the default) as the offset calculation below takes into
-> account any returned block descriptors.
-
-DBD is a listed *requirement* of RBC devices ... so I think we have to
-have it.  Also, it's a pass through to __scsi_mode_sense() not a bit
-flag (i.e. to set dbd in the command header, you have to set it to its
-correct bit position, i.e. 8).
-
-> James,
-> scsi_lib.c::__scsi_mode_sense() has a bug in it.
-> If dbd is set then both the DBD and LLBA bits in the
-> MODE SENSE cdb are set. However LLBA is not defined for
-> MODE SENSE 6 (in SPC or RBC). That may be why Al's
-> hardware doesn't like MODE SENSE 6 cdbs issued by the
-> SCSI mid level :-)
-
-no, look again; the statement is:
-
-	cmd[1] = dbd & 0x18;	/* allows DBD and LLBA bits */
-
-So if you set dbd  0x08, you get dbd and 0x10 you get LLBA etc.
-
-However, I agree, we shouldn't allow the setting of LLBA on MODE SENSE
-6, fixed below.
-
-> > +		if ((buffer[offset] & 0x3f) != modepage) {
-> > +			printk(KERN_ERR "%s: got wrong page\n", diskname);
-> > +			goto defaults;
-> > +		}
+On Tue, May 17, 2005 at 01:34:57PM -0700, Mark Haverkamp wrote:
+> Re-send of the patch diffed against the latest scsi-misc-2.6 git tree.
 > 
-> So here is the sanity check that I have been talking
-> about. On my hardware since a MODE SENSE 10 was issued,
-> the response is corrupt (actually the response for the
-> corresponding MODE SENSE 6 is returned) so the exercise
-> becomes futile. Note that my hardware complies with
-> the RBC standard in properly supporting MODE SENSE 6.
-> [The RBC standard doesn't say anything about what should
-> happen when MODE SENSE 10 is issued :-)]
+> This patch adds some files into the /sys/class/scsi_host/hostN
+> directories for aacraid adapters.  The file names are pretty much self-
+> explanitory:
 > 
-> To work on my hardware the next move would be to
-> "sdev->use_10_for_ms = 0;" and try again (and if
-> that fails give up).
+> aac_driver_version: Driver version and date
+> aac_bios_version: Adapter's bios version
+> aac_kernel_version: Adapter's kernel version
+> aac_monitor_version: Adapter's monitor version
+> aac_model: Adapter's model name/number
+> aac_serial_number: Adapter's serial number
 
-Well ... what I was wondering is whether to predicate the setting of
-use_10_for_ms in the firewire slave_configure on if (sdev->type !=
-TYPE_RBC).
+Can you remove all those aac_ prefixes?
 
-However, checking for corrupt mode pages in the routine seems like a
-good idea as well, does the attached work?
+> +static ssize_t aac_show_host_version(struct class_device *class_dev,
+> +		char *buf)
+> +{
+> +	int len;
+> +
+> +	len = snprintf(buf, PAGE_SIZE, "Adaptec Raid Controller: %s %s\n",
+> +		  AAC_DRIVER_VERSION,
+> +		  AAC_DRIVER_BUILD_DATE);
+> +	return len;
+> +}
 
-James
+the "Adaptec Raid Controller:" doesn't belong in here.  The driver build
+data and version neither, use MODULE_VERSION instead.
 
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1593,6 +1593,7 @@ __scsi_mode_sense(struct scsi_request *s
- 			len = 4;
- 
- 		cmd[0] = MODE_SENSE;
-+		cmd[1] &= 0x08; /* only DBD is legal */
- 		cmd[4] = len;
- 		header_length = 4;
- 	}
-@@ -1629,12 +1630,25 @@ __scsi_mode_sense(struct scsi_request *s
- 	if(scsi_status_is_good(sreq->sr_result)) {
- 		data->header_length = header_length;
- 		if(use_10_for_ms) {
-+			int actual_page;
-+
- 			data->length = buffer[0]*256 + buffer[1] + 2;
- 			data->medium_type = buffer[2];
- 			data->device_specific = buffer[3];
- 			data->longlba = buffer[4] & 0x01;
- 			data->block_descriptor_length = buffer[6]*256
- 				+ buffer[7];
-+
-+			/* Sanity check the return: some devices give
-+			 * rubbish back in response to ms(10) commands
-+			 * but work with ms(6) */
-+			actual_page = 
-+				buffer[header_length +
-+				       data->block_descriptor_length] & 0x3f;
-+			if (actual_page != modepage) {
-+				sreq->sr_device->use_10_for_ms = 0;
-+				goto retry;
-+			}
- 		} else {
- 			data->length = buffer[0] + 1;
- 			data->medium_type = buffer[1];
+> +
+> +static ssize_t aac_show_model(struct class_device *class_dev,
+> +		char *buf)
+> +{
+> +	struct aac_dev *dev = (struct aac_dev*)class_to_shost(class_dev)->hostdata;
 
+No need to cast.
+
+> +	int len;
+> +
+> +	len = snprintf(buf, PAGE_SIZE, "Vendor: %s Model: %s\n",
+> +		  aac_drivers[dev->cardtype].vname,
+> +		  aac_drivers[dev->cardtype].model);
+> +	return len;
+
+please use two different attributes and remove the prefix.
+
+> +static ssize_t aac_show_kernel_version(struct class_device *class_dev,
+> +		char *buf)
+> +{
+> +	struct aac_dev *dev = (struct aac_dev*)class_to_shost(class_dev)->hostdata;
+> +	int len, tmp;
+> +
+> +	tmp = le32_to_cpu(dev->adapter_info.kernelrev);
+> +	len = snprintf(buf, PAGE_SIZE, "kernel: %d.%d-%d[%d]\n", 
+> +	  tmp >> 24, (tmp >> 16) & 0xff, tmp & 0xff,
+> +	  le32_to_cpu(dev->adapter_info.kernelbuild));
+> +	return len;
+> +}
+
+Again please remove the prefix.  Also what does kernel version mean in
+this context?
+
+> +static ssize_t aac_show_monitor_version(struct class_device *class_dev,
+> +		char *buf)
+> +{
+> +	struct aac_dev *dev = (struct aac_dev*)class_to_shost(class_dev)->hostdata;
+> +	int len, tmp;
+> +
+> +	tmp = le32_to_cpu(dev->adapter_info.monitorrev);
+> +	len = snprintf(buf, PAGE_SIZE, "monitor: %d.%d-%d[%d]\n", 
+> +	  tmp >> 24, (tmp >> 16) & 0xff, tmp & 0xff,
+> +	  le32_to_cpu(dev->adapter_info.monitorbuild));
+> +	return len;
+
+Again no prefix please.
+
+> +}
+> +
+> +static ssize_t aac_show_bios_version(struct class_device *class_dev,
+> +		char *buf)
+> +{
+> +	struct aac_dev *dev = (struct aac_dev*)class_to_shost(class_dev)->hostdata;
+> +	int len, tmp;
+> +
+> +	tmp = le32_to_cpu(dev->adapter_info.biosrev);
+> +	len = snprintf(buf, PAGE_SIZE, "bios: %d.%d-%d[%d]\n", 
+> +	  tmp >> 24, (tmp >> 16) & 0xff, tmp & 0xff,
+> +	  le32_to_cpu(dev->adapter_info.biosbuild));
+> +	return len;
+> +}
+
+dito
+
+> +
+> +static ssize_t aac_show_serial_number(struct class_device *class_dev,
+> +		char *buf)
+> +{
+> +	struct aac_dev *dev = (struct aac_dev*)class_to_shost(class_dev)->hostdata;
+> +	int len = 0;
+> +
+> +	if (le32_to_cpu(dev->adapter_info.serial[0]) != 0xBAD0)
+> +		len = snprintf(buf, PAGE_SIZE, "serial: %x\n",
+> +		  le32_to_cpu(dev->adapter_info.serial[0]));
+> +	return len;
+> +}
+
+dito
 
