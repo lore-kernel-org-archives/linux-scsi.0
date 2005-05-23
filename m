@@ -1,49 +1,36 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] 2.6 aacraid: Add sysfs files for aacraid adapter information (re-diff)
-Date: Mon, 23 May 2005 15:12:02 -0400
-Message-ID: <60807403EABEB443939A5A7AA8A7458B0132B925@otce2k01.adaptec.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] aic7xxx: user scsi_device host private data
+Date: Mon, 23 May 2005 21:16:29 +0200
+Message-ID: <20050523191629.GA8365@lst.de>
+References: <20050523151422.GA3668@lst.de> <1116862481.5021.6.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:7913 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261939AbVEWTMF convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 May 2005 15:12:05 -0400
-content-class: urn:content-classes:message
+Received: from verein.lst.de ([213.95.11.210]:44452 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S261943AbVEWTQe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 May 2005 15:16:34 -0400
+Content-Disposition: inline
+In-Reply-To: <1116862481.5021.6.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Mark Haverkamp <markh@osdl.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <jejb@steeleye.com>
+Cc: Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig [mailto:hch@infradead.org] writes:
-> On Mon, May 23, 2005 at 11:36:48AM -0700, Mark Haverkamp wrote:
->> > the "Adaptec Raid Controller:" doesn't belong in here.  The driver
-build
->> > data and version neither, use MODULE_VERSION instead.
->> 
->> Using MODULE_VERSION in the snprinf doesn't seem to work:
->> 
->> drivers/scsi/aacraid/linit.c: In function `aac_show_host_version':
->> drivers/scsi/aacraid/linit.c:541: error: `MODULE_VERSION' undeclared
-(first use in this function)
->
->sorry, MODULE_VERSION is a macro similar to MODULE_LICENSE or
->MODULE_AUTHOR.
->You say MODULE_VERSION("something"); outside any function and you can
-find
->the version out using modinfo and sysfs (not sure the latter is
-implemented
->yet, but there were patches floating around)
+On Mon, May 23, 2005 at 10:34:41AM -0500, James Bottomley wrote:
+> On Mon, 2005-05-23 at 17:14 +0200, Christoph Hellwig wrote:
+> > -	BUG_ON(dev == NULL);
+> 
+> Leave that one, just in case ... I think it's completely impossible now,
+> but I'm still suspicious of the aic untagged queues and whether they can
+> spit back a command.
 
-modinfo reports the binaries modules information. The sysfs version
-would report the actual in-memory driver information. How do we make
-sure the sysfs report of the MODULE_VERSION patch is driven home? :-)
+This doesn't make sense as we never reset the hostdata, so this is a
+real can't happen.
 
-Sadly, we can't access the string that was placed into the .modinfo
-section (the name is a concatenation of the 'verison' with the line
-number of the MODULE_VERSION 'call') from within the driver program for
-use in the host_version function.
+> > -	BUG_ON(dev->active);
+> 
+> Ditto this one .. although I'm less sanguine that this won't be tripped.
 
--- Mark Salyzyn
+this makes a tiny little bit more sense to keep
+
