@@ -1,82 +1,60 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH RFC 1/2] add transport scan callout to fix sysfs layout when scanning from userspace
-Date: Tue, 24 May 2005 16:01:43 -0700
-Message-ID: <20050524230143.GA6407@us.ibm.com>
-References: <1116711431.6285.28.camel@mina>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH RFC 2/2] implement transport scan callout for iscsi
+Date: Tue, 24 May 2005 18:17:58 -0500
+Message-ID: <1116976678.7710.34.camel@mulgrave>
+References: <42936441.0b798bab.39a4.ffff9774SMTPIN_ADDED@mx.googlegroups.com>
+	 <42939610.3070104@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:57282 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S262154AbVEXXDK
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 May 2005 19:03:10 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e33.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j4ON37mD726458
-	for <linux-scsi@vger.kernel.org>; Tue, 24 May 2005 19:03:07 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j4ON36GO116210
-	for <linux-scsi@vger.kernel.org>; Tue, 24 May 2005 17:03:06 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j4ON35W0013649
-	for <linux-scsi@vger.kernel.org>; Tue, 24 May 2005 17:03:06 -0600
-Content-Disposition: inline
-In-Reply-To: <1116711431.6285.28.camel@mina>
+Received: from stat16.steeleye.com ([209.192.50.48]:42717 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262157AbVEXXSH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 May 2005 19:18:07 -0400
+In-Reply-To: <42939610.3070104@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, James Smart <James.Smart@Emulex.Com>
+Cc: open-iscsi@googlegroups.com, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
 
-[dropped iscsi list ...]
+On Tue, 2005-05-24 at 14:01 -0700, Mike Christie wrote:
+> > It's a leading transport connection of the session1 (above). Quoting the
+> > spec (http://www.faqs.org/rfcs/rfc3720.html):
+> > 
+> >    - According to [SAM2], the I_T nexus is a relationship
+> >      between a SCSI Initiator Port and a SCSI Target Port.  For iSCSI,
+> >      this relationship is a session, defined as a relationship between
+> >      an iSCSI Initiator's end of the session (SCSI Initiator Port) and
+> >      the iSCSI Target's Portal Group.  
+> > 
+> > The session itself is not a "physical connection"; it aggregates one or more
+> > transport connections between a given SCSI Initiator Port and a SCSI Target
+> > Port. There is always at least one (leading) connection.
+> > 
+> 
+> So just to be clear, open-iscsi can support multiple connections per 
+> session. Do you want us to completely remove this feature for mainline? 
+> I know you and christoph have given me this answer many times before, 
+> but not seeing a reply to Nicholas's question about just disabling may 
+> have created some doubt as to the extent people have to go? Since 
+> open-iscsi pushed the connection management code to userspace, removing 
+> MCS from the driver will not be too terrible a job for us though.
+> 
+> The connection dir for single connection sessions though is just a nice 
+> way to export the kernel structure's info and have it also reflect the 
+> iSCSI RFC's definitions at the same time. For sfnet we used to throw 
+> everything in one dir becuase it did not have a connection structure so 
+> it simplified refcounting.
 
-On Sat, May 21, 2005 at 02:37:11PM -0700, Mike Christie wrote:
-> When scanning hosts that implement FC rport support and
-> open-iscsi/linux-iscsi-5 hosts from userspace the sysfs
-> layout will end up placing the target's parent as the host
-> instead of some transport specific object. For FC the
-> target's parent should be the rport and for open-iscsi the
-> parent should be a session (that is if for open-iscsi our
-> using struct devices and our sysfs layout is correct).
+My current position on MC/S is that it runs counter to the no multi-
+pathing in the drivers policy, so should not be done.
 
-I was trying FC to see if it caused problems, instead of a different
-layout, no devices are found at all :-(
+As far as I can see it's an optional add on to the iSCSI standard which
+doesn't improve the feature set or provide any value add over the
+mandatory explicit multi-path support in rfc3720, which is easy to do
+via dm-multipath.
 
-Getting more info from Mike C, and looking at the code, I expected the
-scan to work OK, but for the targets to to show up directly under the
-host, rather than under the rport.
+James
 
-modprobe qla2300 finds sd's as expected (sdg -> sdz), then I remove them
-all via delete attribute, and then scan via /sys/class/scsi_host/host2/scan,
-and nothing shows up.
 
-With scsi command and scan logging on (0x2400 | 0x01c0), there were no
-commands sent, just:
-
-elm3b79:~# scsi_scan_host_selected: <2:4294967295:4294967295:4294967295>
-
-Reloading the qla2300, the devices show up fine again.
-
-I am running plain linux-2.6.12-rc4.
-
-Others with FC storage might want to try this out ...
-
-elm3b79:/sys/bus/scsi/devices# ls
-0:0:0:0  0:0:4:0   2:0:12:0  2:0:16:0  2:0:1:0  2:0:5:0  2:0:9:0
-0:0:1:0  0:0:5:0   2:0:13:0  2:0:17:0  2:0:2:0  2:0:6:0
-0:0:2:0  2:0:10:0  2:0:14:0  2:0:18:0  2:0:3:0  2:0:7:0
-0:0:3:0  2:0:11:0  2:0:15:0  2:0:19:0  2:0:4:0  2:0:8:0
-elm3b79:/sys/bus/scsi/devices# for x in 2\:0\:*/delete
-> do
-> echo x > ${x}
-> done
-
-elm3b79:/sys/bus/scsi/devices# echo "- - -"  > /sys/class/scsi_host/host2/scan
-
-elm3b79:~# modprobe -r qla2300
-elm3b79:~# modprobe qla2300
-elm3b79:~# ls /sys/bus/scsi/devices
-0:0:0:0  0:0:4:0   3:0:11:0  3:0:15:0  3:0:19:0  3:0:4:0  3:0:8:0
-0:0:1:0  0:0:5:0   3:0:12:0  3:0:16:0  3:0:1:0   3:0:5:0  3:0:9:0
-0:0:2:0  3:0:0:0   3:0:13:0  3:0:17:0  3:0:2:0   3:0:6:0
-0:0:3:0  3:0:10:0  3:0:14:0  3:0:18:0  3:0:3:0   3:0:7:0
-
--- Patrick Mansfield
