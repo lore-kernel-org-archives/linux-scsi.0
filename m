@@ -1,60 +1,52 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: sd driver
-Date: Tue, 24 May 2005 16:20:52 +1000
-Message-ID: <4292C7C4.2030204@torque.net>
-References: <42919ABC.9030508@netstorage.it>
-Reply-To: dougg@torque.net
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] libata: device suspend/resume
+Date: Tue, 24 May 2005 08:21:29 +0200
+Message-ID: <20050524062128.GT9855@suse.de>
+References: <20050523201535.GA24298@havoc.gtf.org> <1116880875.5021.34.camel@mulgrave> <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:44685 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S261166AbVEXGUr (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:46495 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261182AbVEXGVj (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 May 2005 02:20:47 -0400
-In-Reply-To: <42919ABC.9030508@netstorage.it>
+	Tue, 24 May 2005 02:21:39 -0400
+Content-Disposition: inline
+In-Reply-To: <1116886206.5021.42.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aldo Gavioli <aldo.gavioli@netstorage.it>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Aldo Gavioli wrote:
-> Hello All,
+On Mon, May 23 2005, James Bottomley wrote:
+> On Mon, 2005-05-23 at 16:45 -0400, Jeff Garzik wrote:
+> > On Mon, May 23, 2005 at 03:41:15PM -0500, James Bottomley wrote:
+> > > The thread petered out before a resolution, however, I think
+> > > at least disk devices should be doing a synchronize cache on suspend.
+> > 
+> > Agreed.
 > 
-> Hello All,
-> I'm trying to attach one proprietary SCSI driver for optical disk on 
-> kernel 2.6.
-> I noted that if sd attach the same device before, my driver will never 
-> be called in the probe function. How can I by-pass this situation ?
-> If anyone can help me I appreciate very much.
+> OK, try this as a straw horse.  It plumbs our scsi bus model into
+> suspend and resume via the driver (which would be the ULD) function.
+> The only ULD which has an extra function is sd, and all it does is
+> synchronize the cache if it was writeback.  I believe you translate SYNC
+> CACHE in libata, so this patch should be sufficient (unless we still
+> have a problem with ATA devices that lie about their cache types?)
+> 
+> I think this is sufficient, because if the LLD also wants this
+> information, it can get it from the model of the bus it's attached to.
 
-Aldo,
-Upper Level Drivers (ULDs of which sd is one) discriminate
-on the basis of the peripheral device type returned by an
-INQUIRY. Currently sd_probe() takes control of TYPE_DISK
-(pdt=0x0) and TYPE_MOD (pdt=0x7 "Optical memory device")
-and will soon take control of TYPE_RBC.
+suspend/resume is a lot more complicated than just flushing a cache, the
+below will probably get you safe asleep but you will never get devices
+alive again after power-up on suspend-to-ram.
 
-If the class of devices you are interested in is TYPE_MOD
-then (at least for testing) just comment out that bit of
-code in sd_probe().
-
-The st and osst (tape ULDs) co-operate to do a finer
-grain division of labour (see their respective *_probe()
-functions). These ULDs show you one way of solving the
-problem. Another way would be a kernel/module option
-to sd (and possibly other ULDs) telling it to leave
-device <h,c,t,l> (or better some world wide unique
-identifier) alone.
+I also greatly prefer issuing a standby command to the drive after the
+flush, so that we don't risk using the emergency parks of the drive. If
+a drive happens to lie about wrt the flush command, it gets an extra
+chance to flush the cache as it now knows that power will be gone very
+soon. So I think the ->suspend/->resume hooks should belong to the LLD,
+not the ULD as the ULD has no idea how to suspend all devices types.
 
 
-As for Arjan's comment about extending sd to cope with
-your class of devices, recent experience with RBC devices
-indicates that such a move may not add to the coherency
-of the sd driver.
-
-Doug Gilbert
-
-
-
+-- 
+Jens Axboe
 
