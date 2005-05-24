@@ -1,57 +1,82 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] Fix reference counting for failed SCSI devices
-Date: Tue, 24 May 2005 17:57:58 -0500
-Message-ID: <1116975478.7710.28.camel@mulgrave>
-References: <4292F631.9090300@suse.de>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH RFC 1/2] add transport scan callout to fix sysfs layout when scanning from userspace
+Date: Tue, 24 May 2005 16:01:43 -0700
+Message-ID: <20050524230143.GA6407@us.ibm.com>
+References: <1116711431.6285.28.camel@mina>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:24029 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261926AbVEXW6D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 May 2005 18:58:03 -0400
-In-Reply-To: <4292F631.9090300@suse.de>
+Received: from e33.co.us.ibm.com ([32.97.110.131]:57282 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S262154AbVEXXDK
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 May 2005 19:03:10 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e33.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j4ON37mD726458
+	for <linux-scsi@vger.kernel.org>; Tue, 24 May 2005 19:03:07 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j4ON36GO116210
+	for <linux-scsi@vger.kernel.org>; Tue, 24 May 2005 17:03:06 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j4ON35W0013649
+	for <linux-scsi@vger.kernel.org>; Tue, 24 May 2005 17:03:06 -0600
+Content-Disposition: inline
+In-Reply-To: <1116711431.6285.28.camel@mina>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, James Smart <James.Smart@Emulex.Com>
 
-On Tue, 2005-05-24 at 11:38 +0200, Hannes Reinecke wrote:
-> whenever the scsi-ml tries to scan non-existent devices the reference
-> count in scsi_alloc_sdev() and scsi_probe_and_add_lun() is not adjusted
-> properly. Every call to XXX_initialize in the driver core sets the
-> reference count to 1, so for a proper deallocation an explicit XXX_put()
-> has to be done.
+[dropped iscsi list ...]
 
-That's true, but I don't see what the problem is if the device has never
-been made visible.
+On Sat, May 21, 2005 at 02:37:11PM -0700, Mike Christie wrote:
+> When scanning hosts that implement FC rport support and
+> open-iscsi/linux-iscsi-5 hosts from userspace the sysfs
+> layout will end up placing the target's parent as the host
+> instead of some transport specific object. For FC the
+> target's parent should be the rport and for open-iscsi the
+> parent should be a session (that is if for open-iscsi our
+> using struct devices and our sysfs layout is correct).
 
-> +			put_device(&starget->dev);
+I was trying FC to see if it caused problems, instead of a different
+layout, no devices are found at all :-(
 
-this would amount to a double put, since the parent put method is called
-in the device release.
+Getting more info from Mike C, and looking at the code, I expected the
+scan to work OK, but for the targets to to show up directly under the
+host, rather than under the rport.
 
-> +	class_device_put(&sdev->sdev_classdev);
+modprobe qla2300 finds sd's as expected (sdg -> sdz), then I remove them
+all via delete attribute, and then scan via /sys/class/scsi_host/host2/scan,
+and nothing shows up.
 
-This is unnecessary since the class device is simply occupying a private
-area in the scsi_device.  As long as its never made visible to the
-system, its refcount is irrelevant
+With scsi command and scan logging on (0x2400 | 0x01c0), there were no
+commands sent, just:
 
->  	put_device(&sdev->sdev_gendev);
->  out:
->  	if (display_failure_msg)
-> @@ -855,6 +857,8 @@ static int scsi_probe_and_add_lun(struct
->  		if (sdev->host->hostt->slave_destroy)
->  			sdev->host->hostt->slave_destroy(sdev);
->  		transport_destroy_device(&sdev->sdev_gendev);
-> +		class_device_put(&sdev->sdev_classdev);
-> +		put_device(sdev->sdev_gendev.parent);
+elm3b79:~# scsi_scan_host_selected: <2:4294967295:4294967295:4294967295>
 
-same should apply here.  As long as this cascade occurs before
-scsi_add_lun() (which calls scsi_sysfs_add_sdev()), which is what makes
-the whole set of devices and classes visible.
+Reloading the qla2300, the devices show up fine again.
 
-James
+I am running plain linux-2.6.12-rc4.
 
+Others with FC storage might want to try this out ...
 
+elm3b79:/sys/bus/scsi/devices# ls
+0:0:0:0  0:0:4:0   2:0:12:0  2:0:16:0  2:0:1:0  2:0:5:0  2:0:9:0
+0:0:1:0  0:0:5:0   2:0:13:0  2:0:17:0  2:0:2:0  2:0:6:0
+0:0:2:0  2:0:10:0  2:0:14:0  2:0:18:0  2:0:3:0  2:0:7:0
+0:0:3:0  2:0:11:0  2:0:15:0  2:0:19:0  2:0:4:0  2:0:8:0
+elm3b79:/sys/bus/scsi/devices# for x in 2\:0\:*/delete
+> do
+> echo x > ${x}
+> done
+
+elm3b79:/sys/bus/scsi/devices# echo "- - -"  > /sys/class/scsi_host/host2/scan
+
+elm3b79:~# modprobe -r qla2300
+elm3b79:~# modprobe qla2300
+elm3b79:~# ls /sys/bus/scsi/devices
+0:0:0:0  0:0:4:0   3:0:11:0  3:0:15:0  3:0:19:0  3:0:4:0  3:0:8:0
+0:0:1:0  0:0:5:0   3:0:12:0  3:0:16:0  3:0:1:0   3:0:5:0  3:0:9:0
+0:0:2:0  3:0:0:0   3:0:13:0  3:0:17:0  3:0:2:0   3:0:6:0
+0:0:3:0  3:0:10:0  3:0:14:0  3:0:18:0  3:0:3:0   3:0:7:0
+
+-- Patrick Mansfield
