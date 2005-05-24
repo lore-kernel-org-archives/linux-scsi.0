@@ -1,68 +1,120 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: Re: [PATCH] 2.6 aacraid: Add sysfs files for aacraid adapter
-	information (re-diff)
-Date: Tue, 24 May 2005 07:18:28 -0700
-Message-ID: <1116944309.13106.2.camel@markh1.pdx.osdl.net>
-References: <1116362098.5838.2.camel@markh1.pdx.osdl.net>
-	 <20050522165443.GA31638@infradead.org>
-	 <1116873408.22284.26.camel@markh1.pdx.osdl.net>
-	 <20050523184610.GA19285@infradead.org>
-	 <1116881371.22284.29.camel@markh1.pdx.osdl.net>
-	 <20050524033020.GA23998@lists.us.dell.com>
+From: "Steven Nash" <Steven_Nash@compuserve.com>
+Subject: RE: [Bugme-new] [Bug 4201] New: megaraid crashes at random with CERC ATA100/4ch (DELL Controller) on PowerEdge 600SC
+Date: Tue, 24 May 2005 15:35:21 +0100
+Message-ID: <20050524143516.0375E7EC0F4@mailgate.sgnash.co.uk>
+References: <0E3FA95632D6D047BA649F95DAB60E57036626A7@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:43221 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261259AbVEXOSj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 May 2005 10:18:39 -0400
-In-Reply-To: <20050524033020.GA23998@lists.us.dell.com>
+Received: from mailgate.sgnash.co.uk ([80.176.179.82]:53156 "EHLO
+	mailgate.sgnash.co.uk") by vger.kernel.org with ESMTP
+	id S261486AbVEXOfX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 May 2005 10:35:23 -0400
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57036626A7@exa-atlanta>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Domsch <Matt_Domsch@dell.com>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: sju@lsil.com, 'Andrew Morton' <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
-On Mon, 2005-05-23 at 22:30 -0500, Matt Domsch wrote:
-> On Mon, May 23, 2005 at 01:49:30PM -0700, Mark Haverkamp wrote:
-> > On Mon, 2005-05-23 at 19:46 +0100, Christoph Hellwig wrote:
-> > > On Mon, May 23, 2005 at 11:36:48AM -0700, Mark Haverkamp wrote:
-> > > > > the "Adaptec Raid Controller:" doesn't belong in here.  The driver build
-> > > > > data and version neither, use MODULE_VERSION instead.
-> > > > 
-> > > > Using MODULE_VERSION in the snprinf doesn't seem to work:
-> > > > 
-> > > > drivers/scsi/aacraid/linit.c: In function `aac_show_host_version':
-> > > > drivers/scsi/aacraid/linit.c:541: error: `MODULE_VERSION' undeclared (first use in this function)
-> > > 
-> > > sorry, MODULE_VERSION is a macro similar to MODULE_LICENSE or MODULE_AUTHOR.
-> > > You say MODULE_VERSION("something"); outside any function and you can find
-> > > the version out using modinfo and sysfs (not sure the latter is implemented
-> > > yet, but there were patches floating around)
-> > 
-> > I haven't seen anything to display MODULE_VERSION in sysfs.
+Has anyone had chance to look at this bug yet?  I havn't seen any updates in
+the kernel tree related to this driver / bug.  For the time being I've been
+using kenel 2.6.9 (Fedora build: 2.6.9-1.724_FC3smp which seems stable,
+obviously at some point I'm going to need to upgrade to a later kernel.  I
+have answered the questions below in bugzilla.  Any suggestions on when a
+fix is likely to be available would be great.  I am prepared to try out
+patches etc.
+
+Cheers
+Steve
+
+> -----Original Message-----
+> From: sju@lsil.com [mailto:sju@lsil.com] 
+> Sent: 14 February 2005 13:30
+> To: 'Andrew Morton'; linux-scsi@vger.kernel.org
+> Cc: Steven_Nash@compuserve.com; Ju, Seokmann
+> Subject: RE: [Bugme-new] [Bug 4201] New: megaraid crashes at 
+> random with CERC ATA100/4ch (DELL Controller) on PowerEdge 600SC
 > 
-> http://marc.theaimsgroup.com/?l=linux-kernel&m=110671970405497&w=2
-> was posted, not included yet, and I haven't pushed it again lately
-> waiting for 2.6.12 to settle.
+>  
+> On Friday, February 11, 2005 7:29 PM, Andrew wrote:
+> > megaraid driver crashing.  I have tried forcing the old megaraid 
+> > driver in the kernel config and rebuilding but this has no effect.
 > 
-> > How about If I just print out AAC_DRIVER_VERSION which is what is
-> > passed into the MODULE_VERSION macro.
-> 
-> That's what others do (ethtool -i), so seems sane if you really need
-> it exported in sysfs before the above is merged.  What's the rush
-> though?  If it can wait a release, I'll push on the above then it'll
-> be there for all modules.
-
-I just hadn't seen that patch before.  If it is going to be merged in,
-then it seems like we should use that method instead of adding another.
-
-Mark.
-
+> Can you provide details on following,please?
+> - The megaraid driver version?
+> - Device configuration information on the CERC ATA100/4ch 
+> with options (cached, WT/WB, or read-ahead?)
+> - Size of main memory on PowerEdge 600SC?
+> - What are the typical I/O loads has been applied to reach crash?
 > 
 > Thanks,
-> Matt
 > 
--- 
-Mark Haverkamp <markh@osdl.org>
+> Seokmann
+> LSI Logic Corporation.
+> 
+> > -----Original Message-----
+> > From: Andrew Morton [mailto:akpm@osdl.org]
+> > Sent: Friday, February 11, 2005 7:29 PM
+> > To: linux-scsi@vger.kernel.org
+> > Cc: Steven_Nash@compuserve.com
+> > Subject: Fw: [Bugme-new] [Bug 4201] New: megaraid crashes at random 
+> > with CERC ATA100/4ch (DELL Controller) on PowerEdge 600SC
+> > 
+> > 
+> > 
+> > Begin forwarded message:
+> > 
+> > Date: Fri, 11 Feb 2005 16:08:26 -0800
+> > From: bugme-daemon@osdl.org
+> > To: bugme-new@lists.osdl.org
+> > Subject: [Bugme-new] [Bug 4201] New: megaraid crashes at 
+> random with 
+> > CERC ATA100/4ch (DELL Controller) on PowerEdge 600SC
+> > 
+> > 
+> > http://bugme.osdl.org/show_bug.cgi?id=4201
+> > 
+> >            Summary: megaraid crashes at random with CERC  
+> ATA100/4ch (DELL
+> >                     Controller) on PowerEdge 600SC
+> >     Kernel Version: 2.6.10
+> >             Status: NEW
+> >           Severity: high
+> >              Owner: andmike@us.ibm.com
+> >          Submitter: Steven_Nash@compuserve.com
+> > 
+> > 
+> > Distribution: Fedora Core 3
+> > Hardware Environment: x86 (32 bit)
+> > Software Environment: Vanilla Kernel & Fedora Build Kernel Problem 
+> > Description: After a day or two (varies) the system hangs 
+> and the only 
+> > option is to hit the reset button.  Sometimes sda errors 
+> appear on the 
+> > current active VT but nothing appears in the logs after 
+> reboot (which 
+> > is due to the megaraid driver crashing.  I have tried 
+> forcing the old 
+> > megaraid driver in the kernel config and rebuilding but this has no 
+> > effect.
+> > 
+> > Steps to reproduce:
+> > Run a system for a few days, crashes seem to occure around 
+> 3 am approx.
+> > The
+> > only other SCSI device on the system is a Dell DLT Drive.
+> > 
+> > This is a serious bug!
+> > 
+> > ------- You are receiving this mail because: ------- You 
+> are on the CC 
+> > list for the bug, or are watching someone who is.
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" 
+> > in the body of a message to majordomo@vger.kernel.org More 
+> majordomo 
+> > info at  http://vger.kernel.org/majordomo-info.html
+> 
 
