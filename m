@@ -1,31 +1,38 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH] libata: device suspend/resume
-Date: Tue, 24 May 2005 09:05:12 -0400
-Message-ID: <42932688.80203@adaptec.com>
-References: <20050523201535.GA24298@havoc.gtf.org> <1116880875.5021.34.camel@mulgrave> <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave> <20050524062128.GT9855@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: aic79xx update?
+Date: Tue, 24 May 2005 15:22:53 +0200
+Message-ID: <42932AAD.9060609@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20050524062128.GT9855@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jgarzik@pobox.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:59576 "EHLO mx2.suse.de")
+	by vger.kernel.org with ESMTP id S262047AbVEXNWy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 May 2005 09:22:54 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 05/24/05 02:21, Jens Axboe wrote:
-> suspend/resume is a lot more complicated than just flushing a cache, the
-> below will probably get you safe asleep but you will never get devices
-> alive again after power-up on suspend-to-ram.
-> 
-> I also greatly prefer issuing a standby command to the drive after the
-> flush, so that we don't risk using the emergency parks of the drive. If
-> a drive happens to lie about wrt the flush command, it gets an extra
-> chance to flush the cache as it now knows that power will be gone very
-> soon. So I think the ->suspend/->resume hooks should belong to the LLD,
-> not the ULD as the ULD has no idea how to suspend all devices types.
+Hi Luben,
 
-Very, very true and very, very correct!
+I did some patch regarding 'rmmod aic79xx' which got partially vetoed a=
+s
+the aic79xx driver should rather be updated to use the spi_transport
+class as the aic7xxx driver already has.
+Do you have any plans in that area?
 
-	Luben
+Cheers,
 
+Hannes
+--=20
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux AG				S390 & zSeries
+Maxfeldstra=DFe 5				+49 911 74053 688
+90409 N=FCrnberg				http://www.suse.de
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
