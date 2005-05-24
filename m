@@ -1,42 +1,57 @@
-From: Kumba <kumba@gentoo.org>
-Subject: Re: sd driver
-Date: Mon, 23 May 2005 23:26:56 -0400
-Message-ID: <42929F00.9000201@gentoo.org>
-References: <4291F929.2010409@netstorage.it>	<1116864085.6280.35.camel@laptopd505.fenrus.org>	<42927A35.6060207@gentoo.org> <20050523194119.6fa22450.rdunlap@xenotime.net>
+From: Matt Domsch <Matt_Domsch@dell.com>
+Subject: Re: [PATCH] 2.6 aacraid: Add sysfs files for aacraid adapter information (re-diff)
+Date: Mon, 23 May 2005 22:30:21 -0500
+Message-ID: <20050524033020.GA23998@lists.us.dell.com>
+References: <1116362098.5838.2.camel@markh1.pdx.osdl.net> <20050522165443.GA31638@infradead.org> <1116873408.22284.26.camel@markh1.pdx.osdl.net> <20050523184610.GA19285@infradead.org> <1116881371.22284.29.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rwcrmhc12.comcast.net ([216.148.227.85]:51361 "EHLO
-	rwcrmhc12.comcast.net") by vger.kernel.org with ESMTP
-	id S261344AbVEXDYQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 May 2005 23:24:16 -0400
-In-Reply-To: <20050523194119.6fa22450.rdunlap@xenotime.net>
+Received: from ausc60ps301.us.dell.com ([143.166.148.206]:35936 "EHLO
+	ausc60ps301.us.dell.com") by vger.kernel.org with ESMTP
+	id S261349AbVEXDaY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 May 2005 23:30:24 -0400
+Content-Disposition: inline
+In-Reply-To: <1116881371.22284.29.camel@markh1.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mark Haverkamp <markh@osdl.org>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-randy_dunlap wrote:
+On Mon, May 23, 2005 at 01:49:30PM -0700, Mark Haverkamp wrote:
+> On Mon, 2005-05-23 at 19:46 +0100, Christoph Hellwig wrote:
+> > On Mon, May 23, 2005 at 11:36:48AM -0700, Mark Haverkamp wrote:
+> > > > the "Adaptec Raid Controller:" doesn't belong in here.  The driver build
+> > > > data and version neither, use MODULE_VERSION instead.
+> > > 
+> > > Using MODULE_VERSION in the snprinf doesn't seem to work:
+> > > 
+> > > drivers/scsi/aacraid/linit.c: In function `aac_show_host_version':
+> > > drivers/scsi/aacraid/linit.c:541: error: `MODULE_VERSION' undeclared (first use in this function)
+> > 
+> > sorry, MODULE_VERSION is a macro similar to MODULE_LICENSE or MODULE_AUTHOR.
+> > You say MODULE_VERSION("something"); outside any function and you can find
+> > the version out using modinfo and sysfs (not sure the latter is implemented
+> > yet, but there were patches floating around)
 > 
-> No, that's OK, but that's not what happened in this case.
-> We saw 2 or 3 emails from Aldo in the space of 1-2 days.
+> I haven't seen anything to display MODULE_VERSION in sysfs.
 
-I was being somewhat sarcastic in my response, specifically because while I 
-considered my question [1] (more like a descriptive problem) lengthy, and 
-decently researched, I got no response for the rough length of time mentioned in 
-my preceeding response.  Yet, a person who writes a 6-8 line email and provides 
-virtually no information about their issue, or environment the issue is occuring 
-in, gets a response rather quickly.
+http://marc.theaimsgroup.com/?l=linux-kernel&m=110671970405497&w=2
+was posted, not included yet, and I haven't pushed it again lately
+waiting for 2.6.12 to settle.
 
-As I often like to say, "Go Figure", but that's just the cynic in me tonight.  I 
-blame C strings.
+> How about If I just print out AAC_DRIVER_VERSION which is what is
+> passed into the MODULE_VERSION macro.
 
+That's what others do (ethtool -i), so seems sane if you really need
+it exported in sysfs before the above is merged.  What's the rush
+though?  If it can wait a release, I'll push on the above then it'll
+be there for all modules.
 
-[1]: http://marc.theaimsgroup.com/?l=linux-scsi&m=111474736920566&w=2
-
-
---Kumba
+Thanks,
+Matt
 
 -- 
-"Such is oft the course of deeds that move the wheels of the world: small hands 
-do them because they must, while the eyes of the great are elsewhere."  --Elrond
+Matt Domsch
+Software Architect
+Dell Linux Solutions linux.dell.com & www.dell.com/linux
+Linux on Dell mailing lists @ http://lists.us.dell.com
