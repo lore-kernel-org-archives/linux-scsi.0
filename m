@@ -1,71 +1,63 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] libata: device suspend/resume
-Date: Tue, 24 May 2005 20:17:06 +1000
-Message-ID: <4292FF22.5040201@torque.net>
-References: <20050523201535.GA24298@havoc.gtf.org> <1116880875.5021.34.camel@mulgrave> <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave> <20050524062128.GT9855@suse.de> <4292CF5D.90809@pobox.com> <20050524070714.GU9855@suse.de> <4292D37C.5020700@pobox.com> <4292D44C.2040102@suse.de> <4292D55B.3050801@pobox.com>
-Reply-To: dougg@torque.net
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Correct order for device unregistration in aic7xxx
+Date: Tue, 24 May 2005 11:44:46 +0100
+Message-ID: <20050524104446.GA11829@infradead.org>
+References: <429300F7.6010106@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4292D55B.3050801@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:53649 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S262054AbVEXKos (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 May 2005 06:44:48 -0400
+Content-Disposition: inline
+In-Reply-To: <429300F7.6010106@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "Justin T. Gibbs" <gibbs@scsiguy.com>
 
-Jeff Garzik wrote:
-> Hannes Reinecke wrote:
-> 
->> We've finally succeeded in convincing everyone that having '/dev/sdX'
->> instead of '/dev/hdX' was a neccessary step forward.
->> I think we're getting shot if we now tell them to reverse this _again_.
->> Can we at least have it optional?
-> 
-> 
-> I will not break compatibility with /dev/sdX, don't worry :)
-> 
-> It will always be there as an optional piece, as I described in my other 
-> reply to you.
+On Tue, May 24, 2005 at 12:24:55PM +0200, Hannes Reinecke wrote:
+> --- linux-2.6.12-rc4/drivers/scsi/aic7xxx/aic7xxx_osm.c.orig	2005-05-24 11:53:51.000000000 +0200
+> +++ linux-2.6.12-rc4/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-05-24 11:55:30.000000000 +0200
+> @@ -1748,12 +1748,6 @@ ahc_platform_free(struct ahc_softc *ahc)
+>  	if (ahc->platform_data != NULL) {
+>  		del_timer_sync(&ahc->platform_data->completeq_timer);
+>  		tasklet_kill(&ahc->platform_data->runq_tasklet);
+> -		if (ahc->platform_data->host != NULL) {
+> -#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
+> -			scsi_remove_host(ahc->platform_data->host);
+> -#endif
+> -			scsi_host_put(ahc->platform_data->host);
+> -		}
+>  
+>  		/* destroy all of the device and target objects */
+>  		for (i = 0; i < AHC_NUM_TARGETS; i++) {
+> @@ -3623,6 +3617,20 @@ ahc_linux_init(void)
+>  static void
+>  ahc_linux_exit(void)
+>  {
+> +	struct ahd_softc *ahc;
+> +
+> +	/*
+> +	 * Tear down midlayer first
+> +	 */
+> +	TAILQ_FOREACH(ahc, &ahd_tailq, links) {
+> +		if (ahc->platform_data->host != NULL) {
+> +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
+> +			scsi_remove_host(ahc->platform_data->host);
+> +#endif
+> +			scsi_host_put(ahc->platform_data->host);
+> +		}
+> +	}
+> +
 
-Jeff,
-At the risk of boring you but informing others, Serial
-Attached SCSI (SAS) is going to muddy things.
+Sorrym this is not acceptable at all.  Please leave the host unregistration
+in ->remove (and while we're at it the scsi_host_put happens far too early
+in there) and move tearing down the DV thread later in ->remove.
 
-The SCSI ATA Translation (SAT
-http://www.t10.org/ftp/t10/drafts/sat/sat-r04.pdf )
-draft hopefully will find application any many areas
-other than libata (e.g. USB mass storage and 1394's
-SBP-2 drivers). The Scope section (section 1) of that
-draft makes interesting reading: in point a) the author
-sees SAT as presenting a unified command interface for
-block type devices across PATA, SATA and ATAPI!
-
-However the primary reason that SAT started is the
-fact that SAS infrastructure can include SATA disks.
-SAS defines the Serial ATA Tunneled Protocol (STP)
-which in linux will first appear in a SAS LLD (i.e.
-a scsi subsystem Low Level Driver, something like
-aic7xxx). Connecting a SATA disk (transported via SAS)
-to the IDE subsystem and a /dev/hd? device node seems
-like an unnatural act (a bit like ide-scsi in reverse).
-A solution involving libata seems appropriate in this case.
-
-Even more likely is that a SAT layer will be implemented
-in SAS enclosures just inches away from lots of SATA
-disks. From the point of view of a linux machine
-such SATA disks talk the SCSI command set and are
-connected via a SAS transport (Serial SCSI Protocol (SSP)).
-The only things that will probably care about the
-difference between such SATA disks and SAS disks are
-utilities like smartmontools (and that gap is being
-partially closed as well).
-
-Even without SAS we already have many fibre channel
-enclosures that bridge to SATA disks. Hopefully a
-SAT layer will be retro-fitted into some of those.
-
-Perhaps libata could be renamed libsat.
-
-Doug Gilbert
+You're current patch completely breaks hot removal.  Also please look
+at aic7xxx in current Linus' tree - it's using the SPI transport class
+and doesn't have it's own dv mechanisms anymore, only aic79xx needs
+fixes or preferably someone porting over the recent aic7xxx changes.
 
