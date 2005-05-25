@@ -1,39 +1,46 @@
-From: Aldo Gavioli <aldo.gavioli@netstorage.it>
-Subject: Disk Partitioning
-Date: Wed, 25 May 2005 15:55:06 +0200
-Message-ID: <429483BA.3070405@netstorage.it>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] Fix reference counting for failed SCSI devices
+Date: Wed, 25 May 2005 09:58:08 -0500
+Message-ID: <1117033088.4956.5.camel@mulgrave>
+References: <4292F631.9090300@suse.de> <1116975478.7710.28.camel@mulgrave>
+	 <4294201D.4070304@suse.de> <1117024043.5071.6.camel@mulgrave>
+	 <429473A1.6010402@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpout07.attiva.biz ([85.37.16.5]:1054 "EHLO
-	smtpout07.attiva.biz") by vger.kernel.org with ESMTP
-	id S262347AbVEYNzM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 May 2005 09:55:12 -0400
+Received: from stat16.steeleye.com ([209.192.50.48]:65513 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261390AbVEYO6R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 May 2005 10:58:17 -0400
+In-Reply-To: <429473A1.6010402@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Hello All,
-I'm trying to attach one SCSI driver to kernel 2.6 in order to pilot 
-optical disk type WORM.
+On Wed, 2005-05-25 at 14:46 +0200, Hannes Reinecke wrote:
+> > so it's contained within the scsi_device.  Freeing the scsi_device frees
+> > the classdev (and the gendev).
+> > 
+> But does not call the ->release function.
 
-I have a problem in accessing to a different partition than 0.
+Please just read the code like I asked.  If you do, you'll find that the
+sdev_classdev release method is NULL until scsi_sysfs_add_sdev()
+precisely for the reason that the class references don't matter until
+that point.  We're free to kill the whole thing without bothering about
+the class devices until scsi_add_lun detects something and calls
+scsi_sysfs_add_sdev() to make the whole thing visible.  Then all
+classdevs get a ref on the parent gendev which their release method
+relinquishes.
 
-On kernel 2.4 I could use the gendisk.part directy to set up my private 
-partitioning.
-On kernel 2.6  I'm using the add_disk functon, but I did not see any 
-possibility to set the disk->part field of gendisk struct.
+> Put it the other way round: does 'rmmod aic7xxx' work for you?
+> It certainly did _not_ work for aic79xx, hence the fix.
 
-How can I set my private partition in gendisk struct ?
+Well, I know aic7xxx works perfectly on a dual channel card, because I
+actually test the failure paths and insmod/rmmod is one of my tests.  I
+can't comment on aic79xx because I don't have the hardware.
 
-Thanks
-Aldo
-
--- 
-Aldo Gavioli
-Product Manager
-NetStorage Software s.r.l
-Viale Europa,74 - 20090 Cusago (Milan) Italy - Web: www.netstorage.it 
+James
 
 
