@@ -1,88 +1,94 @@
-From: "open_iscsi" <ESQuicksall_open_iscsi@Comcast.net>
-Subject: Re: [PATCH RFC 2/2] implement transport scan callout for iscsi
-Date: Tue, 24 May 2005 20:25:27 -0400
-Message-ID: <000b01c560c0$42c59700$03031eac@ivivity.com>
-References: <42936441.0b798bab.39a4.ffff9774SMTPIN_ADDED@mx.googlegroups.com> <42939610.3070104@cs.wisc.edu> <1116976678.7710.34.camel@mulgrave>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH RFC 1/2] add transport scan callout to fix sysfs layout when scanning from userspace
+Date: Tue, 24 May 2005 17:30:44 -0700
+Message-ID: <20050525003044.GA6564@us.ibm.com>
+References: <1116711431.6285.28.camel@mina> <20050524230143.GA6407@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="Windows-1252";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rwcrmhc13.comcast.net ([204.127.198.39]:52895 "EHLO
-	rwcrmhc13.comcast.net") by vger.kernel.org with ESMTP
-	id S262180AbVEYAZc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 May 2005 20:25:32 -0400
+Received: from e33.co.us.ibm.com ([32.97.110.131]:46249 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S262186AbVEYAbu
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 May 2005 20:31:50 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e33.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j4P0VnmD667540
+	for <linux-scsi@vger.kernel.org>; Tue, 24 May 2005 20:31:49 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j4P0VnGO130100
+	for <linux-scsi@vger.kernel.org>; Tue, 24 May 2005 18:31:49 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j4P0VmUo025256
+	for <linux-scsi@vger.kernel.org>; Tue, 24 May 2005 18:31:48 -0600
+Content-Disposition: inline
+In-Reply-To: <20050524230143.GA6407@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: open-iscsi@googlegroups.com, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, James Smart <James.Smart@Emulex.Com>
 
-The MC/S feature of iSCSI is not multi-pathing. Multi-pathing would be the 
-use of multiple sessions to reach the same target. Generally the two 
-sessions would use the same InitiatorName+ISID but use different Target 
-Portal Groups at the target. In SCSI terms, it is the same initiator 
-accessing different SCSI ports.
+On Tue, May 24, 2005 at 04:01:43PM -0700, Patrick Mansfield wrote:
 
-MC/S can be used to improve band width of a session without using 
-multi-pathing and it belongs in the driver because it is hidden from the 
-upper layers. Think of it like parallel wires, each carrying separate (but 
-sequenced) commands in parallel.
+> I was trying FC to see if it caused problems, instead of a different
+> layout, no devices are found at all :-(
 
-Eddy
+The qla2xxx_slave_alloc() is returning -ENXIO, and we don't output any
+printks in that case for qla2xxx. I added a couple qla_printk's and got
+lots of:
 
------ Original Message ----- 
-From: "James Bottomley" <James.Bottomley@SteelEye.com>
-To: "Mike Christie" <michaelc@cs.wisc.edu>
-Cc: <open-iscsi@googlegroups.com>; "'SCSI Mailing List'" 
-<linux-scsi@vger.kernel.org>
-Sent: Tuesday, May 24, 2005 7:17 PM
-Subject: Re: [PATCH RFC 2/2] implement transport scan callout for iscsi
+	qla2300 0000:01:0c.0: no rport for <7:0:0:0>
 
+For:
 
->
-> On Tue, 2005-05-24 at 14:01 -0700, Mike Christie wrote:
->> > It's a leading transport connection of the session1 (above). Quoting 
->> > the
->> > spec (http://www.faqs.org/rfcs/rfc3720.html):
->> >
->> >    - According to [SAM2], the I_T nexus is a relationship
->> >      between a SCSI Initiator Port and a SCSI Target Port.  For iSCSI,
->> >      this relationship is a session, defined as a relationship between
->> >      an iSCSI Initiator's end of the session (SCSI Initiator Port) and
->> >      the iSCSI Target's Portal Group.
->> >
->> > The session itself is not a "physical connection"; it aggregates one or 
->> > more
->> > transport connections between a given SCSI Initiator Port and a SCSI 
->> > Target
->> > Port. There is always at least one (leading) connection.
->> >
->>
->> So just to be clear, open-iscsi can support multiple connections per
->> session. Do you want us to completely remove this feature for mainline?
->> I know you and christoph have given me this answer many times before,
->> but not seeing a reply to Nicholas's question about just disabling may
->> have created some doubt as to the extent people have to go? Since
->> open-iscsi pushed the connection management code to userspace, removing
->> MCS from the driver will not be too terrible a job for us though.
->>
->> The connection dir for single connection sessions though is just a nice
->> way to export the kernel structure's info and have it also reflect the
->> iSCSI RFC's definitions at the same time. For sfnet we used to throw
->> everything in one dir becuase it did not have a connection structure so
->> it simplified refcounting.
->
-> My current position on MC/S is that it runs counter to the no multi-
-> pathing in the drivers policy, so should not be done.
->
-> As far as I can see it's an optional add on to the iSCSI standard which
-> doesn't improve the feature set or provide any value add over the
-> mandatory explicit multi-path support in rfc3720, which is easy to do
-> via dm-multipath.
->
-> James
->
-> 
+	echo "- - -"  > /sys/class/scsi_host/hostX/scan
+
+A change similar change what Mike C. did for iSCSI is needed for FC
+transport, or any transport that has a "device" between the host and
+target. For qla, we need to eventually call its slave_alloc() with a
+target under an rport (so starget_to_rport() gets the rport).
+
+Having a transportt->scan seems a bit high level, I have no better
+suggestion, there should be a way to make this generic for all transports.
+
+It is easy for iSCSI since it has a one-to-one mapping of scsi_host to
+scsi_target: AFAICT you just call scsi_scan_target() once. FC has to
+iterate over all rports, and call scsi_scan_target() for all targets, or
+find the rport that matches the id.
+
+Where is iscsi_register_transport? A current git tree? I should probably
+be using that tree, still trying to get up to speed on git.
+
+qla2xxx debug patch, but we should always print something when 
+returning -ENXIO:
+
+--- linux-2.6.12-rc4/drivers/scsi/qla2xxx/orig-qla_os.c	Fri May  6 22:20:31 2005
++++ linux-2.6.12-rc4/drivers/scsi/qla2xxx/qla_os.c	Tue May 24 16:58:14 2005
+@@ -992,8 +992,12 @@ qla2xxx_slave_alloc(struct scsi_device *
+ 	fc_port_t *fcport;
+ 	int found;
+ 
+-	if (!rport)
++	if (!rport) {
++		qla_printk(KERN_WARNING, ha,
++		    "no rport for <%d:%d:%d:%d>\n",
++		    sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
+ 		return -ENXIO;
++	}
+ 
+ 	found = 0;
+ 	list_for_each_entry(fcport, &ha->fcports, list) {
+@@ -1003,8 +1007,12 @@ qla2xxx_slave_alloc(struct scsi_device *
+ 			break;
+ 		}
+ 	}
+-	if (!found)
++	if (!found) {
++		qla_printk(KERN_WARNING, ha,
++		    "no device at <%d:%d:%d:%d>\n",
++		    sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
+ 		return -ENXIO;
++	}
+ 
+ 	sdev->hostdata = fcport;
+ 
+
 
