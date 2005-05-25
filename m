@@ -1,69 +1,61 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Adaptec 29160 + Promise Ultratrak100 TX8 problems
-Date: Wed, 25 May 2005 15:33:37 -0700
-Message-ID: <20050525153337.0a4436f5.akpm@osdl.org>
-References: <20050308145251.6b73b8b6.mdeboer@iua.upf.es>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: NBD (vs. iSCSI vs. EATA vs...)
+Date: Thu, 26 May 2005 01:41:54 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0505260103430.6612@poirot.grange>
+References: <1416215015.20050504193114@dns.toxicfilms.tv>
+ <1115236116.7761.19.camel@dhollis-lnx.sunera.com>  <1104082357.20050504231722@dns.toxicfilms.tv>
+  <1115305794.3071.5.camel@dhollis-lnx.sunera.com>  <20050507150538.GA800@favonius>
+  <Pine.LNX.4.60.0505102352430.9008@poirot.grange> <1115923927.5042.18.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:60299 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261554AbVEYWc5 (ORCPT
+Received: from mail.gmx.de ([213.165.64.20]:44746 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261612AbVEYXmh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 May 2005 18:32:57 -0400
-In-Reply-To: <20050308145251.6b73b8b6.mdeboer@iua.upf.es>
+	Wed, 25 May 2005 19:42:37 -0400
+In-Reply-To: <1115923927.5042.18.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Maarten de Boer <mdeboer@iua.upf.es>
-Cc: aic7xxx@freebsd.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Paul.Clements@steeleye.com
 
-Maarten de Boer <mdeboer@iua.upf.es> wrote:
->
-> Hello,
-> 
-> I am having nasty problems with an Adaptec 29160 and Promise
-> Ultratrak100 TX8 external RAID. (kernel 2.6.11)
+(Dropped most recepients of the original "ata over ethernet question" 
+discussion, including lkml, from CC)
 
-Could you please test 2.6.12-rc5, provide us with a status update?
+Hi
 
-Thanks.
+On Thu, 12 May 2005, James Bottomley wrote:
+> However, there is room for improvement in nbd, notably the handling of
+> packet commands, which looks to be eminently doable in the current
+> infrastructure (this would basically make nbd a replicator for the linux
+> block system, and would probably necessitate some client side changes to
+> achieve).  If you have any thoughts in this direction, you could drop an
+> email to the maintainer.
 
-> Initially, I can access the RAID normally. I create a (small, for
-> testing) partition on it, and an ext3 filesystem. But when I start
-> writing, in no-time the RAID and the SCSI adapter get into a broken
-> state, and rebooting both RAID and Linux (simply rmmod/modprobe is not
-> enough) is the only way out.
-> 
-> I trigger this with a small test like creating 10000 files, or
-> extracting a kernel tar.gz.
-> 
-> In my /var/log/messages I find:
-> 
-> Mar  8 10:58:22 iua-file-2 kernel: (scsi3:A:0:0): data overrun detected in Data-out phase.  Tag == 0x2.
-> Mar  8 10:58:22 iua-file-2 kernel: (scsi3:A:0:0): Have seen Data Phase.  Length = 524288.  NumSGs = 33.
-> Mar  8 10:58:52 iua-file-2 kernel: scsi3:0:0:0: Attempting to queue an ABORT message
-> Mar  8 10:58:52 iua-file-2 kernel: CDB: 0x2a 0x0 0x0 0x2 0x8c 0x37 0x0 0x4 0x0 0x0
-> Mar  8 10:58:52 iua-file-2 kernel: scsi3: At time of recovery, card was not paused
-> Mar  8 10:58:52 iua-file-2 kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
-> Mar  8 10:58:52 iua-file-2 kernel: scsi3: Dumping Card State in Data-out phase,
-> at SEQADDR 0x17b
-> Mar  8 10:58:52 iua-file-2 kernel: Card was paused
-> 
-> I have tried changing settings in the adaptec controller BIOS, I tried
-> lowering the global_tag_depth, all to no avail. And having the reboot
-> everytime it goes wrong makes trying things rather slow :-(
-> 
-> I googled for the messages, and found many people mentioning them, but
-> no solution.
-> 
-> I'd very much appreciate your help. Please Cc: me when replying, because
-> I am not subscribed to the lkml.
-> 
-> Kind regards,
-> 
-> Maarten
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Ok, I came to a stage, when I start a server and a client, and then on the 
+client side I can do open / close cycles, which would be respectively 
+passed to the server, thus not keeping the server file(s) busy all the 
+time. This allows, e.g., to export a CD-ROM, mount / umount it, eject it 
+(not yet over nbd), insert a new one, mount, etc. Also, open errors are 
+passed back, so, you get a nice "no medium" error on the client side 
+without a CD.
+
+IIUC, the suggestion from James to implement ATAPI translates in 
+user-space terms to implementing respective ioctl's, because this is what 
+nbd gets, and this is what nbd-server has to reproduce.
+
+So, the work is not finished, at least some ioctl's are needed. I had to 
+modify the kernel driver, and both the server and the client apps. No 
+backward compatibility, sorry:-( What I'd like to do now is to ask - is 
+there an interest in such changes to be integrated in the kernel / 
+nbd-package. If there is one - what are your wishes? If we get that far, 
+what should I post here - only the kernel patch, and user-space separately 
+to sf (I think?), or both?
+
+(see also my another post today to linux-scsi)
+
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
+
