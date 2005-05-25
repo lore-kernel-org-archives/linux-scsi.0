@@ -1,59 +1,107 @@
-From: Mogens Valentin <monz@danbbs.dk>
-Subject: Re: [ANNOUNCE] sdparm 0.92
-Date: Wed, 25 May 2005 04:42:50 +0200
-Message-ID: <4293E62A.5080408@danbbs.dk>
-References: <428DC633.5050403@torque.net> <4293BD80.1050503@danbbs.dk> <4293D798.4020606@torque.net>
-Reply-To: monz@danbbs.dk
+From: Dmitry Yusupov <dmitry_yus@yahoo.com>
+Subject: Re: [PATCH RFC 2/2] implement transport scan callout for iscsi
+Date: Tue, 24 May 2005 22:22:44 -0700
+Message-ID: <1116998565.1271.11.camel@mylaptop>
+References: <42936441.0b798bab.39a4.ffff9774SMTPIN_ADDED@mx.googlegroups.com>
+	 <42939610.3070104@cs.wisc.edu> <1116976678.7710.34.camel@mulgrave>
+	 <000b01c560c0$42c59700$03031eac@ivivity.com>
+	 <1116982816.7710.58.camel@mulgrave>
+	 <001101c560c9$0870f280$03031eac@ivivity.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pfepb.post.tele.dk ([195.41.46.236]:37735 "EHLO
-	pfepb.post.tele.dk") by vger.kernel.org with ESMTP id S262247AbVEYCmK
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 May 2005 22:42:10 -0400
-In-Reply-To: <4293D798.4020606@torque.net>
+Received: from smtp106.mail.sc5.yahoo.com ([66.163.169.226]:62873 "HELO
+	smtp106.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S262279AbVEYFW4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 May 2005 01:22:56 -0400
+In-Reply-To: <001101c560c9$0870f280$03031eac@ivivity.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com
+To: "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Mike Christie <michaelc@cs.wisc.edu>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
 
-Douglas Gilbert wrote:
-> Mogens Valentin wrote:
+On Tue, 2005-05-24 at 21:28 -0400, open_iscsi wrote:
+> But it is not multi-pathing. Multi-pathing belongs at a higher layer.
 > 
->> Douglas Gilbert wrote:
->>
->>> sdparm is a command line utility designed to get and set
->>> SCSI disk parameters (cf hdparm for ATA disks). ..snip..
->>
->> Nice! Just got it and tried on an external usb disk.
->> One feature I could use, probably others as well:
->> Could you add the ability to spin down/up a scsi disk?
->> I'd really like this for exteral (usb) disks.
+> Yes, you could make multi-pathing perform a similar action but being at a 
+> higher layer, it means more operations to achieve the same thing. Also, 
+> multi-pathing is better suited for failover than multi-connections.
 > 
-> Mogens,
-> With sg_start (in the sg3_utils package) I have tried
-> to spin up and down an ATA disk inside a USB enclosure
-> without success. The same command on a USB connected
-> CD/DVD combo drive did work.
+> There is another point here ... an HBA will probably use multi-connections 
+> irrespective of what higher layers want.
 > 
-> Could you try sg_start on your USB external enclosure
-> which I assume contains an ATA disk rather than a
-> SCSI (SPI) disk and report if it works?
+> Regarding the numbers, we get 400,000 IOPS with our hardware solution using 
+> multiple connections and multiple micro-engines. 
 
-Sure. Got it, compiled, but got the error:
-   .../usr/include/scsi/sg.h /usr/include/scsi/scsi.h
-   /usr/include/stdint.h   sg_lib.h sg_cmds.h llseek.h
-   gcc: cannot specify -o with -c or -S and multiple compilations
-   make: *** [sgp_dd.o] Error 1
+This number is impressive. I can not believe it is on Initiator side
+since quite a bit of code are involved besides TCP/IP: userspace app,
+VFS, SCSI-ML and LLDD (even though iSCSI HBA can do zero-copy on
+receive).
 
-I could only find  -o  and  -c  in the makefiles around line 95.
+With open-iscsi/linux-iscsi-5.x on very fast hardware the best we could
+get is 75,000 IOPS. And we believe it is a world record among other
+iSCSI software initiators.
 
-Slack 9.1 / 2.6.10 from sources.
+I also did comparison between multipath-like and MC/S-like setups and
+found that multipath-like setup scales much better, especially for
+WRITE's we found that scale factor is ~1.75. I.e. with single session
+we've got ~500MB/sec throughput and with two sessions we've got
+~800MB/sec.
 
-It's 4am, I'm off to bed, sorry :p
-
--- 
-Kind regards,
-Mogens Valentin
+> I have not tried 
+> multi-pathing but I can tell you that I had to count clocks to get that 
+> number and found that even a few extra clocks could mean a lot. So since 
+> multi-pathing takes a lot of extra clocks, then I think there is a benefit. 
+> However with a software solution the extra clocks for the multi-pathing may 
+> not be significant.
+> 
+> I would think that you would want to let the lower layers do their best to 
+> get the best thruput and leave the failover logic to the upper layers.
+> 
+> Eddy
+> 
+> ----- Original Message ----- 
+> From: "James Bottomley" <James.Bottomley@SteelEye.com>
+> To: "open_iscsi" <ESQuicksall_open_iscsi@Comcast.net>
+> Cc: <open-iscsi@googlegroups.com>; "Mike Christie" <michaelc@cs.wisc.edu>; 
+> "'SCSI Mailing List'" <linux-scsi@vger.kernel.org>
+> Sent: Tuesday, May 24, 2005 9:00 PM
+> Subject: Re: [PATCH RFC 2/2] implement transport scan callout for iscsi
+> 
+> 
+> > On Tue, 2005-05-24 at 20:25 -0400, open_iscsi wrote:
+> >> The MC/S feature of iSCSI is not multi-pathing. Multi-pathing would be 
+> >> the
+> >> use of multiple sessions to reach the same target. Generally the two
+> >> sessions would use the same InitiatorName+ISID but use different Target
+> >> Portal Groups at the target. In SCSI terms, it is the same initiator
+> >> accessing different SCSI ports.
+> >
+> > Well, yes, every driver vendor with a multi-path solution in-driver that
+> > made a single presentation to the mid-layer has argued that one...
+> >
+> > The bottom line is that implementation must be in-driver.  So every
+> > driver doing it this way has to have their own separate multi-path
+> > implementation.  Whether you call it FC/AL or MC/S (or any of the other
+> > buzz acronyms) it's still a driver implementation of pathing.
+> >
+> >> MC/S can be used to improve band width of a session without using
+> >> multi-pathing and it belongs in the driver because it is hidden from the
+> >> upper layers. Think of it like parallel wires, each carrying separate 
+> >> (but
+> >> sequenced) commands in parallel.
+> >
+> > So far, no-one has been able to produce any figures to show that MC/S is
+> > significantly better than symmetric active dm-multipath to an iSCSI
+> > target, but if you have them, please publish them.
+> >
+> > Hiding something from the upper layers which the upper layers could do
+> > equally well themselves is what's considered wrong: it adds code bloat
+> > with no tangible benefit.
+> >
+> > James
+> >
+> > 
+> 
 
