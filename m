@@ -1,39 +1,88 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] Fix reference counting for failed SCSI devices
-Date: Wed, 25 May 2005 19:01:06 +0100
-Message-ID: <20050525180106.GB14929@parcelfarce.linux.theplanet.co.uk>
-References: <4292F631.9090300@suse.de> <1116975478.7710.28.camel@mulgrave> <4294201D.4070304@suse.de> <1117024043.5071.6.camel@mulgrave> <429473A1.6010402@suse.de> <1117033088.4956.5.camel@mulgrave> <429496C2.3020706@suse.de> <1117043489.5210.4.camel@mulgrave>
+From: Mogens Valentin <monz@danbbs.dk>
+Subject: Re: [ANNOUNCE] sdparm 0.92
+Date: Wed, 25 May 2005 20:07:02 +0200
+Message-ID: <4294BEC6.30005@danbbs.dk>
+References: <428DC633.5050403@torque.net> <4293BD80.1050503@danbbs.dk> <4293D798.4020606@torque.net> <4293E62A.5080408@danbbs.dk> <429466EC.3080801@torque.net> <429478C2.3000003@danbbs.dk> <429480F9.6050802@torque.net> <42949D2E.5020309@danbbs.dk>
+Reply-To: monz@danbbs.dk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:29147 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261517AbVEYSAj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 May 2005 14:00:39 -0400
-Content-Disposition: inline
-In-Reply-To: <1117043489.5210.4.camel@mulgrave>
+Received: from pfepa.post.tele.dk ([195.41.46.235]:39792 "EHLO
+	pfepa.post.tele.dk") by vger.kernel.org with ESMTP id S261500AbVEYSGT
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 May 2005 14:06:19 -0400
+In-Reply-To: <42949D2E.5020309@danbbs.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Hannes Reinecke <hare@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "Moore, Eric Dean" <Eric.Moore@lsil.com>
+To: dougg@torque.net
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, May 25, 2005 at 01:51:29PM -0400, James Bottomley wrote:
-> Large segments of the aic79xx driver are identical to the aic7xxx driver
-> except that all the functions being ahd_ instead of ahc_, so you should
-> just be able to mirror quite a lot of the aic7xxx updates.  However, you
-> need to include a large number of rather nasty u320 parameters in the
-> SPI transport Class (and make sure they're coupled correctly) to get
-> domain validation to work ... the transport class has also only been
-> tested on speeds up to u160, so going to u320 will be a first for it
-> too...
+Mogens Valentin wrote:
+> Douglas Gilbert wrote:
+> 
+>> Mogens Valentin wrote:
+>>
+>>> Douglas Gilbert wrote:
+>>>
+>>>> Mogens Valentin wrote:
+>>>>
+>>>>> Douglas Gilbert wrote:
+>>>>>
+>>>>>> With sg_start (in the sg3_utils package) I have tried
+>>>>>> to spin up and down an ATA disk inside a USB enclosure
+>>>>>> without success. The same command on a USB connected
+>>>>>> CD/DVD combo drive did work.
+>>>>>>
+>>>>>> Could you try sg_start on your USB external enclosure
+>>>>>> which I assume contains an ATA disk rather than a
+>>>>>> SCSI (SPI) disk and report if it works?
+>>>>>
+>>>>> Sure. Got it, compiled, but got the error:
+>>>>>   .../usr/include/scsi/sg.h /usr/include/scsi/scsi.h
+>>>>>   /usr/include/stdint.h   sg_lib.h sg_cmds.h llseek.h
+>>>>>   gcc: cannot specify -o with -c or -S and multiple compilations
+>>>>>   make: *** [sgp_dd.o] Error 1
+>>>>>
+>>>>> I could only find  -o  and  -c  in the makefiles around line 95.
+>>>>>
+>>>>> Slack 9.1 / 2.6.10 from sources.
+>>>>
+>>>> Could you try the sg3_utils-1.15.tgz beta at the
+>>>> top of http://www.torque.net/sg [in the news section].
+>>>> Hopefully that cures the compile problem.
+>>>
+>>> Nope, but it changes the error. You changed the makefile exactly as I 
+>>> tried it, removing '-c' in line 95.
+>>> This results in missing header files compiles:
+> 
+>>> ...
+>>> creating sg_dd
+>>> gcc  -g -O2 -Wall -W -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 
+>>> -D_REENTRANT -c sgp_dd.c ...
+>>> .../usr/include/stdint.h sg_lib.h sg_cmds.h llseek.h
+>>> gcc: compilation of header file requested
+>>> gcc: compilation of header file requested
+>>> ...
+>>> make: *** [sgp_dd.o] Error 1
+>>>
+>>>
+>>> Forgot to mention I have gcc version 3.2.3, FWIW..
+>>> It's not exactly an uncommon problem; I googled a bit :p
+>>> I haven't pinpointed the problem as yet, but found comments (from 
+>>> compiling other apps) that it could be either a gcc versioning 
+>>> problem, a problem with -I or -D switches, or simply a Makefile problem.
 
-I wonder if LSI have any preliminary work in that area for the Fusion
-driver.  Eric?
+Dear oh dear!  Forgot to tell you I did:
+   make clean; make dep; make
+
+Doing just  make clean; make  did the job. Sorry about the problems.
+Still,  make dep  ought to work :p
+
+Doesn't change the fact that either my Prolific interface or the disk 
+doesn't support the needed scsi modes..
 
 -- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Kind regards,
+Mogens Valentin
+
