@@ -1,81 +1,66 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH RFC 2/2] implement transport scan callout for iscsi
-Date: Wed, 25 May 2005 11:18:05 -0400
-Message-ID: <4294972D.4030807@adaptec.com>
-References: <42936441.0b798bab.39a4.ffff9774SMTPIN_ADDED@mx.googlegroups.com>	 <42939610.3070104@cs.wisc.edu> <1116976678.7710.34.camel@mulgrave>	 <000b01c560c0$42c59700$03031eac@ivivity.com> <1116982816.7710.58.camel@mulgrave>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] Fix reference counting for failed SCSI devices
+Date: Wed, 25 May 2005 17:16:18 +0200
+Message-ID: <429496C2.3020706@suse.de>
+References: <4292F631.9090300@suse.de> <1116975478.7710.28.camel@mulgrave>	 <4294201D.4070304@suse.de> <1117024043.5071.6.camel@mulgrave>	 <429473A1.6010402@suse.de> <1117033088.4956.5.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:15320 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262364AbVEYPSI (ORCPT
+Received: from mx2.suse.de ([195.135.220.15]:31903 "EHLO mx2.suse.de")
+	by vger.kernel.org with ESMTP id S262370AbVEYPQV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 May 2005 11:18:08 -0400
-In-Reply-To: <1116982816.7710.58.camel@mulgrave>
+	Wed, 25 May 2005 11:16:21 -0400
+In-Reply-To: <1117033088.4956.5.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: open_iscsi <ESQuicksall_open_iscsi@Comcast.net>, open-iscsi@googlegroups.com, Mike Christie <michaelc@cs.wisc.edu>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On 05/24/05 21:00, James Bottomley wrote:
-> On Tue, 2005-05-24 at 20:25 -0400, open_iscsi wrote:
+James Bottomley wrote:
+> On Wed, 2005-05-25 at 14:46 +0200, Hannes Reinecke wrote:
+>>>so it's contained within the scsi_device.  Freeing the scsi_device f=
+rees
+>>>the classdev (and the gendev).
+>>>
+>>But does not call the ->release function.
 >=20
->>The MC/S feature of iSCSI is not multi-pathing. Multi-pathing would b=
-e the=20
->>use of multiple sessions to reach the same target. Generally the two=20
->>sessions would use the same InitiatorName+ISID but use different Targ=
-et=20
->>Portal Groups at the target. In SCSI terms, it is the same initiator=20
->>accessing different SCSI ports.
+> Please just read the code like I asked.  If you do, you'll find that =
+the
+> sdev_classdev release method is NULL until scsi_sysfs_add_sdev()
+> precisely for the reason that the class references don't matter until
+> that point.  We're free to kill the whole thing without bothering abo=
+ut
+> the class devices until scsi_add_lun detects something and calls
+> scsi_sysfs_add_sdev() to make the whole thing visible.  Then all
+> classdevs get a ref on the parent gendev which their release method
+> relinquishes.
 >=20
->=20
-> Well, yes, every driver vendor with a multi-path solution in-driver t=
-hat
-> made a single presentation to the mid-layer has argued that one...
+Oh, right. Indeed, you are totally correct. Sorry for the noise.
 
-MC/S in iSCSI can be seen as a "wide port" in SAS.
+>>Put it the other way round: does 'rmmod aic7xxx' work for you?
+>>It certainly did _not_ work for aic79xx, hence the fix.
+>=20
+> Well, I know aic7xxx works perfectly on a dual channel card, because =
+I
+> actually test the failure paths and insmod/rmmod is one of my tests. =
+ I
+> can't comment on aic79xx because I don't have the hardware.
+>=20
+I guess it's time to convert aic79xx to the spi_transport class.
+Unfortunately my attempt segfaults when removing a device in
+attribute_container_device_trigger(); someone is overwriting the ->matc=
+h
+function. Oh well, further debugging needed.
 
-That is, commands are ordered, nexus is the same, going to the same por=
-t,
-etc, etc, etc.  MC/S, has nothing to do with multipathing, which sits a=
-bove
-the nexus level.  With MC/S the nexus is the same.
+Cheers,
 
-MC/S is a good thing.
-
-	Luben
-
-P.S. As Eddy mentioned multipathing sits at a higher level, namely
-at the session level, where you open a different session to a different
-port (=E0 la SCSI parl=E9).
-=20
-> The bottom line is that implementation must be in-driver.  So every
-> driver doing it this way has to have their own separate multi-path
-> implementation.  Whether you call it FC/AL or MC/S (or any of the oth=
-er
-> buzz acronyms) it's still a driver implementation of pathing.
->=20
->=20
->>MC/S can be used to improve band width of a session without using=20
->>multi-pathing and it belongs in the driver because it is hidden from =
-the=20
->>upper layers. Think of it like parallel wires, each carrying separate=
- (but=20
->>sequenced) commands in parallel.
->=20
->=20
-> So far, no-one has been able to produce any figures to show that MC/S=
- is
-> significantly better than symmetric active dm-multipath to an iSCSI
-> target, but if you have them, please publish them.
->=20
-> Hiding something from the upper layers which the upper layers could d=
-o
-> equally well themselves is what's considered wrong: it adds code bloa=
-t
-> with no tangible benefit.
->=20
-> James
+Hannes
+--=20
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux AG				S390 & zSeries
+Maxfeldstra=C3=9Fe 5				+49 911 74053 688
+90409 N=C3=BCrnberg				http://www.suse.de
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
