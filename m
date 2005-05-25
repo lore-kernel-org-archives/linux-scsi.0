@@ -1,56 +1,78 @@
 From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: NBD (vs. iSCSI vs. EATA vs...)
-Date: Thu, 26 May 2005 01:41:54 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0505260103430.6612@poirot.grange>
-References: <1416215015.20050504193114@dns.toxicfilms.tv>
- <1115236116.7761.19.camel@dhollis-lnx.sunera.com>  <1104082357.20050504231722@dns.toxicfilms.tv>
-  <1115305794.3071.5.camel@dhollis-lnx.sunera.com>  <20050507150538.GA800@favonius>
-  <Pine.LNX.4.60.0505102352430.9008@poirot.grange> <1115923927.5042.18.camel@mulgrave>
+Subject: Re: [PATCH] libata: device suspend/resume
+Date: Thu, 26 May 2005 01:40:39 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0505252201270.6612@poirot.grange>
+References: <20050523201535.GA24298@havoc.gtf.org> <1116880875.5021.34.camel@mulgrave>
+ <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave>
+ <20050524062128.GT9855@suse.de> <4292CF5D.90809@pobox.com>
+ <20050524075953.GY9855@suse.de> <4292E3EE.10006@pobox.com>
+ <20050524085133.GZ9855@suse.de> <42935852.2020300@pobox.com>
+ <20050525092952.GA7005@suse.de>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:44746 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S261612AbVEYXmh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 May 2005 19:42:37 -0400
-In-Reply-To: <1115923927.5042.18.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20050525092952.GA7005@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Paul.Clements@steeleye.com
 
-(Dropped most recepients of the original "ata over ethernet question" 
-discussion, including lkml, from CC)
+On Wed, 25 May 2005, Jens Axboe wrote:
 
-Hi
+> On Tue, May 24 2005, Jeff Garzik wrote:
+> > Jens Axboe wrote:
+> > >I agree, it's a cleaner approach, with the rq being a container for
+> > >generel messages as well not just SCSI commands. The one missing piece
+> > >for that was the rq->end_io() callback so everything doesn't have to go
+> > >down sync, but that is in now as well.
+> > >
+> > >I'll try and cook something up.
+> > 
+> > Very cool ;)
+> 
+> This is the base for it. It splits request->flags into two variables:
+> 
+> - cmd_type. this is not a bitmask, but a value indicating what type of
+>   request this is.
+> 
+> - cmd_flags. various command modified flags.
+> 
+> The idea is to add a REQ_TYPE_LINUX_BLOCK request type, where we define
+> a set of command opcodes that signify an upper level defined function
+> (such as flush) that is implemented differently at the hardware/driver
+> level. Basically a way to pass down messages or commands generically.
+> 
+> I like this better than using scsi opcodes always, it's a cleaner
+> abstraction. For sending generic commands to a device, we could add a
+> function ala:
+> 
+> blk_send_message(queue, unsigned char cmd, completion_callback);
+> 
+> that would allocate the request, set it up, add to block layer queue,
+> and call the completion_callback when it is done. So for a flush, a
+> driver could do
+> 
+>         blk_send_message(q, REQ_LB_OP_FLUSH, flush_done);
+> 
+> to a target queue.
+> 
+> What do you think?
 
-On Thu, 12 May 2005, James Bottomley wrote:
-> However, there is room for improvement in nbd, notably the handling of
-> packet commands, which looks to be eminently doable in the current
-> infrastructure (this would basically make nbd a replicator for the linux
-> block system, and would probably necessitate some client side changes to
-> achieve).  If you have any thoughts in this direction, you could drop an
-> email to the maintainer.
+Heh, very nice! Just what's needed for nbd!:-) NBD has several "threads":
 
-Ok, I came to a stage, when I start a server and a client, and then on the 
-client side I can do open / close cycles, which would be respectively 
-passed to the server, thus not keeping the server file(s) busy all the 
-time. This allows, e.g., to export a CD-ROM, mount / umount it, eject it 
-(not yet over nbd), insert a new one, mount, etc. Also, open errors are 
-passed back, so, you get a nice "no medium" error on the client side 
-without a CD.
+1. the one running in the original nbd-client context, receiving answers 
+from the server and completing requests,
 
-IIUC, the suggestion from James to implement ATAPI translates in 
-user-space terms to implementing respective ioctl's, because this is what 
-nbd gets, and this is what nbd-server has to reproduce.
+2. the block queue
 
-So, the work is not finished, at least some ioctl's are needed. I had to 
-modify the kernel driver, and both the server and the client apps. No 
-backward compatibility, sorry:-( What I'd like to do now is to ask - is 
-there an interest in such changes to be integrated in the kernel / 
-nbd-package. If there is one - what are your wishes? If we get that far, 
-what should I post here - only the kernel patch, and user-space separately 
-to sf (I think?), or both?
+3. (my addition) block-device operations open, close, ioctl...
+
+1. and 2. are already working in the block queue context, to simplify 3. I 
+also faked those operations with block requests. I didn't go as far as 
+really submitting them to the block layer and completing them 
+respectively, I just used the same request object and inserted it directly 
+into the internal list to process replies in 1. With the current patch 
+from Jens (with some minor extensions) this could be done even nicer.
 
 (see also my another post today to linux-scsi)
 
