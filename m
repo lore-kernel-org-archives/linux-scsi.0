@@ -1,107 +1,30 @@
-From: Dmitry Yusupov <dmitry_yus@yahoo.com>
-Subject: Re: [PATCH RFC 2/2] implement transport scan callout for iscsi
-Date: Tue, 24 May 2005 22:22:44 -0700
-Message-ID: <1116998565.1271.11.camel@mylaptop>
-References: <42936441.0b798bab.39a4.ffff9774SMTPIN_ADDED@mx.googlegroups.com>
-	 <42939610.3070104@cs.wisc.edu> <1116976678.7710.34.camel@mulgrave>
-	 <000b01c560c0$42c59700$03031eac@ivivity.com>
-	 <1116982816.7710.58.camel@mulgrave>
-	 <001101c560c9$0870f280$03031eac@ivivity.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2.6.12-rc4-mm1 3/4] megaraid_sas: updating the driver
+Date: Wed, 25 May 2005 06:49:14 +0100
+Message-ID: <20050525054914.GA8574@infradead.org>
+References: <60807403EABEB443939A5A7AA8A7458B01399B22@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp106.mail.sc5.yahoo.com ([66.163.169.226]:62873 "HELO
-	smtp106.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S262279AbVEYFW4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 May 2005 01:22:56 -0400
-In-Reply-To: <001101c560c9$0870f280$03031eac@ivivity.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:41384 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S263195AbVEYFtT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 May 2005 01:49:19 -0400
+Content-Disposition: inline
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458B01399B22@otce2k01.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Mike Christie <michaelc@cs.wisc.edu>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Arjan van de Ven <arjan@infradead.org>, "Bagalkote, Sreenivas" <sreenib@lsil.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Matt_Domsch@Dell.com, Andrew Morton <akpm@osdl.org>, Christoph Hellwig <hch@infradead.org>
 
-On Tue, 2005-05-24 at 21:28 -0400, open_iscsi wrote:
-> But it is not multi-pathing. Multi-pathing belongs at a higher layer.
+On Tue, May 24, 2005 at 04:45:05PM -0400, Salyzyn, Mark wrote:
+> Could I get an historical (2.4 & Distribution) perspective on this. At
+> which point, or what code/include/manifest/version delineating it, would
+> you say the driver is no longer, if ever, required to place a lock
+> (host_lock or io_request_lock) around the scsi_done call?
 > 
-> Yes, you could make multi-pathing perform a similar action but being at a 
-> higher layer, it means more operations to achieve the same thing. Also, 
-> multi-pathing is better suited for failover than multi-connections.
-> 
-> There is another point here ... an HBA will probably use multi-connections 
-> irrespective of what higher layers want.
-> 
-> Regarding the numbers, we get 400,000 IOPS with our hardware solution using 
-> multiple connections and multiple micro-engines. 
+> I expect (or hope) the answer to be: always needs io_request_lock in
+> 2.4, never needed the host_lock in 2.5+.
 
-This number is impressive. I can not believe it is on Initiator side
-since quite a bit of code are involved besides TCP/IP: userspace app,
-VFS, SCSI-ML and LLDD (even though iSCSI HBA can do zero-copy on
-receive).
-
-With open-iscsi/linux-iscsi-5.x on very fast hardware the best we could
-get is 75,000 IOPS. And we believe it is a world record among other
-iSCSI software initiators.
-
-I also did comparison between multipath-like and MC/S-like setups and
-found that multipath-like setup scales much better, especially for
-WRITE's we found that scale factor is ~1.75. I.e. with single session
-we've got ~500MB/sec throughput and with two sessions we've got
-~800MB/sec.
-
-> I have not tried 
-> multi-pathing but I can tell you that I had to count clocks to get that 
-> number and found that even a few extra clocks could mean a lot. So since 
-> multi-pathing takes a lot of extra clocks, then I think there is a benefit. 
-> However with a software solution the extra clocks for the multi-pathing may 
-> not be significant.
-> 
-> I would think that you would want to let the lower layers do their best to 
-> get the best thruput and leave the failover logic to the upper layers.
-> 
-> Eddy
-> 
-> ----- Original Message ----- 
-> From: "James Bottomley" <James.Bottomley@SteelEye.com>
-> To: "open_iscsi" <ESQuicksall_open_iscsi@Comcast.net>
-> Cc: <open-iscsi@googlegroups.com>; "Mike Christie" <michaelc@cs.wisc.edu>; 
-> "'SCSI Mailing List'" <linux-scsi@vger.kernel.org>
-> Sent: Tuesday, May 24, 2005 9:00 PM
-> Subject: Re: [PATCH RFC 2/2] implement transport scan callout for iscsi
-> 
-> 
-> > On Tue, 2005-05-24 at 20:25 -0400, open_iscsi wrote:
-> >> The MC/S feature of iSCSI is not multi-pathing. Multi-pathing would be 
-> >> the
-> >> use of multiple sessions to reach the same target. Generally the two
-> >> sessions would use the same InitiatorName+ISID but use different Target
-> >> Portal Groups at the target. In SCSI terms, it is the same initiator
-> >> accessing different SCSI ports.
-> >
-> > Well, yes, every driver vendor with a multi-path solution in-driver that
-> > made a single presentation to the mid-layer has argued that one...
-> >
-> > The bottom line is that implementation must be in-driver.  So every
-> > driver doing it this way has to have their own separate multi-path
-> > implementation.  Whether you call it FC/AL or MC/S (or any of the other
-> > buzz acronyms) it's still a driver implementation of pathing.
-> >
-> >> MC/S can be used to improve band width of a session without using
-> >> multi-pathing and it belongs in the driver because it is hidden from the
-> >> upper layers. Think of it like parallel wires, each carrying separate 
-> >> (but
-> >> sequenced) commands in parallel.
-> >
-> > So far, no-one has been able to produce any figures to show that MC/S is
-> > significantly better than symmetric active dm-multipath to an iSCSI
-> > target, but if you have them, please publish them.
-> >
-> > Hiding something from the upper layers which the upper layers could do
-> > equally well themselves is what's considered wrong: it adds code bloat
-> > with no tangible benefit.
-> >
-> > James
-> >
-> > 
-> 
+You don't need any lock in 2.4 either.
 
