@@ -1,40 +1,48 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] allow the HBA to reserve target and device private
-	areas
-Date: Wed, 25 May 2005 07:17:17 -0500
-Message-ID: <1117023437.5071.2.camel@mulgrave>
-References: <1116971851.5897.52.camel@mulgrave>
-	 <20050525071353.GA13141@infradead.org>
+Subject: Re: [PATCH] Fix reference counting for failed SCSI devices
+Date: Wed, 25 May 2005 07:27:23 -0500
+Message-ID: <1117024043.5071.6.camel@mulgrave>
+References: <4292F631.9090300@suse.de> <1116975478.7710.28.camel@mulgrave>
+	 <4294201D.4070304@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:46311 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:55271 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262308AbVEYMRa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 May 2005 08:17:30 -0400
-In-Reply-To: <20050525071353.GA13141@infradead.org>
+	id S262321AbVEYM11 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 May 2005 08:27:27 -0400
+In-Reply-To: <4294201D.4070304@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Wed, 2005-05-25 at 08:13 +0100, Christoph Hellwig wrote:
-> Do we really need separate functions for this?  It would be so much nicer
-> to just have target_priv_size and device_priv_size members in the
-> foo_function_template.  Yes, it would mean having this in all different
-> transport templates, but in general having this as compile-time initializer
-> seems a lot nicer.
+On Wed, 2005-05-25 at 08:50 +0200, Hannes Reinecke wrote:
+> >>+	class_device_put(&sdev->sdev_classdev);
+> > 
+> > This is unnecessary since the class device is simply occupying a private
+> > area in the scsi_device.  As long as its never made visible to the
+> > system, its refcount is irrelevant
+> > 
+> It's not. Whenever you try to rmmod the adapter it becomes highly
+> relevant. If it doesn't crash you've at least generated a memleak as the
+> class device is never freed.
+> (And these are quite a few for Wide-SCSI Double-channel adapters ...)
 
-Well, they're not functions, they're inlines.  You at least have to have
-an accessor function because the reserved area occurs after the
-transport attributes and is aligned on the pointer size.
+?  Look at the code; you're not doing a put on a pointer to the
+sdev_classdev, you're doing a put on a reference to it.
 
-However, my first implementation was per transport class.  You don't
-actually need the x_private_offset at all because you know the size of
-the transport attributes.  I didn't like it because of all the
-duplication, but I'm willing to go back to it if there's strong feeling
-either way.
+It's defined in scsi_device.h:
+
+struct scsi_device {
+	...
+	struct class_device sdev_classdev;
+	...
+};
+
+so it's contained within the scsi_device.  Freeing the scsi_device frees
+the classdev (and the gendev).
 
 James
 
