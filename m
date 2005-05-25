@@ -1,88 +1,55 @@
-From: Mogens Valentin <monz@danbbs.dk>
-Subject: Re: [ANNOUNCE] sdparm 0.92
-Date: Wed, 25 May 2005 20:07:02 +0200
-Message-ID: <4294BEC6.30005@danbbs.dk>
-References: <428DC633.5050403@torque.net> <4293BD80.1050503@danbbs.dk> <4293D798.4020606@torque.net> <4293E62A.5080408@danbbs.dk> <429466EC.3080801@torque.net> <429478C2.3000003@danbbs.dk> <429480F9.6050802@torque.net> <42949D2E.5020309@danbbs.dk>
-Reply-To: monz@danbbs.dk
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH RFC 2/2] implement transport scan callout for iscsi
+Date: Wed, 25 May 2005 14:04:07 -0400
+Message-ID: <1117044247.5210.15.camel@mulgrave>
+References: <42936441.0b798bab.39a4.ffff9774SMTPIN_ADDED@mx.googlegroups.com>
+	 <42939610.3070104@cs.wisc.edu> <1116976678.7710.34.camel@mulgrave>
+	 <000b01c560c0$42c59700$03031eac@ivivity.com>
+	 <1116982816.7710.58.camel@mulgrave>  <4294972D.4030807@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pfepa.post.tele.dk ([195.41.46.235]:39792 "EHLO
-	pfepa.post.tele.dk") by vger.kernel.org with ESMTP id S261500AbVEYSGT
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 May 2005 14:06:19 -0400
-In-Reply-To: <42949D2E.5020309@danbbs.dk>
+Received: from stat16.steeleye.com ([209.192.50.48]:47852 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261889AbVEYSEZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 May 2005 14:04:25 -0400
+In-Reply-To: <4294972D.4030807@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: open_iscsi <ESQuicksall_open_iscsi@Comcast.net>, open-iscsi@googlegroups.com, Mike Christie <michaelc@cs.wisc.edu>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
 
-Mogens Valentin wrote:
-> Douglas Gilbert wrote:
+On Wed, 2005-05-25 at 11:18 -0400, Luben Tuikov wrote:
+> MC/S in iSCSI can be seen as a "wide port" in SAS.
 > 
->> Mogens Valentin wrote:
->>
->>> Douglas Gilbert wrote:
->>>
->>>> Mogens Valentin wrote:
->>>>
->>>>> Douglas Gilbert wrote:
->>>>>
->>>>>> With sg_start (in the sg3_utils package) I have tried
->>>>>> to spin up and down an ATA disk inside a USB enclosure
->>>>>> without success. The same command on a USB connected
->>>>>> CD/DVD combo drive did work.
->>>>>>
->>>>>> Could you try sg_start on your USB external enclosure
->>>>>> which I assume contains an ATA disk rather than a
->>>>>> SCSI (SPI) disk and report if it works?
->>>>>
->>>>> Sure. Got it, compiled, but got the error:
->>>>>   .../usr/include/scsi/sg.h /usr/include/scsi/scsi.h
->>>>>   /usr/include/stdint.h   sg_lib.h sg_cmds.h llseek.h
->>>>>   gcc: cannot specify -o with -c or -S and multiple compilations
->>>>>   make: *** [sgp_dd.o] Error 1
->>>>>
->>>>> I could only find  -o  and  -c  in the makefiles around line 95.
->>>>>
->>>>> Slack 9.1 / 2.6.10 from sources.
->>>>
->>>> Could you try the sg3_utils-1.15.tgz beta at the
->>>> top of http://www.torque.net/sg [in the news section].
->>>> Hopefully that cures the compile problem.
->>>
->>> Nope, but it changes the error. You changed the makefile exactly as I 
->>> tried it, removing '-c' in line 95.
->>> This results in missing header files compiles:
-> 
->>> ...
->>> creating sg_dd
->>> gcc  -g -O2 -Wall -W -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 
->>> -D_REENTRANT -c sgp_dd.c ...
->>> .../usr/include/stdint.h sg_lib.h sg_cmds.h llseek.h
->>> gcc: compilation of header file requested
->>> gcc: compilation of header file requested
->>> ...
->>> make: *** [sgp_dd.o] Error 1
->>>
->>>
->>> Forgot to mention I have gcc version 3.2.3, FWIW..
->>> It's not exactly an uncommon problem; I googled a bit :p
->>> I haven't pinpointed the problem as yet, but found comments (from 
->>> compiling other apps) that it could be either a gcc versioning 
->>> problem, a problem with -I or -D switches, or simply a Makefile problem.
+> That is, commands are ordered, nexus is the same, going to the same port,
+> etc, etc, etc.  MC/S, has nothing to do with multipathing, which sits above
+> the nexus level.  With MC/S the nexus is the same.
 
-Dear oh dear!  Forgot to tell you I did:
-   make clean; make dep; make
+When I use the term "multi-pathing" I mean multiple virtual paths may be
+traversed to get a command from an application to a target device.
+Under that definition, dm-multipath, MC/S and even network bonding are
+all examples of multi-pathing.
 
-Doing just  make clean; make  did the job. Sorry about the problems.
-Still,  make dep  ought to work :p
+The visibility of the coding is what I have an issue with.  bonding
+could be inherited invisibly from the network but MC/S has to be
+explicitly coded in the software initiator whereas dm-multipath is done
+above the driver: one code base for all multi-path implementations.
 
-Doesn't change the fact that either my Prolific interface or the disk 
-doesn't support the needed scsi modes..
+> MC/S is a good thing.
 
--- 
-Kind regards,
-Mogens Valentin
+a) It's optional, so you can't rely on it.
+b) it requires explicit coding in the driver which is a big negative
+since you can't leverage our existing multi-path code (i.e. more bug
+prone)
+c) The feature set it provides to Linux is identical to the feature set
+that dm-multipath provides.
+
+It's pointless to add support for an optional feature that provides no
+additional benefit (and its detrimental when the only addition is a
+potential negative impact to the code quality).
+
+James
+
 
