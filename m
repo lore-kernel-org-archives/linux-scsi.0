@@ -1,65 +1,112 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [ANNOUNCE] sdparm 0.92
-Date: Wed, 25 May 2005 11:40:40 +1000
-Message-ID: <4293D798.4020606@torque.net>
-References: <428DC633.5050403@torque.net> <4293BD80.1050503@danbbs.dk>
-Reply-To: dougg@torque.net
+From: "open_iscsi" <ESQuicksall_open_iscsi@Comcast.net>
+Subject: Re: [PATCH RFC 2/2] implement transport scan callout for iscsi
+Date: Tue, 24 May 2005 22:20:18 -0400
+Message-ID: <000601c560d0$4c14c1e0$03031eac@ivivity.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	format=flowed;
+	charset="Windows-1252";
+	reply-type=response
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:62640 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S262233AbVEYBke (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 May 2005 21:40:34 -0400
-In-Reply-To: <4293BD80.1050503@danbbs.dk>
+Received: from rwcrmhc14.comcast.net ([216.148.227.89]:17400 "EHLO
+	rwcrmhc14.comcast.net") by vger.kernel.org with ESMTP
+	id S262238AbVEYCUi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 May 2005 22:20:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: monz@danbbs.dk
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: open-iscsi@googlegroups.com, Mike Christie <michaelc@cs.wisc.edu>, 'SCSI Mailing List' <linux-scsi@vger.kernel.org>
 
-Mogens Valentin wrote:
-> Douglas Gilbert wrote:
-> 
->> sdparm is a command line utility designed to get and set
->> SCSI disk parameters (cf hdparm for ATA disks). More generally
->> it gets and sets mode page information on SCSI devices or devices
->> that use a SCSI command set (e.g. CD/DVD drives (any transport)
->> and SCSI tape drives). It also can list VPD pages including
->> the device identification page.
+I would like to correct myself on something I said below ... I said using 
+the upper layer to issue commands with multi-pathing would take more 
+execution time but I don't believe that is correct.
+
+Another point about multi-connections vs multi-pathing and that is 
+sequencing the commands. If you have ordered commands or head of queue tags, 
+you would have to go to more work at the upper layer. Also, there is a mode 
+page that must be properly set (I can't remember the page or bit now) or 
+sequencing can be a problem for simple tags too.
+
+Using multi-pathing for multi-connections is a historical solution. The only 
+SCSI protocol other than iSCSI that had multi-connection capability was SSA 
+and that would not sequence the commands. If I heard correctly recently, 
+there is a Fibre Channel group working on multi-connections for that too.
+
+Eddy
+
+----- Original Message ----- 
+From: "open_iscsi" <ESQuicksall_open_iscsi@Comcast.net>
+To: "James Bottomley" <James.Bottomley@SteelEye.com>
+Cc: <open-iscsi@googlegroups.com>; "Mike Christie" <michaelc@cs.wisc.edu>; 
+"'SCSI Mailing List'" <linux-scsi@vger.kernel.org>
+Sent: Tuesday, May 24, 2005 9:28 PM
+Subject: Re: [PATCH RFC 2/2] implement transport scan callout for iscsi
+
+
+> But it is not multi-pathing. Multi-pathing belongs at a higher layer.
+>
+> Yes, you could make multi-pathing perform a similar action but being at a 
+> higher layer, it means more operations to achieve the same thing. Also, 
+> multi-pathing is better suited for failover than multi-connections.
+>
+> There is another point here ... an HBA will probably use multi-connections 
+> irrespective of what higher layers want.
+>
+> Regarding the numbers, we get 400,000 IOPS with our hardware solution 
+> using multiple connections and multiple micro-engines. I have not tried 
+> multi-pathing but I can tell you that I had to count clocks to get that 
+> number and found that even a few extra clocks could mean a lot. So since 
+> multi-pathing takes a lot of extra clocks, then I think there is a 
+> benefit. However with a software solution the extra clocks for the 
+> multi-pathing may not be significant.
+>
+> I would think that you would want to let the lower layers do their best to 
+> get the best thruput and leave the failover logic to the upper layers.
+>
+> Eddy
+>
+> ----- Original Message ----- 
+> From: "James Bottomley" <James.Bottomley@SteelEye.com>
+> To: "open_iscsi" <ESQuicksall_open_iscsi@Comcast.net>
+> Cc: <open-iscsi@googlegroups.com>; "Mike Christie" <michaelc@cs.wisc.edu>; 
+> "'SCSI Mailing List'" <linux-scsi@vger.kernel.org>
+> Sent: Tuesday, May 24, 2005 9:00 PM
+> Subject: Re: [PATCH RFC 2/2] implement transport scan callout for iscsi
+>
+>
+>> On Tue, 2005-05-24 at 20:25 -0400, open_iscsi wrote:
+>>> The MC/S feature of iSCSI is not multi-pathing. Multi-pathing would be 
+>>> the
+>>> use of multiple sessions to reach the same target. Generally the two
+>>> sessions would use the same InitiatorName+ISID but use different Target
+>>> Portal Groups at the target. In SCSI terms, it is the same initiator
+>>> accessing different SCSI ports.
 >>
->> For more information and downloads (tarball, rpm and deb
->> packages) see:
->> http://www.torque.net/sg/sdparm.html
+>> Well, yes, every driver vendor with a multi-path solution in-driver that
+>> made a single presentation to the mid-layer has argued that one...
+>>
+>> The bottom line is that implementation must be in-driver.  So every
+>> driver doing it this way has to have their own separate multi-path
+>> implementation.  Whether you call it FC/AL or MC/S (or any of the other
+>> buzz acronyms) it's still a driver implementation of pathing.
+>>
+>>> MC/S can be used to improve band width of a session without using
+>>> multi-pathing and it belongs in the driver because it is hidden from the
+>>> upper layers. Think of it like parallel wires, each carrying separate 
+>>> (but
+>>> sequenced) commands in parallel.
+>>
+>> So far, no-one has been able to produce any figures to show that MC/S is
+>> significantly better than symmetric active dm-multipath to an iSCSI
+>> target, but if you have them, please publish them.
+>>
+>> Hiding something from the upper layers which the upper layers could do
+>> equally well themselves is what's considered wrong: it adds code bloat
+>> with no tangible benefit.
+>>
+>> James
+>>
+>>
 > 
-> 
-> Nice! Just got it and tried on an external usb disk.
-> One feature I could use, probably others as well:
-> Could you add the ability to spin down/up a scsi disk?
-> I'd really like this for exteral (usb) disks.
-
-Mogens,
-With sg_start (in the sg3_utils package) I have tried
-to spin up and down an ATA disk inside a USB enclosure
-without success. The same command on a USB connected
-CD/DVD combo drive did work.
-
-Could you try sg_start on your USB external enclosure
-which I assume contains an ATA disk rather than a
-SCSI (SPI) disk and report if it works?
-
-BTW I just checked libata (for SATA disks) and it does
-not seem to support the START STOP UNIT command.
-Jeff, could that one be added?
-
-> Doesn't seem it can; if I missed it, I'm sorry..
-
-It is hard to know where to stop with sdparm ;-)
-At the moment I am adding transport (protocol) specific
-mode page support. So currently sdparm specializes
-in mode pages (for all SCSI command sets) and INQUIRY
-information (including the device identification VPD
-page).
-
-Doug Gilbert
 
