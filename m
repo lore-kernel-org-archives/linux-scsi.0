@@ -1,34 +1,37 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] libata: device suspend/resume
-Date: Thu, 26 May 2005 01:40:39 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0505252201270.6612@poirot.grange>
-References: <20050523201535.GA24298@havoc.gtf.org> <1116880875.5021.34.camel@mulgrave>
- <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave>
- <20050524062128.GT9855@suse.de> <4292CF5D.90809@pobox.com>
- <20050524075953.GY9855@suse.de> <4292E3EE.10006@pobox.com>
- <20050524085133.GZ9855@suse.de> <42935852.2020300@pobox.com>
- <20050525092952.GA7005@suse.de>
+Date: Wed, 25 May 2005 21:05:51 -0400
+Message-ID: <429520EF.2070501@pobox.com>
+References: <20050523201535.GA24298@havoc.gtf.org> <1116880875.5021.34.camel@mulgrave> <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave> <20050524062128.GT9855@suse.de> <4292CF5D.90809@pobox.com> <20050524075953.GY9855@suse.de> <4292E3EE.10006@pobox.com> <20050524085133.GZ9855@suse.de> <42935852.2020300@pobox.com> <20050525092952.GA7005@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/mixed;
+ boundary="------------080304080801070200040800"
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20050525092952.GA7005@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 To: Jens Axboe <axboe@suse.de>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 25 May 2005, Jens Axboe wrote:
+This is a multi-part message in MIME format.
+--------------080304080801070200040800
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
+Jens Axboe wrote:
 > On Tue, May 24 2005, Jeff Garzik wrote:
-> > Jens Axboe wrote:
-> > >I agree, it's a cleaner approach, with the rq being a container for
-> > >generel messages as well not just SCSI commands. The one missing piece
-> > >for that was the rq->end_io() callback so everything doesn't have to go
-> > >down sync, but that is in now as well.
-> > >
-> > >I'll try and cook something up.
-> > 
-> > Very cool ;)
+> 
+>>Jens Axboe wrote:
+>>
+>>>I agree, it's a cleaner approach, with the rq being a container for
+>>>generel messages as well not just SCSI commands. The one missing piece
+>>>for that was the rq->end_io() callback so everything doesn't have to go
+>>>down sync, but that is in now as well.
+>>>
+>>>I'll try and cook something up.
+>>
+>>Very cool ;)
+> 
 > 
 > This is the base for it. It splits request->flags into two variables:
 > 
@@ -45,39 +48,75 @@ On Wed, 25 May 2005, Jens Axboe wrote:
 > I like this better than using scsi opcodes always, it's a cleaner
 > abstraction. For sending generic commands to a device, we could add a
 > function ala:
-> 
-> blk_send_message(queue, unsigned char cmd, completion_callback);
-> 
-> that would allocate the request, set it up, add to block layer queue,
-> and call the completion_callback when it is done. So for a flush, a
-> driver could do
-> 
->         blk_send_message(q, REQ_LB_OP_FLUSH, flush_done);
-> 
-> to a target queue.
-> 
-> What do you think?
 
-Heh, very nice! Just what's needed for nbd!:-) NBD has several "threads":
+cmd_type just adds a needless layer of switch{} statements in block 
+drivers, and its information that can be trivially derived from the 
+command opcode itself.
 
-1. the one running in the original nbd-client context, receiving answers 
-from the server and completing requests,
+	cmd_type = cmd_types[opcode];
 
-2. the block queue
+HOWEVER, don't fall in love with SCSI opcodes.
 
-3. (my addition) block-device operations open, close, ioctl...
+We want _Linux_ commands, not SCSI commands.  Just think of a 
+request_queue as having its own command protocol, one that you can 
+_change at will_.
 
-1. and 2. are already working in the block queue context, to simplify 3. I 
-also faked those operations with block requests. I didn't go as far as 
-really submitting them to the block layer and completing them 
-respectively, I just used the same request object and inserted it directly 
-into the internal list to process replies in 1. With the current patch 
-from Jens (with some minor extensions) this could be done even nicer.
+Yes, often request_queue commands may map seamlessly to SCSI (or ATA or 
+I2O) commands.  And that's good.  But don't let yourself be locked into 
+SCSI.  SCSI is not generic enough, nor mutable enough for all our needs.
 
-(see also my another post today to linux-scsi)
+Just the other day I was thinking about the simpler approach, like the 
+attached :)  It
+* adds RQ_ to avoid namespace conflicts
+* adds RQ_FLUSH, RQ_PM_EVENT
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+So, overall, I would say "think Linux opcodes" as the preferred direction.
 
+	Jeff
+
+
+
+--------------080304080801070200040800
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -66,13 +66,24 @@ extern int dir_notify_enable;
+ 
+ #define RW_MASK		1
+ #define RWA_MASK	2
+-#define READ 0
+-#define WRITE 1
+-#define READA 2		/* read-ahead  - don't block if no resources */
+-#define SPECIAL 4	/* For non-blockdevice requests in request queue */
+-#define READ_SYNC	(READ | (1 << BIO_RW_SYNC))
+-#define WRITE_SYNC	(WRITE | (1 << BIO_RW_SYNC))
+-#define WRITE_BARRIER	((1 << BIO_RW) | (1 << BIO_RW_BARRIER))
++#define RQ_READ		0
++#define RQ_WRITE	1
++#define RQ_READA	2	/* read-ahead  - don't block if no resources */
++#define RQ_SPECIAL	4	/* For non-blockdevice requests in request queue */
++#define RQ_READ_SYNC		(READ | (1 << BIO_RW_SYNC))
++#define RQ_WRITE_SYNC		(WRITE | (1 << BIO_RW_SYNC))
++#define RQ_WRITE_BARRIER	((1 << BIO_RW) | (1 << BIO_RW_BARRIER))
++#define RQ_FLUSH	7
++#define RQ_PM_EVENT	8
++
++/* compatibility with existing code */
++#define READ		RQ_READ
++#define WRITE		RQ_WRITE
++#define READA		RQ_READA
++#define SPECIAL		RQ_SPECIAL
++#define READ_SYNC	RQ_READ_SYNC
++#define WRITE_SYNC	RQ_WRITE_SYNC
++#define WRITE_BARRIER	RQ_WRITE_BARRIER
+ 
+ #define SEL_IN		1
+ #define SEL_OUT		2
+
+--------------080304080801070200040800--
