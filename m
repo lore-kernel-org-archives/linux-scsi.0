@@ -1,127 +1,113 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [Bugme-new] [Bug 4201] New: megaraid crashes at random with
- CERC ATA100/4ch (DELL Controller) on PowerEdge 600SC
-Date: Thu, 26 May 2005 13:23:38 -0700
-Message-ID: <20050526132338.599f1e70.akpm@osdl.org>
-References: <0E3FA95632D6D047BA649F95DAB60E57036626A7@exa-atlanta>
-	<20050524143516.0375E7EC0F4@mailgate.sgnash.co.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] libata: device suspend/resume
+Date: Fri, 27 May 2005 00:56:19 +0200
+Message-ID: <58cb370e0505261556788967a7@mail.gmail.com>
+References: <20050523201535.GA24298@havoc.gtf.org>
+	 <20050523204516.GA28058@havoc.gtf.org>
+	 <1116886206.5021.42.camel@mulgrave> <20050524062128.GT9855@suse.de>
+	 <4292CF5D.90809@pobox.com> <20050524075953.GY9855@suse.de>
+	 <4292E3EE.10006@pobox.com> <20050524085133.GZ9855@suse.de>
+	 <42935852.2020300@pobox.com> <20050525092952.GA7005@suse.de>
+Reply-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:56006 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261616AbVEZUYp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 May 2005 16:24:45 -0400
-In-Reply-To: <20050524143516.0375E7EC0F4@mailgate.sgnash.co.uk>
+Received: from wproxy.gmail.com ([64.233.184.207]:60064 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261709AbVEZW4U convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 May 2005 18:56:20 -0400
+Received: by wproxy.gmail.com with SMTP id 68so1529635wra
+        for <linux-scsi@vger.kernel.org>; Thu, 26 May 2005 15:56:20 -0700 (PDT)
+In-Reply-To: <20050525092952.GA7005@suse.de>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Steven Nash <Steven_Nash@compuserve.com>
-Cc: sju@lsil.com, linux-scsi@vger.kernel.org, sreenib@lsil.com
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-"Steven Nash" <Steven_Nash@compuserve.com> wrote:
->
-> Has anyone had chance to look at this bug yet?  I havn't seen any updates in
-> the kernel tree related to this driver / bug.  For the time being I've been
-> using kenel 2.6.9 (Fedora build: 2.6.9-1.724_FC3smp which seems stable,
-> obviously at some point I'm going to need to upgrade to a later kernel.  I
-> have answered the questions below in bugzilla.  Any suggestions on when a
-> fix is likely to be available would be great.  I am prepared to try out
-> patches etc.
+Nice work Jens, some feedback below:
+
+On 5/25/05, Jens Axboe <axboe@suse.de> wrote:
+
+> Index: drivers/ide/ide-floppy.c
+> ===================================================================
+> --- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/ide/ide-floppy.c  (mode:100644)
+> +++ uncommitted/drivers/ide/ide-floppy.c  (mode:100644)
+
+> @@ -1311,9 +1311,9 @@
+>                 }
+>                 pc = idefloppy_next_pc_storage(drive);
+>                 idefloppy_create_rw_cmd(floppy, pc, rq, block);
+> -       } else if (rq->flags & REQ_SPECIAL) {
+> +       } else if (blk_special_request(rq))
+>                 pc = (idefloppy_pc_t *) rq->buffer;
+> -       } else if (rq->flags & REQ_BLOCK_PC) {
+> +       } else if (blk_fs_request(rq)) {
+>                 pc = idefloppy_next_pc_storage(drive);
+>                 if (idefloppy_blockpc_cmd(floppy, pc, rq)) {
+>                         idefloppy_do_end_request(drive, 0, 0);
+
+blk_pc_request(rq)
+
+> Index: drivers/ide/ide-io.c
+> ===================================================================
+> --- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/ide/ide-io.c  (mode:100644)
+> +++ uncommitted/drivers/ide/ide-io.c  (mode:100644)
+
+> @@ -948,9 +948,10 @@
+>         if (!drive->special.all) {
+>                 ide_driver_t *drv;
 > 
+> -               if (rq->flags & (REQ_DRIVE_CMD | REQ_DRIVE_TASK))
+> +               if (rq->cmd_type == REQ_TYPE_ATA_CMD ||
+> +                   rq->cmd_type == REQ_TYPE_ATA_TASK)
+>                         return execute_drive_cmd(drive, rq);
+> -               else if (rq->flags & REQ_DRIVE_TASKFILE)
+> +               else if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE)
+>                         return execute_drive_cmd(drive, rq);
+>                 else if (blk_pm_request(rq)) {
+>  #ifdef DEBUG_PM
 
-Seems that more debugging is needed before we can talk about patches. 
-Could you please generate the info which Seokmann asked for, below?
+|| rq->cmd_type == REQ_TYPE_ATA_TASKFILE while at it
 
-Thanks.
+> Index: drivers/scsi/ide-scsi.c
+> ===================================================================
+> --- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/scsi/ide-scsi.c  (mode:100644)
+> +++ uncommitted/drivers/scsi/ide-scsi.c  (mode:100644)
 
+> @@ -370,12 +370,12 @@
+>         u8 *scsi_buf;
+>         unsigned long flags;
 > 
-> > -----Original Message-----
-> > From: sju@lsil.com [mailto:sju@lsil.com] 
-> > Sent: 14 February 2005 13:30
-> > To: 'Andrew Morton'; linux-scsi@vger.kernel.org
-> > Cc: Steven_Nash@compuserve.com; Ju, Seokmann
-> > Subject: RE: [Bugme-new] [Bug 4201] New: megaraid crashes at 
-> > random with CERC ATA100/4ch (DELL Controller) on PowerEdge 600SC
-> > 
-> >  
-> > On Friday, February 11, 2005 7:29 PM, Andrew wrote:
-> > > megaraid driver crashing.  I have tried forcing the old megaraid 
-> > > driver in the kernel config and rebuilding but this has no effect.
-> > 
-> > Can you provide details on following,please?
-> > - The megaraid driver version?
-> > - Device configuration information on the CERC ATA100/4ch 
-> > with options (cached, WT/WB, or read-ahead?)
-> > - Size of main memory on PowerEdge 600SC?
-> > - What are the typical I/O loads has been applied to reach crash?
-> > 
-> > Thanks,
-> > 
-> > Seokmann
-> > LSI Logic Corporation.
-> > 
-> > > -----Original Message-----
-> > > From: Andrew Morton [mailto:akpm@osdl.org]
-> > > Sent: Friday, February 11, 2005 7:29 PM
-> > > To: linux-scsi@vger.kernel.org
-> > > Cc: Steven_Nash@compuserve.com
-> > > Subject: Fw: [Bugme-new] [Bug 4201] New: megaraid crashes at random 
-> > > with CERC ATA100/4ch (DELL Controller) on PowerEdge 600SC
-> > > 
-> > > 
-> > > 
-> > > Begin forwarded message:
-> > > 
-> > > Date: Fri, 11 Feb 2005 16:08:26 -0800
-> > > From: bugme-daemon@osdl.org
-> > > To: bugme-new@lists.osdl.org
-> > > Subject: [Bugme-new] [Bug 4201] New: megaraid crashes at 
-> > random with 
-> > > CERC ATA100/4ch (DELL Controller) on PowerEdge 600SC
-> > > 
-> > > 
-> > > http://bugme.osdl.org/show_bug.cgi?id=4201
-> > > 
-> > >            Summary: megaraid crashes at random with CERC  
-> > ATA100/4ch (DELL
-> > >                     Controller) on PowerEdge 600SC
-> > >     Kernel Version: 2.6.10
-> > >             Status: NEW
-> > >           Severity: high
-> > >              Owner: andmike@us.ibm.com
-> > >          Submitter: Steven_Nash@compuserve.com
-> > > 
-> > > 
-> > > Distribution: Fedora Core 3
-> > > Hardware Environment: x86 (32 bit)
-> > > Software Environment: Vanilla Kernel & Fedora Build Kernel Problem 
-> > > Description: After a day or two (varies) the system hangs 
-> > and the only 
-> > > option is to hit the reset button.  Sometimes sda errors 
-> > appear on the 
-> > > current active VT but nothing appears in the logs after 
-> > reboot (which 
-> > > is due to the megaraid driver crashing.  I have tried 
-> > forcing the old 
-> > > megaraid driver in the kernel config and rebuilding but this has no 
-> > > effect.
-> > > 
-> > > Steps to reproduce:
-> > > Run a system for a few days, crashes seem to occure around 
-> > 3 am approx.
-> > > The
-> > > only other SCSI device on the system is a Dell DLT Drive.
-> > > 
-> > > This is a serious bug!
-> > > 
-> > > ------- You are receiving this mail because: ------- You 
-> > are on the CC 
-> > > list for the bug, or are watching someone who is.
-> > > -
-> > > To unsubscribe from this list: send the line "unsubscribe 
-> > linux-scsi" 
-> > > in the body of a message to majordomo@vger.kernel.org More 
-> > majordomo 
-> > > info at  http://vger.kernel.org/majordomo-info.html
-> > 
+> -       if (!(rq->flags & (REQ_SPECIAL|REQ_SENSE))) {
+> +       if (!blk_special_request(rq) || !blk_sense_request(rq)) {
+>                 ide_end_request(drive, uptodate, nrsecs);
+>                 return 0;
+>         }
+
+!blk_special_request(rq) && !blk_sense_request(rq)
+
+> Index: drivers/scsi/scsi_lib.c
+> ===================================================================
+> --- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/scsi/scsi_lib.c  (mode:100644)
+> +++ uncommitted/drivers/scsi/scsi_lib.c  (mode:100644)
+
+> @@ -922,7 +922,7 @@
+>         /*
+>          * if this is a rq->data based REQ_BLOCK_PC, setup for a non-sg xfer
+>          */
+> -       if ((req->flags & REQ_BLOCK_PC) && !req->bio) {
+> +       if (blk_pc_request(req) && req->bio) {
+>                 cmd->request_bufflen = req->data_len;
+>                 cmd->request_buffer = req->data;
+>                 req->buffer = req->data;
+
+!req->bio
+
+
+I assume they you've verified that there are no odd cases possible like
+rq->flags = REQ_DRIVE_TASKFILE | REQ_BAR_FLUSH or rq->flags = REQ_PC
+(without REQ_BLOCK_PC) which would be obviously broken by this patch?
+
+Bartlomiej
