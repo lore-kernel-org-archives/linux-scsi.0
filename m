@@ -1,36 +1,42 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH] qla2xxx: fix bad locking during eh_abort
-Date: Fri, 27 May 2005 16:31:29 -0400
-Message-ID: <1117225889.7379.25.camel@mulgrave>
+Date: Fri, 27 May 2005 16:38:25 -0400
+Message-ID: <1117226305.7379.30.camel@mulgrave>
 References: <20050526231938.GA31205@plap.qlogic.org>
 	 <1117224371.7379.21.camel@mulgrave>
-	 <20050527201831.GE16474@plap.qlogic.org>
+	 <20050527201831.GE16474@plap.qlogic.org>  <42978372.9070607@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:30639 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:35247 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262576AbVE0Ubo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 May 2005 16:31:44 -0400
-In-Reply-To: <20050527201831.GE16474@plap.qlogic.org>
+	id S262581AbVE0Uil (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 May 2005 16:38:41 -0400
+In-Reply-To: <42978372.9070607@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, 2005-05-27 at 13:18 -0700, Andrew Vasquez wrote:
-> Yes, with the latest changes being proposed/implemented by Jeff G.,
-> there would need to be some additional massaging of the driver's
-> eh_*() routines.
-> 
-> Are you planning on putting the host_lock-free changes in for -rc,
-> I figured that would be going into the next kernel rev.  I mention
-> that because I have a block of patches which I have queued-up to add
-> new chip support to the driver.
+On Fri, 2005-05-27 at 16:30 -0400, Jeff Garzik wrote:
+> The ha->hardware_lock is obtained without spin_lock_irq(), so that's 
+> correct.
 
-No ... we're too close to a real kernel to put something like that in.
-I'm just doing minimal essential bug fixes at the moment.
+Yes, that was my confusion
+
+But ... I wish you hadn't pointed it out.  Now I look at the driver, the
+ha->hardware_lock is taken at interrupt level (in the interrupt
+routines).
+
+However, this sequence of code:
+
+	spin_unlock_irq(ha->host->host_lock);
+	spin_lock(&ha->hardware_lock);
+
+Enables interrupts then takes this lock.  If we ever get a qla interrupt
+before we drop the ha->hardware_lock again, that will be a classic
+deadlock.
 
 James
 
