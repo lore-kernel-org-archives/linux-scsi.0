@@ -1,48 +1,49 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: PATCH [2/5]  qla2xxx: add remote port codes...
-Date: Fri, 27 May 2005 00:51:19 -0700
-Message-ID: <20050527075118.GB51419@sgi.com>
-References: <20050413191548.GI9703@plap.qlogic.org> <20050413191824.GK9703@plap.qlogic.org> <20050413214023.GA18161@infradead.org> <20050419072751.GD5999@plap.qlogic.org> <20050520061736.GA11551@sgi.com> <20050520151542.GA17419@plap.qlogic.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC][PATCH] allow sleep inside EH hooks
+Date: Fri, 27 May 2005 08:59:24 +0100
+Message-ID: <20050527075924.GA28608@infradead.org>
+References: <4296A2C7.4090107@pobox.com> <20050527071109.GB27256@infradead.org> <4296D0D8.6030907@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx3-ext.sgi.com ([192.48.171.20]:28116 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S261966AbVE0Hvb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 May 2005 03:51:31 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:40415 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261968AbVE0H71 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 May 2005 03:59:27 -0400
 Content-Disposition: inline
-In-Reply-To: <20050520151542.GA17419@plap.qlogic.org>
+In-Reply-To: <4296D0D8.6030907@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, May 20, 2005 at 08:15:42AM -0700, Andrew Vasquez wrote:
-> On Thu, 19 May 2005, Jeremy Higdon wrote:
+On Fri, May 27, 2005 at 03:48:40AM -0400, Jeff Garzik wrote:
+> Christoph Hellwig wrote:
+> >On Fri, May 27, 2005 at 12:32:07AM -0400, Jeff Garzik wrote:
+> >
+> >>SCSI EH processing already serializes things during EH, so this spinlock 
+> >>isn't really needed.
+> >>
+> >>Removing the spinlock outright would break drivers that surround logic 
+> >>with spin_unlock_irq()..spin_lock_irq(), so I introduced ->unlocked_eh 
+> >>option.
+> >
+> >
+> >Linus has vetoed such conditional locking in the past.  However if you do
+> >it don't make it EH specific but introduce a ->concurrent flag that 
+> >disables
+> >taking host_lock for ->queuecommand aswell.
 > 
-> > On Tue, Apr 19, 2005 at 12:27:51AM -0700, Andrew Vasquez wrote:
-> > 
-> > In fact, it seems to break probing for luns other than zero.
-> > 
-> > You initialize ha->max_luns in qla2x00_nvram_config(), which is called form
-> > qla2x00_initialize_adapter().  So we're currently seeing messages like
-> > this during ISP2312 initialization:
-> > 
-> > <4>scsi: host 1 channel 0 id 0 lun1 has a LUN larger than allowed by the host adapter
+> Such a 'concurrent' flag violates Linus credo "do what you must, and no 
+> more."  It's also silly and much too invasive.
 > 
-> Jeremy, could you try this patch out.
-> 
-> James, please apply.
-> 
-> 
-> [PATCH] Pull-down scsi-host-addition to follow board initialization.
-> 
-> Return to previous held-logic of calling scsi_add_host() only after
-> the board has been completely initialized.  Also return pci_*()
-> error-codes during probe failure paths.
+> Removing the locking from the EH routines (only), and fixing up all 
+> necessary drivers, is much more appealing.
 
+No, hav ing the host_lock only held for ->queuecommand which doesn't
+need that locking doesn't make any sense.  An API like the current one
+where we take the lock over all run-time entry points makes some sense,
+and one where we don't take the lock at all makes lots of sense.  One
+where we take the lock where it hurts most but not in the other cases
+doesn't.
 
-Thanks Andrew,
-
-This patch took care of the problem.
-
-jeremy
