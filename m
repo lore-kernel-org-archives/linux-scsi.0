@@ -1,133 +1,118 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: libata, SCSI and storage drivers
-Date: Fri, 27 May 2005 16:45:38 +1000
-Message-ID: <4296C212.4030703@torque.net>
-References: <20050523201535.GA24298@havoc.gtf.org> <1116880875.5021.34.camel@mulgrave> <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave> <20050524062128.GT9855@suse.de> <4292CF5D.90809@pobox.com> <20050524070714.GU9855@suse.de> <4292D37C.5020700@pobox.com> <20050524071320.GW9855@suse.de> <42968AC9.60705@pobox.com>
-Reply-To: dougg@torque.net
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] libata: device suspend/resume
+Date: Fri, 27 May 2005 08:54:16 +0200
+Message-ID: <20050527065415.GJ1435@suse.de>
+References: <20050523204516.GA28058@havoc.gtf.org> <1116886206.5021.42.camel@mulgrave> <20050524062128.GT9855@suse.de> <4292CF5D.90809@pobox.com> <20050524075953.GY9855@suse.de> <4292E3EE.10006@pobox.com> <20050524085133.GZ9855@suse.de> <42935852.2020300@pobox.com> <20050525092952.GA7005@suse.de> <58cb370e0505261556788967a7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <42968AC9.60705@pobox.com>
+Content-Disposition: inline
+In-Reply-To: <58cb370e0505261556788967a7@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Jeff Garzik wrote:
-> Jens Axboe wrote:
+On Fri, May 27 2005, Bartlomiej Zolnierkiewicz wrote:
+> Nice work Jens, some feedback below:
 > 
->> On Tue, May 24 2005, Jeff Garzik wrote:
->>
->>> Jens Axboe wrote:
->>>
->>>> On Tue, May 24 2005, Jeff Garzik wrote:
->>>>
->>>>> I can describe how this will look when libata is divorced from 
->>>>> SCSI, if you would like, too...
->>>>
->>>>
->>>> I was beginning to dispair you had given up that plan...
->>>
->>>
->>> hehe, nope.  I promised Linus, and I plan to keep my promise :)
->>
->>
->>
->> You promised me, too :)
->>
->>
->>> I know how to do it.  Internally things have been kept as separate as 
->>> possible from the SCSI layer.
->>
->>
->>
->> We should start a list of items that could potentially be moved to the
->> block layer that libata currently uses.
+> On 5/25/05, Jens Axboe <axboe@suse.de> wrote:
 > 
+> > Index: drivers/ide/ide-floppy.c
+> > ===================================================================
+> > --- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/ide/ide-floppy.c  (mode:100644)
+> > +++ uncommitted/drivers/ide/ide-floppy.c  (mode:100644)
 > 
+> > @@ -1311,9 +1311,9 @@
+> >                 }
+> >                 pc = idefloppy_next_pc_storage(drive);
+> >                 idefloppy_create_rw_cmd(floppy, pc, rq, block);
+> > -       } else if (rq->flags & REQ_SPECIAL) {
+> > +       } else if (blk_special_request(rq))
+> >                 pc = (idefloppy_pc_t *) rq->buffer;
+> > -       } else if (rq->flags & REQ_BLOCK_PC) {
+> > +       } else if (blk_fs_request(rq)) {
+> >                 pc = idefloppy_next_pc_storage(drive);
+> >                 if (idefloppy_blockpc_cmd(floppy, pc, rq)) {
+> >                         idefloppy_do_end_request(drive, 0, 0);
 > 
-> Here are the two broad categories of things that immediately come to mind.
+> blk_pc_request(rq)
+
+Indeed, thanks!
+
+> > Index: drivers/ide/ide-io.c
+> > ===================================================================
+> > --- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/ide/ide-io.c  (mode:100644)
+> > +++ uncommitted/drivers/ide/ide-io.c  (mode:100644)
 > 
+> > @@ -948,9 +948,10 @@
+> >         if (!drive->special.all) {
+> >                 ide_driver_t *drv;
+> > 
+> > -               if (rq->flags & (REQ_DRIVE_CMD | REQ_DRIVE_TASK))
+> > +               if (rq->cmd_type == REQ_TYPE_ATA_CMD ||
+> > +                   rq->cmd_type == REQ_TYPE_ATA_TASK)
+> >                         return execute_drive_cmd(drive, rq);
+> > -               else if (rq->flags & REQ_DRIVE_TASKFILE)
+> > +               else if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE)
+> >                         return execute_drive_cmd(drive, rq);
+> >                 else if (blk_pm_request(rq)) {
+> >  #ifdef DEBUG_PM
 > 
-> 1.  Hardware in pre-production right now can do SAS or SATA on the same 
-> card.  So, real soon, a driver will need to do both SCSI and ATA 
-> depending on runtime conditions.
+> || rq->cmd_type == REQ_TYPE_ATA_TASKFILE while at it
+
+Didn't even notice that, fixed.
+
+> > Index: drivers/scsi/ide-scsi.c
+> > ===================================================================
+> > --- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/scsi/ide-scsi.c  (mode:100644)
+> > +++ uncommitted/drivers/scsi/ide-scsi.c  (mode:100644)
 > 
-> The SCSI transport class is a very nice way to connect low-level drivers 
-> and the class drivers (disk/cdrom/tape/...).  It works well with the 
-> device model, and is modular in just the right location.
+> > @@ -370,12 +370,12 @@
+> >         u8 *scsi_buf;
+> >         unsigned long flags;
+> > 
+> > -       if (!(rq->flags & (REQ_SPECIAL|REQ_SENSE))) {
+> > +       if (!blk_special_request(rq) || !blk_sense_request(rq)) {
+> >                 ide_end_request(drive, uptodate, nrsecs);
+> >                 return 0;
+> >         }
 > 
-> I would like to develop ATA transport class(es).  In order to work well 
-> with SATA/SAS hardware, there will need to be at least one.
+> !blk_special_request(rq) && !blk_sense_request(rq)
+
+Thanks.
+
+> > Index: drivers/scsi/scsi_lib.c
+> > ===================================================================
+> > --- 137318b273db26b889675101fbd02d2e84cae5e3/drivers/scsi/scsi_lib.c  (mode:100644)
+> > +++ uncommitted/drivers/scsi/scsi_lib.c  (mode:100644)
 > 
-> And as I hoped you have guessed.....  the ATA transport class should be 
-> a child of the block layer, not the SCSI layer.
+> > @@ -922,7 +922,7 @@
+> >         /*
+> >          * if this is a rq->data based REQ_BLOCK_PC, setup for a non-sg xfer
+> >          */
+> > -       if ((req->flags & REQ_BLOCK_PC) && !req->bio) {
+> > +       if (blk_pc_request(req) && req->bio) {
+> >                 cmd->request_bufflen = req->data_len;
+> >                 cmd->request_buffer = req->data;
+> >                 req->buffer = req->data;
+> 
+> !req->bio
 
-Jeff,
-Yes, the SAS HBAs that I'm aware of can connect to
-SATA I/II disks "directly" on their phys.
+Yeah, this one I already found while trying to boot the patch, SG_IO
+barfed quickly without it.
 
-So here are two scenarios for connecting SATA disks:
+> I assume they you've verified that there are no odd cases possible like
+> rq->flags = REQ_DRIVE_TASKFILE | REQ_BAR_FLUSH or rq->flags = REQ_PC
+> (without REQ_BLOCK_PC) which would be obviously broken by this patch?
 
-a)
-  SAS HBA < -------------------------> SATA disk
+Not fully verified yet, there's some work to be done there. REQ_PC
+never had REQ_BLOCK_PC set, I want to unify those two in ide-cd though.
+Should be pretty trivial, I hope to even kill of the old pc_interrupt
+handling and just use newpc_interrupt at the same time.
 
-b)
-  SAS HBA <------>SAS_expander<------> SATA disk
+But that really should be on top of this patch, done afterwards!
 
-In a) the interconnect is SATA. Still it is hard
-to believe that the SAS HBA LLD would belong to
-anything other than the SCSI subsystem (since
-SAS HBAs come with 4 or 8 phys, others of which could
-be in scenario b) and/or connected to SAS disks).
-Hence the initiator_ports/phys/target_ports on and
-seen by that SAS HBA should (also) have SAS transport
-classes.
-
-When a SAS HBA phy is not connected to anything is it
-a member of a SAS transport class or a ATA transport
-class (or both)?
-
-In scenario b) the left interconnect is SAS and the
-right interconnect is SATA. The SAS_expander contains
-the STP<->SATA bridging function (and, for sake of
-argument, no SCSI-ATA Translation (SAT) layer).
-Would scenario b) also have a ATA transport
-class? I'll assume it does. To be discovered it also
-needs a SAS transport class. Larger enclosures are
-likely to be amplifications of scenario b). The presence
-of the SATA disk in scenario b) will be discovered via
-the SAS SMP (i.e. talking to the SAS_expander) or via
-the SES protocol (i.e. a SCSI Enclosure Services target
-running near the SAS_expander). Either way if there are
-a lot of SATA disks then they are likely to be held
-in their initialization sequence to stop them spinning
-up all at once. SAS transport intervention may be
-required (staggered timers are another possibility).
-
-Now I may be wrong but I think that one of the SAS HBAs
-that I have read about that looks (externally) like
-scenario a) but is actually scenario b). In other words
-the SAS_expander is silicon on the HBA and it is not
-controlled via the PCI bus, but rather by SMP.
-
-This suggests to me we would need an ordered sequence of
-transport classes. I really wonder about trying to model
-this level of complexity in sysfs, plus the nightmare of
-keeping state data of (topologically) distant nodes up
-to date. At some point one needs to supply a management
-pass through and hand the problem over to the user
-space. The question is, at what point.
-
-
-There are already FCP enclosures filled with SATA disks
-on the market so this problem in not unique to SAS.
-However they have (I presume) a SAT layer in their
-FC enclosures so the OS thinks it is taking to SCSI
-disks.
-
-Doug Gilbert
-
-
+-- 
+Jens Axboe
 
