@@ -1,29 +1,56 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Re: [PATCH 1/4] aic7xxx/aic79xx: call scsi_set_device()
-Date: Sun, 29 May 2005 10:05:23 +0100
-Message-ID: <20050529090523.GA20094@infradead.org>
-References: <20050529074029.GA25962@havoc.gtf.org> <20050529082422.GA19685@infradead.org> <429982E8.4000503@pobox.com>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: Re: [RFT][PATCH] aic79xx: remove busyq
+Date: Sun, 29 May 2005 13:21:30 +0400
+Message-ID: <200505291321.31090.adobriyan@gmail.com>
+References: <20050529074620.GA26151@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:8345 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261288AbVE2JFZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 May 2005 05:05:25 -0400
+Received: from wproxy.gmail.com ([64.233.184.202]:1889 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261197AbVE2JQ6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 29 May 2005 05:16:58 -0400
+Received: by wproxy.gmail.com with SMTP id 68so1290110wri
+        for <linux-scsi@vger.kernel.org>; Sun, 29 May 2005 02:16:57 -0700 (PDT)
+In-Reply-To: <20050529074620.GA26151@havoc.gtf.org>
 Content-Disposition: inline
-In-Reply-To: <429982E8.4000503@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sun, May 29, 2005 at 04:52:56AM -0400, Jeff Garzik wrote:
-> Christoph Hellwig wrote:
-> >scsi_add_host connects the host to the device tree.  scsi_set_device
-> >is obsolete and should go away ASAP.
+On Sunday 29 May 2005 11:46, Jeff Garzik wrote:
+> This changes the aic79xx driver to use the standard Linux SCSI queueing
+> code, rather than its own.  After applying this patch, NO behavior
+> changes should be seen.
 > 
-> Someone needs to tell authors of newer drivers not to use 
-> scsi_set_device(), until it can be deleted...
+> The patch is against 2.6.12-rc5, but probably applies OK to recent 2.6.x
+> kernels.
 
-I do so in every review :)
+s/PF_FREEZE/PF_NOFREEZE/ to apply to recent ones.
 
+> --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
+> +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+
+> @@ -2478,18 +2045,10 @@ ahd_linux_dv_thread(void *data)
+>  	 * Complete thread creation.
+>  	 */
+>  	lock_kernel();
+> -#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,60)
+> -	/*
+> -	 * Don't care about any signals.
+> -	 */
+> -	siginitsetinv(&current->blocked, 0);
+>  
+> -	daemonize();
+> -	sprintf(current->comm, "ahd_dv_%d", ahd->unit);
+> -#else
+>  	daemonize("ahd_dv_%d", ahd->unit);
+>  	current->flags |= PF_FREEZE;
+> -#endif
+> +
+>  	unlock_kernel();
+>  
+>  	while (1) {
