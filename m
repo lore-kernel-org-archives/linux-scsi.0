@@ -1,56 +1,91 @@
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: Re: [RFT][PATCH] aic79xx: remove busyq
-Date: Sun, 29 May 2005 13:21:30 +0400
-Message-ID: <200505291321.31090.adobriyan@gmail.com>
-References: <20050529074620.GA26151@havoc.gtf.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [PATCH 5/4] aic79xx: remove the last vestiges of the runq
+Date: Sun, 29 May 2005 12:54:49 -0400
+Message-ID: <4299F3D9.3050405@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------020301050803000601000104"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.202]:1889 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261197AbVE2JQ6 (ORCPT
+Received: from mail.dvmed.net ([216.237.124.58]:28903 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261213AbVE2Qyx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 May 2005 05:16:58 -0400
-Received: by wproxy.gmail.com with SMTP id 68so1290110wri
-        for <linux-scsi@vger.kernel.org>; Sun, 29 May 2005 02:16:57 -0700 (PDT)
-In-Reply-To: <20050529074620.GA26151@havoc.gtf.org>
-Content-Disposition: inline
+	Sun, 29 May 2005 12:54:53 -0400
+Received: from cpe-065-184-065-144.nc.res.rr.com ([65.184.65.144] helo=[10.10.10.88])
+	by mail.dvmed.net with esmtpsa (Exim 4.51 #1 (Red Hat Linux))
+	id 1DcR3s-0003W9-Cl
+	for linux-scsi@vger.kernel.org; Sun, 29 May 2005 16:54:52 +0000
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sunday 29 May 2005 11:46, Jeff Garzik wrote:
-> This changes the aic79xx driver to use the standard Linux SCSI queueing
-> code, rather than its own.  After applying this patch, NO behavior
-> changes should be seen.
-> 
-> The patch is against 2.6.12-rc5, but probably applies OK to recent 2.6.x
-> kernels.
+This is a multi-part message in MIME format.
+--------------020301050803000601000104
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-s/PF_FREEZE/PF_NOFREEZE/ to apply to recent ones.
 
-> --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-> +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+Next patch in the aic series...  this one should have been posted with 
+the last 4-part patch series.
 
-> @@ -2478,18 +2045,10 @@ ahd_linux_dv_thread(void *data)
->  	 * Complete thread creation.
->  	 */
->  	lock_kernel();
-> -#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,60)
-> -	/*
-> -	 * Don't care about any signals.
-> -	 */
-> -	siginitsetinv(&current->blocked, 0);
->  
-> -	daemonize();
-> -	sprintf(current->comm, "ahd_dv_%d", ahd->unit);
-> -#else
->  	daemonize("ahd_dv_%d", ahd->unit);
->  	current->flags |= PF_FREEZE;
-> -#endif
-> +
->  	unlock_kernel();
->  
->  	while (1) {
+Do not apply, only for review.
+
+
+
+--------------020301050803000601000104
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+author Jeff Garzik <jgarzik@pobox.com> Sun, 29 May 2005 12:22:46 -0400
+committer Jeff Garzik <jgarzik@pobox.com> Sun, 29 May 2005 12:22:46 -0400
+
+[SCSI] aic79xx: remove the last vestiges of the runq
+
+This was rendered obsolete by the busyq removal; remove some of the last
+remnants of its presence.
+
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -1796,7 +1796,6 @@ ahd_platform_alloc(struct ahd_softc *ahd
+ 		return (ENOMEM);
+ 	memset(ahd->platform_data, 0, sizeof(struct ahd_platform_data));
+ 	TAILQ_INIT(&ahd->platform_data->completeq);
+-	TAILQ_INIT(&ahd->platform_data->device_runq);
+ 	ahd->platform_data->irq = AHD_LINUX_NOIRQ;
+ 	ahd->platform_data->hw_dma_mask = 0xFFFFFFFF;
+ 	ahd_lockinit(ahd);
+@@ -3923,10 +3922,6 @@ ahd_done(struct ahd_softc *ahd, struct s
+ 	    && dev->active == 0
+ 	    && (dev->flags & AHD_DEV_TIMER_ACTIVE) == 0)
+ 		ahd_linux_free_device(ahd, dev);
+-	else if ((dev->flags & AHD_DEV_ON_RUN_LIST) == 0) {
+-		TAILQ_INSERT_TAIL(&ahd->platform_data->device_runq, dev, links);
+-		dev->flags |= AHD_DEV_ON_RUN_LIST;
+-	}
+ 
+ 	if ((scb->flags & SCB_RECOVERY_SCB) != 0) {
+ 		printf("Recovery SCB completes\n");
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.h b/drivers/scsi/aic7xxx/aic79xx_osm.h
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.h
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.h
+@@ -315,7 +315,6 @@ typedef enum {
+ 	AHD_DEV_UNCONFIGURED	 = 0x01,
+ 	AHD_DEV_FREEZE_TIL_EMPTY = 0x02, /* Freeze queue until active == 0 */
+ 	AHD_DEV_TIMER_ACTIVE	 = 0x04, /* Our timer is active */
+-	AHD_DEV_ON_RUN_LIST	 = 0x08, /* Queued to be run later */
+ 	AHD_DEV_Q_BASIC		 = 0x10, /* Allow basic device queuing */
+ 	AHD_DEV_Q_TAGGED	 = 0x20, /* Allow full SCSI2 command queueing */
+ 	AHD_DEV_PERIODIC_OTAG	 = 0x40, /* Send OTAG to prevent starvation */
+@@ -503,7 +502,6 @@ struct ahd_platform_data {
+ 	 * Fields accessed from interrupt context.
+ 	 */
+ 	struct ahd_linux_target *targets[AHD_NUM_TARGETS]; 
+-	TAILQ_HEAD(, ahd_linux_device) device_runq;
+ 	struct ahd_completeq	 completeq;
+ 
+ 	spinlock_t		 spin_lock;
+
+--------------020301050803000601000104--
