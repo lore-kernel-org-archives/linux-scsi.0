@@ -1,35 +1,30 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH 1/4] aic7xxx/aic79xx: call scsi_set_device()
-Date: Sun, 29 May 2005 09:24:22 +0100
-Message-ID: <20050529082422.GA19685@infradead.org>
-References: <20050529074029.GA25962@havoc.gtf.org>
+Date: Sun, 29 May 2005 04:27:37 -0400
+Message-ID: <42997CF9.8000609@pobox.com>
+References: <20050529074029.GA25962@havoc.gtf.org> <20050529082422.GA19685@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:49560 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261279AbVE2IYY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 May 2005 04:24:24 -0400
-Content-Disposition: inline
-In-Reply-To: <20050529074029.GA25962@havoc.gtf.org>
+Received: from mail.dvmed.net ([216.237.124.58]:26598 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261282AbVE2I1l (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 29 May 2005 04:27:41 -0400
+In-Reply-To: <20050529082422.GA19685@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-scsi@vger.kernel.org
 
-On Sun, May 29, 2005 at 03:40:29AM -0400, Jeff Garzik wrote:
-> 
-> 
-> [note:  just for review...  do not apply, will be submitted later via git]
-> 
-> author Jeff Garzik <jgarzik@pobox.com> Sun, 29 May 2005 06:47:07 -0400
-> committer Jeff Garzik <jgarzik@pobox.com> Sun, 29 May 2005 06:47:07 -0400
-> 
-> [SCSI] aic7xxx/aic79xx: call scsi_set_device()
-> 
-> The 2.4.x version correctly called scsi_set_pci_device(), but the
-> author missed the corresponding 2.6.x scsi_set_device() change.
+Christoph Hellwig wrote:
+> scsi_add_host connects the host to the device tree.  scsi_set_device
+> is obsolete and should go away ASAP.
 
-scsi_add_host connects the host to the device tree.  scsi_set_device
-is obsolete and should go away ASAP.
+Ahhh, indeed it does.
+
+It sounds like I should remove scsi_set_device(), and all calls to it.
+
+	Jeff
+
 
