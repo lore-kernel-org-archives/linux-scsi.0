@@ -1,198 +1,52 @@
 From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: adaptec aic7xxx bug
-Date: Mon, 30 May 2005 14:01:18 -0700
-Message-ID: <20050530140118.6a0d4c67.akpm@osdl.org>
+Subject: Re: 2.6.12-rc5: sleeping function called from invalid context
+ (qla2xxx/scsi_transport_fc?)
+Date: Mon, 30 May 2005 14:07:00 -0700
+Message-ID: <20050530140700.5a4fafa1.akpm@osdl.org>
+References: <20050530125118.GG17514@hpc2n.umu.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fire.osdl.org ([65.172.181.4]:16007 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261764AbVE3VCP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 May 2005 17:02:15 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261763AbVE3VNI@vger.kernel.org>
+In-Reply-To: <20050530125118.GG17514@hpc2n.umu.se>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ake <Ake.Sandgren@hpc2n.umu.se>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Yogesh Bhanu <yogesh@gsf.de>
 
+Ake.Sandgren@hpc2n.umu.se (Ake) wrote:
+>
+> Hi!
+> I got the following when i pulled the FC cable from one of my qla2312
+> cards.
+> This is a 2.6.12-rc5 kernel (with udm1 patches for 2.6.12-rc2)
+> 
+> 
+> May 30 14:12:45 ican-i kernel: [ 1109.864830] qla2300 0000:03:09.0: LOOP DOWN detected.
+> May 30 14:12:45 ican-i kernel: [ 1109.875948] Debug: sleeping function called from invalid context at include/linux/rwsem.h:43
+> May 30 14:12:45 ican-i kernel: [ 1109.894492] in_atomic():1, irqs_disabled():1
+> May 30 14:12:45 ican-i kernel: [ 1109.903864]  [dump_stack+30/48] dump_stack+0x1e/0x30
+> May 30 14:12:45 ican-i kernel: [ 1109.913648]  [__might_sleep+167/176] __might_sleep+0xa7/0xb0
+> May 30 14:12:45 ican-i kernel: [ 1109.924003]  [device_for_each_child+35/144] device_for_each_child+0x23/0x90
+> May 30 14:12:45 ican-i kernel: [ 1109.935865]  [pg0+944279047/1069622272] scsi_target_block+0x57/0x60 [scsi_mod]
+> May 30 14:12:45 ican-i kernel: [ 1109.949142]  [pg0+944996009/1069622272] fc_remote_port_block+0x39/0x60 [scsi_transport_fc]
+> May 30 14:12:45 ican-i kernel: [ 1109.964649]  [pg0+946826440/1069622272] qla2x00_mark_all_devices_lost+0x78/0x80 [qla2xxx]
+> May 30 14:12:45 ican-i kernel: [ 1109.980000]  [pg0+946857000/1069622272] qla2x00_async_event+0x4b8/0xd20 [qla2xxx]
+> May 30 14:12:45 ican-i kernel: [ 1109.993778]  [pg0+946855321/1069622272] qla2300_intr_handler+0x149/0x220 [qla2xxx]
+> May 30 14:12:45 ican-i kernel: [ 1110.007748]  [handle_IRQ_event+51/112] handle_IRQ_event+0x33/0x70
+> May 30 14:12:45 ican-i kernel: [ 1110.018709]  [__do_IRQ+230/320] __do_IRQ+0xe6/0x140
+> May 30 14:12:45 ican-i kernel: [ 1110.028321]  [do_IRQ+55/112] do_IRQ+0x37/0x70
+> May 30 14:12:45 ican-i kernel: [ 1110.037362]  [common_interrupt+26/32] common_interrupt+0x1a/0x20
+> May 30 14:12:45 ican-i kernel: [ 1110.048270]  [cpu_idle+114/128] cpu_idle+0x72/0x80
+> May 30 14:12:45 ican-i kernel: [ 1110.057657]  [start_kernel+407/480] start_kernel+0x197/0x1e0
+> May 30 14:12:45 ican-i kernel: [ 1110.068222]  [L6+0/2] 0xc010020e
+> May 30 14:13:03 ican-i kernel: [ 1127.266792] qla2300 0000:03:09.0: LIP reset occured (f8e8).
+> May 30 14:13:03 ican-i kernel: [ 1127.373378] qla2300 0000:03:09.0: LIP occured (f7e8).
+> May 30 14:13:03 ican-i kernel: [ 1127.384479] qla2300 0000:03:09.0: LOOP UP detected (2 Gbps).
+> 
 
+This was reported (and anaylsed) a month ago:
 
-Begin forwarded message:
+	http://lkml.org/lkml/2005/4/29/82
 
-Date: Mon, 30 May 2005 13:42:59 +0200
-From: Yogesh Bhanu <yogesh@gsf.de>
-To: linux-kernel@vger.kernel.org
-Subject: adaptec aic7xxx bug 
-
-
-hi ,
-      I have a nfs server running sarge (Dual Xeon 2.4GHz , 6 GB RAM) .
-I am running 2.6.11.6 and 2.6.11.8 kernels. Under load the adpatec card which I 
-use to connect my external RAID flakes . I have got the vendor to replace 
-everything on the system from mainboard, external raid chassis to cables.
-
-
-cat /proc/scsi/aic7xxx/1
-Adaptec AIC7xxx driver version: 6.2.36
-Adaptec 3960D Ultra160 SCSI adapter
-aic7899: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
-Allocated SCBs: 4, SG List Length: 128
-
-Serial EEPROM:
-0xcb3a 0xcb3a 0xc33a 0xc13a 0xc13a 0xc13a 0xc13a 0xc13a
-0xc13a 0xc13a 0xc13a 0xc13a 0xc13a 0xc13a 0xc13a 0xc13a
-0x08f4 0x605d 0x2807 0x0010 0x0300 0xffff 0xffff 0xffff
-0xffff 0xffff 0xffff 0xffff 0xffff 0xffff 0x0250 0xc04f
-
-Target 0 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 1 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-         Goal: 160.000MB/s transfers (80.000MHz DT, offset 62, 16bit)
-         Curr: 160.000MB/s transfers (80.000MHz DT, offset 62, 16bit)
-         Channel A Target 1 Lun 0 Settings
-                 Commands Queued 168175
-                 Commands Active 0
-                 Command Openings 2
-                 Max Tagged Openings 2
-                 Device Queue Frozen Count 0
-         Channel A Target 1 Lun 1 Settings
-                 Commands Queued 1172996
-                 Commands Active 0
-                 Command Openings 2
-                 Max Tagged Openings 2
-                 Device Queue Frozen Count 0
-         Channel A Target 1 Lun 2 Settings
-                 Commands Queued 373111
-                 Commands Active 0
-                 Command Openings 2
-                 Max Tagged Openings 2
-                 Device Queue Frozen Count 0
-Target 2 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 3 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 4 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 5 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 6 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 7 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 8 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 9 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 10 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 11 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 12 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 13 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 14 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-Target 15 Negotiation Settings
-         User: 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
-
-
-I get error messages like this .
-
-
-  May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) 
-SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  13 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  14 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  15 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  16 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  17 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  18 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  19 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  20 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  21 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  22 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  23 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  24 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  25 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  26 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  27 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  28 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  29 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  30 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel:  31 SCB_CONTROL[0x0] 
-SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
-May 30 06:29:38 mips-nas kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
-May 30 06:29:38 mips-nas kernel: Pending list:
-May 30 06:29:38 mips-nas kernel:   5 SCB_CONTROL[0x60]:(TAG_ENB|DISCENB) 
-SCB_SCSIID[0x17] SCB_LUN[0x2]
-May 30 06:29:38 mips-nas kernel: Kernel Free SCB list: 1 6 2 0 7 4
-May 30 06:29:38 mips-nas kernel: DevQ(0:1:0): 0 waiting
-May 30 06:29:38 mips-nas kernel: DevQ(0:1:1): 0 waiting
-May 30 06:29:38 mips-nas kernel: DevQ(0:1:2): 0 waiting
-May 30 06:29:38 mips-nas kernel:
-May 30 06:29:38 mips-nas kernel: <<<<<<<<<<<<<<<<< Dump Card State Ends 
- >>>>>>>>>>>>>>>>>>
-May 30 06:29:38 mips-nas kernel: (scsi1:A:1:2): Device is disconnected, 
-re-queuing SCB
-May 30 06:29:38 mips-nas kernel: Recovery code sleeping
-May 30 06:29:38 mips-nas kernel: (scsi1:A:1:2): Abort Tag Message Sent
-May 30 06:29:38 mips-nas kernel: (scsi1:A:1:2): SCB 5 - Abort Tag Completed.
-May 30 06:29:38 mips-nas kernel: Recovery SCB completes
-May 30 06:29:38 mips-nas kernel: Recovery code awake
-May 30 06:29:38 mips-nas kernel: aic7xxx_abort returns 0x2002
-
-
-
--- 
-Yogesh Bhanu
-  MIPS/IBI,
-  #56, GSF- National Research Center for Environment and Health,
-  Ingolstaedter Landstr. 1 ,
-  D-85764, Neuherberg, Germany
-
-  Tel:  +49 89 3187 4217
-  Fax:  +49 89 3187 3585
-  http://mips.gsf.de
--
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
+I don't know if anything has been done about it yet though?
