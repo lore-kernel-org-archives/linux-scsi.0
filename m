@@ -1,60 +1,37 @@
-From: "J.A. Magallon" <jamagallon@able.es>
-Subject: Re: [RFT][PATCH] aic79xx: remove busyq
-Date: Mon, 30 May 2005 21:28:27 +0000
-Message-ID: <1117488507l.7621l.0l@werewolf.able.es>
-References: <20050529074620.GA26151@havoc.gtf.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Problem Adding Transport Class support to fusion
+Date: Mon, 30 May 2005 16:55:52 -0500
+Message-ID: <1117490152.4913.20.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp04.auna.com ([62.81.186.14]:60402 "EHLO smtp04.retemail.es")
-	by vger.kernel.org with ESMTP id S261559AbVE3V23 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 May 2005 17:28:29 -0400
-In-Reply-To: <20050529074620.GA26151@havoc.gtf.org> (from jgarzik@pobox.com
-	on Sun May 29 09:46:20 2005)
-Content-Disposition: inline
+Received: from stat16.steeleye.com ([209.192.50.48]:5344 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261777AbVE3Vz7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 May 2005 17:55:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+I thought I'd look into this, since it seems to be relatively simple:
+you get the parameters from the device config page0 and set them via
+device config page1 as I read the driver.
 
-On 05.29, Jeff Garzik wrote:
-> 
-> Can anyone with aic79xx hardware give me a simple "it works"
-> or "this breaks things" answer, for the patch below?
-> 
-> This changes the aic79xx driver to use the standard Linux SCSI queueing
-> code, rather than its own.  After applying this patch, NO behavior
-> changes should be seen.
-> 
-> The patch is against 2.6.12-rc5, but probably applies OK to recent 2.6.x
-> kernels.
-> 
+However, this appears to be where my fusion card runs into difficulty.
+Debugging the header setup I get this:
 
-Applied with even no offsets to -rc5-mm1. Booted and working fine:
+mptbase: ioc1: Headers: 0: version 0 length 0
+mptbase: ioc1: Headers: 1: version 3 length 4
 
-before
+The driver seems to think this is valid, but if it occurs, there's no
+way to get the parameters or run domain validation.  Is this correct?
+There are classes of fusion card for which we simply cannot obtain
+transport data? 
 
-/dev/sda:
- Timing cached reads:   2744 MB in  2.00 seconds = 1370.15 MB/sec
- Timing buffered disk reads:  158 MB in  3.00 seconds =  52.64 MB/sec
+Or is there a work around that's not coded into the driver?
 
-after
-
-/dev/sda:
- Timing cached reads:   3000 MB in  2.00 seconds = 1498.73 MB/sec
- Timing buffered disk reads:  160 MB in  3.03 seconds =  52.85 MB/sec
-
-so no loose.
-
-Thanks.
-
---
-J.A. Magallon <jamagallon()able!es>     \               Software is like sex:
-werewolf!able!es                         \         It's better when it's free
-Mandriva Linux release 2006.0 (Cooker) for i586
-Linux 2.6.11-jam20 (gcc 4.0.0 (4.0.0-3mdk for Mandriva Linux release 2006.0))
+James
 
 
