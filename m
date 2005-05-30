@@ -1,37 +1,42 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Problem Adding Transport Class support to fusion
-Date: Mon, 30 May 2005 16:55:52 -0500
-Message-ID: <1117490152.4913.20.camel@mulgrave>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [RFT][PATCH] aic79xx: remove busyq
+Date: Mon, 30 May 2005 18:26:25 -0400
+Message-ID: <429B9311.9000608@pobox.com>
+References: <20050529074620.GA26151@havoc.gtf.org> <1117488507l.7621l.0l@werewolf.able.es>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:5344 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261777AbVE3Vz7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 May 2005 17:55:59 -0400
+Received: from mail.dvmed.net ([216.237.124.58]:19692 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261786AbVE3W0e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 May 2005 18:26:34 -0400
+In-Reply-To: <1117488507l.7621l.0l@werewolf.able.es>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "J.A. Magallon" <jamagallon@able.es>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I thought I'd look into this, since it seems to be relatively simple:
-you get the parameters from the device config page0 and set them via
-device config page1 as I read the driver.
+J.A. Magallon wrote:
+> On 05.29, Jeff Garzik wrote:
+> 
+>>Can anyone with aic79xx hardware give me a simple "it works"
+>>or "this breaks things" answer, for the patch below?
+>>
+>>This changes the aic79xx driver to use the standard Linux SCSI queueing
+>>code, rather than its own.  After applying this patch, NO behavior
+>>changes should be seen.
+>>
+>>The patch is against 2.6.12-rc5, but probably applies OK to recent 2.6.x
+>>kernels.
+>>
+> 
+> 
+> Applied with even no offsets to -rc5-mm1. Booted and working fine:
 
-However, this appears to be where my fusion card runs into difficulty.
-Debugging the header setup I get this:
+Thanks a bunch!
 
-mptbase: ioc1: Headers: 0: version 0 length 0
-mptbase: ioc1: Headers: 1: version 3 length 4
+	Jeff
 
-The driver seems to think this is valid, but if it occurs, there's no
-way to get the parameters or run domain validation.  Is this correct?
-There are classes of fusion card for which we simply cannot obtain
-transport data? 
-
-Or is there a work around that's not coded into the driver?
-
-James
 
 
