@@ -1,32 +1,42 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: Problem Adding Transport Class support to fusion
-Date: Tue, 31 May 2005 12:40:55 -0500
-Message-ID: <1117561255.4952.14.camel@mulgrave>
-References: <91888D455306F94EBD4D168954A9457C028C57FA@nacos172.co.lsil.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: 'aic' branch of misc-2.6 updated with aic79xx changes
+Date: Tue, 31 May 2005 14:10:32 -0400
+Message-ID: <429CA898.8050909@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:40427 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261155AbVEaRlD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 May 2005 13:41:03 -0400
-In-Reply-To: <91888D455306F94EBD4D168954A9457C028C57FA@nacos172.co.lsil.com>
+Received: from mail.dvmed.net ([216.237.124.58]:1922 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261157AbVEaSKi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 May 2005 14:10:38 -0400
+Received: from cpe-065-184-065-144.nc.res.rr.com ([65.184.65.144] helo=[10.10.10.88])
+	by mail.dvmed.net with esmtpsa (Exim 4.51 #1 (Red Hat Linux))
+	id 1DdBCF-00057W-Jb
+	for linux-scsi@vger.kernel.org; Tue, 31 May 2005 18:10:37 +0000
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Well ... I seem to have got parameter getting and setting working just
-about OK (modulo a few coupling issues).
 
-The fusion driver seems to have quite a big event subsystem.  Is there
-an event that will report a device transfer agreement change? (without
-this it's a bit difficult to keep track of where the device and the
-fusion core are with negotiation)
+The 'aic' branch of
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/misc-2.6.git
 
-Thanks,
+has been completely replaced with refreshed patches:
 
-James
+[SCSI] aic79xx: remove Linux 2.4 ifdefs
+[SCSI] aic79xx: remove busyq
+[SCSI] aic7xxx: minor cleanups made possible by busyq removal change
+
+This addresses Christoph's objection to the scsi_set_device() changeset, 
+and also collapses "[PATCH 5/4]" into the "remove busyq" patch.
+
+Additionally, a user has verified that these changes do not break things.
+
+If you need help figuring out how to obtain a patch from the above 
+repository, read http://lkml.org/lkml/2005/5/26/11
+
+	Jeff
+
 
 
