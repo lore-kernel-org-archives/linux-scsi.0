@@ -1,56 +1,34 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: 2.6.11-mm3: megaraid_sas.c: stack usage
-Date: Tue, 31 May 2005 02:23:15 +0200
-Message-ID: <20050531002315.GF3627@stusta.de>
-References: <0E3FA95632D6D047BA649F95DAB60E570230CC3D@exa-atlanta>
+From: Rhys Johnson <rhys@golfbox.com.au>
+Subject: megaraid driver for PE1850 running SME Server 6.5
+Date: Tue, 31 May 2005 13:03:52 +0800
+Message-ID: <1117515832.27402.24.camel@bogey.golfbox.com.au>
+Reply-To: rhys@golfbox.com.au
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:60944 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S261598AbVEaAXW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 May 2005 20:23:22 -0400
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E570230CC3D@exa-atlanta>
+Received: from golfbox.com.au ([203.166.11.110]:41194 "HELO golfbox.com.au")
+	by vger.kernel.org with SMTP id S261783AbVEaFD6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 May 2005 01:03:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Mar 15, 2005 at 10:13:17AM -0500, Bagalkote, Sreenivas wrote:
-> >On Sat, Mar 12, 2005 at 03:42:22AM -0800, Andrew Morton wrote:
-> >>...
-> >> All 606 patches:
-> >>...
-> >> megaraid_sas-announcing-new-module-for.patch
-> >>   megaraid_sas: Announcing new module for LSI Logic's SAS 
-> >based MegaRAID controllers
-> >>...
-> >
-> >Enormous stack usage:
-> >- megasas_init_mfi (due to ctrl_info)
-> >
-> >Big stack usage:
-> >- megasas_mgmt_ioctl (due to uioc and dv)
-> >- megasas_mgmt_fw_ioctl (due to uioc)
-> >
-> >Please fix this.
-> 
-> Will do.
+Hello
+I am trying to install SME Server 6.5 on my PE1850 which has the
+PERC4e/SI raid controller. SME uses RedHat 7.3 kernel 2.4.20. I
+installed SME on another machine not running raid and located the raid
+driver in
+/lib/modules/2.4.20-37.7.legacy/kernel/drivers/scsi/megaraid.o. 
+i then copied this file onto a floppy and inserted it when asked by the
+installer.The installer still fails to pick up the driver. What am i
+doing wrong?
+I also tried running "linux dd" from the boot prompt but it doesnt
+recognise "linux" as the correct boot argument. 
 
-This issue is still present in 2.6.12-rc5-mm1.
-Please fix at least the megasas_init_mfi stack usage.
-
-> Thanks,
-> Sreenivas
-
-TIA
-Adrian
-
+Any help would be greatly appreciated
 -- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+Rhys Johnson <rhys@golfbox.com.au>
+GolfBox
 
