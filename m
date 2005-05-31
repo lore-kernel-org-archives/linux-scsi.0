@@ -1,42 +1,53 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: 'aic' branch of misc-2.6 updated with aic79xx changes
-Date: Tue, 31 May 2005 14:10:32 -0400
-Message-ID: <429CA898.8050909@pobox.com>
+From: Bryan Henderson <hbryan@us.ibm.com>
+Subject: Re: NBD (vs. iSCSI vs. EATA vs...) (fwd)
+Date: Tue, 31 May 2005 11:18:44 -0700
+Message-ID: <OF6CB222A1.2DB6C410-ON88257012.0063AA82-88257012.00648FFF@us.ibm.com>
+References: <1117307520.5192.3.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:1922 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261157AbVEaSKi (ORCPT
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:56498 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261167AbVEaSTg (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 May 2005 14:10:38 -0400
-Received: from cpe-065-184-065-144.nc.res.rr.com ([65.184.65.144] helo=[10.10.10.88])
-	by mail.dvmed.net with esmtpsa (Exim 4.51 #1 (Red Hat Linux))
-	id 1DdBCF-00057W-Jb
-	for linux-scsi@vger.kernel.org; Tue, 31 May 2005 18:10:37 +0000
+	Tue, 31 May 2005 14:19:36 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j4VIJXLZ022544
+	for <linux-scsi@vger.kernel.org>; Tue, 31 May 2005 14:19:33 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j4VIJWBU117278
+	for <linux-scsi@vger.kernel.org>; Tue, 31 May 2005 14:19:33 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j4VIJWGb017275
+	for <linux-scsi@vger.kernel.org>; Tue, 31 May 2005 14:19:32 -0400
+Received: from d01ml604.pok.ibm.com (d01ml604.pok.ibm.com [9.56.227.90])
+	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j4VIJVvh017195
+	for <linux-scsi@vger.kernel.org>; Tue, 31 May 2005 14:19:31 -0400
+In-Reply-To: <1117307520.5192.3.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+>I suggest you think about what an ioctl is
+>and why we're going through a process of trying to get rid of them in
+>the kernel:  They're structured streams of information, where the
+>structure is architecture and 64/32 bit dependent (look at all the
+>issues over compat ioctls).
 
-The 'aic' branch of
-rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/misc-2.6.git
+I think that's a poor characterization of an ioctl.  _Some_ ioctls have an 
+architecture and 64/32 bit dependent structure, but it isn't inherent in 
+an ioctl.  In fact, most ioctls don't have that problem.
 
-has been completely replaced with refreshed patches:
+What an ioctl is is something that's defined for a special case (e.g. a 
+certain device type).  The lesson from the compat ioctl mess is that it 
+hurts to have special cases.  Plenty of system calls are as 
+architecture-dependent as any ioctl, but since they aren't defined 
+separately in every device driver, they're easier to update for new 
+architectures.
 
-[SCSI] aic79xx: remove Linux 2.4 ifdefs
-[SCSI] aic79xx: remove busyq
-[SCSI] aic7xxx: minor cleanups made possible by busyq removal change
+Incidentally, I'm reserving judgment on whether the disadvantages of 
+ioctls outweigh their advantages.
 
-This addresses Christoph's objection to the scsi_set_device() changeset, 
-and also collapses "[PATCH 5/4]" into the "remove busyq" patch.
-
-Additionally, a user has verified that these changes do not break things.
-
-If you need help figuring out how to obtain a patch from the above 
-repository, read http://lkml.org/lkml/2005/5/26/11
-
-	Jeff
-
-
-
+--
+Bryan Henderson                     IBM Almaden Research Center
+San Jose CA                         Filesystems 
