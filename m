@@ -1,50 +1,158 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] saved and restore result for timed out commands
-Date: Wed, 1 Jun 2005 14:45:13 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0506011440090.5912-100000@iolanthe.rowland.org>
-References: <20050516174215.GA23974@us.ibm.com>
+From: Alex Aizman <itn780@yahoo.com>
+Subject: [ANNOUNCE 0/7] Open-iSCSI/Linux-iSCSI-5 High-Performance Initiator
+Date: Wed, 01 Jun 2005 13:08:45 -0700
+Message-ID: <429E15CD.2090202@yahoo.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:51636 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261196AbVFASpO
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Jun 2005 14:45:14 -0400
-In-Reply-To: <20050516174215.GA23974@us.ibm.com>
+Received: from smtp110.mail.sc5.yahoo.com ([66.163.170.8]:22412 "HELO
+	smtp110.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S261152AbVFAUIo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Jun 2005 16:08:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Doug Gilbert <dgilbert@interlog.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>
 
-On Mon, 16 May 2005, Patrick Mansfield wrote:
+This is open-iscsi/linux-iscsi-5 Initiator. This submission is ready for
+inclusion into mainline kernel.
 
-> Save and restore the scmd->result, so that timed out commands do not
-> return the result of the TEST UNIT READY or the start/stop commands. =
-Code
-> is already in place to save and restore the result for the request se=
-nse
-> case.
->=20
-> The previous version of this patch erroneously removed the "if" check=
-,
-> instead add a comment as to why the "if" is needed.
+It contains:
 
-Has there been any more progress on this issue?
+- iscsi data path (iscsi_tcp)
+- iscsi transport class (scsi_transport_iscsi).
 
-I spoke with J=F6rg Schilling (author of the cdrecord package, a widely=
--used
-sg client) and he said that failed operations should be retried
-automatically if the command had not gotten as far as being sent on the
-bus -- e.g., if the host adapter driver's queue was full.  But if the
-command did get sent to the device then any subsequent failure should b=
-e
-reflected back to the client with no retrys.
+This Initiator depends on this transport class, but not vice versa: the
+transport class is common, generic, and isolated from this concrete iscsi
+implementation by scsi_transport_iscsi.h interface (see the header file
+and/or diagrams on the open-iscsi website). Initiator's control plane (supplied
+separately at http://www.open-iscsi.org/index.html#download) also does
+not depend on iscsi_tcp data path implementation - it's multi-transport
+capability is ensured by the the transport class itself.
 
-Alan Stern
+Changes since 05/05/05 submission
+(http://marc.theaimsgroup.com/?l=linux-kernel&m=111526765118450&w=2)
+========================
+* Stability: fixed a number of races between eh_abort(), conn_destroy(), abort
+timeout, etc.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+* Performance improvements.
+
+* Internally reviewed and cleaned up all the code, to the best of our ability.
+
+* Exported transport and session/connection information via sysfs.
+
+* Removed not-greater-than-page-size restriction; should be able to support
+applications using sg (tested) and presumably, st as well.
+
+
+Tarball
+====
+The entire Initiator source including user space tools is available at
+http://www.open-iscsi.org/index.html#download and/or svn
+(svn.berlios.de/open-iscsi, r363).
+
+The same tarball can be downloaded from the linux-iscsi project page on
+sourceforge at http://sourceforge.net/project/shownotes.php?release_id=331731
+
+
+Thanks
+======
+Many people contributed to testing. In particular, special thanks to:
+
+Pascal Renauld, Harald Kubota, Olivier Galibert, Arne Redlich.
+
+
+Changelog
+========
+* misleading printout in top-level Makefile fixed
+* new ITT encoding implemented, should protect us from not well behaved targets
+* ctask->in_progress state machine depricated. using direct PDU header processing
+* using eh_host_reset_handler() to unjam iscsi session in case of interface fluks
+* more verificiation done before r2t response processing
+* recovery: ctask->SCp.Status deprecated, using ctask->sc (NULL/not NULL) instead
+* Mike: scsi_transport_iscsi.h copyright cleanup
+* Mike: minor coding style cleanup
+* Mike: fixed the error path when session class was not being unregistered
+* conn_stop() vs. eh_abort(): ctask->sc serialization via xmitsema
+* Mike: iscsi_tcp: remove extra tabs
+* fixed race between conn_destroy() and eh_abort()
+* properly flushing r2tqueue and stopping ctask from being xmited after TMF Abort
+* Mike: data_recv tabs cleanup
+* Mike: dockbook style comments
+* Mike: rm underscore in labels to match rest of driver
+* fixed limitation on number of scattered PDUs across SKBs. Discovered by Harald.
+* Mike: fixed some weird braces where locks would never get dropped if run and
+tabing
+* session->state is no longer volatile, since we always access it under lock
+* session->generation is not longer volatile; renamed as session->age
+* Mike: add kernel printk values
+* Mike: rm extra module get/put call
+* regression.sh: each test-case now tested with fdisk+mkfs+bonnie
+* Mike: do copyright per line
+* Mike: merge iscsi_ifev.h and iscsi_if.h
+* Mike: rm iscsi_iftrans.h and move include of scsi_transport_iscsi.h
+* fixed iscsi_ctask_copy() buffer length bug (observed when using bonnie++ as a
+part of regression.sh)
+* Mike: rm extra braces and add a space between var declarations and code
+* enabling data digest causes lock-up (Arne Redlich)
+* Mike: whitespaces cleanup
+* Mike: coding style cleanup
+* Mike: rm extra brace and mv invalid param test
+* "un-volatile" tmabort_state (volatile is not needed)
+* remved session->conn_lock
+* "un-volatile" conn->c_stage
+* "un-volatile" conn->stop_stage
+* Wang Zhenyu: [io]fmarket typo fix
+* regression introduced in r341: fixed now
+* send_pdu(): use xmit semaphore, now serialized vs. data_xmit()
+* removed: conn->cpu and the (dead) code
+* data_xmit_more(): cleaned up and moved to the data_xmit()
+* comments in the iscsi_tcp.h in particular: conn->xmitsema, session->lock
+* Mike: remove the ISCSI_TRANSPORT_MAX limitation from the kernel using sysfs
+* updated to the recent transport class changes backward-compile-2.6.11.patch
+* fixed gcc4 compilation warnings
+* Mike: don't hold session->lock when deleting timer with del_timer_sync()
+* Mike: don't hold xmitsema while waiting for host_busy to decrement
+* Mike: deadlock fix: cannot call del_timer sync with session_lock held
+* propagating transport->caps up to the daemon, fixes DATA_DIGEST nego bug
+* adding max_conn, max_cmd_len and max_lun attributes for iscsi_transport
+* force eh_abort to unblock while in conn_destroy() waiting
+* fail host_reset() in case of session terminated
+* iscsiadm crash fix when transport capability does not match
+* connection struct: re-aligned Tx members with Tx, Rx with Rx
+* connection suspend: split Tx and Rx suspend, cleanup
+* fixed eh_abort/conn_stop() race: clear/set conn->sock under lock
+* removed restriction: sg element <= PAGE_SIZE
+* removed restriction: non scatter/gather request <= PAGE_SIZE
+
+Patches
+=====
+
+1. iscsi-tcp.c.patch - drivers/scsi/iscsi_tcp.c, iscsi data path. This is ~3000
+lines 84K file, if it does not make it through, I'll split and resend. In
+addition, this file is available at http://www.open-iscsi.org/src/iscsi_tcp.c
+
+2. iscsi-tcp.h.patch - drivers/scsi/iscsi_tcp.h, header file.
+
+3. common-iscsi-headers.patch - common header files:
+	- iscsi_if.h (user/kernel #defines and user/kernel events);
+	- iscsi_proto.h (RFC3720 #defines and types);
+	- scsi_transport_iscsi.h (transport API, transport #defines and types).
+
+
+4. iscsi-netlink.patch - include/linux/netlink.h changes (added new protocol
+NETLINK_ISCSI).
+
+5. iscsi-Makefile.patch - drivers/scsi/Makefile changes.
+
+6. iscsi-transport.patch - new iscsi transport class
+(drivers/scsi/scsi_transport_iscsi.c)
+
+7. iscsi-Kconfig.patch - drivers/scsi/Kconfig changes.
+
+Thanks,
+
+Linux-iscsi Team
+
