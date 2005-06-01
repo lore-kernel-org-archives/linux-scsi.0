@@ -1,158 +1,61 @@
 From: Alex Aizman <itn780@yahoo.com>
-Subject: [ANNOUNCE 0/7] Open-iSCSI/Linux-iSCSI-5 High-Performance Initiator
-Date: Wed, 01 Jun 2005 13:08:45 -0700
-Message-ID: <429E15CD.2090202@yahoo.com>
+Subject: [ANNOUNCE 7/7] Open-iSCSI/Linux-iSCSI-5 High-Performance Initiator:
+ iscsi-Kconfig.patch
+Date: Wed, 01 Jun 2005 13:10:22 -0700
+Message-ID: <429E162E.1000908@yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp110.mail.sc5.yahoo.com ([66.163.170.8]:22412 "HELO
-	smtp110.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S261152AbVFAUIo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Jun 2005 16:08:44 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261173AbVFAUMF@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>
+List-Id: linux-scsi@vger.kernel.org
 
-This is open-iscsi/linux-iscsi-5 Initiator. This submission is ready for
-inclusion into mainline kernel.
+	iscsi-Kconfig.patch - drivers/scsi/Kconfig changes.
 
-It contains:
+	Signed-off-by: Alex Aizman <itn780@yahoo.com>
+	Signed-off-by: Dmitry Yusupov <dmitry_yus@yahoo.com>
+	Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
-- iscsi data path (iscsi_tcp)
-- iscsi transport class (scsi_transport_iscsi).
-
-This Initiator depends on this transport class, but not vice versa: the
-transport class is common, generic, and isolated from this concrete iscsi
-implementation by scsi_transport_iscsi.h interface (see the header file
-and/or diagrams on the open-iscsi website). Initiator's control plane (supplied
-separately at http://www.open-iscsi.org/index.html#download) also does
-not depend on iscsi_tcp data path implementation - it's multi-transport
-capability is ensured by the the transport class itself.
-
-Changes since 05/05/05 submission
-(http://marc.theaimsgroup.com/?l=linux-kernel&m=111526765118450&w=2)
-========================
-* Stability: fixed a number of races between eh_abort(), conn_destroy(), abort
-timeout, etc.
-
-* Performance improvements.
-
-* Internally reviewed and cleaned up all the code, to the best of our ability.
-
-* Exported transport and session/connection information via sysfs.
-
-* Removed not-greater-than-page-size restriction; should be able to support
-applications using sg (tested) and presumably, st as well.
-
-
-Tarball
-====
-The entire Initiator source including user space tools is available at
-http://www.open-iscsi.org/index.html#download and/or svn
-(svn.berlios.de/open-iscsi, r363).
-
-The same tarball can be downloaded from the linux-iscsi project page on
-sourceforge at http://sourceforge.net/project/shownotes.php?release_id=331731
-
-
-Thanks
-======
-Many people contributed to testing. In particular, special thanks to:
-
-Pascal Renauld, Harald Kubota, Olivier Galibert, Arne Redlich.
-
-
-Changelog
-========
-* misleading printout in top-level Makefile fixed
-* new ITT encoding implemented, should protect us from not well behaved targets
-* ctask->in_progress state machine depricated. using direct PDU header processing
-* using eh_host_reset_handler() to unjam iscsi session in case of interface fluks
-* more verificiation done before r2t response processing
-* recovery: ctask->SCp.Status deprecated, using ctask->sc (NULL/not NULL) instead
-* Mike: scsi_transport_iscsi.h copyright cleanup
-* Mike: minor coding style cleanup
-* Mike: fixed the error path when session class was not being unregistered
-* conn_stop() vs. eh_abort(): ctask->sc serialization via xmitsema
-* Mike: iscsi_tcp: remove extra tabs
-* fixed race between conn_destroy() and eh_abort()
-* properly flushing r2tqueue and stopping ctask from being xmited after TMF Abort
-* Mike: data_recv tabs cleanup
-* Mike: dockbook style comments
-* Mike: rm underscore in labels to match rest of driver
-* fixed limitation on number of scattered PDUs across SKBs. Discovered by Harald.
-* Mike: fixed some weird braces where locks would never get dropped if run and
-tabing
-* session->state is no longer volatile, since we always access it under lock
-* session->generation is not longer volatile; renamed as session->age
-* Mike: add kernel printk values
-* Mike: rm extra module get/put call
-* regression.sh: each test-case now tested with fdisk+mkfs+bonnie
-* Mike: do copyright per line
-* Mike: merge iscsi_ifev.h and iscsi_if.h
-* Mike: rm iscsi_iftrans.h and move include of scsi_transport_iscsi.h
-* fixed iscsi_ctask_copy() buffer length bug (observed when using bonnie++ as a
-part of regression.sh)
-* Mike: rm extra braces and add a space between var declarations and code
-* enabling data digest causes lock-up (Arne Redlich)
-* Mike: whitespaces cleanup
-* Mike: coding style cleanup
-* Mike: rm extra brace and mv invalid param test
-* "un-volatile" tmabort_state (volatile is not needed)
-* remved session->conn_lock
-* "un-volatile" conn->c_stage
-* "un-volatile" conn->stop_stage
-* Wang Zhenyu: [io]fmarket typo fix
-* regression introduced in r341: fixed now
-* send_pdu(): use xmit semaphore, now serialized vs. data_xmit()
-* removed: conn->cpu and the (dead) code
-* data_xmit_more(): cleaned up and moved to the data_xmit()
-* comments in the iscsi_tcp.h in particular: conn->xmitsema, session->lock
-* Mike: remove the ISCSI_TRANSPORT_MAX limitation from the kernel using sysfs
-* updated to the recent transport class changes backward-compile-2.6.11.patch
-* fixed gcc4 compilation warnings
-* Mike: don't hold session->lock when deleting timer with del_timer_sync()
-* Mike: don't hold xmitsema while waiting for host_busy to decrement
-* Mike: deadlock fix: cannot call del_timer sync with session_lock held
-* propagating transport->caps up to the daemon, fixes DATA_DIGEST nego bug
-* adding max_conn, max_cmd_len and max_lun attributes for iscsi_transport
-* force eh_abort to unblock while in conn_destroy() waiting
-* fail host_reset() in case of session terminated
-* iscsiadm crash fix when transport capability does not match
-* connection struct: re-aligned Tx members with Tx, Rx with Rx
-* connection suspend: split Tx and Rx suspend, cleanup
-* fixed eh_abort/conn_stop() race: clear/set conn->sock under lock
-* removed restriction: sg element <= PAGE_SIZE
-* removed restriction: non scatter/gather request <= PAGE_SIZE
-
-Patches
-=====
-
-1. iscsi-tcp.c.patch - drivers/scsi/iscsi_tcp.c, iscsi data path. This is ~3000
-lines 84K file, if it does not make it through, I'll split and resend. In
-addition, this file is available at http://www.open-iscsi.org/src/iscsi_tcp.c
-
-2. iscsi-tcp.h.patch - drivers/scsi/iscsi_tcp.h, header file.
-
-3. common-iscsi-headers.patch - common header files:
-	- iscsi_if.h (user/kernel #defines and user/kernel events);
-	- iscsi_proto.h (RFC3720 #defines and types);
-	- scsi_transport_iscsi.h (transport API, transport #defines and types).
-
-
-4. iscsi-netlink.patch - include/linux/netlink.h changes (added new protocol
-NETLINK_ISCSI).
-
-5. iscsi-Makefile.patch - drivers/scsi/Makefile changes.
-
-6. iscsi-transport.patch - new iscsi transport class
-(drivers/scsi/scsi_transport_iscsi.c)
-
-7. iscsi-Kconfig.patch - drivers/scsi/Kconfig changes.
-
-Thanks,
-
-Linux-iscsi Team
-
+Index: drivers/scsi/Kconfig
+===================================================================
+--- 7570fde464d579ce455c865f07a613e967e9396c/drivers/scsi/Kconfig  (mode:100644 sha1:750b11cefd934349480d6237f6df564edf6d297b)
++++ uncommitted/drivers/scsi/Kconfig  (mode:100644)
+@@ -205,12 +205,35 @@
+ 
+ config SCSI_ISCSI_ATTRS
+ 	tristate "iSCSI Transport Attributes"
+-	depends on SCSI
++	depends on SCSI && NET
+ 	help
+ 	  If you wish to export transport-specific information about
+ 	  each attached iSCSI device to sysfs, say Y.
+ 	  Otherwise, say N.
+ 
++config ISCSI_TCP
++	tristate "iSCSI Initiator over TCP/IP"
++	depends on SCSI && INET && SCSI_ISCSI_ATTRS
++	select CRYPTO
++	select CRYPTO_MD5
++	select CRYPTO_CRC32C
++	help
++	 The iSCSI Driver provides a host with the ability to access storage
++	 through an IP network. The driver uses the iSCSI protocol to transport
++	 SCSI requests and responses over a TCP/IP network between the host
++	 (the "initiator") and "targets".  Architecturally, the iSCSI driver
++	 combines with the host's TCP/IP stack, network drivers, and Network
++	 Interface Card (NIC) to provide the same functions as a SCSI or a
++	 Fibre Channel (FC) adapter driver with a Host Bus Adapter (HBA).
++
++	 To compile this driver as a module, choose M here: the
++	 module will be called iscsi_tcp.
++
++	 The userspace component needed to initialize the driver, documentation,
++	 and sample configuration files can be found here:
++
++	 http://linux-iscsi.sf.net
++
+ endmenu
+ 
+ menu "SCSI low-level drivers"
