@@ -1,60 +1,21 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: 2.6.12-rc5: sleeping function called from invalid context (qla2xxx/scsi_transport_fc?)
-Date: Wed, 1 Jun 2005 13:39:58 -0700
-Message-ID: <20050601203958.GA3475@suse.de>
-References: <20050530125118.GG17514@hpc2n.umu.se> <20050530140700.5a4fafa1.akpm@osdl.org> <20050601184820.GE22083@plap.qlogic.org>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: [RFC] SAS domain layout for Linux sysfs
+Date: Wed, 1 Jun 2005 15:49:34 -0600
+Message-ID: <91888D455306F94EBD4D168954A9457C028C627C@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261178AbVFAVef@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20050601184820.GE22083@plap.qlogic.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Andrew Morton <akpm@osdl.org>, Ake <Ake.Sandgren@hpc2n.umu.se>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, James Smart <James.Smart@emulex.com>
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:141 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261317AbVFAVuV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jun 2005 17:50:21 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>, Christoph Hellwig <hch@infradead.org>
+Cc: Douglas Gilbert <dougg@torque.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, andrew.patterson@hp.com, mike.miller@hp.com, Madhuresh_Nagshain@adaptec.com
 
-On Wed, Jun 01, 2005 at 11:48:20AM -0700, Andrew Vasquez wrote:
-> On Mon, 30 May 2005, Andrew Morton wrote:
-> 
-> > Ake.Sandgren@hpc2n.umu.se (Ake) wrote:
-> > >
-> > > Hi!
-> > > I got the following when i pulled the FC cable from one of my qla2312
-> > > cards.
-> > > This is a 2.6.12-rc5 kernel (with udm1 patches for 2.6.12-rc2)
-> > > 
-> > > 
-> > > May 30 14:12:45 ican-i kernel: [ 1109.864830] qla2300 0000:03:09.0: LOOP DOWN detected.
-> > > May 30 14:12:45 ican-i kernel: [ 1109.875948] Debug: sleeping function called from invalid context at include/linux/rwsem.h:43
-> > > May 30 14:12:45 ican-i kernel: [ 1109.894492] in_atomic():1, irqs_disabled():1
-> > > May 30 14:12:45 ican-i kernel: [ 1109.903864]  [dump_stack+30/48] dump_stack+0x1e/0x30
-> > > May 30 14:12:45 ican-i kernel: [ 1109.913648]  [__might_sleep+167/176] __might_sleep+0xa7/0xb0
-> > > May 30 14:12:45 ican-i kernel: [ 1109.924003]  [device_for_each_child+35/144] device_for_each_child+0x23/0x90
-> > > May 30 14:12:45 ican-i kernel: [ 1109.935865]  [pg0+944279047/1069622272] scsi_target_block+0x57/0x60 [scsi_mod]
-> > > May 30 14:12:45 ican-i kernel: [ 1109.949142]  [pg0+944996009/1069622272] fc_remote_port_block+0x39/0x60 [scsi_transport_fc]
-> ...
-> > 
-> > This was reported (and anaylsed) a month ago:
-> > 
-> > 	http://lkml.org/lkml/2005/4/29/82
-> > 
-> > I don't know if anything has been done about it yet though?
-> 
-> Greg,
-> 
-> Is there some other interrupt-safe alternative:
-> 
-> 	http://lkml.org/lkml/2005/4/29/129
-> 
-> to using device_for_each_child()?  The scsi_target_[block/unblock]()
-> functions need to iterate over all the child-scsi_device's belonging
-> to an fc_rport.
+So where are we?  What needs to be done so we can move forward
+with getting SAS LLD support accepted by James Bottomely.
 
-Did you look at the code in the -mm tree?  That's what's going into
-2.6.13, so you might have some chance there.
-
-Otherwise you need to rewrite your logic to not do that :)
-
-Good luck,
-
-greg k-h
+Regards,
+Eric Moore
