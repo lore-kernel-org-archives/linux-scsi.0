@@ -1,94 +1,60 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] saved and restore result for timed out commands
-Date: Wed, 1 Jun 2005 17:26:34 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0506011708410.5912-100000@iolanthe.rowland.org>
-References: <1117659647.5047.52.camel@mulgrave>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: 2.6.12-rc5: sleeping function called from invalid context (qla2xxx/scsi_transport_fc?)
+Date: Wed, 1 Jun 2005 13:39:58 -0700
+Message-ID: <20050601203958.GA3475@suse.de>
+References: <20050530125118.GG17514@hpc2n.umu.se> <20050530140700.5a4fafa1.akpm@osdl.org> <20050601184820.GE22083@plap.qlogic.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:4566 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261186AbVFAV0i
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Jun 2005 17:26:38 -0400
-In-Reply-To: <1117659647.5047.52.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261178AbVFAVef@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20050601184820.GE22083@plap.qlogic.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Andrew Morton <akpm@osdl.org>, Ake <Ake.Sandgren@hpc2n.umu.se>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, James Smart <James.Smart@emulex.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Doug Gilbert <dgilbert@interlog.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, 1 Jun 2005, James Bottomley wrote:
+On Wed, Jun 01, 2005 at 11:48:20AM -0700, Andrew Vasquez wrote:
+> On Mon, 30 May 2005, Andrew Morton wrote:
+> 
+> > Ake.Sandgren@hpc2n.umu.se (Ake) wrote:
+> > >
+> > > Hi!
+> > > I got the following when i pulled the FC cable from one of my qla2312
+> > > cards.
+> > > This is a 2.6.12-rc5 kernel (with udm1 patches for 2.6.12-rc2)
+> > > 
+> > > 
+> > > May 30 14:12:45 ican-i kernel: [ 1109.864830] qla2300 0000:03:09.0: LOOP DOWN detected.
+> > > May 30 14:12:45 ican-i kernel: [ 1109.875948] Debug: sleeping function called from invalid context at include/linux/rwsem.h:43
+> > > May 30 14:12:45 ican-i kernel: [ 1109.894492] in_atomic():1, irqs_disabled():1
+> > > May 30 14:12:45 ican-i kernel: [ 1109.903864]  [dump_stack+30/48] dump_stack+0x1e/0x30
+> > > May 30 14:12:45 ican-i kernel: [ 1109.913648]  [__might_sleep+167/176] __might_sleep+0xa7/0xb0
+> > > May 30 14:12:45 ican-i kernel: [ 1109.924003]  [device_for_each_child+35/144] device_for_each_child+0x23/0x90
+> > > May 30 14:12:45 ican-i kernel: [ 1109.935865]  [pg0+944279047/1069622272] scsi_target_block+0x57/0x60 [scsi_mod]
+> > > May 30 14:12:45 ican-i kernel: [ 1109.949142]  [pg0+944996009/1069622272] fc_remote_port_block+0x39/0x60 [scsi_transport_fc]
+> ...
+> > 
+> > This was reported (and anaylsed) a month ago:
+> > 
+> > 	http://lkml.org/lkml/2005/4/29/82
+> > 
+> > I don't know if anything has been done about it yet though?
+> 
+> Greg,
+> 
+> Is there some other interrupt-safe alternative:
+> 
+> 	http://lkml.org/lkml/2005/4/29/129
+> 
+> to using device_for_each_child()?  The scsi_target_[block/unblock]()
+> functions need to iterate over all the child-scsi_device's belonging
+> to an fc_rport.
 
-> On Wed, 2005-06-01 at 14:45 -0400, Alan Stern wrote:
-> > Has there been any more progress on this issue?
->=20
-> Well, the patch is in scsi-misc, if that's what you're asking.
+Did you look at the code in the -mm tree?  That's what's going into
+2.6.13, so you might have some chance there.
 
-That's good.  Is it too much to ask for an additional patch to zero out
-the sense data buffer after the error handler has finished with a comma=
-nd? =20
-After a transport error or a timeout there shouldn't be any sense data
-(races aside), but the error handler often leaves apparently valid data=
- in
-the buffer, unrelated to the original command.
+Otherwise you need to rewrite your logic to not do that :)
 
-By the way, is scsi-misc available anywhere as a patch (or set of
-patches) for those of us not on the bleeding edge, or does it exist onl=
-y=20
-as a git repository?
+Good luck,
 
-> > I spoke with J=F6rg Schilling (author of the cdrecord package, a wi=
-dely-used
-> > sg client) and he said that failed operations should be retried
-> > automatically if the command had not gotten as far as being sent on=
- the
-> > bus -- e.g., if the host adapter driver's queue was full.  But if t=
-he
-> > command did get sent to the device then any subsequent failure shou=
-ld be
-> > reflected back to the client with no retrys.
->=20
-> That's pretty much what we do now ... with the exception of QUEUE_FUL=
-L
-> and BUSY handling.  What's the actual problem you were discussing?
-
-This isn't so much in response to a particular problem as it is an atte=
-mpt=20
-to make the Linux sg driver more useful.  (The discussion got started=20
-because of an actual problem, but that problem was at the USB level, no=
-t=20
-the SCSI level.)
-
-You may not have run across Schilling very much.  He's done a lot of=20
-work on SCSI application programming on a variety of OS's.  His opinion=
- of=20
-the Linux SCSI stack isn't very high, although admittedly many of the=20
-problems he complains about only existed in much earlier versions of=20
-Linux.  (Try reading through the some of the documentation or man pages=
-=20
-for cdrecord and you'll see what I mean.)
-
-Anyway, he still talks about how Linux's sg interface is so much worse
-than Solaris's.  Considering this issue of proper return codes and clie=
-nt
-control of the device, you can agree that he does have a point.  He mus=
-t
-think of himself purely as an applications programmer, not a kernel
-programmer, because he hasn't done anything to _fix_ these problems -- =
-he
-prefers to complain about them.  So I decided to see if something could=
- be=20
-done to fix this particular issue, which does appear to be genuine.
-
-Overall, the motivation is simply to improve sg by making it more=20
-transparent, giving clients more control over the device, and returning=
-=20
-valid and useful status.
-
-Alan Stern
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+greg k-h
