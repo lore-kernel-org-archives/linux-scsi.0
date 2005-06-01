@@ -1,51 +1,45 @@
-From: Patrick McFarland <pmcfarland@downeast.net>
-Subject: Re: [ANNOUNCE 0/7] Open-iSCSI/Linux-iSCSI-5 High-Performance Initiator
-Date: Wed, 1 Jun 2005 16:54:00 -0400
-Message-ID: <200506011654.11362.pmcfarland@downeast.net>
-References: <429E15CD.2090202@yahoo.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] saved and restore result for timed out commands
+Date: Wed, 01 Jun 2005 16:00:47 -0500
+Message-ID: <1117659647.5047.52.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0506011440090.5912-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart101613187.EEsdeE93Mk";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261254AbVFAUzt@vger.kernel.org>
-In-Reply-To: <429E15CD.2090202@yahoo.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alex Aizman <itn780@yahoo.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:65168 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261238AbVFAVAx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Jun 2005 17:00:53 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0506011440090.5912-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Doug Gilbert <dgilbert@interlog.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
---nextPart101613187.EEsdeE93Mk
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Wed, 2005-06-01 at 14:45 -0400, Alan Stern wrote:
+> Has there been any more progress on this issue?
 
-On Wednesday 01 June 2005 04:08 pm, Alex Aizman wrote:
-> This is open-iscsi/linux-iscsi-5 Initiator. This submission is ready for
-> inclusion into mainline kernel.
+Well, the patch is in scsi-misc, if that's what you're asking.
 
-Awesome! So is this complete enough so I can, say, play DVDs from one box=20
-using an ATAPI DVD drive in another box?
+> I spoke with J=F6rg Schilling (author of the cdrecord package, a wide=
+ly-used
+> sg client) and he said that failed operations should be retried
+> automatically if the command had not gotten as far as being sent on t=
+he
+> bus -- e.g., if the host adapter driver's queue was full.  But if the
+> command did get sent to the device then any subsequent failure should=
+ be
+> reflected back to the client with no retrys.
 
-=2D-=20
-Patrick "Diablo-D3" McFarland || pmcfarland@downeast.net
-"Computer games don't affect kids; I mean if Pac-Man affected us as kids, w=
-e'd=20
-all be running around in darkened rooms, munching magic pills and listening=
- to
-repetitive electronic music." -- Kristian Wilson, Nintendo, Inc, 1989
+That's pretty much what we do now ... with the exception of QUEUE_FULL
+and BUSY handling.  What's the actual problem you were discussing?
 
---nextPart101613187.EEsdeE93Mk
-Content-Type: application/pgp-signature
+James
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.5 (GNU/Linux)
 
-iD8DBQBCniBz8Gvouk7G1cURAq1yAKCTxpu+QglE8jSdEHXTWukgijuE+wCgnP9F
-ss5NJ5Dx3Sp9wRe8WJEZwGg=
-=88gI
------END PGP SIGNATURE-----
-
---nextPart101613187.EEsdeE93Mk--
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
