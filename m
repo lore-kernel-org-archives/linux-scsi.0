@@ -1,47 +1,83 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] saved and restore result for timed out commands
-Date: Wed, 1 Jun 2005 14:57:32 -0700
-Message-ID: <20050601215732.GA27734@us.ibm.com>
-References: <1117659647.5047.52.camel@mulgrave> <Pine.LNX.4.44L0.0506011708410.5912-100000@iolanthe.rowland.org>
+From: Christian Iversen <chrivers@iversen-net.dk>
+Subject: Re: [ANNOUNCE 0/7] Open-iSCSI/Linux-iSCSI-5 High-Performance Initiator
+Date: Thu, 2 Jun 2005 00:45:58 +0200
+Message-ID: <200506020046.02295.chrivers@iversen-net.dk>
+References: <429E15CD.2090202@yahoo.com> <200506011654.11362.pmcfarland@downeast.net> <429E23E3.8000606@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed;
+  boundary="nextPart1177228.RHR7Cshgkd";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:41867 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261252AbVFAV5w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jun 2005 17:57:52 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j51Lvmfv030409
-	for <linux-scsi@vger.kernel.org>; Wed, 1 Jun 2005 17:57:48 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j51LvmLI130322
-	for <linux-scsi@vger.kernel.org>; Wed, 1 Jun 2005 17:57:48 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j51LvlG7005248
-	for <linux-scsi@vger.kernel.org>; Wed, 1 Jun 2005 17:57:48 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0506011708410.5912-100000@iolanthe.rowland.org>
+Received: from port741.ds1-noe.adsl.cybercity.dk ([212.242.204.118]:19028 "EHLO
+	boreas.iversen-net.dk") by vger.kernel.org with ESMTP
+	id S261349AbVFAWqK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Jun 2005 18:46:10 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by boreas.iversen-net.dk (Postfix) with ESMTP id 05CC01C3F75
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2005 00:46:06 +0200 (CEST)
+Received: from boreas.iversen-net.dk ([127.0.0.1])
+	by localhost (boreas.iversen-net.dk [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 13463-02 for <linux-scsi@vger.kernel.org>;
+	Thu, 2 Jun 2005 00:46:02 +0200 (CEST)
+Received: from zephyr.iversen-net.dk (zephyr.iversen-net.dk [10.0.0.2])
+	by boreas.iversen-net.dk (Postfix) with ESMTP
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Jun 2005 00:46:02 +0200 (CEST)
+In-Reply-To: <429E23E3.8000606@yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Doug Gilbert <dgilbert@interlog.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Jun 01, 2005 at 05:26:34PM -0400, Alan Stern wrote:
-> On Wed, 1 Jun 2005, James Bottomley wrote:
-> 
-> > On Wed, 2005-06-01 at 14:45 -0400, Alan Stern wrote:
-> > > Has there been any more progress on this issue?
-> > 
-> > Well, the patch is in scsi-misc, if that's what you're asking.
-> 
-> That's good.  Is it too much to ask for an additional patch to zero out
-> the sense data buffer after the error handler has finished with a command?  
-> After a transport error or a timeout there shouldn't be any sense data
-> (races aside), but the error handler often leaves apparently valid data in
-> the buffer, unrelated to the original command.
+--nextPart1177228.RHR7Cshgkd
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-I was hoping someone else might comment on that, I am not certain if sense
-data is valid only when CHECK_CONDITION is set. 
+On Wednesday 01 June 2005 23:08, Alex Aizman wrote:
+> Patrick McFarland wrote:
+> > On Wednesday 01 June 2005 04:08 pm, Alex Aizman wrote:
+> >> This is open-iscsi/linux-iscsi-5 Initiator. This submission is ready f=
+or
+> >> inclusion into mainline kernel.
+> >
+> > Awesome! So is this complete enough so I can, say, play DVDs from one b=
+ox
+> > using an ATAPI DVD drive in another box?
+>
+> Yep, that's what iSCSI is for, in part. You'll need iSCSI target to conne=
+ct
+> to the SCSI backend, e.g. http://iscsitarget.sourceforge.net/
 
-But, we can zero/clear it after the TUR without hurting anything.
+This is really, really good work. Please keep it up :-)
 
--- Patrick Mansfield
+I'm very much looking forward to comparing this to DVD-over-NBD, which work=
+s=20
+fine, except when you need to change the disc. The NBD server locks the dri=
+ve=20
+when it's running, and you need to restart both client and server after a=20
+disc change.
+
+Briefly, what are the security features available? I assume I can do simple=
+=20
+things like only allow access to an IP range (can I?), but what about more=
+=20
+complex things like encryption?
+
+=2D-=20
+Regards,
+Christian Iversen
+
+--nextPart1177228.RHR7Cshgkd
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQBCnjqqx+vwx6XMZWwRApK+AJ98OpWkIH5kuq1ELEqsXRnD+EECGwCfY+Vc
+oew7JELvcw2s4Xp4QwwuVQU=
+=NNnM
+-----END PGP SIGNATURE-----
+
+--nextPart1177228.RHR7Cshgkd--
