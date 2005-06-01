@@ -1,323 +1,65 @@
-From: Alex Aizman <itn780@yahoo.com>
-Subject: [ANNOUNCE 2/7] Open-iSCSI/Linux-iSCSI-5 High-Performance Initiator:
- iscsi-tcp.h.patch
-Date: Wed, 01 Jun 2005 13:09:28 -0700
-Message-ID: <429E15F8.8070705@yahoo.com>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH 1/4] fusion - sas support
+Date: Wed, 1 Jun 2005 14:21:17 -0600
+Message-ID: <91888D455306F94EBD4D168954A9457C028C616C@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp104.mail.sc5.yahoo.com ([66.163.169.223]:45952 "HELO
-	smtp104.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S261176AbVFAUJa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Jun 2005 16:09:30 -0400
+Received: from mail0.lsil.com ([147.145.40.20]:44161 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261164AbVFAUV2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Jun 2005 16:21:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux scsi <linux-scsi@vger.kernel.org>
 
-	iscsi-tcp.h.patch - drivers/scsi/iscsi_tcp.h, header file.
+> On Wed, 2005-06-01 at 10:47 -0600, Moore, Eric Dean wrote:
+> > Changelog:
+> > * adding support for new module in Kconfig and Makefile
+> > * adding mptsas.c module 
+> 
+> No to this one until you and Adaptec (and any other 
+> interested parties)
+> get the sas transport class sorted out and in use ... at least in
+> embryo.  I won't hold the drivers up while the fine details and code
+> location is sorted out, but we need to get at least the structure in
+> place.
+> 
 
-	Signed-off-by: Alex Aizman <itn780@yahoo.com>
-	Signed-off-by: Dmitry Yusupov <dmitry_yus@yahoo.com>
-	Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-
-Index: drivers/scsi/iscsi_tcp.h
-===================================================================
---- /dev/null  (tree:7570fde464d579ce455c865f07a613e967e9396c)
-+++ uncommitted/drivers/scsi/iscsi_tcp.h  (mode:100644 sha1:82dcf8dada8e223e55acec92f54eb2473460d086)
-@@ -0,0 +1,291 @@
-+/*
-+ * iSCSI Initiator TCP Transport
-+ * Copyright (C) 2004 Dmitry Yusupov, Alex Aizman
-+ * maintained by open-iscsi@googlegroups.com
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published
-+ * by the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-+ * General Public License for more details.
-+ *
-+ * See the file COPYING included with this distribution for more details.
-+ */
-+
-+#ifndef ISCSI_TCP_H
-+#define ISCSI_TCP_H
-+
-+#include <scsi/scsi_transport_iscsi.h>
-+
-+/* Session's states */
-+#define ISCSI_STATE_FREE	1
-+#define ISCSI_STATE_LOGGED_IN	2
-+#define ISCSI_STATE_FAILED	3
-+#define ISCSI_STATE_TERMINATE	4
-+
-+/* Connection's states */
-+#define ISCSI_CNX_INITIAL_STAGE		0
-+#define ISCSI_CNX_STARTED		1
-+#define ISCSI_CNX_STOPPED		2
-+#define ISCSI_CNX_CLEANUP_WAIT		3
-+
-+/* Socket's Receive state machine */
-+#define IN_PROGRESS_WAIT_HEADER		0x0
-+#define IN_PROGRESS_HEADER_GATHER	0x1
-+#define IN_PROGRESS_DATA_RECV		0x2
-+
-+/* Task Mgmt states */
-+#define	TMABORT_INITIAL			0x0
-+#define	TMABORT_SUCCESS			0x1
-+#define	TMABORT_FAILED			0x2
-+#define	TMABORT_TIMEDOUT		0x3
-+
-+/* iSCSI Task Command's state machine */
-+#define IN_PROGRESS_IDLE		0x0
-+#define IN_PROGRESS_READ		0x1
-+#define IN_PROGRESS_WRITE		0x2
-+
-+/* xmit state machine */
-+#define	XMSTATE_IDLE			0x0
-+#define	XMSTATE_R_HDR			0x1
-+#define	XMSTATE_W_HDR			0x2
-+#define	XMSTATE_IMM_HDR			0x4
-+#define	XMSTATE_IMM_DATA		0x8
-+#define	XMSTATE_UNS_INIT		0x10
-+#define	XMSTATE_UNS_HDR			0x20
-+#define	XMSTATE_UNS_DATA		0x40
-+#define	XMSTATE_SOL_HDR			0x80
-+#define	XMSTATE_SOL_DATA		0x100
-+#define	XMSTATE_W_PAD			0x200
-+
-+#define ISCSI_CONN_MAX		1
-+#define ISCSI_CONN_RCVBUF_MIN	262144
-+#define ISCSI_CONN_SNDBUF_MIN	262144
-+#define ISCSI_PAD_LEN		4
-+#define ISCSI_R2T_MAX		16
-+#define ISCSI_XMIT_CMDS_MAX	128		/* must be power of 2 */
-+#define ISCSI_MGMT_CMDS_MAX	32		/* must be power of 2 */
-+#define ISCSI_MGMT_ITT_OFFSET	0x1000
-+#define ISCSI_SG_TABLESIZE	SG_ALL
-+#define ISCSI_CMD_PER_LUN	128
-+#define ISCSI_TCP_MAX_LUN	256
-+#define ISCSI_TCP_MAX_CMD_LEN	16
-+
-+struct iscsi_queue {
-+	struct kfifo		*queue;		/* FIFO Queue */
-+	void			**pool;		/* Pool of elements */
-+	int			max;		/* Max number of elements */
-+};
-+
-+struct iscsi_session;
-+struct iscsi_cmd_task;
-+struct iscsi_mgmt_task;
-+
-+/* Socket connection recieve helper */
-+struct iscsi_tcp_recv {
-+	struct iscsi_hdr	*hdr;
-+	struct sk_buff		*skb;
-+	int			offset;
-+	int			len;
-+	int			hdr_offset;
-+	int			copy;
-+	int			copied;
-+	int			padding;
-+	struct iscsi_cmd_task	*ctask;		/* current cmd in progress */
-+
-+	/* copied and flipped values */
-+	int			opcode;
-+	int			flags;
-+	int			cmd_status;
-+	int			ahslen;
-+	int			datalen;
-+	uint32_t		itt;
-+};
-+
-+struct iscsi_conn {
-+	struct iscsi_hdr	hdr;		/* Header placeholder */
-+	char			hdrext[4*sizeof(__u16) +
-+				    sizeof(__u32)];
-+	char			*data;		/* Data placeholder */
-+	int			data_copied;
-+
-+	/* iSCSI connection-wide sequencing */
-+	uint32_t		exp_statsn;
-+	int			hdr_size;	/* PDU Header size pre-calc. */
-+
-+	/* control data */
-+	int			senselen;	/* is data has sense? */
-+	int			cpu;		/* binded CPU */
-+	int			busy;
-+	int			id;		/* iSCSI CID */
-+	struct iscsi_tcp_recv	in;		/* TCP receive context */
-+	int			in_progress;	/* Connection state machine */
-+	struct socket           *sock;          /* BSD socket layer */
-+	struct iscsi_session	*session;	/* Parent session */
-+	struct list_head	item;		/* item's list of connections */
-+	struct kfifo		*writequeue;	/* Write response xmit queue */
-+	struct kfifo		*immqueue;	/* Immediate xmit queue */
-+	struct kfifo		*mgmtqueue;	/* Mgmt xmit queue */
-+	struct kfifo		*xmitqueue;	/* Data-path queue */
-+	struct work_struct	xmitwork;	/* per-conn. xmit workqueue */
-+	volatile int		c_stage;	/* Connection state */
-+	struct iscsi_mgmt_task	*login_mtask;	/* mtask used for login/text */
-+	spinlock_t		lock;		/* general connection lock */
-+	volatile int		suspend;	/* connection suspended */
-+	struct crypto_tfm	*tx_tfm;
-+	struct crypto_tfm	*rx_tfm;
-+	struct iscsi_mgmt_task	*mtask;		/* xmit mtask in progress */
-+	struct iscsi_cmd_task	*ctask;		/* xmit ctask in progress */
-+	struct semaphore	xmitsema;
-+	wait_queue_head_t	ehwait;
-+	struct iscsi_tm		tmhdr;
-+	volatile int		tmabort_state;
-+	struct timer_list	tmabort_timer;
-+	volatile int		stop_stage;	/* cnx_stop() state machine */
-+	int			data_size;	/* actual recv_dlength size */
-+
-+	/* configuration */
-+	int			max_recv_dlength;
-+	int			max_xmit_dlength;
-+	int			hdrdgst_en;
-+	int			datadgst_en;
-+
-+	/* old values for socket callbacks */
-+	void			(*old_data_ready)(struct sock *, int);
-+	void			(*old_state_change)(struct sock *);
-+	void			(*old_write_space)(struct sock *);
-+
-+	/* MIB-statistics */
-+	uint64_t		txdata_octets;
-+	uint64_t		rxdata_octets;
-+	uint32_t		scsicmd_pdus_cnt;
-+	uint32_t		dataout_pdus_cnt;
-+	uint32_t		scsirsp_pdus_cnt;
-+	uint32_t		datain_pdus_cnt;
-+	uint32_t		r2t_pdus_cnt;
-+	uint32_t		tmfcmd_pdus_cnt;
-+	int32_t			tmfrsp_pdus_cnt;
-+
-+	/* custom statistics */
-+	uint32_t		sendpage_failures_cnt;
-+	uint32_t		discontiguous_hdr_cnt;
-+};
-+
-+struct iscsi_session {
-+	/* iSCSI session-wide sequencing */
-+	uint32_t		cmdsn;
-+	uint32_t		exp_cmdsn;
-+	uint32_t		max_cmdsn;
-+
-+	/* configuration */
-+	int			initial_r2t_en;
-+	int			max_r2t;
-+	int			imm_data_en;
-+	int			first_burst;
-+	int			max_burst;
-+	int			time2wait;
-+	int			time2retain;
-+	int			pdu_inorder_en;
-+	int			dataseq_inorder_en;
-+	int			erl;
-+	int			ifmarker_en;
-+	int			ofmarker_en;
-+
-+	/* control data */
-+	struct Scsi_Host	*host;
-+	int			id;
-+	struct iscsi_conn	*leadconn;	/* Leading Conn. */
-+	spinlock_t		conn_lock;
-+	spinlock_t		lock;
-+	volatile int		state;
-+	struct list_head	item;
-+	void			*auth_client;
-+	int			conn_cnt;
-+	volatile int		generation;
-+
-+	struct list_head	connections;	/* list of connects. */
-+	int			cmds_max;	/* size of cmds array */
-+	struct iscsi_cmd_task	**cmds;		/* Original Cmds arr */
-+	struct iscsi_queue	cmdpool;	/* PDU's pool */
-+	int			mgmtpool_max;	/* size of mgmt array */
-+	struct iscsi_mgmt_task	**mgmt_cmds;	/* Original mgmt arr */
-+	struct iscsi_queue	mgmtpool;	/* Mgmt PDU's pool */
-+};
-+
-+struct iscsi_buf {
-+	struct scatterlist	sg;
-+	unsigned int		sent;
-+};
-+
-+struct iscsi_data_task {
-+	struct iscsi_data	hdr;			/* PDU */
-+	char			hdrext[sizeof(__u32)];	/* Header-Digest */
-+	struct list_head	item;			/* data queue item */
-+};
-+#define ISCSI_DTASK_DEFAULT_MAX	ISCSI_SG_TABLESIZE * PAGE_SIZE / 512
-+
-+struct iscsi_mgmt_task {
-+	struct iscsi_hdr hdr;			/* mgmt. PDU */
-+	char		hdrext[sizeof(__u32)];	/* Header-Digest */
-+	char		*data;			/* mgmt payload */
-+	volatile int	xmstate;		/* mgmt xmit progress */
-+	int		data_count;		/* counts data to be sent */
-+	struct iscsi_buf headbuf;		/* Header Buffer */
-+	struct iscsi_buf sendbuf;		/* in progress buffer */
-+	int		sent;
-+	uint32_t	itt;			/* this ITT */
-+};
-+
-+struct iscsi_r2t_info {
-+	__be32			ttt;		/* copied from R2T */
-+	__be32			exp_statsn;	/* copied from R2T */
-+	uint32_t		data_length;	/* copied from R2T */
-+	uint32_t		data_offset;	/* copied from R2T */
-+	struct iscsi_buf	headbuf;	/* Data-Out Header Buffer */
-+	struct iscsi_buf	sendbuf;	/* Data-Out in progress buffer*/
-+	int			sent;		/* R2T sequence progress */
-+	int			data_count;	/* DATA-Out payload progress */
-+	struct scatterlist	*sg;		/* per-R2T SG list */
-+	int			solicit_datasn;
-+};
-+
-+struct iscsi_cmd_task {
-+	struct iscsi_cmd	hdr;			/* orig. SCSI PDU */
-+	char			hdrext[4*sizeof(__u16)+	/* one AHS */
-+				    sizeof(__u32)];	/* Header-Digest */
-+	char			pad[ISCSI_PAD_LEN];
-+	int			itt;			/* this ITT */
-+	int			datasn;			/* DataSN numbering */
-+	struct iscsi_buf	headbuf;		/* Header Buffer */
-+	struct iscsi_buf	sendbuf;		/* in progress buffer */
-+	int			sent;
-+	struct scatterlist	*sg;			/* per-cmd SG list */
-+	struct scatterlist	*bad_sg;		/* assert statement */
-+	int			sg_count;		/* SG's to process */
-+	uint32_t		unsol_datasn;
-+	uint32_t		exp_r2tsn;
-+	volatile int		in_progress;		/* State machine */
-+	volatile int		xmstate;		/* Xmit State machine */
-+	int			imm_count;		/* Imm-Data bytes */
-+	int			unsol_count;		/* Imm-Data-Out bytes */
-+	int			r2t_data_count;		/* R2T Data-Out bytes */
-+	int			data_count;		/* Remaining Data-Out */
-+	int			pad_count;		/* Padded bytes */
-+	struct scsi_cmnd	*sc;			/* Assoc. SCSI cmnd */
-+	int			total_length;
-+	int			data_offset;
-+	struct iscsi_conn	*conn;			/* used connection */
-+
-+	struct iscsi_r2t_info	*r2t;			/* in progress R2T */
-+	struct iscsi_queue	r2tpool;
-+	struct kfifo		*r2tqueue;
-+	struct iscsi_r2t_info	**r2ts;
-+	struct list_head	dataqueue;		/* Data-Out dataqueue */
-+	mempool_t		*datapool;
-+};
-+
-+#endif /* ISCSI_H */
+All this patch does is add SAS PCI reorganization support.  
+So our customers can install Linux onto SAS part.  I'm not
+adding application support for new ioctls, so it make no sense
+to kill SAS for many people over your stance on the transport class. 
+And by the way, Luben Tuikov(Adaptec) has posted an RFC on sas
+transport class back in April, and it seems its progress was 
+all by killed by Christoph.  What can we do get this moving??
 
 
+> Additionally:
+> 
+> 
+> > +static struct device_attribute mptsas_queue_depth_attr = {
+> > +       .attr = {
+> > +               .name =         "queue_depth",
+> > +               .mode =         S_IWUSR,
+> > +       },
+> > +       .store = mptscsih_store_queue_depth,
+> > +};
+> 
+> This can all be done with the change_queue_depth host template API.
+> 
 
+Fine, I will look into it.  It appears to be implemented in 3w-9xxx and ipr
+drivers.
+
+
+> There are also a suspicious lot of SPI strings in the SAS driver (are
+> these cut and paste issues?):
+> 
+
+I goofed. Thanks for seeing that.
+
+
+Eric Moore
+LSI Logic
