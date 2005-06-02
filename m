@@ -1,40 +1,37 @@
-From: Liran Schour <LIRANS@il.ibm.com>
-Subject: SCSI commands order when using scsi_do_req
-Date: Thu, 2 Jun 2005 20:31:15 +0300
-Message-ID: <OFE0914CA0.DA8D0415-ONC2257014.004F2855-C2257014.00603EFB@il.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: SCSI commands order when using scsi_do_req
+Date: Thu, 02 Jun 2005 12:54:46 -0500
+Message-ID: <1117734886.5025.55.camel@mulgrave>
+References: <OFE0914CA0.DA8D0415-ONC2257014.004F2855-C2257014.00603EFB@il.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.de.ibm.com ([195.212.29.150]:7874 "EHLO
-	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP id S261208AbVFBRfX
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Jun 2005 13:35:23 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate1.de.ibm.com (8.12.10/8.12.10) with ESMTP id j52HZM1c160738
-	for <linux-scsi@vger.kernel.org>; Thu, 2 Jun 2005 17:35:22 GMT
-Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j52HZMDo150770
-	for <linux-scsi@vger.kernel.org>; Thu, 2 Jun 2005 19:35:22 +0200
-Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id j52HZMko015179
-	for <linux-scsi@vger.kernel.org>; Thu, 2 Jun 2005 19:35:22 +0200
-Received: from d12ml102.megacenter.de.ibm.com (d12ml102.megacenter.de.ibm.com [9.149.166.138])
-	by d12av02.megacenter.de.ibm.com (8.12.11/8.12.11) with ESMTP id j52HZL1e015176
-	for <linux-scsi@vger.kernel.org>; Thu, 2 Jun 2005 19:35:22 +0200
+Received: from stat16.steeleye.com ([209.192.50.48]:63903 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261215AbVFBRyz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Jun 2005 13:54:55 -0400
+In-Reply-To: <OFE0914CA0.DA8D0415-ONC2257014.004F2855-C2257014.00603EFB@il.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Liran Schour <LIRANS@il.ibm.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+On Thu, 2005-06-02 at 20:31 +0300, Liran Schour wrote:
+> I am developing a new SCSI upper layer driver. (Object based SCSI device)
+> I noticed that scsi_do_req execute commands in LIFO order (add new commands
+> to the head of the Q).
+> This behavior can cause a starvation of commands (or at least long delays).
+> What is the proper solution to this?
 
+Well, to use the proper interfaces.
 
+scsi_do_req is deprecated, so don't use it.  scsi_wait_req is its
+replacement.  Note: they're only really intended to allow ULDs to
+execute commands that are necessary for controlling the device (that's
+why they go at the head of the queue).  Block commands are executed in
+order using ULD init_command() (or REQ_BLOCK_PC).
 
+James
 
-I am developing a new SCSI upper layer driver. (Object based SCSI device)
-I noticed that scsi_do_req execute commands in LIFO order (add new commands
-to the head of the Q).
-This behavior can cause a starvation of commands (or at least long delays).
-What is the proper solution to this?
-
-Thanks,
-- Liran
 
