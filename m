@@ -1,36 +1,42 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [ANNOUNCE] sdparm 0.93
-Date: Fri, 03 Jun 2005 23:14:53 +1000
-Message-ID: <42A057CD.7050103@torque.net>
-Reply-To: dougg@torque.net
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] fix slab corruption during ipr probe
+Date: Fri, 03 Jun 2005 09:14:04 -0500
+Message-ID: <1117808044.5030.11.camel@mulgrave>
+References: <20050602221509.GA11355@otto>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:22210 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S261254AbVFCNOi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jun 2005 09:14:38 -0400
+Received: from stat16.steeleye.com ([209.192.50.48]:44718 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261279AbVFCOOT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Jun 2005 10:14:19 -0400
+In-Reply-To: <20050602221509.GA11355@otto>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Nathan Lynch <ntl@pobox.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, brking@us.ibm.com, linuxppc64-dev@ozlabs.org
 
-sdparm is a command line utility designed to get and set
-SCSI device parameters (cf hdparm for ATA disks). Apart
-from SCSI devices (e.g. disks, tapes and enclosures) sdparm
-can be used on any device that uses a SCSI command set
-(e.g. CD/DVD drives). sdparm also can list VPD pages including
-the device identification page.
+On Thu, 2005-06-02 at 17:15 -0500, Nathan Lynch wrote:
+> This patch works for me (tm); is it correct?
+> 
+> Signed-off-by: Nathan Lynch <ntl@pobox.com>
 
-The major addition in version 0.93 is transport protocol
-specific modes pages for FCP, SPI and SAS.
+Yes, it is.
 
-For more information and downloads see:
-http://www.torque.net/sg/sdparm.html
+Apparently every other caller except IPR uses the standard
+scsi_scan_target() interface, which does have this extra get_device(), I
+can't think how it got left off the __scsi_add_device path ... well,
+except that it wouldn't show up during testing.
 
-ChangeLog:
-http://www.torque.net/sg/p/sdparm.ChangeLog
+I suppose someone should look at converting ipr to scsi_scan_target()
+and we can eliminate this API (the only difference is that
+scsi_add_device returns the actual device, but ipr never uses this...)
 
-Doug Gilbert
+In the meantime, I'll put this in rc fixes.
+
+Thanks,
+
+James
 
 
