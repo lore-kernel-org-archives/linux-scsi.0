@@ -1,48 +1,36 @@
-From: "Guy" <bugzilla@watkins-home.com>
-Subject: RE: Low I/O performance of PERC 4/DC on PE2650
-Date: Thu, 2 Jun 2005 22:02:08 -0400
-Message-ID: <200506030202.j5322D225595@www.watkins-home.com>
-References: <1921045012.1117720904051.JavaMail.osg@osgjas02.cns.ufl.edu>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [ANNOUNCE] sdparm 0.93
+Date: Fri, 03 Jun 2005 23:14:53 +1000
+Message-ID: <42A057CD.7050103@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sccrmhc13.comcast.net ([204.127.202.64]:20150 "EHLO
-	sccrmhc13.comcast.net") by vger.kernel.org with ESMTP
-	id S261282AbVFCCCP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Jun 2005 22:02:15 -0400
-In-Reply-To: <1921045012.1117720904051.JavaMail.osg@osgjas02.cns.ufl.edu>
+Received: from zorg.st.net.au ([203.16.233.9]:22210 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261254AbVFCNOi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jun 2005 09:14:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'Kadirvel, Selvi'" <selvik@ufl.edu>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-What is the performance of a single disk?
-Since you used 4 disks, at best, expect 4x the performance of a single disk.
+sdparm is a command line utility designed to get and set
+SCSI device parameters (cf hdparm for ATA disks). Apart
+from SCSI devices (e.g. disks, tapes and enclosures) sdparm
+can be used on any device that uses a SCSI command set
+(e.g. CD/DVD drives). sdparm also can list VPD pages including
+the device identification page.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Kadirvel, Selvi
-> Sent: Thursday, June 02, 2005 10:02 AM
-> To: linux-scsi@vger.kernel.org
-> Subject: Low I/O performance of PERC 4/DC on PE2650
-> 
->  We use a PERC 4/DC card on a PowerEdge 2650 server. Connected to
-> each SCSI bus is a set of 14 physical disks. Using the Dell
-> Manager utility we create RAID 0 (logical) disk with 4-way stripes
-> i.e 4 physical disks(across the two channels) and 128K block size.
-> Using I/O benchmark applications like IOzone, the maximum
-> throughput obtained is only about 100 MBps. We get lower values
-> for other stripe sizes and block sizes. Shouldn't this be higher,
-> considering that the SCSI bus provides 320 MBps throughput ? Does
-> anyone know how to get better performance?
-> 
->  Thanks.
->  -Selvi
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The major addition in version 0.93 is transport protocol
+specific modes pages for FCP, SPI and SAS.
+
+For more information and downloads see:
+http://www.torque.net/sg/sdparm.html
+
+ChangeLog:
+http://www.torque.net/sg/p/sdparm.ChangeLog
+
+Doug Gilbert
+
 
