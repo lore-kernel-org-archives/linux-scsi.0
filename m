@@ -1,48 +1,59 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] saved and restore result for timed out commands
-Date: Fri, 3 Jun 2005 11:35:26 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0506031126510.6451-100000@iolanthe.rowland.org>
-References: <1117812062.5030.21.camel@mulgrave>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: BIO_RW_FAILFAST
+Date: Fri, 3 Jun 2005 09:38:37 -0700
+Message-ID: <20050603163837.GA32475@us.ibm.com>
+References: <20050517205915.GA27652@thumper2>
+	<20050602164123.GE22633@marowsky-bree.de>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:1433 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261329AbVFCPf0
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Jun 2005 11:35:26 -0400
-In-Reply-To: <1117812062.5030.21.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20050602164123.GE22633@marowsky-bree.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Doug Gilbert <dgilbert@interlog.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Fri, 3 Jun 2005, James Bottomley wrote:
+On Thu, Jun 02, 2005 at 06:41:23PM +0200, Lars Marowsky-Bree wrote:
+> On 2005-05-17T15:59:15, Andy <genanr@emsphone.com> wrote:
+> 
+> > I have been having problems with systems getting I/O errors and dropping
+> > mounted filesystems, when it is processing a RCSN caused by some other event
+> > on the fabric within its' zone.  If I unset BIO_RW_FAILFAST in dm-mpath.c I
+> > no longer get the I/O errors and of course no filesystem drops.  Are there
+> > any plans to change this, or make it a settable option?  Are there any
+> > negatives to not setting it?
+> 
+> What is "RCSN"? What hardware? And why does it show up on all paths at
+> once?
 
-> On Wed, 2005-06-01 at 17:26 -0400, Alan Stern wrote:
-> > By the way, is scsi-misc available anywhere as a patch (or set of
-> > patches) for those of us not on the bleeding edge, or does it exist only 
-> > as a git repository?
-> 
-> I suppose I should have a cron job sending this information to linux-
-> scsi weekly ...
-> 
-> The git repositories are:
-> 
-> rsync://www.parisc-linux.org/~jejb/git/scsi-misc-2.6.git
-> rsync://www.parisc-linux.org/~jejb/git/scsi-rc-fixes-2.6.git
-> 
-> There's a browser for the git tree at
-> 
-> http://www.parisc-linux.org/cgi-bin/gitweb.pl
-> 
-> And the patches and change logs are here
-> 
-> http://www.parisc-linux.org/~jejb/scsi_diffs
-> 
-> I'm also in the process of setting up SCSI git trees on www.kernel.org
+He must have meant a RSCN: Registered State Change Notification ...
 
-Sorry -- it's my fault for not subscribing to linux-scsi (I don't post to 
-it very often).  Thanks for the pointers.
+Likely qlogic or emulex hardware. AFAIUI, the fibre switch sends an RSCN
+to all initiators when it sees a change on the fabric, for example
+detaching a cable from the switch or target.
 
-Alan Stern
+AFAIR some RSCN's can cause glitches, and the FC driver generally wants
+scsi core (or here, with fail fast set, maybe dm multipath) to just resend
+the command.
 
+I recall some recent changes to qlogic for retry handling in this area,
+maybe as part of the queue removal code. 
+
+Seems likely that the fast fail is hurting if we get a DID_BUS_BUSY or ???
+from the driver.
+
+Seeing the actual IO errors and kernel versions might help, cc-ing
+linux-scsi. 
+
+Maybe Andrew Vasquez (or James Smart) can comment.
+
+-- Patrick Mansfield
