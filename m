@@ -1,44 +1,41 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] saved and restore result for timed out commands
-Date: Fri, 03 Jun 2005 10:21:02 -0500
-Message-ID: <1117812062.5030.21.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0506011708410.5912-100000@iolanthe.rowland.org>
+Subject: [GITPATCH] two bug fixes for SCSI in 2.6.12-rc5
+Date: Fri, 03 Jun 2005 10:27:44 -0500
+Message-ID: <1117812465.5030.28.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:43183 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:49839 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261323AbVFCPVZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Jun 2005 11:21:25 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0506011708410.5912-100000@iolanthe.rowland.org>
+	id S261330AbVFCP14 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Jun 2005 11:27:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Doug Gilbert <dgilbert@interlog.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Wed, 2005-06-01 at 17:26 -0400, Alan Stern wrote:
-> By the way, is scsi-misc available anywhere as a patch (or set of
-> patches) for those of us not on the bleeding edge, or does it exist only 
-> as a git repository?
+These are fixes for a fatal locking problem in qla2xxx and slab
+corruption in the ipr driver which need to go in before 2.6.12 final.
 
-I suppose I should have a cron job sending this information to linux-
-scsi weekly ...
+The fixes are available here:
 
-The git repositories are:
+rsync://www.parisc-linux.org/~jejb/git/scsi-for-linus-2.6.git
 
-rsync://www.parisc-linux.org/~jejb/git/scsi-misc-2.6.git
-rsync://www.parisc-linux.org/~jejb/git/scsi-rc-fixes-2.6.git
+The short log is
 
-There's a browser for the git tree at
+Andrew Vasquez:
+  o qla2xxx: fix bad locking during eh_abort
 
-http://www.parisc-linux.org/cgi-bin/gitweb.pl
+Nathan T. Lynch:
+  o fix slab corruption during ipr probe
 
-And the patches and change logs are here
 
-http://www.parisc-linux.org/~jejb/scsi_diffs
+And the diffstats:
 
-I'm also in the process of setting up SCSI git trees on www.kernel.org
+ qla2xxx/qla_os.c |   24 +++++++++++++-----------
+ scsi_scan.c      |    1 +
+ 2 files changed, 14 insertions(+), 11 deletions(-)
 
 James
 
