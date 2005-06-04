@@ -1,7 +1,7 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH RFC 1/4] add blk_rq_map_kern function
-Date: Fri, 03 Jun 2005 18:27:52 -0700
-Message-ID: <1117848472.23706.1.camel@mina>
+Subject: [PATCH RFC 2/4] convert dm-emc to usr blk_rq_map_kern
+Date: Fri, 03 Jun 2005 18:30:20 -0700
+Message-ID: <1117848620.23706.5.camel@mina>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -19,193 +19,218 @@ Errors-To: dm-devel-bounces@redhat.com
 To: dm-devel@redhat.com, linux-scsi@vger.kernel.org, axboe@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-add blk_rq_map_kern which takes a kernel buffer and maps it into
-a request and bio. This can be used by the dm hw_handlers, old
-sg_scsi_ioctl, and one day scsi special requests so all requests
-comming into scsi will have bios. All requests having bios
-should allow scsi to use scatter lists for all IO and allow it
-to use block layer functions.
+convert blk_rq_map_kern so it does not have to allocate a page
+and use GFP_KERNEL.
 
-This patch was made against 2.6.12-rc5 but also works against
-scsi-misc.
+TODO: fixup mempool problems.
+
+This patch was made against 2.6.12-rc5 and works with scsi-misc.
+Sorry I did not do dm unstable. The patch is only compile tested.
 
 
-diff -uarp linux-2.6.12-rc5.patch/drivers/block/ll_rw_blk.c linux-2.6.12-rc5/drivers/block/ll_rw_blk.c
---- linux-2.6.12-rc5.patch/drivers/block/ll_rw_blk.c	2005-06-03 16:00:47.000000000 -0700
-+++ linux-2.6.12-rc5/drivers/block/ll_rw_blk.c	2005-06-03 15:08:07.000000000 -0700
-@@ -281,6 +281,7 @@ static inline void rq_init(request_queue
- 	rq->special = NULL;
- 	rq->data_len = 0;
- 	rq->data = NULL;
-+	rq->nr_phys_segments = 0;
- 	rq->sense = NULL;
- 	rq->end_io = NULL;
- 	rq->end_io_data = NULL;
-@@ -2184,6 +2185,60 @@ int blk_rq_unmap_user(struct request *rq
+
+
+--- linux-2.6.12-rc5.orig/drivers/md/dm-emc.c	2005-06-03 03:23:46.000000000 -0700
++++ linux-2.6.12-rc5/drivers/md/dm-emc.c	2005-06-03 15:38:09.000000000 -0700
+@@ -28,95 +28,80 @@ struct emc_handler {
+ #define TRESPASS_PAGE 0x22
+ #define EMC_FAILOVER_TIMEOUT (60 * HZ)
  
- EXPORT_SYMBOL(blk_rq_unmap_user);
+-/* Code borrowed from dm-lsi-rdac by Mike Christie */
++static unsigned char emc_long_trespass[] = {
++	0, 0, 0, 0,
++	TRESPASS_PAGE,        /* Page code */
++	0x09,                 /* Page length - 2 */
++	0x81,		      /* Trespass code + Honor reservation bit */
++	0xff, 0xff,           /* Trespass target */
++	0, 0, 0, 0, 0, 0      /* Reserved bytes / unknown */
++};
  
-+static int blk_rq_map_kern_endio(struct bio *bio, unsigned int bytes_done,
-+				 int error)
+-static inline void free_bio(struct bio *bio)
+-{
+-	__free_page(bio->bi_io_vec[0].bv_page);
+-	bio_put(bio);
+-}
++static unsigned char emc_long_trespass_hr[] = {
++	0, 0, 0, 0,
++	TRESPASS_PAGE,        /* Page code */
++	0x09,                 /* Page length - 2 */
++	0x01,		      /* Trespass code + Honor reservation bit */
++	0xff, 0xff,           /* Trespass target */
++	0, 0, 0, 0, 0, 0      /* Reserved bytes / unknown */
++};
+ 
+-static int emc_endio(struct bio *bio, unsigned int bytes_done, int error)
+-{
+-	struct path *path = bio->bi_private;
++static unsigned char emc_short_trespass[] = {
++	0, 0, 0, 0,
++	TRESPASS_PAGE,        /* Page code */
++	0x02,                 /* Page length - 2 */
++	0x81,		      /* Trespass code + Honor reservation bit */
++	0xff,                 /* Trespass target */
++};
+ 
+-	if (bio->bi_size)
+-		return 1;
++static unsigned char emc_short_trespass_hr[] = {
++	0, 0, 0, 0,
++	TRESPASS_PAGE,        /* Page code */
++	0x02,                 /* Page length - 2 */
++	0x01,		      /* Trespass code + Honor reservation bit */
++	0xff,                 /* Trespass target */
++};
++
++/* Code borrowed from dm-lsi-rdac by Mike Christie */
++
++static void emc_endio(struct request *rq)
 +{
-+	if (bio->bi_size)
-+		return 1;
-+	bio_put(bio);
-+	return 0;
-+}
-+
-+/**
-+ * blk_rq_map_kern - map kernel data to a request, for REQ_BLOCK_PC usage
-+ * @q:		request queue where request should be inserted
-+ * @rw:		READ or WRITE data
-+ * @kbuf:	the kernel buffer
-+ * @len:	length of user data
-+ */
-+struct request *blk_rq_map_kern(request_queue_t *q, int rw, void *kbuf,
-+				unsigned int len, unsigned int gfp_mask)
-+{
-+	struct request *rq;
-+	struct bio *bio;
-+
-+	if (len > (q->max_sectors << 9))
-+		return ERR_PTR(-EINVAL);
-+	if ((!len && kbuf) || (len && !kbuf))
-+		return ERR_PTR(-EINVAL);
-+
-+	rq = blk_get_request(q, rw, gfp_mask);
-+	if (!rq)
-+		return ERR_PTR(-ENOMEM);
-+
-+	bio = bio_map_kern(q, kbuf, len, gfp_mask);
-+	if (!IS_ERR(bio)) {
-+		if (rw)
-+			bio->bi_rw |= (1 << BIO_RW);
-+		bio->bi_end_io = blk_rq_map_kern_endio;
-+
-+		rq->bio = rq->biotail = bio;
-+		blk_rq_bio_prep(q, rq, bio);
-+
-+		rq->buffer = rq->data = NULL;
-+		rq->data_len = len;
-+		return rq;
-+	}
-+
-+	/*
-+	 * bio is the err-ptr
-+	 */
++	struct path *path = rq->end_io_data;
+ 
+ 	/* We also need to look at the sense keys here whether or not to
+ 	 * switch to the next PG etc.
+ 	 *
+ 	 * For now simple logic: either it works or it doesn't.
+ 	 */
+-	if (error)
++	if (rq->errors)
+ 		dm_pg_init_complete(path, MP_FAIL_PATH);
+ 	else
+ 		dm_pg_init_complete(path, 0);
+ 
+-	/* request is freed in block layer */
+-	free_bio(bio);
+-
+-	return 0;
+-}
+-
+-static struct bio *get_failover_bio(struct path *path, unsigned data_size)
+-{
+-	struct bio *bio;
+-	struct page *page;
+-
+-	bio = bio_alloc(GFP_ATOMIC, 1);
+-	if (!bio) {
+-		DMERR("dm-emc: get_failover_bio: bio_alloc() failed.");
+-		return NULL;
+-	}
+-
+-	bio->bi_rw |= (1 << BIO_RW);
+-	bio->bi_bdev = path->dev->bdev;
+-	bio->bi_sector = 0;
+-	bio->bi_private = path;
+-	bio->bi_end_io = emc_endio;
+-
+-	page = alloc_page(GFP_ATOMIC);
+-	if (!page) {
+-		DMERR("dm-emc: get_failover_bio: alloc_page() failed.");
+-		bio_put(bio);
+-		return NULL;
+-	}
+-
+-	if (bio_add_page(bio, page, data_size, 0) != data_size) {
+-		DMERR("dm-emc: get_failover_bio: alloc_page() failed.");
+-		__free_page(page);
+-		bio_put(bio);
+-		return NULL;
+-	}
+-
+-	return bio;
 +	blk_put_request(rq);
-+	return (struct request *) bio;
-+}
-+
-+EXPORT_SYMBOL(blk_rq_map_kern);
-+
- /**
-  * blk_execute_rq - insert a request into queue for execution
-  * @q:		queue to insert the request in
-diff -uarp linux-2.6.12-rc5.patch/fs/bio.c linux-2.6.12-rc5/fs/bio.c
---- linux-2.6.12-rc5.patch/fs/bio.c	2005-06-03 16:00:07.000000000 -0700
-+++ linux-2.6.12-rc5/fs/bio.c	2005-06-03 14:31:41.000000000 -0700
-@@ -701,6 +701,71 @@ void bio_unmap_user(struct bio *bio)
- 	bio_put(bio);
  }
  
-+static struct bio *__bio_map_kern(request_queue_t *q, void *data,
-+				  unsigned int len, unsigned int gfp_mask)
-+{
-+	unsigned long kaddr = (unsigned long)data;
-+	unsigned long end = (kaddr + len + PAGE_SIZE - 1) >> PAGE_SHIFT;
-+	unsigned long start = kaddr >> PAGE_SHIFT;
-+	const int nr_pages = end - start;
-+	int offset, i;
-+	struct bio *bio;
-+
-+	bio = bio_alloc(gfp_mask, nr_pages);
-+	if (!bio)
-+		return ERR_PTR(-ENOMEM);
-+
-+	offset = offset_in_page(kaddr);
-+	for (i = 0; i < nr_pages; i++) {
-+		unsigned int bytes = PAGE_SIZE - offset;
-+
-+		if (len <= 0)
-+			break;
-+
-+		if (bytes > len)
-+			bytes = len;
-+
-+		if (__bio_add_page(q, bio, virt_to_page(data), bytes,
-+				   offset) < bytes)
-+			break;
-+
-+		data += bytes;
-+		len -= bytes;
-+		offset = 0;
-+	}
-+
-+	return bio;
-+}
-+
-+/**
-+ *	bio_map_kern	-	map kernel address into bio
-+ *	@q: the request_queue_t for the bio
-+ *	@data: pointer to buffer to map
-+ *	@len: length in bytes
-+ *	@gfp_mask: allocation flags for bio allocation
-+ *
-+ *	Map the kernel address into a bio suitable for io to a block
-+ *	device. Returns an error pointer in case of error.
-+ */
-+struct bio *bio_map_kern(request_queue_t *q, void *data, unsigned int len,
-+			 unsigned int gfp_mask)
-+{
-+	struct bio *bio;
-+
-+	bio = __bio_map_kern(q, data, len, gfp_mask);
-+	if (IS_ERR(bio))
-+		return bio;
-+
-+	if (bio->bi_size == len)
-+		return bio;
-+
-+	/*
-+	 * Don't support partial mappings.
-+	 */
-+	bio_put(bio);
-+	return ERR_PTR(-EINVAL);
-+}
-+
- /*
-  * bio_set_pages_dirty() and bio_check_pages_dirty() are support functions
-  * for performing direct-IO in BIOs.
-@@ -1088,6 +1153,7 @@ EXPORT_SYMBOL(bio_add_page);
- EXPORT_SYMBOL(bio_get_nr_vecs);
- EXPORT_SYMBOL(bio_map_user);
- EXPORT_SYMBOL(bio_unmap_user);
-+EXPORT_SYMBOL(bio_map_kern);
- EXPORT_SYMBOL(bio_pair_release);
- EXPORT_SYMBOL(bio_split);
- EXPORT_SYMBOL(bio_split_pool);
-diff -uarp linux-2.6.12-rc5.patch/include/linux/bio.h linux-2.6.12-rc5/include/linux/bio.h
---- linux-2.6.12-rc5.patch/include/linux/bio.h	2005-06-03 15:59:38.000000000 -0700
-+++ linux-2.6.12-rc5/include/linux/bio.h	2005-06-03 14:31:41.000000000 -0700
-@@ -282,6 +282,8 @@ extern int bio_get_nr_vecs(struct block_
- extern struct bio *bio_map_user(struct request_queue *, struct block_device *,
- 				unsigned long, unsigned int, int);
- extern void bio_unmap_user(struct bio *);
-+extern struct bio *bio_map_kern(struct request_queue *, void *, unsigned int,
-+				unsigned int);
- extern void bio_set_pages_dirty(struct bio *bio);
- extern void bio_check_pages_dirty(struct bio *bio);
- extern struct bio *bio_copy_user(struct request_queue *, unsigned long, unsigned int, int);
-diff -uarp linux-2.6.12-rc5.patch/include/linux/blkdev.h linux-2.6.12-rc5/include/linux/blkdev.h
---- linux-2.6.12-rc5.patch/include/linux/blkdev.h	2005-06-03 15:59:38.000000000 -0700
-+++ linux-2.6.12-rc5/include/linux/blkdev.h	2005-06-03 15:08:01.000000000 -0700
-@@ -560,6 +560,8 @@ extern void blk_run_queue(request_queue_
- extern void blk_queue_activity_fn(request_queue_t *, activity_fn *, void *);
- extern struct request *blk_rq_map_user(request_queue_t *, int, void __user *, unsigned int);
- extern int blk_rq_unmap_user(struct request *, struct bio *, unsigned int);
-+extern struct request *blk_rq_map_kern(request_queue_t *, int, void *,
-+					unsigned int, unsigned int);
- extern int blk_execute_rq(request_queue_t *, struct gendisk *, struct request *);
+ static struct request *get_failover_req(struct emc_handler *h,
+-					struct bio *bio, struct path *path)
++					struct path *path, unsigned char *data,
++					unsigned data_size)
+ {
+ 	struct request *rq;
+-	struct block_device *bdev = bio->bi_bdev;
++	struct block_device *bdev = path->dev->bdev;
+ 	struct request_queue *q = bdev_get_queue(bdev);
  
- static inline request_queue_t *bdev_get_queue(struct block_device *bdev)
+ 	/* FIXME: Figure out why it fails with GFP_ATOMIC. */
+-	rq = blk_get_request(q, WRITE, __GFP_WAIT);
+-	if (!rq) {
++	rq = blk_rq_map_kern(q, WRITE, data, data_size, __GFP_WAIT);
++	if (IS_ERR(rq)) {
+ 		DMERR("dm-emc: get_failover_req: blk_get_request failed");
+ 		return NULL;
+ 	}
+ 
+-	rq->bio = rq->biotail = bio;
+-	blk_rq_bio_prep(q, rq, bio);
+-
++	/*
++	 * do we need to bounce or will data be within the limits magically?
++	 */
++	rq->end_io = emc_endio;
++	rq->end_io_data = path;
+ 	rq->rq_disk = bdev->bd_contains->bd_disk;
+-
+-	/* bio backed don't set data */
+-	rq->buffer = rq->data = NULL;
+-	/* rq data_len used for pc cmd's request_bufflen */
+-	rq->data_len = bio->bi_size;
+-
+ 	rq->sense = h->sense;
+ 	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+ 	rq->sense_len = 0;
+@@ -132,49 +117,22 @@ static struct request *get_failover_req(
+ static struct request *emc_trespass_get(struct emc_handler *h,
+ 					struct path *path)
+ {
+-	struct bio *bio;
+ 	struct request *rq;
+ 	unsigned char *page22;
+-	unsigned char long_trespass_pg[] = {
+-		0, 0, 0, 0,
+-		TRESPASS_PAGE,        /* Page code */
+-		0x09,                 /* Page length - 2 */
+-		h->hr ? 0x01 : 0x81,  /* Trespass code + Honor reservation bit */
+-		0xff, 0xff,           /* Trespass target */
+-		0, 0, 0, 0, 0, 0      /* Reserved bytes / unknown */
+-		};
+-	unsigned char short_trespass_pg[] = {
+-		0, 0, 0, 0,
+-		TRESPASS_PAGE,        /* Page code */
+-		0x02,                 /* Page length - 2 */
+-		h->hr ? 0x01 : 0x81,  /* Trespass code + Honor reservation bit */
+-		0xff,                 /* Trespass target */
+-		};
+-	unsigned data_size = h->short_trespass ? sizeof(short_trespass_pg) :
+-				sizeof(long_trespass_pg);
+-
+-	/* get bio backing */
+-	if (data_size > PAGE_SIZE)
+-		/* this should never happen */
+-		return NULL;
++	unsigned data_size;
+ 
+-	bio = get_failover_bio(path, data_size);
+-	if (!bio) {
+-		DMERR("dm-emc: emc_trespass_get: no bio");
+-		return NULL;
++	if (h->short_trespass) {
++		page22 = h->hr ? emc_short_trespass_hr : emc_short_trespass;
++		data_size = sizeof(emc_short_trespass);
++	} else {
++		page22 = h->hr ? emc_long_trespass_hr : emc_long_trespass;
++		data_size = sizeof(emc_long_trespass);
+ 	}
+ 
+-	page22 = (unsigned char *)bio_data(bio);
+-	memset(page22, 0, data_size);
+-
+-	memcpy(page22, h->short_trespass ?
+-		short_trespass_pg : long_trespass_pg, data_size);
+-
+ 	/* get request for block layer packet command */
+-	rq = get_failover_req(h, bio, path);
++	rq = get_failover_req(h, path, page22, data_size);
+ 	if (!rq) {
+ 		DMERR("dm-emc: emc_trespass_get: no rq");
+-		free_bio(bio);
+ 		return NULL;
+ 	}
+ 
