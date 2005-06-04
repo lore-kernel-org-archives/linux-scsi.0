@@ -1,41 +1,106 @@
-From: Dmitry Torokhov <dtor_core@ameritech.net>
-Subject: Re: [PATCH scsi-misc 2/2][RESEND] megaraid_sas: LSI Logic MegaRAID SA S RAID Driver
-Date: Sat, 4 Jun 2005 02:34:04 -0500
-Message-ID: <200506040234.05451.dtor_core@ameritech.net>
-References: <0E3FA95632D6D047BA649F95DAB60E57060CCEFA@exa-atlanta>
+From: "PRODEK GROUP" <prodek@mynet.com>
+Subject: PROFESYONEL  =?ISO-8859-1?Q?=20=C7=D6Z=DCMLER?= // SATINALMA - ULUSLARARASI  =?ISO-8859-1?Q?=20N?=
+	=?ISO-8859-1?Q?AKL=DDYE-TEKST=DDL?=
+Date: Sat, 4 Jun 2005 15:11:11 +0300
+Message-ID: <200506041211.j54CB6VJ021050@zeus2.kernel.org>
+Reply-To: info@prodekgroup.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1254
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp810.mail.sc5.yahoo.com ([66.163.170.80]:7065 "HELO
-	smtp810.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S261282AbVFDHeL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 4 Jun 2005 03:34:11 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57060CCEFA@exa-atlanta>
-Content-Disposition: inline
+Received: from zeus2.kernel.org ([204.152.191.36]:58502 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S261331AbVFDMLJ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 4 Jun 2005 08:11:09 -0400
+Received: from ommo.net (dsl.dynamic8510018131.ttnet.net.tr [85.100.181.31] (may be forged))
+	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id j54CB6VJ021050
+	for <linux-scsi@vger.kernel.org>; Sat, 4 Jun 2005 05:11:07 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, 'Christoph Hellwig' <hch@infradead.org>, 'James Bottomley' <James.Bottomley@SteelEye.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'Matt_Domsch@Dell.com'" <Matt_Domsch@Dell.com>, "Doelfel, Hardy" <hdoelfel@lsil.com>, "Ju, Seokmann" <sju@lsil.com>
+To: linux-scsi@vger.kernel.org
 
-On Saturday 04 June 2005 01:13, Bagalkote, Sreenivas wrote:
-> +/**
-> + * megasas_issue_polled -	Issues a polling command
-> + * @instance:			Adapter soft state
-> + * @cmd:			Command packet to be issued 
-> + *
-> + * For polling, MFI requires the cmd_status to be set to 0xFF before
-> posting.
-> + */
-> +static int
-> +megasas_issue_polled(struct megasas_instance *instance, struct megasas_cmd
-> *cmd)
 
-Hi,
+KURUMSAL YAPINIZA UYGUN VE S=DDZ=DD T=DCM RAK=DDP VE M=DC=DETER=DDLER=DD=
+N=DDZE KAR=DEI=20
+EN =DDY=DD TARZDA TANITAB=DDLECEK PROJELER YARATMAK =DDST=DDYORSANIZ. !
 
-I am sorry to say that, but it looks like this one arrived line-wrapped
-again.
+HERZAMAN B=DDR ADIM =D6NDE VE BA=DEARILARI =DDLE D=DDKKAT =C7EKEN B=DDR=
+ F=DDRMA OLMAK  =DDST=DDYORSANIZ. !=20
 
--- 
-Dmitry
+BASILI YAYIN VE REKLAM HALKLA =DDL=DD=DEK=DDLER G=DDB=DD DEPARTMANLAR K=
+URMADAN,
+PAZARLAMA VE TANITIM =DD=C7=DDN EK=DDP =C7ALI=DEMALARI OLU=DETURMADAN,
+
+PERSONEL G=DDYS=DDLER=DD VE PROMOSYON ALIMLAR =DD=C7=DDN =DDLK ELDEN =DC=
+RET=DDC=DD =DDLE =C7ALI=DEARAK=20
+EN KAL=DDTEL=DD VE UYGUN =C7=D6Z=DCMLER BULMAK =DDST=DDYORSANIZ.!
+
+MAL=DDYETLER=DDN=DDZ=DD S=DDSTEMAT=DDK OLARAK TAK=DDP ETMEK,
+
+GEREKS=DDZ MASRAFLARINIZI TESP=DDT ED=DDP, TASARRUF YARATMAK,
+
+TAHM=DDN=DD B=DCT=C7E VE SATI=DE PLANLARI, F=DDNANSAL ANAL=DDZ =C7ALI=DE=
+MALARINIZI B=DCNYEN=DDZDE=20
+=C7=D6ZMEK =DDST=DDYORSANIZ.=20
+
+=DCRET=DDM=DDN=DD YAPTI=D0INIZ =DCR=DCN=DCN HEDEF K=DDTLEYE ULA=DEMASIN=
+I, H=DDTAP ETT=DD=D0=DDN=DDZ P=DDYASADA=20
+TANINMAYI EN D=DC=DE=DCK MAL=DDYETLERLE =C7=D6ZMEY=DD =DDST=DDYORSANIZ.=
+!
+
+ULUSLARARASI =DD=DE BA=D0LANTILARI VE SATI=DE D=DC=DE=DCN=DCYORSANIZ.!
+
+ULUSLARARASI NAKL=DDYE KONUSUNDA ALTERNAT=DDF =C7=D6Z=DCMLER BAKIYORSAN=
+IZ.!
+
+
+S=DDZ =DDST=DDYORSANIZ B=DDZ BURDAYIZ.!=20
+
+=C7=DCNK=DC B=DDZ DE S=DDZ=DDN =DDSTED=DDKLER=DDN=DDZ=DD =DDST=DDYORUZ.=
+=20
+
+D=DC=DE=DCNCELER=DDN=DDZ=DD HAYATA GE=C7=DDRMEK,
+
+PROBLEMLER=DDN=DDZ=DD EN KISA S=DCREDE =C7=D6Z=DCMLEMEK,
+
+YATIRIMLARINIZIN KAR=DEILIGINI VE KISA S=DCREDE KAZANCA D=D6N=DC=DET=DC=
+RMEK,
+
+M=DDN=DDMUM MAL=DDYETLE OPT=DDMAL KAZAN=C7 ELDE EDEB=DDLMEN=DDZ=DD SAGL=
+AMAK,
+
+T=DDCARET HAYATINDA HAKETT=DD=D0=DDN=DDZ YERDE OLMANIZI SA=D0LAMAK,
+
+K=DD=DE=DDSEL G=DCVEN=DDN OLMADI=D0I S=DDSTEMAT=DDK =DD=DELEY=DD=DE TAR=
+ZI VE KURUMSALLIGA SAH=DDP OLMANIZI =DDST=DDYORUZ.=20
+
+
+
+B=DDR TELEFON KADAR YAKINIZ .
+
+0212 233 70 51 // 0542 237 93 34
+info@prodekgroup.com
+
+          PRODEK GROUP=20
+PRODEK DANI=DEMANLIK VE E=D0=DDT=DDM
+PRODEK TEKST=DDL
+PRODEK B=DDLG=DD =DD=DELEM
+PRODEK MATBAACILIK VE REKLAM=20
+PRODEK GENEL SATINALMA=20
+PRODEK LOJ=DDST=DDK ULUSLARARASI TA=DEIMACILIK
+
+
+
+
+
+
+
+
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
