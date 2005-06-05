@@ -1,51 +1,57 @@
-From: christophe varoqui <christophe.varoqui@free.fr>
-Subject: Re: [dm-devel] Re: [PATCH RFC 0/4] use scatter lists for all block
-	pc requests and simplify hw handlers
-Date: Sun, 05 Jun 2005 11:41:46 +0200
-Message-ID: <1117964506.15294.130.camel@zezette>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH RFC 0/4] use scatter lists for all block pc
+	requests and simplify hw handlers
+Date: Sun, 05 Jun 2005 09:40:08 -0500
+Message-ID: <1117982408.4990.12.camel@mulgrave>
 References: <1117847972.23638.62.camel@mina>
-	 <1117901234.5005.9.camel@mulgrave>  <1117955727.4961.8.camel@mina>
+	<1117901234.5005.9.camel@mulgrave>  <1117955727.4961.8.camel@mina>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp14.wanadoo.fr ([193.252.23.69]:14996 "EHLO
-	smtp14.wanadoo.fr") by vger.kernel.org with ESMTP id S261296AbVFEJhx
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 5 Jun 2005 05:37:53 -0400
-Received: from me-wanadoo.net (localhost [127.0.0.1])
-	by mwinf1403.wanadoo.fr (SMTP Server) with ESMTP id 7B7E170000B5
-	for <linux-scsi@vger.kernel.org>; Sun,  5 Jun 2005 11:37:52 +0200 (CEST)
+Return-path: <dm-devel-bounces@redhat.com>
 In-Reply-To: <1117955727.4961.8.camel@mina>
-Sender: linux-scsi-owner@vger.kernel.org
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: device-mapper development <dm-devel@redhat.com>, Jens Axboe <axboe@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-While the focus is in this area, I'd like to mention multipath tools
-userland checkers will need to insert SG request on queue head (Ed
-Gaggin will explain this at OLS). I guess the API is lacking there, and
-would like to know if this feature is on your TODOs ...
-
-Regards,
+On Sun, 2005-06-05 at 00:15 -0700, Mike Christie wrote:
+> +int scsi_execute_req(struct scsi_device *sdev, unsigned char *cmd,
+> +                    int data_direction, void *buffer, unsigned
+> bufflen,
+> +                    unsigned char *sense, int timeout, int retries)
 
 
-> inlined below is a patch built over yours + my patch set (I put all my
-> patches here http://www.cs.wisc.edu/~michaelc/block/use-sg/v3/) that
-> converts scsi_scan.c and removes its scsi_request usage. I cheated and
-> added a new function that is basically your scsi_wait_req but it uses
-> the block layer's blk_execute_rq function instead of blk_insert_request.
-> Also to send block pc commands at scan time without the special bit set
-> I had to modify the scsi_prep_fn. This is just a RFC/test-patch so oh
-> well. There is the larger problem of handling queue limits to handle.
-> 
-> > 
-> > There's some loss of functionality to this: retries are no longer
-> > controllable (except by setting REQ_FASTFAIL) and the wait_req API needs
-> > to be altered, but it looks very nice.
-> 
+Actually, not quite; there are two problems with this
 
--- 
-christophe varoqui <christophe.varoqui@free.fr>
+1. We may not be able to compute the command length for vendor specific
+commands and the group 3 (variable length command 0x7f). 
+2. some requests want to set other flags (REQ_FAILFAST mostly).
 
+However, extra arguments should accommodate these.
 
+This:
+
+> +       if (!req)
+
+Should be if (IS_ERR(req))
+
+Also, you can't do this (use after free):
+
+> +       blk_put_request(req);
+> +       return req->errors;
+
+Finally, there's coming up with a replacement API for scsi_do_req that
+returns via the end_io callback ... since that doesn't do a wait/wake,
+perhaps this should be the core API upon which the others are built?
+
+James
