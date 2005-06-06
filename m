@@ -1,50 +1,50 @@
-From: "Tony Battersby" <tonyb@cybernetics.com>
-Subject: RE: [PATCH RFC 0/4] use scatter lists for all block pc	requests	and simplify hw handlers
-Date: Tue, 7 Jun 2005 09:34:00 -0400
-Message-ID: <007901c56b65$90f918c0$e0019d89@cybernetics.com>
-References: <42A59C35.5060207@torque.net>
-Reply-To: <tonyb@cybernetics.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH RFC 0/4] use scatter lists for all block pc
+	requests and simplify hw handlers
+Date: Mon, 6 Jun 2005 12:02:05 -0700
+Message-ID: <20050606190205.GA6817@us.ibm.com>
+References: <1117847972.23638.62.camel@mina> <1117901234.5005.9.camel@mulgrave>
+	<1117955727.4961.8.camel@mina>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host02.cybernetics.com ([206.246.200.18]:9732 "EHLO
-	cyborg.cybernetics.com") by vger.kernel.org with ESMTP
-	id S261864AbVFGNdy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Jun 2005 09:33:54 -0400
-In-Reply-To: <42A59C35.5060207@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1117955727.4961.8.camel@mina>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, device-mapper development <dm-devel@redhat.com>, Jens Axboe <axboe@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net, 'James Bottomley' <James.Bottomley@SteelEye.com>
-Cc: 'Mike Christie' <michaelc@cs.wisc.edu>, 'device-mapper development' <dm-devel@redhat.com>, 'linux-scsi' <linux-scsi@vger.kernel.org>, 'Jens Axboe' <axboe@suse.de>, LIRANS@il.ibm.com
 
-> James Bottomley wrote:
-> > Well ... while I've got your attention, the only complexity I see to
-> > converting sg is the hd->iovec_count != 0 case, which is doing
-vectored
-> > SG from user land.
-> >
-> > This can be implemented (basically you do multiple bio attachment to
-a
-> > request), and probably in the block layer (since block SG_IO would
-then
-> > pick up the capability).
-> >
-> > How important is this functionality?  Are there any applications
-using
-> > it?
->
-> I don't think it is important and I'm not aware of any
-> real world applications that are using it. Naturally,
-> I will find out if that is actually true after it
-> gets removed.
+On Sun, Jun 05, 2005 at 12:15:27AM -0700, Mike Christie wrote:
+> On Sat, 2005-06-04 at 09:07, James Bottomley wrote:
 
-My company (Cybernetics) sells several products that run embedded Linux
-which use the userspace scatter-gather capability of the SG driver.
-They are still running the 2.4 kernel series, but we will probably
-switch to 2.6 at some point.
+> > Here's the proof of concept for this one.  It converts scsi_wait_req to
+> > do correct REQ_BLOCK_PC submission (and works nicely in my setup).
 
-Anthony J. Battersby
-Cybernetics
+That is nice ... I didn't realize Mike's change allowed that.
 
+> > There's some loss of functionality to this: retries are no longer
+> > controllable (except by setting REQ_FASTFAIL) and the wait_req API needs
+> > to be altered, but it looks very nice.
+
+Mike your patch did not replace the retries.
+
+Why can't the retries be passed down via a new blk req->retries?
+
+Or just have scsi_wait_req() do the retries for us (it can sleep). 
+
+It is hard to look at the scsi IO completion paths and see exactly what we
+do and don't (well should and should not) retry. That is we call
+scsi_retry_command() conditionally based on "retries" but can repeatedly
+call scsi_requeue_command() in scsi_io_completion().
+
+-- Patrick Mansfield
