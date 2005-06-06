@@ -1,30 +1,35 @@
-From: Denis Zaitsev <zzz@anda.ru>
-Subject: Re: [PROBLEM] aic7xxx: DV failed to configure device
-Date: Mon, 6 Jun 2005 15:03:22 +0600
-Message-ID: <20050606150321.A817@ward.six>
-References: <20050606141638.A28532@ward.six> <1118045986.5652.21.camel@laptopd505.fenrus.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [Announce] sg3_utils-1.15 available
+Date: Mon, 06 Jun 2005 20:28:18 +1000
+Message-ID: <42A42542.2030207@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw.anda.ru ([83.146.86.58]:18181 "EHLO mail.ward.six")
-	by vger.kernel.org with ESMTP id S261239AbVFFJD2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jun 2005 05:03:28 -0400
-Content-Disposition: inline
-In-Reply-To: <1118045986.5652.21.camel@laptopd505.fenrus.org>; from arjan@infradead.org on Mon, Jun 06, 2005 at 10:19:45AM +0200
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261279AbVFFK2C@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Jun 06, 2005 at 10:19:45AM +0200, Arjan van de Ven wrote:
-> On Mon, 2005-06-06 at 14:16 +0600, Denis Zaitsev wrote:
-> > I'm testing an Adaptec SCSI controller + an IBM drive.  All the things
-> > used to be fine before I had made the low-level format of the drive
-> > (thru the Ctrl-A Adaptec's menu).  And now after
-> > 
-> >         modprobe aic7xxx
-> 
-> 
-> you failed to mention which exact kernel you were using...
+sg3_utils is a package of command line utilities for sending
+SCSI commands to devices. This package targets the lk 2.6 and
+lk 2.4 series. In the lk 2.6 series these utilities (except
+sgp_dd) can be used with any devices that support the SG_IO
+ioctl.
 
-Yes, I'm sorry.  2.6.10.
+This version includes minor enhancements, bug fixes and
+man page improvements. See CHANGELOG for more information.
+
+A tarball, rpm and deb can be found on (see table 2):
+http://www.torque.net/sg
+For an overview of sg3_utils see this page:
+http://www.torque.net/sg/u_index.html
+The sg_dd utility has its own page at:
+http://www.torque.net/sg/sg_dd.html
+A changelog can be found at:
+http://www.torque.net/sg/p/sg3_utils.CHANGELOG
+
+A release announcement has been sent to freshmeat.net .
+
+Doug Gilbert
