@@ -1,55 +1,31 @@
-From: Denis Zaitsev <zzz@anda.ru>
-Subject: [PROBLEM] aic7xxx: DV failed to configure device
-Date: Mon, 6 Jun 2005 14:16:38 +0600
-Message-ID: <20050606141638.A28532@ward.six>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PROBLEM] aic7xxx: DV failed to configure device
+Date: Mon, 06 Jun 2005 10:19:45 +0200
+Message-ID: <1118045986.5652.21.camel@laptopd505.fenrus.org>
+References: <20050606141638.A28532@ward.six>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw.anda.ru ([83.146.86.58]:51460 "EHLO mail.ward.six")
-	by vger.kernel.org with ESMTP id S261187AbVFFIQl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Jun 2005 04:16:41 -0400
-Content-Disposition: inline
+Received: from pentafluge.infradead.org ([213.146.154.40]:28622 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261219AbVFFITy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Jun 2005 04:19:54 -0400
+In-Reply-To: <20050606141638.A28532@ward.six>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: Denis Zaitsev <zzz@anda.ru>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I'm testing an Adaptec SCSI controller + an IBM drive.  All the things
-used to be fine before I had made the low-level format of the drive
-(thru the Ctrl-A Adaptec's menu).  And now after
-
-        modprobe aic7xxx
-
-I have:
-
-
-scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
-        <Adaptec 29160 Ultra160 SCSI adapter>
-        aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
-
-scsi0:A:0:0: DV failed to configure device.  Please file a bug report against this driver.
-(scsi0:A:0): 160.000MB/s transfers (80.000MHz DT, offset 63, 16bit)
-  Vendor: IBM       Model: DDYS-T09170N      Rev: S80D
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-scsi0:A:0:0: Tagged Queuing enabled.  Depth 32
-SCSI device sda: 17916240 512-byte hdwr sectors (9173 MB)
-SCSI device sda: drive cache: write back
-SCSI device sda: 17916240 512-byte hdwr sectors (9173 MB)
-SCSI device sda: drive cache: write back
- sda: unknown partition table
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+On Mon, 2005-06-06 at 14:16 +0600, Denis Zaitsev wrote:
+> I'm testing an Adaptec SCSI controller + an IBM drive.  All the things
+> used to be fine before I had made the low-level format of the drive
+> (thru the Ctrl-A Adaptec's menu).  And now after
+> 
+>         modprobe aic7xxx
 
 
-The message
+you failed to mention which exact kernel you were using...
+(that matters since the aic7xxx driver changes a lot over time, and
+especially it changed recently in this area a lot)
 
-scsi0:A:0:0: DV failed to configure device.  Please file a bug report against this driver.
-
-had never appeared before the low-level format.  But it seems that
-after the format the drive still works fine.
-
-So, what does this message mean?  And can I just ignore it?
-
-Some additional info: it's the PCI64 card installed in a 32-bit PCI
-slot, Domain Validation is turned on thru the Adaptec BIOS setup.
-
-Thanks in advance.
