@@ -1,47 +1,31 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: SCSI commands order when using scsi_do_req
-Date: Mon, 06 Jun 2005 09:32:53 -0500
-Message-ID: <1118068373.5045.25.camel@mulgrave>
-References: <OFDF05D602.08E5F1FA-ONC2257018.002E3CA5-C2257018.002EF1DD@il.ibm.com>
+Subject: Re: [PROBLEM] aic7xxx: DV failed to configure device
+Date: Mon, 06 Jun 2005 09:34:37 -0500
+Message-ID: <1118068477.5045.27.camel@mulgrave>
+References: <20050606141638.A28532@ward.six>
+	 <1118045986.5652.21.camel@laptopd505.fenrus.org>
+	 <20050606150321.A817@ward.six>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:60381 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:63965 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261473AbVFFOc5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Jun 2005 10:32:57 -0400
-In-Reply-To: <OFDF05D602.08E5F1FA-ONC2257018.002E3CA5-C2257018.002EF1DD@il.ibm.com>
+	id S261449AbVFFOfW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Jun 2005 10:35:22 -0400
+In-Reply-To: <20050606150321.A817@ward.six>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Liran Schour <LIRANS@il.ibm.com>
-Cc: Douglas Gilbert <dougg@torque.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org
+To: Denis Zaitsev <zzz@anda.ru>
+Cc: Arjan van de Ven <arjan@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, 2005-06-06 at 11:32 +0300, Liran Schour wrote:
-> In order to run our OSD SCSI initiator on top of the Linux SCSI layer
-> we have needed to do the following changes to the SCSI code:
-> 1. Redefine MAX_COMMAND_SIZE to 256 byte.
+On Mon, 2005-06-06 at 15:03 +0600, Denis Zaitsev wrote:
+> Yes, I'm sorry.  2.6.10.
 
-There's more than just you interested in this one, so separating this
-feature out from all the rest would be helpful.
+That particular code was completely changed for 2.6.12-rc5; could you
+see what that kernel makes of this, please?
 
-> 2. Define a new scatter gather structures that includes two virtual buffers
->    on for data out and one for data in. (implementing bidirectional
-> commands)
->    The SCSI middle layer doesn't now this new structure (only ULD and LLD).
-
-Yes, this is the nasty one ... and why OSD hasn't been incredibly
-popular; bidirectional commands necessitate fairly sweeping changes to
-all LLDs to support.  However, I don't see how we can get away without
-the mid-layer knowing, since it's the entity that constructs the sglists
-and the sglists have to be separated between the in and out pieces.
-
-> 3. The problem above - define a new scsi_do_req that inserts our commands
-> to
->    the tail of the Q.
-
-Well, the solution, I think, is going to be the block execute one, which
-will allow head or tail insertion.
+Thanks,
 
 James
 
