@@ -1,50 +1,50 @@
-From: Denis Zaitsev <zzz@anda.ru>
-Subject: Re: [PROBLEM] aic7xxx: DV failed to configure device
-Date: Tue, 7 Jun 2005 19:16:46 +0600
-Message-ID: <20050607191646.A30496@ward.six>
-References: <20050606141638.A28532@ward.six> <1118045986.5652.21.camel@laptopd505.fenrus.org> <20050606150321.A817@ward.six> <1118068477.5045.27.camel@mulgrave>
+From: "Tony Battersby" <tonyb@cybernetics.com>
+Subject: RE: [PATCH RFC 0/4] use scatter lists for all block pc	requests	and simplify hw handlers
+Date: Tue, 7 Jun 2005 09:34:00 -0400
+Message-ID: <007901c56b65$90f918c0$e0019d89@cybernetics.com>
+References: <42A59C35.5060207@torque.net>
+Reply-To: <tonyb@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261860AbVFGN01@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1118068477.5045.27.camel@mulgrave>; from James.Bottomley@SteelEye.com on Mon, Jun 06, 2005 at 09:34:37AM -0500
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from host02.cybernetics.com ([206.246.200.18]:9732 "EHLO
+	cyborg.cybernetics.com") by vger.kernel.org with ESMTP
+	id S261864AbVFGNdy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Jun 2005 09:33:54 -0400
+In-Reply-To: <42A59C35.5060207@torque.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dougg@torque.net, 'James Bottomley' <James.Bottomley@SteelEye.com>
+Cc: 'Mike Christie' <michaelc@cs.wisc.edu>, 'device-mapper development' <dm-devel@redhat.com>, 'linux-scsi' <linux-scsi@vger.kernel.org>, 'Jens Axboe' <axboe@suse.de>, LIRANS@il.ibm.com
 
-On Mon, Jun 06, 2005 at 09:34:37AM -0500, James Bottomley wrote:
-> On Mon, 2005-06-06 at 15:03 +0600, Denis Zaitsev wrote:
-> > Yes, I'm sorry.  2.6.10.
-> 
-> That particular code was completely changed for 2.6.12-rc5; could you
-> see what that kernel makes of this, please?
+> James Bottomley wrote:
+> > Well ... while I've got your attention, the only complexity I see to
+> > converting sg is the hd->iovec_count != 0 case, which is doing
+vectored
+> > SG from user land.
+> >
+> > This can be implemented (basically you do multiple bio attachment to
+a
+> > request), and probably in the block layer (since block SG_IO would
+then
+> > pick up the capability).
+> >
+> > How important is this functionality?  Are there any applications
+using
+> > it?
+>
+> I don't think it is important and I'm not aware of any
+> real world applications that are using it. Naturally,
+> I will find out if that is actually true after it
+> gets removed.
 
-Ok, 2.6.12-rc5:
+My company (Cybernetics) sells several products that run embedded Linux
+which use the userspace scatter-gather capability of the SG driver.
+They are still running the 2.4 kernel series, but we will probably
+switch to 2.6 at some point.
 
+Anthony J. Battersby
+Cybernetics
 
-scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
-        <Adaptec 29160 Ultra160 SCSI adapter>
-        aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
-
-  Vendor: IBM       Model: DDYS-T09170N      Rev: S80D
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-scsi0:A:0:0: Tagged Queuing enabled.  Depth 32
- target0:0:0: Beginning Domain Validation
-WIDTH IS 1
-(scsi0:A:0): 6.600MB/s transfers (16bit)
- target0:0:0: Domain Validation skipping write tests
-(scsi0:A:0): 160.000MB/s transfers (80.000MHz DT, offset 63, 16bit)
- target0:0:0: Ending Domain Validation
-SCSI device sda: 17916240 512-byte hdwr sectors (9173 MB)
-SCSI device sda: drive cache: write back
-SCSI device sda: 17916240 512-byte hdwr sectors (9173 MB)
-SCSI device sda: drive cache: write back
- sda: unknown partition table
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-
-
-It seems that things are in order, do I understand right?  So, why and
-how the low-level format affects the old driver's behaviour?
-
-Thanks in advance.
