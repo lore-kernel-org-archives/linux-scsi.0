@@ -1,18 +1,17 @@
-From: Jens Axboe <axboe@suse.de>
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: [PATCH RFC 0/4] use scatter lists for all block pc
 	requests and simplify hw handlers
-Date: Tue, 7 Jun 2005 20:09:43 +0200
-Message-ID: <20050607180942.GC8172@suse.de>
+Date: Tue, 7 Jun 2005 11:23:17 -0700
+Message-ID: <20050607182317.GA12959@us.ibm.com>
 References: <1117847972.23638.62.camel@mina> <1117901234.5005.9.camel@mulgrave>
-	<20050607121020.GA6458@infradead.org>
-	<1118146802.4998.3.camel@mulgrave>
-	<1118158614.42a5bf160d317@webmail.cs.wisc.edu>
+	<1117955727.4961.8.camel@mina> <20050606190205.GA6817@us.ibm.com>
+	<1118157976.42a5bc98d6f75@webmail.cs.wisc.edu>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <dm-devel-bounces@redhat.com>
 Content-Disposition: inline
-In-Reply-To: <1118158614.42a5bf160d317@webmail.cs.wisc.edu>
+In-Reply-To: <1118157976.42a5bc98d6f75@webmail.cs.wisc.edu>
 List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -23,43 +22,39 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
 To: Michael Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, device-mapper development <dm-devel@redhat.com>, Jens Axboe <axboe@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jun 07 2005, Michael Christie wrote:
-> Quoting James Bottomley <James.Bottomley@SteelEye.com>:
-> 
-> > On Tue, 2005-06-07 at 13:10 +0100, Christoph Hellwig wrote:
-> > > shouldn't blk_rq_map_kern handle a 0 buffer and do nothing more than
-> > > blk_get_request?  It's not exactly a criticial fastpath and that would make
-> > life
-> > > easier for the callers.
+On Tue, Jun 07, 2005 at 10:26:16AM -0500, Michael Christie wrote:
+> Quoting Patrick Mansfield <patmans@us.ibm.com>:
+
+> > Why can't the retries be passed down via a new blk req->retries?
 > > 
-> > Yes ... and it should probably do bio bouncing as well, since there's
-> > nothing special we have to do on completion to clean it up.
 > 
-> ok. I just made it like the existing blk_rq_map_user which made the caller do
-> those things.
+> Is that all that is needed for dm-multipath? I thought this would be a good time
+> to add some code to allow the finer grained control of retries that could also
+> be used by dm and md. For example do you only want to retry certain failures X
+> numbeer of times?
 
-I agree with Christoph, makes it nicer for blk_rq_map_user as well. I'll
-change the latter if you fix the former.
+I was looking/thinking about the scsi_scan retries not multipath.
 
-> > I also think we might need a blk_rq_kern_iovec call that would take a
-> > vector of user I/O's and map it to a multiple bio request.  This would
-> 
-> Does it need to be a multiple bio request? A single bio should be able
-> to handle a request's segments and sectors limits.
+Setting retries might help dm-multipath, but I thought multipath was going
+to use fast fail.
 
-Indeed.
+The "certain failures" is in question, it is not clear if fastfail (or
+setting retries to zero) give the right behaviour for use by dm-multipath,
+and it is not easy to analyze.
 
-> Will the user assure that the iovec will fit in a single request to
-> handle a case where the iovec is greater than the phys or hw segment
-> limits though?
+Examples: 
 
-This is where the block layer SG_IO and the SCSI layer sg differ. The
-SCSI layer has historically handled these partial completion requests
-fine, where the block layer didn't provide functionality for it and the
-ide driver didn't cope with it.
+MEDIUM_ERROR gets NEEDS_RETRY but is also handled in sd.c:sd_rw_intr(), it
+looks like we retry (if not fast fail), and then sd_rw_intr will do a
+partial retry of the error after that. So with fast fail, we never retry
+the entire IO.
 
--- 
-Jens Axboe
+DID_BUSY_BUSY: should this not be retried for fast fail? It is HBA
+driver/hardware specific.
+
+The unconditional retries in scsi_io_completion() all look OK for multipath.
+
+-- Patrick Mansfield
