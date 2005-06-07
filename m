@@ -1,32 +1,31 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PROBLEM] aic7xxx: DV failed to configure device
-Date: Tue, 07 Jun 2005 12:37:03 -0400
-Message-ID: <1118162223.4813.40.camel@mulgrave>
-References: <20050606141638.A28532@ward.six>
-	 <1118045986.5652.21.camel@laptopd505.fenrus.org>
-	 <20050606150321.A817@ward.six> <1118068477.5045.27.camel@mulgrave>
-	 <20050607191646.A30496@ward.six>
+Subject: RE: [PATCH RFC 0/4] use scatter lists for all block
+	pc	requests	and simplify hw handlers
+Date: Tue, 07 Jun 2005 12:34:57 -0400
+Message-ID: <1118162097.4813.38.camel@mulgrave>
+References: <007901c56b65$90f918c0$e0019d89@cybernetics.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:52918 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:49334 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261926AbVFGSBg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Jun 2005 14:01:36 -0400
-In-Reply-To: <20050607191646.A30496@ward.six>
+	id S261950AbVFGSBB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Jun 2005 14:01:01 -0400
+In-Reply-To: <007901c56b65$90f918c0$e0019d89@cybernetics.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Denis Zaitsev <zzz@anda.ru>
-Cc: Arjan van de Ven <arjan@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: tonyb@cybernetics.com
+Cc: Douglas Gilbert <dougg@torque.net>, 'Mike Christie' <michaelc@cs.wisc.edu>, 'device-mapper development' <dm-devel@redhat.com>, 'linux-scsi' <linux-scsi@vger.kernel.org>, 'Jens Axboe' <axboe@suse.de>, LIRANS@il.ibm.com
 
-On Tue, 2005-06-07 at 19:16 +0600, Denis Zaitsev wrote:
-> It seems that things are in order, do I understand right?  So, why and
-> how the low-level format affects the old driver's behaviour?
+On Tue, 2005-06-07 at 09:34 -0400, Tony Battersby wrote:
+> My company (Cybernetics) sells several products that run embedded Linux
+> which use the userspace scatter-gather capability of the SG driver.
+> They are still running the 2.4 kernel series, but we will probably
+> switch to 2.6 at some point.
 
-I can't answer that ... part of the reason for ditching the in-driver
-aic7xxx DV is that it was where an astonishing number of bugs kept
-turning up.
+What do they actually use it for?  As in why is the data scattered even
+in the virtual address space?
 
 James
 
