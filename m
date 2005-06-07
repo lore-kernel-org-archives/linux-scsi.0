@@ -1,48 +1,54 @@
-From: Alexander Jolk <alexj@buf.fr>
-Subject: Re: LSI MegaRAID SATA 300-X8 problems
-Date: Tue, 07 Jun 2005 22:21:52 +0200
-Message-ID: <42A601E0.8090404@buf.fr>
-References: <42A5F235.6000300@buf.fr>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Re: [PATCH RFC 0/4] use scatter lists for all block
+	pc requests and simplify hw handlers
+Date: Tue, 07 Jun 2005 15:23:49 -0400
+Message-ID: <1118172230.4791.5.camel@mulgrave>
+References: <1117847972.23638.62.camel@mina> <1117901234.5005.9.camel@mulgrave>
+	<20050607121020.GA6458@infradead.org>
+	<1118146802.4998.3.camel@mulgrave>
+	<1118158614.42a5bf160d317@webmail.cs.wisc.edu>
+	<1118159134.42a5c11eb8965@webmail.cs.wisc.edu>
+	<Pine.LNX.4.61.0506071914360.3034@kai.makisara.local>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.buf.fr ([195.68.52.65]:28642 "EHLO mail.buf.fr")
-	by vger.kernel.org with ESMTP id S261970AbVFGUZ7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2005 16:25:59 -0400
-Received: from srv1.pantin.buf.fr (srv1.pantin.buf.fr [172.21.0.241])
-	by mail.buf.fr (8.12.3/8.12.3/Debian-7.1) with ESMTP id j57KLpdf021790
-	for <linux-scsi@vger.kernel.org>; Tue, 7 Jun 2005 22:25:52 +0200
-Received: from [172.21.0.11] (alexj@admin2.pantin.buf.fr [172.21.0.11])
-	by srv1.pantin.buf.fr (8.13.1/8.13.1/Debian-20) with ESMTP id j57KLrgs023241
-	for <linux-scsi@vger.kernel.org>; Tue, 7 Jun 2005 22:21:54 +0200
-In-Reply-To: <42A5F235.6000300@buf.fr>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <Pine.LNX.4.61.0506071914360.3034@kai.makisara.local>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: Christoph Hellwig <hch@infradead.org>, Michael Christie <michaelc@cs.wisc.edu>, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Alexander Jolk wrote:
+On Tue, 2005-06-07 at 19:26 +0300, Kai Makisara wrote:
+> No, it can't do that. If the user submits one SCSI command, it must result 
+> in one SCSI command to the device. Otherwise the effect is not what the 
+> user wants. (You can split a multiple block read/write but this does not 
+> apply to all commands.)
 
-> I'm trying to get an LSI MegaRAID SATA 300-X8 controller to work on a 
-> Debian/sarge system with kernel 2.6.11-9-em64t-p4-smp from unstable. The 
-> megaraid_mbox module is loaded and seems to identify the controller, but 
-> whenever I try to access the disk, I get SCSI errors, the controller 
-> alarm goes off, and upon inspection in the BIOS, the first SATA disc is 
-> marked `FAILED'.  Reconfiguring the RAID lets me restart the whole process.
+Yes, I agree ... we have to have a single request.
 
-Following up to myself, I compiled my own kernel 2.6.11.11 and things 
-appear to work so far.  Known problem that has been fixed, or worth 
-investigating?
+> Michael's question is important. The number of sg segments a HBA supports 
+> determines the maximum SCSI data size. In some cases (e.g., tape 
+> reads and writes with multimegabyte blocks) using page size (e.g., 4 kB) 
+> segments does not allow large enough data size. One solution has been to 
+> have a kernel space buffer that consists of segments spanning several 
+> pages. As far as I know, the current bio code requires page size segments. 
+> It is possible to use chained bios with multimegabyte buffers but the 
+> user should be sure that the split segments will be merged before the 
+> request reaches the HBA so that the request fits the HBA sg segment limit.
 
-I would also appreciate pointers to sites, mailing lists, or people 
-likely to know how to configure things for maximum speed.  (I've got two 
-SATA RAID controllers with 6 discs each, and I need > 300MB/s reading 
-speed through the filesystem.  So far, I was thinking of doing XFS over 
-MD-RAID0 over two hardware RAID0, and things look rather promising.)
+Well, this isn't actually necessarily the problem.  *Provided* the
+underlying driver enables clustering, the block layer will merge
+physically contiguous pages in a single bio (so a large buffer will come
+out the other side of blk_rq_map_sg as a single scatter/gather entry)
 
-Thanks in advance,
-	Alex
-
--- 
-Alexander Jolk  * BUF Compagnie * alexj@buf.com
-Tel +33-1 42 68 18 28  *  Fax +33-1 42 68 18 29
+James
