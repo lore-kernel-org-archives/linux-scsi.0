@@ -1,16 +1,17 @@
 From: Michael Christie <michaelc@cs.wisc.edu>
 Subject: Re: [PATCH RFC 0/4] use scatter lists for all block pc
 	requests and simplify hw handlers
-Date: Tue,  7 Jun 2005 10:26:16 -0500
-Message-ID: <1118157976.42a5bc98d6f75@webmail.cs.wisc.edu>
+Date: Tue,  7 Jun 2005 10:36:54 -0500
+Message-ID: <1118158614.42a5bf160d317@webmail.cs.wisc.edu>
 References: <1117847972.23638.62.camel@mina> <1117901234.5005.9.camel@mulgrave>
-	<1117955727.4961.8.camel@mina> <20050606190205.GA6817@us.ibm.com>
+	<20050607121020.GA6458@infradead.org>
+	<1118146802.4998.3.camel@mulgrave>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20050606190205.GA6817@us.ibm.com>
+In-Reply-To: <1118146802.4998.3.camel@mulgrave>
 List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -20,35 +21,35 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=subscribe>
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, device-mapper development <dm-devel@redhat.com>, Jens Axboe <axboe@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Christoph Hellwig <hch@infradead.org>, device-mapper development <dm-devel@redhat.com>, Jens Axboe <axboe@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Quoting Patrick Mansfield <patmans@us.ibm.com>:
+Quoting James Bottomley <James.Bottomley@SteelEye.com>:
 
-> On Sun, Jun 05, 2005 at 12:15:27AM -0700, Mike Christie wrote:
-> > On Sat, 2005-06-04 at 09:07, James Bottomley wrote:
+> On Tue, 2005-06-07 at 13:10 +0100, Christoph Hellwig wrote:
+> > shouldn't blk_rq_map_kern handle a 0 buffer and do nothing more than
+> > blk_get_request?  It's not exactly a criticial fastpath and that woul=
+d make
+> life
+> > easier for the callers.
 >=20
-> > > Here's the proof of concept for this one.  It converts scsi_wait_re=
-q to
-> > > do correct REQ_BLOCK_PC submission (and works nicely in my setup).
->=20
-> That is nice ... I didn't realize Mike's change allowed that.
->=20
-> > > There's some loss of functionality to this: retries are no longer
-> > > controllable (except by setting REQ_FASTFAIL) and the wait_req API =
-needs
-> > > to be altered, but it looks very nice.
->=20
-> Mike your patch did not replace the retries.
->=20
-> Why can't the retries be passed down via a new blk req->retries?
->=20
+> Yes ... and it should probably do bio bouncing as well, since there's
+> nothing special we have to do on completion to clean it up.
 
-Is that all that is needed for dm-multipath? I thought this would be a go=
-od time
-to add some code to allow the finer grained control of retries that could=
- also
-be used by dm and md. For example do you only want to retry certain failu=
-res X
-numbeer of times?
+ok. I just made it like the existing blk_rq_map_user which made the calle=
+r do
+those things.
+
+>=20
+> I also think we might need a blk_rq_kern_iovec call that would take a
+> vector of user I/O's and map it to a multiple bio request.  This would
+
+Does it need to be a multiple bio request? A single bio should be able to=
+ handle
+ a request's segments and sectors limits.
+=20
+Will the user assure that the iovec will fit in a single request to handl=
+e a
+case where the iovec is greater than the phys or hw segment limits though=
+?
