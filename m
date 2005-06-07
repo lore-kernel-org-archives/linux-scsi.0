@@ -1,48 +1,55 @@
-From: Bodo Stroesser <bstroesser@fujitsu-siemens.com>
-Subject: Deadlock in transport_fc
-Date: Mon, 06 Jun 2005 21:29:33 +0200
-Message-ID: <42A4A41D.7010504@fujitsu-siemens.com>
+From: Michael Christie <michaelc@cs.wisc.edu>
+Subject: Re: Re: [PATCH RFC 0/4] use scatter lists for all block pc
+	requests and simplify hw handlers
+Date: Mon,  6 Jun 2005 19:04:09 -0500
+Message-ID: <1118102649.42a4e479b5d0f@webmail.cs.wisc.edu>
+References: <1117847972.23638.62.camel@mina> <1117901234.5005.9.camel@mulgrave>
+	<1117955727.4961.8.camel@mina> <1117964506.15294.130.camel@zezette>
+	<20050606133135.GZ27119@marowsky-bree.de>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dgate1.fujitsu-siemens.com ([217.115.66.35]:41556 "EHLO
-	dgate1.fujitsu-siemens.com") by vger.kernel.org with ESMTP
-	id S261645AbVFFT3q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Jun 2005 15:29:46 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20050606133135.GZ27119@marowsky-bree.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>, Lars Marowsky-Bree <lmb@suse.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>
 
-Hi,
+Quoting Lars Marowsky-Bree <lmb@suse.de>:
 
-currently I'm trying to use the new transport_fc to read the
-very often changing FibreChannel configuration in a test system.
+> On 2005-06-05T11:41:46, christophe varoqui <christophe.varoqui@free.fr>
+> wrote:
+>=20
+> > While the focus is in this area, I'd like to mention multipath tools
+> > userland checkers will need to insert SG request on queue head (Ed
+> > Gaggin will explain this at OLS). I guess the API is lacking there, a=
+nd
+> > would like to know if this feature is on your TODOs ...
+>=20
+> It's on the TODO list. It's just not done yet. Essentially we need to b=
+e
+> able to set BW_RW_FAILFAST from user-space for SGIO.
+>=20
 
-To avoid a growing list of consistent binding entries (which
-make no sense in this special case), I tried to switch off this
-feature by
-     "echo none > /sys/class/fc_host/host1/tgtid_bind_type"
+Isn't this a seperate issue? It looks like the RHAT bugzilla asks to be a=
+ble to
+insert directly at the head of the queue so you do you not have to wait f=
+or
+possibly a hundred IO to complete before the test IO. Setting failfast ju=
+st
+means in case of en error it will be returned faster (no wasting time
+retying).
 
-Unfortunately, the system stalls immediately, I guess the reason
-is store_fc_private_host_tgtid_bind_type() calling
-fc_rport_terminate() while holding host_lock.
 
-If I understand the code correctly, even if tgtid_bind_type
-would work correctly, still the rport-nummer and scsi-target-id
-would count up on configuration changes. In the lpfc-driver, I
-saw:
-#define MAX_FCP_TARGET              256     /* max num of FCP targets supported */
-Will this result in problems after 256 configuration changes?
-If so, what could I do?
-
-BTW: My Emulex boards do not recognize a change behind the
-FibreChannel switch. So I force them to scan the configuration
-using "echo [01] >/sys/class/scsi_host/host1/board_online".
-Is there a better way to do this?
-
-Regards
-Bodo
-
-P.S.: Please CC me, I'm not on the list.
+> This is Novell bugzilla #81694 and RHAT bugzilla #154436.
+>=20
