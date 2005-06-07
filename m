@@ -1,52 +1,48 @@
 From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH RFC 0/4] use scatter lists for all block
-	pc	requests	and simplify hw handlers
-Date: Tue, 7 Jun 2005 20:07:20 +0200
-Message-ID: <20050607180719.GB8172@suse.de>
-References: <1117847972.23638.62.camel@mina> <1117901234.5005.9.camel@mulgrave>
-	<1117955727.4961.8.camel@mina> <1117982408.4990.12.camel@mulgrave>
-	<1117998665.4990.17.camel@mulgrave> <42A3E275.6030106@torque.net>
-	<1118067544.5045.17.camel@mulgrave> <42A59C35.5060207@torque.net>
-	<1118159966.4813.8.camel@mulgrave>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+Subject: Re: [PATCH RFC 0/4] use scatter lists for all block pc requests and simplify hw handlers
+Date: Tue, 7 Jun 2005 20:07:18 +0200
+Message-ID: <20050607180716.GA8172@suse.de>
+References: <1117847972.23638.62.camel@mina>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:28294 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261878AbVFGSGV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Jun 2005 14:06:21 -0400
 Content-Disposition: inline
-In-Reply-To: <1118159966.4813.8.camel@mulgrave>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: LIRANS@il.ibm.com, Mike Christie <michaelc@cs.wisc.edu>, Douglas Gilbert <dougg@torque.net>, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+In-Reply-To: <1117847972.23638.62.camel@mina>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, Jun 07 2005, James Bottomley wrote:
-> On Tue, 2005-06-07 at 23:08 +1000, Douglas Gilbert wrote:
-> > I don't think it is important and I'm not aware of any
-> > real world applications that are using it. Naturally,
-> > I will find out if that is actually true after it
-> > gets removed.
+On Fri, Jun 03 2005, Mike Christie wrote:
+> The following patches should enable the use of scatter lists for all
+> REQ_BLOCK_PC requests and cleanup some code duplication or dangerous
+> memory allocations in the dm-multipath hw handlers and
+> block/scsi_ioctl.c.
 > 
-> Heh, true.  OK, let's do this: I'll remove it from the sg driver and
-> make sg use the do_command (or it's successor) interface.  If an actual
-> user for the iovecs does turn up, I'll add it to the block layer (it's a
-> fairly well understood multi-bio request setup) and make sg and also the
-> block layer SG_IO use it.
+> REQ_BLOCK_PC scatter list usage only required converting the old
+> sg_scsi_ioctl code to do bio backed requests since the current block
+> layer SG_IO code will always use requests with bios. But while
+> converting the old ioctl and removing some dangerous (GFP_KERNEL in
+> failover path) memory allocations from a dm-multipath hw_handler (and
+> while updating the LSI one) I was able to seperate some common code into
+> two new functions: blk_rq_map_kern() and bio_map_kern. These functions
+> are similar to their blk/bio*user cousins where they allocate requests
+> and bios and setup the data pointers except they work on kernel buffers.
 
-Why multi-bio? No one should ever have to build a request with multiple
-bio's in one go, that's pointless. The only reason multi-bio requests
-exist is because of the file systems not submitting big extents in one
-submission. The whole io path would be faster and simpler were it not
-for multi-bio requests :-)
+Wonderful stuff, much needed for a long time.
 
-A single bio can contain just as much data.
+> The goal is next convert the scsi 'special' requests to use these
+> functions, so scsi will be able to use block layer functions for scatter
+> lists setup for all requests. And then hopefully one day we will not
+> need those stinking "if (sc->use_sg)" paths all over our scsi drivers.
+
+I've slowly been doing the same thing in other places in the kernel and
+this bit has been talked about between James and I for at least a year
+or two.
 
 -- 
 Jens Axboe
+
