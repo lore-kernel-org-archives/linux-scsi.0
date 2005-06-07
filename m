@@ -1,16 +1,20 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH RFC 0/4] use scatter lists for all block pc
-	requests and simplify hw handlers
-Date: Tue, 07 Jun 2005 07:20:01 -0500
-Message-ID: <1118146802.4998.3.camel@mulgrave>
-References: <1117847972.23638.62.camel@mina> <1117901234.5005.9.camel@mulgrave>
-	<20050607121020.GA6458@infradead.org>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH RFC 0/4] use scatter lists for all block
+ pc	requests	and simplify hw handlers
+Date: Tue, 07 Jun 2005 23:08:05 +1000
+Message-ID: <42A59C35.5060207@torque.net>
+References: <1117847972.23638.62.camel@mina>	
+	<1117901234.5005.9.camel@mulgrave> <1117955727.4961.8.camel@mina>	
+	<1117982408.4990.12.camel@mulgrave>
+	<1117998665.4990.17.camel@mulgrave>	 <42A3E275.6030106@torque.net>
+	<1118067544.5045.17.camel@mulgrave>
+Reply-To: dougg@torque.net,
+	device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20050607121020.GA6458@infradead.org>
+In-Reply-To: <1118067544.5045.17.camel@mulgrave>
 List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -20,51 +24,109 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=subscribe>
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: LIRANS@il.ibm.com, Mike Christie <michaelc@cs.wisc.edu>, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2005-06-07 at 13:10 +0100, Christoph Hellwig wrote:
-> shouldn't blk_rq_map_kern handle a 0 buffer and do nothing more than
-> blk_get_request?  It's not exactly a criticial fastpath and that would make life
-> easier for the callers.
-
-Yes ... and it should probably do bio bouncing as well, since there's
-nothing special we have to do on completion to clean it up.
-
-I also think we might need a blk_rq_kern_iovec call that would take a
-vector of user I/O's and map it to a multiple bio request.  This would
-allow me to strip all of the user mapping out of sg, and also allow the
-block layer SG_IO to pick up this API (currently it returns -ENOTSUPP if
-you try it).
-
-> > +		if (req->rq_disk) {
-> > +			drv = *(struct scsi_driver **)req->rq_disk->private_data;
-> > +			if (unlikely(!drv->init_command(cmd))) {
-> > +				scsi_release_buffers(cmd);
-> > +				scsi_put_command(cmd);
-> > +				return BLKPREP_KILL;
-> > +			}
-> > +		} else {
-> > +			memcpy(cmd->cmnd, req->cmd, sizeof(cmd->cmnd));
-> > +			if (rq_data_dir(req) == WRITE)
-> > +				cmd->sc_data_direction = DMA_TO_DEVICE;
-> > +			else if (req->data_len)
-> > +				cmd->sc_data_direction = DMA_FROM_DEVICE;
-> > +			else
-> > +				cmd->sc_data_direction = DMA_NONE;
-> > +			
-> > +			cmd->transfersize = req->data_len;
-> > +			cmd->allowed = 3;
-> > +			cmd->timeout_per_command = req->timeout;
+James Bottomley wrote:
+> Well ... while I've got your attention, the only complexity I see to
+> converting sg is the hd->iovec_count != 0 case, which is doing vectored
+> SG from user land.
 > 
-> most of this could probably be done in the midlayer always instead of the
-> upper drivers.
+> This can be implemented (basically you do multiple bio attachment to a
+> request), and probably in the block layer (since block SG_IO would then
+> pick up the capability).
+> 
+> How important is this functionality?  Are there any applications using
+> it?
 
-I don't think so ... this is all struct scsi_cmnd handling.  SCSI needs
-to allocate and process its internal command structures.
+I don't think it is important and I'm not aware of any
+real world applications that are using it. Naturally,
+I will find out if that is actually true after it
+gets removed.
 
-However, I think we have a case for the number of retries being carried
-by the generic request structure.
+> On Mon, 2005-06-06 at 15:43 +1000, Douglas Gilbert wrote:
+> 
+>>There is no max_length on sense_buffer. How does one
+>>know how much, if any, sense data was written (returned).
+> 
+> 
+> Well, given the way most initiators work we can't do variable length
+> sense buffer sizes; it's limited by SCSI_SENSE_BUFFERSIZE, which seems
+> to be a good fixed value assumption.  The reason we don't have this is
+> because the block layer doesn't.  It also assumes SCSI_SENSE_BUFFERSIZE
+> is the correct maximum.
 
-James
+I believe that I am guilty for SCSI_SENSE_BUFFERSIZE.
+But implementation details shouldn't necessarily limit
+new interface functions. Again OSD could be a problem
+here as it uses descriptor sense format with larger
+descriptors (than SPC-3). Perhaps Liran might comment
+on whether the current 96 bytes is sufficient. [According
+to SPC-3 there is still a limit of 252 bytes.]
+
+Also scsi_do_command() could drop the direction
+argument and have an "in" pair (pointer and length)
+and an "out" pair. Then it could cope with OSD and
+advanced SBC-2 commands.
+
+>>resid is a very useful return parameter.
+> 
+> 
+> Yes, I spotted that too ... already in my version II ...
+> 
+> 
+>>Perhaps the *done() callback should have
+>>two more arguments (and scsi_do_command()
+>>one more argument). And 'buffer' and 'bufflen' have
+>>not changed in name but I assume they have in nature.
+>>
+>>Additionally perhaps it is time to start thinking about
+>>a clean pass through. Something that can pass a packet
+>>command (like sg can at the moment) but to a scsi_host
+>>(or a transport host). An additional argument would be
+>>needed to pass addressing information to the LLD. I'm
+>>thinking about the SAS Serial Management Protocol (SMP)
+>>that has nothing to do with the block layer or the
+>>SCSI mid level. We want to bind to a SAS host (initiator
+>>port) and supply a SAS address (of the SMP target
+>>which is most likely an expander).
+> 
+> 
+> Well, pretty much the block layer SG_IO is a clean passthrough.
+
+Depending on the driver which controls the device node
+that has been opened, there are various policy decisions
+to maneouver (e.g. sr and st require O_NONBLOCK on
+open() otherwise they will wait until media is loaded,
+making the SCSI Test Unit Ready command pointless). Also
+there are state machines in some drivers, that
+can either be confused by the pass through or
+vice versa (e.g. try using the sg_prevent utility in
+sg3_utils via a sr device node, then
+try again with a sg device node). Should maximum
+transfer size limits that apply to the READ/WRITE
+SBC commands also apply to READ/WRITE_BUFFER SPC
+commands?
+
+As always "clean" is the debatable word.
+
+   The
+> direction I think it makes most sense to move in is towards services
+> provided by the block layer (even if that means additions to it) rather
+> than away from them.  Even for arbitrary SAS expanders, we can detect
+> and bind to them; once that's done we have a connection and a management
+> application can read and set sysfs parameters for the object.
+
+The SAS SMP protocol is for discovering what is out
+there. In the extreme case no block device has been found.
+There is just a SAS HBA on a PCI bus with sysfs information
+telling us about some phys and what they are attached
+to. If the attached device type is an expander that
+implements a SMP target then we need to issue SMP
+frames (commands) through a local phy to the SAS address
+of the expander. I'm not sure we need scatter-gather,
+command merging, tagged queues or pseudo block devices
+to accomplish this.
+
+Doug Gilbert
