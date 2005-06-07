@@ -1,45 +1,44 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH RFC 0/4] use scatter lists for all block pc requests
-	and simplify hw handlers
-Date: Tue, 07 Jun 2005 15:38:38 -0400
-Message-ID: <1118173118.4791.17.camel@mulgrave>
-References: <1117847972.23638.62.camel@mina> <20050607180716.GA8172@suse.de>
+Subject: Re: [PATCH RFC 0/4] use scatter lists for all block
+	pc	requests	and simplify hw handlers
+Date: Tue, 07 Jun 2005 15:26:34 -0400
+Message-ID: <1118172394.4791.9.camel@mulgrave>
+References: <1117847972.23638.62.camel@mina>
+	 <1117901234.5005.9.camel@mulgrave> <1117955727.4961.8.camel@mina>
+	 <1117982408.4990.12.camel@mulgrave> <1117998665.4990.17.camel@mulgrave>
+	 <42A3E275.6030106@torque.net> <1118067544.5045.17.camel@mulgrave>
+	 <42A59C35.5060207@torque.net> <1118159966.4813.8.camel@mulgrave>
+	 <20050607180719.GB8172@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:63173 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:63429 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261982AbVFGUnO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S261981AbVFGUnO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 7 Jun 2005 16:43:14 -0400
-In-Reply-To: <20050607180716.GA8172@suse.de>
+In-Reply-To: <20050607180719.GB8172@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@suse.de>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Douglas Gilbert <dougg@torque.net>, Mike Christie <michaelc@cs.wisc.edu>, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, LIRANS@il.ibm.com
 
 On Tue, 2005-06-07 at 20:07 +0200, Jens Axboe wrote:
-> I've slowly been doing the same thing in other places in the kernel and
-> this bit has been talked about between James and I for at least a year
-> or two.
+> Why multi-bio? No one should ever have to build a request with multiple
+> bio's in one go, that's pointless. The only reason multi-bio requests
+> exist is because of the file systems not submitting big extents in one
+> submission. The whole io path would be faster and simpler were it not
+> for multi-bio requests :-)
 
-Yes, it's long been a dream of mine to eliminate at least struct
-scsi_request and just use block struct request for everything in the
-SCSI layer.
+OK, OK, sorry thinko ... I meant multi-biovec (which can be a single
+bio) ... however, I'm not the only one who keeps being confused by
+this ...
 
-The most pleasing aspect of this will be getting rid of the dma mapping
-duplications in st and sg.
+Incidentally, do I take it you're happy with all of this and I can take
+(at least the block pieces) through the SCSI tree?
 
-I'm still not sure we have it entirely correct, though.  Something still
-needs to be done about the queue alignment constraints, so bio_copy_...
-might need to be part of this API.
-
-Also, Jens, this looks wrong (from ll_rw_blk.c around line 2131):
-
-if (!(uaddr & queue_dma_alignment(q)) && !(len & queue_dma_alignment(q)))
-
-The alignment surely wants to be only on the start buffer (otherwise
-we'll get spurious copies in variable length commands (like inquiries)?
+Mike, I won't taking the dm-multipath patch unless there's agreement
+from Alasdair.
 
 James
 
