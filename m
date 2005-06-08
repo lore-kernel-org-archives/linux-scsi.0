@@ -1,50 +1,49 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH RFC 0/4] use scatter lists for all block
-	pc	requests	and simplify hw handlers
-Date: Wed, 8 Jun 2005 09:09:37 +0200
-Message-ID: <20050608070937.GB5749@suse.de>
-References: <1117901234.5005.9.camel@mulgrave> <1117955727.4961.8.camel@mina>
-	<1117982408.4990.12.camel@mulgrave>
-	<1117998665.4990.17.camel@mulgrave> <42A3E275.6030106@torque.net>
-	<1118067544.5045.17.camel@mulgrave> <42A59C35.5060207@torque.net>
-	<1118159966.4813.8.camel@mulgrave> <20050607180719.GB8172@suse.de>
-	<1118172394.4791.9.camel@mulgrave>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH RFC 0/4] use scatter lists for all block pc
+	requests	and simplify hw handlers
+Date: Wed, 08 Jun 2005 08:59:01 -0400
+Message-ID: <1118235541.5042.16.camel@mulgrave>
+References: <1117847972.23638.62.camel@mina> <20050607180716.GA8172@suse.de>
+	 <1118173118.4791.17.camel@mulgrave>  <42A65F5D.6060805@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <1118172394.4791.9.camel@mulgrave>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: LIRANS@il.ibm.com, Mike Christie <michaelc@cs.wisc.edu>, Douglas Gilbert <dougg@torque.net>, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:26291 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261176AbVFHM7R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Jun 2005 08:59:17 -0400
+In-Reply-To: <42A65F5D.6060805@torque.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: Jens Axboe <axboe@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, Kai.Makisara@kolumbus.fi
 
-On Tue, Jun 07 2005, James Bottomley wrote:
-> On Tue, 2005-06-07 at 20:07 +0200, Jens Axboe wrote:
-> > Why multi-bio? No one should ever have to build a request with multiple
-> > bio's in one go, that's pointless. The only reason multi-bio requests
-> > exist is because of the file systems not submitting big extents in one
-> > submission. The whole io path would be faster and simpler were it not
-> > for multi-bio requests :-)
-> 
-> OK, OK, sorry thinko ... I meant multi-biovec (which can be a single
-> bio) ... however, I'm not the only one who keeps being confused by
-> this ...
-> 
-> Incidentally, do I take it you're happy with all of this and I can take
-> (at least the block pieces) through the SCSI tree?
+On Wed, 2005-06-08 at 13:00 +1000, Douglas Gilbert wrote:
+> A "char_uld" library that st, sg, ch and the proposed OSD
+> ULDs could tap into, would cut the duplication. As you can
+> see, Kai and I have shared implementations in this area but
+> had no mechanism for sharing the actual code.
 
-I was planning on trying a block tree out, let me try and merge it first
-and look it over if you don't mind.
+Well, yes, I've been asking for something like this for ages.  However,
+with the new block APIs it seems that the character read and write paths
+become very short, so it may no longer be worth it.
 
--- 
-Jens Axboe
+Also, I really don't think OSD should be a character device.  It's
+definitely a block device, it just happens to have a two dimensional
+address space instead of a one dimensional one.
+
+> An idea I had was to flag what mechanism inserted a
+> command onto a request queue and when a blk_pc_request()
+> follows a blk_pc_request() then use FIFO order for
+> the second one.
+
+Really, I think it's cleaner for head or tail insertion to be handled at
+the time the request is generated.  However, the block queues of
+character taps are special; we certainly don't need all the elevator
+merging machinery, so perhaps we should have a way of setting them up as
+noop elevator?
+
+James
+
+
