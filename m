@@ -1,50 +1,69 @@
-From: Alexander Jolk <alexj@buf.fr>
-Subject: Re: LSI MegaRAID SATA 300-X8 problems
-Date: Thu, 09 Jun 2005 17:26:14 +0200
-Message-ID: <42A85F96.5080608@buf.fr>
-References: <42A5F235.6000300@buf.fr> <42A601E0.8090404@buf.fr>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: list_for_each_entry_safe() regarded as unsafe
+Date: Thu, 9 Jun 2005 12:27:02 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0506091201080.5136-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.buf.fr ([195.68.52.65]:5523 "EHLO mail.buf.fr")
-	by vger.kernel.org with ESMTP id S261916AbVFIP0V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2005 11:26:21 -0400
-Received: from srv1.pantin.buf.fr (srv1.pantin.buf.fr [172.21.0.241])
-	by mail.buf.fr (8.12.3/8.12.3/Debian-7.1) with ESMTP id j59FQEdf026443
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Jun 2005 17:26:14 +0200
-Received: from [172.21.0.11] (alexj@admin2.pantin.buf.fr [172.21.0.11])
-	by srv1.pantin.buf.fr (8.13.1/8.13.1/Debian-20) with ESMTP id j59FQHd2028527
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Jun 2005 17:26:17 +0200
-In-Reply-To: <42A601E0.8090404@buf.fr>
+Received: from iolanthe.rowland.org ([192.131.102.54]:6828 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261374AbVFIQ1D
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Jun 2005 12:27:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Dag Nygren <dag@newtech.fi>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Alexander Jolk wrote:
-> Alexander Jolk wrote:
-> 
->> I'm trying to get an LSI MegaRAID SATA 300-X8 controller to work on a 
->> Debian/sarge system with kernel 2.6.11-9-em64t-p4-smp from unstable. 
->> The megaraid_mbox module is loaded and seems to identify the 
->> controller, but whenever I try to access the disk, I get SCSI errors, 
->> the controller alarm goes off, and upon inspection in the BIOS, the 
->> first SATA disc is marked `FAILED'.  Reconfiguring the RAID lets me 
->> restart the whole process.
-> 
-> 
-> Following up to myself, I compiled my own kernel 2.6.11.11 and things 
-> appear to work so far.  Known problem that has been fixed, or worth 
-> investigating?
+Mike and whoever else may be interested:
 
-Any pointers, anybody?  While things are working a little better, I 
-still get a complete RAID crash every once in a while (a few hours of 
-use, typically).  Since I have got no reaction so far, is more 
-information needed, or should I take my questions somewhere else?  Where?
+The scsi_forget_host() and __scsi_remove_target() routines (in scsi_scan.c 
+and scsi_sysfs.c) contain these lines respectively:
 
-Alex
+	list_for_each_entry_safe(starget, tmp, &shost->__targets, siblings) {
+
+	list_for_each_entry_safe(sdev, tmp, &shost->__devices, siblings) {
+
+Neither loop is truly safe because they release shost->host_lock to do the
+actual removals.  I've just seen a couple of different oopses caused when
+__scsi_remove_target() was called during scanning.  Details available if 
+you want them.
+
+I don't know what the best way is fix this.  Even if scsi_forget_host() 
+acquired the host's scan_mutex, that wouldn't be enough to guarantee the 
+__targets and __devices lists won't change, would it?  And it might cause 
+interference with other pathways.
+
+Maybe it's best simply to avoid using list_for_each_entry_safe, as in
+the example below:
+
+Alan Stern
 
 
--- 
-Alexander Jolk  * BUF Compagnie * alexj@buf.com
-Tel +33-1 42 68 18 28  *  Fax +33-1 42 68 18 29
+Index: usb-2.6/drivers/scsi/scsi_sysfs.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi_sysfs.c
++++ usb-2.6/drivers/scsi/scsi_sysfs.c
+@@ -653,17 +653,19 @@ void __scsi_remove_target(struct scsi_ta
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+ 	unsigned long flags;
+-	struct scsi_device *sdev, *tmp;
++	struct scsi_device *sdev;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	starget->reap_ref++;
+-	list_for_each_entry_safe(sdev, tmp, &shost->__devices, siblings) {
++restart:
++	list_for_each_entry(sdev, &shost->__devices, siblings) {
+ 		if (sdev->channel != starget->channel ||
+ 		    sdev->id != starget->id)
+ 			continue;
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
+ 		scsi_remove_device(sdev);
+ 		spin_lock_irqsave(shost->host_lock, flags);
++		goto restart;
+ 	}
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 	scsi_target_reap(starget);
+
+
