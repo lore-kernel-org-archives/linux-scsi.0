@@ -1,63 +1,74 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH RFC 0/4] use scatter lists for all block pc
-	requests and simplify hw handlers
-Date: Thu, 9 Jun 2005 08:18:39 +0200
-Message-ID: <20050609061838.GB5140@suse.de>
-References: <1117847972.23638.62.camel@mina> <1117901234.5005.9.camel@mulgrave>
-	<1117955727.4961.8.camel@mina> <20050606190205.GA6817@us.ibm.com>
-	<1118157976.42a5bc98d6f75@webmail.cs.wisc.edu>
-	<20050607182317.GA12959@us.ibm.com> <42A711BC.9020108@cs.wisc.edu>
-	<20050609000830.GA20616@us.ibm.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] use spi_transport_class for aic79xx
+Date: Thu, 09 Jun 2005 10:27:38 +0200
+Message-ID: <42A7FD7A.1050105@suse.de>
+References: <42A7EAEA.3060302@suse.de> <42A7F5A7.5080401@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <20050609000830.GA20616@us.ibm.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Mike Christie <michaelc@cs.wisc.edu>, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.suse.de ([195.135.220.2]:56514 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S262333AbVFII1l (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2005 04:27:41 -0400
+In-Reply-To: <42A7F5A7.5080401@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Jun 08 2005, Patrick Mansfield wrote:
-> On Wed, Jun 08, 2005 at 10:41:48AM -0500, Mike Christie wrote:
-> > Patrick Mansfield wrote:
-> > >On Tue, Jun 07, 2005 at 10:26:16AM -0500, Michael Christie wrote:
-> > >
-> > >>Quoting Patrick Mansfield <patmans@us.ibm.com>:
-> > >
-> > >
-> > >>>Why can't the retries be passed down via a new blk req->retries?
-> > >>>
-> > >>
-> > >>Is that all that is needed for dm-multipath? I thought this would be a 
-> > >>good time
-> > >>to add some code to allow the finer grained control of retries that could 
-> > >>also
-> > >>be used by dm and md. For example do you only want to retry certain 
-> > >>failures X
-> > >>numbeer of times?
-> > >
-> > >
-> > >I was looking/thinking about the scsi_scan retries not multipath.
-> > 
-> > And I was hoping the same code/framework can be used for scsi, DM, MD, 
-> > SG_IO and all other block layer drivers.
-> 
-> So use a req->retries instead of the fail fast flag?
+Jeff Garzik wrote:
+> Hannes Reinecke wrote:
+>> Hi James,
+>>
+>> you asked for it :-)
+>> This patch updates aic79xx to use the spi transport class.
+>> Wasn't even too hard.
+>> Patch is relative to 2.6.12-rc6 + scsi-misc fixes.
+>>
+>> Comments etc. welcome.
+>> Otherwise please apply.
+>=20
+> Very nice, you saved me some work.
+>=20
+Thought so.
 
-Would be fine. Some drivers are messing with ->errors for that anyways,
-so would be nice to clean that up.
+> And, did you test it?  :)
+>=20
+Ach, you don't trust me?
 
-It would need to be done _very_ carefully though!
+Seriously, yes I did test it here (Adaptec ASC-29320 U320).
+The usual error applies (crashes on rmmod when disk-devices are
+attached, removing devices by hand and rmmod afterwards works, though),
+but apart from it seems to work.
+And if not I can always blame the transport layer for it :-).
+Next step is to connect an U320 drive to check it works properly.
 
--- 
-Jens Axboe
+> I would like to merge this with my aic changes (ports of James B's
+> aic7xxx work), which removes the busyq, and soon, the completeq.
+>=20
+As it happens I've just merged you aic branch with my update, so watch
+this space. Next step is to include James' latest changes to aic7xxx
+into the aic79xx also.
+
+And I _really_ like to see the common parts merged.
+Both drivers share a lot of code.
+
+> See the 'aic' branch of
+> rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/misc-2.6.gi=
+t
+>=20
+See above. And it only took me 4hrs to figure out the git stuff ...
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux AG				S390 & zSeries
+Maxfeldstra=DFe 5				+49 911 74053 688
+90409 N=FCrnberg				http://www.suse.de
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
