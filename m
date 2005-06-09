@@ -1,49 +1,56 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH RFC 0/4] use scatter lists for all block pc
-	requests and simplify hw handlers
-Date: Thu, 9 Jun 2005 13:54:33 +0200
-Message-ID: <20050609115433.GS5140@suse.de>
-References: <1117847972.23638.62.camel@mina> <1117901234.5005.9.camel@mulgrave>
-	<1117955727.4961.8.camel@mina> <20050606190205.GA6817@us.ibm.com>
-	<1118157976.42a5bc98d6f75@webmail.cs.wisc.edu>
-	<20050607182317.GA12959@us.ibm.com> <42A711BC.9020108@cs.wisc.edu>
-	<20050609000830.GA20616@us.ibm.com> <20050609061838.GB5140@suse.de>
-	<1118317904.5043.3.camel@mulgrave>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: code path
+Date: Thu, 09 Jun 2005 08:50:55 -0400
+Message-ID: <1118321455.5511.27.camel@localhost.localdomain>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <1118317904.5043.3.camel@mulgrave>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Patrick Mansfield <patmans@us.ibm.com>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-lyQDwyx0hi5BpQxQtmOw"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from leviathan.ele.uri.edu ([131.128.51.64]:54923 "EHLO
+	leviathan.ele.uri.edu") by vger.kernel.org with ESMTP
+	id S262222AbVFIMu7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Jun 2005 08:50:59 -0400
+Received: from localhost.localdomain (leviathan [131.128.51.64])
+	by leviathan.ele.uri.edu (8.12.9/8.12.9) with ESMTP id j59Cot9e010529
+	for <linux-scsi@vger.kernel.org>; Thu, 9 Jun 2005 08:50:56 -0400 (EDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Jun 09 2005, James Bottomley wrote:
-> On Thu, 2005-06-09 at 08:18 +0200, Jens Axboe wrote:
-> > > So use a req->retries instead of the fail fast flag?
-> > 
-> > Would be fine. Some drivers are messing with ->errors for that anyways,
-> > so would be nice to clean that up.
-> > 
-> > It would need to be done _very_ carefully though!
-> 
-> Actually, I think there's still a need for both.  Fail fast implies more
-> than simply no retry.  In the SCSI case it should eventually mean fail
-> the command before we begin transport recovery (at the moment, we simply
-> use the command in transport recovery, however long it takes, and then
-> return the failure).
 
-I tend to agree, FAILFAST does have a use outside of normal retry logic.
+--=-lyQDwyx0hi5BpQxQtmOw
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Jens Axboe
+I wonder if anybody could tell me the kernel code path for these two
+commands?
+
+echo "scsi remove-single-device 0 0 4 0" > /proc/scsi/scsi
+echo "scsi add-single-device 0 0 5 0" > /proc/scsi/scsi
+
+
+I have a SATA controller that whenever I execute these 2 command to system,=
+=20
+it has problem. I assume this is because the card driver.
+
+
+Thanks
+
+
+Ming
+
+
+--=-lyQDwyx0hi5BpQxQtmOw
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.2.6 (GNU/Linux)
+
+iD8DBQBCqDsvSYbkL5BnVYoRAsKZAJ42JgF8amUpOoGIF21yKwus9j7XmQCffBtO
+1iywOfFqQunzZLT8Ov+7NxI=
+=VtrH
+-----END PGP SIGNATURE-----
+
+--=-lyQDwyx0hi5BpQxQtmOw--
+
