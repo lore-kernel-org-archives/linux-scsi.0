@@ -1,35 +1,50 @@
-From: Bodo Stroesser <bstroesser@fujitsu-siemens.com>
-Subject: Re: [PATCH] for Deadlock in transport_fc
-Date: Thu, 09 Jun 2005 16:11:41 +0200
-Message-ID: <42A84E1D.5060607@fujitsu-siemens.com>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AC67@xbl3.ad.emulex.com>
+From: Alexander Jolk <alexj@buf.fr>
+Subject: Re: LSI MegaRAID SATA 300-X8 problems
+Date: Thu, 09 Jun 2005 17:26:14 +0200
+Message-ID: <42A85F96.5080608@buf.fr>
+References: <42A5F235.6000300@buf.fr> <42A601E0.8090404@buf.fr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dgate1.fujitsu-siemens.com ([217.115.66.35]:406 "EHLO
-	dgate1.fujitsu-siemens.com") by vger.kernel.org with ESMTP
-	id S262404AbVFIOLo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Jun 2005 10:11:44 -0400
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AC67@xbl3.ad.emulex.com>
+Received: from mail.buf.fr ([195.68.52.65]:5523 "EHLO mail.buf.fr")
+	by vger.kernel.org with ESMTP id S261916AbVFIP0V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2005 11:26:21 -0400
+Received: from srv1.pantin.buf.fr (srv1.pantin.buf.fr [172.21.0.241])
+	by mail.buf.fr (8.12.3/8.12.3/Debian-7.1) with ESMTP id j59FQEdf026443
+	for <linux-scsi@vger.kernel.org>; Thu, 9 Jun 2005 17:26:14 +0200
+Received: from [172.21.0.11] (alexj@admin2.pantin.buf.fr [172.21.0.11])
+	by srv1.pantin.buf.fr (8.13.1/8.13.1/Debian-20) with ESMTP id j59FQHd2028527
+	for <linux-scsi@vger.kernel.org>; Thu, 9 Jun 2005 17:26:17 +0200
+In-Reply-To: <42A601E0.8090404@buf.fr>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org, hch@infradead.org
+To: linux-scsi@vger.kernel.org
 
-James.Smart@Emulex.Com wrote:
+Alexander Jolk wrote:
+> Alexander Jolk wrote:
 > 
->>BTW: at least once when we disconnected one target and 
->>connected the other
->>without waiting for nodev_tmo, we saw the situation, that the 
->>new target was
->>accessible, while sysfs still showed us the old wwpn.
+>> I'm trying to get an LSI MegaRAID SATA 300-X8 controller to work on a 
+>> Debian/sarge system with kernel 2.6.11-9-em64t-p4-smp from unstable. 
+>> The megaraid_mbox module is loaded and seems to identify the 
+>> controller, but whenever I try to access the disk, I get SCSI errors, 
+>> the controller alarm goes off, and upon inspection in the BIOS, the 
+>> first SATA disc is marked `FAILED'.  Reconfiguring the RAID lets me 
+>> restart the whole process.
 > 
 > 
-> We ought to track this further offline. There's more detail I'd like to
-> get from you to ensure there isn't an error here.
-> 
-We'll try to reproduce this. If we succeed, we will let you know the
-recipe.
+> Following up to myself, I compiled my own kernel 2.6.11.11 and things 
+> appear to work so far.  Known problem that has been fixed, or worth 
+> investigating?
 
-	Bodo
+Any pointers, anybody?  While things are working a little better, I 
+still get a complete RAID crash every once in a while (a few hours of 
+use, typically).  Since I have got no reaction so far, is more 
+information needed, or should I take my questions somewhere else?  Where?
+
+Alex
+
+
+-- 
+Alexander Jolk  * BUF Compagnie * alexj@buf.com
+Tel +33-1 42 68 18 28  *  Fax +33-1 42 68 18 29
