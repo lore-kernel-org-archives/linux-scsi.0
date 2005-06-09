@@ -1,56 +1,45 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: code path
-Date: Thu, 09 Jun 2005 08:50:55 -0400
-Message-ID: <1118321455.5511.27.camel@localhost.localdomain>
-Reply-To: mingz@ele.uri.edu
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] use spi_transport_class for aic79xx
+Date: Thu, 09 Jun 2005 09:11:42 -0400
+Message-ID: <1118322702.5041.2.camel@mulgrave>
+References: <42A7EAEA.3060302@suse.de> <42A7F5A7.5080401@pobox.com>
+	 <42A7FD7A.1050105@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-lyQDwyx0hi5BpQxQtmOw"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from leviathan.ele.uri.edu ([131.128.51.64]:54923 "EHLO
-	leviathan.ele.uri.edu") by vger.kernel.org with ESMTP
-	id S262222AbVFIMu7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Jun 2005 08:50:59 -0400
-Received: from localhost.localdomain (leviathan [131.128.51.64])
-	by leviathan.ele.uri.edu (8.12.9/8.12.9) with ESMTP id j59Cot9e010529
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Jun 2005 08:50:56 -0400 (EDT)
+Received: from stat16.steeleye.com ([209.192.50.48]:46549 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262389AbVFINLy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Jun 2005 09:11:54 -0400
+In-Reply-To: <42A7FD7A.1050105@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+On Thu, 2005-06-09 at 10:27 +0200, Hannes Reinecke wrote:
+> Next step is to connect an U320 drive to check it works properly.
 
---=-lyQDwyx0hi5BpQxQtmOw
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+That's definitely a requirement.  The sole function of aic79xx over
+aic7xxx is u320.  That being said, I have been covertly converting the
+transport classes to cope with u320 DV.  I believe now it all works.
+However, you need to plug in more transport parameters than you
+currently have (even if a lot of them are read only).  You also need to
+update the couplings for the period == 8 case (which is u32).
 
-I wonder if anybody could tell me the kernel code path for these two
-commands?
+Let me post the patches I used to fusion as an RFC and you can examine
+the variable setting routines to see how it's done 
 
-echo "scsi remove-single-device 0 0 4 0" > /proc/scsi/scsi
-echo "scsi add-single-device 0 0 5 0" > /proc/scsi/scsi
+And I have tested this one:
 
+scsi5 : ioc1: LSI53C1030, FwRev=01032700h, Ports=1, MaxQ=255, IRQ=56
+  Vendor: HP 36.4G  Model: ST336607LW        Rev: HPC3
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+ target5:0:1: Beginning Domain Validation
+ target5:0:1: Ending Domain Validation
+ target5:0:1: FAST-160 WIDE SCSI 320.0 MB/s DT IU QAS (6.25 ns, offset 127)
 
-I have a SATA controller that whenever I execute these 2 command to system,=
-=20
-it has problem. I assume this is because the card driver.
+James
 
-
-Thanks
-
-
-Ming
-
-
---=-lyQDwyx0hi5BpQxQtmOw
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.6 (GNU/Linux)
-
-iD8DBQBCqDsvSYbkL5BnVYoRAsKZAJ42JgF8amUpOoGIF21yKwus9j7XmQCffBtO
-1iywOfFqQunzZLT8Ov+7NxI=
-=VtrH
------END PGP SIGNATURE-----
-
---=-lyQDwyx0hi5BpQxQtmOw--
 
