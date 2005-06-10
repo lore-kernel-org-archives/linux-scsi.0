@@ -1,53 +1,37 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Patch] Correct issue with midlayer scsi target allocation and transports that create the targets
-Date: Fri, 10 Jun 2005 21:25:43 +0100
-Message-ID: <20050610202543.GA13494@infradead.org>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AC6F@xbl3.ad.emulex.com>
+From: Lee Revell <rlrevell@joe-job.com>
+Subject: DMA mapping (was Re: [PATCH] cciss 2.6; replaces DMA masks with
+	kernel defines)
+Date: Fri, 10 Jun 2005 16:39:59 -0400
+Message-ID: <1118436000.6423.42.camel@mindpipe>
+References: <20050610143453.GA26476@beardog.cca.cpqcorp.net>
+	 <42A9C60E.3080604@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:60382 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261209AbVFJUZp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Jun 2005 16:25:45 -0400
-Content-Disposition: inline
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AC6F@xbl3.ad.emulex.com>
+Received: from mustang.oldcity.dca.net ([216.158.38.3]:60816 "HELO
+	mustang.oldcity.dca.net") by vger.kernel.org with SMTP
+	id S261219AbVFJUjH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Jun 2005 16:39:07 -0400
+In-Reply-To: <42A9C60E.3080604@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: mike.miller@hp.com, akpm@osdl.org, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> Here's a proposed patch. The real problem in all of this was that
-> we had 2 places allocating a scsi target (or should I say, that
-> invoked the scan function that makes the target, but the parents
-> are different).  This patch adds a transport alloc_target function,
-> which allows the transport to adjusts the parent, and then calls
-> back into the midlayer to complete the allocation (small recursive
-> call). It has one additional optimization in that, if the transport
-> is doling out targets, it fails target allocations on things that
-> don't exist. This will make scanning slightly faster. I also like
-> this patch as it leaves all "scan" logic in the midlayer.
+On Fri, 2005-06-10 at 12:55 -0400, Jeff Garzik wrote:
+> mike.miller@hp.com wrote:
+> > This patch removes our homegrown DMA masks and uses the ones defined in
+> > the kernel instead.
+> > Thanks to Jens Axboe for the code. Please consider this for inclusion.
+> > 
+> > Signed-off-by: Mike Miller <mike.miller@hp.com>
+> 
+> You need to add '#include <linux/dma-mapping.h>'
+> 
 
-I don't like the recursion part of this at all.  I'd suggest to make
-scsi_alloc_target a tiny wrapper around the transport ->alloc_target +
-a default action, the shared body that's in scsi_alloc_target will
-become __scsi_alloc_target.
+Why doesn't this file define 29, 30, 31 bit DMA masks, required by many
+devices?  I know of at least 2 soundcards that need a 29 bit DMA mask.
 
-> +	spin_lock_irqsave(shost->host_lock, flags);
-> +	list_for_each_entry_safe(rport, next_rport,
-> +			&fc_host_rports(shost), peers) {
-
-you don't actually need list_for_each_entry_safe here as you're dropping
-out of the loop once the right rport has been found.
-
-> +		if ((rport->channel == channel) &&
-> +		    (rport->scsi_target_id == id)) {
-> +			spin_unlock_irqrestore(shost->host_lock, flags);
-> +			starget = scsi_alloc_target(&rport->dev, channel, id);
-> +			if (starget)
-> +				return 0;
-> +			return 1;
-
-this is always under the scan_mutex, right?  else we'd get a race after
-the sin_unlock but before registering the new target.
+Lee
 
