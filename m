@@ -1,37 +1,51 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: list_for_each_entry_safe() regarded as unsafe
-Date: Fri, 10 Jun 2005 11:26:11 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0506101122410.4975-100000@iolanthe.rowland.org>
-References: <42A9982E.5020802@us.ibm.com>
+From: mike.miller@hp.com
+Subject: [PATCH] cciss 2.6; replaces DMA masks with kernel defines
+Date: Fri, 10 Jun 2005 09:34:53 -0500
+Message-ID: <20050610143453.GA26476@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:2434 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S262568AbVFJP0L
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Jun 2005 11:26:11 -0400
-In-Reply-To: <42A9982E.5020802@us.ibm.com>
+Received: from palrel13.hp.com ([156.153.255.238]:55697 "EHLO palrel13.hp.com")
+	by vger.kernel.org with ESMTP id S262575AbVFJPeU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Jun 2005 11:34:20 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: Mike Anderson <andmike@us.ibm.com>, Dag Nygren <dag@newtech.fi>, SCSI development list <linux-scsi@vger.kernel.org>
+To: akpm@osdl.org, axboe@suse.de
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, 10 Jun 2005, Brian King wrote:
+This patch removes our homegrown DMA masks and uses the ones defined in
+the kernel instead.
+Thanks to Jens Axboe for the code. Please consider this for inclusion.
 
-> > How about not acquiring the scan_mutex in scsi_remove_device, and 
-> > insisting that the caller hold it instead?  There aren't that many places 
-> > where it gets called.  In fact, one of those places (an error pathway in 
-> > scsi_sysfs_add_sdev) looks like it already will cause a deadlock.
-> 
-> scsi_remove_device is an exported symbol, so requiring the caller to obtain
-> the scan_mutex prior to calling it would not work. A __scsi_remove_device
-> could be created, however, which would not grab the scan_mutex so that scsi
-> core could do the right thing.
+Signed-off-by: Mike Miller <mike.miller@hp.com>
 
-Okay.
+ cciss.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-How should a host be marked to indicate it's being removed?  Add another 
-bit to shost_state?
-
-Alan Stern
-
+--------------------------------------------------------------------------------
+diff -burNp lx2612-rc6.orig/drivers/block/cciss.c lx2612-rc6/drivers/block/cciss.c
+--- lx2612-rc6.orig/drivers/block/cciss.c	2005-06-10 08:43:05.516957392 -0500
++++ lx2612-rc6/drivers/block/cciss.c	2005-06-10 08:56:44.302483072 -0500
+@@ -126,8 +126,6 @@ static struct board_type products[] = {
+ #define MAX_CTLR_ORIG 	8
+ 
+ 
+-#define CCISS_DMA_MASK	0xFFFFFFFF	/* 32 bit DMA */
+-
+ static ctlr_info_t *hba[MAX_CTLR];
+ 
+ static void do_cciss_request(request_queue_t *q);
+@@ -2747,9 +2745,9 @@ static int __devinit cciss_init_one(stru
+ 	hba[i]->pdev = pdev;
+ 
+ 	/* configure PCI DMA stuff */
+-	if (!pci_set_dma_mask(pdev, 0xffffffffffffffffULL))
++	if (!pci_set_dma_mask(pdev, DMA_64BIT_MASK))
+ 		printk("cciss: using DAC cycles\n");
+-	else if (!pci_set_dma_mask(pdev, 0xffffffff))
++	else if (!pci_set_dma_mask(pdev, DMA_32BIT_MASK))
+ 		printk("cciss: not using DAC cycles\n");
+ 	else {
+ 		printk("cciss: no suitable DMA available\n");
