@@ -1,40 +1,71 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: DMA mapping (was Re: [PATCH] cciss 2.6; replaces DMA masks with kernel defines)
-Date: Fri, 10 Jun 2005 22:30:03 +0100
-Message-ID: <20050610213003.GI24611@parcelfarce.linux.theplanet.co.uk>
-References: <20050610143453.GA26476@beardog.cca.cpqcorp.net> <42A9C60E.3080604@pobox.com> <1118436000.6423.42.camel@mindpipe> <1118436306.5272.37.camel@laptopd505.fenrus.org> <1118438253.6423.72.camel@mindpipe>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] Sanitize PQ3 device handling (Take #2)
+Date: Fri, 10 Jun 2005 16:52:02 -0500
+Message-ID: <1118440323.5031.41.camel@mulgrave>
+References: <428CA4E3.9030601@suse.de> <20050520214030.GA8925@us.ibm.com>
+	 <4292E4BA.5040001@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:63413 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261250AbVFJV3N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Jun 2005 17:29:13 -0400
-Content-Disposition: inline
-In-Reply-To: <1118438253.6423.72.camel@mindpipe>
+Received: from stat16.steeleye.com ([209.192.50.48]:14785 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261255AbVFJVwJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Jun 2005 17:52:09 -0400
+In-Reply-To: <4292E4BA.5040001@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Revell <rlrevell@joe-job.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, mike.miller@hp.com, akpm@osdl.org, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, Jun 10, 2005 at 05:17:32PM -0400, Lee Revell wrote:
-> OK, this covers the drivers I know.  I didn't make any attempt to check
-> them all.
+On Tue, 2005-05-24 at 10:24 +0200, Hannes Reinecke wrote:
+> -		printk(KERN_INFO "scsi: unknown device type %d\n", sdev->type);
+> +		if (sdev->inq_periph_qual != 1 && sdev->inq_periph_qual != 3)
+> +			printk(KERN_INFO "scsi: unknown device type %d\n", sdev->type);
 
-I know of two others ...
+The device type for PQ1 should be reliable, it's only PQ3 that has 0x1f
 
-sym2 has:
-#define DMA_DAC_MASK    0x000000ffffffffffULL /* 40-bit */
+Also, we have defines for this (SCSI_INQ_PQ_NOT_CON and
+SCSI_INQ_PQ_NOT_CAP)
 
-and aic7xxx has:
-        const uint64_t   mask_39bit = 0x7FFFFFFFFFULL;
+>  	if (res == SCSI_SCAN_LUN_PRESENT) {
+> -		if (scsi_report_lun_scan(sdev, bflags, rescan) != 0)
+> +		if (scsi_report_lun_scan(sdev, bflags, rescan) != 0) {
+>  			/*
+>  			 * The REPORT LUN did not scan the target,
+>  			 * do a sequential scan.
+>  			 */
+> +			if (res == SCSI_SCAN_LUN_IGNORED)
 
-Would you mind respinning your patch to include these?
+This condition is impossible.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+> +				/*
+> +				 * There's a target here, but lun 0 is not 
+> +				 * connected to a device and does not support
+> +				 * the report_lun scan.  Fall back to a 
+> +				 * sequential lun scan with a bflags of 
+> +				 * SPARSELUN.
+> +				 *
+> +				 * The old code also used a default scsi level
+> +				 * of SCSI_2 which seems a bit spurious. Any
+> +				 * misbehaving device should rather be added
+> +				 * to the blacklist.
+> +				 */
+> +				bflags |= BLIST_SPARSELUN;
+
+The reason the old code did all that is because the inquiry data of a
+PQ3 device isn't credible and shouldn't be acted on.
+
+>  			scsi_sequential_lun_scan(starget, bflags,
+>  				       	res, sdev->scsi_level, rescan);
+
+If you really have the SCSI_SCAN_LUN_IGNORED case here, you've already
+released sdev in scsi_probe_and_add_lun, so you can't use it here.
+
+Finally, I think you should probably update the scsi_match function not
+to attach on PQ3, just in case someone violates spec and has a valid
+type.
+
+James
+
+
