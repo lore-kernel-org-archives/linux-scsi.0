@@ -1,67 +1,40 @@
-From: Lee Revell <rlrevell@joe-job.com>
-Subject: Re: DMA mapping (was Re: [PATCH] cciss 2.6; replaces DMA masks
-	with kernel defines)
-Date: Fri, 10 Jun 2005 17:17:32 -0400
-Message-ID: <1118438253.6423.72.camel@mindpipe>
-References: <20050610143453.GA26476@beardog.cca.cpqcorp.net>
-	 <42A9C60E.3080604@pobox.com>  <1118436000.6423.42.camel@mindpipe>
-	 <1118436306.5272.37.camel@laptopd505.fenrus.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: DMA mapping (was Re: [PATCH] cciss 2.6; replaces DMA masks with kernel defines)
+Date: Fri, 10 Jun 2005 22:30:03 +0100
+Message-ID: <20050610213003.GI24611@parcelfarce.linux.theplanet.co.uk>
+References: <20050610143453.GA26476@beardog.cca.cpqcorp.net> <42A9C60E.3080604@pobox.com> <1118436000.6423.42.camel@mindpipe> <1118436306.5272.37.camel@laptopd505.fenrus.org> <1118438253.6423.72.camel@mindpipe>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mustang.oldcity.dca.net ([216.158.38.3]:8857 "HELO
-	mustang.oldcity.dca.net") by vger.kernel.org with SMTP
-	id S261246AbVFJVQi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Jun 2005 17:16:38 -0400
-In-Reply-To: <1118436306.5272.37.camel@laptopd505.fenrus.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:63413 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261250AbVFJV3N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Jun 2005 17:29:13 -0400
+Content-Disposition: inline
+In-Reply-To: <1118438253.6423.72.camel@mindpipe>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, mike.miller@hp.com, akpm@osdl.org, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Lee Revell <rlrevell@joe-job.com>
+Cc: Arjan van de Ven <arjan@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, mike.miller@hp.com, akpm@osdl.org, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, 2005-06-10 at 22:45 +0200, Arjan van de Ven wrote:
-> On Fri, 2005-06-10 at 16:39 -0400, Lee Revell wrote:
-> > On Fri, 2005-06-10 at 12:55 -0400, Jeff Garzik wrote:
-> > > mike.miller@hp.com wrote:
-> > > > This patch removes our homegrown DMA masks and uses the ones defined in
-> > > > the kernel instead.
-> > > > Thanks to Jens Axboe for the code. Please consider this for inclusion.
-> > > > 
-> > > > Signed-off-by: Mike Miller <mike.miller@hp.com>
-> > > 
-> > > You need to add '#include <linux/dma-mapping.h>'
-> > > 
-> > 
-> > Why doesn't this file define 29, 30, 31 bit DMA masks, required by many
-> > devices?  I know of at least 2 soundcards that need a 29 bit DMA mask.
-> 
-> your mail unfortunately was not in diff -u form ;)
-> I'm pretty sure that such constants are welcome
-> 
+On Fri, Jun 10, 2005 at 05:17:32PM -0400, Lee Revell wrote:
+> OK, this covers the drivers I know.  I didn't make any attempt to check
+> them all.
 
-OK, this covers the drivers I know.  I didn't make any attempt to check
-them all.
+I know of two others ...
 
+sym2 has:
+#define DMA_DAC_MASK    0x000000ffffffffffULL /* 40-bit */
 
-According to Robert Love's book there's at least one device than can
-only DMA into a 24 bit address space, maybe the PCI NE2K?
+and aic7xxx has:
+        const uint64_t   mask_39bit = 0x7FFFFFFFFFULL;
 
-Sommary: Add mask defines for some devices that can't DMA into full
-32/64 bit address space.
+Would you mind respinning your patch to include these?
 
-Signed-Off-By: Lee Revell <rlrevell@joe-job.com>
-
---- linux-2.6.12-rc5-k7/include/linux/dma-mapping.h~	2005-03-02 02:38:25.000000000 -0500
-+++ linux-2.6.12-rc5-k7/include/linux/dma-mapping.h	2005-06-10 17:10:12.000000000 -0400
-@@ -15,6 +15,8 @@
- 
- #define DMA_64BIT_MASK	0xffffffffffffffffULL
- #define DMA_32BIT_MASK	0x00000000ffffffffULL
-+#define DMA_31BIT_MASK	0x000000007fffffffULL
-+#define DMA_29BIT_MASK	0x000000001fffffffULL
- 
- #include <asm/dma-mapping.h>
- 
-
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
