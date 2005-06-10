@@ -1,71 +1,126 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] Sanitize PQ3 device handling (Take #2)
-Date: Fri, 10 Jun 2005 16:52:02 -0500
-Message-ID: <1118440323.5031.41.camel@mulgrave>
-References: <428CA4E3.9030601@suse.de> <20050520214030.GA8925@us.ibm.com>
-	 <4292E4BA.5040001@suse.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] aic7xxx: remove some dead wood
+Date: Sat, 11 Jun 2005 00:13:30 +0200
+Message-ID: <20050610221330.GA8706@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:14785 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261255AbVFJVwJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Jun 2005 17:52:09 -0400
-In-Reply-To: <4292E4BA.5040001@suse.de>
+Received: from verein.lst.de ([213.95.11.210]:56755 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S261267AbVFJWNf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Jun 2005 18:13:35 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2005-05-24 at 10:24 +0200, Hannes Reinecke wrote:
-> -		printk(KERN_INFO "scsi: unknown device type %d\n", sdev->type);
-> +		if (sdev->inq_periph_qual != 1 && sdev->inq_periph_qual != 3)
-> +			printk(KERN_INFO "scsi: unknown device type %d\n", sdev->type);
-
-The device type for PQ1 should be reliable, it's only PQ3 that has 0x1f
-
-Also, we have defines for this (SCSI_INQ_PQ_NOT_CON and
-SCSI_INQ_PQ_NOT_CAP)
-
->  	if (res == SCSI_SCAN_LUN_PRESENT) {
-> -		if (scsi_report_lun_scan(sdev, bflags, rescan) != 0)
-> +		if (scsi_report_lun_scan(sdev, bflags, rescan) != 0) {
->  			/*
->  			 * The REPORT LUN did not scan the target,
->  			 * do a sequential scan.
->  			 */
-> +			if (res == SCSI_SCAN_LUN_IGNORED)
-
-This condition is impossible.
-
-> +				/*
-> +				 * There's a target here, but lun 0 is not 
-> +				 * connected to a device and does not support
-> +				 * the report_lun scan.  Fall back to a 
-> +				 * sequential lun scan with a bflags of 
-> +				 * SPARSELUN.
-> +				 *
-> +				 * The old code also used a default scsi level
-> +				 * of SCSI_2 which seems a bit spurious. Any
-> +				 * misbehaving device should rather be added
-> +				 * to the blacklist.
-> +				 */
-> +				bflags |= BLIST_SPARSELUN;
-
-The reason the old code did all that is because the inquiry data of a
-PQ3 device isn't credible and shouldn't be acted on.
-
->  			scsi_sequential_lun_scan(starget, bflags,
->  				       	res, sdev->scsi_level, rescan);
-
-If you really have the SCSI_SCAN_LUN_IGNORED case here, you've already
-released sdev in scsi_probe_and_add_lun, so you can't use it here.
-
-Finally, I think you should probably update the scsi_match function not
-to attach on PQ3, just in case someone violates spec and has a valid
-type.
-
-James
+especially the now dead scsi_cmnd overlay
 
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: scsi-misc-2.6/drivers/scsi/aic7xxx/aic7xxx.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/aic7xxx/aic7xxx.h	2005-06-10 23:53:30.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/aic7xxx/aic7xxx.h	2005-06-10 23:56:05.000000000 +0200
+@@ -346,7 +346,6 @@
+ 					  * controller.
+ 					  */
+ 	AHC_NEWEEPROM_FMT     = 0x4000,
+-	AHC_RESOURCE_SHORTAGE = 0x8000,
+ 	AHC_TQINFIFO_BLOCKED  = 0x10000,  /* Blocked waiting for ATIOs */
+ 	AHC_INT50_SPEEDFLEX   = 0x20000,  /*
+ 					   * Internal 50pin connector
+Index: scsi-misc-2.6/drivers/scsi/aic7xxx/aic7xxx_osm.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-06-10 23:53:59.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-06-10 23:57:17.000000000 +0200
+@@ -501,17 +501,6 @@
+ 	int     found = 0;
+ 
+ 	/*
+-	 * Sanity checking of Linux SCSI data structures so
+-	 * that some of our hacks^H^H^H^H^Hassumptions aren't
+-	 * violated.
+-	 */
+-	if (offsetof(struct ahc_cmd_internal, end)
+-	  > offsetof(struct scsi_cmnd, host_scribble)) {
+-		printf("ahc_linux_detect: SCSI data structures changed.\n");
+-		printf("ahc_linux_detect: Unable to attach\n");
+-		return (0);
+-	}
+-	/*
+ 	 * If we've been passed any parameters, process them now.
+ 	 */
+ 	if (aic7xxx)
+@@ -1587,10 +1576,9 @@
+ 	/*
+ 	 * Get an scb to use.
+ 	 */
+-	if ((scb = ahc_get_scb(ahc)) == NULL) {
+-			ahc->flags |= AHC_RESOURCE_SHORTAGE;
+-			return SCSI_MLQUEUE_HOST_BUSY;
+-	}
++	scb = ahc_get_scb(ahc);
++	if (!scb)
++		return SCSI_MLQUEUE_HOST_BUSY;
+ 
+ 	scb->io_ctx = cmd;
+ 	scb->platform_data->dev = dev;
+Index: scsi-misc-2.6/drivers/scsi/aic7xxx/aic7xxx_osm.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/aic7xxx/aic7xxx_osm.h	2005-06-10 23:53:30.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/aic7xxx/aic7xxx_osm.h	2005-06-10 23:56:06.000000000 +0200
+@@ -285,35 +285,6 @@
+ 
+ #define AIC7XXX_DRIVER_VERSION "6.2.36"
+ 
+-/**************************** Front End Queues ********************************/
+-/*
+- * Data structure used to cast the Linux struct scsi_cmnd to something
+- * that allows us to use the queue macros.  The linux structure has
+- * plenty of space to hold the links fields as required by the queue
+- * macros, but the queue macors require them to have the correct type.
+- */
+-struct ahc_cmd_internal {
+-	/* Area owned by the Linux scsi layer. */
+-	uint8_t	private[offsetof(struct scsi_cmnd, SCp.Status)];
+-	union {
+-		STAILQ_ENTRY(ahc_cmd)	ste;
+-		LIST_ENTRY(ahc_cmd)	le;
+-		TAILQ_ENTRY(ahc_cmd)	tqe;
+-	} links;
+-	uint32_t			end;
+-};
+-
+-struct ahc_cmd {
+-	union {
+-		struct ahc_cmd_internal	icmd;
+-		struct scsi_cmnd	scsi_cmd;
+-	} un;
+-};
+-
+-#define acmd_icmd(cmd) ((cmd)->un.icmd)
+-#define acmd_scsi_cmd(cmd) ((cmd)->un.scsi_cmd)
+-#define acmd_links un.icmd.links
+-
+ /*************************** Device Data Structures ***************************/
+ /*
+  * A per probed device structure used to deal with some error recovery
+@@ -322,7 +293,6 @@
+  * after a successfully completed inquiry command to the target when
+  * that inquiry data indicates a lun is present.
+  */
+-TAILQ_HEAD(ahc_busyq, ahc_cmd);
+ typedef enum {
+ 	AHC_DEV_FREEZE_TIL_EMPTY = 0x02, /* Freeze queue until active == 0 */
+ 	AHC_DEV_Q_BASIC		 = 0x10, /* Allow basic device queuing */
+@@ -917,7 +887,6 @@
+ static __inline void
+ ahc_platform_scb_free(struct ahc_softc *ahc, struct scb *scb)
+ {
+-	ahc->flags &= ~AHC_RESOURCE_SHORTAGE;
+ }
+ 
+ int	ahc_platform_alloc(struct ahc_softc *ahc, void *platform_arg);
