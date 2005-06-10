@@ -1,22 +1,46 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: support for old megaraid cards in megraid_mbox
-Date: Sat, 11 Jun 2005 00:11:03 +0100
-Message-ID: <20050610231103.GA17504@infradead.org>
+From: Lee Revell <rlrevell@joe-job.com>
+Subject: Re: DMA mapping (was Re: [PATCH] cciss 2.6; replaces DMA masks
+	with kernel defines)
+Date: Fri, 10 Jun 2005 19:17:13 -0400
+Message-ID: <1118445434.6423.133.camel@mindpipe>
+References: <20050610143453.GA26476@beardog.cca.cpqcorp.net>
+	 <42A9C60E.3080604@pobox.com> <1118436000.6423.42.camel@mindpipe>
+	 <1118436306.5272.37.camel@laptopd505.fenrus.org>
+	 <1118438253.6423.72.camel@mindpipe>
+	 <20050610213003.GI24611@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:23778 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261402AbVFJXLL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Jun 2005 19:11:11 -0400
-Content-Disposition: inline
+Received: from mustang.oldcity.dca.net ([216.158.38.3]:10925 "HELO
+	mustang.oldcity.dca.net") by vger.kernel.org with SMTP
+	id S261427AbVFJXQR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Jun 2005 19:16:17 -0400
+In-Reply-To: <20050610213003.GI24611@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sreenib@lsil.com, sju@lsil.com
-Cc: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Arjan van de Ven <arjan@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, mike.miller@hp.com, akpm@osdl.org, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-is there a technical reason the PCI_DEVICE_ID_AMI_MEGARAID and
-PCI_DEVICE_ID_AMI_MEGARAID2 cards are supported in the old
-megraid driver, but not in megaraid_mbox?  It would be a real
-pain to keep the old driver around just for those two cards.
+On Fri, 2005-06-10 at 22:30 +0100, Matthew Wilcox wrote:
+> On Fri, Jun 10, 2005 at 05:17:32PM -0400, Lee Revell wrote:
+> > OK, this covers the drivers I know.  I didn't make any attempt to check
+> > them all.
+> 
+> I know of two others ...
+> 
+> sym2 has:
+> #define DMA_DAC_MASK    0x000000ffffffffffULL /* 40-bit */
+> 
+> and aic7xxx has:
+>         const uint64_t   mask_39bit = 0x7FFFFFFFFFULL;
+> 
+> Would you mind respinning your patch to include these?
+> 
+
+I'm grepping the drivers, and what a mess.  This will be a nice cleanup.
+
+Why would someone use 0xFFFFffff?
+
+Lee
 
