@@ -1,26 +1,32 @@
-From: Pat LaVarre <p.lavarre@ieee.org>
-Subject: Re: SK = 4: Non-recoverable doesn't mean non-retryable
-Date: Fri, 10 Jun 2005 09:13:23 -0700
-Message-ID: <84d74523ee1d69bc915e4d64c3b2031f@ieee.org>
-References: <Pine.LNX.4.44L0.0506101111240.4975-100000@iolanthe.rowland.org>
-Mime-Version: 1.0 (Apple Message framework v622)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] cciss 2.6; replaces DMA masks with kernel defines
+Date: Fri, 10 Jun 2005 12:55:42 -0400
+Message-ID: <42A9C60E.3080604@pobox.com>
+References: <20050610143453.GA26476@beardog.cca.cpqcorp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rwcrmhc13.comcast.net ([204.127.198.39]:2476 "EHLO
-	rwcrmhc13.comcast.net") by vger.kernel.org with ESMTP
-	id S262596AbVFJQNZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Jun 2005 12:13:25 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0506101111240.4975-100000@iolanthe.rowland.org>
+Received: from mail.dvmed.net ([216.237.124.58]:47579 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S262605AbVFJQ4B (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Jun 2005 12:56:01 -0400
+In-Reply-To: <20050610143453.GA26476@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: mike.miller@hp.com
+Cc: akpm@osdl.org, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> Throwing more fuel onto the discussion
+mike.miller@hp.com wrote:
+> This patch removes our homegrown DMA masks and uses the ones defined in
+> the kernel instead.
+> Thanks to Jens Axboe for the code. Please consider this for inclusion.
+> 
+> Signed-off-by: Mike Miller <mike.miller@hp.com>
 
-One more matchstick:
+You need to add '#include <linux/dma-mapping.h>'
 
-I've heard the NT/ 2K/ XP strain of Windows often doesn't retry SK 4.  
-True or false only our USB storage gadget folk could easily tell.
+	Jeff
+
+
 
