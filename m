@@ -1,57 +1,38 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Patch] Correct issue with midlayer scsi target allocation and transports that create the targets
-Date: Sat, 11 Jun 2005 16:37:45 +0100
-Message-ID: <20050611153745.GA31943@infradead.org>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AC72@xbl3.ad.emulex.com>
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: DMA mapping (was Re: [PATCH] cciss 2.6; replaces DMA masks with kernel defines)
+Date: Sat, 11 Jun 2005 17:39:07 +0200
+Message-ID: <20050611153907.GA2002@elf.ucw.cz>
+References: <20050610143453.GA26476@beardog.cca.cpqcorp.net> <42A9C60E.3080604@pobox.com> <1118436000.6423.42.camel@mindpipe> <1118436306.5272.37.camel@laptopd505.fenrus.org> <1118438253.6423.72.camel@mindpipe> <20050610213003.GI24611@parcelfarce.linux.theplanet.co.uk> <1118445434.6423.133.camel@mindpipe>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:21889 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261342AbVFKPhr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 11 Jun 2005 11:37:47 -0400
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:1764 "EHLO amd.ucw.cz")
+	by vger.kernel.org with ESMTP id S261393AbVFKPjo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 11 Jun 2005 11:39:44 -0400
 Content-Disposition: inline
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AC72@xbl3.ad.emulex.com>
+In-Reply-To: <1118445434.6423.133.camel@mindpipe>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: hch@infradead.org, linux-scsi@vger.kernel.org
+To: Lee Revell <rlrevell@joe-job.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Arjan van de Ven <arjan@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, mike.miller@hp.com, akpm@osdl.org, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> diff -upNr linux-2.6.12-rc6/drivers/scsi/scsi_scan.c linux-2.6.12-rc6.PATCHED/drivers/scsi/scsi_scan.c
-> --- linux-2.6.12-rc6/drivers/scsi/scsi_scan.c	2005-06-09 15:58:31.000000000 -0400
-> +++ linux-2.6.12-rc6.PATCHED/drivers/scsi/scsi_scan.c	2005-06-10 16:11:04.000000000 -0400
-> @@ -332,9 +332,23 @@ static struct scsi_target *scsi_alloc_ta
->  	unsigned long flags;
->  	const int size = sizeof(struct scsi_target)
->  		+ shost->transportt->target_size;
-> -	struct scsi_target *starget = kmalloc(size, GFP_ATOMIC);
-> +	struct scsi_target *starget;
->  	struct scsi_target *found_target;
->  
-> +	/*
-> +	 * Obtain the real parent from the transport. The transport
-> +	 * is allowed to fail (no error) if there is nothing at that
-> +	 * target id.
-> +	 */
-> +	if (shost->transportt->target_parent) {
-> +		spin_lock_irqsave(shost->host_lock, flags);
-> +		parent = shost->transportt->target_parent(shost, channel, id);
-> +		spin_unlock_irqrestore(shost->host_lock, flags);
-> +		if (!parent)
-> +			return NULL;
-> +	}
+Hi!
 
-Ok, this idea is a lot better, but I think scsi_alloc_target is still
-the wrong place to put this.  It has an explicit parent argument that
-all but one of it's callers get right, and we're now totally ignoring
-and looking it up again when the transport has a ->target_parent method.
+> > I know of two others ...
+> > 
+> > sym2 has:
+> > #define DMA_DAC_MASK    0x000000ffffffffffULL /* 40-bit */
+> > 
+> > and aic7xxx has:
+> >         const uint64_t   mask_39bit = 0x7FFFFFFFFFULL;
+> > 
+> > Would you mind respinning your patch to include these?
+> > 
+> 
+> I'm grepping the drivers, and what a mess.  This will be a nice cleanup.
+> 
+> Why would someone use 0xFFFFffff?
 
-I'm not totally sure where the right place to put it in the
-scsi_scan_host_selected path is, though.  Probably scsi_scan_host_selected
-shoud just become __scsi_scan_host_selected, scsi_scan_host would call
-it directly but the sysfs and legacy procfs scanning would call the method.
-
-Or it might be better to give the transport completely control over the
-scan sysfs attribute, that way we could even allow scanning by WWNs or
-similar things.
-
+To make it easier to count Fs?
+									Pavel
