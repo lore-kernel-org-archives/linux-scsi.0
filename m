@@ -1,39 +1,44 @@
-From: Chris Adams <cmadams@hiwaay.net>
-Subject: Re: support for old megaraid cards in megraid_mbox
-Date: Fri, 10 Jun 2005 21:40:00 -0500
-Message-ID: <20050611024000.GB1227461@hiwaay.net>
-References: <20050610231103.GA17504@infradead.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: DMA mapping (was Re: [PATCH] cciss 2.6; replaces DMA masks with kernel defines)
+Date: Sat, 11 Jun 2005 14:54:11 +0100
+Message-ID: <20050611135411.GJ24611@parcelfarce.linux.theplanet.co.uk>
+References: <20050610143453.GA26476@beardog.cca.cpqcorp.net> <42A9C60E.3080604@pobox.com> <1118436000.6423.42.camel@mindpipe> <1118436306.5272.37.camel@laptopd505.fenrus.org> <1118438253.6423.72.camel@mindpipe> <20050610213003.GI24611@parcelfarce.linux.theplanet.co.uk> <1118444891.6423.130.camel@mindpipe>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bee.hiwaay.net ([216.180.54.11]:17809 "EHLO bee.hiwaay.net")
-	by vger.kernel.org with ESMTP id S261602AbVFKCkR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Jun 2005 22:40:17 -0400
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:36585 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261701AbVFKNxO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 11 Jun 2005 09:53:14 -0400
 Content-Disposition: inline
-In-Reply-To: <20050610231103.GA17504@infradead.org>
+In-Reply-To: <1118444891.6423.130.camel@mindpipe>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: sreenib@lsil.com, sju@lsil.com, linux-scsi@vger.kernel.org
+To: Lee Revell <rlrevell@joe-job.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Arjan van de Ven <arjan@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, mike.miller@hp.com, akpm@osdl.org, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Once upon a time, Christoph Hellwig <hch@infradead.org> said:
-> is there a technical reason the PCI_DEVICE_ID_AMI_MEGARAID and
-> PCI_DEVICE_ID_AMI_MEGARAID2 cards are supported in the old
-> megraid driver, but not in megaraid_mbox?  It would be a real
-> pain to keep the old driver around just for those two cards.
+On Fri, Jun 10, 2005 at 07:08:11PM -0400, Lee Revell wrote:
+> b44 needs 30 bit:
+> 
+> #define B44_DMA_MASK 0x3fffffff
+> 
+> These seem to be all over the place.  I guess it saves a tiny bit of
+> silicon.  Don't these all violate the PCI spec?
 
-The megaraid_mbox driver doesn't support older cards; please do not
-remove the old megaraid driver until/unless there is a functional
-replacement.
+No, it's permitted.  What would violate the PCI spec would be failing
+to decode the full 32/64 bit address and creating aliases (like 10-bit
+ISA cards did).  This is just a reestriction on which parts of memory
+a card can DMA to.
 
-My understand is that the old cards communicate with the host via an
-older protocol.  LSI decided that it would be easier to split the old
-proto and the mbox proto into separate drivers and wrote the mbox
-driver.  However, they apparently have no plans to write a driver for
-the older cards (because they consider the older cards obsolete).
+> Should I just add everything from 24 to 63?
+
+Actually, it'd be useful to have a central list of what DMA masks devices
+really take.  It might provide some arguments for changing the zone allocater.
 
 -- 
-Chris Adams <cmadams@hiwaay.net>
-Systems and Network Administrator - HiWAAY Internet Services
-I don't speak for anybody but myself - that's enough trouble.
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
