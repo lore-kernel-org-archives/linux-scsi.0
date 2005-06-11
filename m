@@ -1,31 +1,38 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Patch] Correct issue with midlayer scsi target allocation and transports that create the targets
-Date: Sat, 11 Jun 2005 19:18:20 +0100
-Message-ID: <20050611181820.GA2771@infradead.org>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AC72@xbl3.ad.emulex.com> <20050611153745.GA31943@infradead.org> <20050611181516.GA8555@us.ibm.com>
+From: jgarzik@pentafluge.infradead.org
+Subject: Re: DMA mapping (was Re: [PATCH] cciss 2.6; replaces DMA masks with kernel defines)
+Date: Sat, 11 Jun 2005 19:32:46 +0100
+Message-ID: <20050611183246.GA3019@pentafluge.infradead.org>
+References: <20050610143453.GA26476@beardog.cca.cpqcorp.net> <42A9C60E.3080604@pobox.com> <1118436000.6423.42.camel@mindpipe> <1118436306.5272.37.camel@laptopd505.fenrus.org> <1118436589.6423.51.camel@mindpipe>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:3460 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:16516 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261772AbVFKSSZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 11 Jun 2005 14:18:25 -0400
+	id S261775AbVFKSc4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 11 Jun 2005 14:32:56 -0400
 Content-Disposition: inline
-In-Reply-To: <20050611181516.GA8555@us.ibm.com>
+In-Reply-To: <1118436589.6423.51.camel@mindpipe>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+To: Lee Revell <rlrevell@joe-job.com>
+Cc: Arjan van de Ven <arjan@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, mike.miller@hp.com, akpm@osdl.org, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sat, Jun 11, 2005 at 11:15:16AM -0700, Patrick Mansfield wrote:
-> What do you think of Mike C's patch, to add a transportt->scan function?
+On Fri, Jun 10, 2005 at 04:49:48PM -0400, Lee Revell wrote:
+> On Fri, 2005-06-10 at 22:45 +0200, Arjan van de Ven wrote: 
+> > > Why doesn't this file define 29, 30, 31 bit DMA masks, required by many
+> > > devices?  I know of at least 2 soundcards that need a 29 bit DMA mask.
+> > 
+> > your mail unfortunately was not in diff -u form ;)
+> > I'm pretty sure that such constants are welcome
+> > 
 > 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=111671146532103&w=2
+> OK, I just wanted to see if there was a reason before posting it.
 > 
-> It needs a bit more code in the transport compared to the above. It also
-> allows the transport to more efficiently scan (the transport can scan only
-> devices it knows are attached, versus all id's up to max_id).
+> Anyone know of hardware that needs less than a 29 bit mask?
 
-Looks good except that it's not updating the legacy procfs-based
-scanning code.
+ALS2000 sound device, which is basically an ISA SB chip on a PCI board.
+
+	Jeff
+
+
 
