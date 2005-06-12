@@ -1,57 +1,30 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH 550] M68k: Mark Sun-3 NCR5380 SCSI broken
-Date: Sun, 12 Jun 2005 11:25:42 +0200
-Message-ID: <200506120925.j5C9Pgnm004328@anakin.of.borg>
+From: Millie <Gorky@daletechnical.com>
+Subject: For your convenience purchase all your prescription and non prescription needs at discount prices.
+Date: Sun, 12 Jun 2005 08:00:24 -0200
+Message-ID: <549354935.738566597@201008014040.user.veloxzone.com.br>
+Mime-Version: 1.0 (Apple Message framework v728)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from amsfep13-int.chello.nl ([213.46.243.23]:38178 "EHLO
-	amsfep13-int.chello.nl") by vger.kernel.org with ESMTP
-	id S261921AbVFLJZq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 12 Jun 2005 05:25:46 -0400
+Received: from 201008014040.user.veloxzone.com.br ([201.8.14.40]:55564 "HELO
+	201008014040.user.veloxzone.com.br") by vger.kernel.org with SMTP
+	id S261944AbVFLKAc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 12 Jun 2005 06:00:32 -0400
+Received: from [213.109.165.59] (port=4086 helo=[blight])
+    by 201008014040.user.veloxzone.com.br with esmtp
+    id 111084104895greening110843
+    for linux-scsi@vger.kernel.org; Sun, 12 Jun 2005 08:00:25 -0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, James.Bottomley@SteelEye.com
-Cc: Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
+To: linux-scsi@vger.kernel.org
 
-M68k: Mark Sun-3 NCR5380 SCSI broken until NCR5380_abort() and
-NCR5380_bus_reset() are replaced with real new-style EH routines (the old EH
-SCSI constants were removed in 2.6.12-rc3).
+New and unique way to take care of medical needs at an afordable price online.
+http://gqaqa.jgmun21uyb195kj.dactylistil.com
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
----
- arch/m68k/configs/sun3_defconfig |    1 -
- drivers/scsi/Kconfig             |    2 +-
- 2 files changed, 1 insertion(+), 2 deletions(-)
 
---- linux-2.6.12-rc6/arch/m68k/configs/sun3_defconfig	2005-04-21 07:39:24.000000000 +0200
-+++ linux-m68k-2.6.12-rc6/arch/m68k/configs/sun3_defconfig	2005-06-07 20:35:02.000000000 +0200
-@@ -171,7 +171,6 @@ CONFIG_SCSI_CONSTANTS=y
- #
- # CONFIG_SCSI_SATA is not set
- # CONFIG_SCSI_DEBUG is not set
--CONFIG_SUN3_SCSI=y
- 
- #
- # Multi-device support (RAID and LVM)
---- linux-2.6.12-rc6/drivers/scsi/Kconfig	2005-05-07 10:56:52.000000000 +0200
-+++ linux-m68k-2.6.12-rc6/drivers/scsi/Kconfig	2005-05-07 16:33:02.000000000 +0200
-@@ -1752,7 +1752,7 @@ config SCSI_NCR53C7xx_FAST
- 
- config SUN3_SCSI
- 	tristate "Sun3 NCR5380 SCSI"
--	depends on SUN3 && SCSI
-+	depends on SUN3 && SCSI && BROKEN
- 	help
- 	  This option will enable support for the OBIO (onboard io) NCR5380
- 	  SCSI controller found in the Sun 3/50 and 3/60, as well as for
+Although the last, not least.        
+Alea Iacta est... (the dice is cast)      
+Gratitude is a sickness suffered by dogs.      
 
-Gr{oetje,eeting}s,
 
-						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
