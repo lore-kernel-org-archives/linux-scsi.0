@@ -1,20 +1,60 @@
-From: =?UTF-8?B?55Sx5riK6Zye?= <yyx@ncic.ac.cn>
-Subject: try if i can post a message
-Date: Mon, 13 Jun 2005 15:14:42 +0800
-Message-ID: <42AD3262.9070804@ncic.ac.cn>
+From: Andreas Herrmann <aherrman@de.ibm.com>
+Subject: [PATCH] [1/8] zfcp: several bug fixes
+Date: Mon, 13 Jun 2005 12:45:37 +0200
+Message-ID: <20050613104537.GA8892@lion28.boeblingen.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gatekeeper.ncic.ac.cn ([159.226.41.188]:40087 "HELO ncic.ac.cn")
-	by vger.kernel.org with SMTP id S261405AbVFMHPD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Jun 2005 03:15:03 -0400
-Received: from [10.10.11.45] (trumpet.ncic.ac.cn [159.226.41.129])
-	by gatekeeper.ncic.ac.cn (Postfix) with ESMTP id DD5E6FB045
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Jun 2005 15:19:59 +0800 (CST)
+Received: from mtagate1.de.ibm.com ([195.212.29.150]:29083 "EHLO
+	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP id S261465AbVFMKph
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Jun 2005 06:45:37 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate1.de.ibm.com (8.12.10/8.12.10) with ESMTP id j5DAjZFu180534
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Jun 2005 10:45:35 GMT
+Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
+	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j5DAjZ2H172926
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Jun 2005 12:45:35 +0200
+Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id j5DAjZWk025922
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Jun 2005 12:45:35 +0200
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@steeleye.com>
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>
 
+s is patch 1 of 8 in a series of zfcp bug fixes.  Patches are based
+on 2.6.12-rc6 plus "remove flags_dump feature"-patch from June, 10th.
+
+This one fixes the handling of failed requests for GID_PN nameserver
+command:
+Set ZFCP_STATUS_PORT_INVALID_WWPN only if indicated by response
+payload for GID_PN nameserver command and not if fsf request fails.
+
+
+Regards,
+
+Andreas
+
+ 
+zfcp: fix wrong handling of failed requests for GID_PN command
+
+Signed-off-by: Andreas Herrmann <aherrman@de.ibm.com>
+
+diff -u linux-2.6.12-rc6/drivers/s390/scsi-orig/zfcp_aux.c linux-2.6.12-rc6/drivers/s390/scsi/zfcp_aux.c
+--- linux-2.6.12-rc6/drivers/s390/scsi-orig/zfcp_aux.c	2005-06-11 22:04:32.062612336 +0200
++++ linux-2.6.12-rc6/drivers/s390/scsi/zfcp_aux.c	2005-06-11 22:05:03.961762928 +0200
+@@ -1753,7 +1753,10 @@
+ 	ct_iu_req = zfcp_sg_to_address(ct->req);
+ 	ct_iu_resp = zfcp_sg_to_address(ct->resp);
+ 
+-	if ((ct->status != 0) || zfcp_check_ct_response(&ct_iu_resp->header)) {
++	if (ct->status != 0)
++		goto failed;
++
++	if (zfcp_check_ct_response(&ct_iu_resp->header)) {
+ 		/* FIXME: do we need some specific erp entry points */
+ 		atomic_set_mask(ZFCP_STATUS_PORT_INVALID_WWPN, &port->status);
+ 		goto failed;
 
