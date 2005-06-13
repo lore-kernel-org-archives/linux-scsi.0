@@ -1,46 +1,65 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [RFC] Add user scatter gather I/O to SG_IO
-Date: Mon, 13 Jun 2005 08:48:12 -0500
-Message-ID: <1118670492.5079.1.camel@mulgrave>
-References: <1118447969.5031.44.camel@mulgrave>
-	 <20050613065529.GF1414@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [RFT][PATCH] aic79xx: remove busyq
+Date: Mon, 13 Jun 2005 15:56:25 +0200
+Message-ID: <42AD9089.5080006@suse.de>
+References: <20050529074620.GA26151@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:32897 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261562AbVFMNsa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Jun 2005 09:48:30 -0400
-In-Reply-To: <20050613065529.GF1414@suse.de>
+Received: from ns1.suse.de ([195.135.220.2]:2779 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S261575AbVFMN40 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Jun 2005 09:56:26 -0400
+In-Reply-To: <20050529074620.GA26151@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, 2005-06-13 at 08:55 +0200, Jens Axboe wrote:
-> Didn't you want to remove more than the comment here?
+Jeff Garzik wrote:
+> Can anyone with aic79xx hardware give me a simple "it works"
+> or "this breaks things" answer, for the patch below?
+>=20
+> This changes the aic79xx driver to use the standard Linux SCSI queuei=
+ng
+> code, rather than its own.  After applying this patch, NO behavior
+> changes should be seen.
+>=20
+> The patch is against 2.6.12-rc5, but probably applies OK to recent 2.=
+6.x
+> kernels.
+>=20
+Hmm. Does not quite work here:
 
-Well ... like I said, it was lightly tested ...
+scsi0: Starting DV
+scsi0 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 1.3.11
+        <Adaptec 29320 Ultra320 SCSI adapter>
+        aic7902: Ultra320 Wide Channel A, SCSI Id=3D7, PCI 33 or 66Mhz,
+512 SCBs
 
-I figured if I could still get SG_IO to work at all, then I'd proved
-that single element SG lists worked ...
+In DV Thread
+scsi0: Beginning Domain Validation
+scsi0:A:0:0: Performing DV
+scsi0:2223: Going from state 0 to state 1
+scsi0:A:0:0: Sending INQ
+scsi0: Timeout while doing DV command 12.
 
-> > +		/* try to reset the bus and the card to a sane state */
-> > +		scsi_try_bus_reset(scmd);
-> > +		scsi_try_host_reset(scmd);
-> >  		scsi_device_set_state(scmd->device, SDEV_OFFLINE);
-> >  		if (scsi_eh_eflags_chk(scmd, SCSI_EH_CANCEL_CMD)) {
-> 
-> Different patch?
+And from there all hell breaks loose.
 
-Yes, contamination, sorry.
+It looks as if it simply refuses to send any commands ...
+Investigating.
 
-> Other than that I think it looks good, thanks. I'll get this added asap.
+Cheers,
 
-Great ... let me know when you have a tree ready and I'll move to base
-the SCSI changes off it.
-
-James
-
-
+Hannes
+--=20
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux AG				S390 & zSeries
+Maxfeldstra=DFe 5				+49 911 74053 688
+90409 N=FCrnberg				http://www.suse.de
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
