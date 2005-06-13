@@ -1,34 +1,50 @@
-From: "'patman@aracnet.com'" <patman@aracnet.com>
-Subject: Re: proposed update to scsi_id needing review
-Date: Mon, 13 Jun 2005 08:11:33 -0700
-Message-ID: <20050613151133.GA17977@aracnet.com>
-References: <C2EEB4E538D3DC48BF57F391F422779321AA86@SRMANNING.eng.emc.com>
+From: =?iso-8859-1?Q?Gr=E9goire?= Favre <gregoire.favre@gmail.com>
+Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
+Date: Mon, 13 Jun 2005 17:17:08 +0200
+Message-ID: <20050613151708.GB12057@gmail.com>
+References: <20050530150950.GA14351@gmail.com> <1117467248.4913.9.camel@mulgrave> <20050530160147.GD14351@gmail.com> <1117477040.4913.12.camel@mulgrave> <20050530190716.GA9239@gmail.com> <1118081857.5045.49.camel@mulgrave> <20050607085710.GB9230@gmail.com> <1118590709.4967.6.camel@mulgrave> <20050613145000.GA12057@gmail.com> <1118674783.5079.9.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 216-99-218-173.dsl.aracnet.com ([216.99.218.173]:8427 "EHLO
-	216-99-218-173.dsl.aracnet.com") by vger.kernel.org with ESMTP
-	id S261607AbVFMPNp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Jun 2005 11:13:45 -0400
+Received: from wproxy.gmail.com ([64.233.184.194]:23821 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261627AbVFMPRU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Jun 2005 11:17:20 -0400
+Received: by wproxy.gmail.com with SMTP id 37so581196wra
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Jun 2005 08:17:14 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <C2EEB4E538D3DC48BF57F391F422779321AA86@SRMANNING.eng.emc.com>
+In-Reply-To: <1118674783.5079.9.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "goggin, edward" <egoggin@emc.com>
-Cc: "'linux-hotplug-devel@lists.sourceforge.net'" <linux-hotplug-devel@lists.sourceforge.net>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: dino@in.ibm.com, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Thu, Jun 09, 2005 at 09:20:58PM -0400, goggin, edward wrote:
-> Resending with patch as attachment ...
-> 
-> This patch is to enable the use of scsi_id to derive a UID for a SCSI-2
-> device which is not compliant with the page 83 inquiry reply format for
-> either SPC-2 or SPC-3.  In this case, the page 83 reply does not
-> contain a list of  Identification descriptors but a single binary encoded
-> hexa-decimal Vendor Specified Identifier.
-> 
-> The update is being driven by the need for scsi_id to support older
-> model EMC Symmetrix hardware, that is, models 4, 5, and 6.
+On Mon, Jun 13, 2005 at 09:59:43AM -0500, James Bottomley wrote:
 
-Looks good ... thanks
+> Actually, the kernel appears to be wrong:
 
--- Patrick Mansfield
+Oops, sorry, I took my grub conf and edited the bad entry :
+
+title 2.6.12-rc6
+#kernel (hd0,2)/bzImage-2.6.12-rc6 root=3D/dev/sdc2 parport=3Dauto vide=
+o=3Dvesafb:mtrr,ywrap,1024x800-16@75 vga=3D0xF07
+kernel (hd0,2)/bzImage-2.6.12-rc5 root=3D/dev/sdc2 parport=3Dauto video=
+=3Dvesafb:mtrr,ywrap,1024x800-16@75 vga=3D0xF07 console=3DttyS0
+
+to take the second option with the "console=3DttyS0" and forgot to upda=
+te
+it to (hd0,2)/bzImage-2.6.12-rc6.
+
+Sorry for it, I can reboot my computer at 9pm (vdr is reccording till
+9pm) and then I post the result :)
+
+And don't worry, it's a vanilla 2.6.12-rc6 with only the scsi-misc and
+the last patch, I even didn't patch for latest DVB.
+--=20
+	Gr=E9goire Favre
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
