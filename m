@@ -1,52 +1,112 @@
-From: randy_dunlap <rdunlap@xenotime.net>
-Subject: [PATCH] scsi: 2 drivers need license
-Date: Mon, 13 Jun 2005 12:33:05 -0700
-Message-ID: <20050613123305.3e0c56be.rdunlap@xenotime.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
+Date: Mon, 13 Jun 2005 15:50:47 -0500
+Message-ID: <1118695847.5079.41.camel@mulgrave>
+References: <20050530150950.GA14351@gmail.com>
+	 <1117467248.4913.9.camel@mulgrave> <20050530160147.GD14351@gmail.com>
+	 <1117477040.4913.12.camel@mulgrave> <20050530190716.GA9239@gmail.com>
+	 <1118081857.5045.49.camel@mulgrave> <20050607085710.GB9230@gmail.com>
+	 <1118590709.4967.6.camel@mulgrave> <20050613145000.GA12057@gmail.com>
+	 <1118674783.5079.9.camel@mulgrave>  <20050613183719.GA8653@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from titan.genwebhost.com ([209.9.226.66]:14272 "EHLO
-	titan.genwebhost.com") by vger.kernel.org with ESMTP
-	id S261245AbVFMTlB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Jun 2005 15:41:01 -0400
+Received: from stat16.steeleye.com ([209.192.50.48]:37001 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261300AbVFMUvU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Jun 2005 16:51:20 -0400
+In-Reply-To: <20050613183719.GA8653@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: jejb <james.bottomley@steeleye.com>
+To: =?utf-8?Q?Gr=E9goire?= Favre <gregoire.favre@gmail.com>
+Cc: dino@in.ibm.com, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
+On Mon, 2005-06-13 at 20:37 +0200, =?utf-8?Q?Gr=E9goire?= Favre wrote:
+> target1:0:1: SC IS ffff81003fca89c0
+> 
+>  target1:0:1: scsirate IS 0xf, min_period is 9
+> 
+>  target1:0:1: asynchronous.
+> 
+>   Vendor: TOSHIBA   Model: DVD-ROM SD-M1201  Rev: 1R08
+> 
+>   Type:   CD-ROM                             ANSI SCSI revision: 02
+> 
+>  target1:0:1: Beginning Domain Validation
+> 
+>  target1:0:1: Domain Validation skipping write tests
+> 
+>  target1:0:1: FAST-20 SCSI 20.0 MB/s ST (50 ns, offset 15)
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+OK, this is what tells me there's an error in the bios reading routines
+for ultra cards.
 
-Modules need a license to prevent kernel tainting.
+Can you try this (it should apply straight on your currently patched
+2.6.12-rc6 tree)... hopefully I've been more careful in the bios reading
+routines for the ultra (and fast) cards.
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Thanks,
 
-diffstat:=
- drivers/scsi/fd_mcs.c |    2 ++
- drivers/scsi/ibmmca.c |    2 ++
- 2 files changed, 4 insertions(+)
+James
 
-diff -Naurp ./drivers/scsi/ibmmca.c~taint_scsi ./drivers/scsi/ibmmca.c
---- ./drivers/scsi/ibmmca.c~taint_scsi	2005-03-01 23:37:48.000000000 -0800
-+++ ./drivers/scsi/ibmmca.c	2005-06-13 10:44:09.000000000 -0700
-@@ -461,6 +461,8 @@ MODULE_PARM(adisplay, "1i");
- MODULE_PARM(normal, "1i");
- MODULE_PARM(ansi, "1i");
- #endif
+diff -u b/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- b/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -622,26 +622,37 @@
+ 
+ 	dev_printk(KERN_ERR, &starget->dev, "SC IS %p\n", sc);
+ 	if (sc) {
++		int maxsync = AHC_SYNCRATE_DT;
++		int ultra = 0;
++		int flags = sc->device_flags[target_offset];
 +
-+MODULE_LICENSE("GPL");
- #endif
- /*counter of concurrent disk read/writes, to turn on/off disk led */
- static int disk_rw_in_progress = 0;
-diff -Naurp ./drivers/scsi/fd_mcs.c~taint_scsi ./drivers/scsi/fd_mcs.c
---- ./drivers/scsi/fd_mcs.c~taint_scsi	2005-06-13 10:46:57.000000000 -0700
-+++ ./drivers/scsi/fd_mcs.c	2005-06-13 10:47:11.000000000 -0700
-@@ -1367,3 +1367,5 @@ static Scsi_Host_Template driver_templat
- 	.use_clustering 		= DISABLE_CLUSTERING,
- };
- #include "scsi_module.c"
-+
-+MODULE_LICENSE("GPL");
++		if (ahc->flags & AHC_NEWEEPROM_FMT) {
++		    if (flags & CFSYNCHISULTRA)
++			ultra = 1;
++		} else if (flags & CFULTRAEN)
++			ultra = 1;
++		/* AIC nutcase; 10MHz appears as ultra = 1, CFXFER = 0x04
++		 * change it to ultra=0, CFXFER = 0 */
++		if(ultra && (flags & CFXFER) == 0x04) {
++			dev_printk(KERN_ERR, &starget->dev, "10MHz, flags 0x%x\n", flags);
++			ultra = 0;
++			flags &= ~CFXFER;
++		}
++	    
+ 		if ((ahc->features & AHC_ULTRA2) != 0) {
+-			scsirate = sc->device_flags[target_offset] & CFXFER;
+-			dev_printk(KERN_ERR, &starget->dev, "ULTRA2\n");
++			scsirate = (flags & CFXFER) | ultra ? 0x8 : 0;
++			dev_printk(KERN_ERR, &starget->dev, "ULTRA2, flags 0x%x\n", flags);
+ 		} else {
+-			scsirate = (sc->device_flags[target_offset] & CFXFER) << 4;
+-			if (sc->device_flags[target_offset] & CFSYNCH)
+-				scsirate |= SOFS;
++			scsirate = (flags & CFXFER) << 4;
++			maxsync = ultra ? AHC_SYNCRATE_ULTRA : 
++				AHC_SYNCRATE_FAST;
+ 		}
+-		if (sc->device_flags[target_offset] & CFWIDEB) {
+-			scsirate |= WIDEXFER;
+-			spi_max_width(starget) = 1;
+-		} else
+-			spi_max_width(starget) = 0;
+-		spi_min_period(starget) = 
+-			ahc_find_period(ahc, scsirate, AHC_SYNCRATE_DT);
+-		dev_printk(KERN_ERR, &starget->dev, "scsirate IS 0x%x, min_period is %d\n", scsirate, spi_min_period(starget));
+-		if (spi_min_period(starget) == 0)
+-			/* This means async, so set offset to zero */
++		spi_max_width(starget) = (flags & CFWIDEB) ? 1 : 0;
++		if (!(flags & CFSYNCH))
+ 			spi_max_offset(starget) = 0;
+-		
++		spi_min_period(starget) = 
++			ahc_find_period(ahc, scsirate, maxsync);
++		dev_printk(KERN_ERR, &starget->dev, "scsirate IS 0x%x, min_period is %d, flags 0x%x\n", scsirate, spi_min_period(starget), flags);
+ 
+ 		tinfo = ahc_fetch_transinfo(ahc, channel, ahc->our_id,
+ 					    starget->id, &tstate);
 
----
+
+
