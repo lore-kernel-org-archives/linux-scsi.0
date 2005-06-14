@@ -1,114 +1,101 @@
-From: Matthias Andree <matthias.andree@gmx.de>
-Subject: sym53c8xx in 2.6.12-rc6: sleeping function called from invalid context at mm/slab.c:2093
-Date: Tue, 14 Jun 2005 10:38:25 +0200
-Message-ID: <m33brlfi4e.fsf@merlin.emma.line.org>
+From: Gregoire Favre <gregoire.favre@gmail.com>
+Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ? (fixed in 2.6.12-rc6 with patches)
+Date: Tue, 14 Jun 2005 11:28:07 +0200
+Message-ID: <20050614092807.GA8641@gmail.com>
+References: <20050613145000.GA12057@gmail.com> <1118674783.5079.9.camel@mulgrave> <20050613183719.GA8653@gmail.com> <1118695847.5079.41.camel@mulgrave> <20050613213307.GA8534@gmail.com> <1118699191.5079.49.camel@mulgrave> <20050613215923.GA8629@gmail.com> <1118700284.5079.52.camel@mulgrave> <20050613222527.GB8629@gmail.com> <1118715622.5079.88.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from krusty.dt.E-Technik.uni-dortmund.de ([129.217.163.1]:55217 "EHLO
-	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
-	id S261281AbVFNIi3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jun 2005 04:38:29 -0400
+Received: from wproxy.gmail.com ([64.233.184.202]:49051 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S261155AbVFNJ2H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Jun 2005 05:28:07 -0400
+Received: by wproxy.gmail.com with SMTP id 69so21217wri
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Jun 2005 02:28:05 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1118715622.5079.88.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: matthew@wil.cx
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: dino@in.ibm.com, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Hi,
+On Mon, Jun 13, 2005 at 09:20:22PM -0500, James Bottomley wrote:
 
-I tried Linux 2.6.12-rc6 recently and got these messages "Debug:
-sleeping function called from invalid context at mm/slab.c:2093
-in_atomic():1, irqs_disabled():1" in dmesg (the current tree from git
-also shows them, but the ones pasted below are from vanilla
-rc6). 2.6.11.12 with the same configuration doesn't show these.
+> Actually, I think the problem is that the DVD-Rom thinks it can run at
+> 20 but actually can't
 
-...
-ACPI: PCI Interrupt 0000:00:0d.0[A] -> GSI 16 (level, low) -> IRQ 16
-sym0: <895> rev 0x1 at pci 0000:00:0d.0 irq 16
-sym0: Tekram NVRAM, ID 7, Fast-40, LVD, parity checking
-sym0: SCSI BUS has been reset.
-scsi0 : sym-2.2.0
-  Vendor: COMPAQ    Model: BB018222B8        Rev: B016
+You are almost certainly right : setting the speed in BIOS back to 20
+and I can't boot, but I can with 16 :-)
+
+> Well ... look at it this way ... if no-one finds anything wrong with the
+> patches, they'll be going straight into the kernel tree after 2.6.12, so
+> I trust them as much as that ...
+
+I will test it for a few days like right now, and I have now set all
+speed back to full (except for the DVD) :
+
+scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+        <Adaptec 29160B Ultra160 SCSI adapter>
+        aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+
+ target0:0:0: SC IS ffff81003fcaeac0
+ target0:0:0: ULTRA2, flags 0xc33a
+ target0:0:0: scsirate IS 0x2, min_period is 9, flags 0xc33a
+  Vendor: IBM       Model: DDRS-39130D       Rev: DC1B
   Type:   Direct-Access                      ANSI SCSI revision: 02
- target0:0:0: tagged command queuing enabled, command queue depth 32.
- target0:0:0: Beginning Domain Validation
-Debug: sleeping function called from invalid context at mm/slab.c:2093
-in_atomic():1, irqs_disabled():1
- [<c0103c4e>] dump_stack+0x1e/0x20
- [<c01166f4>] __might_sleep+0xa4/0xc0
- [<c014528a>] __kmalloc+0x8a/0x90
- [<c014531c>] kcalloc+0x3c/0x70
- [<e082ea9d>] sym_alloc_lcb_tags+0x7d/0x140 [sym53c8xx]
- [<e082e3fb>] sym_get_ccb+0x25b/0x2d0 [sym53c8xx]
- [<e0825ced>] sym_queue_command+0xbd/0xf0 [sym53c8xx]
- [<e0826142>] sym53c8xx_queue_command+0x72/0xa0 [sym53c8xx]
- [<c02b566a>] scsi_dispatch_cmd+0x19a/0x2d0
- [<c02bc232>] scsi_request_fn+0x1d2/0x4a0
- [<c028d97c>] blk_insert_request+0xbc/0x100
- [<c02bab4b>] scsi_insert_special_req+0x3b/0x40
- [<c02badee>] scsi_wait_req+0x6e/0xb0
- [<c02c10a8>] spi_wait_req+0x48/0x90
- [<c02c2525>] spi_dv_device_compare_inquiry+0xc5/0x130
- [<c02c285c>] spi_dv_device_internal+0x5c/0x330
- [<c02c2c1a>] spi_dv_device+0xea/0x160
- [<e0826a1b>] sym53c8xx_slave_configure+0x10b/0x110 [sym53c8xx]
- [<c02bdd20>] scsi_add_lun+0x340/0x370
- [<c02bde3a>] scsi_probe_and_add_lun+0xea/0x230
- [<c02be7b3>] scsi_scan_target+0xe3/0x170
- [<c02be8d7>] scsi_scan_channel+0x97/0xb0
- [<c02be995>] scsi_scan_host_selected+0xa5/0x120
- [<c02bea41>] scsi_scan_host+0x31/0x40
- [<e0827fab>] sym2_probe+0xfb/0x150 [sym53c8xx]
- [<c0222a3b>] pci_device_probe_static+0x4b/0x70
- [<c0222a9c>] __pci_device_probe+0x3c/0x50
- [<c0222adc>] pci_device_probe+0x2c/0x60
- [<c028596e>] driver_probe_device+0x2e/0x80
- [<c0285ad3>] driver_attach+0x53/0xa0
- [<c0286036>] bus_add_driver+0xa6/0xe0
- [<c0222d7d>] pci_register_driver+0x5d/0x90
- [<e0804032>] sym2_init+0x32/0x51 [sym53c8xx]
- [<c01361ea>] sys_init_module+0x18a/0x270
- [<c0102d95>] syscall_call+0x7/0xb
  target0:0:0: asynchronous.
-WIDTH IS 1
+scsi0:A:0:0: Tagged Queuing enabled.  Depth 253
+ target0:0:0: Beginning Domain Validation
  target0:0:0: wide asynchronous.
  target0:0:0: Domain Validation skipping write tests
- target0:0:0: FAST-40 WIDE SCSI 80.0 MB/s ST (25 ns, offset 31)
+ target0:0:0: FAST-40 WIDE SCSI 80.0 MB/s ST (25 ns, offset 15)
  target0:0:0: Ending Domain Validation
-SCSI device sda: 35565080 512-byte hdwr sectors (18209 MB)
-SCSI device sda: drive cache: write back
-SCSI device sda: 35565080 512-byte hdwr sectors (18209 MB)
-SCSI device sda: drive cache: write back
- sda: sda1 sda2
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-  Vendor: PLEXTOR   Model: CD-ROM PX-32TS    Rev: 1.02
-  Type:   CD-ROM                             ANSI SCSI revision: 02
- target0:0:2: Beginning Domain Validation
- target0:0:2: asynchronous.
- target0:0:2: Domain Validation skipping write tests
- target0:0:2: FAST-20 SCSI 20.0 MB/s ST (50 ns, offset 15)
- target0:0:2: Ending Domain Validation
-  Vendor: TANDBERG  Model:  TDC 4222         Rev: =07:
-  Type:   Sequential-Access                  ANSI SCSI revision: 02
- target0:0:6: Beginning Domain Validation
- target0:0:6: asynchronous.
- target0:0:6: Domain Validation skipping write tests
- target0:0:6: FAST-5 SCSI 4.8 MB/s ST (208 ns, offset 8)
- target0:0:6: Ending Domain Validation
-  Vendor: TANDBERG  Model: SLR6              Rev: 0404
-  Type:   Sequential-Access                  ANSI SCSI revision: 02
- target0:0:8: Beginning Domain Validation
- target0:0:8: asynchronous.
-WIDTH IS 1
- target0:0:8: wide asynchronous.
- target0:0:8: Domain Validation skipping write tests
- target0:0:8: FAST-20 WIDE SCSI 40.0 MB/s ST (50 ns, offset 15)
- target0:0:8: Ending Domain Validation
-libata version 1.11 loaded.
-sata_via version 1.1
-ACPI: PCI Interrupt 0000:00:0f.0[B] -> GSI 20 (level, low) -> IRQ 20
-sata_via(0000:00:0f.0): routed to hard irq line 0
 ...
+ target0:0:15: SC IS ffff81003fcaeac0
+ target0:0:15: ULTRA2, flags 0xc13a
+ target0:0:15: scsirate IS 0x2, min_period is 9, flags 0xc13a
+  Vendor: SEAGATE   Model: ST336706LW        Rev: 0108
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+ target0:0:15: asynchronous.
+scsi0:A:15:0: Tagged Queuing enabled.  Depth 253
+ target0:0:15: Beginning Domain Validation
+ target0:0:15: wide asynchronous.
+ target0:0:15: FAST-80 WIDE SCSI 160.0 MB/s ST (12.5 ns, offset 63)
+ target0:0:15: Ending Domain Validation
+scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+        <Adaptec 2940 Ultra SCSI adapter>
+        aic7880: Ultra Single Channel A, SCSI Id=7, 16/253 SCBs
 
+ target1:0:0: SC IS ffff81003fcae980
+ target1:0:0: scsirate IS 0x0, min_period is 12, flags 0xc158
+ target1:0:1: SC IS ffff81003fcae980
+ target1:0:1: scsirate IS 0x10, min_period is 15, flags 0xc159
+ target1:0:1: asynchronous.
+  Vendor: TOSHIBA   Model: DVD-ROM SD-M1201  Rev: 1R08
+  Type:   CD-ROM                             ANSI SCSI revision: 02
+ target1:0:1: Beginning Domain Validation
+ target1:0:1: Domain Validation skipping write tests
+ target1:0:1: FAST-20 SCSI 16.7 MB/s ST (60 ns, offset 15)
+ target1:0:1: Ending Domain Validation
+ target1:0:2: SC IS ffff81003fcae980
+ target1:0:2: scsirate IS 0x0, min_period is 12, flags 0xc158
+ target1:0:2: asynchronous.
+  Vendor: PLEXTOR   Model: CD-R   PX-R820T   Rev: 1.08
+  Type:   CD-ROM                             ANSI SCSI revision: 02
+ target1:0:2: Beginning Domain Validation
+ target1:0:2: Domain Validation skipping write tests
+ target1:0:2: FAST-10 SCSI 10.0 MB/s ST (100 ns, offset 8)
+ target1:0:2: Ending Domain Validation
+ target1:0:3: SC IS ffff81003fcae980
+ target1:0:3: scsirate IS 0x0, min_period is 12, flags 0xc158
+ target1:0:3: asynchronous.
+  Vendor: PLEXTOR   Model: CD-R   PX-R820T   Rev: 1.08
+  Type:   CD-ROM                             ANSI SCSI revision: 02
+ target1:0:3: Beginning Domain Validation
+ target1:0:3: Domain Validation skipping write tests
+ target1:0:3: FAST-10 SCSI 10.0 MB/s ST (100 ns, offset 8)
+ target1:0:3: Ending Domain Validation
+
+Thank you very much !!!
 -- 
-Matthias Andree
+	Gr\'egoire Favre
