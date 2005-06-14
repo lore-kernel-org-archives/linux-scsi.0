@@ -1,31 +1,44 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 8/11]  qla2xxx: Final glue-code for ISP24xx.
-Date: Tue, 14 Jun 2005 22:50:44 +0100
-Message-ID: <20050614215044.GE5849@infradead.org>
-References: <20050614053136.12127.506.sendpatchset@plap.qlogic.com> <20050614053217.12127.19802.sendpatchset@plap.qlogic.com>
+From: "Tony Battersby" <tonyb@cybernetics.com>
+Subject: RE: Sym53c8xx_2 Odd Byte Data Transfer patches
+Date: Tue, 14 Jun 2005 18:00:38 -0400
+Message-ID: <009301c5712c$80200910$e0019d89@cybernetics.com>
+References: <20050614205041.GB11655@parcelfarce.linux.theplanet.co.uk>
+Reply-To: <tonyb@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:39891 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261363AbVFNVuq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jun 2005 17:50:46 -0400
-Content-Disposition: inline
-In-Reply-To: <20050614053217.12127.19802.sendpatchset@plap.qlogic.com>
+Received: from cyborg.cybernetics.com ([206.246.200.18]:14601 "EHLO
+	cyborg.cybernetics.com") by vger.kernel.org with ESMTP
+	id S261368AbVFNWCM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Jun 2005 18:02:12 -0400
+In-Reply-To: <20050614205041.GB11655@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: 'Matthew Wilcox' <matthew@wil.cx>, "'Stephens, Larry'" <larry.stephens@lsil.com>
+Cc: "'Linux-Scsi@Vger. Kernel. Org (E-mail)'" <linux-scsi@vger.kernel.org>
 
-On Mon, Jun 13, 2005 at 10:32:17PM -0700, Andrew Vasquez wrote:
-> Final glue-code for ISP24xx.
-> 
-> Add appropriate glue-code for ISP24xx support within
-> OS and initialization sections of driver.
+> While this patch does seem to solve the problem of transferring an odd
+> number of bytes to the device, I recently received a bug report saying
+> that we don't accept an odd number of bytes transferred from a device.
+> It seems to me that it's going to require modifying the scsi
+> scripts in
+> order to do this.  Do you agree?  Have you looked into
+> transfers in the
+> opposite direction as part of this work?
 
-So why is 24xx and 25xx support directly in the main module while
-all others aren't?
+If a target sends an odd number of bytes during a wide DATA IN phase,
+then it should send an IGNORE WIDE RESIDUE message immediately after
+exiting the data phase to inform the initiator.  The sym53c8xx_2 driver
+in the 2.4 kernel series handles this correctly except on a REQUEST
+SENSE command issued for autosense (previously sym53c8xx_2 would reject
+an IWR message for autosense; I submitted a patch a good while ago to
+make it ignore IWR in this case instead of rejecting it).  Not
+accounting for IWR on autosense is not a big deal though, so I consider
+sym53c8xx_2 in 2.4 kernels to handle odd-length DATA IN phases
+acceptably.  I haven't tested the 2.6 kernels.
 
-And while we're at it, it would be really nice if you could add support
-for hotplug firmware loading for older chips aswell.
+Anthony J. Battersby
+Cybernetics
 
