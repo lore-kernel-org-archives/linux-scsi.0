@@ -1,44 +1,178 @@
-From: "Tony Battersby" <tonyb@cybernetics.com>
-Subject: RE: Sym53c8xx_2 Odd Byte Data Transfer patches
-Date: Tue, 14 Jun 2005 18:00:38 -0400
-Message-ID: <009301c5712c$80200910$e0019d89@cybernetics.com>
-References: <20050614205041.GB11655@parcelfarce.linux.theplanet.co.uk>
-Reply-To: <tonyb@cybernetics.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: [Patch] take 4: Correct issue with midlayer scsi target allocation and transports that create the targets
+Date: Tue, 14 Jun 2005 15:17:00 -0700
+Message-ID: <20050614221700.GA15695@us.ibm.com>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AC72@xbl3.ad.emulex.com> <20050611153745.GA31943@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cyborg.cybernetics.com ([206.246.200.18]:14601 "EHLO
-	cyborg.cybernetics.com") by vger.kernel.org with ESMTP
-	id S261368AbVFNWCM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jun 2005 18:02:12 -0400
-In-Reply-To: <20050614205041.GB11655@parcelfarce.linux.theplanet.co.uk>
+Received: from e35.co.us.ibm.com ([32.97.110.133]:58292 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S261378AbVFNWRn
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Jun 2005 18:17:43 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e35.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j5EMHh3o160620
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Jun 2005 18:17:43 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j5EMHgjx123926
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Jun 2005 16:17:42 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j5EMHgpc000630
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Jun 2005 16:17:42 -0600
+Content-Disposition: inline
+In-Reply-To: <20050611153745.GA31943@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Matthew Wilcox' <matthew@wil.cx>, "'Stephens, Larry'" <larry.stephens@lsil.com>
-Cc: "'Linux-Scsi@Vger. Kernel. Org (E-mail)'" <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
 
-> While this patch does seem to solve the problem of transferring an odd
-> number of bytes to the device, I recently received a bug report saying
-> that we don't accept an odd number of bytes transferred from a device.
-> It seems to me that it's going to require modifying the scsi
-> scripts in
-> order to do this.  Do you agree?  Have you looked into
-> transfers in the
-> opposite direction as part of this work?
+Hi ... yet another patch to fix user space scanning.
 
-If a target sends an odd number of bytes during a wide DATA IN phase,
-then it should send an IGNORE WIDE RESIDUE message immediately after
-exiting the data phase to inform the initiator.  The sym53c8xx_2 driver
-in the 2.4 kernel series handles this correctly except on a REQUEST
-SENSE command issued for autosense (previously sym53c8xx_2 would reject
-an IWR message for autosense; I submitted a patch a good while ago to
-make it ignore IWR in this case instead of rejecting it).  Not
-accounting for IWR on autosense is not a big deal though, so I consider
-sym53c8xx_2 in 2.4 kernels to handle odd-length DATA IN phases
-acceptably.  I haven't tested the 2.6 kernels.
+Based on code in James Smart patch, but moves the ->target_parent call
+outside of scsi_alloc_target.
 
-Anthony J. Battersby
-Cybernetics
+Adding a transport->scan does not play well with __scsi_add_device and
+scsi_get_host_dev.
 
+There appears to be a ref-counting issue with rport->dev, both in this
+patch, and in current code calling scsi_scan_target(&rport->dev ...), or I
+am misunderstanding the code (rport->dev ref count is not incremented)
+hence the FIXME.
+
+Signed off by: Patrick Mansfield <patmans@us.ibm.coM>
+
+diff -uprN -X /home/patman/dontdiff scsi-rc-fixes-2.6/drivers/scsi/scsi_scan.c uscan-scsi-rc-fixes-2.6/drivers/scsi/scsi_scan.c
+--- scsi-rc-fixes-2.6/drivers/scsi/scsi_scan.c	Tue Jun 14 10:15:57 2005
++++ uscan-scsi-rc-fixes-2.6/drivers/scsi/scsi_scan.c	Tue Jun 14 11:40:56 2005
+@@ -373,6 +373,15 @@ static struct scsi_target *scsi_alloc_ta
+ 	return found_target;
+ }
+ 
++static struct device *scsi_target_parent(struct Scsi_Host *shost, unsigned
++					int channel, unsigned int id)
++{
++	if (shost->transportt->target_parent)
++		return shost->transportt->target_parent(shost, channel, id);
++	else 
++		return &shost->shost_gendev;
++}
++
+ /**
+  * scsi_target_reap - check to see if target is in use and destroy if not
+  *
+@@ -1190,10 +1199,15 @@ struct scsi_device *__scsi_add_device(st
+ 				      uint id, uint lun, void *hostdata)
+ {
+ 	struct scsi_device *sdev;
+-	struct device *parent = &shost->shost_gendev;
++	struct device *parent;
+ 	int res;
+-	struct scsi_target *starget = scsi_alloc_target(parent, channel, id);
++	struct scsi_target *starget;
+ 
++	parent = scsi_target_parent(shost, channel, id);
++	if (!parent)
++		return ERR_PTR(-ENODEV);
++
++	starget = scsi_alloc_target(parent, channel, id);
+ 	if (!starget)
+ 		return ERR_PTR(-ENOMEM);
+ 
+@@ -1314,6 +1328,7 @@ static void scsi_scan_channel(struct Scs
+ 			      unsigned int id, unsigned int lun, int rescan)
+ {
+ 	uint order_id;
++	struct device *parent;
+ 
+ 	if (id == SCAN_WILD_CARD)
+ 		for (id = 0; id < shost->max_id; ++id) {
+@@ -1333,10 +1348,16 @@ static void scsi_scan_channel(struct Scs
+ 				order_id = shost->max_id - id - 1;
+ 			else
+ 				order_id = id;
+-			scsi_scan_target(&shost->shost_gendev, channel, order_id, lun, rescan);
++			parent = scsi_target_parent(shost, channel, id);
++			if (parent)
++				scsi_scan_target(parent, channel,
++						 order_id, lun, rescan);
+ 		}
+-	else
+-		scsi_scan_target(&shost->shost_gendev, channel, id, lun, rescan);
++	else {
++		parent = scsi_target_parent(shost, channel, id);
++		if (parent)
++			scsi_scan_target(parent, channel, id, lun, rescan);
++	}
+ }
+ 
+ int scsi_scan_host_selected(struct Scsi_Host *shost, unsigned int channel,
+@@ -1432,8 +1453,12 @@ struct scsi_device *scsi_get_host_dev(st
+ {
+ 	struct scsi_device *sdev;
+ 	struct scsi_target *starget;
++	struct device *parent;
+ 
+-	starget = scsi_alloc_target(&shost->shost_gendev, 0, shost->this_id);
++	parent = scsi_target_parent(shost, 0, shost->this_id);
++	if (!parent)
++		return NULL;
++	starget = scsi_alloc_target(parent, 0, shost->this_id);
+ 	if (!starget)
+ 		return NULL;
+ 
+diff -uprN -X /home/patman/dontdiff scsi-rc-fixes-2.6/drivers/scsi/scsi_transport_fc.c uscan-scsi-rc-fixes-2.6/drivers/scsi/scsi_transport_fc.c
+--- scsi-rc-fixes-2.6/drivers/scsi/scsi_transport_fc.c	Tue Jun 14 10:15:57 2005
++++ uscan-scsi-rc-fixes-2.6/drivers/scsi/scsi_transport_fc.c	Tue Jun 14 13:25:35 2005
+@@ -1022,6 +1022,27 @@ static int fc_rport_match(struct attribu
+ 	return &i->rport_attr_cont.ac == cont;
+ }
+ 
++static struct device *fc_target_parent(struct Scsi_Host *shost,
++					int channel, uint id)
++{
++	struct fc_rport *rport;
++	struct device *parent = NULL;
++	unsigned long flags;
++
++	spin_lock_irqsave(shost->host_lock, flags);
++	list_for_each_entry(rport, &fc_host_rports(shost), peers)
++		if ((rport->channel == channel) &&
++		    (rport->scsi_target_id == id)) {
++			parent = &rport->dev;
++			/*
++			 * FIXME who holds parent in place?
++			 */
++			break;
++		}
++	spin_unlock_irqrestore(shost->host_lock, flags);
++	return parent;
++}
++
+ struct scsi_transport_template *
+ fc_attach_transport(struct fc_function_template *ft)
+ {
+@@ -1057,6 +1078,8 @@ fc_attach_transport(struct fc_function_t
+ 
+ 	/* Transport uses the shost workq for scsi scanning */
+ 	i->t.create_work_queue = 1;
++
++	i->t.target_parent = fc_target_parent;
+ 	
+ 	/*
+ 	 * Setup SCSI Target Attributes.
+diff -uprN -X /home/patman/dontdiff scsi-rc-fixes-2.6/include/scsi/scsi_transport.h uscan-scsi-rc-fixes-2.6/include/scsi/scsi_transport.h
+--- scsi-rc-fixes-2.6/include/scsi/scsi_transport.h	Tue Jun 14 10:16:26 2005
++++ uscan-scsi-rc-fixes-2.6/include/scsi/scsi_transport.h	Tue Jun 14 11:21:36 2005
+@@ -27,6 +27,13 @@ struct scsi_transport_template {
+ 	struct transport_container host_attrs;
+ 	struct transport_container target_attrs;
+ 	struct transport_container device_attrs;
++	/*
++	 * If set, call target_parent prior to allocating or scanning a
++	 * scsi_target, so we get the appropriate parent for the target.
++	 * This function is required for transports like FC and iSCSI that
++	 * do not put the scsi_target under scsi_host.
++	 */
++	struct device *(*target_parent)(struct Scsi_Host *, int, uint);
+ 
+ 	/* The size of the specific transport attribute structure (a
+ 	 * space of this size will be left at the end of the
