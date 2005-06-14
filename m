@@ -1,101 +1,39 @@
-From: Gregoire Favre <gregoire.favre@gmail.com>
-Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ? (fixed in 2.6.12-rc6 with patches)
-Date: Tue, 14 Jun 2005 11:28:07 +0200
-Message-ID: <20050614092807.GA8641@gmail.com>
-References: <20050613145000.GA12057@gmail.com> <1118674783.5079.9.camel@mulgrave> <20050613183719.GA8653@gmail.com> <1118695847.5079.41.camel@mulgrave> <20050613213307.GA8534@gmail.com> <1118699191.5079.49.camel@mulgrave> <20050613215923.GA8629@gmail.com> <1118700284.5079.52.camel@mulgrave> <20050613222527.GB8629@gmail.com> <1118715622.5079.88.camel@mulgrave>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Sym53c8xx_2 Odd Byte Data Transfer patches
+Date: Tue, 14 Jun 2005 21:50:41 +0100
+Message-ID: <20050614205041.GB11655@parcelfarce.linux.theplanet.co.uk>
+References: <91888D455306F94EBD4D168954A9457C013519A0@nacos172.co.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.202]:49051 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261155AbVFNJ2H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jun 2005 05:28:07 -0400
-Received: by wproxy.gmail.com with SMTP id 69so21217wri
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Jun 2005 02:28:05 -0700 (PDT)
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:13799 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S261331AbVFNUtg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Jun 2005 16:49:36 -0400
 Content-Disposition: inline
-In-Reply-To: <1118715622.5079.88.camel@mulgrave>
+In-Reply-To: <91888D455306F94EBD4D168954A9457C013519A0@nacos172.co.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: dino@in.ibm.com, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: "Stephens, Larry" <larry.stephens@lsil.com>
+Cc: "Linux-Scsi@Vger. Kernel. Org (E-mail)" <linux-scsi@vger.kernel.org>
 
-On Mon, Jun 13, 2005 at 09:20:22PM -0500, James Bottomley wrote:
+On Mon, May 09, 2005 at 06:16:48AM -0600, Stephens, Larry wrote:
+> > These changes fix a problem with odd byte data transfers to a wide device
+> > (16 bits) in the LSI sym53c8xx_2 driver.  This issue is primarily seen
+> > only with tape drives although the code doesn't restrict the fix to any
+> > particular device.
 
-> Actually, I think the problem is that the DVD-Rom thinks it can run at
-> 20 but actually can't
+While this patch does seem to solve the problem of transferring an odd
+number of bytes to the device, I recently received a bug report saying
+that we don't accept an odd number of bytes transferred from a device.
+It seems to me that it's going to require modifying the scsi scripts in
+order to do this.  Do you agree?  Have you looked into transfers in the
+opposite direction as part of this work?
 
-You are almost certainly right : setting the speed in BIOS back to 20
-and I can't boot, but I can with 16 :-)
-
-> Well ... look at it this way ... if no-one finds anything wrong with the
-> patches, they'll be going straight into the kernel tree after 2.6.12, so
-> I trust them as much as that ...
-
-I will test it for a few days like right now, and I have now set all
-speed back to full (except for the DVD) :
-
-scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
-        <Adaptec 29160B Ultra160 SCSI adapter>
-        aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
-
- target0:0:0: SC IS ffff81003fcaeac0
- target0:0:0: ULTRA2, flags 0xc33a
- target0:0:0: scsirate IS 0x2, min_period is 9, flags 0xc33a
-  Vendor: IBM       Model: DDRS-39130D       Rev: DC1B
-  Type:   Direct-Access                      ANSI SCSI revision: 02
- target0:0:0: asynchronous.
-scsi0:A:0:0: Tagged Queuing enabled.  Depth 253
- target0:0:0: Beginning Domain Validation
- target0:0:0: wide asynchronous.
- target0:0:0: Domain Validation skipping write tests
- target0:0:0: FAST-40 WIDE SCSI 80.0 MB/s ST (25 ns, offset 15)
- target0:0:0: Ending Domain Validation
-...
- target0:0:15: SC IS ffff81003fcaeac0
- target0:0:15: ULTRA2, flags 0xc13a
- target0:0:15: scsirate IS 0x2, min_period is 9, flags 0xc13a
-  Vendor: SEAGATE   Model: ST336706LW        Rev: 0108
-  Type:   Direct-Access                      ANSI SCSI revision: 03
- target0:0:15: asynchronous.
-scsi0:A:15:0: Tagged Queuing enabled.  Depth 253
- target0:0:15: Beginning Domain Validation
- target0:0:15: wide asynchronous.
- target0:0:15: FAST-80 WIDE SCSI 160.0 MB/s ST (12.5 ns, offset 63)
- target0:0:15: Ending Domain Validation
-scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
-        <Adaptec 2940 Ultra SCSI adapter>
-        aic7880: Ultra Single Channel A, SCSI Id=7, 16/253 SCBs
-
- target1:0:0: SC IS ffff81003fcae980
- target1:0:0: scsirate IS 0x0, min_period is 12, flags 0xc158
- target1:0:1: SC IS ffff81003fcae980
- target1:0:1: scsirate IS 0x10, min_period is 15, flags 0xc159
- target1:0:1: asynchronous.
-  Vendor: TOSHIBA   Model: DVD-ROM SD-M1201  Rev: 1R08
-  Type:   CD-ROM                             ANSI SCSI revision: 02
- target1:0:1: Beginning Domain Validation
- target1:0:1: Domain Validation skipping write tests
- target1:0:1: FAST-20 SCSI 16.7 MB/s ST (60 ns, offset 15)
- target1:0:1: Ending Domain Validation
- target1:0:2: SC IS ffff81003fcae980
- target1:0:2: scsirate IS 0x0, min_period is 12, flags 0xc158
- target1:0:2: asynchronous.
-  Vendor: PLEXTOR   Model: CD-R   PX-R820T   Rev: 1.08
-  Type:   CD-ROM                             ANSI SCSI revision: 02
- target1:0:2: Beginning Domain Validation
- target1:0:2: Domain Validation skipping write tests
- target1:0:2: FAST-10 SCSI 10.0 MB/s ST (100 ns, offset 8)
- target1:0:2: Ending Domain Validation
- target1:0:3: SC IS ffff81003fcae980
- target1:0:3: scsirate IS 0x0, min_period is 12, flags 0xc158
- target1:0:3: asynchronous.
-  Vendor: PLEXTOR   Model: CD-R   PX-R820T   Rev: 1.08
-  Type:   CD-ROM                             ANSI SCSI revision: 02
- target1:0:3: Beginning Domain Validation
- target1:0:3: Domain Validation skipping write tests
- target1:0:3: FAST-10 SCSI 10.0 MB/s ST (100 ns, offset 8)
- target1:0:3: Ending Domain Validation
-
-Thank you very much !!!
 -- 
-	Gr\'egoire Favre
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
