@@ -1,58 +1,52 @@
-From: Frank van Maarseveen <frankvm@frankvm.com>
-Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
-Date: Tue, 14 Jun 2005 23:42:26 +0200
-Message-ID: <20050614214226.GA15560@janus>
-References: <20050530190716.GA9239@gmail.com> <1118081857.5045.49.camel@mulgrave> <20050607085710.GB9230@gmail.com> <1118590709.4967.6.camel@mulgrave> <20050613145000.GA12057@gmail.com> <1118674783.5079.9.camel@mulgrave> <20050613183719.GA8653@gmail.com> <1118695847.5079.41.camel@mulgrave> <20050613214208.GA7471@janus> <1118703593.5079.56.camel@mulgrave>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/11]  qla2xxx: Generalize SNS generic-services routines.
+Date: Tue, 14 Jun 2005 22:50:34 +0100
+Message-ID: <20050614215034.GB5849@infradead.org>
+References: <20050614053136.12127.506.sendpatchset@plap.qlogic.com> <20050614053151.12127.52950.sendpatchset@plap.qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from frankvm.xs4all.nl ([80.126.170.174]:63141 "EHLO
-	janus.localdomain") by vger.kernel.org with ESMTP id S261353AbVFNVm3
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jun 2005 17:42:29 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:37587 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261360AbVFNVuh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Jun 2005 17:50:37 -0400
 Content-Disposition: inline
-In-Reply-To: <1118703593.5079.56.camel@mulgrave>
+In-Reply-To: <20050614053151.12127.52950.sendpatchset@plap.qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Frank van Maarseveen <frankvm@frankvm.com>, Gr?goire Favre <gregoire.favre@gmail.com>, dino@in.ibm.com, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Jun 13, 2005 at 05:59:53PM -0500, James Bottomley wrote:
-> On Mon, 2005-06-13 at 23:42 +0200, Frank van Maarseveen wrote:
-> > kernel:    Vendor: WANGTEK   Model: 5525ES SCSI       Rev: 73F 
-> > kernel:    Type:   Sequential-Access                  ANSI SCSI
-> > revision: 02
-> > kernel:   target0:0:4: Beginning Domain Validation
-> > kernel:   target0:0:4: Domain Validation skipping write tests
-> > kernel:  scsi0:0:4:0: Attempting to queue an ABORT message
-> 
-> The aic7xxx error handling is still very unreconstructed and DV takes
-> the driver through this if there's a mismatch.  My best guess is that
-> like Gr\'egoir's CD-ROM, your wangtek is claiming to support a speed it
-> cannot.  We find this out in DV, but not until we've gone through all
-> the error paths.  The quick fix is simply to set the bios to whatever
-> the tape eventually configures with (although you'll need the current
-> patch set to make that work properly).
+> @@ -47,6 +55,9 @@ qla2x00_prep_ms_iocb(scsi_qla_host_t *ha
+>  {
+>  	ms_iocb_entry_t *ms_pkt;
+>  
+> +	if (IS_QLA24XX(ha) || IS_QLA25XX(ha))
+> +		return qla24xx_prep_ms_iocb(ha, req_size, rsp_size);
+> +
 
-Well, I can't seem to find the right collection of patches applying
-cleanly on 2.6.12-rc6 and the Adaptec BIOS says "ASYNC". It cannot
-go below 10MB/s and the tape unit can't go above 3.3 according to
-/proc/scsi/aic7xxx/0 I think:
+this is horrible style.  Please move the guts of the code of this
+function to qla2x00_old_prep_ms_iocb and make qla2x00_prep_ms_iocb
+a wrapper.  Or given that you things like this in lots of places
+add a proper method table and just call ->prep_ms_iocb on it.
 
-Target 4 Negotiation Settings
-        User: 6.600MB/s transfers (16bit)
-        Goal: 3.300MB/s transfers
-        Curr: 3.300MB/s transfers
-        Channel A Target 4 Lun 0 Settings
-                Commands Queued 61
-                Commands Active 0
-                Command Openings 1
-                Max Tagged Openings 0
-                Device Queue Frozen Count 0
+>  	ms_pkt = ha->ms_iocb;
+>  	memset(ms_pkt, 0, sizeof(ms_iocb_entry_t));
+>  
+> @@ -72,6 +83,42 @@ qla2x00_prep_ms_iocb(scsi_qla_host_t *ha
+>  }
+>  
+>  /**
+> + * qla24xx_prep_ms_iocb() - Prepare common CT IOCB fields for SNS CT query.
+> + * @ha: HA context
+> + * @req_size: request size in bytes
+> + * @rsp_size: response size in bytes
+> + *
+> + * Returns a pointer to the @ha's ms_iocb.
+> + */
+> +static inline void *
+> +qla24xx_prep_ms_iocb(scsi_qla_host_t *ha, uint32_t req_size, uint32_t rsp_size)
 
-So, I'm kind of stuck with a very slow driver initialization. I think it
-takes much longer than the 30 seconds visible in the logfile, at least
-that's the impression I have (I'll use a stopwatch next time).
+also please try to avoid defining functions below their usage.  it makes
+reading the code a lot harder.
 
--- 
-Frank
