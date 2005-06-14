@@ -1,181 +1,176 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [RFC] expand information in the scsi_sense_hdr
-Date: Mon, 13 Jun 2005 22:25:34 -0500
-Message-ID: <1118719534.5079.93.camel@mulgrave>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 0/11]  qla2xxx: Add ISP24xx support.
+Date: Mon, 13 Jun 2005 22:31:36 -0700 (PDT)
+Message-ID: <20050614053136.12127.506.sendpatchset@plap.qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:3470 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261406AbVFNDZi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Jun 2005 23:25:38 -0400
-Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id j5E3PbA16861
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Jun 2005 23:25:37 -0400
+Received: from avexch01.qlogic.com ([198.70.193.200]:41878 "EHLO
+	avexch01.qlogic.com") by vger.kernel.org with ESMTP id S261172AbVFNFbh
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Jun 2005 01:31:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Since the scsi_execute_req() call is trying to make this the standard
-way of passing back sense (mainly because scsi_execute_req() is designed
-for internal consumption, which has more simple sense parsing
-requirements) there needs to be enough information in the header for all
-sense uses within the kernel.
+James,
 
-This patch adds the info field, the flags field, the sense key specific
-field and the command info field to the sense header.  The disadvantage
-is that it adds nineteen bytes to the sense header.
+What follows is a series of patches (against the latest scsi-misc-2.6
+git tree) to add support for a new familiy of 4Gb ISP chips.  The
+firmware images to support these new ISPs will reside on the boards
+themselves and therefore not require a large firmware-blob be compiled
+into the driver.
 
-James
+A summary of the patches can be found towards the end of this message.
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1919,7 +1919,14 @@ int scsi_normalize_sense(const u8 *sense
- 	if (!scsi_sense_valid(sshdr))
- 		return 0;
- 
--	if (sshdr->response_code >= 0x72) {
-+	if (sshdr->response_code == 0x72 || sshdr->response_code == 0x73)
-+		sshdr->descriptor = 1;
-+	if (sshdr->response_code < 0x70 || sshdr->response_code > 0x73)
-+		return 0;
-+	sshdr->deferred = (sshdr->response_code & 0x01) ? 1 : 0;
-+
-+	if (sshdr->descriptor) {
-+		const u8 *desc;
- 		/*
- 		 * descriptor format
- 		 */
-@@ -1931,19 +1938,86 @@ int scsi_normalize_sense(const u8 *sense
- 			sshdr->ascq = sense_buffer[3];
- 		if (sb_len > 7)
- 			sshdr->additional_length = sense_buffer[7];
-+
-+		/* now get descriptor flags data */
-+		desc = scsi_sense_desc_find(sense_buffer, sb_len,
-+					    SCSI_SENSE_DESCRIPTOR_SSC);
-+		if (desc)
-+			sshdr->flags = desc[3] & 0xe0;
-+		desc = scsi_sense_desc_find(sense_buffer, sb_len,
-+					    SCSI_SENSE_DESCRIPTOR_SBC);
-+		if (desc)
-+			sshdr->flags = desc[3] & 0x20; /* ILI */
-+		desc = scsi_sense_desc_find(sense_buffer, sb_len,
-+					    SCSI_SENSE_DESCRIPTOR_INFO);
-+		if (desc) {
-+			sshdr->valid = (desc[2] & 0x80) ? 1 : 0;
-+			sshdr->info = 
-+				((u64)desc[4]  << 56) |
-+				((u64)desc[5]  << 48) |
-+				((u64)desc[6]  << 40) |
-+				((u64)desc[7]  << 32) |
-+				((u64)desc[8]  << 24) |
-+				((u64)desc[9]  << 16) |
-+				((u64)desc[10] <<  8) |
-+				(u64)desc[11];
-+		}
-+		desc = scsi_sense_desc_find(sense_buffer, sb_len,
-+					    SCSI_SENSE_DESCRIPTOR_CMD);
-+		if (desc)
-+			sshdr->cmd_info =
-+				((u64)desc[4]  << 56) |
-+				((u64)desc[5]  << 48) |
-+				((u64)desc[6]  << 40) |
-+				((u64)desc[7]  << 32) |
-+				((u64)desc[8]  << 24) |
-+				((u64)desc[9]  << 16) |
-+				((u64)desc[10] <<  8) |
-+				(u64)desc[11];
-+		desc = scsi_sense_desc_find(sense_buffer, sb_len,
-+					    SCSI_SENSE_DESCRIPTOR_CMD);
-+		if (desc) {
-+			sshdr->sksv = (desc[2] & 0x80) ? 1 : 0;
-+			sshdr->extra_sense_specific = desc[2] & 0x7f;
-+			sshdr->sense_specific =
-+				((u16)desc[3] << 8) |
-+				(u16)desc[4];
-+		}
- 	} else {
- 		/* 
- 		 * fixed format
- 		 */
-+		sshdr->valid = (sense_buffer[0] & 0x80) ? 1 : 0;
- 		if (sb_len > 2)
- 			sshdr->sense_key = (sense_buffer[2] & 0xf);
--		if (sb_len > 7) {
-+		if (sb_len > 3)
-+			sshdr->flags = sense_buffer[2] & 0xe0;
-+		if (sb_len > 6 && sshdr->valid)
-+			sshdr->info = 
-+				((u32)sense_buffer[3] << 24) |
-+				((u32)sense_buffer[4] << 16) |
-+				((u32)sense_buffer[5] <<  8) |
-+				(u32)sense_buffer[6];
-+		if (sb_len > 7)
- 			sb_len = (sb_len < (sense_buffer[7] + 8)) ?
- 					 sb_len : (sense_buffer[7] + 8);
--			if (sb_len > 12)
--				sshdr->asc = sense_buffer[12];
--			if (sb_len > 13)
--				sshdr->ascq = sense_buffer[13];
-+
-+		if (sb_len > 11)
-+			sshdr->cmd_info = 
-+				((u32)sense_buffer[8] << 24) |
-+				((u32)sense_buffer[9] << 16) |
-+				((u32)sense_buffer[10] << 8) |
-+				(u32)sense_buffer[11];
-+		if (sb_len > 12)
-+			sshdr->asc = sense_buffer[12];
-+		if (sb_len > 13)
-+			sshdr->ascq = sense_buffer[13];
-+		if (sb_len > 17) {
-+			sshdr->sksv = (sense_buffer[15] & 0x80) ? 1 : 0;
-+			if (sshdr->sksv)
-+				sshdr->sense_specific =
-+					((u16)sense_buffer[15] & 0x7f) << 8 |
-+					(u16)sense_buffer[16];
- 		}
- 	}
- 
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -16,8 +16,17 @@ struct Scsi_Host;
-  * in which more information is required (e.g. the LBA of a MEDIUM ERROR).
-  */
- struct scsi_sense_hdr {		/* See SPC-3 section 4.5 */
--	u8 response_code;	/* permit: 0x0, 0x70, 0x71, 0x72, 0x73 */
--	u8 sense_key;
-+	u64 info;
-+	u64 cmd_info;
-+	u16 sense_specific;
-+	u8 extra_sense_specific; /* only valid for descriptor format */
-+	u8 valid:1,
-+	   response_code:7;	/* permit: 0x0, 0x70, 0x71, 0x72, 0x73 */
-+	u8 sksv:1,
-+	   deferred:1,
-+	   descriptor:1,
-+	   sense_key:4;
-+	u8 flags;		/* FILEMARK, EOM or ILI */
- 	u8 asc;
- 	u8 ascq;
- 	u8 byte4;
-@@ -26,6 +35,13 @@ struct scsi_sense_hdr {		/* See SPC-3 se
- 	u8 additional_length;	/* always 0 for fixed sense format */
- };
- 
-+/* Descriptor types */
-+#define SCSI_SENSE_DESCRIPTOR_INFO	0x00
-+#define SCSI_SENSE_DESCRIPTOR_CMD	0x01
-+#define SCSI_SENSE_DESCRIPTOR_SKS	0x02
-+#define SCSI_SENSE_DESCRIPTOR_SSC	0x04
-+#define SCSI_SENSE_DESCRIPTOR_SBC	0x05
-+
- static inline int scsi_sense_valid(struct scsi_sense_hdr *sshdr)
- {
- 	if (!sshdr)
+With the exception of the rather large firmware image update (direct
+pointer to bzip'd patch listed), subsequent messages will contain
+inlined patches.
+
+All patches can be found at the following URL:
+
+        ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.01.00b4k/
+
+There are a set of patches present within the scsi-rc-fixes-2.6 tree
+which should be carried over to scsi-misc-2.6 before applying:
+
+	[PATCH] qla2xxx: Pull-down scsi-host-addition to follow board initialization.
+	http://marc.theaimsgroup.com/?l=linux-scsi&m=111836291000433&q=raw
+
+	Re: [dm-devel] further testing w/ multipath ... and bugs
+	http://marc.theaimsgroup.com/?l=linux-scsi&m=111868700022257&q=raw
 
 
+Regards,
+Andrew Vasquez
+QLogic Corporation
+
+
+commit 8f70eac0a59dff15bf39da7af4fe7e5aba274ca5
+Author: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Date:   Mon Jun 13 15:15:19 2005 -0700
+
+    Firmware updates.
+    
+    Resync with latest 21xx firmware      -- 1.19.25.
+    Resync with latest 22xx firmware      -- 2.02.08.
+    Resync with latest 23xx/63xx firmware -- 3.03.15.
+    
+    Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+
+commit c82a228a4898ce097072deca69e3632824667a5c
+Author: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Date:   Mon Jun 13 15:05:45 2005 -0700
+
+    Code scrubbing.
+    
+    Remove trailing whitespace from driver files.
+    
+    Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+
+commit 911d04533e45895584fbaaa85a54ce5710d264f1
+Author: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Date:   Mon Jun 13 15:04:57 2005 -0700
+
+    NVRAM id-list updates.
+    
+    Resync with latest NVRAM subsystem ID list.
+    
+    Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+
+commit 4871198c793d20789a89d7cf8ff61b99f259570e
+Author: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Date:   Mon Jun 13 15:04:25 2005 -0700
+
+    Final glue-code for ISP24xx.
+    
+    Add appropriate glue-code for ISP24xx support within
+    OS and initialization sections of driver.
+    
+    Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+
+commit 6aba66c726c715fced8740684bfd1ba57651d015
+Author: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Date:   Mon Jun 13 15:04:02 2005 -0700
+
+    ISP24xx ISR routines.
+    
+    Add appropriate glue-code for ISP24xx support -- this
+    included generalizing some of the core handling
+    routines (qla2x00_async_event() [pull-up retrieval of
+    mailbox values] and qla2x00_status_entry()].  Fixup
+    2100/2300 ISRs to handle the new conventions.
+    
+    Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+
+commit a732ee4e5aba74cc97c0607e0e0a3827d1c3793d
+Author: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Date:   Mon Jun 13 15:03:48 2005 -0700
+
+    Add ISP24xx IOCB manipulation routines.
+    
+    Add appropriate glue-code for ISP24xx support while
+    manipulting IOCB packets.  Add an ISP24xx specific
+    'start_scsi' routine due to command-type-7 layout
+    changes.
+    
+    Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+
+commit a3885ff384e4cdf03203fc9ea42a54763a0b39f8
+Author: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Date:   Mon Jun 13 15:03:35 2005 -0700
+
+    Add ISP24xx flash-manipulation routines.
+    
+    Add read/write flash manipulation routines for the ISP24xx.
+    Update sysfs NVRAM objects to use generalized accessor
+    functions.
+    
+    Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+
+commit d5f1f079921b48f94606053f246b8d16b39f3f74
+Author: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Date:   Mon Jun 13 15:03:20 2005 -0700
+
+    Add MBX command routines for ISP24xx support.
+    
+    Generalize several routines [qla2x00_load_ram_ext(),
+    qla2x00_execute_fw(), qla2x00_verify_checksum()] to handle
+    larger addressing space.
+    
+    Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+
+commit b01fb29c828317b98912a32ee51a144789c765ff
+Author: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Date:   Mon Jun 13 15:02:50 2005 -0700
+
+    Generalize SNS generic-services routines.
+    
+    Consolidate completion-status checking while adding support
+    for the ISP24xx.
+    
+    Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+
+commit 388467c29a156056c5fe5e2bdcd68b22fb876b54
+Author: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Date:   Mon Jun 13 15:02:37 2005 -0700
+
+    Add ISP24xx diagnostic routines.
+    
+    Add function and structure definitions for the ISP24xx
+    diagnostic firmware dump routines.
+    
+    Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+
+commit d6adba67d6a4f2fd751e3bb100dec5e0efdb7324
+Author: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Date:   Mon Jun 13 15:02:18 2005 -0700
+
+    Add ISP24xx definitions.
+    
+    Add requisite structure definitions and #define's for ISP24xx
+    support.
+    
+    Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+
+-- 
+Andrew Vasquez
