@@ -1,40 +1,64 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Questions about scsi_target_reap and starget/sdev lifecyle
-Date: Tue, 14 Jun 2005 17:27:19 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0506141714530.4698-100000@iolanthe.rowland.org>
+From: "J.A. Magallon" <jamagallon@able.es>
+Subject: Re: [RFT][PATCH] aic79xx: remove busyq
+Date: Tue, 14 Jun 2005 21:27:11 +0000
+Message-ID: <1118784431l.7621l.0l@werewolf.able.es>
+References: <20050529074620.GA26151@havoc.gtf.org>
+	<1117488507l.7621l.0l@werewolf.able.es> <429B9311.9000608@pobox.com>
+	<1118704487l.14239l.0l@werewolf.able.es>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:3987 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261343AbVFNV1W
+Received: from smtp06.auna.com ([62.81.186.16]:39579 "EHLO smtp06.retemail.es")
+	by vger.kernel.org with ESMTP id S261352AbVFNVij convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jun 2005 17:27:22 -0400
+	Tue, 14 Jun 2005 17:38:39 -0400
+In-Reply-To: <1118704487l.14239l.0l@werewolf.able.es> (from
+	jamagallon@able.es on Tue Jun 14 01:14:47 2005)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: "J.A. Magallon" <jamagallon@able.es>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-James:
 
-Can you or anyone else please explain what scsi_target_reap() and
-especially what scsi_target.reap_ref are for?  What's the point of this
-home-brewed reference counting scheme when there's already a perfectly
-useful embedded struct device inside scsi_target?  Why isn't
-scsi_target_reap() simply the release routine for the embedded device?
+On 06.14, J.A. Magallon wrote:
+> 
+> On 05.31, Jeff Garzik wrote:
+> > J.A. Magallon wrote:
+> > > On 05.29, Jeff Garzik wrote:
+> > > 
+> > >>Can anyone with aic79xx hardware give me a simple "it works"
+> > >>or "this breaks things" answer, for the patch below?
+> > >>
+> > >>This changes the aic79xx driver to use the standard Linux SCSI queueing
+> > >>code, rather than its own.  After applying this patch, NO behavior
+> > >>changes should be seen.
+> > >>
+> > >>The patch is against 2.6.12-rc5, but probably applies OK to recent 2.6.x
+> > >>kernels.
+> > >>
+> > > 
+> > > 
+> > > Applied with even no offsets to -rc5-mm1. Booted and working fine:
+> > 
+> > Thanks a bunch!
+> > 
+> 
+> Oops, don't be so happy.
+> Following the other aic thread, I realized I applied the patch but booted on
+> an U160 box :).
+> 
+> Will try shortly on a real 320.. sorry.
+> 
 
-In addition, can someone please explain how long a scsi_target structure 
-and a scsi_device structure are supposed to remain linked into the host's 
-__targets and __devices lists once they have been removed?  The 
-scsi_device link isn't severed until the release routine runs, which can 
-be quite a long time after the device has been removed.  The scsi_target 
-link is severed in scsi_target_reap(), which should be thought of as a
-kind of release routine as well.
+Bad news, it just hangs forever after detecting the first SCSI disk.
+No sysrq-p, sysrq-t, nothing.
 
-Won't this cause trouble in a hotplug environment?  A target or a LUN can 
-be removed, and while it's still on the host's list a new target or LUN 
-could be discovered with the same ID.  Having multiple entries on a list 
-with the same ID sounds like a bad idea.  Is there some reason why these 
-things aren't taken off their list as soon as they are removed?
+--
+J.A. Magallon <jamagallon()able!es>     \               Software is like sex:
+werewolf!able!es                         \         It's better when it's free
+Mandriva Linux release 2006.0 (Cooker) for i586
+Linux 2.6.11-jam25 (gcc 4.0.0 (4.0.0-3mdk for Mandriva Linux release 2006.0))
 
-Alan Stern
 
