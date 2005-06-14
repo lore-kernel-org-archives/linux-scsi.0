@@ -1,39 +1,40 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Sym53c8xx_2 Odd Byte Data Transfer patches
-Date: Tue, 14 Jun 2005 21:50:41 +0100
-Message-ID: <20050614205041.GB11655@parcelfarce.linux.theplanet.co.uk>
-References: <91888D455306F94EBD4D168954A9457C013519A0@nacos172.co.lsil.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Questions about scsi_target_reap and starget/sdev lifecyle
+Date: Tue, 14 Jun 2005 17:27:19 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0506141714530.4698-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:13799 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S261331AbVFNUtg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jun 2005 16:49:36 -0400
-Content-Disposition: inline
-In-Reply-To: <91888D455306F94EBD4D168954A9457C013519A0@nacos172.co.lsil.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:3987 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261343AbVFNV1W
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Jun 2005 17:27:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Stephens, Larry" <larry.stephens@lsil.com>
-Cc: "Linux-Scsi@Vger. Kernel. Org (E-mail)" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, May 09, 2005 at 06:16:48AM -0600, Stephens, Larry wrote:
-> > These changes fix a problem with odd byte data transfers to a wide device
-> > (16 bits) in the LSI sym53c8xx_2 driver.  This issue is primarily seen
-> > only with tape drives although the code doesn't restrict the fix to any
-> > particular device.
+James:
 
-While this patch does seem to solve the problem of transferring an odd
-number of bytes to the device, I recently received a bug report saying
-that we don't accept an odd number of bytes transferred from a device.
-It seems to me that it's going to require modifying the scsi scripts in
-order to do this.  Do you agree?  Have you looked into transfers in the
-opposite direction as part of this work?
+Can you or anyone else please explain what scsi_target_reap() and
+especially what scsi_target.reap_ref are for?  What's the point of this
+home-brewed reference counting scheme when there's already a perfectly
+useful embedded struct device inside scsi_target?  Why isn't
+scsi_target_reap() simply the release routine for the embedded device?
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+In addition, can someone please explain how long a scsi_target structure 
+and a scsi_device structure are supposed to remain linked into the host's 
+__targets and __devices lists once they have been removed?  The 
+scsi_device link isn't severed until the release routine runs, which can 
+be quite a long time after the device has been removed.  The scsi_target 
+link is severed in scsi_target_reap(), which should be thought of as a
+kind of release routine as well.
+
+Won't this cause trouble in a hotplug environment?  A target or a LUN can 
+be removed, and while it's still on the host's list a new target or LUN 
+could be discovered with the same ID.  Having multiple entries on a list 
+with the same ID sounds like a bad idea.  Is there some reason why these 
+things aren't taken off their list as soon as they are removed?
+
+Alan Stern
+
