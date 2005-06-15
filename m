@@ -1,78 +1,60 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [Patch] take 4: Correct issue with midlayer scsi target allocation and transports that create the targets
-Date: Tue, 14 Jun 2005 15:54:33 -0700
-Message-ID: <20050614225433.GA16140@us.ibm.com>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AC72@xbl3.ad.emulex.com> <20050611153745.GA31943@infradead.org> <20050614221700.GA15695@us.ibm.com> <20050614223535.GA6834@infradead.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Questions about scsi_target_reap and starget/sdev lifecyle
+Date: Tue, 14 Jun 2005 22:28:59 -0500
+Message-ID: <1118806139.5027.37.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0506141714530.4698-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:42411 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261392AbVFNWzU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jun 2005 18:55:20 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e4.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j5EMtJNV032740
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jun 2005 18:55:19 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j5EMtJhh240496
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jun 2005 18:55:19 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j5EMtJpq018312
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Jun 2005 18:55:19 -0400
-Content-Disposition: inline
-In-Reply-To: <20050614223535.GA6834@infradead.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:31135 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261306AbVFOD3H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Jun 2005 23:29:07 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0506141714530.4698-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, Jun 14, 2005 at 11:35:35PM +0100, Christoph Hellwig wrote:
-> On Tue, Jun 14, 2005 at 03:17:00PM -0700, Patrick Mansfield wrote:
+On Tue, 2005-06-14 at 17:27 -0400, Alan Stern wrote:
+> Can you or anyone else please explain what scsi_target_reap() and
+> especially what scsi_target.reap_ref are for?  What's the point of this
+> home-brewed reference counting scheme when there's already a perfectly
+> useful embedded struct device inside scsi_target?  Why isn't
+> scsi_target_reap() simply the release routine for the embedded device?
 
-> > @@ -1190,10 +1199,15 @@ struct scsi_device *__scsi_add_device(st
-> >  				      uint id, uint lun, void *hostdata)
-> >  {
-> >  	struct scsi_device *sdev;
-> > -	struct device *parent = &shost->shost_gendev;
-> > +	struct device *parent;
-> >  	int res;
-> > -	struct scsi_target *starget = scsi_alloc_target(parent, channel, id);
-> > +	struct scsi_target *starget;
-> >  
-> > +	parent = scsi_target_parent(shost, channel, id);
-> > +	if (!parent)
-> > +		return ERR_PTR(-ENODEV);
-> > +
-> 
-> scsi_add_device is a library function for LLDDs, thus it does not need
-> this fix.  If we want LLDDs with objects below the target to use them
-> in the future we should probably change the prototype so it takes a parent
-> object.
+Look at how scsi_target_reap works: it's the decider for visibility
+removal, not actual release, that's why we can't use the device
+reference, which is the decider for release.  I could have used a kref,
+but, given the special locking conventions and the tying to the __target
+list, the call would have had to be wrappered anyway, so there didn't
+seem to to be much point.
 
-> >  int scsi_scan_host_selected(struct Scsi_Host *shost, unsigned int channel,
-> > @@ -1432,8 +1453,12 @@ struct scsi_device *scsi_get_host_dev(st
-> >  {
-> >  	struct scsi_device *sdev;
-> >  	struct scsi_target *starget;
-> > +	struct device *parent;
-> >  
-> > -	starget = scsi_alloc_target(&shost->shost_gendev, 0, shost->this_id);
-> > +	parent = scsi_target_parent(shost, 0, shost->this_id);
-> > +	if (!parent)
-> > +		return NULL;
-> > +	starget = scsi_alloc_target(parent, 0, shost->this_id);
-> 
-> scsi_get_host_dev is a library function for LLDDs and does not need to
-> care about this.
+A target is basically a self destroying entity which is why the
+complexity.
 
-But if the transport is like FC or iSCSI, the eventual calls to
-scsi_alloc_sdev() will fail (for qlogic, ->slave_alloc returns ENXIO) or
-somehow be incorrect, so why not change these?
+> In addition, can someone please explain how long a scsi_target structure 
+> and a scsi_device structure are supposed to remain linked into the host's 
+> __targets and __devices lists once they have been removed?  The 
+> scsi_device link isn't severed until the release routine runs, which can 
+> be quite a long time after the device has been removed.  The scsi_target 
+> link is severed in scsi_target_reap(), which should be thought of as a
+> kind of release routine as well.
 
-> > +	list_for_each_entry(rport, &fc_host_rports(shost), peers)
-> > +		if ((rport->channel == channel) &&
-> > +		    (rport->scsi_target_id == id)) {
-> 
-> lots of superflous braces ;-)
+__target entries are removed when the target goes invisible (and for
+this to happen, all the devices have to be already gone).  __devices
+when the device is released.
 
-OK ))
+> Won't this cause trouble in a hotplug environment?  A target or a LUN can 
+> be removed, and while it's still on the host's list a new target or LUN 
+> could be discovered with the same ID.  Having multiple entries on a list 
+> with the same ID sounds like a bad idea.  Is there some reason why these 
+> things aren't taken off their list as soon as they are removed?
+
+It shouldn't, that's what rescan is about.  If the device isn't gone,
+you get the old device back again.
+
+James
+
+
