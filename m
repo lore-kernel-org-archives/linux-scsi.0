@@ -1,39 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Greg KH <gregkh@suse.de>
 Subject: Re: [PATCH 1/1] ipr: Fix for adapter shutdown issue
-Date: Wed, 15 Jun 2005 10:47:38 -0500
-Message-ID: <1118850458.5045.34.camel@mulgrave>
-References: <200506151515.j5FFFNQA020480@d01av01.pok.ibm.com>
-	 <1118849292.5045.27.camel@mulgrave>  <42B04A9C.7050503@us.ibm.com>
+Date: Wed, 15 Jun 2005 09:01:47 -0700
+Message-ID: <20050615160147.GA27966@suse.de>
+References: <200506151515.j5FFFNQA020480@d01av01.pok.ibm.com> <20050615151742.GA24061@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:20904 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261190AbVFOPrk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jun 2005 11:47:40 -0400
-In-Reply-To: <42B04A9C.7050503@us.ibm.com>
+Received: from lyle.provo.novell.com ([137.65.81.174]:64683 "EHLO
+	lyle.provo.novell.com") by vger.kernel.org with ESMTP
+	id S261197AbVFOQCF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jun 2005 12:02:05 -0400
+Content-Disposition: inline
+In-Reply-To: <20050615151742.GA24061@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, haren@us.ibm.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: brking@us.ibm.com, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, haren@us.ibm.com
 
-On Wed, 2005-06-15 at 10:34 -0500, Brian King wrote:
-> For scsi disks attached to an ipr adapter, the SYNCHRONIZE_CACHE command
-> gets sent to the disk and works just like when attached to any other
-> HBA. The ipr disk array devices, however, do not support the SYNC_CACHE command,
-> nor do they support the caching mode page, so SYNC_CACHE never gets sent.
-> So, the shutdown hook is needed to flush the adapter's battery backed write
-> cache for all attached disk arrays on system shutdown.
+On Wed, Jun 15, 2005 at 04:17:42PM +0100, Christoph Hellwig wrote:
+> On Wed, Jun 15, 2005 at 10:15:22AM -0500, brking@us.ibm.com wrote:
+> > 
+> > 
+> > James,
+> > Haren found this in some recent kexec testing. Without this fix, the
+> > ipr adapter's write cache never gets flushed. I'd like to see this
+> > pushed into 2.6.12 if possible.
+> 
+> Umm, there's tons of other drivers doing this. Greg, please revert
+> your pci-layer ->shutdown thing for 2.6.12 and make convert all drivers
+> when re-introducing it.  Or even better make sure it doesn't break
+> drivers setting ->shutdown themselves.
 
-Well, that means you have a whole lot more trouble in 2.6.12 than simply
-failing to flush a cache on shutdown.  The barrier code now uses cache
-synchronization commands, so if you crash the on-disk image will not be
-what a journalling filesystem expects.  As long as the battery keeps the
-information alive in the cache, I assume this corrects itself when ipr
-next powers up, but if you trusted this, you wouldn't be fussing about
-the shutdown cache flush, now would you?
+I'm sorry, what pci-layer ->shutdown thing?  Have a pointer to the patch
+in question that people are having problems with?
 
-James
+thanks,
 
-
+greg k-h
