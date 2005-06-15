@@ -1,23 +1,59 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Eddie Williams <Eddie.Williams@Steeleye.com>
 Subject: Re: Compaq RA4x00 logical volumes not detected in kernel 2.6
-Date: Wed, 15 Jun 2005 09:12:39 -0500
-Message-ID: <1118844759.5045.15.camel@mulgrave>
+Date: Wed, 15 Jun 2005 10:14:02 -0400
+Message-ID: <1118844842.4343.46.camel@gator.sc.steeleye.com>
 References: <66EFFC1A2B0A424E87D68EC10B1F458D6597C1@EXCH2.plzen-city.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:59814 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:61606 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261457AbVFOOMx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jun 2005 10:12:53 -0400
+	id S261464AbVFOOOL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jun 2005 10:14:11 -0400
 In-Reply-To: <66EFFC1A2B0A424E87D68EC10B1F458D6597C1@EXCH2.plzen-city.cz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: =?ISO-8859-1?Q?Hor=E1k?= Daniel <horak@sitmp.cz>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, 2005-06-15 at 14:10 +0200, Hor=E1k Daniel wrote:
+The problem is not with how the driver scans but with the device type
+the array returns for each LUN.  The device type being returned by this
+array, aka "scsi: unknown device type 12" is defined as "Storage array
+controller device (e.g., RAID)".  This array does not return as a
+"direct access device", aka device type 0. =20
+
+As you have seen there is no mid-layer driver that knows how to handle
+this type.
+
+If you look at the cpqfc driver used with the Compaq FC controller it
+converts the device type to 0.  I am not sure if the cpqfc driver is
+doing more than just munging the device type from 12 to 0.  It has been
+4 or so years since I worked with a 4x00 array and found the same thing
+you did.  I was not very disappointed when Compaq discontinued the
+4x00!  I had problems with the cpqfc driver and moved the array to a
+Qlogic SAN.  When I ran into the issue with the device type as you foun=
+d
+I chose to go back to the cpqfc driver and work with Compaq to fix the
+cpqfc driver rather than trying to fix the device type.
+
+I think the short answer is to use the 4x00 arrays you have to use a
+driver that knows how to map the array from a "RAID" device type to a
+direct access device type.  That, I think, restricts you to use the
+cpqfc driver.  I believe the 4x00 array is broken when it returns the
+device type 12 for each LUN and rather than fix the firmware Compaq
+chose to have the driver handle it. =20
+
+Your other option is to create a module that will handle the device typ=
+e
+12 correctly.  I am not familiar with any other arrays that return a
+type of 12 so I am not sure the effort is worth it.
+
+Eddie
+
+On Wed, 2005-06-15 at 08:10, Hor=C3=A1k Daniel wrote:
+> Hello,
+>=20
 > I have a problem with detecting logical volumes on Compaq Raid Array
 > 4x00 which is connected to my server via Emulex LP8000 Fibre Channel
 > card and FC hub. System is CentOS 4 with kernel 2.6.9 (=3DRHEL4 clone=
@@ -31,19 +67,6 @@ on
 > scsi: unknown device type 12=20
 > Vendor: COMPAQ Model: ARRAY CONTROLLER Rev: 2.54=20
 > Type: RAID ANSI SCSI revision: 00=20
-
-This is because the RA4100 shows it's volumes as the array controller
-type.  You actually have to use array controller commands to access
-them.  The cpqfc driver quietly translated these internally, so it's th=
-e
-only driver that will work with the RA4100 array (unless someone writes
-an ULD for type array controller).  Unfortunately, compaq discontinued
-support for cpqfc a while ago and the driver has been decaying in the
-tree (to the point where it won't really build now).
-
-James
-
-
 > scsi: unknown device type 12=20
 > Vendor: COMPAQ Model: ARRAY CONTROLLER Rev: 2.60=20
 > Type: RAID ANSI SCSI revision: 00=20
