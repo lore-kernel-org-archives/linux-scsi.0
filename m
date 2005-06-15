@@ -1,72 +1,34 @@
-From: Christophe Varoqui <christophe.varoqui@free.fr>
-Subject: StorageWorks multipath support
-Date: Wed, 15 Jun 2005 10:56:34 +0200
-Message-ID: <20050615085634.GA16446@averon.dyndns.org>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Frank van Maarseveen <frankvm@frankvm.com>
+Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
+Date: Wed, 15 Jun 2005 14:02:37 +0200
+Message-ID: <20050615120237.GB19645@janus>
+References: <1118081857.5045.49.camel@mulgrave> <20050607085710.GB9230@gmail.com> <1118590709.4967.6.camel@mulgrave> <20050613145000.GA12057@gmail.com> <1118674783.5079.9.camel@mulgrave> <20050613183719.GA8653@gmail.com> <1118695847.5079.41.camel@mulgrave> <20050613214208.GA7471@janus> <1118703593.5079.56.camel@mulgrave> <20050614214226.GA15560@janus>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from frankvm.xs4all.nl ([80.126.170.174]:37798 "EHLO
+	janus.localdomain") by vger.kernel.org with ESMTP id S261396AbVFOMCi
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jun 2005 08:02:38 -0400
 Content-Disposition: inline
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: dm-devel@redhat.com
-Cc: linux-scsi@vger.kernel.org
+In-Reply-To: <20050614214226.GA15560@janus>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Frank van Maarseveen <frankvm@frankvm.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Gr?goire Favre <gregoire.favre@gmail.com>, dino@in.ibm.com, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Hello,
+On Tue, Jun 14, 2005 at 11:42:26PM +0200, Frank van Maarseveen wrote:
+> 
+> So, I'm kind of stuck with a very slow driver initialization. I think it
+> takes much longer than the 30 seconds visible in the logfile, at least
+> that's the impression I have (I'll use a stopwatch next time).
 
-here is a note describing the lego blocks needed to have a fully operational multipath stack with StorageWorks and Qlogic hardware.
+The -rc6 aic7 driver needs just over 7 minutes to recover from this tape
+unit. In -rc3 this was 80 seconds. -rc2 had no problem.
 
-Kernel :
-========
+I don't really need this old tape unit and I don't [re-]boot that often
+so it is not a problem for me. Anyway, if something needs to be tested
+then mail me a patch (for stock rc6) and I'll try it.
 
-2.6.12-rc6
-
-Additional patches :
-====================
-
-Qlogic : LU scaning fix
-http://marc.theaimsgroup.com/?l=linux-scsi&m=111836291000433&w=2
-
-Qlogic : Postpone fc_rport block/unblock to scheduled work
-http://marc.theaimsgroup.com/?l=linux-scsi&m=111868700022257&w=2
-
-Mike Christie : export block layer function
-https://www.redhat.com/archives/dm-devel/2005-June/msg00084.html
-
-Hardware Handler module :
-=========================
-
-Mike Christie, Christophe Varoqui : 
-http://christophe.varoqui.free.fr/multipath-tools/dm-hp-sw.tar.bz2
-
-Multipath Tools :
-=================
-
-git HEAD up to commit fd9857d2eb9796d0a205887bdff879d56355eda2 at minimum :
-http://kernel.org/pub/scm/linux/storage/multipath-tools/.git
-
-Configlet :
-===========
-
-device {
-        vendor                  "COMPAQ"
-        product                 "HSV110 (C)COMPAQ"
-        path_grouping_policy    group_by_serial
-        path_checker            hp_sw
-        features                "1 queue_if_no_path"
-        hardware_handler        "1 hp_sw"
-}
-
-
-It would be good to have the kernel patches pushed to 2.6.12 before it comes out.
-
-Happy testing,
-cvaroqui
+-- 
+Frank
