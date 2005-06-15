@@ -1,261 +1,54 @@
-From: Frank van Maarseveen <frankvm@frankvm.com>
-Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
-Date: Wed, 15 Jun 2005 22:49:48 +0200
-Message-ID: <20050615204948.GA23616@janus>
-References: <1118674783.5079.9.camel@mulgrave> <20050613183719.GA8653@gmail.com> <1118695847.5079.41.camel@mulgrave> <20050613214208.GA7471@janus> <1118703593.5079.56.camel@mulgrave> <20050614214226.GA15560@janus> <20050615120237.GB19645@janus> <1118844888.5045.18.camel@mulgrave> <20050615200957.GA23096@janus> <1118866546.5045.76.camel@mulgrave>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Questions about scsi_target_reap and starget/sdev lifecyle
+Date: Wed, 15 Jun 2005 17:11:56 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0506151706030.6561-100000@iolanthe.rowland.org>
+References: <1118806139.5027.37.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from frankvm.xs4all.nl ([80.126.170.174]:65190 "EHLO
-	janus.localdomain") by vger.kernel.org with ESMTP id S261562AbVFOUtw convert rfc822-to-8bit
+Received: from iolanthe.rowland.org ([192.131.102.54]:61674 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261576AbVFOVMB
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jun 2005 16:49:52 -0400
-Content-Disposition: inline
-In-Reply-To: <1118866546.5045.76.camel@mulgrave>
+	Wed, 15 Jun 2005 17:12:01 -0400
+In-Reply-To: <1118806139.5027.37.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Frank van Maarseveen <frankvm@frankvm.com>, Gr?goire Favre <gregoire.favre@gmail.com>, dino@in.ibm.com, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, Jun 15, 2005 at 03:15:46PM -0500, James Bottomley wrote:
-> On Wed, 2005-06-15 at 22:09 +0200, Frank van Maarseveen wrote:
-> >         User: 80.000MB/s transfers (40.000MHz, offset 127, 16bit)
-> >         Goal: 10.000MB/s transfers (10.000MHz, offset 15)
-> >         Curr: 10.000MB/s transfers (10.000MHz, offset 15)
->=20
-> This would be why ... you need to set you bios to 10MHz narrow (it's
-> currently set to 40MHz wide).
+On Tue, 14 Jun 2005, James Bottomley wrote:
 
-No luck doing so. I tried 10MB, 5MB(8 bit), booting UP (I have a dual
-PIII 450), it doesn't really seem to make any difference.
+> On Tue, 2005-06-14 at 17:27 -0400, Alan Stern wrote:
+> > Can you or anyone else please explain what scsi_target_reap() and
+> > especially what scsi_target.reap_ref are for?  What's the point of this
+> > home-brewed reference counting scheme when there's already a perfectly
+> > useful embedded struct device inside scsi_target?  Why isn't
+> > scsi_target_reap() simply the release routine for the embedded device?
+> 
+> Look at how scsi_target_reap works: it's the decider for visibility
+> removal, not actual release, that's why we can't use the device
+> reference, which is the decider for release.  I could have used a kref,
+> but, given the special locking conventions and the tying to the __target
+> list, the call would have had to be wrappered anyway, so there didn't
+> seem to to be much point.
+> 
+> A target is basically a self destroying entity which is why the
+> complexity.
 
-I've set the aic BIOS back to =FCber speed (80MB, wide negotiation)
-everywhere and booted 2.6.11-rc5 again:
+> __target entries are removed when the target goes invisible (and for
+> this to happen, all the devices have to be already gone).  __devices
+> when the device is released.
 
-Jun 15 22:43:00 iapetus kernel: Uniform CD-ROM driver Revision: 3.20
-Jun 15 22:43:00 iapetus kernel: scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SC=
-SI HBA DRIVER, Rev 6.2.36
-Jun 15 22:43:00 iapetus kernel:         <Adaptec aic7890/91 Ultra2 SCSI=
- adapter>
-Jun 15 22:43:00 iapetus kernel:         aic7890/91: Ultra2 Wide Channel=
- A, SCSI Id=3D7, 32/253 SCBs
-Jun 15 22:43:00 iapetus kernel:=20
-Jun 15 22:43:00 iapetus kernel: (scsi0:A:3): 10.000MB/s transfers (10.0=
-00MHz, offset 15)
-Jun 15 22:43:00 iapetus kernel:   Vendor: YAMAHA    Model: CRW6416S    =
-      Rev: 1.0b
-Jun 15 22:43:00 iapetus kernel:   Type:   CD-ROM                       =
-      ANSI SCSI revision: 02
-Jun 15 22:43:00 iapetus kernel: scsi0:0:4:0: Attempting to queue an ABO=
-RT message
-Jun 15 22:43:00 iapetus kernel: CDB: 0x12 0x0 0x0 0x0 0x24 0x0
-Jun 15 22:43:00 iapetus kernel: scsi0: At time of recovery, card was no=
-t paused
-Jun 15 22:43:00 iapetus kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begi=
-ns <<<<<<<<<<<<<<<<<
-Jun 15 22:43:00 iapetus kernel: scsi0: Dumping Card State in Message-ou=
-t phase, at SEQADDR 0x16e
-Jun 15 22:43:00 iapetus kernel: Card was paused
-Jun 15 22:43:00 iapetus kernel: ACCUM =3D 0xa0, SINDEX =3D 0x61, DINDEX=
- =3D 0xe4, ARG_2 =3D 0x0
-Jun 15 22:43:00 iapetus kernel: HCNT =3D 0x0 SCBPTR =3D 0x0
-Jun 15 22:43:00 iapetus kernel: SCSISIGI[0xa4]:(BSYI|MSGI|CDI) ERROR[0x=
-0] SCSIBUSL[0x7]=20
-Jun 15 22:43:00 iapetus kernel: LASTPHASE[0xa0]:(MSGI|CDI) SCSISEQ[0x12=
-]:(ENAUTOATNP|ENRSELI)=20
-Jun 15 22:43:01 iapetus kernel: SBLKCTL[0xa]:(SELWIDE|SELBUSB) SCSIRATE=
-[0x0] SEQCTL[0x10]:(FASTMODE)=20
-Jun 15 22:43:01 iapetus kernel: SEQ_FLAGS[0x40]:(NO_CDB_SENT) SSTAT0[0x=
-0] SSTAT1[0x2]:(PHASECHG)=20
-Jun 15 22:43:01 iapetus kernel: SSTAT2[0x10]:(EXP_ACTIVE) SSTAT3[0x0] S=
-IMODE0[0x8]:(ENSWRAP)=20
-Jun 15 22:43:01 iapetus kernel: SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENS=
-CSIRST|ENSELTIMO)=20
-Jun 15 22:43:01 iapetus kernel: SXFRCTL0[0x88]:(SPIOEN|DFON) DFCNTRL[0x=
-0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)=20
-Jun 15 22:43:01 iapetus kernel: STACK: 0xe4 0x0 0x166 0x17c
-Jun 15 22:43:01 iapetus kernel: SCB count =3D 4
-Jun 15 22:43:01 iapetus kernel: Kernel NEXTQSCB =3D 2
-Jun 15 22:43:01 iapetus kernel: Card NEXTQSCB =3D 2
-Jun 15 22:43:01 iapetus kernel: QINFIFO entries:=20
-Jun 15 22:43:01 iapetus kernel: Waiting Queue entries:=20
-Jun 15 22:43:01 iapetus kernel: Disconnected Queue entries:=20
-Jun 15 22:43:01 iapetus kernel: QOUTFIFO entries:=20
-Jun 15 22:43:01 iapetus kernel: Sequencer Free SCB List: 1 2 3 4 5 6 7 =
-8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31=20
-Jun 15 22:43:01 iapetus kernel: Sequencer SCB Info:=20
-Jun 15 22:43:01 iapetus kernel:   0 SCB_CONTROL[0x40]:(DISCENB) SCB_SCS=
-IID[0x47] SCB_LUN[0x0]=20
-Jun 15 22:43:01 iapetus kernel: SCB_TAG[0x3]=20
-Jun 15 22:43:01 iapetus kernel:   1 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:   2 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:   3 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:   4 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:   5 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:   6 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:   7 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:   8 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:   9 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  10 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  11 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  12 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  13 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  14 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  15 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  16 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  17 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  18 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  19 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  20 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  21 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  22 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  23 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  24 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  25 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  26 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  27 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  28 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  29 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  30 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel:  31 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(=
-TWIN_CHNLB|OID|TWIN_TID)=20
-Jun 15 22:43:01 iapetus kernel: SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB=
-_TAG[0xff]=20
-Jun 15 22:43:01 iapetus kernel: Pending list:=20
-Jun 15 22:43:01 iapetus kernel:   3 SCB_CONTROL[0x40]:(DISCENB) SCB_SCS=
-IID[0x47] SCB_LUN[0x0]=20
-Jun 15 22:43:02 iapetus kernel: Kernel Free SCB list: 1 0=20
-Jun 15 22:43:02 iapetus kernel: Untagged Q(4): 3=20
-Jun 15 22:43:02 iapetus kernel: DevQ(0:3:0): 0 waiting
-Jun 15 22:43:02 iapetus kernel: DevQ(0:4:0): 0 waiting
-Jun 15 22:43:02 iapetus kernel:=20
-Jun 15 22:43:02 iapetus kernel: <<<<<<<<<<<<<<<<< Dump Card State Ends =
->>>>>>>>>>>>>>>>>>
-Jun 15 22:43:02 iapetus kernel: scsi0:0:4:0: Device is active, assertin=
-g ATN
-Jun 15 22:43:02 iapetus kernel: Recovery code sleeping
-Jun 15 22:43:02 iapetus kernel: Recovery code awake
-Jun 15 22:43:02 iapetus kernel: Timer Expired
-Jun 15 22:43:02 iapetus kernel: aic7xxx_abort returns 0x2003
-Jun 15 22:43:02 iapetus kernel: scsi0:0:4:0: Attempting to queue a TARG=
-ET RESET message
-Jun 15 22:43:02 iapetus kernel: CDB: 0x12 0x0 0x0 0x0 0x24 0x0
-Jun 15 22:43:02 iapetus kernel: aic7xxx_dev_reset returns 0x2003
-Jun 15 22:43:02 iapetus kernel: Recovery SCB completes
-Jun 15 22:43:02 iapetus kernel:   Vendor: WANGTEK   Model: 5525ES SCSI =
-      Rev: 73F=20
-Jun 15 22:43:02 iapetus kernel:   Type:   Sequential-Access            =
-      ANSI SCSI revision: 02
-Jun 15 22:43:02 iapetus kernel: st: Version 20041025, fixed bufsize 327=
-68, s/g segs 256
-Jun 15 22:43:02 iapetus kernel: Attached scsi tape st0 at scsi0, channe=
-l 0, id 4, lun 0
-Jun 15 22:43:02 iapetus kernel: st0: try direct i/o: yes (alignment 512=
- B), max page reachable by HBA 1048575
-Jun 15 22:43:02 iapetus kernel: sr0: scsi3-mmc drive: 16x/16x writer cd=
-/rw xa/form2 cdda tray
-Jun 15 22:43:02 iapetus kernel: Attached scsi generic sg0 at scsi0, cha=
-nnel 0, id 3, lun 0,  type 5
-Jun 15 22:43:02 iapetus kernel: Attached scsi generic sg1 at scsi0, cha=
-nnel 0, id 4, lun 0,  type 1
+This means that scsi_target_reap can be called and the __targets list 
+changed essentially at any time (subject only to the host_lock).  Hence it 
+is impossible for scsi_forget_host to iterate through the list of targets 
+belonging to the host: While it is working to remove one target, the next 
+target on the list (stored in the tmp variable) might be removed by 
+another thread.
 
-so no real problem here.
+In fact there doesn't seem to be any safe way to remove all the targets
+from a host.  And what's to prevent scsi_target_reap being called twice
+for the same target?
 
---=20
-=46rank
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alan Stern
+
