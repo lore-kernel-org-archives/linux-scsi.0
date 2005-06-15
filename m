@@ -1,81 +1,55 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH] aacraid: regression fix
-Date: Wed, 15 Jun 2005 09:36:46 -0700
-Message-ID: <1118853406.12918.17.camel@markh1.pdx.osdl.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 1/1] ipr: Fix for adapter shutdown issue
+Date: Wed, 15 Jun 2005 11:44:59 -0500
+Message-ID: <1118853899.5045.39.camel@mulgrave>
+References: <200506151515.j5FFFNQA020480@d01av01.pok.ibm.com>
+	 <1118849292.5045.27.camel@mulgrave>  <42B04A9C.7050503@us.ibm.com>
+	 <1118850458.5045.34.camel@mulgrave>  <42B05330.7050406@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:6534 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261212AbVFOQgw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jun 2005 12:36:52 -0400
+Received: from stat16.steeleye.com ([209.192.50.48]:7593 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261218AbVFOQpD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jun 2005 12:45:03 -0400
+In-Reply-To: <42B05330.7050406@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: brking@us.ibm.com
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, haren@us.ibm.com
 
+On Wed, 2005-06-15 at 11:11 -0500, Brian King wrote:
+> System crash and controlled power off are two different things. Yes, if the
+> adapter is not told about the shutdown so it can flush its cache, the
+> data will be maintained, but it can only be maintained for as long as
+> the battery lasts. Currently, with 2.6.12-rc, if you do a normal power off
+> and leave the system powered off for a long enough period of time (usually
+> a week or so, depending on the battery on the card), you will suffer data
+> loss. This is not acceptable. With 2.6.11, the adapter is told to flush
+> the write cache on a controlled power off, so the system can remain powered
+> off indefinitely with no data loss.
+> 
+> Regarding supporting the sync cache command to a disk array, I did consider
+> requesting support be added to the adapter microcode, but decided against it
+> since it would make a RAID array perform horribly and it did not seem to be
+> the appropriate model to follow for NV write cache. Some of the ipr adapters
+> have over 500 MB of write cache, which can take an awful long time to flush,
+> much longer than you would want for a journal barrier. So, all the barrier/
+> SYNC_CACHE code works great for a volatile write cache on a disk, but
+> doesn't necessarily seem like the best model for large non-volatile write
+> caches for RAID adapters.
 
-The fixes for sparse warnings mixed in with the fixups for
-the raw_srb handler resulted in a bug that showed up in the 32 bit
-environments when trying to issue calls directly to the physical devices
-that are part of the arrays (ioctl scsi passthrough).
+Well, I still think you're operating unsafely ... some people let these
+batteries run out, you know ...
 
-Received from Mark Salyzyn at adaptec.
-It applies to the scsi-misc-2.6 git tree.
+To fix this, add a
 
-Signed-off-by: Mark Haverkamp <markh@osdl.org>
+blk_queue_ordered(sdev->request_queue, QUEUE_ORDERED_NONE);
 
+to the slave configure routine for each of the devices that doesn't
+synchronize the cache.  That should correct the SCSI layer assumptions.
 
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -104,7 +104,7 @@ static int ioctl_send_fib(struct aac_dev
- 		 * Since we didn't really send a fib, zero out the state to allow 
- 		 * cleanup code not to assert.
- 		 */
--		kfib->header.XferState = 0;
-+		kfib->header.XferState = cpu_to_le32(0);
- 	} else {
- 		retval = fib_send(le16_to_cpu(kfib->header.Command), fibptr,
- 				le16_to_cpu(kfib->header.Size) , FsaNormal,
-@@ -451,7 +451,7 @@ static int aac_send_raw_srb(struct aac_d
- 	 *	Allocate and initialize a Fib then setup a BlockWrite command
- 	 */
- 	if (!(srbfib = fib_alloc(dev))) {
--		return -1;
-+		return -ENOMEM;
- 	}
- 	fib_init(srbfib);
- 
-@@ -508,7 +508,7 @@ static int aac_send_raw_srb(struct aac_d
- 	default:
- 		data_dir = DMA_NONE;
- 	}
--	if (le32_to_cpu(srbcmd->sg.count) > (sizeof(sg_list)/sizeof(sg_list[0]))) {
-+	if (user_srbcmd->sg.count > (sizeof(sg_list)/sizeof(sg_list[0]))) {
- 		dprintk((KERN_DEBUG"aacraid: too many sg entries %d\n",
- 		  le32_to_cpu(srbcmd->sg.count)));
- 		rcode = -EINVAL;
-@@ -592,7 +592,7 @@ static int aac_send_raw_srb(struct aac_d
- 		struct sgmap* psg = &srbcmd->sg;
- 		byte_count = 0;
- 
--		actual_fibsize = sizeof (struct aac_srb) + (((le32_to_cpu(srbcmd->sg.count) & 0xff) - 1) * sizeof (struct sgentry));
-+		actual_fibsize = sizeof (struct aac_srb) + (((user_srbcmd->sg.count & 0xff) - 1) * sizeof (struct sgentry));
- 		if(actual_fibsize != fibsize){ // User made a mistake - should not continue
- 			dprintk((KERN_DEBUG"aacraid: Bad Size specified in Raw SRB command\n"));
- 			rcode = -EINVAL;
-@@ -639,7 +639,7 @@ static int aac_send_raw_srb(struct aac_d
- 
- 	if (status != 0){
- 		dprintk((KERN_DEBUG"aacraid: Could not send raw srb fib to hba\n")); 
--		rcode = -1;
-+		rcode = -ENXIO;
- 		goto cleanup;
- 	}
- 
+James
 
--- 
-Mark Haverkamp <markh@osdl.org>
 
