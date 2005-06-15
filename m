@@ -1,62 +1,91 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [RFC] expand information in the scsi_sense_hdr
-Date: Wed, 15 Jun 2005 09:04:44 -0500
-Message-ID: <1118844284.5045.9.camel@mulgrave>
-References: <1118719534.5079.93.camel@mulgrave>
-	 <42AFADAD.4080307@torque.net>
+Subject: Re: Compaq RA4x00 logical volumes not detected in kernel 2.6
+Date: Wed, 15 Jun 2005 09:12:39 -0500
+Message-ID: <1118844759.5045.15.camel@mulgrave>
+References: <66EFFC1A2B0A424E87D68EC10B1F458D6597C1@EXCH2.plzen-city.cz>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:51878 "EHLO
+Received: from stat16.steeleye.com ([209.192.50.48]:59814 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261445AbVFOOEr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jun 2005 10:04:47 -0400
-In-Reply-To: <42AFADAD.4080307@torque.net>
+	id S261457AbVFOOMx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jun 2005 10:12:53 -0400
+In-Reply-To: <66EFFC1A2B0A424E87D68EC10B1F458D6597C1@EXCH2.plzen-city.cz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
+To: =?ISO-8859-1?Q?Hor=E1k?= Daniel <horak@sitmp.cz>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 2005-06-15 at 00:25 -0400, Douglas Gilbert wrote:
-> Another disadvantage is that it doesn't cope with
-> the newer descriptor fields that don't have equivalents
-> in the older fixed format. OSD and SAT have their own
-> sense descriptors. Vendors can (and do) have fixed sense
-> data (defined beyond offset 18 and field replaceable unit)
-> and can add their own sense descriptors [0x80 to 0xff].
-> Mapping extensible descriptor format (still limited to 252
-> bytes overall) back to a (different) fixed format could
-> be self defeating.
+On Wed, 2005-06-15 at 14:10 +0200, Hor=E1k Daniel wrote:
+> I have a problem with detecting logical volumes on Compaq Raid Array
+> 4x00 which is connected to my server via Emulex LP8000 Fibre Channel
+> card and FC hub. System is CentOS 4 with kernel 2.6.9 (=3DRHEL4 clone=
+)
+>=20
+> I get the following messagen in syslog
+>=20
+> scsi8 : Emulex LightPulse LP8000 1 Gigabit PCI Fibre Channel Adapter =
+on
+> PCI bus 04 device 20 irq 5=20
+> scsi: unknown device type 12=20
+> Vendor: COMPAQ Model: ARRAY CONTROLLER Rev: 2.54=20
+> Type: RAID ANSI SCSI revision: 00=20
 
-Remember that the only use is for internal, so if no-one's interested in
-the information it doesn't matter if we don't use it.  If someone
-becomes interested in OSD or SAT descriptors, they can add them
-(currently OSD is rather expensive and rare and SAT is the province of
-SAS which is still under discussion).  However, the only use currently
-is Filemark, ILI and EOM which are really only a property of SSC and
-SBC.
-
-> My intention with struct scsi_sense_hdr was to give
-> a small fixed size view of sense data (from either
-> fixed or descriptor format) sufficient for drivers
-> to do error processing. It is sufficient for many but
-> not all cases in drivers that I converted. I was not
-> trying to replace the sense data. Is the actual sense
-> data still going to be available to the SG_IO ioctl
-> and the sg driver?
-
-All commands that report sense data back to the user still send the raw
-sense data.  Like I said, the sense header is for internal kernel use.
-
-> BTW If you implement this change, I don't think
-> field member "u8 byte4;" and friends are any longer
-> relevant as that was to maintain the mapping between
-> "struct scsi_sense_data" and the descriptor format
-> sense data header (i.e. both 8 bytes long).
-
-OK, I'll junk those, thanks.
+This is because the RA4100 shows it's volumes as the array controller
+type.  You actually have to use array controller commands to access
+them.  The cpqfc driver quietly translated these internally, so it's th=
+e
+only driver that will work with the RA4100 array (unless someone writes
+an ULD for type array controller).  Unfortunately, compaq discontinued
+support for cpqfc a while ago and the driver has been decaying in the
+tree (to the point where it won't really build now).
 
 James
 
 
+> scsi: unknown device type 12=20
+> Vendor: COMPAQ Model: ARRAY CONTROLLER Rev: 2.60=20
+> Type: RAID ANSI SCSI revision: 00=20
+>=20
+> The result of discussion in lpfc forum is that there should be a prob=
+lem
+> the scanning part of SCSI layer.
+>=20
+> The detected devices should look like the folling output (these messa=
+ges
+> are from the same system booted into RHEL3 clone (Whitebox, kernel 2.=
+4)
+> with the arrays attached via Compaq FC card).
+>=20
+>  kernel: Starting timer : 0 0
+>  kernel:   Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.60
+>  kernel:   Type:   Direct-Access                      ANSI SCSI
+> revision: 02
+>  kernel: Starting timer : 0 0
+>  kernel:   Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.60
+>  kernel:   Type:   Direct-Access                      ANSI SCSI
+> revision: 02
+>  kernel: Starting timer : 0 0
+>  kernel:   Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.54
+>  kernel:   Type:   Direct-Access                      ANSI SCSI
+> revision: 02
+>  kernel: Starting timer : 0 0
+>  kernel: Attached scsi disk sda at scsi2, channel 0, id 0, lun 0
+>  kernel: Attached scsi disk sdb at scsi2, channel 0, id 0, lun 1
+>  kernel: Attached scsi disk sdc at scsi2, channel 0, id 1, lun 0
+>=20
+>=20
+> 		Thank you
+> 			Dan Horak
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
