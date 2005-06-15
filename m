@@ -1,59 +1,35 @@
-From: Lee Revell <rlrevell@joe-job.com>
-Subject: Re: DMA mapping (was Re: [PATCH] cciss 2.6; replaces DMA masks
-	with kernel defines)
-Date: Wed, 15 Jun 2005 14:19:03 -0400
-Message-ID: <1118859544.23353.14.camel@mindpipe>
-References: <20050610143453.GA26476@beardog.cca.cpqcorp.net>
-	 <42A9C60E.3080604@pobox.com> <1118436000.6423.42.camel@mindpipe>
-	 <1118436306.5272.37.camel@laptopd505.fenrus.org>
-	 <1118438253.6423.72.camel@mindpipe>
-	 <20050610213003.GI24611@parcelfarce.linux.theplanet.co.uk>
-	 <1118444891.6423.130.camel@mindpipe>
-	 <20050611135411.GJ24611@parcelfarce.linux.theplanet.co.uk>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Questions about scsi_target_reap and starget/sdev lifecyle
+Date: Wed, 15 Jun 2005 16:07:34 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0506151603270.6561-100000@iolanthe.rowland.org>
+References: <1118806139.5027.37.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from viper.oldcity.dca.net ([216.158.38.4]:10655 "HELO
-	viper.oldcity.dca.net") by vger.kernel.org with SMTP
-	id S261257AbVFOSQc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jun 2005 14:16:32 -0400
-In-Reply-To: <20050611135411.GJ24611@parcelfarce.linux.theplanet.co.uk>
+Received: from iolanthe.rowland.org ([192.131.102.54]:27361 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261191AbVFOUHe
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jun 2005 16:07:34 -0400
+In-Reply-To: <1118806139.5027.37.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Arjan van de Ven <arjan@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, mike.miller@hp.com, akpm@osdl.org, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Sat, 2005-06-11 at 14:54 +0100, Matthew Wilcox wrote:
-> On Fri, Jun 10, 2005 at 07:08:11PM -0400, Lee Revell wrote:
-> > Should I just add everything from 24 to 63?
+On Tue, 14 Jun 2005, James Bottomley wrote:
+
+> > Won't this cause trouble in a hotplug environment?  A target or a LUN can 
+> > be removed, and while it's still on the host's list a new target or LUN 
+> > could be discovered with the same ID.  Having multiple entries on a list 
+> > with the same ID sounds like a bad idea.  Is there some reason why these 
+> > things aren't taken off their list as soon as they are removed?
 > 
-> Actually, it'd be useful to have a central list of what DMA masks devices
-> really take.  It might provide some arguments for changing the zone allocater.
-> 
+> It shouldn't, that's what rescan is about.  If the device isn't gone,
+> you get the old device back again.
 
-OK, patch attached.  I don't have time to cover every case, maybe
-someone else can run with this.
+Is this wise?  With hotplugging, it's possible that the new device is
+physically different from the one that was there before.  You don't want
+to re-use an old structure with stale data in it when that happens.
 
-Lee
-
-Summary: Add DMA mask constants other than 32 and 64 bit
-
-Signed-Off-By: Lee Revell <rlrevell@joe-job.com>
-
---- linux-2.6.12-rc5-k7/include/linux/dma-mapping.h-orig	2005-06-15 14:14:04.000000000 -0400
-+++ linux-2.6.12-rc5-k7/include/linux/dma-mapping.h	2005-06-15 14:17:13.000000000 -0400
-@@ -14,7 +14,12 @@
- };
- 
- #define DMA_64BIT_MASK	0xffffffffffffffffULL
-+#define DMA_40BIT_MASK	0x000000ffffffffffULL
-+#define DMA_39BIT_MASK	0x0000007fffffffffULL
- #define DMA_32BIT_MASK	0x00000000ffffffffULL
-+#define DMA_31BIT_MASK	0x000000007fffffffULL
-+#define DMA_30BIT_MASK	0x000000003fffffffULL
-+#define DMA_29BIT_MASK	0x000000001fffffffULL
- 
- #include <asm/dma-mapping.h>
-
+Alan Stern
 
