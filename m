@@ -1,69 +1,12 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: What breaks aic7xxx in post 2.6.12-rc2 ?
-Date: Wed, 15 Jun 2005 15:15:01 -0500
-Message-ID: <1118866501.5045.74.camel@mulgrave>
-References: <1118590709.4967.6.camel@mulgrave>
-	 <20050613145000.GA12057@gmail.com> <1118674783.5079.9.camel@mulgrave>
-	 <20050613183719.GA8653@gmail.com> <1118695847.5079.41.camel@mulgrave>
-	 <20050613214208.GA7471@janus> <1118703593.5079.56.camel@mulgrave>
-	 <20050614214226.GA15560@janus> <20050615120237.GB19645@janus>
-	 <1118844888.5045.18.camel@mulgrave>  <20050615200957.GA23096@janus>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: commissariat@kittymail.com
+Subject: (unknown)
+Date: Wed, 15 Jun 2005 13:31:43 -0700
+Message-ID: <200506152031.j5FKVg49009759__43092.6719135188$1118867512$gmane$org@zeus2.kernel.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:55723 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261188AbVFOUPW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jun 2005 16:15:22 -0400
-In-Reply-To: <20050615200957.GA23096@janus>
+Received: from zeus2.kernel.org ([204.152.191.36]:44189 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S261545AbVFOUb4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jun 2005 16:31:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Frank van Maarseveen <frankvm@frankvm.com>
-Cc: Gr?goire Favre <gregoire.favre@gmail.com>, dino@in.ibm.com, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
-
-On Wed, 2005-06-15 at 22:09 +0200, Frank van Maarseveen wrote:
-> Target 3 Negotiation Settings
->         User: 80.000MB/s transfers (40.000MHz, offset 127, 16bit)
->         Goal: 10.000MB/s transfers (10.000MHz, offset 15)
->         Curr: 10.000MB/s transfers (10.000MHz, offset 15)
->         Channel A Target 3 Lun 0 Settings
->                 Commands Queued 8
->                 Commands Active 0
->                 Command Openings 1
->                 Max Tagged Openings 0
->                 Device Queue Frozen Count 0
-> Target 4 Negotiation Settings
->         User: 6.600MB/s transfers (16bit)
->         Goal: 3.300MB/s transfers
->         Curr: 3.300MB/s transfers
->         Channel A Target 4 Lun 0 Settings
->                 Commands Queued 2
->                 Commands Active 0
->                 Command Openings 1
->                 Max Tagged Openings 0
->                 Device Queue Frozen Count 0
-> Target 5 Negotiation Settings
->         User: 80.000MB/s transfers (40.000MHz, offset 127, 16bit)
-> Target 6 Negotiation Settings
->         User: 80.000MB/s transfers (40.000MHz, offset 127, 16bit)
-> Target 7 Negotiation Settings
->         User: 80.000MB/s transfers (40.000MHz, offset 127, 16bit)
-> Target 8 Negotiation Settings
->         User: 80.000MB/s transfers (40.000MHz, offset 127, 16bit)
-> Target 9 Negotiation Settings
->         User: 80.000MB/s transfers (40.000MHz, offset 127, 16bit)
-> Target 10 Negotiation Settings
->         User: 80.000MB/s transfers (40.000MHz, offset 127, 16bit)
-> Target 11 Negotiation Settings
->         User: 80.000MB/s transfers (40.000MHz, offset 127, 16bit)
-> Target 12 Negotiation Settings
->         User: 80.000MB/s transfers (40.000MHz, offset 127, 16bit)
-> Target 13 Negotiation Settings
->         User: 80.000MB/s transfers (40.000MHz, offset 127, 16bit)
-> Target 14 Negotiation Settings
->         User: 80.000MB/s transfers (40.000MHz, offset 127, 16bit)
-> Target 15 Negotiation Settings
->         User: 80.000MB/s transfers (40.000MHz, offset 127, 16bit)
-> 
 
