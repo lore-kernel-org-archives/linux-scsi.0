@@ -1,58 +1,56 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH 1/1] ipr: Fix for adapter shutdown issue
-Date: Wed, 15 Jun 2005 10:05:45 -0700
-Message-ID: <20050615170545.GB23912@us.ibm.com>
-References: <200506151515.j5FFFNQA020480@d01av01.pok.ibm.com> <1118849292.5045.27.camel@mulgrave> <42B04A9C.7050503@us.ibm.com> <1118850458.5045.34.camel@mulgrave> <42B05330.7050406@us.ibm.com> <1118853899.5045.39.camel@mulgrave>
+Date: Wed, 15 Jun 2005 12:23:27 -0500
+Message-ID: <1118856207.5045.46.camel@mulgrave>
+References: <200506151515.j5FFFNQA020480@d01av01.pok.ibm.com>
+	 <1118849292.5045.27.camel@mulgrave> <42B04A9C.7050503@us.ibm.com>
+	 <1118850458.5045.34.camel@mulgrave> <42B05330.7050406@us.ibm.com>
+	 <1118853899.5045.39.camel@mulgrave>  <20050615170545.GB23912@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:19186 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S261220AbVFORG3
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Jun 2005 13:06:29 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e31.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j5FH6Sua442002
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Jun 2005 13:06:28 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j5FH6S0E172352
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Jun 2005 11:06:28 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j5FH6RmQ032258
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Jun 2005 11:06:27 -0600
-Content-Disposition: inline
-In-Reply-To: <1118853899.5045.39.camel@mulgrave>
+Received: from stat16.steeleye.com ([209.192.50.48]:38825 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261237AbVFORXa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jun 2005 13:23:30 -0400
+In-Reply-To: <20050615170545.GB23912@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Patrick Mansfield <patmans@us.ibm.com>
 Cc: brking@us.ibm.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, haren@us.ibm.com
 
-On Wed, Jun 15, 2005 at 11:44:59AM -0500, James Bottomley wrote:
-
+On Wed, 2005-06-15 at 10:05 -0700, Patrick Mansfield wrote:
+> First in scsi_alloc_queue, the flush/sync code is only used if we don't
+> have ordered tags, and if the adapter driver explicitly allows it
+> (shost->order_flush).
 > 
-> Well, I still think you're operating unsafely ... some people let these
-> batteries run out, you know ...
+> Plus we clear order_flush in scsi_host_alloc if can_queue > 1.
 > 
-> To fix this, add a
+> So ipr will never get those sync cache commands, correct?
+
+Actually, yes.  I thought Jens turned it on globally, but apparently
+it's only set for the sata controllers.
+
+the can_queue check is a bit mysterious since non TCQ devices should
+have can_queue == 2 (so they have one command executing and one command
+ready to roll).
+
+> And we default to QUEUE_ORDERED_NONE (0) if ordered_tag and ordered_flush
+> are not set.
 > 
-> blk_queue_ordered(sdev->request_queue, QUEUE_ORDERED_NONE);
-> 
-> to the slave configure routine for each of the devices that doesn't
-> synchronize the cache.  That should correct the SCSI layer assumptions.
+> But I can't find any where that we set ordered_tag at all, am I missing
+> something??? Let alone in ipr.
 
-I don't get it.
+I think that was also added by the barrier patch set. Although it's well
+known what the difficulties of using ordered tag queueing to implement
+barriers are:
 
-First in scsi_alloc_queue, the flush/sync code is only used if we don't
-have ordered tags, and if the adapter driver explicitly allows it
-(shost->order_flush).
+1) Race in queuecommand() where barrier gets BUSY or QUEUE_FULL but next
+command is accepted before we see this.
+2) Error handling is not robust to ordering.
+3) Qerr bit of the control mode page needs to be set correctly.
 
-Plus we clear order_flush in scsi_host_alloc if can_queue > 1.
+James
 
-So ipr will never get those sync cache commands, correct?
 
-And we default to QUEUE_ORDERED_NONE (0) if ordered_tag and ordered_flush
-are not set.
-
-But I can't find any where that we set ordered_tag at all, am I missing
-something??? Let alone in ipr.
-
--- Patrick Mansfield
