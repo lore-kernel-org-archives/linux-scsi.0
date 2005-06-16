@@ -1,65 +1,70 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH 1/1] ipr: Fix for adapter shutdown issue
-Date: Thu, 16 Jun 2005 14:00:57 +0200
-Message-ID: <20050616120053.GB10764@suse.de>
-References: <200506151515.j5FFFNQA020480@d01av01.pok.ibm.com> <1118849292.5045.27.camel@mulgrave> <42B04A9C.7050503@us.ibm.com> <1118850458.5045.34.camel@mulgrave> <42B05330.7050406@us.ibm.com> <1118853899.5045.39.camel@mulgrave> <20050615170545.GB23912@us.ibm.com> <1118856207.5045.46.camel@mulgrave>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Questions about scsi_target_reap and starget/sdev lifecyle
+Date: Thu, 16 Jun 2005 08:57:40 -0500
+Message-ID: <1118930260.4998.6.camel@mulgrave>
+References: <1118876632.5045.90.camel@mulgrave>
+	 <Pine.LNX.4.44L0.0506152205000.5061-100000@netrider.rowland.org>
+	 <20050616073127.GA20051@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:59355 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261625AbVFPL7r (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Jun 2005 07:59:47 -0400
-Content-Disposition: inline
-In-Reply-To: <1118856207.5045.46.camel@mulgrave>
+Received: from stat16.steeleye.com ([209.192.50.48]:16056 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261554AbVFPN5p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Jun 2005 09:57:45 -0400
+In-Reply-To: <20050616073127.GA20051@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, brking@us.ibm.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, haren@us.ibm.com
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, Jun 15 2005, James Bottomley wrote:
-> On Wed, 2005-06-15 at 10:05 -0700, Patrick Mansfield wrote:
-> > First in scsi_alloc_queue, the flush/sync code is only used if we don't
-> > have ordered tags, and if the adapter driver explicitly allows it
-> > (shost->order_flush).
-> > 
-> > Plus we clear order_flush in scsi_host_alloc if can_queue > 1.
-> > 
-> > So ipr will never get those sync cache commands, correct?
+On Thu, 2005-06-16 at 00:31 -0700, Mike Anderson wrote:
+
+> I have something similar that I was testing since you mentioned the
+> problem the other day. Our build machine went down so I will need to wait
+> until tomorrow to get access to my patches for a post, if you have already
+> rolled a patch we can compare notes when I post.
 > 
-> Actually, yes.  I thought Jens turned it on globally, but apparently
-> it's only set for the sata controllers.
+> What I did in the patch sequence was:
+> 	1.) Recode the scsi_host state model to align with the device
+> 	state model (i.e. added scsi_host_set_state function and
+> 	associated changes).
+> 	2.) Made shost cancel matched the scsi device state model and set
+> 	this at the top of scsi_remove_host. Previous cancel code was not
+> 	doing anything as the list was normally empty do to
+> 	scsi_forget_host being called first. Also there where possible
+> 	race conditions that you previously mentioned about canceling
+> 	commands in this method.
+> 	3.) Added choke point checks under the scan_mutex to determine if
+> 	scanning is allowed (scsi_host_scan_allowed).
+> 	4.) Added a target state model to match the scsi device state
+> 	model.
+> 	5.) I use the STGT_CANCEL and STGT_DEL states in scsi_forget_host
+> 	to skip over entries in the list as I am no longer using the
+> 	_safe version.
+> This looks like a good starting point with limited testing. I also need to
+> more states to the target state model as I only added a few that I needed
+> for the delete code.
 
-Yeah, I figured most other scsi controllers supported TCQ...
+That sounds something like what I was thinking.
 
-> the can_queue check is a bit mysterious since non TCQ devices should
-> have can_queue == 2 (so they have one command executing and one command
-> ready to roll).
+There is some subtlety to this: the call to forget host with existing
+targets must:
 
-But that will cause the mid layer to invoke ->queuecommand() when you
-already have one command queued, thus the driver needs to check if it
-really can queue one more. I greatly prefer the driver setting the exact
-depth instead. If you want to have the next command pre-setup, you
-should do so in the mid layer.
+a) put the host into a state where it won't accept any additions or
+removal.
+b) loop over targets and devices removing them from visibility and doing
+final puts for them
+c) finally remove the host from visibility, set the deleted state and do
+the final put (which may not remove the actual structure until the last
+referrer relinquishes its reference).
 
-> > And we default to QUEUE_ORDERED_NONE (0) if ordered_tag and ordered_flush
-> > are not set.
-> > 
-> > But I can't find any where that we set ordered_tag at all, am I missing
-> > something??? Let alone in ipr.
-> 
-> I think that was also added by the barrier patch set. Although it's well
-> known what the difficulties of using ordered tag queueing to implement
-> barriers are:
-> 
-> 1) Race in queuecommand() where barrier gets BUSY or QUEUE_FULL but next
-> command is accepted before we see this.
-> 2) Error handling is not robust to ordering.
-> 3) Qerr bit of the control mode page needs to be set correctly.
+Also, since the target is a pure container, I don't think it needs to be
+a party to the state model.
 
-Some work still left to fully supported barriers with tags, Tejun is
-making great progress though.
+Anyway, post the code and we can refine it.
 
--- 
-Jens Axboe
+James
+
 
