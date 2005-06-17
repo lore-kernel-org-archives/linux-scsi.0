@@ -1,30 +1,40 @@
-From: Lew <reoccur@hicks.org>
-Subject: 10 minutes before sex, lasts for 24-36 hours
-Date: Sat, 18 Jun 2005 00:39:30 +0200
-Message-ID: <10150253261.1450277091@84-120-75-162.onocable.ono.com>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] cciss 2.6: pci id fix
+Date: Fri, 17 Jun 2005 19:04:12 -0400
+Message-ID: <42B356EC.6060600@pobox.com>
+References: <20050617183451.GB9913@beardog.cca.cpqcorp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 84-120-75-162.onocable.ono.com ([84.120.75.162]:41464 "HELO
-	84-120-75-162.onocable.ono.com") by vger.kernel.org with SMTP
-	id S261667AbVFQWjj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Jun 2005 18:39:39 -0400
-Received: from [92.75.61.212] (port=4551 helo=[PASCAL])
-    by 84-120-75-162.onocable.ono.com with esmtp
-    id 8181870681preempted87619
-    for linux-scsi@vger.kernel.org; Sat, 18 Jun 2005 00:39:31 +0200
+Received: from mail.dvmed.net ([216.237.124.58]:61327 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261708AbVFQXEZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Jun 2005 19:04:25 -0400
+In-Reply-To: <20050617183451.GB9913@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: mike.miller@hp.com
+Cc: akpm@osdl.org, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Join the thousands already saving. Save up to 50% on prescriptions
-http://jukhyx.306ep43w0d3t74l.falseje.com
+mike.miller@hp.com wrote:
+> This patch fixes a PCI ID I got wrong before. It also adds support for another
+> new SAS controller due out this summer. I didn't have a marketing name prior
+> to my last submission.
+> Also modifies the copyright date range.
+> 
+> Please consider this for inclusion.
+> 
+> Signed-off-by: Mike Miller <mike.miller@hp.com>
 
+ACK for:
 
+this patch
+PCI domain pass 2
+remove partition info
 
-MORE, adj. The comparative degree of too much.     
-The ultimate test of a relationship is to disagree but hold hands. 
-The place where optimism flourishes the most is the lunatic asylum.  
+patches.
+
+	Jeff
 
 
