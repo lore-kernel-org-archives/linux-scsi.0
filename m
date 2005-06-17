@@ -1,39 +1,81 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: sym53c8xx in 2.6.12-rc6: sleeping function called from invalid
-	context at mm/slab.c:2093
-Date: Fri, 17 Jun 2005 09:16:29 -0500
-Message-ID: <1119017789.5049.16.camel@mulgrave>
-References: <m33brlfi4e.fsf@merlin.emma.line.org>
-	 <20050617112907.GH11655@parcelfarce.linux.theplanet.co.uk>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH] aacraid: regression fix (update)
+Date: Fri, 17 Jun 2005 07:51:54 -0700
+Message-ID: <1119019914.23848.10.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:34762 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261983AbVFQOQo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Jun 2005 10:16:44 -0400
-In-Reply-To: <20050617112907.GH11655@parcelfarce.linux.theplanet.co.uk>
+Received: from smtp.osdl.org ([65.172.181.4]:15788 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S261989AbVFQOwF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Jun 2005 10:52:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Matthias Andree <matthias.andree@gmx.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@zip.com.au>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 2005-06-17 at 12:29 +0100, Matthew Wilcox wrote:
-> Fixed in sym2 2.2.1 which was sent to this list on May 20th.  I'm a little
-> unhappy that it's been 4 weeks and it's not included, particularly since
-> it includes some important regression fixes.
+The fixes for sparse warnings mixed in with the fixups for
+the raw_srb handler resulted in a bug that showed up in the 32 bit
+environments when trying to issue calls directly to the physical devices
+that are part of the arrays (ioctl scsi passthrough).
 
-Well, look at it from my point of view ... a complete driver revision
-with enhancements and bug fixes is potentially destabilising so it can't
-go in to a *real* rc (unless you split out the bug fixes).
+Received from Mark Salyzyn at adaptec.
+Applied comment from Christoph to remove cpu_to_le32(0)
+It applies to the scsi-misc-2.6 git tree.
 
-My real beef is that I can't tell when a real rc actually is.  I've
-already concluded that -rc1 to -rc3 are the "We're only joking you can
-still do full feature re-writes".  However, your patch arrived at -rc4
-which is the point I think we're getting to the "we might actually mean
-this is a rc" phase.
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
 
-James
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -451,7 +451,7 @@ static int aac_send_raw_srb(struct aac_d
+ 	 *	Allocate and initialize a Fib then setup a BlockWrite command
+ 	 */
+ 	if (!(srbfib = fib_alloc(dev))) {
+-		return -1;
++		return -ENOMEM;
+ 	}
+ 	fib_init(srbfib);
+ 
+@@ -492,7 +492,7 @@ static int aac_send_raw_srb(struct aac_d
+ 	srbcmd->lun      = cpu_to_le32(user_srbcmd->lun);
+ 	srbcmd->flags    = cpu_to_le32(flags);
+ 	srbcmd->timeout  = cpu_to_le32(user_srbcmd->timeout);
+-	srbcmd->retry_limit =cpu_to_le32(0); // Obsolete parameter
++	srbcmd->retry_limit = 0; // Obsolete parameter
+ 	srbcmd->cdb_size = cpu_to_le32(user_srbcmd->cdb_size);
+ 	
+ 	switch (flags & (SRB_DataIn | SRB_DataOut)) {
+@@ -508,7 +508,7 @@ static int aac_send_raw_srb(struct aac_d
+ 	default:
+ 		data_dir = DMA_NONE;
+ 	}
+-	if (le32_to_cpu(srbcmd->sg.count) > (sizeof(sg_list)/sizeof(sg_list[0]))) {
++	if (user_srbcmd->sg.count > (sizeof(sg_list)/sizeof(sg_list[0]))) {
+ 		dprintk((KERN_DEBUG"aacraid: too many sg entries %d\n",
+ 		  le32_to_cpu(srbcmd->sg.count)));
+ 		rcode = -EINVAL;
+@@ -592,7 +592,7 @@ static int aac_send_raw_srb(struct aac_d
+ 		struct sgmap* psg = &srbcmd->sg;
+ 		byte_count = 0;
+ 
+-		actual_fibsize = sizeof (struct aac_srb) + (((le32_to_cpu(srbcmd->sg.count) & 0xff) - 1) * sizeof (struct sgentry));
++		actual_fibsize = sizeof (struct aac_srb) + (((user_srbcmd->sg.count & 0xff) - 1) * sizeof (struct sgentry));
+ 		if(actual_fibsize != fibsize){ // User made a mistake - should not continue
+ 			dprintk((KERN_DEBUG"aacraid: Bad Size specified in Raw SRB command\n"));
+ 			rcode = -EINVAL;
+@@ -639,7 +639,7 @@ static int aac_send_raw_srb(struct aac_d
+ 
+ 	if (status != 0){
+ 		dprintk((KERN_DEBUG"aacraid: Could not send raw srb fib to hba\n")); 
+-		rcode = -1;
++		rcode = -ENXIO;
+ 		goto cleanup;
+ 	}
+ 
 
+
+-- 
+Mark Haverkamp <markh@osdl.org>
 
