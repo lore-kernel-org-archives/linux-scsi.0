@@ -1,42 +1,32 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: SCSI commands order when using scsi_do_req
-Date: Fri, 17 Jun 2005 13:08:41 +0400
-Message-ID: <42B29319.5050704@vlnb.net>
-References: <OFE0914CA0.DA8D0415-ONC2257014.004F2855-C2257014.00603EFB@il.ibm.com> <1117734886.5025.55.camel@mulgrave>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Patch] take 4: Correct issue with midlayer scsi target allocation and transports that create the targets
+Date: Fri, 17 Jun 2005 12:11:50 +0100
+Message-ID: <20050617111150.GB12178@infradead.org>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AC72@xbl3.ad.emulex.com> <20050611153745.GA31943@infradead.org> <20050614221700.GA15695@us.ibm.com> <20050614223535.GA6834@infradead.org> <20050614225433.GA16140@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay02.infobox.ru ([195.208.235.29]:4771 "EHLO
-	relay02.infobox.ru") by vger.kernel.org with ESMTP id S261745AbVFQJKZ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Jun 2005 05:10:25 -0400
-In-Reply-To: <1117734886.5025.55.camel@mulgrave>
+Received: from pentafluge.infradead.org ([213.146.154.40]:63646 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261943AbVFQLL4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Jun 2005 07:11:56 -0400
+Content-Disposition: inline
+In-Reply-To: <20050614225433.GA16140@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Liran Schour <LIRANS@il.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Thu, 2005-06-02 at 20:31 +0300, Liran Schour wrote:
+On Tue, Jun 14, 2005 at 03:54:33PM -0700, Patrick Mansfield wrote:
+> > scsi_get_host_dev is a library function for LLDDs and does not need to
+> > care about this.
 > 
->>I am developing a new SCSI upper layer driver. (Object based SCSI device)
->>I noticed that scsi_do_req execute commands in LIFO order (add new commands
->>to the head of the Q).
->>This behavior can cause a starvation of commands (or at least long delays).
->>What is the proper solution to this?
-> 
-> 
-> Well, to use the proper interfaces.
-> 
-> scsi_do_req is deprecated, so don't use it.  scsi_wait_req is its
-> replacement.  Note: they're only really intended to allow ULDs to
-> execute commands that are necessary for controlling the device (that's
-> why they go at the head of the queue).  Block commands are executed in
-> order using ULD init_command() (or REQ_BLOCK_PC).
+> But if the transport is like FC or iSCSI, the eventual calls to
+> scsi_alloc_sdev() will fail (for qlogic, ->slave_alloc returns ENXIO) or
+> somehow be incorrect, so why not change these?
 
-Hm, st/osst/sg use scsi_do_req(), so should we consider those drivers 
-broken in async mode? Apparently, a user in this mode could write not 
-what he/she intented, the order could be wrong. Or do I miss something?
+I'd rather see people not using it.  And in case we need any caller
+to use scsi_target_parent we should consolidate this.  Anyway we should
+have a simple as possible patch for 2.6.12.  Probably the one before
+this one.
 
-Vlad
