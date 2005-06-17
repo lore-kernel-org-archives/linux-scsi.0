@@ -1,42 +1,86 @@
-From: mike.miller@hp.com
-Subject: [PATCH] cciss 2.6: remove partition info from CCISS_GETLUNINFO
-Date: Fri, 17 Jun 2005 14:02:08 -0500
-Message-ID: <20050617190208.GA10465@beardog.cca.cpqcorp.net>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH] aacraid: regression fix (update2)
+Date: Fri, 17 Jun 2005 13:38:04 -0700
+Message-ID: <1119040684.23848.46.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atlrel8.hp.com ([156.153.255.206]:15532 "EHLO atlrel8.hp.com")
-	by vger.kernel.org with ESMTP id S262089AbVFQUBh (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:33693 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S261176AbVFQUiI (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Jun 2005 16:01:37 -0400
-Content-Disposition: inline
+	Fri, 17 Jun 2005 16:38:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@osdl.org, axboe@suse.de, hch@infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-This patch fulfills a promise I made to Christoph sometime back. I am removing the partition info from the CCISS_GETLUNINFO ioctl as I was informed my "driver had no damn business reading that structure." ;)
-The application folks are to use /proc or /sys for partition info from now on. I am only aware of a few apps that use this ioctl and I'm not sure they ever used the partition info.
+The fixes for sparse warnings mixed in with the fixups for
+the raw_srb handler resulted in a bug that showed up in the 32 bit
+environments when trying to issue calls directly to the physical devices
+that are part of the arrays (ioctl scsi passthrough).
 
-Signed-off-by: Mike Miller <mike.miller@hp.com>
+Received from Mark Salyzyn at adaptec.
+Applied comment from Christoph to remove cpu_to_le32(0)
+Applied Mark S fix of missing memcpy.
+It applies to the scsi-misc-2.6 git tree.
 
- cciss.c |    7 -------
- 1 files changed, 7 deletions(-)
---------------------------------------------------------------------------------
-diff -burNp lx2612-rc6-p002/drivers/block/cciss.c lx2612-rc6/drivers/block/cciss.c
---- lx2612-rc6-p002/drivers/block/cciss.c	2005-06-17 13:17:23.262424000 -0500
-+++ lx2612-rc6/drivers/block/cciss.c	2005-06-17 13:51:47.347635712 -0500
-@@ -792,13 +792,6 @@ static int cciss_ioctl(struct inode *ino
-  		luninfo.LunID = drv->LunID;
-  		luninfo.num_opens = drv->usage_count;
-  		luninfo.num_parts = 0;
-- 		/* count partitions 1 to 15 with sizes > 0 */
-- 		for (i = 0; i < MAX_PART - 1; i++) {
--			if (!disk->part[i])
--				continue;
--			if (disk->part[i]->nr_sects != 0)
--				luninfo.num_parts++;
--		}
-  		if (copy_to_user(argp, &luninfo,
-  				sizeof(LogvolInfo_struct)))
-  			return -EFAULT;
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
+
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -451,7 +451,7 @@ static int aac_send_raw_srb(struct aac_d
+ 	 *	Allocate and initialize a Fib then setup a BlockWrite command
+ 	 */
+ 	if (!(srbfib = fib_alloc(dev))) {
+-		return -1;
++		return -ENOMEM;
+ 	}
+ 	fib_init(srbfib);
+ 
+@@ -490,10 +490,11 @@ static int aac_send_raw_srb(struct aac_d
+ 	srbcmd->channel  = cpu_to_le32(user_srbcmd->channel);
+ 	srbcmd->id	 = cpu_to_le32(user_srbcmd->id);
+ 	srbcmd->lun      = cpu_to_le32(user_srbcmd->lun);
+-	srbcmd->flags    = cpu_to_le32(flags);
+ 	srbcmd->timeout  = cpu_to_le32(user_srbcmd->timeout);
+-	srbcmd->retry_limit =cpu_to_le32(0); // Obsolete parameter
++	srbcmd->flags    = cpu_to_le32(flags);
++	srbcmd->retry_limit = 0; // Obsolete parameter
+ 	srbcmd->cdb_size = cpu_to_le32(user_srbcmd->cdb_size);
++	memcpy(srbcmd->cdb, user_srbcmd->cdb, sizeof(srbcmd->cdb));
+ 	
+ 	switch (flags & (SRB_DataIn | SRB_DataOut)) {
+ 	case SRB_DataOut:
+@@ -508,7 +509,7 @@ static int aac_send_raw_srb(struct aac_d
+ 	default:
+ 		data_dir = DMA_NONE;
+ 	}
+-	if (le32_to_cpu(srbcmd->sg.count) > (sizeof(sg_list)/sizeof(sg_list[0]))) {
++	if (user_srbcmd->sg.count > (sizeof(sg_list)/sizeof(sg_list[0]))) {
+ 		dprintk((KERN_DEBUG"aacraid: too many sg entries %d\n",
+ 		  le32_to_cpu(srbcmd->sg.count)));
+ 		rcode = -EINVAL;
+@@ -592,7 +593,7 @@ static int aac_send_raw_srb(struct aac_d
+ 		struct sgmap* psg = &srbcmd->sg;
+ 		byte_count = 0;
+ 
+-		actual_fibsize = sizeof (struct aac_srb) + (((le32_to_cpu(srbcmd->sg.count) & 0xff) - 1) * sizeof (struct sgentry));
++		actual_fibsize = sizeof (struct aac_srb) + (((user_srbcmd->sg.count & 0xff) - 1) * sizeof (struct sgentry));
+ 		if(actual_fibsize != fibsize){ // User made a mistake - should not continue
+ 			dprintk((KERN_DEBUG"aacraid: Bad Size specified in Raw SRB command\n"));
+ 			rcode = -EINVAL;
+@@ -639,7 +640,7 @@ static int aac_send_raw_srb(struct aac_d
+ 
+ 	if (status != 0){
+ 		dprintk((KERN_DEBUG"aacraid: Could not send raw srb fib to hba\n")); 
+-		rcode = -1;
++		rcode = -ENXIO;
+ 		goto cleanup;
+ 	}
+ 
+
+-- 
+Mark Haverkamp <markh@osdl.org>
+
