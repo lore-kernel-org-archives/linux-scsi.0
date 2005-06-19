@@ -1,34 +1,99 @@
-From: Lesley <nestled@landimages.net>
-Subject: Wish you could be better?
-Date: Sun, 19 Jun 2005 20:39:31 +0800
-Message-ID: <12781444739.5109419227@221.211.45.57>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: recent scsi changes break fc4 build
+Date: Sun, 19 Jun 2005 11:43:31 -0400
+Message-ID: <42B592A3.8050600@pobox.com>
+References: <20050618.231646.91312440.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------070404020109070508050705"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [221.211.45.57] ([221.211.45.57]:64011 "HELO 221.211.45.57")
-	by vger.kernel.org with SMTP id S262252AbVFSMjf (ORCPT
+Received: from mail.dvmed.net ([216.237.124.58]:13462 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S262228AbVFSPng (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 19 Jun 2005 08:39:35 -0400
-Received: from [101.122.32.27] (port=4268 helo=[messed])
-    by 221.211.45.57 with esmtp
-    id 20572117036quicklime126225
-    for linux-scsi@vger.kernel.org; Sun, 19 Jun 2005 20:39:32 +0800
+	Sun, 19 Jun 2005 11:43:36 -0400
+In-Reply-To: <20050618.231646.91312440.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "David S. Miller" <davem@davemloft.net>
+Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-Good news men! All your problems with small penis and poor erections will become history!!!
-http://www.bateko.com/ss/
+This is a multi-part message in MIME format.
+--------------070404020109070508050705
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+David S. Miller wrote:
+> Please, at the very least, try to compile the changes you send the
+> Linus instead of doing a cut&paste job and hoping for the best.
+> 
+> Thanks a lot.
+> 
+> drivers/fc4/fc.c: In function `fcp_scsi_done':
+> drivers/fc4/fc.c:768: warning: unused variable `flags'
+> drivers/fc4/fc.c: In function `fcp_scsi_abort':
+> drivers/fc4/fc.c:910: warning: unused variable `flags'
+> drivers/fc4/fc.c: In function `fcp_scsi_dev_reset':
+> drivers/fc4/fc.c:987: error: `flags' undeclared (first use in this function)
+> drivers/fc4/fc.c:987: error: (Each undeclared identifier is reported only once
+> drivers/fc4/fc.c:987: error: for each function it appears in.)
+> drivers/fc4/fc.c: In function `fcp_scsi_host_reset':
+> drivers/fc4/fc.c:1033: error: `flags' undeclared (first use in this function)
+
+Regardless of Christoph's comments, 3 out of 4 problems you list are 
+probably my fault.
+
+fc4/fc doesn't get built for me, under 'make allyesconfig', one of the 
+few that fell through the cracks.  Sorry.
+
+Does the attached patch work for you?
+
+	Jeff
 
 
 
+--------------070404020109070508050705
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
 
+diff --git a/drivers/fc4/fc.c b/drivers/fc4/fc.c
+--- a/drivers/fc4/fc.c
++++ b/drivers/fc4/fc.c
+@@ -765,8 +765,6 @@ void fcp_release(fc_channel *fcchain, in
+ 
+ static void fcp_scsi_done (Scsi_Cmnd *SCpnt)
+ {
+-	unsigned long flags;
+-
+ 	if (FCP_CMND(SCpnt)->done)
+ 		FCP_CMND(SCpnt)->done(SCpnt);
+ }
+@@ -907,8 +905,6 @@ int fcp_scsi_abort(Scsi_Cmnd *SCpnt)
+ 	 */
+ 
+ 	if (++fc->abort_count < (fc->can_queue >> 1)) {
+-		unsigned long flags;
+-
+ 		SCpnt->result = DID_ABORT;
+ 		fcmd->done(SCpnt);
+ 		printk("FC: soft abort\n");
+@@ -931,6 +927,7 @@ void fcp_scsi_reset_done(Scsi_Cmnd *SCpn
+ 
+ int fcp_scsi_dev_reset(Scsi_Cmnd *SCpnt)
+ {
++	unsigned long flags;
+ 	fcp_cmd *cmd;
+ 	fcp_cmnd *fcmd;
+ 	fc_channel *fc = FC_SCMND(SCpnt);
+@@ -1028,6 +1025,7 @@ static int __fcp_scsi_host_reset(Scsi_Cm
+ 
+ int fcp_scsi_host_reset(Scsi_Cmnd *SCpnt)
+ {
++	unsigned long flags;
+ 	int rc;
+ 
+ 	spin_lock_irqsave(SCpnt->device->host->host_lock, flags);
 
-It's hard to be nostalgic when you can't remember anything.   
-Name me an emperor who was ever struck by a cannonball.  
-A little inaccuracy sometimes saves tons of explanation.     
-Wheresoever you go, go with all your heart.     
-He helps others most, who shows them how to help themselves.  
-
-
+--------------070404020109070508050705--
