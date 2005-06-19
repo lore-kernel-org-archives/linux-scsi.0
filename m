@@ -1,200 +1,140 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] remove scsi_cmnd->state
-Date: Sun, 19 Jun 2005 13:42:05 +0200
-Message-ID: <20050619114205.GE18801@lst.de>
+Subject: [PATCH] remove scsi_eh_eflags_ macros
+Date: Sun, 19 Jun 2005 13:43:26 +0200
+Message-ID: <20050619114326.GF18801@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:12972 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S262249AbVFSLmI (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:13996 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S262251AbVFSLn2 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 19 Jun 2005 07:42:08 -0400
+	Sun, 19 Jun 2005 07:43:28 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-We never look at it except for the old megaraid driver that abuses it
-for sending internal commands.  That usage can be fixed easily because
-thos internal commands are single-threaded by a mutex and we can easily
-use a completion there.
+Just opencoded access to eh_eflags, it's much more readable anyway.
 
 
-Index: linux-2.6/drivers/scsi/megaraid.c
+Index: linux-2.6/drivers/scsi/libata-core.c
 ===================================================================
---- linux-2.6.orig/drivers/scsi/megaraid.c	2005-06-19 12:27:27.000000000 +0200
-+++ linux-2.6/drivers/scsi/megaraid.c	2005-06-19 12:29:53.000000000 +0200
-@@ -35,6 +35,7 @@
- #include <linux/blkdev.h>
- #include <asm/uaccess.h>
- #include <asm/io.h>
-+#include <linux/completion.h>
- #include <linux/delay.h>
- #include <linux/proc_fs.h>
- #include <linux/reboot.h>
-@@ -4490,8 +4491,6 @@
+--- linux-2.6.orig/drivers/scsi/libata-core.c	2005-06-19 00:16:48.000000000 +0200
++++ linux-2.6/drivers/scsi/libata-core.c	2005-06-19 12:23:06.000000000 +0200
+@@ -2864,7 +2864,7 @@
+ 	if (qc->dev->class == ATA_DEV_ATAPI && qc->scsicmd) {
+ 		struct scsi_cmnd *cmd = qc->scsicmd;
  
- 	scb->idx = CMDID_INT_CMDS;
+-		if (!scsi_eh_eflags_chk(cmd, SCSI_EH_CANCEL_CMD)) {
++		if (!(cmd->eh_eflags & SCSI_EH_CANCEL_CMD)) {
  
--	scmd->state = 0;
--
- 	/*
- 	 * Get the lock only if the caller has not acquired it already
- 	 */
-@@ -4501,15 +4500,7 @@
- 
- 	if( ls == LOCK_INT ) spin_unlock_irqrestore(&adapter->lock, flags);
- 
--	/*
--	 * Wait till this command finishes. Do not use
--	 * wait_event_interruptible(). It causes panic if CTRL-C is hit when
--	 * dumping e.g., physical disk information through /proc interface.
--	 */
--#if 0
--	wait_event_interruptible(adapter->int_waitq, scmd->state);
--#endif
--	wait_event(adapter->int_waitq, scmd->state);
-+	wait_for_completion(&adapter->int_waitq);
- 
- 	rval = scmd->result;
- 	mc->status = scmd->result;
-@@ -4543,16 +4534,7 @@
- 
- 	adapter = (adapter_t *)scmd->device->host->hostdata;
- 
--	scmd->state = 1; /* thread waiting for its command to complete */
--
--	/*
--	 * See comment in mega_internal_command() routine for
--	 * wait_event_interruptible()
--	 */
--#if 0
--	wake_up_interruptible(&adapter->int_waitq);
--#endif
--	wake_up(&adapter->int_waitq);
-+	complete(&adapter->int_waitq);
- 
- }
- 
-@@ -4874,7 +4856,7 @@
- 	}
- 		
- 	init_MUTEX(&adapter->int_mtx);
--	init_waitqueue_head(&adapter->int_waitq);
-+	init_completion(&adapter->int_waitq);
- 
- 	adapter->this_id = DEFAULT_INITIATOR_ID;
- 	adapter->host->this_id = DEFAULT_INITIATOR_ID;
-Index: linux-2.6/drivers/scsi/megaraid.h
-===================================================================
---- linux-2.6.orig/drivers/scsi/megaraid.h	2005-06-19 12:27:27.000000000 +0200
-+++ linux-2.6/drivers/scsi/megaraid.h	2005-06-19 12:28:08.000000000 +0200
-@@ -891,7 +891,7 @@
- 	Scsi_Cmnd		int_scmd;
- 	struct semaphore	int_mtx;	/* To synchronize the internal
- 						commands */
--	wait_queue_head_t	int_waitq;	/* wait queue for internal
-+	struct completion	int_waitq;	/* wait queue for internal
- 						 cmds */
- 
- 	int	has_cluster;	/* cluster support on this HBA */
-Index: linux-2.6/drivers/scsi/scsi.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/scsi.c	2005-06-19 12:28:07.000000000 +0200
-+++ linux-2.6/drivers/scsi/scsi.c	2005-06-19 12:28:08.000000000 +0200
-@@ -257,7 +257,6 @@
- 
- 		memset(cmd, 0, sizeof(*cmd));
- 		cmd->device = dev;
--		cmd->state = SCSI_STATE_UNUSED;
- 		init_timer(&cmd->eh_timeout);
- 		INIT_LIST_HEAD(&cmd->list);
- 		spin_lock_irqsave(&dev->list_lock, flags);
-@@ -607,9 +606,6 @@
- 	 * We will use a queued command if possible, otherwise we will
- 	 * emulate the queuing and calling of completion function ourselves.
- 	 */
--
--	cmd->state = SCSI_STATE_QUEUED;
--
- 	atomic_inc(&cmd->device->iorequest_cnt);
- 
- 	/*
-@@ -762,7 +758,6 @@
- 	 * Set the serial numbers back to zero
- 	 */
- 	cmd->serial_number = 0;
--	cmd->state = SCSI_STATE_BHQUEUE;
- 
- 	atomic_inc(&cmd->device->iodone_cnt);
- 	if (cmd->result)
-@@ -883,8 +878,6 @@
- 	SCSI_LOG_MLCOMPLETE(4, printk("Notifying upper driver of completion "
- 				"for device %d %x\n", sdev->id, cmd->result));
- 
--	cmd->state = SCSI_STATE_FINISHED;
--
- 	/*
- 	 * We can get here with use_sg=0, causing a panic in the upper level
- 	 */
+ 			/* finish completing original command */
+ 			__ata_qc_complete(qc);
 Index: linux-2.6/drivers/scsi/scsi_error.c
 ===================================================================
---- linux-2.6.orig/drivers/scsi/scsi_error.c	2005-06-19 12:28:07.000000000 +0200
-+++ linux-2.6/drivers/scsi/scsi_error.c	2005-06-19 12:29:22.000000000 +0200
-@@ -74,10 +74,6 @@
+--- linux-2.6.orig/drivers/scsi/scsi_error.c	2005-06-19 12:19:53.000000000 +0200
++++ linux-2.6/drivers/scsi/scsi_error.c	2005-06-19 12:27:05.000000000 +0200
+@@ -73,7 +73,7 @@
+ 
  	spin_lock_irqsave(shost->host_lock, flags);
  
- 	scsi_eh_eflags_set(scmd, eh_flag);
--	/*
--	 * FIXME: Can we stop setting owner and state.
--	 */
--	scmd->state = SCSI_STATE_FAILED;
+-	scsi_eh_eflags_set(scmd, eh_flag);
++	scmd->eh_eflags |= eh_flag;
  	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
  	set_bit(SHOST_RECOVERY, &shost->shost_state);
  	shost->host_failed++;
-@@ -634,8 +630,6 @@
+@@ -228,8 +228,7 @@
+ 		list_for_each_entry(scmd, work_q, eh_entry) {
+ 			if (scmd->device == sdev) {
+ 				++total_failures;
+-				if (scsi_eh_eflags_chk(scmd,
+-						       SCSI_EH_CANCEL_CMD))
++				if (scmd->eh_eflags & SCSI_EH_CANCEL_CMD)
+ 					++cmd_cancel;
+ 				else 
+ 					++cmd_failed;
+@@ -425,7 +424,7 @@
+  **/
+ static void scsi_eh_times_out(struct scsi_cmnd *scmd)
+ {
+-	scsi_eh_eflags_set(scmd, SCSI_EH_REC_TIMEOUT);
++	scmd->eh_eflags |= SCSI_EH_REC_TIMEOUT;
+ 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: scmd:%p\n", __FUNCTION__,
+ 					  scmd));
+ 
+@@ -504,8 +503,8 @@
+ 	 * see if timeout.  if so, tell the host to forget about it.
+ 	 * in other words, we don't want a callback any more.
+ 	 */
+-	if (scsi_eh_eflags_chk(scmd, SCSI_EH_REC_TIMEOUT)) {
+-		scsi_eh_eflags_clr(scmd,  SCSI_EH_REC_TIMEOUT);
++	if (scmd->eh_eflags & SCSI_EH_REC_TIMEOUT) {
++		scmd->eh_eflags &= ~SCSI_EH_REC_TIMEOUT;
+ 
+ 		/*
+ 		 * as far as the low level driver is
+@@ -630,7 +629,7 @@
  			       struct list_head *done_q)
  {
  	scmd->device->host->host_failed--;
--	scmd->state = SCSI_STATE_BHQUEUE;
--
- 	scsi_eh_eflags_clr_all(scmd);
+-	scsi_eh_eflags_clr_all(scmd);
++	scmd->eh_eflags = 0;
  
  	/*
-@@ -1803,7 +1797,6 @@
- 	scmd->request = &req;
- 	memset(&scmd->eh_timeout, 0, sizeof(scmd->eh_timeout));
- 	scmd->request->rq_status      	= RQ_SCSI_BUSY;
--	scmd->state                   	= SCSI_STATE_INITIALIZING;
+ 	 * set this back so that the upper level can correctly free up
+@@ -669,7 +668,7 @@
  
- 	memset(&scmd->cmnd, '\0', sizeof(scmd->cmnd));
-     
-Index: linux-2.6/drivers/scsi/scsi_lib.c
+ 	list_for_each_safe(lh, lh_sf, work_q) {
+ 		scmd = list_entry(lh, struct scsi_cmnd, eh_entry);
+-		if (scsi_eh_eflags_chk(scmd, SCSI_EH_CANCEL_CMD) ||
++		if ((scmd->eh_eflags & SCSI_EH_CANCEL_CMD) ||
+ 		    SCSI_SENSE_VALID(scmd))
+ 			continue;
+ 
+@@ -805,14 +804,14 @@
+ 
+ 	list_for_each_safe(lh, lh_sf, work_q) {
+ 		scmd = list_entry(lh, struct scsi_cmnd, eh_entry);
+-		if (!scsi_eh_eflags_chk(scmd, SCSI_EH_CANCEL_CMD))
++		if (!(scmd->eh_eflags & SCSI_EH_CANCEL_CMD))
+ 			continue;
+ 		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: aborting cmd:"
+ 						  "0x%p\n", current->comm,
+ 						  scmd));
+ 		rtn = scsi_try_to_abort_cmd(scmd);
+ 		if (rtn == SUCCESS) {
+-			scsi_eh_eflags_clr(scmd,  SCSI_EH_CANCEL_CMD);
++			scmd->eh_eflags &= ~SCSI_EH_CANCEL_CMD;
+ 			if (!scsi_device_online(scmd->device) ||
+ 			    !scsi_eh_tur(scmd)) {
+ 				scsi_eh_finish_cmd(scmd, done_q);
+@@ -1194,7 +1193,7 @@
+ 				scmd->device->id,
+ 				scmd->device->lun);
+ 		scsi_device_set_state(scmd->device, SDEV_OFFLINE);
+-		if (scsi_eh_eflags_chk(scmd, SCSI_EH_CANCEL_CMD)) {
++		if (scmd->eh_eflags & SCSI_EH_CANCEL_CMD) {
+ 			/*
+ 			 * FIXME: Handle lost cmds.
+ 			 */
+Index: linux-2.6/drivers/scsi/scsi_priv.h
 ===================================================================
---- linux-2.6.orig/drivers/scsi/scsi_lib.c	2005-06-19 12:28:07.000000000 +0200
-+++ linux-2.6/drivers/scsi/scsi_lib.c	2005-06-19 12:28:08.000000000 +0200
-@@ -146,11 +146,6 @@
- 		device->device_blocked = device->max_device_blocked;
- 
- 	/*
--	 * Register the fact that we own the thing for now.
--	 */
--	cmd->state = SCSI_STATE_MLQUEUE;
+--- linux-2.6.orig/drivers/scsi/scsi_priv.h	2005-06-19 12:04:21.000000000 +0200
++++ linux-2.6/drivers/scsi/scsi_priv.h	2005-06-19 12:25:37.000000000 +0200
+@@ -21,15 +21,6 @@
+ /*
+  * Scsi Error Handler Flags
+  */
+-#define scsi_eh_eflags_chk(scp, flags) \
+-	((scp)->eh_eflags & (flags))
+-#define scsi_eh_eflags_set(scp, flags) \
+-	do { (scp)->eh_eflags |= (flags); } while(0)
+-#define scsi_eh_eflags_clr(scp, flags) \
+-	do { (scp)->eh_eflags &= ~(flags); } while(0)
+-#define scsi_eh_eflags_clr_all(scp) \
+-	(scp->eh_eflags = 0)
 -
--	/*
- 	 * Decrement the counters, since these commands are no longer
- 	 * active on the host/device.
- 	 */
-Index: linux-2.6/include/scsi/scsi_cmnd.h
-===================================================================
---- linux-2.6.orig/include/scsi/scsi_cmnd.h	2005-06-19 12:28:07.000000000 +0200
-+++ linux-2.6/include/scsi/scsi_cmnd.h	2005-06-19 12:28:08.000000000 +0200
-@@ -31,7 +31,6 @@
- 	int     sc_magic;
+ #define SCSI_EH_CANCEL_CMD	0x0001	/* Cancel this cmd */
+ #define SCSI_EH_REC_TIMEOUT	0x0002	/* EH retry timed out */
  
- 	struct scsi_device *device;
--	unsigned short state;
- 	struct scsi_request *sc_request;
- 
- 	struct list_head list;  /* scsi_cmnd participates in queue lists */
