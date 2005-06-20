@@ -1,31 +1,49 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] remove drivers/fc4/
-Date: Sun, 19 Jun 2005 22:28:05 +0100
-Message-ID: <20050619212805.GA17205@infradead.org>
-References: <20050619113723.GA18757@lst.de> <20050619.125747.35507641.davem@davemloft.net> <20050619204008.GA26389@lst.de> <20050619212338.GN29811@parcelfarce.linux.theplanet.co.uk>
+From: "Hironobu Ishii" <ishii.hironobu@jp.fujitsu.com>
+Subject: Re: [PATCH] remove scsi_cmnd->owner
+Date: Mon, 20 Jun 2005 11:52:02 +0900
+Message-ID: <019901c57543$0b8d37b0$ce677c0a@soft.fujitsu.com>
+References: <20050619114052.GD18801@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	format=flowed;
+	charset="ISO-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:36302 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261330AbVFSV2K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 19 Jun 2005 17:28:10 -0400
-Content-Disposition: inline
-In-Reply-To: <20050619212338.GN29811@parcelfarce.linux.theplanet.co.uk>
+Received: from fgwmail7.fujitsu.co.jp ([192.51.44.37]:56537 "EHLO
+	fgwmail7.fujitsu.co.jp") by vger.kernel.org with ESMTP
+	id S261404AbVFTCwi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 19 Jun 2005 22:52:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Al Viro <viro@parcelfarce.linux.theplanet.co.uk>
-Cc: "David S. Miller" <davem@davemloft.net>, jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, Jun 19, 2005 at 10:23:38PM +0100, Al Viro wrote:
-> > Who?  looking at sparclinux doesn't show anyone who got it working
-> > since 2.2.x days.
+Hi Christoph,
+
+
+> never checked anywhere
 > 
-> Umm...  sparc64 does work with 2.6.  I don't have any fiberchannel
-> hardware in question, but both 2.4 and 2.6 work on Ultra just fine.
-> Ought to try and resurrect the quad-SS20 box and see what's the
-> situation with sparc32 one of these days...
+> Index: linux-2.6/drivers/scsi/scsi.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/scsi/scsi.c 2005-06-19 12:03:42.000000000 +0200
+> +++ linux-2.6/drivers/scsi/scsi.c 2005-06-19 12:27:27.000000000 +0200
+> @@ -258,7 +258,6 @@
+>  memset(cmd, 0, sizeof(*cmd));
+>  cmd->device = dev;
+>  cmd->state = SCSI_STATE_UNUSED;
+> - cmd->owner = SCSI_OWNER_NOBODY;
+>  init_timer(&cmd->eh_timeout);
+>  INIT_LIST_HEAD(&cmd->list);
+>  spin_lock_irqsave(&dev->list_lock, flags);
+> @@ -610,7 +609,6 @@
+>  */
+> 
 
-Huh?  'sparclinux' in this contect is the sparclinux mainlinglist, and
-'it' refers to drivers/fc4
+I think these field(owner & state) are usefull to analyze 
+the SCSI trouble with kernel memory dump.
+Do we have another way to identify which layer 
+is processing the scsi_cmnd?
 
+
+Hironobu Ishii
