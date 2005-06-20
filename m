@@ -1,125 +1,139 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH, scsi-block-2.6] ll_rw_blk.c kerneldoc fixups
-Date: Mon, 20 Jun 2005 14:24:27 +0200
-Message-ID: <20050620122425.GH15021@suse.de>
-References: <20050619093211.GC16872@lst.de>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] remove scsi_cmnd.eh_state
+Date: Mon, 20 Jun 2005 08:26:24 -0400
+Message-ID: <60807403EABEB443939A5A7AA8A7458B01520CD6@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="LQksG6bCIzRHxTLp"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:21677 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261225AbVFTMXH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2005 08:23:07 -0400
-Content-Disposition: inline
-In-Reply-To: <20050619093211.GC16872@lst.de>
+Received: from magic.adaptec.com ([216.52.22.17]:205 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261226AbVFTM1K convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2005 08:27:10 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
+A bugfix was submitted a couple of weeks ago for the code affected by
+Christoph's patch. I suggest the following modification to merge the two
+patches:
 
---LQksG6bCIzRHxTLp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Sun, Jun 19 2005, Christoph Hellwig wrote:
-
-I've committed a modified patch based on this. There was a typo in the
-blk_execute_rq_nowait() kerneldoc update as well, you duplicated the
-name from blk_execute_rq().
-
-It's committed to the rq-map branch of the linux-2.6-block.git tree.
-
-(http://kernel.org/git/?p=linux/kernel/git/axboe/linux-2.6-block.git;a=summary)
-
--- 
-Jens Axboe
-
-
---LQksG6bCIzRHxTLp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="rq-map-7.diff"
-
-diff-tree 73747aed04d3b3fb694961d025f81863b99c6898 (from 994ca9a19616f0d4161a9e825f0835925d522426)
-tree d7cae2a3da1e15dc8c87b0ffbf2608eb8c999cc9
-parent 994ca9a19616f0d4161a9e825f0835925d522426
-author Christoph Hellwig  <hch@lst.de> 1119270061 +0200
-committer Jens Axboe <axboe@suse.de> 1119270061 +0200
-
-    [PATCH] ll_rw_blk.c kerneldoc updates
-    
-    The recent mapping changes didn't update the kerneldoc appropriately.
-    
-    Original from Christoph Hellwig <hch@lst.de>
-    
-    Signed-off-by: Jens Axboe <axboe@suse.de>
-
-diff --git a/drivers/block/ll_rw_blk.c b/drivers/block/ll_rw_blk.c
---- a/drivers/block/ll_rw_blk.c
-+++ b/drivers/block/ll_rw_blk.c
-@@ -2090,7 +2090,7 @@ EXPORT_SYMBOL(blk_insert_request);
- /**
-  * blk_rq_map_user - map user data to a request, for REQ_BLOCK_PC usage
-  * @q:		request queue where request should be inserted
-- * @rw:		READ or WRITE data
-+ * @rq:		request structure to fill
-  * @ubuf:	the user buffer
-  * @len:	length of user data
-  *
-@@ -2194,12 +2194,11 @@ EXPORT_SYMBOL(blk_rq_map_user_iov);
+--- linux-2.6.orig/drivers/scsi/dpt_i2o.c	2005-06-19
+00:16:48.000000000 +0200
++++ linux-2.6/drivers/scsi/dpt_i2o.c	2005-06-19 11:47:20.000000000
++0200
+@@ -419,7 +419,7 @@
+ 		return 1;
+ 	}
  
- /**
-  * blk_rq_unmap_user - unmap a request with user data
-- * @rq:		request to be unmapped
-- * @bio:	bio for the request
-+ * @bio:	bio to be unmapped
-  * @ulen:	length of user buffer
-  *
-  * Description:
-- *    Unmap a request previously mapped by blk_rq_map_user().
-+ *    Unmap a bio previously mapped by blk_rq_map_user().
-  */
- int blk_rq_unmap_user(struct bio *bio, unsigned int ulen)
- {
-@@ -2220,9 +2219,10 @@ EXPORT_SYMBOL(blk_rq_unmap_user);
- /**
-  * blk_rq_map_kern - map kernel data to a request, for REQ_BLOCK_PC usage
-  * @q:		request queue where request should be inserted
-- * @rw:		READ or WRITE data
-+ * @rq:		request to fill
-  * @kbuf:	the kernel buffer
-  * @len:	length of user data
-+ * @gfp_mask:	memory allocation flags
-  */
- int blk_rq_map_kern(request_queue_t *q, struct request *rq, void *kbuf,
- 		    unsigned int len, unsigned int gfp_mask)
-@@ -2251,6 +2251,18 @@ int blk_rq_map_kern(request_queue_t *q, 
- 
- EXPORT_SYMBOL(blk_rq_map_kern);
- 
-+/**
-+ * blk_execute_rq_nowait - insert a request into queue for execution
-+ * @q:		queue to insert the request in
-+ * @bd_disk:	matching gendisk
-+ * @rq:		request to insert
-+ * @at_head:    insert request at head or tail of queue
-+ * @done:	I/O completion handler
-+ *
-+ * Description:
-+ *    Insert a fully prepared request at the back of the io scheduler queue
-+ *    for execution.  Don't wait for completion.
-+ */
- void blk_execute_rq_nowait(request_queue_t *q, struct gendisk *bd_disk,
- 			   struct request *rq, int at_head,
- 			   void (*done)(struct request *))
-@@ -2273,7 +2285,7 @@ void blk_execute_rq_nowait(request_queue
-  *
-  * Description:
-  *    Insert a fully prepared request at the back of the io scheduler queue
-- *    for execution.
-+ *    for execution and wait for completion.
-  */
- int blk_execute_rq(request_queue_t *q, struct gendisk *bd_disk,
- 		   struct request *rq, int at_head)
+-	if(cmd->eh_state != SCSI_STATE_QUEUED){
++	if(cmd->device->type == TYPE_DISK){
+ 		// If we are not doing error recovery
+ 		mod_timer(&cmd->eh_timeout, timeout);
+ 	}
 
---LQksG6bCIzRHxTLp--
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Christoph Hellwig
+Sent: Sunday, June 19, 2005 7:39 AM
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
+Subject: [PATCH] remove scsi_cmnd.eh_state
+
+it's never set to anything, and just three broken drivers are looking
+at it and doing odd things.
+
+
+Index: linux-2.6/drivers/scsi/dpt_i2o.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/dpt_i2o.c	2005-06-19
+00:16:48.000000000 +0200
++++ linux-2.6/drivers/scsi/dpt_i2o.c	2005-06-19 11:47:20.000000000
++0200
+@@ -419,11 +419,6 @@
+ 		return 1;
+ 	}
+ 
+-	if(cmd->eh_state != SCSI_STATE_QUEUED){
+-		// If we are not doing error recovery
+-		mod_timer(&cmd->eh_timeout, timeout);
+-	}
+-
+ 	// TODO if the cmd->device if offline then I may need to issue a
+bus rescan
+ 	// followed by a get_lct to see if the device is there anymore
+ 	if((pDev = (struct adpt_device*) (cmd->device->hostdata)) ==
+NULL) {
+Index: linux-2.6/drivers/scsi/eata.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/eata.c	2005-06-19 00:16:48.000000000
++0200
++++ linux-2.6/drivers/scsi/eata.c	2005-06-19 11:46:55.000000000
++0200
+@@ -1899,16 +1899,6 @@
+ 			printk("%s: abort, mbox %d, interrupt
+pending.\n",
+ 			       ha->board_name, i);
+ 
+-		if (SCarg->eh_state == SCSI_STATE_TIMEOUT) {
+-			unmap_dma(i, ha);
+-			SCarg->host_scribble = NULL;
+-			ha->cp_stat[i] = FREE;
+-			printk
+-			    ("%s, abort, mbox %d, eh_state timeout, pid
+%ld.\n",
+-			     ha->board_name, i, SCarg->pid);
+-			return SUCCESS;
+-		}
+-
+ 		return FAILED;
+ 	}
+ 
+Index: linux-2.6/drivers/scsi/u14-34f.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/u14-34f.c	2005-06-19
+00:16:48.000000000 +0200
++++ linux-2.6/drivers/scsi/u14-34f.c	2005-06-19 11:47:01.000000000
++0200
+@@ -1372,15 +1372,6 @@
+       if (inb(sh[j]->io_port + REG_SYS_INTR) & IRQ_ASSERTED)
+          printk("%s: abort, mbox %d, interrupt pending.\n", BN(j), i);
+ 
+-      if (SCarg->eh_state == SCSI_STATE_TIMEOUT) {
+-         unmap_dma(i, j);
+-         SCarg->host_scribble = NULL;
+-         HD(j)->cp_stat[i] = FREE;
+-         printk("%s, abort, mbox %d, eh_state timeout, pid %ld.\n",
+-                BN(j), i, SCarg->pid);
+-         return SUCCESS;
+-         }
+-
+       return FAILED;
+       }
+ 
+Index: linux-2.6/include/scsi/scsi_cmnd.h
+===================================================================
+--- linux-2.6.orig/include/scsi/scsi_cmnd.h	2005-04-30
+10:17:20.000000000 +0200
++++ linux-2.6/include/scsi/scsi_cmnd.h	2005-06-19 12:00:47.000000000
++0200
+@@ -38,7 +38,6 @@
+ 	struct list_head list;  /* scsi_cmnd participates in queue lists
+*/
+ 
+ 	struct list_head eh_entry; /* entry for the host eh_cmd_q */
+-	int eh_state;		/* Used for state tracking in error
+handlr */
+ 	int eh_eflags;		/* Used by error handlr */
+ 	void (*done) (struct scsi_cmnd *);	/* Mid-level done
+function */
+ 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
