@@ -1,34 +1,52 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [GIT PATCH] SCSI updates for 2.6.12
-Date: Mon, 20 Jun 2005 11:35:40 +0200
-Message-ID: <1119260140.6099.0.camel@mulgrave>
-References: <1119103586.4984.5.camel@mulgrave>
-	 <20050618141636.GA4112@infradead.org>
-	 <20050618174558.GX9153@shell0.pdx.osdl.net>
+From: =?ISO-8859-2?Q?Tomasz_K=B3oczko?= <kloczek@rudy.mif.pg.gda.pl>
+Subject: Q: qla23xxx and lpfc (Was: Re: [GIT PATCH] SCSI updates for 2.6.12)
+Date: Mon, 20 Jun 2005 12:33:49 +0200 (CEST)
+Message-ID: <Pine.BSO.4.62.0506201217410.19853@rudy.mif.pg.gda.pl>
+References: <1119103586.4984.5.camel@mulgrave>  <20050618141636.GA4112@infradead.org>
+  <20050618174558.GX9153@shell0.pdx.osdl.net> <1119260140.6099.0.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="0-1189960872-1119263629=:19853"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:13447 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261294AbVFTJhq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2005 05:37:46 -0400
-In-Reply-To: <20050618174558.GX9153@shell0.pdx.osdl.net>
+Received: from rudy.mif.pg.gda.pl ([153.19.42.16]:6167 "EHLO
+	rudy.mif.pg.gda.pl") by vger.kernel.org with ESMTP id S261153AbVFTKdf
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2005 06:33:35 -0400
+In-Reply-To: <1119260140.6099.0.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Wright <chrisw@osdl.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Chris Wright <chrisw@osdl.org>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Sat, 2005-06-18 at 10:45 -0700, Chris Wright wrote:
-> Sure, if it's seriously broken w/out send it to stable@kernel.org,
-> and we'll queue it up.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-It should be here:
+--0-1189960872-1119263629=:19853
+Content-Type: TEXT/PLAIN; charset=ISO-8859-2; format=flowed
+Content-Transfer-Encoding: 8BIT
 
-rsync://www.parisc-linux.org/~jejb/git/scsi-rc-fixes-2.6.git
+On Mon, 20 Jun 2005, James Bottomley wrote:
 
-That's the same patch that's merged now.
+> On Sat, 2005-06-18 at 10:45 -0700, Chris Wright wrote:
+>> Sure, if it's seriously broken w/out send it to stable@kernel.org,
+>> and we'll queue it up.
+>
+> It should be here:
+>
+> rsync://www.parisc-linux.org/~jejb/git/scsi-rc-fixes-2.6.git
+>
+> That's the same patch that's merged now.
 
-James
+Included in vanilla 2.6.12 qla23xxx 8.00.02b5 is for me unuseable (fails 
+on scaning luns and oopses on array controler reset) on x86_64 with
+qla2300 and for me works only version 8.01.00b2.
+Is it will be possible include this version in official tree ?
 
+Also is it will be possible include Emulex lpfc driver to official tree ?
 
+kloczek
+-- 
+-----------------------------------------------------------
+*Ludzie nie maj± problemów, tylko sobie sami je stwarzaj±*
+-----------------------------------------------------------
+Tomasz K³oczko, sys adm @zie.pg.gda.pl|*e-mail: kloczek@rudy.mif.pg.gda.pl*
+--0-1189960872-1119263629=:19853--
