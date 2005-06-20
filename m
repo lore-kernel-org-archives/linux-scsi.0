@@ -1,28 +1,33 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] remove scsi_cmnd.eh_state
-Date: Mon, 20 Jun 2005 14:35:26 +0200
-Message-ID: <20050620123526.GA6222@lst.de>
-References: <60807403EABEB443939A5A7AA8A7458B01520CD8@otce2k01.adaptec.com>
+Subject: Re: [PATCH, scsi-block-2.6] ll_rw_blk.c kerneldoc fixups
+Date: Mon, 20 Jun 2005 14:38:12 +0200
+Message-ID: <20050620123812.GA6313@lst.de>
+References: <20050619093211.GC16872@lst.de> <20050620122425.GH15021@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:4802 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S261238AbVFTMfc (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:7362 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S261242AbVFTMiP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2005 08:35:32 -0400
+	Mon, 20 Jun 2005 08:38:15 -0400
 Content-Disposition: inline
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458B01520CD8@otce2k01.adaptec.com>
+In-Reply-To: <20050620122425.GH15021@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-On Mon, Jun 20, 2005 at 08:28:50AM -0400, Salyzyn, Mark wrote:
-> If the code is not in place, then array devices will go offline.
+On Mon, Jun 20, 2005 at 02:24:27PM +0200, Jens Axboe wrote:
+> On Sun, Jun 19 2005, Christoph Hellwig wrote:
 > 
-> The array needs to have a 5 minute timeout, all other devices can
-> timeout as per the SCSI subsystem.
+> I've committed a modified patch based on this. There was a typo in the
+> blk_execute_rq_nowait() kerneldoc update as well, you duplicated the
+> name from blk_execute_rq().
+> 
+> It's committed to the rq-map branch of the linux-2.6-block.git tree.
+> 
+> (http://kernel.org/git/?p=linux/kernel/git/axboe/linux-2.6-block.git;a=summary)
 
-The proper API to do that is to set scsi_device.timeout in
-->slave_configure.
+James, is this the branch you pull into scsi-block-2.6.git?  I try to
+avoid getting lost in all those trees..
 
