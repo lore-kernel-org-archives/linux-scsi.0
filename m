@@ -1,187 +1,103 @@
-From: Chris Wright <chrisw@osdl.org>
-Subject: Re: [GIT PATCH] SCSI updates for 2.6.12
-Date: Mon, 20 Jun 2005 10:52:32 -0700
-Message-ID: <20050620175232.GQ9046@shell0.pdx.osdl.net>
-References: <1119103586.4984.5.camel@mulgrave> <20050618141636.GA4112@infradead.org> <20050618174558.GX9153@shell0.pdx.osdl.net> <1119260140.6099.0.camel@mulgrave>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: Questions about scsi_target_reap and starget/sdev lifecyle
+Date: Mon, 20 Jun 2005 10:31:06 -0700
+Message-ID: <20050620173106.GA22086@us.ibm.com>
+References: <42B6E642.3000703@us.ibm.com> <Pine.LNX.4.44L0.0506201227090.4825-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:446 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261402AbVFTRwn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2005 13:52:43 -0400
+Received: from e35.co.us.ibm.com ([32.97.110.133]:16538 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S261407AbVFTSAI
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2005 14:00:08 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e35.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j5KHxx3o623724
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Jun 2005 14:00:01 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j5KHxxSc085218
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Jun 2005 11:59:59 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j5KHxa1R014875
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Jun 2005 11:59:37 -0600
 Content-Disposition: inline
-In-Reply-To: <1119260140.6099.0.camel@mulgrave>
+In-Reply-To: <Pine.LNX.4.44L0.0506201227090.4825-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Chris Wright <chrisw@osdl.org>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, stable@kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Brian King <brking@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, Mike Anderson <andmike@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-* James Bottomley (James.Bottomley@SteelEye.com) wrote:
-> It should be here:
-> 
-> rsync://www.parisc-linux.org/~jejb/git/scsi-rc-fixes-2.6.git
+Hi Alan -
 
-The following is queued for -stable:
+On Mon, Jun 20, 2005 at 12:35:02PM -0400, Alan Stern wrote:
 
-[SCSI] qla2xxx: Pull-down scsi-host-addition to follow board initialization.
+> -/**
+> - * scsi_scan_target - scan a target id, possibly including all LUNs on the
+> - *     target.
+> - * @sdevsca:	Scsi_Device handle for scanning
+> - * @shost:	host to scan
+> - * @channel:	channel to scan
+> - * @id:		target id to scan
+> - *
+> - * Description:
+> - *     Scan the target id on @shost, @channel, and @id. Scan at least LUN
+> - *     0, and possibly all LUNs on the target id.
+> - *
+> - *     Use the pre-allocated @sdevscan as a handle for the scanning. This
+> - *     function sets sdevscan->host, sdevscan->id and sdevscan->lun; the
+> - *     scanning functions modify sdevscan->lun.
+> - *
+> - *     First try a REPORT LUN scan, if that does not scan the target, do a
+> - *     sequential scan of LUNs on the target id.
+> - **/
+> -void scsi_scan_target(struct device *parent, unsigned int channel,
+> -		      unsigned int id, unsigned int lun, int rescan)
+> +static void __scsi_scan_target(struct Scsi_Host *shost, unsigned int channel,
+> +		unsigned int id, unsigned int lun, int rescan)
+>  {
+> -	struct Scsi_Host *shost = dev_to_shost(parent);
+>  	int bflags = 0;
+>  	int res;
+>  	struct scsi_device *sdev = NULL;
+> @@ -1257,7 +1247,7 @@ void scsi_scan_target(struct device *par
+>  		return;
+>  
+>  
+> -	starget = scsi_alloc_target(parent, channel, id);
+> +	starget = scsi_alloc_target(&shost->shost_gendev, channel, id);
 
-Return to previous held-logic of calling scsi_add_host() only
-after the board has been completely initialized.  Also return
-pci_*() error-codes during probe failure paths.
+For FC (and iSCSI), parent != &shost->shost_gendev. See user scanning
+on FC thread / patches. 
 
-This also corrects an issue where only lun 0 is being scanned for
-a given port.
+[kernel scsi]$ grep scsi_scan_target scsi_transport_fc.c
+	scsi_scan_target(&rport->dev, rport->channel, rport->scsi_target_id,
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+And &rport->dev is not &shost->shost_gendev :-(
 
----
-commit a1541d5af66d02426655b1498f814c52347dd7d3
-tree 02d041e54ebaec744d30ebf6012e305b9673bec0
-parent 27198d855abbfc82df69e81b6c8d2f333580114c
-author Andrew Vasquez <andrew.vasquez@qlogic.com> Thu, 09 Jun 2005 17:21:28 -0700
-committer James Bottomley <jejb@mulgrave.(none)> Sat, 11 Jun 2005 13:06:22 -0500
+> +
+> +/**
+> + * scsi_scan_target - scan a target id, possibly including all LUNs on the
+> + *     target.
+> + * @parent:	host to scan
+> + * @channel:	channel to scan
+> + * @id:		target id to scan
+> + * @rescan:	passed to LUN scanning routines
+> + *
+> + * Description:
+> + *     Scan the target id on @shost, @channel, and @id. Scan at least LUN
+> + *     0, and possibly all LUNs on the target id.
+> + *
+> + *     First try a REPORT LUN scan, if that does not scan the target, do a
+> + *     sequential scan of LUNs on the target id.
+> + **/
+> +void scsi_scan_target(struct device *parent, unsigned int channel,
+> +		      unsigned int id, unsigned int lun, int rescan)
+> +{
+> +	struct Scsi_Host *shost = dev_to_shost(parent);
+> +
+> +	down(&shost->scan_mutex);
+> +	if (!test_bit(SHOST_REMOVE, &shost->shost_state))
+> +		__scsi_scan_target(shost, channel, id, lun, rescan);
 
- drivers/scsi/qla2xxx/qla_os.c |   55 +++++++++++++++++++++--------------------
- 1 files changed, 28 insertions(+), 27 deletions(-)
+And so parent still has to be passed down to __scsi_scan_target.
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1150,7 +1150,7 @@ iospace_error_exit:
-  */
- int qla2x00_probe_one(struct pci_dev *pdev, struct qla_board_info *brd_info)
- {
--	int	ret;
-+	int	ret = -ENODEV;
- 	device_reg_t __iomem *reg;
- 	struct Scsi_Host *host;
- 	scsi_qla_host_t *ha;
-@@ -1161,7 +1161,7 @@ int qla2x00_probe_one(struct pci_dev *pd
- 	fc_port_t *fcport;
- 
- 	if (pci_enable_device(pdev))
--		return -1;
-+		goto probe_out;
- 
- 	host = scsi_host_alloc(&qla2x00_driver_template,
- 	    sizeof(scsi_qla_host_t));
-@@ -1183,9 +1183,8 @@ int qla2x00_probe_one(struct pci_dev *pd
- 
- 	/* Configure PCI I/O space */
- 	ret = qla2x00_iospace_config(ha);
--	if (ret != 0) {
--		goto probe_alloc_failed;
--	}
-+	if (ret)
-+		goto probe_failed;
- 
- 	/* Sanitize the information from PCI BIOS. */
- 	host->irq = pdev->irq;
-@@ -1258,23 +1257,10 @@ int qla2x00_probe_one(struct pci_dev *pd
- 		qla_printk(KERN_WARNING, ha,
- 		    "[ERROR] Failed to allocate memory for adapter\n");
- 
--		goto probe_alloc_failed;
-+		ret = -ENOMEM;
-+		goto probe_failed;
- 	}
- 
--	pci_set_drvdata(pdev, ha);
--	host->this_id = 255;
--	host->cmd_per_lun = 3;
--	host->unique_id = ha->instance;
--	host->max_cmd_len = MAX_CMDSZ;
--	host->max_channel = ha->ports - 1;
--	host->max_id = ha->max_targets;
--	host->max_lun = ha->max_luns;
--	host->transportt = qla2xxx_transport_template;
--	if (scsi_add_host(host, &pdev->dev))
--		goto probe_alloc_failed;
--
--	qla2x00_alloc_sysfs_attr(ha);
--
- 	if (qla2x00_initialize_adapter(ha) &&
- 	    !(ha->device_flags & DFLG_NO_CABLE)) {
- 
-@@ -1285,11 +1271,10 @@ int qla2x00_probe_one(struct pci_dev *pd
- 		    "Adapter flags %x.\n",
- 		    ha->host_no, ha->device_flags));
- 
-+		ret = -ENODEV;
- 		goto probe_failed;
- 	}
- 
--	qla2x00_init_host_attr(ha);
--
- 	/*
- 	 * Startup the kernel thread for this host adapter
- 	 */
-@@ -1299,17 +1284,26 @@ int qla2x00_probe_one(struct pci_dev *pd
- 		qla_printk(KERN_WARNING, ha,
- 		    "Unable to start DPC thread!\n");
- 
-+		ret = -ENODEV;
- 		goto probe_failed;
- 	}
- 	wait_for_completion(&ha->dpc_inited);
- 
-+	host->this_id = 255;
-+	host->cmd_per_lun = 3;
-+	host->unique_id = ha->instance;
-+	host->max_cmd_len = MAX_CMDSZ;
-+	host->max_channel = ha->ports - 1;
-+	host->max_lun = MAX_LUNS;
-+	host->transportt = qla2xxx_transport_template;
-+
- 	if (IS_QLA2100(ha) || IS_QLA2200(ha))
- 		ret = request_irq(host->irq, qla2100_intr_handler,
- 		    SA_INTERRUPT|SA_SHIRQ, ha->brd_info->drv_name, ha);
- 	else
- 		ret = request_irq(host->irq, qla2300_intr_handler,
- 		    SA_INTERRUPT|SA_SHIRQ, ha->brd_info->drv_name, ha);
--	if (ret != 0) {
-+	if (ret) {
- 		qla_printk(KERN_WARNING, ha,
- 		    "Failed to reserve interrupt %d already in use.\n",
- 		    host->irq);
-@@ -1363,9 +1357,18 @@ int qla2x00_probe_one(struct pci_dev *pd
- 		msleep(10);
- 	}
- 
-+	pci_set_drvdata(pdev, ha);
- 	ha->flags.init_done = 1;
- 	num_hosts++;
- 
-+	ret = scsi_add_host(host, &pdev->dev);
-+	if (ret)
-+		goto probe_failed;
-+
-+	qla2x00_alloc_sysfs_attr(ha);
-+
-+	qla2x00_init_host_attr(ha);
-+
- 	qla_printk(KERN_INFO, ha, "\n"
- 	    " QLogic Fibre Channel HBA Driver: %s\n"
- 	    "  QLogic %s - %s\n"
-@@ -1384,9 +1387,6 @@ int qla2x00_probe_one(struct pci_dev *pd
- probe_failed:
- 	fc_remove_host(ha->host);
- 
--	scsi_remove_host(host);
--
--probe_alloc_failed:
- 	qla2x00_free_device(ha);
- 
- 	scsi_host_put(host);
-@@ -1394,7 +1394,8 @@ probe_alloc_failed:
- probe_disable_device:
- 	pci_disable_device(pdev);
- 
--	return -1;
-+probe_out:
-+	return ret;
- }
- EXPORT_SYMBOL_GPL(qla2x00_probe_one);
- 
+-- Patrick Mansfield
