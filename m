@@ -1,34 +1,55 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Q: qla23xxx and lpfc (Was: Re: [GIT PATCH] SCSI updates for 2.6.12)
-Date: Mon, 20 Jun 2005 11:45:44 +0100
-Message-ID: <20050620104544.GA28488@infradead.org>
-References: <1119103586.4984.5.camel@mulgrave> <20050618141636.GA4112@infradead.org> <20050618174558.GX9153@shell0.pdx.osdl.net> <1119260140.6099.0.camel@mulgrave> <Pine.BSO.4.62.0506201217410.19853@rudy.mif.pg.gda.pl>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH, scsi-block-2.6] ll_rw_blk.c kerneldoc fixups
+Date: Mon, 20 Jun 2005 12:53:42 +0200
+Message-ID: <20050620105342.GE15021@suse.de>
+References: <20050619093211.GC16872@lst.de> <20050620104044.GC15021@suse.de> <20050620104035.GA4246@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:2777 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261165AbVFTKpt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2005 06:45:49 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:64485 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261169AbVFTKwW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2005 06:52:22 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.BSO.4.62.0506201217410.19853@rudy.mif.pg.gda.pl>
+In-Reply-To: <20050620104035.GA4246@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomasz K?oczko <kloczek@rudy.mif.pg.gda.pl>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Chris Wright <chrisw@osdl.org>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-On Mon, Jun 20, 2005 at 12:33:49PM +0200, Tomasz K?oczko wrote:
-> Included in vanilla 2.6.12 qla23xxx 8.00.02b5 is for me unuseable (fails 
-> on scaning luns and oopses on array controler reset) on x86_64 with
-> qla2300 and for me works only version 8.01.00b2.
-> Is it will be possible include this version in official tree ?
+On Mon, Jun 20 2005, Christoph Hellwig wrote:
+> On Mon, Jun 20, 2005 at 12:40:44PM +0200, Jens Axboe wrote:
+> > On Sun, Jun 19 2005, Christoph Hellwig wrote:
+> > > @@ -2098,14 +2098,14 @@
+> > >   *    Data will be mapped directly for zero copy io, if possible. Otherwise
+> > >   *    a kernel bounce buffer is used.
+> > >   *
+> > > - *    A matching blk_rq_unmap_user() must be issued at the end of io, while
+> > > - *    still in process context.
+> > > + *    A matching blk_rq_unmap_user_iov() must be issued at the end of io,
+> > > + *    while still in process context.
+> > 
+> > ?
+> 
+> This is ontop of my patch to remove the non-iov variant.
 
-As said above a bad patch from Qlogic went in and Linus didn't pull the
-release critical fixes tree before release.  It'll be fixed in 2.6.12.1.
-8.01.00b2 is full of crap and despite the higher version number actually
-a regression vs the kernel driver in various aspects.
+Hmm, the function names still looked like the older ones.
 
-> Also is it will be possible include Emulex lpfc driver to official tree ?
+> > > @@ -2221,9 +2220,10 @@
+> > >  /**
+> > >   * blk_rq_map_kern - map kernel data to a request, for REQ_BLOCK_PC usage
+> > >   * @q:		request queue where request should be inserted
+> > > - * @rw:		READ or WRITE data
+> > > + * @rw:		request to fill
+> > 
+> > @rq
+> > 
+> > Rest looks good, care to rediff it?
+> 
+> Yeah, will do so later.
 
-See drivers/scsi/lpfc/
+Thanks!
+
+-- 
+Jens Axboe
 
