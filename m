@@ -1,393 +1,335 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Questions about scsi_target_reap and starget/sdev lifecyle
-Date: Mon, 20 Jun 2005 12:35:02 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0506201227090.4825-100000@iolanthe.rowland.org>
-References: <42B6E642.3000703@us.ibm.com>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH] aacraid: New products patch
+Date: Mon, 20 Jun 2005 10:18:00 -0700
+Message-ID: <1119287880.21986.16.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:7890 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261362AbVFTQfD
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2005 12:35:03 -0400
-In-Reply-To: <42B6E642.3000703@us.ibm.com>
+Received: from smtp.osdl.org ([65.172.181.4]:58294 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S261386AbVFTRSH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2005 13:18:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Mike Anderson <andmike@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 20 Jun 2005, Brian King wrote:
+This patch add the following products to the driver:
+        IBM ServeRAID 8i
+        ICP 9014R0
+        ICP 9024R0
+        ICP 9047MA
+        ICP 9087MA
+        ICP 9085LI
+        ICP 5085AU
 
-> Alan Stern wrote:
-> > 	Don't acquire the scan_mutex in scsi_remove_device.  It's
-> > 	not needed since there's nothing wrong with removing devices
-> > 	during scanning, and it will cause deadlock under certain
-> > 	error conditions.  (I'm not certain about this either.  Will
-> > 	removing a device as it's being scanned cause a problem?
-> > 	Perhaps there should be a separate version of the routine
-> > 	that does acquire the scan_mutex.)
-> 
-> I actually submitted the patch to acquire the scan_mutex in scsi_remove_device
-> in order to fix an oops I ran into where a device was being deleted while it
-> was still being scanned. The actual oops was a NULL dentry in sysfs_remove_link.
-> 
-> I would much rather see a __scsi_remove_device API that scsi core and scsi_remove_device
-> can call that does not acquire the scan_mutex in the paths that make sense to
-> change. That way scsi_remove_device can maintain its existing behavior.
+Patch updated to apply to the latest scsi-misc-2.6 git tree.
 
-Okay, I can see you would run into problems if scsi_remove_device was 
-called after the device structure had been initialized but before it was 
-registered in sysfs.  (I'm not sure exactly how that could happen... but 
-never mind.)
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
 
-Here's a revised patch that does what Brian suggested.
+ README    |    8 ++++++
+ TODO      |    2 -
+ aachba.c  |   44 +++++++++++++++++++++++++++++++--
+ aacraid.h |   24 ++++++++++++++++++
+ linit.c   |   81 +++++++++++++++++++++++++++++++++++++++-----------------------
+ 5 files changed, 125 insertions(+), 34 deletions(-)
 
-Alan Stern
-
-
-Index: usb-2.6/include/scsi/scsi_host.h
-===================================================================
---- usb-2.6.orig/include/scsi/scsi_host.h
-+++ usb-2.6/include/scsi/scsi_host.h
-@@ -411,6 +411,7 @@ enum {
- 	SHOST_DEL,
- 	SHOST_CANCEL,
- 	SHOST_RECOVERY,
-+	SHOST_REMOVE,
+diff --git a/drivers/scsi/aacraid/README b/drivers/scsi/aacraid/README
+--- a/drivers/scsi/aacraid/README
++++ b/drivers/scsi/aacraid/README
+@@ -13,6 +13,7 @@ Supported Cards/Chipsets
+ 	Adaptec 2020S
+ 	Adaptec 2025S
+ 	Adaptec 2120S
++	Adaptec 2130S
+ 	Adaptec 2200S
+ 	Adaptec 2230S
+ 	Adaptec 2240S
+@@ -35,6 +36,13 @@ Supported Cards/Chipsets
+ 	HP NetRAID-4M
+ 	Legend S220
+ 	Legend S230
++	IBM ServeRAID 8i
++	ICP 9014R0
++	ICP 9024R0
++	ICP 9047MA
++	ICP 9087MA
++	ICP 9085LI
++	ICP 5085AU
+ 
+ People
+ -------------------------
+diff --git a/drivers/scsi/aacraid/TODO b/drivers/scsi/aacraid/TODO
+--- a/drivers/scsi/aacraid/TODO
++++ b/drivers/scsi/aacraid/TODO
+@@ -1,6 +1,4 @@
+ o	Testing
+ o	More testing
+-o	Feature request: display the firmware/bios/etc revisions in the
+-	/proc info
+ o	Drop irq_mask, basically unused
+ o	I/O size increase
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -276,7 +276,6 @@ int aac_get_containers(struct aac_dev *d
+ 
+ 	if (maximum_num_containers < MAXIMUM_NUM_CONTAINERS)
+ 		maximum_num_containers = MAXIMUM_NUM_CONTAINERS;
+-
+ 	fsa_dev_ptr = (struct fsa_dev_info *) kmalloc(
+ 	  sizeof(*fsa_dev_ptr) * maximum_num_containers, GFP_KERNEL);
+ 	if (!fsa_dev_ptr) {
+@@ -527,6 +526,11 @@ static char *container_types[] = {
+         "V-MIRRORS",          
+         "PSEUDO R4",          
+ 	"RAID50",
++	"RAID5D",
++	"RAID5D0",
++	"RAID1E",
++	"RAID6",
++	"RAID60",
+         "Unknown"
  };
  
- struct Scsi_Host {
-Index: usb-2.6/drivers/scsi/hosts.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/hosts.c
-+++ usb-2.6/drivers/scsi/hosts.c
-@@ -74,8 +74,13 @@ void scsi_host_cancel(struct Scsi_Host *
-  **/
- void scsi_remove_host(struct Scsi_Host *shost)
- {
--	scsi_forget_host(shost);
-+	set_bit(SHOST_REMOVE, &shost->shost_state);
- 	scsi_host_cancel(shost, 0);
-+
-+	down(&shost->scan_mutex);	/* Wait for scanning to stop */
-+	up(&shost->scan_mutex);
-+
-+	scsi_forget_host(shost);
- 	scsi_proc_host_rm(shost);
+@@ -610,7 +614,9 @@ int aac_get_adapter_info(struct aac_dev*
+ 	struct fib* fibptr;
+ 	int rcode;
+ 	u32 tmp;
+-	struct aac_adapter_info * info;
++	struct aac_adapter_info *info;
++	struct aac_bus_info *command;
++	struct aac_bus_info_response *bus_info;
  
- 	set_bit(SHOST_DEL, &shost->shost_state);
-Index: usb-2.6/drivers/scsi/scsi_scan.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_scan.c
-+++ usb-2.6/drivers/scsi/scsi_scan.c
-@@ -843,8 +843,12 @@ static int scsi_probe_and_add_lun(struct
-  out_free_sdev:
- 	if (res == SCSI_SCAN_LUN_PRESENT) {
- 		if (sdevp) {
--			scsi_device_get(sdev);
--			*sdevp = sdev;
-+			if (scsi_device_get(sdev) == 0) {
-+				*sdevp = sdev;
-+			} else {
-+				__scsi_remove_device(sdev);
-+				res = SCSI_SCAN_NO_RESPONSE;
-+			}
- 		}
- 	} else {
- 		if (sdev->host->hostt->slave_destroy)
-@@ -1186,22 +1190,28 @@ struct scsi_device *__scsi_add_device(st
- 				      uint id, uint lun, void *hostdata)
- {
- 	struct scsi_device *sdev;
--	struct device *parent = &shost->shost_gendev;
- 	int res;
--	struct scsi_target *starget = scsi_alloc_target(parent, channel, id);
-+	struct scsi_target *starget;
- 
--	if (!starget)
--		return ERR_PTR(-ENOMEM);
-+	down(&shost->scan_mutex);
-+	if (test_bit(SHOST_REMOVE, &shost->shost_state)) {
-+		sdev = ERR_PTR(-ENODEV);
-+		goto out;
-+	}
-+	starget = scsi_alloc_target(&shost->shost_gendev, channel, id);
-+	if (!starget) {
-+		sdev = ERR_PTR(-ENOMEM);
-+		goto out;
-+	}
- 
- 	get_device(&starget->dev);
--	down(&shost->scan_mutex);
- 	res = scsi_probe_and_add_lun(starget, lun, NULL, &sdev, 1, hostdata);
- 	if (res != SCSI_SCAN_LUN_PRESENT)
- 		sdev = ERR_PTR(-ENODEV);
--	up(&shost->scan_mutex);
- 	scsi_target_reap(starget);
- 	put_device(&starget->dev);
--
-+out:
-+	up(&shost->scan_mutex);
- 	return sdev;
- }
- EXPORT_SYMBOL(__scsi_add_device);
-@@ -1222,29 +1232,9 @@ void scsi_rescan_device(struct device *d
- }
- EXPORT_SYMBOL(scsi_rescan_device);
- 
--/**
-- * scsi_scan_target - scan a target id, possibly including all LUNs on the
-- *     target.
-- * @sdevsca:	Scsi_Device handle for scanning
-- * @shost:	host to scan
-- * @channel:	channel to scan
-- * @id:		target id to scan
-- *
-- * Description:
-- *     Scan the target id on @shost, @channel, and @id. Scan at least LUN
-- *     0, and possibly all LUNs on the target id.
-- *
-- *     Use the pre-allocated @sdevscan as a handle for the scanning. This
-- *     function sets sdevscan->host, sdevscan->id and sdevscan->lun; the
-- *     scanning functions modify sdevscan->lun.
-- *
-- *     First try a REPORT LUN scan, if that does not scan the target, do a
-- *     sequential scan of LUNs on the target id.
-- **/
--void scsi_scan_target(struct device *parent, unsigned int channel,
--		      unsigned int id, unsigned int lun, int rescan)
-+static void __scsi_scan_target(struct Scsi_Host *shost, unsigned int channel,
-+		unsigned int id, unsigned int lun, int rescan)
- {
--	struct Scsi_Host *shost = dev_to_shost(parent);
- 	int bflags = 0;
- 	int res;
- 	struct scsi_device *sdev = NULL;
-@@ -1257,7 +1247,7 @@ void scsi_scan_target(struct device *par
- 		return;
- 
- 
--	starget = scsi_alloc_target(parent, channel, id);
-+	starget = scsi_alloc_target(&shost->shost_gendev, channel, id);
- 
- 	if (!starget)
- 		return;
-@@ -1304,6 +1294,32 @@ void scsi_scan_target(struct device *par
- 
- 	put_device(&starget->dev);
- }
-+
-+/**
-+ * scsi_scan_target - scan a target id, possibly including all LUNs on the
-+ *     target.
-+ * @parent:	host to scan
-+ * @channel:	channel to scan
-+ * @id:		target id to scan
-+ * @rescan:	passed to LUN scanning routines
-+ *
-+ * Description:
-+ *     Scan the target id on @shost, @channel, and @id. Scan at least LUN
-+ *     0, and possibly all LUNs on the target id.
-+ *
-+ *     First try a REPORT LUN scan, if that does not scan the target, do a
-+ *     sequential scan of LUNs on the target id.
-+ **/
-+void scsi_scan_target(struct device *parent, unsigned int channel,
-+		      unsigned int id, unsigned int lun, int rescan)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(parent);
-+
-+	down(&shost->scan_mutex);
-+	if (!test_bit(SHOST_REMOVE, &shost->shost_state))
-+		__scsi_scan_target(shost, channel, id, lun, rescan);
-+	up(&shost->scan_mutex);
-+}
- EXPORT_SYMBOL(scsi_scan_target);
- 
- static void scsi_scan_channel(struct Scsi_Host *shost, unsigned int channel,
-@@ -1329,10 +1345,10 @@ static void scsi_scan_channel(struct Scs
- 				order_id = shost->max_id - id - 1;
- 			else
- 				order_id = id;
--			scsi_scan_target(&shost->shost_gendev, channel, order_id, lun, rescan);
-+			__scsi_scan_target(shost, channel, order_id, lun, rescan);
- 		}
- 	else
--		scsi_scan_target(&shost->shost_gendev, channel, id, lun, rescan);
-+		__scsi_scan_target(shost, channel, id, lun, rescan);
- }
- 
- int scsi_scan_host_selected(struct Scsi_Host *shost, unsigned int channel,
-@@ -1347,11 +1363,14 @@ int scsi_scan_host_selected(struct Scsi_
- 		return -EINVAL;
- 
- 	down(&shost->scan_mutex);
-+	if (test_bit(SHOST_REMOVE, &shost->shost_state))
-+		goto out;
- 	if (channel == SCAN_WILD_CARD) 
- 		for (channel = 0; channel <= shost->max_channel; channel++)
- 			scsi_scan_channel(shost, channel, id, lun, rescan);
- 	else
- 		scsi_scan_channel(shost, channel, id, lun, rescan);
-+out:
- 	up(&shost->scan_mutex);
- 
- 	return 0;
-@@ -1383,23 +1402,17 @@ EXPORT_SYMBOL(scsi_scan_single_target);
- 
- void scsi_forget_host(struct Scsi_Host *shost)
- {
--	struct scsi_target *starget, *tmp;
-+	struct scsi_device *sdev;
- 	unsigned long flags;
- 
--	/*
--	 * Ok, this look a bit strange.  We always look for the first device
--	 * on the list as scsi_remove_device removes them from it - thus we
--	 * also have to release the lock.
--	 * We don't need to get another reference to the device before
--	 * releasing the lock as we already own the reference from
--	 * scsi_register_device that's release in scsi_remove_device.  And
--	 * after that we don't look at sdev anymore.
--	 */
-+restart:
- 	spin_lock_irqsave(shost->host_lock, flags);
--	list_for_each_entry_safe(starget, tmp, &shost->__targets, siblings) {
-+	list_for_each_entry(sdev, &shost->__devices, siblings) {
-+		if (sdev->sdev_state == SDEV_DEL)
-+			continue;
- 		spin_unlock_irqrestore(shost->host_lock, flags);
--		scsi_remove_target(&starget->dev);
--		spin_lock_irqsave(shost->host_lock, flags);
-+		__scsi_remove_device(sdev);
-+		goto restart;
+ 	if (!(fibptr = fib_alloc(dev)))
+ 		return -ENOMEM;
+@@ -655,6 +661,36 @@ int aac_get_adapter_info(struct aac_dev*
+ 			memcpy(&dev->supplement_adapter_info, info, sizeof(*info));
  	}
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- }
-@@ -1426,12 +1439,16 @@ void scsi_forget_host(struct Scsi_Host *
+ 
++
++	/* 
++	 * GetBusInfo 
++	 */
++
++	fib_init(fibptr);
++
++	bus_info = (struct aac_bus_info_response *) fib_data(fibptr);
++
++	memset(info,0,sizeof(*bus_info));
++
++	command = (struct aac_bus_info *)bus_info;
++
++	command->Command = cpu_to_le32(VM_Ioctl);
++	command->ObjType = cpu_to_le32(FT_DRIVE);
++	command->MethodId = cpu_to_le32(1);
++	command->CtlCmd = cpu_to_le32(GetBusInfo);
++
++	rcode = fib_send(ContainerCommand,
++			 fibptr,
++			 sizeof (*bus_info),
++			 FsaNormal,
++			 1, 1,
++			 NULL, NULL);
++
++	if (rcode >= 0 && le32_to_cpu(bus_info->Status) == ST_OK) {
++		dev->maximum_num_physicals = le32_to_cpu(bus_info->TargetsPerBus);
++		dev->maximum_num_channels = le32_to_cpu(bus_info->BusCount);
++	}
++
+ 	tmp = le32_to_cpu(dev->adapter_info.kernelrev);
+ 	printk(KERN_INFO "%s%d: kernel %d.%d-%d[%d] %.*s\n", 
+ 			dev->name, 
+@@ -1818,7 +1854,9 @@ static int aac_send_srb_fib(struct scsi_
+ 	u32 flag;
+ 	u32 timeout;
+ 
+-	if( scsicmd->device->id > 15 || scsicmd->device->lun > 7) {
++	dev = (struct aac_dev *)scsicmd->device->host->hostdata;
++	if (scsicmd->device->id >= dev->maximum_num_physicals || 
++			scsicmd->device->lun > 7) {
+ 		scsicmd->result = DID_NO_CONNECT << 16;
+ 		scsicmd->scsi_done(scsicmd);
+ 		return 0;
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -845,6 +845,28 @@ struct aac_supplement_adapter_info
+ #define AAC_SIS_VERSION_V3	3
+ #define AAC_SIS_SLOT_UNKNOWN	0xFF
+ 
++#define GetBusInfo 0x00000009
++struct aac_bus_info {
++	__le32	Command;	/* VM_Ioctl */
++	__le32	ObjType;	/* FT_DRIVE */
++	__le32	MethodId;	/* 1 = SCSI Layer */
++	__le32	ObjectId;	/* Handle */
++	__le32	CtlCmd;		/* GetBusInfo */
++};
++
++struct aac_bus_info_response {
++	__le32	Status;		/* ST_OK */
++	__le32	ObjType;
++	__le32	MethodId;	/* unused */
++	__le32	ObjectId;	/* unused */
++	__le32	CtlCmd;		/* unused */
++	__le32	ProbeComplete;
++	__le32	BusCount;
++	__le32	TargetsPerBus;
++	u8	InitiatorBusId[10];
++	u8	BusValid[10];
++};
++
+ /*
+  * Battery platforms
   */
- struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
- {
--	struct scsi_device *sdev;
-+	struct scsi_device *sdev = NULL;
- 	struct scsi_target *starget;
+@@ -934,6 +956,8 @@ struct aac_dev
  
-+	down(&shost->scan_mutex);
-+	if (test_bit(SHOST_REMOVE, &shost->shost_state))
-+		goto out;
-+
- 	starget = scsi_alloc_target(&shost->shost_gendev, 0, shost->this_id);
- 	if (!starget)
--		return NULL;
-+		goto out;
- 
- 	sdev = scsi_alloc_sdev(starget, 0, NULL);
- 	if (sdev) {
-@@ -1439,6 +1456,8 @@ struct scsi_device *scsi_get_host_dev(st
- 		sdev->borken = 0;
- 	}
- 	put_device(&starget->dev);
-+out:
-+	up(&shost->scan_mutex);
- 	return sdev;
- }
- EXPORT_SYMBOL(scsi_get_host_dev);
-Index: usb-2.6/drivers/scsi/scsi_sysfs.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_sysfs.c
-+++ usb-2.6/drivers/scsi/scsi_sysfs.c
-@@ -591,7 +591,7 @@ int scsi_sysfs_add_sdev(struct scsi_devi
- 			error = attr_add(&sdev->sdev_gendev,
- 					sdev->host->hostt->sdev_attrs[i]);
- 			if (error) {
--				scsi_remove_device(sdev);
-+				__scsi_remove_device(sdev);
- 				goto out;
- 			}
- 		}
-@@ -605,7 +605,7 @@ int scsi_sysfs_add_sdev(struct scsi_devi
- 							scsi_sysfs_sdev_attrs[i]);
- 			error = device_create_file(&sdev->sdev_gendev, attr);
- 			if (error) {
--				scsi_remove_device(sdev);
-+				__scsi_remove_device(sdev);
- 				goto out;
- 			}
- 		}
-@@ -625,17 +625,10 @@ int scsi_sysfs_add_sdev(struct scsi_devi
- 	return error;
- }
- 
--/**
-- * scsi_remove_device - unregister a device from the scsi bus
-- * @sdev:	scsi_device to unregister
-- **/
--void scsi_remove_device(struct scsi_device *sdev)
-+void __scsi_remove_device(struct scsi_device *sdev)
- {
--	struct Scsi_Host *shost = sdev->host;
+ 	struct Scsi_Host	*scsi_host_ptr;
+ 	int			maximum_num_containers;
++	int			maximum_num_physicals;
++	int			maximum_num_channels;
+ 	struct fsa_dev_info	*fsa_dev;
+ 	pid_t			thread_pid;
+ 	int			cardtype;
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -102,32 +102,43 @@ static struct pci_device_id aac_pci_tbl[
+ 	{ 0x9005, 0x0286, 0x9005, 0x029b, 0, 0, 22 }, /* AAR-2820SA (Intruder) */
+ 	{ 0x9005, 0x0286, 0x9005, 0x029c, 0, 0, 23 }, /* AAR-2620SA (Intruder) */
+ 	{ 0x9005, 0x0286, 0x9005, 0x029d, 0, 0, 24 }, /* AAR-2420SA (Intruder) */
+-	{ 0x9005, 0x0286, 0x9005, 0x0800, 0, 0, 25 }, /* Callisto Jupiter Platform */
+-	{ 0x9005, 0x0285, 0x9005, 0x028e, 0, 0, 26 }, /* ASR-2020SA SATA PCI-X ZCR (Skyhawk) */
+-	{ 0x9005, 0x0285, 0x9005, 0x028f, 0, 0, 27 }, /* ASR-2025SA SATA SO-DIMM PCI-X ZCR (Terminator) */
+-	{ 0x9005, 0x0285, 0x9005, 0x0290, 0, 0, 28 }, /* AAR-2410SA PCI SATA 4ch (Jaguar II) */
+-	{ 0x9005, 0x0285, 0x1028, 0x0291, 0, 0, 29 }, /* CERC SATA RAID 2 PCI SATA 6ch (DellCorsair) */
+-	{ 0x9005, 0x0285, 0x9005, 0x0292, 0, 0, 30 }, /* AAR-2810SA PCI SATA 8ch (Corsair-8) */
+-	{ 0x9005, 0x0285, 0x9005, 0x0293, 0, 0, 31 }, /* AAR-21610SA PCI SATA 16ch (Corsair-16) */
+-	{ 0x9005, 0x0285, 0x9005, 0x0294, 0, 0, 32 }, /* ESD SO-DIMM PCI-X SATA ZCR (Prowler) */
+-	{ 0x9005, 0x0285, 0x103C, 0x3227, 0, 0, 33 }, /* AAR-2610SA PCI SATA 6ch */
+-	{ 0x9005, 0x0285, 0x9005, 0x0296, 0, 0, 34 }, /* ASR-2240S (SabreExpress) */
+-	{ 0x9005, 0x0285, 0x9005, 0x0297, 0, 0, 35 }, /* ASR-4005SAS */
+-	{ 0x9005, 0x0285, 0x1014, 0x02F2, 0, 0, 36 }, /* IBM 8i (AvonPark) */
+-	{ 0x9005, 0x0285, 0x9005, 0x0298, 0, 0, 37 }, /* ASR-4000SAS (BlackBird) */
+-	{ 0x9005, 0x0285, 0x9005, 0x0299, 0, 0, 38 }, /* ASR-4800SAS (Marauder-X) */
+-	{ 0x9005, 0x0285, 0x9005, 0x029A, 0, 0, 39 }, /* ASR-4805SAS (Marauder-E) */
 -
--	down(&shost->scan_mutex);
- 	if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
--		goto out;
-+		return;
- 
- 	class_device_unregister(&sdev->sdev_classdev);
- 	device_del(&sdev->sdev_gendev);
-@@ -644,8 +637,17 @@ void scsi_remove_device(struct scsi_devi
- 		sdev->host->hostt->slave_destroy(sdev);
- 	transport_unregister_device(&sdev->sdev_gendev);
- 	put_device(&sdev->sdev_gendev);
--out:
--	up(&shost->scan_mutex);
-+}
+-	{ 0x9005, 0x0285, 0x1028, 0x0287, 0, 0, 40 }, /* Perc 320/DC*/
+-	{ 0x1011, 0x0046, 0x9005, 0x0365, 0, 0, 41 }, /* Adaptec 5400S (Mustang)*/
+-	{ 0x1011, 0x0046, 0x9005, 0x0364, 0, 0, 42 }, /* Adaptec 5400S (Mustang)*/
+-	{ 0x1011, 0x0046, 0x9005, 0x1364, 0, 0, 43 }, /* Dell PERC2/QC */
+-	{ 0x1011, 0x0046, 0x103c, 0x10c2, 0, 0, 44 }, /* HP NetRAID-4M */
+-
+-	{ 0x9005, 0x0285, 0x1028, PCI_ANY_ID, 0, 0, 45 }, /* Dell Catchall */
+-	{ 0x9005, 0x0285, 0x17aa, PCI_ANY_ID, 0, 0, 46 }, /* Legend Catchall */
+-	{ 0x9005, 0x0285, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 47 }, /* Adaptec Catch All */
+-	{ 0x9005, 0x0286, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 48 }, /* Adaptec Rocket Catch All */
++	{ 0x9005, 0x0286, 0x9005, 0x029e, 0, 0, 25 }, /* ICP9024R0 (Lancer) */
++	{ 0x9005, 0x0286, 0x9005, 0x029f, 0, 0, 26 }, /* ICP9014R0 (Lancer) */
++	{ 0x9005, 0x0286, 0x9005, 0x02a0, 0, 0, 27 }, /* ICP9047MA (Lancer) */
++	{ 0x9005, 0x0286, 0x9005, 0x02a1, 0, 0, 28 }, /* ICP9087MA (Lancer) */
++	{ 0x9005, 0x0286, 0x9005, 0x02a3, 0, 0, 29 }, /* ICP5085AU (Hurricane) */
++	{ 0x9005, 0x0285, 0x9005, 0x02a4, 0, 0, 30 }, /* ICP9085LI (Marauder-X) */
++	{ 0x9005, 0x0285, 0x9005, 0x02a5, 0, 0, 31 }, /* ICP5085BR (Marauder-E) */
++	{ 0x9005, 0x0287, 0x9005, 0x0800, 0, 0, 32 }, /* Themisto Jupiter Platform */
++	{ 0x9005, 0x0200, 0x9005, 0x0200, 0, 0, 32 }, /* Themisto Jupiter Platform */
++	{ 0x9005, 0x0286, 0x9005, 0x0800, 0, 0, 33 }, /* Callisto Jupiter Platform */
++	{ 0x9005, 0x0285, 0x9005, 0x028e, 0, 0, 34 }, /* ASR-2020SA SATA PCI-X ZCR (Skyhawk) */
++	{ 0x9005, 0x0285, 0x9005, 0x028f, 0, 0, 35 }, /* ASR-2025SA SATA SO-DIMM PCI-X ZCR (Terminator) */
++	{ 0x9005, 0x0285, 0x9005, 0x0290, 0, 0, 36 }, /* AAR-2410SA PCI SATA 4ch (Jaguar II) */
++	{ 0x9005, 0x0285, 0x1028, 0x0291, 0, 0, 37 }, /* CERC SATA RAID 2 PCI SATA 6ch (DellCorsair) */
++	{ 0x9005, 0x0285, 0x9005, 0x0292, 0, 0, 38 }, /* AAR-2810SA PCI SATA 8ch (Corsair-8) */
++	{ 0x9005, 0x0285, 0x9005, 0x0293, 0, 0, 39 }, /* AAR-21610SA PCI SATA 16ch (Corsair-16) */
++	{ 0x9005, 0x0285, 0x9005, 0x0294, 0, 0, 40 }, /* ESD SO-DIMM PCI-X SATA ZCR (Prowler) */
++	{ 0x9005, 0x0285, 0x103C, 0x3227, 0, 0, 41 }, /* AAR-2610SA PCI SATA 6ch */
++	{ 0x9005, 0x0285, 0x9005, 0x0296, 0, 0, 42 }, /* ASR-2240S (SabreExpress) */
++	{ 0x9005, 0x0285, 0x9005, 0x0297, 0, 0, 43 }, /* ASR-4005SAS */
++	{ 0x9005, 0x0285, 0x1014, 0x02F2, 0, 0, 44 }, /* IBM 8i (AvonPark) */
++	{ 0x9005, 0x0285, 0x1014, 0x0312, 0, 0, 44 }, /* IBM 8i (AvonPark Lite) */
++	{ 0x9005, 0x0285, 0x9005, 0x0298, 0, 0, 45 }, /* ASR-4000SAS (BlackBird) */
++	{ 0x9005, 0x0285, 0x9005, 0x0299, 0, 0, 46 }, /* ASR-4800SAS (Marauder-X) */
++	{ 0x9005, 0x0285, 0x9005, 0x029a, 0, 0, 47 }, /* ASR-4805SAS (Marauder-E) */
++	{ 0x9005, 0x0286, 0x9005, 0x02a2, 0, 0, 48 }, /* ASR-4810SAS (Hurricane */
 +
-+/**
-+ * scsi_remove_device - unregister a device from the scsi bus
-+ * @sdev:	scsi_device to unregister
-+ **/
-+void scsi_remove_device(struct scsi_device *sdev)
-+{
-+	down(&sdev->host->scan_mutex);
-+	__scsi_remove_device(sdev);
-+	up(&sdev->host->scan_mutex);
- }
- EXPORT_SYMBOL(scsi_remove_device);
++	{ 0x9005, 0x0285, 0x1028, 0x0287, 0, 0, 49 }, /* Perc 320/DC*/
++	{ 0x1011, 0x0046, 0x9005, 0x0365, 0, 0, 50 }, /* Adaptec 5400S (Mustang)*/
++	{ 0x1011, 0x0046, 0x9005, 0x0364, 0, 0, 51 }, /* Adaptec 5400S (Mustang)*/
++	{ 0x1011, 0x0046, 0x9005, 0x1364, 0, 0, 52 }, /* Dell PERC2/QC */
++	{ 0x1011, 0x0046, 0x103c, 0x10c2, 0, 0, 53 }, /* HP NetRAID-4M */
++
++	{ 0x9005, 0x0285, 0x1028, PCI_ANY_ID, 0, 0, 54 }, /* Dell Catchall */
++	{ 0x9005, 0x0285, 0x17aa, PCI_ANY_ID, 0, 0, 55 }, /* Legend Catchall */
++	{ 0x9005, 0x0285, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 56 }, /* Adaptec Catch All */
++	{ 0x9005, 0x0286, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 57 }, /* Adaptec Rocket Catch All */
+ 	{ 0,}
+ };
+ MODULE_DEVICE_TABLE(pci, aac_pci_tbl);
+@@ -164,6 +175,14 @@ static struct aac_driver_ident aac_drive
+ 	{ aac_rkt_init, "aacraid",  "ADAPTEC ", "AAR-2820SA      ", 1 }, /* AAR-2820SA (Intruder) */
+ 	{ aac_rkt_init, "aacraid",  "ADAPTEC ", "AAR-2620SA      ", 1 }, /* AAR-2620SA (Intruder) */
+ 	{ aac_rkt_init, "aacraid",  "ADAPTEC ", "AAR-2420SA      ", 1 }, /* AAR-2420SA (Intruder) */
++	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP9024R0       ", 2 }, /* ICP9024R0 (Lancer) */
++	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP9014R0       ", 1 }, /* ICP9014R0 (Lancer) */
++	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP9047MA       ", 1 }, /* ICP9047MA (Lancer) */
++	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP9087MA       ", 1 }, /* ICP9087MA (Lancer) */
++	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP5085AU       ", 1 }, /* ICP5085AU (Hurricane) */
++	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP9085LI       ", 1 }, /* ICP9085LI (Marauder-X) */
++	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP5085BR       ", 1 }, /* ICP5085BR (Marauder-E) */
++	{ NULL        , "aacraid",  "ADAPTEC ", "Themisto        ", 0, AAC_QUIRK_SLAVE }, /* Jupiter Platform */
+ 	{ aac_rkt_init, "aacraid",  "ADAPTEC ", "Callisto        ", 2, AAC_QUIRK_MASTER }, /* Jupiter Platform */
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2020SA       ", 1 }, /* ASR-2020SA SATA PCI-X ZCR (Skyhawk) */
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2025SA       ", 1 }, /* ASR-2025SA SATA SO-DIMM PCI-X ZCR (Terminator) */
+@@ -175,10 +194,11 @@ static struct aac_driver_ident aac_drive
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "AAR-2610SA      ", 1 }, /* SATA 6Ch (Bearcat) */
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2240S       ", 1 }, /* ASR-2240S (SabreExpress) */
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-4005SAS     ", 1 }, /* ASR-4005SAS */
+-	{ aac_rx_init, "aacraid",  "IBM     ", "ServeRAID 8i    ", 1 }, /* IBM 8i (AvonPark) */
++	{ aac_rx_init, "ServeRAID","IBM     ", "ServeRAID 8i    ", 1 }, /* IBM 8i (AvonPark) */
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-4000SAS     ", 1 }, /* ASR-4000SAS (BlackBird & AvonPark) */
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-4800SAS     ", 1 }, /* ASR-4800SAS (Marauder-X) */
+ 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-4805SAS     ", 1 }, /* ASR-4805SAS (Marauder-E) */
++	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-4810SAS     ", 1 }, /* ASR-4810SAS (Hurricane) */
  
-@@ -653,17 +655,20 @@ void __scsi_remove_target(struct scsi_ta
- {
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
- 	unsigned long flags;
--	struct scsi_device *sdev, *tmp;
-+	struct scsi_device *sdev;
+ 	{ aac_rx_init, "percraid", "DELL    ", "PERC 320/DC     ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG }, /* Perc 320/DC*/
+ 	{ aac_sa_init, "aacraid",  "ADAPTEC ", "Adaptec 5400S   ", 4, AAC_QUIRK_34SG }, /* Adaptec 5400S (Mustang)*/
+@@ -681,7 +701,7 @@ static struct scsi_host_template aac_dri
+ 	.slave_configure		= aac_slave_configure,
+ 	.eh_host_reset_handler		= aac_eh_reset,
+ 	.can_queue      		= AAC_NUM_IO_FIB,	
+-	.this_id        		= 16,
++	.this_id        		= MAXIMUM_NUM_CONTAINERS,
+ 	.sg_tablesize   		= 16,
+ 	.max_sectors    		= 128,
+ #if (AAC_NUM_IO_FIB > 256)
+@@ -760,6 +780,7 @@ static int __devinit aac_probe_one(struc
+ 		if (pci_set_dma_mask(pdev, 0xFFFFFFFFULL))
+ 			goto out_free_fibs;
  
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	starget->reap_ref++;
--	list_for_each_entry_safe(sdev, tmp, &shost->__devices, siblings) {
-+restart:
-+	list_for_each_entry(sdev, &shost->__devices, siblings) {
- 		if (sdev->channel != starget->channel ||
--		    sdev->id != starget->id)
-+		    sdev->id != starget->id ||
-+		    sdev->sdev_state == SDEV_DEL)
- 			continue;
- 		spin_unlock_irqrestore(shost->host_lock, flags);
- 		scsi_remove_device(sdev);
- 		spin_lock_irqsave(shost->host_lock, flags);
-+		goto restart;
- 	}
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 	scsi_target_reap(starget);
-Index: usb-2.6/drivers/scsi/scsi_priv.h
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_priv.h
-+++ usb-2.6/drivers/scsi/scsi_priv.h
-@@ -144,6 +144,7 @@ extern void scsi_sysfs_unregister(void);
- extern void scsi_sysfs_device_initialize(struct scsi_device *);
- extern int scsi_sysfs_target_initialize(struct scsi_device *);
- extern struct scsi_transport_template blank_transport_template;
-+extern void __scsi_remove_device(struct scsi_device *);
++	aac->maximum_num_channels = aac_drivers[index].channels;
+ 	aac_get_adapter_info(aac);
  
- extern struct class sdev_class;
- extern struct bus_type scsi_bus_type;
+ 	/*
+@@ -786,7 +807,7 @@ static int __devinit aac_probe_one(struc
+ 	 * physical channels are address by their actual physical number+1
+ 	 */
+ 	if (aac->nondasd_support == 1)
+-		shost->max_channel = aac_drivers[index].channels+1;
++		shost->max_channel = aac->maximum_num_channels + 1;
+ 	else
+ 		shost->max_channel = 1;
+ 
+@@ -795,6 +816,8 @@ static int __devinit aac_probe_one(struc
+ 	list_add(&aac->entry, insert);
+ 
+ 	shost->max_id = aac->maximum_num_containers;
++	if (shost->max_id < aac->maximum_num_physicals)
++		shost->max_id = aac->maximum_num_physicals;
+ 	if (shost->max_id < MAXIMUM_NUM_CONTAINERS)
+ 		shost->max_id = MAXIMUM_NUM_CONTAINERS;
+ 	else
+
+-- 
+Mark Haverkamp <markh@osdl.org>
 
