@@ -1,57 +1,36 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] aacraid: New products patch
-Date: Mon, 20 Jun 2005 14:38:44 -0400
-Message-ID: <60807403EABEB443939A5A7AA8A7458B01520E90@otce2k01.adaptec.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] aacraid: New products patch
+Date: Mon, 20 Jun 2005 14:48:50 -0400
+Message-ID: <42B70F92.7020709@pobox.com>
+References: <60807403EABEB443939A5A7AA8A7458B01520E90@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:29397 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261440AbVFTSja convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2005 14:39:30 -0400
-content-class: urn:content-classes:message
+Received: from mail.dvmed.net ([216.237.124.58]:49569 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261440AbVFTSs4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2005 14:48:56 -0400
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458B01520E90@otce2k01.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Mark Haverkamp <markh@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-For the fragment:
+Salyzyn, Mark wrote:
+> diff -u a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+> --- a/drivers/scsi/aacraid/aachba.c
+> +++ b/drivers/scsi/aacraid/aachba.c
+> @@ -671,7 +671,7 @@
+>  
+>  	bus_info = (struct aac_bus_info_response *) fib_data(fibptr);
+>  
+> -	memset(info,0,sizeof(*bus_info));
+> +	memset(bus_info,0,sizeof(*bus_info));
 
-+
-+	/* 
-+	 * GetBusInfo 
-+	 */
-+
-+	fib_init(fibptr);
-+
-+	bus_info = (struct aac_bus_info_response *) fib_data(fibptr);
-+
-+	memset(info,0,sizeof(*bus_info));
-+
-+	command = (struct aac_bus_info *)bus_info;
 
-I hate to do this to a patch that has already undergone some review,
-especially since this as merely cosmetic, but I noticed that the memset
-was on the 'info' pointer rather than the 'bus_info' pointer. One should
-note that the value of info is the same as bus_info, they are simply two
-different types originating from a void * source; there is no functional
-difference, the resultant code will work fine in either case.
+If you're going to patch this area, please add whitespace.
 
-Supplementary cleanup patch (if there is such a thing):
+	Jeff
 
-diff -u a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -671,7 +671,7 @@
- 
- 	bus_info = (struct aac_bus_info_response *) fib_data(fibptr);
- 
--	memset(info,0,sizeof(*bus_info));
-+	memset(bus_info,0,sizeof(*bus_info));
- 
- 	command = (struct aac_bus_info *)bus_info;
- 
 
--- Mark Salyzyn
