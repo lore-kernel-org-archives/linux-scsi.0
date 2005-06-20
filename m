@@ -1,93 +1,53 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH] aacraid: Interrupt mitigation
-Date: Mon, 20 Jun 2005 15:41:43 -0700
-Message-ID: <1119307303.21986.37.camel@markh1.pdx.osdl.net>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [RFC]: performance improvement by coalescing requests?
+Date: Mon, 20 Jun 2005 17:01:06 -0400
+Message-ID: <42B72E92.7050306@pobox.com>
+References: <60807403EABEB443939A5A7AA8A7458B01520EDD@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:23713 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261397AbVFTWlr (ORCPT
+Received: from mail.dvmed.net ([216.237.124.58]:52898 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261586AbVFTVBM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2005 18:41:47 -0400
+	Mon, 20 Jun 2005 17:01:12 -0400
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458B01520EDD@otce2k01.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Received from Mark Salyzyn from Adaptec:
+Salyzyn, Mark wrote:
+> This is not a patch to be applied to any release, for discussion only.
+> 
+> We have managed to increase the performance of the I/O to the driver by
+> pushing back on the scsi_merge layer when we detect that we are issuing
+> sequential requests (patch enclosed below to demonstrate the technique
+> used to investigate). In the algorithm used, when we see that we have an
+> I/O that adjoins the previous request, we reduce the queue depth to a
+> value of 2 for the device. This allows the incoming I/O to be
+> scrutinized by the scsi_merge layer for a bit longer permitting them to
+> be merged together into a larger more efficient request.
+> 
+> By limiting the queue to a depth of two, we also do not delay the system
+> much since we keep one worker and one outstanding remaining in the
+> controller. This keeps the I/O's fed without delay.
+> 
+> The net result was instead of receiving, for example, 64 4K sequential
+> I/O requests to an eager controller more than willing to accept the
+> commands into it's domain, we instead see two 4K I/O requests, followed
+> by one 248KB I/O request.
 
-If more than two commands are outstanding to the controller, there is no
-need to notify the adapter via a PCI bus transaction of additional
-commands added into the queue; it will get to them when it works through
-the produce/consumer indexes.
+Since you have
 
-This reduced the PCI traffic in the driver to submit a command to the
-queue to near zero allowing a significant number of commands to be
-turned around with no need to block for the PCI bridge to flush the
-notify request to the adapter.
+./drivers/scsi/aacraid/linit.c: .use_clustering  = ENABLE_CLUSTERING,
 
-Interrupt mitigation has always been present in the driver; it was
-turned off because of a bug that prevented one from realizing the
-usefulness of the feature. This bug is fixed in this patch.
+this smells like a bug or scheduler issue.  The block layer should 
+-already- be coalescing requests.
 
-Applies to scsi-misc-2.6 git tree
+What happens when you change I/O schedulers?  That may be a source of 
+problems too.
 
-Signed-off-by: Mark Haverkamp <markh@osdl.org>
+	Jeff
 
-diff -ru a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
---- a/drivers/scsi/aacraid/comminit.c	Mon Jun 20 13:59:27 2005
-+++ b/drivers/scsi/aacraid/comminit.c	Mon Jun 20 14:03:35 2005
-@@ -44,7 +44,9 @@
- 
- #include "aacraid.h"
- 
--struct aac_common aac_config;
-+struct aac_common aac_config = {
-+	.irq_mod = 1
-+};
- 
- static int aac_alloc_comm(struct aac_dev *dev, void **commaddr, unsigned long commsize, unsigned long commalign)
- {
-diff -ru a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
---- a/drivers/scsi/aacraid/commsup.c	Mon Jun 20 13:59:27 2005
-+++ b/drivers/scsi/aacraid/commsup.c	Mon Jun 20 14:08:22 2005
-@@ -254,6 +254,7 @@
- static int aac_get_entry (struct aac_dev * dev, u32 qid, struct aac_entry **entry, u32 * index, unsigned long *nonotify)
- {
- 	struct aac_queue * q;
-+	unsigned long idx;
- 
- 	/*
- 	 *	All of the queues wrap when they reach the end, so we check
-@@ -263,10 +264,23 @@
- 	 */
- 
- 	q = &dev->queues->queue[qid];
--	
--	*index = le32_to_cpu(*(q->headers.producer));
--	if ((*index - 2) == le32_to_cpu(*(q->headers.consumer)))
-+
-+	idx = *index = le32_to_cpu(*(q->headers.producer));
-+	/* Interrupt Moderation, only interrupt for first two entries */
-+	if (idx != le32_to_cpu(*(q->headers.consumer))) {
-+		if (--idx == 0) {
-+			if (qid == AdapHighCmdQueue)
-+				idx = ADAP_HIGH_CMD_ENTRIES;
-+			else if (qid == AdapNormCmdQueue)
-+				idx = ADAP_NORM_CMD_ENTRIES;
-+			else if (qid == AdapHighRespQueue) 
-+	        		idx = ADAP_HIGH_RESP_ENTRIES;
-+			else if (qid == AdapNormRespQueue) 
-+				idx = ADAP_NORM_RESP_ENTRIES;
-+		}
-+		if (idx != le32_to_cpu(*(q->headers.consumer)))
- 			*nonotify = 1; 
-+	}
- 
- 	if (qid == AdapHighCmdQueue) {
- 	        if (*index >= ADAP_HIGH_CMD_ENTRIES)
-
--- 
-Mark Haverkamp <markh@osdl.org>
 
