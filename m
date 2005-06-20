@@ -1,335 +1,187 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH] aacraid: New products patch
-Date: Mon, 20 Jun 2005 10:18:00 -0700
-Message-ID: <1119287880.21986.16.camel@markh1.pdx.osdl.net>
+From: Chris Wright <chrisw@osdl.org>
+Subject: Re: [GIT PATCH] SCSI updates for 2.6.12
+Date: Mon, 20 Jun 2005 10:52:32 -0700
+Message-ID: <20050620175232.GQ9046@shell0.pdx.osdl.net>
+References: <1119103586.4984.5.camel@mulgrave> <20050618141636.GA4112@infradead.org> <20050618174558.GX9153@shell0.pdx.osdl.net> <1119260140.6099.0.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:58294 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261386AbVFTRSH (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:446 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S261402AbVFTRwn (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2005 13:18:07 -0400
+	Mon, 20 Jun 2005 13:52:43 -0400
+Content-Disposition: inline
+In-Reply-To: <1119260140.6099.0.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Chris Wright <chrisw@osdl.org>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, stable@kernel.org
 
-This patch add the following products to the driver:
-        IBM ServeRAID 8i
-        ICP 9014R0
-        ICP 9024R0
-        ICP 9047MA
-        ICP 9087MA
-        ICP 9085LI
-        ICP 5085AU
+* James Bottomley (James.Bottomley@SteelEye.com) wrote:
+> It should be here:
+> 
+> rsync://www.parisc-linux.org/~jejb/git/scsi-rc-fixes-2.6.git
 
-Patch updated to apply to the latest scsi-misc-2.6 git tree.
+The following is queued for -stable:
 
-Signed-off-by: Mark Haverkamp <markh@osdl.org>
+[SCSI] qla2xxx: Pull-down scsi-host-addition to follow board initialization.
 
- README    |    8 ++++++
- TODO      |    2 -
- aachba.c  |   44 +++++++++++++++++++++++++++++++--
- aacraid.h |   24 ++++++++++++++++++
- linit.c   |   81 +++++++++++++++++++++++++++++++++++++++-----------------------
- 5 files changed, 125 insertions(+), 34 deletions(-)
+Return to previous held-logic of calling scsi_add_host() only
+after the board has been completely initialized.  Also return
+pci_*() error-codes during probe failure paths.
 
-diff --git a/drivers/scsi/aacraid/README b/drivers/scsi/aacraid/README
---- a/drivers/scsi/aacraid/README
-+++ b/drivers/scsi/aacraid/README
-@@ -13,6 +13,7 @@ Supported Cards/Chipsets
- 	Adaptec 2020S
- 	Adaptec 2025S
- 	Adaptec 2120S
-+	Adaptec 2130S
- 	Adaptec 2200S
- 	Adaptec 2230S
- 	Adaptec 2240S
-@@ -35,6 +36,13 @@ Supported Cards/Chipsets
- 	HP NetRAID-4M
- 	Legend S220
- 	Legend S230
-+	IBM ServeRAID 8i
-+	ICP 9014R0
-+	ICP 9024R0
-+	ICP 9047MA
-+	ICP 9087MA
-+	ICP 9085LI
-+	ICP 5085AU
+This also corrects an issue where only lun 0 is being scanned for
+a given port.
+
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+
+---
+commit a1541d5af66d02426655b1498f814c52347dd7d3
+tree 02d041e54ebaec744d30ebf6012e305b9673bec0
+parent 27198d855abbfc82df69e81b6c8d2f333580114c
+author Andrew Vasquez <andrew.vasquez@qlogic.com> Thu, 09 Jun 2005 17:21:28 -0700
+committer James Bottomley <jejb@mulgrave.(none)> Sat, 11 Jun 2005 13:06:22 -0500
+
+ drivers/scsi/qla2xxx/qla_os.c |   55 +++++++++++++++++++++--------------------
+ 1 files changed, 28 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1150,7 +1150,7 @@ iospace_error_exit:
+  */
+ int qla2x00_probe_one(struct pci_dev *pdev, struct qla_board_info *brd_info)
+ {
+-	int	ret;
++	int	ret = -ENODEV;
+ 	device_reg_t __iomem *reg;
+ 	struct Scsi_Host *host;
+ 	scsi_qla_host_t *ha;
+@@ -1161,7 +1161,7 @@ int qla2x00_probe_one(struct pci_dev *pd
+ 	fc_port_t *fcport;
  
- People
- -------------------------
-diff --git a/drivers/scsi/aacraid/TODO b/drivers/scsi/aacraid/TODO
---- a/drivers/scsi/aacraid/TODO
-+++ b/drivers/scsi/aacraid/TODO
-@@ -1,6 +1,4 @@
- o	Testing
- o	More testing
--o	Feature request: display the firmware/bios/etc revisions in the
--	/proc info
- o	Drop irq_mask, basically unused
- o	I/O size increase
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -276,7 +276,6 @@ int aac_get_containers(struct aac_dev *d
+ 	if (pci_enable_device(pdev))
+-		return -1;
++		goto probe_out;
  
- 	if (maximum_num_containers < MAXIMUM_NUM_CONTAINERS)
- 		maximum_num_containers = MAXIMUM_NUM_CONTAINERS;
--
- 	fsa_dev_ptr = (struct fsa_dev_info *) kmalloc(
- 	  sizeof(*fsa_dev_ptr) * maximum_num_containers, GFP_KERNEL);
- 	if (!fsa_dev_ptr) {
-@@ -527,6 +526,11 @@ static char *container_types[] = {
-         "V-MIRRORS",          
-         "PSEUDO R4",          
- 	"RAID50",
-+	"RAID5D",
-+	"RAID5D0",
-+	"RAID1E",
-+	"RAID6",
-+	"RAID60",
-         "Unknown"
- };
+ 	host = scsi_host_alloc(&qla2x00_driver_template,
+ 	    sizeof(scsi_qla_host_t));
+@@ -1183,9 +1183,8 @@ int qla2x00_probe_one(struct pci_dev *pd
  
-@@ -610,7 +614,9 @@ int aac_get_adapter_info(struct aac_dev*
- 	struct fib* fibptr;
- 	int rcode;
- 	u32 tmp;
--	struct aac_adapter_info * info;
-+	struct aac_adapter_info *info;
-+	struct aac_bus_info *command;
-+	struct aac_bus_info_response *bus_info;
+ 	/* Configure PCI I/O space */
+ 	ret = qla2x00_iospace_config(ha);
+-	if (ret != 0) {
+-		goto probe_alloc_failed;
+-	}
++	if (ret)
++		goto probe_failed;
  
- 	if (!(fibptr = fib_alloc(dev)))
- 		return -ENOMEM;
-@@ -655,6 +661,36 @@ int aac_get_adapter_info(struct aac_dev*
- 			memcpy(&dev->supplement_adapter_info, info, sizeof(*info));
+ 	/* Sanitize the information from PCI BIOS. */
+ 	host->irq = pdev->irq;
+@@ -1258,23 +1257,10 @@ int qla2x00_probe_one(struct pci_dev *pd
+ 		qla_printk(KERN_WARNING, ha,
+ 		    "[ERROR] Failed to allocate memory for adapter\n");
+ 
+-		goto probe_alloc_failed;
++		ret = -ENOMEM;
++		goto probe_failed;
  	}
  
-+
-+	/* 
-+	 * GetBusInfo 
-+	 */
-+
-+	fib_init(fibptr);
-+
-+	bus_info = (struct aac_bus_info_response *) fib_data(fibptr);
-+
-+	memset(info,0,sizeof(*bus_info));
-+
-+	command = (struct aac_bus_info *)bus_info;
-+
-+	command->Command = cpu_to_le32(VM_Ioctl);
-+	command->ObjType = cpu_to_le32(FT_DRIVE);
-+	command->MethodId = cpu_to_le32(1);
-+	command->CtlCmd = cpu_to_le32(GetBusInfo);
-+
-+	rcode = fib_send(ContainerCommand,
-+			 fibptr,
-+			 sizeof (*bus_info),
-+			 FsaNormal,
-+			 1, 1,
-+			 NULL, NULL);
-+
-+	if (rcode >= 0 && le32_to_cpu(bus_info->Status) == ST_OK) {
-+		dev->maximum_num_physicals = le32_to_cpu(bus_info->TargetsPerBus);
-+		dev->maximum_num_channels = le32_to_cpu(bus_info->BusCount);
-+	}
-+
- 	tmp = le32_to_cpu(dev->adapter_info.kernelrev);
- 	printk(KERN_INFO "%s%d: kernel %d.%d-%d[%d] %.*s\n", 
- 			dev->name, 
-@@ -1818,7 +1854,9 @@ static int aac_send_srb_fib(struct scsi_
- 	u32 flag;
- 	u32 timeout;
- 
--	if( scsicmd->device->id > 15 || scsicmd->device->lun > 7) {
-+	dev = (struct aac_dev *)scsicmd->device->host->hostdata;
-+	if (scsicmd->device->id >= dev->maximum_num_physicals || 
-+			scsicmd->device->lun > 7) {
- 		scsicmd->result = DID_NO_CONNECT << 16;
- 		scsicmd->scsi_done(scsicmd);
- 		return 0;
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -845,6 +845,28 @@ struct aac_supplement_adapter_info
- #define AAC_SIS_VERSION_V3	3
- #define AAC_SIS_SLOT_UNKNOWN	0xFF
- 
-+#define GetBusInfo 0x00000009
-+struct aac_bus_info {
-+	__le32	Command;	/* VM_Ioctl */
-+	__le32	ObjType;	/* FT_DRIVE */
-+	__le32	MethodId;	/* 1 = SCSI Layer */
-+	__le32	ObjectId;	/* Handle */
-+	__le32	CtlCmd;		/* GetBusInfo */
-+};
-+
-+struct aac_bus_info_response {
-+	__le32	Status;		/* ST_OK */
-+	__le32	ObjType;
-+	__le32	MethodId;	/* unused */
-+	__le32	ObjectId;	/* unused */
-+	__le32	CtlCmd;		/* unused */
-+	__le32	ProbeComplete;
-+	__le32	BusCount;
-+	__le32	TargetsPerBus;
-+	u8	InitiatorBusId[10];
-+	u8	BusValid[10];
-+};
-+
- /*
-  * Battery platforms
-  */
-@@ -934,6 +956,8 @@ struct aac_dev
- 
- 	struct Scsi_Host	*scsi_host_ptr;
- 	int			maximum_num_containers;
-+	int			maximum_num_physicals;
-+	int			maximum_num_channels;
- 	struct fsa_dev_info	*fsa_dev;
- 	pid_t			thread_pid;
- 	int			cardtype;
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -102,32 +102,43 @@ static struct pci_device_id aac_pci_tbl[
- 	{ 0x9005, 0x0286, 0x9005, 0x029b, 0, 0, 22 }, /* AAR-2820SA (Intruder) */
- 	{ 0x9005, 0x0286, 0x9005, 0x029c, 0, 0, 23 }, /* AAR-2620SA (Intruder) */
- 	{ 0x9005, 0x0286, 0x9005, 0x029d, 0, 0, 24 }, /* AAR-2420SA (Intruder) */
--	{ 0x9005, 0x0286, 0x9005, 0x0800, 0, 0, 25 }, /* Callisto Jupiter Platform */
--	{ 0x9005, 0x0285, 0x9005, 0x028e, 0, 0, 26 }, /* ASR-2020SA SATA PCI-X ZCR (Skyhawk) */
--	{ 0x9005, 0x0285, 0x9005, 0x028f, 0, 0, 27 }, /* ASR-2025SA SATA SO-DIMM PCI-X ZCR (Terminator) */
--	{ 0x9005, 0x0285, 0x9005, 0x0290, 0, 0, 28 }, /* AAR-2410SA PCI SATA 4ch (Jaguar II) */
--	{ 0x9005, 0x0285, 0x1028, 0x0291, 0, 0, 29 }, /* CERC SATA RAID 2 PCI SATA 6ch (DellCorsair) */
--	{ 0x9005, 0x0285, 0x9005, 0x0292, 0, 0, 30 }, /* AAR-2810SA PCI SATA 8ch (Corsair-8) */
--	{ 0x9005, 0x0285, 0x9005, 0x0293, 0, 0, 31 }, /* AAR-21610SA PCI SATA 16ch (Corsair-16) */
--	{ 0x9005, 0x0285, 0x9005, 0x0294, 0, 0, 32 }, /* ESD SO-DIMM PCI-X SATA ZCR (Prowler) */
--	{ 0x9005, 0x0285, 0x103C, 0x3227, 0, 0, 33 }, /* AAR-2610SA PCI SATA 6ch */
--	{ 0x9005, 0x0285, 0x9005, 0x0296, 0, 0, 34 }, /* ASR-2240S (SabreExpress) */
--	{ 0x9005, 0x0285, 0x9005, 0x0297, 0, 0, 35 }, /* ASR-4005SAS */
--	{ 0x9005, 0x0285, 0x1014, 0x02F2, 0, 0, 36 }, /* IBM 8i (AvonPark) */
--	{ 0x9005, 0x0285, 0x9005, 0x0298, 0, 0, 37 }, /* ASR-4000SAS (BlackBird) */
--	{ 0x9005, 0x0285, 0x9005, 0x0299, 0, 0, 38 }, /* ASR-4800SAS (Marauder-X) */
--	{ 0x9005, 0x0285, 0x9005, 0x029A, 0, 0, 39 }, /* ASR-4805SAS (Marauder-E) */
+-	pci_set_drvdata(pdev, ha);
+-	host->this_id = 255;
+-	host->cmd_per_lun = 3;
+-	host->unique_id = ha->instance;
+-	host->max_cmd_len = MAX_CMDSZ;
+-	host->max_channel = ha->ports - 1;
+-	host->max_id = ha->max_targets;
+-	host->max_lun = ha->max_luns;
+-	host->transportt = qla2xxx_transport_template;
+-	if (scsi_add_host(host, &pdev->dev))
+-		goto probe_alloc_failed;
 -
--	{ 0x9005, 0x0285, 0x1028, 0x0287, 0, 0, 40 }, /* Perc 320/DC*/
--	{ 0x1011, 0x0046, 0x9005, 0x0365, 0, 0, 41 }, /* Adaptec 5400S (Mustang)*/
--	{ 0x1011, 0x0046, 0x9005, 0x0364, 0, 0, 42 }, /* Adaptec 5400S (Mustang)*/
--	{ 0x1011, 0x0046, 0x9005, 0x1364, 0, 0, 43 }, /* Dell PERC2/QC */
--	{ 0x1011, 0x0046, 0x103c, 0x10c2, 0, 0, 44 }, /* HP NetRAID-4M */
+-	qla2x00_alloc_sysfs_attr(ha);
 -
--	{ 0x9005, 0x0285, 0x1028, PCI_ANY_ID, 0, 0, 45 }, /* Dell Catchall */
--	{ 0x9005, 0x0285, 0x17aa, PCI_ANY_ID, 0, 0, 46 }, /* Legend Catchall */
--	{ 0x9005, 0x0285, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 47 }, /* Adaptec Catch All */
--	{ 0x9005, 0x0286, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 48 }, /* Adaptec Rocket Catch All */
-+	{ 0x9005, 0x0286, 0x9005, 0x029e, 0, 0, 25 }, /* ICP9024R0 (Lancer) */
-+	{ 0x9005, 0x0286, 0x9005, 0x029f, 0, 0, 26 }, /* ICP9014R0 (Lancer) */
-+	{ 0x9005, 0x0286, 0x9005, 0x02a0, 0, 0, 27 }, /* ICP9047MA (Lancer) */
-+	{ 0x9005, 0x0286, 0x9005, 0x02a1, 0, 0, 28 }, /* ICP9087MA (Lancer) */
-+	{ 0x9005, 0x0286, 0x9005, 0x02a3, 0, 0, 29 }, /* ICP5085AU (Hurricane) */
-+	{ 0x9005, 0x0285, 0x9005, 0x02a4, 0, 0, 30 }, /* ICP9085LI (Marauder-X) */
-+	{ 0x9005, 0x0285, 0x9005, 0x02a5, 0, 0, 31 }, /* ICP5085BR (Marauder-E) */
-+	{ 0x9005, 0x0287, 0x9005, 0x0800, 0, 0, 32 }, /* Themisto Jupiter Platform */
-+	{ 0x9005, 0x0200, 0x9005, 0x0200, 0, 0, 32 }, /* Themisto Jupiter Platform */
-+	{ 0x9005, 0x0286, 0x9005, 0x0800, 0, 0, 33 }, /* Callisto Jupiter Platform */
-+	{ 0x9005, 0x0285, 0x9005, 0x028e, 0, 0, 34 }, /* ASR-2020SA SATA PCI-X ZCR (Skyhawk) */
-+	{ 0x9005, 0x0285, 0x9005, 0x028f, 0, 0, 35 }, /* ASR-2025SA SATA SO-DIMM PCI-X ZCR (Terminator) */
-+	{ 0x9005, 0x0285, 0x9005, 0x0290, 0, 0, 36 }, /* AAR-2410SA PCI SATA 4ch (Jaguar II) */
-+	{ 0x9005, 0x0285, 0x1028, 0x0291, 0, 0, 37 }, /* CERC SATA RAID 2 PCI SATA 6ch (DellCorsair) */
-+	{ 0x9005, 0x0285, 0x9005, 0x0292, 0, 0, 38 }, /* AAR-2810SA PCI SATA 8ch (Corsair-8) */
-+	{ 0x9005, 0x0285, 0x9005, 0x0293, 0, 0, 39 }, /* AAR-21610SA PCI SATA 16ch (Corsair-16) */
-+	{ 0x9005, 0x0285, 0x9005, 0x0294, 0, 0, 40 }, /* ESD SO-DIMM PCI-X SATA ZCR (Prowler) */
-+	{ 0x9005, 0x0285, 0x103C, 0x3227, 0, 0, 41 }, /* AAR-2610SA PCI SATA 6ch */
-+	{ 0x9005, 0x0285, 0x9005, 0x0296, 0, 0, 42 }, /* ASR-2240S (SabreExpress) */
-+	{ 0x9005, 0x0285, 0x9005, 0x0297, 0, 0, 43 }, /* ASR-4005SAS */
-+	{ 0x9005, 0x0285, 0x1014, 0x02F2, 0, 0, 44 }, /* IBM 8i (AvonPark) */
-+	{ 0x9005, 0x0285, 0x1014, 0x0312, 0, 0, 44 }, /* IBM 8i (AvonPark Lite) */
-+	{ 0x9005, 0x0285, 0x9005, 0x0298, 0, 0, 45 }, /* ASR-4000SAS (BlackBird) */
-+	{ 0x9005, 0x0285, 0x9005, 0x0299, 0, 0, 46 }, /* ASR-4800SAS (Marauder-X) */
-+	{ 0x9005, 0x0285, 0x9005, 0x029a, 0, 0, 47 }, /* ASR-4805SAS (Marauder-E) */
-+	{ 0x9005, 0x0286, 0x9005, 0x02a2, 0, 0, 48 }, /* ASR-4810SAS (Hurricane */
-+
-+	{ 0x9005, 0x0285, 0x1028, 0x0287, 0, 0, 49 }, /* Perc 320/DC*/
-+	{ 0x1011, 0x0046, 0x9005, 0x0365, 0, 0, 50 }, /* Adaptec 5400S (Mustang)*/
-+	{ 0x1011, 0x0046, 0x9005, 0x0364, 0, 0, 51 }, /* Adaptec 5400S (Mustang)*/
-+	{ 0x1011, 0x0046, 0x9005, 0x1364, 0, 0, 52 }, /* Dell PERC2/QC */
-+	{ 0x1011, 0x0046, 0x103c, 0x10c2, 0, 0, 53 }, /* HP NetRAID-4M */
-+
-+	{ 0x9005, 0x0285, 0x1028, PCI_ANY_ID, 0, 0, 54 }, /* Dell Catchall */
-+	{ 0x9005, 0x0285, 0x17aa, PCI_ANY_ID, 0, 0, 55 }, /* Legend Catchall */
-+	{ 0x9005, 0x0285, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 56 }, /* Adaptec Catch All */
-+	{ 0x9005, 0x0286, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 57 }, /* Adaptec Rocket Catch All */
- 	{ 0,}
- };
- MODULE_DEVICE_TABLE(pci, aac_pci_tbl);
-@@ -164,6 +175,14 @@ static struct aac_driver_ident aac_drive
- 	{ aac_rkt_init, "aacraid",  "ADAPTEC ", "AAR-2820SA      ", 1 }, /* AAR-2820SA (Intruder) */
- 	{ aac_rkt_init, "aacraid",  "ADAPTEC ", "AAR-2620SA      ", 1 }, /* AAR-2620SA (Intruder) */
- 	{ aac_rkt_init, "aacraid",  "ADAPTEC ", "AAR-2420SA      ", 1 }, /* AAR-2420SA (Intruder) */
-+	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP9024R0       ", 2 }, /* ICP9024R0 (Lancer) */
-+	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP9014R0       ", 1 }, /* ICP9014R0 (Lancer) */
-+	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP9047MA       ", 1 }, /* ICP9047MA (Lancer) */
-+	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP9087MA       ", 1 }, /* ICP9087MA (Lancer) */
-+	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP5085AU       ", 1 }, /* ICP5085AU (Hurricane) */
-+	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP9085LI       ", 1 }, /* ICP9085LI (Marauder-X) */
-+	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP5085BR       ", 1 }, /* ICP5085BR (Marauder-E) */
-+	{ NULL        , "aacraid",  "ADAPTEC ", "Themisto        ", 0, AAC_QUIRK_SLAVE }, /* Jupiter Platform */
- 	{ aac_rkt_init, "aacraid",  "ADAPTEC ", "Callisto        ", 2, AAC_QUIRK_MASTER }, /* Jupiter Platform */
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2020SA       ", 1 }, /* ASR-2020SA SATA PCI-X ZCR (Skyhawk) */
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2025SA       ", 1 }, /* ASR-2025SA SATA SO-DIMM PCI-X ZCR (Terminator) */
-@@ -175,10 +194,11 @@ static struct aac_driver_ident aac_drive
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "AAR-2610SA      ", 1 }, /* SATA 6Ch (Bearcat) */
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2240S       ", 1 }, /* ASR-2240S (SabreExpress) */
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-4005SAS     ", 1 }, /* ASR-4005SAS */
--	{ aac_rx_init, "aacraid",  "IBM     ", "ServeRAID 8i    ", 1 }, /* IBM 8i (AvonPark) */
-+	{ aac_rx_init, "ServeRAID","IBM     ", "ServeRAID 8i    ", 1 }, /* IBM 8i (AvonPark) */
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-4000SAS     ", 1 }, /* ASR-4000SAS (BlackBird & AvonPark) */
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-4800SAS     ", 1 }, /* ASR-4800SAS (Marauder-X) */
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-4805SAS     ", 1 }, /* ASR-4805SAS (Marauder-E) */
-+	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-4810SAS     ", 1 }, /* ASR-4810SAS (Hurricane) */
+ 	if (qla2x00_initialize_adapter(ha) &&
+ 	    !(ha->device_flags & DFLG_NO_CABLE)) {
  
- 	{ aac_rx_init, "percraid", "DELL    ", "PERC 320/DC     ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG }, /* Perc 320/DC*/
- 	{ aac_sa_init, "aacraid",  "ADAPTEC ", "Adaptec 5400S   ", 4, AAC_QUIRK_34SG }, /* Adaptec 5400S (Mustang)*/
-@@ -681,7 +701,7 @@ static struct scsi_host_template aac_dri
- 	.slave_configure		= aac_slave_configure,
- 	.eh_host_reset_handler		= aac_eh_reset,
- 	.can_queue      		= AAC_NUM_IO_FIB,	
--	.this_id        		= 16,
-+	.this_id        		= MAXIMUM_NUM_CONTAINERS,
- 	.sg_tablesize   		= 16,
- 	.max_sectors    		= 128,
- #if (AAC_NUM_IO_FIB > 256)
-@@ -760,6 +780,7 @@ static int __devinit aac_probe_one(struc
- 		if (pci_set_dma_mask(pdev, 0xFFFFFFFFULL))
- 			goto out_free_fibs;
+@@ -1285,11 +1271,10 @@ int qla2x00_probe_one(struct pci_dev *pd
+ 		    "Adapter flags %x.\n",
+ 		    ha->host_no, ha->device_flags));
  
-+	aac->maximum_num_channels = aac_drivers[index].channels;
- 	aac_get_adapter_info(aac);
++		ret = -ENODEV;
+ 		goto probe_failed;
+ 	}
  
+-	qla2x00_init_host_attr(ha);
+-
  	/*
-@@ -786,7 +807,7 @@ static int __devinit aac_probe_one(struc
- 	 * physical channels are address by their actual physical number+1
+ 	 * Startup the kernel thread for this host adapter
  	 */
- 	if (aac->nondasd_support == 1)
--		shost->max_channel = aac_drivers[index].channels+1;
-+		shost->max_channel = aac->maximum_num_channels + 1;
- 	else
- 		shost->max_channel = 1;
+@@ -1299,17 +1284,26 @@ int qla2x00_probe_one(struct pci_dev *pd
+ 		qla_printk(KERN_WARNING, ha,
+ 		    "Unable to start DPC thread!\n");
  
-@@ -795,6 +816,8 @@ static int __devinit aac_probe_one(struc
- 	list_add(&aac->entry, insert);
++		ret = -ENODEV;
+ 		goto probe_failed;
+ 	}
+ 	wait_for_completion(&ha->dpc_inited);
  
- 	shost->max_id = aac->maximum_num_containers;
-+	if (shost->max_id < aac->maximum_num_physicals)
-+		shost->max_id = aac->maximum_num_physicals;
- 	if (shost->max_id < MAXIMUM_NUM_CONTAINERS)
- 		shost->max_id = MAXIMUM_NUM_CONTAINERS;
++	host->this_id = 255;
++	host->cmd_per_lun = 3;
++	host->unique_id = ha->instance;
++	host->max_cmd_len = MAX_CMDSZ;
++	host->max_channel = ha->ports - 1;
++	host->max_lun = MAX_LUNS;
++	host->transportt = qla2xxx_transport_template;
++
+ 	if (IS_QLA2100(ha) || IS_QLA2200(ha))
+ 		ret = request_irq(host->irq, qla2100_intr_handler,
+ 		    SA_INTERRUPT|SA_SHIRQ, ha->brd_info->drv_name, ha);
  	else
-
--- 
-Mark Haverkamp <markh@osdl.org>
-
+ 		ret = request_irq(host->irq, qla2300_intr_handler,
+ 		    SA_INTERRUPT|SA_SHIRQ, ha->brd_info->drv_name, ha);
+-	if (ret != 0) {
++	if (ret) {
+ 		qla_printk(KERN_WARNING, ha,
+ 		    "Failed to reserve interrupt %d already in use.\n",
+ 		    host->irq);
+@@ -1363,9 +1357,18 @@ int qla2x00_probe_one(struct pci_dev *pd
+ 		msleep(10);
+ 	}
+ 
++	pci_set_drvdata(pdev, ha);
+ 	ha->flags.init_done = 1;
+ 	num_hosts++;
+ 
++	ret = scsi_add_host(host, &pdev->dev);
++	if (ret)
++		goto probe_failed;
++
++	qla2x00_alloc_sysfs_attr(ha);
++
++	qla2x00_init_host_attr(ha);
++
+ 	qla_printk(KERN_INFO, ha, "\n"
+ 	    " QLogic Fibre Channel HBA Driver: %s\n"
+ 	    "  QLogic %s - %s\n"
+@@ -1384,9 +1387,6 @@ int qla2x00_probe_one(struct pci_dev *pd
+ probe_failed:
+ 	fc_remove_host(ha->host);
+ 
+-	scsi_remove_host(host);
+-
+-probe_alloc_failed:
+ 	qla2x00_free_device(ha);
+ 
+ 	scsi_host_put(host);
+@@ -1394,7 +1394,8 @@ probe_alloc_failed:
+ probe_disable_device:
+ 	pci_disable_device(pdev);
+ 
+-	return -1;
++probe_out:
++	return ret;
+ }
+ EXPORT_SYMBOL_GPL(qla2x00_probe_one);
+ 
