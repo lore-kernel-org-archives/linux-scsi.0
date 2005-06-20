@@ -1,52 +1,34 @@
-From: =?ISO-8859-2?Q?Tomasz_K=B3oczko?= <kloczek@rudy.mif.pg.gda.pl>
-Subject: Q: qla23xxx and lpfc (Was: Re: [GIT PATCH] SCSI updates for 2.6.12)
-Date: Mon, 20 Jun 2005 12:33:49 +0200 (CEST)
-Message-ID: <Pine.BSO.4.62.0506201217410.19853@rudy.mif.pg.gda.pl>
-References: <1119103586.4984.5.camel@mulgrave>  <20050618141636.GA4112@infradead.org>
-  <20050618174558.GX9153@shell0.pdx.osdl.net> <1119260140.6099.0.camel@mulgrave>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH, scsi-block-2.6] remove bio_map_user
+Date: Mon, 20 Jun 2005 12:37:13 +0200
+Message-ID: <20050620103709.GA15021@suse.de>
+References: <20050619092946.GA16872@lst.de>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="0-1189960872-1119263629=:19853"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rudy.mif.pg.gda.pl ([153.19.42.16]:6167 "EHLO
-	rudy.mif.pg.gda.pl") by vger.kernel.org with ESMTP id S261153AbVFTKdf
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2005 06:33:35 -0400
-In-Reply-To: <1119260140.6099.0.camel@mulgrave>
+Received: from ns.virtualhost.dk ([195.184.98.160]:48092 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261153AbVFTKf7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2005 06:35:59 -0400
+Content-Disposition: inline
+In-Reply-To: <20050619092946.GA16872@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Chris Wright <chrisw@osdl.org>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Sun, Jun 19 2005, Christoph Hellwig wrote:
+> It's only used by blk_rq_map_user and that's the only sensible caller.
 
---0-1189960872-1119263629=:19853
-Content-Type: TEXT/PLAIN; charset=ISO-8859-2; format=flowed
-Content-Transfer-Encoding: 8BIT
+That's not really true, there is/are valid uses of bio_map_user() alone.
 
-On Mon, 20 Jun 2005, James Bottomley wrote:
+> So do the iov wrapping there and kill bio_map_user.
 
-> On Sat, 2005-06-18 at 10:45 -0700, Chris Wright wrote:
->> Sure, if it's seriously broken w/out send it to stable@kernel.org,
->> and we'll queue it up.
->
-> It should be here:
->
-> rsync://www.parisc-linux.org/~jejb/git/scsi-rc-fixes-2.6.git
->
-> That's the same patch that's merged now.
+While I do agree with the change, I know of external users of
+bio_map_user(). It's a really trivial piece of code, so I would rather
+just let bio_map_user() stay as-is.
 
-Included in vanilla 2.6.12 qla23xxx 8.00.02b5 is for me unuseable (fails 
-on scaning luns and oopses on array controler reset) on x86_64 with
-qla2300 and for me works only version 8.01.00b2.
-Is it will be possible include this version in official tree ?
 
-Also is it will be possible include Emulex lpfc driver to official tree ?
-
-kloczek
 -- 
------------------------------------------------------------
-*Ludzie nie maj± problemów, tylko sobie sami je stwarzaj±*
------------------------------------------------------------
-Tomasz K³oczko, sys adm @zie.pg.gda.pl|*e-mail: kloczek@rudy.mif.pg.gda.pl*
---0-1189960872-1119263629=:19853--
+Jens Axboe
+
