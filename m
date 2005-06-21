@@ -1,53 +1,43 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH 1/11]  qla2xxx: Add ISP24xx definitions.
-Date: Tue, 21 Jun 2005 11:23:05 -0700
-Message-ID: <20050621182305.GC7510@plap.qlogic.org>
-References: <20050614053136.12127.506.sendpatchset@plap.qlogic.com> <20050614053141.12127.35841.sendpatchset@plap.qlogic.com> <20050614215030.GA5849@infradead.org>
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: Questions about scsi_target_reap and starget/sdev lifecyle
+Date: Tue, 21 Jun 2005 12:24:49 -0700
+Message-ID: <20050621192449.GA30526@us.ibm.com>
+References: <1118930260.4998.6.camel@mulgrave> <Pine.LNX.4.44L0.0506181554270.3347-100000@netrider.rowland.org> <20050621171209.GB29396@us.ibm.com> <20050621174301.GA726@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:795 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S261824AbVFUSXG (ORCPT
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:6564 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262233AbVFUTY3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Jun 2005 14:23:06 -0400
+	Tue, 21 Jun 2005 15:24:29 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j5LJOTHb016929
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Jun 2005 15:24:29 -0400
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j5LJOTKK152188
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Jun 2005 15:24:29 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j5LJOSjA012699
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Jun 2005 15:24:28 -0400
 Content-Disposition: inline
-In-Reply-To: <20050614215030.GA5849@infradead.org>
+In-Reply-To: <20050621174301.GA726@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, 14 Jun 2005, Christoph Hellwig wrote:
+Patrick Mansfield [patmans@us.ibm.com] wrote:
+> Mike -
+> 
+> You probably need Alan's most recent patch that passes through
+> scsi_scan_target's parent argument.
 
-> > +#ifndef PCI_DEVICE_ID_QLOGIC_ISP2512
-> > +#define PCI_DEVICE_ID_QLOGIC_ISP2512	0x2512
-> > +#endif
-> > +
-> > +#ifndef PCI_DEVICE_ID_QLOGIC_ISP2522
-> > +#define PCI_DEVICE_ID_QLOGIC_ISP2522	0x2522
-> > +#endif
-> 
-> It's only an historic accident that the older ids are in here, care
-> to remove all and move them to pci_ids.h instead?
-> 
-> > +	int		(*start_scsi)(srb_t *);
-> 
-> umm, that's most of ->queuecommand, isn't it?  Shouldn't you define
-> a separate scsi_host_template for 24xx/25xx?
-> 
-> > +//ISP24xx
-> 
-> please try to avoid C++-style comments
-> 
-> > +	volatile uint16_t mailbox0;
-> > +	volatile uint16_t mailbox1;
-> > +	volatile uint16_t mailbox2;
-> 
-> never use volatile, always use proper kernel primitives to access
-> hardware or atomic_t for atomic in-kernel variables.
+Yes, thanks I thought that I was running the third update, but I was
+running the second one. Running with third patch update fixes my scan
+issue.
 
-No problem.  I'll have another patchset which hopefully addresses the
-concerns and with a bit of additional testing in the next week or so.
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
 
-Thanks,
-Andrew
