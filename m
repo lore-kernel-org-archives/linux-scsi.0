@@ -1,43 +1,62 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: Questions about scsi_target_reap and starget/sdev lifecyle
-Date: Tue, 21 Jun 2005 12:24:49 -0700
-Message-ID: <20050621192449.GA30526@us.ibm.com>
-References: <1118930260.4998.6.camel@mulgrave> <Pine.LNX.4.44L0.0506181554270.3347-100000@netrider.rowland.org> <20050621171209.GB29396@us.ibm.com> <20050621174301.GA726@us.ibm.com>
+From: =?windows-1252?Q?Martin_MOKREJ=8A?=
+	<mmokrejs@ribosome.natur.cuni.cz>
+Subject: Re: scsi1:0:4:0: Attempting to queue an ABORT message
+Date: Tue, 21 Jun 2005 21:40:43 +0200
+Message-ID: <42B86D3B.3080301@ribosome.natur.cuni.cz>
+References: <42B8598F.70203@ribosome.natur.cuni.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:6564 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262233AbVFUTY3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Jun 2005 15:24:29 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j5LJOTHb016929
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Jun 2005 15:24:29 -0400
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j5LJOTKK152188
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Jun 2005 15:24:29 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j5LJOSjA012699
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Jun 2005 15:24:28 -0400
-Content-Disposition: inline
-In-Reply-To: <20050621174301.GA726@us.ibm.com>
+Received: from r3az252.chello.upc.cz ([213.220.243.252]:5261 "EHLO
+	aquarius.doma") by vger.kernel.org with ESMTP id S262305AbVFUTks
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Jun 2005 15:40:48 -0400
+In-Reply-To: <42B8598F.70203@ribosome.natur.cuni.cz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Patrick Mansfield [patmans@us.ibm.com] wrote:
-> Mike -
-> 
-> You probably need Alan's most recent patch that passes through
-> scsi_scan_target's parent argument.
+The problem doesn't appear when using http://download.adaptec.com/scsi/=
+linux/aic7Yxx-2.0.14-6.3.11-linux-2.4.tar.bz2
+driver. I have simply replaced the aic7xxx subdirectory of vanilla 2.4.=
+31 and done
+make dep; make bzImage; make modules as usually.
 
-Yes, thanks I thought that I was running the third update, but I was
-running the second one. Running with third patch update fixes my scan
-issue.
+Could someone at least tell me which change fixed possibly my problem
+so I'd ask on linux-kernel list to get the patch included?
+Or will someone take over this initiative and push even the 6.3.11 driv=
+er
+into 2.4 and 2.6 kernels? ;)
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+I believe same problem was reported by Yogesh Bhanu with subject
+"Adpatec AIC7xxx problems " today too. I believe he has almost same har=
+dware
+from the same vendor. ;)
+M.
 
+Martin MOKREJ=8A wrote:
+> Hi,
+>  I have asked on this list few weeks ago but received no answer at al=
+l. :(
+> Now I'm retrying again as I still have problems, at the moment with=20
+> 2.4.31 kernel.
+> could someone explain me what is wrong? I get the messages when the=20
+> machine boots
+> and only once I got it while running several weeks/months without reb=
+oot.
+> Thanks for help!
+> Martin
+>=20
+> Jun 20 23:37:14 oxygen scsi1:0:4:0: Attempting to queue an ABORT mess=
+age
+> Jun 20 23:37:14 oxygen CDB: 0x12 0x0 0x0 0x0 0x32 0x0
+> Jun 20 23:37:14 oxygen scsi1: At time of recovery, card was not pause=
+d
+> Jun 20 23:37:14 oxygen >>>>>>>>>>>>>>>>>> Dump Card State Begins=20
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
