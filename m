@@ -1,53 +1,70 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: [RFC]: performance improvement by coalescing requests?
-Date: Mon, 20 Jun 2005 17:01:06 -0400
-Message-ID: <42B72E92.7050306@pobox.com>
-References: <60807403EABEB443939A5A7AA8A7458B01520EDD@otce2k01.adaptec.com>
+Date: Tue, 21 Jun 2005 09:28:22 +0200
+Message-ID: <20050621072822.GE9020@suse.de>
+References: <60807403EABEB443939A5A7AA8A7458B01520F3F@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:52898 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S261586AbVFTVBM (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:4497 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S262037AbVFUH1E (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2005 17:01:12 -0400
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458B01520EDD@otce2k01.adaptec.com>
+	Tue, 21 Jun 2005 03:27:04 -0400
+Content-Disposition: inline
+In-Reply-To: <60807403EABEB443939A5A7AA8A7458B01520F3F@otce2k01.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Salyzyn, Mark wrote:
-> This is not a patch to be applied to any release, for discussion only.
+On Mon, Jun 20 2005, Salyzyn, Mark wrote:
+> Jens Axboe [mailto:axboe@suse.de] writes:
+> > You say io, but I guess you mean writes in particular?
 > 
-> We have managed to increase the performance of the I/O to the driver by
-> pushing back on the scsi_merge layer when we detect that we are issuing
-> sequential requests (patch enclosed below to demonstrate the technique
-> used to investigate). In the algorithm used, when we see that we have an
-> I/O that adjoins the previous request, we reduce the queue depth to a
-> value of 2 for the device. This allows the incoming I/O to be
-> scrutinized by the scsi_merge layer for a bit longer permitting them to
-> be merged together into a larger more efficient request.
+> Read or writes. One of the test cases was:
 > 
-> By limiting the queue to a depth of two, we also do not delay the system
-> much since we keep one worker and one outstanding remaining in the
-> controller. This keeps the I/O's fed without delay.
+> dd if=/dev/sda of=/dev/null bs=512b
 > 
-> The net result was instead of receiving, for example, 64 4K sequential
-> I/O requests to an eager controller more than willing to accept the
-> commands into it's domain, we instead see two 4K I/O requests, followed
-> by one 248KB I/O request.
+> would break apart into 64 4K reads with no completion dependencies
+> between them.
 
-Since you have
+That's a silly test case though, because you are intentionally issuing
+io in a really small size. Do you have any real world cases?
 
-./drivers/scsi/aacraid/linit.c: .use_clustering  = ENABLE_CLUSTERING,
+If you do
 
-this smells like a bug or scheduler issue.  The block layer should 
--already- be coalescing requests.
+dd if=/dev/zero of=/dev/sda bs=512b
 
-What happens when you change I/O schedulers?  That may be a source of 
-problems too.
+and see lots of small requests, then that would be more strange. Can you
+definitely verify this is what happens?
 
-	Jeff
+> > Or for any substantial amount of io, you would be queueing it so fast
+> > that it should have plenty of time to be merged
+> > until the drive sucks them in.
+> 
+> Did I mention that this problem started occurring when we increased the
+> aacraid adapter and driver performance last year? We managed to suck the
+> requests in faster. Sadly (from the perspective of Adaptec pride in our
+> hardware controllers ;-> ), the scsi_merge layer is more efficient at
+> coalescing the requests than the adapter's Firmware solely because of
+> the PCI bus bandwidth used.
+> 
+> I must admit that the last time I did this instrumented test was in the
+> 2.6.3 timeframe with SL9.1. This 'plugging' you are talking about, when
+> did it make it into the scsi layer? Sounds like I need to retest,
+> certainly a good result of opening my mouth to start this thread.
 
+The plugging is a block layer property, it's been in use for ages (since
+at least 2.0, I forget when it was originall introduced).
+
+> > And a few ms should be enough time to queue that amount many many
+> > times over.
+> 
+> The adapter can suck in 256 requests within a single ms.
+
+I'm sure it can, I'm also sure that you can queue io orders of magnitude
+faster than you can send them to hardware!
+
+-- 
+Jens Axboe
 
