@@ -1,68 +1,46 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Questions about scsi_target_reap and starget/sdev lifecyle
-Date: Wed, 22 Jun 2005 11:12:07 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0506221052170.6128-100000@iolanthe.rowland.org>
-References: <42B96947.4040208@adaptec.com>
+From: "Gabor Z. Papp" <gzp@papp.hu>
+Subject: Re: 2.4 and aacraid dmesg
+Date: Wed, 22 Jun 2005 17:25:11 +0200
+Message-ID: <x6ll5276so@gzp>
+References: <60807403EABEB443939A5A7AA8A7458B0152136F@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:15810 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261533AbVFVPMI
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Jun 2005 11:12:08 -0400
-In-Reply-To: <42B96947.4040208@adaptec.com>
+Received: from odpn1.odpn.net ([212.40.96.53]:11733 "EHLO odpn1.odpn.net")
+	by vger.kernel.org with ESMTP id S261386AbVFVPZR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Jun 2005 11:25:17 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Mike Anderson <andmike@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Mark Haverkamp <markh@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 22 Jun 2005, Luben Tuikov wrote:
+* "Salyzyn, Mark" <mark_salyzyn@adaptec.com>:
 
-> For the success of the state machine, states must be discrete.
-> scsi_remove_host() cannot mean "reasonably soon".  If it _has_ to mean
-> that, then _add_ another state.
-> 
-> If one wants to consolidate the hot-unplugging with notified unplug,
-> one might as well aim for the supercase "hot-unplug".  Its implementation
-> would surely satisfy notified unplug.
+| The message is coming from the PCI subsystem. Yes it is triggered by the
+| pending driver load and requesting card pci resources, but such messages
+| are usually a result of issues with the Motherboard BIOS or Hardware.
 
-Certainly.  In the UNPLUG_NOTIFY state, only commands like SYNCHRONIZE 
-CACHE should be allowed.
+The system is working fine, stable, without errors. I was just
+courious about this kernel msg flood.
 
-> The lower layers should make sure that if the device is gone, that is
-> they _know_ about the event, an error is returned.
-> 
-> So that the treatment of flush-cache is no different than already queued
-> commands.
+| on PCI address 03:0d.0 and 03:09.0 are sharing IRQ 4. The 'info' message
+| is printed every time the pcibios_enable_device() call is made. The
+| interrupt sharing is assigned by the Motherboard BIOS and if you have
+| subsequent problems with the operation of the card(s) or the system, you
+| should investigate updating the Motherboard BIOS or go into the
+| motherboard BIOS setup and see if you can reassign the PCI (IRQ)
+| resources.
 
-For the unplug case you are right.  For the notify case it's a little 
-tricky because of the interaction with command cancellation (if commands 
-need to be cancelled) and the need to allow the cache flush without 
-allowing other commands.
+Okay. The other device at 03:09.0 is a:
 
-> So in effect, you (usb-storage) know about a condition (say device is gone)
-> you should act on it right in queuecommand() and not accept the command,
-> as opposed to hoping for the midlayer to turn around and preempt those commands.
-> 
-> 	Luben
-> P.S. USB is perfect, since you're notified on unplug.
+Multimedia audio controller: Creative Labs SB Live! EMU10k1 (rev 08)
 
-Yes.  But in fact usb-storage has a small loophole.  Before calling
-scsi_remove_host, we set a flag that causes the queuecommand routine to
-reject all new commands and any currently-executing command to fail-fast.  
-However there is a small window between the time a command is accepted and
-the time it starts to execute (because execution takes place in a
-separate kernel thread).  If a command has been accepted and has not
-started to execute, then usb-storage doesn't cancel it.  We've been
-relying on the midlayer to cancel it for us.
+| The spurious 8259A interrupt message *may* be viewed as a problem.
 
-There's no reason usb-storage can't cancel the command before calling
-scsi_remove_host.  I tried out a patch to do just that, and it worked
-fine.  (Waiting until after scsi_remove_host to cancel the command doesn't
-work, for the obvious reason that the midlayer may have already cancelled
-it.)  I'll submit the patch; it should solve this particular problem for
-usb-storage.  I don't know how any other hot-unpluggable LLDDs will handle
-cancellation during unplug.
+I'm getting this sh*t from 2.4.18 or so... I think its another story.
 
-Alan Stern
+Anyway, I love this 2120S, boots quite slooowly, but works fine and
+stable.
 
+Ah, the chip is *very* *very* *very* hot on the card, is that normal?
