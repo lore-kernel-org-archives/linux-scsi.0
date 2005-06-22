@@ -1,142 +1,98 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH] aacraid: driver version updates
-Date: Wed, 22 Jun 2005 13:43:11 -0700
-Message-ID: <1119472992.18698.34.camel@markh1.pdx.osdl.net>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Fw: ahc_target_state check starget valid
+Date: Wed, 22 Jun 2005 14:08:08 -0700
+Message-ID: <20050622140808.554fae2d.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:23749 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S262234AbVFVUnV (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:64970 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S262530AbVFVVHQ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Jun 2005 16:43:21 -0400
+	Wed, 22 Jun 2005 17:07:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Andy Whitcroft <apw@shadowen.org>
 
 
-Received from Mark Salyzyn from Adaptec.
+Nope, Justin has departed the scene.  I think someone at adaptec has picked
+up maintenance, but James dinks with aic* as well.  MAINTAINERS needs some
+maintenance.
 
-Fixes a bug in check_revision.  It should return the driver version not
-the firmware version.  
-Update driver version number.
-Update driver version string.
 
-Applies to scsi-misc-2.6 git tree.
 
-Signed-off-by: Mark Haverkamp <markh@osdl.org>
+Begin forwarded message:
 
- aacraid.h  |    8 +++++---
- commctrl.c |   16 +++++++++++++---
- linit.c    |   21 ++++++++++++++++-----
+Date: Wed, 22 Jun 2005 21:59:34 +0100
+From: Andy Whitcroft <apw@shadowen.org>
+To: "Justin T. Gibbs" <gibbs@scsiguy.com>
+Cc: akpm@osdl.org, linux-kernel@vger.kernel.org
+Subject: ahc_target_state check starget valid
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1488,11 +1488,12 @@ struct fib_ioctl
- 
- struct revision
- {
--	u32 compat;
--	u32 version;
--	u32 build;
-+	__le32 compat;
-+	__le32 version;
-+	__le32 build;
- };
- 	
-+
- /*
-  * 	Ugly - non Linux like ioctl coding for back compat.
-  */
-@@ -1713,3 +1714,4 @@ int aac_get_adapter_info(struct aac_dev*
- int aac_send_shutdown(struct aac_dev *dev);
- extern int numacb;
- extern int acbsize;
-+extern char aac_driver_version[];
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -405,10 +405,20 @@ static int close_getadapter_fib(struct a
- static int check_revision(struct aac_dev *dev, void __user *arg)
- {
- 	struct revision response;
-+	char *driver_version = aac_driver_version;
-+	u32 version;
- 
--	response.compat = 1;
--	response.version = le32_to_cpu(dev->adapter_info.kernelrev);
--	response.build = le32_to_cpu(dev->adapter_info.kernelbuild);
-+	response.compat = cpu_to_le32(1);
-+	version = (simple_strtol(driver_version, 
-+				&driver_version, 10) << 24) | 0x00000400;
-+	version += simple_strtol(driver_version + 1, &driver_version, 10) << 16;
-+	version += simple_strtol(driver_version + 1, NULL, 10);
-+	response.version = cpu_to_le32(version);
-+#	if (defined(AAC_DRIVER_BUILD))
-+		response.build = cpu_to_le32(AAC_DRIVER_BUILD);
-+#	else
-+		response.build = cpu_to_le32(9999);
-+#	endif
- 
- 	if (copy_to_user(arg, &response, sizeof(response)))
- 		return -EFAULT;
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -27,8 +27,11 @@
-  * Abstract: Linux Driver entry module for Adaptec RAID Array Controller
-  */
- 
--#define AAC_DRIVER_VERSION		"1.1.2-lk2"
--#define AAC_DRIVER_BUILD_DATE		__DATE__
-+#define AAC_DRIVER_VERSION		"1.1-4"
-+#ifndef AAC_DRIVER_BRANCH
-+#define AAC_DRIVER_BRANCH		""
-+#endif
-+#define AAC_DRIVER_BUILD_DATE		__DATE__ " " __TIME__
- #define AAC_DRIVERNAME			"aacraid"
- 
- #include <linux/compat.h>
-@@ -58,16 +61,24 @@
- 
- #include "aacraid.h"
- 
-+#ifdef AAC_DRIVER_BUILD
-+#define _str(x) #x
-+#define str(x) _str(x)
-+#define AAC_DRIVER_FULL_VERSION	AAC_DRIVER_VERSION "[" str(AAC_DRIVER_BUILD) "]" AAC_DRIVER_BRANCH
-+#else
-+#define AAC_DRIVER_FULL_VERSION	AAC_DRIVER_VERSION AAC_DRIVER_BRANCH " " AAC_DRIVER_BUILD_DATE
-+#endif
- 
- MODULE_AUTHOR("Red Hat Inc and Adaptec");
- MODULE_DESCRIPTION("Dell PERC2, 2/Si, 3/Si, 3/Di, "
- 		   "Adaptec Advanced Raid Products, "
- 		   "and HP NetRAID-4M SCSI driver");
- MODULE_LICENSE("GPL");
--MODULE_VERSION(AAC_DRIVER_VERSION);
-+MODULE_VERSION(AAC_DRIVER_FULL_VERSION);
- 
- static LIST_HEAD(aac_devices);
- static int aac_cfg_major = -1;
-+char aac_driver_version[] = AAC_DRIVER_FULL_VERSION;
- 
- /*
-  * Because of the way Linux names scsi devices, the order in this table has
-@@ -873,8 +884,8 @@ static int __init aac_init(void)
- {
- 	int error;
- 	
--	printk(KERN_INFO "Red Hat/Adaptec aacraid driver (%s %s)\n",
--			AAC_DRIVER_VERSION, AAC_DRIVER_BUILD_DATE);
-+	printk(KERN_INFO "Adaptec %s driver (%s)\n",
-+	  AAC_DRIVERNAME, aac_driver_version);
- 
- 	error = pci_module_init(&aac_pci_driver);
- 	if (error)
 
--- 
-Mark Haverkamp <markh@osdl.org>
+[Justin I believe that you are the maintainer for the aic7xxx 
+driver, could you look this over and if you concur with this
+change push it up.]
 
+Since 2.6.12-git1 we have been seeing the Oops below when accessing
+/proc files for the aix7xxx driver.  This seems to be as a result of
+a new abstraction for scsi targets.  Looking at other uses of the
+aic7xxx 'starget[]' seems to indicate that it is possible for this 
+to be NULL.  The patch below adds a check to ahc_dump_target_state
+before we attempt to map it to a scsi target.
+
+Unable to handle kernel NULL pointer dereference at virtual address 00000124
+ printing eip:
+c02482dc
+*pde = 1b971001
+*pte = 00000000
+Oops: 0000 [#1]
+SMP
+CPU:    2
+EIP:    0060:[<c02482dc>]    Not tainted VLI
+EFLAGS: 00010296   (2.6.12-git4-autokern1)
+EIP is at scsi_is_host_device+0x4/0x18
+eax: 00000014   ebx: 00000014   ecx: 00000000   edx: e017fb80
+esi: 00000000   edi: ddc0b100   ebp: dffe3ef4   esp: dffe3dac
+ds: 007b   es: 007b   ss: 0068
+Process cp (pid: 6942, threadinfo=dffe2000 task=dcc27a60)
+Stack: c026825b 00000014 00000000 dffe3ef4 dfc55600 0000000f 41268703 c02687c9
+       dfc55600 dffe3ef4 00000007 00000041 00000000 00000000 dffe3f68 00000c00
+       db6aa000 dffe3f64 37636961 3a393938 746c5520 36316172 69572030 43206564
+Call Trace:
+ [<c026825b>] ahc_dump_target_state+0xa3/0x10c
+ [<c02687c9>] ahc_linux_proc_info+0x199/0x1ca
+ [<c0141af6>] do_anonymous_page+0x1ee/0x21c
+ [<c0141b0e>] do_anonymous_page+0x206/0x21c
+ [<c0141b79>] do_no_page+0x55/0x3d8
+ [<c0135f15>] prep_new_page+0x49/0x50
+ [<c01365a3>] buffered_rmqueue+0x153/0x1b4
+ [<c0136a4b>] __alloc_pages+0x3bb/0x3c8
+ [<c024ff3b>] proc_scsi_read+0x2b/0x44
+ [<c017d5d8>] proc_file_read+0xec/0x200
+ [<c01506b5>] vfs_read+0x8d/0xec
+ [<c0150924>] sys_read+0x40/0x6c
+ [<c0102df9>] syscall_call+0x7/0xb
+Code: fd ff 83 c4 04 c3 90 68 20 ce 3a c0 e8 ca 31 fd ff 83 c4 04 c3 89 f6 68 20 ce 3a c0 e8 46 32 fd ff 83 c4 04 c3 89 f6 8b 44 24 04 <81> b8 10 01 00 00 80 7d 24 c0 0f 94 c0 0f b6 c0 c3 8d 76 00 8b
+ <1>Unable to handle kernel NULL pointer dereference at virtual address 00000124 printing eip:
+c02482dc
+*pde = 1ff59001
+*pte = 00000000
+
+Signed-off-by: Andy Whitcroft <apw@shadowen.org>
+---
+ aic7xxx_proc.c |    2 ++
+ 1 files changed, 2 insertions(+)
+diff -upN reference/drivers/scsi/aic7xxx/aic7xxx_proc.c current/drivers/scsi/aic7xxx/aic7xxx_proc.c
+--- reference/drivers/scsi/aic7xxx/aic7xxx_proc.c
++++ current/drivers/scsi/aic7xxx/aic7xxx_proc.c
+@@ -155,6 +155,8 @@ ahc_dump_target_state(struct ahc_softc *
+ 	copy_info(info, "\tUser: ");
+ 	ahc_format_transinfo(info, &tinfo->user);
+ 	starget = ahc->platform_data->starget[target_offset];
++	if (starget == NULL)
++		return;
+ 	targ = scsi_transport_target_data(starget);
+ 	if (targ == NULL)
+ 		return;
