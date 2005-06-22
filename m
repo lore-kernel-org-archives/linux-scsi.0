@@ -1,74 +1,68 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: Questions about scsi_target_reap and starget/sdev lifecyle
-Date: Wed, 22 Jun 2005 09:44:51 -0400
-Message-ID: <42B96B53.3070208@adaptec.com>
-References: <20050621201056.GA29658@infradead.org> <Pine.LNX.4.44L0.0506211619460.634-100000@iolanthe.rowland.org> <20050621205858.GB30526@us.ibm.com>
+Date: Wed, 22 Jun 2005 11:12:07 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0506221052170.6128-100000@iolanthe.rowland.org>
+References: <42B96947.4040208@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:52699 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S261287AbVFVNpL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Jun 2005 09:45:11 -0400
-In-Reply-To: <20050621205858.GB30526@us.ibm.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:15810 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261533AbVFVPMI
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Jun 2005 11:12:08 -0400
+In-Reply-To: <42B96947.4040208@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Mike Anderson <andmike@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On 06/21/05 16:58, Mike Anderson wrote:
-> Alan Stern [stern@rowland.harvard.edu] wrote:
->>I would describe it differently: Since you don't know whether a hot-unplug 
->>occurred, you might as well assume it did not.  There's no harm in this, 
->>because if the HBA really was unplugged then it doesn't matter what you 
->>do; everything will fail.
->>
+On Wed, 22 Jun 2005, Luben Tuikov wrote:
+
+> For the success of the state machine, states must be discrete.
+> scsi_remove_host() cannot mean "reasonably soon".  If it _has_ to mean
+> that, then _add_ another state.
 > 
+> If one wants to consolidate the hot-unplugging with notified unplug,
+> one might as well aim for the supercase "hot-unplug".  Its implementation
+> would surely satisfy notified unplug.
+
+Certainly.  In the UNPLUG_NOTIFY state, only commands like SYNCHRONIZE 
+CACHE should be allowed.
+
+> The lower layers should make sure that if the device is gone, that is
+> they _know_ about the event, an error is returned.
 > 
-> I have asked this multiple times, but I will again. If the hba knows to
-> fail everything by some internal state in the LLDD why does it not also
-> know to flush all commands back to the scsi mid layer in this unplugged
-> state so we do not have to deal with canceling them from the mid-layer. 
+> So that the treatment of flush-cache is no different than already queued
+> commands.
 
-This is a good question.  The way I see it: follow the path of the event
-and at each logical point act on it:
-	device-->SDS-->HA-->LLDD-->SCSI midlayer-->etc.
-That is, at each point of the unplug event's path, act on that
-unplug event, meaning HA first, then LLDD, then SCSI midlayer.
+For the unplug case you are right.  For the notify case it's a little 
+tricky because of the interaction with command cancellation (if commands 
+need to be cancelled) and the need to allow the cache flush without 
+allowing other commands.
 
-The HA and LLDD would work together, but if they _know_ about "device gone"
-they should stop accepting commands to that device and return them to
-the midlayer, along with saying hey, this device is gone, along with
-returning all previously queued but infinished commands and rejecting new.
-
-The other way around, a notified unplug, the event travels the same path
-but in opposite direction.  So the same actions should follow but
-in opposite direction: SCSI midlayer first, LLDD, HA, finally device,
-just as the event from userspace travels (remove device).
-
-(We have to go to the device eventualy in case there any reservations on
-the LU.)
- 
-> I think it has been stated many times if commands always go in through
-> queuecommand and always return through scsi_done it makes the chances of
-> errors a lot less.
-
-Completely agree!
-
->>But those sd flush-cache commands are a problem.  Presumably you want to 
->>send them _after_ all the outstanding commands have finished or been 
->>cancelled.  What's the right way to allow those commands while rejecting 
->>all others?
+> So in effect, you (usb-storage) know about a condition (say device is gone)
+> you should act on it right in queuecommand() and not accept the command,
+> as opposed to hoping for the midlayer to turn around and preempt those commands.
 > 
-> 
-> We have some notion of this already if you look in scsi_prep_fn (i.e.,
-> specials_only), but this is based on sdev state not shost. Checking for a
-> specials_only flag in scsi_dispatch may not be to clean. This may be why
-> we should look at a shost state model update and align sdev and shost to
-> clearly state what will happen to command.s
+> 	Luben
+> P.S. USB is perfect, since you're notified on unplug.
 
-Check host state first, then target then lu...
+Yes.  But in fact usb-storage has a small loophole.  Before calling
+scsi_remove_host, we set a flag that causes the queuecommand routine to
+reject all new commands and any currently-executing command to fail-fast.  
+However there is a small window between the time a command is accepted and
+the time it starts to execute (because execution takes place in a
+separate kernel thread).  If a command has been accepted and has not
+started to execute, then usb-storage doesn't cancel it.  We've been
+relying on the midlayer to cancel it for us.
 
-	Luben
+There's no reason usb-storage can't cancel the command before calling
+scsi_remove_host.  I tried out a patch to do just that, and it worked
+fine.  (Waiting until after scsi_remove_host to cancel the command doesn't
+work, for the obvious reason that the midlayer may have already cancelled
+it.)  I'll submit the patch; it should solve this particular problem for
+usb-storage.  I don't know how any other hot-unpluggable LLDDs will handle
+cancellation during unplug.
+
+Alan Stern
 
