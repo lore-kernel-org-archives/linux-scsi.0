@@ -1,98 +1,47 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: ahc_target_state check starget valid
-Date: Wed, 22 Jun 2005 14:08:08 -0700
-Message-ID: <20050622140808.554fae2d.akpm@osdl.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 1/5] scsi host / scsi target state model update
+Date: Wed, 22 Jun 2005 17:03:59 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0506221657200.5325-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:64970 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S262530AbVFVVHQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Jun 2005 17:07:16 -0400
+Received: from iolanthe.rowland.org ([192.131.102.54]:9384 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S262302AbVFVVEF
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Jun 2005 17:04:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Andy Whitcroft <apw@shadowen.org>
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
+
+Mike:
+
+In your first patch, you don't allow transitions from SHOST_RECOVERY to 
+SHOST_CANCEL nor the other way around.  So this section of the patch looks 
+suspicious:
+
+@@ -60,12 +136,11 @@ static void scsi_host_cancel(struct Scsi
+ {
+        struct scsi_device *sdev;
+ 
+-       set_bit(SHOST_CANCEL, &shost->shost_state);
++       scsi_host_set_state(shost, SHOST_CANCEL);
+        shost_for_each_device(sdev, shost) {
+                scsi_device_cancel(sdev, recovery);
+        }
+-       wait_event(shost->host_wait, (!test_bit(SHOST_RECOVERY,
+-                                               &shost->shost_state)));
++       wait_event(shost->host_wait, (shost->shost_state != SHOST_RECOVERY));
+ }
 
 
-Nope, Justin has departed the scene.  I think someone at adaptec has picked
-up maintenance, but James dinks with aic* as well.  MAINTAINERS needs some
-maintenance.
+In fact there are lots of places in the patch where scsi_host_set_state 
+is called and the return value is not checked.  They may end up causing 
+trouble.
 
+Also, is it a good idea to allow write access to the shost_state 
+attribute?  For debugging, yes, okay, but in general it doesn't seem like 
+a good thing.
 
+Alan Stern
 
-Begin forwarded message:
-
-Date: Wed, 22 Jun 2005 21:59:34 +0100
-From: Andy Whitcroft <apw@shadowen.org>
-To: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Cc: akpm@osdl.org, linux-kernel@vger.kernel.org
-Subject: ahc_target_state check starget valid
-
-
-[Justin I believe that you are the maintainer for the aic7xxx 
-driver, could you look this over and if you concur with this
-change push it up.]
-
-Since 2.6.12-git1 we have been seeing the Oops below when accessing
-/proc files for the aix7xxx driver.  This seems to be as a result of
-a new abstraction for scsi targets.  Looking at other uses of the
-aic7xxx 'starget[]' seems to indicate that it is possible for this 
-to be NULL.  The patch below adds a check to ahc_dump_target_state
-before we attempt to map it to a scsi target.
-
-Unable to handle kernel NULL pointer dereference at virtual address 00000124
- printing eip:
-c02482dc
-*pde = 1b971001
-*pte = 00000000
-Oops: 0000 [#1]
-SMP
-CPU:    2
-EIP:    0060:[<c02482dc>]    Not tainted VLI
-EFLAGS: 00010296   (2.6.12-git4-autokern1)
-EIP is at scsi_is_host_device+0x4/0x18
-eax: 00000014   ebx: 00000014   ecx: 00000000   edx: e017fb80
-esi: 00000000   edi: ddc0b100   ebp: dffe3ef4   esp: dffe3dac
-ds: 007b   es: 007b   ss: 0068
-Process cp (pid: 6942, threadinfo=dffe2000 task=dcc27a60)
-Stack: c026825b 00000014 00000000 dffe3ef4 dfc55600 0000000f 41268703 c02687c9
-       dfc55600 dffe3ef4 00000007 00000041 00000000 00000000 dffe3f68 00000c00
-       db6aa000 dffe3f64 37636961 3a393938 746c5520 36316172 69572030 43206564
-Call Trace:
- [<c026825b>] ahc_dump_target_state+0xa3/0x10c
- [<c02687c9>] ahc_linux_proc_info+0x199/0x1ca
- [<c0141af6>] do_anonymous_page+0x1ee/0x21c
- [<c0141b0e>] do_anonymous_page+0x206/0x21c
- [<c0141b79>] do_no_page+0x55/0x3d8
- [<c0135f15>] prep_new_page+0x49/0x50
- [<c01365a3>] buffered_rmqueue+0x153/0x1b4
- [<c0136a4b>] __alloc_pages+0x3bb/0x3c8
- [<c024ff3b>] proc_scsi_read+0x2b/0x44
- [<c017d5d8>] proc_file_read+0xec/0x200
- [<c01506b5>] vfs_read+0x8d/0xec
- [<c0150924>] sys_read+0x40/0x6c
- [<c0102df9>] syscall_call+0x7/0xb
-Code: fd ff 83 c4 04 c3 90 68 20 ce 3a c0 e8 ca 31 fd ff 83 c4 04 c3 89 f6 68 20 ce 3a c0 e8 46 32 fd ff 83 c4 04 c3 89 f6 8b 44 24 04 <81> b8 10 01 00 00 80 7d 24 c0 0f 94 c0 0f b6 c0 c3 8d 76 00 8b
- <1>Unable to handle kernel NULL pointer dereference at virtual address 00000124 printing eip:
-c02482dc
-*pde = 1ff59001
-*pte = 00000000
-
-Signed-off-by: Andy Whitcroft <apw@shadowen.org>
----
- aic7xxx_proc.c |    2 ++
- 1 files changed, 2 insertions(+)
-diff -upN reference/drivers/scsi/aic7xxx/aic7xxx_proc.c current/drivers/scsi/aic7xxx/aic7xxx_proc.c
---- reference/drivers/scsi/aic7xxx/aic7xxx_proc.c
-+++ current/drivers/scsi/aic7xxx/aic7xxx_proc.c
-@@ -155,6 +155,8 @@ ahc_dump_target_state(struct ahc_softc *
- 	copy_info(info, "\tUser: ");
- 	ahc_format_transinfo(info, &tinfo->user);
- 	starget = ahc->platform_data->starget[target_offset];
-+	if (starget == NULL)
-+		return;
- 	targ = scsi_transport_target_data(starget);
- 	if (targ == NULL)
- 		return;
