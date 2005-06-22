@@ -1,73 +1,142 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: Fibre Channel related crash
-Date: Wed, 22 Jun 2005 10:28:32 -0700
-Message-ID: <20050622172832.GA11128@us.ibm.com>
-References: <1119361784.24150.47.camel@nalwalovaton>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH] aacraid: driver version updates
+Date: Wed, 22 Jun 2005 13:43:11 -0700
+Message-ID: <1119472992.18698.34.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <1119361784.24150.47.camel@nalwalovaton>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.osdl.org ([65.172.181.4]:23749 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S262234AbVFVUnV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Jun 2005 16:43:21 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-You should really run with a stock kernel before reporting problems to
-these lists.
 
-cc-ing linux-scsi, maybe someone there will give you more info about the
-HSV110.
+Received from Mark Salyzyn from Adaptec.
 
-On Tue, Jun 21, 2005 at 08:49:44AM -0500, William Alberto Lovaton Tovar wrote:
+Fixes a bug in check_revision.  It should return the driver version not
+the firmware version.  
+Update driver version number.
+Update driver version string.
 
-> Jun 20 13:35:01 dnccor50 kernel:   Vendor: COMPAQ    Model: HSV110 (C)COMPAQ  Rev: 2001
-> Jun 20 13:35:01 dnccor50 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 02
-> Jun 20 13:35:01 dnccor50 kernel: qla2300 0000:07:03.0: scsi(0:0:1:2): Enabled tagged queuing, queue depth 32.
-> Jun 20 13:35:01 dnccor50 kernel: SCSI device sdb: 167772160 512-byte hdwr sectors (85899 MB)
-> Jun 20 13:35:01 dnccor50 kernel: sdb: asking for cache data failed
-> Jun 20 13:35:01 dnccor50 kernel: sdb: assuming drive cache: write through
-> Jun 20 13:35:01 dnccor50 kernel: SCSI device sdb: 167772160 512-byte hdwr sectors (85899 MB)
-> Jun 20 13:35:01 dnccor50 kernel: sdb: asking for cache data failed
-> Jun 20 13:35:01 dnccor50 kernel: sdb: assuming drive cache: write through
-> Jun 20 13:35:01 dnccor50 kernel:  sdb:<6>Device sdb not ready.
-> Jun 20 13:35:01 dnccor50 kernel: end_request: I/O error, dev sdb, sector 0
+Applies to scsi-misc-2.6 git tree.
 
-It isn't a fibre channel crash.
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
 
-The device is (obviously) not ready. Usually, sd during probe spins up the
-device, but the HSV110 is special cased, so we don't spin it up (send a
-START STOP command), and it just keeps telling us it is still not ready.
+ aacraid.h  |    8 +++++---
+ commctrl.c |   16 +++++++++++++---
+ linit.c    |   21 ++++++++++++++++-----
 
-Since it's a disk array, I don't know what a START / spinup means for it,
-or why it is not ready. I would guess it has some sort of failure and is
-waiting for you to fix it :)
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -1488,11 +1488,12 @@ struct fib_ioctl
+ 
+ struct revision
+ {
+-	u32 compat;
+-	u32 version;
+-	u32 build;
++	__le32 compat;
++	__le32 version;
++	__le32 build;
+ };
+ 	
++
+ /*
+  * 	Ugly - non Linux like ioctl coding for back compat.
+  */
+@@ -1713,3 +1714,4 @@ int aac_get_adapter_info(struct aac_dev*
+ int aac_send_shutdown(struct aac_dev *dev);
+ extern int numacb;
+ extern int acbsize;
++extern char aac_driver_version[];
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -405,10 +405,20 @@ static int close_getadapter_fib(struct a
+ static int check_revision(struct aac_dev *dev, void __user *arg)
+ {
+ 	struct revision response;
++	char *driver_version = aac_driver_version;
++	u32 version;
+ 
+-	response.compat = 1;
+-	response.version = le32_to_cpu(dev->adapter_info.kernelrev);
+-	response.build = le32_to_cpu(dev->adapter_info.kernelbuild);
++	response.compat = cpu_to_le32(1);
++	version = (simple_strtol(driver_version, 
++				&driver_version, 10) << 24) | 0x00000400;
++	version += simple_strtol(driver_version + 1, &driver_version, 10) << 16;
++	version += simple_strtol(driver_version + 1, NULL, 10);
++	response.version = cpu_to_le32(version);
++#	if (defined(AAC_DRIVER_BUILD))
++		response.build = cpu_to_le32(AAC_DRIVER_BUILD);
++#	else
++		response.build = cpu_to_le32(9999);
++#	endif
+ 
+ 	if (copy_to_user(arg, &response, sizeof(response)))
+ 		return -EFAULT;
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -27,8 +27,11 @@
+  * Abstract: Linux Driver entry module for Adaptec RAID Array Controller
+  */
+ 
+-#define AAC_DRIVER_VERSION		"1.1.2-lk2"
+-#define AAC_DRIVER_BUILD_DATE		__DATE__
++#define AAC_DRIVER_VERSION		"1.1-4"
++#ifndef AAC_DRIVER_BRANCH
++#define AAC_DRIVER_BRANCH		""
++#endif
++#define AAC_DRIVER_BUILD_DATE		__DATE__ " " __TIME__
+ #define AAC_DRIVERNAME			"aacraid"
+ 
+ #include <linux/compat.h>
+@@ -58,16 +61,24 @@
+ 
+ #include "aacraid.h"
+ 
++#ifdef AAC_DRIVER_BUILD
++#define _str(x) #x
++#define str(x) _str(x)
++#define AAC_DRIVER_FULL_VERSION	AAC_DRIVER_VERSION "[" str(AAC_DRIVER_BUILD) "]" AAC_DRIVER_BRANCH
++#else
++#define AAC_DRIVER_FULL_VERSION	AAC_DRIVER_VERSION AAC_DRIVER_BRANCH " " AAC_DRIVER_BUILD_DATE
++#endif
+ 
+ MODULE_AUTHOR("Red Hat Inc and Adaptec");
+ MODULE_DESCRIPTION("Dell PERC2, 2/Si, 3/Si, 3/Di, "
+ 		   "Adaptec Advanced Raid Products, "
+ 		   "and HP NetRAID-4M SCSI driver");
+ MODULE_LICENSE("GPL");
+-MODULE_VERSION(AAC_DRIVER_VERSION);
++MODULE_VERSION(AAC_DRIVER_FULL_VERSION);
+ 
+ static LIST_HEAD(aac_devices);
+ static int aac_cfg_major = -1;
++char aac_driver_version[] = AAC_DRIVER_FULL_VERSION;
+ 
+ /*
+  * Because of the way Linux names scsi devices, the order in this table has
+@@ -873,8 +884,8 @@ static int __init aac_init(void)
+ {
+ 	int error;
+ 	
+-	printk(KERN_INFO "Red Hat/Adaptec aacraid driver (%s %s)\n",
+-			AAC_DRIVER_VERSION, AAC_DRIVER_BUILD_DATE);
++	printk(KERN_INFO "Adaptec %s driver (%s)\n",
++	  AAC_DRIVERNAME, aac_driver_version);
+ 
+ 	error = pci_module_init(&aac_pci_driver);
+ 	if (error)
 
-You should check the device: verify its settings, check for failures,
-and/or reset it; or maybe send it a START UNIT to the device.
+-- 
+Mark Haverkamp <markh@osdl.org>
 
-You can try to dynamically modify the scsi_devinfo/bflags so it sends the
-START STOP during probe: 
-
-change the devinfo list (won't be reset to the original until you reload
-scsi_mod), I don't know if I have this exactly right:
-
-	echo "COMPAQ   :HSV110 (C)COMPAQ:0x0" > /proc/scsi/device_info
-
-remove and re-scan for the device
-
-	echo 1 > /sys/block/sd/device/delete
-	echo "0 1 2" > /sys/class/scsi_host/host0/scan
-
-And see what happens ... you should see some "spinning up disk ..."
-messages.
-
--- Patrick Mansfield
