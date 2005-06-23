@@ -1,44 +1,39 @@
-From: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
-Subject: Qla2300 driver broken on 2.6.12-git5?
-Date: Thu, 23 Jun 2005 12:16:36 -0700
-Message-ID: <200506231916.j5NJGag23487@unix-os.sc.intel.com>
+From: Lee Revell <rlrevell@joe-job.com>
+Subject: Re: aic79xx -> can't  suspend
+Date: Thu, 23 Jun 2005 15:35:31 -0400
+Message-ID: <1119555331.13259.16.camel@mindpipe>
+References: <1119549104.13259.1.camel@mindpipe>
+	 <20050623193224.GD2251@voodoo>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmr23.intel.com ([143.183.121.15]:49358 "EHLO
-	scsfmr003.sc.intel.com") by vger.kernel.org with ESMTP
-	id S262705AbVFWTQj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Jun 2005 15:16:39 -0400
-Received: from scsfmr100.sc.intel.com (scsfmr100.sc.intel.com [10.3.253.9])
-	by scsfmr003.sc.intel.com (8.12.10/8.12.10/d: major-outer.mc,v 1.1 2004/09/17 17:50:56 root Exp $) with ESMTP id j5NJGamx024418
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2005 19:16:36 GMT
-Received: from unix-os.sc.intel.com (unix-os.sc.intel.com [172.25.110.7])
-	by scsfmr100.sc.intel.com (8.12.10/8.12.10/d: major-inner.mc,v 1.2 2004/09/17 18:05:01 root Exp $) with ESMTP id j5NJIXdp004096
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2005 19:18:33 GMT
-Received: from kwchenmobl1 (kwchen-mobl1.amr.corp.intel.com [143.183.251.71])
-	by unix-os.sc.intel.com (8.11.6/8.11.2) with ESMTP id j5NJGag23487
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2005 12:16:36 -0700
+Received: from mustang.oldcity.dca.net ([216.158.38.3]:60124 "HELO
+	mustang.oldcity.dca.net") by vger.kernel.org with SMTP
+	id S263046AbVFWTff (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Jun 2005 15:35:35 -0400
+In-Reply-To: <20050623193224.GD2251@voodoo>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jim Crilly <jim@why.dont.jablowme.net>
+Cc: linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 
-I tried to boot 2.6.12-git5, kernel panic'ed on qla2300 initialization.
-Is there a patch already out there to fix the problem?
+On Thu, 2005-06-23 at 15:32 -0400, Jim Crilly wrote:
+> On 06/23/05 01:51:43PM -0400, Lee Revell wrote:
+> > I have a machine with an Adaptec 2940U2W adapter running 2.6.11.  When I
+> > try to go into standby like so:
+> > 
+> >     echo standby > /sys/power/state
+> > 
+> > this is what happens:
+> 
+> AFAIK no SCSI drivers have had power management functions implemented, a
+> quick grep for PM_ in drivers/scsi seems to confirm that only the PCMCIA
+> SCSI drivers even look for PM events.
 
-QLogic Fibre Channel HBA Driver
-GSI 76 (level, low) -> CPU 1 (0xc018) vector 51
-ACPI: PCI Interrupt 0000:0b:02.0[A] -> GSI 76 (level, low) -> IRQ 51
-qla2300 0000:0b:02.0: Found an ISP2300, irq 51, iobase 0xc0000000e2ff0000
-qla2300 0000:0b:02.0: Configuring PCI space...
-qla2300 0000:0b:02.0: Configure NVRAM parameters...
-qla2300 0000:0b:02.0: Verifying loaded RISC code...
-qla2300 0000:0b:02.0: LIP reset occured (f7f7).
-qla2300 0000:0b:02.0: Waiting for LIP to complete...
-qla2300 0000:0b:02.0: LIP occured (f7f7).
-qla2300 0000:0b:02.0: Failed to initialize adapter
-Unable to handle kernel NULL pointer dereference (address 00000000000001d0)
-swapper[1]: Oops 11012296146944 [1]
+Thanks, I suspected as much.  I'll take a look at implementing it then,
+can't be too hard.  It would be nice if I could suspend this machine,
+because I have a small apartment and it gets hot in here.
 
+Lee
 
