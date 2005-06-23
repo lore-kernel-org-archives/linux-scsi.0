@@ -1,85 +1,94 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH 1/5] scsi host / scsi target state model update
-Date: Wed, 22 Jun 2005 16:46:59 -0700
-Message-ID: <20050622234659.GA572@us.ibm.com>
-References: <Pine.LNX.4.44L0.0506221657200.5325-100000@iolanthe.rowland.org>
+From: Philip R Auld <pauld@egenera.com>
+Subject: Re: [dm-devel] Fibre Channel related crash
+Date: Thu, 23 Jun 2005 09:52:28 -0400
+Message-ID: <20050623135227.GK9070@vienna.egenera.com>
+References: <1119361784.24150.47.camel@nalwalovaton> <20050622172832.GA11128@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:44502 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S261764AbVFVXqq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Jun 2005 19:46:46 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e3.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j5MNke93014981
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Jun 2005 19:46:40 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j5MNkejx227394
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Jun 2005 19:46:40 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j5MNkejn010585
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Jun 2005 19:46:40 -0400
+Received: from roadrunner-base.egenera.com ([63.160.166.46]:10722 "EHLO
+	coyote.egenera.com") by vger.kernel.org with ESMTP id S262326AbVFWNwq
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Jun 2005 09:52:46 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0506221657200.5325-100000@iolanthe.rowland.org>
+In-Reply-To: <20050622172832.GA11128@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
 
-Alan Stern [stern@rowland.harvard.edu] wrote:
-> Mike:
+
+Hi,
+
+Rumor has it that on Wed, Jun 22, 2005 at 10:28:32AM -0700 Patrick Mansfield said:
+> You should really run with a stock kernel before reporting problems to
+> these lists.
 > 
-> In your first patch, you don't allow transitions from SHOST_RECOVERY to 
-> SHOST_CANCEL nor the other way around.  So this section of the patch looks 
-> suspicious:
+> cc-ing linux-scsi, maybe someone there will give you more info about the
+> HSV110.
+
+The HSV110 is and active/passive array. You're probably accessing a LU 
+that is not on the controller your talking to. Sending it a start would
+work, but, of course, then you can't access it through the other
+controller...
+
+I think the multipath tools and device mapper will know how to handle
+this device.
+
+Cheers,
+
+Phil
 > 
-
-Yes the host state model may need to allow this transition. The rest of
-the patch series removes scsi_host_cancel so I was not running this
-function when the series was fully applied.
-
-> @@ -60,12 +136,11 @@ static void scsi_host_cancel(struct Scsi
->  {
->         struct scsi_device *sdev;
->  
-> -       set_bit(SHOST_CANCEL, &shost->shost_state);
-> +       scsi_host_set_state(shost, SHOST_CANCEL);
->         shost_for_each_device(sdev, shost) {
->                 scsi_device_cancel(sdev, recovery);
->         }
-> -       wait_event(shost->host_wait, (!test_bit(SHOST_RECOVERY,
-> -                                               &shost->shost_state)));
-> +       wait_event(shost->host_wait, (shost->shost_state != SHOST_RECOVERY));
->  }
+> On Tue, Jun 21, 2005 at 08:49:44AM -0500, William Alberto Lovaton Tovar wrote:
 > 
+> > Jun 20 13:35:01 dnccor50 kernel:   Vendor: COMPAQ    Model: HSV110 (C)COMPAQ  Rev: 2001
+> > Jun 20 13:35:01 dnccor50 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 02
+> > Jun 20 13:35:01 dnccor50 kernel: qla2300 0000:07:03.0: scsi(0:0:1:2): Enabled tagged queuing, queue depth 32.
+> > Jun 20 13:35:01 dnccor50 kernel: SCSI device sdb: 167772160 512-byte hdwr sectors (85899 MB)
+> > Jun 20 13:35:01 dnccor50 kernel: sdb: asking for cache data failed
+> > Jun 20 13:35:01 dnccor50 kernel: sdb: assuming drive cache: write through
+> > Jun 20 13:35:01 dnccor50 kernel: SCSI device sdb: 167772160 512-byte hdwr sectors (85899 MB)
+> > Jun 20 13:35:01 dnccor50 kernel: sdb: asking for cache data failed
+> > Jun 20 13:35:01 dnccor50 kernel: sdb: assuming drive cache: write through
+> > Jun 20 13:35:01 dnccor50 kernel:  sdb:<6>Device sdb not ready.
+> > Jun 20 13:35:01 dnccor50 kernel: end_request: I/O error, dev sdb, sector 0
 > 
-> In fact there are lots of places in the patch where scsi_host_set_state 
-> is called and the return value is not checked.  They may end up causing 
-> trouble.
+> It isn't a fibre channel crash.
 > 
-
-Yes, I am not sure what checking a return value will do in all cases (like
-in scsi_remove_host). I notice that most of scsi_device_set_state cases
-are not checked or have void function wrappers. It would appear that these
-functions (scsi_device_set_state and scsi_host_set_state) should be void
-functions with WARN_ONs to go correct the state model or the calling
-function.
-
-> Also, is it a good idea to allow write access to the shost_state 
-> attribute?  For debugging, yes, okay, but in general it doesn't seem like 
-> a good thing.
+> The device is (obviously) not ready. Usually, sd during probe spins up the
+> device, but the HSV110 is special cased, so we don't spin it up (send a
+> START STOP command), and it just keeps telling us it is still not ready.
 > 
+> Since it's a disk array, I don't know what a START / spinup means for it,
+> or why it is not ready. I would guess it has some sort of failure and is
+> waiting for you to fix it :)
+> 
+> You should check the device: verify its settings, check for failures,
+> and/or reset it; or maybe send it a START UNIT to the device.
+> 
+> You can try to dynamically modify the scsi_devinfo/bflags so it sends the
+> START STOP during probe: 
+> 
+> change the devinfo list (won't be reset to the original until you reload
+> scsi_mod), I don't know if I have this exactly right:
+> 
+> 	echo "COMPAQ   :HSV110 (C)COMPAQ:0x0" > /proc/scsi/device_info
+> 
+> remove and re-scan for the device
+> 
+> 	echo 1 > /sys/block/sd/device/delete
+> 	echo "0 1 2" > /sys/class/scsi_host/host0/scan
+> 
+> And see what happens ... you should see some "spinning up disk ..."
+> messages.
+> 
+> -- Patrick Mansfield
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Yes, after debugging we should remove the write access. We allow write on
-the device state (usually used to re-online a device that the error handler
-marked offline), but there probably is no need to change the state of a
-host from user space. In a future patch we could remove write access to
-the scsi device state and possibly have an option to not offline the
-devices in the error handler to cover the need I would assume most people
-use the device state write access for.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
-
+-- 
+Philip R. Auld, Ph.D.  	        	       Egenera, Inc.    
+Software Architect                            165 Forest St.
+(508) 858-2628                            Marlboro, MA 01752
