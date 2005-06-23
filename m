@@ -1,171 +1,44 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH] - mptfusion - adding back the spin locks in eh handlers
-Date: Thu, 23 Jun 2005 15:04:26 -0400
-Message-ID: <42BB07BA.8000802@adaptec.com>
-References: <200506231220.08036.Eric.Moore@lsil.com>
+From: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
+Subject: Qla2300 driver broken on 2.6.12-git5?
+Date: Thu, 23 Jun 2005 12:16:36 -0700
+Message-ID: <200506231916.j5NJGag23487@unix-os.sc.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:25547 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262676AbVFWTEk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Jun 2005 15:04:40 -0400
-In-Reply-To: <200506231220.08036.Eric.Moore@lsil.com>
+Received: from fmr23.intel.com ([143.183.121.15]:49358 "EHLO
+	scsfmr003.sc.intel.com") by vger.kernel.org with ESMTP
+	id S262705AbVFWTQj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Jun 2005 15:16:39 -0400
+Received: from scsfmr100.sc.intel.com (scsfmr100.sc.intel.com [10.3.253.9])
+	by scsfmr003.sc.intel.com (8.12.10/8.12.10/d: major-outer.mc,v 1.1 2004/09/17 17:50:56 root Exp $) with ESMTP id j5NJGamx024418
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2005 19:16:36 GMT
+Received: from unix-os.sc.intel.com (unix-os.sc.intel.com [172.25.110.7])
+	by scsfmr100.sc.intel.com (8.12.10/8.12.10/d: major-inner.mc,v 1.2 2004/09/17 18:05:01 root Exp $) with ESMTP id j5NJIXdp004096
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2005 19:18:33 GMT
+Received: from kwchenmobl1 (kwchen-mobl1.amr.corp.intel.com [143.183.251.71])
+	by unix-os.sc.intel.com (8.11.6/8.11.2) with ESMTP id j5NJGag23487
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Jun 2005 12:16:36 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric.Moore@lsil.com
-Cc: linux scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
+To: linux-scsi@vger.kernel.org
 
-On 06/23/05 14:20, Moore, Eric Dean wrote:
-> The eh handlers are called with host_lock acquired, and interrupts di=
-sabled.
-> However fusion waits for completion of task managment request.  With =
-these spin locks=20
-> removed, the driver is going to hang within the sleep calls.   Someon=
-e recently posted=20
-> a patch to remove them(don=B4t know who),  and can be found in James =
-Bottomely scsi-misc branch. =20
+I tried to boot 2.6.12-git5, kernel panic'ed on qla2300 initialization.
+Is there a patch already out there to fix the problem?
 
-That was Jeff, and I thought those patches made it in already.
-They are needed and are a good thing.
+QLogic Fibre Channel HBA Driver
+GSI 76 (level, low) -> CPU 1 (0xc018) vector 51
+ACPI: PCI Interrupt 0000:0b:02.0[A] -> GSI 76 (level, low) -> IRQ 51
+qla2300 0000:0b:02.0: Found an ISP2300, irq 51, iobase 0xc0000000e2ff0000
+qla2300 0000:0b:02.0: Configuring PCI space...
+qla2300 0000:0b:02.0: Configure NVRAM parameters...
+qla2300 0000:0b:02.0: Verifying loaded RISC code...
+qla2300 0000:0b:02.0: LIP reset occured (f7f7).
+qla2300 0000:0b:02.0: Waiting for LIP to complete...
+qla2300 0000:0b:02.0: LIP occured (f7f7).
+qla2300 0000:0b:02.0: Failed to initialize adapter
+Unable to handle kernel NULL pointer dereference (address 00000000000001d0)
+swapper[1]: Oops 11012296146944 [1]
 
-	Luben
 
-
->=20
-> Please apply.
->=20
-> Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
->=20
->=20
-> diff -uarN b/drivers/message/fusion/mptscsih.c a/drivers/message/fusi=
-on/mptscsih.c
-> --- b/drivers/message/fusion/mptscsih.c	2005-06-23 11:18:44.000000000=
- -0600
-> +++ a/drivers/message/fusion/mptscsih.c	2005-05-10 14:27:13.000000000=
- -0600
-> @@ -1707,6 +1707,7 @@
->  	MPT_FRAME_HDR	*mf;
->  	u32		 ctx2abort;
->  	int		 scpnt_idx;
-> +	spinlock_t	*host_lock =3D SCpnt->device->host->host_lock;
-> =20
->  	/* If we can't locate our host adapter structure, return FAILED sta=
-tus.
->  	 */
-> @@ -1754,6 +1755,7 @@
-> =20
->  	hd->abortSCpnt =3D SCpnt;
-> =20
-> +	spin_unlock_irq(host_lock);
->  	if (mptscsih_TMHandler(hd, MPI_SCSITASKMGMT_TASKTYPE_ABORT_TASK,
->  		SCpnt->device->channel, SCpnt->device->id, SCpnt->device->lun,
->  		ctx2abort, 2 /* 2 second timeout */)
-> @@ -1770,6 +1772,8 @@
->  		hd->tmPending =3D 0;
->  		hd->tmState =3D TM_STATE_NONE;
-> =20
-> +		spin_lock_irq(host_lock);
-> +
->  		/* Unmap the DMA buffers, if any. */
->  		if (SCpnt->use_sg) {
->  			pci_unmap_sg(ioc->pcidev, (struct scatterlist *) SCpnt->request_b=
-uffer,
-> @@ -1785,6 +1789,7 @@
->  		mpt_free_msg_frame(ioc, mf);
->  		return FAILED;
->  	}
-> +	spin_lock_irq(host_lock);
->  	return SUCCESS;
->  }
-> =20
-> @@ -1801,6 +1806,7 @@
->  mptscsih_dev_reset(struct scsi_cmnd * SCpnt)
->  {
->  	MPT_SCSI_HOST	*hd;
-> +	spinlock_t	*host_lock =3D SCpnt->device->host->host_lock;
-> =20
->  	/* If we can't locate our host adapter structure, return FAILED sta=
-tus.
->  	 */
-> @@ -1817,6 +1823,7 @@
->  	printk(KERN_WARNING MYNAM ": %s: >> Attempting target reset! (sc=3D=
-%p)\n",
->  	       hd->ioc->name, SCpnt);
-> =20
-> +	spin_unlock_irq(host_lock);
->  	if (mptscsih_TMHandler(hd, MPI_SCSITASKMGMT_TASKTYPE_TARGET_RESET,
->  		SCpnt->device->channel, SCpnt->device->id,
->  		0, 0, 5 /* 5 second timeout */)
-> @@ -1828,10 +1835,12 @@
->  		 		hd->ioc->name, SCpnt);
->  		hd->tmPending =3D 0;
->  		hd->tmState =3D TM_STATE_NONE;
-> +		spin_lock_irq(host_lock);
->  		return FAILED;
->  	}
-> -
-> +	spin_lock_irq(host_lock);
->  	return SUCCESS;
-> +
->  }
-> =20
->  /*=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D-=3D=
--=3D-=3D-=3D*/
-> @@ -1865,6 +1874,7 @@
->  		hd->timeouts++;
-> =20
->  	/* We are now ready to execute the task management request. */
-> +	spin_unlock_irq(host_lock);
->  	if (mptscsih_TMHandler(hd, MPI_SCSITASKMGMT_TASKTYPE_RESET_BUS,
->  		SCpnt->device->channel, 0, 0, 0, 5 /* 5 second timeout */)
->  	    < 0){
-> @@ -1880,7 +1890,7 @@
->  		spin_lock_irq(host_lock);
->  		return FAILED;
->  	}
-> -
-> +	spin_lock_irq(host_lock);
->  	return SUCCESS;
->  }
-> =20
-> @@ -1899,6 +1909,7 @@
->  {
->  	MPT_SCSI_HOST *  hd;
->  	int              status =3D SUCCESS;
-> +	spinlock_t	*host_lock =3D SCpnt->device->host->host_lock;
-> =20
->  	/*  If we can't locate the host to reset, then we failed. */
->  	if ((hd =3D (MPT_SCSI_HOST *) SCpnt->device->host->hostdata) =3D=3D=
- NULL){
-> @@ -1914,6 +1925,7 @@
->  	/*  If our attempts to reset the host failed, then return a failed
->  	 *  status.  The host will be taken off line by the SCSI mid-layer.
->  	 */
-> +	spin_unlock_irq(host_lock);
->  	if (mpt_HardResetHandler(hd->ioc, CAN_SLEEP) < 0){
->  		status =3D FAILED;
->  	} else {
-> @@ -1923,6 +1935,8 @@
->  		hd->tmPending =3D 0;
->  		hd->tmState =3D TM_STATE_NONE;
->  	}
-> +	spin_lock_irq(host_lock);
-> +
-> =20
->  	dtmprintk( ( KERN_WARNING MYNAM ": mptscsih_host_reset: "
->  		     "Status =3D %s\n",
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
