@@ -1,94 +1,90 @@
-From: Philip R Auld <pauld@egenera.com>
-Subject: Re: [dm-devel] Fibre Channel related crash
-Date: Thu, 23 Jun 2005 09:52:28 -0400
-Message-ID: <20050623135227.GK9070@vienna.egenera.com>
-References: <1119361784.24150.47.camel@nalwalovaton> <20050622172832.GA11128@us.ibm.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 1/5] scsi host / scsi target state model update
+Date: Thu, 23 Jun 2005 11:57:39 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0506231118520.5737-100000@iolanthe.rowland.org>
+References: <20050622234659.GA572@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from roadrunner-base.egenera.com ([63.160.166.46]:10722 "EHLO
-	coyote.egenera.com") by vger.kernel.org with ESMTP id S262326AbVFWNwq
+Received: from iolanthe.rowland.org ([192.131.102.54]:28394 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S262588AbVFWP5k
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Jun 2005 09:52:46 -0400
-Content-Disposition: inline
-In-Reply-To: <20050622172832.GA11128@us.ibm.com>
+	Thu, 23 Jun 2005 11:57:40 -0400
+In-Reply-To: <20050622234659.GA572@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
+
+On Wed, 22 Jun 2005, Mike Anderson wrote:
+
+> Alan Stern [stern@rowland.harvard.edu] wrote:
+> > Mike:
+> > 
+> > In your first patch, you don't allow transitions from SHOST_RECOVERY to 
+> > SHOST_CANCEL nor the other way around.  So this section of the patch looks 
+> > suspicious:
+> > 
+> 
+> Yes the host state model may need to allow this transition. The rest of
+> the patch series removes scsi_host_cancel so I was not running this
+> function when the series was fully applied.
+
+I hadn't read the later patches when I wrote that last message.  Okay, it 
+makes more sense now.  And yes, that transition is needed.
+
+> > In fact there are lots of places in the patch where scsi_host_set_state 
+> > is called and the return value is not checked.  They may end up causing 
+> > trouble.
+> > 
+> 
+> Yes, I am not sure what checking a return value will do in all cases (like
+> in scsi_remove_host). I notice that most of scsi_device_set_state cases
+> are not checked or have void function wrappers. It would appear that these
+> functions (scsi_device_set_state and scsi_host_set_state) should be void
+> functions with WARN_ONs to go correct the state model or the calling
+> function.
+
+That sounds like a good idea.  Just about everywhere those routines are 
+called, the state transitions are mandatory.  Simply returning an error 
+doesn't accomplish anything.
 
 
-Hi,
+After reading through the complete set of your patches and comparing them
+to my own, here's what I came up with:
 
-Rumor has it that on Wed, Jun 22, 2005 at 10:28:32AM -0700 Patrick Mansfield said:
-> You should really run with a stock kernel before reporting problems to
-> these lists.
-> 
-> cc-ing linux-scsi, maybe someone there will give you more info about the
-> HSV110.
+     1. You didn't audit all the places where devices or targets
+	can be added to make sure the scan_mutex is held and the host
+	state is checked.  You missed the target creation in
+	__scsi_add_device, the scsi_scan_target routine (needs
+	separate public and private entry points, where the private
+	entry point already owns the mutex), and target and device
+	creation in scsi_get_host_dev.
 
-The HSV110 is and active/passive array. You're probably accessing a LU 
-that is not on the controller your talking to. Sending it a start would
-work, but, of course, then you can't access it through the other
-controller...
+     2. You didn't create separate public and private entry points for
+	scsi_remove_device, again where the private entry point already
+	owns the mutex.  Checking the host state isn't required since
+	there's nothing wrong with removing a device during host removal.
 
-I think the multipath tools and device mapper will know how to handle
-this device.
+     3. __scsi_add_device returns garbage if the host state check fails.
 
-Cheers,
+     4. You implemented a state model for targets, and allowed
+	scsi_forget_host continue to remove all the targets.  This is
+	not consistent with the way targets are refcounted and reaped
+	automatically when their last child is gone.  James has said
+	that targets shouldn't be part of a state model -- this needs
+	to be settled one way or the other.
 
-Phil
-> 
-> On Tue, Jun 21, 2005 at 08:49:44AM -0500, William Alberto Lovaton Tovar wrote:
-> 
-> > Jun 20 13:35:01 dnccor50 kernel:   Vendor: COMPAQ    Model: HSV110 (C)COMPAQ  Rev: 2001
-> > Jun 20 13:35:01 dnccor50 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 02
-> > Jun 20 13:35:01 dnccor50 kernel: qla2300 0000:07:03.0: scsi(0:0:1:2): Enabled tagged queuing, queue depth 32.
-> > Jun 20 13:35:01 dnccor50 kernel: SCSI device sdb: 167772160 512-byte hdwr sectors (85899 MB)
-> > Jun 20 13:35:01 dnccor50 kernel: sdb: asking for cache data failed
-> > Jun 20 13:35:01 dnccor50 kernel: sdb: assuming drive cache: write through
-> > Jun 20 13:35:01 dnccor50 kernel: SCSI device sdb: 167772160 512-byte hdwr sectors (85899 MB)
-> > Jun 20 13:35:01 dnccor50 kernel: sdb: asking for cache data failed
-> > Jun 20 13:35:01 dnccor50 kernel: sdb: assuming drive cache: write through
-> > Jun 20 13:35:01 dnccor50 kernel:  sdb:<6>Device sdb not ready.
-> > Jun 20 13:35:01 dnccor50 kernel: end_request: I/O error, dev sdb, sector 0
-> 
-> It isn't a fibre channel crash.
-> 
-> The device is (obviously) not ready. Usually, sd during probe spins up the
-> device, but the HSV110 is special cased, so we don't spin it up (send a
-> START STOP command), and it just keeps telling us it is still not ready.
-> 
-> Since it's a disk array, I don't know what a START / spinup means for it,
-> or why it is not ready. I would guess it has some sort of failure and is
-> waiting for you to fix it :)
-> 
-> You should check the device: verify its settings, check for failures,
-> and/or reset it; or maybe send it a START UNIT to the device.
-> 
-> You can try to dynamically modify the scsi_devinfo/bflags so it sends the
-> START STOP during probe: 
-> 
-> change the devinfo list (won't be reset to the original until you reload
-> scsi_mod), I don't know if I have this exactly right:
-> 
-> 	echo "COMPAQ   :HSV110 (C)COMPAQ:0x0" > /proc/scsi/device_info
-> 
-> remove and re-scan for the device
-> 
-> 	echo 1 > /sys/block/sd/device/delete
-> 	echo "0 1 2" > /sys/class/scsi_host/host0/scan
-> 
-> And see what happens ... you should see some "spinning up disk ..."
-> messages.
-> 
-> -- Patrick Mansfield
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+     5. Although the loop in scsi_forget_host doesn't use
+	list_for_each_entry_safe and restarts after each change, the
+	loop in __scsi_remove_target needs to be changed similarly.
 
--- 
-Philip R. Auld, Ph.D.  	        	       Egenera, Inc.    
-Software Architect                            165 Forest St.
-(508) 858-2628                            Marlboro, MA 01752
+     6.	In scsi_probe_and_add_lun there's an unchecked call to
+	scsi_device_get.  If that call fails, the device needs to
+	be removed.
+
+You can determine the details for most of these by comparing my patch 
+against yours.
+
+Alan Stern
+
