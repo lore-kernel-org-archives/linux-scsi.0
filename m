@@ -1,96 +1,52 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH] - mptfusion - adding back the spin locks in eh handle
-  rs
-Date: Thu, 23 Jun 2005 19:47:56 -0400
-Message-ID: <42BB4A2C.3050009@adaptec.com>
-References: <91888D455306F94EBD4D168954A9457C02DD8E97@nacos172.co.lsil.com>
+From: Lee Revell <rlrevell@joe-job.com>
+Subject: Re: aic79xx -> can't  suspend
+Date: Thu, 23 Jun 2005 20:32:22 -0400
+Message-ID: <1119573142.20628.15.camel@mindpipe>
+References: <1119549104.13259.1.camel@mindpipe>
+	 <20050623193224.GD2251@voodoo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:42675 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262915AbVFWXsJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Jun 2005 19:48:09 -0400
-In-Reply-To: <91888D455306F94EBD4D168954A9457C02DD8E97@nacos172.co.lsil.com>
+Received: from mustang.oldcity.dca.net ([216.158.38.3]:16275 "HELO
+	mustang.oldcity.dca.net") by vger.kernel.org with SMTP
+	id S262919AbVFXAcY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Jun 2005 20:32:24 -0400
+In-Reply-To: <20050623193224.GD2251@voodoo>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: linux scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
+To: Jim Crilly <jim@why.dont.jablowme.net>
+Cc: linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 
-On 06/23/05 18:06, Moore, Eric Dean wrote:
-> Luben
+On Thu, 2005-06-23 at 15:32 -0400, Jim Crilly wrote:
+> On 06/23/05 01:51:43PM -0400, Lee Revell wrote:
+> > I have a machine with an Adaptec 2940U2W adapter running 2.6.11.
+> > When I try to go into standby like so:
+> > 
+> >     echo standby > /sys/power/state
+> > 
+> > this is what happens:
 > 
-> Ok - So you agree that completing Task management request
-> in the same context as the eh threads is the way to go, right?
+> AFAIK no SCSI drivers have had power management functions implemented,
+> a quick grep for PM_ in drivers/scsi seems to confirm that only the
+> PCMCIA SCSI drivers even look for PM events. 
 
-I think so -- process context.
- 
-> Because that is what this LLD is doing.  Have you had
-> a chance to look at our code?
+Actually it is implemented in the aic7xxx driver, see ahc_suspend and
+ahc_resume.
 
-No, I haven't looked -- I'm swamped.
- 
-> That previous patch submitted by Jeff(I guess) was removing code which
-> enabled interrupts.  My patch was restoring it back to previous
-> working code which doesn't hang the driver.
+I tried it with 2.6.12, and I no longer have the problem with the ahc_dv
+thread as it no longer exists (AFAICT the functionality is handled by
+the SCSI midlayer now?).
 
-In LLDD yes (since they were never disabled when eh_abort() was called).
-In SCSI Core -- the opposite: removing code which disabled ints and then
-calling eh_abort() of the LLDD.
- 
-> The reason that the previous patch hangs the driver is we are issuing
-> the task managment request using interrupt mode, not polling.
-> Meaning it requires interrupts to be enabled. 
+Now it just immediately resumes:
 
-They are!  The abort handler is called with ints enabled.
-See the core of Jeff's patch here:
+[4297399.286000] PM: Preparing system for standby sleep
+[4297399.609000] Stopping tasks: ================================|
+[4297399.610000] Restarting tasks... done
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -528,10 +528,8 @@ static int scsi_send_eh_cmnd(struct scsi
- 		 * abort a timed out command or not.  not sure how
- 		 * we should treat them differently anyways.
- 		 */
--		spin_lock_irqsave(shost->host_lock, flags);
- 		if (shost->hostt->eh_abort_handler)
- 			shost->hostt->eh_abort_handler(scmd);
--		spin_unlock_irqrestore(shost->host_lock, flags);
- 			
- 		scmd->request->rq_status = RQ_SCSI_DONE;
- 		scmd->owner = SCSI_OWNER_ERROR_HANDLER;
-@@ -737,11 +735,8 @@ static int scsi_eh_get_sense(struct list
-  **/
- static int scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
- {
--	unsigned long flags;
--	int rtn = FAILED;
--
- 	if (!scmd->device->host->hostt->eh_abort_handler)
--		return rtn;
-+		return FAILED;
- 
- 	/*
- 	 * scsi_done was called just after the command timed out and before
-@@ -752,11 +747,7 @@ static int scsi_try_to_abort_cmd(struct 
- 
- 	scmd->owner = SCSI_OWNER_LOWLEVEL;
- 
--	spin_lock_irqsave(scmd->device->host->host_lock, flags);
--	rtn = scmd->device->host->hostt->eh_abort_handler(scmd);
--	spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
--
--	return rtn;
-+	return scmd->device->host->hostt->eh_abort_handler(scmd);
- }
- 
- /**
+How can I debug this further?
 
-So the LLDD is free to sleep in eh_abort().  If it needs to do
-something with ints disabled, it should disable them itself.
-
-	Luben
+Lee
 
 
 
