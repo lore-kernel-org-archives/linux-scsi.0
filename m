@@ -1,52 +1,91 @@
-From: Lee Revell <rlrevell@joe-job.com>
-Subject: Re: aic79xx -> can't  suspend
-Date: Thu, 23 Jun 2005 20:32:22 -0400
-Message-ID: <1119573142.20628.15.camel@mindpipe>
-References: <1119549104.13259.1.camel@mindpipe>
-	 <20050623193224.GD2251@voodoo>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [patch][rfc] 5/5: core remove PageReserved
+Date: Thu, 23 Jun 2005 21:50:11 -0700
+Message-ID: <20050623215011.0b1e6ef2.akpm@osdl.org>
+References: <42BA5F37.6070405@yahoo.com.au>
+	<42BA5F5C.3080101@yahoo.com.au>
+	<42BA5F7B.30904@yahoo.com.au>
+	<42BA5FA8.7080905@yahoo.com.au>
+	<42BA5FC8.9020501@yahoo.com.au>
+	<42BA5FE8.2060207@yahoo.com.au>
+	<20050623095153.GB3334@holomorphy.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mustang.oldcity.dca.net ([216.158.38.3]:16275 "HELO
-	mustang.oldcity.dca.net") by vger.kernel.org with SMTP
-	id S262919AbVFXAcY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Jun 2005 20:32:24 -0400
-In-Reply-To: <20050623193224.GD2251@voodoo>
+Received: from smtp.osdl.org ([65.172.181.4]:9159 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S263096AbVFXEum (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Jun 2005 00:50:42 -0400
+In-Reply-To: <20050623095153.GB3334@holomorphy.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jim Crilly <jim@why.dont.jablowme.net>
-Cc: linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: William Lee Irwin III <wli@holomorphy.com>
+Cc: nickpiggin@yahoo.com.au, linux-kernel@vger.kernel.org, linux-mm@kvack.org, hugh@veritas.com, pbadari@us.ibm.com, linux-scsi@vger.kernel.org
 
-On Thu, 2005-06-23 at 15:32 -0400, Jim Crilly wrote:
-> On 06/23/05 01:51:43PM -0400, Lee Revell wrote:
-> > I have a machine with an Adaptec 2940U2W adapter running 2.6.11.
-> > When I try to go into standby like so:
-> > 
-> >     echo standby > /sys/power/state
-> > 
-> > this is what happens:
+William Lee Irwin III <wli@holomorphy.com> wrote:
+>
+>  On Thu, Jun 23, 2005 at 05:08:24PM +1000, Nick Piggin wrote:
+>  > Index: linux-2.6/drivers/scsi/sg.c
+>  > ===================================================================
+>  > --- linux-2.6.orig/drivers/scsi/sg.c
+>  > +++ linux-2.6/drivers/scsi/sg.c
+>  > @@ -1887,9 +1887,10 @@ st_unmap_user_pages(struct scatterlist *
+>  >  	int i;
+>  >  
+>  >  	for (i=0; i < nr_pages; i++) {
+>  > -		if (dirtied && !PageReserved(sgl[i].page))
+>  > +		if (dirtied)
+>  >  			SetPageDirty(sgl[i].page);
+>  >  		/* unlock_page(sgl[i].page); */
+>  > +		/* FIXME: XXX don't dirty/unmap VM_RESERVED regions? */
+>  >  		/* FIXME: cache flush missing for rw==READ
+>  >  		 * FIXME: call the correct reference counting function
+>  >  		 */
 > 
-> AFAIK no SCSI drivers have had power management functions implemented,
-> a quick grep for PM_ in drivers/scsi seems to confirm that only the
-> PCMCIA SCSI drivers even look for PM events. 
+>  An answer should be devised for this. My numerous SCSI CD-ROM devices
+>  (I have 5 across several different machines of several different arches)
+>  are rather unlikely to be happy with /* FIXME: XXX ... as an answer.
+> 
+> 
+>  On Thu, Jun 23, 2005 at 05:08:24PM +1000, Nick Piggin wrote:
+>  > Index: linux-2.6/drivers/scsi/st.c
+>  > ===================================================================
+>  > --- linux-2.6.orig/drivers/scsi/st.c
+>  > +++ linux-2.6/drivers/scsi/st.c
+>  > @@ -4435,8 +4435,9 @@ static int sgl_unmap_user_pages(struct s
+>  >  	int i;
+>  >  
+>  >  	for (i=0; i < nr_pages; i++) {
+>  > -		if (dirtied && !PageReserved(sgl[i].page))
+>  > +		if (dirtied)
+>  >  			SetPageDirty(sgl[i].page);
+>  > +		/* FIXME: XXX don't dirty/unmap VM_RESERVED regions? */
+>  >  		/* FIXME: cache flush missing for rw==READ
+>  >  		 * FIXME: call the correct reference counting function
+>  >  		 */
+> 
+>  Mutatis mutandis for my SCSI tape drive.
 
-Actually it is implemented in the aic7xxx driver, see ahc_suspend and
-ahc_resume.
+This scsi code is already rather wrong.  There isn't much point in just
+setting PG_dirty and leaving the page marked as clean in the radix tree. 
+As it is we'll lose data if the user reads it into a MAP_SHARED memory
+buffer.
 
-I tried it with 2.6.12, and I no longer have the problem with the ahc_dv
-thread as it no longer exists (AFAICT the functionality is handled by
-the SCSI midlayer now?).
+set_page_dirty_lock() should be used here.  That can sleep.
 
-Now it just immediately resumes:
+<looks>
 
-[4297399.286000] PM: Preparing system for standby sleep
-[4297399.609000] Stopping tasks: ================================|
-[4297399.610000] Restarting tasks... done
+The above two functions are called under write_lock_irqsave() (at least)
+and might be called from irq context (dunno).  So we cannot use
+set_page_dirty_lock() and we don't have a ref on the page's inode.  We
+could use set_page_dirty() and be racy against page reclaim.
 
-How can I debug this further?
+But to get all this correct (and it's very incorrect now) we'd need to punt
+the page dirtying up to process context, along the lines of
+bio_check_pages_dirty().
 
-Lee
-
-
+Or, if st_unmap_user_pages() and sgl_unmap_user_pages() are not called from
+irq context then we should arrange for them to be called without locks held
+and use set_page_dirty_lock().
 
