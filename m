@@ -1,15 +1,15 @@
 From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: [PATCH 1/2] - mptfusion - convert to new change_queue_depth API
-Date: Fri, 24 Jun 2005 12:18:57 -0600
-Message-ID: <200506241218.57505.Eric.Moore@lsil.com>
+Subject: [PATCH 2/2] - mptfusion - FC Transport Support
+Date: Fri, 24 Jun 2005 12:19:00 -0600
+Message-ID: <200506241219.00210.Eric.Moore@lsil.com>
 Reply-To: Eric.Moore@lsil.com
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:44738 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S263213AbVFXSRz (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:44994 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S263215AbVFXSRz (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 24 Jun 2005 14:17:55 -0400
 Content-Disposition: inline
@@ -18,186 +18,253 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux scsi <linux-scsi@vger.kernel.org>
 Cc: James Bottomley <James.Bottomley@SteelEye.com>
 
-Convert driver to use new change_queue_depth API.
+Adding FC transport support in driver.
+
+Target Attributes:
+	port_id
+	port_name
+	node_name
 
 Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
+diff -uarN b/drivers/message/fusion/Kconfig a/drivers/message/fusion/Kconfig
+--- b/drivers/message/fusion/Kconfig	2005-05-10 15:01:27.000000000 -0600
++++ a/drivers/message/fusion/Kconfig	2005-06-23 17:07:37.000000000 -0600
+@@ -23,6 +23,7 @@
+ 	tristate "Fusion MPT ScsiHost drivers for FC"
+ 	depends on PCI && SCSI
+ 	select FUSION
++	select SCSI_FC_ATTRS
+ 	---help---
+ 	  SCSI HOST support for a Fiber Channel host adapters.
+ 
+diff -uarN b/drivers/message/fusion/mptbase.h a/drivers/message/fusion/mptbase.h
+--- b/drivers/message/fusion/mptbase.h	2005-06-24 11:57:37.000000000 -0600
++++ a/drivers/message/fusion/mptbase.h	2005-06-24 12:02:47.000000000 -0600
+@@ -76,8 +76,8 @@
+ #define COPYRIGHT	"Copyright (c) 1999-2005 " MODULEAUTHOR
+ #endif
+ 
+-#define MPT_LINUX_VERSION_COMMON	"3.03.02"
+-#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.03.02"
++#define MPT_LINUX_VERSION_COMMON	"3.03.03"
++#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.03.03"
+ #define WHAT_MAGIC_STRING		"@" "(" "#" ")"
+ 
+ #define show_mptmod_ver(s,ver)  \
 diff -uarN b/drivers/message/fusion/mptfc.c a/drivers/message/fusion/mptfc.c
---- b/drivers/message/fusion/mptfc.c	2005-06-24 09:20:08.000000000 -0600
-+++ a/drivers/message/fusion/mptfc.c	2005-06-23 15:09:00.000000000 -0600
-@@ -83,19 +83,6 @@
+--- b/drivers/message/fusion/mptfc.c	2005-06-23 15:09:00.000000000 -0600
++++ a/drivers/message/fusion/mptfc.c	2005-06-23 17:11:52.000000000 -0600
+@@ -61,6 +61,8 @@
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
++#include <scsi/scsi_transport.h>
++#include <scsi/scsi_transport_fc.h>
+ 
+ #include "mptbase.h"
+ #include "mptscsih.h"
+@@ -83,6 +85,80 @@
  static int	mptfcTaskCtx = -1;
  static int	mptfcInternalCtx = -1; /* Used only for internal commands */
  
--static struct device_attribute mptfc_queue_depth_attr = {
--	.attr = {
--		.name = 	"queue_depth",
--		.mode =		S_IWUSR,
--	},
--	.store = mptscsih_store_queue_depth,
--};
--
--static struct device_attribute *mptfc_dev_attrs[] = {
--	&mptfc_queue_depth_attr,
--	NULL,
--};
--
++static struct scsi_transport_template *mptfc_transport_template = NULL;
++
++static void
++mptfc_get_port_id(struct scsi_target *starget)
++{
++	struct Scsi_Host *host = dev_to_shost(starget->dev.parent);
++	MPT_SCSI_HOST	*hd;
++	MPT_ADAPTER 	*ioc;
++	FCDevicePage0_t fcDevicePage;
++	int rc;
++
++	fc_starget_port_id(starget) = -1;
++	hd = (MPT_SCSI_HOST *)host->hostdata;
++	if (hd==NULL)
++		return;
++	ioc = hd->ioc;
++	rc = mptscsih_readFCDevicePage0(ioc, starget->channel, starget->id, &fcDevicePage);
++	if (rc > offsetof(FCDevicePage0_t,Protocol))
++		fc_starget_port_id(starget) = le64_to_cpu(fcDevicePage.PortIdentifier);
++}
++
++static void
++mptfc_get_port_name(struct scsi_target *starget)
++{
++	struct Scsi_Host *host = dev_to_shost(starget->dev.parent);
++	MPT_SCSI_HOST	*hd;
++	MPT_ADAPTER 	*ioc;
++	FCDevicePage0_t fcDevicePage;
++	int rc;
++
++	fc_starget_port_name(starget) = -1;
++	hd = (MPT_SCSI_HOST *)host->hostdata;
++	if (hd==NULL)
++		return;
++	ioc = hd->ioc;
++	rc = mptscsih_readFCDevicePage0(ioc, starget->channel, starget->id, &fcDevicePage);
++	if (rc > offsetof(FCDevicePage0_t,PortIdentifier)) {
++		memcpy(&fc_starget_port_name(starget),&fcDevicePage.WWPN,
++		    sizeof(fcDevicePage.WWPN));
++		le64_to_cpus(&fc_starget_port_name(starget));
++	}
++}
++
++static void
++mptfc_get_node_name(struct scsi_target *starget)
++{
++	struct Scsi_Host *host = dev_to_shost(starget->dev.parent);
++	MPT_SCSI_HOST	*hd;
++	MPT_ADAPTER 	*ioc;
++	FCDevicePage0_t fcDevicePage;
++	int rc;
++
++	fc_starget_node_name(starget) = -1;
++	hd = (MPT_SCSI_HOST *)host->hostdata;
++	if (hd==NULL)
++		return;
++	ioc = hd->ioc;
++	rc = mptscsih_readFCDevicePage0(ioc, starget->channel, starget->id, &fcDevicePage);
++	if (rc > offsetof(FCDevicePage0_t,WWPN)) {
++		memcpy(&fc_starget_node_name(starget),&fcDevicePage.WWNN,
++		    sizeof(fcDevicePage.WWNN));
++		le64_to_cpus(&fc_starget_node_name(starget));
++	}
++}
++
++static struct fc_function_template mptfc_transport_functions = {
++	.get_starget_port_id = mptfc_get_port_id,
++	.show_starget_port_id = 1,
++	.get_starget_port_name = mptfc_get_port_name,
++	.show_starget_port_name = 1,
++	.get_starget_node_name = mptfc_get_node_name,
++	.show_starget_node_name = 1,
++};
++
  static struct scsi_host_template mptfc_driver_template = {
  	.proc_name			= "mptfc",
  	.proc_info			= mptscsih_proc_info,
-@@ -105,6 +92,7 @@
- 	.slave_alloc			= mptscsih_slave_alloc,
- 	.slave_configure		= mptscsih_slave_configure,
- 	.slave_destroy			= mptscsih_slave_destroy,
-+	.change_queue_depth 		= mptscsih_change_queue_depth,
- 	.eh_abort_handler		= mptscsih_abort,
- 	.eh_device_reset_handler	= mptscsih_dev_reset,
- 	.eh_bus_reset_handler		= mptscsih_bus_reset,
-@@ -116,7 +104,6 @@
- 	.max_sectors			= 8192,
- 	.cmd_per_lun			= 7,
- 	.use_clustering			= ENABLE_CLUSTERING,
--	.sdev_attrs			= mptfc_dev_attrs,
- };
+@@ -220,6 +296,9 @@
+ 	sh->max_channel = 0;
+ 	sh->this_id = ioc->pfacts[0].PortSCSIID;
  
- /****************************************************************************
-diff -uarN b/drivers/message/fusion/mptscsih.c a/drivers/message/fusion/mptscsih.c
---- b/drivers/message/fusion/mptscsih.c	2005-06-24 09:20:08.000000000 -0600
-+++ a/drivers/message/fusion/mptscsih.c	2005-06-24 11:55:06.000000000 -0600
-@@ -2234,13 +2234,27 @@
- 	}
- }
- 
--static void
--mptscsih_set_queue_depth(struct scsi_device *device, MPT_SCSI_HOST *hd,
--	VirtDevice *pTarget, int qdepth)
-+/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
-+/*
-+ *	mptscsih_change_queue_depth - This function will set a devices queue depth
-+ *	@sdev: per scsi_device pointer
-+ *	@qdepth: requested queue depth
-+ *
-+ *	Adding support for new 'change_queue_depth' api.
-+*/
-+int
-+mptscsih_change_queue_depth(struct scsi_device *sdev, int qdepth)
- {
-+	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)sdev->host->hostdata;
-+	VirtDevice *pTarget;
- 	int	max_depth;
- 	int	tagged;
- 
-+	if (hd == NULL)
-+		return 0;
-+	if (!(pTarget = hd->Targets[sdev->id]))
-+		return 0;
++	BUG_ON(mptfc_transport_template == NULL);
++	sh->transportt = mptfc_transport_template;
 +
- 	if (hd->ioc->bus_type == SCSI) {
- 		if (pTarget->tflags & MPT_TARGET_FLAGS_VALID_INQUIRY) {
- 			if (!(pTarget->tflags & MPT_TARGET_FLAGS_Q_YES))
-@@ -2264,10 +2278,10 @@
- 	else
- 		tagged = MSG_SIMPLE_TAG;
+ 	/* Required entry.
+ 	 */
+ 	sh->unique_id = ioc->id;
+@@ -373,6 +452,11 @@
  
--	scsi_adjust_queue_depth(device, tagged, qdepth);
-+	scsi_adjust_queue_depth(sdev, tagged, qdepth);
-+	return sdev->queue_depth;
- }
+ 	show_mptmod_ver(my_NAME, my_VERSION);
  
--
- /*
-  *	OS entry point to adjust the queue_depths on a per-device basis.
-  *	Called once per device the bus scan. Use it to force the queue_depth
-@@ -2317,7 +2331,7 @@
++	mptfc_transport_template =
++	    fc_attach_transport(&mptfc_transport_functions);
++	if (!mptfc_transport_template)
++		return -ENODEV;
++
+ 	mptfcDoneCtx = mpt_register(mptscsih_io_done, MPTFC_DRIVER);
+ 	mptfcTaskCtx = mpt_register(mptscsih_taskmgmt_complete, MPTFC_DRIVER);
+ 	mptfcInternalCtx = mpt_register(mptscsih_scandv_complete, MPTFC_DRIVER);
+@@ -400,7 +484,9 @@
+ mptfc_exit(void)
+ {
+ 	pci_unregister_driver(&mptfc_driver);
+-	
++
++	fc_release_transport(mptfc_transport_template);
++
+ 	mpt_reset_deregister(mptfcDoneCtx);
+ 	dprintk((KERN_INFO MYNAM
+ 	  ": Deregistered for IOC reset notifications\n"));
+diff -uarN b/drivers/message/fusion/mptscsih.c a/drivers/message/fusion/mptscsih.c
+--- b/drivers/message/fusion/mptscsih.c	2005-06-24 11:55:06.000000000 -0600
++++ a/drivers/message/fusion/mptscsih.c	2005-06-24 12:00:06.000000000 -0600
+@@ -944,6 +944,70 @@
  
- 	mptscsih_initTarget(hd, device->channel, device->id, device->lun,
- 		device->inquiry, device->inquiry_len );
--	mptscsih_set_queue_depth(device, hd, pTarget, MPT_SCSI_CMD_PER_DEV_HIGH);
-+	mptscsih_change_queue_depth(device, MPT_SCSI_CMD_PER_DEV_HIGH);
- 
- 	dsprintk((MYIOC_s_INFO_FMT
- 		"Queue depth=%d, tflags=%x\n",
-@@ -2337,25 +2351,6 @@
- 	return 0;
- }
- 
--ssize_t
--mptscsih_store_queue_depth(struct device *dev, const char *buf, size_t count)
--{
--	int			 depth;
--	struct scsi_device	*sdev = to_scsi_device(dev);
--	MPT_SCSI_HOST		*hd = (MPT_SCSI_HOST *) sdev->host->hostdata;
--	VirtDevice		*pTarget;
--
--	depth = simple_strtoul(buf, NULL, 0);
--	if (depth == 0)
--		return -EINVAL;
--	pTarget = hd->Targets[sdev->id];
--	if (pTarget == NULL)
--		return -EINVAL;
--	mptscsih_set_queue_depth(sdev, (MPT_SCSI_HOST *) sdev->host->hostdata,
--		pTarget, depth);
--	return count;
--}
--
  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
  /*
-  *  Private routines...
-@@ -5586,7 +5581,7 @@
- EXPORT_SYMBOL(mptscsih_scandv_complete);
++ *	mptscsih_readFCDevicePage0 - returns FC Device Page 0 data
++ *	@ioc: Pointer to MPT_ADAPTER structure
++ *	@bus: bus id
++ *	@targetId: target id
++ *	@fcDevicePage: FC Device Page 0 data
++ *
++ *	Returns count of number bytes copied into @fcDevicePage
++ *
++ */
++
++int
++mptscsih_readFCDevicePage0(MPT_ADAPTER *ioc, u8 bus, u8 targetId, pFCDevicePage0_t fcDevicePage)
++{
++	ConfigPageHeader_t	 hdr;
++	CONFIGPARMS		 cfg;
++	pFCDevicePage0_t	 ppage0_alloc;
++	dma_addr_t		 page0_dma;
++	int			 data_sz;
++	int			 copy_sz=0;
++	int			 rc;
++
++	/* Get FCPort Page 0 header */
++	hdr.PageVersion = 0;
++	hdr.PageLength = 0;
++	hdr.PageNumber = 0;
++	hdr.PageType = MPI_CONFIG_PAGETYPE_FC_DEVICE;
++	cfg.hdr = &hdr;
++	cfg.physAddr = -1;
++	cfg.action = MPI_CONFIG_ACTION_PAGE_HEADER;
++	cfg.dir = 0;
++
++	cfg.pageAddr = (bus << 8) + targetId + MPI_FC_DEVICE_PGAD_FORM_BUS_TID;
++	cfg.timeout = 0;
++
++	if ((rc = mpt_config(ioc, &cfg)) != 0)
++		return 0;
++
++	if (hdr.PageLength == 0)
++		return 0;
++
++	data_sz = hdr.PageLength * 4;
++	rc = -ENOMEM;
++	ppage0_alloc = (pFCDevicePage0_t ) pci_alloc_consistent(ioc->pcidev,
++	    data_sz, &page0_dma);
++	if (ppage0_alloc) {
++		memset((u8 *)ppage0_alloc, 0, data_sz);
++		cfg.physAddr = page0_dma;
++		cfg.action = MPI_CONFIG_ACTION_PAGE_READ_CURRENT;
++
++		if ((rc = mpt_config(ioc, &cfg)) == 0) {
++			/* save the data */
++			copy_sz = min_t(int, sizeof(FCDevicePage0_t), data_sz);
++			memcpy(fcDevicePage, ppage0_alloc, copy_sz);
++		}
++
++		pci_free_consistent(ioc->pcidev, data_sz, (u8 *) ppage0_alloc,
++		    page0_dma);
++	}
++
++	return copy_sz;
++}
++
++/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
++/*
+  *	mptscsih_remove - Removed scsi devices
+  *	@pdev: Pointer to pci_dev structure
+  *
+@@ -5582,6 +5646,7 @@
  EXPORT_SYMBOL(mptscsih_event_process);
  EXPORT_SYMBOL(mptscsih_ioc_reset);
--EXPORT_SYMBOL(mptscsih_store_queue_depth);
-+EXPORT_SYMBOL(mptscsih_change_queue_depth);
+ EXPORT_SYMBOL(mptscsih_change_queue_depth);
++EXPORT_SYMBOL(mptscsih_readFCDevicePage0);
  EXPORT_SYMBOL(mptscsih_timer_expired);
  
  /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
 diff -uarN b/drivers/message/fusion/mptscsih.h a/drivers/message/fusion/mptscsih.h
---- b/drivers/message/fusion/mptscsih.h	2005-06-24 09:20:08.000000000 -0600
-+++ a/drivers/message/fusion/mptscsih.h	2005-06-23 14:50:34.000000000 -0600
-@@ -103,5 +103,5 @@
- extern int mptscsih_scandv_complete(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_FRAME_HDR *r);
- extern int mptscsih_event_process(MPT_ADAPTER *ioc, EventNotificationReply_t *pEvReply);
+--- b/drivers/message/fusion/mptscsih.h	2005-06-23 14:50:34.000000000 -0600
++++ a/drivers/message/fusion/mptscsih.h	2005-06-23 16:52:46.000000000 -0600
+@@ -105,3 +105,4 @@
  extern int mptscsih_ioc_reset(MPT_ADAPTER *ioc, int post_reset);
--extern ssize_t mptscsih_store_queue_depth(struct device *dev, const char *buf, size_t count);
-+extern int mptscsih_change_queue_depth(struct scsi_device *sdev, int qdepth);
+ extern int mptscsih_change_queue_depth(struct scsi_device *sdev, int qdepth);
  extern void mptscsih_timer_expired(unsigned long data);
-diff -uarN b/drivers/message/fusion/mptspi.c a/drivers/message/fusion/mptspi.c
---- b/drivers/message/fusion/mptspi.c	2005-06-24 09:20:08.000000000 -0600
-+++ a/drivers/message/fusion/mptspi.c	2005-06-23 15:09:02.000000000 -0600
-@@ -102,19 +102,6 @@
- static int	mptspiTaskCtx = -1;
- static int	mptspiInternalCtx = -1; /* Used only for internal commands */
- 
--static struct device_attribute mptspi_queue_depth_attr = {
--	.attr = {
--		.name = 	"queue_depth",
--		.mode =		S_IWUSR,
--	},
--	.store = mptscsih_store_queue_depth,
--};
--
--static struct device_attribute *mptspi_dev_attrs[] = {
--	&mptspi_queue_depth_attr,
--	NULL,
--};
--
- static struct scsi_host_template mptspi_driver_template = {
- 	.proc_name			= "mptspi",
- 	.proc_info			= mptscsih_proc_info,
-@@ -124,6 +111,7 @@
- 	.slave_alloc			= mptscsih_slave_alloc,
- 	.slave_configure		= mptscsih_slave_configure,
- 	.slave_destroy			= mptscsih_slave_destroy,
-+	.change_queue_depth 		= mptscsih_change_queue_depth,
- 	.eh_abort_handler		= mptscsih_abort,
- 	.eh_device_reset_handler	= mptscsih_dev_reset,
- 	.eh_bus_reset_handler		= mptscsih_bus_reset,
-@@ -135,7 +123,6 @@
- 	.max_sectors			= 8192,
- 	.cmd_per_lun			= 7,
- 	.use_clustering			= ENABLE_CLUSTERING,
--	.sdev_attrs			= mptspi_dev_attrs,
- };
- 
- 
++extern int mptscsih_readFCDevicePage0(MPT_ADAPTER *ioc, u8 bus, u8 targetId, pFCDevicePage0_t fcDevicePage);
