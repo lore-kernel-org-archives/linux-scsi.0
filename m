@@ -1,50 +1,50 @@
-From: William Lee Irwin III <wli@holomorphy.com>
-Subject: Re: [patch][rfc] 5/5: core remove PageReserved
-Date: Fri, 24 Jun 2005 01:24:32 -0700
-Message-ID: <20050624082432.GF3334@holomorphy.com>
-References: <42BA5F37.6070405@yahoo.com.au> <42BA5F5C.3080101@yahoo.com.au> <42BA5F7B.30904@yahoo.com.au> <42BA5FA8.7080905@yahoo.com.au> <42BA5FC8.9020501@yahoo.com.au> <42BA5FE8.2060207@yahoo.com.au> <20050623095153.GB3334@holomorphy.com> <20050623215011.0b1e6ef2.akpm@osdl.org>
+From: James.Smart@Emulex.Com
+Subject: RE: [Fwd] further testing w/ multipath ... and bugs
+Date: Fri, 24 Jun 2005 10:14:38 -0400
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AC95@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20050623215011.0b1e6ef2.akpm@osdl.org>
-Sender: owner-linux-mm@kvack.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: nickpiggin@yahoo.com.au, linux-kernel@vger.kernel.org, linux-mm@kvack.org, hugh@veritas.com, pbadari@us.ibm.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:52906 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S263073AbVFXOQp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Jun 2005 10:16:45 -0400
+content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: andmike@us.ibm.com, christophe.varoqui@free.fr, andrew.vasquez@qlogic.com
+Cc: linux-scsi@vger.kernel.org
 
-William Lee Irwin III <wli@holomorphy.com> wrote:
->>  An answer should be devised for this. My numerous SCSI CD-ROM devices
->>  (I have 5 across several different machines of several different arches)
->>  are rather unlikely to be happy with /* FIXME: XXX ... as an answer.
-[...]
->>  Mutatis mutandis for my SCSI tape drive.
+> I did not see an answer to this issue. I am also hitting the problem
+> (i.e., devices being removed) during some dm-mp port bounce testing.
+> Is this the correct behavior going forward for the fc transport?
 
-On Thu, Jun 23, 2005 at 09:50:11PM -0700, Andrew Morton wrote:
-> This scsi code is already rather wrong.  There isn't much point in just
-> setting PG_dirty and leaving the page marked as clean in the radix tree. 
-> As it is we'll lose data if the user reads it into a MAP_SHARED memory
-> buffer.
-> set_page_dirty_lock() should be used here.  That can sleep.
-> The above two functions are called under write_lock_irqsave() (at least)
-> and might be called from irq context (dunno).  So we cannot use
-> set_page_dirty_lock() and we don't have a ref on the page's inode.  We
-> could use set_page_dirty() and be racy against page reclaim.
-> But to get all this correct (and it's very incorrect now) we'd need to punt
-> the page dirtying up to process context, along the lines of
-> bio_check_pages_dirty().
-> Or, if st_unmap_user_pages() and sgl_unmap_user_pages() are not called from
-> irq context then we should arrange for them to be called without locks held
-> and use set_page_dirty_lock().
+Current design is when the LLDD tells the transport that the port is
+gone, it (and it's subtree) gets deleted.  Right or not ? don't know.
+I would assume having the real state, where it does not exist if not
+present, is the right overall approach.  Also makes it consistent
+with other storage devices that go away when not connected
+(usb sticks, etc).
 
-This all sounds very reasonable. I was originally more concerned about
-the new FIXME getting introduced but this sounds like a good way to
-resolve the preexisting FIXME's surrounding all this.
+> Also I see a difference in behavior between the lpfc and 
+> qla2xxx drivers
+> where the lpfc is not removing target even though the 
+> "rport-5:0-5: blocked
+> FC remote port time out: removing target" message is printed. 
+> I guess I
+> can look into the difference myself, but I thought Andrew or 
+> James S you
+> two would know.
 
+I'll have to look into things. Likely this is a reference count issue,
+and may be a reference count on a sdev. I doubt lpfc does anything relative
+to this scenario, but I'll check. The drivers could also differ on the
+return codes returned when the rport is in this transition state, which
+may affect the sdev/block device and references.
 
--- wli
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"aart@kvack.org"> aart@kvack.org </a>
+Keep in mind there are issues in .12 if the target is torn down.
+There was some recent patches to correct this.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=111845669410785&w=2
+
+-- james s 
