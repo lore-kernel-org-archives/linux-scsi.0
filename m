@@ -1,50 +1,54 @@
-From: James.Smart@Emulex.Com
-Subject: RE: [Fwd] further testing w/ multipath ... and bugs
-Date: Fri, 24 Jun 2005 10:14:38 -0400
-Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AC95@xbl3.ma.emulex.com>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH] - mptfusion - adding back the spin locks in eh handle
+	 rs
+Date: Fri, 24 Jun 2005 11:24:04 -0600
+Message-ID: <91888D455306F94EBD4D168954A9457C02DD9381@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:52906 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S263073AbVFXOQp convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Jun 2005 10:16:45 -0400
-content-class: urn:content-classes:message
+Received: from mail0.lsil.com ([147.145.40.20]:13756 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S263389AbVFXRY1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Jun 2005 13:24:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andmike@us.ibm.com, christophe.varoqui@free.fr, andrew.vasquez@qlogic.com
-Cc: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, linux scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
 
-> I did not see an answer to this issue. I am also hitting the problem
-> (i.e., devices being removed) during some dm-mp port bounce testing.
-> Is this the correct behavior going forward for the fc transport?
+Jeff - I didn't realize that the host-lock spin locks were removed inside
+scsi mid layer scsi_error.c code.  I just applied James
+scsi-misc-2.6.diff against the 2.6.12 kerne.  Just built this kernel
+and tested the fusion driver, and I'm happy.  No problem, ignore yesterdays
+patch.
 
-Current design is when the LLDD tells the transport that the port is
-gone, it (and it's subtree) gets deleted.  Right or not ? don't know.
-I would assume having the real state, where it does not exist if not
-present, is the right overall approach.  Also makes it consistent
-with other storage devices that go away when not connected
-(usb sticks, etc).
+I will have to repost the other two patch's later today; e.g. 
+- change_queue_depth API
+- FC transport support.
 
-> Also I see a difference in behavior between the lpfc and 
-> qla2xxx drivers
-> where the lpfc is not removing target even though the 
-> "rport-5:0-5: blocked
-> FC remote port time out: removing target" message is printed. 
-> I guess I
-> can look into the difference myself, but I thought Andrew or 
-> James S you
-> two would know.
+Eric
 
-I'll have to look into things. Likely this is a reference count issue,
-and may be a reference count on a sdev. I doubt lpfc does anything relative
-to this scenario, but I'll check. The drivers could also differ on the
-return codes returned when the rport is in this transition state, which
-may affect the sdev/block device and references.
 
-Keep in mind there are issues in .12 if the target is torn down.
-There was some recent patches to correct this.
-http://marc.theaimsgroup.com/?l=linux-scsi&m=111845669410785&w=2
+On Thursday, June 23, 2005 5:18 PM, Jeff Garzik wrote:
+> Moore, Eric Dean wrote:
+> > Luben
+> > 
+> > Ok - So you agree that completing Task management request
+> > in the same context as the eh threads is the way to go, right?
+> > 
+> > Because that is what this LLD is doing.  Have you had
+> > a chance to look at our code?
+> > 
+> > That previous patch submitted by Jeff(I guess) was removing 
+> code which
+> > enabled interrupts.  My patch was restoring it back to previous
+> > working code which doesn't hang the driver.
+> 
+> What was broken?
+> 
+> MPT abort handler would release the spinlock at the beginning, and 
+> reacquire it at the end, essentially reversing the spinlocks 
+> in the old 
+> spinlocked EH code.
+> 
 
--- james s 
