@@ -1,30 +1,51 @@
-From: Susanna <messages@furnituremallusa.com>
-Subject: Software cds $15 and $99 get al software in 1 cd
-Date: Sun, 26 Jun 2005 00:13:19 +0300
-Message-ID: <1148114707.555168003@dsl.dynamic812156010.ttnet.net.tr>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Fw: ahc_target_state check starget valid
+Date: Sat, 25 Jun 2005 16:23:44 -0500
+Message-ID: <1119734624.5033.40.camel@mulgrave>
+References: <20050622140808.554fae2d.akpm@osdl.org>
+Mime-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl.dynamic812156010.ttnet.net.tr ([81.215.60.10]:16903 "HELO
-	dsl.dynamic812156010.ttnet.net.tr") by vger.kernel.org with SMTP
-	id S261341AbVFYVNY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Jun 2005 17:13:24 -0400
-Received: from [126.230.118.212] (port=4260 helo=[wagoner])
-    by dsl.dynamic812156010.ttnet.net.tr with esmtp
-    id 1303879808menaced78706
-    for linux-scsi@vger.kernel.org; Sun, 26 Jun 2005 00:13:20 +0300
+Received: from stat16.steeleye.com ([209.192.50.48]:50888 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261338AbVFYVXy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 25 Jun 2005 17:23:54 -0400
+In-Reply-To: <20050622140808.554fae2d.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Andy Whitcroft <apw@shadowen.org>
 
-sshs.. get low cost software cds or download!
-http://cmtepx.shwpvrsl72az7bs.poromajg.info
+On Wed, 2005-06-22 at 14:08 -0700, Andrew Morton wrote:
+> Nope, Justin has departed the scene.  I think someone at adaptec has picked
+> up maintenance, but James dinks with aic* as well.  MAINTAINERS needs some
+> maintenance.
 
+Well, Adaptec has more or less abandoned the aic7xxx series of drivers,
+apparently, so I've been trying to get the one which I actually have
+hardware for into some type of shape.
 
+The patch is functional, but not quite complete, the bug being checking
+starg (as the original code did) instead of starget, so the complete
+patch takes out the superfluous if (starg == NULL) as well.
 
+James
 
-To do anything less than your best is to sacrifice the gift. 
-Dig where the gold is…unless you just need some exercise.   
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_proc.c b/drivers/scsi/aic7xxx/aic7xxx_proc.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_proc.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_proc.c
+@@ -155,9 +155,9 @@ ahc_dump_target_state(struct ahc_softc *
+ 	copy_info(info, "\tUser: ");
+ 	ahc_format_transinfo(info, &tinfo->user);
+ 	starget = ahc->platform_data->starget[target_offset];
+-	targ = scsi_transport_target_data(starget);
+-	if (targ == NULL)
++	if (!starget)
+ 		return;
++	targ = scsi_transport_target_data(starget);
+ 
+ 	copy_info(info, "\tGoal: ");
+ 	ahc_format_transinfo(info, &tinfo->goal);
 
 
