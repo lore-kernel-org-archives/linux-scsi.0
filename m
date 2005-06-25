@@ -1,81 +1,248 @@
 From: James.Smart@Emulex.Com
-Subject: [PATCH 3 of 12] Update Emulex lpfc driver to rev 8.0.29
-Date: Sat, 25 Jun 2005 10:34:08 -0400
-Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C20F4148@xbl3.ma.emulex.com>
+Subject: [PATCH 1 of 12] Update Emulex lpfc driver to rev 8.0.29
+Date: Sat, 25 Jun 2005 10:34:00 -0400
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C20F4146@xbl3.ma.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:38590 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S261240AbVFYOeM convert rfc822-to-8bit
+Received: from emulex.emulex.com ([138.239.112.1]:36030 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S261237AbVFYOeC convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Jun 2005 10:34:12 -0400
+	Sat, 25 Jun 2005 10:34:02 -0400
 Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id j5PEY99P008170
-	for <linux-scsi@vger.kernel.org>; Sat, 25 Jun 2005 07:34:09 -0700 (PDT)
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id j5PEY09P008159
+	for <linux-scsi@vger.kernel.org>; Sat, 25 Jun 2005 07:34:01 -0700 (PDT)
 content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Fixes in mbox_timeout_handler
+hgp/pgp cleanups from Christoph Hellwig
 
-Analysis:
+Merge patch from Christoph Hellwig <hch@lst.de>:
+[PATCH] lpfc: hgp/pgp cleanups
 
-Timeout of READ_SPARM64 causes call to lpfc_mbox_timeout_handler which
-reads psli->mbox_active to determine the timeout mbox.  Timeout
-handler then NULL's psli->mbox_active and calls
-lpfc_mbx_cmpl_read_sparam(), which on timeout condition, calls
-link_down().  link_down() now calls disc_done() which calls
-mbox_timeout_hander() again since WORKER_MBOX_TMO is still set, which
-goes back to read psli->mbox_active which is already NULL'ed.
-
-Remove redundant if statement in lpfc_mbox_timeout_handler.  pmbox is
-assigned psli->mbox_active so there is no need to check if it actually
-equals psli->mbox_active.
+ - rename PGP/HPH to lpfc_pgp/lpfc_hgp
+ - use __le32 types for the members to start fixing sparse -Wbitwise
+   issues
+ - remove lpfc_sli.MBhostaddr, we can always use the pointer from
+   SLI2_DESC directly
 
 Signed-off-by: James Smart <James.Smart@emulex.com>
 
 ---
 
- scsi-misc-2.6-20050620-jsmart/drivers/scsi/lpfc/lpfc_sli.c |   18 ++++++-------
- 1 files changed, 9 insertions(+), 9 deletions(-)
+ scsi-misc-2.6-20050620-jsmart/drivers/scsi/lpfc/lpfc_hw.h   |   20 ++---
+ scsi-misc-2.6-20050620-jsmart/drivers/scsi/lpfc/lpfc_mbox.c |    7 -
+ scsi-misc-2.6-20050620-jsmart/drivers/scsi/lpfc/lpfc_sli.c  |   45 +++---------
+ 3 files changed, 26 insertions(+), 46 deletions(-)
 
-diff -puN drivers/scsi/lpfc/lpfc_sli.c~mboxtmo drivers/scsi/lpfc/lpfc_sli.c
---- scsi-misc-2.6-20050620/drivers/scsi/lpfc/lpfc_sli.c~mboxtmo	2005-06-25 09:41:57.000000000 -0400
-+++ scsi-misc-2.6-20050620-jsmart/drivers/scsi/lpfc/lpfc_sli.c	2005-06-25 09:41:57.000000000 -0400
-@@ -1724,6 +1724,8 @@ lpfc_mbox_timeout_handler(struct lpfc_hb
- 		return;
- 	}
+diff -puN drivers/scsi/lpfc/lpfc_mbox.c~hgp drivers/scsi/lpfc/lpfc_mbox.c
+--- scsi-misc-2.6-20050620/drivers/scsi/lpfc/lpfc_mbox.c~hgp	2005-06-25 09:41:44.000000000 -0400
++++ scsi-misc-2.6-20050620-jsmart/drivers/scsi/lpfc/lpfc_mbox.c	2005-06-25 09:41:44.000000000 -0400
+@@ -422,7 +422,6 @@ lpfc_config_pcb_setup(struct lpfc_hba * 
+ 	uint32_t iocbCnt;
+ 	int i;
  
-+	phba->work_hba_events &= ~WORKER_MBOX_TMO;
-+
- 	pmbox = phba->sli.mbox_active;
- 	mb = &pmbox->mb;
+-	psli->MBhostaddr = (uint32_t *)&phba->slim2p->mbx;
+ 	pcbp->maxRing = (psli->num_rings - 1);
  
-@@ -1738,16 +1740,14 @@ lpfc_mbox_timeout_handler(struct lpfc_hb
- 		phba->sli.sli_flag,
- 		phba->sli.mbox_active);
+ 	iocbCnt = 0;
+@@ -528,7 +527,7 @@ lpfc_config_port(struct lpfc_hba * phba,
+ 	dma_addr_t pdma_addr;
+ 	uint32_t bar_low, bar_high;
+ 	size_t offset;
+-	HGP hgp;
++	struct lpfc_hgp hgp;
+ 	void __iomem *to_slim;
  
--	if (phba->sli.mbox_active == pmbox) {
--		phba->sli.mbox_active = NULL;
--		if (pmbox->mbox_cmpl) {
--			mb->mbxStatus = MBX_NOT_FINISHED;
--			spin_unlock_irq(phba->host->host_lock);
--			(pmbox->mbox_cmpl) (phba, pmbox);
--			spin_lock_irq(phba->host->host_lock);
--		}
--		phba->sli.sli_flag &= ~LPFC_SLI_MBOX_ACTIVE;
-+	phba->sli.mbox_active = NULL;
-+	if (pmbox->mbox_cmpl) {
-+		mb->mbxStatus = MBX_NOT_FINISHED;
-+		spin_unlock_irq(phba->host->host_lock);
-+		(pmbox->mbox_cmpl) (phba, pmbox);
-+		spin_lock_irq(phba->host->host_lock);
- 	}
-+	phba->sli.sli_flag &= ~LPFC_SLI_MBOX_ACTIVE;
+ 	memset(pmb, 0, sizeof(LPFC_MBOXQ_t));
+@@ -584,9 +583,9 @@ lpfc_config_port(struct lpfc_hba * phba,
+ 	else
+ 		phba->slim2p->pcb.hgpAddrHigh = 0;
+ 	/* write HGP data to SLIM at the required longword offset */
+-	memset(&hgp, 0, sizeof(HGP));
++	memset(&hgp, 0, sizeof(struct lpfc_hgp));
+ 	to_slim = phba->MBslimaddr + (SLIMOFF*sizeof (uint32_t));
+-	lpfc_memcpy_to_slim(to_slim, &hgp, sizeof (HGP));
++	lpfc_memcpy_to_slim(to_slim, &hgp, sizeof(struct lpfc_hgp));
  
- 	spin_unlock_irq(phba->host->host_lock);
- 	lpfc_mbox_abort(phba);
+ 	/* Setup Port Group ring pointer */
+ 	offset = (uint8_t *)&phba->slim2p->mbx.us.s2.port -
+diff -puN drivers/scsi/lpfc/lpfc_hw.h~hgp drivers/scsi/lpfc/lpfc_hw.h
+--- scsi-misc-2.6-20050620/drivers/scsi/lpfc/lpfc_hw.h~hgp	2005-06-25 09:41:44.000000000 -0400
++++ scsi-misc-2.6-20050620-jsmart/drivers/scsi/lpfc/lpfc_hw.h	2005-06-25 09:41:44.000000000 -0400
+@@ -2214,20 +2214,20 @@ typedef union {
+  * SLI-2 specific structures
+  */
+ 
+-typedef struct {
+-	uint32_t cmdPutInx;
+-	uint32_t rspGetInx;
+-} HGP;
++struct lpfc_hgp {
++	__le32 cmdPutInx;
++	__le32 rspGetInx;
++};
+ 
+-typedef struct {
+-	uint32_t cmdGetInx;
+-	uint32_t rspPutInx;
+-} PGP;
++struct lpfc_pgp {
++	__le32 cmdGetInx;
++	__le32 rspPutInx;
++};
+ 
+ typedef struct _SLI2_DESC {
+-	HGP host[MAX_RINGS];
++	struct lpfc_hgp host[MAX_RINGS];
+ 	uint32_t unused1[16];
+-	PGP port[MAX_RINGS];
++	struct lpfc_pgp port[MAX_RINGS];
+ } SLI2_DESC;
+ 
+ typedef union {
+diff -puN drivers/scsi/lpfc/lpfc_sli.c~hgp drivers/scsi/lpfc/lpfc_sli.c
+--- scsi-misc-2.6-20050620/drivers/scsi/lpfc/lpfc_sli.c~hgp	2005-06-25 09:41:44.000000000 -0400
++++ scsi-misc-2.6-20050620-jsmart/drivers/scsi/lpfc/lpfc_sli.c	2005-06-25 09:41:44.000000000 -0400
+@@ -225,8 +225,7 @@ lpfc_sli_ringtx_get(struct lpfc_hba * ph
+ static IOCB_t *
+ lpfc_sli_next_iocb_slot (struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
+ {
+-	MAILBOX_t *mbox = (MAILBOX_t *)phba->sli.MBhostaddr;
+-	PGP *pgp = (PGP *)&mbox->us.s2.port[pring->ringno];
++	struct lpfc_pgp *pgp = &phba->slim2p->mbx.us.s2.port[pring->ringno];
+ 	uint32_t  max_cmd_idx = pring->numCiocb;
+ 	IOCB_t *iocb = NULL;
+ 
+@@ -411,9 +410,7 @@ lpfc_sli_resume_iocb(struct lpfc_hba * p
+ static void
+ lpfc_sli_turn_on_ring(struct lpfc_hba * phba, int ringno)
+ {
+-	PGP *pgp =
+-		((PGP *) &
+-		 (((MAILBOX_t *)phba->sli.MBhostaddr)->us.s2.port[ringno]));
++	struct lpfc_pgp *pgp = &phba->slim2p->mbx.us.s2.port[ringno];
+ 
+ 	/* If the ring is active, flag it */
+ 	if (phba->sli.ring[ringno].cmdringaddr) {
+@@ -537,7 +534,7 @@ lpfc_sli_handle_mb_event(struct lpfc_hba
+ 	/* Get a Mailbox buffer to setup mailbox commands for callback */
+ 	if ((pmb = phba->sli.mbox_active)) {
+ 		pmbox = &pmb->mb;
+-		mbox = (MAILBOX_t *) phba->sli.MBhostaddr;
++		mbox = &phba->slim2p->mbx;
+ 
+ 		/* First check out the status word */
+ 		lpfc_sli_pcimem_bcopy(mbox, pmbox, sizeof (uint32_t));
+@@ -905,10 +902,10 @@ static int
+ lpfc_sli_handle_fast_ring_event(struct lpfc_hba * phba,
+ 				struct lpfc_sli_ring * pring, uint32_t mask)
+ {
++ 	struct lpfc_pgp *pgp = &phba->slim2p->mbx.us.s2.port[pring->ringno];
+ 	IOCB_t *irsp = NULL;
+ 	struct lpfc_iocbq *cmdiocbq = NULL;
+ 	struct lpfc_iocbq rspiocbq;
+-	PGP *pgp;
+ 	uint32_t status;
+ 	uint32_t portRspPut, portRspMax;
+ 	int rc = 1;
+@@ -920,10 +917,6 @@ lpfc_sli_handle_fast_ring_event(struct l
+ 	spin_lock_irqsave(phba->host->host_lock, iflag);
+ 	pring->stats.iocb_event++;
+ 
+-	/* The driver assumes SLI-2 mode */
+-	pgp = (PGP *) &((MAILBOX_t *) phba->sli.MBhostaddr)
+-		->us.s2.port[pring->ringno];
+-
+ 	/*
+ 	 * The next available response entry should never exceed the maximum
+ 	 * entries.  If it does, treat it as an adapter hardware error.
+@@ -1075,9 +1068,7 @@ lpfc_sli_handle_slow_ring_event(struct l
+ 	struct lpfc_iocbq *cmdiocbp;
+ 	struct lpfc_iocbq *saveq;
+ 	struct list_head *lpfc_iocb_list = &phba->lpfc_iocb_list;
+-	HGP *hgp;
+-	PGP *pgp;
+-	MAILBOX_t *mbox;
++	struct lpfc_pgp *pgp = &phba->slim2p->mbx.us.s2.port[pring->ringno];
+ 	uint8_t iocb_cmd_type;
+ 	lpfc_iocb_type type;
+ 	uint32_t status, free_saveq;
+@@ -1089,11 +1080,6 @@ lpfc_sli_handle_slow_ring_event(struct l
+ 	spin_lock_irqsave(phba->host->host_lock, iflag);
+ 	pring->stats.iocb_event++;
+ 
+-	/* The driver assumes SLI-2 mode */
+-	mbox = (MAILBOX_t *) phba->sli.MBhostaddr;
+-	pgp = (PGP *) & mbox->us.s2.port[pring->ringno];
+-	hgp = (HGP *) & mbox->us.s2.host[pring->ringno];
+-
+ 	/*
+ 	 * The next available response entry should never exceed the maximum
+ 	 * entries.  If it does, treat it as an adapter hardware error.
+@@ -1771,7 +1757,6 @@ lpfc_mbox_timeout_handler(struct lpfc_hb
+ int
+ lpfc_sli_issue_mbox(struct lpfc_hba * phba, LPFC_MBOXQ_t * pmbox, uint32_t flag)
+ {
+-	MAILBOX_t *mbox;
+ 	MAILBOX_t *mb;
+ 	struct lpfc_sli *psli;
+ 	uint32_t status, evtctr;
+@@ -1901,15 +1886,13 @@ lpfc_sli_issue_mbox(struct lpfc_hba * ph
+ 	mb->mbxOwner = OWN_CHIP;
+ 
+ 	if (psli->sli_flag & LPFC_SLI2_ACTIVE) {
+-
+ 		/* First copy command data to host SLIM area */
+-		mbox = (MAILBOX_t *) psli->MBhostaddr;
+-		lpfc_sli_pcimem_bcopy(mb, mbox, MAILBOX_CMD_SIZE);
++		lpfc_sli_pcimem_bcopy(mb, &phba->slim2p->mbx, MAILBOX_CMD_SIZE);
+ 	} else {
+ 		if (mb->mbxCommand == MBX_CONFIG_PORT) {
+ 			/* copy command data into host mbox for cmpl */
+-			mbox = (MAILBOX_t *) psli->MBhostaddr;
+-			lpfc_sli_pcimem_bcopy(mb, mbox, MAILBOX_CMD_SIZE);
++			lpfc_sli_pcimem_bcopy(mb, &phba->slim2p->mbx,
++					MAILBOX_CMD_SIZE);
+ 		}
+ 
+ 		/* First copy mbox command data to HBA SLIM, skip past first
+@@ -1946,8 +1929,7 @@ lpfc_sli_issue_mbox(struct lpfc_hba * ph
+ 		psli->mbox_active = NULL;
+ 		if (psli->sli_flag & LPFC_SLI2_ACTIVE) {
+ 			/* First read mbox status word */
+-			mbox = (MAILBOX_t *) psli->MBhostaddr;
+-			word0 = *((volatile uint32_t *)mbox);
++			word0 = *((volatile uint32_t *)&phba->slim2p->mbx);
+ 			word0 = le32_to_cpu(word0);
+ 		} else {
+ 			/* First read mbox status word */
+@@ -1984,8 +1966,8 @@ lpfc_sli_issue_mbox(struct lpfc_hba * ph
+ 
+ 			if (psli->sli_flag & LPFC_SLI2_ACTIVE) {
+ 				/* First copy command data */
+-				mbox = (MAILBOX_t *) psli->MBhostaddr;
+-				word0 = *((volatile uint32_t *)mbox);
++				word0 = *((volatile uint32_t *)
++						&phba->slim2p->mbx);
+ 				word0 = le32_to_cpu(word0);
+ 				if (mb->mbxCommand == MBX_CONFIG_PORT) {
+ 					MAILBOX_t *slimmb;
+@@ -2009,10 +1991,9 @@ lpfc_sli_issue_mbox(struct lpfc_hba * ph
+ 		}
+ 
+ 		if (psli->sli_flag & LPFC_SLI2_ACTIVE) {
+-			/* First copy command data */
+-			mbox = (MAILBOX_t *) psli->MBhostaddr;
+ 			/* copy results back to user */
+-			lpfc_sli_pcimem_bcopy(mbox, mb, MAILBOX_CMD_SIZE);
++			lpfc_sli_pcimem_bcopy(&phba->slim2p->mbx, mb,
++					MAILBOX_CMD_SIZE);
+ 		} else {
+ 			/* First copy command data */
+ 			lpfc_memcpy_from_slim(mb, phba->MBslimaddr,
 _
