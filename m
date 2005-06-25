@@ -1,12 +1,30 @@
-From: quxrnnaenpk@yahoo.com
-Subject: (unknown)
-Date: Sat, 25 Jun 2005 04:50:16 -0700
-Message-ID: <200506251150.j5PBoG2q010279__40972.3992729143$1119699909$gmane$org@zeus2.kernel.org>
+From: Nance <Vincent@photongolf.com>
+Subject: Men's health pills - order securely online.
+Date: Sat, 25 Jun 2005 08:52:14 -0400
+Message-ID: <110323124274.114687490@c-24-61-80-212.hsd1.ma.comcast.net>
+Mime-Version: 1.0 (Apple Message framework v728)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:4557 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S261153AbVFYLug (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Jun 2005 07:50:36 -0400
+Received: from c-24-61-80-212.hsd1.ma.comcast.net ([24.61.80.212]:15117 "HELO
+	c-24-61-80-212.hsd1.ma.comcast.net") by vger.kernel.org with SMTP
+	id S263314AbVFYMwU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 25 Jun 2005 08:52:20 -0400
+Received: from [133.223.232.91] (port=4203 helo=[posterior])
+    by c-24-61-80-212.hsd1.ma.comcast.net with esmtp
+    id 3134477486pulses43335
+    for linux-scsi@vger.kernel.org; Sat, 25 Jun 2005 08:52:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+Upgrade your life with our lifestyle medications!
+http://nve.2hnv632dhcksolk.evelynlb.com
+
+
+
+In wildness is the preservation of the world.     
+Famous remarks are very seldom quoted correctly.      
+It's hard to be nostalgic when you can't remember anything.   
+
 
