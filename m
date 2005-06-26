@@ -1,51 +1,42 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Fw: ahc_target_state check starget valid
-Date: Sat, 25 Jun 2005 16:23:44 -0500
-Message-ID: <1119734624.5033.40.camel@mulgrave>
-References: <20050622140808.554fae2d.akpm@osdl.org>
+From: Nick Piggin <nickpiggin@yahoo.com.au>
+Subject: Re: [patch][rfc] 5/5: core remove PageReserved
+Date: Sun, 26 Jun 2005 18:41:34 +1000
+Message-ID: <42BE6A3E.8030703@yahoo.com.au>
+References: <42BA5F37.6070405@yahoo.com.au>	<42BA5F5C.3080101@yahoo.com.au>	<42BA5F7B.30904@yahoo.com.au>	<42BA5FA8.7080905@yahoo.com.au>	<42BA5FC8.9020501@yahoo.com.au>	<42BA5FE8.2060207@yahoo.com.au>	<20050623095153.GB3334@holomorphy.com> <20050623215011.0b1e6ef2.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:50888 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261338AbVFYVXy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 25 Jun 2005 17:23:54 -0400
-In-Reply-To: <20050622140808.554fae2d.akpm@osdl.org>
+Received: from smtp206.mail.sc5.yahoo.com ([216.136.129.96]:50072 "HELO
+	smtp206.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
+	id S261213AbVFZIli (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 26 Jun 2005 04:41:38 -0400
+In-Reply-To: <20050623215011.0b1e6ef2.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Andy Whitcroft <apw@shadowen.org>
+Cc: William Lee Irwin III <wli@holomorphy.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, hugh@veritas.com, pbadari@us.ibm.com, linux-scsi@vger.kernel.org
 
-On Wed, 2005-06-22 at 14:08 -0700, Andrew Morton wrote:
-> Nope, Justin has departed the scene.  I think someone at adaptec has picked
-> up maintenance, but James dinks with aic* as well.  MAINTAINERS needs some
-> maintenance.
+Andrew Morton wrote:
+> William Lee Irwin III <wli@holomorphy.com> wrote:
 
-Well, Adaptec has more or less abandoned the aic7xxx series of drivers,
-apparently, so I've been trying to get the one which I actually have
-hardware for into some type of shape.
+>> Mutatis mutandis for my SCSI tape drive.
+> 
+> 
 
-The patch is functional, but not quite complete, the bug being checking
-starg (as the original code did) instead of starget, so the complete
-patch takes out the superfluous if (starg == NULL) as well.
+OK, for the VM_RESERVED case, it looks like it won't be much of a problem
+because get_user_pages faults on VM_IO regions (which is already set in
+remap_pfn_range which is used by mem.c and most drivers). So this code will
+simply not encounter VM_RESERVED regions - well obviously, get_user_pages
+should be made to explicitly check for VM_RESERVED too, but the point being
+that introducing such a check will not overly restrict drivers.
 
-James
+[snip SetPageDirty is wrong]
 
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_proc.c b/drivers/scsi/aic7xxx/aic7xxx_proc.c
---- a/drivers/scsi/aic7xxx/aic7xxx_proc.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_proc.c
-@@ -155,9 +155,9 @@ ahc_dump_target_state(struct ahc_softc *
- 	copy_info(info, "\tUser: ");
- 	ahc_format_transinfo(info, &tinfo->user);
- 	starget = ahc->platform_data->starget[target_offset];
--	targ = scsi_transport_target_data(starget);
--	if (targ == NULL)
-+	if (!starget)
- 		return;
-+	targ = scsi_transport_target_data(starget);
- 
- 	copy_info(info, "\tGoal: ");
- 	ahc_format_transinfo(info, &tinfo->goal);
+Not that this helps the existing bug...
 
+-- 
+SUSE Labs, Novell Inc.
+
+Send instant messages to your online friends http://au.messenger.yahoo.com 
 
