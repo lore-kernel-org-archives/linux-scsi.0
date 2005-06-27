@@ -1,44 +1,101 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Fw: 2.6.12-mm2: 3ware SATA RAID inaccessible
-Date: Mon, 27 Jun 2005 09:52:56 +0200
-Message-ID: <20050627075255.GK19550@suse.de>
-References: <20050626153941.456543d6.akpm@osdl.org> <1119829031.5038.15.camel@mulgrave>
+From: "Ronny T. Lampert" <telecaadmin@uni.de>
+Subject: aic79xx LUN detection failure
+Date: Mon, 27 Jun 2005 14:56:52 +0200
+Message-ID: <42BFF794.2010307@uni.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:57730 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S261911AbVF0Hvt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Jun 2005 03:51:49 -0400
-Content-Disposition: inline
-In-Reply-To: <1119829031.5038.15.camel@mulgrave>
+Received: from [217.111.48.251] ([217.111.48.251]:65530 "EHLO
+	mail.telecasystems.de") by vger.kernel.org with ESMTP
+	id S262179AbVF0M4y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Jun 2005 08:56:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, aradford@amcc.com, Nick Orlov <bugfixer@list.ru>
+To: linux-scsi@vger.kernel.org
 
-On Sun, Jun 26 2005, James Bottomley wrote:
-> On Sun, 2005-06-26 at 15:39 -0700, Andrew Morton wrote:
-> > : OK ... I looked ... and it's not pretty.  The problem is that the 3ware
-> > : assumes certain commands (INQUIRY, READ_CAPACITY, MODE_SENSE + a few
-> > : others) are only generated internally and thus only have use_sg == 0.
-> > : The scsi-block-tree breaks this assumption because we're trying to
-> > : eliminate the use_sg == 0 special case.
-> > : 
-> > : It's important to note that this behaviour is already broken, as anyone
-> > : using SG_IO to send commands to the device would have discovered.
-> 
-> OK, I think the attached is the fix.  It makes the 3w-xxxx routines
-> handle sg data.  Can we verify it works first, and then we'll worry
-> about how many other internal command processing devices are broken in
-> this way.
+Hi,
 
-This wont work at all, I'm afraid. You cannot atomically kmap() the
-buffer for queueing, and unmap it from interrupt context. The type
-probably isn't correct, and you are not guaranteed to be on the same
-CPU when doing the unmap. Thus you end up with corrupted maps and
-preemption counts.
+using aic79xx under 2.6.12 still (as it has done since the beginning) fails
+for me; 2.4.23+ is running fine.
 
--- 
-Jens Axboe
+2.4.23:
+
+scsi1 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 1.3.10
+        <Adaptec 29320 Ultra320 SCSI adapter>
+        aic7901A: Ultra320 Wide Channel A, SCSI Id=7, PCI-X 67-100Mhz, 512 SCBs
+
+scsi2 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 1.3.10
+        <Adaptec 29320 Ultra320 SCSI adapter>
+        aic7901A: Ultra320 Wide Channel B, SCSI Id=7, PCI-X 67-100Mhz, 512 SCBs
+
+blk: queue f39bfa18, I/O limit 4095Mb (mask 0xffffffff)
+scsi2:A:5:0: DV failed to configure device.  Please file a bug report
+against this driver.
+(scsi2:A:5): 160.000MB/s transfers (80.000MHz DT, 16bit)
+  Vendor: easyRAID  Model:  16P              Rev: 0001
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+blk: queue f34ef018, I/O limit 4095Mb (mask 0xffffffff)
+  Vendor: easyRAID  Model:  16P              Rev: 0001
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+blk: queue f34d9e18, I/O limit 4095Mb (mask 0xffffffff)
+  Vendor: easyRAID  Model:  16P              Rev: 0001
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+blk: queue f34d9c18, I/O limit 4095Mb (mask 0xffffffff)
+scsi2:A:5:0: Tagged Queuing enabled.  Depth 127
+scsi2:A:5:1: Tagged Queuing enabled.  Depth 127
+scsi2:A:5:2: Tagged Queuing enabled.  Depth 127
+Attached scsi disk sdb at scsi2, channel 0, id 5, lun 0
+Attached scsi disk sdc at scsi2, channel 0, id 5, lun 1
+Attached scsi disk sdd at scsi2, channel 0, id 5, lun 2
+SCSI device sdb: 980451328 512-byte hdwr sectors (501991 MB)
+ sdb: sdb1
+SCSI device sdc: 1470676992 512-byte hdwr sectors (752987 MB)
+ sdc: sdc1
+SCSI device sdd: 640319488 512-byte hdwr sectors (327844 MB)
+ sdd: sdd1
+
+
+2.6.12.1 is giving:
+
+scsi1 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 1.3.11
+        <Adaptec 29320 Ultra320 SCSI adapter>
+        aic7902: Ultra320 Wide Channel A, SCSI Id=7, PCI-X 67-100Mhz, 512 SCBs
+
+input: AT Translated Set 2 keyboard on isa0060/serio0
+scsi2 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 1.3.11
+        <Adaptec 29320 Ultra320 SCSI adapter>
+        aic7902: Ultra320 Wide Channel B, SCSI Id=7, PCI-X 67-100Mhz, 512 SCBs
+
+scsi2:A:5:0: DV failed to configure device.  Please file a bug report
+against this driver.
+(scsi2:A:5): 160.000MB/s transfers (80.000MHz DT, 16bit)
+  Vendor: easyRAID  Model:  16P              Rev: 0001
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+scsi2:A:5:0: Tagged Queuing enabled.  Depth 127
+SCSI device sdb: 980451328 512-byte hdwr sectors (501991 MB)
+SCSI device sdb: drive cache: write back
+SCSI device sdb: 980451328 512-byte hdwr sectors (501991 MB)
+SCSI device sdb: drive cache: write back
+ sdb: sdb1
+Attached scsi disk sdb at scsi2, channel 0, id 5, lun 0
+scsi: host 2 channel 0 id 5 lun 0x00000200080c0400 has a LUN larger than
+currently supported.
+scsi: host 2 channel 0 id 5 lun 0xff010000ffffffff has a LUN larger than
+currently supported.
+scsi: host 2 channel 0 id 5 lun 0x0002202020202020 has a LUN larger than
+currently supported.
+scsi: host 2 channel 0 id 5 lun808529923 has a LUN larger than allowed by
+the host adapter
+scsi: host 2 channel 0 id 5 lun3078 has a LUN larger than allowed by the
+host adapter
+
+
+The RAID configuration is showing that it is using LUNs 0-2 as 2.4
+indicates. Termination is okay.
+
+Seems like a strange driver problem. What to do?
+
+Cheers,
+Ronny
 
