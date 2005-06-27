@@ -1,42 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: Fw: 2.6.12-mm2: 3ware SATA RAID inaccessible
-Date: Mon, 27 Jun 2005 09:22:22 -0500
-Message-ID: <1119882142.5175.11.camel@mulgrave>
-References: <20050626153941.456543d6.akpm@osdl.org>
-	 <1119829031.5038.15.camel@mulgrave>  <20050627044647.GA4104@nikolas.hn.org>
+Date: Mon, 27 Jun 2005 16:27:44 +0200
+Message-ID: <20050627142742.GH11633@suse.de>
+References: <20050626153941.456543d6.akpm@osdl.org> <1119829031.5038.15.camel@mulgrave> <20050627075255.GK19550@suse.de> <1119882148.5175.13.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:3545 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262051AbVF0OWd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Jun 2005 10:22:33 -0400
-In-Reply-To: <20050627044647.GA4104@nikolas.hn.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:49622 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S261729AbVF0O0h (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Jun 2005 10:26:37 -0400
+Content-Disposition: inline
+In-Reply-To: <1119882148.5175.13.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nick Orlov <bugfixer@list.ru>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, aradford@amcc.com, Nick Orlov <bugfixer@list.ru>
 
-On Mon, 2005-06-27 at 00:46 -0400, Nick Orlov wrote:
-> c0267437 tw_interrupt+0x317/0x480
-> c013ac9d handle_IRQ_event+0x3d/0x70
-> c013adb0 __do_IRQ+0xe0/0x170
-> c0104fc3 do_IRQ+0x23/0x40
-> c01031ce common_interrupt+0x1a/0x20
-> c0100ca6 default_idle+0x26/0x30
-> c0110bbc apm_cpu_idle+0xce/0x160
-> c0100d24 cpu_idle+0x34/0x50
-> c03947e5 start_kernel+0x165/0x180
-> c0394360 unknown_bootoption+0x0/0x1e0
+On Mon, Jun 27 2005, James Bottomley wrote:
+> On Mon, 2005-06-27 at 09:52 +0200, Jens Axboe wrote:
+> > This wont work at all, I'm afraid. You cannot atomically kmap() the
+> > buffer for queueing, and unmap it from interrupt context. The type
+> > probably isn't correct, and you are not guaranteed to be on the same
+> > CPU when doing the unmap. Thus you end up with corrupted maps and
+> > preemption counts.
+> 
+> Actually, it's a lot simpler than that.  We're generating the data for
+> the command, so all we do is send an equivalent command to the array (if
+> any) and then in the irq routine, kmap_atomic the buffer, copy the array
+> data into the buffer in the right order for the command then kunmap the
+> buffer again.  This should work fine, I think.
 
-tw_interrupt wasn't actually modified.  However, it should have executed
-another call, probably where it's doing a null ptr deref, probably in
-one of the completion routines, which should be identified by the EIP;
-could you tell me what this is?
+Yup, that would be ok, if that is what you did I misread where the
+mapping took place! But you still can't use KM_USER0 in irq context.
 
-Thanks,
-
-James
-
+-- 
+Jens Axboe
 
