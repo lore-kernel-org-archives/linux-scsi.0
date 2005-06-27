@@ -1,36 +1,272 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Fw: 2.6.12-mm2: 3ware SATA RAID inaccessible
-Date: Mon, 27 Jun 2005 09:22:28 -0500
-Message-ID: <1119882148.5175.13.camel@mulgrave>
-References: <20050626153941.456543d6.akpm@osdl.org>
-	 <1119829031.5038.15.camel@mulgrave>  <20050627075255.GK19550@suse.de>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH] 2.6 aacraid: shutdown notification (update)
+Date: Mon, 27 Jun 2005 07:39:37 -0700
+Message-ID: <1119883177.22704.12.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:4569 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262075AbVF0OWw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Jun 2005 10:22:52 -0400
-In-Reply-To: <20050627075255.GK19550@suse.de>
+Received: from smtp.osdl.org ([65.172.181.4]:29347 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S261742AbVF0Ojo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Jun 2005 10:39:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, aradford@amcc.com, Nick Orlov <bugfixer@list.ru>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>, Brian King <brking@us.ibm.com>
 
-On Mon, 2005-06-27 at 09:52 +0200, Jens Axboe wrote:
-> This wont work at all, I'm afraid. You cannot atomically kmap() the
-> buffer for queueing, and unmap it from interrupt context. The type
-> probably isn't correct, and you are not guaranteed to be on the same
-> CPU when doing the unmap. Thus you end up with corrupted maps and
-> preemption counts.
+Add in reboot notification so that the adapter shuts down correctly and
+flushes its cache. Shutdown should also disable the adapter's interrupt
+when shutdown (in particularly if the driver is rmmod'd) to prevent
+spurious hardware activities.
 
-Actually, it's a lot simpler than that.  We're generating the data for
-the command, so all we do is send an equivalent command to the array (if
-any) and then in the irq routine, kmap_atomic the buffer, copy the array
-data into the buffer in the right order for the command then kunmap the
-buffer again.  This should work fine, I think.
+Updated to use pci_driver shutdown method instead of the reboot
+notifier.
 
-James
+Patch against scsi-misc-2.6 git tree.
 
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
+
+ aacraid.h |    4 ++++
+ linit.c   |   15 ++++++++++++++-
+ rkt.c     |   20 ++++++++++++++++++++
+ rx.c      |   20 ++++++++++++++++++++
+ sa.c      |   22 ++++++++++++++++++++--
+ 5 files changed, 78 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -460,6 +460,7 @@ struct adapter_ops
+ {
+ 	void (*adapter_interrupt)(struct aac_dev *dev);
+ 	void (*adapter_notify)(struct aac_dev *dev, u32 event);
++	void (*adapter_disable_int)(struct aac_dev *dev);
+ 	int  (*adapter_sync_cmd)(struct aac_dev *dev, u32 command, u32 p1, u32 p2, u32 p3, u32 p4, u32 p5, u32 p6, u32 *status, u32 *r1, u32 *r2, u32 *r3, u32 *r4);
+ 	int  (*adapter_check_health)(struct aac_dev *dev);
+ };
+@@ -970,6 +971,9 @@ struct aac_dev
+ #define aac_adapter_notify(dev, event) \
+ 	(dev)->a_ops.adapter_notify(dev, event)
+ 
++#define aac_adapter_disable_int(dev) \
++	(dev)->a_ops.adapter_disable_int(dev)
++
+ #define aac_adapter_sync_cmd(dev, command, p1, p2, p3, p4, p5, p6, status, r1, r2, r3, r4) \
+ 	(dev)->a_ops.adapter_sync_cmd(dev, command, p1, p2, p3, p4, p5, p6, status, r1, r2, r3, r4)
+ 
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -815,11 +815,12 @@ static int __devinit aac_probe_one(struc
+ 
+ 	return 0;
+ 
+-out_deinit:
++ out_deinit:
+ 	kill_proc(aac->thread_pid, SIGKILL, 0);
+ 	wait_for_completion(&aac->aif_completion);
+ 
+ 	aac_send_shutdown(aac);
++	aac_adapter_disable_int(aac);
+ 	fib_map_free(aac);
+ 	pci_free_consistent(aac->pdev, aac->comm_size, aac->comm_addr, aac->comm_phys);
+ 	kfree(aac->queues);
+@@ -836,6 +837,13 @@ out_deinit:
+ 	return error;
+ }
+ 
++static void aac_shutdown(struct device *dev)
++{
++	struct Scsi_Host *shost = pci_get_drvdata(to_pci_dev(dev));
++	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
++	aac_send_shutdown(aac);
++}
++
+ static void __devexit aac_remove_one(struct pci_dev *pdev)
+ {
+ 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
+@@ -847,6 +855,7 @@ static void __devexit aac_remove_one(str
+ 	wait_for_completion(&aac->aif_completion);
+ 
+ 	aac_send_shutdown(aac);
++	aac_adapter_disable_int(aac);
+ 	fib_map_free(aac);
+ 	pci_free_consistent(aac->pdev, aac->comm_size, aac->comm_addr,
+ 			aac->comm_phys);
+@@ -867,6 +876,9 @@ static struct pci_driver aac_pci_driver 
+ 	.id_table	= aac_pci_tbl,
+ 	.probe		= aac_probe_one,
+ 	.remove		= __devexit_p(aac_remove_one),
++	.driver		= {
++		.shutdown = aac_shutdown,
++	},
+ };
+ 
+ static int __init aac_init(void)
+@@ -885,6 +897,7 @@ static int __init aac_init(void)
+ 		printk(KERN_WARNING
+ 		       "aacraid: unable to register \"aac\" device.\n");
+ 	}
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/aacraid/rkt.c b/drivers/scsi/aacraid/rkt.c
+--- a/drivers/scsi/aacraid/rkt.c
++++ b/drivers/scsi/aacraid/rkt.c
+@@ -88,6 +88,16 @@ static irqreturn_t aac_rkt_intr(int irq,
+ }
+ 
+ /**
++ *	aac_rkt_disable_interrupt	-	Disable interrupts
++ *	@dev: Adapter
++ */
++
++static void aac_rkt_disable_interrupt(struct aac_dev *dev)
++{
++	rkt_writeb(dev, MUnit.OIMR, dev->OIMR = 0xff);
++}
++
++/**
+  *	rkt_sync_cmd	-	send a command and wait
+  *	@dev: Adapter
+  *	@command: Command to execute
+@@ -412,10 +422,19 @@ int aac_rkt_init(struct aac_dev *dev)
+ 	 *	Fill in the function dispatch table.
+ 	 */
+ 	dev->a_ops.adapter_interrupt = aac_rkt_interrupt_adapter;
++	dev->a_ops.adapter_disable_int = aac_rkt_disable_interrupt;
+ 	dev->a_ops.adapter_notify = aac_rkt_notify_adapter;
+ 	dev->a_ops.adapter_sync_cmd = rkt_sync_cmd;
+ 	dev->a_ops.adapter_check_health = aac_rkt_check_health;
+ 
++	/*
++	 *	First clear out all interrupts.  Then enable the one's that we
++	 *	can handle.
++	 */
++	rkt_writeb(dev, MUnit.OIMR, 0xff);
++	rkt_writel(dev, MUnit.ODR, 0xffffffff);
++	rkt_writeb(dev, MUnit.OIMR, dev->OIMR = 0xfb);
++
+ 	if (aac_init_adapter(dev) == NULL)
+ 		goto error_irq;
+ 	/*
+@@ -438,6 +457,7 @@ error_kfree:
+ 	kfree(dev->queues);
+ 
+ error_irq:
++	rkt_writeb(dev, MUnit.OIMR, dev->OIMR = 0xff);
+ 	free_irq(dev->scsi_host_ptr->irq, (void *)dev);
+ 
+ error_iounmap:
+diff --git a/drivers/scsi/aacraid/rx.c b/drivers/scsi/aacraid/rx.c
+--- a/drivers/scsi/aacraid/rx.c
++++ b/drivers/scsi/aacraid/rx.c
+@@ -88,6 +88,16 @@ static irqreturn_t aac_rx_intr(int irq, 
+ }
+ 
+ /**
++ *	aac_rx_disable_interrupt	-	Disable interrupts
++ *	@dev: Adapter
++ */
++
++static void aac_rx_disable_interrupt(struct aac_dev *dev)
++{
++	rx_writeb(dev, MUnit.OIMR, dev->OIMR = 0xff);
++}
++
++/**
+  *	rx_sync_cmd	-	send a command and wait
+  *	@dev: Adapter
+  *	@command: Command to execute
+@@ -412,10 +422,19 @@ int aac_rx_init(struct aac_dev *dev)
+ 	 *	Fill in the function dispatch table.
+ 	 */
+ 	dev->a_ops.adapter_interrupt = aac_rx_interrupt_adapter;
++	dev->a_ops.adapter_disable_int = aac_rx_disable_interrupt;
+ 	dev->a_ops.adapter_notify = aac_rx_notify_adapter;
+ 	dev->a_ops.adapter_sync_cmd = rx_sync_cmd;
+ 	dev->a_ops.adapter_check_health = aac_rx_check_health;
+ 
++	/*
++	 *	First clear out all interrupts.  Then enable the one's that we
++	 *	can handle.
++	 */
++	rx_writeb(dev, MUnit.OIMR, 0xff);
++	rx_writel(dev, MUnit.ODR, 0xffffffff);
++	rx_writeb(dev, MUnit.OIMR, dev->OIMR = 0xfb);
++
+ 	if (aac_init_adapter(dev) == NULL)
+ 		goto error_irq;
+ 	/*
+@@ -438,6 +457,7 @@ error_kfree:
+ 	kfree(dev->queues);
+ 
+ error_irq:
++	rx_writeb(dev, MUnit.OIMR, dev->OIMR = 0xff);
+ 	free_irq(dev->scsi_host_ptr->irq, (void *)dev);
+ 
+ error_iounmap:
+diff --git a/drivers/scsi/aacraid/sa.c b/drivers/scsi/aacraid/sa.c
+--- a/drivers/scsi/aacraid/sa.c
++++ b/drivers/scsi/aacraid/sa.c
+@@ -82,6 +82,16 @@ static irqreturn_t aac_sa_intr(int irq, 
+ }
+ 
+ /**
++ *	aac_sa_disable_interrupt	-	disable interrupt
++ *	@dev: Which adapter to enable.
++ */
++
++static void aac_sa_disable_interrupt (struct aac_dev *dev)
++{
++	sa_writew(dev, SaDbCSR.PRISETIRQMASK, 0xffff);
++}
++
++/**
+  *	aac_sa_notify_adapter		-	handle adapter notification
+  *	@dev:	Adapter that notification is for
+  *	@event:	Event to notidy
+@@ -214,9 +224,8 @@ static int sa_sync_cmd(struct aac_dev *d
+  
+ static void aac_sa_interrupt_adapter (struct aac_dev *dev)
+ {
+-	u32 ret;
+ 	sa_sync_cmd(dev, BREAKPOINT_REQUEST, 0, 0, 0, 0, 0, 0,
+-			&ret, NULL, NULL, NULL, NULL);
++			NULL, NULL, NULL, NULL, NULL);
+ }
+ 
+ /**
+@@ -352,10 +361,18 @@ int aac_sa_init(struct aac_dev *dev)
+ 	 */
+ 
+ 	dev->a_ops.adapter_interrupt = aac_sa_interrupt_adapter;
++	dev->a_ops.adapter_disable_int = aac_sa_disable_interrupt;
+ 	dev->a_ops.adapter_notify = aac_sa_notify_adapter;
+ 	dev->a_ops.adapter_sync_cmd = sa_sync_cmd;
+ 	dev->a_ops.adapter_check_health = aac_sa_check_health;
+ 
++	/*
++	 *	First clear out all interrupts.  Then enable the one's that 
++	 *	we can handle.
++	 */
++	sa_writew(dev, SaDbCSR.PRISETIRQMASK, 0xffff);
++	sa_writew(dev, SaDbCSR.PRICLEARIRQMASK, (PrintfReady | DOORBELL_1 | 
++				DOORBELL_2 | DOORBELL_3 | DOORBELL_4));
+ 
+ 	if(aac_init_adapter(dev) == NULL)
+ 		goto error_irq;
+@@ -381,6 +398,7 @@ error_kfree:
+ 	kfree(dev->queues);
+ 
+ error_irq:
++	sa_writew(dev, SaDbCSR.PRISETIRQMASK, 0xffff);
+ 	free_irq(dev->scsi_host_ptr->irq, (void *)dev);
+ 
+ error_iounmap:
+
+-- 
+Mark Haverkamp <markh@osdl.org>
 
