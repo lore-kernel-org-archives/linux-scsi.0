@@ -1,19 +1,21 @@
 From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH] 2.6 aacraid: shutdown notification (update)
-Date: Mon, 27 Jun 2005 07:39:37 -0700
-Message-ID: <1119883177.22704.12.camel@markh1.pdx.osdl.net>
+Subject: [PATCH] 2.6 aacraid: shutdown notification (update 2)
+Date: Mon, 27 Jun 2005 09:05:41 -0700
+Message-ID: <1119888341.22704.21.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:29347 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261742AbVF0Ojo (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:59830 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S262049AbVF0QFy (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Jun 2005 10:39:44 -0400
+	Mon, 27 Jun 2005 12:05:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>, Brian King <brking@us.ibm.com>
+
+[I think that I have it this time]
 
 Add in reboot notification so that the adapter shuts down correctly and
 flushes its cache. Shutdown should also disable the adapter's interrupt
@@ -27,12 +29,13 @@ Patch against scsi-misc-2.6 git tree.
 
 Signed-off-by: Mark Haverkamp <markh@osdl.org>
 
+--
  aacraid.h |    4 ++++
- linit.c   |   15 ++++++++++++++-
+ linit.c   |   13 ++++++++++++-
  rkt.c     |   20 ++++++++++++++++++++
  rx.c      |   20 ++++++++++++++++++++
  sa.c      |   22 ++++++++++++++++++++--
- 5 files changed, 78 insertions(+), 3 deletions(-)
+ 5 files changed, 76 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
 --- a/drivers/scsi/aacraid/aacraid.h
@@ -76,9 +79,9 @@ diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
  	return error;
  }
  
-+static void aac_shutdown(struct device *dev)
++static void aac_shutdown(struct pci_dev *dev)
 +{
-+	struct Scsi_Host *shost = pci_get_drvdata(to_pci_dev(dev));
++	struct Scsi_Host *shost = pci_get_drvdata(dev);
 +	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
 +	aac_send_shutdown(aac);
 +}
@@ -94,17 +97,15 @@ diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
  	fib_map_free(aac);
  	pci_free_consistent(aac->pdev, aac->comm_size, aac->comm_addr,
  			aac->comm_phys);
-@@ -867,6 +876,9 @@ static struct pci_driver aac_pci_driver 
+@@ -867,6 +876,7 @@ static struct pci_driver aac_pci_driver 
  	.id_table	= aac_pci_tbl,
  	.probe		= aac_probe_one,
  	.remove		= __devexit_p(aac_remove_one),
-+	.driver		= {
-+		.shutdown = aac_shutdown,
-+	},
++	.shutdown 	= aac_shutdown,
  };
  
  static int __init aac_init(void)
-@@ -885,6 +897,7 @@ static int __init aac_init(void)
+@@ -885,6 +895,7 @@ static int __init aac_init(void)
  		printk(KERN_WARNING
  		       "aacraid: unable to register \"aac\" device.\n");
  	}
@@ -266,6 +267,7 @@ diff --git a/drivers/scsi/aacraid/sa.c b/drivers/scsi/aacraid/sa.c
  	free_irq(dev->scsi_host_ptr->irq, (void *)dev);
  
  error_iounmap:
+
 
 -- 
 Mark Haverkamp <markh@osdl.org>
