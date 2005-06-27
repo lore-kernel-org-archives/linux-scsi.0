@@ -1,49 +1,72 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [patch 2.6.12 1/1] st: support ANSI end-of-volume processing
-Date: Mon, 27 Jun 2005 22:43:30 +0300 (EEST)
-Message-ID: <Pine.LNX.4.61.0506272229380.2964@kai.makisara.local>
-References: <20050627191531.GC17260@tuxdriver.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] ifdef out broken fc4 EH code
+Date: Mon, 27 Jun 2005 22:43:06 +0200
+Message-ID: <20050627204306.GA20086@lst.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep30-0.kolumbus.fi ([193.229.0.32]:54975 "EHLO
-	fep30-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S261429AbVF0TkI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Jun 2005 15:40:08 -0400
-In-Reply-To: <20050627191531.GC17260@tuxdriver.com>
+Received: from verein.lst.de ([213.95.11.210]:10374 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S261750AbVF0UnU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Jun 2005 16:43:20 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-scsi@vger.kernel.org, Fabien.Collin@cern.ch, Jean-Philippe.Baud@cern.ch
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 27 Jun 2005, John W. Linville wrote:
+This code pokes deep into EH internals and duplicates scsi_error.c code
+wrongly.  It doesn't compile anymore in scsi-misc, so let's #if 0 out
+the code - the driver hasn't worked for more than five years anyway.
 
-> The ANSI labelled tape standard specifies that the EOD on tape must be
-> preceeded by a trailer label.  If during writing your application hits
-> LEOT (Logical End Of Tape), it must be able to write the trailer label.
-> However with the default tape driver (st), you cannot write anything
-> after the LEOT.
 
-This is not true. Quoting from linux/Documentation/scsi/st.txt:
-
-"When the end of medium early warning is encountered, the current write
-is finished and the number of bytes is returned. The next write
-returns -1 and errno is set to ENOSPC. To enable writing a trailer,
-the next write is allowed to proceed and, if successful, the number of
-bytes is returned. After this, -1 and the number of bytes are
-alternately returned until the physical end of medium (or some other
-error) is encountered."
-
-(Yes, this should be added to the man page ;-)
-
-> So the patch clears the error condition so that the
-> application can write the trailer label (there is some space available
-> on tape media between LEOT and PEOT=Physical End Of Tape).
-> 
-If this new way is what users want and it does not break existing 
-applications, it should be added. Especially if it is the way some other 
-common system behaves. However, when the semantics are changed, the 
-documentation in the kernel sources should also be updated.
-
--- 
-Kai
+Index: linux-2.6/drivers/fc4/fc.c
+===================================================================
+--- linux-2.6.orig/drivers/fc4/fc.c	2005-06-26 13:26:22.000000000 +0200
++++ linux-2.6/drivers/fc4/fc.c	2005-06-27 22:41:10.000000000 +0200
+@@ -365,6 +365,7 @@
+ 			kfree (fc->scsi_bitmap);
+ 			kfree (fc->cmd_slots);
+ 			FCND(("Unregistering\n"));
++#if 0
+ 			if (fc->rst_pkt) {
+ 				if (fc->rst_pkt->eh_state == SCSI_STATE_UNUSED)
+ 					kfree(fc->rst_pkt);
+@@ -373,6 +374,7 @@
+ 					printk("FC: Reset in progress. Now?!");
+ 				}
+ 			}
++#endif
+ 			FCND(("Unregistered\n"));
+ 		}
+ 	} else
+@@ -915,6 +917,7 @@
+ 	}
+ }
+ 
++#if 0
+ void fcp_scsi_reset_done(Scsi_Cmnd *SCpnt)
+ {
+ 	fc_channel *fc = FC_SCMND(SCpnt);
+@@ -922,11 +925,13 @@
+ 	fc->rst_pkt->eh_state = SCSI_STATE_FINISHED;
+ 	up(fc->rst_pkt->device->host->eh_action);
+ }
++#endif
+ 
+ #define FCP_RESET_TIMEOUT (2*HZ)
+ 
+ int fcp_scsi_dev_reset(Scsi_Cmnd *SCpnt)
+ {
++#if 0 /* broken junk, but if davem wants to compile this driver, let him.. */
+ 	unsigned long flags;
+ 	fcp_cmd *cmd;
+ 	fcp_cmnd *fcmd;
+@@ -1000,6 +1005,7 @@
+ 	}
+ 	fc->rst_pkt->eh_state = SCSI_STATE_UNUSED;
+ 	return SUCCESS;
++#endif
+ }
+ 
+ static int __fcp_scsi_host_reset(Scsi_Cmnd *SCpnt)
