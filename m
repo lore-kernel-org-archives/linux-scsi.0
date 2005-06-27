@@ -1,98 +1,166 @@
-From: Jan Merka <jm@wo.cz>
-Subject: Kernel 2.6.12x breaks the qlaxxxx driver
-Date: Mon, 27 Jun 2005 18:17:09 -0400
-Message-ID: <200506271817.09202.jm@wo.cz>
+From: Linda Xie <lxiep@us.ibm.com>
+Subject: [PATCH] IBM VSCSI Client: sending client info to  server
+Date: Mon, 27 Jun 2005 17:01:48 -0500
+Message-ID: <42C0774C.4050006@us.ibm.com>
+Reply-To: lxiep@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------010100020007090506060202"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhost2.gsfc.nasa.gov ([128.183.244.130]:60857 "EHLO
-	mailhost2.gsfc.nasa.gov") by vger.kernel.org with ESMTP
-	id S261949AbVF0WRp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Jun 2005 18:17:45 -0400
-Content-Disposition: inline
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:31899 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S262049AbVF0Wmk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Jun 2005 18:42:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andrew.vasquez@qlogic.com
-Cc: linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Dave C Boutcher <sleddog@us.ibm.com>, Santiago Leon <santil@us.ibm.com>
 
-Hi,
+This is a multi-part message in MIME format.
+--------------010100020007090506060202
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The 2.6.12 and 2.6.12.1 kernels break the qlaxxxx driver(s).
+Hi James,
 
-Problem description:
-Loading the qlaxxxx driver finds the attached FC array but doesn't find/create 
-any SCSI devices because of the following error issued for each available 
-LUN:
+The attached patch fixes the problem in IBM VSCSI Client  where the 
+client doesn't send
+the information which is expected by the server.
 
-scsi: host 0 channel 0 id 0 lun1 has a LUN larger than allowed by the host 
-adapter
+Comments are welcome.
 
-This is the full excerpt from dmesg related to loading the qlaxxx module under 
-2.6.12 or 2.6.12.1 kernels (the result doesn't change if the driver is 
-compiled in the kernel):
+If there are no objections, I would like to get this upstream.
 
-QLogic Fibre Channel HBA Driver
-ACPI: PCI Interrupt 0000:05:07.0[A] -> GSI 34 (level, low) -> IRQ 34
-qla2300 0000:05:07.0: Found an ISP2312, irq 34, iobase 0xf8834000
-scsi0 : qla2xxx
-qla2300 0000:05:07.0: Configuring PCI space...
-qla2300 0000:05:07.0: Configure NVRAM parameters...
-qla2300 0000:05:07.0: Verifying loaded RISC code...
-qla2300 0000:05:07.0: Waiting for LIP to complete...
-qla2300 0000:05:07.0: LIP reset occured (f8f7).
-qla2300 0000:05:07.0: LIP occured (f8f7).
-qla2300 0000:05:07.0: LOOP UP detected (2 Gbps).
-qla2300 0000:05:07.0: Topology - (Loop), Host Loop address 0x0
-qla2300 0000:05:07.0: 
- QLogic Fibre Channel HBA Driver: 8.00.02b5-k
-  QLogic QLA2340 - 
-  ISP2312: PCI-X (100 MHz) @ 0000:05:07.0 hdma-, host#=0, fw=3.03.08 IPX
-  Vendor: nStor     Model: NexStor Wahoo     Rev:     
-  Type:   Processor                          ANSI SCSI revision: 03
-Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 3
-scsi: host 0 channel 0 id 0 lun1 has a LUN larger than allowed by the host 
-adapt
-er
+Thanks,
 
-Contrast it with the dmesg output on the 2.6.11.12 kernel:
+Linda Xie
+IBM Linux Technology Center
 
-QLogic Fibre Channel HBA Driver
-ACPI: PCI interrupt 0000:05:07.0[A] -> GSI 34 (level, low) -> IRQ 34
-qla2300 0000:05:07.0: Found an ISP2312, irq 34, iobase 0xf8834000
-qla2300 0000:05:07.0: Configuring PCI space...
-qla2300 0000:05:07.0: Configure NVRAM parameters...
-qla2300 0000:05:07.0: Verifying loaded RISC code...
-qla2300 0000:05:07.0: Waiting for LIP to complete...
-qla2300 0000:05:07.0: LIP reset occured (f8f7).
-qla2300 0000:05:07.0: LIP occured (f8f7).
-qla2300 0000:05:07.0: LOOP UP detected (2 Gbps).
-qla2300 0000:05:07.0: Topology - (Loop), Host Loop address 0x0
-scsi0 : qla2xxx
-qla2300 0000:05:07.0: 
- QLogic Fibre Channel HBA Driver: 8.00.02b4-k
-  QLogic QLA2340 - 
-  ISP2312: PCI-X (100 MHz) @ 0000:05:07.0 hdma-, host#=0, fw=3.03.08 IPX
-  Vendor: nStor     Model: NexStor Wahoo     Rev:     
-  Type:   Processor                          ANSI SCSI revision: 03
-qla2300 0000:05:07.0: scsi(0:0:0:0): Enabled tagged queuing, queue depth 32.
-Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 3
-  Vendor: nStor     Model: NexStor Wahoo     Rev:     
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-qla2300 0000:05:07.0: scsi(0:0:0:1): Enabled tagged queuing, queue depth 32.
-SCSI device sda: 1418452992 512-byte hdwr sectors (726248 MB)
-SCSI device sda: drive cache: write back
-SCSI device sda: 1418452992 512-byte hdwr sectors (726248 MB)
-SCSI device sda: drive cache: write back
- sda: sda1
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 1
-Attached scsi generic sg1 at scsi0, channel 0, id 0, lun 1,  type 0
+Signed-off-by: Linda Xie <lxie@us.ibm.com>
 
-HW information: HP ProLiant DL385 (dual Opteron, 4GB RAM), QLA2312 FC Adapter
 
-Please let me know, if I can provide more useful information.
+--------------010100020007090506060202
+Content-Type: text/plain;
+ name="mainline-IBMVSCSI-CLIENT-madinfo.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="mainline-IBMVSCSI-CLIENT-madinfo.patch"
 
-Best regards,
+diff -X ../dontdiff -purN linux-2.6.12-rc5-git10-orig/drivers/scsi/ibmvscsi/ibmvscsi.c madinfo/drivers/scsi/ibmvscsi/ibmvscsi.c
+--- linux-2.6.12-rc5-git10-orig/drivers/scsi/ibmvscsi/ibmvscsi.c	2005-06-20 19:00:43.000000000 -0500
++++ madinfo/drivers/scsi/ibmvscsi/ibmvscsi.c	2005-06-24 16:36:16.000000000 -0500
+@@ -87,7 +87,7 @@ static int max_channel = 3;
+ static int init_timeout = 5;
+ static int max_requests = 50;
+ 
+-#define IBMVSCSI_VERSION "1.5.5"
++#define IBMVSCSI_VERSION "1.5.6"
+ 
+ MODULE_DESCRIPTION("IBM Virtual SCSI");
+ MODULE_AUTHOR("Dave Boutcher");
+@@ -675,8 +675,6 @@ static void send_mad_adapter_info(struct
+ 	struct viosrp_adapter_info *req;
+ 	struct srp_event_struct *evt_struct;
+ 	
+-	memset(&hostdata->madapter_info, 0x00, sizeof(hostdata->madapter_info));
+-	
+ 	evt_struct = get_event_struct(&hostdata->pool);
+ 	if (!evt_struct) {
+ 		printk(KERN_ERR "ibmvscsi: couldn't allocate an event "
+diff -X ../dontdiff -purN linux-2.6.12-rc5-git10-orig/drivers/scsi/ibmvscsi/rpa_vscsi.c madinfo/drivers/scsi/ibmvscsi/rpa_vscsi.c
+--- linux-2.6.12-rc5-git10-orig/drivers/scsi/ibmvscsi/rpa_vscsi.c	2005-03-02 01:38:13.000000000 -0600
++++ madinfo/drivers/scsi/ibmvscsi/rpa_vscsi.c	2005-06-24 16:36:16.000000000 -0500
+@@ -33,6 +33,10 @@
+ #include <linux/dma-mapping.h>
+ #include <linux/interrupt.h>
+ #include "ibmvscsi.h"
++#include "srp.h"
++
++static char partition_name[97] = "UNKNOWN";
++static unsigned int partition_number = -1;
+ 
+ /* ------------------------------------------------------------
+  * Routines for managing the command/response queue
+@@ -148,6 +152,48 @@ static void ibmvscsi_task(void *data)
+ 	}
+ }
+ 
++static void gather_partition_info(void)
++{
++	struct device_node *rootdn;
++
++	char *ppartition_name;
++	unsigned int *p_number_ptr;
++
++	/* Retrieve information about this partition */
++	rootdn = find_path_device("/");
++	if (!rootdn) {
++		return;
++	}
++
++	ppartition_name =
++		get_property(rootdn, "ibm,partition-name", NULL);
++	if (ppartition_name)
++		strncpy(partition_name, ppartition_name,
++				sizeof(partition_name));
++	p_number_ptr =
++		(unsigned int *)get_property(rootdn, "ibm,partition-no",
++					     NULL);
++	if (p_number_ptr)
++		partition_number = *p_number_ptr;
++}
++
++static void set_adapter_info(struct ibmvscsi_host_data *hostdata)
++{
++	memset(&hostdata->madapter_info, 0x00,
++			sizeof(hostdata->madapter_info));
++
++	printk(KERN_INFO "rpa_vscsi: SPR_VERSION: %s\n", SRP_VERSION);
++	strcpy(hostdata->madapter_info.srp_version, SRP_VERSION);
++
++	strncpy(hostdata->madapter_info.partition_name, partition_name,
++			sizeof(hostdata->madapter_info.partition_name));
++
++	hostdata->madapter_info.partition_number = partition_number;
++
++	hostdata->madapter_info.mad_version = 1;
++	hostdata->madapter_info.os_type = 2;
++}
++
+ /**
+  * initialize_crq_queue: - Initializes and registers CRQ with hypervisor
+  * @queue:	crq_queue to initialize and register
+@@ -177,6 +223,9 @@ int ibmvscsi_init_crq_queue(struct crq_q
+ 	if (dma_mapping_error(queue->msg_token))
+ 		goto map_failed;
+ 
++	gather_partition_info();
++	set_adapter_info(hostdata);
++
+ 	rc = plpar_hcall_norets(H_REG_CRQ,
+ 				vdev->unit_address,
+ 				queue->msg_token, PAGE_SIZE);
+@@ -246,6 +295,8 @@ void ibmvscsi_reset_crq_queue(struct crq
+ 	memset(queue->msgs, 0x00, PAGE_SIZE);
+ 	queue->cur = 0;
+ 
++	set_adapter_info(hostdata);
++
+ 	/* And re-open it again */
+ 	rc = plpar_hcall_norets(H_REG_CRQ,
+ 				vdev->unit_address,
+diff -X ../dontdiff -purN linux-2.6.12-rc5-git10-orig/drivers/scsi/ibmvscsi/srp.h madinfo/drivers/scsi/ibmvscsi/srp.h
+--- linux-2.6.12-rc5-git10-orig/drivers/scsi/ibmvscsi/srp.h	2005-03-02 01:38:33.000000000 -0600
++++ madinfo/drivers/scsi/ibmvscsi/srp.h	2005-06-24 16:36:16.000000000 -0500
+@@ -28,6 +28,8 @@
+ #ifndef SRP_H
+ #define SRP_H
+ 
++#define SRP_VERSION "16.a"
++
+ #define PACKED __attribute__((packed))
+ 
+ enum srp_types {
 
-Jan
+--------------010100020007090506060202--
+
