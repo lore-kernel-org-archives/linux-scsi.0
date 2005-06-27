@@ -1,31 +1,30 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: odd sg_request munging code in i2o post-2.6.12
-Date: Mon, 27 Jun 2005 22:55:20 +0200
-Message-ID: <20050627205520.GA20272@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Kathleen <actuarial@weathermen.com>
+Subject: Want to learn how to build your own website?
+Date: Mon, 27 Jun 2005 23:16:13 +0200
+Message-ID: <10943956979.105778114966@afp150.internetdsl.tpnet.pl>
+Mime-Version: 1.0 (Apple Message framework v728)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:34950 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S261783AbVF0Uzc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Jun 2005 16:55:32 -0400
-Content-Disposition: inline
+Received: from afp150.internetdsl.tpnet.pl ([83.16.145.150]:34028 "HELO
+	afp150.internetdsl.tpnet.pl") by vger.kernel.org with SMTP
+	id S261841AbVF0VQ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Jun 2005 17:16:27 -0400
+Received: from [29.138.99.70] (port=4123 helo=[Vail])
+    by afp150.internetdsl.tpnet.pl with esmtp
+    id 8493178858sacrificer14439
+    for linux-scsi@vger.kernel.org; Mon, 27 Jun 2005 23:16:14 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: markus.lidel@shadowconnect.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Markus, any chance you could try to send in changes that deal with
-scsi internals through James SCSI tree?
+Software suites.
+http://apj.8fc5tpq1n0qfnrq.edgercc.info
 
-You've sent some changes in that are rather odd:
 
- - created a include/scsi/sg_request.h header that duplicates
-   struct sg_request, an internal data structure of the sg driver.
-   This approach gets easily out of sync.
- - and poke into this data structure of an upper layer driver from a LLDD.
-   That's a big "DON'T"  While of the current drivers only SG uses that
-   field it's open to any ULD, and you're also not supporting SG_IO on
-   non-sg devices.
-   Besides that we are actively killing scsi_requests before 2.6.13,
-   so you code will have to be remove by then.
+
+
+The life of the law has not been logic but experience.  
+America is not merely a nation but a nation of nations.  
+
+
