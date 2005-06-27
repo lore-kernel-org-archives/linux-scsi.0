@@ -1,53 +1,29 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: Question on "embedded" classes
-Date: Mon, 27 Jun 2005 16:29:48 -0700
-Message-ID: <20050627232948.GA24904@kroah.com>
-References: <42C0897A.8010705@adaptec.com>
+From: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
+Subject: RE: Kernel 2.6.12x breaks the qlaxxxx driver
+Date: Mon, 27 Jun 2005 16:59:11 -0700
+Message-ID: <200506272359.j5RNxBg26526@unix-os.sc.intel.com>
+References: <200506271817.09202.jm@wo.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262098AbVF0Xd1@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <42C0897A.8010705@adaptec.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fmr22.intel.com ([143.183.121.14]:63421 "EHLO
+	scsfmr002.sc.intel.com") by vger.kernel.org with ESMTP
+	id S262036AbVF0X7U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Jun 2005 19:59:20 -0400
+In-Reply-To: <200506271817.09202.jm@wo.cz>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'Jan Merka' <jm@wo.cz>, andrew.vasquez@qlogic.com
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Jun 27, 2005 at 07:19:22PM -0400, Luben Tuikov wrote:
-> Hi,
-> 
-> I was wondering what the reason was for allowing
-> class and classdev to only be at level 3 and level
-> 4 respectively of sysfs (/ is level 0)?
-> 
-> 1) Some devices would not have any relevance
-> ouside the scope of the "parent" device.
-> 2) "Hooking" them all at /sys/class/ level
-> would create quite a lot of symlinks (and with
-> cryptic names in order to reference the proper
-> "parent" device in the same directory).
-> 
-> E.g. Some devices, like SAS host adapters, have "devices
-> inside devices" and I'd like to represent this in
-> sysfs.
-> 
-> /sys/class/sas          (a class)
-> /sys/class/sas/ha0/     (a classdev)
-> /sys/class/sas/ha1/     (a classdev)
-> 
-> /sys/class/sas/ha0/device -> symlink to PCI device
-> /sys/class/sas/ha0/device_name    (text attribute)
-> 
-> /sys/class/sas/ha0/phys/     (a class)
-> /sys/class/sas/ha0/phys/0/   (a classdev)
+Jan Merka wrote on Monday, June 27, 2005 3:17 PM
+> The 2.6.12 and 2.6.12.1 kernels break the qlaxxxx driver(s).
 
-Nope, this is not allowed.
+I thought someone on this list said it is fixed in 2.6.12.1.  I guess it
+is not.  I had the same problem last week and applying this patch works
+for me.
 
-Classes are not allowed to have children classes.
-class devices can not have children, be they class_device or a class.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=111836291000433&w=2
 
-That is the reason you are getting oopses :)
-
-thanks,
-
-greg k-h
