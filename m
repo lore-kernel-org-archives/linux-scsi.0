@@ -1,47 +1,37 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: Roland Dreier <rolandd@cisco.com>
 Subject: Re: I want scsi_target_block() in interrupt context
-Date: Wed, 29 Jun 2005 18:36:29 +0100
-Message-ID: <20050629173629.GA32197@infradead.org>
+Date: Wed, 29 Jun 2005 10:52:18 -0700
+Message-ID: <5264vxdp9p.fsf@topspin.com>
 References: <52fyv1dqer.fsf@topspin.com>
+	<20050629173629.GA32197@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:37851 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S262317AbVF2Rgh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jun 2005 13:36:37 -0400
-Content-Disposition: inline
-In-Reply-To: <52fyv1dqer.fsf@topspin.com>
+Received: from sj-iport-2-in.cisco.com ([171.71.176.71]:62519 "EHLO
+	sj-iport-2.cisco.com") by vger.kernel.org with ESMTP
+	id S262332AbVF2RwU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Jun 2005 13:52:20 -0400
+In-Reply-To: <20050629173629.GA32197@infradead.org> (Christoph Hellwig's
+ message of "Wed, 29 Jun 2005 18:36:29 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <rolandd@cisco.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-scsi@vger.kernel.org
 
-On Wed, Jun 29, 2005 at 10:27:40AM -0700, Roland Dreier wrote:
-> I'm working on an implementation of SCSI RDMA Protocol (SRP) on
-> InfiniBand, and I'm running into an issue managing the number of
-> commands that get queued.
-> 
-> The setup is like this: each SRP scsi_host can connect to multiple
-> target ports.  Each target port can have multiple LUNs behind it.  To
-> support this, for each connection, I create a device, set its parent
-> to the scsi_host's shost_gendev, and then call scsi_scan_target to
-> discover the LUNs behind the target port.
-> 
-> This mostly works fine, except the number of outstanding commands is
-> limited per connection.  This doesn't fit that well with the Linux
-> SCSI stack -- can_queue for the scsi_host doesn't work, since a single
-> scsi_host can have multiple connections, and cmd_per_lun doesn't work
-> since a single connection can have many LUNs.
-> 
-> What seems like it _would_ be exactly what I need would be calling
-> scsi_target_block() on the device representing the connection.
-> Unfortunately, scsi_target_block() uses all sorts of device model
-> stuff that takes semaphores and hence potentially sleeps.  This means
-> that I can't block a connection while holding a lock to prevent races.
-> 
-> So I don't see a race-free way I can ensure that I never queue up too
-> many commands on a given connection.
+    Christoph> Just allocate one scsi_host per connection.
 
-Just allocate one scsi_host per connection.
+OK, that solves the queuing problem nicely.
 
+Right now, I create a scsi_host for each local IB port.  For each
+scsi_host, I have a writable sysfs attribute that userspace can put
+the addresses of remote ports to connect to.  Any preference for how
+to implement the mechanism for userspace to pass in a remote address
+to connect to?
+
+Also, with my current scheme, I have a nice hierarchy of devices from
+host port to target port to LUN.  Having this topology available seems
+nice -- are we losing anything useful for multipathing etc. by not
+having a device for the host port?
+
+Thanks,
+  Roland
