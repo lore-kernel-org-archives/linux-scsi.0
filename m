@@ -1,39 +1,85 @@
-From: "Rickey Mcconnell" <quvudej@ezagenda.com>
-Subject: QA: Unique Logos / customer recognition
-Date: Wed, 29 Jun 2005 22:00:06 +0000 (UTC)
-Message-ID: <200506292205.j5TM4mLr024638__37624.971176456$1120082406$gmane$org@zeus2.kernel.org>
+From: Tony Vroon <chainsaw@gentoo.org>
+Subject: aic7xxx regression occuring after 2.6.12 final
+Date: Wed, 29 Jun 2005 23:50:46 +0100
+Message-ID: <1120085446.9743.11.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1252"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:12518 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S262671AbVF2WFX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jun 2005 18:05:23 -0400
-Date: Wen, 29 Jun 2005 09:15:52 +0000
+Received: from smtp1.irishbroadband.ie ([62.231.32.12]:47837 "EHLO
+	smtp1.irishbroadband.ie") by vger.kernel.org with ESMTP
+	id S262707AbVF2Wvn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Jun 2005 18:51:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-raid@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-Your business lacks visual identity?
+Hiya,
 
-Marketing efforts falling short?
+For my Adaptec 29160 card; I see a regression after 2.6.12 final.
+To be exact, these releases work for me:
+2.6.12
+2.6.12.1
 
-Invisible among a sea of competitors?
+These releases do not work for me:
+2.6.12-mm1
+2.6.12-mm2
+2.6.12-git7
+2.6.13-rc1
 
-You're on the right track for a solution - keep reading...
-Our professional designers specialize in the creation of custom logos and business/corporate identities. Our design needs to be seen only once to gain customer attention and recognition. With one of our unique, eye-catching mages you'll never have to introduce yourself twice!
-We promise fast turnaround and 100% customer satisfaction. Choose from as any design ideas as necessary, select as many colors as you wish, order any modifications you like, and request any format. Our prices are affordable for any size of business, and get this: there are no hidden fees.
+On a working kernel; I see the following:
+ACPI: PCI Interrupt Link [APC3] enabled at IRQ 18
+ACPI: PCI Interrupt 0000:01:08.0[A] -> Link [APC3] -> GSI 18 (level,
+high) -> IRQ 18
+scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+        <Adaptec 29160 Ultra160 SCSI adapter>
+        aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
 
-Follow the link below to browse our portfolio and check out our Sweet Deals.
-Wipe the "in" from "invisible" in just a few days - with us!
-http://lkc5.com.ox-files.info
+  Vendor: FUJITSU   Model: MAP3367NP         Rev: 0106
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+scsi0:A:0:0: Tagged Queuing enabled.  Depth 253
+ target0:0:0: Beginning Domain Validation
+WIDTH IS 1
+(scsi0:A:0): 6.600MB/s transfers (16bit)
+(scsi0:A:0): 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
+ target0:0:0: Ending Domain Validation
 
-Sincerely,
-Rickey Mcconnell
+On a failing kernel, I see:
+ACPI: PCI Interrupt Link [APC3] enabled at IRQ 18
+ACPI: PCI Interrupt 0000:01:08.0[A] -> Link [APC3] -> GSI 18 (level,
+high) -> IRQ 18
+scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+        <Adaptec 29160 Ultra160 SCSI adapter>
+        aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+
+target0:0:0: asynchronous
+  Vendor: FUJITSU   Model: MAP3367NP         Rev: 0106
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+scsi0:A:0:0: Tagged Queuing enabled.  Depth 253
+ target0:0:0: Beginning Domain Validation
+ target0:0:0: wide asynchronous
+(scsi0:A:0): refuses tagged commands. Performing non-tagged I/O
+ target0:0:0: asynchronous
+[The PC hangs at this point]
 
 
+lspci output for the adapter:
+0000:01:08.0 SCSI storage controller: Adaptec AIC-7892A U160/m (rev 02)
+        Subsystem: Adaptec 29160 Ultra160 SCSI Controller
+        Flags: bus master, 66Mhz, medium devsel, latency 32, IRQ 18
+        BIST result: 00
+        I/O ports at d800 [disabled] [size=256]
+        Memory at db000000 (64-bit, non-prefetchable) [size=4K]
+        Capabilities: [dc] Power Management version 2
 
+Please let me know if there are specific patches I need to apply or
+revert to debug this. I have more drives on this controller; to be exact
+I have 2 U320-capable drives and one U160-capable drive on wide channel
+A; and 3 removable media units (CD-R, DVD, CD-ROM) on the 50-pin
+SCSI-bus.
 
+Thanks,
+Tony.
+(Please CC replies to me as I am not subscribed to LKML or linux-scsi)
 
