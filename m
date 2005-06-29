@@ -1,85 +1,88 @@
-From: Tony Vroon <chainsaw@gentoo.org>
-Subject: aic7xxx regression occuring after 2.6.12 final
-Date: Wed, 29 Jun 2005 23:50:46 +0100
-Message-ID: <1120085446.9743.11.camel@localhost>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: struct class question
+Date: Wed, 29 Jun 2005 19:03:49 -0400
+Message-ID: <42C328D5.7050602@adaptec.com>
+References: <42C31268.8010606@adaptec.com> <1120082466.5866.13.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.irishbroadband.ie ([62.231.32.12]:47837 "EHLO
-	smtp1.irishbroadband.ie") by vger.kernel.org with ESMTP
-	id S262707AbVF2Wvn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jun 2005 18:51:43 -0400
+Received: from magic.adaptec.com ([216.52.22.17]:24217 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262714AbVF2XD7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Jun 2005 19:03:59 -0400
+In-Reply-To: <1120082466.5866.13.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>
 
-Hiya,
+On 06/29/05 18:01, James Bottomley wrote:
+>>Thus we get the pretty flat sysfs class hierarchy:
+>>/sys/class/<if>/<device>
+> 
+> That's by design.  The class contains a list of all the devices
+> implementing the interface.
 
-For my Adaptec 29160 card; I see a regression after 2.6.12 final.
-To be exact, these releases work for me:
-2.6.12
-2.6.12.1
+Ok, makes sense.
 
-These releases do not work for me:
-2.6.12-mm1
-2.6.12-mm2
-2.6.12-git7
-2.6.13-rc1
+> Interface (class) is tied to struct device.  If it doesn't have a struct
+> device, then it can't have a class and isn't a proper sysfs leaf.  If
 
-On a working kernel; I see the following:
-ACPI: PCI Interrupt Link [APC3] enabled at IRQ 18
-ACPI: PCI Interrupt 0000:01:08.0[A] -> Link [APC3] -> GSI 18 (level,
-high) -> IRQ 18
-scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
-        <Adaptec 29160 Ultra160 SCSI adapter>
-        aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+Makes sense.
 
-  Vendor: FUJITSU   Model: MAP3367NP         Rev: 0106
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-scsi0:A:0:0: Tagged Queuing enabled.  Depth 253
- target0:0:0: Beginning Domain Validation
-WIDTH IS 1
-(scsi0:A:0): 6.600MB/s transfers (16bit)
-(scsi0:A:0): 160.000MB/s transfers (80.000MHz DT, offset 127, 16bit)
- target0:0:0: Ending Domain Validation
+> the device doesn't exist or it can't be directly controlled, then we
+> probably don't need a class for it, right?  As to whether it needs to
 
-On a failing kernel, I see:
-ACPI: PCI Interrupt Link [APC3] enabled at IRQ 18
-ACPI: PCI Interrupt 0000:01:08.0[A] -> Link [APC3] -> GSI 18 (level,
-high) -> IRQ 18
-scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
-        <Adaptec 29160 Ultra160 SCSI adapter>
-        aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+Yes, we don't need a struct device and/or struct class_device for it.
 
-target0:0:0: asynchronous
-  Vendor: FUJITSU   Model: MAP3367NP         Rev: 0106
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-scsi0:A:0:0: Tagged Queuing enabled.  Depth 253
- target0:0:0: Beginning Domain Validation
- target0:0:0: wide asynchronous
-(scsi0:A:0): refuses tagged commands. Performing non-tagged I/O
- target0:0:0: asynchronous
-[The PC hangs at this point]
+> exist at all if we can't do anything with it, I suppose that depends on
+> whether it's necessary to the tree representation or not (a bit like
+> channels in SCSI.  They have meaning, but no sysfs representation on
+> their own).
 
+Very good analogy.  In this respect I think we should represent
+phys, ports, and expanders just as the discover process sees them,
+in the same way, as you pointed out, channels are represented
+even though the do not quite exist (but are an abstraction).
 
-lspci output for the adapter:
-0000:01:08.0 SCSI storage controller: Adaptec AIC-7892A U160/m (rev 02)
-        Subsystem: Adaptec 29160 Ultra160 SCSI Controller
-        Flags: bus master, 66Mhz, medium devsel, latency 32, IRQ 18
-        BIST result: 00
-        I/O ports at d800 [disabled] [size=256]
-        Memory at db000000 (64-bit, non-prefetchable) [size=4K]
-        Capabilities: [dc] Power Management version 2
+>>/sys/class/sas/
+>>/sys/class/sas/ha0/
+>>/sys/class/sas/ha1/
+>>/sys/class/sas/ha1/phys/
+>>/sys/class/sas/ha1/ports/
+>>etc.
+> 
+> 
+> No, this is where you go wrong.  The sysfs tree exists under the host<n>
+> for scsi (and is parented to the PCI/etc device), so you can have
+> something like
+> 
+> .../host1/
+> .../host1/phys/
+> .../host1/ports/
 
-Please let me know if there are specific patches I need to apply or
-revert to debug this. I have more drives on this controller; to be exact
-I have 2 U320-capable drives and one U160-capable drive on wide channel
-A; and 3 removable media units (CD-R, DVD, CD-ROM) on the 50-pin
-SCSI-bus.
+Is this
 
-Thanks,
-Tony.
-(Please CC replies to me as I am not subscribed to LKML or linux-scsi)
+/sys/class/scsi_host/host1
+
+Or is it (e.g.),
+
+/sys/devices/pci0000:00/0000:00:1f.2/host1
+
+?
+
+> (and obviously you need to know where you're putting the targets under
+> this).
+
+True.
+
+> So the rich deep tree is under devices and the class tree represents a
+> flat look into that for devices implementing the specific interface.
+
+In which case the flat class/ wouldn't represent phys, ports and expanders
+as they do not have struct device/struct class_device; and not directly
+controlled by the kernel;  just as "channel".
+
+	Luben
 
