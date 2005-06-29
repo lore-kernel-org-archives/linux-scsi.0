@@ -1,57 +1,37 @@
-From: akpm@osdl.org
-Subject: [patch 18/34] coverity: i386: scsi_lib buffer overrun fix
-Date: Tue, 28 Jun 2005 20:45:06 -0700
-Message-ID: <200506290345.j5T3jXOu017089@shell0.pdx.osdl.net>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:65420 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261178AbVF2Dpj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Jun 2005 23:45:39 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Dave C Boutcher <sleddog@us.ibm.com>
+Subject: Re: [PATCH] IBM VSCSI Client: sending client info to  server
+Date: Wed, 29 Jun 2005 09:41:47 -0500
+Message-ID: <20050629144147.GA23922@cs.umn.edu>
+References: <42C0774C.4050006@us.ibm.com>
+Reply-To: boutcher@cs.umn.edu
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261207AbVF2Oly@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <42C0774C.4050006@us.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linda Xie <lxiep@us.ibm.com>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Santiago Leon <santil@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: torvalds@osdl.org
-Cc: akpm@osdl.org, kambarov@berkeley.edu, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, zkambarov@coverity.com
 
+On Mon, Jun 27, 2005 at 05:01:48PM -0500, Linda Xie wrote:
+> Hi James,
+> 
+> The attached patch fixes the problem in IBM VSCSI Client  where the 
+> client doesn't send
+> the information which is expected by the server.
+> 
+> Comments are welcome.
+> 
+> If there are no objections, I would like to get this upstream.
+> 
+> Thanks,
+> 
+> Linda Xie
+> IBM Linux Technology Center
+> 
+> Signed-off-by: Linda Xie <lxie@us.ibm.com>
 
-From: "KAMBAROV, ZAUR" <kambarov@berkeley.edu>
+Ack
 
-The check in
-
-627  		BUG_ON(index > SG_MEMPOOL_NR);
-
-with SG_MEMPOOL_NR defined in
-
-32   	#define SG_MEMPOOL_NR		(sizeof(scsi_sg_pools)/sizeof(struct scsi_host_sg_pool))
-
-was not sufficient.
-
-sgp, set in
-
-629  		sgp = scsi_sg_pools + index;
-
-is dereferenced in
-
-630  		mempool_free(sgl, sgp->pool);
-
-Signed-off-by: Zaur Kambarov <zkambarov@coverity.com> 
-Cc: <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
-Signed-off-by: Andrew Morton <akpm@osdl.org>
----
-
- drivers/scsi/scsi_lib.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
-
-diff -puN drivers/scsi/scsi_lib.c~coverity-i386-scsi_lib-buffer-overrun-fix drivers/scsi/scsi_lib.c
---- 25/drivers/scsi/scsi_lib.c~coverity-i386-scsi_lib-buffer-overrun-fix	2005-06-28 19:58:38.000000000 -0700
-+++ 25-akpm/drivers/scsi/scsi_lib.c	2005-06-28 19:58:38.000000000 -0700
-@@ -632,7 +632,7 @@ static void scsi_free_sgtable(struct sca
- {
- 	struct scsi_host_sg_pool *sgp;
- 
--	BUG_ON(index > SG_MEMPOOL_NR);
-+	BUG_ON(index >= SG_MEMPOOL_NR);
- 
- 	sgp = scsi_sg_pools + index;
- 	mempool_free(sgl, sgp->pool);
-_
+Dave Boutcher
