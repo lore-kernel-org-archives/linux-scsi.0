@@ -1,88 +1,55 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: struct class question
-Date: Wed, 29 Jun 2005 19:03:49 -0400
-Message-ID: <42C328D5.7050602@adaptec.com>
-References: <42C31268.8010606@adaptec.com> <1120082466.5866.13.camel@mulgrave>
+Date: Wed, 29 Jun 2005 19:30:27 -0400
+Message-ID: <1120087827.5866.20.camel@mulgrave>
+References: <42C31268.8010606@adaptec.com>
+	 <1120082466.5866.13.camel@mulgrave>  <42C328D5.7050602@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:24217 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262714AbVF2XD7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jun 2005 19:03:59 -0400
-In-Reply-To: <1120082466.5866.13.camel@mulgrave>
+Received: from stat16.steeleye.com ([209.192.50.48]:37000 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262731AbVF2Xa3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Jun 2005 19:30:29 -0400
+In-Reply-To: <42C328D5.7050602@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
 Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>
 
-On 06/29/05 18:01, James Bottomley wrote:
->>Thus we get the pretty flat sysfs class hierarchy:
->>/sys/class/<if>/<device>
+On Wed, 2005-06-29 at 19:03 -0400, Luben Tuikov wrote:
+> > exist at all if we can't do anything with it, I suppose that depends on
+> > whether it's necessary to the tree representation or not (a bit like
+> > channels in SCSI.  They have meaning, but no sysfs representation on
+> > their own).
 > 
-> That's by design.  The class contains a list of all the devices
-> implementing the interface.
+> Very good analogy.  In this respect I think we should represent
+> phys, ports, and expanders just as the discover process sees them,
+> in the same way, as you pointed out, channels are represented
+> even though the do not quite exist (but are an abstraction).
 
-Ok, makes sense.
+Right, the question really is can we do anything with it, so targets
+have properties (as do devices) but currently we have no channel
+properties.
 
-> Interface (class) is tied to struct device.  If it doesn't have a struct
-> device, then it can't have a class and isn't a proper sysfs leaf.  If
+All SCSI devices have "ports" as defined by SAM; however, we don't show
+them (well, except FC rports) because we don't use them for anything.
 
-Makes sense.
+As far at least as SAS expanders go, I believe they do have properties
+(the routing table etc.) which the driver can query, so they might be
+worth adding a device for.
 
-> the device doesn't exist or it can't be directly controlled, then we
-> probably don't need a class for it, right?  As to whether it needs to
-
-Yes, we don't need a struct device and/or struct class_device for it.
-
-> exist at all if we can't do anything with it, I suppose that depends on
-> whether it's necessary to the tree representation or not (a bit like
-> channels in SCSI.  They have meaning, but no sysfs representation on
-> their own).
-
-Very good analogy.  In this respect I think we should represent
-phys, ports, and expanders just as the discover process sees them,
-in the same way, as you pointed out, channels are represented
-even though the do not quite exist (but are an abstraction).
-
->>/sys/class/sas/
->>/sys/class/sas/ha0/
->>/sys/class/sas/ha1/
->>/sys/class/sas/ha1/phys/
->>/sys/class/sas/ha1/ports/
->>etc.
+> Is this
 > 
+> /sys/class/scsi_host/host1
 > 
-> No, this is where you go wrong.  The sysfs tree exists under the host<n>
-> for scsi (and is parented to the PCI/etc device), so you can have
-> something like
+> Or is it (e.g.),
 > 
-> .../host1/
-> .../host1/phys/
-> .../host1/ports/
+> /sys/devices/pci0000:00/0000:00:1f.2/host1
 
-Is this
+The latter (that's the devices tree under /sys/devices).
 
-/sys/class/scsi_host/host1
+James
 
-Or is it (e.g.),
-
-/sys/devices/pci0000:00/0000:00:1f.2/host1
-
-?
-
-> (and obviously you need to know where you're putting the targets under
-> this).
-
-True.
-
-> So the rich deep tree is under devices and the class tree represents a
-> flat look into that for devices implementing the specific interface.
-
-In which case the flat class/ wouldn't represent phys, ports and expanders
-as they do not have struct device/struct class_device; and not directly
-controlled by the kernel;  just as "channel".
-
-	Luben
 
