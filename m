@@ -1,85 +1,107 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: struct class question
-Date: Wed, 29 Jun 2005 17:28:08 -0400
-Message-ID: <42C31268.8010606@adaptec.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: struct class question
+Date: Wed, 29 Jun 2005 18:01:05 -0400
+Message-ID: <1120082466.5866.13.camel@mulgrave>
+References: <42C31268.8010606@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:16002 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262664AbVF2V2Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jun 2005 17:28:24 -0400
+Received: from stat16.steeleye.com ([209.192.50.48]:51079 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262667AbVF2WBK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Jun 2005 18:01:10 -0400
+In-Reply-To: <42C31268.8010606@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: Greg KH <greg@kroah.com>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>
 
-Hi guys,
+On Wed, 2005-06-29 at 17:28 -0400, Luben Tuikov wrote:
+> AFAIU, struct class describes a class of devices
+> for which a driver/kernel interface exists.  That is, the
+> implication is "struct class => driver interface (i.e. LLDD)".
 
-AFAIU, struct class describes a class of devices
-for which a driver/kernel interface exists.  That is, the
-implication is "struct class => driver interface (i.e. LLDD)".
+Not necessarily "driver" interface, but device interface (which is often
+implemented by a driver.  The distinction is subtle, but it's the basis
+of how transport classes work).
 
-The reason for this, as I understand it, is that the kernel
-wants to be able to control such devices through the class
-interface (and the class device interface), and possibly
-hotplugging.
+> The reason for this, as I understand it, is that the kernel
+> wants to be able to control such devices through the class
+> interface (and the class device interface), and possibly
+> hotplugging.
+> 
+> Thus we get the pretty flat sysfs class hierarchy:
+> /sys/class/<if>/<device>
 
-Thus we get the pretty flat sysfs class hierarchy:
-/sys/class/<if>/<device>
+That's by design.  The class contains a list of all the devices
+implementing the interface.
 
-But there may be devices which are embedded in the controlled
-device and/or which are part of it but are _not_ directly controlled
-by the kernel or the driver interface and for which no driver
-interface exists.  And representing such devices on their own
-doesn't make sense: they do not exist on their own or/and they
-cannot be directly controlled.
+> But there may be devices which are embedded in the controlled
+> device and/or which are part of it but are _not_ directly controlled
+> by the kernel or the driver interface and for which no driver
+> interface exists.  And representing such devices on their own
+> doesn't make sense: they do not exist on their own or/and they
+> cannot be directly controlled.
 
-Example of such devices are phys, ports, of a SAS host adapter
-and expanders on the SAS domain.  They are "embedded devices",
-not directly controllable by the kernel or through the kernel
-interface.
+Interface (class) is tied to struct device.  If it doesn't have a struct
+device, then it can't have a class and isn't a proper sysfs leaf.  If
+the device doesn't exist or it can't be directly controlled, then we
+probably don't need a class for it, right?  As to whether it needs to
+exist at all if we can't do anything with it, I suppose that depends on
+whether it's necessary to the tree representation or not (a bit like
+channels in SCSI.  They have meaning, but no sysfs representation on
+their own).
 
-Such devices are controlled by the SAS Discover process.
+> Example of such devices are phys, ports, of a SAS host adapter
+> and expanders on the SAS domain.  They are "embedded devices",
+> not directly controllable by the kernel or through the kernel
+> interface.
+> 
+> Such devices are controlled by the SAS Discover process.
+> 
+> Now the SAS Discover process sees those devices as they're
+> physically (and logically) connected (simplified):
+> 
+> host adapter --> phys
+>              --> ports (may not exists)
+>                  --> participating phys (list, mask, etc)
+>                  --> SAS device (target or initiator)
+>                  --> expander device (edge or fanout)
+> 
+> I was wondering if it is viable to represent
+> this hierarchy, *as the SAS discover process sees it*, in
+> sysfs, possibly through the class interface.
 
-Now the SAS Discover process sees those devices as they're
-physically (and logically) connected (simplified):
+Pretty much yes, that's what SCSI FC adapters do with rports.
 
-host adapter --> phys
-             --> ports (may not exists)
-                 --> participating phys (list, mask, etc)
-                 --> SAS device (target or initiator)
-                 --> expander device (edge or fanout)
+> So in effect, (remote) targets and initiators _would_ be present
+> in /sys/class/scsi_device/ (as is normal) and hosts
+> in /sys/class/scsi_host/ (again as is normal), but that the
+> picture as seen by the SAS Discover process (intermediate)
+> would be represented:
+> 
+> /sys/class/sas/
+> /sys/class/sas/ha0/
+> /sys/class/sas/ha1/
+> /sys/class/sas/ha1/phys/
+> /sys/class/sas/ha1/ports/
+> etc.
 
-I was wondering if it is viable to represent
-this hierarchy, *as the SAS discover process sees it*, in
-sysfs, possibly through the class interface.
+No, this is where you go wrong.  The sysfs tree exists under the host<n>
+for scsi (and is parented to the PCI/etc device), so you can have
+something like
 
-So in effect, (remote) targets and initiators _would_ be present
-in /sys/class/scsi_device/ (as is normal) and hosts
-in /sys/class/scsi_host/ (again as is normal), but that the
-picture as seen by the SAS Discover process (intermediate)
-would be represented:
+.../host1/
+.../host1/phys/
+.../host1/ports/
 
-/sys/class/sas/
-/sys/class/sas/ha0/
-/sys/class/sas/ha1/
-/sys/class/sas/ha1/phys/
-/sys/class/sas/ha1/ports/
-etc.
+(and obviously you need to know where you're putting the targets under
+this).
 
-And this is also what the Discover process would use in order
-to discover domains, control zones, configure expanders, etc.
+So the rich deep tree is under devices and the class tree represents a
+flat look into that for devices implementing the specific interface.
 
-That is, this is nothing more but my trying to export in
-viewable form what the SAS Discover process saw and what it
-would use.
-
-Is this okay with kernel and scsi people?
-
-Thanks,
-	Luben
-
+James
 
 
