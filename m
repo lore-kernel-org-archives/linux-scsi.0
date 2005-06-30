@@ -1,63 +1,195 @@
-From: James.Smart@Emulex.Com
-Subject: RE: [PATCH 2/2] - mptfusion - FC Transport Support
-Date: Thu, 30 Jun 2005 17:50:54 -0400
-Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C20F419C@xbl3.ma.emulex.com>
+From: mike.miller@hp.com
+Subject: [PATCH 1/1] cciss per disk queue for 2.6
+Date: Thu, 30 Jun 2005 16:03:42 -0500
+Message-ID: <20050630210342.GA28770@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:29394 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S263055AbVF3VvJ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Jun 2005 17:51:09 -0400
-content-class: urn:content-classes:message
+Received: from atlrel8.hp.com ([156.153.255.206]:45267 "EHLO atlrel8.hp.com")
+	by vger.kernel.org with ESMTP id S263063AbVF3WDF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Jun 2005 18:03:05 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: Eric.Moore@lsil.com, linux-scsi@vger.kernel.org
+To: akpm@osdl.org, axboe@suse.de
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I haven't planned to make any changes as yet. I also didn't quite know
-the rules for how to "break" compatibility things like this.
+This patch adds per disk queue functionality to cciss. Sometime back I submitted a patch but it looks like only part of what I needed. In the 2.6 kernel if we have more than one logical volume the driver will Oops during rmmod. It seems all of the queues actually point back to the same queue. So after deleting the first volume you hit a null pointer on the second one.
 
-The other thing I'm unclear on is - how does udev get to attributes
-are not on the base device ? For example, for FC disks, I'd like to
-get the SCSI lun #, and the FC WWPN of the target hosting it. I don't
-know that udev has considered the "classes", or that a device may be
-in multiple classes (well, not programatically, but that scsi disk 
-entity that I want to manage is both in the block class as well as
-the scsi_device class).
+This has been tested in our labs. There is no difference in performance, it just fixes the Oops. Please consider this patch for inclusion.
 
-Also, in some of the discussions on lsscsi, something that makes a lot
-of sense is have soft links from the device to the class(es) it's a
-part of. Right now, the utility has to find the device, and search the
-classes for something of like name (which there isn't a rule that it
-will always be true). I'd rather see that whenever a class is added to
-a device, a symbolic link (name is class name, points to class object)
-is made under the device object.
+Signed-off-by: Mike Miller <mike.miller@hp.com>
 
--- james s
-
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
-> Sent: Thursday, June 30, 2005 9:28 AM
-> To: Smart, James
-> Cc: Eric.Moore@lsil.com; SCSI Mailing List
-> Subject: RE: [PATCH 2/2] - mptfusion - FC Transport Support
-> 
-> 
-> On Fri, 2005-06-24 at 14:34 -0400, James.Smart@Emulex.Com wrote:
-> > To be honest, if I could have killed it (target-based object
-> > in sysfs), I would have as part of the FC transport rework. 
-> There was
-> > unfortunately too many app side things (udev, etc) that refer to it.
-> > This object is really a lame-duck.
-> 
-> Surely udev is about the only problem ... and we should be able to
-> persuade Greg to change easily enough.  It does seem that all of the
-> port information belongs in the rport, and so the attributes should be
-> deprecated and eventually eliminated.  Are you planning to do this?
-> 
-> James
-> 
-> 
-> 
+ cciss.c |   49 ++++++++++++++++++++++++++-----------------------
+ cciss.h |    4 ++--
+ 2 files changed, 28 insertions(+), 25 deletions(-)
+--------------------------------------------------------------------------------
+diff -burNp lx2612-rc6.orig/drivers/block/cciss.c lx2612-rc6-tmp/drivers/block/cciss.c
+--- lx2612-rc6.orig/drivers/block/cciss.c	2005-06-13 14:51:02.000000000 -0500
++++ lx2612-rc6-tmp/drivers/block/cciss.c	2005-06-30 16:54:56.000000000 -0500
+@@ -1140,7 +1140,7 @@ static int revalidate_allvol(ctlr_info_t
+ 		/* this is for the online array utilities */
+ 		if (!drv->heads && i)
+ 			continue;
+-		blk_queue_hardsect_size(host->queue, drv->block_size);
++		blk_queue_hardsect_size(drv->queue, drv->block_size);
+ 		set_capacity(disk, drv->nr_blocks);
+ 		add_disk(disk);
+ 	}
+@@ -1696,7 +1696,7 @@ static int cciss_revalidate(struct gendi
+ 	cciss_read_capacity(h->ctlr, logvol, size_buff, 1, &total_size, &block_size);
+ 	cciss_geometry_inquiry(h->ctlr, logvol, 1, total_size, block_size, inq_buff, drv);
+ 
+-	blk_queue_hardsect_size(h->queue, drv->block_size);
++	blk_queue_hardsect_size(drv->queue, drv->block_size);
+ 	set_capacity(disk, drv->nr_blocks);
+ 
+ 	kfree(size_buff);
+@@ -2253,12 +2253,12 @@ static irqreturn_t do_cciss_intr(int irq
+  	 * them up.  We will also keep track of the next queue to run so
+  	 * that every queue gets a chance to be started first.
+  	*/
+- 	for (j=0; j < NWD; j++){
+- 		int curr_queue = (start_queue + j) % NWD;
++	for (j=0; j < h->highest_lun + 1; j++){
++		int curr_queue = (start_queue + j) % (h->highest_lun + 1);
+  		/* make sure the disk has been added and the drive is real
+  		 * because this can be called from the middle of init_one.
+  		*/
+- 		if(!(h->gendisk[curr_queue]->queue) ||
++		if(!(h->drv[curr_queue].queue) || 
+ 		 		   !(h->drv[curr_queue].heads))
+  			continue;
+  		blk_start_queue(h->gendisk[curr_queue]->queue);
+@@ -2269,14 +2269,14 @@ static irqreturn_t do_cciss_intr(int irq
+  		if ((find_first_zero_bit(h->cmd_pool_bits, NR_CMDS)) == NR_CMDS)
+  		{
+  			if (curr_queue == start_queue){
+- 				h->next_to_run = (start_queue + 1) % NWD;
++				h->next_to_run = (start_queue + 1) % (h->highest_lun + 1);
+  				goto cleanup;
+  			} else {
+  				h->next_to_run = curr_queue;
+  				goto cleanup;
+  	}
+  		} else {
+- 			curr_queue = (curr_queue + 1) % NWD;
++			curr_queue = (curr_queue + 1) % (h->highest_lun + 1);
+  		}
+  	}
+ 
+@@ -2284,7 +2284,6 @@ cleanup:
+ 	spin_unlock_irqrestore(CCISS_LOCK(h->ctlr), flags);
+ 	return IRQ_HANDLED;
+ }
+-
+ /* 
+  *  We cannot read the structure directly, for portablity we must use 
+  *   the io functions.
+@@ -2799,13 +2798,6 @@ static int __devinit cciss_init_one(stru
+ 	}
+ 
+ 	spin_lock_init(&hba[i]->lock);
+-	q = blk_init_queue(do_cciss_request, &hba[i]->lock);
+-	if (!q)
+-		goto clean4;
+-
+-	q->backing_dev_info.ra_pages = READ_AHEAD;
+-	hba[i]->queue = q;
+-	q->queuedata = hba[i];
+ 
+ 	/* Initialize the pdev driver private data. 
+ 		have it point to hba[i].  */
+@@ -2827,6 +2819,20 @@ static int __devinit cciss_init_one(stru
+ 
+ 	cciss_procinit(i);
+ 
++	for(j=0; j < NWD; j++) { /* mfm */
++		drive_info_struct *drv = &(hba[i]->drv[j]);
++		struct gendisk *disk = hba[i]->gendisk[j];
++
++		q = blk_init_queue(do_cciss_request, &hba[i]->lock);
++		if (!q) {
++			printk(KERN_ERR
++			   "cciss:  unable to allocate queue for disk %d\n",
++			   j);
++			break;
++		}
++		drv->queue = q;
++
++		q->backing_dev_info.ra_pages = READ_AHEAD;
+ 	blk_queue_bounce_limit(q, hba[i]->pdev->dma_mask);
+ 
+ 	/* This is a hardware imposed limit. */
+@@ -2837,26 +2843,23 @@ static int __devinit cciss_init_one(stru
+ 
+ 	blk_queue_max_sectors(q, 512);
+ 
+-
+-	for(j=0; j<NWD; j++) {
+-		drive_info_struct *drv = &(hba[i]->drv[j]);
+-		struct gendisk *disk = hba[i]->gendisk[j];
+-
++		q->queuedata = hba[i];
+ 		sprintf(disk->disk_name, "cciss/c%dd%d", i, j);
+ 		sprintf(disk->devfs_name, "cciss/host%d/target%d", i, j);
+ 		disk->major = hba[i]->major;
+ 		disk->first_minor = j << NWD_SHIFT;
+ 		disk->fops = &cciss_fops;
+-		disk->queue = hba[i]->queue;
++		disk->queue = q;
+ 		disk->private_data = drv;
+ 		/* we must register the controller even if no disks exist */
+ 		/* this is for the online array utilities */
+ 		if(!drv->heads && j)
+ 			continue;
+-		blk_queue_hardsect_size(hba[i]->queue, drv->block_size);
++		blk_queue_hardsect_size(q, drv->block_size);
+ 		set_capacity(disk, drv->nr_blocks);
+ 		add_disk(disk);
+ 	}
++
+ 	return(1);
+ 
+ clean4:
+@@ -2922,10 +2925,10 @@ static void __devexit cciss_remove_one (
+ 	for (j = 0; j < NWD; j++) {
+ 		struct gendisk *disk = hba[i]->gendisk[j];
+ 		if (disk->flags & GENHD_FL_UP)
++			blk_cleanup_queue(disk->queue);
+ 			del_gendisk(disk);
+ 	}
+ 
+-	blk_cleanup_queue(hba[i]->queue);
+ 	pci_free_consistent(hba[i]->pdev, NR_CMDS * sizeof(CommandList_struct),
+ 			    hba[i]->cmd_pool, hba[i]->cmd_pool_dhandle);
+ 	pci_free_consistent(hba[i]->pdev, NR_CMDS * sizeof( ErrorInfo_struct),
+diff -burNp lx2612-rc6.orig/drivers/block/cciss.h lx2612-rc6-tmp/drivers/block/cciss.h
+--- lx2612-rc6.orig/drivers/block/cciss.h	2005-06-13 14:51:02.000000000 -0500
++++ lx2612-rc6-tmp/drivers/block/cciss.h	2005-06-30 16:46:10.000000000 -0500
+@@ -29,6 +29,7 @@ typedef struct _drive_info_struct
+ {
+  	__u32   LunID;	
+ 	int 	usage_count;
++	struct request_queue *queue;
+ 	sector_t nr_blocks;
+ 	int	block_size;
+ 	int 	heads;
+@@ -72,7 +73,6 @@ struct ctlr_info 
+ 	unsigned int maxQsinceinit;
+ 	unsigned int maxSG;
+ 	spinlock_t lock;
+-	struct request_queue *queue;
+ 
+ 	//* pointers to command and error info pool */ 
+ 	CommandList_struct 	*cmd_pool;
+@@ -260,7 +260,7 @@ struct board_type {
+ 	struct access_method *access;
+ };
+ 
+-#define CCISS_LOCK(i)	(hba[i]->queue->queue_lock)
++#define CCISS_LOCK(i)	(&hba[i]->lock)
+ 
+ #endif /* CCISS_H */
+ 
