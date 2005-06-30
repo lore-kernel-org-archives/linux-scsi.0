@@ -1,31 +1,34 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: I want scsi_target_block() in interrupt context
-Date: Wed, 29 Jun 2005 15:48:06 -0500
-Message-ID: <42C30906.5040508@cs.wisc.edu>
-References: <52fyv1dqer.fsf@topspin.com>	<20050629173629.GA32197@infradead.org> <5264vxdp9p.fsf@topspin.com>	<42C3028C.2020606@cs.wisc.edu> <52oe9odhfi.fsf@topspin.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Malcolm <bicameral@nilneca.org>
+Subject: Bigger, harder, and longer - lasting results NOW with a discreet little patch.
+Date: Thu, 30 Jun 2005 17:22:12 +0200
+Message-ID: <6765885669.63421160@169-41-246-201.adsl.terra.cl>
+Mime-Version: 1.0 (Apple Message framework v728)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:14232 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S262619AbVF2UsX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jun 2005 16:48:23 -0400
-In-Reply-To: <52oe9odhfi.fsf@topspin.com>
+Received: from 169-41-246-201.adsl.terra.cl ([201.246.41.169]:7666 "HELO
+	169-41-246-201.adsl.terra.cl") by vger.kernel.org with SMTP
+	id S262682AbVF2VXD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Jun 2005 17:23:03 -0400
+Received: from [187.163.162.199] (port=4514 helo=[steams])
+    by 169-41-246-201.adsl.terra.cl with esmtp
+    id 108893123475entail77522
+    for linux-scsi@vger.kernel.org; Thu, 30 Jun 2005 17:22:13 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <rolandd@cisco.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Roland Dreier wrote:
->     Mike> for iscsi and tcp connections, open-iscsi did the socket
->     Mike> connection stuff in userspace then passed the fd down to the
->     Mike> driver which used sockfd_lookup().
-> 
-> How does userspace pass the fd down?  Through a character device?
-> 
+Achieve stronger and harder erections
+http://www.gretan.com/ss/
 
-open-iscsi uses a netlink socket for most of its interface due to how it 
-pushed a lot of code to userspace. You could just do sysfs I bet, or are 
-you having a problem of not having some place to to hang the initial 
-setup attributes.
+
+
+
+
+To freely bloom - that is my definition of success.   
+Don’t you ‘black or white’ me.       
+The secret to life is meaningless unless you discover it yourself.  
+I call a fig a fig, a spade a spade.   
+You either have to be first, best or different.    
+
+
