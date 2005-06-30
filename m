@@ -1,30 +1,30 @@
-From: Portia <Greenland@aa.every1.net>
-Subject: Can't locate the cheap Viagra online? Buy it at the lowest price with...
-Date: Thu, 30 Jun 2005 16:02:50 -0400
-Message-ID: <2710379501.24964127721@207-255-56-010-dhcp.jst.pa.atlanticbb.net>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Edwards, Scott \(GE Healthcare\)" <J.Scott.Edwards@ge.com>
+Subject: Write cache on SATA drives?
+Date: Thu, 30 Jun 2005 16:39:17 -0500
+Message-ID: <C664ABFF405D6A458806C03AA2E0FF6B0560E7CC@MKEMLVEM01.e2k.ad.ge.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 207-255-56-010-dhcp.jst.pa.atlanticbb.net ([207.255.56.10]:18962
-	"HELO 207-255-56-010-dhcp.jst.pa.atlanticbb.net") by vger.kernel.org
-	with SMTP id S263108AbVF3UC5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jun 2005 16:02:57 -0400
-Received: from [98.223.85.162] (port=4202 helo=[altruistic])
-    by 207-255-56-010-dhcp.jst.pa.atlanticbb.net with esmtp
-    id 594867633gladden103949
-    for linux-scsi@vger.kernel.org; Thu, 30 Jun 2005 16:02:51 -0400
+Received: from ext-nj2ut-1.online-age.net ([64.14.54.230]:6538 "EHLO
+	ext-nj2ut-1.online-age.net") by vger.kernel.org with ESMTP
+	id S263047AbVF3VjK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jun 2005 17:39:10 -0400
+Received: from int-nj2ut-1.online-age.net (int-nj2ut-1.online-age.net [3.159.237.70])
+	by ext-nj2ut-1.online-age.net (8.12.11/8.12.10/20050401-SVVS) with ESMTP id j5ULcWHs002545
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jun 2005 16:38:33 -0500
+Received: from cinmlef05.e2k.ad.ge.com (localhost.localdomain [127.0.0.1])
+	by int-nj2ut-1.online-age.net (8.11.6/8.11.6/20050510-SVVS) with ESMTP id j5ULbUY23953
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Jun 2005 16:37:30 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Low cost medical coverage for families and individuals
-http://cve.ix3tm10tfaiq4ji.mitigatorji.com
+Hello,
 
+Can anyone tell me if the write cache on SATA drives are handled such that journaling file systems work correctly?  Back in the 2.6.5 - 2.6.7 time frame I had to disable the write cache to get ext3 to not trash things when the power was lost.  With kernel 2.6.10 would I still need to disable the write cache?
 
-
-Life's a voyage that's homeward bound.       
-If a child lives with approval, he learns to live with himself. 
-Any fool can tell the truth; it takes talent to lie well. 
-
+Thanks
+  -Scott
 
