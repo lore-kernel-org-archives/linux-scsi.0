@@ -1,30 +1,63 @@
-From: "Edwards, Scott \(GE Healthcare\)" <J.Scott.Edwards@ge.com>
-Subject: Write cache on SATA drives?
-Date: Thu, 30 Jun 2005 16:39:17 -0500
-Message-ID: <C664ABFF405D6A458806C03AA2E0FF6B0560E7CC@MKEMLVEM01.e2k.ad.ge.com>
+From: James.Smart@Emulex.Com
+Subject: RE: [PATCH 2/2] - mptfusion - FC Transport Support
+Date: Thu, 30 Jun 2005 17:50:54 -0400
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C20F419C@xbl3.ma.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ext-nj2ut-1.online-age.net ([64.14.54.230]:6538 "EHLO
-	ext-nj2ut-1.online-age.net") by vger.kernel.org with ESMTP
-	id S263047AbVF3VjK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jun 2005 17:39:10 -0400
-Received: from int-nj2ut-1.online-age.net (int-nj2ut-1.online-age.net [3.159.237.70])
-	by ext-nj2ut-1.online-age.net (8.12.11/8.12.10/20050401-SVVS) with ESMTP id j5ULcWHs002545
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jun 2005 16:38:33 -0500
-Received: from cinmlef05.e2k.ad.ge.com (localhost.localdomain [127.0.0.1])
-	by int-nj2ut-1.online-age.net (8.11.6/8.11.6/20050510-SVVS) with ESMTP id j5ULbUY23953
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Jun 2005 16:37:30 -0500
+Received: from emulex.emulex.com ([138.239.112.1]:29394 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S263055AbVF3VvJ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Jun 2005 17:51:09 -0400
 content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: Eric.Moore@lsil.com, linux-scsi@vger.kernel.org
 
-Hello,
+I haven't planned to make any changes as yet. I also didn't quite know
+the rules for how to "break" compatibility things like this.
 
-Can anyone tell me if the write cache on SATA drives are handled such that journaling file systems work correctly?  Back in the 2.6.5 - 2.6.7 time frame I had to disable the write cache to get ext3 to not trash things when the power was lost.  With kernel 2.6.10 would I still need to disable the write cache?
+The other thing I'm unclear on is - how does udev get to attributes
+are not on the base device ? For example, for FC disks, I'd like to
+get the SCSI lun #, and the FC WWPN of the target hosting it. I don't
+know that udev has considered the "classes", or that a device may be
+in multiple classes (well, not programatically, but that scsi disk 
+entity that I want to manage is both in the block class as well as
+the scsi_device class).
 
-Thanks
-  -Scott
+Also, in some of the discussions on lsscsi, something that makes a lot
+of sense is have soft links from the device to the class(es) it's a
+part of. Right now, the utility has to find the device, and search the
+classes for something of like name (which there isn't a rule that it
+will always be true). I'd rather see that whenever a class is added to
+a device, a symbolic link (name is class name, points to class object)
+is made under the device object.
 
+-- james s
+
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
+> Sent: Thursday, June 30, 2005 9:28 AM
+> To: Smart, James
+> Cc: Eric.Moore@lsil.com; SCSI Mailing List
+> Subject: RE: [PATCH 2/2] - mptfusion - FC Transport Support
+> 
+> 
+> On Fri, 2005-06-24 at 14:34 -0400, James.Smart@Emulex.Com wrote:
+> > To be honest, if I could have killed it (target-based object
+> > in sysfs), I would have as part of the FC transport rework. 
+> There was
+> > unfortunately too many app side things (udev, etc) that refer to it.
+> > This object is really a lame-duck.
+> 
+> Surely udev is about the only problem ... and we should be able to
+> persuade Greg to change easily enough.  It does seem that all of the
+> port information belongs in the rport, and so the attributes should be
+> deprecated and eventually eliminated.  Are you planning to do this?
+> 
+> James
+> 
+> 
+> 
