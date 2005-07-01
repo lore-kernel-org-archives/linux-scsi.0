@@ -1,30 +1,34 @@
-From: Tina <accentual@joshi1.every1.net>
-Subject: 75% Off for All New Software.
-Date: Thu, 30 Jun 2005 21:26:20 -0500
-Message-ID: <1321438488.9949321609@adsl-70-241-162-105.dsl.hstntx.swbell.net>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Write cache on SATA drives?
+Date: Fri, 1 Jul 2005 08:24:21 +0200
+Message-ID: <20050701062416.GQ2243@suse.de>
+References: <C664ABFF405D6A458806C03AA2E0FF6B0560E7CC@MKEMLVEM01.e2k.ad.ge.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adsl-70-241-162-105.dsl.hstntx.swbell.net ([70.241.162.105]:48132
-	"HELO adsl-70-241-162-105.dsl.hstntx.swbell.net") by vger.kernel.org
-	with SMTP id S263192AbVGAC0X (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Jun 2005 22:26:23 -0400
-Received: from [226.141.167.117] (port=4242 helo=[accordion])
-    by adsl-70-241-162-105.dsl.hstntx.swbell.net with esmtp
-    id 11471646722regrettable124636
-    for linux-scsi@vger.kernel.org; Thu, 30 Jun 2005 21:26:21 -0500
+Received: from ns.virtualhost.dk ([195.184.98.160]:57248 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S263225AbVGAGWx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2005 02:22:53 -0400
+Content-Disposition: inline
+In-Reply-To: <C664ABFF405D6A458806C03AA2E0FF6B0560E7CC@MKEMLVEM01.e2k.ad.ge.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Edwards, Scott (GE Healthcare)" <J.Scott.Edwards@ge.com>
+Cc: linux-scsi@vger.kernel.org
 
-Get latest version, cds and download under $99
-http://mkiv.qfc5tp81ni8x5rq.mitigatorji.com
+On Thu, Jun 30 2005, Edwards, Scott (GE Healthcare) wrote:
+> Hello,
+> 
+> Can anyone tell me if the write cache on SATA drives are handled such
+> that journaling file systems work correctly?  Back in the 2.6.5 -
+> 2.6.7 time frame I had to disable the write cache to get ext3 to not
+> trash things when the power was lost.  With kernel 2.6.10 would I
+> still need to disable the write cache?
 
+With 2.6.12.x it should work, if you use ext3 or reiser and the
+appropriate mount options (-o barrier=1 for ext3, barrier=flush for
+reiserfs). 2.6.11 and earlier does not work on SATA.
 
-
-
-Cogito ergo sum. (I think; therefore I am.)     
-The athlete makes himself, the coach doesn't make the athlete.   
-
+-- 
+Jens Axboe
 
