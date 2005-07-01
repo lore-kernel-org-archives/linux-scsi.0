@@ -1,33 +1,48 @@
 From: Jens Axboe <axboe@suse.de>
-Subject: Re: Write cache on SATA drives?
-Date: Fri, 1 Jul 2005 08:24:21 +0200
-Message-ID: <20050701062416.GQ2243@suse.de>
-References: <C664ABFF405D6A458806C03AA2E0FF6B0560E7CC@MKEMLVEM01.e2k.ad.ge.com>
+Subject: Re: [PATCH 1/1] cciss per disk queue for 2.6
+Date: Fri, 1 Jul 2005 09:02:20 +0200
+Message-ID: <20050701070219.GV2243@suse.de>
+References: <20050630210342.GA28770@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:57248 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S263225AbVGAGWx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2005 02:22:53 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:54450 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S263258AbVGAHBG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2005 03:01:06 -0400
 Content-Disposition: inline
-In-Reply-To: <C664ABFF405D6A458806C03AA2E0FF6B0560E7CC@MKEMLVEM01.e2k.ad.ge.com>
+In-Reply-To: <20050630210342.GA28770@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Edwards, Scott (GE Healthcare)" <J.Scott.Edwards@ge.com>
-Cc: linux-scsi@vger.kernel.org
+To: mike.miller@hp.com
+Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, Jun 30 2005, Edwards, Scott (GE Healthcare) wrote:
-> Hello,
+On Thu, Jun 30 2005, mike.miller@hp.com wrote:
+> This patch adds per disk queue functionality to cciss. Sometime back I
+> submitted a patch but it looks like only part of what I needed. In the
+> 2.6 kernel if we have more than one logical volume the driver will
+> Oops during rmmod. It seems all of the queues actually point back to
+> the same queue. So after deleting the first volume you hit a null
+> pointer on the second one.
 > 
-> Can anyone tell me if the write cache on SATA drives are handled such
-> that journaling file systems work correctly?  Back in the 2.6.5 -
-> 2.6.7 time frame I had to disable the write cache to get ext3 to not
-> trash things when the power was lost.  With kernel 2.6.10 would I
-> still need to disable the write cache?
+> This has been tested in our labs. There is no difference in
+> performance, it just fixes the Oops. Please consider this patch for
+> inclusion.
 
-With 2.6.12.x it should work, if you use ext3 or reiser and the
-appropriate mount options (-o barrier=1 for ext3, barrier=flush for
-reiserfs). 2.6.11 and earlier does not work on SATA.
+Going to per-disk queues is undoubtedly a good idea, performance will be
+much better this way. So far, so good.
+
+But you need to do something about the queueing for this to be
+acceptable, imho. You have a per-controller queueing limit in place, you
+need to enforce some fairness to ensure an equal distribution of
+commands between the disks.
+
+Perhaps just limit the per-queue depth to something sane, instead of the
+huuuge 384 commands you have now. I've had several people complain to
+me, that ciss is doing some nasty starvation with that many commands in
+flight and we've effectively had to limit the queueing depth to
+something really low to get adequate read performance in presence of
+writes.
+
 
 -- 
 Jens Axboe
