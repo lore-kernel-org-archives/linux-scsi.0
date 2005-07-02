@@ -1,39 +1,61 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Tony Vroon <chainsaw@gentoo.org>
 Subject: Re: aic7xxx regression occuring after 2.6.12 final
-Date: Sat, 02 Jul 2005 13:01:31 -0400
-Message-ID: <1120323691.5073.12.camel@mulgrave>
+Date: Sat, 02 Jul 2005 18:13:46 +0100
+Message-ID: <1120324426.21967.1.camel@localhost>
 References: <1120085446.9743.11.camel@localhost>
 	 <1120318925.21935.9.camel@localhost>  <1120321322.5073.4.camel@mulgrave>
-	 <1120322788.22046.2.camel@localhost>
+	 <1120322788.22046.2.camel@localhost>  <1120323691.5073.12.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-qicqJD6qwVjJZ4sUp8BJ"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:31398 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261194AbVGBRBe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 2 Jul 2005 13:01:34 -0400
-In-Reply-To: <1120322788.22046.2.camel@localhost>
+Received: from smtp1.irishbroadband.ie ([62.231.32.12]:29899 "EHLO
+	smtp1.irishbroadband.ie") by vger.kernel.org with ESMTP
+	id S261160AbVGBROk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 2 Jul 2005 13:14:40 -0400
+In-Reply-To: <1120323691.5073.12.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Vroon <chainsaw@gentoo.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andy Whitcroft <apw@shadowen.org>
 
-On Sat, 2005-07-02 at 17:46 +0100, Tony Vroon wrote:
-> What does that asynchronous line mean? I  see that on all kernels that
-> do not boot properly. 2.6.12; 2.6.12.1 and 2.6.12.2 do not display it,
-> and boot just fine.
-> 
-> target0:0:0: asynchronous
 
-It means the target is sending data asynchronously (the slowest and
-safest speed).
+--=-qicqJD6qwVjJZ4sUp8BJ
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Could you try booting with aic7xxx=verbose to see what the device thinks
-its negotiating?
+On Sat, 2005-07-02 at 13:01 -0400, James Bottomley wrote:
+> Could you try booting with aic7xxx=3Dverbose to see what the device think=
+s
+> its negotiating?
 
-Thanks,
+scsi0: Slave Alloc 0
+(scsi0:A:0:0): Sending WDTR 0
+(scsi0:A:0:0): Received WDTR 0 filtered to 0
+ target0:0:0: FAST-5 SCSI 1.0 MB/s ST (1020 ns, offset 255)
+scsi0: target 0 using 8bit transfers
+(scsi0:A:0:0): Sending SDTR period 45, offset 0
+(scsi0:A:0:0): Received SDTR period 45, offset 0
+Filtered to period 0, offset 0
+ target0:0:0: asynchronous
+scsi0: target 0 using asynchronous transfers
+[vendor information follows; Fujitsu MAP 36.7GB drive]
 
-James
 
+> James
+Tony.
+
+
+--=-qicqJD6qwVjJZ4sUp8BJ
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1-ecc0.1.6 (GNU/Linux)
+
+iD8DBQBCxstKp5vW4rUFj5oRAn+BAKCSrziWgP+SssyrUtRvdJyJwFxFtwCgj0Y4
+kLcsiOjjDdGau55hHGBmm0o=
+=lBmp
+-----END PGP SIGNATURE-----
+
+--=-qicqJD6qwVjJZ4sUp8BJ--
 
