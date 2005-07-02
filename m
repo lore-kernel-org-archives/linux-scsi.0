@@ -1,7 +1,7 @@
-From: Tony Vroon <tony@vroon.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: aic7xxx regression occuring after 2.6.12 final
-Date: Sat, 02 Jul 2005 20:15:14 +0100
-Message-ID: <1120331714.22021.5.camel@localhost>
+Date: Sat, 02 Jul 2005 14:46:14 -0500
+Message-ID: <1120333574.5073.26.camel@mulgrave>
 References: <1120085446.9743.11.camel@localhost>
 	 <1120318925.21935.9.camel@localhost>  <1120321322.5073.4.camel@mulgrave>
 	 <1120322788.22046.2.camel@localhost>  <1120323691.5073.12.camel@mulgrave>
@@ -9,85 +9,66 @@ References: <1120085446.9743.11.camel@localhost>
 	 <1120326423.22057.3.camel@localhost>  <1120329389.5073.21.camel@mulgrave>
 	 <1120331026.22021.2.camel@localhost>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-uiSMNF8igGd0peSFX7Sf"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.irishbroadband.ie ([62.231.32.12]:26583 "EHLO
-	smtp1.irishbroadband.ie") by vger.kernel.org with ESMTP
-	id S261264AbVGBTQI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 2 Jul 2005 15:16:08 -0400
+Received: from stat16.steeleye.com ([209.192.50.48]:35495 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261267AbVGBTqQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 2 Jul 2005 15:46:16 -0400
 In-Reply-To: <1120331026.22021.2.camel@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Tony Vroon <chainsaw@gentoo.org>
 Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andy Whitcroft <apw@shadowen.org>
 
-
---=-uiSMNF8igGd0peSFX7Sf
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
-
 On Sat, 2005-07-02 at 20:03 +0100, Tony Vroon wrote:
-> Output follows:
-It got mangled somehow. Not sure what happened but it's corrupted near
-the end. Reposting:
-scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
-        <Adaptec 29160 Ultra160 SCSI adapter>
-        aic7892: Ultra160 Wide Channel A, SCSI Id=3D7, 32/253 SCBs
+> As you predicted, it tried but gave up.
 
-scsi0: Slave Alloc 0
-(scsi0:A:0:0): Sending WDTR 0
-(scsi0:A:0:0): Received WDTR 0 filtered to 0
- target0:0:0: FAST-5 SCSI 1.0 MB/s ST (1020 ns, offset 255)
-scsi0: target 0 using 8bit transfers
-(scsi0:A:0:0): Sending SDTR period 45, offset 0
-(scsi0:A:0:0): Received SDTR period 45, offset 0
-Filtered to period 0, offset 0
- target0:0:0: asynchronous.
-scsi0: target 0 using asynchronous transfers
- Vendor: FUJITSU   Model: MAP3367NP         Rev: 0106
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-scsi0: Slave Configure 0
- target0:0:0: asynchronous.
-scsi0:A:0:0:0: Tagged Queuing enabled.  Depth 32
- target0:0:0: Beginning Domain Validation
-(scsi0:A:0:0): Sending WDTR 1
-(scsi0:A:0:0): Received WDTR 1 filtered to 1
- target0:0:0: FAST-5 WIDE SCSI 2.0 MB/s ST (1020 ns, offset 255)
-scsi0: target 0 using 16bit transfers
-(scsi0:A:0:0): Sending SDTR period 45, offset 0
-(scsi0:A:0:0): Received SDTR period 45, offset 0
-Filtered to period 0, offset 0
- target0:0:0: wide asynchronous
-csi0: target 0 using asynchronous transfers
-(scsi0:A:0:0): Sending PPR bus_width 1, period 9, offset 7f, ppr_options
-7
-(scsi0:A:0:0): Received PPR bus_width 1, period 9, offset 7f,
-ppr_options 7
-Filtered to width 1, period 9, offset 7f, options 7
- target0:0:0: FAST-80 WIDE SCSI 160.0 MB/s ST IU (12.5ns, offset 127)
-scsi0: target 0 synchronous at 80.0MHz DT, offset =3D 0x7
-(scsi0:A:0:0): Unexpected busfree in Message-in phase
-SEQADDR =3D=3D 0x16b
- target0:0:0: Write Buffer failure 70000
- target0:0:0: Domain Validation Disabling Information Units
-(scsi0:A:0:0): Sending PPR bus_width 1, period 9, offset 7f, ppr_options
-6
-(scsi0:A:0:0): refuses tagged comands.  Performing non-tagged I/O
- target0:0:0: FAST-80 WIDE SCSI 160.0 MB/s ST IU (12.5 ns, offset 127)
-*PC hangs here*
+Well, I've looked more closely at this.  There's no support in either
+the core or the sequencer for IU or QAS, so I think the safe course is
+just to strip them out of the transport parameters (I don't have the
+sequencer docs anyway, so there's no way I can correct the problem).
 
+This should, therefore, get the whole lot booting again.
 
---=-uiSMNF8igGd0peSFX7Sf
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+James
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1-ecc0.1.6 (GNU/Linux)
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -2633,6 +2633,11 @@ static void ahc_linux_set_dt(struct scsi
+ 	ahc_unlock(ahc, &flags);
+ }
+ 
++#if 0
++/* FIXME: This code claims to support IU and QAS.  However, the actual
++ * sequencer code and aic7xxx_core have no support for these parameters and
++ * will get into a bad state if they're negotiated.  Do not enable this
++ * unless you know what you're doing */
+ static void ahc_linux_set_qas(struct scsi_target *starget, int qas)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+@@ -2688,6 +2693,7 @@ static void ahc_linux_set_iu(struct scsi
+ 			 ppr_options, AHC_TRANS_GOAL, FALSE);
+ 	ahc_unlock(ahc, &flags);
+ }
++#endif
+ 
+ static struct spi_function_template ahc_linux_transport_functions = {
+ 	.set_offset	= ahc_linux_set_offset,
+@@ -2698,10 +2704,12 @@ static struct spi_function_template ahc_
+ 	.show_width	= 1,
+ 	.set_dt		= ahc_linux_set_dt,
+ 	.show_dt	= 1,
++#if 0
+ 	.set_iu		= ahc_linux_set_iu,
+ 	.show_iu	= 1,
+ 	.set_qas	= ahc_linux_set_qas,
+ 	.show_qas	= 1,
++#endif
+ };
+ 
+ 
 
-iD8DBQBCxufCp5vW4rUFj5oRAny6AJsEh4PD8cIiKrjATgkNKsqQvBgaEACgwbkP
-w0yP96781dZGOKAxW2nEc48=
-=NeAK
------END PGP SIGNATURE-----
-
---=-uiSMNF8igGd0peSFX7Sf--
 
