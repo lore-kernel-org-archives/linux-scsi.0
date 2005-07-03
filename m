@@ -1,53 +1,92 @@
-From: Matthias Andree <matthias.andree@gmx.de>
-Subject: Re: Write cache on SATA drives?
-Date: Sun, 03 Jul 2005 19:03:48 +0200
-Message-ID: <m3hdfbizyj.fsf@merlin.emma.line.org>
-References: <C664ABFF405D6A458806C03AA2E0FF6B0560E7CC@MKEMLVEM01.e2k.ad.ge.com>
-	<20050701062416.GQ2243@suse.de> <m3acl7ym7f.fsf@merlin.emma.line.org>
-	<20050701083308.GZ2243@suse.de>
-	<20050701084717.GA18306@merlin.emma.line.org>
-	<20050701085412.GA2243@suse.de> <m38y0qnlt7.fsf@merlin.emma.line.org>
-	<20050702070750.GL2243@suse.de>
+From: Robert Heinzmann <Robert.Heinzmann@gmx.net>
+Subject: I/O Errors and no Partitions visible with QLogic failover driver
+ and Storageworks array (MSA1500)
+Date: Sun, 03 Jul 2005 23:21:32 +0200
+Message-ID: <42C856DC.9070506@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from krusty.dt.e-technik.Uni-Dortmund.DE ([129.217.163.1]:5063 "EHLO
-	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
-	id S261472AbVGCRD5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 3 Jul 2005 13:03:57 -0400
-In-Reply-To: <20050702070750.GL2243@suse.de> (Jens Axboe's message of "Sat, 2
-	Jul 2005 09:07:55 +0200")
+Received: from imap.gmx.net ([213.165.64.20]:18393 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S261542AbVGCVVg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jul 2005 17:21:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Matthias Andree <matthias.andree@gmx.de>, "Edwards, Scott (GE Healthcare)" <J.Scott.Edwards@ge.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Jens Axboe <axboe@suse.de> writes:
+Hello,
 
->> Hm. Any buzz^Wkeywords to look for? "barrier" doesn't seem to be the
->> right word, it yields only memory barriers and an as-iosched fix in
->> 2.6.7.  I checked ChangeLog-2.6.[56789].
->
-> Grep for blk_queue_ordered or similar in the patch.
+we observed some strange behaviour with the Qlogic failover driver 
+version 8.00.02 (Kernel 2.6.7) and MSA1500 storagework arrays.
 
-patch-2.6.9 adds this function -- and a call to it to ide-disk.c. Have
-reiserfs and ext3fs supported this from the very beginning (i. e. 2.6.9)
-or is this an issue that affected only the lower layers anyhow?
+We have a MSA1500 connected to two fabrics and 4 hosts connected to the 
+MSA1500, each with 2 Qlogic FC HBA's. Each HBA is connected to one 
+fabric. We have seen the following strange behaviour:
 
-/**
- * blk_queue_ordered - does this queue support ordered writes
- * @q:     the request queue
- * @flag:  see below
- *
- * Description:
- *   For journalled file systems, doing ordered writes on a commit
- *   block instead of explicitly doing wait_on_buffer (which is bad
- *   for performance) can be a big win. Block drivers supporting this
- *   feature should call this function and indicate so.
- *
- **/
-void blk_queue_ordered(request_queue_t *q, int flag)
-...
+a) If we boot one machine and the HBA first found by the operating 
+system  is connected to the standby MSA1500 controller, the boot takes 
+very long and we get SCSI I/O errors (see below). After the boot no 
+partitions are visible on the array. If we issue blockdev --rescanpt on 
+the LUN's we see the partitions.
 
--- 
-Matthias Andree
+b) If we boot one machine and the HBA first found by the operating 
+system is connected to the active MSA1500 controller, the boot is very 
+quick (normal) and all partitions are visible after the boot.
+
+Because I'm not such an kernel expert I thought of asking the SCSI 
+"gurus" on this list :). Who is responsible for scanning the parition 
+tables after inserting a new driver ? Is this the driver itself or the 
+kernel ?
+
+I would really appreshiate any hint or help.
+
+Regards,
+Robert Heinzmann
+
+------------
+
+Boot log for scenario a) :
+
+qla2300 0000:06:02.0: Found an ISP2312, irq 78, iobase 0xf90f5000
+qla2300 0000:06:02.0: Configuring PCI space...
+qla2300 0000:06:02.0: Configure NVRAM parameters...
+qla2300 0000:06:02.0: Verifying loaded RISC code...
+qla2300 0000:06:02.0: Waiting for LIP to complete...
+qla2300 0000:06:02.0: LOOP UP detected (2 Gbps).
+qla2300 0000:06:02.0: Topology - (F_Port), Host Loop address 0xffff
+scsi(0) :Loop id 0x0081 is a MSA1000 device
+scsi(0) :Loop id 0x0081 is a MSA1000 device
+scsi(0) :Loop id 0x0081 is a MSA1000 device
+scsi0 : qla2xxx
+qla2300 0000:06:02.0:
+QLogic Fibre Channel HBA Driver: 8.00.02-fo
+QLogic QLA2340 -
+ISP2312: PCI-X (100 MHz) @ 0000:06:02.0 hdma+, host#=0, fw=3.03.11 IPX
+scsi: unknown device type 12
+Vendor: COMPAQ Model: MSA1000 Rev: 4.32
+Type: RAID ANSI SCSI revision: 04
+qla2300 0000:06:02.0: scsi(0:0:0:0): Enabled tagged queuing, queue depth 16.
+Vendor: COMPAQ Model: MSA1000 VOLUME Rev: 4.32
+Type: Direct-Access ANSI SCSI revision: 04
+qla2300 0000:06:02.0: scsi(0:0:0:1): Enabled tagged queuing, queue depth 16.
+SCSI device sda: 204799680 512-byte hdwr sectors (104857 MB)
+SCSI device sda: drive cache: write back
+SCSI error : <0 0 0 1> return code = 0x20000
+end_request: I/O error, dev sda, sector 0
+Buffer I/O error on device sda, logical block 0
+SCSI error : <0 0 0 1> return code = 0x20000
+end_request: I/O error, dev sda, sector 0
+Buffer I/O error on device sda, logical block 0
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 1
+Vendor: COMPAQ Model: MSA1000 VOLUME Rev: 4.32
+Type: Direct-Access ANSI SCSI revision: 04
+qla2300 0000:06:02.0: scsi(0:0:0:3): Enabled tagged queuing, queue depth 16.
+SCSI device sdb: 40955040 512-byte hdwr sectors (20969 MB)
+SCSI device sdb: drive cache: write back
+SCSI error : <0 0 0 3> return code = 0x20000
+end_request: I/O error, dev sdb, sector 0
+Buffer I/O error on device sdb, logical block 0
+SCSI error : <0 0 0 3> return code = 0x20000
+end_request: I/O error, dev sdb, sector 0
+Buffer I/O error on device sdb, logical block 0
+Attached scsi disk sdb at scsi0, channel 0, id 0, lun 3
