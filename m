@@ -1,86 +1,54 @@
-From: Neil Brown <neilb@cse.unsw.edu.au>
-Subject: Re: REGRESSION in 2.6.13-rc1: Massive slowdown with Adaptec SCSI
-Date: Tue, 5 Jul 2005 18:59:59 +1000
-Message-ID: <17098.19471.40130.621127@cse.unsw.edu.au>
-References: <17097.56705.490622.759154@cse.unsw.edu.au>
-	<20050705012141.GB9312@parcelfarce.linux.theplanet.co.uk>
-	<17097.57991.652937.849090@cse.unsw.edu.au>
+From: Thomas Backlund <tmb@mandriva.org>
+Subject: Re: WARNING : kernel 2.6.11.7 (others) kills megaraid 4e/Si dead
+Date: Tue, 05 Jul 2005 17:52:03 +0300
+Message-ID: <42CA9E93.1050802@mandriva.org>
+References: <20050503151532.GA1316@thumper2> <20050503190005.GS23013@shell0.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tone.orchestra.cse.unsw.EDU.AU ([129.94.242.59]:53459 "EHLO
-	tone.orchestra.cse.unsw.EDU.AU") by vger.kernel.org with ESMTP
-	id S261772AbVGEJin (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Jul 2005 05:38:43 -0400
-In-Reply-To: message from Neil Brown on Tuesday July 5
+Received: from mbox1.netikka.net ([213.250.81.202]:52710 "EHLO
+	mbox1.netikka.net") by vger.kernel.org with ESMTP id S261868AbVGEOwE
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Jul 2005 10:52:04 -0400
+In-Reply-To: <20050503190005.GS23013@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Chris Wright <chrisw@osdl.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tuesday July 5, neilb@cse.unsw.edu.au wrote:
-> On Tuesday July 5, matthew@wil.cx wrote:
-> > On Tue, Jul 05, 2005 at 11:08:17AM +1000, Neil Brown wrote:
-> > >  On 2.6.13-rc1 the same test takes just short on 1 minute and reports
-> > >  slightly less than 2 M/Second.
-> > 
-> > That sounds like your drives have negotiated an asynchronous transfer
-> > agreement.  Could you provide your dmesg to confirm that diagnosis?
+Chris Wright wrote:
+> * Andy (genanr@emsphone.com) wrote:
 > 
-> Yes, that looks right.
+>>cross posted due to the severity of this issue.
+>>
+>>I have killed two Dell 1850 (x86_64) with megaraid 4e/SI servers using
+>>kernel 2.6.11.7.  When the system boots, it looks like it does not see the
+>>megaraid controller (because it never prints anything about it) and hangs
+>>when it tries to mount root.  When rebooted, the system says no firmware
+>>present for embedded raid controller.  I then try to flash it, the flash
+>>program says the firmware is corrupt and flashes the controller.  However,
+>>upon reboot I still get the no firmware present, thus the machine can no
+>>longer boot off the raid.
+> 
+> 
+> Not good.  There were no megaraid changes in the -stable series.  What's
+> the last kernel.org kernel that worked for you?
+> 
 
 
-I just noticed:
+Any news on this matter?
+I hvr a PE1850 waiting for kernel upgrade, but I'm afraid to do so now...
+
+I can't break my box with tests since it's in active use...
+For now I'm running a 2.6.8.1 based kernel on the box...
 
 
-> From: James Bottomley <James.Bottomley@SteelEye.com>
-> To: Tony Vroon <chainsaw@gentoo.org>
-> Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
->         SCSI Mailing List <linux-scsi@vger.kernel.org>,
->         Andy Whitcroft <apw@shadowen.org>
-> Subject: Re: aic7xxx regression occuring after 2.6.12 final
-> Date: 	Sat, 02 Jul 2005 14:46:14 -0500
+--
+Regards
 
-which had the following patch which fixes this problem nicely.  Sorry for the
-extra noise.
+Thomas
 
-(Thanks James)
+PS.
+Please CC me as I'm not subscribed...
 
-NeilBrown
-
-
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -2633,6 +2633,11 @@ static void ahc_linux_set_dt(struct scsi
- 	ahc_unlock(ahc, &flags);
- }
- 
-+#if 0
-+/* FIXME: This code claims to support IU and QAS.  However, the actual
-+ * sequencer code and aic7xxx_core have no support for these parameters and
-+ * will get into a bad state if they're negotiated.  Do not enable this
-+ * unless you know what you're doing */
- static void ahc_linux_set_qas(struct scsi_target *starget, int qas)
- {
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-@@ -2688,6 +2693,7 @@ static void ahc_linux_set_iu(struct scsi
- 			 ppr_options, AHC_TRANS_GOAL, FALSE);
- 	ahc_unlock(ahc, &flags);
- }
-+#endif
- 
- static struct spi_function_template ahc_linux_transport_functions = {
- 	.set_offset	= ahc_linux_set_offset,
-@@ -2698,10 +2704,12 @@ static struct spi_function_template ahc_
- 	.show_width	= 1,
- 	.set_dt		= ahc_linux_set_dt,
- 	.show_dt	= 1,
-+#if 0
- 	.set_iu		= ahc_linux_set_iu,
- 	.show_iu	= 1,
- 	.set_qas	= ahc_linux_set_qas,
- 	.show_qas	= 1,
-+#endif
- };
- 
