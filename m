@@ -1,42 +1,30 @@
-From: Chris Wright <chrisw@osdl.org>
-Subject: Re: WARNING : kernel 2.6.11.7 (others) kills megaraid 4e/Si dead
-Date: Tue, 5 Jul 2005 08:58:09 -0700
-Message-ID: <20050705155808.GI9153@shell0.pdx.osdl.net>
-References: <20050503151532.GA1316@thumper2> <20050503190005.GS23013@shell0.pdx.osdl.net> <42CA9E93.1050802@mandriva.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261909AbVGEQPU@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <42CA9E93.1050802@mandriva.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Thomas Backlund <tmb@mandriva.org>
-Cc: Chris Wright <chrisw@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Andy <genanr@emsphone.com>
+From: Dennis <Midlandizes@bbsi.com>
+Subject: cheap oem soft shipping worldwide
+Date: Tue, 5 Jul 2005 18:48:13 +0200
+Message-ID: <815227375.4608199152@201-254-148-78.speedy.com.ar>
+Mime-Version: 1.0 (Apple Message framework v728)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 201-254-148-78.speedy.com.ar ([201.254.148.78]:10995 "HELO
+	201-254-148-78.speedy.com.ar") by vger.kernel.org with SMTP
+	id S261930AbVGEQsO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Jul 2005 12:48:14 -0400
+Received: from [205.179.197.65] (port=4039 helo=[sacrilegious])
+    by 201-254-148-78.speedy.com.ar with esmtp
+    id 46333125798establishes66502
+    for linux-scsi@vger.kernel.org; Tue, 5 Jul 2005 18:48:14 +0200
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-* Thomas Backlund (tmb@mandriva.org) wrote:
-> Chris Wright wrote:
-> >* Andy (genanr@emsphone.com) wrote:
-> >
-> >>cross posted due to the severity of this issue.
-> >>
-> >>I have killed two Dell 1850 (x86_64) with megaraid 4e/SI servers using
-> >>kernel 2.6.11.7.  When the system boots, it looks like it does not see the
-> >>megaraid controller (because it never prints anything about it) and hangs
-> >>when it tries to mount root.  When rebooted, the system says no firmware
-> >>present for embedded raid controller.  I then try to flash it, the flash
-> >>program says the firmware is corrupt and flashes the controller.  However,
-> >>upon reboot I still get the no firmware present, thus the machine can no
-> >>longer boot off the raid.
-> >
-> >
-> >Not good.  There were no megaraid changes in the -stable series.  What's
-> >the last kernel.org kernel that worked for you?
-> 
-> Any news on this matter?
-> I hvr a PE1850 waiting for kernel upgrade, but I'm afraid to do so now...
-> 
-> I can't break my box with tests since it's in active use...
-> For now I'm running a 2.6.8.1 based kernel on the box...
+Software paradise.
+http://tog.h6lw2ghaerzow0z.wadlikeei.com
 
-Last known good one (that Andy tested) was 2.6.10.  His was the only
-report I've seen, and I haven't found any more details on it.
+
+
+
+A sense of curiosity is nature's original school of education.   
+How beautiful maleness is, if it finds its right expression.   
+
+
