@@ -1,242 +1,57 @@
-From: "Dailey, Nate" <Nate.Dailey@stratus.com>
-Subject: [PATCH] drivers/scsi/st.c: add reference count and related fixes
-Date: Tue, 5 Jul 2005 13:10:34 -0400
-Message-ID: <92952AEF1F064042B6EF2522E0EEF437348354@EXNA.corp.stratus.com>
+From: "Mail USFLTD" <mail@usfltd.com>
+Subject: Re: REGRESSION in 2.6.13-rc1: Massive slowdown with Adaptec SCSI
+Date: Tue,  5 Jul 2005 18:02:14 -0500
+Message-ID: <200507051802.AA13763432@usfltd.com>
+Reply-To: <mail@usfltd.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C58184.748BD1BF"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub2.stratus.com ([134.111.1.16]:37038 "EHLO
-	mailhub2.stratus.com") by vger.kernel.org with ESMTP
-	id S261901AbVGERKm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Jul 2005 13:10:42 -0400
-Content-class: urn:content-classes:message
+Received: from dude3.usprocom.net ([69.222.0.8]:1798 "EHLO usfltd.com")
+	by vger.kernel.org with ESMTP id S261990AbVGEXBz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jul 2005 19:01:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai.Makisara@kolumbus.fi
-Cc: linux-scsi@vger.kernel.org
+To: matthew@wil.cx
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+kernel 2.6.13-rc1-git7 after applaying patch transfer back to 72MB/s on aha19160 with 15k rpm seagate with reiserfs3 but possible deadlock in heavy IO - rsync ~50000-files from /mnt/seagate15k/a to /mnt/seagate15k/b ended in middle with deadlock of rsync (3 instances), pdflush, and gam_server in uninteruptible state -- system cannot kill this deadlocked uninterruptibles
+any clue ???
 
-------_=_NextPart_001_01C58184.748BD1BF
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-These patches (against a 2.6.9 kernel, Redhat AS 4) for st add a
-reference count, and fix a few bugs I hit during testing (administrative
-removes and cable pulls with IO in progress).
-
-The primary change is adding a kref to the Scsi_Tape structure, to avoid
-an oops when the tape drive is removed while open. This includes
-scsi_tape_get/put routines and scsi_tape_release, and changes to st_open
-and st_release. This is all based on the SCSI disk & CD reference
-counting code.
+xboom
 
 
-I hit some bugs while I was testing this code. Fixes for these are also
-included in the patch:
 
-- When an IO gets a "dead device" error, we need to check the rq_status
-to determine if the request actually completed (scsi_wait_req does
-this)... else there's no notification to the caller that the IO failed.
-There are two changes for this, one in st_do_scsi and one in
-write_behind_check.
- =20
-- When an async IO gets a "dead device" error, we're notified of the
-completion by the block layer (end_that_request_last), so last_SRpnt
-doesn't get set (as it would if the complete were done by
-st_sleep_done). So I changed how last_SRpnt is used to get around
-this... it's now set only for async IOs, just before the IO is issued
-(and nulled out when the IO comes back).=20
-
-
-I also hit the following problem when I briefly tested on a SUSE kernel
-(it wasn't in the Redhat kernel I did most of my testing with, but it is
-in 2.6.12):
-
-- In these kernels, we no longer get a "complete" from
-end_that_request_last when a device goes away and an IO is rejected. I
-therefore added to st_do_scsi (but it's commented in this patch) setting
-SRpnt->sr_request->end_io to blk_end_sync_rq, which will do the
-complete. Since blk_end_sync_rq nulls out rq->waiting, I changed
-st_do_scsi to wait on a local variable, and added a check for null in
-st_sleep_done (just in case).
-
-
-And just one more thing:
-
-- I noticed that in 2.6.12, there is what appears to be a bogus use of
-last_SRpnt in st_chk_result (this doesn't exist in the kernels I tested
-with). This would cause problems if these patches are ported to 2.6.12,
-because of how I changed the use of last_SRpnt. Either my code has to
-change, or st_chk_result shouldn't use last_SRpnt.
-
-
-Anyway... as I said, these are against a 2.6.9 kernel (Redhat AS 4). If
-you're interested, I could port these changes to 2.6.12... can't promise
-I'll be able to test with that kernel, though.
-
-Nate Dailey
-Stratus Technologies
-
-
-Signed-off-by: Nate Dailey <nate.dailey@stratus.com>
-
-------_=_NextPart_001_01C58184.748BD1BF
-Content-Type: application/octet-stream;
-	name="st.c.patch"
-Content-Transfer-Encoding: base64
-Content-Description: st.c.patch
-Content-Disposition: attachment;
-	filename="st.c.patch"
-
-LS0tIHN0LmMub3JpZwkyMDA1LTA2LTIyIDE1OjA4OjMzLjE0Mjg5NTAxNiAtMDQwMAorKysgc3Qu
-YwkyMDA1LTA2LTIyIDE2OjAxOjAzLjU2MzA5OTgzOCAtMDQwMApAQCAtMjEyLDYgKzIxMiwxMiBA
-QCBzdGF0aWMgaW50IHN3aXRjaF9wYXJ0aXRpb24oU2NzaV9UYXBlICopCiAKIHN0YXRpYyBpbnQg
-c3RfaW50X2lvY3RsKFNjc2lfVGFwZSAqLCB1bnNpZ25lZCBpbnQsIHVuc2lnbmVkIGxvbmcpOwog
-CitzdGF0aWMgdm9pZCBzY3NpX3RhcGVfcmVsZWFzZShzdHJ1Y3Qga3JlZiAqa3JlZik7CisKKyNk
-ZWZpbmUgdG9fc2NzaV90YXBlKG9iaikgY29udGFpbmVyX29mKG9iaixTY3NpX1RhcGUsa3JlZikK
-Kworc3RhdGljIERFQ0xBUkVfTVVURVgoc3RfcmVmX3NlbSk7CisKIAwKICNpbmNsdWRlICJvc3N0
-X2RldGVjdC5oIgogI2lmbmRlZiBTSUdTX0ZST01fT1NTVApAQCAtMjIzLDYgKzIyOSw0NiBAQCBz
-dGF0aWMgaW50IHN0X2ludF9pb2N0bChTY3NpX1RhcGUgKiwgdW5zCiAJeyJPblN0cmVhbSIsICJG
-Vy0iLCAiIiwgIm9zc3QifQogI2VuZGlmCiAKK3N0YXRpYyBTY3NpX1RhcGUgKnNjc2lfdGFwZV9n
-ZXQoaW50IGRldikKK3sKKwlTY3NpX1RhcGUgKlNUcCA9IE5VTEw7CisKKwlkb3duKCZzdF9yZWZf
-c2VtKTsKKwl3cml0ZV9sb2NrKCZzdF9kZXZfYXJyX2xvY2spOworCisJaWYgKGRldiA8IHN0X2Rl
-dl9tYXggJiYgc2NzaV90YXBlcyAhPSBOVUxMKQorCQlTVHAgPSBzY3NpX3RhcGVzW2Rldl07CisJ
-aWYgKCFTVHApIGdvdG8gb3V0OworCisJa3JlZl9nZXQoJlNUcC0+a3JlZik7CisKKwlpZiAoIVNU
-cC0+ZGV2aWNlKQorCQlnb3RvIG91dF9wdXQ7CisKKwlpZiAoc2NzaV9kZXZpY2VfZ2V0KFNUcC0+
-ZGV2aWNlKSkKKwkJZ290byBvdXRfcHV0OworCisJZ290byBvdXQ7CisKK291dF9wdXQ6CisJa3Jl
-Zl9wdXQoJlNUcC0+a3JlZiwgc2NzaV90YXBlX3JlbGVhc2UpOworCVNUcCA9IE5VTEw7CitvdXQ6
-CisJd3JpdGVfdW5sb2NrKCZzdF9kZXZfYXJyX2xvY2spOworCXVwKCZzdF9yZWZfc2VtKTsKKwly
-ZXR1cm4gU1RwOworfQorCitzdGF0aWMgdm9pZCBzY3NpX3RhcGVfcHV0KFNjc2lfVGFwZSAqU1Rw
-KQoreworCXN0cnVjdCBzY3NpX2RldmljZSAqc2RldiA9IFNUcC0+ZGV2aWNlOworCisJZG93bigm
-c3RfcmVmX3NlbSk7CisJa3JlZl9wdXQoJlNUcC0+a3JlZiwgc2NzaV90YXBlX3JlbGVhc2UpOwor
-CXNjc2lfZGV2aWNlX3B1dChzZGV2KTsKKwl1cCgmc3RfcmVmX3NlbSk7Cit9CisKIHN0cnVjdCBz
-dF9yZWplY3RfZGF0YSB7CiAJY2hhciAqdmVuZG9yOwogCWNoYXIgKm1vZGVsOwpAQCAtMzc2LDEw
-ICs0MjIsMTAgQEAgc3RhdGljIHZvaWQgc3Rfc2xlZXBfZG9uZShTY3NpX0NtbmQgKiBTQwogCX0g
-ZWxzZQogCQkoU1RwLT5idWZmZXIpLT5taWRsZXZlbF9yZXN1bHQgPSBTQ3BudC0+cmVzdWx0Owog
-CVNDcG50LT5yZXF1ZXN0LT5ycV9zdGF0dXMgPSBSUV9TQ1NJX0RPTkU7Ci0JKFNUcC0+YnVmZmVy
-KS0+bGFzdF9TUnBudCA9IFNDcG50LT5zY19yZXF1ZXN0OwogCURFQiggU1RwLT53cml0ZV9wZW5k
-aW5nID0gMDsgKQogCi0JY29tcGxldGUoU0NwbnQtPnJlcXVlc3QtPndhaXRpbmcpOworCWlmIChT
-Q3BudC0+cmVxdWVzdC0+d2FpdGluZykKKwkJY29tcGxldGUoU0NwbnQtPnJlcXVlc3QtPndhaXRp
-bmcpOwogfQogCiAvKiBEbyB0aGUgc2NzaSBjb21tYW5kLiBXYWl0cyB1bnRpbCBjb21tYW5kIHBl
-cmZvcm1lZCBpZiBkb193YWl0IGlzIHRydWUuCkBAIC0zODksOCArNDM1LDE3IEBAIHN0YXRpYyBT
-Y3NpX1JlcXVlc3QgKgogIHN0X2RvX3Njc2koU2NzaV9SZXF1ZXN0ICogU1JwbnQsIFNjc2lfVGFw
-ZSAqIFNUcCwgdW5zaWduZWQgY2hhciAqY21kLCBpbnQgYnl0ZXMsCiAJICAgIGludCBkaXJlY3Rp
-b24sIGludCB0aW1lb3V0LCBpbnQgcmV0cmllcywgaW50IGRvX3dhaXQpCiB7CisJc3RydWN0IGNv
-bXBsZXRpb24gKndhaXRpbmc7CiAJdW5zaWduZWQgY2hhciAqYnA7CiAKKwkvKiBpZiBhc3luYywg
-bWFrZSBzdXJlIHRoZXJlJ3Mgbm8gY29tbWFuZCBvdXRzdGFuZGluZyAqLworCWlmICghZG9fd2Fp
-dCAmJiAoKFNUcC0+YnVmZmVyKS0+bGFzdF9TUnBudCkpIHsKKwkJcHJpbnRrKEtFUk5fRVJSICIl
-czogQXN5bmMgY29tbWFuZCBhbHJlYWR5IGFjdGl2ZS5cbiIsCisJCSAgICAgICB0YXBlX25hbWUo
-U1RwKSk7CisJCShTVHAtPmJ1ZmZlciktPnN5c2NhbGxfcmVzdWx0ID0gKC1FQlVTWSk7CisJCXJl
-dHVybiBOVUxMOworCX0KKwogCWlmIChTUnBudCA9PSBOVUxMKSB7CiAJCVNScG50ID0gc2NzaV9h
-bGxvY2F0ZV9yZXF1ZXN0KFNUcC0+ZGV2aWNlLCBHRlBfQVRPTUlDKTsKIAkJaWYgKFNScG50ID09
-IE5VTEwpIHsKQEAgLTQwNCw3ICs0NTksMTEgQEAgc3RhdGljIFNjc2lfUmVxdWVzdCAqCiAJCX0K
-IAl9CiAKLQlpbml0X2NvbXBsZXRpb24oJlNUcC0+d2FpdCk7CisJaWYgKCFkb193YWl0KQorCQko
-U1RwLT5idWZmZXIpLT5sYXN0X1NScG50ID0gU1JwbnQ7CisKKwl3YWl0aW5nID0gJlNUcC0+d2Fp
-dDsKKwlpbml0X2NvbXBsZXRpb24od2FpdGluZyk7CiAJU1JwbnQtPnNyX3VzZV9zZyA9IFNUcC0+
-YnVmZmVyLT5kb19kaW8gfHwgKGJ5dGVzID4gKFNUcC0+YnVmZmVyKS0+ZnJwWzBdLmxlbmd0aCk7
-CiAJaWYgKFNScG50LT5zcl91c2Vfc2cpIHsKIAkJaWYgKCFTVHAtPmJ1ZmZlci0+ZG9fZGlvKQpA
-QCAtNDE1LDE2ICs0NzQsMTkgQEAgc3RhdGljIFNjc2lfUmVxdWVzdCAqCiAJCWJwID0gKFNUcC0+
-YnVmZmVyKS0+Yl9kYXRhOwogCVNScG50LT5zcl9kYXRhX2RpcmVjdGlvbiA9IGRpcmVjdGlvbjsK
-IAlTUnBudC0+c3JfY21kX2xlbiA9IDA7Ci0JU1JwbnQtPnNyX3JlcXVlc3QtPndhaXRpbmcgPSAm
-KFNUcC0+d2FpdCk7CisJU1JwbnQtPnNyX3JlcXVlc3QtPndhaXRpbmcgPSB3YWl0aW5nOwogCVNS
-cG50LT5zcl9yZXF1ZXN0LT5ycV9zdGF0dXMgPSBSUV9TQ1NJX0JVU1k7CiAJU1JwbnQtPnNyX3Jl
-cXVlc3QtPnJxX2Rpc2sgPSBTVHAtPmRpc2s7CisvKglTUnBudC0+c3JfcmVxdWVzdC0+ZW5kX2lv
-ID0gYmxrX2VuZF9zeW5jX3JxOyAqLwogCiAJc2NzaV9kb19yZXEoU1JwbnQsICh2b2lkICopIGNt
-ZCwgYnAsIGJ5dGVzLAogCQkgICAgc3Rfc2xlZXBfZG9uZSwgdGltZW91dCwgcmV0cmllcyk7CiAK
-IAlpZiAoZG9fd2FpdCkgewotCQl3YWl0X2Zvcl9jb21wbGV0aW9uKFNScG50LT5zcl9yZXF1ZXN0
-LT53YWl0aW5nKTsKKwkJd2FpdF9mb3JfY29tcGxldGlvbih3YWl0aW5nKTsKIAkJU1JwbnQtPnNy
-X3JlcXVlc3QtPndhaXRpbmcgPSBOVUxMOworCQlpZiAoU1JwbnQtPnNyX3JlcXVlc3QtPnJxX3N0
-YXR1cyAhPSBSUV9TQ1NJX0RPTkUpCisJCQlTUnBudC0+c3JfcmVzdWx0IHw9IChEUklWRVJfRVJS
-T1IgPDwgMjQpOwogCQkoU1RwLT5idWZmZXIpLT5zeXNjYWxsX3Jlc3VsdCA9IHN0X2Noa19yZXN1
-bHQoU1RwLCBTUnBudCk7CiAJfQogCXJldHVybiBTUnBudDsKQEAgLTQzNiw4ICs0OTgsMTEgQEAg
-c3RhdGljIHZvaWQgd3JpdGVfYmVoaW5kX2NoZWNrKFNjc2lfVGFwZQogewogCVNUX2J1ZmZlciAq
-U1RidWZmZXI7CiAJU1RfcGFydHN0YXQgKlNUcHM7CisJU2NzaV9SZXF1ZXN0ICogU1JwbnQ7CiAK
-IAlTVGJ1ZmZlciA9IFNUcC0+YnVmZmVyOworCVNScG50ID0gU1RidWZmZXItPmxhc3RfU1JwbnQ7
-CisJU1RidWZmZXItPmxhc3RfU1JwbnQgPSBOVUxMOwogCiAgICAgICAgIERFQigKIAlpZiAoU1Rw
-LT53cml0ZV9wZW5kaW5nKQpAQCAtNDQ3LDEwICs1MTIsMTEgQEAgc3RhdGljIHZvaWQgd3JpdGVf
-YmVoaW5kX2NoZWNrKFNjc2lfVGFwZQogICAgICAgICApIC8qIGVuZCBERUIgKi8KIAogCXdhaXRf
-Zm9yX2NvbXBsZXRpb24oJihTVHAtPndhaXQpKTsKLQkoU1RwLT5idWZmZXIpLT5sYXN0X1NScG50
-LT5zcl9yZXF1ZXN0LT53YWl0aW5nID0gTlVMTDsKLQotCShTVHAtPmJ1ZmZlciktPnN5c2NhbGxf
-cmVzdWx0ID0gc3RfY2hrX3Jlc3VsdChTVHAsIChTVHAtPmJ1ZmZlciktPmxhc3RfU1JwbnQpOwot
-CXNjc2lfcmVsZWFzZV9yZXF1ZXN0KChTVHAtPmJ1ZmZlciktPmxhc3RfU1JwbnQpOworCVNScG50
-LT5zcl9yZXF1ZXN0LT53YWl0aW5nID0gTlVMTDsKKwlpZiAoU1JwbnQtPnNyX3JlcXVlc3QtPnJx
-X3N0YXR1cyAhPSBSUV9TQ1NJX0RPTkUpCisJCVNScG50LT5zcl9yZXN1bHQgfD0gKERSSVZFUl9F
-UlJPUiA8PCAyNCk7CisJKFNUcC0+YnVmZmVyKS0+c3lzY2FsbF9yZXN1bHQgPSBzdF9jaGtfcmVz
-dWx0KFNUcCwgU1JwbnQpOworCXNjc2lfcmVsZWFzZV9yZXF1ZXN0KFNScG50KTsKIAogCVNUYnVm
-ZmVyLT5idWZmZXJfYnl0ZXMgLT0gU1RidWZmZXItPndyaXRpbmc7CiAJU1RwcyA9ICYoU1RwLT5w
-c1tTVHAtPnBhcnRpdGlvbl0pOwpAQCAtMTAwMiwyNSArMTA2OCwyMSBAQCBzdGF0aWMgaW50IHN0
-X29wZW4oc3RydWN0IGlub2RlICppbm9kZSwgCiAJY2hhciAqbmFtZTsKIAogCW5vbnNlZWthYmxl
-X29wZW4oaW5vZGUsIGZpbHApOworCisJaWYgKCEoU1RwID0gc2NzaV90YXBlX2dldChkZXYpKSkK
-KwkJcmV0dXJuIC1FTlhJTzsKKwogCXdyaXRlX2xvY2soJnN0X2Rldl9hcnJfbG9jayk7Ci0JaWYg
-KGRldiA+PSBzdF9kZXZfbWF4IHx8IHNjc2lfdGFwZXMgPT0gTlVMTCB8fAotCSAgICAoKFNUcCA9
-IHNjc2lfdGFwZXNbZGV2XSkgPT0gTlVMTCkpIHsKLQkJd3JpdGVfdW5sb2NrKCZzdF9kZXZfYXJy
-X2xvY2spOwotCQlyZXR1cm4gKC1FTlhJTyk7Ci0JfQogCWZpbHAtPnByaXZhdGVfZGF0YSA9IFNU
-cDsKIAluYW1lID0gdGFwZV9uYW1lKFNUcCk7CiAKIAlpZiAoU1RwLT5pbl91c2UpIHsKIAkJd3Jp
-dGVfdW5sb2NrKCZzdF9kZXZfYXJyX2xvY2spOworCQlzY3NpX3RhcGVfcHV0KFNUcCk7CiAJCURF
-QiggcHJpbnRrKFNUX0RFQl9NU0cgIiVzOiBEZXZpY2UgYWxyZWFkeSBpbiB1c2UuXG4iLCBuYW1l
-KTsgKQogCQlyZXR1cm4gKC1FQlVTWSk7CiAJfQogCi0JaWYoc2NzaV9kZXZpY2VfZ2V0KFNUcC0+
-ZGV2aWNlKSkgewotCQl3cml0ZV91bmxvY2soJnN0X2Rldl9hcnJfbG9jayk7Ci0JCXJldHVybiAo
-LUVOWElPKTsKLQl9CiAJU1RwLT5pbl91c2UgPSAxOwogCXdyaXRlX3VubG9jaygmc3RfZGV2X2Fy
-cl9sb2NrKTsKIAlTVHAtPnJld19hdF9jbG9zZSA9IFNUcC0+YXV0b3Jld19kZXYgPSAoaW1pbm9y
-KGlub2RlKSAmIDB4ODApID09IDA7CkBAIC0xMDY1LDcgKzExMjcsNyBAQCBzdGF0aWMgaW50IHN0
-X29wZW4oc3RydWN0IGlub2RlICppbm9kZSwgCiAgZXJyX291dDoKIAlub3JtYWxpemVfYnVmZmVy
-KFNUcC0+YnVmZmVyKTsKIAlTVHAtPmluX3VzZSA9IDA7Ci0Jc2NzaV9kZXZpY2VfcHV0KFNUcC0+
-ZGV2aWNlKTsKKwlzY3NpX3RhcGVfcHV0KFNUcCk7CiAJcmV0dXJuIHJldHZhbDsKIAogfQpAQCAt
-MTE5OCw3ICsxMjYwLDcgQEAgc3RhdGljIGludCBzdF9yZWxlYXNlKHN0cnVjdCBpbm9kZSAqaW5v
-ZAogCXdyaXRlX2xvY2soJnN0X2Rldl9hcnJfbG9jayk7CiAJU1RwLT5pbl91c2UgPSAwOwogCXdy
-aXRlX3VubG9jaygmc3RfZGV2X2Fycl9sb2NrKTsKLQlzY3NpX2RldmljZV9wdXQoU1RwLT5kZXZp
-Y2UpOworCXNjc2lfdGFwZV9wdXQoU1RwKTsKIAogCXJldHVybiByZXN1bHQ7CiB9CkBAIC0zNzk5
-LDYgKzM4NjEsNyBAQCBzdGF0aWMgaW50IHN0X3Byb2JlKHN0cnVjdCBkZXZpY2UgKmRldikKIAkJ
-Z290byBvdXRfcHV0X2Rpc2s7CiAJfQogCW1lbXNldCh0cG50LCAwLCBzaXplb2YoU2NzaV9UYXBl
-KSk7CisJa3JlZl9pbml0KCZ0cG50LT5rcmVmKTsKIAl0cG50LT5kaXNrID0gZGlzazsKIAlzcHJp
-bnRmKGRpc2stPmRpc2tfbmFtZSwgInN0JWQiLCBpKTsKIAlkaXNrLT5wcml2YXRlX2RhdGEgPSAm
-dHBudC0+ZHJpdmVyOwpAQCAtMzgxNCw2ICszODc3LDcgQEAgc3RhdGljIGludCBzdF9wcm9iZShz
-dHJ1Y3QgZGV2aWNlICpkZXYpCiAJCXRwbnQtPnRhcGVfdHlwZSA9IE1UX0lTU0NTSTI7CiAKIAl0
-cG50LT5idWZmZXIgPSBidWZmZXI7CisJdHBudC0+YnVmZmVyLT5sYXN0X1NScG50ID0gTlVMTDsK
-IAogCXRwbnQtPmluaXRlZCA9IDA7CiAJdHBudC0+ZGlydHkgPSAwOwpAQCAtMzk4NiwxNSArNDA1
-MCwxMCBAQCBzdGF0aWMgaW50IHN0X3JlbW92ZShzdHJ1Y3QgZGV2aWNlICpkZXYpCiAJCQkJCXRw
-bnQtPm1vZGVzW21vZGVdLmNkZXZzW2pdID0gTlVMTDsKIAkJCQl9CiAJCQl9Ci0JCQl0cG50LT5k
-ZXZpY2UgPSBOVUxMOwogCi0JCQlpZiAodHBudC0+YnVmZmVyKSB7Ci0JCQkJdHBudC0+YnVmZmVy
-LT5vcmlnX2ZycF9zZWdzID0gMDsKLQkJCQlub3JtYWxpemVfYnVmZmVyKHRwbnQtPmJ1ZmZlcik7
-Ci0JCQkJa2ZyZWUodHBudC0+YnVmZmVyKTsKLQkJCX0KLQkJCXB1dF9kaXNrKHRwbnQtPmRpc2sp
-OwotCQkJa2ZyZWUodHBudCk7CisJCQlkb3duKCZzdF9yZWZfc2VtKTsKKwkJCWtyZWZfcHV0KCZ0
-cG50LT5rcmVmLCBzY3NpX3RhcGVfcmVsZWFzZSk7CisJCQl1cCgmc3RfcmVmX3NlbSk7CiAJCQly
-ZXR1cm4gMDsKIAkJfQogCX0KQEAgLTQwMDMsNiArNDA2MiwzNCBAQCBzdGF0aWMgaW50IHN0X3Jl
-bW92ZShzdHJ1Y3QgZGV2aWNlICpkZXYpCiAJcmV0dXJuIDA7CiB9CiAKKy8qKgorICogICAgICBz
-Y3NpX3RhcGVfcmVsZWFzZSAtIENhbGxlZCB0byBmcmVlIHRoZSBTY3NpX1RhcGUgc3RydWN0dXJl
-CisgKiAgICAgIEBrcmVmOiBwb2ludGVyIHRvIGVtYmVkZGVkIGtyZWYKKyAqCisgKiAgICAgIHN0
-X3JlZl9zZW0gbXVzdCBiZSBoZWxkIGVudGVyaW5nIHRoaXMgcm91dGluZS4gIEJlY2F1c2UgaXQg
-aXMKKyAqICAgICAgY2FsbGVkIG9uIGxhc3QgcHV0LCB5b3Ugc2hvdWxkIGFsd2F5cyB1c2UgdGhl
-IHNjc2lfdGFwZV9nZXQoKQorICogICAgICBzY3NpX3RhcGVfcHV0KCkgaGVscGVycyB3aGljaCBt
-YW5pcHVsYXRlIHRoZSBzZW1hcGhvcmUgZGlyZWN0bHkKKyAqICAgICAgYW5kIG5ldmVyIGRvIGEg
-ZGlyZWN0IGtyZWZfcHV0KCkuCisgKiovCitzdGF0aWMgdm9pZCBzY3NpX3RhcGVfcmVsZWFzZShz
-dHJ1Y3Qga3JlZiAqa3JlZikKK3sKKwlTY3NpX1RhcGUgKnRwbnQgPSB0b19zY3NpX3RhcGUoa3Jl
-Zik7CisJc3RydWN0IGdlbmRpc2sgKmRpc2sgPSB0cG50LT5kaXNrOworCisJdHBudC0+ZGV2aWNl
-ID0gTlVMTDsKKworCWlmICh0cG50LT5idWZmZXIpIHsKKwkJdHBudC0+YnVmZmVyLT5vcmlnX2Zy
-cF9zZWdzID0gMDsKKwkJbm9ybWFsaXplX2J1ZmZlcih0cG50LT5idWZmZXIpOworCQlrZnJlZSh0
-cG50LT5idWZmZXIpOworCX0KKworCWRpc2stPnByaXZhdGVfZGF0YSA9IE5VTEw7CisJcHV0X2Rp
-c2soZGlzayk7CisJa2ZyZWUodHBudCk7CisJcmV0dXJuOworfQorCiBzdGF0aWMgdm9pZCBzdF9p
-bnRyKHN0cnVjdCBzY3NpX2NtbmQgKlNDcG50KQogewogCXNjc2lfaW9fY29tcGxldGlvbihTQ3Bu
-dCwgKFNDcG50LT5yZXN1bHQgPyAwOiBTQ3BudC0+YnVmZmxlbiksIDEpOwo=
-
-------_=_NextPart_001_01C58184.748BD1BF
-Content-Type: application/octet-stream;
-	name="st.h.patch"
-Content-Transfer-Encoding: base64
-Content-Description: st.h.patch
-Content-Disposition: attachment;
-	filename="st.h.patch"
-
-LS0tIHN0Lmgub3JpZwkyMDA1LTA2LTIyIDE1OjA4OjM2LjU5NjQ1NDIyOSAtMDQwMAorKysgc3Qu
-aAkyMDA1LTA2LTIyIDE1OjAzOjI1LjA3ODE3MDI5MyAtMDQwMApAQCAtNiw2ICs2LDcgQEAKICNp
-bmNsdWRlICJzY3NpLmgiCiAjZW5kaWYKICNpbmNsdWRlIDxsaW51eC9jb21wbGV0aW9uLmg+Cisj
-aW5jbHVkZSA8bGludXgva3JlZi5oPgogCiAvKiBUaGUgdGFwZSBidWZmZXIgZGVzY3JpcHRvci4g
-Ki8KIHR5cGVkZWYgc3RydWN0IHsKQEAgLTE0Niw2ICsxNDcsNyBAQCB0eXBlZGVmIHN0cnVjdCB7
-CiAJdW5zaWduZWQgY2hhciBsYXN0X3NlbnNlWzE2XTsKICNlbmRpZgogCXN0cnVjdCBnZW5kaXNr
-ICpkaXNrOworCXN0cnVjdCBrcmVmICAgICBrcmVmOwogfSBTY3NpX1RhcGU7CiAKIC8qIEJpdCBt
-YXNrcyBmb3IgdXNlX3BmICovCg==
-
-------_=_NextPart_001_01C58184.748BD1BF--
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -2633,6 +2633,11 @@ static void ahc_linux_set_dt(struct scsi
+ 	ahc_unlock(ahc, &flags);
+ }
+ 
++#if 0
++/* FIXME: This code claims to support IU and QAS.  However, the actual
++ * sequencer code and aic7xxx_core have no support for these parameters and
++ * will get into a bad state if they're negotiated.  Do not enable this
++ * unless you know what you're doing */
+ static void ahc_linux_set_qas(struct scsi_target *starget, int qas)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+@@ -2688,6 +2693,7 @@ static void ahc_linux_set_iu(struct scsi
+ 			 ppr_options, AHC_TRANS_GOAL, FALSE);
+ 	ahc_unlock(ahc, &flags);
+ }
++#endif
+ 
+ static struct spi_function_template ahc_linux_transport_functions = {
+ 	.set_offset	= ahc_linux_set_offset,
+@@ -2698,10 +2704,12 @@ static struct spi_function_template ahc_
+ 	.show_width	= 1,
+ 	.set_dt		= ahc_linux_set_dt,
+ 	.show_dt	= 1,
++#if 0
+ 	.set_iu		= ahc_linux_set_iu,
+ 	.show_iu	= 1,
+ 	.set_qas	= ahc_linux_set_qas,
+ 	.show_qas	= 1,
++#endif
+ };
