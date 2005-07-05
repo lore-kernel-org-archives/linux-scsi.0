@@ -1,25 +1,28 @@
-From: "Mail USFLTD" <mail@usfltd.com>
+From: "art" <art@usfltd.com>
 Subject: Re: REGRESSION in 2.6.13-rc1: Massive slowdown with Adaptec SCSI
-Date: Tue,  5 Jul 2005 18:02:14 -0500
-Message-ID: <200507051802.AA13763432@usfltd.com>
-Reply-To: <mail@usfltd.com>
+Date: Tue,  5 Jul 2005 18:12:14 -0500
+Message-ID: <200507051812.AA590604@usfltd.com>
+Reply-To: <art@usfltd.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dude3.usprocom.net ([69.222.0.8]:1798 "EHLO usfltd.com")
-	by vger.kernel.org with ESMTP id S261990AbVGEXBz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jul 2005 19:01:55 -0400
+Received: from dude3.usprocom.net ([69.222.0.8]:15627 "EHLO usfltd.com")
+	by vger.kernel.org with ESMTP id S261997AbVGEXLz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jul 2005 19:11:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: matthew@wil.cx
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
 kernel 2.6.13-rc1-git7 after applaying patch transfer back to 72MB/s on aha19160 with 15k rpm seagate with reiserfs3 but possible deadlock in heavy IO - rsync ~50000-files from /mnt/seagate15k/a to /mnt/seagate15k/b ended in middle with deadlock of rsync (3 instances), pdflush, and gam_server in uninteruptible state -- system cannot kill this deadlocked uninterruptibles
 any clue ???
 
+thanx
+
 xboom
 
 
+patch-----
 
 diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
 --- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
@@ -55,3 +58,4 @@ diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_o
  	.show_qas	= 1,
 +#endif
  };
+
