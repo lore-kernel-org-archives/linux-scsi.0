@@ -1,38 +1,42 @@
-From: Andrea Carpani <andrea.carpani@criticalpath.net>
-Subject: Latest aic79xx drivers
-Date: Tue, 05 Jul 2005 17:11:43 +0200
-Message-ID: <1120576303.9595.34.camel@cronos.criticalpath.it>
-Reply-To: andrea.carpani@criticalpath.net
+From: Chris Wright <chrisw@osdl.org>
+Subject: Re: WARNING : kernel 2.6.11.7 (others) kills megaraid 4e/Si dead
+Date: Tue, 5 Jul 2005 08:58:09 -0700
+Message-ID: <20050705155808.GI9153@shell0.pdx.osdl.net>
+References: <20050503151532.GA1316@thumper2> <20050503190005.GS23013@shell0.pdx.osdl.net> <42CA9E93.1050802@mandriva.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from plutone.criticalpath.it ([192.92.105.11]:25279 "EHLO
-	mail.criticalpath.it") by vger.kernel.org with ESMTP
-	id S261863AbVGEPLs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Jul 2005 11:11:48 -0400
-Received: from cronos.criticalpath.it (192.92.105.117) by mail.criticalpath.it (7.2.056.2)
-        id 42A028690000732B for linux-scsi@vger.kernel.org; Tue, 5 Jul 2005 17:11:43 +0200
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261909AbVGEQPU@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <42CA9E93.1050802@mandriva.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Thomas Backlund <tmb@mandriva.org>
+Cc: Chris Wright <chrisw@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Andy <genanr@emsphone.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi everybody.
+* Thomas Backlund (tmb@mandriva.org) wrote:
+> Chris Wright wrote:
+> >* Andy (genanr@emsphone.com) wrote:
+> >
+> >>cross posted due to the severity of this issue.
+> >>
+> >>I have killed two Dell 1850 (x86_64) with megaraid 4e/SI servers using
+> >>kernel 2.6.11.7.  When the system boots, it looks like it does not see the
+> >>megaraid controller (because it never prints anything about it) and hangs
+> >>when it tries to mount root.  When rebooted, the system says no firmware
+> >>present for embedded raid controller.  I then try to flash it, the flash
+> >>program says the firmware is corrupt and flashes the controller.  However,
+> >>upon reboot I still get the no firmware present, thus the machine can no
+> >>longer boot off the raid.
+> >
+> >
+> >Not good.  There were no megaraid changes in the -stable series.  What's
+> >the last kernel.org kernel that worked for you?
+> 
+> Any news on this matter?
+> I hvr a PE1850 waiting for kernel upgrade, but I'm afraid to do so now...
+> 
+> I can't break my box with tests since it's in active use...
+> For now I'm running a 2.6.8.1 based kernel on the box...
 
-I think I need some help with aic79xx drivers, can you help?
-
-Last year I tried aic79xx ver 1.3.11 that came with linux 2.6.8.1, but
-it randomly crashed on my Tyan box.
-I since used adaptec's driver version 2.0.12 and all seems to go well.
-I now have to update linux kernel (2.6.12.2) and aic79xx still sits at
-1.3.11 while adaptec has a 2.0.14 patch.
-
-The problem is that this patch doesn't seem to compile as something must
-have changed in the includes of the latest kernels (SCSI_DATA_READ'
-undeclared (first use in this function)).
-
-Any ideas?
-
--- 
-Andrea Carpani <andrea.carpani@criticalpath.net>
-
+Last known good one (that Andy tested) was 2.6.10.  His was the only
+report I've seen, and I haven't found any more details on it.
