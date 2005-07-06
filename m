@@ -1,1056 +1,420 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 4/17]  qla2xxx: Add ISP24xx diagnostic routines.
-Date: Wed,  6 Jul 2005 10:30:36 -0700 (PDT)
-Message-ID: <20050706173036.10568.99168.sendpatchset@plap.qlogic.com>
+Subject: [PATCH 5/17]  qla2xxx: Generalize SNS generic-services routines.
+Date: Wed,  6 Jul 2005 10:30:47 -0700 (PDT)
+Message-ID: <20050706173047.10568.3270.sendpatchset@plap.qlogic.com>
 References: <20050706172955.10568.87971.sendpatchset@plap.qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:40528 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S261790AbVGFRai (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2005 13:30:38 -0400
+Received: from pat.qlogic.com ([198.70.193.2]:4433 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S261792AbVGFRas (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2005 13:30:48 -0400
 In-Reply-To: <20050706172955.10568.87971.sendpatchset@plap.qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Add ISP24xx diagnostic routines.
+Generalize SNS generic-services routines.
 
-Add function and structure definitions for the ISP24xx
-diagnostic firmware dump routines.
+Consolidate completion-status checking while adding support
+for the ISP24xx.
 
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 ---
 
- drivers/scsi/qla2xxx/qla_dbg.c |  949 ++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_dbg.h |   32 +
- drivers/scsi/qla2xxx/qla_gbl.h |    3 
- 3 files changed, 983 insertions(+), 1 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h |    3 -
+ drivers/scsi/qla2xxx/qla_gbl.h |    4 -
+ drivers/scsi/qla2xxx/qla_gs.c  |  181 +++++++++++++++++++++++++---------------
+ drivers/scsi/qla2xxx/qla_mbx.c |    6 +
+ 4 files changed, 121 insertions(+), 73 deletions(-)
 
-0bd26ce5768df74af2a01f14d40bfc3767d3508c
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -975,7 +975,939 @@ qla_uprintf(char **uiter, char *fmt, ...
- 	return (len);
- }
+da11a5f4bce50e1db314b57ba5871e6efa538f33
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2032,8 +2032,7 @@ struct isp_operations {
  
--//FIXME
-+
-+void
-+qla24xx_fw_dump(scsi_qla_host_t *ha, int hardware_locked)
-+{
-+	int		rval;
-+	uint32_t	cnt, timer;
-+	uint32_t	risc_address;
-+	uint16_t	mb[4];
-+
-+	uint32_t	stat;
-+	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
-+	uint32_t __iomem *dmp_reg;
-+	uint32_t	*iter_reg;
-+	uint16_t __iomem *mbx_reg;
-+	unsigned long	flags;
-+	struct qla24xx_fw_dump *fw;
-+	uint32_t	ext_mem_cnt;
-+
-+	risc_address = ext_mem_cnt = 0;
-+	memset(mb, 0, sizeof(mb));
-+	flags = 0;
-+
-+	if (!hardware_locked)
-+		spin_lock_irqsave(&ha->hardware_lock, flags);
-+
-+	if (!ha->fw_dump24) {
-+		qla_printk(KERN_WARNING, ha,
-+		    "No buffer available for dump!!!\n");
-+		goto qla24xx_fw_dump_failed;
-+	}
-+
-+	if (ha->fw_dumped) {
-+		qla_printk(KERN_WARNING, ha,
-+		    "Firmware has been previously dumped (%p) -- ignoring "
-+		    "request...\n", ha->fw_dump24);
-+		goto qla24xx_fw_dump_failed;
-+	}
-+	fw = (struct qla24xx_fw_dump *) ha->fw_dump24;
-+
-+	rval = QLA_SUCCESS;
-+	fw->hccr = RD_REG_DWORD(&reg->hccr);
-+
-+	/* Pause RISC. */
-+	if ((fw->hccr & HCCRX_RISC_PAUSE) == 0) {
-+		WRT_REG_DWORD(&reg->hccr, HCCRX_SET_RISC_RESET |
-+		    HCCRX_CLR_HOST_INT);
-+		RD_REG_DWORD(&reg->hccr);		/* PCI Posting. */
-+		WRT_REG_DWORD(&reg->hccr, HCCRX_SET_RISC_PAUSE);
-+		for (cnt = 30000;
-+		    (RD_REG_DWORD(&reg->hccr) & HCCRX_RISC_PAUSE) == 0 &&
-+		    rval == QLA_SUCCESS; cnt--) {
-+			if (cnt)
-+				udelay(100);
-+			else
-+				rval = QLA_FUNCTION_TIMEOUT;
-+		}
-+	}
-+
-+	/* Disable interrupts. */
-+	WRT_REG_DWORD(&reg->ictrl, 0);
-+	RD_REG_DWORD(&reg->ictrl);
-+
-+	if (rval == QLA_SUCCESS) {
-+		/* Host interface registers. */
-+		dmp_reg = (uint32_t __iomem *)(reg + 0);
-+		for (cnt = 0; cnt < sizeof(fw->host_reg) / 4; cnt++)
-+			fw->host_reg[cnt] = RD_REG_DWORD(dmp_reg++);
-+
-+		/* Mailbox registers. */
-+		mbx_reg = (uint16_t __iomem *)((uint8_t __iomem *)reg + 0x80);
-+		for (cnt = 0; cnt < sizeof(fw->mailbox_reg) / 2; cnt++)
-+			fw->mailbox_reg[cnt] = RD_REG_WORD(mbx_reg++);
-+
-+		/* Transfer sequence registers. */
-+		iter_reg = fw->xseq_gp_reg;
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xBF00);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xBF10);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xBF20);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xBF30);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xBF40);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xBF50);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xBF60);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xBF70);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xBFE0);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < sizeof(fw->xseq_0_reg) / 4; cnt++)
-+			fw->xseq_0_reg[cnt] = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xBFF0);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < sizeof(fw->xseq_1_reg) / 4; cnt++)
-+			fw->xseq_1_reg[cnt] = RD_REG_DWORD(dmp_reg++);
-+
-+		/* Receive sequence registers. */
-+		iter_reg = fw->rseq_gp_reg;
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xFF00);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xFF10);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xFF20);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xFF30);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xFF40);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xFF50);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xFF60);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xFF70);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xFFD0);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < sizeof(fw->rseq_0_reg) / 4; cnt++)
-+			fw->rseq_0_reg[cnt] = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xFFE0);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < sizeof(fw->rseq_1_reg) / 4; cnt++)
-+			fw->rseq_1_reg[cnt] = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0xFFF0);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < sizeof(fw->rseq_2_reg) / 4; cnt++)
-+			fw->rseq_2_reg[cnt] = RD_REG_DWORD(dmp_reg++);
-+
-+		/* Command DMA registers. */
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7100);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < sizeof(fw->cmd_dma_reg) / 4; cnt++)
-+			fw->cmd_dma_reg[cnt] = RD_REG_DWORD(dmp_reg++);
-+
-+		/* Queues. */
-+		iter_reg = fw->req0_dma_reg;
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7200);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 8; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xE4);
-+		for (cnt = 0; cnt < 7; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		iter_reg = fw->resp0_dma_reg;
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7300);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 8; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xE4);
-+		for (cnt = 0; cnt < 7; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		iter_reg = fw->req1_dma_reg;
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7400);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 8; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xE4);
-+		for (cnt = 0; cnt < 7; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		/* Transmit DMA registers. */
-+		iter_reg = fw->xmt0_dma_reg;
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7600);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7610);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		iter_reg = fw->xmt1_dma_reg;
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7620);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7630);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		iter_reg = fw->xmt2_dma_reg;
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7640);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7650);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		iter_reg = fw->xmt3_dma_reg;
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7660);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7670);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		iter_reg = fw->xmt4_dma_reg;
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7680);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7690);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x76A0);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < sizeof(fw->xmt_data_dma_reg) / 4; cnt++)
-+			fw->xmt_data_dma_reg[cnt] = RD_REG_DWORD(dmp_reg++);
-+
-+		/* Receive DMA registers. */
-+		iter_reg = fw->rcvt0_data_dma_reg;
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7700);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7710);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		iter_reg = fw->rcvt1_data_dma_reg;
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7720);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x7730);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		/* RISC registers. */
-+		iter_reg = fw->risc_gp_reg;
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x0F00);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x0F10);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x0F20);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x0F30);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x0F40);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x0F50);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x0F60);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x0F70);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x0F70);
-+		RD_REG_DWORD(&reg->iobase_addr);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xF0);
-+		WRT_REG_DWORD(dmp_reg, 0xB0000000);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xFC);
-+		fw->shadow_reg[0] = RD_REG_DWORD(dmp_reg);
-+
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xF0);
-+		WRT_REG_DWORD(dmp_reg, 0xB0100000);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xFC);
-+		fw->shadow_reg[1] = RD_REG_DWORD(dmp_reg);
-+
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xF0);
-+		WRT_REG_DWORD(dmp_reg, 0xB0200000);
-+		dmp_reg = (uint32_t *)((uint8_t *)reg + 0xFC);
-+		fw->shadow_reg[2] = RD_REG_DWORD(dmp_reg);
-+
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xF0);
-+		WRT_REG_DWORD(dmp_reg, 0xB0300000);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xFC);
-+		fw->shadow_reg[3] = RD_REG_DWORD(dmp_reg);
-+
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xF0);
-+		WRT_REG_DWORD(dmp_reg, 0xB0400000);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xFC);
-+		fw->shadow_reg[4] = RD_REG_DWORD(dmp_reg);
-+
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xF0);
-+		WRT_REG_DWORD(dmp_reg, 0xB0500000);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xFC);
-+		fw->shadow_reg[5] = RD_REG_DWORD(dmp_reg);
-+
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xF0);
-+		WRT_REG_DWORD(dmp_reg, 0xB0600000);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xFC);
-+		fw->shadow_reg[6] = RD_REG_DWORD(dmp_reg);
-+
-+		/* Local memory controller registers. */
-+		iter_reg = fw->lmc_reg;
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x3000);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x3010);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x3020);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x3030);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x3040);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x3050);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x3060);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		/* Fibre Protocol Module registers. */
-+		iter_reg = fw->fpm_hdw_reg;
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x4000);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x4010);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x4020);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x4030);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x4040);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x4050);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x4060);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x4070);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x4080);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x4090);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x40A0);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x40B0);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		/* Frame Buffer registers. */
-+		iter_reg = fw->fb_hdw_reg;
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x6000);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x6010);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x6020);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x6030);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x6040);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x6100);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x6130);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x6150);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x6170);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x6190);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		WRT_REG_DWORD(&reg->iobase_addr, 0x61B0);
-+		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xC0);
-+		for (cnt = 0; cnt < 16; cnt++)
-+			*iter_reg++ = RD_REG_DWORD(dmp_reg++);
-+
-+		/* Reset RISC. */
-+		WRT_REG_DWORD(&reg->ctrl_status,
-+		    CSRX_DMA_SHUTDOWN|MWB_4096_BYTES);
-+		for (cnt = 0; cnt < 30000; cnt++) {
-+			if ((RD_REG_DWORD(&reg->ctrl_status) &
-+			    CSRX_DMA_ACTIVE) == 0)
-+				break;
-+
-+			udelay(10);
-+		}
-+
-+		WRT_REG_DWORD(&reg->ctrl_status,
-+		    CSRX_ISP_SOFT_RESET|CSRX_DMA_SHUTDOWN|MWB_4096_BYTES);
-+		udelay(20);
-+		for (cnt = 0; cnt < 30000; cnt++) {
-+			if ((RD_REG_DWORD(&reg->ctrl_status) &
-+			    CSRX_ISP_SOFT_RESET) == 0)
-+				break;
-+
-+			udelay(10);
-+		}
-+		WRT_REG_DWORD(&reg->hccr, HCCRX_CLR_RISC_RESET);
-+		RD_REG_DWORD(&reg->hccr);             /* PCI Posting. */
-+	}
-+
-+	for (cnt = 30000; RD_REG_WORD(&reg->mailbox0) != 0 &&
-+	    rval == QLA_SUCCESS; cnt--) {
-+		if (cnt)
-+			udelay(100);
-+		else
-+			rval = QLA_FUNCTION_TIMEOUT;
-+	}
-+
-+	/* Memory. */
-+	if (rval == QLA_SUCCESS) {
-+		/* Code RAM. */
-+		risc_address = 0x20000;
-+		WRT_REG_WORD(&reg->mailbox0, MBC_READ_RAM_EXTENDED);
-+		clear_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
-+	}
-+	for (cnt = 0; cnt < sizeof(fw->code_ram) / 4 && rval == QLA_SUCCESS;
-+	    cnt++, risc_address++) {
-+		WRT_REG_WORD(&reg->mailbox1, LSW(risc_address));
-+		WRT_REG_WORD(&reg->mailbox8, MSW(risc_address));
-+		RD_REG_WORD(&reg->mailbox8);
-+		WRT_REG_DWORD(&reg->hccr, HCCRX_SET_HOST_INT);
-+
-+		for (timer = 6000000; timer; timer--) {
-+			/* Check for pending interrupts. */
-+			stat = RD_REG_DWORD(&reg->host_status);
-+			if (stat & HSRX_RISC_INT) {
-+				stat &= 0xff;
-+
-+				if (stat == 0x1 || stat == 0x2 ||
-+				    stat == 0x10 || stat == 0x11) {
-+					set_bit(MBX_INTERRUPT,
-+					    &ha->mbx_cmd_flags);
-+
-+					mb[0] = RD_REG_WORD(&reg->mailbox0);
-+					mb[2] = RD_REG_WORD(&reg->mailbox2);
-+					mb[3] = RD_REG_WORD(&reg->mailbox3);
-+
-+					WRT_REG_DWORD(&reg->hccr,
-+					    HCCRX_CLR_RISC_INT);
-+					RD_REG_DWORD(&reg->hccr);
-+					break;
-+				}
-+
-+				/* Clear this intr; it wasn't a mailbox intr */
-+				WRT_REG_DWORD(&reg->hccr, HCCRX_CLR_RISC_INT);
-+				RD_REG_DWORD(&reg->hccr);
-+			}
-+			udelay(5);
-+		}
-+
-+		if (test_and_clear_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags)) {
-+			rval = mb[0] & MBS_MASK;
-+			fw->code_ram[cnt] = (mb[3] << 16) | mb[2];
-+		} else {
-+			rval = QLA_FUNCTION_FAILED;
-+		}
-+	}
-+
-+	if (rval == QLA_SUCCESS) {
-+		/* External Memory. */
-+		risc_address = 0x100000;
-+		ext_mem_cnt = ha->fw_memory_size - 0x100000 + 1;
-+		WRT_REG_WORD(&reg->mailbox0, MBC_READ_RAM_EXTENDED);
-+		clear_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
-+	}
-+	for (cnt = 0; cnt < ext_mem_cnt && rval == QLA_SUCCESS;
-+	    cnt++, risc_address++) {
-+		WRT_REG_WORD(&reg->mailbox1, LSW(risc_address));
-+		WRT_REG_WORD(&reg->mailbox8, MSW(risc_address));
-+		RD_REG_WORD(&reg->mailbox8);
-+		WRT_REG_DWORD(&reg->hccr, HCCRX_SET_HOST_INT);
-+
-+		for (timer = 6000000; timer; timer--) {
-+			/* Check for pending interrupts. */
-+			stat = RD_REG_DWORD(&reg->host_status);
-+			if (stat & HSRX_RISC_INT) {
-+				stat &= 0xff;
-+
-+				if (stat == 0x1 || stat == 0x2 ||
-+				    stat == 0x10 || stat == 0x11) {
-+					set_bit(MBX_INTERRUPT,
-+					    &ha->mbx_cmd_flags);
-+
-+					mb[0] = RD_REG_WORD(&reg->mailbox0);
-+					mb[2] = RD_REG_WORD(&reg->mailbox2);
-+					mb[3] = RD_REG_WORD(&reg->mailbox3);
-+
-+					WRT_REG_DWORD(&reg->hccr,
-+					    HCCRX_CLR_RISC_INT);
-+					RD_REG_DWORD(&reg->hccr);
-+					break;
-+				}
-+
-+				/* Clear this intr; it wasn't a mailbox intr */
-+				WRT_REG_DWORD(&reg->hccr, HCCRX_CLR_RISC_INT);
-+				RD_REG_DWORD(&reg->hccr);
-+			}
-+			udelay(5);
-+		}
-+
-+		if (test_and_clear_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags)) {
-+			rval = mb[0] & MBS_MASK;
-+			fw->ext_mem[cnt] = (mb[3] << 16) | mb[2];
-+		} else {
-+			rval = QLA_FUNCTION_FAILED;
-+		}
-+	}
-+
-+	if (rval != QLA_SUCCESS) {
-+		qla_printk(KERN_WARNING, ha,
-+		    "Failed to dump firmware (%x)!!!\n", rval);
-+		ha->fw_dumped = 0;
-+
-+	} else {
-+		qla_printk(KERN_INFO, ha,
-+		    "Firmware dump saved to temp buffer (%ld/%p).\n",
-+		    ha->host_no, ha->fw_dump24);
-+		ha->fw_dumped = 1;
-+	}
-+
-+qla24xx_fw_dump_failed:
-+	if (!hardware_locked)
-+		spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+}
-+
-+void
-+qla24xx_ascii_fw_dump(scsi_qla_host_t *ha)
-+{
-+	uint32_t cnt;
-+	char *uiter;
-+	struct qla24xx_fw_dump *fw;
-+	uint32_t ext_mem_cnt;
-+
-+	uiter = ha->fw_dump_buffer;
-+	fw = ha->fw_dump24;
-+
-+	qla_uprintf(&uiter, "ISP FW Version %d.%02d.%02d Attributes %04x\n",
-+	    ha->fw_major_version, ha->fw_minor_version,
-+	    ha->fw_subminor_version, ha->fw_attributes);
-+
-+	qla_uprintf(&uiter, "\nHCCR Register\n%04x\n", fw->hccr);
-+
-+	qla_uprintf(&uiter, "\nHost Interface Registers");
-+	for (cnt = 0; cnt < sizeof(fw->host_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->host_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nMailbox Registers");
-+	for (cnt = 0; cnt < sizeof(fw->mailbox_reg) / 2; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->mailbox_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nXSEQ GP Registers");
-+	for (cnt = 0; cnt < sizeof(fw->xseq_gp_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->xseq_gp_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nXSEQ-0 Registers");
-+	for (cnt = 0; cnt < sizeof(fw->xseq_0_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->xseq_0_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nXSEQ-1 Registers");
-+	for (cnt = 0; cnt < sizeof(fw->xseq_1_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->xseq_1_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nRSEQ GP Registers");
-+	for (cnt = 0; cnt < sizeof(fw->rseq_gp_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->rseq_gp_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nRSEQ-0 Registers");
-+	for (cnt = 0; cnt < sizeof(fw->rseq_0_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->rseq_0_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nRSEQ-1 Registers");
-+	for (cnt = 0; cnt < sizeof(fw->rseq_1_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->rseq_1_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nRSEQ-2 Registers");
-+	for (cnt = 0; cnt < sizeof(fw->rseq_2_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->rseq_2_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nCommand DMA Registers");
-+	for (cnt = 0; cnt < sizeof(fw->cmd_dma_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->cmd_dma_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nRequest0 Queue DMA Channel Registers");
-+	for (cnt = 0; cnt < sizeof(fw->req0_dma_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->req0_dma_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nResponse0 Queue DMA Channel Registers");
-+	for (cnt = 0; cnt < sizeof(fw->resp0_dma_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->resp0_dma_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nRequest1 Queue DMA Channel Registers");
-+	for (cnt = 0; cnt < sizeof(fw->req1_dma_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->req1_dma_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nXMT0 Data DMA Registers");
-+	for (cnt = 0; cnt < sizeof(fw->xmt0_dma_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->xmt0_dma_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nXMT1 Data DMA Registers");
-+	for (cnt = 0; cnt < sizeof(fw->xmt1_dma_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->xmt1_dma_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nXMT2 Data DMA Registers");
-+	for (cnt = 0; cnt < sizeof(fw->xmt2_dma_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->xmt2_dma_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nXMT3 Data DMA Registers");
-+	for (cnt = 0; cnt < sizeof(fw->xmt3_dma_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->xmt3_dma_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nXMT4 Data DMA Registers");
-+	for (cnt = 0; cnt < sizeof(fw->xmt4_dma_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->xmt4_dma_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nXMT Data DMA Common Registers");
-+	for (cnt = 0; cnt < sizeof(fw->xmt_data_dma_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->xmt_data_dma_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nRCV Thread 0 Data DMA Registers");
-+	for (cnt = 0; cnt < sizeof(fw->rcvt0_data_dma_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->rcvt0_data_dma_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nRCV Thread 1 Data DMA Registers");
-+	for (cnt = 0; cnt < sizeof(fw->rcvt1_data_dma_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->rcvt1_data_dma_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nRISC GP Registers");
-+	for (cnt = 0; cnt < sizeof(fw->risc_gp_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->risc_gp_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nShadow Registers");
-+	for (cnt = 0; cnt < sizeof(fw->shadow_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->shadow_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nLMC Registers");
-+	for (cnt = 0; cnt < sizeof(fw->lmc_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->lmc_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nFPM Hardware Registers");
-+	for (cnt = 0; cnt < sizeof(fw->fpm_hdw_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->fpm_hdw_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nFB Hardware Registers");
-+	for (cnt = 0; cnt < sizeof(fw->fb_hdw_reg) / 4; cnt++) {
-+		if (cnt % 8 == 0)
-+			qla_uprintf(&uiter, "\n");
-+
-+		qla_uprintf(&uiter, "%08x ", fw->fb_hdw_reg[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nCode RAM");
-+	for (cnt = 0; cnt < sizeof (fw->code_ram) / 4; cnt++) {
-+		if (cnt % 8 == 0) {
-+			qla_uprintf(&uiter, "\n%08x: ", cnt + 0x20000);
-+		}
-+		qla_uprintf(&uiter, "%08x ", fw->code_ram[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n\nExternal Memory");
-+	ext_mem_cnt = ha->fw_memory_size - 0x100000 + 1;
-+	for (cnt = 0; cnt < ext_mem_cnt; cnt++) {
-+		if (cnt % 8 == 0) {
-+			qla_uprintf(&uiter, "\n%08x: ", cnt + 0x100000);
-+		}
-+		qla_uprintf(&uiter, "%08x ", fw->ext_mem[cnt]);
-+	}
-+
-+	qla_uprintf(&uiter, "\n[<==END] ISP Debug Dump");
-+}
-+
+ 	uint16_t (*calc_req_entries) (uint16_t);
+ 	void (*build_iocbs) (srb_t *, cmd_entry_t *, uint16_t);
+-	ms_iocb_entry_t * (*prep_ms_iocb) (struct scsi_qla_host *, uint32_t,
+-	    uint32_t);
++	void * (*prep_ms_iocb) (struct scsi_qla_host *, uint32_t, uint32_t);
  
- /****************************************************************************/
- /*                         Driver Debug Functions.                          */
-@@ -1066,6 +1998,21 @@ qla2x00_print_scsi_cmd(struct scsi_cmnd 
- 	printk("  state=%d\n", sp->state);
- }
- 
-+void
-+qla2x00_dump_pkt(void *pkt)
-+{
-+	uint32_t i;
-+	uint8_t *data = (uint8_t *) pkt;
-+
-+	for (i = 0; i < 64; i++) {
-+		if (!(i % 4))
-+			printk("\n%02x: ", i);
-+
-+		printk("%02x ", data[i]);
-+	}
-+	printk("\n");
-+}
-+
- #if defined(QL_DEBUG_ROUTINES)
- /*
-  * qla2x00_formatted_dump_buffer
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
---- a/drivers/scsi/qla2xxx/qla_dbg.h
-+++ b/drivers/scsi/qla2xxx/qla_dbg.h
-@@ -230,4 +230,36 @@ struct qla2100_fw_dump {
- 	uint16_t risc_ram[0xf000];
- };
- 
-+#define FW_DUMP_SIZE_24XX	0x2B0000
- 
-+struct qla24xx_fw_dump {
-+	uint32_t hccr;
-+	uint32_t host_reg[32];
-+	uint16_t mailbox_reg[32];
-+	uint32_t xseq_gp_reg[128];
-+	uint32_t xseq_0_reg[16];
-+	uint32_t xseq_1_reg[16];
-+	uint32_t rseq_gp_reg[128];
-+	uint32_t rseq_0_reg[16];
-+	uint32_t rseq_1_reg[16];
-+	uint32_t rseq_2_reg[16];
-+	uint32_t cmd_dma_reg[16];
-+	uint32_t req0_dma_reg[15];
-+	uint32_t resp0_dma_reg[15];
-+	uint32_t req1_dma_reg[15];
-+	uint32_t xmt0_dma_reg[32];
-+	uint32_t xmt1_dma_reg[32];
-+	uint32_t xmt2_dma_reg[32];
-+	uint32_t xmt3_dma_reg[32];
-+	uint32_t xmt4_dma_reg[32];
-+	uint32_t xmt_data_dma_reg[16];
-+	uint32_t rcvt0_data_dma_reg[32];
-+	uint32_t rcvt1_data_dma_reg[32];
-+	uint32_t risc_gp_reg[128];
-+	uint32_t shadow_reg[7];
-+	uint32_t lmc_reg[112];
-+	uint32_t fpm_hdw_reg[192];
-+	uint32_t fb_hdw_reg[176];
-+	uint32_t code_ram[0x2000];
-+	uint32_t ext_mem[1];
-+};
+ 	uint8_t * (*read_nvram) (struct scsi_qla_host *, uint8_t *,
+ 		uint32_t, uint32_t);
 diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
 --- a/drivers/scsi/qla2xxx/qla_gbl.h
 +++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -207,11 +207,14 @@ extern void qla2x00_write_nvram_word(scs
-  */
- extern void qla2100_fw_dump(scsi_qla_host_t *, int);
- extern void qla2300_fw_dump(scsi_qla_host_t *, int);
-+extern void qla24xx_fw_dump(scsi_qla_host_t *, int);
- extern void qla2100_ascii_fw_dump(scsi_qla_host_t *);
- extern void qla2300_ascii_fw_dump(scsi_qla_host_t *);
-+extern void qla24xx_ascii_fw_dump(scsi_qla_host_t *);
- extern void qla2x00_dump_regs(scsi_qla_host_t *);
- extern void qla2x00_dump_buffer(uint8_t *, uint32_t);
- extern void qla2x00_print_scsi_cmd(struct scsi_cmnd *);
-+extern void qla2x00_dump_pkt(void *);
- 
+@@ -219,8 +219,8 @@ extern void qla2x00_dump_pkt(void *);
  /*
   * Global Function Prototypes in qla_gs.c source file.
+  */
+-extern ms_iocb_entry_t *qla2x00_prep_ms_iocb(scsi_qla_host_t *, uint32_t,
+-    uint32_t);
++extern void *qla2x00_prep_ms_iocb(scsi_qla_host_t *, uint32_t, uint32_t);
++extern void *qla24xx_prep_ms_iocb(scsi_qla_host_t *, uint32_t, uint32_t);
+ extern int qla2x00_ga_nxt(scsi_qla_host_t *, fc_port_t *);
+ extern int qla2x00_gid_pt(scsi_qla_host_t *, sw_info_t *);
+ extern int qla2x00_gpn_id(scsi_qla_host_t *, sw_info_t *);
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -32,14 +32,14 @@ static int qla2x00_sns_rft_id(scsi_qla_h
+ static int qla2x00_sns_rnn_id(scsi_qla_host_t *);
+ 
+ /**
+- * qla2x00_prep_ms_iocb() - Prepare common MS IOCB fields for SNS CT query.
++ * qla2x00_prep_ms_iocb() - Prepare common MS/CT IOCB fields for SNS CT query.
+  * @ha: HA context
+  * @req_size: request size in bytes
+  * @rsp_size: response size in bytes
+  *
+  * Returns a pointer to the @ha's ms_iocb.
+  */
+-ms_iocb_entry_t *
++void *
+ qla2x00_prep_ms_iocb(scsi_qla_host_t *ha, uint32_t req_size, uint32_t rsp_size)
+ {
+ 	ms_iocb_entry_t *ms_pkt;
+@@ -69,6 +69,42 @@ qla2x00_prep_ms_iocb(scsi_qla_host_t *ha
+ }
+ 
+ /**
++ * qla24xx_prep_ms_iocb() - Prepare common CT IOCB fields for SNS CT query.
++ * @ha: HA context
++ * @req_size: request size in bytes
++ * @rsp_size: response size in bytes
++ *
++ * Returns a pointer to the @ha's ms_iocb.
++ */
++void *
++qla24xx_prep_ms_iocb(scsi_qla_host_t *ha, uint32_t req_size, uint32_t rsp_size)
++{
++	struct ct_entry_24xx *ct_pkt;
++
++	ct_pkt = (struct ct_entry_24xx *)ha->ms_iocb;
++	memset(ct_pkt, 0, sizeof(struct ct_entry_24xx));
++
++	ct_pkt->entry_type = CT_IOCB_TYPE;
++	ct_pkt->entry_count = 1;
++	ct_pkt->nport_handle = __constant_cpu_to_le16(NPH_SNS);
++	ct_pkt->timeout = __constant_cpu_to_le16(25);
++	ct_pkt->cmd_dsd_count = __constant_cpu_to_le16(1);
++	ct_pkt->rsp_dsd_count = __constant_cpu_to_le16(1);
++	ct_pkt->rsp_byte_count = cpu_to_le32(rsp_size);
++	ct_pkt->cmd_byte_count = cpu_to_le32(req_size);
++
++	ct_pkt->dseg_0_address[0] = cpu_to_le32(LSD(ha->ct_sns_dma));
++	ct_pkt->dseg_0_address[1] = cpu_to_le32(MSD(ha->ct_sns_dma));
++	ct_pkt->dseg_0_len = ct_pkt->cmd_byte_count;
++
++	ct_pkt->dseg_1_address[0] = cpu_to_le32(LSD(ha->ct_sns_dma));
++	ct_pkt->dseg_1_address[1] = cpu_to_le32(MSD(ha->ct_sns_dma));
++	ct_pkt->dseg_1_len = ct_pkt->rsp_byte_count;
++
++	return (ct_pkt);
++}
++
++/**
+  * qla2x00_prep_ct_req() - Prepare common CT request fields for SNS query.
+  * @ct_req: CT request buffer
+  * @cmd: GS command
+@@ -90,6 +126,47 @@ qla2x00_prep_ct_req(struct ct_sns_req *c
+ 	return (ct_req);
+ }
+ 
++static int
++qla2x00_chk_ms_status(scsi_qla_host_t *ha, ms_iocb_entry_t *ms_pkt,
++    struct ct_sns_rsp *ct_rsp, const char *routine)
++{
++	int rval;
++	uint16_t comp_status;
++
++	rval = QLA_FUNCTION_FAILED;
++	if (ms_pkt->entry_status != 0) {
++		DEBUG2_3(printk("scsi(%ld): %s failed, error status (%x).\n",
++		    ha->host_no, routine, ms_pkt->entry_status));
++	} else {
++		if (IS_QLA24XX(ha) || IS_QLA25XX(ha))
++			comp_status =
++			    ((struct ct_entry_24xx *)ms_pkt)->comp_status;
++		else
++			comp_status = le16_to_cpu(ms_pkt->status);
++		switch (comp_status) {
++		case CS_COMPLETE:
++		case CS_DATA_UNDERRUN:
++		case CS_DATA_OVERRUN:		/* Overrun? */
++			if (ct_rsp->header.response !=
++			    __constant_cpu_to_be16(CT_ACCEPT_RESPONSE)) {
++				DEBUG2_3(printk("scsi(%ld): %s failed, "
++				    "rejected request:\n", ha->host_no,
++				    routine));
++				DEBUG2_3(qla2x00_dump_buffer(
++				    (uint8_t *)&ct_rsp->header,
++				    sizeof(struct ct_rsp_hdr)));
++			} else
++				rval = QLA_SUCCESS;
++			break;
++		default:
++			DEBUG2_3(printk("scsi(%ld): %s failed, completion "
++			    "status (%x).\n", ha->host_no, routine,
++			    comp_status));
++			break;
++		}
++	}
++	return rval;
++}
+ 
+ /**
+  * qla2x00_ga_nxt() - SNS scan for fabric devices via GA_NXT command.
+@@ -113,7 +190,7 @@ qla2x00_ga_nxt(scsi_qla_host_t *ha, fc_p
+ 
+ 	/* Issue GA_NXT */
+ 	/* Prepare common MS IOCB */
+-	ms_pkt = qla2x00_prep_ms_iocb(ha, GA_NXT_REQ_SIZE, GA_NXT_RSP_SIZE);
++	ms_pkt = ha->isp_ops.prep_ms_iocb(ha, GA_NXT_REQ_SIZE, GA_NXT_RSP_SIZE);
+ 
+ 	/* Prepare CT request */
+ 	ct_req = qla2x00_prep_ct_req(&ha->ct_sns->p.req, GA_NXT_CMD,
+@@ -132,12 +209,8 @@ qla2x00_ga_nxt(scsi_qla_host_t *ha, fc_p
+ 		/*EMPTY*/
+ 		DEBUG2_3(printk("scsi(%ld): GA_NXT issue IOCB failed (%d).\n",
+ 		    ha->host_no, rval));
+-	} else if (ct_rsp->header.response !=
+-	    __constant_cpu_to_be16(CT_ACCEPT_RESPONSE)) {
+-		DEBUG2_3(printk("scsi(%ld): GA_NXT failed, rejected request, "
+-		    "ga_nxt_rsp:\n", ha->host_no));
+-		DEBUG2_3(qla2x00_dump_buffer((uint8_t *)&ct_rsp->header,
+-		    sizeof(struct ct_rsp_hdr)));
++	} else if (qla2x00_chk_ms_status(ha, ms_pkt, ct_rsp, "GA_NXT") !=
++	    QLA_SUCCESS) {
+ 		rval = QLA_FUNCTION_FAILED;
+ 	} else {
+ 		/* Populate fc_port_t entry. */
+@@ -203,7 +276,7 @@ qla2x00_gid_pt(scsi_qla_host_t *ha, sw_i
+ 
+ 	/* Issue GID_PT */
+ 	/* Prepare common MS IOCB */
+-	ms_pkt = qla2x00_prep_ms_iocb(ha, GID_PT_REQ_SIZE, GID_PT_RSP_SIZE);
++	ms_pkt = ha->isp_ops.prep_ms_iocb(ha, GID_PT_REQ_SIZE, GID_PT_RSP_SIZE);
+ 
+ 	/* Prepare CT request */
+ 	ct_req = qla2x00_prep_ct_req(&ha->ct_sns->p.req, GID_PT_CMD,
+@@ -220,12 +293,8 @@ qla2x00_gid_pt(scsi_qla_host_t *ha, sw_i
+ 		/*EMPTY*/
+ 		DEBUG2_3(printk("scsi(%ld): GID_PT issue IOCB failed (%d).\n",
+ 		    ha->host_no, rval));
+-	} else if (ct_rsp->header.response !=
+-	    __constant_cpu_to_be16(CT_ACCEPT_RESPONSE)) {
+-		DEBUG2_3(printk("scsi(%ld): GID_PT failed, rejected request, "
+-		    "gid_pt_rsp:\n", ha->host_no));
+-		DEBUG2_3(qla2x00_dump_buffer((uint8_t *)&ct_rsp->header,
+-		    sizeof(struct ct_rsp_hdr)));
++	} else if (qla2x00_chk_ms_status(ha, ms_pkt, ct_rsp, "GID_PT") !=
++	    QLA_SUCCESS) {
+ 		rval = QLA_FUNCTION_FAILED;
+ 	} else {
+ 		/* Set port IDs in switch info list. */
+@@ -279,7 +348,7 @@ qla2x00_gpn_id(scsi_qla_host_t *ha, sw_i
+ 	for (i = 0; i < MAX_FIBRE_DEVICES; i++) {
+ 		/* Issue GPN_ID */
+ 		/* Prepare common MS IOCB */
+-		ms_pkt = qla2x00_prep_ms_iocb(ha, GPN_ID_REQ_SIZE,
++		ms_pkt = ha->isp_ops.prep_ms_iocb(ha, GPN_ID_REQ_SIZE,
+ 		    GPN_ID_RSP_SIZE);
+ 
+ 		/* Prepare CT request */
+@@ -299,12 +368,8 @@ qla2x00_gpn_id(scsi_qla_host_t *ha, sw_i
+ 			/*EMPTY*/
+ 			DEBUG2_3(printk("scsi(%ld): GPN_ID issue IOCB failed "
+ 			    "(%d).\n", ha->host_no, rval));
+-		} else if (ct_rsp->header.response !=
+-		    __constant_cpu_to_be16(CT_ACCEPT_RESPONSE)) {
+-			DEBUG2_3(printk("scsi(%ld): GPN_ID failed, rejected "
+-			    "request, gpn_id_rsp:\n", ha->host_no));
+-			DEBUG2_3(qla2x00_dump_buffer((uint8_t *)&ct_rsp->header,
+-			    sizeof(struct ct_rsp_hdr)));
++		} else if (qla2x00_chk_ms_status(ha, ms_pkt, ct_rsp,
++		    "GPN_ID") != QLA_SUCCESS) {
+ 			rval = QLA_FUNCTION_FAILED;
+ 		} else {
+ 			/* Save portname */
+@@ -344,7 +409,7 @@ qla2x00_gnn_id(scsi_qla_host_t *ha, sw_i
+ 	for (i = 0; i < MAX_FIBRE_DEVICES; i++) {
+ 		/* Issue GNN_ID */
+ 		/* Prepare common MS IOCB */
+-		ms_pkt = qla2x00_prep_ms_iocb(ha, GNN_ID_REQ_SIZE,
++		ms_pkt = ha->isp_ops.prep_ms_iocb(ha, GNN_ID_REQ_SIZE,
+ 		    GNN_ID_RSP_SIZE);
+ 
+ 		/* Prepare CT request */
+@@ -364,12 +429,8 @@ qla2x00_gnn_id(scsi_qla_host_t *ha, sw_i
+ 			/*EMPTY*/
+ 			DEBUG2_3(printk("scsi(%ld): GNN_ID issue IOCB failed "
+ 			    "(%d).\n", ha->host_no, rval));
+-		} else if (ct_rsp->header.response !=
+-		    __constant_cpu_to_be16(CT_ACCEPT_RESPONSE)) {
+-			DEBUG2_3(printk("scsi(%ld): GNN_ID failed, rejected "
+-			    "request, gnn_id_rsp:\n", ha->host_no));
+-			DEBUG2_3(qla2x00_dump_buffer((uint8_t *)&ct_rsp->header,
+-			    sizeof(struct ct_rsp_hdr)));
++		} else if (qla2x00_chk_ms_status(ha, ms_pkt, ct_rsp,
++		    "GNN_ID") != QLA_SUCCESS) {
+ 			rval = QLA_FUNCTION_FAILED;
+ 		} else {
+ 			/* Save nodename */
+@@ -422,7 +483,7 @@ qla2x00_rft_id(scsi_qla_host_t *ha)
+ 
+ 	/* Issue RFT_ID */
+ 	/* Prepare common MS IOCB */
+-	ms_pkt = qla2x00_prep_ms_iocb(ha, RFT_ID_REQ_SIZE, RFT_ID_RSP_SIZE);
++	ms_pkt = ha->isp_ops.prep_ms_iocb(ha, RFT_ID_REQ_SIZE, RFT_ID_RSP_SIZE);
+ 
+ 	/* Prepare CT request */
+ 	ct_req = qla2x00_prep_ct_req(&ha->ct_sns->p.req, RFT_ID_CMD,
+@@ -443,12 +504,8 @@ qla2x00_rft_id(scsi_qla_host_t *ha)
+ 		/*EMPTY*/
+ 		DEBUG2_3(printk("scsi(%ld): RFT_ID issue IOCB failed (%d).\n",
+ 		    ha->host_no, rval));
+-	} else if (ct_rsp->header.response !=
+-	    __constant_cpu_to_be16(CT_ACCEPT_RESPONSE)) {
+-		DEBUG2_3(printk("scsi(%ld): RFT_ID failed, rejected "
+-		    "request, rft_id_rsp:\n", ha->host_no));
+-		DEBUG2_3(qla2x00_dump_buffer((uint8_t *)&ct_rsp->header,
+-		    sizeof(struct ct_rsp_hdr)));
++	} else if (qla2x00_chk_ms_status(ha, ms_pkt, ct_rsp, "RFT_ID") !=
++	    QLA_SUCCESS) {
+ 		rval = QLA_FUNCTION_FAILED;
+ 	} else {
+ 		DEBUG2(printk("scsi(%ld): RFT_ID exiting normally.\n",
+@@ -481,7 +538,7 @@ qla2x00_rff_id(scsi_qla_host_t *ha)
+ 
+ 	/* Issue RFF_ID */
+ 	/* Prepare common MS IOCB */
+-	ms_pkt = qla2x00_prep_ms_iocb(ha, RFF_ID_REQ_SIZE, RFF_ID_RSP_SIZE);
++	ms_pkt = ha->isp_ops.prep_ms_iocb(ha, RFF_ID_REQ_SIZE, RFF_ID_RSP_SIZE);
+ 
+ 	/* Prepare CT request */
+ 	ct_req = qla2x00_prep_ct_req(&ha->ct_sns->p.req, RFF_ID_CMD,
+@@ -502,12 +559,8 @@ qla2x00_rff_id(scsi_qla_host_t *ha)
+ 		/*EMPTY*/
+ 		DEBUG2_3(printk("scsi(%ld): RFF_ID issue IOCB failed (%d).\n",
+ 		    ha->host_no, rval));
+-	} else if (ct_rsp->header.response !=
+-	    __constant_cpu_to_be16(CT_ACCEPT_RESPONSE)) {
+-		DEBUG2_3(printk("scsi(%ld): RFF_ID failed, rejected "
+-		    "request, rff_id_rsp:\n", ha->host_no));
+-		DEBUG2_3(qla2x00_dump_buffer((uint8_t *)&ct_rsp->header,
+-		    sizeof(struct ct_rsp_hdr)));
++	} else if (qla2x00_chk_ms_status(ha, ms_pkt, ct_rsp, "RFF_ID") !=
++	    QLA_SUCCESS) {
+ 		rval = QLA_FUNCTION_FAILED;
+ 	} else {
+ 		DEBUG2(printk("scsi(%ld): RFF_ID exiting normally.\n",
+@@ -538,7 +591,7 @@ qla2x00_rnn_id(scsi_qla_host_t *ha)
+ 
+ 	/* Issue RNN_ID */
+ 	/* Prepare common MS IOCB */
+-	ms_pkt = qla2x00_prep_ms_iocb(ha, RNN_ID_REQ_SIZE, RNN_ID_RSP_SIZE);
++	ms_pkt = ha->isp_ops.prep_ms_iocb(ha, RNN_ID_REQ_SIZE, RNN_ID_RSP_SIZE);
+ 
+ 	/* Prepare CT request */
+ 	ct_req = qla2x00_prep_ct_req(&ha->ct_sns->p.req, RNN_ID_CMD,
+@@ -550,7 +603,7 @@ qla2x00_rnn_id(scsi_qla_host_t *ha)
+ 	ct_req->req.rnn_id.port_id[1] = ha->d_id.b.area;
+ 	ct_req->req.rnn_id.port_id[2] = ha->d_id.b.al_pa;
+ 
+-	memcpy(ct_req->req.rnn_id.node_name, ha->init_cb->node_name, WWN_SIZE);
++	memcpy(ct_req->req.rnn_id.node_name, ha->node_name, WWN_SIZE);
+ 
+ 	/* Execute MS IOCB */
+ 	rval = qla2x00_issue_iocb(ha, ha->ms_iocb, ha->ms_iocb_dma,
+@@ -559,12 +612,8 @@ qla2x00_rnn_id(scsi_qla_host_t *ha)
+ 		/*EMPTY*/
+ 		DEBUG2_3(printk("scsi(%ld): RNN_ID issue IOCB failed (%d).\n",
+ 		    ha->host_no, rval));
+-	} else if (ct_rsp->header.response !=
+-	    __constant_cpu_to_be16(CT_ACCEPT_RESPONSE)) {
+-		DEBUG2_3(printk("scsi(%ld): RNN_ID failed, rejected "
+-		    "request, rnn_id_rsp:\n", ha->host_no));
+-		DEBUG2_3(qla2x00_dump_buffer((uint8_t *)&ct_rsp->header,
+-		    sizeof(struct ct_rsp_hdr)));
++	} else if (qla2x00_chk_ms_status(ha, ms_pkt, ct_rsp, "RNN_ID") !=
++	    QLA_SUCCESS) {
+ 		rval = QLA_FUNCTION_FAILED;
+ 	} else {
+ 		DEBUG2(printk("scsi(%ld): RNN_ID exiting normally.\n",
+@@ -600,7 +649,7 @@ qla2x00_rsnn_nn(scsi_qla_host_t *ha)
+ 	/* Issue RSNN_NN */
+ 	/* Prepare common MS IOCB */
+ 	/*   Request size adjusted after CT preparation */
+-	ms_pkt = qla2x00_prep_ms_iocb(ha, 0, RSNN_NN_RSP_SIZE);
++	ms_pkt = ha->isp_ops.prep_ms_iocb(ha, 0, RSNN_NN_RSP_SIZE);
+ 
+ 	/* Prepare CT request */
+ 	ct_req = qla2x00_prep_ct_req(&ha->ct_sns->p.req, RSNN_NN_CMD,
+@@ -608,7 +657,7 @@ qla2x00_rsnn_nn(scsi_qla_host_t *ha)
+ 	ct_rsp = &ha->ct_sns->p.rsp;
+ 
+ 	/* Prepare CT arguments -- node_name, symbolic node_name, size */
+-	memcpy(ct_req->req.rsnn_nn.node_name, ha->init_cb->node_name, WWN_SIZE);
++	memcpy(ct_req->req.rsnn_nn.node_name, ha->node_name, WWN_SIZE);
+ 	
+ 	/* Prepare the Symbolic Node Name */
+ 	/* Board type */
+@@ -638,12 +687,8 @@ qla2x00_rsnn_nn(scsi_qla_host_t *ha)
+ 		/*EMPTY*/
+ 		DEBUG2_3(printk("scsi(%ld): RSNN_NN issue IOCB failed (%d).\n",
+ 		    ha->host_no, rval));
+-	} else if (ct_rsp->header.response !=
+-	    __constant_cpu_to_be16(CT_ACCEPT_RESPONSE)) {
+-		DEBUG2_3(printk("scsi(%ld): RSNN_NN failed, rejected "
+-		    "request, rsnn_id_rsp:\n", ha->host_no));
+-		DEBUG2_3(qla2x00_dump_buffer((uint8_t *)&ct_rsp->header,
+-		    sizeof(struct ct_rsp_hdr)));
++	} else if (qla2x00_chk_ms_status(ha, ms_pkt, ct_rsp, "RSNN_NN") !=
++	    QLA_SUCCESS) {
+ 		rval = QLA_FUNCTION_FAILED;
+ 	} else {
+ 		DEBUG2(printk("scsi(%ld): RSNN_NN exiting normally.\n",
+@@ -1025,14 +1070,14 @@ qla2x00_sns_rnn_id(scsi_qla_host_t *ha)
+ 	sns_cmd->p.cmd.param[1] = ha->d_id.b.area;
+ 	sns_cmd->p.cmd.param[2] = ha->d_id.b.domain;
+ 
+-	sns_cmd->p.cmd.param[4] = ha->init_cb->node_name[7];
+-	sns_cmd->p.cmd.param[5] = ha->init_cb->node_name[6];
+-	sns_cmd->p.cmd.param[6] = ha->init_cb->node_name[5];
+-	sns_cmd->p.cmd.param[7] = ha->init_cb->node_name[4];
+-	sns_cmd->p.cmd.param[8] = ha->init_cb->node_name[3];
+-	sns_cmd->p.cmd.param[9] = ha->init_cb->node_name[2];
+-	sns_cmd->p.cmd.param[10] = ha->init_cb->node_name[1];
+-	sns_cmd->p.cmd.param[11] = ha->init_cb->node_name[0];
++	sns_cmd->p.cmd.param[4] = ha->node_name[7];
++	sns_cmd->p.cmd.param[5] = ha->node_name[6];
++	sns_cmd->p.cmd.param[6] = ha->node_name[5];
++	sns_cmd->p.cmd.param[7] = ha->node_name[4];
++	sns_cmd->p.cmd.param[8] = ha->node_name[3];
++	sns_cmd->p.cmd.param[9] = ha->node_name[2];
++	sns_cmd->p.cmd.param[10] = ha->node_name[1];
++	sns_cmd->p.cmd.param[11] = ha->node_name[0];
+ 
+ 	/* Execute SNS command. */
+ 	rval = qla2x00_send_sns(ha, ha->sns_cmd_dma, RNN_ID_SNS_CMD_SIZE / 2,
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -822,7 +822,11 @@ qla2x00_issue_iocb(scsi_qla_host_t *ha, 
+ 		DEBUG2(printk("qla2x00_issue_iocb(%ld): failed rval 0x%x",
+ 		    ha->host_no,rval);)
+ 	} else {
+-		/*EMPTY*/
++		sts_entry_t *sts_entry = (sts_entry_t *) buffer;
++
++		/* Mask reserved bits. */
++		sts_entry->entry_status &=
++		    IS_QLA24XX(ha) || IS_QLA25XX(ha) ? RF_MASK_24XX :RF_MASK;
+ 	}
+ 
+ 	return rval;
 
 -- 
 Andrew Vasquez
