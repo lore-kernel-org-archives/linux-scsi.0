@@ -1,51 +1,30 @@
-From: "Rafael" <rsantos@unisc.br>
-Subject: kernels 2.6.11 and 2.6.12 hanging with ata_piix on poweredge 800
-Date: Wed, 06 Jul 2005 10:49:34 -0300
-Message-ID: <42CBE16E.4060906@unisc.br>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Stephen <cordiality@dooyoo.every1.net>
+Subject: No need to pay more - cheapest OEM online.
+Date: Wed, 6 Jul 2005 11:18:56 -0400
+Message-ID: <7650881214.128570110260@pa-65-164-19-89.dyn.sprint-hsd.net>
+Mime-Version: 1.0 (Apple Message framework v728)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sirius.unisc.br ([200.17.83.65]:19150 "EHLO smtp.unisc.br")
-	by vger.kernel.org with ESMTP id S262124AbVGFNti convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Jul 2005 09:49:38 -0400
-Received: from EVS.unisc.br (unknown [192.168.0.62])
-	by smtp.unisc.br (Postfix) with ESMTP id 28BBC2844A
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Jul 2005 10:49:30 -0300 (BRST)
-Content-Class: urn:content-classes:message
+Received: from pa-65-164-19-89.dyn.sprint-hsd.net ([65.164.19.89]:39750 "HELO
+	pa-65-164-19-89.dyn.sprint-hsd.net") by vger.kernel.org with SMTP
+	id S262348AbVGFPUy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Jul 2005 11:20:54 -0400
+Received: from [40.153.109.149] (port=4476 helo=[amputate])
+    by pa-65-164-19-89.dyn.sprint-hsd.net with esmtp
+    id 116150125065wrenches63630
+    for linux-scsi@vger.kernel.org; Wed, 6 Jul 2005 11:18:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Cristiano Bonato Both <cboth@unisc.br>, rsantos@unisc.br
+To: linux-scsi@vger.kernel.org
 
-Hi,
-
-I recently upgraded the from kernel 2.6.10 to 2.6.11 and 2.6.12 but my=20
-poweredge 800 machine hangs when trying to boot after kernel=20
-compilation/installation. I was running FC3.
-
-Now I tried FC4 (kernel 2.6.11) and the installation doesnt even starts=
-=20
-haging when trying to load ata_piix driver. Based on that, I figured th=
-e=20
-problem maybe with the scsi driver ata_piix. However, I dont know how t=
-o=20
-confirm that and what am I supposed to do to be able to boot this=20
-machine with the new kernels.
-
-Any help with that is greatly appreciated.
-
-Sincerely,
-Rafael
+Microsoft and IBM OEM Software for Bundling Only and other related software.
+http://ohukda.2r6zn12dhu2rh3k.guigehl.com
 
 
-___________
-Antes de imprimir pense em sua responsabilidade e compromisso com o MEI=
-O AMBIENTE!
-Setor de Inform=E1tica - UNISC
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+The first casualty when war comes is truth.     
+For a good cause, wrongdoing is virtuous.      
+
+
