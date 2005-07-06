@@ -1,138 +1,150 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] Use device_for_each_child() to unregister devices in scsi_remove_target().
-Date: Tue, 5 Jul 2005 17:38:50 -0700
-Message-ID: <20050706003850.GA11542@us.ibm.com>
-References: <11193083662356@kroah.com> <11193083663269@kroah.com>
+From: Pete Zaitcev <zaitcev@redhat.com>
+Subject: Patch for SCSI CD-ROM getting wrong size
+Date: Tue, 5 Jul 2005 18:18:08 -0700
+Message-ID: <20050705181808.51810d90.zaitcev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:2182 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S262027AbVGFAjw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jul 2005 20:39:52 -0400
-Content-Disposition: inline
-In-Reply-To: <11193083663269@kroah.com>
+Received: from mx1.redhat.com ([66.187.233.31]:11493 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S262030AbVGFBSV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jul 2005 21:18:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg K-H <greg@kroah.com>
-Cc: linux-kernel@vger.kernel.org, mochel@digitalimplant.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: zaitcev@redhat.com, viro@parcelfarce.linux.theplanet.co.uk, James.Bottomley@SteelEye.com
 
-Hi Greg / Patrick -
+Hi, All:
 
-I'm getting an oops with current (pulled today) 2.6 git, the
-device_for_each_child() does not seem to be deletion safe.
+Here's the problem. Try to do this on 2.6.12:
+- Kill udev and HAL
+- Insert a CD-ROM into a SCSI or USB CD-ROM drive
+- Run dd if=/dev/scd0
+- cat /sys/block/sr0/size
+- Eject the CD, insert a different one
+- Run dd if=/dev/scd0
+This is likely to do "access beyond the end of device", if you let it
+- cat /sys/block/sr0/size
+This shows the size of a previous CD, even though dd was supposed
+to revalidate the device.
+- Run dd if=/dev/scd0
+The second run of dd works correctly!
 
-We hold the klist in place via the n_ref, but the kobj (in the struct
-device for the struct scsi_target) containing it is freed when the
-kref->refcount goes to zero.
+The bug was introduced in 2.5.31, when Al fixes the recursive opens
+in partitioning. Before, the code worked like this:
+- Block layer called cdrom_open directly
+- cdrom_open called sr_open
+- sr_open called check_disk_change
+- check_disk_change called sr_media_change
+- sr_media_change did cd->needs_disk_change=1
+- before returning sr_open tested cd->needs_disk_change
+  and called get_sector_size.
 
-Any fixes or ?
+In 2.6.12, the check_disk_change is called from cdrom_open only. Thus:
+- Block layer calls sr_bd_open
+- sr_bd_open calls cdrom_open
+- cdrom_open calls sr_open
+- sr_open tests cd->needs_disk_change, which wasn't set yet; returns
+- cdrom_open calls check_disk_change
+- check_disk_change calls sr_media_change
+- sr_media_change does cd->needs_disk_change=1, but nobody cares
 
-I haven't found any relevant patches or similar oopses.
+I propose this patch:
 
-The only (current) caller of scsi_remove_target() is in
-scsi_transport_fc.c, for scsi you could only hit this running with the
-emulex or qlogic drivers, but it could affect other replacements of
-list_for_each_entry_safe with device_for_each_child.
+diff -urp -X dontdiff linux-2.6.12/drivers/scsi/sr.c linux-2.6.12-lem/drivers/scsi/sr.c
+--- linux-2.6.12/drivers/scsi/sr.c	2005-06-21 12:58:43.000000000 -0700
++++ linux-2.6.12-lem/drivers/scsi/sr.c	2005-07-05 16:17:40.000000000 -0700
+@@ -199,15 +199,7 @@ int sr_media_change(struct cdrom_device_
+ 		/* check multisession offset etc */
+ 		sr_cd_check(cdi);
+ 
+-		/* 
+-		 * If the disk changed, the capacity will now be different,
+-		 * so we force a re-read of this information 
+-		 * Force 2048 for the sector size so that filesystems won't
+-		 * be trying to use something that is too small if the disc
+-		 * has changed.
+-		 */
+-		cd->needs_sector_size = 1;
+-		cd->device->sector_size = 2048;
++		get_sectorsize(cd);
+ 	}
+ 	return retval;
+ }
+@@ -538,13 +530,6 @@ static int sr_open(struct cdrom_device_i
+ 	if (!scsi_block_when_processing_errors(sdev))
+ 		goto error_out;
+ 
+-	/*
+-	 * If this device did not have media in the drive at boot time, then
+-	 * we would have been unable to get the sector size.  Check to see if
+-	 * this is the case, and try again.
+-	 */
+-	if (cd->needs_sector_size)
+-		get_sectorsize(cd);
+ 	return 0;
+ 
+ error_out:
+@@ -604,7 +589,6 @@ static int sr_probe(struct device *dev)
+ 	cd->driver = &sr_template;
+ 	cd->disk = disk;
+ 	cd->capacity = 0x1fffff;
+-	cd->needs_sector_size = 1;
+ 	cd->device->changed = 1;	/* force recheck CD type */
+ 	cd->use = 1;
+ 	cd->readcd_known = 0;
+@@ -694,7 +678,6 @@ static void get_sectorsize(struct scsi_c
+ 	if (the_result) {
+ 		cd->capacity = 0x1fffff;
+ 		sector_size = 2048;	/* A guess, just in case */
+-		cd->needs_sector_size = 1;
+ 	} else {
+ #if 0
+ 		if (cdrom_get_last_written(&cd->cdi,
+@@ -727,7 +710,6 @@ static void get_sectorsize(struct scsi_c
+ 			printk("%s: unsupported sector size %d.\n",
+ 			       cd->cdi.name, sector_size);
+ 			cd->capacity = 0;
+-			cd->needs_sector_size = 1;
+ 		}
+ 
+ 		cd->device->sector_size = sector_size;
+@@ -736,7 +718,6 @@ static void get_sectorsize(struct scsi_c
+ 		 * Add this so that we have the ability to correctly gauge
+ 		 * what the device is capable of.
+ 		 */
+-		cd->needs_sector_size = 0;
+ 		set_capacity(cd->disk, cd->capacity);
+ 	}
+ 
+@@ -748,8 +729,7 @@ out:
+ 
+ Enomem:
+ 	cd->capacity = 0x1fffff;
+-	sector_size = 2048;	/* A guess, just in case */
+-	cd->needs_sector_size = 1;
++	cd->device->sector_size = 2048;	/* A guess, just in case */
+ 	if (SRpnt)
+ 		scsi_release_request(SRpnt);
+ 	goto out;
+diff -urp -X dontdiff linux-2.6.12/drivers/scsi/sr.h linux-2.6.12-lem/drivers/scsi/sr.h
+--- linux-2.6.12/drivers/scsi/sr.h	2004-08-19 17:15:55.000000000 -0700
++++ linux-2.6.12-lem/drivers/scsi/sr.h	2005-07-05 16:12:33.000000000 -0700
+@@ -33,7 +33,6 @@ typedef struct scsi_cd {
+ 	struct scsi_device *device;
+ 	unsigned int vendor;	/* vendor code, see sr_vendor.c         */
+ 	unsigned long ms_offset;	/* for reading multisession-CD's        */
+-	unsigned needs_sector_size:1;	/* needs to get sector size */
+ 	unsigned use:1;		/* is this device still supportable     */
+ 	unsigned xa_flag:1;	/* CD has XA sectors ? */
+ 	unsigned readcd_known:1;	/* drive supports READ_CD (0xbe) */
 
-The oops:
+Signed-off-by: Pete Zaitcev <zaitcev@redhat.com>
 
-[linux root]# Oops: Kernel access of bad area, sig: 11 [#1]
-SMP NR_CPUS=128 NUMA PSERIES LPAR 
-Modules linked in: qla2300 qla2xxx scsi_transport_fc scsi_mod<7>kobject_get -> c00000001dfde390 kref c00000001dfde3ac mem: 33
- tg3 evdev joydev ipv6 ohci_hcd usbcore dm_mod
-NIP: C00000000020C408 XER: 00000000 LR: C000000000394DB8 CTR: C0000000002106D0
-REGS: c00000001414b240 TRAP: 0300   Not tainted  (2.6.13-rc1pm)
-MSR: 8000000000009032 EE: 1 PR: 0 FP: 0 ME: 1 IR/DR: 11 CR: 24000422
-DAR: 6b6b6b6b6b6b6b7b DSISR: 0000000040000000
-TASK: c000000002754030[12001] 'rmmod' THREAD: c000000014148000 CPU: 0
-GPR00: C000000000394DAC C00000001414B4C0 C0000000005F4618 6B6B6B6B6B6B6B7B 
-GPR04: 8000000000009032 FFFFFFFFFFFFFFFF 0000000000000037 C0000000005111A4 
-GPR08: C000000000511198 C000000000514A60 C0000000006024D0 C0000000006023F0 
-GPR12: 0000000000000010 C0000000004B2000 0000000000000000 0000000010000000 
-GPR16: 0000000000000000 0000000000000000 0000000010000000 0000000000000000 
-GPR20: 0000000000000800 0000000000000002 0000000000000880 00000000FFFA7AF0 
-GPR24: 00000000FFFAA320 0000000010013008 D0000000003D5460 D0000000003D53D8 
-GPR28: 6B6B6B6B6B6B6B63 C00000001414B5C0 C000000000582FB8 6B6B6B6B6B6B6B6B 
-NIP [c00000000020c408] .kref_get+0x0/0x28
-LR [c000000000394db8] .klist_next+0x90/0x104
-Call Trace:
-[c00000001414b4c0] [c000000000394dac] .klist_next+0x84/0x104 (unreliable)
-[c00000001414b550] [c00000000026c8e0] .device_for_each_child+0x7c/0xd0
-[c00000001414b600] [d00000000030ac78] .scsi_remove_target+0xa8/0xe8 [scsi_mod]
-[c00000001414b690] [d0000000002c6898] .fc_rport_tgt_remove+0xb8/0xdc [scsi_transport_fc]
-[c00000001414b720] [d0000000002c6918] .fc_rport_terminate+0x5c/0xf0 [scsi_transport_fc]
-[c00000001414b7b0] [d0000000002c6b7c] .fc_remove_host+0x40/0xb8 [scsi_transport_fc]
-[c00000001414b830] [d0000000003e6a58] .qla2x00_remove_one+0x34/0x7c [qla2xxx]
-[c00000001414b8c0] [d0000000003b7010] .qla2300_remove_one+0x10/0x24 [qla2300]
-[c00000001414b940] [c00000000021bc88] .pci_device_remove+0x80/0x88
-[c00000001414b9c0] [c00000000026efb0] .__device_release_driver+0xd4/0xdc
-[c00000001414ba50] [c00000000026f100] .driver_detach+0x148/0x14c
-[c00000001414baf0] [c00000000026e0d8] .bus_remove_driver+0xa0/0x128
-[c00000001414bb90] [c00000000026f628] .driver_unregister+0x1c/0x40
-[c00000001414bc20] [c00000000021bf58] .pci_unregister_driver+0x24/0xbc
-[c00000001414bcb0] [d0000000003b7068] .qla2300_exit+0x1c/0x34 [qla2300]
-[c00000001414bd30] [c000000000080014] .sys_delete_module+0x220/0x368
-[c00000001414be30] [c00000000000d580] syscall_exit+0x0/0x18
-Instruction dump:
-4bfffd94 e89e8080 e87e80f0 4be4baad 60000000 4bffff60 e89e8080 e87e80c8 
-4bffffec 38000001 90030000 4e800020 <81230000> 2fa90000 7c000026 5400fffe 
+It looks obvious that "needs_sector_size" is entirely unnecessary in 2.6,
+because our opening sequence is much streamlined now. It made sense
+in 2.4 only.
 
--- Patrick Mansfield
+Al, James, do you approve?
 
-On Mon, Jun 20, 2005 at 03:59:26PM -0700, Greg KH wrote:
-> [PATCH] Use device_for_each_child() to unregister devices in scsi_remove_target().
-> 
-> Signed-off-by: Patrick Mochel <mochel@digitalimplant.org>
-> Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-> 
-> Index: gregkh-2.6/drivers/scsi/scsi_sysfs.c
-> ===================================================================
-> 
-> ---
-> commit 20b1e674230b642be662c5975923a0160ab9cbdc
-> tree 749e1384c57576bfbe3ffd1414df321cc783296f
-> parent 0293a509405dccecc30783a5d729d615b68d6a77
-> author mochel@digitalimplant.org <mochel@digitalimplant.org> Thu, 24 Mar 2005 19:03:59 -0800
-> committer Greg Kroah-Hartman <gregkh@suse.de> Mon, 20 Jun 2005 15:15:19 -0700
-> 
->  drivers/scsi/scsi_sysfs.c |   14 +++++++++-----
->  1 files changed, 9 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -669,6 +669,13 @@ void __scsi_remove_target(struct scsi_ta
->  	scsi_target_reap(starget);
->  }
->  
-> +static int __remove_child (struct device * dev, void * data)
-> +{
-> +	if (scsi_is_target_device(dev))
-> +		__scsi_remove_target(to_scsi_target(dev));
-> +	return 0;
-> +}
-> +
->  /**
->   * scsi_remove_target - try to remove a target and all its devices
->   * @dev: generic starget or parent of generic stargets to be removed
-> @@ -679,7 +686,7 @@ void __scsi_remove_target(struct scsi_ta
->   */
->  void scsi_remove_target(struct device *dev)
->  {
-> -	struct device *rdev, *idev, *next;
-> +	struct device *rdev;
->  
->  	if (scsi_is_target_device(dev)) {
->  		__scsi_remove_target(to_scsi_target(dev));
-> @@ -687,10 +694,7 @@ void scsi_remove_target(struct device *d
->  	}
->  
->  	rdev = get_device(dev);
-> -	list_for_each_entry_safe(idev, next, &dev->children, node) {
-> -		if (scsi_is_target_device(idev))
-> -			__scsi_remove_target(to_scsi_target(idev));
-> -	}
-> +	device_for_each_child(dev, NULL, __remove_child);
->  	put_device(rdev);
->  }
->  EXPORT_SYMBOL(scsi_remove_target);
+-- Pete
