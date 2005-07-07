@@ -1,58 +1,109 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH] drivers/scsi/st.c: add reference count and related fixes
-Date: Thu, 07 Jul 2005 08:24:10 -0500
-Message-ID: <42CD2CFA.20902@us.ibm.com>
-References: <92952AEF1F064042B6EF2522E0EEF437348354@EXNA.corp.stratus.com> <Pine.LNX.4.61.0507071332570.2964@kai.makisara.local>
-Reply-To: brking@us.ibm.com
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: [Paranoia] program cdparanoia not setting count and/or reply_len
+ properly
+Date: Thu, 07 Jul 2005 09:54:58 -0400
+Message-ID: <42CD3432.2090901@tmr.com>
+References: <f4cf9e34050704022158f5e779@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:33269 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S261455AbVGGNYN
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Jul 2005 09:24:13 -0400
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e35.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j67DOCOM521934
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Jul 2005 09:24:12 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j67DOCAu283194
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Jul 2005 07:24:12 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j67DOB2C023444
-	for <linux-scsi@vger.kernel.org>; Thu, 7 Jul 2005 07:24:11 -0600
-In-Reply-To: <Pine.LNX.4.61.0507071332570.2964@kai.makisara.local>
+Received: from mail.tmr.com ([64.65.253.246]:55983 "EHLO gaimboi.tmr.com")
+	by vger.kernel.org with ESMTP id S261548AbVGGNtP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jul 2005 09:49:15 -0400
+In-Reply-To: <f4cf9e34050704022158f5e779@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: "Dailey, Nate" <Nate.Dailey@stratus.com>, linux-scsi@vger.kernel.org
+To: Aaron VonderHaar <gruen0aermel@gmail.com>
+Cc: paranoia@xiph.orgl, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Kai Makisara wrote:
->>The primary change is adding a kref to the Scsi_Tape structure, to avoid
->>an oops when the tape drive is removed while open. This includes
->>scsi_tape_get/put routines and scsi_tape_release, and changes to st_open
->>and st_release. This is all based on the SCSI disk & CD reference
->>counting code.
->>
-> 
-> You have added a new kref for this. Have you considered using the 
-> existing cdev refcounting instead of a separate kref?
-> 
-> (When the new character device code was introduced, I got the impression 
-> that the proper way for the st would be to embed the struct into struct 
-> scsi_tape and make the destructor. The scsi_tapes[] array would not be 
-> necessary any more because the struct scsi_tape would be accessible through 
-> containerof(inode->i_cdev, struct scsi_tape, cdev).
-> (An array would be still necessary for tape number allocation.)
-> I did not implement this at that time because there was no real need for 
-> the change and it seemed too complex to test just for fun.)
+Aaron VonderHaar wrote:
 
-I'm not sure how you would do this since there is currently no way to
-embed data in a cdev. Also, since there are multiple cdevs per scsi_tape,
-it seems cleaner to use a new kref.
+>When ripping from a scsi device (/dev/sg*) with linux kernel 2.6.11,
+>my kernel log is filled with messages like
+>
+>=== dmesg ===
+>sg_write: data in/out 12/12 bytes for SCSI command 0x43--guessing data in;
+>   program cdparanoia not setting count and/or reply_len properly
+>printk: 40 messages suppressed.
+>sg_write: data in/out 30576/30576 bytes for SCSI command 0xbe--guessing data in;
+>   program cdparanoia not setting count and/or reply_len properly
+>printk: 128 messages suppressed.
+>sg_write: data in/out 30576/30576 bytes for SCSI command 0xbe--guessing data in;
+>   program cdparanoia not setting count and/or reply_len properly
+>printk: 149 messages suppressed.
+>sg_write: data in/out 16464/16464 bytes for SCSI command 0xbe--guessing data in;
+>   program cdparanoia not setting count and/or reply_len properly
+>printk: 153 messages suppressed.
+>sg_write: data in/out 30576/30576 bytes for SCSI command 0xbe--guessing data in;
+>   program cdparanoia not setting count and/or reply_len properly
+>printk: 153 messages suppressed.
+>=== END ===
+>
+>After taking a hard look at the cdparanoia code handle_scsi_cmd(), and
+>the kernel sg driver, I've found the problem is this bit of code in
+>the kernel,
+>
+>=== linux/drivers/scsi/sg.c LINE 566 ===
+>        /*
+>         * SG_DXFER_TO_FROM_DEV is functionally equivalent to SG_DXFER_FROM_DEV,
+>         * but is is possible that the app intended SG_DXFER_TO_DEV,
+>because there
+>         * is a non-zero input_size, so emit a warning.
+>         */
+>        if (hp->dxfer_direction == SG_DXFER_TO_FROM_DEV)
+>                if (printk_ratelimit())
+>                        printk(KERN_WARNING
+>                               "sg_write: data in/out %d/%d bytes for
+>SCSI command 0x%x--"
+>                               "guessing data in;\n" KERN_WARNING "   "
+>                               "program %s not setting count and/or
+>reply_len properly\n",
+>                               old_hdr.reply_len - (int)SZ_SG_HEADER,
+>                               input_size, (unsigned int) cmnd[0],
+>                               current->comm);
+>=== END ===
+>
+>As I said, this is in kernel 2.6.11.  I noticed that this piece of
+>code is absent from 2.6.9, so is presumably a new error-checking
+>addition, which unfortunately breaks cdparanoia (the following comment
+>seems to explain why cdparanoia must set the count "incorrectly"),
+>
+>=== cdparanoia-III-alpha9.8/interface/scsi_interface.c LINE 130 ===
+>  /* The following is one of the scariest hacks I've ever had to use.
+>     The idea is this: We want to know if a command fails.  The
+>     generic scsi driver (as of now) won't tell us; it hands back the
+>     uninitialized contents of the preallocated kernel buffer.  We
+>     force this buffer to a known value via another bug (nonzero data
+>     length for a command that doesn't take data) such that we can
+>     tell if the command failed.  Scared yet? */
+>=== END ===
+>
+>With this new warning being logged for nearly every SCSI command
+>(hundreds of times per second), my system becomes unresponsive and
+>ripping is considerably slowed.
+>
+>If I remove the warning code from the kernel and recompile it, ripping
+>seems to proceed as normal.
+>
+>I'm not sure what ought to be done about this, but I though I should
+>at least record my hours' worth of bewilderment for the next person
+>who googles this error message.
+>
 
+Alan Cox has sent fixes for some of the problems in sg to one of the 
+maintainers, but they don't seem to be in mainline. Perhaps he could 
+send them to akpm and see if he is interested in fixing problems. Once 
+the problem with error reporting is fixed (and that may not be the fix 
+Alan has devised) by someone then paranoia can get rid of the egregious 
+hack.
+
+I've expanded the recipients list, perhaps we'll get a status on (a) if 
+the fix Alan has will cause correct error reporting, and (b) when it can 
+be put in mainline. The paranoia can clean up its act.
 
 -- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+bill davidsen <davidsen@tmr.com>
+  CTO TMR Associates, Inc
+  Doing interesting things with small computers since 1979
+
