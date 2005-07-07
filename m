@@ -1,40 +1,36 @@
-From: Yogesh Bhanu <yogesh@gsf.de>
-Subject: Re: is there going to be aic7xxx driver update
-Date: Thu, 07 Jul 2005 15:39:57 +0200
-Message-ID: <42CD30AD.10602@gsf.de>
-References: <0882D625EC1D3043B8F0C4C3C8F73451016FC286@ntmail.gsf.de> <20050707125302.GA28489@infradead.org>
-Reply-To: yogesh@gsf.de
+From: Edmund <untagged@scbbs-bo.com>
+Subject: Welcome to VIP Quality Software.
+Date: Thu, 7 Jul 2005 14:08:03 -0200
+Message-ID: <12472550113.49535117157@200.170.127.206.user.ajato.com.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mta2.gsf.de ([146.107.4.111]:29595 "EHLO mta2.gsf.de")
-	by vger.kernel.org with ESMTP id S261525AbVGGNjF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jul 2005 09:39:05 -0400
-In-Reply-To: <20050707125302.GA28489@infradead.org>
+Received: from 200.170.127.206.user.ajato.com.br ([200.170.127.206]:49668 "EHLO
+	[192.168.1.100]") by vger.kernel.org with ESMTP id S261369AbVGGQUF
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Jul 2005 12:20:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
+To: linux-raid@vger.kernel.org
 
-Hi Christoph ,
-                 Martin and I have already reported our issues with adaptec 
-driver . His issue was with 2.4 series kernel which he fixed by using adaptec 
-driver . I have issues with 2.6 kernel . Temporarily I have switched to using
-LSI Controller and it seems to help . As it is my production server I cannot 
-test with every kernel patch that is coming out .
+The world's best software for research, science and engineering.
+http://xakzeio.kr6h51kdhuk9z32.isothujonene.org
 
 
 
-here is the link to my mail which was forwarded by Andrew Morton
-http://marc.theaimsgroup.com/?l=linux-scsi&m=111748746813088&w=2
 
-I had posted my another attempt but unfortunately I cannot find the mail in 
-digests .
-
-and here is the link to Martin Mokrejs's email .
-http://marc.theaimsgroup.com/?l=linux-scsi&m=111937786531131&w=2
+The arts are the servant; wisdom its master.     
+Don't expect to build up the weak by pulling down the strong. 
 
 
-hth
-yogesh
+y office, thou sendest me to God. 
+
+
+
+
+-- 
+Internal Virus Database is out-of-date.
+Checked by AVG Anti-Virus.
+Version: 7.0.300 / Virus Database: 266.0.0 - Release Date: 18/2/2005
+
