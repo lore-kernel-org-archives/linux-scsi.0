@@ -1,40 +1,36 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH] 2.6 aacraid: Fix sgmap error
-Date: Thu, 07 Jul 2005 13:40:00 -0700
-Message-ID: <1120768800.4472.10.camel@markh1.pdx.osdl.net>
+From: Andrea Carpani <andrea.carpani@criticalpath.net>
+Subject: Re: is there going to be aic7xxx driver update
+Date: Fri, 08 Jul 2005 12:29:49 +0200
+Message-ID: <1120818589.21659.13.camel@cronos.criticalpath.it>
+References: <0882D625EC1D3043B8F0C4C3C8F73451016FC286@ntmail.gsf.de>
+	 <20050707125302.GA28489@infradead.org>
+Reply-To: andrea.carpani@criticalpath.net
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:55724 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261344AbVGGUkE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jul 2005 16:40:04 -0400
+Received: from plutone.criticalpath.it ([192.92.105.11]:18060 "EHLO
+	mail.criticalpath.it") by vger.kernel.org with ESMTP
+	id S262494AbVGHKaI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Jul 2005 06:30:08 -0400
+In-Reply-To: <20050707125302.GA28489@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
+Il giorno gio, 07-07-2005 alle 13:53 +0100, Christoph Hellwig ha
+scritto:
 
-The wrong sgmap structure is being assigned in aac_send_raw_srb.
+> The adaptec drivers are a total mess and contain various regression vs whats
+> in mainline.  I'd suggest you report the problems you have with the latest
+> mainline driver to this list in detail so it can be fixed.
 
-Patch against scsi-misc-2.6 git tree.
-
-Signed-off-by: Mark Haverkamp <markh@osdl.org>
-
-Index: scsi-misc-2.6/drivers/scsi/aacraid/commctrl.c
-===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/aacraid/commctrl.c	2005-06-24 10:51:16.000000000 -0700
-+++ scsi-misc-2.6/drivers/scsi/aacraid/commctrl.c	2005-07-07 13:17:21.000000000 -0700
-@@ -517,7 +517,7 @@
- 	}
- 	if (dev->dac_support == 1) {
- 		struct user_sgmap64* upsg = (struct user_sgmap64*)&user_srbcmd->sg;
--		struct sgmap64* psg = (struct sgmap64*)&user_srbcmd->sg;
-+		struct sgmap64* psg = (struct sgmap64*)&srbcmd->sg;
- 		struct user_sgmap* usg;
- 		byte_count = 0;
- 
+It looks like mainline driver version is still 1.3.11 which is the same
+version that didn't work for me in 2.6.8.1
+Maybe version number hasn't been updated, though.
+I'll give mainline driver a try with the latest 2.6.12.2
 
 -- 
-Mark Haverkamp <markh@osdl.org>
+Andrea Carpani <andrea.carpani@criticalpath.net>
 
