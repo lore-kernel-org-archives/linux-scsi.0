@@ -1,14 +1,14 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH]  qla2xxx: Cleanup FC remote port registration.
-Date: Fri, 8 Jul 2005 18:00:36 -0700
-Message-ID: <20050709010036.GJ24126@plap.qlogic.org>
+Subject: [PATCH]  qla2xxx: Consolidate ISP24xx chip reset logic.
+Date: Fri, 8 Jul 2005 17:59:26 -0700
+Message-ID: <20050709005926.GI24126@plap.qlogic.org>
 References: <20050706172955.10568.87971.sendpatchset@plap.qlogic.com> <20050709005626.GG24126@plap.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:32630 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S263063AbVGIBAi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2005 21:00:38 -0400
+Received: from pat.qlogic.com ([198.70.193.2]:60019 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S263039AbVGIA71 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2005 20:59:27 -0400
 Content-Disposition: inline
 In-Reply-To: <20050709005626.GG24126@plap.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -16,88 +16,159 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Cleanup FC remote port registration.
+Consolidate ISP24xx chip reset logic.
 
-Due to the inherent behaviour (an immediate scan) of adding
-a 'target'-role-capable rport via fc_remote_port_add(),
-split the registration into two steps -- addition as
-unknown-type role, then use fc_remote_port_rolchg() with
-appropriate role (based on PLOGI/PRLI bits).  This allows
-for a more cleaner rport->dd_data management as can be seen
-with the simplified qla2xxx_slave_alloc() function.
+Consolidate near-duplicate RISC reset logic from
+qla24xx_reset_chip() and qla24xx_chip_diag().  Also, after
+initiating a soft-reset, insure the firmware has completed
+all NVRAM accesses before continuing.
 
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 ---
 
- drivers/scsi/qla2xxx/qla_init.c |   17 ++++++++++-------
- drivers/scsi/qla2xxx/qla_os.c   |   16 +---------------
- 2 files changed, 11 insertions(+), 22 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c  |   11 ++++++
+ drivers/scsi/qla2xxx/qla_init.c |   78 ++++++++++++++++-----------------------
+ 2 files changed, 42 insertions(+), 47 deletions(-)
 
-d2b87ba88e4ddfd08931ce2e0d836a2dd1e68ca4
+644a5b0d24ceadbc1ea50ddd494e2386eec97004
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -1526,6 +1526,17 @@ qla24xx_fw_dump(scsi_qla_host_t *ha, int
+ 
+ 		WRT_REG_DWORD(&reg->ctrl_status,
+ 		    CSRX_ISP_SOFT_RESET|CSRX_DMA_SHUTDOWN|MWB_4096_BYTES);
++		RD_REG_DWORD(&reg->ctrl_status);
++
++		/* Wait for firmware to complete NVRAM accesses. */
++		udelay(5);
++		mb[0] = (uint32_t) RD_REG_WORD(&reg->mailbox0);
++		for (cnt = 10000 ; cnt && mb[0]; cnt--) {
++			udelay(5);
++			mb[0] = (uint32_t) RD_REG_WORD(&reg->mailbox0);
++			barrier();
++		}
++
+ 		udelay(20);
+ 		for (cnt = 0; cnt < 30000; cnt++) {
+ 			if ((RD_REG_DWORD(&reg->ctrl_status) &
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2068,21 +2068,24 @@ qla2x00_reg_remote_port(scsi_qla_host_t 
- 	rport_ids.port_id = fcport->d_id.b.domain << 16 |
- 	    fcport->d_id.b.area << 8 | fcport->d_id.b.al_pa;
- 	rport_ids.roles = FC_RPORT_ROLE_UNKNOWN;
-+	fcport->rport = rport = fc_remote_port_add(ha->host, 0, &rport_ids);
-+	if (!rport) {
-+		qla_printk(KERN_WARNING, ha,
-+		    "Unable to allocate fc remote port!\n");
-+		return;
-+	}
-+	rport->dd_data = fcport;
-+
-+	rport_ids.roles = FC_RPORT_ROLE_UNKNOWN;
- 	if (fcport->port_type == FCT_INITIATOR)
- 		rport_ids.roles |= FC_RPORT_ROLE_FCP_INITIATOR;
- 	if (fcport->port_type == FCT_TARGET)
- 		rport_ids.roles |= FC_RPORT_ROLE_FCP_TARGET;
--
--	fcport->rport = rport = fc_remote_port_add(ha->host, 0, &rport_ids);
--	if (!rport)
--		qla_printk(KERN_WARNING, ha,
--		    "Unable to allocate fc remote port!\n");
-+	fc_remote_port_rolechg(rport, rport_ids.roles);
- 
- 	if (rport->scsi_target_id != -1 &&
- 	    rport->scsi_target_id < ha->host->max_id)
- 		fcport->os_target_id = rport->scsi_target_id;
--
--	rport->dd_data = fcport;
+@@ -564,20 +564,18 @@ qla2x00_reset_chip(scsi_qla_host_t *ha)
  }
  
- /*
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1071,26 +1071,12 @@ qla2x00_device_reset(scsi_qla_host_t *ha
- static int
- qla2xxx_slave_alloc(struct scsi_device *sdev)
+ /**
+- * qla24xx_reset_chip() - Reset ISP24xx chip.
++ * qla24xx_reset_risc() - Perform full reset of ISP24xx RISC.
+  * @ha: HA context
+  *
+  * Returns 0 on success.
+  */
+-void
+-qla24xx_reset_chip(scsi_qla_host_t *ha)
++static inline void
++qla24xx_reset_risc(scsi_qla_host_t *ha)
  {
--	scsi_qla_host_t *ha = to_qla_host(sdev->host);
- 	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
--	fc_port_t *fcport;
--	int found;
+ 	unsigned long flags = 0;
+ 	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+ 	uint32_t cnt, d2;
  
- 	if (!rport)
- 		return -ENXIO;
- 
--	found = 0;
--	list_for_each_entry(fcport, &ha->fcports, list) {
--		if (rport->port_name ==
--		    be64_to_cpu(*(uint64_t *)fcport->port_name)) {
--			found++;
--			break;
--		}
--	}
--	if (!found)
--		return -ENXIO;
+-	ha->isp_ops.disable_intrs(ha);
 -
--	sdev->hostdata = fcport;
-+	sdev->hostdata = rport->dd_data;
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
  
- 	return 0;
+ 	/* Reset RISC. */
+@@ -591,6 +589,17 @@ qla24xx_reset_chip(scsi_qla_host_t *ha)
+ 
+ 	WRT_REG_DWORD(&reg->ctrl_status,
+ 	    CSRX_ISP_SOFT_RESET|CSRX_DMA_SHUTDOWN|MWB_4096_BYTES);
++	RD_REG_DWORD(&reg->ctrl_status);
++
++	/* Wait for firmware to complete NVRAM accesses. */
++	udelay(5);
++	d2 = (uint32_t) RD_REG_WORD(&reg->mailbox0);
++	for (cnt = 10000 ; cnt && d2; cnt--) {
++		udelay(5);
++		d2 = (uint32_t) RD_REG_WORD(&reg->mailbox0);
++		barrier();
++	}
++
+ 	udelay(20);
+ 	d2 = RD_REG_DWORD(&reg->ctrl_status);
+ 	for (cnt = 6000000 ; cnt && (d2 & CSRX_ISP_SOFT_RESET); cnt--) {
+@@ -619,6 +628,21 @@ qla24xx_reset_chip(scsi_qla_host_t *ha)
  }
+ 
+ /**
++ * qla24xx_reset_chip() - Reset ISP24xx chip.
++ * @ha: HA context
++ *
++ * Returns 0 on success.
++ */
++void
++qla24xx_reset_chip(scsi_qla_host_t *ha)
++{
++	ha->isp_ops.disable_intrs(ha);
++
++	/* Perform RISC reset. */
++	qla24xx_reset_risc(ha);
++}
++
++/**
+  * qla2x00_chip_diag() - Test chip for proper operation.
+  * @ha: HA context
+  *
+@@ -753,49 +777,9 @@ int
+ qla24xx_chip_diag(scsi_qla_host_t *ha)
+ {
+ 	int rval;
+-	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+-	unsigned long flags = 0;
+-	uint32_t cnt, d2;
+-
+-	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 
+-	/* Reset RISC. */
+-	WRT_REG_DWORD(&reg->ctrl_status, CSRX_DMA_SHUTDOWN|MWB_4096_BYTES);
+-	for (cnt = 0; cnt < 30000; cnt++) {
+-		if ((RD_REG_DWORD(&reg->ctrl_status) &
+-		    CSRX_DMA_ACTIVE) == 0)
+-			break;
+-
+-		udelay(10);
+-	}
+-
+-	WRT_REG_DWORD(&reg->ctrl_status,
+-	    CSRX_ISP_SOFT_RESET|CSRX_DMA_SHUTDOWN|MWB_4096_BYTES);
+-	udelay(20);
+-	d2 = RD_REG_DWORD(&reg->ctrl_status);
+-	for (cnt = 6000000 ; cnt && (d2 & CSRX_ISP_SOFT_RESET); cnt--) {
+-		udelay(5);
+-		d2 = RD_REG_DWORD(&reg->ctrl_status);
+-		barrier();
+-	}
+-
+-	WRT_REG_DWORD(&reg->hccr, HCCRX_SET_RISC_RESET);
+-	RD_REG_DWORD(&reg->hccr);
+-
+-	WRT_REG_DWORD(&reg->hccr, HCCRX_REL_RISC_PAUSE);
+-	RD_REG_DWORD(&reg->hccr);
+-
+-	WRT_REG_DWORD(&reg->hccr, HCCRX_CLR_RISC_RESET);
+-	RD_REG_DWORD(&reg->hccr);
+-
+-	d2 = (uint32_t) RD_REG_WORD(&reg->mailbox0);
+-	for (cnt = 6000000 ; cnt && d2; cnt--) {
+-		udelay(5);
+-		d2 = (uint32_t) RD_REG_WORD(&reg->mailbox0);
+-		barrier();
+-	}
+-
+-	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++	/* Perform RISC reset. */
++	qla24xx_reset_risc(ha);
+ 
+ 	ha->fw_transfer_size = REQUEST_ENTRY_SIZE * 1024;
+ 
 ------------
