@@ -1,36 +1,48 @@
-From: patrick Kazuo <Mongin@btopenworld.com>
-Subject: Employees wanted for fast growing company
-Date: Sat, 09 Jul 2005 22:47:55 +0000
-Message-ID: <5d7701c584d8$21fbe2af$50c89232@btopenworld.com>
+From: Ben Collins <bcollins@debian.org>
+Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
+Date: Sat, 9 Jul 2005 19:06:56 -0400
+Message-ID: <20050709230656.GS29099@phunnypharm.org>
+References: <200507091237.j69Cbtrv003425@einhorn.in-berlin.de> <1120922306.5008.5.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain;
-    format=flowed;
-    charset="iso-8859-1";
-    reply-type=original
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from c-24-8-198-82.hsd1.co.comcast.net ([24.8.198.82]:4869 "HELO
-	c-24-8-198-82.hsd1.co.comcast.net") by vger.kernel.org with SMTP
-	id S261756AbVGIWyY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 9 Jul 2005 18:54:24 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux1394-devel-admin@lists.sourceforge.net>
+Content-Disposition: inline
+In-Reply-To: <1120922306.5008.5.camel@mulgrave>
+Sender: linux1394-devel-admin@lists.sourceforge.net
+Errors-To: linux1394-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-This opportunity is great for people looking for extra income.
-Want to reduce your job related stress and make extra money working from home?
-We are looking for people who share one common goal, the burning desire to make a change.
-Your personal coach will explain you how to put the internet and your computer to work for you.
-No matter what you currently do for a living, you can join our team and make money!
-We will need 3 hours per day from you. You can work part time or full time.
-Our company is designed to take advantage of the exploding internet technology market.
-Many successful members started with no previous experience.
-Keep in mind that there are no fees or packages to buy to join our firm.
-We provide education and training needed to help you realize your financial security.
-Take the vacation of your dreams, buy a better car, and build your dream home!
-Our extensive training and support is what makes this position so easy to run for you.
+Alright, I need some explanation on these changes to sbp2. Lots of things
+ripped out.
 
-Please provide us your contact information to get more details about this job offer!
-To continue with the application process please fill in our online application at:
+I can understand that TYPE_RDC is what we had as TYPE_SDAD. Now, in our
+tree for TYPE_RDC, we converted it to TYPE_DISK. We also did a lot of mode
+conversions for DISK/RDC/ROM types.
 
-http://www.globaltransfer.org/vacancies.html
+My question is, why were the conversions all removed? The conversions, as
+far as I know, are related to SBP protocol, and not SCSI, so why would the
+SCSI maintainers feel the need to rip out an important part of the SBP2
+driver? Note, this isn't really a SCSI device, or a scsi host controller.
+It's a protocol translation layer.
+
+-- 
+Debian     - http://www.debian.org/
+Linux 1394 - http://www.linux1394.org/
+Subversion - http://subversion.tigris.org/
+SwissDisk  - http://www.swissdisk.com/
+
+
+-------------------------------------------------------
+This SF.Net email is sponsored by the 'Do More With Dual!' webinar happening
+July 14 at 8am PDT/11am EDT. We invite you to explore the latest in dual
+core and dual graphics technology at this free one hour event hosted by HP,
+AMD, and NVIDIA.  To register visit http://www.hp.com/go/dualwebinar
