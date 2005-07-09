@@ -1,43 +1,48 @@
-From: Ben Collins <bcollins@debian.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
-Date: Sat, 9 Jul 2005 14:12:18 -0400
-Message-ID: <20050709181218.GH29099@phunnypharm.org>
-References: <20050709162712.GB27347@phunnypharm.org> <200507091700.j69H0q5Y029204@einhorn.in-berlin.de> <20050709175118.GB29099@phunnypharm.org> <1120931849.3176.54.camel@laptopd505.fenrus.org>
+Date: Sat, 09 Jul 2005 13:38:25 -0500
+Message-ID: <1120934305.5008.23.camel@mulgrave>
+References: <200507091237.j69Cbtrv003425@einhorn.in-berlin.de>
+	 <1120922306.5008.5.camel@mulgrave> <20050709162712.GB27347@phunnypharm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [206.246.247.150] ([206.246.247.150]:48864 "EHLO
-	bristol.phunnypharm.org") by vger.kernel.org with ESMTP
-	id S261641AbVGISMU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 9 Jul 2005 14:12:20 -0400
-Content-Disposition: inline
-In-Reply-To: <1120931849.3176.54.camel@laptopd505.fenrus.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux1394-devel-admin@lists.sourceforge.net>
+In-Reply-To: <20050709162712.GB27347@phunnypharm.org>
+Sender: linux1394-devel-admin@lists.sourceforge.net
+Errors-To: linux1394-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
+To: Ben Collins <bcollins@debian.org>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Stefan Richter <stefanr@s5r6.in-berlin.de>
 
-On Sat, Jul 09, 2005 at 07:57:29PM +0200, Arjan van de Ven wrote:
-> On Sat, 2005-07-09 at 13:51 -0400, Ben Collins wrote:
-> > On Sat, Jul 09, 2005 at 07:00:52PM +0200, Stefan Richter wrote:
-> > > On  9 Jul, Ben Collins wrote:
-> > > > If it was orphaned it was done so mistakenly. I maintain that code, and
-> > > > linux1394.
-> > > 
-> > > sbp2 and eth1394 have been listed as orphan since linux-2.6.12.
-> > 
-> > Can't see how the most used driver in our repo can be considered orphaned.
-> > I'm a little irritated that the change occured. I've sent a patch to Linus
-> > to put SBP2 back under my name.
-> 
-> did you also send him the changes you have pending in these drivers (if
-> any) to him ? Or maybe sbp2 should go via james since it is a scsi
-> driver....
+On Sat, 2005-07-09 at 12:27 -0400, Ben Collins wrote:
+> If it was orphaned it was done so mistakenly. I maintain that code, and
+> linux1394.
 
-Not yet. I will once everything is back in sync in our tree.
+Well, it's becoming hard to interrogate BK about ancient changes now
+that Larry has stopped all the tools from working.  However, with a bit
+of patience and the web interface I find that Jody McIntyre did it about
+six months ago.  The Commit log just says "Update ieee1934 Maintainers".
 
--- 
-Debian     - http://www.debian.org/
-Linux 1394 - http://www.linux1394.org/
-Subversion - http://subversion.tigris.org/
-SwissDisk  - http://www.swissdisk.com/
+http://linux.bkbits.net:8080/linux-2.6/cset@41fea0f48hdaU1fFdS1Cb88bjsXqLA
+
+I'm not about to get into an argument over the whys and wherefores; you
+need to take this up with Linus.
+
+James
+
+
+
+
+-------------------------------------------------------
+This SF.Net email is sponsored by the 'Do More With Dual!' webinar happening
+July 14 at 8am PDT/11am EDT. We invite you to explore the latest in dual
+core and dual graphics technology at this free one hour event hosted by HP,
+AMD, and NVIDIA.  To register visit http://www.hp.com/go/dualwebinar
