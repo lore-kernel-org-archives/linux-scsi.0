@@ -1,7 +1,7 @@
 From: Ben Collins <bcollins@debian.org>
 Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
-Date: Sat, 9 Jul 2005 19:06:56 -0400
-Message-ID: <20050709230656.GS29099@phunnypharm.org>
+Date: Sat, 9 Jul 2005 19:31:38 -0400
+Message-ID: <20050709233138.GT29099@phunnypharm.org>
 References: <200507091237.j69Cbtrv003425@einhorn.in-berlin.de> <1120922306.5008.5.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -21,18 +21,19 @@ To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
 
-Alright, I need some explanation on these changes to sbp2. Lots of things
-ripped out.
+Ok, I see that the rw and ms 10byte conversions are in the scsi lib now.
 
-I can understand that TYPE_RDC is what we had as TYPE_SDAD. Now, in our
-tree for TYPE_RDC, we converted it to TYPE_DISK. We also did a lot of mode
-conversions for DISK/RDC/ROM types.
+Thing is, these don't seem to be working for SBP2. I assume these
+conversions came from libata (since that's the only other user of them).
+Is that correct? Was the logic compared to the SBP2 conversions before
+being moved over to using them?
 
-My question is, why were the conversions all removed? The conversions, as
-far as I know, are related to SBP protocol, and not SCSI, so why would the
-SCSI maintainers feel the need to rip out an important part of the SBP2
-driver? Note, this isn't really a SCSI device, or a scsi host controller.
-It's a protocol translation layer.
+Reverting this portion wont break anything, correct? Just means we have
+duplication of code (well, except that one works for us and the other
+doesn't).
+
+I'm going to revert this in my merge with Linus, but I will retain it in
+our tree until we can figure out what the problem is.
 
 -- 
 Debian     - http://www.debian.org/
