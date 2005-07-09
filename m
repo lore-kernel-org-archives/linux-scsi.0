@@ -1,43 +1,34 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
-Date: Sat, 09 Jul 2005 10:18:26 -0500
-Message-ID: <1120922306.5008.5.camel@mulgrave>
-References: <200507091237.j69Cbtrv003425@einhorn.in-berlin.de>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Jake <administration@clintsloan.com>
+Subject: Hey - Don't get ripped off!
+Date: Sat, 9 Jul 2005 19:30:47 +0400
+Message-ID: <10623888381.8703631776@ADSL-TPLUS-15-92.intnet.mu>
+Mime-Version: 1.0 (Apple Message framework v728)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:18562 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261499AbVGIPSb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 9 Jul 2005 11:18:31 -0400
-In-Reply-To: <200507091237.j69Cbtrv003425@einhorn.in-berlin.de>
+Received: from ADSL-TPLUS-15-92.intnet.mu ([202.123.15.92]:45062 "HELO
+	ADSL-TPLUS-15-92.intnet.mu") by vger.kernel.org with SMTP
+	id S261588AbVGIPa7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 9 Jul 2005 11:30:59 -0400
+Received: from [95.47.219.99] (port=4291 helo=[chalked])
+    by ADSL-TPLUS-15-92.intnet.mu with esmtp
+    id 4080729850beachheads65191
+    for linux-scsi@vger.kernel.org; Sat, 9 Jul 2005 19:30:48 +0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net
+To: linux-scsi@vger.kernel.org
 
-On Sat, 2005-07-09 at 14:37 +0200, Stefan Richter wrote:
-> there are a few changes to sbp2 in linux-2.6.13 (-rc2) that were not
-> merged back into the linux1394.org repository (and were not tested by
-> linux1394 maintainers as far as I have heard). Most of these changes
-> deal with TYPE_RBC devices.
-
-That's probably because no-one knows about you: the sbp2 driver is
-listed as Orphaned in the MAINTAINERS file.  You're welcome to take over
-maintenance, but you need to get that file updated.
-
-> I have one question for now: Is the following part of the diff related
-> to the TYPE_RBC issue, or is it unrelated? As you can see, locking is
-> removed from sbp2scsi_complete_command() but added to sbp2scsi_reset():
-
-It's from the SCSI reset API changes, as a quick excursion into the
-kernel web history viewer would have shown you:
-
-http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=history;h=a92b7b80579fe68fe229892815c750f6652eb6a9;f=drivers/ieee1394/sbp2.c
-
-James
+Read this before purchasing penis enlarge products!
+http://www.felmuh.com/ss/
 
 
+
+
+
+Gravity is a habit that is hard to shake off.   
+I am sure the grapes are sour.      
+Wherever I have gone in this country, I have found Americans.  
+The eternal silence of these infinite spaces fills me with dread.  
+Most men are within a finger's breadth of being mad.   
 
 
