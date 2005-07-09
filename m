@@ -1,63 +1,105 @@
-From: "quazi " <quazi41hossain@yahoo.com>
-Subject: Business relationship
-Date: Fri, 08 Jul 2005 19:40:46 +0000
-Message-ID: <5D99896C.F55416E@yahoo.com>
-Reply-To: "quazi " <quazi41hossain@yahoo.com>
+From: Nishanth Aravamudan <nacc@us.ibm.com>
+Subject: [KJ] [PATCH 11/14] scsi/lpfc_scsi: use msleep() instead of
+	schedule_timeout()
+Date: Fri, 8 Jul 2005 17:14:58 -0700
+Message-ID: <20050709001458.GQ2596@us.ibm.com>
+References: <20050709000324.GD2596@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [211.34.248.93] ([211.34.248.93]:30592 "HELO yahoo.com")
-	by vger.kernel.org with SMTP id S262849AbVGHT6p (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2005 15:58:45 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="===============15674706287876861=="
+Return-path: <kernel-janitors-bounces@lists.osdl.org>
+In-Reply-To: <20050709000324.GD2596@us.ibm.com>
+List-Unsubscribe: <https://lists.osdl.org/mailman/listinfo/kernel-janitors>,
+	<mailto:kernel-janitors-request@lists.osdl.org?subject=unsubscribe>
+List-Archive: <http://lists.osdl.org/pipermail/kernel-janitors>
+List-Post: <mailto:kernel-janitors@lists.osdl.org>
+List-Help: <mailto:kernel-janitors-request@lists.osdl.org?subject=help>
+List-Subscribe: <https://lists.osdl.org/mailman/listinfo/kernel-janitors>,
+	<mailto:kernel-janitors-request@lists.osdl.org?subject=subscribe>
+Sender: kernel-janitors-bounces@lists.osdl.org
+Errors-To: kernel-janitors-bounces@lists.osdl.org
+To: James.Bottomley@SteelEye.com
+Cc: Kernel-Janitors <kernel-janitors@lists.osdl.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Administrator <linux-scsi@vger.kernel.org>
 
-Hello!
-Compliments
-I have been searching for a person whom we can jointly invest, Trust in and
-also solicit an honorable partnership with. 
-I want to confirm that your contact information was got from a web email
-directory. I represent a client who is interested in investing in your
-country in areas related to agriculture or any business of your choice, to
-initiate a proper and structured relationship. Please let me know what your
-response will be to an offer to receive investment funds in cash if; 
-1. The said fund amounts to US$8,500,000 (Eight Million, Five hundred
-Thousand US Dollars).
-2. The said fund is in cash and needs to be transferred in the same state,
-due to some covert reasons.
-3. The fund could be invested through your agency in the purchase of
-facility and assets for investment purposes within your country, in
-collaboration with the agency of the current brokers.
-4. This transaction will result in you being paid a commission of 10% off
-the investment capital.
-5. The fund owners desire absolute confidentiality and professionalism
-in the handling of this matter, due to risks of seizure of the fund and
-litigation if personalities are revealed. 
-The fund owners have interest to invest in any of the following industries,
-depending on which is most transparent, low risk, and average profit
-yielding: Power Generation, Telecommunication and Software Development, Film
-Production, Hardware Manufacturing and Export, Medicine, Construction or
-Real-Estate Development.
-Based upon the information provided above, I would like to know if you
-shall be able to assist in the nature of managing the investment fund. You
-must note that the fund can only be transferred in cash, therefore if you
-are in acceptance to participate with us in the investment of the fund, you
-shall also need to participate with us in the transfer of the fund in cash
-in the manner of receiving the fund in cash and depositing it in a Trusted
-account opened in favour of the investment to be established.
-And this account would serve as the base or operating account for the
-investment. I am obliged to believe that you would be able to understand the
-information above, and should you need further information, please do not
-hesitate to ask.
-Kindly confirm receipt of this email by sending all correspondence to:
-quazihossain44@netscape.net
+--===============15674706287876861==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Sincerely,
+From: Nishanth Aravamudan <nacc@us.ibm.com>
 
-Quazi Hossain  (Esq)
+Description: Replace schedule_timeout() with msleep() to guarantee the
+task delays as expected.
 
+Patch is compile-tested.
 
+Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
 
+---
+
+ lpfc_scsi.c |   13 +++++--------
+ 1 files changed, 5 insertions(+), 8 deletions(-)
+
+diff -urp 2.6.13-rc2-kj/drivers/scsi/lpfc/lpfc_scsi.c 2.6.13-rc2-kj-dev/drivers/scsi/lpfc/lpfc_scsi.c
+--- 2.6.13-rc2-kj/drivers/scsi/lpfc/lpfc_scsi.c	2005-07-06 07:57:19.000000000 -0700
++++ 2.6.13-rc2-kj-dev/drivers/scsi/lpfc/lpfc_scsi.c	2005-07-06 19:20:41.000000000 -0700
+@@ -24,6 +24,7 @@
+ 
+ #include <linux/pci.h>
+ #include <linux/interrupt.h>
++#include <linux/delay.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_device.h>
+@@ -885,8 +886,7 @@ __lpfc_abort_handler(struct scsi_cmnd *c
+ 		while (cmnd->host_scribble)
+ 		{
+ 			spin_unlock_irq(phba->host->host_lock);
+-			set_current_state(TASK_UNINTERRUPTIBLE);
+-			schedule_timeout(LPFC_ABORT_WAIT*HZ);
++			msleep(LPFC_ABORT_WAIT * 1000);
+ 			spin_lock_irq(phba->host->host_lock);
+ 			if (++loop_count
+ 			    > (2 * phba->cfg_nodev_tmo)/LPFC_ABORT_WAIT)
+@@ -952,8 +952,7 @@ __lpfc_reset_lun_handler(struct scsi_cmn
+ 
+ 		if (pnode->nlp_state != NLP_STE_MAPPED_NODE) {
+ 			spin_unlock_irq(phba->host->host_lock);
+-			set_current_state(TASK_UNINTERRUPTIBLE);
+-			schedule_timeout( HZ/2);
++			msleep(500);
+ 			spin_lock_irq(phba->host->host_lock);
+ 		}
+ 		if ((pnode) && (pnode->nlp_state == NLP_STE_MAPPED_NODE))
+@@ -1011,8 +1010,7 @@ __lpfc_reset_lun_handler(struct scsi_cmn
+ 				       cmnd->device->id, cmnd->device->lun,
+ 				       LPFC_CTX_LUN))) {
+ 		spin_unlock_irq(phba->host->host_lock);
+-		set_current_state(TASK_UNINTERRUPTIBLE);
+-		schedule_timeout(LPFC_RESET_WAIT*HZ);
++		msleep(LPFC_RESET_WAIT * 1000);
+ 		spin_lock_irq(phba->host->host_lock);
+ 
+ 		if (++loopcnt
+@@ -1110,8 +1108,7 @@ __lpfc_reset_bus_handler(struct scsi_cmn
+ 				&phba->sli.ring[phba->sli.fcp_ring],
+ 				0, 0, LPFC_CTX_HOST))) {
+ 		spin_unlock_irq(phba->host->host_lock);
+-		set_current_state(TASK_UNINTERRUPTIBLE);
+-		schedule_timeout(LPFC_RESET_WAIT*HZ);
++		msleep(LPFC_RESET_WAIT * HZ);
+ 		spin_lock_irq(phba->host->host_lock);
+ 
+ 		if (++loopcnt
+
+--===============15674706287876861==
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+
+_______________________________________________
+Kernel-janitors mailing list
+Kernel-janitors@lists.osdl.org
+https://lists.osdl.org/mailman/listinfo/kernel-janitors
+
+--===============15674706287876861==--
