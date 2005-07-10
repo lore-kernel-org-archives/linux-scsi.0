@@ -1,50 +1,36 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: sbp2: modprobe -r fails, module allegedly in use
-Date: Sun, 10 Jul 2005 12:29:22 -0500
-Message-ID: <1121016562.5078.15.camel@mulgrave>
-References: <42D133EE.9090204@s5r6.in-berlin.de>
+From: Ben Collins <bcollins@debian.org>
+Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
+Date: Sun, 10 Jul 2005 13:33:02 -0400
+Message-ID: <20050710173302.GE14956@phunnypharm.org>
+References: <200507091237.j69Cbtrv003425@einhorn.in-berlin.de> <1120922306.5008.5.camel@mulgrave> <20050709230656.GS29099@phunnypharm.org> <20050710033431.GB13883@havoc.gtf.org> <20050710043645.GF2972@phunnypharm.org> <1121009100.5078.4.camel@mulgrave> <20050710155839.GC14956@phunnypharm.org> <1121015154.5078.10.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:17804 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261980AbVGJR30 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Jul 2005 13:29:26 -0400
-In-Reply-To: <42D133EE.9090204@s5r6.in-berlin.de>
+Received: from [206.246.247.150] ([206.246.247.150]:17380 "EHLO
+	bristol.phunnypharm.org") by vger.kernel.org with ESMTP
+	id S261982AbVGJRdE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Jul 2005 13:33:04 -0400
+Content-Disposition: inline
+In-Reply-To: <1121015154.5078.10.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net, Ben Collins <bcollins@debian.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net
 
-On Sun, 2005-07-10 at 16:42 +0200, Stefan Richter wrote:
-> it seems the sbp2 driver module can never be unloaded because the
-> module "is in use" even though all SBP-2 devices were physically removed
-> (after umount etc.). I believe it is an old problem of the last few 2.6
-> kernels but am not sure when it was really introduced.
+> > Looking the pre TYPE_RBC code, I can see that the modepage change wasn't
+> > there, so sure enough we were using 8. Could this cause an
+> > ILLEGAL_REQUEST, and thus disable use_10_for_{rw,ms}?
 > 
-> One thing can easily be spotted by "ps x": The scsi_error_handler of an
-> SBP-2 device does not exit. The /sys/bus/scsi/devices/$a:$b:$c:$d 
-> vanished, the /sys/bus/ieee1394/devices/$guid-$unit too, but the 
-> scsi_eh_# daemon is still there. It seems shost->shost_gendev.release 
-> was never called.
-> 
-> So I just added a few more scsi_host_put() to sbp2_remove_device(). 
-> scsi_eh_# now goes away when I disconnect the device. Still, modprobe -r 
-> sbp2 fails with "FATAL: Module sbp2 is in use.".
+> Yes, that was the core of the bug Al was fixing.  sd has been requesting
+> caching data for a while now.  However, for RBC devices it was probing
+> the wrong mode page and failing.  After the changes we actually get the
+> correct caching data.
 
-Actually, I think your error is the opposite of this: you should never
-have to do a scsi_host_put() unless you did a corresponding
-scsi_host_get(), which, as far as I can see, sbp2 never does, so the
-extra put should be meaningless.
+Well, what I was asking was that since we were working with modepage=8,
+could the switch to modepage=6 with the new code be causing our problems?
 
-Except, I notice that you don't do a scsi_device_put() after
-scsi_add_device().  I think this is probably the source of the
-refcounting errors: scsi_add_device returns an sdev with the refcount
-incremented by one, so you need to decrement the count after you've
-finished with it (in your case, you do nothing with it, so just
-decrement after you've checked it's not an error pointer).
-
-James
-
-
+-- 
+Debian     - http://www.debian.org/
+Linux 1394 - http://www.linux1394.org/
+Subversion - http://subversion.tigris.org/
+SwissDisk  - http://www.swissdisk.com/
