@@ -1,57 +1,71 @@
-From: randy_dunlap <rdunlap@xenotime.net>
-Subject: Re: Fw: Kernel panic with dc395x in 2.6.12.2
-Date: Sun, 10 Jul 2005 10:56:35 -0700
-Message-ID: <20050710105635.6d1606e3.rdunlap@xenotime.net>
-References: <20050709175725.75f291bf.rdunlap@xenotime.net>
-	<42D07E94.8070409@drzeus.cx>
-	<20050709210824.29a90c5b.rdunlap@xenotime.net>
-	<42D12A39.80207@drzeus.cx>
-	<20050710093907.3f3c36e4.rdunlap@xenotime.net>
-	<42D15968.1080101@drzeus.cx>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
+Date: Sun, 10 Jul 2005 13:14:33 -0500
+Message-ID: <1121019274.5078.22.camel@mulgrave>
+References: <200507091237.j69Cbtrv003425@einhorn.in-berlin.de>
+	 <1120922306.5008.5.camel@mulgrave> <20050709230656.GS29099@phunnypharm.org>
+	 <20050710033431.GB13883@havoc.gtf.org>
+	 <20050710043645.GF2972@phunnypharm.org> <1121009100.5078.4.camel@mulgrave>
+	 <42D15C28.5030705@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chretien.genwebhost.com ([209.59.175.22]:63208 "EHLO
-	chretien.genwebhost.com") by vger.kernel.org with ESMTP
-	id S261994AbVGJR4m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Jul 2005 13:56:42 -0400
-In-Reply-To: <42D15968.1080101@drzeus.cx>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-admin@lists.sourceforge.net>
+In-Reply-To: <42D15C28.5030705@s5r6.in-berlin.de>
+Sender: linux1394-devel-admin@lists.sourceforge.net
+Errors-To: linux1394-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net, Ben Collins <bcollins@debian.org>, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Pierre Ossman <drzeus-list@drzeus.cx>
-Cc: linux-scsi@vger.kernel.org
 
-On Sun, 10 Jul 2005 19:22:48 +0200 Pierre Ossman wrote:
+On Sun, 2005-07-10 at 19:34 +0200, Stefan Richter wrote:
+> Jul 10 18:30:17 shuttle kernel:   Type:   Unknown                            ANSI SCSI revision: 02
 
-| I've tried to get it running on three separate machines now with no
-| success (each running a different kernel version), so I'm starting to
-| suspect I'm doing something wrong here. I've used the following line to
-| load the module:
-| 
-| modprobe netconsole netconsole=@/,@10.8.0.168/
-| 
-| I've tried changing the ip-address to both broadcast and specific hosts
-| with the same result. I also tried giving all parameters using:
-| 
-| modprobe netconsole
-| netconsole=2000@10.8.0.24/eth0,3000@10.8.0.168/00:0e:35:15:32:d6
-| 
-| but the result was the same.
-| 
-| Anything else I might be doing wrong?
+Sorry, that's expected: I had a patch that would identify it as RBC, but
+there was another different one from someone else, and neither got
+applied.  Can you try this:
 
-netconsole seems to be working:
-| netconsole: network logging started
+http://sourceforge.net/mailarchive/message.php?msg_id=11828307
 
-Are you using netcat on the receive side?
+> Then silence.
 
-Matt Mackall says that a common problem is running kernels with
-a log low level:
+Hmm, it sounds like the driver's not binding.  If you do a
 
-Kernel command line: ro root=LABEL=/ rhgb quiet acpi=ht
+ls -l /sys/class/scsi_device/<device>/device/driver
 
-so remove the "quiet" option there, or change it to "debug".
+On this, do you see anything (it should be a link to the bound driver).
 
----
-~Randy
+If there's nothing there, it sounds like sd.c is missing the RBC
+attachment code, which was this hunk of the patch:
+
+  @@ -1533,7 +1551,7 @@
+  	int error;
+  
+  	error = -ENODEV;
+ -	if ((sdp->type != TYPE_DISK) && (sdp->type != TYPE_MOD))
+ +	if (sdp->type != TYPE_DISK && sdp->type != TYPE_MOD && sdp->type != TYPE_RBC)
+  		goto out;
+  
+  	SCSI_LOG_HLQUEUE(3, printk("sd_attach: scsi device: <%d,%d,%d,%d>\n", 
+
+Could you check that that's in sd.c
+
+Thanks,
+
+James
+
+
+
+
+-------------------------------------------------------
+This SF.Net email is sponsored by the 'Do More With Dual!' webinar happening
+July 14 at 8am PDT/11am EDT. We invite you to explore the latest in dual
+core and dual graphics technology at this free one hour event hosted by HP,
+AMD, and NVIDIA.  To register visit http://www.hp.com/go/dualwebinar
