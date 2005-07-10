@@ -1,35 +1,48 @@
-From: Olaf Hering <olh@suse.de>
-Subject: [PATCH 51/82] remove linux/version.h from drivers/scsi/sgiwd93.c
-Date: Sun, 10 Jul 2005 19:35:59 +0000
-Message-ID: <20050710193559.51.IaswNc3626.2247.olh@nectarine.suse.de>
-References: <20050710193508.0.PmFpst2252.2247.olh@nectarine.suse.de>
+From: Pierre Ossman <drzeus-list@drzeus.cx>
+Subject: Re: Fw: Kernel panic with dc395x in 2.6.12.2
+Date: Sun, 10 Jul 2005 21:55:53 +0200
+Message-ID: <42D17D49.1000007@drzeus.cx>
+References: <20050709175725.75f291bf.rdunlap@xenotime.net>	<42D07E94.8070409@drzeus.cx>	<20050709210824.29a90c5b.rdunlap@xenotime.net>	<42D12A39.80207@drzeus.cx>	<20050710093907.3f3c36e4.rdunlap@xenotime.net>	<42D15968.1080101@drzeus.cx> <20050710105635.6d1606e3.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261885AbVGJTnY@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20050710193508.0.PmFpst2252.2247.olh@nectarine.suse.de>  
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [85.8.12.41] ([85.8.12.41]:3456 "EHLO smtp.drzeus.cx")
+	by vger.kernel.org with ESMTP id S262091AbVGJTzz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Jul 2005 15:55:55 -0400
+In-Reply-To: <20050710105635.6d1606e3.rdunlap@xenotime.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: randy_dunlap <rdunlap@xenotime.net>
+Cc: linux-scsi@vger.kernel.org
 
+randy_dunlap wrote:
 
-changing CONFIG_LOCALVERSION rebuilds too much, for no appearent reason.
+>Are you using netcat on the receive side?
+>
+>  
+>
 
-Signed-off-by: Olaf Hering <olh@suse.de>
+I've been using tcpdump and not a single packet eminates from the
+machine when printk:s show up.
 
-drivers/scsi/sgiwd93.c |    1 -
-1 files changed, 1 deletion(-)
+>Matt Mackall says that a common problem is running kernels with
+>a log low level:
+>
+>Kernel command line: ro root=LABEL=/ rhgb quiet acpi=ht
+>
+>so remove the "quiet" option there, or change it to "debug".
+>  
+>
 
-Index: linux-2.6.13-rc2-mm1/drivers/scsi/sgiwd93.c
-===================================================================
---- linux-2.6.13-rc2-mm1.orig/drivers/scsi/sgiwd93.c
-+++ linux-2.6.13-rc2-mm1/drivers/scsi/sgiwd93.c
-@@ -15,7 +15,6 @@
-#include <linux/types.h>
-#include <linux/mm.h>
-#include <linux/blkdev.h>
--#include <linux/version.h>
-#include <linux/delay.h>
-#include <linux/dma-mapping.h>
-#include <linux/spinlock.h>
+Tried with 'debug' and nothing at all. No effect. I also messed around
+with the 'printk' setting in /proc/sys/kernel. Netconsole simply doesn't
+like me. :(
+
+Perhaps I'm misunderstanding the scope of netconsole. Is it supposed to
+send out everything I can see with 'dmesg' or just panics?
+
+Rgds
+Pierre
+
