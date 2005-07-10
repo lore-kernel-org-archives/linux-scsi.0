@@ -1,47 +1,56 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
-Date: Sat, 9 Jul 2005 23:34:31 -0400
-Message-ID: <20050710033431.GB13883@havoc.gtf.org>
-References: <200507091237.j69Cbtrv003425@einhorn.in-berlin.de> <1120922306.5008.5.camel@mulgrave> <20050709230656.GS29099@phunnypharm.org>
+From: randy_dunlap <rdunlap@xenotime.net>
+Subject: Re: Fw: Kernel panic with dc395x in 2.6.12.2
+Date: Sat, 9 Jul 2005 21:08:24 -0700
+Message-ID: <20050709210824.29a90c5b.rdunlap@xenotime.net>
+References: <20050709175725.75f291bf.rdunlap@xenotime.net>
+	<42D07E94.8070409@drzeus.cx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:32721 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S261839AbVGJDed (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jul 2005 23:34:33 -0400
-Content-Disposition: inline
-In-Reply-To: <20050709230656.GS29099@phunnypharm.org>
+Received: from chretien.genwebhost.com ([209.59.175.22]:2485 "EHLO
+	chretien.genwebhost.com") by vger.kernel.org with ESMTP
+	id S261758AbVGJEI1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Jul 2005 00:08:27 -0400
+In-Reply-To: <42D07E94.8070409@drzeus.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Collins <bcollins@debian.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net
+To: Pierre Ossman <drzeus-list@drzeus.cx>
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, Jul 09, 2005 at 07:06:56PM -0400, Ben Collins wrote:
-> I can understand that TYPE_RDC is what we had as TYPE_SDAD. Now, in our
-> tree for TYPE_RDC, we converted it to TYPE_DISK. We also did a lot of mode
-> conversions for DISK/RDC/ROM types.
+On Sun, 10 Jul 2005 03:49:08 +0200 Pierre Ossman wrote:
 
-This isn't correct.
+| randy_dunlap wrote:
+| 
+| >Pierre,
+| >
+| >Can you capture the complete panic message using serial console or
+| >netconsole?  or at least use a smaller font on the console so that
+| >we can see the entire panic message, as some critical parts of it
+| >have scrolled off the top of the screen.
+| >
+| >  
+| >
+| 
+| Hmm... I made an attempt to get netconsole up and running but nothing is
+| emitted to the network. It seems to think everthing is fine though:
+| 
+| netconsole: local port 6665
+| netconsole: interface eth0
+| netconsole: remote port 6666
+| netconsole: remote IP 10.100.0.4
+| netconsole: remote ethernet address ff:ff:ff:ff:ff:ff
+| netconsole: local IP 10.100.0.10
+| netconsole: network logging started
+| 
+| Perhaps the 3c95x driver doesn't work with netconsole?
 
-RBC is a separate, valid disk type defined by the SCSI T10 committee.
-It has its own spec.  Of course, SBP2 isn't wholly RBC compliant, even
-though it reports itself as an RBC device.
+3c59x ??
+3c59x.c has CONFIG_NET_POLL_CONTROLLER code in it.
+I would expect it to work since it's a fairly common NIC, but I
+can't vouch for it.
+Did you enable CONFIG_NETPOLL in your kernel .config?
 
 
-> My question is, why were the conversions all removed? The conversions, as
-> far as I know, are related to SBP protocol, and not SCSI, so why would the
-> SCSI maintainers feel the need to rip out an important part of the SBP2
-> driver?
-
-It's a standard conversion that we've been ripping out of all drivers,
-because it is unnecessary.
-
-I understand you're a bit hacked off by all these changes occurring, but
-how about debugging the failure you're seeing, before ripping out stuff?
-"doesn't work at all" is untrue.  So who are the failure cases, and what
-makes them different from the working case(s)?
-
-	Jeff
-
-
-
+---
+~Randy
