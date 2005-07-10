@@ -1,71 +1,144 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
-Date: Sun, 10 Jul 2005 13:14:33 -0500
-Message-ID: <1121019274.5078.22.camel@mulgrave>
-References: <200507091237.j69Cbtrv003425@einhorn.in-berlin.de>
-	 <1120922306.5008.5.camel@mulgrave> <20050709230656.GS29099@phunnypharm.org>
-	 <20050710033431.GB13883@havoc.gtf.org>
-	 <20050710043645.GF2972@phunnypharm.org> <1121009100.5078.4.camel@mulgrave>
-	 <42D15C28.5030705@s5r6.in-berlin.de>
+Date: Sun, 10 Jul 2005 21:26:02 +0200
+Message-ID: <42D1764A.3060908@s5r6.in-berlin.de>
+References: <200507091237.j69Cbtrv003425@einhorn.in-berlin.de>	 <1120922306.5008.5.camel@mulgrave> <20050709230656.GS29099@phunnypharm.org>	 <20050710033431.GB13883@havoc.gtf.org>	 <20050710043645.GF2972@phunnypharm.org> <1121009100.5078.4.camel@mulgrave> <42D15C28.5030705@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-admin@lists.sourceforge.net>
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:63693 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S261162AbVGJT0S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Jul 2005 15:26:18 -0400
 In-Reply-To: <42D15C28.5030705@s5r6.in-berlin.de>
-Sender: linux1394-devel-admin@lists.sourceforge.net
-Errors-To: linux1394-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net, Ben Collins <bcollins@debian.org>, Jeff Garzik <jgarzik@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Ben Collins <bcollins@debian.org>, Jeff Garzik <jgarzik@pobox.com>
 
-On Sun, 2005-07-10 at 19:34 +0200, Stefan Richter wrote:
-> Jul 10 18:30:17 shuttle kernel:   Type:   Unknown                            ANSI SCSI revision: 02
+I wrote:
+> I tested sbp2 with the logic as presently in 2.6.13-rc2 and added
+> printks everywhere where linux1394.org's old code would do a conversi=
+on.
+> The result:
 
-Sorry, that's expected: I had a patch that would identify it as RBC, but
-there was another different one from someone else, and neither got
-applied.  Can you try this:
-
-http://sourceforge.net/mailarchive/message.php?msg_id=11828307
-
-> Then silence.
-
-Hmm, it sounds like the driver's not binding.  If you do a
-
-ls -l /sys/class/scsi_device/<device>/device/driver
-
-On this, do you see anything (it should be a link to the bound driver).
-
-If there's nothing there, it sounds like sd.c is missing the RBC
-attachment code, which was this hunk of the patch:
-
-  @@ -1533,7 +1551,7 @@
-  	int error;
-  
-  	error = -ENODEV;
- -	if ((sdp->type != TYPE_DISK) && (sdp->type != TYPE_MOD))
- +	if (sdp->type != TYPE_DISK && sdp->type != TYPE_MOD && sdp->type != TYPE_RBC)
-  		goto out;
-  
-  	SCSI_LOG_HLQUEUE(3, printk("sd_attach: scsi device: <%d,%d,%d,%d>\n", 
-
-Could you check that that's in sd.c
-
-Thanks,
-
-James
-
-
-
-
+DViCO Momobay FX-3A 3.5" HDD, based on TSB42AA9A bridge
+now without sbp2's 36byt inquiry workaround
 -------------------------------------------------------
-This SF.Net email is sponsored by the 'Do More With Dual!' webinar happening
-July 14 at 8am PDT/11am EDT. We invite you to explore the latest in dual
-core and dual graphics technology at this free one hour event hosted by HP,
-AMD, and NVIDIA.  To register visit http://www.hp.com/go/dualwebinar
+Jul 10 20:04:13 shuttle kernel: scsi0 : SCSI emulation for IEEE-1394 SB=
+P-2 Devices
+Jul 10 20:04:14 shuttle kernel: ieee1394: sbp2: Logged into SBP-2 devic=
+e
+Jul 10 20:04:14 shuttle kernel: ieee1394: sbp2: sbp2_check_sbp2_respons=
+e: case INQUIRY, TYPE_RBC
+Jul 10 20:04:14 shuttle kernel:   Vendor:  DViCO    Model: MOMOBAY FX-3=
+A     Rev: REV1
+Jul 10 20:04:14 shuttle kernel:   Type:   Unknown                      =
+      ANSI SCSI revision: 02
+
+Then silence.
+# cat /sys/bus/scsi/devices/*/type
+14
+
+MacPower IceCube 3.5" HDD (old FireWire 400 model), OXFW911 based
+-----------------------------------------------------------------
+Jul 10 20:05:12 shuttle kernel: scsi1 : SCSI emulation for IEEE-1394 SB=
+P-2 Devices
+Jul 10 20:05:14 shuttle kernel: ieee1394: sbp2: Logged into SBP-2 devic=
+e
+Jul 10 20:05:14 shuttle kernel: ieee1394: sbp2: sbp2_check_sbp2_respons=
+e: case INQUIRY, TYPE_RBC
+Jul 10 20:05:14 shuttle kernel:   Vendor: SAMSUNG   Model: SV1204H     =
+      Rev:
+Jul 10 20:05:14 shuttle kernel:   Type:   Unknown                      =
+      ANSI SCSI revision: 06
+
+Silence.
+# cat /sys/bus/scsi/devices/*/type
+14
+
+AVLAB 1394b-to-IDE 2.5=E2=80=9D Drive Kit, INIC-2430F based
+---------------------------------------------------
+A few log lines appear, then the PC *reboots* right away. Happens consi=
+stently.
+Did not happen with the kernel I used before, 2.6.11.x + up-to-date lin=
+ux1394.
+
+
+MacPower Prefect II 5.25" DVD-RW, PL-3507 based
+-----------------------------------------------
+Jul 10 20:18:51 shuttle kernel: scsi0 : SCSI emulation for IEEE-1394 SB=
+P-2 Devices
+Jul 10 20:18:52 shuttle kernel: ieee1394: sbp2: Logged into SBP-2 devic=
+e
+Jul 10 20:18:52 shuttle kernel:   Vendor: PLEXTOR   Model: DVDR   PX-71=
+6A    Rev: 1.08
+Jul 10 20:18:52 shuttle kernel:   Type:   CD-ROM                       =
+      ANSI SCSI revision: 02
+Jul 10 20:18:52 shuttle scsi.agent: cdrom at /devices/pci0000:00/0000:0=
+0:0c.0/fw-host1/0030e005003b00c8/0030e005003b00c8-0/host0/target0:0:0/0=
+:0:0:0
+Jul 10 20:18:52 shuttle kernel: sr0: scsi3-mmc drive: 40x/40x writer cd=
+/rw xa/form2 cdda tray
+
+# cat /sys/bus/scsi/devices/*/type
+5
+
+"cdrdao read-cd ..." and "cdrdao write --simulate ..." work.
+No sbp2_check_command or _response is logged during cdrdao's runs.
+scsi_host_dev_release is not called when the DVD-RW is disconnected, bu=
+t
+that is another story.
+
+=46ormac CDRW 16/10/40, an old 5.25" enclosure with LSI bridge
+------------------------------------------------------------
+Jul 10 20:46:00 shuttle kernel: scsi0 : SCSI emulation for IEEE-1394 SB=
+P-2 Devices
+Jul 10 20:46:02 shuttle kernel: ieee1394: sbp2: Logged into SBP-2 devic=
+e
+Jul 10 20:46:02 shuttle kernel:   Vendor: TEAC      Model: CD-W516EB   =
+      Rev: 1.0A
+Jul 10 20:46:02 shuttle kernel:   Type:   CD-ROM                       =
+      ANSI SCSI revision: 02
+Jul 10 20:46:02 shuttle scsi.agent: cdrom at /devices/pci0000:00/0000:0=
+0:0c.0/fw-host1/00a0b80300002142/00a0b80300002142-0/host0/target0:0:0/0=
+:0:0:0
+Jul 10 20:46:04 shuttle kernel: sr0: scsi3-mmc drive: 40x/40x writer cd=
+/rw xa/form2 cdda tray
+
+Same as above with type and cdrdao.
+
+SmartDisk VST Portable CD-RW, unknown bridge
+--------------------------------------------
+Jul 10 20:58:05 shuttle kernel: scsi1 : SCSI emulation for IEEE-1394 SB=
+P-2 Devices
+Jul 10 20:58:14 shuttle kernel: ieee1394: sbp2: Logged into SBP-2 devic=
+e
+Jul 10 20:58:14 shuttle kernel:   Vendor: TEAC      Model: CD-W28E     =
+      Rev: 1.1A
+Jul 10 20:58:14 shuttle kernel:   Type:   CD-ROM                       =
+      ANSI SCSI revision: 02
+Jul 10 20:58:14 shuttle kernel: sr1: scsi3-mmc drive: 24x/24x writer cd=
+/rw xa/form2 cdda tray
+Jul 10 20:58:14 shuttle kernel: Attached scsi generic sg1 at scsi1, cha=
+nnel 0, id 0, lun 0,  type 5
+Jul 10 20:58:15 shuttle scsi.agent: cdrom at /devices/pci0000:00/0000:0=
+0:0a.0/fw-host0/00d0010500006823/00d0010500006823-0/host1/target1:0:0/1=
+:0:0:0
+
+Same again.
+
+I will have a closer look at the silent 3.5" disks right away.
+--=20
+Stefan Richter
+-=3D=3D=3D=3D=3D-=3D-=3D-=3D -=3D=3D=3D -=3D-=3D-
+http://arcgraph.de/sr/
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
