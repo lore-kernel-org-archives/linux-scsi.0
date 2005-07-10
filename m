@@ -1,55 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
-Date: Sun, 10 Jul 2005 12:05:54 -0500
-Message-ID: <1121015154.5078.10.camel@mulgrave>
-References: <200507091237.j69Cbtrv003425@einhorn.in-berlin.de>
-	 <1120922306.5008.5.camel@mulgrave> <20050709230656.GS29099@phunnypharm.org>
-	 <20050710033431.GB13883@havoc.gtf.org>
-	 <20050710043645.GF2972@phunnypharm.org> <1121009100.5078.4.camel@mulgrave>
-	 <20050710155839.GC14956@phunnypharm.org>
+From: Pierre Ossman <drzeus-list@drzeus.cx>
+Subject: Re: Fw: Kernel panic with dc395x in 2.6.12.2
+Date: Sun, 10 Jul 2005 19:22:48 +0200
+Message-ID: <42D15968.1080101@drzeus.cx>
+References: <20050709175725.75f291bf.rdunlap@xenotime.net>	<42D07E94.8070409@drzeus.cx>	<20050709210824.29a90c5b.rdunlap@xenotime.net>	<42D12A39.80207@drzeus.cx> <20050710093907.3f3c36e4.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:6284 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261975AbVGJRHM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Jul 2005 13:07:12 -0400
-In-Reply-To: <20050710155839.GC14956@phunnypharm.org>
+Received: from [85.8.12.41] ([85.8.12.41]:39102 "EHLO smtp.drzeus.cx")
+	by vger.kernel.org with ESMTP id S261979AbVGJRWu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Jul 2005 13:22:50 -0400
+In-Reply-To: <20050710093907.3f3c36e4.rdunlap@xenotime.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Collins <bcollins@debian.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net
+To: randy_dunlap <rdunlap@xenotime.net>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, 2005-07-10 at 11:58 -0400, Ben Collins wrote:
-> I didn't see that the scsi code made a distinction here. I thought it did
-> the conversion for all devices if use_10_for_{rw,ms} was set, and did the
-> fallback when it got ILLEGAL_REQUEST. Is there something in there that
-> will disable use_10_for_{rw,ms} if it's not TYPE_RBC?
+I've tried to get it running on three separate machines now with no
+success (each running a different kernel version), so I'm starting to
+suspect I'm doing something wrong here. I've used the following line to
+load the module:
 
-It doesn't.  As you say, the flags are universal for the device,
-whatever the ULD is.  However, as you also say, if MS_10 fails with
-ILLEGAL_REQUEST we do fall back to MS_6.
+modprobe netconsole netconsole=@/,@10.8.0.168/
 
-> Ok, I see something different in the MODE_SENSE:
-[...]
-> Looking the pre TYPE_RBC code, I can see that the modepage change wasn't
-> there, so sure enough we were using 8. Could this cause an
-> ILLEGAL_REQUEST, and thus disable use_10_for_{rw,ms}?
+I've tried changing the ip-address to both broadcast and specific hosts
+with the same result. I also tried giving all parameters using:
 
-Yes, that was the core of the bug Al was fixing.  sd has been requesting
-caching data for a while now.  However, for RBC devices it was probing
-the wrong mode page and failing.  After the changes we actually get the
-correct caching data.
+modprobe netconsole
+netconsole=2000@10.8.0.24/eth0,3000@10.8.0.168/00:0e:35:15:32:d6
 
-> I'm starting to understand some of the code paths here. So before all of
-> this, TYPE_RBC was not recognized by the scsi layer as a "disk" type
-> device (which is why sbp2 forced TYPE_DISK for TYPE_RDC devices when
-> commands passed into the scsi layer).
+but the result was the same.
 
-Exactly, but trying to pretend they were true TYPE_DISK was also causing
-issues (most notably the cache problem).
+Anything else I might be doing wrong?
 
-James
-
+Rgds
+Pierre
 
