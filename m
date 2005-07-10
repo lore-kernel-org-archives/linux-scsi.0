@@ -1,46 +1,44 @@
-From: Pierre Ossman <drzeus-list@drzeus.cx>
-Subject: Re: Fw: Kernel panic with dc395x in 2.6.12.2
-Date: Sun, 10 Jul 2005 03:49:08 +0200
-Message-ID: <42D07E94.8070409@drzeus.cx>
-References: <20050709175725.75f291bf.rdunlap@xenotime.net>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
+Date: Sat, 9 Jul 2005 23:29:14 -0400
+Message-ID: <20050710032914.GA13883@havoc.gtf.org>
+References: <200507091237.j69Cbtrv003425@einhorn.in-berlin.de> <1120922306.5008.5.camel@mulgrave> <20050709233138.GT29099@phunnypharm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [85.8.12.41] ([85.8.12.41]:18366 "EHLO smtp.drzeus.cx")
-	by vger.kernel.org with ESMTP id S261814AbVGJBtK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jul 2005 21:49:10 -0400
-In-Reply-To: <20050709175725.75f291bf.rdunlap@xenotime.net>
+Received: from havoc.gtf.org ([69.61.125.42]:55740 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S261829AbVGJD3P (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jul 2005 23:29:15 -0400
+Content-Disposition: inline
+In-Reply-To: <20050709233138.GT29099@phunnypharm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: randy_dunlap <rdunlap@xenotime.net>
-Cc: linux-scsi@vger.kernel.org
+To: Ben Collins <bcollins@debian.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net
 
-randy_dunlap wrote:
+On Sat, Jul 09, 2005 at 07:31:38PM -0400, Ben Collins wrote:
+> Thing is, these don't seem to be working for SBP2. I assume these
+> conversions came from libata
 
->Pierre,
->
->Can you capture the complete panic message using serial console or
->netconsole?  or at least use a smaller font on the console so that
->we can see the entire panic message, as some critical parts of it
->have scrolled off the top of the screen.
->
->  
->
+Incorrect.
 
-Hmm... I made an attempt to get netconsole up and running but nothing is
-emitted to the network. It seems to think everthing is fine though:
 
-netconsole: local port 6665
-netconsole: interface eth0
-netconsole: remote port 6666
-netconsole: remote IP 10.100.0.4
-netconsole: remote ethernet address ff:ff:ff:ff:ff:ff
-netconsole: local IP 10.100.0.10
-netconsole: network logging started
+> (since that's the only other user of them).
 
-Perhaps the 3c95x driver doesn't work with netconsole?
+Incorrect.
 
-Rgds
-Pierre
+
+> Was the logic compared to the SBP2 conversions before
+> being moved over to using them?
+
+Ask Al Viro, the author of the changes in question.
+
+
+> Reverting this portion wont break anything, correct?
+
+Probably correct.
+
+	Jeff
+
+
 
