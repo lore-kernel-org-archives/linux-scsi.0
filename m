@@ -1,11 +1,11 @@
 From: Olaf Hering <olh@suse.de>
-Subject: [PATCH 43/82] remove linux/version.h from drivers/scsi/mvme147.c
-Date: Sun, 10 Jul 2005 19:35:51 +0000
-Message-ID: <20050710193551.43.ZznDmV3416.2247.olh@nectarine.suse.de>
+Subject: [PATCH 42/82] remove linux/version.h from drivers/scsi/megaraid
+Date: Sun, 10 Jul 2005 19:35:50 +0000
+Message-ID: <20050710193550.42.tKRWic3388.2247.olh@nectarine.suse.de>
 References: <20050710193508.0.PmFpst2252.2247.olh@nectarine.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261831AbVGJVgm@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262077AbVGJVgm@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <20050710193508.0.PmFpst2252.2247.olh@nectarine.suse.de>  
 Sender: linux-kernel-owner@vger.kernel.org
@@ -18,18 +18,31 @@ changing CONFIG_LOCALVERSION rebuilds too much, for no appearent reason.
 
 Signed-off-by: Olaf Hering <olh@suse.de>
 
-drivers/scsi/mvme147.c |    1 -
-1 files changed, 1 deletion(-)
+drivers/scsi/megaraid/mega_common.h |    1 -
+drivers/scsi/megaraid/megaraid_mm.h |    1 -
+2 files changed, 2 deletions(-)
 
-Index: linux-2.6.13-rc2-mm1/drivers/scsi/mvme147.c
+Index: linux-2.6.13-rc2-mm1/drivers/scsi/megaraid/mega_common.h
 ===================================================================
---- linux-2.6.13-rc2-mm1.orig/drivers/scsi/mvme147.c
-+++ linux-2.6.13-rc2-mm1/drivers/scsi/mvme147.c
-@@ -2,7 +2,6 @@
-#include <linux/mm.h>
+--- linux-2.6.13-rc2-mm1.orig/drivers/scsi/megaraid/mega_common.h
++++ linux-2.6.13-rc2-mm1/drivers/scsi/megaraid/mega_common.h
+@@ -25,7 +25,6 @@
+#include <linux/delay.h>
 #include <linux/blkdev.h>
-#include <linux/sched.h>
+#include <linux/list.h>
 -#include <linux/version.h>
-#include <linux/interrupt.h>
-
-#include <asm/page.h>
+#include <linux/moduleparam.h>
+#include <linux/dma-mapping.h>
+#include <asm/semaphore.h>
+Index: linux-2.6.13-rc2-mm1/drivers/scsi/megaraid/megaraid_mm.h
+===================================================================
+--- linux-2.6.13-rc2-mm1.orig/drivers/scsi/megaraid/megaraid_mm.h
++++ linux-2.6.13-rc2-mm1/drivers/scsi/megaraid/megaraid_mm.h
+@@ -18,7 +18,6 @@
+#include <linux/spinlock.h>
+#include <linux/fs.h>
+#include <asm/uaccess.h>
+-#include <linux/version.h>
+#include <linux/module.h>
+#include <linux/moduleparam.h>
+#include <linux/pci.h>
