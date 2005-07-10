@@ -1,65 +1,58 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
-Date: Sun, 10 Jul 2005 10:25:00 -0500
-Message-ID: <1121009100.5078.4.camel@mulgrave>
-References: <200507091237.j69Cbtrv003425@einhorn.in-berlin.de>
-	 <1120922306.5008.5.camel@mulgrave> <20050709230656.GS29099@phunnypharm.org>
-	 <20050710033431.GB13883@havoc.gtf.org>
-	 <20050710043645.GF2972@phunnypharm.org>
+From: Ben Collins <bcollins@debian.org>
+Subject: Re: sbp2: modprobe -r fails, module allegedly in use
+Date: Sun, 10 Jul 2005 11:31:26 -0400
+Message-ID: <20050710153126.GB14956@phunnypharm.org>
+References: <42D133EE.9090204@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:29579 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261958AbVGJPZ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Jul 2005 11:25:28 -0400
-In-Reply-To: <20050710043645.GF2972@phunnypharm.org>
+Received: from [206.246.247.150] ([206.246.247.150]:64227 "EHLO
+	bristol.phunnypharm.org") by vger.kernel.org with ESMTP
+	id S261883AbVGJPb1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Jul 2005 11:31:27 -0400
+Content-Disposition: inline
+In-Reply-To: <42D133EE.9090204@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Collins <bcollins@debian.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
 
-On Sun, 2005-07-10 at 00:36 -0400, Ben Collins wrote:
-> I would have to say that it isn't working for a lot of people. Why does
-> our code work for everything, but the scsi code only work for some ppl?
-> Atleast I can say that where things are broken, our code fixes it, and
-> where things are working, our code also works. It would seem our code has
-> a workaround for the cases where the scsi code doesn't.
+Yeah, seems like every two months we have to change sbp2 to accomodate
+changes to the scsi layers whole reference scheme which never seems
+simple, and never stays the same.
 
-Could we have a few bug reports to try to diagnose, please?
+Any of the scsi guys care to comment on any changes in the reference
+counting to scsi over the last couple of months? Seriously, I've been
+having to go through tracking these sorts of changes every month or so
+ever since scsi switched to using the driver model. Usually I just take a
+peek at the usb storage module, since it somehow seems to stay up with
+whatever changes are needed to keep working with the scsi callbacks.
 
-> One thing that stands out is that we have a bit of code that changed the
-> device type from TYPE_RBC to TYPE_DISK in the command structure. Since I
-> didn't write this code, I can't really say why that is.  Any ideas what
-> that was trying to accomplish? I've attached the changes here, so you can
-> see what our code did and maybe make some sense of it.
+On Sun, Jul 10, 2005 at 04:42:54PM +0200, Stefan Richter wrote:
+> Hi all,
 > 
-> I honestly thing that our code was removed in an attempt to replace it
-> with some common code, perhaps without fully understanding what it may
-> have done special. I have to say, after looking at the scsi code that
-> replaces the sbp2 code, I can't see a hole lot of similarity.
+> it seems the sbp2 driver module can never be unloaded because the
+> module "is in use" even though all SBP-2 devices were physically removed
+> (after umount etc.). I believe it is an old problem of the last few 2.6
+> kernels but am not sure when it was really introduced.
+> 
+> One thing can easily be spotted by "ps x": The scsi_error_handler of an
+> SBP-2 device does not exit. The /sys/bus/scsi/devices/$a:$b:$c:$d 
+> vanished, the /sys/bus/ieee1394/devices/$guid-$unit too, but the 
+> scsi_eh_# daemon is still there. It seems shost->shost_gendev.release 
+> was never called.
+> 
+> So I just added a few more scsi_host_put() to sbp2_remove_device(). 
+> scsi_eh_# now goes away when I disconnect the device. Still, modprobe -r 
+> sbp2 fails with "FATAL: Module sbp2 is in use.".
+> -- 
+> Stefan Richter
+> -=====-=-=-= -=== -=-=-
+> http://arcgraph.de/sr/
+> 
 
-What the code you attached does is
-
-1) Convert READ_6 and WRITE_6 into READ_10 and WRITE_10 (RBC devices
-only use 10 byte commands).  The equivalent functionality is achieved by
-setting sdev->use_10_for_rw in slave configure.
-
-2) Convert MODE_SENSE into MODE_SENSE_10.  The equivalent functionality
-is achieved by setting sdev->use_10_for_ms in slave configure.
-
-3) Massage the value of MODE_SENSE_10 returns slightly.  RBC devices
-have a few small differences in the way they present mode sense
-information.  The changes in sd.c account for this.
-
-So, for RBC devices, the changes look equivalent.
-
-The only possibility for a problem might be that the code you quote
-massages the MODE_SENSE data for every device, whereas the SCSI changes
-only do it for RBC devices ... are the devices reporting difficulties
-non-RBC?
-
-James
-
-
+-- 
+Debian     - http://www.debian.org/
+Linux 1394 - http://www.linux1394.org/
+Subversion - http://subversion.tigris.org/
+SwissDisk  - http://www.swissdisk.com/
