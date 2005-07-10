@@ -1,38 +1,57 @@
-From: Ben Collins <bcollins@debian.org>
-Subject: Re: sbp2: modprobe -r fails, module allegedly in use
-Date: Sun, 10 Jul 2005 13:52:09 -0400
-Message-ID: <20050710175209.GH14956@phunnypharm.org>
-References: <42D133EE.9090204@s5r6.in-berlin.de> <20050710153126.GB14956@phunnypharm.org> <20050710174054.GA28623@infradead.org> <20050710174643.GG14956@phunnypharm.org> <20050710174913.GA28702@infradead.org>
+From: randy_dunlap <rdunlap@xenotime.net>
+Subject: Re: Fw: Kernel panic with dc395x in 2.6.12.2
+Date: Sun, 10 Jul 2005 10:56:35 -0700
+Message-ID: <20050710105635.6d1606e3.rdunlap@xenotime.net>
+References: <20050709175725.75f291bf.rdunlap@xenotime.net>
+	<42D07E94.8070409@drzeus.cx>
+	<20050709210824.29a90c5b.rdunlap@xenotime.net>
+	<42D12A39.80207@drzeus.cx>
+	<20050710093907.3f3c36e4.rdunlap@xenotime.net>
+	<42D15968.1080101@drzeus.cx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [206.246.247.150] ([206.246.247.150]:29412 "EHLO
-	bristol.phunnypharm.org") by vger.kernel.org with ESMTP
-	id S261991AbVGJRwM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Jul 2005 13:52:12 -0400
-Content-Disposition: inline
-In-Reply-To: <20050710174913.GA28702@infradead.org>
+Received: from chretien.genwebhost.com ([209.59.175.22]:63208 "EHLO
+	chretien.genwebhost.com") by vger.kernel.org with ESMTP
+	id S261994AbVGJR4m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Jul 2005 13:56:42 -0400
+In-Reply-To: <42D15968.1080101@drzeus.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+To: Pierre Ossman <drzeus-list@drzeus.cx>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, Jul 10, 2005 at 06:49:13PM +0100, Christoph Hellwig wrote:
-> On Sun, Jul 10, 2005 at 01:46:43PM -0400, Ben Collins wrote:
-> > The exposed implementation might not have, but atleast 3 times now, since
-> > the driver model started being used, I've had to change the way I use the
-> > exposed implementation in order to get bean counting right with the device
-> > and host devices.
-> 
-> What about reporting your problems to linux-scsi instead of all this
-> silly bitching?
+On Sun, 10 Jul 2005 19:22:48 +0200 Pierre Ossman wrote:
 
-I just did, and I have. Never got a reply before. Plus the fact that
-generally the fix I needed was in the USB storage driver led me to believe
-"yes, we know it changed", so why bother?
+| I've tried to get it running on three separate machines now with no
+| success (each running a different kernel version), so I'm starting to
+| suspect I'm doing something wrong here. I've used the following line to
+| load the module:
+| 
+| modprobe netconsole netconsole=@/,@10.8.0.168/
+| 
+| I've tried changing the ip-address to both broadcast and specific hosts
+| with the same result. I also tried giving all parameters using:
+| 
+| modprobe netconsole
+| netconsole=2000@10.8.0.24/eth0,3000@10.8.0.168/00:0e:35:15:32:d6
+| 
+| but the result was the same.
+| 
+| Anything else I might be doing wrong?
 
--- 
-Debian     - http://www.debian.org/
-Linux 1394 - http://www.linux1394.org/
-Subversion - http://subversion.tigris.org/
-SwissDisk  - http://www.swissdisk.com/
+netconsole seems to be working:
+| netconsole: network logging started
+
+Are you using netcat on the receive side?
+
+Matt Mackall says that a common problem is running kernels with
+a log low level:
+
+Kernel command line: ro root=LABEL=/ rhgb quiet acpi=ht
+
+so remove the "quiet" option there, or change it to "debug".
+
+---
+~Randy
