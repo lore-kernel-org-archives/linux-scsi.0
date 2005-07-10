@@ -1,11 +1,11 @@
 From: Olaf Hering <olh@suse.de>
-Subject: [PATCH 50/82] remove linux/version.h from drivers/scsi/sg.c
-Date: Sun, 10 Jul 2005 19:35:58 +0000
-Message-ID: <20050710193558.50.eKJcUZ3600.2247.olh@nectarine.suse.de>
+Subject: [PATCH 52/82] remove linux/version.h from drivers/scsi/wd33c93.c
+Date: Sun, 10 Jul 2005 19:36:00 +0000
+Message-ID: <20050710193600.52.wrYWPC3654.2247.olh@nectarine.suse.de>
 References: <20050710193508.0.PmFpst2252.2247.olh@nectarine.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261206AbVGJTnY@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261898AbVGJTnZ@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <20050710193508.0.PmFpst2252.2247.olh@nectarine.suse.de>  
 Sender: linux-kernel-owner@vger.kernel.org
@@ -18,20 +18,18 @@ changing CONFIG_LOCALVERSION rebuilds too much, for no appearent reason.
 
 Signed-off-by: Olaf Hering <olh@suse.de>
 
-drivers/scsi/sg.c |    4 ----
-1 files changed, 4 deletions(-)
+drivers/scsi/wd33c93.c |    1 -
+1 files changed, 1 deletion(-)
 
-Index: linux-2.6.13-rc2-mm1/drivers/scsi/sg.c
+Index: linux-2.6.13-rc2-mm1/drivers/scsi/wd33c93.c
 ===================================================================
---- linux-2.6.13-rc2-mm1.orig/drivers/scsi/sg.c
-+++ linux-2.6.13-rc2-mm1/drivers/scsi/sg.c
-@@ -67,10 +67,6 @@ static int sg_proc_init(void);
-static void sg_proc_cleanup(void);
-#endif
-
--#ifndef LINUX_VERSION_CODE
+--- linux-2.6.13-rc2-mm1.orig/drivers/scsi/wd33c93.c
++++ linux-2.6.13-rc2-mm1/drivers/scsi/wd33c93.c
+@@ -77,7 +77,6 @@
+#include <linux/sched.h>
+#include <linux/string.h>
+#include <linux/delay.h>
 -#include <linux/version.h>
--#endif				/* LINUX_VERSION_CODE */
--
-#define SG_ALLOW_DIO_DEF 0
-#define SG_ALLOW_DIO_CODE /* compile out by commenting this define */
+#include <linux/init.h>
+#include <linux/blkdev.h>
+#include <asm/irq.h>
