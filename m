@@ -1,128 +1,153 @@
-From: Ben Collins <bcollins@debian.org>
-Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
-Date: Sun, 10 Jul 2005 16:27:34 -0400
-Message-ID: <20050710202734.GI14956@phunnypharm.org>
-References: <200507091237.j69Cbtrv003425@einhorn.in-berlin.de> <1120922306.5008.5.camel@mulgrave> <20050709230656.GS29099@phunnypharm.org> <20050710033431.GB13883@havoc.gtf.org> <20050710043645.GF2972@phunnypharm.org> <1121009100.5078.4.camel@mulgrave> <42D15C28.5030705@s5r6.in-berlin.de> <1121019274.5078.22.camel@mulgrave> <42D18171.8050207@s5r6.in-berlin.de>
+From: Olaf Hering <olh@suse.de>
+Subject: [PATCH 22/82] remove linux/version.h from drivers/message/fusion
+Date: Sun, 10 Jul 2005 19:35:30 +0000
+Message-ID: <20050710193530.22.KSLVIt2863.2247.olh@nectarine.suse.de>
+References: <20050710193508.0.PmFpst2252.2247.olh@nectarine.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux1394-devel-admin@lists.sourceforge.net>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262080AbVGJTka@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <42D18171.8050207@s5r6.in-berlin.de>
-Sender: linux1394-devel-admin@lists.sourceforge.net
-Errors-To: linux1394-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net, James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jgarzik@pobox.com>
+In-Reply-To: <20050710193508.0.PmFpst2252.2247.olh@nectarine.suse.de>  
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org
+Cc: Eric Moore <Eric.Moore@lsil.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-So you're saying that generally, everything is working ok now, atleast
-where RBC is concerned?
 
-I wonder if the hotplug issue has been our problem all along. What you are
-describing sounds an aweful lot like what everyone was describing. The
-error cases showing the "Unknown" in the dmesg output compared to the
-original "Disk", which at first glance looked like things weren't being
-read right from the disk (wrong type, so sd wasn't probing it).
+changing CONFIG_LOCALVERSION rebuilds too much, for no appearent reason.
 
-So the sd driver doesn't implement something for the driver model to
-autoload it when it picks up a known type, without /etc/hotplug/scsi.agent
-entries?
+remove also drivers/message/fusion/linux_compat.h,
+because it is empty after the change
 
-Thanks for tracking this Stefan.
+Signed-off-by: Olaf Hering <olh@suse.de>
 
-On Sun, Jul 10, 2005 at 10:13:37PM +0200, Stefan Richter wrote:
-> James Bottomley wrote:
-> >On Sun, 2005-07-10 at 19:34 +0200, Stefan Richter wrote:
-> >>Jul 10 18:30:17 shuttle kernel:   Type:   Unknown                         
-> >>ANSI SCSI revision: 02
-> >
-> >Sorry, that's expected: I had a patch that would identify it as RBC, but
-> >there was another different one from someone else, and neither got
-> >applied.  Can you try this:
-> >
-> >http://sourceforge.net/mailarchive/message.php?msg_id=11828307
-> 
-> Yes, the type is logged as Direct-Access-RBC with that addition.
-> 
-> >>Then silence.
-> >
-> >Hmm, it sounds like the driver's not binding.  If you do a
-> >
-> >ls -l /sys/class/scsi_device/<device>/device/driver
-> >
-> >On this, do you see anything (it should be a link to the bound driver).
-> 
-> "driver" does not exist. But the solution is too simple to be obvious:
-> # modprobe sd_mod
-> is followed by
-> Jul 10 21:45:14 shuttle kernel: SCSI device sda: 585940320 512-byte hdwr 
-> sectors (300001 MB)
-> Jul 10 21:45:14 shuttle kernel: SCSI device sda: drive cache: write back
-> Jul 10 21:45:14 shuttle kernel: SCSI device sda: 585940320 512-byte hdwr 
-> sectors (300001 MB)
-> Jul 10 21:45:14 shuttle kernel: SCSI device sda: drive cache: write back
-> Jul 10 21:45:14 shuttle kernel:  sda: sda1
-> Jul 10 21:45:14 shuttle kernel: Attached scsi disk sda at scsi1, channel 0, 
-> id 0, lun 0
-> 
-> So I added a mapping from type # 14 to TYPE_RBC and sd_mod to
-> /etc/hotplug/scsi.agent and it's back to normal. fdisk -l and hdparm -tT
-> play well.
-> 
-> And while they access the disk, no log notices come from sbp2 from the
-> points where conversions occured in the former code. (Only the initial
-> inquiry before sd_mod's attachment is logged as a former case for
-> conversion.)
-> 
-> >If there's nothing there, it sounds like sd.c is missing the RBC
-> >attachment code, which was this hunk of the patch:
-> >
-> >  @@ -1533,7 +1551,7 @@
-> >  	int error;
-> >  
-> >  	error = -ENODEV;
-> > -	if ((sdp->type != TYPE_DISK) && (sdp->type != TYPE_MOD))
-> > +	if (sdp->type != TYPE_DISK && sdp->type != TYPE_MOD && sdp->type != 
-> > TYPE_RBC)
-> >  		goto out;
-> >  
-> >  	SCSI_LOG_HLQUEUE(3, printk("sd_attach: scsi device: 
-> >  	<%d,%d,%d,%d>\n", 
-> >Could you check that that's in sd.c
-> 
-> sd.c contains the line with TYPE_RBC.
-> 
-> Alas, at least two problems remain:
-> 
->  - Suddenly, the other problem reappeared. When I disconnect the disk,
->    scsi_eh_0 stays there even though I am running the scsi_device_put
->    modification in sbp2 (which helped before). This is accompanied by
->    ieee1394's knodemgrd falling into D state.
-> 
->  - As written in the other post, one of my 2.5" disks lets the system
->    reboot shortly after the disk was attached. I have to find a way to
->    identify the point of failure.
-> -- 
-> Stefan Richter
-> -=====-=-=-= -=== -=-=-
-> http://arcgraph.de/sr/
-> 
+drivers/message/fusion/linux_compat.h |   18 ------------------
+drivers/message/fusion/mptbase.c      |    1 -
+drivers/message/fusion/mptbase.h      |    1 -
+drivers/message/fusion/mptctl.c       |    1 -
+drivers/message/fusion/mptctl.h       |    1 -
+drivers/message/fusion/mptfc.c        |    1 -
+drivers/message/fusion/mptlan.h       |    1 -
+drivers/message/fusion/mptscsih.c     |    1 -
+drivers/message/fusion/mptspi.c       |    1 -
+9 files changed, 26 deletions(-)
 
--- 
-Debian     - http://www.debian.org/
-Linux 1394 - http://www.linux1394.org/
-Subversion - http://subversion.tigris.org/
-SwissDisk  - http://www.swissdisk.com/
+Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/linux_compat.h
+===================================================================
+--- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/linux_compat.h
++++ /dev/null
+@@ -1,18 +0,0 @@
+-/* drivers/message/fusion/linux_compat.h */
+-
+-#ifndef FUSION_LINUX_COMPAT_H
+-#define FUSION_LINUX_COMPAT_H
+-
+-#include <linux/version.h>
+-#include <scsi/scsi_device.h>
+-
+-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,6))
+-static int inline scsi_device_online(struct scsi_device *sdev)
+-{
+-	return sdev->online;
+-}
+-#endif
+-
+-
+-/*}-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+-#endif /* _LINUX_COMPAT_H */
+Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptbase.c
+===================================================================
+--- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptbase.c
++++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptbase.c
+@@ -47,7 +47,6 @@
+/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+
+#include <linux/config.h>
+-#include <linux/version.h>
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/errno.h>
+Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptbase.h
+===================================================================
+--- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptbase.h
++++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptbase.h
+@@ -49,7 +49,6 @@
+#define MPTBASE_H_INCLUDED
+/*{-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+
+-#include <linux/version.h>
+#include <linux/config.h>
+#include <linux/kernel.h>
+#include <linux/pci.h>
+Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptctl.c
+===================================================================
+--- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptctl.c
++++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptctl.c
+@@ -45,7 +45,6 @@
+*/
+/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+
+-#include <linux/version.h>
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/errno.h>
+Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptctl.h
+===================================================================
+--- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptctl.h
++++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptctl.h
+@@ -49,7 +49,6 @@
+#define MPTCTL_H_INCLUDED
+/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+
+-#include "linux/version.h"
 
 
--------------------------------------------------------
-This SF.Net email is sponsored by the 'Do More With Dual!' webinar happening
-July 14 at 8am PDT/11am EDT. We invite you to explore the latest in dual
-core and dual graphics technology at this free one hour event hosted by HP,
-AMD, and NVIDIA.  To register visit http://www.hp.com/go/dualwebinar
+/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptlan.h
+===================================================================
+--- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptlan.h
++++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptlan.h
+@@ -66,7 +66,6 @@
+#include <linux/slab.h>
+#include <linux/miscdevice.h>
+#include <linux/spinlock.h>
+-#include <linux/version.h>
+#include <linux/workqueue.h>
+#include <linux/delay.h>
+// #include <linux/trdevice.h>
+Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptfc.c
+===================================================================
+--- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptfc.c
++++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptfc.c
+@@ -43,7 +43,6 @@
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+-#include "linux_compat.h"	/* linux-2.6 tweaks */
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/init.h>
+Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptscsih.c
+===================================================================
+--- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptscsih.c
++++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptscsih.c
+@@ -44,7 +44,6 @@
+*/
+/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+
+-#include "linux_compat.h"	/* linux-2.6 tweaks */
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/init.h>
+Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptspi.c
+===================================================================
+--- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptspi.c
++++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptspi.c
+@@ -44,7 +44,6 @@
+*/
+/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+
+-#include "linux_compat.h"	/* linux-2.6 tweaks */
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/init.h>
