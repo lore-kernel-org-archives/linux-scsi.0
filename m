@@ -1,47 +1,47 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: PE1800 S-ATA RAID CERC6 with RHEL 3 / 4 ???
-Date: Mon, 11 Jul 2005 08:54:45 -0500
-Message-ID: <20050711135445.GB11319@lists.us.dell.com>
-References: <60807403EABEB443939A5A7AA8A7458B01642F00@otce2k01.adaptec.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
+Date: Mon, 11 Jul 2005 08:57:21 -0500
+Message-ID: <1121090241.5045.3.camel@mulgrave>
+References: <200507091237.j69Cbtrv003425@einhorn.in-berlin.de>
+	 <1120922306.5008.5.camel@mulgrave> <20050709230656.GS29099@phunnypharm.org>
+	 <20050710033431.GB13883@havoc.gtf.org>
+	 <20050710043645.GF2972@phunnypharm.org> <1121009100.5078.4.camel@mulgrave>
+	 <42D15C28.5030705@s5r6.in-berlin.de> <1121019274.5078.22.camel@mulgrave>
+	 <42D18171.8050207@s5r6.in-berlin.de>
+	 <20050710202734.GI14956@phunnypharm.org>
+	 <42D191F7.8030506@s5r6.in-berlin.de> <42D19BF8.9080507@s5r6.in-berlin.de>
+	 <42D1A1EF.1060006@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-poweredge-bounces@dell.com>
-Content-Disposition: inline
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458B01642F00@otce2k01.adaptec.com>
-List-Unsubscribe: <http://lists.us.dell.com/mailman/listinfo/linux-poweredge>,
-	<mailto:linux-poweredge-request@dell.com?subject=unsubscribe>
-List-Archive: <http://lists.us.dell.com/pipermail/linux-poweredge>
-List-Post: <mailto:linux-poweredge@dell.com>
-List-Help: <mailto:linux-poweredge-request@dell.com?subject=help>
-List-Subscribe: <http://lists.us.dell.com/mailman/listinfo/linux-poweredge>,
-	<mailto:linux-poweredge-request@dell.com?subject=subscribe>
-Sender: linux-poweredge-bounces@dell.com
-Errors-To: linux-poweredge-bounces@dell.com
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Kit Gerrits <kitgerrits@gmail.com>, linux-scsi@vger.kernel.org, linux-poweredge@dell.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:49044 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261723AbVGKN52 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Jul 2005 09:57:28 -0400
+In-Reply-To: <42D1A1EF.1060006@s5r6.in-berlin.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net, Ben Collins <bcollins@debian.org>, Jeff Garzik <jgarzik@pobox.com>
 
-On Mon, Jul 11, 2005 at 08:02:47AM -0400, Salyzyn, Mark wrote:
-> One of the problems with this class (2.4.* based 64 bit) is the Software
-> IOMMU. You may have to boot with 'swiotlb=12288' in order to free enough
-> mapping resources for the card.
+On Mon, 2005-07-11 at 00:32 +0200, Stefan Richter wrote:
+> I tested again with all conversions reactivated in sbp2 and with
+> sdev->use_10_for_rw = 1, sdev->use_10_for_ms = 1 removed from
+> sbp2scsi_slave_configure again --- i.e. the old pseudo TYPE_DISK
+> mangling completely reinstated. This prevents the reboot and lets
+> me access the disk again.
+> 
+> That is, scsi's mid or high level definitely needs protection from
+> bogus TYPE_DISKs like this one --- in one way or another.
 
-And if you're running RHEL3 Update 5 or higher, the swiotlb no longer
-is mapped into ZONE_DMA space, so you can safely make it larger (as
-Mark describes above) without depleating the 16MB ZONE_DMA.
+Could you get a trace of what's going on from the command response point
+of view?  Doing a scsi_print_command() in the queuecommand() routine and
+printing the return code and sense (with scsi_print_sense()) in the -
+>done() should be sufficient.
 
 Thanks,
-Matt
 
--- 
-Matt Domsch
-Software Architect
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+James
 
-_______________________________________________
-Linux-PowerEdge mailing list
-Linux-PowerEdge@dell.com
-http://lists.us.dell.com/mailman/listinfo/linux-poweredge
-Please read the FAQ at http://lists.us.dell.com/faq
+
