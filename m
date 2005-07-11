@@ -1,216 +1,181 @@
-From: Olaf Hering <olh@suse.de>
-Subject: [PATCH 46/82] remove unused drivers/scsi/pci2000.h
-Date: Sun, 10 Jul 2005 19:35:54 +0000
-Message-ID: <20050710193554.46.wquLLs3498.2247.olh@nectarine.suse.de>
-References: <20050710193508.0.PmFpst2252.2247.olh@nectarine.suse.de>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH 22/82] remove linux/version.h from drivers/message/fus
+	ion
+Date: Sun, 10 Jul 2005 18:15:43 -0600
+Message-ID: <91888D455306F94EBD4D168954A9457C030A908F@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262149AbVGJWt1@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20050710193508.0.PmFpst2252.2247.olh@nectarine.suse.de>  
+Content-Type: text/plain;
+	charset="utf-8"
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262075AbVGKATh@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: Olaf Hering <olh@suse.de>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+I'd rather you not kill linux_compat.h file.
+I use this file for compatibility of driver source 
+across various kernel versions.  I provide our
+customers with driver builds containing single source 
+which needs to compile in kernels 2.6.5( e.g. SLES9),
+2.6.8 (e.g. RHEL4), and 2.6.11 ( e.g. SuSE 9.3 Pro).
 
-changing CONFIG_LOCALVERSION rebuilds too much, for no appearent reason.
-pci2000.h is unused, so drop the whole file
+If you look at our 3.02.18 driver source I submitted to SuSE
+for SLES9 SP2, you will see this file is about 3K bytes of
+compatibility.  
 
-Signed-off-by: Olaf Hering <olh@suse.de>
+Eric Moore
+LSI Logic Corporation 
 
-drivers/scsi/pci2000.h |  200 -------------------------------------------------
-1 files changed, 200 deletions(-)
 
-Index: linux-2.6.13-rc2-mm1/drivers/scsi/pci2000.h
-===================================================================
---- linux-2.6.13-rc2-mm1.orig/drivers/scsi/pci2000.h
-+++ /dev/null
-@@ -1,200 +0,0 @@
--/****************************************************************************
-- * Perceptive Solutions, Inc. PCI-2000 device driver for Linux.
-- *
-- * pci2000.h - Linux Host Driver for PCI-2000 IntelliCache SCSI Adapters
-- *
-- * Copyright (c) 1997-1999 Perceptive Solutions, Inc.
-- * All Rights Reserved.
-- *
-- * Redistribution and use in source and binary forms, with or without
-- * modification, are permitted provided that redistributions of source
-- * code retain the above copyright notice and this comment without
-- * modification.
-- *
-- * Technical updates and product information at:
-- *  http://www.psidisk.com
-- *
-- * Please send questions, comments, bug reports to:
-- *  tech@psidisk.com Technical Support
-- *
-- ****************************************************************************/
--#ifndef _PCI2000_H
--#define _PCI2000_H
--
--#include <linux/types.h>
--
--#ifndef	PSI_EIDE_SCSIOP
--#define	PSI_EIDE_SCSIOP	1
--
--#ifndef LINUX_VERSION_CODE
--#include <linux/version.h>
--#endif
--#define	LINUXVERSION(v,p,s)    (((v)<<16) + ((p)<<8) + (s))
--
--/************************************************/
--/*		definition of standard data types		*/
--/************************************************/
--#define	CHAR	char
--#define	UCHAR	unsigned char
--#define	SHORT	short
--#define	USHORT	unsigned short
--#define	BOOL	long
--#define	LONG	long
--#define	ULONG	unsigned long
--#define	VOID	void
--
--typedef	CHAR	*PCHAR;
--typedef	UCHAR	*PUCHAR;
--typedef	SHORT	*PSHORT;
--typedef	USHORT	*PUSHORT;
--typedef	BOOL	*PBOOL;
--typedef	LONG	*PLONG;
--typedef	ULONG	*PULONG;
--typedef	VOID	*PVOID;
--
--
--/************************************************/
--/*		Misc. macros			 				*/
--/************************************************/
--#define ANY2SCSI(up, p)					-((UCHAR *)up)[0] = (((ULONG)(p)) >> 8);	-((UCHAR *)up)[1] = ((ULONG)(p));
--
--#define SCSI2LONG(up)					-( (((long)*(((UCHAR *)up))) << 16)		-+ (((long)(((UCHAR *)up)[1])) << 8)		-+ ((long)(((UCHAR *)up)[2])) )
--
--#define XANY2SCSI(up, p)				-((UCHAR *)up)[0] = ((long)(p)) >> 24;	-((UCHAR *)up)[1] = ((long)(p)) >> 16;	-((UCHAR *)up)[2] = ((long)(p)) >> 8;	-((UCHAR *)up)[3] = ((long)(p));
--
--#define XSCSI2LONG(up)					-( (((long)(((UCHAR *)up)[0])) << 24)	-+ (((long)(((UCHAR *)up)[1])) << 16)	-+ (((long)(((UCHAR *)up)[2])) <<  8)	-+ ((long)(((UCHAR *)up)[3])) )
--
--/************************************************/
--/*		SCSI CDB operation codes 				*/
--/************************************************/
--#define SCSIOP_TEST_UNIT_READY		0x00
--#define SCSIOP_REZERO_UNIT			0x01
--#define SCSIOP_REWIND				0x01
--#define SCSIOP_REQUEST_BLOCK_ADDR	0x02
--#define SCSIOP_REQUEST_SENSE		0x03
--#define SCSIOP_FORMAT_UNIT			0x04
--#define SCSIOP_READ_BLOCK_LIMITS	0x05
--#define SCSIOP_REASSIGN_BLOCKS		0x07
--#define SCSIOP_READ6				0x08
--#define SCSIOP_RECEIVE				0x08
--#define SCSIOP_WRITE6				0x0A
--#define SCSIOP_PRINT				0x0A
--#define SCSIOP_SEND					0x0A
--#define SCSIOP_SEEK6				0x0B
--#define SCSIOP_TRACK_SELECT			0x0B
--#define SCSIOP_SLEW_PRINT			0x0B
--#define SCSIOP_SEEK_BLOCK			0x0C
--#define SCSIOP_PARTITION			0x0D
--#define SCSIOP_READ_REVERSE			0x0F
--#define SCSIOP_WRITE_FILEMARKS		0x10
--#define SCSIOP_FLUSH_BUFFER			0x10
--#define SCSIOP_SPACE				0x11
--#define SCSIOP_INQUIRY				0x12
--#define SCSIOP_VERIFY6				0x13
--#define SCSIOP_RECOVER_BUF_DATA		0x14
--#define SCSIOP_MODE_SELECT			0x15
--#define SCSIOP_RESERVE_UNIT			0x16
--#define SCSIOP_RELEASE_UNIT			0x17
--#define SCSIOP_COPY					0x18
--#define SCSIOP_ERASE				0x19
--#define SCSIOP_MODE_SENSE			0x1A
--#define SCSIOP_START_STOP_UNIT		0x1B
--#define SCSIOP_STOP_PRINT			0x1B
--#define SCSIOP_LOAD_UNLOAD			0x1B
--#define SCSIOP_RECEIVE_DIAGNOSTIC	0x1C
--#define SCSIOP_SEND_DIAGNOSTIC		0x1D
--#define SCSIOP_MEDIUM_REMOVAL		0x1E
--#define SCSIOP_READ_CAPACITY		0x25
--#define SCSIOP_READ					0x28
--#define SCSIOP_WRITE				0x2A
--#define SCSIOP_SEEK					0x2B
--#define SCSIOP_LOCATE				0x2B
--#define SCSIOP_WRITE_VERIFY			0x2E
--#define SCSIOP_VERIFY				0x2F
--#define SCSIOP_SEARCH_DATA_HIGH		0x30
--#define SCSIOP_SEARCH_DATA_EQUAL	0x31
--#define SCSIOP_SEARCH_DATA_LOW		0x32
--#define SCSIOP_SET_LIMITS			0x33
--#define SCSIOP_READ_POSITION		0x34
--#define SCSIOP_SYNCHRONIZE_CACHE	0x35
--#define SCSIOP_COMPARE				0x39
--#define SCSIOP_COPY_COMPARE			0x3A
--#define SCSIOP_WRITE_DATA_BUFF		0x3B
--#define SCSIOP_READ_DATA_BUFF		0x3C
--#define SCSIOP_CHANGE_DEFINITION	0x40
--#define SCSIOP_READ_SUB_CHANNEL		0x42
--#define SCSIOP_READ_TOC				0x43
--#define SCSIOP_READ_HEADER			0x44
--#define SCSIOP_PLAY_AUDIO			0x45
--#define SCSIOP_PLAY_AUDIO_MSF		0x47
--#define SCSIOP_PLAY_TRACK_INDEX		0x48
--#define SCSIOP_PLAY_TRACK_RELATIVE	0x49
--#define SCSIOP_PAUSE_RESUME			0x4B
--#define SCSIOP_LOG_SELECT			0x4C
--#define SCSIOP_LOG_SENSE			0x4D
--#define SCSIOP_MODE_SELECT10		0x55
--#define SCSIOP_MODE_SENSE10			0x5A
--#define SCSIOP_LOAD_UNLOAD_SLOT		0xA6
--#define SCSIOP_MECHANISM_STATUS		0xBD
--#define SCSIOP_READ_CD				0xBE
--
--// SCSI read capacity structure
--typedef	struct _READ_CAPACITY_DATA
--	{
--	ULONG blks;				/* total blocks (converted to little endian) */
--	ULONG blksiz;			/* size of each (converted to little endian) */
--	}	READ_CAPACITY_DATA, *PREAD_CAPACITY_DATA;
--
--// SCSI inquiry data
--typedef struct _INQUIRYDATA
--	{
--	UCHAR DeviceType			:5;
--	UCHAR DeviceTypeQualifier	:3;
--	UCHAR DeviceTypeModifier	:7;
--	UCHAR RemovableMedia		:1;
--    UCHAR Versions;
--    UCHAR ResponseDataFormat;
--    UCHAR AdditionalLength;
--    UCHAR Reserved[2];
--	UCHAR SoftReset				:1;
--	UCHAR CommandQueue			:1;
--	UCHAR Reserved2				:1;
--	UCHAR LinkedCommands		:1;
--	UCHAR Synchronous			:1;
--	UCHAR Wide16Bit				:1;
--	UCHAR Wide32Bit				:1;
--	UCHAR RelativeAddressing	:1;
--    UCHAR VendorId[8];
--    UCHAR ProductId[16];
--    UCHAR ProductRevisionLevel[4];
--    UCHAR VendorSpecific[20];
--    UCHAR Reserved3[40];
--	}	INQUIRYDATA, *PINQUIRYDATA;
--
--#endif
--
--// function prototypes
--int Pci2000_Detect			(Scsi_Host_Template *tpnt);
--int Pci2000_Command			(Scsi_Cmnd *SCpnt);
--int Pci2000_QueueCommand	(Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *));
--int Pci2000_Abort			(Scsi_Cmnd *SCpnt);
--int Pci2000_Reset			(Scsi_Cmnd *SCpnt, unsigned int flags);
--int Pci2000_Release			(struct Scsi_Host *pshost);
--int Pci2000_BiosParam		(struct scsi_device *sdev,
--					struct block_device *bdev,
--					sector_t capacity, int geom[]);
--
--#endif
+On Sunday, July 10, 2005 1:36 PM, Olaf Hering wrote:
+> 
+> 
+> changing CONFIG_LOCALVERSION rebuilds too much, for no 
+> appearent reason.
+> 
+> remove also drivers/message/fusion/linux_compat.h,
+> because it is empty after the change
+> 
+> Signed-off-by: Olaf Hering <olh@suse.de>
+> 
+> drivers/message/fusion/linux_compat.h |   18 ------------------
+> drivers/message/fusion/mptbase.c      |    1 -
+> drivers/message/fusion/mptbase.h      |    1 -
+> drivers/message/fusion/mptctl.c       |    1 -
+> drivers/message/fusion/mptctl.h       |    1 -
+> drivers/message/fusion/mptfc.c        |    1 -
+> drivers/message/fusion/mptlan.h       |    1 -
+> drivers/message/fusion/mptscsih.c     |    1 -
+> drivers/message/fusion/mptspi.c       |    1 -
+> 9 files changed, 26 deletions(-)
+> 
+> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/linux_compat.h
+> ===================================================================
+> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/linux_compat.h
+> +++ /dev/null
+> @@ -1,18 +0,0 @@
+> -/* drivers/message/fusion/linux_compat.h */
+> -
+> -#ifndef FUSION_LINUX_COMPAT_H
+> -#define FUSION_LINUX_COMPAT_H
+> -
+> -#include <linux/version.h>
+> -#include <scsi/scsi_device.h>
+> -
+> -#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,6))
+> -static int inline scsi_device_online(struct scsi_device *sdev)
+> -{
+> -	return sdev->online;
+> -}
+> -#endif
+> -
+> -
+> -/*}-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+> -=-=-=-=-=-=-=-=*/
+> -#endif /* _LINUX_COMPAT_H */
+> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptbase.c
+> ===================================================================
+> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptbase.c
+> +++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptbase.c
+> @@ -47,7 +47,6 @@
+> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+> =-=-=-=-=-=-=-=*/
+> 
+> #include <linux/config.h>
+> -#include <linux/version.h>
+> #include <linux/kernel.h>
+> #include <linux/module.h>
+> #include <linux/errno.h>
+> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptbase.h
+> ===================================================================
+> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptbase.h
+> +++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptbase.h
+> @@ -49,7 +49,6 @@
+> #define MPTBASE_H_INCLUDED
+> /*{-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+> =-=-=-=-=-=-=-=*/
+> 
+> -#include <linux/version.h>
+> #include <linux/config.h>
+> #include <linux/kernel.h>
+> #include <linux/pci.h>
+> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptctl.c
+> ===================================================================
+> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptctl.c
+> +++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptctl.c
+> @@ -45,7 +45,6 @@
+> */
+> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+> =-=-=-=-=-=-=-=*/
+> 
+> -#include <linux/version.h>
+> #include <linux/kernel.h>
+> #include <linux/module.h>
+> #include <linux/errno.h>
+> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptctl.h
+> ===================================================================
+> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptctl.h
+> +++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptctl.h
+> @@ -49,7 +49,6 @@
+> #define MPTCTL_H_INCLUDED
+> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+> =-=-=-=-=-=-=-=*/
+> 
+> -#include "linux/version.h"
+> 
+> 
+> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+> =-=-=-=-=-=-=-=*/
+> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptlan.h
+> ===================================================================
+> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptlan.h
+> +++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptlan.h
+> @@ -66,7 +66,6 @@
+> #include <linux/slab.h>
+> #include <linux/miscdevice.h>
+> #include <linux/spinlock.h>
+> -#include <linux/version.h>
+> #include <linux/workqueue.h>
+> #include <linux/delay.h>
+> // #include <linux/trdevice.h>
+> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptfc.c
+> ===================================================================
+> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptfc.c
+> +++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptfc.c
+> @@ -43,7 +43,6 @@
+> Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  
+> 02111-1307  USA
+> */
+> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+> =-=-=-=-=-=-=-=*/
+> -#include "linux_compat.h"	/* linux-2.6 tweaks */
+> #include <linux/module.h>
+> #include <linux/kernel.h>
+> #include <linux/init.h>
+> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptscsih.c
+> ===================================================================
+> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptscsih.c
+> +++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptscsih.c
+> @@ -44,7 +44,6 @@
+> */
+> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+> =-=-=-=-=-=-=-=*/
+> 
+> -#include "linux_compat.h"	/* linux-2.6 tweaks */
+> #include <linux/module.h>
+> #include <linux/kernel.h>
+> #include <linux/init.h>
+> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptspi.c
+> ===================================================================
+> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptspi.c
+> +++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptspi.c
+> @@ -44,7 +44,6 @@
+> */
+> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+> =-=-=-=-=-=-=-=*/
+> 
+> -#include "linux_compat.h"	/* linux-2.6 tweaks */
+> #include <linux/module.h>
+> #include <linux/kernel.h>
+> #include <linux/init.h>
+> 
