@@ -1,31 +1,50 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] Use device_for_each_child() to unregister devices in scsi_remove_target().
-Date: Mon, 11 Jul 2005 17:20:12 -0700
-Message-ID: <20050712002011.GA9331@kroah.com>
-References: <11193083662356@kroah.com> <11193083663269@kroah.com> <20050706003850.GA11542@us.ibm.com>
+From: "Rusty French" <fsstiqiph@paalp.com>
+Subject: Get your personalized rate quote NOW!
+Date: Mon, 11 Jul 2005 08:46:54 -0700
+Message-ID: <933687305.20050708343161__31513.7559934103$1121128962$gmane$org@paalp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262306AbVGLAVK@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20050706003850.GA11542@us.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: linux-kernel@vger.kernel.org, mochel@digitalimplant.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zeus1.kernel.org ([204.152.191.4]:64933 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S261894AbVGKOrE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Jul 2005 10:47:04 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: kbaucom@vger.kernel.org
 
-On Tue, Jul 05, 2005 at 05:38:50PM -0700, Patrick Mansfield wrote:
-> Hi Greg / Patrick -
-> 
-> I'm getting an oops with current (pulled today) 2.6 git, the
-> device_for_each_child() does not seem to be deletion safe.
-> 
-> We hold the klist in place via the n_ref, but the kobj (in the struct
-> device for the struct scsi_target) containing it is freed when the
-> kref->refcount goes to zero.
+Hello,
 
-But we grab a reference to that object right before we call
-device_for_each_child(), right?  Or am I missing something here?
+You have been chosen to participate in an invitation only limited time =
+event!=20
+Are you currently paying over 3% for your mortgage? STOP! We can help y=
+ou lower that today!
+Answer only a few questions and we can give you an approval in under 30=
+ seconds =96 it=92s that simple!=20
 
-thanks,
+http://www.homefastcash.com/?h=3Dartemych
 
-greg k-h
+And stop fighting for lenders =96 let them fight for you! Make them wor=
+k for your business by giving you the lowest rates
+around!
+$260,000 loans are available for only $340/month! WE=92RE PRACTICALLY G=
+IVING AWAY MONEY!
+
+Think your credit is too bad to get a deal like this? THINK AGAIN! We w=
+ill have you saving your money in no time!
+Are you ready to save your money? http://www.homefastcash.com/?h=3Darte=
+mych
+
+
+http://www.homefastcash.com/?h=3Dartemych
+
+Regards,
+Rusty French
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
