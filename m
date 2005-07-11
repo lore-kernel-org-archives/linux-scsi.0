@@ -1,181 +1,126 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH 22/82] remove linux/version.h from drivers/message/fus
-	ion
-Date: Sun, 10 Jul 2005 18:15:43 -0600
-Message-ID: <91888D455306F94EBD4D168954A9457C030A908F@nacos172.co.lsil.com>
+From: Nishanth Aravamudan <nacc@us.ibm.com>
+Subject: Re: [KJ] [PATCH 11/14] scsi/lpfc_scsi: use msleep() instead of schedule_timeout()
+Date: Sun, 10 Jul 2005 22:38:13 -0700
+Message-ID: <20050711053813.GB14070@us.ibm.com>
+References: <20050709000324.GD2596@us.ibm.com> <20050709001458.GQ2596@us.ibm.com> <20050710162009.GA2468@homer.coderock.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262075AbVGKATh@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Olaf Hering <olh@suse.de>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e35.co.us.ibm.com ([32.97.110.133]:42952 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S262243AbVGKFqG
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Jul 2005 01:46:06 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e35.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j6B5k5OM552296
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Jul 2005 01:46:05 -0400
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VER6.6) with ESMTP id j6B5k52D424952
+	for <linux-scsi@vger.kernel.org>; Sun, 10 Jul 2005 23:46:05 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j6B5k5gH013758
+	for <linux-scsi@vger.kernel.org>; Sun, 10 Jul 2005 23:46:05 -0600
+Content-Disposition: inline
+In-Reply-To: <20050710162009.GA2468@homer.coderock.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Domen Puncer <domen@coderock.org>
+Cc: James.Bottomley@SteelEye.com, Kernel-Janitors <kernel-janitors@lists.osdl.org>, linux-scsi@vger.kernel.org
 
-I'd rather you not kill linux_compat.h file.
-I use this file for compatibility of driver source 
-across various kernel versions.  I provide our
-customers with driver builds containing single source 
-which needs to compile in kernels 2.6.5( e.g. SLES9),
-2.6.8 (e.g. RHEL4), and 2.6.11 ( e.g. SuSE 9.3 Pro).
+On 10.07.2005 [18:20:10 +0200], Domen Puncer wrote:
+> On 08/07/05 17:14 -0700, Nishanth Aravamudan wrote:
+> > From: Nishanth Aravamudan <nacc@us.ibm.com>
+> > 
+> > Description: Replace schedule_timeout() with msleep() to guarantee the
+> > task delays as expected.
+> > 
+> > Patch is compile-tested.
+> > 
+> > Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
+> > 
+> > ---
+> > 
+> >  lpfc_scsi.c |   13 +++++--------
+> >  1 files changed, 5 insertions(+), 8 deletions(-)
+> > 
+> > diff -urp 2.6.13-rc2-kj/drivers/scsi/lpfc/lpfc_scsi.c 2.6.13-rc2-kj-dev/drivers/scsi/lpfc/lpfc_scsi.c
+> > --- 2.6.13-rc2-kj/drivers/scsi/lpfc/lpfc_scsi.c	2005-07-06 07:57:19.000000000 -0700
+> > +++ 2.6.13-rc2-kj-dev/drivers/scsi/lpfc/lpfc_scsi.c	2005-07-06 19:20:41.000000000 -0700
+> ...
+> > @@ -1110,8 +1108,7 @@ __lpfc_reset_bus_handler(struct scsi_cmn
+> >  				&phba->sli.ring[phba->sli.fcp_ring],
+> >  				0, 0, LPFC_CTX_HOST))) {
+> >  		spin_unlock_irq(phba->host->host_lock);
+> > -		set_current_state(TASK_UNINTERRUPTIBLE);
+> > -		schedule_timeout(LPFC_RESET_WAIT*HZ);
+> > +		msleep(LPFC_RESET_WAIT * HZ);
+> 
+> 					^^ ??
+> I assume you meant 1000.
 
-If you look at our 3.02.18 driver source I submitted to SuSE
-for SLES9 SP2, you will see this file is about 3K bytes of
-compatibility.  
+Gah! You are right. Fixed below. Thanks, Domen!
 
-Eric Moore
-LSI Logic Corporation 
+-Nish
 
+Description: Replace schedule_timeout() with msleep() to guarantee the
+task delays as expected.
 
-On Sunday, July 10, 2005 1:36 PM, Olaf Hering wrote:
-> 
-> 
-> changing CONFIG_LOCALVERSION rebuilds too much, for no 
-> appearent reason.
-> 
-> remove also drivers/message/fusion/linux_compat.h,
-> because it is empty after the change
-> 
-> Signed-off-by: Olaf Hering <olh@suse.de>
-> 
-> drivers/message/fusion/linux_compat.h |   18 ------------------
-> drivers/message/fusion/mptbase.c      |    1 -
-> drivers/message/fusion/mptbase.h      |    1 -
-> drivers/message/fusion/mptctl.c       |    1 -
-> drivers/message/fusion/mptctl.h       |    1 -
-> drivers/message/fusion/mptfc.c        |    1 -
-> drivers/message/fusion/mptlan.h       |    1 -
-> drivers/message/fusion/mptscsih.c     |    1 -
-> drivers/message/fusion/mptspi.c       |    1 -
-> 9 files changed, 26 deletions(-)
-> 
-> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/linux_compat.h
-> ===================================================================
-> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/linux_compat.h
-> +++ /dev/null
-> @@ -1,18 +0,0 @@
-> -/* drivers/message/fusion/linux_compat.h */
-> -
-> -#ifndef FUSION_LINUX_COMPAT_H
-> -#define FUSION_LINUX_COMPAT_H
-> -
-> -#include <linux/version.h>
-> -#include <scsi/scsi_device.h>
-> -
-> -#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,6))
-> -static int inline scsi_device_online(struct scsi_device *sdev)
-> -{
-> -	return sdev->online;
-> -}
-> -#endif
-> -
-> -
-> -/*}-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-> -=-=-=-=-=-=-=-=*/
-> -#endif /* _LINUX_COMPAT_H */
-> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptbase.c
-> ===================================================================
-> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptbase.c
-> +++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptbase.c
-> @@ -47,7 +47,6 @@
-> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-> =-=-=-=-=-=-=-=*/
-> 
-> #include <linux/config.h>
-> -#include <linux/version.h>
-> #include <linux/kernel.h>
-> #include <linux/module.h>
-> #include <linux/errno.h>
-> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptbase.h
-> ===================================================================
-> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptbase.h
-> +++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptbase.h
-> @@ -49,7 +49,6 @@
-> #define MPTBASE_H_INCLUDED
-> /*{-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-> =-=-=-=-=-=-=-=*/
-> 
-> -#include <linux/version.h>
-> #include <linux/config.h>
-> #include <linux/kernel.h>
-> #include <linux/pci.h>
-> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptctl.c
-> ===================================================================
-> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptctl.c
-> +++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptctl.c
-> @@ -45,7 +45,6 @@
-> */
-> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-> =-=-=-=-=-=-=-=*/
-> 
-> -#include <linux/version.h>
-> #include <linux/kernel.h>
-> #include <linux/module.h>
-> #include <linux/errno.h>
-> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptctl.h
-> ===================================================================
-> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptctl.h
-> +++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptctl.h
-> @@ -49,7 +49,6 @@
-> #define MPTCTL_H_INCLUDED
-> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-> =-=-=-=-=-=-=-=*/
-> 
-> -#include "linux/version.h"
-> 
-> 
-> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-> =-=-=-=-=-=-=-=*/
-> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptlan.h
-> ===================================================================
-> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptlan.h
-> +++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptlan.h
-> @@ -66,7 +66,6 @@
-> #include <linux/slab.h>
-> #include <linux/miscdevice.h>
-> #include <linux/spinlock.h>
-> -#include <linux/version.h>
-> #include <linux/workqueue.h>
-> #include <linux/delay.h>
-> // #include <linux/trdevice.h>
-> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptfc.c
-> ===================================================================
-> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptfc.c
-> +++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptfc.c
-> @@ -43,7 +43,6 @@
-> Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  
-> 02111-1307  USA
-> */
-> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-> =-=-=-=-=-=-=-=*/
-> -#include "linux_compat.h"	/* linux-2.6 tweaks */
-> #include <linux/module.h>
-> #include <linux/kernel.h>
-> #include <linux/init.h>
-> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptscsih.c
-> ===================================================================
-> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptscsih.c
-> +++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptscsih.c
-> @@ -44,7 +44,6 @@
-> */
-> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-> =-=-=-=-=-=-=-=*/
-> 
-> -#include "linux_compat.h"	/* linux-2.6 tweaks */
-> #include <linux/module.h>
-> #include <linux/kernel.h>
-> #include <linux/init.h>
-> Index: linux-2.6.13-rc2-mm1/drivers/message/fusion/mptspi.c
-> ===================================================================
-> --- linux-2.6.13-rc2-mm1.orig/drivers/message/fusion/mptspi.c
-> +++ linux-2.6.13-rc2-mm1/drivers/message/fusion/mptspi.c
-> @@ -44,7 +44,6 @@
-> */
-> /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-> =-=-=-=-=-=-=-=*/
-> 
-> -#include "linux_compat.h"	/* linux-2.6 tweaks */
-> #include <linux/module.h>
-> #include <linux/kernel.h>
-> #include <linux/init.h>
-> 
+Patch is compile-tested.
+
+Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
+
+---
+
+ lpfc_scsi.c |   13 +++++--------
+ 1 files changed, 5 insertions(+), 8 deletions(-)
+
+diff -urp 2.6.13-rc2-kj/drivers/scsi/lpfc/lpfc_scsi.c 2.6.13-rc2-kj-dev/drivers/scsi/lpfc/lpfc_scsi.c
+--- 2.6.13-rc2-kj/drivers/scsi/lpfc/lpfc_scsi.c	2005-07-06 07:57:19.000000000 -0700
++++ 2.6.13-rc2-kj-dev/drivers/scsi/lpfc/lpfc_scsi.c	2005-07-06 19:20:41.000000000 -0700
+@@ -24,6 +24,7 @@
+ 
+ #include <linux/pci.h>
+ #include <linux/interrupt.h>
++#include <linux/delay.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_device.h>
+@@ -885,8 +886,7 @@ __lpfc_abort_handler(struct scsi_cmnd *c
+ 		while (cmnd->host_scribble)
+ 		{
+ 			spin_unlock_irq(phba->host->host_lock);
+-			set_current_state(TASK_UNINTERRUPTIBLE);
+-			schedule_timeout(LPFC_ABORT_WAIT*HZ);
++			msleep(LPFC_ABORT_WAIT * 1000);
+ 			spin_lock_irq(phba->host->host_lock);
+ 			if (++loop_count
+ 			    > (2 * phba->cfg_nodev_tmo)/LPFC_ABORT_WAIT)
+@@ -952,8 +952,7 @@ __lpfc_reset_lun_handler(struct scsi_cmn
+ 
+ 		if (pnode->nlp_state != NLP_STE_MAPPED_NODE) {
+ 			spin_unlock_irq(phba->host->host_lock);
+-			set_current_state(TASK_UNINTERRUPTIBLE);
+-			schedule_timeout( HZ/2);
++			msleep(500);
+ 			spin_lock_irq(phba->host->host_lock);
+ 		}
+ 		if ((pnode) && (pnode->nlp_state == NLP_STE_MAPPED_NODE))
+@@ -1011,8 +1010,7 @@ __lpfc_reset_lun_handler(struct scsi_cmn
+ 				       cmnd->device->id, cmnd->device->lun,
+ 				       LPFC_CTX_LUN))) {
+ 		spin_unlock_irq(phba->host->host_lock);
+-		set_current_state(TASK_UNINTERRUPTIBLE);
+-		schedule_timeout(LPFC_RESET_WAIT*HZ);
++		msleep(LPFC_RESET_WAIT * 1000);
+ 		spin_lock_irq(phba->host->host_lock);
+ 
+ 		if (++loopcnt
+@@ -1110,8 +1108,7 @@ __lpfc_reset_bus_handler(struct scsi_cmn
+ 				&phba->sli.ring[phba->sli.fcp_ring],
+ 				0, 0, LPFC_CTX_HOST))) {
+ 		spin_unlock_irq(phba->host->host_lock);
+-		set_current_state(TASK_UNINTERRUPTIBLE);
+-		schedule_timeout(LPFC_RESET_WAIT*HZ);
++		msleep(LPFC_RESET_WAIT * 1000);
+ 		spin_lock_irq(phba->host->host_lock);
+ 
+ 		if (++loopcnt
