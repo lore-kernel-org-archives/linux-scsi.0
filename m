@@ -1,47 +1,39 @@
-From: Kallol Biswas <kallol@nucleodyne.com>
-Subject: Re: LSI MegaRAID SATA 300-X8 problems
-Date: 12 Jul 2005 08:28:10 -0700
-Message-ID: <1121182089.8199.20.camel@driver>
-References: <42A5F235.6000300@buf.fr> <42A601E0.8090404@buf.fr>
-	 <42A85F96.5080608@buf.fr> <1121179247.8199.3.camel@driver>
-	 <42D3D941.6030109@buf.com>
-Reply-To: kallol@nucleodyne.com
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: SCSI luns
+Date: Tue, 12 Jul 2005 12:17:53 -0400
+Message-ID: <1121185078.4825.17.camel@mulgrave>
+References: <1ba727770507120422562d525d@mail.gmail.com>
+	 <1121168331.3171.21.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rwcrmhc14.comcast.net ([216.148.227.89]:48012 "EHLO
-	rwcrmhc12.comcast.net") by vger.kernel.org with ESMTP
-	id S261523AbVGLPat (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Jul 2005 11:30:49 -0400
-In-Reply-To: <42D3D941.6030109@buf.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261834AbVGLRvr@vger.kernel.org>
+In-Reply-To: <1121168331.3171.21.camel@laptopd505.fenrus.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Amrut Joshi <amrut.joshi@gmail.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alexander Jolk <alexj@buf.com>
-Cc: Alexander Jolk <alexj@buf.fr>, linux-scsi@vger.kernel.org
 
-The 3ware controller you used is a PCI 2.2 64/66Mhz 900 series
-controller, right?
+Thanks for redirecting to the correct list.
 
-What is the theoretical limit with the adapter? 528MB/sec, right?
+On Tue, 2005-07-12 at 13:38 +0200, Arjan van de Ven wrote:
+> On Tue, 2005-07-12 at 16:52 +0530, Amrut Joshi wrote:
+> > Currently linux scsi subsystem doesnt store the 8-byte luns which are
+> > recieved in REPORT_LUNS reply. This information is forver lost once
+> > the scan is over. In my LDD  I need this information. Currently I have
+> > to snoop REPORT_LUNS reply, do scsilun_to_int for all the luns and
 
-On Tue, 2005-07-12 at 07:52, Alexander Jolk wrote:
-> Kallol Biswas wrote:
-> > Hello Alexander,
-> >                Could you get the LSI MegaRAID SATA 300-8X controller
-> > working for a long duration?
-> > 
-> > Have you run any performance benchmark on it yet? How much bandwidth do
-> > you get with the controller?
-> 
-> With a 2.6.11.11 kernel, I had it working for a few days finally before 
-> giving up.  I don't quite remember what bandwidth I got; since I didn't 
-> get any echo neither from LSI Logic nor on the mailing list, I've 
-> switched to 3ware controllers with software RAID since, getting 400MB/s 
-> sustained.
-> 
-> Alex
-> 
-> 
-> 
+Our current transformation routine scsilun_to_int is bijective as long
+as the original scsi_lun doesn't overrun 32 bits (which it might well do
+one day).
 
+Why can't you simply do this by transforming back the lun?
+
+In general, I'm not in favour of adding redundant information to the
+device structure, so if you can demonstrate we overrun our allotted 32
+bits, the solution is probably to take lun up to u64 and still do the
+back transform (the alternative being to substitute lun with it's
+structural equivalen which would entail a lot of pain throught the SCSI
+subsytem).
+
+James
