@@ -1,41 +1,41 @@
-From: Alexander Jolk <alexj@buf.com>
-Subject: Re: LSI MegaRAID SATA 300-X8 problems
-Date: Tue, 12 Jul 2005 16:52:49 +0200
-Message-ID: <42D3D941.6030109@buf.com>
-References: <42A5F235.6000300@buf.fr> <42A601E0.8090404@buf.fr>	 <42A85F96.5080608@buf.fr> <1121179247.8199.3.camel@driver>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: qla2300 read buffer problems
+Date: Tue, 12 Jul 2005 16:01:23 +0100
+Message-ID: <20050712150123.GA5524@infradead.org>
+References: <24233.1121179331@www63.gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.buf.fr ([195.68.52.65]:42184 "EHLO mail.buf.fr")
-	by vger.kernel.org with ESMTP id S261493AbVGLOw6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Jul 2005 10:52:58 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:19642 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261530AbVGLPBZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Jul 2005 11:01:25 -0400
+Content-Disposition: inline
+In-Reply-To: <24233.1121179331@www63.gmx.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kallol@nucleodyne.com
-Cc: Alexander Jolk <alexj@buf.fr>, linux-scsi@vger.kernel.org
+To: rother-ml@gmx.de
+Cc: linux-scsi@vger.kernel.org
 
-Kallol Biswas wrote:
-> Hello Alexander,
->                Could you get the LSI MegaRAID SATA 300-8X controller
-> working for a long duration?
+On Tue, Jul 12, 2005 at 04:42:11PM +0200, rother-ml@gmx.de wrote:
+> Hi all,
 > 
-> Have you run any performance benchmark on it yet? How much bandwidth do
-> you get with the controller?
+> we are encountering SAN problems. Twice or threetimes a minute we can
+> neither read nor write for up to five seconds from/to our LUs. After that
+> short periode, it catches up and resumes normally. The diagnostics in
+> SANsurfer (Read/Write Buffer Test) runs a few times successfully (approx.
+> 8-10 times) and then tells us about a problem with the buffer cache: 
+> Info: DiagRWBufferTest:  Unable to send Pass-Thru READ_DATA_BUFF on target
+> (50-06-0e-80-00-c2-8a-03) (0x20000040) (SCSI check condition)
+> Info: DiagRWBufferTest: Sense Key:  0xe, asc:  0x1d, ascq:  0x0.
+> 
+> The numbers of "Link Failure", "Sync Loss" and "Signal Loss" are also
+> increasing.
+> 
+> After compiling the modules with almost every debug option the syslogd
+> notices the following lines:
+> qla2x00_scsi_passthru(18): entered.
 
-With a 2.6.11.11 kernel, I had it working for a few days finally before 
-giving up.  I don't quite remember what bandwidth I got; since I didn't 
-get any echo neither from LSI Logic nor on the mailing list, I've 
-switched to 3ware controllers with software RAID since, getting 400MB/s 
-sustained.
-
-Alex
-
-
-
-
--- 
-Alexander Jolk         /         BUF Compagnie
-tel +33-1 42 68 18 28 /  fax +33-1 42 68 18 29
+These traces are not from the in-kernel qla2xxx driver.  Either use the
+proper driver or complain to qlogic tech support.
 
