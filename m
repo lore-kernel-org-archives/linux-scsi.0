@@ -1,38 +1,54 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 4/5] scsi host / scsi target state model update
-Date: Tue, 12 Jul 2005 12:44:14 -0400
-Message-ID: <1121186655.4825.26.camel@mulgrave>
-References: <20050616181058.GA20923@us.ibm.com>
-	 <20050616181238.GB20923@us.ibm.com> <20050616181342.GC20923@us.ibm.com>
-	 <20050616181433.GD20923@us.ibm.com>  <20050616181518.GE20923@us.ibm.com>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: [BUG] Fusion MPT Base Driver initialization failure with kdum
+	p
+Date: Tue, 12 Jul 2005 12:15:38 -0600
+Message-ID: <91888D455306F94EBD4D168954A9457C030A9D9C@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:11683 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S261806AbVGLRvL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Jul 2005 13:51:11 -0400
-In-Reply-To: <20050616181518.GE20923@us.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262055AbVGLSRz@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, bharata@in.ibm.com
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "Wade, Roy" <Roy.Wade@lsil.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, 2005-06-16 at 11:15 -0700, Mike Anderson wrote:
-> Add a SCSI target state model similar to the SCSI device state model.
+I've seen the report. I need more info from Bharata on how
+to reproduce. Perhaps you can send me email offline which
+provides specific instructions to how to configure kdump,
+how to capture the dump, and what you did to crash your system.
 
-The first three patches look good (sorry been a hectic month, just
-getting around to looking through them) so I'll stick them in scsi-misc
-and see how they work out.
+Eric Moore
+LSI Logic Corporation
 
-Currently, the target is really slaved to the devices, so we have no
-actual need of a target state model (if you destroy the last device on a
-target, the target is also destroyed).
-
-However, ressurecting this could be part of a more comprehensive target
-model if someone actually proves a need for it.
-
-James
-
-
+On Tuesday, July 12, 2005 10:23 AM, James Bottomley wrote:
+> 
+> 
+> On Tue, 2005-07-12 at 11:26 +0530, Bharata B Rao wrote:
+> > Fusion MPT base driver fails during initialization when 
+> kdump capture
+> > kernel boots. The details of the problem are reported here:
+> 
+> This bug report is pretty useless to me because I do a lot of my email
+> when I'm offline, so I can't get to the bugzilla report and you supply
+> no other details.
+> 
+> Also, we've invested quite a bit of effort persuading IBM to alter the
+> kernel bugzilla to collect email replies into the bug report, 
+> so if you
+> wish to bother the email list it should be
+> 
+> 1. With the full bug report that allows people actually to assess the
+> problem
+> 2. cc'd to the correct bugzilla address so that bugzilla 
+> itself collects
+> any replies and suggestions.
+> 
+> James
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
