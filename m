@@ -1,50 +1,59 @@
-From: "Rusty French" <fsstiqiph@paalp.com>
-Subject: Get your personalized rate quote NOW!
-Date: Mon, 11 Jul 2005 08:46:54 -0700
-Message-ID: <933687305.20050708343161__31513.7559934103$1121128962$gmane$org@paalp.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] Use device_for_each_child() to unregister devices in scsi_remove_target().
+Date: Mon, 11 Jul 2005 17:56:33 -0700
+Message-ID: <20050712005633.GA453@us.ibm.com>
+References: <11193083662356@kroah.com> <11193083663269@kroah.com> <20050706003850.GA11542@us.ibm.com> <20050712002011.GA9331@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:64933 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S261894AbVGKOrE (ORCPT
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:2212 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S261804AbVGLA4s (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Jul 2005 10:47:04 -0400
+	Mon, 11 Jul 2005 20:56:48 -0400
+Content-Disposition: inline
+In-Reply-To: <20050712002011.GA9331@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kbaucom@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: linux-kernel@vger.kernel.org, mochel@digitalimplant.org, linux-scsi@vger.kernel.org
 
-Hello,
+On Mon, Jul 11, 2005 at 05:20:12PM -0700, Greg KH wrote:
+> On Tue, Jul 05, 2005 at 05:38:50PM -0700, Patrick Mansfield wrote:
+> > Hi Greg / Patrick -
+> > 
+> > I'm getting an oops with current (pulled today) 2.6 git, the
+> > device_for_each_child() does not seem to be deletion safe.
+> > 
+> > We hold the klist in place via the n_ref, but the kobj (in the struct
+> > device for the struct scsi_target) containing it is freed when the
+> > kref->refcount goes to zero.
+> 
+> But we grab a reference to that object right before we call
+> device_for_each_child(), right?  Or am I missing something here?
 
-You have been chosen to participate in an invitation only limited time =
-event!=20
-Are you currently paying over 3% for your mortgage? STOP! We can help y=
-ou lower that today!
-Answer only a few questions and we can give you an approval in under 30=
- seconds =96 it=92s that simple!=20
+No, we get another reference on the passed in dev argument (in this
+failing case, it is for an FC's rport), not its children (scsi_target)
+that we want to iterate over.
 
-http://www.homefastcash.com/?h=3Dartemych
+If all children (scsi_targets) are removed, then the put in
+scsi_remove_target() would (or could) set the rport refcount to zero and
+it would be deleted. But the scsi_target would already be gone.
 
-And stop fighting for lenders =96 let them fight for you! Make them wor=
-k for your business by giving you the lowest rates
-around!
-$260,000 loans are available for only $340/month! WE=92RE PRACTICALLY G=
-IVING AWAY MONEY!
+Cases that are not affected are passed a scsi_target:
+scsi_is_target_device(dev) is true and we won't even call
+device_for_each_child().
 
-Think your credit is too bad to get a deal like this? THINK AGAIN! We w=
-ill have you saving your money in no time!
-Are you ready to save your money? http://www.homefastcash.com/?h=3Darte=
-mych
+Adding another get/put in __remove_child() does *not* help either, as it
+is the code within device_for_each_child() that needs another get/put of
+the kref instead of a get/put on the klist (well its n_ref); and if you do
+that, I don't see how the locking can be done correctly.
 
+I thought we had some semaphores in scsi to protect calls to
+scsi_remove_target(), but I only see those for scsi_device scan/removal
+(the shost->scan_mutex).
 
-http://www.homefastcash.com/?h=3Dartemych
+It looks like scsi should not allow removal and additions to happen at the
+same time on any scsi_target (and adding up/down on shost->scan_mutex
+won't fix this problem).
 
-Regards,
-Rusty French
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- Patrick Mansfield
