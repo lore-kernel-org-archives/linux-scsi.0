@@ -1,21 +1,12 @@
-From: Bharata B Rao <bharata@in.ibm.com>
-Subject: [BUG] Fusion MPT Base Driver initialization failure with kdump
-Date: Tue, 12 Jul 2005 11:26:49 +0530
-Message-ID: <1121147809.10622.9.camel@localhost.localdomain>
-Reply-To: bharata@in.ibm.com
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262388AbVGLF6v@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+From: fhsmdmtdmwqmk@yahoo.com
+Subject: (unknown)
+Date: Tue, 12 Jul 2005 03:06:54 -0700
+Message-ID: <200507121006.j6CA6sIx011432__24400.5441120409$1121162942$gmane$org@zeus2.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zeus2.kernel.org ([204.152.191.36]:13515 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S261282AbVGLKH0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Jul 2005 06:07:26 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Fusion MPT base driver fails during initialization when kdump capture
-kernel boots. The details of the problem are reported here:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=4870
-
-Regards,
-Bharata.
