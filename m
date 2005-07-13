@@ -1,51 +1,50 @@
 From: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
-Subject: Redundant this_count check in sd_init_command()
-Date: Tue, 12 Jul 2005 15:57:13 -0700
-Message-ID: <200507122257.j6CMvHg07091@unix-os.sc.intel.com>
+Subject: Redundant memset in scsi_alloc_sgtable
+Date: Tue, 12 Jul 2005 17:06:14 -0700
+Message-ID: <200507130006.j6D06Ig07714@unix-os.sc.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmr21.intel.com ([143.183.121.13]:37339 "EHLO
-	scsfmr001.sc.intel.com") by vger.kernel.org with ESMTP
-	id S262448AbVGLW5X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Jul 2005 18:57:23 -0400
-Received: from scsfmr101.sc.intel.com (scsfmr101.sc.intel.com [10.3.253.10])
-	by scsfmr001.sc.intel.com (8.12.10/8.12.10/d: major-outer.mc,v 1.1 2004/09/17 17:50:56 root Exp $) with ESMTP id j6CMvLMD017870
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Jul 2005 22:57:21 GMT
+Received: from fmr24.intel.com ([143.183.121.16]:8941 "EHLO
+	scsfmr004.sc.intel.com") by vger.kernel.org with ESMTP
+	id S262469AbVGMAGW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Jul 2005 20:06:22 -0400
+Received: from scsfmr100.sc.intel.com (scsfmr100.sc.intel.com [10.3.253.9])
+	by scsfmr004.sc.intel.com (8.12.10/8.12.10/d: major-outer.mc,v 1.1 2004/09/17 17:50:56 root Exp $) with ESMTP id j6D06Iod007951
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Jul 2005 00:06:18 GMT
 Received: from unix-os.sc.intel.com (unix-os.sc.intel.com [172.25.110.7])
-	by scsfmr101.sc.intel.com (8.12.10/8.12.10/d: major-inner.mc,v 1.2 2004/09/17 18:05:01 root Exp $) with ESMTP id j6CMoA11029467
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Jul 2005 22:50:10 GMT
+	by scsfmr100.sc.intel.com (8.12.10/8.12.10/d: major-inner.mc,v 1.2 2004/09/17 18:05:01 root Exp $) with ESMTP id j6D08PoV020646
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Jul 2005 00:08:25 GMT
 Received: from kwchenmobl1 (kwchen-mobl1.amr.corp.intel.com [143.183.251.71])
-	by unix-os.sc.intel.com (8.11.6/8.11.2) with ESMTP id j6CMvHg07091
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Jul 2005 15:57:17 -0700
+	by unix-os.sc.intel.com (8.11.6/8.11.2) with ESMTP id j6D06Ig07714
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Jul 2005 17:06:18 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-I was going over the scsi I/O submit path, when sd_init_command
-construct the scsi command, this_count is already checked in the
-previous else if clause.  Why does it need to check it again in
-the last else block?
+scsi_init_io calls scsi_alloc_sgtable and then calls blk_rq_map_sg
+to initialize the scatterlist structure.  blk_rq_map_sg() already
+memset the structure for every new segment.  That makes the memset
+in scsi_alloc_sgtable unnecessary.
 
-Patch to delete the spurious check.
+Patch to delete the extra memset in scsi_alloc_sgtable.  Tested on
+a x86_64 machine.  Looks stable to me.
+
 
 Signed-off-by: Ken Chen <kenneth.w.chen@intel.com>
 
-
---- linux-2.6.12/drivers/scsi/sd.c.orig	2005-07-12 15:48:57.545822227 -0700
-+++ linux-2.6.12/drivers/scsi/sd.c	2005-07-12 15:51:37.109296835 -0700
-@@ -373,9 +373,6 @@ static int sd_init_command(struct scsi_c
- 		SCpnt->cmnd[7] = (unsigned char) (this_count >> 8) & 0xff;
- 		SCpnt->cmnd[8] = (unsigned char) this_count & 0xff;
- 	} else {
--		if (this_count > 0xff)
--			this_count = 0xff;
--
- 		SCpnt->cmnd[1] |= (unsigned char) ((block >> 16) & 0x1f);
- 		SCpnt->cmnd[2] = (unsigned char) ((block >> 8) & 0xff);
- 		SCpnt->cmnd[3] = (unsigned char) block & 0xff;
-
+--- linux-2.6.12/drivers/scsi/scsi_lib.c.orig	2005-07-12 16:34:46.051647933 -0700
++++ linux-2.6.12/drivers/scsi/scsi_lib.c	2005-07-12 16:37:10.601450849 -0700
+@@ -615,8 +615,6 @@ static struct scatterlist *scsi_alloc_sg
+ 
+ 	sgp = scsi_sg_pools + cmd->sglist_len;
+ 	sgl = mempool_alloc(sgp->pool, gfp_mask);
+-	if (sgl)
+-		memset(sgl, 0, sgp->size);
+ 	return sgl;
+ }
+ 
 
 
