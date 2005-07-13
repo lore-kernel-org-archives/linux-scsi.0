@@ -1,289 +1,136 @@
-From: "Dailey, Nate" <Nate.Dailey@stratus.com>
-Subject: RE: [PATCH] drivers/scsi/st.c: add reference count and related fixes
-Date: Wed, 13 Jul 2005 15:12:29 -0400
-Message-ID: <92952AEF1F064042B6EF2522E0EEF437348377@EXNA.corp.stratus.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
+Date: Wed, 13 Jul 2005 21:56:35 +0200
+Message-ID: <42D571F3.1070105@s5r6.in-berlin.de>
+References: <200507091237.j69Cbtrv003425@einhorn.in-berlin.de>	 <1120922306.5008.5.camel@mulgrave> <20050709230656.GS29099@phunnypharm.org>	 <20050710033431.GB13883@havoc.gtf.org>	 <20050710043645.GF2972@phunnypharm.org> <1121009100.5078.4.camel@mulgrave>	 <42D15C28.5030705@s5r6.in-berlin.de> <1121019274.5078.22.camel@mulgrave>	 <42D18171.8050207@s5r6.in-berlin.de>	 <20050710202734.GI14956@phunnypharm.org>	 <42D191F7.8030506@s5r6.in-berlin.de> <42D19BF8.9080507@s5r6.in-berlin.de>	 <42D1A1EF.1060006@s5r6.in-berlin.de> <1121090241.5045.3.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C587DE.D03B989C"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub2.stratus.com ([134.111.1.16]:41932 "EHLO
-	mailhub2.stratus.com") by vger.kernel.org with ESMTP
-	id S262500AbVGMTMb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Jul 2005 15:12:31 -0400
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux1394-devel-admin@lists.sourceforge.net>
+In-Reply-To: <1121090241.5045.3.camel@mulgrave>
+Sender: linux1394-devel-admin@lists.sourceforge.net
+Errors-To: linux1394-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux1394-devel@lists.sourceforge.net
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: Brian King <brking@us.ibm.com>, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+James Bottomley wrote:
+> Could you get a trace of what's going on from the command response point
+> of view?  Doing a scsi_print_command() in the queuecommand() routine and
+> printing the return code and sense (with scsi_print_sense()) in the
+> ->done() should be sufficient.
 
-------_=_NextPart_001_01C587DE.D03B989C
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+If I only new where the done() is taken from. Seems to come
+from scsi.c.
 
-I've attached patches against 2.6.13rc2. These are basically identical
-to my earlier patches, as I found that all issues I'd seen in earlier
-kernels still existed in this kernel.
+Here is the log with all the old conversions active in sbp2.
+I put scsi_print_command() into sbp2scsi_queuecommand() and
+scsi_print_sense() into scsi_done().
 
-To summarize, the changes are: (more details in my original email)
+Jul 13 21:53:20 shuttle kernel: scsi0 : SCSI emulation for IEEE-1394 SBP-2 Devices
+Jul 13 21:53:21 shuttle kernel: ieee1394: sbp2: Logged into SBP-2 device
+Jul 13 21:53:21 shuttle kernel: scsi0 : destination target 0, lun 0
+Jul 13 21:53:21 shuttle kernel:         command: Inquiry: 12 00 00 00 24 00
+Jul 13 21:53:21 shuttle kernel: Unrecognized sense data (in hex):
+Jul 13 21:53:21 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:21 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:21 shuttle kernel:   Vendor: Initio    Model: IC25N080ATMR04-0  Rev: 2.18
+Jul 13 21:53:21 shuttle kernel:   Type:   Direct-Access                      ANSI SCSI revision: 02
+Jul 13 21:53:21 shuttle scsi.agent: disk at /devices/pci0000:00/0000:00:0c.0/fw-host1/00101003b80001e0/00101003b80001e0-0/host0/target0:0:0/0:0:0:0
+Jul 13 21:53:21 shuttle kernel: scsi0 : destination target 0, lun 0
+Jul 13 21:53:21 shuttle kernel:         command: Test Unit Ready: 00 00 00 00 00 00
+Jul 13 21:53:21 shuttle kernel: Unrecognized sense data (in hex):
+Jul 13 21:53:21 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:21 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:21 shuttle kernel: scsi0 : destination target 0, lun 0
+Jul 13 21:53:22 shuttle kernel:         command: Read Capacity (10): 25 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:22 shuttle kernel: Unrecognized sense data (in hex):
+Jul 13 21:53:22 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:22 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:22 shuttle kernel: SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
+Jul 13 21:53:22 shuttle kernel: scsi0 : destination target 0, lun 0
+Jul 13 21:53:23 shuttle perl: drakupdate_fstab called with --auto --add /dev/sda4
+Jul 13 21:53:23 shuttle kernel:         command: Mode Sense (6): 1a 00 08 00 04 00
+Jul 13 21:53:23 shuttle kernel: ieee1394: sbp2: Convert MODE_SENSE_6 to MODE_SENSE_10
+Jul 13 21:53:23 shuttle kernel: ieee1394: sbp2: Modify mode sense response (10 byte version)
+Jul 13 21:53:23 shuttle kernel: Unrecognized sense data (in hex):
+Jul 13 21:53:23 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:23 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:23 shuttle kernel: scsi0 : destination target 0, lun 0
+Jul 13 21:53:23 shuttle kernel:         command: Mode Sense (6): 1a 00 08 00 10 00
+Jul 13 21:53:23 shuttle kernel: ieee1394: sbp2: Convert MODE_SENSE_6 to MODE_SENSE_10
+Jul 13 21:53:23 shuttle kernel: ieee1394: sbp2: Modify mode sense response (10 byte version)
+Jul 13 21:53:23 shuttle kernel: Unrecognized sense data (in hex):
+Jul 13 21:53:23 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:23 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:23 shuttle kernel: sda: got wrong page
+Jul 13 21:53:23 shuttle kernel: sda: assuming drive cache: write through
+Jul 13 21:53:23 shuttle kernel: scsi0 : destination target 0, lun 0
+Jul 13 21:53:23 shuttle kernel:         command: Test Unit Ready: 00 00 00 00 00 00
+Jul 13 21:53:23 shuttle kernel: Unrecognized sense data (in hex):
+Jul 13 21:53:23 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:23 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:23 shuttle kernel: scsi0 : destination target 0, lun 0
+Jul 13 21:53:23 shuttle kernel:         command: Read Capacity (10): 25 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:23 shuttle kernel: Unrecognized sense data (in hex):
+Jul 13 21:53:23 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:23 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:23 shuttle kernel: SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
+Jul 13 21:53:23 shuttle kernel: scsi0 : destination target 0, lun 0
+Jul 13 21:53:23 shuttle kernel:         command: Mode Sense (6): 1a 00 08 00 04 00
+Jul 13 21:53:23 shuttle kernel: ieee1394: sbp2: Convert MODE_SENSE_6 to MODE_SENSE_10
+Jul 13 21:53:23 shuttle kernel: ieee1394: sbp2: Modify mode sense response (10 byte version)
+Jul 13 21:53:23 shuttle kernel: Unrecognized sense data (in hex):
+Jul 13 21:53:24 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:24 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:24 shuttle kernel: scsi0 : destination target 0, lun 0
+Jul 13 21:53:24 shuttle kernel:         command: Mode Sense (6): 1a 00 08 00 10 00
+Jul 13 21:53:24 shuttle kernel: ieee1394: sbp2: Convert MODE_SENSE_6 to MODE_SENSE_10
+Jul 13 21:53:24 shuttle kernel: ieee1394: sbp2: Modify mode sense response (10 byte version)
+Jul 13 21:53:24 shuttle kernel: Unrecognized sense data (in hex):
+Jul 13 21:53:24 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:24 shuttle perl: drakupdate_fstab called with --auto --add /dev/sda3
+Jul 13 21:53:24 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:23 shuttle perl: drakupdate_fstab called with --auto --add /dev/sda1
+Jul 13 21:53:24 shuttle perl: drakupdate_fstab called with --auto --add /dev/sda6
+Jul 13 21:53:25 shuttle perl: drakupdate_fstab called with --auto --add /dev/sda9
+Jul 13 21:53:25 shuttle perl: drakupdate_fstab called with --auto --add /dev/sda8
+Jul 13 21:53:25 shuttle perl: drakupdate_fstab called with --auto --add /dev/sda10
+Jul 13 21:53:25 shuttle kernel: sda: got wrong page
+Jul 13 21:53:25 shuttle kernel: sda: assuming drive cache: write through
+Jul 13 21:53:25 shuttle kernel:  sda:scsi0 : destination target 0, lun 0
+Jul 13 21:53:25 shuttle kernel:         command: Read (10): 28 00 00 00 00 00 00 00 08 00
+Jul 13 21:53:25 shuttle kernel: Unrecognized sense data (in hex):
+Jul 13 21:53:25 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:25 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:25 shuttle kernel:  [mac] sda1 sda2 sda3 sda4 sda5 sda6 sda7scsi0 : destination target 0, lun 0
+Jul 13 21:53:25 shuttle kernel:         command: Read (10): 28 00 00 00 00 08 00 00 08 00
+Jul 13 21:53:25 shuttle kernel: Unrecognized sense data (in hex):
+Jul 13 21:53:25 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:25 shuttle kernel:         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Jul 13 21:53:25 shuttle kernel:  sda8 sda9 sda10
+Jul 13 21:53:25 shuttle kernel: Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+Jul 13 21:53:25 shuttle perl: drakupdate_fstab called with --auto --add /dev/sda7
+Jul 13 21:53:26 shuttle perl: drakupdate_fstab called with --auto --add /dev/sda5
+Jul 13 21:53:26 shuttle perl: drakupdate_fstab called with --auto --add /dev/sda2
 
-- add a kref to the scsi_tape structure, and associate reference
-counting stuff
-
-- set sr_request->end_io =3D blk_end_sync_rq so we get notified when an =
-IO
-is rejected when the device goes away
-
-- check rq_status when IOs complete, else we don't know that IOs
-rejected for a dead device in fact did not complete
-
-- change last_SRpnt so it's set before an async IO is issued (in case
-st_sleep_done is bypassed)
-
-- fix a bogus use of last_SRpnt in st_chk_result
+Next I will try the new sbp2 without conversion (the one that lets the
+system reboot).
+-- 
+Stefan Richter
+-=====-=-=-= -=== -==-=
+http://arcgraph.de/sr/
 
 
-Nate Dailey
-Stratus Technologies
-
-Signed-off-by: Nate Dailey <nate.dailey@stratus.com>
-
-
-> -----Original Message-----
-> From: Kai Makisara [mailto:Kai.Makisara@kolumbus.fi]=20
-> Sent: Tuesday, July 12, 2005 4:08 PM
-> To: Dailey, Nate
-> Cc: Brian King; linux-scsi@vger.kernel.org
-> Subject: RE: [PATCH] drivers/scsi/st.c: add reference count=20
-> and related fixes
->=20
->=20
-> On Tue, 12 Jul 2005, Dailey, Nate wrote:
->=20
-> > I'll try porting my changes to a recent kernel, verify that=20
-> the bugs I
-> > found are still bugs, and get back to you with a new patch.
-> >=20
-> > In the meantime, responses to your comments:
-> >=20
-> > - using a new kref in the scsi_tape structure: I've given this some
-> > thought, and I think using a new kref is defintely the best=20
-> way to go.
-> > If nothing else, this is the same way sd and sr do=20
-> reference counting...
-> > seems easier to maintain if the code in st is as similar as=20
-> possible to
-> > these other drivers.
-> >=20
-> st is a character device and it should use the character device=20
-> refcounting if convenient. However, I now agree that the new=20
-> kref is the=20
-> simplest solution.
->=20
-> > - my changes to how last_SRpnt is used: I'll add a comment=20
-> documenting
-> > when last_SRpnt is valid (it's valid only for async IOs=20
-> that have been
-> > issued, nulled out by write_behind_check when they complete)
-> >=20
-> Good.
->=20
-> > - Here's why I think the use of last_SRpnt in st_chk_result=20
-> is bogus:
-> > one of the inputs to st_chk_result is "struct scsi_request=20
-> * SRpnt", and
-> > it seems like this is the SRpnt you want to use, rather=20
-> than last_SRpnt.
-> > This input will be the command that st_do_scsi or write_behind_check
-> > just waited on. This might not cause any problems with the=20
-> current st
-> > code, but it will definitely cause problems with the=20
-> changes I made to
-> > last_SRpnt. Let me know if I'm wrong about this, though, and I can
-> > change my last_SRpnt code.
-> >=20
-> OK. I now see your point and it seems that the solution is=20
-> simple: use the=20
-> SRpnt argument of st_chk_result(). The reason why the=20
-> function is using=20
-> last_SRpnt is moving code from one place to another and not=20
-> being careful=20
-> enough to change everything (I knew that in that code=20
-> last_SRpnt was valid=20
-> always and so this did not look like an error ;-).
->=20
-> --=20
-> Kai
->=20
-
-------_=_NextPart_001_01C587DE.D03B989C
-Content-Type: application/octet-stream;
-	name="st.c2613rc2nd.patch"
-Content-Transfer-Encoding: base64
-Content-Description: st.c2613rc2nd.patch
-Content-Disposition: attachment;
-	filename="st.c2613rc2nd.patch"
-
-LS0tIHN0LmMub3JpZwkyMDA1LTA3LTEzIDE0OjI5OjAxLjAwMDAwMDAwMCAtMDQwMAorKysgc3Qu
-YwkyMDA1LTA3LTEzIDE0OjI4OjIyLjAwMDAwMDAwMCAtMDQwMApAQCAtMjE5LDYgKzIxOSwxMiBA
-QCBzdGF0aWMgaW50IHN3aXRjaF9wYXJ0aXRpb24oc3RydWN0IHNjc2lfCiAKIHN0YXRpYyBpbnQg
-c3RfaW50X2lvY3RsKHN0cnVjdCBzY3NpX3RhcGUgKiwgdW5zaWduZWQgaW50LCB1bnNpZ25lZCBs
-b25nKTsKIAorc3RhdGljIHZvaWQgc2NzaV90YXBlX3JlbGVhc2Uoc3RydWN0IGtyZWYgKmtyZWYp
-OworCisjZGVmaW5lIHRvX3Njc2lfdGFwZShvYmopIGNvbnRhaW5lcl9vZihvYmosc3RydWN0IHNj
-c2lfdGFwZSxrcmVmKQorCitzdGF0aWMgREVDTEFSRV9NVVRFWChzdF9yZWZfc2VtKTsKKwogDAog
-I2luY2x1ZGUgIm9zc3RfZGV0ZWN0LmgiCiAjaWZuZGVmIFNJR1NfRlJPTV9PU1NUCkBAIC0yMzAs
-NiArMjM2LDQ2IEBAIHN0YXRpYyBpbnQgc3RfaW50X2lvY3RsKHN0cnVjdCBzY3NpX3RhcGUKIAl7
-Ik9uU3RyZWFtIiwgIkZXLSIsICIiLCAib3NzdCJ9CiAjZW5kaWYKIAorc3RhdGljIHN0cnVjdCBz
-Y3NpX3RhcGUgKnNjc2lfdGFwZV9nZXQoaW50IGRldikKK3sKKwlzdHJ1Y3Qgc2NzaV90YXBlICpT
-VHAgPSBOVUxMOworCisJZG93bigmc3RfcmVmX3NlbSk7CisJd3JpdGVfbG9jaygmc3RfZGV2X2Fy
-cl9sb2NrKTsKKworCWlmIChkZXYgPCBzdF9kZXZfbWF4ICYmIHNjc2lfdGFwZXMgIT0gTlVMTCkK
-KwkJU1RwID0gc2NzaV90YXBlc1tkZXZdOworCWlmICghU1RwKSBnb3RvIG91dDsKKworCWtyZWZf
-Z2V0KCZTVHAtPmtyZWYpOworCisJaWYgKCFTVHAtPmRldmljZSkKKwkJZ290byBvdXRfcHV0Owor
-CisJaWYgKHNjc2lfZGV2aWNlX2dldChTVHAtPmRldmljZSkpCisJCWdvdG8gb3V0X3B1dDsKKwor
-CWdvdG8gb3V0OworCitvdXRfcHV0OgorCWtyZWZfcHV0KCZTVHAtPmtyZWYsIHNjc2lfdGFwZV9y
-ZWxlYXNlKTsKKwlTVHAgPSBOVUxMOworb3V0OgorCXdyaXRlX3VubG9jaygmc3RfZGV2X2Fycl9s
-b2NrKTsKKwl1cCgmc3RfcmVmX3NlbSk7CisJcmV0dXJuIFNUcDsKK30KKworc3RhdGljIHZvaWQg
-c2NzaV90YXBlX3B1dChzdHJ1Y3Qgc2NzaV90YXBlICpTVHApCit7CisJc3RydWN0IHNjc2lfZGV2
-aWNlICpzZGV2ID0gU1RwLT5kZXZpY2U7CisKKwlkb3duKCZzdF9yZWZfc2VtKTsKKwlrcmVmX3B1
-dCgmU1RwLT5rcmVmLCBzY3NpX3RhcGVfcmVsZWFzZSk7CisJc2NzaV9kZXZpY2VfcHV0KHNkZXYp
-OworCXVwKCZzdF9yZWZfc2VtKTsKK30KKwogc3RydWN0IHN0X3JlamVjdF9kYXRhIHsKIAljaGFy
-ICp2ZW5kb3I7CiAJY2hhciAqbW9kZWw7CkBAIC0zMTEsNyArMzU3LDcgQEAgc3RhdGljIGludCBz
-dF9jaGtfcmVzdWx0KHN0cnVjdCBzY3NpX3RhcAogCQlyZXR1cm4gMDsKIAogCWNtZHN0YXRwID0g
-JlNUcC0+YnVmZmVyLT5jbWRzdGF0OwotCXN0X2FuYWx5emVfc2Vuc2UoU1RwLT5idWZmZXItPmxh
-c3RfU1JwbnQsIGNtZHN0YXRwKTsKKwlzdF9hbmFseXplX3NlbnNlKFNScG50LCBjbWRzdGF0cCk7
-CiAKIAlpZiAoY21kc3RhdHAtPmhhdmVfc2Vuc2UpCiAJCXNjb2RlID0gU1RwLT5idWZmZXItPmNt
-ZHN0YXQuc2Vuc2VfaGRyLnNlbnNlX2tleTsKQEAgLTM5OSwxMCArNDQ1LDEwIEBAIHN0YXRpYyB2
-b2lkIHN0X3NsZWVwX2RvbmUoc3RydWN0IHNjc2lfY20KIAogCShTVHAtPmJ1ZmZlciktPmNtZHN0
-YXQubWlkbGV2ZWxfcmVzdWx0ID0gU0NwbnQtPnJlc3VsdDsKIAlTQ3BudC0+cmVxdWVzdC0+cnFf
-c3RhdHVzID0gUlFfU0NTSV9ET05FOwotCShTVHAtPmJ1ZmZlciktPmxhc3RfU1JwbnQgPSBTQ3Bu
-dC0+c2NfcmVxdWVzdDsKIAlERUIoIFNUcC0+d3JpdGVfcGVuZGluZyA9IDA7ICkKIAotCWNvbXBs
-ZXRlKFNDcG50LT5yZXF1ZXN0LT53YWl0aW5nKTsKKwlpZiAoU0NwbnQtPnJlcXVlc3QtPndhaXRp
-bmcpCisJCWNvbXBsZXRlKFNDcG50LT5yZXF1ZXN0LT53YWl0aW5nKTsKIH0KIAogLyogRG8gdGhl
-IHNjc2kgY29tbWFuZC4gV2FpdHMgdW50aWwgY29tbWFuZCBwZXJmb3JtZWQgaWYgZG9fd2FpdCBp
-cyB0cnVlLgpAQCAtNDEyLDggKzQ1OCwyMCBAQCBzdGF0aWMgc3RydWN0IHNjc2lfcmVxdWVzdCAq
-CiBzdF9kb19zY3NpKHN0cnVjdCBzY3NpX3JlcXVlc3QgKiBTUnBudCwgc3RydWN0IHNjc2lfdGFw
-ZSAqIFNUcCwgdW5zaWduZWQgY2hhciAqY21kLAogCSAgIGludCBieXRlcywgaW50IGRpcmVjdGlv
-biwgaW50IHRpbWVvdXQsIGludCByZXRyaWVzLCBpbnQgZG9fd2FpdCkKIHsKKwlzdHJ1Y3QgY29t
-cGxldGlvbiAqd2FpdGluZzsKIAl1bnNpZ25lZCBjaGFyICpicDsKIAorCS8qIGlmIGFzeW5jLCBt
-YWtlIHN1cmUgdGhlcmUncyBubyBjb21tYW5kIG91dHN0YW5kaW5nICovCisJaWYgKCFkb193YWl0
-ICYmICgoU1RwLT5idWZmZXIpLT5sYXN0X1NScG50KSkgeworCQlwcmludGsoS0VSTl9FUlIgIiVz
-OiBBc3luYyBjb21tYW5kIGFscmVhZHkgYWN0aXZlLlxuIiwKKwkJICAgICAgIHRhcGVfbmFtZShT
-VHApKTsKKwkJaWYgKHNpZ25hbF9wZW5kaW5nKGN1cnJlbnQpKQorCQkJKFNUcC0+YnVmZmVyKS0+
-c3lzY2FsbF9yZXN1bHQgPSAoLUVJTlRSKTsKKwkJZWxzZQorCQkJKFNUcC0+YnVmZmVyKS0+c3lz
-Y2FsbF9yZXN1bHQgPSAoLUVCVVNZKTsKKwkJcmV0dXJuIE5VTEw7CisJfQorCiAJaWYgKFNScG50
-ID09IE5VTEwpIHsKIAkJU1JwbnQgPSBzY3NpX2FsbG9jYXRlX3JlcXVlc3QoU1RwLT5kZXZpY2Us
-IEdGUF9BVE9NSUMpOwogCQlpZiAoU1JwbnQgPT0gTlVMTCkgewpAQCAtNDI3LDcgKzQ4NSwxMyBA
-QCBzdF9kb19zY3NpKHN0cnVjdCBzY3NpX3JlcXVlc3QgKiBTUnBudCwgCiAJCX0KIAl9CiAKLQlp
-bml0X2NvbXBsZXRpb24oJlNUcC0+d2FpdCk7CisJLyogSWYgYXN5bmMgSU8sIHNldCBsYXN0X1NS
-cG50LiBUaGlzIHB0ciB0ZWxscyB3cml0ZV9iZWhpbmRfY2hlY2sKKwkgICB3aGljaCBJTyBpcyBv
-dXRzdGFuZGluZy4gSXQncyBudWxsZWQgb3V0IHdoZW4gdGhlIElPIGNvbXBsZXRlcy4gKi8KKwlp
-ZiAoIWRvX3dhaXQpCisJCShTVHAtPmJ1ZmZlciktPmxhc3RfU1JwbnQgPSBTUnBudDsKKworCXdh
-aXRpbmcgPSAmU1RwLT53YWl0OworCWluaXRfY29tcGxldGlvbih3YWl0aW5nKTsKIAlTUnBudC0+
-c3JfdXNlX3NnID0gU1RwLT5idWZmZXItPmRvX2RpbyB8fCAoYnl0ZXMgPiAoU1RwLT5idWZmZXIp
-LT5mcnBbMF0ubGVuZ3RoKTsKIAlpZiAoU1JwbnQtPnNyX3VzZV9zZykgewogCQlpZiAoIVNUcC0+
-YnVmZmVyLT5kb19kaW8pCkBAIC00MzgsMTcgKzUwMiwyMCBAQCBzdF9kb19zY3NpKHN0cnVjdCBz
-Y3NpX3JlcXVlc3QgKiBTUnBudCwgCiAJCWJwID0gKFNUcC0+YnVmZmVyKS0+Yl9kYXRhOwogCVNS
-cG50LT5zcl9kYXRhX2RpcmVjdGlvbiA9IGRpcmVjdGlvbjsKIAlTUnBudC0+c3JfY21kX2xlbiA9
-IDA7Ci0JU1JwbnQtPnNyX3JlcXVlc3QtPndhaXRpbmcgPSAmKFNUcC0+d2FpdCk7CisJU1JwbnQt
-PnNyX3JlcXVlc3QtPndhaXRpbmcgPSB3YWl0aW5nOwogCVNScG50LT5zcl9yZXF1ZXN0LT5ycV9z
-dGF0dXMgPSBSUV9TQ1NJX0JVU1k7CiAJU1JwbnQtPnNyX3JlcXVlc3QtPnJxX2Rpc2sgPSBTVHAt
-PmRpc2s7CisJU1JwbnQtPnNyX3JlcXVlc3QtPmVuZF9pbyA9IGJsa19lbmRfc3luY19ycTsKIAlT
-VHAtPmJ1ZmZlci0+Y21kc3RhdC5oYXZlX3NlbnNlID0gMDsKIAogCXNjc2lfZG9fcmVxKFNScG50
-LCAodm9pZCAqKSBjbWQsIGJwLCBieXRlcywKIAkJICAgIHN0X3NsZWVwX2RvbmUsIHRpbWVvdXQs
-IHJldHJpZXMpOwogCiAJaWYgKGRvX3dhaXQpIHsKLQkJd2FpdF9mb3JfY29tcGxldGlvbihTUnBu
-dC0+c3JfcmVxdWVzdC0+d2FpdGluZyk7CisJCXdhaXRfZm9yX2NvbXBsZXRpb24od2FpdGluZyk7
-CiAJCVNScG50LT5zcl9yZXF1ZXN0LT53YWl0aW5nID0gTlVMTDsKKwkJaWYgKFNScG50LT5zcl9y
-ZXF1ZXN0LT5ycV9zdGF0dXMgIT0gUlFfU0NTSV9ET05FKQorCQkJU1JwbnQtPnNyX3Jlc3VsdCB8
-PSAoRFJJVkVSX0VSUk9SIDw8IDI0KTsKIAkJKFNUcC0+YnVmZmVyKS0+c3lzY2FsbF9yZXN1bHQg
-PSBzdF9jaGtfcmVzdWx0KFNUcCwgU1JwbnQpOwogCX0KIAlyZXR1cm4gU1JwbnQ7CkBAIC00NjUs
-NiArNTMyLDcgQEAgc3RhdGljIGludCB3cml0ZV9iZWhpbmRfY2hlY2soc3RydWN0IHNjcwogCXN0
-cnVjdCBzdF9idWZmZXIgKlNUYnVmZmVyOwogCXN0cnVjdCBzdF9wYXJ0c3RhdCAqU1RwczsKIAlz
-dHJ1Y3Qgc3RfY21kc3RhdHVzICpjbWRzdGF0cDsKKwlzdHJ1Y3Qgc2NzaV9yZXF1ZXN0ICpTUnBu
-dDsKIAogCVNUYnVmZmVyID0gU1RwLT5idWZmZXI7CiAJaWYgKCFTVGJ1ZmZlci0+d3JpdGluZykK
-QEAgLTQ3OCwxMCArNTQ2LDE0IEBAIHN0YXRpYyBpbnQgd3JpdGVfYmVoaW5kX2NoZWNrKHN0cnVj
-dCBzY3MKICAgICAgICAgKSAvKiBlbmQgREVCICovCiAKIAl3YWl0X2Zvcl9jb21wbGV0aW9uKCYo
-U1RwLT53YWl0KSk7Ci0JKFNUcC0+YnVmZmVyKS0+bGFzdF9TUnBudC0+c3JfcmVxdWVzdC0+d2Fp
-dGluZyA9IE5VTEw7CisJU1JwbnQgPSBTVGJ1ZmZlci0+bGFzdF9TUnBudDsKKwlTVGJ1ZmZlci0+
-bGFzdF9TUnBudCA9IE5VTEw7CisJU1JwbnQtPnNyX3JlcXVlc3QtPndhaXRpbmcgPSBOVUxMOwor
-CWlmIChTUnBudC0+c3JfcmVxdWVzdC0+cnFfc3RhdHVzICE9IFJRX1NDU0lfRE9ORSkKKwkJU1Jw
-bnQtPnNyX3Jlc3VsdCB8PSAoRFJJVkVSX0VSUk9SIDw8IDI0KTsKIAotCShTVHAtPmJ1ZmZlcikt
-PnN5c2NhbGxfcmVzdWx0ID0gc3RfY2hrX3Jlc3VsdChTVHAsIChTVHAtPmJ1ZmZlciktPmxhc3Rf
-U1JwbnQpOwotCXNjc2lfcmVsZWFzZV9yZXF1ZXN0KChTVHAtPmJ1ZmZlciktPmxhc3RfU1JwbnQp
-OworCShTVHAtPmJ1ZmZlciktPnN5c2NhbGxfcmVzdWx0ID0gc3RfY2hrX3Jlc3VsdChTVHAsIFNS
-cG50KTsKKwlzY3NpX3JlbGVhc2VfcmVxdWVzdChTUnBudCk7CiAKIAlTVGJ1ZmZlci0+YnVmZmVy
-X2J5dGVzIC09IFNUYnVmZmVyLT53cml0aW5nOwogCVNUcHMgPSAmKFNUcC0+cHNbU1RwLT5wYXJ0
-aXRpb25dKTsKQEAgLTEwNTUsMjUgKzExMjcsMjAgQEAgc3RhdGljIGludCBzdF9vcGVuKHN0cnVj
-dCBpbm9kZSAqaW5vZGUsIAogCSAqLwogCWZpbHAtPmZfbW9kZSAmPSB+KEZNT0RFX1BSRUFEIHwg
-Rk1PREVfUFdSSVRFKTsKIAorCWlmICghKFNUcCA9IHNjc2lfdGFwZV9nZXQoZGV2KSkpCisJCXJl
-dHVybiAtRU5YSU87CisKIAl3cml0ZV9sb2NrKCZzdF9kZXZfYXJyX2xvY2spOwotCWlmIChkZXYg
-Pj0gc3RfZGV2X21heCB8fCBzY3NpX3RhcGVzID09IE5VTEwgfHwKLQkgICAgKChTVHAgPSBzY3Np
-X3RhcGVzW2Rldl0pID09IE5VTEwpKSB7Ci0JCXdyaXRlX3VubG9jaygmc3RfZGV2X2Fycl9sb2Nr
-KTsKLQkJcmV0dXJuICgtRU5YSU8pOwotCX0KIAlmaWxwLT5wcml2YXRlX2RhdGEgPSBTVHA7CiAJ
-bmFtZSA9IHRhcGVfbmFtZShTVHApOwogCiAJaWYgKFNUcC0+aW5fdXNlKSB7CiAJCXdyaXRlX3Vu
-bG9jaygmc3RfZGV2X2Fycl9sb2NrKTsKKwkJc2NzaV90YXBlX3B1dChTVHApOwogCQlERUIoIHBy
-aW50ayhTVF9ERUJfTVNHICIlczogRGV2aWNlIGFscmVhZHkgaW4gdXNlLlxuIiwgbmFtZSk7ICkK
-IAkJcmV0dXJuICgtRUJVU1kpOwogCX0KIAotCWlmKHNjc2lfZGV2aWNlX2dldChTVHAtPmRldmlj
-ZSkpIHsKLQkJd3JpdGVfdW5sb2NrKCZzdF9kZXZfYXJyX2xvY2spOwotCQlyZXR1cm4gKC1FTlhJ
-Tyk7Ci0JfQogCVNUcC0+aW5fdXNlID0gMTsKIAl3cml0ZV91bmxvY2soJnN0X2Rldl9hcnJfbG9j
-ayk7CiAJU1RwLT5yZXdfYXRfY2xvc2UgPSBTVHAtPmF1dG9yZXdfZGV2ID0gKGltaW5vcihpbm9k
-ZSkgJiAweDgwKSA9PSAwOwpAQCAtMTExOCw3ICsxMTg1LDcgQEAgc3RhdGljIGludCBzdF9vcGVu
-KHN0cnVjdCBpbm9kZSAqaW5vZGUsIAogIGVycl9vdXQ6CiAJbm9ybWFsaXplX2J1ZmZlcihTVHAt
-PmJ1ZmZlcik7CiAJU1RwLT5pbl91c2UgPSAwOwotCXNjc2lfZGV2aWNlX3B1dChTVHAtPmRldmlj
-ZSk7CisJc2NzaV90YXBlX3B1dChTVHApOwogCXJldHVybiByZXR2YWw7CiAKIH0KQEAgLTEyNTAs
-NyArMTMxNyw3IEBAIHN0YXRpYyBpbnQgc3RfcmVsZWFzZShzdHJ1Y3QgaW5vZGUgKmlub2QKIAl3
-cml0ZV9sb2NrKCZzdF9kZXZfYXJyX2xvY2spOwogCVNUcC0+aW5fdXNlID0gMDsKIAl3cml0ZV91
-bmxvY2soJnN0X2Rldl9hcnJfbG9jayk7Ci0Jc2NzaV9kZXZpY2VfcHV0KFNUcC0+ZGV2aWNlKTsK
-KwlzY3NpX3RhcGVfcHV0KFNUcCk7CiAKIAlyZXR1cm4gcmVzdWx0OwogfQpAQCAtMzg4Nyw2ICsz
-OTU0LDcgQEAgc3RhdGljIGludCBzdF9wcm9iZShzdHJ1Y3QgZGV2aWNlICpkZXYpCiAJCWdvdG8g
-b3V0X3B1dF9kaXNrOwogCX0KIAltZW1zZXQodHBudCwgMCwgc2l6ZW9mKHN0cnVjdCBzY3NpX3Rh
-cGUpKTsKKwlrcmVmX2luaXQoJnRwbnQtPmtyZWYpOwogCXRwbnQtPmRpc2sgPSBkaXNrOwogCXNw
-cmludGYoZGlzay0+ZGlza19uYW1lLCAic3QlZCIsIGkpOwogCWRpc2stPnByaXZhdGVfZGF0YSA9
-ICZ0cG50LT5kcml2ZXI7CkBAIC0zOTAyLDYgKzM5NzAsNyBAQCBzdGF0aWMgaW50IHN0X3Byb2Jl
-KHN0cnVjdCBkZXZpY2UgKmRldikKIAkJdHBudC0+dGFwZV90eXBlID0gTVRfSVNTQ1NJMjsKIAog
-CXRwbnQtPmJ1ZmZlciA9IGJ1ZmZlcjsKKwl0cG50LT5idWZmZXItPmxhc3RfU1JwbnQgPSBOVUxM
-OwogCiAJdHBudC0+aW5pdGVkID0gMDsKIAl0cG50LT5kaXJ0eSA9IDA7CkBAIC00MDc2LDE1ICs0
-MTQ1LDEwIEBAIHN0YXRpYyBpbnQgc3RfcmVtb3ZlKHN0cnVjdCBkZXZpY2UgKmRldikKIAkJCQkJ
-dHBudC0+bW9kZXNbbW9kZV0uY2RldnNbal0gPSBOVUxMOwogCQkJCX0KIAkJCX0KLQkJCXRwbnQt
-PmRldmljZSA9IE5VTEw7CiAKLQkJCWlmICh0cG50LT5idWZmZXIpIHsKLQkJCQl0cG50LT5idWZm
-ZXItPm9yaWdfZnJwX3NlZ3MgPSAwOwotCQkJCW5vcm1hbGl6ZV9idWZmZXIodHBudC0+YnVmZmVy
-KTsKLQkJCQlrZnJlZSh0cG50LT5idWZmZXIpOwotCQkJfQotCQkJcHV0X2Rpc2sodHBudC0+ZGlz
-ayk7Ci0JCQlrZnJlZSh0cG50KTsKKwkJCWRvd24oJnN0X3JlZl9zZW0pOworCQkJa3JlZl9wdXQo
-JnRwbnQtPmtyZWYsIHNjc2lfdGFwZV9yZWxlYXNlKTsKKwkJCXVwKCZzdF9yZWZfc2VtKTsKIAkJ
-CXJldHVybiAwOwogCQl9CiAJfQpAQCAtNDA5Myw2ICs0MTU3LDM0IEBAIHN0YXRpYyBpbnQgc3Rf
-cmVtb3ZlKHN0cnVjdCBkZXZpY2UgKmRldikKIAlyZXR1cm4gMDsKIH0KIAorLyoqCisgKiAgICAg
-IHNjc2lfdGFwZV9yZWxlYXNlIC0gQ2FsbGVkIHRvIGZyZWUgdGhlIFNjc2lfVGFwZSBzdHJ1Y3R1
-cmUKKyAqICAgICAgQGtyZWY6IHBvaW50ZXIgdG8gZW1iZWRkZWQga3JlZgorICoKKyAqICAgICAg
-c3RfcmVmX3NlbSBtdXN0IGJlIGhlbGQgZW50ZXJpbmcgdGhpcyByb3V0aW5lLiAgQmVjYXVzZSBp
-dCBpcworICogICAgICBjYWxsZWQgb24gbGFzdCBwdXQsIHlvdSBzaG91bGQgYWx3YXlzIHVzZSB0
-aGUgc2NzaV90YXBlX2dldCgpCisgKiAgICAgIHNjc2lfdGFwZV9wdXQoKSBoZWxwZXJzIHdoaWNo
-IG1hbmlwdWxhdGUgdGhlIHNlbWFwaG9yZSBkaXJlY3RseQorICogICAgICBhbmQgbmV2ZXIgZG8g
-YSBkaXJlY3Qga3JlZl9wdXQoKS4KKyAqKi8KK3N0YXRpYyB2b2lkIHNjc2lfdGFwZV9yZWxlYXNl
-KHN0cnVjdCBrcmVmICprcmVmKQoreworCXN0cnVjdCBzY3NpX3RhcGUgKnRwbnQgPSB0b19zY3Np
-X3RhcGUoa3JlZik7CisJc3RydWN0IGdlbmRpc2sgKmRpc2sgPSB0cG50LT5kaXNrOworCisJdHBu
-dC0+ZGV2aWNlID0gTlVMTDsKKworCWlmICh0cG50LT5idWZmZXIpIHsKKwkJdHBudC0+YnVmZmVy
-LT5vcmlnX2ZycF9zZWdzID0gMDsKKwkJbm9ybWFsaXplX2J1ZmZlcih0cG50LT5idWZmZXIpOwor
-CQlrZnJlZSh0cG50LT5idWZmZXIpOworCX0KKworCWRpc2stPnByaXZhdGVfZGF0YSA9IE5VTEw7
-CisJcHV0X2Rpc2soZGlzayk7CisJa2ZyZWUodHBudCk7CisJcmV0dXJuOworfQorCiBzdGF0aWMg
-dm9pZCBzdF9pbnRyKHN0cnVjdCBzY3NpX2NtbmQgKlNDcG50KQogewogCXNjc2lfaW9fY29tcGxl
-dGlvbihTQ3BudCwgKFNDcG50LT5yZXN1bHQgPyAwOiBTQ3BudC0+YnVmZmxlbiksIDEpOwo=
-
-------_=_NextPart_001_01C587DE.D03B989C
-Content-Type: application/octet-stream;
-	name="st.h2613rc2nd.patch"
-Content-Transfer-Encoding: base64
-Content-Description: st.h2613rc2nd.patch
-Content-Disposition: attachment;
-	filename="st.h2613rc2nd.patch"
-
-LS0tIHN0Lmgub3JpZwkyMDA1LTA3LTEzIDE0OjI4OjU2LjAwMDAwMDAwMCAtMDQwMAorKysgc3Qu
-aAkyMDA1LTA3LTEzIDE0OjI4OjMxLjAwMDAwMDAwMCAtMDQwMApAQCAtMyw3ICszLDcgQEAKICNk
-ZWZpbmUgX1NUX0gKIAogI2luY2x1ZGUgPGxpbnV4L2NvbXBsZXRpb24uaD4KLQorI2luY2x1ZGUg
-PGxpbnV4L2tyZWYuaD4KIAogLyogRGVzY3JpcHRvciBmb3IgYW5hbHl6ZWQgc2Vuc2UgZGF0YSAq
-Lwogc3RydWN0IHN0X2NtZHN0YXR1cyB7CkBAIC0xNTYsNiArMTU2LDcgQEAgc3RydWN0IHNjc2lf
-dGFwZSB7CiAJdW5zaWduZWQgY2hhciBsYXN0X3NlbnNlWzE2XTsKICNlbmRpZgogCXN0cnVjdCBn
-ZW5kaXNrICpkaXNrOworCXN0cnVjdCBrcmVmICAgICBrcmVmOwogfTsKIAogLyogQml0IG1hc2tz
-IGZvciB1c2VfcGYgKi8K
-
-------_=_NextPart_001_01C587DE.D03B989C--
+-------------------------------------------------------
+This SF.Net email is sponsored by the 'Do More With Dual!' webinar happening
+July 14 at 8am PDT/11am EDT. We invite you to explore the latest in dual
+core and dual graphics technology at this free one hour event hosted by HP,
+AMD, and NVIDIA.  To register visit http://www.hp.com/go/dualwebinar
