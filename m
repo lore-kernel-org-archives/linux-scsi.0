@@ -1,46 +1,34 @@
-From: Domen Puncer <domen@coderock.org>
-Subject: [PATCH 0/15] decrapify FlashPoint
-Date: Fri, 15 Jul 2005 00:17:45 +0200
-Message-ID: <20050714221745.GA2466@homer.coderock.org>
+From: Edward Falk <efalk@google.com>
+Subject: Re: map gendisk (or blockdev) -> scsi_device
+Date: Thu, 14 Jul 2005 15:54:52 -0700
+Message-ID: <42D6ED3C.8030307@google.com>
+References: <db1npr$c1d$1@sea.gmane.org> <20050713143843.GC26025@infradead.org> <db3nei$nrs$1@sea.gmane.org> <20050713234654.GA7222@us.ibm.com> <20050714195613.GA22935@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from coderock.org ([193.77.147.115]:24225 "EHLO trashy.coderock.org")
-	by vger.kernel.org with ESMTP id S262551AbVGNWRv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Jul 2005 18:17:51 -0400
-Content-Disposition: inline
+Received: from 216-239-45-4.google.com ([216.239.45.4]:27942 "EHLO
+	216-239-45-4.google.com") by vger.kernel.org with ESMTP
+	id S263158AbVGNWzV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jul 2005 18:55:21 -0400
+In-Reply-To: <20050714195613.GA22935@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: lnz@dandelion.com
-Cc: linux-scsi@vger.kernel.org, adobriyan@gmail.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
 
-Hi.
+Christoph Hellwig wrote:
+> On Wed, Jul 13, 2005 at 04:46:54PM -0700, Patrick Mansfield wrote:
+> 
+>>Add or use the attributes under the scsi_device, then use the
+>>/sysfs/block/sd/device symlink to find the corresponding scsi_device.
+> 
+> 
+> yupp, the /sys/block/* attributes are really only meant to be for
+> thing related to the actual block device, not the underlying hardware.
 
-I'm not going to send these patches to mailing list, as they are
-cca. 600k in size. If someone really wants them in their mailbox
-just drop me a mail.
+What is the difference between "actual block device" and "underlying 
+hardware"?
 
-Tarball [100k] of them is at:
-wget http://coderock.org/kj/2.6.13-rc3-kj/flashpoint_patches.tar.gz
-You can also get them one by one, they start with "flashpoint_":
-http://coderock.org/kj/2.6.13-rc3-kj/split/
+	-ed
 
-
-Original summary by author Alexey Dobriyan <adobriyan@gmail.com>:
-
-Don't pay attention to whatever whitespace left/added on the way. Lindent will
-take care of it.
-
-1) Mostly remove unused #defines.
-2) Remove wrappers.
-
-3-7) Switch to sane types.
-8-13) Remove useless typedefs.
-
-        Splitted for your reviewing pleasure.
-
-14) Lindent the sucker.
-15) return (*); => return *;
-
-Compile tested with CONFIG_SCSI_OMIT_FLASHPOINT=y and =n.
