@@ -1,68 +1,94 @@
-From: randy_dunlap <rdunlap@xenotime.net>
-Subject: Re: Fw: Kernel panic with dc395x in 2.6.12.2
-Date: Wed, 13 Jul 2005 18:57:19 -0700
-Message-ID: <20050713185719.700f9ce2.rdunlap@xenotime.net>
-References: <20050709175725.75f291bf.rdunlap@xenotime.net>
-	<42D07E94.8070409@drzeus.cx>
-	<20050709210824.29a90c5b.rdunlap@xenotime.net>
-	<42D12A39.80207@drzeus.cx>
-	<20050710093907.3f3c36e4.rdunlap@xenotime.net>
-	<42D15968.1080101@drzeus.cx>
-	<20050710105635.6d1606e3.rdunlap@xenotime.net>
-	<42D17D49.1000007@drzeus.cx>
-	<Pine.LNX.4.60.0507132312050.8774@poirot.grange>
-	<42D5AA82.3010304@drzeus.cx>
+From: James.Smart@Emulex.Com
+Subject: [PATCH] add int_to_scsilun() function
+Date: Wed, 13 Jul 2005 22:05:03 -0400
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C201ACDF@xbl3.ma.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chretien.genwebhost.com ([209.59.175.22]:18757 "EHLO
-	chretien.genwebhost.com") by vger.kernel.org with ESMTP
-	id S262769AbVGNB5Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Jul 2005 21:57:25 -0400
-In-Reply-To: <42D5AA82.3010304@drzeus.cx>
+Received: from emulex.emulex.com ([138.239.112.1]:15564 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S261380AbVGNCFF convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Jul 2005 22:05:05 -0400
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id j6E2549P003282
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Jul 2005 19:05:04 -0700 (PDT)
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pierre Ossman <drzeus-list@drzeus.cx>
-Cc: g.liakhovetski@gmx.de, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 14 Jul 2005 01:57:54 +0200 Pierre Ossman wrote:
+One of the issues we had was reverting the midlayers lun value
+into the 8byte lun value that we wanted to send to the device.
+Historically, there's been some combination of byte swapping,
+setting high/low, etc. There's also been no common thread between
+how our driver did it and others.  I also got very confused as
+to why byteswap routines were being used.
 
-> Guennadi Liakhovetski wrote:
-> 
-> >
-> >Have you managed to get netconsole running? Do you have no chance at all 
-> >to use a serial console? You are, perhaps, the only / last user of dc395x 
-> >on a high-mem machine, the driver is known to have a problem there, 
-> >although from your dump I cannot see yet if that is indeed the problem. As 
-> >someone also already suggested, you could also just try to reduce your 
-> >terminal font size to fit the entire Oops on the monitor. I've tried to 
-> >make a patche for the high-mem problem of dc395x, but we didn't have any 
-> >testers. So, would be nice if you could help.
-> >
-> 
-> I never got netconsole running no. And serial setup is a bit pesky. I'll
-> try changing the font size when I get access to the machine again (this
-> weekend).
+Anyway, this patch is a LLDD-callable function that reverts the
+midlayer's lun value, stored in an int, to the 8-byte quantity
+(note: this is not the real 8byte quantity, just the same amount
+that scsilun_to_int() was able to convert and store originally).
 
-Pierre,
+This also solves the dilemma of the thread:
+http://marc.theaimsgroup.com/?l=linux-kernel&m=112116767118981&w=2
 
-I apologize for my slowness, but I finally tested netconsole (with
-netcat on the receiving side) and it worked for me.
+A patch for the lpfc driver to use this function will be along
+in a few days (batched with other patches).
 
-test system boots with:
-netconsole=6665@192.168.1.104/eth0,6666@192.168.1.107/00:0e:35:4c:9a:0c
-
-and the target system runs netcat (nc):
-nc -l -u -p 6666
+-- james
 
 
-> As far as I know the machine is not a high-mem machine. It is only
-> equipped with 1 GB memory. I have no intention of changing the
-> SCSI-controller in that machine so I'll be glad to test any patches. Be
-> warned that I don't have the machine close by though so it might take a
-> day or two before I can test anything you send.
-
-
----
-~Randy
+diff -upNr scsi-misc-2.6-20050713.ORIG/drivers/scsi/scsi_scan.c scsi-misc-2.6-20050713/drivers/scsi/scsi_scan.c
+--- scsi-misc-2.6-20050713.ORIG/drivers/scsi/scsi_scan.c	2005-07-13 20:52:25.000000000 -0400
++++ scsi-misc-2.6-20050713/drivers/scsi/scsi_scan.c	2005-07-13 20:52:25.000000000 -0400
+@@ -1000,6 +1000,38 @@ static int scsilun_to_int(struct scsi_lu
+ }
+ 
+ /**
++ * int_to_scsilun: reverts an int into a scsi_lun
++ * @int:        integer to be reverted
++ * @scsilun:	struct scsi_lun to be set.
++ *
++ * Description:
++ *     Reverts the functionality of the scsilun_to_int, which packed
++ *     an 8-byte lun value into an int. This routine unpacks the int
++ *     back into the lun value.
++ *     Note: the scsilun_to_int() routine does not truly handle all
++ *     8bytes of the lun value. This functions restores only as much
++ *     as was set by the routine.
++ *
++ * Notes:
++ *     Given an integer : 0x0b030a04,  this function returns a
++ *     scsi_lun of : struct scsi_lun of: 0a 04 0b 03 00 00 00 00
++ *
++ **/
++void int_to_scsilun(unsigned int lun, struct scsi_lun *scsilun)
++{
++	int i;
++
++	memset(scsilun->scsi_lun, 0, sizeof(scsilun->scsi_lun));
++
++	for (i = 0; i < sizeof(lun); i += 2) {
++		scsilun->scsi_lun[i] = (lun >> 8) & 0xFF;
++		scsilun->scsi_lun[i+1] = lun & 0xFF;
++		lun = lun >> 16;
++	}
++}
++EXPORT_SYMBOL(int_to_scsilun);
++
++/**
+  * scsi_report_lun_scan - Scan using SCSI REPORT LUN results
+  * @sdevscan:	scan the host, channel, and id of this Scsi_Device
+  *
+diff -upNr scsi-misc-2.6-20050713.ORIG/include/scsi/scsi_device.h scsi-misc-2.6-20050713/include/scsi/scsi_device.h
+--- scsi-misc-2.6-20050713.ORIG/include/scsi/scsi_device.h	2005-07-13 20:52:36.000000000 -0400
++++ scsi-misc-2.6-20050713/include/scsi/scsi_device.h	2005-07-13 20:52:36.000000000 -0400
+@@ -243,6 +243,7 @@ extern void scsi_target_reap(struct scsi
+ extern void scsi_target_block(struct device *);
+ extern void scsi_target_unblock(struct device *);
+ extern void scsi_remove_target(struct device *);
++extern void int_to_scsilun(unsigned int, struct scsi_lun *);
+ extern const char *scsi_device_state_name(enum scsi_device_state);
+ extern int scsi_is_sdev_device(const struct device *);
+ extern int scsi_is_target_device(const struct device *);
