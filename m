@@ -1,34 +1,31 @@
-From: Edward Falk <efalk@google.com>
-Subject: Re: map gendisk (or blockdev) -> scsi_device
-Date: Thu, 14 Jul 2005 15:54:52 -0700
-Message-ID: <42D6ED3C.8030307@google.com>
-References: <db1npr$c1d$1@sea.gmane.org> <20050713143843.GC26025@infradead.org> <db3nei$nrs$1@sea.gmane.org> <20050713234654.GA7222@us.ibm.com> <20050714195613.GA22935@infradead.org>
+From: Pierre Ossman <drzeus-list@drzeus.cx>
+Subject: Re: Fw: Kernel panic with dc395x in 2.6.12.2
+Date: Fri, 15 Jul 2005 00:25:02 +0200
+Message-ID: <42D6E63E.4070402@drzeus.cx>
+References: <20050709175725.75f291bf.rdunlap@xenotime.net> <42D07E94.8070409@drzeus.cx> <20050709210824.29a90c5b.rdunlap@xenotime.net> <42D12A39.80207@drzeus.cx> <20050710093907.3f3c36e4.rdunlap@xenotime.net> <42D15968.1080101@drzeus.cx> <20050710105635.6d1606e3.rdunlap@xenotime.net> <42D17D49.1000007@drzeus.cx> <Pine.LNX.4.60.0507132312050.8774@poirot.grange> <42D5AA82.3010304@drzeus.cx> <Pine.LNX.4.60.0507142327060.16078@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 216-239-45-4.google.com ([216.239.45.4]:27942 "EHLO
-	216-239-45-4.google.com") by vger.kernel.org with ESMTP
-	id S263158AbVGNWzV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Jul 2005 18:55:21 -0400
-In-Reply-To: <20050714195613.GA22935@infradead.org>
+Received: from [85.8.12.41] ([85.8.12.41]:37251 "EHLO smtp.drzeus.cx")
+	by vger.kernel.org with ESMTP id S262822AbVGNWZR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jul 2005 18:25:17 -0400
+In-Reply-To: <Pine.LNX.4.60.0507142327060.16078@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-scsi@vger.kernel.org
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: randy_dunlap <rdunlap@xenotime.net>, linux-scsi@vger.kernel.org
 
-Christoph Hellwig wrote:
-> On Wed, Jul 13, 2005 at 04:46:54PM -0700, Patrick Mansfield wrote:
-> 
->>Add or use the attributes under the scsi_device, then use the
->>/sysfs/block/sd/device symlink to find the corresponding scsi_device.
-> 
-> 
-> yupp, the /sys/block/* attributes are really only meant to be for
-> thing related to the actual block device, not the underlying hardware.
+Guennadi Liakhovetski wrote:
 
-What is the difference between "actual block device" and "underlying 
-hardware"?
+>>127MB HIGHMEM available.
+>>896MB LOWMEM available.
+>>    
+>>
 
-	-ed
+Quite right. The limit is slightly before 1 GB, not exactly at it. My bad.
+
+Rgds
+Pierre
 
