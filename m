@@ -1,16 +1,16 @@
 From: domen@coderock.org
-Subject: [patch 1/1] scsi/osst: use msleep() instead of schedule_timeout()
-Date: Thu, 14 Jul 2005 23:43:04 +0200
-Message-ID: <20050714214303.581877000@homer>
+Subject: [patch 2/2] scsi/lpfc_scsi: use msleep() instead of schedule_timeout()
+Date: Thu, 14 Jul 2005 23:43:22 +0200
+Message-ID: <20050714214322.441591000@homer>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from coderock.org ([193.77.147.115]:63136 "EHLO trashy.coderock.org")
-	by vger.kernel.org with ESMTP id S263146AbVGNVn0 (ORCPT
+Received: from coderock.org ([193.77.147.115]:929 "EHLO trashy.coderock.org")
+	by vger.kernel.org with ESMTP id S263149AbVGNVni (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Jul 2005 17:43:26 -0400
-Content-Disposition: inline; filename=msleep-drivers_scsi_osst
+	Thu, 14 Jul 2005 17:43:38 -0400
+Content-Disposition: inline; filename=msleep-drivers_scsi_lpfc_lpfc_scsi
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: osst@riede.org
+To: James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org, Nishanth Aravamudan <nacc@us.ibm.com>, domen@coderock.org
 
 From: Nishanth Aravamudan <nacc@us.ibm.com>
@@ -25,42 +25,60 @@ Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
 Signed-off-by: Domen Puncer <domen@coderock.org>
 
 ---
- osst.c |    9 +++------
- 1 files changed, 3 insertions(+), 6 deletions(-)
+ lpfc_scsi.c |   13 +++++--------
+ 1 files changed, 5 insertions(+), 8 deletions(-)
 
-Index: quilt/drivers/scsi/osst.c
+Index: quilt/drivers/scsi/lpfc/lpfc_scsi.c
 ===================================================================
---- quilt.orig/drivers/scsi/osst.c
-+++ quilt/drivers/scsi/osst.c
-@@ -863,8 +863,7 @@ static int osst_recover_wait_frame(struc
- 				retval = osst_write_error_recovery(STp, aSRpnt, 0);
- 				break;
- 			}
--			set_current_state(TASK_INTERRUPTIBLE);
--			schedule_timeout (HZ / OSST_POLL_PER_SEC);
-+			msleep(1000 / OSST_POLL_PER_SEC);
+--- quilt.orig/drivers/scsi/lpfc/lpfc_scsi.c
++++ quilt/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -24,6 +24,7 @@
  
- 			STp->buffer->b_data = mybuf; STp->buffer->buffer_size = 24;
- 			memset(cmd, 0, MAX_COMMAND_SIZE);
-@@ -1559,8 +1558,7 @@ static int osst_reposition_and_retry(str
- 			osst_set_frame_position(STp, aSRpnt, frame + skip, 1);
- 			flag = 0;
- 			attempts--;
--			set_current_state(TASK_INTERRUPTIBLE);
--			schedule_timeout(HZ / 10);
-+			msleep(100);
+ #include <linux/pci.h>
+ #include <linux/interrupt.h>
++#include <linux/delay.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_device.h>
+@@ -885,8 +886,7 @@ __lpfc_abort_handler(struct scsi_cmnd *c
+ 		while (cmnd->host_scribble)
+ 		{
+ 			spin_unlock_irq(phba->host->host_lock);
+-			set_current_state(TASK_UNINTERRUPTIBLE);
+-			schedule_timeout(LPFC_ABORT_WAIT*HZ);
++			msleep(LPFC_ABORT_WAIT * 1000);
+ 			spin_lock_irq(phba->host->host_lock);
+ 			if (++loop_count
+ 			    > (2 * phba->cfg_nodev_tmo)/LPFC_ABORT_WAIT)
+@@ -952,8 +952,7 @@ __lpfc_reset_lun_handler(struct scsi_cmn
+ 
+ 		if (pnode->nlp_state != NLP_STE_MAPPED_NODE) {
+ 			spin_unlock_irq(phba->host->host_lock);
+-			set_current_state(TASK_UNINTERRUPTIBLE);
+-			schedule_timeout( HZ/2);
++			msleep(500);
+ 			spin_lock_irq(phba->host->host_lock);
  		}
- 		if (osst_get_frame_position(STp, aSRpnt) < 0) {		/* additional write error */
- #if DEBUG
-@@ -1621,8 +1619,7 @@ static int osst_reposition_and_retry(str
- 			debugging = 0;
- 		}
- #endif
--		set_current_state(TASK_INTERRUPTIBLE);
--		schedule_timeout(HZ / 10);
-+		msleep(100);
- 	}
- 	printk(KERN_ERR "%s:E: Failed to find valid tape media\n", name);
- #if DEBUG
+ 		if ((pnode) && (pnode->nlp_state == NLP_STE_MAPPED_NODE))
+@@ -1011,8 +1010,7 @@ __lpfc_reset_lun_handler(struct scsi_cmn
+ 				       cmnd->device->id, cmnd->device->lun,
+ 				       LPFC_CTX_LUN))) {
+ 		spin_unlock_irq(phba->host->host_lock);
+-		set_current_state(TASK_UNINTERRUPTIBLE);
+-		schedule_timeout(LPFC_RESET_WAIT*HZ);
++		msleep(LPFC_RESET_WAIT * 1000);
+ 		spin_lock_irq(phba->host->host_lock);
+ 
+ 		if (++loopcnt
+@@ -1110,8 +1108,7 @@ __lpfc_reset_bus_handler(struct scsi_cmn
+ 				&phba->sli.ring[phba->sli.fcp_ring],
+ 				0, 0, LPFC_CTX_HOST))) {
+ 		spin_unlock_irq(phba->host->host_lock);
+-		set_current_state(TASK_UNINTERRUPTIBLE);
+-		schedule_timeout(LPFC_RESET_WAIT*HZ);
++		msleep(LPFC_RESET_WAIT * 1000);
+ 		spin_lock_irq(phba->host->host_lock);
+ 
+ 		if (++loopcnt
 
 --
