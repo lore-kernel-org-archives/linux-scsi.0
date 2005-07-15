@@ -1,69 +1,108 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: SCSI luns
-Date: Fri, 15 Jul 2005 11:00:32 -0700
-Message-ID: <20050715180032.GA28755@us.ibm.com>
-References: <1ba727770507120422562d525d@mail.gmail.com> <1121168331.3171.21.camel@laptopd505.fenrus.org> <1121185078.4825.17.camel@mulgrave>
+From: Daniel Drake <dsd@gentoo.org>
+Subject: scsi/libata bootup sysfs oops with 2.6.12 + 2.6.13-rc3
+Date: Fri, 15 Jul 2005 19:33:45 +0100
+Message-ID: <42D80189.5080805@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S263370AbVGOSE5@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1121185078.4825.17.camel@mulgrave>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, Amrut Joshi <amrut.joshi@gmail.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: edinatux@gmail.com, greg@kroah.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 12, 2005 at 12:17:53PM -0400, James Bottomley wrote:
-> Thanks for redirecting to the correct list.
-> 
-> On Tue, 2005-07-12 at 13:38 +0200, Arjan van de Ven wrote:
-> > On Tue, 2005-07-12 at 16:52 +0530, Amrut Joshi wrote:
-> > > Currently linux scsi subsystem doesnt store the 8-byte luns which are
-> > > recieved in REPORT_LUNS reply. This information is forver lost once
-> > > the scan is over. In my LDD  I need this information. Currently I have
-> > > to snoop REPORT_LUNS reply, do scsilun_to_int for all the luns and
-> 
-> Our current transformation routine scsilun_to_int is bijective as long
-> as the original scsi_lun doesn't overrun 32 bits (which it might well do
-> one day).
-> 
-> Why can't you simply do this by transforming back the lun?
-> 
-> In general, I'm not in favour of adding redundant information to the
-> device structure, so if you can demonstrate we overrun our allotted 32
-> bits, the solution is probably to take lun up to u64 and still do the
-> back transform (the alternative being to substitute lun with it's
-> structural equivalen which would entail a lot of pain throught the SCSI
-> subsytem).
+Hi,
 
-James -
+After upgrading kernel, Edward (on CC) is having trouble booting up.
 
-There have been cases of going past 32 bits, though I have not seen
-specifics, storage devices are instead being configured to avoid the
-problem.
+The kernel hangs after reporting it can't mount root on /dev/sda3, which is 
+supposed to be a partition on a SATA disk, connected to a sata_nv controller.
 
-Using some of those configurations has bad consequences. For example, one
-storage box enumerates the LUN numbering, but this means existing LUN
-values can change when a new LU is added (ugh)!
+As serial console is not available, we stripped down the kernel in hope that 
+the SATA disk detection would appear on the same screen so that it could be 
+caught on camera :)
 
-Trying to have a compatible 64 bit LUN for all uses (change the current
-lun to u64) looks hard, given all of the odd mappings, having to deal with
-the high bits being set (for non-zero LU address methods), and trying to
-figure out whether the 64 bit LUN can fit into 32 bits (really about 8
-bits for SPI, and 16 bits for some HBA's).
+After removing the more verbose parts of the kernel (USB, ACPI, etc) in 
+attempt to get disk detection messages on the same screen, we ran into another 
+issue. The kernel oops's on boot up, and tries to kill init. So its not even 
+getting as far this time (last time, it got all the way to trying to mount root).
 
-Or by "back transform" did you mean change lun to u64, and conditionally
-map to 32 bits for drivers (currently all) that don't support a 64 bit
-LUN? Hmmmm ...
+This problem did not exist in 2.6.10 which can still be booted right now. It 
+is reprocable on both 2.6.12 and 2.6.13-rc3.
 
-Printing the lun value for messages is odd/painful no matter how it is
-added, since for example, 64 bit value for LUN 1 is something like 0001
-0000 0000 0000. Having both 32 and 64 bit versions makes it even odder. An
-sdev_printk() makes this easier, as we would have to print to
-conditionally print lun in both formats (old and new) depending on HBA
-support.
+Under 2.6.10, these messages appear during disk detection:
 
-But just adding a 64 bit LUN in parallel does not help much if the scan
-code is not modified (we'll fail to scan LUNs with higher bits set).
+ata1: SATA max UDMA/133 cmd 0x9F0 ctl 0xBF2 bmdma 0xF200 irq 23
+ata2: SATA max UDMA/133 cmd 0x970 ctl 0xB72 bmdma 0xF208 irq 23
+ata1: dev 0 cfg 49:2f00 82:7c6b 83:7b09 84:4003 85:7c69 86:3a01 87:4003 88:407f
+ata1: dev 0 ATA, max UDMA/133, 240121728 sectors:
+nv_sata: Primary device added
+nv_sata: Primary device removed
+nv_sata: Secondary device removed
+ata1: dev 0 configured for UDMA/133
+scsi0 : sata_nv
+ata2: no device found (phy stat 00000000)
+scsi1 : sata_nv
+   Vendor: ATA       Model: Maxtor 6Y120M0    Rev: YAR5
+   Type:   Direct-Access                      ANSI SCSI revision: 05
+st: Version 20041025, fixed bufsize 32768, s/g segs 256
+SCSI device sda: 240121728 512-byte hdwr sectors (122942 MB)
+SCSI device sda: drive cache: write back
+SCSI device sda: 240121728 512-byte hdwr sectors (122942 MB)
+SCSI device sda: drive cache: write back
+  /dev/scsi/host0/bus0/target0/lun0: p1 p2 p3
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
 
--- Patrick Mansfield
+
+Under a minimal 2.6.13-rc3, this happens instead:
+
+ata1: SATA max UDMA/133 cmd 0x9F0 ctl 0xBF2 bmdma 0xF200 irq 0
+ata2: SATA max UDMA/133 cmd 0x970 ctl 0xB72 bmdma 0xF208 irq 0
+Unable to handle kernel NULL pointer dereference at <...> RIP: 
+sysfs_hash_and_remove+16
+
+PGD 0
+Oops: 0000 [1] SMP
+CPU 0
+Modules linked in:
+Pid 1, comm: swapper Not tainted 2.6.13-rc3
+RIP: sysfs_hash_and_remove+16
+
+Call trace:
+class_device_del   class_device_unregister
+scsi_remove_host   setup_irq
+request_irq   ata_host_remove
+ata_device_add   pci_conf1_write
+pcibios_set_master   nv_init_one
+pci_device_probe   driver_probe_device
+__driver_attach   __driver_attach
+__driver_attach   bus_for_each_dev
+bus_add_driver   pci_register_driver
+init   child_rip
+init   child_rip
+
+I can provide a full jpeg if required.
+
+
+It looks like dir->d_inode is null, although I don't have much idea where the 
+real bug exists.
+
+(gdb) list *sysfs_hash_and_remove+16
+0x5b0 is in sysfs_hash_and_remove (semaphore.h:107).
+102      * This is ugly, but we want the default case to fall through.
+103      * "__down_failed" is a special asm handler that calls the C
+104      * routine that actually waits. See arch/x86_64/kernel/semaphore.c
+105      */
+106     static inline void down(struct semaphore * sem)
+107     {
+108             might_sleep();
+109
+110             __asm__ __volatile__(
+111                     "# atomic down operation\n\t"
+
+
+Any ideas or suggestions?
+
+Thanks,
+Daniel
