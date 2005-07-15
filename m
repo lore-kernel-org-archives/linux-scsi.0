@@ -1,73 +1,49 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: 2.6.13-rc3-mm1: horribly drivers/scsi/qla2xxx/Makefile
-Date: Fri, 15 Jul 2005 07:40:37 -0700
-Message-ID: <20050715144037.GA25648@plap.qlogic.org>
-References: <20050715013653.36006990.akpm@osdl.org> <20050715102744.GA3569@stusta.de>
+From: =?iso-8859-1?Q?Rog=E9rio?= Brito <rbrito@ime.usp.br>
+Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
+Date: Fri, 15 Jul 2005 12:15:00 -0300
+Message-ID: <20050715151500.GA7792@ime.usp.br>
+References: <1120926901.5008.12.camel@mulgrave> <200507091656.j69GuP5Y028863@einhorn.in-berlin.de> <20050715005309.GB14816@ime.usp.br> <20050715014312.GI13229@phunnypharm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:49481 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S263311AbVGOOkl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2005 10:40:41 -0400
+Received: from smtpout5.uol.com.br ([200.221.4.196]:48626 "EHLO
+	smtp.uol.com.br") by vger.kernel.org with ESMTP id S261496AbVGOPPF
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jul 2005 11:15:05 -0400
+Received: from dumont.rtb.ath.cx (unknown [200.221.104.251])
+	by scorpion5.uol.com.br (Postfix) with ESMTP id 84DC97F2F
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Jul 2005 12:15:01 -0300 (BRT)
 Content-Disposition: inline
-In-Reply-To: <20050715102744.GA3569@stusta.de>
+In-Reply-To: <20050715014312.GI13229@phunnypharm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: Ben Collins <bcollins@debian.org>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net, James.Bottomley@SteelEye.com, arjan@infradead.org
 
-On Fri, 15 Jul 2005, Adrian Bunk wrote:
+Hi, Ben.
 
-> On Fri, Jul 15, 2005 at 01:36:53AM -0700, Andrew Morton wrote:
-> >...
-> > Changes since 2.6.13-rc2-mm2:
-> >...
-> >  git-scsi-misc.patch
-> >...
-> >  Subsystem trees
-> >...
-> 
-...
-> +obj-$(CONFIG_SCSI_QLA24XX) += qla2xxx.o
-> 
-> 
-> I don't know what exactly you want to achieve, but this is so horribly 
-> wrong.
+On Jul 14 2005, Ben Collins wrote:
+> Can you give the latest git tree, plus the latest linux1394 repo a tr=
+y?
+
+Yes, of course I can. I already have vanilla -rc3-git2 here being compi=
+led.
+I have already checked out the linux1394 trunk (in a separate tree).
+
+Should I replace the git ieee1394 tree with the contents of ilnux1394 t=
+ree
+or should I just focus on sbp2.[ch] like I did in the previous tries?
 
 
-Yes, quite.  How about the following to correct the intention.
+Thanks, Rog=E9rio.
 
-
-
-Add correct Kconfig option for ISP24xx support.
-
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
----
-
-diff --git a/drivers/scsi/qla2xxx/Kconfig b/drivers/scsi/qla2xxx/Kconfig
---- a/drivers/scsi/qla2xxx/Kconfig
-+++ b/drivers/scsi/qla2xxx/Kconfig
-@@ -39,3 +39,11 @@ config SCSI_QLA6312
- 	---help---
- 	This driver supports the QLogic 63xx (ISP6312 and ISP6322) host
- 	adapter family.
-+
-+config SCSI_QLA24XX
-+	tristate "QLogic ISP24xx host adapter family support"
-+	depends on SCSI_QLA2XXX
-+        select SCSI_FC_ATTRS
-+	---help---
-+	This driver supports the QLogic 24xx (ISP2422 and ISP2432) host
-+	adapter family.
-diff --git a/drivers/scsi/qla2xxx/Makefile b/drivers/scsi/qla2xxx/Makefile
---- a/drivers/scsi/qla2xxx/Makefile
-+++ b/drivers/scsi/qla2xxx/Makefile
-@@ -1,6 +1,4 @@
- EXTRA_CFLAGS += -DUNIQUE_FW_NAME
--CONFIG_SCSI_QLA24XX=m
--EXTRA_CFLAGS += -DCONFIG_SCSI_QLA24XX -DCONFIG_SCSI_QLA24XX_MODULE
- 
- qla2xxx-y := qla_os.o qla_init.o qla_mbx.o qla_iocb.o qla_isr.o qla_gs.o \
- 		qla_dbg.o qla_sup.o qla_rscn.o qla_attr.o
-
+--=20
+Rog=E9rio Brito : rbrito@ime.usp.br : http://www.ime.usp.br/~rbrito
+Homepage of the algorithms package : http://algorithms.berlios.de
+Homepage on freshmeat:  http://freshmeat.net/projects/algorithms/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
