@@ -1,58 +1,26 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.13-rc3-mm1: horribly drivers/scsi/qla2xxx/Makefile
-Date: Fri, 15 Jul 2005 12:27:44 +0200
-Message-ID: <20050715102744.GA3569@stusta.de>
-References: <20050715013653.36006990.akpm@osdl.org>
+From: Pierre Ossman <drzeus-list@drzeus.cx>
+Subject: Re: Fw: Kernel panic with dc395x in 2.6.12.2
+Date: Fri, 15 Jul 2005 14:54:41 +0200
+Message-ID: <42D7B211.8050500@drzeus.cx>
+References: <20050709175725.75f291bf.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:48401 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S263267AbVGOK1r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2005 06:27:47 -0400
-Content-Disposition: inline
-In-Reply-To: <20050715013653.36006990.akpm@osdl.org>
+Received: from [85.8.12.41] ([85.8.12.41]:59523 "EHLO smtp.drzeus.cx")
+	by vger.kernel.org with ESMTP id S263292AbVGOMyo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Jul 2005 08:54:44 -0400
+In-Reply-To: <20050709175725.75f291bf.rdunlap@xenotime.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, andrew.vasquez@qlogic.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: randy_dunlap <rdunlap@xenotime.net>
+Cc: linux-scsi@vger.kernel.org, g.liakhovetski@gmx.de
 
-On Fri, Jul 15, 2005 at 01:36:53AM -0700, Andrew Morton wrote:
->...
-> Changes since 2.6.13-rc2-mm2:
->...
->  git-scsi-misc.patch
->...
->  Subsystem trees
->...
+Finally a dump with a smaller font so that the entire panic is visible:
 
---- linux-2.6.13-rc3/drivers/scsi/qla2xxx/Makefile      2005-06-17 16:04:01.000000000 -0700
-+++ devel/drivers/scsi/qla2xxx/Makefile 2005-07-15 00:46:18.000000000 -0700
-@@ -1,4 +1,6 @@
- EXTRA_CFLAGS += -DUNIQUE_FW_NAME
-+CONFIG_SCSI_QLA24XX=m
-+EXTRA_CFLAGS += -DCONFIG_SCSI_QLA24XX -DCONFIG_SCSI_QLA24XX_MODULE
- 
- qla2xxx-y := qla_os.o qla_init.o qla_mbx.o qla_iocb.o qla_isr.o qla_gs.o \
-                qla_dbg.o qla_sup.o qla_rscn.o qla_attr.o
-@@ -14,3 +16,4 @@ obj-$(CONFIG_SCSI_QLA22XX) += qla2xxx.o 
- obj-$(CONFIG_SCSI_QLA2300) += qla2xxx.o qla2300.o
- obj-$(CONFIG_SCSI_QLA2322) += qla2xxx.o qla2322.o
- obj-$(CONFIG_SCSI_QLA6312) += qla2xxx.o qla6312.o
-+obj-$(CONFIG_SCSI_QLA24XX) += qla2xxx.o
+http://craffe.se/dc395x_panic.jpg
 
-
-I don't know what exactly you want to achieve, but this is so horribly 
-wrong.
-
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+Rgds
+Pierre
 
