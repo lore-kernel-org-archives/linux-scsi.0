@@ -1,93 +1,54 @@
-From: =?iso-8859-1?Q?Rog=E9rio?= Brito <rbrito@ime.usp.br>
+From: Ben Collins <bcollins@debian.org>
 Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
-Date: Fri, 15 Jul 2005 23:10:18 -0300
-Message-ID: <20050716021018.GA1555@ime.usp.br>
-References: <1120926901.5008.12.camel@mulgrave> <200507091656.j69GuP5Y028863@einhorn.in-berlin.de> <20050715005309.GB14816@ime.usp.br> <20050715014312.GI13229@phunnypharm.org> <20050715155332.GA3954@ime.usp.br> <20050715172854.GJ13229@phunnypharm.org> <20050715185034.GA3903@ime.usp.br> <20050715205741.GN13229@phunnypharm.org> <42D82E49.7090907@s5r6.in-berlin.de>
+Date: Sat, 16 Jul 2005 11:56:37 -0400
+Message-ID: <20050716155637.GA22044@phunnypharm.org>
+References: <1120926901.5008.12.camel@mulgrave> <200507091656.j69GuP5Y028863@einhorn.in-berlin.de> <20050715005309.GB14816@ime.usp.br> <20050715014312.GI13229@phunnypharm.org> <20050715155332.GA3954@ime.usp.br> <20050715172854.GJ13229@phunnypharm.org> <20050715185034.GA3903@ime.usp.br> <20050715205741.GN13229@phunnypharm.org> <20050716014225.GA9733@ime.usp.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpout1.uol.com.br ([200.221.4.192]:45553 "EHLO
-	smtp.uol.com.br") by vger.kernel.org with ESMTP id S262005AbVGPCKV
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2005 22:10:21 -0400
-Received: from dumont.rtb.ath.cx (unknown [200.221.104.251])
-	by scorpion1.uol.com.br (Postfix) with ESMTP id 03B607CD9
-	for <linux-scsi@vger.kernel.org>; Fri, 15 Jul 2005 23:10:19 -0300 (BRT)
+Received: from [206.246.247.150] ([206.246.247.150]:55691 "EHLO
+	bristol.phunnypharm.org") by vger.kernel.org with ESMTP
+	id S261675AbVGPP4p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 16 Jul 2005 11:56:45 -0400
 Content-Disposition: inline
-In-Reply-To: <42D82E49.7090907@s5r6.in-berlin.de>
+In-Reply-To: <20050716014225.GA9733@ime.usp.br>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Ben Collins <bcollins@debian.org>, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net, James.Bottomley@SteelEye.com
+To: Rog?rio Brito <rbrito@ime.usp.br>
+Cc: Ben Collins <bcollins@debian.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net, James.Bottomley@SteelEye.com, arjan@infradead.org
 
-Hi, Stefan.
+>From your last dmesg, it appears that things are in fact working.
 
-On Jul 15 2005, Stefan Richter wrote:
-> Rog=E9rio, try "modprobe ieee1394 disable_irm=3D1" again, of course b=
-efore
-> ohci1394 is loaded. Make sure that sd_mod was loaded.
+Are you sure that you just don't need to do modprobe sd_mod?
 
-Ok, I tried this. Here is the relevant part of the dmesg (the whole log=
- is
-uploaded to http://www.ime.usp.br/~rbrito/bug/):
+On Fri, Jul 15, 2005 at 10:42:25PM -0300, Rog?rio Brito wrote:
+> On Jul 15 2005, Ben Collins wrote:
+> > No, there are changes in the current rev of the repo. Are sure you tried
+> > the latest rev?
+> 
+> Well, I think it is, since this is what svn tells me:
+> 
+> - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+> rbrito@dumont:/usr/local/media/progs$ svn co svn://svn.linux1394.org/ieee1394/trunk/ ieee1394
+> Checked out revision 1315.
+> rbrito@dumont:/usr/local/media/progs$ 
+> - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+> 
+> I then copied this over the ieee1394 tree of the git2 kernel and things
+> stopped working (but with vanilla git2, it worked).
+> 
+> I will now try what Stefan told me and I will report back.
+> 
+> 
+> Thanks, Rog?rio.
+> 
+> -- 
+> Rog?rio Brito : rbrito@ime.usp.br : http://www.ime.usp.br/~rbrito
+> Homepage of the algorithms package : http://algorithms.berlios.de
+> Homepage on freshmeat:  http://freshmeat.net/projects/algorithms/
 
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -=
- - -
-SCSI subsystem initialized
-ieee1394: Initialized config rom entry `ip1394'
-ieee1394: IRM functionality disabled
-sbp2: $Rev: 1311 $ Ben Collins <bcollins@debian.org>
-ohci1394: $Rev: 1313 $ Ben Collins <bcollins@debian.org>
-PCI: Found IRQ 5 for device 0000:00:0a.0
-ohci1394: fw-host0: OHCI-1394 1.0 (PCI): IRQ=3D[5]  MMIO=3D[db800000-db=
-8007ff]  Max Packet=3D[2048]
-ieee1394: Host added: ID:BUS[0-00:1023]  GUID[0011066645555ead]
-ieee1394: Node added: ID:BUS[0-01:1023]  GUID[0050c501e00010e8]
-scsi0 : SCSI emulation for IEEE-1394 SBP-2 Devices
-ieee1394: sbp2: Logged into SBP-2 device
-ieee1394: Node 0-01:1023: Max speed [S400] - Max payload [2048]
-  Vendor: ST316002  Model: 1A                Rev: 3.06
-  Type:   Unknown                            ANSI SCSI revision: 06
-SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
-SCSI device sda: drive cache: write back
-SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
-SCSI device sda: drive cache: write back
- sda: [mac] sda1 sda2 sda3 sda4
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -=
- - -
-
-This time, I removed everything like udev and hotplug, doing things by
-hand. I loaded the ohci1394 module after I loaded the sbp2 module.
-
-The drive works this way, but the mouse (ps2) doesn't work. I don't kno=
-w if
-this is related to the fact that I am not using the hotplug scripts (OT=
-OH,
-I do see that the kernel has identified the mouse in the dmesg log).
-
-> If this does not help, enable scsi_print_command(...) and=20
-> scsi_print_sense(...)
-> in sbp2scsi_complete_command(), i.e. #define CONFIG_IEEE1394_SBP2_DEB=
-UG 1
-> or 2 near the beginning of sbp2.c. I assume there won't be too much=20
-> resulting SCSI traffic logged, so you could post it directly here to =
-the
-> lists.
-
-I will try this right now with the hotplug/udev scripts back (with the
-patch you mentioned) and without disable_irm.
-
-
-Thanks, Rog=E9rio.
-
---=20
-Rog=E9rio Brito : rbrito@ime.usp.br : http://www.ime.usp.br/~rbrito
-Homepage of the algorithms package : http://algorithms.berlios.de
-Homepage on freshmeat:  http://freshmeat.net/projects/algorithms/
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Debian     - http://www.debian.org/
+Linux 1394 - http://www.linux1394.org/
+Subversion - http://subversion.tigris.org/
+SwissDisk  - http://www.swissdisk.com/
