@@ -1,46 +1,83 @@
 From: =?iso-8859-1?Q?Rog=E9rio?= Brito <rbrito@ime.usp.br>
 Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
-Date: Fri, 15 Jul 2005 22:42:25 -0300
-Message-ID: <20050716014225.GA9733@ime.usp.br>
-References: <1120926901.5008.12.camel@mulgrave> <200507091656.j69GuP5Y028863@einhorn.in-berlin.de> <20050715005309.GB14816@ime.usp.br> <20050715014312.GI13229@phunnypharm.org> <20050715155332.GA3954@ime.usp.br> <20050715172854.GJ13229@phunnypharm.org> <20050715185034.GA3903@ime.usp.br> <20050715205741.GN13229@phunnypharm.org>
+Date: Fri, 15 Jul 2005 23:10:18 -0300
+Message-ID: <20050716021018.GA1555@ime.usp.br>
+References: <1120926901.5008.12.camel@mulgrave> <200507091656.j69GuP5Y028863@einhorn.in-berlin.de> <20050715005309.GB14816@ime.usp.br> <20050715014312.GI13229@phunnypharm.org> <20050715155332.GA3954@ime.usp.br> <20050715172854.GJ13229@phunnypharm.org> <20050715185034.GA3903@ime.usp.br> <20050715205741.GN13229@phunnypharm.org> <42D82E49.7090907@s5r6.in-berlin.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpout5.uol.com.br ([200.221.4.196]:24529 "EHLO
-	smtp.uol.com.br") by vger.kernel.org with ESMTP id S262040AbVGPBm2
+Received: from smtpout1.uol.com.br ([200.221.4.192]:45553 "EHLO
+	smtp.uol.com.br") by vger.kernel.org with ESMTP id S262005AbVGPCKV
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2005 21:42:28 -0400
+	Fri, 15 Jul 2005 22:10:21 -0400
 Received: from dumont.rtb.ath.cx (unknown [200.221.104.251])
-	by scorpion5.uol.com.br (Postfix) with ESMTP id 74E5E8016
-	for <linux-scsi@vger.kernel.org>; Fri, 15 Jul 2005 22:42:26 -0300 (BRT)
+	by scorpion1.uol.com.br (Postfix) with ESMTP id 03B607CD9
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Jul 2005 23:10:19 -0300 (BRT)
 Content-Disposition: inline
-In-Reply-To: <20050715205741.GN13229@phunnypharm.org>
+In-Reply-To: <42D82E49.7090907@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Collins <bcollins@debian.org>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net, James.Bottomley@SteelEye.com, arjan@infradead.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Ben Collins <bcollins@debian.org>, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net, James.Bottomley@SteelEye.com
 
-On Jul 15 2005, Ben Collins wrote:
-> No, there are changes in the current rev of the repo. Are sure you tr=
-ied
-> the latest rev?
+Hi, Stefan.
 
-Well, I think it is, since this is what svn tells me:
+On Jul 15 2005, Stefan Richter wrote:
+> Rog=E9rio, try "modprobe ieee1394 disable_irm=3D1" again, of course b=
+efore
+> ohci1394 is loaded. Make sure that sd_mod was loaded.
+
+Ok, I tried this. Here is the relevant part of the dmesg (the whole log=
+ is
+uploaded to http://www.ime.usp.br/~rbrito/bug/):
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -=
  - -
-rbrito@dumont:/usr/local/media/progs$ svn co svn://svn.linux1394.org/ie=
-ee1394/trunk/ ieee1394
-Checked out revision 1315.
-rbrito@dumont:/usr/local/media/progs$=20
+SCSI subsystem initialized
+ieee1394: Initialized config rom entry `ip1394'
+ieee1394: IRM functionality disabled
+sbp2: $Rev: 1311 $ Ben Collins <bcollins@debian.org>
+ohci1394: $Rev: 1313 $ Ben Collins <bcollins@debian.org>
+PCI: Found IRQ 5 for device 0000:00:0a.0
+ohci1394: fw-host0: OHCI-1394 1.0 (PCI): IRQ=3D[5]  MMIO=3D[db800000-db=
+8007ff]  Max Packet=3D[2048]
+ieee1394: Host added: ID:BUS[0-00:1023]  GUID[0011066645555ead]
+ieee1394: Node added: ID:BUS[0-01:1023]  GUID[0050c501e00010e8]
+scsi0 : SCSI emulation for IEEE-1394 SBP-2 Devices
+ieee1394: sbp2: Logged into SBP-2 device
+ieee1394: Node 0-01:1023: Max speed [S400] - Max payload [2048]
+  Vendor: ST316002  Model: 1A                Rev: 3.06
+  Type:   Unknown                            ANSI SCSI revision: 06
+SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
+SCSI device sda: drive cache: write back
+SCSI device sda: 312581808 512-byte hdwr sectors (160042 MB)
+SCSI device sda: drive cache: write back
+ sda: [mac] sda1 sda2 sda3 sda4
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -=
  - -
 
-I then copied this over the ieee1394 tree of the git2 kernel and things
-stopped working (but with vanilla git2, it worked).
+This time, I removed everything like udev and hotplug, doing things by
+hand. I loaded the ohci1394 module after I loaded the sbp2 module.
 
-I will now try what Stefan told me and I will report back.
+The drive works this way, but the mouse (ps2) doesn't work. I don't kno=
+w if
+this is related to the fact that I am not using the hotplug scripts (OT=
+OH,
+I do see that the kernel has identified the mouse in the dmesg log).
+
+> If this does not help, enable scsi_print_command(...) and=20
+> scsi_print_sense(...)
+> in sbp2scsi_complete_command(), i.e. #define CONFIG_IEEE1394_SBP2_DEB=
+UG 1
+> or 2 near the beginning of sbp2.c. I assume there won't be too much=20
+> resulting SCSI traffic logged, so you could post it directly here to =
+the
+> lists.
+
+I will try this right now with the hotplug/udev scripts back (with the
+patch you mentioned) and without disable_irm.
 
 
 Thanks, Rog=E9rio.
