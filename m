@@ -1,61 +1,75 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: SCSI layer a stumbling block for true SATA hotplug
-Date: Sun, 17 Jul 2005 10:53:10 +0900
-Message-ID: <42D9BA06.90601@gmail.com>
-References: <42D994C3.8090702@nit.ca>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] SCSI_QLA2ABC mustn't select SCSI_FC_ATTRS
+Date: Sun, 17 Jul 2005 04:38:09 +0200
+Message-ID: <20050717023809.GE3613@stusta.de>
+References: <20050715013653.36006990.akpm@osdl.org> <20050715102744.GA3569@stusta.de> <20050715144037.GA25648@plap.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.193]:61505 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261905AbVGQBxQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 16 Jul 2005 21:53:16 -0400
-Received: by zproxy.gmail.com with SMTP id 4so580811nzn
-        for <linux-scsi@vger.kernel.org>; Sat, 16 Jul 2005 18:53:15 -0700 (PDT)
-In-Reply-To: <42D994C3.8090702@nit.ca>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261776AbVGQCjy@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20050715144037.GA25648@plap.qlogic.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 List-Id: linux-scsi@vger.kernel.org
-To: Lukasz Kosewski <lkosewsk@nit.ca>
-Cc: linux-scsi@vger.kernel.org, jgarzik@pobox.com
 
-  Hi, Lukasz.
+[ The subject was adapted to linux-kernel spam filters... ]
 
-Lukasz Kosewski wrote:
-> Hello all,
+On Fri, Jul 15, 2005 at 07:40:37AM -0700, Andrew Vasquez wrote:
+> On Fri, 15 Jul 2005, Adrian Bunk wrote:
 > 
-> I'm currently working on a project to get a true disk-hotplug subsystem 
-> working in libata, experimenting with Promise SATA150 Tx2 Plus and 
-> SATAII150 Tx2 Plus controllers.
+> > On Fri, Jul 15, 2005 at 01:36:53AM -0700, Andrew Morton wrote:
+> > >...
+> > > Changes since 2.6.13-rc2-mm2:
+> > >...
+> > >  git-scsi-misc.patch
+> > >...
+> > >  Subsystem trees
+> > >...
+> > 
+> ...
+> > +obj-$(CONFIG_SCSI_QLA24XX) += qla2xxx.o
+> > 
+> > 
+> > I don't know what exactly you want to achieve, but this is so horribly 
+> > wrong.
 > 
-> I am very near a 'beta' release of my patches to this mailing list, 
-> however, I have hit a stumbling block in the SCSI layer, which I'm 
-> hoping someone can give me good suggestions for resolving.
 > 
-> The situation is as follows:
-> -> I unplug a disk from my controller.
-> -> An interrupt fires off telling me I've unplugged a disk.
-> -> I acknowledge the interrupt, add an entry to my workqueue to handle 
-> the bottom half.
-> -> Bottom half kicks in, I need to call "scsi_remove_device" in order to 
-> purge the information about this disk from the system.
-> 
-> HOWEVER, "scsi_remove_device", through a chain of functions, ends up 
-> calling sd_shutdown, which attempts to synchronize the SCSI cache for my 
-> disk.  Well... bad plan, I've just unplugged the disk, it's gone.
-> 
-> So the system gets dazed and confused and locks up, timing out waiting 
-> for the disk which isn't there.
-> 
-> If anyone has a suggestion as to a good (ie. acceptable by all parties) 
-> solution to this problem, I'd love to hear it.
+> Yes, quite.  How about the following to correct the intention.
+>...
 
-  AFAIK, lldd (libata in this case) should be ready to handle/fail 
-requests until the removal is complete.  As device hot-unplugging can be 
-initiated from different layers, upper layer currently depends on lldd 
-to handle such cases.  On detecting device removal, mark the device gone 
-inside libata and fail all commands afterward until actual removal is 
-complete.  That should do and, IIRC, what other drivers do.
+It looks good (except that you used spaces instead of a tab in the 
+"select" line, but that's only a minor nitpick).
 
--- 
-tejun
+Below is another fix for a different issue that was already present.
+
+cu
+Adrian
+
+
+<--  snip  -->
+
+
+SCSI_QLA2XXX is automatically enabled for (SCSI && PCI).
+It therefore mustn't select SCSI_FC_ATTRS, since it otherwise 
+unconditionally enables SCSI_FC_ATTRS for all users with
+(SCSI && PCI) enabled, even when they don't need any support for
+QLogic hardware.
+
+This patch also does a cosmetic change for making the "default" look 
+more like in other kernel code.
+
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+--- linux-2.6.13-rc3-mm1-full/drivers/scsi/qla2xxx/Kconfig.old	2005-07-15 22:05:19.000000000 +0200
++++ linux-2.6.13-rc3-mm1-full/drivers/scsi/qla2xxx/Kconfig	2005-07-15 22:07:42.000000000 +0200
+@@ -1,8 +1,7 @@
+ config SCSI_QLA2XXX
+ 	tristate
+-	default (SCSI && PCI)
+ 	depends on SCSI && PCI
+-	select SCSI_FC_ATTRS
++	default y
+ 
+ config SCSI_QLA21XX
+ 	tristate "QLogic ISP2100 host adapter family support"
