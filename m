@@ -1,44 +1,47 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+From: =?iso-8859-1?Q?Rog=E9rio?= Brito <rbrito@ime.usp.br>
 Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
-Date: Mon, 18 Jul 2005 09:13:40 +0200
-Message-ID: <42DB56A4.2020009@s5r6.in-berlin.de>
-References: <20050715005309.GB14816@ime.usp.br> <20050715014312.GI13229@phunnypharm.org> <20050715155332.GA3954@ime.usp.br> <20050715172854.GJ13229@phunnypharm.org> <20050715185034.GA3903@ime.usp.br> <20050715205741.GN13229@phunnypharm.org> <20050716014225.GA9733@ime.usp.br> <20050716155637.GA22044@phunnypharm.org> <20050716164202.GA3846@ime.usp.br> <20050717165712.GA7883@phunnypharm.org> <20050717191832.GB15629@ime.usp.br> <42DAB58F.4000801@s5r6.in-berlin.de> <42DAF44D.2040500@ime.usp.br> <42DAE951.1080209@s5r6.in-berlin.de> <42DB3526.9050009@cs.uni-sb.de>
+Date: Mon, 18 Jul 2005 05:18:13 -0300
+Message-ID: <20050718081813.GA5976@ime.usp.br>
+References: <20050715205741.GN13229@phunnypharm.org> <20050716014225.GA9733@ime.usp.br> <20050716155637.GA22044@phunnypharm.org> <20050716164202.GA3846@ime.usp.br> <20050717165712.GA7883@phunnypharm.org> <20050717191832.GB15629@ime.usp.br> <42DAB58F.4000801@s5r6.in-berlin.de> <42DAF44D.2040500@ime.usp.br> <42DAE951.1080209@s5r6.in-berlin.de> <42DB3526.9050009@cs.uni-sb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-admin@lists.sourceforge.net>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtpout6.uol.com.br ([200.221.4.197]:8865 "EHLO smtp.uol.com.br")
+	by vger.kernel.org with ESMTP id S261571AbVGRISf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Jul 2005 04:18:35 -0400
+Received: from dumont.rtb.ath.cx (unknown [200.221.104.251])
+	by scorpion6.uol.com.br (Postfix) with ESMTP id AF9247B5E
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Jul 2005 05:18:26 -0300 (BRT)
+Content-Disposition: inline
 In-Reply-To: <42DB3526.9050009@cs.uni-sb.de>
-Sender: linux1394-devel-admin@lists.sourceforge.net
-Errors-To: linux1394-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-To: linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
-Cc: =?ISO-8859-1?Q?Rog=E9rio_Brito?= <rbrito@ime.usp.br>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Philipp Slusallek <slusallek@cs.uni-sb.de>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net, Ben Collins <bcollins@debian.org>
 
-Philipp Slusallek wrote:
-> There is an "S" missing in the rbc-disk line from Rogerio's scsi.agent file.
->>  dumont:~# grep sd_mod /etc/hotplug/scsi.agent
->>      0)        TYPE=disk ;    MODULES=sd_mod ;;
->>      7)        TYPE=mod ;    MODULES=sd_mod ;;
->>      14)        TYPE=rbc-disk ;  MODULE=sd_mod ;;
+On Jul 18 2005, Philipp Slusallek wrote:
+> Hi all,
 
-The original scsi.agent from linux-hotplug.sf.net's CVS contains a
-'modprobe $MODULE'. Maybe it was called MODULES in an earlier version
-of theirs or Debian saw fit to rename it for some reason.
--- 
-Stefan Richter
--=====-=-=-= -=== =--=-
-http://arcgraph.de/sr/
+Hi, Philipp.
+
+> I though everyone would notice it: There is an "S" missing in the=20
+> rbc-disk line from Rogerio's scsi.agent file.
+
+Good catch! I am now going to bed, but I will change that and test it a=
+s
+soon as I wake up. I will report back the results that I get.
 
 
--------------------------------------------------------
-SF.Net email is sponsored by: Discover Easy Linux Migration Strategies
-from IBM. Find simple to follow Roadmaps, straightforward articles,
-informative Webcasts and more! Get everything you need to get up to
-speed, fast. http://ads.osdn.com/?ad_id=7477&alloc_id=16492&op=click
+Thanks, Rog=E9rio.
+
+--=20
+Rog=E9rio Brito : rbrito@ime.usp.br : http://www.ime.usp.br/~rbrito
+Homepage of the algorithms package : http://algorithms.berlios.de
+Homepage on freshmeat:  http://freshmeat.net/projects/algorithms/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
