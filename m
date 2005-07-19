@@ -1,32 +1,127 @@
-From: Bobbie <deaden@usaskiing.com>
-Subject: Rolex is not for all. Is it for you ?
-Date: Mon, 18 Jul 2005 13:41:41 -0300
-Message-ID: <119660125003.105292119113@OL230-213.fibertel.com.ar>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from OL230-213.fibertel.com.ar ([24.232.213.230]:8716 "HELO
-	OL230-213.fibertel.com.ar") by vger.kernel.org with SMTP
-	id S261876AbVGRQlm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Jul 2005 12:41:42 -0400
-Received: from [52.87.168.222] (port=4410 helo=[Glendale])
-    by OL230-213.fibertel.com.ar with esmtp
-    id 2710437292jails54596
-    for linux-scsi@vger.kernel.org; Mon, 18 Jul 2005 13:41:42 -0300
-Sender: linux-scsi-owner@vger.kernel.org
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [-mm patch] SCSI_QLA2ABC options must select FW_LOADER
+Date: Tue, 19 Jul 2005 16:04:19 +0200
+Message-ID: <20050719140419.GI5031@stusta.de>
+References: <20050715013653.36006990.akpm@osdl.org> <20050715102744.GA3569@stusta.de> <20050715144037.GA25648@plap.qlogic.org> <dbbg0k$p8g$1@sea.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261988AbVGSOIE@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <dbbg0k$p8g$1@sea.gmane.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jindrich Makovicka <makovick@kmlinux.fjfi.cvut.cz>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Erik Jacobson <erikj@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Rolex Order Details.
-http://namely.varh.com/re/as/
+[ The subject was adapted to linux-kernel spam filters... ]
+
+On Sat, Jul 16, 2005 at 07:26:44PM +0200, Jindrich Makovicka wrote:
+> Andrew Vasquez wrote:
+> > Yes, quite.  How about the following to correct the intention.
+> > 
+> > 
+> > 
+> > Add correct Kconfig option for ISP24xx support.
+> > 
+> > Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+> > ---
+> > 
+> > diff --git a/drivers/scsi/qla2xxx/Kconfig b/drivers/scsi/qla2xxx/Kconfig
+> > --- a/drivers/scsi/qla2xxx/Kconfig
+> > +++ b/drivers/scsi/qla2xxx/Kconfig
+> > @@ -39,3 +39,11 @@ config SCSI_QLA6312
+> >  	---help---
+> >  	This driver supports the QLogic 63xx (ISP6312 and ISP6322) host
+> >  	adapter family.
+> > +
+> > +config SCSI_QLA24XX
+> > +	tristate "QLogic ISP24xx host adapter family support"
+> > +	depends on SCSI_QLA2XXX
+> > +        select SCSI_FC_ATTRS
+> 
+> there should be also "select FW_LOADER", as it uses request_firmware &
+> release_firmware
+>...
+
+You are right, patch below.
+
+> Jindrich Makovicka
+
+cu
+Adrian
 
 
+<--  snip  -->
 
 
-We rarely confide in those who are better than we are.  
-To travel hopefully is a better thing than to arrive.   
-Emotion is a rotten base for politics.      
-If you want creative workers, give them enough time to play.  
+qla_init.c now uses code that requires FW_LOADER.
 
+Additionally, this patch removes spaces instead of tabs at the 
+SCSI_FC_ATTRS selects.
 
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+--- linux-2.6.13-rc3-mm1-full/drivers/scsi/qla2xxx/Kconfig.old	2005-07-17 15:44:26.000000000 +0200
++++ linux-2.6.13-rc3-mm1-full/drivers/scsi/qla2xxx/Kconfig	2005-07-17 15:45:45.000000000 +0200
+@@ -1,49 +1,55 @@
+ config SCSI_QLA2XXX
+ 	tristate
+ 	depends on SCSI && PCI
+ 	default y
+ 
+ config SCSI_QLA21XX
+ 	tristate "QLogic ISP2100 host adapter family support"
+ 	depends on SCSI_QLA2XXX
+-        select SCSI_FC_ATTRS
++	select SCSI_FC_ATTRS
++	select FW_LOADER
+ 	---help---
+ 	This driver supports the QLogic 21xx (ISP2100) host adapter family.
+ 
+ config SCSI_QLA22XX
+ 	tristate "QLogic ISP2200 host adapter family support"
+ 	depends on SCSI_QLA2XXX
+-        select SCSI_FC_ATTRS
++	select SCSI_FC_ATTRS
++	select FW_LOADER
+ 	---help---
+ 	This driver supports the QLogic 22xx (ISP2200) host adapter family.
+ 
+ config SCSI_QLA2300
+ 	tristate "QLogic ISP2300 host adapter family support"
+ 	depends on SCSI_QLA2XXX
+-        select SCSI_FC_ATTRS
++	select SCSI_FC_ATTRS
++	select FW_LOADER
+ 	---help---
+ 	This driver supports the QLogic 2300 (ISP2300 and ISP2312) host
+ 	adapter family.
+ 
+ config SCSI_QLA2322
+ 	tristate "QLogic ISP2322 host adapter family support"
+ 	depends on SCSI_QLA2XXX
+-        select SCSI_FC_ATTRS
++	select SCSI_FC_ATTRS
++	select FW_LOADER
+ 	---help---
+ 	This driver supports the QLogic 2322 (ISP2322) host adapter family.
+ 
+ config SCSI_QLA6312
+ 	tristate "QLogic ISP63xx host adapter family support"
+ 	depends on SCSI_QLA2XXX
+-        select SCSI_FC_ATTRS
++	select SCSI_FC_ATTRS
++	select FW_LOADER
+ 	---help---
+ 	This driver supports the QLogic 63xx (ISP6312 and ISP6322) host
+ 	adapter family.
+ 
+ config SCSI_QLA24XX
+ 	tristate "QLogic ISP24xx host adapter family support"
+ 	depends on SCSI_QLA2XXX
+-        select SCSI_FC_ATTRS
++	select SCSI_FC_ATTRS
++	select FW_LOADER
+ 	---help---
+ 	This driver supports the QLogic 24xx (ISP2422 and ISP2432) host
+ 	adapter family.
