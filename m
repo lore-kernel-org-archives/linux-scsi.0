@@ -1,86 +1,90 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: [PATCH 22/82] remove linux/version.h from drivers/message/fus ion
-Date: Tue, 19 Jul 2005 22:12:49 -0500
-Message-ID: <20050720031249.GA18042@humbolt.us.dell.com>
-References: <91888D455306F94EBD4D168954A9457C03281EB4@nacos172.co.lsil.com>
-Reply-To: Matt Domsch <Matt_Domsch@dell.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Kernel 2.4.26 cannot umount CD: device or resource busy (no fuser)
+Date: Wed, 20 Jul 2005 14:28:43 +1000
+Message-ID: <42DDD2FB.5020306@torque.net>
+References: <29450.1121817356@www6.gmx.net> <29775.1121817486@www15.gmx.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausc60pc101.us.dell.com ([143.166.85.206]:42258 "EHLO
-	ausc60pc101.us.dell.com") by vger.kernel.org with ESMTP
-	id S261500AbVGTDMv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Jul 2005 23:12:51 -0400
-Content-Disposition: inline
-In-Reply-To: <91888D455306F94EBD4D168954A9457C03281EB4@nacos172.co.lsil.com>
+Received: from zorg.st.net.au ([203.16.233.9]:10392 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261586AbVGTE2a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Jul 2005 00:28:30 -0400
+In-Reply-To: <29775.1121817486@www15.gmx.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: Olaf Hering <olh@suse.de>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: Jim <jim999@gmx.net>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Jul 19, 2005 at 06:07:41PM -0600, Moore, Eric Dean wrote:
-> On Tuesday, July 12, 2005 8:17 PM, Matt Domsch wrote:
-> > In general, this construct:
-> > 
-> > > > -#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,6))
-> > > > -static int inline scsi_device_online(struct scsi_device *sdev)
-> > > > -{
-> > > > -	return sdev->online;
-> > > > -}
-> > > > -#endif
-> > 
-> > is better tested as:
-> > 
-> > #ifndef scsi_device_inline
-> > static int inline scsi_device_online(struct scsi_device *sdev)
-> > {
-> >     return sdev->online;
-> > }
-> > #endif
-> > 
-> > when you can.  It cleanly eliminates the version test, and tests for
-> > exactly what you're looking for - is this function defined.
-> > 
+Jim wrote:
+> Symptom: Cannot umount a CD-Rom in my CD-Roaster/Burner/Toaster whatever
 > 
-> What you illustrated above is not going to work.
-> If your doing #ifndef around a function, such as scsi_device_online, it's
-> not going to compile
-> when scsi_device_online is already implemented in the kernel tree.
-> The routine scsi_device_online is a function, not a define.  For a define
-> this would work.
-
-Sure it does, function names are defined symbols.
-
-I'm doing exactly this in my backport of the openipmi drivers to RHEL4
-and SLES9.
-
-> I'm trying your example around msleep, msleep_interruptible, and
-> msecs_to_jiffies, and 
-> my code simply won't compile in SLES9 SP2(-191).  In SLES9 SP1(-139), these
-> three routines were not implemented and
-> your suggestion works.  I won't be able to to a linux version check as this
-> change occurred between service packs
-> of the 2.6.5 kernel suse tree.   Anybody on the linux forums have any ideas?
+> Reason to write to ide AND Scsi-List: Its an IDE - Drive, but with
+> scsi-emulation running. So my 4 questions: WHY is the drive locked? And
+> HOW to work arround it other than to reboot the system? Can't a forced    
+> umount be implemented for other cases than just for NFS (as manpage 
+> sais)? Or is my system just too old and buggy? (because it is, besides from
+> updates)
 > 
-> Example:
+> And yes: It's more than once this happened:
 > 
-> #ifdef msleep
+> # umount /mnt/toaster
+> umount: /mnt/toaster: device is busy
+> # fuser  -v -m /mnt/toaster/
+> # mount | grep toaster
+> /dev/scd0 on /mnt/toaster type iso9660 (ro,noexec,...)
+> # lsof | grep -e scd0 -e toaster
+> # umount /mnt/toaster
+> umount: /mnt/toaster: device is busy
+> # umount -f /mnt/toaster
+> umount2: Device or resource busy
+> umount: /dev/scd0: not mounted
+> umount: /mnt/toaster: Illegal seek
+> # umount /dev/scd0 || umount -f /dev/scd0
+> umount: /mnt/toaster: device is busy
+> umount2: Device or resource busy
+> umount: /dev/scd0: not mounted
+> umount: /mnt/toaster: Illegal seek
+> # umount -V
+> umount: mount-2.10m
+> # fuser -V
+> fuser from psmisc version 18
+> #
 
-#ifndef  you mean.
+Jim,
+Linux uses the "prevent allow medium removal" MMC
+command to effectively lock the medium (disc) in the
+drive while a file system on it is mounted. The eject
+linux command tries to unmount any file systems
+before unlocking and ejecting the disc. If the unmount
+fails (e.g. "Device or resource busy) then it won't
+unlock the drive. Perhaps eject has/should_have an
+option to bypass the unmount when it fails.
 
-> static void inline msleep(unsigned long msecs)
-> {
->         set_current_state(TASK_UNINTERRUPTIBLE);
->         schedule_timeout(msecs_to_jiffies(msecs) + 1);
-> }
-> #endif
+The lsof command may help you find which application
+has a file open and therefore inhibiting the unmount.
+If that doesn't work then fetch the sg3_utils package
+and the sg_prevent utility in there may be of interest.
+Assuming your cd/dvd drive is /dev/sg0 then this should
+eject your drive in lk 2.4 :
+    sg_prevent --prevent=0 /dev/sg0
+    sg_start -loej /dev/sg0
+
+In the lk 2.6 series the actual device name could be
+used (e.g. /dev/hdd rather than /dev/sg0).
+
+Soon I will release sdparm 0.94 which adds some commands.
+The sequence to unlock then eject would be:
+    sdparm -C unlock /dev/hdd
+    sdparm -C eject /dev/hdd
+
+BTW After the unlock operation is successful the eject
+button on the drive should work.
+
+Doug Gilbert
 
 
-Thanks,
-Matt
 
--- 
-Matt Domsch
-Software Architect
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+
