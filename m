@@ -1,157 +1,147 @@
-From: Martin Peschke3 <MPESCHKE@de.ibm.com>
-Subject: Re: lsscsi-0.15 released
-Date: Wed, 20 Jul 2005 15:13:43 +0200
-Message-ID: <OF9CA7648D.65634493-ONC1257044.00476607-C1257044.00496C37@de.ibm.com>
+From: Jesper Juhl <jesper.juhl@gmail.com>
+Subject: Re: [-mm patch] SCSI_QLA2ABC options must select FW_LOADER
+Date: Wed, 20 Jul 2005 15:38:02 +0200
+Message-ID: <9a874849050720063872d0c680@mail.gmail.com>
+References: <20050715013653.36006990.akpm@osdl.org>
+	 <20050715102744.GA3569@stusta.de>
+	 <20050715144037.GA25648@plap.qlogic.org> <dbbg0k$p8g$1@sea.gmane.org>
+	 <20050719140419.GI5031@stusta.de>
+Reply-To: Jesper Juhl <jesper.juhl@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.de.ibm.com ([195.212.29.150]:447 "EHLO
-	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP id S261198AbVGTNNq
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Jul 2005 09:13:46 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate1.de.ibm.com (8.12.10/8.12.10) with ESMTP id j6KDDjmE177918
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Jul 2005 13:13:45 GMT
-Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j6KDDjv3185616
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Jul 2005 15:13:45 +0200
-Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id j6KDDj34022130
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Jul 2005 15:13:45 +0200
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261223AbVGTNii@vger.kernel.org>
+In-Reply-To: <20050719140419.GI5031@stusta.de>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Jindrich Makovicka <makovick@kmlinux.fjfi.cvut.cz>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Erik Jacobson <erikj@sgi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org, Nate.Dailey@stratus.com
 
-Doug,
+On 7/19/05, Adrian Bunk <bunk@stusta.de> wrote:
+> [ The subject was adapted to linux-kernel spam filters... ]
+> 
+> On Sat, Jul 16, 2005 at 07:26:44PM +0200, Jindrich Makovicka wrote:
+> > Andrew Vasquez wrote:
+> > > Yes, quite.  How about the following to correct the intention.
+> > >
+> > >
+> > >
+> > > Add correct Kconfig option for ISP24xx support.
+> > >
+> > > Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+> > > ---
+> > >
+> > > diff --git a/drivers/scsi/qla2xxx/Kconfig b/drivers/scsi/qla2xxx/Kconfig
+> > > --- a/drivers/scsi/qla2xxx/Kconfig
+> > > +++ b/drivers/scsi/qla2xxx/Kconfig
+> > > @@ -39,3 +39,11 @@ config SCSI_QLA6312
+> > >     ---help---
+> > >     This driver supports the QLogic 63xx (ISP6312 and ISP6322) host
+> > >     adapter family.
+> > > +
+> > > +config SCSI_QLA24XX
+> > > +   tristate "QLogic ISP24xx host adapter family support"
+> > > +   depends on SCSI_QLA2XXX
+> > > +        select SCSI_FC_ATTRS
+> >
+> > there should be also "select FW_LOADER", as it uses request_firmware &
+> > release_firmware
+> >...
+> 
+> You are right, patch below.
+> 
+> > Jindrich Makovicka
+> 
+> cu
+> Adrian
+> 
+> 
+> <--  snip  -->
+> 
+> 
+> qla_init.c now uses code that requires FW_LOADER.
+> 
+> Additionally, this patch removes spaces instead of tabs at the
+> SCSI_FC_ATTRS selects.
+> 
+> Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> 
+> --- linux-2.6.13-rc3-mm1-full/drivers/scsi/qla2xxx/Kconfig.old  2005-07-17 15:44:26.000000000 +0200
+> +++ linux-2.6.13-rc3-mm1-full/drivers/scsi/qla2xxx/Kconfig      2005-07-17 15:45:45.000000000 +0200
+> @@ -1,49 +1,55 @@
+>  config SCSI_QLA2XXX
+>         tristate
+>         depends on SCSI && PCI
+>         default y
+> 
+>  config SCSI_QLA21XX
+>         tristate "QLogic ISP2100 host adapter family support"
+>         depends on SCSI_QLA2XXX
+> -        select SCSI_FC_ATTRS
+> +       select SCSI_FC_ATTRS
+> +       select FW_LOADER
+>         ---help---
+>         This driver supports the QLogic 21xx (ISP2100) host adapter family.
+> 
+>  config SCSI_QLA22XX
+>         tristate "QLogic ISP2200 host adapter family support"
+>         depends on SCSI_QLA2XXX
+> -        select SCSI_FC_ATTRS
+> +       select SCSI_FC_ATTRS
+> +       select FW_LOADER
+>         ---help---
+>         This driver supports the QLogic 22xx (ISP2200) host adapter family.
+> 
+>  config SCSI_QLA2300
+>         tristate "QLogic ISP2300 host adapter family support"
+>         depends on SCSI_QLA2XXX
+> -        select SCSI_FC_ATTRS
+> +       select SCSI_FC_ATTRS
+> +       select FW_LOADER
+>         ---help---
+>         This driver supports the QLogic 2300 (ISP2300 and ISP2312) host
+>         adapter family.
+> 
+>  config SCSI_QLA2322
+>         tristate "QLogic ISP2322 host adapter family support"
+>         depends on SCSI_QLA2XXX
+> -        select SCSI_FC_ATTRS
+> +       select SCSI_FC_ATTRS
+> +       select FW_LOADER
+>         ---help---
+>         This driver supports the QLogic 2322 (ISP2322) host adapter family.
+> 
+>  config SCSI_QLA6312
+>         tristate "QLogic ISP63xx host adapter family support"
+>         depends on SCSI_QLA2XXX
+> -        select SCSI_FC_ATTRS
+> +       select SCSI_FC_ATTRS
+> +       select FW_LOADER
+>         ---help---
+>         This driver supports the QLogic 63xx (ISP6312 and ISP6322) host
+>         adapter family.
+> 
+>  config SCSI_QLA24XX
+>         tristate "QLogic ISP24xx host adapter family support"
+>         depends on SCSI_QLA2XXX
+> -        select SCSI_FC_ATTRS
+> +       select SCSI_FC_ATTRS
+> +       select FW_LOADER
+>         ---help---
+>         This driver supports the QLogic 24xx (ISP2422 and ISP2432) host
+>         adapter family.
 
-Providing udev names is great. Makes it more user-frendly.
+I send a patch for this yesterday that lets SCSI_QLA2XXX select
+FW_LOADER. I believe that's a bit better since the other options
+depend on SCSI_QLA2XXX anyway, there's no point in having them all set
+FW_LOADER. My patch also fixes another little issue; that you cannot
+disable SCSI_QLA2XXX if you don't need it.
 
-Btw., what do you think about this idea:
-If lsscsi was enhanced to provide certain transport specific attributes, as
-well,
-then a user could easily look up the Linux device name of a logical unit
-that he otherwise knows by its transport specific addressing, like WWPN and
-so on in case of Fibre Channel. That's desirable, because
-SAN management is done based on these transport specific addresses.
+See the patch here: http://lkml.org/lkml/2005/7/19/147
+The mail contains 3 patches, but the third one is the best fix IMHO.
 
-I guess, this would require to convince James that it makes sense to
-spend effort on teaching either the midlayer or transport class to keep
-track
-of FCP_LUNs, or 64 bit LUNs respectively :)
-
-Martin Peschke
-
-
-
-
-|---------+-------------------------------->
-|         |           Douglas Gilbert      |
-|         |           <dougg@torque.net>   |
-|         |           Sent by:             |
-|         |           linux-scsi-owner@vger|
-|         |           .kernel.org          |
-|         |                                |
-|         |                                |
-|         |           20/07/2005 10:33     |
-|         |           Please respond to    |
-|         |           dougg                |
-|         |                                |
-|---------+-------------------------------->
-  >---------------------------------------------------------------------------------------------------------------|
-  |                                                                                                               |
-  |       To:       linux-scsi@vger.kernel.org                                                                    |
-  |       cc:       Nate.Dailey@stratus.com                                                                       |
-  |       Subject:  lsscsi-0.15 released                                                                          |
-  |                                                                                                               |
-  >---------------------------------------------------------------------------------------------------------------|
-
-
-
-
-lsscsi is a utility that uses sysfs in linux 2.6 series kernels
-to list information about all SCSI devices and SCSI hosts. Both a
-compact format (default) which is one line
-per device and a "classic" format (like the output of
-'cat /proc/scsi/scsi') are supported. Some examples:
-
-$ lsscsi
-[0:0:0:0]    disk    Linux    scsi_debug       0004  /dev/sda
-[1:0:6:0]    tape    SONY     SDT-7000         0192  /dev/st0
-
-$ lsscsi --classic
-Attached devices:
-Host: scsi0 Channel: 00 Id: 00 Lun: 00
-   Vendor: Linux    Model: scsi_debug       Rev: 0004
-   Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi1 Channel: 00 Id: 06 Lun: 00
-   Vendor: SONY     Model: SDT-7000         Rev: 0192
-   Type:   Sequential-Access                ANSI SCSI revision: 02
-
-Version 0.15 is available at
-http://www.torque.net/scsi/lsscsi.html
-
-This is an experimental version that attempts to find the device
-name used in the /dev directory rather than the kernel generated
-name. The kernel generated name of the first SCSI disk discovered
-is /dev/sda . However in the lk 2.6 series kernels udev may be
-used to give this device some other name in the /dev directory,
-for example /dev/root_disk . By default this version will search
-for the device node name in the /dev directory whose type (i.e.
-block or char), major and minor numbers match the kernel device
-information found in sysfs. This change makes a SCSI (or USB,
-Firewire, etc) CD/DVD drive appear with a name like /dev/scd0
-(as most distributions now use) rather than its kernel device
-node name of sr0 used by sysfs. There are other ways this could be
-done which would be more efficient in CPU usage, for example by
-lsscsi using the udevinfo facilities internally. This version of
-lsscsi can be given a '--kname' option to show the kernel
-(i.e. sysfs) device node name instead. Note that sysfs and SCSI
-errors and warning sent to the system log continue to use the
-kernel device node name.
-
-By default lsscsi lists all SCSI devices (or hosts). This version
-allows select arguments to reduce the number of devices listed.
-For example "lsscsi 1" will list all channels, targets and luns
-within host1. A single SCSI device can be listed with
-'lsscsi 1 0 0 0' (or 'lsscsi 1:0:0:0' or 'lsscsi [1:0:0:0]'). See
-man page for more information. This version of lsscsi uses the
-facilities of the scandir() library call to both select (filter)
-and sort the SCSI devices (or hosts) it finds in sysfs. Since
-libsysfs (version 1.2) doesn't have the ability to filter then
-this version of lsscsi uses scandir() [and not libsysfs]. Evidently
-a new version 2.0 API for libsysfs is under development (and I
-have requested a scandir() like select+sort facility).
-
-Extra SCSI device and host attributes (as found in lk 2.6.12) can
-be seen by using the '--long' option twice (or more conveniently
-using '-ll'). Attributes are listed as "<name>=<value>" pairs, one
-per line (indented two spaces) when the '-lll' option is given.
-
-
-ChangeLog:
-Version 0.15 2005/6/29
-   - option '-ll' gives more attributes and '-lll' gives attributes
-     one per line
-   - change reporting if device node:
-     - use "match major+minor" with "/dev" directory (default)
-     - use synthetic device node names when '--kname' given
-       {this was the default in earlier versions}
-   - add filtering, sync with lk 2.6.12
-     {e.g. 'lsscsi 1' lists all SCSI devices on host1}
-   - convert to autotools
-   - builds on version 0.13 (does not use libsysfs)
-     {because dlist_sort_custom() does not have filter() callback}
-
-Thanks to Nate Dailey for the /dev scanning code.
-
-Comments welcome.
-
-Doug Gilbert
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+-- 
+Jesper Juhl <jesper.juhl@gmail.com>
+Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
+Plain text mails only, please      http://www.expita.com/nomime.html
