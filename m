@@ -1,54 +1,144 @@
-From: =?iso-8859-1?Q?Rog=E9rio?= Brito <rbrito@ime.usp.br>
-Subject: Re: changes to ieee1394/sbp2 outside of linux1394.org
-Date: Tue, 19 Jul 2005 21:20:39 -0300
-Message-ID: <20050720002039.GA4127@ime.usp.br>
-References: <20050716014225.GA9733@ime.usp.br> <20050716155637.GA22044@phunnypharm.org> <20050716164202.GA3846@ime.usp.br> <20050717165712.GA7883@phunnypharm.org> <20050717191832.GB15629@ime.usp.br> <42DAB58F.4000801@s5r6.in-berlin.de> <42DAF44D.2040500@ime.usp.br> <42DAE951.1080209@s5r6.in-berlin.de> <42DB3526.9050009@cs.uni-sb.de> <20050718081813.GA5976@ime.usp.br>
+From: Jesper Juhl <jesper.juhl@gmail.com>
+Subject: [patch] QLogic SCSI driver Kconfig fixes
+Date: Wed, 20 Jul 2005 05:26:01 +0200
+Message-ID: <200507200526.02413.jesper.juhl@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpout5.uol.com.br ([200.221.4.196]:29144 "EHLO
-	smtp.uol.com.br") by vger.kernel.org with ESMTP id S261625AbVGTAVj
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Jul 2005 20:21:39 -0400
-Received: from dumont.rtb.ath.cx (unknown [200.221.104.251])
-	by scorpion5.uol.com.br (Postfix) with ESMTP id F1CD38475
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Jul 2005 21:21:36 -0300 (BRT)
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261384AbVGTDIo@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20050718081813.GA5976@ime.usp.br>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Philipp Slusallek <slusallek@cs.uni-sb.de>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net, Ben Collins <bcollins@debian.org>
 
-Hi, all.
+The problem in a nutshell is that the tristate `config SCSI_QLA2XXX' does not 
+have a name and thus does not show up in menuconfig and similar. This coupled 
+with the fact that it defaults to `y' when config PCI and config SCSI is 
+selected results in people (like me) who need PCI and SCSI support but have no 
+need of the QLogic drivers end up with the following warnings at build time 
+(and a superfluous kernel .ko file), since there's no way to disable 
+SCSI_QLA2XXX : 
 
-On Jul 18 2005, Rog=E9rio Brito wrote:
-> On Jul 18 2005, Philipp Slusallek wrote:
-> > I though everyone would notice it: There is an "S" missing in the=20
-> > rbc-disk line from Rogerio's scsi.agent file.
->=20
-> Good catch! I am now going to bed, but I will change that and test it=
- as
-> soon as I wake up. I will report back the results that I get.
+  Building modules, stage 2.
+  MODPOST
+*** Warning: "request_firmware" [drivers/scsi/qla2xxx/qla2xxx.ko] undefined!
+*** Warning: "release_firmware" [drivers/scsi/qla2xxx/qla2xxx.ko] undefined!
 
-Just reporting what I promised, indeed, the missing "S" in the scsi.age=
-nt
-script was enough to make everything work with the linux1394 trunk.
-
-Now, with the patched scsi.agent, the sd_mod actually gets loaded when =
-I
-plug the device.
+In addition to that, SCSI_QLA2XXX has no help text entry.
 
 
-Thank you very much, Rog=E9rio.
+Below I've included 3 patches to fix the problem in various ways (yes, I know 
+there should only be one patch pr email normally, but it seemed silly to send 
+3 emails with 3 different suggested patches for the same problem). The third 
+patch is my personal favorite, but I present all 3 to let you choose which one 
+you like best.
 
---=20
-Rog=E9rio Brito : rbrito@ime.usp.br : http://www.ime.usp.br/~rbrito
-Homepage of the algorithms package : http://algorithms.berlios.de
-Homepage on freshmeat:  http://freshmeat.net/projects/algorithms/
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+This patch just adds a name to the option so people can at least deselect it 
+if they don't need it, and it adds a help text.
+
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+---
+
+ drivers/scsi/qla2xxx/Kconfig |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletion(-)
+
+--- linux-2.6.13-rc3-mm1-orig/drivers/scsi/qla2xxx/Kconfig	2005-07-17 04:39:52.000000000 +0200
++++ linux-2.6.13-rc3-mm1/drivers/scsi/qla2xxx/Kconfig	2005-07-20 04:59:47.000000000 +0200
+@@ -1,8 +1,12 @@
+ config SCSI_QLA2XXX
+-	tristate
++	tristate "QLogic ISP2XXX SCSI host adapter family support"
+ 	default (SCSI && PCI)
+ 	depends on SCSI && PCI
+ 	select SCSI_FC_ATTRS
++	---help---
++	Support the QLogic 2XXX (ISP2XXX) family of host bus adapters.
++	In addition to this option you should select the specific HBAs
++	you want to support from the submenu items.
+ 
+ config SCSI_QLA21XX
+ 	tristate "QLogic ISP2100 host adapter family support"
+
+
+
+This patch adds a name to the option so it can be deselected if not needed, 
+adds a help entry and also adds the selection of config FW_LOADER if this 
+option is selected, so it'll build without problems for people who select it 
+without them having to go hunt for config FW_LOADER themselves.
+
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+---
+
+ drivers/scsi/qla2xxx/Kconfig |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletion(-)
+
+--- linux-2.6.13-rc3-mm1-orig/drivers/scsi/qla2xxx/Kconfig	2005-07-17 04:39:52.000000000 +0200
++++ linux-2.6.13-rc3-mm1/drivers/scsi/qla2xxx/Kconfig	2005-07-20 05:00:57.000000000 +0200
+@@ -1,8 +1,13 @@
+ config SCSI_QLA2XXX
+-	tristate
++	tristate "QLogic ISP2XXX SCSI host adapter family support"
+ 	default (SCSI && PCI)
+ 	depends on SCSI && PCI
+ 	select SCSI_FC_ATTRS
++	select FW_LOADER
++	---help---
++	Support the QLogic 2XXX (ISP2XXX) family of host bus adapters.
++	In addition to this option you should select the specific HBAs
++	you want to support from the submenu items.
+ 
+ config SCSI_QLA21XX
+ 	tristate "QLogic ISP2100 host adapter family support"
+
+
+
+This patch adds a name to the option so it can be deselected if not needed, it 
+also adds a help text and selection of config FW_LOADER if this option is 
+selected, so it'll build without problems for people who select it without 
+them having to go hunt for config FW_LOADER themselves, and finally it makes 
+the option default to `n' since I don't see a point in having any specific 
+SCSI drivers be default enabled - surely people who actually need the option 
+can select it by themselves (especially now that it'll cause the automatic 
+selection of FW_LOADER).
+
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+---
+
+ drivers/scsi/qla2xxx/Kconfig |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
+
+--- linux-2.6.13-rc3-mm1-orig/drivers/scsi/qla2xxx/Kconfig	2005-07-17 04:39:52.000000000 +0200
++++ linux-2.6.13-rc3-mm1/drivers/scsi/qla2xxx/Kconfig	2005-07-20 05:02:50.000000000 +0200
+@@ -1,8 +1,13 @@
+ config SCSI_QLA2XXX
+-	tristate
+-	default (SCSI && PCI)
++	tristate "QLogic ISP2XXX SCSI host adapter family support"
++	default n
+ 	depends on SCSI && PCI
+ 	select SCSI_FC_ATTRS
++	select FW_LOADER
++	---help---
++	Support the QLogic 2XXX (ISP2XXX) family of host bus adapters.
++	In addition to this option you should select the specific HBAs
++	you want to support from the submenu items.
+ 
+ config SCSI_QLA21XX
+ 	tristate "QLogic ISP2100 host adapter family support"
+
+
+
+Feel free to pick the patch you believe fix the problem best. :-)
+
+
+Kind regards,
+
+Jesper Juhl <jesper.juhl@gmail.com>
+
+
+PS. Please keep me on CC if you do not reply directly to me or to linux-kernel, 
+since I'm not subscribed to linux-scsi.
