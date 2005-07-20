@@ -1,58 +1,68 @@
-From: "Jim" <jim999@gmx.net>
-Subject: =?ISO-8859-1?Q?Kernel_2.4.26_cannot_umount_CD:_device_or_resource_busy_(n?=
- =?ISO-8859-1?Q?o_fuser)?=
-Date: Wed, 20 Jul 2005 01:58:06 +0200 (MEST)
-Message-ID: <29775.1121817486@www15.gmx.net>
-References: <29450.1121817356@www6.gmx.net>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH 22/82] remove linux/version.h from drivers/message/fus
+	 ion
+Date: Tue, 19 Jul 2005 18:07:41 -0600
+Message-ID: <91888D455306F94EBD4D168954A9457C03281EB4@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:24241 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S261721AbVGSX6H (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:2787 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S261684AbVGTAIM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Jul 2005 19:58:07 -0400
+	Tue, 19 Jul 2005 20:08:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Matt Domsch <Matt_Domsch@dell.com>
+Cc: Olaf Hering <olh@suse.de>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-Symptom: Cannot umount a CD-Rom in my CD-Roaster/Burner/Toaster whatever
+On Tuesday, July 12, 2005 8:17 PM, Matt Domsch wrote:
+> In general, this construct:
+> 
+> > > -#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,6))
+> > > -static int inline scsi_device_online(struct scsi_device *sdev)
+> > > -{
+> > > -	return sdev->online;
+> > > -}
+> > > -#endif
+> 
+> is better tested as:
+> 
+> #ifndef scsi_device_inline
+> static int inline scsi_device_online(struct scsi_device *sdev)
+> {
+>     return sdev->online;
+> }
+> #endif
+> 
+> when you can.  It cleanly eliminates the version test, and tests for
+> exactly what you're looking for - is this function defined.
+> 
 
-Reason to write to ide AND Scsi-List: Its an IDE - Drive, but with
-scsi-emulation running. So my 4 questions: WHY is the drive locked? And
-HOW to work arround it other than to reboot the system? Can't a forced    
-umount be implemented for other cases than just for NFS (as manpage 
-sais)? Or is my system just too old and buggy? (because it is, besides from
-updates)
+What you illustrated above is not going to work.
+If your doing #ifndef around a function, such as scsi_device_online, it's
+not going to compile
+when scsi_device_online is already implemented in the kernel tree.
+The routine scsi_device_online is a function, not a define.  For a define
+this would work.
 
-And yes: It's more than once this happened:
+I'm trying your example around msleep, msleep_interruptible, and
+msecs_to_jiffies, and 
+my code simply won't compile in SLES9 SP2(-191).  In SLES9 SP1(-139), these
+three routines were not implemented and
+your suggestion works.  I won't be able to to a linux version check as this
+change occurred between service packs
+of the 2.6.5 kernel suse tree.   Anybody on the linux forums have any ideas?
 
-# umount /mnt/toaster
-umount: /mnt/toaster: device is busy
-# fuser  -v -m /mnt/toaster/
-# mount | grep toaster
-/dev/scd0 on /mnt/toaster type iso9660 (ro,noexec,...)
-# lsof | grep -e scd0 -e toaster
-# umount /mnt/toaster
-umount: /mnt/toaster: device is busy
-# umount -f /mnt/toaster
-umount2: Device or resource busy
-umount: /dev/scd0: not mounted
-umount: /mnt/toaster: Illegal seek
-# umount /dev/scd0 || umount -f /dev/scd0
-umount: /mnt/toaster: device is busy
-umount2: Device or resource busy
-umount: /dev/scd0: not mounted
-umount: /mnt/toaster: Illegal seek
-# umount -V
-umount: mount-2.10m
-# fuser -V
-fuser from psmisc version 18
-#
+Example:
+
+#ifdef msleep
+static void inline msleep(unsigned long msecs)
+{
+        set_current_state(TASK_UNINTERRUPTIBLE);
+        schedule_timeout(msecs_to_jiffies(msecs) + 1);
+}
+#endif
 
 
--- 
-Greetings, Jim
 
--- 
-Gruss, Jim
