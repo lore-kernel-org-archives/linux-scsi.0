@@ -1,39 +1,36 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
+From: Lukasz Kosewski <lkosewsk@nit.ca>
 Subject: Re: [PATCH 0/3] Add disk hotswap support to libata
-Date: Fri, 22 Jul 2005 01:58:00 +0400
-Message-ID: <42E01A68.6000002@tls.msk.ru>
-References: <42E01024.9030600@nit.ca>
+Date: Thu, 21 Jul 2005 18:14:46 -0400
+Message-ID: <42E01E56.4080301@nit.ca>
+References: <42E01024.9030600@nit.ca> <42E01A68.6000002@tls.msk.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hobbit.corpit.ru ([81.13.94.6]:32609 "EHLO hobbit.corpit.ru")
-	by vger.kernel.org with ESMTP id S261890AbVGUV67 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2005 17:58:59 -0400
-In-Reply-To: <42E01024.9030600@nit.ca>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Lukasz Kosewski <lkosewsk@nit.ca>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261900AbVGUWOs@vger.kernel.org>
+In-Reply-To: <42E01A68.6000002@tls.msk.ru>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
 Cc: jgarzik@pobox.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Lukasz Kosewski wrote:
-[]
-> [1]  The SCSI error on 2.6.13-rc3-mm1 that I found:
-> 'echo "scsi add-single-device a b c d" > /proc/scsi/scsi'  //works, or 
-> no-op if the sd corresponding to that device is there already
-> 'echo "scsi remove-single-device a b c d" > /proc/scsi/scsi'  //works
-> 'echo "scsi add-single-device a b c d" > /proc/scsi/scsi'  //works
-> 'echo "scsi remove-single-device a b c d" > /proc/scsi/scsi'  //FAILS
+Michael Tokarev wrote:
+> echo -n 1 > /sys/.../hostA/targetA:B:C/A:B:C:D/delete
+> still works.  I think.
+> And (again, I think) this same problem exists with 2.6.11 as well.
+> At least, I wasn't able to remove-single-device even once (I discovered
+> this mechanism only recently, haven't tried it with other kernels).
 
-echo -n 1 > /sys/.../hostA/targetA:B:C/A:B:C:D/delete
-still works.  I think.
-And (again, I think) this same problem exists with 2.6.11 as well.
-At least, I wasn't able to remove-single-device even once (I discovered
-this mechanism only recently, haven't tried it with other kernels).
+You're both correct and incorrect based on my testing; in 2.6.11.12, I 
+have no problems.
 
-> As such, since the same underlying functions are called by hotplugging, 
-> you will only be able to remove a disk from a device once before it 
-> fails, until this error is fixed.  I'll look into it as well.
+However, in 2.6.13-rc1-mm1, you're right that echoing 1 into the delete 
+node does remove the device.
 
-/mjt
+It seems that there is some issue with the 'scsi_device_lookup' function 
+then?
+
+I'd have to debug further.
+
+Luke Kosewski
+Human Cannonball
+Net Integration Technologies
