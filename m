@@ -1,36 +1,27 @@
-From: Lukasz Kosewski <lkosewsk@nit.ca>
-Subject: Re: [PATCH 0/3] Add disk hotswap support to libata
-Date: Thu, 21 Jul 2005 18:14:46 -0400
-Message-ID: <42E01E56.4080301@nit.ca>
-References: <42E01024.9030600@nit.ca> <42E01A68.6000002@tls.msk.ru>
+From: Pierre Ossman <drzeus-list@drzeus.cx>
+Subject: Re: Fw: Kernel panic with dc395x in 2.6.12.2
+Date: Fri, 22 Jul 2005 01:51:34 +0200
+Message-ID: <42E03506.7030707@drzeus.cx>
+References: <20050709175725.75f291bf.rdunlap@xenotime.net> <42D07E94.8070409@drzeus.cx> <20050709210824.29a90c5b.rdunlap@xenotime.net> <42D12A39.80207@drzeus.cx> <20050710093907.3f3c36e4.rdunlap@xenotime.net> <42D15968.1080101@drzeus.cx> <20050710105635.6d1606e3.rdunlap@xenotime.net> <42D17D49.1000007@drzeus.cx> <Pine.LNX.4.60.0507132312050.8774@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261900AbVGUWOs@vger.kernel.org>
-In-Reply-To: <42E01A68.6000002@tls.msk.ru>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: jgarzik@pobox.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [85.8.12.41] ([85.8.12.41]:24709 "EHLO smtp.drzeus.cx")
+	by vger.kernel.org with ESMTP id S261902AbVGUXvm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Jul 2005 19:51:42 -0400
+In-Reply-To: <Pine.LNX.4.60.0507132312050.8774@poirot.grange>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: randy_dunlap <rdunlap@xenotime.net>, linux-scsi@vger.kernel.org
 
-Michael Tokarev wrote:
-> echo -n 1 > /sys/.../hostA/targetA:B:C/A:B:C:D/delete
-> still works.  I think.
-> And (again, I think) this same problem exists with 2.6.11 as well.
-> At least, I wasn't able to remove-single-device even once (I discovered
-> this mechanism only recently, haven't tried it with other kernels).
+I have now tried with highmem disabled and the driver still crashes. See
+the following image:
 
-You're both correct and incorrect based on my testing; in 2.6.11.12, I 
-have no problems.
+http://craffe.se/dc395x_kernel_bug.jpg
 
-However, in 2.6.13-rc1-mm1, you're right that echoing 1 into the delete 
-node does remove the device.
+Rgds
+Pierre
 
-It seems that there is some issue with the 'scsi_device_lookup' function 
-then?
-
-I'd have to debug further.
-
-Luke Kosewski
-Human Cannonball
-Net Integration Technologies
