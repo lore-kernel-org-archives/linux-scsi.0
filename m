@@ -1,57 +1,35 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: ServeRAID V7.12
-Date: Fri, 22 Jul 2005 10:53:07 -0400
-Message-ID: <1122043987.3577.35.camel@localhost.localdomain>
-References: <A121ABA5B472B74EB59076B8E3C8F0190153418E@rtpe2k01.adaptec.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [Patch 0/2] Update aic79xx
+Date: Fri, 22 Jul 2005 11:47:05 -0400
+Message-ID: <42E114F9.7020106@pobox.com>
+References: <42E10572.6030105@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [216.208.38.107] ([216.208.38.107]:36483 "EHLO
-	OTTLS.pngxnet.com") by vger.kernel.org with ESMTP id S262105AbVGVOxT
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jul 2005 10:53:19 -0400
-In-Reply-To: <A121ABA5B472B74EB59076B8E3C8F0190153418E@rtpe2k01.adaptec.com>
+Received: from mail.dvmed.net ([216.237.124.58]:60584 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S261220AbVGVPrO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Jul 2005 11:47:14 -0400
+In-Reply-To: <42E10572.6030105@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Hammer, Jack" <Jack_Hammer@adaptec.com>
-Cc: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-
+Hannes Reinecke wrote:
+> Hi James,
 > 
-> 
-> --- a/drivers/scsi/ips.c	Tue Jul 19 13:15:24 2005
-> +++ b/drivers/scsi/ips.c	Tue Jul 19 13:12:44 2005
-> @@ -133,10 +133,12 @@
->  
->  #ifdef MODULE
->  static char *ips = NULL;
-> -module_param(ips, charp, 0);
-> +#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,25)
-> +MODULE_PARM(ips, "s");
-> +#else
-> +#include <linux/moduleparam.h>
-> +#define MAX_BOOT_OPTIONS_SIZE 256
-> +static char boot_options[MAX_BOOT_OPTIONS_SIZE];
-> +module_param_string(ips, boot_options, MAX_BOOT_OPTIONS_SIZE, 0);
-> +#endif
->  #endif
+> I've finished the update of aic79xx to make use of the
+> scsi_transport_spi infrastructure.
+> The first patch is actually jgarzik's one, with some additions to make
+> it work :-)
+> The second patch is the integration proper. patch made a mess of it,
+> however, so better to compare the files by hand ...
 
-this looks like a major code quality regression!
-In fact, the outer MODULE ifdef should also go away
+nice!
 
-
->  #ifdef MODULE
-> -	if (ips)
-> -		ips_setup(ips);
-> +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,25)
-> +    ips = boot_options;
-> +#endif
-> +    if (ips)
-> +        ips_setup(ips);
-
-this looks like a code clutter for a 2.6 driver
-
+	Jeff
 
 
 
