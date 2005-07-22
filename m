@@ -1,36 +1,32 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 0/3] Add disk hotswap support to libata
-Date: Thu, 21 Jul 2005 21:35:24 -0400
-Message-ID: <42E04D5C.5010907@pobox.com>
-References: <42E01024.9030600@nit.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Gregory <adjudicating@schatz.com>
+Subject: Top 30 Downloads
+Date: Fri, 22 Jul 2005 00:57:50 -0500
+Message-ID: <11539297693.72510130071@CPE-24-208-66-48.neb.res.rr.com>
+Mime-Version: 1.0 (Apple Message framework v728)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <42E01024.9030600@nit.ca>
-Sender: linux-ide-owner@vger.kernel.org
-To: Lukasz Kosewski <lkosewsk@nit.ca>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from CPE-24-208-66-48.neb.res.rr.com ([24.208.66.48]:18961 "HELO
+	CPE-24-208-66-48.neb.res.rr.com") by vger.kernel.org with SMTP
+	id S262055AbVGVF51 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Jul 2005 01:57:27 -0400
+Received: from [49.90.215.223] (port=4288 helo=[abandoned])
+    by CPE-24-208-66-48.neb.res.rr.com with esmtp
+    id 5300953161zeroes96106
+    for linux-scsi@vger.kernel.org; Fri, 22 Jul 2005 00:57:51 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Lukasz Kosewski wrote:
-> Hey all, introductory blurb here.
-> 
-> This sequence of patches will add a framework to libata to allow for 
-> hot-swapping disks in and out.
-> 
-> There are three patches:
-> 01-promise_sataII150_support
-> 02-libata_hotswap_infrastructure
-> 03-promise_hotswap_support
-
-Pretty cool stuff!
-
-As soon as I finish SATA ATAPI (this week[end]), I'll take a look at 
-this.  A quick review of the patches didn't turn up anything terribly 
-objectionable, though :)
-
-	Jeff
+Branded softs
+http://gradual.jetlow.com/
 
 
-P.S.  You might want to CC linux-ide as well, on libata patches.
+
+
+
+Whatever is produced in haste goes hastily to waste.    
+With stupidity the gods themselves contend in vain.     
+Paranoia is a finer scale of reality.      
+
+
