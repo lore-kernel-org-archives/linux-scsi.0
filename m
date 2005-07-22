@@ -1,42 +1,74 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [Patch 0/2] Update aic79xx
-Date: Fri, 22 Jul 2005 12:13:49 -0400
-Message-ID: <1122048829.5128.1.camel@mulgrave>
-References: <42E10572.6030105@suse.de>
+From: "Hammer, Jack" <Jack_Hammer@adaptec.com>
+Subject: RE: ServeRAID V7.12
+Date: Fri, 22 Jul 2005 12:13:59 -0400
+Message-ID: <A121ABA5B472B74EB59076B8E3C8F019015341E1@rtpe2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:5573 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262053AbVGVQOD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jul 2005 12:14:03 -0400
-In-Reply-To: <42E10572.6030105@suse.de>
+Received: from magic.adaptec.com ([216.52.22.17]:43720 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262107AbVGVQPn convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Jul 2005 12:15:43 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2005-07-22 at 16:40 +0200, Hannes Reinecke wrote:
-> I've finished the update of aic79xx to make use of the
-> scsi_transport_spi infrastructure.
-> The first patch is actually jgarzik's one, with some additions to make
-> it work :-)
-> The second patch is the integration proper. patch made a mess of it,
-> however, so better to compare the files by hand ...
+Arjan,
+
+I'll resend this patch including **only** the version info updates.  
+That's really the only important changes anyway ...
+
+Thanks.
+
+Jack 
+
+
+
+-----Original Message-----
+From: Arjan van de Ven [mailto:arjan@infradead.org] 
+Sent: Friday, July 22, 2005 10:53 AM
+To: Hammer, Jack
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: ServeRAID V7.12
+
+
 > 
-> Hope it finds your blessing.
-> Comments etc welcome.
+> 
+> --- a/drivers/scsi/ips.c	Tue Jul 19 13:15:24 2005
+> +++ b/drivers/scsi/ips.c	Tue Jul 19 13:12:44 2005
+> @@ -133,10 +133,12 @@
+>  
+>  #ifdef MODULE
+>  static char *ips = NULL;
+> -module_param(ips, charp, 0);
+> +#if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,25) MODULE_PARM(ips, 
+> +"s"); #else #include <linux/moduleparam.h> #define 
+> +MAX_BOOT_OPTIONS_SIZE 256 static char 
+> +boot_options[MAX_BOOT_OPTIONS_SIZE];
+> +module_param_string(ips, boot_options, MAX_BOOT_OPTIONS_SIZE, 0); 
+> +#endif
+>  #endif
 
-This looks very good, thank you for doing it!
+this looks like a major code quality regression!
+In fact, the outer MODULE ifdef should also go away
 
-> target27:0:10: FAST-160 WIDE SCSI 320.0 MB/s ST IU (6.25 ns, offset 127)
 
-There is a slight problem here:  ST IU isn't a legal SCSI setting (DT is
-a requirement for IU), so there's something slightly wrong in the
-parameter setting somewhere.  I'll take a look through the code and see
-if I can spot it (probably post OLS).
+>  #ifdef MODULE
+> -	if (ips)
+> -		ips_setup(ips);
+> +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,25)
+> +    ips = boot_options;
+> +#endif
+> +    if (ips)
+> +        ips_setup(ips);
 
-James
+this looks like a code clutter for a 2.6 driver
+
+
+
 
 
