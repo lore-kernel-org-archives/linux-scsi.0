@@ -1,32 +1,45 @@
-From: Gregory <adjudicating@schatz.com>
-Subject: Top 30 Downloads
-Date: Fri, 22 Jul 2005 00:57:50 -0500
-Message-ID: <11539297693.72510130071@CPE-24-208-66-48.neb.res.rr.com>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+From: randy_dunlap <rdunlap@xenotime.net>
+Subject: Re: Fw: Kernel panic with dc395x in 2.6.12.2
+Date: Thu, 21 Jul 2005 23:53:48 -0700
+Message-ID: <20050721235348.05eace11.rdunlap@xenotime.net>
+References: <20050709175725.75f291bf.rdunlap@xenotime.net>
+	<42D07E94.8070409@drzeus.cx>
+	<20050709210824.29a90c5b.rdunlap@xenotime.net>
+	<42D12A39.80207@drzeus.cx>
+	<20050710093907.3f3c36e4.rdunlap@xenotime.net>
+	<42D15968.1080101@drzeus.cx>
+	<20050710105635.6d1606e3.rdunlap@xenotime.net>
+	<42D17D49.1000007@drzeus.cx>
+	<Pine.LNX.4.60.0507132312050.8774@poirot.grange>
+	<42E03506.7030707@drzeus.cx>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from CPE-24-208-66-48.neb.res.rr.com ([24.208.66.48]:18961 "HELO
-	CPE-24-208-66-48.neb.res.rr.com") by vger.kernel.org with SMTP
-	id S262055AbVGVF51 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jul 2005 01:57:27 -0400
-Received: from [49.90.215.223] (port=4288 helo=[abandoned])
-    by CPE-24-208-66-48.neb.res.rr.com with esmtp
-    id 5300953161zeroes96106
-    for linux-scsi@vger.kernel.org; Fri, 22 Jul 2005 00:57:51 -0500
+Received: from chretien.genwebhost.com ([209.59.175.22]:35229 "EHLO
+	chretien.genwebhost.com") by vger.kernel.org with ESMTP
+	id S261950AbVGVGx5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Jul 2005 02:53:57 -0400
+In-Reply-To: <42E03506.7030707@drzeus.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Pierre Ossman <drzeus-list@drzeus.cx>
+Cc: g.liakhovetski@gmx.de, linux-scsi@vger.kernel.org
 
-Branded softs
-http://gradual.jetlow.com/
+On Fri, 22 Jul 2005 01:51:34 +0200 Pierre Ossman wrote:
 
+> I have now tried with highmem disabled and the driver still crashes. See
+> the following image:
+> 
+> http://craffe.se/dc395x_kernel_bug.jpg
 
+Hi Pierre,
 
+Does this happen on every boot?
 
+Please send your .config file (or put it on craffe.se).
 
-Whatever is produced in haste goes hastily to waste.    
-With stupidity the gods themselves contend in vain.     
-Paranoia is a finer scale of reality.      
+Does this happen with othe kernel versions?
 
-
+---
+~Randy
