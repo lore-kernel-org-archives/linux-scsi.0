@@ -1,56 +1,37 @@
-From: Steve McIntyre <steve@einval.com>
-Subject: Re: Is it possible to support a sector size 8192
-Date: Sat, 23 Jul 2005 21:29:42 +0300
-Message-ID: <20050723182942.GR27104@einval.com>
-References: <E1Dw26Z-0005m7-JQ@sledge.mossbank.org.uk> <OFC69A050A.B893AF16-ON88257046.007534A8-88257046.00754AFA@us.ibm.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Fw: [Bugme-new] [Bug 4929] New: problem with aic7xxx driver on 2.6.x
+Date: Sat, 23 Jul 2005 19:51:04 +0100
+Message-ID: <20050723185104.GA7934@infradead.org>
+References: <20050723100522.3c308cfe.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="lpbaaqEfWJan1gxl"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lump.einval.com ([217.147.81.17]:13071 "EHLO mail.einval.com")
-	by vger.kernel.org with ESMTP id S262388AbVGWSaJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Jul 2005 14:30:09 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:16322 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S261465AbVGWSvF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Jul 2005 14:51:05 -0400
 Content-Disposition: inline
-In-Reply-To: <OFC69A050A.B893AF16-ON88257046.007534A8-88257046.00754AFA@us.ibm.com>
+In-Reply-To: <20050723100522.3c308cfe.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bryan Henderson <hbryan@us.ibm.com>
-Cc: jhml@gmx.net, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, smcintyre@software.plasmon.com
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org
 
+On Sat, Jul 23, 2005 at 10:05:22AM +1000, Andrew Morton wrote:
+> 
+> 
+> Begin forwarded message:
+> 
+> Date: Fri, 22 Jul 2005 13:43:26 -0700
+> From: bugme-daemon@kernel-bugs.osdl.org
+> To: bugme-new@lists.osdl.org
+> Subject: [Bugme-new] [Bug 4929] New: problem with aic7xxx driver on 2.6.x
+> 
+> 
+> http://bugzilla.kernel.org/show_bug.cgi?id=4929
+> 
+>             Summary: problem with aic7xxx driver on 2.6.x
 
---lpbaaqEfWJan1gxl
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, Jul 22, 2005 at 02:21:08PM -0700, Bryan Henderson wrote:
->>we've started shipping a userland filesystem
->>driver for UDO based on FUSE.
->
->How does the userland filesystem driver talk to the device?
-
-Using sg. It works quite well...
-
---=20
-Steve McIntyre, Cambridge, UK.                                steve@einval.=
-com
-"...In the UNIX world, people tend to interpret `non-technical user'
- as meaning someone who's only ever written one device driver." -- Daniel P=
-ead
-
---lpbaaqEfWJan1gxl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFC4oyWfDt5cIjHwfcRAlLAAJ4iJxzhabKS8NDXW0BwxmO5XcOezwCdFnmm
-xljH32yHK4QbhHVMO4F7jtQ=
-=rJlQ
------END PGP SIGNATURE-----
-
---lpbaaqEfWJan1gxl--
+This message is totally useless.  If you want to forward bugzilla reports
+please include all relevant information.
 
