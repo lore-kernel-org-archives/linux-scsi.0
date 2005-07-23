@@ -1,30 +1,33 @@
-From: Johann Hanne <jhml@gmx.net>
-Subject: Re: Is it possible to support a sector size 8192
-Date: Sat, 23 Jul 2005 15:31:19 +0200
-Message-ID: <200507231531.19650.jhml@gmx.net>
-References: <OFC69A050A.B893AF16-ON88257046.007534A8-88257046.00754AFA@us.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+From: Aloys <additionally@goubert.net>
+Subject: Top 30 Downloads
+Date: Sat, 23 Jul 2005 16:30:36 +0000 (UTC)
+Message-ID: <973215194.7199867176@dialpool-210-214-246-134.maa.sify.net>
+Mime-Version: 1.0 (Apple Message framework v728)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.net ([213.165.64.20]:31920 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S261676AbVGWLVt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Jul 2005 07:21:49 -0400
-In-Reply-To: <OFC69A050A.B893AF16-ON88257046.007534A8-88257046.00754AFA@us.ibm.com>
-Content-Disposition: inline
+Received: from dialpool-210-214-246-134.maa.sify.net ([210.214.246.134]:16649
+	"HELO dialpool-210-214-246-134.maa.sify.net") by vger.kernel.org
+	with SMTP id S262316AbVGWQ2E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jul 2005 12:28:04 -0400
+Received: from [27.47.120.24] (port=4462 helo=[frontiersman])
+    by dialpool-210-214-246-134.maa.sify.net with esmtp
+    id 5023113283nightfall107486
+    for linux-scsi@vger.kernel.org; Fri, 29 Jul 2005 21:57:49 -0700
+Date: Fri, 29 Jul 2005 21:57:48 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bryan Henderson <hbryan@us.ibm.com>
-Cc: Steve McIntyre <steve@einval.com>, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, smcintyre@software.plasmon.com
+To: linux-scsi@vger.kernel.org
 
-It talks to it via /dev/sg*, i.e.
+Software sales
+http://centralizing.rubid.com/
 
-mount -t udo /dev/sga /mnt/udo
 
-On Friday 22 July 2005 23:21, Bryan Henderson wrote:
-> >we've started shipping a userland filesystem
-> >driver for UDO based on FUSE.
->
-> How does the userland filesystem driver talk to the device?
+
+
+
+Science is organized knowledge.         
+No one should be judge in his own case.    
+A witty saying proves nothing.        
+
+
