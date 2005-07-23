@@ -1,33 +1,56 @@
-From: Aloys <additionally@goubert.net>
-Subject: Top 30 Downloads
-Date: Sat, 23 Jul 2005 16:30:36 +0000 (UTC)
-Message-ID: <973215194.7199867176@dialpool-210-214-246-134.maa.sify.net>
-Mime-Version: 1.0 (Apple Message framework v728)
-Content-Type: text/plain; charset=US-ASCII; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Steve McIntyre <steve@einval.com>
+Subject: Re: Is it possible to support a sector size 8192
+Date: Sat, 23 Jul 2005 21:29:42 +0300
+Message-ID: <20050723182942.GR27104@einval.com>
+References: <E1Dw26Z-0005m7-JQ@sledge.mossbank.org.uk> <OFC69A050A.B893AF16-ON88257046.007534A8-88257046.00754AFA@us.ibm.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="lpbaaqEfWJan1gxl"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dialpool-210-214-246-134.maa.sify.net ([210.214.246.134]:16649
-	"HELO dialpool-210-214-246-134.maa.sify.net") by vger.kernel.org
-	with SMTP id S262316AbVGWQ2E (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jul 2005 12:28:04 -0400
-Received: from [27.47.120.24] (port=4462 helo=[frontiersman])
-    by dialpool-210-214-246-134.maa.sify.net with esmtp
-    id 5023113283nightfall107486
-    for linux-scsi@vger.kernel.org; Fri, 29 Jul 2005 21:57:49 -0700
-Date: Fri, 29 Jul 2005 21:57:48 -0700
+Received: from lump.einval.com ([217.147.81.17]:13071 "EHLO mail.einval.com")
+	by vger.kernel.org with ESMTP id S262388AbVGWSaJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Jul 2005 14:30:09 -0400
+Content-Disposition: inline
+In-Reply-To: <OFC69A050A.B893AF16-ON88257046.007534A8-88257046.00754AFA@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-Software sales
-http://centralizing.rubid.com/
+To: Bryan Henderson <hbryan@us.ibm.com>
+Cc: jhml@gmx.net, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, smcintyre@software.plasmon.com
 
 
+--lpbaaqEfWJan1gxl
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Fri, Jul 22, 2005 at 02:21:08PM -0700, Bryan Henderson wrote:
+>>we've started shipping a userland filesystem
+>>driver for UDO based on FUSE.
+>
+>How does the userland filesystem driver talk to the device?
 
+Using sg. It works quite well...
 
-Science is organized knowledge.         
-No one should be judge in his own case.    
-A witty saying proves nothing.        
+--=20
+Steve McIntyre, Cambridge, UK.                                steve@einval.=
+com
+"...In the UNIX world, people tend to interpret `non-technical user'
+ as meaning someone who's only ever written one device driver." -- Daniel P=
+ead
 
+--lpbaaqEfWJan1gxl
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFC4oyWfDt5cIjHwfcRAlLAAJ4iJxzhabKS8NDXW0BwxmO5XcOezwCdFnmm
+xljH32yHK4QbhHVMO4F7jtQ=
+=rJlQ
+-----END PGP SIGNATURE-----
+
+--lpbaaqEfWJan1gxl--
 
