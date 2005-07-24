@@ -1,38 +1,73 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: Fw: [Bugme-new] [Bug 4929] New: problem with aic7xxx driver on
- 2.6.x
-Date: Sun, 24 Jul 2005 12:10:00 +0200
-Message-ID: <42E368F8.90309@s5r6.in-berlin.de>
-References: <20050723100522.3c308cfe.akpm@osdl.org>	<20050723185104.GA7934@infradead.org> <20050724104238.105f0423.akpm@osdl.org>
+	2.6.x
+Date: Sun, 24 Jul 2005 08:50:31 -0400
+Message-ID: <1122209431.5128.9.camel@mulgrave>
+References: <20050723100522.3c308cfe.akpm@osdl.org>
+	 <20050723185104.GA7934@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:8075 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S261515AbVGXKK1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Jul 2005 06:10:27 -0400
-In-Reply-To: <20050724104238.105f0423.akpm@osdl.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:29153 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S261214AbVGXMur (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Jul 2005 08:50:47 -0400
+In-Reply-To: <20050723185104.GA7934@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Andrew Morton <akpm@osdl.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, mbligh@aracnet.com
 
-Andrew Morton wrote:
-> Christoph Hellwig <hch@infradead.org> wrote:
->> This message is totally useless.  If you want to forward bugzilla reports
->> please include all relevant information.
-> 
-> Absolutely not.  Please use bugzilla.
+On Sat, 2005-07-23 at 19:51 +0100, Christoph Hellwig wrote:
+> This message is totally useless.  If you want to forward bugzilla reports
+> please include all relevant information.
 
-I am sure it has been discussed elsewhere multiple times. Here are my 2
-cents anyway: A tool for bug management is extremely valuable. But there
-are comfort drawbacks (e.g. sometimes high latency of bugzilla.kernel.org)
-and a severe conceptional drawback compared to mailinglists: Any list
-subscriber may join a discussion with an additional test case or even with
-a new approach to solve a problem. The bug database lacks this kind of
-input which is vital for a non-corporate project like Linux.
--- 
-Stefan Richter
--=====-=-=-= -=== ==---
-http://arcgraph.de/sr/
+OK, let me try.
+
+The format I'd like is for the text of the bug report to go over the
+list with a cc to the bugzilla so that it captures any email
+conversation about it.  Martin has already set this up, I just can't
+figure out what the bugzilla email address is for this report.
+
+Anyway, this is what looks to be the issue in the trace
+
+>  target2:0:1: Ending Domain Validation
+> SCSI device sdc: 2788016128 512-byte hdwr sectors (1427464 MB)
+> (scsi2:A:1:0): Handled Residual of 4 bytes
+> SCSI device sdc: drive cache: write back
+> SCSI device sdc: 2788016128 512-byte hdwr sectors (1427464 MB)
+> (scsi2:A:1:0): Handled Residual of 4 bytes
+> SCSI device sdc: drive cache: write back
+>  sdc: sdc1 sdc2 sdc3 sdc4
+> Attached scsi disk sdc at scsi2, channel 0, id 1, lun 0
+> (scsi2:A:1:0): Handled Residual of 3960 bytes
+> scsi: host 2 channel 0 id 1 lun 0x00000200080c0400 has a LUN larger than
+> currently supported.
+> scsi: host 2 channel 0 id 1 lun 0xff010000ffffffff has a LUN larger than
+> currently supported.
+> scsi: host 2 channel 0 id 1 lun 0x0002202020202020 has a LUN larger than
+> currently supported.
+> scsi: host 2 channel 0 id 1 lun808529923 has a LUN larger than allowed by the
+> host adapter
+> (scsi2:A:1:4): Handled Residual of 4 bytes
+> (scsi2:A:1:5): Handled Residual of 4 bytes
+> scsi: host 2 channel 0 id 1 lun3078 has a LUN larger than allowed by the host
+> adapter
+
+So I think it's not an aic7xxx error (it seems the new DV actually works
+whereas the old DV failed).  It seems to be a bug in REPORT LUNS.
+Either in the device or in the kernel code.
+
+The curious thing is why after the report luns failure, we apparently
+jump to sequential LUN scanning, but choose to begin at LUN 4.
+
+I think as a work around, a simple
+
+echo scsi add-single-device 2 0 1 1 > /proc/scsi/scsi
+
+should bring the missing LUN back again
+
+James
+
+
