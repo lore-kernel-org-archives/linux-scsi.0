@@ -1,44 +1,42 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Unplugging of SBP-2 devices still does not work
-Date: Sat, 23 Jul 2005 21:58:18 +0200
-Message-ID: <42E2A15A.2030609@s5r6.in-berlin.de>
-References: <42E29DF5.5090603@s5r6.in-berlin.de>
-Reply-To: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: Fw: [Bugme-new] [Bug 4929] New: problem with aic7xxx driver on
+ 2.6.x
+Date: Sun, 24 Jul 2005 10:42:38 +1000
+Message-ID: <20050724104238.105f0423.akpm@osdl.org>
+References: <20050723100522.3c308cfe.akpm@osdl.org>
+	<20050723185104.GA7934@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:18101 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S261339AbVGWT6c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Jul 2005 15:58:32 -0400
-In-Reply-To: <42E29DF5.5090603@s5r6.in-berlin.de>
+Received: from smtp.osdl.org ([65.172.181.4]:61126 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S261166AbVGXAn3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Jul 2005 20:43:29 -0400
+In-Reply-To: <20050723185104.GA7934@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-I wrote:
-> Problem 1) Hot unplugging of SBP-2 hangs ieee1394's nodemgr
-[...]
-> [unplug disk]
-> Jul 23 20:08:53 shuttle kernel: ieee1394: Node changed: 1-01:1023 -> 1-00:1023
-> Jul 23 20:08:53 shuttle kernel: ieee1394: Node suspended: ID:BUS[1-00:1023]  GUID[0001d202e0200ef1]
-> Jul 23 20:08:53 shuttle kernel: ieee1394: sbp2: sbp2_remove
-> Jul 23 20:08:53 shuttle kernel: Synchronizing SCSI cache for disk sda:
+Christoph Hellwig <hch@infradead.org> wrote:
+>
+> On Sat, Jul 23, 2005 at 10:05:22AM +1000, Andrew Morton wrote:
+> > 
+> > 
+> > Begin forwarded message:
+> > 
+> > Date: Fri, 22 Jul 2005 13:43:26 -0700
+> > From: bugme-daemon@kernel-bugs.osdl.org
+> > To: bugme-new@lists.osdl.org
+> > Subject: [Bugme-new] [Bug 4929] New: problem with aic7xxx driver on 2.6.x
+> > 
+> > 
+> > http://bugzilla.kernel.org/show_bug.cgi?id=4929
+> > 
+> >             Summary: problem with aic7xxx driver on 2.6.x
+> 
+> This message is totally useless.  If you want to forward bugzilla reports
+> please include all relevant information.
 
-I should provide perhaps a little more background about nodemgr. It waits for
-events on the FireWire bus. If it detects physical removal of a node, it calls
-remove callbacks from IEEE 1394 protocol drivers such as sbp2. That's where
-sbp2_remove() kicks in. So it all happens in nodemgr's process context, although
-the hang occurs somewhere in the scsi mid or high level, or perhaps in the driver
-core when it is called from scsi.
-
-[...]
-> Jul 23 21:04:49 shuttle kernel: ieee1394: GUID 0x00301bac00002ba4: 
-> bus_info_data[0] = 0x0404912b
-
-Ignore this line. It is normally not logged by ieee1394.
--- 
-Stefan Richter
--=====-=-=-= -=== =-===
-http://arcgraph.de/sr/
+Absolutely not.  Please use bugzilla.
