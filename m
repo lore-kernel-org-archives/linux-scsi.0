@@ -1,79 +1,93 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: [PATCH RESEND] test capacity early in setsize() to avoid bad casts
-Date: Mon, 25 Jul 2005 15:58:24 -0500
-Message-ID: <1122325104.20201.4.camel@madmax.msp.redhat.com>
+From: Markus Lidel <Markus.Lidel@shadowconnect.com>
+Subject: Re: Repeatable Kernel Panic on Adaptec 2015S I20 device on bootup
+Date: Mon, 25 Jul 2005 23:17:19 +0200
+Message-ID: <42E556DF.2010406@shadowconnect.com>
+References: <1671.206.173.47.7.1122320965.squirrel@mail.gravityedge.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:52387 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S261448AbVGYU6a (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jul 2005 16:58:30 -0400
+Received: from s0003.shadowconnect.net ([213.239.201.226]:14856 "EHLO
+	mail.shadowconnect.com") by vger.kernel.org with ESMTP
+	id S261432AbVGYVJu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jul 2005 17:09:50 -0400
+In-Reply-To: <1671.206.173.47.7.1122320965.squirrel@mail.gravityedge.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, aebr@win.tue.nl
+To: joshuam@gravityedge.com
+Cc: linux-scsi@vger.kernel.org
 
-This is just a resend with Andries Brouwer ccd to make sure
-I did not mess up any of the disk geometry stuff up.
+Hello,
 
+joshuam@gravityedge.com wrote:
+> 1. Repeatable Kernel Panic on Adaptec 2015S I20 device on bootup
+> 2. I can get this to panic on every bootup, I have included the Kernel
+> boot output below.
+> 3. Linux SCSI panic Adaptec 2015 bootup
+> 4. Kernel version: 2.6.12.3
+> 5. Kernel Output/Oops
+> Linux version 2.6.12.3 (root@graviton.krk0) (gcc version 3.3.5 (Debian
+> 1:3.3.5-
+> )) #2 SMP Fri Jul 22 14:52:48 PDT 2005
+> [...]
+> Loading Adaptec I2O RAID: Version 2.4 Build 5go
+> Detecting Adaptec I2O RAID controllers...
+> Adaptec I2O RAID controller 0 irq=30
+>      BAR0 e0900000 -
+>      BAR1 e0a80000 - size= 1000000
+> dpti: If you have a lot of devices this could take a few minutes.
+> dpti0: Reading the hardware resource table.
 
-On 32 bit archs with LBD set, setsize can cast a capacity so
-that we result in heads==0 (capacity is sector_t which would
-be a 64 bit value with LBD but it gets cast to a unsigned long
-which is only 32 bits). Some userspace programs will then blindly
-use this heads value to do fun things. This patch avoids the bad
-casts by having setsize check for the max value it can support
-which is 7905 MB. By returning early when its limit is passed to it
-we also avoid bad casts which could result in heads getting set to
-zero here.
+here the dpt_i2o driver is loaded...
 
-Patch is made against 2.6.13.rc2 but applies to scsi-misc and scsi-rc
-trees.
+> TID 008  Vendor: ADAPTEC      Device: AIC-7902     Rev: 00000001
+> TID 009  Vendor: ADAPTEC      Device: AIC-7902     Rev: 00000001
+> TID 513  Vendor: SUPER   G    Device: GEM318       Rev: 0   0
+> scsi0 : Vendor: Adaptec  Model: 2015S            FW:3B0A
+>   Vendor: SUPER     Model: GEM318            Rev: 0
+>   Type:   Processor                          ANSI SCSI revision: 02
+> megaraid cmm: 2.20.2.5 (Release Date: Fri Jan 21 00:01:03 EST 2005)
+> megaraid: 2.20.4.5 (Release Date: Thu Feb 03 12:27:22 EST 2005)
+> 3ware Storage Controller device driver for Linux v1.26.02.001.
+> 3ware 9000 Storage Controller device driver for Linux v2.26.02.002.
+> Attached scsi generic sg0 at scsi0, channel 0, id 6, lun 0,  type 3
+> I2O subsystem v$Rev$
 
---- linux-2.6.13-rc2/drivers/scsi/scsicam.c	2005-07-05 22:46:33.000000000 -0500
-+++ linux-2.6.13-rc2.work/drivers/scsi/scsicam.c	2005-07-12 16:15:07.000000000 -0500
-@@ -21,7 +21,7 @@
- #include <scsi/scsicam.h>
- 
- 
--static int setsize(unsigned long capacity, unsigned int *cyls, unsigned int *hds,
-+static int setsize(sector_t capacity, unsigned int *cyls, unsigned int *hds,
- 		   unsigned int *secs);
- 
- unsigned char *scsi_bios_ptable(struct block_device *dev)
-@@ -72,7 +72,7 @@ int scsicam_bios_param(struct block_devi
- 		/* pick some standard mapping with at most 1024 cylinders,
- 		   and at most 62 sectors per track - this works up to
- 		   7905 MB */
--		ret = setsize((unsigned long)capacity, (unsigned int *)ip + 2,
-+		ret = setsize(capacity, (unsigned int *)ip + 2,
- 		       (unsigned int *)ip + 0, (unsigned int *)ip + 1);
- 	}
- 
-@@ -213,12 +213,21 @@ EXPORT_SYMBOL(scsi_partsize);
-  * accommodated. This algorithm does not use physical geometry. 
-  */
- 
--static int setsize(unsigned long capacity, unsigned int *cyls, unsigned int *hds,
-+static int setsize(sector_t cap, unsigned int *cyls, unsigned int *hds,
- 		   unsigned int *secs)
- {
- 	unsigned int rv = 0;
--	unsigned long heads, sectors, cylinders, temp;
-+	unsigned long heads, sectors, cylinders, temp, capacity;
- 
-+	/*
-+	 * A capacity > 7905 MB (16189440 512 byte sectors) will result
-+	 * in heads > 255 and a capacity >> 7905 will result in bad casts
-+	 * and possibly heads == 0.
-+	 */
-+	if (cap > 16189440)
-+		return -1;
-+
-+	capacity = (unsigned long) cap;
- 	cylinders = 1024L;	/* Set number of cylinders to max */
- 	sectors = 62L;		/* Maximize sectors per track */
- 
+and here the I2O subsystem...
+
+> i2o: max drivers = 8
+> i2o: Checking for PCI I2O controllers...
+> i2o: I2O controller found on bus 3 at 24.
+> iop0: PCI I2O controller
+>      BAR0 at 0xF8300000 size=1048576
+>      BAR1 at 0xFB000000 size=16777216
+> iop0: using write combining MTRR
+> iop0: Installed at IRQ 30
+> iop0: Activating I2O controller...
+> iop0: This may take a few minutes if there are many devices
+> Unable to handle kernel paging request at virtual address 8000002c
+ > [...]
+
+The problem is caused, because two different drivers for the same device 
+are loaded at the same time. You have to remove either the I2O subsystem 
+or the dpt_i2o driver, both at the same time won't work...
 
 
+
+Best regards,
+
+
+Markus Lidel
+------------------------------------------
+Markus Lidel (Senior IT Consultant)
+
+Shadow Connect GmbH
+Carl-Reisch-Weg 12
+D-86381 Krumbach
+Germany
+
+Phone:  +49 82 82/99 51-0
+Fax:    +49 82 82/99 51-11
+
+E-Mail: Markus.Lidel@shadowconnect.com
+URL:    http://www.shadowconnect.com
