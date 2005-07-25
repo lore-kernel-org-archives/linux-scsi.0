@@ -1,33 +1,79 @@
-From: Steve McIntyre <steve@einval.com>
-Subject: Re: Is it possible to support a sector size 8192
-Date: Mon, 25 Jul 2005 21:50:46 +0100
-Message-ID: <E1Dx9uQ-0007t0-86@sledge.mossbank.org.uk>
-References: <E1Dw26Z-0005m7-JQ@sledge.mossbank.org.uk> <200507231528.20356.jhml@gmx.net> <E1Dx8Jk-0006vH-Ra@sledge.mossbank.org.uk> <E1Dx8Jk-0006vH-Ra@sledge.mossbank.org.uk>
+From: Mike Christie <mchristi@redhat.com>
+Subject: [PATCH RESEND] test capacity early in setsize() to avoid bad casts
+Date: Mon, 25 Jul 2005 15:58:24 -0500
+Message-ID: <1122325104.20201.4.camel@madmax.msp.redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lump.einval.com ([217.147.81.17]:21261 "EHLO mail.einval.com")
-	by vger.kernel.org with ESMTP id S261613AbVGYUur (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:52387 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S261448AbVGYU6a (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jul 2005 16:50:47 -0400
-In-Reply-To: <200507260038.22820.jhml@gmx.net>
+	Mon, 25 Jul 2005 16:58:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jhml@gmx.net
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, aebr@win.tue.nl
 
-In article <200507260038.22820.jhml@gmx.net> you write:
->> >I'm a little confused here.  Tape devices have variable sector sizes.
->> >I believe they're required to handle up to 64K in a unix environment.
->> >The drives I work on go up to 256k.
->> Tapes are different. The UDO drive that Johann was asking about is an
->> optical _disk_ drive...
->Hmm... would it be _possible_ to support it as tape device (/dev/st* 
->and /dev/nst*)?
+This is just a resend with Andries Brouwer ccd to make sure
+I did not mess up any of the disk geometry stuff up.
 
-Not that I'm aware, no. It's not designed to be used as a tape at
-all. To be honest, if you want a device that looks like a tape,
-then... :-)
 
--- 
-Steve McIntyre, Cambridge, UK.                                steve@einval.com
-Into the distance, a ribbon of black
-Stretched to the point of no turning back
+On 32 bit archs with LBD set, setsize can cast a capacity so
+that we result in heads==0 (capacity is sector_t which would
+be a 64 bit value with LBD but it gets cast to a unsigned long
+which is only 32 bits). Some userspace programs will then blindly
+use this heads value to do fun things. This patch avoids the bad
+casts by having setsize check for the max value it can support
+which is 7905 MB. By returning early when its limit is passed to it
+we also avoid bad casts which could result in heads getting set to
+zero here.
+
+Patch is made against 2.6.13.rc2 but applies to scsi-misc and scsi-rc
+trees.
+
+--- linux-2.6.13-rc2/drivers/scsi/scsicam.c	2005-07-05 22:46:33.000000000 -0500
++++ linux-2.6.13-rc2.work/drivers/scsi/scsicam.c	2005-07-12 16:15:07.000000000 -0500
+@@ -21,7 +21,7 @@
+ #include <scsi/scsicam.h>
+ 
+ 
+-static int setsize(unsigned long capacity, unsigned int *cyls, unsigned int *hds,
++static int setsize(sector_t capacity, unsigned int *cyls, unsigned int *hds,
+ 		   unsigned int *secs);
+ 
+ unsigned char *scsi_bios_ptable(struct block_device *dev)
+@@ -72,7 +72,7 @@ int scsicam_bios_param(struct block_devi
+ 		/* pick some standard mapping with at most 1024 cylinders,
+ 		   and at most 62 sectors per track - this works up to
+ 		   7905 MB */
+-		ret = setsize((unsigned long)capacity, (unsigned int *)ip + 2,
++		ret = setsize(capacity, (unsigned int *)ip + 2,
+ 		       (unsigned int *)ip + 0, (unsigned int *)ip + 1);
+ 	}
+ 
+@@ -213,12 +213,21 @@ EXPORT_SYMBOL(scsi_partsize);
+  * accommodated. This algorithm does not use physical geometry. 
+  */
+ 
+-static int setsize(unsigned long capacity, unsigned int *cyls, unsigned int *hds,
++static int setsize(sector_t cap, unsigned int *cyls, unsigned int *hds,
+ 		   unsigned int *secs)
+ {
+ 	unsigned int rv = 0;
+-	unsigned long heads, sectors, cylinders, temp;
++	unsigned long heads, sectors, cylinders, temp, capacity;
+ 
++	/*
++	 * A capacity > 7905 MB (16189440 512 byte sectors) will result
++	 * in heads > 255 and a capacity >> 7905 will result in bad casts
++	 * and possibly heads == 0.
++	 */
++	if (cap > 16189440)
++		return -1;
++
++	capacity = (unsigned long) cap;
+ 	cylinders = 1024L;	/* Set number of cylinders to max */
+ 	sectors = 62L;		/* Maximize sectors per track */
+ 
+
+
