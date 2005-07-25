@@ -1,27 +1,32 @@
-From: wolman@mundomail.net
-Subject: Re:
-Date: Sun, 24 Jul 2005 10:31:50 +0000
-Message-ID: <D3C5KH13799AG18C@mundomail.net>
-References: <KC3KJ12CL8BAAEB7@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Laura <advisability@multiservice.net>
+Subject: Autocad 2006 - $69.95
+Date: Mon, 25 Jul 2005 13:01:58 +0700
+Message-ID: <728216534.1505192620@203.113.186.56>
+Mime-Version: 1.0 (Apple Message framework v728)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pc-247-29-86-200.cm.vtr.net ([200.86.29.247]:14611 "HELO
-	compuserve.com") by vger.kernel.org with SMTP id S261326AbVGYDOP
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Jul 2005 23:14:15 -0400
-In-Reply-To: <KC3KJ12CL8BAAEB7@vger.kernel.org>
+Received: from [203.113.186.56] ([203.113.186.56]:34314 "HELO 203.113.186.56")
+	by vger.kernel.org with SMTP id S261834AbVGYGCm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jul 2005 02:02:42 -0400
+Received: from [122.211.202.100] (port=4005 helo=[bachelor])
+    by 203.113.186.56 with esmtp
+    id 113786676reveals15816
+    for linux-scsi@vger.kernel.org; Mon, 25 Jul 2005 13:01:59 +0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Meet the newest and most aggressive addition to Internet commerce - http://4706.2005clearance.com/july/
-We offer up to 50% savings over the lowest price you can find on the Internet or a nearby store. 
-Our prices are low during our Special July 4 Sale, but not for long, as items run out before you get a chance to buy them. 
-We offer quick order processing, online account reports, and live customer support for existing customers. 
-What are you waiting for??? Click and shop!!!
+70% discounts on popular software
+http://Magdalene.useid.com/
 
-http://9704.2005clearance.com/july/
+
+
+
+
+Prima la musica, poi le parole (first the music, then the words) 
+Which is worse: Hell or nothing?       
+Knowledge, if it does not determine action, is dead to us.  
 
 
