@@ -1,46 +1,38 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: PATCH: Check return code from scsi_sysfs_add_sdev
-Date: Mon, 25 Jul 2005 10:51:30 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0507251045480.5068-100000@iolanthe.rowland.org>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: denebeim@deepthot.org (Jay Denebeim)
+Subject: Re: Is it possible to support a sector size 8192
+Date: Mon, 25 Jul 2005 15:43:57 +0000 (UTC)
+Message-ID: <dc31bt$6ti$1@dent.deepthot.org>
+References: <E1Dw26Z-0005m7-JQ@sledge.mossbank.org.uk> <200507231528.20356.jhml@gmx.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:38091 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261243AbVGYOvb
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jul 2005 10:51:31 -0400
+Received: from deepthot.org ([68.14.232.127]:24034 "EHLO dent.deepthot.org")
+	by vger.kernel.org with ESMTP id S261214AbVGYPoH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jul 2005 11:44:07 -0400
+Received: from news by dent.deepthot.org with local (Exim 4.43)
+	id 1Dx57V-0001t3-Ma
+	for linux-scsi@vger.kernel.org; Mon, 25 Jul 2005 08:43:57 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@osdl.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-James:
+In article <200507231528.20356.jhml@gmx.net>,
+Johann Hanne <jhml@gmx.net> wrote:
+>Wow, an answer directly from Plasmon, that's nice. :-)
 
-This patch (as541) adds a missing check for an error return code from 
-scsi_sysfs_add_sdev.  This resolves entry #4863 in the OSDL bugzilla.  
-Although in that bug report the failure occurred because of a confusion 
-over scanning vs. rescanning, in general add_sdev can fail for a number of 
-reasons (the simplest being insufficient memory) and the caller should 
-cope properly.
+>I've already got the FUSE driver (udofs-1.1-92.i386.rpm, based on
+>FUSE 1.4, is this current?!). It is nice for a standalone drive, but
+>we use a SCSI robotic changer in conjunction with an HSM system
+>(Legato DiskXtender 2.9) which needs some kind of direct access to
+>the drive. It probes for /dev/nst*, but I guess /dev/sd* would also
+>work.
 
-Alan Stern
+I'm a little confused here.  Tape devices have variable sector sizes.
+I believe they're required to handle up to 64K in a unix environment.
+The drives I work on go up to 256k.
 
-
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-
-Index: 2.6.13-rc2/drivers/scsi/scsi_scan.c
-===================================================================
---- 2.6.13-rc2.orig/drivers/scsi/scsi_scan.c
-+++ 2.6.13-rc2/drivers/scsi/scsi_scan.c
-@@ -756,7 +756,8 @@ static int scsi_add_lun(struct scsi_devi
- 	 * register it and tell the rest of the kernel
- 	 * about it.
- 	 */
--	scsi_sysfs_add_sdev(sdev);
-+	if (scsi_sysfs_add_sdev(sdev) != 0)
-+		return SCSI_SCAN_NO_RESPONSE;
- 
- 	return SCSI_SCAN_LUN_PRESENT;
- }
-
+Jay
+-- 
+* Jay Denebeim  Moderator       rec.arts.sf.tv.babylon5.moderated *
+* newsgroup submission address: b5mod@deepthot.org                *
+* moderator contact address:    b5mod-request@deepthot.org        *
+* personal contact address:     denebeim@deepthot.org             *
