@@ -1,72 +1,62 @@
-From: Ben Collins <bcollins@debian.org>
-Subject: Re: Unplugging of SBP-2 devices still does not work
-Date: Tue, 26 Jul 2005 00:26:41 -0400
-Message-ID: <20050726042640.GA17885@phunnypharm.org>
-References: <42E29DF5.5090603@s5r6.in-berlin.de> <42E2A15A.2030609@s5r6.in-berlin.de>
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: As of 2.6.13-rc1 Fusion-MPT very slow
+Date: Tue, 26 Jul 2005 10:52:30 +0000 (GMT)
+Message-ID: <Pine.LNX.4.61.0507261025000.22613@praktifix.dwd.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [206.246.247.150] ([206.246.247.150]:15792 "EHLO
-	bristol.phunnypharm.org") by vger.kernel.org with ESMTP
-	id S261626AbVGZE0l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Jul 2005 00:26:41 -0400
-Content-Disposition: inline
-In-Reply-To: <42E2A15A.2030609@s5r6.in-berlin.de>
+Received: from dwdmx4.dwd.de ([141.38.3.230]:43202 "EHLO dwdmx4.dwd.de")
+	by vger.kernel.org with ESMTP id S261783AbVGZKwo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Jul 2005 06:52:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org
 
-Sounds like it is probably hanging in sbp2 while it is trying to logout.
+Hello
 
-Perhaps you can turn on spinlock debug to see if there is a deadlock
-somewhere? Check wstat for the knodemgrd process aswell, see what it is
-waiting for.
+On a four CPU Opteron with Fusion-MPT compiled in, I get the following
+results (up to 2.6.13-rc3-git7) with hdparm on the first channel with
+four disks:
 
-On Sat, Jul 23, 2005 at 09:58:18PM +0200, Stefan Richter wrote:
-> I wrote:
-> >Problem 1) Hot unplugging of SBP-2 hangs ieee1394's nodemgr
-> [...]
-> >[unplug disk]
-> >Jul 23 20:08:53 shuttle kernel: ieee1394: Node changed: 1-01:1023 -> 
-> >1-00:1023
-> >Jul 23 20:08:53 shuttle kernel: ieee1394: Node suspended: 
-> >ID:BUS[1-00:1023]  GUID[0001d202e0200ef1]
-> >Jul 23 20:08:53 shuttle kernel: ieee1394: sbp2: sbp2_remove
-> >Jul 23 20:08:53 shuttle kernel: Synchronizing SCSI cache for disk sda:
-> 
-> I should provide perhaps a little more background about nodemgr. It waits 
-> for
-> events on the FireWire bus. If it detects physical removal of a node, it 
-> calls
-> remove callbacks from IEEE 1394 protocol drivers such as sbp2. That's where
-> sbp2_remove() kicks in. So it all happens in nodemgr's process context, 
-> although
-> the hang occurs somewhere in the scsi mid or high level, or perhaps in the 
-> driver
-> core when it is called from scsi.
-> 
-> [...]
-> >Jul 23 21:04:49 shuttle kernel: ieee1394: GUID 0x00301bac00002ba4: 
-> >bus_info_data[0] = 0x0404912b
-> 
-> Ignore this line. It is normally not logged by ieee1394.
-> -- 
-> Stefan Richter
-> -=====-=-=-= -=== =-===
-> http://arcgraph.de/sr/
-> 
-> 
-> -------------------------------------------------------
-> SF.Net email is sponsored by: Discover Easy Linux Migration Strategies
-> from IBM. Find simple to follow Roadmaps, straightforward articles,
-> informative Webcasts and more! Get everything you need to get up to
-> speed, fast. http://ads.osdn.com/?ad_id=7477&alloc_id=16492&op=click
-> _______________________________________________
-> mailing list linux1394-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/linux1394-devel
+            sdc    74 MB/s
+            sdd     2 MB/s
+            sde     2 MB/s
+            sdf     2 MB/s
 
+On the second channel also with the same type of disks:
+
+            sdg    74 MB/s
+            sdh    74 MB/s
+            sdi    74 MB/s
+            sdj    74 MB/s
+
+All disk are of the same type. Compiling Fusion-MPT as module for the
+same kernel I get 74 MB/s for all eight disks. Taking kernel 2.6.12.2 and
+compile it in, all eigth disks give the expected performance of 74 MB/s.
+When I exchange the two cables, put the first cable on second channel and
+second cable on first channel, always sdd, sde and sdf will only get
+approx. 2 MB/s with any 2.6.13-* kernels.
+
+Another problem observed with 2.6.13-rc3-git7 and Fusion-MPT compiled in
+is when making a ext3 filesystem over those eight disks (software Raid10),
+makes mke2fs hang for a very long time in D-state and /var/log/messages
+writting a lot of these messages:
+
+        mptscsih: ioc0: >> Attempting task abort! (sc=ffff81014ead3ac0)
+        mptscsih: ioc0: >> Attempting task abort! (sc=ffff81014ead38c0)
+        mptscsih: ioc0: >> Attempting task abort! (sc=ffff81014ead36c0)
+        mptscsih: ioc0: >> Attempting task abort! (sc=ffff81014ead34c0)
+           .
+           .
+           .
+
+And finally, when I do a halt or powerdown just after all filesystems
+are unmounted the fusion driver tells me that it puts the two controllers
+in power save mode. Then kernel whants to flush the SCSI disks but
+hangs forever. This does not happen when doing a reboot.
+
+Holger
 -- 
-Debian     - http://www.debian.org/
-Linux 1394 - http://www.linux1394.org/
-Subversion - http://subversion.tigris.org/
-SwissDisk  - http://www.swissdisk.com/
+
