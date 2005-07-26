@@ -1,53 +1,39 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: Unplugging of SBP-2 devices still does not work
-Date: Tue, 26 Jul 2005 15:09:37 -0700
-Message-ID: <20050726220937.GA17476@us.ibm.com>
-References: <42E29DF5.5090603@s5r6.in-berlin.de> <42E2A15A.2030609@s5r6.in-berlin.de>
+From: Russ Garrett <russ@garrett.co.uk>
+Subject: Re: Megaraid problems with >8GB RAM
+Date: Tue, 26 Jul 2005 23:35:24 +0100
+Message-ID: <42E6BAAC.2070100@garrett.co.uk>
+References: <42E6B2A5.9070903@garrett.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux1394-devel-admin@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <42E2A15A.2030609@s5r6.in-berlin.de>
-Sender: linux1394-devel-admin@lists.sourceforge.net
-Errors-To: linux1394-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-To: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mta08-winn.ispmail.ntl.com ([81.103.221.48]:47743 "EHLO
+	mta08-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
+	id S262285AbVGZWfF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Jul 2005 18:35:05 -0400
+Received: from aamta09-winn.ispmail.ntl.com ([81.103.221.35])
+          by mta08-winn.ispmail.ntl.com with ESMTP
+          id <20050726223504.DFJU22560.mta08-winn.ispmail.ntl.com@aamta09-winn.ispmail.ntl.com>
+          for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2005 23:35:04 +0100
+Received: from [192.168.99.15] (really [82.18.123.115])
+          by aamta09-winn.ispmail.ntl.com with ESMTP
+          id <20050726223504.TKZK19483.aamta09-winn.ispmail.ntl.com@[192.168.99.15]>
+          for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2005 23:35:04 +0100
+In-Reply-To: <42E6B2A5.9070903@garrett.co.uk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Seeing sysrq-t stack traces might help debugging.
+Russ Garrett wrote:
 
-On Sat, Jul 23, 2005 at 09:58:18PM +0200, Stefan Richter wrote:
-> I wrote:
-> >Problem 1) Hot unplugging of SBP-2 hangs ieee1394's nodemgr
-> [...]
-> >[unplug disk]
-> >Jul 23 20:08:53 shuttle kernel: ieee1394: Node changed: 1-01:1023 -> 
-> >1-00:1023
-> >Jul 23 20:08:53 shuttle kernel: ieee1394: Node suspended: 
-> >ID:BUS[1-00:1023]  GUID[0001d202e0200ef1]
-> >Jul 23 20:08:53 shuttle kernel: ieee1394: sbp2: sbp2_remove
-> >Jul 23 20:08:53 shuttle kernel: Synchronizing SCSI cache for disk sda:
-> 
-> I should provide perhaps a little more background about nodemgr. It waits 
-> for
-> events on the FireWire bus. If it detects physical removal of a node, it 
-> calls
-> remove callbacks from IEEE 1394 protocol drivers such as sbp2. That's where
-> sbp2_remove() kicks in. So it all happens in nodemgr's process context, 
-> although
-> the hang occurs somewhere in the scsi mid or high level, or perhaps in the 
-> driver
-> core when it is called from scsi.
+> When installing Linux on a pair of new dual-opteron servers (16GB of 
+> RAM and a MegaRAID 320-2), neither the megaraid v1, nor v2 drivers 
+> could talk to the actual MegaRAID hardware. The v1 driver simply 
+> caused the system to lock up, wheras the v2 driver produces the error 
+> "megaraid: maibox adapter did not initialize" after a while.
 
+Just to note that these cards are at the latest firmware (1L37), which 
+is getting round to a year old now. I knew I'd forgotten to mention 
+something.
 
--------------------------------------------------------
-SF.Net email is sponsored by: Discover Easy Linux Migration Strategies
-from IBM. Find simple to follow Roadmaps, straightforward articles,
-informative Webcasts and more! Get everything you need to get up to
-speed, fast. http://ads.osdn.com/?ad_id=7477&alloc_id=16492&op=click
+Russ
