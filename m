@@ -1,103 +1,132 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH 3/5] SCSI scanning and removal fixes
-Date: Tue, 26 Jul 2005 10:20:53 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0507261018460.4746-100000@iolanthe.rowland.org>
+From: Jack Hammer <jack_hammer@adaptec.com>
+Subject: Updated Patch for ServeRAID V7.12.02
+Date: Tue, 26 Jul 2005 10:20:33 -0400
+Message-ID: <42E646B1.7080503@adaptec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:1174 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261790AbVGZOUy
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Jul 2005 10:20:54 -0400
+Received: from magic.adaptec.com ([216.52.22.17]:52913 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S261783AbVGZOWU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Jul 2005 10:22:20 -0400
+Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
+	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j6QEMKc19770
+	for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2005 07:22:20 -0700
+Received: from rtpe2k01.adaptec.com (rtpe2k01.adaptec.com [10.110.12.40])
+	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j6QEMJg14127
+	for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2005 07:22:19 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-James:
+I switched to Thunderbird email, so the line wrapping caused by Outlook
+should be resolved here.
 
-This patch (as544) adds a private entry point to scsi_remove_device, for 
-use when callers already own the scan_mutex.  The appropriate callers are 
-modified to use the new entry point.
+-------------------------------------------------------------------------------
 
-Alan Stern
+I am resubmitting the 2.6 kernel patch for the Version 7.12.02 ips driver.
+I have eliminated a couple of inappropriate changes pointed out by Arjan.
 
+Signed-off-by: Jack Hammer <jack_hammer@adaptec.com>
 
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-
-Index: 2613/drivers/scsi/scsi_sysfs.c
-===================================================================
---- 2613.orig/drivers/scsi/scsi_sysfs.c
-+++ 2613/drivers/scsi/scsi_sysfs.c
-@@ -653,7 +653,7 @@ int scsi_sysfs_add_sdev(struct scsi_devi
- 			error = attr_add(&sdev->sdev_gendev,
- 					sdev->host->hostt->sdev_attrs[i]);
- 			if (error) {
--				scsi_remove_device(sdev);
-+				__scsi_remove_device(sdev);
- 				goto out;
- 			}
- 		}
-@@ -667,7 +667,7 @@ int scsi_sysfs_add_sdev(struct scsi_devi
- 							scsi_sysfs_sdev_attrs[i]);
- 			error = device_create_file(&sdev->sdev_gendev, attr);
- 			if (error) {
--				scsi_remove_device(sdev);
-+				__scsi_remove_device(sdev);
- 				goto out;
- 			}
- 		}
-@@ -687,17 +687,10 @@ int scsi_sysfs_add_sdev(struct scsi_devi
- 	return error;
- }
+--- a/drivers/scsi/ips.c	Tue Jul 19 13:15:24 2005
++++ b/drivers/scsi/ips.c	Tue Jul 19 13:12:44 2005
+@@ -133,10 +133,12 @@
+ /* 6.10.00  - Remove 1G Addressing Limitations                               */
+ /* 6.11.xx  - Get VersionInfo buffer off the stack !              DDTS 60401 */
+ /* 6.11.xx  - Make Logical Drive Info structure safe for DMA      DDTS 60639 */
+-/* 7.10.xx  - Add highmem_io flag in SCSI Templete for 2.4 kernels           */
++/* 7.10.18  - Add highmem_io flag in SCSI Templete for 2.4 kernels           */
+ /*          - Fix path/name for scsi_hosts.h include for 2.6 kernels         */
+ /*          - Fix sort order of 7k                                           */
+ /*          - Remove 3 unused "inline" functions                             */
++/* 7.12.xx  - Use STATIC functions whereever possible                        */
++/*          - Clean up deprecated MODULE_PARM calls                          */
+ /*****************************************************************************/
  
--/**
-- * scsi_remove_device - unregister a device from the scsi bus
-- * @sdev:	scsi_device to unregister
-- **/
--void scsi_remove_device(struct scsi_device *sdev)
-+void __scsi_remove_device(struct scsi_device *sdev)
- {
--	struct Scsi_Host *shost = sdev->host;
--
--	down(&shost->scan_mutex);
- 	if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
--		goto out;
-+		return;
+ /*
+@@ -207,8 +209,8 @@
+ /*
+  * DRIVER_VER
+  */
+-#define IPS_VERSION_HIGH        "7.10"
+-#define IPS_VERSION_LOW         ".18 "
++#define IPS_VERSION_HIGH        "7.12"
++#define IPS_VERSION_LOW         ".02 "
  
- 	class_device_unregister(&sdev->sdev_classdev);
- 	device_del(&sdev->sdev_gendev);
-@@ -706,8 +699,17 @@ void scsi_remove_device(struct scsi_devi
- 		sdev->host->hostt->slave_destroy(sdev);
- 	transport_unregister_device(&sdev->sdev_gendev);
- 	put_device(&sdev->sdev_gendev);
--out:
--	up(&shost->scan_mutex);
-+}
-+
-+/**
-+ * scsi_remove_device - unregister a device from the scsi bus
-+ * @sdev:	scsi_device to unregister
-+ **/
-+void scsi_remove_device(struct scsi_device *sdev)
-+{
-+	down(&sdev->host->scan_mutex);
-+	__scsi_remove_device(sdev);
-+	up(&sdev->host->scan_mutex);
- }
- EXPORT_SYMBOL(scsi_remove_device);
+ #if !defined(__i386__) && !defined(__ia64__) && !defined(__x86_64__)
+ #warning "This driver has only been tested on the x86/ia64/x86_64 platforms"
+--- a/drivers/scsi/ips.h	Tue Jul 19 13:15:31 2005
++++ b/drivers/scsi/ips.h	Tue Jul 19 12:49:03 2005
+@@ -87,15 +87,14 @@
+       #define scsi_set_pci_device(sh,dev) (0)
+    #endif
  
-Index: 2613/drivers/scsi/scsi_priv.h
-===================================================================
---- 2613.orig/drivers/scsi/scsi_priv.h
-+++ 2613/drivers/scsi/scsi_priv.h
-@@ -141,6 +141,7 @@ extern void scsi_sysfs_unregister(void);
- extern void scsi_sysfs_device_initialize(struct scsi_device *);
- extern int scsi_sysfs_target_initialize(struct scsi_device *);
- extern struct scsi_transport_template blank_transport_template;
-+extern void __scsi_remove_device(struct scsi_device *);
+-   #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+-   
+-      #ifndef irqreturn_t
+-         typedef void irqreturn_t;
+-      #endif 
+-      
++   #ifndef IRQ_NONE
++      typedef void irqreturn_t;
+       #define IRQ_NONE
+       #define IRQ_HANDLED
+       #define IRQ_RETVAL(x)
++   #endif
++   
++   #if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0)
+       #define IPS_REGISTER_HOSTS(SHT)      scsi_register_module(MODULE_SCSI_HA,SHT)
+       #define IPS_UNREGISTER_HOSTS(SHT)    scsi_unregister_module(MODULE_SCSI_HA,SHT)
+       #define IPS_ADD_HOST(shost,device)
+@@ -123,6 +122,10 @@
+    #ifndef min
+       #define min(x,y) ((x) < (y) ? x : y)
+    #endif
++   
++   #ifndef __iomem       /* For clean compiles in earlier kernels without __iomem annotations */
++      #define __iomem
++   #endif
  
- extern struct bus_type scsi_bus_type;
+    #define pci_dma_hi32(a)         ((a >> 16) >> 16)
+    #define pci_dma_lo32(a)         (a & 0xffffffff)
+@@ -1206,13 +1209,13 @@
  
-
+ #define IPS_VER_MAJOR 7
+ #define IPS_VER_MAJOR_STRING "7"
+-#define IPS_VER_MINOR 10
+-#define IPS_VER_MINOR_STRING "10"
+-#define IPS_VER_BUILD 18
+-#define IPS_VER_BUILD_STRING "18"
+-#define IPS_VER_STRING "7.10.18"
++#define IPS_VER_MINOR 12
++#define IPS_VER_MINOR_STRING "12"
++#define IPS_VER_BUILD 02
++#define IPS_VER_BUILD_STRING "02"
++#define IPS_VER_STRING "7.12.02"
+ #define IPS_RELEASE_ID 0x00020000
+-#define IPS_BUILD_IDENT 731
++#define IPS_BUILD_IDENT 761
+ #define IPS_LEGALCOPYRIGHT_STRING "(C) Copyright IBM Corp. 1994, 2002. All Rights Reserved."
+ #define IPS_ADAPTECCOPYRIGHT_STRING "(c) Copyright Adaptec, Inc. 2002 to 2004. All Rights Reserved."
+ #define IPS_DELLCOPYRIGHT_STRING "(c) Copyright Dell 2004. All Rights Reserved."
+@@ -1223,12 +1226,12 @@
+ #define IPS_VER_SERVERAID2 "2.88.13"
+ #define IPS_VER_NAVAJO "2.88.13"
+ #define IPS_VER_SERVERAID3 "6.10.24"
+-#define IPS_VER_SERVERAID4H "7.10.11"
+-#define IPS_VER_SERVERAID4MLx "7.10.18"
+-#define IPS_VER_SARASOTA "7.10.18"
+-#define IPS_VER_MARCO "7.10.18"
+-#define IPS_VER_SEBRING "7.10.18"
+-#define IPS_VER_KEYWEST "7.10.18"
++#define IPS_VER_SERVERAID4H "7.12.02"
++#define IPS_VER_SERVERAID4MLx "7.12.02"
++#define IPS_VER_SARASOTA "7.12.02"
++#define IPS_VER_MARCO "7.12.02"
++#define IPS_VER_SEBRING "7.12.02"
++#define IPS_VER_KEYWEST "7.12.02"
+ 
+ /* Compatability IDs for various adapters */
+ #define IPS_COMPAT_UNKNOWN ""
