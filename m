@@ -1,62 +1,33 @@
-From: Holger Kiehl <Holger.Kiehl@dwd.de>
-Subject: As of 2.6.13-rc1 Fusion-MPT very slow
-Date: Tue, 26 Jul 2005 10:52:30 +0000 (GMT)
-Message-ID: <Pine.LNX.4.61.0507261025000.22613@praktifix.dwd.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH 0/5] SCSI scanning and removal fixes
+Date: Tue, 26 Jul 2005 10:08:52 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0507260958060.4746-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dwdmx4.dwd.de ([141.38.3.230]:43202 "EHLO dwdmx4.dwd.de")
-	by vger.kernel.org with ESMTP id S261783AbVGZKwo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Jul 2005 06:52:44 -0400
+Received: from iolanthe.rowland.org ([192.131.102.54]:8093 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S261786AbVGZOIy
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Jul 2005 10:08:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Hello
+James:
 
-On a four CPU Opteron with Fusion-MPT compiled in, I get the following
-results (up to 2.6.13-rc3-git7) with hdparm on the first channel with
-four disks:
+The following series of patches is meant to go on top of the first 
+three patches submitted by Mike Anderson back in June.  They address 
+numerous errors and omissions in the scanning and device/target removal 
+pathways.  Overall they are essentially the same as the changes I proposed 
+last month, but reworked to fit into the framework Mike has created and 
+broken up into smaller, simpler pieces.
 
-            sdc    74 MB/s
-            sdd     2 MB/s
-            sde     2 MB/s
-            sdf     2 MB/s
+The issues they cover include: missing checks for error returns,
+neglecting to acquire the scan_mutex in a scanning pathway, adding private
+entry points for situations where a caller already owns the scan_mutex,
+badly out-of-date kerneldoc, and safe traversal of the device list during
+removal.
 
-On the second channel also with the same type of disks:
-
-            sdg    74 MB/s
-            sdh    74 MB/s
-            sdi    74 MB/s
-            sdj    74 MB/s
-
-All disk are of the same type. Compiling Fusion-MPT as module for the
-same kernel I get 74 MB/s for all eight disks. Taking kernel 2.6.12.2 and
-compile it in, all eigth disks give the expected performance of 74 MB/s.
-When I exchange the two cables, put the first cable on second channel and
-second cable on first channel, always sdd, sde and sdf will only get
-approx. 2 MB/s with any 2.6.13-* kernels.
-
-Another problem observed with 2.6.13-rc3-git7 and Fusion-MPT compiled in
-is when making a ext3 filesystem over those eight disks (software Raid10),
-makes mke2fs hang for a very long time in D-state and /var/log/messages
-writting a lot of these messages:
-
-        mptscsih: ioc0: >> Attempting task abort! (sc=ffff81014ead3ac0)
-        mptscsih: ioc0: >> Attempting task abort! (sc=ffff81014ead38c0)
-        mptscsih: ioc0: >> Attempting task abort! (sc=ffff81014ead36c0)
-        mptscsih: ioc0: >> Attempting task abort! (sc=ffff81014ead34c0)
-           .
-           .
-           .
-
-And finally, when I do a halt or powerdown just after all filesystems
-are unmounted the fusion driver tells me that it puts the two controllers
-in power save mode. Then kernel whants to flush the SCSI disks but
-hangs forever. This does not happen when doing a reboot.
-
-Holger
--- 
+Alan Stern
 
