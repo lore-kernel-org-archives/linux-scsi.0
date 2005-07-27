@@ -1,71 +1,57 @@
-From: Philipp Reisner <philipp.reisner@linbit.com>
-Subject: exporting TCQ functionality to the kernel in SYMBIOS/NCR 53C8XX driver
-Date: Wed, 27 Jul 2005 11:33:33 +0200
-Message-ID: <200507271133.33723.philipp.reisner@linbit.com>
+From: Jack Hammer <jack_hammer@adaptec.com>
+Subject: Re: Updated Patch for ServeRAID V7.12.02
+Date: Wed, 27 Jul 2005 08:20:43 -0400
+Message-ID: <42E77C1B.6050009@adaptec.com>
+References: <42E646B1.7080503@adaptec.com> <20050726201149.6e685a57.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_tT15CqVC3sgPNck"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aug.linbit.com ([212.69.162.22]:40145 "EHLO mail.linbit.com")
-	by vger.kernel.org with ESMTP id S262213AbVG0MJV (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:28390 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262215AbVG0MWd (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Jul 2005 08:09:21 -0400
+	Wed, 27 Jul 2005 08:22:33 -0400
+In-Reply-To: <20050726201149.6e685a57.rdunlap@xenotime.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: matthew@wil.cx, linux-scsi@vger.kernel.org
+To: randy_dunlap <rdunlap@xenotime.net>
+Cc: linux-scsi@vger.kernel.org
 
---Boundary-00=_tT15CqVC3sgPNck
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Randy,
 
-Hi Matthew,
+1.) Install Thunderbird extension "Edit Config Files 1.3".
 
-Does this patch makes sense to you ?
-Could you consider this for inclusion into mainline ?
+2.) Add these two lines in user.js :
 
-best regards,
- Philipp
-=2D-=20
-: Dipl-Ing Philipp Reisner                      Tel +43-1-8178292-50 :
-: LINBIT Information Technologies GmbH          Fax +43-1-8178292-82 :
-: Sch=F6nbrunnerstr 244, 1120 Vienna, Austria    http://www.linbit.com :
+    pref("mailnews.send_plaintext_flowed", false);    // RFC 2646
+    pref("mailnews.display.disable_format_flowed_support", true);
 
---Boundary-00=_tT15CqVC3sgPNck
-Content-Type: text/x-diff;
-  charset="us-ascii";
-  name="sym53c8xxx-tcq-support.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="sym53c8xxx-tcq-support.diff"
+3.) Set "Wrap plain text messages at 0 characters" under "Options / Composition"
 
-diff -ur linux-2.6.12+kdb/drivers/scsi/sym53c8xx_2/sym_glue.c linux-2.6.12+kdb+sym-patch/drivers/scsi/sym53c8xx_2/sym_glue.c
---- linux-2.6.12+kdb/drivers/scsi/sym53c8xx_2/sym_glue.c	2005-07-27 10:54:47.000000000 +0200
-+++ linux-2.6.12+kdb+sym-patch/drivers/scsi/sym53c8xx_2/sym_glue.c	2005-07-27 11:07:47.000000000 +0200
-@@ -494,7 +494,14 @@
- 	 *  Select tagged/untagged.
- 	 */
- 	lp = sym_lp(tp, sdev->lun);
--	order = (lp && lp->s.reqtags) ? M_SIMPLE_TAG : 0;
-+        if (lp && lp->s.reqtags) {
-+		if (cmd->request->flags & REQ_HARDBARRIER)
-+			order = M_ORDERED_TAG;
-+		else
-+			order = M_SIMPLE_TAG;
-+	} else {
-+		order = 0 ;
-+	}
- 
- 	/*
- 	 *  Queue the SCSI IO.
-@@ -1926,6 +1933,7 @@
- 	.proc_info		= sym53c8xx_proc_info,
- 	.proc_name		= NAME53C8XX,
- #endif
-+	.ordered_tag            = 1,
- };
- 
- static int attach_count;
+Thanks to Luben Tuikov, who guided me through all this. If you have any 
+further questions, he is probably the guy to ask ...
 
---Boundary-00=_tT15CqVC3sgPNck--
+Jack
+
+
+
+On 7/26/2005 11:11 PM, randy_dunlap wrote:
+> On Tue, 26 Jul 2005 10:20:33 -0400 Jack Hammer wrote:
+> 
+> 
+>>I switched to Thunderbird email, so the line wrapping caused by Outlook
+>>should be resolved here.
+> 
+> 
+> for the rest of us, how do you put a patch inline (not as an
+> attachment) with thunderbird?  have they added that capability
+> recently?  It would certainly go a long way to making thunderbird
+> usable for kernel patches...
+> 
+> Maybe it helps not to use tabs in the source files very much?
+> 
+> Thanks,
+> ---
+> ~Randy
+> 
+
