@@ -1,65 +1,56 @@
-From: Bodo Stroesser <bstroesser@fujitsu-siemens.com>
-Subject: Re: lpfc: System freezing if fiber is broken
-Date: Wed, 27 Jul 2005 15:45:41 +0200
-Message-ID: <42E79005.3020108@fujitsu-siemens.com>
-References: <42E679A2.1060408@fujitsu-siemens.com> <20050726184800.GA19810@us.ibm.com>
+From: "conway, heather" <conway_heather@emc.com>
+Subject: Request to add EMC Invista to the v2.6.x SCSI Blacklist...
+Date: Wed, 27 Jul 2005 10:22:27 -0400
+Message-ID: <FA2F59D0E55B4B4892EA076FF8704F5509DDC7A5@srgraham.eng.emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_000_01C592B6.93FB20CE"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dgate1.fujitsu-siemens.com ([217.115.66.35]:20786 "EHLO
-	dgate1.fujitsu-siemens.com") by vger.kernel.org with ESMTP
-	id S262244AbVG0Npx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Jul 2005 09:45:53 -0400
-In-Reply-To: <20050726184800.GA19810@us.ibm.com>
+Received: from mailhub.lss.emc.com ([168.159.2.31]:47572 "EHLO
+	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S262259AbVG0OWc
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Jul 2005 10:22:32 -0400
+Received: from srexchimc2.eng.emc.com (srexchimg2.eng.emc.com [168.159.100.11] (may be forged))
+	by mailhub.lss.emc.com (Switch-3.1.6/Switch-3.1.6) with ESMTP id j6REMUvL007999
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2005 10:22:30 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-Mike Anderson wrote:
-> Bodo Stroesser [bstroesser@fujitsu-siemens.com] wrote:
-> 
->>Hi James,
->>
->>disrupting a working FC connection makes my i386 SMP server
->>(2.6.12.2) freeze just one or two seconds after this.
->>I'm normally using lpfc_nodev_tmo = 1. When I change this to the
->>default value of 35, the system stalls about 36 seconds after
->>disruption. So I guess, the problem is caused by nodev_tmo
->>expiring.
->>I activated the nmi_watchdog, but no output.
->>
->>What can I do to analyze this problem?
-> 
-> 
-> Does changing the timeout for a scsi device also alter the problem. In the
-> past people have seen issues of the nodev_tmo expiring near the scsi
-> timeout. This past cases lead to devices being offlined, but may this
-> could be causing a different symptom on your system.
-The amount of time between cutting the connection and the system freezing
-is nearly the same as lpfc_nodev_tmo. Using the default nodev_tmo of 35 seconds
-results in about 36 seconds, while setting nodev_tmo to 1 results in
-2 seconds. As the devices on the Fibre Channel are tapedrives scsi timeout is
-900 seconds.
-There are 8 tests running that write 8 tape-LUNs at the same SCSI target.
-If the connection is broken, some of the tests immediately receive a bad
-result for write(), some keep waiting for a result.
+This message is in MIME format. Since your mail reader does not understand
+this format, some or all of this message may not be legible.
 
-Meanwhile I also did some tests with timeout set to 5 and nodev_tmo to 35
-(The test I'm running doesn't fail with that small timeout). Those tests, that
-do not receive a bad result, stay waiting for result even after 5 second timeout
-is expired. In most cases, the system doesn't freeze after nodev_tmo with this test.
-But about 5 seconds after plugging FC cable again, it freezes.
+------_=_NextPart_000_01C592B6.93FB20CE
+Content-Type: text/plain
 
-> You can change the timeout for the device by echoing a higher value into
-> /sys/bus/scsi/devices/${nexus}/timeout.
-> 
-> Is this a full system freeze or only the controlling console?
-Full freeze, no more replies via console or network.
+Hi,
+I'd like to request that the enclosed patch to scsi_devinfo.c be considered
+for inclusion in the v2.6.x kernel.  This would add support for sparse LUNs
+and large LUNs for the EMC Invista product.  
+Thanks for your consideration.
+Heather
+ <<scsi_devinfo_invista.patch>> 
 
-> 
-> -andmike
-> --
-> Michael Anderson
-> andmike@us.ibm.com
+------_=_NextPart_000_01C592B6.93FB20CE
+Content-Type: application/octet-stream;
+	name="scsi_devinfo_invista.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="scsi_devinfo_invista.patch"
+
+--- scsi_devinfo.c	2005-07-06 14:55:11.892645608 -0400=0A=
++++ /root/scsi_devinfo.c	2005-07-06 14:54:57.558824680 -0400=0A=
+@@ -136,6 +136,7 @@=0A=
+ 	{"DELL", "PERCRAID", NULL, BLIST_FORCELUN},=0A=
+ 	{"DGC", "RAID", NULL, BLIST_SPARSELUN},	/* Dell PV 650F, storage on =
+LUN 0 */=0A=
+ 	{"DGC", "DISK", NULL, BLIST_SPARSELUN},	/* Dell PV 650F, no storage =
+on LUN 0 */=0A=
++	{"EMC", "Invista", NULL, BLIST_SPARSELUN | BLIST_LARGELUN}, =
+/*Invista, no storage on LUN 0 */=0A=
+ 	{"EMC", "SYMMETRIX", NULL, BLIST_SPARSELUN | BLIST_LARGELUN | =
+BLIST_FORCELUN},=0A=
+ 	{"EMULEX", "MD21/S2     ESDI", NULL, BLIST_SINGLELUN},=0A=
+ 	{"FSC", "CentricStor", "*", BLIST_SPARSELUN | BLIST_LARGELUN},=0A=
+
+------_=_NextPart_000_01C592B6.93FB20CE--
