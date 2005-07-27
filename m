@@ -1,57 +1,65 @@
-From: Jack Hammer <jack_hammer@adaptec.com>
-Subject: Re: Updated Patch for ServeRAID V7.12.02
-Date: Wed, 27 Jul 2005 08:20:43 -0400
-Message-ID: <42E77C1B.6050009@adaptec.com>
-References: <42E646B1.7080503@adaptec.com> <20050726201149.6e685a57.rdunlap@xenotime.net>
+From: Bodo Stroesser <bstroesser@fujitsu-siemens.com>
+Subject: Re: lpfc: System freezing if fiber is broken
+Date: Wed, 27 Jul 2005 15:45:41 +0200
+Message-ID: <42E79005.3020108@fujitsu-siemens.com>
+References: <42E679A2.1060408@fujitsu-siemens.com> <20050726184800.GA19810@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:28390 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262215AbVG0MWd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Jul 2005 08:22:33 -0400
-In-Reply-To: <20050726201149.6e685a57.rdunlap@xenotime.net>
+Received: from dgate1.fujitsu-siemens.com ([217.115.66.35]:20786 "EHLO
+	dgate1.fujitsu-siemens.com") by vger.kernel.org with ESMTP
+	id S262244AbVG0Npx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Jul 2005 09:45:53 -0400
+In-Reply-To: <20050726184800.GA19810@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: randy_dunlap <rdunlap@xenotime.net>
-Cc: linux-scsi@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
 
-Randy,
-
-1.) Install Thunderbird extension "Edit Config Files 1.3".
-
-2.) Add these two lines in user.js :
-
-    pref("mailnews.send_plaintext_flowed", false);    // RFC 2646
-    pref("mailnews.display.disable_format_flowed_support", true);
-
-3.) Set "Wrap plain text messages at 0 characters" under "Options / Composition"
-
-Thanks to Luben Tuikov, who guided me through all this. If you have any 
-further questions, he is probably the guy to ask ...
-
-Jack
-
-
-
-On 7/26/2005 11:11 PM, randy_dunlap wrote:
-> On Tue, 26 Jul 2005 10:20:33 -0400 Jack Hammer wrote:
+Mike Anderson wrote:
+> Bodo Stroesser [bstroesser@fujitsu-siemens.com] wrote:
+> 
+>>Hi James,
+>>
+>>disrupting a working FC connection makes my i386 SMP server
+>>(2.6.12.2) freeze just one or two seconds after this.
+>>I'm normally using lpfc_nodev_tmo = 1. When I change this to the
+>>default value of 35, the system stalls about 36 seconds after
+>>disruption. So I guess, the problem is caused by nodev_tmo
+>>expiring.
+>>I activated the nmi_watchdog, but no output.
+>>
+>>What can I do to analyze this problem?
 > 
 > 
->>I switched to Thunderbird email, so the line wrapping caused by Outlook
->>should be resolved here.
-> 
-> 
-> for the rest of us, how do you put a patch inline (not as an
-> attachment) with thunderbird?  have they added that capability
-> recently?  It would certainly go a long way to making thunderbird
-> usable for kernel patches...
-> 
-> Maybe it helps not to use tabs in the source files very much?
-> 
-> Thanks,
-> ---
-> ~Randy
-> 
+> Does changing the timeout for a scsi device also alter the problem. In the
+> past people have seen issues of the nodev_tmo expiring near the scsi
+> timeout. This past cases lead to devices being offlined, but may this
+> could be causing a different symptom on your system.
+The amount of time between cutting the connection and the system freezing
+is nearly the same as lpfc_nodev_tmo. Using the default nodev_tmo of 35 seconds
+results in about 36 seconds, while setting nodev_tmo to 1 results in
+2 seconds. As the devices on the Fibre Channel are tapedrives scsi timeout is
+900 seconds.
+There are 8 tests running that write 8 tape-LUNs at the same SCSI target.
+If the connection is broken, some of the tests immediately receive a bad
+result for write(), some keep waiting for a result.
 
+Meanwhile I also did some tests with timeout set to 5 and nodev_tmo to 35
+(The test I'm running doesn't fail with that small timeout). Those tests, that
+do not receive a bad result, stay waiting for result even after 5 second timeout
+is expired. In most cases, the system doesn't freeze after nodev_tmo with this test.
+But about 5 seconds after plugging FC cable again, it freezes.
+
+> You can change the timeout for the device by echoing a higher value into
+> /sys/bus/scsi/devices/${nexus}/timeout.
+> 
+> Is this a full system freeze or only the controlling console?
+Full freeze, no more replies via console or network.
+
+> 
+> -andmike
+> --
+> Michael Anderson
+> andmike@us.ibm.com
