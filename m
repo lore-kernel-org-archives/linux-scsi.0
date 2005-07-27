@@ -1,56 +1,69 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH] Revert accidental Makefile change
-Date: Wed, 27 Jul 2005 11:03:24 -0700
-Message-ID: <20050727180324.GH7114@plap.qlogic.org>
-References: <1122486845.2757.19.camel@dv>
+Subject: Re: Incorrect driver getting loaded for Qlogic FC-HBA
+Date: Wed, 27 Jul 2005 11:11:35 -0700
+Message-ID: <20050727181135.GI7114@plap.qlogic.org>
+References: <b115cb5f0507241902653b6f72@mail.gmail.com> <20050726000600.GB23858@kroah.com> <b115cb5f050725211615cfab78@mail.gmail.com> <20050726155253.GB8462@plap.qlogic.org> <b115cb5f05072623016a713629@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:34875 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S261336AbVG0SDZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Jul 2005 14:03:25 -0400
+Return-path: <linux-newbie-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1122486845.2757.19.camel@dv>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <b115cb5f05072623016a713629@mail.gmail.com>
+Sender: linux-newbie-owner@vger.kernel.org
+To: Rajat Jain <rajat.noida.india@gmail.com>
+Cc: Greg KH <greg@kroah.com>, kernelnewbies@nl.linux.org, linux-scsi@vger.kernel.org, linux-newbie@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-scsi@vger.kernel.org
 
-On Wed, 27 Jul 2005, Pavel Roskin wrote:
+On Wed, 27 Jul 2005, Rajat Jain wrote:
 
-> In the current git kernel, the qla2xxx.ko module is build and installed,
-> although I have never requested it and I don't have any modules enabled.
+> On 7/27/05, Andrew Vasquez <andrew.vasquez@qlogic.com> wrote:
+> > 
+> > A similar problem was noted with RHEL4, it seems the modules.pcimap
+> > and pci.ids file were correct, but the pcitable file contained entries
+> > for all ql[ae]23xx based HBAs to load qla2300.ko.
+> > 
+> > It's my understanding that this was fixed for RHEL4 U1.  Which distro
+> > are you using?  If you are using RHEL, and are still having problems,
+> > I'd suggest you file a report with Redhat.
+> > 
+> > Regards,
+> > Andrew Vasquez
+> > 
 > 
-> I found the corresponding entry in the git log (commit
-> fca297037127e524e8f61b3fc1c7a1886e5d757b), and it looks like that
-> the change in drivers/scsi/qla2xxx/Makefile was committed accidentally.
-> The comment doesn't refer to Makefile.
-> 
-> Signed-off-by: Pavel Roskin <proski@gnu.org>
-> 
-> diff --git a/drivers/scsi/qla2xxx/Makefile b/drivers/scsi/qla2xxx/Makefile
-> --- a/drivers/scsi/qla2xxx/Makefile
-> +++ b/drivers/scsi/qla2xxx/Makefile
-> @@ -1,6 +1,4 @@
->  EXTRA_CFLAGS += -DUNIQUE_FW_NAME
-> -CONFIG_SCSI_QLA24XX=m
-> -EXTRA_CFLAGS += -DCONFIG_SCSI_QLA24XX -DCONFIG_SCSI_QLA24XX_MODULE
->  
->  qla2xxx-y := qla_os.o qla_init.o qla_mbx.o qla_iocb.o qla_isr.o qla_gs.o \
->  		qla_dbg.o qla_sup.o qla_rscn.o qla_attr.o
-> @@ -16,4 +14,3 @@ obj-$(CONFIG_SCSI_QLA22XX) += qla2xxx.o 
->  obj-$(CONFIG_SCSI_QLA2300) += qla2xxx.o qla2300.o
->  obj-$(CONFIG_SCSI_QLA2322) += qla2xxx.o qla2322.o
->  obj-$(CONFIG_SCSI_QLA6312) += qla2xxx.o qla6312.o
-> -obj-$(CONFIG_SCSI_QLA24XX) += qla2xxx.o
+> BINGO! I AM using RHEL 4. So does that mean I can rectify the problem
+> by making appropriate changes to "pcitable" file?
 
-I had already submitted a patch which took care of this:
+I'm trying to get a firm answer from the folks who originally
+discvoered the problem some time back, it seems you have two options:
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112143863232467&w=2
+ - during installation of RHEL4 (and not RHEL4U1), load with the
+   'noprobe' option:
 
-There also appears to be some other (separate) Kbuild issues which I'm
-hashing through...
+	linux noprobe
 
-Regards,
+   and manually select the appropriate drivers to load.
+
+ - (post installation) modify the /etc/modprobe.conf to and rename the
+   qla2300 entry to qla2322 (i.e.):
+
+	alias scsi_hostadapter1 qla2322
+
+   modify the modules.pcimap table to load qla2322 for the 2322
+   device-id:
+
+	qla2300		0x00001077	0x00002322	...
+
+   to:
+
+	qla2322		0x00001077	0x00002322	...
+
+
+Beyond that, I'd suggest you log a report with Redhat, as that's the
+extent of the workaround knowledge without going to RHEL4U1.
+
+Hope this helps,
 Andrew Vasquez
+-
+To unsubscribe from this list: send the line "unsubscribe linux-newbie" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at http://www.linux-learn.org/faqs
