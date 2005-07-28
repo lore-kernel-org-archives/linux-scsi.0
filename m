@@ -1,47 +1,32 @@
-From: Tom Duffy <tduffy@sun.com>
-Subject: SAS transport class status?
-Date: Thu, 28 Jul 2005 13:27:45 -0700
-Message-ID: <1122582465.14803.14.camel@duffman>
+From: Lazarus <Coates@hellolarry.com>
+Subject: The real viagra deal on the net! Simply the best!
+Date: Thu, 28 Jul 2005 22:58:44 +0200
+Message-ID: <4367012271.71294108342@85.93.245.16>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-DTaAskd1nU2pNzwhNrx1"
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nwkea-mail-1.sun.com ([192.18.42.13]:48054 "EHLO
-	nwkea-mail-1.sun.com") by vger.kernel.org with ESMTP
-	id S262183AbVG1U1u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Jul 2005 16:27:50 -0400
+Received: from [85.93.245.16] ([85.93.245.16]:60937 "HELO 85.93.245.16")
+	by vger.kernel.org with SMTP id S262269AbVG1U6q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Jul 2005 16:58:46 -0400
+Received: from [80.89.117.200] (port=2013 helo=[gardeners])
+    by 85.93.245.16 with esmtp
+    id 6481957252plantation46081
+    for linux-scsi@vger.kernel.org; Thu, 28 Jul 2005 22:58:45 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>, "Moore, Eric Dean" <Eric.Moore@lsil.com>
+To: linux-scsi@vger.kernel.org
+
+Prescription meds to your door.
+http://discharged.q67.net/pharmacy/lib/
 
 
---=-DTaAskd1nU2pNzwhNrx1
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
 
-Luben, et. al.
 
-Any updates on the SAS transport class code?  Are we likely to see this
-happening in the 2.6.14 time frame?  After the BOF at OLS, I figured we
-would be moving quick on this...
+Believe those who are seeking the truth. Doubt those who find it. 
+You cannot shake hands with a clenched fist.     
+Don't knock masturbation -- it's sex with someone I love.   
+Only a life lived for others is a life worth while.  
 
-Eric, have you tried to get your code ported to Luben's patch?
-
-Thanks,
-
--tduffy
-
---=-DTaAskd1nU2pNzwhNrx1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQBC6T/BdY502zjzwbwRAth/AJ9BF692kC297S+0fQBmzUzdP1FyFQCcCzIx
-uDnrZBZE7iyXsAwmg6aXcAM=
-=Wofi
------END PGP SIGNATURE-----
-
---=-DTaAskd1nU2pNzwhNrx1--
 
