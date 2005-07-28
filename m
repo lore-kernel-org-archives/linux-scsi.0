@@ -1,45 +1,25 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [ANNOUNCE] sdparm 0.94
-Date: Thu, 28 Jul 2005 23:35:02 +1000
-Message-ID: <42E8DF06.50201@torque.net>
-Reply-To: dougg@torque.net
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Fix up qla2xxx configuration bogosity
+Date: Thu, 28 Jul 2005 09:53:48 -0400
+Message-ID: <1122558828.5132.8.camel@mulgrave>
+References: <20050728051058.GA567@plap.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:14212 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S261378AbVG1Nem (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Jul 2005 09:34:42 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S261447AbVG1N6W@vger.kernel.org>
+In-Reply-To: <20050728051058.GA567@plap.qlogic.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Linus Torvalds <torvalds@osdl.org>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
 
-sdparm is a command line utility designed to get and set
-SCSI device parameters (cf hdparm for ATA disks). Apart
-from SCSI devices (e.g. disks, tapes and enclosures) sdparm
-can be used on any device that uses a SCSI command set.
-Virtually all CD/DVD drives use the SCSI MMC set irrespective
-of the transport. sdparm also can list VPD pages including
-the device identification page. sdparm can be used in both
-the lk 2.4 and 2.6 series.
+On Wed, 2005-07-27 at 22:10 -0700, Andrew Vasquez wrote:
+> Would you also apply the attached patch which adds the appropriate
+> FW_LOADER pre-requisite and a separate entry for ISP24xx support.
 
-The major addition in version 0.94 is a set of commands
-mainly for devices with removable media: eject, load,
-ready, start, stop and unlock.
+That's what I see reading the code; however, it looks like it's *only*
+the 24xx that needs it (qla24xx_load_risc_hotplug).  The patch below
+pulls in the FW loader for every qlogic fibre driver, not just the
+qla24xx; is there a reason for doing this?
 
-For more information and downloads see:
-http://www.torque.net/sg/sdparm.html
-
-ChangeLog for sdparm-0.94 [20050728]
-   - add CD/DVD (MM) capabilities and mechanical status mode page
-   - add Background medium scan (SBC-2 pending) mode subpage
-   - add '--command=<cmd>' option with these <cmd>s:
-       ready, start, stop, load, eject and unlock
-   - add decoding for SCSI Ports VPD page
-   - updated to automake version 1.9.5
-   - copy of sdparm.html placed in doc directory
-
-
-Doug Gilbert
+James
