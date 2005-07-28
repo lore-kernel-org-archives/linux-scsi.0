@@ -1,36 +1,45 @@
-From: "selim" <selwess11@yahoo.com>
-Subject: e-maillist...
-Date: Thu, 28 Jul 2005 16:02:55 +0300
-Message-ID: <200507281302.j6SD2jbb013276@zeus1.kernel.org>
-Reply-To: ahuvi@mynet.com
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [ANNOUNCE] sdparm 0.94
+Date: Thu, 28 Jul 2005 23:35:02 +1000
+Message-ID: <42E8DF06.50201@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-msdos-owner@vger.kernel.org>
-Sender: linux-msdos-owner@vger.kernel.org
-To: linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-msdos@vger.kernel.org, linux-newbie@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zorg.st.net.au ([203.16.233.9]:14212 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261378AbVG1Nem (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Jul 2005 09:34:42 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Bazen bir musteri ya da tuketiciye ulasmak zahmetli ve masrafli olabilir.
-Sirketler satis ekipleriyle ancak sinirli sayida musteriye ulasabilmektedir.
-Basindan ve televizyonlardan yapilacak reklamlara guc yeter mi?
-Sitenizin arama motorlarina yillik kayit ucretlerini karsilayabilir misiniz?
-INTERNET'TEN E-TICARET VE E-REKLAM ICIN IHTIYACINIZ OLAN E- MAIL LISTELERI ILE ... daha yaygin bir musteri portfoyu olusturabilirsiniz.
-Firmanizin tanitimi,
-Urunlerinizin tanitimi,
-Web sitenizin tanitimi ile 
-Kampanya ve promosyonlarinizi duyurabilmeniz icin;
-Amerika,Asya,Avrupa,Avusturalya ve Afrika kitalarina ulasin!
-ULKELER VE SEKTORLER
-300.000.000 ADEDIN UZERINDE e-mail adresi (5 KITA)
-8.000.000 ADEDIN UZERINDE e-mail adresi (TURKIYE)
-(hotmail,yahoo,mynet vd...adresler)
-KOLAY KURULUM VE HIZLI KULLANIM AVANTAJI ILE
-Yabanci e-mail adresleri:50.YTL
-Turkiye e-mail adresleri:25.YTL
-ikisi beraber:60 YTL
-Sizi ilgilendiren insanlar da bu mesaji almis olabilir!
-ahuvi@mynet.com <mailto:ahuvi@mynet.com>
+sdparm is a command line utility designed to get and set
+SCSI device parameters (cf hdparm for ATA disks). Apart
+from SCSI devices (e.g. disks, tapes and enclosures) sdparm
+can be used on any device that uses a SCSI command set.
+Virtually all CD/DVD drives use the SCSI MMC set irrespective
+of the transport. sdparm also can list VPD pages including
+the device identification page. sdparm can be used in both
+the lk 2.4 and 2.6 series.
+
+The major addition in version 0.94 is a set of commands
+mainly for devices with removable media: eject, load,
+ready, start, stop and unlock.
+
+For more information and downloads see:
+http://www.torque.net/sg/sdparm.html
+
+ChangeLog for sdparm-0.94 [20050728]
+   - add CD/DVD (MM) capabilities and mechanical status mode page
+   - add Background medium scan (SBC-2 pending) mode subpage
+   - add '--command=<cmd>' option with these <cmd>s:
+       ready, start, stop, load, eject and unlock
+   - add decoding for SCSI Ports VPD page
+   - updated to automake version 1.9.5
+   - copy of sdparm.html placed in doc directory
 
 
+Doug Gilbert
