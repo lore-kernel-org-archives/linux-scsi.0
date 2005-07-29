@@ -1,53 +1,32 @@
-From: Mogens Valentin <monz@danbbs.dk>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: sdparm cannot start or stop SATA disks
-Date: Fri, 29 Jul 2005 18:02:24 +0200
-Message-ID: <42EA5310.5070606@danbbs.dk>
+Date: Fri, 29 Jul 2005 12:11:38 -0400
+Message-ID: <42EA553A.1070304@pobox.com>
 References: <42EA0957.9010408@torque.net>
-Reply-To: monz@danbbs.dk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pfepa.post.tele.dk ([195.41.46.235]:45349 "EHLO
-	pfepa.post.tele.dk") by vger.kernel.org with ESMTP id S262641AbVG2P6N
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jul 2005 11:58:13 -0400
+Received: from mail.dvmed.net ([216.237.124.58]:19921 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S262631AbVG2QLm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Jul 2005 12:11:42 -0400
 In-Reply-To: <42EA0957.9010408@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: dougg@torque.net
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
 Douglas Gilbert wrote:
-> Putting this post on this list might head off
-> more (private) emails on this subject.
-> 
 > sdparm uses the START STOP UNIT SCSI command to start
 > and stop (spin up and spin down) SCSI devices.
 > Currently libata does not implement that SCSI command.
 > [Hopefully Jeff contradicts me.]
-> 
-> Has anybody seen a USB or 1394 enclosure that implements
-> START STOP UNIT? [The command is defined in SBC, MMC and
-> RBC.]
 
-Hi Douglas,
-After our previous discussion on USB/Firewire start/stop, I asked on our 
-dk LUG for info on external interfaces, but found none that seems to 
-implement the needed SCSI functionality.
-Too bad, would've been great being able to spin an external drive 
-down/up as needed.
+Correct.
 
-I think I read somewhere that one ATA disk (HItachi og Fujitsu) can do 
-something similar automatically (i.e. adhering to a timeout), once 
-configured to do so, using MS-based utils.
-Dunno if those/similar are available for *nix.
+Someone should submit a libata patch for this!
 
--- 
-Kind regards,
-Mogens Valentin
+	Jeff
 
-
-2.6.12 rocks. I love the Conservative governor (not Arnold)..
-   -- bird603568, on linuxquestions.org
 
