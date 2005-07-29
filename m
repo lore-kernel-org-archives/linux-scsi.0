@@ -1,50 +1,53 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: SAS transport class status?
-Date: Fri, 29 Jul 2005 10:43:55 -0400
-Message-ID: <42EA40AB.1000105@adaptec.com>
-References: <1122582465.14803.14.camel@duffman> <42E94310.9020604@adaptec.com> <42EA3451.9010908@us.ibm.com>
+From: Mogens Valentin <monz@danbbs.dk>
+Subject: Re: sdparm cannot start or stop SATA disks
+Date: Fri, 29 Jul 2005 18:02:24 +0200
+Message-ID: <42EA5310.5070606@danbbs.dk>
+References: <42EA0957.9010408@torque.net>
+Reply-To: monz@danbbs.dk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:15772 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262607AbVG2OoK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jul 2005 10:44:10 -0400
-In-Reply-To: <42EA3451.9010908@us.ibm.com>
+Received: from pfepa.post.tele.dk ([195.41.46.235]:45349 "EHLO
+	pfepa.post.tele.dk") by vger.kernel.org with ESMTP id S262641AbVG2P6N
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Jul 2005 11:58:13 -0400
+In-Reply-To: <42EA0957.9010408@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com
-Cc: Tom Duffy <tduffy@sun.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, "Moore, Eric Dean" <Eric.Moore@lsil.com>
+To: linux-scsi@vger.kernel.org
+Cc: dougg@torque.net
 
-On 07/29/05 09:51, Brian King wrote:
-> Luben, are you also working on the PHY transport class James mentions in
-> his OLS paper, or have you been focusing just on the SAS transport class?
+Douglas Gilbert wrote:
+> Putting this post on this list might head off
+> more (private) emails on this subject.
+> 
+> sdparm uses the START STOP UNIT SCSI command to start
+> and stop (spin up and spin down) SCSI devices.
+> Currently libata does not implement that SCSI command.
+> [Hopefully Jeff contradicts me.]
+> 
+> Has anybody seen a USB or 1394 enclosure that implements
+> START STOP UNIT? [The command is defined in SBC, MMC and
+> RBC.]
 
-SAS layer.  It sits between a SAS LLDD and SCSI Core, and it manages
-phy events, ports and port events, domain discovery, device registration
-and unregistration with SCSI Core, etc.  Devices are registered with their
-respective managing layers: SSP port devices with SCSI Core, STP and directly
-attached SATA, and SATA Port multiplier (ports) with libata.  SMP ports
-are driven by the SAS layer (since SMP is strictly a SAS proto).
+Hi Douglas,
+After our previous discussion on USB/Firewire start/stop, I asked on our 
+dk LUG for info on external interfaces, but found none that seems to 
+implement the needed SCSI functionality.
+Too bad, would've been great being able to spin an external drive 
+down/up as needed.
 
-SAS LLDDs do phy management, OOB, and report phy, port, and HA events
-to the SAS layer.  SAS LLDDs do not do port management or discovery or
-device management (they are just a "transport").
+I think I read somewhere that one ATA disk (HItachi og Fujitsu) can do 
+something similar automatically (i.e. adhering to a timeout), once 
+configured to do so, using MS-based utils.
+Dunno if those/similar are available for *nix.
 
-Attributes of all and any entities managed by the SAS layer
-and their relationships are portrayed in sysfs in true manner.
-They themselves depict the physical world as seen by the SAS
-host adapter.
+-- 
+Kind regards,
+Mogens Valentin
 
-Reference of the internal infrastucture:
-SAS 1.1, chapter 4.
 
-Architecture reference:
-SAM4r02, chapter 1.3, Figure 2 (same as in SPC), where
-"Device specific commands" is SCSI ULDD (sd, st, etc),
-"Shared Command Set"       is SCSI Core,
-"SCSI Protocols"           is the SAS layer for SAS HAs,
-"Interconnects"            is the SCSI LLDD (aic94xx, etc).
+2.6.12 rocks. I love the Conservative governor (not Arnold)..
+   -- bird603568, on linuxquestions.org
 
-	Luben
