@@ -1,35 +1,79 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH RFC] allow bio code to unmap sg io requests and have	blk_execute_rq_nowait
- bounce bios
-Date: Fri, 29 Jul 2005 04:28:11 -0500
-Message-ID: <42E9F6AB.5090008@cs.wisc.edu>
-References: <1122628800.8900.22.camel@max>
+From: Grt Great <grtgrt@clujnapoca.ro>
+Subject: Great Respecto - Please Read From Wu Kwon
+Date: Fri, 29 Jul 2005 13:20:46 +0300
+Message-ID: <200507291020.j6TAKkc28044@zerg.astral.ro>
+Reply-To: wk_70@kaixo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:21133 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S262492AbVG2J2Q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jul 2005 05:28:16 -0400
-In-Reply-To: <1122628800.8900.22.camel@max>
+Received: from zerg.cluj.astral.ro ([193.230.240.30]:62347 "EHLO
+	zerg.astral.ro") by vger.kernel.org with ESMTP id S262557AbVG2KOm
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Jul 2005 06:14:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: Jens Axboe <axboe@suse.de>
+To: Grt Great <grtgrt@clujnapoca.ro>
 
-Mike Christie wrote:
-> And, as I work on the adding of BLKERR_* error values in replacement
-> of the dm-multupath/bio sense patch, I was thinking about your comment
-> about having one true make_request function. It seems like if we extended
-> bios to handle more request stuff (like what is needed for SG IO) we could
-> just pass the bio to __make_request - with some modifications to __make_request -
-> instead of doing it request based and moving the blk_queue_bounce call to
-> blk_execute_rq_nowait  like I did in my patch. Is this what you were thinking when
-> adding the bio sense code?
 
-I mean doing things like sg io and dm-multipath HW handler's manual
-failover with bios instead of requests could simplify those things, but
-I am guessing bios were not meant to handle some of the lower level
-details like SCSI things. Or maybe they are or should be done in a more
-generic way?
+
+My name is Mr Wu kwon from Korea and I would like 
+you to guide me through the most viable 
+investment opportunities in your Country. 
+Alternatively, I can invest in your line of 
+business if you are interested and if your line 
+of business is viable.
+
+I am one of the defectors from the north and I am 
+currently residing in South Korea. I have been in 
+this Country for sometime now. Before defecting 
+from the North, I was into currency exchange
+business and I was always travelling to other 
+parts of Asia and Europe and during that period, 
+I was able to move out my funds and deposit
+it in a bank in EUROPE.
+
+I want to invest this funds in your Country with 
+your help and advice because we are being treated 
+as foreigners here. A lot of defectors now go on 
+to Canada or the United States and some parts of 
+Europe to live.
+
+For more details, please see the following 
+websites;
+http://www.detnews.com/2003/nation/0310/09/a19e-
+292811.htm
+www.washingtonpost.com/ac2/wp-dyn/A41966-2003Oct3?
+language=printer
+http://www.iht.com/articles/531755.html
+http://www.freerepublic.com/focus/f-
+news/1181380/posts
+
+I want you to send me a complete breakdown of the 
+investment opportunities in your Country and also 
+let me know What exactly I need to do to enable 
+you invest the funds for me in your Country.
+
+If interested, you will have to provide an 
+account for receiving the investment funds. I 
+will then come over to your Country after you
+receive the funds and work out the investment 
+plans with you.
+
+After I hear from you and find out the best 
+investment business you can introduce to me, I 
+will tell you how much is involved.
+
+I will expect your response together with your 
+contact details, preferably your private 
+telephone number so that I can discuss further 
+and additional details.
+
+Reply through my private email address.
+Regards and God Bless
+Mr Wu kwon
+
+
+
+______________________________________________
+http://www.sentimente.ro
+Singur? Peste 180.000 utilizatori pentru tine!
+
