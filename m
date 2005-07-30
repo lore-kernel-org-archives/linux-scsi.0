@@ -1,43 +1,24 @@
-From: birini.bul@gmx.net
-Subject: Bul_Birini:)
-Date: 29 Jul 2005 23:28:58 +0300
-Message-ID: <20050729193512.62379139ABBF5114@gmx.net>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: As of 2.6.13-rc1 Fusion-MPT very slow
+Date: Fri, 29 Jul 2005 17:51:22 -0700
+Message-ID: <20050729175122.7e1e9a2d.akpm@osdl.org>
+References: <91888D455306F94EBD4D168954A9457C035CB329@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cable90-153.anadolu.kablonet.com.tr ([195.174.90.153]:2831 "EHLO
-	gmx.net") by vger.kernel.org with ESMTP id S262787AbVG2U3F (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jul 2005 16:29:05 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262794AbVG3AzD@vger.kernel.org>
+In-Reply-To: <91888D455306F94EBD4D168954A9457C035CB329@nacos172.co.lsil.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Cc: Holger.Kiehl@dwd.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-http://www.birinibul.com/?up=3D213  =20
-=20
-Birinibul.com nedir?
-    =C7al=FD=FEan, kariyerine =F6nem veren ve i=FE hayat=FDn=FDn zorluk=
-lar=FD ile=20
-u=F0ra=FE=FDrken bir sevgiliye zaman ay=FDramayan, yeti=FEkin kad=FDnla=
-r=FD ve erkekleri=20
-bulu=FEturmak i=E7in kurulmu=FE bir sitedir.
-    Birinibul.com'da, e=F0iliminize ve isteklerinize uygun =FCyeleri ar=
-ay=FDp=20
-bulabilir ve onlar ile mesajla=FEabilirsiniz.  =DCye olma s=FDras=FDnda=
-,=20
-ad=FDn=FDz, adresiniz, telefonunuz gibi size =F6zel hi=E7bir bilgiyi ve=
-rmeniz=20
-gerekmiyor. Sadece =F6zelliklerinizi ve arad=FD=F0=FDn=FDz =F6zellikler=
-i girerek 1=20
-dakika i=E7inde siz de bize kat=FDlabilirsiniz.=20
-=20
-http://www.birinibul.com/?up=3D213
+"Moore, Eric Dean" <Eric.Moore@lsil.com> wrote:
+>
+>  Regarding the 1st issue, can you try this patch out.  It maybe in the
+>  -mm branch. Andrew cc'd on this email can confirm.
+> 
+>  ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.13-rc3/2.6
+>  .13-rc3-mm3/broken-out/mpt-fusion-dv-fixes.patch
 
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yes, that's part of 2.6.13-rc3-mm3.
