@@ -1,40 +1,32 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH 35/82] remove linux/version.h from
- drivers/scsi/cpqfcTSinit.c
-Date: Fri, 29 Jul 2005 21:19:30 -0700
-Message-ID: <20050729211930.392209b0.akpm@osdl.org>
-References: <20050710193543.35.MfBvHx3206.2247.olh@nectarine.suse.de>
-	<1122691434.5108.30.camel@mulgrave>
+From: Dora <inane@cherishclaire.com>
+Subject: Best pharmacy directoryfor viagra.
+Date: Sat, 30 Jul 2005 14:00:09 +0200
+Message-ID: <10501569185.67291125550@p54AB5B7D.dip.t-dialin.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:13223 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S262870AbVG3EUg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 30 Jul 2005 00:20:36 -0400
-In-Reply-To: <1122691434.5108.30.camel@mulgrave>
+Received: from p54AB5B7D.dip.t-dialin.net ([84.171.91.125]:260 "HELO
+	p54AB5B7D.dip.t-dialin.net") by vger.kernel.org with SMTP
+	id S263068AbVG3MCa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 30 Jul 2005 08:02:30 -0400
+Received: from [80.56.210.145] (port=6032 helo=[militarism])
+    by p54AB5B7D.dip.t-dialin.net with esmtp
+    id 129455116217equates83648
+    for linux-scsi@vger.kernel.org; Sat, 30 Jul 2005 14:00:10 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: olh@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-James Bottomley <James.Bottomley@SteelEye.com> wrote:
->
-> On Sun, 2005-07-10 at 19:35 +0000, Olaf Hering wrote:
-> > changing CONFIG_LOCALVERSION rebuilds too much, for no appearent reason.
-> > remove code for obsolete kernels
-> 
-> I can't seem to get any of these patches to apply:
-> 
-> Applying 'remove linux/version.h from drivers/scsi/cpqfcTSinit.c'
-> 
-> patching file drivers/scsi/cpqfcTSinit.c
-> patch: **** malformed patch at line 4: #include <linux/config.h>
-> 
-> I've no idea what patch's problem is ... as far as I can tell there are
-> no line breaks or illegal characters in the email.
-> 
+Once taken its effective for 36 hrs with fewer side effects.
+http://hoard.f5s.net/pharm/dir/
 
-I suggest you not apply these patches - I have them all lined up and fixed
-in -mm and we can do it in one hit post-2.6.13.
+
+
+
+Life is a moderately good play with a badly written third act. 
+Sometimes a fool makes a good suggestion.      
+Mi taku oyasin. (We are all related.)      
+Men for the sake of getting a living forget to live.  
+
+
