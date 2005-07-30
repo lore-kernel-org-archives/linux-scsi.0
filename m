@@ -1,24 +1,31 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: As of 2.6.13-rc1 Fusion-MPT very slow
-Date: Fri, 29 Jul 2005 17:51:22 -0700
-Message-ID: <20050729175122.7e1e9a2d.akpm@osdl.org>
-References: <91888D455306F94EBD4D168954A9457C035CB329@nacos172.co.lsil.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 35/82] remove linux/version.h from
+	drivers/scsi/cpqfcTSinit.c
+Date: Fri, 29 Jul 2005 21:43:54 -0500
+Message-ID: <1122691434.5108.30.camel@mulgrave>
+References: <20050710193543.35.MfBvHx3206.2247.olh@nectarine.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262794AbVG3AzD@vger.kernel.org>
-In-Reply-To: <91888D455306F94EBD4D168954A9457C035CB329@nacos172.co.lsil.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262728AbVG3CoR@vger.kernel.org>
+In-Reply-To: <20050710193543.35.MfBvHx3206.2247.olh@nectarine.suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: Holger.Kiehl@dwd.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Olaf Hering <olh@suse.de>
+Cc: Andrew Morton <akpm@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-"Moore, Eric Dean" <Eric.Moore@lsil.com> wrote:
->
->  Regarding the 1st issue, can you try this patch out.  It maybe in the
->  -mm branch. Andrew cc'd on this email can confirm.
-> 
->  ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.13-rc3/2.6
->  .13-rc3-mm3/broken-out/mpt-fusion-dv-fixes.patch
+On Sun, 2005-07-10 at 19:35 +0000, Olaf Hering wrote:
+> changing CONFIG_LOCALVERSION rebuilds too much, for no appearent reason.
+> remove code for obsolete kernels
 
-Yes, that's part of 2.6.13-rc3-mm3.
+I can't seem to get any of these patches to apply:
+
+Applying 'remove linux/version.h from drivers/scsi/cpqfcTSinit.c'
+
+patching file drivers/scsi/cpqfcTSinit.c
+patch: **** malformed patch at line 4: #include <linux/config.h>
+
+I've no idea what patch's problem is ... as far as I can tell there are
+no line breaks or illegal characters in the email.
+
+James
