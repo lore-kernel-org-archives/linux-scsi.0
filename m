@@ -1,30 +1,52 @@
-From: "David S. Miller" <davem@davemloft.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [ANNOUNCE 0/7] Open-iSCSI/Linux-iSCSI-5 High-Performance
- Initiator
-Date: Sat, 30 Jul 2005 12:53:54 -0700 (PDT)
-Message-ID: <20050730.125354.112595635.davem@davemloft.net>
-References: <1122744762.5055.10.camel@mulgrave>
-	<42EBC8A6.7030403@yahoo.com>
-	<20050730183803.GA12081@lst.de>
+	Initiator
+Date: Sat, 30 Jul 2005 15:23:20 -0500
+Message-ID: <1122755000.5055.31.camel@mulgrave>
+References: <429E15CD.2090202@yahoo.com> <1122744762.5055.10.camel@mulgrave>
+	 <20050730.125312.78734701.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S263131AbVG3TzO@vger.kernel.org>
-In-Reply-To: <20050730183803.GA12081@lst.de>
+Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S263141AbVG3U0m@vger.kernel.org>
+In-Reply-To: <20050730.125312.78734701.davem@davemloft.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: hch@lst.de
-Cc: itn780@yahoo.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "David S. Miller" <davem@davemloft.net>
+Cc: itn780@yahoo.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [ANNOUNCE 0/7] Open-iSCSI/Linux-iSCSI-5 High-Performance Initiator
-Date: Sat, 30 Jul 2005 20:38:03 +0200
-
-> On Sat, Jul 30, 2005 at 11:36:22AM -0700, Alex Aizman wrote:
-> > OK. Hopefully that'll remain.
+On Sat, 2005-07-30 at 12:53 -0700, David S. Miller wrote:
+> From: James Bottomley <James.Bottomley@SteelEye.com>
+> Date: Sat, 30 Jul 2005 12:32:42 -0500
 > 
-> Please ask davem for a netlink number allocation.
+> > FIB has taken your netlink number, so I changed it to 32
+> 
+> MAX_LINKS is 32, so there is no way this reassignment would
+> work.
 
-There are none to allocate, see my other email as to how we
-have to start handling the issue of many new netlink users
-and the fact that we are out of numbers to give to people.
+Actually, I saw this and increased MAX_LINKS as well.  I was going to
+query all of this on the net-dev mailing list if we'd managed to get the
+code compileable.
+
+> You have to pick something in the range 0 --> 32, and as is
+> no surprise, there are no numbers available :-)
+> 
+> Since ethertap has been deleted, 16-->31 could be made allocatable
+> once more, but I simply do not want to do that and have the flood
+> gates open up for folks allocating random netlink numbers.
+> 
+> Instead, we need to take one of those netlink numbers, and turn
+> it into a multiplexable layer that can support an arbitrary
+> number of sub-netlink types.  Said protocol would need some
+> shim header that just says the "sub-netlink" protocol number,
+> something as simple as just a "u32", this gets pulled off the
+> front of the netlink packet and then it's passed on down to the
+> real protocol.
+
+I'll let the iSCSI people try this ...
+
+Alternatively, if they don't fancy it, I think the kobject_uevent
+mechanism (which already has a netlink number) looks like it might be
+amenable for use for most of the things they want to do.
+
+James
