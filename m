@@ -1,69 +1,51 @@
-From: Dmitry Yusupov <dmitry_yus@yahoo.com>
-Subject: Re: [ANNOUNCE 0/7] Open-iSCSI/Linux-iSCSI-5 High-Performance
-	Initiator
-Date: Sat, 30 Jul 2005 14:25:28 -0700
-Message-ID: <1122758728.13559.4.camel@mylaptop>
-References: <429E15CD.2090202@yahoo.com> <1122744762.5055.10.camel@mulgrave>
-	 <20050730.125312.78734701.davem@davemloft.net>
-	 <1122755000.5055.31.camel@mulgrave>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Unplugging of SBP-2 devices still does not work
+Date: Sat, 30 Jul 2005 23:52:34 +0200
+Message-ID: <42EBF6A2.7040305@s5r6.in-berlin.de>
+References: <42E29DF5.5090603@s5r6.in-berlin.de> <42E2A15A.2030609@s5r6.in-berlin.de> <20050726042640.GA17885@phunnypharm.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp105.mail.sc5.yahoo.com ([66.163.169.225]:63672 "HELO
-	smtp105.mail.sc5.yahoo.com") by vger.kernel.org with SMTP
-	id S261516AbVG3VZz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 30 Jul 2005 17:25:55 -0400
-In-Reply-To: <1122755000.5055.31.camel@mulgrave>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:46021 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S261516AbVG3Vwz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 30 Jul 2005 17:52:55 -0400
+In-Reply-To: <20050726042640.GA17885@phunnypharm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "David S. Miller" <davem@davemloft.net>, itn780@yahoo.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+To: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-On Sat, 2005-07-30 at 15:23 -0500, James Bottomley wrote:
-> On Sat, 2005-07-30 at 12:53 -0700, David S. Miller wrote:
-> > From: James Bottomley <James.Bottomley@SteelEye.com>
-> > Date: Sat, 30 Jul 2005 12:32:42 -0500
-> > 
-> > > FIB has taken your netlink number, so I changed it to 32
-> > 
-> > MAX_LINKS is 32, so there is no way this reassignment would
-> > work.
-> 
-> Actually, I saw this and increased MAX_LINKS as well.  I was going to
-> query all of this on the net-dev mailing list if we'd managed to get the
-> code compileable.
-> 
-> > You have to pick something in the range 0 --> 32, and as is
-> > no surprise, there are no numbers available :-)
-> > 
-> > Since ethertap has been deleted, 16-->31 could be made allocatable
-> > once more, but I simply do not want to do that and have the flood
-> > gates open up for folks allocating random netlink numbers.
-> > 
-> > Instead, we need to take one of those netlink numbers, and turn
-> > it into a multiplexable layer that can support an arbitrary
-> > number of sub-netlink types.  Said protocol would need some
-> > shim header that just says the "sub-netlink" protocol number,
-> > something as simple as just a "u32", this gets pulled off the
-> > front of the netlink packet and then it's passed on down to the
-> > real protocol.
-> 
-> I'll let the iSCSI people try this ...
-> 
-> Alternatively, if they don't fancy it, I think the kobject_uevent
-> mechanism (which already has a netlink number) looks like it might be
-> amenable for use for most of the things they want to do.
+Ben Collins wrote on 2005-07-26:
+> Sounds like it is probably hanging in sbp2 while it is trying to logout.
 
-In fact, during design phase we've considered to use kobject_uevent() as
-well but (if i recall correctly), it didn't fit for the simple reason
-that if we want to have that much code in user-space, than we need to
-have more control on netlink socket and need to pass binary data back
-and forth.
+I don't think so. According to dmesg with SBP2_DEBUGs enabled,
+scsi_remove_device() is entered but sbp2_logout_device() not.
+IOW scsi_remove_device() is not completed. (I'm using sbp2 rev
+1316 which calls scsi_remove_device() before logout. Also, I'm
+on 2.6.13-rc4 now.)
 
-It would be nice to set MAX_LINKS to 64 and close this issue for now,
-since I'm pretty sure some other apps might find out kobject_uevent()
-not suitable for their needs too.
+> Perhaps you can turn on spinlock debug to see if there is a deadlock
+> somewhere? Check wstat for the knodemgrd process aswell, see what it is
+> waiting for.
 
-Dima
+I did not enable spinlock debugging yet.
+Here is more process info for now:
+# ps lx
+F   UID   PID  PPID PRI  NI   VSZ  RSS WCHAN  STAT TTY        TIME COMMAND
+1     0  1539     1  15   0     0    0 scsi_w D    ?          0:00 [knodemgrd_1]
+# cat /proc/1539/wchan
+scsi_wait_req
 
+Patrick Mansfield wrote on 2005-07-27:
+> Seeing sysrq-t stack traces might help debugging.
+
+The knodemgrd is not traced by sysrq-t, and no userspace task is
+hanging.
+
+Thanks for the hints so far, I will hopefully be back with better
+debug info later.
+-- 
+Stefan Richter
+-=====-=-=-= -=== ====-
+http://arcgraph.de/sr/
