@@ -1,31 +1,60 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 35/82] remove linux/version.h from
-	drivers/scsi/cpqfcTSinit.c
-Date: Fri, 29 Jul 2005 21:43:54 -0500
-Message-ID: <1122691434.5108.30.camel@mulgrave>
-References: <20050710193543.35.MfBvHx3206.2247.olh@nectarine.suse.de>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: sdparm cannot start or stop SATA disks
+Date: Sat, 30 Jul 2005 13:06:08 +1000
+Message-ID: <42EAEEA0.5010106@torque.net>
+References: <42EA0957.9010408@torque.net> <42EA553A.1070304@pobox.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262728AbVG3CoR@vger.kernel.org>
-In-Reply-To: <20050710193543.35.MfBvHx3206.2247.olh@nectarine.suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Olaf Hering <olh@suse.de>
-Cc: Andrew Morton <akpm@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zorg.st.net.au ([203.16.233.9]:1680 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S262727AbVG3DFs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Jul 2005 23:05:48 -0400
+In-Reply-To: <42EA553A.1070304@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, 2005-07-10 at 19:35 +0000, Olaf Hering wrote:
-> changing CONFIG_LOCALVERSION rebuilds too much, for no appearent reason.
-> remove code for obsolete kernels
+Jeff Garzik wrote:
+> Douglas Gilbert wrote:
+> 
+>> sdparm uses the START STOP UNIT SCSI command to start
+>> and stop (spin up and spin down) SCSI devices.
+>> Currently libata does not implement that SCSI command.
+>> [Hopefully Jeff contradicts me.]
+> 
+> 
+> Correct.
+> 
+> Someone should submit a libata patch for this!
 
-I can't seem to get any of these patches to apply:
+Jeff,
+I could have a go at the SCSI half of it. According to
+SAT, START STOP UNIT should only be allowed for non-packet
+ATA devices. I assume your SATAPI code will the bypass
+libata-scsi.c SAT layer.
 
-Applying 'remove linux/version.h from drivers/scsi/cpqfcTSinit.c'
+SAT suggests libata should issue a ATA STANDBY (sector=0)
+to "stop" the device. I can't see the STANDBY command (0xE2)
+defined anywhere in libata or the ide subsystem (or their
+headers).
 
-patching file drivers/scsi/cpqfcTSinit.c
-patch: **** malformed patch at line 4: #include <linux/config.h>
+The action to start the SATA device depends on the power
+mode of the SATA device:
+   - SLEEP: send a hardware or software reset: that should
+     get it to ACTIVE or STANDBY mode
+   - STANDBY or IDLE: send a (READ) VERIFY (sector=0) ATA
+     to the command
+   - ACTIVE: I assume this would be a nop
 
-I've no idea what patch's problem is ... as far as I can tell there are
-no line breaks or illegal characters in the email.
+The START STOP UNIT SCSI command also has an "IMMED"iate
+bit. That could just be ignored initially.
 
-James
+Is half a patch any use?
+
+Doug Gilbert
+
+
