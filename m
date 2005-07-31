@@ -1,128 +1,69 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [PATCH] ieee1394/sbp2: fix for hot-unplug
-Date: Mon, 1 Aug 2005 00:57:56 +0200 (CEST)
-Message-ID: <200507312258.j6VMvw6B007691@einhorn.in-berlin.de>
-References: <20050731191658.GC19681@suse.de>
+From: Edwards@mailbg.com
+Subject: kindly endeavour to reply
+Date: Mon, 1 Aug 2005 01:17:07 +0300 (EEST)
+Message-ID: <20241.196.1.179.151.1122848227.squirrel@www.mailbg.com>
 Mime-Version: 1.0
-Content-Type: TEXT/plain; charset=us-ascii
+Content-Type: text/plain;charset=windows-1251
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:49638 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S262027AbVGaXBF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 31 Jul 2005 19:01:05 -0400
-In-Reply-To: <20050731191658.GC19681@suse.de>
+Received: from www.stih4e.com ([213.137.61.230]:32398 "HELO mailbg.com")
+	by vger.kernel.org with SMTP id S262033AbVGaXLK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 31 Jul 2005 19:11:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
 
-When a FireWire CD-ROM or RBC harddisk was detached, the ieee1394
-subsystem and probably the scsi subsystem was locked up. The fix
-unblocks the sbp2 host before attempting to remove scsi devices.
-Commands from scsi highlevel are no longer blocked, but rather
-completed with DID_NO_CONNECT when the FireWire node was detached.
+Edwards Michael
+Birchgrove,
+Cardiff CF4 4JP,
+United Kingdom.
 
-Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
 
-Index: sbp2.c
-===================================================================
---- sbp2.c	(revision 1316)
-+++ sbp2.c	(working copy)
-@@ -637,8 +637,11 @@
- 	scsi_id = ud->device.driver_data;
- 
- 	/* Trigger shutdown functions in scsi's highlevel. */
--	if (scsi_id && scsi_id->sdev)
-+	if (scsi_id) {
-+		BUG_ON(!scsi_id->scsi_host || !scsi_id->sdev);
-+		scsi_unblock_requests(scsi_id->scsi_host);
- 		scsi_remove_device(scsi_id->sdev);
-+	}
- 
- 	sbp2_logout_device(scsi_id);
- 	sbp2_remove_device(scsi_id);
-@@ -2310,6 +2313,7 @@
- 	struct scsi_id_instance_data *scsi_id =
- 		(struct scsi_id_instance_data *)SCpnt->device->host->hostdata[0];
- 	struct sbp2scsi_host_info *hi;
-+	int result = DID_NO_CONNECT << 16;
- 
- 	SBP2_DEBUG("sbp2scsi_queuecommand");
- 
-@@ -2317,30 +2321,28 @@
- 	 * If scsi_id is null, it means there is no device in this slot,
- 	 * so we should return selection timeout.
- 	 */
--	if (!scsi_id) {
--		SCpnt->result = DID_NO_CONNECT << 16;
--		done (SCpnt);
--		return 0;
--	}
-+	if (!scsi_id)
-+		goto done;
- 
-+	/*
-+	 * Node was detached.
-+	 */
-+	if (scsi_id->ne->in_limbo)
-+		goto done;
-+
- 	hi = scsi_id->hi;
- 
- 	if (!hi) {
- 		SBP2_ERR("sbp2scsi_host_info is NULL - this is bad!");
--		SCpnt->result = DID_NO_CONNECT << 16;
--		done (SCpnt);
--		return(0);
-+		goto done;
- 	}
- 
- 	/*
- 	 * Until we handle multiple luns, just return selection time-out
- 	 * to any IO directed at non-zero LUNs
- 	 */
--	if (SCpnt->device->lun) {
--		SCpnt->result = DID_NO_CONNECT << 16;
--		done (SCpnt);
--		return(0);
--	}
-+	if (SCpnt->device->lun)
-+		goto done;
- 
- 	/*
- 	 * Check for request sense command, and handle it here
-@@ -2351,7 +2353,7 @@
- 		memcpy(SCpnt->request_buffer, SCpnt->sense_buffer, SCpnt->request_bufflen);
- 		memset(SCpnt->sense_buffer, 0, sizeof(SCpnt->sense_buffer));
- 		sbp2scsi_complete_command(scsi_id, SBP2_SCSI_STATUS_GOOD, SCpnt, done);
--		return(0);
-+		return 0;
- 	}
- 
- 	/*
-@@ -2359,9 +2361,8 @@
- 	 */
- 	if (!hpsb_node_entry_valid(scsi_id->ne)) {
- 		SBP2_ERR("Bus reset in progress - rejecting command");
--		SCpnt->result = DID_BUS_BUSY << 16;
--		done (SCpnt);
--		return(0);
-+		result = DID_BUS_BUSY << 16;
-+		goto done;
- 	}
- 
- 	/*
-@@ -2372,8 +2373,12 @@
- 		sbp2scsi_complete_command(scsi_id, SBP2_SCSI_STATUS_SELECTION_TIMEOUT,
- 					  SCpnt, done);
- 	}
-+	return 0;
- 
--	return(0);
-+done:
-+	SCpnt->result = result;
-+	done(SCpnt);
-+	return 0;
- }
- 
- /*
+Dear Friend,
+
+
+I write to seek your cooperation as my foreign partner and your assistance
+to enable me to own properties and invest in the stable economy of your
+country. I apologize if this mail message does not suit your personal or
+business ethics.
+
+My names are  Edwards Michael. an attorney to a deceased Immigrant
+property magnate who was based in the U.K., Also referred to as my client.
+
+On the 25th of July 2000, my client, his wife and their two Children died
+in the Air France concord plane crash bound for New York in their plan for
+a world cruise, Since then, I have been managing his properties here in
+the U.K. and some of his properties, which he put out for sale. Which I
+monitored the payment as his attorney, has been bought and paid for. Now
+the money paid was deposited into his account. I have contacted you to
+assist in repatriating the money and property left behind by my client
+before
+they get confiscated or declared unserviceable by his bank.
+
+Particularly, the bank has issued me a notice to provide any of his next
+of kin or have the account confiscated within a short time. My late client
+has an account valued at 15.5 million dollars. Since I have been
+unsuccessful in locating the relatives for some time now, and with the
+bank giving me deadline, I now seek your consent to present you as the
+next of kin of the deceased, so that the proceeds of this account valued
+at 15.5 million dollars can be paid to you and then you, and I can share
+the money. 50% to me amounting to US$7,750,000.00 dollars and 40% for you
+amounting to US$6,200.000.00 and 10% amounting to US$1,550,000.00 for
+miscellaneous expenses that might arise. I have all necessary information
+that can be used to back up any Claim we may make.
+
+All I require is your honest co-operation to enable us see this deal
+through. I guarantee that this will be executed under a legitimate
+arrangement that will protect you from any breach of the law. Trust me, as
+his attorney; this is a risk-free relationship.
+
+Send me your full names and address, telephone and fax numbers to enable
+us discuss further about this transaction. A swift acknowledgement on the
+receipt of this mail would be appreciated.
+
+
+I remain obliged,
+Edwards Michael.
+
+
 
