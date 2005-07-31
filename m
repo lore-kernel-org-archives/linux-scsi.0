@@ -1,69 +1,57 @@
-From: Edwards@mailbg.com
-Subject: kindly endeavour to reply
-Date: Mon, 1 Aug 2005 01:17:07 +0300 (EEST)
-Message-ID: <20241.196.1.179.151.1122848227.squirrel@www.mailbg.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: 100% repeatable way to send firewire out to lunch permanently
+ on 2.6.8.1
+Date: Mon, 1 Aug 2005 01:14:57 +0200 (CEST)
+Message-ID: <200507312315.j6VNEw6B008896@einhorn.in-berlin.de>
+References: <20050731191658.GC19681@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;charset=windows-1251
-Content-Transfer-Encoding: 8bit
+Content-Type: TEXT/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.stih4e.com ([213.137.61.230]:32398 "HELO mailbg.com")
-	by vger.kernel.org with SMTP id S262033AbVGaXLK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 31 Jul 2005 19:11:10 -0400
+Received: from einhorn.in-berlin.de ([192.109.42.8]:1768 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S262038AbVGaXSM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 31 Jul 2005 19:18:12 -0400
+In-Reply-To: <20050731191658.GC19681@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+Cc: goemon@anime.net, James.Bottomley@SteelEye.com, bcollins@debian.org, olh@suse.de
 
-Edwards Michael
-Birchgrove,
-Cardiff CF4 4JP,
-United Kingdom.
+On 31 Jul, Olaf Hering wrote:
+>  On Sun, Jul 31, Dan Hollis wrote:
+>> On Sun, 24 Oct 2004, Olaf Hering wrote:
+>> >  On Sun, Oct 24, James Bottomley wrote:
+>> > > The trace doesn't show any error handler activity at all.  Are there no
+>> > > messages in the log about offlining the device?  If not, it sounds like
+>> > > there's a problem somewhere in the firewire system.
+>> > How should sbp2_remove_device get rid of the device? It calls
+>> > scsi_remove_host, which calls scsi_remove_device, which sets the mode to
+>> > SDEV_CANCEL, then calls to device_del. sr_do_ioctl expects SDEV_OFFLINE.
+>> 
+>> Has there been any progress on this issue? I just got my _entire scsi 
+>> subsystem_ sent out to lunch because a firewire device lost power.
 
+_Now_ there has been progress. :-) The patch I just posted should fix
+it. I tested it with a CD-R/W as well as with a harddisk that was
+affected. The patch applies to the latest sbp2 revision at linux1394.org
+which is not yet merged into mainline.
 
-Dear Friend,
+> I cant help you with that, sr_mod is likely still broken with MRW
+> capable drives. But sbp2 is still the culprit, incomplete error
+> handling.
 
+Sbp2 was one of the very few LDDs that uses scsi_block_requests(). It is
+called whenever the FireWire bus is reset, e.g. when a node was
+attached, detached, or switched off. The patch simply unblocks sbp2's
+host before device removal is attempted in the upper scsi layers. It
+also takes care of how commands are enqueued after a FireWire node was
+detached. (I think we could get rid of scsi_block_requests() altogether
+if we get the .queuecommand and .eh_*_handler right.)
 
-I write to seek your cooperation as my foreign partner and your assistance
-to enable me to own properties and invest in the stable economy of your
-country. I apologize if this mail message does not suit your personal or
-business ethics.
-
-My names are  Edwards Michael. an attorney to a deceased Immigrant
-property magnate who was based in the U.K., Also referred to as my client.
-
-On the 25th of July 2000, my client, his wife and their two Children died
-in the Air France concord plane crash bound for New York in their plan for
-a world cruise, Since then, I have been managing his properties here in
-the U.K. and some of his properties, which he put out for sale. Which I
-monitored the payment as his attorney, has been bought and paid for. Now
-the money paid was deposited into his account. I have contacted you to
-assist in repatriating the money and property left behind by my client
-before
-they get confiscated or declared unserviceable by his bank.
-
-Particularly, the bank has issued me a notice to provide any of his next
-of kin or have the account confiscated within a short time. My late client
-has an account valued at 15.5 million dollars. Since I have been
-unsuccessful in locating the relatives for some time now, and with the
-bank giving me deadline, I now seek your consent to present you as the
-next of kin of the deceased, so that the proceeds of this account valued
-at 15.5 million dollars can be paid to you and then you, and I can share
-the money. 50% to me amounting to US$7,750,000.00 dollars and 40% for you
-amounting to US$6,200.000.00 and 10% amounting to US$1,550,000.00 for
-miscellaneous expenses that might arise. I have all necessary information
-that can be used to back up any Claim we may make.
-
-All I require is your honest co-operation to enable us see this deal
-through. I guarantee that this will be executed under a legitimate
-arrangement that will protect you from any breach of the law. Trust me, as
-his attorney; this is a risk-free relationship.
-
-Send me your full names and address, telephone and fax numbers to enable
-us discuss further about this transaction. A swift acknowledgement on the
-receipt of this mail would be appreciated.
-
-
-I remain obliged,
-Edwards Michael.
-
-
+So sbp2 was indeed the culprit, although the fault was not in its error
+handling.
+-- 
+Stefan Richter
+-=====-=-=-= =--- ----=
+http://arcgraph.de/sr/
 
