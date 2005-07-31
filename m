@@ -1,29 +1,33 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: support for old megaraid cards in megraid_mbox
-Date: Sun, 31 Jul 2005 15:07:40 +0100
-Message-ID: <20050731140740.GA6321@infradead.org>
-References: <20050610231103.GA17504@infradead.org>
+From: Dan Hollis <goemon@anime.net>
+Subject: Re: 100% repeatable way to send firewire out to lunch permanently
+ on 2.6.8.1
+Date: Sun, 31 Jul 2005 07:43:11 -0700 (PDT)
+Message-ID: <Pine.LNX.4.44.0507310739320.13193-100000@sasami.anime.net>
+References: <20041024192920.GA23516@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:38571 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S261803AbVGaOHm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 31 Jul 2005 10:07:42 -0400
-Content-Disposition: inline
-In-Reply-To: <20050610231103.GA17504@infradead.org>
+Received: from sasami.anime.net ([207.109.251.120]:40335 "EHLO
+	sasami.anime.net") by vger.kernel.org with ESMTP id S261618AbVGaOnV
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 31 Jul 2005 10:43:21 -0400
+In-Reply-To: <20041024192920.GA23516@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sreenib@lsil.com, sju@lsil.com
-Cc: linux-scsi@vger.kernel.org
+To: Olaf Hering <olh@suse.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, bcollins@debian.org, linux1394-devel@lists.sourceforge.net
 
-On Sat, Jun 11, 2005 at 12:11:03AM +0100, Christoph Hellwig wrote:
-> is there a technical reason the PCI_DEVICE_ID_AMI_MEGARAID and
-> PCI_DEVICE_ID_AMI_MEGARAID2 cards are supported in the old
-> megraid driver, but not in megaraid_mbox?  It would be a real
-> pain to keep the old driver around just for those two cards.
+On Sun, 24 Oct 2004, Olaf Hering wrote:
+>  On Sun, Oct 24, James Bottomley wrote:
+> > The trace doesn't show any error handler activity at all.  Are there no
+> > messages in the log about offlining the device?  If not, it sounds like
+> > there's a problem somewhere in the firewire system.
+> How should sbp2_remove_device get rid of the device? It calls
+> scsi_remove_host, which calls scsi_remove_device, which sets the mode to
+> SDEV_CANCEL, then calls to device_del. sr_do_ioctl expects SDEV_OFFLINE.
 
-It looks like those aren't actually supported.  So is it fine with
-LSI to remove all but the two above PCI IDs from the driver?  Also
-it would be nice if you could point out what code pathes we can remove
-in the old megaraid driver, e.g. do the old cards use pio only?
+Has there been any progress on this issue? I just got my _entire scsi 
+subsystem_ sent out to lunch because a firewire device lost power.
+
+-Dan
+
