@@ -1,129 +1,66 @@
-From: Holger Kiehl <Holger.Kiehl@dwd.de>
-Subject: Re: As of 2.6.13-rc1 Fusion-MPT very slow
-Date: Mon, 1 Aug 2005 10:15:34 +0000 (GMT)
-Message-ID: <Pine.LNX.4.61.0508011006140.17490@praktifix.dwd.de>
-References: <91888D455306F94EBD4D168954A9457C035CB329@nacos172.co.lsil.com>
- <20050729175122.7e1e9a2d.akpm@osdl.org>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH] 2.6 aacraid: Fix for controller load based timeouts
+	(resend)
+Date: Mon, 01 Aug 2005 07:35:39 -0700
+Message-ID: <1122906940.24183.3.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dwdmx4.dwd.de ([141.38.3.230]:65222 "EHLO dwdmx4.dwd.de")
-	by vger.kernel.org with ESMTP id S262421AbVHAKQI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2005 06:16:08 -0400
-In-Reply-To: <20050729175122.7e1e9a2d.akpm@osdl.org>
+Received: from smtp.osdl.org ([65.172.181.4]:48562 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S261878AbVHAOfv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2005 10:35:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>, Martin Drab <drab@kepler.fjfi.cvut.cz>
 
-On Fri, 29 Jul 2005, Andrew Morton wrote:
 
-> "Moore, Eric Dean" <Eric.Moore@lsil.com> wrote:
->>
->>  Regarding the 1st issue, can you try this patch out.  It maybe in the
->>  -mm branch. Andrew cc'd on this email can confirm.
->>
->>  ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.13-rc3/2.6
->>  .13-rc3-mm3/broken-out/mpt-fusion-dv-fixes.patch
->
-> Yes, that's part of 2.6.13-rc3-mm3.
->
-The patch makes no difference. Still get the following results when fusion
-is compiled in:
+Martin Drab found that he could get aacraid timeouts with high load on
+his controller / disk drive combinations.  After some experimentation
+Mark Salyzyn has come up with a patch to reduce the default max_sectors
+to something that will keep the controller from being overloaded and
+will eliminate the timeout issues.
 
-       sdc   74MB/s
-       sdd    2MB/s
-       sde    2MB/s
-       sdf    2MB/s
+Patch against scsi-misc-2.6 git tree.
 
-On second channel:
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
 
-       sdg   74MB/s
-       sdh   74MB/s
-       sdi   74MB/s
-       sdj   74MB/s
+Index: scsi-misc-2.6/drivers/scsi/aacraid/aacraid.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/aacraid/aacraid.h	2005-07-08 09:22:20.000000000 -0700
++++ scsi-misc-2.6/drivers/scsi/aacraid/aacraid.h	2005-07-08 09:23:52.000000000 -0700
+@@ -15,11 +15,7 @@
+ #define AAC_MAX_LUN		(8)
+ 
+ #define AAC_MAX_HOSTPHYSMEMPAGES (0xfffff)
+-/*
+- *  max_sectors is an unsigned short, otherwise limit is 0x100000000 / 512
+- * Linux has starvation problems if we permit larger than 4MB I/O ...
+- */
+-#define AAC_MAX_32BIT_SGBCOUNT	((unsigned short)8192)
++#define AAC_MAX_32BIT_SGBCOUNT	((unsigned short)512)
+ 
+ /*
+  * These macros convert from physical channels to virtual channels
+Index: scsi-misc-2.6/drivers/scsi/aacraid/linit.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/aacraid/linit.c	2005-06-27 09:57:38.000000000 -0700
++++ scsi-misc-2.6/drivers/scsi/aacraid/linit.c	2005-07-08 09:23:52.000000000 -0700
+@@ -374,7 +374,8 @@
+ 	else
+ 		scsi_adjust_queue_depth(sdev, 0, 1);
+ 
+-	if (host->max_sectors < AAC_MAX_32BIT_SGBCOUNT)
++	if (!(((struct aac_dev *)host->hostdata)->adapter_info.options
++	  & AAC_OPT_NEW_COMM))
+ 		blk_queue_max_segment_size(sdev->request_queue, 65536);
+ 
+ 	return 0;
 
-The patch was applied to linux-2.6.13-rc4-git3.
+-- 
+Mark Haverkamp <markh@osdl.org>
 
-Here part of dmesg output:
-
-    Fusion MPT base driver 3.03.02
-    Copyright (c) 1999-2005 LSI Logic Corporation
-    Fusion MPT SPI Host driver 3.03.02
-    ACPI: PCI Interrupt 0000:02:04.0[A] -> GSI 24 (level, low) -> IRQ 217
-    mptbase: Initiating ioc0 bringup
-    ioc0: 53C1030: Capabilities={Initiator,Target}
-    scsi4 : ioc0: LSI53C1030, FwRev=01032700h, Ports=1, MaxQ=255, IRQ=217
-      Vendor: FUJITSU   Model: MAS3735NP         Rev: 0104
-      Type:   Direct-Access                      ANSI SCSI revision: 03
-    SCSI device sdc: 143552136 512-byte hdwr sectors (73499 MB)
-    SCSI device sdc: drive cache: write back
-    SCSI device sdc: 143552136 512-byte hdwr sectors (73499 MB)
-    SCSI device sdc: drive cache: write back
-     sdc: sdc1
-    Attached scsi disk sdc at scsi4, channel 0, id 0, lun 0
-      Vendor: FUJITSU   Model: MAS3735NP         Rev: 0104
-      Type:   Direct-Access                      ANSI SCSI revision: 03
-    SCSI device sdd: 143552136 512-byte hdwr sectors (73499 MB)
-    SCSI device sdd: drive cache: write back
-    SCSI device sdd: 143552136 512-byte hdwr sectors (73499 MB)
-    SCSI device sdd: drive cache: write back
-     sdd: sdd1
-    Attached scsi disk sdd at scsi4, channel 0, id 1, lun 0
-      Vendor: FUJITSU   Model: MAS3735NP         Rev: 0104
-      Type:   Direct-Access                      ANSI SCSI revision: 03
-    SCSI device sde: 143552136 512-byte hdwr sectors (73499 MB)
-    SCSI device sde: drive cache: write back
-    SCSI device sde: 143552136 512-byte hdwr sectors (73499 MB)
-    SCSI device sde: drive cache: write back
-     sde: sde1
-    Attached scsi disk sde at scsi4, channel 0, id 2, lun 0
-      Vendor: FUJITSU   Model: MAS3735NP         Rev: 0104
-      Type:   Direct-Access                      ANSI SCSI revision: 03
-    SCSI device sdf: 143552136 512-byte hdwr sectors (73499 MB)
-    SCSI device sdf: drive cache: write back
-    SCSI device sdf: 143552136 512-byte hdwr sectors (73499 MB)
-    SCSI device sdf: drive cache: write back
-     sdf: sdf1
-    Attached scsi disk sdf at scsi4, channel 0, id 3, lun 0
-    ACPI: PCI Interrupt 0000:02:04.1[B] -> GSI 25 (level, low) -> IRQ 225
-    mptbase: Initiating ioc1 bringup
-    ioc1: 53C1030: Capabilities={Initiator,Target}
-    scsi5 : ioc1: LSI53C1030, FwRev=01032700h, Ports=1, MaxQ=255, IRQ=225
-      Vendor: FUJITSU   Model: MAS3735NP         Rev: 0104
-      Type:   Direct-Access                      ANSI SCSI revision: 03
-    SCSI device sdg: 143552136 512-byte hdwr sectors (73499 MB)
-    SCSI device sdg: drive cache: write back
-    SCSI device sdg: 143552136 512-byte hdwr sectors (73499 MB)
-    SCSI device sdg: drive cache: write back
-     sdg: sdg1
-    Attached scsi disk sdg at scsi5, channel 0, id 0, lun 0
-      Vendor: FUJITSU   Model: MAS3735NP         Rev: 0104
-      Type:   Direct-Access                      ANSI SCSI revision: 03
-    SCSI device sdh: 143552136 512-byte hdwr sectors (73499 MB)
-    SCSI device sdh: drive cache: write back
-    SCSI device sdh: 143552136 512-byte hdwr sectors (73499 MB)
-    SCSI device sdh: drive cache: write back
-     sdh: sdh1
-    Attached scsi disk sdh at scsi5, channel 0, id 1, lun 0
-      Vendor: FUJITSU   Model: MAS3735NP         Rev: 0104
-      Type:   Direct-Access                      ANSI SCSI revision: 03
-    SCSI device sdi: 143552136 512-byte hdwr sectors (73499 MB)
-    SCSI device sdi: drive cache: write back
-    SCSI device sdi: 143552136 512-byte hdwr sectors (73499 MB)
-    SCSI device sdi: drive cache: write back
-     sdi: sdi1
-    Attached scsi disk sdi at scsi5, channel 0, id 2, lun 0
-      Vendor: FUJITSU   Model: MAS3735NP         Rev: 0104
-      Type:   Direct-Access                      ANSI SCSI revision: 03
-    SCSI device sdj: 143552136 512-byte hdwr sectors (73499 MB)
-    SCSI device sdj: drive cache: write back
-    SCSI device sdj: 143552136 512-byte hdwr sectors (73499 MB)
-    SCSI device sdj: drive cache: write back
-     sdj: sdj1
-    Attached scsi disk sdj at scsi5, channel 0, id 3, lun 0
-
-Anything else I can try or provide?
-
-Holger
+-- 
+Mark Haverkamp <markh@osdl.org>
 
