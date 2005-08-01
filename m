@@ -1,151 +1,129 @@
-From: Lukasz Kosewski <lkosewsk@gmail.com>
-Subject: [PATCH 3/3] Add disk hotswap support to libata RESEND #2
-Date: Mon, 1 Aug 2005 03:02:07 -0700
-Message-ID: <355e5e5e05080103021a8239df@mail.gmail.com>
-Reply-To: Lukasz Kosewski <lkosewsk@gmail.com>
+From: Holger Kiehl <Holger.Kiehl@dwd.de>
+Subject: Re: As of 2.6.13-rc1 Fusion-MPT very slow
+Date: Mon, 1 Aug 2005 10:15:34 +0000 (GMT)
+Message-ID: <Pine.LNX.4.61.0508011006140.17490@praktifix.dwd.de>
+References: <91888D455306F94EBD4D168954A9457C035CB329@nacos172.co.lsil.com>
+ <20050729175122.7e1e9a2d.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_3091_20425929.1122890527200"
-Return-path: <linux-kernel-owner+glk-linux-kernel=40m.gmane.org-S262108AbVHAKDs@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from dwdmx4.dwd.de ([141.38.3.230]:65222 "EHLO dwdmx4.dwd.de")
+	by vger.kernel.org with ESMTP id S262421AbVHAKQI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2005 06:16:08 -0400
+In-Reply-To: <20050729175122.7e1e9a2d.akpm@osdl.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-------=_Part_3091_20425929.1122890527200
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Fri, 29 Jul 2005, Andrew Morton wrote:
 
-Patch 03:  Have sata_promise use the perfect, flawless API from the
-previous patch
+> "Moore, Eric Dean" <Eric.Moore@lsil.com> wrote:
+>>
+>>  Regarding the 1st issue, can you try this patch out.  It maybe in the
+>>  -mm branch. Andrew cc'd on this email can confirm.
+>>
+>>  ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.13-rc3/2.6
+>>  .13-rc3-mm3/broken-out/mpt-fusion-dv-fixes.patch
+>
+> Yes, that's part of 2.6.13-rc3-mm3.
+>
+The patch makes no difference. Still get the following results when fusion
+is compiled in:
 
-As described in the archives, this patch build on patch 02 in the
-series to actually allow the sata_promise controller to hotswap.  Be
-careful, untested!
+       sdc   74MB/s
+       sdd    2MB/s
+       sde    2MB/s
+       sdf    2MB/s
 
-This version comes with all of Jeff's suggestions (documented in the
-patch itself).  It depends on patch 01 to apply, and both patch 01 and
-02 to compile and run.
+On second channel:
 
-Luke Kosewski
+       sdg   74MB/s
+       sdh   74MB/s
+       sdi   74MB/s
+       sdj   74MB/s
 
-------=_Part_3091_20425929.1122890527200
-Content-Type: text/x-patch; name="03-promise_hotswap_support-2.6.13-rc3-mm1-2.diff"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="03-promise_hotswap_support-2.6.13-rc3-mm1-2.diff"
+The patch was applied to linux-2.6.13-rc4-git3.
 
-MDEuMDguMDUgIEx1a2UgS29zZXdza2kgIDxsa29zZXdza0BuaXQuY2E+CgoJKiBBIGZ1bGwgaW1w
-bGVtZW50YXRpb24gb2YgaG90cGx1ZyBvbiBhIGxpYmF0YSBjb250cm9sbGVyLCB0aGlzIGJlaW5n
-CgkgIHRoZSBQcm9taXNlIFR4NC9UeDIgUGx1cyBjb250cm9sbGVyIGxpbmUgKGJvdGggU0FUQTE1
-MCBhbmQgU0FUQUlJMTUwKS4KCSAgQWxtb3N0IGFsbCBvZiB0aGUgY29kZSBwZXJ0YWluaW5nIHRv
-IGhvdyB0byB0YWxrIHRvIHRoZSBob3RwbHVnCgkgIHJlZ2lzdGVycyBoYXMgYmVlbiBzdG9sZW4g
-ZnJvbSB0aGUgcGRjLXVsc2F0YTIgYW5kIHVsdHJhLTEuMC44IFByb21pc2UKCSAgZHJpdmVycy4g
-IFRoaXMgaW52b2x2ZXMgZGV0ZWN0aW5nIHdoZW4gd2UgaGF2ZSBhbiBpbnRlcnJ1cHQgcGVuZGlu
-ZwoJICBhbmQgb24gd2hhdCBkZXZpY2UsIGFzIHdlbGwgYXMgdGhlIGJpdCB3aGVyZSBhIGhhcmQg
-U0FUQSByZXNldCBnZXRzCgkgIGEgY29udHJvbGxlciB0byByZS1zcGV3IGEgcGx1ZyBpbnRlcnJ1
-cHQuCgkqIE5vdGUgdGhhdCB0aGUgaG90cGx1ZyBoYW5kbGluZyBjb2RlIGNvbWVzIEFGVEVSIHRo
-ZSBub3JtYWwgaW50ZXJydXB0CgkgIGhhbmRsaW5nIGNvZGUgaW4gcGRjX2ludGVycnVwdF9jb21t
-b247IHRoaXMgaXMgYmVjYXVzZSB3ZSdyZSBtdWNoCgkgIG1vcmUgbGlrZWx5IHRvIHJlY2VpdmUg
-bm9ybWFsIGludGVycnVwdHMsIHNvIHRoaXMgZHJvcHMgdGhlIEFWRVJBR0UKCSAgaW50ZXJydXB0
-IGhhbmRsaW5nIHRpbWUgZG93biBhIGxvdC4KCSogVGhpcyBpcyBhIHJlc2VuZCBvZiB0aGUgb3Jp
-Z2luYWwgcGF0Y2ggd2hpY2ggaW4gcGFydGljdWxhcjoKCSAgLSBEb2Vzbid0IHNwZWNpYWwtY2Fz
-ZSB0aGUgdHVybmluZyBvZmYgb2YgY2hhbm5lbCBpbnRlcnJ1cHRzIGR1cmluZyBhCgkgICAgaGFy
-ZCByZXNldCB0byB0aGUgU0FUQUlJMTUwIGNvbnRyb2xsZXJzOyBhbGwgY29udHJvbGxlcnMgbm93
-IGRvCgkgICAgdGhpcy4KCSAgLSBBY3R1YWxseSBhYm9ydHMgdGhlIGludGVycnVwdCBoYW5kbGVy
-IGlmLCBhZnRlciByZWFkaW5nIG1taW9fYmFzZSArCgkgICAgUERDX0lOVF9TRVFNQVNLLCB3ZSBk
-b24ndCBnZXQgQU5ZVEhJTkcgKGFrYSBubyBkZXZpY2UpLgoJICAtIE9uIEplZmYncyBzdWdnZXN0
-aW9uLCB0aGUgd2hvbGUgaG90c3dhcCBzeXN0ZW0gd2FzIGNoYW5nZWQgb3ZlciB0bwoJICAgIHVz
-ZSBhIGRlYm91bmNlIHRpbWVyOyBzZWUgcGF0Y2ggMDIgZm9yIHRoYXQgZ29vZGllLgoKU2lnbmVk
-LW9mZi1ieTogIEx1a2UgS29zZXdza2kgPGxrb3Nld3NrQG5pdC5jYT4KCi0tLSBsaW51eC9kcml2
-ZXJzL3Njc2kvc2F0YV9wcm9taXNlLmMub2xkCTIwMDUtMDctMjggMjA6NDM6NTIuMDAwMDAwMDAw
-IC0wNzAwCisrKyBsaW51eC9kcml2ZXJzL3Njc2kvc2F0YV9wcm9taXNlLmMJMjAwNS0wOC0wMSAw
-MjoyMzoyNy4wMDAwMDAwMDAgLTA3MDAKQEAgLTY3LDEyICs2NywxNiBAQCBlbnVtIHsKIAlQRENf
-SEFTX1BBVEEJCT0gKDEgPDwgMSksIC8qIFBEQzIwMzc1LzIwNTc1IGhhcyBQQVRBICovCiAKIAlQ
-RENfUkVTRVQJCT0gKDEgPDwgMTEpLCAvKiBIRE1BIHJlc2V0ICovCisKKwlIT1RQTFVHX1BMVUcJ
-CT0gMSwKKwlIT1RQTFVHX1VOUExVRwkJPSAwLAogfTsKIAogCiBzdHJ1Y3QgcGRjX3BvcnRfcHJp
-diB7CiAJdTgJCQkqcGt0OwogCWRtYV9hZGRyX3QJCXBrdF9kbWE7CisJaW50CQkJaG90cGx1Z19z
-dGF0dXM7CiB9OwogCiBzdHJ1Y3QgcGRjX2hvc3RfcHJpdiB7CkBAIC04Nyw2ICs5MSw3IEBAIHN0
-YXRpYyB2b2lkIHBkY19lbmdfdGltZW91dChzdHJ1Y3QgYXRhX3AKIHN0YXRpYyBpbnQgcGRjX3Bv
-cnRfc3RhcnQoc3RydWN0IGF0YV9wb3J0ICphcCk7CiBzdGF0aWMgdm9pZCBwZGNfcG9ydF9zdG9w
-KHN0cnVjdCBhdGFfcG9ydCAqYXApOwogc3RhdGljIHZvaWQgcGRjX3BoeV9yZXNldChzdHJ1Y3Qg
-YXRhX3BvcnQgKmFwKTsKK3N0YXRpYyBpbnQgcGRjX2hvdHBsdWdfYWN0aW9uKHN0cnVjdCBhdGFf
-cG9ydCAqYXApOwogc3RhdGljIHZvaWQgcGRjX3BhdGFfcGh5X3Jlc2V0KHN0cnVjdCBhdGFfcG9y
-dCAqYXApOwogc3RhdGljIHZvaWQgcGRjX3BhdGFfY2JsX2RldGVjdChzdHJ1Y3QgYXRhX3BvcnQg
-KmFwKTsKIHN0YXRpYyB2b2lkIHBkY19xY19wcmVwKHN0cnVjdCBhdGFfcXVldWVkX2NtZCAqcWMp
-OwpAQCAtMTMzLDYgKzEzOCw3IEBAIHN0YXRpYyBzdHJ1Y3QgYXRhX3BvcnRfb3BlcmF0aW9ucyBw
-ZGNfYXQKIAkucG9ydF9zdGFydAkJPSBwZGNfcG9ydF9zdGFydCwKIAkucG9ydF9zdG9wCQk9IHBk
-Y19wb3J0X3N0b3AsCiAJLmhvc3Rfc3RvcAkJPSBhdGFfaG9zdF9zdG9wLAorCS5ob3RwbHVnX2Fj
-dGlvbgkJPSBwZGNfaG90cGx1Z19hY3Rpb24sCiB9OwogCiBzdGF0aWMgc3RydWN0IGF0YV9wb3J0
-X2luZm8gcGRjX3BvcnRfaW5mb1tdID0gewpAQCAtMjk5LDE1ICszMDUsNjEgQEAgc3RhdGljIHZv
-aWQgcGRjX3Jlc2V0X3BvcnQoc3RydWN0IGF0YV9wbwogCXJlYWRsKG1taW8pOwkvKiBmbHVzaCAq
-LwogfQogCisvKiBNYXNrIGhvdHBsdWcgaW50ZXJydXB0cyBmb3Igb25lIGNoYW5uZWwgKGFwKSAq
-Lworc3RhdGljIGlubGluZSB2b2lkIHBkY19kaXNhYmxlX2NoYW5uZWxfaG90cGx1Z19pbnRlcnJ1
-cHRzKHN0cnVjdCBhdGFfcG9ydCAqYXApCit7CisJc3RydWN0IHBkY19ob3N0X3ByaXYgKmhwID0g
-YXAtPmhvc3Rfc2V0LT5wcml2YXRlX2RhdGE7CisJdm9pZCAqbW1pbyA9IGFwLT5ob3N0X3NldC0+
-bW1pb19iYXNlICsgaHAtPmhvdHBsdWdfb2Zmc2V0ICsgMjsKKworCXU4IG1hc2tmbGFncyA9IHJl
-YWRiKG1taW8pOworCW1hc2tmbGFncyB8PSAoMHgxMSA8PCAodTgpYXAtPmhhcmRfcG9ydF9ubyk7
-CisJd3JpdGViKG1hc2tmbGFncywgbW1pbyk7Cit9CisKKy8qIENsZWFyIGFuZCB1bm1hc2sgaG90
-cGx1ZyBpbnRlcnJ1cHRzIGZvciBvbmUgY2hhbm5lbCAoYXApICovCitzdGF0aWMgaW5saW5lIHZv
-aWQgcGRjX2VuYWJsZV9jaGFubmVsX2hvdHBsdWdfaW50ZXJydXB0cyhzdHJ1Y3QgYXRhX3BvcnQg
-KmFwKQoreworCXN0cnVjdCBwZGNfaG9zdF9wcml2ICpocCA9IGFwLT5ob3N0X3NldC0+cHJpdmF0
-ZV9kYXRhOworCXZvaWQgKm1taW8gPSBhcC0+aG9zdF9zZXQtPm1taW9fYmFzZSArIGhwLT5ob3Rw
-bHVnX29mZnNldDsKKworCS8vQ2xlYXIgY2hhbm5lbCBob3RwbHVnIGludGVycnVwdHMKKwl1OCBt
-YXNrZmxhZ3MgPSByZWFkYihtbWlvKTsKKwltYXNrZmxhZ3MgfD0gKDB4MTEgPDwgKHU4KWFwLT5o
-YXJkX3BvcnRfbm8pOworCXdyaXRlYihtYXNrZmxhZ3MsIG1taW8pOworCisJLy9Vbm1hc2sgY2hh
-bm5lbCBob3RwbHVnIGludGVycnVwdHMKKwltYXNrZmxhZ3MgPSByZWFkYihtbWlvICsgMik7CisJ
-bWFza2ZsYWdzICY9IH4oMHgxMSA8PCAodTgpYXAtPmhhcmRfcG9ydF9ubyk7CisJd3JpdGViKG1h
-c2tmbGFncywgbW1pbyArIDIpOworfQorCiBzdGF0aWMgdm9pZCBwZGNfcGh5X3Jlc2V0KHN0cnVj
-dCBhdGFfcG9ydCAqYXApCiB7CiAJcGRjX3Jlc2V0X3BvcnQoYXApOwotCWlmIChhcC0+ZmxhZ3Mg
-JiBBVEFfRkxBR19TQVRBKQotCQlzYXRhX3BoeV9yZXNldChhcCk7Ci0JZWxzZQorCWlmIChhcC0+
-ZmxhZ3MgJiBBVEFfRkxBR19TQVRBKSB7CisJCS8qIEEgaGFyZCByZXNldCB0cmlnZ2VycyBhIGhv
-dHBsdWcgaW50ZXJydXB0IHRvIGJlIHBsYXllZCBvdXQKKwkJICogb24gc29tZSBjb250cm9sbGVy
-cy4gIEhlbmNlLCBkaXNhYmxlIGhvdHBsdWcgaW50ZXJydXB0cyBmb3IKKwkJICogdGhlIHJlc2V0
-LCByZS1lbmFibGUgdGhlbSB3aGVuIGl0J3MgZG9uZS4KKwkJICoKKwkJICogTm8gUEFUQSBob3Rz
-d2FwIHN1cHBvcnQgeWV0CisJCSAqLworCQlpZiAoYXAtPmZsYWdzICYgQVRBX0ZMQUdfU0FUQV9S
-RVNFVCkgeworCQkJcGRjX2Rpc2FibGVfY2hhbm5lbF9ob3RwbHVnX2ludGVycnVwdHMoYXApOwor
-CQkJc2F0YV9waHlfcmVzZXQoYXApOworCQkJcGRjX2VuYWJsZV9jaGFubmVsX2hvdHBsdWdfaW50
-ZXJydXB0cyhhcCk7CisJCX0gZWxzZQorCQkJc2F0YV9waHlfcmVzZXQoYXApOworCX0gZWxzZQog
-CQlwZGNfcGF0YV9waHlfcmVzZXQoYXApOwogfQogCisvKiBTaG91bGQgYmUgY2FsbGVkIHdpdGgg
-aG9zdF9zZXQtPmxvY2sgaGVsZCAqLworc3RhdGljIGludCBwZGNfaG90cGx1Z19hY3Rpb24oc3Ry
-dWN0IGF0YV9wb3J0ICphcCkKK3sKKwlzdHJ1Y3QgcGRjX3BvcnRfcHJpdiAqcHAgPSBhcC0+cHJp
-dmF0ZV9kYXRhOworCXJldHVybiBwcC0+aG90cGx1Z19zdGF0dXM7Cit9CisKIHN0YXRpYyB2b2lk
-IHBkY19wYXRhX2NibF9kZXRlY3Qoc3RydWN0IGF0YV9wb3J0ICphcCkKIHsKIAl1OCB0bXA7CkBA
-IC00NjcsNyArNTE5LDkgQEAgc3RhdGljIGlycXJldHVybl90IHBkY19pbnRlcnJ1cHQgKGludCBp
-cgogCXN0cnVjdCBhdGFfcG9ydCAqYXA7CiAJdm9pZCAqbW1pb19iYXNlOwogCXUzMiBtYXNrID0g
-MDsKLQl1bnNpZ25lZCBpbnQgaSwgdG1wLCBoYW5kbGVkID0gMDsKKwl1OCBwbHVnZGF0YSwgbWFz
-a2ZsYWdzOworCXN0cnVjdCBwZGNfaG9zdF9wcml2ICpocCA9IGhvc3Rfc2V0LT5wcml2YXRlX2Rh
-dGE7CisJdW5zaWduZWQgaW50IGksIHRtcCwgaGFuZGxlZCA9IDAsIGhvdHBsdWdfb2Zmc2V0ID0g
-aHAtPmhvdHBsdWdfb2Zmc2V0OwogCiAJVlBSSU5USygiRU5URVJcbiIpOwogCkBAIC00OTEsNyAr
-NTQ1LDcgQEAgc3RhdGljIGlycXJldHVybl90IHBkY19pbnRlcnJ1cHQgKGludCBpcgogCW1hc2sg
-Jj0gMHhmZmZmOwkJLyogb25seSAxNiB0YWdzIHBvc3NpYmxlICovCiAJaWYgKCFtYXNrKSB7CiAJ
-CVZQUklOVEsoIlFVSUNLIEVYSVQgM1xuIik7Ci0JCWdvdG8gZG9uZV9pcnE7CisJCWdvdG8gdHJ5
-X2hvdHBsdWc7CiAJfQogCiAJd3JpdGVsKG1hc2ssIG1taW9fYmFzZSArIFBEQ19JTlRfU0VRTUFT
-Syk7CkBAIC01MDksNyArNTYzLDQwIEBAIHN0YXRpYyBpcnFyZXR1cm5fdCBwZGNfaW50ZXJydXB0
-IChpbnQgaXIKIAkJfQogCX0KIAotCVZQUklOVEsoIkVYSVRcbiIpOworCWlmIChoYW5kbGVkKSB7
-CisJCVZQUklOVEsoIkVYSVQgNFxuIik7CisJCWdvdG8gZG9uZV9pcnE7CisJfQorCit0cnlfaG90
-cGx1ZzoKKwlwbHVnZGF0YSA9IHJlYWRiKG1taW9fYmFzZSArIGhvdHBsdWdfb2Zmc2V0KTsKKwlt
-YXNrZmxhZ3MgPSByZWFkYihtbWlvX2Jhc2UgKyBob3RwbHVnX29mZnNldCArIDIpOworCXBsdWdk
-YXRhICY9IH5tYXNrZmxhZ3M7CisJaWYgKHBsdWdkYXRhKSB7CisJCXN0cnVjdCBwZGNfcG9ydF9w
-cml2ICpwcDsKKwkJd3JpdGViKHBsdWdkYXRhLCBtbWlvX2Jhc2UgKyBob3RwbHVnX29mZnNldCk7
-CisJCWZvciAoaSA9IDA7IGkgPCBob3N0X3NldC0+bl9wb3J0czsgKytpKSB7CisJCQlhcCA9IGhv
-c3Rfc2V0LT5wb3J0c1tpXTsKKwkJCXBwID0gYXAtPnByaXZhdGVfZGF0YTsKKwkJCWlmICghKGFw
-LT5mbGFncyAmIEFUQV9GTEFHX1NBVEEpKQorCQkJCWNvbnRpbnVlOyAgLy9ObyBQQVRBIHN1cHBv
-cnQgaGVyZS4uLiB5ZXQKKwkJCS8vIENoZWNrIHVucGx1ZyBmbGFnCisJCQlpZiAocGx1Z2RhdGEg
-JiAweDEpIHsKKwkJCQkvKiBEbyBzdHVmZiByZWxhdGVkIHRvIHVucGx1Z2dpbmcgYSBkZXZpY2Ug
-Ki8KKwkJCQlwcC0+aG90cGx1Z19zdGF0dXMgPSBIT1RQTFVHX1VOUExVRzsKKwkJCQlhdGFfaG90
-cGx1Z19vcChhcCk7CisJCQkJaGFuZGxlZCA9IDE7CisJCQl9IGVsc2UgaWYgKChwbHVnZGF0YSA+
-PiA0KSAmIDB4MSkgeyAgLy9DaGVjayBwbHVnIGZsYWcKKwkJCQkvKiBEbyBzdHVmZiByZWxhdGVk
-IHRvIHBsdWdnaW5nIGluIGEgZGV2aWNlICovCisJCQkJcHAtPmhvdHBsdWdfc3RhdHVzID0gSE9U
-UExVR19QTFVHOworCQkJCWF0YV9ob3RwbHVnX29wKGFwKTsKKwkJCQloYW5kbGVkID0gMTsKKwkJ
-CX0KKwkJCXBsdWdkYXRhID4+PSAxOworCQl9CisJfQorCisJVlBSSU5USygiRVhJVCA1XG4iKTsK
-ICAgICAgICAKIGRvbmVfaXJxOgogCXNwaW5fdW5sb2NrKCZob3N0X3NldC0+bG9jayk7CkBAIC02
-MDksOSArNjk2LDkgQEAgc3RhdGljIHZvaWQgcGRjX2hvc3RfaW5pdCh1bnNpZ25lZCBpbnQgYwog
-CXRtcCA9IHJlYWRsKG1taW8gKyBob3RwbHVnX29mZnNldCk7CiAJd3JpdGVsKHRtcCB8IDB4ZmYs
-IG1taW8gKyBob3RwbHVnX29mZnNldCk7CiAKLQkvKiBtYXNrIHBsdWcvdW5wbHVnIGludHMgKi8K
-KwkvKiB1bm1hc2sgcGx1Zy91bnBsdWcgaW50cyAqLwogCXRtcCA9IHJlYWRsKG1taW8gKyBob3Rw
-bHVnX29mZnNldCk7Ci0Jd3JpdGVsKHRtcCB8IDB4ZmYwMDAwLCBtbWlvICsgaG90cGx1Z19vZmZz
-ZXQpOworCXdyaXRlbCh0bXAgJiB+MHhmZjAwMDAsIG1taW8gKyBob3RwbHVnX29mZnNldCk7CiAK
-IAkvKiByZWR1Y2UgVEJHIGNsb2NrIHRvIDEzMyBNaHouICovCiAJdG1wID0gcmVhZGwobW1pbyAr
-IFBEQ19UQkdfTU9ERSk7Cg==
-------=_Part_3091_20425929.1122890527200--
+Here part of dmesg output:
+
+    Fusion MPT base driver 3.03.02
+    Copyright (c) 1999-2005 LSI Logic Corporation
+    Fusion MPT SPI Host driver 3.03.02
+    ACPI: PCI Interrupt 0000:02:04.0[A] -> GSI 24 (level, low) -> IRQ 217
+    mptbase: Initiating ioc0 bringup
+    ioc0: 53C1030: Capabilities={Initiator,Target}
+    scsi4 : ioc0: LSI53C1030, FwRev=01032700h, Ports=1, MaxQ=255, IRQ=217
+      Vendor: FUJITSU   Model: MAS3735NP         Rev: 0104
+      Type:   Direct-Access                      ANSI SCSI revision: 03
+    SCSI device sdc: 143552136 512-byte hdwr sectors (73499 MB)
+    SCSI device sdc: drive cache: write back
+    SCSI device sdc: 143552136 512-byte hdwr sectors (73499 MB)
+    SCSI device sdc: drive cache: write back
+     sdc: sdc1
+    Attached scsi disk sdc at scsi4, channel 0, id 0, lun 0
+      Vendor: FUJITSU   Model: MAS3735NP         Rev: 0104
+      Type:   Direct-Access                      ANSI SCSI revision: 03
+    SCSI device sdd: 143552136 512-byte hdwr sectors (73499 MB)
+    SCSI device sdd: drive cache: write back
+    SCSI device sdd: 143552136 512-byte hdwr sectors (73499 MB)
+    SCSI device sdd: drive cache: write back
+     sdd: sdd1
+    Attached scsi disk sdd at scsi4, channel 0, id 1, lun 0
+      Vendor: FUJITSU   Model: MAS3735NP         Rev: 0104
+      Type:   Direct-Access                      ANSI SCSI revision: 03
+    SCSI device sde: 143552136 512-byte hdwr sectors (73499 MB)
+    SCSI device sde: drive cache: write back
+    SCSI device sde: 143552136 512-byte hdwr sectors (73499 MB)
+    SCSI device sde: drive cache: write back
+     sde: sde1
+    Attached scsi disk sde at scsi4, channel 0, id 2, lun 0
+      Vendor: FUJITSU   Model: MAS3735NP         Rev: 0104
+      Type:   Direct-Access                      ANSI SCSI revision: 03
+    SCSI device sdf: 143552136 512-byte hdwr sectors (73499 MB)
+    SCSI device sdf: drive cache: write back
+    SCSI device sdf: 143552136 512-byte hdwr sectors (73499 MB)
+    SCSI device sdf: drive cache: write back
+     sdf: sdf1
+    Attached scsi disk sdf at scsi4, channel 0, id 3, lun 0
+    ACPI: PCI Interrupt 0000:02:04.1[B] -> GSI 25 (level, low) -> IRQ 225
+    mptbase: Initiating ioc1 bringup
+    ioc1: 53C1030: Capabilities={Initiator,Target}
+    scsi5 : ioc1: LSI53C1030, FwRev=01032700h, Ports=1, MaxQ=255, IRQ=225
+      Vendor: FUJITSU   Model: MAS3735NP         Rev: 0104
+      Type:   Direct-Access                      ANSI SCSI revision: 03
+    SCSI device sdg: 143552136 512-byte hdwr sectors (73499 MB)
+    SCSI device sdg: drive cache: write back
+    SCSI device sdg: 143552136 512-byte hdwr sectors (73499 MB)
+    SCSI device sdg: drive cache: write back
+     sdg: sdg1
+    Attached scsi disk sdg at scsi5, channel 0, id 0, lun 0
+      Vendor: FUJITSU   Model: MAS3735NP         Rev: 0104
+      Type:   Direct-Access                      ANSI SCSI revision: 03
+    SCSI device sdh: 143552136 512-byte hdwr sectors (73499 MB)
+    SCSI device sdh: drive cache: write back
+    SCSI device sdh: 143552136 512-byte hdwr sectors (73499 MB)
+    SCSI device sdh: drive cache: write back
+     sdh: sdh1
+    Attached scsi disk sdh at scsi5, channel 0, id 1, lun 0
+      Vendor: FUJITSU   Model: MAS3735NP         Rev: 0104
+      Type:   Direct-Access                      ANSI SCSI revision: 03
+    SCSI device sdi: 143552136 512-byte hdwr sectors (73499 MB)
+    SCSI device sdi: drive cache: write back
+    SCSI device sdi: 143552136 512-byte hdwr sectors (73499 MB)
+    SCSI device sdi: drive cache: write back
+     sdi: sdi1
+    Attached scsi disk sdi at scsi5, channel 0, id 2, lun 0
+      Vendor: FUJITSU   Model: MAS3735NP         Rev: 0104
+      Type:   Direct-Access                      ANSI SCSI revision: 03
+    SCSI device sdj: 143552136 512-byte hdwr sectors (73499 MB)
+    SCSI device sdj: drive cache: write back
+    SCSI device sdj: 143552136 512-byte hdwr sectors (73499 MB)
+    SCSI device sdj: drive cache: write back
+     sdj: sdj1
+    Attached scsi disk sdj at scsi5, channel 0, id 3, lun 0
+
+Anything else I can try or provide?
+
+Holger
+
