@@ -1,66 +1,40 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH] 2.6 aacraid: Fix for controller load based timeouts
-	(resend)
-Date: Mon, 01 Aug 2005 07:35:39 -0700
-Message-ID: <1122906940.24183.3.camel@markh1.pdx.osdl.net>
+From: "'SPOKEN ENGLISH' INGILIZCE DILI EGITIM MERKEZI"
+	<spokenenglishtr@gmail.com>
+Subject: INGILIZCE EGITIMI YENI DONEMIMIZ HAKKINDA
+Date: Mon, 1 Aug 2005 17:36:55 +0300
+Message-ID: <200508011436.j71EaZdC015662__16077.9233127416$1122907085$gmane$org@zeus2.kernel.org>
+Reply-To: spokenenglishtr@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-3
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:48562 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S261878AbVHAOfv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2005 10:35:51 -0400
+Received: from zeus2.kernel.org ([204.152.191.36]:10134 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S262086AbVHAOgr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Aug 2005 10:36:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>, Martin Drab <drab@kepler.fjfi.cvut.cz>
+To: linux-fsdevel@vger.kernel.org
+
+ SPOKEN ENGLISH   INGILIZCE DILI EGITIM MERKEZI
+Amerikali egitmenlerle birlikte yuksek egitim performansiyla
+1/4 ZAMANDA   1/4 UCRETE  Kalip Ezberlemeden Egitim sistemimizle  tanis=
+manizi =F6neriyoruz...
+     Konusmanizi  gelistirerek Ingilizcenize ak=FDcilik  kazandirmanin =
+ yani sira, Ingiliz ve Amerikan aksanlarina
+ asina olarak anlama kapasitenizi art=FDrmak i=E7in konusma siniflarina=
+  katilabilirsiniz.Her seviye ve egitim d=FCzeyi=20
+i=E7in bizi mutlaka arayiniz...
+    Egitim kurumumuz size gerekli =E7=F6z=FCm imkanlari sunacaktir.
+      Bilgi icin Bizi Arayin  ,,
+0212 244 90 00 dan   yada =20
+spokenenglishtr.com-dan bize ulasabilirsiniz.
+      Saygilarimizla
+  'SPOKEN ENGLISH'  INGILIZCE DILI EGITIM MERKEZI
 
 
-Martin Drab found that he could get aacraid timeouts with high load on
-his controller / disk drive combinations.  After some experimentation
-Mark Salyzyn has come up with a patch to reduce the default max_sectors
-to something that will keep the controller from being overloaded and
-will eliminate the timeout issues.
-
-Patch against scsi-misc-2.6 git tree.
-
-Signed-off-by: Mark Haverkamp <markh@osdl.org>
-
-Index: scsi-misc-2.6/drivers/scsi/aacraid/aacraid.h
-===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/aacraid/aacraid.h	2005-07-08 09:22:20.000000000 -0700
-+++ scsi-misc-2.6/drivers/scsi/aacraid/aacraid.h	2005-07-08 09:23:52.000000000 -0700
-@@ -15,11 +15,7 @@
- #define AAC_MAX_LUN		(8)
- 
- #define AAC_MAX_HOSTPHYSMEMPAGES (0xfffff)
--/*
-- *  max_sectors is an unsigned short, otherwise limit is 0x100000000 / 512
-- * Linux has starvation problems if we permit larger than 4MB I/O ...
-- */
--#define AAC_MAX_32BIT_SGBCOUNT	((unsigned short)8192)
-+#define AAC_MAX_32BIT_SGBCOUNT	((unsigned short)512)
- 
- /*
-  * These macros convert from physical channels to virtual channels
-Index: scsi-misc-2.6/drivers/scsi/aacraid/linit.c
-===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/aacraid/linit.c	2005-06-27 09:57:38.000000000 -0700
-+++ scsi-misc-2.6/drivers/scsi/aacraid/linit.c	2005-07-08 09:23:52.000000000 -0700
-@@ -374,7 +374,8 @@
- 	else
- 		scsi_adjust_queue_depth(sdev, 0, 1);
- 
--	if (host->max_sectors < AAC_MAX_32BIT_SGBCOUNT)
-+	if (!(((struct aac_dev *)host->hostdata)->adapter_info.options
-+	  & AAC_OPT_NEW_COMM))
- 		blk_queue_max_segment_size(sdev->request_queue, 65536);
- 
- 	return 0;
-
--- 
-Mark Haverkamp <markh@osdl.org>
-
--- 
-Mark Haverkamp <markh@osdl.org>
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
