@@ -1,63 +1,60 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [RFC][PATCH] libata ATAPI alignment
-Date: Tue, 2 Aug 2005 10:27:19 +0200
-Message-ID: <20050802082719.GA22569@suse.de>
-References: <20050729050654.GA10413@havoc.gtf.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20050729050654.GA10413@havoc.gtf.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Andrey Melnikoff <temnota+news@kmv.ru>
+Subject: Re: [PATCH 2.4.31 1/1] scsi/megaraid2: add 64-bit application sup?port
+Date: Wed, 3 Aug 2005 14:44:16 +0400
+Message-ID: <0pj6s2-grt.ln1@kenga.kmv.ru>
+References: <0E3FA95632D6D047BA649F95DAB60E5703662A89@exa-atlanta>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from main.gmane.org ([80.91.229.2]:36524 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S262219AbVHCLBt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2005 07:01:49 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1E0GzS-0000Fn-2M
+	for linux-scsi@vger.kernel.org; Wed, 03 Aug 2005 13:00:50 +0200
+Received: from kenga.kmv.ru ([217.13.212.5])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Aug 2005 13:00:50 +0200
+Received: from temnota+news by kenga.kmv.ru with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Aug 2005 13:00:50 +0200
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Fri, Jul 29 2005, Jeff Garzik wrote:
-> 
-> So, one thing that's terribly ugly about SATA ATAPI is that we need to
-> pad DMA transfers to the next 32-bit boundary, if the length is not
-> evenly divisible by 4.
-> 
-> Messing with the scatterlist to accomplish this is terribly ugly
-> no matter how you slice it.  One way would be to create my own
-> scatterlist, via memcpy and then manual labor.  Another way would be
-> to special case a pad buffer, appending it onto the end of various
-> scatterlist code.
+Ju, Seokmann <sju@lsil.com> wrote:
+> [-- text/plain, encoding 7bit, charset: iso-8859-1, 1346 lines --]
 
-It's not pretty, but I think it's the only solution currently.
+> Hi Marcelo,
 
-> Complicating matters, we currently must support two methods of data
-> buffer submission:  a single kernel virtual address, or a struct
-> scatterlist.
+> I've made changes that reflect your comments.
 
-Fairly soon the !use_sg case will be gone, at least coming from SCSI. I
-hope we can completely get away from the virtual address + length for
-any remaining cases, just making it a single entry sg list.
+> On Tuesday, July 26, 2005 4:33 AM, Marcelo Tosatti wrote:
+> > vary_io has never been part of mainline. How come did you add it
+> > here?
+> Has removed '.vary_io'.
+> > There is no CONFIG_COMPAT on v2.4... thanks James and Christoph
+> > for reviewing.
+> Has removed 'CONFIG_COMPAT'.
 
-> 
-> Review is requested by any and all parties, as well as suggestions for
-> a prettier approach.
-> 
-> This is one of the last steps needed to get ATAPI going.
-> 
-> 
-> 
-> diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-> --- a/drivers/scsi/ahci.c
-> +++ b/drivers/scsi/ahci.c
-> @@ -44,7 +44,7 @@
->  
->  enum {
->  	AHCI_PCI_BAR		= 5,
-> -	AHCI_MAX_SG		= 168, /* hardware max is 64K */
-> +	AHCI_MAX_SG		= 300, /* hardware max is 64K */
->  	AHCI_DMA_BOUNDARY	= 0xffffffff,
->  	AHCI_USE_CLUSTERING	= 0,
->  	AHCI_CMD_SLOT_SZ	= 32 * 32,
+> Thank you.
 
-Reasoning? I agree, just wondering... How big is the allocated area now?
+> Signed-off-by: Seokmann Ju <seokmann.ju@lsil.com>
+Still not compile with gcc-3.4
 
--- 
-Jens Axboe
+-- cut --
+gcc-3.4 -D__KERNEL__ -I/usr/src/linux-2.4.31/include -Wall
+-Wstrict-prototypes -Wno-trigraphs -O2 -fno-strict-aliasing -fno-common
+-fomit-frame-pointer -pipe -mpreferred-stack-boundary=2 -march=i686
+-fno-unit-at-a-time   -nostdinc -iwithprefix include
+-DKBUILD_BASENAME=megaraid2  -c -o megaraid2.o megaraid2.c
+megaraid2.c: In function `megaraid_queue':
+megaraid2.h:1113: sorry, unimplemented: inlining failed in call to
+'mega_runpendq': function body not available
+megaraid2.c:1033: sorry, unimplemented: called from here
+megaraid2.c: In function `mega_n_to_m':
+megaraid2.c:4658: warning: unused variable `uiocp'
+make[3]: *** [megaraid2.o] Error 1
+
+-- cut --
 
