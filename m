@@ -1,37 +1,46 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [ANNOUNCE 4/7] open-iscsi/linux-iscsi-5 Initiator:
- open-iscsi-netlink.patch
-Date: Thu, 4 Aug 2005 21:13:02 -0700
-Message-ID: <20050804211302.754ba34f.rdunlap@xenotime.net>
-References: <42F2CF76.3040209@yahoo.com>
-	<1123212153.5026.90.camel@mulgrave>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH 7/7] aacraid: sgraw command support
+Date: Thu, 4 Aug 2005 07:40:58 -0400
+Message-ID: <60807403EABEB443939A5A7AA8A7458B017931EB@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:46732 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S262854AbVHEENF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Aug 2005 00:13:05 -0400
-Received: from midway ([71.111.147.75]) by xenotime.net for <linux-scsi@vger.kernel.org>; Thu, 4 Aug 2005 21:13:04 -0700
-In-Reply-To: <1123212153.5026.90.camel@mulgrave>
+Received: from magic.adaptec.com ([216.52.22.17]:37823 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262484AbVHDLnA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Aug 2005 07:43:00 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: itn780@yahoo.com, davem@davemloft.net, linux-scsi@vger.kernel.org, hch@lst.de
+To: Arjan van de Ven <arjan@infradead.org>, Mark Haverkamp <markh@osdl.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 
-On Thu, 04 Aug 2005 22:22:33 -0500 James Bottomley wrote:
+In these cases, the 'addr' is an u64, so is it necessary to perform this
+modification?
 
-> On Thu, 2005-08-04 at 19:31 -0700, Alex Aizman wrote:
-> > +#define NETLINK_ISCSI		31	/* iSCSI Open Interface */
-> 
-> This isn't exactly what Dave Miller said to do last time.  This one
-> can't go in until he OK's it.
+I will do a critical analysis of the remaining code in the driver for
+any values that are, or have a risk of being on some platforms, a 32 bit
+entity and undergo this kind of shift action.
 
-Alex-
-for reference, see
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112275607106857&w=2
-and then follow [next in thread]
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: Arjan van de Ven [mailto:arjan@infradead.org] 
+Sent: Thursday, August 04, 2005 4:17 AM
+To: Mark Haverkamp
+Cc: Salyzyn, Mark; linux-scsi; James Bottomley
+Subject: Re: [PATCH 7/7] aacraid: sgraw command support
+
+On Wed, 2005-08-03 at 15:39 -0700, Mark Haverkamp wrote:
+> +               psg->sg[0].addr[1] = cpu_to_le32((u32)(addr>>32));
+
+this is very risky code; if addr is a 32 bit entity, then this is
+undefined behavior (which due to the vagities of x86 asm might get
+optimized out entirely). It is a lot safer to do (addr>>16)>>16
+
+gcc will optimize that just fine, the difference is that it's still
+defined C behavior regardless of the type of addr.
 
 
----
-~Randy
