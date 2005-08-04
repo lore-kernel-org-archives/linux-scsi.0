@@ -1,21 +1,42 @@
-From: Arjan van de Ven <arjan@infradead.org>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
 Subject: RE: [PATCH 6/7] aacraid: unlock around kfree
-Date: Thu, 04 Aug 2005 13:47:50 +0200
-Message-ID: <1123156071.3318.16.camel@laptopd505.fenrus.org>
-References: <60807403EABEB443939A5A7AA8A7458B017931E7@otce2k01.adaptec.com>
+Date: Thu, 4 Aug 2005 08:04:48 -0400
+Message-ID: <60807403EABEB443939A5A7AA8A7458B017931F1@otce2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:18824 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S262486AbVHDLsS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Aug 2005 07:48:18 -0400
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458B017931E7@otce2k01.adaptec.com>
+Received: from magic.adaptec.com ([216.52.22.17]:56263 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S262496AbVHDMGw convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Aug 2005 08:06:52 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+To: Arjan van de Ven <arjan@infradead.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Haverkamp <markh@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>
+
+Cool! Thanks for the information! Sounds like the patch will be
+necessary. However, I have never seen the issue bite us, but who knows,
+it may be the contributor to a system lockup after 8000 hours of uptime
+... I'd prefer the paranoid delusion and a stable system!
+
+As for the GFP_ATOMIC, the intent is to move the kmalloc w/GFP_ATOMIC
+from inside the loop to outside the loop and perform a guestimate+ on
+the possible pool requirements of the loop. Since this is an independent
+thread, there will be no need to use GFP_NOIO. The code has been tested
+for almost a year now in the Adaptec branch, and the guestimate was
+tweaked in that time to be 100% reliable.
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: Arjan van de Ven [mailto:arjan@infradead.org] 
+Sent: Thursday, August 04, 2005 7:48 AM
+To: Salyzyn, Mark
+Cc: linux-scsi; Mark Haverkamp; James Bottomley
+Subject: RE: [PATCH 6/7] aacraid: unlock around kfree
 
 On Thu, 2005-08-04 at 07:33 -0400, Salyzyn, Mark wrote:
 > Good to know. I went through one too many code reviews and had no
