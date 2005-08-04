@@ -1,43 +1,31 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] aic79xx: fix up transport settings
-Date: Thu, 04 Aug 2005 08:58:14 +0200
-Message-ID: <42F1BC86.8070204@suse.de>
-References: <1123093511.5019.17.camel@mulgrave>
+Subject: [PATCH] aic79xx: fixup DT setting
+Date: Thu, 04 Aug 2005 09:16:59 +0200
+Message-ID: <42F1C0EB.40404@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+ boundary="------------070606030108030902040101"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:25060 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S261903AbVHDG6T convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Aug 2005 02:58:19 -0400
-In-Reply-To: <1123093511.5019.17.camel@mulgrave>
+Received: from mx2.suse.de ([195.135.220.15]:51685 "EHLO mx2.suse.de")
+	by vger.kernel.org with ESMTP id S261940AbVHDHRA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2005 03:17:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> There's a slight problem in the way you've done the transport
-> parameters; reading from the variables actually produces the current
-> settings, not the ones you just set (and there's usually a lag becaus=
-e
-> devices don't renegotiate until the next command goes over the bus). =
- If
-> you set the bit immediately, you get into the situation where the
-> transport parameters report something as being set even if the drive
-> cannot support it.
->=20
-Well, as usual you're correct. I wasn't quite sure as to _when_ the
-transport class parameter will be set, as they appearently haven't been
-set correctly (this was whilst chasing down the ST/DT setting issue).
-But yours if of course the correct way of doing things.
+This is a multi-part message in MIME format.
+--------------070606030108030902040101
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-> I patched the driver to do it this way and also corrected a panic in =
-the
-> proc routines.
->=20
-THX. Didn't even know there was a proc panic :-).
+Hi James,
+
+this patch is just a cross-port of your fixup for aic7xxx DT settings.
+As the same restrictions apply for aic79xx also (DT requires wide
+transfers) the dt setting routine should be modified equivalently.
+And an invalid period setting will be catched by ahd_find_syncrate() anyw=
+ay.
 
 Cheers,
 
@@ -48,8 +36,34 @@ SuSE Linux Products GmbH		S390 & zSeries
 Maxfeldstra=DFe 5				+49 911 74053 688
 90409 N=FCrnberg				http://www.suse.de
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--------------070606030108030902040101
+Content-Type: text/plain;
+ name="aic79xx-fix-dt-setting"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="aic79xx-fix-dt-setting"
+
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -2440,6 +2440,7 @@ static void ahd_linux_set_dt(struct scsi
+ 	unsigned int ppr_options = tinfo->goal.ppr_options
+ 		& ~MSG_EXT_PPR_DT_REQ;
+ 	unsigned int period = tinfo->goal.period;
++	unsigned int width = tinfo->goal.width;
+ 	unsigned long flags;
+ 
+ #ifdef AHD_DEBUG
+@@ -2449,8 +2450,8 @@ static void ahd_linux_set_dt(struct scsi
+ #endif
+ 	if (dt) {
+ 		ppr_options |= MSG_EXT_PPR_DT_REQ;
+-		if (period > 9)
+-			period = 9; /* at least 12.5ns for DT */
++		if (!width)
++			ahd_linux_set_width(starget, 1);
+ 	} else {
+ 		if (period <= 9)
+ 			period = 10; /* If resetting DT, period must be >= 25ns */
+
+--------------070606030108030902040101--
