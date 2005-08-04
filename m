@@ -1,48 +1,36 @@
 From: Dave Jones <davej@redhat.com>
 Subject: Re: [PATCH 1/2] cpqfc: fix for "Using too much stach" in 2.6 kernel
-Date: Thu, 4 Aug 2005 12:42:59 -0400
-Message-ID: <20050804164259.GD22886@redhat.com>
-References: <4221C1B21C20854291E185D1243EA8F302623BCC@bgeexc04.asiapacific.cpqcorp.net> <200508041138.38216@bilbo.math.uni-mannheim.de> <20050804154023.GA22886@redhat.com> <200508041756.23611@bilbo.math.uni-mannheim.de>
+Date: Thu, 4 Aug 2005 13:38:56 -0400
+Message-ID: <20050804173856.GG22886@redhat.com>
+References: <4221C1B21C20854291E185D1243EA8F302623BCC@bgeexc04.asiapacific.cpqcorp.net> <200508041756.23611@bilbo.math.uni-mannheim.de> <20050804164259.GD22886@redhat.com> <200508041911.46911@bilbo.math.uni-mannheim.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:1988 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S262598AbVHDQnR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2005 12:43:17 -0400
+Received: from mx1.redhat.com ([66.187.233.31]:14056 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S261487AbVHDRjI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2005 13:39:08 -0400
 Content-Disposition: inline
-In-Reply-To: <200508041756.23611@bilbo.math.uni-mannheim.de>
+In-Reply-To: <200508041911.46911@bilbo.math.uni-mannheim.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+To: Rolf Eike Beer <eike@sf-mail.de>
 Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Saripalli, Venkata Ramanamurthy (STSD)" <saripalli@hp.com>, linux-scsi@vger.kernel.org, axboe@suse.de
 
-On Thu, Aug 04, 2005 at 05:56:14PM +0200, Rolf Eike Beer wrote:
- > Am Donnerstag, 4. August 2005 17:40 schrieb Dave Jones:
- > >On Thu, Aug 04, 2005 at 11:38:30AM +0200, Rolf Eike Beer wrote:
- > > > >+	  ulFibreFrame = kmalloc((2048/4), GFP_KERNEL);
- > > >
- > > > The size bug was already found by Dave Jones. This never should be
- > > > written this way (not your fault). The array should have been
- > > > [2048/sizeof(ULONG)].
- > >
- > >wasteful. We only ever use 2048 bytes of this array, so doubling
- > >its size on 64bit is pointless, unless you make changes later on
- > >in the driver. (Which I think don't make sense, as we just copy
- > >32 64byte chunks).
+On Thu, Aug 04, 2005 at 07:11:38PM +0200, Rolf Eike Beer wrote:
+ > >It's pointless to fix this, without fixing also CpqTsGetSFQEntry()
+ > At least half of the file should be rewritten.
+
+Just half ? You're such an optimist :-)
+
+ > > > No, ulDestPtr ist ULONG* so we increase it by sizeof(ULONG)*16 which is
+ > > > 64.
+ > >Duh, yes.  That is broken on 64-bit however, where it will advance 128 bytes
+ > >instead of 64 bytes.
  > 
- > No, this is how it should have been before. This way it would have been clear 
- > where the magic 4 came from.
+ > ULONG is defined to __u32 in some of the cpq* headers.
 
-It's pointless to fix this, without fixing also CpqTsGetSFQEntry()
-...
-
- > >we're trashing the last 48 bytes of every copy we make.
- > >Does this driver even work ?
- > 
- > No, ulDestPtr ist ULONG* so we increase it by sizeof(ULONG)*16 which is 64. 
-
-Duh, yes.  That is broken on 64-bit however, where it will advance 128 bytes
-instead of 64 bytes.
+Ewwwww.
+Ok, definitly time to stop reading.
 
 		Dave
 
