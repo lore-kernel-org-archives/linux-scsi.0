@@ -1,36 +1,66 @@
-From: Dave Jones <davej@redhat.com>
-Subject: Re: [PATCH 1/2] cpqfc: fix for "Using too much stach" in 2.6 kernel
-Date: Thu, 4 Aug 2005 13:38:56 -0400
-Message-ID: <20050804173856.GG22886@redhat.com>
-References: <4221C1B21C20854291E185D1243EA8F302623BCC@bgeexc04.asiapacific.cpqcorp.net> <200508041756.23611@bilbo.math.uni-mannheim.de> <20050804164259.GD22886@redhat.com> <200508041911.46911@bilbo.math.uni-mannheim.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] fix aic7xxx performance issues since 2.6.12-rc2
+Date: Thu, 04 Aug 2005 13:28:40 -0500
+Message-ID: <1123180120.5026.42.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:14056 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S261487AbVHDRjI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2005 13:39:08 -0400
-Content-Disposition: inline
-In-Reply-To: <200508041911.46911@bilbo.math.uni-mannheim.de>
+Received: from stat16.steeleye.com ([209.192.50.48]:17861 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262510AbVHDS2p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Aug 2005 14:28:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike@sf-mail.de>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Saripalli, Venkata Ramanamurthy (STSD)" <saripalli@hp.com>, linux-scsi@vger.kernel.org, axboe@suse.de
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Jens Axboe <axboe@suse.de>, mason@suse.com, Suparna Bhattacharya <suparna@in.ibm.com>
 
-On Thu, Aug 04, 2005 at 07:11:38PM +0200, Rolf Eike Beer wrote:
- > >It's pointless to fix this, without fixing also CpqTsGetSFQEntry()
- > At least half of the file should be rewritten.
+Several people noticed we dropped quite a bit on benchmark figures.  OK,
+it was my fault but unfortunately I discovered I ran out of brown paper
+bags a while ago and forgot to reorder them.
 
-Just half ? You're such an optimist :-)
+The issue is that a construct introduced in the conversion keyed off
+whether the block request was tagged or not.  However, the aic7xxx
+driver doesn't properly set up the block layer TCQ (it uses the wrong
+API), so the driver now things all requests are untagged and we keep it
+to a queue depth of a single element.  Oops.
 
- > > > No, ulDestPtr ist ULONG* so we increase it by sizeof(ULONG)*16 which is
- > > > 64.
- > >Duh, yes.  That is broken on 64-bit however, where it will advance 128 bytes
- > >instead of 64 bytes.
- > 
- > ULONG is defined to __u32 in some of the cpq* headers.
+The fix is to use the correct TCQ API.
 
-Ewwwww.
-Ok, definitly time to stop reading.
+James
 
-		Dave
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -1264,14 +1264,12 @@ ahc_platform_set_tags(struct ahc_softc *
+ 	}
+ 	switch ((dev->flags & (AHC_DEV_Q_BASIC|AHC_DEV_Q_TAGGED))) {
+ 	case AHC_DEV_Q_BASIC:
+-		scsi_adjust_queue_depth(sdev,
+-					MSG_SIMPLE_TASK,
+-					dev->openings + dev->active);
++		scsi_set_tag_type(sdev, MSG_SIMPLE_TAG);
++		scsi_activate_tcq(sdev, dev->openings + dev->active);
+ 		break;
+ 	case AHC_DEV_Q_TAGGED:
+-		scsi_adjust_queue_depth(sdev,
+-					MSG_ORDERED_TASK,
+-					dev->openings + dev->active);
++		scsi_set_tag_type(sdev, MSG_ORDERED_TAG);
++		scsi_activate_tcq(sdev, dev->openings + dev->active);
+ 		break;
+ 	default:
+ 		/*
+@@ -1280,9 +1278,7 @@ ahc_platform_set_tags(struct ahc_softc *
+ 		 * serially on the controller/device.  This should
+ 		 * remove some latency.
+ 		 */
+-		scsi_adjust_queue_depth(sdev,
+-					/*NON-TAGGED*/0,
+-					/*queue depth*/2);
++		scsi_deactivate_tcq(sdev, 2);
+ 		break;
+ 	}
+ }
+
 
