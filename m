@@ -1,67 +1,36 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: calling scsi_adjust_queue_depth() during I/O...
-Date: Fri, 5 Aug 2005 10:24:05 -0700
-Message-ID: <20050805172405.GT13374@plap.qlogic.org>
-References: <20050804234155.GJ13374@plap.qlogic.org> <20050805075751.GN9369@suse.de> <20050805110911.GA22867@htj.dyndns.org> <42F350E6.2090109@gmail.com> <20050805123301.GA3311@htj.dyndns.org> <1123259528.5003.36.camel@mulgrave> <20050805171034.GA5046@htj.dyndns.org>
+Subject: Re: [PATCH] uninline exported ata_host_intr
+Date: Fri, 5 Aug 2005 10:30:03 -0700
+Message-ID: <20050805173003.GU13374@plap.qlogic.org>
+References: <20050805170349.GA6065@suse.de> <42F39DA0.5000208@pobox.com> <20050805171500.GA6161@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:1291 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S261774AbVHERYG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Aug 2005 13:24:06 -0400
+Received: from pat.qlogic.com ([198.70.193.2]:20514 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S263086AbVHERaZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Aug 2005 13:30:25 -0400
 Content-Disposition: inline
-In-Reply-To: <20050805171034.GA5046@htj.dyndns.org>
+In-Reply-To: <20050805171500.GA6161@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Olaf Hering <olh@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
-On Sat, 06 Aug 2005, Tejun Heo wrote:
+On Fri, 05 Aug 2005, Olaf Hering wrote:
 
-> On Fri, Aug 05, 2005 at 11:32:07AM -0500, James Bottomley wrote:
-> > On Fri, 2005-08-05 at 21:33 +0900, Tejun Heo wrote:
-> > >  Here's the fix.  It basically revives bqt->real_max_depth sans
-> > > allocation optimization in init_tag_map.  I've also added a comment
-> > > explicitly noting that tag map cannot be shrunk to prevent other
-> > > morons like me.  :-( Please try this one and let me know how it works.
-> > > If this is the correct fix, I'll repost properly to Jens and lkml with
-> > > detailed explanation on how it was broken in the original code and how
-> > > I broke it with my previous patch.  Sorry.
-> > 
-> > Actually, if you really want to adjust the array size downwards, there's
-> > a way we can do it:
-> > 
-> > - If the bits that would be lost on shrinkage are all zero at the time
-> > blk_queue_resize_tags() is called, that means that there are no
-> > outstanding tags up there and the array can be shrunk immediately.
-> > 
-> > - If there are outstanding tags between the new and the old depth, the
-> > array can be shrunk when the last one of these returns, say in
-> > blk_rq_end_tag()
-> > 
+> > When I wrote this, the compiler did what I expected:  it inlined the 
+> > local copy, and exported a copy for external modules to call.
 > 
->  Hello, James.
+> so you have the code twice? how clever...
 > 
->  Yes, we can do that, but I'm not sure if that would be necessary.
-> AFAIK, queues are normally not very deep and a tag only occupies one
-> pointer and one bit.  Also, the shrinking operation isn't very common,
-> at least for traditional SPI devices and SATA drives, I think.
+> > Have you verified the asm does not do this?  What changed?
 > 
->  Are newer SCSI devices (say, SAS/iSCSI) different? - like having very
-> deep queue and needing dynamic queue depth adjustment?  If that's the
-> case, I think I can implement shrinking in a separate patch. (and try
-> not to screw up this time ;-)
+> I just grepped ^inline below drivers/scsi and found this in qla4xxx and
+> libata-core.
 
-Well from the fibre-channel side of the storage world, a piece of
-storage (RAID box) is generally parcelled out to a large number of
-hosts.  These boxes tend to have a finite amount of resources
-available to service requests to those hosts, so depending of course
-on the amount of traffic being directed to the storage, QUEUE_FULL
-cases may arise causing a particular host (or a set of hosts), to
-throttle down their queue-depths for some period of time.
-
-The trick though, is to dynamically throttle the depth up so as to
-fully utilise the shared resources of the storage.
+Confused, you found a reference to ata_host_intr() in qla4xxx
+(QLogic's iSCSI driver)?  This is in a SLES kernel correct, and not in
+mainline?
 
 --
-Andrew Vasquez
+av
