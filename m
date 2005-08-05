@@ -1,54 +1,44 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH 7/7] aacraid: sgraw command support
-Date: Fri, 5 Aug 2005 11:57:27 -0400
-Message-ID: <60807403EABEB443939A5A7AA8A7458B01800A71@otce2k01.adaptec.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: calling scsi_adjust_queue_depth() during I/O...
+Date: Fri, 05 Aug 2005 11:32:07 -0500
+Message-ID: <1123259528.5003.36.camel@mulgrave>
+References: <20050804234155.GJ13374@plap.qlogic.org>
+	 <20050805075751.GN9369@suse.de> <20050805110911.GA22867@htj.dyndns.org>
+	 <42F350E6.2090109@gmail.com>  <20050805123301.GA3311@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:40896 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S262379AbVHEP7b convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Aug 2005 11:59:31 -0400
-content-class: urn:content-classes:message
+Received: from stat16.steeleye.com ([209.192.50.48]:19407 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263021AbVHEQce (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Aug 2005 12:32:34 -0400
+In-Reply-To: <20050805123301.GA3311@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>, Mark Haverkamp <markh@osdl.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <axboe@suse.de>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-The size is to match the 64 bit address space command packet to the
-adapter. A dma_addr_t is assigned to an u64 which ends up in a pair of
-__le32's. We also issue 32 bit address space command packets where the
-dma_addr_t is (truncated) into an u32 and placed into a single __le32.
-The code style remains roughly the same for all three paths (32 bit
-address io, 64 bit address io, 64 bit raw io) to cover all the different
-generations of adapters.
+On Fri, 2005-08-05 at 21:33 +0900, Tejun Heo wrote:
+>  Here's the fix.  It basically revives bqt->real_max_depth sans
+> allocation optimization in init_tag_map.  I've also added a comment
+> explicitly noting that tag map cannot be shrunk to prevent other
+> morons like me.  :-( Please try this one and let me know how it works.
+> If this is the correct fix, I'll repost properly to Jens and lkml with
+> detailed explanation on how it was broken in the original code and how
+> I broke it with my previous patch.  Sorry.
 
-The 'addr' is a hardware sized cpu ordered placeholder.
+Actually, if you really want to adjust the array size downwards, there's
+a way we can do it:
 
-Sincerely -- Mark Salyzyn
+- If the bits that would be lost on shrinkage are all zero at the time
+blk_queue_resize_tags() is called, that means that there are no
+outstanding tags up there and the array can be shrunk immediately.
 
------Original Message-----
-From: Arjan van de Ven [mailto:arjan@infradead.org] 
-Sent: Friday, August 05, 2005 10:45 AM
-To: Mark Haverkamp
-Cc: Salyzyn, Mark; linux-scsi; James Bottomley
-Subject: RE: [PATCH 7/7] aacraid: sgraw command support
+- If there are outstanding tags between the new and the old depth, the
+array can be shrunk when the last one of these returns, say in
+blk_rq_end_tag()
 
-On Fri, 2005-08-05 at 07:24 -0700, Mark Haverkamp wrote:
-> On Thu, 2005-08-04 at 07:40 -0400, Salyzyn, Mark wrote:
-> > In these cases, the 'addr' is an u64, so is it necessary to perform
-this
-> > modification?
-> 
-> Arjan,
-> 
-> Do you agree with the above?  If so, is the patch OK as is?
-
-Ok you're ok then. I just then in turn question why addr is actually a
-u64, and not say, a dma_addr_t or something..
-
-
+James
 
 
