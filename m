@@ -1,66 +1,101 @@
-From: Denis Vlasenko <vda@ilport.com.ua>
-Subject: Re: [PATCH 1/2] cpqfc: fix for "Using too much stach" in 2.6 kernel
-Date: Thu, 4 Aug 2005 15:13:51 +0300
-Message-ID: <200508041513.51692.vda@ilport.com.ua>
-References: <4221C1B21C20854291E185D1243EA8F302623BCC@bgeexc04.asiapacific.cpqcorp.net> <200508041138.38216@bilbo.math.uni-mannheim.de>
+From: Alex Aizman <itn780@yahoo.com>
+Subject: [ANNOUNCE 0/7] open-iscsi/linux-iscsi-5 Initiator
+Date: Thu, 04 Aug 2005 19:29:28 -0700
+Message-ID: <42F2CF08.6050407@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="koi8-r"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 167.imtp.Ilyichevsk.Odessa.UA ([195.66.192.167]:24977 "HELO
-	port.imtp.ilyichevsk.odessa.ua") by vger.kernel.org with SMTP
-	id S262510AbVHDMOV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Aug 2005 08:14:21 -0400
-In-Reply-To: <200508041138.38216@bilbo.math.uni-mannheim.de>
-Content-Disposition: inline
+Received: from smtp017.mail.yahoo.com ([216.136.174.114]:38245 "HELO
+	smtp017.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S262809AbVHEC3d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Aug 2005 22:29:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: "Saripalli, Venkata Ramanamurthy (STSD)" <saripalli@hp.com>, linux-scsi@vger.kernel.org, axboe@suse.de
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "David S. Miller" <davem@davemloft.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-On Thursday 04 August 2005 12:38, Rolf Eike Beer wrote:
-> Saripalli, Venkata Ramanamurthy (STSD) wrote:
-> >Patch 1 of 2
-> >
-> >This patch fixes the "#error this is too much stack" in 2.6 kernel.
-> >Using kmalloc to allocate memory to ulFibreFrame.
-> 
-> Good idea.
-> 
-> >Please consider this for inclusion
-> 
-> Your patch is line-wrapped and can't be applied. Your second patch is also 
-> line wrapped. And it touches this file in a different way so they can't be 
-> applied cleanly over each other.
-> 
-> >diff -burpN old/drivers/scsi/cpqfcTScontrol.c
-> >new/drivers/scsi/cpqfcTScontrol.c
-> >--- old/drivers/scsi/cpqfcTScontrol.c	2005-07-12 22:52:29.000000000
-> >+0530
-> >+++ new/drivers/scsi/cpqfcTScontrol.c	2005-07-18 22:19:54.229947176
-> >+0530
-> >@@ -606,22 +606,25 @@ static int PeekIMQEntry( PTACHYON fcChip
-> >         if( (fcChip->IMQ->QEntry[CI].type & 0x1FF) == 0x104 )
-> >         {
-> >           TachFCHDR_GCMND* fchs;
-> >-#error This is too much stack
-> >-          ULONG ulFibreFrame[2048/4];  // max DWORDS in incoming FC
-> >Frame
-> >+          ULONG *ulFibreFrame;  // max DWORDS in incoming FC Frame
-> > 	  USHORT SFQpi = (USHORT)(fcChip->IMQ->QEntry[CI].word[0] &
-> >0x0fffL);
-> 
-> Why not use a void* here as type for the buffer? Or even better: remove this 
-> at all and directly use fchs as target, because this is the only place where 
-> this buffer goes to?
-> 
-> >+	  ulFibreFrame = kmalloc((2048/4), GFP_KERNEL);
-> 
-> The size bug was already found by Dave Jones. This never should be written 
-> this way (not your fault). The array should have been [2048/sizeof(ULONG)].
 
-Also you need to check for NULL return.
---
-vda 
+Open-iSCSI/Linux-iSCSI-5 Initiator: Data Path and Transport Class
+==========================================
+
+This submission contains 7 patches for 2.6.13 (today's git repository). The same 
+7 patches can be downloaded at:
+
+http://www.open-iscsi.org/bits/submission-08042005/
+
+This submission corresponds to Open-iSCSI r389 in the SVN repository.
+
+The entire Initiator source, including control plane and tools, is available at:
+
+http://www.open-iscsi.org/index.html#download
+
+
+Major Changes since the previous (06/01/2005) submission,
+also available at http://lkml.org/lkml/2005/6/1/279
+==================================
+
+* Made it work with 2.6.13
+* Fixed corner case in Data-In processing
+* Internally reviewed and cleaned up the code
+* Added IPv6 support
+
+
+Thanks
+======
+
+Many people contributed to testing *and* development. In particular, special
+thanks to: Zhenyu Wang, Fujita Tomonori, Ming Zhang, Albert (pauw@o2.ie), Arne
+Redlich.
+
+
+Changelog
+========
+
+* Zhenyu Wang: kmap_atomic lockup fix
+* Included Mike Christie in Copyright
+* Zhenyu Wang: support iSCSI Data Digest
+* Fujita Tomonori: improve str_to_ipport() for handling IPv6 address
+* Fujita Tomonori: remove discovery_file() (hack/obsolete)
+* Fujita Tomonori: added IPv6 support (user land)
+* SN checking: added check_assign_cmdsn(), better checking and wrap around
+* updated backward-compile-2.6.12 patch
+* Mike: support multiple LUNs via new API in 2.6.13
+* Fujita Tomonori, Arne Redlich: corruption when processing Data-Ins at non
+page-aligned offsets
+* Mike: 2.6.13 will not hold the host lock when calling eh callouts
+* fix for XFS: sendpage() only if page refcounted, otherwise kernel_sendmsg().
+
+
+Patches
+=====
+
+1. open-iscsi-tcp.c.patch - drivers/scsi/iscsi_tcp.c, iscsi data path.
+
+This is ~3600 lines 96K file. If it does not make it through via e-mail, the
+exact same patch along with the rest 6 can be downloaded at
+http://www.open-iscsi.org/bits/submission-08042005/
+
+2. open-iscsi-tcp.h.patch - drivers/scsi/iscsi_tcp.h, header file.
+
+3. open-iscsi-headers.patch - common header files:
+	- iscsi_if.h (user/kernel #defines and user/kernel events);
+	- iscsi_proto.h (RFC3720 #defines and types);
+	- scsi_transport_iscsi.h (transport API, transport #defines and types).
+
+
+4. open-iscsi-netlink.patch - include/linux/netlink.h changes (added new
+protocol NETLINK_ISCSI).
+
+5. open-iscsi-Makefile.patch - drivers/scsi/Makefile changes.
+
+6. open-iscsi-transport.patch - new iscsi transport class
+(drivers/scsi/scsi_transport_iscsi.c).
+
+7. open-iscsi-Kconfig.patch - drivers/scsi/Kconfig changes.
+
+Thanks,
+
+Linux-iscsi Team
+
 
