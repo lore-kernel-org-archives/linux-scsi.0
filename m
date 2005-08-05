@@ -1,54 +1,52 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [Bugme-new] [Bug 5003] New: Problem with symbios driver on
-	recent	-mm trees
-Date: Fri, 05 Aug 2005 10:01:26 -0500
-Message-ID: <1123254086.5003.10.camel@mulgrave>
-References: <135040000.1123216397@[10.10.2.4]>
-	 <20050804233927.2d3abb16.akpm@osdl.org> <1123251892.5003.6.camel@mulgrave>
-	 <179280000.1123252564@[10.10.2.4]>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: calling scsi_adjust_queue_depth() during I/O...
+Date: Fri, 5 Aug 2005 08:55:48 -0700
+Message-ID: <20050805155548.GP13374@plap.qlogic.org>
+References: <20050804234155.GJ13374@plap.qlogic.org> <20050805075751.GN9369@suse.de> <20050805110911.GA22867@htj.dyndns.org> <42F350E6.2090109@gmail.com> <20050805123301.GA3311@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:29390 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S262481AbVHEPBq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Aug 2005 11:01:46 -0400
-In-Reply-To: <179280000.1123252564@[10.10.2.4]>
+Received: from pat.qlogic.com ([198.70.193.2]:48828 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S262970AbVHEPzv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Aug 2005 11:55:51 -0400
+Content-Disposition: inline
+In-Reply-To: <20050805123301.GA3311@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin J. Bligh" <mbligh@mbligh.org>
-Cc: Andrew Morton <akpm@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, bugme-daemon@kernel-bugs.osdl.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <axboe@suse.de>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, 2005-08-05 at 07:36 -0700, Martin J. Bligh wrote:
-> Howcome it works on all mainline kernels, and not -mm then? ;-)
-> Did we fix an error path to detect failures, maybe?
+On Fri, 05 Aug 2005, Tejun Heo wrote:
 
-Well, OK, it might be something to do with your drives trying to
-negotiate IU and QAS.  Support for this was added to the sym2 driver but
-never verified (because no-one seemed to have drives that could do it).
+> >  Oops, forget about the previous mail.  Above patch make it into the 
+> > tree and it's the source of the problem.  My git HEAD was pointing at 
+> > the latest update but I haven't updated my cache, so I was looking at 
+> > the old source tree.  My apologies for the hassle and the bug.
+> > 
+> >  Original code was broken in the following two points.
+> > 
+> >  * tag_index wasn't allocated fully
+> >  * tag_map's extra bits were always initialized w/ 1's.
+> > 
+> >  The first bug is critical and the second bug prevents proper enlarging 
+> > of tag map.  However, the second bug effectively masks the first bug 
+> > avoiding critical problem.  My above mentioned patch broke things 
+> > seriously when reducing tag size on flight.
+> > 
+> >  Again, my apologies and patch will soon follow.
+> 
+>  Here's the fix.  It basically revives bqt->real_max_depth sans
+> allocation optimization in init_tag_map.  I've also added a comment
+> explicitly noting that tag map cannot be shrunk to prevent other
+> morons like me.  :-( Please try this one and let me know how it works.
+> If this is the correct fix, I'll repost properly to Jens and lkml with
+> detailed explanation on how it was broken in the original code and how
+> I broke it with my previous patch.  Sorry.
 
-The attached should stop the driver from negotiating these two
-parameters, if you could try it (it will produce complaints about static
-functions defined but not used, but you can ignore them).
+OK, 20 minutes into lowering and raising the queue-depth and
+everything appears to be working fine.  I'll continue banging away
+with my configuration and let you know if anything else comes up.
+Looks good so far.
 
-James
-
-diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -2122,10 +2122,12 @@ static struct spi_function_template sym2
- 	.show_width	= 1,
- 	.set_dt		= sym2_set_dt,
- 	.show_dt	= 1,
-+#if 0
- 	.set_iu		= sym2_set_iu,
- 	.show_iu	= 1,
- 	.set_qas	= sym2_set_qas,
- 	.show_qas	= 1,
-+#endif
- 	.get_signalling	= sym2_get_signalling,
- };
- 
-
-
+Thanks,
+Andrew
