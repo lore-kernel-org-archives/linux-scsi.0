@@ -1,49 +1,39 @@
-From: Doug Maxey <dwm@maxeymade.com>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] uninline exported ata_host_intr
-Date: Fri, 05 Aug 2005 12:37:04 -0500
-Message-ID: <200508051737.j75Hb4s9008109@falcon30.maxeymade.com>
-References: <42F39DA0.5000208@pobox.com>
+Date: Fri, 05 Aug 2005 13:44:34 -0400
+Message-ID: <42F3A582.8050800@pobox.com>
+References: <20050805170349.GA6065@suse.de> <42F39DA0.5000208@pobox.com> <20050805171500.GA6161@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from falcon30.maxeymade.com ([24.173.215.190]:53730 "EHLO
-	falcon30.maxeymade.com") by vger.kernel.org with ESMTP
-	id S263046AbVHERjz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Aug 2005 13:39:55 -0400
-In-reply-to: <42F39DA0.5000208@pobox.com> 
+Received: from mail.dvmed.net ([216.237.124.58]:49803 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S262777AbVHERoq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Aug 2005 13:44:46 -0400
+In-Reply-To: <20050805171500.GA6161@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Olaf Hering <olh@suse.de>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
+To: Olaf Hering <olh@suse.de>
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
+Olaf Hering wrote:
+>  On Fri, Aug 05, Jeff Garzik wrote:
+> 
+> 
+>>When I wrote this, the compiler did what I expected:  it inlined the 
+>>local copy, and exported a copy for external modules to call.
+> 
+> 
+> so you have the code twice? how clever...
 
-On Fri, 05 Aug 2005 13:10:56 EDT, Jeff Garzik wrote:
->Olaf Hering wrote:
->> ata_host_intr cant be either inline or exported.
->> 
->> Signed-off-by: Olaf Hering <olh@suse.de>
->> 
->> Index: linux-2.6.12/drivers/scsi/libata-core.c
->> ===================================================================
->> --- linux-2.6.12.orig/drivers/scsi/libata-core.c
->> +++ linux-2.6.12/drivers/scsi/libata-core.c
->> @@ -3487,7 +3487,7 @@ void ata_bmdma_stop(struct ata_port *ap)
->>   *	One if interrupt was handled, zero if not (shared irq).
->>   */
->>  
->> -inline unsigned int ata_host_intr (struct ata_port *ap,
->> +unsigned int ata_host_intr (struct ata_port *ap,
->
->er, huh?
->
->When I wrote this, the compiler did what I expected:  it inlined the 
->local copy, and exported a copy for external modules to call.
->
->Have you verified the asm does not do this?  What changed?
->
->	Jeff
+This is one of the key hot paths in the driver.
 
-breaks on ppc64.
- 
-++doug
+Considering that drivers either call one copy, or the other, the 
+tradeoff is minor overall code size increase for performance gains. 
+This is a typical tradeoff in hot paths.
+
+The code stays until you prove otherwise...
+
+	Jeff
+
 
