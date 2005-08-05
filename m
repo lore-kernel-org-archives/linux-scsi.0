@@ -1,24 +1,50 @@
-From: Pierre Ossman <drzeus-list@drzeus.cx>
-Subject: Re: Fw: Kernel panic with dc395x in 2.6.12.2
-Date: Fri, 05 Aug 2005 16:32:51 +0200
-Message-ID: <42F37893.30006@drzeus.cx>
-References: <20050709175725.75f291bf.rdunlap@xenotime.net>	<20050710093907.3f3c36e4.rdunlap@xenotime.net>	<42D15968.1080101@drzeus.cx>	<20050710105635.6d1606e3.rdunlap@xenotime.net>	<42D17D49.1000007@drzeus.cx>	<Pine.LNX.4.60.0507132312050.8774@poirot.grange>	<42E03506.7030707@drzeus.cx>	<20050721235348.05eace11.rdunlap@xenotime.net>	<20050722135055.6cb4597d.rdunlap@xenotime.net>	<42E17451.6090706@drzeus.cx>	<20050722153651.28d5db51.rdunlap@xenotime.net>	<42E17772.3020903@drzeus.cx>	<20050723100945.7d43d063.rdunlap@xenotime.net>	<42E2933C.4050808@drzeus.cx>	<20050723152714.4212ba52.rdunlap@xenotime.net>	<42E2ECF1.8070501@drzeus.cx>	<20050723184014.49629f9e.rdunlap@xenotime.net>	<42E39462.3040007@drzeus.cx>	<20050724100153.3e891484.rdunlap@xenotime.net>	<42E565FE.4070708@drzeus.cx>	<20050725203133.3cfa650d.rdunlap@xenotime.net>	<42E6A5C3.6070501@drzeus.cx>	<20050726202058.133382c1.rdunlap
+From: "Martin J. Bligh" <mbligh@mbligh.org>
+Subject: Re: [Bugme-new] [Bug 5003] New: Problem with symbios driver on recent	-mm trees
+Date: Fri, 05 Aug 2005 07:36:04 -0700
+Message-ID: <179280000.1123252564@[10.10.2.4]>
+References: <135040000.1123216397@[10.10.2.4]> <20050804233927.2d3abb16.akpm@osdl.org> <1123251892.5003.6.camel@mulgrave>
+Reply-To: "Martin J. Bligh" <mbligh@mbligh.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [85.8.12.41] ([85.8.12.41]:52875 "EHLO smtp.drzeus.cx")
-	by vger.kernel.org with ESMTP id S261848AbVHEOdY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Aug 2005 10:33:24 -0400
-In-Reply-To: <20050728201339.216ab3b8.rdunlap@xenotime.net>
+Received: from dvhart.com ([64.146.134.43]:20864 "EHLO localhost.localdomain")
+	by vger.kernel.org with ESMTP id S261759AbVHEOgL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Aug 2005 10:36:11 -0400
+In-Reply-To: <1123251892.5003.6.camel@mulgrave>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: g.liakhovetski@gmx.de, oliver@neukum.name, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, bugme-daemon@kernel-bugs.osdl.org
 
-Ok, I've now figured out where the bug appears. 2.6.12-rc4 runs fine
-while -rc5 does not.
 
-Rgds
-Pierre
 
+--James Bottomley <James.Bottomley@SteelEye.com> wrote (on Friday, August 05, 2005 09:24:52 -0500):
+
+> On Thu, 2005-08-04 at 23:39 -0700, Andrew Morton wrote:
+>> James, could some of the scsi core rework have caused this?
+> 
+> Well, I don't think so.  The error below:
+> 
+>> > sdc: Unit Not Ready, sense:
+>> > : Current: sense key=0x0
+>> >     ASC=0x0 ASCQ=0x0
+>> >  target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
+>> > Device  not ready.
+>> >  target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
+>> > Device  not ready.
+>> >  target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
+>> > Device  not ready.
+>> > sdc : READ CAPACITY failed.
+>> > sdc : status=1, message=00, host=0, driver=08 
+>> > sd: Current: sense key=0x0
+>> >     ASC=0x0 ASCQ=0x0
+> 
+> Is coming from the disk not the symbios driver ... I think you have a
+> disk failure.
+
+Howcome it works on all mainline kernels, and not -mm then? ;-)
+Did we fix an error path to detect failures, maybe?
+
+M.
