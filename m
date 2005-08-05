@@ -1,57 +1,24 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: RE: [PATCH 7/7] aacraid: sgraw command support
-Date: Fri, 05 Aug 2005 07:24:40 -0700
-Message-ID: <1123251881.6548.8.camel@markh1.pdx.osdl.net>
-References: <60807403EABEB443939A5A7AA8A7458B017931EB@otce2k01.adaptec.com>
+From: Pierre Ossman <drzeus-list@drzeus.cx>
+Subject: Re: Fw: Kernel panic with dc395x in 2.6.12.2
+Date: Fri, 05 Aug 2005 16:32:51 +0200
+Message-ID: <42F37893.30006@drzeus.cx>
+References: <20050709175725.75f291bf.rdunlap@xenotime.net>	<20050710093907.3f3c36e4.rdunlap@xenotime.net>	<42D15968.1080101@drzeus.cx>	<20050710105635.6d1606e3.rdunlap@xenotime.net>	<42D17D49.1000007@drzeus.cx>	<Pine.LNX.4.60.0507132312050.8774@poirot.grange>	<42E03506.7030707@drzeus.cx>	<20050721235348.05eace11.rdunlap@xenotime.net>	<20050722135055.6cb4597d.rdunlap@xenotime.net>	<42E17451.6090706@drzeus.cx>	<20050722153651.28d5db51.rdunlap@xenotime.net>	<42E17772.3020903@drzeus.cx>	<20050723100945.7d43d063.rdunlap@xenotime.net>	<42E2933C.4050808@drzeus.cx>	<20050723152714.4212ba52.rdunlap@xenotime.net>	<42E2ECF1.8070501@drzeus.cx>	<20050723184014.49629f9e.rdunlap@xenotime.net>	<42E39462.3040007@drzeus.cx>	<20050724100153.3e891484.rdunlap@xenotime.net>	<42E565FE.4070708@drzeus.cx>	<20050725203133.3cfa650d.rdunlap@xenotime.net>	<42E6A5C3.6070501@drzeus.cx>	<20050726202058.133382c1.rdunlap
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:40619 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S263044AbVHEOZD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Aug 2005 10:25:03 -0400
-In-Reply-To: <60807403EABEB443939A5A7AA8A7458B017931EB@otce2k01.adaptec.com>
+Received: from [85.8.12.41] ([85.8.12.41]:52875 "EHLO smtp.drzeus.cx")
+	by vger.kernel.org with ESMTP id S261848AbVHEOdY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Aug 2005 10:33:24 -0400
+In-Reply-To: <20050728201339.216ab3b8.rdunlap@xenotime.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Salyzyn <mark_salyzyn@adaptec.com>, Arjan van de Ven <arjan@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: g.liakhovetski@gmx.de, oliver@neukum.name, linux-scsi@vger.kernel.org
 
-On Thu, 2005-08-04 at 07:40 -0400, Salyzyn, Mark wrote:
-> In these cases, the 'addr' is an u64, so is it necessary to perform this
-> modification?
+Ok, I've now figured out where the bug appears. 2.6.12-rc4 runs fine
+while -rc5 does not.
 
-Arjan,
-
-Do you agree with the above?  If so, is the patch OK as is?
-
-Thanks,
-Mark.
-
-> 
-> I will do a critical analysis of the remaining code in the driver for
-> any values that are, or have a risk of being on some platforms, a 32 bit
-> entity and undergo this kind of shift action.
-> 
-> Sincerely -- Mark Salyzyn
-> 
-> -----Original Message-----
-> From: Arjan van de Ven [mailto:arjan@infradead.org] 
-> Sent: Thursday, August 04, 2005 4:17 AM
-> To: Mark Haverkamp
-> Cc: Salyzyn, Mark; linux-scsi; James Bottomley
-> Subject: Re: [PATCH 7/7] aacraid: sgraw command support
-> 
-> On Wed, 2005-08-03 at 15:39 -0700, Mark Haverkamp wrote:
-> > +               psg->sg[0].addr[1] = cpu_to_le32((u32)(addr>>32));
-> 
-> this is very risky code; if addr is a 32 bit entity, then this is
-> undefined behavior (which due to the vagities of x86 asm might get
-> optimized out entirely). It is a lot safer to do (addr>>16)>>16
-> 
-> gcc will optimize that just fine, the difference is that it's still
-> defined C behavior regardless of the type of addr.
-> 
-
--- 
-Mark Haverkamp <markh@osdl.org>
+Rgds
+Pierre
 
