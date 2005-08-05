@@ -1,29 +1,49 @@
-From: Olaf Hering <olh@suse.de>
+From: Doug Maxey <dwm@maxeymade.com>
 Subject: Re: [PATCH] uninline exported ata_host_intr
-Date: Fri, 5 Aug 2005 19:39:18 +0200
-Message-ID: <20050805173918.GA6333@suse.de>
-References: <20050805170349.GA6065@suse.de> <42F39DA0.5000208@pobox.com> <20050805171500.GA6161@suse.de> <20050805173003.GU13374@plap.qlogic.org>
+Date: Fri, 05 Aug 2005 12:37:04 -0500
+Message-ID: <200508051737.j75Hb4s9008109@falcon30.maxeymade.com>
+References: <42F39DA0.5000208@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:47544 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S262844AbVHERjY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Aug 2005 13:39:24 -0400
-Content-Disposition: inline
-In-Reply-To: <20050805173003.GU13374@plap.qlogic.org>
+Received: from falcon30.maxeymade.com ([24.173.215.190]:53730 "EHLO
+	falcon30.maxeymade.com") by vger.kernel.org with ESMTP
+	id S263046AbVHERjz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Aug 2005 13:39:55 -0400
+In-reply-to: <42F39DA0.5000208@pobox.com> 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Olaf Hering <olh@suse.de>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
- On Fri, Aug 05, Andrew Vasquez wrote:
 
-> Confused, you found a reference to ata_host_intr() in qla4xxx
-> (QLogic's iSCSI driver)?  This is in a SLES kernel correct, and not in
-> mainline?
+On Fri, 05 Aug 2005 13:10:56 EDT, Jeff Garzik wrote:
+>Olaf Hering wrote:
+>> ata_host_intr cant be either inline or exported.
+>> 
+>> Signed-off-by: Olaf Hering <olh@suse.de>
+>> 
+>> Index: linux-2.6.12/drivers/scsi/libata-core.c
+>> ===================================================================
+>> --- linux-2.6.12.orig/drivers/scsi/libata-core.c
+>> +++ linux-2.6.12/drivers/scsi/libata-core.c
+>> @@ -3487,7 +3487,7 @@ void ata_bmdma_stop(struct ata_port *ap)
+>>   *	One if interrupt was handled, zero if not (shared irq).
+>>   */
+>>  
+>> -inline unsigned int ata_host_intr (struct ata_port *ap,
+>> +unsigned int ata_host_intr (struct ata_port *ap,
+>
+>er, huh?
+>
+>When I wrote this, the compiler did what I expected:  it inlined the 
+>local copy, and exported a copy for external modules to call.
+>
+>Have you verified the asm does not do this?  What changed?
+>
+>	Jeff
 
-No, qla4xxx called extern inline function in foo.c from bar.c. gcc4 doesnt like
-that because the 'function body is not available'. I found no external users of
-ata_host_intr, maybe it happens there as well.
-If there is a significant performance boost with these inline constructs,
-thats just fine with me as long as it compiles.
+breaks on ppc64.
+ 
+++doug
+
