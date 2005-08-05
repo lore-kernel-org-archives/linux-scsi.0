@@ -1,35 +1,54 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: RE: [PATCH 7/7] aacraid: sgraw command support
-Date: Fri, 05 Aug 2005 16:44:41 +0200
-Message-ID: <1123253081.3239.79.camel@laptopd505.fenrus.org>
-References: <60807403EABEB443939A5A7AA8A7458B017931EB@otce2k01.adaptec.com>
-	 <1123251881.6548.8.camel@markh1.pdx.osdl.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [Bugme-new] [Bug 5003] New: Problem with symbios driver on
+	recent	-mm trees
+Date: Fri, 05 Aug 2005 10:01:26 -0500
+Message-ID: <1123254086.5003.10.camel@mulgrave>
+References: <135040000.1123216397@[10.10.2.4]>
+	 <20050804233927.2d3abb16.akpm@osdl.org> <1123251892.5003.6.camel@mulgrave>
+	 <179280000.1123252564@[10.10.2.4]>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:48807 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S262313AbVHEOow (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Aug 2005 10:44:52 -0400
-In-Reply-To: <1123251881.6548.8.camel@markh1.pdx.osdl.net>
+Received: from stat16.steeleye.com ([209.192.50.48]:29390 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S262481AbVHEPBq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Aug 2005 11:01:46 -0400
+In-Reply-To: <179280000.1123252564@[10.10.2.4]>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
+To: "Martin J. Bligh" <mbligh@mbligh.org>
+Cc: Andrew Morton <akpm@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, bugme-daemon@kernel-bugs.osdl.org
 
-On Fri, 2005-08-05 at 07:24 -0700, Mark Haverkamp wrote:
-> On Thu, 2005-08-04 at 07:40 -0400, Salyzyn, Mark wrote:
-> > In these cases, the 'addr' is an u64, so is it necessary to perform this
-> > modification?
-> 
-> Arjan,
-> 
-> Do you agree with the above?  If so, is the patch OK as is?
+On Fri, 2005-08-05 at 07:36 -0700, Martin J. Bligh wrote:
+> Howcome it works on all mainline kernels, and not -mm then? ;-)
+> Did we fix an error path to detect failures, maybe?
 
-Ok you're ok then. I just then in turn question why addr is actually a
-u64, and not say, a dma_addr_t or something..
+Well, OK, it might be something to do with your drives trying to
+negotiate IU and QAS.  Support for this was added to the sym2 driver but
+never verified (because no-one seemed to have drives that could do it).
 
+The attached should stop the driver from negotiating these two
+parameters, if you could try it (it will produce complaints about static
+functions defined but not used, but you can ignore them).
 
+James
+
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -2122,10 +2122,12 @@ static struct spi_function_template sym2
+ 	.show_width	= 1,
+ 	.set_dt		= sym2_set_dt,
+ 	.show_dt	= 1,
++#if 0
+ 	.set_iu		= sym2_set_iu,
+ 	.show_iu	= 1,
+ 	.set_qas	= sym2_set_qas,
+ 	.show_qas	= 1,
++#endif
+ 	.get_signalling	= sym2_get_signalling,
+ };
+ 
 
 
