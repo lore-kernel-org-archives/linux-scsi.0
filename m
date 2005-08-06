@@ -1,62 +1,108 @@
-From: Jesper Juhl <jesper.juhl@gmail.com>
-Subject: Re: [PATCH 1/2] cpqfc: fix for "Using too much stach" in 2.6 kernel
-Date: Sat, 6 Aug 2005 03:13:09 +0200
-Message-ID: <9a87484905080518133e0cdaf6@mail.gmail.com>
-References: <4221C1B21C20854291E185D1243EA8F302623BCC@bgeexc04.asiapacific.cpqcorp.net>
-	 <9a87484905080406533ad143f9@mail.gmail.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [RFC] add global timeout to the scsi mid-layer
+Date: Fri, 05 Aug 2005 21:45:40 -0500
+Message-ID: <1123296340.5437.4.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.193]:17620 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S261802AbVHFBNK convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Aug 2005 21:13:10 -0400
-Received: by zproxy.gmail.com with SMTP id i11so422856nzh
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Aug 2005 18:13:09 -0700 (PDT)
-In-Reply-To: <9a87484905080406533ad143f9@mail.gmail.com>
-Content-Disposition: inline
+Received: from stat16.steeleye.com ([209.192.50.48]:61395 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S263153AbVHFCpm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Aug 2005 22:45:42 -0400
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id j762jfA23466
+	for <linux-scsi@vger.kernel.org>; Fri, 5 Aug 2005 22:45:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Saripalli, Venkata Ramanamurthy (STSD)" <saripalli@hp.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de, Rolf Eike Beer <eike-kernel@sf-tec.de>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 8/4/05, Jesper Juhl <jesper.juhl@gmail.com> wrote:
-> On 8/4/05, Saripalli, Venkata Ramanamurthy (STSD) <saripalli@hp.com> wrote:
-> > Patch 1 of 2
-> >
-> > This patch fixes the "#error this is too much stack" in 2.6 kernel.
-> > Using kmalloc to allocate memory to ulFibreFrame.
-> >
-> [snip]
-> >            if( fchs->pl[0] == ELS_LILP_FRAME)
-> >           {
-> > +           kfree(ulFibreFrame);
-> >              return 1; // found the LILP frame!
-> >           }
-> >           else
-> >           {
-> > +           kfree(ulFibreFrame);
-> >             // keep looking...
-> >           }
-> 
-> The first thing you do in either branch is to call
-> kfree(ulFibreFrame); , so instead of having the call in both branches
-> you might as well just have one call before the if().  Ohh and this
-> looks like it could do with a CodingStyle cleanup as well.
-> 
-> kfree(ulFibreFrame);
-> if (fchs->pl[0] == ELS_LILP_FRAME)
->         return 1; /* found the LILP frame! */
-> /* keep looking */
+There are certain rogue devices (and the aic7xxx driver) that return
+BUSY or QUEUE_FULL forever.  This code will apply a global timeout (of
+the total number of retries times the per command timer) to a given
+command.  If it is exceeded, the command is completed regardless of its
+state.
 
-Whoops, as Rolf Eike Beer pointed out to me, I snipped one line too many. 
-  fchs = (TachFCHDR_GCMND*)ulFibreFrame;
-So, the kfree inside each branch is correct. Freeing it just before
-the if would be wrong.
-Sorry about that.
+The patch also removes the unused field in the command: timeout and
+timeout_total.
 
--- 
-Jesper Juhl <jesper.juhl@gmail.com>
-Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please      http://www.expita.com/nomime.html
+This solves the problem of detecting an endless loop in the mid-layer
+because of BUSY/QUEUE_FULL bouncing, but will not recover the device.
+In the aic7xxx case, the driver can be recovered by sending a bus reset,
+so possibly this should be tied into the error handler?
+
+James
+
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -9200,8 +9200,8 @@ asc_prt_scsi_cmnd(struct scsi_cmnd *s)
+         (unsigned) s->serial_number, s->retries, s->allowed);
+ 
+     printk(
+-" timeout_per_command %d, timeout_total %d, timeout %d\n",
+-        s->timeout_per_command, s->timeout_total, s->timeout);
++" timeout_per_command %d\n",
++        s->timeout_per_command);
+ 
+     printk(
+ " scsi_done 0x%lx, done 0x%lx, host_scribble 0x%lx, result 0x%x\n",
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -268,6 +268,7 @@ struct scsi_cmnd *scsi_get_command(struc
+ 	} else
+ 		put_device(&dev->sdev_gendev);
+ 
++	cmd->jiffies_at_alloc = jiffies;
+ 	return cmd;
+ }				
+ EXPORT_SYMBOL(scsi_get_command);
+@@ -798,9 +799,23 @@ static void scsi_softirq(struct softirq_
+ 	while (!list_empty(&local_q)) {
+ 		struct scsi_cmnd *cmd = list_entry(local_q.next,
+ 						   struct scsi_cmnd, eh_entry);
++		/* The longest time any command should be outstanding is the
++		 * per command timeout multiplied by the number of retries.
++		 *
++		 * For a typical command, this is 2.5 minutes */
++		unsigned long wait_for 
++			= cmd->allowed * cmd->timeout_per_command;
+ 		list_del_init(&cmd->eh_entry);
+ 
+ 		disposition = scsi_decide_disposition(cmd);
++		if (disposition != SUCCESS &&
++		    time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
++			dev_printk(KERN_ERR, &cmd->device->sdev_gendev, 
++				   "timing out command, waited %ds\n",
++				   wait_for/HZ);
++			disposition = SUCCESS;
++		}
++			
+ 		scsi_log_completion(cmd, disposition);
+ 		switch (disposition) {
+ 		case SUCCESS:
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -51,12 +51,16 @@ struct scsi_cmnd {
+ 	 * printk's to use ->pid, so that we can kill this field.
+ 	 */
+ 	unsigned long serial_number;
++	/*
++	 * This is set to jiffies as it was when the command was first
++	 * allocated.  It is used to time how long the command has
++	 * been outstanding
++	 */
++	unsigned long jiffies_at_alloc;
+ 
+ 	int retries;
+ 	int allowed;
+ 	int timeout_per_command;
+-	int timeout_total;
+-	int timeout;
+ 
+ 	unsigned char cmd_len;
+ 	unsigned char old_cmd_len;
+
+
