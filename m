@@ -1,108 +1,244 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [RFC] add global timeout to the scsi mid-layer
-Date: Fri, 05 Aug 2005 21:45:40 -0500
-Message-ID: <1123296340.5437.4.camel@mulgrave>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH] start stop libata attached SATA disks, take 2
+Date: Sat, 06 Aug 2005 18:27:23 +1000
+Message-ID: <42F4746B.6030303@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------050803030008000103050008"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:61395 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S263153AbVHFCpm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Aug 2005 22:45:42 -0400
-Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id j762jfA23466
-	for <linux-scsi@vger.kernel.org>; Fri, 5 Aug 2005 22:45:41 -0400
+Received: from zorg.st.net.au ([203.16.233.9]:24466 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S261259AbVHFI1e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Aug 2005 04:27:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-scsi@vger.kernel.org
 
-There are certain rogue devices (and the aic7xxx driver) that return
-BUSY or QUEUE_FULL forever.  This code will apply a global timeout (of
-the total number of retries times the per command timer) to a given
-command.  If it is exceeded, the command is completed regardless of its
-state.
+This is a multi-part message in MIME format.
+--------------050803030008000103050008
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-The patch also removes the unused field in the command: timeout and
-timeout_total.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-This solves the problem of detecting an endless loop in the mid-layer
-because of BUSY/QUEUE_FULL bouncing, but will not recover the device.
-In the aic7xxx case, the driver can be recovered by sending a bus reset,
-so possibly this should be tied into the error handler?
+Jeff,
+Here is another (more successful) attempt at that patch.
 
-James
+ChangeLog:
+  - adds minimal START STOP UNIT SCSI command functionality
+    to libata (follows sat-r05 apart from the IMMED bit).
+  - implements the TEST UNIT READY SCSI command as indicated
+    by sat-r05.
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -9200,8 +9200,8 @@ asc_prt_scsi_cmnd(struct scsi_cmnd *s)
-         (unsigned) s->serial_number, s->retries, s->allowed);
+Patch against lk 2.6.13-rc5 .
+
+Tested on my ST380013AS Seagate SATA disk with a Sil 3112
+HBA. Stop (spin down [enter standby power mode]) seems to
+work as does start. Start takes 3.8 seconds to spin up
+on my disk. TEST UNIT READY works returning GOOD status
+(after 0 ms) when the disk is active or idle and the
+"initializing command required" sense (after 180 ms)
+when the disk is in standby power mode.
+
+I looked a bit closer at the power condition states in
+SBC-2 and I assume there is an equivalence with SATA
+disks:
+
+State    Disk mechanics
+- ----------------------------------
+Active   Spinning, heads on track
+Idle     Spinning, heads parked
+Standby  Spun down,  " "
+Stop     Spun down,  " "
+
+The difference between "standby" and "stop" is that an
+initializing command is required (i.e. START STOP UNIT
+command, start=1) to transition out of "stop" state
+(but not "standby"). As far as I can see ATA disks don't
+have a "stop" state that can be accessed via the ATA
+command set so the the SAT draft says to translate a
+SCSI START STOP UNIT command, start=0 (i.e. stop) into
+SATA disk being placed into standby mode. That is fine
+but a SATA (and PATA) disk doesn't need an initializing
+command to go into active state, any media access command
+will do that. This is all fine, I just find it a little
+curious what SAT is defining should happen for the TEST
+UNIT READY translation.
+
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
+
+Doug Gilbert
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+Comment: Using GnuPG with Fedora - http://enigmail.mozdev.org
+
+iD8DBQFC9HRqnayo+9E+FQIRAmWQAJ44Aq/qgo42MF/E6VHdREHVRxw7qwCfceGA
+kklbxZFB/fMgFXQChvC3A7k=
+=a/U2
+-----END PGP SIGNATURE-----
+
+--------------050803030008000103050008
+Content-Type: text/x-patch;
+ name="libata2613rc5_stop.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="libata2613rc5_stop.diff"
+
+--- linux/include/linux/ata.h	2005-07-30 10:22:08.000000000 +1000
++++ linux/include/linux/ata.h2613rc5standby	2005-08-06 14:36:03.000000000 +1000
+@@ -108,6 +108,8 @@
  
-     printk(
--" timeout_per_command %d, timeout_total %d, timeout %d\n",
--        s->timeout_per_command, s->timeout_total, s->timeout);
-+" timeout_per_command %d\n",
-+        s->timeout_per_command);
+ 	/* ATA device commands */
+ 	ATA_CMD_CHK_POWER	= 0xE5, /* check power mode */
++	ATA_CMD_STANDBY		= 0xE2, /* place in standby power mode */
++	ATA_CMD_IDLE		= 0xE3, /* place in idle power mode */
+ 	ATA_CMD_EDD		= 0x90,	/* execute device diagnostic */
+ 	ATA_CMD_FLUSH		= 0xE7,
+ 	ATA_CMD_FLUSH_EXT	= 0xEA,
+--- linux/drivers/scsi/libata-scsi.c	2005-07-30 10:22:02.000000000 +1000
++++ linux/drivers/scsi/libata-scsi.c2613rc5stop	2005-08-06 17:39:34.000000000 +1000
+@@ -391,6 +391,86 @@
+ }
  
-     printk(
- " scsi_done 0x%lx, done 0x%lx, host_scribble 0x%lx, result 0x%x\n",
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -268,6 +268,7 @@ struct scsi_cmnd *scsi_get_command(struc
- 	} else
- 		put_device(&dev->sdev_gendev);
- 
-+	cmd->jiffies_at_alloc = jiffies;
- 	return cmd;
- }				
- EXPORT_SYMBOL(scsi_get_command);
-@@ -798,9 +799,23 @@ static void scsi_softirq(struct softirq_
- 	while (!list_empty(&local_q)) {
- 		struct scsi_cmnd *cmd = list_entry(local_q.next,
- 						   struct scsi_cmnd, eh_entry);
-+		/* The longest time any command should be outstanding is the
-+		 * per command timeout multiplied by the number of retries.
-+		 *
-+		 * For a typical command, this is 2.5 minutes */
-+		unsigned long wait_for 
-+			= cmd->allowed * cmd->timeout_per_command;
- 		list_del_init(&cmd->eh_entry);
- 
- 		disposition = scsi_decide_disposition(cmd);
-+		if (disposition != SUCCESS &&
-+		    time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
-+			dev_printk(KERN_ERR, &cmd->device->sdev_gendev, 
-+				   "timing out command, waited %ds\n",
-+				   wait_for/HZ);
-+			disposition = SUCCESS;
-+		}
-+			
- 		scsi_log_completion(cmd, disposition);
- 		switch (disposition) {
- 		case SUCCESS:
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -51,12 +51,16 @@ struct scsi_cmnd {
- 	 * printk's to use ->pid, so that we can kill this field.
- 	 */
- 	unsigned long serial_number;
+ /**
++ *	ata_scsi_tur_xlat - Translate SCSI TEST UNIT READY command
++ *	@qc: Storage for translated ATA taskfile
++ *	@scsicmd: SCSI command to translate (ignored)
++ *
++ *	Sets up an ATA taskfile to issue CHECK POWER MODE.
++ *	[See SAT revision 5 at www.t10.org]
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host_set lock)
++ *
++ *	RETURNS:
++ *	Zero on success, non-zero on error.
++ */
++
++static unsigned int ata_scsi_tur_xlat(struct ata_queued_cmd *qc, u8 *scsicmd)
++{
++	struct ata_taskfile *tf = &qc->tf;
++
++	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
++	tf->protocol = ATA_PROT_NODATA;
++	tf->command = ATA_CMD_CHK_POWER;
++
++	return 0;
++}
++
++/**
++ *	ata_scsi_start_stop_xlat - Translate SCSI START STOP UNIT command
++ *	@qc: Storage for translated ATA taskfile
++ *	@scsicmd: SCSI command to translate
++ *
++ *	Sets up an ATA taskfile to issue STANDBY (to stop) or READ VERIFY
++ *	(to start). Perhaps these commands should be preceded by
++ *	CHECK POWER MODE to see what power mode the device is already in.
++ *	[See SAT revision 5 at www.t10.org]
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host_set lock)
++ *
++ *	RETURNS:
++ *	Zero on success, non-zero on error.
++ */
++
++static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc,
++					     u8 *scsicmd)
++{
++	struct ata_taskfile *tf = &qc->tf;
++
++	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
++	tf->protocol = ATA_PROT_NODATA;
++	if (scsicmd[1] & 0x1) {
++		;	/* ignore IMMED bit, violates sat-r05 */
++	}
++	if (scsicmd[4] & 0x2)
++		return 1;	/* LOEJ bit set not supported */
++	if (((scsicmd[4] >> 4) & 0xf) != 0)
++		return 1;	/* power conditions not supported */
++	if (scsicmd[4] & 0x1) {
++		tf->nsect = 1;	/* 1 sector, lba=0 */
++		tf->lbah = 0x0;
++		tf->lbam = 0x0;
++		tf->lbal = 0x0;
++		tf->device |= ATA_LBA;
++		tf->command = ATA_CMD_VERIFY;	/* READ VERIFY */
++	} else {
++		tf->nsect = 0;	/* time period value (0 implies now) */
++		tf->command = ATA_CMD_STANDBY;
++		/* Consider: ATA STANDBY IMMEDIATE command */
++	}
 +	/*
-+	 * This is set to jiffies as it was when the command was first
-+	 * allocated.  It is used to time how long the command has
-+	 * been outstanding
++	 * Standby and Idle condition timers could be implemented but that
++	 * would require libata to implement the Power condition mode page
++	 * and allow the user to change it. Changing mode pages requires
++	 * MODE SELECT to be implemented.
 +	 */
-+	unsigned long jiffies_at_alloc;
++
++	return 0;
++}
++
++
++/**
+  *	ata_scsi_flush_xlat - Translate SCSI SYNCHRONIZE CACHE command
+  *	@qc: Storage for translated ATA taskfile
+  *	@scsicmd: SCSI command to translate (ignored)
+@@ -632,7 +712,30 @@
  
- 	int retries;
- 	int allowed;
- 	int timeout_per_command;
--	int timeout_total;
--	int timeout;
+ 	if (unlikely(drv_stat & (ATA_ERR | ATA_BUSY | ATA_DRQ)))
+ 		ata_to_sense_error(qc, drv_stat);
+-	else
++	else if (cmd->cmnd[0] == TEST_UNIT_READY) {
++		unsigned char *sb = cmd->sense_buffer;
++		struct ata_taskfile resp_tf;
++
++		memset(&resp_tf, 0, sizeof(resp_tf));
++		qc->ap->ops->tf_read(qc->ap, &resp_tf);
++		/* result value in sector count field */
++		if (resp_tf.nsect == 0) {
++			/* standby mode, respond as per sat-r05 */
++			sb[0] = 0x70;
++			sb[2] = NOT_READY;
++			sb[7] = 0x0a;
++			sb[12] = 0x4;	/* Logical unit not ready .. */
++			sb[13] = 0x2;	/* .. initializing command required */
++			cmd->result = SAM_STAT_CHECK_CONDITION;
++		} else if (resp_tf.nsect == 0x80) {
++			/* idle mode */
++			DPRINTK("CHECK POWER MODE reports idle\n");
++			cmd->result = SAM_STAT_GOOD;
++		} else {
++			/* nsect should be 0xff implying active or idle */
++			cmd->result = SAM_STAT_GOOD;
++		}
++	} else
+ 		cmd->result = SAM_STAT_GOOD;
  
- 	unsigned char cmd_len;
- 	unsigned char old_cmd_len;
+ 	qc->scsidone(cmd);
+@@ -1434,6 +1537,10 @@
+ 	case VERIFY:
+ 	case VERIFY_16:
+ 		return ata_scsi_verify_xlat;
++	case TEST_UNIT_READY:
++		return ata_scsi_tur_xlat;
++	case START_STOP:
++		return ata_scsi_start_stop_xlat;
+ 	}
+ 
+ 	return NULL;
+@@ -1544,7 +1651,6 @@
+ 		case REZERO_UNIT:
+ 		case SEEK_6:
+ 		case SEEK_10:
+-		case TEST_UNIT_READY:
+ 		case FORMAT_UNIT:		/* FIXME: correct? */
+ 		case SEND_DIAGNOSTIC:		/* FIXME: correct? */
+ 			ata_scsi_rbuf_fill(&args, ata_scsiop_noop);
 
 
+--------------050803030008000103050008--
