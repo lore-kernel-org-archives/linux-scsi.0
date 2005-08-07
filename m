@@ -1,55 +1,39 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 3] sata: restore sg on setup failure
-Date: Sun, 7 Aug 2005 15:17:37 +0900
-Message-ID: <20050807061737.GA14913@htj.dyndns.org>
-References: <20050729050654.GA10413@havoc.gtf.org> <20050807054850.GA13335@htj.dyndns.org>
+From: Pierre Ossman <drzeus-list@drzeus.cx>
+Subject: Re: Fw: Kernel panic with dc395x in 2.6.12.2
+Date: Sun, 07 Aug 2005 14:21:19 +0200
+Message-ID: <42F5FCBF.7080902@drzeus.cx>
+References: <20050709175725.75f291bf.rdunlap@xenotime.net> <20050710105635.6d1606e3.rdunlap@xenotime.net> <42D17D49.1000007@drzeus.cx> <Pine.LNX.4.60.0507132312050.8774@poirot.grange> <42E03506.7030707@drzeus.cx> <20050721235348.05eace11.rdunlap@xenotime.net> <20050722135055.6cb4597d.rdunlap@xenotime.net> <42E17451.6090706@drzeus.cx> <20050722153651.28d5db51.rdunlap@xenotime.net> <42E17772.3020903@drzeus.cx> <20050723100945.7d43d063.rdunlap@xenotime.net> <42E2933C.4050808@drzeus.cx> <20050723152714.4212ba52.rdunlap@xenotime.net> <42E2ECF1.8070501@drzeus.cx> <20050723184014.49629f9e.rdunlap@xenotime.net> <42E39462.3040007@drzeus.cx> <20050724100153.3e891484.rdunlap@xenotime.net> <42E565FE.4070708@drzeus.cx> <20050725203133.3cfa650d.rdunlap@xenotime.net> <42E6A5C3.6070501@drzeus.cx> <20050726202058.133382c1.rdunlap@xenotime.net> <42E964CC.5060600@drzeus.cx> <20050728201339.216ab3b8.rdunlap
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.198]:475 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751127AbVHGGRp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Aug 2005 02:17:45 -0400
-Received: by wproxy.gmail.com with SMTP id i20so650697wra
-        for <linux-scsi@vger.kernel.org>; Sat, 06 Aug 2005 23:17:42 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20050807054850.GA13335@htj.dyndns.org>
+Received: from [85.8.12.41] ([85.8.12.41]:25740 "EHLO smtp.drzeus.cx")
+	by vger.kernel.org with ESMTP id S1751278AbVHGMVW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Aug 2005 08:21:22 -0400
+In-Reply-To: <Pine.LNX.4.60.0508070003520.10832@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, oliver@neukum.name, linux-scsi@vger.kernel.org
 
- I forgot to restore sg->length on setup failure.  This patch adds it.
+Guennadi Liakhovetski wrote:
 
+>So, now that we have somebody to test alternative patches, let's try it... 
+>Please, first revert the first patch (apply with -R), and then apply the 
+>second one. There, probably, will be offsets, don't worry about them. 
+>Warning: untested. Please, try some read-only test first, if you get so 
+>far at all... I prepared this patch a long time ago, and didn't revisit it 
+>since then, hope, it's still fresh enough:-)
+>  
+>
 
-Signed-off-by: Tejun Heo <htejun@gmail.com>
+Ok, I've tried the included patches now and everything seems to work
+fine. Note though that I only have a CD writer hooked up to the
+controller, no disks.
 
-Index: work/drivers/scsi/libata-core.c
-===================================================================
---- work.orig/drivers/scsi/libata-core.c	2005-08-07 15:13:20.000000000 +0900
-+++ work/drivers/scsi/libata-core.c	2005-08-07 15:15:27.000000000 +0900
-@@ -2401,8 +2401,11 @@ static int ata_sg_setup_one(struct ata_q
- 
- 	dma_address = dma_map_single(ap->host_set->dev, qc->buf_virt,
- 				     sg->length, dir);
--	if (dma_mapping_error(dma_address))
-+	if (dma_mapping_error(dma_address)) {
-+		/* restore sg */
-+		sg->length += qc->pad_len;
- 		return -1;
-+	}
- 
- 	sg_dma_address(sg) = dma_address;
- 	sg_dma_len(sg) = sg->length;
-@@ -2473,8 +2476,11 @@ static int ata_sg_setup(struct ata_queue
- 
- 	dir = qc->dma_dir;
- 	n_elem = dma_map_sg(ap->host_set->dev, sg, qc->n_elem, dir);
--	if (n_elem < 1)
-+	if (n_elem < 1) {
-+		/* restore last sg */
-+		lsg->length += qc->pad_len;
- 		return -1;
-+	}
- 
- 	DPRINTK("%d sg elements mapped\n", n_elem);
- 
+Anything special I should try to make sure the patch does what it's
+supposed to?
+
+Rgds
+Pierre
+
