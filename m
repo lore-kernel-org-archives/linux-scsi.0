@@ -1,39 +1,38 @@
-From: Pierre Ossman <drzeus-list@drzeus.cx>
-Subject: Re: Fw: Kernel panic with dc395x in 2.6.12.2
-Date: Sun, 07 Aug 2005 14:21:19 +0200
-Message-ID: <42F5FCBF.7080902@drzeus.cx>
-References: <20050709175725.75f291bf.rdunlap@xenotime.net> <20050710105635.6d1606e3.rdunlap@xenotime.net> <42D17D49.1000007@drzeus.cx> <Pine.LNX.4.60.0507132312050.8774@poirot.grange> <42E03506.7030707@drzeus.cx> <20050721235348.05eace11.rdunlap@xenotime.net> <20050722135055.6cb4597d.rdunlap@xenotime.net> <42E17451.6090706@drzeus.cx> <20050722153651.28d5db51.rdunlap@xenotime.net> <42E17772.3020903@drzeus.cx> <20050723100945.7d43d063.rdunlap@xenotime.net> <42E2933C.4050808@drzeus.cx> <20050723152714.4212ba52.rdunlap@xenotime.net> <42E2ECF1.8070501@drzeus.cx> <20050723184014.49629f9e.rdunlap@xenotime.net> <42E39462.3040007@drzeus.cx> <20050724100153.3e891484.rdunlap@xenotime.net> <42E565FE.4070708@drzeus.cx> <20050725203133.3cfa650d.rdunlap@xenotime.net> <42E6A5C3.6070501@drzeus.cx> <20050726202058.133382c1.rdunlap@xenotime.net> <42E964CC.5060600@drzeus.cx> <20050728201339.216ab3b8.rdunlap
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: As of 2.6.13-rc1 Fusion-MPT very slow
+Date: Sun, 07 Aug 2005 09:29:37 -0500
+Message-ID: <1123424977.5020.4.camel@mulgrave>
+References: <91888D455306F94EBD4D168954A9457C035CB64A@nacos172.co.lsil.com>
+	 <Pine.LNX.4.61.0508011537250.23481@praktifix.dwd.de>
+	 <1123350790.5092.2.camel@mulgrave>
+	 <Pine.LNX.4.61.0508062058200.27998@praktifix.dwd.de>
+	 <1123366064.5102.3.camel@mulgrave>
+	 <Pine.LNX.4.61.0508070540560.12234@praktifix.dwd.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [85.8.12.41] ([85.8.12.41]:25740 "EHLO smtp.drzeus.cx")
-	by vger.kernel.org with ESMTP id S1751278AbVHGMVW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Aug 2005 08:21:22 -0400
-In-Reply-To: <Pine.LNX.4.60.0508070003520.10832@poirot.grange>
+Received: from stat16.steeleye.com ([209.192.50.48]:34016 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751847AbVHGOaI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 7 Aug 2005 10:30:08 -0400
+In-Reply-To: <Pine.LNX.4.61.0508070540560.12234@praktifix.dwd.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, oliver@neukum.name, linux-scsi@vger.kernel.org
+To: Holger Kiehl <Holger.Kiehl@dwd.de>
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>, Andrew Morton <akpm@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Guennadi Liakhovetski wrote:
+On Sun, 2005-08-07 at 05:59 +0000, Holger Kiehl wrote:
+> Thanks, removing those it compiles fine. This patch also solves my problem,
+> here the output of dmesg:
 
->So, now that we have somebody to test alternative patches, let's try it... 
->Please, first revert the first patch (apply with -R), and then apply the 
->second one. There, probably, will be offsets, don't worry about them. 
->Warning: untested. Please, try some read-only test first, if you get so 
->far at all... I prepared this patch a long time ago, and didn't revisit it 
->since then, hope, it's still fresh enough:-)
->  
->
+Well ... the transport class was supposed to help diagnose the problem
+rather than fix it.
 
-Ok, I've tried the included patches now and everything seems to work
-fine. Note though that I only have a CD writer hooked up to the
-controller, no disks.
+However, what it shows is that the original problem is in the fusion
+internal domain validation somewhere, but that we still don't know
+where...
 
-Anything special I should try to make sure the patch does what it's
-supposed to?
+James
 
-Rgds
-Pierre
 
