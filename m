@@ -1,73 +1,26 @@
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH C&C] gdth: remove GDTIOCTL_OSVERS
-Date: Mon, 8 Aug 2005 02:28:29 +0400
-Message-ID: <20050807222829.GA20558@mipter.zuzino.mipt.ru>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: atomic_kmap for PIO (was Re: Fw: Kernel panic with dc395x in
+ 2.6.12.2)
+Date: Sun, 07 Aug 2005 17:34:18 -0500
+Message-ID: <42F68C6A.1070603@cs.wisc.edu>
+References: <20050709175725.75f291bf.rdunlap@xenotime.net> <Pine.LNX.4.60.0507132312050.8774@poirot.grange> <42E03506.7030707@drzeus.cx> <20050721235348.05eace11.rdunlap@xenotime.net> <20050722135055.6cb4597d.rdunlap@xenotime.net> <42E17451.6090706@drzeus.cx> <20050722153651.28d5db51.rdunlap@xenotime.net> <42E17772.3020903@drzeus.cx> <20050723100945.7d43d063.rdunlap@xenotime.net> <42E2933C.4050808@drzeus.cx> <20050723152714.4212ba52.rdunlap@xenotime.net> <42E2ECF1.8070501@drzeus.cx> <20050723184014.49629f9e.rdunlap@xenotime.net> <42E39462.3040007@drzeus.cx> <20050724100153.3e891484.rdunlap@xenotime.net> <42E565FE.4070708@drzeus.cx> <20050725203133.3cfa650d.rdunlap@xenotime.net> <42E6A5C3.6070501@drzeus.cx> <20050726202058.133382c1.rdunlap@xenotime.net> <42E964CC.5060600@drzeus.cx> <20050728201339.216ab3b8.rdunlap@xenotime.net> <42F37893.30006@drzeus.cx> <Pine.LNX.4.60.0508070003520.10832
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.202]:30869 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1753029AbVHGWUS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Aug 2005 18:20:18 -0400
-Received: by wproxy.gmail.com with SMTP id i20so720742wra
-        for <linux-scsi@vger.kernel.org>; Sun, 07 Aug 2005 15:20:17 -0700 (PDT)
-Content-Disposition: inline
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:17804 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1753069AbVHGWeq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Aug 2005 18:34:46 -0400
+In-Reply-To: <Pine.LNX.4.60.0508072214240.7539@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Achim Leubner <achim_leubner@adaptec.com>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: Pierre Ossman <drzeus-list@drzeus.cx>, "Randy.Dunlap" <rdunlap@xenotime.net>, oliver@neukum.name, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, Jamie Lenehan <lenehan@twibble.org>
 
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
----
+Guennadi Liakhovetski wrote:
+> Now, it would be best, I think, if somebody could review the patches to 
+> dc395x and tmscsim. In case the 2 functions are correct, they could be 
+> included in a central file (scsi_lib?) for all drivers, needing PIO (I 
 
- drivers/scsi/gdth.c       |   12 ------------
- drivers/scsi/gdth_ioctl.h |    8 --------
- 2 files changed, 20 deletions(-)
-
-diff -uprN linux-vanilla/drivers/scsi/gdth.c linux-gdth/drivers/scsi/gdth.c
---- linux-vanilla/drivers/scsi/gdth.c	2005-08-08 02:16:47.000000000 +0400
-+++ linux-gdth/drivers/scsi/gdth.c	2005-08-08 02:19:59.000000000 +0400
-@@ -5411,18 +5411,6 @@ static int gdth_ioctl(struct inode *inod
-                 return -EFAULT;
-         break;
-       }
--      
--      case GDTIOCTL_OSVERS:
--      { 
--        gdth_ioctl_osvers osv; 
--
--        osv.version = (unchar)(LINUX_VERSION_CODE >> 16);
--        osv.subversion = (unchar)(LINUX_VERSION_CODE >> 8);
--        osv.revision = (ushort)(LINUX_VERSION_CODE & 0xff);
--        if (copy_to_user(argp, &osv, sizeof(gdth_ioctl_osvers)))
--                return -EFAULT;
--        break;
--      }
- 
-       case GDTIOCTL_CTRTYPE:
-       { 
-diff -uprN linux-vanilla/drivers/scsi/gdth_ioctl.h linux-gdth/drivers/scsi/gdth_ioctl.h
---- linux-vanilla/drivers/scsi/gdth_ioctl.h	2005-08-08 02:16:47.000000000 +0400
-+++ linux-gdth/drivers/scsi/gdth_ioctl.h	2005-08-08 02:20:19.000000000 +0400
-@@ -10,7 +10,6 @@
- #define GDTIOCTL_GENERAL    (GDTIOCTL_MASK | 0) /* general IOCTL */
- #define GDTIOCTL_DRVERS     (GDTIOCTL_MASK | 1) /* get driver version */
- #define GDTIOCTL_CTRTYPE    (GDTIOCTL_MASK | 2) /* get controller type */
--#define GDTIOCTL_OSVERS     (GDTIOCTL_MASK | 3) /* get OS version */
- #define GDTIOCTL_HDRLIST    (GDTIOCTL_MASK | 4) /* get host drive list */
- #define GDTIOCTL_CTRCNT     (GDTIOCTL_MASK | 5) /* get controller count */
- #define GDTIOCTL_LOCKDRV    (GDTIOCTL_MASK | 6) /* lock host drive */
-@@ -296,13 +295,6 @@ typedef struct {
-     unchar channel;                             /* channel */
- } gdth_ioctl_lockchn;
- 
--/* GDTIOCTL_OSVERS */
--typedef struct {
--    unchar version;                             /* OS version */
--    unchar subversion;                          /* OS subversion */
--    ushort revision;                            /* revision */
--} gdth_ioctl_osvers;
--
- /* GDTIOCTL_CTRTYPE */
- typedef struct {
-     ushort ionode;                              /* controller number */
-
+would it be possible to modify the scatterwalk code so we can share
+something with other subsystems?
