@@ -1,38 +1,43 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: As of 2.6.13-rc1 Fusion-MPT very slow
-Date: Sun, 07 Aug 2005 09:29:37 -0500
-Message-ID: <1123424977.5020.4.camel@mulgrave>
-References: <91888D455306F94EBD4D168954A9457C035CB64A@nacos172.co.lsil.com>
-	 <Pine.LNX.4.61.0508011537250.23481@praktifix.dwd.de>
-	 <1123350790.5092.2.camel@mulgrave>
-	 <Pine.LNX.4.61.0508062058200.27998@praktifix.dwd.de>
-	 <1123366064.5102.3.camel@mulgrave>
-	 <Pine.LNX.4.61.0508070540560.12234@praktifix.dwd.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Synchronizing scsi_remove_host and the error handler
+Date: Sun, 7 Aug 2005 10:59:10 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0508071041110.28316-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:34016 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751847AbVHGOaI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 7 Aug 2005 10:30:08 -0400
-In-Reply-To: <Pine.LNX.4.61.0508070540560.12234@praktifix.dwd.de>
+Received: from mx1.rowland.org ([192.131.102.7]:24069 "HELO mx1.rowland.org")
+	by vger.kernel.org with SMTP id S1751921AbVHGO7O (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Aug 2005 10:59:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Holger Kiehl <Holger.Kiehl@dwd.de>
-Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>, Andrew Morton <akpm@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Sun, 2005-08-07 at 05:59 +0000, Holger Kiehl wrote:
-> Thanks, removing those it compiles fine. This patch also solves my problem,
-> here the output of dmesg:
+Mike:
 
-Well ... the transport class was supposed to help diagnose the problem
-rather than fix it.
+What sort of synchronization is there between scsi_remove_host and the 
+error-handler thread?  Offhand I can see two possible problems, depending 
+on how the LLD is written:
 
-However, what it shows is that the original problem is in the fusion
-internal domain validation somewhere, but that we still don't know
-where...
+     1.	The error handler asks the LLD to perform a reset just as the LLD
+	calls scsi_remove_host as part of rmmod.  scsi_remove_host 
+	returns, the LLD's remove method returns, and the LLD is unloaded
+	from memory while its reset routine is executing.
 
-James
+     2. The error handler asks the LLD to perform a reset just before the
+	LLD calls scsi_remove_host.  The LLD's remove method can't return
+	until the reset completes (otherwise the reset would be executing 
+	code that is about to be unloaded, as in (1)).  But the reset
+	can't get started until it acquires the host adapter's device 
+	semaphore, which is owned by the rmmod thread.
 
+(1) causes an oops and (2) causes a deadlock.  Note that (1) can be 
+avoided by making scis_remove_host wait until the error handler thread has 
+exited, but that will make (2) much more likely to happen.
+
+In general, there needs to be some way for the error handler to prevent
+the LLD from being unloaded.  I don't know what the best answer is.  Has
+anyone thought about this?
+
+Alan Stern
 
