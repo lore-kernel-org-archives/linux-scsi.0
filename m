@@ -1,47 +1,36 @@
-From: Dave Jones <davej@redhat.com>
-Subject: blacklist addition.
-Date: Mon, 8 Aug 2005 19:01:43 -0400
-Message-ID: <20050808230143.GA7072@redhat.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Synchronizing scsi_remove_host and the error handler
+Date: Tue, 09 Aug 2005 01:10:48 +0200
+Message-ID: <42F7E678.3010400@s5r6.in-berlin.de>
+References: <Pine.LNX.4.44L0.0508081818131.4470-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:42649 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S932343AbVHHXBt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Aug 2005 19:01:49 -0400
-Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
-	by mx1.redhat.com (8.12.11/8.12.11) with ESMTP id j78N1msj020775
-	for <linux-scsi@vger.kernel.org>; Mon, 8 Aug 2005 19:01:49 -0400
-Received: from devserv.devel.redhat.com (devserv.devel.redhat.com [172.16.58.1])
-	by int-mx1.corp.redhat.com (8.11.6/8.11.6) with ESMTP id j78N1hV05532
-	for <linux-scsi@vger.kernel.org>; Mon, 8 Aug 2005 19:01:43 -0400
-Received: from devserv.devel.redhat.com (localhost.localdomain [127.0.0.1])
-	by devserv.devel.redhat.com (8.12.11/8.12.11) with ESMTP id j78N1h3i007781
-	for <linux-scsi@vger.kernel.org>; Mon, 8 Aug 2005 19:01:43 -0400
-Received: (from davej@localhost)
-	by devserv.devel.redhat.com (8.12.11/8.12.11/Submit) id j78N1hea007779
-	for linux-scsi@vger.kernel.org; Mon, 8 Aug 2005 19:01:43 -0400
-Content-Disposition: inline
+Received: from einhorn.in-berlin.de ([192.109.42.8]:39320 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S932349AbVHHXLD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Aug 2005 19:11:03 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0508081818131.4470-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>
 
-When run on a kernel that scans all LUNs, a certain crappy
-scsi scanner reports the same LUN over and over..
-https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=155457
+Alan Stern wrote:
+> On Mon, 8 Aug 2005, Stefan Richter wrote:
+>>But after all high-level drivers were detached (and that should
+>>have happend right before scsi_remove_host returns) I don't see why  
+>>the host's ref count might not be down to zero.
+> 
+> There might still be outstanding references: processes holding files 
+> open, that sort of thing.
 
-Aparently they were so shamed by this, they chose to remain
-anonymous. Though it seems the blacklist code handles
-anonymous vendors just fine.
+But as long as files are open etc., scsi high-level drivers are
+'in use', cannot be detached, and scsi_remove_host does not return.
 
-Signed-off-by: Dave Jones <davej@redhat.com>
-
---- linux-2.6.11/drivers/scsi/scsi_devinfo.c~	2005-04-29 18:16:15.000000000 -0400
-+++ linux-2.6.11/drivers/scsi/scsi_devinfo.c	2005-04-29 18:18:27.000000000 -0400
-@@ -114,6 +114,7 @@ static struct {
- 	{"YAMAHA", "CDR102", "1.00", BLIST_NOLUN},	/* locks up */
- 	{"YAMAHA", "CRW8424S", "1.0", BLIST_NOLUN},	/* locks up */
- 	{"YAMAHA", "CRW6416S", "1.0c", BLIST_NOLUN},	/* locks up */
-+	{"", "Scanner", "1.80", BLIST_NOLUN},	/* responds to all lun */
- 
- 	/*
- 	 * Other types of devices that have special flags.
+Or that's what I assumed so far.
+-- 
+Stefan Richter
+-=====-=-=-= =--- -=--=
+http://arcgraph.de/sr/
