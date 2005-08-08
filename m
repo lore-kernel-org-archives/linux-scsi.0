@@ -1,132 +1,134 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH] aacraid: adapter support update
-Date: Mon, 08 Aug 2005 14:20:43 -0700
-Message-ID: <1123536043.3927.4.camel@markh1.pdx.osdl.net>
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: Synchronizing scsi_remove_host and the error handler
+Date: Mon, 8 Aug 2005 14:36:01 -0700
+Message-ID: <20050808213601.GC22773@us.ibm.com>
+References: <42F687EA.2020601@s5r6.in-berlin.de> <Pine.LNX.4.44L0.0508081517000.4454-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:35026 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932261AbVHHVUu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Aug 2005 17:20:50 -0400
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:37554 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932219AbVHHVgu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Aug 2005 17:36:50 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j78Lan6f018938
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Aug 2005 17:36:49 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j78LaYWw225468
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Aug 2005 17:36:49 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j78LaXAg002054
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Aug 2005 17:36:33 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0508081517000.4454-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, SCSI development list <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, Luben Tuikov <luben_tuikov@adaptec.com>
 
-Received from Mark Salyzyn
+Alan Stern <stern@rowland.harvard.edu> wrote:
+> Here you are wrong.  In fact the core makes no such guarantees.  It _will_
+> try to enter the host (for things like telling disk drives to flush
+> their caches) for as long as it retains a reference to the host structure.
 
-This patch adds the product ID for the ICP9067MA adapter.
-
-The entries for the ICP9085LI, ICP5085BR, IBM8k & ASR4810SAS were
-incorrect and would not initialize the adapters correctly.
-
-Applies to scsi-misc-2.6 git tree
-
-Signed-off-by: Mark Haverkamp <markh@osdl.org>
+Well post scsi_remove_host returning no commands can be sent through the
+LLDD's queuecommand. There is still the issue you previously mentioned
+about a possible race of the scsi error handler and a call to
+scsi_remove_host.
 
 
-Index: scsi-misc-aac-1/drivers/scsi/aacraid/linit.c
-===================================================================
---- scsi-misc-aac-1.orig/drivers/scsi/aacraid/linit.c	2005-08-08 09:11:56.000000000 -0700
-+++ scsi-misc-aac-1/drivers/scsi/aacraid/linit.c	2005-08-08 11:04:51.000000000 -0700
-@@ -120,36 +120,39 @@
- 	{ 0x9005, 0x0286, 0x9005, 0x02a3, 0, 0, 29 }, /* ICP5085AU (Hurricane) */
- 	{ 0x9005, 0x0285, 0x9005, 0x02a4, 0, 0, 30 }, /* ICP9085LI (Marauder-X) */
- 	{ 0x9005, 0x0285, 0x9005, 0x02a5, 0, 0, 31 }, /* ICP5085BR (Marauder-E) */
--	{ 0x9005, 0x0287, 0x9005, 0x0800, 0, 0, 32 }, /* Themisto Jupiter Platform */
--	{ 0x9005, 0x0200, 0x9005, 0x0200, 0, 0, 32 }, /* Themisto Jupiter Platform */
--	{ 0x9005, 0x0286, 0x9005, 0x0800, 0, 0, 33 }, /* Callisto Jupiter Platform */
--	{ 0x9005, 0x0285, 0x9005, 0x028e, 0, 0, 34 }, /* ASR-2020SA SATA PCI-X ZCR (Skyhawk) */
--	{ 0x9005, 0x0285, 0x9005, 0x028f, 0, 0, 35 }, /* ASR-2025SA SATA SO-DIMM PCI-X ZCR (Terminator) */
--	{ 0x9005, 0x0285, 0x9005, 0x0290, 0, 0, 36 }, /* AAR-2410SA PCI SATA 4ch (Jaguar II) */
--	{ 0x9005, 0x0285, 0x1028, 0x0291, 0, 0, 37 }, /* CERC SATA RAID 2 PCI SATA 6ch (DellCorsair) */
--	{ 0x9005, 0x0285, 0x9005, 0x0292, 0, 0, 38 }, /* AAR-2810SA PCI SATA 8ch (Corsair-8) */
--	{ 0x9005, 0x0285, 0x9005, 0x0293, 0, 0, 39 }, /* AAR-21610SA PCI SATA 16ch (Corsair-16) */
--	{ 0x9005, 0x0285, 0x9005, 0x0294, 0, 0, 40 }, /* ESD SO-DIMM PCI-X SATA ZCR (Prowler) */
--	{ 0x9005, 0x0285, 0x103C, 0x3227, 0, 0, 41 }, /* AAR-2610SA PCI SATA 6ch */
--	{ 0x9005, 0x0285, 0x9005, 0x0296, 0, 0, 42 }, /* ASR-2240S (SabreExpress) */
--	{ 0x9005, 0x0285, 0x9005, 0x0297, 0, 0, 43 }, /* ASR-4005SAS */
--	{ 0x9005, 0x0285, 0x1014, 0x02F2, 0, 0, 44 }, /* IBM 8i (AvonPark) */
--	{ 0x9005, 0x0285, 0x1014, 0x0312, 0, 0, 44 }, /* IBM 8i (AvonPark Lite) */
--	{ 0x9005, 0x0285, 0x9005, 0x0298, 0, 0, 45 }, /* ASR-4000SAS (BlackBird) */
--	{ 0x9005, 0x0285, 0x9005, 0x0299, 0, 0, 46 }, /* ASR-4800SAS (Marauder-X) */
--	{ 0x9005, 0x0285, 0x9005, 0x029a, 0, 0, 47 }, /* ASR-4805SAS (Marauder-E) */
--	{ 0x9005, 0x0286, 0x9005, 0x02a2, 0, 0, 48 }, /* ASR-4810SAS (Hurricane */
--
--	{ 0x9005, 0x0285, 0x1028, 0x0287, 0, 0, 49 }, /* Perc 320/DC*/
--	{ 0x1011, 0x0046, 0x9005, 0x0365, 0, 0, 50 }, /* Adaptec 5400S (Mustang)*/
--	{ 0x1011, 0x0046, 0x9005, 0x0364, 0, 0, 51 }, /* Adaptec 5400S (Mustang)*/
--	{ 0x1011, 0x0046, 0x9005, 0x1364, 0, 0, 52 }, /* Dell PERC2/QC */
--	{ 0x1011, 0x0046, 0x103c, 0x10c2, 0, 0, 53 }, /* HP NetRAID-4M */
--
--	{ 0x9005, 0x0285, 0x1028, PCI_ANY_ID, 0, 0, 54 }, /* Dell Catchall */
--	{ 0x9005, 0x0285, 0x17aa, PCI_ANY_ID, 0, 0, 55 }, /* Legend Catchall */
--	{ 0x9005, 0x0285, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 56 }, /* Adaptec Catch All */
--	{ 0x9005, 0x0286, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 57 }, /* Adaptec Rocket Catch All */
-+	{ 0x9005, 0x0286, 0x9005, 0x02a6, 0, 0, 32 }, /* ICP9067MA (Intruder-6) */
-+	{ 0x9005, 0x0287, 0x9005, 0x0800, 0, 0, 33 }, /* Themisto Jupiter Platform */
-+	{ 0x9005, 0x0200, 0x9005, 0x0200, 0, 0, 33 }, /* Themisto Jupiter Platform */
-+	{ 0x9005, 0x0286, 0x9005, 0x0800, 0, 0, 34 }, /* Callisto Jupiter Platform */
-+	{ 0x9005, 0x0285, 0x9005, 0x028e, 0, 0, 35 }, /* ASR-2020SA SATA PCI-X ZCR (Skyhawk) */
-+	{ 0x9005, 0x0285, 0x9005, 0x028f, 0, 0, 36 }, /* ASR-2025SA SATA SO-DIMM PCI-X ZCR (Terminator) */
-+	{ 0x9005, 0x0285, 0x9005, 0x0290, 0, 0, 37 }, /* AAR-2410SA PCI SATA 4ch (Jaguar II) */
-+	{ 0x9005, 0x0285, 0x1028, 0x0291, 0, 0, 38 }, /* CERC SATA RAID 2 PCI SATA 6ch (DellCorsair) */
-+	{ 0x9005, 0x0285, 0x9005, 0x0292, 0, 0, 39 }, /* AAR-2810SA PCI SATA 8ch (Corsair-8) */
-+	{ 0x9005, 0x0285, 0x9005, 0x0293, 0, 0, 40 }, /* AAR-21610SA PCI SATA 16ch (Corsair-16) */
-+	{ 0x9005, 0x0285, 0x9005, 0x0294, 0, 0, 41 }, /* ESD SO-DIMM PCI-X SATA ZCR (Prowler) */
-+	{ 0x9005, 0x0285, 0x103C, 0x3227, 0, 0, 42 }, /* AAR-2610SA PCI SATA 6ch */
-+	{ 0x9005, 0x0285, 0x9005, 0x0296, 0, 0, 43 }, /* ASR-2240S (SabreExpress) */
-+	{ 0x9005, 0x0285, 0x9005, 0x0297, 0, 0, 44 }, /* ASR-4005SAS */
-+	{ 0x9005, 0x0285, 0x1014, 0x02F2, 0, 0, 45 }, /* IBM 8i (AvonPark) */
-+	{ 0x9005, 0x0285, 0x1014, 0x0312, 0, 0, 45 }, /* IBM 8i (AvonPark Lite) */
-+	{ 0x9005, 0x0286, 0x1014, 0x9580, 0, 0, 46 }, /* IBM 8k/8k-l8 (Aurora) */
-+	{ 0x9005, 0x0286, 0x1014, 0x9540, 0, 0, 47 }, /* IBM 8k/8k-l4 (Aurora Lite) */
-+	{ 0x9005, 0x0285, 0x9005, 0x0298, 0, 0, 48 }, /* ASR-4000SAS (BlackBird) */
-+	{ 0x9005, 0x0285, 0x9005, 0x0299, 0, 0, 49 }, /* ASR-4800SAS (Marauder-X) */
-+	{ 0x9005, 0x0285, 0x9005, 0x029a, 0, 0, 50 }, /* ASR-4805SAS (Marauder-E) */
-+	{ 0x9005, 0x0286, 0x9005, 0x02a2, 0, 0, 51 }, /* ASR-4810SAS (Hurricane */
-+
-+	{ 0x9005, 0x0285, 0x1028, 0x0287, 0, 0, 52 }, /* Perc 320/DC*/
-+	{ 0x1011, 0x0046, 0x9005, 0x0365, 0, 0, 53 }, /* Adaptec 5400S (Mustang)*/
-+	{ 0x1011, 0x0046, 0x9005, 0x0364, 0, 0, 54 }, /* Adaptec 5400S (Mustang)*/
-+	{ 0x1011, 0x0046, 0x9005, 0x1364, 0, 0, 55 }, /* Dell PERC2/QC */
-+	{ 0x1011, 0x0046, 0x103c, 0x10c2, 0, 0, 56 }, /* HP NetRAID-4M */
-+
-+	{ 0x9005, 0x0285, 0x1028, PCI_ANY_ID, 0, 0, 57 }, /* Dell Catchall */
-+	{ 0x9005, 0x0285, 0x17aa, PCI_ANY_ID, 0, 0, 58 }, /* Legend Catchall */
-+	{ 0x9005, 0x0285, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 59 }, /* Adaptec Catch All */
-+	{ 0x9005, 0x0286, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 60 }, /* Adaptec Rocket Catch All */
- 	{ 0,}
- };
- MODULE_DEVICE_TABLE(pci, aac_pci_tbl);
-@@ -191,8 +194,9 @@
- 	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP9047MA       ", 1 }, /* ICP9047MA (Lancer) */
- 	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP9087MA       ", 1 }, /* ICP9087MA (Lancer) */
- 	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP5085AU       ", 1 }, /* ICP5085AU (Hurricane) */
--	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP9085LI       ", 1 }, /* ICP9085LI (Marauder-X) */
--	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP5085BR       ", 1 }, /* ICP5085BR (Marauder-E) */
-+	{ aac_rx_init, "aacraid",  "ICP     ", "ICP9085LI       ", 1 }, /* ICP9085LI (Marauder-X) */
-+	{ aac_rx_init, "aacraid",  "ICP     ", "ICP5085BR       ", 1 }, /* ICP5085BR (Marauder-E) */
-+	{ aac_rkt_init, "aacraid",  "ICP     ", "ICP9067MA       ", 1 }, /* ICP9067MA (Intruder-6) */
- 	{ NULL        , "aacraid",  "ADAPTEC ", "Themisto        ", 0, AAC_QUIRK_SLAVE }, /* Jupiter Platform */
- 	{ aac_rkt_init, "aacraid",  "ADAPTEC ", "Callisto        ", 2, AAC_QUIRK_MASTER }, /* Jupiter Platform */
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2020SA       ", 1 }, /* ASR-2020SA SATA PCI-X ZCR (Skyhawk) */
-@@ -206,10 +210,12 @@
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-2240S       ", 1 }, /* ASR-2240S (SabreExpress) */
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-4005SAS     ", 1 }, /* ASR-4005SAS */
- 	{ aac_rx_init, "ServeRAID","IBM     ", "ServeRAID 8i    ", 1 }, /* IBM 8i (AvonPark) */
-+	{ aac_rkt_init, "ServeRAID","IBM     ", "ServeRAID 8k-l8 ", 1 }, /* IBM 8k/8k-l8 (Aurora) */
-+	{ aac_rkt_init, "ServeRAID","IBM     ", "ServeRAID 8k-l4 ", 1 }, /* IBM 8k/8k-l4 (Aurora Lite) */
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-4000SAS     ", 1 }, /* ASR-4000SAS (BlackBird & AvonPark) */
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-4800SAS     ", 1 }, /* ASR-4800SAS (Marauder-X) */
- 	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-4805SAS     ", 1 }, /* ASR-4805SAS (Marauder-E) */
--	{ aac_rx_init, "aacraid",  "ADAPTEC ", "ASR-4810SAS     ", 1 }, /* ASR-4810SAS (Hurricane) */
-+	{ aac_rkt_init, "aacraid",  "ADAPTEC ", "ASR-4810SAS     ", 1 }, /* ASR-4810SAS (Hurricane) */
- 
- 	{ aac_rx_init, "percraid", "DELL    ", "PERC 320/DC     ", 2, AAC_QUIRK_31BIT | AAC_QUIRK_34SG }, /* Perc 320/DC*/
- 	{ aac_sa_init, "aacraid",  "ADAPTEC ", "Adaptec 5400S   ", 4, AAC_QUIRK_34SG }, /* Adaptec 5400S (Mustang)*/
+> I tried to provoke such a case, but failed.  Evidently I've been barking
+> up the wrong tree.  Normally the SCSI core doesn't call the LLD unless
+> some process has opened a device file for something on that host.  This
+> will automatically do try_module_get on the LLD, making it impossible for
+> the LLD to be removed from memory.
+> 
+> I'm not certain this reasoning is 100% reliable, though -- does it cover
+> _every_ case where the core calls the LLD?  Maybe something like this 
+> little patch would be a good idea:
 
--- 
-Mark Haverkamp <markh@osdl.org>
+In USB is a driver controlling more than one host instance. As I believe
+the suggestion that James indicated as a possible addition would be at per
+host instance granularity and your solution below looks like a
+notification once all instances controlled by a driver are gone.
 
+> --- usb-2.6.orig/drivers/scsi/hosts.c
+> +++ usb-2.6/drivers/scsi/hosts.c
+> @@ -205,6 +205,9 @@ int scsi_add_host(struct Scsi_Host *shos
+>  		goto out_destroy_host;
+>  
+>  	scsi_proc_host_add(shost);
+> +	shost->parent_driver = dev->driver;
+> +	if (shost->parent_driver)
+> +		get_driver(shost->parent_driver);
+
+Just a nit, for a general case solution dev can be null for drivers who live on a
+bus that is not converted to the driver model and may not have a parent.
+
+> But if you think this isn't needed, then okay.
+> 
+> There is an exceptional case: device scanning.  During scanning, there is
+> nothing to directly prevent the LLD from being unloaded.  There is an
+> indirect protection, however, because the scanning thread will own
+> shost->scan_mutex, and scsi_remove_host acquires the mutex before
+> returning.
+
+I think in the past someone has indicated that we really should be getting
+refs during scanning to hold things in place. I guess as you note above
+and below scan_mutex is holding things in place.
+
+
+> memory.  In fact, I've been using the template as kind of a surrogate,
+> standing for all of the LLD's module -- so long as one is present, so is
+> the other.
+> 
+> 
+> I still have one related question.  This is a little bit off to one 
+> side, but maybe you folks can suggest possible solutions.  The question 
+> concerns a deadlock I _was_ able to generate earlier today with a patched
+> usb-storage.
+> 
+> My USB mass-storage test device doesn't respond to TEST UNIT READY, so it
+> causes a timeout and kicks the error handler into action.  This happens 
+> during device scanning, just prior to reading the partition table.  The 
+> error handler goes through various stages of processing, leading up to a 
+> bus reset.  I disconnected the USB device just before the bus reset 
+> routine was called.
+> 
+> Now, usb-storage implements a "SCSI bus reset" by actually performing a
+> USB port reset.  The USB subsystem requires the caller to acquire a
+> device-specific semaphore before doing a port reset, and the subsystem
+> itself acquires this same semaphore when notifying drivers about a
+> disconnection.  (The idea is that we don't want drivers trying to handle
+> a disconnect and a reset on the same device at the same time.)
+> 
+> So here's how things end up.
+> 
+> 	The scanning thread owns shost->scan_mutex and is waiting
+> 	for the error handler to finish.
+> 
+> 	The EH thread is executing usb-storage's bus_reset routine
+> 	and is waiting to acquire the device semaphore.
+> 
+> 	USB's khubd thread owns the device semaphore and has invoked
+> 	the usb-storage disconnect routine.  Among other things, this
+> 	routine calls scsi_remove_host, which tries to acquire the
+> 	scan_mutex.
+> 
+> How should this deadlock be resolved?  The current code has an extremely 
+> inelegant solution, and I would like to find a better one.  Any ideas?
+> 
+> Alan Stern
+> 
+
+I do not mean to push everything down into the LLDD, but in this case it
+is unclear what type of protection the scsi mid layer could add to protect
+against unknown future events while scanning. Is the current inelegant
+solution in the usb storage driver using some form of state model. It
+would appear that if it is not that a state model that uses a spin lock or
+something other than device semaphore to determine a disconnect was
+happening during a reset or vis-versa would be a good idea.
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
