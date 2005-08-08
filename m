@@ -1,68 +1,119 @@
-From: "David S. Miller" <davem@davemloft.net>
-Subject: Netlink allocation for iSCSI and others
-Date: Mon, 08 Aug 2005 13:47:31 -0700 (PDT)
-Message-ID: <20050808.134731.74751192.davem@davemloft.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] Expose the underlying physical disks of Fusion Integrated
+	RAID devices
+Date: Mon, 08 Aug 2005 16:15:52 -0500
+Message-ID: <1123535752.5019.12.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl027-180-168.sfo1.dsl.speakeasy.net ([216.27.180.168]:60302
-	"EHLO sunset.davemloft.net") by vger.kernel.org with ESMTP
-	id S932219AbVHHUrn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Aug 2005 16:47:43 -0400
+Received: from stat16.steeleye.com ([209.192.50.48]:48365 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932238AbVHHVQB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Aug 2005 17:16:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: netdev@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com, itn780@yahoo.com, linux-scsi@vger.kernel.org, hch@lst.de, kaber@trash.net, akpm@osdl.org
+To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+This patch is actually deceptively simple for what it does.
 
-Ok, here is what I'm going to do for 2.6.13 and in the longer
-term.
+For all fusion devices with integrated raid devices, we make the card
+pretend it has two channels, then all I/O on channel 1 is directed to
+the underlying physical discs of the integrated raid assembly.  The net
+effect is that all the physical discs show up correctly on virtual
+channel 1 (we also specify no_uld_attach for anything on virtual channel
+1 so that they can only be accessed using ioctls to the sg device).
 
-First, we can give the current NETLINK_ARPD value to iSCSI
-as it is unused since before I can even remember.
+The net effect is something like this:
 
-Second, ROUTE6 and TAPBASE we can kill from the header file
-as both are unused as well.
+mptbase: Initiating ioc22 bringup
+ioc22: 53C1030: Capabilities={Initiator}
+scsi27 : ioc22: LSI53C1030, FwRev=01032920h, Ports=1, MaxQ=222, IRQ=57
+  Vendor: LSILOGIC  Model: 1030          IM  Rev: 1000
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+SCSI device sdb: 17813504 512-byte hdwr sectors (9121 MB)
+SCSI device sdb: drive cache: write through
+SCSI device sdb: 17813504 512-byte hdwr sectors (9121 MB)
+SCSI device sdb: drive cache: write through
+ sdb: unknown partition table
+Attached scsi disk sdb at scsi27, channel 0, id 0, lun 0
+Attached scsi generic sg1 at scsi27, channel 0, id 0, lun 0,  type 0
+  Vendor: QUANTUM   Model: ATLAS IV 9 WLS    Rev: 0B0B
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+Attached scsi generic sg2 at scsi27, channel 1, id 0, lun 0,  type 0
+  Vendor: QUANTUM   Model: ATLAS IV 9 WLS    Rev: 0B0B
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+Attached scsi generic sg3 at scsi27, channel 1, id 1, lun 0,  type 0
 
-In the longer term, Patrick is right in that there is no
-connection between MAX_LINKS and NPROTO as I had claimed.
+where you can see that sdb is the RAID device and sg2 and sg3 the
+underlying SCSI discs.
 
-So we can increase MAX_LINKS to 256 and that's what I think I will do
-for 2.6.14 unless there is a very serious objection.  The tables sized
-by MAX_LINKS in af_netlink.c are dynamically allocated, and the only
-linear iterations over MAX_LINKS are for the netlink socket procfs
-seq-file dumper, so it's not a performance issue either.
+James
 
-So, for 2.6.13 I'm going to push the following to Linus so that
-everyone gets what they need for the time being.
-
-[NETLINK]: Allocate and kill some netlink numbers.
-
-NETLINK_ARPD is unused, allocate it to the Open-iSCSI folks.
-
-NETLINK_ROUTE6 and NETLINK_TAPBASE are no longer used, delete
-them.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
-
-diff --git a/include/linux/netlink.h b/include/linux/netlink.h
---- a/include/linux/netlink.h
-+++ b/include/linux/netlink.h
-@@ -12,15 +12,13 @@
- #define NETLINK_NFLOG		5	/* netfilter/iptables ULOG */
- #define NETLINK_XFRM		6	/* ipsec */
- #define NETLINK_SELINUX		7	/* SELinux event notifications */
--#define NETLINK_ARPD		8
-+#define NETLINK_ISCSI		8	/* Open-iSCSI */
- #define NETLINK_AUDIT		9	/* auditing */
- #define NETLINK_FIB_LOOKUP	10	
--#define NETLINK_ROUTE6		11	/* af_inet6 route comm channel */
- #define NETLINK_NETFILTER	12	/* netfilter subsystem */
- #define NETLINK_IP6_FW		13
- #define NETLINK_DNRTMSG		14	/* DECnet routing messages */
- #define NETLINK_KOBJECT_UEVENT	15	/* Kernel messages to userspace */
--#define NETLINK_TAPBASE		16	/* 16 to 31 are ethertap */
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -171,6 +171,7 @@ static void	mptscsih_fillbuf(char *buffe
  
- #define MAX_LINKS 32		
+ void 		mptscsih_remove(struct pci_dev *);
+ void 		mptscsih_shutdown(struct pci_dev *);
++static int	mptscsih_is_raid_volume(MPT_SCSI_HOST *hd, uint id);
+ #ifdef CONFIG_PM
+ int 		mptscsih_suspend(struct pci_dev *pdev, pm_message_t state);
+ int 		mptscsih_resume(struct pci_dev *pdev);
+@@ -1274,6 +1275,12 @@ mptscsih_qcmd(struct scsi_cmnd *SCpnt, v
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
  
++	if (SCpnt->device->channel && !mptscsih_is_raid_volume(hd, target)) {
++		SCpnt->result = DID_NO_CONNECT << 16;
++		done(SCpnt);
++		return 0;
++	}
++
+ 	/*
+ 	 *  Put together a MPT SCSI request...
+ 	 */
+@@ -1318,9 +1325,12 @@ mptscsih_qcmd(struct scsi_cmnd *SCpnt, v
+ 	/* Use the above information to set up the message frame
+ 	 */
+ 	pScsiReq->TargetID = (u8) target;
+-	pScsiReq->Bus = (u8) SCpnt->device->channel;
++	pScsiReq->Bus = 0;
+ 	pScsiReq->ChainOffset = 0;
+-	pScsiReq->Function = MPI_FUNCTION_SCSI_IO_REQUEST;
++	if (SCpnt->device->channel)
++		pScsiReq->Function = MPI_FUNCTION_RAID_SCSI_IO_PASSTHROUGH;
++	else
++		pScsiReq->Function = MPI_FUNCTION_SCSI_IO_REQUEST;
+ 	pScsiReq->CDBLength = SCpnt->cmd_len;
+ 	pScsiReq->SenseBufferLength = MPT_SENSE_BUFFER_SIZE;
+ 	pScsiReq->Reserved = 0;
+@@ -2145,6 +2155,9 @@ mptscsih_slave_alloc(struct scsi_device 
+ 	if (hd == NULL)
+ 		return -ENODEV;
+ 
++	if (device->channel)
++		device->no_uld_attach = 1;
++
+ 	if ((vdev = hd->Targets[target]) != NULL)
+ 		goto out;
+ 
+diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
+--- a/drivers/message/fusion/mptspi.c
++++ b/drivers/message/fusion/mptspi.c
+@@ -237,7 +237,10 @@ mptspi_probe(struct pci_dev *pdev, const
+ 	sh->max_id = MPT_MAX_SCSI_DEVICES;
+ 
+ 	sh->max_lun = MPT_LAST_LUN + 1;
+-	sh->max_channel = 0;
++	if (ioc->spi_data.isRaid)
++		sh->max_channel = 1;
++	else
++		sh->max_channel = 0;
+ 	sh->this_id = ioc->pfacts[0].PortSCSIID;
+ 
+ 	/* Required entry.
+
+
