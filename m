@@ -1,42 +1,55 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: atomic_kmap for PIO (was Re: Fw: Kernel panic with dc395x in
- 2.6.12.2)
-Date: Sun, 07 Aug 2005 18:53:46 -0500
-Message-ID: <42F69F0A.4060108@cs.wisc.edu>
-References: <20050709175725.75f291bf.rdunlap@xenotime.net> <20050722135055.6cb4597d.rdunlap@xenotime.net> <42E17451.6090706@drzeus.cx> <20050722153651.28d5db51.rdunlap@xenotime.net> <42E17772.3020903@drzeus.cx> <20050723100945.7d43d063.rdunlap@xenotime.net> <42E2933C.4050808@drzeus.cx> <20050723152714.4212ba52.rdunlap@xenotime.net> <42E2ECF1.8070501@drzeus.cx> <20050723184014.49629f9e.rdunlap@xenotime.net> <42E39462.3040007@drzeus.cx> <20050724100153.3e891484.rdunlap@xenotime.net> <42E565FE.4070708@drzeus.cx> <20050725203133.3cfa650d.rdunlap@xenotime.net> <42E6A5C3.6070501@drzeus.cx> <20050726202058.133382c1.rdunlap@xenotime.net> <42E964CC.5060600@drzeus.cx> <20050728201339.216ab3b8.rdunlap@xenotime.net> <42F37893.30006@drzeus.cx> <Pine.LNX.4.60.0508070003520.10832@poirot.grange> <42F5FCBF.7080902@drzeus.cx> <Pine.LNX.4.60.0508072214240.7539@poirot.gra! nge> <42F68C6A.1070603@cs.wisc.edu
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [PATCH C&C] gdth: remove GDTIOCTL_OSVERS
+Date: Mon, 8 Aug 2005 03:40:27 +0200
+Message-ID: <20050808014027.GI4006@stusta.de>
+References: <20050807222829.GA20558@mipter.zuzino.mipt.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:24204 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1752860AbVHGXyI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Aug 2005 19:54:08 -0400
-In-Reply-To: <Pine.LNX.4.60.0508080112330.29811@poirot.grange>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:27656 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1753224AbVHHBk3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 7 Aug 2005 21:40:29 -0400
+Content-Disposition: inline
+In-Reply-To: <20050807222829.GA20558@mipter.zuzino.mipt.ru>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: Pierre Ossman <drzeus-list@drzeus.cx>, "Randy.Dunlap" <rdunlap@xenotime.net>, oliver@neukum.name, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, Jamie Lenehan <lenehan@twibble.org>
+To: Alexey Dobriyan <adobriyan@gmail.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Achim Leubner <achim_leubner@adaptec.com>
 
-Guennadi Liakhovetski wrote:
-> On Sun, 7 Aug 2005, Mike Christie wrote:
-> 
-> 
->>Guennadi Liakhovetski wrote:
->>
->>>Now, it would be best, I think, if somebody could review the patches to 
->>>dc395x and tmscsim. In case the 2 functions are correct, they could be 
->>>included in a central file (scsi_lib?) for all drivers, needing PIO (I 
->>
->>would it be possible to modify the scatterwalk code so we can share
->>something with other subsystems?
-> 
-> 
-> Do you have something specific in mind or you just mean drivers, that I 
-> mentioned: IDE and libata? If the latter - don't know. I seem to remember 
-> as somebody described their requirements in the April discussion, they 
-> seemed different enough to me. I am pretty sure IDE was mentioned as also 
-> doing PIO sometimes, not even sure if libata really was also discussed. If 
-> you mean something specific, like iscsi, - what exactly?
+On Mon, Aug 08, 2005 at 02:28:29AM +0400, Alexey Dobriyan wrote:
 
-Well, iscsi too, but there is the scatterwalk code which the crypto api
-uses today and looks similar to what ide, libata, and scsi need.
+>...
+> --- linux-vanilla/drivers/scsi/gdth.c	2005-08-08 02:16:47.000000000 +0400
+> +++ linux-gdth/drivers/scsi/gdth.c	2005-08-08 02:19:59.000000000 +0400
+> @@ -5411,18 +5411,6 @@ static int gdth_ioctl(struct inode *inod
+>                  return -EFAULT;
+>          break;
+>        }
+> -      
+> -      case GDTIOCTL_OSVERS:
+> -      { 
+> -        gdth_ioctl_osvers osv; 
+> -
+> -        osv.version = (unchar)(LINUX_VERSION_CODE >> 16);
+> -        osv.subversion = (unchar)(LINUX_VERSION_CODE >> 8);
+> -        osv.revision = (ushort)(LINUX_VERSION_CODE & 0xff);
+> -        if (copy_to_user(argp, &osv, sizeof(gdth_ioctl_osvers)))
+> -                return -EFAULT;
+> -        break;
+> -      }
+>...
+
+Not that I'd like this, but you know that this is a userspace-visible 
+change?
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
