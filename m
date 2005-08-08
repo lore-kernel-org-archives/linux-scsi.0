@@ -1,48 +1,102 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: atomic_kmap for PIO (was Re: Fw: Kernel panic with dc395x in
- 2.6.12.2)
-Date: Mon, 8 Aug 2005 21:31:37 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0508082108280.7840@poirot.grange>
-References: <20050709175725.75f291bf.rdunlap@xenotime.net> <42E17451.6090706@drzeus.cx>
- <20050722153651.28d5db51.rdunlap@xenotime.net> <42E17772.3020903@drzeus.cx>
- <20050723100945.7d43d063.rdunlap@xenotime.net> <42E2933C.4050808@drzeus.cx>
- <20050723152714.4212ba52.rdunlap@xenotime.net> <42E2ECF1.8070501@drzeus.cx>
- <20050723184014.49629f9e.rdunlap@xenotime.net> <42E39462.3040007@drzeus.cx>
- <20050724100153.3e891484.rdunlap@xenotime.net> <42E565FE.4070708@drzeus.cx>
- <20050725203133.3cfa650d.rdunlap@xenotime.net> <42E6A5C3.6070501@drzeus.cx>
- <20050726202058.133382c1.rdunlap@xenotime.net> <42E964CC.5060600@drzeus.cx>
- <20050728201339.216ab3b8.rdunlap@xenotime.net> <42F37893.30006@drzeus.cx>
- <Pine.LNX.4.60.0508070003520.10832@poirot.grange> <42F5FCBF.7080902@drzeus.cx>
- <Pine.LNX.4.60.0508072214240.7539@poirot.gra! nge> <42F68C6A.1070603@cs.wisc.edu>
- <Pine.LNX.4.60.0508080112330.29811
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: Synchronizing scsi_remove_host and the error handler
+Date: Mon, 8 Aug 2005 12:54:53 -0700
+Message-ID: <20050808195453.GA22773@us.ibm.com>
+References: <Pine.LNX.4.44L0.0508071408370.32668-100000@netrider.rowland.org> <1123451837.5020.22.camel@mulgrave> <42F7A344.8070905@adaptec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:30157 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S932202AbVHHTcR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Aug 2005 15:32:17 -0400
-In-Reply-To: <42F69F0A.4060108@cs.wisc.edu>
+Received: from e32.co.us.ibm.com ([32.97.110.130]:42933 "EHLO
+	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S932245AbVHHTzf
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Aug 2005 15:55:35 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e32.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j78JtWkQ713472
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Aug 2005 15:55:32 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j78JtPWw186674
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Aug 2005 15:55:25 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j78JtPYm022141
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Aug 2005 15:55:25 -0400
+Content-Disposition: inline
+In-Reply-To: <42F7A344.8070905@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Pierre Ossman <drzeus-list@drzeus.cx>, "Randy.Dunlap" <rdunlap@xenotime.net>, oliver@neukum.name, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, Jamie Lenehan <lenehan@twibble.org>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Sun, 7 Aug 2005, Mike Christie wrote:
+Luben Tuikov <luben_tuikov@adaptec.com> wrote:
+> On 08/07/05 17:57, James Bottomley wrote:
+> > Alan Stern wrote:
+> >>The only resource that matters for this discussion is associated with the
+> >>LLD itself, not with any of its hosts: the host template.  Once the SCSI
+> >>core has released all references to the template, it can't call the LLD
+> >>any more.  The problem is that the LLD has no way to know when all the
+> >>references have been dropped.  This suggests that the entire problem could
+> >>be solved by adding a kref to struct scsi_host_template.
+> >>
+> >>Would you agree to a patch adding such a kref?
+> > 
+> > 
+> > Well, not really.  The host template usually exists as a variable in the
+> > module, so its lifetime is tied to the lifetime of the module.  Adding a
+> > kref wouldn't help because it will still be freed when the module is
+> > removed.  If there's a case where the template is being freed
+> > prematurely because the module is being removed, then we have the module
+> > refcounting wrong somewhere.  Have you run across such a case?
+> 
+> Hmm, I think Alan has a point.
+> 
+> >From object point of view, who is the parent and who is the child
+> when talking about LLDD/module and the host template?
+> 
+> The reason is that the host template could be simulated on behalf
+> of the underlying transport (as is the case for USB).
+> 
+> So, it could be the case that the host template _should_ be
+> removed but the entity which removed it should stay, and that
+> entity wants to know when the host template is to be removed.
+> 
+> (Actually it doesn't, but setting the release method in the
+> kobj_ktype would do wonders. ;-) )
+> 
+> In which case, it does make sense to include a kset to the
+> host template (since it has many children), and anyone
+> using/manipulating it does kset_get().  When that entity
+> is done with the host template it does a kset_put().
+> 
+> Such entities could be the managing layer above, error
+> handling, etc.
+> 
+> Another solution, just as good, is to use the template
+> _only_ for the registration call, as a _template_, and
+> as soon as the registration call has returned, the
+> caller (LLDD/module) can free the template.  After all,
+> it is only a template.
 
-> Well, iscsi too, but there is the scatterwalk code which the crypto api
-> uses today and looks similar to what ide, libata, and scsi need.
+While you could do this I believe this would not solve Alan's question as
+if I read correctly it involved the functions called through the host
+template (i.e., through shost->hostt).
 
-Ok, I see what you mean now. Well, my impression is that one could, 
-certainly, merge the 2 APIs, but this would incur overhead for both usage 
-patterns: crypto traverses the list page / segment at a time, I think, 
-some other block users (IDE?) would need the same; whereas the code I am 
-proposing is optimised for the case when one needs just to map a few bytes 
-from the sg-list, access them, and unmap.
+> 
+> Then the managing layer allocates the actual host struct
+> and "gives" it to the LLDD.  The LLDD goes a kset_get()
+> on it while it lives, and when it is to die, it does a
+> kset_put().  And if it gets a method call, it would
+> error it out, after the put...
+> 
 
-Have I got it right? Other opinions? Perhaps, a lib/scattergather.c with 
-these both APIs, and, possibly, others?
+We already have kobject for the scsi_host object so it is unclear why
+switch to a kset. In looking at the kernel tree I do not see any users of
+ksets outside the driver model subsystems. I believe James suggestion of
+adding to scsi_host_dev_release would allow the LLDD to get a better
+indicator of release cleanup without changing the LLDD interface to use
+ksets.
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
