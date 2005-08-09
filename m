@@ -1,43 +1,38 @@
-From: "Martin J. Bligh" <mbligh@mbligh.org>
-Subject: Re: [Bugme-new] [Bug 5003] New: Problem with symbios driver	on	recent	-mm trees
-Date: Tue, 09 Aug 2005 07:59:42 -0700
-Message-ID: <531000000.1123599581@[10.10.2.4]>
-References: <135040000.1123216397@[10.10.2.4]> <20050804233927.2d3abb16.akpm@osdl.org> <1123251892.5003.6.camel@mulgrave> <179280000.1123252564@[10.10.2.4]> <1123254086.5003.10.camel@mulgrave> <453380000.1123562466@[10.10.2.4]> <1123597604.5170.10.camel@mulgrave>
-Reply-To: "Martin J. Bligh" <mbligh@mbligh.org>
+From: Jon Scottorn <jscottorn@possibilityforge.com>
+Subject: Adaptec i2o controller
+Date: Tue, 09 Aug 2005 09:59:57 -0600
+Message-ID: <42F8D2FD.6070107@possibilityforge.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dvhart.com ([64.146.134.43]:42881 "EHLO localhost.localdomain")
-	by vger.kernel.org with ESMTP id S964814AbVHIO7l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Aug 2005 10:59:41 -0400
-In-Reply-To: <1123597604.5170.10.camel@mulgrave>
-Content-Disposition: inline
+Received: from mail.possibilityforge.com ([209.33.206.30]:43131 "EHLO
+	possibilityforge.com") by vger.kernel.org with ESMTP
+	id S964839AbVHIQAG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Aug 2005 12:00:06 -0400
+Received: from dev.possibilityforge.com ([209.33.206.3])
+	by  with esmtp (Exim 4.50)
+	id 1E2WWJ-0000lj-GK
+	for linux-scsi@vger.kernel.org; Tue, 09 Aug 2005 10:00:05 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, bugme-daemon@kernel-bugs.osdl.org
+To: linux-scsi@vger.kernel.org
 
+Hi,
+ 
+  I have been running a 2.6.8 kernel with the adaptec i2o scsi
+controller and I went to upgrade to the 2.6.12.4 kernel and when I
+reboot into that kernel I get a kernel panic. I am wondering either what
+I have done wrong or what has changed with the i2o driver between the
+two kernels. 
+Here is the error I get, I am summarizing because I have to type the
+error in.
 
+EIP is at adpt_isr+0x175/0x1f2
+then has a stack and call trace:
+(#0001,*0):c01035b2 oops
+kernel panic - not syncing: Fatal exception in interrupt
 
---James Bottomley <James.Bottomley@SteelEye.com> wrote (on Tuesday, August 09, 2005 09:26:44 -0500):
+Thanks in advance for any suggestions.
 
-> On Mon, 2005-08-08 at 21:41 -0700, Martin J. Bligh wrote:
->> Nope, is the same as before with this patch ....
-> 
-> Dear novice bug reporter,
-> 
-> Thank you for taking the trouble to test this.  Unfortunately, without
-> any dmesg output, it's rather hard to tell what's going on here.  Would
-> you be so kind as to send this information so we can try to diagnose
-> what's going on.
-
-Dear novice test examiner,
-
-It's in http://test.kernel.org with everything else ;-)
-2.6.13-rc4-mm1+jejb_fix ... drills down to:
-
-http://test.kernel.org/10080/debug/console.log
-
-M.
-
+Jon
