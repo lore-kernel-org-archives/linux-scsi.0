@@ -1,129 +1,61 @@
-From: Jon Scottorn <jscottorn@possibilityforge.com>
-Subject: Re: Adaptec i2o controller
-Date: Tue, 09 Aug 2005 10:46:31 -0600
-Message-ID: <42F8DDE7.4020505@possibilityforge.com>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F016845E2@otce2k03.adaptec.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [Bugme-new] [Bug 5003] New: Problem with symbios
+	driver	on	recent	-mm trees
+Date: Tue, 09 Aug 2005 11:55:36 -0500
+Message-ID: <1123606536.5170.27.camel@mulgrave>
+References: <135040000.1123216397@[10.10.2.4]>
+	 <20050804233927.2d3abb16.akpm@osdl.org> <1123251892.5003.6.camel@mulgrave>
+	 <179280000.1123252564@[10.10.2.4]> <1123254086.5003.10.camel@mulgrave>
+	 <453380000.1123562466@[10.10.2.4]> <1123597604.5170.10.camel@mulgrave>
+	 <531000000.1123599581@[10.10.2.4]>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.possibilityforge.com ([209.33.206.30]:31242 "EHLO
-	possibilityforge.com") by vger.kernel.org with ESMTP
-	id S964877AbVHIQql (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Aug 2005 12:46:41 -0400
-Received: from dev.possibilityforge.com ([209.33.206.3])
-	by  with esmtp (Exim 4.50)
-	id 1E2XFN-0001I0-8B
-	for linux-scsi@vger.kernel.org; Tue, 09 Aug 2005 10:46:40 -0600
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F016845E2@otce2k03.adaptec.com>
+Received: from stat16.steeleye.com ([209.192.50.48]:41864 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964879AbVHIQzq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Aug 2005 12:55:46 -0400
+In-Reply-To: <531000000.1123599581@[10.10.2.4]>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Martin J. Bligh" <mbligh@mbligh.org>
+Cc: Andrew Morton <akpm@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, bugme-daemon@kernel-bugs.osdl.org
 
-Thanks for the replies,
+On Tue, 2005-08-09 at 07:59 -0700, Martin J. Bligh wrote:
+> Dear novice test examiner,
+> 
+> It's in http://test.kernel.org with everything else ;-)
+> 2.6.13-rc4-mm1+jejb_fix ... drills down to:
+> 
+> http://test.kernel.org/10080/debug/console.log
 
-      After applying the patch, Now I get a compile error
+Well, OK, apparently some novice coder made an error converting from a
+stack allocated buffer to a kmalloc'd one in the sense handling
+routines.
 
-drivers/scsi/dpt_i2o.c: In function `adpt_install_hba':
-drivers/scsi/dpt_i2o.c:908: error: too few arguments to function
-`pci_request_regions'
-drivers/scsi/dpt_i2o.c: In function `adpt_isr':
-drivers/scsi/dpt_i2o.c:2037: warning: passing arg 1 of `readl' makes
-pointer from integer without a cast
-drivers/scsi/dpt_i2o.c:2038: warning: passing arg 1 of `readl' makes
-pointer from integer without a cast
-drivers/scsi/dpt_i2o.c:2049: warning: passing arg 1 of `readl' makes
-pointer from integer without a cast
-drivers/scsi/dpt_i2o.c:2050: warning: passing arg 2 of `writel' makes
-pointer from integer without a cast
-drivers/scsi/dpt_i2o.c:2053: warning: passing arg 1 of `readl' makes
-pointer from integer without a cast
-drivers/scsi/dpt_i2o.c:2055: warning: passing arg 1 of `readl' makes
-pointer from integer without a cast
-drivers/scsi/dpt_i2o.c:2062: warning: passing arg 1 of `readl' makes
-pointer from integer without a cast
-drivers/scsi/dpt_i2o.c:2069: warning: passing arg 1 of `readl' makes
-pointer from integer without a cast
-drivers/scsi/dpt_i2o.c:2076: warning: passing arg 1 of `readl' makes
-pointer from integer without a cast
-drivers/scsi/dpt_i2o.c: In function `adpt_i2o_to_scsi':
-drivers/scsi/dpt_i2o.c:2246: warning: passing arg 1 of `readl' makes
-pointer from integer without a cast
-drivers/scsi/dpt_i2o.c:2250: warning: passing arg 1 of `readl' makes
-pointer from integer without a cast
-drivers/scsi/dpt_i2o.c:2255: warning: passing arg 1 of `readl' makes
-pointer from integer without a cast
-drivers/scsi/dpt_i2o.c:2266: warning: passing arg 1 of `readl' makes
-pointer from integer without a cast
-drivers/scsi/dpt_i2o.c: At top level:
-drivers/scsi/dpt_i2o.c:171: warning: `dptids' defined but not used
-make[3]: *** [drivers/scsi/dpt_i2o.o] Error 1
-make[2]: *** [drivers/scsi] Error 2
-make[1]: *** [drivers] Error 2
+I think this patch should fix it (or at least restore it to the level of
+bugginess it had before).
 
-and I do have only one option selected in the .config file.
+James
 
-Any other thoughts?
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -342,12 +342,12 @@ int scsi_execute_req(struct scsi_device 
+ 		sense = kmalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
+ 		if (!sense)
+ 			return DRIVER_ERROR << 24;
+-		memset(sense, 0, sizeof(*sense));
++		memset(sense, 0, SCSI_SENSE_BUFFERSIZE);
+ 	}
+ 	result = scsi_execute(sdev, cmd, data_direction, buffer, bufflen,
+ 				  sense, timeout, retries, 0);
+ 	if (sshdr)
+-		scsi_normalize_sense(sense, sizeof(*sense), sshdr);
++		scsi_normalize_sense(sense, SCSI_SENSE_BUFFERSIZE, sshdr);
+ 
+ 	kfree(sense);
+ 	return result;
 
-Thanks,
 
-Jon
-
-Salyzyn, Mark wrote:
-
->This dpt_i2o patch *plus* the patch Markus submitted yesterday for the
->i2o driver to the kernel list need to be performed to create the mutual
->exclusion between the two drivers.
->
->Jon, just select one (CONFIG_SCSI_DPT_I2O) or the other (CONFIG_I2O) in
->your .config
->
->Sincerely -- Mark Salyzyn
->
->-----Original Message-----
->From: linux-scsi-owner@vger.kernel.org
->[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of James Bottomley
->Sent: Tuesday, August 09, 2005 12:11 PM
->To: Jon Scottorn
->Cc: SCSI Mailing List
->Subject: Re: Adaptec i2o controller
->
->On Tue, 2005-08-09 at 09:59 -0600, Jon Scottorn wrote:
->  
->
->>  I have been running a 2.6.8 kernel with the adaptec i2o scsi
->>controller and I went to upgrade to the 2.6.12.4 kernel and when I
->>reboot into that kernel I get a kernel panic. I am wondering either
->>    
->>
->what
->  
->
->>I have done wrong or what has changed with the i2o driver between the
->>two kernels. 
->>Here is the error I get, I am summarizing because I have to type the
->>error in.
->>
->>EIP is at adpt_isr+0x175/0x1f2
->>then has a stack and call trace:
->>(#0001,*0):c01035b2 oops
->>kernel panic - not syncing: Fatal exception in interrupt
->>    
->>
->
->Could you try out the patch in this email:
->
->http://marc.theaimsgroup.com/?l=linux-scsi&m=112351014310129
->
->Thanks,
->
->James
->
->
->-
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->  
->
