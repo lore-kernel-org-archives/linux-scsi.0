@@ -1,71 +1,47 @@
-From: "Wilcox, Stephen P, CITPC" <spwilcox@att.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH]  DEC hsg80 needs BLIST_REPORTLUN2
-Date: Tue, 9 Aug 2005 13:29:04 -0500
-Message-ID: <1123612144.30193.31.camel@aptis101.cqtel.com>
-References: <1123608417.30193.23.camel@aptis101.cqtel.com> <1123609899.5170.32.camel@mulgrave>
+Date: Tue, 09 Aug 2005 13:36:12 -0500
+Message-ID: <1123612572.5170.35.camel@mulgrave>
+References: <1123608417.30193.23.camel@aptis101.cqtel.com>
+	 <1123609899.5170.32.camel@mulgrave>
+	 <1123612144.30193.31.camel@aptis101.cqtel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C59D10.38ECAE80"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail131.messagelabs.com ([216.82.242.99]:63040 "HELO
-	mail131.messagelabs.com") by vger.kernel.org with SMTP
-	id S964900AbVHIS3K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Aug 2005 14:29:10 -0400
-In-Reply-To: <1123609899.5170.32.camel@mulgrave>
-Content-class: urn:content-classes:message
+Received: from stat16.steeleye.com ([209.192.50.48]:56204 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964923AbVHISgT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Aug 2005 14:36:19 -0400
+In-Reply-To: <1123612144.30193.31.camel@aptis101.cqtel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: "Wilcox, Stephen P, CITPC" <spwilcox@att.com>
 Cc: linux-scsi mailing list <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
+On Tue, 2005-08-09 at 13:29 -0500, Wilcox, Stephen P, CITPC wrote:
+> Crap.  I was afraid that my mailer might mangle this...   I created the
+> patch with "diff -up" based on the info in "SubmittingPatches" in the
+> kernel source tree, but I must admit that I manually edited the patch so
+> that It would apply to RedHat's .src.rpms using their canned spec files.
+> The working (at least using RedHat's method) patch is attached this time
+> rather than pasted in.  If that one still fails to work, the single
+> change is all that's really needed.
 
-------_=_NextPart_001_01C59D10.38ECAE80
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: base64
+Well, apparently your ISP mangles attachments:
 
-Q3JhcC4gIEkgd2FzIGFmcmFpZCB0aGF0IG15IG1haWxlciBtaWdodCBtYW5nbGUgdGhpcy4uLiAg
-IEkgY3JlYXRlZCB0aGUNCnBhdGNoIHdpdGggImRpZmYgLXVwIiBiYXNlZCBvbiB0aGUgaW5mbyBp
-biAiU3VibWl0dGluZ1BhdGNoZXMiIGluIHRoZQ0Ka2VybmVsIHNvdXJjZSB0cmVlLCBidXQgSSBt
-dXN0IGFkbWl0IHRoYXQgSSBtYW51YWxseSBlZGl0ZWQgdGhlIHBhdGNoIHNvDQp0aGF0IEl0IHdv
-dWxkIGFwcGx5IHRvIFJlZEhhdCdzIC5zcmMucnBtcyB1c2luZyB0aGVpciBjYW5uZWQgc3BlYyBm
-aWxlcy4NClRoZSB3b3JraW5nIChhdCBsZWFzdCB1c2luZyBSZWRIYXQncyBtZXRob2QpIHBhdGNo
-IGlzIGF0dGFjaGVkIHRoaXMgdGltZQ0KcmF0aGVyIHRoYW4gcGFzdGVkIGluLiAgSWYgdGhhdCBv
-bmUgc3RpbGwgZmFpbHMgdG8gd29yaywgdGhlIHNpbmdsZQ0KY2hhbmdlIGlzIGFsbCB0aGF0J3Mg
-cmVhbGx5IG5lZWRlZC4NCg0KLXN0ZXZlDQoNCg0KDQpPbiBUdWUsIDIwMDUtMDgtMDkgYXQgMTI6
-NTEgLTA1MDAsIEphbWVzIEJvdHRvbWxleSB3cm90ZToNCj4gT24gVHVlLCAyMDA1LTA4LTA5IGF0
-IDEzOjI2IC0wNDAwLCBTdGV2ZSBXaWxjb3ggd3JvdGU6DQo+ID4gSW4gb3JkZXIgdG8gcHJvcGVy
-bHkgcmVwb3J0IExVTidzID4gNywgdGhlIERFQyBIU0c4MCBkZWZpbml0aW9uIGluDQo+ID4gc2Nz
-aV9kZXZpbmZvLmMgbmVlZHMgdG8gaW5jbHVkZSBCTElTVF9SRVBPUlRMVU4yIHJhdGhlciB0aGFu
-DQo+ID4gQkxJU1RfU1BBUlNFTFVOLiAgSSd2ZSB0ZXN0ZWQgdGhpcyBjaGFuZ2Ugd2l0aCBzZXZl
-cmFsIEhTRyBmaXJtd2FyZQ0KPiA+IHJldmlzaW9ucyBhbmQgd2l0aCBib3RoIEVtdWxleCBhbmQg
-UWxvZ2ljIEhCQSdzLg0KPiANCj4gV2VsbCwgeW91ciBwYXRjaCB3b24ndCBhcHBseS4gIEFwYXJ0
-IGZyb20gdGhlIGJyZWFraW5nIGJ5IHRoZSBtYWlsZXIsDQo+IHlvdSBoYXZlIGEgY3VyaW9zaXR5
-IGluIHRoZSBsYXN0IHRocmVlIGxpbmVzICh0aGUgREVMTCBhcnJheXMpIHdoaWNoIGFyZQ0KPiBk
-ZWZpbml0ZWx5IG1pc3NpbmcgdGFicyBhbmQgc3BhY2VzIG92ZXIgd2hhdCB3ZSBoYXZlIGluIHRo
-ZSBrZXJuZWwNCj4gKFRoZXJlIGFyZSB0aHJlZSBzcGFjZXMgYmV0d2VlbiAiUFY2NjBGIiBhbmQg
-IlBTRVVETyIgYW5kIHRoZXJlJ3MgYSB0YWINCj4gbm90IGEgc3BhY2UgYmVmb3JlIHRoZSBjb21t
-ZW50KS4gIEhvdyBkaWQgeW91IGdlbmVyYXRlIHRoaXMgZGlmZj8NCj4gDQo+IEFueXdheSwgSSBj
-YW4gYXBwbHkgdGhlIHNpbmdsZSBjaGFuZ2UgbWFudWFsbHkuDQo+IA0KPiBKYW1lcw0KPiANCj4g
-DQo=
+> The file scsi-blacklist.patch has been replaced, as it is a file type
+> that is known for spreading viruses. For assistance, please contact
+> your local Desktop Support Personnel or refer to the following website
+> for direction. http://antivirus.security.att.com/Default.htm
+> 
 
-------_=_NextPart_001_01C59D10.38ECAE80
-Content-Type: text/plain;
-	name="Replaced Blocked File.txt"
-Content-Transfer-Encoding: base64
-Content-Description: Replaced Blocked File.txt
-Content-Disposition: attachment;
-	filename="Replaced Blocked File.txt"
+However I think I have this patch here:
 
-KioqKioqKiogICAgICAgICAgICAgICBNY0FmZWUgR3JvdXBTaGllbGQgRXhjaGFuZ2UgICAgICAg
-ICAgKioqKioqKioqKg0KKioqKioqKiogIEFsZXJ0IGdlbmVyYXRlZCBhdDogVHVlc2RheSwgQXVn
-dXN0IDA5LCAyMDA1IDAxOjI5OjA1IFBNIENlbnRyYWwgRGF5bGlnaHQgVGltZQ0KKioqKioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioqKg0KDQoNClRoZSBmaWxlIHNjc2ktYmxhY2tsaXN0LnBhdGNoIGhhcyBiZWVuIHJlcGxhY2Vk
-LCBhcyBpdCBpcyBhIGZpbGUgdHlwZSB0aGF0IGlzIGtub3duIGZvciBzcHJlYWRpbmcgdmlydXNl
-cy4gRm9yIGFzc2lzdGFuY2UsIHBsZWFzZSBjb250YWN0IHlvdXIgbG9jYWwgRGVza3RvcCBTdXBw
-b3J0IFBlcnNvbm5lbCBvciByZWZlciB0byB0aGUgZm9sbG93aW5nIHdlYnNpdGUgZm9yIGRpcmVj
-dGlvbi4gaHR0cDovL2FudGl2aXJ1cy5zZWN1cml0eS5hdHQuY29tL0RlZmF1bHQuaHRtDQoNCg==
+http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=67f4602a392008439ab030ab23181f75e330ba74
 
-------_=_NextPart_001_01C59D10.38ECAE80--
+If you just verify I got it right.
+
+James
+
+
