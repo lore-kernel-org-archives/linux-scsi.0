@@ -1,32 +1,74 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Synchronizing scsi_remove_host and the error handler
-Date: Tue, 09 Aug 2005 22:45:36 +0200
-Message-ID: <42F915F0.2080107@s5r6.in-berlin.de>
-References: <Pine.LNX.4.44L0.0508091558020.6287-100000@iolanthe.rowland.org>
+From: "Martin J. Bligh" <mbligh@mbligh.org>
+Subject: Re: [Bugme-new] [Bug 5003] New: Problem with symbios	driver	on	recent	-mm trees
+Date: Tue, 09 Aug 2005 16:23:27 -0700
+Message-ID: <1200490000.1123629807@flay>
+References: <135040000.1123216397@[10.10.2.4]> <20050804233927.2d3abb16.akpm@osdl.org> <1123251892.5003.6.camel@mulgrave> <179280000.1123252564@[10.10.2.4]> <1123254086.5003.10.camel@mulgrave> <453380000.1123562466@[10.10.2.4]> <1123597604.5170.10.camel@mulgrave> <531000000.1123599581@[10.10.2.4]> <1123606536.5170.27.camel@mulgrave>
+Reply-To: "Martin J. Bligh" <mbligh@mbligh.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:44253 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S964950AbVHIUpm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Aug 2005 16:45:42 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0508091558020.6287-100000@iolanthe.rowland.org>
+Received: from dvhart.com ([64.146.134.43]:62337 "EHLO localhost.localdomain")
+	by vger.kernel.org with ESMTP id S932192AbVHIXXk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Aug 2005 19:23:40 -0400
+In-Reply-To: <1123606536.5170.27.camel@mulgrave>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, bugme-daemon@kernel-bugs.osdl.org
 
-Alan Stern wrote:
-> On Tue, 9 Aug 2005, Stefan Richter wrote:
->>these remove functions are completed but the scsi_eh thread still stays 
->>behind, placidly sleeping.
+--On Tuesday, August 09, 2005 11:55:36 -0500 James Bottomley <James.Bottomley@SteelEye.com> wrote:
+
+> On Tue, 2005-08-09 at 07:59 -0700, Martin J. Bligh wrote:
+>> Dear novice test examiner,
+>> 
+>> It's in http://test.kernel.org with everything else ;-)
+>> 2.6.13-rc4-mm1+jejb_fix ... drills down to:
+>> 
+>> http://test.kernel.org/10080/debug/console.log
 > 
-> Because the scsi_host still exists.  It won't be released until the open
-> file reference to it has disappeared.
+> Well, OK, apparently some novice coder made an error converting from a
+> stack allocated buffer to a kmalloc'd one in the sense handling
+> routines.
+> 
+> I think this patch should fix it (or at least restore it to the level of
+> bugginess it had before).
 
-Indeed. I am beginning to comprehend. Thanks for your patience. :-)
--- 
-Stefan Richter
--=====-=-=-= =--- -=--=
-http://arcgraph.de/sr/
+
+Wheeeeeee! that fixed it. Thanks very much. Log is here if you want to
+peek at it:
+
+
+http://test.kernel.org/10431/debug/console.log
+
+Triples all round!
+
+M.
+ 
+> James
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -342,12 +342,12 @@ int scsi_execute_req(struct scsi_device 
+>  		sense = kmalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
+>  		if (!sense)
+>  			return DRIVER_ERROR << 24;
+> -		memset(sense, 0, sizeof(*sense));
+> +		memset(sense, 0, SCSI_SENSE_BUFFERSIZE);
+>  	}
+>  	result = scsi_execute(sdev, cmd, data_direction, buffer, bufflen,
+>  				  sense, timeout, retries, 0);
+>  	if (sshdr)
+> -		scsi_normalize_sense(sense, sizeof(*sense), sshdr);
+> +		scsi_normalize_sense(sense, SCSI_SENSE_BUFFERSIZE, sshdr);
+>  
+>  	kfree(sense);
+>  	return result;
+> 
+> 
+> 
+> 
+
+
