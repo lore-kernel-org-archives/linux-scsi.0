@@ -1,87 +1,95 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Synchronizing scsi_remove_host and the error handler
-Date: Tue, 9 Aug 2005 16:07:14 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0508091558020.6287-100000@iolanthe.rowland.org>
-References: <42F905DD.3090504@s5r6.in-berlin.de>
+From: "John Stoffel" <john@stoffel.org>
+Subject: Re: Linux-2.6.13-rc6: aic7xxx testers please..
+Date: Tue, 9 Aug 2005 16:12:29 -0400
+Message-ID: <17145.3629.933024.963438@smtp.charter.net>
+References: <Pine.LNX.4.58.0508071136020.3258@g5.osdl.org>
+	<200508081954.52638.jesper.juhl@gmail.com>
+	<17145.1417.329260.524528@smtp.charter.net>
+	<1123617516.5170.42.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:38327 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S932510AbVHIUHR
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Aug 2005 16:07:17 -0400
-In-Reply-To: <42F905DD.3090504@s5r6.in-berlin.de>
+Received: from mxsf27.cluster1.charter.net ([209.225.28.227]:27561 "EHLO
+	mxsf27.cluster1.charter.net") by vger.kernel.org with ESMTP
+	id S932565AbVHIUMf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Aug 2005 16:12:35 -0400
+In-Reply-To: <1123617516.5170.42.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: John Stoffel <john@stoffel.org>, Linus Torvalds <torvalds@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 9 Aug 2005, Stefan Richter wrote:
+>>>>> "James" == James Bottomley <James.Bottomley@SteelEye.com> writes:
 
-> Alan Stern wrote:
-> > On Tue, 9 Aug 2005, Stefan Richter wrote:
-> >>But as long as files are open etc., scsi high-level drivers are
-> >>'in use', cannot be detached, and scsi_remove_host does not return.
-> >>
-> >>Or that's what I assumed so far.
-> > 
-> > No, that's not right.  scsi_remove_host _can_ return while the high-level
-> > drivers are still in use -- just think about what happens when you unplug
-> > a USB storage device without unmounting it first.  I'm not sure what you 
-> > mean about "detach"ing high-level SCSI drivers.  The high-level drivers 
-> > are notified about the device removal; they drop their references and 
-> > return.  They can still submit commands if they want, but all such 
-> > submissions will fail in the SCSI core.
-> 
-> "detach" = shutdown, remove (from a device)
-> 
-> I don't know what happens if USB storage devices are unplugged with 
-> filesystems still mounted. But this is what happens with FireWire 
-> storage devices:
->   - ieee1394 core triggers remove function of sbp2 via LKDM
->     (Linux Kernel Device Model)
->   - sbp2 enters scsi_remove_host (each SBP-2 device has its own host)
->   - scsi_remove_host enters scsi_remove_target enters scsi_remove_device
->     for each target and device
->   - scsi_remove_device triggers all sorts of shutdown functions of scsi's
->     highlevel drivers, via LKDM
->   - highlevel runs all sorts of last traffic; in case of a mounted
->     filesystem of a harddisk you see messages like 'rejecting I/O to
->     device being removed', 'Buffer I/O error on device...', errors
->     from the filesystem, and finally 'Synchronizing SCSI cache for...'
->     which fails.
->     Right after this, highlevel's (i.e. sd_mod's) shutdown callbacks
->     exit.
->   - scsi_remove_device does boring stuff, exits
->   - scsi_remove_target does boring stuff, exits
->   - scsi_remove_host does boring stuff, exits
->   - sbp2 is back in control and removes its own stuff
+Thank you for looking into this with me, I really appreciate it.  I'm
+kinda stumped why this suddenly started happening, but it could be
+hardware related of course...
 
-The USB picture is pretty much the same.
+James> So basically the problem is on scsi1 with the tape device, which
+James> apparently negotiates only narrow async?
 
-> Well, the parts in sbp2 itself changed a bit lately, but that is not 
-> relevant now. My point is, scsi_remove_device (and thereby scsi 
-> highlevel's shutdown callbacks) are executed and finished before 
-> scsi_remove_host is finished.
+It's not a performance problem, it's a lockup problem.  I use bacula
+to make my backups using the DLT7000 as my media.  But the tape drives
+hangs, it's hung now so that I can't do my backups.
 
-That's right.  The mounted filesystem is still open (mounted), but
-contrary to what you wrote before, the high-level drivers have been
-detached, are no longer "in-use", and scsi_remove_host has returned.
+James> What do the domain validation messages say about this device?
+James> They should be in dmesg.  I'm fairly certain that DLT tapes do
+James> better than narrow async.
 
-> You are right though that there are still situations (and it seems 
-> detaching a device with mounted filesystem is among them) where all 
-> these remove functions are completed but the scsi_eh thread still stays 
-> behind, placidly sleeping.
+The drive should be able to do 10MBytes/sec to the interface, the
+drive itself can only do 5Mbytes/sec to the media, but with 2:1
+compression and an 8MB buffer on the drive, it likes to be fed data as
+quickly as it can.  
 
-Because the scsi_host still exists.  It won't be released until the open
-file reference to it has disappeared.
+Here's the validation results for my two disks and tape drive:
 
-> And now we are right back on the subject. :-)
+  scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+	  <Adaptec aic7890/91 Ultra2 SCSI adapter>
+	  aic7890/91: Ultra2 Wide Channel A, SCSI Id=7, 32/253 SCBs
 
-Yes.  And it's conceivable that the core might still call the LLD,
-because the scsi_host still contains a pointer to the template.  
-Fortunately, the same open file reference that pins the host structure
-also pins the LLD's module in memory.
+   target0:0:0: asynchronous.
+    Vendor: COMPAQ    Model: HC01841729        Rev: 3208
+    Type:   Direct-Access                      ANSI SCSI revision: 02
+  scsi0:A:0:0: Tagged Queuing enabled.  Depth 32
+   target0:0:0: Beginning Domain Validation
+   target0:0:0: wide asynchronous.
+   target0:0:0: Domain Validation skipping write tests
+   target0:0:0: FAST-20 WIDE SCSI 40.0 MB/s ST (50 ns, offset 15)
+   target0:0:0: Ending Domain Validation
+    Vendor: COMPAQ    Model: BD018222CA        Rev: B016
+    Type:   Direct-Access                      ANSI SCSI revision: 02
+   target0:0:1: asynchronous.
+  scsi0:A:1:0: Tagged Queuing enabled.  Depth 32
+   target0:0:1: Beginning Domain Validation
+   target0:0:1: wide asynchronous.
+   target0:0:1: Domain Validation skipping write tests
+   target0:0:1: FAST-20 WIDE SCSI 40.0 MB/s ST (50 ns, offset 63)
+   target0:0:1: Ending Domain Validation
+  scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+	  <Adaptec aic7880 Ultra SCSI adapter>
+	  aic7880: Ultra Wide Channel A, SCSI Id=7, 16/253 SCBs
 
-Alan Stern
-
+    Vendor: SUN       Model: DLT7000           Rev: 1E48
+    Type:   Sequential-Access                  ANSI SCSI revision: 02
+   target1:0:6: asynchronous.
+   target1:0:6: Beginning Domain Validation
+   target1:0:6: wide asynchronous.
+   target1:0:6: Domain Validation skipping write tests
+   target1:0:6: FAST-10 WIDE SCSI 20.0 MB/s ST (100 ns, offset 8)
+   target1:0:6: Ending Domain Validation
+  st: Version 20050501, fixed bufsize 32768, s/g segs 256
+  Attached scsi tape st0 at scsi1, channel 0, id 6, lun 0
+  st0: try direct i/o: yes (alignment 512 B), max page reachable by HBA 1048575
+  SCSI device sda: 35566000 512-byte hdwr sectors (18210 MB)
+  SCSI device sda: drive cache: write through
+  SCSI device sda: 35566000 512-byte hdwr sectors (18210 MB)
+  SCSI device sda: drive cache: write through
+   sda: sda1 sda2 sda3 sda4 < sda5 sda6 >
+  Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+  SCSI device sdb: 35565080 512-byte hdwr sectors (18209 MB)
+  SCSI device sdb: drive cache: write through
+  SCSI device sdb: 35565080 512-byte hdwr sectors (18209 MB)
+  SCSI device sdb: drive cache: write through
+   sdb: sdb1 sdb2 sdb3 sdb4 < sdb5 >
+  Attached scsi disk sdb at scsi0, channel 0, id 1, lun 0
