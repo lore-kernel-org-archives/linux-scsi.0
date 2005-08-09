@@ -1,49 +1,42 @@
-From: James.Smart@Emulex.Com
-Subject: [PATCH] shorten workqueue name length
-Date: Tue, 9 Aug 2005 12:07:12 -0400
-Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AD19@xbl3.ma.emulex.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Adaptec i2o controller
+Date: Tue, 09 Aug 2005 11:11:26 -0500
+Message-ID: <1123603886.5170.22.camel@mulgrave>
+References: <42F8D2FD.6070107@possibilityforge.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:15598 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S964846AbVHIQHV convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Aug 2005 12:07:21 -0400
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id j79G7Dr7019367
-	for <linux-scsi@vger.kernel.org>; Tue, 9 Aug 2005 09:07:13 -0700 (PDT)
-content-class: urn:content-classes:message
+Received: from stat16.steeleye.com ([209.192.50.48]:11656 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964853AbVHIQME (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Aug 2005 12:12:04 -0400
+In-Reply-To: <42F8D2FD.6070107@possibilityforge.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jon Scottorn <jscottorn@possibilityforge.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-A customer passed this fix to me...
+On Tue, 2005-08-09 at 09:59 -0600, Jon Scottorn wrote:
+>   I have been running a 2.6.8 kernel with the adaptec i2o scsi
+> controller and I went to upgrade to the 2.6.12.4 kernel and when I
+> reboot into that kernel I get a kernel panic. I am wondering either what
+> I have done wrong or what has changed with the i2o driver between the
+> two kernels. 
+> Here is the error I get, I am summarizing because I have to type the
+> error in.
+> 
+> EIP is at adpt_isr+0x175/0x1f2
+> then has a stack and call trace:
+> (#0001,*0):c01035b2 oops
+> kernel panic - not syncing: Fatal exception in interrupt
 
-In a system with double-digit adapter counts, after a few
-rmmod/insmod attempts, the system oops. It always occurs when
-the scsi host number reaches 100.
+Could you try out the patch in this email:
 
-What is happening is that scsi_add_host() detects a transport that
-needs to allocate a workqueue, thus calls create_singlethread_workqueue().
-It hits a BUG_ON() in kernel/workqueue.c:__create_workqueue() which
-ensures the length of the name for the workqueue is 10 characters or less.
-As the name is "scsi_wq_100", we have exceeded the 10 character max.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=112351014310129
 
-I assume there's good reason for the name to be 10 or less. So what I've
-done is shorten the name for the workqueue. Should work until the host number
-reaches 10000.
+Thanks,
 
--- James S
+James
 
---- scsi-misc-2.6.20050808/drivers/scsi/hosts.c	2005-08-08 16:25:30.000000000 -0400
-+++ scsi-misc-2.6.20050808/drivers/scsi/hosts.c.new	2005-08-09 11:55:06.000000000 -0400
-@@ -191,7 +191,7 @@ int scsi_add_host(struct Scsi_Host *shos
- 		goto out_del_classdev;
- 
- 	if (shost->transportt->create_work_queue) {
--		snprintf(shost->work_q_name, KOBJ_NAME_LEN, "scsi_wq_%d",
-+		snprintf(shost->work_q_name, KOBJ_NAME_LEN, "scsiwq%d",
- 			shost->host_no);
- 		shost->work_q = create_singlethread_workqueue(
- 					shost->work_q_name);
+
