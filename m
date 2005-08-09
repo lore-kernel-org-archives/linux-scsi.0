@@ -1,53 +1,40 @@
-From: Steve Wilcox <spwilcox@att.com>
-Subject: Re: [PATCH]  DEC hsg80 needs BLIST_REPORTLUN2
-Date: Tue, 09 Aug 2005 14:45:25 -0400
-Message-ID: <1123613125.30193.42.camel@aptis101.cqtel.com>
-References: <1123608417.30193.23.camel@aptis101.cqtel.com>
-	 <1123609899.5170.32.camel@mulgrave>
-	 <1123612144.30193.31.camel@aptis101.cqtel.com>
-	 <1123612572.5170.35.camel@mulgrave>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Synchronizing scsi_remove_host and the error handler
+Date: Tue, 9 Aug 2005 14:49:16 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0508091444230.6287-100000@iolanthe.rowland.org>
+References: <42F8F442.1000304@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail131.messagelabs.com ([216.82.242.99]:31390 "HELO
-	mail131.messagelabs.com") by vger.kernel.org with SMTP
-	id S1750705AbVHISp1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Aug 2005 14:45:27 -0400
-In-Reply-To: <1123612572.5170.35.camel@mulgrave>
+Received: from iolanthe.rowland.org ([192.131.102.54]:136 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP
+	id S1750719AbVHIStT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Aug 2005 14:49:19 -0400
+In-Reply-To: <42F8F442.1000304@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi mailing list <linux-scsi@vger.kernel.org>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-That one looks good.  Thanks for all of your help there.
+On Tue, 9 Aug 2005, Stefan Richter wrote:
 
--steve
+> > It already is in the core.  If you're interested, read 
+> > drivers/usb/core/usb.c:usb_lock_device_for_reset().
+> 
+> I was actually browsing the usb/storage/scsiglue.c, but only
+> old code at lxr.linux.no, 2.6.11 in fact. Sorry, I see now that
+> this is way too old to look at. However the scsiglue.c's
+> device_reset and bus_reset in Linus' tree are still using down().
 
-On Tue, 2005-08-09 at 13:36 -0500, James Bottomley wrote:
-> On Tue, 2005-08-09 at 13:29 -0500, Wilcox, Stephen P, CITPC wrote:
-> > Crap.  I was afraid that my mailer might mangle this...   I created the
-> > patch with "diff -up" based on the info in "SubmittingPatches" in the
-> > kernel source tree, but I must admit that I manually edited the patch so
-> > that It would apply to RedHat's .src.rpms using their canned spec files.
-> > The working (at least using RedHat's method) patch is attached this time
-> > rather than pasted in.  If that one still fails to work, the single
-> > change is all that's really needed.
-> 
-> Well, apparently your ISP mangles attachments:
-> 
-> > The file scsi-blacklist.patch has been replaced, as it is a file type
-> > that is known for spreading viruses. For assistance, please contact
-> > your local Desktop Support Personnel or refer to the following website
-> > for direction. http://antivirus.security.att.com/Default.htm
-> > 
-> 
-> However I think I have this patch here:
-> 
-> http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=67f4602a392008439ab030ab23181f75e330ba74
-> 
-> If you just verify I got it right.
-> 
-> James
-> 
-> 
+2.6.11 isn't too old.  The code hasn't really changed since then.
+
+However, you're looking at the wrong semaphore.  (Yes, the call to
+
+	down(&(us->dev_semaphore));
+
+in bus_reset() would also create a deadlock, but it's not really needed
+and I'm going to take it out.)  You should instead be looking at the call
+to usb_lock_device_for_reset() -- notice how it uses usb_trylock_device().
+
+Alan Stern
+
