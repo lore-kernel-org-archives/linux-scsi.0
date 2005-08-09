@@ -1,65 +1,54 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: 2.6.13-rc5-mm1 doesnt boot on x86_64
-Date: Mon, 08 Aug 2005 19:06:50 -0500
-Message-ID: <1123546010.8235.18.camel@mulgrave>
-References: <20050808094818.A17579@unix-os.sc.intel.com>
-	 <20050808171126.GA32092@muc.de> <1123522409.5019.0.camel@mulgrave>
-	 <20050808104206.42a51477.akpm@osdl.org>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH] SPI transport class and generic Domain Validation for
+	 fusion
+Date: Mon, 8 Aug 2005 18:07:45 -0600
+Message-ID: <91888D455306F94EBD4D168954A9457C037B09A6@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:58496 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932379AbVHIAHo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Aug 2005 20:07:44 -0400
-In-Reply-To: <20050808104206.42a51477.akpm@osdl.org>
+Received: from mail0.lsil.com ([147.145.40.20]:952 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S932380AbVHIAH6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Aug 2005 20:07:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: ak@muc.de, ashok.raj@intel.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "Wade, Roy" <Roy.Wade@lsil.com>, "Cratin, Laura" <Laura.Cratin@lsil.com>, "Maloy, Joe" <Joe.Maloy@lsil.com>, "Pope, Steve" <spope@lsil.com>, "Shirron, Stephen" <Stephen.Shirron@lsil.com>, "Hickerson, Roger" <roger.hickerson@lsil.com>
 
-On Mon, 2005-08-08 at 10:42 -0700, Andrew Morton wrote:
-> -mm has extra list_head debugging goodies.  I'd be suspecting a list_head
-> corruption detected somewhere under spi_release_transport().
+On Monday, August 08, 2005 3:47 PM, James Bottomley wrote:
+> Eric,
+> 
+> This attached patch should do DV on both physical devices and the
+> underlying devices of fusion IM assemblies (providing you apply it on
+> top of the prior underlying device exposure patch), which, I 
+> believe was
+> your only outstanding concern with the last generic DV patch.
+> 
+> There is one slight unsightly piece: the IM device still 
+> attaches to the
+> transport class however all the parameters it shows actually belong to
+> the underlying device at that id ... I could do with finding a way of
+> persuading the SPI transport class not to attach to RAID devices.
+> 
+> Since this addresses all of LSI's prior concerns, may I now apply it?
+> 
 
-Aha, looking in wrong driver ... the problem actually appears to be a
-double release of the transport template in aic79xx.  Try this patch
+Roy/Laura/Roy/Steve, and others - This is a patch to remove our 
+internal dv(domain validation) code and replace with generic 
+dv implemention in the linux kernel.  This is a year old push from 
+kernel.org , for the drivers in upstream kernel.
 
-James
+James:  I've not been able to review this patch, nor the other one you sent.
+On concern is whether spi transport handle asyn events?  Meaning will it do
+domain
+validation on RAID1 volume - for a new drive that was hot swapped with a 
+good disk?  In the driver look at mptscsih_event_process - this code is 
+handling a aync event from the firmware telling the driver to perform 
+dv on disk that was just added.  
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -2326,8 +2326,6 @@ done:
- 	return (retval);
- }
- 
--static void ahd_linux_exit(void);
--
- static void ahd_linux_set_width(struct scsi_target *starget, int width)
- {
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-@@ -2772,7 +2770,7 @@ ahd_linux_init(void)
- 	if (ahd_linux_detect(&aic79xx_driver_template) > 0)
- 		return 0;
- 	spi_release_transport(ahd_linux_transport_template);
--	ahd_linux_exit();
-+
- 	return -ENODEV;
- }
- 
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -2331,8 +2331,6 @@ ahc_platform_dump_card_state(struct ahc_
- {
- }
- 
--static void ahc_linux_exit(void);
--
- static void ahc_linux_set_width(struct scsi_target *starget, int width)
- {
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+Pls don't rush this into the kernel untill we have time to review, and/or 
+talk to our internal test teams on test effort, and/or talk to our customers
+explaning the risk in removing this code.
 
+Eric Moore
 
