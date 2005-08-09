@@ -1,55 +1,71 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Synchronizing scsi_remove_host and the error handler
-Date: Tue, 09 Aug 2005 20:21:54 +0200
-Message-ID: <42F8F442.1000304@s5r6.in-berlin.de>
-References: <Pine.LNX.4.44L0.0508091023090.4643-100000@iolanthe.rowland.org>
+From: "Wilcox, Stephen P, CITPC" <spwilcox@att.com>
+Subject: Re: [PATCH]  DEC hsg80 needs BLIST_REPORTLUN2
+Date: Tue, 9 Aug 2005 13:29:04 -0500
+Message-ID: <1123612144.30193.31.camel@aptis101.cqtel.com>
+References: <1123608417.30193.23.camel@aptis101.cqtel.com> <1123609899.5170.32.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C59D10.38ECAE80"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:30413 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S964920AbVHISWQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Aug 2005 14:22:16 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0508091023090.4643-100000@iolanthe.rowland.org>
+Received: from mail131.messagelabs.com ([216.82.242.99]:63040 "HELO
+	mail131.messagelabs.com") by vger.kernel.org with SMTP
+	id S964900AbVHIS3K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Aug 2005 14:29:10 -0400
+In-Reply-To: <1123609899.5170.32.camel@mulgrave>
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi mailing list <linux-scsi@vger.kernel.org>
 
-Alan Stern wrote:
-> On Tue, 9 Aug 2005, Stefan Richter wrote:
-...
->> Retries (in the error handler) will not help
->>with error recovery either.
-...
-> Are you referring to the "try again" part I wrote above?
-> That has nothing to do with disconnects.
+This is a multi-part message in MIME format.
 
-OK, I confused that.
+------_=_NextPart_001_01C59D10.38ECAE80
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: base64
 
->>A more general thought: It appears from the example you
->>explained that maybe the USB highlevel carries too much of a
->>burden to watch out for concurrency.
-...
-> I'm not sure I understand your comment.  Are you saying that the job I 
-> outlined above -- trying to acquire the device semaphore while checking 
-> for possible disconnects -- should be part of the USB core instead of 
-> the high-level USB device driver?
+Q3JhcC4gIEkgd2FzIGFmcmFpZCB0aGF0IG15IG1haWxlciBtaWdodCBtYW5nbGUgdGhpcy4uLiAg
+IEkgY3JlYXRlZCB0aGUNCnBhdGNoIHdpdGggImRpZmYgLXVwIiBiYXNlZCBvbiB0aGUgaW5mbyBp
+biAiU3VibWl0dGluZ1BhdGNoZXMiIGluIHRoZQ0Ka2VybmVsIHNvdXJjZSB0cmVlLCBidXQgSSBt
+dXN0IGFkbWl0IHRoYXQgSSBtYW51YWxseSBlZGl0ZWQgdGhlIHBhdGNoIHNvDQp0aGF0IEl0IHdv
+dWxkIGFwcGx5IHRvIFJlZEhhdCdzIC5zcmMucnBtcyB1c2luZyB0aGVpciBjYW5uZWQgc3BlYyBm
+aWxlcy4NClRoZSB3b3JraW5nIChhdCBsZWFzdCB1c2luZyBSZWRIYXQncyBtZXRob2QpIHBhdGNo
+IGlzIGF0dGFjaGVkIHRoaXMgdGltZQ0KcmF0aGVyIHRoYW4gcGFzdGVkIGluLiAgSWYgdGhhdCBv
+bmUgc3RpbGwgZmFpbHMgdG8gd29yaywgdGhlIHNpbmdsZQ0KY2hhbmdlIGlzIGFsbCB0aGF0J3Mg
+cmVhbGx5IG5lZWRlZC4NCg0KLXN0ZXZlDQoNCg0KDQpPbiBUdWUsIDIwMDUtMDgtMDkgYXQgMTI6
+NTEgLTA1MDAsIEphbWVzIEJvdHRvbWxleSB3cm90ZToNCj4gT24gVHVlLCAyMDA1LTA4LTA5IGF0
+IDEzOjI2IC0wNDAwLCBTdGV2ZSBXaWxjb3ggd3JvdGU6DQo+ID4gSW4gb3JkZXIgdG8gcHJvcGVy
+bHkgcmVwb3J0IExVTidzID4gNywgdGhlIERFQyBIU0c4MCBkZWZpbml0aW9uIGluDQo+ID4gc2Nz
+aV9kZXZpbmZvLmMgbmVlZHMgdG8gaW5jbHVkZSBCTElTVF9SRVBPUlRMVU4yIHJhdGhlciB0aGFu
+DQo+ID4gQkxJU1RfU1BBUlNFTFVOLiAgSSd2ZSB0ZXN0ZWQgdGhpcyBjaGFuZ2Ugd2l0aCBzZXZl
+cmFsIEhTRyBmaXJtd2FyZQ0KPiA+IHJldmlzaW9ucyBhbmQgd2l0aCBib3RoIEVtdWxleCBhbmQg
+UWxvZ2ljIEhCQSdzLg0KPiANCj4gV2VsbCwgeW91ciBwYXRjaCB3b24ndCBhcHBseS4gIEFwYXJ0
+IGZyb20gdGhlIGJyZWFraW5nIGJ5IHRoZSBtYWlsZXIsDQo+IHlvdSBoYXZlIGEgY3VyaW9zaXR5
+IGluIHRoZSBsYXN0IHRocmVlIGxpbmVzICh0aGUgREVMTCBhcnJheXMpIHdoaWNoIGFyZQ0KPiBk
+ZWZpbml0ZWx5IG1pc3NpbmcgdGFicyBhbmQgc3BhY2VzIG92ZXIgd2hhdCB3ZSBoYXZlIGluIHRo
+ZSBrZXJuZWwNCj4gKFRoZXJlIGFyZSB0aHJlZSBzcGFjZXMgYmV0d2VlbiAiUFY2NjBGIiBhbmQg
+IlBTRVVETyIgYW5kIHRoZXJlJ3MgYSB0YWINCj4gbm90IGEgc3BhY2UgYmVmb3JlIHRoZSBjb21t
+ZW50KS4gIEhvdyBkaWQgeW91IGdlbmVyYXRlIHRoaXMgZGlmZj8NCj4gDQo+IEFueXdheSwgSSBj
+YW4gYXBwbHkgdGhlIHNpbmdsZSBjaGFuZ2UgbWFudWFsbHkuDQo+IA0KPiBKYW1lcw0KPiANCj4g
+DQo=
 
-That's what I meant. (Two different things actually: Knowing that
-one cannot reset a port after disconnection started, and having
-to down a semaphore.) But again: I don't know If this is actually
-desirable and feasible.
+------_=_NextPart_001_01C59D10.38ECAE80
+Content-Type: text/plain;
+	name="Replaced Blocked File.txt"
+Content-Transfer-Encoding: base64
+Content-Description: Replaced Blocked File.txt
+Content-Disposition: attachment;
+	filename="Replaced Blocked File.txt"
 
-> It already is in the core.  If you're interested, read 
-> drivers/usb/core/usb.c:usb_lock_device_for_reset().
+KioqKioqKiogICAgICAgICAgICAgICBNY0FmZWUgR3JvdXBTaGllbGQgRXhjaGFuZ2UgICAgICAg
+ICAgKioqKioqKioqKg0KKioqKioqKiogIEFsZXJ0IGdlbmVyYXRlZCBhdDogVHVlc2RheSwgQXVn
+dXN0IDA5LCAyMDA1IDAxOjI5OjA1IFBNIENlbnRyYWwgRGF5bGlnaHQgVGltZQ0KKioqKioqKioq
+KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
+KioqKg0KDQoNClRoZSBmaWxlIHNjc2ktYmxhY2tsaXN0LnBhdGNoIGhhcyBiZWVuIHJlcGxhY2Vk
+LCBhcyBpdCBpcyBhIGZpbGUgdHlwZSB0aGF0IGlzIGtub3duIGZvciBzcHJlYWRpbmcgdmlydXNl
+cy4gRm9yIGFzc2lzdGFuY2UsIHBsZWFzZSBjb250YWN0IHlvdXIgbG9jYWwgRGVza3RvcCBTdXBw
+b3J0IFBlcnNvbm5lbCBvciByZWZlciB0byB0aGUgZm9sbG93aW5nIHdlYnNpdGUgZm9yIGRpcmVj
+dGlvbi4gaHR0cDovL2FudGl2aXJ1cy5zZWN1cml0eS5hdHQuY29tL0RlZmF1bHQuaHRtDQoNCg==
 
-I was actually browsing the usb/storage/scsiglue.c, but only
-old code at lxr.linux.no, 2.6.11 in fact. Sorry, I see now that
-this is way too old to look at. However the scsiglue.c's
-device_reset and bus_reset in Linus' tree are still using down().
--- 
-Stefan Richter
--=====-=-=-= =--- -=--=
-http://arcgraph.de/sr/
+------_=_NextPart_001_01C59D10.38ECAE80--
