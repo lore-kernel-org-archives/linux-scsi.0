@@ -1,36 +1,78 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH]  DEC hsg80 needs BLIST_REPORTLUN2
-Date: Tue, 09 Aug 2005 12:51:38 -0500
-Message-ID: <1123609899.5170.32.camel@mulgrave>
-References: <1123608417.30193.23.camel@aptis101.cqtel.com>
+From: Ashok Raj <ashok.raj@intel.com>
+Subject: Re: 2.6.13-rc5-mm1 doesnt boot on x86_64
+Date: Tue, 9 Aug 2005 11:12:37 -0700
+Message-ID: <20050809111237.A32614@unix-os.sc.intel.com>
+References: <20050808094818.A17579@unix-os.sc.intel.com> <20050808171126.GA32092@muc.de> <1123522409.5019.0.camel@mulgrave> <20050808104206.42a51477.akpm@osdl.org> <1123546010.8235.18.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:8073 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S964897AbVHIRvn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Aug 2005 13:51:43 -0400
-In-Reply-To: <1123608417.30193.23.camel@aptis101.cqtel.com>
+Received: from fmr22.intel.com ([143.183.121.14]:65481 "EHLO
+	scsfmr002.sc.intel.com") by vger.kernel.org with ESMTP
+	id S964908AbVHISNV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Aug 2005 14:13:21 -0400
+Content-Disposition: inline
+In-Reply-To: <1123546010.8235.18.camel@mulgrave>; from James.Bottomley@SteelEye.com on Mon, Aug 08, 2005 at 07:06:50PM -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Steve Wilcox <spwilcox@att.com>
-Cc: linux-scsi mailing list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, ak@muc.de, ashok.raj@intel.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2005-08-09 at 13:26 -0400, Steve Wilcox wrote:
-> In order to properly report LUN's > 7, the DEC HSG80 definition in
-> scsi_devinfo.c needs to include BLIST_REPORTLUN2 rather than
-> BLIST_SPARSELUN.  I've tested this change with several HSG firmware
-> revisions and with both Emulex and Qlogic HBA's.
+On Mon, Aug 08, 2005 at 07:06:50PM -0500, James Bottomley wrote:
+> On Mon, 2005-08-08 at 10:42 -0700, Andrew Morton wrote:
+> > -mm has extra list_head debugging goodies.  I'd be suspecting a list_head
+> > corruption detected somewhere under spi_release_transport().
+> 
+> Aha, looking in wrong driver ... the problem actually appears to be a
+> double release of the transport template in aic79xx.  Try this patch
 
-Well, your patch won't apply.  Apart from the breaking by the mailer,
-you have a curiosity in the last three lines (the DELL arrays) which are
-definitely missing tabs and spaces over what we have in the kernel
-(There are three spaces between "PV660F" and "PSEUDO" and there's a tab
-not a space before the comment).  How did you generate this diff?
+Hi James
 
-Anyway, I can apply the single change manually.
+Sorry for the delay...
 
-James
+This patch works like a charm!.....
 
+Cheers,
+ashok
+> 
+> James
+> 
+> diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+> --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
+> +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+> @@ -2326,8 +2326,6 @@ done:
+>  	return (retval);
+>  }
+>  
+> -static void ahd_linux_exit(void);
+> -
+>  static void ahd_linux_set_width(struct scsi_target *starget, int width)
+>  {
+>  	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+> @@ -2772,7 +2770,7 @@ ahd_linux_init(void)
+>  	if (ahd_linux_detect(&aic79xx_driver_template) > 0)
+>  		return 0;
+>  	spi_release_transport(ahd_linux_transport_template);
+> -	ahd_linux_exit();
+> +
+>  	return -ENODEV;
+>  }
+>  
+> diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+> --- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
+> +++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+> @@ -2331,8 +2331,6 @@ ahc_platform_dump_card_state(struct ahc_
+>  {
+>  }
+>  
+> -static void ahc_linux_exit(void);
+> -
+>  static void ahc_linux_set_width(struct scsi_target *starget, int width)
+>  {
+>  	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+> 
+> 
 
+-- 
+Cheers,
+Ashok Raj
+- Open Source Technology Center
