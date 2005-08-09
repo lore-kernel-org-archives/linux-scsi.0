@@ -1,82 +1,51 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Synchronizing scsi_remove_host and the error handler
-Date: Tue, 9 Aug 2005 10:40:24 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0508091023090.4643-100000@iolanthe.rowland.org>
-References: <42F7F1CD.3080600@s5r6.in-berlin.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] SPI transport class and generic Domain Validation for
+	fusion
+Date: Tue, 09 Aug 2005 09:47:10 -0500
+Message-ID: <1123598830.5170.19.camel@mulgrave>
+References: <1123537590.8235.4.camel@mulgrave>
+	 <20050809091353.GA11397@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:27549 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S964796AbVHIOkZ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Aug 2005 10:40:25 -0400
-In-Reply-To: <42F7F1CD.3080600@s5r6.in-berlin.de>
+Received: from stat16.steeleye.com ([209.192.50.48]:25223 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964800AbVHIOr0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Aug 2005 10:47:26 -0400
+In-Reply-To: <20050809091353.GA11397@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, Mike Anderson <andmike@us.ibm.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 9 Aug 2005, Stefan Richter wrote:
+On Tue, 2005-08-09 at 10:13 +0100, Christoph Hellwig wrote:
+>  - there's a stale printk("HERE2\n"); in mptscsih_writeSDP1.
 
-> Alan Stern wrote:
-> > The current code does use
-> > down_*_trylock, and it does check the device state for
-> > disconnect-in-progress.  If things don't work out, it sleeps
-> > for a short while and then tries again.
-> 
-> I think the error handler should rather give SUCCESS back to
-> scsi if it knows the device was or is being disconnected.
-> 
-> After that, commands would be enqueued again, and these
-> commands would be immediately done() with an appropriate
-> result code.
-> 
-> IMO the error handler should return SUCCESS rather than
-> FAILED because, if the device is diconnected, there is
-> simply nothing left to do that could advance recovery
-> from error.
+Yes, sorry, I'll remove it
 
-Your premise is correct: Nothing can advance error recovery once the 
-device is gone.  It doesn't follow that the error handler should return 
-SUCCESS.  In fact it doesn't matter what the handler returns, since no 
-further action will succeed.  When the handler returns FAILED, the device 
-is set off-line and no further commands are issued at all.
+>  - the #undef MPTSCSIH_ENABLE_DOMAIN_VALIDATION is probably not needed
 
->  Retries (in the error handler) will not help
-> with error recovery either. Or do you retry in hope that
-> the device might be reconnected and then a device reset
-> should happen?
+There's actually an awful lot of other cruft besides this that can come
+out of the driver (inquiry snooping leaps to mind).
 
-Are you referring to the "try again" part I wrote above?  That has nothing
-to do with disconnects.  If the handler realizes a disconnect has
-occurred, it immediately returns FAILED.  But if there hasn't been a
-disconnect and the handler was still unable to acquire the semaphore, then
-it waits a short while, checks for disconnect, and does the down_*_trylock 
-again.
+>  - the hd == NULL check in mptspi_target_alloc isn't needed
 
+Yes, OK.
 
-> A more general thought: It appears from the example you
-> explained that maybe the USB highlevel carries too much of a
-> burden to watch out for concurrency. Tasks like to mutually
-> exclude port resets and disconnects --- which seems to me to
-> be a task unspecific to highlevel protocols, correct me if
-> I'm wrong --- might be better moved into the USB core. Then
-> the highlevel would have to worry less about how exactly to
-> avoid races and deadlocks, only about _what_ to do if there
-> is a conflict. (The kind of conflict should be indicated by
-> the core by means of return values or status flags or the
-> like.)
-> 
-> But I am of course speaking without any knowledge about USB
-> and Linux' USB stack.
+>  - should the driver print a warning about too old firmware when we can't
+>    access page 0?
 
-I'm not sure I understand your comment.  Are you saying that the job I 
-outlined above -- trying to acquire the device semaphore while checking 
-for possible disconnects -- should be part of the USB core instead of 
-the high-level USB device driver?
+I'll defer to LSI on this one.  We can't attach the transport classes in
+this case ... which is what I do.  But on the other hand, LSI didn't do
+DV in this case either, so the current situation is identical to what we
+had previously.
 
-It already is in the core.  If you're interested, read 
-drivers/usb/core/usb.c:usb_lock_device_for_reset().
+But yes, this type of situation seems quite common.  The fusion card HP
+sent me initially had this problem, and it does seem to be possible to
+upgrade all the problem cards, so reporting the issue and recommending
+an upgrade seems to be a good approach.
 
-Alan Stern
+James
+
 
