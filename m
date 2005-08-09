@@ -1,29 +1,39 @@
-From: "Cocuk Geleceki" <cocukdunyasi64@yahoo.com>
-Subject: 07 Cok Gec olabilir
-Date: Tue, 9 Aug 2005 22:47:42 +0300
-Message-ID: <412-22005829194741844@adnan>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: [PATCH] gdth: schedule GDTIOCTL_OSVERS for removal
+Date: Tue, 9 Aug 2005 23:55:14 +0400
+Message-ID: <20050809195514.GA10945@mipter.zuzino.mipt.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1254
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from celik.net.tr ([212.45.75.89]:48655 "EHLO kmail.celiknet.com")
-	by vger.kernel.org with ESMTP id S932381AbVHITrp convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Aug 2005 15:47:45 -0400
-Received: from adnan ([85.96.66.118])
-        by kmail.celiknet.com (E-Sunucu) with SMTP id GJG68918
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Aug 2005 22:47:43 +0300
+Received: from wproxy.gmail.com ([64.233.184.192]:11323 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932345AbVHITq7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Aug 2005 15:46:59 -0400
+Received: by wproxy.gmail.com with SMTP id i17so835561wra
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Aug 2005 12:46:56 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Achim Leubner <achim_leubner@adaptec.com>
 
-Okul Oncesi Couk ve Anne Baba Egitimi
-Okul Oncesi Cocuklar Ic=FDn Haz=FDrlanmis Odullu CD'leri Gordunuzmu?
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+---
 
-	http://www.cocukdunyasi.net
+ Documentation/feature-removal-schedule.txt |    8 ++++++++
+ 1 files changed, 8 insertions(+)
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--- linux-vanilla/Documentation/feature-removal-schedule.txt
++++ linux-gdth/Documentation/feature-removal-schedule.txt
+@@ -135,3 +135,11 @@ Why:	With the 16-bit PCMCIA subsystem no
+ 	pcmciautils package available at
+ 	http://kernel.org/pub/linux/utils/kernel/pcmcia/
+ Who:	Dominik Brodowski <linux@brodo.de>
++
++---------------------------
++
++What:	GDTIOCTL_OSVERS ioctl
++When:	November 2005
++Files:	drivers/scsi/gdth.c, drivers/scsi/gdth.h
++Why:	Duplicates uname(2).
++Who:	Alexey Dobriyan <adobriyan@gmail.com>
+
