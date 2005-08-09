@@ -1,78 +1,209 @@
-From: Ashok Raj <ashok.raj@intel.com>
-Subject: Re: 2.6.13-rc5-mm1 doesnt boot on x86_64
-Date: Tue, 9 Aug 2005 11:12:37 -0700
-Message-ID: <20050809111237.A32614@unix-os.sc.intel.com>
-References: <20050808094818.A17579@unix-os.sc.intel.com> <20050808171126.GA32092@muc.de> <1123522409.5019.0.camel@mulgrave> <20050808104206.42a51477.akpm@osdl.org> <1123546010.8235.18.camel@mulgrave>
+From: Jon Scottorn <jscottorn@possibilityforge.com>
+Subject: Re: Adaptec i2o controller
+Date: Tue, 09 Aug 2005 12:13:37 -0600
+Message-ID: <42F8F251.5000902@possibilityforge.com>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F0168461E@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmr22.intel.com ([143.183.121.14]:65481 "EHLO
-	scsfmr002.sc.intel.com") by vger.kernel.org with ESMTP
-	id S964908AbVHISNV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Aug 2005 14:13:21 -0400
-Content-Disposition: inline
-In-Reply-To: <1123546010.8235.18.camel@mulgrave>; from James.Bottomley@SteelEye.com on Mon, Aug 08, 2005 at 07:06:50PM -0500
+Received: from mail.possibilityforge.com ([209.33.206.30]:21197 "EHLO
+	possibilityforge.com") by vger.kernel.org with ESMTP
+	id S964910AbVHISN5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 9 Aug 2005 14:13:57 -0400
+Received: from dev.possibilityforge.com ([209.33.206.3])
+	by  with esmtp (Exim 4.50)
+	id 1E2Ybh-0001ik-1P
+	for linux-scsi@vger.kernel.org; Tue, 09 Aug 2005 12:13:53 -0600
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F0168461E@otce2k03.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@osdl.org>, ak@muc.de, ashok.raj@intel.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Aug 08, 2005 at 07:06:50PM -0500, James Bottomley wrote:
-> On Mon, 2005-08-08 at 10:42 -0700, Andrew Morton wrote:
-> > -mm has extra list_head debugging goodies.  I'd be suspecting a list_head
-> > corruption detected somewhere under spi_release_transport().
+Ok, I have got it to compile and I have installed it.  I reboot and I
+still get the same error I initially had, the kernel panic error. 
+
+Any other suggestion that I could try?
+
+Thanks,
+
+Jon
+
+Salyzyn, Mark wrote:
+
+>There is an additional 'build fix' patch that Andrew Morton submitted on
+>the kernel list (I have changed out his dpr_i2o with dpt_i2o below
+>though).
+>
+>---------------------------------------------------
+>Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+>Cc: James Bottomley <James.Bottomley@steeleye.com>
+>Signed-off-by: Andrew Morton <akpm@osdl.org>
+>---
+>
+> drivers/scsi/dpt_i2o.c |    2 +-
+> 1 files changed, 1 insertion(+), 1 deletion(-)
+>
+>diff -puN drivers/scsi/dpt_i2o.c~dpt_i2o-build-fix
+>drivers/scsi/dpt_i2o.c
+>--- devel/drivers/scsi/dpt_i2o.c~dpt_i2o-build-fix	2005-08-09
+>00:18:51.000000000 -0700
+>+++ devel-akpm/drivers/scsi/dpt_i2o.c	2005-08-09 00:19:02.000000000
+>-0700
+>@@ -907,7 +907,7 @@ static int adpt_install_hba(struct scsi_
+> 		raptorFlag = TRUE;
+> 	}
 > 
-> Aha, looking in wrong driver ... the problem actually appears to be a
-> double release of the transport template in aic79xx.  Try this patch
-
-Hi James
-
-Sorry for the delay...
-
-This patch works like a charm!.....
-
-Cheers,
-ashok
-> 
-> James
-> 
-> diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
-> --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-> +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-> @@ -2326,8 +2326,6 @@ done:
->  	return (retval);
->  }
+>-	if (pci_request_regions(pDev)) {
+>+	if (pci_request_regions(pDev, "dpt_i2o")) {
+> 		PERROR("dpti: adpt_config_hba: pci request region
+>failed\n");
+> 		return -EINVAL;
+> 	}
+>_
+>------------------------------------------------------------------------
+>-
+>Sincerely -- Mark Salyzyn
+>
+>-----Original Message-----
+>From: linux-scsi-owner@vger.kernel.org
+>[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Jon Scottorn
+>Sent: Tuesday, August 09, 2005 12:47 PM
+>To: unlisted-recipients
+>Cc: SCSI Mailing List
+>Subject: Re: Adaptec i2o controller
+>
+>Thanks for the replies,
+>
+>      After applying the patch, Now I get a compile error
+>
+>drivers/scsi/dpt_i2o.c: In function `adpt_install_hba':
+>drivers/scsi/dpt_i2o.c:908: error: too few arguments to function
+>`pci_request_regions'
+>drivers/scsi/dpt_i2o.c: In function `adpt_isr':
+>drivers/scsi/dpt_i2o.c:2037: warning: passing arg 1 of `readl' makes
+>pointer from integer without a cast
+>drivers/scsi/dpt_i2o.c:2038: warning: passing arg 1 of `readl' makes
+>pointer from integer without a cast
+>drivers/scsi/dpt_i2o.c:2049: warning: passing arg 1 of `readl' makes
+>pointer from integer without a cast
+>drivers/scsi/dpt_i2o.c:2050: warning: passing arg 2 of `writel' makes
+>pointer from integer without a cast
+>drivers/scsi/dpt_i2o.c:2053: warning: passing arg 1 of `readl' makes
+>pointer from integer without a cast
+>drivers/scsi/dpt_i2o.c:2055: warning: passing arg 1 of `readl' makes
+>pointer from integer without a cast
+>drivers/scsi/dpt_i2o.c:2062: warning: passing arg 1 of `readl' makes
+>pointer from integer without a cast
+>drivers/scsi/dpt_i2o.c:2069: warning: passing arg 1 of `readl' makes
+>pointer from integer without a cast
+>drivers/scsi/dpt_i2o.c:2076: warning: passing arg 1 of `readl' makes
+>pointer from integer without a cast
+>drivers/scsi/dpt_i2o.c: In function `adpt_i2o_to_scsi':
+>drivers/scsi/dpt_i2o.c:2246: warning: passing arg 1 of `readl' makes
+>pointer from integer without a cast
+>drivers/scsi/dpt_i2o.c:2250: warning: passing arg 1 of `readl' makes
+>pointer from integer without a cast
+>drivers/scsi/dpt_i2o.c:2255: warning: passing arg 1 of `readl' makes
+>pointer from integer without a cast
+>drivers/scsi/dpt_i2o.c:2266: warning: passing arg 1 of `readl' makes
+>pointer from integer without a cast
+>drivers/scsi/dpt_i2o.c: At top level:
+>drivers/scsi/dpt_i2o.c:171: warning: `dptids' defined but not used
+>make[3]: *** [drivers/scsi/dpt_i2o.o] Error 1
+>make[2]: *** [drivers/scsi] Error 2
+>make[1]: *** [drivers] Error 2
+>
+>and I do have only one option selected in the .config file.
+>
+>Any other thoughts?
+>
+>Thanks,
+>
+>Jon
+>
+>Salyzyn, Mark wrote:
+>
 >  
-> -static void ahd_linux_exit(void);
-> -
->  static void ahd_linux_set_width(struct scsi_target *starget, int width)
->  {
->  	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-> @@ -2772,7 +2770,7 @@ ahd_linux_init(void)
->  	if (ahd_linux_detect(&aic79xx_driver_template) > 0)
->  		return 0;
->  	spi_release_transport(ahd_linux_transport_template);
-> -	ahd_linux_exit();
-> +
->  	return -ENODEV;
->  }
+>
+>>This dpt_i2o patch *plus* the patch Markus submitted yesterday for the
+>>i2o driver to the kernel list need to be performed to create the mutual
+>>exclusion between the two drivers.
+>>
+>>Jon, just select one (CONFIG_SCSI_DPT_I2O) or the other (CONFIG_I2O) in
+>>your .config
+>>
+>>Sincerely -- Mark Salyzyn
+>>
+>>-----Original Message-----
+>>From: linux-scsi-owner@vger.kernel.org
+>>[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of James Bottomley
+>>Sent: Tuesday, August 09, 2005 12:11 PM
+>>To: Jon Scottorn
+>>Cc: SCSI Mailing List
+>>Subject: Re: Adaptec i2o controller
+>>
+>>On Tue, 2005-08-09 at 09:59 -0600, Jon Scottorn wrote:
+>> 
+>>
+>>    
+>>
+>>> I have been running a 2.6.8 kernel with the adaptec i2o scsi
+>>>controller and I went to upgrade to the 2.6.12.4 kernel and when I
+>>>reboot into that kernel I get a kernel panic. I am wondering either
+>>>   
+>>>
+>>>      
+>>>
+>>what
+>> 
+>>
+>>    
+>>
+>>>I have done wrong or what has changed with the i2o driver between the
+>>>two kernels. 
+>>>Here is the error I get, I am summarizing because I have to type the
+>>>error in.
+>>>
+>>>EIP is at adpt_isr+0x175/0x1f2
+>>>then has a stack and call trace:
+>>>(#0001,*0):c01035b2 oops
+>>>kernel panic - not syncing: Fatal exception in interrupt
+>>>   
+>>>
+>>>      
+>>>
+>>Could you try out the patch in this email:
+>>
+>>http://marc.theaimsgroup.com/?l=linux-scsi&m=112351014310129
+>>
+>>Thanks,
+>>
+>>James
+>>
+>>
+>>-
+>>To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+>>    
+>>
+>in
 >  
-> diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-> --- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-> +++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-> @@ -2331,8 +2331,6 @@ ahc_platform_dump_card_state(struct ahc_
->  {
->  }
+>
+>>the body of a message to majordomo@vger.kernel.org
+>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> 
+>>
+>>    
+>>
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>-
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>the body of a message to majordomo@vger.kernel.org
+>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 >  
-> -static void ahc_linux_exit(void);
-> -
->  static void ahc_linux_set_width(struct scsi_target *starget, int width)
->  {
->  	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-> 
-> 
-
--- 
-Cheers,
-Ashok Raj
-- Open Source Technology Center
+>
