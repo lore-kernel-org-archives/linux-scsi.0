@@ -1,55 +1,38 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: aacraid probe breaks in scsi-block-2.6.git
-Date: Wed, 10 Aug 2005 13:28:48 -0400
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01684A0A@otce2k03.adaptec.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: dth@picard.cistron.nl (Danny ter Haar)
+Subject: Re: [GIT PATCH] final SCSI bug fixes before 2.6.13
+Date: Wed, 10 Aug 2005 17:31:28 +0000 (UTC)
+Message-ID: <ddddlg$v3v$1@news.cistron.nl>
+References: <1123689057.5134.8.camel@mulgrave>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:52866 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S965233AbVHJRa7 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Aug 2005 13:30:59 -0400
-content-class: urn:content-classes:message
+Received: from uucp.cistron.nl ([62.216.30.38]:5279 "EHLO ncc1701.cistron.net")
+	by vger.kernel.org with ESMTP id S965231AbVHJRbd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Aug 2005 13:31:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Mark Haverkamp <markh@osdl.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Yup, James hit the nail on the head... :-(
+James Bottomley  <James.Bottomley@SteelEye.com> wrote:
+>This tree represents the final bug fixes, both for oopses seen by
+>various people.  One is for the dual binding of the i2o drivers and the
+>other is for an oops adding and removing devices from the lpfc and
+>qlogic fibre drivers.
+>
+>The tree is at
+>www.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
 
-Sincerely -- Mark Salyzyn
+Is this patch allready included in the 2.6.13-rc6-git1 patch ?
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of James Bottomley
-Sent: Wednesday, August 10, 2005 1:27 PM
-To: Mark Haverkamp
-Cc: linux-scsi
-Subject: Re: aacraid probe breaks in scsi-block-2.6.git
+I compiled/installed that kernel now over 6 hours ago
 
-On Wed, 2005-08-10 at 10:20 -0700, Mark Haverkamp wrote:
-> While trying out a recent mm kernel I noticed that when I loaded the
-> aacraid  driver I saw errors probing the disks:
-> 
-> sdc : sector size 0 reported, assuming 512.
-> SCSI device sdc: 1 512-byte hdwr sectors (0 MB)
+reboot   system boot  2.6.13-rc6-git1  Wed Aug 10 13:24          (06:04)
 
-Sigh, I guess this is because aacraid is making illegal assumptions
-about the format of certain commands it emulates?
+Prior to that 2.6.13-rc6 crashed on me twice:
 
-We had a similar issue with 3w-xxxx which assumed commands like INQUIRY,
-READ_CAPACITY and MODE_SENSE only came from the kernel, so would never
-have use_sg != 0.  This is, of course, wrong, since such commands can
-and do come from SG_IO.
+reboot   system boot  2.6.13-rc6       Mon Aug  8 16:52 (1+20:29)
+reboot   system boot  2.6.13-rc6       Sun Aug  7 22:07 (2+15:14)
 
-The fix is probably similar to the 3w-xxxx one.
+Although it managed to receive 1.8 and sent 3.6TB in 24 hours!
 
-James
+Danny
 
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
