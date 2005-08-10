@@ -1,71 +1,43 @@
-From: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
-Subject: Re: kernel workqueue -max name length
-Date: Wed, 10 Aug 2005 07:45:18 +0200
-Message-ID: <42F9946E.2040609@ext.bull.net>
-References: <42F8AE91.9030708@ext.bull.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] remove name length check in a workqueue
+Date: Wed, 10 Aug 2005 09:19:04 -0500
+Message-ID: <1123683544.5093.4.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ecfrec.frec.bull.fr ([129.183.4.8]:44698 "EHLO
-	ecfrec.frec.bull.fr") by vger.kernel.org with ESMTP id S964995AbVHJFpV
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Aug 2005 01:45:21 -0400
-In-Reply-To: <42F8AE91.9030708@ext.bull.net>
+Received: from stat16.steeleye.com ([209.192.50.48]:41877 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S965112AbVHJOTX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Aug 2005 10:19:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
-Cc: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
+To: Andrew Morton <akpm@osdl.org>, mingo@redhat.com
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi,
+Ingo,
 
+This has been in the workqueue code in day one, for no real reason that
+I can see.  We just tripped over it in SCSI because the fibre channel
+transport class creates one workqueue per host with the name scsi_wq_%d
+which trips this after we get to 100.  Unfortunately we just came across
+someone with > 100 host adapters ...
 
-any explanation about the 10 chars limit for kernel workqueue name ?
+I think the solution is just to get rid of the artificial limit.
 
+James
 
-another question: why is the name length test managed by BUG_ON ?
-returning a NULL workqueue is done in the next test (failed kmalloc for wq)...
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -308,8 +308,6 @@ struct workqueue_struct *__create_workqu
+ 	struct workqueue_struct *wq;
+ 	struct task_struct *p;
+ 
+-	BUG_ON(strlen(name) > 10);
+-
+ 	wq = kmalloc(sizeof(*wq), GFP_KERNEL);
+ 	if (!wq)
+ 		return NULL;
 
-Anyway, this can explain some issues when loading some SCSI drivers modules.
-
-
-hope that somebody knows...
-
-
-Frederic TEMPORELLI wrote:
-> Hello,
-> 
-> 
-> When creating a workqueue, workqueue name is limited to 10 chars
-> (kernel/workqueue.c , function is __create_workqueue, test is done in a 
-> BUG_ON).
-> 
-> Why has this length be limited to 10 chars ?
-> Can I safely increase this max length (13 chars should be enough...) ?
-> 
-> 
-> 
-> Some comments about these questions:
-> 
-> In SCSI layer, HBA kernel ID is incremented after each modprobe/rmmod.
-> 
-> Then, when a scsi driver is managing a working queue and HBA kernel ID 
-> is greater than 99 (let's assume that you have modprobe/rmmod the scsi 
-> driver to get this ID to 99, or you may have play with 'scsi_debug' 
-> module), an oops is generated when loading again the driver (and the 
-> driver is frozen).
-> 
-> This is because working queue name format is "scsi_wq_%d" 
-> (drivers/scsi/hosts.c , function scsi_add_host, %d is the HBA ID), and 
-> so working queue name length is greater than 10 chars when HBA kernel ID 
-> is > 99...
-> 
-> 
-> Best regards
-> 
-> 
-
-
--- 
-Frederic TEMPORELLI
 
