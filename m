@@ -1,67 +1,54 @@
-From: Frederic TEMPORELLI - astek <ftemporelli@astek.fr>
-Subject: Re: [PATCH] remove name length check in a workqueue
-Date: Wed, 10 Aug 2005 20:49:40 +0200
-Message-ID: <42FA4C44.5040609@astek.fr>
-References: <1123683544.5093.4.camel@mulgrave>	 <Pine.LNX.4.58.0508101044110.31617@devserv.devel.redhat.com>	 <20050810100523.0075d4e8.akpm@osdl.org> <1123694672.5134.11.camel@mulgrave>	 <20050810103733.42170f27.akpm@osdl.org> <1123696466.5134.23.camel@mulgrave>
+From: James.Smart@Emulex.Com
+Subject: [PATCH 3 of 7] lpfc driver 8.0.30 : fix iocb reuse initialization
+Date: Wed, 10 Aug 2005 15:02:45 -0400
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C20F439F@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailfe09.tele2.fr ([212.247.155.12]:47260 "EHLO swip.net")
-	by vger.kernel.org with ESMTP id S965257AbVHJStx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Aug 2005 14:49:53 -0400
-In-Reply-To: <1123696466.5134.23.camel@mulgrave>
+Received: from emulex.emulex.com ([138.239.112.1]:64141 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1030197AbVHJTCs convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Aug 2005 15:02:48 -0400
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id j7AJ2kr7000744
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Aug 2005 12:02:47 -0700 (PDT)
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel <linux-kernel@vger.kernel.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-James Bottomley a =E9crit :
+IOCB BDE not getting fully initialized during reuse
 
->Well, but the other alternative is that we hit arbitrary BUG_ON() limi=
-ts
->in systems that create numbered workqueues which is rather contrary to
->our scaleability objectives, isn't it?
->
->I think I'd rather the name truncation than have to respond to kernel
->BUG()'s.  If someone really has a problem with the appearance of ps,
->they can always increase TASK_COMM_LEN.
->
-> =20
->
->>We could truncate the name before adding the CPU number, but it sound=
-s
->>saner to just prevent anyone passing in excessively long names.  Via
->>BUG_ON, say ;)
->>
->>What's the actual problem?
->>   =20
->>
->
->What I posted originally; the current SCSI format for a workqueue:
->scsi_wq_%d hits the bug after the host number rises to 100, which has
->been seen by some enterprise person with > 100 HBAs.
->
->The reason for this name is that the error handler thread is called
->scsi_eh_%d; so we could rename all our threads to avoid this, but one
->day someone will come along with a huge enough machine to hit whatever
->limit we squeeze it down to.
->
->James
->
-> =20
->
-In scsi layer (drivers/scsi/hosts.c), wq name length is limited to=20
-KOBJ_NAME_LEN due to the snprintf .
-may be nice to use same limit if BUG_ON is kept... but why NULL isn't=20
-returned, then ?  ;-)
+Symptoms: Driver gets Status 3 and Reason 0x13 on IOCB completions.
 
---
-Tempo
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cause: The IOCB bpl.bdeSize and bdeFlags are not getting initialized on reuse.
+
+Fix: Reinitialize these fields in prep_dma each time an IOCB is used.
+
+Signed-off-by: James Smart <James.Smart@emulex.com>
+
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -238,6 +238,8 @@ lpfc_scsi_prep_dma_buf(struct lpfc_hba *
+ 		bpl->tus.f.bdeSize = scsi_cmnd->request_bufflen;
+ 		if (datadir == DMA_TO_DEVICE)
+ 			bpl->tus.f.bdeFlags = 0;
++		else
++			bpl->tus.f.bdeFlags = BUFF_USE_RCV;
+ 		bpl->tus.w = le32_to_cpu(bpl->tus.w);
+ 		num_bde = 1;
+ 		bpl++;
+@@ -245,8 +247,11 @@ lpfc_scsi_prep_dma_buf(struct lpfc_hba *
+ 
+ 	/*
+ 	 * Finish initializing those IOCB fields that are dependent on the
+-	 * scsi_cmnd request_buffer
++	 * scsi_cmnd request_buffer.  Note that the bdeSize is explicitly
++	 * reinitialized since all iocb memory resources are used many times
++	 * for transmit, receive, and continuation bpl's.
+ 	 */
++	iocb_cmd->un.fcpi64.bdl.bdeSize = (2 * sizeof (struct ulp_bde64));
+ 	iocb_cmd->un.fcpi64.bdl.bdeSize +=
+ 		(num_bde * sizeof (struct ulp_bde64));
+ 	iocb_cmd->ulpBdeCount = 1;
