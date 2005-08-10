@@ -1,51 +1,38 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: Linux-2.6.13-rc6: aic7xxx testers please..
-Date: Wed, 10 Aug 2005 12:27:23 -0400
-Message-ID: <17146.10987.646530.492808@smtp.charter.net>
-References: <Pine.LNX.4.58.0508071136020.3258@g5.osdl.org>
-	<200508081954.52638.jesper.juhl@gmail.com>
-	<17145.1417.329260.524528@smtp.charter.net>
-	<1123617516.5170.42.camel@mulgrave>
-	<17145.3629.933024.963438@smtp.charter.net>
-	<1123635010.5170.75.camel@mulgrave>
-	<17146.7454.818003.464185@smtp.charter.net>
-	<1123688778.5134.3.camel@mulgrave>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: exporting TCQ functionality to the kernel in SYMBIOS/NCR 53C8XX driver
+Date: Wed, 10 Aug 2005 17:36:32 +0100
+Message-ID: <20050810163632.GC16724@parcelfarce.linux.theplanet.co.uk>
+References: <200507271133.33723.philipp.reisner@linbit.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mxsf10.cluster1.charter.net ([209.225.28.210]:33685 "EHLO
-	mxsf10.cluster1.charter.net") by vger.kernel.org with ESMTP
-	id S965189AbVHJQ11 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Aug 2005 12:27:27 -0400
-In-Reply-To: <1123688778.5134.3.camel@mulgrave>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:47074 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S965204AbVHJQdv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Aug 2005 12:33:51 -0400
+Content-Disposition: inline
+In-Reply-To: <200507271133.33723.philipp.reisner@linbit.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: John Stoffel <john@stoffel.org>, Linus Torvalds <torvalds@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Philipp Reisner <philipp.reisner@linbit.com>
+Cc: matthew@wil.cx, linux-scsi@vger.kernel.org
 
+On Wed, Jul 27, 2005 at 11:33:33AM +0200, Philipp Reisner wrote:
+> Hi Matthew,
+> 
+> Does this patch makes sense to you ?
+> Could you consider this for inclusion into mainline ?
 
-James> Well, I suspect the tape is hanging the bus, from which no card
-James> can recover.
+Does it actually do anything?  The sym2 driver doesn't use the generic
+midlayer queue tagging code at all yet, so could this flag ever get set?
 
-Blech, not going to be fun to fix this sucker.
+I must admit, I was hoping you'd done the work to make that happen, but
+I guess I'll have to do it myself (which will make this patch irrelevant).
 
-James> Just to test this, can you try sending a bus reset with sgutils (from
-James> the debain package sg3-utils):
-
-James> sg_reset -b /dev/sg3
-
-James> Then remove and re-add the device with
-
-James> echo scsi remove-single-device 1 0 6 0 > /proc/scsi/scsi
-James> echo scsi add-single-device 1 0 6 0 > /proc/scsi/scsi
-
-James> And see if that brings it back.  If it doesn't I'm afraid the
-James> tape has the bus locked and nothing can free it.
-
-It didn't bring it back, but I'm also not at home to look at the
-device either.  Bummers.  I'll play around with this some more and get
-back to people when I can.
-
-Should I be moving back to 2.6.13-rc6 to get the speedup on /dev/sda
-anyway?  Since my OS partitions are on SCSI.
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
