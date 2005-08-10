@@ -1,64 +1,71 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Linux-2.6.13-rc6: aic7xxx testers please..
-Date: Tue, 09 Aug 2005 19:50:10 -0500
-Message-ID: <1123635010.5170.75.camel@mulgrave>
-References: <Pine.LNX.4.58.0508071136020.3258@g5.osdl.org>
-	 <200508081954.52638.jesper.juhl@gmail.com>
-	 <17145.1417.329260.524528@smtp.charter.net>
-	 <1123617516.5170.42.camel@mulgrave>
-	 <17145.3629.933024.963438@smtp.charter.net>
+From: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
+Subject: Re: kernel workqueue -max name length
+Date: Wed, 10 Aug 2005 07:45:18 +0200
+Message-ID: <42F9946E.2040609@ext.bull.net>
+References: <42F8AE91.9030708@ext.bull.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:2960 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751020AbVHJAuU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Aug 2005 20:50:20 -0400
-In-Reply-To: <17145.3629.933024.963438@smtp.charter.net>
+Received: from ecfrec.frec.bull.fr ([129.183.4.8]:44698 "EHLO
+	ecfrec.frec.bull.fr") by vger.kernel.org with ESMTP id S964995AbVHJFpV
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Aug 2005 01:45:21 -0400
+In-Reply-To: <42F8AE91.9030708@ext.bull.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Stoffel <john@stoffel.org>
-Cc: Linus Torvalds <torvalds@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Cc: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
 
-On Tue, 2005-08-09 at 16:12 -0400, John Stoffel wrote:
-> Thank you for looking into this with me, I really appreciate it.  I'm
-> kinda stumped why this suddenly started happening, but it could be
-> hardware related of course...
-
-Well ... there's something going on that your posted dmesg's don't seem
-to cover.  This:
-
->     Vendor: SUN       Model: DLT7000           Rev: 1E48
->     Type:   Sequential-Access                  ANSI SCSI revision: 02
->    target1:0:6: asynchronous.
->    target1:0:6: Beginning Domain Validation
->    target1:0:6: wide asynchronous.
->    target1:0:6: Domain Validation skipping write tests
->    target1:0:6: FAST-10 WIDE SCSI 20.0 MB/s ST (100 ns, offset 8)
->    target1:0:6: Ending Domain Validation
-
-Say everything went OK with DV and the drive attaches wide and at 10MHz.
-
-But in your previous posting, the aic proc routines said this:
+Hi,
 
 
-> Target 6 Negotiation Settings
->         User: 40.000MB/s transfers (20.000MHz, offset 127, 16bit)
->         Goal: 20.000MB/s transfers (10.000MHz, offset 8, 16bit)
->         Curr: 3.300MB/s transfers
->         Channel A Target 6 Lun 0 Settings
->                 Commands Queued 1065
->                 Commands Active 0
->                 Command Openings 1
->                 Max Tagged Openings 0
->                 Device Queue Frozen Count 0
+any explanation about the 10 chars limit for kernel workqueue name ?
 
-Which is the AIC driver's way of saying narrow async.
 
-So something must have happened during the 1065 I/Os to cause this.
-Hopefully that something left a trace in the logs.
+another question: why is the name length test managed by BUG_ON ?
+returning a NULL workqueue is done in the next test (failed kmalloc for wq)...
 
-James
+Anyway, this can explain some issues when loading some SCSI drivers modules.
 
+
+hope that somebody knows...
+
+
+Frederic TEMPORELLI wrote:
+> Hello,
+> 
+> 
+> When creating a workqueue, workqueue name is limited to 10 chars
+> (kernel/workqueue.c , function is __create_workqueue, test is done in a 
+> BUG_ON).
+> 
+> Why has this length be limited to 10 chars ?
+> Can I safely increase this max length (13 chars should be enough...) ?
+> 
+> 
+> 
+> Some comments about these questions:
+> 
+> In SCSI layer, HBA kernel ID is incremented after each modprobe/rmmod.
+> 
+> Then, when a scsi driver is managing a working queue and HBA kernel ID 
+> is greater than 99 (let's assume that you have modprobe/rmmod the scsi 
+> driver to get this ID to 99, or you may have play with 'scsi_debug' 
+> module), an oops is generated when loading again the driver (and the 
+> driver is frozen).
+> 
+> This is because working queue name format is "scsi_wq_%d" 
+> (drivers/scsi/hosts.c , function scsi_add_host, %d is the HBA ID), and 
+> so working queue name length is greater than 10 chars when HBA kernel ID 
+> is > 99...
+> 
+> 
+> Best regards
+> 
+> 
+
+
+-- 
+Frederic TEMPORELLI
 
