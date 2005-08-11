@@ -1,34 +1,43 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: remove-single-device removes mounted HDDs (kernel 2.6)
-Date: Fri, 12 Aug 2005 00:06:16 +0200
-Message-ID: <42FBCBD8.7040707@s5r6.in-berlin.de>
-References: <OF5B21133C.F5A53509-ON8825705A.005F65D9-8825705A.00611764@us.ibm.com>
-Reply-To: linux-scsi@vger.kernel.org
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: hwo to adjust interrupt?
+Date: Thu, 11 Aug 2005 18:31:08 -0400
+Message-ID: <1123799468.5546.81.camel@localhost.localdomain>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:39913 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S932405AbVHKWGh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Aug 2005 18:06:37 -0400
-Received: from [192.168.0.41] ([62.180.98.151])
-	(authenticated bits=0)
-	by einhorn.in-berlin.de (8.12.10/8.12.10/Debian-4) with ESMTP id j7BM6RjF025446
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Aug 2005 00:06:31 +0200
-In-Reply-To: <OF5B21133C.F5A53509-ON8825705A.005F65D9-8825705A.00611764@us.ibm.com>
+Received: from leviathan.ele.uri.edu ([131.128.51.64]:63362 "EHLO
+	leviathan.ele.uri.edu") by vger.kernel.org with ESMTP
+	id S932500AbVHKWbN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Aug 2005 18:31:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Bryan Henderson wrote:
-> Because removable devices exist, we do have to allow remove-single-device 
-> of an in-use device in general,
+I have this eth1 and aic7xxx share 1 interrupt thus have impact on
+performance, anyway i can change it? thx!
 
-Do we? I don't know of a use case of the add/remove-single-device user 
-interface under Linux 2.6 as far as hotpluggable hardware is concerned.
--- 
-Stefan Richter
--=====-=-=-= =--- -==--
-http://arcgraph.de/sr/
+
+[root@sc420 root]# cat /proc/interrupts
+           CPU0       CPU1
+  0:     378525     402791    IO-APIC-edge  timer
+  1:         38         26    IO-APIC-edge  i8042
+  4:          7          0    IO-APIC-edge  serial
+  8:          3          2    IO-APIC-edge  rtc
+  9:          0          0   IO-APIC-level  acpi
+ 14:       2325        932    IO-APIC-edge  ide0
+ 16:    1330261          0   IO-APIC-level  eth1, aic7xxx
+ 17:       2917          8   IO-APIC-level  aic7xxx
+ 18:          3          0   IO-APIC-level  uhci_hcd:usb4
+ 20:       7577       6597   IO-APIC-level  libata
+ 21:          0          0   IO-APIC-level  ehci_hcd:usb1, uhci_hcd:usb2
+ 22:          0          0   IO-APIC-level  uhci_hcd:usb3
+ 23:          0          0   IO-APIC-level  uhci_hcd:usb5
+NMI:    2017738    1165555
+LOC:     781237     781288
+ERR:          0
+MIS:          0
+
+
+
