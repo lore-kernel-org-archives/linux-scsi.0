@@ -1,38 +1,58 @@
-From: Sonny Rao <sonny@burdell.org>
-Subject: lpfc driver in 2.6.13-rc6 broken on ppc64 ?
-Date: Thu, 11 Aug 2005 16:00:17 -0400
-Message-ID: <20050811200017.GA3951@kevlar.burdell.org>
+From: James.Smart@Emulex.Com
+Subject: RE: lpfc driver in 2.6.13-rc6 broken on ppc64 ?
+Date: Thu, 11 Aug 2005 17:03:10 -0400
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C20F43C7@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 66-23-228-155.clients.speedfactory.net ([66.23.228.155]:30375
-	"EHLO kevlar.burdell.org") by vger.kernel.org with ESMTP
-	id S932390AbVHKUCG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Aug 2005 16:02:06 -0400
-Content-Disposition: inline
+Received: from emulex.emulex.com ([138.239.112.1]:6315 "EHLO emulex.emulex.com")
+	by vger.kernel.org with ESMTP id S932357AbVHKVDU convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Aug 2005 17:03:20 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@emulex.com
+To: sonny@burdell.org
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi, I am having problems using some older Emulex fibre adapters on a
-ppc64 machine, whenever I load the lpfc driver I get a large number of 
+This signature is consistent with having out of date firmware on the adapter.
 
-"lpfc 0001:d8:01.0: 1:0321 Unknown IOCB command Data: x0 x3 x0 x0"
+See http://www.emulex.com/ts/indexemu.html.  There are some hints on downloading firmware at the tail end of  http://sourceforge.net/forum/forum.php?thread_id=1130082&forum_id=355154. 
 
-with several hundred messages per adapter
+Thanks.
 
-and finally I get this message:
-
-lpfc 0001:d8:01.0: 1:0222 Initial FLOGI timeout
-lpfc 0001:d8:01.0: 1:0127 ELS timeout Data: x4000000 xfffffe x8a x23
+-- James S
 
 
-Is this a known issue ?
-
-Let me know if you need patches tested, thanks.
-
-Sonny Rao
-IBM LTC Performance
-
-
+> -----Original Message-----
+> From: Sonny Rao [mailto:sonny@burdell.org]
+> Sent: Thursday, August 11, 2005 4:00 PM
+> To: Smart, James
+> Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
+> Subject: lpfc driver in 2.6.13-rc6 broken on ppc64 ?
+> 
+> 
+> Hi, I am having problems using some older Emulex fibre adapters on a
+> ppc64 machine, whenever I load the lpfc driver I get a large 
+> number of 
+> 
+> "lpfc 0001:d8:01.0: 1:0321 Unknown IOCB command Data: x0 x3 x0 x0"
+> 
+> with several hundred messages per adapter
+> 
+> and finally I get this message:
+> 
+> lpfc 0001:d8:01.0: 1:0222 Initial FLOGI timeout
+> lpfc 0001:d8:01.0: 1:0127 ELS timeout Data: x4000000 xfffffe x8a x23
+> 
+> 
+> Is this a known issue ?
+> 
+> Let me know if you need patches tested, thanks.
+> 
+> Sonny Rao
+> IBM LTC Performance
+> 
+> 
+> 
