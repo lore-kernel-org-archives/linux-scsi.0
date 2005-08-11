@@ -1,50 +1,179 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: remove-single-device removes mounted HDDs (kernel 2.6)
-Date: Thu, 11 Aug 2005 12:52:26 -0500
-Message-ID: <1123782746.5062.42.camel@mulgrave>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01684DCF@otce2k03.adaptec.com>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: Kernel 2.6.5 - Compaq Fibre Channel 64-bit/66Mhz HBA [PATCH]
+Date: Thu, 11 Aug 2005 19:58:42 +0200
+Message-ID: <200508111958.43067@bilbo.math.uni-mannheim.de>
+References: <42FB72DE.8000703@aub.nl>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:22181 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932313AbVHKRwd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Aug 2005 13:52:33 -0400
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01684DCF@otce2k03.adaptec.com>
+Received: from mail.sf-mail.de ([62.27.20.61]:62099 "EHLO mail.sf-mail.de")
+	by vger.kernel.org with ESMTP id S932326AbVHKR5s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Aug 2005 13:57:48 -0400
+In-Reply-To: <42FB72DE.8000703@aub.nl>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Harald Seipp <SEIPP@de.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Bolke de Bruin <bdbruin@aub.nl>, Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org
 
-On Thu, 2005-08-11 at 13:05 -0400, Salyzyn, Mark wrote:
-> RAID management applications have no idea what other applications are
-> doing and can not exercise such control over them. From my (flawed?)
-> view, there is no way to ask the OS if the target happens to be unused
-> and quiesced at this instant of time.
+Bolke de Bruin wrote:
 
-But we have userspace tools, like fuser that can get the answers
+>So the basic question is. Does this controller work on kernel 2.6.5?
 
-> Asking the (various) applications (of which one of them is the
-> filesystem mounts) this question is an exercise in anger management
-> currently. All attempts to add such 'busy' interrogation code to the
-> ioctl of the driver are rejected. This code resides in the 'Adaptec
-> Branch' of the aacraid driver as one of our OEM added values.
+Don't think about it. This thing is a mess. I tried to remove the #errors 
+(which was rather simple) and replace them by kmalloc(). Of course then 
+someone should care about ENOMEM case. One function had no problem at all, the 
+huge buffer can be avoided at all. The other one is called from an interrupt 
+handler. This thing tries to handle the complete packet transfer in the 
+interrupt. Don't use it. It will blow up.
 
-That's because such questions are 1) racy and 2) flawed.
+If someone has some spare time this interrupt handler has to be split up. Here 
+is a diff of what I've done so far. To apply this one you will have to use my 
+two patches sent in the last days first, the subject lines are
 
-I could export the device ref count sure enough, but it's not useful.
-It's internal bookkeeping only.  It could be 1 if there's a filesystem
-mounted, in which case you don't want to force an ejection without
-unmounting or it could be 1 because someone's sitting in the sysfs
-directory, in which case an ejection is fine.
+[PATCH 2.6.13-rc5] reduce whitespace bloat in drivers/scsi/cpqfcTScontrol.c
+[PATCH 2.6.13-rc5] rewrite drivers/scsi/cpqfcTScontrol.c::CpqTsGetSFQEntry
 
-Regardless, userspace is supposed to clean up nicely, so you
-use /proc/mounts and fuser to check to see if the thing is really in use
-and by whom and the user takes action accordingly (either say wait for
-me to clean up manually or go ahead and kill everything to clean this
-up).
+This patch also kills cpqfcTS_reset() function which is never referenced to.
+It causes a compile error by using SCSI_RESET_ERROR, which is undefined (now?).
 
-James
+Eike
 
-
+--- a/drivers/scsi/cpqfcTScontrol.c	2005-08-11 19:04:26.000000000 +0200
++++ b/drivers/scsi/cpqfcTScontrol.c	2005-08-11 19:28:05.000000000 +0200
+@@ -556,27 +556,21 @@ static int PeekIMQEntry( PTACHYON fcChip
+       // first, we need to find an Inbound Completion message,
+       // If we find it, check the incoming frame payload (1st word)
+       // for LILP frame
+-        if( (fcChip->IMQ->QEntry[CI].type & 0x1FF) == 0x104 )
+-        {
+-          TachFCHDR_GCMND* fchs;
+-#error This is too much stack
+-          ULONG ulFibreFrame[2048/4];  // max DWORDS in incoming FC Frame
+-	  ULONG SFQpi = fcChip->IMQ->QEntry[CI].word[0] & 0x0fffL;
+-
+-	  CpqTsGetSFQEntry( fcChip,
+-            SFQpi,        // SFQ producer ndx
+-		ulFibreFrame, 0);	// DON'T update chip--this is a "lookahead"
++		if( (fcChip->IMQ->QEntry[CI].type & 0x1FF) == 0x104 ) {
++			TachFCHDR_GCMND *fchs;
+ 
+-	  fchs = (TachFCHDR_GCMND*)&ulFibreFrame;
+-          if( fchs->pl[0] == ELS_LILP_FRAME)
+-	  {
+-            return 1; // found the LILP frame!
+-	  }
+-	  else
+-	  {
+-	    // keep looking...
+-	  }
+-	}
++			/* Reference to the first chunk of this struct in QEntry
++			 * buffer. We can only rely on the first 64 bytes of
++			 * data because consumerIndex may have a wraparound.
++			 * This is no problem, we only want to see the first
++			 * double word of payload, which is within this range.
++			 */
++			fchs = (TachFCHDR_GCMND*) &fcChip->SFQ->QEntry[fcChip->SFQ->consumerIndex];
++
++			if(fchs->pl[0] == ELS_LILP_FRAME) {
++				return 1;
++			}
++		}
+       }
+       break;
+ 
+@@ -665,8 +659,7 @@ int CpqTsProcessIMQEntry(void *host)
+   ULONG x_ID;
+   ULONG ulBuff, dwStatus;
+   TachFCHDR_GCMND* fchs;
+-#error This is too much stack
+-  ULONG ulFibreFrame[2048/4];  // max number of DWORDS in incoming Fibre Frame
++  void *ulFibreFrame = kmalloc(2048, GFP_KERNEL); /* max number of DWORDS in incoming Fibre Frame */
+   UCHAR ucInboundMessageType;  // Inbound CM, dword 3 "type" field
+ 
+   ENTER("ProcessIMQEntry");
+@@ -675,6 +668,9 @@ int CpqTsProcessIMQEntry(void *host)
+ 				// is a new message waiting for us?
+ 				// equal indexes means empty que
+ 
++  if (!ulFibreFrame)
++	return -ENOMEM;
++
+   if( fcChip->IMQ->producerIndex != fcChip->IMQ->consumerIndex )
+   {                             // need to process message
+ 
+@@ -881,7 +877,7 @@ int CpqTsProcessIMQEntry(void *host)
+ 
+       if( ucInboundMessageType == 1 )
+       {
+-        fchs = (TachFCHDR_GCMND*)ulFibreFrame; // cast to examine IB frame
++        fchs = ulFibreFrame; // cast to examine IB frame
+         // don't fill up our Q with garbage - only accept FCP-CMND
+         // or XRDY frames
+         if( (fchs->d_id & 0xFF000000) == 0x06000000 ) // CMND
+@@ -1432,7 +1428,7 @@ int CpqTsProcessIMQEntry(void *host)
+             // to analyze data transfer (successful?), then send a response
+             // frame for this exchange
+ 
+-          ulFibreFrame[0] = x_ID; // copy for later reference
++		*((ULONG*) ulFibreFrame) = x_ID; // copy for later reference
+ 
+           // if this was a TWE, we have to send satus response
+           if( Exchanges->fcExchange[ x_ID].type == SCSI_TWE )
+@@ -1500,6 +1496,7 @@ int CpqTsProcessIMQEntry(void *host)
+ 
+   LEAVE("ProcessIMQEntry");
+ 
++  kfree(ulFibreFrame);
+   return iStatus;
+ }
+ 
+--- a/drivers/scsi/cpqfcTSstructs.h	2005-08-11 19:30:55.000000000 +0200
++++ b/drivers/scsi/cpqfcTSstructs.h	2005-08-11 19:31:31.000000000 +0200
+@@ -813,7 +813,6 @@ typedef struct
+   void (*UnFreezeTachyon)(void*, int );
+   int (*InitializeTachyon)(void*, int, int );
+   int (*InitializeFrameManager)(void*, int );
+-  int (*ProcessIMQEntry)(void*);
+   int (*ReadWriteWWN)(void*, int ReadWrite);
+   int (*ReadWriteNVRAM)(void*, void*, int ReadWrite);
+ 
+--- a/drivers/scsi/cpqfcTSinit.c	2005-08-11 19:29:22.000000000 +0200
++++ b/drivers/scsi/cpqfcTSinit.c	2005-08-11 19:46:07.000000000 +0200
+@@ -215,7 +215,6 @@ static void Cpqfc_initHBAdata(CPQFCHBA *
+   cpqfcHBAdata->fcChip.DestroyTachyonQues = CpqTsDestroyTachLiteQues;
+   cpqfcHBAdata->fcChip.InitializeTachyon = CpqTsInitializeTachLite;  
+   cpqfcHBAdata->fcChip.LaserControl = CpqTsLaserControl;  
+-  cpqfcHBAdata->fcChip.ProcessIMQEntry = CpqTsProcessIMQEntry;
+   cpqfcHBAdata->fcChip.InitializeFrameManager = CpqTsInitializeFrameManager;
+   cpqfcHBAdata->fcChip.ReadWriteWWN = CpqTsReadWriteWWN;
+   cpqfcHBAdata->fcChip.ReadWriteNVRAM = CpqTsReadWriteNVRAM;
+@@ -1693,16 +1692,6 @@ int cpqfcTS_eh_device_reset(Scsi_Cmnd *C
+   return retval;
+ }
+ 
+-	
+-int cpqfcTS_reset(Scsi_Cmnd *Cmnd, unsigned int reset_flags)
+-{
+-
+-  ENTER("cpqfcTS_reset");
+-
+-  LEAVE("cpqfcTS_reset");
+-  return SCSI_RESET_ERROR;      /* Bus Reset Not supported */
+-}
+-
+ /* This function determines the bios parameters for a given
+    harddisk. These tend to be numbers that are made up by the
+    host adapter.  Parameters:
+@@ -1763,6 +1752,7 @@ irqreturn_t cpqfcTS_intr_handler( int ir
+     {
+       while( (++InfLoopBrk < INFINITE_IMQ_BREAK) && (MoreMessages ==1) ) 
+       {
++#error handle CpqTsProcessIMQEntry returning -ENOMEM
+         MoreMessages = CpqTsProcessIMQEntry( HostAdapter); // ret 0 when done
+       }
+       if( InfLoopBrk >= INFINITE_IMQ_BREAK )
