@@ -1,48 +1,45 @@
-From: Harald Seipp <SEIPP@de.ibm.com>
-Subject: Re: remove-single-device removes mounted HDDs (kernel 2.6)
-Date: Thu, 11 Aug 2005 18:50:03 +0200
-Message-ID: <OFD1AF1EB2.F396BA40-ONC125705A.005C072D-C125705A.005C7944@de.ibm.com>
-References: <20050811164003.GB4351@infradead.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: remove-single-device removes mounted HDDs (kernel 2.6)
+Date: Thu, 11 Aug 2005 11:53:19 -0500
+Message-ID: <1123779199.5062.33.camel@mulgrave>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01684D95@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.de.ibm.com ([195.212.29.153]:32508 "EHLO
-	mtagate4.de.ibm.com") by vger.kernel.org with ESMTP
-	id S1751121AbVHKQyA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Aug 2005 12:54:00 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate4.de.ibm.com (8.12.10/8.12.10) with ESMTP id j7BGrxOA147274
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2005 16:53:59 GMT
-Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j7BGrxo2171226
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2005 18:53:59 +0200
-Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id j7BGrwDA030876
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2005 18:53:59 +0200
-In-Reply-To: <20050811164003.GB4351@infradead.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:50596 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751120AbVHKQxX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Aug 2005 12:53:23 -0400
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01684D95@otce2k03.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Harald Seipp <SEIPP@de.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig wrote on 11.08.2005 18:40:03:
-> On Thu, Aug 11, 2005 at 05:44:46PM +0200, Harald Seipp wrote:
-> > Thank you for your quick responses! It finally looks like the task I
-need
-> > to do - fully rescan all hosts for newly attached/changed devices -
-must
-> > include the logic to skip devices with mounted fs for 2.6.
->
-> Why do you want to rescan a full bus anyway?  What SCSI transport do you
-> want this for?  All transports where new targets can be hot-plugged
-should
-> be doing automatic scanning already.
-Old-fashioned parallel SCSI bus and FC/SAN where there are no hot-plug
-events AFAIK. Rescanning is required for device diagnostics. Diagnostic
-usage will also demand online device exchange - testing multiple devices,
-one after another.
+On Thu, 2005-08-11 at 12:37 -0400, Salyzyn, Mark wrote:
+> Cool, must try that to see if the issues are mitigated, the issues are
+> reported on Distributions in default configurations.
 
-Harald Seipp
-IBM Systems and Technology Group
+Well ... this was one of the nastiest features to get right; we didn't
+get it fully sorted out until quite recently.  I'm not sure if the
+distros backported all the fixes.  However, on a modern 2.6 based
+distro, it works for me and my trusty USB stick with the latest kernel.
+
+> Since it is a design goal to survive, then I better be putting up traces
+> and submitting fs patches, rather than b*&^ing eh? I'd still feel more
+> comfortable having the RAID management GUIs put up a popup box warning
+> the user that what he is about to do to a device currently in-use is
+> dangerous. Reporting a refcount (which covers both filesystem and direct
+> i/o as used by database engines) would help.
+
+Well ... look at it this way.  The system is designed to survive
+surprise ejection (that's for USB, firewire et al.)  If you want to have
+a GUI that does notified ejection then that's fine too, but it's not a
+kernel issue: You clean up everything from userspace by asking nicely
+and then eject the device, which we see as a surprise ejection where we
+think that we fortuitously have no work to do.
+
+James
 
 
