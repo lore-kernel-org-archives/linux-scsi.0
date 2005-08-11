@@ -1,48 +1,50 @@
-From: Bryan Henderson <hbryan@us.ibm.com>
-Subject: Re: remove-single-device removes mounted HDDs (kernel 2.6)
-Date: Thu, 11 Aug 2005 10:47:15 -0700
-Message-ID: <OFB8A5D53D.2225FFAB-ON8825705A.00611D48-8825705A.0061B7F9@us.ibm.com>
-References: <OF8F47C8EA.7E82D4E6-ONC125705A.0053F6D2-C125705A.00567F16@de.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: remove-single-device removes mounted HDDs (kernel 2.6)
+Date: Thu, 11 Aug 2005 12:52:26 -0500
+Message-ID: <1123782746.5062.42.camel@mulgrave>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01684DCF@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:63390 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932313AbVHKRrS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Aug 2005 13:47:18 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e2.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j7BHlDGK012434
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2005 13:47:13 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j7BHlDrR204392
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2005 13:47:13 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j7BHlDLY017154
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2005 13:47:13 -0400
-Received: from [9.56.227.90] (d01ml604.pok.ibm.com [9.56.227.90])
-	by d01av03.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j7BHlDNj017148
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2005 13:47:13 -0400
-In-Reply-To: <OF8F47C8EA.7E82D4E6-ONC125705A.0053F6D2-C125705A.00567F16@de.ibm.com>
+Received: from stat16.steeleye.com ([209.192.50.48]:22181 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932313AbVHKRwd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Aug 2005 13:52:33 -0400
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01684DCF@otce2k03.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Harald Seipp <SEIPP@de.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Harald Seipp <SEIPP@de.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
->Can I rely on the mtab information? I recognized that e.g. submountd will
->add permanent entries even when the devices are not present...
->What about udev, devfsd, usbmount?
+On Thu, 2005-08-11 at 13:05 -0400, Salyzyn, Mark wrote:
+> RAID management applications have no idea what other applications are
+> doing and can not exercise such control over them. From my (flawed?)
+> view, there is no way to ask the OS if the target happens to be unused
+> and quiesced at this instant of time.
 
-Don't use /etc/mtab.  Don't use it for anything if you can help it; it was 
-important technology in its day, but we can now go to the horse's mouth -- 
-the kernel -- for that information.
+But we have userspace tools, like fuser that can get the answers
 
-/proc/mounts will tell you what is really mounted.
+> Asking the (various) applications (of which one of them is the
+> filesystem mounts) this question is an exercise in anger management
+> currently. All attempts to add such 'busy' interrogation code to the
+> ioctl of the driver are rejected. This code resides in the 'Adaptec
+> Branch' of the aacraid driver as one of our OEM added values.
 
-As you mentioned in another posting, this isn't really the information you 
-want either -- you want to know if the SCSI disk is in use.  Being the 
-device backing a conventional filesystem image is only one way a SCSI disk 
-might be in use.
+That's because such questions are 1) racy and 2) flawed.
 
---
-Bryan Henderson                     IBM Almaden Research Center
-San Jose CA                         Filesystems
+I could export the device ref count sure enough, but it's not useful.
+It's internal bookkeeping only.  It could be 1 if there's a filesystem
+mounted, in which case you don't want to force an ejection without
+unmounting or it could be 1 because someone's sitting in the sysfs
+directory, in which case an ejection is fine.
+
+Regardless, userspace is supposed to clean up nicely, so you
+use /proc/mounts and fuser to check to see if the thing is really in use
+and by whom and the user takes action accordingly (either say wait for
+me to clean up manually or go ahead and kill everything to clean this
+up).
+
+James
+
+
