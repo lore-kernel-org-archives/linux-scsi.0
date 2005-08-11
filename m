@@ -1,42 +1,38 @@
-From: Andreas Herrmann <AHERRMAN@de.ibm.com>
-Subject: Re: [PATCH] remove name length check in a workqueue
-Date: Thu, 11 Aug 2005 20:48:50 +0200
-Message-ID: <OFCE6F94E7.B33AAE6C-ONC125705A.00670256-C125705A.0067378D@de.ibm.com>
+From: Sonny Rao <sonny@burdell.org>
+Subject: lpfc driver in 2.6.13-rc6 broken on ppc64 ?
+Date: Thu, 11 Aug 2005 16:00:17 -0400
+Message-ID: <20050811200017.GA3951@kevlar.burdell.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.de.ibm.com ([195.212.29.151]:5536 "EHLO
-	mtagate2.de.ibm.com") by vger.kernel.org with ESMTP id S932357AbVHKSs4
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Aug 2005 14:48:56 -0400
+Received: from 66-23-228-155.clients.speedfactory.net ([66.23.228.155]:30375
+	"EHLO kevlar.burdell.org") by vger.kernel.org with ESMTP
+	id S932390AbVHKUCG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Aug 2005 16:02:06 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Simon Derr <Simon.Derr@bull.net>
-Cc: Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org, mingo@redhat.com
+To: James.Smart@emulex.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-        Simon Derr <Simon.Derr@bull.net> wrote:
+Hi, I am having problems using some older Emulex fibre adapters on a
+ppc64 machine, whenever I load the lpfc driver I get a large number of 
 
-  > It is sufficient to have a few HBAs and to insmod/rmmod the driver a 
-few 
-  > times.
+"lpfc 0001:d8:01.0: 1:0321 Unknown IOCB command Data: x0 x3 x0 x0"
 
-  > Since the host_no is choosen with a mere counter increment 
-  > in scsi_host_alloc():
+with several hundred messages per adapter
 
-  >       shost->host_no = scsi_host_next_hn++; /* XXX(hch): still racy */
+and finally I get this message:
 
-  > Unused `host_no's are not reused and the 100 limit is reached even on 
-  > smaller systems.
-
-  > I have no idea of why someone would do repeated insmod/rmmods, though.
-  > (But someone did).
-
-You even don't have to use insmod/rmmod.  On s390 (using zfcp) it
-suffices to take adapters offline and online (triggered via VM,
-hardware, or within Linux). Just do so about 100 times ... You
-know the result.
+lpfc 0001:d8:01.0: 1:0222 Initial FLOGI timeout
+lpfc 0001:d8:01.0: 1:0127 ELS timeout Data: x4000000 xfffffe x8a x23
 
 
-Regards,
+Is this a known issue ?
 
-Andreas
+Let me know if you need patches tested, thanks.
+
+Sonny Rao
+IBM LTC Performance
+
+
