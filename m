@@ -1,57 +1,70 @@
-From: Harald Seipp <SEIPP@de.ibm.com>
-Subject: Re: remove-single-device removes mounted HDDs (kernel 2.6)
-Date: Thu, 11 Aug 2005 18:57:57 +0200
-Message-ID: <OF7D601105.DA2D411C-ONC125705A.005CB29A-C125705A.005D3238@de.ibm.com>
-References: <42FB3CBD.6040006@torque.net>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: remove-single-device removes mounted HDDs (kernel 2.6)
+Date: Thu, 11 Aug 2005 13:05:23 -0400
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01684DCF@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.de.ibm.com ([195.212.29.152]:9887 "EHLO
-	mtagate3.de.ibm.com") by vger.kernel.org with ESMTP
-	id S1751116AbVHKRBb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Aug 2005 13:01:31 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate3.de.ibm.com (8.12.10/8.12.10) with ESMTP id j7BH1Ump136254
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2005 17:01:30 GMT
-Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j7BH1Uo2194306
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2005 19:01:30 +0200
-Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id j7BH1TDe001433
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2005 19:01:30 +0200
-In-Reply-To: <42FB3CBD.6040006@torque.net>
+Received: from magic.adaptec.com ([216.52.22.17]:8887 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1751126AbVHKRHf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Aug 2005 13:07:35 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Harald Seipp <SEIPP@de.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-> Harald,
-> I just tried remove-single-device followed by
-> add-single-device and I got /dev/sda back again.
-> I also placed the two commands in a script file
-> so they were executed with a very short delay between
-> the two commands.
->
-> The test was with lk 2.6.13-rc6 and a multicard
-> reader (4 luns) via the usb-storage driver.
-Just tried on debian etc (2.6.13-rc6), two SCSI HDDs attached to an aic7xxx
-- same issue, independent if I use procfs or sysfs for device removal.
-But anyway, this behavior seems to be "working as designed" based on the
-other feedback to this thread.
->
-> > Can I easily query
-> > if a device on "h b t l" is mounted to work-around?
->
-> ls /sys/class/scsi_device/<h>:<b>:<t>:<l>
->
-> will indicate (in the lk 2.6 series) that SCSI device
-> "h b t l" is present or not. As for mounted file systems
-> on (partitions of) a disk when its is removed and re-added,
-> I'm not so sure: seems like a questionable procedure IMO.
-This unfortunately does not tell me if there is a pending reference to the
-device (e.g. due to mounted file systems). Such a reference would greatly
-help to satisfy my needs.
+Thanks for your responses thus far, James; I appreciate the education I
+am getting.
 
-Harald Seipp
-IBM Systems and Technology Group
+RAID management applications have no idea what other applications are
+doing and can not exercise such control over them. From my (flawed?)
+view, there is no way to ask the OS if the target happens to be unused
+and quiesced at this instant of time.
+
+Asking the (various) applications (of which one of them is the
+filesystem mounts) this question is an exercise in anger management
+currently. All attempts to add such 'busy' interrogation code to the
+ioctl of the driver are rejected. This code resides in the 'Adaptec
+Branch' of the aacraid driver as one of our OEM added values.
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
+Sent: Thursday, August 11, 2005 12:53 PM
+To: Salyzyn, Mark
+Cc: Harald Seipp; SCSI Mailing List
+Subject: RE: remove-single-device removes mounted HDDs (kernel 2.6)
+
+On Thu, 2005-08-11 at 12:37 -0400, Salyzyn, Mark wrote:
+> Cool, must try that to see if the issues are mitigated, the issues are
+> reported on Distributions in default configurations.
+
+Well ... this was one of the nastiest features to get right; we didn't
+get it fully sorted out until quite recently.  I'm not sure if the
+distros backported all the fixes.  However, on a modern 2.6 based
+distro, it works for me and my trusty USB stick with the latest kernel.
+
+> Since it is a design goal to survive, then I better be putting up
+traces
+> and submitting fs patches, rather than b*&^ing eh? I'd still feel more
+> comfortable having the RAID management GUIs put up a popup box warning
+> the user that what he is about to do to a device currently in-use is
+> dangerous. Reporting a refcount (which covers both filesystem and
+direct
+> i/o as used by database engines) would help.
+
+Well ... look at it this way.  The system is designed to survive
+surprise ejection (that's for USB, firewire et al.)  If you want to have
+a GUI that does notified ejection then that's fine too, but it's not a
+kernel issue: You clean up everything from userspace by asking nicely
+and then eject the device, which we see as a surprise ejection where we
+think that we fortuitously have no work to do.
+
+James
+
 
