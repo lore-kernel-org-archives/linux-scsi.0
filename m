@@ -1,70 +1,61 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+From: Bryan Henderson <hbryan@us.ibm.com>
 Subject: RE: remove-single-device removes mounted HDDs (kernel 2.6)
-Date: Thu, 11 Aug 2005 13:05:23 -0400
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01684DCF@otce2k03.adaptec.com>
+Date: Thu, 11 Aug 2005 10:40:24 -0700
+Message-ID: <OF5B21133C.F5A53509-ON8825705A.005F65D9-8825705A.00611764@us.ibm.com>
+References: <1123776475.5062.22.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:8887 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1751126AbVHKRHf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Aug 2005 13:07:35 -0400
-content-class: urn:content-classes:message
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:45546 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932310AbVHKRkY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Aug 2005 13:40:24 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e4.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j7BHeNwt010123
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2005 13:40:23 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j7BHeNtc243650
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2005 13:40:23 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j7BHeM6x009268
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2005 13:40:22 -0400
+In-Reply-To: <1123776475.5062.22.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Harald Seipp <SEIPP@de.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.orglinux-scsi, Harald Seipp <SEIPP@de.ibm.com>
 
-Thanks for your responses thus far, James; I appreciate the education I
-am getting.
+>> The problem with pushing this policy to the user is that software
+>> applications have no means to determine that a device is currently
+>> in-use. For instance, the net result of pulling a device on a mounted
+>> filesystem is an eventual kernel panic.
+>
+>The kernel only panics if you told it to with the mount option
+>errors=panic (or if you have errors=panic set in the superblock flags).
+>
+>For file systems on removable devices ...
 
-RAID management applications have no idea what other applications are
-doing and can not exercise such control over them. From my (flawed?)
-view, there is no way to ask the OS if the target happens to be unused
-and quiesced at this instant of time.
+This is all valid argument for removable devices, but I don't think that's 
+really what we're talking about here.  I think we're talking about a 
+device that can't physically disappear, but can, unfortunately, logically 
+disappear via remove-single-device.
 
-Asking the (various) applications (of which one of them is the
-filesystem mounts) this question is an exercise in anger management
-currently. All attempts to add such 'busy' interrogation code to the
-ioctl of the driver are rejected. This code resides in the 'Adaptec
-Branch' of the aacraid driver as one of our OEM added values.
+For a fixed device, it is perfectly reasonable to design a system that 
+assumes the device sticks around.  Any older system would definitely be 
+designed that way.  Such a system, whether it technically panics or not, 
+will probably utterly fail if the disk disappears.  It was accessing that 
+disk for a reason.
 
-Sincerely -- Mark Salyzyn
+Because removable devices exist, we do have to allow remove-single-device 
+of an in-use device in general, but it would be good (and probably easy) 
+to provide for the other case as well.  The code obviously knows that the 
+device is in use, because /dev/sda doesn't get reused.  If there were a 
+version of remove-single-device that said, "only if unused," that would 
+solve the problem.  If there are synchronization issues that make that 
+hard, then making it possible for the user to query that in-use state 
+would still go a long way toward solving the problem.
 
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
-Sent: Thursday, August 11, 2005 12:53 PM
-To: Salyzyn, Mark
-Cc: Harald Seipp; SCSI Mailing List
-Subject: RE: remove-single-device removes mounted HDDs (kernel 2.6)
-
-On Thu, 2005-08-11 at 12:37 -0400, Salyzyn, Mark wrote:
-> Cool, must try that to see if the issues are mitigated, the issues are
-> reported on Distributions in default configurations.
-
-Well ... this was one of the nastiest features to get right; we didn't
-get it fully sorted out until quite recently.  I'm not sure if the
-distros backported all the fixes.  However, on a modern 2.6 based
-distro, it works for me and my trusty USB stick with the latest kernel.
-
-> Since it is a design goal to survive, then I better be putting up
-traces
-> and submitting fs patches, rather than b*&^ing eh? I'd still feel more
-> comfortable having the RAID management GUIs put up a popup box warning
-> the user that what he is about to do to a device currently in-use is
-> dangerous. Reporting a refcount (which covers both filesystem and
-direct
-> i/o as used by database engines) would help.
-
-Well ... look at it this way.  The system is designed to survive
-surprise ejection (that's for USB, firewire et al.)  If you want to have
-a GUI that does notified ejection then that's fine too, but it's not a
-kernel issue: You clean up everything from userspace by asking nicely
-and then eject the device, which we see as a surprise ejection where we
-think that we fortuitously have no work to do.
-
-James
-
+--
+Bryan Henderson                     IBM Almaden Research Center
+San Jose CA                         Filesystems
 
