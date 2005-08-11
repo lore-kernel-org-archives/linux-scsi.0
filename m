@@ -1,43 +1,62 @@
-From: Harald Seipp <SEIPP@de.ibm.com>
-Subject: Re: remove-single-device removes mounted HDDs (kernel 2.6)
-Date: Thu, 11 Aug 2005 16:32:51 +0200
-Message-ID: <OFDD993463.B29B392A-ONC125705A.004F39C4-C125705A.004FE950@de.ibm.com>
-References: <1123768768.5062.1.camel@mulgrave>
+From: Simon Derr <Simon.Derr@bull.net>
+Subject: Re: [PATCH] remove name length check in a workqueue
+Date: Thu, 11 Aug 2005 16:37:53 +0200 (CEST)
+Message-ID: <Pine.LNX.4.61.0508111630360.25305@openx3.frec.bull.fr>
+References: <1123683544.5093.4.camel@mulgrave>
+ <Pine.LNX.4.58.0508101044110.31617@devserv.devel.redhat.com>
+ <20050810100523.0075d4e8.akpm@osdl.org> <1123694672.5134.11.camel@mulgrave>
+ <20050810103733.42170f27.akpm@osdl.org> <1123696466.5134.23.camel@mulgrave>
+ <20050810112710.47388a55.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.de.ibm.com ([195.212.29.153]:23429 "EHLO
-	mtagate4.de.ibm.com") by vger.kernel.org with ESMTP
-	id S1751034AbVHKOg1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Aug 2005 10:36:27 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate4.de.ibm.com (8.12.10/8.12.10) with ESMTP id j7BEaQOA118970
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2005 14:36:26 GMT
-Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j7BEaQo2173308
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2005 16:36:26 +0200
-Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id j7BEaQAn027340
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2005 16:36:26 +0200
-In-Reply-To: <1123768768.5062.1.camel@mulgrave>
+Received: from ecfrec.frec.bull.fr ([129.183.4.8]:50563 "EHLO
+	ecfrec.frec.bull.fr") by vger.kernel.org with ESMTP
+	id S1751050AbVHKOiD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Aug 2005 10:38:03 -0400
+In-Reply-To: <20050810112710.47388a55.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, mingo@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-James Bottomley wrote on 11.08.2005 15:59:27:
-> On Thu, 2005-08-11 at 12:09 +0200, Harald Seipp wrote:
-> > I assume this is a bug? How can I prevent that behavior? Can I easily
-query
-> > if a device on "h b t l" is mounted to work-around?
->
-> No, it's expected behaviour.  The mount keeps a reference to the old
-> device node so it can't be reused.
-Ok - but shouldn't the behavior that devices that have mounted partitions
-can be removed be considered as a bug?
-Linux 2.4 SCSI Subsystem Howto, proc interface: "....The removal will fail
-if the device is busy (e.g. if a file system on the device is mounted)."
+On Wed, 10 Aug 2005, Andrew Morton wrote:
 
-Harald Seipp
-IBM System and Technology Group
+> > What I posted originally; the current SCSI format for a workqueue:
+> > scsi_wq_%d hits the bug after the host number rises to 100, which has
+> > been seen by some enterprise person with > 100 HBAs.
+> > 
+> > The reason for this name is that the error handler thread is called
+> > scsi_eh_%d; so we could rename all our threads to avoid this, but one
+> > day someone will come along with a huge enough machine to hit whatever
+> > limit we squeeze it down to.
+> 
+> OK, well scsi is using single-threaded workqueues anyway.  So we could do:
+> 
+> 	if (singlethread)
+> 		BUG_ON(strlen(name) > sizeof(task_struct.comm) - 1);
+> 	else
+> 		BUG_ON(strlen(name) > sizeof(task_struct.comm) - 1 - 4);
+> 
+> which gets you 10,000,000 HBAs.   Enough?
+
+I suppose so, but the problem is slightly worse:
+
+One does not need 100 HBAs to trigger the BUG_ON: 
+
+It is sufficient to have a few HBAs and to insmod/rmmod the driver a few 
+times.
+
+Since the host_no is choosen with a mere counter increment 
+in scsi_host_alloc():
+
+      shost->host_no = scsi_host_next_hn++; /* XXX(hch): still racy */
+
+Unused `host_no's are not reused and the 100 limit is reached even on 
+smaller systems.
+
+I have no idea of why someone would do repeated insmod/rmmods, though.
+(But someone did).
+
+	Simon.
 
