@@ -1,43 +1,53 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: hwo to adjust interrupt?
-Date: Thu, 11 Aug 2005 18:31:08 -0400
-Message-ID: <1123799468.5546.81.camel@localhost.localdomain>
-Reply-To: mingz@ele.uri.edu
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [Announce] sg3_utils-1.16 available
+Date: Fri, 12 Aug 2005 09:37:08 +1000
+Message-ID: <42FBE124.30005@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from leviathan.ele.uri.edu ([131.128.51.64]:63362 "EHLO
-	leviathan.ele.uri.edu") by vger.kernel.org with ESMTP
-	id S932500AbVHKWbN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Aug 2005 18:31:13 -0400
+Received: from zorg.st.net.au ([203.16.233.9]:36836 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1751073AbVHKXhL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Aug 2005 19:37:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-I have this eth1 and aic7xxx share 1 interrupt thus have impact on
-performance, anyway i can change it? thx!
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
+sg3_utils is a package of command line utilities for sending
+SCSI commands to devices. This package targets the lk 2.6 and
+lk 2.4 series. In the lk 2.6 series these utilities (except
+sgp_dd) can be used with any devices that support the SG_IO
+ioctl.
 
-[root@sc420 root]# cat /proc/interrupts
-           CPU0       CPU1
-  0:     378525     402791    IO-APIC-edge  timer
-  1:         38         26    IO-APIC-edge  i8042
-  4:          7          0    IO-APIC-edge  serial
-  8:          3          2    IO-APIC-edge  rtc
-  9:          0          0   IO-APIC-level  acpi
- 14:       2325        932    IO-APIC-edge  ide0
- 16:    1330261          0   IO-APIC-level  eth1, aic7xxx
- 17:       2917          8   IO-APIC-level  aic7xxx
- 18:          3          0   IO-APIC-level  uhci_hcd:usb4
- 20:       7577       6597   IO-APIC-level  libata
- 21:          0          0   IO-APIC-level  ehci_hcd:usb1, uhci_hcd:usb2
- 22:          0          0   IO-APIC-level  uhci_hcd:usb3
- 23:          0          0   IO-APIC-level  uhci_hcd:usb5
-NMI:    2017738    1165555
-LOC:     781237     781288
-ERR:          0
-MIS:          0
+This version adds sg_ident to report and set device identifiers.
+It extends various device scanning utilities beyond 256 device
+and includes bug fixes and man page improvements. See CHANGELOG
+for more information.
 
+A tarball, rpm and deb can be found on (see table 2):
+http://www.torque.net/sg
+For an overview of sg3_utils see this page:
+http://www.torque.net/sg/u_index.html
+The sg_dd utility has its own page at:
+http://www.torque.net/sg/sg_dd.html
+A changelog can be found at:
+http://www.torque.net/sg/p/sg3_utils.CHANGELOG
 
+A release announcement has been sent to freshmeat.net .
 
+Doug Gilbert
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+Comment: Using GnuPG with Fedora - http://enigmail.mozdev.org
+
+iD8DBQFC++Eknayo+9E+FQIRAgQSAKCL7EirWTNuvvF3uqdN4OgnQr2bdwCdE/gY
+sq8wzUyPkd/vPr1Xc8+T+Es=
+=NU4B
+-----END PGP SIGNATURE-----
