@@ -1,62 +1,45 @@
-From: Simon Derr <Simon.Derr@bull.net>
-Subject: Re: [PATCH] remove name length check in a workqueue
-Date: Thu, 11 Aug 2005 16:37:53 +0200 (CEST)
-Message-ID: <Pine.LNX.4.61.0508111630360.25305@openx3.frec.bull.fr>
-References: <1123683544.5093.4.camel@mulgrave>
- <Pine.LNX.4.58.0508101044110.31617@devserv.devel.redhat.com>
- <20050810100523.0075d4e8.akpm@osdl.org> <1123694672.5134.11.camel@mulgrave>
- <20050810103733.42170f27.akpm@osdl.org> <1123696466.5134.23.camel@mulgrave>
- <20050810112710.47388a55.akpm@osdl.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: remove-single-device removes mounted HDDs (kernel 2.6)
+Date: Thu, 11 Aug 2005 15:46:49 +0100
+Message-ID: <20050811144649.GA28067@parcelfarce.linux.theplanet.co.uk>
+References: <1123768768.5062.1.camel@mulgrave> <OFDD993463.B29B392A-ONC125705A.004F39C4-C125705A.004FE950@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ecfrec.frec.bull.fr ([129.183.4.8]:50563 "EHLO
-	ecfrec.frec.bull.fr") by vger.kernel.org with ESMTP
-	id S1751050AbVHKOiD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Aug 2005 10:38:03 -0400
-In-Reply-To: <20050810112710.47388a55.akpm@osdl.org>
+Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:38317 "EHLO
+	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
+	id S1751060AbVHKOoK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Aug 2005 10:44:10 -0400
+Content-Disposition: inline
+In-Reply-To: <OFDD993463.B29B392A-ONC125705A.004F39C4-C125705A.004FE950@de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, mingo@redhat.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Harald Seipp <SEIPP@de.ibm.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 10 Aug 2005, Andrew Morton wrote:
+On Thu, Aug 11, 2005 at 04:32:51PM +0200, Harald Seipp wrote:
+> James Bottomley wrote on 11.08.2005 15:59:27:
+> > On Thu, 2005-08-11 at 12:09 +0200, Harald Seipp wrote:
+> > > I assume this is a bug? How can I prevent that behavior? Can I easily
+> query
+> > > if a device on "h b t l" is mounted to work-around?
+> >
+> > No, it's expected behaviour.  The mount keeps a reference to the old
+> > device node so it can't be reused.
+> Ok - but shouldn't the behavior that devices that have mounted partitions
+> can be removed be considered as a bug?
+> Linux 2.4 SCSI Subsystem Howto, proc interface: "....The removal will fail
+> if the device is busy (e.g. if a file system on the device is mounted)."
 
-> > What I posted originally; the current SCSI format for a workqueue:
-> > scsi_wq_%d hits the bug after the host number rises to 100, which has
-> > been seen by some enterprise person with > 100 HBAs.
-> > 
-> > The reason for this name is that the error handler thread is called
-> > scsi_eh_%d; so we could rename all our threads to avoid this, but one
-> > day someone will come along with a huge enough machine to hit whatever
-> > limit we squeeze it down to.
-> 
-> OK, well scsi is using single-threaded workqueues anyway.  So we could do:
-> 
-> 	if (singlethread)
-> 		BUG_ON(strlen(name) > sizeof(task_struct.comm) - 1);
-> 	else
-> 		BUG_ON(strlen(name) > sizeof(task_struct.comm) - 1 - 4);
-> 
-> which gets you 10,000,000 HBAs.   Enough?
+The trouble is that users can surprise-remove drives (eg USB memory) and
+there's nothing we can do about it.  So the SCSI subsystem is designed
+to cope as best it can with such a scenario rather than trying to forbid
+in software an action that already took place in hardware.
 
-I suppose so, but the problem is slightly worse:
-
-One does not need 100 HBAs to trigger the BUG_ON: 
-
-It is sufficient to have a few HBAs and to insmod/rmmod the driver a few 
-times.
-
-Since the host_no is choosen with a mere counter increment 
-in scsi_host_alloc():
-
-      shost->host_no = scsi_host_next_hn++; /* XXX(hch): still racy */
-
-Unused `host_no's are not reused and the 100 limit is reached even on 
-smaller systems.
-
-I have no idea of why someone would do repeated insmod/rmmods, though.
-(But someone did).
-
-	Simon.
-
+-- 
+"Next the statesmen will invent cheap lies, putting the blame upon 
+the nation that is attacked, and every man will be glad of those
+conscience-soothing falsities, and will diligently study them, and refuse
+to examine any refutations of them; and thus he will by and by convince 
+himself that the war is just, and will thank God for the better sleep 
+he enjoys after this process of grotesque self-deception." -- Mark Twain
