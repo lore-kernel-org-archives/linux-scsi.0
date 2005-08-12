@@ -1,35 +1,46 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: hwo to adjust interrupt?
-Date: Fri, 12 Aug 2005 20:14:00 +0100
-Message-ID: <20050812191400.GB18979@parcelfarce.linux.theplanet.co.uk>
-References: <OF33C7B841.0ED0EFDF-ON8825705B.00600DDB-8825705B.0060A40B@us.ibm.com> <1123873551.5546.116.camel@localhost.localdomain>
+From: Mogens Valentin <monz@danbbs.dk>
+Subject: Re: SATA status report updated
+Date: Fri, 12 Aug 2005 21:17:39 +0200
+Message-ID: <42FCF5D3.1080409__19709.2343507849$1123874395$gmane$org@danbbs.dk>
+References: <42FC2EF8.7030404@pobox.com>
+Reply-To: monz@danbbs.dk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:5309 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S1751244AbVHLTLV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2005 15:11:21 -0400
-Content-Disposition: inline
-In-Reply-To: <1123873551.5546.116.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <42FC2EF8.7030404@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Linux IDE Mailing List <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Ming Zhang <mingz@ele.uri.edu>
-Cc: Bryan Henderson <hbryan@us.ibm.com>, Arjan van de Ven <arjan@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, Aug 12, 2005 at 03:05:51PM -0400, Ming Zhang wrote:
-> i tried to remove the SA_SHIRQ option when request_irq(), unfortunately
-> it seems that the IO-APIC will only try to allocate same # to it and
-> once that slot is used, the request_irq will fail.
+Jeff Garzik wrote:
+> 
+> Things in SATA-land have been moving along recently, so I updated the 
+> software status report:
+> 
+>     http://linux.yyz.us/sata/software-status.html
 
-Yes.  These two interrupts are physically on the same wire attached to
-the IO-APIC.  You need to put the card in a different slot to change
-which interrupt it gets.
+ >> Queueing support, NCQ:
+ >> #3 will be supported by libata, for all hardware and devices that
+ >> support NCQ.
+
+I guess this means libata support for HW-based NCQ.
+It also could mean software/driver implemented NCQ, which could work on 
+chipsets not supporting HW-NCQ in unison with a disk having NCQ?
+
+> Although I have not updated it in several weeks, folks may wish to refer 
+> to the hardware status report as well:
+> 
+>     http://linux.yyz.us/sata/sata-status.html
+
+How well does libata work with the newest ULi chipsets?
+If not well, is there a possible timeframe?
+
+
+(not on kernel list; if anyone there comments on ULi, pls. cc private)
 
 -- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Kind regards,
+Mogens Valentin
+
