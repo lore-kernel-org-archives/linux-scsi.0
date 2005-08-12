@@ -1,22 +1,21 @@
-From: Ming Zhang <mingz@ele.uri.edu>
+From: Arjan van de Ven <arjan@infradead.org>
 Subject: Re: hwo to adjust interrupt?
-Date: Fri, 12 Aug 2005 13:45:26 -0400
-Message-ID: <1123868726.5546.89.camel@localhost.localdomain>
+Date: Fri, 12 Aug 2005 19:51:10 +0200
+Message-ID: <1123869071.3218.35.camel@laptopd505.fenrus.org>
 References: <OF33C7B841.0ED0EFDF-ON8825705B.00600DDB-8825705B.0060A40B@us.ibm.com>
-Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from leviathan.ele.uri.edu ([131.128.51.64]:20172 "EHLO
-	leviathan.ele.uri.edu") by vger.kernel.org with ESMTP
-	id S1750757AbVHLRpk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2005 13:45:40 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:25319 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1750760AbVHLRvQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Aug 2005 13:51:16 -0400
 In-Reply-To: <OF33C7B841.0ED0EFDF-ON8825705B.00600DDB-8825705B.0060A40B@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bryan Henderson <hbryan@us.ibm.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, mingz@ele.uri.edu
 
 On Fri, 2005-08-12 at 10:35 -0700, Bryan Henderson wrote:
 > >>How much extra work does Linux have to do for each interrupt?
@@ -31,19 +30,17 @@ On Fri, 2005-08-12 at 10:35 -0700, Bryan Henderson wrote:
 > mmio read of its device to find out if it had reason to generate an 
 > interrupt?  So the waste is that extra call, and you're saying the CPU 
 > instructions involved are negligible compared to the mmio read?
-> 
+
+yes. A function call is like half a cycle (a function pointer call is
+maybe 40) an mmio read is a lot more
+
 > Are these level-sensitive interrupts, so that if both devices need service 
 > at the same time, they generate just one interrupt and neither device 
 > driver call is wasted?
-> 
 
-i guess so. 
+ok this is more complex, but if 2 cards raise it quickly after
+eachother, before the ISR has run, then you only get the handler called
+once afaik.
 
-also sound like the intr overhead is not that big as i assumed.
- 
-so if i really want to make myself comfortable, i can disable the share
-interrupt when register interrupt in driver code, rite?
-
-ming
 
 
