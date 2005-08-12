@@ -1,69 +1,53 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: Re: hwo to adjust interrupt?
-Date: Fri, 12 Aug 2005 14:06:37 -0400
-Message-ID: <1123869997.5546.98.camel@localhost.localdomain>
-References: <OF33C7B841.0ED0EFDF-ON8825705B.00600DDB-8825705B.0060A40B@us.ibm.com>
-	 <1123869071.3218.35.camel@laptopd505.fenrus.org>
-Reply-To: mingz@ele.uri.edu
+From: David Greaves <david@dgreaves.com>
+Subject: Re: SATA status report updated
+Date: Fri, 12 Aug 2005 19:07:58 +0100
+Message-ID: <42FCE57E.2070302@dgreaves.com>
+References: <42FC2EF8.7030404@pobox.com> <20050812074012.60487882.robn@berrymount.nl> <42FC375C.3040304@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from leviathan.ele.uri.edu ([131.128.51.64]:40411 "EHLO
-	leviathan.ele.uri.edu") by vger.kernel.org with ESMTP
-	id S1750716AbVHLSGs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2005 14:06:48 -0400
-In-Reply-To: <1123869071.3218.35.camel@laptopd505.fenrus.org>
+Received: from s2.ukfsn.org ([217.158.120.143]:44682 "EHLO mail.ukfsn.org")
+	by vger.kernel.org with ESMTP id S1750868AbVHLS0M (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Aug 2005 14:26:12 -0400
+In-Reply-To: <42FC375C.3040304@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Bryan Henderson <hbryan@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Rob van Nieuwkerk <robn@berrymount.nl>, Linux IDE Mailing List <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, 2005-08-12 at 19:51 +0200, Arjan van de Ven wrote:
-> On Fri, 2005-08-12 at 10:35 -0700, Bryan Henderson wrote:
-> > >>How much extra work does Linux have to do for each interrupt?
-> > >
-> > >usually 1 pci mmio read; the rest is negligible.
-> > 
-> > I was hoping you would cater better to my ignorance of how PCI interrupt 
-> > handling works in Linux.
-> > 
-> > Is it the case that Linux invokes the registered interrupt handler of each 
-> > of the drivers for the devices that share the interrupt, and each does an 
-> > mmio read of its device to find out if it had reason to generate an 
-> > interrupt?  So the waste is that extra call, and you're saying the CPU 
-> > instructions involved are negligible compared to the mmio read?
-> 
-> yes. A function call is like half a cycle (a function pointer call is
-> maybe 40) an mmio read is a lot more
- a bit off topic, but where u get these information? thx
+Jeff Garzik wrote:
 
+>
+> True enough :/
+>
+> It's been feature-complete for a while, but the reports from testers
+> in the field have made me too nervous to push it into the upstream
+> kernel.
+>
+> I might push it upstream, but disable it by default, which would allow
+> for a wider test audience.
 
-> 
-> > Are these level-sensitive interrupts, so that if both devices need service 
-> > at the same time, they generate just one interrupt and neither device 
-> > driver call is wasted?
-> 
-> ok this is more complex, but if 2 cards raise it quickly after
-> eachother, before the ISR has run, then you only get the handler called
-> once afaik.
-so it is possible that both card raise intr quicker than isr run, then
-both isr will do mmio and go ahead, but then what is
+Could you specify what tests and reports would be useful and what risks
+are involved?
+Eg If I have 2 SATA drives then could (OK, of course it *could* - but is
+it likely) I break sda whilst testing with sdb? I can live with crashes
+and hangs and I can mitigate data loss, but I may think twice if it'll
+toast the drive.
 
-device 1 raise intr
-device 2 isr run and not belong to it, so quit, but before it clear intr
-and quit
-device 2 raise intr
-device 1 isr run and handle device 1, then clear intr and quit.
+Nb: I often think that if people bemoaning the lack of testers put a bit
+of effort into saying what tests would be useful then more people would
+run them.
+"Here run this and just say if it crashes" is one approach.
+"Try these options, use smartd, turn on debugging like this and send
+this part of the output if you have a problem. Previously reported
+problems include: <blah, blah blah>. Oh, it's only ever going to affect
+the drive you specify and the worst case scenario is a low-level format
+using the vendor's download (which may or may not be available)" - makes
+me more aware of what I'm getting into.
 
-then device 2 intr lost?
+David
 
-or i understand this wrong. :)
-
-ming
-
-
-> 
-> 
-> 
+-- 
 
