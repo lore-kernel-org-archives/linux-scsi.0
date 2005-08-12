@@ -1,53 +1,49 @@
-From: "sinister@sinister.cz" <sinister@sinister.cz>
-Subject: Kernel driver for Adaptec S-ATA 1420SA
-Date: Fri, 12 Aug 2005 19:36:45 +0200
-Message-ID: <42FCDE2D.10602@sinister.cz>
-Reply-To: sinister@sinister.cz
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: Re: hwo to adjust interrupt?
+Date: Fri, 12 Aug 2005 13:45:26 -0400
+Message-ID: <1123868726.5546.89.camel@localhost.localdomain>
+References: <OF33C7B841.0ED0EFDF-ON8825705B.00600DDB-8825705B.0060A40B@us.ibm.com>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.sinister.cz ([213.220.234.245]:27808 "EHLO ns2.sinister.cz")
-	by vger.kernel.org with ESMTP id S1750753AbVHLRhM convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2005 13:37:12 -0400
-Received: from ns2.sinister.cz (ns2.sinister.cz [127.0.0.1])
-	by ns2.sinister.cz (Sinister Post Server 2) with ESMTP id 09764116B9E6
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Aug 2005 19:36:54 +0200 (CEST)
-Received: from [192.168.1.5] (honzik [192.168.1.5])
-	by ns2.sinister.cz (Sinister Post Server 2) with ESMTP id E94AD116B9E6
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Aug 2005 19:36:53 +0200 (CEST)
+Received: from leviathan.ele.uri.edu ([131.128.51.64]:20172 "EHLO
+	leviathan.ele.uri.edu") by vger.kernel.org with ESMTP
+	id S1750757AbVHLRpk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Aug 2005 13:45:40 -0400
+In-Reply-To: <OF33C7B841.0ED0EFDF-ON8825705B.00600DDB-8825705B.0060A40B@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bryan Henderson <hbryan@us.ibm.com>
+Cc: Arjan van de Ven <arjan@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Dear all,
+On Fri, 2005-08-12 at 10:35 -0700, Bryan Henderson wrote:
+> >>How much extra work does Linux have to do for each interrupt?
+> >
+> >usually 1 pci mmio read; the rest is negligible.
+> 
+> I was hoping you would cater better to my ignorance of how PCI interrupt 
+> handling works in Linux.
+> 
+> Is it the case that Linux invokes the registered interrupt handler of each 
+> of the drivers for the devices that share the interrupt, and each does an 
+> mmio read of its device to find out if it had reason to generate an 
+> interrupt?  So the waste is that extra call, and you're saying the CPU 
+> instructions involved are negligible compared to the mmio read?
+> 
+> Are these level-sensitive interrupts, so that if both devices need service 
+> at the same time, they generate just one interrupt and neither device 
+> driver call is wasted?
+> 
 
-I bought the Adaptec S-ATA II-1420SA controller but I have a problem=20
-with this type.
-I use the Linux Slackware 10.1 with the Linux Kernel 2.6.12-4 but I=20
-didn=B4t find any driver for this S-ATA controller.
-I don't need RAID but I need a 4x S-ATA port.
+i guess so. 
 
-Could you please to help me?
-Have you any information about this driver for Linux systems?
-I can't use RH,SUSE,UN binary because these drivers are very old for my=
-=20
-the Linux system
-I think I'm not sole.
-I didn't have any problem with drivers for an Adaptec controller until =
-now.
+also sound like the intr overhead is not that big as i assumed.
+ 
+so if i really want to make myself comfortable, i can disable the share
+interrupt when register interrupt in driver code, rite?
 
-Thanks a lot
-
-Best regards,
-Jan Milsimer
+ming
 
 
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
