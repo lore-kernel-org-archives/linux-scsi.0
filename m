@@ -1,48 +1,30 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: SATA status report updated
-Date: Fri, 12 Aug 2005 01:45:00 -0400
-Message-ID: <42FC375C.3040304@pobox.com>
-References: <42FC2EF8.7030404@pobox.com> <20050812074012.60487882.robn@berrymount.nl>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: hwo to adjust interrupt?
+Date: Fri, 12 Aug 2005 09:14:59 +0200
+Message-ID: <1123830899.3218.15.camel@laptopd505.fenrus.org>
+References: <1123799468.5546.81.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:23466 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751100AbVHLFpI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2005 01:45:08 -0400
-In-Reply-To: <20050812074012.60487882.robn@berrymount.nl>
+Received: from pentafluge.infradead.org ([213.146.154.40]:62396 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932204AbVHLHPD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Aug 2005 03:15:03 -0400
+In-Reply-To: <1123799468.5546.81.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rob van Nieuwkerk <robn@berrymount.nl>
-Cc: Linux IDE Mailing List <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: mingz@ele.uri.edu
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Rob van Nieuwkerk wrote:
-> On Fri, 12 Aug 2005 01:09:12 -0400
-> Jeff Garzik <jgarzik@pobox.com> wrote:
-> 
-> Hi Jeff,
-> 
-> 
->>Things in SATA-land have been moving along recently, so I updated the 
->>software status report:
->>
->>	http://linux.yyz.us/sata/software-status.html
-> 
-> 
-> Is any progress made on SMART support ?
-> I've been reading "SMART support will be integrated very soon"
-> for a very long time now .. :-)
+On Thu, 2005-08-11 at 18:31 -0400, Ming Zhang wrote:
+> I have this eth1 and aic7xxx share 1 interrupt thus have impact on
+> performance, anyway i can change it? thx!
 
-True enough :/
-
-It's been feature-complete for a while, but the reports from testers in 
-the field have made me too nervous to push it into the upstream kernel.
-
-I might push it upstream, but disable it by default, which would allow 
-for a wider test audience.
-
-	Jeff
+realistically, either you need to find a bios setting tweak, or you need
+to move one of the two to a different pci slot in the machine.
 
 
+(Not that it's a big problem, sharing irqs on a pci system isn't too big
+a deal)
 
