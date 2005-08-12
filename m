@@ -1,18 +1,22 @@
 From: Mogens Valentin <monz@danbbs.dk>
 Subject: Re: SATA status report updated
 Date: Fri, 12 Aug 2005 21:17:39 +0200
-Message-ID: <42FCF5D3.1080409__19709.2343507849$1123874395$gmane$org@danbbs.dk>
+Message-ID: <42FCF5D3.1080409__17199.9621591114$1123874395$gmane$org@danbbs.dk>
 References: <42FC2EF8.7030404@pobox.com>
 Reply-To: monz@danbbs.dk
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pfepc.post.tele.dk ([195.41.46.237]:39192 "EHLO
+	pfepc.post.tele.dk") by vger.kernel.org with ESMTP id S1751251AbVHLTRi
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Aug 2005 15:17:38 -0400
 In-Reply-To: <42FC2EF8.7030404@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: Linux IDE Mailing List <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
 
 Jeff Garzik wrote:
 > 
