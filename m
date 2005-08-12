@@ -1,53 +1,30 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [Announce] sg3_utils-1.16 available
-Date: Fri, 12 Aug 2005 09:37:08 +1000
-Message-ID: <42FBE124.30005@torque.net>
-Reply-To: dougg@torque.net
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: SATA status report updated
+Date: Fri, 12 Aug 2005 01:09:12 -0400
+Message-ID: <42FC2EF8.7030404@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:36836 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1751073AbVHKXhL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Aug 2005 19:37:11 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Linux IDE Mailing List <linux-ide@vger.kernel.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
 
-sg3_utils is a package of command line utilities for sending
-SCSI commands to devices. This package targets the lk 2.6 and
-lk 2.4 series. In the lk 2.6 series these utilities (except
-sgp_dd) can be used with any devices that support the SG_IO
-ioctl.
+Things in SATA-land have been moving along recently, so I updated the 
+software status report:
 
-This version adds sg_ident to report and set device identifiers.
-It extends various device scanning utilities beyond 256 device
-and includes bug fixes and man page improvements. See CHANGELOG
-for more information.
+	http://linux.yyz.us/sata/software-status.html
 
-A tarball, rpm and deb can be found on (see table 2):
-http://www.torque.net/sg
-For an overview of sg3_utils see this page:
-http://www.torque.net/sg/u_index.html
-The sg_dd utility has its own page at:
-http://www.torque.net/sg/sg_dd.html
-A changelog can be found at:
-http://www.torque.net/sg/p/sg3_utils.CHANGELOG
+Although I have not updated it in several weeks, folks may wish to refer 
+to the hardware status report as well:
 
-A release announcement has been sent to freshmeat.net .
+	http://linux.yyz.us/sata/sata-status.html
 
-Doug Gilbert
+Thanks to all the hard-working SATA contributors!
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-Comment: Using GnuPG with Fedora - http://enigmail.mozdev.org
+	Jeff
 
-iD8DBQFC++Eknayo+9E+FQIRAgQSAKCL7EirWTNuvvF3uqdN4OgnQr2bdwCdE/gY
-sq8wzUyPkd/vPr1Xc8+T+Es=
-=NU4B
------END PGP SIGNATURE-----
+
+
