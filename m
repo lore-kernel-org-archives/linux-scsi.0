@@ -1,50 +1,62 @@
-From: Mogens Valentin <monz@danbbs.dk>
-Subject: Re: SATA status report updated
-Date: Fri, 12 Aug 2005 21:17:39 +0200
-Message-ID: <42FCF5D3.1080409__17199.9621591114$1123874395$gmane$org@danbbs.dk>
-References: <42FC2EF8.7030404@pobox.com>
-Reply-To: monz@danbbs.dk
+From: Ming Zhang <mingz@ele.uri.edu>
+Subject: Re: hwo to adjust interrupt?
+Date: Fri, 12 Aug 2005 15:27:58 -0400
+Message-ID: <1123874878.5546.119.camel@localhost.localdomain>
+References: <OF33C7B841.0ED0EFDF-ON8825705B.00600DDB-8825705B.0060A40B@us.ibm.com>
+	 <1123873551.5546.116.camel@localhost.localdomain>
+	 <20050812191400.GB18979@parcelfarce.linux.theplanet.co.uk>
+Reply-To: mingz@ele.uri.edu
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pfepc.post.tele.dk ([195.41.46.237]:39192 "EHLO
-	pfepc.post.tele.dk") by vger.kernel.org with ESMTP id S1751251AbVHLTRi
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2005 15:17:38 -0400
-In-Reply-To: <42FC2EF8.7030404@pobox.com>
+Received: from leviathan.ele.uri.edu ([131.128.51.64]:5776 "EHLO
+	leviathan.ele.uri.edu") by vger.kernel.org with ESMTP
+	id S1750884AbVHLT21 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Aug 2005 15:28:27 -0400
+In-Reply-To: <20050812191400.GB18979@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux IDE Mailing List <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Bryan Henderson <hbryan@us.ibm.com>, Arjan van de Ven <arjan@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Jeff Garzik wrote:
+On Fri, 2005-08-12 at 20:14 +0100, Matthew Wilcox wrote:
+> On Fri, Aug 12, 2005 at 03:05:51PM -0400, Ming Zhang wrote:
+> > i tried to remove the SA_SHIRQ option when request_irq(), unfortunately
+> > it seems that the IO-APIC will only try to allocate same # to it and
+> > once that slot is used, the request_irq will fail.
 > 
-> Things in SATA-land have been moving along recently, so I updated the 
-> software status report:
+> Yes.  These two interrupts are physically on the same wire attached to
+> the IO-APIC.  You need to put the card in a different slot to change
+> which interrupt it gets.
 > 
->     http://linux.yyz.us/sata/software-status.html
+thanks.
 
- >> Queueing support, NCQ:
- >> #3 will be supported by libata, for all hardware and devices that
- >> support NCQ.
+i tried to move aic7xxx into another slot and now it uses 17 and 18
+instead of previously 16 17.
 
-I guess this means libata support for HW-based NCQ.
-It also could mean software/driver implemented NCQ, which could work on 
-chipsets not supporting HW-NCQ in unison with a disk having NCQ?
+thus my question is how many intr available in APIC? what if i have a
+quad port nic card and 1-2 scsi dual port controllers on board? then
+they must share anyway?
 
-> Although I have not updated it in several weeks, folks may wish to refer 
-> to the hardware status report as well:
-> 
->     http://linux.yyz.us/sata/sata-status.html
+[root@sc420 root]# cat /proc/interrupts
+           CPU0       CPU1
+  0:     103368      60018    IO-APIC-edge  timer
+  1:         80         68    IO-APIC-edge  i8042
+  4:          7          0    IO-APIC-edge  serial
+  8:          3          0    IO-APIC-edge  rtc
+  9:          0          0   IO-APIC-level  acpi
+ 14:        494          0    IO-APIC-edge  ide0
+ 16:        740          0   IO-APIC-level  eth1
+ 17:         15          0   IO-APIC-level  aic7xxx
+ 18:         28         43   IO-APIC-level  uhci_hcd:usb4, eth0, aic7xxx
+ 20:       4178        179   IO-APIC-level  libata
+ 21:          0          0   IO-APIC-level  ehci_hcd:usb1, uhci_hcd:usb2
+ 22:          0          0   IO-APIC-level  uhci_hcd:usb3
+ 23:          0          0   IO-APIC-level  uhci_hcd:usb5
+NMI:          0          0
+LOC:     163279     163330
+ERR:          0
+MIS:          0
 
-How well does libata work with the newest ULi chipsets?
-If not well, is there a possible timeframe?
-
-
-(not on kernel list; if anyone there comments on ULi, pls. cc private)
-
--- 
-Kind regards,
-Mogens Valentin
 
