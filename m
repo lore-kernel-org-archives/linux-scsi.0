@@ -1,108 +1,82 @@
-From: Pascal Terjan <pterjan@mandriva.com>
-Subject: [PATCH] allow building both megaraid and megraid_mbox
-Date: Sat, 13 Aug 2005 14:03:01 +0200
-Message-ID: <1123934582.8173.29.camel@plop>
+From: James.Smart@Emulex.Com
+Subject: [PATCH] add transport class symlink to device object
+Date: Sat, 13 Aug 2005 11:34:17 -0400
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AD35@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-ijTvXuFyCg4/Qn9Vy99j"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ryu.zarb.org ([212.85.153.228]:5086 "EHLO ryu.zarb.org")
-	by vger.kernel.org with ESMTP id S932147AbVHMMDF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 Aug 2005 08:03:05 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by ryu.zarb.org (Postfix) with ESMTP id 65EFA607E52
-	for <linux-scsi@vger.kernel.org>; Sat, 13 Aug 2005 14:03:03 +0200 (CEST)
-Received: from ryu.zarb.org ([127.0.0.1])
- by localhost (ryu.zarb.org [127.0.0.1]) (amavisd-new, port 10025) with ESMTP
- id 17877-09 for <linux-scsi@vger.kernel.org>;
- Sat, 13 Aug 2005 14:03:02 +0200 (CEST)
-Received: from [192.168.0.2] (cmoi.fasmz.org [82.231.206.15])
-	by ryu.zarb.org (Postfix) with ESMTP id 8E14A600D7A
-	for <linux-scsi@vger.kernel.org>; Sat, 13 Aug 2005 14:03:02 +0200 (CEST)
+Received: from emulex.emulex.com ([138.239.112.1]:9860 "EHLO emulex.emulex.com")
+	by vger.kernel.org with ESMTP id S1751339AbVHMPeW convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 13 Aug 2005 11:34:22 -0400
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id j7DFYJr7005143
+	for <linux-scsi@vger.kernel.org>; Sat, 13 Aug 2005 08:34:19 -0700 (PDT)
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
+In prior conversations with folks doing utilities such as lsscsi, it became
+rather apparent that it is difficult to establish the relationships between
+the class device and its base device. The class->device symlink is good for
+one direction, but the reverse direction didn't exist. In order to go from
+the device to its class device, you needed to either search all class
+devices to search for a device backlink that pointed to you, or had to build
+in name relationships what the subset class devices that you need to look at.
 
---=-ijTvXuFyCg4/Qn9Vy99j
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+This patch adds a symlink from the base device to the class device. The name
+of the symlink is "class:<classname>".  I had originally considered just
+<classname> for the symlink name, but it seemed to get lost in the attributes.
 
-Hello,
-here is a small patch that allow building both drivers by removing the
-devices supported by the new driver from the id_table of the old driver
-when you want both.
-It is usefull for distributions wanting to keep supporting legacy
-hardware.
+-- James S
 
-What's you opinion about that problem and the fix ?
+Example:
 
-Thanks in advance,
-Pascal
+# cd /sys/class/scsi_host/host0
+# ls -ld device
+lrwxrwxrwx  1 root root 0 Aug 13 11:11 device -> ../../../devices/platform/host0
+# cd ../../../devices/platform/host0
+# pwd
+/sys/devices/platform/host0
+# ls
+class:scsi_host  power  target0:0:0  target0:0:1  target0:0:2  target0:0:3
+# ls -ld class*
+lrwxrwxrwx  1 root root 0 Aug 13 07:08 class:scsi_host -> ../../../class/scsi_host/host0
 
---=-ijTvXuFyCg4/Qn9Vy99j
-Content-Disposition: attachment; filename=megaraid-common_ids.patch
-Content-Type: text/x-patch; name=megaraid-common_ids.patch; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -30,6 +30,7 @@
-  *
-  */
+
+
+diff -upNr a/drivers/base/class.c b/drivers/base/class.c
+--- a/drivers/base/class.c	2005-08-13 10:46:33.000000000 -0400
++++ b/drivers/base/class.c	2005-08-13 11:06:51.000000000 -0400
+@@ -495,9 +495,13 @@ int class_device_add(struct class_device
+ 	}
  
-+#include <linux/config.h>
- #include <linux/mm.h>
- #include <linux/fs.h>
- #include <linux/blkdev.h>
-@@ -5014,22 +5015,26 @@ megaraid_shutdown(struct pci_dev *pdev)
- }
+ 	class_device_add_attrs(class_dev);
+-	if (class_dev->dev)
++	if (class_dev->dev) {
++		char buf[40];
+ 		sysfs_create_link(&class_dev->kobj,
+ 				  &class_dev->dev->kobj, "device");
++		snprintf(buf, 40, "class:%s", class_dev->class->name);
++		sysfs_create_link(&class_dev->dev->kobj, &class_dev->kobj, buf);
++	}
  
- static struct pci_device_id megaraid_pci_tbl[] = {
-+#if !defined(CONFIG_MEGARAID_MAILBOX) && !defined(CONFIG_MEGARAID_MAILBOX_MODULE)
-+	/* If the new Megaraid driver is built, only support the adapters
-+	 * it doesn't support itself */
- 	{PCI_VENDOR_ID_DELL, PCI_DEVICE_ID_DISCOVERY,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{PCI_VENDOR_ID_DELL, PCI_DEVICE_ID_PERC4_DI,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, BOARD_64BIT},
- 	{PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_PERC4_QC_VERDE,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, BOARD_64BIT},
-+	{PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_AMI_MEGARAID3,
-+		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID3,
-+		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+#endif
- 	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID2,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID3,
--		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_AMI_MEGARAID3,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_AMI_MEGARAID3,
--		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{0,}
- };
- MODULE_DEVICE_TABLE(pci, megaraid_pci_tbl);
-diff --git a/drivers/scsi/megaraid/Kconfig.megaraid b/drivers/scsi/megaraid/Kconfig.megaraid
---- a/drivers/scsi/megaraid/Kconfig.megaraid
-+++ b/drivers/scsi/megaraid/Kconfig.megaraid
-@@ -64,7 +64,6 @@ config MEGARAID_MAILBOX
- 	To compile this driver as a module, choose M here: the
- 	module will be called megaraid_mbox
+ 	/* notify any interfaces this device is now here */
+ 	if (parent) {
+@@ -589,8 +593,12 @@ void class_device_del(struct class_devic
+ 		up(&parent->sem);
+ 	}
  
--if MEGARAID_NEWGEN=n
- config MEGARAID_LEGACY
- 	tristate "LSI Logic Legacy MegaRAID Driver"
- 	depends on PCI && SCSI
-@@ -75,4 +74,3 @@ config MEGARAID_LEGACY
- 
- 	To compile this driver as a module, choose M here: the
- 	module will be called megaraid
--endif
-
---=-ijTvXuFyCg4/Qn9Vy99j--
-
+-	if (class_dev->dev)
++	if (class_dev->dev) {
++		char buf[40];
++		snprintf(buf, 40, "class:%s", class_dev->class->name);
++		sysfs_remove_link(&class_dev->dev->kobj, buf);
+ 		sysfs_remove_link(&class_dev->kobj, "device");
++	}
+ 	if (class_dev->devt_attr) {
+ 		class_device_remove_file(class_dev, class_dev->devt_attr);
+ 		kfree(class_dev->devt_attr);
