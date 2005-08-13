@@ -1,41 +1,58 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Kernel driver for Adaptec S-ATA 1420SA
-Date: Fri, 12 Aug 2005 17:02:18 -0500
-Message-ID: <1123884138.5031.30.camel@mulgrave>
-References: <42FCDE2D.10602@sinister.cz>
+From: Erik Slagter <erik@slagter.name>
+Subject: Re: SATA status report updated
+Date: Sat, 13 Aug 2005 10:45:59 +0200
+Message-ID: <1123922759.4370.1.camel@localhost.localdomain>
+References: <42FC2EF8.7030404@pobox.com>
+	 <E1E3X1A-00081t-00@chiark.greenend.org.uk>  <42FD14FB.3060200@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-P8EqRvuvJjTgMvGw2iDS"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:6067 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751300AbVHLWC2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2005 18:02:28 -0400
-In-Reply-To: <42FCDE2D.10602@sinister.cz>
+Received: from oldconomy.demon.nl ([212.238.217.56]:18623 "EHLO
+	artemis.slagter.name") by vger.kernel.org with ESMTP
+	id S932131AbVHMIqP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 13 Aug 2005 04:46:15 -0400
+In-Reply-To: <42FD14FB.3060200@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sinister@sinister.cz
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
-
-On Fri, 2005-08-12 at 19:36 +0200, sinister@sinister.cz wrote:
-> I bought the Adaptec S-ATA II-1420SA controller but I have a problem=20
-> with this type.
-> I use the Linux Slackware 10.1 with the Linux Kernel 2.6.12-4 but I=20
-> didn=B4t find any driver for this S-ATA controller.
-> I don't need RAID but I need a 4x S-ATA port.
-
-Adaptec only publishes binary drivers for it's SATA RAID cards.
-
-The rumour is that Adaptec doesn't make the SATA chips in these, but
-OEM's them and then adds Adaptec softraid on top, so theoretically one
-of the in-kernel SATA drivers might be able to attach to the OEM chip.
-Your best bet would be to ask Adaptec support about it.
-
-James
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Matthew Garrett <mgarrett@chiark.greenend.org.uk>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=-P8EqRvuvJjTgMvGw2iDS
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, 2005-08-12 at 17:30 -0400, Jeff Garzik wrote:
+> Matthew Garrett wrote:
+> > Jeff Garzik <jgarzik@pobox.com> wrote:
+> >=20
+> >>Things in SATA-land have been moving along recently, so I updated the=20
+> >>software status report:
+> >>
+> >>	http://linux.yyz.us/sata/software-status.html
+> >=20
+> >=20
+> > I couldn't see any reference to system-wide power management (ie,
+> > suspend/resume of machines with SATA interfaces) - is any work going on
+> > in that area at the moment?
+>=20
+> Jens Axboe @ SuSE posted a patch that needs some work.  So, it's on the=20
+> radar screen, but I haven't seen any new work recently.
+
+Ah, the sata-suspend patch. Also very needed. Extensively used over here
+on various kernels (2.6.11 and 2.6.12 versions), no problems, works like
+a charm imho.
+
+--=-P8EqRvuvJjTgMvGw2iDS
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+
+iD8DBQBC/bNHJgD/6j32wUYRAlMYAJ4mGC70La3nZAviis9nSYpEXolMawCfdKAD
+kaKDhd7WrFlkPzlT2HZWBgc=
+=rUgW
+-----END PGP SIGNATURE-----
+
+--=-P8EqRvuvJjTgMvGw2iDS--
