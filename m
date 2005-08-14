@@ -1,30 +1,46 @@
-From: ericbusboom@lovecat.com
-Subject: Linux, wonder! - Small bitches take dick all day
-Date: Sun, 14 Aug 2005 10:15:27 -0700
-Message-ID: <000001c5a0f3$c236e417$79d0da97@lovecat.com>
+From: James.Smart@Emulex.Com
+Subject: RE: [PATCH] add transport class symlink to device object
+Date: Sun, 14 Aug 2005 08:42:35 -0400
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AD36@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:62697 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S932475AbVHNKQV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Aug 2005 06:16:21 -0400
-Received: from norika-fujiwara.com (evhojesytyxjabgwek@[222.90.118.177])
-	by zeus2.kernel.org (8.13.1/8.13.1) with ESMTP id j7EAFkTh027488
-	for <linux-scsi@vger.kernel.org>; Sun, 14 Aug 2005 03:16:12 -0700
-Received: from lovecat.com (lovecat-com-bk.mr.outblaze.com [208.36.123.75])
-	by norika-fujiwara.com with esmtp
-	id EBE13CBBBB for <linux-scsi@vger.kernel.org>; Sun, 14 Aug 2005 10:15:27 -0700
+Received: from emulex.emulex.com ([138.239.112.1]:63191 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S932507AbVHNMnH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Aug 2005 08:43:07 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux <linux-scsi@vger.kernel.org>
+To: James.Bottomley@SteelEye.com, greg@kroah.com
+Cc: akpm@osdl.org, linux-scsi@vger.kernel.org
 
-Hi,
+I'll trust that James B's fix resolves things. Thought my testing was
+straight-forward and ok. Guess not. Humbled again as a mere mortal in
+the world of sysfs and transport/container logic... :)
 
-Little nasty and sexy girls hardcore pics and movies 
+Anyway, the last item that needs discussion is what name should the
+symlink have ?
 
-http://cwIwT.bestkingplace.net/02
+Here's a few points on why I chose a "class:<classname>" over 
+"<classobjname>".
 
-Teen hardcore, virgins first-time, facial cum and more free cool pix
+- Visually, I get more meaning out of seeing the class's name, than
+  what is usually a redundant object name (many device and class
+  objects have the same name).
+- If a device could ever be associated with more than 1 class, it's
+  supported (and no issues of name collision).
+- The prefix of "class:" highlights what it is; makes it harder to lose
+  in a long list of attributes; gives a simple handle for regex
+  parsing (ex: "ls class*"); and helps avoid name collision with other
+  attributes.
+- The class object's name is always derivable from what the symlink
+  points to.
+- The class name is a good hint for utilities
+(ok, last 2 are a little weak - you can parse the symlink for either of
+ of them).
 
+Preferences ?
+
+-- james
