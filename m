@@ -1,307 +1,196 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] correct transport class abstraction to work outside SCSI
-Date: Sun, 14 Aug 2005 17:09:01 -0500
-Message-ID: <1124057341.18802.17.camel@mulgrave>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [GIT PATCH] scsi bug fixes for 2.6.13
+Date: Mon, 15 Aug 2005 00:13:15 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0508150010200.26220@poirot.grange>
+References: <1123184634.5026.58.camel@mulgrave>  <Pine.LNX.4.60.0508142121000.4594@poirot.grange>
+ <1124048890.18802.13.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:16324 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932317AbVHNWJD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Aug 2005 18:09:03 -0400
-Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id j7EM92A10778
-	for <linux-scsi@vger.kernel.org>; Sun, 14 Aug 2005 18:09:02 -0400
+Received: from pop.gmx.net ([213.165.64.20]:18850 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S932332AbVHNWOJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Aug 2005 18:14:09 -0400
+In-Reply-To: <1124048890.18802.13.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-I recently tried to construct a totally generic transport class and
-found there were certain features missing from the current abstract
-transport class.  Most notable is that you have to hang the data on the
-class_device but most of the API is framed in terms of the generic
-device, not the class_device.
+On Sun, 14 Aug 2005, James Bottomley wrote:
 
-These changes are two fold
+> On Sun, 2005-08-14 at 21:33 +0200, Guennadi Liakhovetski wrote:
+> > Just to make sure everyone agrees on this - there's currently a know bug 
+> > in dc395x with highmem reported by Pierre Ossman in thread "Kernel panic 
+> > with dc395x in 2.6.12.2" on linux-scsi. It is also trivial to reproduce on 
+> > non-highmem machines. It was there also in 2.6.12. It only was hit by one 
+> > person because not many use dc395x controlled cards in highmem machines 
+> > today. The fix is known - at least revert my patch to dc395x commited to 
+> > 2.6.12-rc5. This will fix this bug, leaving another one, which is much 
+> > harder to hit. There was only one person who hit it, but he cannot test 
+> > any more patches - the hardware is not there any more. I think I have a 
+> > fix for that one too, but that's another story. So, I would say it would 
+> > be worth it reverting that patch before 2.6.13, but, that's because I feel 
+> > personal responsibility for that bug:-)
+> 
+> OK, why don't we do this.  Instead of having me trawl through the trees
+> looking for the correct patch to reverse, why don't you attach it in an
+> email and I'll try to get it in to 2.6.13?
 
-- Provide the class_device to all of the setup and configure APIs
-- Provide and extra API to take the device and the attribute class and
-  return the corresponding class_device
+Ok. Below.
 
-James
+Sorry again for the trouble
+Guennadi
+---
+Guennadi Liakhovetski
 
-diff --git a/drivers/base/attribute_container.c b/drivers/base/attribute_container.c
---- a/drivers/base/attribute_container.c
-+++ b/drivers/base/attribute_container.c
-@@ -58,6 +58,7 @@ attribute_container_register(struct attr
- {
- 	INIT_LIST_HEAD(&cont->node);
- 	INIT_LIST_HEAD(&cont->containers);
-+	spin_lock_init(&cont->containers_lock);
- 		
- 	down(&attribute_container_mutex);
- 	list_add_tail(&cont->node, &attribute_container_list);
-@@ -77,11 +78,13 @@ attribute_container_unregister(struct at
- {
- 	int retval = -EBUSY;
- 	down(&attribute_container_mutex);
-+	spin_lock(&cont->containers_lock);
- 	if (!list_empty(&cont->containers))
- 		goto out;
- 	retval = 0;
- 	list_del(&cont->node);
-  out:
-+	spin_unlock(&cont->containers_lock);
- 	up(&attribute_container_mutex);
- 	return retval;
- 		
-@@ -151,7 +154,9 @@ attribute_container_add_device(struct de
- 			fn(cont, dev, &ic->classdev);
- 		else
- 			attribute_container_add_class_device(&ic->classdev);
-+		spin_lock(&cont->containers_lock);
- 		list_add_tail(&ic->node, &cont->containers);
-+		spin_unlock(&cont->containers_lock);
- 	}
- 	up(&attribute_container_mutex);
- }
-@@ -189,6 +194,7 @@ attribute_container_remove_device(struct
- 
- 		if (!cont->match(cont, dev))
- 			continue;
-+		spin_lock(&cont->containers_lock);
- 		list_for_each_entry_safe(ic, tmp, &cont->containers, node) {
- 			if (dev != ic->classdev.dev)
- 				continue;
-@@ -200,6 +206,7 @@ attribute_container_remove_device(struct
- 				class_device_unregister(&ic->classdev);
- 			}
- 		}
-+		spin_unlock(&cont->containers_lock);
- 	}
- 	up(&attribute_container_mutex);
- }
-@@ -230,10 +237,12 @@ attribute_container_device_trigger(struc
- 		if (!cont->match(cont, dev))
- 			continue;
- 
-+		spin_lock(&cont->containers_lock);
- 		list_for_each_entry_safe(ic, tmp, &cont->containers, node) {
- 			if (dev == ic->classdev.dev)
- 				fn(cont, dev, &ic->classdev);
- 		}
-+		spin_unlock(&cont->containers_lock);
- 	}
- 	up(&attribute_container_mutex);
- }
-@@ -368,6 +377,35 @@ attribute_container_class_device_del(str
- }
- EXPORT_SYMBOL_GPL(attribute_container_class_device_del);
- 
-+/**
-+ * attribute_container_find_class_device - find the corresponding class_device
-+ *
-+ * @cont:	the container
-+ * @dev:	the generic device
-+ *
-+ * Looks up the device in the container's list of class devices and returns
-+ * the corresponding class_device.
-+ */
-+struct class_device *
-+attribute_container_find_class_device(struct attribute_container *cont,
-+				      struct device *dev)
-+{
-+	struct class_device *cdev = NULL;
-+	struct internal_container *ic;
-+
-+	spin_lock(&cont->containers_lock);
-+	list_for_each_entry(ic, &cont->containers, node) {
-+		if (ic->classdev.dev == dev) {
-+			cdev = &ic->classdev;
-+			break;
-+		}
-+	}
-+	spin_unlock(&cont->containers_lock);
-+
-+	return cdev;
-+}
-+EXPORT_SYMBOL_GPL(attribute_container_find_class_device);
-+
- int __init
- attribute_container_init(void)
- {
-diff --git a/drivers/base/transport_class.c b/drivers/base/transport_class.c
---- a/drivers/base/transport_class.c
-+++ b/drivers/base/transport_class.c
-@@ -64,7 +64,9 @@ void transport_class_unregister(struct t
- }
- EXPORT_SYMBOL_GPL(transport_class_unregister);
- 
--static int anon_transport_dummy_function(struct device *dev)
-+static int anon_transport_dummy_function(struct transport_container *tc,
-+					 struct device *dev,
-+					 struct class_device *cdev)
- {
- 	/* do nothing */
- 	return 0;
-@@ -115,9 +117,10 @@ static int transport_setup_classdev(stru
- 				    struct class_device *classdev)
- {
- 	struct transport_class *tclass = class_to_transport_class(cont->class);
-+	struct transport_container *tcont = attribute_container_to_transport_container(cont);
- 
- 	if (tclass->setup)
--		tclass->setup(dev);
-+		tclass->setup(tcont, dev, classdev);
- 
- 	return 0;
- }
-@@ -178,12 +181,14 @@ void transport_add_device(struct device 
- EXPORT_SYMBOL_GPL(transport_add_device);
- 
- static int transport_configure(struct attribute_container *cont,
--			       struct device *dev)
-+			       struct device *dev,
-+			       struct class_device *cdev)
- {
- 	struct transport_class *tclass = class_to_transport_class(cont->class);
-+	struct transport_container *tcont = attribute_container_to_transport_container(cont);
- 
- 	if (tclass->configure)
--		tclass->configure(dev);
-+		tclass->configure(tcont, dev, cdev);
- 
- 	return 0;
- }
-@@ -202,7 +207,7 @@ static int transport_configure(struct at
+Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+
+diff -u a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+--- a/drivers/scsi/dc395x.c	17 Nov 2004 21:04:51
++++ b/drivers/scsi/dc395x.c	22 Jan 2005 22:55:45
+@@ -182,7 +182,7 @@
+  * cross a page boundy.
   */
- void transport_configure_device(struct device *dev)
- {
--	attribute_container_trigger(dev, transport_configure);
-+	attribute_container_device_trigger(dev, transport_configure);
+ #define SEGMENTX_LEN	(sizeof(struct SGentry)*DC395x_MAX_SG_LISTENTRY)
+-
++#define VIRTX_LEN	(sizeof(void *) * DC395x_MAX_SG_LISTENTRY)
+ 
+ struct SGentry {
+ 	u32 address;		/* bus! address */
+@@ -234,6 +234,7 @@
+ 	u8 sg_count;			/* No of HW sg entries for this request */
+ 	u8 sg_index;			/* Index of HW sg entry for this request */
+ 	u32 total_xfer_length;		/* Total number of bytes remaining to be transfered */
++	void **virt_map;
+ 	unsigned char *virt_addr;	/* Virtual address of current transfer position */
+ 
+ 	/*
+@@ -1020,14 +1021,14 @@
+ 			reqlen, cmd->request_buffer, cmd->use_sg,
+ 			srb->sg_count);
+ 
+-		srb->virt_addr = page_address(sl->page);
+ 		for (i = 0; i < srb->sg_count; i++) {
+-			u32 busaddr = (u32)sg_dma_address(&sl[i]);
+-			u32 seglen = (u32)sl[i].length;
+-			sgp[i].address = busaddr;
++			u32 seglen = (u32)sg_dma_len(sl + i);
++			sgp[i].address = (u32)sg_dma_address(sl + i);
+ 			sgp[i].length = seglen;
+ 			srb->total_xfer_length += seglen;
++			srb->virt_map[i] = kmap(sl[i].page);
+ 		}
++		srb->virt_addr = srb->virt_map[0];
+ 		sgp += srb->sg_count - 1;
+ 
+ 		/*
+@@ -1964,6 +1965,7 @@
+ 	int segment = cmd->use_sg;
+ 	u32 xferred = srb->total_xfer_length - left; /* bytes transfered */
+ 	struct SGentry *psge = srb->segment_x + srb->sg_index;
++	void **virt = srb->virt_map;
+ 
+ 	dprintkdbg(DBG_0,
+ 		"sg_update_list: Transfered %i of %i bytes, %i remain\n",
+@@ -2003,16 +2005,16 @@
+ 
+ 	/* We have to walk the scatterlist to find it */
+ 	sg = (struct scatterlist *)cmd->request_buffer;
++	idx = 0;
+ 	while (segment--) {
+ 		unsigned long mask =
+ 		    ~((unsigned long)sg->length - 1) & PAGE_MASK;
+ 		if ((sg_dma_address(sg) & mask) == (psge->address & mask)) {
+-			srb->virt_addr = (page_address(sg->page)
+-					   + psge->address -
+-					   (psge->address & PAGE_MASK));
++			srb->virt_addr = virt[idx] + (psge->address & ~PAGE_MASK);
+ 			return;
+ 		}
+ 		++sg;
++		++idx;
+ 	}
+ 
+ 	dprintkl(KERN_ERR, "sg_update_list: sg_to_virt failed\n");
+@@ -2138,7 +2140,7 @@
+ 				DC395x_read32(acb, TRM_S1040_DMA_CXCNT));
+ 		}
+ 		/*
+-		 * calculate all the residue data that not yet tranfered
++		 * calculate all the residue data that not yet transfered
+ 		 * SCSI transfer counter + left in SCSI FIFO data
+ 		 *
+ 		 * .....TRM_S1040_SCSI_COUNTER (24bits)
+@@ -3256,6 +3258,7 @@
+ 	struct scsi_cmnd *cmd = srb->cmd;
+ 	enum dma_data_direction dir = cmd->sc_data_direction;
+ 	if (cmd->use_sg && dir != PCI_DMA_NONE) {
++		int i;
+ 		/* unmap DC395x SG list */
+ 		dprintkdbg(DBG_SG, "pci_unmap_srb: list=%08x(%05x)\n",
+ 			srb->sg_bus_addr, SEGMENTX_LEN);
+@@ -3265,6 +3268,8 @@
+ 		dprintkdbg(DBG_SG, "pci_unmap_srb: segs=%i buffer=%p\n",
+ 			cmd->use_sg, cmd->request_buffer);
+ 		/* unmap the sg segments */
++		for (i = 0; i < srb->sg_count; i++)
++			kunmap(virt_to_page(srb->virt_map[i]));
+ 		pci_unmap_sg(acb->dev,
+ 			     (struct scatterlist *)cmd->request_buffer,
+ 			     cmd->use_sg, dir);
+@@ -3311,7 +3316,7 @@
+ 
+ 	if (cmd->use_sg) {
+ 		struct scatterlist* sg = (struct scatterlist *)cmd->request_buffer;
+-		ptr = (struct ScsiInqData *)(page_address(sg->page) + sg->offset);
++		ptr = (struct ScsiInqData *)(srb->virt_map[0] + sg->offset);
+ 	} else {
+ 		ptr = (struct ScsiInqData *)(cmd->request_buffer);
+ 	}
+@@ -4246,8 +4251,9 @@
+ 	const unsigned srbs_per_page = PAGE_SIZE/SEGMENTX_LEN;
+ 
+ 	for (i = 0; i < DC395x_MAX_SRB_CNT; i += srbs_per_page)
+-		if (acb->srb_array[i].segment_x)
+-			kfree(acb->srb_array[i].segment_x);
++		kfree(acb->srb_array[i].segment_x);
++
++	vfree(acb->srb_array[0].virt_map);
  }
- EXPORT_SYMBOL_GPL(transport_configure_device);
  
-@@ -215,7 +220,7 @@ static int transport_remove_classdev(str
- 	struct transport_class *tclass = class_to_transport_class(cont->class);
  
- 	if (tclass->remove)
--		tclass->remove(dev);
-+		tclass->remove(tcont, dev, classdev);
+@@ -4263,9 +4269,12 @@
+ 	int srb_idx = 0;
+ 	unsigned i = 0;
+ 	struct SGentry *ptr;
++	void **virt_array;
  
- 	if (tclass->remove != anon_transport_dummy_function) {
- 		if (tcont->statistics)
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -252,7 +252,8 @@ struct fc_internal {
+-	for (i = 0; i < DC395x_MAX_SRB_CNT; i++)
++	for (i = 0; i < DC395x_MAX_SRB_CNT; i++) {
+ 		acb->srb_array[i].segment_x = NULL;
++		acb->srb_array[i].virt_map = NULL;
++	}
  
- #define to_fc_internal(tmpl)	container_of(tmpl, struct fc_internal, t)
- 
--static int fc_target_setup(struct device *dev)
-+static int fc_target_setup(struct transport_container *tc, struct device *dev,
-+			   struct class_device *cdev)
- {
- 	struct scsi_target *starget = to_scsi_target(dev);
- 	struct fc_rport *rport = starget_to_rport(starget);
-@@ -281,7 +282,8 @@ static DECLARE_TRANSPORT_CLASS(fc_transp
- 			       NULL,
- 			       NULL);
- 
--static int fc_host_setup(struct device *dev)
-+static int fc_host_setup(struct transport_container *tc, struct device *dev,
-+			 struct class_device *cdev)
- {
- 	struct Scsi_Host *shost = dev_to_shost(dev);
- 
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
---- a/drivers/scsi/scsi_transport_spi.c
-+++ b/drivers/scsi/scsi_transport_spi.c
-@@ -166,7 +166,8 @@ static inline enum spi_signal_type spi_s
- 	return SPI_SIGNAL_UNKNOWN;
- }
- 
--static int spi_host_setup(struct device *dev)
-+static int spi_host_setup(struct transport_container *tc, struct device *dev,
-+			  struct class_device *cdev)
- {
- 	struct Scsi_Host *shost = dev_to_shost(dev);
- 
-@@ -200,7 +201,9 @@ static int spi_host_match(struct attribu
- 	return &i->t.host_attrs.ac == cont;
- }
- 
--static int spi_device_configure(struct device *dev)
-+static int spi_device_configure(struct transport_container *tc,
-+				struct device *dev,
-+				struct class_device *cdev)
- {
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 	struct scsi_target *starget = sdev->sdev_target;
-@@ -218,7 +221,9 @@ static int spi_device_configure(struct d
+ 	dprintkdbg(DBG_1, "Allocate %i pages for SG tables\n", pages);
+ 	while (pages--) {
+@@ -4286,6 +4295,19 @@
+ 		    ptr + (i * DC395x_MAX_SG_LISTENTRY);
+ 	else
+ 		dprintkl(KERN_DEBUG, "No space for tmsrb SG table reserved?!\n");
++
++	virt_array = vmalloc((DC395x_MAX_SRB_CNT + 1) * DC395x_MAX_SG_LISTENTRY * sizeof(void*));
++
++	if (!virt_array) {
++		adapter_sg_tables_free(acb);
++		return 1;
++	}
++
++	for (i = 0; i < DC395x_MAX_SRB_CNT + 1; i++) {
++		acb->srb_array[i].virt_map = virt_array;
++		virt_array += DC395x_MAX_SG_LISTENTRY;
++	}
++
  	return 0;
  }
  
--static int spi_setup_transport_attrs(struct device *dev)
-+static int spi_setup_transport_attrs(struct transport_container *tc,
-+				     struct device *dev,
-+				     struct class_device *cdev)
- {
- 	struct scsi_target *starget = to_scsi_target(dev);
- 
-diff --git a/include/linux/attribute_container.h b/include/linux/attribute_container.h
---- a/include/linux/attribute_container.h
-+++ b/include/linux/attribute_container.h
-@@ -11,10 +11,12 @@
- 
- #include <linux/device.h>
- #include <linux/list.h>
-+#include <linux/spinlock.h>
- 
- struct attribute_container {
- 	struct list_head	node;
- 	struct list_head	containers;
-+	spinlock_t		containers_lock;
- 	struct class		*class;
- 	struct class_device_attribute **attrs;
- 	int (*match)(struct attribute_container *, struct device *);
-@@ -62,12 +64,7 @@ int attribute_container_add_class_device
- 						 struct class_device *classdev);
- void attribute_container_remove_attrs(struct class_device *classdev);
- void attribute_container_class_device_del(struct class_device *classdev);
--
--
--
--
--
--
-+struct class_device *attribute_container_find_class_device(struct attribute_container *, struct device *);
- struct class_device_attribute **attribute_container_classdev_to_attrs(const struct class_device *classdev);
- 
- #endif
-diff --git a/include/linux/transport_class.h b/include/linux/transport_class.h
---- a/include/linux/transport_class.h
-+++ b/include/linux/transport_class.h
-@@ -12,11 +12,16 @@
- #include <linux/device.h>
- #include <linux/attribute_container.h>
- 
-+struct transport_container;
-+
- struct transport_class {
- 	struct class class;
--	int (*setup)(struct device *);
--	int (*configure)(struct device *);
--	int (*remove)(struct device *);
-+	int (*setup)(struct transport_container *, struct device *,
-+		     struct class_device *);
-+	int (*configure)(struct transport_container *, struct device *,
-+			 struct class_device *);
-+	int (*remove)(struct transport_container *, struct device *,
-+		      struct class_device *);
- };
- 
- #define DECLARE_TRANSPORT_CLASS(cls, nm, su, rm, cfg)			\
-
-
