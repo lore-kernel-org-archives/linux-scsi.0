@@ -1,43 +1,80 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [GIT PATCH] scsi bug fixes for 2.6.13
-Date: Sun, 14 Aug 2005 21:33:05 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0508142121000.4594@poirot.grange>
-References: <1123184634.5026.58.camel@mulgrave>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] add ability to deny binding to SPI transport class
+Date: Sun, 14 Aug 2005 14:34:06 -0500
+Message-ID: <1124048047.18802.10.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.de ([213.165.64.20]:44975 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1751068AbVHNTe0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Aug 2005 15:34:26 -0400
-In-Reply-To: <1123184634.5026.58.camel@mulgrave>
-Content-ID: <Pine.LNX.4.60.0508142124061.4594@poirot.grange>
+Received: from stat16.steeleye.com ([209.192.50.48]:28611 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751060AbVHNTeT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Aug 2005 15:34:19 -0400
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id j7EJY8A05124
+	for <linux-scsi@vger.kernel.org>; Sun, 14 Aug 2005 15:34:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi
+This patch is necessary if we begin exposing underlying physical disks
+(which can attach to the SPI transport class) of the hardware RAID
+cards, since we don't want any SPI parameters binding to the raid
+devices.
 
-On Thu, 4 Aug 2005, James Bottomley wrote:
+James
 
-> This is my (hopefully final) collection of safe driver updates and bug
-> fixes for 2.6.13.
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -1068,6 +1072,7 @@ static int spi_device_match(struct attri
+ {
+ 	struct scsi_device *sdev;
+ 	struct Scsi_Host *shost;
++	struct spi_internal *i;
+ 
+ 	if (!scsi_is_sdev_device(dev))
+ 		return 0;
+@@ -1080,6 +1085,9 @@ static int spi_device_match(struct attri
+ 	/* Note: this class has no device attributes, so it has
+ 	 * no per-HBA allocation and thus we don't need to distinguish
+ 	 * the attribute containers for the device */
++	i = to_spi_internal(shost->transportt);
++	if (i->f->deny_binding && i->f->deny_binding(sdev->sdev_target))
++		return 0;
+ 	return 1;
+ }
+ 
+@@ -1087,6 +1095,7 @@ static int spi_target_match(struct attri
+ 			    struct device *dev)
+ {
+ 	struct Scsi_Host *shost;
++	struct scsi_target *starget;
+ 	struct spi_internal *i;
+ 
+ 	if (!scsi_is_target_device(dev))
+@@ -1098,7 +1107,11 @@ static int spi_target_match(struct attri
+ 		return 0;
+ 
+ 	i = to_spi_internal(shost->transportt);
+-	
++	starget = to_scsi_target(dev);
++
++	if (i->f->deny_binding && i->f->deny_binding(starget))
++		return 0;
++
+ 	return &i->t.target_attrs.ac == cont;
+ }
+ 
+diff --git a/include/scsi/scsi_transport_spi.h b/include/scsi/scsi_transport_spi.h
+--- a/include/scsi/scsi_transport_spi.h
++++ b/include/scsi/scsi_transport_spi.h
+@@ -120,6 +120,7 @@ struct spi_function_template {
+ 	void	(*set_hold_mcs)(struct scsi_target *, int);
+ 	void	(*get_signalling)(struct Scsi_Host *);
+ 	void	(*set_signalling)(struct Scsi_Host *, enum spi_signal_type);
++	int	(*deny_binding)(struct scsi_target *);
+ 	/* The driver sets these to tell the transport class it
+ 	 * wants the attributes displayed in sysfs.  If the show_ flag
+ 	 * is not set, the attribute will be private to the transport
 
-Just to make sure everyone agrees on this - there's currently a know bug 
-in dc395x with highmem reported by Pierre Ossman in thread "Kernel panic 
-with dc395x in 2.6.12.2" on linux-scsi. It is also trivial to reproduce on 
-non-highmem machines. It was there also in 2.6.12. It only was hit by one 
-person because not many use dc395x controlled cards in highmem machines 
-today. The fix is known - at least revert my patch to dc395x commited to 
-2.6.12-rc5. This will fix this bug, leaving another one, which is much 
-harder to hit. There was only one person who hit it, but he cannot test 
-any more patches - the hardware is not there any more. I think I have a 
-fix for that one too, but that's another story. So, I would say it would 
-be worth it reverting that patch before 2.6.13, but, that's because I feel 
-personal responsibility for that bug:-)
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
