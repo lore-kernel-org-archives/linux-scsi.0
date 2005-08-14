@@ -1,50 +1,30 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] add transport class symlink to device object
-Date: Sat, 13 Aug 2005 20:37:06 -0500
-Message-ID: <1123983426.5115.32.camel@mulgrave>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AD35@xbl3.ma.emulex.com>
-	 <20050813213955.GB19235@kroah.com>  <1123976180.5115.23.camel@mulgrave>
-	 <1123980143.5115.27.camel@mulgrave>
+From: ericbusboom@lovecat.com
+Subject: Linux, wonder! - Small bitches take dick all day
+Date: Sun, 14 Aug 2005 10:15:27 -0700
+Message-ID: <000001c5a0f3$c236e417$79d0da97@lovecat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:20413 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932294AbVHNBhS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 13 Aug 2005 21:37:18 -0400
-In-Reply-To: <1123980143.5115.27.camel@mulgrave>
+Received: from zeus2.kernel.org ([204.152.191.36]:62697 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S932475AbVHNKQV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Aug 2005 06:16:21 -0400
+Received: from norika-fujiwara.com (evhojesytyxjabgwek@[222.90.118.177])
+	by zeus2.kernel.org (8.13.1/8.13.1) with ESMTP id j7EAFkTh027488
+	for <linux-scsi@vger.kernel.org>; Sun, 14 Aug 2005 03:16:12 -0700
+Received: from lovecat.com (lovecat-com-bk.mr.outblaze.com [208.36.123.75])
+	by norika-fujiwara.com with esmtp
+	id EBE13CBBBB for <linux-scsi@vger.kernel.org>; Sun, 14 Aug 2005 10:15:27 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: James.Smart@Emulex.Com, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Linux <linux-scsi@vger.kernel.org>
 
-On Sat, 2005-08-13 at 19:42 -0500, James Bottomley wrote:
-> I'll look into it.
+Hi,
 
-OK, I think this fix will work for either patch.  The problem is that if
-the class hasn't been made visible, then the dentry has no inode, so in
-that case we can just exit out of sysfs_hash_and_remove().
+Little nasty and sexy girls hardcore pics and movies 
 
-Someone needs to check this though ... I've ventured further into sysfs
-than a sane person ought to go.  In fact if I don't leave now, Mr.
-Flibble's going to be very cross ...
+http://cwIwT.bestkingplace.net/02
 
-James
-
-diff --git a/fs/sysfs/inode.c b/fs/sysfs/inode.c
---- a/fs/sysfs/inode.c
-+++ b/fs/sysfs/inode.c
-@@ -228,6 +228,10 @@ void sysfs_hash_and_remove(struct dentry
- 	struct sysfs_dirent * sd;
- 	struct sysfs_dirent * parent_sd = dir->d_fsdata;
- 
-+	if (dir->d_inode == NULL)
-+		/* no inode means this hasn't been made visible yet */
-+		return;
-+
- 	down(&dir->d_inode->i_sem);
- 	list_for_each_entry(sd, &parent_sd->s_children, s_sibling) {
- 		if (!sd->s_element)
-
+Teen hardcore, virgins first-time, facial cum and more free cool pix
 
