@@ -1,46 +1,43 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] add transport class symlink to device object
-Date: Sun, 14 Aug 2005 16:02:31 +0100
-Message-ID: <20050814150231.GA9466@parcelfarce.linux.theplanet.co.uk>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AD35@xbl3.ma.emulex.com> <20050813213955.GB19235@kroah.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: [GIT PATCH] scsi bug fixes for 2.6.13
+Date: Sun, 14 Aug 2005 21:33:05 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0508142121000.4594@poirot.grange>
+References: <1123184634.5026.58.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:40577 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S932537AbVHNO7v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Aug 2005 10:59:51 -0400
-Content-Disposition: inline
-In-Reply-To: <20050813213955.GB19235@kroah.com>
+Received: from pop.gmx.de ([213.165.64.20]:44975 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1751068AbVHNTe0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Aug 2005 15:34:26 -0400
+In-Reply-To: <1123184634.5026.58.camel@mulgrave>
+Content-ID: <Pine.LNX.4.60.0508142124061.4594@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: James.Smart@Emulex.Com, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>, Russell King <rmk@arm.linux.org.uk>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sat, Aug 13, 2005 at 02:39:56PM -0700, Greg KH wrote:
-> Heh, I already have a patch like this pending for 2.6.14 at:
-> 	http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/gregkh-01-driver/driver-link-device-and-class.patch
+Hi
 
-Last time I tried to do something like this, it fell over with
-multi-function serial ports.  Look at this example:
+On Thu, 4 Aug 2005, James Bottomley wrote:
 
-# ls -l /sys/class/tty/ttyS*/device | cut -c40-
-/sys/class/tty/ttyS0/device -> ../../../devices/parisc/0/0:0/pci0000:00/0000:00:04.0
-/sys/class/tty/ttyS1/device -> ../../../devices/parisc/0/0:0/pci0000:00/0000:00:04.0
-/sys/class/tty/ttyS2/device -> ../../../devices/parisc/0/0:0/pci0000:00/0000:00:04.0
-/sys/class/tty/ttyS3/device -> ../../../devices/parisc/0/0:0/pci0000:00/0000:00:05.0
-/sys/class/tty/ttyS4/device -> ../../../devices/parisc/0/0:0/pci0000:00/0000:00:05.0
+> This is my (hopefully final) collection of safe driver updates and bug
+> fixes for 2.6.13.
 
-Adding the reverse links gets you three links in the 0000:00:04.0
-directory all called 'tty' (or 'class:tty', whatever), each pointing to
-a different place.  This doesn't happen for scsi devices as the class is
-attached to the scsi_dev, not the pci_dev.  I think the tty subsystem
-needs to be modified to add tty_devs as subdevices of the pci_dev.
+Just to make sure everyone agrees on this - there's currently a know bug 
+in dc395x with highmem reported by Pierre Ossman in thread "Kernel panic 
+with dc395x in 2.6.12.2" on linux-scsi. It is also trivial to reproduce on 
+non-highmem machines. It was there also in 2.6.12. It only was hit by one 
+person because not many use dc395x controlled cards in highmem machines 
+today. The fix is known - at least revert my patch to dc395x commited to 
+2.6.12-rc5. This will fix this bug, leaving another one, which is much 
+harder to hit. There was only one person who hit it, but he cannot test 
+any more patches - the hardware is not there any more. I think I have a 
+fix for that one too, but that's another story. So, I would say it would 
+be worth it reverting that patch before 2.6.13, but, that's because I feel 
+personal responsibility for that bug:-)
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
