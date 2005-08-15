@@ -1,130 +1,86 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 2/2] convert sg to blk_rq map functions
-Date: Mon, 15 Aug 2005 22:29:24 +1000
-Message-ID: <43008AA4.6000002@torque.net>
-References: <1123562301.6090.14.camel@max>
-Reply-To: dougg@torque.net
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: Kernel driver for Adaptec S-ATA 1420SA
+Date: Mon, 15 Aug 2005 08:29:08 -0400
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F017089A4@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:16567 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S932294AbVHOM3Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Aug 2005 08:29:24 -0400
-In-Reply-To: <1123562301.6090.14.camel@max>
+Received: from magic.adaptec.com ([216.52.22.17]:35994 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932297AbVHOMbz convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Aug 2005 08:31:55 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, sinister@sinister.cz
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Mauelshagen@redhat.com
 
-Mike Christie wrote:
-> Make sg.c use block layer functions so we always use
-> scatterlists in scsi.
-> 
-> Changes from original driver (junk that is broken or
-> new *features* :) ):
-> 
-> - mmap currently not supported. Need some block layer helpers
-> so we can support this for all ULDs. Is this needed?
+Partially true regarding RAID cards. We publish sources for all our pro=
+cessor based RAID cards (dpt_i2o, aacraid). For the HostRAID cards, the=
+ RAID stack is in the driver, we publish the binaries for the one-piece=
+ drivers. We released a GPL driver for the HostRAID card as a raw drive=
+r + Enhanced md replacement.
 
-In my testing, mmap-ed IO via sg was faster than DIO which
-in turn was faster than using the reserve buffer. So IMO
-mmap-ed was the fastest while double buffered IO was the
-most robust (e.g. no alignment problems).
+As for the chips, depending on which card model, the silicon used for t=
+he interface chips could be Adaptec, or it could be from another OEM. T=
+here is not much to a SATA chip, remember PATA is but a 74374 latch and=
+ the SATA chips simply serialize the same interface. In the case of the=
+ 1420SA, the SATA core is on Adaptec Silicon (AIC8130), but your guess =
+is as good as mine with regards to where that SATA core originated from=
+=2E
 
-One reason for this could be that sg's mmap-ed used its
-reserve buffer allocated with 32 KB scatg elements
-rather than DIO's user space memory which is almost
-always discontiguous PAGE_SIZE (4 KB) blocks.
+As for the ata driver, 1420SA has its PCI RAID class bit turned on, ide=
+ally you would want to turn that bit off before attaching the raw (none=
+-RAID) driver to it. I have yet to get a response back from the H/W or =
+BIOS folks about how this can be done; I could not find a 'RAID' tunabl=
+e in the add-on BIOS. I expect that the intent was not to compete in th=
+e raw SATA environment...
 
-> - Always do DIO for the new interface if buffer is aligned properly.
+And, when the card has the PCI RAID class bit turned on, this should tr=
+igger support for handling the RAID metadata on the drives. The META da=
+ta, and support for HostRAID cards, was published in Justin Gibbs emd r=
+elease last year. Sadly, in the time it took his team to produce that e=
+nhancement to the md product, Linux releases had switched from md to dm=
+ and that effort was lost and a new effort has not been started since J=
+ustin left Adaptec immediately after the rejection on the RAID list.
 
-In my early testing DIO locked up from time to time
-and I put it down to LLD problems (as the more expensive
-hardware didn't exhibit problems); hence the
-/proc/scsi/sg/allow_dio flag. Hopefully those problems
-are a thing of the past.
+The publication of the meta data support has yet to be absorbed by the =
+dm or dmraid tools.
 
-sg_io_hdr::info could be used to indicate whether DIO
-was done or not (as is the present case in sg).
+Sincerely -- Mark Salyzyn
+-----Original Message-----
+=46rom: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.=
+kernel.org] On Behalf Of James Bottomley
+Sent: Friday, August 12, 2005 6:02 PM
+To: sinister@sinister.cz
+Cc: SCSI Mailing List
+Subject: Re: Kernel driver for Adaptec S-ATA 1420SA
 
-But if you are changing things, why not follow the
-user supplied O_DIRECT open() flag?
+On Fri, 2005-08-12 at 19:36 +0200, sinister@sinister.cz wrote:
+> I bought the Adaptec S-ATA II-1420SA controller but I have a problem=20
+> with this type.
+> I use the Linux Slackware 10.1 with the Linux Kernel 2.6.12-4 but I=20
+> didn=B4t find any driver for this S-ATA controller.
+> I don't need RAID but I need a 4x S-ATA port.
 
-> - Always obey LLD queue restrictions.
+Adaptec only publishes binary drivers for it's SATA RAID cards.
 
-Depends which ones :-)
-What have blocks (512 or 2048 byte) got to do with
-a task like writing firmware via the WRITE BUFFER
-command (which is in SPC-3 rather than SBC-2)?
-Scatter gather lists need limits, some of:
-  - number of elements
-  - max size per element
-  - max overall size
+The rumour is that Adaptec doesn't make the SATA chips in these, but
+OEM's them and then adds Adaptec softraid on top, so theoretically one
+of the in-kernel SATA drivers might be able to attach to the OEM chip.
+Your best bet would be to ask Adaptec support about it.
 
-If either of the latter are denominated in blocks then
-something is amiss. The device can talk about blocks
-(see the Block Limits VPD page (0xb0) in SBC-2) but
-not the LLD. Think SSC, OSD and block devices with
-protection information (see SBC-2). SCSI, at the Primary
-Command (SPC-3) level, is byte oriented.
-
-That Block Limits VPD page makes an important distinction:
-maximum versus optimal transfer lengths. It also specifies
-optimal granularity. A generic block layer should concentrate
-on optimal values, a pass-through, on maximum values. Also
-with a pass-through talking to a device with transfer length
-limits, the user of the pass-through is responsible for
-finding out and complying with the limits of that device (or
-decoding the error messages if she doesn't).
-
-> - Rely on block layer reserves and bio bounce buffer for
-> memory allocations.
-
-Do block layer reserves cope with elements greater
-than a PAGE_SIZE? One feature of the current sg driver
-is that it can send a single request greater than
-max_scatg_elems*PAGE_SIZE. The sg driver uses scatg
-elements of 32 KB for a maximum size of 8 MB per transfer
-(if max_scatg_elems is 256). Some folks out there
-increase the 32 KB per scatg element by increasing
-the SG_SCATTER_SZ define in sg.h .
-Are "huge" pages a possibility here?
-
-> - SG_DXFER_TO_FROM_DEV may be broken. sg currently works like
-> the block layer SG_IO code right now.
-
-Originally (sg version 1) this was a read_from_device
-where the app wrote something into a buffer that the
-read_from_device would later overwrite, if it worked. These
-were the days when the only error from sg was an
-EIO and that didn't necessarily occur when a CHECK
-CONDITION SCSI status came back...
-
-In any other situation (e.g. SG_IO in the block layer)
-SG_DXFER_TO_FROM_DEV should be implemented as
-SG_DXFER_FROM_DEV .
-
-If we get around to addressing the bi-directional
-transfer problem, two independent scatg lists would
-be in order IMO: a to_device list and a from_device
-list. Then we don't have to worry about a transfer
-direction indicator :-) OSD and some advanced SBC-2 SCSI
-commands require bi-directional transfers.
-
-> Patch has been tested by running the sg3 and sg utils
-> packaages, so this is not ready for merging (more cleanup
-> of old code needed). We also may want to add some scsi
-> helpers, but because of the sg_read copy_to_user case and
-> sg.c requiring a pointer to the bio to do the uncopy it
-> gets a little strange if we are also going to kill
-> scsi_request. In this patch sg.c just accesses the bio
-> and request directly :(
+James
 
 
-Doug Gilbert
-
-
-
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
