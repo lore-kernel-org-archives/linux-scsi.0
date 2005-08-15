@@ -1,77 +1,82 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH] minimal SAS transport class
-Date: Mon, 15 Aug 2005 11:33:54 -0400
-Message-ID: <4300B5E2.9030000@adaptec.com>
-References: <20050815135537.GB19426@lst.de> <4300B11A.2050006@adaptec.com> <20050815152131.GB20854@lst.de>
+Subject: Re: [PATCH] allow a transport to pre-initialize starget_data
+Date: Mon, 15 Aug 2005 11:41:56 -0400
+Message-ID: <4300B7C4.8060400@adaptec.com>
+References: <20050815134210.GA19426@lst.de>  <4300B232.9000308@adaptec.com> <1124119431.5089.9.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:40658 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S964793AbVHOPd7 (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:38869 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S964807AbVHOPmB (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Aug 2005 11:33:59 -0400
-In-Reply-To: <20050815152131.GB20854@lst.de>
+	Mon, 15 Aug 2005 11:42:01 -0400
+In-Reply-To: <1124119431.5089.9.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jejb@steeleye.com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@steeleye.com>
+Cc: Christoph Hellwig <hch@lst.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 08/15/05 11:21, Christoph Hellwig wrote:
-> On Mon, Aug 15, 2005 at 11:13:30AM -0400, Luben Tuikov wrote:
+Hi guys, :-)
+
+That's a lot of email. :-)
+
+On 08/15/05 11:23, James Bottomley wrote:
+> On Mon, 2005-08-15 at 11:18 -0400, Luben Tuikov wrote:
 > 
->>>+void sas_add_target(struct sas_port *port, struct sas_identify *attached,
->>>+		uint channel, uint target)
->>>+{
->>>+	if (attached->target_port_protocols &
->>>+	    (SAS_PROTOCOL_SSP|SAS_PROTOCOL_STP|SAS_PROTOCOL_SATA))
->>>+		scsi_scan_target(&port->dev, channel, target, ~0, 0, attached);
->>>+}
+>>While you're at it, rip out the extremely broken "channel" and "id",
+>>and leave only the opaque token.
+> 
+> 
+> Unfortunately, I just found an actual use for channel (exposing
+> underlying physical discs of raid devices) and, unfortunately, we're
+> still not yet at the point where we can use an opaque token for ID, but
+> if someone wants to look into what it would take to convert the rest of
+> SCSI ...
+
+Hmm, you've 
+    "found an actual use for channel (exposing underlying physical discs
+     of raid devices)".
+
+I'm completely befuddled James.
+
+What if we didn't have "channel" (SPI leftover) in the first place?
+Or, if an LU is implemented as a RAID device, how do you find out its
+individual disks?
+
+Is there a spec or standard that you're following in doing this?
+
+On 08/15/05 11:25, Christoph Hellwig wrote:
+> On Mon, Aug 15, 2005 at 11:18:10AM -0400, Luben Tuikov wrote:
+> 
+>>On 08/15/05 09:42, Christoph Hellwig wrote:
 >>
->>I've a few questions:
+>>>Add a new void *transport_data argument to scsi_scan_target so that a
+>>>transport-class can fill in known information before actually scanning
+>>>the target.  This is needed by the upcoming SAS transport class patch.
 >>
->>1. What kind of device does the Fusion driver export?
->>   Is this a true end device, or is this the LU in the SSP end device?
->>   I.e. since the Fusion card firmware does everything about SAS there is,
->>   is also LU discovery done in the firmware, or does the firmware export
->>   only the SSP end devices and leave LU discovery to SCSI Core
->>   (as the code suggests)?
+>>Hmm, yes, this has been due for 5 years now.
+>>
+>>While you're at it, rip out the extremely broken "channel" and "id",
+>>and leave only the opaque token.
 > 
-> 
-> It seems to give notification for the actual LU, but doing an LU scan
-> works if you use the target ID from those reports.  Given that I prefer
-> to do as much as possible in the transport class to have the same
-> behaviour for different HBAs I'd prefer to not rely on the firmware's
-> LU scan.
+> Well, it's not a token but pre-initialized data.  The problem with
+> ripping out channel and id is that userland would break all over,
+> else we'd have done it already.
 
-Yes, I see your point.
+Ah, ok.
 
-But you just said it: the FW exports actual LUs.  Thus, even if you do
-a scan, you'll either get the "other" LUs, which the FW has already
-told you about, or CHECK CONDITION depending on where you sent it and
-if the device server supports it.
+Is it possible to figure out which parts of userland rely on
+HCIL tuples, as opposed to "scsi device I can send commands to"?
 
-In effect, you can either leave it at LUs or do your own scan,
-but not both.  An agreement is needed between the Firmware and SCSI Core.
-
->>2. Since I saw that (end) devices bind to ports, what is the maximum
->>   number of ports that the Fusion firmware export?
-> 
-> right now it reports the number of physical ports, that's four or eight
-> for the cards I have.  But again I don't have the actual documentation
-> yet.
-
-So what is the maximum number of devices it can support?
-
->>3. Will control of SATA and STP devices be given to libata or will
->>   the Fision firmware make those look like SCSI devices?
-> 
-> Fusion makes them look like SCSI devices.  As I mentioned I tested this
-> patch only with SATA disks.  But as the command translation for cards
-> not doing thi in firmware would happen in the ->queuecommand path I
-> don't think the transport class should be involved with it.
-
-Yes, how can it...
+Than we can fix those userland programs and we can move into
+the future.
 
 	Luben
+
+
+
+
+
+
 
