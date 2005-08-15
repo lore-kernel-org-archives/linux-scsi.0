@@ -1,37 +1,55 @@
-From: "Support" <caelum@walla.com>
-Subject: e4h <Name>, we invite You to elite sites with 4 in 1 8wx
-Date: Mon, 15 Aug 2005 17:08:53 +0000
-Message-ID: <3BLFBC8B1I7H85K7@walla.com>
-References: <LF58CC9C9BBB8AG1@vger.kernel.org>
+From: Willem Riede <osst@riede.org>
+Subject: Re: [-mm PATCH 29/32] drivers/scsi: fix-up schedule_timeout() usage
+Date: Mon, 15 Aug 2005 20:34:27 +0000
+Message-ID: <1124138067l.3920l.7l@serve.riede.org>
+References: <20050815180514.GC2854@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:9413 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S964926AbVHOUIe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Aug 2005 16:08:34 -0400
-Received: from aar.alcatel-alsthom.fr (129-2-229-250.student.umd.edu [129.2.229.250])
-	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id j7FK8TJX005290
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Aug 2005 13:08:31 -0700
-In-Reply-To: <LF58CC9C9BBB8AG1@vger.kernel.org>
+Received: from rwcrmhc14.comcast.net ([216.148.227.89]:51400 "EHLO
+	rwcrmhc12.comcast.net") by vger.kernel.org with ESMTP
+	id S964917AbVHOUew convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Aug 2005 16:34:52 -0400
+In-Reply-To: <20050815182751.GF2854@us.ibm.com> (from nacc@us.ibm.com on Mon
+	Aug 15 14:27:51 2005)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-scsi <linux-scsi@vger.kernel.org>
+To: Nishanth Aravamudan <nacc@us.ibm.com>
+Cc: James.Bottomley@SteelEye.com, matthew@wil.cx, markus.lidel@shadowconnect.com, andrew.vasquez@qlogic.com, akpm@osdl.org, linux-scsi@vger.kernel.org
 
-Hello Linux-scsi,
+On 08/15/2005 02:27:51 PM, Nishanth Aravamudan wrote:
+> Description: Use schedule_timeout_uninterruptible() instead of
+> set_current_state()/schedule_timeout() to reduce kernel size.
+> 
+> Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
+> 
+> ---
+> 
+>  drivers/scsi/osst.c           |    9 +++------
+>
+> diff -urpN 2.6.13-rc5-mm1/drivers/scsi/osst.c
+> 2.6.13-rc5-mm1-dev/drivers/scsi/osst.c
+> --- 2.6.13-rc5-mm1/drivers/scsi/osst.c	2005-08-07 10:05:21.000000000
+> -0700
+> +++ 2.6.13-rc5-mm1-dev/drivers/scsi/osst.c	2005-08-12
+> 13:42:13.000000000 -0700
+> @@ -862,8 +862,7 @@ static int osst_recover_wait_frame(struc
+>  				retval = osst_write_error_recovery(STp,
+> aSRpnt, 0);
+>  				break;
+>  			}
+> -			set_current_state(TASK_INTERRUPTIBLE);
+> -			schedule_timeout (HZ / OSST_POLL_PER_SEC);
+> +			schedule_timeout_interruptible(HZ /
+OSST_POLL_PER_SEC);
 
-At this time we can offer a small update at our system - BD-MAGAZINE Issue N1,2,3,4,5!
-... When it's  late  at night , all ya really  need is some  midnight passion. See 
-a video few sweet young models show fashion for your passion within these pages.
-Tanya, Marisha, Oksana and Alena.They have new video serries of beautiful Tanya...
-  
-             http://95gkgCvY9N9.leetempire.com/5/?UnN4ZItE
-  
-Our great and unique offer: for each subscribtion You get access to another
-three sites from our portal for 31 days... without any additional payments!
-Simply subscribe, select and use!
+Others have suggested using msleep in osst instead of schedule, which I think
+is 
+more appropriate.
 
-MSGID: zt4TTqgab5Wpf1GBti7htVpmjfqjZJZz
+Regards, Willem Riede.
+
 
 
