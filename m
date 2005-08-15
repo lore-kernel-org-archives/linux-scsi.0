@@ -1,27 +1,31 @@
-From: Arjan van de Ven <arjan@infradead.org>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: [PATCH] minimal SAS transport class
-Date: Mon, 15 Aug 2005 16:35:21 +0200
-Message-ID: <1124116522.3228.42.camel@laptopd505.fenrus.org>
-References: <20050815135537.GB19426@lst.de>
+Date: Mon, 15 Aug 2005 11:04:52 -0400
+Message-ID: <4300AF14.3070508@adaptec.com>
+References: <20050815135537.GB19426@lst.de> <1124116522.3228.42.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:6827 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S964792AbVHOOfq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Aug 2005 10:35:46 -0400
-In-Reply-To: <20050815135537.GB19426@lst.de>
+Received: from magic.adaptec.com ([216.52.22.17]:14023 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S964792AbVHOPFC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Aug 2005 11:05:02 -0400
+In-Reply-To: <1124116522.3228.42.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, andrew.patterson@hp.com, Eric.Moore@lsil.com, ltuikov@yahoo.com, jejb@steeleye.com
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, andrew.patterson@hp.com, Eric.Moore@lsil.com, ltuikov@yahoo.com, jejb@steeleye.com
 
-On Mon, 2005-08-15 at 15:55 +0200, Christoph Hellwig wrote:
-> +EXPORT_SYMBOL(sas_add_target);
+On 08/15/05 10:35, Arjan van de Ven wrote:
+> On Mon, 2005-08-15 at 15:55 +0200, Christoph Hellwig wrote:
+> 
+>>+EXPORT_SYMBOL(sas_add_target);
+> 
+> 
+> should these exports be _GPL? After all they're very much linux specific
+> functionality...
 
-should these exports be _GPL? After all they're very much linux specific
-functionality...
+Someone needs this for a binary only driver? ;-)
 
-
-
+	Luben
