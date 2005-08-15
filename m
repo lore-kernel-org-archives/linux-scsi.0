@@ -1,144 +1,45 @@
-From: Dave C Boutcher <sleddog@us.ibm.com>
-Subject: [patch] ibmvscsi eh locking
-Date: Mon, 15 Aug 2005 16:52:58 -0500
-Message-ID: <20050815215258.GA26240@cs.umn.edu>
-Reply-To: boutcher@cs.umn.edu
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] add transport class symlink to device object
+Date: Mon, 15 Aug 2005 17:41:17 -0500
+Message-ID: <1124145677.5089.68.camel@mulgrave>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AD35@xbl3.ma.emulex.com>
+	 <20050813213955.GB19235@kroah.com>
+	 <20050814150231.GA9466@parcelfarce.linux.theplanet.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.cs.umn.edu ([128.101.36.202]:59123 "EHLO mail.cs.umn.edu")
-	by vger.kernel.org with ESMTP id S964997AbVHOVxB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Aug 2005 17:53:01 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by augustus.cs.umn.edu (Postfix) with ESMTP id 3408D5C59B
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Aug 2005 16:53:01 -0500 (CDT)
-Received: from mail.cs.umn.edu ([127.0.0.1])
- by localhost (mail.cs.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
- with LMTP id 24930-01 for <linux-scsi@vger.kernel.org>;
- Mon, 15 Aug 2005 16:52:59 -0500 (CDT)
-Received: from tera.cs.umn.edu (tera.cs.umn.edu [128.101.35.163])
-	by mail.cs.umn.edu (Postfix) with ESMTP id 0B4C25C59D
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Aug 2005 16:52:59 -0500 (CDT)
-Content-Disposition: inline
+Received: from stat16.steeleye.com ([209.192.50.48]:51664 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S965019AbVHOWli (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Aug 2005 18:41:38 -0400
+In-Reply-To: <20050814150231.GA9466@parcelfarce.linux.theplanet.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Greg KH <greg@kroah.com>, James.Smart@Emulex.Com, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Russell King <rmk@arm.linux.org.uk>
 
-Sorry, been asleep at the wheel for a while.  With the removal
-of the spinlocking around eh calls, we need to add a little
-more locking back in, otherwise we do some naked list
-manipulation.
+On Sun, 2005-08-14 at 16:02 +0100, Matthew Wilcox wrote:
+> /sys/class/tty/ttyS0/device -> ../../../devices/parisc/0/0:0/pci0000:00/0000:00:04.0
+> /sys/class/tty/ttyS1/device -> ../../../devices/parisc/0/0:0/pci0000:00/0000:00:04.0
+> /sys/class/tty/ttyS2/device -> ../../../devices/parisc/0/0:0/pci0000:00/0000:00:04.0
+> /sys/class/tty/ttyS3/device -> ../../../devices/parisc/0/0:0/pci0000:00/0000:00:05.0
+> /sys/class/tty/ttyS4/device -> ../../../devices/parisc/0/0:0/pci0000:00/0000:00:05.0
 
-Signed-off-by: Dave Boutcher <boutcher@us.ibm.com>
+Actually, isn't the fix to all of this to combine Greg and James'
+patches?
 
--- 
+The Greg one fails in SCSI because we don't have unique class device
+names (by convention we use the same name as the device bus_id) and
+James' one fails for ttys because the class name isn't unique.  However,
+if the link were derived from something like
 
---- linux-2.6.13-rc6/drivers/scsi/ibmvscsi/ibmvscsi.c	2005-08-10 10:51:00.000000000 -0500
-+++ linux-2.6.13-rc6-ibmvscsis/drivers/scsi/ibmvscsi/ibmvscsi.c	2005-08-15 16:44:12.068554673 -0500
-@@ -826,11 +826,13 @@
- 	struct srp_event_struct *tmp_evt, *found_evt;
- 	union viosrp_iu srp_rsp;
- 	int rsp_rc;
-+	unsigned long flags;
- 	u16 lun = lun_from_dev(cmd->device);
- 
- 	/* First, find this command in our sent list so we can figure
- 	 * out the correct tag
- 	 */
-+	spin_lock_irqsave(hostdata->host->host_lock, flags);
- 	found_evt = NULL;
- 	list_for_each_entry(tmp_evt, &hostdata->sent, list) {
- 		if (tmp_evt->cmnd == cmd) {
-@@ -839,11 +841,14 @@
- 		}
- 	}
- 
--	if (!found_evt) 
-+	if (!found_evt) {
-+		spin_unlock_irqrestore(hostdata->host->host_lock, flags);
- 		return FAILED;
-+	}
- 
- 	evt = get_event_struct(&hostdata->pool);
- 	if (evt == NULL) {
-+		spin_unlock_irqrestore(hostdata->host->host_lock, flags);
- 		printk(KERN_ERR "ibmvscsi: failed to allocate abort event\n");
- 		return FAILED;
- 	}
-@@ -867,7 +872,9 @@
- 
- 	evt->sync_srp = &srp_rsp;
- 	init_completion(&evt->comp);
--	if (ibmvscsi_send_srp_event(evt, hostdata) != 0) {
-+	rsp_rc = ibmvscsi_send_srp_event(evt, hostdata);
-+	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
-+	if (rsp_rc != 0) {
- 		printk(KERN_ERR "ibmvscsi: failed to send abort() event\n");
- 		return FAILED;
- 	}
-@@ -901,6 +908,7 @@
- 	 * The event is no longer in our list.  Make sure it didn't
- 	 * complete while we were aborting
- 	 */
-+	spin_lock_irqsave(hostdata->host->host_lock, flags);
- 	found_evt = NULL;
- 	list_for_each_entry(tmp_evt, &hostdata->sent, list) {
- 		if (tmp_evt->cmnd == cmd) {
-@@ -910,6 +918,7 @@
- 	}
- 
- 	if (found_evt == NULL) {
-+		spin_unlock_irqrestore(hostdata->host->host_lock, flags);
- 		printk(KERN_INFO
- 		       "ibmvscsi: aborted task tag 0x%lx completed\n",
- 		       tsk_mgmt->managed_task_tag);
-@@ -924,6 +933,7 @@
- 	list_del(&found_evt->list);
- 	unmap_cmd_data(&found_evt->iu.srp.cmd, found_evt->hostdata->dev);
- 	free_event_struct(&found_evt->hostdata->pool, found_evt);
-+	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
- 	atomic_inc(&hostdata->request_limit);
- 	return SUCCESS;
- }
-@@ -943,10 +953,13 @@
- 	struct srp_event_struct *tmp_evt, *pos;
- 	union viosrp_iu srp_rsp;
- 	int rsp_rc;
-+	unsigned long flags;
- 	u16 lun = lun_from_dev(cmd->device);
- 
-+	spin_lock_irqsave(hostdata->host->host_lock, flags);
- 	evt = get_event_struct(&hostdata->pool);
- 	if (evt == NULL) {
-+		spin_unlock_irqrestore(hostdata->host->host_lock, flags);
- 		printk(KERN_ERR "ibmvscsi: failed to allocate reset event\n");
- 		return FAILED;
- 	}
-@@ -969,7 +982,9 @@
- 
- 	evt->sync_srp = &srp_rsp;
- 	init_completion(&evt->comp);
--	if (ibmvscsi_send_srp_event(evt, hostdata) != 0) {
-+	rsp_rc = ibmvscsi_send_srp_event(evt, hostdata);
-+	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
-+	if (rsp_rc != 0) {
- 		printk(KERN_ERR "ibmvscsi: failed to send reset event\n");
- 		return FAILED;
- 	}
-@@ -1002,6 +1017,7 @@
- 	/* We need to find all commands for this LUN that have not yet been
- 	 * responded to, and fail them with DID_RESET
- 	 */
-+	spin_lock_irqsave(hostdata->host->host_lock, flags);
- 	list_for_each_entry_safe(tmp_evt, pos, &hostdata->sent, list) {
- 		if ((tmp_evt->cmnd) && (tmp_evt->cmnd->device == cmd->device)) {
- 			if (tmp_evt->cmnd)
-@@ -1017,6 +1033,7 @@
- 				tmp_evt->done(tmp_evt);
- 		}
- 	}
-+	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
- 	return SUCCESS;
- }
- 
+<class name>:<class device name>
+
+Then is would be unique in both cases.
+
+Unless anyone can think of any more failing cases?
+
+James
+
+
