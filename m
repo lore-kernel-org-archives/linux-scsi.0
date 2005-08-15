@@ -1,86 +1,101 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: Kernel driver for Adaptec S-ATA 1420SA
-Date: Mon, 15 Aug 2005 08:29:08 -0400
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F017089A4@otce2k03.adaptec.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: LLDD: scatterlists only?
+Date: Mon, 15 Aug 2005 22:51:30 +1000
+Message-ID: <43008FD2.5010907@torque.net>
+References: <20050814232446.58676.qmail@web51604.mail.yahoo.com> <1124063460.18802.27.camel@mulgrave> <43003471.5000108@torque.net> <43003D40.3010602@cs.wisc.edu>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:35994 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932297AbVHOMbz convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Aug 2005 08:31:55 -0400
-content-class: urn:content-classes:message
+Received: from zorg.st.net.au ([203.16.233.9]:61368 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1750741AbVHOMv0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Aug 2005 08:51:26 -0400
+In-Reply-To: <43003D40.3010602@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, sinister@sinister.cz
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Mauelshagen@redhat.com
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Partially true regarding RAID cards. We publish sources for all our pro=
-cessor based RAID cards (dpt_i2o, aacraid). For the HostRAID cards, the=
- RAID stack is in the driver, we publish the binaries for the one-piece=
- drivers. We released a GPL driver for the HostRAID card as a raw drive=
-r + Enhanced md replacement.
+Mike Christie wrote:
+> Douglas Gilbert wrote:
+> 
+>> James Bottomley wrote:
+>>
+>>> On Sun, 2005-08-14 at 16:24 -0700, Luben Tuikov wrote:
+>>>
+>>>
+>>>> Did someone have a patch or was there a talk
+>>>> that SCSI Core is moving towards sending _only_ scatterlists
+>>>> down to LLDDs?  (effectively BUG_ON(!cmd->use_sg))
+>>>
+>>>
+>>>
+>>> Yes, you can already see the beginnings in the -mm tree.
+>>>
+>>> Jens is maintaining a block tree with this in here:
+>>>
+>>> http://www.kernel.org/git/?p=linux/kernel/git/axboe/linux-2.6-block.git;a=shortlog;h=rq-map
+>>>
+>>>
+>>> And I have a scsi-block-2.6 tree based off this here:
+>>>
+>>> http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-block-2.6.git;a=summary
+>>>
+>>>
+>>> The missing (and frankly really nasty) pieces are pulling all the sg
+>>> handling out of sg and st, but fortunately Mike Christie is working on
+>>> that.
+>>
+>>
+>>
+>> James,
+>>
+>> I haven't looked at what would be involved with the sg
+>> driver but it is good to hear Mike C. is working on it.
+>>
+> 
+> I sent a patch to begin this the other day
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=112356952007369&w=2
+> 
+> The patch is not complete. I have to add a bunch of stuff I ripped out
+> like the security checks and mmap code. I also have to move some code to
+> a scsi command like James did for the sync code. I am looking over st to
+> try and figure out what to share right now.
+> 
+> One question though. For SG_DXFER_TO_FROM_DEV it looks like for the
+> block layer SG_IO code only the write part of the command could get run.
+> This is becuase in sg_io() the reading variable is never used so a
+> copy_to_user (that is if we end up not being able to do direct IO) may
+> never happen. What commands use SG_DXFER_TO_FROM_DEV, and do we need the
+> read part (or did I misread the block layer code or have we just been
+> getting lucky and been doing zero copy).
 
-As for the chips, depending on which card model, the silicon used for t=
-he interface chips could be Adaptec, or it could be from another OEM. T=
-here is not much to a SATA chip, remember PATA is but a 74374 latch and=
- the SATA chips simply serialize the same interface. In the case of the=
- 1420SA, the SATA core is on Adaptec Silicon (AIC8130), but your guess =
-is as good as mine with regards to where that SATA core originated from=
-=2E
+Mike,
+As I noted in an earlier post, in the absence of a reserve
+buffer, SG_DXFER_TO_FROM_DEV should simply translate to
+SG_DXFER_FROM_DEV (i.e. a read from device).
 
-As for the ata driver, 1420SA has its PCI RAID class bit turned on, ide=
-ally you would want to turn that bit off before attaching the raw (none=
--RAID) driver to it. I have yet to get a response back from the H/W or =
-BIOS folks about how this can be done; I could not find a 'RAID' tunabl=
-e in the add-on BIOS. I expect that the intent was not to compete in th=
-e raw SATA environment...
+> Also for the new interface the write and read will be the same size
+> becuase we use dxfer_len, but for the old interface is the same true?
 
-And, when the card has the PCI RAID class bit turned on, this should tr=
-igger support for handling the RAID metadata on the drives. The META da=
-ta, and support for HostRAID cards, was published in Justin Gibbs emd r=
-elease last year. Sadly, in the time it took his team to produce that e=
-nhancement to the md product, Linux releases had switched from md to dm=
- and that effort was lost and a new effort has not been started since J=
-ustin left Adaptec immediately after the rejection on the RAID list.
+Yes it was always assumed the contents of the sg_io_hdr structure
+given to write() and the corresponding read() would be the same
+apart from the sg_io_hdr::pack_id field when the
+SG_SET_FORCE_PACK_ID was given to sg_io_hdr::flags. See
+Documentation/scsi/scsi-generic.txt for details of that
+special case.
 
-The publication of the meta data support has yet to be absorbed by the =
-dm or dmraid tools.
+For DIO/mmap-ed IO, the sg_io_hdr::dxfer_len value given to
+the read() cannot be operative (e.g. the IO may have already
+occurred by the time the read() is called).
 
-Sincerely -- Mark Salyzyn
------Original Message-----
-=46rom: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.=
-kernel.org] On Behalf Of James Bottomley
-Sent: Friday, August 12, 2005 6:02 PM
-To: sinister@sinister.cz
-Cc: SCSI Mailing List
-Subject: Re: Kernel driver for Adaptec S-ATA 1420SA
+> From looking at the sg driver it looks like there could be different
+> values for the read and write part, but is that ever used or is it just
+> extra tests. And again what commands do this, so I can test them?
 
-On Fri, 2005-08-12 at 19:36 +0200, sinister@sinister.cz wrote:
-> I bought the Adaptec S-ATA II-1420SA controller but I have a problem=20
-> with this type.
-> I use the Linux Slackware 10.1 with the Linux Kernel 2.6.12-4 but I=20
-> didn=B4t find any driver for this S-ATA controller.
-> I don't need RAID but I need a 4x S-ATA port.
+If there are tests then it is just sanity/paranoia.
 
-Adaptec only publishes binary drivers for it's SATA RAID cards.
+Doug Gilbert
 
-The rumour is that Adaptec doesn't make the SATA chips in these, but
-OEM's them and then adds Adaptec softraid on top, so theoretically one
-of the in-kernel SATA drivers might be able to attach to the OEM chip.
-Your best bet would be to ask Adaptec support about it.
-
-James
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
