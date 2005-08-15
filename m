@@ -1,73 +1,44 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 2.6.13-rc6] remove dead reset function from cpqfcTS driver
-Date: Tue, 16 Aug 2005 11:37:30 +0200
-Message-ID: <200508161137.37749@bilbo.math.uni-mannheim.de>
-References: <200508051202.07091@bilbo.math.uni-mannheim.de> <200508161111.08070@bilbo.math.uni-mannheim.de> <20050816091758.GA21378@infradead.org>
+From: "conway, heather" <conway_heather@emc.com>
+Subject: RE: Request to add EMC Invista to the v2.6.x SCSI Blacklist...
+Date: Mon, 15 Aug 2005 16:33:52 -0400
+Message-ID: <FA2F59D0E55B4B4892EA076FF8704F5509DDC9D0@SRGRAHAM.eng.emc.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart7174845.1TegSEWkKF";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:28362 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S965166AbVHPJf5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Aug 2005 05:35:57 -0400
-In-Reply-To: <20050816091758.GA21378@infradead.org>
+Received: from mailhub.lss.emc.com ([168.159.2.31]:2793 "EHLO
+	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S932677AbVHPMVm
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Aug 2005 08:21:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Bolke de Bruin <bdbruin@aub.nl>
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>, "conway, heather" <conway_heather@emc.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
---nextPart7174845.1TegSEWkKF
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Hi James,
+I will request additional information from the engineer and will get back to
+you as soon as I can.
+Thanks.
+Heather
 
-Christoph Hellwig wrote:
->On Tue, Aug 16, 2005 at 11:11:06AM +0200, Rolf Eike Beer wrote:
->> cpqfcTS_reset() is never referenced from anywhere. By using the
->> nonexistent constant SCSI_RESET_ERROR it causes just another unneeded
->> compile error.
->
->That was the old reset handler.  Do you actually have this hardware?
->The driver is pretty much un-recoverable and mkp is working on a from
->scratch driver for this hardware - I don't think putting any work into the
->driver makes sense unless you have a very urgent need to use it.
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
+Sent: Thursday, August 11, 2005 12:39 PM
+To: conway, heather
+Cc: 'linux-scsi@vger.kernel.org'
+Subject: RE: Request to add EMC Invista to the v2.6.x SCSI Blacklist...
 
-No, I don't have (but maybe I'll get access to it soon). There was a reques=
-t=20
-on lkml last week for a working version of this driver. For the moment I tr=
-y=20
-to clean this up a bit before doing some real work. I found 4 major things=
-=20
-that should be done, for half of them I have patches in a proof-of-concept=
-=20
-state.
+On Thu, 2005-08-11 at 11:45 -0400, conway, heather wrote:
+> The information that I was provided is that the default for the Invista is
+> to report back as SCSI-3 compliant.
+> Hope this helps. 
 
-=2Dsplit the interrupt handler into a handler and a tasklet
-=2Dremove the stack abuse
-=2Duse Linux 2.6 hardware probing code (this would cause the most problems =
-for=20
-me, I'm not familiar with the preferred way of doing this for scsi drivers)
-=2Dfix kernel thread stopping
+Well, actually, now I'm confused.  REPORT_LUNS is mandatory for a SCSI3
+compliant device, and if the device reports SCSI-3 compliance we
+automatically try a REPORT LUNS scan, which should mean that
+BLIST_LARGE_LUN and BLIST_SPARSE_LUN are unnecessary, since we add all
+LUNs returned by the scan (up to the limit of the HBA).
 
-After this some more error checking at different places can't hurt. And a b=
-ig=20
-Lindent run.
+Could we try debugging this device to find out what its problem is?
 
-Eike
+James
 
---nextPart7174845.1TegSEWkKF
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.0 (GNU/Linux)
-
-iD8DBQBDAbPhXKSJPmm5/E4RAgiaAJ9ADgZhpUJQw2qHuye6UegAdYR90ACfc7oT
-5ozHVJeWjHRWci+5bh7ogFE=
-=X7oV
------END PGP SIGNATURE-----
-
---nextPart7174845.1TegSEWkKF--
