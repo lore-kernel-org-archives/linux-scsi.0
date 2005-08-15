@@ -1,101 +1,134 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: LLDD: scatterlists only?
-Date: Mon, 15 Aug 2005 22:51:30 +1000
-Message-ID: <43008FD2.5010907@torque.net>
-References: <20050814232446.58676.qmail@web51604.mail.yahoo.com> <1124063460.18802.27.camel@mulgrave> <43003471.5000108@torque.net> <43003D40.3010602@cs.wisc.edu>
-Reply-To: dougg@torque.net
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] allow a transport to pre-initialize starget_data
+Date: Mon, 15 Aug 2005 15:42:10 +0200
+Message-ID: <20050815134210.GA19426@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:61368 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1750741AbVHOMv0 (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:63952 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S932534AbVHONmN (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Aug 2005 08:51:26 -0400
-In-Reply-To: <43003D40.3010602@cs.wisc.edu>
+	Mon, 15 Aug 2005 09:42:13 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-Mike Christie wrote:
-> Douglas Gilbert wrote:
-> 
->> James Bottomley wrote:
->>
->>> On Sun, 2005-08-14 at 16:24 -0700, Luben Tuikov wrote:
->>>
->>>
->>>> Did someone have a patch or was there a talk
->>>> that SCSI Core is moving towards sending _only_ scatterlists
->>>> down to LLDDs?  (effectively BUG_ON(!cmd->use_sg))
->>>
->>>
->>>
->>> Yes, you can already see the beginnings in the -mm tree.
->>>
->>> Jens is maintaining a block tree with this in here:
->>>
->>> http://www.kernel.org/git/?p=linux/kernel/git/axboe/linux-2.6-block.git;a=shortlog;h=rq-map
->>>
->>>
->>> And I have a scsi-block-2.6 tree based off this here:
->>>
->>> http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-block-2.6.git;a=summary
->>>
->>>
->>> The missing (and frankly really nasty) pieces are pulling all the sg
->>> handling out of sg and st, but fortunately Mike Christie is working on
->>> that.
->>
->>
->>
->> James,
->>
->> I haven't looked at what would be involved with the sg
->> driver but it is good to hear Mike C. is working on it.
->>
-> 
-> I sent a patch to begin this the other day
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=112356952007369&w=2
-> 
-> The patch is not complete. I have to add a bunch of stuff I ripped out
-> like the security checks and mmap code. I also have to move some code to
-> a scsi command like James did for the sync code. I am looking over st to
-> try and figure out what to share right now.
-> 
-> One question though. For SG_DXFER_TO_FROM_DEV it looks like for the
-> block layer SG_IO code only the write part of the command could get run.
-> This is becuase in sg_io() the reading variable is never used so a
-> copy_to_user (that is if we end up not being able to do direct IO) may
-> never happen. What commands use SG_DXFER_TO_FROM_DEV, and do we need the
-> read part (or did I misread the block layer code or have we just been
-> getting lucky and been doing zero copy).
+Add a new void *transport_data argument to scsi_scan_target so that a
+transport-class can fill in known information before actually scanning
+the target.  This is needed by the upcoming SAS transport class patch.
 
-Mike,
-As I noted in an earlier post, in the absence of a reserve
-buffer, SG_DXFER_TO_FROM_DEV should simply translate to
-SG_DXFER_FROM_DEV (i.e. a read from device).
 
-> Also for the new interface the write and read will be the same size
-> becuase we use dxfer_len, but for the old interface is the same true?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Yes it was always assumed the contents of the sg_io_hdr structure
-given to write() and the corresponding read() would be the same
-apart from the sg_io_hdr::pack_id field when the
-SG_SET_FORCE_PACK_ID was given to sg_io_hdr::flags. See
-Documentation/scsi/scsi-generic.txt for details of that
-special case.
-
-For DIO/mmap-ed IO, the sg_io_hdr::dxfer_len value given to
-the read() cannot be operative (e.g. the IO may have already
-occurred by the time the read() is called).
-
-> From looking at the sg driver it looks like there could be different
-> values for the read and write part, but is that ever used or is it just
-> extra tests. And again what commands do this, so I can test them?
-
-If there are tests then it is just sanity/paranoia.
-
-Doug Gilbert
-
+Index: scsi-misc-2.6/drivers/scsi/scsi_scan.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/scsi_scan.c	2005-08-13 13:53:54.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/scsi_scan.c	2005-08-15 15:32:57.000000000 +0200
+@@ -329,7 +329,8 @@
+ }
+ 
+ static struct scsi_target *scsi_alloc_target(struct device *parent,
+-					     int channel, uint id)
++					     int channel, uint id,
++					     void *transport_data)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(parent);
+ 	struct device *dev = NULL;
+@@ -344,6 +345,12 @@
+ 		return NULL;
+ 	}
+ 	memset(starget, 0, size);
++
++	if (transport_data) {
++		memcpy((char *)starget->starget_data, transport_data,
++				shost->transportt->target_size);
++	}
++
+ 	dev = &starget->dev;
+ 	device_initialize(dev);
+ 	starget->reap_ref = 1;
+@@ -1244,8 +1251,9 @@
+ 	struct scsi_device *sdev;
+ 	struct device *parent = &shost->shost_gendev;
+ 	int res;
+-	struct scsi_target *starget = scsi_alloc_target(parent, channel, id);
++	struct scsi_target *starget;
+ 
++	starget = scsi_alloc_target(parent, channel, id, NULL);
+ 	if (!starget)
+ 		return ERR_PTR(-ENOMEM);
+ 
+@@ -1301,7 +1309,8 @@
+  *     sequential scan of LUNs on the target id.
+  **/
+ void scsi_scan_target(struct device *parent, unsigned int channel,
+-		      unsigned int id, unsigned int lun, int rescan)
++		      unsigned int id, unsigned int lun, int rescan,
++		      void *transport_data)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(parent);
+ 	int bflags = 0;
+@@ -1316,8 +1325,7 @@
+ 		return;
+ 
+ 
+-	starget = scsi_alloc_target(parent, channel, id);
+-
++	starget = scsi_alloc_target(parent, channel, id, transport_data);
+ 	if (!starget)
+ 		return;
+ 
+@@ -1388,10 +1396,12 @@
+ 				order_id = shost->max_id - id - 1;
+ 			else
+ 				order_id = id;
+-			scsi_scan_target(&shost->shost_gendev, channel, order_id, lun, rescan);
++			scsi_scan_target(&shost->shost_gendev, channel,
++					 order_id, lun, rescan, NULL);
+ 		}
+ 	else
+-		scsi_scan_target(&shost->shost_gendev, channel, id, lun, rescan);
++		scsi_scan_target(&shost->shost_gendev, channel,
++				 id, lun, rescan, NULL);
+ }
+ 
+ int scsi_scan_host_selected(struct Scsi_Host *shost, unsigned int channel,
+@@ -1492,7 +1502,8 @@
+ 	struct scsi_device *sdev;
+ 	struct scsi_target *starget;
+ 
+-	starget = scsi_alloc_target(&shost->shost_gendev, 0, shost->this_id);
++	starget = scsi_alloc_target(&shost->shost_gendev, 0,
++				    shost->this_id, NULL);
+ 	if (!starget)
+ 		return NULL;
+ 
+Index: scsi-misc-2.6/drivers/scsi/scsi_transport_fc.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/scsi_transport_fc.c	2005-08-13 13:53:54.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/scsi_transport_fc.c	2005-08-15 15:32:42.000000000 +0200
+@@ -1653,7 +1653,7 @@
+ 	struct fc_rport *rport = (struct fc_rport *)data;
+ 
+ 	scsi_scan_target(&rport->dev, rport->channel, rport->scsi_target_id,
+-			SCAN_WILD_CARD, 1);
++			SCAN_WILD_CARD, 1, NULL);
+ }
+ 
+ 
+Index: scsi-misc-2.6/include/scsi/scsi_device.h
+===================================================================
+--- scsi-misc-2.6.orig/include/scsi/scsi_device.h	2005-08-13 13:54:07.000000000 +0200
++++ scsi-misc-2.6/include/scsi/scsi_device.h	2005-08-15 15:32:42.000000000 +0200
+@@ -238,7 +238,8 @@
+ extern void scsi_target_quiesce(struct scsi_target *);
+ extern void scsi_target_resume(struct scsi_target *);
+ extern void scsi_scan_target(struct device *parent, unsigned int channel,
+-			     unsigned int id, unsigned int lun, int rescan);
++			     unsigned int id, unsigned int lun, int rescan,
++			     void *transport_data);
+ extern void scsi_target_reap(struct scsi_target *);
+ extern void scsi_target_block(struct device *);
+ extern void scsi_target_unblock(struct device *);
