@@ -1,66 +1,56 @@
-From: Nishanth Aravamudan <nacc@us.ibm.com>
-Subject: Re: [-mm PATCH 29/32] drivers/scsi: fix-up schedule_timeout() usage
-Date: Mon, 15 Aug 2005 13:42:13 -0700
-Message-ID: <20050815204213.GA4746@us.ibm.com>
-References: <20050815180514.GC2854@us.ibm.com> <1124138067l.3920l.7l@serve.riede.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] fix transport class corner case after rework
+Date: Mon, 15 Aug 2005 16:13:19 -0500
+Message-ID: <1124140399.5089.52.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:29643 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S964934AbVHOUmV
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Aug 2005 16:42:21 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e31.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j7FKgGdi208244
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Aug 2005 16:42:16 -0400
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j7FKgH3q123120
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Aug 2005 14:42:17 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j7FKgEwa031995
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Aug 2005 14:42:15 -0600
-Content-Disposition: inline
-In-Reply-To: <1124138067l.3920l.7l@serve.riede.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:63695 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964952AbVHOVNZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Aug 2005 17:13:25 -0400
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id j7FLDKA08661
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Aug 2005 17:13:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Willem Riede <osst@riede.org>
-Cc: James.Bottomley@SteelEye.com, matthew@wil.cx, markus.lidel@shadowconnect.com, andrew.vasquez@qlogic.com, akpm@osdl.org, linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 15.08.2005 [20:34:27 +0000], Willem Riede wrote:
-> On 08/15/2005 02:27:51 PM, Nishanth Aravamudan wrote:
-> > Description: Use schedule_timeout_uninterruptible() instead of
-> > set_current_state()/schedule_timeout() to reduce kernel size.
-> > 
-> > Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
-> > 
-> > ---
-> > 
-> >  drivers/scsi/osst.c           |    9 +++------
-> >
-> > diff -urpN 2.6.13-rc5-mm1/drivers/scsi/osst.c
-> > 2.6.13-rc5-mm1-dev/drivers/scsi/osst.c
-> > --- 2.6.13-rc5-mm1/drivers/scsi/osst.c	2005-08-07 10:05:21.000000000
-> > -0700
-> > +++ 2.6.13-rc5-mm1-dev/drivers/scsi/osst.c	2005-08-12
-> > 13:42:13.000000000 -0700
-> > @@ -862,8 +862,7 @@ static int osst_recover_wait_frame(struc
-> >  				retval = osst_write_error_recovery(STp,
-> > aSRpnt, 0);
-> >  				break;
-> >  			}
-> > -			set_current_state(TASK_INTERRUPTIBLE);
-> > -			schedule_timeout (HZ / OSST_POLL_PER_SEC);
-> > +			schedule_timeout_interruptible(HZ /
-> OSST_POLL_PER_SEC);
-> 
-> Others have suggested using msleep in osst instead of schedule, which I think
-> is 
-> more appropriate.
+If your transport class sets the ATTRIBUTE_CONTAINER_NO_CLASSDEVS flag,
+then its configure method never gets called.  This patch fixes that so
+that the configure method is called with a NULL classdev.
 
-That's my fault, you are right, a patch for msleep() usage in OSST
-already exists in the latest -KJ patchset and covers all these changes.
-I tried to avoid collisions between existing changes in -KJ and these
-new ones in -MM, but must have missed this one.
+Also remove a spurious inverted comma in the transport_class comments.
 
-Thanks,
-Nish
+James
+
+diff --git a/drivers/base/attribute_container.c b/drivers/base/attribute_container.c
+--- a/drivers/base/attribute_container.c
++++ b/drivers/base/attribute_container.c
+@@ -237,6 +237,11 @@ attribute_container_device_trigger(struc
+ 		if (!cont->match(cont, dev))
+ 			continue;
+ 
++		if (attribute_container_no_classdevs(cont)) {
++			fn(cont, dev, NULL);
++			continue;
++		}
++
+ 		spin_lock(&cont->containers_lock);
+ 		list_for_each_entry_safe(ic, tmp, &cont->containers, node) {
+ 			if (dev == ic->classdev.dev)
+diff --git a/drivers/base/transport_class.c b/drivers/base/transport_class.c
+--- a/drivers/base/transport_class.c
++++ b/drivers/base/transport_class.c
+@@ -7,7 +7,7 @@
+  * This file is licensed under GPLv2
+  *
+  * The basic idea here is to allow any "device controller" (which
+- * would most often be a Host Bus Adapter" to use the services of one
++ * would most often be a Host Bus Adapter to use the services of one
+  * or more tranport classes for performing transport specific
+  * services.  Transport specific services are things that the generic
+  * command layer doesn't want to know about (speed settings, line
+
+
