@@ -1,31 +1,51 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [GIT PATCH] scsi bug fixes for 2.6.13
-Date: Mon, 15 Aug 2005 08:12:32 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0508150811580.5302@poirot.grange>
-References: <1123184634.5026.58.camel@mulgrave>  <Pine.LNX.4.60.0508142121000.4594@poirot.grange>
- <1124048890.18802.13.camel@mulgrave>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: LLDD: scatterlists only?
+Date: Mon, 15 Aug 2005 16:21:37 +1000
+Message-ID: <43003471.5000108@torque.net>
+References: <20050814232446.58676.qmail@web51604.mail.yahoo.com> <1124063460.18802.27.camel@mulgrave>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.de ([213.165.64.20]:52701 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S932082AbVHOGNh (ORCPT
+Received: from zorg.st.net.au ([203.16.233.9]:23429 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S932096AbVHOGVl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Aug 2005 02:13:37 -0400
-In-Reply-To: <1124048890.18802.13.camel@mulgrave>
+	Mon, 15 Aug 2005 02:21:41 -0400
+In-Reply-To: <1124063460.18802.27.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: michaelc@cs.wisc.edu, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sun, 14 Aug 2005, James Bottomley wrote:
+James Bottomley wrote:
+> On Sun, 2005-08-14 at 16:24 -0700, Luben Tuikov wrote:
+> 
+>>Did someone have a patch or was there a talk
+>>that SCSI Core is moving towards sending _only_ scatterlists
+>>down to LLDDs?  (effectively BUG_ON(!cmd->use_sg))
+> 
+> 
+> Yes, you can already see the beginnings in the -mm tree.
+> 
+> Jens is maintaining a block tree with this in here:
+> 
+> http://www.kernel.org/git/?p=linux/kernel/git/axboe/linux-2.6-block.git;a=shortlog;h=rq-map
+> 
+> And I have a scsi-block-2.6 tree based off this here:
+> 
+> http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-block-2.6.git;a=summary
+> 
+> The missing (and frankly really nasty) pieces are pulling all the sg
+> handling out of sg and st, but fortunately Mike Christie is working on
+> that.
 
-> OK, why don't we do this.  Instead of having me trawl through the trees
-> looking for the correct patch to reverse, why don't you attach it in an
-> email and I'll try to get it in to 2.6.13?
+James,
 
-Looks like just reverting that patch is not enough. More in about 12 
-hours.
+I haven't looked at what would be involved with the sg
+driver but it is good to hear Mike C. is working on it.
 
-Guennadi
----
-Guennadi Liakhovetski
+Hopefully scsi_cmnd::buffer and bufflen get _less_ generic
+names in the process.
+
+Doug Gilbert
