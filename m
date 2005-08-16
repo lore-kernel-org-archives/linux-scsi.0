@@ -1,121 +1,115 @@
 From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 2.6.13-rc6] MODULE_DEVICE_TABLE for cpqfcTS driver
-Date: Tue, 16 Aug 2005 15:57:35 +0200
-Message-ID: <200508161557.44013@bilbo.math.uni-mannheim.de>
-References: <200508051202.07091@bilbo.math.uni-mannheim.de> <200508161111.35431@bilbo.math.uni-mannheim.de> <4301E1AE.6010501@gmail.com>
+Subject: [PATCH 2.6.13-rc6] remove 2.4 compat code from cpqfcTS driver, take 2
+Date: Tue, 16 Aug 2005 16:28:07 +0200
+Message-ID: <200508161628.09474@bilbo.math.uni-mannheim.de>
+References: <200508051202.07091@bilbo.math.uni-mannheim.de> <200508161111.35431@bilbo.math.uni-mannheim.de> <200508161112.47120@bilbo.math.uni-mannheim.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1243065.6xEbQJN4la";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:18579 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S965238AbVHPN4H (ORCPT
+Received: from mail.sf-mail.de ([62.27.20.61]:665 "EHLO mail.sf-mail.de")
+	by vger.kernel.org with ESMTP id S965250AbVHPO00 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Aug 2005 09:56:07 -0400
-In-Reply-To: <4301E1AE.6010501@gmail.com>
+	Tue, 16 Aug 2005 10:26:26 -0400
+In-Reply-To: <200508161112.47120@bilbo.math.uni-mannheim.de>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Jiri Slaby <jirislaby@gmail.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Bolke de Bruin <bdbruin@aub.nl>, Greg KH <greg@kroah.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Bolke de Bruin <bdbruin@aub.nl>
 
---nextPart1243065.6xEbQJN4la
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Remove compat code for Linux 2.4 and earlier. Fixed bug in earlier version
+that caused compile error.
 
-Jiri Slaby wrote:
->Rolf Eike Beer napsal(a):
->>Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
->>
->>--- a/drivers/scsi/cpqfcTSinit.c	2005-08-14 14:20:40.000000000 +0200
->>+++ b/drivers/scsi/cpqfcTSinit.c	2005-08-14 14:25:33.000000000 +0200
->>@@ -264,18 +264,14 @@ static void launch_FCworker_thread(struc
->>  * Agilent XL2
->>  * HP Tachyon
->>  */
->>-#define HBA_TYPES 3
->>-
->>-#ifndef PCI_DEVICE_ID_COMPAQ_
->>-#define PCI_DEVICE_ID_COMPAQ_TACHYON	0xa0fc
->>-#endif
->>-
->>-static struct SupportedPCIcards cpqfc_boards[] __initdata =3D {
->>-	{PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_TACHYON},
->>-	{PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHLITE},
->>-	{PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHYON},
->>+static struct pci_device_id cpqfc_boards[] __initdata =3D {
->>+	{PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_TACHYON, PCI_ANY_ID,
->> PCI_ANY_ID, 0, 0, 0}, +	{PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHLITE,
->> PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0}, +	{PCI_VENDOR_ID_HP,
->> PCI_DEVICE_ID_HP_TACHYON, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0}, +	{0, }
->> };
->
->Wouldn't be better to use PCI_DEVICE macro for better readability?
+Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
 
-Yes, useful little thing. Thanks, I wasn't aware of it.
-
->>+MODULE_DEVICE_TABLE(pci, cpqfc_boards);
->>
->> int cpqfcTS_detect(Scsi_Host_Template *ScsiHostTemplate)
->> {
->>@@ -294,14 +290,9 @@ int cpqfcTS_detect(Scsi_Host_Template *S
->>   ScsiHostTemplate->proc_name =3D "cpqfcTS";
->> #endif
->>
->>-  for( i=3D0; i < HBA_TYPES; i++)
->>-  {
->>-    // look for all HBAs of each type
->>-
->>-    while((PciDev =3D pci_find_device(cpqfc_boards[i].vendor_id,
->>-				    cpqfc_boards[i].device_id, PciDev)))
->>-    {
->>-
->>+  for(i =3D 0; cpqfc_boards[i]; i++) {
->>+    while((PciDev =3D pci_get_device(cpqfc_boards[i].vendor,
->>+				    cpqfc_boards[i].device, PciDev))) {
->>       if (pci_enable_device(PciDev)) {
->> 	printk(KERN_ERR
->> 		"cpqfc: can't enable PCI device at %s\n", pci_name(PciDev));
->
->You maybe forgot to add pci_dev_put in error cases.=20
-
-No, all errors will result in next iteration of this loop. Anyway this=20
-function should be rewritten. Once I figure out how to do the correct=20
-register stuff for SCSI drivers I'll port this over to Linux 2.6 driver=20
-model. Then this loop will go away.
-
->You can inspire yourself here:
->http://www.fi.muni.cz/~xslaby/lnx/pci_find/drivers:scsi:cpqfcTSinit.c.txt
->(it wasn't accepted yet).
-
-*g* I've done such patches more than once ;)
-
->BTW. Greg KH wants me to cc him, if some of these changes are being done.
-
-I read that, yes. But I had reasons not to CC him. This change is more or l=
-ess=20
-to prevent others touching this file ;)
-
-Eike
-
-P.S.: your host is listed in cbl.abuseat.org. You should go and check this.=
-=20
-Either you have a dynamic IP used by someone dumb before (than you have to=
-=20
-ask them for delisting) or you probably have some sort of security hole.
-
---nextPart1243065.6xEbQJN4la
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.0 (GNU/Linux)
-
-iD8DBQBDAfDXXKSJPmm5/E4RAjIzAJ9HqtTUKJtmaXLZ1uhd67qC8t3hrQCeN3yg
-MkM682KWkfB5GeFMGwmnjz4=
-=ZYE6
------END PGP SIGNATURE-----
-
---nextPart1243065.6xEbQJN4la--
+--- a/drivers/scsi/cpqfcTScontrol.c	2005-08-13 19:00:35.000000000 +0200
++++ b/drivers/scsi/cpqfcTScontrol.c	2005-08-14 11:02:09.000000000 +0200
+@@ -28,8 +28,6 @@
+    Hewlitt Packard Manual Part Number 5968-1083E.
+ */
+ 
+-#define LinuxVersionCode(v, p, s) (((v)<<16)+((p)<<8)+(s))
+-
+ #include <linux/blkdev.h>
+ #include <linux/kernel.h>
+ #include <linux/string.h>
+--- a/drivers/scsi/cpqfcTSstructs.h	2005-08-14 11:11:52.000000000 +0200
++++ b/drivers/scsi/cpqfcTSstructs.h	2005-08-14 11:12:54.000000000 +0200
+@@ -88,7 +88,6 @@
+ #define CPQFCTS_CMD_PER_LUN 15 // power of 2 -1, must be >0 
+ #define CPQFCTS_REQ_QUEUE_LEN (TACH_SEST_LEN/2) // must be < TACH_SEST_LEN
+ 
+-#define LinuxVersionCode(v, p, s) (((v)<<16)+((p)<<8)+(s))
+ #ifndef DECLARE_MUTEX_LOCKED
+ #define DECLARE_MUTEX_LOCKED(sem) struct semaphore sem = MUTEX_LOCKED
+ #endif
+--- a/drivers/scsi/cpqfcTSinit.c	2005-08-14 14:56:41.000000000 +0200
++++ b/drivers/scsi/cpqfcTSinit.c	2005-08-14 14:57:27.000000000 +0200
+@@ -29,8 +29,6 @@
+ */
+ 
+ 
+-#define LinuxVersionCode(v, p, s) (((v)<<16)+((p)<<8)+(s))
+-
+ #include <linux/config.h>  
+ #include <linux/interrupt.h>  
+ #include <linux/module.h>
+@@ -72,31 +70,10 @@ int cpqfcTS_TargetDeviceReset( Scsi_Devi
+ // few fields...
+ // NOTE: proc_fs changes in 2.4 kernel
+ 
+-#if LINUX_VERSION_CODE < LinuxVersionCode(2,3,27)
+-static struct proc_dir_entry proc_scsi_cpqfcTS =
+-{
+-  PROC_SCSI_CPQFCTS,           // ushort low_ino (enumerated list)
+-  7,                           // ushort namelen
+-  DEV_NAME,                    // const char* name
+-  S_IFDIR | S_IRUGO | S_IXUGO, // mode_t mode
+-  2                            // nlink_t nlink
+-	                       // etc. ...
+-};
+-
+-
+-#endif
+-
+-#if LINUX_VERSION_CODE >= LinuxVersionCode(2,4,7)
+-#  define CPQFC_DECLARE_COMPLETION(x) DECLARE_COMPLETION(x)
+-#  define CPQFC_WAITING waiting
+-#  define CPQFC_COMPLETE(x) complete(x)
+-#  define CPQFC_WAIT_FOR_COMPLETION(x) wait_for_completion(x);
+-#else
+-#  define CPQFC_DECLARE_COMPLETION(x) DECLARE_MUTEX_LOCKED(x)
+-#  define CPQFC_WAITING sem
+-#  define CPQFC_COMPLETE(x) up(x)
+-#  define CPQFC_WAIT_FOR_COMPLETION(x) down(x)
+-#endif
++#define CPQFC_DECLARE_COMPLETION(x) DECLARE_COMPLETION(x)
++#define CPQFC_WAITING waiting
++#define CPQFC_COMPLETE(x) complete(x)
++#define CPQFC_WAIT_FOR_COMPLETION(x) wait_for_completion(x);
+ 
+ static int cpqfc_alloc_private_data_pool(CPQFCHBA *hba);
+ 
+@@ -284,12 +261,6 @@ int cpqfcTS_detect(Scsi_Host_Template *S
+ 
+   ENTER("cpqfcTS_detect");
+ 
+-#if LINUX_VERSION_CODE < LinuxVersionCode(2,3,27)
+-  ScsiHostTemplate->proc_dir = &proc_scsi_cpqfcTS;
+-#else
+-  ScsiHostTemplate->proc_name = "cpqfcTS";
+-#endif
+-
+   for(i = 0; cpqfc_boards[i]; i++) {
+     while((PciDev = pci_get_device(cpqfc_boards[i].vendor,
+ 				    cpqfc_boards[i].device, PciDev))) {
+@@ -2059,6 +2030,7 @@ void* fcMemManager( struct pci_dev *pdev
+ 
+ 
+ static Scsi_Host_Template driver_template = {
++	.proc_name              = DEV_NAME,
+ 	.detect                 = cpqfcTS_detect,
+ 	.release                = cpqfcTS_release,
+ 	.info                   = cpqfcTS_info,
