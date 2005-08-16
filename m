@@ -1,45 +1,121 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH] add transport class symlink to device object
-Date: Tue, 16 Aug 2005 09:41:26 -0400
-Message-ID: <4301ED06.1020209@adaptec.com>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AD39@xbl3.ma.emulex.com> <1124154494.5089.86.camel@mulgrave>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 2.6.13-rc6] MODULE_DEVICE_TABLE for cpqfcTS driver
+Date: Tue, 16 Aug 2005 15:57:35 +0200
+Message-ID: <200508161557.44013@bilbo.math.uni-mannheim.de>
+References: <200508051202.07091@bilbo.math.uni-mannheim.de> <200508161111.35431@bilbo.math.uni-mannheim.de> <4301E1AE.6010501@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed;
+  boundary="nextPart1243065.6xEbQJN4la";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:1486 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S965217AbVHPNlb (ORCPT
+Received: from mail.sf-mail.de ([62.27.20.61]:18579 "EHLO mail.sf-mail.de")
+	by vger.kernel.org with ESMTP id S965238AbVHPN4H (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Aug 2005 09:41:31 -0400
-In-Reply-To: <1124154494.5089.86.camel@mulgrave>
+	Tue, 16 Aug 2005 09:56:07 -0400
+In-Reply-To: <4301E1AE.6010501@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: James.Smart@Emulex.Com, matthew@wil.cx, Greg KH <greg@kroah.com>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Russell King <rmk@arm.linux.org.uk>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Jiri Slaby <jirislaby@gmail.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Bolke de Bruin <bdbruin@aub.nl>, Greg KH <greg@kroah.com>
 
-On 08/15/05 21:08, James Bottomley wrote:
->>Think if SCSI used this same style of representation. For example,
->>if there was no scsi target device entity, but class entities did
->>exist and they just pointed back to the scsi host device entry.
-> 
-> 
-> Yes, it's theoretically possible to have had SCSI do this.  We didn't do
-> it at the time because class_devices didn't exist when the SCSI tree was
-> first put together.  It would, however, have rather put the mockers on
-> doing transport classes since class devices can't point at other class
-> devices.
+--nextPart1243065.6xEbQJN4la
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Well, so be it.
+Jiri Slaby wrote:
+>Rolf Eike Beer napsal(a):
+>>Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
+>>
+>>--- a/drivers/scsi/cpqfcTSinit.c	2005-08-14 14:20:40.000000000 +0200
+>>+++ b/drivers/scsi/cpqfcTSinit.c	2005-08-14 14:25:33.000000000 +0200
+>>@@ -264,18 +264,14 @@ static void launch_FCworker_thread(struc
+>>  * Agilent XL2
+>>  * HP Tachyon
+>>  */
+>>-#define HBA_TYPES 3
+>>-
+>>-#ifndef PCI_DEVICE_ID_COMPAQ_
+>>-#define PCI_DEVICE_ID_COMPAQ_TACHYON	0xa0fc
+>>-#endif
+>>-
+>>-static struct SupportedPCIcards cpqfc_boards[] __initdata =3D {
+>>-	{PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_TACHYON},
+>>-	{PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHLITE},
+>>-	{PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHYON},
+>>+static struct pci_device_id cpqfc_boards[] __initdata =3D {
+>>+	{PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_TACHYON, PCI_ANY_ID,
+>> PCI_ANY_ID, 0, 0, 0}, +	{PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHLITE,
+>> PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0}, +	{PCI_VENDOR_ID_HP,
+>> PCI_DEVICE_ID_HP_TACHYON, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0}, +	{0, }
+>> };
+>
+>Wouldn't be better to use PCI_DEVICE macro for better readability?
 
-All in all, I'd like to point out that James S has a very good
-and valid point, as anyone trained in SCSI protocols can see.
+Yes, useful little thing. Thanks, I wasn't aware of it.
 
->>My vote is to make the multiplexor instantiate each serial line
->>as a separate device.
-> 
-> That's a choice that's up to the maintainer of the serial driver ...
+>>+MODULE_DEVICE_TABLE(pci, cpqfc_boards);
+>>
+>> int cpqfcTS_detect(Scsi_Host_Template *ScsiHostTemplate)
+>> {
+>>@@ -294,14 +290,9 @@ int cpqfcTS_detect(Scsi_Host_Template *S
+>>   ScsiHostTemplate->proc_name =3D "cpqfcTS";
+>> #endif
+>>
+>>-  for( i=3D0; i < HBA_TYPES; i++)
+>>-  {
+>>-    // look for all HBAs of each type
+>>-
+>>-    while((PciDev =3D pci_find_device(cpqfc_boards[i].vendor_id,
+>>-				    cpqfc_boards[i].device_id, PciDev)))
+>>-    {
+>>-
+>>+  for(i =3D 0; cpqfc_boards[i]; i++) {
+>>+    while((PciDev =3D pci_get_device(cpqfc_boards[i].vendor,
+>>+				    cpqfc_boards[i].device, PciDev))) {
+>>       if (pci_enable_device(PciDev)) {
+>> 	printk(KERN_ERR
+>> 		"cpqfc: can't enable PCI device at %s\n", pci_name(PciDev));
+>
+>You maybe forgot to add pci_dev_put in error cases.=20
 
-I think James S, was making a point of concept.  Maybe SCSI Core can
-learn from this?
+No, all errors will result in next iteration of this loop. Anyway this=20
+function should be rewritten. Once I figure out how to do the correct=20
+register stuff for SCSI drivers I'll port this over to Linux 2.6 driver=20
+model. Then this loop will go away.
 
-	Luben
+>You can inspire yourself here:
+>http://www.fi.muni.cz/~xslaby/lnx/pci_find/drivers:scsi:cpqfcTSinit.c.txt
+>(it wasn't accepted yet).
+
+*g* I've done such patches more than once ;)
+
+>BTW. Greg KH wants me to cc him, if some of these changes are being done.
+
+I read that, yes. But I had reasons not to CC him. This change is more or l=
+ess=20
+to prevent others touching this file ;)
+
+Eike
+
+P.S.: your host is listed in cbl.abuseat.org. You should go and check this.=
+=20
+Either you have a dynamic IP used by someone dumb before (than you have to=
+=20
+ask them for delisting) or you probably have some sort of security hole.
+
+--nextPart1243065.6xEbQJN4la
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.0 (GNU/Linux)
+
+iD8DBQBDAfDXXKSJPmm5/E4RAjIzAJ9HqtTUKJtmaXLZ1uhd67qC8t3hrQCeN3yg
+MkM682KWkfB5GeFMGwmnjz4=
+=ZYE6
+-----END PGP SIGNATURE-----
+
+--nextPart1243065.6xEbQJN4la--
