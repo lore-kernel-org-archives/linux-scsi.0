@@ -1,88 +1,43 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: [PATCH 2.6.13-rc6] MODULE_DEVICE_TABLE for cpqfcTS driver
-Date: Tue, 16 Aug 2005 14:53:02 +0200
-Message-ID: <4301E1AE.6010501@gmail.com>
-References: <200508051202.07091@bilbo.math.uni-mannheim.de> <200508091806.45341@bilbo.math.uni-mannheim.de> <200508161111.08070@bilbo.math.uni-mannheim.de> <200508161111.35431@bilbo.math.uni-mannheim.de>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [PATCH] add transport class symlink to device object
+Date: Tue, 16 Aug 2005 09:37:18 -0400
+Message-ID: <4301EC0E.6090406@adaptec.com>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AD39@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wscnet.wsc.cz ([212.80.64.118]:21127 "EHLO wscnet.wsc.cz")
-	by vger.kernel.org with ESMTP id S965201AbVHPMx6 (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:20427 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S965211AbVHPNhX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Aug 2005 08:53:58 -0400
-In-Reply-To: <200508161111.35431@bilbo.math.uni-mannheim.de>
+	Tue, 16 Aug 2005 09:37:23 -0400
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AD39@xbl3.ma.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Bolke de Bruin <bdbruin@aub.nl>, Greg KH <greg@kroah.com>
+To: James.Smart@Emulex.Com
+Cc: James.Bottomley@SteelEye.com, matthew@wil.cx, greg@kroah.com, akpm@osdl.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk, rmk@arm.linux.org.uk
 
-Rolf Eike Beer napsal(a):
-
->Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
->
->--- a/drivers/scsi/cpqfcTSinit.c	2005-08-14 14:20:40.000000000 +0200
->+++ b/drivers/scsi/cpqfcTSinit.c	2005-08-14 14:25:33.000000000 +0200
->@@ -264,18 +264,14 @@ static void launch_FCworker_thread(struc
->  * Agilent XL2 
->  * HP Tachyon
->  */
->-#define HBA_TYPES 3
->-
->-#ifndef PCI_DEVICE_ID_COMPAQ_
->-#define PCI_DEVICE_ID_COMPAQ_TACHYON	0xa0fc
->-#endif
->-
->-static struct SupportedPCIcards cpqfc_boards[] __initdata = {
->-	{PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_TACHYON},
->-	{PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHLITE},
->-	{PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHYON},
->+static struct pci_device_id cpqfc_boards[] __initdata = {
->+	{PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_TACHYON, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
->+	{PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHLITE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
->+	{PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHYON, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
->+	{0, }
-> };
->  
->
-Wouldn't be better to use PCI_DEVICE macro for better readability?
-
+On 08/15/05 20:52, James.Smart@Emulex.Com wrote:
+> Actually, I view this as being a little odd...
 > 
->+MODULE_DEVICE_TABLE(pci, cpqfc_boards);
+> What is "0000:00:04:0" in this case ? The "device" is not a serial
+> port, which is what the ttyXX back link would lead you to believe.
+> Thus, it's a serial port multiplexer that supports up to N ports,
+> right ? and wouldn't the more correct representation have been to
+> enumerate a device for each serial port ? (e.g. 0000:00:04.0/line0,
+> 0000:00:04.0/line1, or similar)
 > 
-> int cpqfcTS_detect(Scsi_Host_Template *ScsiHostTemplate)
-> {
->@@ -294,14 +290,9 @@ int cpqfcTS_detect(Scsi_Host_Template *S
->   ScsiHostTemplate->proc_name = "cpqfcTS";
-> #endif
+> Think if SCSI used this same style of representation. For example,
+> if there was no scsi target device entity, but class entities did
+> exist and they just pointed back to the scsi host device entry.
 > 
->-  for( i=0; i < HBA_TYPES; i++)
->-  {
->-    // look for all HBAs of each type
->-
->-    while((PciDev = pci_find_device(cpqfc_boards[i].vendor_id,
->-				    cpqfc_boards[i].device_id, PciDev)))
->-    {
->-
->+  for(i = 0; cpqfc_boards[i]; i++) {
->+    while((PciDev = pci_get_device(cpqfc_boards[i].vendor,
->+				    cpqfc_boards[i].device, PciDev))) {
->       if (pci_enable_device(PciDev)) {
-> 	printk(KERN_ERR
-> 		"cpqfc: can't enable PCI device at %s\n", pci_name(PciDev));
->  
->
-You maybe forgot to add pci_dev_put in error cases. You can inspire 
-yourself here:
-http://www.fi.muni.cz/~xslaby/lnx/pci_find/drivers:scsi:cpqfcTSinit.c.txt
-(it wasn't accepted yet).
+> My vote is to make the multiplexor instantiate each serial line
+> as a separate device.
 
-BTW. Greg KH wants me to cc him, if some of these changes are being done.
+Hi James,
 
-regards,
+Yes, you're absolutely and completely correct.  I think the same
+way as you do.
 
--- 
-Jiri Slaby         www.fi.muni.cz/~xslaby
-~\-/~      jirislaby@gmail.com      ~\-/~
-241B347EC88228DE51EE A49C4A73A25004CB2A10
+	Luben
 
