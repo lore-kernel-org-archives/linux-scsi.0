@@ -1,44 +1,88 @@
-From: "conway, heather" <conway_heather@emc.com>
-Subject: RE: Request to add EMC Invista to the v2.6.x SCSI Blacklist...
-Date: Mon, 15 Aug 2005 16:33:52 -0400
-Message-ID: <FA2F59D0E55B4B4892EA076FF8704F5509DDC9D0@SRGRAHAM.eng.emc.com>
+From: Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: [PATCH 2.6.13-rc6] MODULE_DEVICE_TABLE for cpqfcTS driver
+Date: Tue, 16 Aug 2005 14:53:02 +0200
+Message-ID: <4301E1AE.6010501@gmail.com>
+References: <200508051202.07091@bilbo.math.uni-mannheim.de> <200508091806.45341@bilbo.math.uni-mannheim.de> <200508161111.08070@bilbo.math.uni-mannheim.de> <200508161111.35431@bilbo.math.uni-mannheim.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.lss.emc.com ([168.159.2.31]:2793 "EHLO
-	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S932677AbVHPMVm
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Aug 2005 08:21:42 -0400
+Received: from wscnet.wsc.cz ([212.80.64.118]:21127 "EHLO wscnet.wsc.cz")
+	by vger.kernel.org with ESMTP id S965201AbVHPMx6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Aug 2005 08:53:58 -0400
+In-Reply-To: <200508161111.35431@bilbo.math.uni-mannheim.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@SteelEye.com>, "conway, heather" <conway_heather@emc.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Bolke de Bruin <bdbruin@aub.nl>, Greg KH <greg@kroah.com>
 
-Hi James,
-I will request additional information from the engineer and will get back to
-you as soon as I can.
-Thanks.
-Heather
+Rolf Eike Beer napsal(a):
 
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
-Sent: Thursday, August 11, 2005 12:39 PM
-To: conway, heather
-Cc: 'linux-scsi@vger.kernel.org'
-Subject: RE: Request to add EMC Invista to the v2.6.x SCSI Blacklist...
+>Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
+>
+>--- a/drivers/scsi/cpqfcTSinit.c	2005-08-14 14:20:40.000000000 +0200
+>+++ b/drivers/scsi/cpqfcTSinit.c	2005-08-14 14:25:33.000000000 +0200
+>@@ -264,18 +264,14 @@ static void launch_FCworker_thread(struc
+>  * Agilent XL2 
+>  * HP Tachyon
+>  */
+>-#define HBA_TYPES 3
+>-
+>-#ifndef PCI_DEVICE_ID_COMPAQ_
+>-#define PCI_DEVICE_ID_COMPAQ_TACHYON	0xa0fc
+>-#endif
+>-
+>-static struct SupportedPCIcards cpqfc_boards[] __initdata = {
+>-	{PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_TACHYON},
+>-	{PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHLITE},
+>-	{PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHYON},
+>+static struct pci_device_id cpqfc_boards[] __initdata = {
+>+	{PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_TACHYON, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+>+	{PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHLITE, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+>+	{PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHYON, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+>+	{0, }
+> };
+>  
+>
+Wouldn't be better to use PCI_DEVICE macro for better readability?
 
-On Thu, 2005-08-11 at 11:45 -0400, conway, heather wrote:
-> The information that I was provided is that the default for the Invista is
-> to report back as SCSI-3 compliant.
-> Hope this helps. 
+> 
+>+MODULE_DEVICE_TABLE(pci, cpqfc_boards);
+> 
+> int cpqfcTS_detect(Scsi_Host_Template *ScsiHostTemplate)
+> {
+>@@ -294,14 +290,9 @@ int cpqfcTS_detect(Scsi_Host_Template *S
+>   ScsiHostTemplate->proc_name = "cpqfcTS";
+> #endif
+> 
+>-  for( i=0; i < HBA_TYPES; i++)
+>-  {
+>-    // look for all HBAs of each type
+>-
+>-    while((PciDev = pci_find_device(cpqfc_boards[i].vendor_id,
+>-				    cpqfc_boards[i].device_id, PciDev)))
+>-    {
+>-
+>+  for(i = 0; cpqfc_boards[i]; i++) {
+>+    while((PciDev = pci_get_device(cpqfc_boards[i].vendor,
+>+				    cpqfc_boards[i].device, PciDev))) {
+>       if (pci_enable_device(PciDev)) {
+> 	printk(KERN_ERR
+> 		"cpqfc: can't enable PCI device at %s\n", pci_name(PciDev));
+>  
+>
+You maybe forgot to add pci_dev_put in error cases. You can inspire 
+yourself here:
+http://www.fi.muni.cz/~xslaby/lnx/pci_find/drivers:scsi:cpqfcTSinit.c.txt
+(it wasn't accepted yet).
 
-Well, actually, now I'm confused.  REPORT_LUNS is mandatory for a SCSI3
-compliant device, and if the device reports SCSI-3 compliance we
-automatically try a REPORT LUNS scan, which should mean that
-BLIST_LARGE_LUN and BLIST_SPARSE_LUN are unnecessary, since we add all
-LUNs returned by the scan (up to the limit of the HBA).
+BTW. Greg KH wants me to cc him, if some of these changes are being done.
 
-Could we try debugging this device to find out what its problem is?
+regards,
 
-James
+-- 
+Jiri Slaby         www.fi.muni.cz/~xslaby
+~\-/~      jirislaby@gmail.com      ~\-/~
+241B347EC88228DE51EE A49C4A73A25004CB2A10
 
