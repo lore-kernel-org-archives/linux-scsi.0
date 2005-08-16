@@ -1,94 +1,93 @@
 From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 2.6.13-rc6] remove dead reset function from cpqfcTS driver
-Date: Tue, 16 Aug 2005 17:07:48 +0200
-Message-ID: <200508161707.57101@bilbo.math.uni-mannheim.de>
-References: <200508051202.07091@bilbo.math.uni-mannheim.de> <200508161137.37749@bilbo.math.uni-mannheim.de> <yq14q9qdjig.fsf@wilson.lab.mkp.net>
+Subject: [PATCH 2.6.13-rc6] MODULE_DEVICE_TABLE for cpqfcTS driver, take 2
+Date: Tue, 16 Aug 2005 16:36:59 +0200
+Message-ID: <200508161637.01236@bilbo.math.uni-mannheim.de>
+References: <200508051202.07091@bilbo.math.uni-mannheim.de> <200508161111.08070@bilbo.math.uni-mannheim.de> <200508161111.35431@bilbo.math.uni-mannheim.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart4839344.7JXZs6uu73";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:9887 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S965263AbVHPPGP (ORCPT
+Received: from mail.sf-mail.de ([62.27.20.61]:6815 "EHLO mail.sf-mail.de")
+	by vger.kernel.org with ESMTP id S965259AbVHPPGP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 16 Aug 2005 11:06:15 -0400
-In-Reply-To: <yq14q9qdjig.fsf@wilson.lab.mkp.net>
+In-Reply-To: <200508161111.35431@bilbo.math.uni-mannheim.de>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: "Martin K. Petersen" <mkp@mkp.net>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Bolke de Bruin <bdbruin@aub.nl>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Bolke de Bruin <bdbruin@aub.nl>
 
---nextPart4839344.7JXZs6uu73
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+cpqfcTSinit has a static array of PCI device and vendor ids supported by the 
+driver. Sounds familiar, doesn't it? Use pci_device_id as type for the 
+entries of this array and declare the array as MODULE_DEVICE_TABLE. Also use 
+pci_get_device() instead of pci_find_device() and remove some superfluos 
+defines for device scanning.
 
-Martin K. Petersen wrote:
->>>>>> "Rolf" =3D=3D Rolf Eike Beer <eike-kernel@sf-tec.de> writes:
->
->Hey Rolf!
+Version 2:
+-use PCI_DEVICE makro (thanks to Jiri Slaby for pointing this out)
+-fix compile error (diffed wrong files)
 
-I should go and use "R. Eike Beer" ;)
+Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
 
->Rolf> There was a request on lkml last week for a working version of
->Rolf> this driver. For the moment I try to clean this up a bit before
->Rolf> doing some real work. I found 4 major things that should be
->Rolf> done, for half of them I have patches in a proof-of-concept
->Rolf> state.
->
->As Christoph said I'm working on a driver for the TachLite TL/TS/XL2
->chips.
->
->Initially I just wanted to add support for the integrated PHY on XL2
->so we could support those cards on PA-RISC.  But when I started
->looking at the driver I came to the conclusion that it was just too
->ugly to live.  Architecturally, the overall design of cpqfc just
->doesn't fit in well with Linux.  So I'm rewriting it from scratch -
->but that obviously takes a while.
-
->I think it's cool that you want to hack on cpqfcTS.  But be aware that
->it's not just a matter of running lindent and making it compile in
->2.6.late.  And without hardware it's going to be hard.  Fibre channel
->is very finicky.
-
-=46or the moment I'm trying to fix the most buggy parts. The Lindent run is=
-=20
-scheduled to be done last, it's too big and adds nothing if it would go int=
-o=20
-kernel for now. It won't even compile now, my tests are only compile tests=
-=20
-done with the two #error commented out. That should prevent most users from=
-=20
-using it without all patches applied. The rest either knows what he's doing=
-=20
-and/or would get crashes anyway ;)
-
-Next to come will be splitting up the ISR and then fixing the #errors. Afte=
-r=20
-this is might even work. :)
-
->If you manage to get your hands on hardware (cards - avoid Tachyon
->5000 series. TachLite 5100, 5166 or 5200 is what you want, disk array,
->hub/switch, GBICs, etc.) I wouldn't mind some help...
-
-Give me some code and we can see...
-
-Bolke, what kind of adapter do you have?
-
-Eike
-
---nextPart4839344.7JXZs6uu73
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.0 (GNU/Linux)
-
-iD8DBQBDAgFMXKSJPmm5/E4RAue+AJ4vTneSwUZAAGHCPxk6uxVUPH1nLwCgldhd
-yGE6eYy7V6qqAFSh9mxiBE8=
-=BN2O
------END PGP SIGNATURE-----
-
---nextPart4839344.7JXZs6uu73--
+--- a/drivers/scsi/cpqfcTSstructs.h	2005-08-14 10:56:41.000000000 +0200
++++ b/drivers/scsi/cpqfcTSstructs.h	2005-08-14 10:57:32.000000000 +0200
+@@ -95,12 +95,6 @@
+ 
+ #define DEV_NAME "cpqfcTS"
+ 
+-struct SupportedPCIcards
+-{
+-  __u16 vendor_id;
+-  __u16 device_id;
+-};
+-			 
+ // nn:nn denotes bit field
+                             // TachyonHeader struct def.
+                             // the fields shared with ODB
+--- a/drivers/scsi/cpqfcTSinit.c	2005-08-14 14:20:40.000000000 +0200
++++ b/drivers/scsi/cpqfcTSinit.c	2005-08-14 14:25:33.000000000 +0200
+@@ -264,18 +264,14 @@ static void launch_FCworker_thread(struc
+  * Agilent XL2 
+  * HP Tachyon
+  */
+-#define HBA_TYPES 3
+-
+-#ifndef PCI_DEVICE_ID_COMPAQ_
+-#define PCI_DEVICE_ID_COMPAQ_TACHYON	0xa0fc
+-#endif
+-
+-static struct SupportedPCIcards cpqfc_boards[] __initdata = {
+-	{PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_TACHYON},
+-	{PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHLITE},
+-	{PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHYON},
++static struct pci_device_id cpqfc_boards[] __initdata = {
++	{PCI_DEVICE(PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_TACHYON), 0, 0, 0},
++	{PCI_DEVICE(PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHLITE), 0, 0, 0},
++	{PCI_DEVICE(PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_TACHYON), 0, 0, 0},
++	{0, }
+ };
+ 
++MODULE_DEVICE_TABLE(pci, cpqfc_boards);
+ 
+ int cpqfcTS_detect(Scsi_Host_Template *ScsiHostTemplate)
+ {
+@@ -294,14 +290,9 @@ int cpqfcTS_detect(Scsi_Host_Template *S
+   ScsiHostTemplate->proc_name = "cpqfcTS";
+ #endif
+ 
+-  for( i=0; i < HBA_TYPES; i++)
+-  {
+-    // look for all HBAs of each type
+-
+-    while((PciDev = pci_find_device(cpqfc_boards[i].vendor_id,
+-				    cpqfc_boards[i].device_id, PciDev)))
+-    {
+-
++  for(i = 0; cpqfc_boards[i].vendor; i++) {
++    while((PciDev = pci_get_device(cpqfc_boards[i].vendor,
++				    cpqfc_boards[i].device, PciDev))) {
+       if (pci_enable_device(PciDev)) {
+ 	printk(KERN_ERR
+ 		"cpqfc: can't enable PCI device at %s\n", pci_name(PciDev));
