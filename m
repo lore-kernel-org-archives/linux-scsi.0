@@ -1,40 +1,80 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: [PATCH] add transport class symlink to device object
-Date: Tue, 16 Aug 2005 21:53:29 +0100
-Message-ID: <20050816215329.B14055@flint.arm.linux.org.uk>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AD39@xbl3.ma.emulex.com> <4301EC0E.6090406@adaptec.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: [PATCH 2.4.12.5 1/2] lib: allow idr to be used in irq context
+Date: Tue, 16 Aug 2005 17:55:50 -0400
+Message-ID: <430260E6.4090108@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([212.18.232.186]:56584 "EHLO
-	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
-	id S932704AbVHPUxl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Aug 2005 16:53:41 -0400
-Content-Disposition: inline
-In-Reply-To: <4301EC0E.6090406@adaptec.com>; from luben_tuikov@adaptec.com on Tue, Aug 16, 2005 at 09:37:18AM -0400
+Received: from magic.adaptec.com ([216.52.22.17]:13245 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1750980AbVHPV4D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Aug 2005 17:56:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: James.Smart@Emulex.Com, James.Bottomley@SteelEye.com, matthew@wil.cx, greg@kroah.com, akpm@osdl.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Dave Jones <davej@redhat.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: Jim Houston <jim.houston@ccur.com>
 
-On Tue, Aug 16, 2005 at 09:37:18AM -0400, Luben Tuikov wrote:
-> On 08/15/05 20:52, James.Smart@Emulex.Com wrote:
-> > My vote is to make the multiplexor instantiate each serial line
-> > as a separate device.
-> 
-> Yes, you're absolutely and completely correct.  I think the same
-> way as you do.
+Hi,
 
-Just don't expect it to happen any time in the next fortnight, even
-if 2.6.13 were to appear tomorrow.  Firstly, I have the parport_serial
-patches queued up since god knows when (a month or so back now I
-think.)  Secondly I'm not around next week so I probably won't have
-time to do anything with serial in the non-rc part of the 2.6.14
-cycle.
+This patch allows idr to be used in irq context.
 
-Therefore, I think this will have to wait for 2.6.14 or so.  Sorry.
+idr_pre_get() is necessary to be called before
+idr_get_new() is called.  No locking is necessary when
+calling idr_pre_get().
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:  2.6 Serial core
+But idr_get_new(), idr_find() and idr_remove()
+must be serialized with respect to each other.
+
+All of the aforementioned, may end up in alloc_layer()
+or free_layer() which grabs the idp lock using spin_lock.
+
+If idr_get_new() or idr_remove() is used in IRQ context,
+then we may get a lockup when idr_pre_get was called
+in process context and an IRQ interrupted while it held
+the idp lock.
+
+This patch changes the spin_lock to spin_lock_irqsave,
+and spin_unlock to spin_unlock_irqrestore, to allow
+idr_get_new(), idr_find() and idr_remove() to be
+called from IRQ context, while idr_pre_get() to be
+called in process context.
+
+Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
+
+--- linux-2.6.12.5/lib/idr.c.old	2005-08-16 17:20:08.000000000 -0400
++++ linux-2.6.12.5/lib/idr.c	2005-08-16 17:22:16.000000000 -0400
+@@ -37,27 +37,29 @@
+ static struct idr_layer *alloc_layer(struct idr *idp)
+ {
+ 	struct idr_layer *p;
++	unsigned long flags;
+ 
+-	spin_lock(&idp->lock);
++	spin_lock_irqsave(&idp->lock, flags);
+ 	if ((p = idp->id_free)) {
+ 		idp->id_free = p->ary[0];
+ 		idp->id_free_cnt--;
+ 		p->ary[0] = NULL;
+ 	}
+-	spin_unlock(&idp->lock);
++	spin_unlock_irqrestore(&idp->lock, flags);
+ 	return(p);
+ }
+ 
+ static void free_layer(struct idr *idp, struct idr_layer *p)
+ {
++	unsigned long flags;
+ 	/*
+ 	 * Depends on the return element being zeroed.
+ 	 */
+-	spin_lock(&idp->lock);
++	spin_lock_irqsave(&idp->lock, flags);
+ 	p->ary[0] = idp->id_free;
+ 	idp->id_free = p;
+ 	idp->id_free_cnt++;
+-	spin_unlock(&idp->lock);
++	spin_unlock_irqrestore(&idp->lock, flags);
+ }
+ 
+ /**
