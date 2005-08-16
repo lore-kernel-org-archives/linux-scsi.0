@@ -1,213 +1,104 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: [PATCH 2.6.13-rc6] improve start/stop code for worker thread in cpqfcTS driver, take 3
-Date: Tue, 16 Aug 2005 19:09:18 +0200
-Message-ID: <200508161909.20196@bilbo.math.uni-mannheim.de>
-References: <200508051202.07091@bilbo.math.uni-mannheim.de> <200508161658.15546@bilbo.math.uni-mannheim.de> <200508161820.57817@bilbo.math.uni-mannheim.de>
+From: Marko Macek <Marko.Macek@gmx.net>
+Subject: oops when removing storage device with no actual drive
+Date: Tue, 16 Aug 2005 21:20:38 +0200
+Message-ID: <43023C86.8050705@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:43185 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S1030256AbVHPRIB (ORCPT
+Received: from pop.gmx.de ([213.165.64.20]:51115 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S932381AbVHPTWN (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Aug 2005 13:08:01 -0400
-In-Reply-To: <200508161820.57817@bilbo.math.uni-mannheim.de>
-Content-Disposition: inline
+	Tue, 16 Aug 2005 15:22:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Bolke de Bruin <bdbruin@aub.nl>, Christoph Hellwig <hch@infradead.org>
+To: linux-usb-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-Improve start/stop code for HBA worker thread. For the moment the return code 
-of the start/stop functions is ignored, this will change once the init/exit 
-code is changed to use 2.6 driver model.
+Hello.
 
-Version 2: remove that lock_kernel() stuff missed in the first version
-Version 3: use kthread API (pointed out by Christoph Hellwig)
+Kernel 2.6.12.4 (or -2.6.12-1.1398_FC4)
 
-Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Below is a backtrace for a 100% reproducible oops. Recipe:
 
-diff -aup linux-2.6.13-rc6/drivers/scsi/cpqfcTSinit.c linux-2.6.13-rc6-eike/drivers/scsi/cpqfcTSinit.c
---- linux-2.6.13-rc6/drivers/scsi/cpqfcTSinit.c	2005-08-16 16:42:14.000000000 +0200
-+++ linux-2.6.13-rc6-eike/drivers/scsi/cpqfcTSinit.c	2005-08-16 18:59:26.000000000 +0200
-@@ -43,6 +43,7 @@
- #include <linux/init.h>
- #include <linux/ioport.h>  // request_region() prototype
- #include <linux/completion.h>
-+#include <linux/kthread.h>
+1. External usb disk enclosure for an IDE drive.
+2. Drive set to slave instead of master (or cable-select, probably). 
+Jumper is set to Master, all is fine.
+3. No drive found after plugging in (maybe OK)
+4. OOPS happens as soon as I turn off or unplug the device.
+
+usb-storage: device found at 26
+usb-storage: waiting for device to settle before scanning
+scsi: Device offlined - not ready after error recovery: host 4 channel 0 
+id 0 lu
+n 0
+usb 2-7: USB disconnect, address 26
+usb-storage: device scan complete
+Unable to handle kernel NULL pointer dereference at virtual address 00000048
+ printing eip:
+c0199cb3
+*pde = 00000000
+Oops: 0000 [#1]
+PREEMPT
+Modules linked in: usb_storage radeon ipv6 parport_pc lp parport autofs4 
+rfcomm
+l2cap sunrpc ipt_REJECT ipt_state ip_conntrack iptable_filter ip_tables 
+binfmt_m
+isc dm_mod video button battery ac ati_remote ohci1394 ieee1394 usblp 
+joydev uhc
+i_hcd ehci_hcd budget l64781 ves1820 budget_core saa7146 ttpci_eeprom 
+stv0299 td
+a8083 ves1x93 dvb_core tuner saa7134 video_buf v4l2_common v4l1_compat 
+ir_common
+ videodev pdc202xx_new shpchp i2c_viapro i2c_core snd_emu10k1_synth 
+snd_emux_syn
+th snd_seq_virmidi snd_seq_midi_emul snd_emu10k1 snd_rawmidi 
+snd_ac97_codec snd_
+seq_dummy snd_seq_oss snd_seq_midi_event snd_seq snd_seq_device 
+snd_pcm_oss snd_
+mixer_oss snd_pcm snd_timer snd_page_alloc snd_util_mem snd_hwdep snd 
+soundcore
+sk98lin floppy ext3 jbd raid1 sata_promise sata_via libata sd_mod scsi_mod
+CPU:    0
+EIP:    0060:[<c0199cb3>]    Not tainted VLI
+EFLAGS: 00010292   (2.6.12.4)
+EIP is at sysfs_hash_and_remove+0x13/0xeb
+eax: 00000000   ebx: edecc64c   ecx: 00000000   edx: 00000066
+esi: edecc644   edi: f885dc20   ebp: f885dbc0   esp: f7b25e34
+ds: 007b   es: 007b   ss: 0068
+Process khubd (pid: 114, threadinfo=f7b25000 task=f7b22520)
+Stack: c033ca3c 00000000 c0314e16 edecc64c edecc644 f885dc20 f885dbc0 
+c023eeaa
+       f885dc28 edecc644 edecc400 ef278c28 e4392480 c023eee8 edecc590 
+f884b6a5
+       ef278bf8 edecc400 ef278c00 f884b787 00000202 f7b25000 f7b25000 
+ef278c04
+Call Trace:
+ [<c0314e16>] __down+0xb6/0x140
+ [<c023eeaa>] class_device_del+0x8a/0xc0
+ [<c023eee8>] class_device_unregister+0x8/0x10
+ [<f884b6a5>] scsi_remove_device+0x65/0xa0 [scsi_mod]
+ [<f884b787>] __scsi_remove_target+0xa7/0x110 [scsi_mod]
+ [<f884a7a2>] scsi_forget_host+0x52/0xb0 [scsi_mod]
+ [<f88425d1>] scsi_remove_host+0x11/0x60 [scsi_mod]
+ [<f8d75b1f>] storage_disconnect+0x5f/0x79 [usb_storage]
+ [<c0278982>] usb_unbind_interface+0x32/0x60
+ [<c023dbc0>] device_release_driver+0x50/0x70
+ [<c023de20>] bus_remove_device+0x70/0xc0
+ [<c023cdf5>] device_del+0x65/0xa0
+ [<c028045b>] usb_disable_device+0x9b/0xf0
+ [<c027adac>] usb_disconnect+0x9c/0x150
+ [<c027be3e>] hub_port_connect_change+0x4e/0x3c0
+ [<c0279a88>] clear_port_feature+0x48/0x50
+ [<c027c436>] hub_events+0x286/0x3e0
+ [<c027c5df>] hub_thread+0x4f/0x110
+ [<c0134580>] autoremove_wake_function+0x0/0x50
+ [<c027c590>] hub_thread+0x0/0x110
+ [<c0101325>] kernel_thread_helper+0x5/0x10
+Code: c4 b9 17 00 8d 74 26 00 e9 3f ff ff ff 8d 74 26 00 8d bc 27 00 00 
+00 00 55
+ 57 56 53 83 ec 0c 89 44 24 04 89 14 24 ba 66 00 00 00 <8b> 70 48 8b 58 
+08 b8 a2
+ 17 33 c0 e8 1d 2a f8 ff ff 4b 70 0f 88
  
- #include <asm/io.h>
- #include <asm/uaccess.h>   // ioctl related
-@@ -204,32 +205,26 @@ static void Cpqfc_initHBAdata(CPQFCHBA *
-       }
- }
- 
--
--/* (borrowed from linux/drivers/scsi/hosts.c) */
--static void launch_FCworker_thread(struct Scsi_Host *HostAdapter)
-+static int launch_FCworker_thread(struct Scsi_Host *HostAdapter)
- {
--  DECLARE_MUTEX_LOCKED(sem);
--
--  CPQFCHBA *cpqfcHBAdata = (CPQFCHBA *)HostAdapter->hostdata;
-+	CPQFCHBA *cpqfcHBAdata = (CPQFCHBA *)HostAdapter->hostdata;
- 
--  ENTER("launch_FC_worker_thread");
-+	ENTER(__function__);
- 
--  cpqfcHBAdata->notify_wt = &sem;
-+	spin_unlock_irq(HostAdapter->host_lock);
- 
--  /* must unlock before kernel_thread(), for it may cause a reschedule. */
--  spin_unlock_irq(HostAdapter->host_lock);
--  kernel_thread((int (*)(void *))cpqfcTSWorkerThread,
--                          (void *) HostAdapter, 0);
--  /*
--   * Now wait for the kernel error thread to initialize itself
--
--   */
--  down (&sem);
--  spin_lock_irq(HostAdapter->host_lock);
--  cpqfcHBAdata->notify_wt = NULL;
-+	cpqfcHBAdata->worker_thread = kthread_run(cpqfcTSWorkerThread,
-+			HostAdapter,
-+			"cpqfcTS_wt_%d", HostAdapter->host_no);
-+	if (IS_ERR(cpqfcHBAdata->worker_thread)) {
-+		printk(KERN_ERR DEV_NAME " can't start worker thread\n");
-+		return PTR_ERR(cpqfcHBAdata->worker_thread);
-+	}
- 
--  LEAVE("launch_FC_worker_thread");
-+	spin_lock_irq(HostAdapter->host_lock);
- 
-+	LEAVE(__function__);
-+	return 0;
- }
- 
- 
-@@ -317,9 +312,7 @@ int cpqfcTS_detect(Scsi_Host_Template *S
-       // each HBA on the PCI bus(ses)).
-       cpqfcHBAdata = (CPQFCHBA *)HostAdapter->hostdata;
- 
--      // make certain our data struct is clear
--      memset( cpqfcHBAdata, 0, sizeof( CPQFCHBA ) );
--
-+      memset(cpqfcHBAdata, 0, sizeof(*cpqfcHBAdata));
- 
-       // initialize our HBA info
-       cpqfcHBAdata->HBAnum = NumberOfAdapters;
-@@ -731,18 +724,7 @@ int cpqfcTS_release(struct Scsi_Host *Ho
-   DEBUG_PCI( printk(" disable hardware, destroy queues, free mem\n"));
-   cpqfcHBAdata->fcChip.ResetTachyon( cpqfcHBAdata, CLEAR_FCPORTS);
- 
--  // kill kernel thread
--  if( cpqfcHBAdata->worker_thread ) // (only if exists)
--  {
--    DECLARE_MUTEX_LOCKED(sem);  // synchronize thread kill
--
--    cpqfcHBAdata->notify_wt = &sem;
--    DEBUG_PCI( printk(" killing kernel thread\n"));
--    send_sig( SIGKILL, cpqfcHBAdata->worker_thread, 1);
--    down( &sem);
--    cpqfcHBAdata->notify_wt = NULL;
--
--  }
-+  kthread_stop(cpqfcHBAdata->worker_thread);
- 
-   cpqfc_free_private_data_pool(cpqfcHBAdata);
-   // free Linux resources
-diff -aup linux-2.6.13-rc6/drivers/scsi/cpqfcTSstructs.h linux-2.6.13-rc6-eike/drivers/scsi/cpqfcTSstructs.h
---- linux-2.6.13-rc6/drivers/scsi/cpqfcTSstructs.h	2005-08-16 16:42:14.000000000 +0200
-+++ linux-2.6.13-rc6-eike/drivers/scsi/cpqfcTSstructs.h	2005-08-16 19:01:42.000000000 +0200
-@@ -829,7 +829,7 @@ int CpqTsReadWriteWWN(void*, int ReadWri
- int CpqTsReadWriteNVRAM(void*, void* data, int ReadWrite);
- 
- void cpqfcTS_WorkTask( struct Scsi_Host *HostAdapter);
--void cpqfcTSWorkerThread( void *host);
-+extern int cpqfcTSWorkerThread(void *host);
- 
- int cpqfcTS_GetNVRAM_data( UCHAR *wwnbuf, UCHAR *buf );
- ULONG cpqfcTS_ReadNVRAM( void* GPIOin, void* GPIOout , USHORT count,
-diff -aup linux-2.6.13-rc6/drivers/scsi/cpqfcTSworker.c linux-2.6.13-rc6-eike/drivers/scsi/cpqfcTSworker.c
---- linux-2.6.13-rc6/drivers/scsi/cpqfcTSworker.c	2005-08-16 16:42:14.000000000 +0200
-+++ linux-2.6.13-rc6-eike/drivers/scsi/cpqfcTSworker.c	2005-08-16 19:05:42.000000000 +0200
-@@ -31,8 +31,7 @@
- #include <linux/delay.h>
- #include <linux/smp_lock.h>
- #include <linux/pci.h>
--
--#define SHUTDOWN_SIGS	(sigmask(SIGKILL)|sigmask(SIGINT)|sigmask(SIGTERM))
-+#include <linux/kthread.h>
- 
- #include <asm/system.h>
- #include <asm/irq.h>
-@@ -145,9 +144,8 @@ static void IssueReportLunsCommand( 
-               CPQFCHBA* cpqfcHBAdata, 
- 	      TachFCHDR_GCMND* fchs);
- 
--// (see scsi_error.c comments on kernel task creation)
--
--void cpqfcTSWorkerThread( void *host)
-+int
-+cpqfcTSWorkerThread(void *host)
- {
-   struct Scsi_Host *HostAdapter = (struct Scsi_Host*)host;
-   CPQFCHBA *cpqfcHBAdata = (CPQFCHBA *)HostAdapter->hostdata; 
-@@ -159,24 +157,11 @@ void cpqfcTSWorkerThread( void *host)
-   DECLARE_MUTEX_LOCKED(TachFrozen);  
-   DECLARE_MUTEX_LOCKED(BoardLock);  
- 
--  ENTER("WorkerThread");
--
--  lock_kernel();
--  daemonize("cpqfcTS_wt_%d", HostAdapter->host_no);
--  siginitsetinv(&current->blocked, SHUTDOWN_SIGS);
--
-+  ENTER(__function__);
- 
-   cpqfcHBAdata->fcQueReady = &fcQueReady;  // primary wait point
-   cpqfcHBAdata->TYOBcomplete = &fcTYOBcomplete;
-   cpqfcHBAdata->TachFrozen = &TachFrozen;
--    
-- 
--  cpqfcHBAdata->worker_thread = current;
--  
--  unlock_kernel();
--
--  if( cpqfcHBAdata->notify_wt != NULL )
--    up( cpqfcHBAdata->notify_wt); // OK to continue
- 
-   while(1)
-   {
-@@ -184,9 +169,11 @@ void cpqfcTSWorkerThread( void *host)
- 
-     down_interruptible( &fcQueReady);  // wait for something to do
- 
--    if (signal_pending(current) )
--      break;
--    
-+    if (signal_pending(current))
-+		flush_signals(current);
-+    if (kthread_should_stop())
-+		return 0;
-+
-     PCI_TRACE( 0x90)
-     // first, take the IO lock so the SCSI upper layers can't call
-     // into our _quecommand function (this also disables INTs)
-@@ -225,15 +212,9 @@ void cpqfcTSWorkerThread( void *host)
-     // Now, complete any Cmnd we Q'd up while BoardLock was held
- 
-     CompleteBoardLockCmnd( cpqfcHBAdata);
--  
--
-   }
--  // hopefully, the signal was for our module exit...
--  if( cpqfcHBAdata->notify_wt != NULL )
--    up( cpqfcHBAdata->notify_wt); // yep, we're outta here
- }
- 
--
- // Freeze Tachyon routine.
- // If Tachyon is already frozen, return FALSE
- // If Tachyon is not frozen, call freeze function, return TRUE
+
+    Mark
