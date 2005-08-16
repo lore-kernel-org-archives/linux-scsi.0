@@ -1,47 +1,38 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [PATCH 2.6.12.5 2/2] include/linux: enclose idr.h in #ifndef
-Date: Tue, 16 Aug 2005 18:04:04 -0400
-Message-ID: <430262D4.9060705@adaptec.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] add missing attribute container function prototype
+Date: Tue, 16 Aug 2005 17:26:10 -0500
+Message-ID: <1124231170.5093.16.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:11712 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1751104AbVHPWEL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Aug 2005 18:04:11 -0400
+Received: from stat16.steeleye.com ([209.192.50.48]:9695 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750700AbVHPW0M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Aug 2005 18:26:12 -0400
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id j7GMQAA17604
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Aug 2005 18:26:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Dave Jones <davej@redhat.com>, Jeff Garzik <jgarzik@pobox.com>, Jim Houston <jim.houston@ccur.com>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi,
+attribute_container_classdev_to_container is an exported function of the
+attribute_container.c file.  However, there's no prototype for it.  Now
+I actually want to use it, so add one.
 
-This patch encloses the idr.h header file in
-#ifndef __IDR_H__ macro.
+James
 
-Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
-
---- linux-2.6.12.5/include/linux/idr.h.old	2005-08-16 17:20:15.000000000 -0400
-+++ linux-2.6.12.5/include/linux/idr.h	2005-08-16 17:21:11.000000000 -0400
-@@ -8,6 +8,10 @@
-  * Small id to pointer translation service avoiding fixed sized
-  * tables.
-  */
-+
-+#ifndef __IDR_H__
-+#define __IDR_H__
-+
- #include <linux/types.h>
- #include <linux/bitops.h>
+diff --git a/include/linux/attribute_container.h b/include/linux/attribute_container.h
+--- a/include/linux/attribute_container.h
++++ b/include/linux/attribute_container.h
+@@ -64,6 +64,7 @@ int attribute_container_add_class_device
+ 						 struct class_device *classdev);
+ void attribute_container_remove_attrs(struct class_device *classdev);
+ void attribute_container_class_device_del(struct class_device *classdev);
++struct attribute_container *attribute_container_classdev_to_container(struct class_device *);
+ struct class_device *attribute_container_find_class_device(struct attribute_container *, struct device *);
+ struct class_device_attribute **attribute_container_classdev_to_attrs(const struct class_device *classdev);
  
-@@ -76,3 +80,5 @@
- int idr_get_new_above(struct idr *idp, void *ptr, int starting_id, int *id);
- void idr_remove(struct idr *idp, int id);
- void idr_init(struct idr *idp);
-+
-+#endif /* __IDR_H__ */
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
