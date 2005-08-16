@@ -1,51 +1,28 @@
-From: Torrey Hoffman <torrey@lockdownnetworks.com>
-Subject: aacraid, dbus, and RAID health status
-Date: Tue, 16 Aug 2005 09:18:21 -0700
-Message-ID: <1124209101.29691.2.camel@localhost.localdomain>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2.6.13-rc6] improve start/stop code for worker thread in cpqfcTS driver, take 2
+Date: Tue, 16 Aug 2005 17:24:57 +0100
+Message-ID: <20050816162457.GA29799@infradead.org>
+References: <200508051202.07091@bilbo.math.uni-mannheim.de> <200508161114.39675@bilbo.math.uni-mannheim.de> <200508161658.15546@bilbo.math.uni-mannheim.de> <200508161820.57817@bilbo.math.uni-mannheim.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from red.lockdownnetworks.com ([67.105.193.226]:14304 "EHLO
-	mx1.lockdownnetworks.com") by vger.kernel.org with ESMTP
-	id S1030219AbVHPQYV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Aug 2005 12:24:21 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:21466 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1030220AbVHPQY6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Aug 2005 12:24:58 -0400
+Content-Disposition: inline
+In-Reply-To: <200508161820.57817@bilbo.math.uni-mannheim.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Bolke de Bruin <bdbruin@aub.nl>
 
-Hi.
+On Tue, Aug 16, 2005 at 06:20:56PM +0200, Rolf Eike Beer wrote:
+> Use pid of worker thread and struct completion for signaling end of worker 
+> thread (code more or less taken from drivers/net/8139too.c). For the moment 
+> the return code of the start/stop functions is ignored, this will change 
+> once the init/exit code is changed to use 2.6 driver model.
 
-I'm interested in setting up a system which can monitor the status of an
-aacraid-based RAID system, ideally via dbus.
-
-I've seen solutions on the web that poll the system using the 'afacli'
-command line tool, and parse the output.  This seems less than optimal.
-
-I want a system which doesn't use polling.  Surely it's possible to have
-the kernel send out notifications if the health status of the RAID
-changes?
-
-Ideally these would be available via HAL (hald) and sent to user space
-via dbus.  
-
-I'm willing to patch the kernel and hald if required.  If no such
-solution exists, I may be able to spend some paid work time writing it.
-If I did, would there be some chance of getting it into the official
-driver?  Would other people find this useful? 
-
-I've been grepping the sources of .../drivers/scsi/... looking for
-examples of kernel events or hotplug being used to notify user space of
-changes in the RAID array health, without any luck.  Does any other
-driver, (or the software RAID system) do anything like this? 
-
-Thanks in advance for any tips or pointers. 
-
-Please reply directly, as I'm not currently subscribed to linux-scsi. If
-I get multiple off-list messages, I'll write and post a summary. 
-
-Torrey Hoffman
-torrey@lockdownnetworks.com
-thoffman@arnor.net
-
+thread start/stop should use the kthread.h API.  Not that this helps at
+all for this driver..
 
