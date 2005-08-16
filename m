@@ -1,118 +1,94 @@
 From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: [PATCH 2.6.13-rc6] remove 2.4 compat code from cpqfcTS driver, take 3
-Date: Tue, 16 Aug 2005 16:51:20 +0200
-Message-ID: <200508161651.21866@bilbo.math.uni-mannheim.de>
-References: <200508051202.07091@bilbo.math.uni-mannheim.de> <200508161112.47120@bilbo.math.uni-mannheim.de> <200508161628.09474@bilbo.math.uni-mannheim.de>
+Subject: Re: [PATCH 2.6.13-rc6] remove dead reset function from cpqfcTS driver
+Date: Tue, 16 Aug 2005 17:07:48 +0200
+Message-ID: <200508161707.57101@bilbo.math.uni-mannheim.de>
+References: <200508051202.07091@bilbo.math.uni-mannheim.de> <200508161137.37749@bilbo.math.uni-mannheim.de> <yq14q9qdjig.fsf@wilson.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: multipart/signed;
+  boundary="nextPart4839344.7JXZs6uu73";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:6559 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S965257AbVHPPGP (ORCPT
+Received: from mail.sf-mail.de ([62.27.20.61]:9887 "EHLO mail.sf-mail.de")
+	by vger.kernel.org with ESMTP id S965263AbVHPPGP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 16 Aug 2005 11:06:15 -0400
-In-Reply-To: <200508161628.09474@bilbo.math.uni-mannheim.de>
-Content-Disposition: inline
+In-Reply-To: <yq14q9qdjig.fsf@wilson.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Bolke de Bruin <bdbruin@aub.nl>
+Cc: "Martin K. Petersen" <mkp@mkp.net>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Bolke de Bruin <bdbruin@aub.nl>
 
-Remove compat code for Linux 2.4 and earlier.
-Version 2: Fixed bug in earlier version that caused compile error.
-Version 3: found bug in previous patch, changed this to apply cleanly.
+--nextPart4839344.7JXZs6uu73
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Sorry for the noise.
+Martin K. Petersen wrote:
+>>>>>> "Rolf" =3D=3D Rolf Eike Beer <eike-kernel@sf-tec.de> writes:
+>
+>Hey Rolf!
 
-Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
+I should go and use "R. Eike Beer" ;)
 
---- a/drivers/scsi/cpqfcTScontrol.c	2005-08-13 19:00:35.000000000 +0200
-+++ b/drivers/scsi/cpqfcTScontrol.c	2005-08-14 11:02:09.000000000 +0200
-@@ -28,8 +28,6 @@
-    Hewlitt Packard Manual Part Number 5968-1083E.
- */
- 
--#define LinuxVersionCode(v, p, s) (((v)<<16)+((p)<<8)+(s))
--
- #include <linux/blkdev.h>
- #include <linux/kernel.h>
- #include <linux/string.h>
---- a/drivers/scsi/cpqfcTSstructs.h	2005-08-14 11:11:52.000000000 +0200
-+++ b/drivers/scsi/cpqfcTSstructs.h	2005-08-14 11:12:54.000000000 +0200
-@@ -88,7 +88,6 @@
- #define CPQFCTS_CMD_PER_LUN 15 // power of 2 -1, must be >0 
- #define CPQFCTS_REQ_QUEUE_LEN (TACH_SEST_LEN/2) // must be < TACH_SEST_LEN
- 
--#define LinuxVersionCode(v, p, s) (((v)<<16)+((p)<<8)+(s))
- #ifndef DECLARE_MUTEX_LOCKED
- #define DECLARE_MUTEX_LOCKED(sem) struct semaphore sem = MUTEX_LOCKED
- #endif
---- a/drivers/scsi/cpqfcTSinit.c	2005-08-14 14:56:41.000000000 +0200
-+++ b/drivers/scsi/cpqfcTSinit.c	2005-08-14 14:57:27.000000000 +0200
-@@ -29,8 +29,6 @@
- */
- 
- 
--#define LinuxVersionCode(v, p, s) (((v)<<16)+((p)<<8)+(s))
--
- #include <linux/config.h>  
- #include <linux/interrupt.h>  
- #include <linux/module.h>
-@@ -72,31 +70,10 @@ int cpqfcTS_TargetDeviceReset( Scsi_Devi
- // few fields...
- // NOTE: proc_fs changes in 2.4 kernel
- 
--#if LINUX_VERSION_CODE < LinuxVersionCode(2,3,27)
--static struct proc_dir_entry proc_scsi_cpqfcTS =
--{
--  PROC_SCSI_CPQFCTS,           // ushort low_ino (enumerated list)
--  7,                           // ushort namelen
--  DEV_NAME,                    // const char* name
--  S_IFDIR | S_IRUGO | S_IXUGO, // mode_t mode
--  2                            // nlink_t nlink
--	                       // etc. ...
--};
--
--
--#endif
--
--#if LINUX_VERSION_CODE >= LinuxVersionCode(2,4,7)
--#  define CPQFC_DECLARE_COMPLETION(x) DECLARE_COMPLETION(x)
--#  define CPQFC_WAITING waiting
--#  define CPQFC_COMPLETE(x) complete(x)
--#  define CPQFC_WAIT_FOR_COMPLETION(x) wait_for_completion(x);
--#else
--#  define CPQFC_DECLARE_COMPLETION(x) DECLARE_MUTEX_LOCKED(x)
--#  define CPQFC_WAITING sem
--#  define CPQFC_COMPLETE(x) up(x)
--#  define CPQFC_WAIT_FOR_COMPLETION(x) down(x)
--#endif
-+#define CPQFC_DECLARE_COMPLETION(x) DECLARE_COMPLETION(x)
-+#define CPQFC_WAITING waiting
-+#define CPQFC_COMPLETE(x) complete(x)
-+#define CPQFC_WAIT_FOR_COMPLETION(x) wait_for_completion(x);
- 
- static int cpqfc_alloc_private_data_pool(CPQFCHBA *hba);
- 
-@@ -284,12 +261,6 @@ int cpqfcTS_detect(Scsi_Host_Template *S
- 
-   ENTER("cpqfcTS_detect");
- 
--#if LINUX_VERSION_CODE < LinuxVersionCode(2,3,27)
--  ScsiHostTemplate->proc_dir = &proc_scsi_cpqfcTS;
--#else
--  ScsiHostTemplate->proc_name = "cpqfcTS";
--#endif
--
-   for(i = 0; cpqfc_boards[i].vendor; i++) {
-     while((PciDev = pci_get_device(cpqfc_boards[i].vendor,
- 				    cpqfc_boards[i].device, PciDev))) {
-@@ -2059,6 +2030,7 @@ void* fcMemManager( struct pci_dev *pdev
- 
- 
- static Scsi_Host_Template driver_template = {
-+	.proc_name              = DEV_NAME,
- 	.detect                 = cpqfcTS_detect,
- 	.release                = cpqfcTS_release,
- 	.info                   = cpqfcTS_info,
+>Rolf> There was a request on lkml last week for a working version of
+>Rolf> this driver. For the moment I try to clean this up a bit before
+>Rolf> doing some real work. I found 4 major things that should be
+>Rolf> done, for half of them I have patches in a proof-of-concept
+>Rolf> state.
+>
+>As Christoph said I'm working on a driver for the TachLite TL/TS/XL2
+>chips.
+>
+>Initially I just wanted to add support for the integrated PHY on XL2
+>so we could support those cards on PA-RISC.  But when I started
+>looking at the driver I came to the conclusion that it was just too
+>ugly to live.  Architecturally, the overall design of cpqfc just
+>doesn't fit in well with Linux.  So I'm rewriting it from scratch -
+>but that obviously takes a while.
+
+>I think it's cool that you want to hack on cpqfcTS.  But be aware that
+>it's not just a matter of running lindent and making it compile in
+>2.6.late.  And without hardware it's going to be hard.  Fibre channel
+>is very finicky.
+
+=46or the moment I'm trying to fix the most buggy parts. The Lindent run is=
+=20
+scheduled to be done last, it's too big and adds nothing if it would go int=
+o=20
+kernel for now. It won't even compile now, my tests are only compile tests=
+=20
+done with the two #error commented out. That should prevent most users from=
+=20
+using it without all patches applied. The rest either knows what he's doing=
+=20
+and/or would get crashes anyway ;)
+
+Next to come will be splitting up the ISR and then fixing the #errors. Afte=
+r=20
+this is might even work. :)
+
+>If you manage to get your hands on hardware (cards - avoid Tachyon
+>5000 series. TachLite 5100, 5166 or 5200 is what you want, disk array,
+>hub/switch, GBICs, etc.) I wouldn't mind some help...
+
+Give me some code and we can see...
+
+Bolke, what kind of adapter do you have?
+
+Eike
+
+--nextPart4839344.7JXZs6uu73
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.0 (GNU/Linux)
+
+iD8DBQBDAgFMXKSJPmm5/E4RAue+AJ4vTneSwUZAAGHCPxk6uxVUPH1nLwCgldhd
+yGE6eYy7V6qqAFSh9mxiBE8=
+=BN2O
+-----END PGP SIGNATURE-----
+
+--nextPart4839344.7JXZs6uu73--
