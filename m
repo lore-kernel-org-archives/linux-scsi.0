@@ -1,40 +1,38 @@
-From: =?iso-8859-1?Q?Hor=E1k_Daniel?= <horak@sitmp.cz>
-Subject: RE: [PATCH 2.6.13-rc6] fix copying stack memory in cpqfcTScontrol.c::cpqfcTSPutLinkQue()
-Date: Wed, 17 Aug 2005 19:11:59 +0200
-Message-ID: <66EFFC1A2B0A424E87D68EC10B1F458D65980F@EXCH2.plzen-city.cz>
+From: Marko Macek <Marko.Macek@gmx.net>
+Subject: Re: oops when removing storage device with no actual drive
+Date: Wed, 17 Aug 2005 19:22:04 +0200
+Message-ID: <4303723C.3080903@gmx.net>
+References: <43023C86.8050705@gmx.net> <1124281453.5038.1.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fred2.plzen-city.cz ([195.113.166.14]:37296 "EHLO
-	fred2.plzen-city.cz") by vger.kernel.org with ESMTP
-	id S1751173AbVHQRMK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2005 13:12:10 -0400
-Received: from exch2.plzen-city.cz ([192.168.4.51])
-	by fred2.plzen-city.cz (8.11.7/8.11.7/Wim) with ESMTP id j7HHBxw29951
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Aug 2005 19:11:59 +0200
-content-class: urn:content-classes:message
+Received: from mail.gmx.net ([213.165.64.20]:53438 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1750722AbVHQRXW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Aug 2005 13:23:22 -0400
+In-Reply-To: <1124281453.5038.1.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-> First of all: since the request for a working version of this 
-> driver is not
-> longer there at the moment I'll only send out what I 
-> currently have to get it
-> into list archives. Merging this would be fine to decrease 
-> the amount of bugs
-> in this (and the size of it). I removed everyone but 
-> linux-scsi from recipient
-> list because of this. Removing the stack error is rather 
-> simple now, but I 
-> don't do it for now to make sure noone uses this beast until 
-> it's fixed.
+James Bottomley wrote:
 
-I really would like to see this driver working in 2.6, because it is the
-only way how to connect old Compaq FC arrays. In one or two weeks I will
-have a test hardware available, so I can help at least with testing the
-driver.
+>On Tue, 2005-08-16 at 21:20 +0200, Marko Macek wrote:
+>  
+>
+>>EIP is at sysfs_hash_and_remove+0x13/0xeb
+>>    
+>>
+>This is suspiciously similar to the oops when trying to add new class
+>links in the devices.  Could you try the fix reported there:
+>
+>http://marc.theaimsgroup.com/?l=linux-scsi&m=112398346008284
+>
+>And see if it works for you?
+>  
+>
+That seems to fix it. Thanks.
 
-
-			Dan
+    Mark
