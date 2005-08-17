@@ -1,133 +1,67 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [2.6.13-rc6-latest] SCSI disk registration msgs repeat themselves
-Date: Wed, 17 Aug 2005 14:01:43 -0700
-Message-ID: <20050817210143.GA11364@us.ibm.com>
-References: <200508162304_MC3-1-A768-3F2@compuserve.com> <20050817043933.GA2803@us.ibm.com> <20050816225113.1c3677c2.zaitcev@redhat.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [RFC] embryonic RAID class
+Date: Wed, 17 Aug 2005 18:45:25 -0400
+Message-ID: <1124318725.5221.12.camel@mulgrave>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01709318@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751283AbVHQVCA@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20050816225113.1c3677c2.zaitcev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Pete Zaitcev <zaitcev@redhat.com>
-Cc: 76306.1226@compuserve.com, linux-kernel@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:52202 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751292AbVHQWpc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Aug 2005 18:45:32 -0400
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01709318@otce2k03.adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, Aug 16, 2005 at 10:51:13PM -0700, Pete Zaitcev wrote:
-> On Tue, 16 Aug 2005 21:39:33 -0700, Patrick Mansfield <patmans@us.ibm.com> wrote:
-> > On Tue, Aug 16, 2005 at 11:01:30PM -0400, Chuck Ebbert wrote:
+On Wed, 2005-08-17 at 16:25 -0400, Salyzyn, Mark wrote:
+> Under aac based adapters the build task reports the task number, current
+> array water mark and end of array but not the array number associated
+> with the build task in the AIF events returning from the Firmware. The
+> management applications generally issue a series of enumerations to the
+> devices and the arrays to build a set of objects, one of these object
+> attributes is the build task associated with the array (if it is
+> rebuilding).
 > 
-> > >   I just added some usb-storage devices to my system and got the below.
-> 
-> > > Why do the first four lines repeat for each device?  (Not sure if
-> > > this is a SCSI or USB problem.)
-> > 
-> > It is in the partition code. I posted twice before about this with no
-> > response.
-> 
-> It's not an important problem, presumably. I observe dual revalidations
-> as well, but they are not that bothersome. Add to it that your patch
+> Really simple to report the percentage completed as the driver already
+> sniffs the AIFs to generate hot-add and hot-remove actions, much more
+> difficult and quite possibly driver bloating to associate that build
+> task status with an array or underlying targets.
 
-Yes.
+Yes, fusion also necessitates some digging to get the correct
+information.
 
-Does this *only* happens for sd (scsi) devices?
+> Compromise? Well, what about exporting an raid adapter class and having
+> 'resync' associated with that adapter object? Array creation will no
+> doubt have to go to the raid adapter class in any case, so it will be a
+> requirement if configuration is to be allowed in this RAID class.
 
-> appears wrong (see below). If you offered an acceptable solution, I would
-> expect a warmer welcome... But even then getting a reply from linux-scsi
-> folks is like pulling a tooth (if my own little CD-ROM sizing patch is
-> any indication). So, steel yourself for challenges of this life, Patrick!
+But isn't that what you currently have?  The HBA exports a get_resync()
+method via the function templates which the raid class makes use of.
 
-;-)
+I admit that the whole thing will get hugely complex if configuration
+becomes allowable via this class, but at the moment I'm just trying to
+get at useful information display ... configuration can come later.
 
-> Here's what it was in 2.6.9, as documented in drivers/block/ub.c:
-> 
-> +	/*
-> +	 * This is a workaround for a specific problem in our block layer.
-> +	 * In 2.6.9, register_disk duplicates the code from rescan_partitions.
-> +	 * However, if we do add_disk with a device which persistently reports
-> +	 * a changed media, add_disk calls register_disk, which does do_open,
-> +	 * which will call rescan_paritions for changed media. After that,
-> +	 * register_disk attempts to do it all again and causes double kobject
-> +	 * registration and a eventually an oops on module removal.
-> +	 *
-> +	 * The bottom line is, Al Viro says that we should not allow
-> +	 * bdev->bd_invalidated to be set when doing add_disk no matter what.
-> +	 */
+> Add hotspare-0, hotspare-1 ... to the list?
 
-> +	if (sc->first_open) {
-> +		if (sc->changed) {
-> +			sc->first_open = 0;
-> +			rc = -ENOMEDIUM;
-> +			goto err_open;
-> +		}
-> +	}
-> 
-> Users were hitting it with oopses like these:
-> http://www.ussg.iu.edu/hypermail/linux/kernel/0409.2/0011.html
-> 
-> The ub alone was not suffient to motivate Al for the fix, so I added
-> this silly "first_open" thingie, which papered over it. It was thought
-> that sd was miraclously immune.
-> 
-> However, over time users hit it with usb-storage and sd, like this:
->  http://lkml.org/lkml/2004/2/21/19
-> This prompted Al's action. He simply dropped all the extra code like
-> this:
-> 
-> --- linux-2.6.9-11.5.EL/fs/partitions/check.c	2004-10-18 14:55:07.000000000 -0700
-> +++ linux-2.6.12/fs/partitions/check.c	2005-06-17 12:48:29.000000000 -0700
-> @@ -358,24 +357,9 @@ void register_disk(struct gendisk *disk)
->  	if (!bdev)
->  		return;
->  
-> +	bdev->bd_invalidated = 1;
->  	if (blkdev_get(bdev, FMODE_READ, 0) < 0)
->  		return;
-> -	state = check_partition(disk, bdev);
-> -	if (state) {
-> -		for (j = 1; j < state->limit; j++) {
-> -			sector_t size = state->parts[j].size;
-> -			sector_t from = state->parts[j].from;
-> -			if (!size)
-> -				continue;
-> -			add_partition(disk, j, from, size);
-> -#ifdef CONFIG_BLK_DEV_MD
-> -			if (!state->parts[j].flags)
-> -				continue;
-> -			md_autodetect_dev(bdev->bd_dev+j);
-> -#endif
-> -		}
-> -		kfree(state);
-> -	}
->  	blkdev_put(bdev);
->  }
+Yes ... I only have two disks though, so I've reached the limit of what
+I can do with my current fusion setup.  The whole of the component
+display has to be reworked anyway (I only provide add, but obviously
+delete should be allowed as well as component type).  I'll add it to the
+list.  Probably we also need a component state model as well (and
+perhaps spare would be one of the states).
 
-OK, thanks for posting those links and information.
+> A target id written to resync would be used to 'suck in' a hotspare or
+> trigger a rebuild to a failed target?
 
-> > --- linux-2.6.11-rc1/fs/partitions/check.c	Fri Dec 24 13:35:28 2004
-> > +++ no-double-sd-linux-2.6.11-rc1/fs/partitions/check.c	Fri Jan 21 11:19:00 2005
-> > @@ -375,8 +375,6 @@ int rescan_partitions(struct gendisk *di
-> >  	bdev->bd_invalidated = 0;
-> >  	for (p = 1; p < disk->minors; p++)
-> >  		delete_partition(disk, p);
-> > -	if (disk->fops->revalidate_disk)
-> > -		disk->fops->revalidate_disk(disk);
-> 
-> As for your proposed fix, it may be problematic. The ->revalidate
-> method has to be called at least once for a new device, because
-> that's when drivers fetch the capacities. But ->open only calls
-> check_disk_change() for removable devices. Who is going to call
-> ->revalidate inside add_disk() for non-removable devices?
+Actually, probably do that via an echo to the state.  The user would be
+allowed to kick certain state transitions, and degraded->resyncing
+should probably be one of them.
 
-sd.c always calls its revalidate_disk method (sd_revalidate_disk) when the
-device is attached, so for scsi, we definitely do not miss anything.
+James
 
-I thought revalidate_disk was not called prior to Al's patch, so why do we
-need to call it on the first open now?
 
-You already have to call set_capacity() before add_disk(), else
-register_disk thinks there is no media present, and won't set
-bd_invalidated. So drivers must already get the capacity (or fake it)
-prior to calling add_disk.
-
--- Patrick Mansfield
