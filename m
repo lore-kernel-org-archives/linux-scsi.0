@@ -1,52 +1,37 @@
-From: Chuck Ebbert <76306.1226@compuserve.com>
-Subject: [2.6.13-rc6-latest] SCSI disk registration msgs repeat
-  themselves
-Date: Tue, 16 Aug 2005 23:01:30 -0400
-Message-ID: <200508162304_MC3-1-A768-3F2@compuserve.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [2.6.13-rc6-latest] SCSI disk registration msgs repeat themselves
+Date: Tue, 16 Aug 2005 21:39:33 -0700
+Message-ID: <20050817043933.GA2803@us.ibm.com>
+References: <200508162304_MC3-1-A768-3F2@compuserve.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	 charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from siaag1ak.mx.compuserve.com ([149.174.40.26]:59168 "EHLO
-	siaag1ak.mx.compuserve.com") by vger.kernel.org with ESMTP
-	id S1750804AbVHQDGa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Aug 2005 23:06:30 -0400
+Received: from e34.co.us.ibm.com ([32.97.110.132]:49869 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750829AbVHQEjj
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Aug 2005 00:39:39 -0400
 Content-Disposition: inline
+In-Reply-To: <200508162304_MC3-1-A768-3F2@compuserve.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>
-Cc: "linux-usb-devel@lists.sourceforge.net" <linux-usb-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Chuck Ebbert <76306.1226@compuserve.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, "linux-usb-devel@lists.sourceforge.net" <linux-usb-devel@lists.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-  I just added some usb-storage devices to my system and got the below.
-Why do the first four lines repeat for each device?  (Not sure if
-this is a SCSI or USB problem.)
+On Tue, Aug 16, 2005 at 11:01:30PM -0400, Chuck Ebbert wrote:
+>   I just added some usb-storage devices to my system and got the below.
+> Why do the first four lines repeat for each device?  (Not sure if
+> this is a SCSI or USB problem.)
 
-[   23.433725] SCSI device sda: 63424 512-byte hdwr sectors (32 MB)
-[   23.560564] sda: Write Protect is off
-[   23.560581] sda: Mode Sense: 02 00 00 00
-[   23.560593] sda: assuming drive cache: write through
-[   23.572525] SCSI device sda: 63424 512-byte hdwr sectors (32 MB)
-[   23.576504] sda: Write Protect is off
-[   23.576519] sda: Mode Sense: 02 00 00 00
-[   23.576530] sda: assuming drive cache: write through
-[   23.576545]  sda: sda1
-[   23.583752] Attached scsi removable disk sda at scsi1, channel 0, id 0, lun 0
-[   23.583847] Attached scsi generic sg1 at scsi1, channel 0, id 0, lun 0,  type 0
-[   23.584701] usb-storage: device scan complete
-[   32.116248] SCSI device sdb: 196608 512-byte hdwr sectors (101 MB)
-[   32.141310] sdb: Write Protect is off
-[   32.153477] sdb: Mode Sense: 45 00 00 08
-[   32.153490] sdb: assuming drive cache: write through
-[   32.178386] SCSI device sdb: 196608 512-byte hdwr sectors (101 MB)
-[   32.204473] sdb: Write Protect is off
-[   32.216654] sdb: Mode Sense: 45 00 00 08
-[   32.216735] sdb: assuming drive cache: write through
-[   32.233259]  sdb: sdb4
-[   32.246595] Attached scsi removable disk sdb at scsi2, channel 0, id 0, lun 0
-[   32.270348] Attached scsi generic sg2 at scsi2, channel 0, id 0, lun 0,  type 0
-[   32.295843] usb-storage: device scan complete
+It is in the partition code. I posted twice before about this with no
+response.
 
+The changelog said it was a workaround for a borken device, but not what
+device it was or any other details.
 
-__
-Chuck
+There is a patch (against 2.6.11) in the below, I haven't tried it with
+recent kernels:
+
+http://marc.theaimsgroup.com/?l=linux-scsi&m=110719123625593&w=2
+http://marc.theaimsgroup.com/?l=linux-scsi&m=110848617107098&w=2
+
+-- Patrick Mansfield
