@@ -1,34 +1,27 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: oops when removing storage device with no actual drive
-Date: Wed, 17 Aug 2005 07:24:13 -0500
-Message-ID: <1124281453.5038.1.camel@mulgrave>
-References: <43023C86.8050705@gmx.net>
+From: Jim Houston <jim.houston@ccur.com>
+Subject: Re: [PATCH 2.6.12.5 1/2] lib: allow idr to be used in irq context
+Date: 17 Aug 2005 12:01:29 -0400
+Message-ID: <1124294489.2802.107.camel@new.localdomain>
+References: <430262C5.20503@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:6117 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751111AbVHQMYd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Aug 2005 08:24:33 -0400
-In-Reply-To: <43023C86.8050705@gmx.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751155AbVHQQBd@vger.kernel.org>
+In-Reply-To: <430262C5.20503@adaptec.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Dave Jones <davej@redhat.com>, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Marko Macek <Marko.Macek@gmx.net>
-Cc: linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2005-08-16 at 21:20 +0200, Marko Macek wrote:
-> EIP is at sysfs_hash_and_remove+0x13/0xeb
+On Tue, 2005-08-16 at 18:03, Luben Tuikov wrote:
 
-This is suspiciously similar to the oops when trying to add new class
-links in the devices.  Could you try the fix reported there:
+> If idr_get_new() or idr_remove() is used in IRQ context,
+> then we may get a lockup when idr_pre_get was called
+> in process context and an IRQ interrupted while it held
+> the idp lock.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112398346008284
+Hi Everyone,
 
-And see if it works for you?
+Luben's changes make sense please merge them.
 
-Thanks,
-
-James
-
-
+Jim Houston - Concurrent Computer Corp.
