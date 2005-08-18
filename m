@@ -1,55 +1,55 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: [PATCH] minimal SAS transport class
-Date: Thu, 18 Aug 2005 16:05:29 -0400
-Message-ID: <4304EA09.1070804@adaptec.com>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A35@xbl3.ma.emulex.com> <20050818175648.GA27894@lst.de>
+Date: Thu, 18 Aug 2005 16:06:03 -0400
+Message-ID: <4304EA2B.6000107@adaptec.com>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A3A@xbl3.ma.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:42947 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932383AbVHRUFe (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:58307 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932418AbVHRUGF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Aug 2005 16:05:34 -0400
-In-Reply-To: <20050818175648.GA27894@lst.de>
+	Thu, 18 Aug 2005 16:06:05 -0400
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A3A@xbl3.ma.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James.Smart@Emulex.Com, jejb@steeleye.com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, linux-scsi@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: hch@lst.de, jejb@steeleye.com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, linux-scsi@vger.kernel.org
 
-On 08/18/05 13:56, Christoph Hellwig wrote:
-> I was trying to avoid the need for an rport object, but I'm not yet sure
-> it's feasible.  We certainly won't put in target-persistency support
-> similar to FC, that was just a hack to get the existing drivers migrated
-> without lots of complaints, it's not going in for new transports like
-> SAS or iSCSI.
+On 08/18/05 14:48, James.Smart@Emulex.Com wrote:
+> 
+> This is a heck of a statement... The customers don't see it as SAS vs FC
+> vs SPI, they just see it as SCSI, and there's a lot of expectations on
+> consistent behavior. We take a lot of heat defending the community's
+> position, even from companies that you would have thought had signed on
+> to the 2.6 behaviors.
 
-Hmm, I remember working on iSCSI exactly 5 years ago.
-Is this considered new?  (er, I mean in light of SCSI Core)
+I tried to understand this paragraph in the light of the very few past days,
+but I couldn't.  What is it actually saying?
 
-I also remember it was that time when I asked about 8 byte LUNs
-to be supported transparently by SCSI Core.
+> I understand the need to push folks to the new 2.6 models, but I fully
+> expect the same complaints to come from the users of SAS and iSCSI as well.
 
-It was also that time when I asked for "target" to be supported
-without "channel" and "id" as this had to be invented by
-the iSCSI LLDD as it needs to be invented by FC and USB.
+What kind of complaints?
 
-It was also that time when I asked for "target" to be
-represented transparently so that SCSI Core can do LU
-discovery and register the devices found and register
-them with the Command Set Drivers (sd, st, etc).
+I ask because I'm a "user of SAS and iSCSI".
 
-On all three points I saw great opposition from the maintainers.
+> Please note that by implementing the consistent mappings, you are lessening
+> the demands on the hba vendor to supply a non-upstream driver that works
+> around the issue.
 
-Sadly, I had implemented all those things, but the products
-(target and initiator) was closed source.
+So LLDD would still have to do wild "scsi transport X domain" to "SPI Centric
+HCIL used by SCSI Core" translation?  I'm not quite understanding.
 
-This is where scsi_done_q and scsi commands from slab cache came from...
+>>What we might need an rport for is to support SMP.  I'm
+>>not yet sure how to do SMP passthrough, but we will need some object
+>>to represent SMP ports.
+> 
+> Depending on how SATA support is implemented, it may be useful for that.
 
->  What we might need an rport for is to support SMP.  I'm
-> not yet sure how to do SMP passthrough, but we will need some object
-> to represent SMP ports.
+Why do you need SMP ports?
+Why and how are they going to be used for SATA?
 
-Why?  How is this going to be used?  What is the architecture model?
-
+Thanks,
 	Luben
