@@ -1,31 +1,51 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] add transport class symlink to device object
-Date: Thu, 18 Aug 2005 12:43:02 +0100
-Message-ID: <20050818114302.GC5113@parcelfarce.linux.theplanet.co.uk>
-References: <20050813213955.GB19235@kroah.com> <20050814150231.GA9466@parcelfarce.linux.theplanet.co.uk> <20050814232525.A27481@flint.arm.linux.org.uk> <20050815004303.GB9466@parcelfarce.linux.theplanet.co.uk> <20050815093244.A19811@flint.arm.linux.org.uk> <20050818052156.GC29301@kroah.com> <20050818073049.B2365@flint.arm.linux.org.uk> <20050818064129.GA2280@kroah.com> <20050818075027.D2365@flint.arm.linux.org.uk> <20050818070442.GA8258@kroah.com>
+From: James.Smart@Emulex.Com
+Subject: RE: [PATCH] minimal SAS transport class
+Date: Thu, 18 Aug 2005 07:57:30 -0400
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A33@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:14019 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S932204AbVHRLkN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Aug 2005 07:40:13 -0400
-Content-Disposition: inline
-In-Reply-To: <20050818070442.GA8258@kroah.com>
+Received: from emulex.emulex.com ([138.239.112.1]:46540 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S932212AbVHRL55 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Aug 2005 07:57:57 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, James.Smart@Emulex.Com, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: hch@lst.de, jejb@steeleye.com
+Cc: ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, linux-scsi@vger.kernel.org
 
-On Thu, Aug 18, 2005 at 12:04:42AM -0700, Greg KH wrote:
-> Matthew, this work for you?
+Christoph,
 
-Yep, that's fine by me.  Thanks.
+I like it, and have no real complaints.  
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+As familiar as this looks, there were a couple of conventions in the FC
+transport that I thought should have carried over here. Namely, I saw
+not all attributes being the same, thus I created 3 categories of
+attributes:
+  Private:
+    These are attributes fully owned by the transport. The LLDD does
+    not directly access them, or participate in the sysfs calls.
+    LLDD interaction is strictly indirect via transport functions.
+  Fixed:
+    These attributes, once set, are not expected to change. The LLDD
+    does set these values directly, but should only do so at
+    initialization. The sysfs functions will be handled solely by
+    the transport w/ no interaction with the LLDD.
+  Dynamic (Normal):
+    Values can change. Sysfs functions utilize LLDD to get/set values.
+
+I expect that the SAS transport has much the same categories, and it
+would be beneficial to indicate which category the different attributes
+fall into. This can be as simple as comments, grouping, or name prefixes.
+
+Also, I see your enums set explicit values. Just a caution. When I did
+the FC transport, there were cases where I specifically did not use
+specification-specific values, as the transport was a subset or extension
+of the spec. This made anyone interacting with the transport realize that
+this area was not just a reincarnation of the spec (plus, spec writers
+sometimes do stupid things).
+
+-- james s
+
