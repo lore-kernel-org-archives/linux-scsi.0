@@ -1,29 +1,52 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [RFC] embryonic RAID class
-Date: Thu, 18 Aug 2005 13:16:13 -0400
-Message-ID: <4304C25D.2040204@adaptec.com>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01709318@otce2k03.adaptec.com> <1124318725.5221.12.camel@mulgrave>
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: Re: [PATCH] add transport class symlink to device object
+Date: Thu, 18 Aug 2005 14:50:19 -0500
+Message-ID: <d120d500050818125031d1bc98@mail.gmail.com>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C201AD35@xbl3.ma.emulex.com>
+	 <20050813213955.GB19235@kroah.com>
+	 <20050814150231.GA9466@parcelfarce.linux.theplanet.co.uk>
+	 <1124145677.5089.68.camel@mulgrave> <20050818052311.GD29301@kroah.com>
+	 <20050818063712.GA25321@kroah.com>
+Reply-To: dtor_core@ameritech.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:4281 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932406AbVHRTeW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Aug 2005 15:34:22 -0400
-In-Reply-To: <1124318725.5221.12.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932412AbVHRTu0@vger.kernel.org>
+In-Reply-To: <20050818063712.GA25321@kroah.com>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, James.Smart@emulex.com, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Russell King <rmk@arm.linux.org.uk>, Dmitry Torokhov <dtor@mail.ru>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 08/17/05 18:45, James Bottomley wrote:
-> I admit that the whole thing will get hugely complex if configuration
-> becomes allowable via this class, but at the moment I'm just trying to
-> get at useful information display ... configuration can come later.
+On 8/18/05, Greg KH <greg@kroah.com> wrote:
+> @@ -500,9 +519,13 @@ int class_device_add(struct class_device
+>        }
+> 
+>        class_device_add_attrs(class_dev);
+> -       if (class_dev->dev)
+> +       if (class_dev->dev) {
+> +               class_name = make_class_name(class_dev);
+>                sysfs_create_link(&class_dev->kobj,
+>                                  &class_dev->dev->kobj, "device");
+> +               sysfs_create_link(&class_dev->dev->kobj, &class_dev->kobj,
+> +                                 class_name);
+> +       }
+> 
 
-James are you saying that you do not have a _vision_ of how the
-*whole thing* would look?
+I wonder if we need to grab a reference to class_dev->dev here:
 
-	Luben
+        dev = device_get(class_dev->dev);
+        if (dev) {
+             ....
+        }
 
+Otherwise, if device gets unregistered/deleted before class device is
+deleted we'll get into trouble when removing the link since
+class_dev->dev will be garbage.
+
+.. But grabbing that reference will cause pains in SCSI system which,
+when I looked, removed class devices from device's release function.
+
+-- 
+Dmitry
