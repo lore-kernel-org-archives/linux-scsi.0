@@ -1,55 +1,67 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
 Subject: Re: libata error handling
-Date: Fri, 19 Aug 2005 17:02:32 -0400
-Message-ID: <430648E8.9070902@adaptec.com>
-References: <20050729050654.GA10413@havoc.gtf.org> <20050807054850.GA13335@htj.dyndns.org> <430556BF.5070004@pobox.com> <4306290B.6080608@adaptec.com> <20050819193853.GA1549@us.ibm.com> <43063B03.8050008@adaptec.com> <20050819202954.GA22563@us.ibm.com>
+Date: Fri, 19 Aug 2005 14:10:08 -0700
+Message-ID: <20050819211008.GA3032@us.ibm.com>
+References: <20050729050654.GA10413@havoc.gtf.org> <20050807054850.GA13335@htj.dyndns.org> <430556BF.5070004@pobox.com> <4306290B.6080608@adaptec.com> <20050819193853.GA1549@us.ibm.com> <43063B03.8050008@adaptec.com> <20050819201121.GA2523@us.ibm.com> <4306447D.7090204@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20050819202954.GA22563@us.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e33.co.us.ibm.com ([32.97.110.131]:10967 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S965128AbVHSVKY
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Aug 2005 17:10:24 -0400
+Content-Disposition: inline
+In-Reply-To: <4306447D.7090204@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On 08/19/05 16:29, Mike Anderson wrote:
-> Luben Tuikov <luben_tuikov@adaptec.com> wrote:
->>Consider this: When SCSI Core told you that the command timed out,
->>	A) it has already finished,
->>	B) it hasn't already finished.
->>
->>In case A, you can return EH_HANDLED.  In case B, you return
->>EH_NOT_HANDLED, and deal with it in the eh_strategy_handler.
->>(Hint: you can still "finish" it from there.)
->>
+Luben -
+
+On Fri, Aug 19, 2005 at 04:43:41PM -0400, Luben Tuikov wrote:
+> On 08/19/05 16:11, Patrick Mansfield wrote:
+
+> > I was changing it to wakeup the eh even while other IO is outstanding, so
+> > the eh can wakeup and cancel individual commands while other IO is still
+> > using the HBA.
 > 
+> Hmm, if you want to do this, then SCSI Core needs to know about:
+> 	- Domain,
+> 	- Domain device and
+> 	- LU.
+
+Not really, scsi core is just asking the LLDD to cancel or release the scmd.
+That is really all we do in the eh today, and then if the LLDD can't
+cancel the scmd, we take other sometimes less than useful steps.
+
+The LLDD could start any error handling scheme it wants, independent of
+scsi core action.
+
+We don't initiate error handling in scsi core for other error cases, why
+should a timeout be any different?
+
+> The reason, is that you do not know why a task timed out.
+> Is it the LU, is it the device, is it the domain?
+
+Right, so in scsi core allow a simple method that can cancel commands
+while the HBA is still in use.
+
+> (Those are concepts talked about in SAM.)
 > 
-> But dealing with it in the eh_strategy_handler means that you may be
-> stopping all IO on the host instance as the first lun returns
-> EH_NOT_HANDLED for LUN based canceling.
+> Since currently, SCSI Core has no clue about those concepts,
+> the current infrastructure, stalling IO to the host on eh,
+> satisfies.
+> 
+> > So, for EH_NOT_HANDLED, do you add the scmd to a LLDD list in your
+> > eh_timed_out, then wait for the eh to run?
+> 
+> No, no Patrick, I don't.  The SCSI Core does this for me, and then
+> calls my eh_strategy routine and all the commands are on the list.
 
-Hi Mike, how are you?
+Oh right ... I was not thinking straight.
 
-Yes, this is true.  See my email to Patrick.
- 
-> I still think we can do better here for an LLDD that cannot execute a
-> cancel in interrupt context.
+But I don't see how that gains much, if you sometimes still wait for scsi
+core to quiesce IO and wakeup the eh.
 
-This is the key!
-
-Think about this:
-	You do not need to cancel a command to cancel a command. ;-)
- 
-> Having a error handler that works is a plus, I would hope that
-> some factoring would happen over time from the eh_strategy_handler to
-> some transport (or other factor point) error handler. I would think from a
-> testing, support, and block level multipath predictability sharing code
-> would be a good goal.
-
-Yes, definitely.  Hopefully I'll be posting code soon.
-
-	Luben
-
-
-
+-- Patrick Mansfield
