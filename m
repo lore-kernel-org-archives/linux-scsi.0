@@ -1,49 +1,66 @@
-From: James Bottomley <jejb@steeleye.com>
-Subject: Re: [PATCH] minimal SAS transport class
-Date: Fri, 19 Aug 2005 15:59:41 -0400
-Message-ID: <1124481582.5130.88.camel@mulgrave>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A3A@xbl3.ma.emulex.com>
-	 <4304DBA1.4050900@pobox.com> <20050819140631.GB12485@lst.de>
-	 <43061C3C.2020303@adaptec.com> <20050819175459.GA16619@lst.de>
-	 <43061D57.9060201@adaptec.com> <20050819175929.GA5614@infradead.org>
-	 <43061FC9.8060301@adaptec.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: libata error handling
+Date: Fri, 19 Aug 2005 16:03:15 -0400
+Message-ID: <43063B03.8050008@adaptec.com>
+References: <20050729050654.GA10413@havoc.gtf.org> <20050807054850.GA13335@htj.dyndns.org> <430556BF.5070004@pobox.com> <4306290B.6080608@adaptec.com> <20050819193853.GA1549@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:22933 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932687AbVHSUAR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Aug 2005 16:00:17 -0400
-In-Reply-To: <43061FC9.8060301@adaptec.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965133AbVHSUDd@vger.kernel.org>
+In-Reply-To: <20050819193853.GA1549@us.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, James.Smart@Emulex.Com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, 2005-08-19 at 14:07 -0400, Luben Tuikov wrote:
-> So you're doing architectural decisions based on guesses on how
-> Adaptec's (design) driver is?
+On 08/19/05 15:38, Patrick Mansfield wrote:
+> On Fri, Aug 19, 2005 at 02:46:35PM -0400, Luben Tuikov wrote:
+> 
+> 
+>>Using the command time out hook and the strategy routine, gives _complete_
+>>control over host recovery, and I really do mean _complete_.
+>>
+> 
+> 
+> I assume you mean hostt->eh_timed_out.
 
-You can't have it both ways.  We have to take a fully theoretical
-approach (which does involve guesswork) because only the vendors have
-the actual silicon and devices to set up a SAS topology.  However, it
-has become equally clear that we cannot rely on the vendors to come up
-with a SAS class (and this in not for want of effort on our part).
+Hi Patrick, how are you?
 
-The current SAS class will only get validated when it actually meets
-real SAS topologies, which is acceptable in my view just to get this
-project actually moving; code can always be updated later ...
+Yes, this is what I meant, sorry for not being clear.
 
-> There is a lot more areas where SCSI core needs improvement --
-> *that* would be commendable work.
+> Is anyone implmenting (or has implemented) a ->eh_timed_out function? I see
+> none in mainline kernel.
 
-Patches are always welcome as long as they solve real problems or make
-real improvements.  Open source is "itch driven" to a large extent (as
-in if something bites you, you have the impetus to scratch the sore
-place and fix it) ... remember society doesn't encourage the scratching
-of other peoples itches (in public at least) ...
+Yes, I have.
 
-James
+> I was looking at using it in an LLDD, but hit two problems, and have
+> started to work on an alternate approach of cancelling (aborting or wtf you
+> want to call it) a list of commands in the eh thread.
 
+The eh_timed_out + eh_strategy_handler is actually pretty perfect,
+and _complete_, for any application and purpose in recovering a
+LU/device/host (in that order ;-) ).
 
+> The two problems I see with the hook are:
+> 
+> It calls the driver in interrupt context, so the called function can't
+> sleep.
+
+Consider this: When SCSI Core told you that the command timed out,
+	A) it has already finished,
+	B) it hasn't already finished.
+
+In case A, you can return EH_HANDLED.  In case B, you return
+EH_NOT_HANDLED, and deal with it in the eh_strategy_handler.
+(Hint: you can still "finish" it from there.)
+
+EH_RESET_TIMER is not really needed provided that
+	- your interface infrastructure is in place,
+	- you set the timeout value properly in slave_configure.
+
+> There is no queueing or list mechanism, so LLDD's that can only cancel one
+> command at a time will have problem.
+
+See above.
+
+	Luben
