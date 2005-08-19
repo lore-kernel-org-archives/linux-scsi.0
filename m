@@ -1,47 +1,55 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] minimal SAS transport class
-Date: Fri, 19 Aug 2005 16:54:16 -0400
-Message-ID: <430646F8.7050607@pobox.com>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A3A@xbl3.ma.emulex.com>	 <4304DBA1.4050900@pobox.com> <20050819140631.GB12485@lst.de>	 <43061C3C.2020303@adaptec.com> <20050819175459.GA16619@lst.de>	 <43061D57.9060201@adaptec.com> <20050819175929.GA5614@infradead.org>	 <43061FC9.8060301@adaptec.com> <1124481582.5130.88.camel@mulgrave> <430641CF.3070709@adaptec.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: libata error handling
+Date: Fri, 19 Aug 2005 17:02:32 -0400
+Message-ID: <430648E8.9070902@adaptec.com>
+References: <20050729050654.GA10413@havoc.gtf.org> <20050807054850.GA13335@htj.dyndns.org> <430556BF.5070004@pobox.com> <4306290B.6080608@adaptec.com> <20050819193853.GA1549@us.ibm.com> <43063B03.8050008@adaptec.com> <20050819202954.GA22563@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:24542 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932293AbVHSUyn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Aug 2005 16:54:43 -0400
-In-Reply-To: <430641CF.3070709@adaptec.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20050819202954.GA22563@us.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: James Bottomley <jejb@steeleye.com>, Christoph Hellwig <hch@infradead.org>, James.Smart@Emulex.Com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Luben Tuikov wrote:
-> James, the "current SAS class" _will_go_ into the kernel because:
-> 	- It is 3 vendor driven: LSI, Dell, HP.
-> 	- It is being developed by you and Christoph, the people
-> who decide what goes in or not.
+On 08/19/05 16:29, Mike Anderson wrote:
+> Luben Tuikov <luben_tuikov@adaptec.com> wrote:
+>>Consider this: When SCSI Core told you that the command timed out,
+>>	A) it has already finished,
+>>	B) it hasn't already finished.
+>>
+>>In case A, you can return EH_HANDLED.  In case B, you return
+>>EH_NOT_HANDLED, and deal with it in the eh_strategy_handler.
+>>(Hint: you can still "finish" it from there.)
+>>
+> 
+> 
+> But dealing with it in the eh_strategy_handler means that you may be
+> stopping all IO on the host instance as the first lun returns
+> EH_NOT_HANDLED for LUN based canceling.
 
-No, not for these reasons.
+Hi Mike, how are you?
 
-It will go in because it is small, and can be improved over time as 
-vendors such as Adaptec teach us the proper topology.
+Yes, this is true.  See my email to Patrick.
+ 
+> I still think we can do better here for an LLDD that cannot execute a
+> cancel in interrupt context.
 
-It is a standard problem:  engineers know their hardware, and know the 
-specs, but not the Linux development process.
+This is the key!
 
-An Adaptec SAS driver can be in the 2.6.14 kernel, if it is small.
+Think about this:
+	You do not need to cancel a command to cancel a command. ;-)
+ 
+> Having a error handler that works is a plus, I would hope that
+> some factoring would happen over time from the eh_strategy_handler to
+> some transport (or other factor point) error handler. I would think from a
+> testing, support, and block level multipath predictability sharing code
+> would be a good goal.
 
-The process then starts:
-1) Luben points out a problem.
-2) The best solution is discussed.
-3) A patch is created to solve that one problem.
-4) Go to step #1.
+Yes, definitely.  Hopefully I'll be posting code soon.
 
-We grow SAS support, like growing a plant or tree.  Start with a seed, 
-not a full-grown tree.
+	Luben
 
-	Jeff
 
 
