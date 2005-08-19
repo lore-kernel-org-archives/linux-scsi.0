@@ -1,40 +1,49 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: libata error handling
-Date: Fri, 19 Aug 2005 12:38:54 -0700
-Message-ID: <20050819193853.GA1549@us.ibm.com>
-References: <20050729050654.GA10413@havoc.gtf.org> <20050807054850.GA13335@htj.dyndns.org> <430556BF.5070004@pobox.com> <4306290B.6080608@adaptec.com>
+From: James Bottomley <jejb@steeleye.com>
+Subject: Re: [PATCH] minimal SAS transport class
+Date: Fri, 19 Aug 2005 15:59:41 -0400
+Message-ID: <1124481582.5130.88.camel@mulgrave>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A3A@xbl3.ma.emulex.com>
+	 <4304DBA1.4050900@pobox.com> <20050819140631.GB12485@lst.de>
+	 <43061C3C.2020303@adaptec.com> <20050819175459.GA16619@lst.de>
+	 <43061D57.9060201@adaptec.com> <20050819175929.GA5614@infradead.org>
+	 <43061FC9.8060301@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4306290B.6080608@adaptec.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:22933 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932687AbVHSUAR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Aug 2005 16:00:17 -0400
+In-Reply-To: <43061FC9.8060301@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, James.Smart@Emulex.Com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, Aug 19, 2005 at 02:46:35PM -0400, Luben Tuikov wrote:
+On Fri, 2005-08-19 at 14:07 -0400, Luben Tuikov wrote:
+> So you're doing architectural decisions based on guesses on how
+> Adaptec's (design) driver is?
 
-> 
-> Using the command time out hook and the strategy routine, gives _complete_
-> control over host recovery, and I really do mean _complete_.
-> 
+You can't have it both ways.  We have to take a fully theoretical
+approach (which does involve guesswork) because only the vendors have
+the actual silicon and devices to set up a SAS topology.  However, it
+has become equally clear that we cannot rely on the vendors to come up
+with a SAS class (and this in not for want of effort on our part).
 
-I assume you mean hostt->eh_timed_out.
+The current SAS class will only get validated when it actually meets
+real SAS topologies, which is acceptable in my view just to get this
+project actually moving; code can always be updated later ...
 
-Is anyone implmenting (or has implemented) a ->eh_timed_out function? I see
-none in mainline kernel.
+> There is a lot more areas where SCSI core needs improvement --
+> *that* would be commendable work.
 
-I was looking at using it in an LLDD, but hit two problems, and have
-started to work on an alternate approach of cancelling (aborting or wtf you
-want to call it) a list of commands in the eh thread.
+Patches are always welcome as long as they solve real problems or make
+real improvements.  Open source is "itch driven" to a large extent (as
+in if something bites you, you have the impetus to scratch the sore
+place and fix it) ... remember society doesn't encourage the scratching
+of other peoples itches (in public at least) ...
 
-The two problems I see with the hook are:
+James
 
-It calls the driver in interrupt context, so the called function can't
-sleep.
 
-There is no queueing or list mechanism, so LLDD's that can only cancel one
-command at a time will have problem.
-
--- Patrick Mansfield
