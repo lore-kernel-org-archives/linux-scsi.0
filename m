@@ -1,52 +1,39 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] minimal SAS transport class
-Date: Fri, 19 Aug 2005 16:15:52 +0200
-Message-ID: <20050819141552.GC12485@lst.de>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A35@xbl3.ma.emulex.com> <20050818175648.GA27894@lst.de> <4304EA09.1070804@adaptec.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] dpt_i2o pci_driver model
+Date: Fri, 19 Aug 2005 15:59:02 +0100
+Message-ID: <20050819145902.GA2015@infradead.org>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01709253@otce2k03.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:7385 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S964918AbVHSOQQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Aug 2005 10:16:16 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:54933 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S964955AbVHSO7E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Aug 2005 10:59:04 -0400
 Content-Disposition: inline
-In-Reply-To: <4304EA09.1070804@adaptec.com>
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01709253@otce2k03.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Christoph Hellwig <hch@lst.de>, James.Smart@Emulex.Com, jejb@steeleye.com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, linux-scsi@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Aug 18, 2005 at 04:05:29PM -0400, Luben Tuikov wrote:
-> On 08/18/05 13:56, Christoph Hellwig wrote:
-> > I was trying to avoid the need for an rport object, but I'm not yet sure
-> > it's feasible.  We certainly won't put in target-persistency support
-> > similar to FC, that was just a hack to get the existing drivers migrated
-> > without lots of complaints, it's not going in for new transports like
-> > SAS or iSCSI.
+On Wed, Aug 17, 2005 at 01:04:05PM -0400, Salyzyn, Mark wrote:
+> Christoph Hellwig [mailto:hch@infradead.org] writes:
+> > ... update the driver to use the pci_driver model ...
 > 
-> Hmm, I remember working on iSCSI exactly 5 years ago.
-> Is this considered new?  (er, I mean in light of SCSI Core)
+> The patch applies to the scsi-misc-2.6 git tree. The moving of
+> adpt_install_hba to the near bottom of the dpt_i2o.c file creates a
+> dirty context diff in that region which is hard to inspect from within
+> the patch. No coding style changes were made when moving content from
+> the original initialization code to the module_init and module_exit
+> functions to aid before and after comparisons for inspection; even
+> despite the fact C++ style comments are used in these sections. We
+> expect such style cleanup to occur either on any necessary follow-up
+> rewrites after basic functional approval, or as a follow-up cleanup
+> patch.
 
-We've just added the first iSCSI LLDD (the open-iscsi software
-initiator) to the scsi git trees, so yes, this is considered new.
-
-> I also remember it was that time when I asked about 8 byte LUNs
-> to be supported transparently by SCSI Core.
-> 
-> It was also that time when I asked for "target" to be supported
-> without "channel" and "id" as this had to be invented by
-> the iSCSI LLDD as it needs to be invented by FC and USB.
-
-Or just ignored.
-
-> >  What we might need an rport for is to support SMP.  I'm
-> > not yet sure how to do SMP passthrough, but we will need some object
-> > to represent SMP ports.
-> 
-> Why?  How is this going to be used?  What is the architecture model?
-
-We need some way to implement SMP passthrough.  One of the options is
-to have a passthrough node that frames can be written to - for that we
-obviously need an object for non-scsi target sas remote ports.
+This looks wrong to me.  It's still walking a lot of driver-global
+hba lists in the init routine.  All hba initialization should happen
+in the ->probe callback, and there should be very little global
+initialization.  There shouldn't really be any global list of hbas.
 
