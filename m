@@ -1,61 +1,47 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: libata error handling
-Date: Fri, 19 Aug 2005 16:43:41 -0400
-Message-ID: <4306447D.7090204@adaptec.com>
-References: <20050729050654.GA10413@havoc.gtf.org> <20050807054850.GA13335@htj.dyndns.org> <430556BF.5070004@pobox.com> <4306290B.6080608@adaptec.com> <20050819193853.GA1549@us.ibm.com> <43063B03.8050008@adaptec.com> <20050819201121.GA2523@us.ibm.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] minimal SAS transport class
+Date: Fri, 19 Aug 2005 16:54:16 -0400
+Message-ID: <430646F8.7050607@pobox.com>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A3A@xbl3.ma.emulex.com>	 <4304DBA1.4050900@pobox.com> <20050819140631.GB12485@lst.de>	 <43061C3C.2020303@adaptec.com> <20050819175459.GA16619@lst.de>	 <43061D57.9060201@adaptec.com> <20050819175929.GA5614@infradead.org>	 <43061FC9.8060301@adaptec.com> <1124481582.5130.88.camel@mulgrave> <430641CF.3070709@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20050819201121.GA2523@us.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:24542 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932293AbVHSUyn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Aug 2005 16:54:43 -0400
+In-Reply-To: <430641CF.3070709@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: James Bottomley <jejb@steeleye.com>, Christoph Hellwig <hch@infradead.org>, James.Smart@Emulex.Com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 08/19/05 16:11, Patrick Mansfield wrote:
-> On Fri, Aug 19, 2005 at 04:03:15PM -0400, Luben Tuikov wrote:
->>The eh_timed_out + eh_strategy_handler is actually pretty perfect,
->>and _complete_, for any application and purpose in recovering a
-> 
-> 
-> One other point: Another problems is that we quiesce all shost IO before
-> waking up the eh. 
+Luben Tuikov wrote:
+> James, the "current SAS class" _will_go_ into the kernel because:
+> 	- It is 3 vendor driven: LSI, Dell, HP.
+> 	- It is being developed by you and Christoph, the people
+> who decide what goes in or not.
 
-Yes, this is true.
- 
-> I was changing it to wakeup the eh even while other IO is outstanding, so
-> the eh can wakeup and cancel individual commands while other IO is still
-> using the HBA.
+No, not for these reasons.
 
-Hmm, if you want to do this, then SCSI Core needs to know about:
-	- Domain,
-	- Domain device and
-	- LU.
+It will go in because it is small, and can be improved over time as 
+vendors such as Adaptec teach us the proper topology.
 
-The reason, is that you do not know why a task timed out.
-Is it the LU, is it the device, is it the domain?
+It is a standard problem:  engineers know their hardware, and know the 
+specs, but not the Linux development process.
 
-(Those are concepts talked about in SAM.)
+An Adaptec SAS driver can be in the 2.6.14 kernel, if it is small.
 
-Since currently, SCSI Core has no clue about those concepts,
-the current infrastructure, stalling IO to the host on eh,
-satisfies.
+The process then starts:
+1) Luben points out a problem.
+2) The best solution is discussed.
+3) A patch is created to solve that one problem.
+4) Go to step #1.
 
-> So, for EH_NOT_HANDLED, do you add the scmd to a LLDD list in your
-> eh_timed_out, then wait for the eh to run?
+We grow SAS support, like growing a plant or tree.  Start with a seed, 
+not a full-grown tree.
 
-No, no Patrick, I don't.  The SCSI Core does this for me, and then
-calls my eh_strategy routine and all the commands are on the list.
+	Jeff
 
-> Or maybe your host can_queue is 1 :)
-
-No, it is actually pretty huge for a controller, and have to 
-more than halve it and give that to SCSI Core.
- 
-> I don't see it ... hence my question above.
-
-Hmm, let me know if I'm missing something out.
-
-	Luben
 
