@@ -1,40 +1,46 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: libata error handling
-Date: Fri, 19 Aug 2005 01:54:41 -0400
-Message-ID: <43057421.5090306@pobox.com>
-References: <20050729050654.GA10413@havoc.gtf.org> <20050807054850.GA13335@htj.dyndns.org> <430556BF.5070004@pobox.com> <430570B5.60109@gmail.com>
+From: Frederic TEMPORELLI <frederic.temporelli@ext.bull.net>
+Subject: increase SD_STATS ?
+Date: Fri, 19 Aug 2005 10:02:43 +0200
+Message-ID: <43059223.4020205@ext.bull.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:12507 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932561AbVHSFyy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Aug 2005 01:54:54 -0400
-In-Reply-To: <430570B5.60109@gmail.com>
+Received: from ecfrec.frec.bull.fr ([129.183.4.8]:34528 "EHLO
+	ecfrec.frec.bull.fr") by vger.kernel.org with ESMTP id S964918AbVHSICt
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Aug 2005 04:02:49 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by ecfrec.frec.bull.fr (Postfix) with ESMTP id DB7AE19DEFB
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2005 10:02:47 +0200 (CEST)
+Received: from ecfrec.frec.bull.fr ([127.0.0.1])
+ by localhost (ecfrec.frec.bull.fr [127.0.0.1]) (amavisd-new, port 10024)
+ with ESMTP id 09113-06 for <linux-scsi@vger.kernel.org>;
+ Fri, 19 Aug 2005 10:02:46 +0200 (CEST)
+Received: from ecn002.frec.bull.fr (ecn002.frec.bull.fr [129.183.4.6])
+	by ecfrec.frec.bull.fr (Postfix) with ESMTP id 3DD0019D909
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2005 10:02:46 +0200 (CEST)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+	by openx3.frec.bull.fr (Postfix) with ESMTP id 33C092B0E8
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2005 10:02:43 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: linux-scsi@vger.kernel.org
 
-Tejun Heo wrote:
->  Heh... Maybe I'm just reluctant to let go of my patches.  Anyways, I'll 
-> now stand down and see how things go and try to help.
+Hi,
 
 
-Note that my email simply describes a long term target.  For the short 
-term, and perhaps medium term, libata will continue to use 
-->eh_strategy_handler().
+Due to SD_STATS=256  (/drivers/scsi/sd.c)
+there's a limit on the max /dev/sd devices.
 
-Given Mark's messages, my own knowledge, and other reports, there 
-continues to be room for improvement in the current EH code.
+Now, we have a large FC fabric, with more than 3500 LUNs...
+=> Of course, we have an Oops when an HBA is connected to the fabric
+(still sd.c, BUG in function sd_iostats_bump when sd>SD_STATS)
 
-In general, we need to distinguish between PCI bus errors, SATA bus 
-errors, and ATA device errors, and handle each error class 
-appropriately.  In the SCSI layer, ->eh_strategy_handler() or no, this 
-will likely consist of taking the SCSI device offline and dealing with 
-the error(s).
+What (bad) side-effects can be expected if we increase SD_STATS (4096 should be 
+nice, may be 8192) ?
 
-	Jeff
+Best regards.
 
-
+-- 
+Frederic TEMPORELLI
