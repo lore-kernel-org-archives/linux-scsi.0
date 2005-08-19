@@ -1,32 +1,31 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Some interesting results in the aic7xxx slowdown problem
-Date: Fri, 19 Aug 2005 09:22:45 -0400
-Message-ID: <1124457765.5130.13.camel@mulgrave>
-References: <1123119347.5019.78.camel@mulgrave>
-	 <20050804061809.GA4158@in.ibm.com> <1123166928.5026.8.camel@mulgrave>
-	 <20050819095428.GA9130@in.ibm.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] minimal SAS transport class
+Date: Fri, 19 Aug 2005 16:06:31 +0200
+Message-ID: <20050819140631.GB12485@lst.de>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A3A@xbl3.ma.emulex.com> <4304DBA1.4050900@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([64.109.89.108]:4024 "EHLO
-	accolon.hansenpartnership.com") by vger.kernel.org with ESMTP
-	id S932658AbVHSNWy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Aug 2005 09:22:54 -0400
-In-Reply-To: <20050819095428.GA9130@in.ibm.com>
+Received: from verein.lst.de ([213.95.11.210]:48088 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S964815AbVHSOGx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Aug 2005 10:06:53 -0400
+Content-Disposition: inline
+In-Reply-To: <4304DBA1.4050900@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: suparna@in.ibm.com
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: James.Smart@Emulex.Com, jejb@steeleye.com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, linux-scsi@vger.kernel.org
 
-On Fri, 2005-08-19 at 15:24 +0530, Suparna Bhattacharya wrote:
->  sda:
+On Thu, Aug 18, 2005 at 03:04:01PM -0400, Jeff Garzik wrote:
+> >Depending on how SATA support is implemented, it may be useful for that.
+> 
+> 
+> You can already see how SATA support is implemented ;-)
+> 
+> We just need to wrap it in a transport class.
 
-Well, this line is identifying the root cause.  It says that the
-partition code came up with no partitions for this device.  Do any of
-your other devices come up with paritions? (as in could this be a simple
-device node transposition issue?)
-
-James
-
-
+SATA support for SAS host adapters.  Especially when talking STP to a
+bridge this is a little more complicated than the current libata model.
+That doesn't mean I don't want to share code and mechanisms but it'll
+need a little refactoring at least.
