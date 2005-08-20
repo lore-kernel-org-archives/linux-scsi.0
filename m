@@ -1,130 +1,114 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: libata error handling
-Date: Fri, 19 Aug 2005 18:37:29 -0400
-Message-ID: <43065F29.8000001@adaptec.com>
-References: <20050729050654.GA10413@havoc.gtf.org> <20050807054850.GA13335@htj.dyndns.org> <430556BF.5070004@pobox.com> <4306290B.6080608@adaptec.com> <20050819193853.GA1549@us.ibm.com> <43063B03.8050008@adaptec.com> <20050819201121.GA2523@us.ibm.com> <4306447D.7090204@adaptec.com> <20050819211008.GA3032@us.ibm.com>
+From: James.Smart@Emulex.Com
+Subject: RE: [PATCH] minimal SAS transport class
+Date: Sat, 20 Aug 2005 00:15:41 -0400
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A40@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20050819211008.GA3032@us.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:41163 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1030205AbVHTEQV convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 20 Aug 2005 00:16:21 -0400
+content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: luben_tuikov@adaptec.com
+Cc: hch@lst.de, jejb@steeleye.com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, linux-scsi@vger.kernel.org
 
-On 08/19/05 17:10, Patrick Mansfield wrote:
-> Luben -
+> > This is a heck of a statement... The customers don't see it 
+> as SAS vs FC
+> > vs SPI, they just see it as SCSI, and there's a lot of 
+> expectations on
+> > consistent behavior. We take a lot of heat defending the community's
+> > position, even from companies that you would have thought 
+> had signed on
+> > to the 2.6 behaviors.
 > 
-> On Fri, Aug 19, 2005 at 04:43:41PM -0400, Luben Tuikov wrote:
+> I tried to understand this paragraph in the light of the very 
+> few past days,
+> but I couldn't.  What is it actually saying?
 > 
->>On 08/19/05 16:11, Patrick Mansfield wrote:
+> > I understand the need to push folks to the new 2.6 models, 
+> but I fully
+> > expect the same complaints to come from the users of SAS 
+> and iSCSI as well.
 > 
+> What kind of complaints?
 > 
->>>I was changing it to wakeup the eh even while other IO is outstanding, so
->>>the eh can wakeup and cancel individual commands while other IO is still
->>>using the HBA.
->>
->>Hmm, if you want to do this, then SCSI Core needs to know about:
->>	- Domain,
->>	- Domain device and
->>	- LU.
-> 
-> 
-> Not really, scsi core is just asking the LLDD to cancel or release the scmd.
+> I ask because I'm a "user of SAS and iSCSI".
 
-Hi Patrick,
+Ok, so I guess I owe you a response. I hesitate, as this discussion
+always becomes larger than it should.
 
-If you want to call any kind of eh, *without* stalling IO to the host, you have
-to know the context: LU or Domain Device or Domain,  in order to stall IO
-to the context object only.
+There are 2 key points:
+- the target id is logical for everything but SPI
+- following old SPI behavior, users expect the same devices to
+  be enumerated at the same target ids, regardless of whether
+  that enumeration is at the next link event, driver load/unload,
+  or system reboot. The corollary for this is that the device's
+  name should have remained the same as well.
 
-> That is really all we do in the eh today, and then if the LLDD can't
-> cancel the scmd, we take other sometimes less than useful steps.
+For FC, target ids are typically assigned to devices on a
+1st-seen-1st-assigned basis. For several reasons, there can be
+changes in port discovery order after link events (cable pulls,
+etc). For 2.4 kernels, the driver typically maintained a mapping
+within the driver to ensure the same device showed up at the same
+target id, even if it disappeared for some amount of time. If FC
+was the boot device, wacky methods were used to ensure the mapping
+persisted boot-to-boot.
 
-But remember, eh_timed_out and eh_strategy_handler point to
-functions in the driver, so they can do more or less, depending.
+For 2.6 kernels, the desire is to move away from relying on the
+physical addressing. The recommendation is to use udev (preferred)
+or filesystem labels (ok in some circumstances) to find the right
+devices. By moving to lun/device-level id's, issues such as name
+shift are better solved (note: name-shift still existed under 2.4).
 
-BTW, you may be able to implement an _instantaneous_ canceling of
-a command in the LLDD from any context, but this would bloat the
-LLDD so much, that is is not a viable solution, plus it _cannot_
-always be done (physically).
+We have found users having difficulty with the udev transition, as:
+- From 2.4 history, old scsi behavior, and other unix's behavior
+  (which functions much like 2.4), they are accustomed to not
+  needing external tools or admin steps for device nameing.
+  Things had just worked for the most part.
+- Most view 2.6 as an upgrade and didn't expect something this
+  basic to change.
+- Many really don't know about or understand udev, hotplug,
+  disk identifiers, and so on. Thus, there's a large education
+  effort. It has to be dealt with in yet more documentation,
+  help lines, etc.
+- There are some real challenges in supporting a udev-named boot
+  device. For the most part, it's a distro issue, which is becoming
+  better. PS: for $10, name a 2.6 distro that uses udev out
+  of the box for disk names and its installation. For $10 more, 
+  can it install/boot from one?
+- For better or worse, tools and api's exist that interacted with
+  the old 2.4-style behavior. Now they must wait for the tools to
+  be updated, suffer their non-functionality, and/or craft their
+  own tools.
+- Some of these vendors come from large disk farms, and in several
+  cases, the disk farms change frequently. Thus, they must flush
+  and regenerate their udev configurations on each change. Not a
+  fun process.
+- Most could care less about, or don't understand, the technical
+  justifications for the new 2.6 behaviors. Thus, they push their
+  vendors for same-style behaviors as 2.4 regardless of the 2.6
+  stance.
 
-This is why eh_timed_out + eh_strategy_handler is a best current bet
-for transport LLDD. (Given the current SCSI Core infrastructure.)
+Now - back to Christoph's point....
 
-As far as the upper layers are concerned:
-	- the command is either finished with status,
-	- or the LU or the Device or the Domain had problems.
-The above list is exhaustive, because if the task was never
-able to be sent via the service delivery subsystem you'd
-get a response, but the task will not "sit" in the LLDD.
+For iSCSI, (correct me if I'm wrong) as the scsi_host is mapped 1:1
+with the session, there really is no such thing as multiple targets,
+so it works. Even if it isn't 1:1, it is controlled via user space
+so it's likely managable. Note: instead of target id shifting, there
+may now be scsi_host number shifting.
 
-Most importantly to remember is that a timed out command _cannot_
-be returned instantaneously to SCSI Core, unless it is "complete"
-in the SAM sense of the meaning.  If the task is out on the domain,
-the respective eh needs to be invoked.
+For SAS, looking at Christoph's code - 
+The target id comes from the LLDD. So either the LLDD maintains a
+map of SAS port addresses to target ids, or the mapping could change,
+same as FC. Christoph's argument is that FC's issue was historical.
+SAS is sufficiently new that folks are now smart enough to use udev.
+My contention is that people will expect the same behavior out of
+SAS as they did w/ FC. To them its all "just SCSI".
 
-> The LLDD could start any error handling scheme it wants, independent of
-> scsi core action.
+I'm winded. Hope this helps.
 
-True, but this will bloat LLDD very much, and all you want of a
-transport LLDD is access to the delivery subsystem as described in SAM.
-
-> We don't initiate error handling in scsi core for other error cases, why
-> should a timeout be any different?
-
-Think of eh_timed_out as a replacement of the transport timeout
-plus some delta.  Even if you had implemented it internally,
-which you don't need to, you'd still get a timer to fire off
-and you'd be in interrupt context.
-
-As I mentioned earlier, if you've properly set the timeout value at
-slave_configure, you shouldn't be getting SCSI Core calling your
-eh_timed_out _unless_ the transport time out has kicked in, which
-*you* set at slave configure time.
-
-If, OTOH, SCSI Core _did_ call your eh_timed_out routine, this means
-that the timeout which *you* set has kicked in and action needs
-to be taken.  At that time, as per protocol, your task is either
-complete or you need to go and find it and take the appropriate
-action.
-
->>The reason, is that you do not know why a task timed out.
->>Is it the LU, is it the device, is it the domain?
-> 
-> Right, so in scsi core allow a simple method that can cancel commands
-> while the HBA is still in use.
-
-Yes, you can do this.  But in order to do this you'll need to know
-_why_ the command failed.  Is it the LU or is it the Device or
-is it the Domain.
-
-The only one who can tell you this is the LLDD who talks to the
-transport.
-
-*Unless*, the LLDD exports SAM TMFs and SCSI Core knows what to call
-and how, which is currently not the case.
-
->>>So, for EH_NOT_HANDLED, do you add the scmd to a LLDD list in your
->>>eh_timed_out, then wait for the eh to run?
->>
->>No, no Patrick, I don't.  The SCSI Core does this for me, and then
->>calls my eh_strategy routine and all the commands are on the list.
-> 
-> 
-> Oh right ... I was not thinking straight.
-> 
-> But I don't see how that gains much, if you sometimes still wait for scsi
-> core to quiesce IO and wakeup the eh.
-
-Yes, you're completely right, the SCSI Core eh infrastructure is
-incomplete. (I never mentioned I was gaining anything, I was merely
-working around the current infrastructure. ;-) )
-
-With the current infrastructure you cannot fine grain stalling
-IO to the different storage objects, simply because SCSI Core
-has _no representation for them_.
-
-	Luben
-
+-- james s
