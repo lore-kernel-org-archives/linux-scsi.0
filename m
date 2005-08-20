@@ -1,45 +1,38 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH] minimal SAS transport class
-Date: Sat, 20 Aug 2005 00:57:38 -0400
-Message-ID: <4306B842.6010708@pobox.com>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A40@xbl3.ma.emulex.com>
+Date: Sat, 20 Aug 2005 10:18:14 +0100
+Message-ID: <20050820091814.GB21698@infradead.org>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A3A@xbl3.ma.emulex.com> <4304DBA1.4050900@pobox.com> <20050819140631.GB12485@lst.de> <43061C3C.2020303@adaptec.com> <20050819175459.GA16619@lst.de> <43061D57.9060201@adaptec.com> <20050819175929.GA5614@infradead.org> <43061FC9.8060301@adaptec.com> <1124481582.5130.88.camel@mulgrave> <430641CF.3070709@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:5088 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750748AbVHTE55 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 Aug 2005 00:57:57 -0400
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A40@xbl3.ma.emulex.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:6350 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751242AbVHTJSq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 20 Aug 2005 05:18:46 -0400
+Content-Disposition: inline
+In-Reply-To: <430641CF.3070709@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: luben_tuikov@adaptec.com, hch@lst.de, jejb@steeleye.com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: James Bottomley <jejb@steeleye.com>, Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, James.Smart@Emulex.Com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James.Smart@Emulex.Com wrote:
-> For SAS, looking at Christoph's code - 
-> The target id comes from the LLDD. So either the LLDD maintains a
-> map of SAS port addresses to target ids, or the mapping could change,
-> same as FC. Christoph's argument is that FC's issue was historical.
+On Fri, Aug 19, 2005 at 04:32:15PM -0400, Luben Tuikov wrote:
+> > The current SAS class will only get validated when it actually meets
+> > real SAS topologies, which is acceptable in my view just to get this
+> > project actually moving; code can always be updated later ...
+> 
+> James, the "current SAS class" _will_go_ into the kernel because:
+> 	- It is 3 vendor driven: LSI, Dell, HP.
+> 	- It is being developed by you and Christoph, the people
+> who decide what goes in or not.
 
+No, it will go in because it's the only class actually available.
 
-As James and I discussed on IRC, the FC mapping issue will crop up 
-again, such as with SAS.
-
-A core problem is that the SCSI layer expects to address things on a 
-host/channel/id/lun basis, when _that_ addressing is largely a legacy 
-holdover from parallel SCSI.
-
-We need to figure out a way to move SCSI layer addressing forward, and 
-eliminate any need for hacks such as FC's mapping.
-
-FC's mapping hacks exist because the SCSI layer addressing needs to be 
-made more flexible.
-
-Unfortunately, as James also pointed out, changing addressing will cause 
-lots of churn, and potentially some breakage.
-
-	Jeff
-
+I'd still love to see any code from you posted publically.  I've been
+forwarded in private some code you sent around to a few people at OLS,
+but you still can't be bothered to actually posting it publically.  Not
+that even if my minimal code goes in now there's absolutely no reason
+we can't replace it completely later on.  See the evolution of the FC
+transport class.
 
