@@ -1,102 +1,62 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: [PATCH] minimal SAS transport class
-Date: Sat, 20 Aug 2005 13:23:04 -0400
-Message-ID: <430766F8.1090100@adaptec.com>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A40@xbl3.ma.emulex.com>
+Date: Sat, 20 Aug 2005 13:34:49 -0400
+Message-ID: <430769B9.9080302@adaptec.com>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A3A@xbl3.ma.emulex.com> <4304DBA1.4050900@pobox.com> <20050819140631.GB12485@lst.de> <43061C3C.2020303@adaptec.com> <20050819175459.GA16619@lst.de> <43061D57.9060201@adaptec.com> <20050819175929.GA5614@infradead.org> <43061FC9.8060301@adaptec.com> <1124481582.5130.88.camel@mulgrave> <430641CF.3070709@adaptec.com> <20050820091814.GB21698@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:17564 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932585AbVHTRXV (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:62372 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932590AbVHTRe4 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 Aug 2005 13:23:21 -0400
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A40@xbl3.ma.emulex.com>
+	Sat, 20 Aug 2005 13:34:56 -0400
+In-Reply-To: <20050820091814.GB21698@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: hch@lst.de, jejb@steeleye.com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <jejb@steeleye.com>, Jeff Garzik <jgarzik@pobox.com>, James.Smart@Emulex.Com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 08/20/05 00:15, James.Smart@Emulex.Com wrote:
-> Ok, so I guess I owe you a response. I hesitate, as this discussion
-> always becomes larger than it should.
+On 08/20/05 05:18, Christoph Hellwig wrote:
+> On Fri, Aug 19, 2005 at 04:32:15PM -0400, Luben Tuikov wrote:
 > 
-> There are 2 key points:
-> - the target id is logical for everything but SPI
-> - following old SPI behavior, users expect the same devices to
->   be enumerated at the same target ids, regardless of whether
->   that enumeration is at the next link event, driver load/unload,
->   or system reboot. The corollary for this is that the device's
->   name should have remained the same as well.
+>>>The current SAS class will only get validated when it actually meets
+>>>real SAS topologies, which is acceptable in my view just to get this
+>>>project actually moving; code can always be updated later ...
+>>
+>>James, the "current SAS class" _will_go_ into the kernel because:
+>>	- It is 3 vendor driven: LSI, Dell, HP.
+>>	- It is being developed by you and Christoph, the people
+>>who decide what goes in or not.
+> 
+> 
+> No, it will go in because it's the only class actually available.
+> 
+> I'd still love to see any code from you posted publically.  I've been
+> forwarded in private some code you sent around to a few people at OLS,
 
-I don't mind LLDD giving channel and id to SCSI Core.  Not at all.
-What I mind is the _way_ it is done.
+Thats good, I was hoping that you'd get it.
 
-Just consider this (and I'm sure you have the same sentiments):
-slave alloc gives you channel and id and lun/2 to find out
-the device it wants to poke at...  And the really sad part is
-that NO ONE at linux-scsi finds this objectionable.   This should've
-been thrown out 5 years ago (well slave alloc wasn't around then)
-when iSCSI was making its way in, and when people suggested it.
-Sadly it was shot down by the Maintainers and this is what we
-have here today.
+> but you still can't be bothered to actually posting it publically.  Not
 
-> For FC, target ids are typically assigned to devices on a
-> 1st-seen-1st-assigned basis. For several reasons, there can be
-> changes in port discovery order after link events (cable pulls,
-> etc). For 2.4 kernels, the driver typically maintained a mapping
-> within the driver to ensure the same device showed up at the same
-> target id, even if it disappeared for some amount of time. If FC
-> was the boot device, wacky methods were used to ensure the mapping
-> persisted boot-to-boot.
+C'mon Christoph -- no one more than me wants to see SCSI Core improved.
+5 years ago because of iSCSI, now because of SAS.
 
-This is all _fine_ and I don't mind it at all.
+It's not about "being bothered", it's just that it's not quite
+finished yet.
 
-> For SAS, looking at Christoph's code - 
-> The target id comes from the LLDD. So either the LLDD maintains a
-> map of SAS port addresses to target ids, or the mapping could change,
-> same as FC. Christoph's argument is that FC's issue was historical.
-> SAS is sufficiently new that folks are now smart enough to use udev.
-> My contention is that people will expect the same behavior out of
-> SAS as they did w/ FC. To them its all "just SCSI".
+> that even if my minimal code goes in now there's absolutely no reason
+> we can't replace it completely later on.  See the evolution of the FC
+> transport class.
 
-Ok, to answer both your and Jeff's email, this is how this all is done:
+Who makes all those decisions?
 
-Let, (channel, id) tuple be *just another label*!
+More generally, why is SCSI Core not being managed by
+Documentation/ManagingStyle?
 
-For a domain device or LU in a domain device you can have a myriad of
-labels, depending on a myriad of things, like
-	- how you got to the device
-	- what transport you used to get the device
-	- what kind of device it actually is,
-	- what kind of interrogation methods it replies to,
-	- what kind of VPD it has if any,
-	- what the Command Set driver named it (sdX, stX),
-	- etc.
-
-Now, the function of a LLDD is to provide access to the
-transport, this is done by the LLDD implementing SAM's
-Execute Task and the TMFs.
-
-Next, the transport layer uses those to interrogate the domain
-the LLDD provides access to and find out any domain devices.
-Each domain device is then registered with SCSI Core,
-using something like a "struct domain_device".
-
-Now _that_ "struct domain_device" can have as many and as varied
-_labels_ as you want: (channel, id), WWN, Funky name1, Funky name2,
-name given by the Command Set driver, which as kept in the
-struct domain_device.
-
-Then you expose _those_ labels to user space and let programs
-use whatever label they want.  The kernel itself can use
-the struct domain device to address the device, but anyone
-else from user space can use one of the labels: WWN, (channel,id),
-etc.
-
-This will give you backward compatibility, plus it would allow
-for SCSI Core to be completely rewritten in the spirit of
-SAM and enter the 21 century.
+Is it because there's so much vendor interest here?
 
 	Luben
+
+
 
