@@ -1,43 +1,33 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH] minimal SAS transport class
-Date: Sun, 21 Aug 2005 08:41:55 +0200
-Message-ID: <1124606515.3209.3.camel@laptopd505.fenrus.org>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A3A@xbl3.ma.emulex.com>
-	 <4304DBA1.4050900@pobox.com> <20050819140631.GB12485@lst.de>
-	 <43061C3C.2020303@adaptec.com> <20050819175459.GA16619@lst.de>
-	 <43061D57.9060201@adaptec.com> <20050819175929.GA5614@infradead.org>
-	 <43061FC9.8060301@adaptec.com> <1124481582.5130.88.camel@mulgrave>
-	 <430641CF.3070709@adaptec.com> <20050820091814.GB21698@infradead.org>
-	 <430769B9.9080302@adaptec.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [PATCH 2.6.12.5 1/2] lib: allow idr to be used in irq context
+Date: Sun, 21 Aug 2005 01:25:06 -0700
+Message-ID: <20050821012506.5b106dab.akpm@osdl.org>
+References: <430262C5.20503@adaptec.com>
+	<1124294489.2802.107.camel@new.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:56216 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1750774AbVHUGmJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 Aug 2005 02:42:09 -0400
-In-Reply-To: <430769B9.9080302@adaptec.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750711AbVHUI0u@vger.kernel.org>
+In-Reply-To: <1124294489.2802.107.camel@new.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jim Houston <jim.houston@ccur.com>
+Cc: luben_tuikov@adaptec.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, davej@redhat.com, jgarzik@pobox.com
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, andrew.patterson@hp.com, Eric.Moore@lsil.com, ltuikov@yahoo.com, James.Smart@Emulex.Com, Jeff Garzik <jgarzik@pobox.com>, James Bottomley <jejb@steeleye.com>, Christoph Hellwig <hch@infradead.org>
 
-
+Jim Houston <jim.houston@ccur.com> wrote:
+>
+> On Tue, 2005-08-16 at 18:03, Luben Tuikov wrote:
 > 
-> > that even if my minimal code goes in now there's absolutely no reason
-> > we can't replace it completely later on.  See the evolution of the FC
-> > transport class.
+> > If idr_get_new() or idr_remove() is used in IRQ context,
+> > then we may get a lockup when idr_pre_get was called
+> > in process context and an IRQ interrupted while it held
+> > the idp lock.
 > 
-> Who makes all those decisions?
+> Hi Everyone,
 > 
-> More generally, why is SCSI Core not being managed by
-> Documentation/ManagingStyle?
+> Luben's changes make sense please merge them.
 > 
-> Is it because there's so much vendor interest here?
 
-well Christophs code is the only one out there. So why shouldn't his be
-merged? If better code comes along later it's easy to replace (or
-extend)... what is the problem here??
+Well yes, the change makes sense if there's actually a caller which needs it.
 
-
+If there is such a caller then Luben should identify it, please.
