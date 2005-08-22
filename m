@@ -1,42 +1,118 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] minimal SAS transport class
-Date: Mon, 22 Aug 2005 17:08:33 -0600
-Message-ID: <91888D455306F94EBD4D168954A9457C03B21627@nacos172.co.lsil.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [PATCH 2.6.12.5 1/2] lib: allow idr to be used in irq context
+Date: Sun, 21 Aug 2005 17:33:25 -0700 (PDT)
+Message-ID: <20050822003325.33507.qmail@web51613.mail.yahoo.com>
+References: <1124661830.5068.19.camel@mulgrave>
+Reply-To: luben_tuikov@adaptec.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:60372 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932312AbVHVXI5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Aug 2005 19:08:57 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932360AbVHVXNl@vger.kernel.org>
+In-Reply-To: <1124661830.5068.19.camel@mulgrave>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, luben_tuikov@adaptec.com
+Cc: Andrew Morton <akpm@osdl.org>, Jim Houston <jim.houston@ccur.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Dave Jones <davej@redhat.com>, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, James.Smart@Emulex.Com
-Cc: luben_tuikov@adaptec.com, jejb@steeleye.com, ltuikov@yahoo.com, andrew.patterson@hp.com, linux-scsi@vger.kernel.org
 
-On Sunday, August 21, 2005 10:53 AM, Christoph Hellwig wrote:
-> This is just a brindup helper because the Fusion hardware does a SAS
-> remote port to target ID mapping in firmware, in fact the firmware
-> interface only addresses them using this assigned ID, which is a big
-> shortcoming in the Fusion interface.  Once the more basic things are
-> dealt with that will go away, similarly to how Fusion won't be able
-> to use their firmware mapping for FC once they fully support the FC
-> transport class.
->
+--- James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> On Sun, 2005-08-21 at 10:27 -0700, Luben Tuikov wrote:
+> > Is this the only use _you_ could find for a *radix tree*? ;-)
+> > Since of course sd.c uses it just as an enumeration, according to
+> > you this must be the only use? :-)
+> 
+> And Dicto Simpliciter to you too.
+> 
+> > It was designed as a general purpose id to pointer translation
+> > service, just as the comment in it says.
+> 
+> idr was specifically designed with unlocked pre-allocation in mind.  The
+> change you're proposing wants to allow pre allocation from irq context.
+> This really doesn't look like a good change because the whole point of
+> pre allocation is to do it at a point in time when the system can sleep
+> if it has to.
 
-Thats incorrect about the Fusion Firmware Interface.
+No preallocation is done from IRQ context.  Do not spread FUD.
+It seems to me that you're unaware how IDR works and unaware how
+the driver works.
 
-The Sas Device Config pages offers three ways to access this config page.
-They are:  (1) GetNextHandle (2) BusTargetID (3) Handle.
-This is set in config page pageAddr field - bits 28-31.  Lets say you want
-to know all the devices out in the sas domain that is discovered by
-this HBA, you do the GetNextHandle method.  Bits 0-27 is the FormSpecific.
-In FormSpecific, you pass 0xFFFF for the first request, then you pass the
-devHandle for the previous config page to get the next.  The 3.02.55 code
-I sent you did this discovery in mptbase.c, in a function called
-mpt_sas_get_info.
-All this info is stored in a link list, that currently is used for CSMI.
+See the original patch submission -- I do explain why it is needed,
+and show exactly how it breaks.  You may also want to look at the idr.c
+code.  There is no reason not to promote the lock to an irq spinlock,
+again, since it protects only data manipulation, as it should.
 
-Eric Moore
- 
+In fact, when you start writing code and actually face problems,
+and start looking for the right tools, then you'll see it.  Right now
+this is a useless argument and you should drop it.
+
+> What I don't understand is why you need to pre allocate this tag from
+> irq context.  Best practise is to allocate when you have user context
+> but make use of it in IRQ context.
+
+No preallocation is done in IRQ context.  See above.
+
+Furthermore, you should know that a slab cache *settles* very
+quickly, especially for IO.  You should've learned this when
+I posted my results of SCSI Core using the slab cache for commands
+5 years ago, before that code was in SCSI Core.
+
+James, is this the most important thing for SCSI Core for the maintaner of
+SCSI Core to discuss?
+
+IDR's use?  A general library utility's use in a driver?
+Is this what the SCSI Core maintainer will use to reject a driver's
+acceptance?
+
+When so many things have been said in the last week on this mailing
+list, being in direct importance to SCSI Core: error handling
+being one of them, another is HCIL usage, and other vendor
+provided labels for LUs, native target support, etc.
+
+> > > However, there is an infrastructure in the block layer called the
+> > > generic tag infrastructure which was designed precisely for this purpose
+> > > and which is designed to operate in IRQ context.
+> > 
+> > James, I'm sure you're well aware that,
+> >    - a request_queue is LU-bound,
+> >    - a SCSI _transport_ (*ANY*) can _only_ address domain devices, but
+> >      _not_ LUs.  LUs are *not* seen on the domain.
+> > 
+> > See the different associations?  Then why are you posting such emails?
+> 
+> So you're planning to do some type of tag command queueing outside of
+> the block framework?  Could you just look at what it would take to do it
+> within the existing framework first?  I seem to have wasted quite a bit
+> of time recently pulling spurious queueing code out of Adaptec drivers.
+
+No one is implementing tag command queueing.  Why are you spreading FUD
+into making people think that if you use tags, you must be doing
+tagged command _queueing_?
+
+Here:
+    Tags do _not_ imply TCQ.
+    TCQ does imply Tags.
+
+> Remember that the code is adaptable ... we have non-block devices that
+> use block queues for instance.
+
+Completely irrelevant for a transport driver.  Stop throwing red-herring.
+
+Instead let's start discussing matters SCSI, which have been due for
+the last 5 years, which I had hoped you'd _lead_ or at least
+*listen and take paches* into SCSI Core, you know, like other
+maintainers do.  Those are:
+    - 8 byte LUNs, opaque to SCSI Core,
+    - native target (domain device) support,
+    - native LU discovery,
+    - HCIL becoming just one of _many_ possible labels for an LU, whereby
+      vendors provide them.
+
+*This* is what is important and relevant to SCSI Core.  Not to mention,
+error handling, etc.
+
+Now let's drop this and start discussing things which have been
+a pain for the last 5 years, since the first SAM LLDD (iSCSI)
+was introduced to SCSI Core (at least not publicly).
+
+Let's take SCSI Core into the 21st century, shall we?  Please?
+
+   Luben
