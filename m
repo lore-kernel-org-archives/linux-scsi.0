@@ -1,48 +1,43 @@
-From: Matt Domsch <Matt_Domsch@dell.com>
-Subject: Re: [PATCH] minimal SAS transport class
-Date: Sun, 21 Aug 2005 23:55:02 -0500
-Message-ID: <20050822045502.GA7147@lists.us.dell.com>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A40@xbl3.ma.emulex.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] correct attribute_container list usage
+Date: Mon, 22 Aug 2005 17:47:06 -0500
+Message-ID: <1124750826.5211.46.camel@mulgrave>
+References: <1124723180.5211.25.camel@mulgrave>
+	 <20050822214617.GA26441@us.ibm.com> <1124747956.5211.38.camel@mulgrave>
+	 <20050822221427.GA26767@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:16268 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751306AbVHVWmn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Aug 2005 18:42:43 -0400
-Received: from ausc60ps301.us.dell.com (ausc60ps301.us.dell.com [143.166.148.206])
-	by zeus1.kernel.org (8.13.1/8.13.1) with ESMTP id j7M4u87R002158
-	for <linux-scsi@vger.kernel.org>; Sun, 21 Aug 2005 21:56:09 -0700
-Content-Disposition: inline
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A40@xbl3.ma.emulex.com>
+Received: from stat16.steeleye.com ([209.192.50.48]:7861 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751370AbVHVWrP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Aug 2005 18:47:15 -0400
+In-Reply-To: <20050822221427.GA26767@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: luben_tuikov@adaptec.com, hch@lst.de, jejb@steeleye.com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>
 
-On Sat, Aug 20, 2005 at 12:15:41AM -0400, James.Smart@Emulex.Com wrote:
-> - There are some real challenges in supporting a udev-named boot
->   device. For the most part, it's a distro issue, which is becoming
->   better. PS: for $10, name a 2.6 distro that uses udev out
->   of the box for disk names and its installation. For $10 more, 
->   can it install/boot from one?
+On Mon, 2005-08-22 at 15:14 -0700, Patrick Mansfield wrote:
+> based on whatever was in current 2.6.x git tree a couple weeks ago.]
+> 
+> The klist is (effectively) embedded within the struct device.
+> 
+> The klist_next() gets and puts on the klist object, so when the struct
+> device ref (or kref) counts go to zero, we free up the klist independent
+> of its ref counts.
 
-I won't get your $10, but RHEL4 has a mechanism to specify "install
-onto BIOS disk N", where N is typically 80h (it's an int13 number,
-what BIOS typically boots from).  EDD in anaconda handles the mapping
-of BIOS disk number to /dev/whatever.  And a few folks at Dell are
-working on a udev helper to let udev know this mapping too, and
-incorporating the same capability into SLES in the future.
+Aarg, yet another object lifetime problem.
 
-After install, file system labels have been working great for years.
-root=LABEL=/  syntax for example, and you can get as complex as you
-like with that label.
+That somewhat lessens klist's utility, I think.  To fix this, the node
+kref and the object that embeds it have to be tied together somehow.
 
-Thanks,
-Matt
+One apparent, but rather nasty, solution would be to embed object get
+and put into the klist head as functions that take the node, so
+klist_next would take the object reference as well as the list kref,
+then drop it on klist_release.
 
--- 
-Matt Domsch
-Software Architect
-Dell Linux Solutions linux.dell.com & www.dell.com/linux
-Linux on Dell mailing lists @ http://lists.us.dell.com
+James
+
+
