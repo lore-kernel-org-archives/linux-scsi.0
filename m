@@ -1,61 +1,38 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] correct attribute_container list usage
-Date: Mon, 22 Aug 2005 14:46:17 -0700
-Message-ID: <20050822214617.GA26441@us.ibm.com>
-References: <1124723180.5211.25.camel@mulgrave>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 2.6.12.5 1/2] lib: allow idr to be used in irq context
+Date: Mon, 22 Aug 2005 16:53:35 -0500
+Message-ID: <1124747615.5211.34.camel@mulgrave>
+References: <20050822003325.33507.qmail@web51613.mail.yahoo.com>
+	 <1124680540.5068.37.camel@mulgrave> <20050821205214.2a75b3cf.akpm@osdl.org>
+	 <1124720938.5211.13.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:44729 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751269AbVHVVqW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Aug 2005 17:46:22 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j7MLkKaF001796
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2005 17:46:20 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j7MLkHpD289402
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2005 17:46:17 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j7MLkGHG012653
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2005 17:46:16 -0400
-Content-Disposition: inline
-In-Reply-To: <1124723180.5211.25.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751296AbVHVVyJ@vger.kernel.org>
+In-Reply-To: <1124720938.5211.13.camel@mulgrave>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: luben_tuikov@adaptec.com, jim.houston@ccur.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Dave Jones <davej@redhat.com>, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Aug 22, 2005 at 10:06:19AM -0500, James Bottomley wrote:
+On Mon, 2005-08-22 at 09:28 -0500, James Bottomley wrote:
+> > I think providing locking inside idr.c was always a mistake - generally we
+> > rely on caller-provided locking for such things.
+> 
+> Well, the reason is because they wanted lockless pre-alloc.  If you do
+> it locked, you can't use GFP_KERNEL for the memory allocation flag which
+> rather defeats its purpose.
 
-> +/* FIXME: can't break out of this unless klist_iter_exit is also
-> + * called before doing the break
-> + */
-> +#define klist_for_each_entry(pos, head, member, iter) \
-> +	for (klist_iter_init(head, iter); (pos = ({ \
-> +		struct klist_node *n = klist_next(iter); \
-> +		n ? ({ klist_iter_exit(iter) ; NULL; }) : \
-> +			container_of(n, typeof(*pos), member);\
-> +	}) ) != NULL; )
-> +			
-> +
+It looks to be feasible to implement this locklessly the same way as the
+radix-tree does (with a per_cpu list), except that you still need a
+start/end API for the pre allocation to do the initial disable of pre-
+emption.
 
-> -		spin_lock(&cont->containers_lock);
-> -		list_for_each_entry_safe(ic, tmp, &cont->containers, node) {
-> +
-> +		klist_for_each_entry(ic, &cont->containers, node, &iter) {
->  			if (dev != ic->classdev.dev)
->  				continue;
-> -			list_del(&ic->node);
-> +			klist_remove(&ic->node);
->  			if (fn)
->  				fn(cont, dev, &ic->classdev);
+Then the remove should simply then free the entry (again like radix-
+tree) and let the slab take care of necessary locking.
 
-Did you test with CONFIG_DEBUG_SLAB enabled?
+Of course, if we're going to go to all this trouble, the next question
+that arises naturally is why not just reuse the radix-tree code to
+implement idr anyway ... ?
 
-I have a workaround for problems with device_for_each_child() not being
-"safe", I'm trying to verify it right now, but the underlying problem is
-in klist_next(), I don't have a general solution for it (it looks hard to
-fix).
-
--- Patrick Mansfield
+James
