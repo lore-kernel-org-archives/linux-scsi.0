@@ -1,118 +1,287 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH 2.6.12.5 1/2] lib: allow idr to be used in irq context
-Date: Sun, 21 Aug 2005 17:33:25 -0700 (PDT)
-Message-ID: <20050822003325.33507.qmail@web51613.mail.yahoo.com>
-References: <1124661830.5068.19.camel@mulgrave>
-Reply-To: luben_tuikov@adaptec.com
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] correct attribute_container list usage
+Date: Mon, 22 Aug 2005 15:21:11 -0700
+Message-ID: <20050822222111.GA26927@us.ibm.com>
+References: <1124723180.5211.25.camel@mulgrave> <20050822214617.GA26441@us.ibm.com> <1124747956.5211.38.camel@mulgrave> <20050822221427.GA26767@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932360AbVHVXNl@vger.kernel.org>
-In-Reply-To: <1124661830.5068.19.camel@mulgrave>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, luben_tuikov@adaptec.com
-Cc: Andrew Morton <akpm@osdl.org>, Jim Houston <jim.houston@ccur.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Dave Jones <davej@redhat.com>, Jeff Garzik <jgarzik@pobox.com>
+Content-Type: multipart/mixed; boundary="Dxnq1zWXvFF0Q93v"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e31.co.us.ibm.com ([32.97.110.129]:40911 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751081AbVHVXVf
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Aug 2005 19:21:35 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e31.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j7MN07Zp238250
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2005 19:21:32 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j7MMLJh5346276
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2005 16:21:19 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j7MMLAaN022325
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2005 16:21:10 -0600
+Content-Disposition: inline
+In-Reply-To: <20050822221427.GA26767@us.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
---- James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> On Sun, 2005-08-21 at 10:27 -0700, Luben Tuikov wrote:
-> > Is this the only use _you_ could find for a *radix tree*? ;-)
-> > Since of course sd.c uses it just as an enumeration, according to
-> > you this must be the only use? :-)
-> 
-> And Dicto Simpliciter to you too.
-> 
-> > It was designed as a general purpose id to pointer translation
-> > service, just as the comment in it says.
-> 
-> idr was specifically designed with unlocked pre-allocation in mind.  The
-> change you're proposing wants to allow pre allocation from irq context.
-> This really doesn't look like a good change because the whole point of
-> pre allocation is to do it at a point in time when the system can sleep
-> if it has to.
 
-No preallocation is done from IRQ context.  Do not spread FUD.
-It seems to me that you're unaware how IDR works and unaware how
-the driver works.
+--Dxnq1zWXvFF0Q93v
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-See the original patch submission -- I do explain why it is needed,
-and show exactly how it breaks.  You may also want to look at the idr.c
-code.  There is no reason not to promote the lock to an irq spinlock,
-again, since it protects only data manipulation, as it should.
+On Mon, Aug 22, 2005 at 03:14:27PM -0700, Patrick Mansfield wrote:
 
-In fact, when you start writing code and actually face problems,
-and start looking for the right tools, then you'll see it.  Right now
-this is a useless argument and you should drop it.
+> Attached is a test module, it oopsed for me with CONFIG_DEBUG_SLAB, on
+> ppc64. I was trying to complete testing of my hack (on current git tree,
+> rather than scsi-misc), but have been preempted by other work today.
+> The patch worked OK for rmmod qla2300.
 
-> What I don't understand is why you need to pre allocate this tag from
-> irq context.  Best practise is to allocate when you have user context
-> but make use of it in IRQ context.
+OK ... really attached it this time.
 
-No preallocation is done in IRQ context.  See above.
+--Dxnq1zWXvFF0Q93v
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="dev_child.c"
 
-Furthermore, you should know that a slab cache *settles* very
-quickly, especially for IO.  You should've learned this when
-I posted my results of SCSI Core using the slab cache for commands
-5 years ago, before that code was in SCSI Core.
+#include <linux/config.h>
+#include <linux/module.h>
 
-James, is this the most important thing for SCSI Core for the maintaner of
-SCSI Core to discuss?
+#include <linux/kernel.h>
+#include <linux/sched.h>
+#include <linux/errno.h>
+#include <linux/timer.h>
+#include <linux/types.h>
+#include <linux/string.h>
+#include <linux/genhd.h>
+#include <linux/fs.h>
+#include <linux/init.h>
+#include <linux/proc_fs.h>
+#include <linux/moduleparam.h>
 
-IDR's use?  A general library utility's use in a driver?
-Is this what the SCSI Core maintainer will use to reject a driver's
-acceptance?
+static int dev_child_state = 1;
 
-When so many things have been said in the last week on this mailing
-list, being in direct importance to SCSI Core: error handling
-being one of them, another is HCIL usage, and other vendor
-provided labels for LUs, native target support, etc.
+MODULE_AUTHOR("Patrick Mansfield");
+MODULE_DESCRIPTION("test device_for_each_child");
+MODULE_LICENSE("GPL");
 
-> > > However, there is an infrastructure in the block layer called the
-> > > generic tag infrastructure which was designed precisely for this purpose
-> > > and which is designed to operate in IRQ context.
-> > 
-> > James, I'm sure you're well aware that,
-> >    - a request_queue is LU-bound,
-> >    - a SCSI _transport_ (*ANY*) can _only_ address domain devices, but
-> >      _not_ LUs.  LUs are *not* seen on the domain.
-> > 
-> > See the different associations?  Then why are you posting such emails?
-> 
-> So you're planning to do some type of tag command queueing outside of
-> the block framework?  Could you just look at what it would take to do it
-> within the existing framework first?  I seem to have wasted quite a bit
-> of time recently pulling spurious queueing code out of Adaptec drivers.
+static struct device dev_child_main, *dev_child_child;
 
-No one is implementing tag command queueing.  Why are you spreading FUD
-into making people think that if you use tags, you must be doing
-tagged command _queueing_?
+static void some_release(struct device *dev)
+{
+	printk(KERN_WARNING "enter %s to kfree %s\n", __FUNCTION__,
+	       dev->bus_id);
+	kfree(dev);
+	printk(KERN_WARNING "exit  %s\n", __FUNCTION__);
+}
 
-Here:
-    Tags do _not_ imply TCQ.
-    TCQ does imply Tags.
+/*
+ * Add one device under dev_child_main.
+ */
+static void dev_child_create(void)
+{
+	struct device *dev;
 
-> Remember that the code is adaptable ... we have non-block devices that
-> use block queues for instance.
+	printk(KERN_WARNING "enter %s\n", __FUNCTION__);
+	dev = kmalloc(sizeof (*dev), GFP_KERNEL);
+	if (!dev) {
+		printk(KERN_WARNING "%s can't get dev\n", __FUNCTION__);
+		return;
+	}
+	memset(dev, 0, sizeof(*dev));
+	dev->parent = &dev_child_main;
+	dev->release = &some_release;
+	sprintf(dev->bus_id, "child-1");
+	device_register(dev);
+	dev_child_child = dev;
+	printk(KERN_WARNING "exit  %s, added %s\n", __FUNCTION__,
+	       dev->bus_id);
+}
 
-Completely irrelevant for a transport driver.  Stop throwing red-herring.
+/*
+ * Remove dev_child_child.
+ */
+static void dev_child_destroy_ok(void)
+{
+	printk(KERN_WARNING "enter %s\n", __FUNCTION__);
+	if (dev_child_child) {
+		get_device(&dev_child_main);
+		device_unregister(dev_child_child);
+		dev_child_child = NULL;
+		put_device(&dev_child_main);
+	}
+	printk(KERN_WARNING "exit  %s\n", __FUNCTION__);
+}
 
-Instead let's start discussing matters SCSI, which have been due for
-the last 5 years, which I had hoped you'd _lead_ or at least
-*listen and take paches* into SCSI Core, you know, like other
-maintainers do.  Those are:
-    - 8 byte LUNs, opaque to SCSI Core,
-    - native target (domain device) support,
-    - native LU discovery,
-    - HCIL becoming just one of _many_ possible labels for an LU, whereby
-      vendors provide them.
+static int remove_child(struct device *dev, void *data)
+{
+	printk(KERN_WARNING "enter %s\n", __FUNCTION__);
+	device_unregister(dev);
+	printk(KERN_WARNING "exit  %s\n", __FUNCTION__);
+	return 0;
+}
 
-*This* is what is important and relevant to SCSI Core.  Not to mention,
-error handling, etc.
+/*
+ * Remove all children of dev_child_main
+ */
+static void dev_child_destroy_fails(void)
+{
+	printk(KERN_WARNING "enter %s\n", __FUNCTION__);
+	get_device(&dev_child_main);
+	device_for_each_child(&dev_child_main, NULL, remove_child);
+	put_device(&dev_child_main);
+	dev_child_child = NULL;
+	printk(KERN_WARNING "exit  %s\n", __FUNCTION__);
+}
 
-Now let's drop this and start discussing things which have been
-a pain for the last 5 years, since the first SAM LLDD (iSCSI)
-was introduced to SCSI Core (at least not publicly).
+static int dev_child_set_state(const char *val, struct kernel_param *kp)
+{
+	int new_state;
 
-Let's take SCSI Core into the 21st century, shall we?  Please?
+	switch(val[0]) {
+	case '0':
+		new_state = 0;
+		break;
+	case '1':
+		new_state = 1;
+		break;
+	case '2':
+		new_state = 2;
+		break;
+	default:
+		return -EINVAL;
+	}
 
-   Luben
+	if (new_state != dev_child_state) {
+		dev_child_state = new_state;
+		if (dev_child_state == 0)
+			dev_child_create();
+		else if (dev_child_state == 1)
+			dev_child_destroy_ok();
+		else /* 2 */
+			dev_child_destroy_fails();
+		return 0;
+	} else
+		return -E2BIG;
+
+	return 0;
+}
+
+module_param_call(state, dev_child_set_state, param_get_int,
+		                    &dev_child_state, 0644);
+
+static void dev_child_0_release(struct device * dev)
+{
+}
+
+static struct device dev_child_primary = {
+	.bus_id		= "pseudo-dev_child",
+	.release	= dev_child_0_release,
+};
+
+static int dev_child_bus_match(struct device *dev,
+                          struct device_driver *dev_driver)
+{
+        return 1;
+}
+
+static struct bus_type dev_child_bus = {
+        .name = "dev_child_bus",
+        .match = dev_child_bus_match,
+};
+
+static int dev_child_probe(struct device *dev)
+{
+	int error = 0;
+
+	return error;
+}
+
+static int dev_child_remove(struct device *dev)
+{
+	int error = 0;
+
+	dev_child_destroy_ok();
+	return error;
+}
+
+static struct device_driver dev_child_sys_driver = {
+	.name           = "dev_child",
+	.bus            = &dev_child_bus,
+	.probe          = dev_child_probe,
+	.remove         = dev_child_remove,
+};
+
+static void dev_child_release(struct device *dev)
+{
+}
+
+static void add_main(void)
+{
+	struct device *dev = &dev_child_main;
+	int error;
+
+	/* add one device to our pseudo bus */
+	device_initialize(dev);
+	dev->bus = &dev_child_bus;
+	dev->parent = &dev_child_primary;
+	dev->release = &dev_child_release;
+	strcpy(dev->bus_id, "dev_child_main");
+
+	error = device_register(dev);
+	if (error)
+		printk(KERN_WARNING "%s device_register failed %d\n",
+		       __FUNCTION__, error);
+}
+
+static void remove_main(void)
+{
+	device_unregister(&dev_child_main);
+}
+
+static int __init dev_child_init(void)
+{
+	int err;
+
+	err = device_register(&dev_child_primary);
+	if (err) {
+		printk(KERN_WARNING "%s: device_register failed %d\n",
+		      __FUNCTION__, err);
+		goto fail1;
+	}
+	err = bus_register(&dev_child_bus);
+	if (err) {
+		printk(KERN_WARNING "%s: bus_register failed %d\n",
+		      __FUNCTION__, err);
+		goto fail2;
+	}
+	err = driver_register(&dev_child_sys_driver);
+	if (err) {
+		printk(KERN_WARNING "%s: driver_register failed %d\n",
+		      __FUNCTION__, err);
+		goto fail3;
+	}
+
+	add_main();
+	return 0;
+
+fail3:
+	bus_unregister(&dev_child_bus);
+fail2:
+	device_unregister(&dev_child_primary);
+fail1:
+	return err;
+}
+
+static void __exit dev_child_exit(void)
+{
+	remove_main();
+	driver_unregister(&dev_child_sys_driver);
+	bus_unregister(&dev_child_bus);
+	device_unregister(&dev_child_primary);
+}
+
+device_initcall(dev_child_init);
+module_exit(dev_child_exit);
+
+--Dxnq1zWXvFF0Q93v--
