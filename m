@@ -1,42 +1,61 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 2.6.12.5 1/2] lib: allow idr to be used in irq context
-Date: Mon, 22 Aug 2005 09:28:58 -0500
-Message-ID: <1124720938.5211.13.camel@mulgrave>
-References: <20050822003325.33507.qmail@web51613.mail.yahoo.com>
-	 <1124680540.5068.37.camel@mulgrave> <20050821205214.2a75b3cf.akpm@osdl.org>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] correct attribute_container list usage
+Date: Mon, 22 Aug 2005 14:46:17 -0700
+Message-ID: <20050822214617.GA26441@us.ibm.com>
+References: <1124723180.5211.25.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:5505 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751242AbVHVVf5 (ORCPT
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:44729 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751269AbVHVVqW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Aug 2005 17:35:57 -0400
-In-Reply-To: <20050821205214.2a75b3cf.akpm@osdl.org>
+	Mon, 22 Aug 2005 17:46:22 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j7MLkKaF001796
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2005 17:46:20 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j7MLkHpD289402
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2005 17:46:17 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j7MLkGHG012653
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2005 17:46:16 -0400
+Content-Disposition: inline
+In-Reply-To: <1124723180.5211.25.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: luben_tuikov@adaptec.com, jim.houston@ccur.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Dave Jones <davej@redhat.com>, Jeff Garzik <jgarzik@pobox.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sun, 2005-08-21 at 20:52 -0700, Andrew Morton wrote:
-> erp.  posix_timers has its own irq-safe lock, so we're doing extra,
-> unneeded locking in that code path.
+On Mon, Aug 22, 2005 at 10:06:19AM -0500, James Bottomley wrote:
 
-Possibly, the posix timer code is rather convoluted in this area so I'm
-not entirely sure my analysis is correct.
+> +/* FIXME: can't break out of this unless klist_iter_exit is also
+> + * called before doing the break
+> + */
+> +#define klist_for_each_entry(pos, head, member, iter) \
+> +	for (klist_iter_init(head, iter); (pos = ({ \
+> +		struct klist_node *n = klist_next(iter); \
+> +		n ? ({ klist_iter_exit(iter) ; NULL; }) : \
+> +			container_of(n, typeof(*pos), member);\
+> +	}) ) != NULL; )
+> +			
+> +
 
-> I think providing locking inside idr.c was always a mistake - generally we
-> rely on caller-provided locking for such things.
+> -		spin_lock(&cont->containers_lock);
+> -		list_for_each_entry_safe(ic, tmp, &cont->containers, node) {
+> +
+> +		klist_for_each_entry(ic, &cont->containers, node, &iter) {
+>  			if (dev != ic->classdev.dev)
+>  				continue;
+> -			list_del(&ic->node);
+> +			klist_remove(&ic->node);
+>  			if (fn)
+>  				fn(cont, dev, &ic->classdev);
 
-Well, the reason is because they wanted lockless pre-alloc.  If you do
-it locked, you can't use GFP_KERNEL for the memory allocation flag which
-rather defeats its purpose.
+Did you test with CONFIG_DEBUG_SLAB enabled?
 
-Perhaps the bug is in the API.  We have pre-allocate, new, find and
-remove.  Perhaps what we're missing is a reuse all of which could then
-rely on caller provided locking, with pre-alloc and remove requiring
-user context but new, find and reuse being happy in irq context.
+I have a workaround for problems with device_for_each_child() not being
+"safe", I'm trying to verify it right now, but the underlying problem is
+in klist_next(), I don't have a general solution for it (it looks hard to
+fix).
 
-James
-
-
+-- Patrick Mansfield
