@@ -1,403 +1,225 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: write cache and read ahead
-Date: Sun, 21 Aug 2005 19:56:50 -0400
-Message-ID: <430914C2.8030301@pobox.com>
-References: <43085209.50405@torque.net>
+Subject: Re: [PATCH] libata: error processing + rw 6 byte fix
+Date: Mon, 22 Aug 2005 15:10:03 -0400
+Message-ID: <430A230B.8040204@pobox.com>
+References: <430994BC.4060102@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:33256 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751192AbVHUX5C (ORCPT
+Received: from mail.dvmed.net ([216.237.124.58]:30342 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750718AbVHVTKT (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 21 Aug 2005 19:57:02 -0400
-In-Reply-To: <43085209.50405@torque.net>
+	Mon, 22 Aug 2005 15:10:19 -0400
+In-Reply-To: <430994BC.4060102@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
 Douglas Gilbert wrote:
-> The attachment is for discussion. It adds MODE SELECT
-> support to libata allowing the write(back) cache and
-> read ahead to be manipulated by users [i.e. the WCE and
-> DRA **  bits in the SCSI Caching mode page].
-
-In general I approve of this concept.  I've wanted libata to do MODE 
-SELECT for a while, but have been too slack to worry about it myself.
-
-
-> The patch is against lk 2.6.13-rc6 and includes the
-> SSU patch (but not the TUR patch).
+> This is a revised patch following this post:
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=112461881419898&w=2
 > 
-> It highlights several issues with libata:
->    - may need hook so SCSI command specific logic can be
->      executed _after_ a ATA command has completed successfully
-
-You should just be able to do this via ata_queued_cmd completion 
-callback.  See Tejun Heo's "mod15write quirk fix" patch for an example.
-
-
->    - one SCSI command can map to two or more
->      ATA commands (e.g. a MODE SELECT caching
->      page that changes the state of both WCE and DRA)
->      I cannot see a graceful way to do this with libata.
-
-ditto above comment
-
-
->    - patch generalizes error processing but probably
->      not enough
-
-what, ata_scsi_invalid_field() and ata_scsi_set_sense() use?  Those look 
-like a good start to me.
-
-
->    - may need lighter weight version of
->      ata_dev_identify() when the "dev->id" array needs
->      to be resync-ed (e.g. as required by the ATA information
->      VPD page in sat-r05)
-
-well no implementation will be completely "light"...  ideally each time 
-you attempt to change the configuration, you should IDENTIFY DEVICE 
-again to make sure that you achieved the desired effect.  We should do 
-this after SET FEATURES - XFER MODE in fact, but don't ATM.
-
-
+> The plan is to add MODE SELECT SCSI command support to
+> libata so that parameters such as WCE and DRA can be
+> changed by a user (i.e. Write(back) Cache Enable and
+> Disable Read Ahead respectively). There are still some
+> issues to be addressed with MODE SELECT so the attached
+> is mainly a subset of the earlier one.
+> It improves error processing and fixes a READ_6/WRITE_6
+> SCSI command special case ** as requested by Jeff G.
+> 
+> The attached is against lk 2.6.13-rc6 and includes the
+> START STOP UNIT patch.
+> 
 > ChangeLog:
->    - add MODE SELECT (6 and 10) handling; active for
->      WCE and DRA in Caching mode page
+>    - generalize SCSI error processing
 >    - add block descriptor to MODE SENSE command
 >    - make various changes to sync with sat-r05 (as
 >      noted in source)
->    - answer some "FIXME" questions in code and flag
->      points for extra work
-> Not to be applied to mainline kernel yet.
+>    - fix READ(6) and WRITE(6) SCSI command special
+>      case: transfer_length=0 -> transfer 256 blocks
+> 
+> 
+> ** The special case can be tested with sg_dd:
+> sg_dd if=/dev/sda blk_sgio=1 cdbsz=6 of=. bs=512 bpt=256 count=256
+>    This tests READ(6) with a transfer length of 0
+>    (i.e. 256 blocks) in its cdb.
+>    BTW the scsi_debug driver has the same bug.
+> 
+> Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
-As bits become ready for mainline, please submit them as separate 
-patches.  For example, you could separate out simple stuff like 
-ata_scsi_set_sense() use, and go ahead and get that into the kernel.
+First change needed:  this patch must be incremental to your previous 
+START STOP UNIT patch, since I have already applied that patch.
 
 
-> @@ -579,6 +631,10 @@
+> @@ -579,7 +631,19 @@
 >  	}
 >  
 >  	if (scsicmd[0] == READ_6 || scsicmd[0] == WRITE_6) {
-> +		/*
-> +		 * FIXME: for READ_6 and WRITE_6 (only)
-> +		 * transfer_len==0 -> 256 blocks !!
-> +		 */
->  		qc->nsect = tf->nsect = scsicmd[4];
+> -		qc->nsect = tf->nsect = scsicmd[4];
+> +		if (scsicmd[4] == 0) {
+> +			/*
+> +			 * For READ_6 and WRITE_6 (only)
+> +			 * transfer_len==0 -> 256 blocks !!
+> +			 */
+> +			if (lba48) {
+> +				tf->hob_nsect = 1;
+> +				qc->nsect = 256;
+> +			} else
+> +				return 1;
+> +		} else
+> +			qc->nsect = scsicmd[4];
+> +		tf->nsect = scsicmd[4];
 >  		tf->lbal = scsicmd[3];
 >  		tf->lbam = scsicmd[2];
+>  		tf->lbah = scsicmd[1] & 0x1f; /* mask out reserved bits */
 
-Good catch.  Interested in submitting a fix for this sooner rather than 
-later?
+lba28 ATA commands behave similarly:  for READ DMA, which only has an 
+8-bit sector count, 00h == 256 sectors.
+
+So, you should not error out for that case.
 
 
-> @@ -994,6 +1078,13 @@
->  	*ptr_io = ptr;
+> @@ -1027,6 +1121,13 @@
+>  	return sizeof(page);
 >  }
 >  
-> +static const u8 def_caching_mpage[] = {
-> +		0x8,				/* page code */
-> +		0x12,				/* page length */
-> +		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 10 zeroes */
-> +		0, 0, 0, 0, 0, 0, 0, 0		/* 8 zeroes */
-> +	};
+> +/* As of sat-r05: considering defining this page (for QErr).
+> + * D_SENSE is now 0 (fixed sense data format);
+> + * guess extended self test completion time: 30 seconds (why?).
+> + */
+> +static const u8 def_control_mpage[] = {
+> +		0xa, 0xa, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 0, 30};
 > +
 >  /**
->   *	ata_msense_caching - Simulate MODE SENSE caching info page
->   *	@id: device IDENTIFY data
-> @@ -1011,13 +1102,9 @@
->  static unsigned int ata_msense_caching(u16 *id, u8 **ptr_io,
->  				       const u8 *last)
->  {
-> -	u8 page[] = {
-> -		0x8,				/* page code */
-> -		0x12,				/* page length */
-> -		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 10 zeroes */
-> -		0, 0, 0, 0, 0, 0, 0, 0		/* 8 zeroes */
-> -	};
-> +	u8 page[0x12 + 2];
+>   *	ata_msense_ctl_mode - Simulate MODE SENSE control mode page
+>   *	@dev: Device associated with this MODE SENSE command
+> @@ -1041,16 +1142,17 @@
 >  
-> +	memcpy(page, def_caching_mpage, sizeof(page));
->  	if (ata_id_wcache_enabled(id))
->  		page[2] |= (1 << 2);	/* write cache enable */
->  	if (!ata_id_rahead_enabled(id))
+>  static unsigned int ata_msense_ctl_mode(u8 **ptr_io, const u8 *last)
+>  {
+> -	const u8 page[] = {0xa, 0xa, 6, 0, 0, 0, 0, 0, 0xff, 0xff, 0, 30};
+> -
+> -	/* byte 2: set the descriptor format sense data bit (bit 2)
+> -	 * since we need to support returning this format for SAT
+> -	 * commands and any SCSI commands against a 48b LBA device.
+> -	 */
+> -
+> -	ata_msense_push(ptr_io, last, page, sizeof(page));
+> -	return sizeof(page);
+> +	ata_msense_push(ptr_io, last, def_control_mpage,
+> +			sizeof(def_control_mpage));
+> +	return sizeof(def_control_mpage);
+>  }
+> +	
 
-Don't define the size of automatic variable 'page' with numeric 
-constants.  That sort of method is very error-prone.
+Please don't shuffle code around, AND change it at the same time.  It 
+has the effect of hiding small changes.
+
+In this case, you have chosen to clear the D_SENSE bit (ok) and the 
+GLTSD bit (not ok).
 
 
-> @@ -1093,28 +1182,52 @@
+> +static const u8 def_rw_recovery_mpage[] = {
+> +		0x1,			  /* page code */
+> +		0xa,			  /* page length */
+> +		(1 << 6),		  /* note: ARRE=1 */
+> +		0, 0, 0, 0, 0, 0, 0, 0, 0 /* 9 zeroes */
+> +	};	/* sat-r05 says AWRE will be 0 */
+>  
+>  /**
+>   *	ata_msense_rw_recovery - Simulate MODE SENSE r/w error recovery page
+> @@ -1066,15 +1168,9 @@
+>  
+>  static unsigned int ata_msense_rw_recovery(u8 **ptr_io, const u8 *last)
+>  {
+> -	const u8 page[] = {
+> -		0x1,			  /* page code */
+> -		0xa,			  /* page length */
+> -		(1 << 7) | (1 << 6),	  /* note auto r/w reallocation */
+> -		0, 0, 0, 0, 0, 0, 0, 0, 0 /* 9 zeroes */
+> -	};
+> -
+> -	ata_msense_push(ptr_io, last, page, sizeof(page));
+> -	return sizeof(page);
+> +	ata_msense_push(ptr_io, last, def_rw_recovery_mpage,
+> +			sizeof(def_rw_recovery_mpage));
+> +	return sizeof(def_rw_recovery_mpage);
+>  }
+>  
+>  /**
+
+Similarly, do not clear bits without discussion.
+
+In this case, I disagree with SAT.  ATA devices will definitely 
+reallocate around defective sectors in the background, trying its 
+damndest to complete a write without failing.
+
+Reads are obviously different.  The device doesn't known, until the OS 
+asks for a sector, whether its corrupt or not.  The device is free to 
+reallocate this sector as well, in the background, once it discovers 
+that a sector is defective.
+
+How to interpret this?  Re-reading SBC-2, it is my feeling that ATA 
+devices should either set both AWRE and ARRE since they do perform 
+background reallocation, or, set NEITHER bit, since the libata SAT layer 
+does not support the error reporting bits mentioned in SBC-2 for R/W 
+Recovery Page.
+
+As of the current implementation, I made a conscious decision to ignore 
+SAT and set both bits.  I'm willing to consider changing to the 'neither 
+bit' setup, but not one where ARRE is the only bit set.
+
+
+> @@ -1093,28 +1189,54 @@
 >  				  unsigned int buflen)
 >  {
 >  	u8 *scsicmd = args->cmd->cmnd, *p, *last;
 > -	unsigned int page_control, six_byte, output_len;
 > +	const u8 sat_blk_desc[] = {0, 0, 0, 0, 0, 0, 0x2, 0x0};
 > +	/* 512 byte blocks, number of blocks = 0, (sat-r05) */
-> +	u8 pg, spg;
-> +	unsigned int ebd, page_control, six_byte, output_len, alloc_len, minlen;
+
+NOTE: don't hardcode 512, since that will change very soon in SATA.
+
+1K ATA devices are just around the corner.
+
+> @@ -1570,11 +1737,6 @@
+>  			ata_scsi_rbuf_fill(&args, ata_scsiop_mode_sense);
+>  			break;
 >  
->  	VPRINTK("ENTER\n");
->  
->  	six_byte = (scsicmd[0] == MODE_SENSE);
-> +	ebd = !(scsicmd[1] & 0x8);	/* dbd bit inverted == edb */
->  
-> -	/* we only support saved and current values (which we treat
-> -	 * in the same manner)
-> +	/*
-> +	 * LLBA bit in MS(10) ignored (permitted)
-> +	 * Only support current values (sat-r05)
->  	 */
->  	page_control = scsicmd[2] >> 6;
-> -	if ((page_control != 0) && (page_control != 3))
-> -		return 1;
-> +	if (page_control != 0) {
-> +		if (page_control == 3) {
-> +			ata_scsi_set_sense(args->cmd,
-> +					   ILLEGAL_REQUEST, 0x39, 0x0);
-> +			/* "Saving parameters not supported" */
-> +			return 2;
-> +		} else
-> +			return 1;
-> +	}
-
-[style] I would probably use a 'switch' statement here
-
-
-> @@ -1237,6 +1369,151 @@
->  }
->  
->  /**
-> + *	ata_scsi_mode_select_xlat - Translate SCSI MODE SELECT commands
-> + *	@qc: Storage for translated ATA taskfile
-> + *	@scsicmd: SCSI command to translate
-> + *
-> + *	Sets up an ATA taskfile to issue SET FEATURES, if required.
-> + *
-> + *	LOCKING:
-> + *	spin_lock_irqsave(host_set lock)
-> + *
-> + *	RETURNS:
-> + *	Zero on success, non-zero on error.
-> + */
-> +
-> +static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc,
-> +					      u8 *scsicmd)
-> +{
-> +	struct ata_taskfile *tf = &qc->tf;
-> +	struct scsi_cmnd *cmd = qc->scsicmd;
-> +	unsigned int param_len, ten, buflen, minlen, bdlen, offset;
-> +	unsigned int pglen, spf, mpg, wce, dra;
-> +	u8 *rbuf;
-> +	u8 apage[48];
-
-Overall, add some blank lines to the code below, to break it up a bit. 
-Suggested places to break up code into "paragraphs" include 'return' 
-statements or 'if' tests with long stretches of code inside.
-
-
-> +	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
-> +	tf->protocol = ATA_PROT_NODATA;
-> +	cmd->result = SAM_STAT_GOOD;
-> +	if (! (scsicmd[1] & 0x10))
-> +		return 1;	/* require PF bit set */
-> +	ten = (scsicmd[0] == MODE_SELECT_10) ? 1 : 0;
-> +	param_len =  ten ? ((scsicmd[7] << 8) + scsicmd[8]) : scsicmd[4];
-> +	if (param_len < (ten ? 8 : 4))
-> +		return 2;
-> +        buflen = ata_scsi_rbuf_get(cmd, &rbuf);
-
-indentation problem
-
-> +	minlen = (param_len < buflen) ? param_len : buflen;
-> +	bdlen = ten ? ((rbuf[6] << 8) + rbuf[7]) : rbuf[3];
-> +	offset = (ten ? 8 : 4) + bdlen;
-> +	if (minlen > offset) {
-> +		memset(apage, 0, sizeof(apage));
-> +		pglen = minlen - offset;
-> +		pglen = (pglen < sizeof(apage)) ? pglen : sizeof(apage);
-> +		memcpy(apage, rbuf + offset, pglen);
-> +	}
-> +	ata_scsi_rbuf_put(cmd, rbuf);
-> +	if (minlen == offset)
-> +		return 2;
-> +	if (minlen < offset)
-> +		goto bad_param;
-> +	minlen -= offset;
-> +	spf = !!(apage[0] & 0x40);
-
-'!!' operation not needed.
-
-
-> +	mpg = apage[0] & 0x3f;
-> +	/* mspg = spf ? apage[1] : 0; */
-> +	if (spf)
-> +		goto bad_param;
-> +	else
-> +		pglen = apage[1];
-> +		if (pglen + 2 < minlen)
-> +			goto bad_param;
-> +	switch (mpg) {
-> +	case 0x1:
-> +		if (pglen != def_rw_recovery_mpage[1])
-> +			goto bad_param;
-> +		break;
-> +	case 0x8:
-> +		if (pglen != def_caching_mpage[1])
-> +			goto bad_param;
-> +		wce = !!(apage[2] & 0x4);
-> +		dra = !!(apage[12] & 0x20);
-> +		if (wce != !!(ata_id_wcache_enabled(qc->dev->id))) {
-> +			/* write(back) cache */
-> +			if (wce)
-> +				tf->feature = 0x2;	/* WCE -> enable */
-> +			else
-> +				tf->feature = 0x82;	/* disable */
-
-define named constants for these numeric constants, include/linux/ata.h
-
-
-> +			tf->command = ATA_CMD_SET_FEATURES;
-> +			/* <<< If success, should dev->id be updated? >>> */
-> +			/* vvvvvvv   start of dubious code   vvvvvvvvvv */
-> +			if (wce)
-> +				qc->dev->id[85] |= 0x20;
-> +			else
-> +				qc->dev->id[85] &= ~0x20;
-> +			/* vvvvvvv   end of dubious code   vvvvvvvvvv */
-> +			return 0;
-
-SET FEATURES should be followed by a second command, IDENTIFY [PACKET] 
-DEVICE, to update dev->id and also to verify that the device set the 
-feature as requested.
-
-
-> +/* FIXME: we may want to issue two SET FEATURES commands here */
-> +		if (dra != !(ata_id_rahead_enabled(qc->dev->id))) {
-
-bug: need one more '!' AFAICS
-
-
-> +			/* read look ahead */
-> +			if (dra)
-> +				tf->feature = 0x55;	/* DRA -> disable */
-> +			else
-> +				tf->feature = 0xaa;	/* enable */
-> +			tf->command = ATA_CMD_SET_FEATURES;
-> +			/* <<< If success, should dev->id be updated? >>> */
-> +			/* vvvvvvv   start of dubious code   vvvvvvvvvv */
-> +			if (dra)
-> +				qc->dev->id[85] &= ~0x40;
-> +			else
-> +				qc->dev->id[85] |= 0x40;
-> +			/* vvvvvvv   end of dubious code   vvvvvvvvvv */
-> +			return 0;
-
-same comment as with 'wce'.  if both dra and wce change, then four 
-commands should follow: SET FEATURES, IDENTIFY DEVICE, SET FEATURES, 
-IDENTIFY DEVICE.  If you wanted to be optimal, you could expend more 
-[code] effort and only issue SF, SF, ID.
-
-
-> +	case 0xa:
-> +		if (pglen != def_control_mpage[1])
-> +			goto bad_param;
-> +		break;
-> +	default:
-> +		goto bad_param;
-> +	}
-> +	/* GOOD response, no ATA command issued */
-> +	return 2;
-> +
-> +bad_param:
-> +	ata_scsi_set_sense(cmd, ILLEGAL_REQUEST, 0x26, 0x0);
-> +	/* "Invalid field in parameter list" */
-> +	return 2;
-> +}
-> +
-> +/**
-> + *	ata_scsi_set_sense - Set SCSI sense data and status
-> + *	@cmd: SCSI request to be handled
-> + *	@sk: SCSI-defined sense key
-> + *	@asc: SCSI-defined additional sense code
-> + *	@ascq: SCSI-defined additional sense code qualifier
-> + *
-> + *	Helper function that builds a valid fixed format, current
-> + *	response code and the given sense key (sk), additional sense
-> + *	code (asc) and additional sense code qualifier (ascq) with
-> + *	a SCSI command status of %SAM_STAT_CHECK_CONDITION .
-> + *
-> + *	LOCKING:
-> + *	Not required
-> + */
-> +
-> +void ata_scsi_set_sense(struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq)
-> +{
-> +	cmd->result = SAM_STAT_CHECK_CONDITION;
-> +
-> +	cmd->sense_buffer[0] = 0x70;	/* fixed format, current */
-> +	cmd->sense_buffer[2] = sk;
-> +	cmd->sense_buffer[7] = 18 - 8;	/* additional sense length */
-> +	cmd->sense_buffer[12] = asc;
-> +	cmd->sense_buffer[13] = ascq;
-> +}
-> +
-> +/**
->   *	ata_scsi_badcmd - End a SCSI request with an error
->   *	@cmd: SCSI request to be handled
->   *	@done: SCSI command completion function
-> @@ -1254,13 +1531,7 @@
->  void ata_scsi_badcmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *), u8 asc, u8 ascq)
->  {
->  	DPRINTK("ENTER\n");
-> -	cmd->result = SAM_STAT_CHECK_CONDITION;
+> -		case MODE_SELECT:	/* unconditionally return */
+> -		case MODE_SELECT_10:	/* bad-field-in-cdb */
+> -			ata_bad_cdb(cmd, done);
+> -			break;
 > -
-> -	cmd->sense_buffer[0] = 0x70;
-> -	cmd->sense_buffer[2] = ILLEGAL_REQUEST;
-> -	cmd->sense_buffer[7] = 14 - 8;	/* addnl. sense len. FIXME: correct? */
-> -	cmd->sense_buffer[12] = asc;
-> -	cmd->sense_buffer[13] = ascq;
-> +	ata_scsi_set_sense(cmd, ILLEGAL_REQUEST, asc, ascq);
->  
->  	done(cmd);
->  }
-> @@ -1414,9 +1685,10 @@
->   *	Pointer to translation function if possible, %NULL if not.
->   */
->  
-> -static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
-> +static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev,
-> +						u8 *cmd)
->  {
-> -	switch (cmd) {
-> +	switch (cmd[0]) {
->  	case READ_6:
->  	case READ_10:
->  	case READ_16:
-> @@ -1426,6 +1698,16 @@
->  	case WRITE_16:
->  		return ata_scsi_rw_xlat;
->  
-> +	case INQUIRY:
-> +		if (((cmd[1] & 0x3) == 0x1) && (cmd[2] == 0x89)) {
+>  		case READ_CAPACITY:
+>  			ata_scsi_rbuf_fill(&args, ata_scsiop_read_cap);
+>  			break;
 
-what do these magic numbers indicate?
+At this point in the patch series, you should not be removing this code 
+AFAICS.
 
 
-> +			/* needs to re-issue an ATA IDENTIFY cmd
-> +			 * and refill dev->id array. Then put this
-> +			 * data and the signature in the vpd response.
-> +			 */
-> +			/* return ata_scsi_ata_info_vpd_xlat; ?? */
 
-IFF your diagnosis is correct, then I agree with the proposed solution.
+Finally, overall, it would really be nice if you would split your 
+changes into a series of patches.  i.e.
 
-The rest looks OK.
+[PATCH 1/4] START STOP UNIT (already applied)
+[PATCH 2/4] ata_scsi_set_sense() impl, and usage
+[PATCH 3/4] twiddle mode parameter page values
+[PATCH 4/4] MODE SENSE cleanup, blk descriptor, move mode page values
+etc.
+
+I don't mean to carp, but separating out changes in this manner is 
+strongly encouraged under Linux, and greatly aids in reviewing and 
+applying each patch.  You don't have to enumerate EVERY change into a 
+separate patch, just be reasonable:  group sets of associated changes 
+into patches.
+
+Thanks, and regards,
 
 	Jeff
-
 
 
