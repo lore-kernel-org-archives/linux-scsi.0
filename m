@@ -1,44 +1,216 @@
-From: James.Smart@Emulex.Com
-Subject: RE: [PATCH] minimal SAS transport class
-Date: Tue, 23 Aug 2005 12:16:45 -0400
-Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A4B@xbl3.ma.emulex.com>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH] scsi: /proc/scsi/scsi patch for large number of devices
+Date: Tue, 23 Aug 2005 09:40:40 -0700
+Message-ID: <1124815241.22518.11.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:12961 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S932204AbVHWQRU convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Aug 2005 12:17:20 -0400
-content-class: urn:content-classes:message
+Received: from smtp.osdl.org ([65.172.181.4]:42467 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1750864AbVHWQkn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Aug 2005 12:40:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: patmans@us.ibm.com
-Cc: luben_tuikov@adaptec.com, hch@lst.de, jejb@steeleye.com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-> As others stated, id is already a tag/label. You should be 
-> able to pass
-> whatever id you want to scsi_scan_target, like the FC ID 
-> (port_id), and
-> then we also want an abstract iterator in fc transport for the id for
-> usage in scsi_scan.c:scsi_scan_channel. Then you can lose all the
-> fc_host->next_target_id code.
 
-All nice and well, but....
+I'm not sure if people care about /proc/scsi, but here is a patch so you
+can cat /proc/scsi/scsi when you have a large number of scsi devices.  I
+have over 4000 devices configured and when I would cat /proc/scsi/scsi I
+would see a memory allocation error.  I instead used the seq_file
+iterator to display the devices.  The patch is a little brute force, but
+it only took about 2.5 seconds to display 4000 devices.
 
-How did this help things ?  The issue was the device with a changing
-target id. If the device comes back at the same address each and
-every time, ok. But, with FC, the Port ID is temporal. It can change
-on a loop init, fabric reconfig, or with a user cable swap (kicked
-the cable and replugged).
+Applies to scsi-misc-2.6 git tree
 
-If the port id changes during run time, what are you to do ? What if
-a new port is seen at the old port id, how do you now deal with the
-name conflict ? You know apps are going to key off the physical bus
-address being the target - if it changes, this becomes very problematic.
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
 
-This approach only works as long as the transport's id fits within
-the target id (an int). How would the SAS address(8byte wwn) utilize
-such a scheme ?
+Index: scsi-misc-aac-2/drivers/scsi/scsi_proc.c
+===================================================================
+--- scsi-misc-aac-2.orig/drivers/scsi/scsi_proc.c	2005-08-22 11:53:41.000000000 -0700
++++ scsi-misc-aac-2/drivers/scsi/scsi_proc.c	2005-08-23 08:45:09.000000000 -0700
+@@ -43,6 +43,10 @@
+ /* Protect sht->present and sht->proc_dir */
+ static DECLARE_MUTEX(global_host_template_sem);
+ 
++static struct device *proc_dev;
++static loff_t dev_skip;
++static DECLARE_MUTEX(proc_dev_sem);
++
+ static int proc_scsi_read(char *buffer, char **start, off_t offset,
+ 			  int length, int *eof, void *data)
+ {
+@@ -142,53 +146,6 @@
+ 	remove_proc_entry(name, shost->hostt->proc_dir);
+ }
+ 
+-static int proc_print_scsidevice(struct device *dev, void *data)
+-{
+-	struct scsi_device *sdev = to_scsi_device(dev);
+-	struct seq_file *s = data;
+-	int i;
+-
+-	seq_printf(s,
+-		"Host: scsi%d Channel: %02d Id: %02d Lun: %02d\n  Vendor: ",
+-		sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
+-	for (i = 0; i < 8; i++) {
+-		if (sdev->vendor[i] >= 0x20)
+-			seq_printf(s, "%c", sdev->vendor[i]);
+-		else
+-			seq_printf(s, " ");
+-	}
+-
+-	seq_printf(s, " Model: ");
+-	for (i = 0; i < 16; i++) {
+-		if (sdev->model[i] >= 0x20)
+-			seq_printf(s, "%c", sdev->model[i]);
+-		else
+-			seq_printf(s, " ");
+-	}
+-
+-	seq_printf(s, " Rev: ");
+-	for (i = 0; i < 4; i++) {
+-		if (sdev->rev[i] >= 0x20)
+-			seq_printf(s, "%c", sdev->rev[i]);
+-		else
+-			seq_printf(s, " ");
+-	}
+-
+-	seq_printf(s, "\n");
+-
+-	seq_printf(s, "  Type:   %s ",
+-		     sdev->type < MAX_SCSI_DEVICE_CODE ?
+-	       scsi_device_types[(int) sdev->type] : "Unknown          ");
+-	seq_printf(s, "               ANSI"
+-		     " SCSI revision: %02x", (sdev->scsi_level - 1) ?
+-		     sdev->scsi_level - 1 : 1);
+-	if (sdev->scsi_level == 2)
+-		seq_printf(s, " CCS\n");
+-	else
+-		seq_printf(s, "\n");
+-
+-	return 0;
+-}
+ 
+ static int scsi_add_single_device(uint host, uint channel, uint id, uint lun)
+ {
+@@ -284,20 +241,101 @@
+ 	return err;
+ }
+ 
+-static int proc_scsi_show(struct seq_file *s, void *p)
++
++static int proc_set_scsidevice(struct device *dev, void *data)
++{
++	if (dev_skip--)
++		return 0;
++
++	proc_dev = dev;
++	return -ENXIO;
++}
++
++static void *proc_dev_start(struct seq_file *s, loff_t *pos)
+ {
+-	seq_printf(s, "Attached devices:\n");
+-	bus_for_each_dev(&scsi_bus_type, NULL, s, proc_print_scsidevice);
++	down(&proc_dev_sem);
++	proc_dev = NULL;
++	dev_skip = *pos;
++	bus_for_each_dev(&scsi_bus_type, NULL,
++			NULL, proc_set_scsidevice);
++	return proc_dev;
++}
++
++static void *proc_dev_next(struct seq_file *part, void *v, loff_t *pos)
++{
++	dev_skip = ++*pos;
++	proc_dev = NULL;
++	bus_for_each_dev(&scsi_bus_type, NULL,
++			NULL, proc_set_scsidevice);
++	return proc_dev;
++}
++
++static void proc_dev_stop(struct seq_file *part, void *v)
++{
++	up(&proc_dev_sem);
++}
++
++static int proc_dev_show(struct seq_file *s, void *data)
++{
++	struct scsi_device *sdev = to_scsi_device((struct device*)data);
++	int i;
++
++	seq_printf(s,
++		"Host: scsi%d Channel: %02d Id: %02d Lun: %02d\n  Vendor: ",
++		sdev->host->host_no, sdev->channel,
++		sdev->id, sdev->lun);
++	for (i = 0; i < 8; i++) {
++		if (sdev->vendor[i] >= 0x20)
++			seq_printf(s, "%c", sdev->vendor[i]);
++		else
++			seq_printf(s, " ");
++	}
++
++	seq_printf(s, " Model: ");
++	for (i = 0; i < 16; i++) {
++		if (sdev->model[i] >= 0x20)
++			seq_printf(s, "%c", sdev->model[i]);
++		else
++			seq_printf(s, " ");
++	}
++
++	seq_printf(s, " Rev: ");
++	for (i = 0; i < 4; i++) {
++		if (sdev->rev[i] >= 0x20)
++			seq_printf(s, "%c", sdev->rev[i]);
++		else
++			seq_printf(s, " ");
++	}
++
++	seq_printf(s, "\n");
++
++	seq_printf(s, "  Type:   %s ",
++		     sdev->type < MAX_SCSI_DEVICE_CODE ?
++	       scsi_device_types[(int) sdev->type] : "Unknown          ");
++	seq_printf(s, "               ANSI"
++		     " SCSI revision: %02x", (sdev->scsi_level - 1) ?
++		     sdev->scsi_level - 1 : 1);
++	if (sdev->scsi_level == 2)
++		seq_printf(s, " CCS\n");
++	else
++		seq_printf(s, "\n");
++
+ 	return 0;
+ }
+ 
++struct seq_operations proc_dev_op = {
++	.start =proc_dev_start,
++	.next =	proc_dev_next,
++	.stop =	proc_dev_stop,
++	.show =	proc_dev_show
++};
+ static int proc_scsi_open(struct inode *inode, struct file *file)
+ {
+ 	/*
+ 	 * We don't really needs this for the write case but it doesn't
+ 	 * harm either.
+ 	 */
+-	return single_open(file, proc_scsi_show, NULL);
++	return seq_open(file, &proc_dev_op);
+ }
+ 
+ static struct file_operations proc_scsi_operations = {
+@@ -305,7 +343,7 @@
+ 	.read		= seq_read,
+ 	.write		= proc_scsi_write,
+ 	.llseek		= seq_lseek,
+-	.release	= single_release,
++	.release	= seq_release
+ };
+ 
+ int __init scsi_init_procfs(void)
 
--- james s
+-- 
+Mark Haverkamp <markh@osdl.org>
+
