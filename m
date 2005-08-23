@@ -1,104 +1,68 @@
-From: Jan Blunck <j.blunck@tu-harburg.de>
-Subject: [PATCH] sg.c: fix a memory leak in devices seq_file implementation
-Date: Fri, 19 Aug 2005 14:27:44 +0200
-Message-ID: <4305D040.1050301@tu-harburg.de>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] minimal SAS transport class
+Date: Tue, 23 Aug 2005 08:42:32 -0700
+Message-ID: <20050823154232.GA3464@us.ibm.com>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A40@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040904050300090802050903"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.rz.tu-harburg.de ([134.28.205.13]:2852 "EHLO
-	smtp2.rz.tu-harburg.de") by vger.kernel.org with ESMTP
-	id S932197AbVHWPRR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Aug 2005 11:17:17 -0400
+Received: from e34.co.us.ibm.com ([32.97.110.132]:31721 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750784AbVHWPq3
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Aug 2005 11:46:29 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e34.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j7NFjDIO449354
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Aug 2005 11:45:23 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j7NFiS0I363730
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Aug 2005 09:44:33 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j7NFiur6003546
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Aug 2005 09:44:57 -0600
+Content-Disposition: inline
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A40@xbl3.ma.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Andrew Morton <akpm@osdl.org>, Linux-Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: James.Smart@Emulex.Com
+Cc: luben_tuikov@adaptec.com, hch@lst.de, jejb@steeleye.com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------040904050300090802050903
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+On Sat, Aug 20, 2005 at 12:15:41AM -0400, James.Smart@Emulex.Com wrote:
 
-I know that scsi procfs is legacy code but this is a fix for a memory leak.
+> - the target id is logical for everything but SPI
 
-While reading through sg.c I realized that the implementation of
-/proc/scsi/sg/devices with seq_file is leaking memory due to freeing the
-pointer returned by the next() iterator method. Since next() might
-return NULL or an error this is wrong. This patch fixes it through using
-the seq_files private field for holding the reference to the iterator
-object.
+> For FC, target ids are typically assigned to devices on a
+> 1st-seen-1st-assigned basis. For several reasons, there can be
+> changes in port discovery order after link events (cable pulls,
+> etc). For 2.4 kernels, the driver typically maintained a mapping
+> within the driver to ensure the same device showed up at the same
+> target id, even if it disappeared for some amount of time. If FC
+> was the boot device, wacky methods were used to ensure the mapping
+> persisted boot-to-boot.
 
-Here is a small bash script to trigger the leak. Use slabtop to watch
-the size-32 usage grow and grow.
+As others stated, id is already a tag/label. You should be able to pass
+whatever id you want to scsi_scan_target, like the FC ID (port_id), and
+then we also want an abstract iterator in fc transport for the id for
+usage in scsi_scan.c:scsi_scan_channel. Then you can lose all the
+fc_host->next_target_id code.
 
-[--snipp--]
-#!/bin/sh
+Printing of them won't be so nice, we should have used hex values in our
+device's bus_id.
 
-while true; do
-	cat /proc/scsi/sg/devices > /dev/null
-done
+Hex would also make scsi class/bus_id shorter. 
 
-[--snipp--]
+We can in theory overflow it today: 
 
-Signed-off-by: Jan Blunck <j.blunck@tu-harburg.de>
+	(5 digits per short + 10 digits per int * 3 + 3 :'s) = 38
 
+But BUS_ID_SIZE (KOBJ_NAME_LEN) is 20.
 
---------------040904050300090802050903
-Content-Type: text/x-patch;
- name="scsi_sg.c-dev_seq_file-fix.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="scsi_sg.c-dev_seq_file-fix.diff"
+8 byte lun would add on another 10 bytes (if in decimal).
 
- drivers/scsi/sg.c |   16 +++++++++-------
- 1 files changed, 9 insertions(+), 7 deletions(-)
+We generally don't have problems since channel is one digit (it should be
+a char or bit), id is < 100, and host < 1000 ... lun I'm not sure about:
 
-Index: experimental-jb/drivers/scsi/sg.c
-===================================================================
---- experimental-jb.orig/drivers/scsi/sg.c
-+++ experimental-jb/drivers/scsi/sg.c
-@@ -2971,23 +2971,22 @@ static void * dev_seq_start(struct seq_f
- {
- 	struct sg_proc_deviter * it = kmalloc(sizeof(*it), GFP_KERNEL);
- 
-+	s->private = it;
- 	if (! it)
- 		return NULL;
-+
- 	if (NULL == sg_dev_arr)
--		goto err1;
-+		return NULL;
- 	it->index = *pos;
- 	it->max = sg_last_dev();
- 	if (it->index >= it->max)
--		goto err1;
-+		return NULL;
- 	return it;
--err1:
--	kfree(it);
--	return NULL;
- }
- 
- static void * dev_seq_next(struct seq_file *s, void *v, loff_t *pos)
- {
--	struct sg_proc_deviter * it = (struct sg_proc_deviter *) v;
-+	struct sg_proc_deviter * it = s->private;
- 
- 	*pos = ++it->index;
- 	return (it->index < it->max) ? it : NULL;
-@@ -2995,7 +2994,10 @@ static void * dev_seq_next(struct seq_fi
- 
- static void dev_seq_stop(struct seq_file *s, void *v)
- {
--	kfree (v);
-+	struct sg_proc_deviter *it = s->private;
-+
-+	if (it)
-+		kfree (it);
- }
- 
- static int sg_proc_open_dev(struct inode *inode, struct file *file)
+	(3 + 1 + 2 + 10) + 3 = 19.
 
---------------040904050300090802050903--
+i.e. use port_id as the id (8 digits?) and we are more likely to go above 20.
 
+-- Patrick Mansfield
