@@ -1,135 +1,54 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 2.6.12.5 1/2] lib: allow idr to be used in irq context
-Date: Tue, 23 Aug 2005 12:15:38 -0500
-Message-ID: <1124817338.5108.17.camel@mulgrave>
-References: <20050822003325.33507.qmail@web51613.mail.yahoo.com>
-	 <1124680540.5068.37.camel@mulgrave> <20050821205214.2a75b3cf.akpm@osdl.org>
-	 <1124720938.5211.13.camel@mulgrave> <1124747615.5211.34.camel@mulgrave>
-	 <20050822150942.4f0c46df.akpm@osdl.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] minimal SAS transport class
+Date: Tue, 23 Aug 2005 19:28:59 +0200
+Message-ID: <430B5CDB.9070204@s5r6.in-berlin.de>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A4B@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932237AbVHWRPx@vger.kernel.org>
-In-Reply-To: <20050822150942.4f0c46df.akpm@osdl.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: luben_tuikov@adaptec.com, jim.houston@ccur.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Dave Jones <davej@redhat.com>, Jeff Garzik <jgarzik@pobox.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:8078 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S932205AbVHWR3W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Aug 2005 13:29:22 -0400
+Received: from [192.168.0.41] ([62.180.98.151])
+	(authenticated bits=0)
+	by einhorn.in-berlin.de (8.12.10/8.12.10/Debian-4) with ESMTP id j7NHT40M016114
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Aug 2005 19:29:12 +0200
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A4B@xbl3.ma.emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2005-08-22 at 15:09 -0700, Andrew Morton wrote:
-> James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> >
-> > Of course, if we're going to go to all this trouble, the next question
-> >  that arises naturally is why not just reuse the radix-tree code to
-> >  implement idr anyway ... ?
-> 
-> Yes, we could probably have gone that way.  radix-tree would need some
-> enhancements for the find-next-above thing.
+James.Smart@Emulex.Com wrote:
+>>As others stated, id is already a tag/label. You should be 
+>>able to pass
+>>whatever id you want to scsi_scan_target, like the FC ID 
+>>(port_id),
+[...]
+> If the port id changes during run time, what are you to do ?
+[...]
+> This approach only works as long as the transport's id fits within
+> the target id (an int). How would the SAS address(8byte wwn) utilize
+> such a scheme ?
 
-Yes, that's particularly simple (example patch below).  However, radix-
-tree needs to grow a bitmap index for whether its slots are occupied for
-this to be made efficient (it would also help with the gang lookups
-too)---at the moment it's O(N); it could be made O(log(N)).
+I don't understand exactly what is being discussed here. But if 
+anybody's intention is to extend the concept of target ID to also 
+provide the concept of transport specific, persistent, globally unique 
+identifiers*, then the datatype of target ID needs to be extended 
+accordingly.
 
-> radix-tree has some features (tags, gang-lookup, gang-lookup-by-tag) which
-> idr doesn't.  Fitting them all into the one storage API would be nice, I
-> guess.  radix-tree does potentially use more memory, although that'll only
-> be significant for collections which are both large and sparse.
+Otherwise the LLDs have to implement a mapping between target IDs and 
+these unique identifiers. This mapping does not need to be persistent. 
+Persistent mappings for whatever purpose can and should be implemented 
+in userspace. (This is how it has always been e.g. with SBP-2.)
 
-And by definition, idr is trying to discourage sparsity in the
-collections.
 
-> Still, people can use either facility at present.  The person who does any
-> such consolidation would do the kernel-wide migration at the same time.
-
-True.  We only seem to have 8 in tree users ... that's not a huge number
-to convert.
-
-James
-
-diff --git a/include/linux/radix-tree.h b/include/linux/radix-tree.h
---- a/include/linux/radix-tree.h
-+++ b/include/linux/radix-tree.h
-@@ -62,10 +62,20 @@ unsigned int
- radix_tree_gang_lookup_tag(struct radix_tree_root *root, void **results,
- 		unsigned long first_index, unsigned int max_items, int tag);
- int radix_tree_tagged(struct radix_tree_root *root, int tag);
-+int radix_tree_get_new_above(struct radix_tree_root *root, void *item,
-+			     unsigned long starting_index,
-+			     unsigned long *index);
- 
- static inline void radix_tree_preload_end(void)
- {
- 	preempt_enable();
- }
- 
-+static inline int radix_tree_get_new(struct radix_tree_root *root, void *item,
-+				     unsigned long *index)
-+{
-+	return radix_tree_get_new_above(root, item, 0, index);
-+}
-+
-+
- #endif /* _LINUX_RADIX_TREE_H */
-diff --git a/lib/radix-tree.c b/lib/radix-tree.c
---- a/lib/radix-tree.c
-+++ b/lib/radix-tree.c
-@@ -133,6 +133,7 @@ int radix_tree_preload(int gfp_mask)
- out:
- 	return ret;
- }
-+EXPORT_SYMBOL(radix_tree_preload);
- 
- static inline void tag_set(struct radix_tree_node *node, int tag, int offset)
- {
-@@ -483,7 +484,9 @@ __lookup(struct radix_tree_root *root, v
- 		unsigned long i = (index >> shift) & RADIX_TREE_MAP_MASK;
- 
- 		for ( ; i < RADIX_TREE_MAP_SIZE; i++) {
--			if (slot->slots[i] != NULL)
-+			if (max_items == 0 && slot->slots[i] == NULL)
-+				goto out;
-+			else if (max_items != 0 && slot->slots[i] != NULL)
- 				break;
- 			index &= ~((1UL << shift) - 1);
- 			index += 1UL << shift;
-@@ -498,7 +501,9 @@ __lookup(struct radix_tree_root *root, v
- 
- 			for ( ; j < RADIX_TREE_MAP_SIZE; j++) {
- 				index++;
--				if (slot->slots[j]) {
-+				if (max_items == 0 && slot->slots[j] == NULL)
-+					goto out;
-+				if (max_items != 0 && slot->slots[j]) {
- 					results[nr_found++] = slot->slots[j];
- 					if (nr_found == max_items)
- 						goto out;
-@@ -551,6 +556,28 @@ radix_tree_gang_lookup(struct radix_tree
- }
- EXPORT_SYMBOL(radix_tree_gang_lookup);
- 
-+/**
-+ * radix_tree_get_new_above - insert item into first available slot
-+ *
-+ * @root:	radix tree root
-+ * @item:	item to insert
-+ * @starting_index: index to begin the search for a new slot from
-+ * @index:	actual index found for inserting the item
-+ *
-+ * Performs an index-ascending scan of the tree for an empty slot.  Places
-+ * @item in the first empty slot and sets @index to its position.
-+ */
-+int radix_tree_get_new_above(struct radix_tree_root *root, void *item,
-+			     unsigned long starting_index,
-+			     unsigned long *index)
-+{
-+	if (item == NULL)
-+		item = (void *)1UL;
-+	__lookup(root, NULL, starting_index, 0, index);
-+	return radix_tree_insert(root, *index, item);
-+}
-+EXPORT_SYMBOL(radix_tree_get_new_above);
-+
- /*
-  * FIXME: the two tag_get()s here should use find_next_bit() instead of
-  * open-coding the search.
+*) examples of transport specific, persistent, globally unique 
+identifiers: obviously 8 Byte address from SAS, 8 Byte EUI from SBP-2/ 
+IEEE 1394/ ISO/IEC 13213, or maybe 88 bit GUI from ISO/IEC 13213
+-- 
+Stefan Richter
+-=====-=-=-= =--- =-===
+http://arcgraph.de/sr/
