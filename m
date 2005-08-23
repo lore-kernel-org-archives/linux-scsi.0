@@ -1,216 +1,135 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH] scsi: /proc/scsi/scsi patch for large number of devices
-Date: Tue, 23 Aug 2005 09:40:40 -0700
-Message-ID: <1124815241.22518.11.camel@markh1.pdx.osdl.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 2.6.12.5 1/2] lib: allow idr to be used in irq context
+Date: Tue, 23 Aug 2005 12:15:38 -0500
+Message-ID: <1124817338.5108.17.camel@mulgrave>
+References: <20050822003325.33507.qmail@web51613.mail.yahoo.com>
+	 <1124680540.5068.37.camel@mulgrave> <20050821205214.2a75b3cf.akpm@osdl.org>
+	 <1124720938.5211.13.camel@mulgrave> <1124747615.5211.34.camel@mulgrave>
+	 <20050822150942.4f0c46df.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:42467 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750864AbVHWQkn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Aug 2005 12:40:43 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932237AbVHWRPx@vger.kernel.org>
+In-Reply-To: <20050822150942.4f0c46df.akpm@osdl.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: luben_tuikov@adaptec.com, jim.houston@ccur.com, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Dave Jones <davej@redhat.com>, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
+On Mon, 2005-08-22 at 15:09 -0700, Andrew Morton wrote:
+> James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> >
+> > Of course, if we're going to go to all this trouble, the next question
+> >  that arises naturally is why not just reuse the radix-tree code to
+> >  implement idr anyway ... ?
+> 
+> Yes, we could probably have gone that way.  radix-tree would need some
+> enhancements for the find-next-above thing.
 
-I'm not sure if people care about /proc/scsi, but here is a patch so you
-can cat /proc/scsi/scsi when you have a large number of scsi devices.  I
-have over 4000 devices configured and when I would cat /proc/scsi/scsi I
-would see a memory allocation error.  I instead used the seq_file
-iterator to display the devices.  The patch is a little brute force, but
-it only took about 2.5 seconds to display 4000 devices.
+Yes, that's particularly simple (example patch below).  However, radix-
+tree needs to grow a bitmap index for whether its slots are occupied for
+this to be made efficient (it would also help with the gang lookups
+too)---at the moment it's O(N); it could be made O(log(N)).
 
-Applies to scsi-misc-2.6 git tree
+> radix-tree has some features (tags, gang-lookup, gang-lookup-by-tag) which
+> idr doesn't.  Fitting them all into the one storage API would be nice, I
+> guess.  radix-tree does potentially use more memory, although that'll only
+> be significant for collections which are both large and sparse.
 
-Signed-off-by: Mark Haverkamp <markh@osdl.org>
+And by definition, idr is trying to discourage sparsity in the
+collections.
 
-Index: scsi-misc-aac-2/drivers/scsi/scsi_proc.c
-===================================================================
---- scsi-misc-aac-2.orig/drivers/scsi/scsi_proc.c	2005-08-22 11:53:41.000000000 -0700
-+++ scsi-misc-aac-2/drivers/scsi/scsi_proc.c	2005-08-23 08:45:09.000000000 -0700
-@@ -43,6 +43,10 @@
- /* Protect sht->present and sht->proc_dir */
- static DECLARE_MUTEX(global_host_template_sem);
+> Still, people can use either facility at present.  The person who does any
+> such consolidation would do the kernel-wide migration at the same time.
+
+True.  We only seem to have 8 in tree users ... that's not a huge number
+to convert.
+
+James
+
+diff --git a/include/linux/radix-tree.h b/include/linux/radix-tree.h
+--- a/include/linux/radix-tree.h
++++ b/include/linux/radix-tree.h
+@@ -62,10 +62,20 @@ unsigned int
+ radix_tree_gang_lookup_tag(struct radix_tree_root *root, void **results,
+ 		unsigned long first_index, unsigned int max_items, int tag);
+ int radix_tree_tagged(struct radix_tree_root *root, int tag);
++int radix_tree_get_new_above(struct radix_tree_root *root, void *item,
++			     unsigned long starting_index,
++			     unsigned long *index);
  
-+static struct device *proc_dev;
-+static loff_t dev_skip;
-+static DECLARE_MUTEX(proc_dev_sem);
-+
- static int proc_scsi_read(char *buffer, char **start, off_t offset,
- 			  int length, int *eof, void *data)
+ static inline void radix_tree_preload_end(void)
  {
-@@ -142,53 +146,6 @@
- 	remove_proc_entry(name, shost->hostt->proc_dir);
+ 	preempt_enable();
  }
  
--static int proc_print_scsidevice(struct device *dev, void *data)
--{
--	struct scsi_device *sdev = to_scsi_device(dev);
--	struct seq_file *s = data;
--	int i;
--
--	seq_printf(s,
--		"Host: scsi%d Channel: %02d Id: %02d Lun: %02d\n  Vendor: ",
--		sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
--	for (i = 0; i < 8; i++) {
--		if (sdev->vendor[i] >= 0x20)
--			seq_printf(s, "%c", sdev->vendor[i]);
--		else
--			seq_printf(s, " ");
--	}
--
--	seq_printf(s, " Model: ");
--	for (i = 0; i < 16; i++) {
--		if (sdev->model[i] >= 0x20)
--			seq_printf(s, "%c", sdev->model[i]);
--		else
--			seq_printf(s, " ");
--	}
--
--	seq_printf(s, " Rev: ");
--	for (i = 0; i < 4; i++) {
--		if (sdev->rev[i] >= 0x20)
--			seq_printf(s, "%c", sdev->rev[i]);
--		else
--			seq_printf(s, " ");
--	}
--
--	seq_printf(s, "\n");
--
--	seq_printf(s, "  Type:   %s ",
--		     sdev->type < MAX_SCSI_DEVICE_CODE ?
--	       scsi_device_types[(int) sdev->type] : "Unknown          ");
--	seq_printf(s, "               ANSI"
--		     " SCSI revision: %02x", (sdev->scsi_level - 1) ?
--		     sdev->scsi_level - 1 : 1);
--	if (sdev->scsi_level == 2)
--		seq_printf(s, " CCS\n");
--	else
--		seq_printf(s, "\n");
--
--	return 0;
--}
- 
- static int scsi_add_single_device(uint host, uint channel, uint id, uint lun)
- {
-@@ -284,20 +241,101 @@
- 	return err;
++static inline int radix_tree_get_new(struct radix_tree_root *root, void *item,
++				     unsigned long *index)
++{
++	return radix_tree_get_new_above(root, item, 0, index);
++}
++
++
+ #endif /* _LINUX_RADIX_TREE_H */
+diff --git a/lib/radix-tree.c b/lib/radix-tree.c
+--- a/lib/radix-tree.c
++++ b/lib/radix-tree.c
+@@ -133,6 +133,7 @@ int radix_tree_preload(int gfp_mask)
+ out:
+ 	return ret;
  }
++EXPORT_SYMBOL(radix_tree_preload);
  
--static int proc_scsi_show(struct seq_file *s, void *p)
-+
-+static int proc_set_scsidevice(struct device *dev, void *data)
-+{
-+	if (dev_skip--)
-+		return 0;
-+
-+	proc_dev = dev;
-+	return -ENXIO;
-+}
-+
-+static void *proc_dev_start(struct seq_file *s, loff_t *pos)
+ static inline void tag_set(struct radix_tree_node *node, int tag, int offset)
  {
--	seq_printf(s, "Attached devices:\n");
--	bus_for_each_dev(&scsi_bus_type, NULL, s, proc_print_scsidevice);
-+	down(&proc_dev_sem);
-+	proc_dev = NULL;
-+	dev_skip = *pos;
-+	bus_for_each_dev(&scsi_bus_type, NULL,
-+			NULL, proc_set_scsidevice);
-+	return proc_dev;
-+}
-+
-+static void *proc_dev_next(struct seq_file *part, void *v, loff_t *pos)
-+{
-+	dev_skip = ++*pos;
-+	proc_dev = NULL;
-+	bus_for_each_dev(&scsi_bus_type, NULL,
-+			NULL, proc_set_scsidevice);
-+	return proc_dev;
-+}
-+
-+static void proc_dev_stop(struct seq_file *part, void *v)
-+{
-+	up(&proc_dev_sem);
-+}
-+
-+static int proc_dev_show(struct seq_file *s, void *data)
-+{
-+	struct scsi_device *sdev = to_scsi_device((struct device*)data);
-+	int i;
-+
-+	seq_printf(s,
-+		"Host: scsi%d Channel: %02d Id: %02d Lun: %02d\n  Vendor: ",
-+		sdev->host->host_no, sdev->channel,
-+		sdev->id, sdev->lun);
-+	for (i = 0; i < 8; i++) {
-+		if (sdev->vendor[i] >= 0x20)
-+			seq_printf(s, "%c", sdev->vendor[i]);
-+		else
-+			seq_printf(s, " ");
-+	}
-+
-+	seq_printf(s, " Model: ");
-+	for (i = 0; i < 16; i++) {
-+		if (sdev->model[i] >= 0x20)
-+			seq_printf(s, "%c", sdev->model[i]);
-+		else
-+			seq_printf(s, " ");
-+	}
-+
-+	seq_printf(s, " Rev: ");
-+	for (i = 0; i < 4; i++) {
-+		if (sdev->rev[i] >= 0x20)
-+			seq_printf(s, "%c", sdev->rev[i]);
-+		else
-+			seq_printf(s, " ");
-+	}
-+
-+	seq_printf(s, "\n");
-+
-+	seq_printf(s, "  Type:   %s ",
-+		     sdev->type < MAX_SCSI_DEVICE_CODE ?
-+	       scsi_device_types[(int) sdev->type] : "Unknown          ");
-+	seq_printf(s, "               ANSI"
-+		     " SCSI revision: %02x", (sdev->scsi_level - 1) ?
-+		     sdev->scsi_level - 1 : 1);
-+	if (sdev->scsi_level == 2)
-+		seq_printf(s, " CCS\n");
-+	else
-+		seq_printf(s, "\n");
-+
- 	return 0;
+@@ -483,7 +484,9 @@ __lookup(struct radix_tree_root *root, v
+ 		unsigned long i = (index >> shift) & RADIX_TREE_MAP_MASK;
+ 
+ 		for ( ; i < RADIX_TREE_MAP_SIZE; i++) {
+-			if (slot->slots[i] != NULL)
++			if (max_items == 0 && slot->slots[i] == NULL)
++				goto out;
++			else if (max_items != 0 && slot->slots[i] != NULL)
+ 				break;
+ 			index &= ~((1UL << shift) - 1);
+ 			index += 1UL << shift;
+@@ -498,7 +501,9 @@ __lookup(struct radix_tree_root *root, v
+ 
+ 			for ( ; j < RADIX_TREE_MAP_SIZE; j++) {
+ 				index++;
+-				if (slot->slots[j]) {
++				if (max_items == 0 && slot->slots[j] == NULL)
++					goto out;
++				if (max_items != 0 && slot->slots[j]) {
+ 					results[nr_found++] = slot->slots[j];
+ 					if (nr_found == max_items)
+ 						goto out;
+@@ -551,6 +556,28 @@ radix_tree_gang_lookup(struct radix_tree
  }
+ EXPORT_SYMBOL(radix_tree_gang_lookup);
  
-+struct seq_operations proc_dev_op = {
-+	.start =proc_dev_start,
-+	.next =	proc_dev_next,
-+	.stop =	proc_dev_stop,
-+	.show =	proc_dev_show
-+};
- static int proc_scsi_open(struct inode *inode, struct file *file)
- {
- 	/*
- 	 * We don't really needs this for the write case but it doesn't
- 	 * harm either.
- 	 */
--	return single_open(file, proc_scsi_show, NULL);
-+	return seq_open(file, &proc_dev_op);
- }
- 
- static struct file_operations proc_scsi_operations = {
-@@ -305,7 +343,7 @@
- 	.read		= seq_read,
- 	.write		= proc_scsi_write,
- 	.llseek		= seq_lseek,
--	.release	= single_release,
-+	.release	= seq_release
- };
- 
- int __init scsi_init_procfs(void)
-
--- 
-Mark Haverkamp <markh@osdl.org>
-
++/**
++ * radix_tree_get_new_above - insert item into first available slot
++ *
++ * @root:	radix tree root
++ * @item:	item to insert
++ * @starting_index: index to begin the search for a new slot from
++ * @index:	actual index found for inserting the item
++ *
++ * Performs an index-ascending scan of the tree for an empty slot.  Places
++ * @item in the first empty slot and sets @index to its position.
++ */
++int radix_tree_get_new_above(struct radix_tree_root *root, void *item,
++			     unsigned long starting_index,
++			     unsigned long *index)
++{
++	if (item == NULL)
++		item = (void *)1UL;
++	__lookup(root, NULL, starting_index, 0, index);
++	return radix_tree_insert(root, *index, item);
++}
++EXPORT_SYMBOL(radix_tree_get_new_above);
++
+ /*
+  * FIXME: the two tag_get()s here should use find_next_bit() instead of
+  * open-coding the search.
