@@ -1,41 +1,38 @@
-From: George Anzinger <george@mvista.com>
-Subject: Re: [PATCH 3/3] Add disk hotswap support to libata RESEND #2
-Date: Tue, 23 Aug 2005 15:56:16 -0700
-Message-ID: <430BA990.9090807@mvista.com>
-References: <355e5e5e05080103021a8239df@mail.gmail.com>	 <4789af9e050823124140eb924f@mail.gmail.com> <4789af9e050823154364c8e9eb@mail.gmail.com>
-Reply-To: george@mvista.com
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [PATCH] libata: write cache and read ahead
+Date: Tue, 23 Aug 2005 19:22:59 -0400
+Message-ID: <430BAFD3.9000702@adaptec.com>
+References: <43085209.50405@torque.net> <430914C2.8030301@pobox.com> <43095EB3.2020202@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932476AbVHWW43@vger.kernel.org>
-In-Reply-To: <4789af9e050823154364c8e9eb@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jim Ramsay <jim.ramsay@gmail.com>
-Cc: Linux-ide <linux-ide@vger.kernel.org>, Lukasz Kosewski <lkosewsk@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:54975 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1750784AbVHWXXC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Aug 2005 19:23:02 -0400
+In-Reply-To: <43095EB3.2020202@torque.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-Jim Ramsay wrote:
-> On 8/23/05, Jim Ramsay <jim.ramsay@gmail.com> wrote:
-> 
->>Then I must have found an undocumented feature!  I've applied this set
->>of patches to a 2.6.11 kernel (with few problems) and ran into a bunch
->>of "scheduling while atomic" errors when hotplugging a drive, culprit
->>being probably scsi_sysfs.c where scsi_remove_device locks a mutex, or
->>perhaps when it then calls class_device_unregister, which does a
->>'down_write'.
-> 
-> 
-> After further debugging, it appears that the problem is the debounce
-> timer in libata-core.c.
-> 
-> Timers appear to operate in an atomic context, so timers should not be
-> allowed to call scsi_remove_device, which eventually schedules.
-> 
-> Any suggestions on the best way to fix this?
+On 08/22/05 01:12, Douglas Gilbert wrote:
+> I was surprised how much code needed changing.
+> With MODE SELECT's issues with libata addressed
+> various other SAT "extras" should be much easier
+> to implement. That should make libata more attractive
+> as a SAT layer for SAS LLDDs (that don't do it already
+> in firmware).
 
-Workqueue, perhaps.
-> 
+Doug, how about never needing a SAT layer for SAS LLDDs
+for ATA/ATAPI devices.
 
--- 
-George Anzinger   george@mvista.com
-HRT (High-res-timers):  http://sourceforge.net/projects/high-res-timers/
+Would you object if I "give" you a "domain device" to which
+you can send FISes (+ the packet if ATAPI) through
+a SAM-4 intefrace: Execute Task + TMFs?
+
+Jeff?
+
+	Luben
+
