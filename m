@@ -1,31 +1,63 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi: /proc/scsi/scsi patch for large number of devices
-Date: Tue, 23 Aug 2005 18:42:06 +0100
-Message-ID: <20050823174206.GA12359@infradead.org>
-References: <1124815241.22518.11.camel@markh1.pdx.osdl.net>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH] minimal SAS transport class
+Date: Tue, 23 Aug 2005 10:57:16 -0700
+Message-ID: <20050823175716.GA6914@us.ibm.com>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A4B@xbl3.ma.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:15588 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932244AbVHWRmK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Aug 2005 13:42:10 -0400
+Received: from e35.co.us.ibm.com ([32.97.110.133]:55241 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S932254AbVHWR5h
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Aug 2005 13:57:37 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e35.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j7NHvXSh302866
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Aug 2005 13:57:33 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j7NHv20I412066
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Aug 2005 11:57:02 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j7NHvVjT003298
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Aug 2005 11:57:32 -0600
 Content-Disposition: inline
-In-Reply-To: <1124815241.22518.11.camel@markh1.pdx.osdl.net>
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A4B@xbl3.ma.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James.Smart@Emulex.Com
+Cc: luben_tuikov@adaptec.com, hch@lst.de, jejb@steeleye.com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, linux-scsi@vger.kernel.org
 
-On Tue, Aug 23, 2005 at 09:40:40AM -0700, Mark Haverkamp wrote:
+On Tue, Aug 23, 2005 at 12:16:45PM -0400, James.Smart@Emulex.Com wrote:
+> > As others stated, id is already a tag/label. You should be 
+> > able to pass
+> > whatever id you want to scsi_scan_target, like the FC ID 
+> > (port_id), and
+> > then we also want an abstract iterator in fc transport for the id for
+> > usage in scsi_scan.c:scsi_scan_channel. Then you can lose all the
+> > fc_host->next_target_id code.
 > 
-> I'm not sure if people care about /proc/scsi, but here is a patch so you
-> can cat /proc/scsi/scsi when you have a large number of scsi devices.  I
-> have over 4000 devices configured and when I would cat /proc/scsi/scsi I
-> would see a memory allocation error.  I instead used the seq_file
-> iterator to display the devices.  The patch is a little brute force, but
-> it only took about 2.5 seconds to display 4000 devices.
+> All nice and well, but....
+> 
+> How did this help things ?  The issue was the device with a changing
+> target id. If the device comes back at the same address each and
+> every time, ok. But, with FC, the Port ID is temporal. It can change
+> on a loop init, fabric reconfig, or with a user cable swap (kicked
+> the cable and replugged).
+> 
+> If the port id changes during run time, what are you to do ? What if
+> a new port is seen at the old port id, how do you now deal with the
+> name conflict ? You know apps are going to key off the physical bus
+> address being the target - if it changes, this becomes very problematic.
 
-We had this before, and the answer is: don't use /proc/scsi if you have
-lots of device.  Don't even enable the config option.
+I thought by "the target id is logical for everything but SPI" you meant
+that FC enumerated the scsi_device id.
 
+I didn't mean to address problems with persistent names, just map the
+scsi_device id to an FC value. We can't keep all the values in the h:c:i:l
+constant.
+
+udev (currently, and per Hannes' email in sles9) creates /dev entries with
+persistent id's. That does not help if you change scsi_device id values,
+or (effectively) remove and add back the same scsi_device. dm-mp should
+(eventually?) support that scenario - multipath is really 0 or more paths ...
+
+-- Patrick Mansfield
