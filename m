@@ -1,44 +1,60 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] correct attribute_container list usage
-Date: Mon, 22 Aug 2005 20:17:37 -0700
-Message-ID: <20050823031737.GA31361@us.ibm.com>
-References: <1124723180.5211.25.camel@mulgrave> <20050822214617.GA26441@us.ibm.com> <1124747956.5211.38.camel@mulgrave> <20050822221427.GA26767@us.ibm.com> <1124750826.5211.46.camel@mulgrave> <1124753185.5211.50.camel@mulgrave> <20050823003938.GA29211@us.ibm.com> <1124762584.5211.53.camel@mulgrave>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] minimal SAS transport class
+Date: Tue, 23 Aug 2005 08:27:51 +0200
+Message-ID: <430AC1E7.4090408@suse.de>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A40@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:58786 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932068AbVHWDRj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Aug 2005 23:17:39 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e2.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j7N3Hc2t001868
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2005 23:17:38 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j7N3HcpD234214
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2005 23:17:38 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j7N3Hbpx008971
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2005 23:17:38 -0400
-Content-Disposition: inline
-In-Reply-To: <1124762584.5211.53.camel@mulgrave>
+Received: from ns.suse.de ([195.135.220.2]:5765 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S1750772AbVHWG15 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Aug 2005 02:27:57 -0400
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A40@xbl3.ma.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Aug 22, 2005 at 09:03:03PM -0500, James Bottomley wrote:
-> On Mon, 2005-08-22 at 17:39 -0700, Patrick Mansfield wrote:
-> > But, we have to pass in a struct kref, to affect put/get_device, correct?
-> 
-> Correct.  Let me post the code mods to drivers/base/core.c so you can
-> see how it works.
+James.Smart@Emulex.Com wrote:
+> - There are some real challenges in supporting a udev-named boot
+>   device. For the most part, it's a distro issue, which is becoming
+>   better. PS: for $10, name a 2.6 distro that uses udev out
+>   of the box for disk names and its installation. For $10 more,=20
+>   can it install/boot from one?
+Hmm. You are correct in that appearently there _is_ a large education
+effort required.
+SLES9 uses udev for installation and booting per default, and this work=
+s
+with even the horribly old version we're having there.
 
-OK ... I thought that was what you intended but could not quite see it.
+> - Some of these vendors come from large disk farms, and in several
+>   cases, the disk farms change frequently. Thus, they must flush
+>   and regenerate their udev configurations on each change. Not a
+>   fun process.
+Not really. You normally shouldn't have to redo the udev configuration
+as your vendor/distributor will have provided you with one which works
+out of the box. Of course, you'll have to initiate a rescan of the SAN
+topology, but udev is the least of the problems you're facing then.
 
-> Incidentally, it now passes your dev_child test without causing a slab
-> corruption.
+> - Most could care less about, or don't understand, the technical
+>   justifications for the new 2.6 behaviors. Thus, they push their
+>   vendors for same-style behaviors as 2.4 regardless of the 2.6
+>   stance.
+Oh, how true. I heartily agree with you on this one.
 
-Great, tested with your two patches applied on recent 2.6.13-rc6-git tree,
-and modprobe -r qla2300 now works fine.
+Cheers,
 
--- Patrick Mansfield
+Hannes
+--=20
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux Products GmbH		S390 & zSeries
+Maxfeldstra=DFe 5				+49 911 74053 688
+90409 N=FCrnberg				http://www.suse.de
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
