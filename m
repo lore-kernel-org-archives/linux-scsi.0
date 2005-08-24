@@ -1,33 +1,73 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC PATCH 1/4] convert block layer drivers to
-	blkerr error values
-Date: Wed, 24 Aug 2005 04:49:27 -0500
-Message-ID: <430C42A7.3040008@cs.wisc.edu>
-References: <1124874238.10888.18.camel@max>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Frederik Schueler <fs@lowpingbastards.de>
+Subject: Re: new qla2xxx driver breaks SAN setup with 2 controllers
+Date: Wed, 24 Aug 2005 11:55:20 +0200
+Message-ID: <20050824095520.GD13391@mail.lowpingbastards.de>
+References: <20050823112535.GB13391@mail.lowpingbastards.de> <20050823200040.GA8310@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1124874238.10888.18.camel@max>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: dm-devel@redhat.com, axboe@suse.de, linux-scsi@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="4ZLFUWh1odzi/v6L"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750824AbVHXJzt@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20050823200040.GA8310@us.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Frederik Schueler <fs@lowpingbastards.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Mike Christie wrote:
-> @@ -1049,7 +1049,6 @@ static void pkt_start_write(struct pktcd
->  	pkt->w_bio->bi_max_vecs = PACKET_MAX_SIZE;
->  	pkt->w_bio->bi_sector = pkt->sector;
->  	pkt->w_bio->bi_bdev = pd->bdev;
-> -	pkt->w_bio->bi_end_io = pkt_end_io_packet_write;
 
-oops I messed up my git checkins and stuff. This was a accident.
+--4ZLFUWh1odzi/v6L
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hello,
+
+On Tue, Aug 23, 2005 at 01:00:40PM -0700, Patrick Mansfield wrote:
+> The use of scsiadd script implies that you are attaching or somehow
+> modifying the storage after the driver has loaded. Is that correct?
+
+yes exactly, only the bootdrive LUN is registered after bootup. I have
+to selectively scsiadd the other LUNs if there is a gap between the=20
+boot LUN (1-8 in our setup) and the shared storages (9-14). I don't
+consider this a bug though, I had to remove some devices otherwise,=20
+and old drivers had to be patched to allow this at all.
+
+
+> There is a fix for scanning initiated via user space, this change:
+>=20
+> http://www.kernel.org/git/?p=3Dlinux/kernel/git/jejb/scsi-rc-fixes-2.6.gi=
+t;a=3Dcommit;h=3D5c44cd2afad3f7b015542187e147a820600172f1
+>=20
+> The above fix is in the current 2.6 git tree. Does that fix your problem?
+=20
+It does, thanks for the hint :-)
+
+I see this is in rc7 too.
+
+
+> Also try using lsscsi.
+
+it does not list the non-registered LUNs the driver knows about, as the
+old proc interface did.
+
+
+Best regards
+Frederik Schueler
+
+--=20
+ENOSIG
+
+--4ZLFUWh1odzi/v6L
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFDDEQI6n7So0GVSSARAhAlAKCCx09jpD77raczusgfOpdW6hIb5ACfUC+a
+y2q1W3rNj6Aw/fP+NrMnDkQ=
+=x4/n
+-----END PGP SIGNATURE-----
+
+--4ZLFUWh1odzi/v6L--
