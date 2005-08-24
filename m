@@ -1,69 +1,56 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] minimal SAS transport class
-Date: Wed, 24 Aug 2005 13:42:14 -0700
-Message-ID: <20050824204214.GA21794@us.ibm.com>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A40@xbl3.ma.emulex.com> <20050822045502.GA7147@lists.us.dell.com> <430A05F2.10009@adaptec.com> <20050822215316.GB8083@us.ibm.com> <430BB779.2060209@adaptec.com> <20050824171241.GB16652@us.ibm.com> <430CD2EF.8010108@adaptec.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: Re: [RFC PATCH 1/4] convert block layer drivers to
+	blkerr error values
+Date: Wed, 24 Aug 2005 15:50:45 -0500
+Message-ID: <430CDDA5.5000705@cs.wisc.edu>
+References: <1124874238.10888.18.camel@max> <20050824192132.GA20663@us.ibm.com>
+	<1124915637.5116.54.camel@mulgrave>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:252 "EHLO e35.co.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932168AbVHXUmd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Aug 2005 16:42:33 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e35.co.us.ibm.com (8.12.10/8.12.9) with ESMTP id j7OKgTSh448818
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Aug 2005 16:42:30 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j7OKgcdc368352
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Aug 2005 14:42:39 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j7OKgTJn007285
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Aug 2005 14:42:29 -0600
-Content-Disposition: inline
-In-Reply-To: <430CD2EF.8010108@adaptec.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <1124915637.5116.54.camel@mulgrave>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>
+Cc: Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Patrick Mansfield <patmans@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: ltuikov@yahoo.com, linux-scsi@vger.kernel.org
 
-On Wed, Aug 24, 2005 at 04:05:03PM -0400, Luben Tuikov wrote:
-> On 08/24/05 13:12, Patrick Mansfield wrote:
-> > On Tue, Aug 23, 2005 at 07:55:37PM -0400, Luben Tuikov wrote:
-> > 
-> >>Where does udev get its label?
-> > 
-> > 
-> > You can call any script or program from udev and use the result. There are
+James Bottomley wrote:
+> On Wed, 2005-08-24 at 12:21 -0700, Patrick Mansfield wrote:
 > 
-> And where does _it_ get it?
-
-You can write a program to supply it :)
-
-And then try to get it into your favourite distribution ...
-
-> > recent changes for persistent naming, the /dev/by-id naming used in sles9
-> > is in current udev.
-> > 
-> > A tmp /dev node is available to called out programs, so any pass through
-> > or regular IO can be sent to the device before it has its real name.  So
-> > you should be able to get anything available on the scsi device that way.
+>>On Wed, Aug 24, 2005 at 04:03:58AM -0500, Mike Christie wrote:
+>>
+>>
+>>>-#define end_io_error(uptodate)	(unlikely((uptodate) <= 0))
+>>>+enum {
+>>>+	BLK_SUCCESS = 0,	/* Must be zero for compat with old usage */
+>>>+	BLKERR_IO,		/* Generic I/O error */
+>>>+	BLKERR_NOTSUPP,		/* Operation is not supported */
+>>>+	BLKERR_WOULDBLOCK,	/* Operation would block */
+>>>+	BLKERR_FATAL_DRV,	/* Fatal driver error */
+>>>+	BLKERR_FATAL_DEV,	/* Fatal device error */
+>>>+	BLKERR_FATAL_XPT,	/* Fatal transport error */
+>>>+	BLKERR_RETRY_DRV,	/* Driver error, I/O may be retried */
+>>>+	BLKERR_RETRY_DEV,	/* Device error, I/O may be retried */
+>>>+	BLKERR_RETRY_XPT,	/* Transport error, I/O may retried */
+>>>+};
 > 
-> *"SCSI DEVICE"*, not SAS of FC or iSCSI or whatever.
-> Now, where will that *scsi device* get _its_ label?
 > 
-> > udev now has an "IMPORT" rule, see usage of scsi_id, vol_id, etc. in
-> > current udev rules.
-> > 
-> > Followup posts should go to linux-hotplug-devel@lists.sourceforge.net
+> Actually, I'd really be happier if these were a bitmap rather than an
+> enumeration.  That way we can divide them easily into cause (Driver,
+> Device or Transport) and severity (fatal or retryable), so something
+> like dm-multipath would only be interested in errors it made sense for a
+> path to be failed over for (i.e. all transport and driver errors).
 > 
-> Hey Patrick, is there a point to this thread?
 
-Yes, at this juncture a simplified explanation about udev rules.
-
-> If you have an idea, please go ahead and share and/or implement it.
-> If you're unclear on something please ask it directly.
-
-I thought you were asking for details about udev ... your question was
-rather ambiguous.
-
--- Patrick Mansfield
+Would it be good then to also extend the fail fast flag to a bit map so 
+dm-multipath can tell scsi that scsi should handle device errors?
