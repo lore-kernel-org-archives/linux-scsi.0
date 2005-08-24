@@ -1,172 +1,197 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [RFC PATCH 3/4] convert dm-multipath to blkerr error values
-Date: Wed, 24 Aug 2005 04:04:27 -0500
-Message-ID: <1124874267.10888.20.camel@max>
+Subject: [RFC PATCH 2/4] convert dm to blkerr error values
+Date: Wed, 24 Aug 2005 04:04:10 -0500
+Message-ID: <1124874250.10888.19.camel@max>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:979 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1750795AbVHXJEd (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:64978 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1750794AbVHXJES (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Aug 2005 05:04:33 -0400
+	Wed, 24 Aug 2005 05:04:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dm-devel@redhat.com, axboe@suse.de, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, axboe@suse.de, dm-devel@redhat.com
 
-Ok here is a first pass at converting dm-multipath.
-I have tested with some software iSCSI drivers.
+Convert dm and dm-targets (excpet dm-multipath) to
+BLKERR values.
 
-The next step is to move the sense code in dm-emc
-to scsi. One possible problem is coming up with
-a BLKERR value that will give dm-multipath the same
-info as MP_BYPASS_PG.
+Some temporary crap I will fix is the dec_pending fucntions.
+Becuase dec_pending() used to get -Exyz values from target map
+functions I just added a switch statement to convert the Exyz
+value to a BLKERR one. I need to spend more time looking at
+some of them to make sure I do the right thing. I will convert
+the target's map functions in the next round - unless you are
+fine with that conversion code in dec_pending. I had to play
+similar tricks for the other target's dec_pending/count functions.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -94,8 +94,11 @@ struct multipath {
- struct mpath_io {
- 	struct pgpath *pgpath;
- 	struct dm_bio_details details;
-+	int retries;
- };
+diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
+--- a/drivers/md/dm-crypt.c
++++ b/drivers/md/dm-crypt.c
+@@ -436,8 +436,8 @@ static void dec_pending(struct crypt_io 
+ {
+ 	struct crypt_config *cc = (struct crypt_config *) io->target->private;
  
-+#define MPIO_MAX_RETRIES 5
-+
- typedef int (*action_fn) (struct pgpath *pgpath);
+-	if (error < 0)
+-		io->error = error;
++	if (error && io->error != BLK_SUCCESS)
++		io->error = BLKERR_IO;
  
- #define MIN_IOS 256	/* Mempool size */
-@@ -370,7 +373,7 @@ static void dispatch_queued_ios(struct m
- 
- 		r = map_io(m, bio, mpio, 1);
- 		if (r < 0)
--			bio_endio(bio, bio->bi_size, r);
-+			bio_endio(bio, bio->bi_size, BLKERR_IO);
- 		else if (r == 1)
- 			generic_make_request(bio);
- 
-@@ -781,6 +784,7 @@ static int multipath_map(struct dm_targe
- 
- 	mpio = mempool_alloc(m->mpio_pool, GFP_NOIO);
- 	dm_bio_record(&mpio->details, bio);
-+	mpio->retries = 0;
- 
- 	map_context->ptr = mpio;
- 	bio->bi_rw |= (1 << BIO_RW_FAILFAST);
-@@ -988,6 +992,20 @@ void dm_pg_init_complete(struct path *pa
- 	spin_unlock_irqrestore(&m->lock, flags);
- }
- 
-+/* queue for the daemon to resubmit or fail */
-+static void requeue_io(struct multipath *m, struct bio *bio,
-+		       struct mpath_io *mpio)
-+{
-+	dm_bio_restore(&mpio->details, bio);
-+
-+	spin_lock(&m->lock);
-+	bio_list_add(&m->queued_ios, bio);
-+	m->queue_size++;
-+	if (!m->queue_io)
-+		queue_work(kmultipathd, &m->process_queued_ios);
-+	spin_unlock(&m->lock);
-+}
-+
- /*
-  * end_io handling
-  */
-@@ -997,20 +1015,11 @@ static int do_end_io(struct multipath *m
- 	struct hw_handler *hwh = &m->hw_handler;
- 	unsigned err_flags = MP_FAIL_PATH;	/* Default behavior */
- 
--	if (!error)
--		return 0;	/* I/O complete */
--
--	if ((error == -EWOULDBLOCK) && bio_rw_ahead(bio))
--		return error;
--
--	if (error == -EOPNOTSUPP)
--		return error;
--
- 	spin_lock(&m->lock);
- 	if (!m->nr_valid_paths) {
- 		if (!m->queue_if_no_path) {
- 			spin_unlock(&m->lock);
--			return -EIO;
-+			return BLKERR_FATAL_DEV;
- 		} else {
- 			spin_unlock(&m->lock);
- 			goto requeue;
-@@ -1030,20 +1039,11 @@ static int do_end_io(struct multipath *m
+ 	if (!atomic_dec_and_test(&io->pending))
+ 		return;
+@@ -726,7 +726,10 @@ static int crypt_endio(struct bio *bio, 
  	}
  
- 	if (err_flags & MP_ERROR_IO)
--		return -EIO;
-+		return BLKERR_FATAL_DEV;
+ 	if (bio->bi_size)
+-		return 1;
++		return -1;
++
++	if (error != BLK_SUCCESS)
++		io->error = error;
  
--      requeue:
--	dm_bio_restore(&mpio->details, bio);
--
--	/* queue for the daemon to resubmit or fail */
--	spin_lock(&m->lock);
--	bio_list_add(&m->queued_ios, bio);
--	m->queue_size++;
--	if (!m->queue_io)
--		queue_work(kmultipathd, &m->process_queued_ios);
--	spin_unlock(&m->lock);
--
--	return 1;	/* io not complete */
-+requeue:
-+	requeue_io(m, bio, mpio);	
-+	return -1;	/* io not complete */
+ 	bio_put(bio);
+ 
+@@ -804,7 +807,7 @@ static int crypt_map(struct dm_target *t
+ 	io->target = ti;
+ 	io->bio = bio;
+ 	io->first_clone = NULL;
+-	io->error = 0;
++	io->error = BLK_SUCCESS;
+ 	atomic_set(&io->pending, 1); /* hold a reference */
+ 
+ 	if (bio_data_dir(bio) == WRITE)
+diff --git a/drivers/md/dm-emc.c b/drivers/md/dm-emc.c
+--- a/drivers/md/dm-emc.c
++++ b/drivers/md/dm-emc.c
+@@ -48,7 +48,7 @@ static int emc_endio(struct bio *bio, un
+ 	 *
+ 	 * For now simple logic: either it works or it doesn't.
+ 	 */
+-	if (error)
++	if (error != BLK_SUCCESS)
+ 		dm_pg_init_complete(path, MP_FAIL_PATH);
+ 	else
+ 		dm_pg_init_complete(path, 0);
+diff --git a/drivers/md/dm-io.c b/drivers/md/dm-io.c
+--- a/drivers/md/dm-io.c
++++ b/drivers/md/dm-io.c
+@@ -115,7 +115,7 @@ static inline unsigned bio_get_region(st
+  *---------------------------------------------------------------*/
+ static void dec_count(struct io *io, unsigned int region, int error)
+ {
+-	if (error)
++	if (error != BLK_SUCCESS)
+ 		set_bit(region, &io->error);
+ 
+ 	if (atomic_dec_and_test(&io->count)) {
+@@ -141,7 +141,7 @@ static int endio(struct bio *bio, unsign
+ 	if (bio->bi_size)
+ 		return 1;
+ 
+-	if (error && bio_data_dir(bio) == READ)
++	if (error != BLK_SUCCESS && bio_data_dir(bio) == READ)
+ 		zero_fill_bio(bio);
+ 
+ 	dec_count(io, bio_get_region(bio), error);
+@@ -308,7 +308,7 @@ static void dispatch_io(int rw, unsigned
+ 	 * Drop the extra refence that we were holding to avoid
+ 	 * the io being completed too early.
+ 	 */
+-	dec_count(io, 0, 0);
++	dec_count(io, 0, BLK_SUCCESS);
  }
  
- static int multipath_end_io(struct dm_target *ti, struct bio *bio,
-@@ -1053,15 +1053,40 @@ static int multipath_end_io(struct dm_ta
- 	struct mpath_io *mpio = (struct mpath_io *) map_context->ptr;
- 	struct pgpath *pgpath = mpio->pgpath;
- 	struct path_selector *ps;
--	int r;
-+	int r = error;
-+
-+	switch (error) {
-+	case BLK_SUCCESS:
-+		break;
-+	case BLKERR_NOTSUPP:
-+		break;
-+	case BLKERR_WOULDBLOCK:
-+		if (bio_rw_ahead(bio))
-+			break;
-+	case BLKERR_RETRY_DRV:
-+	case BLKERR_RETRY_DEV:
-+	case BLKERR_RETRY_XPT:
-+		/*
-+		 * this should be modifiable, we should also add some
-+		 * counters to indicate how many error we have on this
-+		 * path.
-+		 */
-+		if (mpio->retries++ < MPIO_MAX_RETRIES) {
-+			requeue_io(m, bio, mpio);
-+			r = -1;
-+			break;
-+		} else
-+			r = BLKERR_FATAL_DEV;
-+	default:
-+		r  = do_end_io(m, bio, error, mpio);
+ static int sync_io(unsigned int num_regions, struct io_region *where,
+diff --git a/drivers/md/dm-zero.c b/drivers/md/dm-zero.c
+--- a/drivers/md/dm-zero.c
++++ b/drivers/md/dm-zero.c
+@@ -41,7 +41,7 @@ static int zero_map(struct dm_target *ti
+ 		break;
+ 	}
+ 
+-	bio_endio(bio, bio->bi_size, 0);
++	bio_endio(bio, bio->bi_size, BLK_SUCCESS);
+ 
+ 	/* accepted bio, don't make new request */
+ 	return 0;
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -294,8 +294,25 @@ struct dm_table *dm_get_table(struct map
+  */
+ static inline void dec_pending(struct dm_io *io, int error)
+ {
+-	if (error)
+-		io->error = error;
++	/*
++	 * When called from the endio functions io->error will
++	 * have been set or we will be passed a BLKERR value.
++	 * If this is called from the mapping functions then will get
++	 * a old error value because we have not converted them yet
++	 */
++	if (error && io->error == BLK_SUCCESS) {
++		switch (error) {
++			case -EWOULDBLOCK:
++				io->error = BLKERR_WOULDBLOCK;
++				break;
++			case -EOPNOTSUPP:
++				io->error = BLKERR_NOTSUPP;
++				break;
++			default:
++				io->error = BLKERR_IO;
++				break;
++		}
 +	}
  
--	r  = do_end_io(m, bio, error, mpio);
- 	if (pgpath) {
- 		ps = &pgpath->pg->ps;
- 		if (ps->type->end_io)
- 			ps->type->end_io(ps, &pgpath->path);
- 	}
--	if (r <= 0)
-+	if (r != -1)
- 		mempool_free(mpio, m->mpio_pool);
+ 	if (atomic_dec_and_test(&io->io_count)) {
+ 		if (atomic_dec_and_test(&io->md->pending))
+@@ -317,19 +334,22 @@ static int clone_endio(struct bio *bio, 
+ 	if (bio->bi_size)
+ 		return 1;
  
- 	return r;
+-	if (!bio_flagged(bio, BIO_UPTODATE) && !error)
+-		error = -EIO;
++	if (!bio_flagged(bio, BIO_UPTODATE) && error == BLK_SUCCESS)
++		error = BLKERR_IO;
+ 
+ 	if (endio) {
+ 		r = endio(tio->ti, bio, error, &tio->info);
+-		if (r < 0)
++		if (r >= 0)
+ 			error = r;
+ 
+-		else if (r > 0)
++		else if (r < 0)
+ 			/* the target wants another shot at the io */
+ 			return 1;
+ 	}
+ 
++	if (error != BLK_SUCCESS)
++		io->error = error;
++
+ 	free_tio(io->md, tio);
+ 	dec_pending(io, error);
+ 	bio_put(bio);
+@@ -539,7 +559,7 @@ static void __split_bio(struct mapped_de
+ 	ci.md = md;
+ 	ci.bio = bio;
+ 	ci.io = alloc_io(md);
+-	ci.io->error = 0;
++	ci.io->error = BLK_SUCCESS;
+ 	atomic_set(&ci.io->io_count, 1);
+ 	ci.io->bio = bio;
+ 	ci.io->md = md;
+@@ -552,7 +572,7 @@ static void __split_bio(struct mapped_de
+ 		__clone_and_map(&ci);
+ 
+ 	/* drop the extra reference count */
+-	dec_pending(ci.io, 0);
++	dec_pending(ci.io, BLK_SUCCESS);
+ 	dm_table_put(ci.map);
+ }
+ /*-----------------------------------------------------------------
 
 
