@@ -1,33 +1,49 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC PATCH 1/4] convert block layer drivers to blkerr error values
-Date: Wed, 24 Aug 2005 14:42:25 -0500
-Message-ID: <430CCDA1.2050403@cs.wisc.edu>
-References: <1124874238.10888.18.camel@max> <20050824192132.GA20663@us.ibm.com> <430CCB5E.3090808@pobox.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [PATCH] minimal SAS transport class
+Date: Wed, 24 Aug 2005 16:05:03 -0400
+Message-ID: <430CD2EF.8010108@adaptec.com>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A40@xbl3.ma.emulex.com> <20050822045502.GA7147@lists.us.dell.com> <430A05F2.10009@adaptec.com> <20050822215316.GB8083@us.ibm.com> <430BB779.2060209@adaptec.com> <20050824171241.GB16652@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:11734 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1751491AbVHXTmh (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:17096 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932072AbVHXUFP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Aug 2005 15:42:37 -0400
-In-Reply-To: <430CCB5E.3090808@pobox.com>
+	Wed, 24 Aug 2005 16:05:15 -0400
+In-Reply-To: <20050824171241.GB16652@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: axboe@suse.de, Patrick Mansfield <patmans@us.ibm.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Mike Anderson <andmike@us.ibm.com>, Matt Domsch <Matt_Domsch@dell.com>, James.Smart@Emulex.Com, hch@lst.de, jejb@steeleye.com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, linux-scsi@vger.kernel.org
 
-Jeff Garzik wrote:
-> In general, I'm a bit worried about these changes, for two overall reasons:
+On 08/24/05 13:12, Patrick Mansfield wrote:
+> On Tue, Aug 23, 2005 at 07:55:37PM -0400, Luben Tuikov wrote:
 > 
-> 1) I didn't see any analysis of the ultimate end users of block layer 
-> error values:  the filesystems.
+>>Where does udev get its label?
+> 
+> 
+> You can call any script or program from udev and use the result. There are
 
-The filesystems or helpers they use normally did not even check the 
--Exyz error they were getting except for -EOPNOTSUPPORTED. They 
-typically use the uptodate bits on the bio or buffer head.
+And where does _it_ get it?
 
-A greater discussion on what the FS's needed and what actions they 
-should take would be good though, I agree. They never responded in the 
-past so I thought the MD and DM were the only interested users for now. 
-I will post to lkml or fs-devel next time. Sorry about that.
+> recent changes for persistent naming, the /dev/by-id naming used in sles9
+> is in current udev.
+> 
+> A tmp /dev node is available to called out programs, so any pass through
+> or regular IO can be sent to the device before it has its real name.  So
+> you should be able to get anything available on the scsi device that way.
+
+*"SCSI DEVICE"*, not SAS of FC or iSCSI or whatever.
+Now, where will that *scsi device* get _its_ label?
+
+> udev now has an "IMPORT" rule, see usage of scsi_id, vol_id, etc. in
+> current udev rules.
+> 
+> Followup posts should go to linux-hotplug-devel@lists.sourceforge.net
+
+Hey Patrick, is there a point to this thread?
+If you have an idea, please go ahead and share and/or implement it.
+If you're unclear on something please ask it directly.
+
+	Luben
