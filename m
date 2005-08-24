@@ -1,120 +1,196 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH] libata: write cache and read ahead
-Date: Wed, 24 Aug 2005 12:41:36 -0400
-Message-ID: <430CA340.90105@adaptec.com>
-References: <43085209.50405@torque.net> <430914C2.8030301@pobox.com> <43095EB3.2020202@torque.net> <430BAFD3.9000702@adaptec.com> <430C5415.5000603@torque.net>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: new qla2xxx driver breaks SAN setup with 2 controllers
+Date: Wed, 24 Aug 2005 10:03:52 -0700
+Message-ID: <20050824170352.GA16652@us.ibm.com>
+References: <20050823112535.GB13391@mail.lowpingbastards.de> <20050823200040.GA8310@us.ibm.com> <20050824095520.GD13391@mail.lowpingbastards.de> <20050824100112.GA27216@infradead.org> <20050824124803.GE13391@mail.lowpingbastards.de> <20050824125022.GA29817@infradead.org> <20050824130823.GF13391@mail.lowpingbastards.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:57222 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1751147AbVHXQlj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Aug 2005 12:41:39 -0400
-In-Reply-To: <430C5415.5000603@torque.net>
+Received: from e34.co.us.ibm.com ([32.97.110.132]:34283 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751212AbVHXRD4
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Aug 2005 13:03:56 -0400
+Content-Disposition: inline
+In-Reply-To: <20050824130823.GF13391@mail.lowpingbastards.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Frederik Schueler <fs@lowpingbastards.de>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 08/24/05 07:03, Douglas Gilbert wrote:
-> Luben Tuikov wrote:
+On Wed, Aug 24, 2005 at 03:08:23PM +0200, Frederik Schueler wrote:
+> Hello,
 > 
->>On 08/22/05 01:12, Douglas Gilbert wrote:
->>
->>
->>>I was surprised how much code needed changing.
->>>With MODE SELECT's issues with libata addressed
->>>various other SAT "extras" should be much easier
->>>to implement. That should make libata more attractive
->>>as a SAT layer for SAS LLDDs (that don't do it already
->>>in firmware).
->>
->>
->>Doug, how about never needing a SAT layer for SAS LLDDs
->>for ATA/ATAPI devices.
-> 
-> 
-> Well that might make things easier for the SAS LLDD
-> driver writer but may not change things a lot
-> upstream.
+> no change.
 
-Ok.
+What was logged? Any errors?
 
-Just a general note to make my stance clear:
-I'm in favour of making lower layers as simple as possible,
-in order to allow greater _versatility_ at a _higher_ level.
-Of course none of this without following a well defined
-spec.
+Try setting scsi logging_level for scan, after boot/load:
 
-> The primary target for SAT is a layer within SAS
-> enclosures/expanders sitting between a SATA
-> transport with one or more SATA disks at the other
-> end and SSP. Evidently SSP has advantages over STP
-> in this role. Further, SATL isolating SATA devices from
-> a multi-initiator SAS fabric, can manage SCSI tags
-> from multiple initiators and map them onto the SATA
-> disk's NCQ tags.
-> Basically SATL adds value at that level. [It is also
+     sysctl -w dev.scsi.logging_level=0x1c0
 
-Yes, I agree.
+Then reload the qla driver, and post logs.
 
-> a useful document to improve all those horrible USB/1394
-> mass storage SCSI translation layers out there (but
-> I'm not holding my breath)].
-> 
-> So from the point of view of a SAS LLDD, SATA disks
-> (LUs) will appear both via STP and SSP.
+If the qlogic driver returned DID_NO_CONNECT while scanning (or similar
+errors), we stop the scan, but there is no code like that in the mainline
+qlogic driver.
 
-Hmm.
+Can you also try this patch to use REPORT LUN scan even if no storage on
+LUN 0?  Herre posted a similar patch that keeps LUN 0 around after the
+scan, this version does not; I was going to post this after 2.6.13 was
+out.
 
->>Would you object if I "give" you a "domain device" to which
->>you can send FISes (+ the packet if ATAPI) through
->>a SAM-4 intefrace: Execute Task + TMFs?
-> 
-> 
-> Well that is what CSMI (SDI) does and I think we will
-> be implementing its functionality one way or another ;-).
-> I just checked SDI and it allows the STP_PASSTHROUGH
-> to be replaced by a SAT (like) emulation. That is when
-> the SDI_STP_PASSTHROUGH ioctl can return SDI_SCSI_EMULATION
-> which tells the user to go away and use the SAT like
-> interface :-). That is why I said that it may not change
-> things a lot upstream.
+Also, you can pass devinfo additions as a module param (or boot time
+param).
 
-What I meant here by "Execute Task" is that when you call
-it, lldd->execute_task(), the task _immeditely_ goes out
-on the transport.  That is, you're really touching the
-transport at that point.
+diff -uprN -X /home/patman/dontdiff linux-2.6.13-rc6-git13/drivers/scsi/scsi_scan.c lun0-linux-2.6.13-rc6-git13/drivers/scsi/scsi_scan.c
+--- linux-2.6.13-rc6-git13/drivers/scsi/scsi_scan.c	2005-08-21 03:20:19.000000000 -0700
++++ lun0-linux-2.6.13-rc6-git13/drivers/scsi/scsi_scan.c	2005-08-24 09:22:23.000000000 -0700
+@@ -64,14 +64,14 @@
+  * SCSI_SCAN_NO_RESPONSE: no valid response received from the target, this
+  * includes allocation or general failures preventing IO from being sent.
+  *
+- * SCSI_SCAN_TARGET_PRESENT: target responded, but no device is available
++ * SCSI_SCAN_LUN_IGNORED: target responded, but no device is available
+  * on the given LUN.
+  *
+  * SCSI_SCAN_LUN_PRESENT: target responded, and a device is available on a
+  * given LUN.
+  */
+ #define SCSI_SCAN_NO_RESPONSE		0
+-#define SCSI_SCAN_TARGET_PRESENT	1
++#define SCSI_SCAN_LUN_IGNORED		1
+ #define SCSI_SCAN_LUN_PRESENT		2
+ 
+ static char *scsi_null_device_strs = "nullnullnullnull";
+@@ -585,7 +585,7 @@ static void scsi_probe_lun(struct scsi_r
+ 
+ 	/*
+ 	 * The scanning code needs to know the scsi_level, even if no
+-	 * device is attached at LUN 0 (SCSI_SCAN_TARGET_PRESENT) so
++	 * device is attached at LUN 0 (SCSI_SCAN_LUN_IGNORED) so
+ 	 * non-zero LUNs can be scanned.
+ 	 */
+ 	sdev->scsi_level = inq_result[2] & 0x07;
+@@ -776,6 +776,19 @@ static int scsi_add_lun(struct scsi_devi
+ 	return SCSI_SCAN_LUN_PRESENT;
+ }
+ 
++/*
++ * scsi_scan_remove: Helper funciton to free up sdev's that are not added
++ * as sys devices. That is, we never call scsi_probe_and_add_lun for these
++ * sdev's.
++ */
++static void scsi_scan_remove(struct scsi_device *sdev)
++{
++	if (sdev->host->hostt->slave_destroy)
++		sdev->host->hostt->slave_destroy(sdev);
++	transport_destroy_device(&sdev->sdev_gendev);
++	put_device(&sdev->sdev_gendev);
++}
++
+ /**
+  * scsi_probe_and_add_lun - probe a LUN, if a LUN is found add it
+  * @starget:	pointer to target device structure
+@@ -788,9 +801,12 @@ static int scsi_add_lun(struct scsi_devi
+  *     Call scsi_probe_lun, if a LUN with an attached device is found,
+  *     allocate and set it up by calling scsi_add_lun.
+  *
++ * Note: LUN 0 is special cased so it can be used for a REPORT LUN scan,
++ *     the caller must release the sdev if we return SCSI_SCAN_LUN_IGNORED.
++ *
+  * Return:
+  *     SCSI_SCAN_NO_RESPONSE: could not allocate or setup a Scsi_Device
+- *     SCSI_SCAN_TARGET_PRESENT: target responded, but no device is
++ *     SCSI_SCAN_LUN_IGNORED: target responded, but no device is
+  *         attached at the LUN
+  *     SCSI_SCAN_LUN_PRESENT: a new Scsi_Device was allocated and initialized
+  **/
+@@ -860,7 +876,7 @@ static int scsi_probe_and_add_lun(struct
+ 		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
+ 					"scsi scan: peripheral qualifier of 3,"
+ 					" no device added\n"));
+-		res = SCSI_SCAN_TARGET_PRESENT;
++		res = SCSI_SCAN_LUN_IGNORED;
+ 		goto out_free_result;
+ 	}
+ 
+@@ -879,17 +895,14 @@ static int scsi_probe_and_add_lun(struct
+  out_free_sreq:
+ 	scsi_release_request(sreq);
+  out_free_sdev:
+-	if (res == SCSI_SCAN_LUN_PRESENT) {
++	if ((res == SCSI_SCAN_LUN_PRESENT) ||
++	    ((lun == 0) && (res == SCSI_SCAN_LUN_IGNORED))) {
+ 		if (sdevp) {
+ 			scsi_device_get(sdev);
+ 			*sdevp = sdev;
+ 		}
+-	} else {
+-		if (sdev->host->hostt->slave_destroy)
+-			sdev->host->hostt->slave_destroy(sdev);
+-		transport_destroy_device(&sdev->sdev_gendev);
+-		put_device(&sdev->sdev_gendev);
+-	}
++	} else
++		scsi_scan_remove(sdev);
+  out:
+ 	return res;
+ }
+@@ -1266,6 +1279,8 @@ struct scsi_device *__scsi_add_device(st
+ 	get_device(&starget->dev);
+ 	down(&shost->scan_mutex);
+ 	res = scsi_probe_and_add_lun(starget, lun, NULL, &sdev, 1, hostdata);
++	if ((lun == 0) && (res == SCSI_SCAN_LUN_IGNORED))
++		scsi_scan_remove(sdev);
+ 	if (res != SCSI_SCAN_LUN_PRESENT)
+ 		sdev = ERR_PTR(-ENODEV);
+ 	up(&shost->scan_mutex);
+@@ -1337,7 +1352,8 @@ void scsi_scan_target(struct device *par
+ 		/*
+ 		 * Scan for a specific host/chan/id/lun.
+ 		 */
+-		scsi_probe_and_add_lun(starget, lun, NULL, NULL, rescan, NULL);
++		res = scsi_probe_and_add_lun(starget, lun, NULL, &sdev,
++					     rescan, NULL);
+ 		goto out_reap;
+ 	}
+ 
+@@ -1345,8 +1361,11 @@ void scsi_scan_target(struct device *par
+ 	 * Scan LUN 0, if there is some response, scan further. Ideally, we
+ 	 * would not configure LUN 0 until all LUNs are scanned.
+ 	 */
+-	res = scsi_probe_and_add_lun(starget, 0, &bflags, &sdev, rescan, NULL);
+-	if (res == SCSI_SCAN_LUN_PRESENT) {
++	lun = 0;
++	res = scsi_probe_and_add_lun(starget, lun, &bflags, &sdev, rescan,
++				     NULL);
++	WARN_ON(!sdev && res != SCSI_SCAN_NO_RESPONSE);
++	if (sdev && res != SCSI_SCAN_NO_RESPONSE)
+ 		if (scsi_report_lun_scan(sdev, bflags, rescan) != 0)
+ 			/*
+ 			 * The REPORT LUN did not scan the target,
+@@ -1354,20 +1373,12 @@ void scsi_scan_target(struct device *par
+ 			 */
+ 			scsi_sequential_lun_scan(starget, bflags,
+ 				       	res, sdev->scsi_level, rescan);
+-	} else if (res == SCSI_SCAN_TARGET_PRESENT) {
+-		/*
+-		 * There's a target here, but lun 0 is offline so we
+-		 * can't use the report_lun scan.  Fall back to a
+-		 * sequential lun scan with a bflags of SPARSELUN and
+-		 * a default scsi level of SCSI_2
+-		 */
+-		scsi_sequential_lun_scan(starget, BLIST_SPARSELUN,
+-				SCSI_SCAN_TARGET_PRESENT, SCSI_2, rescan);
+-	}
+ 	if (sdev)
+ 		scsi_device_put(sdev);
+ 
+  out_reap:
++	if ((lun == 0) && (res == SCSI_SCAN_LUN_IGNORED))
++		scsi_scan_remove(sdev);
+ 	/* now determine if the target has any children at all
+ 	 * and if not, nuke it */
+ 	scsi_target_reap(starget);
 
-The concept of "passthrough" at this point is rather moot,
-_unless_ you are "passing through" something inside the task
-work to be done, which the transport wouldn't care.
-
-I like this shielding/separation, since it clearly defines
-what each layer needs to worry about.
-
-> As for ATAPI, 99% of the time it is conveying MMC set.
-> With BD and HD-DVD coming down the line, app writers
-> in that space probably won't want to worry about
-> transport issues any more than they absolutely need to.
-> SAT defines a "ATA information" VPD page (0x89) which
-> conveys back the response to IDENTIFY DEVICE (for
-> non-packet devices) or IDENTIFY PACKET DEVICE. SAT
-> also defines 12 byte and 16 bytes ATA PASSTHROUGH
-> SCSI commands which would be handy for smartmontools.
-
-When I give you the "domain_device" you'll have that info
-in it, since of course obtaining it is transport specific,
-_unless_ you use the tools you mention above, which means
-you've already established a nexus to the device.
-
-> Looking at SAT draft, I would suggest that it is an immature
-> state, being work in progress (most recent teleconference:
-> yesterday). And libata is trailing SAT by a good bit.
-> And libata needs to slide over something like you are
-> suggesting to be useful in the SAS context.
-
-Yes, I agree.
-
-	Luben
+-- Patrick Mansfield
