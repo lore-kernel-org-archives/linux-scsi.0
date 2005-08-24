@@ -1,48 +1,53 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: new qla2xxx driver breaks SAN setup with 2 controllers
-Date: Wed, 24 Aug 2005 11:01:12 +0100
-Message-ID: <20050824100112.GA27216@infradead.org>
-References: <20050823112535.GB13391@mail.lowpingbastards.de> <20050823200040.GA8310@us.ibm.com> <20050824095520.GD13391@mail.lowpingbastards.de>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: write cache and read ahead
+Date: Wed, 24 Aug 2005 06:04:00 -0400
+Message-ID: <430C4610.3080205@pobox.com>
+References: <43085209.50405@torque.net> <430914C2.8030301@pobox.com> <43095EB3.2020202@torque.net> <430BAFD3.9000702@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:19112 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1750833AbVHXKBj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Aug 2005 06:01:39 -0400
-Content-Disposition: inline
-In-Reply-To: <20050824095520.GD13391@mail.lowpingbastards.de>
+Received: from mail.dvmed.net ([216.237.124.58]:29586 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750849AbVHXKEP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Aug 2005 06:04:15 -0400
+In-Reply-To: <430BAFD3.9000702@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Frederik Schueler <fs@lowpingbastards.de>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: dougg@torque.net, linux-scsi@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-On Wed, Aug 24, 2005 at 11:55:20AM +0200, Frederik Schueler wrote:
-> Hello,
+Luben Tuikov wrote:
+> On 08/22/05 01:12, Douglas Gilbert wrote:
 > 
-> On Tue, Aug 23, 2005 at 01:00:40PM -0700, Patrick Mansfield wrote:
-> > The use of scsiadd script implies that you are attaching or somehow
-> > modifying the storage after the driver has loaded. Is that correct?
+>>I was surprised how much code needed changing.
+>>With MODE SELECT's issues with libata addressed
+>>various other SAT "extras" should be much easier
+>>to implement. That should make libata more attractive
+>>as a SAT layer for SAS LLDDs (that don't do it already
+>>in firmware).
 > 
-> yes exactly, only the bootdrive LUN is registered after bootup. I have
-> to selectively scsiadd the other LUNs if there is a gap between the 
-> boot LUN (1-8 in our setup) and the shared storages (9-14). I don't
-> consider this a bug though, I had to remove some devices otherwise, 
-> and old drivers had to be patched to allow this at all.
+> 
+> Doug, how about never needing a SAT layer for SAS LLDDs
+> for ATA/ATAPI devices.
+> 
+> Would you object if I "give" you a "domain device" to which
+> you can send FISes (+ the packet if ATAPI) through
+> a SAM-4 intefrace: Execute Task + TMFs?
+> 
+> Jeff?
 
-Actually this sounds like a bug in your storage system.  It's probably
-reporting to be only SCSI2 complicant, which doesn't make sense for
-FC storage.  Please try the patch below:
+SAT is the useful piece of libata that makes everything work.  You can't 
+rip out it and still expect to do anything useful ;-)
 
-Index: scsi-misc-2.6/drivers/scsi/scsi_devinfo.c
-===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/scsi_devinfo.c	2005-08-13 13:53:53.000000000 +0200
-+++ scsi-misc-2.6/drivers/scsi/scsi_devinfo.c	2005-08-24 12:00:22.000000000 +0200
-@@ -162,6 +162,7 @@
- 	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
- 	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"IBM", "2105", NULL, BLIST_RETRY_HWERROR},
-+	{"IFT", "A16F-R1211", NULL, BLIST_REPORTLUN2},
- 	{"iomega", "jaz 1GB", "J.86", BLIST_NOTQ | BLIST_NOLUN},
- 	{"IOMEGA", "Io20S         *F", NULL, BLIST_KEY},
- 	{"INSITE", "Floptical   F*8I", NULL, BLIST_KEY},
+libata relies on SCSI's device class drivers -- sd, sr, st, sg -- to 
+manage devices and generate commands to service.  And in turn, we rely 
+on SAT (libata-scsi.c) to translate device class commands into ATA commands.
+
+If the SAT layer went away, then nothing would exist to generate 
+commands for libata to service.
+
+	Jeff
+
+
+
