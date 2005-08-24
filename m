@@ -1,105 +1,77 @@
-From: Luben Tuikov <linux-scsi@vger.kernel.org>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: [PATCH] minimal SAS transport class
-Date: Tue, 23 Aug 2005 20:02:39 -0400
-Message-ID: <430BB91F.7000406@vger.kernel.org>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A4B@xbl3.ma.emulex.com> <430B5CDB.9070204@s5r6.in-berlin.de>
+Date: Tue, 23 Aug 2005 20:13:50 -0400
+Message-ID: <430BBBBE.4070408@adaptec.com>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A40@xbl3.ma.emulex.com> <20050823154232.GA3464@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:1490 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932498AbVHXACl (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:42712 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932505AbVHXANy (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Aug 2005 20:02:41 -0400
-In-Reply-To: <430B5CDB.9070204@s5r6.in-berlin.de>
+	Tue, 23 Aug 2005 20:13:54 -0400
+In-Reply-To: <20050823154232.GA3464@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: James.Smart@Emulex.Com, hch@lst.de, jejb@steeleye.com, ltuikov@yahoo.com, Eric.Moore@lsil.com, andrew.patterson@hp.com, linux-scsi@vger.kernel.org
 
-On 08/23/05 13:28, Stefan Richter wrote:
-> James.Smart@Emulex.Com wrote:
-> 
->>>As others stated, id is already a tag/label. You should be 
->>>able to pass
->>>whatever id you want to scsi_scan_target, like the FC ID 
->>>(port_id),
-> 
-> [...]
-> 
->>If the port id changes during run time, what are you to do ?
-> 
-> [...]
-> 
->>This approach only works as long as the transport's id fits within
->>the target id (an int). How would the SAS address(8byte wwn) utilize
->>such a scheme ?
+On 08/23/05 11:42, Patrick Mansfield wrote:
+> On Sat, Aug 20, 2005 at 12:15:41AM -0400, James.Smart@Emulex.Com wrote:
 > 
 > 
-> I don't understand exactly what is being discussed here. But if 
-> anybody's intention is to extend the concept of target ID to also 
-> provide the concept of transport specific, persistent, globally unique 
-> identifiers*, then the datatype of target ID needs to be extended 
-> accordingly.
-
-Hi Stefan,
-
-No, no, no -- this is exactly what we DO NOT WANT TO DO.
-
-Why?  Because it is the same mistake that was done when HCIL crept
-up into SCSI Core 13 years ago.
-
-Device addressing done by LLDD is completely not the business
-of SCSI Core and vice versa.  They should be *completely* separate.
-
-In effect, a native support for targets (I know... a poor choice of
-words, but not everyone reads specs), has been in need for SCSI Core
-since one of the first iSCSI Target and Initiator for Linux was developed
-5 years ago.
-
-In effect FC tells SCSI Core: here is a device I do not know anything
-about, other than the fact that it is on the fabric and it has
-a SCSI Target (or Initiator) Port: how you get to is is _my_ business,
-what is done with or to the device is _your_ business.
-
-Then SCSI Core does LU discovery using SPC and SAM on the device
-using Execute Task.
-
-All this _completely_ eliminates the need for HCIL.
-
-How the FC layer identifies the device is the FC's layer problem.
-How SCSI Core identifies the device is SCSI Core's problem.
-
-HCIL should have never been available to SCSI Core in the first place,
-but then again SAM didn't exist back then.
- 
-> Otherwise the LLDs have to implement a mapping between target IDs and 
-
-LLDD should not have to invent HCIL just because SCSI Core hasn't
-seen any inovation and advancement for the last 13 years.
-
-Currently they do.
-
-Target ID should NOT be extended to cover whatever new transport
-protocols comes up.  SCSI Core whould follow SAM if it wants to
-transparently cover FC, iSCSI, SAS, etc.
-
-> these unique identifiers. This mapping does not need to be persistent. 
-> Persistent mappings for whatever purpose can and should be implemented 
-> in userspace. (This is how it has always been e.g. with SBP-2.)
+>>- the target id is logical for everything but SPI
 > 
 > 
-> *) examples of transport specific, persistent, globally unique 
-> identifiers: obviously 8 Byte address from SAS, 8 Byte EUI from SBP-2/ 
-> IEEE 1394/ ISO/IEC 13213, or maybe 88 bit GUI from ISO/IEC 13213
+>>For FC, target ids are typically assigned to devices on a
+>>1st-seen-1st-assigned basis. For several reasons, there can be
+>>changes in port discovery order after link events (cable pulls,
+>>etc). For 2.4 kernels, the driver typically maintained a mapping
+>>within the driver to ensure the same device showed up at the same
+>>target id, even if it disappeared for some amount of time. If FC
+>>was the boot device, wacky methods were used to ensure the mapping
+>>persisted boot-to-boot.
+> 
+> 
+> As others stated, id is already a tag/label. You should be able to pass
+> whatever id you want to scsi_scan_target, like the FC ID (port_id), and
 
-Yes, you're right.
+No!
 
-And if would be nice if all those IDs are just another label tacked
-onto the domain device, opaque label.  SCSI Core can add labels
-on its own (e.g. HCIL ;-) ).
+The whole point is to move _away_ from HCIL.  So that addressing
+of devices in SCSI Core is _completely_ independent of addressing
+at the protocol layer.
+
+In fact SCSI Core neither needs to address/enumerate the devices,
+nor it needs to know any kind of addressing.
+
+All SCSI Core needs is a pointer to a structure that it can pass
+to the LLDD's Execute Task, so that the task can be sent to that
+device and executed.
+
+This allows great versatility between type of device, protocol
+it speaks, command set it uses, transport used to talk to the device.
+
+> then we also want an abstract iterator in fc transport for the id for
+> usage in scsi_scan.c:scsi_scan_channel. Then you can lose all the
+> fc_host->next_target_id code.
+
+This gets too complicated and unnecessary.  First there is no such
+thing as scsi_scan_channel() for FC or for SAS or for iSCSI or for ...
+
+If you use propely the kobject model, no such "container" is needed.
+Hotplug works very nice too.
 
 	Luben
+
+
+
+
+
+
+
+
 
 
 
