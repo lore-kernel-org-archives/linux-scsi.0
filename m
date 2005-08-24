@@ -1,54 +1,79 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: Re: [RFC PATCH 1/4] convert block layer drivers to
-	blkerr error values
-Date: Wed, 24 Aug 2005 14:27:27 -0500
-Message-ID: <430CCA1F.7070408@cs.wisc.edu>
-References: <1124874238.10888.18.camel@max> <20050824192132.GA20663@us.ibm.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: Process in D state with st driver
+Date: Wed, 24 Aug 2005 22:35:23 +0300 (EEST)
+Message-ID: <Pine.LNX.4.61.0508242214360.2982@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20050824192132.GA20663@us.ibm.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: axboe@suse.de, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fep32-0.kolumbus.fi ([193.229.0.63]:34909 "EHLO
+	fep32-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S1751455AbVHXTaq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Aug 2005 15:30:46 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: hjb@pro-linux.de, Andrew Morton <akpm@osdl.org>
 
-Patrick Mansfield wrote:
-> On Wed, Aug 24, 2005 at 04:03:58AM -0500, Mike Christie wrote:
-> 
-> 
->>-#define end_io_error(uptodate)	(unlikely((uptodate) <= 0))
->>+enum {
->>+	BLK_SUCCESS = 0,	/* Must be zero for compat with old usage */
->>+	BLKERR_IO,		/* Generic I/O error */
->>+	BLKERR_NOTSUPP,		/* Operation is not supported */
->>+	BLKERR_WOULDBLOCK,	/* Operation would block */
->>+	BLKERR_FATAL_DRV,	/* Fatal driver error */
->>+	BLKERR_FATAL_DEV,	/* Fatal device error */
->>+	BLKERR_FATAL_XPT,	/* Fatal transport error */
->>+	BLKERR_RETRY_DRV,	/* Driver error, I/O may be retried */
->>+	BLKERR_RETRY_DEV,	/* Device error, I/O may be retried */
->>+	BLKERR_RETRY_XPT,	/* Transport error, I/O may retried */
->>+};
-> 
-> 
-> Do you need to add and use a BLKERR_TIMEOUT? As we can't determine the
-> problem area for a timeout, and if it can or should be retried.
-> 
+I am sorry that this is not a proper reply email. For some reason I did 
+not get this email although I subscribe to linux-scsi and found this 
+accidentally from an archive.
 
-I was hoping we could figure this out. In the patches, if a command 
-times out and eh kicks off I was just returning BLKERR_RETRY_DEV. This 
-guessing occurs for a lot of errors becuase we do not know what exactly 
-happened. the reason for the timeout could have been a device problem or 
-transport problem. Some help in figuring this type of thing out is 
-needed in other places.
+On Wed, 24 Aug 2005 akpm@osdl.org wrote:
+
+> Hans-Joachim Baader <hjb@pro-linux.de> wrote:
+> >
+> > Hi,
+> > 
+> > > >
+> > > > I do nightly backups on tape. Every 3 to 4 weeks a process is stuck in
+> > > >  D state while accessing the drive:
+> > > > 
+> > > >  12398 ?        D      0:00 /usr/sbin/amcheck -ms daily
+> > > > 
+> > > >  There are no messages in the log. Only a reboot can remove this process.
+> > > 
+> > > Next time it happens, do
+> > > 
+> > > 	dmesg -c
+> > > 	echo t > /proc/sysrq-trigger
+> > > 	dmesg -s 1000000 > foo
+> > 
+> > thanks for looking into this. Since I haven't rebooted yet, I have the
+> > output for you. Hope it helps.
+> > 
+> 
+> OK, thanks.
+> 
+> It would appear that st_do_scsi() is stuck in the wait_for_completion().
+> 
+> 
+> Just looking at that function: I wonder if there's a problem with incoming
+> arg `do_wait'.  If it's false and some other thread is waiting on STp->wait
+> then this thread will go and scribble on the completion structure.  Maybe
+> there's additional synchronisation which can prevent that?
+> 
+This should never happen. The st driver is designed so that only one SCSI 
+command is active for one device at any time. The device can be opened by 
+only a single user at a time. More than one thread can access the device 
+if the fd is dup'ed. The trace shows that the process is hanging in 
+st_open(). The SCSI commands there use 'do_wait' true and no other thread 
+should be able to access this device through st.
+
+'do_wait' is set to false only with the so called "asynchronous 
+writes" when a write returns. One of the first things in read(), write(), 
+and ioctl() is to check that a potential previous write has finished.
+
+Well, this is the theory. Bugs may exist.
+
+This kind of a problem of a process using a tape hanging in D state has 
+occurred sometimes for numerous years. When the user has waited long 
+enough (the default timeouts are loooong), the process has continued. When 
+st has printed the command timed out, it has been usually a legitimate 
+read or write. St has sent the command and waited for it to finish but 
+this has never occurred. These problems may or may not be related to the 
+current one.
+
+I have never been able to reproduce the problem in my systems.
+
+-- 
+Kai
