@@ -1,34 +1,115 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [dm-devel] Re: [RFC PATCH 1/4] convert block layer drivers to
-	blkerr error values
-Date: Wed, 24 Aug 2005 16:02:07 -0500
-Message-ID: <1124917327.5116.62.camel@mulgrave>
-References: <1124874238.10888.18.camel@max>
-	 <20050824192132.GA20663@us.ibm.com> <1124915637.5116.54.camel@mulgrave>
-	 <430CDDA5.5000705@cs.wisc.edu>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: qla2xxx: does not respond to SCSI_IOCTL_PROBE_HOST
+Date: Wed, 24 Aug 2005 14:13:48 -0700
+Message-ID: <20050824211348.GH8205@plap.qlogic.org>
+References: <1124915655.13251.16.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:25553 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932214AbVHXVC3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Aug 2005 17:02:29 -0400
-In-Reply-To: <430CDDA5.5000705@cs.wisc.edu>
+Received: from pat.qlogic.com ([198.70.193.2]:33619 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S932239AbVHXVNy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Aug 2005 17:13:54 -0400
+Content-Disposition: inline
+In-Reply-To: <1124915655.13251.16.camel@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: device-mapper development <dm-devel@redhat.com>, Patrick Mansfield <patmans@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
+To: Drew Winstel <raw@dslr.net>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2005-08-24 at 15:50 -0500, Mike Christie wrote:
-> Would it be good then to also extend the fail fast flag to a bit map so 
-> dm-multipath can tell scsi that scsi should handle device errors?
+On Wed, 24 Aug 2005, Drew Winstel wrote:
 
-You mean have a REQ_FASTFAIL_{DEV,XPRT,DRV}?  The slight problem is that
-we're already closing in on the limit for request flags (we're already
-up to 26, this would take us to 28 with the maximum being 32) so I'll
-defer to Jens on that.
+> Here's the situation.  I am running a QLogic QLA2200 (32-bit mode; lspci
+> output follows), and when I issue an ioctl() to call
+> SCSI_IOCTL_PROBE_HOST to /dev/sg0 (example code follows as well), the
+> ioctl() returns 0, as if to imply that there is no host present, which
+> is obviously not possible since the drive is attached to the HBA.  Using
+> an Adaptec 29160 adapter with a drive connected produces logical,
+> reasonable output, so I'm turning to the experts here.  Is this by
+> design, a bug, or just something I've horribly missed?  I have tried it
+> with a 2.6.11 and 2.6.12.5 kernel to no avail.
 
-James
+/proc support has been stripped from the qla2xxx driver.  So,
+hostt->present is never incremented:
 
+	void scsi_proc_hostdir_add(struct scsi_host_template *sht)
+	{
+		if (!sht->proc_info)
+			return;
 
+		down(&global_host_template_sem);
+		if (!sht->present++) {
+			...
+
+SCSI_IOCTL_PROBE_HOST returns hostt->present:
+
+	static int ioctl_probe(struct Scsi_Host *host, void __user *buffer)
+	{
+		unsigned int len, slen;
+		const char *string;
+		int temp = host->hostt->present;
+
+		...
+		return temp;
+
+Not sure how we want to fix it, perhaps for backwards compatibility,
+increment present regardless of the value of proc_info.
+
+Something like this, perhaps (untested)?
+
+---
+
+diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
+--- a/drivers/scsi/scsi_proc.c
++++ b/drivers/scsi/scsi_proc.c
+@@ -80,32 +80,44 @@ out:
+ 
+ void scsi_proc_hostdir_add(struct scsi_host_template *sht)
+ {
++	int create;
++
++	down(&global_host_template_sem);
++	create = !sht->present++;
++	up(&global_host_template_sem);
++
+ 	if (!sht->proc_info)
+ 		return;
+ 
+-	down(&global_host_template_sem);
+-	if (!sht->present++) {
++	if (create) {
++		down(&global_host_template_sem);
+ 		sht->proc_dir = proc_mkdir(sht->proc_name, proc_scsi);
+         	if (!sht->proc_dir)
+ 			printk(KERN_ERR "%s: proc_mkdir failed for %s\n",
+ 			       __FUNCTION__, sht->proc_name);
+ 		else
+ 			sht->proc_dir->owner = sht->module;
++		up(&global_host_template_sem);
+ 	}
+-	up(&global_host_template_sem);
+ }
+ 
+ void scsi_proc_hostdir_rm(struct scsi_host_template *sht)
+ {
++	int destroy;
++
++	down(&global_host_template_sem);
++	destroy = !--sht->present;
++	up(&global_host_template_sem);
++
+ 	if (!sht->proc_info)
+ 		return;
+ 
+-	down(&global_host_template_sem);
+-	if (!--sht->present && sht->proc_dir) {
++	if (destroy && sht->proc_dir) {
++		down(&global_host_template_sem);
+ 		remove_proc_entry(sht->proc_name, proc_scsi);
+ 		sht->proc_dir = NULL;
++		up(&global_host_template_sem);
+ 	}
+-	up(&global_host_template_sem);
+ }
+ 
+ void scsi_proc_host_add(struct Scsi_Host *shost)
