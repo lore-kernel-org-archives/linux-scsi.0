@@ -1,91 +1,59 @@
-From: Andrea Carpani <andrea.carpani@criticalpath.net>
-Subject: hot-swap problems with Adaptec AIC-7902 (aic79xx)
-Date: Wed, 24 Aug 2005 13:29:44 +0200
-Message-ID: <1124882984.13829.33.camel@cronos.criticalpath.it>
-Reply-To: andrea.carpani@criticalpath.net
+From: Frederik Schueler <fs@lowpingbastards.de>
+Subject: Re: new qla2xxx driver breaks SAN setup with 2 controllers
+Date: Wed, 24 Aug 2005 14:48:03 +0200
+Message-ID: <20050824124803.GE13391@mail.lowpingbastards.de>
+References: <20050823112535.GB13391@mail.lowpingbastards.de> <20050823200040.GA8310@us.ibm.com> <20050824095520.GD13391@mail.lowpingbastards.de> <20050824100112.GA27216@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from plutone.criticalpath.it ([192.92.105.11]:62651 "EHLO
-	mail.criticalpath.it") by vger.kernel.org with ESMTP
-	id S1750893AbVHXL3v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Aug 2005 07:29:51 -0400
-Received: from cronos.criticalpath.it (192.92.105.117) by mail.criticalpath.it (7.2.056.2)
-        id 42E4DD46000019EF for linux-scsi@vger.kernel.org; Wed, 24 Aug 2005 13:29:44 +0200
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Ycz6tD7Th1CMF4v7"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750937AbVHXMsu@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20050824100112.GA27216@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Frederik Schueler <fs@lowpingbastards.de>, Patrick Mansfield <patmans@us.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-Hi everybody,
-here are some issues I'm having with my system dealing with
-hot-swapping.
-
-The box is a Tyan GX28 (B2881) B2881G28U4H with 4 Hot-swap U320 SCSI
-bays. SCSI controller is Adaptec AIC-7902 dual channel Ultra320 SCSI.
-
-# cat /proc/scsi/scsi
-Attached devices:
-Host: scsi0 Channel: 00 Id: 00 Lun: 00
-  Vendor: FUJITSU  Model: MAP3735NC        Rev: 0108
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-Host: scsi0 Channel: 00 Id: 01 Lun: 00
-  Vendor: FUJITSU  Model: MAP3735NC        Rev: 0108
-  Type:   Direct-Access                    ANSI SCSI revision: 03
-
-Linux kernel 2.6.12.3 (no patches).
-
-I have 2 drives single partition set up as a single md0 software
-mirrored raid device (xfs filesystem). I set /dev/sdb1 as faulty and
-remove it from the array.
-
-I then want to hot-swap the drive with another one.
-
-echo "scsi remove-single-device 0 0 1 0" > /proc/scsi/scsi
-
-removes it and 
-
-cat /proc/scsi/scsi
-
-shows this. If I physically swap the drive (with a different Maxtor one)
-and issue
-
-echo "scsi add-single-device 0 0 1 0" > /proc/scsi/scsi
-
-nothing happens (syslog: 
-Aug 24 12:53:48 localhost kernel: scsi0: ILLEGAL_PHASE 0x80
-Aug 24 12:53:48 localhost kernel: (scsi0:A:1:0): Abort Message Sent)
-and the new drive appears in /proc/scsi/scsi only after a second "echo"
-command (I assume this is a power-up delay).
-
-At this point I'm not yet adding the drive to the mirror. The problem is
-that if I repeat the last steps more than once (remove-single-device,
-swap the drives again, add-single-device) I get the following error on
-the console and everything freezes
-
-I/O error in filesystem ("md0") meta-data dev md0 block 0x44308c4
-("xlog_iodone") error 5 buf count 1024
-Filesystem "md0": Log I/O error detected.
-Shutting down filesystem: md0
-Please umount the filesystem and rectify the problem(s).
-
-Which is quite strange as I'm only scsi-dealing with the sdb device and
-the filesystem at this point should only be on sda.
-
-Here are some questions:
-Is it possible that the scsi level operations disturb the other drive?
-Which is the correct way to hot-swap scsi disks? Am I doing something
-wrong?
-More often than not (but not as easily reproducible) the removal and
-detection of a new drive fails and the box hangs (no console messages):
-could it be a driver/board problem?
-Are there well tested scsi adapters/drivers that I should use?
-Which scsi debug info should I turn on to help understad the problem?
 
 
-Thanks,
-Andrea.
+--Ycz6tD7Th1CMF4v7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Andrea Carpani <andrea.carpani@criticalpath.net>
+Hello,
 
+On Wed, Aug 24, 2005 at 11:01:12AM +0100, Christoph Hellwig wrote:
+> > yes exactly, only the bootdrive LUN is registered after bootup. I have
+> > to selectively scsiadd the other LUNs if there is a gap between the=20
+> > boot LUN (1-8 in our setup) and the shared storages (9-14). I don't
+> > consider this a bug though, I had to remove some devices otherwise,=20
+> > and old drivers had to be patched to allow this at all.
+>=20
+> Actually this sounds like a bug in your storage system.  It's probably
+> reporting to be only SCSI2 complicant, which doesn't make sense for
+> FC storage.  Please try the patch below:
+
+[...]
+
+Unfortunately this does not fix this issue, besides the SAN being=20
+reported as a scsi3 device now.
+
+Thanks anyway :)
+Frederik Schueler
+
+--=20
+ENOSIG
+
+--Ycz6tD7Th1CMF4v7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFDDGyD6n7So0GVSSARAhRgAJ9toAGAkW3sQV0Bk18ZmwidfdnslACfdsqa
+tqjFBcEUVtAPYCONIY7Mjo8=
+=DpCQ
+-----END PGP SIGNATURE-----
+
+--Ycz6tD7Th1CMF4v7--
