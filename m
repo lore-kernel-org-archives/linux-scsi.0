@@ -1,59 +1,78 @@
-From: Suparna Bhattacharya <suparna@in.ibm.com>
-Subject: Re: Some interesting results in the aic7xxx slowdown problem
-Date: Thu, 25 Aug 2005 16:09:43 +0530
-Message-ID: <20050825103943.GA7421@in.ibm.com>
-References: <1123119347.5019.78.camel@mulgrave> <20050804061809.GA4158@in.ibm.com> <1123166928.5026.8.camel@mulgrave> <20050819095428.GA9130@in.ibm.com> <1124457765.5130.13.camel@mulgrave>
-Reply-To: suparna@in.ibm.com
+From: Frederik Schueler <fs@lowpingbastards.de>
+Subject: Re: new qla2xxx driver breaks SAN setup with 2 controllers
+Date: Thu, 25 Aug 2005 13:42:30 +0200
+Message-ID: <20050825114230.GP5564@mail.lowpingbastards.de>
+References: <20050823112535.GB13391@mail.lowpingbastards.de> <20050823200040.GA8310@us.ibm.com> <20050824095520.GD13391@mail.lowpingbastards.de> <20050824100112.GA27216@infradead.org> <20050824124803.GE13391@mail.lowpingbastards.de> <20050824125022.GA29817@infradead.org> <20050824130823.GF13391@mail.lowpingbastards.de> <20050824170352.GA16652@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ReaqsoxgOBHFXBhH"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:26790 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S964943AbVHYLm2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Aug 2005 07:42:28 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e1.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j7PBfxsC026996
-	for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2005 07:42:12 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j7PAUX8a263498
-	for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2005 06:30:33 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j7PAUWET018671
-	for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2005 06:30:33 -0400
+Received: from defiant.lowpingbastards.de ([213.178.77.226]:3492 "EHLO
+	mail.lowpingbastards.de") by vger.kernel.org with ESMTP
+	id S964946AbVHYLnX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Aug 2005 07:43:23 -0400
 Content-Disposition: inline
-In-Reply-To: <1124457765.5130.13.camel@mulgrave>
+In-Reply-To: <20050824170352.GA16652@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
-
-On Fri, Aug 19, 2005 at 09:22:45AM -0400, James Bottomley wrote:
-> On Fri, 2005-08-19 at 15:24 +0530, Suparna Bhattacharya wrote:
-> >  sda:
-> 
-> Well, this line is identifying the root cause.  It says that the
-> partition code came up with no partitions for this device.  Do any of
-> your other devices come up with paritions? (as in could this be a simple
-> device node transposition issue?)
-
-Yes, it looks like that. The ordering now seems to be id 9, 10, ... 14, 0,
-1, 2, instead of the default of id 0, 1, 2 ...  Did you expect a change
-in probe ordering ? 
-
-When I switch back to the old AIC driver the ordering goes back to
-default.
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Frederik Schueler <fs@lowpingbastards.de>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
-Regards
-Suparna
+--ReaqsoxgOBHFXBhH
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> 
-> James
-> 
-> 
+Hello,
 
--- 
-Suparna Bhattacharya (suparna@in.ibm.com)
-Linux Technology Center
-IBM Software Lab, India
+your patch works!
 
+first a box booting from a gdth:
+
+a01:~# lsscsi=20
+[0:0:0:0]    disk    ICP      Host Drive  #00        /dev/sda
+[0:2:6:0]    process SUPER    GEM318           0     -      =20
+[1:0:0:10]   disk    IFT      A16F-R1211       334B  /dev/sdb
+[1:0:0:12]   disk    IFT      A16F-R1211       334B  /dev/sdc
+[1:0:0:14]   disk    IFT      A16F-R1211       334B  /dev/sdd
+[1:0:1:9]    disk    IFT      A16F-R1211       334B  /dev/sde
+[1:0:1:11]   disk    IFT      A16F-R1211       334B  /dev/sdf
+[1:0:1:13]   disk    IFT      A16F-R1211       334B  /dev/sdg
+
+
+and this is one of the cluster nodes, wich boots from san:
+
+s06:~# lsscsi=20
+[0:0:0:3]    disk    IFT      A16F-R1211       334B  /dev/sda
+[0:0:0:10]   disk    IFT      A16F-R1211       334B  /dev/sdb
+[0:0:0:12]   disk    IFT      A16F-R1211       334B  /dev/sdc
+[0:0:0:14]   disk    IFT      A16F-R1211       334B  /dev/sdd
+[0:0:1:9]    disk    IFT      A16F-R1211       334B  /dev/sde
+[0:0:1:11]   disk    IFT      A16F-R1211       334B  /dev/sdf
+[0:0:1:13]   disk    IFT      A16F-R1211       334B  /dev/sdg
+
+
+it finds everything on bootup.
+
+
+Best regards
+Frederik Schueler
+
+--=20
+ENOSIG
+
+--ReaqsoxgOBHFXBhH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFDDa6m6n7So0GVSSARAiklAKCM1/yO4I/Td3J9jA3ZJEOvuK9L4QCfUdBO
+SffmbjPQE011iHE2+2pIFis=
+=FuJg
+-----END PGP SIGNATURE-----
+
+--ReaqsoxgOBHFXBhH--
