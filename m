@@ -1,51 +1,47 @@
-From: "Johann Hanne" <jhml@gmx.net>
-Subject: =?ISO-8859-1?Q?[patch]_reenable_megaraid_legacy_driver?=
-Date: Thu, 25 Aug 2005 15:52:03 +0200 (MEST)
-Message-ID: <1399.1124977923@www79.gmx.net>
+From: Drew Winstel <raw@dslr.net>
+Subject: Re: qla2xxx: does not respond to SCSI_IOCTL_PROBE_HOST
+Date: Thu, 25 Aug 2005 11:02:23 -0500
+Message-ID: <1124985743.15175.6.camel@localhost>
+References: <1124915655.13251.16.camel@localhost>
+	 <20050824211348.GH8205@plap.qlogic.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="========GMXBoundary13991124977923"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imap.gmx.net ([213.165.64.20]:61656 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S964991AbVHYNwE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Aug 2005 09:52:04 -0400
+Received: from mail.dslreports.com ([209.123.192.187]:62671 "EHLO
+	mail.dslr.net") by vger.kernel.org with ESMTP id S932222AbVHYQBx
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Aug 2005 12:01:53 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.dslr.net (Postfix) with ESMTP id 7956442C0B
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2005 12:01:51 -0400 (EDT)
+Received: from mail.dslr.net ([127.0.0.1])
+ by localhost (coral.dslreports.com [127.0.0.1]) (amavisd-new, port 10024)
+ with ESMTP id 32071-01 for <linux-scsi@vger.kernel.org>;
+ Thu, 25 Aug 2005 12:01:51 -0400 (EDT)
+In-Reply-To: <20050824211348.GH8205@plap.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-scsi@vger.kernel.org
 
-This is a MIME encapsulated multipart message -
-please use a MIME-compliant e-mail program to open it.
+On Wed, 2005-08-24 at 14:13 -0700, Andrew Vasquez wrote:
 
-Dies ist eine mehrteilige Nachricht im MIME-Format -
-bitte verwenden Sie zum Lesen ein MIME-konformes Mailprogramm.
+> Not sure how we want to fix it, perhaps for backwards compatibility,
+> increment present regardless of the value of proc_info.
+> 
+> Something like this, perhaps (untested)?
 
---========GMXBoundary13991124977923
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Thanks for the patch, Andrew.
 
-Hi,
+It certainly appears to work (the ioctl new returns qla2xxx), although I
+have not done any in-depth testing other than issuing the ioctl to
+drives connected to both the QLA2200 and the Adaptec 29160.  
 
-this re-enables the megaraid legacy driver (drivers/scsi/megaraid.c) which
-is still completely in the kernel but is missing from drivers/scsi/Kconfig.
-Some devices are NOT supported by the newgen megaraid driver (e.g. the HP
-Netserver LH 3000 embedded Netraid) and the old driver still works fine with
-them, so I see no reason to not supported it!?
+Should this patch be added to the tree (assuming more testing, of
+course)?
 
-Cheers, Johann
---========GMXBoundary13991124977923
-Content-Type: application/octet-stream; name="reenable-megaraid-legacy.diff"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="reenable-megaraid-legacy.diff"
 
-LS0tIG5ldHdhdGNoMDItMi42LjEyLjUvZHJpdmVycy9zY3NpL0tjb25maWcub3JpZwkyMDA1LTA4
-LTI1IDE1OjI4OjE4LjAwMDAwMDAwMCArMDIwMAorKysgbmV0d2F0Y2gwMi0yLjYuMTIuNS9kcml2
-ZXJzL3Njc2kvS2NvbmZpZwkyMDA1LTA4LTI1IDE1OjI4OjM3LjAwMDAwMDAwMCArMDIwMApAQCAt
-NDAzLDYgKzQwMywxMCBAQAogCSAgVG8gY29tcGlsZSB0aGlzIGRyaXZlciBhcyBhIG1vZHVsZSwg
-Y2hvb3NlIE0gaGVyZTogdGhlCiAJICBtb2R1bGUgd2lsbCBiZSBjYWxsZWQgaW4yMDAwLgogCitj
-b25maWcgTUVHQVJBSURfTEVHQUNZCisgICAgICAgIHRyaXN0YXRlICJBTUkgTWVnYVJBSUQgc3Vw
-cG9ydCAobGVnYWN5KSIKKyAgICAgICAgZGVwZW5kcyBvbiBQQ0kgJiYgU0NTSQorCiBzb3VyY2Ug
-ImRyaXZlcnMvc2NzaS9tZWdhcmFpZC9LY29uZmlnLm1lZ2FyYWlkIgogCiBjb25maWcgU0NTSV9T
-QVRBCg==
-
---========GMXBoundary13991124977923--
+Thanks again,
+Drew
 
