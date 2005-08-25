@@ -1,54 +1,29 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 2.6: how do I this in sysfs?
-Date: Thu, 25 Aug 2005 20:09:51 +0100
-Message-ID: <20050825190951.GA20812@infradead.org>
-References: <D4CFB69C345C394284E4B78B876C1CF10AB38B33@cceexc23.americas.cpqcorp.net>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] minimal SAS transport class
+Date: Thu, 25 Aug 2005 21:32:01 +0200
+Message-ID: <430E1CB1.1050108@s5r6.in-berlin.de>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A40@xbl3.ma.emulex.com> <20050823154232.GA3464@us.ibm.com> <430BBBBE.4070408@adaptec.com>
+Reply-To: linux-scsi@vger.kernel.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:12929 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932283AbVHYTKC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Aug 2005 15:10:02 -0400
-Content-Disposition: inline
-In-Reply-To: <D4CFB69C345C394284E4B78B876C1CF10AB38B33@cceexc23.americas.cpqcorp.net>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:13249 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1751235AbVHYTcU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Aug 2005 15:32:20 -0400
+In-Reply-To: <430BBBBE.4070408@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, greg@kroah.com, mochel@osdl.org, "Moore, Eric Dean" <Eric.Moore@lsil.com>, "Patterson, Andrew D (Linux R&D)" <andrew.patterson@hp.com>, Luben Tuikov <luben_tuikov@adaptec.com>
+To: linux-scsi@vger.kernel.org
+Cc: jejb@steeleye.com
 
-> > typedef struct _CSMI_SAS_IDENTIFY {
-> >    __u8  bDeviceType;
-> >    __u8  bRestricted;
-> >    __u8  bInitiatorPortProtocol;
-> >    __u8  bTargetPortProtocol;
-> >    __u8  bRestricted2[8];
-> >    __u8  bSASAddress[8];
-> >    __u8  bPhyIdentifier;
-> >    __u8  bSignalClass;
-> >    __u8  bReserved[6];
-> > } CSMI_SAS_IDENTIFY,
-> >   *PCSMI_SAS_IDENTIFY;
+Luben Tuikov wanted...
+> to move _away_ from HCIL.  So that addressing of devices in SCSI Core
+> is _completely_ independent of addressing at the protocol layer.
 
-please compare this with struct sas_identify in
-include/linux/scsi_transport_sas.h and look at
-drivers/scsi/scsi_transport_sas.c om how it's exposed.
-
-> > typedef struct _CSMI_SAS_PHY_ENTITY {
-> >    CSMI_SAS_IDENTIFY Identify;
-> >    __u8  bPortIdentifier;
-> >    __u8  bNegotiatedLinkRate;
-> >    __u8  bMinimumLinkRate;
-> >    __u8  bMaximumLinkRate;
-> >    __u8  bPhyChangeCount;
-> >    __u8  bAutoDiscover;
-> >    __u8  bReserved[2];
-> >    CSMI_SAS_IDENTIFY Attached;
-> > } CSMI_SAS_PHY_ENTITY,
-> >   *PCSMI_SAS_PHY_ENTITY;
-
-and this one to struct sas_port_attrs.
-
-This is after my minimal sas transport class, please also read the
-thread about it on linux-scsi
-
+I second that.
+-- 
+Stefan Richter
+-=====-=-=-= =--- ==--=
+http://arcgraph.de/sr/
