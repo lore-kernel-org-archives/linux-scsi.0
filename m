@@ -1,43 +1,23 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: Oops on scsi_remove_target
-Date: Fri, 26 Aug 2005 14:37:58 -0700
-Message-ID: <20050826213758.GQ22320@plap.qlogic.org>
+Date: Fri, 26 Aug 2005 16:40:08 -0500
+Message-ID: <1125092409.5079.107.camel@mulgrave>
 References: <430F8637.2060202@xfs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:3102 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S1030244AbVHZVh6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Aug 2005 17:37:58 -0400
-Content-Disposition: inline
+Received: from stat16.steeleye.com ([209.192.50.48]:12521 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S965172AbVHZVkR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Aug 2005 17:40:17 -0400
 In-Reply-To: <430F8637.2060202@xfs.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Stephen Lord <lord@xfs.org>
-Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>, Andrew Morton <akpm@osdl.org>
 
-On Fri, 26 Aug 2005, Stephen Lord wrote:
-
-> Running 2.6.12 (or one of several descendents of it), someone just let
-> loose a new device on our fabric, it is causing one of our hosts no
-> end of grief:
-> 
-> scsi: unknown device type 12
->   Vendor: ADIC      Model: SNC               Rev: 42dF
->   Type:   RAID                               ANSI SCSI revision: 03
-> qla2300 0000:18:01.1: Waiting for LIP to complete...
-> qla2300 0000:18:01.1: LIP reset occured (f7f7).
-> qla2300 0000:18:01.1: LOOP UP detected (2 Gbps).
-> qla2300 0000:18:01.1: Topology - (F_Port), Host Loop address 0xffff
-> qla2300 0000:18:01.0: scsi(3:16:1): Abort command issued -- 197 2002.
-> 
-> and a while later:
-> 
-> Starting udev:  Unable to handle kernel NULL pointer dereference at 
-> virtual address 0000004c
->  printing eip:
-> *pde = 00000000
+On Fri, 2005-08-26 at 16:14 -0500, Stephen Lord wrote:
 > Oops: 0000 [#1]
 > SMP
 > Modules linked in: sg qla2300 qla2xxx scsi_transport_fc aic7xxx 
@@ -52,28 +32,26 @@ On Fri, 26 Aug 2005, Stephen Lord wrote:
 > Process events/2 (pid: 12, threadinfo=f7fee000 task=f7fef530)
 > Stack: 00000002 00000180 f7e09400 00000000 f7e096b0 f7e096a8 f885f6ac 
 > f7feee78
->        c0193aaa 00000000 c02f41fe f7feee9c c0227691 f7e096b0 c02f41fe 
+>         c0193aaa 00000000 c02f41fe f7feee9c c0227691 f7e096b0 c02f41fe 
 > f885f640
->        f885f6b4 f7e096a8 c1a1fff8 c1a20030 f7feeeac c0227702 f7e096a8 
+>         f885f6b4 f7e096a8 c1a1fff8 c1a20030 f7feeeac c0227702 f7e096a8 
 > f7e09400
 > Call Trace:
->  [<c0103ec2>] show_stack+0x9a/0xd0
->  [<c010408d>] show_registers+0x175/0x209
->  [<c01042ac>] die+0xfa/0x19c
->  [<c0115200>] do_page_fault+0x239/0x6ee
->  [<c0103ad7>] error_code+0x4f/0x54
->  [<c0193aaa>] sysfs_remove_link+0x1b/0x1d
->  [<c0227691>] class_device_del+0x8e/0xed
->  [<c0227702>] class_device_unregister+0x12/0x20
->  [<f884d083>] scsi_remove_device+0x4e/0x97 [scsi_mod]
->  [<f884d156>] __scsi_remove_target+0x8a/0xc9 [scsi_mod]
->  [<f884d1b6>] __remove_child+0x21/0x29 [scsi_mod]
->  [<c02255bb>] device_for_each_child+0x32/0x53
->  [<f884d209>] scsi_remove_target+0x4b/0x5a [scsi_mod]
->  [<f883bc54>] fc_timeout_blocked_rport+0x4f/0x55 [scsi_transport_fc]
+>   [<c0103ec2>] show_stack+0x9a/0xd0
+>   [<c010408d>] show_registers+0x175/0x209
+>   [<c01042ac>] die+0xfa/0x19c
+>   [<c0115200>] do_page_fault+0x239/0x6ee
+>   [<c0103ad7>] error_code+0x4f/0x54
+>   [<c0193aaa>] sysfs_remove_link+0x1b/0x1d
+>   [<c0227691>] class_device_del+0x8e/0xed
 
-Hmm, could you try one of the latest 2.6.13-rcs, I believe this was
-recently addressed.
+This is known and reported and the fix is here:
 
---
-AV
+http://marc.theaimsgroup.com/?l=linux-scsi&m=112398346008284
+
+Andrew, Greg, could we do something about getting this fix in.  It's in
+sysfs, so I can't really push it.
+
+James
+
+
