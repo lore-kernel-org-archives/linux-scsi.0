@@ -1,136 +1,118 @@
-From: Stephen Lord <lord@xfs.org>
-Subject: Oops on scsi_remove_target
-Date: Fri, 26 Aug 2005 16:14:31 -0500
-Message-ID: <430F8637.2060202@xfs.org>
+From: Matti Aarnio <matti.aarnio@zmailer.org>
+Subject: regression w/ qla2300 - oopses..
+Date: Sat, 27 Aug 2005 00:29:34 +0300
+Message-ID: <20050826212934.GO22165@mea-ext.zmailer.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay04.roc.ny.frontiernet.net ([66.133.182.167]:59625 "EHLO
-	relay04.roc.ny.frontiernet.net") by vger.kernel.org with ESMTP
-	id S965173AbVHZVOf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Aug 2005 17:14:35 -0400
-Received: from filter07.roc.ny.frontiernet.net (filter07.roc.ny.frontiernet.net [66.133.183.74])
-	by relay04.roc.ny.frontiernet.net (Postfix) with ESMTP id 9F077358360
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Aug 2005 21:14:32 +0000 (UTC)
-Received: from relay04.roc.ny.frontiernet.net ([66.133.182.167])
-	by filter07.roc.ny.frontiernet.net (filter07.roc.ny.frontiernet.net [66.133.183.74]) (amavisd-new, port 10024)
-	with LMTP id 29468-09-29 for <linux-scsi@vger.kernel.org>;
-	Fri, 26 Aug 2005 21:14:32 +0000 (UTC)
-Received: from [192.168.1.65] (67-137-96-87.dsl2.brv.mn.frontiernet.net [67.137.96.87])
-	by relay04.roc.ny.frontiernet.net (Postfix) with ESMTP id 1A0813581D6
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Aug 2005 21:14:10 +0000 (UTC)
+Received: from van-1-67.lab.dnainternet.fi ([62.78.96.67]:65226 "EHLO
+	mail.zmailer.org") by vger.kernel.org with ESMTP id S965172AbVHZV3f
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Aug 2005 17:29:35 -0400
+Received: (mea@mea-ext) by mail.zmailer.org id S1609960AbVHZV3e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Aug 2005 00:29:34 +0300
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Running 2.6.12 (or one of several descendents of it), someone just let
-loose a new device on our fabric, it is causing one of our hosts no
-end of grief:
+Well, not in normal operation, but when I do "rmmod qla2300",
+I do get most impressive oops backtrace.  (With Amd64 machine.)
 
-scsi: unknown device type 12
-   Vendor: ADIC      Model: SNC               Rev: 42dF
-   Type:   RAID                               ANSI SCSI revision: 03
-qla2300 0000:18:01.1: Waiting for LIP to complete...
-qla2300 0000:18:01.1: LIP reset occured (f7f7).
-qla2300 0000:18:01.1: LOOP UP detected (2 Gbps).
-qla2300 0000:18:01.1: Topology - (F_Port), Host Loop address 0xffff
-qla2300 0000:18:01.0: scsi(3:16:1): Abort command issued -- 197 2002.
+This oops does happen with lattest Fedora Core Development kernel
+(as of yesterday) which is up to Linus  2.6.13-rc7.
 
-and a while later:
+This crash didn't happen with   vmlinuz-2.6.11-1.1226_FC4  from
+past April, but it did happen with a week old 2.6.13 FC5 snapshot.
+(I have been jumping back and forth in between them.)
 
-Starting udev:  Unable to handle kernel NULL pointer dereference at 
-virtual address 0000004c
-  printing eip:
-*pde = 00000000
-Oops: 0000 [#1]
-SMP
-Modules linked in: sg qla2300 qla2xxx scsi_transport_fc aic7xxx 
-scsi_transport_spi sd_mod scsi_mod
-CPU:    2
-EIP:    0060:[<c0191fe3>]    Not tainted VLI
-EFLAGS: 00010282   (2.6.12-kdb)
-EIP is at sysfs_hash_and_remove+0xc/0xfe
-eax: 00000000   ebx: f7e096b0   ecx: 00000000   edx: f885f6b4
-esi: f7e096a8   edi: f885f6ac   ebp: f7feee68   esp: f7feee4c
-ds: 007b   es: 007b   ss: 0068
-Process events/2 (pid: 12, threadinfo=f7fee000 task=f7fef530)
-Stack: 00000002 00000180 f7e09400 00000000 f7e096b0 f7e096a8 f885f6ac 
-f7feee78
-        c0193aaa 00000000 c02f41fe f7feee9c c0227691 f7e096b0 c02f41fe 
-f885f640
-        f885f6b4 f7e096a8 c1a1fff8 c1a20030 f7feeeac c0227702 f7e096a8 
-f7e09400
-Call Trace:
-  [<c0103ec2>] show_stack+0x9a/0xd0
-  [<c010408d>] show_registers+0x175/0x209
-  [<c01042ac>] die+0xfa/0x19c
-  [<c0115200>] do_page_fault+0x239/0x6ee
-  [<c0103ad7>] error_code+0x4f/0x54
-  [<c0193aaa>] sysfs_remove_link+0x1b/0x1d
-  [<c0227691>] class_device_del+0x8e/0xed
-  [<c0227702>] class_device_unregister+0x12/0x20
-  [<f884d083>] scsi_remove_device+0x4e/0x97 [scsi_mod]
-  [<f884d156>] __scsi_remove_target+0x8a/0xc9 [scsi_mod]
-  [<f884d1b6>] __remove_child+0x21/0x29 [scsi_mod]
-  [<c02255bb>] device_for_each_child+0x32/0x53
-  [<f884d209>] scsi_remove_target+0x4b/0x5a [scsi_mod]
-  [<f883bc54>] fc_timeout_blocked_rport+0x4f/0x55 [scsi_transport_fc]
-  [<c012d2ee>] worker_thread+0x18f/0x238
-  [<c0131367>] kthread+0xb1/0xb5
-  [<c010141d>] kernel_thread_helper+0x5/0xb
-Code: c0 e8 29 b2 13 00 89 5c 24 04 8b 45 0c 8b 40 0c 89 04 24 e8 1f b8 
-fe ff 83 c4 08 5b 5e 5d c3 55 89 e5 57 56 53 83 ec 10 8b 45 08 <8b> 50 
-4c 8b 48 0c f0 ff 49 74 0f 88 e2 00 00 00 8b 42 0c 8d 58
+The reason for that rmmod ?   I had to somehow get the card/driver to
+do whole re-init and to scan what LUNS are available in the SAN, while
+I was debugging my playround, and I just didn't like to do whole
+machine reboots...
 
-Entering kdb (current=0xf7fef530, pid 12) on processor 2 Oops: Oops
-due to oops @ 0xc0191fe3
-eax = 0x00000000 ebx = 0xf7e096b0 ecx = 0x00000000 edx = 0xf885f6b4
-esi = 0xf7e096a8 edi = 0xf885f6ac esp = 0xf7feee4c eip = 0xc0191fe3
-ebp = 0xf7feee68 xss = 0xc0260068 xcs = 0x00000060 eflags = 0x00010282
-xds = 0xf885007b xes = 0x0000007b origeax = 0xffffffff &regs = 0xf7feee18
-[2]kdb> bt
-Stack traceback for pid 12
-0xf7fef530       12        1  1    2   R  0xf7fef6f0 *events/2
-EBP        EIP        Function (args)
-0xf7feee68 0xc0191fe3 sysfs_hash_and_remove+0xc (0x0, 0xc02f41fe)
-0xf7feee78 0xc0193aaa sysfs_remove_link+0x1b (0xf7e096b0, 0xc02f41fe, 
-0xf885f640, 0xf885f6b4, 0xf7e096a8)
-0xf7feee9c 0xc0227691 class_device_del+0x8e (0xf7e096a8, 0xf7e09400)
-0xf7feeeac 0xc0227702 class_device_unregister+0x12 (0xf7e096a8, 0x3, 
-0xf7e09400, 0xc1a1fff8, 0xc1a20000)
-0xf7feeec8 0xf884d083 [scsi_mod]scsi_remove_device+0x4e (0xf7e09400, 
-0xf78fb214, 0xf7feef00, 0xf884d195)
-0xf7feeee0 0xf884d156 [scsi_mod]__scsi_remove_target+0x8a (0xf78fb200, 0x0)
-0xf7feeef0 0xf884d1b6 [scsi_mod]__remove_child+0x21 (0xf78fb214, 0x0, 
-0xf7e17840, 0xf7e17844, 0xf78fb220)
-0xf7feef18 0xc02255bb device_for_each_child+0x32 (0xf7e17840, 0x0, 
-0xf884d195, 0xf7e17840, 0xf7e17958)
-0xf7feef34 0xf884d209 [scsi_mod]scsi_remove_target+0x4b (0xf7e17840, 
-0xf883bece, 0xf7e178e4, 0xf7e17800)
-0xf7feef4c 0xf883bc54 [scsi_transport_fc]fc_timeout_blocked_rport+0x4f 
-(0xf7e17800, 0xf7feef7c, 0x0, 0xc193090c, 0xc1930914)
-0xf7feefb8 0xc012d2ee worker_thread+0x18f (0xc1930900, 0xff, 0x0, 
-0xc012d15f, 0xffffffff)
-0xf7feefe4 0xc0131367 kthread+0xb1
-            0xc010141d kernel_thread_helper+0x5
+   /Matti Aarnio
 
 
-Here is another example:
-scsi: unknown device type 12
-   Vendor: ADIC      Model: SNC               Rev: 42dF
-   Type:   RAID                               ANSI SCSI revision: 03
-qla2300 0000:18:01.1: scsi(4:16:1): Abort command issued -- 197 2002.
-qla2300 0000:18:01.1: scsi(4:16:1): Abort command issued -- 198 2002.
-qla2300 0000:18:01.1: scsi(4:16:1): Abort command issued -- 198 2002.
-scsi: Device offlined - not ready after error recovery: host 4 channel 0 
-id 16 lun 1
-scsi: Unexpected response from host 4 channel 0 id 16 lun 1 while 
-scanning, scan aborted
-
-followed by the same oops.
-
-I zoned the fabric to get around the problem for now
-
-
+Aug 26 10:40:14 sisakko kernel: Synchronizing SCSI cache for disk sda: 
+Aug 26 10:40:14 sisakko kernel: Synchronizing SCSI cache for disk sdb: 
+Aug 26 10:40:14 sisakko kernel: general protection fault: 0000 [1] SMP 
+Aug 26 10:40:14 sisakko kernel: CPU 0 
+Aug 26 10:40:14 sisakko kernel: Modules linked in: lp w83627hf i2c_sensor i2c_isa sunrpc ipv6 ipt_conntrack ip_conntrack_ftp ipt_REJECT ipt_state ip_conntrack iptable_filter ip_tables xfs exportfs dm_mod video button battery ac uhci_hcd ehci_hcd sata_via libata parport_pc parport shpchp i2c_viapro i2c_core snd_via82xx gameport snd_ac97_codec snd_seq_dummy snd_seq_oss snd_seq_midi_event snd_seq snd_pcm_oss snd_mixer_oss snd_pcm snd_timer snd_page_alloc snd_mpu401_uart snd_rawmidi snd_seq_device snd soundcore e100 mii skge floppy ext3 jbd raid1 qla2300 qla2xxx scsi_transport_fc sd_mod scsi_mod
+Aug 26 10:40:14 sisakko kernel: Pid: 19819, comm: rmmod Not tainted 2.6.12-1.1509_FC5
+Aug 26 10:40:14 sisakko kernel: RIP: 0010:[<ffffffff8020034b>] <ffffffff8020034b>{kref_get+4}
+Aug 26 10:40:14 sisakko kernel: RSP: 0018:ffff810031459d28  EFLAGS: 00010203
+Aug 26 10:40:14 sisakko kernel: RAX: ffff81003f5d35d0 RBX: 6b6b6b6b6b6b6b7b RCX: 0000000000000000
+Aug 26 10:40:14 sisakko kernel: RDX: 0000000000000007 RSI: ffffffff8034b06d RDI: 6b6b6b6b6b6b6b7b
+Aug 26 10:40:14 sisakko kernel: RBP: ffff810031459d58 R08: 0000000000000000 R09: ffff81003f5d3160
+Aug 26 10:40:14 sisakko kernel: R10: 0000000000000000 R11: ffffffff88009ed6 R12: 6b6b6b6b6b6b6b63
+Aug 26 10:40:14 sisakko kernel: R13: 0000000000000000 R14: ffffffff88060a78 R15: ffffffff88060a80
+Aug 26 10:40:14 sisakko kernel: FS:  00002aaaaadfe6d0(0000) GS:ffffffff80529800(0000) knlGS:00000000f7ea2ba0
+Aug 26 10:40:14 sisakko kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+Aug 26 10:40:14 sisakko kernel: CR2: 0000555555661200 CR3: 0000000034e55000 CR4: 00000000000006e0
+Aug 26 10:40:14 sisakko kernel: Process rmmod (pid: 19819, threadinfo ffff810031458000, task ffff8100330ca030)
+Aug 26 10:40:14 sisakko kernel: Stack: 6b6b6b6b6b6b6b6b ffffffff8034b1c4 0000000000000000 ffff81003f5d35c8 
+Aug 26 10:40:14 sisakko kernel:        ffffffff8800b631 ffffffff8026bae1 ffff81003f5d35c8 ffff81003f5d35d0 
+Aug 26 10:40:14 sisakko kernel:        ffff81003f5d31a0 ffff81003f5d35c8 
+Aug 26 10:40:14 sisakko kernel: Call Trace:<ffffffff8034b1c4>{klist_next+69} <ffffffff8800b631>{:scsi_mod:__remove_child+0}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff8026bae1>{device_for_each_child+44} <ffffffff8800b688>{:scsi_mod:scsi_remove_target+61}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff8803498b>{:scsi_transport_fc:fc_rport_terminate+63}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff88034a51>{:scsi_transport_fc:fc_remove_host+52}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff8803f0cf>{:qla2xxx:qla2x00_remove_one+34} <ffffffff8020c5b6>{pci_device_remove+36}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff8026cc85>{__device_release_driver+93} <ffffffff8026cd3c>{driver_detach+155}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff8026c9a9>{bus_remove_driver+122} <ffffffff8026d1a4>{driver_unregister+9}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff8020c4b2>{pci_unregister_driver+16} <ffffffff80151799>{sys_delete_module+478}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff801107e5>{syscall_trace_enter+217} <ffffffff8010dafe>{tracesys+209}
+Aug 26 10:40:14 sisakko kernel: 
+Aug 26 10:40:14 sisakko kernel: Code: 8b 07 85 c0 75 2e e8 d5 4b f3 ff 49 89 c0 b9 20 00 00 00 48 
+Aug 26 10:40:14 sisakko kernel: RIP <ffffffff8020034b>{kref_get+4} RSP <ffff810031459d28>
+Aug 26 10:40:14 sisakko kernel:  <3>Debug: sleeping function called from invalid context at include/linux/rwsem.h:43
+Aug 26 10:40:14 sisakko kernel: in_atomic():0, irqs_disabled():1
+Aug 26 10:40:14 sisakko kernel: 
+Aug 26 10:40:14 sisakko kernel: Call Trace:<ffffffff8013682a>{profile_task_exit+21} <ffffffff801379fd>{do_exit+34}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff80214089>{vgacon_cursor+216} <ffffffff8010f4a5>{default_do_nmi+0}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff8010f8f5>{do_general_protection+257} <ffffffff8010e4b9>{error_exit+0}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff88009ed6>{:scsi_mod:scsi_target_dev_release+0}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff8034b06d>{klist_release+0} <ffffffff8020034b>{kref_get+4}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff8034b1c4>{klist_next+69} <ffffffff8800b631>{:scsi_mod:__remove_child+0}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff8026bae1>{device_for_each_child+44} <ffffffff8800b688>{:scsi_mod:scsi_remove_target+61}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff8803498b>{:scsi_transport_fc:fc_rport_terminate+63}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff88034a51>{:scsi_transport_fc:fc_remove_host+52}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff8803f0cf>{:qla2xxx:qla2x00_remove_one+34} <ffffffff8020c5b6>{pci_device_remove+36}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff8026cc85>{__device_release_driver+93} <ffffffff8026cd3c>{driver_detach+155}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff8026c9a9>{bus_remove_driver+122} <ffffffff8026d1a4>{driver_unregister+9}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff8020c4b2>{pci_unregister_driver+16} <ffffffff80151799>{sys_delete_module+478}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff801107e5>{syscall_trace_enter+217} <ffffffff8010dafe>{tracesys+209}
+Aug 26 10:40:14 sisakko kernel:        
+Aug 26 10:40:14 sisakko kernel: Slab corruption: (Not tainted) start=ffff81003f5d3160, len=1024
+Aug 26 10:40:14 sisakko kernel: Redzone: 0x5a2cf071/0x5a2cf071.
+Aug 26 10:40:14 sisakko kernel: Last user: [<ffffffff88009f29>](scsi_target_dev_release+0x53/0x63 [scsi_mod])
+Aug 26 10:40:14 sisakko kernel: 
+Aug 26 10:40:14 sisakko kernel: Call Trace:<ffffffff80168b5e>{check_poison_obj+141} <ffffffff802e7000>{alloc_skb+67}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff80168d3d>{cache_alloc_debugcheck_after+55}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff802e7000>{alloc_skb+67} <ffffffff802e5709>{sock_alloc_send_skb+97}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff8034713e>{unix_dgram_sendmsg+374} <ffffffff8019d61c>{__d_lookup+250}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff802e3b5d>{sock_sendmsg+257} <ffffffff801e488e>{avc_has_perm+70}
+Aug 26 10:40:14 sisakko kernel:        <ffffffff801e488e>{avc_has_perm+70} <ffffffff8016041d>{find_get_page+75}
+Aug 26 10:40:15 sisakko kernel:        <ffffffff8014a5b0>{autoremove_wake_function+0} <ffffffff80202e8c>{vsnprintf+1487}
+Aug 26 10:40:15 sisakko kernel:        <ffffffff80171f01>{unmap_vmas+1253} <ffffffff80167ad9>{poison_obj+49}
+Aug 26 10:40:15 sisakko kernel:        <ffffffff8015d560>{audit_sockaddr+51} <ffffffff801678ee>{dbg_redzone1+32}
+Aug 26 10:40:15 sisakko kernel:        <ffffffff8015d560>{audit_sockaddr+51} <ffffffff80168e15>{cache_alloc_debugcheck_after+271}
+Aug 26 10:40:15 sisakko kernel:        <ffffffff8015d580>{audit_sockaddr+83} <ffffffff802e3ee7>{sys_sendto+235}
+Aug 26 10:40:15 sisakko kernel:        <ffffffff80168e15>{cache_alloc_debugcheck_after+271}
+Aug 26 10:40:15 sisakko kernel:        <ffffffff8015dfdd>{audit_syscall_entry+313} <ffffffff8010dafe>{tracesys+209}
+Aug 26 10:40:15 sisakko kernel:        
+Aug 26 10:40:15 sisakko kernel: 050: 6b 6b 6b 6b 6b 6b 6b 6b 6a 6b 6b 6b 6b 6b 6b 6b
+Aug 26 10:40:15 sisakko kernel: Single bit error detected. Possibly bad RAM. Run memtest86.
+Aug 26 10:40:15 sisakko kernel: Prev obj: start=ffff81003f5d2d48, len=1024
+Aug 26 10:40:15 sisakko kernel: Redzone: 0x170fc2a5/0x170fc2a5.
+Aug 26 10:40:15 sisakko kernel: Last user: [<ffffffff8027c334>](cfq_init_queue+0x1b/0x2ba)
+Aug 26 10:40:15 sisakko kernel: 000: 1f 00 00 00 00 00 00 00 a0 69 df 3f 00 81 ff ff
+Aug 26 10:40:15 sisakko kernel: 010: 58 2d 5d 3f 00 81 ff ff 58 2d 5d 3f 00 81 ff ff
+Aug 26 10:40:15 sisakko kernel: Next obj: start=ffff81003f5d3578, len=1024
+Aug 26 10:40:15 sisakko kernel: Redzone: 0x170fc2a5/0x170fc2a5.
+Aug 26 10:40:15 sisakko kernel: Last user: [<ffffffff880337a0>](fc_rport_create+0x44/0x30f [scsi_transport_fc])
+Aug 26 10:40:15 sisakko kernel: 000: ff ff ff ff 00 00 00 00 23 00 00 00 00 00 00 00
+Aug 26 10:40:15 sisakko kernel: 010: 86 09 e0 02 04 00 00 10 86 09 e1 02 04 00 00 20
