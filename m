@@ -1,114 +1,121 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: SCSI_OWNER_LOWLEVEL, scsicmd->owner & scsicmd->state visibility in the LLD
-Date: Fri, 26 Aug 2005 08:45:46 -0400
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F017F26A8@otce2k03.adaptec.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [PATCH] minimal SAS transport class
+Date: Fri, 26 Aug 2005 11:47:22 -0400
+Message-ID: <430F398A.30200@adaptec.com>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A4B@xbl3.ma.emulex.com> <430B5CDB.9070204@s5r6.in-berlin.de> <430BB91F.7000406@vger.kernel.org> <20050824091230.GB26447@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:9180 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1750971AbVHZMpx convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Aug 2005 08:45:53 -0400
-Received: from redfish.adaptec.com (redfish.adaptec.com [162.62.50.11])
-	by magic.adaptec.com (8.11.6/8.11.6) with ESMTP id j7QCjmc31634
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Aug 2005 05:45:48 -0700
-Received: from otce2k03.adaptec.com (otce2k03.adaptec.com [10.12.1.72])
-	by redfish.adaptec.com (8.11.6/8.11.6) with ESMTP id j7QCjmg08210
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Aug 2005 05:45:48 -0700
-content-class: urn:content-classes:message
+Received: from magic.adaptec.com ([216.52.22.17]:52134 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S965087AbVHZPrZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Aug 2005 11:47:25 -0400
+In-Reply-To: <20050824091230.GB26447@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, Stefan Richter <stefanr@s5r6.in-berlin.de>
 
-Answer was not forthcoming regarding deprecation of scsicmd->owner and
-scsicmd->state, thus no API to determine if the command is currently
-owned by the low level driver. Need to move this functionality into the
-driver, so can I count on scsicmd->SCp.phase sticking around?
+On 08/24/05 05:12, Christoph Hellwig wrote:
+> On Tue, Aug 23, 2005 at 08:02:39PM -0400, Luben Tuikov wrote:
+> 
+>>In effect FC tells SCSI Core: here is a device I do not know anything
+>>about, other than the fact that it is on the fabric and it has
+>>a SCSI Target (or Initiator) Port: how you get to is is _my_ business,
+>>what is done with or to the device is _your_ business.
+>>
+>>Then SCSI Core does LU discovery using SPC and SAM on the device
+>>using Execute Task.
+>>
+>>All this _completely_ eliminates the need for HCIL.
+>>
+>>How the FC layer identifies the device is the FC's layer problem.
+>>How SCSI Core identifies the device is SCSI Core's problem.
+>>
+>>HCIL should have never been available to SCSI Core in the first place,
+>>but then again SAM didn't exist back then.
+> 
+> 
+> Ok, Luben, here's the TODO list to get there:
+> 
+>  (1) add a sdev_printk that takes a struct scsi_device * and prints
+>      a sensible name for it.  Later we might or might not make this
+>      a transport hook, but for now it gets rid of all these ->id
+>      references in LLDDs
+>  (2) add a variant of scsi_scan_target that takes a scsi_target * to
+>      scan, make the old scsi_scan_target a wrapper around it and
+>      introduce similar wrappers for transport-specific target identifiers
+>      (e.g. WWNs for FC and SAS)
 
-For example:
+Hi Christoph,
 
-static int aac_queuecommand(struct scsi_cmnd *cmd, void (*done)(struct
-scsi_cmnd *))
-{
-	cmd->scsi_done = done;
-	. . .
-	cmd->SCp.phase = 1;
+Yeah this sounds cool.
 
-And every interrupt callback handler:
-	. . .
-	cmd->SCp.phase = 2;
-	. . .
-	cmd->scsi_done(scsicmd);
+Do you think it would be beneficial to revisit struct
+scsi_target to something like struct scsi_domain_device and
+have a kobject in it.  Then the FC/SAS/iSCSI/USB layer upon finding
+a domain device, they call a suitable function which allocates them
+struct scsi_domain_device, which sets the "release" method for the
+kobject embedded.  Then they call SCSI Core to register the domain device.
+(All in all, the transport layer may also do kobject_get.)
+SCSI Core does kobject_register (thus kobject_get) and starts
+doing LU discovery for the device (all through the pointer to struct
+scsi_domain_device), and thus the LUs are discovered and struct
+scsi_device is created for each one.
 
-And in the reset handler that returns commands to the host:
+Then if the device is unplugged from the domain, the protocol layer
+does whatever is necessary, including kobject_put(), and then 
+calls the unregister function in SCSI Core to unregister the device.
+SCSI Core does whatever it wants and then does kobject_unregister(kobject_put),
+and the device is gone.
 
-__shost_for_each_device(dev, host) {
-      	spin_lock_irqsave(&dev->list_lock, flags);
-      	list_for_each_entry(command, &dev->cmd_list, list)
-			if (command->SCp.phase == 1)
+If OTOH, the unplug event came from userspace, SCSI Core does whatever is
+necessary to finish with the device, and then calls the slave_destroy()
+function (you get the idea), and then does kobject_put.
 
-Sincerely -- Mark Salyzyn
+Of course the order of those doesn't have to be quite like so.
+
+I've all this implemented for the _current_ architecture of SCSI Core.
+The aforementioned was a draft to extend (move) domain devices _and_ LUs
+into SCSI Core where they belong, as opposed to the transport layer
+doing LU discovery _as_well_as_ domain device discovery and giving only
+LUs to SCSI Core.
+
+>  (3) fix a bunch of internal functions that use ->id despite not actually
+>      needing it, e.g. starget_for_each_device
+
+Yeah, that sounds cool.  In effect, all you'll have is a struct list_head
+of LUs, and that list_head would live in the struct scsi_domain_device.
+
+>  (4) eventually move the traditional scsi_scan_target and other functions
+>      that lookup a scsi_target based on ->id into the spi transport class
+
+Even simpler: the transport layer, calls SCSI Core, saying: "Hey here is
+a pointer to struct scsi_domain_device.  If you want, you an send REPORT
+LUNS and other things to it."
+
+The current slave_alloc/slave_configure/slave_destroy implementation is
+_very_good_, but slight adjustments would have to be made when the domain
+device concept arrives at SCSI Core -- nothing unprecedented.  If anything,
+it would be a _simplification_, and I'm actually in _favour_ of keeping the
+current infra in place as well -- no big, sudden changes.
+
+>  (5) add an SPI-specific taget ID accessor and move all drivers over to it
+
+Yeah, sure.  The transport layer would actually assign these ids as part of
+it doing domain discovery.  They would be some opaque string in some opaque
+format, "WWN", "H:C:I:L", "X,Y", etc, which the transport layer tacked to the
+domain device before announcing that it exists to SCSI Core.  SCSI Core
+can feel free to add more and other various labels if it wishes to do so.
+Imagine a struct list_head of labels.
+
+	Luben
+P.S. Transport class != Transport layer.
+
+SCSI Core >> transport layer (FC/SAS/USB/iSCSI) >> LLDD/transport >> interconnect >> physical world.
+
+Anything to the left is completely unaware of internals of anything to the
+right.  Access to the right is provided as dictated by some spec.
 
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Salyzyn, Mark
-Sent: Thursday, August 25, 2005 4:20 PM
-To: linux-scsi
-Subject: SCSI_OWNER_LOWLEVEL, scsicmd->owner & scsicmd->state visibility
-in the LLD
-
-
-The aacraid driver does not maintain a list of outstanding commands to
-the controller. The 'active' list is effectively maintained by the
-controller Firmware state that reports back an index upon completion to
-the 'active FIB' so that it may be placed back into the free list.
-
-I want to add a means to reset the adapter (typically when it faults),
-late model firmware offers an IOP_RESET command. I will be resetting the
-adapter in the eh_handler context, ioctl context (for legacy kernels),
-sysfs context and in a background kernel watchdog thread observing
-adapter health indicators.
-
-The problem is I must complete all outstanding commands in the
-controller ala:
-
-	command->result = DID_OK << 16 | COMMAND_COMPLETE << 8 |
-SAM_STAT_TASK_SET_FULL;
-	command->scsi_done(command);
-
-In the name of performance (not maintaining two active lists, the one in
-the scsi layer, and another in the driver) I noticed that I can discern
-the commands that should be completed at Adapter Reset as:
-
-	__shost_for_each_device(dev, host) {
-      	spin_lock_irqsave(&dev->list_lock, flags);
-      	list_for_each_entry(command, &dev->cmd_list, list)
-			if (command->request &&
-			  command->request->rq_status != RQ_INACTIVE &&
-/* All commands that are active */
-			  command->owner == SCSI_OWNER_LOWLEVEL &&
-/* All commands owned by the driver */
-			  command->state != SCSI_STATE_FAILED)
-/* Remove any commands that have made it into the error handler */
-
-But I am *sure* this is misplaced since command->state usage is
-deprecated in recent cleanup patches, and command->owner's manifests are
-maintained in .../drivers/scsi/scsi_priv.h probably (?) to obscure them
-from the driver's view. (NOTE: 2.4 kernels 'command->request &&
-command->request->rq_status != RQ_INACTIVE' with
-'command->serial_number')
-
-Is there an 'approved' API to acquire the low level driver outstanding
-list, subtracting the commands that are already on the road to
-completion but are tied up in the error handler? Is there an 'approved'
-style to complete commands safely *within* the above loop, or must I do
-it outside the loop?
-
-Sincerely -- Mark Salyzyn
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org More majordomo info
-at  http://vger.kernel.org/majordomo-info.html
