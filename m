@@ -1,60 +1,99 @@
-From: Lejano Oriente <kceqvq@stc.com.sa>
-Subject: Curso Multimedia de Chino Mandarin
-Date: Sat, 27 Aug 2005 19:38:51 -0300
-Message-ID: <200508271544.j7RFioYg002340@linuxhelp.com.mx>
-Reply-To: kceqvq@stc.com.sa
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
+Subject: [PATCH] zfcp: bugfix and compile fixes
+Date: Sun, 28 Aug 2005 01:33:23 +0200
+Message-ID: <20050827233323.GA11194@osiris.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl-200-67-82-39.prod-empresarial.com.mx ([200.67.82.39]:41453
-	"EHLO linuxhelp.com.mx") by vger.kernel.org with ESMTP
-	id S1750768AbVH0WjS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Aug 2005 18:39:18 -0400
+Received: from mtagate2.de.ibm.com ([195.212.29.151]:34251 "EHLO
+	mtagate2.de.ibm.com") by vger.kernel.org with ESMTP
+	id S1750779AbVH0Xdg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Aug 2005 19:33:36 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate2.de.ibm.com (8.12.10/8.12.10) with ESMTP id j7RNXZd7134230
+	for <linux-scsi@vger.kernel.org>; Sat, 27 Aug 2005 23:33:35 GMT
+Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
+	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j7RNXZJl092964
+	for <linux-scsi@vger.kernel.org>; Sun, 28 Aug 2005 01:33:35 +0200
+Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id j7RNXYPE027396
+	for <linux-scsi@vger.kernel.org>; Sun, 28 Aug 2005 01:33:35 +0200
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+Cc: Andreas Herrmann <aherrman@de.ibm.com>, Andrew Morton <akpm@osdl.org>
 
-CURSO MULTIMEDIA DE CHINO EN CD
------------------------------------------------------------
-Con este curso de Chino mandarin, Ud. acceder al fascinante mundo del idioma
- y la cultura china de una manera accesible y simple.
+Hi James,
 
-El objetivo principal del aprendizaje de idiomas es poder utilizarlos de forma natural 
-y apropiada en la vida corriente.
+unfortunately the last zfcp patch introduces a bug and the driver doesn't
+compile anymore in addition. If possible the patch below should go into 2.6.13.
 
-Este curso esta destinado al gran publico de cualquier edad o profesion.
+Thanks,
+Heiko
 
-El CD contiene el software necesario y un documento de alta calidad de 
-226 paginas a todo color y con el sonido para pronunciar con fonetica y simbologia.
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
 
-No hay requisitos para el aprendizaje, el curso comienza desde cero.
+Bugfix (usage of uninitialized pointer in zfcp_port_dequeue) and compile fixes
+for the zfcp device driver.
 
-INSCRIPCION
-------------
-PARA INSCRIBIRSE, envenos un mail a camaras@jazzfree.com 
-indicando su nombre y apellidos completos, direccion y medio de pago elegido y le enviaremos un mail con las instrucciones para el pago. Una vez recibido el pago, le enviamos el material.
-Es importante destacar que este curso NO tiene tutorias.
+Signed-off-by: Heiko Carstens <heiko.carstens@de.ibm.com>
 
-ARANCELES PARA ARGENTINA (en pesos arg)
---------------------------
-- Costo de Curso: $ 69
-- Costo de Envio: $ 15
-- TOTAL : $ 84
+diffstat:
+ drivers/s390/scsi/zfcp_aux.c        |    5 ++---
+ drivers/s390/scsi/zfcp_ccw.c        |    2 +-
+ drivers/s390/scsi/zfcp_sysfs_port.c |    2 --
+ 3 files changed, 3 insertions(+), 6 deletions(-)
 
-ARANCELES PARA EXTERIOR (en dolares USA)
--------------------------
-- Costo de Curso: U$ 49
-- Costo de Envio: U$  9
-- TOTAL : U$ 58
-
-FORMAS DE PAGO
---------------
-- Contrareembolso. Solo Argentina
-- Deposito Bancario. Solo Argentina
-- Tarjeta de Credito Online.
-- Western Union
-
-CONSULTAS A camaras@jazzfree.com 
+diff --git a/drivers/s390/scsi/zfcp_aux.c b/drivers/s390/scsi/zfcp_aux.c
+--- a/drivers/s390/scsi/zfcp_aux.c
++++ b/drivers/s390/scsi/zfcp_aux.c
+@@ -1403,15 +1403,14 @@ zfcp_port_enqueue(struct zfcp_adapter *a
+ void
+ zfcp_port_dequeue(struct zfcp_port *port)
+ {
+-	struct fc_port *rport;
+-
+ 	zfcp_port_wait(port);
+ 	write_lock_irq(&zfcp_data.config_lock);
+ 	list_del(&port->list);
+ 	port->adapter->ports--;
+ 	write_unlock_irq(&zfcp_data.config_lock);
+ 	if (port->rport)
+-		fc_remote_port_delete(rport);
++		fc_remote_port_delete(port->rport);
++	port->rport = NULL;
+ 	zfcp_adapter_put(port->adapter);
+ 	zfcp_sysfs_port_remove_files(&port->sysfs_device,
+ 				     atomic_read(&port->status));
+diff --git a/drivers/s390/scsi/zfcp_ccw.c b/drivers/s390/scsi/zfcp_ccw.c
+--- a/drivers/s390/scsi/zfcp_ccw.c
++++ b/drivers/s390/scsi/zfcp_ccw.c
+@@ -203,7 +203,7 @@ zfcp_ccw_set_offline(struct ccw_device *
+ {
+ 	struct zfcp_adapter *adapter;
+ 	struct zfcp_port *port;
+-	struct fc_port *rport;
++	struct fc_rport *rport;
  
-PCCLYLHMTPGRBCPWPSXPEQBBYNGBRQPJYMVWTW
+ 	down(&zfcp_data.config_sema);
+ 	adapter = dev_get_drvdata(&ccw_device->dev);
+diff --git a/drivers/s390/scsi/zfcp_sysfs_port.c b/drivers/s390/scsi/zfcp_sysfs_port.c
+--- a/drivers/s390/scsi/zfcp_sysfs_port.c
++++ b/drivers/s390/scsi/zfcp_sysfs_port.c
+@@ -67,7 +67,6 @@ static DEVICE_ATTR(_name, S_IRUGO, zfcp_
+ ZFCP_DEFINE_PORT_ATTR(status, "0x%08x\n", atomic_read(&port->status));
+ ZFCP_DEFINE_PORT_ATTR(wwnn, "0x%016llx\n", port->wwnn);
+ ZFCP_DEFINE_PORT_ATTR(d_id, "0x%06x\n", port->d_id);
+-ZFCP_DEFINE_PORT_ATTR(scsi_id, "0x%x\n", port->scsi_id);
+ ZFCP_DEFINE_PORT_ATTR(in_recovery, "%d\n", atomic_test_mask
+ 		      (ZFCP_STATUS_COMMON_ERP_INUSE, &port->status));
+ ZFCP_DEFINE_PORT_ATTR(access_denied, "%d\n", atomic_test_mask
+@@ -263,7 +262,6 @@ static struct attribute_group zfcp_port_
+ static struct attribute *zfcp_port_no_ns_attrs[] = {
+ 	&dev_attr_unit_add.attr,
+ 	&dev_attr_unit_remove.attr,
+-	&dev_attr_scsi_id.attr,
+ 	NULL
+ };
+ 
