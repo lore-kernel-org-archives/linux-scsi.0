@@ -1,73 +1,52 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Douglas Gilbert <dougg@torque.net>
 Subject: Re: [PATCH] libata: error processing + rw 6 byte fix
-Date: Fri, 26 Aug 2005 23:31:17 -0400
-Message-ID: <430FDE85.4060301@pobox.com>
-References: <430994BC.4060102@torque.net> <430A230B.8040204@pobox.com> <430B1337.7080906@torque.net>
+Date: Sat, 27 Aug 2005 15:08:07 +1000
+Message-ID: <430FF537.7010705@torque.net>
+References: <430994BC.4060102@torque.net> <20050823071338.GA11233@suse.de> <430B1799.1060800@torque.net> <430FDD73.6050200@pobox.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:48556 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030290AbVH0DbT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Aug 2005 23:31:19 -0400
-In-Reply-To: <430B1337.7080906@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <430FDD73.6050200@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Jens Axboe <axboe@suse.de>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Douglas Gilbert wrote:
-> Jeff Garzik wrote:
->>>@@ -1093,28 +1189,54 @@
->>>                   unsigned int buflen)
->>> {
->>>     u8 *scsicmd = args->cmd->cmnd, *p, *last;
->>>-    unsigned int page_control, six_byte, output_len;
->>>+    const u8 sat_blk_desc[] = {0, 0, 0, 0, 0, 0, 0x2, 0x0};
->>>+    /* 512 byte blocks, number of blocks = 0, (sat-r05) */
->>
->>
->>NOTE: don't hardcode 512, since that will change very soon in SATA.
+Jeff Garzik wrote:
+> Does the attached look OK to everybody?
 > 
-> 
-> So put ATA_SECT_SIZE in there for the time being?
 
+Jeff,
 Yes.
 
+And after an exchange with Jens, it would probably be
+safer to map transfer_length=0 for READ_10 and READ_16
+(as well as WRITE_10 and WRITE_16) to a nop on the ATA
+side. Otherwise an ATA disk may attempt to transfer 2**16
+sectors. [Only READ_6 and WRITE_6 have the quirky "0 means
+256" definition, in the larger commands "0 means 0".]
 
->>1K ATA devices are just around the corner.
->>
->>
->>>@@ -1570,11 +1737,6 @@
->>>             ata_scsi_rbuf_fill(&args, ata_scsiop_mode_sense);
->>>             break;
->>> 
->>>-        case MODE_SELECT:    /* unconditionally return */
->>>-        case MODE_SELECT_10:    /* bad-field-in-cdb */
->>>-            ata_bad_cdb(cmd, done);
->>>-            break;
->>>-
->>>         case READ_CAPACITY:
->>>             ata_scsi_rbuf_fill(&args, ata_scsiop_read_cap);
->>>             break;
->>
->>
->>At this point in the patch series, you should not be removing this code
->>AFAICS.
+Doug Gilbert
+
 > 
+> ------------------------------------------------------------------------
 > 
-> It is a trick and an error correction. In this version
-> of libata MODE SELECT commands don't have "invalid field
-> in cdb" as the ata_bad_cmd() sets, but "invalid command
-> operation code" which is what the default case sets.
-
-Since they are required commands, I tend to prefer "invalid field in 
-CDB" as a temporary return code.
-
-Of course we could just solve this by getting your MODE SELECT code in 
-there ;)
-
-	Jeff
-
+> diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+> --- a/drivers/scsi/libata-scsi.c
+> +++ b/drivers/scsi/libata-scsi.c
+> @@ -581,6 +581,12 @@ static unsigned int ata_scsi_rw_xlat(str
+>  
+>  	if (scsicmd[0] == READ_6 || scsicmd[0] == WRITE_6) {
+>  		qc->nsect = tf->nsect = scsicmd[4];
+> +		if (!qc->nsect) {
+> +			qc->nsect = 256;
+> +			if (lba48)
+> +				tf->hob_nsect = 1;
+> +		}
+> +
+>  		tf->lbal = scsicmd[3];
+>  		tf->lbam = scsicmd[2];
+>  		tf->lbah = scsicmd[1] & 0x1f; /* mask out reserved bits */
 
