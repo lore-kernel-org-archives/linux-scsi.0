@@ -1,88 +1,123 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 10/16] qla2xxx: Add change_queue_depth/type() API support.
-Date: Fri, 26 Aug 2005 19:09:30 -0700 (PDT)
-Message-ID: <20050827020930.27275.49830.sendpatchset@plap.qlogic.com>
+Subject: [PATCH 8/16]  qla2xxx: Remove RISC pause/release barriers during flash manipulation.
+Date: Fri, 26 Aug 2005 19:09:10 -0700 (PDT)
+Message-ID: <20050827020910.27275.53675.sendpatchset@plap.qlogic.com>
 References: <20050827020750.27275.19733.sendpatchset@plap.qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:10344 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751619AbVH0CJb (ORCPT
+Received: from pat.qlogic.com ([198.70.193.2]:360 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751617AbVH0CJL (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Aug 2005 22:09:31 -0400
+	Fri, 26 Aug 2005 22:09:11 -0400
 In-Reply-To: <20050827020750.27275.19733.sendpatchset@plap.qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Add change_queue_depth/type() API support.
+Remove RISC pause/release barriers during flash manipulation.
+
+Remove unnecessary RISC pause/release barriers during
+ISP24xx flash manipulation.  The ISP24xx can arbitrate flash
+access requests during RISC executions.
 
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 ---
 
- drivers/scsi/qla2xxx/qla_os.c |   29 +++++++++++++++++++++++++++++
- 1 files changed, 29 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_sup.c |   34 ----------------------------------
+ 1 files changed, 0 insertions(+), 34 deletions(-)
 
-c61d82773aa6675dd6e8553f5aee97a743948689
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -111,6 +111,9 @@ static int qla2xxx_eh_host_reset(struct 
- static int qla2x00_loop_reset(scsi_qla_host_t *ha);
- static int qla2x00_device_reset(scsi_qla_host_t *, fc_port_t *);
+2fa684b695e1ff9420557a5488cc00e7ddc42499
+diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
+--- a/drivers/scsi/qla2xxx/qla_sup.c
++++ b/drivers/scsi/qla2xxx/qla_sup.c
+@@ -468,21 +468,12 @@ qla24xx_read_flash_data(scsi_qla_host_t 
+     uint32_t dwords)
+ {
+ 	uint32_t i;
+-	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+-
+-	/* Pause RISC. */
+-	WRT_REG_DWORD(&reg->hccr, HCCRX_SET_RISC_PAUSE);
+-	RD_REG_DWORD(&reg->hccr);		/* PCI Posting. */
  
-+static int qla2x00_change_queue_depth(struct scsi_device *, int);
-+static int qla2x00_change_queue_type(struct scsi_device *, int);
-+
- static struct scsi_host_template qla2x00_driver_template = {
- 	.module			= THIS_MODULE,
- 	.name			= "qla2xxx",
-@@ -125,6 +128,8 @@ static struct scsi_host_template qla2x00
+ 	/* Dword reads to flash. */
+ 	for (i = 0; i < dwords; i++, faddr++)
+ 		dwptr[i] = cpu_to_le32(qla24xx_read_flash_dword(ha,
+ 		    flash_data_to_access_addr(faddr)));
  
- 	.slave_alloc		= qla2xxx_slave_alloc,
- 	.slave_destroy		= qla2xxx_slave_destroy,
-+	.change_queue_depth	= qla2x00_change_queue_depth,
-+	.change_queue_type	= qla2x00_change_queue_type,
- 	.this_id		= -1,
- 	.cmd_per_lun		= 3,
- 	.use_clustering		= ENABLE_CLUSTERING,
-@@ -151,6 +156,8 @@ static struct scsi_host_template qla24xx
- 
- 	.slave_alloc		= qla2xxx_slave_alloc,
- 	.slave_destroy		= qla2xxx_slave_destroy,
-+	.change_queue_depth	= qla2x00_change_queue_depth,
-+	.change_queue_type	= qla2x00_change_queue_type,
- 	.this_id		= -1,
- 	.cmd_per_lun		= 3,
- 	.use_clustering		= ENABLE_CLUSTERING,
-@@ -1109,6 +1116,28 @@ qla2xxx_slave_destroy(struct scsi_device
- 	sdev->hostdata = NULL;
+-	/* Release RISC pause. */
+-	WRT_REG_DWORD(&reg->hccr, HCCRX_REL_RISC_PAUSE);
+-	RD_REG_DWORD(&reg->hccr);		/* PCI Posting. */
+-
+ 	return dwptr;
  }
  
-+static int
-+qla2x00_change_queue_depth(struct scsi_device *sdev, int qdepth)
-+{
-+	scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), qdepth);
-+	return sdev->queue_depth;
-+}
-+
-+static int
-+qla2x00_change_queue_type(struct scsi_device *sdev, int tag_type)
-+{
-+	if (sdev->tagged_supported) {
-+		scsi_set_tag_type(sdev, tag_type);
-+		if (tag_type)
-+			scsi_activate_tcq(sdev, sdev->queue_depth);
-+		else
-+			scsi_deactivate_tcq(sdev, sdev->queue_depth);
-+	} else
-+		tag_type = 0;
-+
-+	return tag_type;
-+}
-+
- /**
-  * qla2x00_config_dma_addressing() - Configure OS DMA addressing method.
-  * @ha: HA context
+@@ -532,10 +523,6 @@ qla24xx_write_flash_data(scsi_qla_host_t
+ 
+ 	ret = QLA_SUCCESS;
+ 
+-	/* Pause RISC. */
+-	WRT_REG_DWORD(&reg->hccr, HCCRX_SET_RISC_PAUSE);
+-	RD_REG_DWORD(&reg->hccr);		/* PCI Posting. */
+-
+ 	qla24xx_get_flash_manufacturer(ha, &man_id, &flash_id);
+ 	DEBUG9(printk("%s(%ld): Flash man_id=%d flash_id=%d\n", __func__,
+ 	    ha->host_no, man_id, flash_id));
+@@ -599,10 +586,6 @@ qla24xx_write_flash_data(scsi_qla_host_t
+ 	    RD_REG_DWORD(&reg->ctrl_status) & ~CSRX_FLASH_ENABLE);
+ 	RD_REG_DWORD(&reg->ctrl_status);	/* PCI Posting. */
+ 
+-	/* Release RISC pause. */
+-	WRT_REG_DWORD(&reg->hccr, HCCRX_REL_RISC_PAUSE);
+-	RD_REG_DWORD(&reg->hccr);		/* PCI Posting. */
+-
+ 	return ret;
+ }
+ 
+@@ -630,11 +613,6 @@ qla24xx_read_nvram_data(scsi_qla_host_t 
+ {
+ 	uint32_t i;
+ 	uint32_t *dwptr;
+-	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+-
+-	/* Pause RISC. */
+-	WRT_REG_DWORD(&reg->hccr, HCCRX_SET_RISC_PAUSE);
+-	RD_REG_DWORD(&reg->hccr);	/* PCI Posting. */
+ 
+ 	/* Dword reads to flash. */
+ 	dwptr = (uint32_t *)buf;
+@@ -642,10 +620,6 @@ qla24xx_read_nvram_data(scsi_qla_host_t 
+ 		dwptr[i] = cpu_to_le32(qla24xx_read_flash_dword(ha,
+ 		    nvram_data_to_access_addr(naddr)));
+ 
+-	/* Release RISC pause. */
+-	WRT_REG_DWORD(&reg->hccr, HCCRX_REL_RISC_PAUSE);
+-	RD_REG_DWORD(&reg->hccr);	/* PCI Posting. */
+-
+ 	return buf;
+ }
+ 
+@@ -690,10 +664,6 @@ qla24xx_write_nvram_data(scsi_qla_host_t
+ 
+ 	ret = QLA_SUCCESS;
+ 
+-	/* Pause RISC. */
+-	WRT_REG_DWORD(&reg->hccr, HCCRX_SET_RISC_PAUSE);
+-	RD_REG_DWORD(&reg->hccr);		/* PCI Posting. */
+-
+ 	/* Enable flash write. */
+ 	WRT_REG_DWORD(&reg->ctrl_status,
+ 	    RD_REG_DWORD(&reg->ctrl_status) | CSRX_FLASH_ENABLE);
+@@ -728,9 +698,5 @@ qla24xx_write_nvram_data(scsi_qla_host_t
+ 	    RD_REG_DWORD(&reg->ctrl_status) & ~CSRX_FLASH_ENABLE);
+ 	RD_REG_DWORD(&reg->ctrl_status);	/* PCI Posting. */
+ 
+-	/* Release RISC pause. */
+-	WRT_REG_DWORD(&reg->hccr, HCCRX_REL_RISC_PAUSE);
+-	RD_REG_DWORD(&reg->hccr);		/* PCI Posting. */
+-
+ 	return ret;
+ }
 
 -- 
 Andrew Vasquez
