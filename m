@@ -1,31 +1,39 @@
-From: Dave Jiang <djiang@mvista.com>
-Subject: Adaptec DPT call schedule_timeout with irq off
-Date: Fri, 26 Aug 2005 17:45:28 -0700
-Message-ID: <430FB7A8.8020105@mvista.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: regression w/ qla2300 - oopses..
+Date: Fri, 26 Aug 2005 18:17:46 -0700
+Message-ID: <20050827011746.GT22320@plap.qlogic.org>
+References: <20050826212934.GO22165@mea-ext.zmailer.org> <1125092648.5079.110.camel@mulgrave> <20050826145239.6032a509.akpm@osdl.org> <1125094436.5079.122.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([12.44.186.158]:2811 "EHLO
-	av.mvista.com") by vger.kernel.org with ESMTP id S965183AbVH0Apb
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Aug 2005 20:45:31 -0400
-Received: from [10.50.1.77] (av [127.0.0.1])
-	by av.mvista.com (8.9.3/8.9.3) with ESMTP id RAA10656
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Aug 2005 17:45:30 -0700
+Received: from pat.qlogic.com ([198.70.193.2]:51259 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S965189AbVH0BRv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Aug 2005 21:17:51 -0400
+Content-Disposition: inline
+In-Reply-To: <1125094436.5079.122.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, matti.aarnio@zmailer.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, Greg KH <greg@kroah.com>
 
-I noticed that in the Adaptec DPT driver, drivers/scsi/dpt_i2o.c in 
-funciton adapt_i2o_post_wait() around line 1161ish. spin_lock_irqsave() 
-is called. However then spin_unlock() is called 2 lines later and 
-leaving IRQ disabled. Then a little bit later, schedule_timeout() is 
-called with IRQ off. Isn't that bad? Why was irq left off earlier 
-instead of doing spin_unlock_irqrestore()? Am I missing something.....
+On Fri, 26 Aug 2005, James Bottomley wrote:
 
-Please cc me on replies. Thank you!
+> On Fri, 2005-08-26 at 14:52 -0700, Andrew Morton wrote:
+> > Is there not some nasty little hack we can do to make the crash go away in
+> > the interim?
+> 
+> Well, it's nasty.  The problem is that klist_next() refers to the
+> previous element to get the next one.  However, this previous element
+> has just been removed and freed.  We could try to open code the
+> necessary gets and puts in next_device().
+> 
+> Could someone check the attached, I think it's the correct open coding?
 
--- 
-Dave
+Hmm, basic loading and unloading tests appear to be fine with the
+patch.  I'll try to allocate some additional boxes for weekend runs.
 
+Seems minimal, hopefully it will make it into 2.6.13.
+
+--
+av
