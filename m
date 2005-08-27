@@ -1,44 +1,56 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 3/16]  qla2xxx: Correct ISP24xx soft-reset handling.
-Date: Fri, 26 Aug 2005 21:26:21 -0500
-Message-ID: <1125109581.5079.160.camel@mulgrave>
-References: <20050827020750.27275.19733.sendpatchset@plap.qlogic.com>
-	 <20050827020820.27275.23899.sendpatchset@plap.qlogic.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: error processing + rw 6 byte fix
+Date: Fri, 26 Aug 2005 23:26:43 -0400
+Message-ID: <430FDD73.6050200@pobox.com>
+References: <430994BC.4060102@torque.net> <20050823071338.GA11233@suse.de> <430B1799.1060800@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------090904010706020204080405"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:28651 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1030274AbVH0C0f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Aug 2005 22:26:35 -0400
-In-Reply-To: <20050827020820.27275.23899.sendpatchset@plap.qlogic.com>
+Received: from mail.dvmed.net ([216.237.124.58]:46764 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030287AbVH0D0w (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Aug 2005 23:26:52 -0400
+In-Reply-To: <430B1799.1060800@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: dougg@torque.net
+Cc: Jens Axboe <axboe@suse.de>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, 2005-08-26 at 19:08 -0700, Andrew Vasquez wrote:
->  		WRT_REG_DWORD(&reg->ctrl_status,
->  		    CSRX_ISP_SOFT_RESET|CSRX_DMA_SHUTDOWN|MWB_4096_BYTES);
-> -		RD_REG_DWORD(&reg->ctrl_status);
-> +		/*
-> +		 * It is necessary to delay here since the card doesn't respond
-> +		 * to PCI reads during a reset. On some architectures this will
-> +		 * result in an MCA.
-> +		*/
-> +		udelay(100);
+This is a multi-part message in MIME format.
+--------------090904010706020204080405
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Removing the read introduces a potential write posting bug, doesn't?
-And again:
+Does the attached look OK to everybody?
+
+	Jeff
 
 
-> @@ -589,10 +589,14 @@ qla24xx_reset_risc(scsi_qla_host_t *ha)
->  
->         WRT_REG_DWORD(&reg->ctrl_status,
->             CSRX_ISP_SOFT_RESET|CSRX_DMA_SHUTDOWN|MWB_4096_BYTES);
-> -       RD_REG_DWORD(&reg->ctrl_status);
-
-James
 
 
+--------------090904010706020204080405
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -581,6 +581,12 @@ static unsigned int ata_scsi_rw_xlat(str
+ 
+ 	if (scsicmd[0] == READ_6 || scsicmd[0] == WRITE_6) {
+ 		qc->nsect = tf->nsect = scsicmd[4];
++		if (!qc->nsect) {
++			qc->nsect = 256;
++			if (lba48)
++				tf->hob_nsect = 1;
++		}
++
+ 		tf->lbal = scsicmd[3];
+ 		tf->lbam = scsicmd[2];
+ 		tf->lbah = scsicmd[1] & 0x1f; /* mask out reserved bits */
+
+--------------090904010706020204080405--
