@@ -1,50 +1,36 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] libata: error processing + rw 6 byte fix
-Date: Sat, 27 Aug 2005 09:17:33 +0200
-Message-ID: <20050827071729.GL4018@suse.de>
-References: <430994BC.4060102@torque.net> <20050823071338.GA11233@suse.de> <430B1799.1060800@torque.net> <430FDD73.6050200@pobox.com> <430FF537.7010705@torque.net>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] minimal SAS transport class
+Date: Sat, 27 Aug 2005 09:35:48 +0200
+Message-ID: <431017D4.9040305@s5r6.in-berlin.de>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A4B@xbl3.ma.emulex.com> <430B5CDB.9070204@s5r6.in-berlin.de> <430BB91F.7000406@vger.kernel.org> <20050824091230.GB26447@infradead.org> <430F398A.30200@adaptec.com> <430F6C56.1090801@pobox.com> <430F710E.7020206@adaptec.com> <430FC7B2.7080700@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <430FF537.7010705@torque.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:45239 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1030330AbVH0HgI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Aug 2005 03:36:08 -0400
+In-Reply-To: <430FC7B2.7080700@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, Luben Tuikov <luben_tuikov@adaptec.com>, Christoph Hellwig <hch@infradead.org>
 
-On Sat, Aug 27 2005, Douglas Gilbert wrote:
-> Jeff Garzik wrote:
-> > Does the attached look OK to everybody?
-> > 
-> 
-> Jeff,
-> Yes.
-> 
-> And after an exchange with Jens, it would probably be
-> safer to map transfer_length=0 for READ_10 and READ_16
-> (as well as WRITE_10 and WRITE_16) to a nop on the ATA
-> side. Otherwise an ATA disk may attempt to transfer 2**16
-> sectors. [Only READ_6 and WRITE_6 have the quirky "0 means
-> 256" definition, in the larger commands "0 means 0".]
+Jeff Garzik wrote:
+> An in-kernel C pointer, to a SCSI target device, is 
+> not sufficient in all cases to address a target.  This plays out most 
+> often in userland interfaces such as ioctls.
 
-Yes, that part needs to be added as well. Jeff, the below looks good for
-the READ/WRITE_6 case.
+The C pointer is all the interface between core and low-level needs.
 
-> >  	if (scsicmd[0] == READ_6 || scsicmd[0] == WRITE_6) {
-> >  		qc->nsect = tf->nsect = scsicmd[4];
-> > +		if (!qc->nsect) {
-> > +			qc->nsect = 256;
-> > +			if (lba48)
-> > +				tf->hob_nsect = 1;
-> > +		}
-> > +
-> >  		tf->lbal = scsicmd[3];
-> >  		tf->lbam = scsicmd[2];
-> >  		tf->lbah = scsicmd[1] & 0x1f; /* mask out reserved bits */
-> 
-> 
+All other means of addressing (IDs, labels, ... of which HCIL is only 
+one kind) are only meaningful to userspace. The labels may be 
+_generated_ at any level (low, core, high) depending on their context, 
+but they are _used_ only in userspace->kernel interfaces.
 
+The core provides the map of devices<->labels.
 -- 
-Jens Axboe
-
+Stefan Richter
+-=====-=-=-= =--- ==-==
+http://arcgraph.de/sr/
