@@ -1,79 +1,70 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] minimal SAS transport class
-Date: Fri, 26 Aug 2005 21:53:54 -0400
-Message-ID: <430FC7B2.7080700@pobox.com>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A4B@xbl3.ma.emulex.com> <430B5CDB.9070204@s5r6.in-berlin.de> <430BB91F.7000406@vger.kernel.org> <20050824091230.GB26447@infradead.org> <430F398A.30200@adaptec.com> <430F6C56.1090801@pobox.com> <430F710E.7020206@adaptec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 5/16]  qla2xxx: Correct domain/area exclusion logic.
+Date: Fri, 26 Aug 2005 19:08:40 -0700 (PDT)
+Message-ID: <20050827020840.27275.61783.sendpatchset@plap.qlogic.com>
+References: <20050827020750.27275.19733.sendpatchset@plap.qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:14508 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965202AbVH0ByA (ORCPT
+Received: from pat.qlogic.com ([198.70.193.2]:51047 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751613AbVH0CIl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Aug 2005 21:54:00 -0400
-In-Reply-To: <430F710E.7020206@adaptec.com>
+	Fri, 26 Aug 2005 22:08:41 -0400
+In-Reply-To: <20050827020750.27275.19733.sendpatchset@plap.qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Stefan Richter <stefanr@s5r6.in-berlin.de>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Luben Tuikov wrote:
-> On 08/26/05 15:24, Jeff Garzik wrote:
-> 
->>Luben Tuikov wrote:
->>
->>
->>>Even simpler: the transport layer, calls SCSI Core, saying: "Hey here is
->>>a pointer to struct scsi_domain_device.  If you want, you an send REPORT
->>>LUNS and other things to it."
->>
->>
->>For the SG_IO ioctl, /dev/sg and request_queue usage, SCSI core must map 
->>an address (currently HCIL) into a scsi_domain_device pointer.  These 
-> 
-> 
-> The request queue is associated with the LU, not the scsi_domain_device.
-> When SCSI Core discovers the LU, it sets up the request queue for it,
-> etc.  Again this is the role of SCSI Core, not messing up with transport
-> specific stuff.
-> 
-> 
->>upper layer kernel elements rely on this "SCSI address", and rely on the 
->>fact that SCSI core can route from a block device straight to a SCSI 
->>LLD, using nothing more than this "SCSI address."
-> 
-> 
-> I don't get this.
+Correct domain/area exclusion logic.
 
-More basically...  An in-kernel C pointer, to a SCSI target device, is 
-not sufficient in all cases to address a target.  This plays out most 
-often in userland interfaces such as ioctls.
+In an FL topology, limit port recognition to those devices
+not within the same area and domain of the ISP.  The
+firmware will recogonize such devices during local-loop
+discovery.
 
+Some devices may respond to a PLOGI before they have
+completed their fabric login or they may not be a public
+device. In this case they will report:
 
->>That is the heart of the routing/addressing that the SCSI core must perform.
-> 
-> 
-> Disagree: now: scsi_device <--> request_queue, then: struct LU <--> request_queue.
-> 
-> The LU points to the domain_device (as its parent). The domain_device
-> has a void *lldd_dev in it.  
+        domain == 00
+        area == 00
+        alpa == <XX>
 
-The current SCSI code largely already has this stuff.
+which is valid. Exclude such devices from local loop
+discovery.
 
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+---
 
->>Right now the addressing is hardcoded to HCIL.  But that can be 
->>changed...  One proposal was to use (host,string) identifiers.
-> 
-> 
-> Who? Who is proposing this? I never saw an email to SCSI Core about
-> this proposal?  Is there any more information about this proposal
-> and what is the justification of it?  Any specs and docs?
+ drivers/scsi/qla2xxx/qla_init.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
 
-No specs, just a comment from IRC.
+051e6f0a69a8a9b3012dfe568eb11d74362df53c
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1904,7 +1904,8 @@ qla2x00_configure_local_loop(scsi_qla_ho
+ 			continue;
+ 
+ 		/* Bypass if not same domain and area of adapter. */
+-		if (area != ha->d_id.b.area || domain != ha->d_id.b.domain)
++		if (area && domain &&
++		    (area != ha->d_id.b.area || domain != ha->d_id.b.domain))
+ 			continue;
+ 
+ 		/* Bypass invalid local loop ID. */
+@@ -2404,6 +2405,12 @@ qla2x00_find_all_fabric_devs(scsi_qla_ho
+ 		if (new_fcport->d_id.b24 == ha->d_id.b24)
+ 			continue;
+ 
++		/* Bypass if same domain and area of adapter. */
++		if (((new_fcport->d_id.b24 & 0xffff00) ==
++		    (ha->d_id.b24 & 0xffff00)) && ha->current_topology ==
++			ISP_CFG_FL)
++			    continue;
++
+ 		/* Bypass reserved domain fields. */
+ 		if ((new_fcport->d_id.b.domain & 0xf0) == 0xf0)
+ 			continue;
 
-(host,string) could succeed in transporting both HCIL and non-HCIL 
-target identifiers.
-
-	Jeff
-
-
+-- 
+Andrew Vasquez
