@@ -1,36 +1,72 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] minimal SAS transport class
-Date: Sat, 27 Aug 2005 09:35:48 +0200
-Message-ID: <431017D4.9040305@s5r6.in-berlin.de>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A4B@xbl3.ma.emulex.com> <430B5CDB.9070204@s5r6.in-berlin.de> <430BB91F.7000406@vger.kernel.org> <20050824091230.GB26447@infradead.org> <430F398A.30200@adaptec.com> <430F6C56.1090801@pobox.com> <430F710E.7020206@adaptec.com> <430FC7B2.7080700@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: error processing + rw 6 byte fix
+Date: Sat, 27 Aug 2005 04:20:54 -0400
+Message-ID: <43102266.7040001@pobox.com>
+References: <430994BC.4060102@torque.net> <20050823071338.GA11233@suse.de> <430B1799.1060800@torque.net> <430FDD73.6050200@pobox.com> <430FF537.7010705@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------020604080703050800010205"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:45239 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1030330AbVH0HgI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Aug 2005 03:36:08 -0400
-In-Reply-To: <430FC7B2.7080700@pobox.com>
+Received: from mail.dvmed.net ([216.237.124.58]:41645 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030342AbVH0IVE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 27 Aug 2005 04:21:04 -0400
+In-Reply-To: <430FF537.7010705@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Jeff Garzik <jgarzik@pobox.com>, Luben Tuikov <luben_tuikov@adaptec.com>, Christoph Hellwig <hch@infradead.org>
+To: dougg@torque.net, Jens Axboe <axboe@suse.de>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Jeff Garzik wrote:
-> An in-kernel C pointer, to a SCSI target device, is 
-> not sufficient in all cases to address a target.  This plays out most 
-> often in userland interfaces such as ioctls.
+This is a multi-part message in MIME format.
+--------------020604080703050800010205
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The C pointer is all the interface between core and low-level needs.
+Here is the patch I just checked in.
 
-All other means of addressing (IDs, labels, ... of which HCIL is only 
-one kind) are only meaningful to userspace. The labels may be 
-_generated_ at any level (low, core, high) depending on their context, 
-but they are _used_ only in userspace->kernel interfaces.
+	Jeff
 
-The core provides the map of devices<->labels.
--- 
-Stefan Richter
--=====-=-=-= =--- ==-==
-http://arcgraph.de/sr/
+
+
+
+--------------020604080703050800010205
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -630,11 +630,19 @@ static unsigned int ata_scsi_rw_xlat(str
+ 		tf->lbah = scsicmd[3];
+ 
+ 		VPRINTK("ten-byte command\n");
++		if (qc->nsect == 0) /* we don't support length==0 cmds */
++			return 1;
+ 		return 0;
+ 	}
+ 
+ 	if (scsicmd[0] == READ_6 || scsicmd[0] == WRITE_6) {
+ 		qc->nsect = tf->nsect = scsicmd[4];
++		if (!qc->nsect) {
++			qc->nsect = 256;
++			if (lba48)
++				tf->hob_nsect = 1;
++		}
++
+ 		tf->lbal = scsicmd[3];
+ 		tf->lbam = scsicmd[2];
+ 		tf->lbah = scsicmd[1] & 0x1f; /* mask out reserved bits */
+@@ -674,6 +682,8 @@ static unsigned int ata_scsi_rw_xlat(str
+ 		tf->lbah = scsicmd[7];
+ 
+ 		VPRINTK("sixteen-byte command\n");
++		if (qc->nsect == 0) /* we don't support length==0 cmds */
++			return 1;
+ 		return 0;
+ 	}
+ 
+
+--------------020604080703050800010205--
