@@ -1,89 +1,48 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] attribute container final klist fixes
-Date: Sun, 28 Aug 2005 09:13:17 -0500
-Message-ID: <1125238397.5048.10.camel@mulgrave>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: libata: clustering on or off?
+Date: Sun, 28 Aug 2005 16:20:19 +0200
+Message-ID: <20050828142018.GS4018@suse.de>
+References: <20050828094218.GA29145@havoc.gtf.org> <1125224541.3219.13.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:2955 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751169AbVH1ONU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 28 Aug 2005 10:13:20 -0400
-Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id j7SEDJA25066
-	for <linux-scsi@vger.kernel.org>; Sun, 28 Aug 2005 10:13:19 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1125224541.3219.13.camel@laptopd505.fenrus.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Since the attribute container deletes from a klist while it's walking
-it, it is vulnerable to the problem (and fix) here:
+On Sun, Aug 28 2005, Arjan van de Ven wrote:
+> On Sun, 2005-08-28 at 05:42 -0400, Jeff Garzik wrote:
+> > The constant ATA_SHT_USE_CLUSTERING in include/linux/libata.h controls
+> > the use of SCSI layer's use_clustering feature, for a great many libata
+> > drivers.
+> > 
+> > The current setup has clustering disabled, which in theory causes the
+> > block layer to do less work, at the expense of a greater number of
+> > scatter/gather table entries used.
+> > 
+> > Any opinions WRT turning on clustering for libata?
+> 
+> in 2.4 clustering was expensive due to a large number of checks that
+> were done (basically the number of fragments got recounted a gazilion
+> times). In 2.6 Jens fixed that afaik to make it basically free...
+> at which point it's a win always.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112485448830217
+Yeah, it wont cost any extra cycles, so there's no point in keeping it
+turned off for that reason.
 
-The attached fixes this (but won't compile without the above).
+> Imo clustering on the driver level should announce driver capabilities.
+> If clustering for some arch/kernel makes it slower, that should be
+> decided at a midlayer level and not in each driver; eg the midlayer
+> would chose to ignore the drivers capabilities.
+> So .. my opinion would be that libata should announce the capability (it
+> seems the code/hw can do it). 
 
-It also fixes the logical reversal in the traversal loop which meant
-that we were never actually traversing the loop to hit this bug in the
-first place.
+Agree, we should just remove the ability to control clustering, as it
+really overlaps with the segment settings anyways.
 
-James
-
-diff --git a/drivers/base/attribute_container.c b/drivers/base/attribute_container.c
---- a/drivers/base/attribute_container.c
-+++ b/drivers/base/attribute_container.c
-@@ -27,6 +27,21 @@ struct internal_container {
- 	struct class_device classdev;
- };
- 
-+static void internal_container_klist_get(struct klist_node *n)
-+{
-+	struct internal_container *ic =
-+		container_of(n, struct internal_container, node);
-+	class_device_get(&ic->classdev);
-+}
-+
-+static void internal_container_klist_put(struct klist_node *n)
-+{
-+	struct internal_container *ic =
-+		container_of(n, struct internal_container, node);
-+	class_device_put(&ic->classdev);
-+}
-+
-+
- /**
-  * attribute_container_classdev_to_container - given a classdev, return the container
-  *
-@@ -57,7 +72,8 @@ int
- attribute_container_register(struct attribute_container *cont)
- {
- 	INIT_LIST_HEAD(&cont->node);
--	klist_init(&cont->containers);
-+	klist_init(&cont->containers,internal_container_klist_get,
-+		   internal_container_klist_put);
- 		
- 	down(&attribute_container_mutex);
- 	list_add_tail(&cont->node, &attribute_container_list);
-@@ -163,8 +179,8 @@ attribute_container_add_device(struct de
- #define klist_for_each_entry(pos, head, member, iter) \
- 	for (klist_iter_init(head, iter); (pos = ({ \
- 		struct klist_node *n = klist_next(iter); \
--		n ? ({ klist_iter_exit(iter) ; NULL; }) : \
--			container_of(n, typeof(*pos), member);\
-+		n ? container_of(n, typeof(*pos), member) : \
-+			({ klist_iter_exit(iter) ; NULL; }); \
- 	}) ) != NULL; )
- 			
- 
-@@ -206,7 +222,7 @@ attribute_container_remove_device(struct
- 		klist_for_each_entry(ic, &cont->containers, node, &iter) {
- 			if (dev != ic->classdev.dev)
- 				continue;
--			klist_remove(&ic->node);
-+			klist_del(&ic->node);
- 			if (fn)
- 				fn(cont, dev, &ic->classdev);
- 			else {
-
+-- 
+Jens Axboe
 
