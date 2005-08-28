@@ -1,42 +1,59 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: libata: clustering on or off?
-Date: Sun, 28 Aug 2005 12:22:21 +0200
-Message-ID: <1125224541.3219.13.camel@laptopd505.fenrus.org>
-References: <20050828094218.GA29145@havoc.gtf.org>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: Fw: [Bugme-new] [Bug 5117] New: Panic when accessing scsi-tapedrives
+ with 4G-remap
+Date: Sun, 28 Aug 2005 13:40:04 +0300 (EEST)
+Message-ID: <Pine.LNX.4.61.0508281333280.13411@kai.makisara.local>
+References: <20050825172417.217d56af.akpm@osdl.org>
+ <Pine.LNX.4.61.0508261930510.2960@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:49795 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1750963AbVH1KWh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 28 Aug 2005 06:22:37 -0400
-In-Reply-To: <20050828094218.GA29145@havoc.gtf.org>
+Received: from fep01-0.kolumbus.fi ([193.229.0.41]:26522 "EHLO
+	fep01-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S1751128AbVH1KfU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 28 Aug 2005 06:35:20 -0400
+In-Reply-To: <Pine.LNX.4.61.0508261930510.2960@kai.makisara.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: axboe@suse.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: osst@riede.org, JF@vanbaarlen.demon.nl, linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@kernel-bugs.osdl.org>
 
-On Sun, 2005-08-28 at 05:42 -0400, Jeff Garzik wrote:
-> The constant ATA_SHT_USE_CLUSTERING in include/linux/libata.h controls
-> the use of SCSI layer's use_clustering feature, for a great many libata
-> drivers.
+On Fri, 26 Aug 2005, Kai Makisara wrote:
+
+> On Thu, 25 Aug 2005, Andrew Morton wrote:
 > 
-> The current setup has clustering disabled, which in theory causes the
-> block layer to do less work, at the expense of a greater number of
-> scatter/gather table entries used.
+> > 
+> > 
+> > Begin forwarded message:
+> > 
+> > Date: Tue, 23 Aug 2005 12:53:38 -0700
+> > From: bugme-daemon@kernel-bugs.osdl.org
+> > To: bugme-new@lists.osdl.org
+> > Subject: [Bugme-new] [Bug 5117] New: Panic when accessing scsi-tapedrives with 4G-remap
+> > 
+> > 
+> >  http://bugzilla.kernel.org/show_bug.cgi?id=5117
+> > 
+> >             Summary: Panic when accessing scsi-tapedrives with 4G-remap
+> >      Kernel Version: 2.6.12.5
+> > 
+> > 
+> > Could this purely be a highmem problem?   Is the zero-copy DMA feature of
+> > st.c known to work OK with x86 highmem?
 > 
-> Any opinions WRT turning on clustering for libata?
+> It is _not_ known _not_ to work ;-) I.e., I have received neither any 
+> success nor any failure reports. I have not tested it because I don't have 
+> any machine with enough memory (and I have not hacked a kernel to use 
+> highmem with 512 MB of memory). I hope someone seeing this thread and 
+> using highmem with tape can comment on this subject.
+> 
+OK. I booted my test i386 machine with highmem=384m and did some tests. I 
+also added a counter to st.c to count the highmem pages used for zero-copy 
+DMA. I could not get dd to use highmem but with tar that succeeded. No 
+extra messages were found in syslog during these tests.
 
-in 2.4 clustering was expensive due to a large number of checks that
-were done (basically the number of fragments got recounted a gazilion
-times). In 2.6 Jens fixed that afaik to make it basically free...
-at which point it's a win always.
+BUT, at the same time I remembered that the system in the Bugzilla report 
+was Athlon64 running FC3 x86_64. The x86_64 kernel does not have highmem.
 
-Imo clustering on the driver level should announce driver capabilities.
-If clustering for some arch/kernel makes it slower, that should be
-decided at a midlayer level and not in each driver; eg the midlayer
-would chose to ignore the drivers capabilities.
-So .. my opinion would be that libata should announce the capability (it
-seems the code/hw can do it). 
-
+-- 
+Kai
