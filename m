@@ -1,133 +1,150 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: [PATCH] Allow both megaraid drivers to be built
-Date: Mon, 29 Aug 2005 15:50:19 +0100
-Message-ID: <431320AB.7010303@gentoo.org>
+From: Jack Hammer <jack_hammer@adaptec.com>
+Subject: ips init / kdump
+Date: Mon, 29 Aug 2005 10:44:34 -0400
+Message-ID: <43131F52.2040307@adaptec.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090600010608080309010608"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mta07-winn.ispmail.ntl.com ([81.103.221.47]:60194 "EHLO
-	mta07-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
-	id S1750941AbVH2Oqw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Aug 2005 10:46:52 -0400
+Received: from magic.adaptec.com ([216.52.22.17]:52628 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1750886AbVH2Ooh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Aug 2005 10:44:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, sreenib@lsil.com, sju@lsil.com
+To: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------090600010608080309010608
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+This patch, applied to ips version 7.12.02 in the 2.6.13 kernel, fixes an
+initialization bug found with kdump.
 
-Currently, the two megaraid drivers are exclusive - if you build the "new 
-generation" megaraid driver then you aren't able to build the old one.
+If I/O is active on the adapter, and an unexpected interrupt is pending 
+during initialization, the driver blows it's brains out. Since the driver
+didn't initiate the I/O, the data in it's internal tables will contain NULL
+pointers.
 
-I've been investigating this as this is not ideal: the old driver supports a 
-lot of common hardware which the new driver does not, and vice-versa.
+When this condition is detected, a "flush cache and reset" is performed. 
+The flush cache allows any pending "lazy writes" that the adapter is 
+processing to complete ( a "must have" for a RAID adapter ) and the reset
+puts the adapter back into a known, good state.
 
-The two drivers compile together ok but will clash at runtime, due to the same 
-name in the pci_driver struct. However I presume that the main reason that 
-these drivers exclude each other is because there is some hardware support 
-overlap - the new driver supports some hardware which would also be claimed by 
-the old, not a sensible thing to do if both can be built and run in parallel.
 
-The hardware overlap isn't straightforward - the newgen driver supports mostly 
-a specific set of pid/vid/sspid/ssvid whereas the legacy one supports pid/vid 
-pairs and accepts _any_ subsystem id's.
+Signed-off-by: Jack Hammer <jack_hammer@adaptec.com>
 
-For example, the legacy driver will claim any device with vendor=101E 
-product=1960. The newgen driver also lists those ID numbers but only against 5 
-different subsystem id pairs, it won't claim "the whole lot".
 
-I have repeatedly tried to contact LSI Logic to find out more about this 
-overlap. In the above example, are there devices which have the ID's 
-vendor=101E product=1960 and a subsystem _not_ listed in the newgen driver? 
-These devices would be claimed by the old driver and not the new - is there a 
-reason for this - would they not work with the newgen driver? Do they even 
-exist at all?
 
-I have recieved no real response from LSIL so I have produced this patch, 
-which has been included on Gentoo's latest release media where both drivers 
-have been built alongside each other and we have not recieved any negative 
-reports about it. (hopefully those legacy users are over the moon because they 
-can install gentoo again!)
-
-This patch makes the assumption that in the above example there are no 
-101E/1960 adapters anywhere in the world that have subsystem ID's not listed 
-in the newgen driver, and the same for the other device support overlaps. This 
-results in the newgen driver being favoured (which apparently performs much 
-better than the legacy on the devices which are supported by both) when both 
-are built together -- however the device support in the old driver will be 
-*unchanged* if you do not build the new one alongside it.
-
-I know that this solution is not ideal, but as LSIL are being uncooperative, I 
-think this is the best compromise we can do for now. Please apply.
-
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
-
---------------090600010608080309010608
-Content-Type: text/x-patch;
- name="4351_megaraid-compatibility.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="4351_megaraid-compatibility.patch"
-
-diff -urNp linux-2.6.12/drivers/scsi-orig/megaraid/Kconfig.megaraid linux-2.6.12/drivers/scsi/megaraid/Kconfig.megaraid
---- linux-2.6.12/drivers/scsi-orig/megaraid/Kconfig.megaraid	2005-06-29 16:19:55.000000000 +0100
-+++ linux-2.6.12/drivers/scsi/megaraid/Kconfig.megaraid	2005-06-29 16:22:12.000000000 +0100
-@@ -64,7 +64,6 @@ config MEGARAID_MAILBOX
- 	To compile this driver as a module, choose M here: the
- 	module will be called megaraid_mbox
+--- a/drivers/scsi/ips.c	Mon Aug  8 12:22:19 2005
++++ b/drivers/scsi/ips.c	Mon Aug  8 12:22:08 2005
+@@ -358,6 +358,9 @@
+ static int ips_init_phase1(struct pci_dev *pci_dev, int *indexPtr);
+ static int ips_register_scsi(int index);
  
--if MEGARAID_NEWGEN=n
- config MEGARAID_LEGACY
- 	tristate "LSI Logic Legacy MegaRAID Driver"
- 	depends on PCI && SCSI
-@@ -75,4 +74,4 @@ config MEGARAID_LEGACY
- 
- 	To compile this driver as a module, choose M here: the
- 	module will be called megaraid
--endif
++static int  ips_poll_for_flush_complete(ips_ha_t * ha);
++static void ips_flush_and_reset(ips_ha_t *ha);
 +
-diff -urNp linux-2.6.12/drivers/scsi-orig/megaraid.c linux-2.6.12/drivers/scsi/megaraid.c
---- linux-2.6.12/drivers/scsi-orig/megaraid.c	2005-06-29 16:19:55.000000000 +0100
-+++ linux-2.6.12/drivers/scsi/megaraid.c	2005-06-30 13:07:41.000000000 +0100
-@@ -5033,28 +5033,34 @@ megaraid_shutdown(struct device *dev)
+ /*
+  * global variables
+  */
+@@ -4807,6 +4810,9 @@
+ 	uint32_t bits;
+ 
+ 	METHOD_TRACE("ips_is_init_morpheus", 1);
++   
++	if (ips_isintr_morpheus(ha)) 
++	    ips_flush_and_reset(ha);
+ 
+ 	post = readl(ha->mem_ptr + IPS_REG_I960_MSG0);
+ 	bits = readl(ha->mem_ptr + IPS_REG_I2O_HIR);
+@@ -4818,6 +4824,93 @@
+ 	else
+ 		return (1);
  }
++
++/****************************************************************************/
++/*                                                                          */
++/* Routine Name: ips_flush_and_reset                                        */
++/*                                                                          */
++/* Routine Description:                                                     */
++/*                                                                          */
++/*   Perform cleanup ( FLUSH and RESET ) when the adapter is in an unknown  */
++/*   state ( was trying to INIT and an interrupt was already pending ) ...  */
++/*                                                                          */
++/****************************************************************************/
++static void 
++ips_flush_and_reset(ips_ha_t *ha)
++{
++	ips_scb_t *scb;
++	int  ret;
++ 	int  time;
++	int  done;
++	dma_addr_t command_dma;
++
++	/* Create a usuable SCB */
++	scb = pci_alloc_consistent(ha->pcidev, sizeof(ips_scb_t), &command_dma);
++	if (scb) {
++	    memset(scb, 0, sizeof(ips_scb_t));
++	    ips_init_scb(ha, scb);
++	    scb->scb_busaddr = command_dma;
++
++	    scb->timeout = ips_cmd_timeout;
++	    scb->cdb[0] = IPS_CMD_FLUSH;
++
++	    scb->cmd.flush_cache.op_code = IPS_CMD_FLUSH;
++	    scb->cmd.flush_cache.command_id = IPS_MAX_CMDS;   /* Use an ID that would otherwise not exist */
++	    scb->cmd.flush_cache.state = IPS_NORM_STATE;
++	    scb->cmd.flush_cache.reserved = 0;
++	    scb->cmd.flush_cache.reserved2 = 0;
++	    scb->cmd.flush_cache.reserved3 = 0;
++	    scb->cmd.flush_cache.reserved4 = 0;
++
++	    ret = ips_send_cmd(ha, scb);                      /* Send the Flush Command */
++
++	    if (ret == IPS_SUCCESS) {
++	        time = 60 * IPS_ONE_SEC;	              /* Max Wait time is 60 seconds */
++	        done = 0;
++	            
++	        while ((time > 0) && (!done)) {
++	           done = ips_poll_for_flush_complete(ha); 	   
++	           /* This may look evil, but it's only done during extremely rare start-up conditions ! */
++	           udelay(1000);
++	           time--;
++	        }
++        }
++	}
++
++	/* Now RESET and INIT the adapter */
++	(*ha->func.reset) (ha);
++
++	pci_free_consistent(ha->pcidev, sizeof(ips_scb_t), scb, command_dma);
++	return;
++}
++
++/****************************************************************************/
++/*                                                                          */
++/* Routine Name: ips_poll_for_flush_complete                                */
++/*                                                                          */
++/* Routine Description:                                                     */
++/*                                                                          */
++/*   Poll for the Flush Command issued by ips_flush_and_reset() to complete */
++/*   All other responses are just taken off the queue and ignored           */
++/*                                                                          */
++/****************************************************************************/
++static int
++ips_poll_for_flush_complete(ips_ha_t * ha)
++{
++	IPS_STATUS cstatus;
++    
++	while (TRUE) {
++	    cstatus.value = (*ha->func.statupd) (ha);
++
++	    if (cstatus.value == 0xffffffff)      /* If No Interrupt to process */
++			break;
++            
++	    /* Success is when we see the Flush Command ID */
++	    if (cstatus.fields.command_id == IPS_MAX_CMDS ) 
++	        return 1;
++	 }	
++
++	return 0;
  
- static struct pci_device_id megaraid_pci_tbl[] = {
-+#ifndef CONFIG_MEGARAID_NEWGEN
- 	{PCI_VENDOR_ID_DELL, PCI_DEVICE_ID_DISCOVERY,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{PCI_VENDOR_ID_DELL, PCI_DEVICE_ID_PERC4_DI,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, BOARD_64BIT},
- 	{PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_PERC4_QC_VERDE,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, BOARD_64BIT},
-+#endif
- 	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID2,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+#ifndef CONFIG_MEGARAID_NEWGEN
- 	{PCI_VENDOR_ID_AMI, PCI_DEVICE_ID_AMI_MEGARAID3,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+#endif
- 	{PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_AMI_MEGARAID3,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+#ifndef CONFIG_MEGARAID_NEWGEN
- 	{PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_AMI_MEGARAID3,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+#endif
- 	{0,}
- };
- MODULE_DEVICE_TABLE(pci, megaraid_pci_tbl);
- 
- static struct pci_driver megaraid_pci_driver = {
--	.name		= "megaraid",
-+	.name		= "megaraid_legacy",
- 	.id_table	= megaraid_pci_tbl,
- 	.probe		= megaraid_probe_one,
- 	.remove		= __devexit_p(megaraid_remove_one),
-
---------------090600010608080309010608--
+ /****************************************************************************/
+ /*                                                                          */
