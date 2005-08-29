@@ -1,64 +1,32 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH 3/16]  qla2xxx: Correct ISP24xx soft-reset handling.
-Date: Mon, 29 Aug 2005 09:04:42 -0700
-Message-ID: <20050829160442.GC11393@plap.qlogic.org>
-References: <20050827020750.27275.19733.sendpatchset@plap.qlogic.com> <20050827020820.27275.23899.sendpatchset@plap.qlogic.com> <1125109581.5079.160.camel@mulgrave>
+From: "'Christoph Hellwig'" <hch@lst.de>
+Subject: Re: [PATCH scsi-misc 2/2] megaraid_sas: LSI Logic MegaRAID SAS RAID D river
+Date: Mon, 29 Aug 2005 19:05:50 +0200
+Message-ID: <20050829170550.GA21128@lst.de>
+References: <0E3FA95632D6D047BA649F95DAB60E57060CD100@exa-atlanta>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:36238 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751080AbVH2QEv (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:21965 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S1750806AbVH2RGE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Aug 2005 12:04:51 -0400
+	Mon, 29 Aug 2005 13:06:04 -0400
 Content-Disposition: inline
-In-Reply-To: <1125109581.5079.160.camel@mulgrave>
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57060CD100@exa-atlanta>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, 'Christoph Hellwig' <hch@lst.de>, 'James Bottomley' <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>
 
-On Fri, 26 Aug 2005, James Bottomley wrote:
+Looks pretty good to me.  Small issues I've identified:
 
-> On Fri, 2005-08-26 at 19:08 -0700, Andrew Vasquez wrote:
-> >  		WRT_REG_DWORD(&reg->ctrl_status,
-> >  		    CSRX_ISP_SOFT_RESET|CSRX_DMA_SHUTDOWN|MWB_4096_BYTES);
-> > -		RD_REG_DWORD(&reg->ctrl_status);
-> > +		/*
-> > +		 * It is necessary to delay here since the card doesn't respond
-> > +		 * to PCI reads during a reset. On some architectures this will
-> > +		 * result in an MCA.
-> > +		*/
-> > +		udelay(100);
-> 
-> Removing the read introduces a potential write posting bug, doesn't?
+ - what do you need the hba_count attribute for?  This should be
+   implementable in userspace pretty easily by iterating of all
+   devices of the scsi_host class that are attached to the driver
+ - the ->queuecommand cleanup patch I sent you a awhile ago doesn't
+   seem to be applied
+ - there's quite a lot of slightly odd formating, it would be nice
+   if you could run the code through scripts/Lindent.
 
-Possibly, but that has been the case all software drivers have had to
-contend with after an ISP soft-reset:
+If you could sent out an unmangled patch (even as attachment or on
+LSI's ftp side) I'd like to take another, closer look.
 
-	...
-	/* Reset ISP chip. */
-	WRT_REG_WORD(&reg->ctrl_status, CSR_ISP_SOFT_RESET);
-
-	/* Wait for RISC to recover from reset. */
-	if (IS_QLA2100(ha) || IS_QLA2200(ha) || IS_QLA2300(ha)) {
-		/*
-		 * It is necessary to for a delay here since the
-		 * card doesn't respond to PCI reads during a
-		 * reset. On some architectures this will
-		 * result in an MCA.
-		 */
-		udelay(20);
-		...
-
-During the soft-reset, the ISP cannot respond to the MMIO read until
-completion.  On several platforms, the subsequent readl() without the
-delay would cause machine checks.
-
-Unfortunately, this has been a risk we've come to accept. We're still
-evaluating the possibility of using a config-space read as a means of
-flushing any posted writes -- since the RISC state-machines can handle
-the request while resetting.  I'll ping the hardware folks again, but
-in the interim, the udelay() will need to be present.
-
---
-Andrew Vasquez
