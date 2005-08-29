@@ -1,51 +1,68 @@
-From: Daniel Drake <dsd@gentoo.org>
-Subject: [PATCH] Allow both megaraid drivers to be built
-Date: Mon, 29 Aug 2005 18:30:23 +0100
-Message-ID: <4313462F.9030904@gentoo.org>
-References: <431320AB.7010303@gentoo.org> <20050829150209.GA5563@infradead.org>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [PATCH] minimal SAS transport class
+Date: Mon, 29 Aug 2005 13:31:18 -0400
+Message-ID: <43134666.1000103@adaptec.com>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A4B@xbl3.ma.emulex.com> <430B5CDB.9070204@s5r6.in-berlin.de> <430BB91F.7000406@vger.kernel.org> <20050824091230.GB26447@infradead.org> <430F398A.30200@adaptec.com> <20050829171629.GB7875@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mta07-winn.ispmail.ntl.com ([81.103.221.47]:63325 "EHLO
-	mta07-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
-	id S1751138AbVH2RYu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Aug 2005 13:24:50 -0400
-In-Reply-To: <20050829150209.GA5563@infradead.org>
+Received: from magic.adaptec.com ([216.52.22.17]:19922 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1751153AbVH2RbW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Aug 2005 13:31:22 -0400
+In-Reply-To: <20050829171629.GB7875@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, sreenib@lsil.com, sju@lsil.com
+Cc: linux-scsi@vger.kernel.org, Stefan Richter <stefanr@s5r6.in-berlin.de>
 
-Christoph Hellwig wrote:
-> ifdef on other drivers is bogus, please remove the pci ids completely
-> from the old driver.  It'd probably be a good idea to rename it to
-> megaraid_legacy aswell.  I've also asked the LSI Engineers whether they
-> could help identifying what code could be remove when only supporting
-> the two oldes chips but haven't gotten a reply yet.  I hope they'll
-> be able to answer when they're less busy.
+On 08/29/05 13:16, Christoph Hellwig wrote:
+> 
+> No need to do silly renaming, but yes, moving creating of scsi_target
 
-Thanks for the feedback. Here's a new patch.
+I'd do the "silly renaming".  I'd also create "struct scsi_domain_device",
+and do "scsi_register_domain_device()".  You know, clean slate...
 
+> structures to the transport does make sense.  It's kinda implicit
 
+There is *nothing* implicit in a Software Project Specification!
+Everything must be completely explicit.
 
-Rename megaraid to megaraid_legacy, changing the filenames, sysfs name, module 
-name, and the messages printed out via printk. I have left the procfs name as 
-"megaraid" as presumably userspace tools rely on this.
+> in the todo list I posted.  I also don't really see the point of
+> the embedded kobject.
 
-Remove hardware ID's from megaraid_legacy which overlap with the newgen 
-megaraid drivers.
+You will, once I post my code.
 
-Allow megaraid_legacy to be built alongside the newgen driver.
+Think,
+	- Hotplugging.
+	- More than one "owner" from above.
 
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
+That is, on a transport you can have a diverse set of
+devices.
 
+What if queuecommand() was *not* the only way to send a
+task to the device? ;-)
 
+> We actually already have a list in the scsi_target that chains of the
+> scsi_device, .devices in scsi_target and .same_target_siblings in scsi_device.
+> We just need to use it everywhere.
 
-As the patch is large (300K) I am not including it in this mail. You can get 
-it here:
+Yes, I've seen all this.  And I'm sorry to say, but it is *UGLY AS HELL!*
 
-	http://dev.gentoo.org/~dsd/megaraid_legacy.patch
+As I said: before implementing an object by a structure in a software
+project one has to ask themselves what that object is?  How will it play
+with the rest of the objects existsing or to be designed?  What are
+the dependencies and what is the dependency graph?  Etc.
 
-Thanks,
-Daniel
+First it starts with a white sheet of paper, pencil on one side
+and a spec on the other.
+ 
+> Yes. that's what I ment with my item (3) (sorry, I hate all this
+> techno-babble, simple language is much easier to understand normally)
+
+Ok, sorry, it's that software specificaion "tehcno-babble" thing talking
+through me again.
+
+	Luben
+
