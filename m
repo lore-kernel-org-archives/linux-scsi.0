@@ -1,52 +1,36 @@
-From: "Frank Borich" <Frank_Borich@us.xyratex.com>
-Subject: Possible bug in qla2xxx rev. 8.00.02
-Date: Mon, 29 Aug 2005 11:44:38 -0700
-Message-ID: <47F3C2BE74738E4683574107469DFA203B97D8@XYUSEX01.xyus.xyratex.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [RFC] SCSI EH document
+Date: Mon, 29 Aug 2005 14:50:35 -0400
+Message-ID: <431358FB.6050005@pobox.com>
+References: <20050826035326.GA13392@htj.dyndns.org> <430F8AE0.7080806@pobox.com> <4312D213.9000402@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xyratexus12.xyratex.com ([65.203.33.12]:5400 "EHLO
-	XYUSEX02.xyus.xyratex.com") by vger.kernel.org with ESMTP
-	id S1751295AbVH2SpJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Aug 2005 14:45:09 -0400
-Content-class: urn:content-classes:message
+Received: from mail.dvmed.net ([216.237.124.58]:21954 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751298AbVH2Su6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Aug 2005 14:50:58 -0400
+In-Reply-To: <4312D213.9000402@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: James.Bottomley@steeleye.com, luben_tuikov@adaptec.com, albertcc@tw.ibm.com, linux-scsi@vger.kernel.org
 
-Hi,
+Tejun Heo wrote:
+>> Both all the list-heads need to be cleared, otherwise there may be 
+>> list corruption next time the element is added to the list_head.
+>>
+> 
+>  scmd->eh_entry is never used as list head.  It's always used as list 
+> entry.  So, technically, it needs not be cleared, I think.  No?  The 
+> problem we had was w/ shost->eh_cmd_q not being cleared.
 
-I have a controller with a firmware bug that mishandles 
-underrun situations for inquiry commands. It correctly
-sets the FCP_RESID_UNDER flag however it miscalculates
-the FCP_RESID count.  The 7.05.00 Qlogic driver for 2.4.x
-kernels thinks frame(s) were lost and retries the command
-20 times with no success:
+Every node is a list_head.  You want all pointers for all nodes pointing 
+to something useful, even if they are not actively present on a list, so 
+that they may be easily and corrected added to a list at a later time. 
+Read list_del_init() for example.
+
+	Jeff
 
 
- if (!(scsi_status & SS_RESIDUAL_UNDER)) {
-                                        ha->dropped_frame_error_cnt++;
-                                        CMD_RESULT(cp) = DID_BUS_BUSY <<
-16;
-                                        DEBUG2(printk(KERN_INFO
-"scsi(%ld): Dropped "
-                                                "frame(s) detected (%x
-of %x "
-                                                "bytes)...retrying
-command.\n",
-                                                ha->host_no,
-                                                resid,
-                                                CMD_XFRLEN(cp));)
-                                        break;
-                                }
-
-Just wondering why the 8.00.02 driver for 2.6.x kernels did not
-detect this transport error ?  Latest Emulex and LSI drivers did
-not detect this either ???
-
-Thanks,
-Frank
-
- 
