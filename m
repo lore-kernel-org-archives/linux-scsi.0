@@ -1,90 +1,58 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFC] SCSI EH document
-Date: Mon, 29 Aug 2005 18:14:59 +0900
-Message-ID: <4312D213.9000402@gmail.com>
-References: <20050826035326.GA13392@htj.dyndns.org> <430F8AE0.7080806@pobox.com>
+From: Andreas Herrmann <AHERRMAN@de.ibm.com>
+Subject: Re: correct deregistration from scsi_transport_fc
+Date: Mon, 29 Aug 2005 12:02:15 +0200
+Message-ID: <OF2D6CD10B.4BD0B2F3-ONC125706C.0036B5BA-C125706C.0036F30A@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.199]:17633 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751008AbVH2JPF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Aug 2005 05:15:05 -0400
-Received: by wproxy.gmail.com with SMTP id i7so585106wra
-        for <linux-scsi@vger.kernel.org>; Mon, 29 Aug 2005 02:15:04 -0700 (PDT)
-In-Reply-To: <430F8AE0.7080806@pobox.com>
+Received: from mtagate1.de.ibm.com ([195.212.29.150]:16850 "EHLO
+	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP
+	id S1750737AbVH2KCS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Aug 2005 06:02:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: James.Bottomley@steeleye.com, luben_tuikov@adaptec.com, albertcc@tw.ibm.com, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <jejb@steeleye.com>, Linux SCSI <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org
+
+On 29.08.2005 10:48 Christoph Hellwig <hch@infradead.org> worte:
+
+  > Never use scsi_add_device with the fc_transport code. 
+fc_remote_port_add
+  > will do a proper lun scan if the added rport is a scsi target.
+
+Won't work for all zSeries FC host adapters because they are
+virtualized and you can have several virtual adapters using the same
+WWPN/WWNN.  Using LUN masking and zoning it is not possible to
+configure the SAN such that one virtual adapter sees just that LUNs
+that are supposed to be used by it. There is a tool to write an access
+control table to the adapter. This ACT specifies which virtual adapter
+can access which ports and FCP LUNs ... 
+
+A REPORT LUNs scan from adapter X of port Y might report thousands of
+LUNs that I don't like to use with adapter X because they are for
+another virtual adapter. Thats the reason why I like to stick to
+manual configuration (triggered from zfcp) of scsi_devices. Hence zfcp
+has not enabled a proper lun scan when fc_remote_port_add is
+called. slave_alloc will fail for scsi_devices not added by zfcp
+itself.  (BTW, new FC cards that are already announced will provide a
+feature called NPort Id Virtualization. With this feature each virtual
+adapter will have its own WWPN. This will allow zfcp to use the lun
+scan during fc_remote_port_add.)
+
+Do you mean, that scsi_add_device is not supposed to work with 
+fc_transport
+code anymore?
+
+Or is it mere a recommendation not to stick to scsi_add_device but to use
+the automatic LUN scanning provided with fc_transport code?
 
 
-  Hi, Jeff.
+  > fc_remove_host removes all rports for you.
 
-Jeff Garzik wrote:
-> Tejun Heo wrote:
-> 
->>  Hello, fellow SCSI/ATA developers.
->>
->>  This is the first draft of SCSI EH document.  This document tries to
->> describe how SCSI EH works and what choirs should be done to maintain
->> SCSI midlayer integrity.  It's intended that this document can be used
->> as reference for implementing either fine-grained EH callbacks or
->> single eh_strategy_handler() callback.
->>
->>  I'm pretty sure that I've screwed up in (hopefully) several places,
->> so please correct me.  Also, I have several places where I'm not sure
->> or have questions, those are marked with *VERIFY* and *QUESTION*
->> respectively.  If you know the answer, please let me know.
-> 
-> 
-> Seems sane to me at first glance.
-> 
-> 
->>     - EH_RESET_TIMER
->>     This indicates that more time is required to finish the
->>     command.  Timer is restarted.  This action is counted as a
->>     retry and only allowed scmd->allowed + 1(!) times.  Once the
->>     limit is reached, EH_NOT_HANDLED action is taken.
->>
->>     *NOTE* This action is racy as the LLDD could finish the scmd
->>     after the timeout has expired but before it's added back.  In
->>     such cases, scsi_done() would think that timeout has occurred
->>     and return without doing anything.  We lose completion and the
->>     command will time out again.
-> 
-> 
-> hmmmm
-> 
-> 
->> [2-2-2] Post hostt->eh_strategy_handler() SCSI midlayer conditions
->>
->>  The following conditions must be true on exit from the handler.
->>
->>  - shost->host_failed is zero.
->>
->>  - Each scmd's eh_eflags field is cleared.
->>
->>  - Each scmd is in such a state that scsi_setup_cmd_retry() on the
->>    scmd doesn't make any difference.
->>
->>  - shost->eh_cmd_q is cleared.
->>
->>  - Each scmd->eh_entry is cleared.  (*VERIFY* This is currently not
->>    necessary for correct operation, but keep them cleared anyway for
->>    consistency.)
-> 
-> 
-> Both all the list-heads need to be cleared, otherwise there may be list 
-> corruption next time the element is added to the list_head.
-> 
+Ok, works. But it still fails to remove the scsi target representation
+of that rport.
 
-  scmd->eh_entry is never used as list head.  It's always used as list 
-entry.  So, technically, it needs not be cleared, I think.  No?  The 
-problem we had was w/ shost->eh_cmd_q not being cleared.
 
-  Thanks.
+Regards,
 
--- 
-tejun
+Andreas
