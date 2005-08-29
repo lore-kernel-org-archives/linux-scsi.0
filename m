@@ -1,35 +1,48 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [RFC] SCSI EH document
-Date: Mon, 29 Aug 2005 20:49:54 +0100
-Message-ID: <20050829194954.GH26314@parcelfarce.linux.theplanet.co.uk>
-References: <20050826035326.GA13392@htj.dyndns.org> <430F8AE0.7080806@pobox.com> <4312D213.9000402@gmail.com> <431358FB.6050005@pobox.com>
+From: Steve Lord <lord@xfs.org>
+Subject: Re: Oops on scsi_remove_target
+Date: Mon, 29 Aug 2005 14:47:14 -0500
+Message-ID: <43136642.4090401@xfs.org>
+References: <430F8637.2060202@xfs.org>	<1125092409.5079.107.camel@mulgrave> <20050826144707.2915909e.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from parcelfarce.linux.theplanet.co.uk ([195.92.249.252]:37520 "EHLO
-	parcelfarce.linux.theplanet.co.uk") by vger.kernel.org with ESMTP
-	id S1751471AbVH2Tqu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Aug 2005 15:46:50 -0400
-Content-Disposition: inline
-In-Reply-To: <431358FB.6050005@pobox.com>
+Received: from webmail.adic.com ([63.81.117.10]:61098 "EHLO MAIL01HQ.adic.com")
+	by vger.kernel.org with ESMTP id S1751502AbVH2TrR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Aug 2005 15:47:17 -0400
+In-Reply-To: <20050826144707.2915909e.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, James.Bottomley@steeleye.com, luben_tuikov@adaptec.com, albertcc@tw.ibm.com, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, greg@kroah.com
 
-On Mon, Aug 29, 2005 at 02:50:35PM -0400, Jeff Garzik wrote:
-> Every node is a list_head.  You want all pointers for all nodes pointing 
-> to something useful, even if they are not actively present on a list, so 
-> that they may be easily and corrected added to a list at a later time. 
-> Read list_del_init() for example.
+Andrew Morton wrote:
+> James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> 
+>>>  [<c01042ac>] die+0xfa/0x19c
+>>>  [<c0115200>] do_page_fault+0x239/0x6ee
+>>>  [<c0103ad7>] error_code+0x4f/0x54
+>>>  [<c0193aaa>] sysfs_remove_link+0x1b/0x1d
+>>>  [<c0227691>] class_device_del+0x8e/0xed
+>>
+>>This is known and reported and the fix is here:
+>>
+>>http://marc.theaimsgroup.com/?l=linux-scsi&m=112398346008284
+>>
+>>Andrew, Greg, could we do something about getting this fix in.  It's in
+>>sysfs, so I can't really push it.
+>>
+> 
+> 
+> Well it may not be right, but it looks fine as a
+> fix-for-2.6.13-coz-gregs-on-vacation.
+> 
+> Could you send me the diff?  I'll add it to today's
+> batch-of-patches-to-send-to-linus-after-having-worked-out-wtf-git-has-done-this-time.
+> 
 
-I disagree.  If you know what you're doing, it's perfectly fine to
-simply list_del and not init the nodes.
+So I guess this missed the boat, since I just hit the same oops on
+2.6.13.
 
--- 
-"Next the statesmen will invent cheap lies, putting the blame upon 
-the nation that is attacked, and every man will be glad of those
-conscience-soothing falsities, and will diligently study them, and refuse
-to examine any refutations of them; and thus he will by and by convince 
-himself that the war is just, and will thank God for the better sleep 
-he enjoys after this process of grotesque self-deception." -- Mark Twain
+Steve
