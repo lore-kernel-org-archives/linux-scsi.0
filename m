@@ -1,75 +1,44 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFC] SCSI EH document
-Date: Mon, 29 Aug 2005 18:27:25 -0400
-Message-ID: <43138BCD.7060106@pobox.com>
-References: <20050826035326.GA13392@htj.dyndns.org> <430F8AE0.7080806@pobox.com> <4312D213.9000402@gmail.com> <431358FB.6050005@pobox.com> <4313803B.3060703@gmail.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: 2.6: how do I this in sysfs?
+Date: Mon, 29 Aug 2005 15:32:11 -0700
+Message-ID: <20050829223211.GA17088@kroah.com>
+References: <D4CFB69C345C394284E4B78B876C1CF10ABB0269@cceexc23.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:62402 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751367AbVH2W1j (ORCPT
+Received: from kroah.com ([216.218.225.136]:9112 "HELO kroah.com")
+	by vger.kernel.org with SMTP id S1751376AbVH2WcV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Aug 2005 18:27:39 -0400
-In-Reply-To: <4313803B.3060703@gmail.com>
+	Mon, 29 Aug 2005 18:32:21 -0400
+Received: from storm.he.net ([127.0.0.9]) by kroah.com for <linux-scsi@vger.kernel.org>; Mon, 29 Aug 2005 15:32:11 -0700
+Content-Disposition: inline
+In-Reply-To: <D4CFB69C345C394284E4B78B876C1CF10ABB0269@cceexc23.americas.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: James.Bottomley@steeleye.com, luben_tuikov@adaptec.com, albertcc@tw.ibm.com, linux-scsi@vger.kernel.org
+To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, mochel@osdl.org, "Moore, Eric Dean" <Eric.Moore@lsil.com>, "Patterson, Andrew D (Linux R&D)" <andrew.patterson@hp.com>, Luben Tuikov <luben_tuikov@adaptec.com>
 
-Tejun Heo wrote:
+On Mon, Aug 29, 2005 at 12:24:18PM -0500, Miller, Mike (OS Dev) wrote:
 > 
->  Hi, Jeff.
+> > This is after my minimal sas transport class, please also 
+> > read the thread about it on linux-scsi
+> > 
+> In the referenced code for using sysfs, there only appear to be methods
+> for reading attributes.  How about if we want to cause a command to
+> get written out to the hardware?   Do we do something like this?
 > 
-> Jeff Garzik wrote:
+>         /* get a semaphore keep everyone else out while we're working,
+>            and hope like hell that all the other processes are playing
+>            nice and using the semaphore too, or else we're hosed. */
 > 
->> Tejun Heo wrote:
->>
->>>> Both all the list-heads need to be cleared, otherwise there may be 
->>>> list corruption next time the element is added to the list_head.
->>>>
->>>
->>>  scmd->eh_entry is never used as list head.  It's always used as list 
->>> entry.  So, technically, it needs not be cleared, I think.  No?  The 
->>> problem we had was w/ shost->eh_cmd_q not being cleared.
->>
->>
->>
->> Every node is a list_head.  You want all pointers for all nodes 
->> pointing to something useful, even if they are not actively present on 
->> a list, so that they may be easily and corrected added to a list at a 
->> later time. Read list_del_init() for example.
->>
->>     Jeff
->>
-> 
->  Okay... to make things clearer.  A struct list_head can have two roles.
-> 
->  list head  : other list_head gets added to it
->  list entry : gets added to other list_head
-> 
->  When a struct list_head acts as list head, it always needs to be in 
-> clean (pointing to valid things) state before being used.  When a struct 
-> list_head acts as list entry, its current content doesn't matter.
-> 
->  AFAICS, scmd->eh_entry is currently not used as list head in any place, 
-> neither do we use list_empty() test on it to determine whether or not 
-> it's on a list.  The original code does clear scmd->eh_entry all the 
-> time and I am very okay with that.  I just wanted to make sure that I 
-> didn't miss something regarding scmd->eh_entry's usage.
-> 
->  If I'm missing such a usage, can you please point out?
+>         get_some_kind_of_semaphore();
 
+try flock() on the /sys/blah/blah/ directory.  That should keep userspace happy.  
+I think it only takes a small sysfs patch to make this work (or it might work
+today, don't remember, sorry...)
 
-I'm mainly talking at a higher level.  While it strictly doesn't matter 
-in this instance, in general its a bad idea to clear a list using a
+Or look into using configfs instead.
 
-	list = (null)
+thanks,
 
-operation.  Its a good way to leak references, leak memory, etc.
-
-In this specific case it seems to be OK.
-
-	Jeff
-
-
+greg k-h
