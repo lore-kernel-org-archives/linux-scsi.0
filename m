@@ -1,61 +1,70 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH] minimal SAS transport class
-Date: Mon, 29 Aug 2005 13:20:50 -0400
-Message-ID: <431343F2.5060805@adaptec.com>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A4B@xbl3.ma.emulex.com> <430B5CDB.9070204@s5r6.in-berlin.de> <430BB91F.7000406@vger.kernel.org> <20050824091230.GB26447@infradead.org> <430F398A.30200@adaptec.com> <430F6C56.1090801@pobox.com> <20050829171152.GA7875@infradead.org>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: 2.6: how do I this in sysfs?
+Date: Mon, 29 Aug 2005 12:24:18 -0500
+Message-ID: <D4CFB69C345C394284E4B78B876C1CF10ABB0269@cceexc23.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:6864 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1750982AbVH2RU7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Aug 2005 13:20:59 -0400
-In-Reply-To: <20050829171152.GA7875@infradead.org>
+Received: from ccerelbas02.cce.hp.com ([161.114.21.105]:23735 "EHLO
+	ccerelbas02.cce.hp.com") by vger.kernel.org with ESMTP
+	id S1751142AbVH2RZL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Aug 2005 13:25:11 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, greg@kroah.com, mochel@osdl.org, "Moore, Eric Dean" <Eric.Moore@lsil.com>, "Patterson, Andrew D (Linux R&D)" <andrew.patterson@hp.com>, Luben Tuikov <luben_tuikov@adaptec.com>
 
-On 08/29/05 13:11, Christoph Hellwig wrote:
-> On Fri, Aug 26, 2005 at 03:24:06PM -0400, Jeff Garzik wrote:
+
+> This is after my minimal sas transport class, please also 
+> read the thread about it on linux-scsi
 > 
->>Luben Tuikov wrote:
->>
->>>Even simpler: the transport layer, calls SCSI Core, saying: "Hey here is
->>>a pointer to struct scsi_domain_device.  If you want, you an send REPORT
->>>LUNS and other things to it."
->>
->>For the SG_IO ioctl, /dev/sg and request_queue usage, SCSI core must map 
->>an address (currently HCIL) into a scsi_domain_device pointer.  These 
->>upper layer kernel elements rely on this "SCSI address", and rely on the 
->>fact that SCSI core can route from a block device straight to a SCSI 
->>LLD, using nothing more than this "SCSI address."
-> 
-> 
-> What's a scsi_domain_device?  Anyway, we don't need any HCIL tuple for
-> all of the above.  SG_IO is done on a blockdevice node, /dev/sg is done
-> on a chardevice node.  Each of them are attached to a request_queue that's
-> known at the time their ->probe routine is setup - no need for HCIL here
-> _at all_.  There's actually only few userland interfaces that use HCIL
-> addressing:  the scanning through /sys/.../scan (or the old /proc/scsi/scsi
-> variant), using WWNs for FC and SAS here would be much nicer, but there's
+In the referenced code for using sysfs, there only appear to be methods
+for reading attributes.  How about if we want to cause a command to
+get written out to the hardware?   Do we do something like this?
 
-WWNs *must not* be visible _at_all_ to anyone above the SAS layer, in the
-kernel.  That is, the transport addressing method *must not* be visible to
-SCSI Core or anyone above it, in the kernel.
+        /* get a semaphore keep everyone else out while we're working,
+           and hope like hell that all the other processes are playing
+           nice and using the semaphore too, or else we're hosed. */
 
-Else you'll end up with another "HCIL"... (if you get the irony).
+        get_some_kind_of_semaphore();
 
-> a huge backwards-compatiblity issue - we'll probably have to support the
-> old variant forever.  Besides that there's probably only SCSI_IOCTL_GET_IDLUN,
+        fd = open("/sys/blah/blah/attribute1", O_RDWR);
+        write(fd, SOME_JUNK1, sizeof(SOME_JUNK1));
+        close(fd);
+        fd = open("/sys/blah/blah/attribute2", O_RDWR);
+        write(fd, SOME_JUNK2, sizeof(SOME_JUNK2));
+        close(fd);
+        fd = open("/sys/blah/blah/attribute3", O_RDWR);
+        write(fd, SOME_JUNK3, sizeof(SOME_JUNK3));
+        close(fd);
+        fd = open("/sys/blah/blah/attribute4", O_RDWR);
+        write(fd, SOME_JUNK4, sizeof(SOME_JUNK4));
+        close(fd);
+        fd = open("/sys/blah/blah/attribute5", O_RDWR);
+        write(fd, SOME_JUNK5, sizeof(SOME_JUNK5));
+        close(fd);
+        fd = open("/sys/blah/blah/attribute6", O_RDWR);
+        write(fd, SOME_JUNK6, sizeof(SOME_JUNK6));
+        close(fd);
+        fd = open("/sys/blah/blah/attribute7", O_RDWR);
+        write(fd, SOME_JUNK7, sizeof(SOME_JUNK7));
+        close(fd);
 
-If there's no userspace dependency, the kernel can do anything it wants.
+        /* When the attribute write_doorbell is written to, by
+convention
+           of this particular device "/sys/blah/blah",  it acts as a
+           doorbell which causes all the values which were "latched" by
+           the above writes to be consolidated into one command and
+           written to the hardware.  */
 
-Since HCIL is SCSI Core crud, let SCSI Core invent HCIL tuples and support them.
+        fd = open("/sys/blah/blah/write_doorbell", O_RDWR);
+        write(fd, "ding dong", 9);
+        close(fd);
 
-	Luben
+        release_some_kind_of_semaphore();
 
-> which is superceeded by sysfs but probably still has tons of users in
-> hardware probing, managment utilities and all kinds of userland.
-
+I'm not suggesting that the above is a good idea.  I don't have a good
+idea about how to do this.
