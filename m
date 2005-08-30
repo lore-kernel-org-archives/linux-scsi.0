@@ -1,90 +1,47 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH] sg direct io/mmap oops
-Date: Tue, 30 Aug 2005 21:14:21 +1000
-Message-ID: <43143F8D.3080904@torque.net>
-Reply-To: dougg@torque.net
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [dm-devel] Re: fibre channel/multipath questions
+Date: Tue, 30 Aug 2005 13:37:23 +0200
+Message-ID: <431444F3.90305@s5r6.in-berlin.de>
+References: <200508261812.23328.Rik.Bobbaers@cc.kuleuven.be>	 <20050829172316.GC7875@infradead.org> <1125378108.6375.15.camel@zezette>	 <200508301119.24072.Rik.Bobbaers@cc.kuleuven.be> <1125393973.3224.16.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080302010103080906090004"
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:31649 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1751372AbVH3LON (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Aug 2005 07:14:13 -0400
+Received: from einhorn.in-berlin.de ([192.109.42.8]:25829 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1751369AbVH3Lhh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Aug 2005 07:37:37 -0400
+In-Reply-To: <1125393973.3224.16.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: ahmed.teirelbar@adic.com, Kai.Makisara@kolumbus.fi, James.Bottomley@SteelEye.com
+To: linux-scsi@vger.kernel.org, device-mapper development <dm-devel@redhat.com>
+Cc: Arjan van de Ven <arjan@infradead.org>, Rik Bobbaers <Rik.Bobbaers@cc.kuleuven.be>, christophe varoqui <christophe.varoqui@free.fr>
 
-This is a multi-part message in MIME format.
---------------080302010103080906090004
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Arjan van de Ven wrote:
+[|Rik Bobbaers wrote:]
+>>the last rule poses the problem. depending on how many multipath devices i 
+>>have, i constantly have to change lilo.conf for every machine.
+>>
+>>in bsd, there is a way to set your drives to a fixed name, is there something 
+>>alike in linux? or a sollution to this problem? (i'm definately willing to 
+>>help find one, if there isn't... and i guess i'm not the only one with this 
+>>problem?)
+> 
+> there is mount-by-label (filesystem label that is) that at least Fedora
+> and RHEL distros use, and I assume many other distros support too even
+> if they don't use it by default.
 
-Back in the lk 2.4 series it was possible with the sgm_dd
-utility to do a zero copy transfer between two disks (or
-2 locations on the same disk). That was done by doing mmap-ed
-IO on the read and direct IO on the write with the sg driver.
+Although I don't really know what mount-by-label on Fedora and RHEL 
+means precisely, I suspect it may not help with the _bootloader_ and/or 
+with RAID device files.
 
-Well that no longer works in the lk 2.6 series because the
-sg (and st) driver uses get_user_pages() for direct IO and
-that returns -EFAULT when VM_IO is set on any of the user
-pages it is trying use. Pages that are mmap-ed have VM_IO
-set.
-
-I can live with that: dio and mmap-ed IO work separately
-and dio can work on both sides of a transfer.
-
-This was brought to my attention by Ahmed Teirelbar
-<ahmed.teirelbar@adic.com> with lk 2.6.5 . Worse, when
-tested in lk 2.6.12 and lk 2.6.13, attempting dio/mmap
-caused the sg driver to oops (due to empty entries in
-a scatter gather list). Ahmed proposed the following
-patch which both of us have tested.
-
-I have alerted Kai M. as the same fix is needed in
-the st driver IMO.
-
-
-Changelog:
-   - check error return (a negative integer) properly after
-     the get_user_pages() call that sets up direct IO
-
-Signed-off-by: Douglas Gilbert <dougg@torque.net>
-
-Doug Gilbert
-
-
-
-
---------------080302010103080906090004
-Content-Type: text/x-patch;
- name="sg_2613mm.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sg_2613mm.diff"
-
---- linux/drivers/scsi/sg.c	2005-08-29 18:28:23.000000000 +1000
-+++ linux/drivers/scsi/sg.c2613mm	2005-08-30 15:09:04.000000000 +1000
-@@ -61,7 +61,7 @@
- 
- #ifdef CONFIG_SCSI_PROC_FS
- #include <linux/proc_fs.h>
--static char *sg_version_date = "20050328";
-+static char *sg_version_date = "20050830";
- 
- static int sg_proc_init(void);
- static void sg_proc_cleanup(void);
-@@ -1831,7 +1831,8 @@
- 	up_read(&current->mm->mmap_sem);
- 
- 	/* Errors and no page mapped should return here */
--	if (res < nr_pages)
-+	/* Beware of signed to unsigned integer promotions!! */
-+	if ((res < 0) || (res < nr_pages))
- 		goto out_unmap;
- 
-         for (i=0; i < nr_pages; i++) {
-
-
---------------080302010103080906090004--
+Rik, do you want to have the kernel image on a SAN disk? If _not_, there 
+is a solution which has long been in use with USB and FireWire disks. 
+Just install an initrd along with the kernel image. In the initrd, you 
+can create or rename or link to device files as you whish. Typically, 
+udev is used to fetch unique persistent properties of devices and 
+associate device names, symlinks, or mount points accordingly.
+-- 
+Stefan Richter
+-=====-=-=-= =--- ====-
+http://arcgraph.de/sr/
