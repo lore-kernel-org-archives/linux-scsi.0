@@ -1,43 +1,58 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Some interesting results in the aic7xxx slowdown problem
-Date: Tue, 30 Aug 2005 08:52:22 -0500
-Message-ID: <1125409942.5037.2.camel@mulgrave>
-References: <1123119347.5019.78.camel@mulgrave>
-	 <20050804061809.GA4158@in.ibm.com> <1123166928.5026.8.camel@mulgrave>
-	 <20050819095428.GA9130@in.ibm.com> <1124457765.5130.13.camel@mulgrave>
-	 <20050825103943.GA7421@in.ibm.com> <1125328875.5089.37.camel@mulgrave>
-	 <20050830044956.GA4187@in.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [RFC] libata new EH document
+Date: Tue, 30 Aug 2005 09:27:02 -0500
+Message-ID: <1125412023.5037.15.camel@mulgrave>
+References: <20050829061124.GA2725@htj.dyndns.org>
+	 <43142279.3070004@tw.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([64.109.89.108]:61390 "EHLO
-	accolon.hansenpartnership.com") by vger.kernel.org with ESMTP
-	id S1750868AbVH3Nwh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Aug 2005 09:52:37 -0400
-In-Reply-To: <20050830044956.GA4187@in.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <43142279.3070004@tw.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Albert Lee <albertcc@tw.ibm.com>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
 List-Id: linux-scsi@vger.kernel.org
-To: suparna@in.ibm.com
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2005-08-30 at 10:19 +0530, Suparna Bhattacharya wrote:
-> scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
->         <Adaptec aic7896/97 Ultra2 SCSI adapter>
->         aic7896/97: Ultra2 Wide Channel A, SCSI Id=7, 32/253 SCBs
-[...]
-> scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
->         <Adaptec aic7896/97 Ultra2 SCSI adapter>
->         aic7896/97: Ultra2 Wide Channel B, SCSI Id=7, 32/253 SCBs
+On Tue, 2005-08-30 at 17:10 +0800, Albert Lee wrote:
+> Could we get the sense data before calling qc->scsidone()?  (Using the 
+> proposed separate
+> EH qc can keep the original qc intact.)
 
-Aha, what I think has happened is that scsi0 and scsi1 have reversed
-their detection order.  This is a consequence of moving aic7xxx to the
-new PCI model.  We no-longer control the detection order, we get probed
-in the order that the PCI subsystem decides.  In your case, it must have
-decided to detect the external card first.
+Well, the way most SCSI drivers do it today is to turn around the
+command returning Check Condition from irq context.  This is sort of
+like ACA simulation.  The reason it's done is because while a drive
+holds a contingent allegiance condition it cannot accept other commands.
+This effectively holds everything in abeyance until the sense is taken,
+so for fast operation, SCSI drivers take the sense as soon as possible.
 
-The PCI subsystem pulls a few tricks to try to prevent this, but most of
-them rely on ACPI I think ... I assume this isn't an ACPI system?
+Ideally, though this mechanism should be deprecated because it causes us
+to keep a complete copy of the old command and parameters around which
+is a hit in the command allocation and set up fast path.
+
+> The issue:
+> When a DVD drive returns MEDIUM_ERROR in the sense data, libata doesn't 
+> retry the command.
+> 
+> For libata, when scsi_softirq() calls scsi_decide_disposition() and 
+> scsi_check_sense() to determine
+> how to handle the result, scsi_check_sense() always returns "fail" since 
+> the sense data is not there
+> yet. The sense data is requested later in the libata error handler. But 
+> the command has already been
+> considered as an "error".
+> 
+> By having the sense data ready before calling qc->scsidone(), we can 
+> make the
+> NEEDS_RETRY work in scsi_softirq().  So, for things like MEDIUM_ERROR, 
+> the device has
+> a chance to retry/recover the error. This seems to be important for 
+> devices with built-in
+> defect management system.
+
+It sounds like the ATA error handler is missing the sense interpretation
+part.  If you look at the scsi error handler, we will request sense and
+then redecide the disposition based on the return.
 
 James
 
