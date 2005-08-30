@@ -1,45 +1,44 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: scsi_debug driver with SAS support
-Date: Tue, 30 Aug 2005 21:52:23 +1000
-Message-ID: <43144877.8040801@torque.net>
-Reply-To: dougg@torque.net
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Some interesting results in the aic7xxx slowdown problem
+Date: Tue, 30 Aug 2005 08:52:22 -0500
+Message-ID: <1125409942.5037.2.camel@mulgrave>
+References: <1123119347.5019.78.camel@mulgrave>
+	 <20050804061809.GA4158@in.ibm.com> <1123166928.5026.8.camel@mulgrave>
+	 <20050819095428.GA9130@in.ibm.com> <1124457765.5130.13.camel@mulgrave>
+	 <20050825103943.GA7421@in.ibm.com> <1125328875.5089.37.camel@mulgrave>
+	 <20050830044956.GA4187@in.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:20134 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1751387AbVH3LwB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Aug 2005 07:52:01 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by borg.st.net.au (Postfix) with ESMTP id E9AC3394674
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Aug 2005 21:52:30 +1000 (EST)
-Received: from [192.168.48.80] (dsl-138.0.240.220.rns01-kent-syd.dsl.comindico.com.au [220.240.0.138])
-	by borg.st.net.au (Postfix) with ESMTP id 3DBCE394626
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Aug 2005 21:52:30 +1000 (EST)
+Received: from accolon.hansenpartnership.com ([64.109.89.108]:61390 "EHLO
+	accolon.hansenpartnership.com") by vger.kernel.org with ESMTP
+	id S1750868AbVH3Nwh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Aug 2005 09:52:37 -0400
+In-Reply-To: <20050830044956.GA4187@in.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: suparna@in.ibm.com
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Many recent changes to drafts at www.t10.org are related
-to Serial Attached SCSI (SAS). Changes to SCSI command sets
-are mainly in the Vital Product Data (VPD) page and mode
-page area and I have tried to track those in sg3_utils.
-To test these new facilities I often add "target" code to
-the scsi_debug driver. These may be useful to others working
-in the same space. See http://www.torque.net/sg/sdebug26.html
-The last entry in the Downloads table is a replacement for
-the scsi_debug driver found in lk 2.6.13 (which is the second
-last entry). A description of the additions follows the Downloads
-table.
+On Tue, 2005-08-30 at 10:19 +0530, Suparna Bhattacharya wrote:
+> scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+>         <Adaptec aic7896/97 Ultra2 SCSI adapter>
+>         aic7896/97: Ultra2 Wide Channel A, SCSI Id=7, 32/253 SCBs
+[...]
+> scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+>         <Adaptec aic7896/97 Ultra2 SCSI adapter>
+>         aic7896/97: Ultra2 Wide Channel B, SCSI Id=7, 32/253 SCBs
 
-With these additions the scsi_debug driver can simulate one
-or more dual ported SAS targets each with one or more LUs.
-Artificial SAS addresses should obey most rules (apart from
-being truly unique) across the device identification VPD page,
-the SAS ports page and the SAS phy control and discover mode
-(sub)page. Most recent betas of sg3_utils and sdparm can be
-found in the news section of http://www.torque.net/sg
+Aha, what I think has happened is that scsi0 and scsi1 have reversed
+their detection order.  This is a consequence of moving aic7xxx to the
+new PCI model.  We no-longer control the detection order, we get probed
+in the order that the PCI subsystem decides.  In your case, it must have
+decided to detect the external card first.
+
+The PCI subsystem pulls a few tricks to try to prevent this, but most of
+them rely on ACPI I think ... I assume this isn't an ACPI system?
+
+James
 
 
-Doug Gilbert
