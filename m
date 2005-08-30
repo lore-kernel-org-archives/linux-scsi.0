@@ -1,84 +1,95 @@
-From: tony.luck@intel.com
-Subject: RE: As of 2.6.13-rc1 Fusion-MPT very slow
-Date: Tue, 30 Aug 2005 08:28:00 -0700
-Message-ID: <200508301528.j7UFS0J2009272@agluck-lia64.sc.intel.com>
-References: <91888D455306F94EBD4D168954A9457C037B0557@nacos172.co.lsil.com>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932217AbVH3Qkg@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.61.0508091126350.18591@praktifix.dwd.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Holger Kiehl <Holger.Kiehl@dwd.de>
-Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>, James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, linux-kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-ia64@vger.kernel.org
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] aic7xxx: move to dma_get_required_mask() and correct 39
+	bit assumptions
+Date: Tue, 30 Aug 2005 11:48:07 -0500
+Message-ID: <1125420487.5037.27.camel@mulgrave>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat16.steeleye.com ([209.192.50.48]:55457 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932221AbVH3Qs0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Aug 2005 12:48:26 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dave Jones <davej@redhat.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, luben_tuikov@adaptec.com
 
-This is alive and well in 2.6.13 (final) on ia64.  Excerpts from dmesg
-when booting:
+This patch moves aic7xxx over to the dma_get_required_mask() API and
+dumps its open coded memory check.
 
-Fusion MPT base driver 3.03.02
-Copyright (c) 1999-2005 LSI Logic Corporation
-Fusion MPT SPI Host driver 3.03.02
-GSI 28 (level, low) -> CPU 1 (0xc218) vector 49
-ACPI: PCI Interrupt 0000:06:02.0[A] -> GSI 28 (level, low) -> IRQ 49
-mptbase: Initiating ioc0 bringup
-ioc0: 53C1030: Capabilities={Initiator}
-scsi0 : ioc0: LSI53C1030, FwRev=01030a00h, Ports=1, MaxQ=255, IRQ=49
-  Vendor: QUANTUM   Model: ATLAS IV 9 SCA    Rev: 0B0B
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-SCSI device sda: 17942584 512-byte hdwr sectors (9187 MB)
-SCSI device sda: drive cache: write back
-SCSI device sda: 17942584 512-byte hdwr sectors (9187 MB)
-SCSI device sda: drive cache: write back
- sda: sda1 sda2 sda3
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-  Vendor: MAXTOR    Model: ATLAS10K4_73SCA   Rev: DFV0
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-SCSI device sdb: 143666192 512-byte hdwr sectors (73557 MB)
-SCSI device sdb: drive cache: write back
-SCSI device sdb: 143666192 512-byte hdwr sectors (73557 MB)
-SCSI device sdb: drive cache: write back
- sdb: sdb1
-Attached scsi disk sdb at scsi0, channel 0, id 1, lun 0
-  Vendor: ESG-SHV   Model: SCA HSBP M17      Rev: 1.0D
-  Type:   Processor                          ANSI SCSI revision: 02
-GSI 29 (level, low) -> CPU 2 (0xc418) vector 50
-ACPI: PCI Interrupt 0000:06:02.1[B] -> GSI 29 (level, low) -> IRQ 50
-mptbase: Initiating ioc1 bringup
-ioc1: 53C1030: Capabilities={Initiator}
-scsi1 : ioc1: LSI53C1030, FwRev=01030a00h, Ports=1, MaxQ=255, IRQ=50
-Fusion MPT FC Host driver 3.03.02
-Fusion MPT misc device (ioctl) driver 3.03.02
-mptctl: Registered with Fusion MPT base driver
-mptctl: /dev/mptctl @ (major,minor=10,220)
+It also appears from this bug:
+
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=167049
+
+That 39 bit addressing doesn't work on older cards.  I surmise that the
+AHC_LARGE_SCBS flag is the one that marks cards capable of using 39 bit
+addressing, so I also folded that check into the code.
+
+Luben, since you have access to the docs, could you confirm this guess.
+
+Dave, could you see if this fixes the problem for the bug reporter.
+
+James
+
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -1036,15 +1036,6 @@ ahc_linux_register_host(struct ahc_softc
+ 	return (0);
+ }
+ 
+-uint64_t
+-ahc_linux_get_memsize(void)
+-{
+-	struct sysinfo si;
+-
+-	si_meminfo(&si);
+-	return ((uint64_t)si.totalram << PAGE_SHIFT);
+-}
+-
+ /*
+  * Place the SCSI bus into a known state by either resetting it,
+  * or forcing transfer negotiations on the next command to any
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.h b/drivers/scsi/aic7xxx/aic7xxx_osm.h
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.h
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.h
+@@ -494,8 +494,6 @@ ahc_insb(struct ahc_softc * ahc, long po
+ int		ahc_linux_register_host(struct ahc_softc *,
+ 					struct scsi_host_template *);
+ 
+-uint64_t	ahc_linux_get_memsize(void);
+-
+ /*************************** Pretty Printing **********************************/
+ struct info_str {
+ 	char *buffer;
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
+@@ -180,6 +180,7 @@ ahc_linux_pci_dev_probe(struct pci_dev *
+ 	struct		 ahc_pci_identity *entry;
+ 	char		*name;
+ 	int		 error;
++	struct device	*dev = &pdev->dev;
+ 
+ 	pci = pdev;
+ 	entry = ahc_find_pci_device(pci);
+@@ -209,11 +210,12 @@ ahc_linux_pci_dev_probe(struct pci_dev *
+ 	pci_set_master(pdev);
+ 
+ 	if (sizeof(dma_addr_t) > 4
+-	 && ahc_linux_get_memsize() > 0x80000000
+-	 && pci_set_dma_mask(pdev, mask_39bit) == 0) {
++	    && ahc->features & AHC_LARGE_SCBS
++	    && dma_set_mask(dev, mask_39bit) == 0
++	    && dma_get_required_mask(dev) > DMA_32BIT_MASK) {
+ 		ahc->flags |= AHC_39BIT_ADDRESSING;
+ 	} else {
+-		if (pci_set_dma_mask(pdev, DMA_32BIT_MASK)) {
++		if (dma_set_mask(dev, DMA_32BIT_MASK)) {
+ 			printk(KERN_WARNING "aic7xxx: No suitable DMA available.\n");
+                 	return (-ENODEV);
+ 		}
 
 
-When I'm up and running, measure the speed of sda and sdb:
-
-# hdparm -t /dev/sda
-
-/dev/sda:
- Timing buffered disk reads:   62 MB in  3.02 seconds =  20.56 MB/sec
-
-[This is VERY consistent from run to run, 20.56 MB/s every time].
-
-# hdparm -t /dev/sdb
-
-/dev/sdb:
- Timing buffered disk reads:    2 MB in  4.04 seconds = 53.79 kB/sec
-
-[Speed on sdb is very erratic ... 53.79 KB/s is the worst I saw in half
-a dozen tests ... but first try after boot was 47.14 MB/s, and I see
-intermediate rates all over the map: 545.42 KB/s, 5.13 MB/s, 32.61 MB/s]
-
-dmesg shows some messages like this:
-mptscsih: ioc0: >> Attempting task abort! (sc=e0000001fceb4c80)
-mptbase: ioc0: IOCStatus(0x0048): SCSI Task Terminated
-mptscsih: ioc0: >> Attempting task abort! (sc=e0000001fceb5080)
-mptbase: ioc0: IOCStatus(0x0048): SCSI Task Terminated
-mptscsih: ioc0: >> Attempting task abort! (sc=e0000001fceb6e80)
-mptbase: ioc0: IOCStatus(0x0048): SCSI Task Terminated
-mptscsih: ioc0: >> Attempting task abort! (sc=e0000001fceb7a80)
-mptbase: ioc0: IOCStatus(0x0048): SCSI Task Terminated
-
-Sometimes there are floods of these, other times just a few ... e.g. I
-saw just those 8 lines after ten iterations of "hdparm -t /dev/hdb".
-
--Tony
