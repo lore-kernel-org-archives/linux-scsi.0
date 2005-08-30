@@ -1,322 +1,282 @@
-From: Steve Sutphen <steve@cs.ualberta.ca>
-Subject: Re: Megaraid and Dell PERC 4 controllers
-Date: Tue, 30 Aug 2005 01:43:30 -0600
-Message-ID: <20050830074330.GR1830@cs.ualberta.ca>
-References: <0E3FA95632D6D047BA649F95DAB60E5703662AFB@exa-atlanta>
+From: Albert Lee <albertcc@tw.ibm.com>
+Subject: Re: [RFC] libata new EH document
+Date: Tue, 30 Aug 2005 17:10:17 +0800
+Message-ID: <43142279.3070004@tw.ibm.com>
+References: <20050829061124.GA2725@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="sfyO1m2EN8ZOtJL6"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sunkay.cs.ualberta.ca ([129.128.4.11]:51707 "EHLO
-	sunkay.cs.ualberta.ca") by vger.kernel.org with ESMTP
-	id S1751196AbVH3Hnj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Aug 2005 03:43:39 -0400
-Received: (from localhost user: 'steve' uid#10 fake: STDIN (steve@snaring))
-	by sunkay.cs.ualberta.ca id S566687AbVH3Hna (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Aug 2005 01:43:30 -0600
-Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703662AFB@exa-atlanta>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20050829061124.GA2725@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Doug Maxey <dwm@maxeymade.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Ju, Seokmann" <sju@lsil.com>
-Cc: linux-scsi@vger.kernel.org, 'Jonathan Fischer' <jfischer@csusm.edu>, "Kolli, Neela Syam" <knsyam@lsil.com>
+
+Tejun Heo wrote:
+
+> Hello, Jeff, Albert & ATA developers.
+>
+> This is the final one of recent document series for libata EH - SCSI
+>EH, ATA exceptions, libata EH and, this one - libata new EH.
+>
+> This document tries to discuss how to implement new advanced EH.  It
+>also describes some proposed mechanisms in detail.  I'm aware that
+>things are vague without actual code, but I still think this document
+>alone can at least help discussion if nothing else.  As long as some
+>consensus is reached regarding general desing, I'll follow up with
+>patches.
+>
+> Jeff, a lot are from my previous new EH/NCQ patchset but also quite
+>a bit has changed (for better, I hope).
+>
+> Thanks.
+>
+>
+>libata new EH
+>======================================
+>
+> As discussed in the previous libata EH doc, the current libata EH
+>needs some improvements.  This document discusses goals of new libata
+>EH and how to reach them.  Please read SCSI EH, ATA exceptions and
+>libata EH documents first.
+>
+>TABLE OF CONTENTS
+>
+>[1] Goals & design choices
+>    [1-1] Use SCSI hostt->eh_strategy_handler()
+>    [1-2] Unified error path in an EH thread
+>    [1-3] Synchronization
+>    [1-4] Clean mechanism to hand off qc's to EH
+>    [1-5] Separate EH qc
+>    [1-6] SCSI/libata separation
+>[2] Designs
+>    [2-1] Handoff of failed qc's
+>    [2-2] Timed out scmd's and qc's
+>    [2-3] Summary of [2-1] and [2-2]
+>    [2-4] EH processing & completion
+>[3] Ideas
+>    [3-1] Using EH for non-error exceptions and dynamic reconfiguration
+>    [3-2] Using EH for host_set level exclusion
+>[4] Implementation plan
+>
+>
+>[1] Goals & design choices
+>
+> The final goal is implementing advanced error handling as described
+>in ATA exceptions document including NCQ EH, dynamic transport
+>reconfiguration and non-error exception handling for power management
+>and hot plugging.
+>
+> The followings are sub goals and design choices to reach the final
+>goal.
+>
+>
+>[1-1] Use SCSI hostt->eh_strategy_handler()
+>
+>    We have two other alternatives here - one is using fine-grained
+>    SCSI EH callbacks and the other is implementing separate EH for
+>    libata.
+>
+>    Using fine-grained SCSI EH callbacks is possible, but it has too
+>    much SCSI/SPI assumptions in it - ATA error handling can be quite
+>    different from SCSI error handling.  Also, as described in the
+>    SCSI EH doc, it issues several SCSI commands for recovery.  They
+>    can be translated but recovery through translation is a bit
+>    creepy, IMHO.
+>
+>    The second option - private EH implementation - is attractive in
+>    that it will be better integrated into libata.  However,
+>    implementing a full EH when a generic framwork is already in place
+>    doesn't make a lot of people happy.  And, I think integration
+>    problems can be worked around without too much trouble.
+>
+>    The basic semantics of eh_strategy_handler() are
+>
+>    - Full context EH.
+>
+>    - After EH is started, all normal command processing is suspended
+>      until EH is complete.
+>
+>    - Once EH is determined to be necessary, active commands are
+>      drained by suppressing all command issuing and waiting for
+>      in-flight commands.  When EH is finally entered, all active
+>      commands are failed commands.
+>
+>    IMO, above semantics are fairly fundamental to block device error
+>    handling and, in the future, to whatever framework libata
+>    migrates, assuming above semantics shouldn't hurt too much.
+>
+>
+>[1-2] Unified error path in an EH thread
+>
+>    Currently EH is scattered around several places including the
+>    interrupt handler and polling tasks.  This is problemetic for the
+>    following reasons.
+>
+>    a. Full EH context is required for error handling.
+>
+>       Advanced recovery usually involves resetting, command issuing
+>       and other blocking operations.
+>
+>    b. Simple errors may trigger complex error handling behavior.
+>
+>       For example, when an ABRT error occurs, reporting to upper
+>       layer is sufficent for most cases; however, repeated ABRT
+>       errors for known-to-be-supported commands might indicate too
+>       high transmission speed.  In such cases, full EH context is
+>       required to perform error handling.
+>
+>    c. Scattered complex EH is difficult to implement and maintain.
+>
+>       EH logic can be somewhat complex and scattering won't help
+>       implementing and maintaining it.  Also, libata low level
+>       drivers are allowed to override callbacks where part of EH
+>       logic may reside making matters worse.
+>
+>
+>[1-3] Synchronization
+>
+>    A simple & concrete qc synchronization model to make sure that EH
+>    and any other processing don't occur concurrently is needed.
+>
+>
+>[1-4] Clean mechanism to hand off qc's to EH
+>
+>    For EH to handle errors and timeouts, letting EH deal with and
+>    complete both errored and timed out qc's is good for simplicity
+>    and consistency.  To achieve this, we need a mechanism to hand off
+>    a qc to EH.
+>
+>    Currently, libata EH has a similar mechanism to hand off a failed
+>    ATAPI qc to EH.  As described in libata EH doc, such qc is
+>    half-completed and used as place holder until EH is kicked in and
+>    handles it.
+>
+>    This half-completion isn't very clean semantically and requires
+>    calling splitted internal completion routines directly.  Also, as
+>    such qc's are not explicitly marked as failed, not-very-intuitive
+>    stuff has to be done to avoid spurious interrupts or other events
+>    from messing with it after error has occurred.
+>
+>
+>[1-5] Separate EH qc
+>
+>    EH needs to issue qc's for recovery.  There can be several ways to
+>    allocate EH qc.
+>
+>    a. reserve one extra qc for internal/EH commands
+>    b. reserve one of normal qc's
+>    c. use failed qc
+>    d. complete failed qc first and reuse it
+>
+>    The preferred choice is #a for the following reasons.
+>
+>    - Allowing only one concurrent internal command is okay as long as
+>      proper allocation mechanism is implemented or only one user is
+>      guaranteed.
+>
+>    - EH commands are restricted to non-NCQ commands, so reserving an
+>      extra qc won't break qc to tag mapping.
+>
+>    - #b is impossible for non-NCQ devices because only one qc is
+>      available.
+>
+>    - #c requires dancing with qc's internals.  No real nerd likes
+>       dancing.
+>
+>    - It may be necessary to issue commands to determine whether to
+>      finish or retry a qc, so #d is out.
+>
+>
+>[1-6] SCSI/libata separation
+>
+>    Internal libata EH logic implementation should be free from SCSI
+>    considerations.  All glueing work should be localized to EH
+>    frontend and once in the actual error handling EH should only deal
+>    with qc's.
+>
+>
+>[2] Designs
+>
+> This section proposes detailed design of several important mechanisms
+>to help discussion and verification.
+>
+>
+>[2-1] Handoff of failed qc's
+>
+> As described above, when normal command processing determines that a
+>qc has failed, those qc's have to be handed off to EH without being
+>lost.
+>
+> A new qc flag ATA_QCFLAG_ERROR is defined to mark qc's which have
+>failed and ata_qc_error() is defined to be used by command processing
+>to mark failed qc and schedule EH.  ata_qc_error() has to be called
+>under the same condition as ata_qc_complete() - under host_lock - and
+>performs the following.
+>
+> 1. First check if the command is already marked with
+>    ATA_QCFLAG_ERROR.  If so, this isn't the first error completion
+>    attempt, just return.
+>
+> 2. Mark the qc with ATA_QCFLAG_ERROR.
+>
+> 3. As, currently, SCSI command issuing is not atomic with respect to
+>    SHOST_RECOVERY flag, we need a separate atomic mechanism to plug
+>    command issuing.  Per-port flag ATA_FLAG_ERROR is set here to
+>    prevent further command issuing.
+>
+> 4. Corresponding scmd's result code is set to
+>    SAM_STAT_CHECK_CONDITION and qc->scsidone() callback is called
+>    directly.  As we haven't filled sense data,
+>    scsi_determine_disposition() will return FAILED and SCSI EH will
+>    be scheduled.  Note that as we directly call qc->scsidone(), qc is
+>    left intact.
+>  
+>
+
+Could we get the sense data before calling qc->scsidone()?  (Using the 
+proposed separate
+EH qc can keep the original qc intact.)
+
+The issue:
+When a DVD drive returns MEDIUM_ERROR in the sense data, libata doesn't 
+retry the command.
+
+For libata, when scsi_softirq() calls scsi_decide_disposition() and 
+scsi_check_sense() to determine
+how to handle the result, scsi_check_sense() always returns "fail" since 
+the sense data is not there
+yet. The sense data is requested later in the libata error handler. But 
+the command has already been
+considered as an "error".
+
+By having the sense data ready before calling qc->scsidone(), we can 
+make the
+NEEDS_RETRY work in scsi_softirq().  So, for things like MEDIUM_ERROR, 
+the device has
+a chance to retry/recover the error. This seems to be important for 
+devices with built-in
+defect management system.
+
+> After above function is complete, the following conditions are true.
+>
+> a. The qc has ATA_QCFLAG_ERROR set and no further normal qc
+>    processing will happen for the command.
+>
+> b. No new qc will be issued for the port.
+>
+> c. EH is scheduled.
+>
+> d. Corresponding scmd and qc are left alone until EH processes them.
+>
+> Note that to achieve above behavior, we need to modify other places
+>too.  e.g. ata_qc_complete() needs to be modified to ignore failed
+>qc's and command issuing part to fail issuing if ATA_FLAG_ERROR is
+>set.
+>
+>
+>  
+>
 
 
---sfyO1m2EN8ZOtJL6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-Seokmann,
-This sounds identical to a crash that I had on Saturday.
-I have a server that has a dual Opteron/244 with 2GB of memory (4x512MB
-400MHz, Registered ECC, Corsair CM72SD512RLP-3) on a Tyan Opteron 8131
-motherboard.  The controller is the LSI MegaRAID SATA II 300-8X PCI-X
-(P/N LSI00005 with the LSI00012 battery backup).  The system is fairly new,
-it was manufactured on 06/22/05 and put in service about a mounth later.
-The MegaRAID controller has 8 Seagate ST3250823AS 250GB SATA drives with 
-NCQ.  
-The RAID array is a RAID5 array with a global spare.  It is divided 
-into two nearly equal sized logical disks.  The controller parameters 
-are set to:
-FlexRAID PowerFail = ENABLED
-Command Que = Enabled
-
-both logical drives are set to:
-RAID = 5
-Size = 712392MB 
-StripeSize = 64KB 
-{Write Policy = WRTHRU
-Read Policy = NORMAL
-Cache Policy = DirectIO
-#Stripes = 7
-State = OPTIMAL
-
-The system is running Red Hat Enterprise Linux AS release 4 (Nahant Update 1)
-With an updated kernel (I am booting off of a SATA disk on the 
-Silicon Image, Inc. SiI 3114 controller which was only fixed in recent
-kernels and firmware):
-Kernel 2.6.11.12 on a 2-processor i686
-
-The system is being used primarily as an NFS server. It also serves as
-the head node for a small cluster.  It does the Ganglia data collection
-task for the cluster.  Looking at the Ganglia data does not indicate
-that there was much of a load on the system just before the crash.  
-Although Ganglia is not recording disk I/O's I do not see much indirect 
-evidence that there was heavy disk I/O: the CPUs are steady state--
-around 97% idle, and no particular peaks or valleys.  Same with the 
-number of packets and network bytes transmitted/received, and memory 
-usage.  It all seems normal, with no particular peaks just before
-I rebooted it (as with the original case--the system kept running,
-although it was logging lots of disk I/O failed messages becuse the 
-controller had been off-lined.
-
-I am attaching a file that has the log records from the last 
-reboot (we had moved it to a UPS just under 4 days before the 
-controller locked up) showing the megaraid initialization,
-and the sequence of error (condensed) messages from the controller 
-up to the point where it off-lined the array(s).
-
-Other than this incident the system has been running fine since it was
-installed.  I hope that this helps.  If you have any suggestions 
-please tell me as I am worried that this may happen again.
-
-Thank you,
-	steve.
-
-On Mon, Aug 29, 2005 at 04:25:52PM -0400, Ju, Seokmann wrote:
-> FYI - Resending due to failure on previous sending.  
-> 
-> > -----Original Message-----
-> > From: Ju, Seokmann 
-> > Sent: Friday, August 26, 2005 11:00 AM
-> > To: 'Jonathan Fischer'
-> > Cc: Kolli, Neela Syam
-> > Subject: RE: Megaraid and Dell PERC 4 controllers
-> > 
-> > Hi Jonathan,
-> > 
-> > On Tuesday, August 23, 2005 4:52 PM, Jonathan Fischer wrote:
-> > > I think next up I'm trying writethru mode, instead of write 
-> > back, but
-> > > has anyone seen anything like this, or have any insight they might
-> > > offer?  I'm quickly getting to the point of being stumped.
-> > Can you please specify detail system configuration? (memory 
-> > size, # of cpus)
-> > And, what kind of load are you putting on the system when it locks up.
-> > Also, I assuem that the system doesn't have any monitoring 
-> > applications running for those PERC controllers. Please confirm this.
-> > From the message, the controller takes more than 3 minutes to 
-> > return certain I/O requests and it leads system to lock up.
-> > 
-> > Thank you.
-> > 
-> > Seokmann
-> > 
-> > > -----Original Message-----
-> > > From: Jonathan Fischer [mailto:jfischer@csusm.edu] 
-> > > Sent: Tuesday, August 23, 2005 4:52 PM
-> > > To: linux-scsi@vger.kernel.org
-> > > Subject: Megaraid and Dell PERC 4 controllers
-> > > 
-> > > I apologize if this is the wrong list to ask this kind of 
-> > question on;
-> > > I've posted on Dell's PowerEdge list and Red Hat's lists as 
-> > > well, but I
-> > > figure the people here might know better what to try for 
-> > this problem.
-> > > 
-> > > I have 2 Dell PowerEdge 2850's, one with a PERC 4e/DC raid 
-> > controller,
-> > > and the other with a PERC 4e/Di.  On both of these systems, I can
-> > > reliably cause the controllers to lock up under heavy load.  This is
-> > > using a fully up-to-date Red Hat 4 EL (non x86_64) 
-> > > installation on both
-> > > computers.  The controllers use the megaraid_mbox driver.
-> > > 
-> > > During a period of high load, the controller suddenly seems to stop
-> > > responding to the driver, causing the driver to go into a 
-> > waiting loop
-> > > for it.  It waits 3 minutes for the controller to respond, which it
-> > > never does, and then takes the controller offline, pretty 
-> > much yanking
-> > > the filesystem out from underneath the OS.
-> > > 
-> > > Some things keep running alright, so (working with Red Hat's 
-> > > support) I
-> > > got the thing set up to netdump to another server to see if we could
-> > > figure out what was going wrong.  The kernel never actually 
-> > > crashes, so
-> > > netdump doesn't produce a vmcore to look through, but syslog keeps
-> > > spouting out information, so I've got that.
-> > > 
-> > > Every time this lockup occurs, the log file looks like this:
-> > > 
-> > > megaraid: aborting-29762 cmd=2a <c=2 t=0 l=0>
-> > > megaraid abort: 29762:21[255:128], fw owner
-> > > megaraid: aborting-29763 cmd=2a <c=2 t=0 l=0>
-> > > megaraid abort: 29763:39[255:128], fw owner
-> > > megaraid: aborting-29764 cmd=2a <c=2 t=0 l=0>
-> > > megaraid abort: 29764:16[255:128], fw owner
-> > > megaraid: aborting-29768 cmd=2a <c=2 t=0 l=0>
-> > > megaraid abort: 29768:53[255:128], fw owner
-> > > 
-> > > 	This part repeats 64 times, then...
-> > > 
-> > > megaraid: aborting-29831 cmd=2a <c=2 t=0 l=0>
-> > > megaraid abort: 29831:8[255:128], fw owner
-> > > megaraid: resetting the host...
-> > > megaraid: 64 outstanding commands. Max wait 180 sec
-> > > megaraid mbox: Wait for 64 commands to complete:180
-> > > megaraid mbox: Wait for 64 commands to complete:175
-> > > 	
-> > > 	megaraid mbox counts down to 0, and then...
-> > > 
-> > > megaraid mbox: critical hardware error!
-> > > megaraid: resetting the host...
-> > > megaraid: hw error, cannot reset
-> > > megaraid: resetting the host...
-> > > megaraid: hw error, cannot reset
-> > > SCSI error : <0 2 0 0> return code = 0x6000000
-> > > end_request: I/O error, dev sda, sector 242938701
-> > > Buffer I/O error on device dm-4, logical block 9893952 lost 
-> > page write
-> > > due to I/O error on dm-4
-> > > scsi0 (0:0): rejecting I/O to offline device
-> > > 
-> > > The commands that the driver are waiting for are always the 
-> > > same, except
-> > > for the sequence number (the number right after "aborting-" 
-> > > and  "abort:
-> > > ").  And there are always 64 commands backed up that the driver is
-> > > waiting for.
-> > > 
-> > > Both machines in question pass memtest86 and Dell's 
-> > > diagnostic sets, and
-> > > since the failure is identical in both I don't believe it's bad
-> > > hardware.  We've got the latest BIOS, RAID firmware, and backplane
-> > > firmware on the machines.
-> > > 
-> > > I've also tried:
-> > > - the RHEL 4 Update 2 Beta kernel (at Red Hat's suggestion)
-> > > - RHEL 4 x86_64
-> > > - RHEL 3 x86_64
-> > > - Fedora Core 4 x86
-> > > - disabling Patrol Read in the RAID bios
-> > > - disabling read-ahead in the RAID bios
-> > > - changing the writeback cache flush to every 2 seconds, 
-> > > instead of the
-> > > default 4
-> > > 
-> > > I think next up I'm trying writethru mode, instead of write 
-> > back, but
-> > > has anyone seen anything like this, or have any insight they might
-> > > offer?  I'm quickly getting to the point of being stumped.
-> > > 
-> > > Jonathan Fischer
-> > > Operating Systems Analyst - CSU San Marcos
-> > > jfischer@csusm.edu
-> > > 
-> > > -
-> > > To unsubscribe from this list: send the line "unsubscribe 
-> > > linux-scsi" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > > 
-> > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---sfyO1m2EN8ZOtJL6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename=brule_crash
-
-Red Hat Enterprise Linux AS release 4 (Nahant Update 1)
-Kernel 2.6.11.12 on a 2-processor i686
-
-Aug 23 19:49:03 brule kernel: megaraid cmm: 2.20.2.5 (Release Date: Fri Jan 21 00:01:03 EST 2005)
-Aug 23 19:49:03 brule kernel: megaraid: 2.20.4.5 (Release Date: Thu Feb 03 12:27:22 EST 2005)
-Aug 23 19:49:03 brule kernel: megaraid: probe new device 0x1000:0x0409:0x1000:0x3008: bus 2:slot 14:func 0
-Aug 23 19:49:03 brule kernel: ACPI: PCI interrupt 0000:02:0e.0[C] -> GSI 28 (level, low) -> IRQ 28
-Aug 23 19:49:03 brule kernel: megaraid: fw version:[813i] bios version:[H430]
-Aug 23 19:49:03 brule kernel: scsi0 : LSI Logic MegaRAID driver
-Aug 23 19:49:03 brule kernel: scsi[0]: scanning scsi channel 0 [Phy 0] for non-raid devices
-Aug 23 19:49:03 brule kernel: scsi[0]: scanning scsi channel 1 [virtual] for logical drives
-Aug 23 19:49:03 brule kernel:   Vendor: MegaRAID  Model: LD 0 RAID5  712G  Rev: 813i
-Aug 23 19:49:03 brule kernel:   Type:   Direct-Access                      ANSI SCSI revision: 02
-Aug 23 19:49:03 brule kernel:   Vendor: MegaRAID  Model: LD 1 RAID5  712G  Rev: 813i
-Aug 23 19:49:03 brule kernel:   Type:   Direct-Access                      ANSI SCSI revision: 02
-Aug 23 19:49:03 brule kernel: ACPI: PCI interrupt 0000:04:05.0[A] -> GSI 19 (level, low) -> IRQ 19
-Aug 23 19:49:03 brule kernel: ata1: SATA max UDMA/100 cmd 0xF8806C80 ctl 0xF8806C8A bmdma 0xF8806C00 irq 19
-Aug 23 19:49:03 brule kernel: ata2: SATA max UDMA/100 cmd 0xF8806CC0 ctl 0xF8806CCA bmdma 0xF8806C08 irq 19
-Aug 23 19:49:03 brule kernel: ata3: SATA max UDMA/100 cmd 0xF8806E80 ctl 0xF8806E8A bmdma 0xF8806E00 irq 19
-Aug 23 19:49:03 brule kernel: ata4: SATA max UDMA/100 cmd 0xF8806EC0 ctl 0xF8806ECA bmdma 0xF8806E08 irq 19
-Aug 23 19:49:03 brule kernel: ata1: dev 0 ATA, max UDMA/133, 234441648 sectors: lba48
-Aug 23 19:49:03 brule kernel: ata1: dev 0 configured for UDMA/100
-Aug 23 19:49:03 brule kernel: scsi1 : sata_sil
-Aug 23 19:49:03 brule kernel: ata2: no device found (phy stat 00000000)
-Aug 23 19:49:03 brule kernel: scsi2 : sata_sil
-Aug 23 19:49:03 brule kernel: ata3: no device found (phy stat 00000000)
-Aug 23 19:49:03 brule kernel: scsi3 : sata_sil
-Aug 23 19:49:03 brule kernel: ata4: no device found (phy stat 00000000)
-Aug 23 19:49:03 brule kernel: scsi4 : sata_sil
-Aug 23 19:49:03 brule kernel:   Vendor: ATA       Model: ST3120026AS       Rev: 3.05
-Aug 23 19:49:03 brule kernel:   Type:   Direct-Access                      ANSI SCSI revision: 05
-Aug 23 19:49:03 brule kernel: SCSI device sda: 1458978816 512-byte hdwr sectors (746997 MB)
-Aug 23 19:49:03 brule kernel: sda: asking for cache data failed
-Aug 23 19:49:03 brule kernel: sda: assuming drive cache: write through
-Aug 23 19:49:04 brule kernel: SCSI device sda: 1458978816 512-byte hdwr sectors (746997 MB)
-Aug 23 19:49:04 brule kernel: sda: asking for cache data failed
-Aug 23 19:49:04 brule kernel: sda: assuming drive cache: write through
-Aug 23 19:49:04 brule kernel:  sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 sda8 sda9 sda10 sda11 sda12 sda13 sda14 >
-Aug 23 19:49:04 brule kernel: Attached scsi disk sda at scsi0, channel 1, id 0, lun 0
-Aug 23 19:49:04 brule kernel: SCSI device sdb: 1458978816 512-byte hdwr sectors (746997 MB)
-Aug 23 19:49:04 brule kernel: sdb: asking for cache data failed
-Aug 23 19:49:04 brule kernel: sdb: assuming drive cache: write through
-Aug 23 19:49:04 brule kernel: SCSI device sdb: 1458978816 512-byte hdwr sectors (746997 MB)
-Aug 23 19:49:04 brule kernel: sdb: asking for cache data failed
-Aug 23 19:49:04 brule kernel: sdb: assuming drive cache: write through
-Aug 23 19:49:04 brule kernel:  sdb: sdb1 sdb2 sdb3 sdb4
-Aug 23 19:49:04 brule kernel: Attached scsi disk sdb at scsi0, channel 1, id 1, lun 0
-Aug 23 19:49:04 brule kernel: SCSI device sdc: 234441648 512-byte hdwr sectors (120034 MB)
-Aug 23 19:49:04 brule kernel: SCSI device sdc: drive cache: write back
-Aug 23 19:49:04 brule kernel: SCSI device sdc: 234441648 512-byte hdwr sectors (120034 MB)
-Aug 23 19:49:04 brule kernel: SCSI device sdc: drive cache: write back
-Aug 23 19:49:04 brule kernel:  sdc: sdc1 sdc2 sdc3 < sdc5 sdc6 sdc7 sdc8 > sdc4
-Aug 23 19:49:04 brule kernel: Attached scsi disk sdc at scsi1, channel 0, id 0, lun 0
-Aug 23 19:49:04 brule kernel: Attached scsi generic sg0 at scsi0, channel 1, id 0, lun 0,  type 0
-Aug 23 19:49:04 brule kernel: Attached scsi generic sg1 at scsi0, channel 1, id 1, lun 0,  type 0
-Aug 23 19:49:04 brule kernel: Attached scsi generic sg2 at scsi1, channel 0, id 0, lun 0,  type 0
-... the disk ran fine for nearly 4 days
-
-Aug 27 16:19:56 brule kernel: megaraid: aborting-35347365 cmd=2a <c=1 t=0 l=0>
-Aug 27 16:19:56 brule kernel: megaraid abort: 35347365:95[255:128], fw owner
-Aug 27 16:19:56 brule kernel: megaraid: aborting-35347366 cmd=2a <c=1 t=0 l=0>
-Aug 27 16:19:56 brule kernel: megaraid abort: 35347366:121[255:128], fw owner
-Aug 27 16:19:56 brule kernel: megaraid: aborting-35347367 cmd=2a <c=1 t=0 l=0>
-...
-Aug 27 16:19:57 brule kernel: megaraid: aborting-35347510 cmd=2a <c=1 t=0 l=0>
-Aug 27 16:19:57 brule kernel: megaraid abort: 35347510:112[255:128], fw owner
-Aug 27 16:19:57 brule kernel: megaraid: reseting the host...
-Aug 27 16:19:57 brule kernel: megaraid: 64 outstanding commands. Max wait 180 sec
-Aug 27 16:19:57 brule kernel: megaraid mbox: Wait for 64 commands to complete:180
-Aug 27 16:20:01 brule kernel: megaraid mbox: Wait for 64 commands to complete:175
-Aug 27 16:20:06 brule kernel: megaraid mbox: Wait for 1 commands to complete:170
-Aug 27 16:20:11 brule kernel: megaraid mbox: Wait for 1 commands to complete:165
-Aug 27 16:20:16 brule kernel: megaraid mbox: Wait for 1 commands to complete:160
-...
-Aug 27 16:22:51 brule kernel: megaraid mbox: Wait for 1 commands to complete:5
-Aug 27 16:22:56 brule kernel: megaraid mbox: Wait for 1 commands to complete:0
-Aug 27 16:23:01 brule kernel: megaraid mbox: Wait for 1 commands to complete:-5
-...
-Aug 27 16:24:46 brule kernel: megaraid mbox: Wait for 1 commands to complete:-110
-Aug 27 16:24:51 brule kernel: megaraid mbox: Wait for 1 commands to complete:-115
-Aug 27 16:24:56 brule kernel: megaraid mbox: critical hardware error!
-Aug 27 16:24:56 brule kernel: megaraid: reseting the host...
-Aug 27 16:24:56 brule kernel: megaraid: hw error, cannot reset
-Aug 27 16:24:56 brule kernel: megaraid: reseting the host...
-Aug 27 16:24:56 brule kernel: megaraid: hw error, cannot reset
-Aug 27 16:24:56 brule kernel: scsi: Device offlined - not ready after error recovery: host 0 channel 1 id 0 lun 0
-
---sfyO1m2EN8ZOtJL6--
