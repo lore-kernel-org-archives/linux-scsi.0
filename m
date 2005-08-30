@@ -1,95 +1,25 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] aic7xxx: move to dma_get_required_mask() and correct 39
-	bit assumptions
-Date: Tue, 30 Aug 2005 11:48:07 -0500
-Message-ID: <1125420487.5037.27.camel@mulgrave>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] aic7xxx: move to dma_get_required_mask() and correct 39 bit assumptions
+Date: Tue, 30 Aug 2005 17:58:31 +0100
+Message-ID: <20050830165831.GA32049@infradead.org>
+References: <1125420487.5037.27.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat16.steeleye.com ([209.192.50.48]:55457 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932221AbVH3Qs0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Aug 2005 12:48:26 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:13720 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932140AbVH3Q6e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Aug 2005 12:58:34 -0400
+Content-Disposition: inline
+In-Reply-To: <1125420487.5037.27.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Jones <davej@redhat.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, luben_tuikov@adaptec.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Dave Jones <davej@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, luben_tuikov@adaptec.com
 
-This patch moves aic7xxx over to the dma_get_required_mask() API and
-dumps its open coded memory check.
+On Tue, Aug 30, 2005 at 11:48:07AM -0500, James Bottomley wrote:
+> This patch moves aic7xxx over to the dma_get_required_mask() API and
+> dumps its open coded memory check.
 
-It also appears from this bug:
-
-https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=167049
-
-That 39 bit addressing doesn't work on older cards.  I surmise that the
-AHC_LARGE_SCBS flag is the one that marks cards capable of using 39 bit
-addressing, so I also folded that check into the code.
-
-Luben, since you have access to the docs, could you confirm this guess.
-
-Dave, could you see if this fixes the problem for the bug reporter.
-
-James
-
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -1036,15 +1036,6 @@ ahc_linux_register_host(struct ahc_softc
- 	return (0);
- }
- 
--uint64_t
--ahc_linux_get_memsize(void)
--{
--	struct sysinfo si;
--
--	si_meminfo(&si);
--	return ((uint64_t)si.totalram << PAGE_SHIFT);
--}
--
- /*
-  * Place the SCSI bus into a known state by either resetting it,
-  * or forcing transfer negotiations on the next command to any
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.h b/drivers/scsi/aic7xxx/aic7xxx_osm.h
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.h
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.h
-@@ -494,8 +494,6 @@ ahc_insb(struct ahc_softc * ahc, long po
- int		ahc_linux_register_host(struct ahc_softc *,
- 					struct scsi_host_template *);
- 
--uint64_t	ahc_linux_get_memsize(void);
--
- /*************************** Pretty Printing **********************************/
- struct info_str {
- 	char *buffer;
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
---- a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
-@@ -180,6 +180,7 @@ ahc_linux_pci_dev_probe(struct pci_dev *
- 	struct		 ahc_pci_identity *entry;
- 	char		*name;
- 	int		 error;
-+	struct device	*dev = &pdev->dev;
- 
- 	pci = pdev;
- 	entry = ahc_find_pci_device(pci);
-@@ -209,11 +210,12 @@ ahc_linux_pci_dev_probe(struct pci_dev *
- 	pci_set_master(pdev);
- 
- 	if (sizeof(dma_addr_t) > 4
--	 && ahc_linux_get_memsize() > 0x80000000
--	 && pci_set_dma_mask(pdev, mask_39bit) == 0) {
-+	    && ahc->features & AHC_LARGE_SCBS
-+	    && dma_set_mask(dev, mask_39bit) == 0
-+	    && dma_get_required_mask(dev) > DMA_32BIT_MASK) {
- 		ahc->flags |= AHC_39BIT_ADDRESSING;
- 	} else {
--		if (pci_set_dma_mask(pdev, DMA_32BIT_MASK)) {
-+		if (dma_set_mask(dev, DMA_32BIT_MASK)) {
- 			printk(KERN_WARNING "aic7xxx: No suitable DMA available.\n");
-                 	return (-ENODEV);
- 		}
-
+Can you put in that change for aic79xx aswell?
 
