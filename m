@@ -1,88 +1,90 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFC] SCSI EH document
-Date: Tue, 30 Aug 2005 19:47:31 +0900
-Message-ID: <43143943.2050802@gmail.com>
-References: <20050826035326.GA13392@htj.dyndns.org> <430F8AE0.7080806@pobox.com> <4312D213.9000402@gmail.com> <431313D1.7090107@adaptec.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH] sg direct io/mmap oops
+Date: Tue, 30 Aug 2005 21:14:21 +1000
+Message-ID: <43143F8D.3080904@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------080302010103080906090004"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.194]:47815 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750930AbVH3Krh (ORCPT
+Received: from zorg.st.net.au ([203.16.233.9]:31649 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1751372AbVH3LON (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Aug 2005 06:47:37 -0400
-Received: by zproxy.gmail.com with SMTP id r28so776879nza
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Aug 2005 03:47:37 -0700 (PDT)
-In-Reply-To: <431313D1.7090107@adaptec.com>
+	Tue, 30 Aug 2005 07:14:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James.Bottomley@steeleye.com, albertcc@tw.ibm.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: ahmed.teirelbar@adic.com, Kai.Makisara@kolumbus.fi, James.Bottomley@SteelEye.com
+
+This is a multi-part message in MIME format.
+--------------080302010103080906090004
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+Back in the lk 2.4 series it was possible with the sgm_dd
+utility to do a zero copy transfer between two disks (or
+2 locations on the same disk). That was done by doing mmap-ed
+IO on the read and direct IO on the write with the sg driver.
+
+Well that no longer works in the lk 2.6 series because the
+sg (and st) driver uses get_user_pages() for direct IO and
+that returns -EFAULT when VM_IO is set on any of the user
+pages it is trying use. Pages that are mmap-ed have VM_IO
+set.
+
+I can live with that: dio and mmap-ed IO work separately
+and dio can work on both sides of a transfer.
+
+This was brought to my attention by Ahmed Teirelbar
+<ahmed.teirelbar@adic.com> with lk 2.6.5 . Worse, when
+tested in lk 2.6.12 and lk 2.6.13, attempting dio/mmap
+caused the sg driver to oops (due to empty entries in
+a scatter gather list). Ahmed proposed the following
+patch which both of us have tested.
+
+I have alerted Kai M. as the same fix is needed in
+the st driver IMO.
 
 
-  Hi, Luben.
+Changelog:
+   - check error return (a negative integer) properly after
+     the get_user_pages() call that sets up direct IO
 
-Luben Tuikov wrote:
-> On 08/29/05 05:14, Tejun Heo wrote:
-> 
->>>Both all the list-heads need to be cleared, otherwise there may be list 
->>>corruption next time the element is added to the list_head.
->>>
->>
->>
->>  scmd->eh_entry is never used as list head.  It's always used as list 
->>entry.  So, technically, it needs not be cleared, I think.  No?  The 
->>problem we had was w/ shost->eh_cmd_q not being cleared.
-> 
-> 
-> In your "strategy" routine:
-> 
-> 	...
-> 	spin_lock_irqsave(shost->host_lock, flags);
-> 	list_splice_init(&shost->eh_cmd_q, &error_q);
-> 	spin_unlock_irqrestore(shost->host_lock, flags);
-> 	...
-> 
-> 	loop {
-> 		...
-> 		list_del_init(&cmd->eh_entry);
-> 		...
-> 	}
-> 
-> A good policy to follow is:
-> 	1. Never leave prev/next pointing somewhere where
-> 		- you don't belong, or
-> 		- where you don't know existance is in place.
-> 	2. Someone (memory release?) may do:
-> 		if (!list_empty(cmd->eh_entry))
-> 			Refuse to free the memory.
-> 	Which is often the case to check if the object belongs to
-> 	a list. (You shouldn't have to do this but case pointed only for
-> 	illustrational purposes.)
-> 
->    Luben
-> 
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
-  The reason why I explicitly stated that clearing scmd->eh_entry was 
-not currently necessary was that libata had infinite loop bug due to 
-eh_cmd_q related memory corruption and I wanted to make sure that not 
-clearing scmd->eh_entry wasn't the cause.
+Doug Gilbert
 
-  Previously, libata didn't clear both shost->eh_cmd_q and 
-scmd->eh_entry.  I posted an one liner which cleared shost->eh_cmd_q and 
-I believe that's the fix for the problem.  However, Mark Lord is still 
-having lockup problems with libata which, I suspect, is because libata 
-doesn't handle PM's properly.  But, as I'm not very sure, I wanted to 
-make sure that libata's not clearing scmd->eh_cmd_q is not causing the 
-lockup.
 
-  I agree that, as a policy, always clearing list_head's are nice if 
-it's not in the *real* hot path where reducing several assignments 
-matter, but as it's not strictly/technically necessary, it might be 
-difficult to enforce as long as functions which don't clear list_head 
-are there.
 
-  Thanks for your input.  :-)
 
--- 
-tejun
+--------------080302010103080906090004
+Content-Type: text/x-patch;
+ name="sg_2613mm.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sg_2613mm.diff"
+
+--- linux/drivers/scsi/sg.c	2005-08-29 18:28:23.000000000 +1000
++++ linux/drivers/scsi/sg.c2613mm	2005-08-30 15:09:04.000000000 +1000
+@@ -61,7 +61,7 @@
+ 
+ #ifdef CONFIG_SCSI_PROC_FS
+ #include <linux/proc_fs.h>
+-static char *sg_version_date = "20050328";
++static char *sg_version_date = "20050830";
+ 
+ static int sg_proc_init(void);
+ static void sg_proc_cleanup(void);
+@@ -1831,7 +1831,8 @@
+ 	up_read(&current->mm->mmap_sem);
+ 
+ 	/* Errors and no page mapped should return here */
+-	if (res < nr_pages)
++	/* Beware of signed to unsigned integer promotions!! */
++	if ((res < 0) || (res < nr_pages))
+ 		goto out_unmap;
+ 
+         for (i=0; i < nr_pages; i++) {
+
+
+--------------080302010103080906090004--
