@@ -1,55 +1,72 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: [PATCH] SCSI tape signed/unsigned fix
-Date: Wed, 31 Aug 2005 23:12:05 +0300 (EEST)
-Message-ID: <Pine.LNX.4.61.0508312304580.2962@kai.makisara.local>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: Possible bug in qla2xxx rev. 8.00.02
+Date: Wed, 31 Aug 2005 15:08:50 -0700
+Message-ID: <20050831220850.GH11577@plap.qlogic.org>
+References: <47F3C2BE74738E4683574107469DFA203B97D8@XYUSEX01.xyus.xyratex.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep02-0.kolumbus.fi ([193.229.0.44]:49640 "EHLO
-	fep02-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S964927AbVHaUHO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Aug 2005 16:07:14 -0400
+Received: from pat.qlogic.com ([198.70.193.2]:31639 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S964873AbVHaWJA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Aug 2005 18:09:00 -0400
+Content-Disposition: inline
+In-Reply-To: <47F3C2BE74738E4683574107469DFA203B97D8@XYUSEX01.xyus.xyratex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@steeleye.com>
+To: Frank Borich <Frank_Borich@us.xyratex.com>
+Cc: linux-scsi@vger.kernel.org
 
-This patch fixes in st.c the bug in the signed/unsigned int comparison
-reported by Doug Gilbert and fixed by him in sg.c (see [PATCH] sg direct
-io/mmap oops). Doug fixed the comparison in sg.c. This fix for st.c does not
-touch the comparison but makes both arguments signed to remove the
-problem. The new code is adapted from linux/fs/bio.c.
+On Mon, 29 Aug 2005, Frank Borich wrote:
 
-Doug's fix is correct and simple, no question about it. I just have learned to
-hate these signed/unsigned comparisons where they can be avoided (having
-originally created this bug is one more reason ;-)
+> I have a controller with a firmware bug that mishandles 
+> underrun situations for inquiry commands. It correctly
+> sets the FCP_RESID_UNDER flag however it miscalculates
+> the FCP_RESID count.  The 7.05.00 Qlogic driver for 2.4.x
+> kernels thinks frame(s) were lost and retries the command
+> 20 times with no success:
+> 
+> 
+>  if (!(scsi_status & SS_RESIDUAL_UNDER)) {
+>                                         ha->dropped_frame_error_cnt++;
+>                                         CMD_RESULT(cp) = DID_BUS_BUSY <<
+> 16;
+>                                         DEBUG2(printk(KERN_INFO
+> "scsi(%ld): Dropped "
+>                                                 "frame(s) detected (%x
+> of %x "
+>                                                 "bytes)...retrying
+> command.\n",
+>                                                 ha->host_no,
+>                                                 resid,
+>                                                 CMD_XFRLEN(cp));)
+>                                         break;
+>                                 }
+> 
 
-Signed-off-by: Kai Makisara <kai.makisara@kolumbus.fi>
+Interesting, could you submit a support a problem report here:
 
---- linux-2.6.13/drivers/scsi/st.c	2005-08-29 21:04:57.000000000 +0300
-+++ linux-2.6.13-k1/drivers/scsi/st.c	2005-08-30 21:35:14.000000000 +0300
-@@ -17,7 +17,7 @@
-    Last modified: 18-JAN-1998 Richard Gooch <rgooch@atnf.csiro.au> Devfs support
-  */
- 
--static char *verstr = "20050501";
-+static char *verstr = "20050830";
- 
- #include <linux/module.h>
- 
-@@ -4348,12 +4348,12 @@ static int st_map_user_pages(struct scat
- static int sgl_map_user_pages(struct scatterlist *sgl, const unsigned int max_pages, 
- 			      unsigned long uaddr, size_t count, int rw)
- {
-+	unsigned long end = (uaddr + count + PAGE_SIZE - 1) >> PAGE_SHIFT;
-+	unsigned long start = uaddr >> PAGE_SHIFT;
-+	const int nr_pages = end - start;
- 	int res, i, j;
--	unsigned int nr_pages;
- 	struct page **pages;
- 
--	nr_pages = ((uaddr & ~PAGE_MASK) + count + ~PAGE_MASK) >> PAGE_SHIFT;
--
- 	/* User attempted Overflow! */
- 	if ((uaddr + count) < uaddr)
- 		return -EINVAL;
+	http://connection.qlogic.com/support/report/index.asp?id=csg
+
+this will insure, this gets routed through the proper channels.
+
+7.05.00 uses an older 23xx firmware.
+
+Might be best if we had a FC trace as well, I'm sure the FW folks will
+be interested to see what's comming back on the wire.
+
+> Just wondering why the 8.00.02 driver for 2.6.x kernels did not
+> detect this transport error ?
+>
+
+Did you enable the proper debug settings for this driver?  This driver
+has the dropped-frame check as well...
+
+IAC:  route this through tech-support.
+
+> Latest Emulex and LSI drivers did
+> not detect this either ???
+> 
+
+--
+av
