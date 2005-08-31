@@ -1,45 +1,67 @@
-From: Andi Kleen <ak@suse.de>
-Subject: [PATCH] Fix crash in aic79xx probing in scsi-misc when no hardware is present
-Date: Wed, 31 Aug 2005 10:45:54 +0200
-Message-ID: <200508311045.54846.ak@suse.de>
+From: "David William" <davidwilliam@davidwilliam.net>
+Subject: INVISTMENT PROJECT
+Date: Wed, 31 Aug 2005 10:19:15 +0000
+Message-ID: <BAY15-F189032D188688A13FB3024ABA10__49700.3210396089$1125483690$gmane$org@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:19128 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S932489AbVHaIqA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Aug 2005 04:46:00 -0400
-Received: from Relay2.suse.de (mail2.suse.de [195.135.221.8])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx2.suse.de (Postfix) with ESMTP id A32981D975
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Aug 2005 10:45:59 +0200 (CEST)
-Content-Disposition: inline
+Received: from bay15-f18.bay15.hotmail.com ([65.54.185.18]:20984 "EHLO
+	hotmail.com") by vger.kernel.org with ESMTP id S932073AbVHaKTQ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Aug 2005 06:19:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: davidwilliam@davidwilliam.net
+
+Dear Beloved,
 
 
-aic79xx in scsi-misc would oops when no hardware was present.
-Reason was a duplicated call to free the spi transport object -
-it was done both in ahd_linux_exit and in the cleanup part
-of ahd_linux_init.
+I am looking for your cooperation in building a
+Tourist Hotel/shopping Mall or Real Estate in your
+country. I am sorry if this is not in line
+with your business.I need an experienced person like
+you to assist me to set up , develop the project and
+assume responsibility of ownership as chairman but
+will be bringing in profit /distribute profit monthly
+or annually.
 
-Just remove the superfluous call.
+I am Henry Bori,a citizen of Nairobi ,Kenya.A former
+Presidential adviser on Budget and planning to the
+former president of Kenya,Daniel Arab Moi.I acuirred
+this money as a result of gold and diamond export.
 
-Signed-off-by: Andi Kleen <ak@suse.de>
+I am currently in possession of $58.1m,which i want to
+use for investment purposes preferably in your
+country.
 
-Index: linux-2.6.13/drivers/scsi/aic7xxx/aic79xx_osm.c
-===================================================================
---- linux-2.6.13.orig/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ linux-2.6.13/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -2771,7 +2771,6 @@ ahd_linux_init(void)
- 				      sizeof(struct ahd_linux_device));
- 	if (ahd_linux_detect(&aic79xx_driver_template) > 0)
- 		return 0;
--	spi_release_transport(ahd_linux_transport_template);
- 	ahd_linux_exit();
- 	return -ENODEV;
- }
+Now the present government of Mwai Kibaki has
+intensified efforts at probing Moi's government,
+goverment officials have turned their backs on us and
+have been frustrating me and others that served under
+Daniel Arab Moi. For this reason, I left Kenya for
+Western part of Africa, in the Calabar City.
+That is why i need someone like you who is trustworhty
+and honest, to assist me achieve my objectives,and
+also manage the business for me.
+
+However ,I got your email information on your Hotel
+contact list,that is why i am making this exclusive
+contact with you. your immediate reply will be highly
+appreciated and I shall give you more information on
+this project,and your percentage and all what is
+expected of you.
+
+Please contact me at my private email address
+bol200110@yahoo.co.uk
+
+
+Your response
+is higly welcomed.
+
+Thanks and God bless.
+
+I Remain Yours;
+
+Henry Bori.
+
+
