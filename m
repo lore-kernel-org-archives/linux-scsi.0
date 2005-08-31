@@ -1,14 +1,14 @@
 From: "David William" <davidwilliam@davidwilliam.net>
 Subject: INVISTMENT PROJECT
-Date: Wed, 31 Aug 2005 10:19:15 +0000
-Message-ID: <BAY15-F189032D188688A13FB3024ABA10__49700.3210396089$1125483690$gmane$org@phx.gbl>
+Date: Wed, 31 Aug 2005 10:20:40 +0000
+Message-ID: <BAY15-F30C1FD529C5D754DEFFD22ABA10@phx.gbl>
 Mime-Version: 1.0
 Content-Type: text/plain; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bay15-f18.bay15.hotmail.com ([65.54.185.18]:20984 "EHLO
-	hotmail.com") by vger.kernel.org with ESMTP id S932073AbVHaKTQ
+Received: from bay15-f30.bay15.hotmail.com ([65.54.185.30]:12450 "EHLO
+	hotmail.com") by vger.kernel.org with ESMTP id S932334AbVHaKUk
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Aug 2005 06:19:16 -0400
+	Wed, 31 Aug 2005 06:20:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: davidwilliam@davidwilliam.net
