@@ -1,51 +1,47 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [RFC] libata new EH document
-Date: Thu, 01 Sep 2005 18:09:15 -0400
-Message-ID: <43177C0B.9040500@adaptec.com>
-References: <20050901043850.15186.qmail@web51611.mail.yahoo.com>	 <43169520.6040008@gmail.com>  <20050901055421.GA23496@havoc.gtf.org> <1125581097.4834.5.camel@mulgrave> <4317755C.5080700@adaptec.com> <431776A0.2030107@pobox.com>
+Date: Thu, 01 Sep 2005 18:23:28 -0400
+Message-ID: <1125613408.4946.28.camel@mulgrave>
+References: <20050901043850.15186.qmail@web51611.mail.yahoo.com>
+	 <43169520.6040008@gmail.com>  <20050901055421.GA23496@havoc.gtf.org>
+	 <1125581097.4834.5.camel@mulgrave>  <4317755C.5080700@adaptec.com>
+	 <1125611718.4946.20.camel@mulgrave>  <43177B95.4040602@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:57999 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1030440AbVIAWJY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Sep 2005 18:09:24 -0400
-In-Reply-To: <431776A0.2030107@pobox.com>
+Received: from stat16.steeleye.com ([209.192.50.48]:7869 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1030466AbVIAWYg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Sep 2005 18:24:36 -0400
+In-Reply-To: <43177B95.4040602@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Tejun Heo <htejun@gmail.com>, ltuikov@yahoo.com, Albert Lee <albertcc@tw.ibm.com>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, ltuikov@yahoo.com, Albert Lee <albertcc@tw.ibm.com>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
 
-On 09/01/05 17:46, Jeff Garzik wrote:
->>>>libata is simply being lazy:  while the SCSI core continues to support
->>>>kicking the EH thread when sense is missing, it's preferred for libata
->>>>to reuse that infrastructure.
->>>
->>>
->>>That makes the most sense ;-)
->>
->>
->>For libata it doesn't really matter, since it is _ATA_.
+On Thu, 2005-09-01 at 18:07 -0400, Luben Tuikov wrote:
+> > Well, not really, since it's basic SCSI and the explanation's pretty
+> > long.  However, the standards have several pages about it.  For your
+> > reading pleasure, I suggest SAM-2 section 5.9.1 Contingent allegiance
+> > (CA) and auto contingent allegiance (ACA)
 > 
-> It matters quite a bit.  One of the main reasons libata uses the SCSI 
-> layer is for its infrastructure.
+> SCSI Core knows nothing about ACA and/or how to use it.
 
-Hmm, maybe I should've been more clear.
+I don't recall ever claiming that it did.  The discussion was about how
+the error handler clears contingent allegiance conditions.
 
-> This is the same reason a couple RAID drivers use the SCSI layer.  It 
-> has nothing to do with SCSI-as-defined-by-T10, and more to do with the 
-> fact that SCSI provides a robust queueing/EH/block interface infrastructure.
+> You should also know that no one actually spells out CA or ACA,
+> they just use the capitalized abbreviation, plus the fact that
+> CA is obsolete.
 
-You must be kidding! "robust"?  What are you comparing this to?
+Lets just say I'm TLA averse.
 
-I think it's only because "it's there" and that it provides
-a uniform access -- provided by SCSI, _not_ by that particular
-SCSI implementation.
+> Stop impressing the children!
 
-> My long term plans include moving some of this not-SCSI-related 
-> infrastructure from the SCSI layer to the block layer.
+Is that what people who constantly refer to standards are trying to do?
+I must say I did wonder ...
 
-Which is that infrastructure?
+James
 
-	Luben
 
