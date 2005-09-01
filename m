@@ -1,86 +1,48 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [RFC] libata new EH document
-Date: Thu, 01 Sep 2005 10:17:15 +0900
-Message-ID: <4316569B.6080406@gmail.com>
-References: <20050829061124.GA2725@htj.dyndns.org> <43142279.3070004@tw.ibm.com> <43143461.7040606@gmail.com> <43146DE7.1070501@adaptec.com>
+Date: Wed, 31 Aug 2005 22:22:17 -0400
+Message-ID: <431665D9.7010500@pobox.com>
+References: <20050829061124.GA2725@htj.dyndns.org> <43142279.3070004@tw.ibm.com> <43143461.7040606@gmail.com> <43146DE7.1070501@adaptec.com> <4316569B.6080406@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <43146DE7.1070501@adaptec.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Albert Lee <albertcc@tw.ibm.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Doug Maxey <dwm@maxeymade.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:16336 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S965031AbVIACWf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Aug 2005 22:22:35 -0400
+In-Reply-To: <4316569B.6080406@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Albert Lee <albertcc@tw.ibm.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Doug Maxey <dwm@maxeymade.com>
 
-Luben Tuikov wrote:
-> On 08/30/05 06:26, Tejun Heo wrote:
+Tejun Heo wrote:
+>  IMHO, it's a good idea to maintain one qc to one ATA/ATAPI command 
+> mapping as long as possible.  And, in the suggested framework, it's 
+> guaranteed that no other command can come inbetween CHECK_SENSE and 
+> REQUEST_SENSE.
 > 
->>Albert Lee wrote:
->>
->>
->>>>4. Corresponding scmd's result code is set to
->>>>  SAM_STAT_CHECK_CONDITION and qc->scsidone() callback is called
->>>>  directly.  As we haven't filled sense data,
->>>>  scsi_determine_disposition() will return FAILED and SCSI EH will
->>>>  be scheduled.  Note that as we directly call qc->scsidone(), qc is
->>>>  left intact.
->>>>
->>>>
->>>
->>>Could we get the sense data before calling qc->scsidone()?  (Using the 
->>>proposed separate
->>>EH qc can keep the original qc intact.)
->>>
->>>The issue:
->>>When a DVD drive returns MEDIUM_ERROR in the sense data, libata doesn't 
->>>retry the command.
->>>
->>>For libata, when scsi_softirq() calls scsi_decide_disposition() and 
->>>scsi_check_sense() to determine
->>>how to handle the result, scsi_check_sense() always returns "fail" since 
->>>the sense data is not there
->>>yet. The sense data is requested later in the libata error handler. But 
->>>the command has already been
->>>considered as an "error".
->>>
->>>By having the sense data ready before calling qc->scsidone(), we can 
->>>make the
->>>NEEDS_RETRY work in scsi_softirq().  So, for things like MEDIUM_ERROR, 
->>>the device has
->>>a chance to retry/recover the error. This seems to be important for 
->>>devices with built-in
->>>defect management system.
->>
->>
->>  There are two ways a scmd can leave EH - retry by scsi_queue_insert() 
->>and finish by scsi_finish_cmd().  I think the problem you described can 
->>be easily solved by choosing the former method when finishing the qc 
->>from EH.  Note that other advanced EH stuff like reconfiguring transport 
->>speed also requires retrying, so we will surely have a mechanism for 
->>retrying failed qc's from EH.
-> 
-> 
-> What is needed is autosense simulation for ATA, so that SCSI Core doesn't
-> know that the device doesn't support autosense.
-> 
-> So, before a failed command reaches SCSI Core recovery, it should pass by
-> ATA layer recovery to get sense.
-> 
-> Note: if you send another command for execution after the failed command
-> _and_ no autosense is provided, then any sense data is lost -- this is further
-> subject to more rules set forth in SAM and SPC.
-> 
+>  Requesting sense from EH, calling scsi_decide_disposition() on the 
+> sense and following the verdict should achieve the same effect as 
+> emulating autosense.  Is there any compelling reason to break one qc to 
+> one command mapping?
 
-  IMHO, it's a good idea to maintain one qc to one ATA/ATAPI command 
-mapping as long as possible.  And, in the suggested framework, it's 
-guaranteed that no other command can come inbetween CHECK_SENSE and 
-REQUEST_SENSE.
 
-  Requesting sense from EH, calling scsi_decide_disposition() on the 
-sense and following the verdict should achieve the same effect as 
-emulating autosense.  Is there any compelling reason to break one qc to 
-one command mapping?
+Yes, you should have one qc <-> one ATA/ATAPI command.  That's why, in 
+the NCQ scenario, I wanted to make sure that one qc was always reserved 
+for error handling:  REQUEST SENSE or READ LOG EXT, most importantly.
 
--- 
-tejun
+For SAT layer MODE SELECT translations, that implies multiple calls to 
+qc_new/qc_issue/qc_complete before completing the overall SCSI command. 
+  The same for handling sata_sil mod15write:  I am beginning to feel 
+like the mod15write workaround might be best implemented in a manner 
+that caused libata-scsi (not sata_sil) to create/issue/complete multiple 
+ATA commands.
+
+The only problem you run into is that a qc may be active during EH, when 
+you need another qc.  So avoiding recursive details becomes an issue.
+
+	Jeff
+
+
