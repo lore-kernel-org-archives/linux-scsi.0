@@ -1,45 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [RFC] libata new EH document
-Date: Thu, 01 Sep 2005 09:24:57 -0400
-Message-ID: <1125581097.4834.5.camel@mulgrave>
-References: <20050901043850.15186.qmail@web51611.mail.yahoo.com>
-	 <43169520.6040008@gmail.com>  <20050901055421.GA23496@havoc.gtf.org>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: [PATCH] aacraid:  2.6.13 aacraid bad BUG_ON fix
+Date: Thu, 01 Sep 2005 08:19:23 -0700
+Message-ID: <1125587963.21124.9.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20050901055421.GA23496@havoc.gtf.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, ltuikov@yahoo.com, Luben Tuikov <luben_tuikov@adaptec.com>, Albert Lee <albertcc@tw.ibm.com>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.osdl.org ([65.172.181.4]:36481 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1030193AbVIAPWf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Sep 2005 11:22:35 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-On Thu, 2005-09-01 at 01:54 -0400, Jeff Garzik wrote:
-> The long term direction for the SCSI core seems to be that of
-> requiring auto-sensing.
+This was noticed by Doug Bazamic and the fix found by Mark Salyzyn at
+Adaptec.
 
-No, I don't see the mid-layer error thread handling of this ever going
-away.
+There was an error in the BUG_ON() statement that validated the
+calculated fib size which can cause the driver to panic.
 
-> libata is simply being lazy:  while the SCSI core continues to support
-> kicking the EH thread when sense is missing, it's preferred for libata
-> to reuse that infrastructure.
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
 
-That makes the most sense ;-)
+--- a/drivers/scsi/aacraid/aachba.c	2005-08-28 19:41:01.000000000 -0400
++++ b/drivers/scsi/aacraid/aachba.c	2005-09-01 08:05:29.118304656 -0400
+@@ -968,7 +968,7 @@
+ 		fibsize = sizeof(struct aac_read64) + 
+ 			((le32_to_cpu(readcmd->sg.count) - 1) * 
+ 			 sizeof (struct sgentry64));
+-		BUG_ON (fibsize > (sizeof(struct hw_fib) - 
++		BUG_ON (fibsize > (dev->max_fib_size - 
+ 					sizeof(struct aac_fibhdr)));
+ 		/*
+ 		 *	Now send the Fib to the adapter
 
-> Auto-sensing (and READ LOG EXT for NCQ errors) requires either an
-> FSM or a kernel thread, to initiate a secondary qc for REQUEST SENSE.
-> Since the common infrastructure already exists for this, libata reuses
-> the existing SCSI EH kernel thread.
-
-The current SCSI autosense in drivers doesn't require this because we
-reuse the existing command that got the contingent allegiance condition.
-This is the piece I'd like to get rid of because the extra fields and
-extra setup to allow the command to be reused are a critical path hit.
-If you look at any driver that does this (53c700.c for instance) you'll
-see that the command is turned around and resubmitted in the irq
-routine).
-
-James
-
+-- 
+Mark Haverkamp <markh@osdl.org>
 
