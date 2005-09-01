@@ -1,80 +1,87 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFC] libata new EH document
-Date: Thu, 1 Sep 2005 11:42:53 +0900
-Message-ID: <20050901024253.GA1648@htj.dyndns.org>
-References: <20050829061124.GA2725@htj.dyndns.org> <43142279.3070004@tw.ibm.com> <43143461.7040606@gmail.com> <43146DE7.1070501@adaptec.com> <4316569B.6080406@gmail.com> <431665D9.7010500@pobox.com>
+From: Rudolph Pereira <rudolph@usyd.edu.au>
+Subject: Re: fc remote port timeout with qla2xxx driver
+Date: Thu, 1 Sep 2005 12:58:39 +1000
+Message-ID: <20050901025838.GI27270@usyd.edu.au>
+References: <20050831060134.GA26115@usyd.edu.au> <20050831224409.GL11577@plap.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="EemXnrF2ob+xzFeB"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ankara.ucc.usyd.edu.au ([129.78.64.57]:44778 "EHLO
+	ankara.ucc.usyd.edu.au") by vger.kernel.org with ESMTP
+	id S965042AbVIAC6p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 31 Aug 2005 22:58:45 -0400
 Content-Disposition: inline
-In-Reply-To: <431665D9.7010500@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Albert Lee <albertcc@tw.ibm.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Doug Maxey <dwm@maxeymade.com>
+In-Reply-To: <20050831224409.GL11577@plap.qlogic.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-scsi@vger.kernel.org
 
- Hello, Jeff.
 
-On Wed, Aug 31, 2005 at 10:22:17PM -0400, Jeff Garzik wrote:
-> Tejun Heo wrote:
-> > IMHO, it's a good idea to maintain one qc to one ATA/ATAPI command 
-> >mapping as long as possible.  And, in the suggested framework, it's 
-> >guaranteed that no other command can come inbetween CHECK_SENSE and 
-> >REQUEST_SENSE.
-> >
-> > Requesting sense from EH, calling scsi_decide_disposition() on the 
-> >sense and following the verdict should achieve the same effect as 
-> >emulating autosense.  Is there any compelling reason to break one qc to 
-> >one command mapping?
-> 
-> 
-> Yes, you should have one qc <-> one ATA/ATAPI command.  That's why, in 
-> the NCQ scenario, I wanted to make sure that one qc was always reserved 
-> for error handling:  REQUEST SENSE or READ LOG EXT, most importantly.
+--EemXnrF2ob+xzFeB
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
- Having an extra (as opposed to reserved) EH qc doesn't break one qc
-<-> one command mapping.
+On Wed, Aug 31, 2005 at 03:44:09PM -0700, Andrew Vasquez wrote:
+> Hmm, could you try the attached small patch?  This should close that
+> whole where the fc_remote_port state is restored to a correct state.
+This seems to fix the problem. The debug now shows:
+...
 
- a. All EH commands are non-NCQ.
- b. Inside EH, no other command is allowed.
+Sep  1 10:05:15 baku kernel: scsi(0): LOOP READY
+Sep  1 10:05:15 baku kernel: scsi(0): qla2x00_loop_resync - end
+Sep  1 10:05:36 baku kernel: scsi(0): Port Update -- creating RSCN fcport f7c2a080 for 81/7/6000.
+Sep  1 10:05:36 baku kernel: scsi(0): Handle RSCN -- process RSCN for fcport [ffffff].
+Sep  1 10:05:36 baku kernel: scsi(0): Handle RSCN -- attempting login to [81/ffffff].
+Sep  1 10:05:36 baku kernel: scsi(0): Sending Login IOCB (a0004000) to [81/ffffff].
+Sep  1 10:05:36 baku kernel: scsi(0): Port login retry: 210000d02367d125, id = 0x0081 retry cnt=10
+Sep  1 10:05:36 baku kernel: scsi(0): Process IODesc -- processing a0004000.
+Sep  1 10:05:36 baku kernel: scsi(0): Login IOCB -- loop id [81] used by port id [0b1132].
+Sep  1 10:05:36 baku kernel: scsi(0): Login IOCB -- retrying login to [81/0b1132] (2).
+Sep  1 10:05:36 baku kernel: scsi(0): Sending Login IOCB (a0005000) to [81/0b1132].
+Sep  1 10:05:36 baku kernel: scsi(0): Process IODesc -- processing a0005000.
+Sep  1 10:05:36 baku kernel: scsi(0): Login IOCB -- status=0 mb1=0 pn=210000d02367d125.
+Sep  1 10:05:36 baku kernel: scsi(0): fcport-0 - port retry count: 29 remaining
+Sep  1 10:05:36 baku kernel: scsi(0): qla2x00_port_login()
+Sep  1 10:05:36 baku kernel: scsi(0): Trying Fabric Login w/loop id 0x0081 for port 0b1132.
+Sep  1 10:05:36 baku kernel: scsi(0): Login IOCB -- found RSCN fcport in fcports list [f7db8100].
+Sep  1 10:05:36 baku kernel: scsi(0): Login IOCB -- marking existing fcport [81/0b1132] online.
+Sep  1 10:05:36 baku kernel: scsi(0): Login IOCB -- Freeing RSCN fcport f7c2a080 [81/0b1132].
+Sep  1 10:05:36 baku kernel: scsi(0): port login OK: logged in ID 0x81
+Sep  1 10:05:36 baku kernel: scsi(0): qla2x00_port_login - end
 
- So, we can allocate a qc which does not have a corresponding NCQ tag.
-This qc will never be used for normal commands.  It's used only for
-internal commands when no other qc can be active.
+one thing that I forgot to mention is that I'm prodding the scsi layer to get
+rescan for devices by doing:
 
- If we don't have an extra qc for EH, as non-NCQ devices have only one
-qc, we should either,
+echo "1" > '/sys/class/fc_remote_ports/rport-0:0-0/device/target0:0:0/0:0:0:1/rescan'
+I did this above at 10:05:36, as shown in the log, which led to the
+port_login. This explains the delay between loop_resync and relogin.
 
- a. Rewrite failed qc to issue recovery command
- b. Complete failed qc and issue recovery command
+Apologies for the basic question, but is this what one is supposed to
+do? (I believe the dm-multipath stuff does this when it tries to update
+devices)
 
- Both are not too attractive, IMHO.
+If so, it seems like there might be a reference counting issue hanging
+around, as I am able to do a rescan _after_ the FC port is blocked (as
+indicated in the debug output), whereas I'd expect the fc_remote_port
+sysfs stuff to have disappeared. Related to that, when the port is
+disconnected, /sys/class/fc_remote_ports/rport-0:0-0/ still exists - I
+presume this is part of the same issue.
 
- I currently don't understand very well why you don't like extra qc
-approach.  Can you please elaborate?
+In any case, thanks for the patch, as it seems to fix the real issue for me.
 
-> 
-> For SAT layer MODE SELECT translations, that implies multiple calls to 
-> qc_new/qc_issue/qc_complete before completing the overall SCSI command. 
->  The same for handling sata_sil mod15write:  I am beginning to feel 
-> like the mod15write workaround might be best implemented in a manner 
-> that caused libata-scsi (not sata_sil) to create/issue/complete multiple 
-> ATA commands.
+--EemXnrF2ob+xzFeB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
- That's what I've done for multi-qc SCSI cmd translation patch I've
-posted the other day, and I think it would be really neat to do
-similar thing for m15w.  However, to do so, we'll need some callbacks
-at libata scsi/core layers (say, driver-overridable command
-translation callbacks?) at the very least and I'm not sure about
-adding those just for m15w.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
 
-> The only problem you run into is that a qc may be active during EH, when 
-> you need another qc.  So avoiding recursive details becomes an issue.
+iD8DBQFDFm5eK6c0oCC40tsRAoTyAJ9owpyVGgwoZYJ/nEn581H4vGz2uACfZBOA
+Swv48AjwPVBJey3urXYr3HI=
+=R5Ax
+-----END PGP SIGNATURE-----
 
- I guess this means the same thing I've described above about non-NCQ
-devices, right?
-
- Thanks.
-
--- 
-tejun
+--EemXnrF2ob+xzFeB--
