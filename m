@@ -1,80 +1,45 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH] sg direct io/mmap oops, st sync
-Date: Thu, 01 Sep 2005 21:50:02 +1000
-Message-ID: <4316EAEA.5050800@torque.net>
-Reply-To: dougg@torque.net
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [RFC] libata new EH document
+Date: Thu, 01 Sep 2005 09:24:57 -0400
+Message-ID: <1125581097.4834.5.camel@mulgrave>
+References: <20050901043850.15186.qmail@web51611.mail.yahoo.com>
+	 <43169520.6040008@gmail.com>  <20050901055421.GA23496@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------010006070009080204080201"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:63703 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S965088AbVIALtv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Sep 2005 07:49:51 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20050901055421.GA23496@havoc.gtf.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <htejun@gmail.com>, ltuikov@yahoo.com, Luben Tuikov <luben_tuikov@adaptec.com>, Albert Lee <albertcc@tw.ibm.com>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Kai.Makisara@kolumbus.fi, James.Bottomley@SteelEye.com
 
-This is a multi-part message in MIME format.
---------------010006070009080204080201
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+On Thu, 2005-09-01 at 01:54 -0400, Jeff Garzik wrote:
+> The long term direction for the SCSI core seems to be that of
+> requiring auto-sensing.
 
-This patch has the same effect of stopping the oops
-as that described in:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112540053711489&w=2
-titled: "[PATCH] sg direct io/mmap oops".
+No, I don't see the mid-layer error thread handling of this ever going
+away.
 
-This patch adopts the same solution as proposed by Kai M. in
-a post titled: "[PATCH] SCSI tape signed/unsigned fix".
-The fix is in a function that the sg driver borrowed from
-the st driver so its maintenance is a little easier if
-the functions remain the same after the fix.
+> libata is simply being lazy:  while the SCSI core continues to support
+> kicking the EH thread when sense is missing, it's preferred for libata
+> to reuse that infrastructure.
 
-James, please apply this patch rather than the earlier one
-(referenced above) that I posted for the sg driver.
+That makes the most sense ;-)
 
-Changelog:
-   - change nr_pages type from unsigned to signed so errors
-     from get_user_pages() call are properly handled
+> Auto-sensing (and READ LOG EXT for NCQ errors) requires either an
+> FSM or a kernel thread, to initiate a secondary qc for REQUEST SENSE.
+> Since the common infrastructure already exists for this, libata reuses
+> the existing SCSI EH kernel thread.
 
-Signed-off-by: Douglas Gilbert <dougg@torque.net>
+The current SCSI autosense in drivers doesn't require this because we
+reuse the existing command that got the contingent allegiance condition.
+This is the piece I'd like to get rid of because the extra fields and
+extra setup to allow the command to be reused are a critical path hit.
+If you look at any driver that does this (53c700.c for instance) you'll
+see that the command is turned around and resubmitted in the irq
+routine).
 
-Doug Gilbert
+James
 
---------------010006070009080204080201
-Content-Type: text/x-patch;
- name="sg_2613kai.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="sg_2613kai.diff"
 
---- linux/drivers/scsi/sg.c	2005-08-29 18:28:23.000000000 +1000
-+++ linux/drivers/scsi/sg.c2613kai	2005-09-01 21:30:39.000000000 +1000
-@@ -61,7 +61,7 @@
- 
- #ifdef CONFIG_SCSI_PROC_FS
- #include <linux/proc_fs.h>
--static char *sg_version_date = "20050328";
-+static char *sg_version_date = "20050901";
- 
- static int sg_proc_init(void);
- static void sg_proc_cleanup(void);
-@@ -1795,12 +1795,12 @@
- 	          unsigned long uaddr, size_t count, int rw,
- 	          unsigned long max_pfn)
- {
-+	unsigned long end = (uaddr + count + PAGE_SIZE - 1) >> PAGE_SHIFT;
-+	unsigned long start = uaddr >> PAGE_SHIFT;
-+	const int nr_pages = end - start;
- 	int res, i, j;
--	unsigned int nr_pages;
- 	struct page **pages;
- 
--	nr_pages = ((uaddr & ~PAGE_MASK) + count + ~PAGE_MASK) >> PAGE_SHIFT;
--
- 	/* User attempted Overflow! */
- 	if ((uaddr + count) < uaddr)
- 		return -EINVAL;
-
---------------010006070009080204080201--
