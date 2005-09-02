@@ -1,41 +1,44 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [RFC] libata new EH document
-Date: Fri, 02 Sep 2005 09:09:39 +0200
-Message-ID: <4317FAB3.7050304@s5r6.in-berlin.de>
-References: <20050901043850.15186.qmail@web51611.mail.yahoo.com>	 <43169520.6040008@gmail.com>  <20050901055421.GA23496@havoc.gtf.org> <1125581097.4834.5.camel@mulgrave> <4317755C.5080700@adaptec.com> <431776A0.2030107@pobox.com> <43177C0B.9040500@adaptec.com> <43178060.9030601@pobox.com>
+From: Daniel Drake <dsd@gentoo.org>
+Subject: ioctl_internal_command() too verbose?
+Date: Fri, 02 Sep 2005 13:44:09 +0100
+Message-ID: <43184919.5060107@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:41917 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1030521AbVIBHLK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Sep 2005 03:11:10 -0400
-In-Reply-To: <43178060.9030601@pobox.com>
+Received: from mta07-winn.ispmail.ntl.com ([81.103.221.47]:9559 "EHLO
+	mta07-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
+	id S1751250AbVIBMlE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Sep 2005 08:41:04 -0400
+Received: from aamta10-winn.ispmail.ntl.com ([81.103.221.35])
+          by mta07-winn.ispmail.ntl.com with ESMTP
+          id <20050902124100.DGKG21883.mta07-winn.ispmail.ntl.com@aamta10-winn.ispmail.ntl.com>
+          for <linux-scsi@vger.kernel.org>; Fri, 2 Sep 2005 13:41:00 +0100
+Received: from zog.reactivated.net ([81.99.81.161])
+          by aamta10-winn.ispmail.ntl.com with ESMTP
+          id <20050902124100.OJBC3432.aamta10-winn.ispmail.ntl.com@zog.reactivated.net>
+          for <linux-scsi@vger.kernel.org>; Fri, 2 Sep 2005 13:41:00 +0100
+Received: from [192.168.0.2] (dsd [192.168.0.2])
+	by zog.reactivated.net (Postfix) with ESMTP id 625157BDD57
+	for <linux-scsi@vger.kernel.org>; Fri,  2 Sep 2005 14:13:49 +0100 (BST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>, James Bottomley <James.Bottomley@SteelEye.com>, Tejun Heo <htejun@gmail.com>, ltuikov@yahoo.com, Albert Lee <albertcc@tw.ibm.com>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
+To: linux-scsi@vger.kernel.org
 
-Jeff Garzik wrote:
-> Linux is NOT about big designs.  Linus says "do what you must, and no 
-> more."
+Hi,
 
-The scsi subsystem is used in so many divergent areas, its set of 
-requirements is "big". Therefore its design has to be "big".
+In a Gentoo bug report, a user reported this message appearing repeatedly in 
+the kernel logs:
 
-> The future will bring other "baby steps" that evolve us towards a more 
-> modular design where each LLD may register themselves with a storage 
-> system, associate themselves with
-[...]
+	Device not ready. Make sure there is a disc in the drive.
 
-...and hopefully a future where a LLD can be written and maintained 
-without profound knowledge of many implementation details of scsi mid- 
-and high-level.
+This comes from ioctl_internal_command() (scsi_ioctl.c).
 
-(Sorry for digressing further from the thread's subject, although it 
-still seems related.)
--- 
-Stefan Richter
--=====-=-=-= =--= ---=-
-http://arcgraph.de/sr/
+This message can be reproduced once by a simple "touch /dev/scd0" on a drive 
+with no CD inserted. The userspace tools which monitor for CD change by 
+repeatedly polling the device are resulting in this message being printed lots 
+of times when no CD is in the drive.
+
+Any objections to reducing this to a debug message only?
+
+Daniel
