@@ -1,66 +1,68 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [RFC] libata new EH document
-Date: Thu, 01 Sep 2005 19:27:32 -0400
-Message-ID: <43178E64.40600@adaptec.com>
-References: <20050901043850.15186.qmail@web51611.mail.yahoo.com>	 <43169520.6040008@gmail.com>  <20050901055421.GA23496@havoc.gtf.org>	 <1125581097.4834.5.camel@mulgrave>  <4317755C.5080700@adaptec.com>	 <1125611718.4946.20.camel@mulgrave>  <43177B95.4040602@adaptec.com>	 <1125613408.4946.28.camel@mulgrave>  <43178281.20203@adaptec.com> <1125615684.4946.36.camel@mulgrave>
+From: Neil Brown <neilb@suse.de>
+Subject: Possible deadlock in scsi_lib.c
+Date: Fri, 2 Sep 2005 13:13:54 +1000
+Message-ID: <17175.50034.697065.553704@cse.unsw.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:673 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1030528AbVIAX1i (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Sep 2005 19:27:38 -0400
-In-Reply-To: <1125615684.4946.36.camel@mulgrave>
+Received: from ns1.suse.de ([195.135.220.2]:29389 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S1030661AbVIBDOH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Sep 2005 23:14:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, ltuikov@yahoo.com, Albert Lee <albertcc@tw.ibm.com>, linux-ide@vger.kernel.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, Doug Maxey <dwm@maxeymade.com>
-
-On 09/01/05 19:01, James Bottomley wrote:
-> On Thu, 2005-09-01 at 18:36 -0400, Luben Tuikov wrote:
-> 
->>So are you claiming that 
->>    "the error handler clears contingent allegiance conditions" ?
->>
->>Please point me to the lines in the source code where it does this
->>and how it does it.
-> 
-> 
-> That's this bit:
-> 
-> static void scsi_unjam_host(struct Scsi_Host *shost)
-> {
-> 	unsigned long flags;
-> 	LIST_HEAD(eh_work_q);
-> 	LIST_HEAD(eh_done_q);
-> 
-> 	spin_lock_irqsave(shost->host_lock, flags);
-> 	list_splice_init(&shost->eh_cmd_q, &eh_work_q);
-> 	spin_unlock_irqrestore(shost->host_lock, flags);
-> 
-> 	SCSI_LOG_ERROR_RECOVERY(1, scsi_eh_prt_fail_stats(shost, &eh_work_q));
-> 
-> 	if (!scsi_eh_get_sense(&eh_work_q, &eh_done_q))
-> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-James,
-
-1. I'd suggest you take a look at the QErr and TST bits in the
-   Control Mode page.
-
-2. I'd also suggest looking at the ACA Task Attribute.
-
-3. I'd also suggest looking at the NACA bit of the SCSI CDB.
-
-	Luben
+To: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
 
+Hi,
+  If a filesystem, while writing out data, decides that it is good
+to issue a cache flush on a SCSI drive (or other 'sd' device), it will
+call blkdev_issue_flush which calls ->issue_flush_fn which is
+scsi_issue_flush_fn. 
+This calls sd_issue_flush which calls sd_sync_cache, which calls
+scsi_execute_request.
+This will (as sshdr != NULL) call
+    kmalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL)
 
-> 		if (!scsi_eh_abort_cmds(&eh_work_q, &eh_done_q))
-> 			scsi_eh_ready_devs(shost, &eh_work_q, &eh_done_q);
-> 
-> James
-> 
-> 
-> 
+If memory is tight, the presence of GFP_KERNEL may cause write
+requests to be sent to some filesystem to free up memory, however if
+that filesystem is waiting for the issue_flush_fn to complete, you
+could get a deadlock.
 
+I wonder if it might be more appropriate to use GFP_NOIO as in the
+following patch.
+
+I wonder if it might be even more appropriate to cope better with a
+kmalloc failure, especially as in this use, sd_sync_cache only will
+use the sense information to print out a more informative error
+message.
+
+Note that I'm not certain that this deadlock is actually happening,
+and it is in a filesystem that is not in mainline kernel (few mainline
+filesystems use issue_flush_fn).  However I think it may still be a
+real bug.
+
+Thanks for your time,
+
+NeilBrown
+
+--
+
+Signed-off-by: Neil Brown <neilb@suse.de>
+
+### Diffstat output
+ ./drivers/scsi/scsi_lib.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff ./drivers/scsi/scsi_lib.c~current~ ./drivers/scsi/scsi_lib.c
+--- ./drivers/scsi/scsi_lib.c~current~	2005-09-02 13:01:53.000000000 +1000
++++ ./drivers/scsi/scsi_lib.c	2005-09-02 13:02:00.000000000 +1000
+@@ -339,7 +339,7 @@ int scsi_execute_req(struct scsi_device 
+ 	int result;
+ 	
+ 	if (sshdr) {
+-		sense = kmalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
++		sense = kmalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
+ 		if (!sense)
+ 			return DRIVER_ERROR << 24;
+ 		memset(sense, 0, SCSI_SENSE_BUFFERSIZE);
