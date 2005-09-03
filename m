@@ -1,68 +1,38 @@
-From: Reuben Farrelly <reuben-lkml@reub.net>
-Subject: Re: 2.6.13-mm1: hangs during boot ...
-Date: Sun, 04 Sep 2005 01:24:18 +1200
-Message-ID: <4319A402.7030705@reub.net>
-References: <fa.qs5cahs.i2khgm@ifi.uio.no> <fa.fm9i4v6.1ekchhm@ifi.uio.no>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 1/7] zfcp: introduce eh_timed_out handler
+Date: Sat, 03 Sep 2005 09:45:01 -0400
+Message-ID: <1125755101.4803.5.camel@mulgrave>
+References: <20050903123042.GA7902@lion28.boeblingen.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tornado.reub.net ([202.89.145.182]:61906 "EHLO tornado.reub.net")
-	by vger.kernel.org with ESMTP id S1751427AbVICNYf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Sep 2005 09:24:35 -0400
-In-Reply-To: <fa.fm9i4v6.1ekchhm@ifi.uio.no>
+Received: from stat9.steeleye.com ([209.192.50.41]:51150 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750917AbVICNpG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 3 Sep 2005 09:45:06 -0400
+In-Reply-To: <20050903123042.GA7902@lion28.boeblingen.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Peter Williams <pwil3058@bigpond.net.au>
-Cc: "Brown, Len" <len.brown@intel.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: Andreas Herrmann <aherrman@de.ibm.com>
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>
 
-Hi Peter,
-
-On 3/09/2005 4:59 a.m., Peter Williams wrote:
-> Brown, Len wrote:
->>>> [  279.662960]  [<c02d5c74>] wait_for_completion+0xa4/0x110
->>
->>
->> possibly a missing interrupt?
->>
->>
->>> CONFIG_ACPI=y
->>
->>
->> any difference if booted with "acpi=off" or "acpi=noirq"?
+On Sat, 2005-09-03 at 14:30 +0200, Andreas Herrmann wrote:
+> zfcp: introduce eh_timed_out handler
 > 
-> Yes.  In both cases, the system appears to boot normally but I'm unable 
-> to login or connect via ssh.  Also there's a "device not ready" message
+> This handler is required to avoid offlined SCSI devices in a multipath
+> setup if scsi commands time out on cable pulls lasting longer than 30
+> seconds.
 
-Are you seeing this "Device  not ready" message appear over and over, or just 
-the once?
+But that's not what the patch does.  It short circuits the error handler
+globally, not just in the cable pulled case.
 
-I am seeing it fill up my messages log as it is logging 1 or so messages each 
-minute.  I've emailed the SCSI maintainer James Bottomley twice about it but 
-had no response either time.
+For any error induced timeout, you're going to follow this logic.  In
+particular, if the device itself actually has an issue and genuinely
+needs to be reset, that's never going to happen.
 
-The SCSI device I have is:
+Is this really what you want to do?
 
-Sep  3 22:14:40 tornado kernel: Vendor: SONY  Model: CD-RW  CRX145S  Rev: 1.0b
+James
 
-As for the inability to log in, this bug may be relevant, given I also had 
-that problem:
-
-https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=166422
-
-There are fixes in the pipeline for util-linux audit interaction in Fedora as 
-well.  I know because I reported those too ;)
-
-> after the scsi initialization which I don't normally see.  I've attached 
-> the scsi initialization output.  The PF_NETLINK error messages after the 
-> login prompt in this output are created whenever I try to log in or 
-> connect via ssh.
-
-The workaround by enabling audit support, but obviously a better fix is in the 
-pipeline..
-
-I'm surprised more people aren't discovering these 'interactions' due to 
-having audit not turned on.  Does everyone build audit into their kernels?
-
-reuben
 
