@@ -1,74 +1,57 @@
-From: Peter Williams <pwil3058@bigpond.net.au>
+From: Len Brown <len.brown@intel.com>
 Subject: Re: 2.6.13-mm1: hangs during boot ...
-Date: Sat, 03 Sep 2005 17:18:19 +1000
-Message-ID: <43194E3B.2050609@bigpond.net.au>
-References: <F7DC2337C7631D4386A2DF6E8FB22B30047FA063@hdsmsx401.amr.corp.intel.com> <4319403E.4050105@bigpond.net.au>
+Date: Sat, 03 Sep 2005 04:19:08 -0400
+Message-ID: <1125735548.11903.53.camel@toshiba>
+References: <F7DC2337C7631D4386A2DF6E8FB22B30047FA063@hdsmsx401.amr.corp.intel.com>
+	 <4319403E.4050105@bigpond.net.au>  <43194E3B.2050609@bigpond.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omta01sl.mx.bigpond.com ([144.140.92.153]:13278 "EHLO
-	omta01sl.mx.bigpond.com") by vger.kernel.org with ESMTP
-	id S1161172AbVICHSV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 3 Sep 2005 03:18:21 -0400
-In-Reply-To: <4319403E.4050105@bigpond.net.au>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161180AbVICIQ6@vger.kernel.org>
+In-Reply-To: <43194E3B.2050609@bigpond.net.au>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Peter Williams <pwil3058@bigpond.net.au>
-Cc: "Brown, Len" <len.brown@intel.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Peter Williams wrote:
-> Brown, Len wrote:
+On Sat, 2005-09-03 at 03:18 -0400, Peter Williams wrote:
 > 
->>  
->>
->>> Brown, Len wrote:
->>>
->>>>>> [  279.662960]  [<c02d5c74>] wait_for_completion+0xa4/0x110
->>>>
->>>>
->>>>
->>>> possibly a missing interrupt?
->>>>
->>>>
->>>>
->>>>> CONFIG_ACPI=y
->>>>
->>>>
->>>>
->>>> any difference if booted with "acpi=off" or "acpi=noirq"?
->>>
->>>
->>> Yes.  In both cases, the system appears to boot normally but I'm 
->>> unable to login or connect via ssh.  Also there's a "device not 
->>> ready" message after the scsi initialization which I don't normally 
->>> see.  I've attached the scsi initialization output.  The PF_NETLINK 
->>> error messages after the login prompt in this output are created 
->>> whenever I try to log in or connect via ssh.
->>
->>
->>
->> Please confirm that vanilla 2.6.13 has none of these symptoms.
-> 
-> 
-> That's correct.  2.6.13 exhibits none of these symptoms.
-> 
->> Please apply just the ACPI part of the 2.6.13-mm1 patch to see if
->> these issues are caused by that or if they are caused by something
->> else in the mm patch.
->>
->> http://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.13/2.6.13-mm1/broken-out/git-acpi.patch 
->>
-> 
-> 
-> OK.  I'll get back to you shortly.
+> http://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.13/2.6.13-mm1/broken-out/git-acpi.patch
+> >>
 
-I am able to confirm that the problem occurs with vanilla 2.5.13 after I 
-apply the above patch.
+> I am able to confirm that the problem occurs with vanilla 2.5.13 after
+> I apply the above patch.
 
-Peter
--- 
-Peter Williams                                   pwil3058@bigpond.net.au
+Thanks.
 
-"Learning, n. The kind of ignorance distinguishing the studious."
-  -- Ambrose Bierce
+Please then try the latest ACPI patch here:
+http://ftp.kernel.org/pub/linux/kernel/people/lenb/acpi/patches/release/2.6.13/acpi-20050902-2.6.13.diff.gz
+It should apply to vanilla 2.6.13 with a reject in ia64/Kconfig
+that you can ignore.
+
+If this works, then we munged git-acpi.patch in 2.6.13-mm1 somehow.
+
+If this fails, then please confirm it still fails with pnpacpi=off
+
+if it still fails, then please open a bugzilla here:
+http://bugzilla.kernel.org/enter_bug.cgi?product=ACPI
+component=config-interrupts
+
+build the failing kernel with CONFIG_ACPI_DEBUG=y
+boot it with "acpi=noirq" and attach the output from
+dmesg -s64000
+lspci -vv
+cat /proc/interrupts
+acpidump, available in the latest pmtools here:
+http://ftp.kernel.org/pub/linux/kernel/people/lenb/acpi/utils/
+
+also include the dmesg -s64000 from the successful
+acpi-enabled 2.6.13 boot, along with its /proc/interrupts.
+
+If you have a  serial console and can then capture the
+failing console log with "debug", that would be ideal.
+
+Where we got from there will depend what we see...
+
+thanks,
+-Len
