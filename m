@@ -1,109 +1,51 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: 2.6.13-mm1: hangs during boot ...
-Date: Sat, 3 Sep 2005 02:48:41 -0700
-Message-ID: <20050903024841.341beef0.akpm@osdl.org>
-References: <F7DC2337C7631D4386A2DF6E8FB22B30047FA063@hdsmsx401.amr.corp.intel.com>
-	<4319403E.4050105@bigpond.net.au>
-	<43194E3B.2050609@bigpond.net.au>
-	<1125735548.11903.53.camel@toshiba>
-	<43196CAE.2000309@bigpond.net.au>
+From: Andreas Herrmann <aherrman@de.ibm.com>
+Subject: [PATCH 0/7] zfcp: update to driver version 4.5.0
+Date: Sat, 3 Sep 2005 14:29:55 +0200
+Message-ID: <20050903122955.GA7893@lion28.boeblingen.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:16325 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750824AbVICJu2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Sep 2005 05:50:28 -0400
-In-Reply-To: <43196CAE.2000309@bigpond.net.au>
+Received: from mtagate1.de.ibm.com ([195.212.29.150]:34452 "EHLO
+	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP
+	id S1751034AbVICMcM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 3 Sep 2005 08:32:12 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate1.de.ibm.com (8.12.10/8.12.10) with ESMTP id j83CWBOI092124
+	for <linux-scsi@vger.kernel.org>; Sat, 3 Sep 2005 12:32:11 GMT
+Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
+	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j83CWAih181652
+	for <linux-scsi@vger.kernel.org>; Sat, 3 Sep 2005 14:32:10 +0200
+Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id j83CWA0d014141
+	for <linux-scsi@vger.kernel.org>; Sat, 3 Sep 2005 14:32:10 +0200
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Peter Williams <pwil3058@bigpond.net.au>
-Cc: len.brown@intel.com, linux-kernel@vger.kernel.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@steeleye.com>
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>
 
-Peter Williams <pwil3058@bigpond.net.au> wrote:
->
-> > Please then try the latest ACPI patch here:
->  > http://ftp.kernel.org/pub/linux/kernel/people/lenb/acpi/patches/release/2.6.13/acpi-20050902-2.6.13.diff.gz
->  > It should apply to vanilla 2.6.13 with a reject in ia64/Kconfig
->  > that you can ignore.
->  > 
->  > If this works, then we munged git-acpi.patch in 2.6.13-mm1 somehow.
-> 
->  There were no problems with this patch applied.  So it looks like the 
->  munge theory is correct.
+Hi,
 
-That diff is significantly different from the diff I plucked from
-master.kernel.org:/pub/scm/linux/kernel/git/lenb/linux-acpi-2.6.git#test
-for 2.6.13-mm1.
+Following a series of 7 patches (based on 2.6.13) to update the zfcp
+device driver. Patches contain bugfixes, some cleanups and new
+features. Overall diffstat of all patches is:
 
-Doing (patch -R | grep FAILED) on 2.6.13-mm1 says:
+ Makefile             |    2 
+ zfcp_aux.c           |  188 ---------
+ zfcp_dbf.c           |  999 ++++++++++++++++++++++++++++++++++++++++++++++++++-
+ zfcp_def.h           |  295 +++++++++------
+ zfcp_erp.c           |  119 +++++-
+ zfcp_ext.h           |   30 +
+ zfcp_fsf.c           |  718 ++++++++++++++++--------------------
+ zfcp_fsf.h           |   54 ++
+ zfcp_qdio.c          |   30 -
+ zfcp_scsi.c          |  403 ++++++++------------
+ zfcp_sysfs_adapter.c |    4 
+ 11 files changed, 1874 insertions(+), 968 deletions(-)
 
-Hunk #3 FAILED at 356.
-1 out of 3 hunks FAILED -- saving rejects to file arch/ia64/Kconfig.rej
-Hunk #6 FAILED at 190.
-Hunk #8 FAILED at 221.
-Hunk #10 FAILED at 254.
-Hunk #11 FAILED at 357.
-Hunk #15 FAILED at 474.
-Hunk #17 FAILED at 569.
-6 out of 17 hunks FAILED -- saving rejects to file drivers/acpi/dispatcher/dsmethod.c.rej
-Hunk #19 FAILED at 468.
-Hunk #29 FAILED at 701.
-2 out of 38 hunks FAILED -- saving rejects to file drivers/acpi/dispatcher/dswload.c.rej
-Hunk #14 FAILED at 321.
-Hunk #43 FAILED at 1159.
-2 out of 44 hunks FAILED -- saving rejects to file drivers/acpi/osl.c.rej
-Hunk #17 FAILED at 1134.
-1 out of 18 hunks FAILED -- saving rejects to file drivers/acpi/parser/psparse.c.rej
-Hunk #3 FAILED at 74.
-1 out of 3 hunks FAILED -- saving rejects to file drivers/acpi/parser/psxface.c.rej
-Hunk #1 FAILED at 35.
-1 out of 15 hunks FAILED -- saving rejects to file drivers/acpi/pci_bind.c.rej
-Hunk #5 FAILED at 220.
-Hunk #15 FAILED at 412.
-Hunk #16 FAILED at 425.
-Hunk #17 FAILED at 446.
-Hunk #19 FAILED at 484.
-5 out of 36 hunks FAILED -- saving rejects to file drivers/acpi/processor_core.c.rej
-Hunk #1 FAILED at 41.
-Hunk #2 FAILED at 71.
-Hunk #4 FAILED at -55.
-Hunk #5 FAILED at 30.
-Hunk #6 FAILED at 40.
-Hunk #7 FAILED at 69.
-Hunk #9 FAILED at 317.
-Hunk #10 FAILED at 344.
-Hunk #12 FAILED at 289.
-Hunk #14 FAILED at 523.
-Hunk #15 FAILED at 607.
-Hunk #16 FAILED at 618.
-Hunk #17 FAILED at 645.
-Hunk #19 FAILED at 534.
-Hunk #20 FAILED at 686.
-Hunk #22 FAILED at 916.
-Hunk #23 FAILED at 968.
-Hunk #25 FAILED at 881.
-Hunk #26 FAILED at 891.
-Hunk #29 FAILED at 953.
-20 out of 29 hunks FAILED -- saving rejects to file drivers/acpi/resources/rsaddr.c.rej
-Hunk #11 FAILED at 289.
-Hunk #16 FAILED at 407.
-Hunk #17 FAILED at 425.
-Hunk #18 FAILED at 434.
-Hunk #20 FAILED at 470.
-Hunk #21 FAILED at 527.
-6 out of 21 hunks FAILED -- saving rejects to file drivers/acpi/resources/rsirq.c.rej
-Hunk #27 FAILED at 553.
-1 out of 61 hunks FAILED -- saving rejects to file drivers/acpi/scan.c.rej
-Hunk #1 FAILED at 41.
-1 out of 34 hunks FAILED -- saving rejects to file drivers/acpi/utilities/utmisc.c.rej
-Hunk #5 FAILED at 291.
-1 out of 76 hunks FAILED -- saving rejects to file drivers/acpi/video.c.rej
-Hunk #2 FAILED at 64.
-1 out of 8 hunks FAILED -- saving rejects to file include/acpi/acconfig.h.rej
-Hunk #1 FAILED at 41.
-1 out of 1 hunk FAILED -- saving rejects to file include/acpi/acdispat.h.rej
-Hunk #29 FAILED at 1078.
-Hunk #30 FAILED at 1240.
-2 out of 31 hunks FAILED -- saving rejects to file include/acpi/actypes.h.rej
+Please apply.
 
+
+Regards,
+
+Andreas
