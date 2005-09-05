@@ -1,29 +1,40 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] Generalize WWN to u64 interger conversions.
-Date: Mon, 5 Sep 2005 13:26:54 +0100
-Message-ID: <20050905122654.GA15791@infradead.org>
-References: <20050827020750.27275.19733.sendpatchset@plap.qlogic.com> <20050827020950.27275.51550.sendpatchset@plap.qlogic.com> <20050827104053.GA21026@infradead.org> <20050831221835.GI11577@plap.qlogic.org>
+Subject: Re: correct deregistration from scsi_transport_fc
+Date: Mon, 5 Sep 2005 13:31:49 +0100
+Message-ID: <20050905123149.GB15791@infradead.org>
+References: <OF2D6CD10B.4BD0B2F3-ONC125706C.0036B5BA-C125706C.0036F30A@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:7560 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:43711 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751151AbVIEM06 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Sep 2005 08:26:58 -0400
+	id S1751158AbVIEMby (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Sep 2005 08:31:54 -0400
 Content-Disposition: inline
-In-Reply-To: <20050831221835.GI11577@plap.qlogic.org>
+In-Reply-To: <OF2D6CD10B.4BD0B2F3-ONC125706C.0036B5BA-C125706C.0036F30A@de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, "Smart, James" <James.Smart@emulex.com>
+To: Andreas Herrmann <AHERRMAN@de.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jejb@steeleye.com>, Linux SCSI <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org
 
-On Wed, Aug 31, 2005 at 03:18:35PM -0700, Andrew Vasquez wrote:
-> Ok, how about this generic patchset:
+On Mon, Aug 29, 2005 at 12:02:15PM +0200, Andreas Herrmann wrote:
+> On 29.08.2005 10:48 Christoph Hellwig <hch@infradead.org> worte:
 > 
-> 1) add helper function to transport class
-> 2) add support to qla2xxx
-> 3) add support to lpfc -- I'll let James S. decide on
->    whether the union {} changes to lpfc_name are acceptable
+>   > Never use scsi_add_device with the fc_transport code. 
+> fc_remote_port_add
+>   > will do a proper lun scan if the added rport is a scsi target.
+> 
+> Won't work for all zSeries FC host adapters because they are
+> virtualized and you can have several virtual adapters using the same
+> WWPN/WWNN.  Using LUN masking and zoning it is not possible to
+> configure the SAN such that one virtual adapter sees just that LUNs
+> that are supposed to be used by it. There is a tool to write an access
+> control table to the adapter. This ACT specifies which virtual adapter
+> can access which ports and FCP LUNs ...
 
-looks very nice.
+Ugly.
+
+Maybe we could pass down a bitmap of exluded luns down the scanning path?
+Starting from fc_rport_create down to scsi_scan_target and the underlying
+fuctions?
 
