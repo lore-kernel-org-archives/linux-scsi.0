@@ -1,40 +1,46 @@
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: correct deregistration from scsi_transport_fc
-Date: Mon, 5 Sep 2005 13:31:49 +0100
-Message-ID: <20050905123149.GB15791@infradead.org>
-References: <OF2D6CD10B.4BD0B2F3-ONC125706C.0036B5BA-C125706C.0036F30A@de.ibm.com>
+Date: Mon, 5 Sep 2005 13:34:03 +0100
+Message-ID: <20050905123403.GC15791@infradead.org>
+References: <OFAAE017F2.A67F0DDA-ONC125706C.00546128-C125706C.0054C0AC@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:43711 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:48319 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751158AbVIEMby (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Sep 2005 08:31:54 -0400
+	id S1751202AbVIEMeF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 5 Sep 2005 08:34:05 -0400
 Content-Disposition: inline
-In-Reply-To: <OF2D6CD10B.4BD0B2F3-ONC125706C.0036B5BA-C125706C.0036F30A@de.ibm.com>
+In-Reply-To: <OFAAE017F2.A67F0DDA-ONC125706C.00546128-C125706C.0054C0AC@de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andreas Herrmann <AHERRMAN@de.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jejb@steeleye.com>, Linux SCSI <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org
+Cc: James Bottomley <jejb@steeleye.com>, Linux SCSI <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org
 
-On Mon, Aug 29, 2005 at 12:02:15PM +0200, Andreas Herrmann wrote:
-> On 29.08.2005 10:48 Christoph Hellwig <hch@infradead.org> worte:
+On Mon, Aug 29, 2005 at 05:27:47PM +0200, Andreas Herrmann wrote:
+>   > It works by accident, but I will veto any updates you're going to send
+>   > for this broken behaviour.
 > 
->   > Never use scsi_add_device with the fc_transport code. 
-> fc_remote_port_add
->   > will do a proper lun scan if the added rport is a scsi target.
+> So scsi_add_device will soon be mentioned in
+> Documentation/feature-removal-schedule.txt?
+
+No, the will still be available for transport where they make sense,
+aka non-SAM things like RAID adapters.
+
+> What is the rationale of proscribing usage of scsi_add_device() when
+> scsi_transport_fc is used?
+
+We do actually use it inernally in the sysfs scan attribute.  We don't
+want the driver to do their own LUN scanning, though - that's the job
+of the generic scsi code.
+
+>   > That's intentional.  See the discussion during development of the FC
+>   > transport class.  I don't like that behaviour but it's a compromise we
+>   > agreed on.
 > 
-> Won't work for all zSeries FC host adapters because they are
-> virtualized and you can have several virtual adapters using the same
-> WWPN/WWNN.  Using LUN masking and zoning it is not possible to
-> configure the SAN such that one virtual adapter sees just that LUNs
-> that are supposed to be used by it. There is a tool to write an access
-> control table to the adapter. This ACT specifies which virtual adapter
-> can access which ports and FCP LUNs ...
+> Where is the function to remove the scsi target representation of
+> an rport? You did not agree on having memory leaks in the kernel, did
+> you?
 
-Ugly.
-
-Maybe we could pass down a bitmap of exluded luns down the scanning path?
-Starting from fc_rport_create down to scsi_scan_target and the underlying
-fuctions?
+fc_remove_host will remove it when the host is gone.
 
