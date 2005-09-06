@@ -1,19 +1,41 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: eh_active checks in qla2xxx error handling
-Date: Tue, 6 Sep 2005 14:20:28 +0200
-Message-ID: <20050906122028.GA22963@lst.de>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] dpt_i2o pci_driver model
+Date: Tue, 6 Sep 2005 08:28:12 -0400
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F018BD34C@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:47493 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S964782AbVIFMUj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2005 08:20:39 -0400
-Content-Disposition: inline
+Received: from magic.adaptec.com ([216.52.22.17]:10172 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S964818AbVIFM2O convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Sep 2005 08:28:14 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andrew.vasquez@qlogic.com
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-qla2xxx is the only driver looking at eh_active, and doing the wait
-for oustanding commands only from EH thread resets but not from the
-ioctls looks rather wrong to me.  Do you remember the rational for it?
+Christoph Hellwig writes:
+
+> On Fri, Aug 19, 2005 at 11:05:41AM -0400, Salyzyn, Mark wrote:
+> > The sysinit structure is supposed to be a complete list of all
+peered 
+> > i2o adapters. The current driver structure issued the sysinit
+command 
+> > after all adapters were discovered rather than re-issuing as each
+was 
+> > added.
+> Yeah, I noticed that, but the question is why that's nessecary, after
+all the i2o layer drivers don't need that either.
+
+Strictly no longer required, even our multi-controller failover software
+made alternate daemon application arrangements for inter-card
+communications (cache synchronization). Cross Adapter RAID was dropped
+in 1998. It was merely a pedantic continuation of this support.
+
+As I indicated (and once I have time) I will recode the paths to
+instantiate the adapters individually.
+
+-- Mark Salyzyn
