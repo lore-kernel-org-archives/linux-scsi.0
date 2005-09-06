@@ -1,34 +1,43 @@
-From: James.Smart@Emulex.Com
-Subject: RE: [PATCH] SAS transport class
-Date: Tue, 6 Sep 2005 10:24:51 -0400
-Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C20F453A@xbl3.ma.emulex.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] SAS transport class
+Date: Tue, 06 Sep 2005 18:00:00 +0200
+Message-ID: <431DBD00.2060309@s5r6.in-berlin.de>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A75@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:9190 "EHLO emulex.emulex.com")
-	by vger.kernel.org with ESMTP id S964849AbVIFOZF convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Sep 2005 10:25:05 -0400
-content-class: urn:content-classes:message
+Received: from einhorn.in-berlin.de ([192.109.42.8]:8681 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1750735AbVIFP7O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Sep 2005 11:59:14 -0400
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7A75@xbl3.ma.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hch@lst.de
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Smart@Emulex.Com, hch@lst.de
 
-> > So this is odd... grandparent ?  why pass in port # (you should
-> > know the object already)?  why is channel skipping over / not
-> > associated with the local port ?
-> 
-> I didn't really want to need the drivers to keep around arrays
-> or lists of sas_port objects.
+James Smart wrote:
+> I'll point out, but not delve into - that you've avoided the target
+> id bindings again, thus forcing the lldd's/adapters to maintain tables
+> of port#/SASaddr to target id (if they care, and I believe enterprise
+> storage will care!).  I can understand if you're going to eventually
+> insert a generic abstraction layer for scsi's b/c/t/l addressing
+> scheme, but since it's not here today, I expect you to hold SAS to the
+> same "code sharing" level as FC.
 
-They're going to have to if they ever need to call xxx_delete() (or
-perhaps block functions, etc)... which is all likely once the mgmt
-interface is in place, or you start dealing with run-time events.
+b/c/t/l has no place in layers below scsi core (except in SPI low-level 
+where it has actual meaning).
 
-Everything else sounds good...
+I don't understand exactly what should be accomplished by a table of 
+WWNs to target IDs --- but any kind of mapping between WWN and device 
+file (and thereby between WWN and a faked b/c/t/l) belongs into 
+userspace, not into the kernel.
 
--- james s
-
- 
+Furthermore, there cannot be an "abstraction layer for scsi's b/c/t/l 
+addressing scheme". It is impossible to abstract something which is 
+without meaning.
+-- 
+Stefan Richter
+-=====-=-=-= =--= --==-
+http://arcgraph.de/sr/
