@@ -1,28 +1,64 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] dpt_i2o pci_driver model
-Date: Tue, 6 Sep 2005 12:45:59 +0100
-Message-ID: <20050906114559.GG5309@infradead.org>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F0177C1BF@otce2k03.adaptec.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] fix SCSI_IOCTL_PROBE_HOST
+Date: Tue, 6 Sep 2005 14:03:44 +0200
+Message-ID: <20050906120344.GA20177@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:25043 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S964820AbVIFLqA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Sep 2005 07:46:00 -0400
+Received: from verein.lst.de ([213.95.11.210]:19077 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S964835AbVIFMDu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2005 08:03:50 -0400
 Content-Disposition: inline
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F0177C1BF@otce2k03.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Aug 19, 2005 at 11:05:41AM -0400, Salyzyn, Mark wrote:
-> The sysinit structure is supposed to be a complete list of all peered
-> i2o adapters. The current driver structure issued the sysinit command
-> after all adapters were discovered rather than re-issuing as each was
-> added.
+This returns always false with new-style drivers right now.  Make it
+return always true instead, as a host must be present if we are able
+to call the ioctl (without a host attached there would be no device
+node to call on..)
 
-Yeah, I noticed that, but the question is why that's nessecary, after
-all the i2o layer drivers don't need that either.
 
+Index: scsi-misc-2.6/drivers/scsi/scsi_ioctl.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/scsi_ioctl.c	2005-09-06 14:11:23.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/scsi_ioctl.c	2005-09-06 14:16:18.000000000 +0200
+@@ -30,20 +30,20 @@
+ 
+ #define MAX_BUF PAGE_SIZE
+ 
+-/*
+- * If we are told to probe a host, we will return 0 if  the host is not
+- * present, 1 if the host is present, and will return an identifying
+- * string at *arg, if arg is non null, filling to the length stored at
+- * (int *) arg
++/**
++ * ioctl_probe  --  return host identification
++ * @host:	host to identify
++ * @buffer:	userspace buffer for identification
++ *
++ * Return an identifying string at @buffer, if @buffer is non-NULL, filling
++ * to the length stored at * (int *) @buffer.
+  */
+-
+ static int ioctl_probe(struct Scsi_Host *host, void __user *buffer)
+ {
+ 	unsigned int len, slen;
+ 	const char *string;
+-	int temp = host->hostt->present;
+ 
+-	if (temp && buffer) {
++	if (buffer) {
+ 		if (get_user(len, (unsigned int __user *) buffer))
+ 			return -EFAULT;
+ 
+@@ -59,7 +59,7 @@
+ 				return -EFAULT;
+ 		}
+ 	}
+-	return temp;
++	return 1;
+ }
+ 
+ /*
