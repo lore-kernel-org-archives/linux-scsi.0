@@ -1,34 +1,63 @@
-From: Dave C Boutcher <sleddog@us.ibm.com>
-Subject: Re: [PATCH] IBM VSCSI Client: handle large scatter/gather lists
-Date: Tue, 6 Sep 2005 16:16:21 -0500
-Message-ID: <20050906211621.GA14057@cs.umn.edu>
-References: <42C2D85E.5010306@us.ibm.com> <20050906074943.GS6945@krispykreme> <1126016005.5012.1.camel@mulgrave>
-Reply-To: boutcher@cs.umn.edu
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 0/8]  qla4xxx: new driver -- request for review.
+Date: Tue,  6 Sep 2005 15:08:41 -0700 (PDT)
+Message-ID: <20050906220841.11409.88669.sendpatchset@plap.qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.cs.umn.edu ([128.101.33.102]:3024 "EHLO mail.cs.umn.edu")
-	by vger.kernel.org with ESMTP id S1750960AbVIFVQ0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2005 17:16:26 -0400
-Content-Disposition: inline
-In-Reply-To: <1126016005.5012.1.camel@mulgrave>
+Received: from pat.qlogic.com ([198.70.193.2]:28058 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751007AbVIFWIl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2005 18:08:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Anton Blanchard <anton@samba.org>, Linda Xie <lxiep@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Santiago Leon <santil@us.ibm.com>
+To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On Tue, Sep 06, 2005 at 09:13:25AM -0500, James Bottomley wrote:
-> On Tue, 2005-09-06 at 17:49 +1000, Anton Blanchard wrote:
-> > Any chance we could get this into 2.6.14? I just tested it on current
-> > git and as expected the number of sg elements increased. Testing a dd
-> > from a virtual disk with clustering disabled (to avoid physical merging
-> > effects) shows:
-> 
-> Yes ... but according to my records it wasn't acked by the
-> maintainer ... does he agree?
+All,
 
-Yes.  Acking Linda's patches has been on my todo list for month..sorry
-for the lag.
+Here's a first-pass run for submission-review of the qla4xxx driver for
+QLogic's ISP4010 and ISP4022 products.
+
+The patchset breaks-down as follows:
+
+o Driver definitions
+o initialisation routines
+o OS integration files
+o iSNS routines
+o ISR routines
+o Mailbox routines
+o Support routines
+o Settings
+
+There's still quite a bit of work to do:
+
+- All command-queueing has been removed, so cable-pulls cannot be
+  tolerated.  We need to complete the iSCSI transport integration
+  (which seems to no be present).
+
+  Are the iSCSI block()/unblock() routines moving forward similarly to
+  FC and now SAS?  Mike Christie had submitted patches:
+
+	[PATCH] add block/unblock to iscsi class
+	http://marc.theaimsgroup.com/?l=linux-scsi&m=111201856631844&w=2
+
+  some time back.  Why were the patches dropped?
+
+- Request-queue management cleanup
+
+- iSNS code rework
+
+- Additional cruft removal (unused structures and functions)
+
+
+All patches can be found at the following URL:
+
+	ftp://ftp.qlogic.com/outgoing/linux/iSCSI/upstream/5.00.03b15-k/
+
+Comments and criticisms welcomed.
+
+
+Regards,
+Andrew Vasquez
+QLogic Corporation
 
 -- 
-Dave Boutcher
+Andrew Vasquez
