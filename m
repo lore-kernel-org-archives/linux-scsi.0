@@ -1,41 +1,43 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] dpt_i2o pci_driver model
-Date: Tue, 6 Sep 2005 08:28:12 -0400
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F018BD34C@otce2k03.adaptec.com>
+From: "'hch@lst.de'" <hch@lst.de>
+Subject: Re: FW: [Fwd: Re: [PATCH scsi-misc 2/2] megaraid_sas: LSI Logic MegaR AID SAS RA ID D river]
+Date: Tue, 6 Sep 2005 15:30:33 +0200
+Message-ID: <20050906133033.GA30721@lst.de>
+References: <0E3FA95632D6D047BA649F95DAB60E57060CD126@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:10172 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S964818AbVIFM2O convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Sep 2005 08:28:14 -0400
-content-class: urn:content-classes:message
+Received: from verein.lst.de ([213.95.11.210]:19591 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S932467AbVIFNaz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2005 09:30:55 -0400
+Content-Disposition: inline
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57060CD126@exa-atlanta>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: "Bagalkote, Sreenivas" <sreenib@lsil.com>
+Cc: "'hch@lst.de'" <hch@lst.de>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, 'James Bottomley' <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, "'Matt_Domsch@Dell.com'" <Matt_Domsch@Dell.com>, "Patro, Sumant" <sumantp@COS1.co.lsil.com>, "Kolli, Neela Syam" <knsyam@lsil.com>
 
-Christoph Hellwig writes:
+On Wed, Aug 31, 2005 at 08:34:07PM -0400, Bagalkote, Sreenivas wrote:
+> >  - the ->queuecommand cleanup patch I sent you a awhile ago doesn't
+> >    seem to be applied
+> 
+> I seem to have missed it. I will submit the patch after inclusion
 
-> On Fri, Aug 19, 2005 at 11:05:41AM -0400, Salyzyn, Mark wrote:
-> > The sysinit structure is supposed to be a complete list of all
-peered 
-> > i2o adapters. The current driver structure issued the sysinit
-command 
-> > after all adapters were discovered rather than re-issuing as each
-was 
-> > added.
-> Yeah, I noticed that, but the question is why that's nessecary, after
-all the i2o layer drivers don't need that either.
+ok, this is really just a small cleanup anyway.
 
-Strictly no longer required, even our multi-controller failover software
-made alternate daemon application arrangements for inter-card
-communications (cache synchronization). Cross Adapter RAID was dropped
-in 1998. It was merely a pedantic continuation of this support.
+> >  - there's quite a lot of slightly odd formating, it would be nice
+> >    if you could run the code through scripts/Lindent.
+> 
+> I ran Lindent. It looks worse :( I am submitting the Lindent output anyway.
+> 
+> > 
+> > If you could sent out an unmangled patch (even as attachment or on 
+> > LSI's ftp side) I'd like to take another, closer look.
+> 
+> I am sending this from a Linux box. Hopefully, this will comeout clean.
+> Sorry for mangled patches.
 
-As I indicated (and once I have time) I will recode the paths to
-instantiate the adapters individually.
+It's still wrapped, unfortunately.  Let's retry as an attachment.
+Anyway, I think we can put the patch in now.  I have a few more really
+small things that I'd like to address, I will submit patches as soon
+as I have a codebase that I can create patches against.
 
--- Mark Salyzyn
