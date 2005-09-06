@@ -1,58 +1,38 @@
-From: Anton Blanchard <anton@samba.org>
-Subject: Re: 2.5.51 + fastT FC disk
-Date: Tue, 6 Sep 2005 18:08:14 +1000
-Message-ID: <20050906080814.GT6945@krispykreme>
-References: <20021212132439.GE6278@krispykreme>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: remove-single-device removes mounted HDDs (kernel 2.6)
+Date: Tue, 6 Sep 2005 12:43:50 +0100
+Message-ID: <20050906114350.GE5309@infradead.org>
+References: <20050811164003.GB4351@infradead.org> <OFD1AF1EB2.F396BA40-ONC125705A.005C072D-C125705A.005C7944@de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:23189 "EHLO ozlabs.org")
-	by vger.kernel.org with ESMTP id S932444AbVIFILX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2005 04:11:23 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:16857 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S964818AbVIFLn6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Sep 2005 07:43:58 -0400
 Content-Disposition: inline
-In-Reply-To: <20021212132439.GE6278@krispykreme>
+In-Reply-To: <OFD1AF1EB2.F396BA40-ONC125705A.005C072D-C125705A.005C7944@de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Harald Seipp <SEIPP@de.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+On Thu, Aug 11, 2005 at 06:50:03PM +0200, Harald Seipp wrote:
+> Christoph Hellwig wrote on 11.08.2005 18:40:03:
+> > On Thu, Aug 11, 2005 at 05:44:46PM +0200, Harald Seipp wrote:
+> > > Thank you for your quick responses! It finally looks like the task I
+> need
+> > > to do - fully rescan all hosts for newly attached/changed devices -
+> must
+> > > include the logic to skip devices with mounted fs for 2.6.
+> >
+> > Why do you want to rescan a full bus anyway?  What SCSI transport do you
+> > want this for?  All transports where new targets can be hot-plugged
+> should
+> > be doing automatic scanning already.
+> Old-fashioned parallel SCSI bus and FC/SAN where there are no hot-plug
+> events AFAIK.
 
-On Fri, Dec 13, 2002 at 12:24:39AM +1100, Anton Blanchard wrote:
+In FC you get per-target events, although none for new LUs showing up
+on a given target (in fact no SAM transport does the latter)
 
-> We tested 2.5.51 on a ppc64 box, qlogic 2312 and a fastt700 array. I
-> had CONFIG_SCSI_REPORT_LUNS and unfortunately it thought the management
-> LUN was a disk:
-> 
->   Vendor: IBM       Model: Universal Xport   Rev: 0520
->   Type:   Direct-Access                      ANSI SCSI revision: 03
-> 
-> ...
-> 
-> SCSI device sdaj: drive cache: write through
-> SCSI device sdaj: 40960 512-byte hdwr sectors (21 MB)
->  sdaj: unknown partition table
-> Attached scsi disk sdaj at scsi2, channel 0, id 0, lun 31
-> 
-> ...
-> 
-> end_request: I/O error, dev sdaj, sector 0
-
-Three years later...
-
-It looks like SGI use the same FC vendor and they already have a
-workaround for this issue. The following patch adds the IBM version of
-it.
-
-Signed-off-by: Anton Blanchard <anton@samba.org>
-
-Index: linux-2.6.git-work/drivers/scsi/scsi_devinfo.c
-===================================================================
---- linux-2.6.git-work.orig/drivers/scsi/scsi_devinfo.c	2005-05-23 17:42:37.000000000 +1000
-+++ linux-2.6.git-work/drivers/scsi/scsi_devinfo.c	2005-05-23 18:21:00.000000000 +1000
-@@ -191,6 +191,7 @@
- 	{"SGI", "RAID5", "*", BLIST_SPARSELUN},
- 	{"SGI", "TP9100", "*", BLIST_REPORTLUN2},
- 	{"SGI", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
-+	{"IBM", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
- 	{"SMSC", "USB 2 HS-CF", NULL, BLIST_SPARSELUN | BLIST_INQUIRY_36},
- 	{"SONY", "CD-ROM CDU-8001", NULL, BLIST_BORKEN},
- 	{"SONY", "TSL", NULL, BLIST_FORCELUN},		/* DDS3 & DDS4 autoloaders */
