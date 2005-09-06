@@ -1,38 +1,28 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: remove-single-device removes mounted HDDs (kernel 2.6)
-Date: Tue, 6 Sep 2005 12:43:50 +0100
-Message-ID: <20050906114350.GE5309@infradead.org>
-References: <20050811164003.GB4351@infradead.org> <OFD1AF1EB2.F396BA40-ONC125705A.005C072D-C125705A.005C7944@de.ibm.com>
+Subject: Re: [PATCH] dpt_i2o pci_driver model
+Date: Tue, 6 Sep 2005 12:45:59 +0100
+Message-ID: <20050906114559.GG5309@infradead.org>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F0177C1BF@otce2k03.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:16857 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:25043 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S964818AbVIFLn6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Sep 2005 07:43:58 -0400
+	id S964820AbVIFLqA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Sep 2005 07:46:00 -0400
 Content-Disposition: inline
-In-Reply-To: <OFD1AF1EB2.F396BA40-ONC125705A.005C072D-C125705A.005C7944@de.ibm.com>
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F0177C1BF@otce2k03.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Harald Seipp <SEIPP@de.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Aug 11, 2005 at 06:50:03PM +0200, Harald Seipp wrote:
-> Christoph Hellwig wrote on 11.08.2005 18:40:03:
-> > On Thu, Aug 11, 2005 at 05:44:46PM +0200, Harald Seipp wrote:
-> > > Thank you for your quick responses! It finally looks like the task I
-> need
-> > > to do - fully rescan all hosts for newly attached/changed devices -
-> must
-> > > include the logic to skip devices with mounted fs for 2.6.
-> >
-> > Why do you want to rescan a full bus anyway?  What SCSI transport do you
-> > want this for?  All transports where new targets can be hot-plugged
-> should
-> > be doing automatic scanning already.
-> Old-fashioned parallel SCSI bus and FC/SAN where there are no hot-plug
-> events AFAIK.
+On Fri, Aug 19, 2005 at 11:05:41AM -0400, Salyzyn, Mark wrote:
+> The sysinit structure is supposed to be a complete list of all peered
+> i2o adapters. The current driver structure issued the sysinit command
+> after all adapters were discovered rather than re-issuing as each was
+> added.
 
-In FC you get per-target events, although none for new LUs showing up
-on a given target (in fact no SAM transport does the latter)
+Yeah, I noticed that, but the question is why that's nessecary, after
+all the i2o layer drivers don't need that either.
 
