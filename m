@@ -1,34 +1,44 @@
-From: Santiago Leon <santil@us.ibm.com>
-Subject: Re: [RFC] SCSI target for IBM Power5 LPAR
-Date: Wed, 07 Sep 2005 09:57:43 -0500
-Message-ID: <431EFFE7.6070709@us.ibm.com>
-References: <20050906212801.GB14057@cs.umn.edu> <20050907025932.GU6945@krispykreme>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 1/5] SCSI scanning and removal fixes
+Date: Wed, 07 Sep 2005 10:16:36 -0500
+Message-ID: <1126106196.4823.16.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0507261008540.4746-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932156AbVIGO5y@vger.kernel.org>
-In-Reply-To: <20050907025932.GU6945@krispykreme>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Anton Blanchard <anton@samba.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc64-dev@ozlabs.org, Santiago Leon <santil@us.ibm.com>, Linda Xie <lxiep@us.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:43915 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932166AbVIGPQj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Sep 2005 11:16:39 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0507261008540.4746-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Hi Anton,
+On Tue, 2005-07-26 at 10:12 -0400, Alan Stern wrote:
+> This patch (as542) fixes a few loose ends left by Mike's patches.  It adds 
+> a declaration for the new scsi_host_set_state routine, adds an allowed 
+> transition from the SHOST_RECOVERY state to the SHOST_CANCEL state, and 
+> avoids returning an uninitialized value in __scsi_add_device.
 
-> +	adapter->max_sectors = MAX_SECTORS;
-> 
-> Does this mean we are limited to 128kB transfers? Would it be OK to
-> bump the default?
+The first part (external declaration) is already in.
 
-We use MAX_SECTORS (which is actually 127.5kB) because that's the 
-max_sectors of the loopback device (we have a lot of users that like the 
-flexibility of using loopback with the ibmvscsis driver)... It can be 
-bumped up without any problems because there is code that splits 
-requests if they are larger than the target's max_sectors...
+The second (allow RECOVERY->CANCEL) isn't really an answer.  The correct
+thing, I suppose, is to have scsi_remove_host() wait for the error
+handler to finish if the state transition cannot be accomodated
+(otherwise the error handler will try to transition ->RUNNING part way
+through the removal).
 
-What would you recommend? 256kB?
+The third (don't allow uninitialised return from __scsi_add_device) is
+correct, but the return is universally ignored (the only actual user
+being ipr).  Unfortunately, now I look at this, ipr gets it wrong too.
+This API currently returns an sdev with an incremented refcount.  If you
+ignore the return, as ipr does, you're leaking refcounts.  So, since the
+only user gets it wrong all the time, I'd vote for modifying the API not
+to return a device.
 
--- 
-Santiago A. Leon
-Power Linux Development
-IBM Linux Technology Center
+James
+
+
