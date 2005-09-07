@@ -1,60 +1,120 @@
-From: Yiannis Mavroukakis <jander@darthvader.us>
-Subject: SCSI Raid card problems
-Date: Wed, 07 Sep 2005 14:50:04 +0100
-Message-ID: <431EF00C.2010403@darthvader.us>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/2] update commands and trace statemenets in scsi_error_handler
+Date: Wed, 7 Sep 2005 15:52:19 +0200
+Message-ID: <20050907135219.GB16340@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail68.messagelabs.com ([193.109.255.67]:15016 "HELO
-	mail68.messagelabs.com") by vger.kernel.org with SMTP
-	id S932142AbVIGNtn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Sep 2005 09:49:43 -0400
+Received: from verein.lst.de ([213.95.11.210]:39072 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S932145AbVIGNwW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 09:52:22 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+There are lots of comments that are either outdated, slightly wrong or
+stating the obvious.  Also remove a useless trace statement and reformat
+the others to be more easily readable.
 
-I'm running reiser4 on 2.6.11-mm4 at the moment. I compiled 2.6.13-mm1 
-(and subsequently a few more kernel versions in-between)  as a 
-replacement, only to find out that it blows up in my face when the root 
-fs is due to be mounted:
-
-VFS: Cannot open root device "801" or unknown-block
-Unable to mount root fs on unknown-block (8,1)
-
-The server has a NetRaid-1Si card set in raid-5 mode
-
-lspci -v shows
-
-02:01.1 I2O: Intel Corporation 80960RP [i960RP Microprocessor] (rev 05) 
-(prog-if 01)
-        Subsystem: Hewlett-Packard Company HP NetRAID-1Si
-        Flags: bus master, fast Back2Back, medium devsel, latency 32, IRQ 17
-        Memory at fe000000 (32-bit, prefetchable) [size=4M]
-        Expansion ROM at <unassigned> [disabled] [size=32K]
-        Capabilities: [80] Power Management version 2
-
-dmesg output
-
-scsi2:Found MegaRAID controller at 0xe081a000, IRQ:17
-megaraid: [F :B ] detected 1 logical drives.
-megaraid: channel[0] is raid.
-scsi2 : LSI Logic MegaRAID F  254 commands 16 targs 4 chans 7 luns
-scsi2: scanning scsi channel 0 for logical drives.
-  Vendor: MegaRAID  Model: LD0 RAID0 26031R  Rev:   F
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-
-
-Everything works fine on 2.6.11-mm4
-Was anything changed in the legacy driver that would cause this?
-
-Thank you,
-
-Yiannis.
-
-______________________________________________________________________
-This email has been scanned by the MessageLabs Email Security System.
-For more information please visit http://www.messagelabs.com/email 
-______________________________________________________________________
+Index: scsi-misc-2.6/drivers/scsi/scsi_error.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/scsi_error.c	2005-09-07 14:22:58.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/scsi_error.c	2005-09-07 14:29:14.000000000 +0200
+@@ -1566,57 +1566,39 @@
+ }
+ 
+ /**
+- * scsi_error_handler - Handle errors/timeouts of SCSI cmds.
++ * scsi_error_handler - SCSI error handler thread
+  * @data:	Host for which we are running.
+  *
+  * Notes:
+- *    This is always run in the context of a kernel thread.  The idea is
+- *    that we start this thing up when the kernel starts up (one per host
+- *    that we detect), and it immediately goes to sleep and waits for some
+- *    event (i.e. failure).  When this takes place, we have the job of
+- *    trying to unjam the bus and restarting things.
++ *    This is the main error handling loop.  This is run as a kernel thread
++ *    for every SCSI host and handles all error handling activity.
+  **/
+ int scsi_error_handler(void *data)
+ {
+-	struct Scsi_Host *shost = (struct Scsi_Host *) data;
+-	int rtn;
++	struct Scsi_Host *shost = data;
+ 	DECLARE_MUTEX_LOCKED(sem);
+ 
+ 	current->flags |= PF_NOFREEZE;
+ 	shost->eh_wait = &sem;
+ 
+-	/*
+-	 * Wake up the thread that created us.
+-	 */
+-	SCSI_LOG_ERROR_RECOVERY(3, printk("Wake up parent of"
+-					  " scsi_eh_%d\n",shost->host_no));
+-
+ 	while (!kthread_should_stop()) {
+-		/*
+-		 * If we get a signal, it means we are supposed to go
+-		 * away and die.  This typically happens if the user is
+-		 * trying to unload a module.
+-		 */
+-		SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler"
+-						  " scsi_eh_%d"
+-						  " sleeping\n",shost->host_no));
++		SCSI_LOG_ERROR_RECOVERY(1,
++			printk("Error handler scsi_eh_%d sleeping\n",
++				shost->host_no));
+ 
+ 		/*
+-		 * Note - we always use down_interruptible with the semaphore
+-		 * even if the module was loaded as part of the kernel.  The
+-		 * reason is that down() will cause this thread to be counted
+-		 * in the load average as a running process, and down
+-		 * interruptible doesn't.  Given that we need to allow this
+-		 * thread to die if the driver was loaded as a module, using
+-		 * semaphores isn't unreasonable.
++		 * We use down_interruptible() so that the thread is not
++		 * counted against the load average as a running process.
++		 * We never actually get interrupted because kthread_run
++		 * disables singal delivery for the create thread.
+ 		 */
+ 		down_interruptible(&sem);
+ 		if (kthread_should_stop())
+ 			break;
+ 
+-		SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler"
+-						  " scsi_eh_%d waking"
+-						  " up\n",shost->host_no));
++		SCSI_LOG_ERROR_RECOVERY(1,
++			printk("Error handler scsi_eh_%d waking up\n",
++				shost->host_no));
+ 
+ 		shost->eh_active = 1;
+ 
+@@ -1626,7 +1608,7 @@
+ 		 * If we fail, we end up taking the thing offline.
+ 		 */
+ 		if (shost->hostt->eh_strategy_handler) 
+-			rtn = shost->hostt->eh_strategy_handler(shost);
++			shost->hostt->eh_strategy_handler(shost);
+ 		else
+ 			scsi_unjam_host(shost);
+ 
+@@ -1643,12 +1625,9 @@
+ 
+ 	}
+ 
+-	SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler scsi_eh_%d"
+-					  " exiting\n",shost->host_no));
++	SCSI_LOG_ERROR_RECOVERY(1,
++		printk("Error handler scsi_eh_%d exiting\n", shost->host_no));
+ 
+-	/*
+-	 * Make sure that nobody tries to wake us up again.
+-	 */
+ 	shost->eh_wait = NULL;
+ 	return 0;
+ }
