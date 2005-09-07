@@ -1,33 +1,40 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [RFC] SCSI EH document
-Date: Wed, 07 Sep 2005 09:00:30 -0500
-Message-ID: <1126101630.4823.6.camel@mulgrave>
-References: <20050826035326.GA13392@htj.dyndns.org>
-	 <431E9F14.7070703@pobox.com>  <431ECD91.80407@gmail.com>
+Subject: Re: Pending patches
+Date: Wed, 07 Sep 2005 09:47:53 -0500
+Message-ID: <1126104473.4823.8.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0509061611410.32674-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:53898 "EHLO
+Received: from stat9.steeleye.com ([209.192.50.41]:16267 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751211AbVIGOAy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Sep 2005 10:00:54 -0400
-In-Reply-To: <431ECD91.80407@gmail.com>
+	id S932146AbVIGOr7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Sep 2005 10:47:59 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0509061611410.32674-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, luben_tuikov@adaptec.com, albertcc@tw.ibm.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, 2005-09-07 at 20:22 +0900, Tejun Heo wrote:
->   If James agrees, I'll reformat it to DocBook and submit the patch. 
-> James, what do you think?
+On Tue, 2005-09-06 at 16:17 -0400, Alan Stern wrote:
+> May I draw your attention to these patch submissions:
+> 
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=111221335824727&w=2
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=112117962214214&w=2
 
-Certainly ... just submit it as a patch and I'll put it in.
+These two should be in.
 
-As far as docbook goes, that's fine ... it's just that docbook has to be
-built and it's supposed to derive its API from the actual files its
-describing (although you get to do the sections) ... not that all
-docbook files do this, of course.
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=112238708903663&w=2 (this 
+> 	is a cover message, not a patch)
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=112238726326927&w=2
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=112238753725214&w=2
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=112238771326644&w=2
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=112238804301664&w=2
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=112238825727146&w=2
+
+I was hoping that Mike Anderson would review these, but since he hasn't
+I'll take a look.
 
 James
 
