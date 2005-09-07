@@ -1,46 +1,56 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [RFC] SCSI target for IBM Power5 LPAR/SCST 0.9.3-pre1 published
-Date: Thu, 08 Sep 2005 00:07:13 +0400
-Message-ID: <431F4871.6080905@vlnb.net>
-References: <20050906212801.GB14057@cs.umn.edu> <20050907104932.GA14200@lst.de> <20050907124504.GA13614@cs.umn.edu> <431F35D2.7040209@vlnb.net> <431F37E6.3080706@cs.wisc.edu>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: legacy megaraid driver bug in mm-series
+Date: Wed, 7 Sep 2005 13:33:55 -0700
+Message-ID: <20050907133355.54f3dd2d.akpm@osdl.org>
+References: <0E3FA95632D6D047BA649F95DAB60E5703662B18@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay02.infobox.ru ([195.208.235.29]:22150 "EHLO
-	relay02.infobox.ru") by vger.kernel.org with ESMTP id S1751297AbVIGUI6
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Sep 2005 16:08:58 -0400
-In-Reply-To: <431F37E6.3080706@cs.wisc.edu>
+Received: from smtp.osdl.org ([65.172.181.4]:61081 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932236AbVIGUfr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 16:35:47 -0400
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703662B18@exa-atlanta>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: boutcher@cs.umn.edu, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc64-dev@ozlabs.org, Santiago Leon <santil@us.ibm.com>, Linda Xie <lxiep@us.ibm.com>, iscsitarget-devel@lists.sourceforge.net
+To: "Ju, Seokmann" <sju@lsil.com>
+Cc: linux-scsi@vger.kernel.org, ojbyer@usa.net
 
-Mike Christie wrote:
-> Vladislav Bolkhovitin wrote:
->> Sorry, I can see on stgt page only mail lists archive and not from 
->> start (from Aug 22). Mike, can I see stgt code and some design 
->> description, please? You can send it directly on my e-mail address, if 
->> necessary.
-> 
-> goto the svn page for the code
-> http://developer.berlios.de/svn/?group_id=4492
-> 
-> As for design desc, I do not have anything. It is the evolving source :) 
-> We are slowly merging leasons we learned from open-iscsi, your SCST 
-> code, the available software and HW targets, and the SCSI ULD's 
-> scatterlist code which needs redoing so it is a bit of a mess.
+"Ju, Seokmann" <sju@lsil.com> wrote:
+>
+> Hi Andrew,
+> On Wednesday, September 07, 2005 5:53 AM, Andrew Morton forwarded:
+> > 2.6.11-mm1:	works
+> > 2.6.11-mm4:	works
+> > 2.6.12-rc5-mm1:	will not compile
+> > 2.6.12-rc6-mm1:	works
+> > 2.6.12-mm1:	will not compile megaraid driver
+> > 2.6.12-mm2:	broken
+> > 2.6.13-mm1:	broken
+> > 
+> > 2.6.12:		works
+> > 2.6.13:		works
+>
+> Is there any precedence rule on the kernels?.
+>
 
-OK, thanks, will try tomorrow.
+It's a bit weird, but the above are in chronological order.
 
-I put SCST 0.9.3-pre1 on its page 
-(http://sourceforge.net/projects/scst/). This is not the latest, but 
-this is the one, which working. At the end of this week I'll try to put 
-there the latest one as well. Hope, you will learn some more lessons 
-from it :).
+Time order:
 
-Any comments are welcome.
+	2.6.12
+	2.6.13-rc1
+	2.6.13-rc2
+	2.6.13
+	2.6.14-rc1
 
-Vlad
+etc.  And -mm kernels are just the current Linus kernel with -mmX appended.
+
+> I wonder which kernel is latest in between 2.6.12 and 2.6.12-mmx.
+
+2.6.12-mmX
+
+> I assume 2.6.12-mmx is later than 2.6.12.
+
+Correct.
 
