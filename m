@@ -1,56 +1,64 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: legacy megaraid driver bug in mm-series
-Date: Wed, 7 Sep 2005 13:33:55 -0700
-Message-ID: <20050907133355.54f3dd2d.akpm@osdl.org>
-References: <0E3FA95632D6D047BA649F95DAB60E5703662B18@exa-atlanta>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [PATCH 1/5] SCSI scanning and removal fixes
+Date: Wed, 07 Sep 2005 16:43:27 -0400
+Message-ID: <431F50EF.1060901@adaptec.com>
+References: <Pine.LNX.4.44L0.0509071519080.4988-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:61081 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932236AbVIGUfr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 16:35:47 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703662B18@exa-atlanta>
+Received: from magic.adaptec.com ([216.52.22.17]:2002 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932250AbVIGUnd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 16:43:33 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0509071519080.4988-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ju, Seokmann" <sju@lsil.com>
-Cc: linux-scsi@vger.kernel.org, ojbyer@usa.net
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-"Ju, Seokmann" <sju@lsil.com> wrote:
->
-> Hi Andrew,
-> On Wednesday, September 07, 2005 5:53 AM, Andrew Morton forwarded:
-> > 2.6.11-mm1:	works
-> > 2.6.11-mm4:	works
-> > 2.6.12-rc5-mm1:	will not compile
-> > 2.6.12-rc6-mm1:	works
-> > 2.6.12-mm1:	will not compile megaraid driver
-> > 2.6.12-mm2:	broken
-> > 2.6.13-mm1:	broken
-> > 
-> > 2.6.12:		works
-> > 2.6.13:		works
->
-> Is there any precedence rule on the kernels?.
->
+On 09/07/05 15:31, Alan Stern wrote:
+> 
+> As for layering violations and deadlocks...  Unfortunately the violation
+> is unavoidable.  It's related to the way the error handler sometimes tries
+> to fix a non-working device by doing a bus reset, which will also affect
+> all the other devices on the same bus.
 
-It's a bit weird, but the above are in chronological order.
+Yes, that's a good point.
 
-Time order:
+Is it possible to implement LU Reset TMF for USB storage devices?
+If so, then you do not need to do a "bus reset".
 
-	2.6.12
-	2.6.13-rc1
-	2.6.13-rc2
-	2.6.13
-	2.6.14-rc1
+*General note:* It is very bad to have to punish all devices on the
+"bus" just because one device failed.  Isn't there a better way
+to recover(*) a failed USB Storage device?
 
-etc.  And -mm kernels are just the current Linus kernel with -mmX appended.
+(*) That doesn't necessarily mean "bring back to life", it could
+also mean "remove".
 
-> I wonder which kernel is latest in between 2.6.12 and 2.6.12-mmx.
+That is, a "bus reset" means that also any other device on the "bus" is
+unreachable.  If this is _not_ the case, then a "bus" reset must _not_
+take place.
 
-2.6.12-mmX
+>>This makes me believe that maybe USB storage would need an overhaul
+>>of the event infra: removing and adding, and/or implement its own
+>>eh.
+> 
+> In the long run that might be good, but for now I think we'll be okay.  
+> The important thing is to make sure that once the device has moved to the
+> CANCEL state, everything fails quickly.
 
-> I assume 2.6.12-mmx is later than 2.6.12.
+If you have the means to do transport checking of the state of the
+device, (and it seems like you can for USB Storage, since it is USB after
+all), then you _must_ implement your own eh handler.  This is what
+it is for.  Please, consider.
 
-Correct.
+	Luben
+
+P.S. It may actually simplify things in the USB transport layer _and_ in
+SCSI Core (i.e. no need for those patches).
+
+
+
+
+
 
