@@ -1,15 +1,15 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: [PATCH 1/5] SCSI scanning and removal fixes
-Date: Wed, 07 Sep 2005 14:37:44 -0400
-Message-ID: <431F3378.8000109@adaptec.com>
+Date: Wed, 07 Sep 2005 14:42:14 -0400
+Message-ID: <431F3486.4060704@adaptec.com>
 References: <Pine.LNX.4.44L0.0509071413070.4988-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:17844 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932207AbVIGShu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 14:37:50 -0400
+Received: from magic.adaptec.com ([216.52.22.17]:15285 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932212AbVIGSmU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 14:42:20 -0400
 In-Reply-To: <Pine.LNX.4.44L0.0509071413070.4988-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -45,22 +45,20 @@ On 09/07/05 14:27, Alan Stern wrote:
 > Instead, the error handler should not be allowed to make the transition to
 > RUNNING once the removal has started.
 
-Hey guys,
+Alan, this tells me one thing: the _layering_ infrastructure is broken,
+and in this case, it looks like is not SCSI Core.
 
-I haven't looked at Alan's patches in detail, but would just like
-to mention that my driver supports hot plugging _and_unplugging_
-of devices and _whole_domains_ (many devices at the same time,
-plug and unplug).
+E.g. why is the LLDD messing with semas of the host? (rhetorical, please
+do not answer as this would go into another thread...)
 
-scsi hosts are also dynamically created and destroyed.
+BTW, since the eh is a _function of the host_, James is correct that
+scsi_remove_host should wait for the eh to finish.
 
-Currently there is absolutely no problems with any deadlocks or anything
-like that.  (Of course the driver implements its own eh+timeout hooks.)
-
-Make sure you guys do not break something. ;-)
+This makes me believe that maybe USB storage would need an overhaul
+of the event infra: removing and adding, and/or implement its own
+eh.
 
 	Luben
-
 
 
 > 
