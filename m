@@ -1,41 +1,34 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Pending patches
-Date: Wed, 07 Sep 2005 09:47:53 -0500
-Message-ID: <1126104473.4823.8.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0509061611410.32674-100000@iolanthe.rowland.org>
+From: Santiago Leon <santil@us.ibm.com>
+Subject: Re: [RFC] SCSI target for IBM Power5 LPAR
+Date: Wed, 07 Sep 2005 09:57:43 -0500
+Message-ID: <431EFFE7.6070709@us.ibm.com>
+References: <20050906212801.GB14057@cs.umn.edu> <20050907025932.GU6945@krispykreme>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:16267 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932146AbVIGOr7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Sep 2005 10:47:59 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0509061611410.32674-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932156AbVIGO5y@vger.kernel.org>
+In-Reply-To: <20050907025932.GU6945@krispykreme>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Anton Blanchard <anton@samba.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc64-dev@ozlabs.org, Santiago Leon <santil@us.ibm.com>, Linda Xie <lxiep@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, 2005-09-06 at 16:17 -0400, Alan Stern wrote:
-> May I draw your attention to these patch submissions:
+Hi Anton,
+
+> +	adapter->max_sectors = MAX_SECTORS;
 > 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=111221335824727&w=2
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=112117962214214&w=2
+> Does this mean we are limited to 128kB transfers? Would it be OK to
+> bump the default?
 
-These two should be in.
+We use MAX_SECTORS (which is actually 127.5kB) because that's the 
+max_sectors of the loopback device (we have a lot of users that like the 
+flexibility of using loopback with the ibmvscsis driver)... It can be 
+bumped up without any problems because there is code that splits 
+requests if they are larger than the target's max_sectors...
 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=112238708903663&w=2 (this 
-> 	is a cover message, not a patch)
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=112238726326927&w=2
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=112238753725214&w=2
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=112238771326644&w=2
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=112238804301664&w=2
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=112238825727146&w=2
+What would you recommend? 256kB?
 
-I was hoping that Mike Anderson would review these, but since he hasn't
-I'll take a look.
-
-James
-
-
+-- 
+Santiago A. Leon
+Power Linux Development
+IBM Linux Technology Center
