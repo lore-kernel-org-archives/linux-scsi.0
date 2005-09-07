@@ -1,50 +1,53 @@
-From: "Bhanu, Yogesh" <yogesh@gsf.de>
-Subject: aic7xxx   slowness on 2.6.13
-Date: Wed, 7 Sep 2005 13:15:55 +0200
-Message-ID: <8306780C060A7D4790F8BA02CBA1B6910A9499@sw-rz010.gsf.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [RFC] SCSI EH document
+Date: Wed, 07 Sep 2005 20:22:57 +0900
+Message-ID: <431ECD91.80407@gmail.com>
+References: <20050826035326.GA13392@htj.dyndns.org> <431E9F14.7070703@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mta2.gsf.de ([146.107.4.111]:65452 "EHLO mta2.gsf.de")
-	by vger.kernel.org with ESMTP id S932111AbVIGLQG convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Sep 2005 07:16:06 -0400
-Received: from sw-rz010.gsf.de (sw-rz010.gsf.de [146.107.8.106])
-	by mta2.gsf.de (Postfix) with ESMTP id 4DA6D1465C0
-	for <linux-scsi@vger.kernel.org>; Wed,  7 Sep 2005 13:15:55 +0200 (CEST)
-Content-class: urn:content-classes:message
+Received: from zproxy.gmail.com ([64.233.162.196]:14540 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932114AbVIGLXG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 07:23:06 -0400
+Received: by zproxy.gmail.com with SMTP id r28so972076nza
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Sep 2005 04:23:02 -0700 (PDT)
+In-Reply-To: <431E9F14.7070703@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: James.Bottomley@steeleye.com, luben_tuikov@adaptec.com, albertcc@tw.ibm.com, linux-scsi@vger.kernel.org
 
-hi ,
-       I  installed 2.6.13 over the weekend  on a dual Pentium Xeon 2.4 Ghz with 6 GB RAM (My fileserver) running Debian Sarge.
-My fileserver uses external infrotrend raid . 
- 
-On switching to 2.6.13 I also switched from my older slower Symbios 53c895   to Adaptec 3960D
- 
-I have noticed when using the adaptec card my file server performs slower than the Symbios 
-card.
- 
-As an example I tried to copy my Mail folder of 66.8 M  and this is what I see .
- 
-with symbios 53c895 
- 
-bash-2.05$ time cp -pa Mail Mail.mips
-real     0m6.048s
-user    0m0.007s
-sys     0m0.295s
- 
- 
-with adaptec 3960D
-bash-2.05$ time cp -pa Mail Mail.mips
-real     0m49.543s
-user    0m0.000s
-sys     0m0.044s
- 
- 
-I wonder anybody is experiencing this . 
- 
-Thanks
-yogesh
+
+  Hello, Jeff & James.
+
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+> 
+>>  Hello, fellow SCSI/ATA developers.
+>>
+>>  This is the first draft of SCSI EH document.  This document tries to
+>> describe how SCSI EH works and what choirs should be done to maintain
+>> SCSI midlayer integrity.  It's intended that this document can be used
+>> as reference for implementing either fine-grained EH callbacks or
+>> single eh_strategy_handler() callback.
+>>
+>>  I'm pretty sure that I've screwed up in (hopefully) several places,
+>> so please correct me.  Also, I have several places where I'm not sure
+>> or have questions, those are marked with *VERIFY* and *QUESTION*
+>> respectively.  If you know the answer, please let me know.
+>>
+>>  Thanks.
+>>
+>>
+>> SCSI EH
+> 
+> 
+> Although it's up to the SCSI maintainer ultimately, I think it would be 
+> nice to stick this in Documentation/DocBook/ or Documentation/scsi/
+
+  If James agrees, I'll reformat it to DocBook and submit the patch. 
+James, what do you think?
+
+-- 
+tejun
