@@ -1,43 +1,62 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [RFC] SCSI target for IBM Power5 LPAR
-Date: Wed, 07 Sep 2005 21:58:16 +0900
-Message-ID: <20050907215816C.fujita.tomonori@lab.ntt.co.jp>
-References: <20050906212801.GB14057@cs.umn.edu>
-	<20050907104932.GA14200@lst.de>
-	<20050907124504.GA13614@cs.umn.edu>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [RFC] SCSI EH document
+Date: Wed, 07 Sep 2005 09:12:32 -0400
+Message-ID: <431EE740.2090005@adaptec.com>
+References: <20050826035326.GA13392@htj.dyndns.org> <431E9F14.7070703@pobox.com> <431ECD91.80407@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:29832 "EHLO
-	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
-	id S1751135AbVIGM6l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Sep 2005 08:58:41 -0400
-In-Reply-To: <20050907124504.GA13614@cs.umn.edu>
+Received: from magic.adaptec.com ([216.52.22.17]:7636 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1750962AbVIGNMk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 09:12:40 -0400
+In-Reply-To: <431ECD91.80407@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: boutcher@cs.umn.edu
-Cc: hch@lst.de, vst@vlnb.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc64-dev@ozlabs.org, santil@us.ibm.com, lxiep@us.ibm.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James.Bottomley@steeleye.com, albertcc@tw.ibm.com, linux-scsi@vger.kernel.org
 
-From: Dave C Boutcher <sleddog@us.ibm.com>
-Subject: Re: [RFC] SCSI target for IBM Power5 LPAR
-Date: Wed, 7 Sep 2005 07:45:04 -0500
-
-> On Wed, Sep 07, 2005 at 12:49:32PM +0200, Christoph Hellwig wrote:
-> > On Tue, Sep 06, 2005 at 04:28:01PM -0500, Dave C Boutcher wrote:
-> > > This device driver provides the SCSI target side of the "virtual
-> > > SCSI" on IBM Power5 systems.  The initiator side has been in mainline
-> > > for a while now (drivers/scsi/ibmvscsi/ibmvscsi.c.)  Targets already
-> > > exist for AIX and OS/400.
-> > 
-> > Please try to integrate that with the generic scsi target framework at
-> > http://developer.berlios.de/projects/stgt/.
+On 09/07/05 07:22, Tejun Heo wrote:
+>   Hello, Jeff & James.
 > 
-> There hasn't been a lot of forward progress on stgt in over a year, and
-> there were some issues (lack of scatterlist support, synchronous and
-> serial command execution) that were an issue when last I looked.
+> Jeff Garzik wrote:
+> 
+>>Tejun Heo wrote:
+>>
+>>
+>>> Hello, fellow SCSI/ATA developers.
+>>>
+>>> This is the first draft of SCSI EH document.  This document tries to
+>>>describe how SCSI EH works and what choirs should be done to maintain
+>>>SCSI midlayer integrity.  It's intended that this document can be used
+>>>as reference for implementing either fine-grained EH callbacks or
+>>>single eh_strategy_handler() callback.
+>>>
+>>> I'm pretty sure that I've screwed up in (hopefully) several places,
+>>>so please correct me.  Also, I have several places where I'm not sure
+>>>or have questions, those are marked with *VERIFY* and *QUESTION*
+>>>respectively.  If you know the answer, please let me know.
+>>>
+>>> Thanks.
+>>>
+>>>
+>>>SCSI EH
+>>
+>>
+>>Although it's up to the SCSI maintainer ultimately, I think it would be 
+>>nice to stick this in Documentation/DocBook/ or Documentation/scsi/
+> 
+> 
+>   If James agrees, I'll reformat it to DocBook and submit the patch. 
+> James, what do you think?
 
-The generic scsi target framework (stgt) is not SCST (that Vlad has
-maintained). It is the project that Mike Christie and I started last
-month. We discussed it with Christoph and decided that it would be
-better to start from scratch because of the design differences.
+Add to this the vendor treatment of linux-scsi and lo and behold,
+our current situation.
+
+Again: Documentation/ManagamentStyle, Section 1: Decisions.
+
+Any work is good work.  If _you_ think that it should go into
+Documentation/scsi, then it probably should.
+
+	Luben
+
