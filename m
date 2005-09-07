@@ -1,35 +1,67 @@
-From: Zaigham Faraz Siddiqui <zaigham61@yahoo.com>
-Subject: Data Overrun Error?
-Date: Wed, 7 Sep 2005 07:54:27 +0100 (BST)
-Message-ID: <20050907065427.90252.qmail@web30504.mail.mud.yahoo.com>
-Reply-To: zaigham16@hotmail.com
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH] switch EH thread startup to the kthread API
+Date: Wed, 7 Sep 2005 09:30:55 +0200
+Message-ID: <200509070931.02816@bilbo.math.uni-mannheim.de>
+References: <20050906120426.GB20177@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed;
+  boundary="nextPart7129837.THXu6GkLzO";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web30504.mail.mud.yahoo.com ([68.142.200.117]:24171 "HELO
-	web30504.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1751021AbVIGGyb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Sep 2005 02:54:31 -0400
+Received: from mail.sf-mail.de ([62.27.20.61]:50884 "EHLO mail.sf-mail.de")
+	by vger.kernel.org with ESMTP id S932068AbVIGHbE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 03:31:04 -0400
+In-Reply-To: <20050906120426.GB20177@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-hi,
-the virtual scsi device is hosted on Linux 2.4 and
-solaris 10 (x86) is the initiator. Disk formating and
-mountig is working fine but as soon as we try and run
-dd 1Gb.... the initiartor copies around 41Mb and after
-that 'data overrun' ctio-error is recieved on the
-target side (qla2300)... we are extracting information
-like data length and lun from the atio/iocb... scsi
-cdb is also giving the same parameters... can some one
-advise me why exactly is the error coming? can it be
-due to mis-calculated data length on the target side?
+--nextPart7129837.THXu6GkLzO
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
+Christoph Hellwig wrote:
 
-	
-	
-		
-___________________________________________________________ 
-Yahoo! Messenger - NEW crystal clear PC to PC calling worldwide with voicemail http://uk.messenger.yahoo.com
+>@@ -1600,8 +1593,6 @@
+> 	SCSI_LOG_ERROR_RECOVERY(3, printk("Wake up parent of"
+> 					  " scsi_eh_%d\n",shost->host_no));
+>
+>-	complete(shost->eh_notify);
+>-
+> 	while (1) {
+> 		/*
+> 		 * If we get a signal, it means we are supposed to go
+>@@ -1622,7 +1613,7 @@
+> 		 * semaphores isn't unreasonable.
+> 		 */
+> 		down_interruptible(&sem);
+>-		if (shost->eh_kill)
+>+		if (kthread_should_stop())
+> 			break;
+>
+> 		SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler"
+
+We used nearly the same code in cpqfcTS yesterday for testing. On module=20
+unload down_interruptible() does not get interrupted and the kthread_stop()=
+=20
+will wait forever and hang rmmod.
+
+Eike
+
+--nextPart7129837.THXu6GkLzO
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.0 (GNU/Linux)
+
+iD8DBQBDHpc2XKSJPmm5/E4RAp5FAJ0e6bBQtGbKNiTLIO4rDo6yq+VMUgCgoj/c
+o5UgzHHHJn558G5mbAupfNw=
+=Edhh
+-----END PGP SIGNATURE-----
+
+--nextPart7129837.THXu6GkLzO--
