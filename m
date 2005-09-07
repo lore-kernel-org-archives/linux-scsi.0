@@ -1,44 +1,39 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [GIT PATCH] SCSI merge for 2.6.13
-Date: Wed, 7 Sep 2005 10:47:44 -0700
-Message-ID: <20050907174744.GA13172@us.ibm.com>
-References: <1126053452.5012.28.camel@mulgrave>
+From: Dave C Boutcher <sleddog@us.ibm.com>
+Subject: [Patch 0/4] [RFC] Resend SCSI target for IBM Power5 LPAR
+Date: Wed, 7 Sep 2005 13:03:33 -0500
+Message-ID: <20050907180333.GA12904@cs.umn.edu>
+Reply-To: boutcher@cs.umn.edu
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.131]:34004 "EHLO
-	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S932072AbVIGR4k
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Sep 2005 13:56:40 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932108AbVIGSDi@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1126053452.5012.28.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
 
-On Tue, Sep 06, 2005 at 07:37:32PM -0500, James Bottomley wrote:
-> This should be the entire contents of the SCSI tree I've been saving.
-> It also includes Jens' send SCSI requests via bios tree that he, Mike
-> Christie and I have been working on.
-> 
-> The patch is available here:
-> 
-> master.kernel.org:/pub/linux/kernel/scm/jejb/scsi-for-linus-2.6.git
-> 
+The dog ate my homework.  No, that's not it, the mailer ate my patches.
+In any case, since most of the mailing list mailers ate my (>100K) 
+patches, here's the same thing broken up.
 
->   o convert ch to use scsi_execute_req
->   o convert sr to scsi_execute_req
->   o convert sd to scsi_execute_req (and update the scsi_execute_req API)
->   o convert SPI transport class to scsi_execute
->   o convert the remaining mid-layer pieces to scsi_execute_req
+his device driver provides the SCSI target side of the "virtual
+SCSI" on IBM Power5 systems.  The initiator side has been in mainline
+for a while now (drivers/scsi/ibmvscsi/ibmvscsi.c.)  Targets already
+exist for AIX and OS/400.
 
-The scsi_execute() retries argument is still not used.
+One of the biggest discussions, I expect, will be whether much of
+this belongs in user-land.  We have had considerable debates on that
+subject, and ended up with it all in the kernel.  Unlike some other
+targets (e.g. iSCSI) that sit on top of nice TCP/IP stacks, this one
+interacts at a pretty low level with the firmware.  There weren't
+any good user-land splits that seemed to make sense (and looking at
+the history of the NFS server also influenced the discussion.)
 
-How is this going to work?
+This is currently just an RFC...if my boxers survive the flamage
+I'll submit it for inclusion.
 
-For example, multiple unit attentions (power on / reset) during scanning.
-We send REPORT LUN, READ CAPACITY, etc., and would not retry if we got a
-unit attention.
+As an additional note, Cristoph already pointed me to Mike Christie and
+Tomonori Fujita who are doing some similar work
 
--- Patrick Mansfield
+Thanks
+
+Dave B
