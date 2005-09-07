@@ -1,71 +1,46 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [PATCH 1/5] SCSI scanning and removal fixes
-Date: Wed, 7 Sep 2005 13:00:41 -0700
-Message-ID: <20050907200041.GB26071@us.ibm.com>
-References: <431F3486.4060704@adaptec.com> <Pine.LNX.4.44L0.0509071519080.4988-100000@iolanthe.rowland.org>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [RFC] SCSI target for IBM Power5 LPAR/SCST 0.9.3-pre1 published
+Date: Thu, 08 Sep 2005 00:07:13 +0400
+Message-ID: <431F4871.6080905@vlnb.net>
+References: <20050906212801.GB14057@cs.umn.edu> <20050907104932.GA14200@lst.de> <20050907124504.GA13614@cs.umn.edu> <431F35D2.7040209@vlnb.net> <431F37E6.3080706@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:48856 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751278AbVIGUCB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 16:02:01 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e1.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j87K17DB023597
-	for <linux-scsi@vger.kernel.org>; Wed, 7 Sep 2005 16:01:07 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j87K17gh102800
-	for <linux-scsi@vger.kernel.org>; Wed, 7 Sep 2005 16:01:07 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j87K16qB005855
-	for <linux-scsi@vger.kernel.org>; Wed, 7 Sep 2005 16:01:06 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0509071519080.4988-100000@iolanthe.rowland.org>
+Received: from relay02.infobox.ru ([195.208.235.29]:22150 "EHLO
+	relay02.infobox.ru") by vger.kernel.org with ESMTP id S1751297AbVIGUI6
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Sep 2005 16:08:58 -0400
+In-Reply-To: <431F37E6.3080706@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: boutcher@cs.umn.edu, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc64-dev@ozlabs.org, Santiago Leon <santil@us.ibm.com>, Linda Xie <lxiep@us.ibm.com>, iscsitarget-devel@lists.sourceforge.net
 
-Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Wed, 7 Sep 2005, Luben Tuikov wrote:
+Mike Christie wrote:
+> Vladislav Bolkhovitin wrote:
+>> Sorry, I can see on stgt page only mail lists archive and not from 
+>> start (from Aug 22). Mike, can I see stgt code and some design 
+>> description, please? You can send it directly on my e-mail address, if 
+>> necessary.
 > 
-> > On 09/07/05 14:27, Alan Stern wrote:
+> goto the svn page for the code
+> http://developer.berlios.de/svn/?group_id=4492
 > 
-> > > I'm going to argue strongly about this.  scsi_remove_host should _not_
-> > > wait for error recovery to complete -- to do so will invite deadlocks.  
-> > > (Suppose the error handler is waiting for a bus reset, but the bus reset
-> > > routine requires a semaphore held by the LLD during the call to
-> > > scsi_remove_host?)  Furthermore, error recovery can potentially take quite
-> > > a long time -- much longer than we want to wait during a removal event.  
-> > > Instead, the error handler should not be allowed to make the transition to
-> > > RUNNING once the removal has started.
-> > 
-> > Alan, this tells me one thing: the _layering_ infrastructure is broken,
-> > and in this case, it looks like is not SCSI Core.
-> > 
-> > E.g. why is the LLDD messing with semas of the host? (rhetorical, please
-> > do not answer as this would go into another thread...)
-> > 
-> > BTW, since the eh is a _function of the host_, James is correct that
-> > scsi_remove_host should wait for the eh to finish.
-> 
-> That's a very good point.  It hadn't occurred to me before, but you're
-> absolutely right.  scsi_remove_host should indeed wait for the error
-> handler to finish.  But first it should set things up so that the
-> everything the error handler does will fail-fast, so that the eh can
-> return quickly.  That will include putting the device into the SDEV_CANCEL
-> state, so it remains true that the error handler better not try to move
-> from CANCEL back to RUNNING.
-> 
+> As for design desc, I do not have anything. It is the evolving source :) 
+> We are slowly merging leasons we learned from open-iscsi, your SCST 
+> code, the available software and HW targets, and the SCSI ULD's 
+> scatterlist code which needs redoing so it is a bit of a mess.
 
-Well the scsi_device_set_state function / model will not let us move a
-device from SDEV_CANCEL to SDEV_RUNNING again.
+OK, thanks, will try tomorrow.
 
-To fail faster (I assumed you mean the concept not the flag) we would need
-to add a few checks during the start of some of the functions. It would be
-good to make these as efficient as possibly, but I guess we are already in
-the error handler so we have take a time hit already.
+I put SCST 0.9.3-pre1 on its page 
+(http://sourceforge.net/projects/scst/). This is not the latest, but 
+this is the one, which working. At the end of this week I'll try to put 
+there the latest one as well. Hope, you will learn some more lessons 
+from it :).
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Any comments are welcome.
+
+Vlad
+
