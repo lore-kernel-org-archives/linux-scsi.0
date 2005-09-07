@@ -1,64 +1,38 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: [PATCH 1/5] SCSI scanning and removal fixes
-Date: Wed, 07 Sep 2005 16:43:27 -0400
-Message-ID: <431F50EF.1060901@adaptec.com>
-References: <Pine.LNX.4.44L0.0509071519080.4988-100000@iolanthe.rowland.org>
+Date: Wed, 07 Sep 2005 23:34:17 +0200
+Message-ID: <431F5CD9.8030608@s5r6.in-berlin.de>
+References: <Pine.LNX.4.44L0.0509071519080.4988-100000@iolanthe.rowland.org> <431F50EF.1060901@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:2002 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932250AbVIGUnd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 16:43:33 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0509071519080.4988-100000@iolanthe.rowland.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:53891 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S932449AbVIGVez (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Sep 2005 17:34:55 -0400
+In-Reply-To: <431F50EF.1060901@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On 09/07/05 15:31, Alan Stern wrote:
-> 
-> As for layering violations and deadlocks...  Unfortunately the violation
-> is unavoidable.  It's related to the way the error handler sometimes tries
-> to fix a non-working device by doing a bus reset, which will also affect
-> all the other devices on the same bus.
+Luben Tuikov wrote:
+> It is very bad to have to punish all devices on the
+> "bus" just because one device failed.  Isn't there a better way
+> to recover(*) a failed USB Storage device?
 
-Yes, that's a good point.
+usb-storage implements scsi_mod bus reset as USB port reset. This 
+affects only the failing device.
 
-Is it possible to implement LU Reset TMF for USB storage devices?
-If so, then you do not need to do a "bus reset".
+There is one scsi_mod bus per SCSI target in usb-storage. There is no 
+mapping from scsi_mod bus to USB bus. The same is true for sbp2. 
+Usb-storage and sbp2 actually don't care at all for the bus a device is 
+attached to.
 
-*General note:* It is very bad to have to punish all devices on the
-"bus" just because one device failed.  Isn't there a better way
-to recover(*) a failed USB Storage device?
-
-(*) That doesn't necessarily mean "bring back to life", it could
-also mean "remove".
-
-That is, a "bus reset" means that also any other device on the "bus" is
-unreachable.  If this is _not_ the case, then a "bus" reset must _not_
-take place.
-
->>This makes me believe that maybe USB storage would need an overhaul
->>of the event infra: removing and adding, and/or implement its own
->>eh.
-> 
-> In the long run that might be good, but for now I think we'll be okay.  
-> The important thing is to make sure that once the device has moved to the
-> CANCEL state, everything fails quickly.
-
-If you have the means to do transport checking of the state of the
-device, (and it seems like you can for USB Storage, since it is USB after
-all), then you _must_ implement your own eh handler.  This is what
-it is for.  Please, consider.
-
-	Luben
-
-P.S. It may actually simplify things in the USB transport layer _and_ in
-SCSI Core (i.e. no need for those patches).
-
-
-
-
-
-
+(Or at least that's how I understand the USB subsystem; I'm sure about 
+the 1394 subsystem.)
+-- 
+Stefan Richter
+-=====-=-=-= =--= --===
+http://arcgraph.de/sr/
