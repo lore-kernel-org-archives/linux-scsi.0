@@ -1,88 +1,47 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH 1/5] SCSI scanning and removal fixes
-Date: Wed, 07 Sep 2005 14:42:14 -0400
-Message-ID: <431F3486.4060704@adaptec.com>
-References: <Pine.LNX.4.44L0.0509071413070.4988-100000@iolanthe.rowland.org>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [RFC] SCSI target for IBM Power5 LPAR
+Date: Wed, 07 Sep 2005 22:47:46 +0400
+Message-ID: <431F35D2.7040209@vlnb.net>
+References: <20050906212801.GB14057@cs.umn.edu> <20050907104932.GA14200@lst.de> <20050907124504.GA13614@cs.umn.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:15285 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932212AbVIGSmU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 14:42:20 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0509071413070.4988-100000@iolanthe.rowland.org>
+Received: from relay02.infobox.ru ([195.208.235.29]:42987 "EHLO
+	relay02.infobox.ru") by vger.kernel.org with ESMTP id S1750768AbVIGStW
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Sep 2005 14:49:22 -0400
+In-Reply-To: <20050907124504.GA13614@cs.umn.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: boutcher@cs.umn.edu, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc64-dev@ozlabs.org, Santiago Leon <santil@us.ibm.com>, Linda Xie <lxiep@us.ibm.com>
 
-On 09/07/05 14:27, Alan Stern wrote:
-> On Wed, 7 Sep 2005, James Bottomley wrote:
+Dave C Boutcher wrote:
+> On Wed, Sep 07, 2005 at 12:49:32PM +0200, Christoph Hellwig wrote:
 > 
-> 
->>On Tue, 2005-07-26 at 10:12 -0400, Alan Stern wrote:
+>>On Tue, Sep 06, 2005 at 04:28:01PM -0500, Dave C Boutcher wrote:
 >>
->>>This patch (as542) fixes a few loose ends left by Mike's patches.  It adds 
->>>a declaration for the new scsi_host_set_state routine, adds an allowed 
->>>transition from the SHOST_RECOVERY state to the SHOST_CANCEL state, and 
->>>avoids returning an uninitialized value in __scsi_add_device.
+>>>This device driver provides the SCSI target side of the "virtual
+>>>SCSI" on IBM Power5 systems.  The initiator side has been in mainline
+>>>for a while now (drivers/scsi/ibmvscsi/ibmvscsi.c.)  Targets already
+>>>exist for AIX and OS/400.
 >>
->>The first part (external declaration) is already in.
->>
->>The second (allow RECOVERY->CANCEL) isn't really an answer.  The correct
->>thing, I suppose, is to have scsi_remove_host() wait for the error
->>handler to finish if the state transition cannot be accomodated
->>(otherwise the error handler will try to transition ->RUNNING part way
->>through the removal).
+>>Please try to integrate that with the generic scsi target framework at
+>>http://developer.berlios.de/projects/stgt/.
 > 
 > 
-> I'm going to argue strongly about this.  scsi_remove_host should _not_
-> wait for error recovery to complete -- to do so will invite deadlocks.  
-> (Suppose the error handler is waiting for a bus reset, but the bus reset
-> routine requires a semaphore held by the LLD during the call to
-> scsi_remove_host?)  Furthermore, error recovery can potentially take quite
-> a long time -- much longer than we want to wait during a removal event.  
-> Instead, the error handler should not be allowed to make the transition to
-> RUNNING once the removal has started.
+> There hasn't been a lot of forward progress on stgt in over a year, and
+> there were some issues (lack of scatterlist support, synchronous and
+> serial command execution) that were an issue when last I looked.
+> 
+> Vlad, can you comment on the state of stgt and whether you see it
+> being ready for mainline any time soon?
 
-Alan, this tells me one thing: the _layering_ infrastructure is broken,
-and in this case, it looks like is not SCSI Core.
+Sorry, I can see on stgt page only mail lists archive and not from start 
+(from Aug 22). Mike, can I see stgt code and some design description, 
+please? You can send it directly on my e-mail address, if necessary.
 
-E.g. why is the LLDD messing with semas of the host? (rhetorical, please
-do not answer as this would go into another thread...)
+Vlad
 
-BTW, since the eh is a _function of the host_, James is correct that
-scsi_remove_host should wait for the eh to finish.
-
-This makes me believe that maybe USB storage would need an overhaul
-of the event infra: removing and adding, and/or implement its own
-eh.
-
-	Luben
-
-
-> 
-> 
->>The third (don't allow uninitialised return from __scsi_add_device) is
->>correct, but the return is universally ignored (the only actual user
->>being ipr).  Unfortunately, now I look at this, ipr gets it wrong too.
->>This API currently returns an sdev with an incremented refcount.  If you
->>ignore the return, as ipr does, you're leaking refcounts.  So, since the
->>only user gets it wrong all the time, I'd vote for modifying the API not
->>to return a device.
-> 
-> 
-> Changing the API is fine with me, but the existing code is still shaky
-> because it calls scsi_alloc_target before checking scsi_host_scan_allowed.  
-> Maybe that's not an out-and-out mistake, but better to avoid it.
-> 
-> Would you like me to submit an updated patch?
-> 
-> Alan Stern
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
 
