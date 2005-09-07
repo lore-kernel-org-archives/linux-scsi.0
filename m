@@ -1,67 +1,43 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH] switch EH thread startup to the kthread API
-Date: Wed, 7 Sep 2005 09:30:55 +0200
-Message-ID: <200509070931.02816@bilbo.math.uni-mannheim.de>
-References: <20050906120426.GB20177@lst.de>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [RFC] SCSI EH document
+Date: Wed, 07 Sep 2005 04:04:36 -0400
+Message-ID: <431E9F14.7070703@pobox.com>
+References: <20050826035326.GA13392@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart7129837.THXu6GkLzO";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:50884 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S932068AbVIGHbE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 03:31:04 -0400
-In-Reply-To: <20050906120426.GB20177@lst.de>
+Received: from mail.dvmed.net ([216.237.124.58]:25580 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932078AbVIGIEp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 04:04:45 -0400
+In-Reply-To: <20050826035326.GA13392@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: James.Bottomley@steeleye.com, luben_tuikov@adaptec.com, albertcc@tw.ibm.com, linux-scsi@vger.kernel.org
 
---nextPart7129837.THXu6GkLzO
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Tejun Heo wrote:
+>  Hello, fellow SCSI/ATA developers.
+> 
+>  This is the first draft of SCSI EH document.  This document tries to
+> describe how SCSI EH works and what choirs should be done to maintain
+> SCSI midlayer integrity.  It's intended that this document can be used
+> as reference for implementing either fine-grained EH callbacks or
+> single eh_strategy_handler() callback.
+> 
+>  I'm pretty sure that I've screwed up in (hopefully) several places,
+> so please correct me.  Also, I have several places where I'm not sure
+> or have questions, those are marked with *VERIFY* and *QUESTION*
+> respectively.  If you know the answer, please let me know.
+> 
+>  Thanks.
+> 
+> 
+> SCSI EH
 
-Christoph Hellwig wrote:
+Although it's up to the SCSI maintainer ultimately, I think it would be 
+nice to stick this in Documentation/DocBook/ or Documentation/scsi/
 
->@@ -1600,8 +1593,6 @@
-> 	SCSI_LOG_ERROR_RECOVERY(3, printk("Wake up parent of"
-> 					  " scsi_eh_%d\n",shost->host_no));
->
->-	complete(shost->eh_notify);
->-
-> 	while (1) {
-> 		/*
-> 		 * If we get a signal, it means we are supposed to go
->@@ -1622,7 +1613,7 @@
-> 		 * semaphores isn't unreasonable.
-> 		 */
-> 		down_interruptible(&sem);
->-		if (shost->eh_kill)
->+		if (kthread_should_stop())
-> 			break;
->
-> 		SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler"
+	Jeff
 
-We used nearly the same code in cpqfcTS yesterday for testing. On module=20
-unload down_interruptible() does not get interrupted and the kthread_stop()=
-=20
-will wait forever and hang rmmod.
 
-Eike
-
---nextPart7129837.THXu6GkLzO
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.0 (GNU/Linux)
-
-iD8DBQBDHpc2XKSJPmm5/E4RAp5FAJ0e6bBQtGbKNiTLIO4rDo6yq+VMUgCgoj/c
-o5UgzHHHJn558G5mbAupfNw=
-=Edhh
------END PGP SIGNATURE-----
-
---nextPart7129837.THXu6GkLzO--
