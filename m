@@ -1,43 +1,65 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFC] SCSI EH document
-Date: Wed, 07 Sep 2005 04:04:36 -0400
-Message-ID: <431E9F14.7070703@pobox.com>
-References: <20050826035326.GA13392@htj.dyndns.org>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Fw: legacy megaraid driver bug in mm-series
+Date: Wed, 7 Sep 2005 02:52:58 -0700
+Message-ID: <20050907025258.35100c34.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:25580 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932078AbVIGIEp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 04:04:45 -0400
-In-Reply-To: <20050826035326.GA13392@htj.dyndns.org>
+Received: from smtp.osdl.org ([65.172.181.4]:19909 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932092AbVIGJyo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 05:54:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: James.Bottomley@steeleye.com, luben_tuikov@adaptec.com, albertcc@tw.ibm.com, linux-scsi@vger.kernel.org
-
-Tejun Heo wrote:
->  Hello, fellow SCSI/ATA developers.
-> 
->  This is the first draft of SCSI EH document.  This document tries to
-> describe how SCSI EH works and what choirs should be done to maintain
-> SCSI midlayer integrity.  It's intended that this document can be used
-> as reference for implementing either fine-grained EH callbacks or
-> single eh_strategy_handler() callback.
-> 
->  I'm pretty sure that I've screwed up in (hopefully) several places,
-> so please correct me.  Also, I have several places where I'm not sure
-> or have questions, those are marked with *VERIFY* and *QUESTION*
-> respectively.  If you know the answer, please let me know.
-> 
->  Thanks.
-> 
-> 
-> SCSI EH
-
-Although it's up to the SCSI maintainer ultimately, I think it would be 
-nice to stick this in Documentation/DocBook/ or Documentation/scsi/
-
-	Jeff
+To: linux-scsi@vger.kernel.org
+Cc: Jack Byer <ojbyer@usa.net>
 
 
+
+Begin forwarded message:
+
+Date: Mon, 05 Sep 2005 21:05:40 -0400
+From: Jack Byer <ojbyer@usa.net>
+To: linux-kernel@vger.kernel.org
+Subject: legacy megaraid driver bug in mm-series
+
+
+My AMI megaraid card no longer works with recent mm-series kernels. The
+bug appears on mm- kernels newer than 2.6.12-rc6-mm1; mainline kernels
+are not affected.
+
+The driver will load and detect both devices on the card (sda and sdb).
+It will scan each device and read the partition table successfully,
+however the megaraid driver message will include the following errors:
+
+sda: sector size 0 reported, assuming 512.
+sda: asking for cache data failed.
+sda: assuming drive cache: write through
+
+When the kernel tries to mount the root file system, I get the following
+error:
+
+ReiserFS: sda3: warning: sh-2006: read_super_block: bread failed (dev
+sda3, block 2, size 4096)
+ReiserFS: sda3: warning: sh-2006: read_super_block: bread failed (dev
+sda3, block 16, size 4096)
+VFS: Cannot open root device "sda3" or unknown-block(0,3)
+
+Here is a summary of the kernels I have tested for this bug:
+
+2.6.11-mm1:	works
+2.6.11-mm4:	works
+2.6.12-rc5-mm1:	will not compile
+2.6.12-rc6-mm1:	works
+2.6.12-mm1:	will not compile megaraid driver
+2.6.12-mm2:	broken
+2.6.13-mm1:	broken
+
+2.6.12:		works
+2.6.13:		works
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
