@@ -1,92 +1,89 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 1/5] SCSI scanning and removal fixes
-Date: Thu, 8 Sep 2005 11:19:42 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0509081057430.4607-100000@iolanthe.rowland.org>
-References: <431F50EF.1060901@adaptec.com>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 1/2] fix EH thread teardown
+Date: Thu, 8 Sep 2005 17:26:36 +0200
+Message-ID: <200509081726.43760@bilbo.math.uni-mannheim.de>
+References: <20050907135105.GA16340@lst.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed;
+  boundary="nextPart2556486.LKtZpeR4oZ";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:52391 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S932670AbVIHPTn
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Sep 2005 11:19:43 -0400
-In-Reply-To: <431F50EF.1060901@adaptec.com>
+Received: from mail.sf-mail.de ([62.27.20.61]:8097 "EHLO mail.sf-mail.de")
+	by vger.kernel.org with ESMTP id S932690AbVIHP0p (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2005 11:26:45 -0400
+In-Reply-To: <20050907135105.GA16340@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>, Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-On Wed, 7 Sep 2005, Stefan Richter wrote:
+--nextPart2556486.LKtZpeR4oZ
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> usb-storage implements scsi_mod bus reset as USB port reset. This
-> affects only the failing device.
+Christoph Hellwig wrote:
+>As Rolf Eike Beer noted we might not actually get to the
+>kthread_should_stop() because we are waiting in the semaphore forever.
+>I didn't get a rmmod hang because of this, but my instrumentation showed
+>the thread defitiyly didn't exit.
+>
+>So make sure to wake the EH thread before the kthread_stop, and to plug
+>the reaming race check kthead_should_stop() a second time just before
+>calling down_interruptible().
 
-Correct, but you're forgetting that in USB a single device can contain
-more than one "interface", and drivers bind to interfaces, not devices.  
-Doing a USB port reset has implications beyond those of the single
-interface controlled by usb-storage, since it affects the entire device.  
-In fact, the current version refuses to do a port reset if there are other
-interfaces present.
+Ok, we looked a bit closer on all this. http://lwn.net/Articles/65178/ tell=
+s=20
+that ktread_stop() will not send a signal, so the down_interruptible() will=
+=20
+never return on kthread_stop(). But calling up() directly before=20
+kthread_stop() adds a race condition: if reschedule happens right after the=
+=20
+up() we've won nothing and it will hang again.
 
-> There is one scsi_mod bus per SCSI target in usb-storage.
+Using this kind of semaphore for thread wakeup looks more dangerous everyti=
+me=20
+I think on it. down_interruptible() may be interrupted by someone with a=20
+signal and return without the semaphore locked. Better would be something=20
+like
 
-That's not quite entirely true.  There are a few obscure USB mass-storage 
-devices that actually are a SCSI host adapter and control a real SCSI bus.  
-But for all practical purposes we can forget about them.
+i =3D down_interruptible();
 
+if (kthread_should_stop())
+	break;
 
-On Wed, 7 Sep 2005, Luben Tuikov wrote:
+if (i)
+	continue;
 
-> Is it possible to implement LU Reset TMF for USB storage devices?
-> If so, then you do not need to do a "bus reset".
+Or we have to block all signals, then we can just ignore the _interruptible=
+ at=20
+all. What about something like this instead?
 
-Sorry, I don't know that acronym.  What is TMF?
+while(!kthread_should_stop()) {
+	if (!down_trylock(&sem)) {
+		if (kthread_should_stop())
+			break;
+		yield();
+		continue;
+	}
 
-> *General note:* It is very bad to have to punish all devices on the
-> "bus" just because one device failed.  Isn't there a better way
-> to recover(*) a failed USB Storage device?
+	/* something */
+}
 
-No.  There are only two reset mechanisms available for USB Mass Storage.  
-One is a class-specific reset command (which usb-storage issues when asked 
-to do a device reset), and the other is a USB port reset (which 
-usb-storage issues when asked to do a bus reset).
+Eike
 
-In practice, it turns out that many (perhaps even most) USB Storage 
-devices don't implement the class-specific reset command correctly.  
-Windows doesn't use it at all, so far as I know.  This means our only 
-realistic option is the USB port reset.
+--nextPart2556486.LKtZpeR4oZ
+Content-Type: application/pgp-signature
 
-> (*) That doesn't necessarily mean "bring back to life", it could
-> also mean "remove".
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.0 (GNU/Linux)
 
-Well, usb-storage doesn't need to "remove" a failed device.  The SCSI core 
-does a perfectly good job just by setting it off-line.  And since there 
-aren't other targets sharing the bus, that's good enough.
+iD8DBQBDIFgzXKSJPmm5/E4RAm58AJsGaUpHGrs5gJk4QPAW/R2+ahXoeQCgmYjD
+/toIxaFMQhcH3n9EYUet0eg=
+=VPsW
+-----END PGP SIGNATURE-----
 
-> That is, a "bus reset" means that also any other device on the "bus" is
-> unreachable.  If this is _not_ the case, then a "bus" reset must _not_
-> take place.
-
-I'm not sure what that first sentence is intended to mean.  The SCSI error 
-handler _does_ issue bus resets even when other devices on the bus are 
-still reachable, doesn't it?  Provided the others are idle at the time, 
-there shouldn't be any harm in it.
-
-> If you have the means to do transport checking of the state of the
-> device, (and it seems like you can for USB Storage, since it is USB after
-> all), then you _must_ implement your own eh handler.  This is what
-> it is for.  Please, consider.
-> 
-> 	Luben
-> 
-> P.S. It may actually simplify things in the USB transport layer _and_ in
-> SCSI Core (i.e. no need for those patches).
-
-We are sort of moving in that direction.  usb-storage already does its 
-own unsolicited resets when unexpected error occur.  But we don't have 
-anything like the error-handler's mechanism for recovering from timeouts 
-(TUR, then device reset, then TUR, then bus reset, ...).  There doesn't 
-seem to be any point in reinventing all that code.
-
-Alan Stern
-
+--nextPart2556486.LKtZpeR4oZ--
