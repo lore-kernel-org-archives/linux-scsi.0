@@ -1,31 +1,32 @@
-From: viro@ZenIV.linux.org.uk
-Subject: [PATCH] bogus #if (ncr53c406)
-Date: Wed, 7 Sep 2005 23:26:35 +0100
-Message-ID: <20050907222635.GG13549@ZenIV.linux.org.uk>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: [GIT PATCH] SCSI merge for 2.6.13
+Date: Wed, 7 Sep 2005 17:31:59 -0700 (PDT)
+Message-ID: <Pine.LNX.4.58.0509071730490.11102@g5.osdl.org>
+References: <1126053452.5012.28.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:52876 "EHLO
-	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S1750848AbVIGW0g
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Sep 2005 18:26:36 -0400
-Content-Disposition: inline
+Received: from smtp.osdl.org ([65.172.181.4]:21890 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932408AbVIHAcF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 20:32:05 -0400
+In-Reply-To: <1126053452.5012.28.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@suse.de>
 
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
-----
-diff -urN RC13-git7-hamachi/drivers/scsi/NCR53c406a.c RC13-git7-ncr53c406/drivers/scsi/NCR53c406a.c
---- RC13-git7-hamachi/drivers/scsi/NCR53c406a.c	2005-08-28 23:09:45.000000000 -0400
-+++ RC13-git7-ncr53c406/drivers/scsi/NCR53c406a.c	2005-09-07 13:55:46.000000000 -0400
-@@ -62,7 +62,7 @@
- 
- #define SYNC_MODE 0		/* Synchronous transfer mode */
- 
--#if DEBUG
-+#ifdef DEBUG
- #undef NCR53C406A_DEBUG
- #define NCR53C406A_DEBUG 1
- #endif
+
+
+On Tue, 6 Sep 2005, James Bottomley wrote:
+> 
+> master.kernel.org:/pub/linux/kernel/scm/jejb/scsi-for-linus-2.6.git
+
+No it isn't.
+
+You meant 
+
+  master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-for-linus-2.6.git
+
+I do believe,
+
+		Linus
