@@ -1,89 +1,61 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 1/2] fix EH thread teardown
-Date: Thu, 8 Sep 2005 17:26:36 +0200
-Message-ID: <200509081726.43760@bilbo.math.uni-mannheim.de>
-References: <20050907135105.GA16340@lst.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] SCSI core: fix leakage of scsi_cmnd's
+Date: Thu, 08 Sep 2005 10:56:29 -0500
+Message-ID: <1126194989.4845.24.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0509081045230.4503-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2556486.LKtZpeR4oZ";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:8097 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S932690AbVIHP0p (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2005 11:26:45 -0400
-In-Reply-To: <20050907135105.GA16340@lst.de>
+Received: from stat9.steeleye.com ([209.192.50.41]:20892 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964807AbVIHP4c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Sep 2005 11:56:32 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0509081045230.4503-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
---nextPart2556486.LKtZpeR4oZ
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+> The SCSI core has a problem with leakage of scsi_cmnd structs.  It occurs
+> when a request is requeued; the request keeps its associated scsi_cmnd so
+> that the core doesn't need to assign a new one.  However, the routines
+> that read the device queue sometimes delete entries without bothering to
+> free the associated scsi_cmnd.  Among other things, this bug manifests as
+> error-handler processes remaining alive when a hot-pluggable device is
+> unplugged in the middle of executing a command.
+> 
+> This patch (as559) fixes the problem by calling scsi_put_command and 
+> scsi_release_buffers at the appropriate times.  It also reorganizes a 
+> couple of bits of code, adding a new subroutine to find the scsi_cmnd 
+> associated with a requeued request.
 
-Christoph Hellwig wrote:
->As Rolf Eike Beer noted we might not actually get to the
->kthread_should_stop() because we are waiting in the semaphore forever.
->I didn't get a rmmod hang because of this, but my instrumentation showed
->the thread defitiyly didn't exit.
->
->So make sure to wake the EH thread before the kthread_stop, and to plug
->the reaming race check kthead_should_stop() a second time just before
->calling down_interruptible().
+Nate Dailey also had a patch for this, a reply to which is incomplete
+still in my drafts folder.
 
-Ok, we looked a bit closer on all this. http://lwn.net/Articles/65178/ tell=
-s=20
-that ktread_stop() will not send a signal, so the down_interruptible() will=
-=20
-never return on kthread_stop(). But calling up() directly before=20
-kthread_stop() adds a race condition: if reschedule happens right after the=
-=20
-up() we've won nothing and it will hang again.
+The bottom line is that I don't think any modifications to the prep_fn()
+are necessary.  It's guarded by REQ_DONTPREP, so is never called again
+if we actually manage to prepare a command fully.  The returns from it
+are:
 
-Using this kind of semaphore for thread wakeup looks more dangerous everyti=
-me=20
-I think on it. down_interruptible() may be interrupted by someone with a=20
-signal and return without the semaphore locked. Better would be something=20
-like
+BLKPREP_DEFER:  Requeue the command for re-preparation (no resources
+should be allocated)
 
-i =3D down_interruptible();
+BLKPREP_KILL: destroy the command (no resources should be allocated)
 
-if (kthread_should_stop())
-	break;
+BLKPREP_OK: Command is prepared, resources are allocated, REQ_DONTPREP
+is set to prevent any additional prep_fn() call.
 
-if (i)
-	continue;
+So in the DEFER or KILL case, all you need to worry about is resources
+you may have allocated in the current prep_fn() invocation.  It seems to
+me that we do release these correctly, unless I'm missing something?
 
-Or we have to block all signals, then we can just ignore the _interruptible=
- at=20
-all. What about something like this instead?
+The second problem is a bug (also spotted by Nate).  However, what I
+think we should be doing in this case is calling __scsi_done with
+DID_NO_CONNECT which should clean up correctly and also send the error
+indications back up the stack to the correct sources (that's what we do
+in scsi_dispatch_cmd() for this problem).
 
-while(!kthread_should_stop()) {
-	if (!down_trylock(&sem)) {
-		if (kthread_should_stop())
-			break;
-		yield();
-		continue;
-	}
+James
 
-	/* something */
-}
 
-Eike
-
---nextPart2556486.LKtZpeR4oZ
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.0 (GNU/Linux)
-
-iD8DBQBDIFgzXKSJPmm5/E4RAm58AJsGaUpHGrs5gJk4QPAW/R2+ahXoeQCgmYjD
-/toIxaFMQhcH3n9EYUet0eg=
-=VPsW
------END PGP SIGNATURE-----
-
---nextPart2556486.LKtZpeR4oZ--
