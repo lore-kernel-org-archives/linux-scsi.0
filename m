@@ -1,45 +1,91 @@
-From: "Ju, Seokmann" <sju@lsil.com>
-Subject: [PATCH 1/1][BUG] undefined symbol in legacy megaraid driver on 2.
-	6.12-mm1
-Date: Thu, 8 Sep 2005 15:31:51 -0400
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E5703662B21@exa-atlanta>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 1/5] SCSI scanning and removal fixes
+Date: Thu, 08 Sep 2005 15:15:41 -0500
+Message-ID: <1126210542.4845.66.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0509081441190.5768-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:53144 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S964952AbVIHTb5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2005 15:31:57 -0400
+Received: from stat9.steeleye.com ([209.192.50.41]:62878 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964977AbVIHUPu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Sep 2005 16:15:50 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0509081441190.5768-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Hi,
+On Thu, 2005-09-08 at 14:58 -0400, Alan Stern wrote:
+> On Thu, 8 Sep 2005, James Bottomley wrote:
+> > Actually, no, that's why we have the parallel EH states ... let me put
+> > in the events that trigger state transitions so you can see what
+> > happens:
+> > 
+> > 
+> >         EH thread finishes
+> > 	<---------------
+> > 
+> >         EH thread begins
+> >         ---------------->
+> > 
+> > 
+> >          <--------- 
+> >   running ---------> recovery
+> >     |                   |
+> >     |                   | scsi_remove_host() called
+> >     v   <----------     v
+> >   cancel ----------> recover/cancel
+> >     |                   |
+> >     |                   | scsi_remove_host finishes visibility removal
+> >     v                   v
+> >    del <------------ recover/del
+> > 
+> > So the EH is allowed to activate in either running or cancel states, but
+> > goes through its own state transition eventually coming back to del when
+> > it finishes.  Once the EH gets into recover/cancel it can never
+> > transition back to running.
+> 
+> Why allow cancel -> recover/cancel?  Once the device is in the cancel 
+> state, there isn't anything useful the error handler can accomplish, is 
+> there?  Failed or timed-out commands should simply return an error.
+> 
+> And if you accept that, then what point is there in distinguishing between 
+> cancel and recover/cancel?  As far as I can see, the only significant 
+> difference is that in recover/cancel the error handler is running (but not 
+> accomplishing anything).  Is this related to 1) below?
 
-I've created a patch to address "legacy megaraid driver compilation error on
-2.6.12-mm1 kernel.
-Please take this patch and let me know for any further concern.
+Yes, a state machine like I've shown can only be in one state at any
+given time.  The problem is what happens if the error handler is running
+when you try to remove the device.  We can reach in and try to stop it,
+but under a state model we'd have to wait until the error handler put
+the device back to running unless we allow a set of state transitions
+that the error handler can go through in parallel with the removal
+(which is the model I've shown above).
 
-Thank you,
+The idea of allowing the error handler to start up in cancel is that not
+every device removal is a forced removal, so you want to permit the
+shutdown commands (like sync cache) and consequent error handling on
+those commands.
 
-Seokmann
+> > It's just nasty on two counts:
+> > 
+> > 1) we have an incorrect bifurcation in the state model and
+> > 2) we never actually enforce any of the state transitions.
+> 
+> Can you explain 1) more fully?  I don't really understand what you're 
+> getting at.
 
-Sign-off by: Seokmann JU <seokmann.ju@lsil.com>
----
-diff -Naur old/drivers/scsi/megaraid.c new/drivers/scsi/megaraid.c
---- old/drivers/scsi/megaraid.c	2005-09-08 16:24:12.017451400 -0400
-+++ new/drivers/scsi/megaraid.c	2005-09-08 16:23:36.509849376 -0400
-@@ -1975,9 +1975,11 @@
- static int
- megaraid_reset(Scsi_Cmnd *cmd)
- {
--	adapter = (adapter_t *)cmd->device->host->hostdata;
-+	adapter_t *adapter;
- 	int rc;
- 
-+	adapter = (adapter_t *)cmd->device->host->hostdata;
-+
- 	spin_lock_irq(&adapter->lock);
- 	rc = __megaraid_reset(cmd);
- 	spin_unlock_irq(&adapter->lock);
----
+Does the explanation above cover this?
+
+> As for 2), what do you mean?  In 2.6.13, scsi_device_set_state does not 
+> change the state if the transition is illegal.
+
+Yes, but we never act on the return value.  if the state is illegal, we
+shouldn't be taking actions believing we're in that state, so we should
+always be checking the returns.
+
+James
+
+
