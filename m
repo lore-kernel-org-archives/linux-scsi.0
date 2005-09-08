@@ -1,55 +1,110 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: [PATCH 1/5] SCSI scanning and removal fixes
-Date: Thu, 8 Sep 2005 12:08:35 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0509081202170.4607-100000@iolanthe.rowland.org>
-References: <1126123089.4823.48.camel@mulgrave>
+Date: Thu, 08 Sep 2005 12:07:17 -0400
+Message-ID: <432061B5.1000407@adaptec.com>
+References: <Pine.LNX.4.44L0.0509081057430.4607-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:6056 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S932543AbVIHQIg
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Sep 2005 12:08:36 -0400
-In-Reply-To: <1126123089.4823.48.camel@mulgrave>
+Received: from magic.adaptec.com ([216.52.22.17]:44687 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S964887AbVIHQHX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2005 12:07:23 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0509081057430.4607-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Mike Anderson <andmike@us.ibm.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, 7 Sep 2005, James Bottomley wrote:
-
-> Actually, alloc_target is properly guarded so it doesn't need the scan
-> mutex.  It might be nice to update the SDEV_ state model to include a
-> "scanning" state, that way we could properly guard the sdev_alloc as
-> well and dump the scan mutex ... that's probably more than a slight
-> change, though.
-
-Probably not a good idea, either.  The "scanning" state applies to the 
-host, not a particular device -- the idea is to prevent one thread from 
-adding new devices while another thread is trying to get rid of all the 
-devices because the host is going away.  (Not to mention, preventing two 
-threads from adding the same target at the same time!)
-
-And this needs to be a mutex, since host removal must wait until scanning 
-finishes.  Making it a state instead won't work well.
-
-> > Would you like me to submit an updated patch?
+On 09/08/05 11:19, Alan Stern wrote:
+> On Wed, 7 Sep 2005, Luben Tuikov wrote:
 > 
-> Yes, please.  It's been suggested that we should have a scsi_add_target
-> that returns zero on success or error on failure (with no ref to the
-> sdev) and keep the old behaviour of __scsi_add_target().
+> 
+>>Is it possible to implement LU Reset TMF for USB storage devices?
+>>If so, then you do not need to do a "bus reset".
+> 
+> 
+> Sorry, I don't know that acronym.  What is TMF?
 
-On Wed, 7 Sep 2005, Mike Anderson wrote:
+Good morning Alan,
 
-> On as542. The first hunk of the diff is already in (declare of
-> scsi_host_set_state). The second hunk looks good (SHOST_RECOVERY label).
-> The third hunk I will take in combination with the other patch that
-> effects the scan code. This should have probably been
-> another patch.
+I meant Task Management Function. (SAM from T10.org, section 7).
 
-At this point, maybe it's best for me to step back and let Mike look 
-through the issues first.  There's Patrick's patch to be combined with the 
-one I sent, and other things that need to be straightened out.
+All newer storage transports are requred to have a direct mapping
+of TMFs to transport units, e.g. SAS.
 
-Alan Stern
+>>*General note:* It is very bad to have to punish all devices on the
+>>"bus" just because one device failed.  Isn't there a better way
+>>to recover(*) a failed USB Storage device?
+> 
+> No.  There are only two reset mechanisms available for USB Mass Storage.  
+
+I see.
+
+> One is a class-specific reset command (which usb-storage issues when asked 
+> to do a device reset),
+
+So as far as I can see it sends a reset on the wire to the device?
+
+> and the other is a USB port reset (which 
+> usb-storage issues when asked to do a bus reset).
+
+As far as I see this resets the port on the host side and then
+rediscovers the devices?
+
+> In practice, it turns out that many (perhaps even most) USB Storage 
+> devices don't implement the class-specific reset command correctly.  
+> Windows doesn't use it at all, so far as I know.  This means our only 
+> realistic option is the USB port reset.
+> 
+> 
+>>(*) That doesn't necessarily mean "bring back to life", it could
+>>also mean "remove".
+> 
+> 
+> Well, usb-storage doesn't need to "remove" a failed device.  The SCSI core 
+> does a perfectly good job just by setting it off-line.  And since there 
+> aren't other targets sharing the bus, that's good enough.
+
+Well what happens when I just unplug the device?
+ 
+>>That is, a "bus reset" means that also any other device on the "bus" is
+>>unreachable.  If this is _not_ the case, then a "bus" reset must _not_
+>>take place.
+> 
+> I'm not sure what that first sentence is intended to mean.  The SCSI error 
+> handler _does_ issue bus resets even when other devices on the bus are 
+> still reachable, doesn't it?  Provided the others are idle at the time, 
+> there shouldn't be any harm in it.
+
+Ok, I see where the confusion is.
+
+>>If you have the means to do transport checking of the state of the
+>>device, (and it seems like you can for USB Storage, since it is USB after
+>>all), then you _must_ implement your own eh handler.  This is what
+>>it is for.  Please, consider.
+>>
+>>	Luben
+>>
+>>P.S. It may actually simplify things in the USB transport layer _and_ in
+>>SCSI Core (i.e. no need for those patches).
+> 
+> 
+> We are sort of moving in that direction.  usb-storage already does its 
+> own unsolicited resets when unexpected error occur.  But we don't have 
+> anything like the error-handler's mechanism for recovering from timeouts 
+> (TUR, then device reset, then TUR, then bus reset, ...).  There doesn't 
+> seem to be any point in reinventing all that code.
+
+What code?  What reinvention?
+
+You _need_ to implement a timeout and eh hook if you want to do this
+in any sane way.
+
+You also need to implement kref via kobject for the devices which you/USB Storage
+represent to SCSI Core.  You also need to get rid of that horrible patchwork
+of a solution: dev_semaphore.  Maybe you can take a look in the SAS code and
+see how this is all done?
+
+	Luben
 
