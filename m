@@ -1,59 +1,67 @@
-From: Jim Ramsay <jim.ramsay@gmail.com>
-Subject: Re: [Linux-usb-users] Possible bug in usb storage (2.6.11 kernel)
-Date: Thu, 8 Sep 2005 14:28:09 -0600
-Message-ID: <4789af9e05090813287f05e12a@mail.gmail.com>
-References: <4789af9e05090810142bd3531d@mail.gmail.com>
-	 <20050908175852.GA3196@one-eyed-alien.net>
-	 <4789af9e05090812521d9d687b@mail.gmail.com>
-Reply-To: jim.ramsay@gmail.com
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Possible bug in usb storage (2.6.11 kernel)
+Date: Thu, 8 Sep 2005 16:40:16 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0509081637410.4545-100000@iolanthe.rowland.org>
+References: <4789af9e05090813287f05e12a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964999AbVIHU2N@vger.kernel.org>
-In-Reply-To: <4789af9e05090812521d9d687b@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, linux-usb-users@lists.sourceforge.net, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-users-admin@lists.sourceforge.net>
+In-Reply-To: <4789af9e05090813287f05e12a@mail.gmail.com>
+Sender: linux-usb-users-admin@lists.sourceforge.net
+Errors-To: linux-usb-users-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
+	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux-usb-users@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-users-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
+	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-users>
+To: Jim Ramsay <jim.ramsay@gmail.com>
+Cc: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, linux-usb-users@lists.sourceforge.net, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 9/8/05, Jim Ramsay <jim.ramsay@gmail.com> wrote:
-> On 9/8/05, Matthew Dharm <mdharm-kernel@one-eyed-alien.net> wrote:
-> > On Thu, Sep 08, 2005 at 11:14:36AM -0600, Jim Ramsay wrote:
-> > > I think I have found a possible bug:
-> > > [...]
-> > > I suppose the scsi code could be changed to guarantee that
-> > > srb->request_buffer is page-aligned or cache-aligned, but that seems
-> > > like the wrong solution for this bug.
-> >
-> > Fixing the SCSI layer is -exactly- the correct solution.  The SCSI layer is
-> > supposed to guarantee us that those buffers are suitable for DMA'ing, and
-> > apparently it's violating that promise.
+On Thu, 8 Sep 2005, Jim Ramsay wrote:
+
+> More information:
 > 
-> Thanks, I'll check on what buffer I'm actually getting, where it's
-> allocated, and post back what I find, or how I fixed it.
+> The error only occurrs during device sensing when the
+> srb->request_buffer is assigned as follows, by usb/storage/transport.c
+> in the routine usb_stor_invoke_transport:
+> 
+> old_request_buffer = srb->request_buffer;
+> srb->request_buffer = srb->sense_buffer;
+> 
+> Now, this is a problem because srb->sense_buffer is defined as follows
+> in the struct scsi_cmnd:
+> 
+> #define SCSI_SENSE_BUFFERSIZE   96
+>         unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];
+> 
+> Since it is not allocated at runtime there is NO WAY the SCSI layer
+> can possibly guarantee it is page- or cache-aligned and ready for DMA.
+> 
+> Any suggestions on best fix for this?  Is it still a SCSI-layer issue?
+>  Or should USB step up in this case and ensure this buffer is dma-safe
+> itself?
 
-More information:
+Aha!
 
-The error only occurrs during device sensing when the
-srb->request_buffer is assigned as follows, by usb/storage/transport.c
-in the routine usb_stor_invoke_transport:
+I've long thought that usb-storage should allocate its own transfer buffer 
+for sense data.  In the past people have said, "No, don't bother, it's not 
+really needed."  Here's a good reason for doing it.
 
-old_request_buffer = srb->request_buffer;
-srb->request_buffer = srb->sense_buffer;
+Expect a patch before long.
 
-Now, this is a problem because srb->sense_buffer is defined as follows
-in the struct scsi_cmnd:
+Alan Stern
 
-#define SCSI_SENSE_BUFFERSIZE   96
-        unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];
 
-Since it is not allocated at runtime there is NO WAY the SCSI layer
-can possibly guarantee it is page- or cache-aligned and ready for DMA.
 
-Any suggestions on best fix for this?  Is it still a SCSI-layer issue?
- Or should USB step up in this case and ensure this buffer is dma-safe
-itself?
-
--- 
-Jim Ramsay
-"Me fail English?  That's unpossible!"
+-------------------------------------------------------
+SF.Net email is Sponsored by the Better Software Conference & EXPO
+September 19-22, 2005 * San Francisco, CA * Development Lifecycle Practices
+Agile & Plan-Driven Development * Managing Projects & Teams * Testing & QA
+Security * Process Improvement & Measurement * http://www.sqe.com/bsce5sf
+_______________________________________________
+Linux-usb-users@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-users
