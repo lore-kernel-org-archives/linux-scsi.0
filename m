@@ -1,72 +1,55 @@
 From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [PATCH 1/5] SCSI scanning and removal fixes
-Date: Thu, 8 Sep 2005 11:59:25 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0509081148350.4607-100000@iolanthe.rowland.org>
+Date: Thu, 8 Sep 2005 12:08:35 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0509081202170.4607-100000@iolanthe.rowland.org>
 References: <1126123089.4823.48.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:45027 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S964869AbVIHP70
+Received: from iolanthe.rowland.org ([192.131.102.54]:6056 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S932543AbVIHQIg
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Sep 2005 11:59:26 -0400
+	Thu, 8 Sep 2005 12:08:36 -0400
 In-Reply-To: <1126123089.4823.48.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Mike Anderson <andmike@us.ibm.com>
 Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
 On Wed, 7 Sep 2005, James Bottomley wrote:
 
-> I agree (about the deadlocks).  However, as things stand RECOVERY is a
-> state in the model and the model can only be in a single state.  If you
-> permit the transition, and recovery is going on in parallel with
-> removal, they'll race to set the final state (removal wants DEL and the
-> eh thread will set it to RUNNING).
+> Actually, alloc_target is properly guarded so it doesn't need the scan
+> mutex.  It might be nice to update the SDEV_ state model to include a
+> "scanning" state, that way we could properly guard the sdev_alloc as
+> well and dump the scan mutex ... that's probably more than a slight
+> change, though.
+
+Probably not a good idea, either.  The "scanning" state applies to the 
+host, not a particular device -- the idea is to prevent one thread from 
+adding new devices while another thread is trying to get rid of all the 
+devices because the host is going away.  (Not to mention, preventing two 
+threads from adding the same target at the same time!)
+
+And this needs to be a mutex, since host removal must wait until scanning 
+finishes.  Making it a state instead won't work well.
+
+> > Would you like me to submit an updated patch?
 > 
-> Either we go back to having an in_recovery flag (i.e. lift recovery out
-> of the state model) or we make the model more complex to cope with this.
-> Since really the only thing we test is in_recovery, we could do a more
-> complex model; something like:
-> 
-> created
->    |
->    v    <--------- 
->  running ---------> recovery
->    |                   |
->    v   <----------     v
->  cancel ----------> recover/cancel
->    |                   |
->    v   ----------->    v
->   del <------------ recover/del
-> 
-> I also think I'd like not to go from del -> recover/del, but unless del
-> actually means that all devices have completed their I/O for deletion
-> that can't be avoided.
+> Yes, please.  It's been suggested that we should have a scsi_add_target
+> that returns zero on success or error on failure (with no ref to the
+> sdev) and keep the old behaviour of __scsi_add_target().
 
-I don't understand your reasoning.  With your new system, you end up with 
-two threads doing this:
+On Wed, 7 Sep 2005, Mike Anderson wrote:
 
-	Removal thread			Error handler thread
-	-------------------------	---------------------------
-					Go from RUNNING to RECOVERY
-	Try to go to CANCEL, fail
-	Go to CANCEL_RECOVERY
-race:	Go to DEL_RECOVERY		Try to go to RUNNING, fail
+> On as542. The first hunk of the diff is already in (declare of
+> scsi_host_set_state). The second hunk looks good (SHOST_RECOVERY label).
+> The third hunk I will take in combination with the other patch that
+> effects the scan code. This should have probably been
+> another patch.
 
-
-Whereas the old system has the two threads doing this:
-
-	Removal thread			Error handler thread
-	-------------------------	---------------------------
-					Go from RUNNING to RECOVERY
-	Go to CANCEL
-race:	Go to DEL			Try to go to RUNNING, fail
-
-
-At least, that's how it would work if you allow the RECOVERY -> CANCEL
-transition.  Either way you end up in the correct state.  So what's wrong
-with the old (current) system?
+At this point, maybe it's best for me to step back and let Mike look 
+through the issues first.  There's Patrick's patch to be combined with the 
+one I sent, and other things that need to be straightened out.
 
 Alan Stern
 
