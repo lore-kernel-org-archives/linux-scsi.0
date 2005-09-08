@@ -1,42 +1,43 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [GIT PATCH] SCSI merge for 2.6.13
-Date: Wed, 7 Sep 2005 17:59:06 -0700
-Message-ID: <20050907175906.09b0a46f.akpm@osdl.org>
-References: <1126053452.5012.28.camel@mulgrave>
-	<Pine.LNX.4.58.0509071730490.11102@g5.osdl.org>
-	<Pine.LNX.4.58.0509071738050.11102@g5.osdl.org>
-	<Pine.LNX.4.58.0509071743380.11102@g5.osdl.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:47500 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932483AbVIHBA4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2005 21:00:56 -0400
-In-Reply-To: <Pine.LNX.4.58.0509071743380.11102@g5.osdl.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Chris Wright <chrisw@osdl.org>
+Subject: [PATCH 2/9] [PATCH] aacraid: 2.6.13 aacraid bad BUG_ON fix
+Date: Wed, 07 Sep 2005 18:28:44 -0700
+Message-ID: <20050908012855.090515000@localhost.localdomain>
+References: <20050908012842.299637000@localhost.localdomain>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932849AbVIHB3X@vger.kernel.org>
+Content-Disposition: inline; filename=aacraid-bad-BUG_ON-fix.patch
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@kernel.org, Andrew Morton <akpm@osdl.org>
+Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Chuck Wolber <chuckw@quantumlinux.com>, torvalds@osdl.org, alan@lxorguk.ukuu.org.uk, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>, Mark Haverkamp <markh@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, Chris Wright <chrisw@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de, greg@kroah.com
 
-Linus Torvalds <torvalds@osdl.org> wrote:
->
-> 
-> 
-> On Wed, 7 Sep 2005, Linus Torvalds wrote:
-> > 
-> > Quite frankly, what's the point in asking people to pull a tree that is 
-> > known to not compile?
+-stable review patch.  If anyone has any  objections, please let us know.
+------------------
 
-James was assuming you'd merged the klist patch whcih I'd sent beforehand.
+This was noticed by Doug Bazamic and the fix found by Mark Salyzyn at
+Adaptec.
 
-> Btw, I see the patch that is supposed to fix it, but I'm in no position to
-> know whether it's even acceptable to basically double the size of the
-> "struct klist", for example. There may be a good reason why Greg hasn't 
-> been merging the klist stuff,
+There was an error in the BUG_ON() statement that validated the
+calculated fib size which can cause the driver to panic.
 
-This patch came out around the time Greg went walkabout.
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
+Acked-by: James Bottomley <James.Bottomley@SteelEye.com>
+Signed-off-by: Chris Wright <chrisw@osdl.org>
+---
+ drivers/scsi/aacraid/aachba.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-I'd suggest we merge the klist patch anyway, so it doesn't hold up scsi. 
-If Greg wants to fix that bug by other means later on, we can do that
-anytime.
+Index: linux-2.6.13.y/drivers/scsi/aacraid/aachba.c
+===================================================================
+--- linux-2.6.13.y.orig/drivers/scsi/aacraid/aachba.c
++++ linux-2.6.13.y/drivers/scsi/aacraid/aachba.c
+@@ -968,7 +968,7 @@ static int aac_read(struct scsi_cmnd * s
+ 		fibsize = sizeof(struct aac_read64) + 
+ 			((le32_to_cpu(readcmd->sg.count) - 1) * 
+ 			 sizeof (struct sgentry64));
+-		BUG_ON (fibsize > (sizeof(struct hw_fib) - 
++		BUG_ON (fibsize > (dev->max_fib_size - 
+ 					sizeof(struct aac_fibhdr)));
+ 		/*
+ 		 *	Now send the Fib to the adapter
+
+--
