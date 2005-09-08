@@ -1,66 +1,61 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Fw: legacy megaraid driver bug in mm-series
-Date: Thu, 8 Sep 2005 15:35:47 +0100
-Message-ID: <20050908143547.GA9741@infradead.org>
-References: <20050907025258.35100c34.akpm@osdl.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] move iscsi to a better place in Kconfig
+Date: Thu, 08 Sep 2005 09:56:18 -0500
+Message-ID: <1126191378.4845.8.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:2457 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751366AbVIHOfs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Sep 2005 10:35:48 -0400
-Content-Disposition: inline
-In-Reply-To: <20050907025258.35100c34.akpm@osdl.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:41627 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932520AbVIHO43 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Sep 2005 10:56:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, Jack Byer <ojbyer@usa.net>
+To: Alex Aizman <itn780@yahoo.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Sep 07, 2005 at 02:52:58AM -0700, Andrew Morton wrote:
-> 
-> 
-> Begin forwarded message:
+Now it looks like we'll have multiple users of the iscsi transport
+class, the iscsi initiator shouldn't really be a dependency of it.  This
+patch moves iscsi to being an initiator in its own right which selects
+the transport attributes.
 
-This looks preyyu much like a breakage because we're now always sending
-S/G list down the scsi layer.
+James
 
-The patch below brings over code to handle that case from the megaraid_mbox
-driver.  It's still wrong for the case someone sends a MODE_SENSE from
-highmem userspace, but it should at least boot with the patch applied.
-
-
-Index: scsi-misc-2.6/drivers/scsi/megaraid.c
-===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/megaraid.c	2005-08-13 13:53:52.000000000 +0200
-+++ scsi-misc-2.6/drivers/scsi/megaraid.c	2005-09-08 16:34:06.000000000 +0200
-@@ -621,8 +621,6 @@
- 	if(islogical) {
- 		switch (cmd->cmnd[0]) {
- 		case TEST_UNIT_READY:
--			memset(cmd->request_buffer, 0, cmd->request_bufflen);
--
- #if MEGA_HAVE_CLUSTERING
- 			/*
- 			 * Do we support clustering and is the support enabled
-@@ -653,7 +651,19 @@
- #endif
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -235,12 +235,18 @@ config SCSI_ISCSI_ATTRS
+ 	  each attached iSCSI device to sysfs, say Y.
+ 	  Otherwise, say N.
  
- 		case MODE_SENSE:
--			memset(cmd->request_buffer, 0, cmd->cmnd[4]);
-+			if (cmd->use_sg) {
-+				struct scatterlist	*sgl;
-+				caddr_t			vaddr;
++endmenu
 +
-+				sgl = (struct scatterlist *)cmd->request_buffer;
-+				vaddr = (caddr_t)
-+					(page_address((&sgl[0])->page)
-+					+ (&sgl[0])->offset);
++menu "SCSI low-level drivers"
++	depends on SCSI!=n
 +
-+				memset(vaddr, 0, cmd->cmnd[4]);
-+			} else {
-+				memset(cmd->request_buffer, 0, cmd->cmnd[4]);
-+			}
- 			cmd->result = (DID_OK << 16);
- 			cmd->scsi_done(cmd);
- 			return NULL;
+ config ISCSI_TCP
+ 	tristate "iSCSI Initiator over TCP/IP"
+-	depends on SCSI && INET && SCSI_ISCSI_ATTRS
++	depends on SCSI && INET
+ 	select CRYPTO
+ 	select CRYPTO_MD5
+ 	select CRYPTO_CRC32C
++	select SCSI_ISCSI_ATTRS
+ 	help
+ 	 The iSCSI Driver provides a host with the ability to access storage
+ 	 through an IP network. The driver uses the iSCSI protocol to transport
+@@ -258,11 +264,6 @@ config ISCSI_TCP
+ 
+ 	 http://linux-iscsi.sf.net
+ 
+-endmenu
+-
+-menu "SCSI low-level drivers"
+-	depends on SCSI!=n
+-
+ config SGIWD93_SCSI
+ 	tristate "SGI WD93C93 SCSI Driver"
+ 	depends on SGI_IP22 && SCSI
+
+
