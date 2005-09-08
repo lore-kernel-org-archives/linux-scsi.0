@@ -1,76 +1,108 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] move iscsi to a better place in Kconfig
-Date: Thu, 08 Sep 2005 14:23:14 -0500
-Message-ID: <43208FA2.8070304@cs.wisc.edu>
-References: <1126191378.4845.8.camel@mulgrave>
+From: "Ju, Seokmann" <sju@lsil.com>
+Subject: RE: legacy megaraid driver bug in mm-series
+Date: Thu, 8 Sep 2005 15:26:55 -0400
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E5703662B20@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:26281 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S964945AbVIHTXU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2005 15:23:20 -0400
-In-Reply-To: <1126191378.4845.8.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964948AbVIHT1K@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jack Byer <ojbyer@usa.net>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Alex Aizman <itn780@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> Now it looks like we'll have multiple users of the iscsi transport
-> class, the iscsi initiator shouldn't really be a dependency of it.  This
-> patch moves iscsi to being an initiator in its own right which selects
-> the transport attributes.
+Hi,
 
-I think the reason it was a dependency was becuase the transport class 
-manages does the lifetime management/refcounting for the 
-initiators/iscsi_tcp.c session struct. scsi_transport_iscsi allocates 
-the scsi_host, and the initiator/iscsi_tcp.c's session structure is 
-allocated in that host_data.
+On Thursday, September 08, 2005 3:01 PM, Ju, Seokmann wrote:
+> I've tried and it works fine.
+> I'm not sure where the problem is related to compilation.
+> Please provide more details.
+My applogize to all for confusion.
 
+There is an issue on compiling legacy megaraid driver on 2.6.12-mm1 kernel.
+That is due to undefined symbol "adapter_t *" in the megaraid_reset().
+I'm not sure how and where this change came from, though.
 
+I'll create patch and submit soon.
+
+Thank you.
+
+> -----Original Message-----
+> From: Ju, Seokmann [mailto:sju@lsil.com] 
+> Sent: Thursday, September 08, 2005 3:01 PM
+> To: Jack Byer; linux-kernel@vger.kernel.org
+> Subject: RE: legacy megaraid driver bug in mm-series
 > 
-> James
+> Hi,
 > 
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -235,12 +235,18 @@ config SCSI_ISCSI_ATTRS
->  	  each attached iSCSI device to sysfs, say Y.
->  	  Otherwise, say N.
->  
-> +endmenu
-> +
-> +menu "SCSI low-level drivers"
-> +	depends on SCSI!=n
-> +
->  config ISCSI_TCP
->  	tristate "iSCSI Initiator over TCP/IP"
-> -	depends on SCSI && INET && SCSI_ISCSI_ATTRS
-> +	depends on SCSI && INET
->  	select CRYPTO
->  	select CRYPTO_MD5
->  	select CRYPTO_CRC32C
-> +	select SCSI_ISCSI_ATTRS
->  	help
->  	 The iSCSI Driver provides a host with the ability to access storage
->  	 through an IP network. The driver uses the iSCSI protocol to transport
-> @@ -258,11 +264,6 @@ config ISCSI_TCP
->  
->  	 http://linux-iscsi.sf.net
->  
-> -endmenu
+> On Monday, September 05, 2005 9:06 PM, Jack Byer wrote:
+> > 2.6.12-mm1:	will not compile megaraid driver
+> I've tried and it works fine.
+> I'm not sure where the problem is related to compilation.
+> Please provide more details.
+> 
+> Thank you,
+> 
+> Seokmann
+> 
+> > -----Original Message-----
+> > From: Jack Byer [mailto:ojbyer@usa.net] 
+> > Sent: Monday, September 05, 2005 9:06 PM
+> > To: linux-kernel@vger.kernel.org
+> > Subject: legacy megaraid driver bug in mm-series
+> > 
+> > My AMI megaraid card no longer works with recent mm-series 
+> > kernels. The
+> > bug appears on mm- kernels newer than 2.6.12-rc6-mm1; 
+> mainline kernels
+> > are not affected.
+> > 
+> > The driver will load and detect both devices on the card (sda 
+> > and sdb).
+> > It will scan each device and read the partition table successfully,
+> > however the megaraid driver message will include the 
+> following errors:
+> > 
+> > sda: sector size 0 reported, assuming 512.
+> > sda: asking for cache data failed.
+> > sda: assuming drive cache: write through
+> > 
+> > When the kernel tries to mount the root file system, I get 
+> > the following
+> > error:
+> > 
+> > ReiserFS: sda3: warning: sh-2006: read_super_block: bread 
+> failed (dev
+> > sda3, block 2, size 4096)
+> > ReiserFS: sda3: warning: sh-2006: read_super_block: bread 
+> failed (dev
+> > sda3, block 16, size 4096)
+> > VFS: Cannot open root device "sda3" or unknown-block(0,3)
+> > 
+> > Here is a summary of the kernels I have tested for this bug:
+> > 
+> > 2.6.11-mm1:	works
+> > 2.6.11-mm4:	works
+> > 2.6.12-rc5-mm1:	will not compile
+> > 2.6.12-rc6-mm1:	works
+> > 2.6.12-mm1:	will not compile megaraid driver
+> > 2.6.12-mm2:	broken
+> > 2.6.13-mm1:	broken
+> > 
+> > 2.6.12:		works
+> > 2.6.13:		works
+> > 
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe 
+> > linux-kernel" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Please read the FAQ at  http://www.tux.org/lkml/
+> > 
 > -
-> -menu "SCSI low-level drivers"
-> -	depends on SCSI!=n
-> -
->  config SGIWD93_SCSI
->  	tristate "SGI WD93C93 SCSI Driver"
->  	depends on SGI_IP22 && SCSI
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-kernel" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
