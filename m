@@ -1,91 +1,59 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 1/5] SCSI scanning and removal fixes
-Date: Thu, 08 Sep 2005 15:15:41 -0500
-Message-ID: <1126210542.4845.66.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0509081441190.5768-100000@iolanthe.rowland.org>
+From: Jim Ramsay <jim.ramsay@gmail.com>
+Subject: Re: [Linux-usb-users] Possible bug in usb storage (2.6.11 kernel)
+Date: Thu, 8 Sep 2005 14:28:09 -0600
+Message-ID: <4789af9e05090813287f05e12a@mail.gmail.com>
+References: <4789af9e05090810142bd3531d@mail.gmail.com>
+	 <20050908175852.GA3196@one-eyed-alien.net>
+	 <4789af9e05090812521d9d687b@mail.gmail.com>
+Reply-To: jim.ramsay@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:62878 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S964977AbVIHUPu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Sep 2005 16:15:50 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0509081441190.5768-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964999AbVIHU2N@vger.kernel.org>
+In-Reply-To: <4789af9e05090812521d9d687b@mail.gmail.com>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, linux-usb-users@lists.sourceforge.net, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, 2005-09-08 at 14:58 -0400, Alan Stern wrote:
-> On Thu, 8 Sep 2005, James Bottomley wrote:
-> > Actually, no, that's why we have the parallel EH states ... let me put
-> > in the events that trigger state transitions so you can see what
-> > happens:
-> > 
-> > 
-> >         EH thread finishes
-> > 	<---------------
-> > 
-> >         EH thread begins
-> >         ---------------->
-> > 
-> > 
-> >          <--------- 
-> >   running ---------> recovery
-> >     |                   |
-> >     |                   | scsi_remove_host() called
-> >     v   <----------     v
-> >   cancel ----------> recover/cancel
-> >     |                   |
-> >     |                   | scsi_remove_host finishes visibility removal
-> >     v                   v
-> >    del <------------ recover/del
-> > 
-> > So the EH is allowed to activate in either running or cancel states, but
-> > goes through its own state transition eventually coming back to del when
-> > it finishes.  Once the EH gets into recover/cancel it can never
-> > transition back to running.
+On 9/8/05, Jim Ramsay <jim.ramsay@gmail.com> wrote:
+> On 9/8/05, Matthew Dharm <mdharm-kernel@one-eyed-alien.net> wrote:
+> > On Thu, Sep 08, 2005 at 11:14:36AM -0600, Jim Ramsay wrote:
+> > > I think I have found a possible bug:
+> > > [...]
+> > > I suppose the scsi code could be changed to guarantee that
+> > > srb->request_buffer is page-aligned or cache-aligned, but that seems
+> > > like the wrong solution for this bug.
+> >
+> > Fixing the SCSI layer is -exactly- the correct solution.  The SCSI layer is
+> > supposed to guarantee us that those buffers are suitable for DMA'ing, and
+> > apparently it's violating that promise.
 > 
-> Why allow cancel -> recover/cancel?  Once the device is in the cancel 
-> state, there isn't anything useful the error handler can accomplish, is 
-> there?  Failed or timed-out commands should simply return an error.
-> 
-> And if you accept that, then what point is there in distinguishing between 
-> cancel and recover/cancel?  As far as I can see, the only significant 
-> difference is that in recover/cancel the error handler is running (but not 
-> accomplishing anything).  Is this related to 1) below?
+> Thanks, I'll check on what buffer I'm actually getting, where it's
+> allocated, and post back what I find, or how I fixed it.
 
-Yes, a state machine like I've shown can only be in one state at any
-given time.  The problem is what happens if the error handler is running
-when you try to remove the device.  We can reach in and try to stop it,
-but under a state model we'd have to wait until the error handler put
-the device back to running unless we allow a set of state transitions
-that the error handler can go through in parallel with the removal
-(which is the model I've shown above).
+More information:
 
-The idea of allowing the error handler to start up in cancel is that not
-every device removal is a forced removal, so you want to permit the
-shutdown commands (like sync cache) and consequent error handling on
-those commands.
+The error only occurrs during device sensing when the
+srb->request_buffer is assigned as follows, by usb/storage/transport.c
+in the routine usb_stor_invoke_transport:
 
-> > It's just nasty on two counts:
-> > 
-> > 1) we have an incorrect bifurcation in the state model and
-> > 2) we never actually enforce any of the state transitions.
-> 
-> Can you explain 1) more fully?  I don't really understand what you're 
-> getting at.
+old_request_buffer = srb->request_buffer;
+srb->request_buffer = srb->sense_buffer;
 
-Does the explanation above cover this?
+Now, this is a problem because srb->sense_buffer is defined as follows
+in the struct scsi_cmnd:
 
-> As for 2), what do you mean?  In 2.6.13, scsi_device_set_state does not 
-> change the state if the transition is illegal.
+#define SCSI_SENSE_BUFFERSIZE   96
+        unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];
 
-Yes, but we never act on the return value.  if the state is illegal, we
-shouldn't be taking actions believing we're in that state, so we should
-always be checking the returns.
+Since it is not allocated at runtime there is NO WAY the SCSI layer
+can possibly guarantee it is page- or cache-aligned and ready for DMA.
 
-James
+Any suggestions on best fix for this?  Is it still a SCSI-layer issue?
+ Or should USB step up in this case and ensure this buffer is dma-safe
+itself?
 
-
+-- 
+Jim Ramsay
+"Me fail English?  That's unpossible!"
