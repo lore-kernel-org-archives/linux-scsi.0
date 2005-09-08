@@ -1,74 +1,51 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 1/5] SCSI scanning and removal fixes
-Date: Thu, 8 Sep 2005 14:58:58 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0509081441190.5768-100000@iolanthe.rowland.org>
-References: <1126196125.4845.40.camel@mulgrave>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] iscsi_tcp: make iscsi compile again after recent netlink
+ changes
+Date: Thu, 08 Sep 2005 14:17:27 -0500
+Message-ID: <43208E47.9010603@cs.wisc.edu>
+References: <1126192451.4845.10.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:47758 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S964933AbVIHS67
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Sep 2005 14:58:59 -0400
-In-Reply-To: <1126196125.4845.40.camel@mulgrave>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:23209 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S964936AbVIHTRe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2005 15:17:34 -0400
+In-Reply-To: <1126192451.4845.10.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: Alex Aizman <itn780@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, 8 Sep 2005, James Bottomley wrote:
+James Bottomley wrote:
+> netlink_kernel_create now has two new arguments; the module (which is
+> easy) and the number of groups, which I arbitrarily set to one.
+> 
 
-> Actually, no, that's why we have the parallel EH states ... let me put
-> in the events that trigger state transitions so you can see what
-> happens:
+Thanks. Are you going to apply this to scsi-misc? We are building a 
+patchset for fixes to send this weekend hopefully so we can take the 
+patch and incorporate it or patch over the updated scsi-misc.
+
+
+> James
+> 
+> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+> --- a/drivers/scsi/scsi_transport_iscsi.c
+> +++ b/drivers/scsi/scsi_transport_iscsi.c
+> @@ -1230,7 +1230,8 @@ static __init int iscsi_transport_init(v
+>  	if (err)
+>  		goto unregister_session_class;
+>  
+> -	nls = netlink_kernel_create(NETLINK_ISCSI, iscsi_if_rx);
+> +	nls = netlink_kernel_create(NETLINK_ISCSI, 1, iscsi_if_rx,
+> +				    THIS_MODULE);
+>  	if (!nls) {
+>  		err = -ENOBUFS;
+>  		goto unregister_notifier;
 > 
 > 
->         EH thread finishes
-> 	<---------------
-> 
->         EH thread begins
->         ---------------->
-> 
-> 
->          <--------- 
->   running ---------> recovery
->     |                   |
->     |                   | scsi_remove_host() called
->     v   <----------     v
->   cancel ----------> recover/cancel
->     |                   |
->     |                   | scsi_remove_host finishes visibility removal
->     v                   v
->    del <------------ recover/del
-> 
-> So the EH is allowed to activate in either running or cancel states, but
-> goes through its own state transition eventually coming back to del when
-> it finishes.  Once the EH gets into recover/cancel it can never
-> transition back to running.
-
-Why allow cancel -> recover/cancel?  Once the device is in the cancel 
-state, there isn't anything useful the error handler can accomplish, is 
-there?  Failed or timed-out commands should simply return an error.
-
-And if you accept that, then what point is there in distinguishing between 
-cancel and recover/cancel?  As far as I can see, the only significant 
-difference is that in recover/cancel the error handler is running (but not 
-accomplishing anything).  Is this related to 1) below?
-
-> > At least, that's how it would work if you allow the RECOVERY -> CANCEL
-> > transition.  Either way you end up in the correct state.  So what's wrong
-> > with the old (current) system?
-> 
-> It's just nasty on two counts:
-> 
-> 1) we have an incorrect bifurcation in the state model and
-> 2) we never actually enforce any of the state transitions.
-
-Can you explain 1) more fully?  I don't really understand what you're 
-getting at.
-
-As for 2), what do you mean?  In 2.6.13, scsi_device_set_state does not 
-change the state if the transition is illegal.
-
-Alan Stern
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
