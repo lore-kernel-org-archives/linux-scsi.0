@@ -1,70 +1,41 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 1/5] SCSI scanning and removal fixes
-Date: Thu, 08 Sep 2005 11:15:25 -0500
-Message-ID: <1126196125.4845.40.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0509081148350.4607-100000@iolanthe.rowland.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: FW: [Fwd: Re: [PATCH scsi-misc 2/2] megaraid_sas: LSI Logic MegaR AID SAS RA ID D river]
+Date: Thu, 8 Sep 2005 17:42:03 +0100
+Message-ID: <20050908164203.GA13693@infradead.org>
+References: <0E3FA95632D6D047BA649F95DAB60E57060CD126@exa-atlanta> <20050906133033.GA30721@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:32668 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S964897AbVIHQP2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Sep 2005 12:15:28 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0509081148350.4607-100000@iolanthe.rowland.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:10961 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S964891AbVIHQmH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Sep 2005 12:42:07 -0400
+Content-Disposition: inline
+In-Reply-To: <20050906133033.GA30721@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: "'hch@lst.de'" <hch@lst.de>
+Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, 'James Bottomley' <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, "'Matt_Domsch@Dell.com'" <Matt_Domsch@Dell.com>, "Patro, Sumant" <sumantp@COS1.co.lsil.com>, "Kolli, Neela Syam" <knsyam@lsil.com>
 
-On Thu, 2005-09-08 at 11:59 -0400, Alan Stern wrote:
-> I don't understand your reasoning.  With your new system, you end up with 
-> two threads doing this:
-> 
-> 	Removal thread			Error handler thread
-> 	-------------------------	---------------------------
-> 					Go from RUNNING to RECOVERY
-> 	Try to go to CANCEL, fail
-> 	Go to CANCEL_RECOVERY
-> race:	Go to DEL_RECOVERY		Try to go to RUNNING, fail
+On Tue, Sep 06, 2005 at 03:30:33PM +0200, 'hch@lst.de' wrote:
+> It's still wrapped, unfortunately.  Let's retry as an attachment.
+> Anyway, I think we can put the patch in now.  I have a few more really
+> small things that I'd like to address, I will submit patches as soon
+> as I have a codebase that I can create patches against.
 
-Actually, no, that's why we have the parallel EH states ... let me put
-in the events that trigger state transitions so you can see what
-happens:
+I need a trivial one-liner to get it to compile on ppc64, see below.
+With that additional patch I think it should go in.
 
 
-        EH thread finishes
-	<---------------
-
-        EH thread begins
-        ---------------->
-
-
-         <--------- 
-  running ---------> recovery
-    |                   |
-    |                   | scsi_remove_host() called
-    v   <----------     v
-  cancel ----------> recover/cancel
-    |                   |
-    |                   | scsi_remove_host finishes visibility removal
-    v                   v
-   del <------------ recover/del
-
-So the EH is allowed to activate in either running or cancel states, but
-goes through its own state transition eventually coming back to del when
-it finishes.  Once the EH gets into recover/cancel it can never
-transition back to running.
-
-> At least, that's how it would work if you allow the RECOVERY -> CANCEL
-> transition.  Either way you end up in the correct state.  So what's wrong
-> with the old (current) system?
-
-It's just nasty on two counts:
-
-1) we have an incorrect bifurcation in the state model and
-2) we never actually enforce any of the state transitions.
-
-James
-
-
+Index: scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/megaraid/megaraid_sas.c	2005-09-08 18:50:20.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas.c	2005-09-08 18:51:49.000000000 +0200
+@@ -33,6 +33,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/delay.h>
+ #include <linux/uio.h>
++#include <linux/compat.h>
+ #include <asm/uaccess.h>
+ 
+ #include <scsi/scsi.h>
