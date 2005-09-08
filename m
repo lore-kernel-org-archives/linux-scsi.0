@@ -1,61 +1,72 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] SCSI core: fix leakage of scsi_cmnd's
-Date: Thu, 08 Sep 2005 10:56:29 -0500
-Message-ID: <1126194989.4845.24.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0509081045230.4503-100000@iolanthe.rowland.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 1/5] SCSI scanning and removal fixes
+Date: Thu, 8 Sep 2005 11:59:25 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0509081148350.4607-100000@iolanthe.rowland.org>
+References: <1126123089.4823.48.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:20892 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S964807AbVIHP4c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Sep 2005 11:56:32 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0509081045230.4503-100000@iolanthe.rowland.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:45027 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S964869AbVIHP70
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Sep 2005 11:59:26 -0400
+In-Reply-To: <1126123089.4823.48.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-> The SCSI core has a problem with leakage of scsi_cmnd structs.  It occurs
-> when a request is requeued; the request keeps its associated scsi_cmnd so
-> that the core doesn't need to assign a new one.  However, the routines
-> that read the device queue sometimes delete entries without bothering to
-> free the associated scsi_cmnd.  Among other things, this bug manifests as
-> error-handler processes remaining alive when a hot-pluggable device is
-> unplugged in the middle of executing a command.
+On Wed, 7 Sep 2005, James Bottomley wrote:
+
+> I agree (about the deadlocks).  However, as things stand RECOVERY is a
+> state in the model and the model can only be in a single state.  If you
+> permit the transition, and recovery is going on in parallel with
+> removal, they'll race to set the final state (removal wants DEL and the
+> eh thread will set it to RUNNING).
 > 
-> This patch (as559) fixes the problem by calling scsi_put_command and 
-> scsi_release_buffers at the appropriate times.  It also reorganizes a 
-> couple of bits of code, adding a new subroutine to find the scsi_cmnd 
-> associated with a requeued request.
+> Either we go back to having an in_recovery flag (i.e. lift recovery out
+> of the state model) or we make the model more complex to cope with this.
+> Since really the only thing we test is in_recovery, we could do a more
+> complex model; something like:
+> 
+> created
+>    |
+>    v    <--------- 
+>  running ---------> recovery
+>    |                   |
+>    v   <----------     v
+>  cancel ----------> recover/cancel
+>    |                   |
+>    v   ----------->    v
+>   del <------------ recover/del
+> 
+> I also think I'd like not to go from del -> recover/del, but unless del
+> actually means that all devices have completed their I/O for deletion
+> that can't be avoided.
 
-Nate Dailey also had a patch for this, a reply to which is incomplete
-still in my drafts folder.
+I don't understand your reasoning.  With your new system, you end up with 
+two threads doing this:
 
-The bottom line is that I don't think any modifications to the prep_fn()
-are necessary.  It's guarded by REQ_DONTPREP, so is never called again
-if we actually manage to prepare a command fully.  The returns from it
-are:
+	Removal thread			Error handler thread
+	-------------------------	---------------------------
+					Go from RUNNING to RECOVERY
+	Try to go to CANCEL, fail
+	Go to CANCEL_RECOVERY
+race:	Go to DEL_RECOVERY		Try to go to RUNNING, fail
 
-BLKPREP_DEFER:  Requeue the command for re-preparation (no resources
-should be allocated)
 
-BLKPREP_KILL: destroy the command (no resources should be allocated)
+Whereas the old system has the two threads doing this:
 
-BLKPREP_OK: Command is prepared, resources are allocated, REQ_DONTPREP
-is set to prevent any additional prep_fn() call.
+	Removal thread			Error handler thread
+	-------------------------	---------------------------
+					Go from RUNNING to RECOVERY
+	Go to CANCEL
+race:	Go to DEL			Try to go to RUNNING, fail
 
-So in the DEFER or KILL case, all you need to worry about is resources
-you may have allocated in the current prep_fn() invocation.  It seems to
-me that we do release these correctly, unless I'm missing something?
 
-The second problem is a bug (also spotted by Nate).  However, what I
-think we should be doing in this case is calling __scsi_done with
-DID_NO_CONNECT which should clean up correctly and also send the error
-indications back up the stack to the correct sources (that's what we do
-in scsi_dispatch_cmd() for this problem).
+At least, that's how it would work if you allow the RECOVERY -> CANCEL
+transition.  Either way you end up in the correct state.  So what's wrong
+with the old (current) system?
 
-James
-
+Alan Stern
 
