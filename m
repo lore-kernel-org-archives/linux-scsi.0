@@ -1,78 +1,68 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH] sg: do not set VM_IO flag on mmap-ed pages
-Date: Fri, 09 Sep 2005 17:18:57 +1000
-Message-ID: <43213761.8060403@torque.net>
+Subject: [PATCH] permit READ DEFECT DATA in block/scsi_ioctl
+Date: Fri, 09 Sep 2005 20:07:32 +1000
+Message-ID: <43215EE4.6050003@torque.net>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------040807060003050209040602"
+ boundary="------------070106010203090209060500"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:20398 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1751423AbVIIHSf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 03:18:35 -0400
+Received: from zorg.st.net.au ([203.16.233.9]:12992 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1030213AbVIIKHL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 06:07:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com, ahmed.teirelbar@adic.com
+Cc: linux-kernel@vger.kernel.org, axboe@suse.de, ballen@gravity.phys.uwm.edu
 
 This is a multi-part message in MIME format.
---------------040807060003050209040602
+--------------070106010203090209060500
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 
-Further to the problem discussed in this post:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112540053711489&w=2
+The soon to be released smartmontools 5.34 uses the
+READ DEFECT DATA command on SCSI disks. A disk that
+has defect list entries (or worse, an increasing number
+of them) is at risk.
 
-It seems that the sg driver does not need to set the VM_IO flag
-on pages that it memory maps to the user space since they are
-not from the IO space. Ahmed Teirelbar <ahmed.teirelbar@adic.com>
-wants the facility and has tested this patch as I have without
-adverse effects.
+Currently the first invocation of smartctl causes this:
+   scsi: unknown opcode 0x37
+message to appear the console and in the log.
 
-Patch is against lk 2.6.13 with this "[PATCH] sg direct io/mmap
-oops, st sync" applied.
+The READ DEFECT DATA SCSI command does not change
+the state of a disk. Its opcode (0x37) is valid for
+SBC devices (e.g. disks) and SMC-2 devices (media
+changers) where it is called INITIALIZE STATUS ELEMENT
+WITH RANGE and again doesn't change the external state
+of the device.
 
-The oops protection is still important. Some users really did
-try and use dio transfers from the sg driver to memory mapped
-IO space (on a video capture card if my memory serves) during the
-lk 2.4 series. I'm not sure how successful it was but that will
-now be politely refused in lk 2.6.13+ .
+The patch is against lk 2.6.13 .
 
 Changelog:
-   - set the page flags for sg's reserved buffer mmap-ed
-     to the user space to VM_RESERVED (rather than
-     VM_RESERVED | VM_IO )
+  - mark SCSI opcode 0x37 (READ DEFECT DATA) as
+    safe_for_read
 
 Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
 Doug Gilbert
 
---------------040807060003050209040602
+
+--------------070106010203090209060500
 Content-Type: text/x-patch;
- name="sg_lk2613kai_vmio.diff"
+ name="scsi_ioctl2613rdd.diff"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="sg_lk2613kai_vmio.diff"
+ filename="scsi_ioctl2613rdd.diff"
 
---- linux/drivers/scsi/sg.c	2005-09-01 21:30:39.000000000 +1000
-+++ linux/drivers/scsi/sg.c2613kai_vmio	2005-09-08 20:36:39.000000000 +1000
-@@ -61,7 +61,7 @@
- 
- #ifdef CONFIG_SCSI_PROC_FS
- #include <linux/proc_fs.h>
--static char *sg_version_date = "20050901";
-+static char *sg_version_date = "20050908";
- 
- static int sg_proc_init(void);
- static void sg_proc_cleanup(void);
-@@ -1300,7 +1300,7 @@
- 		sg_rb_correct4mmap(rsv_schp, 1);	/* do only once per fd lifetime */
- 		sfp->mmap_called = 1;
- 	}
--	vma->vm_flags |= (VM_RESERVED | VM_IO);
-+	vma->vm_flags |= VM_RESERVED;
- 	vma->vm_private_data = sfp;
- 	vma->vm_ops = &sg_mmap_vm_ops;
- 	return 0;
+--- linux/drivers/block/scsi_ioctl.c	2005-06-19 07:54:59.000000000 +1000
++++ linux/drivers/block/scsi_ioctl.c2613rdd	2005-09-09 17:21:52.000000000 +1000
+@@ -123,6 +123,7 @@
+ 		safe_for_read(READ_12),
+ 		safe_for_read(READ_16),
+ 		safe_for_read(READ_BUFFER),
++		safe_for_read(READ_DEFECT_DATA),
+ 		safe_for_read(READ_LONG),
+ 		safe_for_read(INQUIRY),
+ 		safe_for_read(MODE_SENSE),
 
---------------040807060003050209040602--
+--------------070106010203090209060500--
