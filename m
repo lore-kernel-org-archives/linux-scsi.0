@@ -1,482 +1,658 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [PATCH 2.6.13 3/14] sas-class: expander_conf.c Expander communication
- user space program
-Date: Fri, 09 Sep 2005 15:39:26 -0400
-Message-ID: <4321E4EE.20906@adaptec.com>
+Subject: [PATCH 2.6.13 20/20] aic94xx: aic94xx_tmf.c Implements the Task Management
+ Funcions defined by SAS
+Date: Fri, 09 Sep 2005 15:37:23 -0400
+Message-ID: <4321E473.2020002@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030382AbVIITkN@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:60613 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1030359AbVIITh3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 15:37:29 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
 
-diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi/sas-class/expander_conf.c linux-2.6.13/drivers/scsi/sas-class/expander_conf.c
---- linux-2.6.13-orig/drivers/scsi/sas-class/expander_conf.c	1969-12-31 19:00:00.000000000 -0500
-+++ linux-2.6.13/drivers/scsi/sas-class/expander_conf.c	2005-09-09 11:14:29.000000000 -0400
-@@ -0,0 +1,463 @@
+diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi/aic94xx/aic94xx_tmf.c linux-2.6.13/drivers/scsi/aic94xx/aic94xx_tmf.c
+--- linux-2.6.13-orig/drivers/scsi/aic94xx/aic94xx_tmf.c	1969-12-31 19:00:00.000000000 -0500
++++ linux-2.6.13/drivers/scsi/aic94xx/aic94xx_tmf.c	2005-09-09 11:21:23.000000000 -0400
+@@ -0,0 +1,634 @@
 +/*
-+ * Serial Attached SCSI (SAS) Expander communication user space program
++ * Aic94xx Task Management Functions
 + *
 + * Copyright (C) 2005 Adaptec, Inc.  All rights reserved.
 + * Copyright (C) 2005 Luben Tuikov <luben_tuikov@adaptec.com>
 + *
 + * This file is licensed under GPLv2.
++ * 
++ * This file is part of the aic94xx driver.
 + *
-+ * This program is free software; you can redistribute it and/or
++ * The aic94xx driver is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation; either version 2 of the
-+ * License, or (at your option) any later version.
++ * published by the Free Software Foundation; version 2 of the
++ * License.
 + *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * The aic94xx driver is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
 + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 + * General Public License for more details.
 + *
 + * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
++ * along with the aic94xx driver; if not, write to the Free Software
 + * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 + *
-+ * $Id: //depot/sas-class/expander_conf.c#6 $
++ * $Id: //depot/aic94xx/aic94xx_tmf.c#34 $
 + */
 +
-+/* This is a simple program to show how to communicate with
-+ * expander devices in a SAS domain.
-+ *
-+ * The process is simple:
-+ * 1. Build the SMP frame you want to send. The format and layout
-+ *    is described in the SAS spec.  Leave the CRC field equal 0.
-+ * 2. Open the expander's SMP portal sysfs file in RW mode.
-+ * 3. Write the frame you built in 1.
-+ * 4. Read the amount of data you expect to receive for the frame you built.
-+ *    If you receive different amount of data you expected to receive,
-+ *    then there was some kind of error.
-+ * All this process is shown in detail in the function do_smp_func()
-+ * and its callers, below.
-+ */
++#include <linux/spinlock.h>
++#include <scsi/sas/sas_task.h>
++#include "aic94xx.h"
++#include "aic94xx_sas.h"
++#include "aic94xx_hwi.h"
 +
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <fcntl.h>
-+#include <unistd.h>
-+#include <stdio.h>
-+#include <string.h>
-+#include <string.h>
-+#include <errno.h>
-+#include <endian.h>
-+#include <byteswap.h>
-+#include <stdint.h>
-+#include <stdlib.h>
++/* ---------- Internal enqueue ---------- */
 +
-+#define LEFT_FIELD_SIZE 25
++static int asd_enqueue_internal(struct asd_ascb *ascb,
++		void (*tasklet_complete)(struct asd_ascb *,
++					 struct done_list_struct *),
++				void (*timed_out)(unsigned long))
++{
++	int res;
++	
++	ascb->tasklet_complete = tasklet_complete;
++	ascb->uldd_timer = 1;
++	
++	ascb->timer.data = (unsigned long) ascb;
++	ascb->timer.function = timed_out;
++	ascb->timer.expires = jiffies + AIC94XX_SCB_TIMEOUT;
 +
-+#ifdef __LITTLE_ENDIAN
-+#define be64_to_cpu(_x)  __bswap_64(*(uint64_t *)(&(_x)))
-+#define be32_to_cpu(_x)  __bswap_32(*(uint32_t *)(&(_x)))
-+#define be16_to_cpu(_x)  __bswap_16(*(uint16_t *)(&(_x)))
-+#define cpu_to_be64(_x)  __bswap_64(*(uint64_t *)(&(_x)))
-+#define cpu_to_be32(_x)  __bswap_32(*(uint32_t *)(&(_x)))
-+#define cpu_to_be16(_x)  __bswap_16(*(uint16_t *)(&(_x)))
-+#else
-+#define be64_to_cpu(_x)  (_x)
-+#define be32_to_cpu(_x)  (_x)
-+#define be16_to_cpu(_x)  (_x)
-+#define cpu_to_be64(_x)  (_x)
-+#define cpu_to_be32(_x)  (_x)
-+#define cpu_to_be16(_x)  (_x)
++	add_timer(&ascb->timer);
++
++	res = asd_post_ascb_list(ascb->ha, ascb, 1);
++	if (unlikely(res))
++		del_timer(&ascb->timer);
++	return res;
++}
++
++static inline void asd_timedout_common(unsigned long data)
++{
++	struct asd_ascb *ascb = (void *) data;
++	struct asd_seq_data *seq = &ascb->ha->seq;
++        unsigned long flags;
++
++	spin_lock_irqsave(&seq->pend_q_lock, flags);
++        seq->pending--;
++        list_del_init(&ascb->list);
++        spin_unlock_irqrestore(&seq->pend_q_lock, flags);
++}
++
++/* ---------- CLEAR NEXUS ---------- */
++
++static void asd_clear_nexus_tasklet_complete(struct asd_ascb *ascb,
++					     struct done_list_struct *dl)
++{
++	ASD_DPRINTK("%s: here\n", __FUNCTION__);
++	if (!del_timer(&ascb->timer)) {
++		ASD_DPRINTK("%s: couldn't delete timer\n", __FUNCTION__);
++		return;
++	}
++	ASD_DPRINTK("%s: opcode: 0x%x\n", __FUNCTION__, dl->opcode);
++	ascb->uldd_task = (void *) (unsigned long) dl->opcode;
++	complete(&ascb->completion);
++}
++
++static void asd_clear_nexus_timedout(unsigned long data)
++{
++	struct asd_ascb *ascb = (void *) data;
++
++	ASD_DPRINTK("%s: here\n", __FUNCTION__);
++	asd_timedout_common(data);
++	ascb->uldd_task = (void *) TMF_RESP_FUNC_FAILED;
++	complete(&ascb->completion);
++}
++
++#define CLEAR_NEXUS_PRE         \
++	ASD_DPRINTK("%s: PRE\n", __FUNCTION__); \
++        res = 1;                \
++	ascb = asd_ascb_alloc_list(asd_ha, &res, GFP_KERNEL); \
++	if (!ascb)              \
++		return -ENOMEM; \
++                                \
++	scb = ascb->scb;        \
++	scb->header.opcode = CLEAR_NEXUS
++
++#define CLEAR_NEXUS_POST        \
++	ASD_DPRINTK("%s: POST\n", __FUNCTION__); \
++	res = asd_enqueue_internal(ascb, asd_clear_nexus_tasklet_complete, \
++				   asd_clear_nexus_timedout);              \
++	if (res)                \
++		goto out_err;   \
++	ASD_DPRINTK("%s: clear nexus posted, waiting...\n", __FUNCTION__); \
++	wait_for_completion(&ascb->completion); \
++	res = (int) (unsigned long) ascb->uldd_task; \
++	if (res == TC_NO_ERROR) \
++		res = TMF_RESP_FUNC_COMPLETE;   \
++out_err:                        \
++	asd_ascb_free(ascb);    \
++	return res
++
++int asd_clear_nexus_ha(struct sas_ha_struct *sas_ha)
++{
++	struct asd_ha_struct *asd_ha = sas_ha->lldd_ha;
++	struct asd_ascb *ascb;
++	struct scb *scb;
++	int res;
++
++	CLEAR_NEXUS_PRE;
++	scb->clear_nexus.nexus = NEXUS_ADAPTER;
++	CLEAR_NEXUS_POST;
++}
++
++int asd_clear_nexus_port(struct sas_port *port)
++{
++	struct asd_ha_struct *asd_ha = port->ha->lldd_ha;
++	struct asd_ascb *ascb;
++	struct scb *scb;
++	int res;
++	
++	CLEAR_NEXUS_PRE;
++	scb->clear_nexus.nexus = NEXUS_PORT;
++	scb->clear_nexus.conn_mask = port->phy_mask;
++	CLEAR_NEXUS_POST;
++}
++
++#if 0
++static int asd_clear_nexus_I_T(struct domain_device *dev)
++{
++	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
++	struct asd_ascb *ascb;
++	struct scb *scb;
++	int res;
++	
++	CLEAR_NEXUS_PRE;
++	scb->clear_nexus.nexus = NEXUS_I_T;
++	scb->clear_nexus.flags = SEND_Q | EXEC_Q | NOTINQ;
++	if (dev->tproto)
++		scb->clear_nexus.flags |= SUSPEND_TX;
++	scb->clear_nexus.conn_handle = cpu_to_le16((u16)(unsigned long)
++						   dev->lldd_dev);
++	CLEAR_NEXUS_POST;
++}
 +#endif
 +
-+#define SAS_ADDR(_x) ((unsigned long long) be64_to_cpu(*(uint64_t *)(_x)))
-+#define SAS_ADDR_SIZE 8
-+
-+const char *prog;
-+
-+struct route_table_entry {
-+	int      disabled;
-+	uint8_t  routed_sas_addr[SAS_ADDR_SIZE];
-+};
-+
-+struct expander {
-+	int     num_phys;
-+	uint8_t *phy_attr;
-+	int     route_indexes;
-+};
-+
-+static int do_smp_func(char *smp_portal_name, void *smp_req, int smp_req_size,
-+		       void *smp_resp, int smp_resp_size)
++static int asd_clear_nexus_I_T_L(struct domain_device *dev, u8 *lun)
 +{
-+	int fd;
-+	ssize_t res;
-+
-+	fd = open(smp_portal_name, O_RDWR);
-+	if (fd == -1) {
-+		printf("%s: opening %s: %s(%d)\n", prog, smp_portal_name,
-+		       strerror(errno), errno);
-+		return fd;
-+	}
-+
-+	res = write(fd, smp_req, smp_req_size);
-+	if (!res) {
-+		printf("%s: nothing could be written to %s\n", prog,
-+		       smp_portal_name);
-+		goto out_err;
-+	} else if (res == -1) {
-+		printf("%s: writing to %s: %s(%d)\n", prog, smp_portal_name,
-+		       strerror(errno), errno);
-+		goto out_err;
-+	}
-+
-+	res = read(fd, smp_resp, smp_resp_size);
-+	if (!res) {
-+		printf("%s: nothing could be read from %s\n", prog,
-+		       smp_portal_name);
-+		goto out_err;
-+	} else if (res == -1) {
-+		printf("%s: reading from %s: %s(%d)\n", prog, smp_portal_name,
-+		       strerror(errno), errno);
-+		goto out_err;
-+	}
-+	close(fd);
-+	return res;
-+ out_err:
-+	close(fd);
-+	return -1;
-+}
-+
-+#define MI_REQ_SIZE   8
-+#define MI_RESP_SIZE 64
-+
-+static unsigned char mi_req[MI_REQ_SIZE] = { 0x40, 1, 0, };
-+static unsigned char mi_resp[MI_RESP_SIZE];
-+
-+#define MI_FIELD_SIZE 20
-+#define MI_PRINTS(a, b) printf("%*s %*s\n",LEFT_FIELD_SIZE,a,MI_FIELD_SIZE,b)
-+#define MI_PRINTD(a, b) printf("%*s %*u\n",LEFT_FIELD_SIZE,a,MI_FIELD_SIZE,b)
-+#define MI_PRINTA(a, b) printf("%*s %0*llx\n",LEFT_FIELD_SIZE,a,MI_FIELD_SIZE,b)
-+
-+static int mi_expander(char *smp_portal_name, struct expander *ex)
-+{
++	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
++	struct asd_ascb *ascb;
++	struct scb *scb;
 +	int res;
-+
-+	res = do_smp_func(smp_portal_name, mi_req, MI_REQ_SIZE,
-+			  mi_resp, MI_RESP_SIZE);
-+	if (res == MI_RESP_SIZE && mi_resp[2] == 0) {
-+		char buf[20];
-+
-+		memcpy(buf, mi_resp+12, 8);
-+		buf[8] = 0;
-+		MI_PRINTS("Vendor:", buf);
-+
-+		memcpy(buf, mi_resp+20, 16);
-+		buf[16] = 0;
-+		MI_PRINTS("Product:", buf);
-+
-+		memcpy(buf, mi_resp+36, 4);
-+		buf[4] = 0;
-+		MI_PRINTS("Revision:", buf);
-+
-+		if (!(mi_resp[8] & 1))
-+			return 0;
-+
-+		memcpy(buf, mi_resp+40, 8);
-+		buf[8] = 0;
-+		MI_PRINTS("Component:", buf);
-+
-+		MI_PRINTD("Component ID:", be16_to_cpu(mi_resp[48]));
-+		MI_PRINTD("Component revision:", mi_resp[50]);
-+	}
-+	return 0;
-+}
-+
-+#define RG_REQ_SIZE   8
-+#define RG_RESP_SIZE 32
-+
-+static unsigned char rg_req[RG_REQ_SIZE] = { 0x40, 0, };
-+static unsigned char rg_resp[RG_RESP_SIZE];
-+
-+static int rg_expander(char *smp_portal_name, struct expander *ex)
-+{
-+	int res;
-+
-+	res = do_smp_func(smp_portal_name, rg_req, RG_REQ_SIZE, rg_resp,
-+			  RG_RESP_SIZE);
-+
-+	if (res == RG_RESP_SIZE && rg_resp[2] == 0) {
-+		MI_PRINTD("Expander Change Count:", be16_to_cpu(rg_resp[4]));
-+		MI_PRINTD("Expander Route Indexes:", be16_to_cpu(rg_resp[6]));
-+		ex->route_indexes = be16_to_cpu(rg_resp[6]);
-+		MI_PRINTD("Number of phys:", rg_resp[9]);
-+		ex->num_phys = rg_resp[9];
-+		MI_PRINTS("Configuring:", (rg_resp[10] & 2) ? "Yes" : "No");
-+		MI_PRINTS("Configurable route table:",
-+			  (rg_resp[10] & 1) ? "Yes" : "No");
-+		MI_PRINTA("Enclosure Logical Identifier:",
-+			  SAS_ADDR(rg_resp+12));
-+		ex->phy_attr = malloc(ex->num_phys * sizeof(*ex->phy_attr));
-+	}
-+	return 0;
-+}
-+
-+#define DISCOVER_REQ_SIZE  16
-+#define DISCOVER_RESP_SIZE 56
-+
-+static unsigned char disc_req[DISCOVER_REQ_SIZE] = {0x40, 0x10, 0, };
-+static unsigned char disc_resp[DISCOVER_RESP_SIZE];
-+
-+#define PHY_EEXIST 0x10
-+#define PHY_VACANT 0x16
-+
-+static const char *attached_dev_type[8] = {
-+	[0] = "none",
-+	[1] = "end device",
-+	[2] = "edge expander",
-+	[3] = "fanout expander",
-+	[4 ... 7] = "unknown",
-+};
-+
-+static const char *phy_link_rate[16] = {
-+	[0] = "unknown",
-+	[1] = "disabled",
-+	[2] = "phy reset problem",
-+	[3] = "spinup hold",
-+	[4] = "port selector",
-+	[5 ... 7] = "unknown",
-+	[8] = "G1 (1,5 Gb/s)",
-+	[9] = "G2 (3 GB/s)",
-+	[10 ... 15] = "Unknown",
-+};
-+
-+static const char *proto_table[8] = {
-+	"",
-+	"SMP", "STP", "STP|SMP", "SSP",
-+	"SSP|SMP", "SSP|STP", "SSP|STP|SMP",
-+};
-+
-+#define DIRECT_ROUTING      0
-+#define SUBTRACTIVE_ROUTING 1
-+#define TABLE_ROUTING       2
-+
-+static const char *routing_attr[8] = {
-+	[DIRECT_ROUTING] = "D",
-+	[SUBTRACTIVE_ROUTING] = "S",
-+	[TABLE_ROUTING] = "T",
-+	[3 ... 7] = "x",
-+};
-+
-+static const char *conn_type[0x80] = {
-+	[0] = "No information",
-+	[1] = "SAS external receptacle (i.e., SFF-8470)(see SAS-1.1)",
-+	[2] = "SAS external compact receptacle (i.e., SFF-8088)(see SAS-1.1)",
-+	[3 ... 0x0f ] = "External connector",
-+	[0x10] = "SAS internal wide plug (i.e., SFF-8484)(see SAS-1.1)",
-+	[0x11] = "SAS internal compact wide plug (i.e., SFF-8087)(see SAS-1.1)",
-+	[0x12 ... 0x1f] = "Internal wide connector",
-+	[0x20] = "SAS backplane receptacle (i.e., SFF-8482)(see SAS-1.1)",
-+	[0x21] = "SATA-style host plug (i.e., ATA/ATAPI-7 V3)(see SAS-1.1)",
-+	[0x22] = "SAS plug (i.e., SFF-8482)(see SAS-1.1)",
-+	[0x23] = "SATA device plug (i.e., ATA/ATAPI-7 V3)(see SAS-1.1)",
-+	[0x24 ... 0x2f] = "Internal connector to end device",
-+	[0x30 ... 0x6f] = "Unknown\n",
-+	[0x70 ... 0x7f] = "Vendor specific",
-+};
-+
-+static int discover_phy(char *smp_portal_name, int phy_id, struct expander *ex)
-+{
-+	int res;
-+	const char *dev_str;
 +	
-+	disc_req[9] = phy_id;
++	CLEAR_NEXUS_PRE;
++	scb->clear_nexus.nexus = NEXUS_I_T_L;
++	scb->clear_nexus.flags = SEND_Q | EXEC_Q | NOTINQ;
++	if (dev->tproto)
++		scb->clear_nexus.flags |= SUSPEND_TX;
++	memcpy(scb->clear_nexus.ssp_task.lun, lun, 8);
++	scb->clear_nexus.conn_handle = cpu_to_le16((u16)(unsigned long)
++						   dev->lldd_dev);
++	CLEAR_NEXUS_POST;
++}
 +
-+	res = do_smp_func(smp_portal_name, disc_req, DISCOVER_REQ_SIZE,
-+			  disc_resp, DISCOVER_RESP_SIZE);
++static int asd_clear_nexus_tag(struct sas_task *task)
++{
++	struct asd_ha_struct *asd_ha = task->dev->port->ha->lldd_ha;
++	struct asd_ascb *tascb = task->lldd_task;
++	struct asd_ascb *ascb;
++	struct scb *scb;
++	int res;
++	
++	CLEAR_NEXUS_PRE;
++	scb->clear_nexus.nexus = NEXUS_TAG;
++	memcpy(scb->clear_nexus.ssp_task.lun, task->ssp_task.LUN, 8);
++	scb->clear_nexus.ssp_task.tag = tascb->tag;
++	if (task->dev->tproto)
++		scb->clear_nexus.conn_handle = cpu_to_le16((u16)(unsigned long)
++							  task->dev->lldd_dev);
++	CLEAR_NEXUS_POST;
++}
 +
-+	if (res != DISCOVER_RESP_SIZE) {
-+		printf("%s: error disovering phy %d\n", prog, phy_id);
-+		goto out;
++static int asd_clear_nexus_index(struct sas_task *task)
++{
++	struct asd_ha_struct *asd_ha = task->dev->port->ha->lldd_ha;
++	struct asd_ascb *tascb = task->lldd_task;
++	struct asd_ascb *ascb;
++	struct scb *scb;
++	int res;
++	
++	CLEAR_NEXUS_PRE;
++	scb->clear_nexus.nexus = NEXUS_TRANS_CX;
++	if (task->dev->tproto)
++		scb->clear_nexus.conn_handle = cpu_to_le16((u16)(unsigned long)
++							  task->dev->lldd_dev);
++	scb->clear_nexus.index = cpu_to_le16(tascb->tc_index);
++	CLEAR_NEXUS_POST;
++}
++
++/* ---------- TMFs ---------- */
++
++static void asd_tmf_timedout(unsigned long data)
++{
++	struct asd_ascb *ascb = (void *) data;
++
++	ASD_DPRINTK("tmf timed out\n");
++	asd_timedout_common(data);
++	ascb->uldd_task = (void *) TMF_RESP_FUNC_FAILED;
++	complete(&ascb->completion);
++}
++
++static int asd_get_tmf_resp_tasklet(struct asd_ascb *ascb,
++				    struct done_list_struct *dl)
++{
++	struct asd_ha_struct *asd_ha = ascb->ha;
++	unsigned long flags;
++	struct tc_resp_sb_struct {
++		__le16 index_escb;
++		u8     len_lsb;
++		u8     flags;
++	} __attribute__ ((packed)) *resp_sb = (void *) dl->status_block;
++
++	int  edb_id = ((resp_sb->flags & 0x70) >> 4)-1;
++	struct asd_ascb *escb;
++	struct asd_dma_tok *edb;
++	struct ssp_frame_hdr *fh;
++	struct ssp_response_iu   *ru;
++	int res = TMF_RESP_FUNC_FAILED;
++
++	ASD_DPRINTK("tmf resp tasklet\n");
++
++	spin_lock_irqsave(&asd_ha->seq.tc_index_lock, flags);
++	escb = asd_tc_index_find(&asd_ha->seq,
++				 (int)le16_to_cpu(resp_sb->index_escb));
++	spin_unlock_irqrestore(&asd_ha->seq.tc_index_lock, flags);
++
++	if (!escb) {
++		ASD_DPRINTK("Uh-oh! No escb for this dl?!\n");
++		return res;
 +	}
-+	switch (disc_resp[2]) {
-+	case PHY_VACANT:
-+		printf("phy%02d: vacant\n", phy_id);
-+		goto out; break;
-+	case PHY_EEXIST:
-+		printf("phy%02d doesn't exist\n", phy_id);
-+		goto out; break;
-+	case 0:
++
++	edb = asd_ha->seq.edb_arr[edb_id + escb->edb_index];
++	ascb->tag = *(__be16 *)(edb->vaddr+4);
++	fh = edb->vaddr + 16;
++	ru = edb->vaddr + 16 + sizeof(*fh);
++	res = ru->status;
++	if (ru->datapres == 1)	  /* Response data present */
++		res = ru->resp_data[3];
++#if 0
++	ascb->tag = fh->tag;
++#endif	
++	ascb->tag_valid = 1;
++
++	asd_invalidate_edb(escb, edb_id);
++	return res;
++}
++
++static void asd_tmf_tasklet_complete(struct asd_ascb *ascb,
++				     struct done_list_struct *dl)
++{
++	if (!del_timer(&ascb->timer))
++		return;
++
++	ASD_DPRINTK("tmf tasklet complete\n");
++	
++	if (dl->opcode == TC_SSP_RESP)
++		ascb->uldd_task = (void *) (unsigned long)
++			asd_get_tmf_resp_tasklet(ascb, dl);
++	else
++		ascb->uldd_task = (void *) 0xFF00 + (unsigned long) dl->opcode;
++
++	complete(&ascb->completion);
++}
++
++static inline int asd_clear_nexus(struct sas_task *task)
++{
++	int res = TMF_RESP_FUNC_FAILED;
++	struct asd_ascb *tascb = task->lldd_task;
++	unsigned long flags;
++
++	ASD_DPRINTK("task not done, clearing nexus\n");
++	if (tascb->tag_valid)
++		res = asd_clear_nexus_tag(task);
++	else
++		res = asd_clear_nexus_index(task);
++	wait_for_completion_timeout(&tascb->completion,
++				    AIC94XX_SCB_TIMEOUT);
++	ASD_DPRINTK("came back from clear nexus\n");
++	spin_lock_irqsave(&task->task_state_lock, flags);
++	if (task->task_state_flags & SAS_TASK_STATE_DONE)
++		res = TMF_RESP_FUNC_COMPLETE;
++	spin_unlock_irqrestore(&task->task_state_lock, flags);
++
++	return res;
++}
++
++/**
++ * asd_abort_task -- ABORT TASK TMF
++ * @task: the task to be aborted
++ *
++ * Before calling ABORT TASK the task state flags should be ORed with
++ * SAS_TASK_STATE_ABORTED (unless SAS_TASK_STATE_DONE is set) under
++ * the task_state_lock IRQ spinlock, then ABORT TASK *must* be called.
++ * 
++ * Implements the ABORT TASK TMF, I_T_L_Q nexus.
++ * Returns: SAS TMF responses (see sas_task.h),
++ *          -ENOMEM,
++ *          -SAS_QUEUE_FULL.
++ *
++ * When ABORT TASK returns, the caller of ABORT TASK checks first the
++ * task->task_state_flags, and then the return value of ABORT TASK.
++ * 
++ * If the task has task state bit SAS_TASK_STATE_DONE set, then the
++ * task was completed successfully prior to it being aborted.  The
++ * caller of ABORT TASK has responsibility to call task->task_done()
++ * xor free the task, depending on their framework.  The return code
++ * is TMF_RESP_FUNC_FAILED in this case.
++ * 
++ * Else the SAS_TASK_STATE_DONE bit is not set,
++ * 	If the return code is TMF_RESP_FUNC_COMPLETE, then
++ * 		the task was aborted successfully.  The caller of
++ * 		ABORT TASK has responsibility to call task->task_done()
++ *              to finish the task, xor free the task depending on their
++ *		framework.
++ *	else
++ * 		the ABORT TASK returned some kind of error. The task
++ *              was _not_ cancelled.  Nothing can be assumed.
++ *		The caller of ABORT TASK may wish to retry.
++ */
++int asd_abort_task(struct sas_task *task)
++{
++	struct asd_ascb *tascb = task->lldd_task;
++	struct asd_ha_struct *asd_ha = tascb->ha;
++	int res = 1;
++	unsigned long flags;
++	struct asd_ascb *ascb = NULL;
++	struct scb *scb;
++
++	spin_lock_irqsave(&task->task_state_lock, flags);
++	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
++		spin_unlock_irqrestore(&task->task_state_lock, flags);
++		res = TMF_RESP_FUNC_COMPLETE;
++		ASD_DPRINTK("%s: task 0x%p done\n", __FUNCTION__, task);
++		goto out_done;
++	}
++	spin_unlock_irqrestore(&task->task_state_lock, flags);
++
++	ascb = asd_ascb_alloc_list(asd_ha, &res, GFP_KERNEL);
++	if (!ascb)
++		return -ENOMEM;
++	scb = ascb->scb;
++
++	scb->header.opcode = ABORT_TASK;
++
++	switch (task->task_proto) {
++	case SATA_PROTO:
++	case SAS_PROTO_STP:
++		scb->abort_task.proto_conn_rate = (1 << 5); /* STP */
++		break;
++	case SAS_PROTO_SSP:
++		scb->abort_task.proto_conn_rate  = (1 << 4); /* SSP */
++		scb->abort_task.proto_conn_rate |= task->dev->linkrate;
++		break;
++	case SAS_PROTO_SMP:
 +		break;
 +	default:
-+		printf("phy%02d SMP function result: 0x%x\n",
-+		       phy_id, disc_resp[2]);
++		break;
++	}
++	
++	if (task->task_proto == SAS_PROTO_SSP) {
++		scb->abort_task.ssp_frame.frame_type = SSP_TASK;
++		memcpy(scb->abort_task.ssp_frame.hashed_dest_addr,
++		       task->dev->hashed_sas_addr, HASHED_SAS_ADDR_SIZE);
++		memcpy(scb->abort_task.ssp_frame.hashed_src_addr,
++		       task->dev->port->ha->hashed_sas_addr,
++		       HASHED_SAS_ADDR_SIZE);
++		scb->abort_task.ssp_frame.tptt = cpu_to_be16(0xFFFF);
++
++		memcpy(scb->abort_task.ssp_task.lun, task->ssp_task.LUN, 8);
++		scb->abort_task.ssp_task.tmf = TMF_ABORT_TASK;
++		scb->abort_task.ssp_task.tag = cpu_to_be16(0xFFFF);
++	}
++
++	scb->abort_task.sister_scb = cpu_to_le16(0xFFFF);
++	scb->abort_task.conn_handle = cpu_to_le16(
++		(u16)(unsigned long)task->dev->lldd_dev);
++	scb->abort_task.retry_count = 1;
++	scb->abort_task.index = cpu_to_le16((u16)tascb->tc_index);
++	scb->abort_task.itnl_to = cpu_to_le16(ITNL_TIMEOUT_CONST);
++
++	res = asd_enqueue_internal(ascb, asd_tmf_tasklet_complete,
++				   asd_tmf_timedout);
++	if (res)
 +		goto out;
++	wait_for_completion(&ascb->completion);
++	ASD_DPRINTK("tmf came back\n");
++
++	res = (int) (unsigned long) ascb->uldd_task;
++	tascb->tag = ascb->tag;
++	tascb->tag_valid = ascb->tag_valid;
++
++	spin_lock_irqsave(&task->task_state_lock, flags);
++	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
++		spin_unlock_irqrestore(&task->task_state_lock, flags);
++		res = TMF_RESP_FUNC_COMPLETE;
++		ASD_DPRINTK("%s: task 0x%p done\n", __FUNCTION__, task);
++		goto out_done;
 +	}
++	spin_unlock_irqrestore(&task->task_state_lock, flags);
 +
-+	printf("Phy%02d:%s    attached: %016llx:%02d    chg count:%02d\n",
-+	       phy_id, routing_attr[disc_resp[44] & 0x0F],
-+	       SAS_ADDR(disc_resp+24), disc_resp[32], disc_resp[42]);
++	switch (res) {
++	/* The task to be aborted has been sent to the device.
++	 * We got a Response IU for the ABORT TASK TMF. */
++	case TC_NO_ERROR + 0xFF00:
++	case TMF_RESP_FUNC_COMPLETE:
++	case TMF_RESP_FUNC_FAILED:
++		res = asd_clear_nexus(task);
++		break;
++	case TMF_RESP_INVALID_FRAME:
++	case TMF_RESP_OVERLAPPED_TAG:
++	case TMF_RESP_FUNC_ESUPP:
++	case TMF_RESP_NO_LUN:
++		goto out_done; break;
++	}
++	/* In the following we assume that the managing layer
++	 * will _never_ make a mistake, when issuing ABORT TASK.
++	 */
++	switch (res) {
++	default:
++		res = asd_clear_nexus(task);
++		/* fallthrough */
++	case TC_NO_ERROR + 0xFF00:
++	case TMF_RESP_FUNC_COMPLETE:
++		break;
++	/* The task hasn't been sent to the device xor we never got
++	 * a (sane) Response IU for the ABORT TASK TMF.
++	 */
++	case TF_NAK_RECV + 0xFF00:
++		res = TMF_RESP_INVALID_FRAME;
++		break;
++	case TF_TMF_TASK_DONE + 0xFF00:	/* done but not reported yet */
++		res = TMF_RESP_FUNC_FAILED;
++		wait_for_completion_timeout(&tascb->completion,
++					    AIC94XX_SCB_TIMEOUT);
++		spin_lock_irqsave(&task->task_state_lock, flags);
++		if (task->task_state_flags & SAS_TASK_STATE_DONE)
++			res = TMF_RESP_FUNC_COMPLETE;
++		spin_unlock_irqrestore(&task->task_state_lock, flags);
++		goto out_done; break;
++	case TF_TMF_NO_TAG + 0xFF00:
++	case TF_TMF_TAG_FREE + 0xFF00: /* the tag is in the free list */
++	case TF_TMF_NO_CTX + 0xFF00: /* not in seq, or proto != SSP */
++	case TF_TMF_NO_CONN_HANDLE + 0xFF00: /* no such device */
++		res = TMF_RESP_FUNC_COMPLETE;
++		goto out_done; break;
++	}
++out_done:
++	if (res == TMF_RESP_FUNC_COMPLETE) {
++		task->lldd_task = NULL;
++		mb();
++		asd_ascb_free(tascb);
++	}
++out:
++	asd_ascb_free(ascb);
++	ASD_DPRINTK("task 0x%p aborted, res: 0x%x\n", task, res);
++	return res;
++}
 +
-+	if (ex->phy_attr)
-+		ex->phy_attr[phy_id] = disc_resp[44] & 0x0F;
++/**
++ * asd_initiate_ssp_tmf -- send a TMF to an I_T_L or I_T_L_Q nexus
++ * @dev: pointer to struct domain_device of interest
++ * @lun: pointer to u8[8] which is the LUN
++ * @tmf: the TMF to be performed (see sas_task.h or the SAS spec)
++ * @index: the transaction context of the task to be queried if QT TMF
++ *
++ * This function is used to send ABORT TASK SET, CLEAR ACA,
++ * CLEAR TASK SET, LU RESET and QUERY TASK TMFs.
++ *
++ * No SCBs should be queued to the I_T_L nexus when this SCB is
++ * pending.
++ *
++ * Returns: TMF response code (see sas_task.h or the SAS spec)
++ */
++static int asd_initiate_ssp_tmf(struct domain_device *dev, u8 *lun,
++				int tmf, int index)
++{
++	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
++	struct asd_ascb *ascb;
++	int res = 1;
++	struct scb *scb;
 +
-+	if (disc_resp[14] & 1)
-+		dev_str = "SATA Host";
-+	else if (disc_resp[15] & 0x80)
-+		dev_str = "SATA Port Selector";
-+	else if (disc_resp[15] & 1)
-+		dev_str = "SATA device";
++	if (!(dev->tproto & SAS_PROTO_SSP))
++		return TMF_RESP_FUNC_ESUPP;
++
++	ascb = asd_ascb_alloc_list(asd_ha, &res, GFP_KERNEL);
++	if (!ascb)
++		return -ENOMEM;
++	scb = ascb->scb;
++
++	if (tmf == TMF_QUERY_TASK)
++		scb->header.opcode = QUERY_SSP_TASK;
 +	else
-+		dev_str = attached_dev_type[(disc_resp[12] & 0x70) >> 4];
-+	printf(" Attached device: %15s    Link rate: %15s\n",
-+	       dev_str, phy_link_rate[disc_resp[13] & 0xf]);
-+
-+	printf(" Tproto: %15s    Iproto: %15s\n",
-+	       proto_table[(disc_resp[15] & 0xe) >> 1],
-+	       proto_table[(disc_resp[14] & 0xe) >> 1]);
++		scb->header.opcode = INITIATE_SSP_TMF;
 +	
-+	printf(" Programmed MIN-MAX linkrate: %s - %s\n",
-+	       phy_link_rate[(disc_resp[40] & 0xF0)>>4],
-+	       phy_link_rate[(disc_resp[41] & 0xF0)>>4]);
++	scb->ssp_tmf.proto_conn_rate  = (1 << 4); /* SSP */
++	scb->ssp_tmf.proto_conn_rate |= dev->linkrate;
++	/* SSP frame header */
++	scb->ssp_tmf.ssp_frame.frame_type = SSP_TASK;
++	memcpy(scb->ssp_tmf.ssp_frame.hashed_dest_addr,
++	       dev->hashed_sas_addr, HASHED_SAS_ADDR_SIZE);
++	memcpy(scb->ssp_tmf.ssp_frame.hashed_src_addr,
++	       dev->port->ha->hashed_sas_addr, HASHED_SAS_ADDR_SIZE);
++	scb->ssp_tmf.ssp_frame.tptt = cpu_to_be16(0xFFFF);
++	/* SSP Task IU */
++	memcpy(scb->ssp_tmf.ssp_task.lun, lun, 8);
++	scb->ssp_tmf.ssp_task.tmf = tmf;
 +
-+	printf(" Hardware   MIN-MAX linkrate: %s - %s\n",
-+	       phy_link_rate[(disc_resp[40] & 0x0F)],
-+	       phy_link_rate[(disc_resp[41] & 0x0F)]);
++	scb->ssp_tmf.sister_scb = cpu_to_le16(0xFFFF);
++	scb->ssp_tmf.conn_handle= cpu_to_le16((u16)(unsigned long)
++					      dev->lldd_dev);
++	scb->ssp_tmf.retry_count = 1;
++	scb->ssp_tmf.itnl_to = cpu_to_le16(ITNL_TIMEOUT_CONST);
++	if (tmf == TMF_QUERY_TASK)
++		scb->ssp_tmf.index = cpu_to_le16(index);
 +
-+	printf(" %s phy\n", (disc_resp[43] & 0x80) ? "Virtual" : "Physical");
-+	printf(" Partial pathway timeout value: %d microseconds\n",
-+	       disc_resp[43] & 0x0F);
-+	
-+	printf(" Connector type: %s\n", conn_type[disc_resp[45] & 0x7F]);
-+	printf(" Connector element index: %d\n", disc_resp[46]);
-+	printf(" Connector physical link: %d\n", disc_resp[47]);
-+out:
-+	return 0;	
-+}
++	res = asd_enqueue_internal(ascb, asd_tmf_tasklet_complete,
++				   asd_tmf_timedout);
++	if (res)
++		goto out_err;
++	wait_for_completion(&ascb->completion);
++	res = (int) (unsigned long) ascb->uldd_task;
 +
-+#define RPEL_REQ_SIZE  16
-+#define RPEL_RESP_SIZE 32
-+
-+static unsigned char rpel_req[RPEL_REQ_SIZE] = { 0x40, 0x11, 0, };
-+static unsigned char rpel_resp[RPEL_RESP_SIZE];
-+
-+static int report_phy_error_log(char *smp_portal_name, int phy_id)
-+{
-+	int res;
-+	
-+	rpel_req[9] = phy_id;
-+
-+	res = do_smp_func(smp_portal_name, rpel_req, RPEL_REQ_SIZE,
-+			  rpel_resp, RPEL_RESP_SIZE);
-+	if (res != RPEL_RESP_SIZE) {
-+		printf("%s: error reading error log for phy %d (%d)\n",
-+		       prog, phy_id, res);
-+		goto out;
++	switch (res) {
++	case TC_NO_ERROR + 0xFF00:
++		res = TMF_RESP_FUNC_COMPLETE;
++		break;
++	case TF_NAK_RECV + 0xFF00:
++		res = TMF_RESP_INVALID_FRAME;
++		break;
++	case TF_TMF_TASK_DONE + 0xFF00:
++		res = TMF_RESP_FUNC_FAILED;
++		break;
++	case TF_TMF_NO_TAG + 0xFF00:
++	case TF_TMF_TAG_FREE + 0xFF00: /* the tag is in the free list */
++	case TF_TMF_NO_CTX + 0xFF00: /* not in seq, or proto != SSP */
++	case TF_TMF_NO_CONN_HANDLE + 0xFF00: /* no such device */
++		res = TMF_RESP_FUNC_COMPLETE;
++		break;
++	default:
++		ASD_DPRINTK("%s: converting result 0x%x to TMF_RESP_FUNC_FAILED\n",
++			    __FUNCTION__, res);
++		res = TMF_RESP_FUNC_FAILED;
++		break;
 +	}
-+	MI_PRINTD(" Invalid DW count:", be32_to_cpu(rpel_resp[12]));
-+	MI_PRINTD(" RD error count:", be32_to_cpu(rpel_resp[16]));
-+	MI_PRINTD(" DW sync loss count:", be32_to_cpu(rpel_resp[20]));
-+	MI_PRINTD(" Reset problem count:", be32_to_cpu(rpel_resp[24]));
-+out:
-+	return 0;
++out_err:
++	asd_ascb_free(ascb);
++	return res;
 +}
 +
-+#define RRI_REQ_SIZE  16
-+#define RRI_RESP_SIZE 44
-+
-+static unsigned char rri_req[RRI_REQ_SIZE] = { 0x40, 0x13, 0, };
-+static unsigned char rri_resp[RRI_RESP_SIZE];
-+
-+static int show_routing_table(char *smp_portal_name, int phy_id,
-+			      struct expander *ex)
++int asd_abort_task_set(struct domain_device *dev, u8 *lun)
 +{
-+	struct route_table_entry *rt;
-+	int res, i, last_non_zero = -1;
++	int res = asd_initiate_ssp_tmf(dev, lun, TMF_ABORT_TASK_SET, 0);
 +
-+	if (!ex->phy_attr || ex->phy_attr[phy_id] != TABLE_ROUTING)
-+		return 0;
-+
-+	rt = malloc(sizeof(struct route_table_entry)*ex->route_indexes);
-+	if (!rt)
-+		return 0;
-+
-+	rri_req[9] = phy_id;
-+
-+	for (i = 0; i < ex->route_indexes; i++) {
-+		*(uint16_t *)(rri_req+6) = cpu_to_be16(i);
-+		res = do_smp_func(smp_portal_name, rri_req, RRI_REQ_SIZE,
-+				  rri_resp, RRI_RESP_SIZE);
-+		if (res != RRI_RESP_SIZE) {
-+			printf("Error getting phy %d route index %d (%d)\n",
-+			       phy_id, i, res);
-+			goto out;
-+		}
-+		if (rri_resp[2] != 0)
-+			break;
-+		if (be16_to_cpu(rri_resp[6]) != i) {
-+			printf("Expander FW error for phy %d index %d\n",
-+			       phy_id, i);
-+			goto out;
-+		}
-+		rt[i].disabled = rri_resp[12] & 0x80 ? 1 : 0;
-+		memcpy(rt[i].routed_sas_addr, rri_resp+16, SAS_ADDR_SIZE);
-+		if (rt[i].routed_sas_addr[0])
-+			last_non_zero = i;
-+	}
-+	printf(" Routing Table\n");
-+	if (last_non_zero == -1)
-+		printf("  Empty (all zero)\n");
-+	else {
-+		for (i = 0; i <= last_non_zero; i++)
-+			printf("  %02d %8s %016llx\n",
-+			       i, rt[i].disabled ? "disabled" : "enabled",
-+			       SAS_ADDR(rt[i].routed_sas_addr));
-+	}
-+out:
-+	free(rt);
-+	return 0;
++	if (res == TMF_RESP_FUNC_COMPLETE)
++		asd_clear_nexus_I_T_L(dev, lun);
++	return res;
 +}
 +
-+static int discover_expander(char *smp_portal_name, struct expander *ex)
++int asd_clear_aca(struct domain_device *dev, u8 *lun)
 +{
-+	int i;
++	int res = asd_initiate_ssp_tmf(dev, lun, TMF_CLEAR_ACA, 0);
 +
-+	for (i = 0; i < ex->num_phys; i++) {
-+		printf("\n");
-+		discover_phy(smp_portal_name, i, ex);
-+		report_phy_error_log(smp_portal_name, i);
-+		show_routing_table(smp_portal_name, i, ex);
-+	}
-+
-+	return 0;
++	if (res == TMF_RESP_FUNC_COMPLETE)
++		asd_clear_nexus_I_T_L(dev, lun);
++	return res;
 +}
 +
-+static void print_info(void)
++int asd_clear_task_set(struct domain_device *dev, u8 *lun)
 +{
-+	printf("%s <smp portal file>\n", prog);
-+	printf("\tWhere <smp portal file> is the binary attribute file of the"
-+	       "\n\texpander device in sysfs.\n");
++	int res = asd_initiate_ssp_tmf(dev, lun, TMF_CLEAR_TASK_SET, 0);
++
++	if (res == TMF_RESP_FUNC_COMPLETE)
++		asd_clear_nexus_I_T_L(dev, lun);
++	return res;
 +}
 +
-+int main(int argc, char *argv[])
++int asd_lu_reset(struct domain_device *dev, u8 *lun)
 +{
-+	prog = strrchr(argv[0], '/');
-+	if (prog)
-+		prog++;
-+	else
-+		prog = argv[0];
++	int res = asd_initiate_ssp_tmf(dev, lun, TMF_LU_RESET, 0);
 +
-+	if (argc < 2) {
-+		print_info();
-+		return 0;
-+	} else {
-+		struct expander ex;
-+
-+		memset(&ex, 0, sizeof(ex));
-+		
-+		mi_expander(argv[1], &ex);
-+		rg_expander(argv[1], &ex);
-+		discover_expander(argv[1], &ex);
-+		if (ex.phy_attr)
-+			free(ex.phy_attr);
-+	}
-+	return 0;
++	if (res == TMF_RESP_FUNC_COMPLETE)
++		asd_clear_nexus_I_T_L(dev, lun);
++	return res;	
 +}
++
++/**
++ * asd_query_task -- send a QUERY TASK TMF to an I_T_L_Q nexus
++ * task: pointer to sas_task struct of interest
++ *
++ * Returns: TMF_RESP_FUNC_COMPLETE if the task is not in the task set,
++ * or TMF_RESP_FUNC_SUCC if the task is in the task set.
++ *
++ * Normally the management layer sets the task to aborted state,
++ * and then calls query task and then abort task.
++ */
++int asd_query_task(struct sas_task *task)
++{
++	struct asd_ascb *ascb = task->lldd_task;
++	int index;
++
++	if (ascb) {
++		index = ascb->tc_index;
++		return asd_initiate_ssp_tmf(task->dev, task->ssp_task.LUN,
++					    TMF_QUERY_TASK, index);
++	}
++	return TMF_RESP_FUNC_COMPLETE;
++}
+
+
