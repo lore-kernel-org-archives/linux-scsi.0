@@ -1,27 +1,24 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [PATCH 2.6.13 19/20] aic94xx: aic94xx_task.c Implements the Execute
- Task SCSI RPC
-Date: Fri, 09 Sep 2005 15:37:09 -0400
-Message-ID: <4321E465.2060100@adaptec.com>
+Subject: [PATCH 2.6.13 14/20] aic94xx: aic94xx_scb.c Sequencer control block
+ management
+Date: Fri, 09 Sep 2005 15:35:45 -0400
+Message-ID: <4321E411.6000701@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:58053 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1030360AbVIIThP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 15:37:15 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030356AbVIITgd@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
 
-diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi/aic94xx/aic94xx_task.c linux-2.6.13/drivers/scsi/aic94xx/aic94xx_task.c
---- linux-2.6.13-orig/drivers/scsi/aic94xx/aic94xx_task.c	1969-12-31 19:00:00.000000000 -0500
-+++ linux-2.6.13/drivers/scsi/aic94xx/aic94xx_task.c	2005-09-09 11:21:23.000000000 -0400
-@@ -0,0 +1,645 @@
+diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi/aic94xx/aic94xx_scb.c linux-2.6.13/drivers/scsi/aic94xx/aic94xx_scb.c
+--- linux-2.6.13-orig/drivers/scsi/aic94xx/aic94xx_scb.c	1969-12-31 19:00:00.000000000 -0500
++++ linux-2.6.13/drivers/scsi/aic94xx/aic94xx_scb.c	2005-09-09 11:21:23.000000000 -0400
+@@ -0,0 +1,726 @@
 +/*
-+ * Aic94xx SAS/SATA Tasks
++ * Aic94xx SAS/SATA driver SCB management.
 + *
 + * Copyright (C) 2005 Adaptec, Inc.  All rights reserved.
 + * Copyright (C) 2005 Luben Tuikov <luben_tuikov@adaptec.com>
@@ -44,625 +41,705 @@ diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi
 + * along with the aic94xx driver; if not, write to the Free Software
 + * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 + *
-+ * $Id: //depot/aic94xx/aic94xx_task.c#50 $
++ * $Id: //depot/aic94xx/aic94xx_scb.c#70 $
 + */
 +
-+#include <linux/spinlock.h>
-+#include <scsi/sas/sas_task.h>
-+#include <scsi/sas/sas_frames.h>
++#include <linux/pci.h>
++
 +#include "aic94xx.h"
-+#include "aic94xx_sas.h"
++#include "aic94xx_reg.h"
 +#include "aic94xx_hwi.h"
++#include "aic94xx_seq.h"
 +
-+static void asd_unbuild_ata_ascb(struct asd_ascb *a);
-+static void asd_unbuild_smp_ascb(struct asd_ascb *a);
-+static void asd_unbuild_ssp_ascb(struct asd_ascb *a);
++#include "aic94xx_dump.h"
 +
-+static inline void asd_can_dequeue(struct asd_ha_struct *asd_ha, int num)
++/* ---------- EMPTY SCB ---------- */
++
++#define DL_PHY_MASK      7
++#define BYTES_DMAED      0
++#define PRIMITIVE_RECVD  0x08
++#define PHY_EVENT        0x10
++#define LINK_RESET_ERROR 0x18
++#define TIMER_EVENT      0x20
++#define REQ_TASK_ABORT   0xF0
++#define REQ_DEVICE_RESET 0xF1
++#define SIGNAL_NCQ_ERROR 0xF2
++#define CLEAR_NCQ_ERROR  0xF3
++
++#define PHY_EVENTS_STATUS (CURRENT_LOSS_OF_SIGNAL | CURRENT_OOB_DONE   \
++			   | CURRENT_SPINUP_HOLD | CURRENT_GTO_TIMEOUT \
++			   | CURRENT_OOB_ERROR)
++
++static inline void get_lrate_mode(struct asd_phy *phy, u8 oob_mode)
 +{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&asd_ha->seq.pend_q_lock, flags);
-+	asd_ha->seq.can_queue += num;
-+	spin_unlock_irqrestore(&asd_ha->seq.pend_q_lock, flags);
++	switch (oob_mode & 7) {
++	case PHY_SPEED_60:
++		phy->sas_phy.linkrate = PHY_LINKRATE_6;
++		break;
++	case PHY_SPEED_30:
++		phy->sas_phy.linkrate = PHY_LINKRATE_3;
++		break;
++	case PHY_SPEED_15:
++		phy->sas_phy.linkrate = PHY_LINKRATE_1_5;
++		break;
++	}
++	if (oob_mode & SAS_MODE)
++		phy->sas_phy.oob_mode = SAS_OOB_MODE;
++	else if (oob_mode & SATA_MODE)
++		phy->sas_phy.oob_mode = SATA_OOB_MODE;
 +}
 +
-+/* PCI_DMA_... to our direction translation.
++static inline void asd_phy_event_tasklet(struct asd_ascb *ascb,
++					 struct done_list_struct *dl)
++{
++	struct asd_ha_struct *asd_ha = ascb->ha;
++	struct sas_ha_struct *sas_ha = &asd_ha->sas_ha;
++	int phy_id = dl->status_block[0] & DL_PHY_MASK;
++	struct asd_phy *phy = &asd_ha->phys[phy_id];
++
++	u8 oob_status = dl->status_block[1] & PHY_EVENTS_STATUS;
++	u8 oob_mode   = dl->status_block[2];
++
++	switch (oob_status) {
++	case CURRENT_LOSS_OF_SIGNAL:
++		/* directly attached device was removed */
++		ASD_DPRINTK("phy%d: device unplugged\n", phy_id);
++		asd_turn_led(asd_ha, phy_id, 0);
++		sas_phy_disconnected(&phy->sas_phy);
++		sas_ha->notify_phy_event(&phy->sas_phy, PHYE_LOSS_OF_SIGNAL);
++		break;
++	case CURRENT_OOB_DONE:
++		/* hot plugged device */
++		asd_turn_led(asd_ha, phy_id, 1);
++		get_lrate_mode(phy, oob_mode);
++		ASD_DPRINTK("phy%d device plugged: lrate:0x%x, proto:0x%x\n",
++			    phy_id, phy->sas_phy.linkrate, phy->sas_phy.iproto);
++		sas_ha->notify_phy_event(&phy->sas_phy, PHYE_OOB_DONE);
++		break;
++	case CURRENT_SPINUP_HOLD:
++		/* hot plug SATA, no COMWAKE sent */
++		asd_turn_led(asd_ha, phy_id, 1);
++		sas_ha->notify_phy_event(&phy->sas_phy, PHYE_SPINUP_HOLD);
++		break;
++	case CURRENT_GTO_TIMEOUT:
++	case CURRENT_OOB_ERROR:
++		ASD_DPRINTK("phy%d error while OOB: oob status:0x%x\n", phy_id,
++			    dl->status_block[1]);
++		asd_turn_led(asd_ha, phy_id, 0);
++		sas_phy_disconnected(&phy->sas_phy);
++		sas_ha->notify_phy_event(&phy->sas_phy, PHYE_OOB_ERROR);
++		break;
++	}
++}
++
++/* If phys are enabled sparsely, this will do the right thing. */
++static inline unsigned ord_phy(struct asd_ha_struct *asd_ha,
++			       struct asd_phy *phy)
++{
++	u8 enabled_mask = asd_ha->hw_prof.enabled_phys;
++	int i, k = 0;
++
++	for_each_phy(enabled_mask, enabled_mask, i) {
++		if (&asd_ha->phys[i] == phy)
++			return k;
++		k++;
++	}
++}
++
++/**
++ * asd_get_attached_sas_addr -- extract/generate attached SAS address
++ * phy: pointer to asd_phy
++ * sas_addr: pointer to buffer where the SAS address is to be written
++ *
++ * This function extracts the SAS address from an IDENTIFY frame
++ * received.  If OOB is SATA, then a SAS address is generated from the
++ * HA tables.
++ *
++ * LOCKING: the frame_rcvd_lock needs to be held since this parses the frame
++ * buffer.
 + */
-+static const u8 data_dir_flags[] = {
-+	[PCI_DMA_BIDIRECTIONAL] = DATA_DIR_BYRECIPIENT,	/* UNSPECIFIED */
-+	[PCI_DMA_TODEVICE]      = DATA_DIR_OUT, /* OUTBOUND */
-+	[PCI_DMA_FROMDEVICE]    = DATA_DIR_IN, /* INBOUND */
-+	[PCI_DMA_NONE]          = DATA_DIR_NONE, /* NO TRANSFER */
-+};
-+
-+static inline int asd_map_scatterlist(struct sas_task *task,
-+				      struct sg_el *sg_arr,
-+				      unsigned long gfp_flags)
++static inline void asd_get_attached_sas_addr(struct asd_phy *phy, u8 *sas_addr)
 +{
-+	struct asd_ascb *ascb = task->lldd_task;
-+	struct asd_ha_struct *asd_ha = ascb->ha;
-+	struct scatterlist *sc;
-+	int num_sg, res;
++	if (phy->sas_phy.frame_rcvd[0] == 0x34
++	    && phy->sas_phy.oob_mode == SATA_OOB_MODE) {
++		struct asd_ha_struct *asd_ha = phy->sas_phy.ha->lldd_ha;
++		/* FIS device-to-host */
++		u64 addr = be64_to_cpu(*(__be64 *)phy->phy_desc->sas_addr);
 +
-+	if (task->data_dir == PCI_DMA_NONE)
-+		return 0;
-+
-+	if (task->num_scatter == 0) {
-+		void *p = task->scatter;
-+		dma_addr_t dma = pci_map_single(asd_ha->pcidev, p,
-+						task->total_xfer_len,
-+						task->data_dir);
-+		sg_arr[0].bus_addr = cpu_to_le64((u64)dma);
-+		sg_arr[0].size = cpu_to_le32(task->total_xfer_len);
-+		sg_arr[0].flags |= ASD_SG_EL_LIST_EOL;
-+		return 0;
-+	}
-+
-+	num_sg = pci_map_sg(asd_ha->pcidev, task->scatter, task->num_scatter,
-+			    task->data_dir);
-+	if (num_sg == 0)
-+		return -ENOMEM;
-+
-+	if (num_sg > 3) {
-+		int i;
-+
-+		ascb->sg_arr = asd_alloc_coherent(asd_ha,
-+						  num_sg*sizeof(struct sg_el),
-+						  gfp_flags);
-+		if (!ascb->sg_arr) {
-+			res = -ENOMEM;
-+			goto err_unmap;
-+		}
-+		for (sc = task->scatter, i = 0; i < num_sg; i++, sc++) {
-+			struct sg_el *sg =
-+				&((struct sg_el *)ascb->sg_arr->vaddr)[i];
-+			sg->bus_addr = cpu_to_le64((u64)sg_dma_address(sc));
-+			sg->size = cpu_to_le32((u32)sg_dma_len(sc));
-+			if (i == num_sg-1)
-+				sg->flags |= ASD_SG_EL_LIST_EOL;
-+		}
-+
-+		for (sc = task->scatter, i = 0; i < 2; i++, sc++) {
-+			sg_arr[i].bus_addr =
-+				cpu_to_le64((u64)sg_dma_address(sc));
-+			sg_arr[i].size = cpu_to_le32((u32)sg_dma_len(sc));
-+		}
-+		sg_arr[1].next_sg_offs = 2 * sizeof(*sg_arr);
-+		sg_arr[1].flags |= ASD_SG_EL_LIST_EOS;
-+
-+		memset(&sg_arr[2], 0, sizeof(*sg_arr));
-+		sg_arr[2].bus_addr=cpu_to_le64((u64)ascb->sg_arr->dma_handle);
++		addr += asd_ha->hw_prof.sata_name_base + ord_phy(asd_ha, phy);
++		*(__be64 *)sas_addr = cpu_to_be64(addr);
 +	} else {
-+		int i;
-+		for (sc = task->scatter, i = 0; i < num_sg; i++, sc++) {
-+			sg_arr[i].bus_addr =
-+				cpu_to_le64((u64)sg_dma_address(sc));
-+			sg_arr[i].size = cpu_to_le32((u32)sg_dma_len(sc));
-+		}
-+		sg_arr[i-1].flags |= ASD_SG_EL_LIST_EOL;
++		struct sas_identify_frame *idframe =
++			(void *) phy->sas_phy.frame_rcvd;
++		memcpy(sas_addr, idframe->sas_addr, SAS_ADDR_SIZE);
 +	}
-+	
-+	return 0;
-+err_unmap:
-+	pci_unmap_sg(asd_ha->pcidev, task->scatter, task->num_scatter,
-+		     task->data_dir);
-+	return res;
 +}
 +
-+static inline void asd_unmap_scatterlist(struct asd_ascb *ascb)
++static inline void asd_bytes_dmaed_tasklet(struct asd_ascb *ascb,
++					   struct done_list_struct *dl,
++					   int edb_id, int phy_id)
 +{
-+	struct asd_ha_struct *asd_ha = ascb->ha;
-+	struct sas_task *task = ascb->uldd_task;
-+
-+	if (task->data_dir == PCI_DMA_NONE)
-+		return;
-+
-+	if (task->num_scatter == 0) {
-+		dma_addr_t dma = (dma_addr_t)
-+		       le64_to_cpu(ascb->scb->ssp_task.sg_element[0].bus_addr);
-+		pci_unmap_single(ascb->ha->pcidev, dma, task->total_xfer_len,
-+				 task->data_dir);
-+		return;
-+	}
-+	
-+	asd_free_coherent(asd_ha, ascb->sg_arr);
-+	pci_unmap_sg(asd_ha->pcidev, task->scatter, task->num_scatter,
-+		     task->data_dir);
-+}
-+
-+/* ---------- Task complete tasklet ---------- */
-+
-+static void asd_get_response_tasklet(struct asd_ascb *ascb,
-+				     struct done_list_struct *dl)
-+{
-+	struct asd_ha_struct *asd_ha = ascb->ha;
-+	struct sas_task *task = ascb->uldd_task;
-+	struct task_status_struct *ts = &task->task_status;
 +	unsigned long flags;
-+	struct tc_resp_sb_struct {
-+		__le16 index_escb;
-+		u8     len_lsb;
-+		u8     flags;
-+	} __attribute__ ((packed)) *resp_sb = (void *) dl->status_block;
++	int edb_el = edb_id + ascb->edb_index;
++	struct asd_dma_tok *edb = ascb->ha->seq.edb_arr[edb_el];
++	struct asd_phy *phy = &ascb->ha->phys[phy_id];
++	struct sas_ha_struct *sas_ha = phy->sas_phy.ha;
++	u16 size = ((dl->status_block[3] & 7) << 8) | dl->status_block[2];
 +
-+/* 	int  size   = ((resp_sb->flags & 7) << 8) | resp_sb->len_lsb; */
-+	int  edb_id = ((resp_sb->flags & 0x70) >> 4)-1;
-+	struct asd_ascb *escb;
-+	struct asd_dma_tok *edb;
-+	void *r;
++	size = min(size, (u16) sizeof(phy->frame_rcvd));
 +
-+	spin_lock_irqsave(&asd_ha->seq.tc_index_lock, flags);
-+	escb = asd_tc_index_find(&asd_ha->seq,
-+				 (int)le16_to_cpu(resp_sb->index_escb));
-+	spin_unlock_irqrestore(&asd_ha->seq.tc_index_lock, flags);
-+
-+	if (!escb) {
-+		ASD_DPRINTK("Uh-oh! No escb for this dl?!\n");
-+		return;
-+	}
-+	
-+	ts->buf_valid_size = 0;
-+	edb = asd_ha->seq.edb_arr[edb_id + escb->edb_index];
-+	r = edb->vaddr;
-+	if (task->task_proto == SAS_PROTO_SSP) {
-+		struct ssp_response_iu *iu =
-+			r + 16 + sizeof(struct ssp_frame_hdr);
-+
-+		ts->residual = le32_to_cpu(*(__le32 *)r);
-+		ts->resp = SAS_TASK_COMPLETE;
-+		if (iu->datapres == 0)
-+			ts->stat = iu->status;
-+		else if (iu->datapres == 1)
-+			ts->stat = iu->resp_data[3];
-+		else if (iu->datapres == 2) {
-+			ts->stat = SAM_CHECK_COND;
-+			ts->buf_valid_size = min((u32) SAS_STATUS_BUF_SIZE,
-+					 be32_to_cpu(iu->sense_data_len));
-+			memcpy(ts->buf, iu->sense_data, ts->buf_valid_size);
-+			if (iu->status != SAM_CHECK_COND) {
-+				ASD_DPRINTK("device %llx sent sense data, but "
-+					    "stat(0x%x) is not CHECK_CONDITION"
-+					    "\n",
-+					    SAS_ADDR(task->dev->sas_addr),
-+					    ts->stat);
-+			}
-+		}
-+	}  else {
-+		struct ata_task_resp *resp = (void *) &ts->buf[0];
-+		
-+		ts->residual = le32_to_cpu(*(__le32 *)r);
-+
-+		if (SAS_STATUS_BUF_SIZE >= sizeof(*resp)) {
-+			resp->frame_len = le16_to_cpu(*(__le16 *)(r+6));
-+			memcpy(&resp->ending_fis[0], r+16, 24);
-+			ts->buf_valid_size = sizeof(*resp);
-+		}
-+	}
-+
-+	asd_invalidate_edb(escb, edb_id);
++	spin_lock_irqsave(&phy->sas_phy.frame_rcvd_lock, flags);
++	memcpy(phy->sas_phy.frame_rcvd, edb->vaddr, size);
++	phy->sas_phy.frame_rcvd_size = size;
++	asd_get_attached_sas_addr(phy, phy->sas_phy.attached_sas_addr);
++	spin_unlock_irqrestore(&phy->sas_phy.frame_rcvd_lock, flags);
++	asd_dump_frame_rcvd(phy, dl);
++	sas_ha->notify_port_event(&phy->sas_phy, PORTE_BYTES_DMAED);
 +}
 +
-+static void asd_task_tasklet_complete(struct asd_ascb *ascb,
++static inline void asd_link_reset_err_tasklet(struct asd_ascb *ascb,
++					      struct done_list_struct *dl,
++					      int phy_id)
++{
++	struct asd_ha_struct *asd_ha = ascb->ha;
++	struct sas_ha_struct *sas_ha = &asd_ha->sas_ha;
++	struct sas_phy *sas_phy = sas_ha->sas_phy[phy_id];
++	u8 lr_error = dl->status_block[1];
++	u8 retries_left = dl->status_block[2];
++
++	switch (lr_error) {
++	case 0:
++		ASD_DPRINTK("phy%d: Receive ID timer expired\n", phy_id);
++		break;
++	case 1:
++		ASD_DPRINTK("phy%d: Loss of signal\n", phy_id);
++		break;
++	case 2:
++		ASD_DPRINTK("phy%d: Loss of dword sync\n", phy_id);
++		break;
++	case 3:
++		ASD_DPRINTK("phy%d: Receive FIS timeout\n", phy_id);
++		break;
++	default:
++		ASD_DPRINTK("phy%d: unknown link reset error code: 0x%x\n",
++			    phy_id, lr_error);
++		break;
++	}
++
++	asd_turn_led(asd_ha, phy_id, 0);
++	sas_phy_disconnected(sas_phy);
++	sas_ha->notify_port_event(sas_phy, PORTE_LINK_RESET_ERR);
++
++	if (retries_left == 0) {
++		int num = 1;
++		struct asd_ascb *cp = asd_ascb_alloc_list(ascb->ha, &num,
++							  GFP_ATOMIC);
++		if (!cp) {
++			asd_printk("%s: out of memory\n", __FUNCTION__);
++			goto out;
++		}
++		ASD_DPRINTK("phy%d: retries:0 performing link reset seq\n",
++			    phy_id);
++		asd_build_control_phy(cp, phy_id, ENABLE_PHY);
++		if (asd_post_ascb_list(ascb->ha, cp, 1) != 0)
++			asd_ascb_free(cp);
++	}
++out:
++	;
++}
++
++static inline void asd_primitive_rcvd_tasklet(struct asd_ascb *ascb,
++					      struct done_list_struct *dl,
++					      int phy_id)
++{
++	unsigned long flags;
++	struct sas_ha_struct *sas_ha = &ascb->ha->sas_ha;
++	struct sas_phy *sas_phy = sas_ha->sas_phy[phy_id];
++	u8  reg  = dl->status_block[1];
++	u32 cont = dl->status_block[2] << ((reg & 3)*8);
++
++	reg &= ~3;
++	switch (reg) {
++	case LmPRMSTAT0BYTE0:
++		switch (cont) {
++		case LmBROADCH:
++		case LmBROADRVCH0:
++		case LmBROADRVCH1:
++		case LmBROADSES:
++			ASD_DPRINTK("phy%d: BROADCAST change received:%d\n",
++				    phy_id, cont);
++			spin_lock_irqsave(&sas_phy->sas_prim_lock, flags);
++			sas_phy->sas_prim = ffs(cont);
++			spin_unlock_irqrestore(&sas_phy->sas_prim_lock, flags);
++			sas_ha->notify_port_event(sas_phy,PORTE_BROADCAST_RCVD);
++			break;
++
++		case LmUNKNOWNP:
++			ASD_DPRINTK("phy%d: unknown BREAK\n", phy_id);
++			break;
++
++		default:
++			ASD_DPRINTK("phy%d: primitive reg:0x%x, cont:0x%04x\n",
++				    phy_id, reg, cont);
++			break;
++		}
++		break;
++	case LmPRMSTAT1BYTE0:
++		switch (cont) {
++		case LmHARDRST:
++			ASD_DPRINTK("phy%d: HARD_RESET primitive rcvd\n",
++				    phy_id);
++			/* The sequencer disables all phys on that port.
++			 * We have to re-enable the phys ourselves. */
++			sas_ha->notify_port_event(sas_phy, PORTE_HARD_RESET);
++			break;
++			
++		default:
++			ASD_DPRINTK("phy%d: primitive reg:0x%x, cont:0x%04x\n",
++				    phy_id, reg, cont);
++			break;
++		}
++		break;
++	default:
++		ASD_DPRINTK("unknown primitive register:0x%x\n",
++			    dl->status_block[1]);
++		break;
++	}
++}
++
++/**
++ * asd_invalidate_edb -- invalidate an EDB and if necessary post the ESCB
++ * @ascb: pointer to Empty SCB
++ * @edb_id: index [0,6] to the empty data buffer which is to be invalidated
++ *
++ * After an EDB has been invalidated, if all EDBs in this ESCB have been
++ * invalidated, the ESCB is posted back to the sequencer.
++ * Context is tasklet/IRQ.
++ */
++void asd_invalidate_edb(struct asd_ascb *ascb, int edb_id)
++{
++	struct asd_seq_data *seq = &ascb->ha->seq;
++	struct empty_scb *escb = &ascb->scb->escb;
++	struct sg_el     *eb   = &escb->eb[edb_id];
++	struct asd_dma_tok *edb = seq->edb_arr[ascb->edb_index + edb_id];
++
++	memset(edb->vaddr, 0, ASD_EDB_SIZE);
++	eb->flags |= ELEMENT_NOT_VALID;
++	escb->num_valid--;
++
++	if (escb->num_valid == 0) {
++		int i;
++		/* ASD_DPRINTK("reposting escb: vaddr: 0x%p, "
++			    "dma_handle: 0x%08llx, next: 0x%08llx, "
++			    "index:%d, opcode:0x%02x\n",
++			    ascb->dma_scb.vaddr,
++			    (u64)ascb->dma_scb.dma_handle,
++			    le64_to_cpu(ascb->scb->header.next_scb),
++			    le16_to_cpu(ascb->scb->header.index),
++			    ascb->scb->header.opcode);
++		*/
++		escb->num_valid = ASD_EDBS_PER_SCB;
++		for (i = 0; i < ASD_EDBS_PER_SCB; i++)
++			escb->eb[i].flags = 0;
++		if (!list_empty(&ascb->list))
++			list_del_init(&ascb->list);
++		i = asd_post_escb_list(ascb->ha, ascb, 1);
++		if (i)
++			asd_printk("couldn't post escb, err:%d\n", i);
++	}
++}
++
++static void escb_tasklet_complete(struct asd_ascb *ascb,
++				  struct done_list_struct *dl)
++{
++	struct asd_ha_struct *asd_ha = ascb->ha;
++	struct sas_ha_struct *sas_ha = &asd_ha->sas_ha;
++	int edb = (dl->opcode & DL_PHY_MASK) - 1; /* [0xc1,0xc7] -> [0,6] */
++	u8  sb_opcode = dl->status_block[0];
++	int phy_id = sb_opcode & DL_PHY_MASK;
++	struct sas_phy *sas_phy = sas_ha->sas_phy[phy_id];
++
++	if (edb > 6 || edb < 0) {
++		ASD_DPRINTK("edb is 0x%x! dl->opcode is 0x%x\n",
++			    edb, dl->opcode);
++		ASD_DPRINTK("sb_opcode : 0x%x, phy_id: 0x%x\n",
++			    sb_opcode, phy_id);
++		ASD_DPRINTK("escb: vaddr: 0x%p, "
++			    "dma_handle: 0x%08llx, next: 0x%08llx, "
++			    "index:%d, opcode:0x%02x\n",
++			    ascb->dma_scb.vaddr,
++			    (u64)ascb->dma_scb.dma_handle,
++			    le64_to_cpu(ascb->scb->header.next_scb),
++			    le16_to_cpu(ascb->scb->header.index),
++			    ascb->scb->header.opcode);
++	}
++
++	sb_opcode &= ~DL_PHY_MASK;
++
++	switch (sb_opcode) {
++	case BYTES_DMAED:
++		ASD_DPRINTK("%s: phy%d: BYTES_DMAED\n", __FUNCTION__, phy_id);
++		asd_bytes_dmaed_tasklet(ascb, dl, edb, phy_id);
++		break;
++	case PRIMITIVE_RECVD:
++		ASD_DPRINTK("%s: phy%d: PRIMITIVE_RECVD\n", __FUNCTION__,
++			    phy_id);
++		asd_primitive_rcvd_tasklet(ascb, dl, phy_id);
++		break;
++	case PHY_EVENT:
++		ASD_DPRINTK("%s: phy%d: PHY_EVENT\n", __FUNCTION__, phy_id);
++		asd_phy_event_tasklet(ascb, dl);
++		break;
++	case LINK_RESET_ERROR:
++		ASD_DPRINTK("%s: phy%d: LINK_RESET_ERROR\n", __FUNCTION__,
++			    phy_id);
++		asd_link_reset_err_tasklet(ascb, dl, phy_id);
++		break;
++	case TIMER_EVENT:
++		ASD_DPRINTK("%s: phy%d: TIMER_EVENT, lost dw sync\n",
++			    __FUNCTION__, phy_id);
++		asd_turn_led(asd_ha, phy_id, 0);
++		/* the device is gone */
++		sas_phy_disconnected(sas_phy);
++		sas_ha->notify_port_event(sas_phy, PORTE_TIMER_EVENT);
++		break;
++	case REQ_TASK_ABORT:
++		ASD_DPRINTK("%s: phy%d: REQ_TASK_ABORT\n", __FUNCTION__,
++			    phy_id);
++		break;
++	case REQ_DEVICE_RESET:
++		ASD_DPRINTK("%s: phy%d: REQ_DEVICE_RESET\n", __FUNCTION__,
++			    phy_id);
++		break;
++	case SIGNAL_NCQ_ERROR:
++		ASD_DPRINTK("%s: phy%d: SIGNAL_NCQ_ERROR\n", __FUNCTION__,
++			    phy_id);
++		break;
++	case CLEAR_NCQ_ERROR:
++		ASD_DPRINTK("%s: phy%d: CLEAR_NCQ_ERROR\n", __FUNCTION__,
++			    phy_id);
++		break;
++	default:
++		ASD_DPRINTK("%s: phy%d: unknown event:0x%x\n", __FUNCTION__,
++			    phy_id, sb_opcode);
++		ASD_DPRINTK("edb is 0x%x! dl->opcode is 0x%x\n",
++			    edb, dl->opcode);
++		ASD_DPRINTK("sb_opcode : 0x%x, phy_id: 0x%x\n",
++			    sb_opcode, phy_id);
++		ASD_DPRINTK("escb: vaddr: 0x%p, "
++			    "dma_handle: 0x%08llx, next: 0x%08llx, "
++			    "index:%d, opcode:0x%02x\n",
++			    ascb->dma_scb.vaddr,
++			    (u64)ascb->dma_scb.dma_handle,
++			    le64_to_cpu(ascb->scb->header.next_scb),
++			    le16_to_cpu(ascb->scb->header.index),
++			    ascb->scb->header.opcode);
++		
++		break;
++	}
++
++	asd_invalidate_edb(ascb, edb);
++}
++
++int asd_init_post_escbs(struct asd_ha_struct *asd_ha)
++{
++	struct asd_seq_data *seq = &asd_ha->seq;
++	int i;
++
++	for (i = 0; i < seq->num_escbs; i++)
++		seq->escb_arr[i]->tasklet_complete = escb_tasklet_complete;
++
++	ASD_DPRINTK("posting %d escbs\n", i);
++	return asd_post_escb_list(asd_ha, seq->escb_arr[0], seq->num_escbs);
++}
++
++/* ---------- CONTROL PHY ---------- */
++
++#define CONTROL_PHY_STATUS (CURRENT_DEVICE_PRESENT | CURRENT_OOB_DONE   \
++			    | CURRENT_SPINUP_HOLD | CURRENT_GTO_TIMEOUT \
++			    | CURRENT_OOB_ERROR)
++
++/**
++ * control_phy_tasklet_complete -- tasklet complete for CONTROL PHY ascb
++ * @ascb: pointer to an ascb
++ * @dl: pointer to the done list entry
++ *
++ * This function completes a CONTROL PHY scb and frees the ascb.
++ * A note on LEDs:
++ *  - an LED blinks if there is IO though it,
++ *  - if a device is connected to the LED, it is lit,
++ *  - if no device is connected to the LED, is is dimmed (off).
++ */
++static void control_phy_tasklet_complete(struct asd_ascb *ascb,
++					 struct done_list_struct *dl)
++{
++	struct asd_ha_struct *asd_ha = ascb->ha;
++	struct scb *scb = ascb->scb;
++	struct control_phy *control_phy = &scb->control_phy;
++	u8 phy_id = control_phy->phy_id;
++	struct asd_phy *phy = &ascb->ha->phys[phy_id];
++
++	u8 status     = dl->status_block[0];
++	u8 oob_status = dl->status_block[1];
++	u8 oob_mode   = dl->status_block[2];
++	/* u8 oob_signals= dl->status_block[3]; */
++
++	if (status != 0) {
++		ASD_DPRINTK("%s: phy%d status block opcode:0x%x\n",
++			    __FUNCTION__, phy_id, status);
++		goto out;
++	}
++
++	switch (control_phy->sub_func) {
++	case DISABLE_PHY:
++		asd_ha->hw_prof.enabled_phys &= ~(1 << phy_id);
++		asd_turn_led(asd_ha, phy_id, 0);
++		asd_control_led(asd_ha, phy_id, 0);
++		ASD_DPRINTK("%s: disable phy%d\n", __FUNCTION__, phy_id);
++		break;
++
++	case ENABLE_PHY:
++		asd_control_led(asd_ha, phy_id, 1);
++		if (oob_status & CURRENT_OOB_DONE) {
++			asd_ha->hw_prof.enabled_phys |= (1 << phy_id);
++			get_lrate_mode(phy, oob_mode);
++			asd_turn_led(asd_ha, phy_id, 1);
++			ASD_DPRINTK("%s: phy%d, lrate:0x%x, proto:0x%x\n",
++				    __FUNCTION__, phy_id,phy->sas_phy.linkrate,
++				    phy->sas_phy.iproto);
++		} else if (oob_status & CURRENT_SPINUP_HOLD) {
++			asd_ha->hw_prof.enabled_phys |= (1 << phy_id);
++			asd_turn_led(asd_ha, phy_id, 1);
++			ASD_DPRINTK("%s: phy%d, spinup hold\n", __FUNCTION__,
++				    phy_id);
++		} else if (oob_status & CURRENT_ERR_MASK) {
++			asd_turn_led(asd_ha, phy_id, 0);
++			ASD_DPRINTK("%s: phy%d: error: oob status:0x%02x\n",
++				    __FUNCTION__, phy_id, oob_status);
++		} else if (oob_status & (CURRENT_HOT_PLUG_CNCT
++					 | CURRENT_DEVICE_PRESENT))  {
++			asd_ha->hw_prof.enabled_phys |= (1 << phy_id);
++			asd_turn_led(asd_ha, phy_id, 1);
++			ASD_DPRINTK("%s: phy%d: hot plug or device present\n",
++				    __FUNCTION__, phy_id);
++		} else {
++			asd_ha->hw_prof.enabled_phys |= (1 << phy_id);
++			asd_turn_led(asd_ha, phy_id, 0);
++			ASD_DPRINTK("%s: phy%d: no device present: "
++				    "oob_status:0x%x\n",
++				    __FUNCTION__, phy_id, oob_status);
++		}
++		break;
++	case RELEASE_SPINUP_HOLD:
++	case PHY_NO_OP:
++	case EXECUTE_HARD_RESET:
++		ASD_DPRINTK("%s: phy%d: sub_func:0x%x\n", __FUNCTION__,
++			    phy_id, control_phy->sub_func);
++		/* XXX finish */
++		break;
++	default:
++		ASD_DPRINTK("%s: phy%d: sub_func:0x%x?\n", __FUNCTION__,
++			    phy_id, control_phy->sub_func);
++		break;
++	}
++out:
++	asd_ascb_free(ascb);
++}
++
++static inline void set_speed_mask(u8 *speed_mask, struct asd_phy_desc *pd)
++{
++	/* disable all speeds, then enable defaults */
++	*speed_mask = SAS_SPEED_60_DIS | SAS_SPEED_30_DIS | SAS_SPEED_15_DIS
++		| SATA_SPEED_30_DIS | SATA_SPEED_15_DIS;
++	
++	switch (pd->max_sas_lrate) {
++	case PHY_LINKRATE_6:
++		*speed_mask &= ~SAS_SPEED_60_DIS;
++	default:
++	case PHY_LINKRATE_3:
++		*speed_mask &= ~SAS_SPEED_30_DIS;
++	case PHY_LINKRATE_1_5:
++		*speed_mask &= ~SAS_SPEED_15_DIS;
++	}
++
++	switch (pd->min_sas_lrate) {
++	case PHY_LINKRATE_6:
++		*speed_mask |= SAS_SPEED_30_DIS;
++	case PHY_LINKRATE_3:
++		*speed_mask |= SAS_SPEED_15_DIS;
++	default:
++	case PHY_LINKRATE_1_5:
++		/* nothing to do */
++		;
++	}
++
++	switch (pd->max_sata_lrate) {
++	case PHY_LINKRATE_3:
++		*speed_mask &= ~SATA_SPEED_30_DIS;
++	default:
++	case PHY_LINKRATE_1_5:
++		*speed_mask &= ~SATA_SPEED_15_DIS;
++	}
++	
++	switch (pd->min_sata_lrate) {
++	case PHY_LINKRATE_3:
++		*speed_mask |= SATA_SPEED_15_DIS;
++	default:
++	case PHY_LINKRATE_1_5:
++		/* nothing to do */
++		;
++	}
++}
++
++/**
++ * asd_build_control_phy -- build a CONTROL PHY SCB
++ * @ascb: pointer to an ascb
++ * @phy_id: phy id to control, integer
++ * @subfunc: subfunction, what to actually to do the phy
++ *
++ * This function builds a CONTROL PHY scb.  No allocation of any kind
++ * is performed. @ascb is allocated with the list function.
++ * The caller can override the ascb->tasklet_complete to point
++ * to its own callback function.  It must call asd_ascb_free()
++ * at its tasklet complete function.
++ * See the default implementation.
++ */
++void asd_build_control_phy(struct asd_ascb *ascb, int phy_id, u8 subfunc)
++{
++	struct asd_phy *phy = &ascb->ha->phys[phy_id];
++	struct scb *scb = ascb->scb;
++	struct control_phy *control_phy = &scb->control_phy;
++
++	scb->header.opcode = CONTROL_PHY;
++	control_phy->phy_id = (u8) phy_id;
++	control_phy->sub_func = subfunc;
++	
++	switch (subfunc) {
++	case EXECUTE_HARD_RESET:  /* 0x81 */
++	case ENABLE_PHY:          /* 0x01 */
++		/* decide hot plug delay */
++		control_phy->hot_plug_delay = HOTPLUG_DELAY_TIMEOUT;
++		
++		/* decide speed mask */
++		set_speed_mask(&control_phy->speed_mask, phy->phy_desc);
++
++		/* initiator port settings are in the hi nibble */
++		if (phy->sas_phy.role == PHY_ROLE_INITIATOR)
++			control_phy->port_type = SAS_PROTO_ALL << 4;
++		else if (phy->sas_phy.role == PHY_ROLE_TARGET)
++			control_phy->port_type = SAS_PROTO_ALL;
++		else
++			control_phy->port_type =
++				(SAS_PROTO_ALL << 4) | SAS_PROTO_ALL;
++
++		/* link reset retries, this should be nominal */
++		control_phy->link_reset_retries = 10;
++
++	case RELEASE_SPINUP_HOLD: /* 0x02 */
++		/* decide the func_mask */
++		control_phy->func_mask = FUNCTION_MASK_DEFAULT;
++		if (phy->phy_desc->flags & ASD_SATA_SPINUP_HOLD)
++			control_phy->func_mask &= ~SPINUP_HOLD_DIS;
++		else
++			control_phy->func_mask |= SPINUP_HOLD_DIS;
++	}
++
++	control_phy->conn_handle = cpu_to_le16(0xFFFF);
++
++	ascb->tasklet_complete = control_phy_tasklet_complete;
++}
++
++/* ---------- INITIATE LINK ADM TASK ---------- */
++
++static void link_adm_tasklet_complete(struct asd_ascb *ascb,
 +				      struct done_list_struct *dl)
 +{
-+	struct sas_task *task = ascb->uldd_task;
-+	struct task_status_struct *ts = &task->task_status;
-+	unsigned long flags;
 +	u8 opcode = dl->opcode;
++	struct initiate_link_adm *link_adm = &ascb->scb->link_adm;
++	u8 phy_id = link_adm->phy_id;
 +
-+	asd_can_dequeue(ascb->ha, 1);
-+
-+Again:
-+	switch (opcode) {
-+	case TC_NO_ERROR:
-+		ts->resp = SAS_TASK_COMPLETE;
-+		ts->stat = SAM_GOOD;
-+		break;
-+	case TC_UNDERRUN:
-+		ts->resp = SAS_TASK_COMPLETE;
-+		ts->stat = SAS_DATA_UNDERRUN;
-+		ts->residual = le32_to_cpu(*(__le32 *)dl->status_block);
-+		break;
-+	case TC_OVERRUN:
-+		ts->resp = SAS_TASK_COMPLETE;
-+		ts->stat = SAS_DATA_OVERRUN;
-+		ts->residual = 0;
-+		break;
-+	case TC_SSP_RESP:
-+	case TC_ATA_RESP:
-+		ts->resp = SAS_TASK_COMPLETE;
-+		ts->stat = SAS_PROTO_RESPONSE;
-+		asd_get_response_tasklet(ascb, dl);
-+		break;
-+	case TF_OPEN_REJECT:
-+		ts->resp = SAS_TASK_UNDELIVERED;
-+		ts->stat = SAS_OPEN_REJECT;
-+		if (dl->status_block[1] & 2)
-+			ts->open_rej_reason = 1 + dl->status_block[2];
-+		else if (dl->status_block[1] & 1)
-+			ts->open_rej_reason = (dl->status_block[2] >> 4)+10;
-+		else
-+			ts->open_rej_reason = SAS_OREJ_UNKNOWN;
-+		break;
-+	case TF_OPEN_TO:
-+		ts->resp = SAS_TASK_UNDELIVERED;
-+		ts->stat = SAS_OPEN_TO;
-+		break;
-+	case TF_PHY_DOWN:
-+	case TU_PHY_DOWN:
-+		ts->resp = SAS_TASK_UNDELIVERED;
-+		ts->stat = SAS_PHY_DOWN;
-+		break;
-+	case TI_PHY_DOWN:
-+		ts->resp = SAS_TASK_COMPLETE;
-+		ts->stat = SAS_PHY_DOWN;
-+		break;
-+	case TI_BREAK:
-+	case TI_PROTO_ERR:
-+	case TI_NAK:
-+	case TI_ACK_NAK_TO:
-+	case TF_SMP_XMIT_RCV_ERR:
-+	case TC_ATA_R_ERR_RECV:
-+		ts->resp = SAS_TASK_COMPLETE;
-+		ts->stat = SAS_INTERRUPTED;
-+		break;
-+	case TF_BREAK:
-+	case TU_BREAK:		
-+	case TU_ACK_NAK_TO:
-+	case TF_SMPRSP_TO:
-+		ts->resp = SAS_TASK_UNDELIVERED;
-+		ts->stat = SAS_DEV_NO_RESPONSE;
-+		break;
-+	case TF_NAK_RECV:
-+		ts->resp = SAS_TASK_COMPLETE;
-+		ts->stat = SAS_NAK_R_ERR;
-+		break;
-+	case TA_I_T_NEXUS_LOSS:
-+		opcode = dl->status_block[0];
-+		goto Again;
-+		break;
-+	case TF_INV_CONN_HANDLE:
-+		ts->resp = SAS_TASK_UNDELIVERED;
-+		ts->stat = SAS_DEVICE_UNKNOWN;
-+		break;
-+	case TF_REQUESTED_N_PENDING:
-+		ts->resp = SAS_TASK_UNDELIVERED;
-+		ts->stat = SAS_PENDING;
-+		break;
-+	case TC_TASK_CLEARED:
-+	case TA_ON_REQ:
-+		ts->resp = SAS_TASK_COMPLETE;
-+		ts->stat = SAS_ABORTED_TASK;
-+		break;
-+
-+	case TF_NO_SMP_CONN:
-+	case TF_TMF_NO_CTX:
-+	case TF_TMF_NO_TAG:
-+	case TF_TMF_TAG_FREE:
-+	case TF_TMF_TASK_DONE:
-+	case TF_TMF_NO_CONN_HANDLE:
-+	case TF_IRTT_TO:
-+	case TF_IU_SHORT:
-+	case TF_DATA_OFFS_ERR:
-+		ts->resp = SAS_TASK_UNDELIVERED;
-+		ts->stat = SAS_DEV_NO_RESPONSE;
-+		break;
-+
-+	case TC_LINK_ADM_RESP:
-+	case TC_CONTROL_PHY:
-+	case TC_RESUME:
-+	case TC_PARTIAL_SG_LIST:
-+	default:
-+		ASD_DPRINTK("%s: dl opcode: 0x%x?\n", __FUNCTION__, opcode);
-+		break;
++	if (opcode != TC_NO_ERROR) {
++		asd_printk("phy%d: link adm task 0x%x completed with error "
++			   "0x%x\n", phy_id, link_adm->sub_func, opcode);
 +	}
++	ASD_DPRINTK("phy%d: link adm task 0x%x: 0x%x\n",
++		    phy_id, link_adm->sub_func, opcode);
 +
-+	switch (task->task_proto) {
-+	case SATA_PROTO:
-+	case SAS_PROTO_STP:
-+		asd_unbuild_ata_ascb(ascb);
-+		break;
-+	case SAS_PROTO_SMP:
-+		asd_unbuild_smp_ascb(ascb);
-+		break;
-+	case SAS_PROTO_SSP:
-+		asd_unbuild_ssp_ascb(ascb);
-+	default:
-+		break;
-+	}
-+
-+	spin_lock_irqsave(&task->task_state_lock, flags);
-+	task->task_state_flags &= ~SAS_TASK_STATE_PENDING;
-+	task->task_state_flags |= SAS_TASK_STATE_DONE;
-+	if (unlikely((task->task_state_flags & SAS_TASK_STATE_ABORTED))) {
-+		spin_unlock_irqrestore(&task->task_state_lock, flags);
-+		ASD_DPRINTK("task 0x%p done with opcode 0x%x resp 0x%x "
-+			    "stat 0x%x but aborted by upper layer!\n",
-+			    task, opcode, ts->resp, ts->stat);
-+		complete(&ascb->completion);
-+	} else {
-+		spin_unlock_irqrestore(&task->task_state_lock, flags);
-+		task->lldd_task = NULL;
-+		asd_ascb_free(ascb);
-+		mb();
-+		task->task_done(task);
-+	}
++	asd_ascb_free(ascb);
 +}
 +
-+/* ---------- ATA ---------- */
-+
-+static int asd_build_ata_ascb(struct asd_ascb *ascb, struct sas_task *task,
-+			      unsigned long gfp_flags)
++void asd_build_initiate_link_adm_task(struct asd_ascb *ascb, int phy_id,
++				      u8 subfunc)
 +{
-+	struct domain_device *dev = task->dev;
-+	struct scb *scb;
-+	u8     flags;
-+	int    res = 0;
-+	
-+	scb = ascb->scb;
++	struct scb *scb = ascb->scb;
++	struct initiate_link_adm *link_adm = &scb->link_adm;
 +
-+	if (unlikely(task->ata_task.device_control_reg_update))
-+		scb->header.opcode = CONTROL_ATA_DEV;
-+	else if (dev->sata_dev.command_set == ATA_COMMAND_SET)
-+		scb->header.opcode = INITIATE_ATA_TASK;
-+	else
-+		scb->header.opcode = INITIATE_ATAPI_TASK;
-+	
-+	scb->ata_task.proto_conn_rate = (1 << 5); /* STP */
-+	if (dev->port->oob_mode == SAS_OOB_MODE)
-+		scb->ata_task.proto_conn_rate |= dev->linkrate;
++	scb->header.opcode = INITIATE_LINK_ADM_TASK;
 +
-+	scb->ata_task.total_xfer_len = cpu_to_le32(task->total_xfer_len);
-+	scb->ata_task.fis = task->ata_task.fis;
-+	scb->ata_task.fis.fis_type = 0x27;
-+	if (likely(!task->ata_task.device_control_reg_update))
-+		scb->ata_task.fis.flags |= 0x80; /* C=1: update ATA cmd reg */
-+	scb->ata_task.fis.flags &= 0xF0; /* PM_PORT field shall be 0 */
-+	if (dev->sata_dev.command_set == ATAPI_COMMAND_SET)
-+		memcpy(scb->ata_task.atapi_packet, task->ata_task.atapi_packet,
-+		       16);
-+	scb->ata_task.sister_scb = cpu_to_le16(0xFFFF);
-+	scb->ata_task.conn_handle = cpu_to_le16(
-+		(u16)(unsigned long)dev->lldd_dev);
++	link_adm->phy_id = phy_id;
++	link_adm->sub_func = subfunc;
++	link_adm->conn_handle = cpu_to_le16(0xFFFF);
 +
-+	if (likely(!task->ata_task.device_control_reg_update)) {
-+		flags = 0;
-+		if (task->ata_task.dma_xfer)
-+			flags |= DATA_XFER_MODE_DMA;
-+		if (task->ata_task.use_ncq &&
-+		    dev->sata_dev.command_set != ATAPI_COMMAND_SET)
-+			flags |= ATA_Q_TYPE_NCQ;
-+		flags |= data_dir_flags[task->data_dir];
-+		scb->ata_task.ata_flags = flags;
-+	
-+		scb->ata_task.retry_count = task->ata_task.retry_count;
-+
-+		flags = 0;
-+		if (task->ata_task.set_affil_pol)
-+			flags |= SET_AFFIL_POLICY;
-+		if (task->ata_task.stp_affil_pol)
-+			flags |= STP_AFFIL_POLICY;
-+		scb->ata_task.flags = flags;
-+	}
-+	ascb->tasklet_complete = asd_task_tasklet_complete;
-+
-+	if (likely(!task->ata_task.device_control_reg_update))
-+		res = asd_map_scatterlist(task, scb->ata_task.sg_element,
-+					  gfp_flags);
-+
-+	return res;
++	ascb->tasklet_complete = link_adm_tasklet_complete;
 +}
 +
-+static void asd_unbuild_ata_ascb(struct asd_ascb *a)
++/* ---------- SCB timer ---------- */
++
++/**
++ * asd_ascb_timedout -- called when a pending SCB's timer has expired
++ * @data: unsigned long, a pointer to the ascb in question
++ *
++ * This is the default timeout function which does the most necessary.
++ * Upper layers can implement their own timeout function, say to free
++ * resources they have with this SCB, and then call this one at the
++ * end of their timeout function.  To do this, one should initialize
++ * the ascb->timer.{function, data, expires} prior to calling the post
++ * funcion.  The timer is started by the post function.
++ */
++void asd_ascb_timedout(unsigned long data)
 +{
-+	asd_unmap_scatterlist(a);
-+}
-+
-+/* ---------- SMP ---------- */
-+
-+static int asd_build_smp_ascb(struct asd_ascb *ascb, struct sas_task *task,
-+			      unsigned long gfp_flags)
-+{
-+	struct asd_ha_struct *asd_ha = ascb->ha;
-+	struct domain_device *dev = task->dev;
-+	struct scb *scb;
-+
-+	pci_map_sg(asd_ha->pcidev, &task->smp_task.smp_req, 1,
-+		   PCI_DMA_FROMDEVICE);
-+	pci_map_sg(asd_ha->pcidev, &task->smp_task.smp_resp, 1,
-+		   PCI_DMA_FROMDEVICE);
-+
-+	scb = ascb->scb;
-+
-+	scb->header.opcode = INITIATE_SMP_TASK;
-+
-+	scb->smp_task.proto_conn_rate = dev->linkrate;
-+	
-+	scb->smp_task.smp_req.bus_addr =
-+		cpu_to_le64((u64)sg_dma_address(&task->smp_task.smp_req));
-+	scb->smp_task.smp_req.size =
-+		cpu_to_le32((u32)sg_dma_len(&task->smp_task.smp_req)-4);
-+
-+	scb->smp_task.smp_resp.bus_addr =
-+		cpu_to_le64((u64)sg_dma_address(&task->smp_task.smp_resp));
-+	scb->smp_task.smp_resp.size =
-+		cpu_to_le32((u32)sg_dma_len(&task->smp_task.smp_resp)-4);
-+
-+	scb->smp_task.sister_scb = cpu_to_le16(0xFFFF);
-+	scb->smp_task.conn_handle = cpu_to_le16((u16)
-+						(unsigned long)dev->lldd_dev);
-+
-+	ascb->tasklet_complete = asd_task_tasklet_complete;
-+	
-+	return 0;
-+}
-+
-+static void asd_unbuild_smp_ascb(struct asd_ascb *a)
-+{
-+	struct sas_task *task = a->uldd_task;
-+
-+	BUG_ON(!task);
-+	pci_unmap_sg(a->ha->pcidev, &task->smp_task.smp_req, 1,
-+		     PCI_DMA_FROMDEVICE);
-+	pci_unmap_sg(a->ha->pcidev, &task->smp_task.smp_resp, 1,
-+		     PCI_DMA_FROMDEVICE);
-+}
-+
-+/* ---------- SSP ---------- */
-+
-+static int asd_build_ssp_ascb(struct asd_ascb *ascb, struct sas_task *task,
-+			      unsigned long gfp_flags)
-+{
-+	struct domain_device *dev = task->dev;
-+	struct scb *scb;
-+	int    res = 0;
-+	
-+	scb = ascb->scb;
-+
-+	scb->header.opcode = INITIATE_SSP_TASK;
-+
-+	scb->ssp_task.proto_conn_rate  = (1 << 4); /* SSP */
-+	scb->ssp_task.proto_conn_rate |= dev->linkrate;
-+	scb->ssp_task.total_xfer_len = cpu_to_le32(task->total_xfer_len);
-+	scb->ssp_task.ssp_frame.frame_type = SSP_DATA;
-+	memcpy(scb->ssp_task.ssp_frame.hashed_dest_addr, dev->hashed_sas_addr,
-+	       HASHED_SAS_ADDR_SIZE);
-+	memcpy(scb->ssp_task.ssp_frame.hashed_src_addr,
-+	       dev->port->ha->hashed_sas_addr, HASHED_SAS_ADDR_SIZE);
-+	scb->ssp_task.ssp_frame.tptt = cpu_to_be16(0xFFFF);
-+
-+	memcpy(scb->ssp_task.ssp_cmd.lun, task->ssp_task.LUN, 8);
-+	if (task->ssp_task.enable_first_burst)
-+		scb->ssp_task.ssp_cmd.efb_prio_attr |= EFB_MASK;
-+	scb->ssp_task.ssp_cmd.efb_prio_attr |= (task->ssp_task.task_prio << 3);
-+	scb->ssp_task.ssp_cmd.efb_prio_attr |= (task->ssp_task.task_attr & 7);
-+	memcpy(scb->ssp_task.ssp_cmd.cdb, task->ssp_task.cdb, 16);
-+
-+	scb->ssp_task.sister_scb = cpu_to_le16(0xFFFF);
-+	scb->ssp_task.conn_handle = cpu_to_le16(
-+		(u16)(unsigned long)dev->lldd_dev);
-+	scb->ssp_task.data_dir = data_dir_flags[task->data_dir];
-+	scb->ssp_task.retry_count = scb->ssp_task.retry_count;
-+
-+	ascb->tasklet_complete = asd_task_tasklet_complete;
-+
-+	res = asd_map_scatterlist(task, scb->ssp_task.sg_element, gfp_flags);
-+
-+	return res;
-+}
-+
-+static void asd_unbuild_ssp_ascb(struct asd_ascb *a)
-+{
-+	asd_unmap_scatterlist(a);
-+}
-+
-+/* ---------- Execute Task ---------- */
-+
-+static inline int asd_can_queue(struct asd_ha_struct *asd_ha, int num)
-+{
-+	int res = 0;
++	struct asd_ascb *ascb = (void *) data;
++	struct asd_seq_data *seq = &ascb->ha->seq;
 +	unsigned long flags;
 +
-+	spin_lock_irqsave(&asd_ha->seq.pend_q_lock, flags);
-+	if ((asd_ha->seq.can_queue - num) < 0)
-+		res = -SAS_QUEUE_FULL;
-+	else
-+		asd_ha->seq.can_queue -= num;
-+	spin_unlock_irqrestore(&asd_ha->seq.pend_q_lock, flags);
++	ASD_DPRINTK("scb:0x%x timed out\n", ascb->scb->header.opcode);
++
++	spin_lock_irqsave(&seq->pend_q_lock, flags);
++	seq->pending--;
++	list_del_init(&ascb->list);
++	spin_unlock_irqrestore(&seq->pend_q_lock, flags);
 +	
-+	return res;
++	asd_ascb_free(ascb);
 +}
 +
-+int asd_execute_task(struct sas_task *task, const int num,
-+		     unsigned long gfp_flags)
++/* ---------- CONTROL PHY ---------- */
++
++/* Given the spec value, return a driver value. */
++static const int phy_func_table[] = {
++	[PHY_FUNC_NOP]        = PHY_NO_OP,
++	[PHY_FUNC_LINK_RESET] = ENABLE_PHY,
++	[PHY_FUNC_HARD_RESET] = EXECUTE_HARD_RESET,
++	[PHY_FUNC_DISABLE]    = DISABLE_PHY,
++	[PHY_FUNC_RELEASE_SPINUP_HOLD] = RELEASE_SPINUP_HOLD,
++};
++
++int asd_control_phy(struct sas_phy *phy, enum phy_func func)
 +{
-+	int res = 0;
-+	LIST_HEAD(alist);
-+	struct sas_task *t = task;
-+	struct asd_ascb *ascb = NULL, *a;
-+	struct asd_ha_struct *asd_ha = task->dev->port->ha->lldd_ha;
++	struct asd_ha_struct *asd_ha = phy->ha->lldd_ha;
++	struct asd_ascb *ascb;
++	int res = 1;
 +
-+	res = asd_can_queue(asd_ha, num);
++	if (func == PHY_FUNC_CLEAR_ERROR_LOG)
++		return -ENOSYS;
++
++	ascb = asd_ascb_alloc_list(asd_ha, &res, GFP_KERNEL);
++	if (!ascb)
++		return -ENOMEM;
++
++	asd_build_control_phy(ascb, phy->id, phy_func_table[func]);
++	res = asd_post_ascb_list(asd_ha, ascb , 1);
 +	if (res)
-+		return res;
++		asd_ascb_free(ascb);
 +
-+	res = num;
-+	ascb = asd_ascb_alloc_list(asd_ha, &res, gfp_flags);
-+	if (res) {
-+		res = -ENOMEM;
-+		goto out_err;
-+	}
-+
-+	__list_add(&alist, ascb->list.prev, &ascb->list);
-+	list_for_each_entry(a, &alist, list) {
-+		a->uldd_task = t;
-+		t->lldd_task = a;
-+		t = list_entry(t->list.next, struct sas_task, list);
-+	}
-+	list_for_each_entry(a, &alist, list) {
-+		t = a->uldd_task;
-+		a->uldd_timer = 1;
-+		if (t->task_proto & SAS_PROTO_STP)
-+			t->task_proto = SAS_PROTO_STP;
-+		switch (t->task_proto) {
-+		case SATA_PROTO:
-+		case SAS_PROTO_STP:
-+			res = asd_build_ata_ascb(a, t, gfp_flags);
-+			break;
-+		case SAS_PROTO_SMP:
-+			res = asd_build_smp_ascb(a, t, gfp_flags);
-+			break;
-+		case SAS_PROTO_SSP:
-+			res = asd_build_ssp_ascb(a, t, gfp_flags);
-+			break;
-+		default:
-+			asd_printk("unknown sas_task proto: 0x%x\n",
-+				   t->task_proto);
-+			res = -ENOMEM;
-+			break;
-+		}
-+		if (res)
-+			goto out_err_unmap;
-+	}
-+	list_del_init(&alist);
-+
-+	res = asd_post_ascb_list(asd_ha, ascb, num);
-+	if (unlikely(res)) {
-+		a = NULL;
-+		__list_add(&alist, ascb->list.prev, &ascb->list);
-+		goto out_err_unmap;
-+	}
-+
-+	return 0;
-+out_err_unmap:
-+	{
-+		struct asd_ascb *b = a;
-+		list_for_each_entry(a, &alist, list) {
-+			if (a == b)
-+				break;
-+			t = a->uldd_task;
-+			switch (t->task_proto) {
-+			case SATA_PROTO:
-+			case SAS_PROTO_STP:
-+				asd_unbuild_ata_ascb(a);
-+				break;
-+			case SAS_PROTO_SMP:
-+				asd_unbuild_smp_ascb(a);
-+				break;
-+			case SAS_PROTO_SSP:
-+				asd_unbuild_ssp_ascb(a);
-+			default:
-+				break;
-+			}
-+			t->lldd_task = NULL;
-+		}
-+	}			
-+	list_del_init(&alist);
-+out_err:
-+	if (ascb)
-+		asd_ascb_free_list(ascb);
-+	asd_can_dequeue(asd_ha, num);
 +	return res;
 +}
-
