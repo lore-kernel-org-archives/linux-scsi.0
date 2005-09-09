@@ -1,53 +1,66 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] move iscsi to a better place in Kconfig
-Date: Fri, 09 Sep 2005 12:33:18 -0500
-Message-ID: <4321C75E.8090204@cs.wisc.edu>
-References: <1126191378.4845.8.camel@mulgrave>	 <43208FA2.8070304@cs.wisc.edu> <1126278063.4799.15.camel@mulgrave> <4321C044.3020605@cs.wisc.edu>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] SCSI core: fix leakage of scsi_cmnd's
+Date: Fri, 09 Sep 2005 13:40:23 -0500
+Message-ID: <1126291223.4799.35.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0509081640260.4545-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:9646 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1030280AbVIIRdo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 13:33:44 -0400
-In-Reply-To: <4321C044.3020605@cs.wisc.edu>
+Received: from stat9.steeleye.com ([209.192.50.41]:9642 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932573AbVIISkc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Sep 2005 14:40:32 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0509081640260.4545-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Alex Aizman <itn780@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "Dailey, Nate" <Nate.Dailey@stratus.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Mike Christie wrote:
-> James Bottomley wrote:
-> 
->> On Thu, 2005-09-08 at 14:23 -0500, Mike Christie wrote:
->>
->>> I think the reason it was a dependency was becuase the transport 
->>> class manages does the lifetime management/refcounting for the 
->>> initiators/iscsi_tcp.c session struct. scsi_transport_iscsi allocates 
->>> the scsi_host, and the initiator/iscsi_tcp.c's session structure is 
->>> allocated in that host_data.
->>
->>
->>
->> Yes, but Kconfig isn't about lifetimes or, in fact, much of the way the
->> code is constructed; it's about how the user selects particular
->> features.
->>
->> In the current setup, they have to know to say Y/M to the ISCSI
->> attribute question even to see the config option for the iscsi
->> initiator.  This is a bit counter intuitive (and definitely isn't the
->> way any of the other drivers that depend on transport classes are
->> presented).
->>
-> 
-> Yeah, sorry about that. With the userspace split and interpreting and 
-> implementing the review comments everything got a bit mixed up and we 
-> ended up the using the classes in a strange way. Should we resplit 
-> things up so that the host_alloc code is not part of the transport 
-> class? I think this will help the ql4xxx guys, Andrew have you started 
-> that?
+On Thu, 2005-09-08 at 16:49 -0400, Alan Stern wrote:
+> This hasn't been tested very thoroughly, so please look through it 
+> carefully.
 
-And/or are there parts of the netlink interface you can use or will 
-everything be done your fw/nvram? For example can you put part of the 
-iSNS stuff in userspace then communicate through a modified iscsi 
-netlink interface or is it not worth it or possible?
+Actually, just one problem and one cosmetic fix:
+
+1) We need to dequeue for the loop and kill case (it seems easiest
+simply to dequeue in the scsi_kill_request() routine)
+2) There's no real need to drop the queue lock.  __scsi_done() is lock
+agnostic, so since there's no requirement, let's just leave it in to
+avoid any locking issues.
+
+Thanks,
+
+James
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1370,7 +1370,8 @@ static void scsi_kill_request(struct req
+ {
+ 	struct scsi_cmnd *cmd = req->special;
+ 
+-	spin_unlock(q->queue_lock);
++	blkdev_dequeue_request(req);
++
+ 	if (unlikely(cmd == NULL)) {
+ 		printk(KERN_CRIT "impossible request in %s.\n",
+ 				 __FUNCTION__);
+@@ -1381,7 +1382,6 @@ static void scsi_kill_request(struct req
+ 	cmd->result = DID_NO_CONNECT << 16;
+ 	atomic_inc(&cmd->device->iorequest_cnt);
+ 	__scsi_done(cmd);
+-	spin_lock(q->queue_lock);
+ }
+ 
+ /*
+@@ -1432,7 +1432,6 @@ static void scsi_request_fn(struct reque
+ 		if (unlikely(!scsi_device_online(sdev))) {
+ 			printk(KERN_ERR "scsi%d (%d:%d): rejecting I/O to offline device\n",
+ 			       sdev->host->host_no, sdev->id, sdev->lun);
+-			blkdev_dequeue_request(req);
+ 			scsi_kill_request(req, q);
+ 			continue;
+ 		}
+
+
