@@ -1,212 +1,120 @@
 From: mike.miller@hp.com
-Subject: [PATCH 4/8] cciss: direct lookup for command completions
-Date: Fri, 9 Sep 2005 17:06:09 -0500
-Message-ID: <20050909220609.GD4616@beardog.cca.cpqcorp.net>
+Subject: [PATCH 7/8] cciss: One Button Disaster Recovery support
+Date: Fri, 9 Sep 2005 17:11:44 -0500
+Message-ID: <20050909221144.GG4616@beardog.cca.cpqcorp.net>
 Reply-To: mikem@beardog.cca.cpqcorp.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030601AbVIIWGf@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030701AbVIIWMG@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
 To: akpm@osdl.org, axboe@suse.de
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Patch 4 of 8
-This patch changes the way we complete commands. In the old method when we
-got a completion we searched our command list from the top until we find it.
-This method uses a tag associated with each command (not SCSI command tagging)
-to index us directly to the completed command. This helps performance.
-Please consider this for inclusion.
+Patch 7 of 8
+This patch adds support for "One Button Disaster Recovery" devices
+to the cciss driver.  (OBDR devices are tape drives which can
+pretend to be cd-rom devices temporarily.  Once booted the device
+can be reverted to a tape drive and data recovery operations can
+be automatically begun.)
+This is an enhancement request by a vendor/partner working on
+One Button Disaster Recovery.
+Please consider for inclusion.
 
-Signed-off-by: Don Brace <dab@hp.com>
+Signed-off-by: Stephen M. Cameron <steve.cameron@hp.com>
 Signed-off-by: Mike Miller <mike.miller@hp.com>
 
- cciss.c      |   70 ++++++++++++++++++++++++++++++++++++++++++++++++++++++-----
- cciss.h      |    1
- cciss_cmd.h  |    8 +++++-
- cciss_scsi.c |    1
- 4 files changed, 73 insertions(+), 7 deletions(-)
+ cciss_scsi.c |   41 +++++++++++++++++++++++++++++------------
+ 1 files changed, 29 insertions(+), 12 deletions(-)
 --------------------------------------------------------------------------------
-diff -burNp lx2613-p003/drivers/block/cciss.c lx2613/drivers/block/cciss.c
---- lx2613-p003/drivers/block/cciss.c	2005-09-07 14:40:02.852611000 -0500
-+++ lx2613/drivers/block/cciss.c	2005-09-07 14:55:12.831273680 -0500
-@@ -174,6 +174,8 @@ static int sendcmd_withirq(__u8	cmd, int
- 	unsigned int use_unit_num, unsigned int log_unit, __u8	page_code,
- 	int cmd_type);
+diff -burNp lx2613-p006/drivers/block/cciss_scsi.c lx2613/drivers/block/cciss_scsi.c
+--- lx2613-p006/drivers/block/cciss_scsi.c	2005-09-09 16:09:13.365616000 -0500
++++ lx2613/drivers/block/cciss_scsi.c	2005-09-09 16:20:35.292948160 -0500
+@@ -878,7 +878,7 @@ cciss_scsi_interpret_error(CommandList_s
  
-+static void fail_all_cmds(unsigned long ctlr);
-+
- #ifdef CONFIG_PROC_FS
- static int cciss_proc_get_info(char *buffer, char **start, off_t offset, 
- 		int length, int *eof, void *data);
-@@ -387,6 +389,8 @@ static CommandList_struct * cmd_alloc(ct
-                  	return NULL;
- 		memset(c, 0, sizeof(CommandList_struct));
+ static int
+ cciss_scsi_do_inquiry(ctlr_info_t *c, unsigned char *scsi3addr, 
+-		 InquiryData_struct *buf)
++		 unsigned char *buf, unsigned char bufsize)
+ {
+ 	int rc;
+ 	CommandList_struct *cp;
+@@ -901,11 +901,10 @@ cciss_scsi_do_inquiry(ctlr_info_t *c, un
+ 	cdb[1] = 0;
+ 	cdb[2] = 0;
+ 	cdb[3] = 0;
+-	cdb[4] = sizeof(*buf) & 0xff;
++	cdb[4] = bufsize;
+ 	cdb[5] = 0;
+ 	rc = cciss_scsi_do_simple_cmd(c, cp, scsi3addr, cdb, 
+-				6, (unsigned char *) buf, 
+-				sizeof(*buf), XFER_READ);
++				6, buf, bufsize, XFER_READ);
  
-+		c->cmdindex = -1;
-+
- 		c->err_info = (ErrorInfo_struct *)pci_alloc_consistent(
- 					h->pdev, sizeof(ErrorInfo_struct), 
- 					&err_dma_handle);
-@@ -417,6 +421,8 @@ static CommandList_struct * cmd_alloc(ct
- 		err_dma_handle = h->errinfo_pool_dhandle 
- 					+ i*sizeof(ErrorInfo_struct);
-                 h->nr_allocs++;
-+
-+		c->cmdindex = i;
-         }
+ 	if (rc != 0) return rc; /* something went wrong */
  
- 	c->busaddr = (__u32) cmd_dma_handle;
-@@ -2259,7 +2265,11 @@ queue:
- 	/* fill in the request */ 
- 	drv = creq->rq_disk->private_data;
- 	c->Header.ReplyQueue = 0;  // unused in simple mode
--	c->Header.Tag.lower = c->busaddr;  // use the physical address the cmd block for tag
-+	/* got command from pool, so use the command block index instead */
-+	/* for direct lookups. */
-+	/* The first 2 bits are reserved for controller error reporting. */
-+	c->Header.Tag.lower = (c->cmdindex << 3);
-+	c->Header.Tag.lower |= 0x04; /* flag for direct lookup. */
- 	c->Header.LUN.LogDev.VolId= drv->LunID;
- 	c->Header.LUN.LogDev.Mode = 1;
- 	c->Request.CDBLen = 10; // 12 byte commands not in FW yet;
-@@ -2334,7 +2344,7 @@ static irqreturn_t do_cciss_intr(int irq
- 	ctlr_info_t *h = dev_id;
- 	CommandList_struct *c;
- 	unsigned long flags;
--	__u32 a, a1;
-+	__u32 a, a1, a2;
- 	int j;
- 	int start_queue = h->next_to_run;
+@@ -1001,9 +1000,10 @@ cciss_update_non_disk_devices(int cntl_n
+ 	   that though.  
  
-@@ -2352,10 +2362,21 @@ static irqreturn_t do_cciss_intr(int irq
- 		while((a = h->access.command_completed(h)) != FIFO_EMPTY) 
+ 	 */
+-
++#define OBDR_TAPE_INQ_SIZE 49
++#define OBDR_TAPE_SIG "$DR-10"
+ 	ReportLunData_struct *ld_buff;
+-	InquiryData_struct *inq_buff;
++	unsigned char *inq_buff;
+ 	unsigned char scsi3addr[8];
+ 	ctlr_info_t *c;
+ 	__u32 num_luns=0;
+@@ -1021,7 +1021,7 @@ cciss_update_non_disk_devices(int cntl_n
+ 		return;
+ 	}
+ 	memset(ld_buff, 0, reportlunsize);
+-	inq_buff = kmalloc(sizeof( InquiryData_struct), GFP_KERNEL);
++	inq_buff = kmalloc(OBDR_TAPE_INQ_SIZE, GFP_KERNEL);
+         if (inq_buff == NULL) {
+                 printk(KERN_ERR "cciss: out of memory\n");
+                 kfree(ld_buff);
+@@ -1052,19 +1052,36 @@ cciss_update_non_disk_devices(int cntl_n
+ 
+ 		/* for each physical lun, do an inquiry */
+ 		if (ld_buff->LUN[i][3] & 0xC0) continue;
+-		memset(inq_buff, 0, sizeof(InquiryData_struct));
++		memset(inq_buff, 0, OBDR_TAPE_INQ_SIZE);
+ 		memcpy(&scsi3addr[0], &ld_buff->LUN[i][0], 8);
+ 
+-		if (cciss_scsi_do_inquiry(hba[cntl_num], 
+-			scsi3addr, inq_buff) != 0)
+-		{
++		if (cciss_scsi_do_inquiry(hba[cntl_num], scsi3addr, inq_buff, 
++			(unsigned char) OBDR_TAPE_INQ_SIZE) != 0) {
+ 			/* Inquiry failed (msg printed already) */
+ 			devtype = 0; /* so we will skip this device. */
+ 		} else /* what kind of device is this? */
+-			devtype = (inq_buff->data_byte[0] & 0x1f);
++			devtype = (inq_buff[0] & 0x1f);
+ 
+ 		switch (devtype)
  		{
- 			a1 = a;
-+			if ((a & 0x04)) {
-+				a2 = (a >> 3);
-+				if (a2 >= NR_CMDS) {
-+					printk(KERN_WARNING "cciss: controller cciss%d failed, stopping.\n", h->ctlr);
-+					fail_all_cmds(h->ctlr);
-+					return IRQ_HANDLED;
-+				}
++		  case 0x05: /* CD-ROM */ {
 +
-+				c = h->cmd_pool + a2;
-+				a = c->busaddr;
++			/* We don't *really* support actual CD-ROM devices,
++			 * just this "One Button Disaster Recovery" tape drive
++			 * which temporarily pretends to be a CD-ROM drive.
++			 * So we check that the device is really an OBDR tape 
++			 * device by checking for "$DR-10" in bytes 43-48 of 
++			 * the inquiry data.
++			 */ 
++				char obdr_sig[7]; 
 +
-+			} else {
- 			a &= ~3;
--			if ((c = h->cmpQ) == NULL)
--			{  
--				printk(KERN_WARNING "cciss: Completion of %08lx ignored\n", (unsigned long)a1);
-+				if ((c = h->cmpQ) == NULL) {  
-+					printk(KERN_WARNING "cciss: Completion of %08x ignored\n", a1);
- 				continue;	
- 			} 
- 			while(c->busaddr != a) {
-@@ -2363,6 +2384,7 @@ static irqreturn_t do_cciss_intr(int irq
- 				if (c == h->cmpQ) 
- 					break;
- 			}
++				strncpy(obdr_sig, &inq_buff[43], 6);
++				obdr_sig[6] = '\0';
++				if (strncmp(obdr_sig, OBDR_TAPE_SIG, 6) != 0) 
++					/* Not OBDR device, ignore it. */
++					break;
 +			}
- 			/*
- 			 * If we've found the command, take it off the
- 			 * completion Q and free it
-@@ -3126,5 +3148,43 @@ static void __exit cciss_cleanup(void)
- 	remove_proc_entry("cciss", proc_root_driver);
- }
- 
-+static void fail_all_cmds(unsigned long ctlr)
-+{
-+	/* If we get here, the board is apparently dead. */
-+	ctlr_info_t *h = hba[ctlr];
-+	CommandList_struct *c;
-+	unsigned long flags;
-+
-+	printk(KERN_WARNING "cciss%d: controller not responding.\n", h->ctlr);
-+	h->alive = 0;	/* the controller apparently died... */ 
-+
-+	spin_lock_irqsave(CCISS_LOCK(ctlr), flags);
-+
-+	pci_disable_device(h->pdev); /* Make sure it is really dead. */
-+
-+	/* move everything off the request queue onto the completed queue */
-+	while( (c = h->reqQ) != NULL ) {
-+		removeQ(&(h->reqQ), c);
-+		h->Qdepth--;
-+		addQ (&(h->cmpQ), c); 
-+	}
-+
-+	/* Now, fail everything on the completed queue with a HW error */
-+	while( (c = h->cmpQ) != NULL ) {
-+		removeQ(&h->cmpQ, c);
-+		c->err_info->CommandStatus = CMD_HARDWARE_ERR;
-+		if (c->cmd_type == CMD_RWREQ) {
-+			complete_command(h, c, 0);
-+		} else if (c->cmd_type == CMD_IOCTL_PEND)
-+			complete(c->waiting);
-+#ifdef CONFIG_CISS_SCSI_TAPE
-+			else if (c->cmd_type == CMD_SCSI)
-+				complete_scsi_command(c, 0, 0);
-+#endif
-+	}
-+	spin_unlock_irqrestore(CCISS_LOCK(ctlr), flags);
-+	return;
-+}
-+
- module_init(cciss_init);
- module_exit(cciss_cleanup);
-diff -burNp lx2613-p003/drivers/block/cciss.h lx2613/drivers/block/cciss.h
---- lx2613-p003/drivers/block/cciss.h	2005-09-07 14:40:02.852611000 -0500
-+++ lx2613/drivers/block/cciss.h	2005-09-07 14:55:12.833273376 -0500
-@@ -101,6 +101,7 @@ struct ctlr_info 
- #ifdef CONFIG_CISS_SCSI_TAPE
- 	void *scsi_ctlr; /* ptr to structure containing scsi related stuff */
- #endif
-+	unsigned char alive;
- };
- 
- /*  Defining the diffent access_menthods */
-diff -burNp lx2613-p003/drivers/block/cciss_cmd.h lx2613/drivers/block/cciss_cmd.h
---- lx2613-p003/drivers/block/cciss_cmd.h	2005-08-28 18:41:01.000000000 -0500
-+++ lx2613/drivers/block/cciss_cmd.h	2005-09-07 14:55:12.832273528 -0500
-@@ -226,6 +226,10 @@ typedef struct _ErrorInfo_struct {
- #define CMD_MSG_DONE	0x04
- #define CMD_MSG_TIMEOUT 0x05
- 
-+/* This structure needs to be divisible by 8 for new
-+ * indexing method.
-+ */
-+#define PADSIZE (sizeof(long) - 4)
- typedef struct _CommandList_struct {
-   CommandListHeader_struct Header;
-   RequestBlock_struct      Request;
-@@ -236,14 +240,14 @@ typedef struct _CommandList_struct {
-   ErrorInfo_struct * 	   err_info; /* pointer to the allocated mem */ 
-   int			   ctlr;
-   int			   cmd_type; 
-+  long			   cmdindex;
-   struct _CommandList_struct *prev;
-   struct _CommandList_struct *next;
-   struct request *	   rq;
-   struct completion *waiting;
-   int	 retry_count;
--#ifdef CONFIG_CISS_SCSI_TAPE
-   void * scsi_cmd;
--#endif
-+  char   pad[PADSIZE];
- } CommandList_struct;
- 
- //Configuration Table Structure
-diff -burNp lx2613-p003/drivers/block/cciss_scsi.c lx2613/drivers/block/cciss_scsi.c
---- lx2613-p003/drivers/block/cciss_scsi.c	2005-08-28 18:41:01.000000000 -0500
-+++ lx2613/drivers/block/cciss_scsi.c	2005-09-07 14:55:12.834273224 -0500
-@@ -93,6 +93,7 @@ struct cciss_scsi_cmd_stack_elem_t {
- 	CommandList_struct cmd;
- 	ErrorInfo_struct Err;
- 	__u32 busaddr;
-+	__u32 pad;
- };
- 
- #pragma pack()
++			/* fall through . . . */
+ 		  case 0x01: /* sequential access, (tape) */
+ 		  case 0x08: /* medium changer */
+ 			if (ncurrent >= CCISS_MAX_SCSI_DEVS_PER_HBA) {
