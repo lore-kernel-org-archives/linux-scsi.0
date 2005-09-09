@@ -1,130 +1,82 @@
 From: mike.miller@hp.com
-Subject: [PATCH 1/8] cciss: new controller pci/subsystem ids
-Date: Fri, 9 Sep 2005 17:00:26 -0500
-Message-ID: <20050909220026.GA4616@beardog.cca.cpqcorp.net>
+Subject: [PATCH 2/8] cciss:busy_initializing flag
+Date: Fri, 9 Sep 2005 17:02:34 -0500
+Message-ID: <20050909220234.GB4616@beardog.cca.cpqcorp.net>
 Reply-To: mikem@beardog.cca.cpqcorp.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atlrel9.hp.com ([156.153.255.214]:28822 "EHLO atlrel9.hp.com")
-	by vger.kernel.org with ESMTP id S1030381AbVIIWAv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 18:00:51 -0400
+Received: from ccerelbas04.cce.hp.com ([161.114.21.107]:41683 "EHLO
+	ccerelbas04.cce.hp.com") by vger.kernel.org with ESMTP
+	id S1030426AbVIIWC6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Sep 2005 18:02:58 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: akpm@osdl.org, axboe@suse.de
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-NOTE: All patches in this set have been tested.
-
-Patch 1 of 8
-
-This patch adds new PCI and subsystem ID's that finally made the spec. It also
-include a name change for one controller. I know there's a lot of duplicat names
- but the fw folks wanted this for the different implementations.
-Even though the same ASIC is used it may be embedded on some platforms,
-standup card in others, and a mezzanine in other servers.
+Patch 2 of 8
+This patch adds a flag called busy_initializing. If there are multiple
+controllers in a server AND the HP agents are running it's possible
+the agents may try to poll a card that is still initializing if the 
+driver is removed and then added again.
 Please consider this for inclusion.
 
-Signed-off-by: Mike Miller <mike.miller@hp.com>
+Signed-off-by: Don Brace <dab@hp.com>
+Signed-of-by: Mike Miller <mike.miller@hp.com>
 
- Documentation/cciss.txt |    4 +++-
- drivers/block/cciss.c   |   33 ++++++++++++++++++++++++---------
- include/linux/pci_ids.h |    4 +++-
- 3 files changed, 30 insertions(+), 11 deletions(-)
+ cciss.c |    8 ++++++++
+ cciss.h |    1 +
+ 2 files changed, 9 insertions(+)
 --------------------------------------------------------------------------------
-diff -burNp lx2613.orig/Documentation/cciss.txt lx2613/Documentation/cciss.txt
---- lx2613.orig/Documentation/cciss.txt	2005-08-28 18:41:01.000000000 -0500
-+++ lx2613/Documentation/cciss.txt	2005-09-07 13:28:14.743543592 -0500
-@@ -17,7 +17,9 @@ This driver is known to work with the fo
- 	* SA P600
- 	* SA P800
- 	* SA E400
--	* SA E300
-+	* SA P400i
-+	* SA E200
-+	* SA E200i
+diff -burNp lx2613-p001/drivers/block/cciss.c lx2613/drivers/block/cciss.c
+--- lx2613-p001/drivers/block/cciss.c	2005-09-07 13:27:05.390086000 -0500
++++ lx2613/drivers/block/cciss.c	2005-09-07 14:27:13.573559656 -0500
+@@ -468,6 +468,9 @@ static int cciss_open(struct inode *inod
+ 	printk(KERN_DEBUG "cciss_open %s\n", inode->i_bdev->bd_disk->disk_name);
+ #endif /* CCISS_DEBUG */ 
  
- If nodes are not already created in the /dev/cciss directory, run as root:
++	if (host->busy_initializing)
++		return -EBUSY;
++
+ 	/*
+ 	 * Root is allowed to open raw volume zero even if it's not configured
+ 	 * so array config can still work. Root is also allowed to open any
+@@ -2743,6 +2746,9 @@ static int __devinit cciss_init_one(stru
+ 	i = alloc_cciss_hba();
+ 	if(i < 0)
+ 		return (-1);
++
++	hba[i]->busy_initializing = 1;
++
+ 	if (cciss_pci_init(hba[i], pdev) != 0)
+ 		goto clean1;
  
-diff -burNp lx2613.orig/drivers/block/cciss.c lx2613/drivers/block/cciss.c
---- lx2613.orig/drivers/block/cciss.c	2005-08-28 18:41:01.000000000 -0500
-+++ lx2613/drivers/block/cciss.c	2005-09-07 13:27:05.390086920 -0500
-@@ -47,14 +47,14 @@
- #include <linux/completion.h>
+@@ -2865,6 +2871,7 @@ static int __devinit cciss_init_one(stru
+ 		add_disk(disk);
+ 	}
  
- #define CCISS_DRIVER_VERSION(maj,min,submin) ((maj<<16)|(min<<8)|(submin))
--#define DRIVER_NAME "HP CISS Driver (v 2.6.6)"
--#define DRIVER_VERSION CCISS_DRIVER_VERSION(2,6,6)
-+#define DRIVER_NAME "HP CISS Driver (v 2.6.8)"
-+#define DRIVER_VERSION CCISS_DRIVER_VERSION(2,6,8)
++	hba[i]->busy_initializing = 0;
+ 	return(1);
  
- /* Embedded module documentation macros - see modules.h */
- MODULE_AUTHOR("Hewlett-Packard Company");
--MODULE_DESCRIPTION("Driver for HP Controller SA5xxx SA6xxx version 2.6.6");
-+MODULE_DESCRIPTION("Driver for HP Controller SA5xxx SA6xxx version 2.6.8");
- MODULE_SUPPORTED_DEVICE("HP SA5i SA5i+ SA532 SA5300 SA5312 SA641 SA642 SA6400"
--			" SA6i P600 P800 E400 E300");
-+			" SA6i P600 P800 P400 P400i E200 E200i");
- MODULE_LICENSE("GPL");
+ clean4:
+@@ -2885,6 +2892,7 @@ clean2:
+ clean1:
+ 	release_io_mem(hba[i]);
+ 	free_hba(i);
++	hba[i]->busy_initializing = 0;
+ 	return(-1);
+ }
  
- #include "cciss_cmd.h"
-@@ -83,12 +83,22 @@ static const struct pci_device_id cciss_
- 		0x0E11, 0x4091, 0, 0, 0},
- 	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSA,
- 		0x103C, 0x3225, 0, 0, 0},
--	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSB,
-+	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSC,
- 		0x103c, 0x3223, 0, 0, 0},
- 	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSC,
--		0x103c, 0x3231, 0, 0, 0},
-+		0x103c, 0x3234, 0, 0, 0},
- 	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSC,
--		0x103c, 0x3233, 0, 0, 0},
-+		0x103c, 0x3235, 0, 0, 0},
-+	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSD,
-+		0x103c, 0x3211, 0, 0, 0},
-+	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSD,
-+		0x103c, 0x3212, 0, 0, 0},
-+	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSD,
-+		0x103c, 0x3213, 0, 0, 0},
-+	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSD,
-+		0x103c, 0x3214, 0, 0, 0},
-+	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSD,
-+		0x103c, 0x3215, 0, 0, 0},
- 	{0,}
- };
- MODULE_DEVICE_TABLE(pci, cciss_pci_device_id);
-@@ -111,8 +121,13 @@ static struct board_type products[] = {
- 	{ 0x40910E11, "Smart Array 6i", &SA5_access},
- 	{ 0x3225103C, "Smart Array P600", &SA5_access},
- 	{ 0x3223103C, "Smart Array P800", &SA5_access},
--	{ 0x3231103C, "Smart Array E400", &SA5_access},
--	{ 0x3233103C, "Smart Array E300", &SA5_access},
-+	{ 0x3234103C, "Smart Array P400", &SA5_access},
-+	{ 0x3235103C, "Smart Array P400i", &SA5_access},
-+	{ 0x3211103C, "Smart Array E200i", &SA5_access},
-+	{ 0x3212103C, "Smart Array E200", &SA5_access},
-+	{ 0x3213103C, "Smart Array E200i", &SA5_access},
-+	{ 0x3214103C, "Smart Array E200i", &SA5_access},
-+	{ 0x3215103C, "Smart Array E200i", &SA5_access},
- };
+diff -burNp lx2613-p001/drivers/block/cciss.h lx2613/drivers/block/cciss.h
+--- lx2613-p001/drivers/block/cciss.h	2005-08-28 18:41:01.000000000 -0500
++++ lx2613/drivers/block/cciss.h	2005-09-07 14:24:55.174599496 -0500
+@@ -83,6 +83,7 @@ struct ctlr_info 
+ 	int			nr_allocs;
+ 	int			nr_frees; 
+ 	int			busy_configuring;
++	int			busy_initializing;
  
- /* How long to wait (in millesconds) for board to go into simple mode */
-diff -burNp lx2613.orig/include/linux/pci_ids.h lx2613/include/linux/pci_ids.h
---- lx2613.orig/include/linux/pci_ids.h	2005-08-28 18:41:01.000000000 -0500
-+++ lx2613/include/linux/pci_ids.h	2005-09-07 13:29:55.946158456 -0500
-@@ -713,10 +713,12 @@
- #define PCI_DEVICE_ID_HP_DIVA_EVEREST	0x1282
- #define PCI_DEVICE_ID_HP_DIVA_AUX	0x1290
- #define PCI_DEVICE_ID_HP_DIVA_RMP3	0x1301
-+#define PCI_DEVICE_ID_HP_CISS		0x3210
- #define PCI_DEVICE_ID_HP_CISSA		0x3220
- #define PCI_DEVICE_ID_HP_CISSB		0x3222
--#define PCI_DEVICE_ID_HP_ZX2_IOC	0x4031
- #define PCI_DEVICE_ID_HP_CISSC		0x3230
-+#define PCI_DEVICE_ID_HP_CISSD		0x3238
-+#define PCI_DEVICE_ID_HP_ZX2_IOC	0x4031
- 
- #define PCI_VENDOR_ID_PCTECH		0x1042
- #define PCI_DEVICE_ID_PCTECH_RZ1000	0x1000
+ 	/* This element holds the zero based queue number of the last
+ 	 * queue to be started.  It is used for fairness.
