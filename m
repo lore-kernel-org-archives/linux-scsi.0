@@ -1,120 +1,44 @@
 From: mike.miller@hp.com
-Subject: [PATCH 7/8] cciss: One Button Disaster Recovery support
-Date: Fri, 9 Sep 2005 17:11:44 -0500
-Message-ID: <20050909221144.GG4616@beardog.cca.cpqcorp.net>
+Subject: [PATCH 5/8] cciss: bug fix in cciss_remove_one
+Date: Fri, 9 Sep 2005 17:07:50 -0500
+Message-ID: <20050909220750.GE4616@beardog.cca.cpqcorp.net>
 Reply-To: mikem@beardog.cca.cpqcorp.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030701AbVIIWMG@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ccerelbas04.cce.hp.com ([161.114.21.107]:13014 "EHLO
+	ccerelbas04.cce.hp.com") by vger.kernel.org with ESMTP
+	id S1030639AbVIIWII (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Sep 2005 18:08:08 -0400
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: akpm@osdl.org, axboe@suse.de
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-Patch 7 of 8
-This patch adds support for "One Button Disaster Recovery" devices
-to the cciss driver.  (OBDR devices are tape drives which can
-pretend to be cd-rom devices temporarily.  Once booted the device
-can be reverted to a tape drive and data recovery operations can
-be automatically begun.)
-This is an enhancement request by a vendor/partner working on
-One Button Disaster Recovery.
-Please consider for inclusion.
+Patch 5 of 8
+This patch fixes a bug in cciss_remove_one. A set of braces was missing 
+for the if statement causing an Oops on driver unload.
+Please consider this for inclusion.
 
-Signed-off-by: Stephen M. Cameron <steve.cameron@hp.com>
 Signed-off-by: Mike Miller <mike.miller@hp.com>
 
- cciss_scsi.c |   41 +++++++++++++++++++++++++++++------------
- 1 files changed, 29 insertions(+), 12 deletions(-)
+ cciss.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 --------------------------------------------------------------------------------
-diff -burNp lx2613-p006/drivers/block/cciss_scsi.c lx2613/drivers/block/cciss_scsi.c
---- lx2613-p006/drivers/block/cciss_scsi.c	2005-09-09 16:09:13.365616000 -0500
-+++ lx2613/drivers/block/cciss_scsi.c	2005-09-09 16:20:35.292948160 -0500
-@@ -878,7 +878,7 @@ cciss_scsi_interpret_error(CommandList_s
- 
- static int
- cciss_scsi_do_inquiry(ctlr_info_t *c, unsigned char *scsi3addr, 
--		 InquiryData_struct *buf)
-+		 unsigned char *buf, unsigned char bufsize)
- {
- 	int rc;
- 	CommandList_struct *cp;
-@@ -901,11 +901,10 @@ cciss_scsi_do_inquiry(ctlr_info_t *c, un
- 	cdb[1] = 0;
- 	cdb[2] = 0;
- 	cdb[3] = 0;
--	cdb[4] = sizeof(*buf) & 0xff;
-+	cdb[4] = bufsize;
- 	cdb[5] = 0;
- 	rc = cciss_scsi_do_simple_cmd(c, cp, scsi3addr, cdb, 
--				6, (unsigned char *) buf, 
--				sizeof(*buf), XFER_READ);
-+				6, buf, bufsize, XFER_READ);
- 
- 	if (rc != 0) return rc; /* something went wrong */
- 
-@@ -1001,9 +1000,10 @@ cciss_update_non_disk_devices(int cntl_n
- 	   that though.  
- 
- 	 */
--
-+#define OBDR_TAPE_INQ_SIZE 49
-+#define OBDR_TAPE_SIG "$DR-10"
- 	ReportLunData_struct *ld_buff;
--	InquiryData_struct *inq_buff;
-+	unsigned char *inq_buff;
- 	unsigned char scsi3addr[8];
- 	ctlr_info_t *c;
- 	__u32 num_luns=0;
-@@ -1021,7 +1021,7 @@ cciss_update_non_disk_devices(int cntl_n
- 		return;
+diff -burNp lx2613-p004/drivers/block/cciss.c lx2613/drivers/block/cciss.c
+--- lx2613-p004/drivers/block/cciss.c	2005-09-09 16:09:13.362617000 -0500
++++ lx2613/drivers/block/cciss.c	2005-09-09 16:10:55.801044320 -0500
+@@ -3097,9 +3097,10 @@ static void __devexit cciss_remove_one (
+ 	/* remove it from the disk list */
+ 	for (j = 0; j < NWD; j++) {
+ 		struct gendisk *disk = hba[i]->gendisk[j];
+-		if (disk->flags & GENHD_FL_UP)
+-			blk_cleanup_queue(disk->queue);
++		if (disk->flags & GENHD_FL_UP) {
+ 			del_gendisk(disk);
++			blk_cleanup_queue(disk->queue);
++		}
  	}
- 	memset(ld_buff, 0, reportlunsize);
--	inq_buff = kmalloc(sizeof( InquiryData_struct), GFP_KERNEL);
-+	inq_buff = kmalloc(OBDR_TAPE_INQ_SIZE, GFP_KERNEL);
-         if (inq_buff == NULL) {
-                 printk(KERN_ERR "cciss: out of memory\n");
-                 kfree(ld_buff);
-@@ -1052,19 +1052,36 @@ cciss_update_non_disk_devices(int cntl_n
  
- 		/* for each physical lun, do an inquiry */
- 		if (ld_buff->LUN[i][3] & 0xC0) continue;
--		memset(inq_buff, 0, sizeof(InquiryData_struct));
-+		memset(inq_buff, 0, OBDR_TAPE_INQ_SIZE);
- 		memcpy(&scsi3addr[0], &ld_buff->LUN[i][0], 8);
- 
--		if (cciss_scsi_do_inquiry(hba[cntl_num], 
--			scsi3addr, inq_buff) != 0)
--		{
-+		if (cciss_scsi_do_inquiry(hba[cntl_num], scsi3addr, inq_buff, 
-+			(unsigned char) OBDR_TAPE_INQ_SIZE) != 0) {
- 			/* Inquiry failed (msg printed already) */
- 			devtype = 0; /* so we will skip this device. */
- 		} else /* what kind of device is this? */
--			devtype = (inq_buff->data_byte[0] & 0x1f);
-+			devtype = (inq_buff[0] & 0x1f);
- 
- 		switch (devtype)
- 		{
-+		  case 0x05: /* CD-ROM */ {
-+
-+			/* We don't *really* support actual CD-ROM devices,
-+			 * just this "One Button Disaster Recovery" tape drive
-+			 * which temporarily pretends to be a CD-ROM drive.
-+			 * So we check that the device is really an OBDR tape 
-+			 * device by checking for "$DR-10" in bytes 43-48 of 
-+			 * the inquiry data.
-+			 */ 
-+				char obdr_sig[7]; 
-+
-+				strncpy(obdr_sig, &inq_buff[43], 6);
-+				obdr_sig[6] = '\0';
-+				if (strncmp(obdr_sig, OBDR_TAPE_SIG, 6) != 0) 
-+					/* Not OBDR device, ignore it. */
-+					break;
-+			}
-+			/* fall through . . . */
- 		  case 0x01: /* sequential access, (tape) */
- 		  case 0x08: /* medium changer */
- 			if (ncurrent >= CCISS_MAX_SCSI_DEVS_PER_HBA) {
+ 	pci_free_consistent(hba[i]->pdev, NR_CMDS * sizeof(CommandList_struct),
