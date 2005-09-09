@@ -1,82 +1,58 @@
-From: mike.miller@hp.com
-Subject: [PATCH 8/8] cciss: SCSI tape info for /proc
-Date: Fri, 9 Sep 2005 17:13:12 -0500
-Message-ID: <20050909221312.GH4616@beardog.cca.cpqcorp.net>
-Reply-To: mikem@beardog.cca.cpqcorp.net
+From: Daniel Drake <dsd@gentoo.org>
+Subject: [PATCH] SCSI: Don't be so verbose if no disc is present
+Date: Fri, 09 Sep 2005 23:17:16 +0100
+Message-ID: <432209EC.90900@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030339AbVIIWNe@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: akpm@osdl.org, axboe@suse.de
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------050601010706080906080008"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mta07-winn.ispmail.ntl.com ([81.103.221.47]:13765 "EHLO
+	mta07-winn.ispmail.ntl.com") by vger.kernel.org with ESMTP
+	id S1030720AbVIIWRT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Sep 2005 18:17:19 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org
 
-Patch 8 of 8
-Add SCSI host and device info not elsewhere available to /proc/scsi/cciss/*
-Namely, connect cciss device instance with scsi host number, and
-give scsi host number, bus, target, lun, devicetype, and 8-byte cciss LUNID
-for each tapedrive/medium changer attached to a controller
+This is a multi-part message in MIME format.
+--------------050601010706080906080008
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-For instance:
+Running a simple "touch /dev/scd0" on a SCSI cdrom will cause the following 
+message to appear in the logs if no disc is present:
 
-# cat /proc/scsi/cciss/2
-cciss0: SCSI host: 2
-c2b0t0l0 01 0x0000000000000001
+	Device not ready. Make sure there is a disc in the drive.
 
-Signed-off-by: Stephen M. Cameron <steve.cameron@hp.com>
-Signed-off-by: Mike Miller <mike.miller@hp.com>
+This results in the logs being flooded for some users by those userspace 
+agents which repeatedly poll the device for media change.
 
- cciss_scsi.c |   25 +++++++++++++++++++++++--
- 1 files changed, 23 insertions(+), 2 deletions(-)
---------------------------------------------------------------------------------
-diff -burNp lx2613-p007/drivers/block/cciss_scsi.c lx2613/drivers/block/cciss_scsi.c
---- lx2613-p007/drivers/block/cciss_scsi.c	2005-09-09 16:20:35.292948000 -0500
-+++ lx2613/drivers/block/cciss_scsi.c	2005-09-09 16:24:43.948146824 -0500
-@@ -1144,6 +1144,7 @@ cciss_scsi_proc_info(struct Scsi_Host *s
- 
- 	int buflen, datalen;
- 	ctlr_info_t *ci;
-+	int i;
- 	int cntl_num;
- 
- 
-@@ -1154,8 +1155,28 @@ cciss_scsi_proc_info(struct Scsi_Host *s
- 	cntl_num = ci->ctlr;	/* Get our index into the hba[] array */
- 
- 	if (func == 0) {	/* User is reading from /proc/scsi/ciss*?/?*  */
--		buflen = sprintf(buffer, "hostnum=%d\n", sh->host_no); 	
-+		buflen = sprintf(buffer, "cciss%d: SCSI host: %d\n", 
-+				cntl_num, sh->host_no); 	
- 
-+		/* this information is needed by apps to know which cciss 
-+		   device corresponds to which scsi host number without 
-+		   having to open a scsi target device node.  The device 
-+		   information is not a duplicate of /proc/scsi/scsi because 
-+		   the two may be out of sync due to scsi hotplug, rather 
-+		   this info is for an app to be able to use to know how to 
-+		   get them back in sync. */
-+
-+		for (i=0;i<ccissscsi[cntl_num].ndevices;i++) {
-+			struct cciss_scsi_dev_t *sd = &ccissscsi[cntl_num].dev[i];
-+			buflen += sprintf(&buffer[buflen], "c%db%dt%dl%d %02d "
-+				"0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
-+				sh->host_no, sd->bus, sd->target, sd->lun, 
-+				sd->devtype,
-+				sd->scsi3addr[0], sd->scsi3addr[1], 
-+				sd->scsi3addr[2], sd->scsi3addr[3],
-+				sd->scsi3addr[4], sd->scsi3addr[5], 
-+				sd->scsi3addr[6], sd->scsi3addr[7]);
-+		}
- 		datalen = buflen - offset;
- 		if (datalen < 0) { 	/* they're reading past EOF. */
- 			datalen = 0;
-@@ -1417,7 +1438,7 @@ cciss_proc_tape_report(int ctlr, unsigne
- 
- 	CPQ_TAPE_LOCK(ctlr, flags);
- 	size = sprintf(buffer + *len, 
--		"       Sequential access devices: %d\n\n",
-+		"Sequential access devices: %d\n\n",
- 			ccissscsi[ctlr].ndevices);
- 	CPQ_TAPE_UNLOCK(ctlr, flags);
- 	*pos += size; *len += size;
+This patch demotes the message to a quieter scsi-logging message only.
+
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+
+
+--------------050601010706080906080008
+Content-Type: text/x-patch;
+ name="scsi-quiet-no-cd-warning.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi-quiet-no-cd-warning.patch"
+
+--- linux/drivers/scsi/scsi_ioctl.c.orig	2005-09-09 23:10:07.000000000 +0100
++++ linux/drivers/scsi/scsi_ioctl.c	2005-09-09 23:13:17.000000000 +0100
+@@ -118,8 +118,9 @@ static int ioctl_internal_command(struct
+ 			break;
+ 		case NOT_READY:	/* This happens if there is no disc in drive */
+ 			if (sdev->removable && (cmd[0] != TEST_UNIT_READY)) {
+-				printk(KERN_INFO "Device not ready. Make sure"
+-				       " there is a disc in the drive.\n");
++				SCSI_LOG_IOCTL(2, printk(
++				       "Device not ready. Make sure"
++				       " there is a disc in the drive.\n"));
+ 				break;
+ 			}
+ 		case UNIT_ATTENTION:
+
+--------------050601010706080906080008--
