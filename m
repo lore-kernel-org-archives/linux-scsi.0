@@ -1,1006 +1,976 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] SAS transport class
-Date: Fri, 9 Sep 2005 16:22:50 +0200
-Message-ID: <20050909142250.GA13136@lst.de>
+Subject: [PATCH 1/2] fusion core changes for SAS support
+Date: Fri, 9 Sep 2005 16:25:54 +0200
+Message-ID: <20050909142554.GA14098@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:53972 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S964911AbVIIOXH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 10:23:07 -0400
+Received: from verein.lst.de ([213.95.11.210]:57812 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S964881AbVIIO0R (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 10:26:17 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@steeleye.com
+To: jejb@steeleye.com, Eric.Moore@lsil.com
 Cc: linux-scsi@vger.kernel.org
 
-The SAS transport class contains common code to deal with SAS HBAs, an
-aproximated representation of SAS topologies in the driver model,
-and various sysfs attributes to expose these topologies and managment
-interfaces to userspace.
-
-In addition to the basic SCSI core objects this transport class introduces
-two additional intermediate objects:  The SAS PHY as represented by struct
-sas_phy defines an "outgoing" PHY on a SAS HBA or Expander, and the SAS
-remote PHY represented by struct sas_rphy defines an "incoming" PHY on a
-SAS Expander or end device.  Note that this is purely a software concept, the
-underlying hardware for a PHY and a remote PHY is the exactly the same.
-
-There is no concept of a SAS port in this code, users can see what PHYs
-form a wide port based on the port_identifier attribute, which is the same
-for all PHYs in a port.
-
-This submission doesn't handle hot-plug addition or removal of SAS devices
-and thus doesn't do scanning in a workqueue yet, that will be added in
-phase2 after this submission.  In a third phase I will add additional
-managment infrastructure.
-
-I think this submission is ready for 2.6.14, but additional comments are
-of course very welcome.
-
-I'd like to thanks James Smart a lot for his very useful input on the
-design.
+ - various bits for SAS support from the LSI driver.
+ - use the device private data for the fusion target private data.
+   this should be using the midlayer target data framework, but we
+   can't move over to that until fusion has been switched to the
+   generic DV code
+ - use target ID and channel from the fusion target private data,
+   because those in scsi_device will be different for mptsas
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs-2.6.x/drivers/scsi/Kconfig
+Index: xfs-2.6.x/drivers/message/fusion/mptbase.h
 ===================================================================
---- xfs-2.6.x.orig/drivers/scsi/Kconfig	2005-09-09 16:23:01.000000000 +0200
-+++ xfs-2.6.x/drivers/scsi/Kconfig	2005-09-09 16:23:38.000000000 +0200
-@@ -229,6 +229,13 @@
- 	  each attached iSCSI device to sysfs, say Y.
- 	  Otherwise, say N.
+--- xfs-2.6.x.orig/drivers/message/fusion/mptbase.h	2005-09-08 22:22:00.000000000 +0200
++++ xfs-2.6.x/drivers/message/fusion/mptbase.h	2005-09-09 16:23:29.000000000 +0200
+@@ -65,6 +65,7 @@
+ #include "lsi/mpi_fc.h"		/* Fibre Channel (lowlevel) support */
+ #include "lsi/mpi_targ.h"	/* SCSI/FCP Target protcol support */
+ #include "lsi/mpi_tool.h"	/* Tools support */
++#include "lsi/mpi_sas.h"	/* SAS support */
  
-+config SCSI_SAS_ATTRS
-+	tristate "SAS Transport Attributes"
-+	depends on SCSI
-+	help
-+	  If you wish to export transport-specific information about
-+	  each attached SAS device to sysfs, say Y.
-+
- endmenu
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
  
- menu "SCSI low-level drivers"
-Index: xfs-2.6.x/drivers/scsi/Makefile
-===================================================================
---- xfs-2.6.x.orig/drivers/scsi/Makefile	2005-09-09 16:23:01.000000000 +0200
-+++ xfs-2.6.x/drivers/scsi/Makefile	2005-09-09 16:23:38.000000000 +0200
-@@ -29,6 +29,7 @@
- obj-$(CONFIG_SCSI_SPI_ATTRS)	+= scsi_transport_spi.o
- obj-$(CONFIG_SCSI_FC_ATTRS) 	+= scsi_transport_fc.o
- obj-$(CONFIG_SCSI_ISCSI_ATTRS)	+= scsi_transport_iscsi.o
-+obj-$(CONFIG_SCSI_SAS_ATTRS)	+= scsi_transport_sas.o
+@@ -477,6 +478,14 @@
+ 	u8		 rsvd[1];
+ } ScsiCfgData;
  
- obj-$(CONFIG_SCSI_AMIGA7XX)	+= amiga7xx.o	53c7xx.o
- obj-$(CONFIG_A3000_SCSI)	+= a3000.o	wd33c93.o
-Index: xfs-2.6.x/drivers/scsi/scsi_transport_sas.c
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfs-2.6.x/drivers/scsi/scsi_transport_sas.c	2005-09-09 16:23:38.000000000 +0200
-@@ -0,0 +1,819 @@
-+/*
-+ * Copyright (C) 2005 Dell Inc.
-+ *	Released under GPL v2.
-+ *
-+ * Serial Attached SCSI (SAS) transport class.
-+ *
-+ * The SAS transport class contains common code to deal with SAS HBAs,
-+ * an aproximated representation of SAS topologies in the driver model,
-+ * and various sysfs attributes to expose these topologies and managment
-+ * interfaces to userspace.
-+ *
-+ * In addition to the basic SCSI core objects this transport class
-+ * introduces two additional intermediate objects:  The SAS PHY
-+ * as represented by struct sas_phy defines an "outgoing" PHY on
-+ * a SAS HBA or Expander, and the SAS remote PHY represented by
-+ * struct sas_rphy defines an "incoming" PHY on a SAS Expander or
-+ * end device.  Note that this is purely a software concept, the
-+ * underlying hardware for a PHY and a remote PHY is the exactly
-+ * the same.
-+ *
-+ * There is no concept of a SAS port in this code, users can see
-+ * what PHYs form a wide port based on the port_identifier attribute,
-+ * which is the same for all PHYs in a port.
-+ */
++typedef	struct _SasCfgData {
++	u8		 ptClear;		/* 1 to automatically clear the
++						 * persistent table.
++						 * 0 to disable
++						 * automatic clearing.
++						 */
++}SasCfgData;
 +
-+#include <linux/init.h>
-+#include <linux/module.h>
-+#include <linux/err.h>
-+
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_host.h>
-+#include <scsi/scsi_transport.h>
-+#include <scsi/scsi_transport_sas.h>
-+
-+
-+#define SAS_HOST_ATTRS		0
-+#define SAS_PORT_ATTRS		11
-+#define SAS_RPORT_ATTRS		5
-+
-+struct sas_internal {
-+	struct scsi_transport_template t;
-+	struct sas_function_template *f;
-+
-+	struct class_device_attribute private_host_attrs[SAS_HOST_ATTRS];
-+	struct class_device_attribute private_phy_attrs[SAS_PORT_ATTRS];
-+	struct class_device_attribute private_rphy_attrs[SAS_RPORT_ATTRS];
-+
-+	struct transport_container phy_attr_cont;
-+	struct transport_container rphy_attr_cont;
-+
+ /*
+  *  Adapter Structure - pci_dev specific. Maximum: MPT_MAX_ADAPTERS
+  */
+@@ -530,11 +539,15 @@
+ 	u8			*sense_buf_pool;
+ 	dma_addr_t		 sense_buf_pool_dma;
+ 	u32			 sense_buf_low_dma;
++	u8			*HostPageBuffer; /* SAS - host page buffer support */
++	u32			HostPageBuffer_sz;
++	dma_addr_t		HostPageBuffer_dma;
+ 	int			 mtrr_reg;
+ 	struct pci_dev		*pcidev;	/* struct pci_dev pointer */
+ 	u8			__iomem *memmap;	/* mmap address */
+ 	struct Scsi_Host	*sh;		/* Scsi Host pointer */
+ 	ScsiCfgData		spi_data;	/* Scsi config. data */
++	SasCfgData		sas_data;	/* Sas config. data */
+ 	MPT_IOCTL		*ioctl;		/* ioctl data pointer */
+ 	struct proc_dir_entry	*ioc_dentry;
+ 	struct _MPT_ADAPTER	*alt_ioc;	/* ptr to 929 bound adapter port */
+@@ -554,31 +567,35 @@
+ #else
+ 	u32			 mfcnt;
+ #endif
+-	u32			 NB_for_64_byte_frame;       
++	u32			 NB_for_64_byte_frame;
+ 	u32			 hs_req[MPT_MAX_FRAME_SIZE/sizeof(u32)];
+ 	u16			 hs_reply[MPT_MAX_FRAME_SIZE/sizeof(u16)];
+ 	IOCFactsReply_t		 facts;
+ 	PortFactsReply_t	 pfacts[2];
+ 	FCPortPage0_t		 fc_port_page0[2];
++	struct timer_list	 persist_timer;	/* persist table timer */
++	int			 persist_wait_done; /* persist completion flag */
++	u8			 persist_reply_frame[MPT_DEFAULT_FRAME_SIZE]; /* persist reply */
+ 	LANPage0_t		 lan_cnfg_page0;
+ 	LANPage1_t		 lan_cnfg_page1;
+-	/*  
 +	/*
-+	 * The array of null terminated pointers to attributes
-+	 * needed by scsi_sysfs.c
-+	 */
-+	struct class_device_attribute *host_attrs[SAS_HOST_ATTRS + 1];
-+	struct class_device_attribute *phy_attrs[SAS_PORT_ATTRS + 1];
-+	struct class_device_attribute *rphy_attrs[SAS_RPORT_ATTRS + 1];
-+};
-+#define to_sas_internal(tmpl)	container_of(tmpl, struct sas_internal, t)
-+
-+struct sas_host_attrs {
-+	struct list_head rphy_list;
-+	spinlock_t lock;
-+	u32 next_target_id;
-+};
-+#define to_sas_host_attrs(host)	((struct sas_host_attrs *)(host)->shost_data)
-+
-+
-+/*
-+ * Hack to allow attributes of the same name in different objects.
-+ */
-+#define SAS_CLASS_DEVICE_ATTR(_prefix,_name,_mode,_show,_store) \
-+	struct class_device_attribute class_device_attr_##_prefix##_##_name = \
-+	__ATTR(_name,_mode,_show,_store)
-+
-+
-+/*
-+ * Pretty printing helpers
-+ */
-+
-+#define sas_bitfield_name_match(title, table)			\
-+static ssize_t							\
-+get_sas_##title##_names(u32 table_key, char *buf)		\
-+{								\
-+	char *prefix = "";					\
-+	ssize_t len = 0;					\
-+	int i;							\
-+								\
-+	for (i = 0; i < sizeof(table)/sizeof(table[0]); i++) {	\
-+		if (table[i].value & table_key) {		\
-+			len += sprintf(buf + len, "%s%s",	\
-+				prefix, table[i].name);		\
-+			prefix = ", ";				\
-+		}						\
-+	}							\
-+	len += sprintf(buf + len, "\n");			\
-+	return len;						\
-+}
-+
-+#define sas_bitfield_name_search(title, table)			\
-+static ssize_t							\
-+get_sas_##title##_names(u32 table_key, char *buf)		\
-+{								\
-+	ssize_t len = 0;					\
-+	int i;							\
-+								\
-+	for (i = 0; i < sizeof(table)/sizeof(table[0]); i++) {	\
-+		if (table[i].value == table_key) {		\
-+			len += sprintf(buf + len, "%s",		\
-+				table[i].name);			\
-+			break;					\
-+		}						\
-+	}							\
-+	len += sprintf(buf + len, "\n");			\
-+	return len;						\
-+}
-+
-+static struct {
-+	u32		value;
-+	char		*name;
-+} sas_device_type_names[] = {
-+	{ SAS_PHY_UNUSED,		"unused" },
-+	{ SAS_END_DEVICE,		"end device" },
-+	{ SAS_EDGE_EXPANDER_DEVICE,	"edge expander" },
-+	{ SAS_FANOUT_EXPANDER_DEVICE,	"fanout expander" },
-+};
-+sas_bitfield_name_search(device_type, sas_device_type_names)
-+
-+
-+static struct {
-+	u32		value;
-+	char		*name;
-+} sas_protocol_names[] = {
-+	{ SAS_PROTOCOL_SATA,		"sata" },
-+	{ SAS_PROTOCOL_SMP,		"smp" },
-+	{ SAS_PROTOCOL_STP,		"stp" },
-+	{ SAS_PROTOCOL_SSP,		"ssp" },
-+};
-+sas_bitfield_name_match(protocol, sas_protocol_names)
-+
-+static struct {
-+	u32		value;
-+	char		*name;
-+} sas_linkspeed_names[] = {
-+	{ SAS_LINK_RATE_UNKNOWN,	"Unknown" },
-+	{ SAS_PHY_DISABLED,		"Phy disabled" },
-+	{ SAS_LINK_RATE_FAILED,		"Link Rate failed" },
-+	{ SAS_SATA_SPINUP_HOLD,		"Spin-up hold" },
-+	{ SAS_LINK_RATE_1_5_GBPS,	"1.5 Gbit" },
-+	{ SAS_LINK_RATE_3_0_GBPS,	"3.0 Gbit" },
-+};
-+sas_bitfield_name_search(linkspeed, sas_linkspeed_names)
-+
-+
-+/*
-+ * SAS host attributes
-+ */
-+
-+static int sas_host_setup(struct device *dev)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(dev);
-+	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
-+
-+	INIT_LIST_HEAD(&sas_host->rphy_list);
-+	spin_lock_init(&sas_host->lock);
-+	sas_host->next_target_id = 0;
-+	return 0;
-+}
-+
-+static DECLARE_TRANSPORT_CLASS(sas_host_class,
-+		"sas_host", sas_host_setup, NULL, NULL);
-+
-+static int sas_host_match(struct attribute_container *cont,
-+			    struct device *dev)
-+{
-+	struct Scsi_Host *shost;
-+	struct sas_internal *i;
-+
-+	if (!scsi_is_host_device(dev))
-+		return 0;
-+	shost = dev_to_shost(dev);
-+
-+	if (!shost->transportt)
-+		return 0;
-+	if (shost->transportt->host_attrs.ac.class !=
-+			&sas_host_class.class)
-+		return 0;
-+
-+	i = to_sas_internal(shost->transportt);
-+	return &i->t.host_attrs.ac == cont;
-+}
-+
-+static int do_sas_phy_delete(struct device *dev, void *data)
-+{
-+	if (scsi_is_sas_phy(dev))
-+		sas_phy_delete(dev_to_phy(dev));
-+	return 0;
-+}
-+
-+/**
-+ * sas_remove_host  --  tear down a Scsi_Host's SAS data structures
-+ * @shost:	Scsi Host that is torn down
-+ *
-+ * Removes all SAS PHYs and remote PHYs for a given Scsi_Host.
-+ * Must be called just before scsi_remove_host for SAS HBAs.
-+ */
-+void sas_remove_host(struct Scsi_Host *shost)
-+{
-+	device_for_each_child(&shost->shost_gendev, NULL, do_sas_phy_delete);
-+}
-+EXPORT_SYMBOL(sas_remove_host);
-+
-+
-+/*
-+ * SAS Port attributes
-+ */
-+
-+#define sas_phy_show_simple(field, name, format_string, cast)		\
-+static ssize_t								\
-+show_sas_phy_##name(struct class_device *cdev, char *buf)		\
-+{									\
-+	struct sas_phy *phy = transport_class_to_phy(cdev);		\
-+									\
-+	return snprintf(buf, 20, format_string, cast phy->field);	\
-+}
-+
-+#define sas_phy_simple_attr(field, name, format_string, type)		\
-+	sas_phy_show_simple(field, name, format_string, (type))	\
-+static CLASS_DEVICE_ATTR(name, S_IRUGO, show_sas_phy_##name, NULL)
-+
-+#define sas_phy_show_protocol(field, name)				\
-+static ssize_t								\
-+show_sas_phy_##name(struct class_device *cdev, char *buf)		\
-+{									\
-+	struct sas_phy *phy = transport_class_to_phy(cdev);		\
-+									\
-+	if (!phy->field)						\
-+		return snprintf(buf, 20, "none\n");			\
-+	return get_sas_protocol_names(phy->field, buf);		\
-+}
-+
-+#define sas_phy_protocol_attr(field, name)				\
-+	sas_phy_show_protocol(field, name)				\
-+static CLASS_DEVICE_ATTR(name, S_IRUGO, show_sas_phy_##name, NULL)
-+
-+#define sas_phy_show_linkspeed(field)					\
-+static ssize_t								\
-+show_sas_phy_##field(struct class_device *cdev, char *buf)		\
-+{									\
-+	struct sas_phy *phy = transport_class_to_phy(cdev);		\
-+									\
-+	return get_sas_linkspeed_names(phy->field, buf);		\
-+}
-+
-+#define sas_phy_linkspeed_attr(field)					\
-+	sas_phy_show_linkspeed(field)					\
-+static CLASS_DEVICE_ATTR(field, S_IRUGO, show_sas_phy_##field, NULL)
-+
-+static ssize_t
-+show_sas_device_type(struct class_device *cdev, char *buf)
-+{
-+	struct sas_phy *phy = transport_class_to_phy(cdev);
-+
-+	if (!phy->identify.device_type)
-+		return snprintf(buf, 20, "none\n");
-+	return get_sas_device_type_names(phy->identify.device_type, buf);
-+}
-+
-+static CLASS_DEVICE_ATTR(device_type, S_IRUGO, show_sas_device_type, NULL);
-+
-+sas_phy_protocol_attr(identify.initiator_port_protocols,
-+		initiator_port_protocols);
-+sas_phy_protocol_attr(identify.target_port_protocols,
-+		target_port_protocols);
-+sas_phy_simple_attr(identify.sas_address, sas_address, "0x%016llx\n",
-+		unsigned long long);
-+sas_phy_simple_attr(identify.phy_identifier, phy_identifier, "%d\n", u8);
-+sas_phy_simple_attr(port_identifier, port_identifier, "%d\n", u8);
-+sas_phy_linkspeed_attr(negotiated_linkrate);
-+sas_phy_linkspeed_attr(minimum_linkrate_hw);
-+sas_phy_linkspeed_attr(minimum_linkrate);
-+sas_phy_linkspeed_attr(maximum_linkrate_hw);
-+sas_phy_linkspeed_attr(maximum_linkrate);
-+
-+
-+static DECLARE_TRANSPORT_CLASS(sas_phy_class,
-+		"sas_phy", NULL, NULL, NULL);
-+
-+static int sas_phy_match(struct attribute_container *cont, struct device *dev)
-+{
-+	struct Scsi_Host *shost;
-+	struct sas_internal *i;
-+
-+	if (!scsi_is_sas_phy(dev))
-+		return 0;
-+	shost = dev_to_shost(dev->parent);
-+
-+	if (!shost->transportt)
-+		return 0;
-+	if (shost->transportt->host_attrs.ac.class !=
-+			&sas_host_class.class)
-+		return 0;
-+
-+	i = to_sas_internal(shost->transportt);
-+	return &i->phy_attr_cont.ac == cont;
-+}
-+
-+static void sas_phy_release(struct device *dev)
-+{
-+	struct sas_phy *phy = dev_to_phy(dev);
-+
-+	put_device(dev->parent);
-+	kfree(phy);
-+}
-+
-+/**
-+ * sas_phy_alloc  --  allocates and initialize a SAS PHY structure
-+ * @parent:	Parent device
-+ * @number:	Port number
-+ *
-+ * Allocates an SAS PHY structure.  It will be added in the device tree
-+ * below the device specified by @parent, which has to be either a Scsi_Host
-+ * or sas_rphy.
-+ *
-+ * Returns:
-+ *	SAS PHY allocated or %NULL if the allocation failed.
-+ */
-+struct sas_phy *sas_phy_alloc(struct device *parent, int number)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(parent);
-+	struct sas_phy *phy;
-+
-+	phy = kmalloc(sizeof(*phy), GFP_KERNEL);
-+	if (!phy)
-+		return NULL;
-+	memset(phy, 0, sizeof(*phy));
-+
-+	get_device(parent);
-+
-+	phy->number = number;
-+
-+	device_initialize(&phy->dev);
-+	phy->dev.parent = get_device(parent);
-+	phy->dev.release = sas_phy_release;
-+	sprintf(phy->dev.bus_id, "phy-%d:%d", shost->host_no, number);
-+
-+	transport_setup_device(&phy->dev);
-+
-+	return phy;
-+}
-+EXPORT_SYMBOL(sas_phy_alloc);
-+
-+/**
-+ * sas_phy_add  --  add a SAS PHY to the device hierachy
-+ * @phy:	The PHY to be added
-+ *
-+ * Publishes a SAS PHY to the rest of the system.
-+ */
-+int sas_phy_add(struct sas_phy *phy)
-+{
-+	int error;
-+
-+	error = device_add(&phy->dev);
-+	if (!error) {
-+		transport_add_device(&phy->dev);
-+		transport_configure_device(&phy->dev);
-+	}
-+
-+	return error;
-+}
-+EXPORT_SYMBOL(sas_phy_add);
-+
-+/**
-+ * sas_phy_free  --  free a SAS PHY
-+ * @phy:	SAS PHY to free
-+ *
-+ * Frees the specified SAS PHY.
-+ *
-+ * Note:
-+ *   This function must only be called on a PHY that has not
-+ *   sucessfully been added using sas_phy_add().
-+ */
-+void sas_phy_free(struct sas_phy *phy)
-+{
-+	transport_destroy_device(&phy->dev);
-+	put_device(phy->dev.parent);
-+	put_device(phy->dev.parent);
-+	put_device(phy->dev.parent);
-+	kfree(phy);
-+}
-+EXPORT_SYMBOL(sas_phy_free);
-+
-+/**
-+ * sas_phy_delete  --  remove SAS PHY
-+ * @phy:	SAS PHY to remove
-+ *
-+ * Removes the specified SAS PHY.  If the SAS PHY has an
-+ * associated remote PHY it is removed before.
-+ */
-+void
-+sas_phy_delete(struct sas_phy *phy)
-+{
-+	struct device *dev = &phy->dev;
-+
-+	if (phy->rphy)
-+		sas_rphy_delete(phy->rphy);
-+
-+	transport_remove_device(dev);
-+	device_del(dev);
-+	transport_destroy_device(dev);
-+	put_device(dev->parent);
-+}
-+EXPORT_SYMBOL(sas_phy_delete);
-+
-+/**
-+ * scsi_is_sas_phy  --  check if a struct device represents a SAS PHY
-+ * @dev:	device to check
-+ *
-+ * Returns:
-+ *	%1 if the device represents a SAS PHY, %0 else
-+ */
-+int scsi_is_sas_phy(const struct device *dev)
-+{
-+	return dev->release == sas_phy_release;
-+}
-+EXPORT_SYMBOL(scsi_is_sas_phy);
-+
-+/*
-+ * SAS remote PHY attributes.
-+ */
-+
-+#define sas_rphy_show_simple(field, name, format_string, cast)		\
-+static ssize_t								\
-+show_sas_rphy_##name(struct class_device *cdev, char *buf)		\
-+{									\
-+	struct sas_rphy *rphy = transport_class_to_rphy(cdev);	\
-+									\
-+	return snprintf(buf, 20, format_string, cast rphy->field);	\
-+}
-+
-+#define sas_rphy_simple_attr(field, name, format_string, type)		\
-+	sas_rphy_show_simple(field, name, format_string, (type))	\
-+static SAS_CLASS_DEVICE_ATTR(rphy, name, S_IRUGO, 			\
-+		show_sas_rphy_##name, NULL)
-+
-+#define sas_rphy_show_protocol(field, name)				\
-+static ssize_t								\
-+show_sas_rphy_##name(struct class_device *cdev, char *buf)		\
-+{									\
-+	struct sas_rphy *rphy = transport_class_to_rphy(cdev);	\
-+									\
-+	if (!rphy->field)					\
-+		return snprintf(buf, 20, "none\n");			\
-+	return get_sas_protocol_names(rphy->field, buf);	\
-+}
-+
-+#define sas_rphy_protocol_attr(field, name)				\
-+	sas_rphy_show_protocol(field, name)				\
-+static SAS_CLASS_DEVICE_ATTR(rphy, name, S_IRUGO,			\
-+		show_sas_rphy_##name, NULL)
-+
-+static ssize_t
-+show_sas_rphy_device_type(struct class_device *cdev, char *buf)
-+{
-+	struct sas_rphy *rphy = transport_class_to_rphy(cdev);
-+
-+	if (!rphy->identify.device_type)
-+		return snprintf(buf, 20, "none\n");
-+	return get_sas_device_type_names(
-+			rphy->identify.device_type, buf);
-+}
-+
-+static SAS_CLASS_DEVICE_ATTR(rphy, device_type, S_IRUGO,
-+		show_sas_rphy_device_type, NULL);
-+
-+sas_rphy_protocol_attr(identify.initiator_port_protocols,
-+		initiator_port_protocols);
-+sas_rphy_protocol_attr(identify.target_port_protocols, target_port_protocols);
-+sas_rphy_simple_attr(identify.sas_address, sas_address, "0x%016llx\n",
-+		unsigned long long);
-+sas_rphy_simple_attr(identify.phy_identifier, phy_identifier, "%d\n", u8);
-+
-+static DECLARE_TRANSPORT_CLASS(sas_rphy_class,
-+		"sas_rphy", NULL, NULL, NULL);
-+
-+static int sas_rphy_match(struct attribute_container *cont, struct device *dev)
-+{
-+	struct Scsi_Host *shost;
-+	struct sas_internal *i;
-+
-+	if (!scsi_is_sas_rphy(dev))
-+		return 0;
-+	shost = dev_to_shost(dev->parent->parent);
-+
-+	if (!shost->transportt)
-+		return 0;
-+	if (shost->transportt->host_attrs.ac.class !=
-+			&sas_host_class.class)
-+		return 0;
-+
-+	i = to_sas_internal(shost->transportt);
-+	return &i->rphy_attr_cont.ac == cont;
-+}
-+
-+static void sas_rphy_release(struct device *dev)
-+{
-+	struct sas_rphy *rphy = dev_to_rphy(dev);
-+
-+	put_device(dev->parent);
-+	kfree(rphy);
-+}
-+
-+/**
-+ * sas_rphy_alloc  --  allocates and initialize a SAS remote PHY structure
-+ * @parent:		SAS PHY this remote PHY is conneted to
-+ *
-+ * Allocates an SAS remote PHY structure, connected to @parent.
-+ *
-+ * Returns:
-+ *	SAS PHY allocated or %NULL if the allocation failed.
-+ */
-+struct sas_rphy *sas_rphy_alloc(struct sas_phy *parent)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(&parent->dev);
-+	struct sas_rphy *rphy;
-+
-+	rphy = kmalloc(sizeof(*rphy), GFP_KERNEL);
-+	if (!rphy) {
-+		put_device(&parent->dev);
-+		return NULL;
-+	}
-+	memset(rphy, 0, sizeof(*rphy));
-+
-+	device_initialize(&rphy->dev);
-+	rphy->dev.parent = get_device(&parent->dev);
-+	rphy->dev.release = sas_rphy_release;
-+	sprintf(rphy->dev.bus_id, "rphy-%d:%d",
-+		shost->host_no, parent->number);
-+	transport_setup_device(&rphy->dev);
-+
-+	return rphy;
-+}
-+EXPORT_SYMBOL(sas_rphy_alloc);
-+
-+/**
-+ * sas_rphy_add  --  add a SAS remote PHY to the device hierachy
-+ * @rphy:	The remote PHY to be added
-+ *
-+ * Publishes a SAS remote PHY to the rest of the system.
-+ */
-+int sas_rphy_add(struct sas_rphy *rphy)
-+{
-+	struct sas_phy *parent = dev_to_phy(rphy->dev.parent);
-+	struct Scsi_Host *shost = dev_to_shost(parent->dev.parent);
-+	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
-+	struct sas_identify *identify = &rphy->identify;
-+	int error;
-+
-+	if (parent->rphy)
-+		return -ENXIO;
-+	parent->rphy = rphy;
-+
-+	error = device_add(&rphy->dev);
-+	if (error)
-+		return error;
-+	transport_add_device(&rphy->dev);
-+	transport_configure_device(&rphy->dev);
-+
-+	spin_lock(&sas_host->lock);
-+	list_add_tail(&rphy->list, &sas_host->rphy_list);
-+	if (identify->device_type == SAS_END_DEVICE &&
-+	    (identify->target_port_protocols &
-+	     (SAS_PROTOCOL_SSP|SAS_PROTOCOL_STP|SAS_PROTOCOL_SATA)))
-+		rphy->scsi_target_id = sas_host->next_target_id++;
-+	else
-+		rphy->scsi_target_id = -1;
-+	spin_unlock(&sas_host->lock);
-+
-+	if (rphy->scsi_target_id != -1) {
-+		scsi_scan_target(&rphy->dev, parent->number,
-+				rphy->scsi_target_id, ~0, 0);
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(sas_rphy_add);
-+
-+/**
-+ * sas_rphy_free  --  free a SAS remote PHY
-+ * @rphy	SAS remote PHY to free
-+ *
-+ * Frees the specified SAS remote PHY.
-+ *
-+ * Note:
-+ *   This function must only be called on a remote
-+ *   PHY that has not sucessfully been added using
-+ *   sas_rphy_add().
-+ */
-+void sas_rphy_free(struct sas_rphy *rphy)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(rphy->dev.parent->parent);
-+	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
-+
-+	spin_lock(&sas_host->lock);
-+	list_del(&rphy->list);
-+	spin_unlock(&sas_host->lock);
-+
-+	transport_destroy_device(&rphy->dev);
-+	put_device(rphy->dev.parent);
-+	put_device(rphy->dev.parent);
-+	put_device(rphy->dev.parent);
-+	kfree(rphy);
-+}
-+EXPORT_SYMBOL(sas_rphy_free);
-+
-+/**
-+ * sas_rphy_delete  --  remove SAS remote PHY
-+ * @rphy:	SAS remote PHY to remove
-+ *
-+ * Removes the specified SAS remote PHY.
-+ */
-+void
-+sas_rphy_delete(struct sas_rphy *rphy)
-+{
-+	struct device *dev = &rphy->dev;
-+	struct sas_phy *parent = dev_to_phy(dev->parent);
-+	struct Scsi_Host *shost = dev_to_shost(parent->dev.parent);
-+	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
-+
-+	transport_destroy_device(&rphy->dev);
-+
-+	scsi_remove_target(&rphy->dev);
-+
-+	spin_lock(&sas_host->lock);
-+	list_del(&rphy->list);
-+	spin_unlock(&sas_host->lock);
-+
-+	transport_remove_device(dev);
-+	device_del(dev);
-+	transport_destroy_device(dev);
-+	put_device(&parent->dev);
-+}
-+EXPORT_SYMBOL(sas_rphy_delete);
-+
-+/**
-+ * scsi_is_sas_rphy  --  check if a struct device represents a SAS remote PHY
-+ * @dev:	device to check
-+ *
-+ * Returns:
-+ *	%1 if the device represents a SAS remote PHY, %0 else
-+ */
-+int scsi_is_sas_rphy(const struct device *dev)
-+{
-+	return dev->release == sas_rphy_release;
-+}
-+EXPORT_SYMBOL(scsi_is_sas_rphy);
-+
-+
-+/*
-+ * SCSI scan helper
-+ */
-+
-+static struct device *sas_target_parent(struct Scsi_Host *shost,
-+					int channel, uint id)
-+{
-+	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
-+	struct sas_rphy *rphy;
-+	struct device *dev = NULL;
-+
-+	spin_lock(&sas_host->lock);
-+	list_for_each_entry(rphy, &sas_host->rphy_list, list) {
-+		struct sas_phy *parent = dev_to_phy(rphy->dev.parent);
-+		if (parent->number == channel &&
-+		    rphy->scsi_target_id == id)
-+			dev = &rphy->dev;
-+	}
-+	spin_unlock(&sas_host->lock);
-+
-+	return dev;
-+}
-+
-+
-+/*
-+ * Setup / Teardown code
-+ */
-+
-+#define SETUP_RPORT_ATTRIBUTE(field)					\
-+	i->private_rphy_attrs[count] = class_device_attr_##field;	\
-+	i->private_rphy_attrs[count].attr.mode = S_IRUGO;		\
-+	i->private_rphy_attrs[count].store = NULL;			\
-+	i->rphy_attrs[count] = &i->private_rphy_attrs[count];	\
-+	count++
-+
-+#define SETUP_PORT_ATTRIBUTE(field)					\
-+	i->private_phy_attrs[count] = class_device_attr_##field;	\
-+        i->private_phy_attrs[count].attr.mode = S_IRUGO;		\
-+        i->private_phy_attrs[count].store = NULL;			\
-+        i->phy_attrs[count] = &i->private_phy_attrs[count];		\
-+	count++
-+
-+
-+/**
-+ * sas_attach_transport  --  instantiate SAS transport template
-+ * @ft:		SAS transport class function template
-+ */
-+struct scsi_transport_template *
-+sas_attach_transport(struct sas_function_template *ft)
-+{
-+	struct sas_internal *i;
-+	int count;
-+
-+	i = kmalloc(sizeof(struct sas_internal), GFP_KERNEL);
-+	if (!i)
-+		return NULL;
-+	memset(i, 0, sizeof(struct sas_internal));
-+
-+	i->t.target_parent = sas_target_parent;
-+
-+	i->t.host_attrs.ac.attrs = &i->host_attrs[0];
-+	i->t.host_attrs.ac.class = &sas_host_class.class;
-+	i->t.host_attrs.ac.match = sas_host_match;
-+	transport_container_register(&i->t.host_attrs);
-+	i->t.host_size = sizeof(struct sas_host_attrs);
-+
-+	i->phy_attr_cont.ac.class = &sas_phy_class.class;
-+	i->phy_attr_cont.ac.attrs = &i->phy_attrs[0];
-+	i->phy_attr_cont.ac.match = sas_phy_match;
-+	transport_container_register(&i->phy_attr_cont);
-+
-+	i->rphy_attr_cont.ac.class = &sas_rphy_class.class;
-+	i->rphy_attr_cont.ac.attrs = &i->rphy_attrs[0];
-+	i->rphy_attr_cont.ac.match = sas_rphy_match;
-+	transport_container_register(&i->rphy_attr_cont);
-+
-+	i->f = ft;
-+
-+	count = 0;
-+	i->host_attrs[count] = NULL;
-+
-+	count = 0;
-+	SETUP_PORT_ATTRIBUTE(initiator_port_protocols);
-+	SETUP_PORT_ATTRIBUTE(target_port_protocols);
-+	SETUP_PORT_ATTRIBUTE(device_type);
-+	SETUP_PORT_ATTRIBUTE(sas_address);
-+	SETUP_PORT_ATTRIBUTE(phy_identifier);
-+	SETUP_PORT_ATTRIBUTE(port_identifier);
-+	SETUP_PORT_ATTRIBUTE(negotiated_linkrate);
-+	SETUP_PORT_ATTRIBUTE(minimum_linkrate_hw);
-+	SETUP_PORT_ATTRIBUTE(minimum_linkrate);
-+	SETUP_PORT_ATTRIBUTE(maximum_linkrate_hw);
-+	SETUP_PORT_ATTRIBUTE(maximum_linkrate);
-+	i->phy_attrs[count] = NULL;
-+
-+	count = 0;
-+	SETUP_RPORT_ATTRIBUTE(rphy_initiator_port_protocols);
-+	SETUP_RPORT_ATTRIBUTE(rphy_target_port_protocols);
-+	SETUP_RPORT_ATTRIBUTE(rphy_device_type);
-+	SETUP_RPORT_ATTRIBUTE(rphy_sas_address);
-+	SETUP_RPORT_ATTRIBUTE(rphy_phy_identifier);
-+	i->rphy_attrs[count] = NULL;
-+
-+	return &i->t;
-+}
-+EXPORT_SYMBOL(sas_attach_transport);
-+
-+/**
-+ * sas_release_transport  --  release SAS transport template instance
-+ * @t:		transport template instance
-+ */
-+void sas_release_transport(struct scsi_transport_template *t)
-+{
-+	struct sas_internal *i = to_sas_internal(t);
-+
-+	transport_container_unregister(&i->t.host_attrs);
-+	transport_container_unregister(&i->phy_attr_cont);
-+	transport_container_unregister(&i->rphy_attr_cont);
-+
-+	kfree(i);
-+}
-+EXPORT_SYMBOL(sas_release_transport);
-+
-+static __init int sas_transport_init(void)
-+{
-+	int error;
-+
-+	error = transport_class_register(&sas_host_class);
-+	if (error)
-+		goto out;
-+	error = transport_class_register(&sas_phy_class);
-+	if (error)
-+		goto out_unregister_transport;
-+	error = transport_class_register(&sas_rphy_class);
-+	if (error)
-+		goto out_unregister_phy;
-+
-+	return 0;
-+
-+ out_unregister_phy:
-+	transport_class_unregister(&sas_phy_class);
-+ out_unregister_transport:
-+	transport_class_unregister(&sas_host_class);
-+ out:
-+	return error;
-+
-+}
-+
-+static void __exit sas_transport_exit(void)
-+{
-+	transport_class_unregister(&sas_host_class);
-+	transport_class_unregister(&sas_phy_class);
-+	transport_class_unregister(&sas_rphy_class);
-+}
-+
-+MODULE_AUTHOR("Christoph Hellwig");
-+MODULE_DESCRIPTION("SAS Transphy Attributes");
-+MODULE_LICENSE("GPL");
-+
-+module_init(sas_transport_init);
-+module_exit(sas_transport_exit);
-Index: xfs-2.6.x/include/scsi/scsi_transport_sas.h
+ 	 * Description: errata_flag_1064
+ 	 * If a PCIX read occurs within 1 or 2 cycles after the chip receives
+ 	 * a split completion for a read data, an internal address pointer incorrectly
+ 	 * increments by 32 bytes
+ 	 */
+-	int			 errata_flag_1064;	
++	int			 errata_flag_1064;
+ 	u8			 FirstWhoInit;
+ 	u8			 upload_fw;	/* If set, do a fw upload */
+ 	u8			 reload_fw;	/* Force a FW Reload on next reset */
+-	u8			 NBShiftFactor;  /* NB Shift Factor based on Block Size (Facts)  */     
++	u8			 NBShiftFactor;  /* NB Shift Factor based on Block Size (Facts)  */
+ 	u8			 pad1[4];
+ 	int			 DoneCtx;
+ 	int			 TaskCtx;
+ 	int			 InternalCtx;
+-	struct list_head	 list; 
++	struct list_head	 list;
+ 	struct net_device	*netdev;
++	struct list_head	 sas_topology;
+ } MPT_ADAPTER;
+ 
+ /*
+@@ -964,6 +981,7 @@
+ extern void	 mpt_free_fw_memory(MPT_ADAPTER *ioc);
+ extern int	 mpt_findImVolumes(MPT_ADAPTER *ioc);
+ extern int	 mpt_read_ioc_pg_3(MPT_ADAPTER *ioc);
++extern int	 mptbase_sas_persist_operation(MPT_ADAPTER *ioc, u8 persist_opcode);
+ 
+ /*
+  *  Public data decl's...
+Index: xfs-2.6.x/drivers/message/fusion/mptbase.c
 ===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfs-2.6.x/include/scsi/scsi_transport_sas.h	2005-09-09 16:23:38.000000000 +0200
-@@ -0,0 +1,100 @@
-+#ifndef SCSI_TRANSPORT_SAS_H
-+#define SCSI_TRANSPORT_SAS_H
+--- xfs-2.6.x.orig/drivers/message/fusion/mptbase.c	2005-09-08 22:22:00.000000000 +0200
++++ xfs-2.6.x/drivers/message/fusion/mptbase.c	2005-09-08 22:22:01.000000000 +0200
+@@ -141,7 +141,7 @@
+ static int	SendIocInit(MPT_ADAPTER *ioc, int sleepFlag);
+ static int	SendPortEnable(MPT_ADAPTER *ioc, int portnum, int sleepFlag);
+ static int	mpt_do_upload(MPT_ADAPTER *ioc, int sleepFlag);
+-static int	mpt_downloadboot(MPT_ADAPTER *ioc, int sleepFlag);
++static int	mpt_downloadboot(MPT_ADAPTER *ioc, MpiFwHeader_t *pFwHeader, int sleepFlag);
+ static int	mpt_diag_reset(MPT_ADAPTER *ioc, int ignore, int sleepFlag);
+ static int	KickStart(MPT_ADAPTER *ioc, int ignore, int sleepFlag);
+ static int	SendIocReset(MPT_ADAPTER *ioc, u8 reset_type, int sleepFlag);
+@@ -152,6 +152,7 @@
+ static int	GetLanConfigPages(MPT_ADAPTER *ioc);
+ static int	GetFcPortPage0(MPT_ADAPTER *ioc, int portnum);
+ static int	GetIoUnitPage2(MPT_ADAPTER *ioc);
++int		mptbase_sas_persist_operation(MPT_ADAPTER *ioc, u8 persist_opcode);
+ static int	mpt_GetScsiPortSettings(MPT_ADAPTER *ioc, int portnum);
+ static int	mpt_readScsiDevicePageHeaders(MPT_ADAPTER *ioc, int portnum);
+ static void 	mpt_read_ioc_pg_1(MPT_ADAPTER *ioc);
+@@ -159,6 +160,8 @@
+ static void	mpt_timer_expired(unsigned long data);
+ static int	SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch);
+ static int	SendEventAck(MPT_ADAPTER *ioc, EventNotificationReply_t *evnp);
++static int	mpt_host_page_access_control(MPT_ADAPTER *ioc, u8 access_control_value, int sleepFlag);
++static int	mpt_host_page_alloc(MPT_ADAPTER *ioc, pIOCInit_t ioc_init);
+ 
+ #ifdef CONFIG_PROC_FS
+ static int	procmpt_summary_read(char *buf, char **start, off_t offset,
+@@ -509,6 +512,14 @@
+ 			pCfg->wait_done = 1;
+ 			wake_up(&mpt_waitq);
+ 		}
++	} else if (func == MPI_FUNCTION_SAS_IO_UNIT_CONTROL) {
++		/* we should be always getting a reply frame */
++		memcpy(ioc->persist_reply_frame, reply,
++		    min(MPT_DEFAULT_FRAME_SIZE,
++		    4*reply->u.reply.MsgLength));
++		del_timer(&ioc->persist_timer);
++		ioc->persist_wait_done = 1;
++		wake_up(&mpt_waitq);
+ 	} else {
+ 		printk(MYIOC_s_ERR_FMT "Unexpected msg function (=%02Xh) reply received!\n",
+ 				ioc->name, func);
+@@ -750,6 +761,7 @@
+ 		mf = list_entry(ioc->FreeQ.next, MPT_FRAME_HDR,
+ 				u.frame.linkage.list);
+ 		list_del(&mf->u.frame.linkage.list);
++		mf->u.frame.linkage.arg1 = 0;
+ 		mf->u.frame.hwhdr.msgctxu.fld.cb_idx = handle;	/* byte */
+ 		req_offset = (u8 *)mf - (u8 *)ioc->req_frames;
+ 								/* u16! */
+@@ -845,6 +857,7 @@
+ 
+ 	/*  Put Request back on FreeQ!  */
+ 	spin_lock_irqsave(&ioc->FreeQlock, flags);
++	mf->u.frame.linkage.arg1 = 0xdeadbeaf; /* signature to know if this mf is freed */
+ 	list_add_tail(&mf->u.frame.linkage.list, &ioc->FreeQ);
+ #ifdef MFCNT
+ 	ioc->mfcnt--;
+@@ -971,12 +984,123 @@
+ 
+ 	/* Make sure there are no doorbells */
+ 	CHIPREG_WRITE32(&ioc->chip->IntStatus, 0);
+-	
 +
-+#include <linux/transport_class.h>
-+#include <linux/types.h>
+ 	return r;
+ }
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ /**
++ * mpt_host_page_access_control - provides mechanism for the host
++ * driver to control the IOC's Host Page Buffer access.
++ * @ioc: Pointer to MPT adapter structure
++ * @access_control_value: define bits below
++ *
++ * Access Control Value - bits[15:12]
++ * 0h Reserved
++ * 1h Enable Access { MPI_DB_HPBAC_ENABLE_ACCESS }
++ * 2h Disable Access { MPI_DB_HPBAC_DISABLE_ACCESS }
++ * 3h Free Buffer { MPI_DB_HPBAC_FREE_BUFFER }
++ *
++ * Returns 0 for success, non-zero for failure.
++ */
 +
-+struct scsi_transport_template;
-+struct sas_rphy;
++static int
++mpt_host_page_access_control(MPT_ADAPTER *ioc, u8 access_control_value, int sleepFlag)
++{
++	int	 r = 0;
++
++	/* return if in use */
++	if (CHIPREG_READ32(&ioc->chip->Doorbell)
++	    & MPI_DOORBELL_ACTIVE)
++	    return -1;
++
++	CHIPREG_WRITE32(&ioc->chip->IntStatus, 0);
++
++	CHIPREG_WRITE32(&ioc->chip->Doorbell,
++		((MPI_FUNCTION_HOST_PAGEBUF_ACCESS_CONTROL
++		 <<MPI_DOORBELL_FUNCTION_SHIFT) |
++		 (access_control_value<<12)));
++
++	/* Wait for IOC to clear Doorbell Status bit */
++	if ((r = WaitForDoorbellAck(ioc, 5, sleepFlag)) < 0) {
++		return -2;
++	}else
++		return 0;
++}
++
++/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
++/**
++ *	mpt_host_page_alloc - allocate system memory for the fw
++ *	If we already allocated memory in past, then resend the same pointer.
++ *	ioc@: Pointer to pointer to IOC adapter
++ *	ioc_init@: Pointer to ioc init config page
++ *
++ *	Returns 0 for success, non-zero for failure.
++ */
++static int
++mpt_host_page_alloc(MPT_ADAPTER *ioc, pIOCInit_t ioc_init)
++{
++	char	*psge;
++	int	flags_length;
++	u32	host_page_buffer_sz=0;
++
++	if(!ioc->HostPageBuffer) {
++
++		host_page_buffer_sz =
++		    le32_to_cpu(ioc->facts.HostPageBufferSGE.FlagsLength) & 0xFFFFFF;
++
++		if(!host_page_buffer_sz)
++			return 0; /* fw doesn't need any host buffers */
++
++		/* spin till we get enough memory */
++		while(host_page_buffer_sz > 0) {
++
++			if((ioc->HostPageBuffer = pci_alloc_consistent(
++			    ioc->pcidev,
++			    host_page_buffer_sz,
++			    &ioc->HostPageBuffer_dma)) != NULL) {
++
++				dinitprintk((MYIOC_s_INFO_FMT
++				    "host_page_buffer @ %p, dma @ %x, sz=%d bytes\n",
++				    ioc->name,
++				    ioc->HostPageBuffer,
++				    ioc->HostPageBuffer_dma,
++				    hst_page_buffer_sz));
++				ioc->alloc_total += host_page_buffer_sz;
++				ioc->HostPageBuffer_sz = host_page_buffer_sz;
++				break;
++			}
++
++			host_page_buffer_sz -= (4*1024);
++		}
++	}
++
++	if(!ioc->HostPageBuffer) {
++		printk(MYIOC_s_ERR_FMT
++		    "Failed to alloc memory for host_page_buffer!\n",
++		    ioc->name);
++		return -999;
++	}
++
++	psge = (char *)&ioc_init->HostPageBufferSGE;
++	flags_length = MPI_SGE_FLAGS_SIMPLE_ELEMENT |
++	    MPI_SGE_FLAGS_SYSTEM_ADDRESS |
++	    MPI_SGE_FLAGS_32_BIT_ADDRESSING |
++	    MPI_SGE_FLAGS_HOST_TO_IOC |
++	    MPI_SGE_FLAGS_END_OF_BUFFER;
++	if (sizeof(dma_addr_t) == sizeof(u64)) {
++	    flags_length |= MPI_SGE_FLAGS_64_BIT_ADDRESSING;
++	}
++	flags_length = flags_length << MPI_SGE_FLAGS_SHIFT;
++	flags_length |= ioc->HostPageBuffer_sz;
++	mpt_add_sge(psge, flags_length, ioc->HostPageBuffer_dma);
++	ioc->facts.HostPageBufferSGE = ioc_init->HostPageBufferSGE;
++
++return 0;
++}
++
++/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
++/**
+  *	mpt_verify_adapter - Given a unique IOC identifier, set pointer to
+  *	the associated MPT adapter structure.
+  *	@iocid: IOC unique identifier (integer)
+@@ -1213,6 +1337,33 @@
+ 		ioc->prod_name = "LSI53C1035";
+ 		ioc->bus_type = SCSI;
+ 	}
++	else if (pdev->device == MPI_MANUFACTPAGE_DEVID_SAS1064) {
++		ioc->prod_name = "LSISAS1064";
++		ioc->bus_type = SAS;
++		ioc->errata_flag_1064 = 1;
++	}
++	else if (pdev->device == MPI_MANUFACTPAGE_DEVID_SAS1066) {
++		ioc->prod_name = "LSISAS1066";
++		ioc->bus_type = SAS;
++		ioc->errata_flag_1064 = 1;
++	}
++	else if (pdev->device == MPI_MANUFACTPAGE_DEVID_SAS1068) {
++		ioc->prod_name = "LSISAS1068";
++		ioc->bus_type = SAS;
++		ioc->errata_flag_1064 = 1;
++	}
++	else if (pdev->device == MPI_MANUFACTPAGE_DEVID_SAS1064E) {
++		ioc->prod_name = "LSISAS1064E";
++		ioc->bus_type = SAS;
++	}
++	else if (pdev->device == MPI_MANUFACTPAGE_DEVID_SAS1066E) {
++		ioc->prod_name = "LSISAS1066E";
++		ioc->bus_type = SAS;
++	}
++	else if (pdev->device == MPI_MANUFACTPAGE_DEVID_SAS1068E) {
++		ioc->prod_name = "LSISAS1068E";
++		ioc->bus_type = SAS;
++	}
+ 
+ 	if (ioc->errata_flag_1064)
+ 		pci_disable_io_access(pdev);
+@@ -1640,7 +1791,22 @@
+ 	 *	and we try GetLanConfigPages again...
+ 	 */
+ 	if ((ret == 0) && (reason == MPT_HOSTEVENT_IOC_BRINGUP)) {
+-		if (ioc->bus_type == FC) {
++		if (ioc->bus_type == SAS) {
++
++			/* clear persistency table */
++			if(ioc->facts.IOCExceptions &
++			    MPI_IOCFACTS_EXCEPT_PERSISTENT_TABLE_FULL) {
++				ret = mptbase_sas_persist_operation(ioc,
++				    MPI_SAS_OP_CLEAR_NOT_PRESENT);
++				if(ret != 0)
++					return -1;
++			}
++
++			/* Find IM volumes
++			 */
++			mpt_findImVolumes(ioc);
++
++		} else if (ioc->bus_type == FC) {
+ 			/*
+ 			 *  Pre-fetch FC port WWN and stuff...
+ 			 *  (FCPortPage0_t stuff)
+@@ -1783,7 +1949,7 @@
+ 
+ 	if (ioc->cached_fw != NULL) {
+ 		ddlprintk((KERN_INFO MYNAM ": mpt_adapter_disable: Pushing FW onto adapter\n"));
+-		if ((ret = mpt_downloadboot(ioc, NO_SLEEP)) < 0) {
++		if ((ret = mpt_downloadboot(ioc, (MpiFwHeader_t *)ioc->cached_fw, NO_SLEEP)) < 0) {
+ 			printk(KERN_WARNING MYNAM
+ 				": firmware downloadboot failure (%d)!\n", ret);
+ 		}
+@@ -1852,6 +2018,23 @@
+ 
+ 	kfree(ioc->ChainToChain);
+ 	ioc->ChainToChain = NULL;
++
++	if (ioc->HostPageBuffer != NULL) {
++		if((ret = mpt_host_page_access_control(ioc,
++		    MPI_DB_HPBAC_FREE_BUFFER, NO_SLEEP)) != 0) {
++			printk(KERN_ERR MYNAM
++			   ": %s: host page buffers free failed (%d)!\n",
++			    __FUNCTION__, ret);
++		}
++		dexitprintk((KERN_INFO MYNAM ": %s HostPageBuffer free  @ %p, sz=%d bytes\n",
++		 	ioc->name, ioc->HostPageBuffer, ioc->HostPageBuffer_sz));
++		pci_free_consistent(ioc->pcidev, ioc->HostPageBuffer_sz,
++				ioc->HostPageBuffer,
++				ioc->HostPageBuffer_dma);
++		ioc->HostPageBuffer = NULL;
++		ioc->HostPageBuffer_sz = 0;
++		ioc->alloc_total -= ioc->HostPageBuffer_sz;
++	}
+ }
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+@@ -2034,7 +2217,7 @@
+ 	 *  Loop here waiting for IOC to come READY.
+ 	 */
+ 	ii = 0;
+-	cntdn = ((sleepFlag == CAN_SLEEP) ? HZ : 1000) * 15;	/* 15 seconds */
++	cntdn = ((sleepFlag == CAN_SLEEP) ? HZ : 1000) * 5;	/* 5 seconds */
+ 
+ 	while ((ioc_state = mpt_GetIocState(ioc, 1)) != MPI_IOC_STATE_READY) {
+ 		if (ioc_state == MPI_IOC_STATE_OPERATIONAL) {
+@@ -2212,6 +2395,7 @@
+ 				le32_to_cpu(facts->CurrentSenseBufferHighAddr);
+ 		facts->CurReplyFrameSize =
+ 				le16_to_cpu(facts->CurReplyFrameSize);
++		facts->IOCCapabilities = le32_to_cpu(facts->IOCCapabilities);
+ 
+ 		/*
+ 		 * Handle NEW (!) IOCFactsReply fields in MPI-1.01.xx
+@@ -2383,13 +2567,25 @@
+ 	ddlprintk((MYIOC_s_INFO_FMT "upload_fw %d facts.Flags=%x\n",
+ 		   ioc->name, ioc->upload_fw, ioc->facts.Flags));
+ 
+-	if (ioc->bus_type == FC)
++	if(ioc->bus_type == SAS)
++		ioc_init.MaxDevices = ioc->facts.MaxDevices;
++	else if(ioc->bus_type == FC)
+ 		ioc_init.MaxDevices = MPT_MAX_FC_DEVICES;
+ 	else
+ 		ioc_init.MaxDevices = MPT_MAX_SCSI_DEVICES;
+-	
+ 	ioc_init.MaxBuses = MPT_MAX_BUS;
+-
++	dinitprintk((MYIOC_s_INFO_FMT "facts.MsgVersion=%x\n",
++		   ioc->name, ioc->facts.MsgVersion));
++	if (ioc->facts.MsgVersion >= MPI_VERSION_01_05) {
++		// set MsgVersion and HeaderVersion host driver was built with
++		ioc_init.MsgVersion = cpu_to_le16(MPI_VERSION);
++	        ioc_init.HeaderVersion = cpu_to_le16(MPI_HEADER_VERSION);
++
++		if (ioc->facts.Flags & MPI_IOCFACTS_FLAGS_HOST_PAGE_BUFFER_PERSISTENT) {
++			ioc_init.HostPageBufferSGE = ioc->facts.HostPageBufferSGE;
++		} else if(mpt_host_page_alloc(ioc, &ioc_init))
++			return -99;
++	}
+ 	ioc_init.ReplyFrameSize = cpu_to_le16(ioc->reply_sz);	/* in BYTES */
+ 
+ 	if (sizeof(dma_addr_t) == sizeof(u64)) {
+@@ -2403,17 +2599,21 @@
+ 		ioc_init.HostMfaHighAddr = cpu_to_le32(0);
+ 		ioc_init.SenseBufferHighAddr = cpu_to_le32(0);
+ 	}
+-		
++
+ 	ioc->facts.CurrentHostMfaHighAddr = ioc_init.HostMfaHighAddr;
+ 	ioc->facts.CurrentSenseBufferHighAddr = ioc_init.SenseBufferHighAddr;
++	ioc->facts.MaxDevices = ioc_init.MaxDevices;
++	ioc->facts.MaxBuses = ioc_init.MaxBuses;
+ 
+ 	dhsprintk((MYIOC_s_INFO_FMT "Sending IOCInit (req @ %p)\n",
+ 			ioc->name, &ioc_init));
+ 
+ 	r = mpt_handshake_req_reply_wait(ioc, sizeof(IOCInit_t), (u32*)&ioc_init,
+ 				sizeof(MPIDefaultReply_t), (u16*)&init_reply, 10 /*seconds*/, sleepFlag);
+-	if (r != 0)
++	if (r != 0) {
++		printk(MYIOC_s_ERR_FMT "Sending IOCInit failed(%d)!\n",ioc->name, r);
+ 		return r;
++	}
+ 
+ 	/* No need to byte swap the multibyte fields in the reply
+ 	 * since we don't even look at it's contents.
+@@ -2472,7 +2672,7 @@
+ {
+ 	PortEnable_t		 port_enable;
+ 	MPIDefaultReply_t	 reply_buf;
+-	int	 ii;
++	int	 rc;
+ 	int	 req_sz;
+ 	int	 reply_sz;
+ 
+@@ -2494,22 +2694,15 @@
+ 
+ 	/* RAID FW may take a long time to enable
+ 	 */
+-	if (ioc->bus_type == FC) {
+-		ii = mpt_handshake_req_reply_wait(ioc, req_sz, (u32*)&port_enable,
+-				reply_sz, (u16*)&reply_buf, 65 /*seconds*/, sleepFlag);
+-	} else {
+-		ii = mpt_handshake_req_reply_wait(ioc, req_sz, (u32*)&port_enable,
++	if ( (ioc->facts.ProductID & MPI_FW_HEADER_PID_PROD_MASK)
++			> MPI_FW_HEADER_PID_PROD_TARGET_SCSI ) {
++		rc = mpt_handshake_req_reply_wait(ioc, req_sz, (u32*)&port_enable,
+ 				reply_sz, (u16*)&reply_buf, 300 /*seconds*/, sleepFlag);
++	} else {
++		rc = mpt_handshake_req_reply_wait(ioc, req_sz, (u32*)&port_enable,
++				reply_sz, (u16*)&reply_buf, 30 /*seconds*/, sleepFlag);
+ 	}
+-
+-	if (ii != 0)
+-		return ii;
+-
+-	/* We do not even look at the reply, so we need not
+-	 * swap the multi-byte fields.
+-	 */
+-
+-	return 0;
++	return rc;
+ }
+ 
+ /*
+@@ -2666,9 +2859,8 @@
+  *		<0 for fw upload failure.
+  */
+ static int
+-mpt_downloadboot(MPT_ADAPTER *ioc, int sleepFlag)
++mpt_downloadboot(MPT_ADAPTER *ioc, MpiFwHeader_t *pFwHeader, int sleepFlag)
+ {
+-	MpiFwHeader_t		*pFwHeader;
+ 	MpiExtImageHeader_t	*pExtImage;
+ 	u32			 fwSize;
+ 	u32			 diag0val;
+@@ -2679,18 +2871,8 @@
+ 	u32			 load_addr;
+ 	u32 			 ioc_state=0;
+ 
+-	ddlprintk((MYIOC_s_INFO_FMT "downloadboot: fw size 0x%x, ioc FW Ptr %p\n",
+-				ioc->name, ioc->facts.FWImageSize, ioc->cached_fw));
+-
+-	if ( ioc->facts.FWImageSize == 0 )
+-		return -1;
+-
+-	if (ioc->cached_fw == NULL)
+-		return -2;
+-
+-	/* prevent a second downloadboot and memory free with alt_ioc */
+-	if (ioc->alt_ioc && ioc->alt_ioc->cached_fw)
+-		ioc->alt_ioc->cached_fw = NULL;
++	ddlprintk((MYIOC_s_INFO_FMT "downloadboot: fw size 0x%x (%d), FW Ptr %p\n",
++				ioc->name, pFwHeader->ImageSize, pFwHeader->ImageSize, pFwHeader));
+ 
+ 	CHIPREG_WRITE32(&ioc->chip->WriteSequence, 0xFF);
+ 	CHIPREG_WRITE32(&ioc->chip->WriteSequence, MPI_WRSEQ_1ST_KEY_VALUE);
+@@ -2718,16 +2900,17 @@
+ 				ioc->name, count));
+ 			break;
+ 		}
+-		/* wait 1 sec */
++		/* wait .1 sec */
+ 		if (sleepFlag == CAN_SLEEP) {
+-			msleep_interruptible (1000);
++			msleep_interruptible (100);
+ 		} else {
+-			mdelay (1000);
++			mdelay (100);
+ 		}
+ 	}
+ 
+ 	if ( count == 30 ) {
+-		ddlprintk((MYIOC_s_INFO_FMT "downloadboot failed! Unable to RESET_ADAPTER diag0val=%x\n",
++		ddlprintk((MYIOC_s_INFO_FMT "downloadboot failed! "
++		"Unable to get MPI_DIAG_DRWE mode, diag0val=%x\n",
+ 		ioc->name, diag0val));
+ 		return -3;
+ 	}
+@@ -2742,7 +2925,6 @@
+ 	/* Set the DiagRwEn and Disable ARM bits */
+ 	CHIPREG_WRITE32(&ioc->chip->Diagnostic, (MPI_DIAG_RW_ENABLE | MPI_DIAG_DISABLE_ARM));
+ 
+-	pFwHeader = (MpiFwHeader_t *) ioc->cached_fw;
+ 	fwSize = (pFwHeader->ImageSize + 3)/4;
+ 	ptrFw = (u32 *) pFwHeader;
+ 
+@@ -2792,19 +2974,38 @@
+ 	/* Clear the internal flash bad bit - autoincrementing register,
+ 	 * so must do two writes.
+ 	 */
+-	CHIPREG_PIO_WRITE32(&ioc->pio_chip->DiagRwAddress, 0x3F000000);
+-	diagRwData = CHIPREG_PIO_READ32(&ioc->pio_chip->DiagRwData);
+-	diagRwData |= 0x4000000;
+-	CHIPREG_PIO_WRITE32(&ioc->pio_chip->DiagRwAddress, 0x3F000000);
+-	CHIPREG_PIO_WRITE32(&ioc->pio_chip->DiagRwData, diagRwData);
++	if (ioc->bus_type == SCSI) {
++		/*
++		 * 1030 and 1035 H/W errata, workaround to access
++		 * the ClearFlashBadSignatureBit
++		 */
++		CHIPREG_PIO_WRITE32(&ioc->pio_chip->DiagRwAddress, 0x3F000000);
++		diagRwData = CHIPREG_PIO_READ32(&ioc->pio_chip->DiagRwData);
++		diagRwData |= 0x40000000;
++		CHIPREG_PIO_WRITE32(&ioc->pio_chip->DiagRwAddress, 0x3F000000);
++		CHIPREG_PIO_WRITE32(&ioc->pio_chip->DiagRwData, diagRwData);
++
++	} else /* if((ioc->bus_type == SAS) || (ioc->bus_type == FC)) */ {
++		diag0val = CHIPREG_READ32(&ioc->chip->Diagnostic);
++		CHIPREG_WRITE32(&ioc->chip->Diagnostic, diag0val |
++		    MPI_DIAG_CLEAR_FLASH_BAD_SIG);
++
++		/* wait 1 msec */
++		if (sleepFlag == CAN_SLEEP) {
++			msleep_interruptible (1);
++		} else {
++			mdelay (1);
++		}
++	}
+ 
+ 	if (ioc->errata_flag_1064)
+ 		pci_disable_io_access(ioc->pcidev);
+ 
+ 	diag0val = CHIPREG_READ32(&ioc->chip->Diagnostic);
+-	ddlprintk((MYIOC_s_INFO_FMT "downloadboot diag0val=%x, turning off PREVENT_IOC_BOOT, DISABLE_ARM\n",
++	ddlprintk((MYIOC_s_INFO_FMT "downloadboot diag0val=%x, "
++		"turning off PREVENT_IOC_BOOT, DISABLE_ARM, RW_ENABLE\n",
+ 		ioc->name, diag0val));
+-	diag0val &= ~(MPI_DIAG_PREVENT_IOC_BOOT | MPI_DIAG_DISABLE_ARM);
++	diag0val &= ~(MPI_DIAG_PREVENT_IOC_BOOT | MPI_DIAG_DISABLE_ARM | MPI_DIAG_RW_ENABLE);
+ 	ddlprintk((MYIOC_s_INFO_FMT "downloadboot now diag0val=%x\n",
+ 		ioc->name, diag0val));
+ 	CHIPREG_WRITE32(&ioc->chip->Diagnostic, diag0val);
+@@ -2812,10 +3013,23 @@
+ 	/* Write 0xFF to reset the sequencer */
+ 	CHIPREG_WRITE32(&ioc->chip->WriteSequence, 0xFF);
+ 
++	if (ioc->bus_type == SAS) {
++		ioc_state = mpt_GetIocState(ioc, 0);
++		if ( (GetIocFacts(ioc, sleepFlag,
++				MPT_HOSTEVENT_IOC_BRINGUP)) != 0 ) {
++			ddlprintk((MYIOC_s_INFO_FMT "GetIocFacts failed: IocState=%x\n",
++					ioc->name, ioc_state));
++			return -EFAULT;
++		}
++	}
++
+ 	for (count=0; count<HZ*20; count++) {
+ 		if ((ioc_state = mpt_GetIocState(ioc, 0)) & MPI_IOC_STATE_READY) {
+ 			ddlprintk((MYIOC_s_INFO_FMT "downloadboot successful! (count=%d) IocState=%x\n",
+ 					ioc->name, count, ioc_state));
++			if (ioc->bus_type == SAS) {
++				return 0;
++			}
+ 			if ((SendIocInit(ioc, sleepFlag)) != 0) {
+ 				ddlprintk((MYIOC_s_INFO_FMT "downloadboot: SendIocInit failed\n",
+ 					ioc->name));
+@@ -3049,12 +3263,13 @@
+ 
+ 				/* wait 1 sec */
+ 				if (sleepFlag == CAN_SLEEP) {
+-					ssleep(1);
++					msleep_interruptible (1000);
+ 				} else {
+ 					mdelay (1000);
+ 				}
+ 			}
+-			if ((count = mpt_downloadboot(ioc, sleepFlag)) < 0) {
++			if ((count = mpt_downloadboot(ioc,
++				(MpiFwHeader_t *)ioc->cached_fw, sleepFlag)) < 0) {
+ 				printk(KERN_WARNING MYNAM
+ 					": firmware downloadboot failure (%d)!\n", count);
+ 			}
+@@ -4001,6 +4216,85 @@
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ /*
++ *	mptbase_sas_persist_operation - Perform operation on SAS Persitent Table
++ *	@ioc: Pointer to MPT_ADAPTER structure
++ *	@sas_address: 64bit SAS Address for operation.
++ *	@target_id: specified target for operation
++ *	@bus: specified bus for operation
++ *	@persist_opcode: see below
++ *
++ *	MPI_SAS_OP_CLEAR_NOT_PRESENT - Free all persist TargetID mappings for
++ *		devices not currently present.
++ *	MPI_SAS_OP_CLEAR_ALL_PERSISTENT - Clear al persist TargetID mappings
++ *
++ *	NOTE: Don't use not this function during interrupt time.
++ *
++ *	Returns: 0 for success, non-zero error
++ */
++
++/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
++int
++mptbase_sas_persist_operation(MPT_ADAPTER *ioc, u8 persist_opcode)
++{
++	SasIoUnitControlRequest_t	*sasIoUnitCntrReq;
++	SasIoUnitControlReply_t		*sasIoUnitCntrReply;
++	MPT_FRAME_HDR			*mf = NULL;
++	MPIHeader_t			*mpi_hdr;
 +
 +
-+enum sas_device_type {
-+	SAS_PHY_UNUSED,
-+	SAS_END_DEVICE,
-+	SAS_EDGE_EXPANDER_DEVICE,
-+	SAS_FANOUT_EXPANDER_DEVICE,
-+};
++	/* insure garbage is not sent to fw */
++	switch(persist_opcode) {
 +
-+enum sas_protocol {
-+	SAS_PROTOCOL_SATA		= 0x01,
-+	SAS_PROTOCOL_SMP		= 0x02,
-+	SAS_PROTOCOL_STP		= 0x04,
-+	SAS_PROTOCOL_SSP		= 0x08,
-+};
++	case MPI_SAS_OP_CLEAR_NOT_PRESENT:
++	case MPI_SAS_OP_CLEAR_ALL_PERSISTENT:
++		break;
 +
-+enum sas_linkrate {
-+	SAS_LINK_RATE_UNKNOWN,
-+	SAS_PHY_DISABLED,
-+	SAS_LINK_RATE_FAILED,
-+	SAS_SATA_SPINUP_HOLD,
-+	SAS_SATA_PORT_SELECTOR,
-+	SAS_LINK_RATE_1_5_GBPS,
-+	SAS_LINK_RATE_3_0_GBPS,
-+	SAS_LINK_VIRTUAL,
-+};
++	default:
++		return -1;
++		break;
++	}
 +
-+struct sas_identify {
-+	enum sas_device_type	device_type;
-+	enum sas_protocol	initiator_port_protocols;
-+	enum sas_protocol	target_port_protocols;
-+	u64			sas_address;
-+	u8			phy_identifier;
-+};
++	printk("%s: persist_opcode=%x\n",__FUNCTION__, persist_opcode);
 +
-+/* The functions by which the transport class and the driver communicate */
-+struct sas_function_template {
-+};
++	/* Get a MF for this command.
++	 */
++	if ((mf = mpt_get_msg_frame(mpt_base_index, ioc)) == NULL) {
++		printk("%s: no msg frames!\n",__FUNCTION__);
++		return -1;
++        }
 +
-+struct sas_phy {
-+	struct device		dev;
-+	int			number;
-+	struct sas_identify	identify;
-+	enum sas_linkrate	negotiated_linkrate;
-+	enum sas_linkrate	minimum_linkrate_hw;
-+	enum sas_linkrate	minimum_linkrate;
-+	enum sas_linkrate	maximum_linkrate_hw;
-+	enum sas_linkrate	maximum_linkrate;
-+	u8			port_identifier;
-+	struct sas_rphy		*rphy;
-+};
++	mpi_hdr = (MPIHeader_t *) mf;
++	sasIoUnitCntrReq = (SasIoUnitControlRequest_t *)mf;
++	memset(sasIoUnitCntrReq,0,sizeof(SasIoUnitControlRequest_t));
++	sasIoUnitCntrReq->Function = MPI_FUNCTION_SAS_IO_UNIT_CONTROL;
++	sasIoUnitCntrReq->MsgContext = mpi_hdr->MsgContext;
++	sasIoUnitCntrReq->Operation = persist_opcode;
 +
-+#define dev_to_phy(d) \
-+	container_of((d), struct sas_phy, dev)
-+#define transport_class_to_phy(cdev) \
-+	dev_to_phy((cdev)->dev)
-+#define phy_to_shost(phy) \
-+	dev_to_shost((phy)->dev.parent)
++	init_timer(&ioc->persist_timer);
++	ioc->persist_timer.data = (unsigned long) ioc;
++	ioc->persist_timer.function = mpt_timer_expired;
++	ioc->persist_timer.expires = jiffies + HZ*10 /* 10 sec */;
++	ioc->persist_wait_done=0;
++	add_timer(&ioc->persist_timer);
++	mpt_put_msg_frame(mpt_base_index, ioc, mf);
++	wait_event(mpt_waitq, ioc->persist_wait_done);
 +
-+struct sas_rphy {
-+	struct device		dev;
-+	struct sas_identify	identify;
-+	struct list_head	list;
-+	u32			scsi_target_id;
-+};
++	sasIoUnitCntrReply =
++	    (SasIoUnitControlReply_t *)ioc->persist_reply_frame;
++	if (le16_to_cpu(sasIoUnitCntrReply->IOCStatus) != MPI_IOCSTATUS_SUCCESS) {
++		printk("%s: IOCStatus=0x%X IOCLogInfo=0x%X\n",
++		    __FUNCTION__,
++		    sasIoUnitCntrReply->IOCStatus,
++		    sasIoUnitCntrReply->IOCLogInfo);
++		return -1;
++	}
 +
-+#define dev_to_rphy(d) \
-+	container_of((d), struct sas_rphy, dev)
-+#define transport_class_to_rphy(cdev) \
-+	dev_to_rphy((cdev)->dev)
-+#define rphy_to_shost(rphy) \
-+	dev_to_shost((rphy)->dev.parent)
++	printk("%s: success\n",__FUNCTION__);
++	return 0;
++}
 +
-+extern void sas_remove_host(struct Scsi_Host *);
++/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
++/*
+  *	GetIoUnitPage2 - Retrieve BIOS version and boot order information.
+  *	@ioc: Pointer to MPT_ADAPTER structure
+  *
+@@ -5366,8 +5660,8 @@
+ }
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+-static char *
+-EventDescriptionStr(u8 event, u32 evData0)
++static void
++EventDescriptionStr(u8 event, u32 evData0, char *evStr)
+ {
+ 	char *ds;
+ 
+@@ -5420,8 +5714,95 @@
+ 			ds = "Events(OFF) Change";
+ 		break;
+ 	case MPI_EVENT_INTEGRATED_RAID:
+-		ds = "Integrated Raid";
++	{
++		u8 ReasonCode = (u8)(evData0 >> 16);
++		switch (ReasonCode) {
++		case MPI_EVENT_RAID_RC_VOLUME_CREATED :
++			ds = "Integrated Raid: Volume Created";
++			break;
++		case MPI_EVENT_RAID_RC_VOLUME_DELETED :
++			ds = "Integrated Raid: Volume Deleted";
++			break;
++		case MPI_EVENT_RAID_RC_VOLUME_SETTINGS_CHANGED :
++			ds = "Integrated Raid: Volume Settings Changed";
++			break;
++		case MPI_EVENT_RAID_RC_VOLUME_STATUS_CHANGED :
++			ds = "Integrated Raid: Volume Status Changed";
++			break;
++		case MPI_EVENT_RAID_RC_VOLUME_PHYSDISK_CHANGED :
++			ds = "Integrated Raid: Volume Physdisk Changed";
++			break;
++		case MPI_EVENT_RAID_RC_PHYSDISK_CREATED :
++			ds = "Integrated Raid: Physdisk Created";
++			break;
++		case MPI_EVENT_RAID_RC_PHYSDISK_DELETED :
++			ds = "Integrated Raid: Physdisk Deleted";
++			break;
++		case MPI_EVENT_RAID_RC_PHYSDISK_SETTINGS_CHANGED :
++			ds = "Integrated Raid: Physdisk Settings Changed";
++			break;
++		case MPI_EVENT_RAID_RC_PHYSDISK_STATUS_CHANGED :
++			ds = "Integrated Raid: Physdisk Status Changed";
++			break;
++		case MPI_EVENT_RAID_RC_DOMAIN_VAL_NEEDED :
++			ds = "Integrated Raid: Domain Validation Needed";
++			break;
++		case MPI_EVENT_RAID_RC_SMART_DATA :
++			ds = "Integrated Raid; Smart Data";
++			break;
++		case MPI_EVENT_RAID_RC_REPLACE_ACTION_STARTED :
++			ds = "Integrated Raid: Replace Action Started";
++			break;
++		default:
++			ds = "Integrated Raid";
+ 		break;
++		}
++		break;
++	}
++	case MPI_EVENT_SCSI_DEVICE_STATUS_CHANGE:
++		ds = "SCSI Device Status Change";
++		break;
++	case MPI_EVENT_SAS_DEVICE_STATUS_CHANGE:
++	{
++		u8 ReasonCode = (u8)(evData0 >> 16);
++		switch (ReasonCode) {
++		case MPI_EVENT_SAS_DEV_STAT_RC_ADDED:
++			ds = "SAS Device Status Change: Added";
++			break;
++		case MPI_EVENT_SAS_DEV_STAT_RC_NOT_RESPONDING:
++			ds = "SAS Device Status Change: Deleted";
++			break;
++		case MPI_EVENT_SAS_DEV_STAT_RC_SMART_DATA:
++			ds = "SAS Device Status Change: SMART Data";
++			break;
++		case MPI_EVENT_SAS_DEV_STAT_RC_NO_PERSIST_ADDED:
++			ds = "SAS Device Status Change: No Persistancy Added";
++			break;
++		default:
++			ds = "SAS Device Status Change: Unknown";
++		break;
++		}
++		break;
++	}
++	case MPI_EVENT_ON_BUS_TIMER_EXPIRED:
++		ds = "Bus Timer Expired";
++		break;
++	case MPI_EVENT_QUEUE_FULL:
++		ds = "Queue Full";
++		break;
++	case MPI_EVENT_SAS_SES:
++		ds = "SAS SES Event";
++		break;
++	case MPI_EVENT_PERSISTENT_TABLE_FULL:
++		ds = "Persistent Table Full";
++		break;
++	case MPI_EVENT_SAS_PHY_LINK_STATUS:
++		ds = "SAS PHY Link Status";
++		break;
++	case MPI_EVENT_SAS_DISCOVERY_ERROR:
++		ds = "SAS Discovery Error";
++		break;
 +
-+extern struct sas_phy *sas_phy_alloc(struct device *, int);
-+extern void sas_phy_free(struct sas_phy *);
-+extern int sas_phy_add(struct sas_phy *);
-+extern void sas_phy_delete(struct sas_phy *);
-+extern int scsi_is_sas_phy(const struct device *);
-+
-+extern struct sas_rphy *sas_rphy_alloc(struct sas_phy *);
-+void sas_rphy_free(struct sas_rphy *);
-+extern int sas_rphy_add(struct sas_rphy *);
-+extern void sas_rphy_delete(struct sas_rphy *);
-+extern int scsi_is_sas_rphy(const struct device *);
-+
-+extern struct scsi_transport_template *
-+sas_attach_transport(struct sas_function_template *);
-+extern void sas_release_transport(struct scsi_transport_template *);
-+
-+#endif /* SCSI_TRANSPORT_SAS_H */
-
+ 	/*
+ 	 *  MPT base "custom" events may be added here...
+ 	 */
+@@ -5429,7 +5810,7 @@
+ 		ds = "Unknown";
+ 		break;
+ 	}
+-	return ds;
++	strcpy(evStr,ds);
+ }
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+@@ -5451,7 +5832,7 @@
+ 	int ii;
+ 	int r = 0;
+ 	int handlers = 0;
+-	char *evStr;
++	char evStr[100];
+ 	u8 event;
+ 
+ 	/*
+@@ -5464,7 +5845,7 @@
+ 		evData0 = le32_to_cpu(pEventReply->Data[0]);
+ 	}
+ 
+-	evStr = EventDescriptionStr(event, evData0);
++	EventDescriptionStr(event, evData0, evStr);
+ 	devtprintk((MYIOC_s_INFO_FMT "MPT event (%s=%02Xh) detected!\n",
+ 			ioc->name,
+ 			evStr,
+@@ -5481,20 +5862,6 @@
+ 	 *  Do general / base driver event processing
+ 	 */
+ 	switch(event) {
+-	case MPI_EVENT_NONE:			/* 00 */
+-	case MPI_EVENT_LOG_DATA:		/* 01 */
+-	case MPI_EVENT_STATE_CHANGE:		/* 02 */
+-	case MPI_EVENT_UNIT_ATTENTION:		/* 03 */
+-	case MPI_EVENT_IOC_BUS_RESET:		/* 04 */
+-	case MPI_EVENT_EXT_BUS_RESET:		/* 05 */
+-	case MPI_EVENT_RESCAN:			/* 06 */
+-	case MPI_EVENT_LINK_STATUS_CHANGE:	/* 07 */
+-	case MPI_EVENT_LOOP_STATE_CHANGE:	/* 08 */
+-	case MPI_EVENT_LOGOUT:			/* 09 */
+-	case MPI_EVENT_INTEGRATED_RAID:		/* 0B */
+-	case MPI_EVENT_SCSI_DEVICE_STATUS_CHANGE:	/* 0C */
+-	default:
+-		break;
+ 	case MPI_EVENT_EVENT_CHANGE:		/* 0A */
+ 		if (evDataLen) {
+ 			u8 evState = evData0 & 0xFF;
+@@ -5507,6 +5874,8 @@
+ 			}
+ 		}
+ 		break;
++	default:
++		break;
+ 	}
+ 
+ 	/*
+@@ -5814,6 +6183,7 @@
+ EXPORT_SYMBOL(mpt_read_ioc_pg_3);
+ EXPORT_SYMBOL(mpt_alloc_fw_memory);
+ EXPORT_SYMBOL(mpt_free_fw_memory);
++EXPORT_SYMBOL(mptbase_sas_persist_operation);
+ 
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+Index: xfs-2.6.x/drivers/message/fusion/mptscsih.c
+===================================================================
+--- xfs-2.6.x.orig/drivers/message/fusion/mptscsih.c	2005-09-09 16:23:12.000000000 +0200
++++ xfs-2.6.x/drivers/message/fusion/mptscsih.c	2005-09-09 16:23:29.000000000 +0200
+@@ -1256,8 +1256,7 @@
+ 	MPT_SCSI_HOST		*hd;
+ 	MPT_FRAME_HDR		*mf;
+ 	SCSIIORequest_t		*pScsiReq;
+-	VirtDevice		*pTarget;
+-	int	 target;
++	VirtDevice		*pTarget = SCpnt->device->hostdata;
+ 	int	 lun;
+ 	u32	 datalen;
+ 	u32	 scsictl;
+@@ -1267,12 +1266,9 @@
+ 	int	 ii;
+ 
+ 	hd = (MPT_SCSI_HOST *) SCpnt->device->host->hostdata;
+-	target = SCpnt->device->id;
+ 	lun = SCpnt->device->lun;
+ 	SCpnt->scsi_done = done;
+ 
+-	pTarget = hd->Targets[target];
+-
+ 	dmfprintk((MYIOC_s_INFO_FMT "qcmd: SCpnt=%p, done()=%p\n",
+ 			(hd && hd->ioc) ? hd->ioc->name : "ioc?", SCpnt, done));
+ 
+@@ -1315,7 +1311,7 @@
+ 	/* Default to untagged. Once a target structure has been allocated,
+ 	 * use the Inquiry data to determine if device supports tagged.
+ 	 */
+-	if (   pTarget
++	if (pTarget
+ 	    && (pTarget->tflags & MPT_TARGET_FLAGS_Q_YES)
+ 	    && (SCpnt->device->tagged_supported)) {
+ 		scsictl = scsidir | MPI_SCSIIO_CONTROL_SIMPLEQ;
+@@ -1325,8 +1321,8 @@
+ 
+ 	/* Use the above information to set up the message frame
+ 	 */
+-	pScsiReq->TargetID = (u8) target;
+-	pScsiReq->Bus = (u8) SCpnt->device->channel;
++	pScsiReq->TargetID = (u8) pTarget->target_id;
++	pScsiReq->Bus = pTarget->bus_id;
+ 	pScsiReq->ChainOffset = 0;
+ 	pScsiReq->Function = MPI_FUNCTION_SCSI_IO_REQUEST;
+ 	pScsiReq->CDBLength = SCpnt->cmd_len;
+@@ -1378,7 +1374,7 @@
+ 
+ #ifdef MPTSCSIH_ENABLE_DOMAIN_VALIDATION
+ 	if (hd->ioc->bus_type == SCSI) {
+-		int dvStatus = hd->ioc->spi_data.dvStatus[target];
++		int dvStatus = hd->ioc->spi_data.dvStatus[pTarget->target_id];
+ 		int issueCmd = 1;
+ 
+ 		if (dvStatus || hd->ioc->spi_data.forceDv) {
+@@ -2180,6 +2176,7 @@
+ 
+  out:
+ 	vdev->num_luns++;
++	device->hostdata = vdev;
+ 	return 0;
+ }
+ 
