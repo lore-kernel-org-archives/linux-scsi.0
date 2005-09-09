@@ -1,40 +1,42 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] move iscsi to a better place in Kconfig
-Date: Fri, 09 Sep 2005 10:01:03 -0500
-Message-ID: <1126278063.4799.15.camel@mulgrave>
-References: <1126191378.4845.8.camel@mulgrave>
-	 <43208FA2.8070304@cs.wisc.edu>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 1/5] SCSI scanning and removal fixes
+Date: Fri, 9 Sep 2005 11:16:53 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0509091052300.5557-100000@iolanthe.rowland.org>
+References: <1126277097.4799.12.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:59815 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751416AbVIIPBO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Sep 2005 11:01:14 -0400
-In-Reply-To: <43208FA2.8070304@cs.wisc.edu>
+Received: from iolanthe.rowland.org ([192.131.102.54]:17621 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S964911AbVIIPQ4
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Sep 2005 11:16:56 -0400
+In-Reply-To: <1126277097.4799.12.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Alex Aizman <itn780@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, 2005-09-08 at 14:23 -0500, Mike Christie wrote:
-> I think the reason it was a dependency was becuase the transport class 
-> manages does the lifetime management/refcounting for the 
-> initiators/iscsi_tcp.c session struct. scsi_transport_iscsi allocates 
-> the scsi_host, and the initiator/iscsi_tcp.c's session structure is 
-> allocated in that host_data.
+On Fri, 9 Sep 2005, James Bottomley wrote:
 
-Yes, but Kconfig isn't about lifetimes or, in fact, much of the way the
-code is constructed; it's about how the user selects particular
-features.
+> So which way do you want to go?  Either we wait in recovery for the
+> error handler to finish and transition the host state to RUNNING or we
+> introduce the parallel states for the error handler.
 
-In the current setup, they have to know to say Y/M to the ISCSI
-attribute question even to see the config option for the iscsi
-initiator.  This is a bit counter intuitive (and definitely isn't the
-way any of the other drivers that depend on transport classes are
-presented).
+For usb-storage it won't make any difference on the whole, as far as I can
+see.  The important thing is that scsi_remove_host needs to synchronize
+somehow with the error handler.  Waiting for the host state to go back to
+RUNNING would be valid.  Introducing the parallel states would mean 
+waiting for the host to go from CANCEL_RECOVERY to CANCEL, right?
 
-James
+Either way should work.  Would there be more of a difference for drivers
+that allow non-forced removal?  And without the parallel states, would you
+worry about the possibility of starving scsi_remove_host (every time it
+tries to go from RUNNING to CANCEL, the error handler gets there first and
+changes the state to RECOVERY)?
+
+In the absence of other considerations, my vote goes for adding the least 
+amount of additional code.
+
+Alan Stern
 
 
