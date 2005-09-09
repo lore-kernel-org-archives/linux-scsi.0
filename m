@@ -1,26 +1,26 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [PATCH 2.6.13 10/20] aic94xx: aic94xx_reg.c Register access
-Date: Fri, 09 Sep 2005 15:34:35 -0400
-Message-ID: <4321E3CB.2060806@adaptec.com>
+Subject: [PATCH 2.6.13 4/20] aic94xx: aic94xx_dev.c Sequencer DDB management
+Date: Fri, 09 Sep 2005 15:32:47 -0400
+Message-ID: <4321E35F.6050309@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:16069 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1030348AbVIITel (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 15:34:41 -0400
+Received: from magic.adaptec.com ([216.52.22.17]:62148 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1030333AbVIITcx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 15:32:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
 
-diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi/aic94xx/aic94xx_reg.c linux-2.6.13/drivers/scsi/aic94xx/aic94xx_reg.c
---- linux-2.6.13-orig/drivers/scsi/aic94xx/aic94xx_reg.c	1969-12-31 19:00:00.000000000 -0500
-+++ linux-2.6.13/drivers/scsi/aic94xx/aic94xx_reg.c	2005-09-09 11:21:23.000000000 -0400
-@@ -0,0 +1,333 @@
+diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi/aic94xx/aic94xx_dev.c linux-2.6.13/drivers/scsi/aic94xx/aic94xx_dev.c
+--- linux-2.6.13-orig/drivers/scsi/aic94xx/aic94xx_dev.c	1969-12-31 19:00:00.000000000 -0500
++++ linux-2.6.13/drivers/scsi/aic94xx/aic94xx_dev.c	2005-09-09 11:21:23.000000000 -0400
+@@ -0,0 +1,350 @@
 +/*
-+ * Aic94xx SAS/SATA driver register access.
++ * Aic94xx SAS/SATA DDB management
 + *
 + * Copyright (C) 2005 Adaptec, Inc.  All rights reserved.
 + * Copyright (C) 2005 Luben Tuikov <luben_tuikov@adaptec.com>
@@ -43,313 +43,330 @@ diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi
 + * along with the aic94xx driver; if not, write to the Free Software
 + * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 + *
-+ * $Id: //depot/aic94xx/aic94xx_reg.c#13 $
++ * $Id: //depot/aic94xx/aic94xx_dev.c#20 $
 + */
 +
-+#include <linux/pci.h>
-+#include "aic94xx_reg.h"
 +#include "aic94xx.h"
++#include "aic94xx_hwi.h"
++#include "aic94xx_reg.h"
++#include "aic94xx_sas.h"
 +
-+/* Writing to device address space.
-+ * Offset comes before value to remind that the operation of
-+ * this function is *offs = val.
-+ */
-+static inline void asd_write_byte(struct asd_ha_struct *asd_ha,
-+				  unsigned long offs, u8 val)
++#define FIND_FREE_DDB(_ha) find_first_zero_bit((_ha)->hw_prof.ddb_bitmap, \
++					       (_ha)->hw_prof.max_ddbs)
++#define SET_DDB(_ddb, _ha) set_bit(_ddb, (_ha)->hw_prof.ddb_bitmap)
++#define CLEAR_DDB(_ddb, _ha) clear_bit(_ddb, (_ha)->hw_prof.ddb_bitmap)
++
++static inline int asd_get_ddb(struct asd_ha_struct *asd_ha)
 +{
-+	if (unlikely(asd_ha->iospace))
-+		outb(val,
-+		     (unsigned long)asd_ha->io_handle[0].addr + (offs & 0xFF));
-+	else
-+		writeb(val, asd_ha->io_handle[0].addr + offs);
-+	wmb();
++	unsigned long flags;
++	int ddb, i;
++	
++	spin_lock_irqsave(&asd_ha->hw_prof.ddb_lock, flags);
++	ddb = FIND_FREE_DDB(asd_ha);
++	if (ddb >= asd_ha->hw_prof.max_ddbs) {
++		ddb = -ENOMEM;
++		spin_unlock_irqrestore(&asd_ha->hw_prof.ddb_lock, flags);
++		goto out;
++	}
++	SET_DDB(ddb, asd_ha);
++	spin_unlock_irqrestore(&asd_ha->hw_prof.ddb_lock, flags);
++
++	for (i = 0; i < sizeof(struct asd_ddb_ssp_smp_target_port); i+= 4)
++		asd_ddbsite_write_dword(asd_ha, ddb, i, 0);
++out:
++	return ddb;
 +}
 +
-+static inline void asd_write_word(struct asd_ha_struct *asd_ha,
-+				  unsigned long offs, u16 val)
++#define INIT_CONN_TAG   offsetof(struct asd_ddb_ssp_smp_target_port, init_conn_tag)
++#define DEST_SAS_ADDR   offsetof(struct asd_ddb_ssp_smp_target_port, dest_sas_addr)
++#define SEND_QUEUE_HEAD offsetof(struct asd_ddb_ssp_smp_target_port, send_queue_head)
++#define DDB_TYPE        offsetof(struct asd_ddb_ssp_smp_target_port, ddb_type)
++#define CONN_MASK       offsetof(struct asd_ddb_ssp_smp_target_port, conn_mask)
++#define DDB_TARG_FLAGS  offsetof(struct asd_ddb_ssp_smp_target_port, flags)
++#define DDB_TARG_FLAGS2 offsetof(struct asd_ddb_stp_sata_target_port, flags2)
++#define EXEC_QUEUE_TAIL offsetof(struct asd_ddb_ssp_smp_target_port, exec_queue_tail)
++#define SEND_QUEUE_TAIL offsetof(struct asd_ddb_ssp_smp_target_port, send_queue_tail)
++#define SISTER_DDB      offsetof(struct asd_ddb_ssp_smp_target_port, sister_ddb)
++#define MAX_CCONN       offsetof(struct asd_ddb_ssp_smp_target_port, max_concurrent_conn)
++#define NUM_CTX         offsetof(struct asd_ddb_ssp_smp_target_port, num_contexts)
++#define ATA_CMD_SCBPTR  offsetof(struct asd_ddb_stp_sata_target_port, ata_cmd_scbptr)
++#define SATA_TAG_ALLOC_MASK offsetof(struct asd_ddb_stp_sata_target_port, sata_tag_alloc_mask)
++#define NUM_SATA_TAGS   offsetof(struct asd_ddb_stp_sata_target_port, num_sata_tags)
++#define SATA_STATUS     offsetof(struct asd_ddb_stp_sata_target_port, sata_status)
++#define NCQ_DATA_SCB_PTR offsetof(struct asd_ddb_stp_sata_target_port, ncq_data_scb_ptr)
++#define ITNL_TIMEOUT    offsetof(struct asd_ddb_ssp_smp_target_port, itnl_timeout)
++
++static inline void asd_free_ddb(struct asd_ha_struct *asd_ha, int ddb)
 +{
-+	if (unlikely(asd_ha->iospace))
-+		outw(val,
-+		     (unsigned long)asd_ha->io_handle[0].addr + (offs & 0xFF));
-+	else
-+		writew(val, asd_ha->io_handle[0].addr + offs);
-+	wmb();
++	unsigned long flags;
++
++	if (!ddb || ddb >= 0xFFFF)
++		return;
++	asd_ddbsite_write_byte(asd_ha, ddb, DDB_TYPE, DDB_TYPE_UNUSED);
++	spin_lock_irqsave(&asd_ha->hw_prof.ddb_lock, flags);
++	CLEAR_DDB(ddb, asd_ha);
++	spin_unlock_irqrestore(&asd_ha->hw_prof.ddb_lock, flags);
 +}
 +
-+static inline void asd_write_dword(struct asd_ha_struct *asd_ha,
-+				   unsigned long offs, u32 val)
++static inline void asd_set_ddb_type(struct domain_device *dev)
 +{
-+	if (unlikely(asd_ha->iospace))
-+		outl(val,
-+		     (unsigned long)asd_ha->io_handle[0].addr + (offs & 0xFF));
++	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
++	int ddb = (int) (unsigned long) dev->lldd_dev;
++	
++	if (dev->dev_type == SATA_PM_PORT)
++		asd_ddbsite_write_byte(asd_ha,ddb, DDB_TYPE, DDB_TYPE_PM_PORT);
++	else if (dev->tproto)
++		asd_ddbsite_write_byte(asd_ha,ddb, DDB_TYPE, DDB_TYPE_TARGET);
 +	else
-+		writel(val, asd_ha->io_handle[0].addr + offs);
-+	wmb();
++		asd_ddbsite_write_byte(asd_ha,ddb,DDB_TYPE,DDB_TYPE_INITIATOR);
 +}
 +
-+/* Reading from device address space.
-+ */
-+static inline u8 asd_read_byte(struct asd_ha_struct *asd_ha,
-+			       unsigned long offs)
++static int asd_init_sata_tag_ddb(struct domain_device *dev)
 +{
-+	u8 val;
-+	if (unlikely(asd_ha->iospace))
-+		val = inb((unsigned long) asd_ha->io_handle[0].addr
-+			  + (offs & 0xFF));
-+	else
-+		val = readb(asd_ha->io_handle[0].addr + offs);
-+	rmb();
-+	return val;
-+}
++	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
++	int ddb, i;
 +
-+static inline u16 asd_read_word(struct asd_ha_struct *asd_ha,
-+				unsigned long offs)
-+{
-+	u16 val;
-+	if (unlikely(asd_ha->iospace))
-+		val = inw((unsigned long)asd_ha->io_handle[0].addr
-+			  + (offs & 0xFF));
-+	else
-+		val = readw(asd_ha->io_handle[0].addr + offs);
-+	rmb();
-+	return val;
-+}
++	ddb = asd_get_ddb(asd_ha);
++	if (ddb < 0)
++		return ddb;
 +
-+static inline u32 asd_read_dword(struct asd_ha_struct *asd_ha,
-+				 unsigned long offs)
-+{
-+	u32 val;
-+	if (unlikely(asd_ha->iospace))
-+		val = inl((unsigned long) asd_ha->io_handle[0].addr
-+			  + (offs & 0xFF));
-+	else
-+		val = readl(asd_ha->io_handle[0].addr + offs);
-+	rmb();
-+	return val;
-+}
++	for (i = 0; i < sizeof(struct asd_ddb_sata_tag); i += 2)
++		asd_ddbsite_write_word(asd_ha, ddb, i, 0xFFFF);
 +
-+static inline u32 asd_mem_offs_swa(void)
-+{
++	asd_ddbsite_write_word(asd_ha, (int) (unsigned long) dev->lldd_dev,
++			       SISTER_DDB, ddb);
 +	return 0;
 +}
 +
-+static inline u32 asd_mem_offs_swc(void)
++static inline int asd_init_sata(struct domain_device *dev)
 +{
-+	return asd_mem_offs_swa() + MBAR0_SWA_SIZE;
++	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
++	int ddb = (int) (unsigned long) dev->lldd_dev;
++	u32 qdepth = 0;
++	int res = 0;
++
++	asd_ddbsite_write_word(asd_ha, ddb, ATA_CMD_SCBPTR, 0xFFFF);
++	if ((dev->dev_type == SATA_DEV || dev->dev_type == SATA_PM_PORT) &&
++	    dev->sata_dev.identify_device &&
++	    dev->sata_dev.identify_device[10] != 0) {
++		u16 w75 = le16_to_cpu(dev->sata_dev.identify_device[75]);
++		u16 w76 = le16_to_cpu(dev->sata_dev.identify_device[76]);
++
++		if (w76 & 0x100) /* NCQ? */
++			qdepth = (w75 & 0x1F) + 1;
++		asd_ddbsite_write_dword(asd_ha, ddb, SATA_TAG_ALLOC_MASK,
++					(1<<qdepth)-1);
++		asd_ddbsite_write_byte(asd_ha, ddb, NUM_SATA_TAGS, qdepth);
++	}
++	if (dev->dev_type == SATA_DEV || dev->dev_type == SATA_PM ||
++	    dev->dev_type == SATA_PM_PORT) {
++		struct dev_to_host_fis *fis = (struct dev_to_host_fis *)
++			dev->frame_rcvd;
++		asd_ddbsite_write_byte(asd_ha, ddb, SATA_STATUS, fis->status);
++	}
++	asd_ddbsite_write_word(asd_ha, ddb, NCQ_DATA_SCB_PTR, 0xFFFF);
++	if (qdepth > 0)
++		res = asd_init_sata_tag_ddb(dev);
++	return res;
 +}
 +
-+static inline u32 asd_mem_offs_swb(void)
++static int asd_init_target_ddb(struct domain_device *dev)
 +{
-+	return asd_mem_offs_swc() + MBAR0_SWC_SIZE + 0x20;
++	int ddb, i;
++	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
++	u8 flags = 0;
++
++	ddb = asd_get_ddb(asd_ha);
++	if (ddb < 0)
++		return ddb;
++
++	dev->lldd_dev = (void *) (unsigned long) ddb;
++
++	asd_ddbsite_write_byte(asd_ha, ddb, 0, DDB_TP_CONN_TYPE);
++	asd_ddbsite_write_byte(asd_ha, ddb, 1, 0);
++	asd_ddbsite_write_word(asd_ha, ddb, INIT_CONN_TAG, 0xFFFF);
++	for (i = 0; i < SAS_ADDR_SIZE; i++)
++		asd_ddbsite_write_byte(asd_ha, ddb, DEST_SAS_ADDR+i,
++				       dev->sas_addr[i]);
++	asd_ddbsite_write_word(asd_ha, ddb, SEND_QUEUE_HEAD, 0xFFFF);
++	asd_set_ddb_type(dev);
++	asd_ddbsite_write_byte(asd_ha, ddb, CONN_MASK, dev->port->phy_mask);
++	if (dev->port->oob_mode != SATA_OOB_MODE) {
++		flags |= OPEN_REQUIRED;
++		if ((dev->dev_type == SATA_DEV) ||
++		    (dev->tproto & SAS_PROTO_STP)) {
++			struct smp_resp *rps_resp = &dev->sata_dev.rps_resp;
++			if (rps_resp->frame_type == SMP_RESPONSE &&
++			    rps_resp->function == SMP_REPORT_PHY_SATA &&
++			    rps_resp->result == SMP_RESP_FUNC_ACC) {
++				if (rps_resp->rps.affil_valid)
++					flags |= STP_AFFIL_POL;
++				if (rps_resp->rps.affil_supp)
++					flags |= SUPPORTS_AFFIL;
++			}
++		} else {
++			flags |= CONCURRENT_CONN_SUPP;
++			if (!dev->parent &&
++			    (dev->dev_type == EDGE_DEV ||
++			     dev->dev_type == FANOUT_DEV))
++				asd_ddbsite_write_byte(asd_ha, ddb, MAX_CCONN,
++						       4);
++			else
++				asd_ddbsite_write_byte(asd_ha, ddb, MAX_CCONN,
++						       dev->pathways);
++			asd_ddbsite_write_byte(asd_ha, ddb, NUM_CTX, 1);
++		}
++	}
++	if (dev->dev_type == SATA_PM)
++		flags |= SATA_MULTIPORT;
++	asd_ddbsite_write_byte(asd_ha, ddb, DDB_TARG_FLAGS, flags);
++
++	flags = 0;
++	if (dev->tproto & SAS_PROTO_STP)
++		flags |= STP_CL_POL_NO_TX;
++	asd_ddbsite_write_byte(asd_ha, ddb, DDB_TARG_FLAGS2, flags);
++	
++	asd_ddbsite_write_word(asd_ha, ddb, EXEC_QUEUE_TAIL, 0xFFFF);
++	asd_ddbsite_write_word(asd_ha, ddb, SEND_QUEUE_TAIL, 0xFFFF);
++	asd_ddbsite_write_word(asd_ha, ddb, SISTER_DDB, 0xFFFF);
++
++	if (dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTO_STP)) {
++		i = asd_init_sata(dev);
++		if (i < 0) {
++			asd_free_ddb(asd_ha, ddb);
++			return i;
++		}
++	}
++
++	if (dev->dev_type == SAS_END_DEV && dev->end_dev.itnl_timeout > 0)
++		asd_ddbsite_write_word(asd_ha, ddb, ITNL_TIMEOUT,
++				       min(dev->end_dev.itnl_timeout,
++					   (u16)ITNL_TIMEOUT_CONST));
++	else
++		asd_ddbsite_write_word(asd_ha, ddb, ITNL_TIMEOUT,
++				       (u16)ITNL_TIMEOUT_CONST);
++	return 0;
 +}
 +
-+/* We know that the register wanted is in the range
-+ * of the sliding window.
-+ */
-+#define ASD_READ_SW(ww, type, ord)                                     \
-+static inline type asd_read_##ww##_##ord (struct asd_ha_struct *asd_ha,\
-+					  u32 reg)                     \
-+{                                                                      \
-+	struct asd_ha_addrspace *io_handle = &asd_ha->io_handle[0];    \
-+	u32 map_offs=(reg - io_handle-> ww##_base )+asd_mem_offs_##ww ();\
-+	return asd_read_##ord (asd_ha, (unsigned long) map_offs);      \
++static int asd_init_sata_pm_table_ddb(struct domain_device *dev)
++{
++	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
++	int ddb, i;
++
++	ddb = asd_get_ddb(asd_ha);
++	if (ddb < 0)
++		return ddb;
++
++	for (i = 0; i < 32; i += 2)
++		asd_ddbsite_write_word(asd_ha, ddb, i, 0xFFFF);
++
++	asd_ddbsite_write_word(asd_ha, (int) (unsigned long) dev->lldd_dev,
++			       SISTER_DDB, ddb);
++	
++	return 0;
 +}
 +
-+#define ASD_WRITE_SW(ww, type, ord)                                    \
-+static inline void asd_write_##ww##_##ord (struct asd_ha_struct *asd_ha,\
-+				  u32 reg, type val)                   \
-+{                                                                      \
-+	struct asd_ha_addrspace *io_handle = &asd_ha->io_handle[0];    \
-+	u32 map_offs=(reg - io_handle-> ww##_base )+asd_mem_offs_##ww ();\
-+	asd_write_##ord (asd_ha, (unsigned long) map_offs, val);       \
-+}
++#define PM_PORT_FLAGS offsetof(struct asd_ddb_sata_pm_port, pm_port_flags)
++#define PARENT_DDB    offsetof(struct asd_ddb_sata_pm_port, parent_ddb)
 +
-+ASD_READ_SW(swa, u8,  byte);
-+ASD_READ_SW(swa, u16, word);
-+ASD_READ_SW(swa, u32, dword);
-+
-+ASD_READ_SW(swb, u8,  byte);
-+ASD_READ_SW(swb, u16, word);
-+ASD_READ_SW(swb, u32, dword);
-+
-+ASD_READ_SW(swc, u8,  byte);
-+ASD_READ_SW(swc, u16, word);
-+ASD_READ_SW(swc, u32, dword);
-+
-+ASD_WRITE_SW(swa, u8,  byte);
-+ASD_WRITE_SW(swa, u16, word);
-+ASD_WRITE_SW(swa, u32, dword);
-+
-+ASD_WRITE_SW(swb, u8,  byte);
-+ASD_WRITE_SW(swb, u16, word);
-+ASD_WRITE_SW(swb, u32, dword);
-+
-+ASD_WRITE_SW(swc, u8,  byte);
-+ASD_WRITE_SW(swc, u16, word);
-+ASD_WRITE_SW(swc, u32, dword);
-+
-+/*
-+ * A word about sliding windows:
-+ * MBAR0 is divided into sliding windows A, C and B, in that order.
-+ * SWA starts at offset 0 of MBAR0, up to 0x57, with size 0x58 bytes.
-+ * SWC starts at offset 0x58 of MBAR0, up to 0x60, with size 0x8 bytes.
-+ * From 0x60 to 0x7F, we have a copy of PCI config space 0x60-0x7F.
-+ * SWB starts at offset 0x80 of MBAR0 and extends to the end of MBAR0.
-+ * See asd_init_sw() in aic94xx_hwi.c
++/**
++ * asd_init_sata_pm_port_ddb -- SATA Port Multiplier Port
++ * dev: pointer to domain device
 + *
-+ * We map the most common registers we'd access of the internal 4GB
-+ * host adapter memory space.  If a register/internal memory location
-+ * is wanted which is not mapped, we slide SWB, by paging it,
-+ * see asd_move_swb() in aic94xx_reg.c.
++ * For SATA Port Multiplier Ports we need to allocate one SATA Port
++ * Multiplier Port DDB and depending on whether the target on it
++ * supports SATA II NCQ, one SATA Tag DDB.
 + */
-+
-+/**
-+ * asd_move_swb -- move sliding window B
-+ * @asd_ha: pointer to host adapter structure
-+ * @reg: register desired to be within range of the new window
-+ */
-+static inline void asd_move_swb(struct asd_ha_struct *asd_ha, u32 reg)
++static int asd_init_sata_pm_port_ddb(struct domain_device *dev)
 +{
-+	u32 base = reg & ~(MBAR0_SWB_SIZE-1);
-+	pci_write_config_dword(asd_ha->pcidev, PCI_CONF_MBAR0_SWB, base);
-+	asd_ha->io_handle[0].swb_base = base;
-+}
++	int ddb, i, parent_ddb, pmtable_ddb;
++	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
++	u8  flags;
 +
-+static void __asd_write_reg_byte(struct asd_ha_struct *asd_ha, u32 reg, u8 val)
-+{
-+	struct asd_ha_addrspace *io_handle=&asd_ha->io_handle[0];
-+	BUG_ON(reg >= 0xC0000000 || reg < ALL_BASE_ADDR);
-+	if (io_handle->swa_base <= reg
-+	    && reg < io_handle->swa_base + MBAR0_SWA_SIZE)
-+		asd_write_swa_byte (asd_ha, reg,val);
-+	else if (io_handle->swb_base <= reg
-+		 && reg < io_handle->swb_base + MBAR0_SWB_SIZE)
-+		asd_write_swb_byte (asd_ha, reg, val);
-+	else if (io_handle->swc_base <= reg
-+		 && reg < io_handle->swc_base + MBAR0_SWC_SIZE)
-+		asd_write_swc_byte (asd_ha, reg, val);
-+	else {
-+		/* Ok, we have to move SWB */
-+		asd_move_swb(asd_ha, reg);
-+		asd_write_swb_byte (asd_ha, reg, val);
++	ddb = asd_get_ddb(asd_ha);
++	if (ddb < 0)
++		return ddb;
++
++	asd_set_ddb_type(dev);
++	flags = (dev->sata_dev.port_no << 4) | PM_PORT_SET;
++	asd_ddbsite_write_byte(asd_ha, ddb, PM_PORT_FLAGS, flags);
++	asd_ddbsite_write_word(asd_ha, ddb, SISTER_DDB, 0xFFFF);
++	asd_ddbsite_write_word(asd_ha, ddb, ATA_CMD_SCBPTR, 0xFFFF);
++	asd_init_sata(dev);
++
++	parent_ddb = (int) (unsigned long) dev->parent->lldd_dev;
++	asd_ddbsite_write_word(asd_ha, ddb, PARENT_DDB, parent_ddb);
++	pmtable_ddb = asd_ddbsite_read_word(asd_ha, parent_ddb, SISTER_DDB);
++	asd_ddbsite_write_word(asd_ha, pmtable_ddb, dev->sata_dev.port_no,ddb);
++
++	if (asd_ddbsite_read_byte(asd_ha, ddb, NUM_SATA_TAGS) > 0) {
++		i = asd_init_sata_tag_ddb(dev);
++		if (i < 0) {
++			asd_free_ddb(asd_ha, ddb);
++			return i;
++		}
 +	}
++	return 0;
 +}
 +
-+#define ASD_WRITE_REG(type, ord)                                  \
-+void asd_write_reg_##ord (struct asd_ha_struct *asd_ha, u32 reg, type val)\
-+{                                                                 \
-+	struct asd_ha_addrspace *io_handle=&asd_ha->io_handle[0]; \
-+	unsigned long flags;                                      \
-+	BUG_ON(reg >= 0xC0000000 || reg < ALL_BASE_ADDR);         \
-+	spin_lock_irqsave(&asd_ha->iolock, flags);                \
-+	if (io_handle->swa_base <= reg                            \
-+	    && reg < io_handle->swa_base + MBAR0_SWA_SIZE)        \
-+		asd_write_swa_##ord (asd_ha, reg,val);            \
-+	else if (io_handle->swb_base <= reg                       \
-+		 && reg < io_handle->swb_base + MBAR0_SWB_SIZE)   \
-+		asd_write_swb_##ord (asd_ha, reg, val);           \
-+	else if (io_handle->swc_base <= reg                       \
-+		 && reg < io_handle->swc_base + MBAR0_SWC_SIZE)   \
-+		asd_write_swc_##ord (asd_ha, reg, val);           \
-+	else {                                                    \
-+		/* Ok, we have to move SWB */                     \
-+		asd_move_swb(asd_ha, reg);                        \
-+		asd_write_swb_##ord (asd_ha, reg, val);           \
-+	}                                                         \
-+	spin_unlock_irqrestore(&asd_ha->iolock, flags);           \
-+}
-+
-+ASD_WRITE_REG(u8, byte);
-+ASD_WRITE_REG(u16,word);
-+ASD_WRITE_REG(u32,dword);
-+
-+static u8 __asd_read_reg_byte(struct asd_ha_struct *asd_ha, u32 reg)
++static int asd_init_initiator_ddb(struct domain_device *dev)
 +{
-+	struct asd_ha_addrspace *io_handle=&asd_ha->io_handle[0];
-+	u8 val;
-+	BUG_ON(reg >= 0xC0000000 || reg < ALL_BASE_ADDR);
-+	if (io_handle->swa_base <= reg
-+	    && reg < io_handle->swa_base + MBAR0_SWA_SIZE)
-+		val = asd_read_swa_byte (asd_ha, reg);
-+	else if (io_handle->swb_base <= reg
-+		 && reg < io_handle->swb_base + MBAR0_SWB_SIZE)
-+		val = asd_read_swb_byte (asd_ha, reg);
-+	else if (io_handle->swc_base <= reg
-+		 && reg < io_handle->swc_base + MBAR0_SWC_SIZE)
-+		val = asd_read_swc_byte (asd_ha, reg);
-+	else {
-+		/* Ok, we have to move SWB */
-+		asd_move_swb(asd_ha, reg);
-+		val = asd_read_swb_byte (asd_ha, reg);
++	return -ENODEV;
++}
++
++/**
++ * asd_init_sata_pm_ddb -- SATA Port Multiplier
++ * dev: pointer to domain device
++ * 
++ * For STP and direct-attached SATA Port Multipliers we need
++ * one target port DDB entry and one SATA PM table DDB entry.
++ */
++static int asd_init_sata_pm_ddb(struct domain_device *dev)
++{
++	int res = 0;
++
++	res = asd_init_target_ddb(dev);
++	if (res)
++		goto out;
++	res = asd_init_sata_pm_table_ddb(dev);
++	if (res)
++		asd_free_ddb(dev->port->ha->lldd_ha,
++			     (int) (unsigned long) dev->lldd_dev);
++out:
++	return res;
++}
++
++int asd_dev_found(struct domain_device *dev)
++{
++	int res = 0;
++	
++	switch (dev->dev_type) {
++	case SATA_PM:
++		res = asd_init_sata_pm_ddb(dev);
++		break;
++	case SATA_PM_PORT:
++		res = asd_init_sata_pm_port_ddb(dev);
++		break;
++	default:
++		if (dev->tproto)
++			res = asd_init_target_ddb(dev);
++		else
++			res = asd_init_initiator_ddb(dev);
 +	}
-+	return val;
++	return res;
 +}
 +
-+#define ASD_READ_REG(type, ord)                                   \
-+type asd_read_reg_##ord (struct asd_ha_struct *asd_ha, u32 reg)   \
-+{                                                                 \
-+	struct asd_ha_addrspace *io_handle=&asd_ha->io_handle[0]; \
-+	type val;                                                 \
-+	unsigned long flags;                                      \
-+	BUG_ON(reg >= 0xC0000000 || reg < ALL_BASE_ADDR);         \
-+	spin_lock_irqsave(&asd_ha->iolock, flags);                \
-+	if (io_handle->swa_base <= reg                            \
-+	    && reg < io_handle->swa_base + MBAR0_SWA_SIZE)        \
-+		val = asd_read_swa_##ord (asd_ha, reg);           \
-+	else if (io_handle->swb_base <= reg                       \
-+		 && reg < io_handle->swb_base + MBAR0_SWB_SIZE)   \
-+		val = asd_read_swb_##ord (asd_ha, reg);           \
-+	else if (io_handle->swc_base <= reg                       \
-+		 && reg < io_handle->swc_base + MBAR0_SWC_SIZE)   \
-+		val = asd_read_swc_##ord (asd_ha, reg);           \
-+	else {                                                    \
-+		/* Ok, we have to move SWB */                     \
-+		asd_move_swb(asd_ha, reg);                        \
-+		val = asd_read_swb_##ord (asd_ha, reg);           \
-+	}                                                         \
-+	spin_unlock_irqrestore(&asd_ha->iolock, flags);           \
-+	return val;                                               \
-+}
-+
-+ASD_READ_REG(u8, byte);
-+ASD_READ_REG(u16,word);
-+ASD_READ_REG(u32,dword);
-+
-+/**
-+ * asd_read_reg_string -- read a string of bytes from io space memory
-+ * @asd_ha: pointer to host adapter structure
-+ * @dst: pointer to a destination buffer where data will be written to
-+ * @offs: start offset (register) to read from
-+ * @count: number of bytes to read
-+ */
-+void asd_read_reg_string(struct asd_ha_struct *asd_ha, void *dst,
-+			 u32 offs, int count)
++void asd_dev_gone(struct domain_device *dev)
 +{
-+	u8 *p = dst;
-+	unsigned long flags;
-+	
-+	spin_lock_irqsave(&asd_ha->iolock, flags);
-+	for ( ; count > 0; count--, offs++, p++)
-+		*p = __asd_read_reg_byte(asd_ha, offs);
-+	spin_unlock_irqrestore(&asd_ha->iolock, flags);
-+}
++	int ddb, sister_ddb;
++	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
 +
-+/**
-+ * asd_write_reg_string -- write a string of bytes to io space memory
-+ * @asd_ha: pointer to host adapter structure
-+ * @src: pointer to source buffer where data will be read from
-+ * @offs: start offset (register) to write to
-+ * @count: number of bytes to write
-+ */
-+void asd_write_reg_string(struct asd_ha_struct *asd_ha, void *src,
-+			  u32 offs, int count)
-+{
-+	u8 *p = src;
-+	unsigned long flags;
-+	
-+	spin_lock_irqsave(&asd_ha->iolock, flags);
-+	for ( ; count > 0; count--, offs++, p++)
-+		__asd_write_reg_byte(asd_ha, offs, *p);
-+	spin_unlock_irqrestore(&asd_ha->iolock, flags);
++	ddb = (int) (unsigned long) dev->lldd_dev;
++	sister_ddb = asd_ddbsite_read_word(asd_ha, ddb, SISTER_DDB);
++
++	if (sister_ddb != 0xFFFF)
++		asd_free_ddb(asd_ha, sister_ddb);
++	asd_free_ddb(asd_ha, ddb);
++	dev->lldd_dev = NULL;
 +}
 
