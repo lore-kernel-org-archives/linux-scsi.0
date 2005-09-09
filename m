@@ -1,57 +1,219 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 1/5] SCSI scanning and removal fixes
-Date: Fri, 09 Sep 2005 10:37:28 -0500
-Message-ID: <1126280249.4799.21.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0509091052300.5557-100000@iolanthe.rowland.org>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: Re: [PATCH 2/8] aacraid: AIF preallocation  (Updated)
+Date: Fri, 09 Sep 2005 08:35:39 -0700
+Message-ID: <1126280140.12266.15.camel@markh1.pdx.osdl.net>
+References: <1126212607.7479.19.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:15784 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S964960AbVIIPhb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Sep 2005 11:37:31 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0509091052300.5557-100000@iolanthe.rowland.org>
+Received: from smtp.osdl.org ([65.172.181.4]:57534 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S964916AbVIIPiy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 11:38:54 -0400
+In-Reply-To: <1126212607.7479.19.camel@markh1.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-On Fri, 2005-09-09 at 11:16 -0400, Alan Stern wrote:
-> > So which way do you want to go?  Either we wait in recovery for the
-> > error handler to finish and transition the host state to RUNNING or we
-> > introduce the parallel states for the error handler.
+On Thu, 2005-09-08 at 13:50 -0700, Mark Haverkamp wrote:
+> Aif pre-allocation is used to pull the kmalloc outside of the locks.
 > 
-> For usb-storage it won't make any difference on the whole, as far as I can
-> see.  The important thing is that scsi_remove_host needs to synchronize
-> somehow with the error handler.  Waiting for the host state to go back to
-> RUNNING would be valid.  Introducing the parallel states would mean 
-> waiting for the host to go from CANCEL_RECOVERY to CANCEL, right?
+It looks like part of this patch was lost somehow.  Here is an updated
+version that includes the missing piece.
 
-Actually, no, there would be no waiting.  Once the host gets to DEL or
-CANCEL_DEL, then all the devices should be in DEL and the mid-layer will
-begin rejecting any commands the error handler makes.  So it can
-continue until it's exhausted.  It keeps a reference to the devices it
-needs to operate, so they'll be finally freed when it stops.
+ - - - - -
 
-Since the eh has references, module removal would have to wait until it
-had finished, but everything else can proceed without it.
+Recevied from Mark Salyzyn from Adaptec.
 
-> Either way should work.  Would there be more of a difference for drivers
-> that allow non-forced removal?  And without the parallel states, would you
-> worry about the possibility of starving scsi_remove_host (every time it
-> tries to go from RUNNING to CANCEL, the error handler gets there first and
-> changes the state to RECOVERY)?
+Aif pre-allocation is used to pull the kmalloc outside of the locks.
 
-Not really.  Starting the eh is quite a long and involved process, so
-the chances of it restarting before scsi_remove_host gets scheduled is
-small (not impossible, but small).
+Applies to the scsi-misc-2.6 git tree.
 
-> In the absence of other considerations, my vote goes for adding the least 
-> amount of additional code.
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
 
-Actually, they're both about the same amount of code.
 
-James
+Index: scsi-misc-aac-2/drivers/scsi/aacraid/commsup.c
+===================================================================
+--- scsi-misc-aac-2.orig/drivers/scsi/aacraid/commsup.c	2005-09-08 11:00:20.000000000 -0700
++++ scsi-misc-aac-2/drivers/scsi/aacraid/commsup.c	2005-09-09 07:58:15.000000000 -0700
+@@ -805,7 +805,6 @@
+ {
+ 	struct hw_fib *hw_fib, *hw_newfib;
+ 	struct fib *fib, *newfib;
+-	struct aac_queue_block *queues = dev->queues;
+ 	struct aac_fib_context *fibctx;
+ 	unsigned long flags;
+ 	DECLARE_WAITQUEUE(wait, current);
+@@ -825,21 +824,22 @@
+ 	 *	Let the DPC know it has a place to send the AIF's to.
+ 	 */
+ 	dev->aif_thread = 1;
+-	add_wait_queue(&queues->queue[HostNormCmdQueue].cmdready, &wait);
++	add_wait_queue(&dev->queues->queue[HostNormCmdQueue].cmdready, &wait);
+ 	set_current_state(TASK_INTERRUPTIBLE);
++	dprintk ((KERN_INFO "aac_command_thread start\n"));
+ 	while(1) 
+ 	{
+-		spin_lock_irqsave(queues->queue[HostNormCmdQueue].lock, flags);
+-		while(!list_empty(&(queues->queue[HostNormCmdQueue].cmdq))) {
++		spin_lock_irqsave(dev->queues->queue[HostNormCmdQueue].lock, flags);
++		while(!list_empty(&(dev->queues->queue[HostNormCmdQueue].cmdq))) {
+ 			struct list_head *entry;
+ 			struct aac_aifcmd * aifcmd;
+ 
+ 			set_current_state(TASK_RUNNING);
+-		
+-			entry = queues->queue[HostNormCmdQueue].cmdq.next;
++	
++			entry = dev->queues->queue[HostNormCmdQueue].cmdq.next;
+ 			list_del(entry);
+-			
+-			spin_unlock_irqrestore(queues->queue[HostNormCmdQueue].lock, flags);
++		
++			spin_unlock_irqrestore(dev->queues->queue[HostNormCmdQueue].lock, flags);
+ 			fib = list_entry(entry, struct fib, fiblink);
+ 			/*
+ 			 *	We will process the FIB here or pass it to a 
+@@ -869,9 +869,54 @@
+ 				   
+ 				u32 time_now, time_last;
+ 				unsigned long flagv;
++				unsigned num;
++				struct hw_fib ** hw_fib_pool, ** hw_fib_p;
++				struct fib ** fib_pool, ** fib_p;
+ 				
+ 				time_now = jiffies/HZ;
+ 
++				/*
++				 * Warning: no sleep allowed while
++				 * holding spinlock. We take the estimate
++				 * and pre-allocate a set of fibs outside the
++				 * lock.
++				 */
++				num = le32_to_cpu(dev->init->AdapterFibsSize)
++				    / sizeof(struct hw_fib); /* some extra */
++				spin_lock_irqsave(&dev->fib_lock, flagv);
++				entry = dev->fib_list.next;
++				while (entry != &dev->fib_list) {
++					entry = entry->next;
++					++num;
++				}
++				spin_unlock_irqrestore(&dev->fib_lock, flagv);
++				hw_fib_pool = NULL;
++				fib_pool = NULL;
++				if (num
++				 && ((hw_fib_pool = kmalloc(sizeof(struct hw_fib *) * num, GFP_ATOMIC|GFP_KERNEL)))
++				 && ((fib_pool = kmalloc(sizeof(struct fib *) * num, GFP_ATOMIC|GFP_KERNEL)))) {
++					hw_fib_p = hw_fib_pool;
++					fib_p = fib_pool;
++					while (hw_fib_p < &hw_fib_pool[num]) {
++						if (!(*(hw_fib_p++) = kmalloc(sizeof(struct hw_fib), GFP_ATOMIC|GFP_KERNEL))) {
++							--hw_fib_p;
++							break;
++						}
++						if (!(*(fib_p++) = kmalloc(sizeof(struct fib), GFP_ATOMIC|GFP_KERNEL))) {
++							kfree(*(--hw_fib_p));
++							break;
++						}
++					}
++					if ((num = hw_fib_p - hw_fib_pool) == 0) {
++						kfree(fib_pool);
++						fib_pool = NULL;
++						kfree(hw_fib_pool);
++						hw_fib_pool = NULL;
++					}
++				} else if (hw_fib_pool) {
++					kfree(hw_fib_pool);
++					hw_fib_pool = NULL;
++				}
+ 				spin_lock_irqsave(&dev->fib_lock, flagv);
+ 				entry = dev->fib_list.next;
+ 				/*
+@@ -880,6 +925,8 @@
+ 				 * fib, and then set the event to wake up the
+ 				 * thread that is waiting for it.
+ 				 */
++				hw_fib_p = hw_fib_pool;
++				fib_p = fib_pool;
+ 				while (entry != &dev->fib_list) {
+ 					/*
+ 					 * Extract the fibctx
+@@ -912,9 +959,11 @@
+ 					 * Warning: no sleep allowed while
+ 					 * holding spinlock
+ 					 */
+-					hw_newfib = kmalloc(sizeof(struct hw_fib), GFP_ATOMIC);
+-					newfib = kmalloc(sizeof(struct fib), GFP_ATOMIC);
+-					if (newfib && hw_newfib) {
++					if (hw_fib_p < &hw_fib_pool[num]) {
++						hw_newfib = *hw_fib_p;
++						*(hw_fib_p++) = NULL;
++						newfib = *fib_p;
++						*(fib_p++) = NULL;
+ 						/*
+ 						 * Make the copy of the FIB
+ 						 */
+@@ -929,15 +978,11 @@
+ 						fibctx->count++;
+ 						/* 
+ 						 * Set the event to wake up the
+-						 * thread that will waiting.
++						 * thread that is waiting.
+ 						 */
+ 						up(&fibctx->wait_sem);
+ 					} else {
+ 						printk(KERN_WARNING "aifd: didn't allocate NewFib.\n");
+-						if(newfib)
+-							kfree(newfib);
+-						if(hw_newfib)
+-							kfree(hw_newfib);
+ 					}
+ 					entry = entry->next;
+ 				}
+@@ -947,21 +992,38 @@
+ 				*(__le32 *)hw_fib->data = cpu_to_le32(ST_OK);
+ 				fib_adapter_complete(fib, sizeof(u32));
+ 				spin_unlock_irqrestore(&dev->fib_lock, flagv);
++				/* Free up the remaining resources */
++				hw_fib_p = hw_fib_pool;
++				fib_p = fib_pool;
++				while (hw_fib_p < &hw_fib_pool[num]) {
++					if (*hw_fib_p)
++						kfree(*hw_fib_p);
++					if (*fib_p)
++						kfree(*fib_p);
++					++fib_p;
++					++hw_fib_p;
++				}
++				if (hw_fib_pool)
++					kfree(hw_fib_pool);
++				if (fib_pool)
++					kfree(fib_pool);
+ 			}
+-			spin_lock_irqsave(queues->queue[HostNormCmdQueue].lock, flags);
+ 			kfree(fib);
++			spin_lock_irqsave(dev->queues->queue[HostNormCmdQueue].lock, flags);
+ 		}
+ 		/*
+ 		 *	There are no more AIF's
+ 		 */
+-		spin_unlock_irqrestore(queues->queue[HostNormCmdQueue].lock, flags);
++		spin_unlock_irqrestore(dev->queues->queue[HostNormCmdQueue].lock, flags);
+ 		schedule();
+ 
+ 		if(signal_pending(current))
+ 			break;
+ 		set_current_state(TASK_INTERRUPTIBLE);
+ 	}
+-	remove_wait_queue(&queues->queue[HostNormCmdQueue].cmdready, &wait);
++	if (dev->queues)
++		remove_wait_queue(&dev->queues->queue[HostNormCmdQueue].cmdready, &wait);
+ 	dev->aif_thread = 0;
+ 	complete_and_exit(&dev->aif_completion, 0);
++	return 0;
+ }
 
+-- 
+Mark Haverkamp <markh@osdl.org>
 
