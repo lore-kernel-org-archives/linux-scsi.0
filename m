@@ -1,658 +1,1596 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [PATCH 2.6.13 20/20] aic94xx: aic94xx_tmf.c Implements the Task Management
- Funcions defined by SAS
-Date: Fri, 09 Sep 2005 15:37:23 -0400
-Message-ID: <4321E473.2020002@adaptec.com>
+Subject: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process (end
+ devices)
+Date: Fri, 09 Sep 2005 15:40:15 -0400
+Message-ID: <4321E51F.8040906@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:60613 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1030359AbVIITh3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 15:37:29 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030392AbVIITlM@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
 
-diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi/aic94xx/aic94xx_tmf.c linux-2.6.13/drivers/scsi/aic94xx/aic94xx_tmf.c
---- linux-2.6.13-orig/drivers/scsi/aic94xx/aic94xx_tmf.c	1969-12-31 19:00:00.000000000 -0500
-+++ linux-2.6.13/drivers/scsi/aic94xx/aic94xx_tmf.c	2005-09-09 11:21:23.000000000 -0400
-@@ -0,0 +1,634 @@
+diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi/sas-class/sas_discover.c linux-2.6.13/drivers/scsi/sas-class/sas_discover.c
+--- linux-2.6.13-orig/drivers/scsi/sas-class/sas_discover.c	1969-12-31 19:00:00.000000000 -0500
++++ linux-2.6.13/drivers/scsi/sas-class/sas_discover.c	2005-09-09 11:14:29.000000000 -0400
+@@ -0,0 +1,1577 @@
 +/*
-+ * Aic94xx Task Management Functions
++ * Serial Attached SCSI (SAS) Discover process
 + *
 + * Copyright (C) 2005 Adaptec, Inc.  All rights reserved.
 + * Copyright (C) 2005 Luben Tuikov <luben_tuikov@adaptec.com>
 + *
 + * This file is licensed under GPLv2.
-+ * 
-+ * This file is part of the aic94xx driver.
 + *
-+ * The aic94xx driver is free software; you can redistribute it and/or
++ * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation; version 2 of the
-+ * License.
++ * published by the Free Software Foundation; either version 2 of the
++ * License, or (at your option) any later version.
 + *
-+ * The aic94xx driver is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
 + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 + * General Public License for more details.
 + *
 + * You should have received a copy of the GNU General Public License
-+ * along with the aic94xx driver; if not, write to the Free Software
++ * along with this program; if not, write to the Free Software
 + * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 + *
-+ * $Id: //depot/aic94xx/aic94xx_tmf.c#34 $
++ * $Id: //depot/sas-class/sas_discover.c#130 $
 + */
 +
-+#include <linux/spinlock.h>
++#include <linux/pci.h>
++#include <linux/scatterlist.h>
++#include <scsi/scsi_host.h>
++#include <scsi/scsi_eh.h>
++#include "sas_internal.h"
 +#include <scsi/sas/sas_task.h>
-+#include "aic94xx.h"
-+#include "aic94xx_sas.h"
-+#include "aic94xx_hwi.h"
++#include <scsi/sas/sas_discover.h>
 +
-+/* ---------- Internal enqueue ---------- */
++/* ---------- Domain device attributes ---------- */
 +
-+static int asd_enqueue_internal(struct asd_ascb *ascb,
-+		void (*tasklet_complete)(struct asd_ascb *,
-+					 struct done_list_struct *),
-+				void (*timed_out)(unsigned long))
++ssize_t dev_show_type(struct domain_device *dev, char *page)
 +{
-+	int res;
-+	
-+	ascb->tasklet_complete = tasklet_complete;
-+	ascb->uldd_timer = 1;
-+	
-+	ascb->timer.data = (unsigned long) ascb;
-+	ascb->timer.function = timed_out;
-+	ascb->timer.expires = jiffies + AIC94XX_SCB_TIMEOUT;
-+
-+	add_timer(&ascb->timer);
-+
-+	res = asd_post_ascb_list(ascb->ha, ascb, 1);
-+	if (unlikely(res))
-+		del_timer(&ascb->timer);
-+	return res;
++	static const char *dev_type[] = {
++		"no device",
++		"end device",
++		"edge expander",
++		"fanout expander",
++		"host adapter",
++		"sata device",
++		"sata port multiplier",
++		"sata port multiplier port",
++	};
++	return sprintf(page, "%s\n", dev_type[dev->dev_type]);
 +}
 +
-+static inline void asd_timedout_common(unsigned long data)
++ssize_t dev_show_iproto(struct domain_device *dev, char *page)
 +{
-+	struct asd_ascb *ascb = (void *) data;
-+	struct asd_seq_data *seq = &ascb->ha->seq;
-+        unsigned long flags;
-+
-+	spin_lock_irqsave(&seq->pend_q_lock, flags);
-+        seq->pending--;
-+        list_del_init(&ascb->list);
-+        spin_unlock_irqrestore(&seq->pend_q_lock, flags);
++	return sas_show_proto(dev->iproto, page);
 +}
 +
-+/* ---------- CLEAR NEXUS ---------- */
-+
-+static void asd_clear_nexus_tasklet_complete(struct asd_ascb *ascb,
-+					     struct done_list_struct *dl)
++ssize_t dev_show_tproto(struct domain_device *dev, char *page)
 +{
-+	ASD_DPRINTK("%s: here\n", __FUNCTION__);
-+	if (!del_timer(&ascb->timer)) {
-+		ASD_DPRINTK("%s: couldn't delete timer\n", __FUNCTION__);
-+		return;
++	return sas_show_proto(dev->tproto, page);
++}
++
++ssize_t dev_show_sas_addr(struct domain_device *dev, char *page)
++{
++	return sprintf(page, "%llx\n", SAS_ADDR(dev->sas_addr));
++}
++
++ssize_t dev_show_linkrate(struct domain_device *dev, char *page)
++{
++	return sas_show_linkrate(dev->linkrate, page);
++}
++
++ssize_t dev_show_min_linkrate(struct domain_device *dev, char *page)
++{
++	return sas_show_linkrate(dev->min_linkrate, page);
++}
++
++ssize_t dev_show_max_linkrate(struct domain_device *dev, char *page)
++{
++	return sas_show_linkrate(dev->max_linkrate, page);
++}
++
++ssize_t dev_show_pathways(struct domain_device *dev, char *page)
++{
++	return sprintf(page, "%d\n", dev->pathways);
++}
++
++/* ---------- SATA specific sysfs ---------- */
++
++static ssize_t sata_show_command_set(struct domain_device *dev, char *page)
++{
++	static const char *cs[] = {
++		"ATA",
++		"ATAPI",
++	};
++	return sprintf(page, "%s\n", cs[dev->sata_dev.command_set]);
++}
++
++static ssize_t sata_show_rps_resp(struct domain_device *dev, char *page)
++{
++	char *buf = page;
++	if ((dev->tproto & SAS_PROTO_STP) &&
++	    dev->sata_dev.rps_resp.frame_type == SMP_RESPONSE &&
++	    dev->sata_dev.rps_resp.function == SMP_REPORT_PHY_SATA &&
++	    dev->sata_dev.rps_resp.result == SMP_RESP_FUNC_ACC) {
++		int i = 0;
++		u8 *p = (u8 *) &dev->sata_dev.rps_resp;
++		for (i = 0; i < sizeof(struct smp_resp); i+=4, p+=4) {
++			buf += sprintf(buf, "%02x %02x %02x %02x\n",
++				       *(p+0), *(p+1), *(p+2), *(p+3));
++		}
 +	}
-+	ASD_DPRINTK("%s: opcode: 0x%x\n", __FUNCTION__, dl->opcode);
-+	ascb->uldd_task = (void *) (unsigned long) dl->opcode;
-+	complete(&ascb->completion);
++	return buf-page;
 +}
 +
-+static void asd_clear_nexus_timedout(unsigned long data)
++static inline int show_chars(__le16 *p, int start, int words, char *page)
 +{
-+	struct asd_ascb *ascb = (void *) data;
-+
-+	ASD_DPRINTK("%s: here\n", __FUNCTION__);
-+	asd_timedout_common(data);
-+	ascb->uldd_task = (void *) TMF_RESP_FUNC_FAILED;
-+	complete(&ascb->completion);
-+}
-+
-+#define CLEAR_NEXUS_PRE         \
-+	ASD_DPRINTK("%s: PRE\n", __FUNCTION__); \
-+        res = 1;                \
-+	ascb = asd_ascb_alloc_list(asd_ha, &res, GFP_KERNEL); \
-+	if (!ascb)              \
-+		return -ENOMEM; \
-+                                \
-+	scb = ascb->scb;        \
-+	scb->header.opcode = CLEAR_NEXUS
-+
-+#define CLEAR_NEXUS_POST        \
-+	ASD_DPRINTK("%s: POST\n", __FUNCTION__); \
-+	res = asd_enqueue_internal(ascb, asd_clear_nexus_tasklet_complete, \
-+				   asd_clear_nexus_timedout);              \
-+	if (res)                \
-+		goto out_err;   \
-+	ASD_DPRINTK("%s: clear nexus posted, waiting...\n", __FUNCTION__); \
-+	wait_for_completion(&ascb->completion); \
-+	res = (int) (unsigned long) ascb->uldd_task; \
-+	if (res == TC_NO_ERROR) \
-+		res = TMF_RESP_FUNC_COMPLETE;   \
-+out_err:                        \
-+	asd_ascb_free(ascb);    \
-+	return res
-+
-+int asd_clear_nexus_ha(struct sas_ha_struct *sas_ha)
-+{
-+	struct asd_ha_struct *asd_ha = sas_ha->lldd_ha;
-+	struct asd_ascb *ascb;
-+	struct scb *scb;
-+	int res;
-+
-+	CLEAR_NEXUS_PRE;
-+	scb->clear_nexus.nexus = NEXUS_ADAPTER;
-+	CLEAR_NEXUS_POST;
-+}
-+
-+int asd_clear_nexus_port(struct sas_port *port)
-+{
-+	struct asd_ha_struct *asd_ha = port->ha->lldd_ha;
-+	struct asd_ascb *ascb;
-+	struct scb *scb;
-+	int res;
++	int i;
++	char *buf = page;
 +	
-+	CLEAR_NEXUS_PRE;
-+	scb->clear_nexus.nexus = NEXUS_PORT;
-+	scb->clear_nexus.conn_mask = port->phy_mask;
-+	CLEAR_NEXUS_POST;
-+}
++	for (i = start; i < start+words; i++) {
++		u16  s = le16_to_cpu(p[i]);
++		char a = (s&0xFF00)>>8;
++		char b = s&0x00FF;
 +
-+#if 0
-+static int asd_clear_nexus_I_T(struct domain_device *dev)
-+{
-+	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
-+	struct asd_ascb *ascb;
-+	struct scb *scb;
-+	int res;
-+	
-+	CLEAR_NEXUS_PRE;
-+	scb->clear_nexus.nexus = NEXUS_I_T;
-+	scb->clear_nexus.flags = SEND_Q | EXEC_Q | NOTINQ;
-+	if (dev->tproto)
-+		scb->clear_nexus.flags |= SUSPEND_TX;
-+	scb->clear_nexus.conn_handle = cpu_to_le16((u16)(unsigned long)
-+						   dev->lldd_dev);
-+	CLEAR_NEXUS_POST;
-+}
-+#endif
-+
-+static int asd_clear_nexus_I_T_L(struct domain_device *dev, u8 *lun)
-+{
-+	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
-+	struct asd_ascb *ascb;
-+	struct scb *scb;
-+	int res;
-+	
-+	CLEAR_NEXUS_PRE;
-+	scb->clear_nexus.nexus = NEXUS_I_T_L;
-+	scb->clear_nexus.flags = SEND_Q | EXEC_Q | NOTINQ;
-+	if (dev->tproto)
-+		scb->clear_nexus.flags |= SUSPEND_TX;
-+	memcpy(scb->clear_nexus.ssp_task.lun, lun, 8);
-+	scb->clear_nexus.conn_handle = cpu_to_le16((u16)(unsigned long)
-+						   dev->lldd_dev);
-+	CLEAR_NEXUS_POST;
-+}
-+
-+static int asd_clear_nexus_tag(struct sas_task *task)
-+{
-+	struct asd_ha_struct *asd_ha = task->dev->port->ha->lldd_ha;
-+	struct asd_ascb *tascb = task->lldd_task;
-+	struct asd_ascb *ascb;
-+	struct scb *scb;
-+	int res;
-+	
-+	CLEAR_NEXUS_PRE;
-+	scb->clear_nexus.nexus = NEXUS_TAG;
-+	memcpy(scb->clear_nexus.ssp_task.lun, task->ssp_task.LUN, 8);
-+	scb->clear_nexus.ssp_task.tag = tascb->tag;
-+	if (task->dev->tproto)
-+		scb->clear_nexus.conn_handle = cpu_to_le16((u16)(unsigned long)
-+							  task->dev->lldd_dev);
-+	CLEAR_NEXUS_POST;
-+}
-+
-+static int asd_clear_nexus_index(struct sas_task *task)
-+{
-+	struct asd_ha_struct *asd_ha = task->dev->port->ha->lldd_ha;
-+	struct asd_ascb *tascb = task->lldd_task;
-+	struct asd_ascb *ascb;
-+	struct scb *scb;
-+	int res;
-+	
-+	CLEAR_NEXUS_PRE;
-+	scb->clear_nexus.nexus = NEXUS_TRANS_CX;
-+	if (task->dev->tproto)
-+		scb->clear_nexus.conn_handle = cpu_to_le16((u16)(unsigned long)
-+							  task->dev->lldd_dev);
-+	scb->clear_nexus.index = cpu_to_le16(tascb->tc_index);
-+	CLEAR_NEXUS_POST;
-+}
-+
-+/* ---------- TMFs ---------- */
-+
-+static void asd_tmf_timedout(unsigned long data)
-+{
-+	struct asd_ascb *ascb = (void *) data;
-+
-+	ASD_DPRINTK("tmf timed out\n");
-+	asd_timedout_common(data);
-+	ascb->uldd_task = (void *) TMF_RESP_FUNC_FAILED;
-+	complete(&ascb->completion);
-+}
-+
-+static int asd_get_tmf_resp_tasklet(struct asd_ascb *ascb,
-+				    struct done_list_struct *dl)
-+{
-+	struct asd_ha_struct *asd_ha = ascb->ha;
-+	unsigned long flags;
-+	struct tc_resp_sb_struct {
-+		__le16 index_escb;
-+		u8     len_lsb;
-+		u8     flags;
-+	} __attribute__ ((packed)) *resp_sb = (void *) dl->status_block;
-+
-+	int  edb_id = ((resp_sb->flags & 0x70) >> 4)-1;
-+	struct asd_ascb *escb;
-+	struct asd_dma_tok *edb;
-+	struct ssp_frame_hdr *fh;
-+	struct ssp_response_iu   *ru;
-+	int res = TMF_RESP_FUNC_FAILED;
-+
-+	ASD_DPRINTK("tmf resp tasklet\n");
-+
-+	spin_lock_irqsave(&asd_ha->seq.tc_index_lock, flags);
-+	escb = asd_tc_index_find(&asd_ha->seq,
-+				 (int)le16_to_cpu(resp_sb->index_escb));
-+	spin_unlock_irqrestore(&asd_ha->seq.tc_index_lock, flags);
-+
-+	if (!escb) {
-+		ASD_DPRINTK("Uh-oh! No escb for this dl?!\n");
-+		return res;
++		if (a == 0)
++			break;
++		buf += sprintf(buf, "%c", a);
++		if (b == 0)
++			break;
++		buf += sprintf(buf, "%c", b);
++		
 +	}
-+
-+	edb = asd_ha->seq.edb_arr[edb_id + escb->edb_index];
-+	ascb->tag = *(__be16 *)(edb->vaddr+4);
-+	fh = edb->vaddr + 16;
-+	ru = edb->vaddr + 16 + sizeof(*fh);
-+	res = ru->status;
-+	if (ru->datapres == 1)	  /* Response data present */
-+		res = ru->resp_data[3];
-+#if 0
-+	ascb->tag = fh->tag;
-+#endif	
-+	ascb->tag_valid = 1;
-+
-+	asd_invalidate_edb(escb, edb_id);
-+	return res;
++	return buf-page;
 +}
 +
-+static void asd_tmf_tasklet_complete(struct asd_ascb *ascb,
-+				     struct done_list_struct *dl)
++static ssize_t sata_show_serial_number(struct domain_device *dev, char *page)
 +{
-+	if (!del_timer(&ascb->timer))
-+		return;
++	char *buf = page;
++	__le16 *identify_x = NULL;
 +
-+	ASD_DPRINTK("tmf tasklet complete\n");
-+	
-+	if (dl->opcode == TC_SSP_RESP)
-+		ascb->uldd_task = (void *) (unsigned long)
-+			asd_get_tmf_resp_tasklet(ascb, dl);
++	if (dev->sata_dev.command_set == ATA_COMMAND_SET)
++		identify_x = dev->sata_dev.identify_device;
 +	else
-+		ascb->uldd_task = (void *) 0xFF00 + (unsigned long) dl->opcode;
-+
-+	complete(&ascb->completion);
++		identify_x = dev->sata_dev.identify_packet_device;
++	
++	if (identify_x &&
++	    (dev->dev_type == SATA_DEV || dev->dev_type == SATA_PM_PORT)) {
++		buf += show_chars(identify_x, 10, 10, buf);
++		buf += sprintf(buf, "\n");
++	}
++	return buf-page;
 +}
 +
-+static inline int asd_clear_nexus(struct sas_task *task)
++static ssize_t sata_show_firmware_rev(struct domain_device *dev, char *page)
 +{
-+	int res = TMF_RESP_FUNC_FAILED;
-+	struct asd_ascb *tascb = task->lldd_task;
-+	unsigned long flags;
++	char *buf = page;
++	__le16 *identify_x = NULL;
 +
-+	ASD_DPRINTK("task not done, clearing nexus\n");
-+	if (tascb->tag_valid)
-+		res = asd_clear_nexus_tag(task);
++	if (dev->sata_dev.command_set == ATA_COMMAND_SET)
++		identify_x = dev->sata_dev.identify_device;
 +	else
-+		res = asd_clear_nexus_index(task);
-+	wait_for_completion_timeout(&tascb->completion,
-+				    AIC94XX_SCB_TIMEOUT);
-+	ASD_DPRINTK("came back from clear nexus\n");
-+	spin_lock_irqsave(&task->task_state_lock, flags);
-+	if (task->task_state_flags & SAS_TASK_STATE_DONE)
-+		res = TMF_RESP_FUNC_COMPLETE;
-+	spin_unlock_irqrestore(&task->task_state_lock, flags);
++		identify_x = dev->sata_dev.identify_packet_device;
++	
++	if (identify_x &&
++	    (dev->dev_type == SATA_DEV || dev->dev_type == SATA_PM_PORT)) {
++		buf += show_chars(identify_x, 23, 4, buf);
++		buf += sprintf(buf, "\n");
++	}
++	return buf-page;
++}
 +
++static ssize_t sata_show_model_number(struct domain_device *dev, char *page)
++{
++	char *buf = page;
++	__le16 *identify_x = NULL;
++
++	if (dev->sata_dev.command_set == ATA_COMMAND_SET)
++		identify_x = dev->sata_dev.identify_device;
++	else
++		identify_x = dev->sata_dev.identify_packet_device;
++	
++	if (identify_x &&
++	    (dev->dev_type == SATA_DEV || dev->dev_type == SATA_PM_PORT)) {
++		buf += show_chars(identify_x, 27, 20, buf);
++		buf += sprintf(buf, "\n");
++	}
++	return buf-page;
++}
++
++static ssize_t sata_show_identify_device(struct domain_device *dev, char *page)
++{
++	char *buf = page;
++	
++	if (dev->sata_dev.identify_device &&
++	    (dev->dev_type == SATA_DEV || dev->dev_type == SATA_PM_PORT)) {
++		__le16 *p = dev->sata_dev.identify_device;
++		int i;
++
++		for (i = 0; i < 16; i++) {
++			int k;
++			for (k = 0; k < 16; k++)
++				buf += sprintf(buf, "%04x%s",
++					      le16_to_cpu(p[i*16+k]),
++					      k==15 ? "\n" : " ");
++		}
++	}
++	return buf-page;
++}
++
++static ssize_t sata_show_identify_packet(struct domain_device *dev, char *page)
++{
++	char *buf = page;
++
++	if (dev->sata_dev.identify_packet_device &&
++	    (dev->dev_type == SATA_DEV || dev->dev_type == SATA_PM_PORT)) {
++		__le16 *p = dev->sata_dev.identify_packet_device;
++		int i;
++
++		for (i = 0; i < 16; i++) {
++			int k;
++			for (k = 0; k < 16; k++)
++				buf += sprintf(buf, "%04x%s",
++					      le16_to_cpu(p[i*16+k]),
++					      k==15 ? "\n" : " ");
++		}
++	}
++
++	return buf-page;
++}
++
++static ssize_t sata_show_port_no(struct domain_device *dev, char *page)
++{
++	int res = 0;
++
++	if (dev->dev_type == SATA_PM || dev->dev_type == SATA_PM_PORT)
++		res = sprintf(page, "%02Xh\n", dev->sata_dev.port_no);
 +	return res;
 +}
 +
-+/**
-+ * asd_abort_task -- ABORT TASK TMF
-+ * @task: the task to be aborted
-+ *
-+ * Before calling ABORT TASK the task state flags should be ORed with
-+ * SAS_TASK_STATE_ABORTED (unless SAS_TASK_STATE_DONE is set) under
-+ * the task_state_lock IRQ spinlock, then ABORT TASK *must* be called.
-+ * 
-+ * Implements the ABORT TASK TMF, I_T_L_Q nexus.
-+ * Returns: SAS TMF responses (see sas_task.h),
-+ *          -ENOMEM,
-+ *          -SAS_QUEUE_FULL.
-+ *
-+ * When ABORT TASK returns, the caller of ABORT TASK checks first the
-+ * task->task_state_flags, and then the return value of ABORT TASK.
-+ * 
-+ * If the task has task state bit SAS_TASK_STATE_DONE set, then the
-+ * task was completed successfully prior to it being aborted.  The
-+ * caller of ABORT TASK has responsibility to call task->task_done()
-+ * xor free the task, depending on their framework.  The return code
-+ * is TMF_RESP_FUNC_FAILED in this case.
-+ * 
-+ * Else the SAS_TASK_STATE_DONE bit is not set,
-+ * 	If the return code is TMF_RESP_FUNC_COMPLETE, then
-+ * 		the task was aborted successfully.  The caller of
-+ * 		ABORT TASK has responsibility to call task->task_done()
-+ *              to finish the task, xor free the task depending on their
-+ *		framework.
-+ *	else
-+ * 		the ABORT TASK returned some kind of error. The task
-+ *              was _not_ cancelled.  Nothing can be assumed.
-+ *		The caller of ABORT TASK may wish to retry.
-+ */
-+int asd_abort_task(struct sas_task *task)
++/* ---------- SAS end device specific ---------- */
++
++static ssize_t sas_show_rled_meaning(struct domain_device *dev, char *page)
 +{
-+	struct asd_ascb *tascb = task->lldd_task;
-+	struct asd_ha_struct *asd_ha = tascb->ha;
-+	int res = 1;
-+	unsigned long flags;
-+	struct asd_ascb *ascb = NULL;
-+	struct scb *scb;
++	return sprintf(page, "%d\n", dev->end_dev.ready_led_meaning);
++}
 +
-+	spin_lock_irqsave(&task->task_state_lock, flags);
-+	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
-+		spin_unlock_irqrestore(&task->task_state_lock, flags);
-+		res = TMF_RESP_FUNC_COMPLETE;
-+		ASD_DPRINTK("%s: task 0x%p done\n", __FUNCTION__, task);
-+		goto out_done;
-+	}
-+	spin_unlock_irqrestore(&task->task_state_lock, flags);
++static ssize_t sas_show_itnl_timeout(struct domain_device *dev, char *page)
++{
++	return sprintf(page, "0x%04x\n", dev->end_dev.itnl_timeout);
++}
 +
-+	ascb = asd_ascb_alloc_list(asd_ha, &res, GFP_KERNEL);
-+	if (!ascb)
-+		return -ENOMEM;
-+	scb = ascb->scb;
++static ssize_t sas_show_iresp_timeout(struct domain_device *dev, char *page)
++{
++	return sprintf(page, "0x%04x\n", dev->end_dev.iresp_timeout);
++}
 +
-+	scb->header.opcode = ABORT_TASK;
++static ssize_t sas_show_rl_wlun(struct domain_device *dev, char *page)
++{
++	return sprintf(page, "%d\n", dev->end_dev.rl_wlun);
++}
 +
-+	switch (task->task_proto) {
-+	case SATA_PROTO:
-+	case SAS_PROTO_STP:
-+		scb->abort_task.proto_conn_rate = (1 << 5); /* STP */
-+		break;
-+	case SAS_PROTO_SSP:
-+		scb->abort_task.proto_conn_rate  = (1 << 4); /* SSP */
-+		scb->abort_task.proto_conn_rate |= task->dev->linkrate;
-+		break;
-+	case SAS_PROTO_SMP:
-+		break;
-+	default:
-+		break;
++/* ---------- LU specific ---------- */
++
++static ssize_t lu_show_lun(struct LU *lu, char *page)
++{
++	return sprintf(page, "%016llx\n", SAS_ADDR(lu->LUN));
++}
++
++static ssize_t lu_show_inq(struct LU *lu, char *_page)
++{
++	int i;
++	char *buf = _page;
++	if (lu->inquiry_valid_data_len <= 0)
++		return 0;
++	for (i = 0; i < lu->inquiry_valid_data_len; i += 4) {
++		buf += sprintf(buf, "%02x %02x %02x %02x\n",
++			       lu->inquiry_data[i+0], lu->inquiry_data[i+1],
++			       lu->inquiry_data[i+2], lu->inquiry_data[i+3]);
 +	}
 +	
-+	if (task->task_proto == SAS_PROTO_SSP) {
-+		scb->abort_task.ssp_frame.frame_type = SSP_TASK;
-+		memcpy(scb->abort_task.ssp_frame.hashed_dest_addr,
-+		       task->dev->hashed_sas_addr, HASHED_SAS_ADDR_SIZE);
-+		memcpy(scb->abort_task.ssp_frame.hashed_src_addr,
-+		       task->dev->port->ha->hashed_sas_addr,
-+		       HASHED_SAS_ADDR_SIZE);
-+		scb->abort_task.ssp_frame.tptt = cpu_to_be16(0xFFFF);
++	return buf-_page;
++}
 +
-+		memcpy(scb->abort_task.ssp_task.lun, task->ssp_task.LUN, 8);
-+		scb->abort_task.ssp_task.tmf = TMF_ABORT_TASK;
-+		scb->abort_task.ssp_task.tag = cpu_to_be16(0xFFFF);
-+	}
++static ssize_t lu_show_tm_type(struct LU *lu, char *page)
++{
++	static const char *tm_type[] = {
++		"none",
++		"full",
++		"basic",
++	};
++	return sprintf(page, "%s\n", tm_type[lu->tm_type]);
++}
 +
-+	scb->abort_task.sister_scb = cpu_to_le16(0xFFFF);
-+	scb->abort_task.conn_handle = cpu_to_le16(
-+		(u16)(unsigned long)task->dev->lldd_dev);
-+	scb->abort_task.retry_count = 1;
-+	scb->abort_task.index = cpu_to_le16((u16)tascb->tc_index);
-+	scb->abort_task.itnl_to = cpu_to_le16(ITNL_TIMEOUT_CONST);
++static ssize_t lu_show_channel(struct LU *lu, char *page)
++{
++	if (lu->uldd_dev)
++		return sprintf(page, "%d\n", lu->map.channel);
++	return 0;
++}
 +
-+	res = asd_enqueue_internal(ascb, asd_tmf_tasklet_complete,
-+				   asd_tmf_timedout);
-+	if (res)
-+		goto out;
-+	wait_for_completion(&ascb->completion);
-+	ASD_DPRINTK("tmf came back\n");
++static ssize_t lu_show_id(struct LU *lu, char *page)
++{
++	if (lu->uldd_dev)
++		return sprintf(page, "%d\n", lu->map.id);
++	return 0;
++}
 +
-+	res = (int) (unsigned long) ascb->uldd_task;
-+	tascb->tag = ascb->tag;
-+	tascb->tag_valid = ascb->tag_valid;
++/* ---------- Sysfs attribute implementation ---------- */
 +
-+	spin_lock_irqsave(&task->task_state_lock, flags);
-+	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
-+		spin_unlock_irqrestore(&task->task_state_lock, flags);
-+		res = TMF_RESP_FUNC_COMPLETE;
-+		ASD_DPRINTK("%s: task 0x%p done\n", __FUNCTION__, task);
-+		goto out_done;
-+	}
-+	spin_unlock_irqrestore(&task->task_state_lock, flags);
++struct lu_dev_attribute {
++	struct attribute attr;
++	ssize_t (*show)(struct LU *lu, char *);
++	ssize_t (*store)(struct LU *lu, const char *, size_t);
++};
 +
-+	switch (res) {
-+	/* The task to be aborted has been sent to the device.
-+	 * We got a Response IU for the ABORT TASK TMF. */
-+	case TC_NO_ERROR + 0xFF00:
-+	case TMF_RESP_FUNC_COMPLETE:
-+	case TMF_RESP_FUNC_FAILED:
-+		res = asd_clear_nexus(task);
-+		break;
-+	case TMF_RESP_INVALID_FRAME:
-+	case TMF_RESP_OVERLAPPED_TAG:
-+	case TMF_RESP_FUNC_ESUPP:
-+	case TMF_RESP_NO_LUN:
-+		goto out_done; break;
-+	}
-+	/* In the following we assume that the managing layer
-+	 * will _never_ make a mistake, when issuing ABORT TASK.
-+	 */
-+	switch (res) {
-+	default:
-+		res = asd_clear_nexus(task);
-+		/* fallthrough */
-+	case TC_NO_ERROR + 0xFF00:
-+	case TMF_RESP_FUNC_COMPLETE:
-+		break;
-+	/* The task hasn't been sent to the device xor we never got
-+	 * a (sane) Response IU for the ABORT TASK TMF.
-+	 */
-+	case TF_NAK_RECV + 0xFF00:
-+		res = TMF_RESP_INVALID_FRAME;
-+		break;
-+	case TF_TMF_TASK_DONE + 0xFF00:	/* done but not reported yet */
-+		res = TMF_RESP_FUNC_FAILED;
-+		wait_for_completion_timeout(&tascb->completion,
-+					    AIC94XX_SCB_TIMEOUT);
-+		spin_lock_irqsave(&task->task_state_lock, flags);
-+		if (task->task_state_flags & SAS_TASK_STATE_DONE)
-+			res = TMF_RESP_FUNC_COMPLETE;
-+		spin_unlock_irqrestore(&task->task_state_lock, flags);
-+		goto out_done; break;
-+	case TF_TMF_NO_TAG + 0xFF00:
-+	case TF_TMF_TAG_FREE + 0xFF00: /* the tag is in the free list */
-+	case TF_TMF_NO_CTX + 0xFF00: /* not in seq, or proto != SSP */
-+	case TF_TMF_NO_CONN_HANDLE + 0xFF00: /* no such device */
-+		res = TMF_RESP_FUNC_COMPLETE;
-+		goto out_done; break;
-+	}
-+out_done:
-+	if (res == TMF_RESP_FUNC_COMPLETE) {
-+		task->lldd_task = NULL;
++static struct lu_dev_attribute lu_attrs[] = {
++	__ATTR(lun, 0444, lu_show_lun, NULL),
++	__ATTR(inquiry_data, 0444, lu_show_inq, NULL),
++	__ATTR(channel, 0444, lu_show_channel, NULL),
++	__ATTR(id, 0444, lu_show_id, NULL),
++	__ATTR(task_management, 0444, lu_show_tm_type, NULL),
++	__ATTR_NULL,
++};
++
++static struct domain_dev_attribute dev_attrs[] = {
++	__ATTR(dev_type, 0444, dev_show_type, NULL),
++	__ATTR(iproto, 0444, dev_show_iproto, NULL),
++	__ATTR(tproto, 0444, dev_show_tproto, NULL),
++	__ATTR(sas_addr, 0444, dev_show_sas_addr, NULL),
++	__ATTR(ready_led_meaning, 0444, sas_show_rled_meaning, NULL),
++	__ATTR(itnl_timeout, 0444, sas_show_itnl_timeout, NULL),
++	__ATTR(iresp_timeout, 0444, sas_show_iresp_timeout, NULL),
++	__ATTR(rl_wlun, 0444, sas_show_rl_wlun, NULL),
++	__ATTR(linkrate, 0444, dev_show_linkrate, NULL),
++	__ATTR(min_linkrate, 0444, dev_show_min_linkrate, NULL),
++	__ATTR(max_linkrate, 0444, dev_show_max_linkrate, NULL),
++	__ATTR(pathways, 0444, dev_show_pathways, NULL),
++	__ATTR_NULL,
++};
++
++static struct domain_dev_attribute sata_attrs[] = {
++	__ATTR(dev_type, 0444, dev_show_type, NULL),
++	__ATTR(iproto, 0444, dev_show_iproto, NULL),
++	__ATTR(tproto, 0444, dev_show_tproto, NULL),
++	__ATTR(sas_addr, 0444, dev_show_sas_addr, NULL),
++	__ATTR(linkrate, 0444, dev_show_linkrate, NULL),
++	__ATTR(min_linkrate, 0444, dev_show_min_linkrate, NULL),
++	__ATTR(max_linkrate, 0444, dev_show_max_linkrate, NULL),
++	__ATTR(command_set, 0444, sata_show_command_set, NULL),
++	__ATTR(report_phy_sata_resp, 0444, sata_show_rps_resp, NULL),
++	__ATTR(serial_number, 0444, sata_show_serial_number, NULL),
++	__ATTR(firmware_rev, 0444, sata_show_firmware_rev, NULL),
++	__ATTR(model_number, 0444, sata_show_model_number, NULL),
++	__ATTR(identify_device, 0444, sata_show_identify_device, NULL),
++	__ATTR(identify_packet_device, 0444, sata_show_identify_packet, NULL),
++	__ATTR(port_no, 0444, sata_show_port_no, NULL),
++	__ATTR_NULL,
++};
++
++static void end_dev_release(struct kobject *obj)
++{
++	struct domain_device *dev = to_dom_device(obj);
++	BUG_ON(!list_empty(&dev->end_dev.LU_list));
++	SAS_DPRINTK("freeing dev %llx\n", SAS_ADDR(dev->sas_addr));
++	kfree(dev);
++}
++
++static void sata_dev_release(struct kobject *obj)
++{
++	struct domain_device *dev = to_dom_device(obj);
++
++	SAS_DPRINTK("freeing SATA dev %llx\n", SAS_ADDR(dev->sas_addr));
++	if (dev->sata_dev.identify_device) {
++		void *p = dev->sata_dev.identify_device;
 +		mb();
-+		asd_ascb_free(tascb);
++		dev->sata_dev.identify_device = NULL;
++		kfree(p);
 +	}
++	if (dev->sata_dev.identify_packet_device) {
++		void *p = dev->sata_dev.identify_packet_device;
++		mb();
++		dev->sata_dev.identify_packet_device = NULL;
++		kfree(p);
++	}
++	kfree(dev);
++}
++
++static void sas_lu_release(struct kobject *obj)
++{
++	struct LU *lu = to_lu_device(obj);
++	SAS_DPRINTK("freeing LUN %016llx\n", SAS_ADDR(lu->LUN));
++	sas_release_scsi_id(lu->parent->port, lu->map.id);
++	kfree(lu);
++}
++
++static ssize_t dev_show_attr(struct kobject *kobj, struct attribute *attr,
++			     char *page)
++{
++	ssize_t ret = 0;
++	struct domain_device *dev = to_dom_device(kobj);
++	struct domain_dev_attribute *dev_attr = to_dev_attr(attr);
++
++	if (dev_attr->show)
++		ret = dev_attr->show(dev, page);
++	return ret;
++}
++
++static ssize_t lu_show_attr(struct kobject *obj, struct attribute *attr,
++			    char *page)
++{
++	ssize_t ret = 0;
++	struct LU *lu = to_lu_device(obj);
++	struct lu_dev_attribute *lu_attr = to_lu_attr(attr);
++
++	if (lu_attr->show)
++		ret = lu_attr->show(lu, page);
++	return ret;
++}
++
++struct sysfs_ops dev_sysfs_ops = {
++	.show = dev_show_attr,
++};
++static struct sysfs_ops lu_sysfs_ops = {
++	.show = lu_show_attr,
++};
++
++static struct attribute *end_dev_attrs[ARRAY_SIZE(dev_attrs)];
++static struct attribute *sata_dev_attrs[ARRAY_SIZE(sata_attrs)];
++static struct attribute *lu_dev_attrs[ARRAY_SIZE(lu_attrs)];
++
++static struct kobj_type end_dev_ktype = {
++	.release = end_dev_release,
++	.sysfs_ops = &dev_sysfs_ops,
++	.default_attrs = end_dev_attrs,
++};
++static struct kobj_type sata_dev_ktype = {
++	.release = sata_dev_release,
++	.sysfs_ops = &dev_sysfs_ops,
++	.default_attrs = sata_dev_attrs,
++};
++static struct kobj_type lu_dev_ktype = {
++	.release = sas_lu_release,
++	.sysfs_ops = &lu_sysfs_ops,
++	.default_attrs = lu_dev_attrs,
++};
++
++struct kobj_type *dev_ktype[] = {
++	NULL,
++	&end_dev_ktype,
++	&ex_dev_ktype,
++	&ex_dev_ktype,
++	NULL,
++	&sata_dev_ktype,
++	NULL,
++	NULL,
++};
++
++/* ---------- Basic task processing for discovery purposes ---------- */
++
++static void sas_task_timedout(unsigned long _task)
++{
++	struct sas_task *task = (void *) _task;
++	unsigned long flags;
++	
++	spin_lock_irqsave(&task->task_state_lock, flags);
++	if (!(task->task_state_flags & SAS_TASK_STATE_DONE))
++		task->task_state_flags |= SAS_TASK_STATE_ABORTED;
++	spin_unlock_irqrestore(&task->task_state_lock, flags);
++	
++	complete(&task->completion);
++}
++
++static void sas_disc_task_done(struct sas_task *task)
++{
++	if (!del_timer(&task->timer))
++		return;
++	complete(&task->completion);
++}
++
++#define SAS_DEV_TIMEOUT 10
++
++/**
++ * sas_execute_task -- Basic task processing for discovery
++ * @task: the task to be executed
++ * @buffer: pointer to buffer to do I/O
++ * @size: size of @buffer
++ * @pci_dma_dir: PCI_DMA_...
++ */
++static int sas_execute_task(struct sas_task *task, void *buffer, int size,
++			    int pci_dma_dir)
++{
++	int res = 0;
++	struct scatterlist *scatter = NULL;
++	struct task_status_struct *ts = &task->task_status;
++	int num_scatter = 0;
++	int retries = 0;
++
++	if (pci_dma_dir != PCI_DMA_NONE) {
++		scatter = kmalloc(sizeof(*scatter), GFP_KERNEL);
++		if (!scatter)
++			goto out;
++		memset(scatter, 0, sizeof(scatter));
++
++		sg_init_one(scatter, buffer, size);
++		num_scatter = 1;
++	}
++
++	task->task_proto = task->dev->tproto;
++	task->scatter = scatter;
++	task->num_scatter = num_scatter;
++	task->total_xfer_len = size;
++	task->data_dir = pci_dma_dir;
++	task->task_done = sas_disc_task_done;
++	
++	for (retries = 0; retries < 5; retries++) {
++		task->task_state_flags = SAS_TASK_STATE_PENDING;
++		init_completion(&task->completion);
++
++		task->timer.data = (unsigned long) task;
++		task->timer.function = sas_task_timedout;
++		task->timer.expires = jiffies + SAS_DEV_TIMEOUT*HZ;
++		add_timer(&task->timer);
++
++		res = task->dev->port->ha->lldd_execute_task(task, 1,
++							     GFP_KERNEL);
++		if (res) {
++			del_timer(&task->timer);
++			SAS_DPRINTK("executing SAS discovery task failed:%d\n",
++				    res);
++			goto ex_err;
++		}
++		wait_for_completion(&task->completion);
++		res = -ETASK;
++		if (task->task_state_flags & SAS_TASK_STATE_ABORTED) {
++			int res2;
++			SAS_DPRINTK("task aborted, flags:0x%x\n",
++				    task->task_state_flags);
++			res2 = task->dev->port->ha->lldd_abort_task(task);
++			SAS_DPRINTK("came back from abort task\n");
++			if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
++				if (res2 == TMF_RESP_FUNC_COMPLETE)
++					continue; /* Retry the task */
++				else
++					goto ex_err;
++			}
++		}
++		if (task->task_status.stat == SAM_BUSY ||
++			   task->task_status.stat == SAM_TASK_SET_FULL ||
++			   task->task_status.stat == SAS_QUEUE_FULL) {
++			SAS_DPRINTK("task: q busy, sleeping...\n");
++			set_current_state(TASK_INTERRUPTIBLE);
++			schedule_timeout(HZ);
++		} else if (task->task_status.stat == SAM_CHECK_COND) {
++			struct scsi_sense_hdr shdr;
++
++			if (!scsi_normalize_sense(ts->buf, ts->buf_valid_size,
++						  &shdr)) {
++				SAS_DPRINTK("couldn't normalize sense\n");
++				continue;
++			}
++			if ((shdr.sense_key == 6 && shdr.asc == 0x29) ||
++			    (shdr.sense_key == 2 && shdr.asc == 4 &&
++			     shdr.ascq == 1)) {
++				SAS_DPRINTK("device %016llx LUN: %016llx "
++					    "powering up or not ready yet, "
++					    "sleeping...\n",
++					    SAS_ADDR(task->dev->sas_addr),
++					    SAS_ADDR(task->ssp_task.LUN));
++					    
++				set_current_state(TASK_INTERRUPTIBLE);
++				schedule_timeout(5*HZ);
++			} else if (shdr.sense_key == 1) {
++				res = 0;
++				break;
++			} else if (shdr.sense_key == 5) {
++				break;
++			} else {
++				SAS_DPRINTK("dev %016llx LUN: %016llx "
++					    "sense key:0x%x ASC:0x%x ASCQ:0x%x"
++					    "\n",
++					    SAS_ADDR(task->dev->sas_addr),
++					    SAS_ADDR(task->ssp_task.LUN),
++					    shdr.sense_key,
++					    shdr.asc, shdr.ascq);
++			}
++		} else if (task->task_status.resp != SAS_TASK_COMPLETE ||
++			   task->task_status.stat != SAM_GOOD) {
++			SAS_DPRINTK("task finished with resp:0x%x, "
++				    "stat:0x%x\n",
++				    task->task_status.resp,
++				    task->task_status.stat);
++			goto ex_err;
++		} else {
++			res = 0;
++			break;
++		}
++	}
++ex_err:
++	if (pci_dma_dir != PCI_DMA_NONE)
++		kfree(scatter);
 +out:
-+	asd_ascb_free(ascb);
-+	ASD_DPRINTK("task 0x%p aborted, res: 0x%x\n", task, res);
 +	return res;
 +}
 +
++/* ---------- Domain device discovery ---------- */
++
 +/**
-+ * asd_initiate_ssp_tmf -- send a TMF to an I_T_L or I_T_L_Q nexus
-+ * @dev: pointer to struct domain_device of interest
-+ * @lun: pointer to u8[8] which is the LUN
-+ * @tmf: the TMF to be performed (see sas_task.h or the SAS spec)
-+ * @index: the transaction context of the task to be queried if QT TMF
++ * sas_get_port_device -- Discover devices which caused port creation
++ * @port: pointer to struct sas_port of interest
 + *
-+ * This function is used to send ABORT TASK SET, CLEAR ACA,
-+ * CLEAR TASK SET, LU RESET and QUERY TASK TMFs.
-+ *
-+ * No SCBs should be queued to the I_T_L nexus when this SCB is
-+ * pending.
-+ *
-+ * Returns: TMF response code (see sas_task.h or the SAS spec)
++ * Devices directly attached to a HA port, have no parent.  This is
++ * how we know they are (domain) "root" devices.  All other devices
++ * do, and should have their "parent" pointer set appropriately as
++ * soon as a child device is discovered.
 + */
-+static int asd_initiate_ssp_tmf(struct domain_device *dev, u8 *lun,
-+				int tmf, int index)
++static int sas_get_port_device(struct sas_port *port)
 +{
-+	struct asd_ha_struct *asd_ha = dev->port->ha->lldd_ha;
-+	struct asd_ascb *ascb;
-+	int res = 1;
-+	struct scb *scb;
++	unsigned long flags;
++	struct sas_phy *phy;
++	struct domain_device *dev;
 +
-+	if (!(dev->tproto & SAS_PROTO_SSP))
-+		return TMF_RESP_FUNC_ESUPP;
-+
-+	ascb = asd_ascb_alloc_list(asd_ha, &res, GFP_KERNEL);
-+	if (!ascb)
++	dev = kmalloc(sizeof(*dev), GFP_KERNEL);
++	if (!dev)
 +		return -ENOMEM;
-+	scb = ascb->scb;
++	memset(dev, 0, sizeof(*dev));
 +
-+	if (tmf == TMF_QUERY_TASK)
-+		scb->header.opcode = QUERY_SSP_TASK;
-+	else
-+		scb->header.opcode = INITIATE_SSP_TMF;
++	spin_lock_irqsave(&port->phy_list_lock, flags);
++	if (list_empty(&port->phy_list)) {
++		spin_unlock_irqrestore(&port->phy_list_lock, flags);
++		kfree(dev);
++		return -ENODEV;
++	}
++	phy = container_of(port->phy_list.next, struct sas_phy, port_phy_el);
++	spin_lock(&phy->frame_rcvd_lock);
++	memcpy(dev->frame_rcvd, phy->frame_rcvd, min(sizeof(dev->frame_rcvd),
++					     (size_t)phy->frame_rcvd_size));
++	spin_unlock(&phy->frame_rcvd_lock);
++	spin_unlock_irqrestore(&port->phy_list_lock, flags);
++
++	if (dev->frame_rcvd[0] == 0x34 && port->oob_mode == SATA_OOB_MODE) {
++		struct dev_to_host_fis *fis =
++			(struct dev_to_host_fis *) dev->frame_rcvd;
++		if (fis->interrupt_reason == 1 && fis->lbal == 1 &&
++		    fis->byte_count_low==0x69 && fis->byte_count_high == 0x96
++		    && (fis->device & ~0x10) == 0)
++			dev->dev_type = SATA_PM;
++		else
++			dev->dev_type = SATA_DEV;
++		dev->tproto = SATA_PROTO;
++	} else {
++		struct sas_identify_frame *id =
++			(struct sas_identify_frame *) dev->frame_rcvd;
++		dev->dev_type = id->dev_type;
++		dev->iproto = id->initiator_bits;
++		dev->tproto = id->target_bits;
++	}
++
++	sas_init_dev(dev);
++
++	memcpy(dev->sas_addr, port->attached_sas_addr, SAS_ADDR_SIZE);
++	sas_hash_addr(dev->hashed_sas_addr, dev->sas_addr);
++	port->port_dev = dev;
++	dev->port = port;
++	dev->linkrate = port->linkrate;
++	dev->min_linkrate = port->linkrate;
++	dev->max_linkrate = port->linkrate;
++	dev->pathways = port->num_phys;
++	memset(port->disc.fanout_sas_addr, 0, SAS_ADDR_SIZE);
++	memset(port->disc.eeds_a, 0, SAS_ADDR_SIZE);
++	memset(port->disc.eeds_b, 0, SAS_ADDR_SIZE);
++	port->disc.max_level = 0;
++
++	return 0;
++}
++
++/* ---------- Discover and Revalidate ---------- */
++
++/* ---------- SATA ---------- */
++
++static inline void sas_get_ata_command_set(struct domain_device *dev)
++{
++	struct dev_to_host_fis *fis =
++		(struct dev_to_host_fis *) dev->frame_rcvd;
++
++	if ((fis->sector_count == 1 && /* ATA */
++	     fis->lbal         == 1 &&
++	     fis->lbam         == 0 &&
++	     fis->lbah         == 0 &&
++	     fis->device       == 0))
++
++		dev->sata_dev.command_set = ATA_COMMAND_SET;
++
++	else if ((fis->interrupt_reason == 1 &&	/* ATAPI */
++		  fis->lbal             == 1 &&
++		  fis->byte_count_low   == 0x14 &&
++		  fis->byte_count_high  == 0xEB &&
++		  (fis->device & ~0x10) == 0))
++
++		dev->sata_dev.command_set = ATAPI_COMMAND_SET;
++
++	else if ((fis->sector_count == 1 && /* SEMB */
++		  fis->lbal         == 1 &&
++		  fis->lbam         == 0x3C &&
++		  fis->lbah         == 0xC3 &&
++		  fis->device       == 0)
++		||
++		 (fis->interrupt_reason == 1 &&	/* SATA PM */
++		  fis->lbal             == 1 &&
++		  fis->byte_count_low   == 0x69 &&
++		  fis->byte_count_high  == 0x96 &&
++		  (fis->device & ~0x10) == 0))
++
++		dev->sata_dev.command_set = ATAPI_COMMAND_SET;
++}
++
++/**
++ * sas_issue_ata_cmd -- Basic SATA command processing for discovery
++ * @dev: the device to send the command to
++ * @command: the command register
++ * @features: the features register
++ * @buffer: pointer to buffer to do I/O
++ * @size: size of @buffer
++ * @pci_dma_dir: PCI_DMA_...
++ */
++static int sas_issue_ata_cmd(struct domain_device *dev, u8 command,
++			     u8 features, void *buffer, int size,
++			     int pci_dma_dir)
++{
++	int res = 0;
++	struct sas_task *task;
++	struct dev_to_host_fis *d2h_fis = (struct dev_to_host_fis *)
++		&dev->frame_rcvd[0];
++
++	res = -ENOMEM;
++	task = sas_alloc_task(GFP_KERNEL);
++	if (!task)
++		goto out;
 +	
-+	scb->ssp_tmf.proto_conn_rate  = (1 << 4); /* SSP */
-+	scb->ssp_tmf.proto_conn_rate |= dev->linkrate;
-+	/* SSP frame header */
-+	scb->ssp_tmf.ssp_frame.frame_type = SSP_TASK;
-+	memcpy(scb->ssp_tmf.ssp_frame.hashed_dest_addr,
-+	       dev->hashed_sas_addr, HASHED_SAS_ADDR_SIZE);
-+	memcpy(scb->ssp_tmf.ssp_frame.hashed_src_addr,
-+	       dev->port->ha->hashed_sas_addr, HASHED_SAS_ADDR_SIZE);
-+	scb->ssp_tmf.ssp_frame.tptt = cpu_to_be16(0xFFFF);
-+	/* SSP Task IU */
-+	memcpy(scb->ssp_tmf.ssp_task.lun, lun, 8);
-+	scb->ssp_tmf.ssp_task.tmf = tmf;
++	task->dev = dev;
 +
-+	scb->ssp_tmf.sister_scb = cpu_to_le16(0xFFFF);
-+	scb->ssp_tmf.conn_handle= cpu_to_le16((u16)(unsigned long)
-+					      dev->lldd_dev);
-+	scb->ssp_tmf.retry_count = 1;
-+	scb->ssp_tmf.itnl_to = cpu_to_le16(ITNL_TIMEOUT_CONST);
-+	if (tmf == TMF_QUERY_TASK)
-+		scb->ssp_tmf.index = cpu_to_le16(index);
++	task->ata_task.fis.command = command;
++	task->ata_task.fis.features = features;
++	task->ata_task.fis.device = d2h_fis->device;
++	task->ata_task.retry_count = 1;
 +
-+	res = asd_enqueue_internal(ascb, asd_tmf_tasklet_complete,
-+				   asd_tmf_timedout);
++	res = sas_execute_task(task, buffer, size, pci_dma_dir);
++	
++	sas_free_task(task);
++out:
++	return res;
++}
++
++static void sas_sata_propagate_sas_addr(struct domain_device *dev)
++{
++	unsigned long flags;
++	struct sas_port *port = dev->port;
++	struct sas_phy  *phy;
++
++	BUG_ON(dev->parent);
++	
++	memcpy(port->attached_sas_addr, dev->sas_addr, SAS_ADDR_SIZE);
++	spin_lock_irqsave(&port->phy_list_lock, flags);
++	list_for_each_entry(phy, &port->phy_list, port_phy_el)
++		memcpy(phy->attached_sas_addr, dev->sas_addr, SAS_ADDR_SIZE);
++	spin_unlock_irqrestore(&port->phy_list_lock, flags);
++}
++
++#define ATA_IDENTIFY_DEV         0xEC
++#define ATA_IDENTIFY_PACKET_DEV  0xA1
++#define ATA_SET_FEATURES         0xEF
++#define ATA_FEATURE_PUP_STBY_SPIN_UP 0x07
++
++/**
++ * sas_discover_sata_dev -- discover a STP/SATA device (SATA_DEV)
++ * @dev: STP/SATA device of interest (ATA/ATAPI)
++ *
++ * The LLDD has already been notified of this device, so that we can
++ * send FISes to it.  Here we try to get IDENTIFY DEVICE or IDENTIFY
++ * PACKET DEVICE, if ATAPI device, so that the LLDD can fine-tune its
++ * performance for this device.
++ */
++static int sas_discover_sata_dev(struct domain_device *dev)
++{
++	int     res;
++	__le16  *identify_x;
++	u8      command;
++	
++	identify_x = kmalloc(512, GFP_KERNEL);
++	if (!identify_x)
++		return -ENOMEM;
++	memset(identify_x, 0, 512);
++
++	if (dev->sata_dev.command_set == ATA_COMMAND_SET) {
++		dev->sata_dev.identify_device = identify_x;
++		command = ATA_IDENTIFY_DEV;
++	} else {
++		dev->sata_dev.identify_packet_device = identify_x;
++		command = ATA_IDENTIFY_PACKET_DEV;
++	}
++	
++	res = sas_issue_ata_cmd(dev, command, 0, identify_x, 512,
++				PCI_DMA_FROMDEVICE);
 +	if (res)
 +		goto out_err;
-+	wait_for_completion(&ascb->completion);
-+	res = (int) (unsigned long) ascb->uldd_task;
 +
-+	switch (res) {
-+	case TC_NO_ERROR + 0xFF00:
-+		res = TMF_RESP_FUNC_COMPLETE;
-+		break;
-+	case TF_NAK_RECV + 0xFF00:
-+		res = TMF_RESP_INVALID_FRAME;
-+		break;
-+	case TF_TMF_TASK_DONE + 0xFF00:
-+		res = TMF_RESP_FUNC_FAILED;
-+		break;
-+	case TF_TMF_NO_TAG + 0xFF00:
-+	case TF_TMF_TAG_FREE + 0xFF00: /* the tag is in the free list */
-+	case TF_TMF_NO_CTX + 0xFF00: /* not in seq, or proto != SSP */
-+	case TF_TMF_NO_CONN_HANDLE + 0xFF00: /* no such device */
-+		res = TMF_RESP_FUNC_COMPLETE;
-+		break;
-+	default:
-+		ASD_DPRINTK("%s: converting result 0x%x to TMF_RESP_FUNC_FAILED\n",
-+			    __FUNCTION__, res);
-+		res = TMF_RESP_FUNC_FAILED;
-+		break;
++	/* lives on the media? */
++	if (le16_to_cpu(identify_x[0]) & 4) {
++		/* incomplete response */
++		SAS_DPRINTK("sending SET FEATURE/PUP_STBY_SPIN_UP to "
++			    "dev %llx\n", SAS_ADDR(dev->sas_addr));
++		if (!le16_to_cpu(identify_x[83] & (1<<6)))
++			goto cont1;
++		res = sas_issue_ata_cmd(dev, ATA_SET_FEATURES,
++					ATA_FEATURE_PUP_STBY_SPIN_UP,
++					NULL, 0, PCI_DMA_NONE);
++		if (res)
++			goto cont1;
++
++		set_current_state(TASK_INTERRUPTIBLE);
++		schedule_timeout(5*HZ); /* More time? */
++		res = sas_issue_ata_cmd(dev, command, 0, identify_x, 512,
++					PCI_DMA_FROMDEVICE);
++		if (res)
++			goto out_err;
 +	}
++cont1:
++	/* Get WWN */
++	if (dev->port->oob_mode != SATA_OOB_MODE) {
++		memcpy(dev->sas_addr, dev->sata_dev.rps_resp.rps.stp_sas_addr,
++		       SAS_ADDR_SIZE);		
++	} else if (dev->sata_dev.command_set == ATA_COMMAND_SET &&
++		   (le16_to_cpu(dev->sata_dev.identify_device[108]) & 0xF000)
++		   == 0x5000) {
++		int i;
++
++		for (i = 0; i < 4; i++) {
++			dev->sas_addr[2*i] =
++	     (le16_to_cpu(dev->sata_dev.identify_device[108+i]) & 0xFF00) >> 8;
++			dev->sas_addr[2*i+1] =
++	      le16_to_cpu(dev->sata_dev.identify_device[108+i]) & 0x00FF;
++		}
++	}
++	sas_hash_addr(dev->hashed_sas_addr, dev->sas_addr);
++	if (!dev->parent)
++		sas_sata_propagate_sas_addr(dev);
++
++	return 0;
 +out_err:
-+	asd_ascb_free(ascb);
++	dev->sata_dev.identify_packet_device = NULL;
++	dev->sata_dev.identify_device = NULL;
++	kfree(identify_x);
 +	return res;
 +}
 +
-+int asd_abort_task_set(struct domain_device *dev, u8 *lun)
++static int sas_discover_sata_pm(struct domain_device *dev)
 +{
-+	int res = asd_initiate_ssp_tmf(dev, lun, TMF_ABORT_TASK_SET, 0);
++	return -ENODEV;
++}
 +
-+	if (res == TMF_RESP_FUNC_COMPLETE)
-+		asd_clear_nexus_I_T_L(dev, lun);
++/* ---------- SAS end devices ---------- */
++
++static int sas_get_itnl_timeout(struct domain_device *dev)
++{
++	static const u8 mode_sense_6[16]  = { 0x1a, };
++	static const u8 mode_sense_10[16] = { 0x5a, };
++	
++	int res = -ENOMEM;
++	struct sas_task *task;
++	u8 *buffer, *__buf;
++	const int buffer_size = 12;
++
++	task = sas_alloc_task(GFP_KERNEL);
++	if (!task)
++		return -ENOMEM;
++	buffer = kmalloc(buffer_size, GFP_KERNEL);
++	if (!buffer)
++		goto out;
++	__buf = buffer;
++
++	task->dev = dev;
++
++	task->ssp_task.retry_count = 1;
++	memcpy(task->ssp_task.cdb, mode_sense_6, 16);
++	task->ssp_task.cdb[1] |= (1 << 3);
++	task->ssp_task.cdb[2] = 0x19;
++	task->ssp_task.cdb[4] = buffer_size;
++
++	res = sas_execute_task(task, buffer, buffer_size, PCI_DMA_FROMDEVICE);
++	if (res) {
++		SAS_DPRINTK("task to device %llx returned stat 0x%x for "
++			    "MODE SENSE 6\n",
++			    SAS_ADDR(dev->sas_addr), task->task_status.stat);
++		memcpy(task->ssp_task.cdb, mode_sense_10, 16);
++		task->ssp_task.cdb[1] |= (1 << 3);
++		task->ssp_task.cdb[2] = 0x19;
++		task->ssp_task.cdb[8] = buffer_size;
++
++		res = sas_execute_task(task, buffer, buffer_size,
++				       PCI_DMA_FROMDEVICE);
++		if (res) {
++			SAS_DPRINTK("task to device %llx returned stat 0x%x "
++				    "for MODE SENSE 10\n",
++				    SAS_ADDR(dev->sas_addr),
++				    task->task_status.stat);
++			goto out_buf;
++		}
++		dev->end_dev.ms_10 = 1;
++		buffer += 4;
++	}
++
++	buffer += 4;		  /* skip mode parameter header */
++
++	dev->end_dev.ready_led_meaning = (buffer[2] & (1<<4)) ? 1 : 0;
++ 	dev->end_dev.itnl_timeout = be16_to_cpu(*(__be16 *)(buffer+4));
++	dev->end_dev.iresp_timeout= be16_to_cpu(*(__be16 *)(buffer+6));
++ 	
++	res = 0;
++	
++out_buf:
++	kfree(__buf);
++out:
++	sas_free_task(task);
 +	return res;
 +}
 +
-+int asd_clear_aca(struct domain_device *dev, u8 *lun)
++static int sas_get_report_luns(struct domain_device *dev, u8 **buffer,
++			       int *size)
 +{
-+	int res = asd_initiate_ssp_tmf(dev, lun, TMF_CLEAR_ACA, 0);
++	static const u8 report_luns[16] = { 0xA0, };
++	static const u8 RL_WLUN[8] = { 0xC1, 0x01, };
++	
++	int res = -ENOMEM;
++	struct sas_task *task;
++	u8 *buf;
++	int buffer_size = 16;
++	u32 len;
 +
-+	if (res == TMF_RESP_FUNC_COMPLETE)
-+		asd_clear_nexus_I_T_L(dev, lun);
++	*buffer = kmalloc(buffer_size, GFP_KERNEL);
++	if (!*buffer)
++		return -ENOMEM;
++	buf = *buffer;
++
++	task = sas_alloc_task(GFP_KERNEL);
++	if (!task)
++		goto out_err;
++
++	task->dev = dev;
++	task->ssp_task.retry_count = 1;
++	memcpy(task->ssp_task.cdb, report_luns, 16);
++	*(__be32 *)(&task->ssp_task.cdb[6]) = cpu_to_be32(buffer_size);
++	
++	res = sas_execute_task(task, buf, buffer_size, PCI_DMA_FROMDEVICE);
++	if (res) {
++		SAS_DPRINTK("REPORT LUNS to LUN0 failed for device %llx "
++			    "with status:0x%x\n",
++			    SAS_ADDR(dev->sas_addr), task->task_status.stat);
++		memcpy(task->ssp_task.LUN, RL_WLUN, 8);
++		res = sas_execute_task(task, buf, buffer_size,
++				       PCI_DMA_FROMDEVICE);
++		if (res) {
++			SAS_DPRINTK("REPORT LUNS to REPORT LUNS W-LUN failed "
++				    "for device %llx with status:0x%x\n",
++				    SAS_ADDR(dev->sas_addr),
++				    task->task_status.stat);
++			goto out_err_task;
++		}
++		dev->end_dev.rl_wlun = 1;
++	}
++
++	len = be32_to_cpu(*(__be32 *)buf);
++	if (len + 8 > buffer_size) {
++		SAS_DPRINTK("need bigger buffer for REPORT LUNS\n");
++		buffer_size = len + 8;
++		res = -ENOMEM;
++		buf = kmalloc(buffer_size, GFP_KERNEL);
++		if (!buf)
++			goto out_err_task;
++		kfree(*buffer);
++		*buffer = buf;
++		if (dev->end_dev.rl_wlun)
++			memcpy(task->ssp_task.LUN, RL_WLUN, 8);
++		else
++			memset(task->ssp_task.LUN, 0, 8);
++		res = sas_execute_task(task, buf, buffer_size,
++				       PCI_DMA_FROMDEVICE);
++		if (res) {
++			SAS_DPRINTK("2nd REPORT LUNS to %s failed "
++				    "for device %llx with status:0x%x\n",
++				    dev->end_dev.rl_wlun ? "REPORT LUNS W-LUN"
++				    : "LUN0",
++				    SAS_ADDR(dev->sas_addr),
++				    task->task_status.stat);
++			goto out_err_task;
++		}
++	}
++	
++	*size = len+8;
++	sas_free_task(task);
++	return 0;
++
++out_err_task:
++	sas_free_task(task);
++out_err:
++	kfree(*buffer);
++	*buffer = NULL;
++	size = 0;
 +	return res;
 +}
 +
-+int asd_clear_task_set(struct domain_device *dev, u8 *lun)
++static int sas_get_inquiry(struct LU *lu)
 +{
-+	int res = asd_initiate_ssp_tmf(dev, lun, TMF_CLEAR_TASK_SET, 0);
++	static const u8 inquiry_cmd[16] = { 0x12, };
++	struct sas_task *task;
++	int res;
 +
-+	if (res == TMF_RESP_FUNC_COMPLETE)
-+		asd_clear_nexus_I_T_L(dev, lun);
++	task = sas_alloc_task(GFP_KERNEL);
++	if (!task)
++		return -ENOMEM;
++
++	task->dev = lu->parent;
++	task->ssp_task.retry_count = 1;
++	memcpy(task->ssp_task.LUN, lu->LUN, 8);
++	memcpy(task->ssp_task.cdb, inquiry_cmd, 16);
++	*(__be16 *)(task->ssp_task.cdb+3) = cpu_to_be16(SAS_INQUIRY_DATA_LEN);
++
++	res = sas_execute_task(task, lu->inquiry_data, SAS_INQUIRY_DATA_LEN,
++			       PCI_DMA_FROMDEVICE);
++	if (!res)
++		lu->inquiry_valid_data_len = min(SAS_INQUIRY_DATA_LEN,
++						 lu->inquiry_data[4]+5);
++	sas_free_task(task);
 +	return res;
 +}
 +
-+int asd_lu_reset(struct domain_device *dev, u8 *lun)
++static struct LU *sas_alloc_lu(void)
 +{
-+	int res = asd_initiate_ssp_tmf(dev, lun, TMF_LU_RESET, 0);
++	struct LU *lu = kmalloc(sizeof(*lu), GFP_KERNEL);
++	if (lu) {
++		memset(lu, 0, sizeof(*lu));
++		INIT_LIST_HEAD(&lu->list);
++	}
++	return lu;
++}
++		
++static int sas_register_lu(struct domain_device *dev, u8 *buf, int size)
++{
++	int res;
++	
++	for (buf = buf+8, size -= 8; size > 0; size -= 8, buf += 8) {
++		struct LU *lu = sas_alloc_lu();
 +
-+	if (res == TMF_RESP_FUNC_COMPLETE)
-+		asd_clear_nexus_I_T_L(dev, lun);
-+	return res;	
++		SAS_DPRINTK("%016llx probing LUN:%016llx\n",
++			    SAS_ADDR(dev->sas_addr),
++			    be64_to_cpu(*(__be64 *)buf));
++		if (lu) {
++			lu->parent = dev;
++			memcpy(lu->LUN, buf, 8);
++			res = sas_get_inquiry(lu);
++			if (res) {
++				SAS_DPRINTK("dev %llx LUN %016llx didn't reply"
++					    " to INQUIRY, forgotten\n",
++					    SAS_ADDR(dev->sas_addr),
++					    SAS_ADDR(lu->LUN));
++				kfree(lu);
++				continue;
++			}
++			lu->lu_obj.kset = &dev->end_dev.LU_kset;
++			kobject_set_name(&lu->lu_obj, "%016llx",
++					 SAS_ADDR(lu->LUN));
++			lu->lu_obj.ktype = dev->end_dev.LU_kset.ktype;
++			memcpy(lu->LUN, buf, 8);
++			list_add_tail(&lu->list, &dev->end_dev.LU_list);
++		}
++	}
++
++	return list_empty(&dev->end_dev.LU_list) ? -ENODEV : 0;
 +}
 +
 +/**
-+ * asd_query_task -- send a QUERY TASK TMF to an I_T_L_Q nexus
-+ * task: pointer to sas_task struct of interest
++ * sas_do_lu_discovery -- Discover LUs of a SCSI device
++ * @dev: pointer to a domain device of interest
 + *
-+ * Returns: TMF_RESP_FUNC_COMPLETE if the task is not in the task set,
-+ * or TMF_RESP_FUNC_SUCC if the task is in the task set.
++ * Discover logical units present in the SCSI device.  I'd like this
++ * to be moved to SCSI Core, but SCSI Core has no concept of a "SCSI
++ * device with a SCSI Target port".  A SCSI device with a SCSI Target
++ * port is a device which the _transport_ found, but other than that,
++ * the transport has little or _no_ knowledge about the device.
++ * Ideally, a LLDD would register a "SCSI device with a SCSI Target
++ * port" with SCSI Core and then SCSI Core would do LU discovery of
++ * that device.
 + *
-+ * Normally the management layer sets the task to aborted state,
-+ * and then calls query task and then abort task.
++ * REPORT LUNS is mandatory.  If a device doesn't support it,
++ * it is broken and you should return it.  Nevertheless, we
++ * assume (optimistically) that the link hasn't been severed and
++ * that maybe we can get to the device anyhow.
 + */
-+int asd_query_task(struct sas_task *task)
++static int sas_do_lu_discovery(struct domain_device *dev)
 +{
-+	struct asd_ascb *ascb = task->lldd_task;
-+	int index;
++	int  res;
++	u8  *buffer;
++	int  size;
 +
-+	if (ascb) {
-+		index = ascb->tc_index;
-+		return asd_initiate_ssp_tmf(task->dev, task->ssp_task.LUN,
-+					    TMF_QUERY_TASK, index);
++	res = sas_get_report_luns(dev, &buffer, &size);
++	if (res) {
++		SAS_DPRINTK("dev %llx didn't reply to REPORT LUNS, trying "
++			    "LUN 0 anyway\n",
++			    SAS_ADDR(dev->sas_addr));
++		size = 16;
++		buffer = kmalloc(size, GFP_KERNEL);
++		memset(buffer, 0, size);
 +	}
-+	return TMF_RESP_FUNC_COMPLETE;
++	
++	res = sas_register_lu(dev, buffer, size);
++	if (res) {
++		SAS_DPRINTK("dev %llx didn't report any LUs\n",
++			    SAS_ADDR(dev->sas_addr));
++		res = 0;
++	}
++
++	kfree(buffer);
++	return res;
 +}
-
-
++
++/* ---------- Common/dispatchers ---------- */
++
++void sas_kobj_set(struct domain_device *dev)
++{
++	if (!dev->parent) {
++		/* device directly attached to the host adapter */
++		dev->dev_obj.kset = &dev->port->dev_kset;
++	} else {
++		/* parent is an expander */
++		dev->dev_obj.parent = &dev->parent->dev_obj;
++		dev->port = dev->parent->port;
++	}
++	
++	list_add_tail(&dev->dev_list_node, &dev->port->dev_list);
++	kobject_set_name(&dev->dev_obj, "%016llx", SAS_ADDR(dev->sas_addr));
++	dev->dev_obj.ktype = dev_ktype[dev->dev_type];
++}
++
++/**
++ * sas_discover_sata -- discover an STP/SATA domain device
++ * @dev: pointer to struct domain_device of interest
++ *
++ * First we notify the LLDD of this device, so we can send frames to
++ * it.  Then depending on the type of device we call the appropriate
++ * discover functions.  Once device discover is done, we notify the
++ * LLDD so that it can fine-tune its parameters for the device, by
++ * removing it and then adding it.  That is, the second time around,
++ * the driver would have certain fields, that it is looking at, set.
++ * Finally we initialize the kobj so that the device can be added to
++ * the system at registration time.  Devices directly attached to a HA
++ * port, have no parents.  All other devices do, and should have their
++ * "parent" pointer set appropriately before calling this function.
++ */
++int sas_discover_sata(struct domain_device *dev)
++{
++	int res;
++
++	sas_get_ata_command_set(dev);
++
++	res = sas_notify_lldd_dev_found(dev);
++	if (res)
++		return res;
++
++	switch (dev->dev_type) {
++	case SATA_DEV:
++		res = sas_discover_sata_dev(dev);
++		break;
++	case SATA_PM:
++		res = sas_discover_sata_pm(dev);
++		break;
++	default:
++		break;
++	}
++
++	sas_notify_lldd_dev_gone(dev);
++	if (!res) {
++		sas_notify_lldd_dev_found(dev);
++		sas_kobj_set(dev);
++	}
++	return res;
++}
++
++/**
++ * sas_discover_end_dev -- discover an end device (SSP, etc)
++ * @end: pointer to domain device of interest
++ *
++ * See comment in sas_discover_sata().
++ *
++ * Get the ITNL timeout only for domain root devices.
++ * If we couldn't get it, either the link was severed or
++ * this is a device which doesn't support MODE SENSE.
++ */
++int sas_discover_end_dev(struct domain_device *dev)
++{
++	int res;
++
++	res = sas_notify_lldd_dev_found(dev);
++	if (res)
++		return res;
++
++	res = sas_get_itnl_timeout(dev);
++	if (!res) {
++		sas_notify_lldd_dev_gone(dev);
++		sas_notify_lldd_dev_found(dev);
++	}
++
++	dev->end_dev.LU_kset.kobj.parent = &dev->dev_obj;
++	dev->end_dev.LU_kset.ktype  = &lu_dev_ktype;
++	
++	res = sas_do_lu_discovery(dev);
++	if (res)
++		goto out_err;
++
++	kobject_set_name(&dev->end_dev.LU_kset.kobj, "%s", "LUNS");
++	
++	sas_kobj_set(dev);
++	return 0;
++
++out_err:
++	sas_notify_lldd_dev_gone(dev);
++	return res;
++}
++
++/* ---------- Device registration and unregistration ---------- */
++
++static inline void sas_unregister_common_dev(struct domain_device *dev)
++{
++	sas_notify_lldd_dev_gone(dev);
++	if (!dev->parent)
++		dev->port->port_dev = NULL;
++	else
++		list_del_init(&dev->siblings);
++	list_del_init(&dev->dev_list_node);
++	kobject_unregister(&dev->dev_obj);
++}
++
++static int sas_register_end_dev(struct domain_device *dev)
++{
++	struct LU *lu;
++	
++	kobject_register(&dev->dev_obj);
++	kset_register(&dev->end_dev.LU_kset);
++
++	list_for_each_entry(lu, &dev->end_dev.LU_list, list) {
++		kobject_register(&lu->lu_obj);
++   		sas_register_with_scsi(lu);
++	}
++
++	return 0;
++}
++
++static void sas_unregister_end_dev(struct domain_device *dev)
++{
++	struct LU *lu, *n;
++
++	list_for_each_entry_safe(lu, n, &dev->end_dev.LU_list, list) {
++   		sas_unregister_with_scsi(lu);
++		list_del_init(&lu->list);
++		kobject_unregister(&lu->lu_obj);
++	}
++	kset_unregister(&dev->end_dev.LU_kset);
++	sas_unregister_common_dev(dev);
++}
++
++static int sas_register_sata(struct domain_device *dev)
++{
++	kobject_register(&dev->dev_obj);
++	return 0;
++}
++
++static void sas_unregister_sata(struct domain_device *dev)
++{
++	sas_unregister_common_dev(dev);
++}
++
++/**
++ * sas_register_ex_dev -- Register this expander
++ * @ex: pointer to domain device
++ *
++ * It is imperative that this is done breadth-first.  Other parts of
++ * the code rely on that.
++ */
++static int sas_register_ex_dev(struct domain_device *dev)
++{
++	kobject_register(&dev->dev_obj);
++	sysfs_create_bin_file(&dev->dev_obj, &dev->ex_dev.smp_bin_attr);
++	return 0;
++}
++
++static void sas_unregister_ex_dev(struct domain_device *dev)
++{
++	BUG_ON(!list_empty(&dev->ex_dev.children));
++	sysfs_remove_bin_file(&dev->dev_obj, &dev->ex_dev.smp_bin_attr);
++	sas_unregister_common_dev(dev);
++}
++
++/**
++ * sas_register_domain_devs -- register the domain devices with sysfs
++ * @port: the port to the domain
++ *
++ * This function registers the domain devices with sysfs and with
++ * the SCSI subsystem.
++ */
++static int sas_register_domain_devs(struct sas_port *port)
++{
++	struct domain_device *dev;
++
++	list_for_each_entry(dev, &port->dev_list, dev_list_node) {
++		if (dev->dev_obj.dentry)
++			continue;
++		switch (dev->dev_type) {
++		case SAS_END_DEV:
++			sas_register_end_dev(dev);
++			break;
++		case EDGE_DEV:
++		case FANOUT_DEV:
++			sas_register_ex_dev(dev);
++			break;
++		case SATA_DEV:
++		case SATA_PM:
++			sas_register_sata(dev);
++			break;
++		default:
++			SAS_DPRINTK("%s: unknown device type %d\n",
++				    __FUNCTION__, dev->dev_type);
++			break;
++		}
++	}
++	
++	return 0;
++}
++
++void sas_unregister_dev(struct domain_device *dev)
++{
++	switch (dev->dev_type) {
++	case SAS_END_DEV:
++		sas_unregister_end_dev(dev);
++		break;
++	case EDGE_DEV:
++	case FANOUT_DEV:
++		sas_unregister_ex_dev(dev);
++		break;
++	case SATA_DEV:
++	case SATA_PM:
++		sas_unregister_sata(dev);
++		break;
++	default:
++		SAS_DPRINTK("%s: unknown device type %d\n",
++			    __FUNCTION__, dev->dev_type);
++		BUG_ON(dev);
++		break;
++	}
++}
++
++static void sas_unregister_domain_devices(struct sas_port *port)
++{
++	struct domain_device *dev, *n;
++
++	list_for_each_entry_reverse_safe(dev,n,&port->dev_list,dev_list_node)
++		sas_unregister_dev(dev);
++}
++
++/* ---------- Discovery and Revalidation ---------- */
++
++/**
++ * sas_discover_domain -- discover the domain
++ * @port: port to the domain of interest
++ *
++ * NOTE: this process _must_ quit (return) as soon as any connection
++ * errors are encountered.  Connection recovery is done elsewhere.
++ * Discover process only interrogates devices in order to discover the
++ * domain.
++ */
++static int sas_discover_domain(struct sas_port *port)
++{
++	int error = 0;
++	
++
++	if (port->port_dev)
++		return 0;
++	else {
++		error = sas_get_port_device(port);
++		if (error)
++			return error;
++	}
++
++	SAS_DPRINTK("DOING DISCOVERY on port %d, pid:%d\n", port->id,
++		    current->pid);
++
++	switch (port->port_dev->dev_type) {
++	case SAS_END_DEV:
++		error = sas_discover_end_dev(port->port_dev);
++		break;
++	case EDGE_DEV:
++	case FANOUT_DEV:
++		error = sas_discover_root_expander(port->port_dev);
++		break;
++	case SATA_DEV:
++	case SATA_PM:
++		error = sas_discover_sata(port->port_dev);
++		break;
++	default:
++		SAS_DPRINTK("unhandled device %d\n", port->port_dev->dev_type);
++		break;
++	}
++
++	if (error) {
++		kfree(port->port_dev); /* not kobject_register-ed yet */
++		port->port_dev = NULL;
++	} else
++		sas_register_domain_devs(port);
++
++	SAS_DPRINTK("DONE DISCOVERY on port %d, pid:%d, result:%d\n", port->id,
++		    current->pid, error);
++
++	return error;
++}
++
++static int sas_revalidate_domain(struct sas_port *port)
++{
++	int res = 0;
++	
++	SAS_DPRINTK("REVALIDATING DOMAIN on port %d, pid:%d\n", port->id,
++		    current->pid);
++	if (port->port_dev) {
++		res = sas_ex_revalidate_domain(port->port_dev);
++		if (!res)
++			sas_register_domain_devs(port);
++	}
++	SAS_DPRINTK("done REVALIDATING DOMAIN on port %d, pid:%d, res 0x%x\n",
++		    port->id, current->pid, res);
++	return res;
++}
++
++/* ---------- Threads and events ---------- */
++
++static DECLARE_COMPLETION(disc_comp_start);
++
++static int sas_discover_thread(void *_sas_port)
++{
++	struct sas_port *port = _sas_port;
++	struct sas_ha_struct *sas_ha = port->ha;
++	struct sas_discovery *disc = &port->disc;
++
++	daemonize("sas_disc_h%dp%d", sas_ha->core.shost->host_no, port->id);
++			   
++	spin_lock(&disc->disc_event_lock);
++	disc->disc_thread = current;
++	complete(&disc_comp_start);
++	while (!disc->disc_thread_quit && !list_empty(&disc->disc_event_list)){
++		struct list_head *head = disc->disc_event_list.next;
++		enum discover_event disc_ev = container_of(head,
++							   struct sas_event,
++							   el)->event;
++		list_del_init(head);
++		spin_unlock(&disc->disc_event_lock);
++
++		switch (disc_ev) {
++		case DISCE_DISCOVER_DOMAIN:
++			sas_discover_domain(port);
++			break;
++		case DISCE_REVALIDATE_DOMAIN:
++			sas_revalidate_domain(port);
++			break;
++		case DISCE_PORT_GONE:
++			sas_unregister_domain_devices(port);
++			complete(&port->port_gone_completion);
++			break;
++		}
++		spin_lock(&disc->disc_event_lock);
++	}
++	INIT_LIST_HEAD(&disc->disc_event_list);	
++	disc->disc_thread = NULL;
++	spin_unlock(&disc->disc_event_lock);
++	up(&disc->disc_sema);
++
++	return 0;
++}
++
++static int sas_create_discover_thread(struct sas_port *port)
++{
++	int i;
++
++	init_completion(&disc_comp_start);
++	i = kernel_thread(sas_discover_thread, port, 0);
++	if (i >= 0)
++		wait_for_completion(&disc_comp_start);
++	
++	return i < 0 ? i : 0;
++}
++
++int sas_discover_event(struct sas_port *port, enum discover_event ev)
++{
++	int res;
++	struct sas_discovery *disc = &port->disc;
++
++	spin_lock(&disc->disc_event_lock);
++	list_move_tail(&disc->disc_events[ev].el,
++		       &disc->disc_event_list);
++	if (disc->disc_thread) {
++		spin_unlock(&disc->disc_event_lock);
++		return 0;
++	}
++	down_interruptible(&disc->disc_sema);
++	disc->disc_thread_quit = 0;
++	spin_unlock(&disc->disc_event_lock);
++
++	/* The event thread (caller) is single threaded so this is safe. */
++	res = sas_create_discover_thread(port);
++	if (res) {
++		SAS_DPRINTK("sas port%d: couldn't create discovery thread!\n",
++			    port->id);
++		up(&disc->disc_sema);
++	}
++	return res;
++}
++
++void sas_kill_disc_thread(struct sas_port *port)
++{
++	struct sas_discovery *disc = &port->disc;
++	
++	spin_lock(&disc->disc_event_lock);
++	disc->disc_thread_quit = 1;
++	if (disc->disc_thread) {
++		wake_up_process(disc->disc_thread);
++		spin_unlock(&disc->disc_event_lock);
++		down_interruptible(&disc->disc_sema);
++		return;
++	}
++	spin_unlock(&disc->disc_event_lock);
++}
++
++/**
++ * sas_init_disc -- initialize the discovery struct in the port
++ * @port: pointer to struct port
++ *
++ * Called when the ports are being initialized.
++ */  
++void sas_init_disc(struct sas_discovery *disc, struct sas_port *port)
++{
++	int i;
++
++	if (!end_dev_attrs[0]) {
++		for (i = 0; i < ARRAY_SIZE(dev_attrs)-1; i++)
++			end_dev_attrs[i] = &dev_attrs[i].attr;
++		end_dev_attrs[i] = NULL;
++		sas_init_ex_attr();
++		for (i = 0; i < ARRAY_SIZE(sata_attrs)-1; i++)
++			sata_dev_attrs[i] = &sata_attrs[i].attr;
++		sata_dev_attrs[i] = NULL;
++		for (i = 0; i < ARRAY_SIZE(lu_attrs)-1; i++)
++			lu_dev_attrs[i] = &lu_attrs[i].attr;
++		lu_dev_attrs[i] = NULL;
++	}
++
++	spin_lock_init(&disc->disc_event_lock);
++	INIT_LIST_HEAD(&disc->disc_event_list);
++	init_MUTEX(&disc->disc_sema);
++	disc->disc_thread = NULL;
++	disc->disc_thread_quit = 0;
++
++	for (i = 0; i < DISC_NUM_EVENTS; i++) {
++		struct sas_event *ev = &disc->disc_events[i];
++		ev->event = i;
++		INIT_LIST_HEAD(&ev->el);
++	}
++}
++
++void sas_unregister_devices(struct sas_ha_struct *sas_ha)
++{
++	int i;
++
++	for (i = 0; i < sas_ha->num_phys; i++)
++		sas_unregister_domain_devices(sas_ha->sas_port[i]);
++}
