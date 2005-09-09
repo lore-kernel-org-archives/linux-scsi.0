@@ -1,48 +1,71 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH] SCSI: Don't be so verbose if no disc is present
-Date: Fri, 9 Sep 2005 15:35:41 -0700
-Message-ID: <20050909223541.GA25458@us.ibm.com>
-References: <432209EC.90900@gentoo.org>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: [PATCH 2.6.13-mm2 0/3] scsi: SAS: Makefile and Kconfig
+Date: Fri, 09 Sep 2005 18:39:51 -0400
+Message-ID: <43220F37.7010003@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:40612 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932606AbVIIWfp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 18:35:45 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e1.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j89MZjbN007102
-	for <linux-scsi@vger.kernel.org>; Fri, 9 Sep 2005 18:35:45 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j89MZibX105404
-	for <linux-scsi@vger.kernel.org>; Fri, 9 Sep 2005 18:35:45 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j89MZiQe029462
-	for <linux-scsi@vger.kernel.org>; Fri, 9 Sep 2005 18:35:44 -0400
-Content-Disposition: inline
-In-Reply-To: <432209EC.90900@gentoo.org>
+Received: from magic.adaptec.com ([216.52.22.17]:40834 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932608AbVIIWj5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 18:39:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Drake <dsd@gentoo.org>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-Hi ... did you try James' patch? Looks like the same problem.
+Andrew,
 
-Patch here:
+The following is a patchset of the SAS code as posted
+today but it has the suggestions by Nish and Alexey,
+and it is against -mm2 tree.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112585164819923&w=2
+Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
 
-Was hidden within some other thread ...
-
-On Fri, Sep 09, 2005 at 11:17:16PM +0100, Daniel Drake wrote:
-> Running a simple "touch /dev/scd0" on a SCSI cdrom will cause the following 
-> message to appear in the logs if no disc is present:
-> 
-> 	Device not ready. Make sure there is a disc in the drive.
-> 
-> This results in the logs being flooded for some users by those userspace 
-> agents which repeatedly poll the device for media change.
-> 
-> This patch demotes the message to a quieter scsi-logging message only.
-> 
-> Signed-off-by: Daniel Drake <dsd@gentoo.org>
-> 
+diff -X linux-2.6.13-mm2/Documentation/dontdiff -Nau linux-2.6.13-mm2-orig/drivers/scsi/Kconfig linux-2.6.13-mm2/drivers/scsi/Kconfig
+--- linux-2.6.13-mm2-orig/drivers/scsi/Kconfig	2005-09-09 17:49:57.000000000 -0400
++++ linux-2.6.13-mm2/drivers/scsi/Kconfig	2005-09-09 17:45:35.000000000 -0400
+@@ -260,6 +260,16 @@
+ 
+ endmenu
+ 
++
++menu "SCSI Transport Layers"
++
++depends on SCSI
++
++source "drivers/scsi/sas-class/Kconfig"
++
++endmenu
++
++
+ menu "SCSI low-level drivers"
+ 	depends on SCSI!=n
+ 
+@@ -330,6 +340,8 @@
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called wd7000.
+ 
++source "drivers/scsi/aic94xx/Kconfig"
++
+ config SCSI_ACARD
+ 	tristate "ACARD SCSI support"
+ 	depends on PCI && SCSI
+diff -X linux-2.6.13-mm2/Documentation/dontdiff -Nau linux-2.6.13-mm2-orig/drivers/scsi/Makefile linux-2.6.13-mm2/drivers/scsi/Makefile
+--- linux-2.6.13-mm2-orig/drivers/scsi/Makefile	2005-09-09 17:49:57.000000000 -0400
++++ linux-2.6.13-mm2/drivers/scsi/Makefile	2005-09-09 17:45:35.000000000 -0400
+@@ -31,6 +31,7 @@
+ obj-$(CONFIG_SCSI_SPI_ATTRS)	+= scsi_transport_spi.o
+ obj-$(CONFIG_SCSI_FC_ATTRS) 	+= scsi_transport_fc.o
+ obj-$(CONFIG_SCSI_ISCSI_ATTRS)	+= scsi_transport_iscsi.o
++obj-$(CONFIG_SAS_CLASS)		+= sas-class/
+ 
+ obj-$(CONFIG_ISCSI_TCP) 	+= iscsi_tcp.o
+ obj-$(CONFIG_SCSI_AMIGA7XX)	+= amiga7xx.o	53c7xx.o
+@@ -64,6 +65,7 @@
+ obj-$(CONFIG_SCSI_AIC7XXX)	+= aic7xxx/
+ obj-$(CONFIG_SCSI_AIC79XX)	+= aic7xxx/
+ obj-$(CONFIG_SCSI_AACRAID)	+= aacraid/
++obj-$(CONFIG_SCSI_AIC94XX)	+= aic94xx/
+ obj-$(CONFIG_SCSI_AIC7XXX_OLD)	+= aic7xxx_old.o
+ obj-$(CONFIG_SCSI_ARCMSR)	+= arcmsr/
+ obj-$(CONFIG_SCSI_IPS)		+= ips.o
