@@ -1,458 +1,482 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [PATCH 2.6.13 2/14] sas-class: README
-Date: Fri, 09 Sep 2005 15:39:09 -0400
-Message-ID: <4321E4DD.7070405@adaptec.com>
+Subject: [PATCH 2.6.13 3/14] sas-class: expander_conf.c Expander communication
+ user space program
+Date: Fri, 09 Sep 2005 15:39:26 -0400
+Message-ID: <4321E4EE.20906@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030379AbVIITjZ@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030382AbVIITkN@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
 
-diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi/sas-class/README linux-2.6.13/drivers/scsi/sas-class/README
---- linux-2.6.13-orig/drivers/scsi/sas-class/README	1969-12-31 19:00:00.000000000 -0500
-+++ linux-2.6.13/drivers/scsi/sas-class/README	2005-09-09 12:22:32.000000000 -0400
-@@ -0,0 +1,440 @@
-+SAS Layer
-+---------
+diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi/sas-class/expander_conf.c linux-2.6.13/drivers/scsi/sas-class/expander_conf.c
+--- linux-2.6.13-orig/drivers/scsi/sas-class/expander_conf.c	1969-12-31 19:00:00.000000000 -0500
++++ linux-2.6.13/drivers/scsi/sas-class/expander_conf.c	2005-09-09 11:14:29.000000000 -0400
+@@ -0,0 +1,463 @@
++/*
++ * Serial Attached SCSI (SAS) Expander communication user space program
++ *
++ * Copyright (C) 2005 Adaptec, Inc.  All rights reserved.
++ * Copyright (C) 2005 Luben Tuikov <luben_tuikov@adaptec.com>
++ *
++ * This file is licensed under GPLv2.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation; either version 2 of the
++ * License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ *
++ * $Id: //depot/sas-class/expander_conf.c#6 $
++ */
 +
-+The SAS Layer is a management infrastructure which manages
-+SAS LLDDs.  It sits between SCSI Core and SAS LLDDs.  The
-+layout is as follows: while SCSI Core is concerned with
-+SAM/SPC issues, and a SAS LLDD+sequencer is concerned with
-+phy/OOB/link management, the SAS layer is concerned with:
++/* This is a simple program to show how to communicate with
++ * expander devices in a SAS domain.
++ *
++ * The process is simple:
++ * 1. Build the SMP frame you want to send. The format and layout
++ *    is described in the SAS spec.  Leave the CRC field equal 0.
++ * 2. Open the expander's SMP portal sysfs file in RW mode.
++ * 3. Write the frame you built in 1.
++ * 4. Read the amount of data you expect to receive for the frame you built.
++ *    If you receive different amount of data you expected to receive,
++ *    then there was some kind of error.
++ * All this process is shown in detail in the function do_smp_func()
++ * and its callers, below.
++ */
 +
-+      * SAS Phy/Port/HA event management (LLDD generates,
-+        SAS Layer processes),
-+      * SAS Port management (creation/destruction),
-+      * SAS Domain discovery and revalidation,
-+      * SAS Domain device management,
-+      * SCSI Host registration/unregistration,
-+      * Device registration with SCSI Core (SAS) or libata
-+        (SATA), and
-+      * Expander management and exporting expander control
-+        to user space.
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <stdio.h>
++#include <string.h>
++#include <string.h>
++#include <errno.h>
++#include <endian.h>
++#include <byteswap.h>
++#include <stdint.h>
++#include <stdlib.h>
 +
-+A SAS LLDD is a PCI device driver.  It is concerned with
-+phy/OOB management, and vendor specific tasks and generates
-+events to the SAS layer.
++#define LEFT_FIELD_SIZE 25
 +
-+The SAS Layer does most SAS tasks as outlined in the SAS 1.1
-+spec.
++#ifdef __LITTLE_ENDIAN
++#define be64_to_cpu(_x)  __bswap_64(*(uint64_t *)(&(_x)))
++#define be32_to_cpu(_x)  __bswap_32(*(uint32_t *)(&(_x)))
++#define be16_to_cpu(_x)  __bswap_16(*(uint16_t *)(&(_x)))
++#define cpu_to_be64(_x)  __bswap_64(*(uint64_t *)(&(_x)))
++#define cpu_to_be32(_x)  __bswap_32(*(uint32_t *)(&(_x)))
++#define cpu_to_be16(_x)  __bswap_16(*(uint16_t *)(&(_x)))
++#else
++#define be64_to_cpu(_x)  (_x)
++#define be32_to_cpu(_x)  (_x)
++#define be16_to_cpu(_x)  (_x)
++#define cpu_to_be64(_x)  (_x)
++#define cpu_to_be32(_x)  (_x)
++#define cpu_to_be16(_x)  (_x)
++#endif
 +
-+The sas_ha_struct describes the SAS LLDD to the SAS layer.
-+Most of it is used by the SAS Layer but a few fields need to
-+be initialized by the LLDDs.
++#define SAS_ADDR(_x) ((unsigned long long) be64_to_cpu(*(uint64_t *)(_x)))
++#define SAS_ADDR_SIZE 8
 +
-+After initializing your hardware, from the probe() function
-+you call sas_register_ha(). It will register your LLDD with
-+the SCSI subsystem, creating a SCSI host and it will
-+register your SAS driver with the sysfs SAS tree it creates.
-+It will then return.  Then you enable your phys to actually
-+start OOB (at which point your driver will start calling the
-+notify_* event callbacks).
++const char *prog;
 +
-+Structure descriptions:
-+
-+struct sas_phy --------------------
-+Normally this is statically embedded to your driver's
-+phy structure:
-+	struct my_phy {
-+	       blah;
-+	       struct sas_phy sas_phy;
-+	       bleh;
-+	};
-+And then all the phys are an array of my_phy in your HA
-+struct (shown below).
-+
-+Then as you go along and initialize your phys you also
-+initialize the sas_phy struct, along with your own
-+phy structure.
-+
-+In general, the phys are managed by the LLDD and the ports
-+are managed by the SAS layer.  So the phys are initialized
-+and updated by the LLDD and the ports are initialized and
-+updated by the SAS layer.
-+
-+There is a scheme where the LLDD can RW certain fields,
-+and the SAS layer can only read such ones, and vice versa.
-+The idea is to avoid unnecessary locking.
-+
-+enabled -- must be set (0/1)
-+id -- must be set [0,MAX_PHYS)
-+class, proto, type, role, oob_mode, linkrate -- must be set
-+oob_mode --  you set this when OOB has finished and then notify
-+the SAS Layer.
-+
-+sas_addr -- this normally points to an array holding the sas
-+address of the phy, possibly somewhere in your my_phy
-+struct.
-+
-+attached_sas_addr -- set this when you (LLDD) receive an
-+IDENTIFY frame or a FIS frame, _before_ notifying the SAS
-+layer.  The idea is that sometimes the LLDD may want to fake
-+or provide a different SAS address on that phy/port and this
-+allows it to do this.  At best you should copy the sas
-+address from the IDENTIFY frame or maybe generate a SAS
-+address for SATA directly attached devices.  The Discover
-+process may later change this.
-+
-+frame_rcvd -- this is where you copy the IDENTIFY/FIS frame
-+when you get it; you lock, copy, set frame_rcvd_size and
-+unlock the lock, and then call the event.  It is a pointer
-+since there's no way to know your hw frame size _exactly_,
-+so you define the actual array in your phy struct and let
-+this pointer point to it.  You copy the frame from your
-+DMAable memory to that area holding the lock.
-+
-+sas_prim -- this is where primitives go when they're
-+received.  See sas.h. Grab the lock, set the primitive,
-+release the lock, notify.
-+
-+port -- this points to the sas_port if the phy belongs
-+to a port -- the LLDD only reads this. It points to the
-+sas_port this phy is part of.  Set by the SAS Layer.
-+
-+ha -- may be set; the SAS layer sets it anyway.
-+
-+lldd_phy -- you should set this to point to your phy so you
-+can find your way around faster when the SAS layer calls one
-+of your callbacks and passes you a phy.  If the sas_phy is
-+embedded you can also use container_of -- whatever you
-+prefer.
-+
-+
-+struct sas_port --------------------
-+The LLDD doesn't set any fields of this struct -- it only
-+reads them.  They should be self explanatory.
-+
-+phy_mask is 32 bit, this should be enough for now, as I
-+haven't heard of a HA having more than 8 phys.
-+
-+lldd_port -- I haven't found use for that -- maybe other
-+LLDD who wish to have internal port representation can make
-+use of this.
-+
-+
-+struct sas_ha_struct --------------------
-+It normally is statically declared in your own LLDD
-+structure describing your adapter: 
-+struct my_sas_ha {
-+       blah;
-+       struct sas_ha_struct sas_ha;
-+       struct my_phy phys[MAX_PHYS];
-+       struct sas_port sas_ports[MAX_PHYS]; /* (1) */
-+       bleh;
++struct route_table_entry {
++	int      disabled;
++	uint8_t  routed_sas_addr[SAS_ADDR_SIZE];
 +};
 +
-+(1) If your LLDD doesn't have its own port representation.
++struct expander {
++	int     num_phys;
++	uint8_t *phy_attr;
++	int     route_indexes;
++};
 +
-+What needs to be initialized (sample function given below).
-+
-+pcidev
-+sas_addr -- since the SAS layer doesn't want to mess with
-+	 memory allocation, etc, this points to statically
-+	 allocated array somewhere (say in your host adapter
-+	 structure) and holds the SAS address of the host
-+	 adapter as given by you or the manufacturer, etc.
-+sas_port
-+sas_phy -- an array of pointers to structures. (see
-+	note above on sas_addr).
-+	These must be set.  See more notes below.
-+num_phys -- the number of phys present in the sas_phy array,
-+	 and the number of ports present in the sas_port
-+	 array.  There can be a maximum num_phys ports (one per
-+	 port) so we drop the num_ports, and only use
-+	 num_phys.
-+
-+The event interface:
-+
-+	/* LLDD calls these to notify the class of an event. */
-+	void (*notify_ha_event)(struct sas_ha_struct *, enum ha_event);
-+	void (*notify_port_event)(struct sas_phy *, enum port_event);
-+	void (*notify_phy_event)(struct sas_phy *, enum phy_event);
-+
-+When sas_register_ha() returns, those are set and can be
-+called by the LLDD to notify the SAS layer of such events
-+the SAS layer.
-+
-+The port notification:
-+
-+	/* The class calls these to notify the LLDD of an event. */
-+	void (*lldd_port_formed)(struct sas_phy *);
-+	void (*lldd_port_deformed)(struct sas_phy *);
-+
-+If the LLDD wants notification when a port has been formed
-+or deformed it sets those to a function satisfying the type.
-+
-+A SAS LLDD should also implement at least one of the Task
-+Management Functions (TMFs) described in SAM:
-+
-+	/* Task Management Functions. Must be called from process context. */
-+	int (*lldd_abort_task)(struct sas_task *);
-+	int (*lldd_abort_task_set)(struct domain_device *, u8 *lun);
-+	int (*lldd_clear_aca)(struct domain_device *, u8 *lun);
-+	int (*lldd_clear_task_set)(struct domain_device *, u8 *lun);
-+	int (*lldd_I_T_nexus_reset)(struct domain_device *);
-+	int (*lldd_lu_reset)(struct domain_device *, u8 *lun);
-+	int (*lldd_query_task)(struct sas_task *);
-+
-+For more information please read SAM from T10.org.
-+
-+Port and Adapter management:
-+
-+	/* Port and Adapter management */
-+	int (*lldd_clear_nexus_port)(struct sas_port *);
-+	int (*lldd_clear_nexus_ha)(struct sas_ha_struct *);
-+
-+A SAS LLDD should implement at least one of those.
-+
-+Phy management:
-+
-+	/* Phy management */
-+	int (*lldd_control_phy)(struct sas_phy *, enum phy_func);
-+
-+lldd_ha -- set this to point to your HA struct. You can also
-+use container_of if you embedded it as shown above.
-+
-+A sample initialization and registration function
-+can look like this (called last thing from probe())
-+*but* before you enable the phys to do OOB:	
-+
-+static int register_sas_ha(struct my_sas_ha *my_ha)
++static int do_smp_func(char *smp_portal_name, void *smp_req, int smp_req_size,
++		       void *smp_resp, int smp_resp_size)
 +{
-+	int i;
-+	static struct sas_phy   *sas_phys[MAX_PHYS];
-+	static struct sas_port  *sas_ports[MAX_PHYS];
-+	
-+	my_ha->sas_ha.sas_addr = &my_ha->sas_addr[0];
++	int fd;
++	ssize_t res;
 +
-+	for (i = 0; i < MAX_PHYS; i++) {
-+		sas_phys[i] = &my_ha->phys[i].sas_phy;
-+		sas_ports[i] = &my_ha->sas_ports[i];
++	fd = open(smp_portal_name, O_RDWR);
++	if (fd == -1) {
++		printf("%s: opening %s: %s(%d)\n", prog, smp_portal_name,
++		       strerror(errno), errno);
++		return fd;
 +	}
 +
-+	my_ha->sas_ha.sas_phy  = sas_phys;
-+	my_ha->sas_ha.sas_port = sas_ports;
-+	my_ha->sas_ha.num_phys = MAX_PHYS;
++	res = write(fd, smp_req, smp_req_size);
++	if (!res) {
++		printf("%s: nothing could be written to %s\n", prog,
++		       smp_portal_name);
++		goto out_err;
++	} else if (res == -1) {
++		printf("%s: writing to %s: %s(%d)\n", prog, smp_portal_name,
++		       strerror(errno), errno);
++		goto out_err;
++	}
 +
-+	my_ha->sas_ha.lldd_port_formed = my_port_formed;
-+
-+	return sas_register_ha(&my_ha->sas_ha);
++	res = read(fd, smp_resp, smp_resp_size);
++	if (!res) {
++		printf("%s: nothing could be read from %s\n", prog,
++		       smp_portal_name);
++		goto out_err;
++	} else if (res == -1) {
++		printf("%s: reading from %s: %s(%d)\n", prog, smp_portal_name,
++		       strerror(errno), errno);
++		goto out_err;
++	}
++	close(fd);
++	return res;
++ out_err:
++	close(fd);
++	return -1;
 +}
 +
++#define MI_REQ_SIZE   8
++#define MI_RESP_SIZE 64
 +
-+Events
-+------
++static unsigned char mi_req[MI_REQ_SIZE] = { 0x40, 1, 0, };
++static unsigned char mi_resp[MI_RESP_SIZE];
 +
-+Events are _the only way_ a SAS LLDD notifies the SAS layer
-+of anything.  There is no other method or way a LLDD to tell
-+the SAS layer of anything happening internally or on the SAS
-+domain.
++#define MI_FIELD_SIZE 20
++#define MI_PRINTS(a, b) printf("%*s %*s\n",LEFT_FIELD_SIZE,a,MI_FIELD_SIZE,b)
++#define MI_PRINTD(a, b) printf("%*s %*u\n",LEFT_FIELD_SIZE,a,MI_FIELD_SIZE,b)
++#define MI_PRINTA(a, b) printf("%*s %0*llx\n",LEFT_FIELD_SIZE,a,MI_FIELD_SIZE,b)
 +
-+Phy events: 
-+	PHYE_LOSS_OF_SIGNAL, (C)
-+	PHYE_OOB_DONE,
-+	PHYE_OOB_ERROR,      (C)
-+	PHYE_SPINUP_HOLD.
++static int mi_expander(char *smp_portal_name, struct expander *ex)
++{
++	int res;
 +
-+Port events, passed on a _phy_:
-+	PORTE_BYTES_DMAED,      (M)
-+	PORTE_BROADCAST_RCVD,   (E)
-+	PORTE_LINK_RESET_ERR,   (C)
-+	PORTE_TIMER_EVENT,      (C)
-+	PORTE_HARD_RESET.
++	res = do_smp_func(smp_portal_name, mi_req, MI_REQ_SIZE,
++			  mi_resp, MI_RESP_SIZE);
++	if (res == MI_RESP_SIZE && mi_resp[2] == 0) {
++		char buf[20];
 +
-+Host Adapter event:
-+	HAE_RESET
++		memcpy(buf, mi_resp+12, 8);
++		buf[8] = 0;
++		MI_PRINTS("Vendor:", buf);
 +
-+A SAS LLDD should be able to generate
-+	- at least one event from group C (choice),
-+	- events marked M (mandatory) are mandatory (only one),
-+	- events marked E (expander) if it wants the SAS layer
-+	  to handle domain revalidation (only one such).
-+	- Unmarked events are optional.
++		memcpy(buf, mi_resp+20, 16);
++		buf[16] = 0;
++		MI_PRINTS("Product:", buf);
 +
-+Meaning:
++		memcpy(buf, mi_resp+36, 4);
++		buf[4] = 0;
++		MI_PRINTS("Revision:", buf);
 +
-+HAE_RESET -- when your HA got internal error and was reset.
++		if (!(mi_resp[8] & 1))
++			return 0;
 +
-+PORTE_BYTES_DMAED -- on receiving an IDENTIFY/FIS frame
-+PORTE_BROADCAST_RCVD -- on receiving a primitive
-+PORTE_LINK_RESET_ERR -- timer expired, loss of signal, loss
-+of DWS, etc. (*)
-+PORTE_TIMER_EVENT -- DWS reset timeout timer expired (*)
-+PORTE_HARD_RESET -- Hard Reset primitive received.
++		memcpy(buf, mi_resp+40, 8);
++		buf[8] = 0;
++		MI_PRINTS("Component:", buf);
 +
-+PHYE_LOSS_OF_SIGNAL -- the device is gone (*)
-+PHYE_OOB_DONE -- OOB went fine and oob_mode is valid
-+PHYE_OOB_ERROR -- Error while doing OOB, the device probably
-+got disconnected. (*)
-+PHYE_SPINUP_HOLD -- SATA is present, COMWAKE not sent.
++		MI_PRINTD("Component ID:", be16_to_cpu(mi_resp[48]));
++		MI_PRINTD("Component revision:", mi_resp[50]);
++	}
++	return 0;
++}
 +
-+(*) should set/clear the appropriate fields in the phy,
-+    or alternatively call the inlined sas_phy_disconnected()
-+    which is just a helper, from their tasklet.
++#define RG_REQ_SIZE   8
++#define RG_RESP_SIZE 32
 +
-+The Execute Command SCSI RPC:
++static unsigned char rg_req[RG_REQ_SIZE] = { 0x40, 0, };
++static unsigned char rg_resp[RG_RESP_SIZE];
 +
-+	int (*lldd_execute_task)(struct sas_task *, int num,
-+				 unsigned long gfp_flags);
++static int rg_expander(char *smp_portal_name, struct expander *ex)
++{
++	int res;
 +
-+Used to queue a task to the SAS LLDD.  @task is the tasks to
-+be executed.  @num should be the number of tasks being
-+queued at this function call (they are linked listed via
-+task::list), @gfp_mask should be the gfp_mask defining the
-+context of the caller.
++	res = do_smp_func(smp_portal_name, rg_req, RG_REQ_SIZE, rg_resp,
++			  RG_RESP_SIZE);
 +
-+This function should implement the Execute Command SCSI RPC,
-+or if you're sending a SCSI Task as linked commands, you
-+should also use this function.
++	if (res == RG_RESP_SIZE && rg_resp[2] == 0) {
++		MI_PRINTD("Expander Change Count:", be16_to_cpu(rg_resp[4]));
++		MI_PRINTD("Expander Route Indexes:", be16_to_cpu(rg_resp[6]));
++		ex->route_indexes = be16_to_cpu(rg_resp[6]);
++		MI_PRINTD("Number of phys:", rg_resp[9]);
++		ex->num_phys = rg_resp[9];
++		MI_PRINTS("Configuring:", (rg_resp[10] & 2) ? "Yes" : "No");
++		MI_PRINTS("Configurable route table:",
++			  (rg_resp[10] & 1) ? "Yes" : "No");
++		MI_PRINTA("Enclosure Logical Identifier:",
++			  SAS_ADDR(rg_resp+12));
++		ex->phy_attr = malloc(ex->num_phys * sizeof(*ex->phy_attr));
++	}
++	return 0;
++}
 +
-+That is, when lldd_execute_task() is called, the command(s)
-+go out on the transport *immediately*.  There is *no*
-+queuing of any sort and at any level in a SAS LLDD.
++#define DISCOVER_REQ_SIZE  16
++#define DISCOVER_RESP_SIZE 56
 +
-+The use of task::list is two-fold, one for linked commands,
-+the other discussed below.
-+	
-+It is possible to queue up more than one task at a time, by
-+initializing the list element of struct sas_task, and
-+passing the number of tasks enlisted in this manner in num.
-+	
-+Returns: -SAS_QUEUE_FULL, -ENOMEM, nothing was queued;
-+	 0, the task(s) were queued.
++static unsigned char disc_req[DISCOVER_REQ_SIZE] = {0x40, 0x10, 0, };
++static unsigned char disc_resp[DISCOVER_RESP_SIZE];
 +
-+If you want to pass num > 1, then either
-+A) you're the only caller of this function and keep track
-+   of what you've queued to the LLDD, or
-+B) you know what you're doing and have a strategy of
-+   retrying.
++#define PHY_EEXIST 0x10
++#define PHY_VACANT 0x16
 +
-+As opposed to queuing one task at a time (function call),
-+batch queuing of tasks, by having num > 1, greatly
-+simplifies LLDD code, sequencer code, and _hardware design_,
-+and has some performance advantages in certain situations
-+(DBMS).
-+
-+The LLDD advertises if it can take more than one command at
-+a time at lldd_execute_task(), by setting the
-+lldd_max_execute_num parameter (controlled by "collector"
-+module parameter in aic94xx SAS LLDD).
-+
-+You should leave this to the default 1, unless you know what
-+you're doing.
-+
-+This is a function of the LLDD, to which the SAS layer can
-+cater to.
-+
-+int lldd_queue_size
-+	The host adapter's queue size.  This is the maximum
-+number of commands the lldd can have pending to domain
-+devices on behalf of all upper layers submitting through
-+lldd_execute_task().
-+	
-+You really want to set this to something (much) larger than
-+1.
-+
-+This _really_ has absolutely nothing to do with queuing.
-+There is no queuing in SAS LLDDs.
-+
-+struct sas_task {
-+	dev -- the device this task is destined to
-+	list -- must be initialized (INIT_LIST_HEAD)
-+	task_proto -- _one_ of enum sas_proto
-+	scatter -- pointer to scatter gather list array
-+	num_scatter -- number of elements in scatter
-+	total_xfer_len -- total number of bytes expected to be transfered
-+	data_dir -- PCI_DMA_...
-+	task_done -- callback when the task has finished execution
++static const char *attached_dev_type[8] = {
++	[0] = "none",
++	[1] = "end device",
++	[2] = "edge expander",
++	[3] = "fanout expander",
++	[4 ... 7] = "unknown",
 +};
 +
-+When an external entity, entity other than the LLDD or the
-+SAS Layer, wants to work with a struct domain_device, it
-+_must_ call kobject_get() when getting a handle on the
-+device and kobject_put() when it is done with the device.
++static const char *phy_link_rate[16] = {
++	[0] = "unknown",
++	[1] = "disabled",
++	[2] = "phy reset problem",
++	[3] = "spinup hold",
++	[4] = "port selector",
++	[5 ... 7] = "unknown",
++	[8] = "G1 (1,5 Gb/s)",
++	[9] = "G2 (3 GB/s)",
++	[10 ... 15] = "Unknown",
++};
 +
-+This does two things:
-+     A) implements proper kfree() for the device;
-+     B) increments/decrements the kref for all players:
-+     domain_device
-+	all domain_device's ... (if past an expander)
-+	    port
-+		host adapter
-+		     pci device
-+			 and up the ladder, etc.
++static const char *proto_table[8] = {
++	"",
++	"SMP", "STP", "STP|SMP", "SSP",
++	"SSP|SMP", "SSP|STP", "SSP|STP|SMP",
++};
 +
-+DISCOVERY
-+---------
++#define DIRECT_ROUTING      0
++#define SUBTRACTIVE_ROUTING 1
++#define TABLE_ROUTING       2
 +
-+The sysfs tree has the following purposes:
-+    a) It shows you the physical layout of the SAS domain at
-+       the current time, i.e. how the domain looks in the
-+       physical world right now.
-+    b) Shows some device parameters _at_discovery_time_.
++static const char *routing_attr[8] = {
++	[DIRECT_ROUTING] = "D",
++	[SUBTRACTIVE_ROUTING] = "S",
++	[TABLE_ROUTING] = "T",
++	[3 ... 7] = "x",
++};
 +
-+This is a link to the tree(1) program, very useful in
-+viewing the SAS domain:
-+ftp://mama.indstate.edu/linux/tree/
-+I expect user space applications to actually create a
-+graphical interface of this.
++static const char *conn_type[0x80] = {
++	[0] = "No information",
++	[1] = "SAS external receptacle (i.e., SFF-8470)(see SAS-1.1)",
++	[2] = "SAS external compact receptacle (i.e., SFF-8088)(see SAS-1.1)",
++	[3 ... 0x0f ] = "External connector",
++	[0x10] = "SAS internal wide plug (i.e., SFF-8484)(see SAS-1.1)",
++	[0x11] = "SAS internal compact wide plug (i.e., SFF-8087)(see SAS-1.1)",
++	[0x12 ... 0x1f] = "Internal wide connector",
++	[0x20] = "SAS backplane receptacle (i.e., SFF-8482)(see SAS-1.1)",
++	[0x21] = "SATA-style host plug (i.e., ATA/ATAPI-7 V3)(see SAS-1.1)",
++	[0x22] = "SAS plug (i.e., SFF-8482)(see SAS-1.1)",
++	[0x23] = "SATA device plug (i.e., ATA/ATAPI-7 V3)(see SAS-1.1)",
++	[0x24 ... 0x2f] = "Internal connector to end device",
++	[0x30 ... 0x6f] = "Unknown\n",
++	[0x70 ... 0x7f] = "Vendor specific",
++};
 +
-+That is, the sysfs domain tree doesn't show or keep state if
-+you e.g., change the meaning of the READY LED MEANING
-+setting, but it does show you the current connection status
-+of the domain device.
++static int discover_phy(char *smp_portal_name, int phy_id, struct expander *ex)
++{
++	int res;
++	const char *dev_str;
++	
++	disc_req[9] = phy_id;
 +
-+Keeping internal device state changes is responsibility of
-+upper layers (Command set drivers) and user space.
++	res = do_smp_func(smp_portal_name, disc_req, DISCOVER_REQ_SIZE,
++			  disc_resp, DISCOVER_RESP_SIZE);
 +
-+When a device or devices are unplugged from the domain, this
-+is reflected in the sysfs tree immediately, and the device(s)
-+removed from the system.
++	if (res != DISCOVER_RESP_SIZE) {
++		printf("%s: error disovering phy %d\n", prog, phy_id);
++		goto out;
++	}
++	switch (disc_resp[2]) {
++	case PHY_VACANT:
++		printf("phy%02d: vacant\n", phy_id);
++		goto out; break;
++	case PHY_EEXIST:
++		printf("phy%02d doesn't exist\n", phy_id);
++		goto out; break;
++	case 0:
++		break;
++	default:
++		printf("phy%02d SMP function result: 0x%x\n",
++		       phy_id, disc_resp[2]);
++		goto out;
++	}
 +
-+The structure domain_device describes any device in the SAS
-+domain.  It is completely managed by the SAS layer.  A task
-+points to a domain device, this is how the SAS LLDD knows
-+where to send the task(s) to.  A SAS LLDD only reads the
-+contents of the domain_device structure, but it never creates
-+or destroys one.
++	printf("Phy%02d:%s    attached: %016llx:%02d    chg count:%02d\n",
++	       phy_id, routing_attr[disc_resp[44] & 0x0F],
++	       SAS_ADDR(disc_resp+24), disc_resp[32], disc_resp[42]);
 +
-+Expander management from User Space
-+-----------------------------------
++	if (ex->phy_attr)
++		ex->phy_attr[phy_id] = disc_resp[44] & 0x0F;
 +
-+In each expander directory in sysfs, there is a file called
-+"smp_portal".  It is a binary sysfs attribute file, which
-+implements an SMP portal (Note: this is *NOT* an SMP port),
-+to which user space applications can send SMP requests and
-+receive SMP responses.
++	if (disc_resp[14] & 1)
++		dev_str = "SATA Host";
++	else if (disc_resp[15] & 0x80)
++		dev_str = "SATA Port Selector";
++	else if (disc_resp[15] & 1)
++		dev_str = "SATA device";
++	else
++		dev_str = attached_dev_type[(disc_resp[12] & 0x70) >> 4];
++	printf(" Attached device: %15s    Link rate: %15s\n",
++	       dev_str, phy_link_rate[disc_resp[13] & 0xf]);
 +
-+Functionality is deceptively simple:
++	printf(" Tproto: %15s    Iproto: %15s\n",
++	       proto_table[(disc_resp[15] & 0xe) >> 1],
++	       proto_table[(disc_resp[14] & 0xe) >> 1]);
++	
++	printf(" Programmed MIN-MAX linkrate: %s - %s\n",
++	       phy_link_rate[(disc_resp[40] & 0xF0)>>4],
++	       phy_link_rate[(disc_resp[41] & 0xF0)>>4]);
 +
-+1. Build the SMP frame you want to send. The format and layout
-+   is described in the SAS spec.  Leave the CRC field equal 0.
-+open(2)
-+2. Open the expander's SMP portal sysfs file in RW mode.
-+write(2)
-+3. Write the frame you built in 1.
-+read(2)
-+4. Read the amount of data you expect to receive for the frame you built.
-+   If you receive different amount of data you expected to receive,
-+   then there was some kind of error.
-+close(2)
-+All this process is shown in detail in the function do_smp_func()
-+and its callers, in the file "expander_conf.c".
++	printf(" Hardware   MIN-MAX linkrate: %s - %s\n",
++	       phy_link_rate[(disc_resp[40] & 0x0F)],
++	       phy_link_rate[(disc_resp[41] & 0x0F)]);
 +
-+The kernel functionality is implemented in the file
-+"sas_expander.c".
++	printf(" %s phy\n", (disc_resp[43] & 0x80) ? "Virtual" : "Physical");
++	printf(" Partial pathway timeout value: %d microseconds\n",
++	       disc_resp[43] & 0x0F);
++	
++	printf(" Connector type: %s\n", conn_type[disc_resp[45] & 0x7F]);
++	printf(" Connector element index: %d\n", disc_resp[46]);
++	printf(" Connector physical link: %d\n", disc_resp[47]);
++out:
++	return 0;	
++}
 +
-+The program "expander_conf.c" implements this. It takes one
-+argument, the sysfs file name of the SMP portal to the
-+expander, and gives expander information, including routing
-+tables.
++#define RPEL_REQ_SIZE  16
++#define RPEL_RESP_SIZE 32
 +
-+The SMP portal gives you complete control of the expander,
-+so please be careful.
++static unsigned char rpel_req[RPEL_REQ_SIZE] = { 0x40, 0x11, 0, };
++static unsigned char rpel_resp[RPEL_RESP_SIZE];
++
++static int report_phy_error_log(char *smp_portal_name, int phy_id)
++{
++	int res;
++	
++	rpel_req[9] = phy_id;
++
++	res = do_smp_func(smp_portal_name, rpel_req, RPEL_REQ_SIZE,
++			  rpel_resp, RPEL_RESP_SIZE);
++	if (res != RPEL_RESP_SIZE) {
++		printf("%s: error reading error log for phy %d (%d)\n",
++		       prog, phy_id, res);
++		goto out;
++	}
++	MI_PRINTD(" Invalid DW count:", be32_to_cpu(rpel_resp[12]));
++	MI_PRINTD(" RD error count:", be32_to_cpu(rpel_resp[16]));
++	MI_PRINTD(" DW sync loss count:", be32_to_cpu(rpel_resp[20]));
++	MI_PRINTD(" Reset problem count:", be32_to_cpu(rpel_resp[24]));
++out:
++	return 0;
++}
++
++#define RRI_REQ_SIZE  16
++#define RRI_RESP_SIZE 44
++
++static unsigned char rri_req[RRI_REQ_SIZE] = { 0x40, 0x13, 0, };
++static unsigned char rri_resp[RRI_RESP_SIZE];
++
++static int show_routing_table(char *smp_portal_name, int phy_id,
++			      struct expander *ex)
++{
++	struct route_table_entry *rt;
++	int res, i, last_non_zero = -1;
++
++	if (!ex->phy_attr || ex->phy_attr[phy_id] != TABLE_ROUTING)
++		return 0;
++
++	rt = malloc(sizeof(struct route_table_entry)*ex->route_indexes);
++	if (!rt)
++		return 0;
++
++	rri_req[9] = phy_id;
++
++	for (i = 0; i < ex->route_indexes; i++) {
++		*(uint16_t *)(rri_req+6) = cpu_to_be16(i);
++		res = do_smp_func(smp_portal_name, rri_req, RRI_REQ_SIZE,
++				  rri_resp, RRI_RESP_SIZE);
++		if (res != RRI_RESP_SIZE) {
++			printf("Error getting phy %d route index %d (%d)\n",
++			       phy_id, i, res);
++			goto out;
++		}
++		if (rri_resp[2] != 0)
++			break;
++		if (be16_to_cpu(rri_resp[6]) != i) {
++			printf("Expander FW error for phy %d index %d\n",
++			       phy_id, i);
++			goto out;
++		}
++		rt[i].disabled = rri_resp[12] & 0x80 ? 1 : 0;
++		memcpy(rt[i].routed_sas_addr, rri_resp+16, SAS_ADDR_SIZE);
++		if (rt[i].routed_sas_addr[0])
++			last_non_zero = i;
++	}
++	printf(" Routing Table\n");
++	if (last_non_zero == -1)
++		printf("  Empty (all zero)\n");
++	else {
++		for (i = 0; i <= last_non_zero; i++)
++			printf("  %02d %8s %016llx\n",
++			       i, rt[i].disabled ? "disabled" : "enabled",
++			       SAS_ADDR(rt[i].routed_sas_addr));
++	}
++out:
++	free(rt);
++	return 0;
++}
++
++static int discover_expander(char *smp_portal_name, struct expander *ex)
++{
++	int i;
++
++	for (i = 0; i < ex->num_phys; i++) {
++		printf("\n");
++		discover_phy(smp_portal_name, i, ex);
++		report_phy_error_log(smp_portal_name, i);
++		show_routing_table(smp_portal_name, i, ex);
++	}
++
++	return 0;
++}
++
++static void print_info(void)
++{
++	printf("%s <smp portal file>\n", prog);
++	printf("\tWhere <smp portal file> is the binary attribute file of the"
++	       "\n\texpander device in sysfs.\n");
++}
++
++int main(int argc, char *argv[])
++{
++	prog = strrchr(argv[0], '/');
++	if (prog)
++		prog++;
++	else
++		prog = argv[0];
++
++	if (argc < 2) {
++		print_info();
++		return 0;
++	} else {
++		struct expander ex;
++
++		memset(&ex, 0, sizeof(ex));
++		
++		mi_expander(argv[1], &ex);
++		rg_expander(argv[1], &ex);
++		discover_expander(argv[1], &ex);
++		if (ex.phy_attr)
++			free(ex.phy_attr);
++	}
++	return 0;
++}
