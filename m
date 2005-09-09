@@ -1,72 +1,82 @@
 From: mike.miller@hp.com
-Subject: [PATCH 6/8] cciss: fix for DMA brokeness
-Date: Fri, 9 Sep 2005 17:09:38 -0500
-Message-ID: <20050909220938.GF4616@beardog.cca.cpqcorp.net>
+Subject: [PATCH 8/8] cciss: SCSI tape info for /proc
+Date: Fri, 9 Sep 2005 17:13:12 -0500
+Message-ID: <20050909221312.GH4616@beardog.cca.cpqcorp.net>
 Reply-To: mikem@beardog.cca.cpqcorp.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atlrel6.hp.com ([156.153.255.205]:13470 "EHLO atlrel6.hp.com")
-	by vger.kernel.org with ESMTP id S1030682AbVIIWKA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 18:10:00 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030339AbVIIWNe@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: akpm@osdl.org, axboe@suse.de
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Patch 6 of 8
-The CCISS driver seems to loose track of DMA mappings
-created by it's fill_cmd() routine.  Neither callers of this routine are
-extracting the DMA address created in order to do the unmap.
-Instead, they simply try to unmap 0x0.  It's easy to see this
-problem on an x86_64 system when using the "swiotlb=force"
-boot option.  In this case, the driver is leaking resources
-of the swiotlb and not causing a sync of the bounce buffer.  Thanks
+Patch 8 of 8
+Add SCSI host and device info not elsewhere available to /proc/scsi/cciss/*
+Namely, connect cciss device instance with scsi host number, and
+give scsi host number, bus, target, lun, devicetype, and 8-byte cciss LUNID
+for each tapedrive/medium changer attached to a controller
 
-Signed-off-by: Alex Williamson <alex.williamson@hp.com>
+For instance:
+
+# cat /proc/scsi/cciss/2
+cciss0: SCSI host: 2
+c2b0t0l0 01 0x0000000000000001
+
+Signed-off-by: Stephen M. Cameron <steve.cameron@hp.com>
 Signed-off-by: Mike Miller <mike.miller@hp.com>
 
- cciss.c |   13 +++++++++----
- 1 files changed, 9 insertions(+), 4 deletions(-)
+ cciss_scsi.c |   25 +++++++++++++++++++++++--
+ 1 files changed, 23 insertions(+), 2 deletions(-)
 --------------------------------------------------------------------------------
-diff -burNp lx2613-p004/drivers/block/cciss.c lx2613/drivers/block/cciss.c
---- lx2613-p004/drivers/block/cciss.c	2005-09-09 16:09:13.362617000 -0500
-+++ lx2613/drivers/block/cciss.c	2005-09-09 16:14:54.116814816 -0500
-@@ -1731,8 +1731,10 @@ case CMD_HARDWARE_ERR:
- 		}
- 	}	
- 	/* unlock the buffers from DMA */
-+	buff_dma_handle.val32.lower = c->SG[0].Addr.lower;
-+	buff_dma_handle.val32.upper = c->SG[0].Addr.upper;
- 	pci_unmap_single( h->pdev, (dma_addr_t) buff_dma_handle.val,
--			size, PCI_DMA_BIDIRECTIONAL);
-+			c->SG[0].Len, PCI_DMA_BIDIRECTIONAL);
- 	cmd_free(h, c, 0);
-         return(return_status);
+diff -burNp lx2613-p007/drivers/block/cciss_scsi.c lx2613/drivers/block/cciss_scsi.c
+--- lx2613-p007/drivers/block/cciss_scsi.c	2005-09-09 16:20:35.292948000 -0500
++++ lx2613/drivers/block/cciss_scsi.c	2005-09-09 16:24:43.948146824 -0500
+@@ -1144,6 +1144,7 @@ cciss_scsi_proc_info(struct Scsi_Host *s
  
-@@ -2013,8 +2015,10 @@ resend_cmd1:
- 		
- cleanup1:	
- 	/* unlock the data buffer from DMA */
-+	buff_dma_handle.val32.lower = c->SG[0].Addr.lower;
-+	buff_dma_handle.val32.upper = c->SG[0].Addr.upper;
- 	pci_unmap_single(info_p->pdev, (dma_addr_t) buff_dma_handle.val,
--				size, PCI_DMA_BIDIRECTIONAL);
-+				c->SG[0].Len, PCI_DMA_BIDIRECTIONAL);
- 	cmd_free(info_p, c, 1);
- 	return (status);
- } 
-@@ -3097,9 +3101,10 @@ static void __devexit cciss_remove_one (
- 	/* remove it from the disk list */
- 	for (j = 0; j < NWD; j++) {
- 		struct gendisk *disk = hba[i]->gendisk[j];
--		if (disk->flags & GENHD_FL_UP)
--			blk_cleanup_queue(disk->queue);
-+		if (disk->flags & GENHD_FL_UP) {
- 			del_gendisk(disk);
-+			blk_cleanup_queue(disk->queue);
+ 	int buflen, datalen;
+ 	ctlr_info_t *ci;
++	int i;
+ 	int cntl_num;
+ 
+ 
+@@ -1154,8 +1155,28 @@ cciss_scsi_proc_info(struct Scsi_Host *s
+ 	cntl_num = ci->ctlr;	/* Get our index into the hba[] array */
+ 
+ 	if (func == 0) {	/* User is reading from /proc/scsi/ciss*?/?*  */
+-		buflen = sprintf(buffer, "hostnum=%d\n", sh->host_no); 	
++		buflen = sprintf(buffer, "cciss%d: SCSI host: %d\n", 
++				cntl_num, sh->host_no); 	
+ 
++		/* this information is needed by apps to know which cciss 
++		   device corresponds to which scsi host number without 
++		   having to open a scsi target device node.  The device 
++		   information is not a duplicate of /proc/scsi/scsi because 
++		   the two may be out of sync due to scsi hotplug, rather 
++		   this info is for an app to be able to use to know how to 
++		   get them back in sync. */
++
++		for (i=0;i<ccissscsi[cntl_num].ndevices;i++) {
++			struct cciss_scsi_dev_t *sd = &ccissscsi[cntl_num].dev[i];
++			buflen += sprintf(&buffer[buflen], "c%db%dt%dl%d %02d "
++				"0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
++				sh->host_no, sd->bus, sd->target, sd->lun, 
++				sd->devtype,
++				sd->scsi3addr[0], sd->scsi3addr[1], 
++				sd->scsi3addr[2], sd->scsi3addr[3],
++				sd->scsi3addr[4], sd->scsi3addr[5], 
++				sd->scsi3addr[6], sd->scsi3addr[7]);
 +		}
- 	}
+ 		datalen = buflen - offset;
+ 		if (datalen < 0) { 	/* they're reading past EOF. */
+ 			datalen = 0;
+@@ -1417,7 +1438,7 @@ cciss_proc_tape_report(int ctlr, unsigne
  
- 	pci_free_consistent(hba[i]->pdev, NR_CMDS * sizeof(CommandList_struct),
+ 	CPQ_TAPE_LOCK(ctlr, flags);
+ 	size = sprintf(buffer + *len, 
+-		"       Sequential access devices: %d\n\n",
++		"Sequential access devices: %d\n\n",
+ 			ccissscsi[ctlr].ndevices);
+ 	CPQ_TAPE_UNLOCK(ctlr, flags);
+ 	*pos += size; *len += size;
