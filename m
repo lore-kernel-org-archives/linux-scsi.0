@@ -1,149 +1,130 @@
-From: viro@ZenIV.linux.org.uk
-Subject: [PATCH] __user annotations (scsi/ch)
-Date: Fri, 9 Sep 2005 22:03:44 +0100
-Message-ID: <20050909210344.GF9623@ZenIV.linux.org.uk>
+From: mike.miller@hp.com
+Subject: [PATCH 1/8] cciss: new controller pci/subsystem ids
+Date: Fri, 9 Sep 2005 17:00:26 -0500
+Message-ID: <20050909220026.GA4616@beardog.cca.cpqcorp.net>
+Reply-To: mikem@beardog.cca.cpqcorp.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030517AbVIIVDt@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from atlrel9.hp.com ([156.153.255.214]:28822 "EHLO atlrel9.hp.com")
+	by vger.kernel.org with ESMTP id S1030381AbVIIWAv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 18:00:51 -0400
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: akpm@osdl.org, axboe@suse.de
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
-----
-diff -urN RC13-git7-s2io-u64/drivers/scsi/ch.c RC13-git7-scsi-ch/drivers/scsi/ch.c
---- RC13-git7-s2io-u64/drivers/scsi/ch.c	2005-08-28 23:09:45.000000000 -0400
-+++ RC13-git7-scsi-ch/drivers/scsi/ch.c	2005-09-07 13:55:19.000000000 -0400
-@@ -565,7 +565,7 @@
- 	return result;
- }
+NOTE: All patches in this set have been tested.
+
+Patch 1 of 8
+
+This patch adds new PCI and subsystem ID's that finally made the spec. It also
+include a name change for one controller. I know there's a lot of duplicat names
+ but the fw folks wanted this for the different implementations.
+Even though the same ASIC is used it may be embedded on some platforms,
+standup card in others, and a mezzanine in other servers.
+Please consider this for inclusion.
+
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+
+ Documentation/cciss.txt |    4 +++-
+ drivers/block/cciss.c   |   33 ++++++++++++++++++++++++---------
+ include/linux/pci_ids.h |    4 +++-
+ 3 files changed, 30 insertions(+), 11 deletions(-)
+--------------------------------------------------------------------------------
+diff -burNp lx2613.orig/Documentation/cciss.txt lx2613/Documentation/cciss.txt
+--- lx2613.orig/Documentation/cciss.txt	2005-08-28 18:41:01.000000000 -0500
++++ lx2613/Documentation/cciss.txt	2005-09-07 13:28:14.743543592 -0500
+@@ -17,7 +17,9 @@ This driver is known to work with the fo
+ 	* SA P600
+ 	* SA P800
+ 	* SA E400
+-	* SA E300
++	* SA P400i
++	* SA E200
++	* SA E200i
  
--static int ch_gstatus(scsi_changer *ch, int type, unsigned char *dest)
-+static int ch_gstatus(scsi_changer *ch, int type, unsigned char __user *dest)
- {
- 	int retval = 0;
- 	u_char data[16];
-@@ -639,6 +639,7 @@
- {
- 	scsi_changer *ch = file->private_data;
- 	int retval;
-+	void __user *argp = (void __user *)arg;
- 	
- 	switch (cmd) {
- 	case CHIOGPARAMS:
-@@ -651,7 +652,7 @@
- 		params.cp_nportals  = ch->counts[CHET_IE];
- 		params.cp_ndrives   = ch->counts[CHET_DT];
- 		
--		if (copy_to_user((void *) arg, &params, sizeof(params)))
-+		if (copy_to_user(argp, &params, sizeof(params)))
- 			return -EFAULT;
- 		return 0;
- 	}
-@@ -676,7 +677,7 @@
- 			vparams.cvp_n4  = ch->counts[CHET_V4];
- 			strncpy(vparams.cvp_label4,vendor_labels[3],16);
- 		}
--		if (copy_to_user((void *) arg, &vparams, sizeof(vparams)))
-+		if (copy_to_user(argp, &vparams, sizeof(vparams)))
- 			return -EFAULT;
- 		return 0;
- 	}
-@@ -685,7 +686,7 @@
- 	{
- 		struct changer_position pos;
- 		
--		if (copy_from_user(&pos, (void*)arg, sizeof (pos)))
-+		if (copy_from_user(&pos, argp, sizeof (pos)))
- 			return -EFAULT;
+ If nodes are not already created in the /dev/cciss directory, run as root:
  
- 		if (0 != ch_checkrange(ch, pos.cp_type, pos.cp_unit)) {
-@@ -704,7 +705,7 @@
- 	{
- 		struct changer_move mv;
+diff -burNp lx2613.orig/drivers/block/cciss.c lx2613/drivers/block/cciss.c
+--- lx2613.orig/drivers/block/cciss.c	2005-08-28 18:41:01.000000000 -0500
++++ lx2613/drivers/block/cciss.c	2005-09-07 13:27:05.390086920 -0500
+@@ -47,14 +47,14 @@
+ #include <linux/completion.h>
  
--		if (copy_from_user(&mv, (void*)arg, sizeof (mv)))
-+		if (copy_from_user(&mv, argp, sizeof (mv)))
- 			return -EFAULT;
+ #define CCISS_DRIVER_VERSION(maj,min,submin) ((maj<<16)|(min<<8)|(submin))
+-#define DRIVER_NAME "HP CISS Driver (v 2.6.6)"
+-#define DRIVER_VERSION CCISS_DRIVER_VERSION(2,6,6)
++#define DRIVER_NAME "HP CISS Driver (v 2.6.8)"
++#define DRIVER_VERSION CCISS_DRIVER_VERSION(2,6,8)
  
- 		if (0 != ch_checkrange(ch, mv.cm_fromtype, mv.cm_fromunit) ||
-@@ -726,7 +727,7 @@
- 	{
- 		struct changer_exchange mv;
- 		
--		if (copy_from_user(&mv, (void*)arg, sizeof (mv)))
-+		if (copy_from_user(&mv, argp, sizeof (mv)))
- 			return -EFAULT;
+ /* Embedded module documentation macros - see modules.h */
+ MODULE_AUTHOR("Hewlett-Packard Company");
+-MODULE_DESCRIPTION("Driver for HP Controller SA5xxx SA6xxx version 2.6.6");
++MODULE_DESCRIPTION("Driver for HP Controller SA5xxx SA6xxx version 2.6.8");
+ MODULE_SUPPORTED_DEVICE("HP SA5i SA5i+ SA532 SA5300 SA5312 SA641 SA642 SA6400"
+-			" SA6i P600 P800 E400 E300");
++			" SA6i P600 P800 P400 P400i E200 E200i");
+ MODULE_LICENSE("GPL");
  
- 		if (0 != ch_checkrange(ch, mv.ce_srctype,  mv.ce_srcunit ) ||
-@@ -751,7 +752,7 @@
- 	{
- 		struct changer_element_status ces;
- 		
--		if (copy_from_user(&ces, (void*)arg, sizeof (ces)))
-+		if (copy_from_user(&ces, argp, sizeof (ces)))
- 			return -EFAULT;
- 		if (ces.ces_type < 0 || ces.ces_type >= CH_TYPES)
- 			return -EINVAL;
-@@ -767,7 +768,7 @@
- 		unsigned int elem;
- 		int     result,i;
- 		
--		if (copy_from_user(&cge, (void*)arg, sizeof (cge)))
-+		if (copy_from_user(&cge, argp, sizeof (cge)))
- 			return -EFAULT;
- 
- 		if (0 != ch_checkrange(ch, cge.cge_type, cge.cge_unit))
-@@ -830,7 +831,7 @@
- 		kfree(buffer);
- 		up(&ch->lock);
- 		
--		if (copy_to_user((void*)arg, &cge, sizeof (cge)))
-+		if (copy_to_user(argp, &cge, sizeof (cge)))
- 			return -EFAULT;
- 		return result;
- 	}
-@@ -848,7 +849,7 @@
- 		struct changer_set_voltag csv;
- 		int elem;
- 
--		if (copy_from_user(&csv, (void*)arg, sizeof(csv)))
-+		if (copy_from_user(&csv, argp, sizeof(csv)))
- 			return -EFAULT;
- 
- 		if (0 != ch_checkrange(ch, csv.csv_type, csv.csv_unit)) {
-@@ -866,7 +867,7 @@
- 	}
- 
- 	default:
--		return scsi_ioctl(ch->device, cmd, (void*)arg);
-+		return scsi_ioctl(ch->device, cmd, argp);
- 
- 	}
- }
-@@ -899,9 +900,9 @@
- 	case CHIOGSTATUS32:
- 	{
- 		struct changer_element_status32 ces32;
--		unsigned char *data;
-+		unsigned char __user *data;
- 		
--		if (copy_from_user(&ces32, (void*)arg, sizeof (ces32)))
-+		if (copy_from_user(&ces32, (void __user *)arg, sizeof (ces32)))
- 			return -EFAULT;
- 		if (ces32.ces_type < 0 || ces32.ces_type >= CH_TYPES)
- 			return -EINVAL;
-diff -urN RC13-git7-s2io-u64/include/linux/chio.h RC13-git7-scsi-ch/include/linux/chio.h
---- RC13-git7-s2io-u64/include/linux/chio.h	2005-08-28 23:09:48.000000000 -0400
-+++ RC13-git7-scsi-ch/include/linux/chio.h	2005-09-07 13:55:19.000000000 -0400
-@@ -96,7 +96,7 @@
-  */
- struct changer_element_status {
- 	int             ces_type;
--	unsigned char   *ces_data;
-+	unsigned char   __user *ces_data;
+ #include "cciss_cmd.h"
+@@ -83,12 +83,22 @@ static const struct pci_device_id cciss_
+ 		0x0E11, 0x4091, 0, 0, 0},
+ 	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSA,
+ 		0x103C, 0x3225, 0, 0, 0},
+-	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSB,
++	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSC,
+ 		0x103c, 0x3223, 0, 0, 0},
+ 	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSC,
+-		0x103c, 0x3231, 0, 0, 0},
++		0x103c, 0x3234, 0, 0, 0},
+ 	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSC,
+-		0x103c, 0x3233, 0, 0, 0},
++		0x103c, 0x3235, 0, 0, 0},
++	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSD,
++		0x103c, 0x3211, 0, 0, 0},
++	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSD,
++		0x103c, 0x3212, 0, 0, 0},
++	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSD,
++		0x103c, 0x3213, 0, 0, 0},
++	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSD,
++		0x103c, 0x3214, 0, 0, 0},
++	{ PCI_VENDOR_ID_HP, PCI_DEVICE_ID_HP_CISSD,
++		0x103c, 0x3215, 0, 0, 0},
+ 	{0,}
  };
- #define CESTATUS_FULL     0x01 /* full */
- #define CESTATUS_IMPEXP   0x02	/* media was imported (inserted by sysop) */
+ MODULE_DEVICE_TABLE(pci, cciss_pci_device_id);
+@@ -111,8 +121,13 @@ static struct board_type products[] = {
+ 	{ 0x40910E11, "Smart Array 6i", &SA5_access},
+ 	{ 0x3225103C, "Smart Array P600", &SA5_access},
+ 	{ 0x3223103C, "Smart Array P800", &SA5_access},
+-	{ 0x3231103C, "Smart Array E400", &SA5_access},
+-	{ 0x3233103C, "Smart Array E300", &SA5_access},
++	{ 0x3234103C, "Smart Array P400", &SA5_access},
++	{ 0x3235103C, "Smart Array P400i", &SA5_access},
++	{ 0x3211103C, "Smart Array E200i", &SA5_access},
++	{ 0x3212103C, "Smart Array E200", &SA5_access},
++	{ 0x3213103C, "Smart Array E200i", &SA5_access},
++	{ 0x3214103C, "Smart Array E200i", &SA5_access},
++	{ 0x3215103C, "Smart Array E200i", &SA5_access},
+ };
+ 
+ /* How long to wait (in millesconds) for board to go into simple mode */
+diff -burNp lx2613.orig/include/linux/pci_ids.h lx2613/include/linux/pci_ids.h
+--- lx2613.orig/include/linux/pci_ids.h	2005-08-28 18:41:01.000000000 -0500
++++ lx2613/include/linux/pci_ids.h	2005-09-07 13:29:55.946158456 -0500
+@@ -713,10 +713,12 @@
+ #define PCI_DEVICE_ID_HP_DIVA_EVEREST	0x1282
+ #define PCI_DEVICE_ID_HP_DIVA_AUX	0x1290
+ #define PCI_DEVICE_ID_HP_DIVA_RMP3	0x1301
++#define PCI_DEVICE_ID_HP_CISS		0x3210
+ #define PCI_DEVICE_ID_HP_CISSA		0x3220
+ #define PCI_DEVICE_ID_HP_CISSB		0x3222
+-#define PCI_DEVICE_ID_HP_ZX2_IOC	0x4031
+ #define PCI_DEVICE_ID_HP_CISSC		0x3230
++#define PCI_DEVICE_ID_HP_CISSD		0x3238
++#define PCI_DEVICE_ID_HP_ZX2_IOC	0x4031
+ 
+ #define PCI_VENDOR_ID_PCTECH		0x1042
+ #define PCI_DEVICE_ID_PCTECH_RZ1000	0x1000
