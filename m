@@ -1,173 +1,60 @@
-From: Bernd Schubert <bernd.schubert@pci.uni-heidelberg.de>
-Subject: aic79xx oops
-Date: Fri, 9 Sep 2005 13:25:45 +0200
-Message-ID: <200509091325.45620.bernd.schubert@pci.uni-heidelberg.de>
-Reply-To: bernd-schubert@gmx.de
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 1/5] SCSI scanning and removal fixes
+Date: Fri, 9 Sep 2005 10:16:38 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0509091000480.4945-100000@iolanthe.rowland.org>
+References: <1126210542.4845.66.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.uni-heidelberg.de ([129.206.100.212]:43482 "EHLO
-	relay.uni-heidelberg.de") by vger.kernel.org with ESMTP
-	id S1030250AbVIILZr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 07:25:47 -0400
-Content-Disposition: inline
+Received: from iolanthe.rowland.org ([192.131.102.54]:13281 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S964902AbVIIOQl
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Sep 2005 10:16:41 -0400
+In-Reply-To: <1126210542.4845.66.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Hello,
+On Thu, 8 Sep 2005, James Bottomley wrote:
 
-this morning our server crashed without any log messages, nothing captu=
-red via=20
-serial cable and magic sysrqs also didn't work.
-Anyway during the reboot on oops of the aic79xx module occured, see bel=
-ow .
+> Yes, a state machine like I've shown can only be in one state at any
+> given time.  The problem is what happens if the error handler is running
+> when you try to remove the device.  We can reach in and try to stop it,
+> but under a state model we'd have to wait until the error handler put
+> the device back to running unless we allow a set of state transitions
+> that the error handler can go through in parallel with the removal
+> (which is the model I've shown above).
+> 
+> The idea of allowing the error handler to start up in cancel is that not
+> every device removal is a forced removal, so you want to permit the
+> shutdown commands (like sync cache) and consequent error handling on
+> those commands.
 
-This is a 2.6.11.12 kernel, patched with bluesmoke and the bio-clone fi=
-x.=20
-=46urthermore, the drbd module is loaded. You may find a dmesg, lsmod a=
-nd lspci=20
-information and the kernel config here:
+I see.  You must be making an unstated assumption, something along the
+lines of "If the error handler is running then the host is in a *RECOVERY
+state."  Given that, there definitely is a need for a separate 
+CANCEL_RECOVERY and DEL_RECOVERY.
 
-http://www.pci.uni-heidelberg.de/tc/usr/bernd/downloads/aic79xx-oops/
+> > As for 2), what do you mean?  In 2.6.13, scsi_device_set_state does not 
+> > change the state if the transition is illegal.
+> 
+> Yes, but we never act on the return value.  if the state is illegal, we
+> shouldn't be taking actions believing we're in that state, so we should
+> always be checking the returns.
 
+Hmmm, well looking through the patch you posted yesterday, there are a few 
+problems.  If the ->CANCEL transition fails, scsi_remove_host then tries 
+->CANCEL_RECOVERY.  But the failed transition still writes a error message 
+to the log, even though it's not really an error.
 
-Ooops:
+Also, you've got a race between scsi_remove_host doing ->CANCEL_RECOVERY
+and the error handler doing ->RUNNING.  If both happen at the same time,
+you can end up in the wrong state.  To make this work, the state
+transitions should only be made under protection of the host's spinlock.  
+And to avoid the error messages, the choice of next state should be made 
+depending on the current state (like, if the current state is RECOVERY 
+then go to CANCEL_RECOVERY, otherwise go to CANCEL).
 
-(none) login: ACPI: PCI interrupt 0000:02:06.0[A] -> GSI 24 (level, low=
-) ->=20
-IRQ 24
-ACPI: PCI interrupt 0000:02:06.1[B] -> GSI 25 (level, low) -> IRQ 25
-scsi4 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 1.3.11
-        <Adaptec AIC7902 Ultra320 SCSI adapter>
-        aic7902: Ultra320 Wide Channel A, SCSI Id=3D7, PCI-X 67-100Mhz,=
- 512 SCBs
+Alan Stern
 
-scsi4:A:0:0: DV failed to configure device.  Please file a bug report a=
-gainst=20
-this driver.
-(scsi4:A:0): 160.000MB/s transfers (80.000MHz DT, 16bit)
-  Vendor: transtec  Model: T5008             Rev: 0001
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-scsi4:A:0:0: Tagged Queuing enabled.  Depth 32
-SCSI device sdc: 4101521408 512-byte hdwr sectors (2099979 MB)
-SCSI device sdc: drive cache: write back
-SCSI device sdc: 4101521408 512-byte hdwr sectors (2099979 MB)
-SCSI device sdc: drive cache: write back
- sdc: sdc1 sdc2 sdc3 < sdc5 sdc6 sdc7 sdc8 >
-Attached scsi disk sdc at scsi4, channel 0, id 0, lun 0
-Attached scsi generic sg2 at scsi4, channel 0, id 0, lun 0,  type 0
-scsi: host 4 channel 0 id 0 lun 0x00000200080c0400 has a LUN larger tha=
-n=20
-currently supported.
-scsi: host 4 channel 0 id 0 lun1002486961 has a LUN larger than allowed=
- by the=20
-host adapter
-scsi: host 4 channel 0 id 0 lun 0x01000000407a27c0 has a LUN larger tha=
-n=20
-currently supported.
-scsi: host 4 channel 0 id 0 lun 0x007a27c0d05d27c0 has a LUN larger tha=
-n=20
-currently supported.
-scsi: host 4 channel 0 id 0 lun 0x305e27c0907b27c0 has a LUN larger tha=
-n=20
-currently supported.
-scsi: host 4 channel 0 id 0 lun 0xf08227c0b08d27c0 has a LUN larger tha=
-n=20
-currently supported.
-scsi: host 4 channel 0 id 0 lun 0x307827c0008527c0 has a LUN larger tha=
-n=20
-currently supported.
-scsi: host 4 channel 0 id 0 lun 0x00000000b06727c0 has a LUN larger tha=
-n=20
-currently supported.
-scsi: host 4 channel 0 id 0 lun 0x306727c0706727c0 has a LUN larger tha=
-n=20
-currently supported.
-  Vendor: transtec  Model: T5008             Rev: 0001
-  Type:   Direct-Access                      ANSI SCSI revision: 03
-Unable to handle kernel NULL pointer dereference at virtual address 000=
-00403
- printing eip:
-f8a4de8e
-*pde =3D 00000000
-Oops: 0000 [#1]
-SMP=20
-Modules linked in: aic79xx
-CPU:    0
-EIP:    0060:[<f8a4de8e>]    Not tainted VLI
-EFLAGS: 00010246   (2.6.11.12-tc2)=20
-EIP is at ahd_send_async+0xde/0x2a0 [aic79xx]
-eax: 0000000f   ebx: 00000042   ecx: f7f05d28   edx: 00000000
-esi: 00000400   edi: f7f74000   ebp: 00000000   esp: f7f05c64
-ds: 007b   es: 007b   ss: 0068
-Process modprobe (pid: 1081, threadinfo=3Df7f04000 task=3Df7ee1540)
-Stack: c0135aae 0006162f 00000000 00000282 00000000 f7f05c88 00000050 0=
-0000000=20
-       00000000 00000001 c01230a0 00000001 f7f05d00 c0107376 f7f05d00 c=
-03fb620=20
-       00000000 f7f05d0a ffffffff c038f3a0 20000000 f7323536 20000000 0=
-0000000=20
-Call Trace:
- [<c0135aae>] __do_IRQ+0x10e/0x160
- [<c01230a0>] do_timer+0xc0/0xd0
- [<c0107376>] timer_interrupt+0xb6/0x130
- [<c0135aae>] __do_IRQ+0x10e/0x160
- [<f8a2be35>] ahd_set_tags+0x55/0x70 [aic79xx]
- [<f8a4d107>] ahd_linux_device_queue_depth+0xa7/0xd0 [aic79xx]
- [<f8a4dc42>] ahd_linux_free_target+0x112/0x160 [aic79xx]
- [<f8a479d2>] ahd_linux_slave_configure+0x72/0xe0 [aic79xx]
- [<f8a47960>] ahd_linux_slave_configure+0x0/0xe0 [aic79xx]
- [<c02cb97a>] scsi_add_lun+0x2aa/0x300
- [<c02cbaa9>] scsi_probe_and_add_lun+0xd9/0x220
- [<c02cc090>] scsi_report_lun_scan+0x330/0x480
- [<c02cbac2>] scsi_probe_and_add_lun+0xf2/0x220
- [<c02cc3f2>] scsi_scan_target+0x102/0x130
- [<c02cc49a>] scsi_scan_channel+0x7a/0x90
- [<c02cc565>] scsi_scan_host_selected+0xb5/0xf0
- [<c02cc5cf>] scsi_scan_host+0x2f/0x40
- [<f8a497ae>] ahd_linux_register_host+0x21e/0x270 [aic79xx]
- [<c01916c8>] sysfs_add_file+0x58/0x80
- [<c019171e>] sysfs_create_file+0x2e/0x50
- [<c0247137>] pci_create_newid_file+0x27/0x30
- [<c024762e>] pci_register_driver+0x8e/0x90
- [<f8a4752c>] ahd_linux_detect+0x4c/0x70 [aic79xx]
- [<f8a6f00f>] ahd_linux_init+0xf/0x13 [aic79xx]
- [<c0132bc7>] sys_init_module+0x167/0x200
- [<c01027d3>] syscall_call+0x7/0xb
-Code: c7 44 24 20 00 00 00 00 80 fb 42 0f b6 87 41 1d 00 00 8d 50 08 0f=
- 44 c2=20
-8d 54 ed 00 01 d2 03 94 87 6c 18 00 00 8d b2 00 04 00 00 <0f> b6 56 03 =
-3a 56=20
-09 0f 84 2b 01 00 00 a1 28 d1 a6 f8 85 c0 0f=20
-
-
-
-Even though there was an oops, the aic79xx module and the card still se=
-em to=20
-work, we currently uncertain if we better should reboot again and/or tr=
-y to=20
-use a newer kernel or can leave the system as it is without another reb=
-oot.=20
-Of course, we would also like to know the reason for the oops. Any help=
- is=20
-appreciated.
-
-Thanks in advance,
-	Bernd
-
-
---=20
-Bernd Schubert
-Physikalisch Chemisches Institut / Theoretische Chemie
-Universit=E4t Heidelberg
-INF 229
-69120 Heidelberg
-e-mail: bernd.schubert@pci.uni-heidelberg.de
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
