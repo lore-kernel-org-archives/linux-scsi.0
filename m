@@ -1,136 +1,104 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [PATCH 2.6.13 3/20] aic94xx: aic94xx.h
-Date: Fri, 09 Sep 2005 15:32:36 -0400
-Message-ID: <4321E354.40604@adaptec.com>
+Subject: [PATCH 2.6.13 2/20] aic94xx: README
+Date: Fri, 09 Sep 2005 15:32:18 -0400
+Message-ID: <4321E342.4070509@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:59844 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1030332AbVIITcm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 15:32:42 -0400
+Received: from magic.adaptec.com ([216.52.22.17]:55236 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1030331AbVIITcY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 15:32:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
 
-diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi/aic94xx/aic94xx.h linux-2.6.13/drivers/scsi/aic94xx/aic94xx.h
---- linux-2.6.13-orig/drivers/scsi/aic94xx/aic94xx.h	1969-12-31 19:00:00.000000000 -0500
-+++ linux-2.6.13/drivers/scsi/aic94xx/aic94xx.h	2005-09-09 11:21:23.000000000 -0400
-@@ -0,0 +1,114 @@
-+/*
-+ * Aic94xx SAS/SATA driver header file.
-+ *
-+ * Copyright (C) 2005 Adaptec, Inc.  All rights reserved.
-+ * Copyright (C) 2005 Luben Tuikov <luben_tuikov@adaptec.com>
-+ *
-+ * This file is licensed under GPLv2.
-+ * 
-+ * This file is part of the aic94xx driver.
-+ *
-+ * The aic94xx driver is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation; version 2 of the
-+ * License.
-+ *
-+ * The aic94xx driver is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with the aic94xx driver; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ *
-+ * $Id: //depot/aic94xx/aic94xx.h#30 $
-+ */
+diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi/aic94xx/README linux-2.6.13/drivers/scsi/aic94xx/README
+--- linux-2.6.13-orig/drivers/scsi/aic94xx/README	1969-12-31 19:00:00.000000000 -0500
++++ linux-2.6.13/drivers/scsi/aic94xx/README	2005-09-09 11:21:23.000000000 -0400
+@@ -0,0 +1,82 @@
++$Id: //depot/aic94xx/readme.txt#5 $
 +
-+#ifndef _AIC94XX_H_
-+#define _AIC94XX_H_
++Copyright (C) 2005 Adaptec, Inc.  All rights reserved.
++Copyright (C) 2005 Luben Tuikov <luben_tuikov@adaptec.com>
 +
-+#include <linux/slab.h>
-+#include <linux/ctype.h>
-+#include <scsi/sas/sas_discover.h>
++LICENSE AGREEMENT
++-----------------
 +
-+#define ASD_DRIVER_NAME		"aic94xx"
-+#define ASD_DRIVER_DESCRIPTION	"Adaptec aic94xx SAS/SATA driver"
++This file is licensed under GPLv2.
++    
++This file is part of the aic94xx driver.
 +
-+#define asd_printk(fmt, ...)	printk(KERN_NOTICE ASD_DRIVER_NAME ": " fmt, ## __VA_ARGS__)
++The aic94xx driver is free software; you can redistribute it and/or
++modify it under the terms of the GNU General Public
++License as published by the Free Software Foundation;
++version 2 of the License.
 +
-+#ifdef ASD_ENTER_EXIT
-+#define ENTER  printk(KERN_NOTICE "%s: ENTER %s\n", ASD_DRIVER_NAME, \
-+		__FUNCTION__)
-+#define EXIT   printk(KERN_NOTICE "%s: --EXIT %s\n", ASD_DRIVER_NAME, \
-+		__FUNCTION__)
-+#else
-+#define ENTER
-+#define EXIT
-+#endif
++The aic94xx driver is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
 +
-+#ifdef ASD_DEBUG
-+#define ASD_DPRINTK asd_printk
-+#else
-+#define ASD_DPRINTK(fmt, ...)
-+#endif
++You should have received a copy of the GNU General Public License
++along with Aic94xx Driver; if not, write to the Free Software
++Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 +
-+/* 2*ITNL timeout + 1 second */
-+#define AIC94XX_SCB_TIMEOUT  (5*HZ)
++Introduction
++------------
 +
-+extern kmem_cache_t *asd_dma_token_cache;
-+extern kmem_cache_t *asd_ascb_cache;
-+extern char sas_addr_str[2*SAS_ADDR_SIZE + 1];
++The aic94xx driver supports Adaptec SAS/SATA Host Adapters
++with AIC-94xx chips.  Features include 32/64 bit PCI/PCI-X
++interface supporting up to 66 MHz PCI 2.3 and up to 133 MHz
++PCI-X 2.0 operation.  It supports MSI or PCI interrupt pin.
++      * AIC-9405W is a  4 phy host adapter, 4 port maximum.
++      * AIC-9410W is an 8 phy host adapter, 8 port maximum.
 +
-+static inline void asd_stringify_sas_addr(char *p, const u8 *sas_addr)
-+{
-+	int i;
-+	for (i = 0; i < SAS_ADDR_SIZE; i++, p += 2)
-+		snprintf(p, 3, "%02X", sas_addr[i]);
-+	*p = '\0';
-+}
++The driver supports Revision B0 or later of the controller.
 +
-+static inline void asd_destringify_sas_addr(u8 *sas_addr, const char *p)
-+{
-+	int i;
-+	for (i = 0; i < SAS_ADDR_SIZE; i++) {
-+		u8 h, l;
-+		if (!*p)
-+			break;
-+		h = isdigit(*p) ? *p-'0' : *p-'A'+10;
-+		p++;
-+		l = isdigit(*p) ? *p-'0' : *p-'A'+10;
-+		p++;
-+		sas_addr[i] = (h<<4) | l;
-+	}
-+}
 +
-+struct asd_ha_struct;
-+struct asd_ascb;
++Hot plugging
++------------
 +
-+int  asd_read_ocm(struct asd_ha_struct *asd_ha);
-+int  asd_read_flash(struct asd_ha_struct *asd_ha);
++Hot plugging is supported, it works and has been tested.
 +
-+int  asd_dev_found(struct domain_device *dev);
-+void asd_dev_gone(struct domain_device *dev);
 +
-+void asd_invalidate_edb(struct asd_ascb *ascb, int edb_id);
++Dynamic PCI IDs
++---------------
 +
-+int  asd_execute_task(struct sas_task *, int num, unsigned long gfp_flags);
++To make the driver probe and attach to a new device it
++doesn't quite recognize, you can dynamically add to the PCI
++ID table of the driver as follows:
 +
-+/* ---------- TMFs ---------- */
-+int  asd_abort_task(struct sas_task *);
-+int  asd_abort_task_set(struct domain_device *, u8 *lun);
-+int  asd_clear_aca(struct domain_device *, u8 *lun);
-+int  asd_clear_task_set(struct domain_device *, u8 *lun);
-+int  asd_lu_reset(struct domain_device *, u8 *lun);
-+int  asd_query_task(struct sas_task *);
++echo "vendor device" > /sys/bus/pci/drivers/aic94xx/new_id
 +
-+/* ---------- Adapter and Port management ---------- */
-+int  asd_clear_nexus_port(struct sas_port *port);
-+int  asd_clear_nexus_ha(struct sas_ha_struct *sas_ha);
++For the complete details see Documentation/pci.txt file.
 +
-+/* ---------- Phy Management ---------- */
-+int  asd_control_phy(struct sas_phy *phy, enum phy_func func);
 +
-+#endif
++Not a HostRAID driver
++---------------------
++
++This driver is _not_ a HostRAID driver, it does _not_
++provide RAID capabilities.  Although RAID could be built on
++top of the devices exported by this driver.
++
++If you would like this driver to attach to a HostRAID
++enabled controller*, set the "attach_HostRAID" module
++parameter to "1" either at module load time or through sysfs.
++
++Kernel command line; append this:
++
++       aic94xx.attach_HostRAID=1
++
++Module loading, append this to your modprobe/insmod:
++
++       attach_HostRAID=1
++
++Or through sysfs, if the driver has already been loaded:
++
++echo "1" > /sys/module/aic94xx/parameters/attach_HostRAID
++
++* This of course could COMPLETELY destroy your HostRAID
++  array, and is NOT recommended.
 
