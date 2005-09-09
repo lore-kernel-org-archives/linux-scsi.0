@@ -1,23 +1,27 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [PATCH 2.6.13 4/14] sas-class: sas_common.c Common functions
-Date: Fri, 09 Sep 2005 15:39:52 -0400
-Message-ID: <4321E508.3080306@adaptec.com>
+Subject: [PATCH 2.6.13 7/14] sas-class: sas_dump.h Dumping utility header
+ file
+Date: Fri, 09 Sep 2005 15:40:39 -0400
+Message-ID: <4321E537.90505@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030380AbVIITkT@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:3271 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1030389AbVIITku (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 15:40:50 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
 
-diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi/sas-class/sas_common.c linux-2.6.13/drivers/scsi/sas-class/sas_common.c
---- linux-2.6.13-orig/drivers/scsi/sas-class/sas_common.c	1969-12-31 19:00:00.000000000 -0500
-+++ linux-2.6.13/drivers/scsi/sas-class/sas_common.c	2005-09-09 11:14:29.000000000 -0400
-@@ -0,0 +1,115 @@
+diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi/sas-class/sas_dump.h linux-2.6.13/drivers/scsi/sas-class/sas_dump.h
+--- linux-2.6.13-orig/drivers/scsi/sas-class/sas_dump.h	1969-12-31 19:00:00.000000000 -0500
++++ linux-2.6.13/drivers/scsi/sas-class/sas_dump.h	2005-09-09 11:14:51.000000000 -0400
+@@ -0,0 +1,43 @@
 +/*
-+ * Serial Attached SCSI (SAS) class common functions
++ * Serial Attached SCSI (SAS) Dump/Debugging routines header file
 + *
 + * Copyright (C) 2005 Adaptec, Inc.  All rights reserved.
 + * Copyright (C) 2005 Luben Tuikov <luben_tuikov@adaptec.com>
@@ -36,98 +40,28 @@ diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi
 + *
 + * You should have received a copy of the GNU General Public License
 + * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
-+ * USA
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 + *
-+ * $Id: //depot/sas-class/sas_common.c#8 $
++ * $Id: //depot/sas-class/sas_dump.h#2 $
 + */
 +
-+#include <scsi/sas/sas_class.h>
 +#include "sas_internal.h"
 +
-+int sas_show_class(enum sas_class class, char *buf)
-+{
-+	static const char *class_str[] = {
-+		[SAS] = "SAS",
-+		[EXPANDER] = "EXPANDER",
-+	};
-+	return sprintf(buf, "%s\n", class_str[class]);
-+}
++#ifdef SAS_DEBUG
 +
-+int sas_show_proto(enum sas_proto proto, char *page)
-+{
-+	static const char *proto_str[] = {
-+		[SATA_PROTO] = "SATA",
-+		[SAS_PROTO_SMP] = "SMP",
-+		[SAS_PROTO_STP] = "STP",
-+		[SAS_PROTO_SSP] = "SSP",
-+	};
-+	int  v;
-+	char *buf = page;
++void sas_dprint_porte(int phyid, enum port_event pe);
++void sas_dprint_phye(int phyid, enum phy_event pe);
++void sas_dprint_hae(struct sas_ha_struct *sas_ha, enum ha_event he);
++void sas_dump_port(struct sas_port *port);
 +
-+	for (v = 1; proto != 0 && v <= SAS_PROTO_SSP; v <<= 1) {
-+		if (v & proto) {
-+			buf += sprintf(buf, "%s", proto_str[v]);
-+		
-+			if (proto & ~((v<<1)-1))
-+				buf += sprintf(buf, "|");
-+			else
-+				buf += sprintf(buf, "\n");
-+		}
-+	}
-+	return buf-page;
-+}
++#else /* SAS_DEBUG */
 +
-+int sas_show_linkrate(enum sas_phy_linkrate linkrate, char *page)
-+{
-+	static const char *phy_linkrate_str[] = {
-+		[PHY_LINKRATE_NONE] = "",
-+		[PHY_DISABLED] = "disabled",
-+		[PHY_RESET_PROBLEM] = "phy reset problem",
-+		[PHY_SPINUP_HOLD] = "phy spinup hold",
-+		[PHY_PORT_SELECTOR] = "phy port selector",
-+		[PHY_LINKRATE_1_5] = "1,5 GB/s",
-+		[PHY_LINKRATE_3]  = "3,0 GB/s",
-+		[PHY_LINKRATE_6] = "6,0 GB/s",
-+	};
-+	return sprintf(page, "%s\n", phy_linkrate_str[linkrate]);
-+}
++static inline void sas_dprint_porte(int phyid, enum port_event pe) { }
++static inline void sas_dprint_phye(int phyid, enum phy_event pe) { }
++static inline void sas_dprint_hae(struct sas_ha_struct *sas_ha,
++				  enum ha_event he) { }
++static inline void sas_dump_port(struct sas_port *port) { }
 +
-+int sas_show_oob_mode(enum sas_oob_mode oob_mode, char *buf)
-+{
-+	switch (oob_mode) {
-+	case OOB_NOT_CONNECTED:
-+		return sprintf(buf, "%s", "");
-+		break;
-+	case SATA_OOB_MODE:
-+		return sprintf(buf, "%s\n", "SATA");
-+		break;
-+	case SAS_OOB_MODE:
-+		return sprintf(buf, "%s\n", "SAS");
-+		break;
-+	}
-+	return 0;
-+}
-+
-+void sas_hash_addr(u8 *hashed, const u8 *sas_addr)
-+{
-+	const u32 poly = 0x00DB2777;
-+	u32 	r = 0;
-+	int 	i;
-+
-+	for (i = 0; i < 8; i++) {
-+		int b;
-+		for (b = 7; b >= 0; b--) {
-+			r <<= 1;
-+			if ((1 << b) & sas_addr[i]) {
-+				if (!(r & 0x01000000))
-+					r ^= poly;
-+			} else if (r & 0x01000000)
-+				r ^= poly;
-+		}
-+	}
-+
-+	hashed[0] = (r >> 16) & 0xFF;
-+	hashed[1] = (r >> 8) & 0xFF ;
-+	hashed[2] = r & 0xFF;
-+}
++#endif /* SAS_DEBUG */
+
+
