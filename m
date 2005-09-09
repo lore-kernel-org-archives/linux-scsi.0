@@ -1,30 +1,30 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: [PATCH 2.6.13 1/20] aic94xx: Makefile
-Date: Fri, 09 Sep 2005 15:32:05 -0400
-Message-ID: <4321E335.5010805@adaptec.com>
+Subject: [PATCH 2.6.13 0/20] aic94xx: Kconfig
+Date: Fri, 09 Sep 2005 15:31:46 -0400
+Message-ID: <4321E322.2020609@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030328AbVIITcP@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030324AbVIITbx@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
 
-diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi/aic94xx/Makefile linux-2.6.13/drivers/scsi/aic94xx/Makefile
---- linux-2.6.13-orig/drivers/scsi/aic94xx/Makefile	1969-12-31 19:00:00.000000000 -0500
-+++ linux-2.6.13/drivers/scsi/aic94xx/Makefile	2005-09-09 11:23:01.000000000 -0400
-@@ -0,0 +1,46 @@
+diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi/aic94xx/Kconfig linux-2.6.13/drivers/scsi/aic94xx/Kconfig
+--- linux-2.6.13-orig/drivers/scsi/aic94xx/Kconfig	1969-12-31 19:00:00.000000000 -0500
++++ linux-2.6.13/drivers/scsi/aic94xx/Kconfig	2005-09-09 11:55:32.000000000 -0400
+@@ -0,0 +1,41 @@
 +#
-+# Makefile for Adaptec aic94xx SAS/SATA driver.
++# Kernel configuration file for aic94xx SAS/SATA driver.
 +#
-+# Copyright (C) 2005 Adaptec, Inc.  All rights reserved.
-+# Copyright (C) 2005 Luben Tuikov <luben_tuikov@adaptec.com>
++# Copyright (c) 2005 Adaptec, Inc.  All rights reserved.
++# Copyright (c) 2005 Luben Tuikov <luben_tuikov@adaptec.com>
 +#
 +# This file is licensed under GPLv2.
 +# 
-+# This file is part of the the aic94xx driver.
++# This file is part of the aic94xx driver.
 +#
 +# The aic94xx driver is free software; you can redistribute it and/or
 +# modify it under the terms of the GNU General Public License as
@@ -37,28 +37,23 @@ diff -X linux-2.6.13/Documentation/dontdiff -Naur linux-2.6.13-orig/drivers/scsi
 +# General Public License for more details.
 +#
 +# You should have received a copy of the GNU General Public License
-+# along with the aic94xx driver; if not, write to the Free Software
++# along with Aic94xx Driver; if not, write to the Free Software
 +# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 +#
-+# $Id: //depot/aic94xx/Makefile#34 $
++# $Id: //depot/aic94xx/Kconfig#6 $
 +#
 +
-+CHECK = sparse -Wbitwise
++config SCSI_AIC94XX
++	tristate "Adaptec AIC94xx SAS/SATA support"
++	depends on PCI && SAS_CLASS
++	help
++		This driver supports Adaptec's SAS/SATA 3Gb/s 64 bit PCI-X
++		AIC94xx chip based host adapters.
 +
-+ifeq ($(CONFIG_AIC94XX_DEBUG),y)
-+	EXTRA_CFLAGS += -DASD_DEBUG -DASD_ENTER_EXIT -g
-+endif
-+
-+clean-files += *~
-+
-+obj-$(CONFIG_SCSI_AIC94XX) += aic94xx.o
-+aic94xx-y += aic94xx_init.o \
-+	     aic94xx_hwi.o  \
-+	     aic94xx_reg.o  \
-+	     aic94xx_sds.o  \
-+	     aic94xx_seq.o  \
-+	     aic94xx_dump.o \
-+	     aic94xx_scb.o  \
-+	     aic94xx_dev.o  \
-+	     aic94xx_tmf.o  \
-+	     aic94xx_task.o
++config AIC94XX_DEBUG
++	bool "Compile in debug mode"
++	default y
++	depends on SCSI_AIC94XX
++	help
++		Compiles the aic94xx driver in debug mode.  In debug mode,
++		the driver prints some messages to the console.
