@@ -1,85 +1,140 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH 3/8] cciss: new disk register/deregister routines
-Date: Fri, 9 Sep 2005 18:59:25 -0700
-Message-ID: <20050909185925.2ae69954.akpm@osdl.org>
-References: <20050909220435.GC4616@beardog.cca.cpqcorp.net>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process (end devices)
+Date: Fri, 9 Sep 2005 19:44:54 -0700 (PDT)
+Message-ID: <20050910024454.20602.qmail@web51613.mail.yahoo.com>
+References: <1126308304.4799.45.camel@mulgrave>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:26498 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1030514AbVIJCAD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 22:00:03 -0400
-In-Reply-To: <20050909220435.GC4616@beardog.cca.cpqcorp.net>
+Received: from web51613.mail.yahoo.com ([68.142.224.86]:43680 "HELO
+	web51613.mail.yahoo.com") by vger.kernel.org with SMTP
+	id S1750842AbVIJCpF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Sep 2005 22:45:05 -0400
+In-Reply-To: <1126308304.4799.45.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mikem@beardog.cca.cpqcorp.ne
-Cc: mike.miller@hp.com, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-mike.miller@hp.com wrote:
->
-> Patch 3 of 8
-> This patch removes a couple of functions dealing  with configuration and
-> replaces them with new functions. This implementation fixes some bugs
-> associated with the ACUXE. It also allows a logical volume to be removed
-> from the middle without deleting all volumes behind it.
-> If a user has 5 logical volumes and decides he wants to reconfigure volume
-> number 3, he can now do that without removing volumes 4 & 5 first. This
-> code has been tested in our labs against all application software.
-> Please consider this for inclusion.
+--- James Bottomley <James.Bottomley@SteelEye.com> wrote:
+
+> On Fri, 2005-09-09 at 15:40 -0400, Luben Tuikov wrote:
+> > +/**
+> > + * sas_do_lu_discovery -- Discover LUs of a SCSI device
+> > + * @dev: pointer to a domain device of interest
 > 
-> ...
->
-> +static void cciss_update_drive_info(int ctlr, int drv_index)
-> +  {
-> +	ctlr_info_t *h = hba[ctlr];
-> +	struct gendisk *disk;
-> +	ReadCapdata_struct *size_buff = NULL;
-> +	InquiryData_struct *inq_buff = NULL;
-> +	unsigned int block_size;
-> +	unsigned int total_size;
-> +	unsigned long flags = 0;
-> +	int ret = 0;
-> +
-> +	/* if the disk already exists then deregister it before proceeding*/
-> +	if (h->drv[drv_index].raid_level != -1){
-> +		spin_lock_irqsave(CCISS_LOCK(h->ctlr), flags);
-> +		h->drv[drv_index].busy_configuring = 1;
-> +		spin_unlock_irqrestore(CCISS_LOCK(h->ctlr), flags);
+> Aside from all the other problems,
 
-I always get worried when I see a spinlock around a simple assignment like
-this - it often doesn't make a lot of sense and can indicate that
-something's wrong.
+"Aside from all the other problems"?
 
-> ...
-> +
-> +	/* Get information about the disk and modify the driver sturcture */
-> +	size_buff = kmalloc(sizeof( ReadCapdata_struct), GFP_KERNEL);
-> +        if (size_buff == NULL)
-> +		goto mem_msg;
-> +	inq_buff = kmalloc(sizeof( InquiryData_struct), GFP_KERNEL);
-> +       	if (inq_buff == NULL)
-> +		goto mem_msg;
+WTF?
 
-Indenting went wrong.
+This is very rude James.  You have to _specific_ as opposed to
+spreading FUD like this.
 
-urgh, maybe it just looks wrong because someone's being inserting spaces
-instead of tabs.
+> this one completely duplicates the
+> mid-layer infrastructure for handling devices with Logical Units.
 
-> +		ld_buff = kmalloc(sizeof(ReportLunData_struct), GFP_KERNEL);
-> +		if (ld_buff == NULL)
-> +			goto mem_msg;
-> +		memset(ld_buff, 0, sizeof(ReportLunData_struct));
+No, it does *not*.  James, you have _stop_ spreading FUD, relying
+that other people have not read the SCSI Core code.
 
-We have kzalloc() now.
+See here:
+    SCSI Core has *no representation* of a SCSI Device with a
+SCSI Target Port.
 
->  	/* make sure logical volume is NOT is use */
-> -	if( drv->usage_count > 1) {
-> -		spin_unlock_irqrestore(CCISS_LOCK(ctlr), flags);
-> +	if(clear_all || (h->gendisk[0] == disk)) {
-> +                if (drv->usage_count > 1)
->                  return -EBUSY;
+I've _clearly_ outlined that in the comments of the code,
+which you _conveniently_ did _not_ cut and paste here.
 
-Again, it looks wrong but is probably OK due to broken tab key.
+I've been asking for a generic SCSI Target representation for
+the last 5 years, which you conventiently skip to mention.
+Or shall we search linux-scsi archives?
 
-Do you want the code to go in like this or do you want to clean it up?
+As to duplication: NOT!
+
+Why?
+
+Look at scsi_scan_target() declaration:
+
+void scsi_scan_target(struct device *parent, unsigned int channel,
+		      unsigned int id, unsigned int lun, int rescan);
+
+Channel, id, lun, rescan?  WTF?
+
+Do you see any of this in the proprely implemented LU discovery
+code in the SAS discovery code I submitted?
+
+> > + * Discover logical units present in the SCSI device.  I'd like this
+> > + * to be moved to SCSI Core, but SCSI Core has no concept of a "SCSI
+> > + * device with a SCSI Target port".  A SCSI device with a SCSI Target
+> > + * port is a device which the _transport_ found, but other than that,
+> > + * the transport has little or _no_ knowledge about the device.
+> > + * Ideally, a LLDD would register a "SCSI device with a SCSI Target
+> > + * port" with SCSI Core and then SCSI Core would do LU discovery of
+> > + * that device.
+> 
+> That would be what scsi_scan_target() actually does.
+
+No, it does *not* do that.
+
+STOP SPREADING FUD!
+
+Let everyone take a look at scsi_scan_target() -- it fails in its
+interface.  It has no concept of "SCSI device with Target port".
+
+I asked for pure SCSI device with Target port implementation of
+scsi_target and _you_ rejected it about 4 years ago.  Shall I search
+for this message in the linux-scsi archives?
+
+> > + * REPORT LUNS is mandatory.  If a device doesn't support it,
+> > + * it is broken and you should return it.  Nevertheless, we
+> > + * assume (optimistically) that the link hasn't been severed and
+> > + * that maybe we can get to the device anyhow.
+> 
+> That's a surprisingly optimistic statement from someone who claims to
+> have worked in SCSI for so long.  We have a huge list of heuristics for
+
+Ouch!  Getting into the personal arena now, are we?
+
+James, how old are the blacklisted devices you talk of?
+
+How old are SAS devices? 
+
+> devices that violate the standards in one way or another.  We already
+> have a flag for a SCSI3 device that doesn't respond correctly to
+> REPORT_LUNS ... and we have a few other reports of potentially more
+> suspect devices.
+
+Are those devices SAS?
+
+Again, stop spreading FUD and talking as you know what you're talking about.
+
+"few other reports of potentially more suspect devices" -- is such
+a broad and vague statement that it isn't worth much.
+
+First are those SAS devices.
+
+Second, SAS devices being very recent have their firmware written
+to latest specs, and advertised as SPC-3 and SAM-3.
+
+> Now, if you did this properly and used the mid-layer infrastructure you
+> wouldn't have to worry about any of this.
+> 
+> > +static int sas_do_lu_discovery(struct domain_device *dev)
+> 
+> Please just handle targets ... scanning beyond targets is best handled
+> in generic code.
+
+I agree.
+
+But that generic code you talk about is complete *crap* and needs
+rewriting.  When that generic code, can handle "SCSI device with
+a Target port" then I'd love to off load that to SCSI Core.
+
+In fact initially I _really_ tried to offload that to SCSI Core,
+but it didn't quite work, then I wrote LU discovery.  Just run it on
+real hardware.
+
+    Luben
+
