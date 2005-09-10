@@ -1,138 +1,110 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] set error value when failing block pc commands in
-	prep_fn
-Date: Sat, 10 Sep 2005 16:45:35 -0500
-Message-ID: <1126388735.4656.3.camel@max>
-References: <1126378749.2696.4.camel@max>
-	 <1126382225.4813.63.camel@mulgrave>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: scsi device refcounting in sbp2 (was Re: [PATCH 3/8] aacraid:
+	handle AIF hotplug events)
+Date: Sat, 10 Sep 2005 17:49:45 -0500
+Message-ID: <1126392585.4813.79.camel@mulgrave>
+References: <200509102116.j8ALGqt8011874@einhorn.in-berlin.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:48561 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932331AbVIJVpk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Sep 2005 17:45:40 -0400
-In-Reply-To: <1126382225.4813.63.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-admin@lists.sourceforge.net>
+In-Reply-To: <200509102116.j8ALGqt8011874@einhorn.in-berlin.de>
+Sender: linux1394-devel-admin@lists.sourceforge.net
+Errors-To: linux1394-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux1394-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>, Ben Collins <bcollins@debian.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sat, 2005-09-10 at 14:57 -0500, James Bottomley wrote:
-> On Sat, 2005-09-10 at 13:59 -0500, Mike Christie wrote:
-> > This patch is updated against scsi-rc-fixes which has
-> > Alan's patch that fixes the places where we did not set
-> > a error value in the request_fn.
-> > 
-> > But when we kill a block pc request in the prep function
-> > the  errors value is still not getting set. And if scsi_init_io
-> > returned BLKPREP_DEFER we missed the blk_plug_device code so
-> > this patch just has it go to the defer label in that case.
-> > 
-> > Patch was made against scsi-rc-fixes.
+On Sat, 2005-09-10 at 23:16 +0200, Stefan Richter wrote:
+> I was just trying to adapt that fix and stumbled upon potential problems
+> of my code. Two questions:
 > 
-> Is there a reason we shouldn't be setting the error in all cases?  I
+> 1. Is the following sequence safe?
+> [connect to device]
+> 	sdev = __scsi_add_device();
+> 	scsi_device_put(sdev);
+> 	store sdev in sbp2's private data for later use
+> [sbp2 .remove hook]
+> 	scsi_remove_device(sdev);
 
-I was not sure. __end_that_request_first() clears the errors value for
-non block pc commands so it does not end up doing anything for normal
-requests and seems safe.
+not really ... you have an undeclared reference to sdev.  If someone
+removed it outside of the driver (using one of the remove APIs) then
+you'd be left with a stale pointer.
 
-> certainly can't think of one, in which case just set it globally.
-> There's also a return BLKPREP_DEFER on line 1191:
+
+> 2. Is this safe?
+> [connect to device]
+> 	sdev = __scsi_add_device();
+> 	scsi_device_put(sdev);
+> [sbp2 .remove hook]
+> 	scsi_remove_host(shost);
+> I ask because scsi_remove_host will implicitly remove the device too.
 > 
-> 	if(unlikely(specials_only) && !(req->flags & REQ_SPECIAL)) {
-> 		if(specials_only == SDEV_QUIESCE ||
-> 				specials_only == SDEV_BLOCK)
-> 			return BLKPREP_DEFER;
-> 
-> That needs to become a goto defer; for the same reasons as outlined
-> above.
+> BTW, the following won't work:
+> [connect to device]
+> 	sdev = __scsi_add_device();
+> 	store sdev for later use
+> [sbp2 .remove hook]
+> 	scsi_remove_device(sdev);
+> 	scsi_device_put(sdev);
+> That way, "modprobe -r sbp2" would fail because sbp2 is "in use" until
+> scsi_device_put.
 
-ok here is a patch with both fixes you requested.
+well, you could do this
 
-Signed-Off-By: Mike Christie <michaelc@cs.wisc.edu>
+[connect to device]
+	sdev = __scsi_add_device();
+	get_device(&sdev->sdev_gendev);
+	scsi_device_put(sdev);
+	store sdev for later use
+[sbp2 .remove hook]
+	scsi_remove_device(sdev);
+	put_device(&sdev->sdev_gendev);
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1146,7 +1146,7 @@ static int scsi_prep_fn(struct request_q
- 	if (unlikely(!scsi_device_online(sdev))) {
- 		printk(KERN_ERR "scsi%d (%d:%d): rejecting I/O to offline device\n",
- 		       sdev->host->host_no, sdev->id, sdev->lun);
--		return BLKPREP_KILL;
-+		goto kill;
- 	}
- 	if (unlikely(sdev->sdev_state != SDEV_RUNNING)) {
- 		/* OK, we're not in a running state don't prep
-@@ -1156,7 +1156,7 @@ static int scsi_prep_fn(struct request_q
- 			 * at all allowed down */
- 			printk(KERN_ERR "scsi%d (%d:%d): rejecting I/O to dead device\n",
- 			       sdev->host->host_no, sdev->id, sdev->lun);
--			return BLKPREP_KILL;
-+			goto kill;
- 		}
- 		/* OK, we only allow special commands (i.e. not
- 		 * user initiated ones */
-@@ -1188,11 +1188,11 @@ static int scsi_prep_fn(struct request_q
- 		if(unlikely(specials_only) && !(req->flags & REQ_SPECIAL)) {
- 			if(specials_only == SDEV_QUIESCE ||
- 					specials_only == SDEV_BLOCK)
--				return BLKPREP_DEFER;
-+				goto defer;
- 			
- 			printk(KERN_ERR "scsi%d (%d:%d): rejecting I/O to device being removed\n",
- 			       sdev->host->host_no, sdev->id, sdev->lun);
--			return BLKPREP_KILL;
-+			goto kill;
- 		}
- 			
- 			
-@@ -1210,7 +1210,7 @@ static int scsi_prep_fn(struct request_q
- 		cmd->tag = req->tag;
- 	} else {
- 		blk_dump_rq_flags(req, "SCSI bad req");
--		return BLKPREP_KILL;
-+		goto kill;
- 	}
- 	
- 	/* note the overloading of req->special.  When the tag
-@@ -1248,8 +1248,13 @@ static int scsi_prep_fn(struct request_q
- 		 * required).
- 		 */
- 		ret = scsi_init_io(cmd);
--		if (ret)	/* BLKPREP_KILL return also releases the command */
--			return ret;
-+		switch(ret) {
-+		case BLKPREP_KILL:
-+			/* BLKPREP_KILL return also releases the command */
-+			goto kill;
-+		case BLKPREP_DEFER:
-+			goto defer;
-+		}
- 		
- 		/*
- 		 * Initialize the actual SCSI command for this request.
-@@ -1259,7 +1264,7 @@ static int scsi_prep_fn(struct request_q
- 			if (unlikely(!drv->init_command(cmd))) {
- 				scsi_release_buffers(cmd);
- 				scsi_put_command(cmd);
--				return BLKPREP_KILL;
-+				goto kill;
- 			}
- 		} else {
- 			memcpy(cmd->cmnd, req->cmd, sizeof(cmd->cmnd));
-@@ -1290,6 +1295,9 @@ static int scsi_prep_fn(struct request_q
- 	if (sdev->device_busy == 0)
- 		blk_plug_device(q);
- 	return BLKPREP_DEFER;
-+ kill:
-+	req->errors = DID_NO_CONNECT << 16;
-+	return BLKPREP_KILL;
- }
- 
- /*
+But that would hold the device for the entire lifetime of your module,
+which I think, isn't really what you want.  Any user requested removal
+would remove the visibility of the device but wouldn't actually destroy
+it (so the next add would get into difficulty).  I suspect what you want
+to do is something like this:
+
+[connect to device]
+	scsi_add_device();
+	store sdev parameters (id and lun) for later use
+[sbp2 .remove hook]
+	spin_lock_irqsave(host_lock);
+	sdev = __scsi_lookup_device(shost, c, id, lun);
+	spin_unlock_irqsave(host_lock);
+	if (sdev)
+		scsi_remove_device(sdev);
+
+which will behave correctly if the user removes the device;  It's a bit
+inelegant, but it should be the minimum code change.
+
+A better method would be to use the slave_alloc/slave_destroy hooks to
+attach your data to that of the device.  You know that if slave_destroy
+hasn't been called on the sdev, then it must be valid ... and you also
+know that the user has requested an ejection if you get a slave_destroy
+() call on it.
+
+James
 
 
 
 
+
+
+
+
+
+-------------------------------------------------------
+SF.Net email is Sponsored by the Better Software Conference & EXPO
+September 19-22, 2005 * San Francisco, CA * Development Lifecycle Practices
+Agile & Plan-Driven Development * Managing Projects & Teams * Testing & QA
+Security * Process Improvement & Measurement * http://www.sqe.com/bsce5sf
