@@ -1,48 +1,34 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 3/8] aacraid: handle AIF hotplug events
-Date: Sat, 10 Sep 2005 12:50:50 -0500
-Message-ID: <1126374650.4813.56.camel@mulgrave>
-References: <1126212613.7479.20.camel@markh1.pdx.osdl.net>
-	 <1126370295.4813.49.camel@mulgrave>  <4323197D.7070401@s5r6.in-berlin.de>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] Alter the scsi_add_device() API to conform to what users
+ expect
+Date: Sat, 10 Sep 2005 20:24:19 +0200
+Message-ID: <432324D3.2040208@s5r6.in-berlin.de>
+References: <1126374249.4813.54.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:52403 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932087AbVIJRuz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Sep 2005 13:50:55 -0400
-In-Reply-To: <4323197D.7070401@s5r6.in-berlin.de>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:24045 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S932284AbVIJSYk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Sep 2005 14:24:40 -0400
+In-Reply-To: <1126374249.4813.54.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Haverkamp <markh@osdl.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>, Ben Collins <bcollins@debian.org>
+To: linux1394-devel@lists.sourceforge.net
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sat, 2005-09-10 at 19:35 +0200, Stefan Richter wrote:
-> James Bottomley wrote:
-> > scsi_add_device() returns an sdev on
-> > success with the refcount bumped up for you.  If you don't do a put,
-> > you'll be stuck with a device you can't get rid of.
-> > 
-> > However, all other users of scsi_add_device() make the same mistake ...
-> 
-> Sbp2 was fixed recently, thanks to your advice. (Although the fix did 
-> not make it into Linus' tree yet.)
+James Bottomley wrote:
+...
+> -	struct scsi_device *sdev;
+> +	int error;
+...
 
-Yes, I forgot about that, we will eventually have one correct user ;-)
-
-> > I'll apply this patch and fix the API to return zero or error and not
-> > bump the sdev refcount.
-> 
-> If you will do this, the now correct scsi_device_put() will become not 
-> only incorrect but even dangerous, won't it?
-
-I've cc'd you on the patch (and it fixes sbp2 as it currently stands in
-the Linus tree, but it would conflict with the fix you have pending).
-It basically makes scsi_add_device return an int rather than a device
-pointer, so the compiler will now flag if something actually tries to
-use the return as a pointer.
-
-James
-
-
+Side note: The most recent sbp2 at svn.linux1394.org (which is not in 
+Linus' tree yet and probably also not in -mm) needs a different approach 
+because the sdev is required in sbp2's .remove hook later. I will submit 
+an according update to linux1394-devel when the time is rife.
+-- 
+Stefan Richter
+-=====-=-=-= =--= -=-=-
+http://arcgraph.de/sr/
