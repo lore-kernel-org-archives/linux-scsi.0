@@ -1,73 +1,85 @@
 From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Fw: legacy megaraid driver bug in mm-series
-Date: Fri, 9 Sep 2005 16:58:17 -0700
-Message-ID: <20050909165817.1a8ad251.akpm@osdl.org>
-References: <20050907025258.35100c34.akpm@osdl.org>
-	<20050908143547.GA9741@infradead.org>
+Subject: Re: [PATCH 3/8] cciss: new disk register/deregister routines
+Date: Fri, 9 Sep 2005 18:59:25 -0700
+Message-ID: <20050909185925.2ae69954.akpm@osdl.org>
+References: <20050909220435.GC4616@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:57047 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1030988AbVIIX6X (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 19:58:23 -0400
-In-Reply-To: <20050908143547.GA9741@infradead.org>
+Received: from smtp.osdl.org ([65.172.181.4]:26498 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1030514AbVIJCAD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2005 22:00:03 -0400
+In-Reply-To: <20050909220435.GC4616@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, ojbyer@usa.net
+To: mikem@beardog.cca.cpqcorp.ne
+Cc: mike.miller@hp.com, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Christoph Hellwig <hch@infradead.org> wrote:
+mike.miller@hp.com wrote:
 >
-> On Wed, Sep 07, 2005 at 02:52:58AM -0700, Andrew Morton wrote:
-> > 
-> > 
-> > Begin forwarded message:
+> Patch 3 of 8
+> This patch removes a couple of functions dealing  with configuration and
+> replaces them with new functions. This implementation fixes some bugs
+> associated with the ACUXE. It also allows a logical volume to be removed
+> from the middle without deleting all volumes behind it.
+> If a user has 5 logical volumes and decides he wants to reconfigure volume
+> number 3, he can now do that without removing volumes 4 & 5 first. This
+> code has been tested in our labs against all application software.
+> Please consider this for inclusion.
 > 
-> This looks preyyu much like a breakage because we're now always sending
-> S/G list down the scsi layer.
-> 
-> The patch below brings over code to handle that case from the megaraid_mbox
-> driver.  It's still wrong for the case someone sends a MODE_SENSE from
-> highmem userspace, but it should at least boot with the patch applied.
-> 
-
-Jack, have you had a chance to test this?
-
-Thanks.
-
-> 
-> Index: scsi-misc-2.6/drivers/scsi/megaraid.c
-> ===================================================================
-> --- scsi-misc-2.6.orig/drivers/scsi/megaraid.c	2005-08-13 13:53:52.000000000 +0200
-> +++ scsi-misc-2.6/drivers/scsi/megaraid.c	2005-09-08 16:34:06.000000000 +0200
-> @@ -621,8 +621,6 @@
->  	if(islogical) {
->  		switch (cmd->cmnd[0]) {
->  		case TEST_UNIT_READY:
-> -			memset(cmd->request_buffer, 0, cmd->request_bufflen);
-> -
->  #if MEGA_HAVE_CLUSTERING
->  			/*
->  			 * Do we support clustering and is the support enabled
-> @@ -653,7 +651,19 @@
->  #endif
->  
->  		case MODE_SENSE:
-> -			memset(cmd->request_buffer, 0, cmd->cmnd[4]);
-> +			if (cmd->use_sg) {
-> +				struct scatterlist	*sgl;
-> +				caddr_t			vaddr;
+> ...
+>
+> +static void cciss_update_drive_info(int ctlr, int drv_index)
+> +  {
+> +	ctlr_info_t *h = hba[ctlr];
+> +	struct gendisk *disk;
+> +	ReadCapdata_struct *size_buff = NULL;
+> +	InquiryData_struct *inq_buff = NULL;
+> +	unsigned int block_size;
+> +	unsigned int total_size;
+> +	unsigned long flags = 0;
+> +	int ret = 0;
 > +
-> +				sgl = (struct scatterlist *)cmd->request_buffer;
-> +				vaddr = (caddr_t)
-> +					(page_address((&sgl[0])->page)
-> +					+ (&sgl[0])->offset);
+> +	/* if the disk already exists then deregister it before proceeding*/
+> +	if (h->drv[drv_index].raid_level != -1){
+> +		spin_lock_irqsave(CCISS_LOCK(h->ctlr), flags);
+> +		h->drv[drv_index].busy_configuring = 1;
+> +		spin_unlock_irqrestore(CCISS_LOCK(h->ctlr), flags);
+
+I always get worried when I see a spinlock around a simple assignment like
+this - it often doesn't make a lot of sense and can indicate that
+something's wrong.
+
+> ...
 > +
-> +				memset(vaddr, 0, cmd->cmnd[4]);
-> +			} else {
-> +				memset(cmd->request_buffer, 0, cmd->cmnd[4]);
-> +			}
->  			cmd->result = (DID_OK << 16);
->  			cmd->scsi_done(cmd);
->  			return NULL;
+> +	/* Get information about the disk and modify the driver sturcture */
+> +	size_buff = kmalloc(sizeof( ReadCapdata_struct), GFP_KERNEL);
+> +        if (size_buff == NULL)
+> +		goto mem_msg;
+> +	inq_buff = kmalloc(sizeof( InquiryData_struct), GFP_KERNEL);
+> +       	if (inq_buff == NULL)
+> +		goto mem_msg;
+
+Indenting went wrong.
+
+urgh, maybe it just looks wrong because someone's being inserting spaces
+instead of tabs.
+
+> +		ld_buff = kmalloc(sizeof(ReportLunData_struct), GFP_KERNEL);
+> +		if (ld_buff == NULL)
+> +			goto mem_msg;
+> +		memset(ld_buff, 0, sizeof(ReportLunData_struct));
+
+We have kzalloc() now.
+
+>  	/* make sure logical volume is NOT is use */
+> -	if( drv->usage_count > 1) {
+> -		spin_unlock_irqrestore(CCISS_LOCK(ctlr), flags);
+> +	if(clear_all || (h->gendisk[0] == disk)) {
+> +                if (drv->usage_count > 1)
+>                  return -EBUSY;
+
+Again, it looks wrong but is probably OK due to broken tab key.
+
+Do you want the code to go in like this or do you want to clean it up?
