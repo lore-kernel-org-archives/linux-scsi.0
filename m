@@ -1,61 +1,146 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: aic79xx oops
-Date: Sat, 10 Sep 2005 10:06:05 -0500
-Message-ID: <1126364765.4813.16.camel@mulgrave>
-References: <200509091325.45620.bernd.schubert@pci.uni-heidelberg.de>
+Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process
+	(end devices)
+Date: Sat, 10 Sep 2005 11:01:21 -0500
+Message-ID: <1126368081.4813.46.camel@mulgrave>
+References: <20050910024454.20602.qmail@web51613.mail.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:47282 "EHLO
+Received: from stat9.steeleye.com ([209.192.50.41]:3763 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751014AbVIJPGU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Sep 2005 11:06:20 -0400
-In-Reply-To: <200509091325.45620.bernd.schubert@pci.uni-heidelberg.de>
+	id S1750798AbVIJQB0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Sep 2005 12:01:26 -0400
+In-Reply-To: <20050910024454.20602.qmail@web51613.mail.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bernd-schubert@gmx.de
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: ltuikov@yahoo.com
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, 2005-09-09 at 13:25 +0200, Bernd Schubert wrote:
->   Vendor: transtec  Model: T5008             Rev: 0001
->   Type:   Direct-Access                      ANSI SCSI revision: 03
-> scsi4:A:0:0: Tagged Queuing enabled.  Depth 32
-> SCSI device sdc: 4101521408 512-byte hdwr sectors (2099979 MB)
-> SCSI device sdc: drive cache: write back
-> SCSI device sdc: 4101521408 512-byte hdwr sectors (2099979 MB)
-> SCSI device sdc: drive cache: write back
->  sdc: sdc1 sdc2 sdc3 < sdc5 sdc6 sdc7 sdc8 >
-> Attached scsi disk sdc at scsi4, channel 0, id 0, lun 0
-> Attached scsi generic sg2 at scsi4, channel 0, id 0, lun 0,  type 0
-> scsi: host 4 channel 0 id 0 lun 0x00000200080c0400 has a LUN larger than 
-> currently supported.
-> scsi: host 4 channel 0 id 0 lun1002486961 has a LUN larger than allowed by the 
-> host adapter
-> scsi: host 4 channel 0 id 0 lun 0x01000000407a27c0 has a LUN larger than 
-> currently supported.
-> scsi: host 4 channel 0 id 0 lun 0x007a27c0d05d27c0 has a LUN larger than 
-> currently supported.
-> scsi: host 4 channel 0 id 0 lun 0x305e27c0907b27c0 has a LUN larger than 
-> currently supported.
-> scsi: host 4 channel 0 id 0 lun 0xf08227c0b08d27c0 has a LUN larger than 
-> currently supported.
-> scsi: host 4 channel 0 id 0 lun 0x307827c0008527c0 has a LUN larger than 
-> currently supported.
-> scsi: host 4 channel 0 id 0 lun 0x00000000b06727c0 has a LUN larger than 
-> currently supported.
-> scsi: host 4 channel 0 id 0 lun 0x306727c0706727c0 has a LUN larger than 
-> currently supported.
+On Fri, 2005-09-09 at 19:44 -0700, Luben Tuikov wrote:
+> > this one completely duplicates the
+> > mid-layer infrastructure for handling devices with Logical Units.
+> 
+> No, it does *not*.  James, you have _stop_ spreading FUD, relying
+> that other people have not read the SCSI Core code.
 
-This looks symptomatic of a report luns failure
+We have an infrastructure in the mid-layer for doing report lun scans.
+You have a parallel one in your code.  In my book, that's duplication.
 
-> EIP is at ahd_send_async+0xde/0x2a0 [aic79xx]
+> See here:
+>     SCSI Core has *no representation* of a SCSI Device with a
+> SCSI Target Port.
 
-This I'm not sure about.  There are some fixes that may correct this in
-the current kernel tree head (i.e. beyond 2.6.13), if you could give
-that a go.
+A scsi target is represented by struct scsi_target.
+
+> I've _clearly_ outlined that in the comments of the code,
+> which you _conveniently_ did _not_ cut and paste here.
+> 
+> I've been asking for a generic SCSI Target representation for
+> the last 5 years, which you conventiently skip to mention.
+> Or shall we search linux-scsi archives?
+> 
+> As to duplication: NOT!
+> 
+> Why?
+> 
+> Look at scsi_scan_target() declaration:
+> 
+> void scsi_scan_target(struct device *parent, unsigned int channel,
+> 		      unsigned int id, unsigned int lun, int rescan);
+> 
+> Channel, id, lun, rescan?  WTF?
+
+So you want to rehash that argument again.
+
+Either you can do what others like FC currently do:
+
+http://marc.theaimsgroup.com/?l=linux-scsi&m=110546207223304
+
+Or you can follow the recipe you were given for making the mid-layer use
+arbitrary identifiers for the target
+
+http://marc.theaimsgroup.com/?l=linux-scsi&m=112487476527470
+
+Simply writing your own because you don't like the former and the
+latter's too much work isn't acceptable.
+
+> Do you see any of this in the proprely implemented LU discovery
+> code in the SAS discovery code I submitted?
+
+Yes, of course, I did notice the W_LUN support which we could do with in
+scsi_report_lun_scan() if you'd care to play nicely with others.
+
+> I asked for pure SCSI device with Target port implementation of
+> scsi_target and _you_ rejected it about 4 years ago.  Shall I search
+> for this message in the linux-scsi archives?
+
+You can ask for all the features you want ... however, unless you can
+persuade someone else to do the implementation, you get to write the
+code yourself...
+
+> > > + * REPORT LUNS is mandatory.  If a device doesn't support it,
+> > > + * it is broken and you should return it.  Nevertheless, we
+> > > + * assume (optimistically) that the link hasn't been severed and
+> > > + * that maybe we can get to the device anyhow.
+> > 
+> > That's a surprisingly optimistic statement from someone who claims to
+> > have worked in SCSI for so long.  We have a huge list of heuristics for
+> 
+> Ouch!  Getting into the personal arena now, are we?
+> 
+> James, how old are the blacklisted devices you talk of?
+> 
+> How old are SAS devices? 
+> 
+> > devices that violate the standards in one way or another.  We already
+> > have a flag for a SCSI3 device that doesn't respond correctly to
+> > REPORT_LUNS ... and we have a few other reports of potentially more
+> > suspect devices.
+> 
+> Are those devices SAS?
+> 
+> Again, stop spreading FUD and talking as you know what you're talking about.
+> 
+> "few other reports of potentially more suspect devices" -- is such
+> a broad and vague statement that it isn't worth much.
+> 
+> First are those SAS devices.
+> 
+> Second, SAS devices being very recent have their firmware written
+> to latest specs, and advertised as SPC-3 and SAM-3.
+
+We have boatloads of devices that claim SCSI-n or SPC-n compliance then
+fail in various ways.  That's what the list in scsi_devinfo.c is all
+about.  I'm sure the manufacturers of those devices didn't intentionally
+set out to violate the specs; however, what they actually released does.
+I'm sure that SAS vendors will start out with the best of intentions
+too ...
+
+> > Now, if you did this properly and used the mid-layer infrastructure you
+> > wouldn't have to worry about any of this.
+> > 
+> > > +static int sas_do_lu_discovery(struct domain_device *dev)
+> > 
+> > Please just handle targets ... scanning beyond targets is best handled
+> > in generic code.
+> 
+> I agree.
+> 
+> But that generic code you talk about is complete *crap* and needs
+> rewriting.  When that generic code, can handle "SCSI device with
+> a Target port" then I'd love to off load that to SCSI Core.
+> 
+> In fact initially I _really_ tried to offload that to SCSI Core,
+> but it didn't quite work, then I wrote LU discovery.  Just run it on
+> real hardware.
+
+The practise of allowing Vendors to duplicate code just because they
+didn't like what's in the generic subsystem or because it lacks a
+feature they need hasn't been acceptable for a long time now.  Either
+use what we have or fix it to do what you want.
 
 James
-
 
 
