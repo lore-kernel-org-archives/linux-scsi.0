@@ -1,33 +1,48 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2.6.13 14/14] sas-class: SCSI Host glue
-Date: Sat, 10 Sep 2005 21:20:05 +0100
-Message-ID: <1126383605.30449.12.camel@localhost.localdomain>
-References: <20050910041218.29183.qmail@web51612.mail.yahoo.com>
-	 <Pine.LNX.4.63.0509101028510.4630@cuia.boston.redhat.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] set error value when failing block pc commands in
+	prep_fn
+Date: Sat, 10 Sep 2005 14:57:05 -0500
+Message-ID: <1126382225.4813.63.camel@mulgrave>
+References: <1126378749.2696.4.camel@max>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:19160 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932246AbVIJT5X
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Sep 2005 15:57:23 -0400
-In-Reply-To: <Pine.LNX.4.63.0509101028510.4630@cuia.boston.redhat.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:36532 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932223AbVIJT5S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Sep 2005 15:57:18 -0400
+In-Reply-To: <1126378749.2696.4.camel@max>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rik van Riel <riel@redhat.com>
-Cc: Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <James.Bottomley@SteelEye.com>, Luben Tuikov <luben_tuikov@adaptec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sad, 2005-09-10 at 10:30 -0400, Rik van Riel wrote:
-> That's very nice for you - but lets face it, a SAS layer
-> that'll be unable to also deal with the El-Cheapo brand
-> controllers isn't going to be very useful.
+On Sat, 2005-09-10 at 13:59 -0500, Mike Christie wrote:
+> This patch is updated against scsi-rc-fixes which has
+> Alan's patch that fixes the places where we did not set
+> a error value in the request_fn.
+> 
+> But when we kill a block pc request in the prep function
+> the  errors value is still not getting set. And if scsi_init_io
+> returned BLKPREP_DEFER we missed the blk_plug_device code so
+> this patch just has it go to the defer label in that case.
+> 
+> Patch was made against scsi-rc-fixes.
 
-If future cheap SAS controllers are like cheap anything else controllers
-then it is better IMHO to deal with it once the problems are visible. We
-*know* from experience that hardware limits will be weirder than the
-anticipated.
+Is there a reason we shouldn't be setting the error in all cases?  I
+certainly can't think of one, in which case just set it globally.
+There's also a return BLKPREP_DEFER on line 1191:
+
+	if(unlikely(specials_only) && !(req->flags & REQ_SPECIAL)) {
+		if(specials_only == SDEV_QUIESCE ||
+				specials_only == SDEV_BLOCK)
+			return BLKPREP_DEFER;
+
+That needs to become a goto defer; for the same reasons as outlined
+above.
+
+James
 
 
-Alan
 
