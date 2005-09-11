@@ -1,38 +1,60 @@
-From: Olaf Hering <olh@suse.de>
-Subject: incorrect printk in sym_attach error path
-Date: Sun, 11 Sep 2005 19:40:29 +0200
-Message-ID: <20050911174029.GA23300@suse.de>
+From: Daniel Drake <dsd@gentoo.org>
+Subject: Re: crash upon rmmod aic7xxx (pcmcia)
+Date: Sun, 11 Sep 2005 19:24:43 +0100
+Message-ID: <4324766B.70107@gentoo.org>
+References: <17188.9683.311780.197075@sbox13.aei.mpg.de>	<432444B6.7070309@gentoo.org> <17188.28765.826177.728033@sbox13.aei.mpg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53720 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S964951AbVIKRka (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Sep 2005 13:40:30 -0400
-Received: from Relay1.suse.de (mail2.suse.de [195.135.221.8])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx2.suse.de (Postfix) with ESMTP id 5B6AE1AC5A
-	for <linux-scsi@vger.kernel.org>; Sun, 11 Sep 2005 19:40:29 +0200 (CEST)
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965026AbVIKSYr@vger.kernel.org>
+In-Reply-To: <17188.28765.826177.728033@sbox13.aei.mpg.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kasper Peeters <kasper.peeters@aei.mpg.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
+(please use reply-to-all)
 
-I get this with 2.6.13, due to some ppc64 specific errors:
+Kasper Peeters wrote:
+>>Try enabling magic sysrq and press Alt+sysrq+9 then Alt+SysRq+P 
+> 
+> 
+> I just spent an hour trying to make this work: it's turned on in the
+> kernel, I have done
+> 
+>   echo '1' > /proc/sys/kernel/sysrq
+> 
+> , I have done a 'showkey -s' to find out that my sysrq generates
+> '0x53', I have done 'setkeycodes 53 84', but none of the
+> alt-sysrq-command things does anything (even before triggering the
+> aic7xxx bug, that is). I must have overlooked something stupid.
+> 
+> Anyhow, for what it's worth, the 'rmmod' does spit out some more stuff
+> to the console just before the crash (inasfar it has not yet scrolled
+> off the screen):
+> 
+>   Sequencer Free SCB List 0 1 2
+>   Sequencer SCB Info
+>     0 SCB_CONTROL[0x0]:SCB_SCSIID[0x67]:SCB_LOW[0x0]:SCB_TAG[0xff]
+>     1 SCB_CONTROL[0x0]:SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TIB)SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID)SCB_TAG[0xff]
+>     2 SCB_CONTROL[0x0]:SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TIB)SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID)SCB_TAG[0xff]
+>   Pending List:
+>     2 SCB_CONTROL[0x40]:(DISCENB)SCB_SCSIID[0x47]:SCB_LUN[0x0]
+>   Kernel Free SCB List: 1 0
+>   Untagged Q(4):2
+>   
+>   <<< Dump Card State End >>>
+>   qindex = 0, SCB index=0
+>   Kernel Panic - not syncing: Loop 1
+> 
 
+Ok, if its a kernel panic then I'm fairly sure sysrq would be useless for 
+debugging even if it worked on your setup. Also, this is the exact same 
+message from the Gentoo bug that I mentioned previously: 
+http://bugs.gentoo.org/102636
 
-PCI: Enabling device: (0002:30:0c.0), cmd 143
-sym0: <896> rev 0x7 at pci 0002:30:0c.0 irq 65
-__sym_calloc2: failed to allocate HCB[2200]
-<NULL>: giving up ...
-RTAS: event: 71, Type: Internal Device Failure, Severity: 2
-PCI: Enabling device: (0002:30:0c.1), cmd 143
-sym0: <896> rev 0x7 at pci 0002:30:0c.1 irq 66
-__sym_calloc2: failed to allocate HCB[2200]
-<NULL>: giving up ...
+Perhaps you could file a bug for this at http://bugzilla.kernel.org and I'll 
+get the Gentoo bug reporter to post his experience on your bug too.
 
-
-attach_failed is used for more than one error.
-np->s.inst_name should be assigned earlier.
+Thanks,
+Daniel
