@@ -1,50 +1,55 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 2.6.13 14/14] sas-class: SCSI Host glue
-Date: Sun, 11 Sep 2005 08:41:10 -0500
-Message-ID: <1126446071.4831.5.camel@mulgrave>
-References: <20050910041218.29183.qmail@web51612.mail.yahoo.com>
-	 <Pine.LNX.4.63.0509101028510.4630@cuia.boston.redhat.com>
-	 <20050911035621.87661.qmail@mail.muc.de>
+From: Daniel Drake <dsd@gentoo.org>
+Subject: Re: crash upon rmmod aic7xxx (pcmcia)
+Date: Sun, 11 Sep 2005 15:52:38 +0100
+Message-ID: <432444B6.7070309@gentoo.org>
+References: <17188.9683.311780.197075@sbox13.aei.mpg.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:3003 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750817AbVIKNlb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Sep 2005 09:41:31 -0400
-In-Reply-To: <20050911035621.87661.qmail@mail.muc.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932400AbVIKOwn@vger.kernel.org>
+In-Reply-To: <17188.9683.311780.197075@sbox13.aei.mpg.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kasper Peeters <kasper.peeters@aei.mpg.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ak@muc.de
-Cc: Rik van Riel <riel@redhat.com>, Luben Tuikov <luben_tuikov@adaptec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sun, 2005-09-11 at 05:56 +0200, ak@muc.de wrote:
-> >> Naturally, aic94xx has _no limitations_. :-)  But hey, our hardware just 
-> >> kicks a*s!
-> >
-> > That's very nice for you - but lets face it, a SAS layer
-> > that'll be unable to also deal with the El-Cheapo brand
-> > controllers isn't going to be very useful.
+Kasper Peeters wrote:
+> Since the early 2.6.x kernels, removing the aic7xxx module (either by
+> doing a 'rmmod' by hand or by ejecting the pcmcia aic7xxx card) locks
+> the system hard after about 2 seconds, leaving no trace in syslog. 
+> Just checked with kernel 2.6.13 (and pcmcia-tools 3.2.8).
+
+Try enabling magic sysrq and press Alt+sysrq+9 then Alt+SysRq+P when the 
+freeze occurs, and write down the call trace which hopefully appears on the 
+console.
+
+On a sidenote, this might be related to a Gentoo bug that I'm working on 
+getting full details of:
+
+http://bugs.gentoo.org/show_bug.cgi?id=102636
+
+> Upon insertion of the pcmcia card, this appears in syslog:
 > 
-> Nobody knows what these bu^wlimitations will be though. So you cannot
-> really plan for them in advance.  When someone writes drivers for such 
-> limited hardware they can add code to handle the limitations. But it 
-> seems reasonable to start with a clean hardware model, and only
-> add the hacks later when they are really needed and the requirements
-> are understood.
-
-But my point was that we already have a mechanism for coping with this:
-The scsi template parameterises some of these things (max sector size,
-sg table elements, clustering, etc).  For less standard things it
-doesn't cover the driver uses the blk_ adjustors directly from
-slave_alloc/slave_configure (This is currently how USB and firewire
-communicate their alignment requirements).
-
-By wrappering both the template and the slave_alloc/slave_configure
-methods in the SAS class and not providing the driver access, it can't
-use existing methods to make any adjustments that may be necessary.
-
-James
-
-
+> Sep 11 14:36:05 whiteroom2 kernel: PCI: Enabling device 0000:03:00.0 (0000 -> 0003)
+> Sep 11 14:36:05 whiteroom2 kernel: ACPI: PCI Interrupt 0000:03:00.0[A] -> Link [LNKA] -> GSI 11 (level, low
+> ) -> IRQ 11
+> Sep 11 14:36:05 whiteroom2 kernel: aic7xxx: PCI Device 3:0:0 failed memory mapped test.  Using PIO.
+> Sep 11 14:36:05 whiteroom2 kernel: ahc_pci:3:0:0: Host Adapter Bios disabled.  Using default SCSI device pa
+> rameters
+> Sep 11 14:36:05 whiteroom2 kernel: scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+> Sep 11 14:36:05 whiteroom2 kernel:         <Adaptec 1480A Ultra SCSI adapter>
+> Sep 11 14:36:05 whiteroom2 kernel:         aic7860: Ultra Single Channel A, SCSI Id=7, 3/253 SCBs
+> Sep 11 14:36:05 whiteroom2 kernel: 
+> Sep 11 14:36:12 whiteroom2 kernel: scsi0: PCI error Interrupt at seqaddr = 0x8
+> Sep 11 14:36:12 whiteroom2 kernel: scsi0: Signaled a Target Abort
+> Sep 11 14:36:21 whiteroom2 kernel:   Vendor: HP        Model: CD-Writer+ 9200   Rev: 1.0c
+> Sep 11 14:36:21 whiteroom2 kernel:   Type:   CD-ROM                             ANSI SCSI revision: 04
+> Sep 11 14:36:21 whiteroom2 kernel:  target0:0:4: asynchronous.
+> Sep 11 14:36:21 whiteroom2 kernel:  target0:0:4: Beginning Domain Validation
+> Sep 11 14:36:21 whiteroom2 kernel:  target0:0:4: Domain Validation skipping write tests
+> Sep 11 14:36:21 whiteroom2 kernel:  target0:0:4: FAST-10 SCSI 10.0 MB/s ST (100 ns, offset 15)
+> Sep 11 14:36:21 whiteroom2 kernel:  target0:0:4: Ending Domain Validation
+> Sep 11 14:36:21 whiteroom2 kernel: sr0: scsi3-mmc drive: 32x/32x writer cd/rw xa/form2 cdda tray
+> Sep 11 14:36:21 whiteroom2 kernel: Attached scsi generic sg0 at scsi0, channel 0, id 4, lun 0,  type 5
+> Sep 11 14:36:22 whiteroom2 scsi.agent[3014]: cdrom at /devices/pci0000:00/0000:00:1e.0/0000:02:0a.0/0000:03
+> :00.0/host0/target0:0:4/0:0:4:0
