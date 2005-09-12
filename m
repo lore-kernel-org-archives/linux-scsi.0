@@ -1,238 +1,113 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process
- (end devices)
-Date: Mon, 12 Sep 2005 14:17:55 -0400
-Message-ID: <4325C653.2020905@adaptec.com>
-References: <1126308304.4799.45.camel@mulgrave> <20050910024454.20602.qmail@web51613.mail.yahoo.com> <20050911094656.GC5429@infradead.org> <43251D8C.7020409@torque.net>
+Subject: Re: [PATCH 2.6.13 2/14] sas-class: README
+Date: Mon, 12 Sep 2005 14:38:08 -0400
+Message-ID: <4325CB10.1020902@adaptec.com>
+References: <4321E4DD.7070405@adaptec.com> <432543C6.1020403@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932118AbVILSSF@vger.kernel.org>
-In-Reply-To: <43251D8C.7020409@torque.net>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932137AbVILSiQ@vger.kernel.org>
+In-Reply-To: <432543C6.1020403@torque.net>
 Sender: linux-kernel-owner@vger.kernel.org
 To: dougg@torque.net
-Cc: Christoph Hellwig <hch@infradead.org>, Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <James.Bottomley@SteelEye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/12/05 02:17, Douglas Gilbert wrote:
-> Christoph Hellwig wrote:
+On 09/12/05 05:00, Douglas Gilbert wrote:
+> Luben Tuikov wrote:
 > 
->>On Fri, Sep 09, 2005 at 07:44:54PM -0700, Luben Tuikov wrote:
->> * Discover logical units present in the SCSI device.  I'd like this
->> * to be moved to SCSI Core, but SCSI Core has no concept of a "SCSI
->> * device with a SCSI Target port".  A SCSI device with a SCSI Target
->> * port is a device which the _transport_ found, but other than that,
->> * the transport has little or _no_ knowledge about the device.
->> * Ideally, a LLDD would register a "SCSI device with a SCSI Target
->> * port" with SCSI Core and then SCSI Core would do LU discovery of
->> * that device.
->>
->>So what does this mean except "Luben tries to impress everyone with
->>standards gibberish, at the same time ignoring we soluitions that
->>work despite maybe not 100% elegant".
+> <snip>
 > 
-> 
-> Christoph,
-> How about we put that another way. Luben (like yourself)
-> gets to implement a LLDD for a new SCSI transport technology
-> called SAS. He looks at its architecture and how it conforms
-> (well not 100 %) to SAM and then he looks at the architecture
-> of the kernel environment he has to fit it into.
-
-Doug, you forgot to mention:
-
-Luben is working with the hardware engineers who make
-SAS happen.  Luben is working with the firmware engineers
-which make SAS happen.  Luben is asking a lot of questions.
-Luben is asking a lot of questions.  Luben is asing a lot
-of questions.
-
-Luben spends many contiguous days reading specs, open
-and/or confidential of many companies implementing you-name-it
-SAS device, expanders, etc.  Then he rereads them.  Then he
-rereads them again.  Then he rereads them again, underlining
-and highlighting things of interest.
-
-Eventually his family gets angry at him that he's not paying
-any attention to them, falling asleep with a tattered binder
-full of specs on his chest, and waking up next to it.
-
-> The latter uses terms and addressing structures appropriate
-> to SCSI-2 (circa 1992). Each time a new transport (or a
-> revision of SPI) comes along a larger hammer is needed to
-> belt the new transport LLDDs into place.
-> 
-> FreeBSD threw out their original SCSI design and replaced it
-> with CAM circa 1998. CAM has its problems but I would guess
-> a modern SAS LLDD would have less "impedance mismatch" (sorry
-> about the gibberish) than what Luben is now facing.
-
-Just to add:
-
-Also, the newer the transport (e.g. SAS) the closer it adheres
-to SAM and SPC.
-
-You can see this in the evolution of transports for the last
-5 years, say starting with iSCSI.
-
-Thus the more sense it makes for a LLDD to implement the
-mere basics: Execute Command SCSI RPC and TMFs.
-
->>Sure, we'd like to move away from needing the ->id target id specifier.
->>But right now we need it, even you're code sets it in over-complicated
->>ways.  But if you send a nice patch to get rid everyone will be happy.
+>>+
+>>+DISCOVERY
+>>+---------
+>>+
+>>+The sysfs tree has the following purposes:
+>>+    a) It shows you the physical layout of the SAS domain at
+>>+       the current time, i.e. how the domain looks in the
+>>+       physical world right now.
+>>+    b) Shows some device parameters _at_discovery_time_.
+>>+
+>>+This is a link to the tree(1) program, very useful in
+>>+viewing the SAS domain:
+>>+ftp://mama.indstate.edu/linux/tree/
+>>+I expect user space applications to actually create a
+>>+graphical interface of this.
+>>+
+>>+That is, the sysfs domain tree doesn't show or keep state if
+>>+you e.g., change the meaning of the READY LED MEANING
+>>+setting, but it does show you the current connection status
+>>+of the domain device.
 > 
 > 
-> If we look at our (im)famous <h:c:i:l> addressing string,
-> the first 2 elements (i.e. "h:c") are about kernel device
-> addressing (i.e. which (part of a) HBA to be initiator); the
-> contentious "i" is about addressing the target and is
-> transport dependent, and the "l" is for addressing within
-> the target. Only the last element is true SCSI and is
-> defined in SAM (to be 64 bits, not 32). In iSCSI the "i"
-> is actually an adorned IP address.
-> 
-> So the kernel "discovers" at the "h:c" level at powerup
-> (and at runtime with hotplug events); leaving the SCSI
-> subsystem to do discovery at the "i" and the "l" level.
+> So in that case, user applications should ignore READY
+> LED MEANING in sysfs and ask the device directly.
+> For example:
+>     sdparm --get RLM --transport sas /dev/sda
 
-Just to add:
+Yes, correct.  You and I have discussed this already.
 
-The kernel discovers at "h" level, which is purely
-kernel implementation dependent.  I.e. how the kernel
-enumerates Storage Controllers is kernel dependent.
+Excerpt from that same "README" file (just above the code
+you cut and pasted):
 
-The transport layer discovers at "c" level.  What it
-discovers is "i".  _How_ it discovers is transport
-dependent: iSCSI, FC, SAS, IEEE 1394, USB, etc.
+The sysfs tree has the following purposes:
+    a) It shows you the physical layout of the SAS domain at
+       the current time, i.e. how the domain looks in the
+       physical world right now.
+    b) Shows some device parameters _at_discovery_time_.
 
-"i:l" is what SCSI Core is concerned about.  SCSI Core
-has no concept of "i" only, to save its life.
+> ... and what about multiple initiators sitting on different
+> machines? Should they be responsible for:
+>   1) finding out about one another
+>   2) and keeping the sysfs tree in the other machine
+>      in sync when one changes READY LED MEANING
+>      (or anything else)?
 
-"c" is ugly and abhorable, as it is different per transport
-protocol.  SAM calls it "SCSI domain" which unifies it
-across transport protocols.
+And how is this a problem of the Discover code?
 
-"i", is also ugly and abhorable as it is SPI centric only
-and LLDD have to invent it.
+There is a way to handle more than one initiator on the domain
+doing discovery, but I didn't code it since _at_this_time_
+I doubt people would start doing this: they don't even
+have SAS hardware, a lot less two initiators on the same
+domain.
 
-"l", in the kernel is chopped to 32 bits _and_ it is
-interpreted.  Both wrong.
+> Putting distributed state information in sysfs and then
+> passing off the responsibility for maintaining its state
+> (because it is a difficult problem) brings into question
+> the wisdom of the strategy.
 
-> At this point I would like to make an observation: there
-> is no absolute requirement for the SCSI subsystem to do
-> discovery at either the "i" or the "l" levels. Using SAS
-> as an example, only the SAS (target port) address and
-> a logical unit number (identifier) or name are needed.
+No Doug, not true at all.
 
-... to send tasks to the device.
+Sorry that "sg" isn't going to be used to communicate with
+expanders, but this is just part of evolution.
 
-> So an embedded system which includes a SAS initiator (HBA)
-> could connect to an arbitrary device quickly and with
-> minimal impact on a large SAS fabric (i.e. no SAS target
-> discovery phase). As an extreme example, target discovery
+If I removed "ready_led_meaning" and a couple of other
+such entries: you would have NO argument.
 
-Link layer is implemented in firmware, so you'll at least have
-to say, to the firmware "I'd like to talk to device with
-such and such SAS address, such and such port, and such
-and such command set".  Then everything is cool.
+If I left only the directory entries representing the
+object and the "smp_portal" you argument falls apart.
 
-One normally knows these things, if you know the SAS
-port identifier and the LUN.
+Instead, you should've been saying how easy and
+_elegant_ it is communicating with expanders on the
+domain:
+	* open(2) the "smp_portal" in the expander
+          directory you want to talk to,
+	* write(2) the SMP frame you want to send,
+	* read(2) the amount of information you
+	  expect to get,
+	* close(2).
 
-> in iSCSI cannot involve the whole internet (and even though
-> its topology would be interesting, representing it in sysfs
-> is absurd).
+Done!  No addressing to figure out, no memory problems, etc.
+The easiest interface: read(2)/write(2), _and_ the simplest
+format to use: pure SMP frames, easy and straightforward.
 
-True, but then again, the _storage_ domain of iSCSI isn't
-as interesting as SAS.  In iSCSI it would be really
-straightforward to represent the domain in sysfs.
+GUI programs would be able to use all this to give
+a GUI of the whole domain and then you can just point and
+click on an expander and get information using this simple
+and elegant interface.
 
-> My major objection to Luben's SAS sysfs representation is
-> that "things" have to be discovered before the user space
-> can talk to them. Why?? An app in the user space might
-
-Yes, I'm aware of your concern.
-
-But as I'm sure you're also well aware:
-Any initiator has to do 
-	* domain discovery *or*
-	* inherit the domain
-discovered by another initiator, in order to access
-any device on the domain. (Cont'd below)
-
-> _know_ that the "thing" (e.g. SAS expander or a "well
-> known" logical unit) is out there. Again the obvious comparison
-> is with IP addresses and the way the networking subsystem
-> functions. I would like to make HBA initiators (or their ports)
-> visible as interfaces (like eth0 and friends) through which
-> commands/frames/primitives can be sent and events received.
-
-Oh, no, no, no!
-
-SAS is _not_ Ethernet and will _never_ be.
-
-The reason is that Ethernet is *coherent* even when no one
-is attached to it (thought exercise :-) ).
-
-*But* a SAS domain is *not coherent* when no one has ever
-attached to it, _unless_ expanders are self-configuring.
-
-The general move is that expanders will _not_ self-configure,
-although most of them are capable of doing this.
-
-It is best to leave configuration to an (authorised) initiator.
-
-Only SAS Target device can adhere to what you're saying
-above, since they _reply_ to a connection.
-
-Initiators _have_to_ have either discovered the domain, and
-thus configured it (expanders), *or* inherited the domain
-configuration from somewhere else.
-
-> Traditionally, directly attached storage devices have been
-> represented as device nodes in Unix/linux (e.g. /dev/hda and
-> /dev/sda). Other subsystems require this. However, I suggest
-> the following do _not_ need to be represented by device
-> nodes or sysfs:
->   - a transport topology
->   - transport management devices (e.g. SAS expanders)
->   - SCSI management devices (e.g. "well known" logical units, SES
->     and bridge devices)
-
-Except for the "or" you're correct.
-
-There is _nothing_ wrong in representing the SAS domain as I've
-done in the SAS Class Layer code.
-
-Simply tack a kobject/kset to each object I'm _already_anyway_
-representing internally and register it with sysfs.  Voila!
-
-This achieves two things:
-	* represents the domain as it is in the _physical_ world, and
-	* does kref naturally as you'd expect the electrical signals
-	to flow through.
-
-What you mean to say is: _outside_ of the _storage_transport_
-infrastructure!
-
-"by device nodes" -- this is the keypoint in
-your statement.  I cannot stress this enough:
-
-	* Transport topology
-	* Transport management devices
-	* SCSI Management devices
-
-should NOT be represented by, and here is the keypoint,
-"device nodes".
-
-Those are _storage_ entities, managed by the respective
-transport layer.  They do not exist or have any meaning
-outside the transport layer they are being used!
-
-There is nothing wrong in showing the SAS domain as is
-done in the SAS Class Layer -- there will be GUI applications
-which will take advantage of this to control storage clusters,
-and send SMP requests to expanders -- people want this.
+Sorry again "sg" wouldn't fit in here.  It's just evolution.
 
 	Luben
+P.S. I _did_ mention to you in private email that this is going
+to happen and you didn't reply at all.
