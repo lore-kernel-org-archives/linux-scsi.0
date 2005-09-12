@@ -1,44 +1,86 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 2.6.13 14/14] sas-class: SCSI Host glue
-Date: Mon, 12 Sep 2005 10:08:05 -0600
-Message-ID: <20050912160805.GC32395@parisc-linux.org>
-References: <1126308949.4799.54.camel@mulgrave> <20050910041218.29183.qmail@web51612.mail.yahoo.com> <20050911093847.GA5429@infradead.org>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process (end devices)
+Date: Mon, 12 Sep 2005 09:27:39 -0700
+Message-ID: <20050912162739.GA11455@us.ibm.com>
+References: <20050910024454.20602.qmail@web51613.mail.yahoo.com> <1126368081.4813.46.camel@mulgrave> <4325997D.3050103@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751038AbVILQIN@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e33.co.us.ibm.com ([32.97.110.131]:56049 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S932069AbVILQ31
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Sep 2005 12:29:27 -0400
 Content-Disposition: inline
-In-Reply-To: <20050911093847.GA5429@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <James.Bottomley@SteelEye.com>, Luben Tuikov <luben_tuikov@adaptec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+In-Reply-To: <4325997D.3050103@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, ltuikov@yahoo.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sun, Sep 11, 2005 at 10:38:47AM +0100, Christoph Hellwig wrote:
-> On Fri, Sep 09, 2005 at 09:12:18PM -0700, Luben Tuikov wrote:
-> > I long for the days of the previous maintainer.  Had it not been
-> > for him and Andi, we may have never had scsi commands from a slab,
-> > scsi_done queue, done_q softirq processing, scsi timer hook, etc.
-> > Of course back then Splentec wasn't your payrol company, but there
-> > was some common sense present in linux-scsi.
+On Mon, Sep 12, 2005 at 11:06:37AM -0400, Luben Tuikov wrote:
+
+> > We have an infrastructure in the mid-layer for doing report lun scans.
+> > You have a parallel one in your code.  In my book, that's duplication.
 > 
-> Could you please stop this bullshit spreading now, thanks?
+> This infrastructure is broken.  Its interface is broken.  It is a horrible
+> excuse of LUN scanning written initially to support a certain hardware.
 
-I meant to reply to Luben's original, but I deleted it in disgust.
-As the person who converted SCSI from the old bottom-half completion
-processing first to a tasklet and then to a softirq, I'd like to refute
-at least part of this allegation.  I didn't do it in order to improve
-SCSI particularly, satisfy Splentec (who are they?), or prove a point.
+That is not true of the report lun support, it was written initially for
+support of any hardware. Of course it was tested on certain hardware, but
+that was not the goal.
 
-I did it because I wanted to remove the old bottom-half mechanism and
-SCSI was one of the remaining users.  That required me to learn a bit
-about the SCSI stack and I got sucked in.  BTW, I believe at that time,
-James had alreeady taken over maintenance.  I'm not actually sure who
-the previous maintainer was -- was it Eric Biederman?
+> And secondly, the routine which I've written is NOT duplication.
+> It is the _correct_ way to do it, while the one in SCSI Core
+> is *crap*, thus there is no duplication.
 
-A colleague asked me to summarise the current dispute.  I said that
-Luben's point was that nobody else understood SCSI.  Everybody else's
-point was that Luben doesn't understand Linux kernel development.  Luben,
-I think you need to shut up, accept advice, stop trying to do everything
-in your own driver, and stop trying to have private conversations.
-Just discuss things on linux-scsi dispassionately.  There's no hidden
-agenda to get you or your company.  But you are pissing people off,
-and very soon there *will* be because of your behaviour.
+What is wrong with the one in scsi core?
+
+Your implementation has problems for large numbers of LU the secondary
+kmalloc() will always fail. I do not see how it handles transient failures
+either, or (per below discussion) devices that return bogus data.
+
+> >>>>+ * REPORT LUNS is mandatory.  If a device doesn't support it,
+> [cut]
+> >>Second, SAS devices being very recent have their firmware written
+> >>to latest specs, and advertised as SPC-3 and SAM-3.
+
+> > We have boatloads of devices that claim SCSI-n or SPC-n compliance then
+> > fail in various ways.  That's what the list in scsi_devinfo.c is all
+> > about.  I'm sure the manufacturers of those devices didn't intentionally
+> > set out to violate the specs; however, what they actually released does.
+> > I'm sure that SAS vendors will start out with the best of intentions
+> > too ...
+> 
+> I've run this code on pre-pre-pre-.... firmware and it handles
+> really broken REPORT LUNS devices.  It works *without the need* for
+> a blacklist lookup table.
+
+There could (will?) be bridges from SAS to anything (like existing SPI to
+IDE bridges, or FC to SPI bridges), so it is likely it will have to
+handle not-so-new and potentially brain dead storage devices.
+
+> Second, I did ask for REPORT LUNS mechanism into SCSI Core before it
+> was there.
+
+That code was not written because anyone asked for it.
+
+> Are you asking me to submit a patch for SCSI Core to do proper
+> REPORT LUNS?   *This is ubelievable.*  I would like the whole
+> world to note it (for your sake).
+
+At least tell us what is wrong with it, I know it does not have well known
+LUN support, and we already know about 8 byte LUN support.
+
+
+IMO adding well known LUNs at this point to the standard added nothing of
+value, the target firmware has to check for special paths no matter what,
+adding a well known LUN does not change that. And most vendors will
+(likely) have support for use without a well known LUN. (This does not
+mean we should not support it in linux, I just don't know why this went
+into the standard.)
+
+Using well known LUNs will be another code path that will have to live
+alongside existing ones, and will likely require further black listing
+(similar to REPORT LUN vs scanning for LUNs).
+
+-- Patrick Mansfield
