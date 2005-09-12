@@ -1,47 +1,31 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: Fw: [OOPS] 2.6.13-mm2 scsi, sata, ich5
-Date: Mon, 12 Sep 2005 02:40:27 -0700
-Message-ID: <20050912024027.39a1d7be.akpm@osdl.org>
-References: <20050911232109.35720176.akpm@osdl.org>
-	<6bffcb0e05091202296a07f1ad@mail.gmail.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH 3/8] aacraid: handle AIF hotplug events
+Date: Mon, 12 Sep 2005 07:10:05 -0400
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01919BB9@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:42906 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751265AbVILJk5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Sep 2005 05:40:57 -0400
-In-Reply-To: <6bffcb0e05091202296a07f1ad@mail.gmail.com>
+Received: from magic.adaptec.com ([216.52.22.17]:61918 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1750733AbVILLKH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Sep 2005 07:10:07 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michal.k.k.piotrowski@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Mark Haverkamp <markh@osdl.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
+Christoph Hellwig [mailto:hch@infradead.org] writes:
+ 
+>> +			if (busy == 0) {
+>> +				device->removable = 1;
+> devce->removeable means the device has a removable medium, not that
+> it can go away.
 
-(re-adding linux-scsi)
+It also means that the capacity can change. The SCSI subsystem will
+cache the partition table and capacity for the device if this is not
+set.
 
-Michal Piotrowski <michal.k.k.piotrowski@gmail.com> wrote:
->
-> Hi,
-> 
-> On 12/09/05, Andrew Morton <akpm@osdl.org> wrote:
-> > 
-> > This is a strange trace.   I assume one of the WARN_ON()s in
-> > kref_put() has triggered and there's stack stuff missing.   Or
-> > Maybe it's an oops under scsi_end_request(), but the oops trace doesn't
-> > use show_trace(), whcih that output is from.   But if it's not
-> > an oops, why is the Code: dump there.
-> > 
-> > Head spins.   Michal, can you try to gather another trace?   Is there
-> > info missing from this one?
-> > 
-> > (It's quite possibly a scsi thing rather than a sata thing, btw).
-> > 
-> 
-> The oops always hapen about 3 seconds after system start booting. When
-> it hapen I can't see what is up, because shift+pageup doesn't work.
-> So, AFAIK the only way to catch that oops is serial console?
-> 
-> Regards,
-> Michal Piotrowski
+-- Mark Salyzyn
