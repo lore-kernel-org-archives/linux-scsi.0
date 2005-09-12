@@ -1,73 +1,104 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH 2.6.13 14/14] sas-class: SCSI Host glue
-Date: Mon, 12 Sep 2005 18:00:15 -0400
-Message-ID: <4325FA6F.3060102@adaptec.com>
-References: <1126308949.4799.54.camel@mulgrave> <20050910041218.29183.qmail@web51612.mail.yahoo.com> <20050911093847.GA5429@infradead.org>
+Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process
+ (end devices)
+Date: Mon, 12 Sep 2005 18:39:21 -0400
+Message-ID: <43260399.3000405@adaptec.com>
+References: <1126308304.4799.45.camel@mulgrave> <20050910024454.20602.qmail@web51613.mail.yahoo.com> <20050911094656.GC5429@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932284AbVILWAX@vger.kernel.org>
-In-Reply-To: <20050911093847.GA5429@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:47785 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1750876AbVILWj3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Sep 2005 18:39:29 -0400
+In-Reply-To: <20050911094656.GC5429@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
 Cc: Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <James.Bottomley@SteelEye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
 
-On 09/11/05 05:38, Christoph Hellwig wrote:
->>Hmm, lets see:
->>I posted today, a _complete_ solution, 1000 years ahead of this
->>"embryonic SAS class" you speak of.
+On 09/11/05 05:46, Christoph Hellwig wrote:
+> On Fri, Sep 09, 2005 at 07:44:54PM -0700, Luben Tuikov wrote:
+> 
+>>>this one completely duplicates the
+>>>mid-layer infrastructure for handling devices with Logical Units.
+>>
+>>No, it does *not*.  James, you have _stop_ spreading FUD, relying
+>>that other people have not read the SCSI Core code.
+>>
+>>See here:
+>>    SCSI Core has *no representation* of a SCSI Device with a
+>>SCSI Target Port.
 > 
 > 
-> They're actually serving different needs.  The host-bases SAS code you
-> wrote should be layering below my SAS transport class.
+> struct scsi_target
+> 
+> 
+>>I've _clearly_ outlined that in the comments of the code,
+>>which you _conveniently_ did _not_ cut and paste here.
+> 
+> 
+>  * Discover logical units present in the SCSI device.  I'd like this
+>  * to be moved to SCSI Core, but SCSI Core has no concept of a "SCSI
+>  * device with a SCSI Target port".  A SCSI device with a SCSI Target
+>  * port is a device which the _transport_ found, but other than that,
+>  * the transport has little or _no_ knowledge about the device.
+>  * Ideally, a LLDD would register a "SCSI device with a SCSI Target
+>  * port" with SCSI Core and then SCSI Core would do LU discovery of
+>  * that device.
+> 
+> So what does this mean except "Luben tries to impress everyone with
+> standards gibberish, at the same time ignoring we soluitions that
+> work despite maybe not 100% elegant".
 
-Yes, they are completely orthogonal and can co-exist.
+Yes, that "maybe not 100% elegant" is what makes code survive
+long years, being maintainable and not spaghetti like (as new
+functionality is added).
 
-> What SPEC do you think a representation of SAS domains in the linux driver
-> model just adhere to?
+> Sure, we'd like to move away from needing the ->id target id specifier.
+> But right now we need it, even you're code sets it in over-complicated
 
-See figure 10, SAS Domain class diagram, in SAS1r09e.  It cross-links
-you to SAM-3 (you can also use SAM-4).
+It is not "over-complicated".  The functionality which is there Christoph,
+is there for a reason.  Mainly this is experience and knowlege, but
+you canot _shortcut_ code, since you're eliminating an abstraction
+layer: one thing is done at a time at a logical layer.  When
+all tasks are done at a logical layer, then we move onto the next.
 
-> There will be more SAS LLDDs that either do more things in firmware like
-> LSI Fusion and ones that do things in the Host like the Adaptec one.  And
-> we need to support both.  The best way to do that is to have a small top
-> layer that just unifies the SAS domain presentation, and a 'libsas' layer
-> below it for host-bases SAS implementations.
+E.g. an SES device may want to do something before you transition
+from one stage to the next, to all devices on the same level as
+that SES device. (This is a topic for another thread, no intentions
+to mention it.)
 
-It is a _layer_ just like it is in SAM and SPC and SAS.
-It is a _layer_ by SCSI design, if you look in SAM.
+> ways.  But if you send a nice patch to get rid everyone will be happy.
 
-SAS is not libsas, but a transport _layer_ sitting between
-the interconnect (hardware) and SCSI Core (SAM/SPC).
+You and I share the same passion: to improve SCSI Core.
 
-I wish I could do something to convince you, but you have
-to convince yourself of this reading SAM and trying
-to draw it out (literally) yourself.  Try it for
-an SPI domain, FC domain and SAS domain, and then you'll
-see it.
+I'm not sure that a patch to get rid of id in the current SCSI Core
+is quite possible without major heart-attacks of quite a few
+LLDDs, etc.
 
-The sysfs representation is just a perk of the transport
-layer, it is owned and operated by the transport layer.
+Instead, maybe, we should write a few new functions in SCSI Core which
+could accomodate new, improved "standards gibberish" as you call
+it, behaviour.
 
-"transport attribute class" is just an _attribute_ class, Christoph.
-"transport layer" is a lot more involved.  I sincerely hope
-you can see this.  E.g. domain discovery belongs in the transport
-layer.  In SPI, LLDDs did it; in MPT the firmware does it.
+Newer code would use those new functions.  Older one, would use
+old ones.
 
-With SAS, the domain is passive, and the protocol has evolved
-enough (due to SAM) to yield to a common transport layer,
-where common routines are done, as the SAS code shows.
+As SPI is slowly dying away, there'd be less and less need and support
+for the current SCSI Core, and the "new" one will emerge.  Granted,
+in the beginning that "new" one would be one or two functions, but
+a start nevertheless.
 
-The _next_ new protocol after SAS, will also adhere to SAM.
-It will not happen tomorrow, but it will come around.
+E.g. create a new scsi_domain_device structure and just move
+sas_do_lu_discovery(struct domain_device *) into SCSI Core
+as scsi_do_lu_discovery(struct scsi_domain_device *).
 
-The less we invent our own stuff, and the more we adhere
-to a spec, the easier we'd support new techonologies, since
-they will adhere to SAM.
+Note the declaration of this new function: the decision to call
+it is done by the transport _layer_ since it knows whether a
+target port is supported or not.  Then it will send a task
+to the scsi_domain_device, which the LLDD knows how to
+address.  Etc.
 
 	Luben
 
-P.S. You know when I mentioned "SCSI" above, I did _not_ mean
-SCSI-2 or SCSI (Parallel SCSI).  I meant SCSI-3 (SAM).
