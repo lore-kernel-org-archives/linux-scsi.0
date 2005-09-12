@@ -1,113 +1,104 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH 2.6.13 2/14] sas-class: README
-Date: Mon, 12 Sep 2005 14:38:08 -0400
-Message-ID: <4325CB10.1020902@adaptec.com>
-References: <4321E4DD.7070405@adaptec.com> <432543C6.1020403@torque.net>
+Subject: Re: [PATCH 2.6.13 14/14] sas-class: SCSI Host glue
+Date: Mon, 12 Sep 2005 14:46:18 -0400
+Message-ID: <4325CCFA.4060300@adaptec.com>
+References: <20050910041218.29183.qmail@web51612.mail.yahoo.com> <1126357713.3222.149.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932137AbVILSiQ@vger.kernel.org>
-In-Reply-To: <432543C6.1020403@torque.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: dougg@torque.net
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:59874 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932138AbVILSqe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Sep 2005 14:46:34 -0400
+In-Reply-To: <1126357713.3222.149.camel@laptopd505.fenrus.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: luben_tulkov@adaptec.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, Luben Tuikov <luben_tuikov@adaptec.com>
 
-On 09/12/05 05:00, Douglas Gilbert wrote:
-> Luben Tuikov wrote:
-> 
-> <snip>
-> 
->>+
->>+DISCOVERY
->>+---------
->>+
->>+The sysfs tree has the following purposes:
->>+    a) It shows you the physical layout of the SAS domain at
->>+       the current time, i.e. how the domain looks in the
->>+       physical world right now.
->>+    b) Shows some device parameters _at_discovery_time_.
->>+
->>+This is a link to the tree(1) program, very useful in
->>+viewing the SAS domain:
->>+ftp://mama.indstate.edu/linux/tree/
->>+I expect user space applications to actually create a
->>+graphical interface of this.
->>+
->>+That is, the sysfs domain tree doesn't show or keep state if
->>+you e.g., change the meaning of the READY LED MEANING
->>+setting, but it does show you the current connection status
->>+of the domain device.
-> 
-> 
-> So in that case, user applications should ignore READY
-> LED MEANING in sysfs and ask the device directly.
-> For example:
->     sdparm --get RLM --transport sas /dev/sda
+Arjan,
 
-Yes, correct.  You and I have discussed this already.
+You misspelled my email address:
+It is not "luben_tulkov@adaptec.com",
 
-Excerpt from that same "README" file (just above the code
-you cut and pasted):
+It is "luben_tuikov@adatptec.com".
 
-The sysfs tree has the following purposes:
-    a) It shows you the physical layout of the SAS domain at
-       the current time, i.e. how the domain looks in the
-       physical world right now.
-    b) Shows some device parameters _at_discovery_time_.
-
-> ... and what about multiple initiators sitting on different
-> machines? Should they be responsible for:
->   1) finding out about one another
->   2) and keeping the sysfs tree in the other machine
->      in sync when one changes READY LED MEANING
->      (or anything else)?
-
-And how is this a problem of the Discover code?
-
-There is a way to handle more than one initiator on the domain
-doing discovery, but I didn't code it since _at_this_time_
-I doubt people would start doing this: they don't even
-have SAS hardware, a lot less two initiators on the same
-domain.
-
-> Putting distributed state information in sysfs and then
-> passing off the responsibility for maintaining its state
-> (because it is a difficult problem) brings into question
-> the wisdom of the strategy.
-
-No Doug, not true at all.
-
-Sorry that "sg" isn't going to be used to communicate with
-expanders, but this is just part of evolution.
-
-If I removed "ready_led_meaning" and a couple of other
-such entries: you would have NO argument.
-
-If I left only the directory entries representing the
-object and the "smp_portal" you argument falls apart.
-
-Instead, you should've been saying how easy and
-_elegant_ it is communicating with expanders on the
-domain:
-	* open(2) the "smp_portal" in the expander
-          directory you want to talk to,
-	* write(2) the SMP frame you want to send,
-	* read(2) the amount of information you
-	  expect to get,
-	* close(2).
-
-Done!  No addressing to figure out, no memory problems, etc.
-The easiest interface: read(2)/write(2), _and_ the simplest
-format to use: pure SMP frames, easy and straightforward.
-
-GUI programs would be able to use all this to give
-a GUI of the whole domain and then you can just point and
-click on an expander and get information using this simple
-and elegant interface.
-
-Sorry again "sg" wouldn't fit in here.  It's just evolution.
-
+Thanks,
 	Luben
-P.S. I _did_ mention to you in private email that this is going
-to happen and you didn't reply at all.
+P.S. I've added a CC to the correct address and left
+the mistaken one in.
+
+
+
+On 09/10/05 09:08, Arjan van de Ven wrote:
+>>No self respecting SAS chip would not do 64 bit DMA, or have an sg tablesize
+>>or any other limitation.
+> 
+> 
+> yet... there will be :)
+> 
+>>Naturally, aic94xx has _no limitations_. :-)  But hey, our hardware just
+>>kicks a*s!
+> 
+> 
+> if it has no such limits then it indeed does!
+> 
+> 
+> 
+>>(Oh, I know, the solution you're paid to push into the kernel
+>>doesn't need those since it does all SAS in the firmware.)
+> 
+> 
+> I think you are way out of line here. James is very prudent in
+> separating his job at SteelEye and his maintainership.
+> 
+> 
+> 
+>>Hmm, lets see:
+>>I posted today, a _complete_ solution, 1000 years ahead of this
+>>"embryonic SAS class" you speak of.
+> 
+> 
+> yet you post this without having had ANY discussion or earlier reviews
+> in the recent months. IN fact to the outside world it looks like you sat
+> on this code for a long time for competative reasons and just posted it
+> now that Christoph is getting his layer finished.
+> 
+> 
+> 
+>>Furthermore, why do you want to use a downgrade solution?
+>>
+>>The answer is simple:
+>>   After "emd", Dell (Hi Matt!) learned quickly that if they want something
+>>in SCSI Core, they have to hire the people who _make_the_decisions_ what
+>>goes in and stays out of SCSI Core, to write that something, irrespectively
+> 
+> 
+> well EMD's failure was 100% Adaptecs fault. Adaptec was warned EARLY ON
+> that a dmraid like solution was going to be needed. It was just that
+> Adaptec decided to ignore this advice (and focus only on 2.4 and ignore
+> 2.6 entirely) that caused Adaptec to waste all the time and money on it.
+>  
+> 
+> 
+>>So as long as *you are on their payroll*, what are you discussing here
+> 
+> 
+> James is paid by SteelEye. Not by Dell or LSI.
+> 
+> 
+>>with me?  *You have an agenda*!
+> 
+> 
+> so do you.
+> 
+> 
+>>I long for the days of the previous maintainer.
+> 
+> 
+> What previous maintainer?
+> 
+> 
+> 
+
