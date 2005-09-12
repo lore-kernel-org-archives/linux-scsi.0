@@ -1,64 +1,26 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 2.6.13 14/14] sas-class: SCSI Host glue
-Date: Mon, 12 Sep 2005 13:55:21 -0600
-Message-ID: <20050912195521.GD32395@parisc-linux.org>
-References: <1126308949.4799.54.camel@mulgrave> <20050910041218.29183.qmail@web51612.mail.yahoo.com> <20050911093847.GA5429@infradead.org> <20050912160805.GC32395@parisc-linux.org> <4325D1E8.9030302@adaptec.com>
+From: James.Smart@Emulex.Com
+Subject: RE: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process (end devices)
+Date: Mon, 12 Sep 2005 15:53:11 -0400
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C20F45A0@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:50649 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S932181AbVILTz0
+Received: from emulex.emulex.com ([138.239.112.1]:10452 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1751063AbVILUBS convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Sep 2005 15:55:26 -0400
-Content-Disposition: inline
-In-Reply-To: <4325D1E8.9030302@adaptec.com>
+	Mon, 12 Sep 2005 16:01:18 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <James.Bottomley@SteelEye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: patmans@us.ibm.com
+Cc: James.Bottomley@SteelEye.com, dougg@torque.net, hch@infradead.org, ltuikov@yahoo.com, luben_tuikov@adaptec.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Sep 12, 2005 at 03:07:20PM -0400, Luben Tuikov wrote:
-> > A colleague asked me to summarise the current dispute.  I said that
-> > Luben's point was that nobody else understood SCSI.  Everybody else's
+> I meant did you test many (even a few) LUNs with non 00b 
+> addressing mode?
 > 
-> No, my point is that SCSI Core "development" isn't following any
-> spec or document or any formally accepted spec.
+> sg (scsi generic) had fixed limits removed some time ago (in 2.6.x).
 
-That's right.  And it's actually a good thing.  I'm sorry you find it so
-hard to accept, but please stop telling us we're wrong and evil.
+Yes. tested with level 01b. As mentioned, I wouldn't recommend it.
 
-> And as more and more transports are coming aboard, you see more
-> and more "kludge" from SPI making everything fit around the
-> SCSI Core's legacy SPI as _opposed_ to _evolving_ SCSI Core.
-
-Nobody wants to see that.  People do want the SCSI core to evolve.
-It has evolved substantially in the last few years that I've been paying
-attention.  Again, I'm sorry that it's not evolving in the direction that
-you'd like it to, but you're not doing a very good job at persuading us
-we're wrong.
-
-> > Just discuss things on linux-scsi dispassionately.  There's no hidden
-> 
-> I have been, many times.
-> 
-> Absolutely no advice I've ever posted to linux-scsi has been accepted
-> ever, unless someone else implemented it.
-> 
-> Any advice I've ever posted have been SAM/SPC related.
-
-If the advice is couched in the same terms you've been using recently,
-I'm not surprised.
-
-> > agenda to get you or your company.  But you are pissing people off,
-> > and very soon there *will* be because of your behaviour.
-> 
-> Personal threat on a public list?
-
-Nope, just a prediction.  Perhaps I should have used 'shall' instead
-of 'will'.  If you continue being abusive, you'll end up in peoples
-killfiles, which would be a real shame.  If you think people are being
-abusive towards you, please rise above it and don't attack them in
-return.  We all want your cards supported by the SCSI layer in the best
-possible way.  We just disagree about what that best possible way is.
-I think we can all agree that the worst possible way is if somebody else
-ends up writing a driver for your cards because your code isn't usable.
+- james
