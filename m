@@ -1,66 +1,40 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH 2.6.13 14/14] sas-class: SCSI Host glue
-Date: Mon, 12 Sep 2005 15:07:20 -0400
-Message-ID: <4325D1E8.9030302@adaptec.com>
-References: <1126308949.4799.54.camel@mulgrave> <20050910041218.29183.qmail@web51612.mail.yahoo.com> <20050911093847.GA5429@infradead.org> <20050912160805.GC32395@parisc-linux.org>
+From: James.Smart@Emulex.Com
+Subject: RE: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process (end devices)
+Date: Mon, 12 Sep 2005 15:04:03 -0400
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C20F459D@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:47335 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932153AbVILTH1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Sep 2005 15:07:27 -0400
-In-Reply-To: <20050912160805.GC32395@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750899AbVILTME@vger.kernel.org>
+content-class: urn:content-classes:message
+Sender: linux-kernel-owner@vger.kernel.org
+To: patmans@us.ibm.com, James.Bottomley@SteelEye.com
+Cc: dougg@torque.net, hch@infradead.org, ltuikov@yahoo.com, luben_tuikov@adaptec.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <James.Bottomley@SteelEye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 09/12/05 12:08, Matthew Wilcox wrote:
+
+
+> Though we still have problems with scsi_report_lun_scan code like:
 > 
-> I meant to reply to Luben's original, but I deleted it in disgust.
-> As the person who converted SCSI from the old bottom-half completion
-> processing first to a tasklet and then to a softirq, I'd like to refute
-> at least part of this allegation.  I didn't do it in order to improve
-> SCSI particularly, satisfy Splentec (who are they?), or prove a point.
+>                 } else if (lun > sdev->host->max_lun) {
 > 
-> I did it because I wanted to remove the old bottom-half mechanism and
-> SCSI was one of the remaining users.  That required me to learn a bit
-> about the SCSI stack and I got sucked in.  BTW, I believe at that time,
-> James had alreeady taken over maintenance.  I'm not actually sure who
-> the previous maintainer was -- was it Eric Biederman?
+> max_lun just has to be large, at least greater than 0xc001 
+> (49153), maybe
+> even 0xffffffff, correct?
+
+right...
+
 > 
-> A colleague asked me to summarise the current dispute.  I said that
-> Luben's point was that nobody else understood SCSI.  Everybody else's
+> But then some sequential scanning could take a while. Maybe the above
+> check is not needed.
+> 
+> lpfc has max_luns set to 256, with max limited to 32768, I 
+> don't know how
+> it could be working OK here. (Has James S or anyone tested this?)
 
-No, my point is that SCSI Core "development" isn't following any
-spec or document or any formally accepted spec.
+Yes we did test this (actually, we tested out to 64k). Time to perform all
+this looping, plus impacts due on sg devices (some configs generate huge
+numbers - outside of sg's range), made us pull back to 256 - although it's
+tunable.
 
-And as more and more transports are coming aboard, you see more
-and more "kludge" from SPI making everything fit around the
-SCSI Core's legacy SPI as _opposed_ to _evolving_ SCSI Core.
-
-> point was that Luben doesn't understand Linux kernel development.  Luben,
-> I think you need to shut up, accept advice, stop trying to do everything
-> in your own driver, and stop trying to have private conversations.
-
-I've had private conversations _before_ I posted anything and those
-were highly technical -- you know SAS stuff.
-
-> Just discuss things on linux-scsi dispassionately.  There's no hidden
-
-I have been, many times.
-
-Absolutely no advice I've ever posted to linux-scsi has been accepted
-ever, unless someone else implemented it.
-
-Any advice I've ever posted have been SAM/SPC related.
-
-> agenda to get you or your company.  But you are pissing people off,
-> and very soon there *will* be because of your behaviour.
-
-Personal threat on a public list?
-
-	Luben
-
+-- james s 
