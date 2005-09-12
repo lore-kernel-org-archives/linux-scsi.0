@@ -1,104 +1,129 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process
- (end devices)
-Date: Mon, 12 Sep 2005 18:39:21 -0400
-Message-ID: <43260399.3000405@adaptec.com>
-References: <1126308304.4799.45.camel@mulgrave> <20050910024454.20602.qmail@web51613.mail.yahoo.com> <20050911094656.GC5429@infradead.org>
+From: Andrew Patterson <andrew.patterson@hp.com>
+Subject: Re: [ANNOUNCE 0/2] Serial Attached SCSI (SAS) support for the
+	Linux kernel
+Date: Mon, 12 Sep 2005 17:18:31 -0600
+Message-ID: <1126567112.20831.102.camel@bluto.andrew>
+References: <4321E2C1.7080507@adaptec.com>
+	 <20050911092030.GA5140@infradead.org>  <4325F488.5040304@adaptec.com>
+Reply-To: andrew.patterson@hp.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-F3c/3N8SDVdWaqfktxF6"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:47785 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1750876AbVILWj3 (ORCPT
+Received: from atlrel7.hp.com ([156.153.255.213]:5351 "EHLO atlrel7.hp.com")
+	by vger.kernel.org with ESMTP id S932349AbVILXTZ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Sep 2005 18:39:29 -0400
-In-Reply-To: <20050911094656.GC5429@infradead.org>
+	Mon, 12 Sep 2005 19:19:25 -0400
+In-Reply-To: <4325F488.5040304@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <James.Bottomley@SteelEye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 09/11/05 05:46, Christoph Hellwig wrote:
-> On Fri, Sep 09, 2005 at 07:44:54PM -0700, Luben Tuikov wrote:
-> 
->>>this one completely duplicates the
->>>mid-layer infrastructure for handling devices with Logical Units.
->>
->>No, it does *not*.  James, you have _stop_ spreading FUD, relying
->>that other people have not read the SCSI Core code.
->>
->>See here:
->>    SCSI Core has *no representation* of a SCSI Device with a
->>SCSI Target Port.
-> 
-> 
-> struct scsi_target
-> 
-> 
->>I've _clearly_ outlined that in the comments of the code,
->>which you _conveniently_ did _not_ cut and paste here.
-> 
-> 
->  * Discover logical units present in the SCSI device.  I'd like this
->  * to be moved to SCSI Core, but SCSI Core has no concept of a "SCSI
->  * device with a SCSI Target port".  A SCSI device with a SCSI Target
->  * port is a device which the _transport_ found, but other than that,
->  * the transport has little or _no_ knowledge about the device.
->  * Ideally, a LLDD would register a "SCSI device with a SCSI Target
->  * port" with SCSI Core and then SCSI Core would do LU discovery of
->  * that device.
-> 
-> So what does this mean except "Luben tries to impress everyone with
-> standards gibberish, at the same time ignoring we soluitions that
-> work despite maybe not 100% elegant".
 
-Yes, that "maybe not 100% elegant" is what makes code survive
-long years, being maintainable and not spaghetti like (as new
-functionality is added).
+--=-F3c/3N8SDVdWaqfktxF6
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-> Sure, we'd like to move away from needing the ->id target id specifier.
-> But right now we need it, even you're code sets it in over-complicated
+On Mon, 2005-09-12 at 17:35 -0400, Luben Tuikov wrote:
+> On 09/11/05 05:20, Christoph Hellwig wrote:
+> > Thanks for finally posting your code.
+> >=20
+> > At the core it's some really nice code dealing with host-based SAS
+> > implementations.
+>=20
+> Thank you Christoph.  Much appreciated.
+>=20
+> > What's not nice is that it's not intgerating with the
+> > SAS transport class I posted,
+>=20
+> I wish there was something I could do.  HP and LSI
+> were aware of my efforts since the beginning of the year.
 
-It is not "over-complicated".  The functionality which is there Christoph,
-is there for a reason.  Mainly this is experience and knowlege, but
-you canot _shortcut_ code, since you're eliminating an abstraction
-layer: one thing is done at a time at a logical layer.  When
-all tasks are done at a logical layer, then we move onto the next.
+I know I am going to regret getting pulled into this ;-(.
 
-E.g. an SES device may want to do something before you transition
-from one stage to the next, to all devices on the same level as
-that SES device. (This is a topic for another thread, no intentions
-to mention it.)
+This effort started on April.  Eric Moore, Mike Miller and I started
+work on a SAS transport class and then later pulled Luben it at the
+suggestion of Douglas Gilbert (if I remember correctly).  We later
+mutually agreed that Luben would take over the transport class work as
+he seemed to have much more experience with this sort of thing.  The
+original idea was to implement a SAS transport class that would allow
+the LSI and Adaptec driver to get into kernel.org (or others at the
+time) and to find a way to get SDI/CSMI API's into the kernel without
+the use of IOCTL's.  Luben then went off on his own and came up with his
+effectively Adaptec only solution.
 
-> ways.  But if you send a nice patch to get rid everyone will be happy.
+>=20
+> As well, you had a copy of my code July 14 this year,
+> long before starting your work on your SAS class for LSI and
+> HP (so its acceptance is guaranteed), after OLS.
 
-You and I share the same passion: to improve SCSI Core.
+HP never suggested that Christoph do a SAS transport layer. We were
+happy to provide some equipment when we found out that he was working on
+it.  Please don't speak for HP. I am sure that LSI would prefer you
+don't speak for them either.
 
-I'm not sure that a patch to get rid of id in the current SCSI Core
-is quite possible without major heart-attacks of quite a few
-LLDDs, etc.
+>=20
+> We did meet at OLS and we did have the SAS BOF.  I'm not sure
+> why you didn't want to work together?
 
-Instead, maybe, we should write a few new functions in SCSI Core which
-could accomodate new, improved "standards gibberish" as you call
-it, behaviour.
+If my memory serves correctly, there were 10-12 people at that BOF,
+representing the SCSI kernel maintainers and all of the vendors
+currently providing SAS hardware.  Virtually everyone disagreed with
+your implementation (which you indeed emailed shortly before the
+conference) that would only work with one vendor's card. The suggestion
+was made that you convert your code to various library layers so that it
+would work with all vendors.  A suggestion which it seems that you
+continue to reject.
 
-Newer code would use those new functions.  Older one, would use
-old ones.
+>=20
+> > it's duplicating things like LUN disocvery
+>=20
+> This is a much more involved subject than meets the eye.
+>=20
+> > from the SCSI core code, and adding it's own sysfs representation that'=
+s
+> > very different from the way the SCSI core and transport classes do it.
+>=20
+> Yes, it is time to evolve.
+>=20
+> I've pointed out many times the shortcomings of expanding the
+> JB's "transport _attribute_ class" into a "transport layer" in
+> recent threads.
+>=20
+> I'm sorry but over everything else, we need a common base,
+> (what you call "techno-gibberish") in order to see eye to eye.
+>=20
+> > Are you willing to work with us to intgerate it with the infrastructure
+> > we have?
+>=20
+> I'm sure you've already taken a closer look at the SAS code=20
+> I posted.   Study it, read the spec, read the code again.
+>=20
+> Let me know if I can help with anything.
+>=20
+> Overall, MPT is very different in design than a disclosed
+> transport.  Talk to HP, LSI and Dell and see what they think.
 
-As SPI is slowly dying away, there'd be less and less need and support
-for the current SCSI Core, and the "new" one will emerge.  Granted,
-in the beginning that "new" one would be one or two functions, but
-a start nevertheless.
+=46rom HP's point of view (or mine at least).  We would prefer something
+that works with every vendors card.  Not Adaptec's (or is it Luben's)
+vision of the perfect card.
 
-E.g. create a new scsi_domain_device structure and just move
-sas_do_lu_discovery(struct domain_device *) into SCSI Core
-as scsi_do_lu_discovery(struct scsi_domain_device *).
+Andrew
+--=20
+Andrew Patterson               =20
+Hewlett-Packard
 
-Note the declaration of this new function: the decision to call
-it is done by the transport _layer_ since it knows whether a
-target port is supported or not.  Then it will send a task
-to the scsi_domain_device, which the LLDD knows how to
-address.  Etc.
+--=-F3c/3N8SDVdWaqfktxF6
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
 
-	Luben
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQBDJgzHoKXgdXvblSgRArxbAKC6fbWRh8/CadXThxlGzqqGy1eL8wCfZ68s
+zPwJwKbm6dm4g3T/B5HX5bg=
+=HYu6
+-----END PGP SIGNATURE-----
+
+--=-F3c/3N8SDVdWaqfktxF6--
 
