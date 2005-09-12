@@ -1,81 +1,70 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process
-	(end devices)
-Date: Mon, 12 Sep 2005 16:23:10 -0500
-Message-ID: <1126560191.4825.71.camel@mulgrave>
-References: <20050910024454.20602.qmail@web51613.mail.yahoo.com>
-	 <1126368081.4813.46.camel@mulgrave>  <4325997D.3050103@adaptec.com>
-	 <1126547565.4825.52.camel@mulgrave>  <4325E5AE.1080900@adaptec.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [ANNOUNCE 0/2] Serial Attached SCSI (SAS) support for the Linux
+ kernel
+Date: Mon, 12 Sep 2005 17:35:04 -0400
+Message-ID: <4325F488.5040304@adaptec.com>
+References: <4321E2C1.7080507@adaptec.com> <20050911092030.GA5140@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:30410 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932095AbVILVXQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Sep 2005 17:23:16 -0400
-In-Reply-To: <4325E5AE.1080900@adaptec.com>
+Received: from magic.adaptec.com ([216.52.22.17]:46491 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932268AbVILVfL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Sep 2005 17:35:11 -0400
+In-Reply-To: <20050911092030.GA5140@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: ltuikov@yahoo.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, 2005-09-12 at 16:31 -0400, Luben Tuikov wrote:
-> On 09/12/05 13:52, James Bottomley wrote:
-> > Well there is this in sas_discover.h:
-> > 
-> > struct scsi_core_mapping {
-> > 	int  channel;
-> > 	int  id;
-> > };
-> > 
-> > struct LU {
-> > [...]
-> > 	struct scsi_core_mapping map;
-> > 
-> > 
-> > so if you use channel, id and scsilun_to_int() (or your SCSI_LUN
-> > reimplementation of that) on your LUN structure, you have everything
-> > necessary to interface to scsi_scan_target, yes.
-> > 
-> > You have to have this, otherwise you wouldn't be able to use
-> > scsi_add_device in sas_scsi_host.c:sas_register_with_scsi().
-> > 
-> > Based on this it does look like your refusal to use scsi_scan_target is
-> > based on ideological rather than technical objections.
+On 09/11/05 05:20, Christoph Hellwig wrote:
+> Thanks for finally posting your code.
 > 
-> Hmm, no.
-> 
-> Channel and id are assigned _after_ the device has been scanned for
-> LUs.  So I cannot just call scsi_scan_target() and say: "here is
-> this SCSI Domain device, I know nothing about, other than
-> the fact that it has a Target port, scan it".
+> At the core it's some really nice code dealing with host-based SAS
+> implementations.
 
-In your code channel corresponds to an index in the ports array of the
-host adapter and hence is known before you do any logical unit scanning.
-Id is assigned from a bitmap in the port.  You could do that assignment
-in sas_discover_end_dev() then you could use scsi_scan_target() in place
-of sas_do_lu_discovery().  It would also mitigate your bug below since
-now your id is one to one on the end devices rather than the logical
-units of the end devices, so each port would support up to 128 end
-devices rather than 128 logical units.
+Thank you Christoph.  Much appreciated.
 
-> SCSI Core has no representation of a SCSI Target, it has
-> an HCIL representation.
-> 
-> > It also looks like you have a bug in your id mapping code: you allocate
-> > one id per lun, not per target, so you're going to run out pretty
-> > quickly when you meet a device with actual logical units, since you hard
-> > code max_ids to 128 in sas_port.c
-> 
-> Yes, this is a bit more involved (on a larger scale than per port).
-> The hard coding is intentional.
-> 
-> Ideally, I'd not have to generate Channel and Id to accomodate
-> SCSI Core's ancient SPI centric code.
-> 
-> Then I'd not need max_ids and/or the bitmap.
+> What's not nice is that it's not intgerating with the
+> SAS transport class I posted,
 
-James
+I wish there was something I could do.  HP and LSI
+were aware of my efforts since the beginning of the year.
 
+As well, you had a copy of my code July 14 this year,
+long before starting your work on your SAS class for LSI and
+HP (so its acceptance is guaranteed), after OLS.
+
+We did meet at OLS and we did have the SAS BOF.  I'm not sure
+why you didn't want to work together?
+
+> it's duplicating things like LUN disocvery
+
+This is a much more involved subject than meets the eye.
+
+> from the SCSI core code, and adding it's own sysfs representation that's
+> very different from the way the SCSI core and transport classes do it.
+
+Yes, it is time to evolve.
+
+I've pointed out many times the shortcomings of expanding the
+JB's "transport _attribute_ class" into a "transport layer" in
+recent threads.
+
+I'm sorry but over everything else, we need a common base,
+(what you call "techno-gibberish") in order to see eye to eye.
+
+> Are you willing to work with us to intgerate it with the infrastructure
+> we have?
+
+I'm sure you've already taken a closer look at the SAS code 
+I posted.   Study it, read the spec, read the code again.
+
+Let me know if I can help with anything.
+
+Overall, MPT is very different in design than a disclosed
+transport.  Talk to HP, LSI and Dell and see what they think.
+
+	Luben
 
