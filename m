@@ -1,37 +1,72 @@
-From: =?iso-8859-1?Q?J=F6rn?= Engel <joern@wohnheim.fh-wedel.de>
-Subject: Re: [PATCH 2.6.13 14/14] sas-class: SCSI Host glue
-Date: Mon, 12 Sep 2005 16:13:57 +0200
-Message-ID: <20050912141357.GA28933@wohnheim.fh-wedel.de>
-References: <20050910041218.29183.qmail@web51612.mail.yahoo.com> <1126357713.3222.149.camel@laptopd505.fenrus.org> <432588E4.5020103@adaptec.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: aic79xx oops
+Date: Mon, 12 Sep 2005 09:15:14 -0500
+Message-ID: <1126534514.4825.5.camel@mulgrave>
+References: <200509091325.45620.bernd.schubert@pci.uni-heidelberg.de>
+	 <1126364765.4813.16.camel@mulgrave>
+	 <200509121258.26823.bernd.schubert@pci.uni-heidelberg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750938AbVILOOD@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <432588E4.5020103@adaptec.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, luben_tulkov@adaptec.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:11461 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750973AbVILOPT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Sep 2005 10:15:19 -0400
+In-Reply-To: <200509121258.26823.bernd.schubert@pci.uni-heidelberg.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bernd-schubert@gmx.de
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, 12 September 2005 09:55:48 -0400, Luben Tuikov wrote:
->=20
-> No, I do not.  I'm _not_ a maintainer.  I'm simply a _contributor_.
+[linux-scsi re-added to cc list]
 
-Putting in less effort than someone else is hardly an excuse for
-anything.  Much less for personal attacks.
+On Mon, 2005-09-12 at 12:58 +0200, Bernd Schubert wrote:
+> Hello James,
+> 
+> > > scsi: host 4 channel 0 id 0 lun 0x306727c0706727c0 has a LUN larger than
+> > > currently supported.
+> >
+> > This looks symptomatic of a report luns failure
+> 
+> Hmm, so far we always believed this is a bug in the firmware of our scsi-ide 
+> raid array.
 
-Can you please cut it off and offer technical arguments?  Even if the
-maintainer had a personal problem with you, technical arguments tend
-to win and good code will go in.  Everything else is just mailing list
-noise and increased hart rates for some people.
+It is ... the array firmware isn't sending the correct response to
+report luns, I think.  Try the attached patch; it will blacklist the
+array and prevent us from sending REPORT LUNS commands.
 
-J=F6rn
+> >
+> > > EIP is at ahd_send_async+0xde/0x2a0 [aic79xx]
+> >
+> > This I'm not sure about.  There are some fixes that may correct this in
+> > the current kernel tree head (i.e. beyond 2.6.13), if you could give
+> > that a go.
+> 
+> Well, the oopses do not always occur, only sometimes. On Friday the server 
+> locked up a second time and we switched to 2.6.13. With three reboots no oops 
+> did happen, though this doesn't tell anything as we also could reboot 2.6.11 
+> several times without this oops.
+> Well, now we a probably experiencing a network bug in 2.6.13 and the chance it 
+> pretty high that we have to switch back to 2.6.11, no chance for a kernel 
+> beyond 2.6.13.
 
---=20
-You cannot suppose that Moliere ever troubled himself to be original in=
- the
-matter of ideas. You cannot suppose that the stories he tells in his pl=
-ays
-have never been told before. They were culled, as you very well know.
--- Andre-Louis Moreau in Scarabouche
+OK ... it looks like an internal refcounting error in the aic79xx; that
+piece of the driver was overhauled for post 2.6.13; however, that
+doesn't guarantee that this particular issue was fixed ...
+
+James
+
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -110,6 +110,7 @@ static struct {
+ 	{"RELISYS", "Scorpio", NULL, BLIST_NOLUN},	/* responds to all lun */
+ 	{"SANKYO", "CP525", "6.64", BLIST_NOLUN},	/* causes failed REQ SENSE, extra reset */
+ 	{"TEXEL", "CD-ROM", "1.06", BLIST_NOLUN},
++	{"transtec", "T5008", "0001", BLIST_NOREPORTLUN },
+ 	{"YAMAHA", "CDR100", "1.00", BLIST_NOLUN},	/* locks up */
+ 	{"YAMAHA", "CDR102", "1.00", BLIST_NOLUN},	/* locks up */
+ 	{"YAMAHA", "CRW8424S", "1.0", BLIST_NOLUN},	/* locks up */
+
+
