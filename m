@@ -1,124 +1,90 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH 2.6.13 2/14] sas-class: README
-Date: Mon, 12 Sep 2005 12:56:19 -0400
-Message-ID: <4325B333.3070301@adaptec.com>
-References: <4321E4DD.7070405@adaptec.com> <43238C16.4010709@torque.net>
+Subject: Re: [PATCH 2.6.13 10/20] aic94xx: aic94xx_reg.c Register access
+Date: Mon, 12 Sep 2005 13:04:16 -0400
+Message-ID: <4325B510.4010205@adaptec.com>
+References: <4321E3CB.2060806@adaptec.com> <20050911102649.GA2742@elf.ucw.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932076AbVILQ41@vger.kernel.org>
-In-Reply-To: <43238C16.4010709@torque.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: dougg@torque.net
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:60616 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932099AbVILREX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Sep 2005 13:04:23 -0400
+In-Reply-To: <20050911102649.GA2742@elf.ucw.cz>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 09/10/05 21:44, Douglas Gilbert wrote:
-> Luben Tuikov wrote:
-> 
->>Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
-> 
-> 
-> <snip>
-> 
-> An interesting document. 
-
-Hi Doug, how are you?
-
-If there is something wrong with the document in general,
-please point it out.
-
-Your "An interesting document" sounds like James's
-"Aside from all other problems".
-
-> I have a small quibble here (and a larger
-> one about the SMP user space access that I will elaborate on
-> in a day or so).
-
-Ok.
-
-(Thinking to myself: I wonder, if he's got a problem with
-SMP user space access, why not post it now?  Why in a day
-or so?)
-
->>+Port events, passed on a _phy_:
->>+	PORTE_BYTES_DMAED,      (M)
->>+	PORTE_BROADCAST_RCVD,   (E)
->>+	PORTE_LINK_RESET_ERR,   (C)
->>+	PORTE_TIMER_EVENT,      (C)
->>+	PORTE_HARD_RESET.
+On 09/11/05 06:26, Pavel Machek wrote:
+> Hi!
 > 
 > 
-> Link layer broadcasts don't only come from expanders
-> (i.e. BROADCAST(CHANGE) ); SAS 1.1 (sas1r09e.pdf) defines
+>>+/* We know that the register wanted is in the range
+>>+ * of the sliding window.
+>>+ */
+>>+#define ASD_READ_SW(ww, type, ord)                                     \
+>>+static inline type asd_read_##ww##_##ord (struct asd_ha_struct *asd_ha,\
+>>+					  u32 reg)                     \
+>>+{                                                                      \
+>>+	struct asd_ha_addrspace *io_handle = &asd_ha->io_handle[0];    \
+>>+	u32 map_offs=(reg - io_handle-> ww##_base )+asd_mem_offs_##ww ();\
+>>+	return asd_read_##ord (asd_ha, (unsigned long) map_offs);      \
+>>+}
+>>+
+>>+#define ASD_WRITE_SW(ww, type, ord)                                    \
+>>+static inline void asd_write_##ww##_##ord (struct asd_ha_struct *asd_ha,\
+>>+				  u32 reg, type val)                   \
+>>+{                                                                      \
+>>+	struct asd_ha_addrspace *io_handle = &asd_ha->io_handle[0];    \
+>>+	u32 map_offs=(reg - io_handle-> ww##_base )+asd_mem_offs_##ww ();\
+>>+	asd_write_##ord (asd_ha, (unsigned long) map_offs, val);       \
+>>+}
+>>+
+>>+ASD_READ_SW(swa, u8,  byte);
+>>+ASD_READ_SW(swa, u16, word);
+>>+ASD_READ_SW(swa, u32, dword);
+>>+
+>>+ASD_READ_SW(swb, u8,  byte);
+>>+ASD_READ_SW(swb, u16, word);
+>>+ASD_READ_SW(swb, u32, dword);
+>>+
+>>+ASD_READ_SW(swc, u8,  byte);
+>>+ASD_READ_SW(swc, u16, word);
+>>+ASD_READ_SW(swc, u32, dword);
+>>+
+>>+ASD_WRITE_SW(swa, u8,  byte);
+>>+ASD_WRITE_SW(swa, u16, word);
+>>+ASD_WRITE_SW(swa, u32, dword);
+>>+
+>>+ASD_WRITE_SW(swb, u8,  byte);
+>>+ASD_WRITE_SW(swb, u16, word);
+>>+ASD_WRITE_SW(swb, u32, dword);
+>>+
+>>+ASD_WRITE_SW(swc, u8,  byte);
+>>+ASD_WRITE_SW(swc, u16, word);
+>>+ASD_WRITE_SW(swc, u32, dword);
+> 
+> 
+> This is certainly nice entry into "best abuse of macros" contest. Do
+> you really need all those inline functions?
 
-I'm aware of what the spec says.
+Hehehee, you may be right Pavel.  I just wanted to minimize bugs which
+could be introduced by syntax errors (not necessarily compilation errors).
 
-> BROADCAST(SES) coming from a target port associated with
+Yes, reading byte/word/dword from HA memory is needed.
 
-I'm aware of this primitive.
+>>+static void __asd_write_reg_byte(struct asd_ha_struct *asd_ha, u32 reg, u8 val)
+>>+{
+>>+	struct asd_ha_addrspace *io_handle=&asd_ha->io_handle[0];
+>>+	BUG_ON(reg >= 0xC0000000 || reg < ALL_BASE_ADDR);
+> 
+> 
+> Will this work correctly with 2GB/2GB split kernels?
 
-> an enclosure device (SES peripheral type). It is not
-> clear to me how the associated primitive is conveyed back
-> with the broadcast.
+"reg" is an address in the host adapter's memory.  Will this matter?
 
-As you can see the message is "PORTE_BROADCAST_RCVD".
-The _type_ of BROADCAST is encoded in phy->sas_prim.
+	Luben
 
-See sas_port.c::void sas_porte_broadcast_rcvd(struct sas_phy *phy).
 
-This function decides what to do depending on the type of
-BROADCAST received.
-
-Currently there have been no requests for handling of
-BROADCAST(SES).
-
-When there's such a request, we handle it there, telling
-the Discover code of a SES event.
-
-Currently only BROADCAST(CHANGE) is handled _by default_.
-
-I.e. we search the domain for the expander and phy which
-generated it, and act on it.  If we find no expander and
-phy which generated it, in case we processed a different
-BROADCAST or an expander has broken firmware, we return.
-This is all in the code.
-
-BROADCAST filtering is also present in the LLDD, i.e.
-notify on such and such BROADCAST or primitive in general.
-This is done by the hardware itself (no firmware) so it
-is very fast.
- 
-> If it is not conveyed back then perhaps that broadcast define
-> could be expanded to:
->      PORTE_BROADCAST_CHANGE   (E)
->      PORTE_BROADCAST_SES      (Target)
-
-I can add this event if you want.
-The questiong is _what_ to do on this event.  This is a complex
-answer and I'd rather have a _SES_ layer (or at least a logical
-module/library) to handle those as storage vendors want this,
-_right now_.
-
-In fact, I've some patches to submit regarding SES devices
-on the domain, but I wanted to _trim *down*_ the politics,
-_not_ escalate them.
-
-Also this patch was "SAS support", not "SES device support".
-
-> and a note inserted that BROADCAST(RESERVED CHANGE 0) and
-> BROADCAST(RESERVED CHANGE 1) be mapped to PORTE_BROADCAST_CHANGE
-> by the LLDD as per table 79 of sas1r09e.pdf .
-
-They already are Doug.
-
-> BTW table 70 indicates an initiator can originate a BROADCAST(CHANGE),
-> not just an expander.
-
-I hope this isn't going to be a thread about
-	* pointing out the obvious, or
-	* some kind of competion of who's read the spec the most.
-
-All in all, you could've just asked "How about BROADCAST(SES)?".
-
-   Luben
