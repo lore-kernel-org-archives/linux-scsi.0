@@ -1,129 +1,64 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process
- (end devices)
-Date: Mon, 12 Sep 2005 15:39:39 -0400
-Message-ID: <4325D97B.8010401@adaptec.com>
-References: <1126308304.4799.45.camel@mulgrave>	 <20050910024454.20602.qmail@web51613.mail.yahoo.com>	 <20050911094656.GC5429@infradead.org>  <43251D8C.7020409@torque.net> <1126537041.4825.28.camel@mulgrave>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 2.6.13 14/14] sas-class: SCSI Host glue
+Date: Mon, 12 Sep 2005 13:55:21 -0600
+Message-ID: <20050912195521.GD32395@parisc-linux.org>
+References: <1126308949.4799.54.camel@mulgrave> <20050910041218.29183.qmail@web51612.mail.yahoo.com> <20050911093847.GA5429@infradead.org> <20050912160805.GC32395@parisc-linux.org> <4325D1E8.9030302@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932169AbVILTjw@vger.kernel.org>
-In-Reply-To: <1126537041.4825.28.camel@mulgrave>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Douglas Gilbert <dougg@torque.net>, Christoph Hellwig <hch@infradead.org>, Luben Tuikov <ltuikov@yahoo.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:50649 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S932181AbVILTz0
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Sep 2005 15:55:26 -0400
+Content-Disposition: inline
+In-Reply-To: <4325D1E8.9030302@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <James.Bottomley@SteelEye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 09/12/05 10:57, James Bottomley wrote:
-> On Mon, 2005-09-12 at 16:17 +1000, Douglas Gilbert wrote:
+On Mon, Sep 12, 2005 at 03:07:20PM -0400, Luben Tuikov wrote:
+> > A colleague asked me to summarise the current dispute.  I said that
+> > Luben's point was that nobody else understood SCSI.  Everybody else's
 > 
->>If we look at our (im)famous <h:c:i:l> addressing string,
->>the first 2 elements (i.e. "h:c") are about kernel device
->>addressing (i.e. which (part of a) HBA to be initiator); the
->>contentious "i" is about addressing the target and is
->>transport dependent, and the "l" is for addressing within
->>the target. Only the last element is true SCSI and is
->>defined in SAM (to be 64 bits, not 32). In iSCSI the "i"
->>is actually an adorned IP address.
+> No, my point is that SCSI Core "development" isn't following any
+> spec or document or any formally accepted spec.
+
+That's right.  And it's actually a good thing.  I'm sorry you find it so
+hard to accept, but please stop telling us we're wrong and evil.
+
+> And as more and more transports are coming aboard, you see more
+> and more "kludge" from SPI making everything fit around the
+> SCSI Core's legacy SPI as _opposed_ to _evolving_ SCSI Core.
+
+Nobody wants to see that.  People do want the SCSI core to evolve.
+It has evolved substantially in the last few years that I've been paying
+attention.  Again, I'm sorry that it's not evolving in the direction that
+you'd like it to, but you're not doing a very good job at persuading us
+we're wrong.
+
+> > Just discuss things on linux-scsi dispassionately.  There's no hidden
 > 
+> I have been, many times.
 > 
-> About the "i" problem, I've long agreed that we could do with an
-> arbitrary string or other method there.  There is a description of how
-
-You do not need an "i" representation in SCSI Core. In fact,
-the "i" does exist, but it is _transport_ specific, e.g. Id in SPI,
-or WWN in SAS.
-
-SCSI Core can work without ever representing "i".
-
-The IEEE1394 people have also pointed that out to you recently.
-
-> to do it, it's just rather involved since the idea of "i" being a small
-> number threads through a large amount of driver code making backward
-> compatibility a bit of a nightmare.
+> Absolutely no advice I've ever posted to linux-scsi has been accepted
+> ever, unless someone else implemented it.
 > 
-> The "l" issue should be primarily solved with the scsilun_to_int and
-> int_to_scsilun functions.  OK, horribly named, but they now mean that
-> the internal mid-layer representation (a 32 bit int currently) is
-> abstracted from the structure the drivers use on the wire so we should
-> be free to increase it if necessary.
+> Any advice I've ever posted have been SAM/SPC related.
 
-The "L" you need to represent at face value: 64 bits, no interpretations
-of any kind, BE order.
+If the advice is couched in the same terms you've been using recently,
+I'm not surprised.
 
-Once you do that you need not worry about it, ever.
-
->  Note: you do actually need either
-> an array with more than two levels of nesting actually to need the
-> increase and no-one actually seems to have one of these yet.
-
-What?
-
->>My major objection to Luben's SAS sysfs representation is
->>that "things" have to be discovered before the user space
->>can talk to them. Why?? An app in the user space might
->>_know_ that the "thing" (e.g. SAS expander or a "well
->>known" logical unit) is out there. Again the obvious comparison
->>is with IP addresses and the way the networking subsystem
->>functions. I would like to make HBA initiators (or their ports)
->>visible as interfaces (like eth0 and friends) through which
->>commands/frames/primitives can be sent and events received.
+> > agenda to get you or your company.  But you are pissing people off,
+> > and very soon there *will* be because of your behaviour.
 > 
-> 
-> This one, I actually agree with.  Most users have small domains which
+> Personal threat on a public list?
 
-Don't rush to agree.
-
-Read my reply where I explain that SAS is _not_ Ethernet,
-half way down:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112654911906868&w=2
-
-> will be easily amenable to total enumeration.  The other issue is that
-
-Enumeration is wrong!  I know you want to stick to Parallel SCSI,
-but enumeration is wrong.
-
-You do not know what the domain is or looks like at SCSI Core level,
-and to impose enumeration is simply wrong.
-
-You need not an "i" part at all to make SCSI Core work.  A pointer
-to scsi_domain_device (yet to be created) is enough.
-
-> if we go with a socket like approach where the user has to connect to
-> the devices, then we lose hotplug ... a true network doesn't know or
-> care when another PC is plugged into it.
-
-And a SAS domain is not a _true_ network, although very similar.
-
-Trust me, showing the domain in sysfs naturally, does _not_ hurt
-anyone.
-
-It is simply part of evolution: The storage transport layer owns
-it and controls it, SCSI Core is unaware of it due to layering
-set forth in SAM and SPC (SAS too).
-
-I've posted references to the figures and text before:
-- SAM4r02, Figure 2 to Figure 8 are very good -- a picture is worth
-more than a 1000 words.
-- SPC4r00, Figure 1 -- very descriptive.
-- SAS1r09e, Figure 1, (Figure 2 for ATA),
-  Figure 10 -- very descriptive in showing what SCSI Core should
-  be (yellow part) and what transport layer should be (green part).
-
-> For things like iscsi, we do have the compromise that discovery doesn't
-> begin until the endpoint is known.
-> 
-> If we go like net and have the whole world as our potential but non-
-> discovered domain, we have to begin addressing security issues that
-> arise because of the parts of the domain that we don't control ... I'd
-> much rather leave these sort of issues to the net people and begin with
-> the a priori assumption that a scsi domain, although it might be bridged
-> across the hostile network,
-
-[SCSI domain]
-> represents a fundamentally secure and
-> discoverable system.
-
-Yes, that's a good assumption to take.
-
-	Luben
+Nope, just a prediction.  Perhaps I should have used 'shall' instead
+of 'will'.  If you continue being abusive, you'll end up in peoples
+killfiles, which would be a real shame.  If you think people are being
+abusive towards you, please rise above it and don't attack them in
+return.  We all want your cards supported by the SCSI layer in the best
+possible way.  We just disagree about what that best possible way is.
+I think we can all agree that the worst possible way is if somebody else
+ends up writing a driver for your cards because your code isn't usable.
