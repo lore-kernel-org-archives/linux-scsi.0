@@ -1,43 +1,94 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 2.6.13 14/14] sas-class: SCSI Host glue
-Date: Mon, 12 Sep 2005 18:55:18 +0100
-Message-ID: <1126547718.30449.79.camel@localhost.localdomain>
-References: <20050910041218.29183.qmail@web51612.mail.yahoo.com>
-	 <Pine.LNX.4.63.0509101028510.4630@cuia.boston.redhat.com>
-	 <20050911035621.87661.qmail@mail.muc.de> <1126446071.4831.5.camel@mulgrave>
-	 <4325B6E3.9090503@adaptec.com>
+From: Mark Haverkamp <markh@osdl.org>
+Subject: Re: [PATCH 5/8] aacraid: error return checking  (Updated)
+Date: Mon, 12 Sep 2005 10:35:30 -0700
+Message-ID: <1126546530.7407.16.camel@markh1.pdx.osdl.net>
+References: <1126212624.7479.23.camel@markh1.pdx.osdl.net>
+	 <20050910191925.GC3662@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from clock-tower.bc.nu ([81.2.110.250]:14785 "EHLO
-	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP id S932112AbVILRaX
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Sep 2005 13:30:23 -0400
-In-Reply-To: <4325B6E3.9090503@adaptec.com>
+Received: from smtp.osdl.org ([65.172.181.4]:54930 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751089AbVILRfi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Sep 2005 13:35:38 -0400
+In-Reply-To: <20050910191925.GC3662@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, ak@muc.de, Rik van Riel <riel@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-On Llu, 2005-09-12 at 13:12 -0400, Luben Tuikov wrote:
-> > But my point was that we already have a mechanism for coping with this:
-> > The scsi template parameterises some of these things (max sector size,
-> > sg table elements, clustering, etc).
+On Sat, 2005-09-10 at 20:19 +0100, Christoph Hellwig wrote:
+> > @@ -929,9 +932,14 @@
+> >  	printk(KERN_INFO "Adaptec %s driver (%s)\n",
+> >  	  AAC_DRIVERNAME, aac_driver_version);
+> >  
+> > -	error = pci_module_init(&aac_pci_driver);
+> > -	if (error)
+> > +	error = pci_register_driver(&aac_pci_driver);
+> > +	if (error < 0 || list_empty(&aac_devices)) {
+> > +		if (error >= 0) {
+> > +			pci_unregister_driver(&aac_pci_driver);
+> > +			error = -ENODEV;
+> > +		}
+> >  		return error;
 > 
-> James, people have _already_ replied to your point, saying
-> that they want to start with a _clean_ hardware model/interface.
-> See Alan and Andi's emails.
+> The list_empty check is wrong.  I driver should stay loaded even if
+> no devices have been found.
 
-There is a difference between worrying about stuff later and not
-supporting existing things people expect to work.
+Here is an updated patch with the suggested change.
 
-> It is time SCSI Core started cleanly, especially now with SAS
-> which will completely *replace* Parallel SCSI and IDE (for SATA).
+- - - - 
+Received from Mark Salyzyn from Adaptec
 
-You have to get from here to there, and do so without breaking anything
-or making it untestable on the way. Going around the scsi limits rather
-than fixing the current weaknesses may or may not be the right way but
-it needs to occur in logical steps.
+This patch adds some additional error return checking and error return
+value propagation during initialization. Also, the deprecation of
+pci_module_init with pci_register_driver along with the change in return
+values.
 
-Alan
+Applies to the scsi-misc-2.6 git tree.
+
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
+
+
+
+Index: scsi-misc-aac-2/drivers/scsi/aacraid/linit.c
+===================================================================
+--- scsi-misc-aac-2.orig/drivers/scsi/aacraid/linit.c	2005-09-12 08:58:32.000000000 -0700
++++ scsi-misc-aac-2/drivers/scsi/aacraid/linit.c	2005-09-12 09:01:05.000000000 -0700
+@@ -748,7 +748,8 @@
+ 		unique_id++;
+ 	}
+ 
+-	if (pci_enable_device(pdev))
++	error = pci_enable_device(pdev);
++	if (error)
+ 		goto out;
+ 
+ 	if (pci_set_dma_mask(pdev, 0xFFFFFFFFULL) || 
+@@ -801,7 +802,9 @@
+ 			goto out_free_fibs;
+ 
+ 	aac->maximum_num_channels = aac_drivers[index].channels;
+-	aac_get_adapter_info(aac);
++	error = aac_get_adapter_info(aac);
++	if (error < 0)
++		goto out_deinit;
+ 
+ 	/*
+  	 * Lets override negotiations and drop the maximum SG limit to 34
+@@ -929,8 +932,8 @@
+ 	printk(KERN_INFO "Adaptec %s driver (%s)\n",
+ 	  AAC_DRIVERNAME, aac_driver_version);
+ 
+-	error = pci_module_init(&aac_pci_driver);
+-	if (error)
++	error = pci_register_driver(&aac_pci_driver);
++	if (error < 0)
+ 		return error;
+ 
+ 	aac_cfg_major = register_chrdev( 0, "aac", &aac_cfg_fops);
+
+-- 
+Mark Haverkamp <markh@osdl.org>
+
