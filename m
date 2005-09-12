@@ -1,74 +1,66 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process (end devices)
-Date: Mon, 12 Sep 2005 11:46:29 -0700
-Message-ID: <20050912184629.GA13489@us.ibm.com>
-References: <1126308304.4799.45.camel@mulgrave> <20050910024454.20602.qmail@web51613.mail.yahoo.com> <20050911094656.GC5429@infradead.org> <43251D8C.7020409@torque.net> <1126537041.4825.28.camel@mulgrave> <20050912164548.GB11455@us.ibm.com> <1126545680.4825.40.camel@mulgrave>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [PATCH 2.6.13 14/14] sas-class: SCSI Host glue
+Date: Mon, 12 Sep 2005 15:07:20 -0400
+Message-ID: <4325D1E8.9030302@adaptec.com>
+References: <1126308949.4799.54.camel@mulgrave> <20050910041218.29183.qmail@web51612.mail.yahoo.com> <20050911093847.GA5429@infradead.org> <20050912160805.GC32395@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.130]:46982 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S932138AbVILSsF
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Sep 2005 14:48:05 -0400
-Content-Disposition: inline
-In-Reply-To: <1126545680.4825.40.camel@mulgrave>
+Received: from magic.adaptec.com ([216.52.22.17]:47335 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932153AbVILTH1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Sep 2005 15:07:27 -0400
+In-Reply-To: <20050912160805.GC32395@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Douglas Gilbert <dougg@torque.net>, Christoph Hellwig <hch@infradead.org>, Luben Tuikov <ltuikov@yahoo.com>, Luben Tuikov <luben_tuikov@adaptec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <James.Bottomley@SteelEye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Sep 12, 2005 at 12:21:20PM -0500, James Bottomley wrote:
-> On Mon, 2005-09-12 at 09:45 -0700, Patrick Mansfield wrote:
-> > On Mon, Sep 12, 2005 at 09:57:21AM -0500, James Bottomley wrote:
-> > > be free to increase it if necessary.  Note: you do actually need either
-> > > an array with more than two levels of nesting actually to need the
-> > > increase and no-one actually seems to have one of these yet.
-> > 
-> > That is not correct, I posted before on this, the address method is in the
-> > high bits of the 8 byte LUN and tells how to "interpret" the LUN value.
-> > You can't convert from an int to 8 byte LUN (without any other
-> > information) and set these bits. See SAM-4 in (or near) section 4.9.7.
-> > 
-> > So some storage devices that want to use addressing methods other than 00b
-> > don't because we do not have 8 byte LUN support in linux, and then we have
-> > other problems because of this.
+On 09/12/05 12:08, Matthew Wilcox wrote:
 > 
-> Well, as long as we represent the u32 (or u64) as
+> I meant to reply to Luben's original, but I deleted it in disgust.
+> As the person who converted SCSI from the old bottom-half completion
+> processing first to a tasklet and then to a softirq, I'd like to refute
+> at least part of this allegation.  I didn't do it in order to improve
+> SCSI particularly, satisfy Splentec (who are they?), or prove a point.
 > 
-> scsilun[1] | (scsilun[0] << 8) | (scsilun[3] << 16) | (scsilun[2] << 24)
+> I did it because I wanted to remove the old bottom-half mechanism and
+> SCSI was one of the remaining users.  That required me to learn a bit
+> about the SCSI stack and I got sucked in.  BTW, I believe at that time,
+> James had alreeady taken over maintenance.  I'm not actually sure who
+> the previous maintainer was -- was it Eric Biederman?
 > 
-> I think we cover all 2 level lun bases, don't we (obviously we ignore
-> levels 3 and 4 [and 6 and 8 byte extended luns])?
+> A colleague asked me to summarise the current dispute.  I said that
+> Luben's point was that nobody else understood SCSI.  Everybody else's
 
-hmmm ... yes, I'm wrong, it works (or should) in the existing code.
-I don't know what I was thinking.
+No, my point is that SCSI Core "development" isn't following any
+spec or document or any formally accepted spec.
 
-Though we still have problems with scsi_report_lun_scan code like:
+And as more and more transports are coming aboard, you see more
+and more "kludge" from SPI making everything fit around the
+SCSI Core's legacy SPI as _opposed_ to _evolving_ SCSI Core.
 
-                } else if (lun > sdev->host->max_lun) {
+> point was that Luben doesn't understand Linux kernel development.  Luben,
+> I think you need to shut up, accept advice, stop trying to do everything
+> in your own driver, and stop trying to have private conversations.
 
-max_lun just has to be large, at least greater than 0xc001 (49153), maybe
-even 0xffffffff, correct?
+I've had private conversations _before_ I posted anything and those
+were highly technical -- you know SAS stuff.
 
-But then some sequential scanning could take a while. Maybe the above
-check is not needed.
+> Just discuss things on linux-scsi dispassionately.  There's no hidden
 
-lpfc has max_luns set to 256, with max limited to 32768, I don't know how
-it could be working OK here. (Has James S or anyone tested this?)
+I have been, many times.
 
-Probably similar for qlogic and maybe other non-SPI transports (though
-current qlogic max_luns is 65535, gets us to ff ff 00 00 00 00 00 00).
+Absolutely no advice I've ever posted to linux-scsi has been accepted
+ever, unless someone else implemented it.
 
-> That representation works transparently for type 00b which is what SPI
-> and other legacy expects, since our lun variable is equal to the actual
-> numeric lun.  Although SAM allows type 01b for arrays with < 256 LUNs it
-> does strongly suggest you use type 00b which hopefully will cover us for
-> a while longer...
-> 
-> fc already uses int_to_scsilun and 8 byte LUN addressing, so it will
-> work even in the 01b case (the numbers that the mid-layer prints will
-> look odd, but at least the driver will work).
+Any advice I've ever posted have been SAM/SPC related.
 
-OK.
+> agenda to get you or your company.  But you are pissing people off,
+> and very soon there *will* be because of your behaviour.
 
--- Patrick Mansfield
+Personal threat on a public list?
+
+	Luben
+
