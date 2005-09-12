@@ -1,74 +1,58 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH 2.6.13 14/14] sas-class: SCSI Host glue
-Date: Mon, 12 Sep 2005 13:12:03 -0400
-Message-ID: <4325B6E3.9090503@adaptec.com>
-References: <20050910041218.29183.qmail@web51612.mail.yahoo.com>	 <Pine.LNX.4.63.0509101028510.4630@cuia.boston.redhat.com>	 <20050911035621.87661.qmail@mail.muc.de> <1126446071.4831.5.camel@mulgrave>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process
+	(end devices)
+Date: Mon, 12 Sep 2005 12:21:20 -0500
+Message-ID: <1126545680.4825.40.camel@mulgrave>
+References: <1126308304.4799.45.camel@mulgrave>
+	 <20050910024454.20602.qmail@web51613.mail.yahoo.com>
+	 <20050911094656.GC5429@infradead.org> <43251D8C.7020409@torque.net>
+	 <1126537041.4825.28.camel@mulgrave>  <20050912164548.GB11455@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:44236 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932067AbVILRM0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Sep 2005 13:12:26 -0400
-In-Reply-To: <1126446071.4831.5.camel@mulgrave>
+Received: from stat9.steeleye.com ([209.192.50.41]:10184 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932111AbVILRXC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Sep 2005 13:23:02 -0400
+In-Reply-To: <20050912164548.GB11455@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: ak@muc.de, Rik van Riel <riel@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Douglas Gilbert <dougg@torque.net>, Christoph Hellwig <hch@infradead.org>, Luben Tuikov <ltuikov@yahoo.com>, Luben Tuikov <luben_tuikov@adaptec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 09/11/05 09:41, James Bottomley wrote:
-> On Sun, 2005-09-11 at 05:56 +0200, ak@muc.de wrote:
+On Mon, 2005-09-12 at 09:45 -0700, Patrick Mansfield wrote:
+> On Mon, Sep 12, 2005 at 09:57:21AM -0500, James Bottomley wrote:
+> > be free to increase it if necessary.  Note: you do actually need either
+> > an array with more than two levels of nesting actually to need the
+> > increase and no-one actually seems to have one of these yet.
 > 
->>>>Naturally, aic94xx has _no limitations_. :-)  But hey, our hardware just 
->>>>kicks a*s!
->>>
->>>That's very nice for you - but lets face it, a SAS layer
->>>that'll be unable to also deal with the El-Cheapo brand
->>>controllers isn't going to be very useful.
->>
->>Nobody knows what these bu^wlimitations will be though. So you cannot
->>really plan for them in advance.  When someone writes drivers for such 
->>limited hardware they can add code to handle the limitations. But it 
->>seems reasonable to start with a clean hardware model, and only
->>add the hacks later when they are really needed and the requirements
->>are understood.
+> That is not correct, I posted before on this, the address method is in the
+> high bits of the 8 byte LUN and tells how to "interpret" the LUN value.
+> You can't convert from an int to 8 byte LUN (without any other
+> information) and set these bits. See SAM-4 in (or near) section 4.9.7.
 > 
-> 
-> But my point was that we already have a mechanism for coping with this:
-> The scsi template parameterises some of these things (max sector size,
-> sg table elements, clustering, etc).
+> So some storage devices that want to use addressing methods other than 00b
+> don't because we do not have 8 byte LUN support in linux, and then we have
+> other problems because of this.
 
-James, people have _already_ replied to your point, saying
-that they want to start with a _clean_ hardware model/interface.
-See Alan and Andi's emails.
+Well, as long as we represent the u32 (or u64) as
 
-I don't know why do you keep grinding this, just like the
-IDR thread (you had no other code to write?) and like the
-"EH turned into ACA" thread?
+scsilun[1] | (scsilun[0] << 8) | (scsilun[3] << 16) | (scsilun[2] << 24)
 
-It is time SCSI Core started cleanly, especially now with SAS
-which will completely *replace* Parallel SCSI and IDE (for SATA).
+I think we cover all 2 level lun bases, don't we (obviously we ignore
+levels 3 and 4 [and 6 and 8 byte extended luns])?
 
-> For less standard things it
-> doesn't cover the driver uses the blk_ adjustors directly from
-> slave_alloc/slave_configure (This is currently how USB and firewire
-> communicate their alignment requirements).
-> 
-> By wrappering both the template and the slave_alloc/slave_configure
-> methods in the SAS class and not providing the driver access, it can't
-> use existing methods to make any adjustments that may be necessary.
+That representation works transparently for type 00b which is what SPI
+and other legacy expects, since our lun variable is equal to the actual
+numeric lun.  Although SAM allows type 01b for arrays with < 256 LUNs it
+does strongly suggest you use type 00b which hopefully will cover us for
+a while longer...
 
-"that may be necessary"?
+fc already uses int_to_scsilun and 8 byte LUN addressing, so it will
+work even in the 01b case (the numbers that the mid-layer prints will
+look odd, but at least the driver will work).
 
-You don't listen to anyone, do you?
+James
 
-Let's deal with those when they come.  The sas_ha_struct can certainly
-deal with those as I pointed out in a previous email in this thread:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112632556516797&w=2
-
-We do not want to write code for things "that may be necessary".
-This has been pointed out numerous times.
-
-	Luben
 
