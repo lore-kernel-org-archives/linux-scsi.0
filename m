@@ -1,431 +1,88 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: Re: [PATCH 3/8] aacraid: handle AIF hotplug events (Updated)
-Date: Mon, 12 Sep 2005 10:35:43 -0700
-Message-ID: <1126546543.7407.18.camel@markh1.pdx.osdl.net>
-References: <1126212613.7479.20.camel@markh1.pdx.osdl.net>
-	 <20050910165028.GA3662@infradead.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process
+	(end devices)
+Date: Mon, 12 Sep 2005 12:52:45 -0500
+Message-ID: <1126547565.4825.52.camel@mulgrave>
+References: <20050910024454.20602.qmail@web51613.mail.yahoo.com>
+	 <1126368081.4813.46.camel@mulgrave>  <4325997D.3050103@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:47507 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750715AbVILRjA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Sep 2005 13:39:00 -0400
-In-Reply-To: <20050910165028.GA3662@infradead.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:30152 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751110AbVILRw6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Sep 2005 13:52:58 -0400
+In-Reply-To: <4325997D.3050103@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: ltuikov@yahoo.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sat, 2005-09-10 at 17:50 +0100, Christoph Hellwig wrote:
-> > +			if ((dev != (struct aac_dev *)NULL)
-> > +			 && (dev->scsi_host_ptr != (struct Scsi_Host *)NULL)) {
+On Mon, 2005-09-12 at 11:06 -0400, Luben Tuikov wrote:
+> On 09/10/05 12:01, James Bottomley wrote:
+> > On Fri, 2005-09-09 at 19:44 -0700, Luben Tuikov wrote:
+> > 
+> >>>this one completely duplicates the
+> >>>mid-layer infrastructure for handling devices with Logical Units.
+> >>
+> >>No, it does *not*.  James, you have _stop_ spreading FUD, relying
+> >>that other people have not read the SCSI Core code.
+> > 
+> > 
+> > We have an infrastructure in the mid-layer for doing report lun scans.
+> > You have a parallel one in your code.  In my book, that's duplication.
 > 
-> no need for the casts.
+> This infrastructure is broken.  Its interface is broken.  It is a horrible
+> excuse of LUN scanning written initially to support a certain hardware.
 > 
-> > +	shost_for_each_device(device, dev->scsi_host_ptr)
-> > +	{
-> > +		if ((device->channel == CONTAINER_TO_CHANNEL(container))
-> > +		 && (device->id == CONTAINER_TO_ID(container))
-> > +		 && (device->lun == CONTAINER_TO_LUN(container))) {
-> > +			busy |= device->device_busy ||
-> > +				test_bit(SHOST_RECOVERY,
-> > +				(const unsigned long*)&dev->scsi_host_ptr->shost_state);
+> LUN scanning is done a tad bit differently with a tad bit different
+> interface.  Read the specs, study the code I submitted.
 > 
-> this is broken.  You must not look at the device_busy field from a driver,
-> and it means something different than what seems intended here.  Also
-> the direct messing with the host state is wrong.
+> It is poinless for you to argue back just with a sentence and for
+> me to reply back to you with *code*.
 > 
-> > +			if (busy == 0) {
-> > +				device->removable = 1;
+> Again, unless you point out code, you're spreading FUD!
 > 
-> devce->removeable means the device has a removable medium, not that
-> it can go away.
+> Here is excerpt from my previous message to the list:
+> ---cut-start----
+> Look at scsi_scan_target() declaration:
+> 
+> void scsi_scan_target(struct device *parent, unsigned int channel,
+> 		      unsigned int id, unsigned int lun, int rescan);
+> 
+> Channel, id, lun, rescan?  WTF?
+> 
+> Do you see any of this in the proprely implemented LU discovery
+> code in the SAS discovery code I submitted?
 
-Here is a new patch with the suggested changes.
+Well there is this in sas_discover.h:
 
-- - - - 
+struct scsi_core_mapping {
+	int  channel;
+	int  id;
+};
 
-Received from Mark Salyzyn from Adaptec.
-
-Hotplug sniffs the AIFs (events) from the adapter and if a container
-change resulting in the device going offline (container zero), online
-(container zero completed) or changing capacity (morph) it will take
-actions by calling the appropriate API.
-
-Applies to the scsi-misc-2.6 git tree.
-
-Signed-off-by: Mark Haverkamp <markh@osdl.org>
-
-
-Index: scsi-misc-aac-2/drivers/scsi/aacraid/aachba.c
-===================================================================
---- scsi-misc-aac-2.orig/drivers/scsi/aacraid/aachba.c	2005-09-09 07:47:45.000000000 -0700
-+++ scsi-misc-aac-2/drivers/scsi/aacraid/aachba.c	2005-09-12 10:08:49.000000000 -0700
-@@ -479,7 +479,7 @@
-  *	is updated in the struct fsa_dev_info structure rather than returned.
-  */
-  
--static int probe_container(struct aac_dev *dev, int cid)
-+int probe_container(struct aac_dev *dev, int cid)
- {
- 	struct fsa_dev_info *fsa_dev_ptr;
- 	int status;
-@@ -1455,6 +1455,8 @@
- 				case TEST_UNIT_READY:
- 					spin_unlock_irq(host->host_lock);
- 					probe_container(dev, cid);
-+					if ((fsa_dev_ptr[cid].valid & 1) == 0)
-+						fsa_dev_ptr[cid].valid = 0;
- 					spin_lock_irq(host->host_lock);
- 					if (fsa_dev_ptr[cid].valid == 0) {
- 						scsicmd->result = DID_NO_CONNECT << 16;
-Index: scsi-misc-aac-2/drivers/scsi/aacraid/aacraid.h
-===================================================================
---- scsi-misc-aac-2.orig/drivers/scsi/aacraid/aacraid.h	2005-09-09 07:47:45.000000000 -0700
-+++ scsi-misc-aac-2/drivers/scsi/aacraid/aacraid.h	2005-09-12 10:08:46.000000000 -0700
-@@ -780,7 +780,9 @@
- 	u64		last;
- 	u64		size;
- 	u32		type;
-+	u32		config_waiting_on;
- 	u16		queue_depth;
-+	u8		config_needed;
- 	u8		valid;
- 	u8		ro;
- 	u8		locked;
-@@ -1715,6 +1717,7 @@
- #define		AifCmdJobProgress	2	/* Progress report */
- #define			AifJobCtrZero	101	/* Array Zero progress */
- #define			AifJobStsSuccess 1	/* Job completes */
-+#define			AifJobStsRunning 102	/* Job running */
- #define		AifCmdAPIReport		3	/* Report from other user of API */
- #define		AifCmdDriverNotify	4	/* Notify host driver of event */
- #define			AifDenMorphComplete 200	/* A morph operation completed */
-@@ -1785,6 +1788,7 @@
- struct aac_driver_ident* aac_get_driver_ident(int devtype);
- int aac_get_adapter_info(struct aac_dev* dev);
- int aac_send_shutdown(struct aac_dev *dev);
-+int probe_container(struct aac_dev *dev, int cid);
- extern int numacb;
- extern int acbsize;
- extern char aac_driver_version[];
-Index: scsi-misc-aac-2/drivers/scsi/aacraid/commsup.c
-===================================================================
---- scsi-misc-aac-2.orig/drivers/scsi/aacraid/commsup.c	2005-09-09 07:58:15.000000000 -0700
-+++ scsi-misc-aac-2/drivers/scsi/aacraid/commsup.c	2005-09-12 10:10:01.000000000 -0700
-@@ -39,6 +39,7 @@
- #include <linux/completion.h>
- #include <linux/blkdev.h>
- #include <scsi/scsi_host.h>
-+#include <scsi/scsi_device.h>
- #include <asm/semaphore.h>
- 
- #include "aacraid.h"
-@@ -791,6 +792,275 @@
- 	memset(cp, 0,  256);
- }
- 
-+
-+/**
-+ *	aac_handle_aif		-	Handle a message from the firmware
-+ *	@dev: Which adapter this fib is from
-+ *	@fibptr: Pointer to fibptr from adapter
-+ *
-+ *	This routine handles a driver notify fib from the adapter and
-+ *	dispatches it to the appropriate routine for handling.
-+ */
-+
-+static void aac_handle_aif(struct aac_dev * dev, struct fib * fibptr)
-+{
-+	struct hw_fib * hw_fib = fibptr->hw_fib;
-+	struct aac_aifcmd * aifcmd = (struct aac_aifcmd *)hw_fib->data;
-+	int busy;
-+	u32 container;
-+	struct scsi_device *device;
-+	enum {
-+		NOTHING,
-+		DELETE,
-+		ADD,
-+		CHANGE
-+	} device_config_needed;
-+
-+	/* Sniff for container changes */
-+
-+	if (!dev)
-+		return;
-+	container = (u32)-1;
-+
-+	/*
-+	 *	We have set this up to try and minimize the number of
-+	 * re-configures that take place. As a result of this when
-+	 * certain AIF's come in we will set a flag waiting for another
-+	 * type of AIF before setting the re-config flag.
-+	 */
-+	switch (le32_to_cpu(aifcmd->command)) {
-+	case AifCmdDriverNotify:
-+		switch (le32_to_cpu(((u32 *)aifcmd->data)[0])) {
-+		/*
-+		 *	Morph or Expand complete
-+		 */
-+		case AifDenMorphComplete:
-+		case AifDenVolumeExtendComplete:
-+			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
-+			if (container >= dev->maximum_num_containers)
-+				break;
-+
-+			/*
-+			 *	Find the Scsi_Device associated with the SCSI
-+			 * address. Make sure we have the right array, and if
-+			 * so set the flag to initiate a new re-config once we
-+			 * see an AifEnConfigChange AIF come through.
-+			 */
-+
-+			if ((dev != NULL)
-+			 && (dev->scsi_host_ptr != NULL)) {
-+				shost_for_each_device(device,
-+					dev->scsi_host_ptr)
-+				{
-+					if ((device->channel ==
-+						CONTAINER_TO_CHANNEL(container))
-+					 && (device->id ==
-+						CONTAINER_TO_ID(container))
-+					 && (device->lun ==
-+						CONTAINER_TO_LUN(container))) {
-+
-+						dev->fsa_dev[container].config_needed = CHANGE;
-+						dev->fsa_dev[container].config_waiting_on = AifEnConfigChange;
-+						break;
-+					}
-+				}
-+			}
-+		}
-+
-+		/*
-+		 *	If we are waiting on something and this happens to be
-+		 * that thing then set the re-configure flag.
-+		 */
-+		if (container != (u32)-1) {
-+			if (container >= dev->maximum_num_containers)
-+				break;
-+			if (dev->fsa_dev[container].config_waiting_on ==
-+			    le32_to_cpu(*(u32 *)aifcmd->data))
-+				dev->fsa_dev[container].config_waiting_on = 0;
-+		} else for (container = 0;
-+		    container < dev->maximum_num_containers; ++container) {
-+			if (dev->fsa_dev[container].config_waiting_on ==
-+			    le32_to_cpu(*(u32 *)aifcmd->data))
-+				dev->fsa_dev[container].config_waiting_on = 0;
-+		}
-+		break;
-+
-+	case AifCmdEventNotify:
-+		switch (le32_to_cpu(((u32 *)aifcmd->data)[0])) {
-+		/*
-+		 *	Add an Array.
-+		 */
-+		case AifEnAddContainer:
-+			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
-+			if (container >= dev->maximum_num_containers)
-+				break;
-+			dev->fsa_dev[container].config_needed = ADD;
-+			dev->fsa_dev[container].config_waiting_on =
-+				AifEnConfigChange;
-+			break;
-+
-+		/*
-+		 *	Delete an Array.
-+		 */
-+		case AifEnDeleteContainer:
-+			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
-+			if (container >= dev->maximum_num_containers)
-+				break;
-+			dev->fsa_dev[container].config_needed = DELETE;
-+			dev->fsa_dev[container].config_waiting_on =
-+				AifEnConfigChange;
-+			break;
-+
-+		/*
-+		 *	Container change detected. If we currently are not
-+		 * waiting on something else, setup to wait on a Config Change.
-+		 */
-+		case AifEnContainerChange:
-+			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
-+			if (container >= dev->maximum_num_containers)
-+				break;
-+			if (dev->fsa_dev[container].config_waiting_on)
-+				break;
-+			dev->fsa_dev[container].config_needed = CHANGE;
-+			dev->fsa_dev[container].config_waiting_on =
-+				AifEnConfigChange;
-+			break;
-+
-+		case AifEnConfigChange:
-+			break;
-+
-+		}
-+
-+		/*
-+		 *	If we are waiting on something and this happens to be
-+		 * that thing then set the re-configure flag.
-+		 */
-+		if (container != (u32)-1) {
-+			if (container >= dev->maximum_num_containers)
-+				break;
-+			if (dev->fsa_dev[container].config_waiting_on ==
-+			    le32_to_cpu(*(u32 *)aifcmd->data))
-+				dev->fsa_dev[container].config_waiting_on = 0;
-+		} else for (container = 0;
-+		    container < dev->maximum_num_containers; ++container) {
-+			if (dev->fsa_dev[container].config_waiting_on ==
-+			    le32_to_cpu(*(u32 *)aifcmd->data))
-+				dev->fsa_dev[container].config_waiting_on = 0;
-+		}
-+		break;
-+
-+	case AifCmdJobProgress:
-+		/*
-+		 *	These are job progress AIF's. When a Clear is being
-+		 * done on a container it is initially created then hidden from
-+		 * the OS. When the clear completes we don't get a config
-+		 * change so we monitor the job status complete on a clear then
-+		 * wait for a container change.
-+		 */
-+
-+		if ((((u32 *)aifcmd->data)[1] == cpu_to_le32(AifJobCtrZero))
-+		 && ((((u32 *)aifcmd->data)[6] == ((u32 *)aifcmd->data)[5])
-+		  || (((u32 *)aifcmd->data)[4] == cpu_to_le32(AifJobStsSuccess)))) {
-+			for (container = 0;
-+			    container < dev->maximum_num_containers;
-+			    ++container) {
-+				/*
-+				 * Stomp on all config sequencing for all
-+				 * containers?
-+				 */
-+				dev->fsa_dev[container].config_waiting_on =
-+					AifEnContainerChange;
-+				dev->fsa_dev[container].config_needed = ADD;
-+			}
-+		}
-+		if ((((u32 *)aifcmd->data)[1] == cpu_to_le32(AifJobCtrZero))
-+		 && (((u32 *)aifcmd->data)[6] == 0)
-+		 && (((u32 *)aifcmd->data)[4] == cpu_to_le32(AifJobStsRunning))) {
-+			for (container = 0;
-+			    container < dev->maximum_num_containers;
-+			    ++container) {
-+				/*
-+				 * Stomp on all config sequencing for all
-+				 * containers?
-+				 */
-+				dev->fsa_dev[container].config_waiting_on =
-+					AifEnContainerChange;
-+				dev->fsa_dev[container].config_needed = DELETE;
-+			}
-+		}
-+		break;
-+	}
-+
-+	device_config_needed = NOTHING;
-+	for (container = 0; container < dev->maximum_num_containers;
-+	    ++container) {
-+		if ((dev->fsa_dev[container].config_waiting_on == 0)
-+		 && (dev->fsa_dev[container].config_needed != NOTHING)) {
-+			device_config_needed =
-+				dev->fsa_dev[container].config_needed;
-+			dev->fsa_dev[container].config_needed = NOTHING;
-+			break;
-+		}
-+	}
-+	if (device_config_needed == NOTHING)
-+		return;
-+
-+	/*
-+	 *	If we decided that a re-configuration needs to be done,
-+	 * schedule it here on the way out the door, please close the door
-+	 * behind you.
-+	 */
-+
-+	busy = 0;
-+
-+
-+	/*
-+	 *	Find the Scsi_Device associated with the SCSI address,
-+	 * and mark it as changed, invalidating the cache. This deals
-+	 * with changes to existing device IDs.
-+	 */
-+
-+	if (!dev || !dev->scsi_host_ptr)
-+		return;
-+	/*
-+	 * force reload of disk info via probe_container
-+	 */
-+	if ((device_config_needed == CHANGE)
-+	 && (dev->fsa_dev[container].valid == 1))
-+		dev->fsa_dev[container].valid = 2;
-+	if ((device_config_needed == CHANGE) ||
-+			(device_config_needed == ADD))
-+		probe_container(dev, container);
-+	shost_for_each_device(device, dev->scsi_host_ptr)
-+	{
-+		if ((device->channel == CONTAINER_TO_CHANNEL(container))
-+		 && (device->id == CONTAINER_TO_ID(container))
-+		 && (device->lun == CONTAINER_TO_LUN(container))) {
-+			switch (device_config_needed) {
-+			case DELETE:
-+				scsi_remove_device(device);
-+				break;
-+			case CHANGE:
-+				if (!dev->fsa_dev[container].valid) {
-+					scsi_remove_device(device);
-+					break;
-+				}
-+				scsi_rescan_device(&device->sdev_gendev);
-+
-+			default:
-+				break;
-+			}
-+		}
-+	}
-+	if (device_config_needed == ADD) {
-+		scsi_add_device(dev->scsi_host_ptr,
-+		  CONTAINER_TO_CHANNEL(container),
-+		  CONTAINER_TO_ID(container),
-+		  CONTAINER_TO_LUN(container));
-+	}
-+
-+}
-+
- /**
-  *	aac_command_thread	-	command processing thread
-  *	@dev: Adapter to monitor
-@@ -860,6 +1130,7 @@
- 			aifcmd = (struct aac_aifcmd *) hw_fib->data;
- 			if (aifcmd->command == cpu_to_le32(AifCmdDriverNotify)) {
- 				/* Handle Driver Notify Events */
-+				aac_handle_aif(dev, fib);
- 				*(__le32 *)hw_fib->data = cpu_to_le32(ST_OK);
- 				fib_adapter_complete(fib, (u16)sizeof(u32));
- 			} else {
-@@ -872,7 +1143,15 @@
- 				unsigned num;
- 				struct hw_fib ** hw_fib_pool, ** hw_fib_p;
- 				struct fib ** fib_pool, ** fib_p;
--				
-+			
-+				/* Sniff events */
-+				if ((aifcmd->command == 
-+				     cpu_to_le32(AifCmdEventNotify)) ||
-+				    (aifcmd->command == 
-+				     cpu_to_le32(AifCmdJobProgress))) {
-+					aac_handle_aif(dev, fib);
-+				}
-+ 				
- 				time_now = jiffies/HZ;
- 
- 				/*
+struct LU {
+[...]
+	struct scsi_core_mapping map;
 
 
--- 
-Mark Haverkamp <markh@osdl.org>
+so if you use channel, id and scsilun_to_int() (or your SCSI_LUN
+reimplementation of that) on your LUN structure, you have everything
+necessary to interface to scsi_scan_target, yes.
+
+You have to have this, otherwise you wouldn't be able to use
+scsi_add_device in sas_scsi_host.c:sas_register_with_scsi().
+
+Based on this it does look like your refusal to use scsi_scan_target is
+based on ideological rather than technical objections.
+
+It also looks like you have a bug in your id mapping code: you allocate
+one id per lun, not per target, so you're going to run out pretty
+quickly when you meet a device with actual logical units, since you hard
+code max_ids to 128 in sas_port.c
+
+James
+
 
