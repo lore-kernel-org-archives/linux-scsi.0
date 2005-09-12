@@ -1,69 +1,121 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: [Bugme-new] [Bug 5224] New: Panic upon rmmod of aic7xxx module
- (pcmcia)
-Date: Sun, 11 Sep 2005 12:50:40 -0700
-Message-ID: <20050911125040.5bab6c30.akpm@osdl.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process
+ (end devices)
+Date: Mon, 12 Sep 2005 16:17:48 +1000
+Message-ID: <43251D8C.7020409@torque.net>
+References: <1126308304.4799.45.camel@mulgrave> <20050910024454.20602.qmail@web51613.mail.yahoo.com> <20050911094656.GC5429@infradead.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:22667 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1750776AbVIKTvT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Sep 2005 15:51:19 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751177AbVILGRe@vger.kernel.org>
+In-Reply-To: <20050911094656.GC5429@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <James.Bottomley@SteelEye.com>, Luben Tuikov <luben_tuikov@adaptec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@kernel-bugs.osdl.org>
+
+Christoph Hellwig wrote:
+> On Fri, Sep 09, 2005 at 07:44:54PM -0700, Luben Tuikov wrote:
+> 
+>>>this one completely duplicates the
+>>>mid-layer infrastructure for handling devices with Logical Units.
+>>
+>>No, it does *not*.  James, you have _stop_ spreading FUD, relying
+>>that other people have not read the SCSI Core code.
+>>
+>>See here:
+>>    SCSI Core has *no representation* of a SCSI Device with a
+>>SCSI Target Port.
+> 
+> 
+> struct scsi_target
+> 
+> 
+>>I've _clearly_ outlined that in the comments of the code,
+>>which you _conveniently_ did _not_ cut and paste here.
+> 
+> 
+>  * Discover logical units present in the SCSI device.  I'd like this
+>  * to be moved to SCSI Core, but SCSI Core has no concept of a "SCSI
+>  * device with a SCSI Target port".  A SCSI device with a SCSI Target
+>  * port is a device which the _transport_ found, but other than that,
+>  * the transport has little or _no_ knowledge about the device.
+>  * Ideally, a LLDD would register a "SCSI device with a SCSI Target
+>  * port" with SCSI Core and then SCSI Core would do LU discovery of
+>  * that device.
+> 
+> So what does this mean except "Luben tries to impress everyone with
+> standards gibberish, at the same time ignoring we soluitions that
+> work despite maybe not 100% elegant".
+
+Christoph,
+How about we put that another way. Luben (like yourself)
+gets to implement a LLDD for a new SCSI transport technology
+called SAS. He looks at its architecture and how it conforms
+(well not 100 %) to SAM and then he looks at the architecture
+of the kernel environment he has to fit it into.
+
+The latter uses terms and addressing structures appropriate
+to SCSI-2 (circa 1992). Each time a new transport (or a
+revision of SPI) comes along a larger hammer is needed to
+belt the new transport LLDDs into place.
+
+FreeBSD threw out their original SCSI design and replaced it
+with CAM circa 1998. CAM has its problems but I would guess
+a modern SAS LLDD would have less "impedance mismatch" (sorry
+about the gibberish) than what Luben is now facing.
+
+> Sure, we'd like to move away from needing the ->id target id specifier.
+> But right now we need it, even you're code sets it in over-complicated
+> ways.  But if you send a nice patch to get rid everyone will be happy.
+
+If we look at our (im)famous <h:c:i:l> addressing string,
+the first 2 elements (i.e. "h:c") are about kernel device
+addressing (i.e. which (part of a) HBA to be initiator); the
+contentious "i" is about addressing the target and is
+transport dependent, and the "l" is for addressing within
+the target. Only the last element is true SCSI and is
+defined in SAM (to be 64 bits, not 32). In iSCSI the "i"
+is actually an adorned IP address.
+
+So the kernel "discovers" at the "h:c" level at powerup
+(and at runtime with hotplug events); leaving the SCSI
+subsystem to do discovery at the "i" and the "l" level.
+
+At this point I would like to make an observation: there
+is no absolute requirement for the SCSI subsystem to do
+discovery at either the "i" or the "l" levels. Using SAS
+as an example, only the SAS (target port) address and
+a logical unit number (identifier) or name are needed.
+So an embedded system which includes a SAS initiator (HBA)
+could connect to an arbitrary device quickly and with
+minimal impact on a large SAS fabric (i.e. no SAS target
+discovery phase). As an extreme example, target discovery
+in iSCSI cannot involve the whole internet (and even though
+its topology would be interesting, representing it in sysfs
+is absurd).
+
+My major objection to Luben's SAS sysfs representation is
+that "things" have to be discovered before the user space
+can talk to them. Why?? An app in the user space might
+_know_ that the "thing" (e.g. SAS expander or a "well
+known" logical unit) is out there. Again the obvious comparison
+is with IP addresses and the way the networking subsystem
+functions. I would like to make HBA initiators (or their ports)
+visible as interfaces (like eth0 and friends) through which
+commands/frames/primitives can be sent and events received.
+
+Traditionally, directly attached storage devices have been
+represented as device nodes in Unix/linux (e.g. /dev/hda and
+/dev/sda). Other subsystems require this. However, I suggest
+the following do _not_ need to be represented by device
+nodes or sysfs:
+  - a transport topology
+  - transport management devices (e.g. SAS expanders)
+  - SCSI management devices (e.g. "well known" logical units, SES
+    and bridge devices)
 
 
-
-Begin forwarded message:
-
-Date: Sun, 11 Sep 2005 12:28:56 -0700
-From: bugme-daemon@kernel-bugs.osdl.org
-To: bugme-new@lists.osdl.org
-Subject: [Bugme-new] [Bug 5224] New: Panic upon rmmod of aic7xxx module (pcmcia)
-
-
-http://bugzilla.kernel.org/show_bug.cgi?id=5224
-
-           Summary: Panic upon rmmod of aic7xxx module (pcmcia)
-    Kernel Version: 2.6.13
-            Status: NEW
-          Severity: normal
-             Owner: andmike@us.ibm.com
-         Submitter: kasper.peeters@aei.mpg.de
-
-
-Most recent kernel where this bug did not occur: early 2.6.x
-Distribution: Red Hat
-Hardware Environment: Fujitsu-Siemens E7110, Adaptec 1480A, HP 9200 CDwriter
-Software Environment: pcmcia-tools 3.2.8
-Problem Description: Upon rmmod of the aic7xxx module, a kernel panic follows
-after a few seconds. Ditto when the pcmcia card is removed by hand. The 
-console still spits out
-
-  [...]
-  Sequencer Free SCB List 0 1 2
-  Sequencer SCB Info
-    0 SCB_CONTROL[0x0]:SCB_SCSIID[0x67]:SCB_LOW[0x0]:SCB_TAG[0xff]
-    1 SCB_CONTROL[0x0]:SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TIB)SCB_LUN[0xff]:\
-(SCB_XFERLEN_ODD|LID)SCB_TAG[0xff]
-    2 SCB_CONTROL[0x0]:SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TIB)SCB_LUN[0xff]:\
-(SCB_XFERLEN_ODD|LID)SCB_TAG[0xff]
-  Pending List:
-    2 SCB_CONTROL[0x40]:(DISCENB)SCB_SCSIID[0x47]:SCB_LUN[0x0]
-  Kernel Free SCB List: 1 0
-  Untagged Q(4):2
-
-  <<< Dump Card State End >>>
-  qindex = 0, SCB index=0
-  Kernel Panic - not syncing: Loop 1
-
-Steps to reproduce: boot machine, insert pcmcia card which loads the 
-aic7xxx module, wait until scsi device has been recognised and the
-module usecount returns to '0', then 'rmmod aic7xxx'.
-
-------- You are receiving this mail because: -------
-You are on the CC list for the bug, or are watching someone who is.
+Ducking for cover
+Doug Gilbert
