@@ -1,84 +1,38 @@
-From: Jack Byer <ojbyer@usa.net>
-Subject: Re: Fw: legacy megaraid driver bug in mm-series
-Date: Mon, 12 Sep 2005 19:48:10 -0400
-Message-ID: <432613BA.5060606@usa.net>
-References: <20050907025258.35100c34.akpm@osdl.org>	<20050908143547.GA9741@infradead.org> <20050909165817.1a8ad251.akpm@osdl.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 2.6.13 14/14] sas-class: SCSI Host glue
+Date: Tue, 13 Sep 2005 01:51:36 +0200
+Message-ID: <43261488.5040309@s5r6.in-berlin.de>
+References: <1126308949.4799.54.camel@mulgrave> <20050910041218.29183.qmail@web51612.mail.yahoo.com> <20050911093847.GA5429@infradead.org> <20050912160805.GC32395@parisc-linux.org> <4325D1E8.9030302@adaptec.com> <20050912195521.GD32395@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 69.37.187.190.adsl.snet.net ([69.37.187.190]:1497 "EHLO
-	copper.fuckthenavy.net") by vger.kernel.org with ESMTP
-	id S932366AbVILXs1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Sep 2005 19:48:27 -0400
-In-Reply-To: <20050909165817.1a8ad251.akpm@osdl.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932367AbVILXwY@vger.kernel.org>
+In-Reply-To: <20050912195521.GD32395@parisc-linux.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, Luben Tuikov <luben_tuikov@adaptec.com>, Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <James.Bottomley@SteelEye.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-Andrew Morton wrote:
-> Christoph Hellwig <hch@infradead.org> wrote:
+Matthew Wilcox wrote:
+> On Mon, Sep 12, 2005 at 03:07:20PM -0400, Luben Tuikov wrote:
+>>No, my point is that SCSI Core "development" isn't following any
+>>spec or document or any formally accepted spec.
 > 
->>On Wed, Sep 07, 2005 at 02:52:58AM -0700, Andrew Morton wrote:
->>
->>>
->>>Begin forwarded message:
->>
->>This looks preyyu much like a breakage because we're now always sending
->>S/G list down the scsi layer.
->>
->>The patch below brings over code to handle that case from the megaraid_mbox
->>driver.  It's still wrong for the case someone sends a MODE_SENSE from
->>highmem userspace, but it should at least boot with the patch applied.
->>
-> 
-> 
-> Jack, have you had a chance to test this?
-> 
-> Thanks.
-> 
-Sorry, I spent the weekend whitewater rafting :)  I will be able to test
-this patch on Wednesday. Which kernel versions should I apply this patch to?
+> That's right.  And it's actually a good thing.
 
+Are you two discussing specs for scsi subsystem development process 
+here, or are you discussing specs for scsi subsystem architecture?
 
-
-
-> 
->>Index: scsi-misc-2.6/drivers/scsi/megaraid.c
->>===================================================================
->>--- scsi-misc-2.6.orig/drivers/scsi/megaraid.c	2005-08-13 13:53:52.000000000 +0200
->>+++ scsi-misc-2.6/drivers/scsi/megaraid.c	2005-09-08 16:34:06.000000000 +0200
->>@@ -621,8 +621,6 @@
->> 	if(islogical) {
->> 		switch (cmd->cmnd[0]) {
->> 		case TEST_UNIT_READY:
->>-			memset(cmd->request_buffer, 0, cmd->request_bufflen);
->>-
->> #if MEGA_HAVE_CLUSTERING
->> 			/*
->> 			 * Do we support clustering and is the support enabled
->>@@ -653,7 +651,19 @@
->> #endif
->> 
->> 		case MODE_SENSE:
->>-			memset(cmd->request_buffer, 0, cmd->cmnd[4]);
->>+			if (cmd->use_sg) {
->>+				struct scatterlist	*sgl;
->>+				caddr_t			vaddr;
->>+
->>+				sgl = (struct scatterlist *)cmd->request_buffer;
->>+				vaddr = (caddr_t)
->>+					(page_address((&sgl[0])->page)
->>+					+ (&sgl[0])->offset);
->>+
->>+				memset(vaddr, 0, cmd->cmnd[4]);
->>+			} else {
->>+				memset(cmd->request_buffer, 0, cmd->cmnd[4]);
->>+			}
->> 			cmd->result = (DID_OK << 16);
->> 			cmd->scsi_done(cmd);
->> 			return NULL;
-> 
-> 
-
+In case of the latter: These are indispensable. The scope of the scsi 
+subsystem is big enough to benefit from following the T10 specs, 
+including their concepts, their layers. I am saying this as somebody who 
+is trying to bring one small part of the subsystem forward, who will 
+never be able to grasp what is going on throughout the whole subsystem 
+nor to learn all about all SCSI layers. Thereby, every bigger or smaller 
+layering violation, every common SCSI concept that I have trouble to 
+match with Linux' scsi concepts will be a bigger or smaller setback for 
+undertakings like mine. (Well, I'm stating the obvious, or so I hope.)
+-- 
+Stefan Richter
+-=====-=-=-= =--= -==-=
+http://arcgraph.de/sr/
