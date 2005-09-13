@@ -1,156 +1,151 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process
  (end devices)
-Date: Tue, 13 Sep 2005 16:01:05 -0400
-Message-ID: <43273001.3070309@adaptec.com>
-References: <20050910024454.20602.qmail@web51613.mail.yahoo.com>	 <1126368081.4813.46.camel@mulgrave>  <4325997D.3050103@adaptec.com>	 <1126547565.4825.52.camel@mulgrave>  <4325E5AE.1080900@adaptec.com>	 <1126560191.4825.71.camel@mulgrave>  <4326CAC6.3050202@adaptec.com> <1126626858.4809.26.camel@mulgrave>
+Date: Tue, 13 Sep 2005 16:23:42 -0400
+Message-ID: <4327354E.7090409@adaptec.com>
+References: <1126308304.4799.45.camel@mulgrave>	 <20050910024454.20602.qmail@web51613.mail.yahoo.com>	 <20050911094656.GC5429@infradead.org> <43251D8C.7020409@torque.net>	 <1126537041.4825.28.camel@mulgrave> <20050912164548.GB11455@us.ibm.com>	 <1126545680.4825.40.camel@mulgrave>  <20050912184629.GA13489@us.ibm.com> <1126639342.4809.53.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:11663 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932696AbVIMUBM (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:17812 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932276AbVIMUXu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Sep 2005 16:01:12 -0400
-In-Reply-To: <1126626858.4809.26.camel@mulgrave>
+	Tue, 13 Sep 2005 16:23:50 -0400
+In-Reply-To: <1126639342.4809.53.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: ltuikov@yahoo.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Douglas Gilbert <dougg@torque.net>, Christoph Hellwig <hch@infradead.org>, Luben Tuikov <ltuikov@yahoo.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 09/13/05 11:54, James Bottomley wrote:
-> On Tue, 2005-09-13 at 08:49 -0400, Luben Tuikov wrote:
+On 09/13/05 15:22, James Bottomley wrote:
+> On Mon, 2005-09-12 at 11:46 -0700, Patrick Mansfield wrote:
 > 
->>>>Channel and id are assigned _after_ the device has been scanned for
->>>>LUs.  So I cannot just call scsi_scan_target() and say: "here is
->>>>this SCSI Domain device, I know nothing about, other than
->>>>the fact that it has a Target port, scan it".
->>>
->>>In your code channel corresponds to an index in the ports array of the
->>>host adapter and hence is known before you do any logical unit scanning.
->>>Id is assigned from a bitmap in the port.  You could do that assignment
->>>in sas_discover_end_dev() then you could use scsi_scan_target() in place
->>>of sas_do_lu_discovery().  It would also mitigate your bug below since
->>>now your id is one to one on the end devices rather than the logical
->>>units of the end devices, so each port would support up to 128 end
->>>devices rather than 128 logical units.
+>>Though we still have problems with scsi_report_lun_scan code like:
 >>
->>James, even Christoph understands this: no HCIL in SCSI Core is needed.
->>The whole problem is not what you *keep grinding about over and over above*,
->>but the fact that I have to _invent_ channel, id and emaciated LUN to give
->>to the broken, outdated and Parallel SCSI-centric SCSI Core.
+>>                } else if (lun > sdev->host->max_lun) {
 >>
->>Christoph understand this, why cannot you?
+>>max_lun just has to be large, at least greater than 0xc001 (49153), maybe
+>>even 0xffffffff, correct?
 >>
->>That bitmap was added in the last moment when I needed to register devices
->>with SCSI Core.  There is a lot of other problems which I've pointed out
->>int the scsi glue file, which do you not want to talk about or you do
->>not bring up.
+>>But then some sequential scanning could take a while. Maybe the above
+>>check is not needed.
 > 
 > 
-> I think, therefore, I've made the point that you could have used
-> scsi_scan_target() but chose not to for ideological rather than
-> technical reasons.
+> Try this as a straw horse for doing full u64 luns.
 
-I did try to use scsi_scan_target() but it was just tremendously
-ugly, and I still had to generate HCIL, and it didn't work for some
-unknown reason, and I didn't go on to investigate for reasons mentioned
-below.
+James, this patch is wrong.
 
-You know that SCSI Core is broken and outdated, you know that
-HCIL needs to go, you know that this is just the right moment
-and you still insist on your own.  This isn't a very good trait
-for a maintainer.  I told you: you need to *listen* more than
-you order things around.
+A SCSI LUN is not "u64 lun", it has never been and it will
+never be.
 
-> Writing code which duplicates existing mid-layer functionality is what
-> I've been telling you all along isn't acceptable.  Use what exists to
+A SCSI LUN is "u8 LUN[8]" -- it is this from the Application
+Layer down to the _transport layer_ (if you cared to look at
+_any_ LL transport).
 
-I don't see any code duplication, as I already explained many
-times in this and other threads.
+(It is also capitalized since it is an abbreviation.)
 
-> day and if it doesn't work quite right, fix it.  If you want to alter an
-> interface, we need to evolve towards it keeping all the current users
-> working.
+To compare/print it, please use, as shown at the top of the
+file "sas.h":
 
-You cannot do this because the current interface is _broken_ and you
-cannot give heart-attack to all LLDD currently using it.  You should
-know this, you're the maintaner.
+(be64_to_cpu(*(__be64 *)(_x)))
 
-What you need to do is start writing new functions to be used
-by the SAS Transport Layer, which could be _universally_ used by
-IEEE 1394, FC, USB, Infiniband, etc, where the is no such thing as HCIL.
+where _x is only the "LUN" of the definition above.
 
-So that they do not have to generate HCIL.
+If you want to print it, please use "%016llx".
 
-I mean, I keep repeating the same thing over and over again.  It is as
-if I'm talking to a wall.
+It also appears that you've never compiled your patch on
+x86_64.
 
-> Now, I can merge your transport class with Christoph's (or find someone
-> else to do it for me) by converting it to use the existing mid-layer and
-> transport class infrastructure (I think, actually, it will look rather
-> nice after this and probably reduce in size by about 50%) but I'd much
-
-No, it would _not_ reduce by about 50% -- stop spreading FUD!
-
-sas_scsi_host.c -- the SAS<->SCSI glue is _only_ 991 lines including
-comments and GPL license blurb at top.
-
-SAS Transport Layer is 8030 lines total.  This means that if anything is
-reduced it would be by less than 12%, (if you were to obliterate sas_scsi_host.c).
-
-> rather that you did it.
-
-Apparently you do not understand the difference between the
-Open Transport and MPT.
-
-Christoph does.  Please talk to him.  You may also want to talk
-to Eric or someone else here who understands this.
-
-> The unified transport class should be capable of supporting both the
-> aic94xx SAS card using your existing domain device interface as well as
-> the fusion SAS card, which is the whole goal of all of this in the first
-> place.
-
-No, this is *your agenda*, and it has _never_ been "in the first place".
-Stop spreading FUD.  In the first place was SAS Support in the kernel as
-I've posted specs to linux-scsi in April of this year and in 
-July of this year before OLS to you and some other folks.
-
-You cannot reconcile a technology whose sole existence is to *hide*
-transport specifics (Fusion MPT) and *only export SCSI LUs* and technology
-which exposes the transport in its bare minimum.
-
-> So, do you want to do this work, or would you rather just be responsible
-> for the aic94xx driver?
-
-James, this is very rude and smacks full of incompetence.
-
-Talk to Eric or their MPT engineers, or even Christoph to see and
-understand the problem between MPT and Open Transport.  The two
-technologies are a world apart.
-
-Christoph has begun to understand things correctly by asking
-what _can_ be shared if anyhing.
-
-You cannot order things like this around, bridging two competing
-companies.  You cannot order things like this around to have it
-your way.  You cannot order people working for other companies
-to do things.  This is very rude and incompetent, _and_ naive.
-
-Notice that no other maintainer has this tone of voice.  The reason
-is that they do not pretend to know everything.
-
-You cannot order who's responsible for what.  They who wrote the code
-have a say.
-
-This is very rude of you.  I'm sorry I have to say this.
-
-You don't seem to concentrate on technology discussions but quickly
-start ordering people around -- very unbecoming for a maintainer,
-who's also a CTO.
-
-Documentation/ManagementStyle
+Alternatively, you can take a look at the SAS Layer.
 
 	Luben
+
+> 
+> I've converted all the mid-layer and the ULDs; I ran out of steam at the
+> lld's.
+> 
+> This should work transparently for all luns up to 255 (using
+> representation 00b), so I've limited all of our sequential LUN scans to
+> 255
+> 
+> This actually boots ... but I don't have a system with >1 LUN currently.
+> 
+> James
+
+[cut]
+
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -66,7 +66,8 @@ struct scsi_device {
+>  					   jiffie count on our counter, they
+>  					   could all be from the same event. */
+>  
+> -	unsigned int id, lun, channel;
+> +	unsigned int id, channel;
+> +	u64 lun;
+>  
+>  	unsigned int manufacturer;	/* Manufacturer of device, for using 
+>  					 * vendor-specific cmd's */
+> @@ -179,20 +180,20 @@ static inline struct scsi_target *scsi_t
+>  extern struct scsi_device *__scsi_add_device(struct Scsi_Host *,
+>  		uint, uint, uint, void *hostdata);
+>  extern int scsi_add_device(struct Scsi_Host *host, uint channel,
+> -			   uint target, uint lun);
+> +			   uint target, u64 lun);
+>  extern void scsi_remove_device(struct scsi_device *);
+>  extern int scsi_device_cancel(struct scsi_device *, int);
+>  
+>  extern int scsi_device_get(struct scsi_device *);
+>  extern void scsi_device_put(struct scsi_device *);
+>  extern struct scsi_device *scsi_device_lookup(struct Scsi_Host *,
+> -					      uint, uint, uint);
+> +					      uint, uint, u64);
+>  extern struct scsi_device *__scsi_device_lookup(struct Scsi_Host *,
+> -						uint, uint, uint);
+> +						uint, uint, u64);
+>  extern struct scsi_device *scsi_device_lookup_by_target(struct scsi_target *,
+> -							uint);
+> +							u64);
+>  extern struct scsi_device *__scsi_device_lookup_by_target(struct scsi_target *,
+> -							  uint);
+> +							  u64);
+>  extern void starget_for_each_device(struct scsi_target *, void *,
+>  		     void (*fn)(struct scsi_device *, void *));
+>  
+> @@ -248,12 +249,13 @@ extern void scsi_device_resume(struct sc
+>  extern void scsi_target_quiesce(struct scsi_target *);
+>  extern void scsi_target_resume(struct scsi_target *);
+>  extern void scsi_scan_target(struct device *parent, unsigned int channel,
+> -			     unsigned int id, unsigned int lun, int rescan);
+> +			     unsigned int id, u64 lun, int rescan);
+>  extern void scsi_target_reap(struct scsi_target *);
+>  extern void scsi_target_block(struct device *);
+>  extern void scsi_target_unblock(struct device *);
+>  extern void scsi_remove_target(struct device *);
+> -extern void int_to_scsilun(unsigned int, struct scsi_lun *);
+> +extern void int_to_scsilun(u64, struct scsi_lun *);
+> +extern u64 scsilun_to_int(struct scsi_lun *);
+>  extern const char *scsi_device_state_name(enum scsi_device_state);
+>  extern int scsi_is_sdev_device(const struct device *);
+>  extern int scsi_is_target_device(const struct device *);
+> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -494,7 +494,10 @@ struct Scsi_Host {
+>  	 * or lun (i.e. 8 for normal systems).
+>  	 */
+>  	unsigned int max_id;
+> -	unsigned int max_lun;
+> +	#define SCSI_UNLIMITED_LUNS	(0xffffffffffffffffULL)
+> +	/* Any luns beyond 255 *require* report luns to find */
+> +	#define SCSI_SCAN_LIMIT_LUNS	256
+> +	u64 max_lun;
+>  	unsigned int max_channel;
+>  
+>  	/*
+> 
+> 
+> 
 
