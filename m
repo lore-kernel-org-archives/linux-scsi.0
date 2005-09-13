@@ -1,42 +1,24 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/8] aacraid: add name to driver template
-Date: Tue, 13 Sep 2005 11:05:18 +0100
-Message-ID: <20050913100518.GB30375@infradead.org>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01919CB4@otce2k03.adaptec.com>
+Subject: Re: [PATCH 5/8] aacraid: error return checking  (Updated)
+Date: Tue, 13 Sep 2005 11:05:45 +0100
+Message-ID: <20050913100545.GC30375@infradead.org>
+References: <1126212624.7479.23.camel@markh1.pdx.osdl.net> <20050910191925.GC3662@infradead.org> <1126546530.7407.16.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:16311 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:18615 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1750753AbVIMKFT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Sep 2005 06:05:19 -0400
+	id S1750768AbVIMKFt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Sep 2005 06:05:49 -0400
 Content-Disposition: inline
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01919CB4@otce2k03.adaptec.com>
+In-Reply-To: <1126546530.7407.16.camel@markh1.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>, Mark Haverkamp <markh@osdl.org>
+To: Mark Haverkamp <markh@osdl.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-On Mon, Sep 12, 2005 at 10:05:55AM -0400, Salyzyn, Mark wrote:
-> Mark Salyzyn writes:
-> >Christoph Hellwig writes:
-> >>> +	aac_driver_template.name = aac_drivers[index].name;
-> >>this is broken. it overwrites the name every time a host is allocated.
-> >Especially it does this on a live template.  Just implemented ->info
-> >
-> >->info() is not enough, there are places in the scsi subsystem which do
-> >not implement the info override over top the template name.
-> >
-> >I had discussed the possibility of submitting a patch to the scsi
-> subsystem to fix that brokenness, I am generally concerned with legacy
-> issues.
-> 
-> Looks like few remain. Could not figure a way to alter scsi_module.c
-> that made sense, doable but expensive, but hosts.c could be fixed up
-> with:
+On Mon, Sep 12, 2005 at 10:35:30AM -0700, Mark Haverkamp wrote:
+> Here is an updated patch with the suggested change.
 
-Ok.  Long-term I'll probably just kill ->name.  Note that all these
-are error messages that don't happen unless someone broke the actual
-driver, so adding the branding string there doesn't seem to be very
-interesting..
+ok.
 
