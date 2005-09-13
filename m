@@ -1,79 +1,127 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process
- (end devices)
-Date: Tue, 13 Sep 2005 08:49:10 -0400
-Message-ID: <4326CAC6.3050202@adaptec.com>
-References: <20050910024454.20602.qmail@web51613.mail.yahoo.com>	 <1126368081.4813.46.camel@mulgrave>  <4325997D.3050103@adaptec.com>	 <1126547565.4825.52.camel@mulgrave>  <4325E5AE.1080900@adaptec.com> <1126560191.4825.71.camel@mulgrave>
+From: Dipankar Sarma <dipankar@in.ibm.com>
+Subject: [2.6.14-rc1] sym scsi boot hang
+Date: Tue, 13 Sep 2005 18:18:04 +0530
+Message-ID: <20050913124804.GA5008@in.ibm.com>
+Reply-To: dipankar@in.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932637AbVIMMtT@vger.kernel.org>
-In-Reply-To: <1126560191.4825.71.camel@mulgrave>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932644AbVIMMzG@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: ltuikov@yahoo.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/12/05 17:23, James Bottomley wrote:
-> On Mon, 2005-09-12 at 16:31 -0400, Luben Tuikov wrote:
-> 
->>On 09/12/05 13:52, James Bottomley wrote:
->>
->>>Well there is this in sas_discover.h:
->>>
->>>struct scsi_core_mapping {
->>>	int  channel;
->>>	int  id;
->>>};
->>>
->>>struct LU {
->>>[...]
->>>	struct scsi_core_mapping map;
->>>
->>>
->>>so if you use channel, id and scsilun_to_int() (or your SCSI_LUN
->>>reimplementation of that) on your LUN structure, you have everything
->>>necessary to interface to scsi_scan_target, yes.
->>>
->>>You have to have this, otherwise you wouldn't be able to use
->>>scsi_add_device in sas_scsi_host.c:sas_register_with_scsi().
->>>
->>>Based on this it does look like your refusal to use scsi_scan_target is
->>>based on ideological rather than technical objections.
->>
->>Hmm, no.
->>
->>Channel and id are assigned _after_ the device has been scanned for
->>LUs.  So I cannot just call scsi_scan_target() and say: "here is
->>this SCSI Domain device, I know nothing about, other than
->>the fact that it has a Target port, scan it".
-> 
-> 
-> In your code channel corresponds to an index in the ports array of the
-> host adapter and hence is known before you do any logical unit scanning.
-> Id is assigned from a bitmap in the port.  You could do that assignment
-> in sas_discover_end_dev() then you could use scsi_scan_target() in place
-> of sas_do_lu_discovery().  It would also mitigate your bug below since
-> now your id is one to one on the end devices rather than the logical
-> units of the end devices, so each port would support up to 128 end
-> devices rather than 128 logical units.
+My ppc64 box refuses to boot with 2.6.14-rc1. The console log
+is included below. I see a lot of repeat of the last message
+in the log and then the box hangs.
 
-James, even Christoph understands this: no HCIL in SCSI Core is needed.
-The whole problem is not what you *keep grinding about over and over above*,
-but the fact that I have to _invent_ channel, id and emaciated LUN to give
-to the broken, outdated and Parallel SCSI-centric SCSI Core.
+Any idea what might have caused this ?
 
-Christoph understand this, why cannot you?
+Thanks
+Dipankar
 
-That bitmap was added in the last moment when I needed to register devices
-with SCSI Core.  There is a lot of other problems which I've pointed out
-int the scsi glue file, which do you not want to talk about or you do
-not bring up.
-
-Concentrate on SCSI Core, _not_ IDR.
-
-I hope that by the time people start plugging in hardware with more
-than one LU into a SAS domain, SCSI Core's new part would not need
-HCIL.  Currently SAS hardware is scarce at best.
-
-	Luben
+sym0: <1010-66> rev 0x1 at pci 0001:01:01.0 irq 115
+sym0: No NVRAM, ID 7, Fast-80, LVD, parity checking
+sym0: SCSI BUS has been reset.
+scsi0 : sym-2.2.1
+ target0:0:8: FAST-40 WIDE SCSI 80.0 MB/s ST (25 ns, offset 31)
+  Vendor: IBM       Model: IC35L036UCDY10-0  Rev: S25M
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+ target0:0:8: tagged command queuing enabled, command queue depth 16.
+ target0:0:8: Beginning Domain Validation
+ target0:0:8: asynchronous.
+ target0:0:8: wide asynchronous.
+ target0:0:8: FAST-80 WIDE SCSI 160.0 MB/s DT IU QAS (12.5 ns, offset 31)
+sym0: unexpected disconnect
+ target0:0:8: Write Buffer failure 700ff
+ target0:0:8: Domain Validation Disabing Information Units
+ target0:0:8: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
+sym0: unexpected disconnect
+ target0:0:8: Write Buffer failure 700ff
+ target0:0:8: Domain Validation detected failure, dropping back
+ target0:0:8: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
+ target0:0:8: Ending Domain Validation
+ target0:0:9: FAST-40 WIDE SCSI 80.0 MB/s ST (25 ns, offset 31)
+  Vendor: IBM       Model: IC35L036UCDY10-0  Rev: S25M
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+ target0:0:9: tagged command queuing enabled, command queue depth 16.
+ target0:0:9: Beginning Domain Validation
+ target0:0:9: asynchronous.
+ target0:0:9: wide asynchronous.
+ target0:0:9: FAST-80 WIDE SCSI 160.0 MB/s DT IU QAS (12.5 ns, offset 31)
+sym0: unexpected disconnect
+ target0:0:9: Write Buffer failure 700ff
+ target0:0:9: Domain Validation Disabing Information Units
+ target0:0:9: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
+sym0: unexpected disconnect
+ target0:0:9: Write Buffer failure 700ff
+ target0:0:9: Domain Validation detected failure, dropping back
+ target0:0:9: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
+ target0:0:9: Ending Domain Validation
+ target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s ST (25 ns, offset 31)
+  Vendor: IBM       Model: IC35L036UCDY10-0  Rev: S25M
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+ target0:0:10: tagged command queuing enabled, command queue depth 16.
+ target0:0:10: Beginning Domain Validation
+ target0:0:10: asynchronous.
+ target0:0:10: wide asynchronous.
+ target0:0:10: Domain Validation skipping write tests
+ target0:0:10: FAST-80 WIDE SCSI 160.0 MB/s DT IU QAS (12.5 ns, offset 31)
+sym0: unexpected disconnect
+ target0:0:10: Domain Validation Disabing Information Units
+ target0:0:10: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 31)
+sym0: unexpected disconnect
+ target0:0:10: Domain Validation detected failure, dropping back
+ target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
+ target0:0:10: Ending Domain Validation
+  Vendor: IBM       Model: HSBPM2   PU2SCSI  Rev: 0016
+  Type:   Enclosure                          ANSI SCSI revision: 02
+ target0:0:14: Beginning Domain Validation
+ 0:0:14:0: phase change 6-7 9@100503a8 resid=7.
+ 0:0:14:0: phase change 6-7 9@100503a8 resid=7.
+ 0:0:14:0: phase change 6-7 9@100503a8 resid=7.
+ 0:0:14:0: phase change 6-7 9@100503a8 resid=7.
+ target0:0:14: Ending Domain Validation
+  Vendor: IBM       Model: HSBPD4M  PU3SCSI  Rev: 0016
+  Type:   Enclosure                          ANSI SCSI revision: 02
+ target0:0:15: Beginning Domain Validation
+ 0:0:15:0: phase change 6-7 9@100503a8 resid=7.
+ 0:0:15:0: phase change 6-7 9@100503a8 resid=7.
+ 0:0:15:0: phase change 6-7 9@100503a8 resid=7.
+ 0:0:15:0: phase change 6-7 9@100503a8 resid=7.
+ target0:0:15: Ending Domain Validation
+sym1: <1010-66> rev 0x1 at pci 0001:01:01.1 irq 116
+sym1: No NVRAM, ID 7, Fast-80, LVD, parity checking
+sym1: SCSI BUS has been reset.
+scsi1 : sym-2.2.1
+sym2: <1010-66> rev 0x1 at pci 0001:41:01.0 irq 119
+sym2: No NVRAM, ID 7, Fast-80, LVD, parity checking
+sym2: SCSI BUS has been reset.
+scsi2 : sym-2.2.1
+sym3: <1010-66> rev 0x1 at pci 0001:41:01.1 irq 120
+sym3: No NVRAM, ID 7, Fast-80, LVD, parity checking
+sym3: SCSI BUS has been reset.
+scsi3 : sym-2.2.1
+st: Version 20050830, fixed bufsize 32768, s/g segs 256
+SCSI device sda: 71096640 512-byte hdwr sectors (36401 MB)
+SCSI device sda: drive cache: write through
+SCSI device sda: 71096640 512-byte hdwr sectors (36401 MB)
+SCSI device sda: drive cache: write through
+ sda: sda1 sda2 sda3 sda4 < sda5 sda6 >
+Attached scsi disk sda at scsi0, channel 0, id 8, lun 0
+SCSI device sdb: 71096640 512-byte hdwr sectors (36401 MB)
+SCSI device sdb: drive cache: write through
+SCSI device sdb: 71096640 512-byte hdwr sectors (36401 MB)
+SCSI device sdb: drive cache: write through
+ sdb: sdb1 sdb2
+Attached scsi disk sdb at scsi0, channel 0, id 9, lun 0
+ target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
+ target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
+ target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
+sdc: Spinning up disk....<6> target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
+ target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
+ target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
+ target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
+ target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
+ target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
