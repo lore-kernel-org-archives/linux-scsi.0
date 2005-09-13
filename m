@@ -1,72 +1,72 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 2.6.13 2/14] sas-class: README
-Date: Tue, 13 Sep 2005 20:13:09 +1000
-Message-ID: <4326A635.3020400@torque.net>
-References: <4321E4DD.7070405@adaptec.com> <432543C6.1020403@torque.net> <4325CB10.1020902@adaptec.com>
-Reply-To: dougg@torque.net
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [ANNOUNCE 0/2] Serial Attached SCSI (SAS) support for the Linux kernel
+Date: Tue, 13 Sep 2005 11:14:09 +0100
+Message-ID: <20050913101409.GA30666@infradead.org>
+References: <4321E2C1.7080507@adaptec.com> <20050911092030.GA5140@infradead.org> <4325F488.5040304@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750723AbVIMKMg@vger.kernel.org>
-In-Reply-To: <4325CB10.1020902@adaptec.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:4235 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1750730AbVIMKOK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Sep 2005 06:14:10 -0400
+Content-Disposition: inline
+In-Reply-To: <4325F488.5040304@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Luben Tuikov wrote:
-> On 09/12/05 05:00, Douglas Gilbert wrote:
-
-<snip>
-
->>Putting distributed state information in sysfs and then
->>passing off the responsibility for maintaining its state
->>(because it is a difficult problem) brings into question
->>the wisdom of the strategy.
+On Mon, Sep 12, 2005 at 05:35:04PM -0400, Luben Tuikov wrote:
+> > What's not nice is that it's not intgerating with the
+> > SAS transport class I posted,
 > 
+> I wish there was something I could do.  HP and LSI
+> were aware of my efforts since the beginning of the year.
+
+As was I.  And the reason I wrote this upper layer is that you
+clearly stated multiple times (at the SAS BOF and in mail) that
+you're not interested in this upper layer.
+
+> As well, you had a copy of my code July 14 this year,
+
+That code didn't have anything that overlaps with the code I wrote.
+
+> long before starting your work on your SAS class for LSI and
+> HP (so its acceptance is guaranteed), after OLS.
+
+Just in case it was clear:  I'm paid for this transport class by Dell.
+I don't have any contractural relationship with LSI or HP, although these
+companies (like most sucessfull hardware vendors) know that giving hardware
+to linux people active in the area they care about helps to get thos people
+actually fixing things about instead of just bitching around..
+
+> We did meet at OLS and we did have the SAS BOF.  I'm not sure
+> why you didn't want to work together?
+
+I abosultely want to.  To quote from my first minimal transport class
+announcement mail:
+
+"I hope this will integrate nicely with the top-down work Luben has done
+once he finally releases it publically, but for now I think we should have
+something so SAS drivers can go in the tree."
+
+> > from the SCSI core code, and adding it's own sysfs representation that's
+> > very different from the way the SCSI core and transport classes do it.
 > 
-> No Doug, not true at all.
+> Yes, it is time to evolve.
 > 
-> Sorry that "sg" isn't going to be used to communicate with
-> expanders, but this is just part of evolution.
+> I've pointed out many times the shortcomings of expanding the
+> JB's "transport _attribute_ class" into a "transport layer" in
+> recent threads.
 
-That is a relief, retired at last.
+We need both a transport class in the original sense aswell as a library
+for host-based SAS HBAs, and they need to play together nicely - whatever
+term you give to them.
 
-> If I removed "ready_led_meaning" and a couple of other
-> such entries: you would have NO argument.
+> Overall, MPT is very different in design than a disclosed
+> transport.
 
-less ...
+I know.  And we still want to cover it with a common base for what we
+can have common.
 
-> If I left only the directory entries representing the
-> object and the "smp_portal" you argument falls apart.
-> 
-> Instead, you should've been saying how easy and
-> _elegant_ it is communicating with expanders on the
-> domain:
-> 	* open(2) the "smp_portal" in the expander
->           directory you want to talk to,
-> 	* write(2) the SMP frame you want to send,
-> 	* read(2) the amount of information you
-> 	  expect to get,
-> 	* close(2).
-> 
-> Done!  No addressing to figure out, no memory problems, etc.
-> The easiest interface: read(2)/write(2), _and_ the simplest
-> format to use: pure SMP frames, easy and straightforward.
-
-It is impressive how elegant a passthrough can be when
-one dispenses with a bit of metadata such as per command
-timeouts and 3 levels of error messages (i.e. from the
-driver, from the link layer and from the SMP target).
-I always enjoy getting EIO in errno.
-
-This all seems so frustrating; a LLD injects a
-command/frame/whatever into an initiator and waits for
-a response or something to happen. Networking code faces
-the same scenario and presents it "as is" to the user
-space (for any application that cares). Yes, there are
-messy details. However in the SCSI subsystem we want to
-hide this simple reality with all these wierd and
-wonderful abstractions.
-
-Doug Gilbert
