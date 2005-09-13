@@ -1,34 +1,30 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [Patch] ibmvscsi compatibility fix
-Date: Tue, 13 Sep 2005 10:18:04 -0500
-Message-ID: <1126624684.4809.10.camel@mulgrave>
-References: <20050912024350.60e89eb1.akpm@osdl.org>
-	 <20050912222437.GA13124@sergelap.austin.ibm.com>
-	 <20050912161013.76ef833f.akpm@osdl.org> <20050913013840.GG5382@krispykreme>
-	 <20050913085643.GA24156@sergelap.austin.ibm.com>
-	 <20050913150902.GA22071@cs.umn.edu>
+From: Anton Blanchard <anton@samba.org>
+Subject: Re: [RFC] SCSI target for IBM Power5 LPAR
+Date: Wed, 14 Sep 2005 01:00:10 +1000
+Message-ID: <20050913150009.GG26162@krispykreme>
+References: <20050906212801.GB14057@cs.umn.edu> <20050907025932.GU6945@krispykreme> <431EFFE7.6070709@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:46546 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932671AbVIMPT2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Sep 2005 11:19:28 -0400
-In-Reply-To: <20050913150902.GA22071@cs.umn.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932677AbVIMPcg@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <431EFFE7.6070709@us.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Santiago Leon <santil@us.ibm.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc64-dev@ozlabs.org, Linda Xie <lxiep@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: boutcher@cs.umn.edu
-Cc: serue@us.ibm.com, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, lxie@us.ibm.com, santil@us.ibm.com
-
-On Tue, 2005-09-13 at 10:09 -0500, Dave C Boutcher wrote:
-> Andrew, while this stuff usually goes through James, it would
-> probably make Serge happier if you could pick it up for the next
-> mm.  
-
-I'll put it in scsi-rc-fixes-2.6 ... that should be fast track for
-inclusion prior to 2.6.14 and it should also feed into the next -mm
-
-James
 
 
+Hi,
+
+> We use MAX_SECTORS (which is actually 127.5kB) because that's the 
+> max_sectors of the loopback device (we have a lot of users that like the 
+> flexibility of using loopback with the ibmvscsis driver)... It can be 
+> bumped up without any problems because there is code that splits 
+> requests if they are larger than the target's max_sectors...
+> 
+> What would you recommend? 256kB?
+
+~256kB sounds reasonable to me and I notice that other VIO server is
+setting it to 256kB :) 
+
+Anton
