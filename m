@@ -1,60 +1,59 @@
-From: "Serge E. Hallyn" <serue@us.ibm.com>
-Subject: Re: [Patch] ibmvscsi compatibility fix
-Date: Tue, 13 Sep 2005 14:16:05 -0500
-Message-ID: <20050913191605.GA608@IBM-BWN8ZTBWAO1>
-References: <20050912024350.60e89eb1.akpm@osdl.org> <20050912222437.GA13124@sergelap.austin.ibm.com> <20050912161013.76ef833f.akpm@osdl.org> <20050913013840.GG5382@krispykreme> <20050913085643.GA24156@sergelap.austin.ibm.com> <20050913150902.GA22071@cs.umn.edu>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] aic7xxx: move to dma_get_required_mask() and correct
+	39 bit assumptions
+Date: Tue, 13 Sep 2005 14:20:48 -0500
+Message-ID: <1126639248.4809.50.camel@mulgrave>
+References: <20050830221316.98368.qmail@web51608.mail.yahoo.com>
+	 <1125440652.5037.71.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.129]:53470 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S965160AbVIMTRh
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Sep 2005 15:17:37 -0400
-Content-Disposition: inline
-In-Reply-To: <20050913150902.GA22071@cs.umn.edu>
+Received: from stat9.steeleye.com ([209.192.50.41]:33237 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S965155AbVIMTVG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Sep 2005 15:21:06 -0400
+In-Reply-To: <1125440652.5037.71.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, lxie@us.ibm.com, santil@us.ibm.com
+To: ltuikov@yahoo.com
+Cc: Dave Jones <davej@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, luben_tuikov@adaptec.com
 
-Works like a charm on my machine with 2.6.13-mm2.
+On Tue, 2005-08-30 at 17:24 -0500, James Bottomley wrote:
+> On Tue, 2005-08-30 at 15:13 -0700, Luben Tuikov wrote:
+> > AHC_LARGE_SCBS means that the card can take 64 byte hardware SCBs.
+> > Normally HSCBs are 32 bytes for older controllers.  Latter aic78xx and
+> > all aic79xx chips support 64 byte HSCBs.  So this isn't related.
+> 
+> So all aic chips, regardless of age can do 39 bit addressing mode in the
+> scb?  It also means they must be DAC capable, which I thought was pretty
+> much a universally missing feature in early cards.  From the bug report,
+> the card in question is a 7880, which is pretty early, I think: only
+> ultra, not even U2 or LVD.
+> 
+> > To fix this bug, you should only have to substitute
+> >            ahc_linux_get_memsize() > 0x80000000
+> > with
+> >            dma_get_required_mask(dev) > DMA_32BIT_MASK,
+> > to fix this issue (unless of course the kernel is confused too ;-) ).
+> 
+> But all that does is correct a thinko in the original code where it
+> would try to turn on 39 bit addressing mode if the machine has >2GB of
+> memory.  The practical effect of which is pretty much nil.
+> 
+> The symptoms reported look very much like DMA to the wrong region.
 
-thanks,
--serge
+OK, I just had confirmation that the patch does indeed fix the bug on
+x86_64 validating the guess that the 7880 isn't working correctly with
+39 bit addresses.
 
-Quoting Dave C Boutcher (sleddog@us.ibm.com):
-> Linda Xie ever so gently pointed out that she had a patch
-> to preserve compatibility with older SLES targets, and I told
-> her we didn't need to push it to mainline.
-> 
-> This patch explicitly checks the version of the IBMVSCSI target
-> and ensures that large scatterlists are not sent to older 
-> targets.
-> 
-> Andrew, while this stuff usually goes through James, it would
-> probably make Serge happier if you could pick it up for the next
-> mm.  
-> 
-> Signed-off-by: Linda Xie <lxie@us.ibm.com>
-> Signed-off-by: Dave Boutcher <boutcher@us.ibm.com>
-> 
-> --- linux-2.6.13-mm3-orig/drivers/scsi/ibmvscsi/ibmvscsi.c	2005-09-13 09:50:31.000000000 -0500
-> +++ linux-2.6.13.1/drivers/scsi/ibmvscsi/ibmvscsi.c	2005-09-13 09:09:41.000000000 -0500
-> @@ -727,6 +727,16 @@
->  		if (hostdata->madapter_info.port_max_txu[0]) 
->  			hostdata->host->max_sectors = 
->  				hostdata->madapter_info.port_max_txu[0] >> 9;
-> +		
-> +		if (hostdata->madapter_info.os_type == 3 &&
-> +		    strcmp(hostdata->madapter_info.srp_version, "1.6a") <= 0) {
-> +			printk("ibmvscsi: host (Ver. %s) doesn't support large"
-> +			       "transfers\n",
-> +			       hostdata->madapter_info.srp_version);
-> +			printk("ibmvscsi: limiting scatterlists to %d\n",
-> +			       MAX_INDIRECT_BUFS);
-> +			hostdata->host->sg_tablesize = MAX_INDIRECT_BUFS;
-> +		}
->  	}
->  }
->  
-> 
+Luben, could you look in the manual and see if it says what chip
+versions do work with the 39 bit mask.  For the time being I'm going to
+commit the fix that assumes only the versions with AHC_LARGE_SCB's
+defined work.  That's probably going to penalise a few chipsets that
+have 39 bit but not 64 bit, but without the information, it's the best I
+can do.
+
+James
+
 
