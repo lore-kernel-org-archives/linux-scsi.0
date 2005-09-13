@@ -1,82 +1,92 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 7/9] iscsi: rename some proto defs
-Date: Mon, 12 Sep 2005 21:01:57 -0500
-Message-ID: <1126576918.29245.27.camel@max>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [GIT PATCH] scsi merge for 2.6.13
+Date: Mon, 12 Sep 2005 21:44:48 -0500
+Message-ID: <1126579489.4825.5.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:20409 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932403AbVIMCCV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Sep 2005 22:02:21 -0400
-Received: from max (c-24-118-218-223.hsd1.mn.comcast.net [24.118.218.223])
-	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id j8D22Kff010043
-	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Sep 2005 21:02:21 -0500
+Received: from stat9.steeleye.com ([209.192.50.41]:50636 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932259AbVIMCpA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Sep 2005 22:45:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-from hare@suse.de
+This should be the final round of changes before we close down into bug
+fix mode.  There will be a few extra driver updates in some of the -rc
+stages (there's at least aacraid and zfcp still going through the
+process).
 
-for a proper alignment between open-iscsi and iscsitarget the
-definitions in include/iscsi_proto.h do not match exactly.
+The patch is available here [URL checked this time]
 
-With this patch it's possible to have iscsitarget use
-'include/iscsi_proto.h' instead of its own iscsi_hdr.h.
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-for-linus-2.6.git
 
-Signed-off-by: Alex Aizman <itn780@yahoo.com>
-Signed-off-by: Dmitry Yusupov <dmitry_yus@yahoo.com>
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+The short change log is:
 
+adam radford:
+  o 3ware 9000: handle use_sg != 0 for emulated commands
 
-diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
---- a/include/scsi/iscsi_proto.h
-+++ b/include/scsi/iscsi_proto.h
-@@ -548,9 +548,11 @@ struct iscsi_reject {
- 	uint8_t flags;
- 	uint8_t reason;
- 	uint8_t rsvd2;
--	uint8_t rsvd3;
-+	uint8_t hlength;
- 	uint8_t dlength[3];
--	uint8_t rsvd4[16];
-+	uint8_t rsvd3[8];
-+	__be32  ffffffff;
-+	uint8_t rsvd4[4];
- 	__be32	statsn;
- 	__be32	exp_cmdsn;
- 	__be32	max_cmdsn;
-@@ -560,17 +562,17 @@ struct iscsi_reject {
- };
- 
- /* Reason for Reject */
--#define CMD_BEFORE_LOGIN	1
--#define DATA_DIGEST_ERROR	2
--#define DATA_SNACK_REJECT	3
--#define ISCSI_PROTOCOL_ERROR	4
--#define CMD_NOT_SUPPORTED	5
--#define IMM_CMD_REJECT		6
--#define TASK_IN_PROGRESS	7
--#define INVALID_SNACK		8
--#define BOOKMARK_REJECTED	9
--#define BOOKMARK_NO_RESOURCES	10
--#define NEGOTIATION_RESET	11
-+#define ISCSI_REASON_CMD_BEFORE_LOGIN	1
-+#define ISCSI_REASON_DATA_DIGEST_ERROR	2
-+#define ISCSI_REASON_DATA_SNACK_REJECT	3
-+#define ISCSI_REASON_PROTOCOL_ERROR	4
-+#define ISCSI_REASON_CMD_NOT_SUPPORTED	5
-+#define ISCSI_REASON_IMM_CMD_REJECT		6
-+#define ISCSI_REASON_TASK_IN_PROGRESS	7
-+#define ISCSI_REASON_INVALID_SNACK		8
-+#define ISCSI_REASON_BOOKMARK_INVALID	9
-+#define ISCSI_REASON_BOOKMARK_NO_RESOURCES	10
-+#define ISCSI_REASON_NEGOTIATION_RESET	11
- 
- /* Max. number of Key=Value pairs in a text message */
- #define MAX_KEY_VALUE_PAIRS	8192
+Alan Stern:
+  o Fix module removal/device add race
+  o fix callers of scsi_remove_device() who already hold the scan muted
+  o add missing scan mutex to scsi_scan_target()
+
+Andrew Vasquez:
+  o lpfc: use wwn_to_u64() transport helper
+  o qla2xxx: use wwn_to_u64() transport helper
+  o fc_transport: Generalize WWN to u64 interger conversions
+
+Christoph Hellwig:
+  o SAS transport class
+
+Douglas Gilbert:
+  o permit READ DEFECT DATA in block/scsi_ioctl
+  o sg: do not set VM_IO flag on mmap-ed pages
+
+James Bottomley:
+  o Alter the scsi_add_device() API to conform to what users expect
+  o SAS transport class: fixup prototype of sas_host_setup
+  o core: fix leakage of scsi_cmnd's
+  o core: fix leakage of scsi_cmnd's
+
+Mike Christie:
+  o set error value when failing commands in prep_fn
+
+Neil Brown:
+  o fix possible deadlock in scsi_lib.c
+
+Tejun Heo:
+  o scsi: Error handler description document
+
+The diffstat is:
+
+ Documentation/scsi/00-INDEX       |    2 
+ Documentation/scsi/scsi_eh.txt    |  479 ++++++++++++++++++++++
+ drivers/block/scsi_ioctl.c        |    1 
+ drivers/ieee1394/sbp2.c           |    8 
+ drivers/scsi/3w-9xxx.c            |   30 +
+ drivers/scsi/Kconfig              |    7 
+ drivers/scsi/Makefile             |    1 
+ drivers/scsi/lpfc/lpfc_attr.c     |   22 -
+ drivers/scsi/lpfc/lpfc_hbadisc.c  |    7 
+ drivers/scsi/lpfc/lpfc_hw.h       |   17 
+ drivers/scsi/lpfc/lpfc_init.c     |    7 
+ drivers/scsi/qla2xxx/qla_attr.c   |   18 
+ drivers/scsi/qla2xxx/qla_init.c   |    4 
+ drivers/scsi/scsi_lib.c           |  138 ++++--
+ drivers/scsi/scsi_priv.h          |    1 
+ drivers/scsi/scsi_scan.c          |   88 ++--
+ drivers/scsi/scsi_sysfs.c         |   28 -
+ drivers/scsi/scsi_transport_sas.c |  820 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sg.c                 |    4 
+ include/scsi/scsi_device.h        |    4 
+ include/scsi/scsi_transport_fc.h  |    8 
+ include/scsi/scsi_transport_sas.h |  100 ++++
+ 22 files changed, 1648 insertions(+), 146 deletions(-)
+
+James
 
 
