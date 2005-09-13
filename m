@@ -1,42 +1,59 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] SCSI core: fix leakage of scsi_cmnd's
-Date: Tue, 13 Sep 2005 13:00:01 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0509131254250.4481-100000@iolanthe.rowland.org>
-References: <1126291223.4799.35.camel@mulgrave>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 1/2] fix EH thread teardown
+Date: Tue, 13 Sep 2005 19:01:26 +0200
+Message-ID: <200509131901.33033@bilbo.math.uni-mannheim.de>
+References: <Pine.LNX.4.44L0.0509131247090.4481-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/signed;
+  boundary="nextPart1310945.fQatWsyLyi";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:56548 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S964889AbVIMRAC
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Sep 2005 13:00:02 -0400
-In-Reply-To: <1126291223.4799.35.camel@mulgrave>
+Received: from mail.sf-mail.de ([62.27.20.61]:42987 "EHLO mail.sf-mail.de")
+	by vger.kernel.org with ESMTP id S964900AbVIMRAz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Sep 2005 13:00:55 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0509131247090.4481-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Christoph Hellwig <hch@lst.de>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Fri, 9 Sep 2005, James Bottomley wrote:
+--nextPart1310945.fQatWsyLyi
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-> On Thu, 2005-09-08 at 16:49 -0400, Alan Stern wrote:
-> > This hasn't been tested very thoroughly, so please look through it 
-> > carefully.
-> 
-> Actually, just one problem and one cosmetic fix:
-> 
-> 1) We need to dequeue for the loop and kill case (it seems easiest
-> simply to dequeue in the scsi_kill_request() routine)
-> 2) There's no real need to drop the queue lock.  __scsi_done() is lock
-> agnostic, so since there's no requirement, let's just leave it in to
-> avoid any locking issues.
+Am Dienstag, 13. September 2005 18:50 schrieb Alan Stern:
+>Rolf Eike Beer wrote:
+>> Ok, we looked a bit closer on all this. http://lwn.net/Articles/65178/
+>> tells that ktread_stop() will not send a signal, so the
+>> down_interruptible() will never return on kthread_stop(). But calling up()
+>> directly before
+>> kthread_stop() adds a race condition: if reschedule happens right after
+>> the up() we've won nothing and it will hang again.
+>
+>This problem shows up in other ways as well.  With hot-unpluggable
+>hosts, the call that does the last 'put' on the last device will hang
+>waiting for the eh thread to terminate.  See
+>
+>http://bugzilla.kernel.org/show_bug.cgi?id=5237
 
-Have you applied this to any publicly-accessible tree yet?  I looked at 
-the git browsers on parisc-linux.org and kernel.org, but the patch doesn't 
-seem to be there yet.
+Looks like someone has to build a waitqueue to fix this.
 
-For that matter, what about the other patches you agreed to take (as543 - 
-as546)?  They aren't in the git repositories either.  It would be good if 
-all these things could be ready in time for the next -mm release.
+Eike
 
-Alan Stern
+--nextPart1310945.fQatWsyLyi
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.0 (GNU/Linux)
+
+iD8DBQBDJwXsXKSJPmm5/E4RArA3AJ4mbt4LS4GlDBAfavLc8RsyM3p8mgCfb0l2
+qRhDx4EYa0ote34FqwW6D0Q=
+=yQGa
+-----END PGP SIGNATURE-----
+
+--nextPart1310945.fQatWsyLyi--
