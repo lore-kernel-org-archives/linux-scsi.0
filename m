@@ -1,51 +1,94 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2.6.13 2/14] sas-class: README
-Date: Tue, 13 Sep 2005 11:17:28 +0100
-Message-ID: <20050913101727.GA30865@infradead.org>
-References: <4321E4DD.7070405@adaptec.com> <432543C6.1020403@torque.net>
+From: Jack Byer <ojbyer@usa.net>
+Subject: Re: Fw: legacy megaraid driver bug in mm-series
+Date: Tue, 13 Sep 2005 06:17:39 -0400
+Message-ID: <4326A743.3060808@usa.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750751AbVIMKRb@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <432543C6.1020403@torque.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 69.37.187.190.adsl.snet.net ([69.37.187.190]:65165 "EHLO
+	copper.fuckthenavy.net") by vger.kernel.org with ESMTP
+	id S1750775AbVIMKRv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Sep 2005 06:17:51 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-On Mon, Sep 12, 2005 at 07:00:54PM +1000, Douglas Gilbert wrote:
-> > +This is a link to the tree(1) program, very useful in
-> > +viewing the SAS domain:
-> > +ftp://mama.indstate.edu/linux/tree/
-> > +I expect user space applications to actually create a
-> > +graphical interface of this.
-> > +
-> > +That is, the sysfs domain tree doesn't show or keep state if
-> > +you e.g., change the meaning of the READY LED MEANING
-> > +setting, but it does show you the current connection status
-> > +of the domain device.
-> 
-> So in that case, user applications should ignore READY
-> LED MEANING in sysfs and ask the device directly.
-> For example:
->     sdparm --get RLM --transport sas /dev/sda
-> 
-> > +Keeping internal device state changes is responsibility of
-> > +upper layers (Command set drivers) and user space.
-> 
-> ... and what about multiple initiators sitting on different
-> machines? Should they be responsible for:
->   1) finding out about one another
->   2) and keeping the sysfs tree in the other machine
->      in sync when one changes READY LED MEANING
->      (or anything else)?
-> 
-> Putting distributed state information in sysfs and then
-> passing off the responsibility for maintaining its state
-> (because it is a difficult problem) brings into question
-> the wisdom of the strategy.
 
-If you looks at what the other transport classes do is that they put
-information at discovery time into sysfs, but try to refresh it on
-every access.  IMHO that makes a lot of sense, and should be done
-that way in the final SAS transport class.
+
+-------- Original Message --------
+Subject: Re: Fw: legacy megaraid driver bug in mm-series
+Date: Tue, 13 Sep 2005 06:06:29 -0400
+From: Jack Byer <ojbyer@usa.net>
+To: Christoph Hellwig <hch@infradead.org>
+References: <20050907025258.35100c34.akpm@osdl.org>
+<20050908143547.GA9741@infradead.org>
+<20050909165817.1a8ad251.akpm@osdl.org> <432613BA.5060606@usa.net>
+<20050913092359.GA29552@infradead.org>
+
+Christoph Hellwig wrote:
+> On Mon, Sep 12, 2005 at 07:48:10PM -0400, Jack Byer wrote:
+> 
+>>Andrew Morton wrote:
+>>
+>>>Christoph Hellwig <hch@infradead.org> wrote:
+>>>
+>>>
+>>>>On Wed, Sep 07, 2005 at 02:52:58AM -0700, Andrew Morton wrote:
+>>>>
+>>>>
+>>>>>Begin forwarded message:
+>>>>
+>>>>This looks preyyu much like a breakage because we're now always sending
+>>>>S/G list down the scsi layer.
+>>>>
+>>>>The patch below brings over code to handle that case from the megaraid_mbox
+>>>>driver.  It's still wrong for the case someone sends a MODE_SENSE from
+>>>>highmem userspace, but it should at least boot with the patch applied.
+>>>>
+>>>
+>>>
+>>>Jack, have you had a chance to test this?
+>>>
+>>>Thanks.
+>>>
+>>
+>>Sorry, I spent the weekend whitewater rafting :)  I will be able to test
+>>this patch on Wednesday. Which kernel versions should I apply this patch to?
+> 
+> 
+> I did it against the at that time latest scsi-misc tree.  The old megaraid
+> driver hasn'tt changed much for a long time so it should apply against
+> any recent-ish tree.
+> 
+> 
+
+I tried the patch on a 2.6.13-mm1 tree. It applied cleanly, but produced
+a few compiler warnings:
+
+
+/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c: In function `issue_scb':
+/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c:1143: warning: passing
+arg 2 of `writel' makes pointer from integer without a cast
+/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c: In function
+`issue_scb_block':
+/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c:1206: warning: passing
+arg 2 of `writel' makes pointer from integer without a cast
+/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c:1219: warning: passing
+arg 2 of `writel' makes pointer from integer without a cast
+/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c:1221: warning: passing
+arg 1 of `readl' makes pointer from integer without a cast
+/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c: In function
+`megaraid_isr_memmapped':
+/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c:1351: warning: passing
+arg 1 of `readl' makes pointer from integer without a cast
+/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c:1358: warning: passing
+arg 2 of `writel' makes pointer from integer without a cast
+/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c:1377: warning: passing
+arg 2 of `writel' makes pointer from integer without a cast
+/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c:1381: warning: passing
+arg 1 of `readl' makes pointer from integer without a cast
+
+Booting the kernel resulted in the same symptoms as before (can not
+mount root fs).
+
