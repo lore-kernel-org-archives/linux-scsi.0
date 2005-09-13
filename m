@@ -1,40 +1,49 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 2.6.13] scsi: sd fails to copy cmd_len on SG_IO
-Date: Tue, 13 Sep 2005 12:48:43 -0500
-Message-ID: <432710FB.1000802@cs.wisc.edu>
-References: <CA45571DE57E1C45BF3552118BA92C9D69BDD8@WDSCEXBECL03.sc.wdc.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] gdth: use dma_addr_t properly
+Date: Tue, 13 Sep 2005 19:55:16 +0200
+Message-ID: <20050913175516.GA25746@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964938AbVIMRs4@vger.kernel.org>
-In-Reply-To: <CA45571DE57E1C45BF3552118BA92C9D69BDD8@WDSCEXBECL03.sc.wdc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Timothy Thelin <Timothy.Thelin@wdc.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.210]:12760 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S964945AbVIMRz2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Sep 2005 13:55:28 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: achim_leubner@adaptec.com
+Cc: linux-scsi@vger.kernel.org
 
-Timothy Thelin wrote:
-> This fixes an issue when doing SG_IO on an sd device: the
-> sd driver fails to copy the request's cmd_len to the scsi
-> command's cmd_len when initializing the command.
-> 
+bus address returned from pci_alloc_consistant or pci_map_* should
+be stored in dma_addr_t variables.
 
-Do you need the same fix to st, sr, and scsi_lib (in the 
-scsi_generic_done path)?
 
-> Signed-off-by: Timothy Thelin <timothy.thelin@wdc.com>
-> 
-> --- linux-2.6.13.orig/drivers/scsi/sd.c	2005-08-28 16:41:01.000000000 -0700
-> +++ linux-2.6.13/drivers/scsi/sd.c	2005-09-13 09:39:06.000000000 -0700
-> @@ -236,6 +236,7 @@ static int sd_init_command(struct scsi_c
->  			return 0;
->  
->  		memcpy(SCpnt->cmnd, rq->cmd, sizeof(SCpnt->cmnd));
-> +		SCpnt->cmd_len = rq->cmd_len;
->  		if (rq_data_dir(rq) == WRITE)
->  			SCpnt->sc_data_direction = DMA_TO_DEVICE;
->  		else if (rq->data_len)
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: linux-2.6/drivers/scsi/gdth.h
+===================================================================
+--- linux-2.6.orig/drivers/scsi/gdth.h	2005-09-11 18:12:24.000000000 +0200
++++ linux-2.6/drivers/scsi/gdth.h	2005-09-11 18:14:51.000000000 +0200
+@@ -872,17 +872,17 @@
+     ulong32             brd_phys;               /* slot number/BIOS address */
+     gdt6c_plx_regs      *plx;                   /* PLX regs (new PCI contr.) */
+     gdth_cmd_str        *pccb;                  /* address command structure */
+-    ulong32             ccb_phys;               /* phys. address */
++    dma_addr_t          ccb_phys;               /* phys. address */
+ #ifdef INT_COAL
+     gdth_coal_status    *coal_stat;             /* buffer for coalescing int.*/
+-    ulong64             coal_stat_phys;         /* phys. address */
++    dma_addr_t          coal_stat_phys;         /* phys. address */
+ #endif
+     char                *pscratch;              /* scratch (DMA) buffer */
+-    ulong64             scratch_phys;           /* phys. address */
++    dma_addr_t          scratch_phys;           /* phys. address */
+     unchar              scratch_busy;           /* in use? */
+     unchar              dma64_support;          /* 64-bit DMA supported? */
+     gdth_msg_str        *pmsg;                  /* message buffer */
+-    ulong64             msg_phys;               /* phys. address */
++    dma_addr_t          msg_phys;               /* phys. address */
+     unchar              scan_mode;              /* current scan mode */
+     unchar              irq;                    /* IRQ */
+     unchar              drq;                    /* DRQ (ISA controllers) */
