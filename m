@@ -1,41 +1,107 @@
-From: Anton Blanchard <anton@samba.org>
-Subject: Re: [2.6.14-rc1] sym scsi boot hang
-Date: Tue, 13 Sep 2005 23:17:39 +1000
-Message-ID: <20050913131739.GD26162@krispykreme>
-References: <20050913124804.GA5008@in.ibm.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [ANNOUNCE 0/2] Serial Attached SCSI (SAS) support for the Linux
+ kernel
+Date: Tue, 13 Sep 2005 10:24:06 -0400
+Message-ID: <4326E106.8080801@adaptec.com>
+References: <4321E2C1.7080507@adaptec.com> <20050911092030.GA5140@infradead.org> <4325F488.5040304@adaptec.com> <20050913101409.GA30666@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964773AbVIMNqv@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20050913124804.GA5008@in.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dipankar Sarma <dipankar@in.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:40620 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932514AbVIMOYR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Sep 2005 10:24:17 -0400
+In-Reply-To: <20050913101409.GA30666@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-
-Hi,
-
-> My ppc64 box refuses to boot with 2.6.14-rc1. The console log
-> is included below. I see a lot of repeat of the last message
-> in the log and then the box hangs.
+On 09/13/05 06:14, Christoph Hellwig wrote:
+> On Mon, Sep 12, 2005 at 05:35:04PM -0400, Luben Tuikov wrote:
 > 
-> Any idea what might have caused this ?
+>>>What's not nice is that it's not intgerating with the
+>>>SAS transport class I posted,
+>>
+>>I wish there was something I could do.  HP and LSI
+>>were aware of my efforts since the beginning of the year.
+> 
+> 
+> As was I.  And the reason I wrote this upper layer is that you
+> clearly stated multiple times (at the SAS BOF and in mail) that
+> you're not interested in this upper layer.
 
-...
+Well, I never really said "Not interested".  There was just
+nothing I could do.  By that time I know from our
+original LSI/HP/SAS list that those folks have moved away
+from what I was doing, plus I had my own work to do.
 
-> Attached scsi disk sdb at scsi0, channel 0, id 9, lun 0
->  target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
->  target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
->  target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
-> sdc: Spinning up disk....<6> target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
->  target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
->  target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
->  target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
->  target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
->  target0:0:10: FAST-40 WIDE SCSI 80.0 MB/s DT (25 ns, offset 31)
+As to your work, or integration or whatever you decide
+to do, I'm willing to help in anyway I can.
 
-Looks like a change between 2.6.13-git11 and 2.6.14-rc1 caused this - so
-something in the last 24 hours.
+>>As well, you had a copy of my code July 14 this year,
+> 
+> That code didn't have anything that overlaps with the code I wrote.
 
-Anton
+Well, both source code are public, people can read the code themselves
+and make that decision for themselves.  There is no point us in discussing
+this.
+
+> Just in case it was clear:  I'm paid for this transport class by Dell.
+> I don't have any contractural relationship with LSI or HP, although these
+> companies (like most sucessfull hardware vendors) know that giving hardware
+> to linux people active in the area they care about helps to get thos people
+> actually fixing things about instead of just bitching around..
+
+Christoph, there is smart engineers in companies too, not only in the Linux
+community.
+
+>>We did meet at OLS and we did have the SAS BOF.  I'm not sure
+>>why you didn't want to work together?
+> 
+> 
+> I abosultely want to.  To quote from my first minimal transport class
+> announcement mail:
+> 
+> "I hope this will integrate nicely with the top-down work Luben has done
+> once he finally releases it publically, but for now I think we should have
+> something so SAS drivers can go in the tree."
+
+I see.
+
+> We need both a transport class in the original sense aswell as a library
+> for host-based SAS HBAs, and they need to play together nicely - whatever
+> term you give to them.
+
+I don't mind using "transport attribute class" for JB's class,
+and "SAS Transport Layer" for the recent code submission.
+
+That is, by design, JB tried to unify _attributes_ across _all_
+transports.  Not an easy feat by any means, but we shall leave
+that at that.
+
+While, by design (and SAM), the SAS Transport Layer, literally
+sits between the interconnect and SCSI Core (SAM to be).
+
+This separation is clear and distinct.
+
+>>Overall, MPT is very different in design than a disclosed
+>>transport.
+> 
+> I know.  And we still want to cover it with a common base for what we
+> can have common.
+
+Yes, this is very noble to have and do.
+
+Figuring out _what_ we can have common, in such different and
+distinct engineering architectures, Open Transport vs. MPT,
+is not an easy feat by any means.
+
+I don't have an indepth knowlege in MPT as you do, clearly since
+I don't have specs, etc, but if you have questions or concerns
+please don't hesitate to email, I'd gladly help with anything I can.
+
+	Luben
+
+
