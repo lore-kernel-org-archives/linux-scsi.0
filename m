@@ -1,166 +1,48 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 2.6.13 2/14] sas-class: README
-Date: Tue, 13 Sep 2005 19:23:06 +1000
-Message-ID: <43269A7A.3080602@torque.net>
-References: <4321E4DD.7070405@adaptec.com> <43238C16.4010709@torque.net> <4325B333.3070301@adaptec.com>
-Reply-To: dougg@torque.net
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Fw: legacy megaraid driver bug in mm-series
+Date: Tue, 13 Sep 2005 10:23:59 +0100
+Message-ID: <20050913092359.GA29552@infradead.org>
+References: <20050907025258.35100c34.akpm@osdl.org> <20050908143547.GA9741@infradead.org> <20050909165817.1a8ad251.akpm@osdl.org> <432613BA.5060606@usa.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:19122 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S932452AbVIMJWf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Sep 2005 05:22:35 -0400
-In-Reply-To: <4325B333.3070301@adaptec.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:21670 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932460AbVIMJYE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Sep 2005 05:24:04 -0400
+Content-Disposition: inline
+In-Reply-To: <432613BA.5060606@usa.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jack Byer <ojbyer@usa.net>
+Cc: Andrew Morton <akpm@osdl.org>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-Luben Tuikov wrote:
-> On 09/10/05 21:44, Douglas Gilbert wrote:
-> 
->>Luben Tuikov wrote:
->>
->>
->>>Signed-off-by: Luben Tuikov <luben_tuikov@adaptec.com>
->>
->>
->><snip>
->>
->>An interesting document. 
-> 
-> 
-> Hi Doug, how are you?
+On Mon, Sep 12, 2005 at 07:48:10PM -0400, Jack Byer wrote:
+> Andrew Morton wrote:
+> > Christoph Hellwig <hch@infradead.org> wrote:
+> > 
+> >>On Wed, Sep 07, 2005 at 02:52:58AM -0700, Andrew Morton wrote:
+> >>
+> >>>
+> >>>Begin forwarded message:
+> >>
+> >>This looks preyyu much like a breakage because we're now always sending
+> >>S/G list down the scsi layer.
+> >>
+> >>The patch below brings over code to handle that case from the megaraid_mbox
+> >>driver.  It's still wrong for the case someone sends a MODE_SENSE from
+> >>highmem userspace, but it should at least boot with the patch applied.
+> >>
+> > 
+> > 
+> > Jack, have you had a chance to test this?
+> > 
+> > Thanks.
+> > 
+> Sorry, I spent the weekend whitewater rafting :)  I will be able to test
+> this patch on Wednesday. Which kernel versions should I apply this patch to?
 
-Fine, but loosing a fair amount of time reading emails :-)
+I did it against the at that time latest scsi-misc tree.  The old megaraid
+driver hasn'tt changed much for a long time so it should apply against
+any recent-ish tree.
 
-> If there is something wrong with the document in general,
-> please point it out.
-> 
-> Your "An interesting document" sounds like James's
-> "Aside from all other problems".
-> 
-> 
->>I have a small quibble here (and a larger
->>one about the SMP user space access that I will elaborate on
->>in a day or so).
-> 
-> 
-> Ok.
-> 
-> (Thinking to myself: I wonder, if he's got a problem with
-> SMP user space access, why not post it now?  Why in a day
-> or so?)
-> 
-> 
->>>+Port events, passed on a _phy_:
->>>+	PORTE_BYTES_DMAED,      (M)
->>>+	PORTE_BROADCAST_RCVD,   (E)
->>>+	PORTE_LINK_RESET_ERR,   (C)
->>>+	PORTE_TIMER_EVENT,      (C)
->>>+	PORTE_HARD_RESET.
->>
->>
->>Link layer broadcasts don't only come from expanders
->>(i.e. BROADCAST(CHANGE) ); SAS 1.1 (sas1r09e.pdf) defines
-> 
-> 
-> I'm aware of what the spec says.
-> 
-> 
->>BROADCAST(SES) coming from a target port associated with
-> 
-> 
-> I'm aware of this primitive.
-> 
-> 
->>an enclosure device (SES peripheral type). It is not
->>clear to me how the associated primitive is conveyed back
->>with the broadcast.
-> 
-> 
-> As you can see the message is "PORTE_BROADCAST_RCVD".
-> The _type_ of BROADCAST is encoded in phy->sas_prim.
-
-Good.
-
-> See sas_port.c::void sas_porte_broadcast_rcvd(struct sas_phy *phy).
-> 
-> This function decides what to do depending on the type of
-> BROADCAST received.
-> 
-> Currently there have been no requests for handling of
-> BROADCAST(SES).
-> 
-> When there's such a request, we handle it there, telling
-> the Discover code of a SES event.
-> 
-> Currently only BROADCAST(CHANGE) is handled _by default_.
-> 
-> I.e. we search the domain for the expander and phy which
-> generated it, and act on it.  If we find no expander and
-> phy which generated it, in case we processed a different
-> BROADCAST or an expander has broken firmware, we return.
-> This is all in the code.
-> 
-> BROADCAST filtering is also present in the LLDD, i.e.
-> notify on such and such BROADCAST or primitive in general.
-> This is done by the hardware itself (no firmware) so it
-> is very fast.
->  
-> 
->>If it is not conveyed back then perhaps that broadcast define
->>could be expanded to:
->>     PORTE_BROADCAST_CHANGE   (E)
->>     PORTE_BROADCAST_SES      (Target)
-> 
-> 
-> I can add this event if you want.
-
-No need, phy->sys_prim is fine.
-
-> The questiong is _what_ to do on this event.  This is a complex
-> answer and I'd rather have a _SES_ layer (or at least a logical
-> module/library) to handle those as storage vendors want this,
-> _right now_.
-
-Simple answer: generate a hotplug event and let a
-user application that cares worry about it. No
-need for a SES layer in the kernel.
-
-> In fact, I've some patches to submit regarding SES devices
-> on the domain, but I wanted to _trim *down*_ the politics,
-> _not_ escalate them.
-
-Oh no, not a sysfs representation of SES abstractions :-)
-
-> Also this patch was "SAS support", not "SES device support".
-
-True.
-
->>and a note inserted that BROADCAST(RESERVED CHANGE 0) and
->>BROADCAST(RESERVED CHANGE 1) be mapped to PORTE_BROADCAST_CHANGE
->>by the LLDD as per table 79 of sas1r09e.pdf .
-> 
-> 
-> They already are Doug.
-> 
-> 
->>BTW table 70 indicates an initiator can originate a BROADCAST(CHANGE),
->>not just an expander.
-> 
-> 
-> I hope this isn't going to be a thread about
-> 	* pointing out the obvious, or
-> 	* some kind of competion of who's read the spec the most.
-> 
-> All in all, you could've just asked "How about BROADCAST(SES)?".
-
-Indeed.
-
-It may be an idea to encourage people who look at
-your submission.
-
-Doug Gilbert
