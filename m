@@ -1,167 +1,138 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 2/9] iscsi: preemt fix and cleanup
-Date: Mon, 12 Sep 2005 21:01:32 -0500
-Message-ID: <1126576892.29245.22.camel@max>
+Subject: [PATCH 4/9] iscsi: update some iscsi proto defs
+Date: Mon, 12 Sep 2005 21:01:38 -0500
+Message-ID: <1126576898.29245.24.camel@max>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:17849 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932306AbVIMCBo (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:18873 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S932397AbVIMCB7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Sep 2005 22:01:44 -0400
+	Mon, 12 Sep 2005 22:01:59 -0400
 Received: from max (c-24-118-218-223.hsd1.mn.comcast.net [24.118.218.223])
 	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id j8D21hsd010018
+	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id j8D21v3W010024
 	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Sep 2005 21:01:44 -0500
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Sep 2005 21:01:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-from zhenyu.z.wang@intel.com
+from michaelc@cs.wisc.edu
 
-Delay the head digest update until xmit time, like data digest update.
-[To make things cleaner and avoid prempt bug]
+Cleanup some iscsi_proto defs, add some missing values, and
+fix some defs.
 
 Signed-off-by: Alex Aizman <itn780@yahoo.com>
 Signed-off-by: Dmitry Yusupov <dmitry_yus@yahoo.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 
-
 diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
 --- a/drivers/scsi/iscsi_tcp.c
 +++ b/drivers/scsi/iscsi_tcp.c
-@@ -129,14 +129,11 @@ iscsi_buf_left(struct iscsi_buf *ibuf)
- }
+@@ -751,7 +751,7 @@ iscsi_hdr_recv(struct iscsi_conn *conn)
+ 						(void*)&mtask, sizeof(void*));
+ 				conn->tmabort_state =
+ 					((struct iscsi_tm_rsp *)hdr)->
+-					response == SCSI_TCP_TM_RESP_COMPLETE ?
++					response == ISCSI_TMF_RSP_COMPLETE ?
+ 						TMABORT_SUCCESS:TMABORT_FAILED;
+ 				/* unblock eh_abort() */
+ 				wake_up(&conn->ehwait);
+diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
+--- a/include/scsi/iscsi_proto.h
++++ b/include/scsi/iscsi_proto.h
+@@ -56,7 +56,8 @@ struct iscsi_hdr {
+ 	__be32		ttt;		/* Target Task Tag */
+ 	__be32		statsn;
+ 	__be32		exp_statsn;
+-	uint8_t		other[16];
++	__be32		max_statsn;
++	uint8_t		other[12];
+ };
  
- static inline void
--iscsi_buf_init_hdr(struct iscsi_conn *conn, struct iscsi_buf *ibuf,
--		   char *vbuf, u8 *crc)
-+iscsi_hdr_digest(struct iscsi_conn *conn, struct iscsi_buf *buf,
-+		 u8* crc)
- {
--	iscsi_buf_init_virt(ibuf, vbuf, sizeof(struct iscsi_hdr));
--	if (conn->hdrdgst_en) {
--		crypto_digest_digest(conn->tx_tfm, &ibuf->sg, 1, crc);
--		ibuf->sg.length += sizeof(uint32_t);
--	}
-+	crypto_digest_digest(conn->tx_tfm, &buf->sg, 1, crc);
-+	buf->sg.length += sizeof(uint32_t);
- }
+ /************************* RFC 3720 Begin *****************************/
+@@ -78,6 +79,11 @@ struct iscsi_hdr {
+ #define ISCSI_OP_LOGOUT			0x06
+ #define ISCSI_OP_SNACK			0x10
  
- static void
-@@ -427,8 +424,8 @@ iscsi_solicit_data_init(struct iscsi_con
++#define ISCSI_OP_VENDOR1_CMD		0x1c
++#define ISCSI_OP_VENDOR2_CMD		0x1d
++#define ISCSI_OP_VENDOR3_CMD		0x1e
++#define ISCSI_OP_VENDOR4_CMD		0x1f
++
+ /* Target Opcode values */
+ #define ISCSI_OP_NOOP_IN		0x20
+ #define ISCSI_OP_SCSI_CMD_RSP		0x21
+@@ -90,12 +96,20 @@ struct iscsi_hdr {
+ #define ISCSI_OP_ASYNC_EVENT		0x32
+ #define ISCSI_OP_REJECT			0x3f
  
- 	r2t->sent = 0;
++struct iscsi_ahs_hdr {
++	__be16 ahslength;
++	uint8_t ahstype;
++	uint8_t ahspec[5];
++};
++
++#define ISCSI_AHSTYPE_CDB		1
++#define ISCSI_AHSTYPE_RLENGTH		2
++
+ /* iSCSI PDU Header */
+ struct iscsi_cmd {
+ 	uint8_t opcode;
+ 	uint8_t flags;
+-	uint8_t rsvd2;
+-	uint8_t cmdrn;
++	__be16 rsvd2;
+ 	uint8_t hlength;
+ 	uint8_t dlength[3];
+ 	uint8_t lun[8];
+@@ -120,6 +134,13 @@ struct iscsi_cmd {
+ #define ISCSI_ATTR_HEAD_OF_QUEUE	3
+ #define ISCSI_ATTR_ACA			4
  
--	iscsi_buf_init_hdr(conn, &r2t->headbuf, (char*)hdr,
--			   (u8 *)dtask->hdrext);
-+	iscsi_buf_init_virt(&r2t->headbuf, (char*)hdr,
-+			   sizeof(struct iscsi_hdr));
++struct iscsi_rlength_ahdr {
++	__be16 ahslength;
++	uint8_t ahstype;
++	uint8_t reserved;
++	__be32 read_length;
++};
++
+ /* SCSI Response Header */
+ struct iscsi_cmd_rsp {
+ 	uint8_t opcode;
+@@ -227,7 +248,7 @@ struct iscsi_tm {
+ 	uint8_t rsvd2[8];
+ };
  
- 	r2t->dtask = dtask;
+-#define ISCSI_FLAG_TASK_MGMT_FUNCTION_MASK	0x7F
++#define ISCSI_FLAG_TM_FUNC_MASK			0x7F
  
-@@ -1494,8 +1491,8 @@ iscsi_solicit_data_cont(struct iscsi_con
- 	}
- 	conn->dataout_pdus_cnt++;
+ /* Function values */
+ #define ISCSI_TM_FUNC_ABORT_TASK		1
+@@ -257,14 +278,14 @@ struct iscsi_tm_rsp {
+ };
  
--	iscsi_buf_init_hdr(conn, &r2t->headbuf, (char*)hdr,
--			   (u8 *)dtask->hdrext);
-+	iscsi_buf_init_virt(&r2t->headbuf, (char*)hdr,
-+			   sizeof(struct iscsi_hdr));
+ /* Response values */
+-#define SCSI_TCP_TM_RESP_COMPLETE	0x00
+-#define SCSI_TCP_TM_RESP_NO_TASK	0x01
+-#define SCSI_TCP_TM_RESP_NO_LUN		0x02
+-#define SCSI_TCP_TM_RESP_TASK_ALLEGIANT	0x03
+-#define SCSI_TCP_TM_RESP_NO_FAILOVER	0x04
+-#define SCSI_TCP_TM_RESP_NOT_SUPPORTED	0x05
+-#define SCSI_TCP_TM_RESP_AUTH_FAILED	0x06
+-#define SCSI_TCP_TM_RESP_REJECTED	0xff
++#define ISCSI_TMF_RSP_COMPLETE		0x00
++#define ISCSI_TMF_RSP_NO_TASK		0x01
++#define ISCSI_TMF_RSP_NO_LUN		0x02
++#define ISCSI_TMF_RSP_TASK_ALLEGIANT	0x03
++#define ISCSI_TMF_RSP_NO_FAILOVER	0x04
++#define ISCSI_TMF_RSP_NOT_SUPPORTED	0x05
++#define ISCSI_TMF_RSP_AUTH_FAILED	0x06
++#define ISCSI_TMF_RSP_REJECTED		0xff
  
- 	r2t->dtask = dtask;
- 
-@@ -1541,8 +1538,8 @@ iscsi_unsolicit_data_init(struct iscsi_c
- 		hdr->flags = ISCSI_FLAG_CMD_FINAL;
- 	}
- 
--	iscsi_buf_init_hdr(conn, &ctask->headbuf, (char*)hdr,
--			   (u8 *)dtask->hdrext);
-+	iscsi_buf_init_virt(&ctask->headbuf, (char*)hdr,
-+			   sizeof(struct iscsi_hdr));
- 
- 	list_add(&dtask->item, &ctask->dataqueue);
- 
-@@ -1662,8 +1659,8 @@ iscsi_cmd_init(struct iscsi_conn *conn, 
- 		zero_data(ctask->hdr.dlength);
- 	}
- 
--	iscsi_buf_init_hdr(conn, &ctask->headbuf, (char*)&ctask->hdr,
--			    (u8 *)ctask->hdrext);
-+	iscsi_buf_init_virt(&ctask->headbuf, (char*)&ctask->hdr, 
-+			    sizeof(struct iscsi_hdr));
- 	conn->scsicmd_pdus_cnt++;
- }
- 
-@@ -1692,6 +1689,11 @@ iscsi_mtask_xmit(struct iscsi_conn *conn
- 		mtask->xmstate &= ~XMSTATE_IMM_HDR;
- 		if (mtask->data_count)
- 			mtask->xmstate |= XMSTATE_IMM_DATA;
-+		if (conn->c_stage != ISCSI_CONN_INITIAL_STAGE &&
-+	    	    conn->stop_stage != STOP_CONN_RECOVER &&
-+		    conn->hdrdgst_en)
-+			iscsi_hdr_digest(conn, &mtask->headbuf,
-+					(u8*)mtask->hdrext);
- 		if (iscsi_sendhdr(conn, &mtask->headbuf, mtask->data_count)) {
- 			mtask->xmstate |= XMSTATE_IMM_HDR;
- 			if (mtask->data_count)
-@@ -1723,6 +1725,8 @@ static inline int
- handle_xmstate_r_hdr(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
- {
- 	ctask->xmstate &= ~XMSTATE_R_HDR;
-+	if (conn->hdrdgst_en) 
-+		iscsi_hdr_digest(conn, &ctask->headbuf, (u8*)ctask->hdrext);
- 	if (!iscsi_sendhdr(conn, &ctask->headbuf, 0)) {
- 		BUG_ON(ctask->xmstate != XMSTATE_IDLE);
- 		return 0; /* wait for Data-In */
-@@ -1735,6 +1739,8 @@ static inline int
- handle_xmstate_w_hdr(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
- {
- 	ctask->xmstate &= ~XMSTATE_W_HDR;
-+	if (conn->hdrdgst_en) 
-+		iscsi_hdr_digest(conn, &ctask->headbuf, (u8*)ctask->hdrext);
- 	if (iscsi_sendhdr(conn, &ctask->headbuf, ctask->imm_count)) {
- 		ctask->xmstate |= XMSTATE_W_HDR;
- 		return -EAGAIN;
-@@ -1813,7 +1819,9 @@ handle_xmstate_uns_hdr(struct iscsi_conn
- 		iscsi_unsolicit_data_init(conn, ctask);
- 		BUG_ON(!ctask->dtask);
- 		dtask = ctask->dtask;
--
-+		if (conn->hdrdgst_en)
-+			iscsi_hdr_digest(conn, &ctask->headbuf,
-+					(u8*)dtask->hdrext);
- 		ctask->xmstate &= ~XMSTATE_UNS_INIT;
- 	}
- 	if (iscsi_sendhdr(conn, &ctask->headbuf, ctask->data_count)) {
-@@ -2118,7 +2126,9 @@ unsolicit_head_again:
- 				    sizeof(void*));
- solicit_head_again:
- 		r2t = ctask->r2t;
--
-+		if (conn->hdrdgst_en)
-+			iscsi_hdr_digest(conn, &r2t->headbuf, 
-+					(u8*)r2t->dtask->hdrext);
- 		if (iscsi_sendhdr(conn, &r2t->headbuf, r2t->data_count)) {
- 			ctask->xmstate &= ~XMSTATE_SOL_DATA;
- 			ctask->xmstate |= XMSTATE_SOL_HDR;
-@@ -2889,14 +2899,8 @@ iscsi_conn_send_generic(struct iscsi_con
- 
- 	memcpy(&mtask->hdr, hdr, sizeof(struct iscsi_hdr));
- 
--	if (conn->c_stage == ISCSI_CONN_INITIAL_STAGE ||
--	    conn->stop_stage == STOP_CONN_RECOVER)
--		iscsi_buf_init_virt(&mtask->headbuf, (char*)&mtask->hdr,
-+	iscsi_buf_init_virt(&mtask->headbuf, (char*)&mtask->hdr,
- 				    sizeof(struct iscsi_hdr));
--	else
--		/* this will update header digest */
--		iscsi_buf_init_hdr(conn, &mtask->headbuf, (char*)&mtask->hdr,
--				    (u8 *)mtask->hdrext);
- 
- 	spin_unlock_bh(&session->lock);
- 
+ /* Ready To Transfer Header */
+ struct iscsi_r2t_rsp {
 
 
