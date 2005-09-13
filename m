@@ -1,51 +1,59 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: atomic_kmap for PIO (was Re: Fw: Kernel panic with dc395x in
-	2.6.12.2)
-Date: Mon, 12 Sep 2005 22:09:01 -0500
-Message-ID: <1126580941.4825.8.camel@mulgrave>
-References: <20050709175725.75f291bf.rdunlap@xenotime.net>
-	 <42E03506.7030707@drzeus.cx> <20050721235348.05eace11.rdunlap@xenotime.net>
-	 <20050722135055.6cb4597d.rdunlap@xenotime.net> <42E17451.6090706@drzeus.cx>
-	 <20050722153651.28d5db51.rdunlap@xenotime.net> <42E17772.3020903@drzeus.cx>
-	 <20050723100945.7d43d063.rdunlap@xenotime.net> <42E2933C.4050808@drzeus.cx>
-	 <20050723152714.4212ba52.rdunlap@xenotime.net> <42E2ECF1.8070501@drzeus.cx>
-	 <20050723184014.49629f9e.rdunlap@xenotime.net> <42E39462.3040007@drzeus.cx>
-	 <20050724100153.3e891484.rdunlap@xenotime.net> <42E565FE.4070708@drzeus.cx>
-	 <20050725203133.3cfa650d.rdunlap@xenotime.net> <42E6A5C3.6070501@drzeus.cx>
-	 <20050726202058.133382c1.rdunlap@xenotime.net> <42E964CC.5060600@drzeus.cx>
-	 <20050728201339.216ab3b8.rdunlap@xenotime.net> <42F37893.30006@drzeus.cx>
-	 <Pine.LNX.4.60.0508070003520.10832@poirot.grange>
-	 <42F5FCBF
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process
+ (end devices)
+Date: Tue, 13 Sep 2005 19:05:15 +1000
+Message-ID: <4326964B.9010503@torque.net>
+References: <20050910024454.20602.qmail@web51613.mail.yahoo.com> <1126368081.4813.46.camel@mulgrave> <4325997D.3050103@adaptec.com> <20050912162739.GA11455@us.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:61388 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932335AbVIMDJG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Sep 2005 23:09:06 -0400
-In-Reply-To: <Pine.LNX.4.60.0509052241020.11890@poirot.grange>
+Received: from zorg.st.net.au ([203.16.233.9]:15024 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1751149AbVIMJE6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Sep 2005 05:04:58 -0400
+In-Reply-To: <20050912162739.GA11455@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, James Bottomley <James.Bottomley@SteelEye.com>, ltuikov@yahoo.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, 2005-09-05 at 23:50 +0200, Guennadi Liakhovetski wrote:
-> I've been buggering the list with this ridiculous problem for quite some 
-> time now:-) I understand, it is too risky to apply an untested patch to 
-> mainline, but could we either
+Patrick Mansfield wrote:
+> On Mon, Sep 12, 2005 at 11:06:37AM -0400, Luben Tuikov wrote:
+
+<snip>
+
+> IMO adding well known LUNs at this point to the standard added nothing of
+> value, the target firmware has to check for special paths no matter what,
+> adding a well known LUN does not change that. And most vendors will
+> (likely) have support for use without a well known LUN. (This does not
+> mean we should not support it in linux, I just don't know why this went
+> into the standard.)
 > 
-> 1) get it into -mm
-> 
-> or
-> 
-> 2) try to find some beta-testers by applying something like the below:
+> Using well known LUNs will be another code path that will have to live
+> alongside existing ones, and will likely require further black listing
+> (similar to REPORT LUN vs scanning for LUNs).
 
-OK, why don't we do this.  I'll put it into scsi-misc-2.6; that will
-queue it for 2.6.14 and also put it in -mm.  It will probably be a month
-at least before scsi-misc-2.6 goes into 2.6.14, so you have until that
-time to find problems in it and back it out ...
+Patrick,
+The technique of supporting REPORT_LUNS on lun 0 of
+a target in the case where there is no such device
+(logical unit) is a pretty ugly. It also indicates what
+is really happening: the target device intercepts
+REPORT_LUNS, builds the response and replies on behalf
+of lun 0.
 
-James
+Turns out there are other reasons an application may want
+to "talk" to a target device rather than one of its logical
+units (e.g. access controls and log pages specific to
+the target's transport). Well known lus can be seen with the
+REPORT_LUNS (select_report=1) but there is no mechanism (that
+I am aware of) that allows anyone to access them
+from the user space with linux.
 
 
+References at www.t10.org:
+   spc4r01a.pdf  [section 8]
+   bcc-r00.pdf   [bridge controller commands]
+
+Doug Gilbert
