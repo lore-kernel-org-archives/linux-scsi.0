@@ -1,30 +1,71 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 2.6.13 14/14] sas-class: SCSI Host glue
-Date: Tue, 13 Sep 2005 09:40:14 -0600
-Message-ID: <20050913154014.GE32395@parisc-linux.org>
-References: <1126308949.4799.54.camel@mulgrave> <20050910041218.29183.qmail@web51612.mail.yahoo.com> <20050911093847.GA5429@infradead.org> <4325FA6F.3060102@adaptec.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process
+	(end devices)
+Date: Tue, 13 Sep 2005 10:54:17 -0500
+Message-ID: <1126626858.4809.26.camel@mulgrave>
+References: <20050910024454.20602.qmail@web51613.mail.yahoo.com>
+	 <1126368081.4813.46.camel@mulgrave>  <4325997D.3050103@adaptec.com>
+	 <1126547565.4825.52.camel@mulgrave>  <4325E5AE.1080900@adaptec.com>
+	 <1126560191.4825.71.camel@mulgrave>  <4326CAC6.3050202@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:9355 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S964805AbVIMPkU
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Sep 2005 11:40:20 -0400
-Content-Disposition: inline
-In-Reply-To: <4325FA6F.3060102@adaptec.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964822AbVIMPzZ@vger.kernel.org>
+In-Reply-To: <4326CAC6.3050202@adaptec.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <James.Bottomley@SteelEye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: ltuikov@yahoo.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Sep 12, 2005 at 06:00:15PM -0400, Luben Tuikov wrote:
-> "transport attribute class" is just an _attribute_ class, Christoph.
-> "transport layer" is a lot more involved.  I sincerely hope
-> you can see this.  E.g. domain discovery belongs in the transport
-> layer.  In SPI, LLDDs did it; in MPT the firmware does it.
+On Tue, 2005-09-13 at 08:49 -0400, Luben Tuikov wrote:
+> >>Channel and id are assigned _after_ the device has been scanned for
+> >>LUs.  So I cannot just call scsi_scan_target() and say: "here is
+> >>this SCSI Domain device, I know nothing about, other than
+> >>the fact that it has a Target port, scan it".
+> > 
+> > In your code channel corresponds to an index in the ports array of the
+> > host adapter and hence is known before you do any logical unit scanning.
+> > Id is assigned from a bitmap in the port.  You could do that assignment
+> > in sas_discover_end_dev() then you could use scsi_scan_target() in place
+> > of sas_do_lu_discovery().  It would also mitigate your bug below since
+> > now your id is one to one on the end devices rather than the logical
+> > units of the end devices, so each port would support up to 128 end
+> > devices rather than 128 logical units.
+> 
+> James, even Christoph understands this: no HCIL in SCSI Core is needed.
+> The whole problem is not what you *keep grinding about over and over above*,
+> but the fact that I have to _invent_ channel, id and emaciated LUN to give
+> to the broken, outdated and Parallel SCSI-centric SCSI Core.
+> 
+> Christoph understand this, why cannot you?
+> 
+> That bitmap was added in the last moment when I needed to register devices
+> with SCSI Core.  There is a lot of other problems which I've pointed out
+> int the scsi glue file, which do you not want to talk about or you do
+> not bring up.
 
-LLDDs having their own domain discovery code is definitely a misfeature.
-As you know, stuff is being rearranged to move more of the SPI-specific
-code from both SCSI core and LLDDs into the SPI transport.  I suspect
-domain discovery will always be triggered by the LLDD for SPI, but at
-least a driver doesn't have to have its own code to do that any more.
+I think, therefore, I've made the point that you could have used
+scsi_scan_target() but chose not to for ideological rather than
+technical reasons.
+
+Writing code which duplicates existing mid-layer functionality is what
+I've been telling you all along isn't acceptable.  Use what exists to
+day and if it doesn't work quite right, fix it.  If you want to alter an
+interface, we need to evolve towards it keeping all the current users
+working.
+
+Now, I can merge your transport class with Christoph's (or find someone
+else to do it for me) by converting it to use the existing mid-layer and
+transport class infrastructure (I think, actually, it will look rather
+nice after this and probably reduce in size by about 50%) but I'd much
+rather that you did it.
+
+The unified transport class should be capable of supporting both the
+aic94xx SAS card using your existing domain device interface as well as
+the fusion SAS card, which is the whole goal of all of this in the first
+place.
+
+So, do you want to do this work, or would you rather just be responsible
+for the aic94xx driver?
+
+James
