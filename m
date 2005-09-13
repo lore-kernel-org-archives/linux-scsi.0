@@ -1,55 +1,33 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 2.6.13] scsi: sd fails to copy cmd_len on SG_IO
-Date: Tue, 13 Sep 2005 14:05:13 -0500
-Message-ID: <432722E9.1090904@cs.wisc.edu>
-References: <CA45571DE57E1C45BF3552118BA92C9D69BDDB@WDSCEXBECL03.sc.wdc.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/2] fix EH thread teardown
+Date: Tue, 13 Sep 2005 21:05:36 +0200
+Message-ID: <20050913190536.GA26985@lst.de>
+References: <200509131901.33033@bilbo.math.uni-mannheim.de> <Pine.LNX.4.44L0.0509131457530.4662-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:10941 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S965036AbVIMTFZ (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:39641 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S965048AbVIMTFr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Sep 2005 15:05:25 -0400
-In-Reply-To: <CA45571DE57E1C45BF3552118BA92C9D69BDDB@WDSCEXBECL03.sc.wdc.com>
+	Tue, 13 Sep 2005 15:05:47 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0509131457530.4662-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Timothy Thelin <Timothy.Thelin@wdc.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Rolf Eike Beer <eike-kernel@sf-tec.de>, Christoph Hellwig <hch@lst.de>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Timothy Thelin wrote:
+On Tue, Sep 13, 2005 at 03:03:19PM -0400, Alan Stern wrote:
+> On Tue, 13 Sep 2005, Rolf Eike Beer wrote:
 > 
->>-----Original Message-----
->>From: Mike Christie [mailto:michaelc@cs.wisc.edu]
->>Sent: Tuesday, September 13, 2005 10:49 AM
->>To: Timothy Thelin
->>Cc: James Bottomley; SCSI Mailing List; Linux Kernel; Andrew Morton
->>Subject: Re: [PATCH 2.6.13] scsi: sd fails to copy cmd_len on SG_IO
->>
->>
->>Timothy Thelin wrote:
->>
->>>This fixes an issue when doing SG_IO on an sd device: the
->>>sd driver fails to copy the request's cmd_len to the scsi
->>>command's cmd_len when initializing the command.
->>>
->>
->>Do you need the same fix to st, sr, and scsi_lib (in the 
->>scsi_generic_done path)?
->>
+> > Looks like someone has to build a waitqueue to fix this.
 > 
-> 
-> I just looked, and st and sr look like they need the same fix, but i'm
-> unaware of where scsi_lib might need it (I'm new to the Linux scsi stack).
-> Mind elaborating on your thoughts of the scsi_generic_done path? (I cant
-> find
-> the symbol in drivers/scsi/*)
-> 
+> Tell me what you think of this patch.  I'm not sure whether that 
+> condition, host_busy == host_failed, is correct for the call to 
+> wait_event_interruptible.
 
-look at the bottom of scsi_prep_fn() in scsi_lib.c. SCSI-ml will do 
-block_pc commands (which come down like block layer SG_IO ones) for 
-things like inquiry and report luns when scanning a host. At that time 
-there is no upper layer driver like sd attached so scsi_generic_done() 
-is used as a callback for finishing up commands.
-
+I don't think we even need the waitque, a wake_up_process can replace
+it when there's only a single process waiting on it ever.  Similarly
+we don't need eh_alive - EH must be alive after scsi_add_host returned,
+and no command may be in flight before that.
 
