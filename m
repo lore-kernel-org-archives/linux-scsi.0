@@ -1,64 +1,54 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH 3/8] aacraid: handle AIF hotplug events
-Date: Tue, 13 Sep 2005 07:53:53 -0400
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F0191A08C@otce2k03.adaptec.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [PATCH 2.6.13 14/14] sas-class: SCSI Host glue
+Date: Tue, 13 Sep 2005 08:41:35 -0400
+Message-ID: <4326C8FF.8050400@adaptec.com>
+References: <20050910041218.29183.qmail@web51612.mail.yahoo.com> <Pine.LNX.4.63.0509101028510.4630@cuia.boston.redhat.com> <1126383605.30449.12.camel@localhost.localdomain> <20050911094007.GB5429@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:7816 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932618AbVIMLxz convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Sep 2005 07:53:55 -0400
-content-class: urn:content-classes:message
+Received: from magic.adaptec.com ([216.52.22.17]:51345 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932470AbVIMMln (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Sep 2005 08:41:43 -0400
+In-Reply-To: <20050911094007.GB5429@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Mark Haverkamp <markh@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Rik van Riel <riel@redhat.com>, Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <James.Bottomley@SteelEye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig sez:
->On Mon, Sep 12, 2005 at 07:10:05AM -0400, Salyzyn, Mark wrote:
->> Christoph Hellwig [mailto:hch@infradead.org] writes:
->> >> +				device->removable = 1;
->> > devce->removeable means the device has a removable medium, not that
->> > it can go away.
->> It also means that the capacity can change. The SCSI subsystem will 
->> cache the partition table and capacity for the device if this is not
->please submit a patch to split ->removable into one flag for removal
-dervices and one for those that allow underlying volume changes.
->Usage of ->removable as-is is defintelitly wrong.
+On 09/11/05 05:40, Christoph Hellwig wrote:
+> 
+> Yes, absolutely.  This discussion is driving far off right now, no one
+> is asking Adaptec to add support for competing products here, we're just
+> asking to not declare the host_template in the common code, and supporting
+> limited controllers is one of the reasons.
 
-As this is too close to rc, and all these patches have had more than a
-year of stability testing, we will remove this concern from this patch
-(as already done in the Updated patch yesterday) in order to propagate
-the AIF hot plug events now. Splitting and/or removable flag is perhaps
-for another day as I expect such flag setting belongs in
-aac_slave_configure instead. I would hope that you would approve of the
-current updated patch.
+Hi Christoph,
 
-And now on to the discussion.
+I cannot make something to be, something that it is not.
 
-The removable flag is used for RAID to also track prevent/allow media
-removal (one recommended means to track busy status to block array
-changes while array is in use) and to manage the write protect status
-(transition to array failure during second chance recovery phase). What
-is left as unnecessary is perhaps the check condition handling, but even
-that has its desirable side-effects with regards to media change
-notification after a Morph has completed (although the architectural
-choice was to issue a scsi_rescan_device instead as part of this patch).
-I have almost convinced myself to place if (sdp->removable ||
-sdp->morphable_raid) in all the code locations in scsi_ioctl.c,
-scsi_lib.c, scsi_scan.c and sd.c!
+That is, the SAS LLDD is not a "scsi host" and it will never be,
+because it is just not a "scsi host".
 
-Allowing on-line array changes, failures & recovery is looking
-remarkably similar to a removable device except for the pesky 'Device
-not ready. Make sure there is a disc in the drive' message ;-> And now I
-may be slitting my own throat. Until recently the aacraid driver set the
-removable flag via the spoofed inquiry, this moved the flag to be
-explicitly set so that the array could be declared clearly as an sd but
-still behave like an sr. I did not expect a debate over the removable
-flag as it has been done this way, in not just this array driver, for
-some time.
+What it is, is an access point to the transport, this is its
+sole function and existance.  E.g. it doesn't know about max_luns,
+etc, which are purely SCSI Core-into-scsi_host concepts.
+It does know about Execute Command SCSI RPC and TMFs.
 
--- Mark
+The "scsi_host" template is a SCSI Core concept, which
+mixes a software component (what it is) and a hardware component
+(what you're talking about).
+
+Now, see the layering infrastructure: SATA support:
+The sas_sata_host.c file would also declare a scsi_host, where
+it will define its own queuecommand(), eh_timed_out(),
+eh_strategy_handler(), etc. and do the _protocol_ part,
+whereby the SAS LLDD does the transport part.
+
+	Luben
+
+
+
+
+
