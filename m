@@ -1,24 +1,34 @@
-From: "Martin" <martynakaczor5@o2.pl>
-Subject: Only you
-Date: Tue, 13 Sep 2005 11:53:46 +0200
-Message-ID: <20050913095337.BABD7137AF4@poczta.o2.pl>
-Reply-To: "Martin" <martynakaczor5@o2.pl>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/8] aacraid: handle AIF hotplug events
+Date: Tue, 13 Sep 2005 11:03:10 +0100
+Message-ID: <20050913100310.GA30375@infradead.org>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01919BB9@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx.go2.pl ([193.17.41.41]:30093 "EHLO poczta.o2.pl")
-	by vger.kernel.org with ESMTP id S932478AbVIMJxj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Sep 2005 05:53:39 -0400
-Received: from martynakaczor5 (bgt244.neoplus.adsl.tpnet.pl [83.28.83.244])
-	by poczta.o2.pl (Postfix) with SMTP id BABD7137AF4
-	for <linux-scsi@vger.kernel.org>; Tue, 13 Sep 2005 11:53:37 +0200 (CEST)
+Received: from pentafluge.infradead.org ([213.146.154.40]:32231 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932484AbVIMKDQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Sep 2005 06:03:16 -0400
+Content-Disposition: inline
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01919BB9@otce2k03.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Mark Haverkamp <markh@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
+On Mon, Sep 12, 2005 at 07:10:05AM -0400, Salyzyn, Mark wrote:
+> Christoph Hellwig [mailto:hch@infradead.org] writes:
+>  
+> >> +			if (busy == 0) {
+> >> +				device->removable = 1;
+> > devce->removeable means the device has a removable medium, not that
+> > it can go away.
+> 
+> It also means that the capacity can change. The SCSI subsystem will
+> cache the partition table and capacity for the device if this is not
 
-This is for you
-http://adsfree.50megs.com
+please submit a patch to split ->removable into one flag for removal dervices
+and one for those that allow underlying volume changes.
+
+Usage of ->removable as-is is defintelitly wrong.
