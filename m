@@ -1,94 +1,56 @@
-From: Jack Byer <ojbyer@usa.net>
-Subject: Re: Fw: legacy megaraid driver bug in mm-series
-Date: Tue, 13 Sep 2005 06:17:39 -0400
-Message-ID: <4326A743.3060808@usa.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process (end devices)
+Date: Tue, 13 Sep 2005 11:25:56 +0100
+Message-ID: <20050913102555.GB30865@infradead.org>
+References: <1126308304.4799.45.camel@mulgrave> <20050910024454.20602.qmail@web51613.mail.yahoo.com> <20050911094656.GC5429@infradead.org> <43251D8C.7020409@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 69.37.187.190.adsl.snet.net ([69.37.187.190]:65165 "EHLO
-	copper.fuckthenavy.net") by vger.kernel.org with ESMTP
-	id S1750775AbVIMKRv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Sep 2005 06:17:51 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:24526 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1750714AbVIMKZ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Sep 2005 06:25:59 -0400
+Content-Disposition: inline
+In-Reply-To: <43251D8C.7020409@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: Douglas Gilbert <dougg@torque.net>
+Cc: Christoph Hellwig <hch@infradead.org>, Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <James.Bottomley@SteelEye.com>, Luben Tuikov <luben_tuikov@adaptec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+On Mon, Sep 12, 2005 at 04:17:48PM +1000, Douglas Gilbert wrote:
+> FreeBSD threw out their original SCSI design and replaced it
+> with CAM circa 1998. CAM has its problems but I would guess
+> a modern SAS LLDD would have less "impedance mismatch" (sorry
+> about the gibberish) than what Luben is now facing.
 
+Their code doesn't scale well to current needs at all.  Please look
+at the freebsd-scsi list and all the problems they have with things
+like FC or iSCSI.  Or no support for REPORT_LUNs at all.  While I
+wouldn't say we have the best thing since slided bread it's certainly
+not as bad as some people would like to make it.
 
--------- Original Message --------
-Subject: Re: Fw: legacy megaraid driver bug in mm-series
-Date: Tue, 13 Sep 2005 06:06:29 -0400
-From: Jack Byer <ojbyer@usa.net>
-To: Christoph Hellwig <hch@infradead.org>
-References: <20050907025258.35100c34.akpm@osdl.org>
-<20050908143547.GA9741@infradead.org>
-<20050909165817.1a8ad251.akpm@osdl.org> <432613BA.5060606@usa.net>
-<20050913092359.GA29552@infradead.org>
-
-Christoph Hellwig wrote:
-> On Mon, Sep 12, 2005 at 07:48:10PM -0400, Jack Byer wrote:
+> If we look at our (im)famous <h:c:i:l> addressing string,
+> the first 2 elements (i.e. "h:c") are about kernel device
+> addressing (i.e. which (part of a) HBA to be initiator); the
+> contentious "i" is about addressing the target and is
+> transport dependent, and the "l" is for addressing within
+> the target. Only the last element is true SCSI and is
+> defined in SAM (to be 64 bits, not 32). In iSCSI the "i"
+> is actually an adorned IP address.
 > 
->>Andrew Morton wrote:
->>
->>>Christoph Hellwig <hch@infradead.org> wrote:
->>>
->>>
->>>>On Wed, Sep 07, 2005 at 02:52:58AM -0700, Andrew Morton wrote:
->>>>
->>>>
->>>>>Begin forwarded message:
->>>>
->>>>This looks preyyu much like a breakage because we're now always sending
->>>>S/G list down the scsi layer.
->>>>
->>>>The patch below brings over code to handle that case from the megaraid_mbox
->>>>driver.  It's still wrong for the case someone sends a MODE_SENSE from
->>>>highmem userspace, but it should at least boot with the patch applied.
->>>>
->>>
->>>
->>>Jack, have you had a chance to test this?
->>>
->>>Thanks.
->>>
->>
->>Sorry, I spent the weekend whitewater rafting :)  I will be able to test
->>this patch on Wednesday. Which kernel versions should I apply this patch to?
-> 
-> 
-> I did it against the at that time latest scsi-misc tree.  The old megaraid
-> driver hasn'tt changed much for a long time so it should apply against
-> any recent-ish tree.
-> 
-> 
+> So the kernel "discovers" at the "h:c" level at powerup
+> (and at runtime with hotplug events); leaving the SCSI
+> subsystem to do discovery at the "i" and the "l" level.
 
-I tried the patch on a 2.6.13-mm1 tree. It applied cleanly, but produced
-a few compiler warnings:
-
-
-/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c: In function `issue_scb':
-/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c:1143: warning: passing
-arg 2 of `writel' makes pointer from integer without a cast
-/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c: In function
-`issue_scb_block':
-/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c:1206: warning: passing
-arg 2 of `writel' makes pointer from integer without a cast
-/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c:1219: warning: passing
-arg 2 of `writel' makes pointer from integer without a cast
-/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c:1221: warning: passing
-arg 1 of `readl' makes pointer from integer without a cast
-/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c: In function
-`megaraid_isr_memmapped':
-/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c:1351: warning: passing
-arg 1 of `readl' makes pointer from integer without a cast
-/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c:1358: warning: passing
-arg 2 of `writel' makes pointer from integer without a cast
-/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c:1377: warning: passing
-arg 2 of `writel' makes pointer from integer without a cast
-/usr/src/linux-2.6.13-mm1/drivers/scsi/megaraid.c:1381: warning: passing
-arg 1 of `readl' makes pointer from integer without a cast
-
-Booting the kernel resulted in the same symptoms as before (can not
-mount root fs).
+That's not true at all.  Neither is 100% mandatory in the
+scsi level.  As Luben's code shows you can just call scsi_add_device
+and do everything yourself.  That is nice for LLDDs that don't
+fit into SAM at all like integrated RAID HBAs.  Besides that we
+support a library function to do the "l" part that can be used by
+transport classes or drivers.  There's a library function to do
+the "i" part brute-force for SPI and modelled after SPI devices that
+is still in scsi_mod.ko but isn't integrated with the core code
+in any way.  Before 2.6 the predessor to this function
+"scsi_scan_host" was called for every registered host, but we
+fortunately got rid of that.
 
