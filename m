@@ -1,28 +1,32 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [2.6.14-rc1] sym scsi boot hang
-Date: Tue, 13 Sep 2005 11:35:44 -0500
-Message-ID: <1126629345.4809.36.camel@mulgrave>
-References: <20050913124804.GA5008@in.ibm.com>
-	 <20050913131739.GD26162@krispykreme>  <20050913142939.GE26162@krispykreme>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 1/2] fix EH thread teardown
+Date: Tue, 13 Sep 2005 12:50:56 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0509131247090.4481-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964872AbVIMQgH@vger.kernel.org>
-In-Reply-To: <20050913142939.GE26162@krispykreme>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Anton Blanchard <anton@samba.org>
-Cc: Dipankar Sarma <dipankar@in.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:58788 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S964883AbVIMQu6
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Sep 2005 12:50:58 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: Christoph Hellwig <hch@lst.de>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, 2005-09-14 at 00:29 +1000, Anton Blanchard wrote:
-> I just noticed a similar hang on the ibmvscsi driver. The following
-> backout patch seems to fix it (part of the scsi merge yesterday), I'll
-> look closer after I get some sleep.
+Rolf Eike Beer wrote:
+> 
+> Ok, we looked a bit closer on all this. http://lwn.net/Articles/65178/ tells 
+> that ktread_stop() will not send a signal, so the down_interruptible() will 
+> never return on kthread_stop(). But calling up() directly before 
+> kthread_stop() adds a race condition: if reschedule happens right after the 
+> up() we've won nothing and it will hang again.
 
-If that's the cause, it's probably a double down of the host scan
-semaphore somewhere in the code.  alt-sysrq-t should work in this case,
-can you get a stack trace of the blocked process?
+This problem shows up in other ways as well.  With hot-unpluggable 
+hosts, the call that does the last 'put' on the last device will hang 
+waiting for the eh thread to terminate.  See
 
-Thanks,
+http://bugzilla.kernel.org/show_bug.cgi?id=5237
 
-James
+Alan Stern
+
