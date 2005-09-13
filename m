@@ -1,112 +1,45 @@
-From: Burton Windle <bwindle@fint.org>
-Subject: SCSI issue with 2.6.14-rc1
-Date: Tue, 13 Sep 2005 13:31:23 -0400 (EDT)
-Message-ID: <Pine.LNX.4.63.0509131330500.1684@postal>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [2.6.14-rc1] sym scsi boot hang
+Date: Tue, 13 Sep 2005 12:32:40 -0500
+Message-ID: <1126632760.4809.38.camel@mulgrave>
+References: <20050913124804.GA5008@in.ibm.com>
+	 <20050913131739.GD26162@krispykreme> <20050913142939.GE26162@krispykreme>
+	 <1126629345.4809.36.camel@mulgrave>  <20050913164727.GA26353@krispykreme>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ispmxmta06-srv.alltel.net ([166.102.165.167]:35257 "EHLO
-	ispmxmta06-srv.alltel.net") by vger.kernel.org with ESMTP
-	id S964919AbVIMRb1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Sep 2005 13:31:27 -0400
-Received: from postal ([71.29.140.10]) by ispmxmta06-srv.alltel.net
-          with ESMTP
-          id <20050913173122.KXTV12191.ispmxmta06-srv.alltel.net@postal>
-          for <linux-scsi@vger.kernel.org>; Tue, 13 Sep 2005 12:31:22 -0500
-Received: from localhost ([127.0.0.1])
-	by postal with esmtp (Exim 4.52)
-	id 1EFEct-0000qP-SD
-	for linux-scsi@vger.kernel.org; Tue, 13 Sep 2005 13:31:23 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964922AbVIMRcq@vger.kernel.org>
+In-Reply-To: <20050913164727.GA26353@krispykreme>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Anton Blanchard <anton@samba.org>
+Cc: Dipankar Sarma <dipankar@in.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Dell Poweredge 1300, MegaRAID SCSI with hardware RAID1. With 2.6.13, system was 
-fine, but on 2.6.14-rc1, it sees the RAID array as a 0mb drive with 1 512-byte 
-sector, and seems to have a bit of a problem mounting /
+On Wed, 2005-09-14 at 02:47 +1000, Anton Blanchard wrote:
+> Good idea, I wonder why the IO isnt completing.
+> 
+> Anton
+> 
+> [c0000000004945fc] schedule+0x63c/0xf70
+> [c0000000004954c8] wait_for_completion+0xb8/0x140
+> [c0000000002a3800] blk_execute_rq+0xb0/0x120
+> [c000000000338a98] scsi_execute+0xf8/0x150
+> [c000000000338bc0] scsi_execute_req+0xd0/0x140
+> [c00000000033bce4] scsi_probe_and_add_lun+0x204/0x9f0
+> [c00000000033cfc4] __scsi_scan_target+0x164/0x4f0
+> [c00000000033d430] scsi_scan_channel+0xe0/0x120
+> [c00000000033d598] scsi_scan_host_selected+0x128/0x1d0
+> [c000000000361c20] ibmvscsi_probe+0x270/0x400
+> [c0000000000367fc] vio_bus_probe+0x7c/0x90
+> [c000000000299a78] driver_probe_device+0x98/0x160
+> [c000000000299ce8] __driver_attach+0xa8/0xd0
+> [c000000000298938] bus_for_each_dev+0x88/0xe0
+> [c000000000299738] driver_attach+0x28/0x40
+> [c000000000299074] bus_add_driver+0xc4/0x200
+> [c00000000029a1cc] driver_register+0x5c/0x80
+> [c0000000000365b0] vio_register_driver+0x50/0x70
+> [c000000000565bac] ibmvscsi_module_init+0x1c/0x40
 
-2.6.13:
-megaraid: found 0x8086:0x1960:bus 0:slot 13:func 1
-scsi0:Found MegaRAID controller at 0xf8802000, IRQ:185
-megaraid: [1.06:1p00] detected 1 logical drives.
-megaraid: channel[0] is raid.
-megaraid: channel[1] is raid.
-scsi0 : LSI Logic MegaRAID 1.06 254 commands 16 targs 5 chans 7 luns
-scsi0: scanning scsi channel 0 for logical drives.
-   Vendor: MegaRAID  Model: LD0 RAID1  8568R  Rev: 1.06
-   Type:   Direct-Access                      ANSI SCSI revision: 02
-scsi0: scanning scsi channel 4 [P0] for physical devices.
-scsi0: scanning scsi channel 5 [P1] for physical devices.
-st: Version 20050501, fixed bufsize 32768, s/g segs 256
-SCSI device sda: 17547264 512-byte hdwr sectors (8984 MB)
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-sda: asking for cache data failed
-sda: assuming drive cache: write through
-SCSI device sda: 17547264 512-byte hdwr sectors (8984 MB)
-sda: asking for cache data failed
-sda: assuming drive cache: write through
-  sda: sda1
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+That trace says the ibmvscsi driver (not sym2) has lost an I/O
 
-2.6.14-rc1:
-megaraid: found 0x8086:0x1960:bus 0:slot 13:func 1
-scsi0:Found MegaRAID controller at 0xf8802000, IRQ:185
-megaraid: [1.06:1p00] detected 1 logical drives.
-megaraid: channel[0] is raid.
-megaraid: channel[1] is raid.
-scsi0 : LSI Logic MegaRAID 1.06 254 commands 16 targs 5 chans 7 luns
-scsi0: scanning scsi channel 0 for logical drives.
-   Vendor: MegaRAID  Model: LD0 RAID1  8568R  Rev: 1.06
-   Type:   Direct-Access                      ANSI SCSI revision: 02
-scsi0: scanning scsi channel 4 [P0] for physical devices.
-scsi0: scanning scsi channel 5 [P1] for physical devices.
-st: Version 20050830, fixed bufsize 32768, s/g segs 256
-sda : sector size 0 reported, assuming 512.
-SCSI device sda: 1 512-byte hdwr sectors (0 MB)
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-sda: asking for cache data failed
-sda: assuming drive cache: write through
-sda : sector size 0 reported, assuming 512.
-SCSI device sda: 1 512-byte hdwr sectors (0 MB)
-sda: asking for cache data failed
-sda: assuming drive cache: write through
-  sda: sda1
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-
-
-
-Linux RTIX-NM-003 2.6.13 #8 SMP Wed Aug 31 16:38:12 EDT 2005 i686 GNU/Linux
-
-Gnu C                  2.95.4
-Gnu make               3.80
-binutils               2.16.1
-util-linux             2.12p
-mount                  2.12p
-module-init-tools      3.2-pre1
-e2fsprogs              1.37
-reiserfsprogs          line
-reiser4progs           line
-Linux C Library        2.3.5
-Dynamic linker (ldd)   2.3.5
-Procps                 3.2.5
-Net-tools              1.60
-Console-tools          0.2.3
-Sh-utils               5.2.1
-
-CONFIG_SCSI=y
-CONFIG_SCSI_PROC_FS=y
-CONFIG_BLK_DEV_SD=y
-CONFIG_CHR_DEV_ST=y
-CONFIG_SCSI_MULTI_LUN=y
-CONFIG_SCSI_LOGGING=y
-CONFIG_MEGARAID_LEGACY=y
-
-
--- 
-Burton Windle                           bwindle@fint.org
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
+James
