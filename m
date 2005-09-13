@@ -1,85 +1,88 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process (end devices)
-Date: Tue, 13 Sep 2005 15:42:15 -0700
-Message-ID: <20050913224215.GB1308@us.ibm.com>
-References: <20050910024454.20602.qmail@web51613.mail.yahoo.com> <1126368081.4813.46.camel@mulgrave> <4325997D.3050103@adaptec.com> <20050912162739.GA11455@us.ibm.com> <4326964B.9010503@torque.net>
+From: Adam Kropelin <akropel1@rochester.rr.com>
+Subject: [PATCH] qla2xxx: Use dword accessors for PCI_ROM_ADDRESS
+Date: Tue, 13 Sep 2005 19:20:02 -0400
+Message-ID: <20050913192002.E10911@mail.kroptech.com>
+References: <20050913182550.A10911@mail.kroptech.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.133]:46047 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S932266AbVIMWnF
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Sep 2005 18:43:05 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964985AbVIMWvL@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4326964B.9010503@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
+In-reply-to: <20050913182550.A10911@mail.kroptech.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: andrew.vasquez@qlogic.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>, James Bottomley <James.Bottomley@SteelEye.com>, ltuikov@yahoo.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, Sep 13, 2005 at 07:05:15PM +1000, Douglas Gilbert wrote:
-> Patrick Mansfield wrote:
-> > On Mon, Sep 12, 2005 at 11:06:37AM -0400, Luben Tuikov wrote:
-> 
-> <snip>
-> 
-> > IMO adding well known LUNs at this point to the standard added nothing of
-> > value, the target firmware has to check for special paths no matter what,
-> > adding a well known LUN does not change that. And most vendors will
-> > (likely) have support for use without a well known LUN. (This does not
-> > mean we should not support it in linux, I just don't know why this went
-> > into the standard.)
-> > 
-> > Using well known LUNs will be another code path that will have to live
-> > alongside existing ones, and will likely require further black listing
-> > (similar to REPORT LUN vs scanning for LUNs).
-> 
-> Patrick,
-> The technique of supporting REPORT_LUNS on lun 0 of
-> a target in the case where there is no such device
-> (logical unit) is a pretty ugly. It also indicates what
-> is really happening: the target device intercepts
-> REPORT_LUNS, builds the response and replies on behalf
-> of lun 0.
+PCI_ROM_ADDRESS is a 32 bit register and as such should be accessed
+using pci_bus_{read,write}_config_dword(). A recent audit of drivers/
+turned up several cases of byte- and word-sized accesses. The harmful
+ones were fixed by Linus directly. This patches up one of the remaining
+harmless-but-still-wrong cases caught in the dragnet.
 
-It should ignore the lun value for REPORT LUNS.
+Signed-off-by: Adam Kropelin <akropel1@rochester.rr.com>
 
-> Turns out there are other reasons an application may want
-> to "talk" to a target device rather than one of its logical
-> units (e.g. access controls and log pages specific to
-> the target's transport). Well known lus can be seen with the
-> REPORT_LUNS (select_report=1) but there is no mechanism (that
-> I am aware of) that allows anyone to access them
-> from the user space with linux.
-
-What I mean is that the target has to intercept the command whether it is
-a REPORT LUN or for the well known (W_LUN).
-
-The target (firmware) code has to have code today like:
-
-	if (cmd == REPORT_LUN) {
-		do_report_lun();
-	}
-
-For only W_LUN support, the code might be something like:
-
-	if (lun == W_LUN) {
-		if (cmd == REPORT_LUN) {
-			do_report_lun();
-		}
-	}
-
-But the first case above already covers even the W_LUN case.
-
-So adding a W_LUN at this point does not add any value ... maybe it looks
-nice in the spec and in someones firmware, but it does not add anything
-that I can see.
-
-Kind of like an 8 byte lun, it adds no meaningful functionallity. [I mean,
-who would want 2^64 LUs on one target? Yeh, let's give everyone in the
-world ... no in the universe their own private LUN on a single target. The
-LUN hiearchy is a bad idea, I have not seen a device that supports it,
-kind of like trying to implement network routing inside your storage box.
-Don't let those storage or database experts design your network hardware.]
-
--- Patrick Mansfield
+--- linux-2.6.14-rc1.orig/drivers/scsi/qla2xxx/qla_init.c	2005-09-13 11:59:16.000000000 -0400
++++ linux-2.6.14-rc1/drivers/scsi/qla2xxx/qla_init.c	2005-09-13 11:54:06.000000000 -0400
+@@ -201,6 +201,7 @@
+ qla2100_pci_config(scsi_qla_host_t *ha)
+ {
+ 	uint16_t w, mwi;
++	uint32_t d;
+ 	unsigned long flags;
+ 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
+ 
+@@ -215,9 +216,9 @@
+ 	pci_write_config_word(ha->pdev, PCI_COMMAND, w);
+ 
+ 	/* Reset expansion ROM address decode enable */
+-	pci_read_config_word(ha->pdev, PCI_ROM_ADDRESS, &w);
+-	w &= ~PCI_ROM_ADDRESS_ENABLE;
+-	pci_write_config_word(ha->pdev, PCI_ROM_ADDRESS, w);
++	pci_read_config_dword(ha->pdev, PCI_ROM_ADDRESS, &d);
++	d &= ~PCI_ROM_ADDRESS_ENABLE;
++	pci_write_config_dword(ha->pdev, PCI_ROM_ADDRESS, d);
+ 
+ 	/* Get PCI bus information. */
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+@@ -237,6 +238,7 @@
+ qla2300_pci_config(scsi_qla_host_t *ha)
+ {
+ 	uint16_t	w, mwi;
++	uint32_t	d;
+ 	unsigned long   flags = 0;
+ 	uint32_t	cnt;
+ 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
+@@ -302,9 +304,9 @@
+ 	pci_write_config_byte(ha->pdev, PCI_LATENCY_TIMER, 0x80);
+ 
+ 	/* Reset expansion ROM address decode enable */
+-	pci_read_config_word(ha->pdev, PCI_ROM_ADDRESS, &w);
+-	w &= ~PCI_ROM_ADDRESS_ENABLE;
+-	pci_write_config_word(ha->pdev, PCI_ROM_ADDRESS, w);
++	pci_read_config_dword(ha->pdev, PCI_ROM_ADDRESS, &d);
++	d &= ~PCI_ROM_ADDRESS_ENABLE;
++	pci_write_config_dword(ha->pdev, PCI_ROM_ADDRESS, d);
+ 
+ 	/* Get PCI bus information. */
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+@@ -324,6 +326,7 @@
+ qla24xx_pci_config(scsi_qla_host_t *ha)
+ {
+ 	uint16_t w, mwi;
++	uint32_t d;
+ 	unsigned long flags = 0;
+ 	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
+ 	int pcix_cmd_reg, pcie_dctl_reg;
+@@ -366,9 +369,9 @@
+ 	}
+ 
+ 	/* Reset expansion ROM address decode enable */
+-	pci_read_config_word(ha->pdev, PCI_ROM_ADDRESS, &w);
+-	w &= ~PCI_ROM_ADDRESS_ENABLE;
+-	pci_write_config_word(ha->pdev, PCI_ROM_ADDRESS, w);
++	pci_read_config_dword(ha->pdev, PCI_ROM_ADDRESS, &d);
++	d &= ~PCI_ROM_ADDRESS_ENABLE;
++	pci_write_config_dword(ha->pdev, PCI_ROM_ADDRESS, d);
+ 
+ 	/* Get PCI bus information. */
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
