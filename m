@@ -1,75 +1,48 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process
- (end devices)
-Date: Wed, 14 Sep 2005 13:17:30 -0400
-Message-ID: <43285B2A.5040107@adaptec.com>
-References: <20050910024454.20602.qmail@web51613.mail.yahoo.com> <1126368081.4813.46.camel@mulgrave> <4325997D.3050103@adaptec.com> <20050912162739.GA11455@us.ibm.com> <4326964B.9010503@torque.net> <20050913224215.GB1308@us.ibm.com> <4328176D.80307@adaptec.com> <20050914171307.GA10044@us.ibm.com>
+From: "Ravi Anand" <ravi.anand@qlogic.com>
+Subject: RE: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process (end devices)
+Date: Wed, 14 Sep 2005 10:46:06 -0700
+Message-ID: <3679966B84813344B908D418BA3F6A4A0461EE6B@AVEXCH01.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:60130 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S965254AbVINRRs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Sep 2005 13:17:48 -0400
-In-Reply-To: <20050914171307.GA10044@us.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030298AbVINRqJ@vger.kernel.org>
+content-class: urn:content-classes:message
+Sender: linux-kernel-owner@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>, Sergey Panov <sipan@sipan.org>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@SteelEye.com>, Douglas Gilbert <dougg@torque.net>, Christoph Hellwig <hch@infradead.org>, Luben Tuikov <ltuikov@yahoo.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@SteelEye.com>, ltuikov@yahoo.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 09/14/05 13:13, Patrick Mansfield wrote:
-> On Wed, Sep 14, 2005 at 08:28:29AM -0400, Luben Tuikov wrote:
-> 
->>On 09/13/05 18:42, Patrick Mansfield wrote:
-> 
-> 
->>>What I mean is that the target has to intercept the command whether it is
->>>a REPORT LUN or for the well known (W_LUN).
->>>
->>>The target (firmware) code has to have code today like:
->>>
->>>	if (cmd == REPORT_LUN) {
->>>		do_report_lun();
->>>	}
->>>
->>>For only W_LUN support, the code might be something like:
->>>
->>>	if (lun == W_LUN) {
->>>		if (cmd == REPORT_LUN) {
->>>			do_report_lun();
->>>		}
->>>	}
->>>
->>>But the first case above already covers even the W_LUN case.
->>
->>_Except_, that what the firmware actually does is, it routes
->>the tasks by LUN first, _before_ looking up with what the command
->>is.*  This is crucial.
-> 
-> 
-> That is what the second code snippet above is meant to show.
+On Wed, Sep 14, 2005 Patrick Mansfield wrote:
+>>I didn't look at raid driver code, I mean they can setup and use luns
+>>however they want, as they are not following any scsi transport specs.
 
-It was completely unclear what you meant since your code was
-scattered in English text and you did not mention that
-firmware does LU routing first, to quote:
-     "The target (firmware) code has to have code today like:"
+>>In drivers/scsi/qla2xxx/qla_iocb.c qla2x00_start_scsi(), it is swapped as
+>>firmware wants le, and then the firmware has to convert it to a proper 8
+>>byte LUN:
 
->>>So adding a W_LUN at this point does not add any value ... maybe it looks
->>>nice in the spec and in someones firmware, but it does not add anything
->>>that I can see.
->>
->>I wonder if the maintainer of the SCSI Core would listen or ignore your
->>opinion here.
-> 
-> 
->>I wonder _who_ decides here where speculation ends and industry
->>opinion starts?
-> 
-> 
-> I am talking about the scsi spec, not the code. IMO linux scsi code should
-> support W_LUN and 64 bit LUN.
+>>	cmd_pkt->lun = cpu_to_le16(sp->cmd->device->lun);
 
-Ok, that's good.
+>>(I'm not sure where or how they handle 8 byte LUN for qla24xx per Ravin's
+email).
 
-	Luben
+As I mentioned that HBA's can handle an 8 byte lun. But as far as the driver
+is concerned, it does not populate all the level.
+
+So if you look at the "struct cmd_type_7" iocb in qla_fw.h lun field is an 8 byte field.
+
+struct cmd_type_7 {
+	.......
+ uint8_t lun[8];                 /* FCP LUN (BE). */
+	.........
+}
+
+Here's the snippet
+of the code where the driver builds iocb for ISP24XX in  qla24xx_start_scsi():
+
+	 /* Set LUN number*/
+        cmd_pkt->lun[1] = LSB(fclun->lun);
+        cmd_pkt->lun[2] = MSB(fclun->lun);
+
+Hope this clarifies the confusion if any.
+
+Ravi
