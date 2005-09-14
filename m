@@ -1,145 +1,139 @@
-From: "Ju, Seokmann" <sju@lsil.com>
-Subject: RE: [Bugme-new] [Bug 5244] New: HW RAID1 detected as zero size dr
-	ive
-Date: Wed, 14 Sep 2005 11:02:51 -0400
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E5703662B31@exa-atlanta>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [2.6.14-rc1] sym scsi boot hang
+Date: Wed, 14 Sep 2005 11:49:47 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0509141052410.5064-100000@iolanthe.rowland.org>
+References: <20050914080629.GB19051@krispykreme>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:20457 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S965233AbVINPC7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Sep 2005 11:02:59 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030202AbVINPtt@vger.kernel.org>
+In-Reply-To: <20050914080629.GB19051@krispykreme>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Anton Blanchard <anton@samba.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Dipankar Sarma <dipankar@in.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Andrew Morton' <akpm@osdl.org>, linux-scsi@vger.kernel.org, "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Cc: bugme-daemon@kernel-bugs.osdl.org
 
-On Tuesday, September 13, 2005 7:55 PM, Andrew Morton wrote:
-> Could whoever maintains the megaraid driver(s) please submit 
-> a MANTAINERS
-> patch?
-> 
-> It broke in 2.6.14-rc1.
-I'm checking out 2.6.14-rc1, right now. The patch will be submitted soon.
+On Wed, 14 Sep 2005, Anton Blanchard wrote:
 
-Thank you.
+> Hi,
+> 
+> > If that's the cause, it's probably a double down of the host scan
+> > semaphore somewhere in the code.  alt-sysrq-t should work in this case,
+> > can you get a stack trace of the blocked process?
+> 
+> It appears to be this patch:
+> 
+>   [SCSI] SCSI core: fix leakage of scsi_cmnd's
+> 
+>   From:         Alan Stern <stern@rowland.harvard.edu>
 
-> -----Original Message-----
-> From: Andrew Morton [mailto:akpm@osdl.org] 
-> Sent: Tuesday, September 13, 2005 7:55 PM
-> To: linux-scsi@vger.kernel.org; Atul Mukker; Sreenivas 
-> Bagalkote; Manoj Jose
-> Cc: bugme-daemon@kernel-bugs.osdl.org
-> Subject: Re: [Bugme-new] [Bug 5244] New: HW RAID1 detected as 
-> zero size drive
-> 
-> 
-> Could whoever maintains the megaraid driver(s) please submit 
-> a MANTAINERS
-> patch?
-> 
-> It broke in 2.6.14-rc1.
-> 
-> 
-> bugme-daemon@kernel-bugs.osdl.org wrote:
-> >
-> > http://bugzilla.kernel.org/show_bug.cgi?id=5244
-> > 
-> >            Summary: HW RAID1 detected as zero size drive
-> >     Kernel Version: 2.6.14-rc1
-> >             Status: NEW
-> >           Severity: blocking
-> >              Owner: andmike@us.ibm.com
-> >          Submitter: bwindle-kbt@fint.org
-> > 
-> > 
-> > Most recent kernel where this bug did not occur: 2.6.13
-> > Distribution: Debian Testing
-> > Hardware Environment: Dell PowerEDGE 1300, MegaRAID with 
-> two SCSI drives in
-> > RAID1, two CPUs
-> > Software Environment:
-> > Linux RTIX-NM-003 2.6.13 #8 SMP Wed Aug 31 16:38:12 EDT 
-> 2005 i686 GNU/Linux
-> > 
-> > Gnu C                  2.95.4
-> > Gnu make               3.80
-> > binutils               2.16.1
-> > util-linux             2.12p
-> > mount                  2.12p
-> > module-init-tools      3.2-pre1
-> > e2fsprogs              1.37
-> > reiserfsprogs          line
-> > reiser4progs           line
-> > Linux C Library        2.3.5
-> > Dynamic linker (ldd)   2.3.5
-> > Procps                 3.2.5
-> > Net-tools              1.60
-> > Console-tools          0.2.3
-> > Sh-utils               5.2.1
-> > 
-> > Problem Description:
-> > 
-> > When booting with 2.6.14-rc1, my RAID1 array is seen as a 0 
-> megabyte drive. This
-> > causes the kernel to not be able to mount the filesystem, 
-> and thus, a panic.
-> > 
-> > 2.6.13:
-> > megaraid: found 0x8086:0x1960:bus 0:slot 13:func 1
-> > scsi0:Found MegaRAID controller at 0xf8802000, IRQ:185
-> > megaraid: [1.06:1p00] detected 1 logical drives.
-> > megaraid: channel[0] is raid.
-> > megaraid: channel[1] is raid.
-> > scsi0 : LSI Logic MegaRAID 1.06 254 commands 16 targs 5 chans 7 luns
-> > scsi0: scanning scsi channel 0 for logical drives.
-> >   Vendor: MegaRAID  Model: LD0 RAID1  8568R  Rev: 1.06
-> >   Type:   Direct-Access                      ANSI SCSI revision: 02
-> > scsi0: scanning scsi channel 4 [P0] for physical devices.
-> > scsi0: scanning scsi channel 5 [P1] for physical devices.
-> > st: Version 20050501, fixed bufsize 32768, s/g segs 256
-> > SCSI device sda: 17547264 512-byte hdwr sectors (8984 MB)
-> >                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> > sda: asking for cache data failed
-> > sda: assuming drive cache: write through
-> > SCSI device sda: 17547264 512-byte hdwr sectors (8984 MB)
-> > sda: asking for cache data failed
-> > sda: assuming drive cache: write through
-> >  sda: sda1
-> > Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-> > 
-> > 2.6.14-rc1:
-> > megaraid: found 0x8086:0x1960:bus 0:slot 13:func 1
-> > scsi0:Found MegaRAID controller at 0xf8802000, IRQ:185
-> > megaraid: [1.06:1p00] detected 1 logical drives.
-> > megaraid: channel[0] is raid.
-> > megaraid: channel[1] is raid.
-> > scsi0 : LSI Logic MegaRAID 1.06 254 commands 16 targs 5 chans 7 luns
-> > scsi0: scanning scsi channel 0 for logical drives.
-> >   Vendor: MegaRAID  Model: LD0 RAID1  8568R  Rev: 1.06
-> >   Type:   Direct-Access                      ANSI SCSI revision: 02
-> > scsi0: scanning scsi channel 4 [P0] for physical devices.
-> > scsi0: scanning scsi channel 5 [P1] for physical devices.
-> > st: Version 20050830, fixed bufsize 32768, s/g segs 256
-> > sda : sector size 0 reported, assuming 512.
-> > SCSI device sda: 1 512-byte hdwr sectors (0 MB)
-> >                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> > sda: asking for cache data failed
-> > sda: assuming drive cache: write through
-> > sda : sector size 0 reported, assuming 512.
-> > SCSI device sda: 1 512-byte hdwr sectors (0 MB)
-> > sda: asking for cache data failed
-> > sda: assuming drive cache: write through
-> >  sda: sda1
-> > Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-> > 
-> > ------- You are receiving this mail because: -------
-> > You are on the CC list for the bug, or are watching someone who is.
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> And in particular it looks like the scsi_unprep_request in
+> scsi_queue_insert is causing it. The following patch fixes the boot
+> problems on the vscsi machine:
+
+In general the scsi_unprep_request routine is correct and needs to be
+there.  The one part that might be questionable is the assignment to
+req->special.  It may turn out that the real solution is to have
+scsi_execute set req->special to NULL; I assumed it would be NULL already
+but perhaps I was wrong.
+
+(James, I see a possible problem with scsi_insert_special_req.  It adds to
+the queue a request with REQ_DONTPREP set.  How can such a request, with
+no associated scsi_cmnd, ever work?  Also, won't scsi_end_request and 
+__scsi_release_request end up putting the same scsi_command twice?)
+
+Here is a patch that addresses the first problem and fixes up a few other
+loose ends.  Please see if it helps.
+
+Alan Stern
+
+
+
+Index: usb-2.6/drivers/scsi/scsi_lib.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi_lib.c
++++ usb-2.6/drivers/scsi/scsi_lib.c
+@@ -116,7 +116,13 @@ static void scsi_unprep_request(struct r
+ 	struct scsi_cmnd *cmd = req->special;
+ 
+ 	req->flags &= ~REQ_DONTPREP;
+-	req->special = (req->flags & REQ_SPECIAL) ? cmd->sc_request : NULL;
++	req->special = NULL;
++	if (req->flags & REQ_SPECIAL) {
++		struct scsi_request *sreq = cmd->sc_request;
++
++		if (sreq->sr_magic == SCSI_REQ_MAGIC)
++			req->special = sreq;
++	}
+ 
+ 	scsi_release_buffers(cmd);
+ 	scsi_put_command(cmd);
+@@ -343,6 +349,7 @@ int scsi_execute(struct scsi_device *sde
+ 	req->sense_len = 0;
+ 	req->timeout = timeout;
+ 	req->flags |= flags | REQ_BLOCK_PC | REQ_SPECIAL | REQ_QUIET;
++	req->special = NULL;
+ 
+ 	/*
+ 	 * head injection *required* here otherwise quiesce won't work
+@@ -1072,9 +1079,6 @@ static int scsi_init_io(struct scsi_cmnd
+ 	printk(KERN_ERR "req nr_sec %lu, cur_nr_sec %u\n", req->nr_sectors,
+ 			req->current_nr_sectors);
+ 
+-	/* release the command and kill it */
+-	scsi_release_buffers(cmd);
+-	scsi_put_command(cmd);
+ 	return BLKPREP_KILL;
+ }
+ 
+@@ -1176,13 +1180,13 @@ static int scsi_prep_fn(struct request_q
+ 	if (req->flags & REQ_SPECIAL && req->special) {
+ 		struct scsi_request *sreq = req->special;
+ 
+-		if (sreq->sr_magic == SCSI_REQ_MAGIC) {
+-			cmd = scsi_get_command(sreq->sr_device, GFP_ATOMIC);
+-			if (unlikely(!cmd))
+-				goto defer;
+-			scsi_init_cmd_from_req(cmd, sreq);
+-		} else
+-			cmd = req->special;
++		if (sreq->sr_magic != SCSI_REQ_MAGIC)
++			printk(KERN_ERR "invalid sr_magic in %s\n",
++					__FUNCTION__);
++		cmd = scsi_get_command(sreq->sr_device, GFP_ATOMIC);
++		if (unlikely(!cmd))
++			goto defer;
++		scsi_init_cmd_from_req(cmd, sreq);
+ 	} else if (req->flags & (REQ_CMD | REQ_BLOCK_PC)) {
+ 
+ 		if(unlikely(specials_only) && !(req->flags & REQ_SPECIAL)) {
+@@ -1194,17 +1198,14 @@ static int scsi_prep_fn(struct request_q
+ 			       sdev->host->host_no, sdev->id, sdev->lun);
+ 			goto kill;
+ 		}
+-			
+ 			
+ 		/*
+ 		 * Now try and find a command block that we can use.
+ 		 */
+-		if (!req->special) {
+-			cmd = scsi_get_command(sdev, GFP_ATOMIC);
+-			if (unlikely(!cmd))
+-				goto defer;
+-		} else
+-			cmd = req->special;
++		cmd = scsi_get_command(sdev, GFP_ATOMIC);
++		if (unlikely(!cmd))
++			goto defer;
++		cmd->sc_request = NULL;
+ 		
+ 		/* pull a tag out of the request if we have one */
+ 		cmd->tag = req->tag;
+@@ -1250,7 +1251,7 @@ static int scsi_prep_fn(struct request_q
+ 		ret = scsi_init_io(cmd);
+ 		switch(ret) {
+ 		case BLKPREP_KILL:
+-			/* BLKPREP_KILL return also releases the command */
++			scsi_unprep_request(req);
+ 			goto kill;
+ 		case BLKPREP_DEFER:
+ 			goto defer;
