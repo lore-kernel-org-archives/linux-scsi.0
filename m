@@ -1,184 +1,44 @@
-From: "Ju, Seokmann" <sju@lsil.com>
-Subject: RE: [Bugme-new] [Bug 5244] New: HW RAID1 detected as zero size dr
-	 ive
-Date: Wed, 14 Sep 2005 13:45:40 -0400
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E5703662B32@exa-atlanta>
+From: "'patman@aracnet.com'" <patman@aracnet.com>
+Subject: Re: proposed update to scsi_id needing review
+Date: Wed, 14 Sep 2005 10:55:48 -0700
+Message-ID: <20050914175548.GA20981@aracnet.com>
+References: <C2EEB4E538D3DC48BF57F391F422779321AC87@SRMANNING.eng.emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:765 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1030266AbVINRpu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Sep 2005 13:45:50 -0400
+Received: from 216-99-218-173.dsl.aracnet.com ([216.99.218.173]:36588 "EHLO
+	216-99-218-173.dsl.aracnet.com") by vger.kernel.org with ESMTP
+	id S932482AbVINSEF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Sep 2005 14:04:05 -0400
+Content-Disposition: inline
+In-Reply-To: <C2EEB4E538D3DC48BF57F391F422779321AC87@SRMANNING.eng.emc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Andrew Morton' <akpm@osdl.org>, linux-scsi@vger.kernel.org, "Bagalkote, Sreenivas" <sreenib@lsil.com>
-Cc: bugme-daemon@kernel-bugs.osdl.org
+To: "goggin, edward" <egoggin@emc.com>, greg@kroah.com, kay.sievers@vrfy.org
+Cc: "'linux-hotplug-devel@lists.sourceforge.net'" <linux-hotplug-devel@lists.sourceforge.net>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, christophe.varoqui@free.fr
 
-> On Tuesday, September 13, 2005 7:55 PM, Andrew Morton wrote:
-> > Could whoever maintains the megaraid driver(s) please submit 
-> > a MANTAINERS
-> > patch?
-> > 
-> > It broke in 2.6.14-rc1.
-> I'm checking out 2.6.14-rc1, right now. The patch will be 
-> submitted soon.
-I've compiled the kernel and created bzImage and initrd.
-When I reboot the system with 2.6.14-rc1, I'm getting panic without any
-meaningful messages.
-The kernel installed on on-board SATA drive (/dev/hda1).
-To me, the issue happening witout MegaRAID as boot device.
+On Tue, Sep 13, 2005 at 12:48:43PM -0400, goggin, edward wrote:
+> Resending (original on June 9th) this patch notice after merging these
+> scsi_id changes into the version of scsi_id found in udev-068.
+> 
+> This patch is to enable the use of scsi_id to derive a UID for a SCSI-2
+> device which is not compliant with the page 83 inquiry reply format for
+> either SPC-2 or SPC-3.  In this case, the page 83 reply does not
+> contain a list of  Identification descriptors but a single binary encoded
+> hexa-decimal Vendor Specified Identifier.
+> 
+> The update is being driven by the need for scsi_id to support older
+> model EMC Symmetrix hardware, that is, models 4, 5, and 6.
 
-And when the MegaRAID driver compiled, I haven't seen any warning messages.
+Ed - Looks good, I ran some simple tests (no EMC hardware here though).
 
-Can I get some clue where to dig out further?
-Are there any APIs called by driver have been changed?
+Greg or Kay, can you please apply Ed's patch?
 
-> -----Original Message-----
-> From: Ju, Seokmann [mailto:sju@lsil.com] 
-> Sent: Wednesday, September 14, 2005 11:03 AM
-> To: 'Andrew Morton'; linux-scsi@vger.kernel.org; Bagalkote, Sreenivas
-> Cc: bugme-daemon@kernel-bugs.osdl.org
-> Subject: RE: [Bugme-new] [Bug 5244] New: HW RAID1 detected as 
-> zero size dr ive
-> 
-> On Tuesday, September 13, 2005 7:55 PM, Andrew Morton wrote:
-> > Could whoever maintains the megaraid driver(s) please submit 
-> > a MANTAINERS
-> > patch?
-> > 
-> > It broke in 2.6.14-rc1.
-> I'm checking out 2.6.14-rc1, right now. The patch will be 
-> submitted soon.
-> 
-> Thank you.
-> 
-> > -----Original Message-----
-> > From: Andrew Morton [mailto:akpm@osdl.org] 
-> > Sent: Tuesday, September 13, 2005 7:55 PM
-> > To: linux-scsi@vger.kernel.org; Atul Mukker; Sreenivas 
-> > Bagalkote; Manoj Jose
-> > Cc: bugme-daemon@kernel-bugs.osdl.org
-> > Subject: Re: [Bugme-new] [Bug 5244] New: HW RAID1 detected as 
-> > zero size drive
-> > 
-> > 
-> > Could whoever maintains the megaraid driver(s) please submit 
-> > a MANTAINERS
-> > patch?
-> > 
-> > It broke in 2.6.14-rc1.
-> > 
-> > 
-> > bugme-daemon@kernel-bugs.osdl.org wrote:
-> > >
-> > > http://bugzilla.kernel.org/show_bug.cgi?id=5244
-> > > 
-> > >            Summary: HW RAID1 detected as zero size drive
-> > >     Kernel Version: 2.6.14-rc1
-> > >             Status: NEW
-> > >           Severity: blocking
-> > >              Owner: andmike@us.ibm.com
-> > >          Submitter: bwindle-kbt@fint.org
-> > > 
-> > > 
-> > > Most recent kernel where this bug did not occur: 2.6.13
-> > > Distribution: Debian Testing
-> > > Hardware Environment: Dell PowerEDGE 1300, MegaRAID with 
-> > two SCSI drives in
-> > > RAID1, two CPUs
-> > > Software Environment:
-> > > Linux RTIX-NM-003 2.6.13 #8 SMP Wed Aug 31 16:38:12 EDT 
-> > 2005 i686 GNU/Linux
-> > > 
-> > > Gnu C                  2.95.4
-> > > Gnu make               3.80
-> > > binutils               2.16.1
-> > > util-linux             2.12p
-> > > mount                  2.12p
-> > > module-init-tools      3.2-pre1
-> > > e2fsprogs              1.37
-> > > reiserfsprogs          line
-> > > reiser4progs           line
-> > > Linux C Library        2.3.5
-> > > Dynamic linker (ldd)   2.3.5
-> > > Procps                 3.2.5
-> > > Net-tools              1.60
-> > > Console-tools          0.2.3
-> > > Sh-utils               5.2.1
-> > > 
-> > > Problem Description:
-> > > 
-> > > When booting with 2.6.14-rc1, my RAID1 array is seen as a 0 
-> > megabyte drive. This
-> > > causes the kernel to not be able to mount the filesystem, 
-> > and thus, a panic.
-> > > 
-> > > 2.6.13:
-> > > megaraid: found 0x8086:0x1960:bus 0:slot 13:func 1
-> > > scsi0:Found MegaRAID controller at 0xf8802000, IRQ:185
-> > > megaraid: [1.06:1p00] detected 1 logical drives.
-> > > megaraid: channel[0] is raid.
-> > > megaraid: channel[1] is raid.
-> > > scsi0 : LSI Logic MegaRAID 1.06 254 commands 16 targs 5 
-> chans 7 luns
-> > > scsi0: scanning scsi channel 0 for logical drives.
-> > >   Vendor: MegaRAID  Model: LD0 RAID1  8568R  Rev: 1.06
-> > >   Type:   Direct-Access                      ANSI SCSI 
-> revision: 02
-> > > scsi0: scanning scsi channel 4 [P0] for physical devices.
-> > > scsi0: scanning scsi channel 5 [P1] for physical devices.
-> > > st: Version 20050501, fixed bufsize 32768, s/g segs 256
-> > > SCSI device sda: 17547264 512-byte hdwr sectors (8984 MB)
-> > >                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> > > sda: asking for cache data failed
-> > > sda: assuming drive cache: write through
-> > > SCSI device sda: 17547264 512-byte hdwr sectors (8984 MB)
-> > > sda: asking for cache data failed
-> > > sda: assuming drive cache: write through
-> > >  sda: sda1
-> > > Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-> > > 
-> > > 2.6.14-rc1:
-> > > megaraid: found 0x8086:0x1960:bus 0:slot 13:func 1
-> > > scsi0:Found MegaRAID controller at 0xf8802000, IRQ:185
-> > > megaraid: [1.06:1p00] detected 1 logical drives.
-> > > megaraid: channel[0] is raid.
-> > > megaraid: channel[1] is raid.
-> > > scsi0 : LSI Logic MegaRAID 1.06 254 commands 16 targs 5 
-> chans 7 luns
-> > > scsi0: scanning scsi channel 0 for logical drives.
-> > >   Vendor: MegaRAID  Model: LD0 RAID1  8568R  Rev: 1.06
-> > >   Type:   Direct-Access                      ANSI SCSI 
-> revision: 02
-> > > scsi0: scanning scsi channel 4 [P0] for physical devices.
-> > > scsi0: scanning scsi channel 5 [P1] for physical devices.
-> > > st: Version 20050830, fixed bufsize 32768, s/g segs 256
-> > > sda : sector size 0 reported, assuming 512.
-> > > SCSI device sda: 1 512-byte hdwr sectors (0 MB)
-> > >                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> > > sda: asking for cache data failed
-> > > sda: assuming drive cache: write through
-> > > sda : sector size 0 reported, assuming 512.
-> > > SCSI device sda: 1 512-byte hdwr sectors (0 MB)
-> > > sda: asking for cache data failed
-> > > sda: assuming drive cache: write through
-> > >  sda: sda1
-> > > Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-> > > 
-> > > ------- You are receiving this mail because: -------
-> > > You are on the CC list for the bug, or are watching 
-> someone who is.
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe 
-> > linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Note that this requires explicit usage of '-p pre-spc3-83' for EMC
+Symmetrix devices or addition to the scsi_id.config file for this to be of
+any real use.
+
+udev rules could handle this, but multipathd will also need to set the
+option.
+
+-- Patrick Mansfield
