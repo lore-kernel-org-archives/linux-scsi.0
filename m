@@ -1,52 +1,46 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process (end devices)
-Date: Wed, 14 Sep 2005 09:28:35 -0700
-Message-ID: <20050914162835.GA9409@us.ibm.com>
-References: <1126537041.4825.28.camel@mulgrave> <20050912164548.GB11455@us.ibm.com> <1126545680.4825.40.camel@mulgrave> <20050912184629.GA13489@us.ibm.com> <1126639342.4809.53.camel@mulgrave> <4327354E.7090409@adaptec.com> <20050913203611.GH32395@parisc-linux.org> <43273E6C.9050807@adaptec.com> <20050913222519.GA1308@us.ibm.com> <1126675366.26050.41.camel@sipan.sipan.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [2.6.14-rc1] sym scsi boot hang
+Date: Wed, 14 Sep 2005 11:52:13 -0500
+Message-ID: <4328553D.10501@cs.wisc.edu>
+References: <Pine.LNX.4.44L0.0509141052410.5064-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:48066 "EHLO e6.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1030253AbVINQ2z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Sep 2005 12:28:55 -0400
-Content-Disposition: inline
-In-Reply-To: <1126675366.26050.41.camel@sipan.sipan.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030278AbVINQw1@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.0509141052410.5064-100000@iolanthe.rowland.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Anton Blanchard <anton@samba.org>, James Bottomley <James.Bottomley@SteelEye.com>, Dipankar Sarma <dipankar@in.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Sergey Panov <sipan@sipan.org>
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@SteelEye.com>, Douglas Gilbert <dougg@torque.net>, Christoph Hellwig <hch@infradead.org>, Luben Tuikov <ltuikov@yahoo.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Sep 14, 2005 at 01:22:46AM -0400, Sergey Panov wrote:
-> On Tue, 2005-09-13 at 15:25 -0700, Patrick Mansfield wrote:
-
-> > Not all HBA drivers implement a mapping to a SCSI transport, we have
-> > raid drivers and even an FC driver that has its own lun definition that
-> > does not fit any SAM or SCSI spec.
+Alan Stern wrote:
+> On Wed, 14 Sep 2005, Anton Blanchard wrote:
 > 
-> May I ask you to name those drivers/HBAs, it would be interesting to
-> look at how REPORT_LUN results are interpreted there. Actually, the data
-> from the  REPORT_LUN response is always treated as proper  8 byte LUN
-> and it is converted to int by scsilun_to_int(). What is interesting is
-> how those derivers/HBA treat integer "lun" in queuecommand or EH calls.
-
-I didn't look at raid driver code, I mean they can setup and use luns
-however they want, as they are not following any scsi transport specs.
-
-In drivers/scsi/qla2xxx/qla_iocb.c qla2x00_start_scsi(), it is swapped as
-firmware wants le, and then the firmware has to convert it to a proper 8
-byte LUN:
-
-	cmd_pkt->lun = cpu_to_le16(sp->cmd->device->lun);
-
-(I'm not sure where or how they handle 8 byte LUN for qla24xx per Ravin's
-email).
-
-> > So, we can't have one "LUN" that fits all, and it makes no sense to call
-> > it a LUN when it is really a wtf.
 > 
-> IMHO one 8 byte LUN is better then wtf. I's kinda obvious :)
+>>Hi,
+>>
+>>
+>>>If that's the cause, it's probably a double down of the host scan
+>>>semaphore somewhere in the code.  alt-sysrq-t should work in this case,
+>>>can you get a stack trace of the blocked process?
+>>
+>>It appears to be this patch:
+>>
+>>  [SCSI] SCSI core: fix leakage of scsi_cmnd's
+>>
+>>  From:         Alan Stern <stern@rowland.harvard.edu>
+> 
+> 
+>>And in particular it looks like the scsi_unprep_request in
+>>scsi_queue_insert is causing it. The following patch fixes the boot
+>>problems on the vscsi machine:
+> 
+> 
+> In general the scsi_unprep_request routine is correct and needs to be
+> there.  The one part that might be questionable is the assignment to
+> req->special.  It may turn out that the real solution is to have
+> scsi_execute set req->special to NULL; I assumed it would be NULL already
+> but perhaps I was wrong.
 
-Yes :)
-
--- Patrick Mansfield
+I think we have scsi_execute and friends setting REQ_SPECIAL. This is 
+could cause a problem becuase it does not have a scsi_request.
