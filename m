@@ -1,94 +1,94 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process
- (end devices)
-Date: Wed, 14 Sep 2005 16:17:09 -0400
-Message-ID: <43288545.3090207@adaptec.com>
-References: <1126308304.4799.45.camel@mulgrave>	 <20050910024454.20602.qmail@web51613.mail.yahoo.com>	 <20050911094656.GC5429@infradead.org> <43251D8C.7020409@torque.net>	 <1126537041.4825.28.camel@mulgrave> <20050912164548.GB11455@us.ibm.com>	 <1126545680.4825.40.camel@mulgrave> <20050912184629.GA13489@us.ibm.com>	 <1126639342.4809.53.camel@mulgrave> <4327354E.7090409@adaptec.com>	 <20050913203611.GH32395@parisc-linux.org>	 <1126673844.26050.24.camel@sipan.sipan.org> <1126723396.4588.3.camel@mulgrave>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [2.6.14-rc1] sym scsi boot hang
+Date: Wed, 14 Sep 2005 16:19:45 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0509141610480.8011-100000@iolanthe.rowland.org>
+References: <1126717062.4584.4.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932574AbVINURZ@vger.kernel.org>
-In-Reply-To: <1126723396.4588.3.camel@mulgrave>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Sergey Panov <sipan@sipan.org>, Matthew Wilcox <matthew@wil.cx>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Luben Tuikov <ltuikov@yahoo.com>, Christoph Hellwig <hch@infradead.org>, Douglas Gilbert <dougg@torque.net>, Patrick Mansfield <patmans@us.ibm.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:33972 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S932582AbVINUTt
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Sep 2005 16:19:49 -0400
+In-Reply-To: <1126717062.4584.4.camel@mulgrave>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Anton Blanchard <anton@samba.org>, Dipankar Sarma <dipankar@in.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On 09/14/05 14:43, James Bottomley wrote:
-> On Wed, 2005-09-14 at 00:57 -0400, Sergey Panov wrote: 
-> 
->>Because set of valid LUN id represented by 8 byte combinations is not
->>isomorphic to the set of unsigned int values from 0 to UINT64_MAX. While
-> 
-> 
-> The transformation we're using is an isomorphism that happens to have
-> the important property that single level type 00b LUNs are numerically
-> equal to the legacy uses of the lun value.
-> 
-> 
->>scsilun_to_int() will convert legal LUN id into some integer, the
->>int_to_scsilun() function will not produce legal  LUN id for any
->>arbitrary integer lun value. 
-> 
-> 
-> No that's what I said.  We limit the integer scanned luns to < 256 and
-> use representation 00b
-> 
-> 
->>For example, sequential LUN scanning should be stopped at int lun = 255
->>because result of converting value 256 by int_to_scsilun() will be
->>either illegal(best case) or equivalent to int lun  = 0.
-> 
-> 
-> It is.  That's this bit of the code:
-> 
-> @@ -965,6 +964,13 @@ static void scsi_sequential_lun_scan(str
->                 max_dev_lun = min(8U, max_dev_lun);
->  
->         /*
-> +        * regardless of what parameters we derived above, on no
-> +        * account scan further than SCSI_SCAN_LIMIT_LUNS
-> +        */
-> +       if (max_dev_lun > SCSI_SCAN_LIMIT_LUNS + 1)
-> +               max_dev_lun = SCSI_SCAN_LIMIT_LUNS + 1;
-> +
-> 
-> 
-> 
->>LUN id should be presented to the management layers in a way similar to
->>MAC addresses or FC/SAS/... WWN . E.g. the usual LUN 4  on some FC
->>device will be identified by something like (in 00b, or "Peripheral
->>device addressing"):
->>
->>WWPN = 22:00:00:0c:50:05:df:6d
->>LUN  = 00:04:00:00:00:00:00:00
->>
->>
->>Interestingly enough, the following is also LUN = 4 device, but in a
->>different addressing mode (01b, AKA "Logical unit addressing"):
->>
->>WWPN = 22:00:00:0c:50:05:df:6d
->>LUN  = 40:04:00:00:00:00:00:00
-> 
-> 
-> Firstly, those two LUNs are actually not equivalent (according to SAM-3
-> section 4.9.1) because two luns are defined to be different if expressed
-> in different representations.
-> 
-> Secondly, The idea of using u64 is that all transports that don't use
-> hierarchical LUNs can simply copy the number as they do today.  This
-> idea rests on the assumption that arrays responding to REPORT_LUNS on
-> these transports always reply with type 00b.  This assumption is
-> suggested (but not mandated) in SAM. If they violate this assumption,
-> we'll just reject all the LUNs and I'll get a bug report.
+On Wed, 14 Sep 2005, James Bottomley wrote:
 
-I was actually going to reply to this email and write something
-sensible, but on second thought I see that it would be 
-a _complete_ waste of time, effort and keystrokes.
+> OK, my fault.  Your fix is almost correct .. I was going to do this
+> eventually, honest, because there's no need to unprep and reprep a
+> command that comes in through scsi_queue_insert().
+> 
+> However, I decided to leave it in to exercise the scsi_unprep_request()
+> path just to make sure it was working.  What's happening, I think, is
+> that we also use this path for retries.  Since we kill and reget the
+> command each time, the retries decrement is never seen, so we're
+> retrying forever.
+> 
+> This should be the correct reversal.
 
-  "If they violate this assumption, we'll just reject all the LUNs"
-and
-  "I'll get a bug report"
-tops it all off.
+Then shouldn't you also avoid unprepping and reprepping a command that is
+deferred because the host isn't ready?
 
-	Luben
+And isn't it necessary to make sure that req->special is NULL when
+submitting a special request with no scsi_request, and that
+cmd->sc_request is NULL when associating a command block to a special
+request with no scsi_request?
+
+In short, is this patch needed?
+
+Alan Stern
+
+
+
+Index: usb-2.6/drivers/scsi/scsi_lib.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/scsi_lib.c
++++ usb-2.6/drivers/scsi/scsi_lib.c
+@@ -343,6 +343,7 @@ int scsi_execute(struct scsi_device *sde
+ 	req->sense_len = 0;
+ 	req->timeout = timeout;
+ 	req->flags |= flags | REQ_BLOCK_PC | REQ_SPECIAL | REQ_QUIET;
++	req->special = NULL;
+ 
+ 	/*
+ 	 * head injection *required* here otherwise quiesce won't work
+@@ -1072,9 +1073,6 @@ static int scsi_init_io(struct scsi_cmnd
+ 	printk(KERN_ERR "req nr_sec %lu, cur_nr_sec %u\n", req->nr_sectors,
+ 			req->current_nr_sectors);
+ 
+-	/* release the command and kill it */
+-	scsi_release_buffers(cmd);
+-	scsi_put_command(cmd);
+ 	return BLKPREP_KILL;
+ }
+ 
+@@ -1205,6 +1203,7 @@ static int scsi_prep_fn(struct request_q
+ 				goto defer;
+ 		} else
+ 			cmd = req->special;
++		cmd->sc_request = NULL;
+ 		
+ 		/* pull a tag out of the request if we have one */
+ 		cmd->tag = req->tag;
+@@ -1250,7 +1249,7 @@ static int scsi_prep_fn(struct request_q
+ 		ret = scsi_init_io(cmd);
+ 		switch(ret) {
+ 		case BLKPREP_KILL:
+-			/* BLKPREP_KILL return also releases the command */
++			scsi_unprep_request(req);
+ 			goto kill;
+ 		case BLKPREP_DEFER:
+ 			goto defer;
+@@ -1514,7 +1513,6 @@ static void scsi_request_fn(struct reque
+ 	 * cases (host limits or settings) should run the queue at some
+ 	 * later time.
+ 	 */
+-	scsi_unprep_request(req);
+ 	spin_lock_irq(q->queue_lock);
+ 	blk_requeue_request(q, req);
+ 	sdev->device_busy--;
+
