@@ -1,139 +1,135 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [2.6.14-rc1] sym scsi boot hang
-Date: Wed, 14 Sep 2005 11:49:47 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0509141052410.5064-100000@iolanthe.rowland.org>
-References: <20050914080629.GB19051@krispykreme>
+Subject: Re: [PATCH 1/2] fix EH thread teardown
+Date: Wed, 14 Sep 2005 12:24:24 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0509141222420.5064-100000@iolanthe.rowland.org>
+References: <20050913190536.GA26985@lst.de>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030202AbVINPtt@vger.kernel.org>
-In-Reply-To: <20050914080629.GB19051@krispykreme>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Anton Blanchard <anton@samba.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Dipankar Sarma <dipankar@in.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:51676 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP
+	id S1030246AbVINQY0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Sep 2005 12:24:26 -0400
+In-Reply-To: <20050913190536.GA26985@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Rolf Eike Beer <eike-kernel@sf-tec.de>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, 14 Sep 2005, Anton Blanchard wrote:
+On Tue, 13 Sep 2005, Christoph Hellwig wrote:
 
-> Hi,
-> 
-> > If that's the cause, it's probably a double down of the host scan
-> > semaphore somewhere in the code.  alt-sysrq-t should work in this case,
-> > can you get a stack trace of the blocked process?
-> 
-> It appears to be this patch:
-> 
->   [SCSI] SCSI core: fix leakage of scsi_cmnd's
-> 
->   From:         Alan Stern <stern@rowland.harvard.edu>
-
-> And in particular it looks like the scsi_unprep_request in
-> scsi_queue_insert is causing it. The following patch fixes the boot
-> problems on the vscsi machine:
-
-In general the scsi_unprep_request routine is correct and needs to be
-there.  The one part that might be questionable is the assignment to
-req->special.  It may turn out that the real solution is to have
-scsi_execute set req->special to NULL; I assumed it would be NULL already
-but perhaps I was wrong.
-
-(James, I see a possible problem with scsi_insert_special_req.  It adds to
-the queue a request with REQ_DONTPREP set.  How can such a request, with
-no associated scsi_cmnd, ever work?  Also, won't scsi_end_request and 
-__scsi_release_request end up putting the same scsi_command twice?)
-
-Here is a patch that addresses the first problem and fixes up a few other
-loose ends.  Please see if it helps.
-
+> I don't think we even need the waitque, a wake_up_process can replace
+> it when there's only a single process waiting on it ever.  Similarly
+> we don't need eh_alive - EH must be alive after scsi_add_host returned,
+> and no command may be in flight before that.
+        
+Okay, how do you like this patch instead?  I haven't tested it yet.
+  
 Alan Stern
 
 
 
-Index: usb-2.6/drivers/scsi/scsi_lib.c
+Index: usb-2.6/drivers/scsi/scsi_error.c
 ===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_lib.c
-+++ usb-2.6/drivers/scsi/scsi_lib.c
-@@ -116,7 +116,13 @@ static void scsi_unprep_request(struct r
- 	struct scsi_cmnd *cmd = req->special;
+--- usb-2.6.orig/drivers/scsi/scsi_error.c
++++ usb-2.6/drivers/scsi/scsi_error.c
+@@ -50,7 +50,7 @@
+ void scsi_eh_wakeup(struct Scsi_Host *shost)
+ {
+ 	if (shost->host_busy == shost->host_failed) {
+-		up(shost->eh_wait);
++		wake_up_process(shost->ehandler);
+ 		SCSI_LOG_ERROR_RECOVERY(5,
+ 				printk("Waking error handler thread\n"));
+ 	}
+@@ -69,9 +69,6 @@ int scsi_eh_scmd_add(struct scsi_cmnd *s
+ 	struct Scsi_Host *shost = scmd->device->host;
+ 	unsigned long flags;
  
- 	req->flags &= ~REQ_DONTPREP;
--	req->special = (req->flags & REQ_SPECIAL) ? cmd->sc_request : NULL;
-+	req->special = NULL;
-+	if (req->flags & REQ_SPECIAL) {
-+		struct scsi_request *sreq = cmd->sc_request;
+-	if (shost->eh_wait == NULL)
+-		return 0;
+-
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 
+ 	scmd->eh_eflags |= eh_flag;
+@@ -1582,37 +1579,33 @@ int scsi_error_handler(void *data)
+ {
+ 	struct Scsi_Host *shost = (struct Scsi_Host *) data;
+ 	int rtn;
+-	DECLARE_MUTEX_LOCKED(sem);
+ 
+ 	current->flags |= PF_NOFREEZE;
+-	shost->eh_wait = &sem;
+-
+-	/*
+-	 * Wake up the thread that created us.
+-	 */
+-	SCSI_LOG_ERROR_RECOVERY(3, printk("Wake up parent of"
+-					  " scsi_eh_%d\n",shost->host_no));
+ 
+ 	while (1) {
+-		/*
+-		 * If we get a signal, it means we are supposed to go
+-		 * away and die.  This typically happens if the user is
+-		 * trying to unload a module.
+-		 */
+ 		SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler"
+ 						  " scsi_eh_%d"
+ 						  " sleeping\n",shost->host_no));
+ 
+ 		/*
+-		 * Note - we always use down_interruptible with the semaphore
+-		 * even if the module was loaded as part of the kernel.  The
+-		 * reason is that down() will cause this thread to be counted
+-		 * in the load average as a running process, and down
+-		 * interruptible doesn't.  Given that we need to allow this
+-		 * thread to die if the driver was loaded as a module, using
+-		 * semaphores isn't unreasonable.
+-		 */
+-		down_interruptible(&sem);
++		 * Note - we always use TASK_INTERRUPTIBLE even if the
++		 * module was loaded as part of the kernel.  The reason
++		 * is that UNINTERRUPTIBLE would cause this thread to be
++		 * counted in the load average as a running process, and
++		 * an interruptible wait doesn't.
++		 */
++		for (;;) {
++			set_current_state(TASK_INTERRUPTIBLE);
++			if (shost->host_busy == shost->host_failed ||
++					kthread_should_stop()) {
++				set_current_state(TASK_RUNNING);
++				break;
++			}
 +
-+		if (sreq->sr_magic == SCSI_REQ_MAGIC)
-+			req->special = sreq;
-+	}
++			/* Even though we are INTERRUPTIBLE, ignore signals */
++			flush_signals(current);
++			schedule();
++		}
+ 		if (kthread_should_stop())
+ 			break;
  
- 	scsi_release_buffers(cmd);
- 	scsi_put_command(cmd);
-@@ -343,6 +349,7 @@ int scsi_execute(struct scsi_device *sde
- 	req->sense_len = 0;
- 	req->timeout = timeout;
- 	req->flags |= flags | REQ_BLOCK_PC | REQ_SPECIAL | REQ_QUIET;
-+	req->special = NULL;
+@@ -1648,10 +1641,6 @@ int scsi_error_handler(void *data)
+ 	SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler scsi_eh_%d"
+ 					  " exiting\n",shost->host_no));
  
- 	/*
- 	 * head injection *required* here otherwise quiesce won't work
-@@ -1072,9 +1079,6 @@ static int scsi_init_io(struct scsi_cmnd
- 	printk(KERN_ERR "req nr_sec %lu, cur_nr_sec %u\n", req->nr_sectors,
- 			req->current_nr_sectors);
- 
--	/* release the command and kill it */
--	scsi_release_buffers(cmd);
--	scsi_put_command(cmd);
- 	return BLKPREP_KILL;
+-	/*
+-	 * Make sure that nobody tries to wake us up again.
+-	 */
+-	shost->eh_wait = NULL;
+ 	return 0;
  }
  
-@@ -1176,13 +1180,13 @@ static int scsi_prep_fn(struct request_q
- 	if (req->flags & REQ_SPECIAL && req->special) {
- 		struct scsi_request *sreq = req->special;
+Index: usb-2.6/include/scsi/scsi_host.h
+===================================================================
+--- usb-2.6.orig/include/scsi/scsi_host.h
++++ usb-2.6/include/scsi/scsi_host.h
+@@ -465,8 +465,6 @@ struct Scsi_Host {
  
--		if (sreq->sr_magic == SCSI_REQ_MAGIC) {
--			cmd = scsi_get_command(sreq->sr_device, GFP_ATOMIC);
--			if (unlikely(!cmd))
--				goto defer;
--			scsi_init_cmd_from_req(cmd, sreq);
--		} else
--			cmd = req->special;
-+		if (sreq->sr_magic != SCSI_REQ_MAGIC)
-+			printk(KERN_ERR "invalid sr_magic in %s\n",
-+					__FUNCTION__);
-+		cmd = scsi_get_command(sreq->sr_device, GFP_ATOMIC);
-+		if (unlikely(!cmd))
-+			goto defer;
-+		scsi_init_cmd_from_req(cmd, sreq);
- 	} else if (req->flags & (REQ_CMD | REQ_BLOCK_PC)) {
- 
- 		if(unlikely(specials_only) && !(req->flags & REQ_SPECIAL)) {
-@@ -1194,17 +1198,14 @@ static int scsi_prep_fn(struct request_q
- 			       sdev->host->host_no, sdev->id, sdev->lun);
- 			goto kill;
- 		}
--			
- 			
- 		/*
- 		 * Now try and find a command block that we can use.
- 		 */
--		if (!req->special) {
--			cmd = scsi_get_command(sdev, GFP_ATOMIC);
--			if (unlikely(!cmd))
--				goto defer;
--		} else
--			cmd = req->special;
-+		cmd = scsi_get_command(sdev, GFP_ATOMIC);
-+		if (unlikely(!cmd))
-+			goto defer;
-+		cmd->sc_request = NULL;
- 		
- 		/* pull a tag out of the request if we have one */
- 		cmd->tag = req->tag;
-@@ -1250,7 +1251,7 @@ static int scsi_prep_fn(struct request_q
- 		ret = scsi_init_io(cmd);
- 		switch(ret) {
- 		case BLKPREP_KILL:
--			/* BLKPREP_KILL return also releases the command */
-+			scsi_unprep_request(req);
- 			goto kill;
- 		case BLKPREP_DEFER:
- 			goto defer;
+ 	struct list_head	eh_cmd_q;
+ 	struct task_struct    * ehandler;  /* Error recovery thread. */
+-	struct semaphore      * eh_wait;   /* The error recovery thread waits
+-					      on this. */
+ 	struct semaphore      * eh_action; /* Wait for specific actions on the
+                                           host. */
+ 	unsigned int            eh_active:1; /* Indicates the eh thread is awake and active if
+
