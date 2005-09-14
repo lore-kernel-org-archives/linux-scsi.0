@@ -1,94 +1,47 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [2.6.14-rc1] sym scsi boot hang
-Date: Wed, 14 Sep 2005 16:19:45 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0509141610480.8011-100000@iolanthe.rowland.org>
-References: <1126717062.4584.4.camel@mulgrave>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process
+ (end devices)
+Date: Wed, 14 Sep 2005 16:20:48 -0400
+Message-ID: <43288620.2070302@adaptec.com>
+References: <20050910024454.20602.qmail@web51613.mail.yahoo.com>	 <1126368081.4813.46.camel@mulgrave> <4325997D.3050103@adaptec.com>	 <20050912162739.GA11455@us.ibm.com> <4326964B.9010503@torque.net>	 <20050913224215.GB1308@us.ibm.com> <1126723680.4588.9.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:33972 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S932582AbVINUTt
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Sep 2005 16:19:49 -0400
-In-Reply-To: <1126717062.4584.4.camel@mulgrave>
+Received: from magic.adaptec.com ([216.52.22.17]:42657 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932560AbVINUUz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Sep 2005 16:20:55 -0400
+In-Reply-To: <1126723680.4588.9.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Anton Blanchard <anton@samba.org>, Dipankar Sarma <dipankar@in.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Douglas Gilbert <dougg@torque.net>, ltuikov@yahoo.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 14 Sep 2005, James Bottomley wrote:
-
-> OK, my fault.  Your fix is almost correct .. I was going to do this
-> eventually, honest, because there's no need to unprep and reprep a
-> command that comes in through scsi_queue_insert().
+On 09/14/05 14:47, James Bottomley wrote:
+> On Tue, 2005-09-13 at 15:42 -0700, Patrick Mansfield wrote:
 > 
-> However, I decided to leave it in to exercise the scsi_unprep_request()
-> path just to make sure it was working.  What's happening, I think, is
-> that we also use this path for retries.  Since we kill and reget the
-> command each time, the retries decrement is never seen, so we're
-> retrying forever.
+>>So adding a W_LUN at this point does not add any value ... maybe it looks
+>>nice in the spec and in someones firmware, but it does not add anything
+>>that I can see.
 > 
-> This should be the correct reversal.
+> 
+> Well I agree with the analysis, but even given that, we have a linux
+> implementation problem: We have to get an inquiry response first before
+> we begin a report luns scan.  An array implementing a W_LUN is entitled
+> not respond on LUN 0 to INQUIRY with an error, which would mean we don't
+> see it.
+> 
+> Therefore, I think our strategy has to be when the current probe fails
+> because of no LUN 0 try a report luns scan on the W_LUN anyway as long
+> as the transport indicates it is capable of supporting it (i.e. as long
+> as it has max_luns set at 0xffff or higher).
 
-Then shouldn't you also avoid unprepping and reprepping a command that is
-deferred because the host isn't ready?
+Alternatively, you can see how this is all properly implemented
+in the SAS Layer which I posted last week.
 
-And isn't it necessary to make sure that req->special is NULL when
-submitting a special request with no scsi_request, and that
-cmd->sc_request is NULL when associating a command block to a special
-request with no scsi_request?
+All indications point to the fact that you had indeed taken
+a look at the code.
 
-In short, is this patch needed?
-
-Alan Stern
-
-
-
-Index: usb-2.6/drivers/scsi/scsi_lib.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_lib.c
-+++ usb-2.6/drivers/scsi/scsi_lib.c
-@@ -343,6 +343,7 @@ int scsi_execute(struct scsi_device *sde
- 	req->sense_len = 0;
- 	req->timeout = timeout;
- 	req->flags |= flags | REQ_BLOCK_PC | REQ_SPECIAL | REQ_QUIET;
-+	req->special = NULL;
- 
- 	/*
- 	 * head injection *required* here otherwise quiesce won't work
-@@ -1072,9 +1073,6 @@ static int scsi_init_io(struct scsi_cmnd
- 	printk(KERN_ERR "req nr_sec %lu, cur_nr_sec %u\n", req->nr_sectors,
- 			req->current_nr_sectors);
- 
--	/* release the command and kill it */
--	scsi_release_buffers(cmd);
--	scsi_put_command(cmd);
- 	return BLKPREP_KILL;
- }
- 
-@@ -1205,6 +1203,7 @@ static int scsi_prep_fn(struct request_q
- 				goto defer;
- 		} else
- 			cmd = req->special;
-+		cmd->sc_request = NULL;
- 		
- 		/* pull a tag out of the request if we have one */
- 		cmd->tag = req->tag;
-@@ -1250,7 +1249,7 @@ static int scsi_prep_fn(struct request_q
- 		ret = scsi_init_io(cmd);
- 		switch(ret) {
- 		case BLKPREP_KILL:
--			/* BLKPREP_KILL return also releases the command */
-+			scsi_unprep_request(req);
- 			goto kill;
- 		case BLKPREP_DEFER:
- 			goto defer;
-@@ -1514,7 +1513,6 @@ static void scsi_request_fn(struct reque
- 	 * cases (host limits or settings) should run the queue at some
- 	 * later time.
- 	 */
--	scsi_unprep_request(req);
- 	spin_lock_irq(q->queue_lock);
- 	blk_requeue_request(q, req);
- 	sdev->device_busy--;
+	Luben
 
