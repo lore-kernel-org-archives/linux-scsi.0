@@ -1,58 +1,40 @@
-From: Anton Blanchard <anton@samba.org>
-Subject: Re: [2.6.14-rc1] sym scsi boot hang
-Date: Wed, 14 Sep 2005 18:06:29 +1000
-Message-ID: <20050914080629.GB19051@krispykreme>
-References: <20050913124804.GA5008@in.ibm.com> <20050913131739.GD26162@krispykreme> <20050913142939.GE26162@krispykreme> <1126629345.4809.36.camel@mulgrave>
+From: Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: [RESEND][PATCH 2.6.14-rc1] scsi: sd, sr, st, and scsi_lib all
+ fail to copy cmd_len to new cmd
+Date: Wed, 14 Sep 2005 11:57:47 +0200
+Message-ID: <4327F41B.6080008@gmail.com>
+References: <CA45571DE57E1C45BF3552118BA92C9D69BDE9@WDSCEXBECL03.sc.wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932687AbVINIgj@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1126629345.4809.36.camel@mulgrave>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Dipankar Sarma <dipankar@in.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, stern@rowland.harvard.edu
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wscnet.wsc.cz ([212.80.64.118]:30599 "EHLO wscnet.wsc.cz")
+	by vger.kernel.org with ESMTP id S965131AbVINJ6N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Sep 2005 05:58:13 -0400
+In-Reply-To: <CA45571DE57E1C45BF3552118BA92C9D69BDE9@WDSCEXBECL03.sc.wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Timothy Thelin <Timothy.Thelin@wdc.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Mike Christie <michaelc@cs.wisc.edu>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
- 
-Hi,
+Timothy Thelin napsal(a):
 
-> If that's the cause, it's probably a double down of the host scan
-> semaphore somewhere in the code.  alt-sysrq-t should work in this case,
-> can you get a stack trace of the blocked process?
+>Sorry it wrapped.  It's now an attachment.
+>
+>This fixes an issue in scsi command initialization from a request
+>where sd, sr, st, and scsi_lib all fail to copy the request's
+>cmd_len to the scsi command's cmd_len field.
+>
+>Signed-off-by: Timothy Thelin <timothy.thelin@wdc.com>
+>  
+>
+Mime is hell, include patch in e-mail's body, please.
 
-It appears to be this patch:
+thanks,
 
-  [SCSI] SCSI core: fix leakage of scsi_cmnd's
+-- 
+Jiri Slaby         www.fi.muni.cz/~xslaby
+~\-/~      jirislaby@gmail.com      ~\-/~
+241B347EC88228DE51EE A49C4A73A25004CB2A10
 
-  From:         Alan Stern <stern@rowland.harvard.edu>
-
-  This patch (as559b) adds a new routine, scsi_unprep_request, which
-  gets called every place a request is requeued.  (That includes
-  scsi_queue_insert as well as scsi_requeue_command.)  It also changes
-  scsi_kill_requests to make it call __scsi_done with result equal to
-  DID_NO_CONNECT << 16.  (I'm not sure if it's necessary to call
-  scsi_init_cmd_errh here; maybe you can check on that.)  Finally, the
-  patch changes the return value from scsi_end_request, to avoid
-  returning a stale pointer in the case where the request was requeued.
-  Fortunately the return value is used in only place, and the change
-  actually simplified it.
-
-
-And in particular it looks like the scsi_unprep_request in
-scsi_queue_insert is causing it. The following patch fixes the boot
-problems on the vscsi machine:
-
-
-Index: build/drivers/scsi/scsi_lib.c
-===================================================================
---- build.orig/drivers/scsi/scsi_lib.c	2005-09-14 18:23:34.000000000 +1000
-+++ build/drivers/scsi/scsi_lib.c	2005-09-14 18:27:33.000000000 +1000
-@@ -188,7 +188,7 @@
- 	 * function.  The SCSI request function detects the blocked condition
- 	 * and plugs the queue appropriately.
-          */
--	scsi_unprep_request(req);
-+	//scsi_unprep_request(req);
- 	spin_lock_irqsave(q->queue_lock, flags);
- 	blk_requeue_request(q, req);
- 	spin_unlock_irqrestore(q->queue_lock, flags);
