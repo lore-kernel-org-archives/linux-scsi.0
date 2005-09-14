@@ -1,70 +1,57 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [2.6.14-rc1] sym scsi boot hang
-Date: Wed, 14 Sep 2005 12:57:42 -0400
-Message-ID: <1126717062.4584.4.camel@mulgrave>
-References: <20050913124804.GA5008@in.ibm.com>
-	 <20050913131739.GD26162@krispykreme> <20050913142939.GE26162@krispykreme>
-	 <1126629345.4809.36.camel@mulgrave>  <20050914080629.GB19051@krispykreme>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [Bugme-new] [Bug 5244] New: HW RAID1 detected as zero size dr
+ ive
+Date: Wed, 14 Sep 2005 12:35:48 -0700
+Message-ID: <20050914123548.38b6b56a.akpm@osdl.org>
+References: <0E3FA95632D6D047BA649F95DAB60E5703662B32@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:53729 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S964803AbVINTdw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Sep 2005 15:33:52 -0400
-In-Reply-To: <20050914080629.GB19051@krispykreme>
+Received: from smtp.osdl.org ([65.172.181.4]:58345 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932300AbVINTgb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Sep 2005 15:36:31 -0400
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703662B32@exa-atlanta>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anton Blanchard <anton@samba.org>
-Cc: Dipankar Sarma <dipankar@in.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, stern@rowland.harvard.edu
+To: "Ju, Seokmann" <sju@lsil.com>
+Cc: linux-scsi@vger.kernel.org, sreenib@lsil.com, bugme-daemon@kernel-bugs.osdl.org
 
-On Wed, 2005-09-14 at 18:06 +1000, Anton Blanchard wrote:
-> And in particular it looks like the scsi_unprep_request in
-> scsi_queue_insert is causing it. The following patch fixes the boot
-> problems on the vscsi machine:
+"Ju, Seokmann" <sju@lsil.com> wrote:
+>
+> > On Tuesday, September 13, 2005 7:55 PM, Andrew Morton wrote:
+> > > Could whoever maintains the megaraid driver(s) please submit 
+> > > a MANTAINERS
+> > > patch?
+> > > 
+> > > It broke in 2.6.14-rc1.
+> > I'm checking out 2.6.14-rc1, right now. The patch will be 
+> > submitted soon.
+> I've compiled the kernel and created bzImage and initrd.
+> When I reboot the system with 2.6.14-rc1, I'm getting panic without any
+> meaningful messages.
 
-OK, my fault.  Your fix is almost correct .. I was going to do this
-eventually, honest, because there's no need to unprep and reprep a
-command that comes in through scsi_queue_insert().
+It's unusual to get a panic with no messages which explain the reason for
+the panic.  We'd need to get additional info about that panic to proceed
+any further.
 
-However, I decided to leave it in to exercise the scsi_unprep_request()
-path just to make sure it was working.  What's happening, I think, is
-that we also use this path for retries.  Since we kill and reget the
-command each time, the retries decrement is never seen, so we're
-retrying forever.
+You may need to double-check the .config - sometimes `make oldconfig'
+doesn't quite do the right thing, especially if the old config file isn't
+very recent.
 
-This should be the correct reversal.
+If you're on x86_64 you may need this:
 
-James
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -140,14 +140,12 @@ static void scsi_unprep_request(struct r
-  *              commands.
-  * Notes:       This could be called either from an interrupt context or a
-  *              normal process context.
-- * Notes:	Upon return, cmd is a stale pointer.
-  */
- int scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
- {
- 	struct Scsi_Host *host = cmd->device->host;
- 	struct scsi_device *device = cmd->device;
- 	struct request_queue *q = device->request_queue;
--	struct request *req = cmd->request;
- 	unsigned long flags;
- 
- 	SCSI_LOG_MLQUEUE(1,
-@@ -188,9 +186,8 @@ int scsi_queue_insert(struct scsi_cmnd *
- 	 * function.  The SCSI request function detects the blocked condition
- 	 * and plugs the queue appropriately.
-          */
--	scsi_unprep_request(req);
- 	spin_lock_irqsave(q->queue_lock, flags);
--	blk_requeue_request(q, req);
-+	blk_requeue_request(q, cmd->request);
- 	spin_unlock_irqrestore(q->queue_lock, flags);
- 
- 	scsi_run_queue(q);
-
+--- devel/mm/slab.c~fix-slab-bug-due-to-change-in-array-cache-size	2005-09-14 11:54:18.000000000 -0700
++++ devel-akpm/mm/slab.c	2005-09-14 11:54:18.000000000 -0700
+@@ -659,7 +659,7 @@ static inline kmem_cache_t *__find_gener
+  	* kmem_cache_create(), or __kmalloc(), before
+  	* the generic caches are initialized.
+  	*/
+-	BUG_ON(csizep->cs_cachep == NULL);
++	BUG_ON(malloc_sizes[INDEX_AC].cs_cachep == NULL);
+ #endif
+ 	while (size > csizep->cs_size)
+ 		csizep++;
+_
 
