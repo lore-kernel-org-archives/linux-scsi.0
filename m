@@ -1,135 +1,52 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 1/2] fix EH thread teardown
-Date: Wed, 14 Sep 2005 12:24:24 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0509141222420.5064-100000@iolanthe.rowland.org>
-References: <20050913190536.GA26985@lst.de>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process (end devices)
+Date: Wed, 14 Sep 2005 09:28:35 -0700
+Message-ID: <20050914162835.GA9409@us.ibm.com>
+References: <1126537041.4825.28.camel@mulgrave> <20050912164548.GB11455@us.ibm.com> <1126545680.4825.40.camel@mulgrave> <20050912184629.GA13489@us.ibm.com> <1126639342.4809.53.camel@mulgrave> <4327354E.7090409@adaptec.com> <20050913203611.GH32395@parisc-linux.org> <43273E6C.9050807@adaptec.com> <20050913222519.GA1308@us.ibm.com> <1126675366.26050.41.camel@sipan.sipan.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:51676 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP
-	id S1030246AbVINQY0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Sep 2005 12:24:26 -0400
-In-Reply-To: <20050913190536.GA26985@lst.de>
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:48066 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1030253AbVINQ2z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Sep 2005 12:28:55 -0400
+Content-Disposition: inline
+In-Reply-To: <1126675366.26050.41.camel@sipan.sipan.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Rolf Eike Beer <eike-kernel@sf-tec.de>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Sergey Panov <sipan@sipan.org>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@SteelEye.com>, Douglas Gilbert <dougg@torque.net>, Christoph Hellwig <hch@infradead.org>, Luben Tuikov <ltuikov@yahoo.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 13 Sep 2005, Christoph Hellwig wrote:
+On Wed, Sep 14, 2005 at 01:22:46AM -0400, Sergey Panov wrote:
+> On Tue, 2005-09-13 at 15:25 -0700, Patrick Mansfield wrote:
 
-> I don't think we even need the waitque, a wake_up_process can replace
-> it when there's only a single process waiting on it ever.  Similarly
-> we don't need eh_alive - EH must be alive after scsi_add_host returned,
-> and no command may be in flight before that.
-        
-Okay, how do you like this patch instead?  I haven't tested it yet.
-  
-Alan Stern
+> > Not all HBA drivers implement a mapping to a SCSI transport, we have
+> > raid drivers and even an FC driver that has its own lun definition that
+> > does not fit any SAM or SCSI spec.
+> 
+> May I ask you to name those drivers/HBAs, it would be interesting to
+> look at how REPORT_LUN results are interpreted there. Actually, the data
+> from the  REPORT_LUN response is always treated as proper  8 byte LUN
+> and it is converted to int by scsilun_to_int(). What is interesting is
+> how those derivers/HBA treat integer "lun" in queuecommand or EH calls.
 
+I didn't look at raid driver code, I mean they can setup and use luns
+however they want, as they are not following any scsi transport specs.
 
+In drivers/scsi/qla2xxx/qla_iocb.c qla2x00_start_scsi(), it is swapped as
+firmware wants le, and then the firmware has to convert it to a proper 8
+byte LUN:
 
-Index: usb-2.6/drivers/scsi/scsi_error.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_error.c
-+++ usb-2.6/drivers/scsi/scsi_error.c
-@@ -50,7 +50,7 @@
- void scsi_eh_wakeup(struct Scsi_Host *shost)
- {
- 	if (shost->host_busy == shost->host_failed) {
--		up(shost->eh_wait);
-+		wake_up_process(shost->ehandler);
- 		SCSI_LOG_ERROR_RECOVERY(5,
- 				printk("Waking error handler thread\n"));
- 	}
-@@ -69,9 +69,6 @@ int scsi_eh_scmd_add(struct scsi_cmnd *s
- 	struct Scsi_Host *shost = scmd->device->host;
- 	unsigned long flags;
- 
--	if (shost->eh_wait == NULL)
--		return 0;
--
- 	spin_lock_irqsave(shost->host_lock, flags);
- 
- 	scmd->eh_eflags |= eh_flag;
-@@ -1582,37 +1579,33 @@ int scsi_error_handler(void *data)
- {
- 	struct Scsi_Host *shost = (struct Scsi_Host *) data;
- 	int rtn;
--	DECLARE_MUTEX_LOCKED(sem);
- 
- 	current->flags |= PF_NOFREEZE;
--	shost->eh_wait = &sem;
--
--	/*
--	 * Wake up the thread that created us.
--	 */
--	SCSI_LOG_ERROR_RECOVERY(3, printk("Wake up parent of"
--					  " scsi_eh_%d\n",shost->host_no));
- 
- 	while (1) {
--		/*
--		 * If we get a signal, it means we are supposed to go
--		 * away and die.  This typically happens if the user is
--		 * trying to unload a module.
--		 */
- 		SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler"
- 						  " scsi_eh_%d"
- 						  " sleeping\n",shost->host_no));
- 
- 		/*
--		 * Note - we always use down_interruptible with the semaphore
--		 * even if the module was loaded as part of the kernel.  The
--		 * reason is that down() will cause this thread to be counted
--		 * in the load average as a running process, and down
--		 * interruptible doesn't.  Given that we need to allow this
--		 * thread to die if the driver was loaded as a module, using
--		 * semaphores isn't unreasonable.
--		 */
--		down_interruptible(&sem);
-+		 * Note - we always use TASK_INTERRUPTIBLE even if the
-+		 * module was loaded as part of the kernel.  The reason
-+		 * is that UNINTERRUPTIBLE would cause this thread to be
-+		 * counted in the load average as a running process, and
-+		 * an interruptible wait doesn't.
-+		 */
-+		for (;;) {
-+			set_current_state(TASK_INTERRUPTIBLE);
-+			if (shost->host_busy == shost->host_failed ||
-+					kthread_should_stop()) {
-+				set_current_state(TASK_RUNNING);
-+				break;
-+			}
-+
-+			/* Even though we are INTERRUPTIBLE, ignore signals */
-+			flush_signals(current);
-+			schedule();
-+		}
- 		if (kthread_should_stop())
- 			break;
- 
-@@ -1648,10 +1641,6 @@ int scsi_error_handler(void *data)
- 	SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler scsi_eh_%d"
- 					  " exiting\n",shost->host_no));
- 
--	/*
--	 * Make sure that nobody tries to wake us up again.
--	 */
--	shost->eh_wait = NULL;
- 	return 0;
- }
- 
-Index: usb-2.6/include/scsi/scsi_host.h
-===================================================================
---- usb-2.6.orig/include/scsi/scsi_host.h
-+++ usb-2.6/include/scsi/scsi_host.h
-@@ -465,8 +465,6 @@ struct Scsi_Host {
- 
- 	struct list_head	eh_cmd_q;
- 	struct task_struct    * ehandler;  /* Error recovery thread. */
--	struct semaphore      * eh_wait;   /* The error recovery thread waits
--					      on this. */
- 	struct semaphore      * eh_action; /* Wait for specific actions on the
-                                           host. */
- 	unsigned int            eh_active:1; /* Indicates the eh thread is awake and active if
+	cmd_pkt->lun = cpu_to_le16(sp->cmd->device->lun);
 
+(I'm not sure where or how they handle 8 byte LUN for qla24xx per Ravin's
+email).
+
+> > So, we can't have one "LUN" that fits all, and it makes no sense to call
+> > it a LUN when it is really a wtf.
+> 
+> IMHO one 8 byte LUN is better then wtf. I's kinda obvious :)
+
+Yes :)
+
+-- Patrick Mansfield
