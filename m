@@ -1,35 +1,70 @@
-From: "Gabriel Langford" <nnmlinux-kernel-owner@vger.kernel.org>
-Subject: Astounding Funding with options.
-Date: Wed, 14 Sep 2005 00:59:07 -0500
-Message-ID: <19011.gH67FuOVX__272.192879538302$1126674036$gmane$org@211.243.235.103>
+From: Sergey Panov <sipan@sipan.org>
+Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process
+	(end devices)
+Date: Wed, 14 Sep 2005 01:22:46 -0400
+Message-ID: <1126675366.26050.41.camel@sipan.sipan.org>
+References: <20050911094656.GC5429@infradead.org>
+	 <43251D8C.7020409@torque.net> <1126537041.4825.28.camel@mulgrave>
+	 <20050912164548.GB11455@us.ibm.com> <1126545680.4825.40.camel@mulgrave>
+	 <20050912184629.GA13489@us.ibm.com> <1126639342.4809.53.camel@mulgrave>
+	 <4327354E.7090409@adaptec.com> <20050913203611.GH32395@parisc-linux.org>
+	 <43273E6C.9050807@adaptec.com>  <20050913222519.GA1308@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:25829 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S965002AbVINE7T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Sep 2005 00:59:19 -0400
-Content-language: en
-Content-disposition: inline
+Received: from rwcrmhc14.comcast.net ([216.148.227.89]:44784 "EHLO
+	rwcrmhc12.comcast.net") by vger.kernel.org with ESMTP
+	id S965022AbVINF4k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Sep 2005 01:56:40 -0400
+In-Reply-To: <20050913222519.GA1308@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel-owner@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@SteelEye.com>, Douglas Gilbert <dougg@torque.net>, Christoph Hellwig <hch@infradead.org>, Luben Tuikov <ltuikov@yahoo.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hows it going?
+On Tue, 2005-09-13 at 15:25 -0700, Patrick Mansfield wrote:
+> On Tue, Sep 13, 2005 at 05:02:36PM -0400, Luben Tuikov wrote:
+> > On 09/13/05 16:36, Matthew Wilcox wrote:
+> > > On Tue, Sep 13, 2005 at 04:23:42PM -0400, Luben Tuikov wrote:
+> > > 
+> > >>A SCSI LUN is not "u64 lun", it has never been and it will
+> > >>never be.
+> > >>
+> > >>A SCSI LUN is "u8 LUN[8]" -- it is this from the Application
+> > >>Layer down to the _transport layer_ (if you cared to look at
+> > >>_any_ LL transport).
+> 
+> Not all HBA drivers implement a mapping to a SCSI transport, we have
+> raid drivers and even an FC driver that has its own lun definition that
+> does not fit any SAM or SCSI spec.
 
-Homeowner
+May I ask you to name those drivers/HBAs, it would be interesting to
+look at how REPORT_LUN results are interpreted there. Actually, the data
+from the  REPORT_LUN response is always treated as proper  8 byte LUN
+and it is converted to int by scsilun_to_int(). What is interesting is
+how those derivers/HBA treat integer "lun" in queuecommand or EH calls.
 
-You have been pre-approved for a $488,926 Home Loan at a Introductory APR of 3.44%
-This offer is being extended to you unconditionally and your credit is in no way a factor.
+> I think the only HBA's today that can handle an 8 byte lun are lpfc and
+> iscsi (plus new SAS ones).
 
-To take Advantage of this Limited Time opportunity
+I am not aware of any SCSI/FC/SAS/etc hardware which uses more then just
+first two bytes, but all drivers I looked at to proper bytes
+rearrangement for those two bytes, and, as a result they do support 00b
+and 01b addressing modes.  
 
-All we ask is that you visit our Website and complete
-The 1 minute post Approval Form
+> So, we can't have one "LUN" that fits all, and it makes no sense to call
+> it a LUN when it is really a wtf.
 
-http://deoT.telopsis.com/?ra=s1250
+IMHO one 8 byte LUN is better then wtf. I's kinda obvious :)
 
-Chat Later,
+Sergey Panov
 
-Gabriel Langford
+========================================================================
+Any opinions are personal and not necessarily those of my former,
+present, or future employers.
+
+
+
+
+
