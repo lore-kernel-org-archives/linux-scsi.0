@@ -1,41 +1,70 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: proposed update to scsi_id needing review
-Date: Wed, 14 Sep 2005 20:24:47 +0200
-Message-ID: <20050914182447.GB16796@vrfy.org>
-References: <C2EEB4E538D3DC48BF57F391F422779321AC87@SRMANNING.eng.emc.com> <20050914175548.GA20981@aracnet.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [2.6.14-rc1] sym scsi boot hang
+Date: Wed, 14 Sep 2005 12:57:42 -0400
+Message-ID: <1126717062.4584.4.camel@mulgrave>
+References: <20050913124804.GA5008@in.ibm.com>
+	 <20050913131739.GD26162@krispykreme> <20050913142939.GE26162@krispykreme>
+	 <1126629345.4809.36.camel@mulgrave>  <20050914080629.GB19051@krispykreme>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from soundwarez.org ([217.160.171.123]:39332 "EHLO soundwarez.org")
-	by vger.kernel.org with ESMTP id S932538AbVINSYv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Sep 2005 14:24:51 -0400
-Content-Disposition: inline
-In-Reply-To: <20050914175548.GA20981@aracnet.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:53729 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964803AbVINTdw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Sep 2005 15:33:52 -0400
+In-Reply-To: <20050914080629.GB19051@krispykreme>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'patman@aracnet.com'" <patman@aracnet.com>
-Cc: "goggin, edward" <egoggin@emc.com>, greg@kroah.com, "'linux-hotplug-devel@lists.sourceforge.net'" <linux-hotplug-devel@lists.sourceforge.net>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, christophe.varoqui@free.fr
+To: Anton Blanchard <anton@samba.org>
+Cc: Dipankar Sarma <dipankar@in.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, stern@rowland.harvard.edu
 
-On Wed, Sep 14, 2005 at 10:55:48AM -0700, 'patman@aracnet.com' wrote:
-> On Tue, Sep 13, 2005 at 12:48:43PM -0400, goggin, edward wrote:
-> > Resending (original on June 9th) this patch notice after merging these
-> > scsi_id changes into the version of scsi_id found in udev-068.
-> > 
-> > This patch is to enable the use of scsi_id to derive a UID for a SCSI-2
-> > device which is not compliant with the page 83 inquiry reply format for
-> > either SPC-2 or SPC-3.  In this case, the page 83 reply does not
-> > contain a list of  Identification descriptors but a single binary encoded
-> > hexa-decimal Vendor Specified Identifier.
-> > 
-> > The update is being driven by the need for scsi_id to support older
-> > model EMC Symmetrix hardware, that is, models 4, 5, and 6.
-> 
-> Ed - Looks good, I ran some simple tests (no EMC hardware here though).
-> 
-> Greg or Kay, can you please apply Ed's patch?
+On Wed, 2005-09-14 at 18:06 +1000, Anton Blanchard wrote:
+> And in particular it looks like the scsi_unprep_request in
+> scsi_queue_insert is causing it. The following patch fixes the boot
+> problems on the vscsi machine:
 
-Done!
+OK, my fault.  Your fix is almost correct .. I was going to do this
+eventually, honest, because there's no need to unprep and reprep a
+command that comes in through scsi_queue_insert().
 
-Thanks,
-Kay
+However, I decided to leave it in to exercise the scsi_unprep_request()
+path just to make sure it was working.  What's happening, I think, is
+that we also use this path for retries.  Since we kill and reget the
+command each time, the retries decrement is never seen, so we're
+retrying forever.
+
+This should be the correct reversal.
+
+James
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -140,14 +140,12 @@ static void scsi_unprep_request(struct r
+  *              commands.
+  * Notes:       This could be called either from an interrupt context or a
+  *              normal process context.
+- * Notes:	Upon return, cmd is a stale pointer.
+  */
+ int scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
+ {
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	struct scsi_device *device = cmd->device;
+ 	struct request_queue *q = device->request_queue;
+-	struct request *req = cmd->request;
+ 	unsigned long flags;
+ 
+ 	SCSI_LOG_MLQUEUE(1,
+@@ -188,9 +186,8 @@ int scsi_queue_insert(struct scsi_cmnd *
+ 	 * function.  The SCSI request function detects the blocked condition
+ 	 * and plugs the queue appropriately.
+          */
+-	scsi_unprep_request(req);
+ 	spin_lock_irqsave(q->queue_lock, flags);
+-	blk_requeue_request(q, req);
++	blk_requeue_request(q, cmd->request);
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
+ 
+ 	scsi_run_queue(q);
+
+
