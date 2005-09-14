@@ -1,60 +1,61 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [2.6.14-rc1] sym scsi boot hang
-Date: Wed, 14 Sep 2005 11:53:45 -0500
-Message-ID: <43285599.9040002@cs.wisc.edu>
-References: <Pine.LNX.4.44L0.0509141052410.5064-100000@iolanthe.rowland.org> <4328553D.10501@cs.wisc.edu>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process (end devices)
+Date: Wed, 14 Sep 2005 10:13:07 -0700
+Message-ID: <20050914171307.GA10044@us.ibm.com>
+References: <20050910024454.20602.qmail@web51613.mail.yahoo.com> <1126368081.4813.46.camel@mulgrave> <4325997D.3050103@adaptec.com> <20050912162739.GA11455@us.ibm.com> <4326964B.9010503@torque.net> <20050913224215.GB1308@us.ibm.com> <4328176D.80307@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:2754 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1030279AbVINQx4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Sep 2005 12:53:56 -0400
-In-Reply-To: <4328553D.10501@cs.wisc.edu>
+Received: from e35.co.us.ibm.com ([32.97.110.133]:49105 "EHLO
+	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S965097AbVINRNY
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Sep 2005 13:13:24 -0400
+Content-Disposition: inline
+In-Reply-To: <4328176D.80307@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Anton Blanchard <anton@samba.org>, James Bottomley <James.Bottomley@SteelEye.com>, Dipankar Sarma <dipankar@in.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Douglas Gilbert <dougg@torque.net>, James Bottomley <James.Bottomley@SteelEye.com>, ltuikov@yahoo.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Mike Christie wrote:
-> Alan Stern wrote:
-> 
->> On Wed, 14 Sep 2005, Anton Blanchard wrote:
->>
->>
->>> Hi,
->>>
->>>
->>>> If that's the cause, it's probably a double down of the host scan
->>>> semaphore somewhere in the code.  alt-sysrq-t should work in this case,
->>>> can you get a stack trace of the blocked process?
->>>
->>>
->>> It appears to be this patch:
->>>
->>>  [SCSI] SCSI core: fix leakage of scsi_cmnd's
->>>
->>>  From:         Alan Stern <stern@rowland.harvard.edu>
->>
->>
->>
->>> And in particular it looks like the scsi_unprep_request in
->>> scsi_queue_insert is causing it. The following patch fixes the boot
->>> problems on the vscsi machine:
->>
->>
->>
->> In general the scsi_unprep_request routine is correct and needs to be
->> there.  The one part that might be questionable is the assignment to
->> req->special.  It may turn out that the real solution is to have
->> scsi_execute set req->special to NULL; I assumed it would be NULL already
->> but perhaps I was wrong.
-> 
-> 
-> I think we have scsi_execute and friends setting REQ_SPECIAL. This is 
-> could cause a problem becuase it does not have a scsi_request.
-> 
+On Wed, Sep 14, 2005 at 08:28:29AM -0400, Luben Tuikov wrote:
+> On 09/13/05 18:42, Patrick Mansfield wrote:
 
-well now actually it won't becuase sc_request should be null for those 
-scsi_execute block pc commands I think.
+> > What I mean is that the target has to intercept the command whether it is
+> > a REPORT LUN or for the well known (W_LUN).
+> > 
+> > The target (firmware) code has to have code today like:
+> > 
+> > 	if (cmd == REPORT_LUN) {
+> > 		do_report_lun();
+> > 	}
+> > 
+> > For only W_LUN support, the code might be something like:
+> > 
+> > 	if (lun == W_LUN) {
+> > 		if (cmd == REPORT_LUN) {
+> > 			do_report_lun();
+> > 		}
+> > 	}
+> > 
+> > But the first case above already covers even the W_LUN case.
+> 
+> _Except_, that what the firmware actually does is, it routes
+> the tasks by LUN first, _before_ looking up with what the command
+> is.*  This is crucial.
+
+That is what the second code snippet above is meant to show.
+
+> > So adding a W_LUN at this point does not add any value ... maybe it looks
+> > nice in the spec and in someones firmware, but it does not add anything
+> > that I can see.
+> 
+> I wonder if the maintainer of the SCSI Core would listen or ignore your
+> opinion here.
+
+> I wonder _who_ decides here where speculation ends and industry
+> opinion starts?
+
+I am talking about the scsi spec, not the code. IMO linux scsi code should
+support W_LUN and 64 bit LUN.
+
+-- Patrick Mansfield
