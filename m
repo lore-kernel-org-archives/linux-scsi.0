@@ -1,29 +1,41 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH RFC/RFT 2/4] add scsi helpers
-Date: Thu, 15 Sep 2005 19:29:39 +0100
-Message-ID: <20050915182939.GA1316@infradead.org>
-References: <1126736388.16778.25.camel@max> <20050915101303.GB24689@infradead.org> <4329AF9F.1030209@cs.wisc.edu> <4329B586.6010802@cs.wisc.edu>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH 2/2] fusion SAS support (mptsas driver)
+Date: Thu, 15 Sep 2005 12:47:51 -0600
+Message-ID: <91888D455306F94EBD4D168954A9457C0407A562@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:12251 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1030566AbVIOS3k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Sep 2005 14:29:40 -0400
-Content-Disposition: inline
-In-Reply-To: <4329B586.6010802@cs.wisc.edu>
+Received: from mail0.lsil.com ([147.145.40.20]:45037 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1030573AbVIOSs1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Sep 2005 14:48:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-On Thu, Sep 15, 2005 at 12:55:18PM -0500, Mike Christie wrote:
-> Actually after talking with Jens, I think it is better to keep the 
-> function in scsi_lib and move my blk_rq_map_iov() function there. The 
-> problem is that sg and st have some special needs and as a result do 
-> some things like partial setup themselves. It looks like nobody wants 
-> the burdon of having these special case fucntions :) but since SCSI's 
-> ULDs are the only user and probably will be the only user does it make 
-> sense to keep them there?
+On Thursday, September 15, 2005 6:19 AM, Christoph Hellwig wrote: 
+> 
+> Did you get any compile errors in scsi_transport_sas.c?  
+> sas_host_setup
+> changed the prototype from
+> 
+> 	static int sas_host_setup(struct device *dev)
+> 
+> to
+> 
+> 	static int sas_host_setup(struct transport_container *tc,
+> 		struct device *dev, struct class_device *cdev)
+> 
+> recently, and you're oops looks like you have a mismatch.
+>
 
-ok, makes sense
+That fix's it, however before there were no compile errors.
+
+When I watch real closely while it compiled, and I saw
+the warning
+
+scsi_transport_sas.c: line 170 warning: initialization from incompatible
+pointer type
+
