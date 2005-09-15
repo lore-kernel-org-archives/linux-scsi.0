@@ -1,35 +1,79 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [linux-usb-devel] oops on usb storage device disconnect with 2.6.14-rc1
-Date: Thu, 15 Sep 2005 12:29:12 -0700
-Message-ID: <20050915192912.GA7077@kroah.com>
-References: <20050915190338.GA6807@kroah.com> <Pine.LNX.4.44L0.0509151514460.4493-100000@iolanthe.rowland.org>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: 2.6.13-mm3 (general protection fault)
+Date: Thu, 15 Sep 2005 12:34:38 -0700
+Message-ID: <20050915123438.7ce4b938.akpm@osdl.org>
+References: <20050912024350.60e89eb1.akpm@osdl.org>
+	<200509152058.13898.dominik.karall@gmx.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kroah.org ([69.55.234.183]:2797 "EHLO perch.kroah.org")
-	by vger.kernel.org with ESMTP id S965268AbVIOT3d (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:56805 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965273AbVIOTfV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Sep 2005 15:29:33 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0509151514460.4493-100000@iolanthe.rowland.org>
+	Thu, 15 Sep 2005 15:35:21 -0400
+In-Reply-To: <200509152058.13898.dominik.karall@gmx.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-usb-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, mdharm-usb@one-eyed-alien.net
+To: Dominik Karall <dominik.karall@gmx.net>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 
-On Thu, Sep 15, 2005 at 03:23:11PM -0400, Alan Stern wrote:
-> On Thu, 15 Sep 2005, Greg KH wrote:
+Dominik Karall <dominik.karall@gmx.net> wrote:
+>
+> On Monday 12 September 2005 11:43, Andrew Morton wrote:
+> > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.13/2.6.13
+> >-mm3/
 > 
-> > Here's a nice oops I get when removing a usb-storage device with
-> > 2.6.14-rc1.  I've also created a bug for this for those who like to
-> > track bugzilla:
-> > 	http://bugzilla.kernel.org/show_bug.cgi?id=5265
-> > 
-> > Any ideas?
+> hi,
+> again a general protection fault...
+
+scsi or USB I guess.
+
+Does the crash happen without loading any proprietary modules?
+
+> usb 1-2.3: USB disconnect, address 5
+> general protection fault: 0000 [1] PREEMPT SMP
+> CPU 0
+> Modules linked in: nls_cp437 vfat fat ppp_deflate bsd_comp ppp_async r8169 
+> snd_bt87x
+> Pid: 84, comm: khubd Tainted: P      2.6.13-mm3 #12
+> RIP: 0010:[<ffffffff8035a005>] <ffffffff8035a005>{scsi_remove_device+53}
+> RSP: 0000:ffff81003f811bc8  EFLAGS: 00010246
+> RAX: 6b6b6b6b6b6b6b6b RBX: ffff810000902458 RCX: 0000000000000034
+> RDX: 0000000000000001 RSI: ffffffff80267170 RDI: 6b6b6b6b6b6b6beb
+> RBP: ffff81003f811bd8 R08: 0000000000000000 R09: ffff810000902458
+> R10: 0000000000000000 R11: 0000000000000000 R12: ffff81002dce50f8
+> R13: ffff8100125ca0f8 R14: ffff81002dce5108 R15: 0000000000000003
+> FS:  00002aaaaadfdb00(0000) GS:ffffffff806ed800(0000) knlGS:0000000056114840
+> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
+> CR2: 00002aaaaac56480 CR3: 0000000000101000 CR4: 00000000000006e0
+> Process khubd (pid: 84, threadinfo ffff81003f810000, task ffff81003fc8cea0)
+> Stack: 0000000000000213 ffff810000902458 ffff81003f811c08 ffffffff8035a364
+> ffff81002dce5110 ffff8100125ca120 ffff81002dce5110 ffff81002dce5118
+> ffff81003f811c28 ffffffff8035a3f7
+> Call Trace:<ffffffff8035a364>{__scsi_remove_target+148} 
+> <ffffffff8035a3f7>{scsi_remove_target+39}
+> <ffffffff8035916b>{scsi_forget_host+75} 
+> <ffffffff80351c9d>{scsi_remove_host+77}
+> <ffffffff803a20ac>{quiesce_and_remove_host+156} 
+> <ffffffff803a2bd8>{storage_disconnect+24}
+> <ffffffff80380f35>{usb_unbind_interface+85} 
+> <ffffffff802e32f1>{__device_release_driver+113}
+> <ffffffff802e3355>{device_release_driver+53} 
+> <ffffffff802e2a7c>{bus_remove_device+172}
+> <ffffffff802e19f8>{device_del+56} <ffffffff80388b32>{usb_disable_device+178}
+> <ffffffff8038349e>{usb_disconnect+190} <ffffffff80384a42>{hub_thread+930}
+> <ffffffff8046ac8f>{thread_return+203} 
+> <ffffffff8014bf80>{autoremove_wake_function+0}
+> <ffffffff8014bf80>{autoremove_wake_function+0} 
+> <ffffffff803846a0>{hub_thread+0}
+> <ffffffff8014b86b>{kthread+219} <ffffffff8010ee06>{child_rip+8}
+> <ffffffff8014b790>{kthread+0} <ffffffff8010edfe>{child_rip+0}
+> Sep 15 18:55:18 dkey_amd64
+> Sep 15 18:55:18 dkey_amd64
+> Code: f0 ff 80 80 00 00 00 0f 8e 4e 07 00 00 48 83 c4 08 5b c9 c3
+> RIP <ffffffff8035a005>{scsi_remove_device+53} RSP <ffff81003f811bc8>
 > 
-> Patches for this bug plus two others attached to the bug report.
-
-Ah, thanks for the pointer.  SCSI developers, any objections to these
-patches being merged?
-
-greg k-h
+> 
+> dominik
+> 
