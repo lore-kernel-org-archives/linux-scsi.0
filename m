@@ -1,44 +1,57 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH RFC/RFT 1/4]  add some block layer helpers
-Date: Thu, 15 Sep 2005 11:09:26 +0100
-Message-ID: <20050915100926.GA24689@infradead.org>
-References: <1126736384.16778.24.camel@max> <43291280.5060506@cs.wisc.edu>
+Subject: Re: [PATCH RFC/RFT 2/4] add scsi helpers
+Date: Thu, 15 Sep 2005 11:13:03 +0100
+Message-ID: <20050915101303.GB24689@infradead.org>
+References: <1126736388.16778.25.camel@max>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:61899 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:21680 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932444AbVIOKJ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Sep 2005 06:09:27 -0400
+	id S932465AbVIOKNE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Sep 2005 06:13:04 -0400
 Content-Disposition: inline
-In-Reply-To: <43291280.5060506@cs.wisc.edu>
+In-Reply-To: <1126736388.16778.25.camel@max>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Mike Christie <michaelc@cs.wisc.edu>
 Cc: linux-scsi@vger.kernel.org
 
-> > /**
-> >+ * blk_rq_map_kern_iov - map kernel data to a request, for REQ_BLOCK_PC 
-> >usage
-> >+ * @q:		request queue where request should be inserted
-> >+ * @rq:		request to fill
-> >+ * @vec:	pointer to kvec
-> >+ * @vec_count:	number of elements in kvec
-> >+ * @gfp_mask:	memory allocation flags
-> >+ *
-> >+ * blk_rq_map_kern_iov maps a kvec into a multiple bio request so that
-> >+ * it can create very large requests.
-> >+ *
-> >+ * For now we assume that each element will fit in one bio
-> >+ */
-> >+int blk_rq_map_kern_iov(request_queue_t *q, struct request *rq,
-> >+			struct kvec *vec, int vec_count, unsigned int gfp)
-> >+{
-> 
-> On second thought, I think this function should work on pages and not 
-> kernel addresses. It also has a leak in the error path.
+> +struct __scsi_request {
+> +	void *data;
+> +	void (*done)(void *data, char *sense, int result, int resid);
+> +	char sense[SCSI_SENSE_BUFFERSIZE];
+> +};
 
-Passing down <page,offset,len> tuples, aka struct bio_vec sounds like
-the better API indeed as all callers seem to either do virt_to_page or
-allocate new pages anyway.  This should also fix the highmem problems
-inherited from the old code.
+I don't think this is a good structure name.  Just something like
+iocontext  or similar?
+
+> +int scsi_execute_async_iov_req(struct scsi_device *sdev,
+> +			       const unsigned char *cmd, int data_direction,
+> +			       struct kvec *vec, int vec_count, int timeout,
+> +			       int retries, void *privdata,
+> +			       void (*done)(void *, char *, int, int))
+
+If you passed an request_queue_t instead of th scsi_device this function
+would not have any knowledge about scsi internals and could be moved up
+to the block layer.  not sure that's actually a good idea.
+
+If we stick to putting it into the scsi layer the done callback could
+normalize the sense data, though.
+
+> +	struct request *req;
+> +	struct __scsi_request *sreq;
+> +	int write = (data_direction == DMA_TO_DEVICE);
+
+What about just passing in a write parameter directly?
+
+> +
+> +	sreq = kzalloc(sizeof(*sreq), GFP_ATOMIC);
+> +	if (!sreq) {
+> +		return DRIVER_ERROR << 24;
+> +	}
+> +
+> +	req = blk_get_request(sdev->request_queue, write, GFP_ATOMIC);
+
+can you add a gfp_mask argument instead of hardcoding GFP_ATOMIC?
+
