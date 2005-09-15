@@ -1,36 +1,47 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 2.6.14-rc1] scsi: sd, sr, st, and scsi_lib all fail to
- copy cmd_len to new cmd
-Date: Thu, 15 Sep 2005 22:23:23 +1000
-Message-ID: <432967BB.1080104@torque.net>
-References: <CA45571DE57E1C45BF3552118BA92C9D69BDE2@WDSCEXBECL03.sc.wdc.com>
-Reply-To: dougg@torque.net
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 6/6] zfcp: provide support for NPIV
+Date: Thu, 15 Sep 2005 13:26:39 +0100
+Message-ID: <20050915122639.GA26916@infradead.org>
+References: <20050913195116.GA7699@lion28.boeblingen.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:12989 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1751180AbVIOMWr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Sep 2005 08:22:47 -0400
-In-Reply-To: <CA45571DE57E1C45BF3552118BA92C9D69BDE2@WDSCEXBECL03.sc.wdc.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:15253 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751181AbVIOM0l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Sep 2005 08:26:41 -0400
+Content-Disposition: inline
+In-Reply-To: <20050913195116.GA7699@lion28.boeblingen.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Timothy Thelin <Timothy.Thelin@wdc.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Andreas Herrmann <aherrman@de.ibm.com>
+Cc: James Bottomley <jejb@steeleye.com>, Linux SCSI <linux-scsi@vger.kernel.org>, Maxim Shchetynin <maxim@de.ibm.com>
 
-Timothy Thelin wrote:
-> This fixes an issue in scsi command initialization from a request
-> where sd, sr, st, and scsi_lib all fail to copy the request's
-> cmd_len to the scsi command's cmd_len field.
+On Tue, Sep 13, 2005 at 09:51:16PM +0200, Andreas Herrmann wrote:
+> From: Maxim Shchetynin <maxim@de.ibm.com>
+> 
+> zfcp: provide support for NPIV
+> 
+> N_Port ID Virtualization (NPIV) allows a single FCP port to appear as
+> multiple, distinct ports providing separate port identification. NPIV
+> is supported by FC HBAs on System z9. zfcp was adapted to support this
+> new feature.
 
-This is an important fix. The bug is triggered whenever a SCSI
-command is sent that does not conform to the old "top 3 bits of
-the first byte dictate cdb length" convention. This mainly happens
-with vendor specific commands and with variable length commands
-(those starting with opcode 0x7f). The latter is not a problem
-today because linux doesn't support variable length commands
-(or, to be more precise, those commands with more than 16 bytes
-in them).
+I have a hard time understanding much of the driver and thus this
+patch aswell, but it looks like you're adding the luns using scsi_add_device
+instead of using the proper midlayer lun scan.
 
-Doug Gilbert
+> @@ -68,6 +68,8 @@ ZFCP_DEFINE_ADAPTER_ATTR(s_id, "0x%06x\n
+>  ZFCP_DEFINE_ADAPTER_ATTR(peer_wwnn, "0x%016llx\n", adapter->peer_wwnn);
+>  ZFCP_DEFINE_ADAPTER_ATTR(peer_wwpn, "0x%016llx\n", adapter->peer_wwpn);
+>  ZFCP_DEFINE_ADAPTER_ATTR(peer_d_id, "0x%06x\n", adapter->peer_d_id);
+> +ZFCP_DEFINE_ADAPTER_ATTR(physical_wwpn, "0x%016llx\n", adapter->physical_wwpn);
+
+this information belongs into the transport class, not the driver.
+What's the peer information above?  is that for point-to-point FC
+connections?
+
+>  ZFCP_DEFINE_ADAPTER_ATTR(fc_link_speed, "%d Gb/s\n", adapter->fc_link_speed);
+
+dito this one belongs only in the transport class.
+
