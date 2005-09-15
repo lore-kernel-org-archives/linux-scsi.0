@@ -1,48 +1,49 @@
-From: Jack Byer <ojbyer@usa.net>
-Subject: Re: Hardware RAID problem
-Date: Thu, 15 Sep 2005 19:13:02 -0400
-Message-ID: <4329FFFE.5020907@usa.net>
-References: <dgcpuo$n6a$1@sea.gmane.org> <b1bc6a00050915152657ebb321@mail.gmail.com>
+From: "Timothy Thelin" <Timothy.Thelin@wdc.com>
+Subject: SG_FLAG_LUN_INHIBIT broken?
+Date: Thu, 15 Sep 2005 16:45:35 -0700
+Message-ID: <CA45571DE57E1C45BF3552118BA92C9D69BE0F@WDSCEXBECL03.sc.wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pcp08552403pcs.groton01.ct.comcast.net ([69.138.132.253]:28897
-	"EHLO copper.fuckthenavy.net") by vger.kernel.org with ESMTP
-	id S1751147AbVIOXNN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Sep 2005 19:13:13 -0400
-In-Reply-To: <b1bc6a00050915152657ebb321@mail.gmail.com>
+Received: from wdscexfe02.sc.wdc.com ([129.253.170.52]:29346 "EHLO
+	wdscexfe02.sc.wdc.com") by vger.kernel.org with ESMTP
+	id S932590AbVIOXpg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2005 19:45:36 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: aradford@gmail.com
-Cc: linux-scsi@vger.kernel.org
-
-adam radford wrote:
-> Jack,
-> 
-> There was a bug in 3w-9xxx that became apparent with the latest scsi-block-2.6
-> merge.  Can you re-test the 3ware 9000 with 2.6.14-rc1?
-> 
-> -Adam
+To: linux-scsi@vger.kernel.org
 
 
-The 3ware machine works with 2.6.14-rc1; still no luck with the Megaraid
-machine.
+Can anyone confirm that this flag actually works when doing SG_IO? (I'm
+testing on a 2.6.13-rc6 kernel)
 
+I'm attempting to do an ata-pt command on a cypress board:
+http://www.cypress.com/portal/server.pt?space=CommunityPage&control=SetCommu
+nity&CommunityID=209&PageID=259&fid=14&rpn=CY7C68320
 
-> On 9/15/05, Jack Byer <ojbyer@usa.net> wrote:
-> 
->>Last week, I reported a problem booting my machine with a AMI megaraid
->>card. This problem appeared on -mm kernels >= 2.6.12-mm1 and on
->>2.6.14-rc1. I tried applying a patch from Christoph Hellwig, which did
->>not resolve the problem.
->>
->>Now I am seeing the exact same bug on a different machine, using a
->>different raid controller (3ware 9xxx series) when trying to install
->>2.6.13-mm1.
->>
->>Is there any chance that this is a kernel configuration problem, or has
->>something recently changed in the scsi drivers that is affecting both
->>drivers?
->>
->>-
+It involves a 16-byte cdb with cdb[ 1 ] = 0x24 as a signature byte (Page 13
+of the datasheet).  So when the scsi stack adds lun info, it kills the
+signature byte.
+
+I've tried adding SG_FLAG_LUN_INHIBIT to the SG_IO header, but neither sd or
+sg seem to obey it. After looking at the source neither driver seems to make
+any reference to SG_FLAG_LUN_INHIBIT.
+
+Eventually all the commands seemed to be funneled to
+scsi.c:532:scsi_dispatch_cmd which does this:
+	if (cmd->device->scsi_level <= SCSI_2) {
+		cmd->cmnd[1] = (cmd->cmnd[1] & 0x1f) |
+			       (cmd->device->lun << 5 & 0xe0);
+	}
+So basically this is an unconditional "add lun info" if the scsi spec is
+<=2, which is what usb-storage devices end up being.
+
+Is SG_FLAG_LUN_INHIBIT supposed to be supported still or is it deprecated or
+something?
+
+Thanks,
+Tim Thelin
+
