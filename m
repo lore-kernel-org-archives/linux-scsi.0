@@ -1,57 +1,45 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [2.6.14-rc1] sym scsi boot hang
-Date: Thu, 15 Sep 2005 13:52:51 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0509151210370.4472-100000@iolanthe.rowland.org>
-References: <1126792573.4821.18.camel@mulgrave>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH RFC/RFT 2/4] add scsi helpers
+Date: Thu, 15 Sep 2005 12:55:18 -0500
+Message-ID: <4329B586.6010802@cs.wisc.edu>
+References: <1126736388.16778.25.camel@max> <20050915101303.GB24689@infradead.org> <4329AF9F.1030209@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932586AbVIORwz@vger.kernel.org>
-In-Reply-To: <1126792573.4821.18.camel@mulgrave>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Anton Blanchard <anton@samba.org>, Dipankar Sarma <dipankar@in.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:12743 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1030560AbVIORzU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Sep 2005 13:55:20 -0400
+In-Reply-To: <4329AF9F.1030209@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Thu, 15 Sep 2005, James Bottomley wrote:
-
-> On Wed, 2005-09-14 at 17:33 -0400, Alan Stern wrote:
-> > On Wed, 14 Sep 2005, James Bottomley wrote:
-> > > Yes ... really the only case for unprep is when we've partially released
-> > > the command (like in scsi_io_completion) where we need to tear the rest
-> > > of it down.
-> > 
-> > In other words, in scsi_requeue_command and nowhere else.
+Mike Christie wrote:
+>>
+>>
+>>> +int scsi_execute_async_iov_req(struct scsi_device *sdev,
+>>> +                   const unsigned char *cmd, int data_direction,
+>>> +                   struct kvec *vec, int vec_count, int timeout,
+>>> +                   int retries, void *privdata,
+>>> +                   void (*done)(void *, char *, int, int))
+>>
+>>
+>>
+>> If you passed an request_queue_t instead of th scsi_device this function
+>> would not have any knowledge about scsi internals and could be moved up
+>> to the block layer.  not sure that's actually a good idea.
 > 
-> Pretty much, yes.
+> 
+> Did you want to move scsi_execute too?
+> 
 
-I found one other thing that needs to be fixed.  The call to 
-scsi_release_buffers in scsi_unprep_request causes an oops, because the 
-sgtable has already been freed in scsi_io_completion.  The following patch 
-is needed.
-
-Alan Stern
-
-
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-
-Index: usb-2.6/drivers/scsi/scsi_lib.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_lib.c
-+++ usb-2.6/drivers/scsi/scsi_lib.c
-@@ -118,7 +118,6 @@ static void scsi_unprep_request(struct r
- 	req->flags &= ~REQ_DONTPREP;
- 	req->special = (req->flags & REQ_SPECIAL) ? cmd->sc_request : NULL;
- 
--	scsi_release_buffers(cmd);
- 	scsi_put_command(cmd);
- }
- 
-@@ -1514,7 +1513,6 @@ static void scsi_request_fn(struct reque
- 	 * cases (host limits or settings) should run the queue at some
- 	 * later time.
- 	 */
--	scsi_unprep_request(req);
- 	spin_lock_irq(q->queue_lock);
- 	blk_requeue_request(q, req);
- 	sdev->device_busy--;
+Actually after talking with Jens, I think it is better to keep the 
+function in scsi_lib and move my blk_rq_map_iov() function there. The 
+problem is that sg and st have some special needs and as a result do 
+some things like partial setup themselves. It looks like nobody wants 
+the burdon of having these special case fucntions :) but since SCSI's 
+ULDs are the only user and probably will be the only user does it make 
+sense to keep them there?
