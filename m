@@ -1,43 +1,36 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [linux-usb-devel] oops on usb storage device disconnect with
-	2.6.14-rc1
-Date: Thu, 15 Sep 2005 17:08:03 -0400
-Message-ID: <1126818483.4821.60.camel@mulgrave>
-References: <20050915190338.GA6807@kroah.com>
-	 <Pine.LNX.4.44L0.0509151514460.4493-100000@iolanthe.rowland.org>
-	 <20050915192912.GA7077@kroah.com>  <1126814226.4821.48.camel@mulgrave>
+From: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>
+Subject: How to avoid "Trying to register duplicated ioctl32 handler"
+Date: Thu, 15 Sep 2005 17:17:29 -0400
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57060CD194@exa-atlanta>
 Mime-Version: 1.0
 Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:34177 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1030492AbVIOVIL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Sep 2005 17:08:11 -0400
-In-Reply-To: <1126814226.4821.48.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030517AbVIOVRj@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: 'Christoph Hellwig' <hch@infradead.org>
+Cc: "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdharm-usb@one-eyed-alien.net
 
-On Thu, 2005-09-15 at 15:57 -0400, James Bottomley wrote:
-> I haven't had time to review the eh changes, but I was going to reply to
-> the other one (basically there's a better way to try to close the device
-> add/host remove race using the host state model).
-> 
-> Let me complete the SCSI process and I'll take them through the scsi-rc-
-> fixes tree.
+In our MegaRAID driver, one of the IOCTLs is defined as
+#define MEGASAS_IOC_GET_AEN _IOW('M', 2, struct megasas_aen)
 
-Well, I think the symptoms are racing scsi_remove_host() calls and the
-solution is to enforce the state model on removal (as in if the host is
-already in the remove state, don't try to remove it again).
+This clashes with some other value in "built_in" ioctl table on x86_64
+kernels.
+How do I really avoid such problems in the future. Even if I search the
+length
+of the built_in table and pick a unique value, is it guaranteed to be unique
+in
+the future releases? The Documentation/ioctl-number.txt isn't of much help
+either.
+It lists multiple conflicts. Moreover, not all of them are listed there.
 
-Could you try the patch here:
+On a broader note, if the struct ioctl_trans inside ioctl32_hash_table could
+use the combination of cmd + major number instead of just cmd to determine
+the
+uniqueness, these conflicts could be avoided, right? I mean understand the
+reasons
+for system-wide unique ioctl numbers. But right now, only those platforms
+that
+need conversion are technically impeded for violating that guideline.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112613077011571
-
-And see if it will fix the problem?
-
-James
-
-
+Thanks,
+Sreenivas
