@@ -1,47 +1,50 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/6] zfcp: provide support for NPIV
-Date: Thu, 15 Sep 2005 13:26:39 +0100
-Message-ID: <20050915122639.GA26916@infradead.org>
-References: <20050913195116.GA7699@lion28.boeblingen.de.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [2.6.14-rc1] sym scsi boot hang
+Date: Thu, 15 Sep 2005 09:56:13 -0400
+Message-ID: <1126792573.4821.18.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0509141716410.8011-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:15253 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751181AbVIOM0l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Sep 2005 08:26:41 -0400
-Content-Disposition: inline
-In-Reply-To: <20050913195116.GA7699@lion28.boeblingen.de.ibm.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:64746 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1030420AbVION4n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Sep 2005 09:56:43 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0509141716410.8011-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andreas Herrmann <aherrman@de.ibm.com>
-Cc: James Bottomley <jejb@steeleye.com>, Linux SCSI <linux-scsi@vger.kernel.org>, Maxim Shchetynin <maxim@de.ibm.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Anton Blanchard <anton@samba.org>, Dipankar Sarma <dipankar@in.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-On Tue, Sep 13, 2005 at 09:51:16PM +0200, Andreas Herrmann wrote:
-> From: Maxim Shchetynin <maxim@de.ibm.com>
+On Wed, 2005-09-14 at 17:33 -0400, Alan Stern wrote:
+> On Wed, 14 Sep 2005, James Bottomley wrote:
+> > Yes ... really the only case for unprep is when we've partially released
+> > the command (like in scsi_io_completion) where we need to tear the rest
+> > of it down.
 > 
-> zfcp: provide support for NPIV
-> 
-> N_Port ID Virtualization (NPIV) allows a single FCP port to appear as
-> multiple, distinct ports providing separate port identification. NPIV
-> is supported by FC HBAs on System z9. zfcp was adapted to support this
-> new feature.
+> In other words, in scsi_requeue_command and nowhere else.
 
-I have a hard time understanding much of the driver and thus this
-patch aswell, but it looks like you're adding the luns using scsi_add_device
-instead of using the proper midlayer lun scan.
+Pretty much, yes.
 
-> @@ -68,6 +68,8 @@ ZFCP_DEFINE_ADAPTER_ATTR(s_id, "0x%06x\n
->  ZFCP_DEFINE_ADAPTER_ATTR(peer_wwnn, "0x%016llx\n", adapter->peer_wwnn);
->  ZFCP_DEFINE_ADAPTER_ATTR(peer_wwpn, "0x%016llx\n", adapter->peer_wwpn);
->  ZFCP_DEFINE_ADAPTER_ATTR(peer_d_id, "0x%06x\n", adapter->peer_d_id);
-> +ZFCP_DEFINE_ADAPTER_ATTR(physical_wwpn, "0x%016llx\n", adapter->physical_wwpn);
+> Or will be prepared for the first time, as in scsi_execute.  As far as I 
+> can tell, a new struct request is not set to all 0's.  So if you queue a 
+> request with REQ_SPECIAL set and you fail to clear req->special, you're in 
+> trouble.  Do you have any idea why this hasn't been causing errors all 
+> along?
 
-this information belongs into the transport class, not the driver.
-What's the peer information above?  is that for point-to-point FC
-connections?
+That's true, it's not.  However ll_rq_blk.c:rq_init() clears req-
+>special (and initialises all other important fields).
 
->  ZFCP_DEFINE_ADAPTER_ATTR(fc_link_speed, "%d Gb/s\n", adapter->fc_link_speed);
+> Okay, then how does this patch look (moved the routine over to where it 
+> gets used, plus two real changes)?
 
-dito this one belongs only in the transport class.
+Well ... under pressure to fix this in -mm, I already commited a version
+to rc-fixes.  What I did was fully reverse the changes to the
+scsi_insert_queue() [the patch I sent Anton].  We can move the unprep
+function if you feel strongly about it, but I'm also happy to keep it
+where it is.
+
+James
+
 
