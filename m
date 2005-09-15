@@ -1,51 +1,48 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: oops on usb storage device disconnect with
-	2.6.14-rc1
-Date: Thu, 15 Sep 2005 15:57:05 -0400
-Message-ID: <1126814226.4821.48.camel@mulgrave>
-References: <20050915190338.GA6807@kroah.com>
-	 <Pine.LNX.4.44L0.0509151514460.4493-100000@iolanthe.rowland.org>
-	 <20050915192912.GA7077@kroah.com>
+Subject: Re: [PATCH 4/5] SCSI scanning and removal fixes
+Date: Thu, 15 Sep 2005 16:09:53 -0400
+Message-ID: <1126814993.4821.56.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0507261020540.4746-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
-In-Reply-To: <20050915192912.GA7077@kroah.com>
-Sender: linux-usb-devel-admin@lists.sourceforge.net
-Errors-To: linux-usb-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
-To: Greg KH <greg@kroah.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdharm-usb@one-eyed-alien.net
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:61312 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1030483AbVIOUJz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Sep 2005 16:09:55 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0507261020540.4746-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, 2005-09-15 at 12:29 -0700, Greg KH wrote:
-> Ah, thanks for the pointer.  SCSI developers, any objections to these
-> patches being merged?
+On Tue, 2005-07-26 at 10:27 -0400, Alan Stern wrote:
+> This patch (as545) fixes the list traversals in __scsi_remove_target and 
+> scsi_forget_host.  In each case the existing code list_for_each_entry_safe 
+> in an _unsafe_ manner, because the list was not protected from outside 
+> modification while the iteration was running.
 
-I haven't had time to review the eh changes, but I was going to reply to
-the other one (basically there's a better way to try to close the device
-add/host remove race using the host state model).
+Yes, but all you're doing is trying to close a race between add and
+remove by trying the remove until there's nothing left.  That still
+won't close the race window.
 
-Let me complete the SCSI process and I'll take them through the scsi-rc-
-fixes tree.
+The solution is to enforce the state model:  Once the host goes into
+cancel or del, no further additions may be made to the host list and if
+we add the other patch to enforce the state model on removal then only
+one process could be in remove as well.
+
+> The new scsi_forget_host routine takes the moderately controversial step 
+> of iterating over devices for removal rather than iterating over targets.  
+> This makes more sense to me because the current scheme treats targets as 
+> second-class citizens, created and removed on demand, rather than as 
+> objects corresponding to actual hardware.  (Also I couldn't figure out any 
+> safe way to iterate over the target list, since it's not so easy to tell 
+> when a target has already been removed.)
+
+Actually, in doing that, the target now never gets reaped, which would
+leave us with dangling target objects.
 
 James
 
 
-
-
--------------------------------------------------------
-SF.Net email is sponsored by:
-Tame your development challenges with Apache's Geronimo App Server. Download
-it for free - -and be entered to win a 42" plasma tv or your very own
-Sony(tm)PSP.  Click here to play: http://sourceforge.net/geronimo.php
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
