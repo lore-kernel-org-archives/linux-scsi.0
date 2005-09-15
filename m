@@ -1,35 +1,36 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH ] fusion SAS support (mptsas driver)
-Date: Thu, 15 Sep 2005 13:22:01 +0100
-Message-ID: <20050915122201.GA26829@infradead.org>
-References: <91888D455306F94EBD4D168954A9457C0407A02F@nacos172.co.lsil.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH 2.6.14-rc1] scsi: sd, sr, st, and scsi_lib all fail to
+ copy cmd_len to new cmd
+Date: Thu, 15 Sep 2005 22:23:23 +1000
+Message-ID: <432967BB.1080104@torque.net>
+References: <CA45571DE57E1C45BF3552118BA92C9D69BDE2@WDSCEXBECL03.sc.wdc.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:15795 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751179AbVIOMWE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Sep 2005 08:22:04 -0400
-Content-Disposition: inline
-In-Reply-To: <91888D455306F94EBD4D168954A9457C0407A02F@nacos172.co.lsil.com>
+Received: from zorg.st.net.au ([203.16.233.9]:12989 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1751180AbVIOMWr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Sep 2005 08:22:47 -0400
+In-Reply-To: <CA45571DE57E1C45BF3552118BA92C9D69BDE2@WDSCEXBECL03.sc.wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: Timothy Thelin <Timothy.Thelin@wdc.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Sep 14, 2005 at 06:09:10PM -0600, Moore, Eric Dean wrote:
-> I've reviewed patches today: 
-> [PATCH 1/2] fusion core changes for SAS support
-> [PATCH 2/2] fusion SAS support (mptsas driver)
-> (However the driver oops when loading - sent
-> email earlier today on that).
-> 
-> 
-> These previous patches were posted last Friday
-> seem fine, however I recommend we add the following 
-> changes, and I've provided a patch attached to this email.
+Timothy Thelin wrote:
+> This fixes an issue in scsi command initialization from a request
+> where sd, sr, st, and scsi_lib all fail to copy the request's
+> cmd_len to the scsi command's cmd_len field.
 
-Looks good to me, except for the spurious scsi_print_command prototype
-in mptscsih.h.  However this will conflict really badly with James
-generic DV work..
+This is an important fix. The bug is triggered whenever a SCSI
+command is sent that does not conform to the old "top 3 bits of
+the first byte dictate cdb length" convention. This mainly happens
+with vendor specific commands and with variable length commands
+(those starting with opcode 0x7f). The latter is not a problem
+today because linux doesn't support variable length commands
+(or, to be more precise, those commands with more than 16 bytes
+in them).
 
+Doug Gilbert
