@@ -1,51 +1,58 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] oops on usb storage device disconnect with
- 2.6.14-rc1
-Date: Thu, 15 Sep 2005 21:57:37 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0509152155160.9589-100000@netrider.rowland.org>
-References: <20050915234612.GA10974@kroah.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: oops on usb storage device disconnect with
+	2.6.14-rc1
+Date: Thu, 15 Sep 2005 22:27:31 -0400
+Message-ID: <1126837651.4794.16.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0509152133170.9589-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.rowland.org ([192.131.102.7]:48652 "HELO mx1.rowland.org")
-	by vger.kernel.org with SMTP id S1161043AbVIPB5i (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Sep 2005 21:57:38 -0400
-In-Reply-To: <20050915234612.GA10974@kroah.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+In-Reply-To: <Pine.LNX.4.44L0.0509152133170.9589-100000@netrider.rowland.org>
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdharm-usb@one-eyed-alien.net
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdharm-usb@one-eyed-alien.net
 
-On Thu, 15 Sep 2005, Greg KH wrote:
-
-> On Thu, Sep 15, 2005 at 05:08:03PM -0400, James Bottomley wrote:
-> > On Thu, 2005-09-15 at 15:57 -0400, James Bottomley wrote:
-> > > I haven't had time to review the eh changes, but I was going to reply to
-> > > the other one (basically there's a better way to try to close the device
-> > > add/host remove race using the host state model).
-> > > 
-> > > Let me complete the SCSI process and I'll take them through the scsi-rc-
-> > > fixes tree.
-> > 
-> > Well, I think the symptoms are racing scsi_remove_host() calls and the
-> > solution is to enforce the state model on removal (as in if the host is
-> > already in the remove state, don't try to remove it again).
-> > 
-> > Could you try the patch here:
-> > 
-> > http://marc.theaimsgroup.com/?l=linux-scsi&m=112613077011571
-> > 
-> > And see if it will fix the problem?
+On Thu, 2005-09-15 at 21:52 -0400, Alan Stern wrote:
+> You're forgetting something: Devices can be removed at any time, no matter
+> what state the host is in.  It's even possible for thread A to be removing
+> a device while thread B is removing the host.  The A thread will interfere
+> with the B thread, because the "list_for_each_entry_safe" loops in
+> scsi_forget_host and __scsi_remove_target _aren't_ safe against other
+> threads removing devices.  Also remember that the list pointers get
+> changed when a device is _released_, which can occur quite some time after
+> it is _removed_.
 > 
-> That helped in that there is no more kernel oops.  But the
-> /sys/block/sdb device (and partitions) do not get removed from the
-> kernel.  So the next time I plug the device in, it gets bumped to "sdc".
-> I can provide kernel logs of the unplug event if you wish.
+> In short, those iterations must be carried out as in my patch.
 
-You still need to use the second patch in the Bugzilla entry, the one
-that James hasn't had time to check over yet.  Without it, the SCSI error
-handler thread never exits and the device removal sequence hangs.
+OK, I concede the point ... I'll put it in.
 
-Alan Stern
+> Finally, having said all that, it turns out there's still a bug in the 
+> 2.6.14-rc1 code.  I feel pretty stupid about it -- you'll understand why 
+> when you read the patch below.
 
+Heh, yes, got that one in too.
+
+James
+
+
+
+
+-------------------------------------------------------
+SF.Net email is sponsored by:
+Tame your development challenges with Apache's Geronimo App Server. Download
+it for free - -and be entered to win a 42" plasma tv or your very own
+Sony(tm)PSP.  Click here to play: http://sourceforge.net/geronimo.php
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
