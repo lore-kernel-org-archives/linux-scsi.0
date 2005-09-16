@@ -1,72 +1,82 @@
-From: Jan Dittmer <jdittmer@ppp0.net>
-Subject: Re: [linux-usb-devel] Re: 2.6.14-rc1 load average calculation broken?
-Date: Sat, 17 Sep 2005 00:14:11 +0200
-Message-ID: <432B43B3.2080801@ppp0.net>
-References: <Pine.LNX.4.44L0.0509161702480.5838-100000@iolanthe.rowland.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC PATCH 4/4] convert scsi to blkerr error values
+Date: Fri, 16 Sep 2005 15:26:25 -0500
+Message-ID: <432B2A71.6020305@cs.wisc.edu>
+References: <C2EEB4E538D3DC48BF57F391F422779321ACB6@SRMANNING.eng.emc.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.portrix.net ([212.202.157.208]:46743 "EHLO
-	zoidberg.portrix.net") by vger.kernel.org with ESMTP
-	id S1750721AbVIPWO0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Sep 2005 18:14:26 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0509161702480.5838-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <C2EEB4E538D3DC48BF57F391F422779321ACB6@SRMANNING.eng.emc.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: "goggin, edward" <egoggin@emc.com>
+Cc: dm-devel@redhat.com, axboe@suse.de, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Mike Anderson <andmike@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, Pavel Machek <pavel@suse.cz>, Greg KH <greg@kroah.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Alan Stern wrote:
-> On Fri, 16 Sep 2005, Mike Anderson wrote:
+goggin, edward wrote:
+> Mike,
 > 
-> 
->>>This makes me suspect that the condition about host_busy == host_failed is 
->>>wrong.  Unfortunately I don't know why it's wrong or how to fix it.
->>>
->>>Perhaps somebody on the SCSI list can provide the answer.
->>>
->>
->>What condition are you thinking would happen if this was wrong (we are
->>getting woken up too early?)?
-> 
-> 
-> Yes, that is what would happen.  Or failing to go back to sleep when we 
-> should, which might be even worse.
-> 
-> 
->> I did a quick look and could not see changes
->>between 2.6.13 and 2.16.14-rc1 that would make these values wrong. This is
->>just a check to ensure the eh is not woken up to early. Historically in
->>older scsi eh code there used to be a panic if the error handler was woken
->>up to early. In scsi_unjam_host and a quick look at ata_scsi_error getting
->>woken up early should not cause a panic.
->>
->>I built a listfile (libata-scsi.lst) and it is probably not an exact
->>match. ..but..
->>
->>These lines in ata_scsi_error(..) appear to be close to the failure and
->>edx being zero as shown above in the oops would not be good.
->>	ap->ops->eng_timeout(ap);
->>	499:       8b 50 04                mov    0x4(%eax),%edx
->>	49c:       ff 52 48                call   *0x48(%edx)
->>
->>Since I do not know the libata code it is unclear from doing a short
->>search how an ops pointer could get altered or if my observations are
->>correct.
-> 
-> 
-> Maybe the wakeup occurred before ap->ops was set correctly, or after it 
-> was unset.  Jan, at what point did the oops happen?  Was it right after 
-> the device was detected, during removal, or some other time?
-> 
-> Can you put in some debugging printk's to see what values are in ap, 
-> ap->ops, and ap->ops->eng_timeout?
+> I don't think it is reasonably possible to anticipate
+> all possible parsing requirements for the asc and ascq
+> portions of SCSI sense information across all device
+> models.  I'm in favor of having a "small" framework in
+> SCSI where a SCSI sense interpreter module (per
+> vendor & model possibly) could be registered
+> dynamically, by dm-emc.c for instance.
 
-ap->ops is 0, on dereferencing I get a backtrace. ap has a valid pointer
-(-573296044 whatever that maps to).
+Yeah I agree, I mentioned this before in some other mails. I think a 
+module versus some table that userspace could write to were discussed.
 
-Jan
+The BLKERR values were meant to be able to tell upper layer code whether 
+a transport or device or driver error occured and whether the lower 
+level thought it was retryable. But then I thought I could also wedge in 
+the handling of the vendor specifcs by adding a vendor specific SCSI 
+module that would map the their specific value to a BLKERR_* one. And as 
+I said offlist it is not working perfectly becuase we are losing some 
+information in the translations.
 
--- 
-Jan
+> 
+> The extended error interpreter callout would be
+> triggered indirectly by a call from
+> __end_that_request_first to a extended error parser
+> associated with the io request's queue whenever it
+> sees a non-zero sense field of the io request.
+> Perhaps the sense and sense_len fields in the
+> request structure should be changed to not be
+> SCSI specific.
+
+So this just handles the sense type of error right? We still need 
+something seperate for the transport and device etc errors correct?
+
+> 
+> Also, in order to allow for more variation and detail
+> in the interpretation of device specific SCSI asc and
+> ascq values, the results of the interpretation should
+> not be required to be block layer generic, but instead
+> are saved in something like a void *bi_extended_error
+> field of the bio.  __end_that_request_first would push
+> the results of the extended_error interpretation to the
+> bi_extended_error field of each bio in the request,
+> similar to how Jens's code currently works.
+> 
+> This extended error parsing approach should extend easily
+> (without requiring a kernel revision for new BLKERR values)
+> to new SCSI devices/models and their device specific asc
+> and ascq values.  This design could also be extended to
+> support the interpretation of extended error information
+> for non-SCSI block devices like DASD.
+> 
+
+I am fine with such a thing. You basically described what we have been 
+talking about for some time but sperated the BLKERR part from the vendor 
+specific part (which solves the problem I was having in trying to use 
+the BLKERR value for two things). I am not the decision maker though so.
