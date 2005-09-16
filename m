@@ -1,96 +1,151 @@
-From: "goggin, edward" <egoggin@emc.com>
-Subject: RE: [RFC PATCH 4/4] convert scsi to blkerr error values
-Date: Sat, 17 Sep 2005 08:10:43 -0400
-Message-ID: <C2EEB4E538D3DC48BF57F391F422779321ACB9@SRMANNING.eng.emc.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Fw: [Bugme-new] [Bug 5268] New: aic79xx scsi driver causing
+	system to hang
+Date: Fri, 16 Sep 2005 17:02:58 -0400
+Message-ID: <1126904578.4631.2.camel@mulgrave>
+References: <20050916120313.7f8969ba.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.lss.emc.com ([168.159.2.31]:15987 "EHLO
-	mailhub.lss.emc.com") by vger.kernel.org with ESMTP
-	id S1751086AbVIQMK6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Sep 2005 08:10:58 -0400
+Received: from stat9.steeleye.com ([209.192.50.41]:61589 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751115AbVIQPQL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Sep 2005 11:16:11 -0400
+In-Reply-To: <20050916120313.7f8969ba.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Mike Christie' <michaelc@cs.wisc.edu>, "goggin, edward" <egoggin@emc.com>
-Cc: axboe@suse.de, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+To: Andrew Morton <akpm@osdl.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-> -----Original Message-----
-> From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
-> Sent: Friday, September 16, 2005 4:26 PM
-> To: goggin, edward
-> Cc: axboe@suse.de; linux-scsi@vger.kernel.org; dm-devel@redhat.com
-> Subject: Re: [RFC PATCH 4/4] convert scsi to blkerr error values
+On Fri, 2005-09-16 at 12:03 -0700, Andrew Morton wrote:
+> This one's a bit strange.
 > 
-> goggin, edward wrote:
-> > Mike,
-> > 
-> > I don't think it is reasonably possible to anticipate
-> > all possible parsing requirements for the asc and ascq
-> > portions of SCSI sense information across all device
-> > models.  I'm in favor of having a "small" framework in
-> > SCSI where a SCSI sense interpreter module (per
-> > vendor & model possibly) could be registered
-> > dynamically, by dm-emc.c for instance.
-> 
-> Yeah I agree, I mentioned this before in some other mails. I think a 
-> module versus some table that userspace could write to were discussed.
+> It's a post-2.6.12 regression.
 
-Yes, I first heard about this idea from you on one of the multipathing
-conference calls.  I wasn't sure if you were still advocating for this
-approach though :))
+Yes, strange to me too.  The changes that went in to aic79xx between
+2.6.12 and 2.6.13 were tiny:
 
-> 
-> The BLKERR values were meant to be able to tell upper layer 
-> code whether 
-> a transport or device or driver error occured and whether the lower 
-> level thought it was retryable. But then I thought I could 
-> also wedge in 
-> the handling of the vendor specifcs by adding a vendor specific SCSI 
-> module that would map the their specific value to a BLKERR_* 
-> one. And as 
-> I said offlist it is not working perfectly becuase we are losing some 
-> information in the translations.
-> 
-> > 
-> > The extended error interpreter callout would be
-> > triggered indirectly by a call from
-> > __end_that_request_first to a extended error parser
-> > associated with the io request's queue whenever it
-> > sees a non-zero sense field of the io request.
-> > Perhaps the sense and sense_len fields in the
-> > request structure should be changed to not be
-> > SCSI specific.
-> 
-> So this just handles the sense type of error right? We still need 
-> something seperate for the transport and device etc errors correct?
+ aic79xx_osm.c |   18 +++++++++---------
+ aic79xx_osm.h |   17 -----------------
+ aic79xx_pci.c |    2 +-
+ 3 files changed, 10 insertions(+), 27 deletions(-)
 
-Yeah, I forgot about those.
+I've also attached them below, but I think they were
 
-> 
-> > 
-> > Also, in order to allow for more variation and detail
-> > in the interpretation of device specific SCSI asc and
-> > ascq values, the results of the interpretation should
-> > not be required to be block layer generic, but instead
-> > are saved in something like a void *bi_extended_error
-> > field of the bio.  __end_that_request_first would push
-> > the results of the extended_error interpretation to the
-> > bi_extended_error field of each bio in the request,
-> > similar to how Jens's code currently works.
-> > 
-> > This extended error parsing approach should extend easily
-> > (without requiring a kernel revision for new BLKERR values)
-> > to new SCSI devices/models and their device specific asc
-> > and ascq values.  This design could also be extended to
-> > support the interpretation of extended error information
-> > for non-SCSI block devices like DASD.
-> > 
-> 
-> I am fine with such a thing. You basically described what we 
-> have been 
-> talking about for some time but sperated the BLKERR part from 
-> the vendor 
-> specific part (which solves the problem I was having in trying to use 
-> the BLKERR value for two things). I am not the decision maker 
-> though so.
-> 
+1) #if -> #ifdef changes
+2) removal of the duplicated ENDIAN macros
+3) ahd_midlayer_entrypoint_lock/unlock -> ahd_lock/unlock
+
+I can't see how anything in these could produce the shown behaviour.
+
+James
+
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -1505,23 +1505,23 @@ ahd_linux_dev_reset(Scsi_Cmnd *cmd)
+ 	memset(recovery_cmd, 0, sizeof(struct scsi_cmnd));
+ 	recovery_cmd->device = cmd->device;
+ 	recovery_cmd->scsi_done = ahd_linux_dev_reset_complete;
+-#if AHD_DEBUG
++#ifdef AHD_DEBUG
+ 	if ((ahd_debug & AHD_SHOW_RECOVERY) != 0)
+ 		printf("%s:%d:%d:%d: Device reset called for cmd %p\n",
+ 		       ahd_name(ahd), cmd->device->channel, cmd->device->id,
+ 		       cmd->device->lun, cmd);
+ #endif
+-	ahd_midlayer_entrypoint_lock(ahd, &s);
++	ahd_lock(ahd, &s);
+ 
+ 	dev = ahd_linux_get_device(ahd, cmd->device->channel, cmd->device->id,
+ 				   cmd->device->lun, /*alloc*/FALSE);
+ 	if (dev == NULL) {
+-		ahd_midlayer_entrypoint_unlock(ahd, &s);
++		ahd_unlock(ahd, &s);
+ 		kfree(recovery_cmd);
+ 		return (FAILED);
+ 	}
+ 	if ((scb = ahd_get_scb(ahd, AHD_NEVER_COL_IDX)) == NULL) {
+-		ahd_midlayer_entrypoint_unlock(ahd, &s);
++		ahd_unlock(ahd, &s);
+ 		kfree(recovery_cmd);
+ 		return (FAILED);
+ 	}
+@@ -1553,7 +1553,7 @@ ahd_linux_dev_reset(Scsi_Cmnd *cmd)
+ 	ahd_queue_scb(ahd, scb);
+ 
+ 	scb->platform_data->flags |= AHD_SCB_UP_EH_SEM;
+-	spin_unlock_irq(&ahd->platform_data->spin_lock);
++	ahd_unlock(ahd, &s);
+ 	init_timer(&timer);
+ 	timer.data = (u_long)scb;
+ 	timer.expires = jiffies + (5 * HZ);
+@@ -1567,10 +1567,10 @@ ahd_linux_dev_reset(Scsi_Cmnd *cmd)
+ 		printf("Timer Expired\n");
+ 		retval = FAILED;
+ 	}
+-	spin_lock_irq(&ahd->platform_data->spin_lock);
++	ahd_lock(ahd, &s);
+ 	ahd_schedule_runq(ahd);
+ 	ahd_linux_run_complete_queue(ahd);
+-	ahd_midlayer_entrypoint_unlock(ahd, &s);
++	ahd_unlock(ahd, &s);
+ 	printf("%s: Device reset returning 0x%x\n", ahd_name(ahd), retval);
+ 	return (retval);
+ }
+@@ -1591,11 +1591,11 @@ ahd_linux_bus_reset(Scsi_Cmnd *cmd)
+ 		printf("%s: Bus reset called for cmd %p\n",
+ 		       ahd_name(ahd), cmd);
+ #endif
+-	ahd_midlayer_entrypoint_lock(ahd, &s);
++	ahd_lock(ahd, &s);
+ 	found = ahd_reset_channel(ahd, cmd->device->channel + 'A',
+ 				  /*initiate reset*/TRUE);
+ 	ahd_linux_run_complete_queue(ahd);
+-	ahd_midlayer_entrypoint_unlock(ahd, &s);
++	ahd_unlock(ahd, &s);
+ 
+ 	if (bootverbose)
+ 		printf("%s: SCSI bus reset delivered. "
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.h b/drivers/scsi/aic7xxx/aic79xx_osm.h
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.h
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.h
+@@ -112,23 +112,6 @@ typedef Scsi_Cmnd      *ahd_io_ctx_t;
+ #define ahd_le32toh(x)	le32_to_cpu(x)
+ #define ahd_le64toh(x)	le64_to_cpu(x)
+ 
+-#ifndef LITTLE_ENDIAN
+-#define LITTLE_ENDIAN 1234
+-#endif
+-
+-#ifndef BIG_ENDIAN
+-#define BIG_ENDIAN 4321
+-#endif
+-
+-#ifndef BYTE_ORDER
+-#if defined(__BIG_ENDIAN)
+-#define BYTE_ORDER BIG_ENDIAN
+-#endif
+-#if defined(__LITTLE_ENDIAN)
+-#define BYTE_ORDER LITTLE_ENDIAN
+-#endif
+-#endif /* BYTE_ORDER */
+-
+ /************************* Configuration Data *********************************/
+ extern uint32_t aic79xx_allow_memio;
+ extern int aic79xx_detect_complete;
+diff --git a/drivers/scsi/aic7xxx/aic79xx_pci.c b/drivers/scsi/aic7xxx/aic79xx_pci.c
+--- a/drivers/scsi/aic7xxx/aic79xx_pci.c
++++ b/drivers/scsi/aic7xxx/aic79xx_pci.c
+@@ -582,7 +582,7 @@ ahd_check_extport(struct ahd_softc *ahd)
+ 		}
+ 	}
+ 
+-#if AHD_DEBUG
++#ifdef AHD_DEBUG
+ 	if (have_seeprom != 0
+ 	 && (ahd_debug & AHD_DUMP_SEEPROM) != 0) {
+ 		uint16_t *sc_data;
+
+
