@@ -1,40 +1,59 @@
-From: Andreas Herrmann <AHERRMAN@de.ibm.com>
-Subject: Re: [PATCH 2.6.13 5/14] sas-class: sas_discover.c Discover process	(end
- devices)
-Date: Fri, 16 Sep 2005 09:28:54 +0200
-Message-ID: <OF93511537.D7B47A05-ONC125707D.00728836-C125707E.0028DAC3@de.ibm.com>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 5/5] kill scsi_wait_req
+Date: Fri, 16 Sep 2005 09:40:03 +0200
+Message-ID: <200509160940.10846@bilbo.math.uni-mannheim.de>
+References: <1126845602.9276.46.camel@max>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161105AbVIPH3F@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sergey Panov <sipan@sipan.org>
-Cc: Douglas Gilbert <dougg@torque.net>, Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@SteelEye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org, Luben Tuikov <ltuikov@yahoo.com>, Luben Tuikov <luben_tuikov@adaptec.com>, Matthew Wilcox <matthew@wil.cx>, Patrick Mansfield <patmans@us.ibm.com>
+Content-Type: multipart/signed;
+  boundary="nextPart16840474.XbN3bR8dUy";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.sf-mail.de ([62.27.20.61]:63191 "EHLO mail.sf-mail.de")
+	by vger.kernel.org with ESMTP id S1161117AbVIPHjI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Sep 2005 03:39:08 -0400
+In-Reply-To: <1126845602.9276.46.camel@max>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org
 
-On 14.09.2005 07:22 Sergey Panov <sipan@sipan.org> wrote:
-> On Tue, 2005-09-13 at 15:25 -0700, Patrick Mansfield wrote:
+--nextPart16840474.XbN3bR8dUy
+Content-Type: text/plain;
+  charset="iso-8859-6"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> > I think the only HBA's today that can handle an 8 byte lun are lpfc 
-and
-> > iscsi (plus new SAS ones).
+Mike Christie wrote:
+>cpqfc is the last user of scsi_wait_req. It is too broken to even
+>test patches to convert it to other functions though.
+>This patch just kills scsi_wait_req and adds to the list
+>of things that are broken on cpqfc. I was not sure what
+>the proper thing to do in this case when the driver
+>is so broken.
 
-> I am not aware of any SCSI/FC/SAS/etc hardware which uses more then just
-> first two bytes, but all drivers I looked at to proper bytes
-> rearrangement for those two bytes, and, as a result they do support 00b
-> and 01b addressing modes. 
+If you want to test it you'll find the needed patches on=20
+http://opensource.sf-tec.de/kernel/. I found someone with this hardware (or=
+=20
+he found me) and we're testing this.
 
-In certain configurations IBM's DS8000 uses 2nd level addressing with
-flat space addressing method (01b). Thus ending up with 8 byte LUNs
-where the first 4 bytes are really used, e.g. 40:ab:40:cd:00:00:00:00.
-This allows to address more than 0x3fff LUNs. But I don't know whether
-that many LUNs can be configured in practice.
+If you refuse to touch it I'll try to fix it up once your patches went into=
+=20
+mainline.
 
-BTW, zfcp really handles 8 byte LUNs using "unsigned long long" on
-big (endian) iron ;-)
-(However LUNs have to be configured via sysfs - no LUN scanning
-supported at the moment ;-(
+Eike
 
+--nextPart16840474.XbN3bR8dUy
+Content-Type: application/pgp-signature
 
-Regards,
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.0 (GNU/Linux)
 
-Andreas
+iD8DBQBDKnbaXKSJPmm5/E4RAlZRAKCJMh8/tVHOqa3wWNOyaVllPMOUTgCgiK04
+sYsaa6VOwwRHT/K40BSOsrU=
+=948m
+-----END PGP SIGNATURE-----
+
+--nextPart16840474.XbN3bR8dUy--
