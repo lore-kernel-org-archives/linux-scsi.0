@@ -1,73 +1,37 @@
-From: Andreas Herrmann <aherrman@de.ibm.com>
-Subject: [PATCH] change port speed definitions for scsi_transport_fc
-Date: Fri, 16 Sep 2005 11:01:14 +0200
-Message-ID: <20050916090114.GA7110@lion28.boeblingen.de.ibm.com>
+From: Anton Blanchard <anton@samba.org>
+Subject: Re: [2.6.14-rc1] sym scsi boot hang
+Date: Fri, 16 Sep 2005 20:28:30 +1000
+Message-ID: <20050916102830.GC14962@krispykreme>
+References: <20050913124804.GA5008@in.ibm.com> <20050913131739.GD26162@krispykreme> <20050913142939.GE26162@krispykreme> <1126629345.4809.36.camel@mulgrave> <20050914080629.GB19051@krispykreme> <1126717062.4584.4.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.de.ibm.com ([195.212.29.151]:7298 "EHLO
-	mtagate2.de.ibm.com") by vger.kernel.org with ESMTP
-	id S1161054AbVIPJEB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Sep 2005 05:04:01 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate2.de.ibm.com (8.12.10/8.12.10) with ESMTP id j8G93ud7099036
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2005 09:03:56 GMT
-Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j8G93udg181250
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2005 11:03:56 +0200
-Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id j8G93ttP018084
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2005 11:03:56 +0200
+Received: from ozlabs.org ([203.10.76.45]:27059 "EHLO ozlabs.org")
+	by vger.kernel.org with ESMTP id S1161157AbVIPKb5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Sep 2005 06:31:57 -0400
 Content-Disposition: inline
+In-Reply-To: <1126717062.4584.4.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@steeleye.com>, James Smart <james.smart@emulex.com>
-Cc: Linux SCSI <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Dipankar Sarma <dipankar@in.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, stern@rowland.harvard.edu
+
 
 Hi,
 
-obviously FC Port Speeds in scsi_transport_fc.h are defined according
-to FC-HBA:
+> OK, my fault.  Your fix is almost correct .. I was going to do this
+> eventually, honest, because there's no need to unprep and reprep a
+> command that comes in through scsi_queue_insert().
+> 
+> However, I decided to leave it in to exercise the scsi_unprep_request()
+> path just to make sure it was working.  What's happening, I think, is
+> that we also use this path for retries.  Since we kill and reget the
+> command each time, the retries decrement is never seen, so we're
+> retrying forever.
+> 
+> This should be the correct reversal.
 
-#define FC_PORTSPEED_1GBIT              1
-#define FC_PORTSPEED_2GBIT              2
-#define FC_PORTSPEED_10GBIT             4
-#define FC_PORTSPEED_4GBIT              8
+Thanks James, that did the trick.
 
-Problem is, whoever invented FC-HBA did not care about FC-FS or
-FC-GS-x. Following FC-FS/FC-GS-x defintions of port speeds would look
-like:
-
-1 GBit: 0x0001
-2 GBit: 0x0002
-4 GBit: 0x0004
-10GBit: 0x0008
-
-(and new in FC-LS:
-8 Gbit: 0x0010
-16GBit: 0x0020)
-
-I really appreciate if scsi_transport_fc.h would define port speeds
-according to FC-GS-x/FC-FS. Thus mapping of port speed capabilities to
-values defined in scsi_transport_fc.h can be avoided in the LLDD.
-
-Attached is a patch to change the definitions.
-
-
-Regards,
-
-Andreas
-
---- linux-2.6.14-rcx/include/scsi/scsi_transport_fc.h.orig	2005-09-16 10:49:44.000000000 +0200
-+++ linux-2.6.14-rcx/include/scsi/scsi_transport_fc.h	2005-09-16 10:50:03.000000000 +0200
-@@ -103,8 +103,8 @@ enum fc_port_state {
- 					     incapable of reporting */
- #define FC_PORTSPEED_1GBIT		1
- #define FC_PORTSPEED_2GBIT		2
--#define FC_PORTSPEED_10GBIT		4
--#define FC_PORTSPEED_4GBIT		8
-+#define FC_PORTSPEED_4GBIT		4
-+#define FC_PORTSPEED_10GBIT		8
- #define FC_PORTSPEED_NOT_NEGOTIATED	(1 << 15) /* Speed not established */
- 
- /*
+Anton
