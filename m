@@ -1,131 +1,126 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: atomic_kmap for PIO (was Re: Fw: Kernel panic with dc395x in
- 2.6.12.2)
-Date: Fri, 16 Sep 2005 19:28:01 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0509161922220.7533@poirot.grange>
-References: <20050709175725.75f291bf.rdunlap@xenotime.net>  <42E03506.7030707@drzeus.cx>
- <42E17772.3020903@drzeus.cx>  <20050723100945.7d43d063.rdunlap@xenotime.net>
- <42E2933C.4050808@drzeus.cx>  <20050723152714.4212ba52.rdunlap@xenotime.net>
- <42E2ECF1.8070501@drzeus.cx>  <20050723184014.49629f9e.rdunlap@xenotime.net>
- <42E39462.3040007@drzeus.cx>  <20050724100153.3e891484.rdunlap@xenotime.net>
- <42E565FE.4070708@drzeus.cx>  <20050725203133.3cfa650d.rdunlap@xenotime.net>
- <42E6A5C3.6070501@drzeus.cx>  <20050726202058.133382c1.rdunlap@xenotime.net>
- <42E964CC.5060600@drzeus.cx>  <20050728201339.216ab3b8.rdunlap@xenotime.net>
- <42F37893.30006@drzeus.cx>  <Pine.LNX.4.60.0508070003520.10832@poirot.grange>
-  <42F5FCBF.7080902@drzeus.cx>  <Pine.LNX.4.60.0508072214240.7539@poirot.grange>
-  <Pine.LNX.4.60.0509052241020.11890@poirot.grange> <1126580941.4825.8.camel@mulgrave>
- <Pine.LNX.4.60.05
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] Re: 2.6.14-rc1 load average calculation broken?
+Date: Fri, 16 Sep 2005 13:57:20 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0509161351240.4523-100000@iolanthe.rowland.org>
+References: <432B0394.8030907@ppp0.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.de ([213.165.64.20]:55252 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1030587AbVIPR2l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Sep 2005 13:28:41 -0400
-In-Reply-To: <Pine.LNX.4.60.0509131852360.7665@poirot.grange>
+Received: from iolanthe.rowland.org ([192.131.102.54]:64490 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP
+	id S1161213AbVIPR5W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Sep 2005 13:57:22 -0400
+In-Reply-To: <432B0394.8030907@ppp0.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jan Dittmer <jdittmer@ppp0.net>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Pavel Machek <pavel@suse.cz>, Greg KH <greg@kroah.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Hi all,
+[I have moved this thread to the SCSI list, where it now belongs.]
 
-On Tue, 13 Sep 2005, Guennadi Liakhovetski wrote:
+On Fri, 16 Sep 2005, Jan Dittmer wrote:
 
-> On Mon, 12 Sep 2005, James Bottomley wrote:
-> 
-> > On Mon, 2005-09-05 at 23:50 +0200, Guennadi Liakhovetski wrote:
-> > > 
-> > > 2) try to find some beta-testers by applying something like the below:
+> Alan Stern wrote:
+> > On Fri, 16 Sep 2005, Jan Dittmer wrote:
 > > 
-> > OK, why don't we do this.  I'll put it into scsi-misc-2.6; that will
-> > queue it for 2.6.14 and also put it in -mm.  It will probably be a month
-> > at least before scsi-misc-2.6 goes into 2.6.14, so you have until that
-> > time to find problems in it and back it out ...
+> > 
+> >>>Can you post a stack dump for those two threads?  Normally they are idle,
+> >>>in an interruptible wait, so they shouldn't be in D state.  Since they
+> >>>are, maybe there's some sort of error recovery attempt going on.  Like
+> >>>hald doing its periodic checking of hotpluggable storage devices while
+> >>>your monitor is off.
+> >>
+> >>They don't appear in lsusb or /proc/scsi/scsi anymore, so I don't know what
+> >>you mean.
+> >>
+> >>[4327082.342000] usb-storage   D 000F4261     0  3308      1          4671
+> >>2487 (L-TLB)
+> >>[4327082.342000] ded95f0c c9185a70 c04ae888 000f4261 00000010 ded94000
+> >>00000000 cd393840
+> >>[4327082.342000]        000f4261 dfabcb98 dfabca70 ce5b2300 000f4261 ded94000
+> >>09c67100 00000000
+> >>[4327082.342000]        c0410b24 00000286 c0410b2c dfabca70 c03adb5d 00000001
+> >>dfabca70 c011a2f0
+> >>[4327082.342000] Call Trace:
+> >>[4327082.342000]  [<c03adb5d>] __down+0xdd/0x140
+> >>[4327082.342000]  [<c011a2f0>] default_wake_function+0x0/0x20
+> >>[4327082.342000]  [<c03ac35f>] __down_failed+0x7/0xc
+> >>[4327082.342000]  [<c02c5050>] scsi_host_dev_release+0x0/0x90
+> >>[4327082.342000]  [<c0134dd4>] .text.lock.kthread+0xb/0x27
+> >>[4327082.342000]  [<c02c5087>] scsi_host_dev_release+0x37/0x90
+> >>[4327082.342000]  [<c020a4be>] kobject_cleanup+0x4e/0xa0
+> >>[4327082.342000]  [<c020a510>] kobject_release+0x0/0x10
+> >>[4327082.342000]  [<c020af3f>] kref_put+0x2f/0x80
+> >>[4327082.342000]  [<c020a53e>] kobject_put+0x1e/0x30
+> >>[4327082.342000]  [<c020a510>] kobject_release+0x0/0x10
+> >>[4327082.342000]  [<e0869288>] usb_stor_control_thread+0x68/0x240 [usb_storage]
+> >>[4327082.342000]  [<c010322e>] ret_from_fork+0x6/0x14
+> >>[4327082.342000]  [<e0869220>] usb_stor_control_thread+0x0/0x240 [usb_storage]
+> >>[4327082.342000]  [<e0869220>] usb_stor_control_thread+0x0/0x240 [usb_storage]
+> >>[4327082.342000]  [<c01013ad>] kernel_thread_helper+0x5/0x18
+> > 
+> > 
+> > I recognize the problem.  This experimental patch should fix it:
+
+http://marc.theaimsgroup.com/?l=linux-scsi&m=112681273931290&w=2
+
+(This is the new error-handler thread-exit patch.)
+
+> It fixes the described problem but introduces some others:
 > 
-> You mean option 2? Then, please, take the one below - it will not give 
-> false positives on dc395x.
+> [4294822.152000] ACPI: PCI Interrupt 0000:00:0d.1[A] -> GSI 17 (level, low) ->
+> IRQ 18
+> [4294822.781000] libata version 1.12 loaded.
+> [4294822.795000] sata_via version 1.1
+> [4294822.795000] ACPI: PCI Interrupt 0000:00:0f.0[B] -> GSI 20 (level, low) ->
+> IRQ 17
+> [4294822.796000] PCI: Via IRQ fixup for 0000:00:0f.0, from 10 to 1
+> [4294822.798000] sata_via(0000:00:0f.0): routed to hard irq line 1
+> [4294822.800000] Unable to handle kernel NULL pointer dereference at virtual
+> address 00000048
+> [4294822.801000]  printing eip:
+> [4294822.803000] e5c4d384
+> [4294822.805000] *pde = 00000000
+> [4294822.806000] Oops: 0000 [#1]
+> [4294822.806000] PREEMPT
+> [4294822.806000] Modules linked in: sata_via libata snd_bt87x pl2303 usbserial
+> usblp usbhid snd_via82xx snd_mpu401_uart w83627hf w83781d i2c_viapro tun vfat
+> fat loop via_agp intel_agp agpgart lp parport_pc parport tuner tvaudio msp3400
+> bttv video_buf firmware_class v4l2_common btcx_risc tveeprom videodev eeprom
+> asb100 hwmon_vid hwmon i2c_dev i2c_isa i2c_i801 snd_emu10k1_synth
+> snd_emux_synth snd_seq_virmidi snd_seq_midi_emul snd_seq_dummy snd_seq_oss
+> snd_seq_midi snd_seq_midi_event snd_seq snd_emu10k1 snd_rawmidi snd_seq_device
+> snd_ac97_codec snd_pcm_oss snd_mixer_oss snd_pcm snd_timer snd_ac97_bus
+> snd_page_alloc snd_util_mem snd_hwdep snd soundcore usb_storage ehci_hcd
+> uhci_hcd usbcore button processor ac e100 rtc
+> [4294822.806000] CPU:    0
+> [4294822.806000] EIP:    0060:[<e5c4d384>]    Not tainted VLI
+> [4294822.806000] EFLAGS: 00010282   (2.6.14-rc1-git1-via)
+> [4294822.806000] EIP is at ata_scsi_error+0x14/0x30 [libata]
+> [4294822.806000] eax: dfabb254   ebx: dfabb000   ecx: df8de000   edx: 00000000
+> [4294822.806000] esi: deb82000   edi: dfabb000   ebp: c02c8310   esp: deb83fa8
+> [4294822.806000] ds: 007b   es: 007b   ss: 0068
+> [4294822.806000] Process scsi_eh_5 (pid: 6417, threadinfo=deb82000 task=df5fda70)
+> [4294822.806000] Stack: dfabb254 dfabb000 c02c836d dfabb000 fffffffc df8dfde0
+> c0134bb6 dfabb000
+> [4294822.806000]        deb83fd0 00000000 ffffffff ffffffff c0134b00 00000000
+> 00000000 00000000
+> [4294822.806000]        c01013ad df8dfde0 00000000 00000000 00000000 00000000
+> [4294822.806000] Call Trace:
+> [4294822.806000]  [<c02c836d>] scsi_error_handler+0x5d/0xa0
+> [4294822.806000]  [<c0134bb6>] kthread+0xb6/0xc0
+> [4294822.806000]  [<c0134b00>] kthread+0x0/0xc0
+> [4294822.806000]  [<c01013ad>] kernel_thread_helper+0x5/0x18
+> [4294822.806000] Code: 83 bd 63 da 83 c4 08 31 c0 5b c3 8d b6 00 00 00 00 8d
+> bf 00 00 00 00 53 83 ec 04 8b 5c 24 0c 8d 83 54 02 00 00 8b 50 04 89 04 24
+> <ff> 52 48 8d 43 38 ff 4b 60 89 43 38 89 43 3c 83 c4 04 5b 31 c0
+> [4294822.806000]  <6>ata1: SATA max UDMA/133 cmd 0xEC00 ctl 0xE802 bmdma
+> 0xDC00 irq 17
 
-You were faster than I - I checked scsi-misc-2.6, you already applied the 
-first version:-( But it will trigger on every dc395x, which is, of course, 
-useless. Could you, please, replace it with the one below, or should I 
-send an incremental patch? Really sorry.
+This makes me suspect that the condition about host_busy == host_failed is 
+wrong.  Unfortunately I don't know why it's wrong or how to fix it.
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+Perhaps somebody on the SCSI list can provide the answer.
 
-Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Alan Stern
 
-Index: linux-2_6/drivers/scsi/dc395x.c
-===================================================================
-RCS file: /usr/src/cvs/linux-2_6/drivers/scsi/dc395x.c,v
-retrieving revision 1.1.1.8
-diff -u -p -r1.1.1.8 dc395x.c
---- linux-2_6/drivers/scsi/dc395x.c	2 Sep 2005 19:16:29 -0000	1.1.1.8
-+++ linux-2_6/drivers/scsi/dc395x.c	5 Sep 2005 20:38:23 -0000
-@@ -976,6 +976,16 @@
- 	}
- }
- 
-+static inline void pio_trigger(void)
-+{
-+	static int feedback_requested;
-+
-+	if (!feedback_requested) {
-+		feedback_requested = 1;
-+		printk(KERN_WARNING "%s: Please, contact <linux-scsi@vger.kernel.org> "
-+		       "to help improve support for your system.\n", __FILE__);
-+	}
-+}
- 
- /* Prepare SRB for being sent to Device DCB w/ command *cmd */
- static void build_srb(struct scsi_cmnd *cmd, struct DeviceCtlBlk *dcb,
-@@ -2320,6 +2330,7 @@
- 					      CFG2_WIDEFIFO);
- 			while (DC395x_read8(acb, TRM_S1040_SCSI_FIFOCNT) != 0x40) {
- 				u8 byte = DC395x_read8(acb, TRM_S1040_SCSI_FIFO);
-+				pio_trigger();
- 				*(srb->virt_addr)++ = byte;
- 				if (debug_enabled(DBG_PIO))
- 					printk(" %02x", byte);
-@@ -2331,6 +2342,7 @@
-                 /* Read the last byte ... */
- 				if (srb->total_xfer_length > 0) {
- 					u8 byte = DC395x_read8(acb, TRM_S1040_SCSI_FIFO);
-+					pio_trigger();
- 					*(srb->virt_addr)++ = byte;
- 					srb->total_xfer_length--;
- 					if (debug_enabled(DBG_PIO))
-@@ -2507,6 +2519,7 @@
- 				if (debug_enabled(DBG_PIO))
- 					printk(" %02x", (unsigned char) *(srb->virt_addr));
- 
-+				pio_trigger();
- 				DC395x_write8(acb, TRM_S1040_SCSI_FIFO, 
- 				     *(srb->virt_addr)++);
- 
-Index: linux-2_6/drivers/scsi/tmscsim.c
-===================================================================
-RCS file: /usr/src/cvs/linux-2_6/drivers/scsi/tmscsim.c,v
-retrieving revision 1.1.1.9
-diff -u -p -r1.1.1.9 tmscsim.c
---- linux-2_6/drivers/scsi/tmscsim.c	2 Sep 2005 19:16:29 -0000	1.1.1.9
-+++ linux-2_6/drivers/scsi/tmscsim.c	5 Sep 2005 20:38:31 -0000
-@@ -988,7 +988,15 @@
- 
- 	    if( residual )
- 	    {
-+		static int feedback_requested;
- 		bval = DC390_read8 (ScsiFifo);	    /* get one residual byte */
-+
-+		if (!feedback_requested) {
-+			feedback_requested = 1;
-+			printk(KERN_WARNING "%s: Please, contact <linux-scsi@vger.kernel.org> "
-+			       "to help improve support for your system.\n", __FILE__);
-+		}
-+
- 		ptr = (u8 *) bus_to_virt( pSRB->SGBusAddr );
- 		*ptr = bval;
- 		pSRB->SGBusAddr++; xferCnt++;
