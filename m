@@ -1,16 +1,16 @@
 From: Jan Dittmer <jdittmer@ppp0.net>
 Subject: Re: [linux-usb-devel] Re: 2.6.14-rc1 load average calculation broken?
-Date: Fri, 16 Sep 2005 23:56:28 +0200
-Message-ID: <432B3F8C.9050709@ppp0.net>
+Date: Sat, 17 Sep 2005 00:14:11 +0200
+Message-ID: <432B43B3.2080801@ppp0.net>
 References: <Pine.LNX.4.44L0.0509161702480.5838-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.portrix.net ([212.202.157.208]:29845 "EHLO
+Received: from mail.portrix.net ([212.202.157.208]:46743 "EHLO
 	zoidberg.portrix.net") by vger.kernel.org with ESMTP
-	id S1750703AbVIPV4q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Sep 2005 17:56:46 -0400
+	id S1750721AbVIPWO0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Sep 2005 18:14:26 -0400
 In-Reply-To: <Pine.LNX.4.44L0.0509161702480.5838-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -58,34 +58,15 @@ Alan Stern wrote:
 > 
 > Maybe the wakeup occurred before ap->ops was set correctly, or after it 
 > was unset.  Jan, at what point did the oops happen?  Was it right after 
-> the device was detected, during removal,or some other time?
-
-On startup, loaded by hotplug, I don't have any devices on that bus.
-CONFIG_SCSI_SATA_VIA=m
-
+> the device was detected, during removal, or some other time?
 > 
 > Can you put in some debugging printk's to see what values are in ap, 
 > ap->ops, and ap->ops->eng_timeout?
 
-Where exactly? Patch would be appreciated.
-Is that what you mean (hand edited)?
+ap->ops is 0, on dereferencing I get a backtrace. ap has a valid pointer
+(-573296044 whatever that maps to).
 
---- linux-2.6/drivers/scsi/libata-scsi.c.backup 2005-09-16 23:52:21.000000000
-+0200
-+++ linux-2.6/drivers/scsi/libata-scsi.c        2005-09-16 23:52:29.000000000
-+0200
-@@ -387,7 +387,9 @@
-        struct ata_port *ap;
-
-        DPRINTK("ENTER\n");
-        ap = (struct ata_port *) &host->hostdata[0];
-+       printk("ap: %d %d %d\n", ap);
-+       printk("ap->ops %d\n", ap->ops);
-+       printk("ap->ops->eng_timeout %d\n", ap->ops->eng_timeout);
-        ap->ops->eng_timeout(ap);
-
-
-I'll reboot with these changes, we'll see.
+Jan
 
 -- 
 Jan
