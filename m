@@ -1,225 +1,61 @@
-From: "goggin, edward" <egoggin@emc.com>
-Subject: RE: [RFC PATCH 2/4] convert dm to blkerr error values
-Date: Fri, 16 Sep 2005 16:56:31 -0400
-Message-ID: <C2EEB4E538D3DC48BF57F391F422779321ACB7@SRMANNING.eng.emc.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] Re: 2.6.14-rc1 load average calculation broken?
+Date: Fri, 16 Sep 2005 17:09:05 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0509161702480.5838-100000@iolanthe.rowland.org>
+References: <20050916202827.GA30689@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.lss.emc.com ([168.159.2.31]:8069 "EHLO
-	mailhub.lss.emc.com") by vger.kernel.org with ESMTP
-	id S1750860AbVIPU4w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Sep 2005 16:56:52 -0400
+Received: from iolanthe.rowland.org ([192.131.102.54]:57778 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP
+	id S1750882AbVIPVJJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Sep 2005 17:09:09 -0400
+In-Reply-To: <20050916202827.GA30689@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Mike Christie' <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, axboe@suse.de, dm-devel@redhat.com
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Jan Dittmer <jdittmer@ppp0.net>, James Bottomley <James.Bottomley@SteelEye.com>, Pavel Machek <pavel@suse.cz>, Greg KH <greg@kroah.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Mike,
+On Fri, 16 Sep 2005, Mike Anderson wrote:
 
-Can't dec_pending now see different error values for the
-possibly multiple bio clones of a single original bio?
-How should it decide which error gets propagated up to
-the original bio?
+> > This makes me suspect that the condition about host_busy == host_failed is 
+> > wrong.  Unfortunately I don't know why it's wrong or how to fix it.
+> > 
+> > Perhaps somebody on the SCSI list can provide the answer.
+> > 
+> 
+> What condition are you thinking would happen if this was wrong (we are
+> getting woken up too early?)?
 
-Looks like the old code and your new code just take the error
-value from the last completed bio which has an error.  While
-this was probably OK when the only error value was -ENXIO, we
-may now need some logic in dec_pending to decide which error
-value has more significance.
+Yes, that is what would happen.  Or failing to go back to sleep when we 
+should, which might be even worse.
 
-Ed
+>  I did a quick look and could not see changes
+> between 2.6.13 and 2.16.14-rc1 that would make these values wrong. This is
+> just a check to ensure the eh is not woken up to early. Historically in
+> older scsi eh code there used to be a panic if the error handler was woken
+> up to early. In scsi_unjam_host and a quick look at ata_scsi_error getting
+> woken up early should not cause a panic.
+> 
+> I built a listfile (libata-scsi.lst) and it is probably not an exact
+> match. ..but..
+> 
+> These lines in ata_scsi_error(..) appear to be close to the failure and
+> edx being zero as shown above in the oops would not be good.
+> 	ap->ops->eng_timeout(ap);
+> 	499:       8b 50 04                mov    0x4(%eax),%edx
+> 	49c:       ff 52 48                call   *0x48(%edx)
+> 
+> Since I do not know the libata code it is unclear from doing a short
+> search how an ops pointer could get altered or if my observations are
+> correct.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org 
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Mike Christie
-> Sent: Wednesday, August 24, 2005 5:04 AM
-> To: linux-scsi@vger.kernel.org; axboe@suse.de; dm-devel@redhat.com
-> Subject: [RFC PATCH 2/4] convert dm to blkerr error values
-> 
-> Convert dm and dm-targets (excpet dm-multipath) to
-> BLKERR values.
-> 
-> Some temporary crap I will fix is the dec_pending fucntions.
-> Becuase dec_pending() used to get -Exyz values from target map
-> functions I just added a switch statement to convert the Exyz
-> value to a BLKERR one. I need to spend more time looking at
-> some of them to make sure I do the right thing. I will convert
-> the target's map functions in the next round - unless you are
-> fine with that conversion code in dec_pending. I had to play
-> similar tricks for the other target's dec_pending/count functions.
-> 
-> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-> 
-> diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-> --- a/drivers/md/dm-crypt.c
-> +++ b/drivers/md/dm-crypt.c
-> @@ -436,8 +436,8 @@ static void dec_pending(struct crypt_io 
->  {
->  	struct crypt_config *cc = (struct crypt_config *) 
-> io->target->private;
->  
-> -	if (error < 0)
-> -		io->error = error;
-> +	if (error && io->error != BLK_SUCCESS)
-> +		io->error = BLKERR_IO;
->  
->  	if (!atomic_dec_and_test(&io->pending))
->  		return;
-> @@ -726,7 +726,10 @@ static int crypt_endio(struct bio *bio, 
->  	}
->  
->  	if (bio->bi_size)
-> -		return 1;
-> +		return -1;
-> +
-> +	if (error != BLK_SUCCESS)
-> +		io->error = error;
->  
->  	bio_put(bio);
->  
-> @@ -804,7 +807,7 @@ static int crypt_map(struct dm_target *t
->  	io->target = ti;
->  	io->bio = bio;
->  	io->first_clone = NULL;
-> -	io->error = 0;
-> +	io->error = BLK_SUCCESS;
->  	atomic_set(&io->pending, 1); /* hold a reference */
->  
->  	if (bio_data_dir(bio) == WRITE)
-> diff --git a/drivers/md/dm-emc.c b/drivers/md/dm-emc.c
-> --- a/drivers/md/dm-emc.c
-> +++ b/drivers/md/dm-emc.c
-> @@ -48,7 +48,7 @@ static int emc_endio(struct bio *bio, un
->  	 *
->  	 * For now simple logic: either it works or it doesn't.
->  	 */
-> -	if (error)
-> +	if (error != BLK_SUCCESS)
->  		dm_pg_init_complete(path, MP_FAIL_PATH);
->  	else
->  		dm_pg_init_complete(path, 0);
-> diff --git a/drivers/md/dm-io.c b/drivers/md/dm-io.c
-> --- a/drivers/md/dm-io.c
-> +++ b/drivers/md/dm-io.c
-> @@ -115,7 +115,7 @@ static inline unsigned bio_get_region(st
->   *---------------------------------------------------------------*/
->  static void dec_count(struct io *io, unsigned int region, int error)
->  {
-> -	if (error)
-> +	if (error != BLK_SUCCESS)
->  		set_bit(region, &io->error);
->  
->  	if (atomic_dec_and_test(&io->count)) {
-> @@ -141,7 +141,7 @@ static int endio(struct bio *bio, unsign
->  	if (bio->bi_size)
->  		return 1;
->  
-> -	if (error && bio_data_dir(bio) == READ)
-> +	if (error != BLK_SUCCESS && bio_data_dir(bio) == READ)
->  		zero_fill_bio(bio);
->  
->  	dec_count(io, bio_get_region(bio), error);
-> @@ -308,7 +308,7 @@ static void dispatch_io(int rw, unsigned
->  	 * Drop the extra refence that we were holding to avoid
->  	 * the io being completed too early.
->  	 */
-> -	dec_count(io, 0, 0);
-> +	dec_count(io, 0, BLK_SUCCESS);
->  }
->  
->  static int sync_io(unsigned int num_regions, struct io_region *where,
-> diff --git a/drivers/md/dm-zero.c b/drivers/md/dm-zero.c
-> --- a/drivers/md/dm-zero.c
-> +++ b/drivers/md/dm-zero.c
-> @@ -41,7 +41,7 @@ static int zero_map(struct dm_target *ti
->  		break;
->  	}
->  
-> -	bio_endio(bio, bio->bi_size, 0);
-> +	bio_endio(bio, bio->bi_size, BLK_SUCCESS);
->  
->  	/* accepted bio, don't make new request */
->  	return 0;
-> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-> --- a/drivers/md/dm.c
-> +++ b/drivers/md/dm.c
-> @@ -294,8 +294,25 @@ struct dm_table *dm_get_table(struct map
->   */
->  static inline void dec_pending(struct dm_io *io, int error)
->  {
-> -	if (error)
-> -		io->error = error;
-> +	/*
-> +	 * When called from the endio functions io->error will
-> +	 * have been set or we will be passed a BLKERR value.
-> +	 * If this is called from the mapping functions then will get
-> +	 * a old error value because we have not converted them yet
-> +	 */
-> +	if (error && io->error == BLK_SUCCESS) {
-> +		switch (error) {
-> +			case -EWOULDBLOCK:
-> +				io->error = BLKERR_WOULDBLOCK;
-> +				break;
-> +			case -EOPNOTSUPP:
-> +				io->error = BLKERR_NOTSUPP;
-> +				break;
-> +			default:
-> +				io->error = BLKERR_IO;
-> +				break;
-> +		}
-> +	}
->  
->  	if (atomic_dec_and_test(&io->io_count)) {
->  		if (atomic_dec_and_test(&io->md->pending))
-> @@ -317,19 +334,22 @@ static int clone_endio(struct bio *bio, 
->  	if (bio->bi_size)
->  		return 1;
->  
-> -	if (!bio_flagged(bio, BIO_UPTODATE) && !error)
-> -		error = -EIO;
-> +	if (!bio_flagged(bio, BIO_UPTODATE) && error == BLK_SUCCESS)
-> +		error = BLKERR_IO;
->  
->  	if (endio) {
->  		r = endio(tio->ti, bio, error, &tio->info);
-> -		if (r < 0)
-> +		if (r >= 0)
->  			error = r;
->  
-> -		else if (r > 0)
-> +		else if (r < 0)
->  			/* the target wants another shot at the io */
->  			return 1;
->  	}
->  
-> +	if (error != BLK_SUCCESS)
-> +		io->error = error;
-> +
->  	free_tio(io->md, tio);
->  	dec_pending(io, error);
->  	bio_put(bio);
-> @@ -539,7 +559,7 @@ static void __split_bio(struct mapped_de
->  	ci.md = md;
->  	ci.bio = bio;
->  	ci.io = alloc_io(md);
-> -	ci.io->error = 0;
-> +	ci.io->error = BLK_SUCCESS;
->  	atomic_set(&ci.io->io_count, 1);
->  	ci.io->bio = bio;
->  	ci.io->md = md;
-> @@ -552,7 +572,7 @@ static void __split_bio(struct mapped_de
->  		__clone_and_map(&ci);
->  
->  	/* drop the extra reference count */
-> -	dec_pending(ci.io, 0);
-> +	dec_pending(ci.io, BLK_SUCCESS);
->  	dm_table_put(ci.map);
->  }
->  /*-----------------------------------------------------------------
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Maybe the wakeup occurred before ap->ops was set correctly, or after it 
+was unset.  Jan, at what point did the oops happen?  Was it right after 
+the device was detected, during removal, or some other time?
+
+Can you put in some debugging printk's to see what values are in ap, 
+ap->ops, and ap->ops->eng_timeout?
+
+Alan Stern
+
