@@ -1,152 +1,155 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 4/5] convert st to use scsi_execte_async
-Date: Sat, 17 Sep 2005 11:25:25 -0500
-Message-ID: <1126974325.10413.5.camel@max>
-References: <1126845599.9276.44.camel@max>
-	 <Pine.LNX.4.61.0509171428410.9258@kai.makisara.local>
-	 <432C39BC.1030105@cs.wisc.edu>  <432C3C75.5090405@cs.wisc.edu>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: Fw: [Bugme-new] [Bug 5268] New: aic79xx scsi driver causing
+ system to hang
+Date: Sat, 17 Sep 2005 13:30:56 -0700
+Message-ID: <20050917133056.487394cf.akpm@osdl.org>
+References: <20050916120313.7f8969ba.akpm@osdl.org>
+	<1126904578.4631.2.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:54736 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1750715AbVIQSZb (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:39646 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751063AbVIQUbl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Sep 2005 14:25:31 -0400
-In-Reply-To: <432C3C75.5090405@cs.wisc.edu>
+	Sat, 17 Sep 2005 16:31:41 -0400
+In-Reply-To: <1126904578.4631.2.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@kernel-bugs.osdl.org>, freelsjd@ornl.gov
 
-On Sat, 2005-09-17 at 10:55 -0500, Mike Christie wrote:
-> Mike Christie wrote:
-> > Kai Makisara wrote:
+
+(Add reporter and bugzilla to cc)
+
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
+>
+> On Fri, 2005-09-16 at 12:03 -0700, Andrew Morton wrote:
+> > This one's a bit strange.
 > > 
-> >>
-> >> I think I may have found the problem: scsi_execute_async does not use 
-> >> the parameter retries (the same applies to scsi_execute btw). This 
-> >> leads to retrying the reads at filemark and this is not correct. I 
-> >> added the hack below to scsi_execute_async and after this the simple 
-> >> tests succeed.
-> > 
-> > 
-> > ah ok. I think when we prep the command we need to copy the retries from 
-> > the command. So in st.c st_init_command callout we need to copy that 
-> > value (we are just copying the timeout today).
+> > It's a post-2.6.12 regression.
 > 
-> oh I guess there is not retries count on the request like there is for 
-> timeout :)
+> Yes, strange to me too.  The changes that went in to aic79xx between
+> 2.6.12 and 2.6.13 were tiny:
 > 
-> But it looks like retried is always 0. I guess st's init_command could 
-> just do
+>  aic79xx_osm.c |   18 +++++++++---------
+>  aic79xx_osm.h |   17 -----------------
+>  aic79xx_pci.c |    2 +-
+>  3 files changed, 10 insertions(+), 27 deletions(-)
 > 
-> SCpnt->allowed = 0;
-
-
-Or how about this patch it was made against my updated patches here:
-http://www.cs.wisc.edu/~michaelc/block/use-sg/v6/
-
-It is the 06-add-retry-field.patch patch. All it does it add a retries
-count onto the request so it can be passed around like the timeout
-value.
-
-diff -aurp scsi-rc-fixes.tmp/drivers/block/scsi_ioctl.c scsi-rc-fixes/drivers/block/scsi_ioctl.c
---- scsi-rc-fixes.tmp/drivers/block/scsi_ioctl.c	2005-09-17 11:16:42.000000000 -0500
-+++ scsi-rc-fixes/drivers/block/scsi_ioctl.c	2005-09-17 11:05:22.000000000 -0500
-@@ -302,6 +302,7 @@ static int sg_io(struct file *file, requ
- 		rq->timeout = q->sg_timeout;
- 	if (!rq->timeout)
- 		rq->timeout = BLK_DEFAULT_TIMEOUT;
-+	rq->retries = 1;
- 
- 	start_time = jiffies;
- 
-@@ -412,6 +413,7 @@ static int sg_scsi_ioctl(struct file *fi
- 			rq->timeout = BLK_DEFAULT_TIMEOUT;
- 			break;
- 	}
-+	rq->retries = 1;
- 
- 	memset(sense, 0, sizeof(sense));
- 	rq->sense = sense;
-@@ -570,6 +572,7 @@ int scsi_cmd_ioctl(struct file *file, st
- 			rq->data = NULL;
- 			rq->data_len = 0;
- 			rq->timeout = BLK_DEFAULT_TIMEOUT;
-+			rq->retries = 1;
- 			memset(rq->cmd, 0, sizeof(rq->cmd));
- 			rq->cmd[0] = GPCMD_START_STOP_UNIT;
- 			rq->cmd[4] = 0x02 + (close != 0);
-diff -aurp scsi-rc-fixes.tmp/drivers/scsi/scsi_lib.c scsi-rc-fixes/drivers/scsi/scsi_lib.c
---- scsi-rc-fixes.tmp/drivers/scsi/scsi_lib.c	2005-09-17 11:17:08.000000000 -0500
-+++ scsi-rc-fixes/drivers/scsi/scsi_lib.c	2005-09-17 11:06:17.000000000 -0500
-@@ -261,6 +261,7 @@ int scsi_execute(struct scsi_device *sde
- 	memcpy(req->cmd, cmd, req->cmd_len);
- 	req->sense = sense;
- 	req->sense_len = 0;
-+	req->retries = retries;
- 	req->timeout = timeout;
- 	req->flags |= flags | REQ_BLOCK_PC | REQ_SPECIAL | REQ_QUIET;
- 
-@@ -427,6 +428,7 @@ int scsi_execute_async(struct scsi_devic
- 	req->sense = sioc->sense;
- 	req->sense_len = 0;
- 	req->timeout = timeout;
-+	req->retries = retries;
- 	req->flags |= REQ_BLOCK_PC | REQ_QUIET;
- 	req->end_io_data = sioc;
- 
-@@ -1340,7 +1342,7 @@ static int scsi_prep_fn(struct request_q
- 				cmd->sc_data_direction = DMA_NONE;
- 			
- 			cmd->transfersize = req->data_len;
--			cmd->allowed = 3;
-+			cmd->allowed = req->retries;
- 			cmd->timeout_per_command = req->timeout;
- 			cmd->done = scsi_generic_done;
- 		}
-diff -aurp scsi-rc-fixes.tmp/drivers/scsi/sd.c scsi-rc-fixes/drivers/scsi/sd.c
---- scsi-rc-fixes.tmp/drivers/scsi/sd.c	2005-09-17 11:16:49.000000000 -0500
-+++ scsi-rc-fixes/drivers/scsi/sd.c	2005-09-17 11:05:32.000000000 -0500
-@@ -86,7 +86,6 @@
-  * Number of allowed retries
-  */
- #define SD_MAX_RETRIES		5
--#define SD_PASSTHROUGH_RETRIES	1
- 
- static void scsi_disk_release(struct kref *kref);
- 
-@@ -248,7 +247,7 @@ static int sd_init_command(struct scsi_c
- 			timeout = rq->timeout;
- 
- 		SCpnt->transfersize = rq->data_len;
--		SCpnt->allowed = SD_PASSTHROUGH_RETRIES;
-+		SCpnt->allowed = rq->retries;
- 		goto queue;
- 	}
- 
-diff -aurp scsi-rc-fixes.tmp/drivers/scsi/st.c scsi-rc-fixes/drivers/scsi/st.c
---- scsi-rc-fixes.tmp/drivers/scsi/st.c	2005-09-17 11:17:08.000000000 -0500
-+++ scsi-rc-fixes/drivers/scsi/st.c	2005-09-17 11:06:00.000000000 -0500
-@@ -4206,6 +4206,7 @@ static int st_init_command(struct scsi_c
- 	else
- 		SCpnt->sc_data_direction = DMA_NONE;
- 
-+	SCpnt->allowed = rq->retries;
- 	SCpnt->timeout_per_command = rq->timeout;
- 	SCpnt->transfersize = rq->data_len;
- 	SCpnt->done = st_intr;
-diff -aurp scsi-rc-fixes.tmp/include/linux/blkdev.h scsi-rc-fixes/include/linux/blkdev.h
---- scsi-rc-fixes.tmp/include/linux/blkdev.h	2005-09-17 11:17:08.000000000 -0500
-+++ scsi-rc-fixes/include/linux/blkdev.h	2005-09-17 10:59:44.000000000 -0500
-@@ -184,6 +184,7 @@ struct request {
- 	void *sense;
- 
- 	unsigned int timeout;
-+	int retries;
- 
- 	/*
- 	 * For Power Management requests
-
-
+> I've also attached them below, but I think they were
+> 
+> 1) #if -> #ifdef changes
+> 2) removal of the duplicated ENDIAN macros
+> 3) ahd_midlayer_entrypoint_lock/unlock -> ahd_lock/unlock
+> 
+> I can't see how anything in these could produce the shown behaviour.
+> 
+> James
+> 
+> diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+> --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
+> +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+> @@ -1505,23 +1505,23 @@ ahd_linux_dev_reset(Scsi_Cmnd *cmd)
+>  	memset(recovery_cmd, 0, sizeof(struct scsi_cmnd));
+>  	recovery_cmd->device = cmd->device;
+>  	recovery_cmd->scsi_done = ahd_linux_dev_reset_complete;
+> -#if AHD_DEBUG
+> +#ifdef AHD_DEBUG
+>  	if ((ahd_debug & AHD_SHOW_RECOVERY) != 0)
+>  		printf("%s:%d:%d:%d: Device reset called for cmd %p\n",
+>  		       ahd_name(ahd), cmd->device->channel, cmd->device->id,
+>  		       cmd->device->lun, cmd);
+>  #endif
+> -	ahd_midlayer_entrypoint_lock(ahd, &s);
+> +	ahd_lock(ahd, &s);
+>  
+>  	dev = ahd_linux_get_device(ahd, cmd->device->channel, cmd->device->id,
+>  				   cmd->device->lun, /*alloc*/FALSE);
+>  	if (dev == NULL) {
+> -		ahd_midlayer_entrypoint_unlock(ahd, &s);
+> +		ahd_unlock(ahd, &s);
+>  		kfree(recovery_cmd);
+>  		return (FAILED);
+>  	}
+>  	if ((scb = ahd_get_scb(ahd, AHD_NEVER_COL_IDX)) == NULL) {
+> -		ahd_midlayer_entrypoint_unlock(ahd, &s);
+> +		ahd_unlock(ahd, &s);
+>  		kfree(recovery_cmd);
+>  		return (FAILED);
+>  	}
+> @@ -1553,7 +1553,7 @@ ahd_linux_dev_reset(Scsi_Cmnd *cmd)
+>  	ahd_queue_scb(ahd, scb);
+>  
+>  	scb->platform_data->flags |= AHD_SCB_UP_EH_SEM;
+> -	spin_unlock_irq(&ahd->platform_data->spin_lock);
+> +	ahd_unlock(ahd, &s);
+>  	init_timer(&timer);
+>  	timer.data = (u_long)scb;
+>  	timer.expires = jiffies + (5 * HZ);
+> @@ -1567,10 +1567,10 @@ ahd_linux_dev_reset(Scsi_Cmnd *cmd)
+>  		printf("Timer Expired\n");
+>  		retval = FAILED;
+>  	}
+> -	spin_lock_irq(&ahd->platform_data->spin_lock);
+> +	ahd_lock(ahd, &s);
+>  	ahd_schedule_runq(ahd);
+>  	ahd_linux_run_complete_queue(ahd);
+> -	ahd_midlayer_entrypoint_unlock(ahd, &s);
+> +	ahd_unlock(ahd, &s);
+>  	printf("%s: Device reset returning 0x%x\n", ahd_name(ahd), retval);
+>  	return (retval);
+>  }
+> @@ -1591,11 +1591,11 @@ ahd_linux_bus_reset(Scsi_Cmnd *cmd)
+>  		printf("%s: Bus reset called for cmd %p\n",
+>  		       ahd_name(ahd), cmd);
+>  #endif
+> -	ahd_midlayer_entrypoint_lock(ahd, &s);
+> +	ahd_lock(ahd, &s);
+>  	found = ahd_reset_channel(ahd, cmd->device->channel + 'A',
+>  				  /*initiate reset*/TRUE);
+>  	ahd_linux_run_complete_queue(ahd);
+> -	ahd_midlayer_entrypoint_unlock(ahd, &s);
+> +	ahd_unlock(ahd, &s);
+>  
+>  	if (bootverbose)
+>  		printf("%s: SCSI bus reset delivered. "
+> diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.h b/drivers/scsi/aic7xxx/aic79xx_osm.h
+> --- a/drivers/scsi/aic7xxx/aic79xx_osm.h
+> +++ b/drivers/scsi/aic7xxx/aic79xx_osm.h
+> @@ -112,23 +112,6 @@ typedef Scsi_Cmnd      *ahd_io_ctx_t;
+>  #define ahd_le32toh(x)	le32_to_cpu(x)
+>  #define ahd_le64toh(x)	le64_to_cpu(x)
+>  
+> -#ifndef LITTLE_ENDIAN
+> -#define LITTLE_ENDIAN 1234
+> -#endif
+> -
+> -#ifndef BIG_ENDIAN
+> -#define BIG_ENDIAN 4321
+> -#endif
+> -
+> -#ifndef BYTE_ORDER
+> -#if defined(__BIG_ENDIAN)
+> -#define BYTE_ORDER BIG_ENDIAN
+> -#endif
+> -#if defined(__LITTLE_ENDIAN)
+> -#define BYTE_ORDER LITTLE_ENDIAN
+> -#endif
+> -#endif /* BYTE_ORDER */
+> -
+>  /************************* Configuration Data *********************************/
+>  extern uint32_t aic79xx_allow_memio;
+>  extern int aic79xx_detect_complete;
+> diff --git a/drivers/scsi/aic7xxx/aic79xx_pci.c b/drivers/scsi/aic7xxx/aic79xx_pci.c
+> --- a/drivers/scsi/aic7xxx/aic79xx_pci.c
+> +++ b/drivers/scsi/aic7xxx/aic79xx_pci.c
+> @@ -582,7 +582,7 @@ ahd_check_extport(struct ahd_softc *ahd)
+>  		}
+>  	}
+>  
+> -#if AHD_DEBUG
+> +#ifdef AHD_DEBUG
+>  	if (have_seeprom != 0
+>  	 && (ahd_debug & AHD_DUMP_SEEPROM) != 0) {
+>  		uint16_t *sc_data;
