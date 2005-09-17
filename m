@@ -1,40 +1,45 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] Re: 2.6.14-rc1 load average calculation broken?
-Date: Sat, 17 Sep 2005 00:23:28 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0509170014070.4420-100000@netrider.rowland.org>
-References: <432B43B3.2080801@ppp0.net>
+From: 'Christoph Hellwig' <hch@infradead.org>
+Subject: Re: How to avoid "Trying to register duplicated ioctl32 handler"
+Date: Sat, 17 Sep 2005 10:29:53 +0100
+Message-ID: <20050917092953.GA14144@infradead.org>
+References: <0E3FA95632D6D047BA649F95DAB60E57060CD194@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.rowland.org ([192.131.102.7]:28431 "HELO mx1.rowland.org")
-	by vger.kernel.org with SMTP id S1750876AbVIQEXb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Sep 2005 00:23:31 -0400
-In-Reply-To: <432B43B3.2080801@ppp0.net>
+Received: from pentafluge.infradead.org ([213.146.154.40]:34507 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751015AbVIQJ34 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Sep 2005 05:29:56 -0400
+Content-Disposition: inline
+In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57060CD194@exa-atlanta>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Dittmer <jdittmer@ppp0.net>
-Cc: Mike Anderson <andmike@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, Pavel Machek <pavel@suse.cz>, Greg KH <greg@kroah.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>
+Cc: 'Christoph Hellwig' <hch@infradead.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-On Sat, 17 Sep 2005, Jan Dittmer wrote:
-
-> > Maybe the wakeup occurred before ap->ops was set correctly, or after it 
-> > was unset.  Jan, at what point did the oops happen?  Was it right after 
-> > the device was detected, during removal, or some other time?
-> > 
-> > Can you put in some debugging printk's to see what values are in ap, 
-> > ap->ops, and ap->ops->eng_timeout?
+On Thu, Sep 15, 2005 at 05:17:29PM -0400, Bagalkote, Sreenivas wrote:
+> In our MegaRAID driver, one of the IOCTLs is defined as
+> #define MEGASAS_IOC_GET_AEN _IOW('M', 2, struct megasas_aen)
 > 
-> ap->ops is 0, on dereferencing I get a backtrace. ap has a valid pointer
-> (-573296044 whatever that maps to).
+> This clashes with some other value in "built_in" ioctl table on x86_64
+> kernels.
+> How do I really avoid such problems in the future. Even if I search the
+> length
+> of the built_in table and pick a unique value, is it guaranteed to be unique
+> in
+> the future releases? The Documentation/ioctl-number.txt isn't of much help
+> either.
+> It lists multiple conflicts. Moreover, not all of them are listed there.
+> 
+> On a broader note, if the struct ioctl_trans inside ioctl32_hash_table could
+> use the combination of cmd + major number instead of just cmd to determine
+> the
+> uniqueness, these conflicts could be avoided, right? I mean understand the
+> reasons
+> for system-wide unique ioctl numbers. But right now, only those platforms
+> that
+> need conversion are technically impeded for violating that guideline.
 
-Hmm...  I imagine that when the error handler is first starting up,
-->host_busy is equal to ->host_failed because both are 0.  So that really
-is not the appropriate condition to wait for.  A better approach would be
-to have an atomic_t variable recording the number of pending invocations.
-
-On the whole, I wonder if using kthread_stop here is such a good idea.  
-The old mechanism for stopping worked well...
-
-Alan Stern
-
+Cou can't avoid the clashes in the hash.  That's why we got rid of
+user-registerable ioctl translations completely and only allow ->compat_ioctl
+anymore.
