@@ -1,54 +1,109 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH 4/5] convert st to use scsi_execte_async
-Date: Sat, 17 Sep 2005 19:48:32 +0300 (EEST)
-Message-ID: <Pine.LNX.4.61.0509171944080.10503@kai.makisara.local>
-References: <1126845599.9276.44.camel@max> <Pine.LNX.4.61.0509171428410.9258@kai.makisara.local>
- <Pine.LNX.4.61.0509171840110.10503@kai.makisara.local>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [dm-devel] RE: [RFC PATCH 4/4] convert scsi to blkerr error values
+Date: Sat, 17 Sep 2005 10:35:57 -0500
+Message-ID: <432C37DD.3080208@cs.wisc.edu>
+References: <C2EEB4E538D3DC48BF57F391F422779321ACB8@SRMANNING.eng.emc.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep19-0.kolumbus.fi ([193.229.0.45]:42716 "EHLO
-	fep19-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S1751146AbVIQQnJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Sep 2005 12:43:09 -0400
-In-Reply-To: <Pine.LNX.4.61.0509171840110.10503@kai.makisara.local>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:34768 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1751170AbVIQRge (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Sep 2005 13:36:34 -0400
+In-Reply-To: <C2EEB4E538D3DC48BF57F391F422779321ACB8@SRMANNING.eng.emc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: "goggin, edward" <egoggin@emc.com>, axboe@suse.de, linux-scsi@vger.kernel.org
 
-On Sat, 17 Sep 2005, Kai Makisara wrote:
-
-> On Sat, 17 Sep 2005, Kai Makisara wrote:
+goggin, edward wrote:
+>>-----Original Message-----
+>>From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
+>>Sent: Friday, September 16, 2005 4:54 PM
+>>To: goggin, edward
+>>Cc: axboe@suse.de; linux-scsi@vger.kernel.org; dm-devel@redhat.com
+>>Subject: Re: [RFC PATCH 4/4] convert scsi to blkerr error values
+>>
+>>Mike Christie wrote:
+>>
+>>>goggin, edward wrote:
+>>>
+>>>
+>>>>Mike,
+>>>>
+>>>>I don't think it is reasonably possible to anticipate
+>>>>all possible parsing requirements for the asc and ascq
+>>>>portions of SCSI sense information across all device
+>>>>models.  I'm in favor of having a "small" framework in
+>>>>SCSI where a SCSI sense interpreter module (per
+>>>>vendor & model possibly) could be registered
+>>>>dynamically, by dm-emc.c for instance.
+>>>
+>>>
+>>>Yeah I agree, I mentioned this before in some other mails. 
+>>
+>>I think a 
+>>
+>>>module versus some table that userspace could write to were 
+>>
+>>discussed.
+>>
+>>>The BLKERR values were meant to be able to tell upper layer 
+>>
+>>code whether 
+>>
+>>>a transport or device or driver error occured and whether the lower 
+>>>level thought it was retryable. But then I thought I could 
+>>
+>>also wedge in 
+>>
+>>>the handling of the vendor specifcs by adding a vendor 
+>>
+>>specific SCSI 
+>>
+>>>module that would map the their specific value to a 
+>>
+>>BLKERR_* one. And as 
+>>
+>>>I said offlist it is not working perfectly becuase we are 
+>>
+>>losing some 
+>>
+>>>information in the translations.
+>>>
+>>
+>>Oh yeah so the problem I am having is emc boxes may return "LUN Not 
+>>Ready - Manual Intervention Required". When dm-emc.c sees 
+>>this error it 
+>>wants to bypass a group of paths and retry the IO but under ceratin 
+>>conditions not fail those paths. So I am not sure what to return for 
+>>this error. I thought if I redo my BLKERR so they describe 
+>>the error like
+>>
+>>BLKERR_DEV_NOT_READY
+>>BLKERR_MANUAL_INTERVENTION_REQ
+>>BLKERR_NOT_CONN
+>>
+>>... and set them up as a bitmap like suggested by JamesB. I 
+>>could return
+>>BLKERR_MANUAL_INTERVENTION_REQ from a scsi module then have dm-emc.c 
+>>evaluate that value to a dm-mpaths return value of "MP_BYPASS_PG | 
+>>MP_RETRY_IO" which means bypass the priority group (group of 
+>>paths) and 
+>>retry the IO.
+>>
+>>But as more vendors use dm and they cannot use existing 
+>>BLKERR values I 
+>>have to add more and more.
 > 
-> > On Thu, 15 Sep 2005, Mike Christie wrote:
-> > 
-> ...
-> > This is not a real solution though. There should be some control over 
-> > retries from the scsi ULDs but I did not directly see how to do it. 
-> > Looking at the tests I did a couple of days, the number of retries seemed 
-> > to be variable (i.e., the number of retries I saw in the same test today 
-> > and a couple of days ago didn't match).
-> > 
-> I have looked the retries more and there seems to be several problems 
-> somewhere, not necessarily in your new code. I don't have any answers but 
-> here is data from one of my experiments. I had debugging enabled in 
-> st and added a printk to st_sleep_done to see what results st gets from 
-> the requests.
 > 
-...
-> Sep 17 14:12:10 box kernel: st: cmd=0x00 result=0x0 resid=10240 sense[0]=0x00
->                                                     ^^^^^^^^^^^
-> The resid here seems to have been "inherited" from the previous command.
-
-Can be a bug in sym53c8xx_2.
-
->         I don't know how old these problems are because earlier the SCSI 
-> subsystem has used the retries parameter and not even "thought" about 
-> retrying the tape commands.
+> I was hoping we could avoid the need to do this by having the framework
+> described in my email -- the idea for which I heard about from you in
+> the first place :))
 > 
-I tried 2.6.14-rc1 (changed st.c to allow 5 read retries). This did 
-not show any errors (no retries were done).
 
--- 
-Kai
+umm, yeah I understand this. I was writing it becuase for some reason 
+multipath people do not post on lists and instead email me offlist, so I 
+put this out there so I do not have to write multiple emails to people 
+about why I do not like my original idea. :)
