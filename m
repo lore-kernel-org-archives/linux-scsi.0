@@ -1,51 +1,69 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] oops on usb storage device disconnect with
- 2.6.14-rc1
-Date: Sat, 17 Sep 2005 22:33:21 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0509172225040.6834-100000@netrider.rowland.org>
-References: <1127003801.4794.13.camel@mulgrave>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCH 4/5] convert st to use scsi_execte_async
+Date: Sun, 18 Sep 2005 15:01:59 +0300 (EEST)
+Message-ID: <Pine.LNX.4.61.0509181456370.14776@kai.makisara.local>
+References: <1126845599.9276.44.camel@max>  <Pine.LNX.4.61.0509171428410.9258@kai.makisara.local>
+  <432C39BC.1030105@cs.wisc.edu>  <432C3C75.5090405@cs.wisc.edu>
+ <1126974325.10413.5.camel@max>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.rowland.org ([192.131.102.7]:44048 "HELO mx1.rowland.org")
-	by vger.kernel.org with SMTP id S1751272AbVIRCdZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Sep 2005 22:33:25 -0400
-In-Reply-To: <1127003801.4794.13.camel@mulgrave>
+Received: from fep30-0.kolumbus.fi ([193.229.0.32]:9364 "EHLO
+	fep30-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S1751181AbVIRL4h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 18 Sep 2005 07:56:37 -0400
+In-Reply-To: <1126974325.10413.5.camel@max>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Mike Anderson <andmike@us.ibm.com>, Greg KH <greg@kroah.com>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdharm-usb@one-eyed-alien.net
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, 17 Sep 2005, James Bottomley wrote:
+On Sat, 17 Sep 2005, Mike Christie wrote:
 
-> On Thu, 2005-09-15 at 21:52 -0400, Alan Stern wrote:
-> > In short, those iterations must be carried out as in my patch.
+> On Sat, 2005-09-17 at 10:55 -0500, Mike Christie wrote:
+> > Mike Christie wrote:
+> > > Kai Makisara wrote:
+> > > 
+> > >>
+> > >> I think I may have found the problem: scsi_execute_async does not use 
+> > >> the parameter retries (the same applies to scsi_execute btw). This 
+> > >> leads to retrying the reads at filemark and this is not correct. I 
+> > >> added the hack below to scsi_execute_async and after this the simple 
+> > >> tests succeed.
+> > > 
+> > > 
+> > > ah ok. I think when we prep the command we need to copy the retries from 
+> > > the command. So in st.c st_init_command callout we need to copy that 
+> > > value (we are just copying the timeout today).
+> > 
+> > oh I guess there is not retries count on the request like there is for 
+> > timeout :)
+> > 
+> > But it looks like retried is always 0. I guess st's init_command could 
+> > just do
+> > 
+> > SCpnt->allowed = 0;
+
+This does not work because st_init_command() is not called (called only 
+with SG_IO ioctls).
+
 > 
-> OK, I looked at making this work while reaping the target correctly, but
-> I couldn't (basic problem is that the target list keeps the target until
-> it has no more devices, a condition that could be made untrue by
-> something as simple as an open of the sysfs file).
+> 
+> Or how about this patch it was made against my updated patches here:
+> http://www.cs.wisc.edu/~michaelc/block/use-sg/v6/
+> 
+> It is the 06-add-retry-field.patch patch. All it does it add a retries
+> count onto the request so it can be passed around like the timeout
+> value.
+> 
+[patch cut]
 
-Sorry, I'm a bit slow tonight.  I thought you _wanted_ the target to hang
-around until it had no more devices.  (Wasn't that the whole point of
-scsi_target_reap?)  What's wrong with keeping the target until the sysfs
-file is closed?
+This looks like a clean approach because it allows passing the retries 
+parameter of scsi_execute_* to the request processing.
 
-> So, rather than try that, I thought a better approach might be to make
-> the host state model work for us.  i.e. if we know the host is being
-> removed, there's no point allowing target or device removal because at
-> some point the host removal will do it for us.  This enforcement would
-> ensure we're the only legitimate removers of the target and device.
+I tested this but it does not quite work: there are now two retries in the 
+same test that previously gave six retries. Unfortunately I don't just now 
+have time to study the problem further.
 
-How does this make things any better?  You still face the problem that an 
-open sysfs file will delay device removal and target reaping, if all the 
-devices on that target are hot-unplugged and the host remains alive and 
-active.
-
-> The alternative is to migrate to klists, I think ...
-
-Think very carefully before taking such a step...  :-)
-
-Alan Stern
-
+-- 
+Kai
