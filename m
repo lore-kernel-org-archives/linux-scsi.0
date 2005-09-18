@@ -1,248 +1,269 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [resend] [PATCH 2.6.14-rc1 3/13] ieee1394/sbp2: fixes for
- hot-unplug and module unloading
-Date: Sun, 18 Sep 2005 01:32:34 +0200 (CEST)
-Message-ID: <200509172332.j8HNWbcH031631@einhorn.in-berlin.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [linux-usb-devel] oops on usb storage device disconnect with
+	2.6.14-rc1
+Date: Sat, 17 Sep 2005 19:35:17 -0500
+Message-ID: <1127003717.4794.10.camel@mulgrave>
+References: <20050915190338.GA6807@kroah.com>
+	 <Pine.LNX.4.44L0.0509151514460.4493-100000@iolanthe.rowland.org>
+	 <20050915192912.GA7077@kroah.com> <1126814226.4821.48.camel@mulgrave>
+	 <1126818483.4821.60.camel@mulgrave>  <20050915221946.GA28441@us.ibm.com>
+	 <1126823917.4821.70.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:41153 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1751230AbVIQXdB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Sep 2005 19:33:01 -0400
+Received: from stat9.steeleye.com ([209.192.50.41]:49049 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751247AbVIRAfb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Sep 2005 20:35:31 -0400
+In-Reply-To: <1126823917.4821.70.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux1394-devel@lists.sourceforge.net
-Cc: linux-scsi@vger.kernel.org, bcollins@debian.org, scjody@steamballoon.com, dan@dennedy.org, James.Bottomley@SteelEye.com
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Greg KH <greg@kroah.com>, Alan Stern <stern@rowland.harvard.edu>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdharm-usb@one-eyed-alien.net
 
-sbp2:
-fixes for deadlocks of the ieee1394 and scsi subsystems and long delays in
-futile error recovery attempts when SBP-2 devices are removed or drivers are
-unloaded.
+On Thu, 2005-09-15 at 18:38 -0400, James Bottomley wrote:
+> On Thu, 2005-09-15 at 15:19 -0700, Mike Anderson wrote:
+> > In looking at the state model introduced by your patch I believe there may
+> > still be a state model race issue if the recovery completes just after
+> > the "if (!scsi_host_set_state(shost, SHOST_CANCEL))" call in
+> > scsi_remove_host (maybe I am just looking to quickly at the state
+> > updates).
+> 
+> No, that's true; there's a tiny race that can be mediated by doing
+> locking around the state changes ... that was one of the feedback
+> comments from Alan.
 
- - Complete commands quickly with DID_NO_CONNECT if the 1394 node is gone or if
-   the 1394 low-level driver was unloaded.
- - Skip unnecessary work in the eh_abort_handler and eh_device_reset_handler if
-   the node or 1394 low-level driver is gone. 
- - Let scsi's high-level shut down gracefully when sbp2 is being unloaded or
-   detached from the 1394 unit. A call to scsi_remove_device is added for this
-   purpose, which requires us to store a scsi_device pointer.
- - scsi_device pointer is obtained from slave_alloc hook and cleared by
-   slave_destroy. This avoids usage of the pointer after the scsi device was
-   deleted e.g. by the user via scsi_mod's sysfs interface.
+The attached should be that patch with the race window closed.
 
-Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
----
+James
 
- drivers/ieee1394/sbp2.c |   96 +++++++++++++++++++++++++++++-------------------
- 1 files changed, 58 insertions(+), 38 deletions(-)
-
---- linux-2.6.14-rc1.orig/drivers/ieee1394/sbp2.c	2005-09-13 05:12:09.000000000 +0200
-+++ linux-2.6.14-rc1/drivers/ieee1394/sbp2.c	2005-09-17 16:14:30.000000000 +0200
-@@ -596,6 +596,14 @@ static void sbp2util_mark_command_comple
- 	spin_unlock_irqrestore(&scsi_id->sbp2_command_orb_lock, flags);
- }
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -98,6 +98,7 @@ int scsi_host_set_state(struct Scsi_Host
+ 		switch (oldstate) {
+ 		case SHOST_CREATED:
+ 		case SHOST_RUNNING:
++		case SHOST_CANCEL_RECOVERY:
+ 			break;
+ 		default:
+ 			goto illegal;
+@@ -107,12 +108,31 @@ int scsi_host_set_state(struct Scsi_Host
+ 	case SHOST_DEL:
+ 		switch (oldstate) {
+ 		case SHOST_CANCEL:
++		case SHOST_DEL_RECOVERY:
+ 			break;
+ 		default:
+ 			goto illegal;
+ 		}
+ 		break;
  
-+/*
-+ * Is scsi_id valid? Is the 1394 node still present?
-+ */
-+static inline int sbp2util_node_is_available(struct scsi_id_instance_data *scsi_id)
-+{
-+	return scsi_id && scsi_id->ne && !scsi_id->ne->in_limbo;
-+}
++	case SHOST_CANCEL_RECOVERY:
++		switch (oldstate) {
++		case SHOST_CANCEL:
++		case SHOST_RECOVERY:
++			break;
++		default:
++			goto illegal;
++		}
++		break;
 +
- 
-
- 
- /*********************************************
-@@ -631,11 +639,23 @@ static int sbp2_remove(struct device *de
- {
- 	struct unit_directory *ud;
- 	struct scsi_id_instance_data *scsi_id;
-+	struct scsi_device *sdev;
- 
- 	SBP2_DEBUG("sbp2_remove");
- 
- 	ud = container_of(dev, struct unit_directory, device);
- 	scsi_id = ud->device.driver_data;
-+	if (!scsi_id)
-+		return 0;
-+
-+	/* Trigger shutdown functions in scsi's highlevel. */
-+	if (scsi_id->scsi_host)
-+		scsi_unblock_requests(scsi_id->scsi_host);
-+	sdev = scsi_id->sdev;
-+	if (sdev) {
-+		scsi_id->sdev = NULL;
-+		scsi_remove_device(sdev);
-+	}
- 
- 	sbp2_logout_device(scsi_id);
- 	sbp2_remove_device(scsi_id);
-@@ -2473,37 +2493,26 @@ static int sbp2scsi_queuecommand(struct 
- 	struct scsi_id_instance_data *scsi_id =
- 		(struct scsi_id_instance_data *)SCpnt->device->host->hostdata[0];
- 	struct sbp2scsi_host_info *hi;
-+	int result = DID_NO_CONNECT << 16;
- 
- 	SBP2_DEBUG("sbp2scsi_queuecommand");
- 
--	/*
--	 * If scsi_id is null, it means there is no device in this slot,
--	 * so we should return selection timeout.
--	 */
--	if (!scsi_id) {
--		SCpnt->result = DID_NO_CONNECT << 16;
--		done (SCpnt);
--		return 0;
--	}
-+	if (!sbp2util_node_is_available(scsi_id))
-+		goto done;
- 
- 	hi = scsi_id->hi;
- 
- 	if (!hi) {
- 		SBP2_ERR("sbp2scsi_host_info is NULL - this is bad!");
--		SCpnt->result = DID_NO_CONNECT << 16;
--		done (SCpnt);
--		return(0);
-+		goto done;
++	case SHOST_DEL_RECOVERY:
++		switch (oldstate) {
++		case SHOST_CANCEL_RECOVERY:
++			break;
++		default:
++			goto illegal;
++		}
++		break;
  	}
- 
- 	/*
- 	 * Until we handle multiple luns, just return selection time-out
- 	 * to any IO directed at non-zero LUNs
- 	 */
--	if (SCpnt->device->lun) {
--		SCpnt->result = DID_NO_CONNECT << 16;
--		done (SCpnt);
--		return(0);
--	}
-+	if (SCpnt->device->lun)
-+		goto done;
- 
- 	/*
- 	 * Check for request sense command, and handle it here
-@@ -2514,7 +2523,7 @@ static int sbp2scsi_queuecommand(struct 
- 		memcpy(SCpnt->request_buffer, SCpnt->sense_buffer, SCpnt->request_bufflen);
- 		memset(SCpnt->sense_buffer, 0, sizeof(SCpnt->sense_buffer));
- 		sbp2scsi_complete_command(scsi_id, SBP2_SCSI_STATUS_GOOD, SCpnt, done);
--		return(0);
-+		return 0;
- 	}
- 
- 	/*
-@@ -2522,9 +2531,8 @@ static int sbp2scsi_queuecommand(struct 
- 	 */
- 	if (!hpsb_node_entry_valid(scsi_id->ne)) {
- 		SBP2_ERR("Bus reset in progress - rejecting command");
--		SCpnt->result = DID_BUS_BUSY << 16;
--		done (SCpnt);
--		return(0);
-+		result = DID_BUS_BUSY << 16;
-+		goto done;
- 	}
- 
- 	/*
-@@ -2535,8 +2543,12 @@ static int sbp2scsi_queuecommand(struct 
- 		sbp2scsi_complete_command(scsi_id, SBP2_SCSI_STATUS_SELECTION_TIMEOUT,
- 					  SCpnt, done);
- 	}
-+	return 0;
- 
--	return(0);
-+done:
-+	SCpnt->result = result;
-+	done(SCpnt);
-+	return 0;
- }
- 
- /*
-@@ -2683,14 +2695,27 @@ static void sbp2scsi_complete_command(st
- }
- 
- 
--static int sbp2scsi_slave_configure (struct scsi_device *sdev)
-+static int sbp2scsi_slave_alloc(struct scsi_device *sdev)
- {
--	blk_queue_dma_alignment(sdev->request_queue, (512 - 1));
-+	((struct scsi_id_instance_data *)sdev->host->hostdata[0])->sdev = sdev;
-+	return 0;
-+}
-+
- 
-+static int sbp2scsi_slave_configure(struct scsi_device *sdev)
-+{
-+	blk_queue_dma_alignment(sdev->request_queue, (512 - 1));
+ 	shost->shost_state = state;
  	return 0;
+@@ -134,13 +154,24 @@ EXPORT_SYMBOL(scsi_host_set_state);
+  **/
+ void scsi_remove_host(struct Scsi_Host *shost)
+ {
++	unsigned long flags;
+ 	down(&shost->scan_mutex);
+-	scsi_host_set_state(shost, SHOST_CANCEL);
++	spin_lock_irqsave(shost->host_lock, flags);
++	if (!scsi_host_set_state(shost, SHOST_CANCEL))
++		if (!scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY)) {
++			spin_unlock_irqrestore(shost->host_lock, flags);
++			up(&shost->scan_mutex);
++			return;
++		}
++	spin_unlock_irqrestore(shost->host_lock, flags);
+ 	up(&shost->scan_mutex);
+ 	scsi_forget_host(shost);
+ 	scsi_proc_host_rm(shost);
+ 
+-	scsi_host_set_state(shost, SHOST_DEL);
++	spin_lock_irqsave(shost->host_lock, flags);
++	if (!scsi_host_set_state(shost, SHOST_DEL))
++		BUG_ON(!scsi_host_set_state(shost, SHOST_DEL_RECOVERY));
++	spin_unlock_irqrestore(shost->host_lock, flags);
+ 
+ 	transport_unregister_device(&shost->shost_gendev);
+ 	class_device_unregister(&shost->shost_classdev);
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -68,19 +68,24 @@ int scsi_eh_scmd_add(struct scsi_cmnd *s
+ {
+ 	struct Scsi_Host *shost = scmd->device->host;
+ 	unsigned long flags;
++	int ret = 0;
+ 
+ 	if (shost->eh_wait == NULL)
+ 		return 0;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
++	if (!scsi_host_set_state(shost, SHOST_RECOVERY))
++		if (!scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY))
++			goto out_unlock;
+ 
++	ret = 1;
+ 	scmd->eh_eflags |= eh_flag;
+ 	list_add_tail(&scmd->eh_entry, &shost->eh_cmd_q);
+-	scsi_host_set_state(shost, SHOST_RECOVERY);
+ 	shost->host_failed++;
+ 	scsi_eh_wakeup(shost);
++ out_unlock:
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+-	return 1;
++	return ret;
  }
  
+ /**
+@@ -176,8 +181,8 @@ void scsi_times_out(struct scsi_cmnd *sc
+ 		}
  
-+static void sbp2scsi_slave_destroy(struct scsi_device *sdev)
-+{
-+	((struct scsi_id_instance_data *)sdev->host->hostdata[0])->sdev = NULL;
-+	return;
-+}
-+
-+
- /*
-  * Called by scsi stack when something has really gone wrong.  Usually
-  * called when a command has timed-out for some reason.
-@@ -2705,7 +2730,7 @@ static int sbp2scsi_abort(struct scsi_cm
- 	SBP2_ERR("aborting sbp2 command");
- 	scsi_print_command(SCpnt);
+ 	if (unlikely(!scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD))) {
+-		panic("Error handler thread not present at %p %p %s %d",
+-		      scmd, scmd->device->host, __FILE__, __LINE__);
++		scmd->result |= DID_TIME_OUT << 16;
++		__scsi_done(scmd);
+ 	}
+ }
  
--	if (scsi_id) {
-+	if (sbp2util_node_is_available(scsi_id)) {
- 
- 		/*
- 		 * Right now, just return any matching command structures
-@@ -2742,31 +2767,24 @@ static int sbp2scsi_abort(struct scsi_cm
- /*
-  * Called by scsi stack when something has really gone wrong.
-  */
--static int __sbp2scsi_reset(struct scsi_cmnd *SCpnt)
-+static int sbp2scsi_reset(struct scsi_cmnd *SCpnt)
+@@ -196,8 +201,7 @@ int scsi_block_when_processing_errors(st
  {
- 	struct scsi_id_instance_data *scsi_id =
- 		(struct scsi_id_instance_data *)SCpnt->device->host->hostdata[0];
+ 	int online;
+ 
+-	wait_event(sdev->host->host_wait, (sdev->host->shost_state !=
+-					   SHOST_RECOVERY));
++	wait_event(sdev->host->host_wait, !scsi_host_in_recovery(sdev->host));
+ 
+ 	online = scsi_device_online(sdev);
+ 
+@@ -1441,6 +1445,7 @@ static void scsi_eh_lock_door(struct scs
+ static void scsi_restart_operations(struct Scsi_Host *shost)
+ {
+ 	struct scsi_device *sdev;
 +	unsigned long flags;
  
- 	SBP2_ERR("reset requested");
+ 	/*
+ 	 * If the door was locked, we need to insert a door lock request
+@@ -1460,7 +1465,11 @@ static void scsi_restart_operations(stru
+ 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: waking up host to restart\n",
+ 					  __FUNCTION__));
  
--	if (scsi_id) {
-+	spin_lock_irqsave(SCpnt->device->host->host_lock, flags);
-+
-+	if (sbp2util_node_is_available(scsi_id)) {
- 		SBP2_ERR("Generating sbp2 fetch agent reset");
- 		sbp2_agent_reset(scsi_id, 0);
- 	}
+-	scsi_host_set_state(shost, SHOST_RUNNING);
++	spin_lock_irqsave(shost->host_lock, flags);
++	if (!scsi_host_set_state(shost, SHOST_RUNNING))
++		if (!scsi_host_set_state(shost, SHOST_CANCEL))
++			BUG_ON(!scsi_host_set_state(shost, SHOST_DEL));
++	spin_unlock_irqrestore(shost->host_lock, flags);
  
--	return(SUCCESS);
--}
--
--static int sbp2scsi_reset(struct scsi_cmnd *SCpnt)
--{
--	unsigned long flags;
--	int rc;
--
--	spin_lock_irqsave(SCpnt->device->host->host_lock, flags);
--	rc = __sbp2scsi_reset(SCpnt);
- 	spin_unlock_irqrestore(SCpnt->device->host->host_lock, flags);
+ 	wake_up(&shost->host_wait);
  
--	return rc;
-+	return SUCCESS;
+diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
+--- a/drivers/scsi/scsi_ioctl.c
++++ b/drivers/scsi/scsi_ioctl.c
+@@ -458,7 +458,7 @@ int scsi_nonblockable_ioctl(struct scsi_
+ 	 * error processing, as long as the device was opened
+ 	 * non-blocking */
+ 	if (filp && filp->f_flags & O_NONBLOCK) {
+-		if (sdev->host->shost_state == SHOST_RECOVERY)
++		if (scsi_host_in_recovery(sdev->host))
+ 			return -ENODEV;
+ 	} else if (!scsi_block_when_processing_errors(sdev))
+ 		return -ENODEV;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -447,7 +447,7 @@ void scsi_device_unbusy(struct scsi_devi
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	shost->host_busy--;
+-	if (unlikely((shost->shost_state == SHOST_RECOVERY) &&
++	if (unlikely(scsi_host_in_recovery(shost) &&
+ 		     shost->host_failed))
+ 		scsi_eh_wakeup(shost);
+ 	spin_unlock(shost->host_lock);
+@@ -1339,7 +1339,7 @@ static inline int scsi_host_queue_ready(
+ 				   struct Scsi_Host *shost,
+ 				   struct scsi_device *sdev)
+ {
+-	if (shost->shost_state == SHOST_RECOVERY)
++	if (scsi_host_in_recovery(shost))
+ 		return 0;
+ 	if (shost->host_busy == 0 && shost->host_blocked) {
+ 		/*
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -57,6 +57,8 @@ static struct {
+ 	{ SHOST_CANCEL, "cancel" },
+ 	{ SHOST_DEL, "deleted" },
+ 	{ SHOST_RECOVERY, "recovery" },
++	{ SHOST_CANCEL_RECOVERY, "cancel/recovery" },
++	{ SHOST_DEL_RECOVERY, "deleted/recovery", },
+ };
+ const char *scsi_host_state_name(enum scsi_host_state state)
+ {
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1027,7 +1027,7 @@ sg_ioctl(struct inode *inode, struct fil
+ 		if (sdp->detached)
+ 			return -ENODEV;
+ 		if (filp->f_flags & O_NONBLOCK) {
+-			if (sdp->device->host->shost_state == SHOST_RECOVERY)
++			if (scsi_host_in_recovery(sdp->device->host))
+ 				return -EBUSY;
+ 		} else if (!scsi_block_when_processing_errors(sdp->device))
+ 			return -EBUSY;
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -439,6 +439,8 @@ enum scsi_host_state {
+ 	SHOST_CANCEL,
+ 	SHOST_DEL,
+ 	SHOST_RECOVERY,
++	SHOST_CANCEL_RECOVERY,
++	SHOST_DEL_RECOVERY,
+ };
+ 
+ struct Scsi_Host {
+@@ -621,6 +623,13 @@ static inline struct Scsi_Host *dev_to_s
+ 	return container_of(dev, struct Scsi_Host, shost_gendev);
  }
  
- static const char *sbp2scsi_info (struct Scsi_Host *host)
-@@ -2817,7 +2835,9 @@ static struct scsi_host_template scsi_dr
- 	.eh_device_reset_handler =	sbp2scsi_reset,
- 	.eh_bus_reset_handler =		sbp2scsi_reset,
- 	.eh_host_reset_handler =	sbp2scsi_reset,
-+	.slave_alloc =			sbp2scsi_slave_alloc,
- 	.slave_configure =		sbp2scsi_slave_configure,
-+	.slave_destroy =		sbp2scsi_slave_destroy,
- 	.this_id =			-1,
- 	.sg_tablesize =			SG_ALL,
- 	.use_clustering =		ENABLE_CLUSTERING,
++static inline int scsi_host_in_recovery(struct Scsi_Host *shost)
++{
++	return shost->shost_state == SHOST_RECOVERY ||
++		shost->shost_state == SHOST_CANCEL_RECOVERY ||
++		shost->shost_state == SHOST_DEL_RECOVERY;
++}
++
+ extern int scsi_queue_work(struct Scsi_Host *, struct work_struct *);
+ extern void scsi_flush_work(struct Scsi_Host *);
+ 
+
 
