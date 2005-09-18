@@ -1,37 +1,34 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] fix retries and command completion when using REQ_BLOCK_PC
-Date: Sun, 18 Sep 2005 14:58:43 -0500
-Message-ID: <432DC6F3.80801@cs.wisc.edu>
-References: <1127063944.1421.16.camel@max>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [linux-usb-devel] oops on usb storage device disconnect with 2.6.14-rc1
+Date: Sun, 18 Sep 2005 15:01:26 -0700
+Message-ID: <20050918220126.GA6317@kroah.com>
+References: <20050915190338.GA6807@kroah.com> <Pine.LNX.4.44L0.0509151514460.4493-100000@iolanthe.rowland.org> <20050915192912.GA7077@kroah.com> <1126814226.4821.48.camel@mulgrave> <1126818483.4821.60.camel@mulgrave> <20050915221946.GA28441@us.ibm.com> <1126823917.4821.70.camel@mulgrave> <1127003717.4794.10.camel@mulgrave> <1127073920.4847.34.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:6867 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932220AbVIRV6t (ORCPT
+Received: from mail.kroah.org ([69.55.234.183]:39908 "EHLO perch.kroah.org")
+	by vger.kernel.org with ESMTP id S932208AbVIRWCU (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Sep 2005 17:58:49 -0400
-In-Reply-To: <1127063944.1421.16.camel@max>
+	Sun, 18 Sep 2005 18:02:20 -0400
+Content-Disposition: inline
+In-Reply-To: <1127073920.4847.34.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@suse.de
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Mike Anderson <andmike@us.ibm.com>, Alan Stern <stern@rowland.harvard.edu>, linux-usb-devel@lists.sourceforge.net, SCSI Mailing List <linux-scsi@vger.kernel.org>, mdharm-usb@one-eyed-alien.net
 
-Mike Christie wrote:
-> Hi Jens and James,
+On Sun, Sep 18, 2005 at 03:05:20PM -0500, James Bottomley wrote:
+> On Sat, 2005-09-17 at 19:35 -0500, James Bottomley wrote:
+> > The attached should be that patch with the race window closed.
 > 
-> As you know a side effect of SCSI using REQ_BLOCK_PC is that commands
-> that used to originate from SCSI do not obey the retries value, and we
-> now add extra processing of failures in scsi_io_completion.
-> 
-> The patch below adds a retry count on the request which is used like the
-> timeout value. And it changes scsi_generic_done to always complete the
-> entire command which emulates the old behavior we had with
-> scsi_wait_req/scsi_do_req where scsi_io_completeion does not process the
-> error and request additional retries.
-> 
+> There's a big oops in this one (and there was when greg tested it).  The
+> state checker is reversed (it's checking !scsi_host_set_state() for
+> indicating a problem ... of course, the return is 0 on success or
+> error).  I've corrected this; Greg, could you retest? 
 
-Oh yeah this is also what sd does with REQ_BLOCK_PC commands and with my 
-other patch for st in this mail 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112708046601499&w=2 it is 
-what tape will do.
+Should I apply any additional patches too?  Or just this one will
+suffice?
+
+thanks,
+
+greg k-h
