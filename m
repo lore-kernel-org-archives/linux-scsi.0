@@ -1,145 +1,47 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] fix retries and command completion when using REQ_BLOCK_PC
-Date: Sun, 18 Sep 2005 15:47:06 -0500
-Message-ID: <432DD24A.7040802@cs.wisc.edu>
-References: <1127063944.1421.16.camel@max>
+Subject: Re: [PATCH] dont retry on SG_IO tape commands
+Date: Sun, 18 Sep 2005 15:46:33 -0500
+Message-ID: <432DD229.1080201@cs.wisc.edu>
+References: <1127073191.3067.1.camel@max>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:20691 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932240AbVIRWrK (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:19667 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S932239AbVIRWqj (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Sep 2005 18:47:10 -0400
-In-Reply-To: <1127063944.1421.16.camel@max>
+	Sun, 18 Sep 2005 18:46:39 -0400
+In-Reply-To: <1127073191.3067.1.camel@max>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: axboe@suse.de, linux-scsi@vger.kernel.org
+To: axboe@suse.de, Kai Makisara <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org
 
-Forget this patch too. We just combine some paths.
+Actually forget this patch. We can just make scsi-ml handle this.
+
 
 Mike Christie wrote:
-> Hi Jens and James,
-> 
-> As you know a side effect of SCSI using REQ_BLOCK_PC is that commands
-> that used to originate from SCSI do not obey the retries value, and we
-> now add extra processing of failures in scsi_io_completion.
-> 
-> The patch below adds a retry count on the request which is used like the
-> timeout value. And it changes scsi_generic_done to always complete the
-> entire command which emulates the old behavior we had with
-> scsi_wait_req/scsi_do_req where scsi_io_completeion does not process the
-> error and request additional retries.
+> sd does not allow scsi_io_completion to retry commands for
+> SG_IO requests, and it make sense that it should not happen for st
+> SG_IO commands too. This patch returns to the block layer that
+> the whole command completed and relies on the caller to check
+> the request errors field.
 > 
 > Patch was made against scsi-rc-fixes.
 > 
 > Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 > 
-> diff --git a/drivers/block/scsi_ioctl.c b/drivers/block/scsi_ioctl.c
-> --- a/drivers/block/scsi_ioctl.c
-> +++ b/drivers/block/scsi_ioctl.c
-> @@ -302,6 +302,7 @@ static int sg_io(struct file *file, requ
->  		rq->timeout = q->sg_timeout;
->  	if (!rq->timeout)
->  		rq->timeout = BLK_DEFAULT_TIMEOUT;
-> +	rq->retries = 1;
->  
->  	start_time = jiffies;
->  
-> @@ -412,6 +413,7 @@ static int sg_scsi_ioctl(struct file *fi
->  			rq->timeout = BLK_DEFAULT_TIMEOUT;
->  			break;
->  	}
-> +	rq->retries = 1;
->  
->  	memset(sense, 0, sizeof(sense));
->  	rq->sense = sense;
-> @@ -570,6 +572,7 @@ int scsi_cmd_ioctl(struct file *file, st
->  			rq->data = NULL;
->  			rq->data_len = 0;
->  			rq->timeout = BLK_DEFAULT_TIMEOUT;
-> +			rq->retries = 1;
->  			memset(rq->cmd, 0, sizeof(rq->cmd));
->  			rq->cmd[0] = GPCMD_START_STOP_UNIT;
->  			rq->cmd[4] = 0x02 + (close != 0);
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -337,6 +337,7 @@ int scsi_execute(struct scsi_device *sde
->  	memcpy(req->cmd, cmd, req->cmd_len);
->  	req->sense = sense;
->  	req->sense_len = 0;
-> +	req->retries = retries;
->  	req->timeout = timeout;
->  	req->flags |= flags | REQ_BLOCK_PC | REQ_SPECIAL | REQ_QUIET;
->  
-> @@ -1125,7 +1126,13 @@ static int scsi_issue_flush_fn(request_q
->  static void scsi_generic_done(struct scsi_cmnd *cmd)
->  {
->  	BUG_ON(!blk_pc_request(cmd->request));
-> -	scsi_io_completion(cmd, cmd->result == 0 ? cmd->bufflen : 0, 0);
-> +	/*
-> +	 * This will complete the whole command with uptodate=1 so
-> +	 * as far as the block layer is concerned the command completed
-> +	 * successfully. Since his is a REQ_BLOCK_PC command though the
-> +	 * caller should check the request errors value
-> +	 */
-> +	scsi_io_completion(cmd, cmd->bufflen, 0);
->  }
->  
->  static int scsi_prep_fn(struct request_queue *q, struct request *req)
-> @@ -1273,7 +1280,7 @@ static int scsi_prep_fn(struct request_q
->  				cmd->sc_data_direction = DMA_NONE;
->  			
->  			cmd->transfersize = req->data_len;
-> -			cmd->allowed = 3;
-> +			cmd->allowed = req->retries;
->  			cmd->timeout_per_command = req->timeout;
->  			cmd->done = scsi_generic_done;
->  		}
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -86,7 +86,6 @@
->   * Number of allowed retries
->   */
->  #define SD_MAX_RETRIES		5
-> -#define SD_PASSTHROUGH_RETRIES	1
->  
->  static void scsi_disk_release(struct kref *kref);
->  
-> @@ -248,7 +247,7 @@ static int sd_init_command(struct scsi_c
->  			timeout = rq->timeout;
->  
->  		SCpnt->transfersize = rq->data_len;
-> -		SCpnt->allowed = SD_PASSTHROUGH_RETRIES;
-> +		SCpnt->allowed = rq->retries;
->  		goto queue;
->  	}
->  
 > diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
 > --- a/drivers/scsi/st.c
 > +++ b/drivers/scsi/st.c
-> @@ -4215,6 +4215,7 @@ static int st_init_command(struct scsi_c
->  	else
->  		SCpnt->sc_data_direction = DMA_NONE;
+> @@ -4187,7 +4187,7 @@ static void scsi_tape_release(struct kre
 >  
-> +	SCpnt->allowed = rq->retries;
->  	SCpnt->timeout_per_command = rq->timeout;
->  	SCpnt->transfersize = rq->data_len;
->  	SCpnt->done = st_intr;
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -184,6 +184,7 @@ struct request {
->  	void *sense;
+>  static void st_intr(struct scsi_cmnd *SCpnt)
+>  {
+> -	scsi_io_completion(SCpnt, (SCpnt->result ? 0: SCpnt->bufflen), 1);
+> +	scsi_io_completion(SCpnt, SCpnt->bufflen, 0);
+>  }
 >  
->  	unsigned int timeout;
-> +	int retries;
->  
->  	/*
->  	 * For Power Management requests
+>  /*
 > 
 > 
 > -
