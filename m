@@ -1,138 +1,143 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH] fix retries and command completion when using REQ_BLOCK_PC
-Date: Sun, 18 Sep 2005 12:19:04 -0500
-Message-ID: <1127063944.1421.16.camel@max>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] Fix thread termination for the SCSI error handler
+Date: Sun, 18 Sep 2005 14:53:43 -0500
+Message-ID: <1127073224.4847.28.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0509151524000.4493-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:47826 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932174AbVIRTTL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Sep 2005 15:19:11 -0400
+Received: from stat9.steeleye.com ([209.192.50.41]:20385 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932182AbVIRTxv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 18 Sep 2005 15:53:51 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0509151524000.4493-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@suse.de, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Hi Jens and James,
+On Thu, 2005-09-15 at 15:29 -0400, Alan Stern wrote:
+> Can you please check that the
+> 
+> 	if (shost->host_busy == shost->host_failed ...
+> 
+> condition for waking up is really correct?  Thanks.
 
-As you know a side effect of SCSI using REQ_BLOCK_PC is that commands
-that used to originate from SCSI do not obey the retries value, and we
-now add extra processing of failures in scsi_io_completion.
+Yes, it mirrors the one in the scsi_eh_scmd_add()  But it's not quite
+correct as a condition for sleeping since it may be true if they're both
+zero.
 
-The patch below adds a retry count on the request which is used like the
-timeout value. And it changes scsi_generic_done to always complete the
-entire command which emulates the old behavior we had with
-scsi_wait_req/scsi_do_req where scsi_io_completeion does not process the
-error and request additional retries.
+Try the attached, I made our infrastructure as close as possible to
+other users of the kthread interface.  I junked the double loop and
+added back the check in the scsi_eh_scmd_add() routine for the error
+thread not running (this is a theoretical impossibility at the momen,
+but it will become relevant if people move the thread shutdown to
+earlier in the host removal cycle, so best to leave it in).  I also made
+the eh do a final sweep through the queues before shutdown, just in case
+(also theoretically not necessary, but it won't hurt anything).
 
-Patch was made against scsi-rc-fixes.
+James
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-
-diff --git a/drivers/block/scsi_ioctl.c b/drivers/block/scsi_ioctl.c
---- a/drivers/block/scsi_ioctl.c
-+++ b/drivers/block/scsi_ioctl.c
-@@ -302,6 +302,7 @@ static int sg_io(struct file *file, requ
- 		rq->timeout = q->sg_timeout;
- 	if (!rq->timeout)
- 		rq->timeout = BLK_DEFAULT_TIMEOUT;
-+	rq->retries = 1;
- 
- 	start_time = jiffies;
- 
-@@ -412,6 +413,7 @@ static int sg_scsi_ioctl(struct file *fi
- 			rq->timeout = BLK_DEFAULT_TIMEOUT;
- 			break;
- 	}
-+	rq->retries = 1;
- 
- 	memset(sense, 0, sizeof(sense));
- 	rq->sense = sense;
-@@ -570,6 +572,7 @@ int scsi_cmd_ioctl(struct file *file, st
- 			rq->data = NULL;
- 			rq->data_len = 0;
- 			rq->timeout = BLK_DEFAULT_TIMEOUT;
-+			rq->retries = 1;
- 			memset(rq->cmd, 0, sizeof(rq->cmd));
- 			rq->cmd[0] = GPCMD_START_STOP_UNIT;
- 			rq->cmd[4] = 0x02 + (close != 0);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -337,6 +337,7 @@ int scsi_execute(struct scsi_device *sde
- 	memcpy(req->cmd, cmd, req->cmd_len);
- 	req->sense = sense;
- 	req->sense_len = 0;
-+	req->retries = retries;
- 	req->timeout = timeout;
- 	req->flags |= flags | REQ_BLOCK_PC | REQ_SPECIAL | REQ_QUIET;
- 
-@@ -1125,7 +1126,13 @@ static int scsi_issue_flush_fn(request_q
- static void scsi_generic_done(struct scsi_cmnd *cmd)
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -50,7 +50,7 @@
+ void scsi_eh_wakeup(struct Scsi_Host *shost)
  {
- 	BUG_ON(!blk_pc_request(cmd->request));
--	scsi_io_completion(cmd, cmd->result == 0 ? cmd->bufflen : 0, 0);
-+	/*
-+	 * This will complete the whole command with uptodate=1 so
-+	 * as far as the block layer is concerned the command completed
-+	 * successfully. Since his is a REQ_BLOCK_PC command though the
-+	 * caller should check the request errors value
-+	 */
-+	scsi_io_completion(cmd, cmd->bufflen, 0);
+ 	if (shost->host_busy == shost->host_failed) {
+-		up(shost->eh_wait);
++		wake_up_process(shost->ehandler);
+ 		SCSI_LOG_ERROR_RECOVERY(5,
+ 				printk("Waking error handler thread\n"));
+ 	}
+@@ -70,7 +70,7 @@ int scsi_eh_scmd_add(struct scsi_cmnd *s
+ 	unsigned long flags;
+ 	int ret = 0;
+ 
+-	if (shost->eh_wait == NULL)
++	if (!shost->ehandler)
+ 		return 0;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+@@ -1591,39 +1591,28 @@ int scsi_error_handler(void *data)
+ {
+ 	struct Scsi_Host *shost = (struct Scsi_Host *) data;
+ 	int rtn;
+-	DECLARE_MUTEX_LOCKED(sem);
+ 
+ 	current->flags |= PF_NOFREEZE;
+-	shost->eh_wait = &sem;
+-
+-	/*
+-	 * Wake up the thread that created us.
+-	 */
+-	SCSI_LOG_ERROR_RECOVERY(3, printk("Wake up parent of"
+-					  " scsi_eh_%d\n",shost->host_no));
+ 
+-	while (1) {
++	while (!kthread_should_stop()) {
+ 		/*
+-		 * If we get a signal, it means we are supposed to go
+-		 * away and die.  This typically happens if the user is
+-		 * trying to unload a module.
+-		 */
+-		SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler"
+-						  " scsi_eh_%d"
+-						  " sleeping\n",shost->host_no));
+-
+-		/*
+-		 * Note - we always use down_interruptible with the semaphore
+-		 * even if the module was loaded as part of the kernel.  The
+-		 * reason is that down() will cause this thread to be counted
+-		 * in the load average as a running process, and down
+-		 * interruptible doesn't.  Given that we need to allow this
+-		 * thread to die if the driver was loaded as a module, using
+-		 * semaphores isn't unreasonable.
+-		 */
+-		down_interruptible(&sem);
+-		if (kthread_should_stop())
+-			break;
++		 * Note - we always use TASK_INTERRUPTIBLE even if the
++		 * module was loaded as part of the kernel.  The reason
++		 * is that UNINTERRUPTIBLE would cause this thread to be
++		 * counted in the load average as a running process, and
++		 * an interruptible wait doesn't.
++		 */
++		if (shost->host_failed == 0 ||
++		    shost->host_failed != shost->host_busy) {
++			SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler"
++							  " scsi_eh_%d"
++							  " sleeping\n",
++							  shost->host_no));
++			set_current_state(TASK_INTERRUPTIBLE);
++			/* Even though we are INTERRUPTIBLE, ignore signals */
++			flush_signals(current);
++			schedule();
++		}
+ 
+ 		SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler"
+ 						  " scsi_eh_%d waking"
+@@ -1660,7 +1649,7 @@ int scsi_error_handler(void *data)
+ 	/*
+ 	 * Make sure that nobody tries to wake us up again.
+ 	 */
+-	shost->eh_wait = NULL;
++	shost->ehandler = NULL;
+ 	return 0;
  }
  
- static int scsi_prep_fn(struct request_queue *q, struct request *req)
-@@ -1273,7 +1280,7 @@ static int scsi_prep_fn(struct request_q
- 				cmd->sc_data_direction = DMA_NONE;
- 			
- 			cmd->transfersize = req->data_len;
--			cmd->allowed = 3;
-+			cmd->allowed = req->retries;
- 			cmd->timeout_per_command = req->timeout;
- 			cmd->done = scsi_generic_done;
- 		}
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -86,7 +86,6 @@
-  * Number of allowed retries
-  */
- #define SD_MAX_RETRIES		5
--#define SD_PASSTHROUGH_RETRIES	1
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -467,8 +467,6 @@ struct Scsi_Host {
  
- static void scsi_disk_release(struct kref *kref);
- 
-@@ -248,7 +247,7 @@ static int sd_init_command(struct scsi_c
- 			timeout = rq->timeout;
- 
- 		SCpnt->transfersize = rq->data_len;
--		SCpnt->allowed = SD_PASSTHROUGH_RETRIES;
-+		SCpnt->allowed = rq->retries;
- 		goto queue;
- 	}
- 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -4215,6 +4215,7 @@ static int st_init_command(struct scsi_c
- 	else
- 		SCpnt->sc_data_direction = DMA_NONE;
- 
-+	SCpnt->allowed = rq->retries;
- 	SCpnt->timeout_per_command = rq->timeout;
- 	SCpnt->transfersize = rq->data_len;
- 	SCpnt->done = st_intr;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -184,6 +184,7 @@ struct request {
- 	void *sense;
- 
- 	unsigned int timeout;
-+	int retries;
- 
- 	/*
- 	 * For Power Management requests
+ 	struct list_head	eh_cmd_q;
+ 	struct task_struct    * ehandler;  /* Error recovery thread. */
+-	struct semaphore      * eh_wait;   /* The error recovery thread waits
+-					      on this. */
+ 	struct semaphore      * eh_action; /* Wait for specific actions on the
+                                           host. */
+ 	unsigned int            eh_active:1; /* Indicates the eh thread is awake and active if
 
 
