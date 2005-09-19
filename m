@@ -1,42 +1,38 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] Re: 2.6.14-rc1 load average calculation broken?
-Date: Mon, 19 Sep 2005 10:24:59 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0509191020580.5306-100000@iolanthe.rowland.org>
-References: <20050919035804.GA5260@us.ibm.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Arabella <Oswald@netcabo.pt>
+Subject: Dude check out this sweet site!
+Date: Mon, 19 Sep 2005 16:41:23 +0200
+Message-ID: <107067177.4251168059@p549E3FFB.dip.t-dialin.net>
+Mime-Version: 1.0 (Apple Message framework v728)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:28567 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S932429AbVISOZB
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Sep 2005 10:25:01 -0400
-In-Reply-To: <20050919035804.GA5260@us.ibm.com>
+Received: from zeus1.kernel.org ([204.152.191.4]:56552 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S932440AbVISOla (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Sep 2005 10:41:30 -0400
+Received: from p549E3FFB.dip.t-dialin.net (p549E3FFB.dip.t-dialin.net [84.158.63.251])
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id j8JEfSGK001118
+	for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2005 07:41:29 -0700
+Received: from 189.128.216.179  (EHLO agape)
+    by p549E3FFB.dip.t-dialin.net with SMTP; Mon, 19 Sep 2005 16:41:24 +0200
+    id 4541397264brand61893
+    for linux-scsi@vger.kernel.org; Mon, 19 Sep 2005 16:41:24 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: Jan Dittmer <jdittmer@ppp0.net>, James Bottomley <James.Bottomley@SteelEye.com>, Pavel Machek <pavel@suse.cz>, Greg KH <greg@kroah.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Sun, 18 Sep 2005, Mike Anderson wrote:
+Experience more powerful orgasms
+http://www.nysaum.com/pt/
 
-> Since scsi_eh_wakeup can only be called on a completion or timeout of an IO
-> you cannot get a comparison when both are 0 (unless we have a bug
-> somewhere).
 
-This is now a moot point since James's most recent patch
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112709424027012&w=2
+Successful education is always a two-way street.      
+The secret to life is meaningless unless you discover it yourself.  
 
-but I'll answer it anyway.  In the patch I originally wrote, the error 
-handler always checked the condition shost_busy == shost_failed before 
-going to sleep.  So even without scsi_eh_wakeup being called, the error 
-handler would fail to go to sleep when it originally started up, because 
-both values were 0.
+Afflicted by love's madness all are blind.      
+I understand a fury in your words,But not the words.   
 
-> If the increment of host_failed, increment of host_busy, decrement of
-> host_busy, and the comparison of host_busy to host_failed is all under
-> the host_lock why would the atomic_t be better.
+I have read your book and much like it.    
 
-They are not under the host_lock.
 
-Alan Stern
 
