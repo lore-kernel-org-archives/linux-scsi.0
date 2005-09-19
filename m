@@ -1,62 +1,68 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [linux-usb-devel] Re: 2.6.14-rc1 load average calculation broken?
-Date: Sun, 18 Sep 2005 20:58:04 -0700
-Message-ID: <20050919035804.GA5260@us.ibm.com>
-References: <432B43B3.2080801@ppp0.net> <Pine.LNX.4.44L0.0509170014070.4420-100000@netrider.rowland.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: SG_FLAG_LUN_INHIBIT broken?
+Date: Mon, 19 Sep 2005 17:33:53 +1000
+Message-ID: <432E69E1.6030705@torque.net>
+References: <CA45571DE57E1C45BF3552118BA92C9D69BE0F@WDSCEXBECL03.sc.wdc.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:52932 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932163AbVISD6a (ORCPT
+Received: from zorg.st.net.au ([203.16.233.9]:23965 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S932357AbVISHd2 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Sep 2005 23:58:30 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e4.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j8J3wTER030087
-	for <linux-scsi@vger.kernel.org>; Sun, 18 Sep 2005 23:58:29 -0400
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j8J3wT0f075832
-	for <linux-scsi@vger.kernel.org>; Sun, 18 Sep 2005 23:58:29 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j8J3wSKI032706
-	for <linux-scsi@vger.kernel.org>; Sun, 18 Sep 2005 23:58:29 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0509170014070.4420-100000@netrider.rowland.org>
+	Mon, 19 Sep 2005 03:33:28 -0400
+In-Reply-To: <CA45571DE57E1C45BF3552118BA92C9D69BE0F@WDSCEXBECL03.sc.wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jan Dittmer <jdittmer@ppp0.net>, James Bottomley <James.Bottomley@SteelEye.com>, Pavel Machek <pavel@suse.cz>, Greg KH <greg@kroah.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Timothy Thelin <Timothy.Thelin@wdc.com>
+Cc: linux-scsi@vger.kernel.org
 
-Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Sat, 17 Sep 2005, Jan Dittmer wrote:
-> 
-> > > Maybe the wakeup occurred before ap->ops was set correctly, or after it 
-> > > was unset.  Jan, at what point did the oops happen?  Was it right after 
-> > > the device was detected, during removal, or some other time?
-> > > 
-> > > Can you put in some debugging printk's to see what values are in ap, 
-> > > ap->ops, and ap->ops->eng_timeout?
-> > 
-> > ap->ops is 0, on dereferencing I get a backtrace. ap has a valid pointer
-> > (-573296044 whatever that maps to).
-> 
-> Hmm...  I imagine that when the error handler is first starting up,
-> ->host_busy is equal to ->host_failed because both are 0.  So that really
-> is not the appropriate condition to wait for.  A better approach would be
-> to have an atomic_t variable recording the number of pending invocations.
-> 
-> On the whole, I wonder if using kthread_stop here is such a good idea.  
-> The old mechanism for stopping worked well...
-> 
+Timothy Thelin wrote:
+> Can anyone confirm that this flag actually works when doing SG_IO? (I'm
+> testing on a 2.6.13-rc6 kernel)
 
-Since scsi_eh_wakeup can only be called on a completion or timeout of an IO
-you cannot get a comparison when both are 0 (unless we have a bug
-somewhere).
+Timothy,
+No it doesn't work. It hasn't worked since the lk 2.2
+series. It has been renamed to:
+SG_FLAG_UNUSED_LUN_INHIBIT
 
-If the increment of host_failed, increment of host_busy, decrement of
-host_busy, and the comparison of host_busy to host_failed is all under
-the host_lock why would the atomic_t be better.
+Notice that addition of the _UNUSED_ . It is pretty old
+stuff, SCSI-2 commands reserved the 3 top bits in byte
+one for the lun. Nowadays luns are 64 bit quantities that
+are sent to the target outside the cdb which carries the
+SCSI command.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+I thought it had been removed from the mid level, but ...
+
+> I'm attempting to do an ata-pt command on a cypress board:
+> http://www.cypress.com/portal/server.pt?space=CommunityPage&control=SetCommu
+> nity&CommunityID=209&PageID=259&fid=14&rpn=CY7C68320
+> 
+> It involves a 16-byte cdb with cdb[ 1 ] = 0x24 as a signature byte (Page 13
+> of the datasheet).  So when the scsi stack adds lun info, it kills the
+> signature byte.
+> 
+> I've tried adding SG_FLAG_LUN_INHIBIT to the SG_IO header, but neither sd or
+> sg seem to obey it. After looking at the source neither driver seems to make
+> any reference to SG_FLAG_LUN_INHIBIT.
+> 
+> Eventually all the commands seemed to be funneled to
+> scsi.c:532:scsi_dispatch_cmd which does this:
+> 	if (cmd->device->scsi_level <= SCSI_2) {
+> 		cmd->cmnd[1] = (cmd->cmnd[1] & 0x1f) |
+> 			       (cmd->device->lun << 5 & 0xe0);
+> 	}
+> So basically this is an unconditional "add lun info" if the scsi spec is
+> <=2, which is what usb-storage devices end up being.
+> 
+> Is SG_FLAG_LUN_INHIBIT supposed to be supported still or is it deprecated or
+> something?
+
+The above code is a worry because a lot of devices
+just place 0 in the version (byte 2 of an INQUIRY
+response). Perhaps scsi_level in sysfs
+(/sys/class/scsi_device/<h:c:i:l>/device/scsi_level)
+should be writable.
+
+Doug Gilbert
