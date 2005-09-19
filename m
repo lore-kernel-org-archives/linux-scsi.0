@@ -1,111 +1,138 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH 3/8] aacraid: handle AIF hotplug events
-Date: Mon, 19 Sep 2005 15:28:20 -0400
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F019B0612@otce2k03.adaptec.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] scsi_transport_sas: support link error attributes
+Date: Mon, 19 Sep 2005 21:59:42 +0200
+Message-ID: <20050919195942.GA18616@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:13202 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932603AbVIST2V convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Sep 2005 15:28:21 -0400
-content-class: urn:content-classes:message
+Received: from verein.lst.de ([213.95.11.210]:43701 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S932623AbVIST7q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Sep 2005 15:59:46 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-I retract my statement.
-
-	scsi_remove_device(device);
-	scsi_host_put(dev->scsi_host_ptr);
-	goto break_out_of_loop;
-
-Should work fine. Using 'break' in a switch statement is not going to
-break out of the loop.
-
-Sincerely -- Mark Salyzyn
+For now supporting the ->get_linkerrors method is mandatory.  I'll
+probably be beaten to implement the .show_foo variables and different
+types of attributes soon..
 
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Salyzyn, Mark
-Sent: Monday, September 19, 2005 2:28 PM
-To: Mark Haverkamp
-Cc: James Bottomley; Christoph Hellwig; linux-scsi
-Subject: RE: [PATCH 3/8] aacraid: handle AIF hotplug events
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-
-The problem is, breaking out of the shost_for_each_device requires a put
-on the device and we can no longer use it as an argument to
-scsi_remove_device.
-
-And if we decided to do so, what other race condition are we going to
-trigger?
-
-Sincerely -- Mark Salyzyn
-
-
------Original Message-----
-From: Mark Haverkamp [mailto:markh@osdl.org] 
-Sent: Monday, September 19, 2005 1:57 PM
-To: Salyzyn, Mark
-Cc: James Bottomley; Christoph Hellwig; linux-scsi
-Subject: RE: [PATCH 3/8] aacraid: handle AIF hotplug events
-
-
-On Mon, 2005-09-19 at 13:28 -0400, Salyzyn, Mark wrote:
-> The construct:
-> 
-> 	shost_for_each_device(device, dev->scsi_host_ptr) {
-> 		if (!(the_device_that_is_to_be_changed))
-> 			continue;
-> 		. . .
-> 		switch (device_config_needed) {
-> 		. . .
-> 		case DELETE:
-> 			scsi_remove_device(device);
-> 			break;
-> 		}
-> 	}
-> 
-> Under intensive testing by an OEM client is proving to be 'unstable'.
-> Apparently the expectation of locking/usage count that is part of the
-> shost_for_each_device() call is not immune to the call to
-> scsi_remove_device() and can cause a panic in __scsi_iterate_devices 
-> () in 1 out of between 100 to 1000 tries.
-> 
-> Any suggestions? Pulling scsi_remove_device call(s) out of the loop
-> only serves to open up a race condition. This patch has yet to migrate
-
-> into scsi-misc-2.6, probably wise to hold off until the root cause can
-
-> be dealt with.
-
-It looks like you only want to process one device.  Wouldn't you want to
-break out of the shost_for_each_device after processing the
-scsi_remove_device?  That way __scsi_iterate_devices() wouldn't get
-called again after the device removal.
-
-shost_for_each_device() {
-        if ()
-               continue;
-        switch () {
-        case DELETE:
-              scsi_remove_device();
-              break;
-       }
-       break;
-}
-
-
-
--- 
-Mark Haverkamp <markh@osdl.org>
-
+Index: linux-2.6/drivers/scsi/scsi_transport_sas.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/scsi_transport_sas.c	2005-09-18 13:47:25.000000000 +0200
++++ linux-2.6/drivers/scsi/scsi_transport_sas.c	2005-09-19 19:55:23.000000000 +0200
+@@ -34,7 +34,7 @@
+ 
+ 
+ #define SAS_HOST_ATTRS		0
+-#define SAS_PORT_ATTRS		11
++#define SAS_PORT_ATTRS		15
+ #define SAS_RPORT_ATTRS		5
+ 
+ struct sas_internal {
+@@ -257,6 +257,26 @@
+ 	sas_phy_show_linkspeed(field)					\
+ static CLASS_DEVICE_ATTR(field, S_IRUGO, show_sas_phy_##field, NULL)
+ 
++#define sas_phy_show_linkerror(field)					\
++static ssize_t								\
++show_sas_phy_##field(struct class_device *cdev, char *buf)		\
++{									\
++	struct sas_phy *phy = transport_class_to_phy(cdev);		\
++	struct Scsi_Host *shost = dev_to_shost(phy->dev.parent);	\
++	struct sas_internal *i = to_sas_internal(shost->transportt);	\
++	int error;							\
++									\
++	error = i->f->get_linkerrors(phy);				\
++	if (error)							\
++		return error;						\
++	return snprintf(buf, 20, "%u\n", phy->field);			\
++}
++
++#define sas_phy_linkerror_attr(field)					\
++	sas_phy_show_linkerror(field)					\
++static CLASS_DEVICE_ATTR(field, S_IRUGO, show_sas_phy_##field, NULL)
++
++
+ static ssize_t
+ show_sas_device_type(struct class_device *cdev, char *buf)
+ {
+@@ -282,6 +302,10 @@
+ sas_phy_linkspeed_attr(minimum_linkrate);
+ sas_phy_linkspeed_attr(maximum_linkrate_hw);
+ sas_phy_linkspeed_attr(maximum_linkrate);
++sas_phy_linkerror_attr(invalid_dword_count);
++sas_phy_linkerror_attr(running_disparity_error_count);
++sas_phy_linkerror_attr(loss_of_dword_sync_count);
++sas_phy_linkerror_attr(phy_reset_problem_count);
+ 
+ 
+ static DECLARE_TRANSPORT_CLASS(sas_phy_class,
+@@ -750,6 +774,11 @@
+ 	SETUP_PORT_ATTRIBUTE(minimum_linkrate);
+ 	SETUP_PORT_ATTRIBUTE(maximum_linkrate_hw);
+ 	SETUP_PORT_ATTRIBUTE(maximum_linkrate);
++
++	SETUP_PORT_ATTRIBUTE(invalid_dword_count);
++	SETUP_PORT_ATTRIBUTE(running_disparity_error_count);
++	SETUP_PORT_ATTRIBUTE(loss_of_dword_sync_count);
++	SETUP_PORT_ATTRIBUTE(phy_reset_problem_count);
+ 	i->phy_attrs[count] = NULL;
+ 
+ 	count = 0;
+Index: linux-2.6/include/scsi/scsi_transport_sas.h
+===================================================================
+--- linux-2.6.orig/include/scsi/scsi_transport_sas.h	2005-09-18 13:47:45.000000000 +0200
++++ linux-2.6/include/scsi/scsi_transport_sas.h	2005-09-19 18:31:14.000000000 +0200
+@@ -41,20 +41,28 @@
+ 	u8			phy_identifier;
+ };
+ 
+-/* The functions by which the transport class and the driver communicate */
+-struct sas_function_template {
+-};
 -
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org More majordomo info
-at  http://vger.kernel.org/majordomo-info.html
+ struct sas_phy {
+ 	struct device		dev;
+ 	int			number;
++
++	/* phy identification */
+ 	struct sas_identify	identify;
++
++	/* phy attributes */
+ 	enum sas_linkrate	negotiated_linkrate;
+ 	enum sas_linkrate	minimum_linkrate_hw;
+ 	enum sas_linkrate	minimum_linkrate;
+ 	enum sas_linkrate	maximum_linkrate_hw;
+ 	enum sas_linkrate	maximum_linkrate;
+ 	u8			port_identifier;
++
++	/* link error statistics */
++	u32			invalid_dword_count;
++	u32			running_disparity_error_count;
++	u32			loss_of_dword_sync_count;
++	u32			phy_reset_problem_count;
++
++	/* the other end of the link */
+ 	struct sas_rphy		*rphy;
+ };
+ 
+@@ -79,6 +87,13 @@
+ #define rphy_to_shost(rphy) \
+ 	dev_to_shost((rphy)->dev.parent)
+ 
++
++/* The functions by which the transport class and the driver communicate */
++struct sas_function_template {
++	int (*get_linkerrors)(struct sas_phy *);
++};
++
++
+ extern void sas_remove_host(struct Scsi_Host *);
+ 
+ extern struct sas_phy *sas_phy_alloc(struct device *, int);
