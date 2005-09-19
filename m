@@ -1,64 +1,45 @@
-From: "Timothy Thelin" <Timothy.Thelin@wdc.com>
-Subject: RE: SG_FLAG_LUN_INHIBIT broken?
-Date: Mon, 19 Sep 2005 09:58:02 -0700
-Message-ID: <CA45571DE57E1C45BF3552118BA92C9D69BE20@WDSCEXBECL03.sc.wdc.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH 3/8] aacraid: handle AIF hotplug events
+Date: Mon, 19 Sep 2005 13:28:21 -0400
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F019B052C@otce2k03.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wdscexfe02.sc.wdc.com ([129.253.170.52]:14808 "EHLO
-	wdscexfe02.sc.wdc.com") by vger.kernel.org with ESMTP
-	id S932501AbVISQ6E convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2005 12:58:04 -0400
-Content-class: urn:content-classes:message
+Received: from magic.adaptec.com ([216.52.22.17]:46308 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932515AbVISR20 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Sep 2005 13:28:26 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: Mark Haverkamp <markh@osdl.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
+The construct:
 
-> 
-> Timothy,
-> No it doesn't work. It hasn't worked since the lk 2.2
-> series. It has been renamed to:
-> SG_FLAG_UNUSED_LUN_INHIBIT
-> 
-> Notice that addition of the _UNUSED_ . It is pretty old
-> stuff, SCSI-2 commands reserved the 3 top bits in byte
-> one for the lun. Nowadays luns are 64 bit quantities that
-> are sent to the target outside the cdb which carries the
-> SCSI command.
-> 
-> I thought it had been removed from the mid level, but ...
-> 
-> <...snip...>
-> 
-> The above code is a worry because a lot of devices
-> just place 0 in the version (byte 2 of an INQUIRY
-> response). Perhaps scsi_level in sysfs
-> (/sys/class/scsi_device/<h:c:i:l>/device/scsi_level)
-> should be writable.
+	shost_for_each_device(device, dev->scsi_host_ptr) {
+		if (!(the_device_that_is_to_be_changed))
+			continue;
+		. . .
+		switch (device_config_needed) {
+		. . .
+		case DELETE:
+			scsi_remove_device(device);
+			break;
+		}
+	}
 
-The kernel makes no mention of it that I found, but it's
-in a header and the original SG_IO docs so it makes it
-seem like it exists.  In addition someone on the USB mailing
-list pointed me to it a couple of days ago to solve the issue
-I discussed in the original mail.
+Under intensive testing by an OEM client is proving to be 'unstable'.
+Apparently the expectation of locking/usage count that is part of the
+shost_for_each_device() call is not immune to the call to
+scsi_remove_device() and can cause a panic in __scsi_iterate_devices ()
+in 1 out of between 100 to 1000 tries.
 
-The USB devs don't seem to have interest in treating USB
-devices as entities other than SCSI-2 because the devices tend
-to lie about their revision and really only work with scsi-2
-commands (according to them). So that knocks
-/sys/class/scsi_device/<h:c:i:l>/device/scsi_level out of
-the water since they want the device to stay scsi2.
+Any suggestions? Pulling scsi_remove_device call(s) out of the loop only
+serves to open up a race condition. This patch has yet to migrate into
+scsi-misc-2.6, probably wise to hold off until the root cause can be
+dealt with.
 
-If SG_FLAG_LUN_INHIBIT worked, this wouldn't be an issue
-because even though these are seen as scsi2 devices,
-for raw commands the LUN issue could be stopped.  However,
-I'm still open to other solutions if SG_FLAG_LUN_INHIBIT
-can't come back.
-
-Regards,
-Tim Thelin
-
+Sincerely -- Mark Salyzyn
