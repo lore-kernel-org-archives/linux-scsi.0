@@ -1,53 +1,42 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH] libata: ATA Information VPD page, minor
-Date: Mon, 19 Sep 2005 20:29:58 +1000
-Message-ID: <432E9326.10206@torque.net>
-Reply-To: dougg@torque.net
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] Re: 2.6.14-rc1 load average calculation broken?
+Date: Mon, 19 Sep 2005 10:24:59 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0509191020580.5306-100000@iolanthe.rowland.org>
+References: <20050919035804.GA5260@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030002050908060907020703"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:62387 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S932412AbVISK31 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Sep 2005 06:29:27 -0400
+Received: from iolanthe.rowland.org ([192.131.102.54]:28567 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S932429AbVISOZB
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Sep 2005 10:25:01 -0400
+In-Reply-To: <20050919035804.GA5260@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: Jan Dittmer <jdittmer@ppp0.net>, James Bottomley <James.Bottomley@SteelEye.com>, Pavel Machek <pavel@suse.cz>, Greg KH <greg@kroah.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------030002050908060907020703
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+On Sun, 18 Sep 2005, Mike Anderson wrote:
 
-Jeff,
-Here is a small followup patch for the ATA Information
-VPD page.
+> Since scsi_eh_wakeup can only be called on a completion or timeout of an IO
+> you cannot get a comparison when both are 0 (unless we have a bug
+> somewhere).
 
-Changelog:
-  - add entry for ATA information VPD page [0x89] in the
-    Supported VPD pages VPD page [0x0]
+This is now a moot point since James's most recent patch
 
-Doug Gilbert
+http://marc.theaimsgroup.com/?l=linux-scsi&m=112709424027012&w=2
 
---------------030002050908060907020703
-Content-Type: text/x-patch;
- name="libata2614rc1err_ai2.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata2614rc1err_ai2.diff"
+but I'll answer it anyway.  In the patch I originally wrote, the error 
+handler always checked the condition shost_busy == shost_failed before 
+going to sleep.  So even without scsi_eh_wakeup being called, the error 
+handler would fail to go to sleep when it originally started up, because 
+both values were 0.
 
---- linux/drivers/scsi/libata-scsi.c	2005-09-19 20:14:15.000000000 +1000
-+++ linux/drivers/scsi/libata-scsi.c2614rc1err_ai2	2005-09-19 20:12:34.000000000 +1000
-@@ -1065,7 +1065,8 @@
- 	const u8 pages[] = {
- 		0x00,	/* page 0x00, this page */
- 		0x80,	/* page 0x80, unit serial no page */
--		0x83	/* page 0x83, device ident page */
-+		0x83,	/* page 0x83, device ident page */
-+		0x89,	/* page 0x89, ATA Information page */
- 	};
- 	rbuf[3] = sizeof(pages);	/* number of supported EVPD pages */
- 
+> If the increment of host_failed, increment of host_busy, decrement of
+> host_busy, and the comparison of host_busy to host_failed is all under
+> the host_lock why would the atomic_t be better.
 
---------------030002050908060907020703--
+They are not under the host_lock.
+
+Alan Stern
+
