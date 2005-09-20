@@ -1,15 +1,15 @@
 From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH 6/7] aacraid: fib size math fix
-Date: Tue, 20 Sep 2005 12:57:04 -0700
-Message-ID: <1127246224.1891.37.camel@markh1.pdx.osdl.net>
+Subject: [PATCH 5/7] aacraid: initialization timeout
+Date: Tue, 20 Sep 2005 12:56:50 -0700
+Message-ID: <1127246210.1891.36.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:38590 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965111AbVITUAR (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:35774 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965109AbVITUAF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Sep 2005 16:00:17 -0400
+	Tue, 20 Sep 2005 16:00:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
@@ -17,12 +17,16 @@ Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>
 
 Received from Mark Salyzyn from Adaptec.
 
-The size of the command packet's scatter gather list maximum size was
-miscalculated in the low range leading to the driver initialization
-limiting the maximum i/o size that could go to the Adapter. There were
-no negative operational side effects resulting from this bad math, only
-a subtle limit in performance of the Adapter at the top end of the
-range.
+In the rare instances where the adapter, or the motherboard, is
+misbehaving; driver initialization or shutdown becomes problematic. By
+introducing a 3 minute timeout on the first interrupt driven command
+during initialization, or the issuance of the adapter shutdown command
+during driver unload, we can resolve the lockup problems induced by
+common (but rare) hardware misbehaviors.
+
+The timeout during initialization, should it occur, is accompanied by a
+message presented to the console and the logs indicating that the user
+should inspect and resolve problems with interrupt routing.
 
 Applies to the scsi-misc-2.6 git tree.
 
@@ -32,56 +36,78 @@ Signed-off-by: Mark Haverkamp <markh@osdl.org>
 
 Index: scsi-misc-aac-2/drivers/scsi/aacraid/aachba.c
 ===================================================================
---- scsi-misc-aac-2.orig/drivers/scsi/aacraid/aachba.c	2005-09-20 09:12:07.000000000 -0700
-+++ scsi-misc-aac-2/drivers/scsi/aacraid/aachba.c	2005-09-20 09:12:10.000000000 -0700
-@@ -843,8 +843,8 @@
- 	if (!(dev->raw_io_interface)) {
- 		dev->scsi_host_ptr->sg_tablesize = (dev->max_fib_size -
- 			sizeof(struct aac_fibhdr) -
--			sizeof(struct aac_write) + sizeof(struct sgmap)) /
--				sizeof(struct sgmap);
-+			sizeof(struct aac_write) + sizeof(struct sgentry)) /
-+				sizeof(struct sgentry);
- 		if (dev->dac_support) {
- 			/* 
- 			 * 38 scatter gather elements 
-@@ -853,8 +853,8 @@
- 				(dev->max_fib_size -
- 				sizeof(struct aac_fibhdr) -
- 				sizeof(struct aac_write64) +
--				sizeof(struct sgmap64)) /
--					sizeof(struct sgmap64);
-+				sizeof(struct sgentry64)) /
-+					sizeof(struct sgentry64);
- 		}
- 		dev->scsi_host_ptr->max_sectors = AAC_MAX_32BIT_SGBCOUNT;
- 		if(!(dev->adapter_info.options & AAC_OPT_NEW_COMM)) {
+--- scsi-misc-aac-2.orig/drivers/scsi/aacraid/aachba.c	2005-09-20 09:12:03.000000000 -0700
++++ scsi-misc-aac-2/drivers/scsi/aacraid/aachba.c	2005-09-20 09:12:07.000000000 -0700
+@@ -692,7 +692,7 @@
+ 			 fibptr, 
+ 			 sizeof(*info),
+ 			 FsaNormal, 
+-			 1, 1, 
++			 -1, 1, /* First `interrupt' command uses special wait */
+ 			 NULL, 
+ 			 NULL);
+ 
 Index: scsi-misc-aac-2/drivers/scsi/aacraid/comminit.c
 ===================================================================
---- scsi-misc-aac-2.orig/drivers/scsi/aacraid/comminit.c	2005-09-20 09:12:07.000000000 -0700
-+++ scsi-misc-aac-2/drivers/scsi/aacraid/comminit.c	2005-09-20 09:12:10.000000000 -0700
-@@ -313,8 +313,8 @@
- 	dev->max_fib_size = sizeof(struct hw_fib);
- 	dev->sg_tablesize = host->sg_tablesize = (dev->max_fib_size
- 		- sizeof(struct aac_fibhdr)
--		- sizeof(struct aac_write) + sizeof(struct sgmap))
--			/ sizeof(struct sgmap);
-+		- sizeof(struct aac_write) + sizeof(struct sgentry))
-+			/ sizeof(struct sgentry);
- 	dev->raw_io_64 = 0;
- 	if ((!aac_adapter_sync_cmd(dev, GET_ADAPTER_PROPERTIES,
- 		0, 0, 0, 0, 0, 0, status+0, status+1, status+2, NULL, NULL)) &&
-@@ -349,8 +349,8 @@
- 			dev->max_fib_size = 512;
- 			dev->sg_tablesize = host->sg_tablesize
- 			  = (512 - sizeof(struct aac_fibhdr)
--			    - sizeof(struct aac_write) + sizeof(struct sgmap))
--			     / sizeof(struct sgmap);
-+			    - sizeof(struct aac_write) + sizeof(struct sgentry))
-+			     / sizeof(struct sgentry);
- 			host->can_queue = AAC_NUM_IO_FIB;
- 		} else if (acbsize == 2048) {
- 			host->max_sectors = 512;
+--- scsi-misc-aac-2.orig/drivers/scsi/aacraid/comminit.c	2005-09-20 09:08:00.000000000 -0700
++++ scsi-misc-aac-2/drivers/scsi/aacraid/comminit.c	2005-09-20 09:12:07.000000000 -0700
+@@ -195,7 +195,7 @@
+ 			  fibctx,
+ 			  sizeof(struct aac_close),
+ 			  FsaNormal,
+-			  1, 1,
++			  -2 /* Timeout silently */, 1,
+ 			  NULL, NULL);
+ 
+ 	if (status == 0)
+Index: scsi-misc-aac-2/drivers/scsi/aacraid/commsup.c
+===================================================================
+--- scsi-misc-aac-2.orig/drivers/scsi/aacraid/commsup.c	2005-09-20 09:12:03.000000000 -0700
++++ scsi-misc-aac-2/drivers/scsi/aacraid/commsup.c	2005-09-20 09:12:07.000000000 -0700
+@@ -41,6 +41,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_device.h>
+ #include <asm/semaphore.h>
++#include <asm/delay.h>
+ 
+ #include "aacraid.h"
+ 
+@@ -541,7 +542,34 @@
+     
+ 	if (wait) {
+ 		spin_unlock_irqrestore(&fibptr->event_lock, flags);
+-		down(&fibptr->event_wait);
++		/* Only set for first known interruptable command */
++		if (wait < 0) {
++			/*
++			 * *VERY* Dangerous to time out a command, the
++			 * assumption is made that we have no hope of
++			 * functioning because an interrupt routing or other
++			 * hardware failure has occurred.
++			 */
++			unsigned long count = 36000000L; /* 3 minutes */
++			unsigned long qflags;
++			while (down_trylock(&fibptr->event_wait)) {
++				if (--count == 0) {
++					spin_lock_irqsave(q->lock, qflags);
++					q->numpending--;
++					list_del(&fibptr->queue);
++					spin_unlock_irqrestore(q->lock, qflags);
++					if (wait == -1) {
++	        				printk(KERN_ERR "aacraid: fib_send: first asynchronous command timed out.\n"
++						  "Usually a result of a PCI interrupt routing problem;\n"
++						  "update mother board BIOS or consider utilizing one of\n"
++						  "the SAFE mode kernel options (acpi, apic etc)\n");
++					}
++					return -ETIMEDOUT;
++				}
++				udelay(5);
++			}
++		} else
++			down(&fibptr->event_wait);
+ 		if(fibptr->done == 0)
+ 			BUG();
+ 			
 
 -- 
 Mark Haverkamp <markh@osdl.org>
