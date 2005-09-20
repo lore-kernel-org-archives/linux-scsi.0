@@ -1,121 +1,103 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [GIT PATCH] SCSI bug fixes for 2.6.14-rc1
-Date: Tue, 20 Sep 2005 10:19:50 -0500
-Message-ID: <1127229590.5589.2.camel@mulgrave>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCH 4/5] convert st to use scsi_execte_async
+Date: Tue, 20 Sep 2005 22:23:51 +0300 (EEST)
+Message-ID: <Pine.LNX.4.61.0509202149180.4741@kai.makisara.local>
+References: <1126845599.9276.44.camel@max>  <Pine.LNX.4.61.0509171428410.9258@kai.makisara.local>
+  <432C39BC.1030105@cs.wisc.edu>  <432C3C75.5090405@cs.wisc.edu>
+ <1126974325.10413.5.camel@max>  <Pine.LNX.4.61.0509181456370.14776@kai.makisara.local>
+  <432D81BD.9080803@cs.wisc.edu> <432D8515.9010809@cs.wisc.edu>
+ <Pine.LNX.4.61.0509182031090.15507@kai.makisara.local> <1127061365.800.1.camel@max>
+ <432D97F2.5040508@cs.wisc.edu> <Pine.LNX.4.61.0509182155350.15507@kai.makisara.local>
+ <432D9D53.3070706@cs.wisc.edu> <Pine.LNX.4.61.0509192040360.4404@kai.makisara.local>
+ <432F100D.7050007@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:49849 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S965032AbVITPT7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Sep 2005 11:19:59 -0400
+Received: from fep02-0.kolumbus.fi ([193.229.0.44]:22228 "EHLO
+	fep02-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S965089AbVITTS2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Sep 2005 15:18:28 -0400
+In-Reply-To: <432F100D.7050007@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org
 
-This is my set of accumulated bug fixes.  With this, module removal
-actually works and several oopses (in USB and sym2) are fixed; plus
-there's some pending driver updates that missed the review/feedback
-cutoff for the last push.  There's st
+On Mon, 19 Sep 2005, Mike Christie wrote:
 
-The tree is here:
+> Kai Makisara wrote:
+> > 
+> > st sends the command using a buffer of one segment. The command is passed
+> > to the HBA driver and it sees 8 segments. Clustering seems to work
+> > properly (the maximum segment size is set to 65536 bytes by default). 
+> > Here is what is seen when the block size is increased to 513 kB:
+> > dd if=tdata of=/dev/nst0 bs=513k count=1
+> > 
+> > The dd process hangs in device wait. It turns out that
+> > scsi_execute_async() fails. This is an async write and the process later
+> > waits for the failed write to finish. The patch at the end of this
+> > message fixes this st bug (don't worry about the line shifts, I have some
+> > debugging printks in this driver).
+> > 
+> > The real problem is that scsi_execute_async() fails. The 513 kB request
+> > is 129 pages. Could the reason be related to these defaults in
+> > include/linux?
+> > # define MAX_PHYS_SEGMENTS 128
+> > # define MAX_HW_SEGMENTS 128
+> > 
+> 
+> Yeah I think this is due to the MAX_PHYS_SEGMENTS limit. The hw segments is
+> set by scsi_lib in scsi_alloc_queue and is the sg_tablesize value on the host.
+> Right now all I do is return a error when someone violates one of the limits,
+> but I think the right thing to do is have the ULDs take some of these values
+> into account when they build their lists. However if I do that we will not be
+> able to make large requests since the MAX_PHYS_SEGMENTS/SCSI_MAX_PHYS_SEGMENTS
+> will limit them. Umm let me rethink.
+> 
+I have done some additional debugging. Submitting the large write fails in 
+bio_map_pages() called from scsi_req_map_sg(). The first reason is not 
+phys_segments or hw_segments limit but max_sectors. The sym53c8xx_2 uses 
+the default SCSI_DEFAULT_MAX_SECTORS which is 1024 (512 kB).
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-for-linus-2.6.git/
+I increased max_sectors in sym_glue.c to 10240 in sym53c8xx and now I can 
+write blocks up to 1024 kB. Then bio_map_page() fails again but this time 
+in bio_alloc(). This is because st can allocate chunks of more than 1 MB 
+and this is too much for one bio. I added the code in the patch at the end 
+of this message to limit the chunk size and this allowed writing of blocks 
+up to 5120 kB.
 
-Alan Stern:
-  o scanning and removal fixes
-  o fix oops in scsi_release_buffers()
-  o fix use after potential free in scsi_remove_device
+If I try 5121 kB, write fails as is expected but not completely nicely. 
+Here are some test printks:
 
-Andreas Herrmann:
-  o zfcp: add additional fc_host attributes
-  o zfcp: shorten eh_bus_reset and eh_host_reset handlers
-  o zfcp: remove function zfcp_fsf_req_wait_and_cleanup
-  o zfcp: remove union zfcp_req_data, use unit refcount for FCP commands
-  o zfcp: fix race conditions when accessing erp_action lists
-  o change port speed definitions for scsi_transport_fc
+scsi_req_map_sg: q->back_merge failed, i=10
+st 1:0:5:0: extraneous data discarded.
+st 1:0:5:0: COMMAND FAILED (87 0 1).
+sym: cmd: 0x0a 0x00 0x50 0x04 0x00 0x00
+st: cmd=0x0a result=0x70000 resid=0 sense[0]=0x00 sense[2]=0x00
 
-Christoph Hellwig:
-  o fusion SAS support (mptsas driver)
-  o fusion core changes for SAS support
+scsi_req_map_sg fails as it should but still a bogus SCSI command is sent. 
+I think the reason for this is simple but I don't want to delay the good 
+news by trying to debug this.
 
-Dave Boutcher:
-  o ibmvscsi compatibility fix
+So, now st can write as large blocks as it should. Good work, Mike!
 
-Eric Moore:
-  o fusion SAS support (mptsas driver) minor fix
-  o fusion SAS support (mptsas driver) updates
+What I don't quite like is that being able to do this requires setting 
+SCSI adapter parameters (use_clustering, max_sectors) to values that are 
+not used by most drivers today. Changing is in most cases trivial but this 
+has to be done. Otherwise the users needing large block sizes feel that 
+these enhancements are a regression.
 
-James Bottomley:
-  o Fix thread termination for the SCSI error handle
-  o fix oops on usb storage device disconnect
-  o atp870u: fix memory addressing bug
-  o fix sym scsi boot hang
-  o aic7xxx: move to dma_get_required_mask() and correct 39 bit assumptions
-  o blacklist REPORT LUNS usage on transtec arrays
-
-Maxim Shchetynin:
-  o zfcp: provide support for NPIV
-  o zfcp: enhancement of zfcp debug features
-
-Randy.Dunlap:
-  o scsi: 2 drivers need MODULE_LICENSE()
-
-Timothy Thelin:
-  o scsi: sd, sr, st, and scsi_lib all fail to copy cmd_len to new cmd
-
-The diffstat is:
-
- drivers/message/fusion/Kconfig         |   17 
- drivers/message/fusion/Makefile        |    1 
- drivers/message/fusion/mptbase.c       |  963 +++++++++++++++++++------
- drivers/message/fusion/mptbase.h       |   56 +
- drivers/message/fusion/mptctl.c        |    4 
- drivers/message/fusion/mptfc.c         |    2 
- drivers/message/fusion/mptlan.c        |    7 
- drivers/message/fusion/mptsas.c        | 1235 +++++++++++++++++++++++++++++++++
- drivers/message/fusion/mptscsih.c      |  463 ++++++------
- drivers/message/fusion/mptscsih.h      |    7 
- drivers/message/fusion/mptspi.c        |    2 
- drivers/s390/scsi/Makefile             |    2 
- drivers/s390/scsi/zfcp_aux.c           |  184 ----
- drivers/s390/scsi/zfcp_ccw.c           |   10 
- drivers/s390/scsi/zfcp_dbf.c           |  995 ++++++++++++++++++++++++++
- drivers/s390/scsi/zfcp_def.h           |  307 +++++---
- drivers/s390/scsi/zfcp_erp.c           |  135 ++-
- drivers/s390/scsi/zfcp_ext.h           |   30 
- drivers/s390/scsi/zfcp_fsf.c           |  769 +++++++++-----------
- drivers/s390/scsi/zfcp_fsf.h           |   54 +
- drivers/s390/scsi/zfcp_qdio.c          |   30 
- drivers/s390/scsi/zfcp_scsi.c          |  297 ++-----
- drivers/s390/scsi/zfcp_sysfs_adapter.c |   14 
- drivers/scsi/aic7xxx/aic7xxx_osm.c     |    9 
- drivers/scsi/aic7xxx/aic7xxx_osm.h     |    2 
- drivers/scsi/aic7xxx/aic7xxx_osm_pci.c |    8 
- drivers/scsi/atp870u.c                 |    6 
- drivers/scsi/atp870u.h                 |    5 
- drivers/scsi/fd_mcs.c                  |    2 
- drivers/scsi/hosts.c                   |   35 
- drivers/scsi/ibmmca.c                  |    2 
- drivers/scsi/ibmvscsi/ibmvscsi.c       |   10 
- drivers/scsi/scsi.c                    |    5 
- drivers/scsi/scsi_devinfo.c            |    1 
- drivers/scsi/scsi_error.c              |   80 +-
- drivers/scsi/scsi_ioctl.c              |    2 
- drivers/scsi/scsi_lib.c                |   12 
- drivers/scsi/scsi_scan.c               |   20 
- drivers/scsi/scsi_sysfs.c              |   17 
- drivers/scsi/sd.c                      |    1 
- drivers/scsi/sg.c                      |    2 
- drivers/scsi/sr.c                      |    1 
- drivers/scsi/st.c                      |    1 
- include/scsi/scsi_host.h               |   11 
- include/scsi/scsi_transport_fc.h       |    4 
- 45 files changed, 4235 insertions(+), 1585 deletions(-)
-
-
-James
-
-
+-- 
+Kai
+--------------------------------8<--------------------------------------
+--- linux-2.6.14-rc1-blk3/drivers/scsi/st.c.org	2005-09-16 20:37:19.000000000 +0300
++++ linux-2.6.14-rc1-blk3/drivers/scsi/st.c	2005-09-20 21:52:22.000000000 +0300
+@@ -3623,7 +3627,7 @@
+ 	priority = GFP_KERNEL | __GFP_NOWARN;
+ 	if (need_dma)
+ 		priority |= GFP_DMA;
+-	for (b_size = PAGE_SIZE, order=0;
++	for (b_size = PAGE_SIZE, order=0; order <= 6 &&
+ 	     b_size < new_size - STbuffer->buffer_size;
+ 	     order++, b_size *= 2)
+ 		;  /* empty */
