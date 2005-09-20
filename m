@@ -1,87 +1,95 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 4/5] convert st to use scsi_execte_async
-Date: Tue, 20 Sep 2005 15:20:30 -0500
-Message-ID: <1127247630.5589.30.camel@mulgrave>
-References: <1126845599.9276.44.camel@max>
-	 <Pine.LNX.4.61.0509171428410.9258@kai.makisara.local>
-	 <432C39BC.1030105@cs.wisc.edu>  <432C3C75.5090405@cs.wisc.edu>
-	 <1126974325.10413.5.camel@max>
-	 <Pine.LNX.4.61.0509181456370.14776@kai.makisara.local>
-	 <432D81BD.9080803@cs.wisc.edu> <432D8515.9010809@cs.wisc.edu>
-	 <Pine.LNX.4.61.0509182031090.15507@kai.makisara.local>
-	 <1127061365.800.1.camel@max> <432D97F2.5040508@cs.wisc.edu>
-	 <Pine.LNX.4.61.0509182155350.15507@kai.makisara.local>
-	 <432D9D53.3070706@cs.wisc.edu>
-	 <Pine.LNX.4.61.0509192040360.4404@kai.makisara.local>
-	 <432F100D.7050007@cs.wisc.edu>
-	 <Pine.LNX.4.61.0509202149180.4741@kai.makisara.local>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: eh_active checks in qla2xxx error handling
+Date: Tue, 20 Sep 2005 13:25:53 -0700
+Message-ID: <20050920202553.GJ19002@plap.qlogic.org>
+References: <20050906122028.GA22963@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:7869 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S964783AbVITUUk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Sep 2005 16:20:40 -0400
-In-Reply-To: <Pine.LNX.4.61.0509202149180.4741@kai.makisara.local>
+Received: from pat.qlogic.com ([198.70.193.2]:26021 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S964783AbVITUZy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Sep 2005 16:25:54 -0400
+Content-Disposition: inline
+In-Reply-To: <20050906122028.GA22963@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, Duane Grigsby <duane.grigsby@qlogic.com>
 
-On Tue, 2005-09-20 at 22:23 +0300, Kai Makisara wrote:
-> > Yeah I think this is due to the MAX_PHYS_SEGMENTS limit. The hw segments is
-> > set by scsi_lib in scsi_alloc_queue and is the sg_tablesize value on the host.
-> > Right now all I do is return a error when someone violates one of the limits,
-> > but I think the right thing to do is have the ULDs take some of these values
-> > into account when they build their lists. However if I do that we will not be
-> > able to make large requests since the MAX_PHYS_SEGMENTS/SCSI_MAX_PHYS_SEGMENTS
-> > will limit them. Umm let me rethink.
+On Tue, 06 Sep 2005, Christoph Hellwig wrote:
 
-There's already the code in SCSI to increase this to 256 (and
-potentially beyond) if it becomes necessary.
+> qla2xxx is the only driver looking at eh_active, and doing the wait
+> for oustanding commands only from EH thread resets but not from the
+> ioctls looks rather wrong to me.  Do you remember the rational for it?
 
-> I have done some additional debugging. Submitting the large write fails in 
-> bio_map_pages() called from scsi_req_map_sg(). The first reason is not 
-> phys_segments or hw_segments limit but max_sectors. The sym53c8xx_2 uses 
-> the default SCSI_DEFAULT_MAX_SECTORS which is 1024 (512 kB).
-> 
-> I increased max_sectors in sym_glue.c to 10240 in sym53c8xx and now I can 
-> write blocks up to 1024 kB. Then bio_map_page() fails again but this time 
-> in bio_alloc(). This is because st can allocate chunks of more than 1 MB 
-> and this is too much for one bio. I added the code in the patch at the end 
-> of this message to limit the chunk size and this allowed writing of blocks 
-> up to 5120 kB.
-> 
-> If I try 5121 kB, write fails as is expected but not completely nicely. 
-> Here are some test printks:
-> 
-> scsi_req_map_sg: q->back_merge failed, i=10
-> st 1:0:5:0: extraneous data discarded.
-> st 1:0:5:0: COMMAND FAILED (87 0 1).
-> sym: cmd: 0x0a 0x00 0x50 0x04 0x00 0x00
-> st: cmd=0x0a result=0x70000 resid=0 sense[0]=0x00 sense[2]=0x00
-> 
-> scsi_req_map_sg fails as it should but still a bogus SCSI command is sent. 
-> I think the reason for this is simple but I don't want to delay the good 
-> news by trying to debug this.
-> 
-> So, now st can write as large blocks as it should. Good work, Mike!
-> 
-> What I don't quite like is that being able to do this requires setting 
-> SCSI adapter parameters (use_clustering, max_sectors) to values that are 
-> not used by most drivers today. Changing is in most cases trivial but this 
-> has to be done. Otherwise the users needing large block sizes feel that 
-> these enhancements are a regression.
+As Duane mentioned, this looks to be some residual from the 2.4 era
+which unfortunately I've yet to find a reasonably valid justification
+for...Alas, another loss of history...
 
-OK, but this is troubling either way:  Previously the LLD was simply
-lying about its ability to support more sectors and clustering and you
-called its bluff by sending such commands.  Now the bio layer is
-actually enforcing these limits.
+---
+Here's a patch which drops the eh_active checks in the qla2xxx
+eh_handler callbacks.
 
-The fix has got to be to update the LLDs so they're reporting their
-capabilities truthfully.
-
-James
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
 
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -797,29 +797,19 @@ qla2xxx_eh_device_reset(struct scsi_cmnd
+ 		goto eh_dev_reset_done;
+ 	}
+ 
+-	/*
+-	 * If we are coming down the EH path, wait for all commands to
+-	 * complete for the device.
+-	 */
+-	if (cmd->device->host->eh_active) {
+-		if (qla2x00_eh_wait_for_pending_target_commands(ha, id))
+-			ret = FAILED;
+-
+-		if (ret == FAILED) {
+-			DEBUG3(printk("%s(%ld): failed while waiting for "
+-			    "commands\n", __func__, ha->host_no));
+-			qla_printk(KERN_INFO, ha,
+-			    "%s: failed while waiting for commands\n",
+-			    __func__);
+-
+-			goto eh_dev_reset_done;
+-		}
+-	}
+-
+-	qla_printk(KERN_INFO, ha,
+-	    "scsi(%ld:%d:%d): DEVICE RESET SUCCEEDED.\n", ha->host_no, id, lun);
++	/* Flush outstanding commands. */
++	if (qla2x00_eh_wait_for_pending_target_commands(ha, id))
++		ret = FAILED;
++	if (ret == FAILED) {
++		DEBUG3(printk("%s(%ld): failed while waiting for commands\n",
++		    __func__, ha->host_no));
++		qla_printk(KERN_INFO, ha,
++		    "%s: failed while waiting for commands\n", __func__);
++	} else
++		qla_printk(KERN_INFO, ha,
++		    "scsi(%ld:%d:%d): DEVICE RESET SUCCEEDED.\n", ha->host_no,
++		    id, lun);
+ 
+-eh_dev_reset_done:
+ 	return ret;
+ }
+ 
+@@ -921,10 +911,9 @@ qla2xxx_eh_bus_reset(struct scsi_cmnd *c
+ 	if (ret == FAILED)
+ 		goto eh_bus_reset_done;
+ 
+-	/* Waiting for our command in done_queue to be returned to OS.*/
+-	if (cmd->device->host->eh_active)
+-		if (!qla2x00_eh_wait_for_pending_commands(ha))
+-			ret = FAILED;
++	/* Flush outstanding commands. */
++	if (!qla2x00_eh_wait_for_pending_commands(ha))
++		ret = FAILED;
+ 
+ eh_bus_reset_done:
+ 	qla_printk(KERN_INFO, ha, "%s: reset %s\n", __func__,
