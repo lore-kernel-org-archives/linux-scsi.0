@@ -1,56 +1,40 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [ANNOUNCE] sdparm 0.95
-Date: Tue, 20 Sep 2005 17:55:18 +1000
-Message-ID: <432FC066.8030806@torque.net>
-Reply-To: dougg@torque.net
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 6/6] zfcp: provide support for NPIV
+Date: Tue, 20 Sep 2005 09:58:36 +0100
+Message-ID: <20050920085836.GA31792@infradead.org>
+References: <OFD2F66C80.E6AB000B-ONC1257081.00515783-C1257081.005185B0@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:20611 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S964911AbVITHyv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Sep 2005 03:54:51 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:40119 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S964941AbVITI6i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Sep 2005 04:58:38 -0400
+Content-Disposition: inline
+In-Reply-To: <OFD2F66C80.E6AB000B-ONC1257081.00515783-C1257081.005185B0@de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, tomfa@debian.org, kumba@gentoo.org
+To: Andreas Herrmann <AHERRMAN@de.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jejb@steeleye.com>, Linux SCSI <linux-scsi@vger.kernel.org>, Maxim Shchetynin <maxim@de.ibm.com>
 
-sdparm is a command line utility designed to get and set
-SCSI device parameters (cf hdparm for ATA disks). Apart
-from SCSI devices (e.g. disks, tapes and enclosures) sdparm
-can be used on any device that uses a SCSI command set.
-Virtually all CD/DVD drives use the SCSI MMC set irrespective
-of the transport. sdparm also can decode VPD pages including
-the device identification page. Commands to start and stop
-the media; and load and unload removable media are supported.
-sdparm can be used in both the lk 2.4 and 2.6 series.
+On Mon, Sep 19, 2005 at 04:53:13PM +0200, Andreas Herrmann wrote:
+> > > @@ -68,6 +68,8 @@ ZFCP_DEFINE_ADAPTER_ATTR(s_id, "0x%06x\n
+> > >  ZFCP_DEFINE_ADAPTER_ATTR(peer_wwnn, "0x%016llx\n", 
+> adapter->peer_wwnn);
+> > >  ZFCP_DEFINE_ADAPTER_ATTR(peer_wwpn, "0x%016llx\n", 
+> adapter->peer_wwpn);
+> > >  ZFCP_DEFINE_ADAPTER_ATTR(peer_d_id, "0x%06x\n", adapter->peer_d_id);
+> > > +ZFCP_DEFINE_ADAPTER_ATTR(physical_wwpn, "0x%016llx\n", 
+> adapter->physical_wwpn);
+> 
+> > this information belongs into the transport class, not the driver.
+> > What's the peer information above?  is that for point-to-point FC
+> > connections?
+> 
+> Hope it is acceptable to keep this attributes in zfcp sysfs subtree
+> until I will send a patch to add physical port_name and physical
+> port_id information to the transport class. 
 
-This release adds the decoding of 5 more Vital Product Data
-(VPD) pages. Most of the rest of the changes are bug fixes.
+keeping the peer stuff is okay for now, adding the physical attributes
+is not, they should be moved to the transport class from the start.
 
-For more information and downloads see:
-http://www.torque.net/sg/sdparm.html
-
-ChangeLog for sdparm-0.95 [20050920]
-  - add debian directory (for builds)
-  - add decode for extended inquiry data VPD page
-  - add decode for management network addresses VPD page
-  - add decode for mode page policy VPD page
-  - add decode for ATA information VPD page
-  - add decode for Block limits VPD page
-  - fix DRA and LBCSS bits in caching mode page
-  - sync with SPC-4 rev 02
-  - add EBACKERR in Informational exceptions mode page
-  - add some defensive code into SCSI INQUIRY response processing
-  - about 10 fixes to mode page items as a result of chk_sdparm_data
-    <see notes.txt file for more information>
-  - when changing mode pages, check modification position does not
-    exceed actual page length
-  - process '-p' option last since it depends on '-t' and '-i'
-    - output available arguments when '-p' or '-t' arguments
-      don't match
-  - fix command line problem with '--dbd', '--defaults' and
-    '--dummy'
-
-Doug Gilbert
