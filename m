@@ -1,93 +1,70 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 4/5] convert st to use scsi_execte_async
-Date: Wed, 21 Sep 2005 08:39:06 +1000
-Message-ID: <43308F8A.1020808@torque.net>
-References: <1126845599.9276.44.camel@max>  <Pine.LNX.4.61.0509171428410.9258@kai.makisara.local>  <432C39BC.1030105@cs.wisc.edu>  <432C3C75.5090405@cs.wisc.edu>  <1126974325.10413.5.camel@max>  <Pine.LNX.4.61.0509181456370.14776@kai.makisara.local>  <432D81BD.9080803@cs.wisc.edu> <432D8515.9010809@cs.wisc.edu>  <Pine.LNX.4.61.0509182031090.15507@kai.makisara.local>  <1127061365.800.1.camel@max> <432D97F2.5040508@cs.wisc.edu>  <Pine.LNX.4.61.0509182155350.15507@kai.makisara.local>  <432D9D53.3070706@cs.wisc.edu>  <Pine.LNX.4.61.0509192040360.4404@kai.makisara.local>  <432F100D.7050007@cs.wisc.edu>  <Pine.LNX.4.61.0509202149180.4741@kai.makisara.local> <1127247630.5589.30.camel@mulgrave> <Pine.LNX.4.61.0509202342590.4741@kai.makisara.local>
-Reply-To: dougg@torque.net
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 2.6.14-rc1 0/13] ieee1394: fixes and cleanups
+Date: Wed, 21 Sep 2005 00:41:20 +0200
+Message-ID: <43309010.6010205@s5r6.in-berlin.de>
+References: <200509172308.j8HN8ZcH030215@einhorn.in-berlin.de> <20050920213121.GB1114@conscoop.ottawa.on.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:26581 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1750700AbVITWkI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Sep 2005 18:40:08 -0400
-In-Reply-To: <Pine.LNX.4.61.0509202342590.4741@kai.makisara.local>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:6379 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1750704AbVITWln (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Sep 2005 18:41:43 -0400
+In-Reply-To: <20050920213121.GB1114@conscoop.ottawa.on.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Mike Christie <michaelc@cs.wisc.edu>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux1394-devel@lists.sourceforge.net
+Cc: Jody McIntyre <scjody@steamballoon.com>, linux-scsi@vger.kernel.org, Ben Collins <bcollins@debian.org>, Dan Dennedy <dan@dennedy.org>, James Bottomley <James.Bottomley@SteelEye.com>
 
-Kai Makisara wrote:
-> On Tue, 20 Sep 2005, James Bottomley wrote:
-> 
-> 
->>On Tue, 2005-09-20 at 22:23 +0300, Kai Makisara wrote:
->>
->>>>Yeah I think this is due to the MAX_PHYS_SEGMENTS limit. The hw segments is
->>>>set by scsi_lib in scsi_alloc_queue and is the sg_tablesize value on the host.
->>>>Right now all I do is return a error when someone violates one of the limits,
->>>>but I think the right thing to do is have the ULDs take some of these values
->>>>into account when they build their lists. However if I do that we will not be
->>>>able to make large requests since the MAX_PHYS_SEGMENTS/SCSI_MAX_PHYS_SEGMENTS
->>>>will limit them. Umm let me rethink.
->>
->>There's already the code in SCSI to increase this to 256 (and
->>potentially beyond) if it becomes necessary.
->>
-> 
-> The current default segment size limit is 64 kB. This multiplied by 128 
-> gives 8 MB. This should be large enough for all tape usage I know.
-> 
-> ...
-> 
->>>What I don't quite like is that being able to do this requires setting 
->>>SCSI adapter parameters (use_clustering, max_sectors) to values that are 
->>>not used by most drivers today. Changing is in most cases trivial but this 
->>>has to be done. Otherwise the users needing large block sizes feel that 
->>>these enhancements are a regression.
->>
->>OK, but this is troubling either way:  Previously the LLD was simply
->>lying about its ability to support more sectors and clustering and you
->>called its bluff by sending such commands.  Now the bio layer is
->>actually enforcing these limits.
->>
-> 
-> I agree that it is good to have a common layer to enforce the limits. 
-> Currently st has had to check the limits (it checks some and for others 
-> relies on that all decent SCSI HBAs support what st tries to do). Based 
-> on my earlier experience, I just doubt a little that the limits will be 
-> updated but I hope to be proven wrong here :-)
-> 
-> 
->>The fix has got to be to update the LLDs so they're reporting their
->>capabilities truthfully.
->>
-> 
-> If this happens, it is very good. (I hope this includes the alignment 
-> constraints, too :-)
+Jody McIntyre wrote:
+> Do you have any strong feelings as to what we should do with these
+> patches?  My practice has been to send them to akpm for testing in -mm,
+> then to Linus after 2 weeks.  All the fixes are for fairly longstanding
+> issues AFAICT, so probably not urgent enough to skip that.
 
-... or perhaps the LLD could complain (rather than
-the block layer) if it gets a scatter gather list
-that it can't handle, since that may be dynamic
-(e.g. depend on other requests the LLD is processing
-at the time). Both the st and sg drivers could produce
-a reasonable error to their application clients in this
-case.
+What Linus and Andrew do with these patches is ultimately up to them. In 
+my opinion they could/should go straight into Linus' tree because they 
+are ...well... fixes and cleanups. There are no new features, no risky 
+rewrites.
 
-The SCSI device may also have data size limits
-(e.g. the Block Limits VPD page in SBC-2). And that
-VPD page makes an interesting distinction: between
-maximum and optimum transfer size. Also these limits
-apply to a disk's block commands (e.g. READ and WRITE)
-but not to other data bearing commands (e.g. WRITE
-BUFFER for uploading firmware).
+Furthermore, there _is_ a certain urgency IMO. Linux1394.org's stuff and 
+Linus' tree are already diverging again. So I became a little bit 
+worried, which is one of the reasons why I put these patches together.
 
-Basically if an app is using st to talk to a SCSI
-tape device, the kernel block layer and the LLD
-should only be heard from if they can't do what was
-requested. No second guessing please.
+Also note that one group of patches is missing from this collection, as 
+I already mentioned. I left sbp2's RBC related changes out. (I promise 
+to produce a patch against the then latest -rc or -rc-mm with these 
+changes as soon as I have the time; probably at the beginning of 
+October. Of course I won't mind if somebody else did it...) _This_ kind 
+of changes belongs into -mm first. (Actually it was already there; made 
+it even into Linus' tree, but luckily was reverted.)
 
-Doug Gilbert
+This is actually another reason why the other patches should better go 
+into Linus' tree already. We have to have released kernels with an sbp2 
+driver that actually works. Only a working, released kernel as basis of 
+reference makes it possible to actually test changes like the RBC 
+related ones.
 
+Also note: Incarnations of the sbp2 hot-unplug patch, the whole 
+serialize_io matter, and patch 5/13 (reordering to nodemgr's IRM duties) 
+have actually received testing by kind readers of linux1394-devel and 
+linux1394-user. This is certainly a different circle of testers than 
+those who are running -mm kernels. However it's a very valid way of 
+testing because there were _fixes_ to test, not new features or code 
+rearrangements.
 
+(That was a long answer... However, don't take me wrong. I don't want to 
+push anything and I don't have strong feelings what should happen with 
+the patches.)
+
+> In any case,
+> they should be sent in by Ben or myself, to avoid confusing people :)
+
+Well, _somebody_ should do it. :-)
+And I agree that confusion should be avoided. No need to add more 
+friction to the process.
+-- 
+Stefan Richter
+-=====-=-=-= =--= =-=--
+http://arcgraph.de/sr/
