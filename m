@@ -1,83 +1,42 @@
-From: =?iso-8859-1?Q?Strand_=C5ge?= <aage.strand@imr.no>
-Subject: RE: aix79xx driver status
-Date: Wed, 21 Sep 2005 13:48:56 +0200
-Message-ID: <0D54094F69391A438650C6151B0A33E402132A7E@post2.imr.no>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: aix79xx driver status
+Date: Wed, 21 Sep 2005 14:29:34 +0100
+Message-ID: <20050921132934.GA32696@infradead.org>
+References: <0D54094F69391A438650C6151B0A33E402132A7A@post2.imr.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.imr.no ([82.134.28.194]:45957 "EHLO ns.imr.no")
-	by vger.kernel.org with ESMTP id S1750824AbVIULs5 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Sep 2005 07:48:57 -0400
-Received: from post2.imr.no ([10.1.2.137])
-	by ns.imr.no with esmtp (Exim 4.43)
-	id 1EI35s-0008Dv-Vs
-	for linux-scsi@vger.kernel.org; Wed, 21 Sep 2005 13:48:56 +0200
-Content-class: urn:content-classes:message
+Received: from pentafluge.infradead.org ([213.146.154.40]:7600 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1750914AbVIUN3f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Sep 2005 09:29:35 -0400
+Content-Disposition: inline
+In-Reply-To: <0D54094F69391A438650C6151B0A33E402132A7A@post2.imr.no>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Laas <jens.laas@data.slu.se>
+To: Strand ?ge <aage.strand@imr.no>
 Cc: linux-scsi@vger.kernel.org
 
+On Wed, Sep 21, 2005 at 11:44:28AM +0200, Strand ?ge wrote:
+> 
+> Hi,
+> 
+> I'm trying to debug an md RAID problem and was looking into aic79xx driver version, and now I'm confused.
+> 
+> The 2.6.13 kernel code lists the version for this driver as 1.3.11 (AIC79XX_DRIVER_VERSION), and it looks like the last update was back in 2003.
+> 
+> But I can find a 2.0.14 version of the driver at adaptec.com, dated 17.May 2005:
+> http://www.adaptec.com/worldwide/support/driversbycat.jsp?sess=no&language=English+US&cat=%2FOperating+System%2FLinux+Driver+Source+Code
+> 
+> Granted, it says the driver is "minimally tested", but I wonder why the aic79xx driver in the kernel hasn't been updated since 2003 when there are newer versions being developed by the vendor.
+> 
+> Is there a fork in the aic79xx driver tree? What was the reason? Is there any point in even trying the "minimally tested" driver from adaptec, or is that to be considered dangerous?
 
+Yes, there was a fork.  The kernel aic79xx got various fixes and got
+integerated better with the scsi subsytem, using generic, fully debugged
+code instead of it's own, etc..  Unfortunately there's also various fixes
+in the adaptec releases which need to be brought back.  They are sometimes
+non-trivial and until a short time ago non of the core SCSI developers
+had aic79xx hardware.  The fixes will be merged back one day, similar
+to the aic7xxx where this happened.
 
-
->-----Original Message-----
->From: Jens Laas [mailto:jens.laas@data.slu.se]
->Sent: Wed 9/21/2005 12:54 PM
->To: Strand =C5ge
->Cc: linux-scsi@vger.kernel.org
->Subject: Re: aix79xx driver status
->=20
->(05.09.21 kl.11:44) Strand =C5ge skrev f=F6ljande till linux-scsi@vger=
-=2Ekernel.org:
->
->>
->> Hi,
->>
->> I'm trying to debug an md RAID problem and was looking into aic79xx=20
->> driver version, and now I'm confused.
->
->> I'm having problems with an md RAID running off an Adaptec 39320A-R =
-card=20
->> (14 disks, one hot spare). I'm getting PKT busfree errors at random=20
->> intervals which result in RAID disks going offline - so I'm keen to =
-see=20
->> if a driver update may help.
->
->Ill just add that we have seen PKT busfree errors too (which take the =
-card=20
->offline) with this driver.
->
->(Adaptec ASC-39320D if I remember correctly).
-
-Hm. "Good" to hear I'm not alone :-)
-Have you tried replacing the controller with some other brand?=20
-
-I wonder if this is just an Adaptec related issue or if it relates to p=
-roblems with the md driver as well.
-Sometimes the PKT bug triggers another bug in the md driver which basic=
-ally makes the md driver try to update the superblock 100 times (hard c=
-oded value) before failing. I'm running a 2.6.9 kernel, the md bug has =
-been fixed in later kernels, according to Neil Brown - IIRC.=20
-
->Also confused about versions and how they relate.
-
-Yes, the version numbering is a bit confusing. On the linux-scsi mailin=
-g list I have seen messages about paches going into the aic7xxx/79xx tr=
-ee as late as 2004, but there has been no update to the version numbers=
-=2E It would be nice if someone could explain that one for me.
-
-Anyhow, according to another message on this list there was a change in=
- maintainer back i June 2004, where Justin T. Gibbs gave it up to Luben=
- Tuikov, then working for Adaptec. I'll try to see if I can get in touc=
-h with him.=20
-
-Cheers,
-aage
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
