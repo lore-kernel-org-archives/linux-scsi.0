@@ -1,275 +1,40 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH scsi-misc-2.6] allow REPORT LUN scanning even for LUN 0
-	PQ of 3
-Date: Tue, 20 Sep 2005 22:11:10 -0500
-Message-ID: <1127272270.5589.57.camel@mulgrave>
-References: <20050830224316.GA11210@us.ibm.com>
+From: =?iso-8859-1?Q?Strand_=C5ge?= <aage.strand@imr.no>
+Subject: aix79xx driver status
+Date: Wed, 21 Sep 2005 11:44:28 +0200
+Message-ID: <0D54094F69391A438650C6151B0A33E402132A7A@post2.imr.no>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:46784 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750896AbVIUDLd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Sep 2005 23:11:33 -0400
-In-Reply-To: <20050830224316.GA11210@us.ibm.com>
+Received: from ns.imr.no ([82.134.28.194]:24196 "EHLO ns.imr.no")
+	by vger.kernel.org with ESMTP id S1750798AbVIUJo3 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Sep 2005 05:44:29 -0400
+Received: from post2.imr.no ([10.1.2.137])
+	by ns.imr.no with esmtp (Exim 4.43)
+	id 1EI19Q-00026H-Cw
+	for linux-scsi@vger.kernel.org; Wed, 21 Sep 2005 11:44:28 +0200
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>, hare@suse.de
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
-
-On Tue, 2005-08-30 at 15:43 -0700, Patrick Mansfield wrote:
-> James -
-> 
-> Can you ack or comment?
-> 
-> Allow REPORT LUN scanning even if LUN 0 reports a peripheral qualifier of
-> 3 (effectively no storage is available on LUN 0).
-> 
-> Similar patch I previously posted:
-> 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=110297733824960&w=2
-> 
-> There is also Hannes patch, it leaves LUN 0 available for use via user
-> space, for compatibility it likely requires that it stay visible in the
-> future:
-> 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=111692497200507&w=2
-> 
-> Hannes' patch also causes a lot of extra vSCSI devices to show up on some
-> platforms :)
-
-Sorry, I didn't really like either patch.
-
-The problem, essentially is this rather evil return refcounted sdev
-under certain circumstances.  What I didn't like about your patch was
-that you actually extended it to be under more circumstances.
-
-The correct fix, I think, is to make scsi_report_lun_scan() actually
-work on the target device; this will also set us up nicely for WLUN
-scans if they prove necessary.  This being well into -rc for linux, I'll
-resist the strong urge to take the hatchet to the sdev returning code
-and stomach the duplication of scsi_level and resist the urge to
-investigate dumping the rescan parameter ... they can all be fixed
-properly after 2.6.14.
-
-How does the attached look (and more importantly, does it work)?
-
-James
-
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -587,6 +587,7 @@ static int scsi_probe_lun(struct scsi_de
- 	if (sdev->scsi_level >= 2 ||
- 	    (sdev->scsi_level == 1 && (inq_result[3] & 0x0f) == 1))
- 		sdev->scsi_level++;
-+	sdev->sdev_target->scsi_level = sdev->scsi_level;
- 
- 	return 0;
- }
-@@ -771,6 +772,15 @@ static int scsi_add_lun(struct scsi_devi
- 	return SCSI_SCAN_LUN_PRESENT;
- }
- 
-+static inline void scsi_destroy_sdev(struct scsi_device *sdev)
-+{
-+	if (sdev->host->hostt->slave_destroy)
-+		sdev->host->hostt->slave_destroy(sdev);
-+	transport_destroy_device(&sdev->sdev_gendev);
-+	put_device(&sdev->sdev_gendev);
-+}
-+
-+
- /**
-  * scsi_probe_and_add_lun - probe a LUN, if a LUN is found add it
-  * @starget:	pointer to target device structure
-@@ -803,9 +813,9 @@ static int scsi_probe_and_add_lun(struct
- 	 * The rescan flag is used as an optimization, the first scan of a
- 	 * host adapter calls into here with rescan == 0.
- 	 */
--	if (rescan) {
--		sdev = scsi_device_lookup_by_target(starget, lun);
--		if (sdev) {
-+	sdev = scsi_device_lookup_by_target(starget, lun);
-+	if (sdev) {
-+		if (rescan || sdev->sdev_state != SDEV_CREATED) {
- 			SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
- 				"scsi scan: device exists on %s\n",
- 				sdev->sdev_gendev.bus_id));
-@@ -820,12 +830,15 @@ static int scsi_probe_and_add_lun(struct
- 								 sdev->model);
- 			return SCSI_SCAN_LUN_PRESENT;
- 		}
--	}
--
--	sdev = scsi_alloc_sdev(starget, lun, hostdata);
-+	} else
-+		sdev = scsi_alloc_sdev(starget, lun, hostdata);
- 	if (!sdev)
- 		goto out;
- 
-+	BUG_ON(sdev->sdev_state == SDEV_RUNNING ||
-+	       sdev->sdev_state == SDEV_QUIESCE ||
-+	       sdev->sdev_state == SDEV_BLOCK);
-+
- 	result = kmalloc(result_len, GFP_ATOMIC |
- 			((shost->unchecked_isa_dma) ? __GFP_DMA : 0));
- 	if (!result)
-@@ -877,12 +890,8 @@ static int scsi_probe_and_add_lun(struct
- 				res = SCSI_SCAN_NO_RESPONSE;
- 			}
- 		}
--	} else {
--		if (sdev->host->hostt->slave_destroy)
--			sdev->host->hostt->slave_destroy(sdev);
--		transport_destroy_device(&sdev->sdev_gendev);
--		put_device(&sdev->sdev_gendev);
--	}
-+	} else
-+		scsi_destroy_sdev(sdev);
-  out:
- 	return res;
- }
-@@ -1054,7 +1063,7 @@ EXPORT_SYMBOL(int_to_scsilun);
-  *     0: scan completed (or no memory, so further scanning is futile)
-  *     1: no report lun scan, or not configured
-  **/
--static int scsi_report_lun_scan(struct scsi_device *sdev, int bflags,
-+static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
- 				int rescan)
- {
- 	char devname[64];
-@@ -1067,7 +1076,8 @@ static int scsi_report_lun_scan(struct s
- 	struct scsi_lun *lunp, *lun_data;
- 	u8 *data;
- 	struct scsi_sense_hdr sshdr;
--	struct scsi_target *starget = scsi_target(sdev);
-+	struct scsi_device *sdev;
-+	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
- 
- 	/*
- 	 * Only support SCSI-3 and up devices if BLIST_NOREPORTLUN is not set.
-@@ -1075,15 +1085,23 @@ static int scsi_report_lun_scan(struct s
- 	 * support more than 8 LUNs.
- 	 */
- 	if ((bflags & BLIST_NOREPORTLUN) || 
--	     sdev->scsi_level < SCSI_2 ||
--	    (sdev->scsi_level < SCSI_3 && 
--	     (!(bflags & BLIST_REPORTLUN2) || sdev->host->max_lun <= 8)) )
-+	     starget->scsi_level < SCSI_2 ||
-+	    (starget->scsi_level < SCSI_3 && 
-+	     (!(bflags & BLIST_REPORTLUN2) || shost->max_lun <= 8)) )
- 		return 1;
- 	if (bflags & BLIST_NOLUN)
- 		return 0;
- 
-+	if (!(sdev = scsi_device_lookup_by_target(starget, 0))) {
-+		sdev = scsi_alloc_sdev(starget, 0, NULL);
-+		if (!sdev)
-+			return 0;
-+		if (!scsi_device_get(sdev))
-+			return 0;
-+	}
-+
- 	sprintf(devname, "host %d channel %d id %d",
--		sdev->host->host_no, sdev->channel, sdev->id);
-+		shost->host_no, sdev->channel, sdev->id);
- 
- 	/*
- 	 * Allocate enough to hold the header (the same size as one scsi_lun)
-@@ -1098,8 +1116,10 @@ static int scsi_report_lun_scan(struct s
- 	length = (max_scsi_report_luns + 1) * sizeof(struct scsi_lun);
- 	lun_data = kmalloc(length, GFP_ATOMIC |
- 			   (sdev->host->unchecked_isa_dma ? __GFP_DMA : 0));
--	if (!lun_data)
-+	if (!lun_data) {
-+		printk(ALLOC_FAILURE_MSG, __FUNCTION__);
- 		goto out;
-+	}
- 
- 	scsi_cmd[0] = REPORT_LUNS;
- 
-@@ -1201,10 +1221,6 @@ static int scsi_report_lun_scan(struct s
- 			for (i = 0; i < sizeof(struct scsi_lun); i++)
- 				printk("%02x", data[i]);
- 			printk(" has a LUN larger than currently supported.\n");
--		} else if (lun == 0) {
--			/*
--			 * LUN 0 has already been scanned.
--			 */
- 		} else if (lun > sdev->host->max_lun) {
- 			printk(KERN_WARNING "scsi: %s lun%d has a LUN larger"
- 			       " than allowed by the host adapter\n",
-@@ -1227,13 +1243,13 @@ static int scsi_report_lun_scan(struct s
- 	}
- 
- 	kfree(lun_data);
--	return 0;
--
-  out:
--	/*
--	 * We are out of memory, don't try scanning any further.
--	 */
--	printk(ALLOC_FAILURE_MSG, __FUNCTION__);
-+	scsi_device_put(sdev);
-+	if (sdev->sdev_state == SDEV_CREATED)
-+		/*
-+		 * the sdev we used didn't appear in the report luns scan
-+		 */
-+		scsi_destroy_sdev(sdev);
- 	return 0;
- }
- 
-@@ -1326,23 +1342,14 @@ static void __scsi_scan_target(struct de
- 	 * would not configure LUN 0 until all LUNs are scanned.
- 	 */
- 	res = scsi_probe_and_add_lun(starget, 0, &bflags, &sdev, rescan, NULL);
--	if (res == SCSI_SCAN_LUN_PRESENT) {
--		if (scsi_report_lun_scan(sdev, bflags, rescan) != 0)
-+	if (res == SCSI_SCAN_LUN_PRESENT || res == SCSI_SCAN_TARGET_PRESENT) {
-+		if (scsi_report_lun_scan(starget, bflags, rescan) != 0)
- 			/*
- 			 * The REPORT LUN did not scan the target,
- 			 * do a sequential scan.
- 			 */
- 			scsi_sequential_lun_scan(starget, bflags,
--				       	res, sdev->scsi_level, rescan);
--	} else if (res == SCSI_SCAN_TARGET_PRESENT) {
--		/*
--		 * There's a target here, but lun 0 is offline so we
--		 * can't use the report_lun scan.  Fall back to a
--		 * sequential lun scan with a bflags of SPARSELUN and
--		 * a default scsi level of SCSI_2
--		 */
--		scsi_sequential_lun_scan(starget, BLIST_SPARSELUN,
--				SCSI_SCAN_TARGET_PRESENT, SCSI_2, rescan);
-+				       	res, starget->scsi_level, rescan);
- 	}
- 	if (sdev)
- 		scsi_device_put(sdev);
-@@ -1542,10 +1549,7 @@ void scsi_free_host_dev(struct scsi_devi
- {
- 	BUG_ON(sdev->id != sdev->host->this_id);
- 
--	if (sdev->host->hostt->slave_destroy)
--		sdev->host->hostt->slave_destroy(sdev);
--	transport_destroy_device(&sdev->sdev_gendev);
--	put_device(&sdev->sdev_gendev);
-+	scsi_destroy_sdev(sdev);
- }
- EXPORT_SYMBOL(scsi_free_host_dev);
- 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -163,6 +163,7 @@ struct scsi_target {
- 	unsigned int		id; /* target id ... replace
- 				     * scsi_device.id eventually */
- 	unsigned long		create:1; /* signal that it needs to be added */
-+	char			scsi_level;
- 	void 			*hostdata; /* available to low-level driver */
- 	unsigned long		starget_data[0]; /* for the transport */
- 	/* starget_data must be the last element!!!! */
+To: linux-scsi@vger.kernel.org
 
 
+Hi,
+
+I'm trying to debug an md RAID problem and was looking into aic79xx driver version, and now I'm confused.
+
+The 2.6.13 kernel code lists the version for this driver as 1.3.11 (AIC79XX_DRIVER_VERSION), and it looks like the last update was back in 2003.
+
+But I can find a 2.0.14 version of the driver at adaptec.com, dated 17.May 2005:
+http://www.adaptec.com/worldwide/support/driversbycat.jsp?sess=no&language=English+US&cat=%2FOperating+System%2FLinux+Driver+Source+Code
+
+Granted, it says the driver is "minimally tested", but I wonder why the aic79xx driver in the kernel hasn't been updated since 2003 when there are newer versions being developed by the vendor.
+
+Is there a fork in the aic79xx driver tree? What was the reason? Is there any point in even trying the "minimally tested" driver from adaptec, or is that to be considered dangerous?
+
+I'm having problems with an md RAID running off an Adaptec 39320A-R card (14 disks, one hot spare). I'm getting PKT busfree errors at random intervals which result in RAID disks going offline - so I'm keen to see if a driver update may help. 
+
+
+Best regards,
+Aage Strand
