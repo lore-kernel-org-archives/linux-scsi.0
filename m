@@ -1,43 +1,119 @@
-From: Kenneth Porter <shiva@sewingwitch.com>
-Subject: Re: legacy megaraid status
-Date: Wed, 21 Sep 2005 09:10:05 -0700
-Message-ID: <30E6DB5A16C820CE29D97507@[10.169.6.233]>
-References: <433175AE.5070905@darthvader.us>
+From: Oscar Pearce <oscar@pearceenterprises.com>
+Subject: Dell PERC 4/di controller lock-up problems
+Date: Wed, 21 Sep 2005 14:25:36 -0500
+Message-ID: <1127330736.7528.119.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segw.microprecisionautomation.com ([69.17.55.168]:34237 "EHLO
-	segw.microprecisionautomation.com") by vger.kernel.org with ESMTP
-	id S1751101AbVIUQKZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Sep 2005 12:10:25 -0400
-Received: from home.sewingwitch.com (c-67-160-222-127.hsd1.ca.comcast.net [67.160.222.127])
-	(authenticated bits=0)
-	by segw.microprecisionautomation.com (8.13.1/8.13.1) with ESMTP id j8LGA47j029351
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2005 09:10:10 -0700
-Received: from [10.169.6.233] (segw.microprecisionautomation.com [69.17.55.168])
-	(authenticated bits=0)
-	by home.sewingwitch.com (8.13.1/8.13.1) with ESMTP id j8LGA0FO017251
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2005 09:10:03 -0700
-In-Reply-To: <433175AE.5070905@darthvader.us>
-Content-Disposition: inline
+Received: from tatooine.pearceenterprises.com ([66.142.116.66]:17585 "HELO
+	tatooine.pearceenterprises.com") by vger.kernel.org with SMTP
+	id S1751391AbVIUTZn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Sep 2005 15:25:43 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
---On Wednesday, September 21, 2005 4:01 PM +0100 Yiannis Mavroukakis 
-<jander@darthvader.us> wrote:
+Hi, all.  I apologize in advance for the long email - I've tried to
+include all the pertinent information on my problem.  I have a Dell
+PowerEdge 2650 that's been having stability issues ever since we got it
+about a year ago, and I'm trying to figure out what might be wrong.  The
+symptoms are that every once in a while (sometimes after a couple of
+days of uptime, once after 4 months) that SCSI write commands to the
+RAID array will not complete and the controller will be taken offline.
+At that point the machine has to be rebooted, and everything is fine
+until the next time the problem occurs.
 
-> What is the current situation with the legacy megaraid driver? It seems
-> that is is broken for a lot
-> of people with old raid cards.
+Dell's diagnostics don't show anything wrong with the hardware.
 
-Any particular card you're interested in?
+The machine is a dual processor 2.8 Ghz Xeon with 4 GB RAM with a
+PERC4/di RAID controller configured with RAID 5.  I started out with
+Debian on it running a 2.4 series kernel, then tried several 2.6 series
+kernels.  For the last 5 months or so it's been running Ubuntu 5.04 with
+a custom built kernel (2.6.11.11) with the new megaraid driver, which
+seemed to be stable (no lockups for a 4 month period), but then finally
+crashed a few weeks ago.  It's been crashing more frequently recently,
+probably because we're using it more heavily.
 
-I've got a test kernel built based on Fedora Core 4's installation kernel 
-to try the new driver with the old i4-100 (ATA100 RAID) but haven't had a 
-chance to build a boot disk with it so I can test it on my working Fedora 
-Core 2 server. (Gotta re-learn how to make boot media. Haven't done that 
-since I made a boot floppy with Red Hat 6.)
+I've (finally!) successfully configured the machine to log kernel
+messages over the network to another machine (using netconsole) and
+here's what occurs immediately before the lockup:
+
+Sep 21 00:11:29 192.168.0.198 megaraid: aborting-990472 cmd=2a <c=2 t=0
+l=0> 
+Sep 21 00:11:38 192.168.0.198 megaraid: aborting-990473 cmd=2a <c=2 t=0
+l=0> 
+Sep 21 00:11:41 192.168.0.198 megaraid abort: 990473:32[255:128], fw
+owner 
+Sep 21 00:11:50 192.168.0.198 megaraid abort: 990474:0[255:128], fw
+owner 
+Sep 21 00:11:55 192.168.0.198 megaraid: aborting-990475 cmd=2a <c=2 t=0
+l=0> 
+Sep 21 00:11:57 192.168.0.198 megaraid abort: 990475:52[255:128], fw
+owner 
+Sep 21 00:12:06 192.168.0.198 megaraid abort: 990476:54[255:128], fw
+owner 
+Sep 21 00:12:09 192.168.0.198 megaraid: aborting-990477 cmd=2a <c=2 t=0
+l=0> 
+Sep 21 00:12:18 192.168.0.198 megaraid: aborting-990478 cmd=2a <c=2 t=0
+l=0> 
+
+--- more of the same omitted ---
+
+Sep 21 00:13:52 192.168.0.198 megaraid: aborting-990490 cmd=2a <c=2 t=0
+l=0> 
+Sep 21 00:13:54 192.168.0.198 megaraid abort: 990490:26[255:128], fw
+owner 
+Sep 21 00:14:03 192.168.0.198 megaraid mbox: Wait for 64 commands to
+complete:175 
+Sep 21 00:14:06 192.168.0.198 megaraid mbox: Wait for 64 commands to
+complete:170 
+
+--- countdown from 170 to 10 by 5's omitted ---
+
+Sep 21 00:16:49 192.168.0.198 megaraid mbox: Wait for 64 commands to
+complete:10 
+Sep 21 00:16:54 192.168.0.198 megaraid mbox: Wait for 64 commands to
+complete:5 
+Sep 21 00:16:56 192.168.0.198 megaraid mbox: Wait for 64 commands to
+complete:5 
+Sep 21 00:17:05 192.168.0.198 scsi0 (0:0): rejecting I/O to offline
+device 
+Sep 21 00:17:10 192.168.0.198 printk: 17466 messages suppressed. 
+Sep 21 00:17:12 192.168.0.198 scsi0 (0:0): rejecting I/O to offline
+device 
+Sep 21 00:17:21 192.168.0.198 lost page write due to I/O error on sda2 
+Sep 21 00:17:26 192.168.0.198 scsi0 (0:0): rejecting I/O to offline
+device 
+Sep 21 00:17:35 192.168.0.198 scsi0 (0:0): rejecting I/O to offline
+device 
+Sep 21 00:17:40 192.168.0.198 scsi0 (0:0): rejecting I/O to offline
+device 
+Sep 21 00:17:42 192.168.0.198 scsi0 (0:0): rejecting I/O to offline
+device 
+Sep 21 00:17:51 192.168.0.198 SoftDog: Initiating system reboot.
+
+The next thing in the logs is the initial boot messages.  Here are the
+megaraid bits from dmesg:
+
+megaraid cmm: 2.20.2.5 (Release Date: Fri Jan 21 00:01:03 EST 2005)
+SCSI subsystem initialized
+megaraid: 2.20.4.5 (Release Date: Thu Feb 03 12:27:22 EST 2005)
+megaraid: probe new device 0x1028:0x000e:0x1028:0x0123: bus 8:slot
+8:func 0
+ACPI: PCI interrupt 0000:08:08.0[A] -> GSI 120 (level, low) -> IRQ 120
+megaraid: fw version:[251S] bios version:[1.07]
+scsi0 : LSI Logic MegaRAID driver
+scsi[0]: scanning scsi channel 0 [Phy 0] for non-raid devices
+  Vendor: PE/PV     Model: 1x6 SCSI BP       Rev: 1.1 
+  Type:   Processor                          ANSI SCSI revision: 02
+scsi[0]: scanning scsi channel 1 [Phy 1] for non-raid devices
+scsi[0]: scanning scsi channel 2 [virtual] for logical drives
+  Vendor: MegaRAID  Model: LD 0 RAID5  279G  Rev: 251S
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+
+Anybody have any ideas?
+
+Thanks,
+Oscar
+
