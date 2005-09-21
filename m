@@ -1,59 +1,91 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: deadlock while cleaning up after transport timeout for target
-Date: Wed, 21 Sep 2005 14:21:11 -0700
-Message-ID: <20050921212111.GA5492@us.ibm.com>
-References: <C2EEB4E538D3DC48BF57F391F422779321ACC9@SRMANNING.eng.emc.com>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH scsi-misc-2.6] allow REPORT LUN scanning even for LUN 0 PQ of 3
+Date: Wed, 21 Sep 2005 15:15:00 -0700
+Message-ID: <20050921221500.GA24993@us.ibm.com>
+References: <20050830224316.GA11210@us.ibm.com> <1127272270.5589.57.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:2688 "EHLO e6.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S964933AbVIUVVj (ORCPT
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:64676 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S965105AbVIUWPr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Sep 2005 17:21:39 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e6.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j8LLLceq013158
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2005 17:21:38 -0400
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j8LLLc5x098962
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2005 17:21:38 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j8LLLbVp000479
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2005 17:21:38 -0400
+	Wed, 21 Sep 2005 18:15:47 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e4.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j8LMFYU8032519
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2005 18:15:34 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j8LMFY8D081628
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2005 18:15:34 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j8LMFYPu002137
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2005 18:15:34 -0400
 Content-Disposition: inline
-In-Reply-To: <C2EEB4E538D3DC48BF57F391F422779321ACC9@SRMANNING.eng.emc.com>
+In-Reply-To: <1127272270.5589.57.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "goggin, edward" <egoggin@emc.com>, James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: hare@suse.de, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-goggin, edward <egoggin@emc.com> wrote:
-> Running with 2.6.13, an EMC Symmetrix target with lpfc and getting
-> into a deadlock when the target port times out WHILE starting to scan
-> the port via fc_scsi_scan_rport.
-> 
-> The lpfc_worker thread is stuck waiting for the scsi host's work_q to
-> empty in scsi_flush_work.  But this work queue wont empty since the
-> inquiry to LUN 0 initiated by the fc_scsi_scan_rport port scan is
-> getting retried onto the scsi mid-level request queue, seemingly ad
-> infinitum, since lpfc_queuecommand is returning
-> SCSI_MLQUEUE_HOST_BUSY whenever a target port infrastructure
-> is being dismantled.  This prevents the fc_scsi_scan_rport call from
-> finishing which prevents the target's NODEV timeout from being
-> completely serviced.  My boot up hangs as a result.
-> 
+Hi James -
 
-I believe the lpfc driver in 2.6.13 is missing the latest update from
-Emulex which is in 2.6.14-rc* (i.e., 8.0.29 vs. 8.0.30). Have you tried a
-test run on 2.6.14-rc?
+On Tue, Sep 20, 2005 at 10:11:10PM -0500, James Bottomley wrote:
+> Sorry, I didn't really like either patch.
 
-James S can better comment if this fix alone will solve your issue, but it
-matches fairly close to the signature I was previously receiving on the
-older version of the lpfc driver.
+OK :-/
 
-In my testing of port bounce runs, I could not complete a run until I
-started using the updated version of the driver.
+> The problem, essentially is this rather evil return refcounted sdev
+> under certain circumstances.  What I didn't like about your patch was
+> that you actually extended it to be under more circumstances.
 
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+I don't follow the "certain circumstances", but OK.
+
+> The correct fix, I think, is to make scsi_report_lun_scan() actually
+> work on the target device; this will also set us up nicely for WLUN
+> scans if they prove necessary.  This being well into -rc for linux, I'll
+
+Yes, I agree. I was forward porting the patch from some time ago, and
+didn't think the starget was far enough along.
+
+> resist the strong urge to take the hatchet to the sdev returning code
+> and stomach the duplication of scsi_level and resist the urge to
+> investigate dumping the rescan parameter ... they can all be fixed
+> properly after 2.6.14.
+
+Yes for scsi_level. 
+
+With your patch, rescan could go away, but I do not like the lookup for
+each LU when we first scan a target (I think O(n^2)? i.e. for many LUs,
+1000 + 999 + ... + 1 and except for LUN 0, none will match). Long term we
+could avoid this, maybe still special case LUN 0 in scsi_report_lun_scan();
+we could also auto-set the rescan setting (and not externalize it) when
+there no LU's on a target (or host) at the start
+
+> How does the attached look (and more importantly, does it work)?
+
+I tried it on top of scsi-rc-fixes, it oopsed (non-scsi) on ppc/JS20, so I
+patched on a 2.6.14-rc2 git tree from sept 21, that boots up OK on IDE.
+
+But the module refcount stays non-zero for scsi-debug, probably
+scsi_device_put/get. I am still debugging ...
+
+Did your try it with the scsi_debug patch? And multiple insmod/rmmod of
+it?
+
+This chunk (and "insmod scsi_debug.ko max_luns=5" or such):
+
+--- scsi-misc-2.6/drivers/scsi/scsi_debug.c	2005-07-26 11:08:51.000000000 -0700
++++ lun0-replun-scsi-misc-2.6/drivers/scsi/scsi_debug.c	2005-07-27 18:24:05.000000000 -0700
+@@ -619,7 +619,10 @@ static int resp_inquiry(struct scsi_cmnd
+ 
+ 	alloc_len = (cmd[3] << 8) + cmd[4];
+ 	memset(arr, 0, SDEBUG_MAX_INQ_ARR_SZ);
+-	pq_pdt = (scsi_debug_ptype & 0x1f);
++	if (devip->lun == 0)
++		pq_pdt = 0x7f;
++	else
++		pq_pdt = (scsi_debug_ptype & 0x1f);
+ 	arr[0] = pq_pdt;
+ 	if (0x2 & cmd[1]) {  /* CMDDT bit set */
+ 		mk_sense_buffer(devip, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB,
+
+-- Patrick Mansfield
