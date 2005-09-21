@@ -1,64 +1,34 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Question on kernel.org scsi git trees.
-Date: Wed, 21 Sep 2005 13:42:17 -0700
-Message-ID: <20050921204217.GA28313@us.ibm.com>
+From: "goggin, edward" <egoggin@emc.com>
+Subject: deadlock while cleaning up after transport timeout for target
+Date: Wed, 21 Sep 2005 16:47:38 -0400
+Message-ID: <C2EEB4E538D3DC48BF57F391F422779321ACC9@SRMANNING.eng.emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:929 "EHLO e2.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S964810AbVIUUmz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Sep 2005 16:42:55 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e2.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j8LKgodR011598
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2005 16:42:50 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j8LKgd8D078272
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2005 16:42:50 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j8LKgd4T025226
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2005 16:42:39 -0400
-Received: from hmsbounty.us.ibm.com (dyn9047022139.beaverton.ibm.com [9.47.22.139])
-	by d01av02.pok.ibm.com (8.12.11/8.12.11) with ESMTP id j8LKgciG025176
-	for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2005 16:42:38 -0400
-Content-Disposition: inline
+Received: from mailhub.lss.emc.com ([168.159.2.31]:33499 "EHLO
+	mailhub.lss.emc.com") by vger.kernel.org with ESMTP id S964811AbVIUUrm
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Sep 2005 16:47:42 -0400
+Received: from mercury.eng.emc.com (mercury.eng.emc.com [168.159.100.12])
+	by mailhub.lss.emc.com (Switch-3.1.6/Switch-3.1.6) with ESMTP id j8LKld2p003011
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2005 16:47:40 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-I am getting an odd error (or message) on these two scsi git trees:
-rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
-rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-for-linus-2.6.git
+Running with 2.6.13, an EMC Symmetrix target with lpfc and getting
+into a deadlock when the target port times out WHILE starting to scan
+the port via fc_scsi_scan_rport.
 
-I received an merge error last night when I did an cg-update on
-scsi-misc-2.6 so I decided to remove the view and clone.
+The lpfc_worker thread is stuck waiting for the scsi host's work_q to
+empty in scsi_flush_work.  But this work queue wont empty since the
+inquiry to LUN 0 initiated by the fc_scsi_scan_rport port scan is
+getting retried onto the scsi mid-level request queue, seemingly ad
+infinitum, since lpfc_queuecommand is returning
+SCSI_MLQUEUE_HOST_BUSY whenever a target port infrastructure
+is being dismantled.  This prevents the fc_scsi_scan_rport call from
+finishing which prevents the target's NODEV timeout from being
+completely serviced.  My boot up hangs as a result.
 
-The messages I am receiving are:
-
-scsi-misc-2.6.git:
-Missing object of tag v2.6.13... unable to retrieve
-
-scsi-for-linus-2.6.git:
-Missing object of tag v2.6.14-rc1... unable to retrieve
-
-Just to verify I can clone a clean tree, I did a cg-clone of linux-2.6.git
-and it worked fine.
-
-Anybody else seeing this?
-
-I have ran the cg-clone on two different systems with different versions of
-cogito and git. The above errors where produced with:
-
-git-core-0.99.6-1.fc4
-cogito-0.14.1-2.fc4
-
-and
-
-git-core-0.99.7
-cogito-0.15
-
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+Not clear yet why the timeout is happening in the first place.  This
+problem is occurring for about 70% of my reboots :((
