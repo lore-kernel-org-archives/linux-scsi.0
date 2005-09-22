@@ -1,93 +1,140 @@
-From: "akshat verma" <akshat@lycos.com>
-Subject: (unknown)
-Date: Thu, 22 Sep 2005 00:32:49 -0500
-Message-ID: <20050922053249.4F39ACA077@ws7-4.us4.outblaze.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: 2.6.14-rc2-mm1
+Date: Thu, 22 Sep 2005 00:03:50 -0700
+Message-ID: <20050922000350.63b68060.akpm@osdl.org>
+References: <20050921222839.76c53ba1.akpm@osdl.org>
+	<4332535D.1010309@reub.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from webmail-outgoing2.us4.outblaze.com ([205.158.62.67]:62378 "EHLO
-	webmail-outgoing.us4.outblaze.com") by vger.kernel.org with ESMTP
-	id S964976AbVIVFct convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2005 01:32:49 -0400
-Received: from unknown (unknown [192.168.9.180])
-	by webmail-outgoing.us4.outblaze.com (Postfix) with QMQP id 57B1218001B6
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Sep 2005 05:32:49 +0000 (GMT)
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4332535D.1010309@reub.net>
+Sender: linux-ide-owner@vger.kernel.org
+To: Reuben Farrelly <reuben-lkml@reub.net>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-I have been trying to register luns created using a FastT box with my linux box.. 
+Reuben Farrelly <reuben-lkml@reub.net> wrote:
+>
+> Hi,
+> 
+> On 22/09/2005 5:28 p.m., Andrew Morton wrote:
+> > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.14-rc2/2.6.14-rc2-mm1/
+> > 
+> > - Added git tree `git-sas.patch': Luben Tuikov's SAS driver and its support.
+> > 
+> > - Various random other things - nothing major.
+> 
+> Overall boots up and looks fine, but still seeing this oops which comes up on 
+> warm reboot intermittently:
 
-the luns are visible to linux 
-cat /proc/scsi/qla2200/0 returns the following..  as one can see, the luns are not registered..
----------------
-QLogic PCI to Fibre Channel Host Adapter for QLA22xx:
-        Firmware version:  2.02.06, Driver version 7.01.01
-Entry address = f8831060
-HBA: QLA2200 , Serial# J17188
-Request Queue = 0x2b300000, Response Queue = 0x2b7f0000
-Request Queue count= 512, Response Queue count= 64
-Total number of active commands = 0
-Total number of interrupts = 51
-Total number of IOCBs (used/max) = (0/600)
-Total number of queued commands = 0
-    Device queue depth = 0x20
-Number of free request entries = 510
-Number of mailbox timeouts = 0
-Number of ISP aborts = 0
-Number of loop resyncs = 4
-Number of retries for empty slots = 0
-Number of reqs in pending_q= 0, retry_q= 0, done_q= 0, scsi_retry_q= 0
-Host adapter:loop state= <READY>, flags= 0x868811
-Dpc flags = 0x0
-MBX flags = 0x0
-SRB Free Count = 4096
-Link down Timeout = 000
-Port down retry = 030
-Login retry count = 030
-Commands retried with dropped frame(s) = 0
+Nasty.
 
+> ahci(0000:00:1f.2) AHCI 0001.0000 32 slots 4 ports 1.5 Gbps 0xf impl SATA mode
+> ahci(0000:00:1f.2) flags: 64bit ncq led slum part
+> ata1: SATA max UDMA/133 cmd 0xF8802D00 ctl 0x0 bmdma 0x0 irq 193
+> ata2: SATA max UDMA/133 cmd 0xF8802D80 ctl 0x0 bmdma 0x0 irq 193
+> ata3: SATA max UDMA/133 cmd 0xF8802E00 ctl 0x0 bmdma 0x0 irq 193
+> ata4: SATA max UDMA/133 cmd 0xF8802E80 ctl 0x0 bmdma 0x0 irq 193
+> ata1: dev 0 ATA-6, max UDMA/133, 156301488 sectors: LBA48
+> ata1: dev 0 configured for UDMA/133
+> scsi0 : ahci
+> ata2: dev 0 ATA-6, max UDMA/133, 156301488 sectors: LBA48
+> ata2: dev 0 configured for UDMA/133
+> scsi1 : ahci
+> ata3: no device found (phy stat 00000000)
+> scsi2 : ahci
+> ata4: no device found (phy stat 00000000)
+> scsi3 : ahci
+>    Vendor: ATA       Model: ST380817AS        Rev: 3.42
+>    Type:   Direct-Access                      ANSI SCSI revision: 05
+>    Vendor: ATA       Model: ST380817AS        Rev: 3.42
+>    Type:   Direct-Access                      ANSI SCSI revision: 05
+> scheduling while atomic: ksoftirqd/0/0x00000100/3
+>   [<c0103ad0>] dump_stack+0x17/0x19
+>   [<c031483a>] schedule+0x8ba/0xccb
+>   [<c0315d17>] __down+0xe5/0x126
+>   [<c0313f1a>] __down_failed+0xa/0x10
+>   [<c0233f3d>] .text.lock.main+0x2b/0x3e
+>   [<c022f90c>] device_del+0x35/0x5d
+>   [<c025d71e>] scsi_target_reap+0x89/0xa3
+>   [<c025ed5a>] scsi_device_dev_release+0x114/0x18b
+>   [<c022f504>] device_release+0x1a/0x5a
+>   [<c01e15c2>] kobject_cleanup+0x43/0x6b
+>   [<c01e15f5>] kobject_release+0xb/0xd
+>   [<c01e1e3c>] kref_put+0x2e/0x92
+>   [<c01e160b>] kobject_put+0x14/0x16
+>   [<c022f8d5>] put_device+0x11/0x13
+>   [<c0256fd8>] scsi_put_command+0x7c/0x9e
+>   [<c025b918>] scsi_next_command+0xf/0x19
+>   [<c025b9db>] scsi_end_request+0x93/0xc5
+>   [<c025bdd4>] scsi_io_completion+0x281/0x46a
+>   [<c025c1c8>] scsi_generic_done+0x2d/0x3a
+>   [<c0257746>] scsi_finish_command+0x7f/0x93
+>   [<c025762b>] scsi_softirq+0xab/0x11c
+>   [<c0121952>] __do_softirq+0x72/0xdc
+>   [<c01219f3>] do_softirq+0x37/0x39
+>   [<c0121eeb>] ksoftirqd+0x9f/0xf4
+>   [<c012ff37>] kthread+0x99/0x9d
+>   [<c01010b5>] kernel_thread_helper+0x5/0xb
 
-SCSI Device Information:
-scsi-qla0-adapter-node=200000e08b0dc4fe;
-scsi-qla0-adapter-port=210000e08b0dc4fe;
-scsi-qla0-target-0=200b00a0b80be4d7;
+There's a whole bunch of reasons why we cannot call scsi_target_reap() from
+softirq context.  klist_del() locking and whatever semaphore that's taking
+are amongst them...
 
-SCSI LUN Information:
-(Id:Lun)  * - indicates lun is not registered with the OS.
-( 0: 0): Total reqs 1, Pending reqs 0, flags 0x0*, 0:0:82,
-( 0: 1): Total reqs 0, Pending reqs 0, flags 0x0*, 0:0:82,
-( 0: 5): Total reqs 0, Pending reqs 0, flags 0x0*, 0:0:82,
--------------------------------------------------------------------
+> Unable to handle kernel paging request<5>SCSI device sda: 156301488 512-byte 
+> hdwr sectors (80026 MB)
+> SCSI device sda: drive cache: write back
+> SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
+> SCSI device sda: drive cache: write back
+>   sda: at virtual address 6b6b6b6b
+>   printing eip:
+> c025b81f
+> *pde = 00000000
+> Oops: 0000 [#1]
+> SMP
+> last sysfs file:
+> Modules linked in:
+> CPU:    0
+> EIP:    0060:[<c025b81f>]    Not tainted VLI
+> EFLAGS: 00010292   (2.6.14-rc2-mm1)
+> EIP is at scsi_run_queue+0x12/0xb8
+> eax: 6b6b6b6b   ebx: f7c36b70   ecx: 00000000   edx: 00000001
+> esi: f7c4eb6c   edi: 00000246   ebp: c1911eac   esp: c1911e98
+> ds: 007b   es: 007b   ss: 0068
+> Process ksoftirqd/0 (pid: 3, threadinfo=c1910000 task=c1942a90)
+> Stack: c1baf5f8 f7c36b70 f7c36b70 f7c4eb6c 00000246 c1911eb8 c025b91f f7c386e8
+>         c1911ed0 c025b9db f7c36b70 f7c4eb6c 00000000 00000000 c1911f28 c025bdd4
+>         00000001 00004f80 00000100 00000001 c1807ac0 00000000 00000000 00040000
+> Call Trace:
+>   [<c0103a83>] show_stack+0x94/0xca
+>   [<c0103c2c>] show_registers+0x15a/0x1ea
+>   [<c0103e4a>] die+0x108/0x183
+>   [<c03166cd>] do_page_fault+0x1ed/0x63d
+>   [<c0103753>] error_code+0x4f/0x54
+>   [<c025b91f>] scsi_next_command+0x16/0x19
+>   [<c025b9db>] scsi_end_request+0x93/0xc5
+>   [<c025bdd4>] scsi_io_completion+0x281/0x46a
+>   [<c025c1c8>] scsi_generic_done+0x2d/0x3a
+>   [<c0257746>] scsi_finish_command+0x7f/0x93
+>   [<c025762b>] scsi_softirq+0xab/0x11c
+>   [<c0121952>] __do_softirq+0x72/0xdc
+>   [<c01219f3>] do_softirq+0x37/0x39
+>   [<c0121eeb>] ksoftirqd+0x9f/0xf4
+>   [<c012ff37>] kthread+0x99/0x9d
+>   [<c01010b5>] kernel_thread_helper+0x5/0xb
+> Code: fd ff 8b 4d ec 8b 41 44 e8 e4 a6 0b 00 89 45 f0 89 d8 e8 34 c1 ff ff eb 
+> b2 55 89 e5 57 56 53 83 ec 08 89 45 f0 8b 80 10 01 00 00 <8b> 38 80 b8 85 01 
+> 00 00 00 0f 88 8b 00 00 00 8b 47 44 e8 af a6
+>   <0>Kernel panic - not syncing: Fatal exception in interrupt
+>   <0>Rebooting in 60 seconds..
+> 
 
-and so going thru the lists, I figured that an 
-echo "scsi add-single-device 0 0 0 0" > /proc/scsi/scsi 
-should be able to register the lun.. however, it does not change anything..
+It oopsed as well.   That might be a second bug.
 
-I checked also at /proc/scsi/sg/devices but the device was not registered..
+> 
+> This is not new to this -mm release (I had a screen dump of it 2 weeks ago but 
+> I suspect it is actually a bit older than that even).
+> 
 
-0       0       0       0       3       0       32      0       0
-1       0       0       0       0       2       31      0       1
-3       0       0       0       5       0       5       0       1
-
-trying to figure out the problem, I found that /proc/scsi/scsi has only read permissions even for the root.. and I was unable to change the permissions.. 
-now, my question is this.. 
-1. how do I register the lun?
-2. is a read only permission normal of /proc/scsi/scsi behavior ? ( I am a newbie here)
-3. is there anything I have messed up in my system settings? In that case, shld I restart from scratch (creating luns etc).. any suggestions, obvious mistakes I might have made here..
-
-thanks,
-akshat
-
-P.S - please cc me any reply as well..
-
-
--- 
-_______________________________________________
-
-Search for businesses by name, location, or phone number.  -Lycos Yellow Pages
-
-http://r.lycos.com/r/yp_emailfooter/http://yellowpages.lycos.com/default.asp?SRC=lycos10
-
+Thanks.
