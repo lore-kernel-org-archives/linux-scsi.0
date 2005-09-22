@@ -1,46 +1,66 @@
-From: Richard Bollinger <rabollinger@gmail.com>
-Subject: SATA Drive Information (vs hdparm -i)?
-Date: Thu, 22 Sep 2005 15:06:37 -0400
-Message-ID: <7744a2840509221206254d2109@mail.gmail.com>
-Reply-To: Richard Bollinger <rabollinger@gmail.com>
+From: Brett Russ <russb@emc.com>
+Subject: Re: [PATCH] libata: scsi error handling, lk 2.6.14-rc1
+Date: Thu, 22 Sep 2005 15:21:02 -0400
+Message-ID: <4333041E.9000405@emc.com>
+References: <432E7A6A.4090209@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.196]:45468 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750751AbVIVTGl convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Sep 2005 15:06:41 -0400
-Received: by zproxy.gmail.com with SMTP id i11so346400nzi
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Sep 2005 12:06:38 -0700 (PDT)
-Content-Disposition: inline
+Received: from mailhub.lss.emc.com ([168.159.2.31]:22478 "EHLO
+	mailhub.lss.emc.com") by vger.kernel.org with ESMTP
+	id S1751148AbVIVTVV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Sep 2005 15:21:21 -0400
+In-Reply-To: <432E7A6A.4090209@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
 
-Is there a program for SATA drives which reveals the depth of
-information that "hdparm -i" does for IDE drives?  sdparm reveals
-almost nothing in comparison:
+Douglas Gilbert wrote:
+> Jeff,
+> This is a retransmission (and resync against lk 2.6.14-rc1)
+> of a patch that I sent on 2005/8/28 . I haven't seen a reply.
+> 
+> If it has be applied, then my following patch
+> ("[PATCH] libata: ATA Information VPD page, lk 2.6.14-rc1")
+> should apply.
+> 
+> This patch adds more general error processing, typically for
+> problems (or an early finish) detected while a
+> SCSI command is being processed prior to an ATA
+> command being executed.
+> 
+> Changelog:
+>   - add extern ata_scsi_set_sense() to build SCSI
+>     sense data and corresponding status
+>   - this allows removal of extern ata_scsi_badcmd()
+>     and static inline ata_bad_scsiop() and ata_bad_cdb()
+>   - change "xlat" functions in libata-scsi so they
+>     are responsible for SCSI status and sense data
+>     when they return 1. This allows GOOD status or a
+>     specialized error to be set.
+>   - set DRIVER_SENSE when SAM_STAT_CHECK_CONDITION
+>     is flagged in scsi_cmnd::result
+>   - yield an error for mode sense requests for saved
+>     values [sat-r05]
+>   - change recent rw_zero_length patch to do nothing
+>     (yield GOOD status) when transfer_length==0 for
+>     10 and 16 byte READ and WRITE commands (SBC-2).
 
-# sdparm -i /dev/sda
-    /dev/sda: ATA       WDC WD3200JD-00K  08.0
-Device identification VPD page:
-  Addressed logical unit:
-    id_type: vendor specific [0x0],  code_set: ASCII
- 00     4c 69 6e 75 78 20 41 54  41 2d 53 43 53 49 20 73    Linux ATA-SCSI s
- 10     69 6d 75 6c 61 74 6f 72                             imulator
 
-# hdparm -i /dev/hda
+Hi Doug,
 
-/dev/hda:
+In March I got a bunch of patches in this same area into libata-dev; I'm 
+not sure where they sit now (definitely not in 2.6.14-rc).  Jeff would 
+probably know.
 
- Model=WDC WD800BB-00JHC0, FwRev=05.01C05, SerialNo=WD-MAM96054404
- Config={ HardSect NotMFM HdSw>15uSec SpinMotCtl Fixed DTR>5Mbs mtGapReq }
- RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=66
- BuffType=unknown, BuffSize=2048kB, MaxMultSect=16, MultSect=off
- CurCHS=16383/16/63, CurSects=-66060037, LBA=yes, LBAsects=156301488
- IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
- PIO modes: pio0 pio3 pio4
- DMA modes: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5
- AdvancedPM=no
- Drive Supports : Reserved : ATA-1 ATA-2 ATA-3 ATA-4 ATA-5 ATA-6
+See start of thread:
+http://lkml.org/lkml/2005/3/17/157
+
+So there would be conflicts if my stuff went forward--a lot of the 
+changes are similar.  I think the best bet would be to find the tree 
+with my patches and for you to look at it and find problems that you 
+solved in this patch that I didn't address.
+
+BR
