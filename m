@@ -1,66 +1,104 @@
-From: Brett Russ <russb@emc.com>
-Subject: Re: [PATCH] libata: scsi error handling, lk 2.6.14-rc1
-Date: Thu, 22 Sep 2005 15:21:02 -0400
-Message-ID: <4333041E.9000405@emc.com>
-References: <432E7A6A.4090209@torque.net>
+From: "Juraj Hantak" <hantak@webglobe.sk>
+Subject: aacraid bug?
+Date: Thu, 22 Sep 2005 21:41:13 +0200 (CEST)
+Message-ID: <3664.82.119.107.113.1127418073.squirrel@mail.wg.sk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.lss.emc.com ([168.159.2.31]:22478 "EHLO
-	mailhub.lss.emc.com") by vger.kernel.org with ESMTP
-	id S1751148AbVIVTVV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Sep 2005 15:21:21 -0400
-In-Reply-To: <432E7A6A.4090209@torque.net>
+Received: from mailhub.webglobe.sk ([217.67.22.78]:19634 "HELO
+	mailhub.webglobe.sk") by vger.kernel.org with SMTP id S1030187AbVIVTlP
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Sep 2005 15:41:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
+To: linux-scsi@vger.kernel.org
 
-Douglas Gilbert wrote:
-> Jeff,
-> This is a retransmission (and resync against lk 2.6.14-rc1)
-> of a patch that I sent on 2005/8/28 . I haven't seen a reply.
-> 
-> If it has be applied, then my following patch
-> ("[PATCH] libata: ATA Information VPD page, lk 2.6.14-rc1")
-> should apply.
-> 
-> This patch adds more general error processing, typically for
-> problems (or an early finish) detected while a
-> SCSI command is being processed prior to an ATA
-> command being executed.
-> 
-> Changelog:
->   - add extern ata_scsi_set_sense() to build SCSI
->     sense data and corresponding status
->   - this allows removal of extern ata_scsi_badcmd()
->     and static inline ata_bad_scsiop() and ata_bad_cdb()
->   - change "xlat" functions in libata-scsi so they
->     are responsible for SCSI status and sense data
->     when they return 1. This allows GOOD status or a
->     specialized error to be set.
->   - set DRIVER_SENSE when SAM_STAT_CHECK_CONDITION
->     is flagged in scsi_cmnd::result
->   - yield an error for mode sense requests for saved
->     values [sat-r05]
->   - change recent rw_zero_length patch to do nothing
->     (yield GOOD status) when transfer_length==0 for
->     10 and 16 byte READ and WRITE commands (SBC-2).
+Hi,
+
+Yesterday I upgrade my box to newest latest stable kernel and after a time
+I got an error from my raid 10 array:
+
+After reboot the array was OK and the system is running  OK but how long?
+
+Please give me an addvice what to do ;-)
+
+Best Regards
+
+Juraj Hantak
 
 
-Hi Doug,
+Kernel: latest stable: 2.6.13-2
 
-In March I got a bunch of patches in this same area into libata-dev; I'm 
-not sure where they sit now (definitely not in 2.6.14-rc).  Jeff would 
-probably know.
+dmesg:
 
-See start of thread:
-http://lkml.org/lkml/2005/3/17/157
+Sep 22 12:22:25 mailhub kernel: Red Hat/Adaptec aacraid driver (1.1.2-lk2
+Sep 20 2005)
+Sep 22 12:22:25 mailhub kernel: ACPI: PCI Interrupt 0000:03:08.0[A] -> GSI
+17 (level, low) -> IRQ 169
+Sep 22 12:22:25 mailhub kernel: AAC0: kernel 4.2-0[7348]
+Sep 22 12:22:25 mailhub kernel: AAC0: monitor 4.2-0[7348]
+Sep 22 12:22:25 mailhub kernel: AAC0: bios 4.2-0[7348]
+Sep 22 12:22:25 mailhub kernel: AAC0: serial c3c94b
+Sep 22 12:22:25 mailhub kernel: scsi0 : aacraid
+Sep 22 12:22:25 mailhub kernel: Vendor: ADAPTEC   Model: mailusers        
+Rev: V1.0
+Sep 22 12:22:25 mailhub kernel: Type:   Direct-Access                     
+ANSI SCSI revision: 02
 
-So there would be conflicts if my stuff went forward--a lot of the 
-changes are similar.  I think the best bet would be to find the tree 
-with my patches and for you to look at it and find problems that you 
-solved in this patch that I didn't address.
 
-BR
+diagnostic dump text
+
+        Remote Computer: .
+             Device Name: AAC0
+         Controller Type: Adaptec 2810SA
+             Access Mode: READ-WRITE
+Controller Serial Number: Last Six Digits = C3C94B
+         Number of Buses: 1
+         Devices per Bus: 15
+Controller Physical Slot: 2
+          Controller CPU: i960 series
+    Controller CPU Speed: 100 Mhz
+       Controller Memory: 64 Mbytes
+           Battery State: Not Present
+
+SYSLOG:
+Sep 22 11:54:59 mailhub kernel: irq 169: nobody cared (try booting with
+the "irqpoll" option)
+Sep 22 11:54:59 mailhub kernel: [<c013a89a>] __report_bad_irq+0x2a/0xa0
+Sep 22 11:54:59 mailhub kernel: [<c013a0e0>] handle_IRQ_event+0x30/0x70
+Sep 22 11:54:59 mailhub kernel: [<c013a9b0>] note_interrupt+0x80/0xf0
+Sep 22 11:54:59 mailhub kernel: [<c013a23b>] __do_IRQ+0x11b/0x120
+Sep 22 11:54:59 mailhub kernel: [<c01056e9>] do_IRQ+0x19/0x30
+Sep 22 11:54:59 mailhub kernel: [<c0103a2e>] common_interrupt+0x1a/0x20
+Sep 22 11:54:59 mailhub kernel: handlers:
+Sep 22 11:54:59 mailhub kernel: [<c02e4b20>] (aac_rx_intr+0x0/0xf0)
+Sep 22 11:54:59 mailhub kernel: [<c0281fe0>] (e1000_intr+0x0/0x130)
+Sep 22 11:54:59 mailhub kernel: Disabling IRQ #169
+Sep 22 11:55:30 mailhub kernel: aacraid: Host adapter reset request. SCSI
+hang ?
+Sep 22 11:56:30 mailhub kernel: aacraid: SCSI bus appears hung
+Sep 22 11:56:30 mailhub kernel: scsi: Device offlined - not ready after
+error recovery: host 0 channel 0 id 0 lun 0
+Sep 22 11:56:30 mailhub kernel: SCSI error : <0 0 0 0> return code =
+0x6000000
+Sep 22 11:56:30 mailhub kernel: end_request: I/O error, dev sda, sector
+1056492327
+Sep 22 11:56:30 mailhub kernel: Buffer I/O error on device sda1, logical
+block 132061533
+Sep 22 11:56:30 mailhub kernel: lost page write due to I/O error on sda1
+Sep 22 11:56:30 mailhub kernel: scsi0 (0:0): rejecting I/O to offline device
+Sep 22 11:56:30 mailhub kernel: EXT3-fs error (device sda1): ext3_readdir:
+directory #29492069 contains a hole at offset 0
+Sep 22 11:56:30 mailhub kernel: Aborting journal on device sda1.
+Sep 22 11:56:30 mailhub kernel: scsi0 (0:0): rejecting I/O to offline device
+Sep 22 11:56:30 mailhub kernel: Buffer I/O error on device sda1, logical
+block 128235520
+Sep 22 11:56:30 mailhub kernel: lost page write due to I/O error on sda1
+Sep 22 11:56:30 mailhub kernel: scsi0 (0:0): rejecting I/O to offline device
+Sep 22 11:56:30 mailhub kernel: Buffer I/O error on device sda1, logical
+block 132030489
+Sep 22 11:56:30 mailhub kernel: lost page write due to I/O error on sda1
+
+
+
