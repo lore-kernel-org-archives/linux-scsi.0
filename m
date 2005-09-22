@@ -1,67 +1,55 @@
-From: Age Strand <aages@imr.no>
-Subject: Re: aix79xx driver status
-Date: Thu, 22 Sep 2005 10:36:29 +0200
-Message-ID: <1127378189.26581.52.camel@itse6863.imr.no>
-References: <0D54094F69391A438650C6151B0A33E402132A7A@post2.imr.no>
-	 <20050921132934.GA32696@infradead.org>
+From: Yiannis Mavroukakis <jander@darthvader.us>
+Subject: Re: legacy megaraid status
+Date: Thu, 22 Sep 2005 09:50:38 +0100
+Message-ID: <4332705E.6030905@darthvader.us>
+References: <433175AE.5070905@darthvader.us> <30E6DB5A16C820CE29D97507@[10.169.6.233]>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.imr.no ([82.134.28.194]:12337 "EHLO ns.imr.no")
-	by vger.kernel.org with ESMTP id S1751452AbVIVIge (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Sep 2005 04:36:34 -0400
-Received: from post2.imr.no ([10.1.2.137])
-	by ns.imr.no with esmtp (Exim 4.43)
-	id 1EIMZC-0000YF-Ff
-	for linux-scsi@vger.kernel.org; Thu, 22 Sep 2005 10:36:30 +0200
-In-Reply-To: <20050921132934.GA32696@infradead.org>
+Received: from mail59.messagelabs.com ([195.245.230.83]:17849 "HELO
+	mail59.messagelabs.com") by vger.kernel.org with SMTP
+	id S1751447AbVIVItw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Sep 2005 04:49:52 -0400
+In-Reply-To: <30E6DB5A16C820CE29D97507@[10.169.6.233]>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2005-09-21 at 14:29 +0100, Christoph Hellwig wrote:
-> On Wed, Sep 21, 2005 at 11:44:28AM +0200, Strand ?ge wrote:
-> > 
-> > Hi,
-> > 
-> > I'm trying to debug an md RAID problem and was looking into aic79xx driver version, and now I'm confused.
-> > 
-> > The 2.6.13 kernel code lists the version for this driver as 1.3.11 (AIC79XX_DRIVER_VERSION), and it looks like the last update was back in 2003.
-> > 
-> > But I can find a 2.0.14 version of the driver at adaptec.com, dated 17.May 2005:
-> > http://www.adaptec.com/worldwide/support/driversbycat.jsp?sess=no&language=English+US&cat=%2FOperating+System%2FLinux+Driver+Source+Code
-> > 
-> > Granted, it says the driver is "minimally tested", but I wonder why the aic79xx driver in the kernel hasn't been updated since 2003 when there are newer versions being developed by the vendor.
-> > 
-> > Is there a fork in the aic79xx driver tree? What was the reason? Is there any point in even trying the "minimally tested" driver from adaptec, or is that to be considered dangerous?
-> 
-> Yes, there was a fork.  The kernel aic79xx got various fixes and got
-> integerated better with the scsi subsytem, using generic, fully debugged
-> code instead of it's own, etc..  Unfortunately there's also various fixes
-> in the adaptec releases which need to be brought back.  They are sometimes
-> non-trivial and until a short time ago non of the core SCSI developers
-> had aic79xx hardware.  The fixes will be merged back one day, similar
-> to the aic7xxx where this happened.
+Kenneth Porter wrote:
 
-As far as I understand you the aic7Yxx kernel driver tree is very much
-alive and kicking.
+> --On Wednesday, September 21, 2005 4:01 PM +0100 Yiannis Mavroukakis 
+> <jander@darthvader.us> wrote:
+>
+>> What is the current situation with the legacy megaraid driver? It seems
+>> that is is broken for a lot
+>> of people with old raid cards.
+>
+>
+> Any particular card you're interested in?
+>
+> I've got a test kernel built based on Fedora Core 4's installation 
+> kernel to try the new driver with the old i4-100 (ATA100 RAID) but 
+> haven't had a chance to build a boot disk with it so I can test it on 
+> my working Fedora Core 2 server. (Gotta re-learn how to make boot 
+> media. Haven't done that since I made a boot floppy with Red Hat 6.)
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-So what's the deal with the version numbers on the aic79xx driver? It
-has stayed put on 1.1.13 since 2003. Does that mean that there hasn't
-been any new releases of this driver since then? 
+This bunny
+02:01.1 I2O: Intel Corporation 80960RP [i960RP Microprocessor] (rev 05) 
+(prog-if 01)
+        Subsystem: Hewlett-Packard Company HP NetRAID-1Si
+        Flags: bus master, fast Back2Back, medium devsel, latency 32, IRQ 17
+        Memory at fe000000 (32-bit, prefetchable) [size=4M]
+        Expansion ROM at <unassigned> [disabled] [size=32K]
+        Capabilities: [80] Power Management version 2
 
-I seem to recall seeing submitted patches to aic79xx on the list as late
-as 2004. What's become of those? Is this just a case of patches going in
-but version numbering not being updated?
+I'm stuck with 2.6.11-mm4 at the mo :)
 
-Regarding lack of hardware for developers: Are you looking for hardware
-donors (e.g. of 39320 cards), and would that aid development on the
-aic79xx driver?
-
-
-Best regards,
-aage
-
+______________________________________________________________________
+This email has been scanned by the MessageLabs Email Security System.
+For more information please visit http://www.messagelabs.com/email 
+______________________________________________________________________
