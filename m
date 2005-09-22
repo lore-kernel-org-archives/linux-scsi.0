@@ -1,104 +1,58 @@
-From: "Juraj Hantak" <hantak@webglobe.sk>
-Subject: aacraid bug?
-Date: Thu, 22 Sep 2005 21:41:13 +0200 (CEST)
-Message-ID: <3664.82.119.107.113.1127418073.squirrel@mail.wg.sk>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCH 4/5] convert st to use scsi_execte_async
+Date: Thu, 22 Sep 2005 23:12:31 +0300 (EEST)
+Message-ID: <Pine.LNX.4.61.0509222309390.6022@kai.makisara.local>
+References: <1126845599.9276.44.camel@max>  <Pine.LNX.4.61.0509171428410.9258@kai.makisara.local>
+  <432C39BC.1030105@cs.wisc.edu>  <432C3C75.5090405@cs.wisc.edu>
+ <1126974325.10413.5.camel@max>  <Pine.LNX.4.61.0509181456370.14776@kai.makisara.local>
+  <432D81BD.9080803@cs.wisc.edu> <432D8515.9010809@cs.wisc.edu>
+ <Pine.LNX.4.61.0509182031090.15507@kai.makisara.local> <1127061365.800.1.camel@max>
+ <432D97F2.5040508@cs.wisc.edu> <Pine.LNX.4.61.0509182155350.15507@kai.makisara.local>
+ <432D9D53.3070706@cs.wisc.edu> <Pine.LNX.4.61.0509192040360.4404@kai.makisara.local>
+ <432F100D.7050007@cs.wisc.edu> <Pine.LNX.4.61.0509202149180.4741@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.webglobe.sk ([217.67.22.78]:19634 "HELO
-	mailhub.webglobe.sk") by vger.kernel.org with SMTP id S1030187AbVIVTlP
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Sep 2005 15:41:15 -0400
+Received: from fep30-0.kolumbus.fi ([193.229.0.32]:13533 "EHLO
+	fep30-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S1030298AbVIVUHE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Sep 2005 16:07:04 -0400
+In-Reply-To: <Pine.LNX.4.61.0509202149180.4741@kai.makisara.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+On Tue, 20 Sep 2005, Kai Makisara wrote:
 
-Yesterday I upgrade my box to newest latest stable kernel and after a time
-I got an error from my raid 10 array:
+...
+> If I try 5121 kB, write fails as is expected but not completely nicely. 
+> Here are some test printks:
+> 
+> scsi_req_map_sg: q->back_merge failed, i=10
+> st 1:0:5:0: extraneous data discarded.
+> st 1:0:5:0: COMMAND FAILED (87 0 1).
+> sym: cmd: 0x0a 0x00 0x50 0x04 0x00 0x00
+> st: cmd=0x0a result=0x70000 resid=0 sense[0]=0x00 sense[2]=0x00
+> 
+> scsi_req_map_sg fails as it should but still a bogus SCSI command is sent. 
+> I think the reason for this is simple but I don't want to delay the good 
+> news by trying to debug this.
+> 
+The reason was simple: scsi_req_map_sg did not set err when q->back_merge 
+failed. The patch at the end fixes the problem (I am not sure what would 
+be the correct error code).
 
-After reboot the array was OK and the system is running  OK but how long?
+-- 
+Kai
 
-Please give me an addvice what to do ;-)
-
-Best Regards
-
-Juraj Hantak
-
-
-Kernel: latest stable: 2.6.13-2
-
-dmesg:
-
-Sep 22 12:22:25 mailhub kernel: Red Hat/Adaptec aacraid driver (1.1.2-lk2
-Sep 20 2005)
-Sep 22 12:22:25 mailhub kernel: ACPI: PCI Interrupt 0000:03:08.0[A] -> GSI
-17 (level, low) -> IRQ 169
-Sep 22 12:22:25 mailhub kernel: AAC0: kernel 4.2-0[7348]
-Sep 22 12:22:25 mailhub kernel: AAC0: monitor 4.2-0[7348]
-Sep 22 12:22:25 mailhub kernel: AAC0: bios 4.2-0[7348]
-Sep 22 12:22:25 mailhub kernel: AAC0: serial c3c94b
-Sep 22 12:22:25 mailhub kernel: scsi0 : aacraid
-Sep 22 12:22:25 mailhub kernel: Vendor: ADAPTEC   Model: mailusers        
-Rev: V1.0
-Sep 22 12:22:25 mailhub kernel: Type:   Direct-Access                     
-ANSI SCSI revision: 02
-
-
-diagnostic dump text
-
-        Remote Computer: .
-             Device Name: AAC0
-         Controller Type: Adaptec 2810SA
-             Access Mode: READ-WRITE
-Controller Serial Number: Last Six Digits = C3C94B
-         Number of Buses: 1
-         Devices per Bus: 15
-Controller Physical Slot: 2
-          Controller CPU: i960 series
-    Controller CPU Speed: 100 Mhz
-       Controller Memory: 64 Mbytes
-           Battery State: Not Present
-
-SYSLOG:
-Sep 22 11:54:59 mailhub kernel: irq 169: nobody cared (try booting with
-the "irqpoll" option)
-Sep 22 11:54:59 mailhub kernel: [<c013a89a>] __report_bad_irq+0x2a/0xa0
-Sep 22 11:54:59 mailhub kernel: [<c013a0e0>] handle_IRQ_event+0x30/0x70
-Sep 22 11:54:59 mailhub kernel: [<c013a9b0>] note_interrupt+0x80/0xf0
-Sep 22 11:54:59 mailhub kernel: [<c013a23b>] __do_IRQ+0x11b/0x120
-Sep 22 11:54:59 mailhub kernel: [<c01056e9>] do_IRQ+0x19/0x30
-Sep 22 11:54:59 mailhub kernel: [<c0103a2e>] common_interrupt+0x1a/0x20
-Sep 22 11:54:59 mailhub kernel: handlers:
-Sep 22 11:54:59 mailhub kernel: [<c02e4b20>] (aac_rx_intr+0x0/0xf0)
-Sep 22 11:54:59 mailhub kernel: [<c0281fe0>] (e1000_intr+0x0/0x130)
-Sep 22 11:54:59 mailhub kernel: Disabling IRQ #169
-Sep 22 11:55:30 mailhub kernel: aacraid: Host adapter reset request. SCSI
-hang ?
-Sep 22 11:56:30 mailhub kernel: aacraid: SCSI bus appears hung
-Sep 22 11:56:30 mailhub kernel: scsi: Device offlined - not ready after
-error recovery: host 0 channel 0 id 0 lun 0
-Sep 22 11:56:30 mailhub kernel: SCSI error : <0 0 0 0> return code =
-0x6000000
-Sep 22 11:56:30 mailhub kernel: end_request: I/O error, dev sda, sector
-1056492327
-Sep 22 11:56:30 mailhub kernel: Buffer I/O error on device sda1, logical
-block 132061533
-Sep 22 11:56:30 mailhub kernel: lost page write due to I/O error on sda1
-Sep 22 11:56:30 mailhub kernel: scsi0 (0:0): rejecting I/O to offline device
-Sep 22 11:56:30 mailhub kernel: EXT3-fs error (device sda1): ext3_readdir:
-directory #29492069 contains a hole at offset 0
-Sep 22 11:56:30 mailhub kernel: Aborting journal on device sda1.
-Sep 22 11:56:30 mailhub kernel: scsi0 (0:0): rejecting I/O to offline device
-Sep 22 11:56:30 mailhub kernel: Buffer I/O error on device sda1, logical
-block 128235520
-Sep 22 11:56:30 mailhub kernel: lost page write due to I/O error on sda1
-Sep 22 11:56:30 mailhub kernel: scsi0 (0:0): rejecting I/O to offline device
-Sep 22 11:56:30 mailhub kernel: Buffer I/O error on device sda1, logical
-block 132030489
-Sep 22 11:56:30 mailhub kernel: lost page write due to I/O error on sda1
-
-
-
+--- linux-2.6.14-rc1-blk3/drivers/scsi/scsi_lib.c.old	2005-09-22 22:57:53.000000000 +0300
++++ linux-2.6.14-rc1-blk3/drivers/scsi/scsi_lib.c	2005-09-22 22:58:14.000000000 +0300
+@@ -360,6 +360,7 @@
+ 			blk_rq_bio_prep(q, rq, bio);
+ 		else if (!q->back_merge_fn(q, rq, bio)) {
+ 			bio_endio(bio, bio->bi_size, 0);
++			err = -ENOMEM;
+ 			goto free_bios;
+ 		} else {
+ 			rq->biotail->bi_next = bio;
