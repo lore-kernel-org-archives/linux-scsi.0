@@ -1,18 +1,18 @@
 From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 Subject: Re: aix79xx driver status
-Date: Thu, 22 Sep 2005 11:52:57 +0200
-Message-ID: <ee588a54050922025263ed9a0e@mail.gmail.com>
+Date: Thu, 22 Sep 2005 11:54:44 +0200
+Message-ID: <ee588a540509220254668b98b4@mail.gmail.com>
 Reply-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.203]:698 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030245AbVIVJw7 convert rfc822-to-8bit
+Received: from nproxy.gmail.com ([64.233.182.202]:64209 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751452AbVIVJyp convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Sep 2005 05:52:59 -0400
-Received: by nproxy.gmail.com with SMTP id x37so29120nfc
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Sep 2005 02:52:57 -0700 (PDT)
+	Thu, 22 Sep 2005 05:54:45 -0400
+Received: by nproxy.gmail.com with SMTP id x37so29442nfc
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Sep 2005 02:54:44 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -38,6 +38,9 @@ You can get the latest ADAPTEC patches from:
 http://marc.theaimsgroup.com/?a=108731197000012&r=5&w=2
 http://marc.theaimsgroup.com/?a=108731197000012&r=4&w=2
 under the subject "patch XX/28] Sync up drivers/scsi/aic7xxx".
+
+never applied because
+:http://marc.theaimsgroup.com/?l=linux-scsi&m=109637681104990&w=2
 
 But maybe,  there are newer patches inside Adaptec,
 ask it to Luben Tuikov <luben_tuikov@adaptec.com>
