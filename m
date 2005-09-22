@@ -1,58 +1,61 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH 4/5] convert st to use scsi_execte_async
-Date: Thu, 22 Sep 2005 23:12:31 +0300 (EEST)
-Message-ID: <Pine.LNX.4.61.0509222309390.6022@kai.makisara.local>
-References: <1126845599.9276.44.camel@max>  <Pine.LNX.4.61.0509171428410.9258@kai.makisara.local>
-  <432C39BC.1030105@cs.wisc.edu>  <432C3C75.5090405@cs.wisc.edu>
- <1126974325.10413.5.camel@max>  <Pine.LNX.4.61.0509181456370.14776@kai.makisara.local>
-  <432D81BD.9080803@cs.wisc.edu> <432D8515.9010809@cs.wisc.edu>
- <Pine.LNX.4.61.0509182031090.15507@kai.makisara.local> <1127061365.800.1.camel@max>
- <432D97F2.5040508@cs.wisc.edu> <Pine.LNX.4.61.0509182155350.15507@kai.makisara.local>
- <432D9D53.3070706@cs.wisc.edu> <Pine.LNX.4.61.0509192040360.4404@kai.makisara.local>
- <432F100D.7050007@cs.wisc.edu> <Pine.LNX.4.61.0509202149180.4741@kai.makisara.local>
+From: Markus Lidel <Markus.Lidel@shadowconnect.com>
+Subject: Re: legacy megaraid status
+Date: Thu, 22 Sep 2005 22:09:18 +0200
+Message-ID: <43330F6E.9070303@shadowconnect.com>
+References: <433175AE.5070905@darthvader.us> <30E6DB5A16C820CE29D97507@[10.169.6.233]> <4332705E.6030905@darthvader.us> <C2A6572782C9593467A750C4@[10.169.6.233]>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep30-0.kolumbus.fi ([193.229.0.32]:13533 "EHLO
-	fep30-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S1030298AbVIVUHE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Sep 2005 16:07:04 -0400
-In-Reply-To: <Pine.LNX.4.61.0509202149180.4741@kai.makisara.local>
+Received: from s0003.shadowconnect.net ([213.239.201.226]:60638 "EHLO
+	mail.shadowconnect.com") by vger.kernel.org with ESMTP
+	id S1030316AbVIVUJZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Sep 2005 16:09:25 -0400
+In-Reply-To: <C2A6572782C9593467A750C4@[10.169.6.233]>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
+To: Kenneth Porter <shiva@sewingwitch.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Tue, 20 Sep 2005, Kai Makisara wrote:
+Hello,
 
-...
-> If I try 5121 kB, write fails as is expected but not completely nicely. 
-> Here are some test printks:
+Kenneth Porter wrote:
+> --On Thursday, September 22, 2005 9:50 AM +0100 Yiannis Mavroukakis 
+> <jander@darthvader.us> wrote:
 > 
-> scsi_req_map_sg: q->back_merge failed, i=10
-> st 1:0:5:0: extraneous data discarded.
-> st 1:0:5:0: COMMAND FAILED (87 0 1).
-> sym: cmd: 0x0a 0x00 0x50 0x04 0x00 0x00
-> st: cmd=0x0a result=0x70000 resid=0 sense[0]=0x00 sense[2]=0x00
-> 
-> scsi_req_map_sg fails as it should but still a bogus SCSI command is sent. 
-> I think the reason for this is simple but I don't want to delay the good 
-> news by trying to debug this.
-> 
-The reason was simple: scsi_req_map_sg did not set err when q->back_merge 
-failed. The patch at the end fixes the problem (I am not sure what would 
-be the correct error code).
+>> 02:01.1 I2O: Intel Corporation 80960RP [i960RP Microprocessor] (rev 05)
+>> (prog-if 01)
+>>         Subsystem: Hewlett-Packard Company HP NetRAID-1Si
+>>         Flags: bus master, fast Back2Back, medium devsel, latency 32, IRQ
+>> 17
+>>         Memory at fe000000 (32-bit, prefetchable) [size=4M]
+>>         Expansion ROM at <unassigned> [disabled] [size=32K]
+>>         Capabilities: [80] Power Management version 2
+> Any idea what the PCI ID quad is? (See the pci.ids file for examples.)
+> One possibility is that it's "close enough" to one of the cards listed 
+> in the PCI ID table in megaraid_mbox.c and you can just add the ID for 
+> this one. I'll wait for one of the LSI people to weigh in on whether 
+> that would work.
 
--- 
-Kai
+If changing the PCI ID doesn't work, you could switch the controller to 
+I2O mode and use the I2O driver. But after doing so it's not possible to 
+use the megaraid utilities anymore.
 
---- linux-2.6.14-rc1-blk3/drivers/scsi/scsi_lib.c.old	2005-09-22 22:57:53.000000000 +0300
-+++ linux-2.6.14-rc1-blk3/drivers/scsi/scsi_lib.c	2005-09-22 22:58:14.000000000 +0300
-@@ -360,6 +360,7 @@
- 			blk_rq_bio_prep(q, rq, bio);
- 		else if (!q->back_merge_fn(q, rq, bio)) {
- 			bio_endio(bio, bio->bi_size, 0);
-+			err = -ENOMEM;
- 			goto free_bios;
- 		} else {
- 			rq->biotail->bi_next = bio;
+
+Best regards,
+
+
+Markus Lidel
+------------------------------------------
+Markus Lidel (Senior IT Consultant)
+
+Shadow Connect GmbH
+Carl-Reisch-Weg 12
+D-86381 Krumbach
+Germany
+
+Phone:  +49 82 82/99 51-0
+Fax:    +49 82 82/99 51-11
+
+E-Mail: Markus.Lidel@shadowconnect.com
+URL:    http://www.shadowconnect.com
