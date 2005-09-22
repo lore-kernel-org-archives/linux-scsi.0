@@ -1,50 +1,46 @@
-From: Kenneth Porter <shiva@sewingwitch.com>
-Subject: Re: legacy megaraid status
-Date: Thu, 22 Sep 2005 09:55:00 -0700
-Message-ID: <C2A6572782C9593467A750C4@[10.169.6.233]>
-References: <433175AE.5070905@darthvader.us>
- <30E6DB5A16C820CE29D97507@[10.169.6.233]> <4332705E.6030905@darthvader.us>
+From: Richard Bollinger <rabollinger@gmail.com>
+Subject: SATA Drive Information (vs hdparm -i)?
+Date: Thu, 22 Sep 2005 15:06:37 -0400
+Message-ID: <7744a2840509221206254d2109@mail.gmail.com>
+Reply-To: Richard Bollinger <rabollinger@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segw.microprecisionautomation.com ([69.17.55.168]:47295 "EHLO
-	segw.microprecisionautomation.com") by vger.kernel.org with ESMTP
-	id S1030444AbVIVQ5Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Sep 2005 12:57:16 -0400
-Received: from home.sewingwitch.com (c-67-160-222-127.hsd1.ca.comcast.net [67.160.222.127])
-	(authenticated bits=0)
-	by segw.microprecisionautomation.com (8.13.1/8.13.1) with ESMTP id j8MGv7uT015799
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Sep 2005 09:57:15 -0700
-Received: from [10.169.6.233] (segw.microprecisionautomation.com [69.17.55.168])
-	(authenticated bits=0)
-	by home.sewingwitch.com (8.13.1/8.13.1) with ESMTP id j8MGv4j4025391
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Sep 2005 09:57:05 -0700
-In-Reply-To: <4332705E.6030905@darthvader.us>
+Received: from zproxy.gmail.com ([64.233.162.196]:45468 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750751AbVIVTGl convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Sep 2005 15:06:41 -0400
+Received: by zproxy.gmail.com with SMTP id i11so346400nzi
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Sep 2005 12:06:38 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
---On Thursday, September 22, 2005 9:50 AM +0100 Yiannis Mavroukakis 
-<jander@darthvader.us> wrote:
+Is there a program for SATA drives which reveals the depth of
+information that "hdparm -i" does for IDE drives?  sdparm reveals
+almost nothing in comparison:
 
-> 02:01.1 I2O: Intel Corporation 80960RP [i960RP Microprocessor] (rev 05)
-> (prog-if 01)
->         Subsystem: Hewlett-Packard Company HP NetRAID-1Si
->         Flags: bus master, fast Back2Back, medium devsel, latency 32, IRQ
-> 17
->         Memory at fe000000 (32-bit, prefetchable) [size=4M]
->         Expansion ROM at <unassigned> [disabled] [size=32K]
->         Capabilities: [80] Power Management version 2
+# sdparm -i /dev/sda
+    /dev/sda: ATA       WDC WD3200JD-00K  08.0
+Device identification VPD page:
+  Addressed logical unit:
+    id_type: vendor specific [0x0],  code_set: ASCII
+ 00     4c 69 6e 75 78 20 41 54  41 2d 53 43 53 49 20 73    Linux ATA-SCSI s
+ 10     69 6d 75 6c 61 74 6f 72                             imulator
 
-Any idea what the PCI ID quad is? (See the pci.ids file for examples.)
+# hdparm -i /dev/hda
 
-One possibility is that it's "close enough" to one of the cards listed in 
-the PCI ID table in megaraid_mbox.c and you can just add the ID for this 
-one. I'll wait for one of the LSI people to weigh in on whether that would 
-work.
+/dev/hda:
 
-
+ Model=WDC WD800BB-00JHC0, FwRev=05.01C05, SerialNo=WD-MAM96054404
+ Config={ HardSect NotMFM HdSw>15uSec SpinMotCtl Fixed DTR>5Mbs mtGapReq }
+ RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=66
+ BuffType=unknown, BuffSize=2048kB, MaxMultSect=16, MultSect=off
+ CurCHS=16383/16/63, CurSects=-66060037, LBA=yes, LBAsects=156301488
+ IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes: pio0 pio3 pio4
+ DMA modes: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5
+ AdvancedPM=no
+ Drive Supports : Reserved : ATA-1 ATA-2 ATA-3 ATA-4 ATA-5 ATA-6
