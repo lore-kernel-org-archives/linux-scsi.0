@@ -1,32 +1,28 @@
-From: Brett Russ <russb@emc.com>
-Subject: Re: 2.6.14-rc2 hang on Marvell Sata HBA
-Date: Thu, 22 Sep 2005 09:52:29 -0400
-Message-ID: <4332B71D.5030803@emc.com>
-References: <4332B412.40808@exegy.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: SATA suspend-to-ram patch - merge?
+Date: Thu, 22 Sep 2005 15:28:55 +0100
+Message-ID: <20050922142855.GA29672@infradead.org>
+References: <433104E0.4090308@triplehelix.org> <433221A1.5000600@pobox.com> <20050922061849.GJ7929@suse.de> <4332ABDC.3030106@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.lss.emc.com ([168.159.2.31]:4074 "EHLO
-	mailhub.lss.emc.com") by vger.kernel.org with ESMTP
-	id S1030344AbVIVNwl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Sep 2005 09:52:41 -0400
-In-Reply-To: <4332B412.40808@exegy.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4332ABDC.3030106@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Jens Axboe <axboe@suse.de>, Jeff Garzik <jgarzik@pobox.com>, Joshua Kwan <joshk@triplehelix.org>, Linux Kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Mr. Berkley Shands" <bshands@exegy.com>
-Cc: linux-scsi@vger.kernel.org
 
-Mr. Berkley Shands wrote:
-> Note that there are THREE HBAs here, with two logical raid0's each, so 
-> there should be 6 drives
-> sdb - sdg, not 8.
+On Thu, Sep 22, 2005 at 09:04:28AM -0400, Mark Lord wrote:
+> Rather than sitting around for another six months hoping the problem
+> will go away (it won't), perhaps we should just update/merge Jen's
+> patch as a sorely needed interim fix.
+> 
+> This might then prod James et al into looking more at the SCSI side of
+> things, and some year we might see this get replaced with a better scheme.
+> 
+> This is a real problem, and an immediate solution is needed last spring.
 
-Hi Berkley,
-
-I've got DMA support done for the 6xxx series but am still debugging a 
-SCSI panic in the error handling path.  I'm going to be sending mail 
-about it today.  So, soon you'll have something more recent to try.
-
-Thanks,
-BR
+Folks, bitching around on lkml on this won't get you far.  Send the
+patch to linux-scsi again, and explain what's the current stance on the
+disk synchronize cache and spindown issues.
