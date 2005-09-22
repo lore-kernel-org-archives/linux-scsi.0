@@ -1,358 +1,111 @@
-From: adam radford <aradford@gmail.com>
-Subject: [PATCH 1/1] 3ware 9000 driver update for scsi-misc-2.6
-Date: Wed, 21 Sep 2005 17:20:14 -0700
-Message-ID: <b1bc6a0005092117203855bf48@mail.gmail.com>
-Reply-To: adam radford <aradford@gmail.com>
+From: sqrt3@citiz.net
+Subject: problem with adaptec 6360L scsi card
+Date: Thu, 22 Sep 2005 11:11:57 +0800 (CST)
+Message-ID: <47287.2164370075$1127365910@news.gmane.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_4136_31272315.1127348414762"
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.193]:14060 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S965187AbVIVAUP (ORCPT
+Received: from ws15.citiz.net ([218.1.66.100]:28367 "HELO mail.citiz.net")
+	by vger.kernel.org with SMTP id S965051AbVIVFLj (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Sep 2005 20:20:15 -0400
-Received: by xproxy.gmail.com with SMTP id h28so323142wxd
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2005 17:20:14 -0700 (PDT)
+	Thu, 22 Sep 2005 01:11:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-------=_Part_4136_31272315.1127348414762
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+i have a ISA scsi card with adaptec 6360L chip (CardModel=AC520A). i am using woody and kernel 2.4. i believe aha152x module is for me, although i can hear the sound of scsi disks after entering the following command it does not work:
 
-The attached patch updates the driver for the 3ware 9000 series to do
-the following:
+modprobe aha152x io=0x340 irq=9 scsiid=4
 
-- Add support for 9550SX controllers.
+/lib/modules/2.4.18/kernel/drivers/scsi/aha152x.o: init_module: No such device
+/lib/modules/2.4.18/kernel/drivers/scsi/aha152x.o: insmod /lib/modules/2.4.18/kernel/drivers/scsi/aha152x.o failed
+/lib/modules/2.4.18/kernel/drivers/scsi/aha152x.o: insmod aha152x failed
+Hint: insmod errors can be caused by incorrect module parameters, including invalid IO or IRQ parameters
 
-Signed-off-by: Adam Radford <linuxraid@amcc.com>
+i believe parameters are correct. what should i do? Thanks. below is scsi part of .config
 
-James, Please apply
+#
+# SCSI support
+#
+CONFIG_SCSI=m
 
-Thanks!
+#
+# SCSI support type (disk, tape, CD-ROM)
+#
+CONFIG_BLK_DEV_SD=m
+CONFIG_SD_EXTRA_DEVS=40
+# CONFIG_CHR_DEV_ST is not set
+# CONFIG_CHR_DEV_OSST is not set
+# CONFIG_BLK_DEV_SR is not set
+# CONFIG_CHR_DEV_SG is not set
 
-Note: The patch is attached as an attachment, and also included
-in-line below.   The below may have line-wrap issues since I'm pasting
-into gmail.
+#
+# Some SCSI devices (e.g. CD jukebox) support multiple LUNs
+#
+# CONFIG_SCSI_DEBUG_QUEUES is not set
+# CONFIG_SCSI_MULTI_LUN is not set
+# CONFIG_SCSI_CONSTANTS is not set
+# CONFIG_SCSI_LOGGING is not set
 
-diff -Naur scsi-misc-2.6.old/drivers/scsi/3w-9xxx.c
-scsi-misc-2.6.new/drivers/scsi/3w-9xxx.c
---- scsi-misc-2.6.old/drivers/scsi/3w-9xxx.c=092005-09-21 15:11:49.00000000=
-0 -0700
-+++ scsi-misc-2.6.new/drivers/scsi/3w-9xxx.c=092005-09-21 15:18:56.00000000=
-0 -0700
-@@ -60,6 +60,7 @@
-                  Remove un-needed eh_abort handler.
-                  Add support for embedded firmware error strings.
-    2.26.02.003 - Correctly handle single sgl's with use_sg=3D1.
-+   2.26.02.004 - Add support for 9550SX controllers.
- */
+#
+# SCSI low-level drivers
+#
+# CONFIG_BLK_DEV_3W_XXXX_RAID is not set
+# CONFIG_SCSI_7000FASST is not set
+# CONFIG_SCSI_ACARD is not set
+CONFIG_SCSI_AHA152X=m
+# CONFIG_SCSI_AHA1542 is not set
+# CONFIG_SCSI_AHA1740 is not set
+# CONFIG_SCSI_AIC7XXX is not set
+# CONFIG_SCSI_AIC7XXX_OLD is not set
+# CONFIG_SCSI_DPT_I2O is not set
+# CONFIG_SCSI_ADVANSYS is not set
+# CONFIG_SCSI_IN2000 is not set
+# CONFIG_SCSI_AM53C974 is not set
+# CONFIG_SCSI_MEGARAID is not set
+# CONFIG_SCSI_BUSLOGIC is not set
+# CONFIG_SCSI_CPQFCTS is not set
+# CONFIG_SCSI_DMX3191D is not set
+# CONFIG_SCSI_DTC3280 is not set
+# CONFIG_SCSI_EATA is not set
+# CONFIG_SCSI_EATA_DMA is not set
+# CONFIG_SCSI_EATA_PIO is not set
+# CONFIG_SCSI_FUTURE_DOMAIN is not set
+# CONFIG_SCSI_GDTH is not set
+# CONFIG_SCSI_GENERIC_NCR5380 is not set
+# CONFIG_SCSI_IPS is not set
+# CONFIG_SCSI_INITIO is not set
+# CONFIG_SCSI_INIA100 is not set
+# CONFIG_SCSI_NCR53C406A is not set
+# CONFIG_SCSI_NCR53C7xx is not set
+# CONFIG_SCSI_SYM53C8XX_2 is not set
+# CONFIG_SCSI_NCR53C8XX is not set
+# CONFIG_SCSI_SYM53C8XX is not set
+# CONFIG_SCSI_PAS16 is not set
+# CONFIG_SCSI_PCI2000 is not set
+# CONFIG_SCSI_PCI2220I is not set
+# CONFIG_SCSI_PSI240I is not set
+# CONFIG_SCSI_QLOGIC_FAS is not set
+# CONFIG_SCSI_QLOGIC_ISP is not set
+# CONFIG_SCSI_QLOGIC_FC is not set
+# CONFIG_SCSI_QLOGIC_1280 is not set
+# CONFIG_SCSI_SEAGATE is not set
+# CONFIG_SCSI_SIM710 is not set
+# CONFIG_SCSI_SYM53C416 is not set
+# CONFIG_SCSI_DC390T is not set
+# CONFIG_SCSI_T128 is not set
+# CONFIG_SCSI_U14_34F is not set
+# CONFIG_SCSI_ULTRASTOR is not set
 
- #include <linux/module.h>
-@@ -82,7 +83,7 @@
- #include "3w-9xxx.h"
 
- /* Globals */
--#define TW_DRIVER_VERSION "2.26.02.003"
-+#define TW_DRIVER_VERSION "2.26.02.004"
- static TW_Device_Extension *twa_device_extension_list[TW_MAX_SLOT];
- static unsigned int twa_device_extension_count;
- static int twa_major =3D -1;
-@@ -892,11 +893,6 @@
- =09=09writel(TW_CONTROL_CLEAR_QUEUE_ERROR, TW_CONTROL_REG_ADDR(tw_dev));
- =09}
 
--=09if (status_reg_value & TW_STATUS_SBUF_WRITE_ERROR) {
--=09=09TW_PRINTK(tw_dev->host, TW_DRIVER, 0xf, "SBUF Write Error: clearing"=
-);
--=09=09writel(TW_CONTROL_CLEAR_SBUF_WRITE_ERROR, TW_CONTROL_REG_ADDR(tw_dev=
-));
--=09}
--
- =09if (status_reg_value & TW_STATUS_MICROCONTROLLER_ERROR) {
- =09=09if (tw_dev->reset_print =3D=3D 0) {
- =09=09=09TW_PRINTK(tw_dev->host, TW_DRIVER, 0x10, "Microcontroller Error: =
-clearing");
-@@ -930,6 +926,36 @@
- =09return retval;
- } /* End twa_empty_response_queue() */
 
-+/* This function will clear the pchip/response queue on 9550SX */
-+static int twa_empty_response_queue_large(TW_Device_Extension *tw_dev)
-+{
-+=09u32 status_reg_value, response_que_value;
-+=09int count =3D 0, retval =3D 1;
-+
-+=09if (tw_dev->tw_pci_dev->device =3D=3D PCI_DEVICE_ID_3WARE_9550SX) {
-+=09=09status_reg_value =3D readl(TW_STATUS_REG_ADDR(tw_dev));
-+
-+=09=09while (((status_reg_value & TW_STATUS_RESPONSE_QUEUE_EMPTY) =3D=3D 0=
-)
-&& (count < TW_MAX_RESPONSE_DRAIN)) {
-+=09=09=09response_que_value =3D readl(TW_RESPONSE_QUEUE_REG_ADDR_LARGE(tw_=
-dev));
-+=09=09=09if ((response_que_value & TW_9550SX_DRAIN_COMPLETED) =3D=3D
-TW_9550SX_DRAIN_COMPLETED) {
-+=09=09=09=09/* P-chip settle time */
-+=09=09=09=09msleep(500);
-+=09=09=09=09retval =3D 0;
-+=09=09=09=09goto out;
-+=09=09=09}
-+=09=09=09status_reg_value =3D readl(TW_STATUS_REG_ADDR(tw_dev));
-+=09=09=09count++;
-+=09=09}
-+=09=09if (count =3D=3D TW_MAX_RESPONSE_DRAIN)
-+=09=09=09goto out;
-+=09=09
-+=09=09retval =3D 0;
-+=09} else
-+=09=09retval =3D 0;
-+out:
-+=09return retval;
-+} /* End twa_empty_response_queue_large() */
-+
- /* This function passes sense keys from firmware to scsi layer */
- static int twa_fill_sense(TW_Device_Extension *tw_dev, int
-request_id, int copy_sense, int print_host)
- {
-@@ -1613,8 +1639,16 @@
- =09int tries =3D 0, retval =3D 1, flashed =3D 0, do_soft_reset =3D soft_re=
-set;
 
- =09while (tries < TW_MAX_RESET_TRIES) {
--=09=09if (do_soft_reset)
-+=09=09if (do_soft_reset) {
- =09=09=09TW_SOFT_RESET(tw_dev);
-+=09=09=09/* Clear pchip/response queue on 9550SX */
-+=09=09=09if (twa_empty_response_queue_large(tw_dev)) {
-+=09=09=09=09TW_PRINTK(tw_dev->host, TW_DRIVER, 0x36, "Response queue (larg=
-e)
-empty failed during reset sequence");
-+=09=09=09=09do_soft_reset =3D 1;
-+=09=09=09=09tries++;
-+=09=09=09=09continue;
-+=09=09=09}
-+=09=09}
+-- 
+To UNSUBSCRIBE, email to debian-user-REQUEST@lists.debian.org 
+with a subject of "unsubscribe". Trouble? Contact listmaster@lists.debian.org
 
- =09=09/* Make sure controller is in a good state */
- =09=09if (twa_poll_status(tw_dev, TW_STATUS_MICROCONTROLLER_READY |
-(do_soft_reset =3D=3D 1 ? TW_STATUS_ATTENTION_INTERRUPT : 0), 60)) {
-@@ -2034,7 +2068,10 @@
- =09=09goto out_free_device_extension;
- =09}
 
--=09mem_addr =3D pci_resource_start(pdev, 1);
-+=09if (pdev->device =3D=3D PCI_DEVICE_ID_3WARE_9000)
-+=09=09mem_addr =3D pci_resource_start(pdev, 1);
-+=09else
-+=09=09mem_addr =3D pci_resource_start(pdev, 2);
 
- =09/* Save base address */
- =09tw_dev->base_addr =3D ioremap(mem_addr, PAGE_SIZE);
-@@ -2148,6 +2185,8 @@
- static struct pci_device_id twa_pci_tbl[] __devinitdata =3D {
- =09{ PCI_VENDOR_ID_3WARE, PCI_DEVICE_ID_3WARE_9000,
- =09  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-+=09{ PCI_VENDOR_ID_3WARE, PCI_DEVICE_ID_3WARE_9550SX,
-+=09  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- =09{ }
- };
- MODULE_DEVICE_TABLE(pci, twa_pci_tbl);
-diff -Naur scsi-misc-2.6.old/drivers/scsi/3w-9xxx.h
-scsi-misc-2.6.new/drivers/scsi/3w-9xxx.h
---- scsi-misc-2.6.old/drivers/scsi/3w-9xxx.h=092005-08-28 16:41:01.00000000=
-0 -0700
-+++ scsi-misc-2.6.new/drivers/scsi/3w-9xxx.h=092005-09-21 15:18:57.00000000=
-0 -0700
-@@ -267,7 +267,6 @@
- #define TW_CONTROL_CLEAR_PARITY_ERROR          0x00800000
- #define TW_CONTROL_CLEAR_QUEUE_ERROR           0x00400000
- #define TW_CONTROL_CLEAR_PCI_ABORT             0x00100000
--#define TW_CONTROL_CLEAR_SBUF_WRITE_ERROR      0x00000008
 
- /* Status register bit definitions */
- #define TW_STATUS_MAJOR_VERSION_MASK=09       0xF0000000
-@@ -285,9 +284,8 @@
- #define TW_STATUS_MICROCONTROLLER_READY=09       0x00002000
- #define TW_STATUS_COMMAND_QUEUE_EMPTY=09       0x00001000
- #define TW_STATUS_EXPECTED_BITS=09=09       0x00002000
--#define TW_STATUS_UNEXPECTED_BITS=09       0x00F00008
--#define TW_STATUS_SBUF_WRITE_ERROR             0x00000008
--#define TW_STATUS_VALID_INTERRUPT              0x00DF0008
-+#define TW_STATUS_UNEXPECTED_BITS=09       0x00F00000
-+#define TW_STATUS_VALID_INTERRUPT              0x00DF0000
-
- /* RESPONSE QUEUE BIT DEFINITIONS */
- #define TW_RESPONSE_ID_MASK=09=09       0x00000FF0
-@@ -324,9 +322,9 @@
-
- /* Compatibility defines */
- #define TW_9000_ARCH_ID 0x5
--#define TW_CURRENT_DRIVER_SRL 28
--#define TW_CURRENT_DRIVER_BUILD 9
--#define TW_CURRENT_DRIVER_BRANCH 4
-+#define TW_CURRENT_DRIVER_SRL 30
-+#define TW_CURRENT_DRIVER_BUILD 80
-+#define TW_CURRENT_DRIVER_BRANCH 0
-
- /* Phase defines */
- #define TW_PHASE_INITIAL 0
-@@ -334,6 +332,7 @@
- #define TW_PHASE_SGLIST  2
-
- /* Misc defines */
-+#define TW_9550SX_DRAIN_COMPLETED=09      0xFFFF
- #define TW_SECTOR_SIZE                        512
- #define TW_ALIGNMENT_9000                     4  /* 4 bytes */
- #define TW_ALIGNMENT_9000_SGL                 0x3
-@@ -417,6 +416,9 @@
- #ifndef PCI_DEVICE_ID_3WARE_9000
- #define PCI_DEVICE_ID_3WARE_9000 0x1002
- #endif
-+#ifndef PCI_DEVICE_ID_3WARE_9550SX
-+#define PCI_DEVICE_ID_3WARE_9550SX 0x1003
-+#endif
-
- /* Bitmask macros to eliminate bitfields */
-
-@@ -443,6 +445,7 @@
- #define TW_STATUS_REG_ADDR(x) ((unsigned char __iomem *)x->base_addr + 0x4=
-)
- #define TW_COMMAND_QUEUE_REG_ADDR(x) (sizeof(dma_addr_t) > 4 ?
-((unsigned char __iomem *)x->base_addr + 0x20) : ((unsigned char
-__iomem *)x->base_addr + 0x8))
- #define TW_RESPONSE_QUEUE_REG_ADDR(x) ((unsigned char __iomem
-*)x->base_addr + 0xC)
-+#define TW_RESPONSE_QUEUE_REG_ADDR_LARGE(x) ((unsigned char __iomem
-*)x->base_addr + 0x30)
- #define TW_CLEAR_ALL_INTERRUPTS(x) (writel(TW_STATUS_VALID_INTERRUPT,
-TW_CONTROL_REG_ADDR(x)))
- #define TW_CLEAR_ATTENTION_INTERRUPT(x)
-(writel(TW_CONTROL_CLEAR_ATTENTION_INTERRUPT, TW_CONTROL_REG_ADDR(x)))
- #define TW_CLEAR_HOST_INTERRUPT(x)
-(writel(TW_CONTROL_CLEAR_HOST_INTERRUPT, TW_CONTROL_REG_ADDR(x)))
-
-------=_Part_4136_31272315.1127348414762
-Content-Type: text/x-patch; name="3ware_update_scsi_misc_2.6.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="3ware_update_scsi_misc_2.6.patch"
-
-ZGlmZiAtTmF1ciBzY3NpLW1pc2MtMi42Lm9sZC9kcml2ZXJzL3Njc2kvM3ctOXh4eC5jIHNjc2kt
-bWlzYy0yLjYubmV3L2RyaXZlcnMvc2NzaS8zdy05eHh4LmMKLS0tIHNjc2ktbWlzYy0yLjYub2xk
-L2RyaXZlcnMvc2NzaS8zdy05eHh4LmMJMjAwNS0wOS0yMSAxNToxMTo0OS4wMDAwMDAwMDAgLTA3
-MDAKKysrIHNjc2ktbWlzYy0yLjYubmV3L2RyaXZlcnMvc2NzaS8zdy05eHh4LmMJMjAwNS0wOS0y
-MSAxNToxODo1Ni4wMDAwMDAwMDAgLTA3MDAKQEAgLTYwLDYgKzYwLDcgQEAKICAgICAgICAgICAg
-ICAgICAgUmVtb3ZlIHVuLW5lZWRlZCBlaF9hYm9ydCBoYW5kbGVyLgogICAgICAgICAgICAgICAg
-ICBBZGQgc3VwcG9ydCBmb3IgZW1iZWRkZWQgZmlybXdhcmUgZXJyb3Igc3RyaW5ncy4KICAgIDIu
-MjYuMDIuMDAzIC0gQ29ycmVjdGx5IGhhbmRsZSBzaW5nbGUgc2dsJ3Mgd2l0aCB1c2Vfc2c9MS4K
-KyAgIDIuMjYuMDIuMDA0IC0gQWRkIHN1cHBvcnQgZm9yIDk1NTBTWCBjb250cm9sbGVycy4KICov
-CiAKICNpbmNsdWRlIDxsaW51eC9tb2R1bGUuaD4KQEAgLTgyLDcgKzgzLDcgQEAKICNpbmNsdWRl
-ICIzdy05eHh4LmgiCiAKIC8qIEdsb2JhbHMgKi8KLSNkZWZpbmUgVFdfRFJJVkVSX1ZFUlNJT04g
-IjIuMjYuMDIuMDAzIgorI2RlZmluZSBUV19EUklWRVJfVkVSU0lPTiAiMi4yNi4wMi4wMDQiCiBz
-dGF0aWMgVFdfRGV2aWNlX0V4dGVuc2lvbiAqdHdhX2RldmljZV9leHRlbnNpb25fbGlzdFtUV19N
-QVhfU0xPVF07CiBzdGF0aWMgdW5zaWduZWQgaW50IHR3YV9kZXZpY2VfZXh0ZW5zaW9uX2NvdW50
-Owogc3RhdGljIGludCB0d2FfbWFqb3IgPSAtMTsKQEAgLTg5MiwxMSArODkzLDYgQEAKIAkJd3Jp
-dGVsKFRXX0NPTlRST0xfQ0xFQVJfUVVFVUVfRVJST1IsIFRXX0NPTlRST0xfUkVHX0FERFIodHdf
-ZGV2KSk7CiAJfQogCi0JaWYgKHN0YXR1c19yZWdfdmFsdWUgJiBUV19TVEFUVVNfU0JVRl9XUklU
-RV9FUlJPUikgewotCQlUV19QUklOVEsodHdfZGV2LT5ob3N0LCBUV19EUklWRVIsIDB4ZiwgIlNC
-VUYgV3JpdGUgRXJyb3I6IGNsZWFyaW5nIik7Ci0JCXdyaXRlbChUV19DT05UUk9MX0NMRUFSX1NC
-VUZfV1JJVEVfRVJST1IsIFRXX0NPTlRST0xfUkVHX0FERFIodHdfZGV2KSk7Ci0JfQotCiAJaWYg
-KHN0YXR1c19yZWdfdmFsdWUgJiBUV19TVEFUVVNfTUlDUk9DT05UUk9MTEVSX0VSUk9SKSB7CiAJ
-CWlmICh0d19kZXYtPnJlc2V0X3ByaW50ID09IDApIHsKIAkJCVRXX1BSSU5USyh0d19kZXYtPmhv
-c3QsIFRXX0RSSVZFUiwgMHgxMCwgIk1pY3JvY29udHJvbGxlciBFcnJvcjogY2xlYXJpbmciKTsK
-QEAgLTkzMCw2ICs5MjYsMzYgQEAKIAlyZXR1cm4gcmV0dmFsOwogfSAvKiBFbmQgdHdhX2VtcHR5
-X3Jlc3BvbnNlX3F1ZXVlKCkgKi8KIAorLyogVGhpcyBmdW5jdGlvbiB3aWxsIGNsZWFyIHRoZSBw
-Y2hpcC9yZXNwb25zZSBxdWV1ZSBvbiA5NTUwU1ggKi8KK3N0YXRpYyBpbnQgdHdhX2VtcHR5X3Jl
-c3BvbnNlX3F1ZXVlX2xhcmdlKFRXX0RldmljZV9FeHRlbnNpb24gKnR3X2RldikKK3sKKwl1MzIg
-c3RhdHVzX3JlZ192YWx1ZSwgcmVzcG9uc2VfcXVlX3ZhbHVlOworCWludCBjb3VudCA9IDAsIHJl
-dHZhbCA9IDE7CisKKwlpZiAodHdfZGV2LT50d19wY2lfZGV2LT5kZXZpY2UgPT0gUENJX0RFVklD
-RV9JRF8zV0FSRV85NTUwU1gpIHsKKwkJc3RhdHVzX3JlZ192YWx1ZSA9IHJlYWRsKFRXX1NUQVRV
-U19SRUdfQUREUih0d19kZXYpKTsKKworCQl3aGlsZSAoKChzdGF0dXNfcmVnX3ZhbHVlICYgVFdf
-U1RBVFVTX1JFU1BPTlNFX1FVRVVFX0VNUFRZKSA9PSAwKSAmJiAoY291bnQgPCBUV19NQVhfUkVT
-UE9OU0VfRFJBSU4pKSB7CisJCQlyZXNwb25zZV9xdWVfdmFsdWUgPSByZWFkbChUV19SRVNQT05T
-RV9RVUVVRV9SRUdfQUREUl9MQVJHRSh0d19kZXYpKTsKKwkJCWlmICgocmVzcG9uc2VfcXVlX3Zh
-bHVlICYgVFdfOTU1MFNYX0RSQUlOX0NPTVBMRVRFRCkgPT0gVFdfOTU1MFNYX0RSQUlOX0NPTVBM
-RVRFRCkgeworCQkJCS8qIFAtY2hpcCBzZXR0bGUgdGltZSAqLworCQkJCW1zbGVlcCg1MDApOwor
-CQkJCXJldHZhbCA9IDA7CisJCQkJZ290byBvdXQ7CisJCQl9CisJCQlzdGF0dXNfcmVnX3ZhbHVl
-ID0gcmVhZGwoVFdfU1RBVFVTX1JFR19BRERSKHR3X2RldikpOworCQkJY291bnQrKzsKKwkJfQor
-CQlpZiAoY291bnQgPT0gVFdfTUFYX1JFU1BPTlNFX0RSQUlOKQorCQkJZ290byBvdXQ7CisJCQor
-CQlyZXR2YWwgPSAwOworCX0gZWxzZQorCQlyZXR2YWwgPSAwOworb3V0OgorCXJldHVybiByZXR2
-YWw7Cit9IC8qIEVuZCB0d2FfZW1wdHlfcmVzcG9uc2VfcXVldWVfbGFyZ2UoKSAqLworCiAvKiBU
-aGlzIGZ1bmN0aW9uIHBhc3NlcyBzZW5zZSBrZXlzIGZyb20gZmlybXdhcmUgdG8gc2NzaSBsYXll
-ciAqLwogc3RhdGljIGludCB0d2FfZmlsbF9zZW5zZShUV19EZXZpY2VfRXh0ZW5zaW9uICp0d19k
-ZXYsIGludCByZXF1ZXN0X2lkLCBpbnQgY29weV9zZW5zZSwgaW50IHByaW50X2hvc3QpCiB7CkBA
-IC0xNjEzLDggKzE2MzksMTYgQEAKIAlpbnQgdHJpZXMgPSAwLCByZXR2YWwgPSAxLCBmbGFzaGVk
-ID0gMCwgZG9fc29mdF9yZXNldCA9IHNvZnRfcmVzZXQ7CiAKIAl3aGlsZSAodHJpZXMgPCBUV19N
-QVhfUkVTRVRfVFJJRVMpIHsKLQkJaWYgKGRvX3NvZnRfcmVzZXQpCisJCWlmIChkb19zb2Z0X3Jl
-c2V0KSB7CiAJCQlUV19TT0ZUX1JFU0VUKHR3X2Rldik7CisJCQkvKiBDbGVhciBwY2hpcC9yZXNw
-b25zZSBxdWV1ZSBvbiA5NTUwU1ggKi8KKwkJCWlmICh0d2FfZW1wdHlfcmVzcG9uc2VfcXVldWVf
-bGFyZ2UodHdfZGV2KSkgeworCQkJCVRXX1BSSU5USyh0d19kZXYtPmhvc3QsIFRXX0RSSVZFUiwg
-MHgzNiwgIlJlc3BvbnNlIHF1ZXVlIChsYXJnZSkgZW1wdHkgZmFpbGVkIGR1cmluZyByZXNldCBz
-ZXF1ZW5jZSIpOworCQkJCWRvX3NvZnRfcmVzZXQgPSAxOworCQkJCXRyaWVzKys7CisJCQkJY29u
-dGludWU7CisJCQl9CisJCX0KIAogCQkvKiBNYWtlIHN1cmUgY29udHJvbGxlciBpcyBpbiBhIGdv
-b2Qgc3RhdGUgKi8KIAkJaWYgKHR3YV9wb2xsX3N0YXR1cyh0d19kZXYsIFRXX1NUQVRVU19NSUNS
-T0NPTlRST0xMRVJfUkVBRFkgfCAoZG9fc29mdF9yZXNldCA9PSAxID8gVFdfU1RBVFVTX0FUVEVO
-VElPTl9JTlRFUlJVUFQgOiAwKSwgNjApKSB7CkBAIC0yMDM0LDcgKzIwNjgsMTAgQEAKIAkJZ290
-byBvdXRfZnJlZV9kZXZpY2VfZXh0ZW5zaW9uOwogCX0KIAotCW1lbV9hZGRyID0gcGNpX3Jlc291
-cmNlX3N0YXJ0KHBkZXYsIDEpOworCWlmIChwZGV2LT5kZXZpY2UgPT0gUENJX0RFVklDRV9JRF8z
-V0FSRV85MDAwKQorCQltZW1fYWRkciA9IHBjaV9yZXNvdXJjZV9zdGFydChwZGV2LCAxKTsKKwll
-bHNlCisJCW1lbV9hZGRyID0gcGNpX3Jlc291cmNlX3N0YXJ0KHBkZXYsIDIpOwogCiAJLyogU2F2
-ZSBiYXNlIGFkZHJlc3MgKi8KIAl0d19kZXYtPmJhc2VfYWRkciA9IGlvcmVtYXAobWVtX2FkZHIs
-IFBBR0VfU0laRSk7CkBAIC0yMTQ4LDYgKzIxODUsOCBAQAogc3RhdGljIHN0cnVjdCBwY2lfZGV2
-aWNlX2lkIHR3YV9wY2lfdGJsW10gX19kZXZpbml0ZGF0YSA9IHsKIAl7IFBDSV9WRU5ET1JfSURf
-M1dBUkUsIFBDSV9ERVZJQ0VfSURfM1dBUkVfOTAwMCwKIAkgIFBDSV9BTllfSUQsIFBDSV9BTllf
-SUQsIDAsIDAsIDB9LAorCXsgUENJX1ZFTkRPUl9JRF8zV0FSRSwgUENJX0RFVklDRV9JRF8zV0FS
-RV85NTUwU1gsCisJICBQQ0lfQU5ZX0lELCBQQ0lfQU5ZX0lELCAwLCAwLCAwfSwKIAl7IH0KIH07
-CiBNT0RVTEVfREVWSUNFX1RBQkxFKHBjaSwgdHdhX3BjaV90YmwpOwpkaWZmIC1OYXVyIHNjc2kt
-bWlzYy0yLjYub2xkL2RyaXZlcnMvc2NzaS8zdy05eHh4Lmggc2NzaS1taXNjLTIuNi5uZXcvZHJp
-dmVycy9zY3NpLzN3LTl4eHguaAotLS0gc2NzaS1taXNjLTIuNi5vbGQvZHJpdmVycy9zY3NpLzN3
-LTl4eHguaAkyMDA1LTA4LTI4IDE2OjQxOjAxLjAwMDAwMDAwMCAtMDcwMAorKysgc2NzaS1taXNj
-LTIuNi5uZXcvZHJpdmVycy9zY3NpLzN3LTl4eHguaAkyMDA1LTA5LTIxIDE1OjE4OjU3LjAwMDAw
-MDAwMCAtMDcwMApAQCAtMjY3LDcgKzI2Nyw2IEBACiAjZGVmaW5lIFRXX0NPTlRST0xfQ0xFQVJf
-UEFSSVRZX0VSUk9SICAgICAgICAgIDB4MDA4MDAwMDAKICNkZWZpbmUgVFdfQ09OVFJPTF9DTEVB
-Ul9RVUVVRV9FUlJPUiAgICAgICAgICAgMHgwMDQwMDAwMAogI2RlZmluZSBUV19DT05UUk9MX0NM
-RUFSX1BDSV9BQk9SVCAgICAgICAgICAgICAweDAwMTAwMDAwCi0jZGVmaW5lIFRXX0NPTlRST0xf
-Q0xFQVJfU0JVRl9XUklURV9FUlJPUiAgICAgIDB4MDAwMDAwMDgKIAogLyogU3RhdHVzIHJlZ2lz
-dGVyIGJpdCBkZWZpbml0aW9ucyAqLwogI2RlZmluZSBUV19TVEFUVVNfTUFKT1JfVkVSU0lPTl9N
-QVNLCSAgICAgICAweEYwMDAwMDAwCkBAIC0yODUsOSArMjg0LDggQEAKICNkZWZpbmUgVFdfU1RB
-VFVTX01JQ1JPQ09OVFJPTExFUl9SRUFEWQkgICAgICAgMHgwMDAwMjAwMAogI2RlZmluZSBUV19T
-VEFUVVNfQ09NTUFORF9RVUVVRV9FTVBUWQkgICAgICAgMHgwMDAwMTAwMAogI2RlZmluZSBUV19T
-VEFUVVNfRVhQRUNURURfQklUUwkJICAgICAgIDB4MDAwMDIwMDAKLSNkZWZpbmUgVFdfU1RBVFVT
-X1VORVhQRUNURURfQklUUwkgICAgICAgMHgwMEYwMDAwOAotI2RlZmluZSBUV19TVEFUVVNfU0JV
-Rl9XUklURV9FUlJPUiAgICAgICAgICAgICAweDAwMDAwMDA4Ci0jZGVmaW5lIFRXX1NUQVRVU19W
-QUxJRF9JTlRFUlJVUFQgICAgICAgICAgICAgIDB4MDBERjAwMDgKKyNkZWZpbmUgVFdfU1RBVFVT
-X1VORVhQRUNURURfQklUUwkgICAgICAgMHgwMEYwMDAwMAorI2RlZmluZSBUV19TVEFUVVNfVkFM
-SURfSU5URVJSVVBUICAgICAgICAgICAgICAweDAwREYwMDAwCiAKIC8qIFJFU1BPTlNFIFFVRVVF
-IEJJVCBERUZJTklUSU9OUyAqLwogI2RlZmluZSBUV19SRVNQT05TRV9JRF9NQVNLCQkgICAgICAg
-MHgwMDAwMEZGMApAQCAtMzI0LDkgKzMyMiw5IEBACiAKIC8qIENvbXBhdGliaWxpdHkgZGVmaW5l
-cyAqLwogI2RlZmluZSBUV185MDAwX0FSQ0hfSUQgMHg1Ci0jZGVmaW5lIFRXX0NVUlJFTlRfRFJJ
-VkVSX1NSTCAyOAotI2RlZmluZSBUV19DVVJSRU5UX0RSSVZFUl9CVUlMRCA5Ci0jZGVmaW5lIFRX
-X0NVUlJFTlRfRFJJVkVSX0JSQU5DSCA0CisjZGVmaW5lIFRXX0NVUlJFTlRfRFJJVkVSX1NSTCAz
-MAorI2RlZmluZSBUV19DVVJSRU5UX0RSSVZFUl9CVUlMRCA4MAorI2RlZmluZSBUV19DVVJSRU5U
-X0RSSVZFUl9CUkFOQ0ggMAogCiAvKiBQaGFzZSBkZWZpbmVzICovCiAjZGVmaW5lIFRXX1BIQVNF
-X0lOSVRJQUwgMApAQCAtMzM0LDYgKzMzMiw3IEBACiAjZGVmaW5lIFRXX1BIQVNFX1NHTElTVCAg
-MgogCiAvKiBNaXNjIGRlZmluZXMgKi8KKyNkZWZpbmUgVFdfOTU1MFNYX0RSQUlOX0NPTVBMRVRF
-RAkgICAgICAweEZGRkYKICNkZWZpbmUgVFdfU0VDVE9SX1NJWkUgICAgICAgICAgICAgICAgICAg
-ICAgICA1MTIKICNkZWZpbmUgVFdfQUxJR05NRU5UXzkwMDAgICAgICAgICAgICAgICAgICAgICA0
-ICAvKiA0IGJ5dGVzICovCiAjZGVmaW5lIFRXX0FMSUdOTUVOVF85MDAwX1NHTCAgICAgICAgICAg
-ICAgICAgMHgzCkBAIC00MTcsNiArNDE2LDkgQEAKICNpZm5kZWYgUENJX0RFVklDRV9JRF8zV0FS
-RV85MDAwCiAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfM1dBUkVfOTAwMCAweDEwMDIKICNlbmRpZgor
-I2lmbmRlZiBQQ0lfREVWSUNFX0lEXzNXQVJFXzk1NTBTWAorI2RlZmluZSBQQ0lfREVWSUNFX0lE
-XzNXQVJFXzk1NTBTWCAweDEwMDMKKyNlbmRpZgogCiAvKiBCaXRtYXNrIG1hY3JvcyB0byBlbGlt
-aW5hdGUgYml0ZmllbGRzICovCiAKQEAgLTQ0Myw2ICs0NDUsNyBAQAogI2RlZmluZSBUV19TVEFU
-VVNfUkVHX0FERFIoeCkgKCh1bnNpZ25lZCBjaGFyIF9faW9tZW0gKil4LT5iYXNlX2FkZHIgKyAw
-eDQpCiAjZGVmaW5lIFRXX0NPTU1BTkRfUVVFVUVfUkVHX0FERFIoeCkgKHNpemVvZihkbWFfYWRk
-cl90KSA+IDQgPyAoKHVuc2lnbmVkIGNoYXIgX19pb21lbSAqKXgtPmJhc2VfYWRkciArIDB4MjAp
-IDogKCh1bnNpZ25lZCBjaGFyIF9faW9tZW0gKil4LT5iYXNlX2FkZHIgKyAweDgpKQogI2RlZmlu
-ZSBUV19SRVNQT05TRV9RVUVVRV9SRUdfQUREUih4KSAoKHVuc2lnbmVkIGNoYXIgX19pb21lbSAq
-KXgtPmJhc2VfYWRkciArIDB4QykKKyNkZWZpbmUgVFdfUkVTUE9OU0VfUVVFVUVfUkVHX0FERFJf
-TEFSR0UoeCkgKCh1bnNpZ25lZCBjaGFyIF9faW9tZW0gKil4LT5iYXNlX2FkZHIgKyAweDMwKQog
-I2RlZmluZSBUV19DTEVBUl9BTExfSU5URVJSVVBUUyh4KSAod3JpdGVsKFRXX1NUQVRVU19WQUxJ
-RF9JTlRFUlJVUFQsIFRXX0NPTlRST0xfUkVHX0FERFIoeCkpKQogI2RlZmluZSBUV19DTEVBUl9B
-VFRFTlRJT05fSU5URVJSVVBUKHgpICh3cml0ZWwoVFdfQ09OVFJPTF9DTEVBUl9BVFRFTlRJT05f
-SU5URVJSVVBULCBUV19DT05UUk9MX1JFR19BRERSKHgpKSkKICNkZWZpbmUgVFdfQ0xFQVJfSE9T
-VF9JTlRFUlJVUFQoeCkgKHdyaXRlbChUV19DT05UUk9MX0NMRUFSX0hPU1RfSU5URVJSVVBULCBU
-V19DT05UUk9MX1JFR19BRERSKHgpKSkK
-------=_Part_4136_31272315.1127348414762--
