@@ -1,43 +1,40 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 4/5] convert st to use scsi_execte_async
-Date: Thu, 22 Sep 2005 22:20:12 -0500
-Message-ID: <4333746C.2030704@cs.wisc.edu>
-References: <1126845599.9276.44.camel@max>  <Pine.LNX.4.61.0509171428410.9258@kai.makisara.local>  <432C39BC.1030105@cs.wisc.edu>  <432C3C75.5090405@cs.wisc.edu>  <1126974325.10413.5.camel@max>  <Pine.LNX.4.61.0509181456370.14776@kai.makisara.local>  <432D81BD.9080803@cs.wisc.edu> <432D8515.9010809@cs.wisc.edu>  <Pine.LNX.4.61.0509182031090.15507@kai.makisara.local> <1127061365.800.1.camel@max> <432D97F2.5040508@cs.wisc.edu> <Pine.LNX.4.61.0509182155350.15507@kai.makisara.local> <432D9D53.3070706@cs.wisc.edu> <Pine.LNX.4.61.0509192040360.4404@kai.makisara.local> <432F100D.7050007@cs.wisc.edu> <Pine.LNX.4.61.0509202149180.4741@kai.makisara.local> <Pine.LNX.4.61.0509222309390.6022@kai.makisara.local>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: scsi error handling, lk 2.6.14-rc1
+Date: Fri, 23 Sep 2005 05:00:20 -0400
+Message-ID: <4333C424.6080209@pobox.com>
+References: <432E7A6A.4090209@torque.net> <4333041E.9000405@emc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:2794 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1751262AbVIWDUT (ORCPT
+Received: from mail.dvmed.net ([216.237.124.58]:15797 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750821AbVIWJAe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Sep 2005 23:20:19 -0400
-In-Reply-To: <Pine.LNX.4.61.0509222309390.6022@kai.makisara.local>
+	Fri, 23 Sep 2005 05:00:34 -0400
+In-Reply-To: <4333041E.9000405@emc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: linux-scsi@vger.kernel.org
+To: Brett Russ <russb@emc.com>
+Cc: dougg@torque.net, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
 
-Kai Makisara wrote:
-> On Tue, 20 Sep 2005, Kai Makisara wrote:
+Brett Russ wrote:
+> In March I got a bunch of patches in this same area into libata-dev; I'm 
+> not sure where they sit now (definitely not in 2.6.14-rc).  Jeff would 
+> probably know.
 > 
-> ...
+> See start of thread:
+> http://lkml.org/lkml/2005/3/17/157
 > 
->>If I try 5121 kB, write fails as is expected but not completely nicely. 
->>Here are some test printks:
->>
->>scsi_req_map_sg: q->back_merge failed, i=10
->>st 1:0:5:0: extraneous data discarded.
->>st 1:0:5:0: COMMAND FAILED (87 0 1).
->>sym: cmd: 0x0a 0x00 0x50 0x04 0x00 0x00
->>st: cmd=0x0a result=0x70000 resid=0 sense[0]=0x00 sense[2]=0x00
->>
->>scsi_req_map_sg fails as it should but still a bogus SCSI command is sent. 
->>I think the reason for this is simple but I don't want to delay the good 
->>news by trying to debug this.
->>
-> 
-> The reason was simple: scsi_req_map_sg did not set err when q->back_merge 
-> failed. The patch at the end fixes the problem (I am not sure what would 
-> be the correct error code).
+> So there would be conflicts if my stuff went forward--a lot of the 
+> changes are similar.  I think the best bet would be to find the tree 
+> with my patches and for you to look at it and find problems that you 
+> solved in this patch that I didn't address.
 
-yeah :) thanks.
+
+Embarrassingly, I'm afraid they have probably disappeared into the dust 
+of my SATA patch archive.  I completely forget the issues with your 
+patches that caused me to not apply them immediately :(
+
+	Jeff
+
+
