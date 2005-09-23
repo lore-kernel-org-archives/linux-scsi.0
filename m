@@ -1,61 +1,94 @@
-From: Markus Lidel <Markus.Lidel@shadowconnect.com>
-Subject: Re: legacy megaraid status
-Date: Thu, 22 Sep 2005 22:09:18 +0200
-Message-ID: <43330F6E.9070303@shadowconnect.com>
-References: <433175AE.5070905@darthvader.us> <30E6DB5A16C820CE29D97507@[10.169.6.233]> <4332705E.6030905@darthvader.us> <C2A6572782C9593467A750C4@[10.169.6.233]>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: SATA Drive Information (vs hdparm -i)?
+Date: Fri, 23 Sep 2005 10:23:27 +1000
+Message-ID: <43334AFF.8010901@torque.net>
+References: <7744a2840509221206254d2109@mail.gmail.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from s0003.shadowconnect.net ([213.239.201.226]:60638 "EHLO
-	mail.shadowconnect.com") by vger.kernel.org with ESMTP
-	id S1030316AbVIVUJZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Sep 2005 16:09:25 -0400
-In-Reply-To: <C2A6572782C9593467A750C4@[10.169.6.233]>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <7744a2840509221206254d2109@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Richard Bollinger <rabollinger@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kenneth Porter <shiva@sewingwitch.com>
-Cc: linux-scsi@vger.kernel.org
 
-Hello,
-
-Kenneth Porter wrote:
-> --On Thursday, September 22, 2005 9:50 AM +0100 Yiannis Mavroukakis 
-> <jander@darthvader.us> wrote:
+Richard Bollinger wrote:
+> Is there a program for SATA drives which reveals the depth of
+> information that "hdparm -i" does for IDE drives?  sdparm reveals
+> almost nothing in comparison:
 > 
->> 02:01.1 I2O: Intel Corporation 80960RP [i960RP Microprocessor] (rev 05)
->> (prog-if 01)
->>         Subsystem: Hewlett-Packard Company HP NetRAID-1Si
->>         Flags: bus master, fast Back2Back, medium devsel, latency 32, IRQ
->> 17
->>         Memory at fe000000 (32-bit, prefetchable) [size=4M]
->>         Expansion ROM at <unassigned> [disabled] [size=32K]
->>         Capabilities: [80] Power Management version 2
-> Any idea what the PCI ID quad is? (See the pci.ids file for examples.)
-> One possibility is that it's "close enough" to one of the cards listed 
-> in the PCI ID table in megaraid_mbox.c and you can just add the ID for 
-> this one. I'll wait for one of the LSI people to weigh in on whether 
-> that would work.
+> # sdparm -i /dev/sda
+>     /dev/sda: ATA       WDC WD3200JD-00K  08.0
+> Device identification VPD page:
+>   Addressed logical unit:
+>     id_type: vendor specific [0x0],  code_set: ASCII
+>  00     4c 69 6e 75 78 20 41 54  41 2d 53 43 53 49 20 73    Linux ATA-SCSI s
+>  10     69 6d 75 6c 61 74 6f 72                             imulator
 
-If changing the PCI ID doesn't work, you could switch the controller to 
-I2O mode and use the I2O driver. But after doing so it's not possible to 
-use the megaraid utilities anymore.
+Richard,
+libata needs to improve the information it provides for
+the Device Identification VPD page [0x83]. For example
+as defined in section 10.3.4.2 in the just released sat-r06 .
+Something approaching a world wide unique identifier is
+needed.
+
+> # hdparm -i /dev/hda
+> 
+> /dev/hda:
+> 
+>  Model=WDC WD800BB-00JHC0, FwRev=05.01C05, SerialNo=WD-MAM96054404
+>  Config={ HardSect NotMFM HdSw>15uSec SpinMotCtl Fixed DTR>5Mbs mtGapReq }
+>  RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=66
+>  BuffType=unknown, BuffSize=2048kB, MaxMultSect=16, MultSect=off
+>  CurCHS=16383/16/63, CurSects=-66060037, LBA=yes, LBAsects=156301488
+>  IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+>  PIO modes: pio0 pio3 pio4
+>  DMA modes: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5
+>  AdvancedPM=no
+>  Drive Supports : Reserved : ATA-1 ATA-2 ATA-3 ATA-4 ATA-5 ATA-6
+
+However an improved "sdparm -i" is not what you seem to be
+asking for. Most of the above information is derived from
+the response to the IDENTIFY [PACKET] DEVICE ATA command.
+There seems to be two options for providing this:
+  1) libata to implement ioctls like HDIO_GET_IDENTITY
+  2) libata to implement SCSI ATA Translation [SAT]
+     facilities such as:
+       a) the ATA Information VPD page
+       b) SCSI ATA pass through commands
+       c) MODE SELECT SCSI command
+
+Option 1) is the simplest but it requires that the SAT layer
+is on the host computer [as it is in the case of libata].
+Hopefully external USB and Firewire storage enclosures will
+be enhanced to support the [draft] SAT standard and in
+that case the SAT layer will be in the enclosure. SATA
+disks [and S-ATAPI devices] in a SAS fabric may either
+tunnel through the SAS fabric [via SAS Tunnelling Protocol
+[STP]] or have a SAT layer in the fabric [typically in the
+enclosure holding the disks]. Only the STP route allows for
+option 1) .
+
+I have published some patches for 2 a) and 2 c) and someone
+else has published some patches for 2 b). I am unaware
+if any have been accepted into libata yet.
+
+Option 2) still needs an application client to output
+information like "hdparm -i". "sdparm --page=ai" will
+do this at a lower level if 2) a is implemented in
+libata. Another approach is to make the hdparm application
+libata aware and issue [shock horror] SCSI commands :-)
+
+hdparm has a "-Istdin" command line option which accepts
+the raw (binary) IDENTIFY x DEVICE response. So
+implementing option 2 a), using sg_inq, dd and finally
+hdparm could do it. That is a bit convoluted.
+
+Doug Gilbert
 
 
-Best regards,
 
 
-Markus Lidel
-------------------------------------------
-Markus Lidel (Senior IT Consultant)
 
-Shadow Connect GmbH
-Carl-Reisch-Weg 12
-D-86381 Krumbach
-Germany
-
-Phone:  +49 82 82/99 51-0
-Fax:    +49 82 82/99 51-11
-
-E-Mail: Markus.Lidel@shadowconnect.com
-URL:    http://www.shadowconnect.com
