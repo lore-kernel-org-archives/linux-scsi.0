@@ -1,62 +1,43 @@
-From: Joshua Kwan <joshk@triplehelix.org>
-Subject: Re: [PATCH] updated version of Jens' SATA suspend-to-ram patch
-Date: Fri, 23 Sep 2005 14:21:45 -0700
-Message-ID: <433471E9.2040307@triplehelix.org>
-References: <20050923163334.GA13567@triplehelix.org>
- <20050923180711.GH22655@suse.de> <433469DF.1060900@pobox.com>
+From: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>
+Subject: [2.4.21] Spurious ABORTs
+Date: Fri, 23 Sep 2005 17:28:03 -0400
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E57060CD1D3@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-reply-to: <433469DF.1060900@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Jens Axboe <axboe@suse.de>, torvalds@osdl.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:50647 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751308AbVIWV2J (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Sep 2005 17:28:09 -0400
+Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
+	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id j8NLNpSW001799
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2005 14:23:51 -0700 (PDT)
+Received: from EXA-ATLANTA.se.lsil.com (atl1.se.lsil.com [147.145.16.4])
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id j8NLS4Ze010682
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2005 14:28:04 -0700
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: "Kolli, Neela Syam" <Neela.Kolli@engenio.com>
 
-Jeff Garzik wrote:
-> Very strange.  I cannot find this patch at all in my email folders.
-> 
-> Can someone resend it to me?
+Hello List,
 
-The original is at
-http://seclists.org/lists/linux-kernel/2005/May/0447.html, as indicated
-by the footnote in my original message.
+I am running rather heavy IO's on our MegaRAID controller on a
+Red Hat 3.0 Gold (2.4.21-4.Elsmp) 32 kernel. After a while, I 
+notice that the OS sends the abort requests for commands that
+the driver has completed a while ago! I am using the unused
+struct scsi_cmnd->SCp fields to record the entry/exit timestamps
+and also the status of each commands while it is being processed.
+When I get the abort request, I am seeing that driver had completed
+the command already.
 
-That said, it's identical in content to the one I've just sent (attached
-as a text/plain MIME attachment.)
+I know that this is not an appropriate list to ask RH specific
+question. But I wasn't sure if it RH specific bug or if there are
+any known situations where 2.4 based kernels would try to _abort_
+previously completed commands. I tried tracing the SCSI mid-layer
+code and I quickly got lost.
 
-> Worried now!
-> 
-> If this patch is needed, something VERY VERY WRONG is going on.  This
-> patch indicates that the queueing state machine has been violated, and
-> something is trying to IGNORE the command synchronization :(
-> 
-> Further, you cannot always assume that msleep() is valid in that
-> context.  It should be the caller that waits (libata suspend code), not
-> ata_do_simple_cmd() itself.
-> 
-> Does anyone have a link to James Bottomley's proposed patch?  That one
-> seemed to do what was necessary -- send a SYNCHRONIZE_CACHE command then
-> turn it over to the LLD for further suspend.
+Thanks in advance for any help.
 
-I don't think James sent any patch in the original thread with Jens'
-patch. But that sounds somewhat cleaner than msleep().
-
-At any rate, the current patch (with or without Jens' new addition)
-works for me on Thinkpad T43. So the net result is better anyway, IMO.
-
->> Ok. Can we have this in -mm for a few days just to shake out anything
->> interesting, and then merge it into mainline?
-> 
-> Once we get a decent patch, I can merge it into my libata-dev.git
-> repository, which is automatically propagated to -mm.
-
-Is the kludginess of Jens' addition the only problem you have with the
-current patch? (If it is, then fixing this is out of the range of my
-current ability...)
-
-Thanks for responding.
-
--- 
-Joshua Kwan
+Sincerely,
+Sreenivas Bagalkote
