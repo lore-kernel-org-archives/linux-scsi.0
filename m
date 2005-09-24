@@ -1,112 +1,110 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH scsi-misc-2.6] allow REPORT LUN scanning even for LUN 0 PQ of 3
-Date: Fri, 23 Sep 2005 15:52:08 -0700
-Message-ID: <20050923225208.GA21452@us.ibm.com>
-References: <20050830224316.GA11210@us.ibm.com> <1127272270.5589.57.camel@mulgrave> <20050921221500.GA24993@us.ibm.com> <20050922001035.GA27643@us.ibm.com> <1127439208.4818.94.camel@mulgrave>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: SATA Drive Information (vs hdparm -i)?
+Date: Sat, 24 Sep 2005 13:18:07 +1000
+Message-ID: <4334C56F.8010208@torque.net>
+References: <7744a2840509221206254d2109@mail.gmail.com> <43334AFF.8010901@torque.net> <43340FB7.3080708@adaptec.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:30664 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751333AbVIWWw1
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Sep 2005 18:52:27 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e31.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id j8NMq3JL017516
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2005 18:52:03 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j8NMr0XO544800
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2005 16:53:00 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j8NMqQMf020072
-	for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2005 16:52:26 -0600
-Content-Disposition: inline
-In-Reply-To: <1127439208.4818.94.camel@mulgrave>
+Received: from zorg.st.net.au ([203.16.233.9]:24792 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1751386AbVIXDRg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Sep 2005 23:17:36 -0400
+In-Reply-To: <43340FB7.3080708@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: hare@suse.de, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Richard Bollinger <rabollinger@gmail.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, Sep 22, 2005 at 08:33:28PM -0500, James Bottomley wrote:
-> On Wed, 2005-09-21 at 17:10 -0700, Patrick Mansfield wrote:
-> > I removed the bad "!" on !scsi_device_get(), and the "insmod ./scsi_debug.ko
-> > max_luns=3' found 2 sd's as expected.
+Luben Tuikov wrote:
+> On 09/22/05 20:23, Douglas Gilbert wrote:
 > 
-> Fixed it.
+>>However an improved "sdparm -i" is not what you seem to be
+>>asking for. Most of the above information is derived from
+>>the response to the IDENTIFY [PACKET] DEVICE ATA command.
+>>There seems to be two options for providing this:
+>>  1) libata to implement ioctls like HDIO_GET_IDENTITY
+>>  2) libata to implement SCSI ATA Translation [SAT]
+>>     facilities such as:
+>>       a) the ATA Information VPD page
+>>       b) SCSI ATA pass through commands
+>>       c) MODE SELECT SCSI command
+>>
+>>Option 1) is the simplest but it requires that the SAT layer
+>>is on the host computer [as it is in the case of libata].
+>>Hopefully external USB and Firewire storage enclosures will
+>>be enhanced to support the [draft] SAT standard and in
+>>that case the SAT layer will be in the enclosure. SATA
+>>disks [and S-ATAPI devices] in a SAS fabric may either
+>>tunnel through the SAS fabric [via SAS Tunnelling Protocol
+>>[STP]] or have a SAT layer in the fabric [typically in the
+>>enclosure holding the disks].
 > 
-> > But, scsi_debug module count is still at 1. Removing (via delete attr) the
-> > 2 scsi_debug devices, and module count is still at 1. So probably still a
-> > missing scsi_device_put(). I'm trying to debug a bit more.
 > 
-> Found it and fixed that too ... missing a put after the find_device.
+> There will be no SAT layer in a SAS fabric.  STP is just
+> that, a _tunneling_ protocol.  Thus, either in Option 1,
+> or Option 2 if you want to present the device to
+> SCSI Core as a SCSI Device you need SAT somewhere below
+> SCSI Core (on the host).
 
-OK, works fine now ...
+Luben,
+The folks at HP, Intel and WDC seemingly driving the
+SAT draft write in the overview [in sat-r06 section 5.1]
+of the SAT layer (SATL):
 
-> +static inline void scsi_destroy_sdev(struct scsi_device *sdev)
-> +{
-> +	if (sdev->host->hostt->slave_destroy)
-> +		sdev->host->hostt->slave_destroy(sdev);
-> +	transport_destroy_device(&sdev->sdev_gendev);
-> +	put_device(&sdev->sdev_gendev);
+"Examples of SATL implemented in accordance to this
+standard include:
+   a) a SATL contained within a SCSI target ...
+   b) An ATA/ATAPI Host Bus Adapter (HBA) directly
+      connected to ATA/ATAPI devices ...
+   c) A SAS STP initiator port to connect ATA/ATAPI
+      devices ...
+"
 
-One nit ... get rid of the inline, as the code path is not performance
-critical.
+There are figures (diagrams) of these three later in
+the draft: figure 7 (page 81), figure 5 (page 79) and
+figure 6 (page 80) respectively.
 
-Also, note that most devices won't behave as scsi_debug configured as
-previosly patched: it had PQ !=0 for LUN 0, but then put LUN 0 in REPORT
-LUN output.
+For point a) they give as examples FCP, SPI and SBP-3
+(but not SAS). One reason for putting a SAT layer in
+a SAS target is multi-initiator and mult-port command
+queuing support (sat-r05 section 6.2.4). Converting
+port multipliers to luns may also be useful. [Perhaps
+you could confirm this: a 1.5 GB SATA disk chews up
+3 GB of SAS bandwidth when doing STP data transfers
+(thanks to ALIGNs inserted every other word).] A RAID
+of SATA disks in a SAS target (enclosure) would be
+another candidate for a SAT layer (with luns > 0 to
+access the individual disks (e.g. for SMART diagnostics)).
 
-So, we hit the already existing sdev case in James' patch. 
+> In general, lower (hardware) layers want to do the
+> _absolute_ minimum as far as their function is concerned.
 
-But it was a good test case :)
+Some folks have reported beta testing disks that, via
+firmware download, can change between having a SATA and
+a SAS interface. So I think that what you say is
+basically true, but intelligence is being distributed
+as well. "Nice to have" features like SMART in disks
+must consume a lot of firmware (and flash) but support
+(and standard's compliance) seems to be improving.
 
-For the record, here's a scsi_debug patch to not have LUN 0 show up, and
-not have it in REPORT LUNS output.
+> Thus, for example, you can expect an incomplete
+> USB/IEEE1394 SAT layer on the device.
 
---- linux-2.6.14-rc2-git1/drivers/scsi/scsi_debug.c	2005-08-28 17:51:48.000000000 -0700
-+++ jamesb-lun0-replun/drivers/scsi/scsi_debug.c	2005-09-23 15:33:51.000000000 -0700
-@@ -619,7 +619,10 @@ static int resp_inquiry(struct scsi_cmnd
- 
- 	alloc_len = (cmd[3] << 8) + cmd[4];
- 	memset(arr, 0, SDEBUG_MAX_INQ_ARR_SZ);
--	pq_pdt = (scsi_debug_ptype & 0x1f);
-+	if (devip->lun == 0)
-+		pq_pdt = 0x7f; /* XXX hack no LUN 0 */
-+	else
-+		pq_pdt = (scsi_debug_ptype & 0x1f);
- 	arr[0] = pq_pdt;
- 	if (0x2 & cmd[1]) {  /* CMDDT bit set */
- 		mk_sense_buffer(devip, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB,
-@@ -946,7 +949,7 @@ static int resp_report_luns(struct scsi_
- 			    struct sdebug_dev_info * devip)
- {
- 	unsigned int alloc_len;
--	int lun_cnt, i, upper;
-+	int lun_cnt, i, upper, lun;
- 	unsigned char *cmd = (unsigned char *)scp->cmnd;
- 	int select_report = (int)cmd[2];
- 	struct scsi_lun *one_lun;
-@@ -960,18 +963,18 @@ static int resp_report_luns(struct scsi_
- 	}
- 	/* can produce response with up to 16k luns (lun 0 to lun 16383) */
- 	memset(arr, 0, SDEBUG_RLUN_ARR_SZ);
--	lun_cnt = scsi_debug_max_luns;
-+	lun_cnt = scsi_debug_max_luns - 1;
- 	arr[2] = ((sizeof(struct scsi_lun) * lun_cnt) >> 8) & 0xff;
- 	arr[3] = (sizeof(struct scsi_lun) * lun_cnt) & 0xff;
- 	lun_cnt = min((int)((SDEBUG_RLUN_ARR_SZ - 8) /
- 			    sizeof(struct scsi_lun)), lun_cnt);
- 	one_lun = (struct scsi_lun *) &arr[8];
--	for (i = 0; i < lun_cnt; i++) {
--		upper = (i >> 8) & 0x3f;
-+	for (i = 0, lun = 1; i < lun_cnt; i++, lun++) {
-+		upper = (lun >> 8) & 0x3f;
- 		if (upper)
- 			one_lun[i].scsi_lun[0] =
- 			    (upper | (SAM2_LUN_ADDRESS_METHOD << 6));
--		one_lun[i].scsi_lun[1] = i & 0xff;
-+		one_lun[i].scsi_lun[1] = lun & 0xff;
- 	}
- 	return fill_from_dev_buffer(scp, arr,
- 				    min((int)alloc_len, SDEBUG_RLUN_ARR_SZ));
+Yep. Judging from my mail, lots of these users would
+be happy with START STOP UNIT (well, at least as a
+start).
 
--- Patrick Mansfield
+>>Only the STP route allows for option 1) .
+> 
+> 
+> Option 2 as well: you'll just treat the device as
+> SCSI and SAT will emulate as much as possible.
+
+True; point c) from the SAT overview.
+
+Doug Gilbert
+
+
