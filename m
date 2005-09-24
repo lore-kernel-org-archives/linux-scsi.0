@@ -1,23 +1,40 @@
-From: "Kelsey Dotson" <dotsonds@0660.hu>
-Subject: knot costly yet effectivek
-Date: Sat, 24 Sep 2005 11:35:16 +0100
-Message-ID: <e6b601c5c0f3$41bfa138$1136858e@modintech.co.za>
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Supporting ACPI drive hotswap
+Date: Sat, 24 Sep 2005 17:48:23 +0100
+Message-ID: <20050924164823.GA24351@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [61.34.13.207] ([61.34.13.207]:57609 "HELO modintech.co.za")
-	by vger.kernel.org with SMTP id S932170AbVIXLLE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Sep 2005 07:11:04 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: acpi-support@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
+ACPI provides a mechanism for noting which devices can be hotswapped and 
+notifying the system that this has happened. Hotswappable devices are 
+tagged with a _RMV token. What effectively needs to be done is this:
 
-Be ERECT in less than 15 mins
+1) Find every device with an _RMV token, and install a notify handler 
+for it. This is fairly easy.
 
-PRlCE: $ 2 / use
+2) On notification, check whether the device is present or absent. This 
+can be done by calling the _STA method - alternatively it could 
+presumably be done through the appropriate IDE or SCSI layer. I believe 
+that we now have code that allows binding of ACPI devices to appropriate 
+busses.
 
-visit us: greenones.com
+3) If a device has been added, enumerate it and do appropriate messaging
+to userspace (for device node creation and so forth). This ought to be 
+relatively easy?
 
+4) If a device has been removed, we currently have problems. SATA 
+hotplugging is only supported on a subset of devices. The SATA laptop I 
+have here is an Intel ICH part, but uses the ata_piix driver (ahci won't 
+load) which isn't supposed to support hotswap. Unregistering devices in 
+the IDE layer has been broken for ages.
+
+Is there any point in working on the first three of these points until 
+point four is more reasonable? What actually needs to be done to improve 
+this?
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
