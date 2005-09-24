@@ -1,59 +1,23 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] updated version of Jens' SATA suspend-to-ram patch
-Date: Sat, 24 Sep 2005 09:07:04 +0200
-Message-ID: <20050924070659.GK22655@suse.de>
-References: <20050923163334.GA13567@triplehelix.org> <20050923180711.GH22655@suse.de> <433469DF.1060900@pobox.com>
+From: "Kelsey Dotson" <dotsonds@0660.hu>
+Subject: knot costly yet effectivek
+Date: Sat, 24 Sep 2005 11:35:16 +0100
+Message-ID: <e6b601c5c0f3$41bfa138$1136858e@modintech.co.za>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:4947 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1751452AbVIXHHD (ORCPT
+Received: from [61.34.13.207] ([61.34.13.207]:57609 "HELO modintech.co.za")
+	by vger.kernel.org with SMTP id S932170AbVIXLLE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Sep 2005 03:07:03 -0400
-Content-Disposition: inline
-In-Reply-To: <433469DF.1060900@pobox.com>
+	Sat, 24 Sep 2005 07:11:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: torvalds@osdl.org, joshk@triplehelix.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Sep 23 2005, Jeff Garzik wrote:
-> >--- linux-2.6.13/drivers/scsi/libata-core.c~	2005-09-01 
-> >12:22:19.000000000 +0200
-> >+++ linux-2.6.13/drivers/scsi/libata-core.c	2005-09-01 
-> >12:24:38.000000000 +0200
-> >@@ -3738,8 +3738,8 @@
-> > 	unsigned long flags;
-> > 	int rc;
-> > 
-> >-	qc = ata_qc_new_init(ap, dev);
-> >-	BUG_ON(qc == NULL);
-> >+	while ((qc = ata_qc_new_init(ap, dev)) == NULL)
-> >+		msleep(10);
-> > 
-> > 	qc->tf.command = cmd;
-> > 	qc->tf.flags |= ATA_TFLAG_DEVICE;
-> 
-> Worried now!
-> 
-> If this patch is needed, something VERY VERY WRONG is going on.  This 
-> patch indicates that the queueing state machine has been violated, and 
-> something is trying to IGNORE the command synchronization :(
 
-I haven't diagnosed this further and it only ever happened in the SUSE
-kernel to my knowledge (no one has reported it to me for the vanilla
-kernels + suspend patch).
+Be ERECT in less than 15 mins
 
-So lets just keep this patch out of the equation for now, it could be
-that other SUSE patches broke something in this area :/
+PRlCE: $ 2 / use
 
-> Further, you cannot always assume that msleep() is valid in that 
-> context.  It should be the caller that waits (libata suspend code), not 
-> ata_do_simple_cmd() itself.
-
-ata_do_simple_cmd() always blocks anyways, so I don't see the point.
-Perhaps rename the function to ata_execute_and_wait_simple_cmd().
-
--- 
-Jens Axboe
+visit us: greenones.com
 
