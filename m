@@ -1,244 +1,438 @@
 From: Mark Haverkamp <markh@osdl.org>
-Subject: Re: [PATCH 2/7] aacraid: aacraid: AIF preallocation (update)
-Date: Mon, 26 Sep 2005 13:02:15 -0700
-Message-ID: <1127764935.29614.18.camel@markh1.pdx.osdl.net>
-References: <1127246170.1891.32.camel@markh1.pdx.osdl.net>
-	 <1127659284.4839.1.camel@mulgrave>
+Subject: Re: [PATCH 3/7] aacraid: handle AIF hotplug events (update)
+Date: Mon, 26 Sep 2005 13:04:56 -0700
+Message-ID: <1127765096.29614.21.camel@markh1.pdx.osdl.net>
+References: <1127246183.1891.34.camel@markh1.pdx.osdl.net>
+	 <1127660195.4839.5.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:61386 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932482AbVIZUFa (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:26827 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932493AbVIZUIO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Sep 2005 16:05:30 -0400
-In-Reply-To: <1127659284.4839.1.camel@mulgrave>
+	Mon, 26 Sep 2005 16:08:14 -0400
+In-Reply-To: <1127660195.4839.5.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-On Sun, 2005-09-25 at 09:41 -0500, James Bottomley wrote:
+On Sun, 2005-09-25 at 09:56 -0500, James Bottomley wrote:
 > On Tue, 2005-09-20 at 12:56 -0700, Mark Haverkamp wrote:
-> > +                                && ((hw_fib_pool = kmalloc(sizeof
-> > (struct hw_fib *) * num, GFP_ATOMIC|GFP_KERNEL)))
-> > +                                && ((fib_pool = kmalloc(sizeof(struct
-> > fib *) * num, GFP_ATOMIC|GFP_KERNEL)))) {
-> > +                                       hw_fib_p = hw_fib_pool;
-> > +                                       fib_p = fib_pool;
-> > +                                       while (hw_fib_p < &hw_fib_pool
-> > [num]) {
-> > +                                               if (!(*(hw_fib_p++) =
-> > kmalloc(sizeof(struct hw_fib), GFP_ATOMIC|GFP_KERNEL))) {
-> > +                                                       --hw_fib_p;
-> > +                                                       break;
-> > +                                               }
-> > +                                               if (!(*(fib_p++) =
-> > kmalloc(sizeof(struct fib), GFP_ATOMIC|GFP_KERNEL))) {
+> > +       shost_for_each_device(device, dev->scsi_host_ptr)
+> > +       {
+> > +               if ((device->channel == CONTAINER_TO_CHANNEL
+> > (container))
+> > +                && (device->id == CONTAINER_TO_ID(container))
+> > +                && (device->lun == CONTAINER_TO_LUN(container))) {
+> > +                       switch (device_config_needed) {
+> > +                       case DELETE:
+> > +                               scsi_remove_device(device);
+> > +                               break;
+> > +                       case CHANGE:
+> > +                               if (!dev->fsa_dev[container].valid) {
+> > +                                       scsi_remove_device(device);
+> > +                                       break;
+> > +                               }
+> > +                               scsi_rescan_device(&device-
+> > >sdev_gendev);
+> > +
+> > +                       default:
+> > +                               break;
+> > +                       }
+> > +                       scsi_device_put(device);
+> > +                       break;
+> > +               }
+> > +       }
 > 
-> all of these allocations should be either GFP_ATOMIC or GFP_KERNEL, but
-> not both (it looks like they should be GFP_KERNEL).  What GFP_KERNEL|
-> GFP_ATOMIC actually gives you is a potentially sleeping allocation that
-> will exhaust the emergency pools, which sounds really undesirable.
+> This is open coding scsi_lookup_device(); why not simply use that API?
+> It returns a device that also has to have scsi_device_put() called on it
+> when you're finished.  I suppose it won't necessarily matter for
+> aacraid, but if we have to make the lookup more efficient for large lun
+> configurations, you'll benefit.
 > 
 > James
 > 
 
 James,
 
-Here is the patch again with the fixed kmalloc.
+Here is the patch again with scsi_device_lookup.
 
------
+----
 
-Recevied from Mark Salyzyn from Adaptec.
+Received from Mark Salyzyn from Adaptec.
 
-Aif pre-allocation is used to pull the kmalloc outside of the locks.
+Hotplug sniffs the AIFs (events) from the adapter and if a container
+change resulting in the device going offline (container zero), online
+(container zero completed) or changing capacity (morph) it will take
+actions by calling the appropriate API.
 
 Applies to the scsi-misc-2.6 git tree.
+
+Updated from review comments since the last version of the patch.
 
 Signed-off-by: Mark Haverkamp <markh@osdl.org>
 
 
+Index: scsi-misc-aac-2/drivers/scsi/aacraid/aachba.c
+===================================================================
+--- scsi-misc-aac-2.orig/drivers/scsi/aacraid/aachba.c	2005-09-26 09:13:26.000000000 -0700
++++ scsi-misc-aac-2/drivers/scsi/aacraid/aachba.c	2005-09-26 09:18:48.000000000 -0700
+@@ -479,7 +479,7 @@
+  *	is updated in the struct fsa_dev_info structure rather than returned.
+  */
+  
+-static int probe_container(struct aac_dev *dev, int cid)
++int probe_container(struct aac_dev *dev, int cid)
+ {
+ 	struct fsa_dev_info *fsa_dev_ptr;
+ 	int status;
+@@ -1471,6 +1471,8 @@
+ 				case TEST_UNIT_READY:
+ 					spin_unlock_irq(host->host_lock);
+ 					probe_container(dev, cid);
++					if ((fsa_dev_ptr[cid].valid & 1) == 0)
++						fsa_dev_ptr[cid].valid = 0;
+ 					spin_lock_irq(host->host_lock);
+ 					if (fsa_dev_ptr[cid].valid == 0) {
+ 						scsicmd->result = DID_NO_CONNECT << 16;
+Index: scsi-misc-aac-2/drivers/scsi/aacraid/aacraid.h
+===================================================================
+--- scsi-misc-aac-2.orig/drivers/scsi/aacraid/aacraid.h	2005-09-26 09:13:26.000000000 -0700
++++ scsi-misc-aac-2/drivers/scsi/aacraid/aacraid.h	2005-09-26 09:18:46.000000000 -0700
+@@ -780,7 +780,9 @@
+ 	u64		last;
+ 	u64		size;
+ 	u32		type;
++	u32		config_waiting_on;
+ 	u16		queue_depth;
++	u8		config_needed;
+ 	u8		valid;
+ 	u8		ro;
+ 	u8		locked;
+@@ -1715,6 +1717,7 @@
+ #define		AifCmdJobProgress	2	/* Progress report */
+ #define			AifJobCtrZero	101	/* Array Zero progress */
+ #define			AifJobStsSuccess 1	/* Job completes */
++#define			AifJobStsRunning 102	/* Job running */
+ #define		AifCmdAPIReport		3	/* Report from other user of API */
+ #define		AifCmdDriverNotify	4	/* Notify host driver of event */
+ #define			AifDenMorphComplete 200	/* A morph operation completed */
+@@ -1785,6 +1788,7 @@
+ struct aac_driver_ident* aac_get_driver_ident(int devtype);
+ int aac_get_adapter_info(struct aac_dev* dev);
+ int aac_send_shutdown(struct aac_dev *dev);
++int probe_container(struct aac_dev *dev, int cid);
+ extern int numacb;
+ extern int acbsize;
+ extern char aac_driver_version[];
 Index: scsi-misc-aac-2/drivers/scsi/aacraid/commsup.c
 ===================================================================
---- scsi-misc-aac-2.orig/drivers/scsi/aacraid/commsup.c	2005-09-20 13:20:05.000000000 -0700
-+++ scsi-misc-aac-2/drivers/scsi/aacraid/commsup.c	2005-09-26 09:14:25.000000000 -0700
-@@ -805,7 +805,6 @@
- {
- 	struct hw_fib *hw_fib, *hw_newfib;
- 	struct fib *fib, *newfib;
--	struct aac_queue_block *queues = dev->queues;
- 	struct aac_fib_context *fibctx;
- 	unsigned long flags;
- 	DECLARE_WAITQUEUE(wait, current);
-@@ -825,21 +824,22 @@
- 	 *	Let the DPC know it has a place to send the AIF's to.
- 	 */
- 	dev->aif_thread = 1;
--	add_wait_queue(&queues->queue[HostNormCmdQueue].cmdready, &wait);
-+	add_wait_queue(&dev->queues->queue[HostNormCmdQueue].cmdready, &wait);
- 	set_current_state(TASK_INTERRUPTIBLE);
-+	dprintk ((KERN_INFO "aac_command_thread start\n"));
- 	while(1) 
- 	{
--		spin_lock_irqsave(queues->queue[HostNormCmdQueue].lock, flags);
--		while(!list_empty(&(queues->queue[HostNormCmdQueue].cmdq))) {
-+		spin_lock_irqsave(dev->queues->queue[HostNormCmdQueue].lock, flags);
-+		while(!list_empty(&(dev->queues->queue[HostNormCmdQueue].cmdq))) {
- 			struct list_head *entry;
- 			struct aac_aifcmd * aifcmd;
+--- scsi-misc-aac-2.orig/drivers/scsi/aacraid/commsup.c	2005-09-26 09:14:25.000000000 -0700
++++ scsi-misc-aac-2/drivers/scsi/aacraid/commsup.c	2005-09-26 09:23:32.000000000 -0700
+@@ -39,6 +39,7 @@
+ #include <linux/completion.h>
+ #include <linux/blkdev.h>
+ #include <scsi/scsi_host.h>
++#include <scsi/scsi_device.h>
+ #include <asm/semaphore.h>
  
- 			set_current_state(TASK_RUNNING);
--		
--			entry = queues->queue[HostNormCmdQueue].cmdq.next;
-+	
-+			entry = dev->queues->queue[HostNormCmdQueue].cmdq.next;
- 			list_del(entry);
--			
--			spin_unlock_irqrestore(queues->queue[HostNormCmdQueue].lock, flags);
-+		
-+			spin_unlock_irqrestore(dev->queues->queue[HostNormCmdQueue].lock, flags);
- 			fib = list_entry(entry, struct fib, fiblink);
- 			/*
- 			 *	We will process the FIB here or pass it to a 
-@@ -869,9 +869,54 @@
- 				   
- 				u32 time_now, time_last;
- 				unsigned long flagv;
-+				unsigned num;
-+				struct hw_fib ** hw_fib_pool, ** hw_fib_p;
-+				struct fib ** fib_pool, ** fib_p;
- 				
+ #include "aacraid.h"
+@@ -791,6 +792,268 @@
+ 	memset(cp, 0,  256);
+ }
+ 
++
++/**
++ *	aac_handle_aif		-	Handle a message from the firmware
++ *	@dev: Which adapter this fib is from
++ *	@fibptr: Pointer to fibptr from adapter
++ *
++ *	This routine handles a driver notify fib from the adapter and
++ *	dispatches it to the appropriate routine for handling.
++ */
++
++static void aac_handle_aif(struct aac_dev * dev, struct fib * fibptr)
++{
++	struct hw_fib * hw_fib = fibptr->hw_fib;
++	struct aac_aifcmd * aifcmd = (struct aac_aifcmd *)hw_fib->data;
++	int busy;
++	u32 container;
++	struct scsi_device *device;
++	enum {
++		NOTHING,
++		DELETE,
++		ADD,
++		CHANGE
++	} device_config_needed;
++
++	/* Sniff for container changes */
++
++	if (!dev)
++		return;
++	container = (u32)-1;
++
++	/*
++	 *	We have set this up to try and minimize the number of
++	 * re-configures that take place. As a result of this when
++	 * certain AIF's come in we will set a flag waiting for another
++	 * type of AIF before setting the re-config flag.
++	 */
++	switch (le32_to_cpu(aifcmd->command)) {
++	case AifCmdDriverNotify:
++		switch (le32_to_cpu(((u32 *)aifcmd->data)[0])) {
++		/*
++		 *	Morph or Expand complete
++		 */
++		case AifDenMorphComplete:
++		case AifDenVolumeExtendComplete:
++			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
++			if (container >= dev->maximum_num_containers)
++				break;
++
++			/*
++			 *	Find the Scsi_Device associated with the SCSI
++			 * address. Make sure we have the right array, and if
++			 * so set the flag to initiate a new re-config once we
++			 * see an AifEnConfigChange AIF come through.
++			 */
++
++			if ((dev != NULL) && (dev->scsi_host_ptr != NULL)) {
++				device = scsi_device_lookup(dev->scsi_host_ptr, 
++					CONTAINER_TO_CHANNEL(container), 
++					CONTAINER_TO_ID(container), 
++					CONTAINER_TO_LUN(container));
++				if (device) {
++					dev->fsa_dev[container].config_needed = CHANGE;
++					dev->fsa_dev[container].config_waiting_on = AifEnConfigChange;
++					scsi_device_put(device);
++				}
++			}
++		}
++
++		/*
++		 *	If we are waiting on something and this happens to be
++		 * that thing then set the re-configure flag.
++		 */
++		if (container != (u32)-1) {
++			if (container >= dev->maximum_num_containers)
++				break;
++			if (dev->fsa_dev[container].config_waiting_on ==
++			    le32_to_cpu(*(u32 *)aifcmd->data))
++				dev->fsa_dev[container].config_waiting_on = 0;
++		} else for (container = 0;
++		    container < dev->maximum_num_containers; ++container) {
++			if (dev->fsa_dev[container].config_waiting_on ==
++			    le32_to_cpu(*(u32 *)aifcmd->data))
++				dev->fsa_dev[container].config_waiting_on = 0;
++		}
++		break;
++
++	case AifCmdEventNotify:
++		switch (le32_to_cpu(((u32 *)aifcmd->data)[0])) {
++		/*
++		 *	Add an Array.
++		 */
++		case AifEnAddContainer:
++			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
++			if (container >= dev->maximum_num_containers)
++				break;
++			dev->fsa_dev[container].config_needed = ADD;
++			dev->fsa_dev[container].config_waiting_on =
++				AifEnConfigChange;
++			break;
++
++		/*
++		 *	Delete an Array.
++		 */
++		case AifEnDeleteContainer:
++			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
++			if (container >= dev->maximum_num_containers)
++				break;
++			dev->fsa_dev[container].config_needed = DELETE;
++			dev->fsa_dev[container].config_waiting_on =
++				AifEnConfigChange;
++			break;
++
++		/*
++		 *	Container change detected. If we currently are not
++		 * waiting on something else, setup to wait on a Config Change.
++		 */
++		case AifEnContainerChange:
++			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
++			if (container >= dev->maximum_num_containers)
++				break;
++			if (dev->fsa_dev[container].config_waiting_on)
++				break;
++			dev->fsa_dev[container].config_needed = CHANGE;
++			dev->fsa_dev[container].config_waiting_on =
++				AifEnConfigChange;
++			break;
++
++		case AifEnConfigChange:
++			break;
++
++		}
++
++		/*
++		 *	If we are waiting on something and this happens to be
++		 * that thing then set the re-configure flag.
++		 */
++		if (container != (u32)-1) {
++			if (container >= dev->maximum_num_containers)
++				break;
++			if (dev->fsa_dev[container].config_waiting_on ==
++			    le32_to_cpu(*(u32 *)aifcmd->data))
++				dev->fsa_dev[container].config_waiting_on = 0;
++		} else for (container = 0;
++		    container < dev->maximum_num_containers; ++container) {
++			if (dev->fsa_dev[container].config_waiting_on ==
++			    le32_to_cpu(*(u32 *)aifcmd->data))
++				dev->fsa_dev[container].config_waiting_on = 0;
++		}
++		break;
++
++	case AifCmdJobProgress:
++		/*
++		 *	These are job progress AIF's. When a Clear is being
++		 * done on a container it is initially created then hidden from
++		 * the OS. When the clear completes we don't get a config
++		 * change so we monitor the job status complete on a clear then
++		 * wait for a container change.
++		 */
++
++		if ((((u32 *)aifcmd->data)[1] == cpu_to_le32(AifJobCtrZero))
++		 && ((((u32 *)aifcmd->data)[6] == ((u32 *)aifcmd->data)[5])
++		  || (((u32 *)aifcmd->data)[4] == cpu_to_le32(AifJobStsSuccess)))) {
++			for (container = 0;
++			    container < dev->maximum_num_containers;
++			    ++container) {
++				/*
++				 * Stomp on all config sequencing for all
++				 * containers?
++				 */
++				dev->fsa_dev[container].config_waiting_on =
++					AifEnContainerChange;
++				dev->fsa_dev[container].config_needed = ADD;
++			}
++		}
++		if ((((u32 *)aifcmd->data)[1] == cpu_to_le32(AifJobCtrZero))
++		 && (((u32 *)aifcmd->data)[6] == 0)
++		 && (((u32 *)aifcmd->data)[4] == cpu_to_le32(AifJobStsRunning))) {
++			for (container = 0;
++			    container < dev->maximum_num_containers;
++			    ++container) {
++				/*
++				 * Stomp on all config sequencing for all
++				 * containers?
++				 */
++				dev->fsa_dev[container].config_waiting_on =
++					AifEnContainerChange;
++				dev->fsa_dev[container].config_needed = DELETE;
++			}
++		}
++		break;
++	}
++
++	device_config_needed = NOTHING;
++	for (container = 0; container < dev->maximum_num_containers;
++	    ++container) {
++		if ((dev->fsa_dev[container].config_waiting_on == 0)
++		 && (dev->fsa_dev[container].config_needed != NOTHING)) {
++			device_config_needed =
++				dev->fsa_dev[container].config_needed;
++			dev->fsa_dev[container].config_needed = NOTHING;
++			break;
++		}
++	}
++	if (device_config_needed == NOTHING)
++		return;
++
++	/*
++	 *	If we decided that a re-configuration needs to be done,
++	 * schedule it here on the way out the door, please close the door
++	 * behind you.
++	 */
++
++	busy = 0;
++
++
++	/*
++	 *	Find the Scsi_Device associated with the SCSI address,
++	 * and mark it as changed, invalidating the cache. This deals
++	 * with changes to existing device IDs.
++	 */
++
++	if (!dev || !dev->scsi_host_ptr)
++		return;
++	/*
++	 * force reload of disk info via probe_container
++	 */
++	if ((device_config_needed == CHANGE)
++	 && (dev->fsa_dev[container].valid == 1))
++		dev->fsa_dev[container].valid = 2;
++	if ((device_config_needed == CHANGE) ||
++			(device_config_needed == ADD))
++		probe_container(dev, container);
++	device = scsi_device_lookup(dev->scsi_host_ptr, 
++		CONTAINER_TO_CHANNEL(container), 
++		CONTAINER_TO_ID(container), 
++		CONTAINER_TO_LUN(container));
++	if (device) {
++		switch (device_config_needed) {
++		case DELETE:
++			scsi_remove_device(device);
++			break;
++		case CHANGE:
++			if (!dev->fsa_dev[container].valid) {
++				scsi_remove_device(device);
++				break;
++			}
++			scsi_rescan_device(&device->sdev_gendev);
++
++		default:
++			break;
++		}
++		scsi_device_put(device);
++	}
++	if (device_config_needed == ADD) {
++		scsi_add_device(dev->scsi_host_ptr,
++		  CONTAINER_TO_CHANNEL(container),
++		  CONTAINER_TO_ID(container),
++		  CONTAINER_TO_LUN(container));
++	}
++
++}
++
+ /**
+  *	aac_command_thread	-	command processing thread
+  *	@dev: Adapter to monitor
+@@ -860,6 +1123,7 @@
+ 			aifcmd = (struct aac_aifcmd *) hw_fib->data;
+ 			if (aifcmd->command == cpu_to_le32(AifCmdDriverNotify)) {
+ 				/* Handle Driver Notify Events */
++				aac_handle_aif(dev, fib);
+ 				*(__le32 *)hw_fib->data = cpu_to_le32(ST_OK);
+ 				fib_adapter_complete(fib, (u16)sizeof(u32));
+ 			} else {
+@@ -872,7 +1136,15 @@
+ 				unsigned num;
+ 				struct hw_fib ** hw_fib_pool, ** hw_fib_p;
+ 				struct fib ** fib_pool, ** fib_p;
+-				
++			
++				/* Sniff events */
++				if ((aifcmd->command == 
++				     cpu_to_le32(AifCmdEventNotify)) ||
++				    (aifcmd->command == 
++				     cpu_to_le32(AifCmdJobProgress))) {
++					aac_handle_aif(dev, fib);
++				}
++ 				
  				time_now = jiffies/HZ;
  
-+				/*
-+				 * Warning: no sleep allowed while
-+				 * holding spinlock. We take the estimate
-+				 * and pre-allocate a set of fibs outside the
-+				 * lock.
-+				 */
-+				num = le32_to_cpu(dev->init->AdapterFibsSize)
-+				    / sizeof(struct hw_fib); /* some extra */
-+				spin_lock_irqsave(&dev->fib_lock, flagv);
-+				entry = dev->fib_list.next;
-+				while (entry != &dev->fib_list) {
-+					entry = entry->next;
-+					++num;
-+				}
-+				spin_unlock_irqrestore(&dev->fib_lock, flagv);
-+				hw_fib_pool = NULL;
-+				fib_pool = NULL;
-+				if (num
-+				 && ((hw_fib_pool = kmalloc(sizeof(struct hw_fib *) * num, GFP_KERNEL)))
-+				 && ((fib_pool = kmalloc(sizeof(struct fib *) * num, GFP_KERNEL)))) {
-+					hw_fib_p = hw_fib_pool;
-+					fib_p = fib_pool;
-+					while (hw_fib_p < &hw_fib_pool[num]) {
-+						if (!(*(hw_fib_p++) = kmalloc(sizeof(struct hw_fib), GFP_KERNEL))) {
-+							--hw_fib_p;
-+							break;
-+						}
-+						if (!(*(fib_p++) = kmalloc(sizeof(struct fib), GFP_KERNEL))) {
-+							kfree(*(--hw_fib_p));
-+							break;
-+						}
-+					}
-+					if ((num = hw_fib_p - hw_fib_pool) == 0) {
-+						kfree(fib_pool);
-+						fib_pool = NULL;
-+						kfree(hw_fib_pool);
-+						hw_fib_pool = NULL;
-+					}
-+				} else if (hw_fib_pool) {
-+					kfree(hw_fib_pool);
-+					hw_fib_pool = NULL;
-+				}
- 				spin_lock_irqsave(&dev->fib_lock, flagv);
- 				entry = dev->fib_list.next;
  				/*
-@@ -880,6 +925,8 @@
- 				 * fib, and then set the event to wake up the
- 				 * thread that is waiting for it.
- 				 */
-+				hw_fib_p = hw_fib_pool;
-+				fib_p = fib_pool;
- 				while (entry != &dev->fib_list) {
- 					/*
- 					 * Extract the fibctx
-@@ -912,9 +959,11 @@
- 					 * Warning: no sleep allowed while
- 					 * holding spinlock
- 					 */
--					hw_newfib = kmalloc(sizeof(struct hw_fib), GFP_ATOMIC);
--					newfib = kmalloc(sizeof(struct fib), GFP_ATOMIC);
--					if (newfib && hw_newfib) {
-+					if (hw_fib_p < &hw_fib_pool[num]) {
-+						hw_newfib = *hw_fib_p;
-+						*(hw_fib_p++) = NULL;
-+						newfib = *fib_p;
-+						*(fib_p++) = NULL;
- 						/*
- 						 * Make the copy of the FIB
- 						 */
-@@ -929,15 +978,11 @@
- 						fibctx->count++;
- 						/* 
- 						 * Set the event to wake up the
--						 * thread that will waiting.
-+						 * thread that is waiting.
- 						 */
- 						up(&fibctx->wait_sem);
- 					} else {
- 						printk(KERN_WARNING "aifd: didn't allocate NewFib.\n");
--						if(newfib)
--							kfree(newfib);
--						if(hw_newfib)
--							kfree(hw_newfib);
- 					}
- 					entry = entry->next;
- 				}
-@@ -947,21 +992,38 @@
- 				*(__le32 *)hw_fib->data = cpu_to_le32(ST_OK);
- 				fib_adapter_complete(fib, sizeof(u32));
- 				spin_unlock_irqrestore(&dev->fib_lock, flagv);
-+				/* Free up the remaining resources */
-+				hw_fib_p = hw_fib_pool;
-+				fib_p = fib_pool;
-+				while (hw_fib_p < &hw_fib_pool[num]) {
-+					if (*hw_fib_p)
-+						kfree(*hw_fib_p);
-+					if (*fib_p)
-+						kfree(*fib_p);
-+					++fib_p;
-+					++hw_fib_p;
-+				}
-+				if (hw_fib_pool)
-+					kfree(hw_fib_pool);
-+				if (fib_pool)
-+					kfree(fib_pool);
- 			}
--			spin_lock_irqsave(queues->queue[HostNormCmdQueue].lock, flags);
- 			kfree(fib);
-+			spin_lock_irqsave(dev->queues->queue[HostNormCmdQueue].lock, flags);
- 		}
- 		/*
- 		 *	There are no more AIF's
- 		 */
--		spin_unlock_irqrestore(queues->queue[HostNormCmdQueue].lock, flags);
-+		spin_unlock_irqrestore(dev->queues->queue[HostNormCmdQueue].lock, flags);
- 		schedule();
- 
- 		if(signal_pending(current))
- 			break;
- 		set_current_state(TASK_INTERRUPTIBLE);
- 	}
--	remove_wait_queue(&queues->queue[HostNormCmdQueue].cmdready, &wait);
-+	if (dev->queues)
-+		remove_wait_queue(&dev->queues->queue[HostNormCmdQueue].cmdready, &wait);
- 	dev->aif_thread = 0;
- 	complete_and_exit(&dev->aif_completion, 0);
-+	return 0;
- }
 
 -- 
 Mark Haverkamp <markh@osdl.org>
