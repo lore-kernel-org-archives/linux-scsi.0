@@ -1,38 +1,50 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Status of MegaRAID SAS based RAID driver
-Date: Tue, 27 Sep 2005 15:13:40 -0500
-Message-ID: <1127852021.4823.27.camel@mulgrave>
-References: <0E3FA95632D6D047BA649F95DAB60E57060CD1E2@exa-atlanta>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+ the kernel
+Date: Tue, 27 Sep 2005 16:34:34 -0400
+Message-ID: <4339ACDA.3090801@pobox.com>
+References: <4339440C.6090107@adaptec.com>	 <20050927131959.GA30329@infradead.org>  <43395ED0.6070504@adaptec.com> <1127836380.4814.36.camel@mulgrave> <43399F17.4090004@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:39837 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751044AbVI0UNq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Sep 2005 16:13:46 -0400
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57060CD1E2@exa-atlanta>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932521AbVI0Uey@vger.kernel.org>
+In-Reply-To: <43399F17.4090004@adaptec.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "Kolli, Neela Syam" <Neela.Kolli@engenio.com>, 'Christoph Hellwig' <hch@infradead.org>, "'hch@lst.de'" <hch@lst.de>
 
-On Tue, 2005-09-27 at 15:51 -0400, Bagalkote, Sreenivas wrote:
-> What is the status of the megaraid_sas module that I submitted?
-> Could you please us a hint as to when you are planning to include
-> and in which version?
+Luben Tuikov wrote:
+> Instead of you _waiting_ and thus do nothing, you can
+> move out of the way, or listen and accept _technical_ advice.
+> 
+> This is unfortunate.  History shows us that being
+> inflexible to new ideas (or technologies) becomes
+> one's undoing.
+> 
+> I wonder if SCSI Core could be Linux's undoing?  Could this
+> and reiser4, and OBDs (yet another new SCSI technology in the
+> making), show us how inflexible Linux has become?
+> 
+> Now its SAS and reiser4.  When OBDs come out full force it
+> will be the block layer, then who knows whatelse...
+> 
+> Is Linux going to be just as obstinate?
+> 
+> Why has Linux become like this?
 
-It's here:
 
-http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=c4a3e0a529ab3e65223e81681c7c6b1bc188fa58
+Luben,
 
-I was planning to send this tree when we get a fix for the old megaraid
-issue with MODE SENSE and scatter gather sorted out.  Could you prod the
-people who work on this to see if they agree with my conclusion that it
-looks like a firmware issue?
+The fact that your responses are constantly filled with non-technical 
+paranoia does not help the inclusion of aic94xx at all.
 
-Thanks,
+Maybe you need to write your driver as a block driver, and completely 
+skip the SCSI core, if it bothers you so much?  That would get everybody 
+else out of the loop, and free you to write the driver as you see fit.
 
-James
+As it stands now, you're making an end run around the SCSI core, rather 
+than fixing it up.  SCSI needs to be modified for SAS, not just 
+complained about.
 
-
+	Jeff
