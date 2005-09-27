@@ -1,77 +1,55 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
  the kernel
-Date: Tue, 27 Sep 2005 17:55:53 -0400
-Message-ID: <4339BFE9.1060604@pobox.com>
-References: <43384E28.8030207@adaptec.com>
+Date: Tue, 27 Sep 2005 18:01:16 -0400
+Message-ID: <4339C12C.5020004@pobox.com>
+References: <4339440C.6090107@adaptec.com>	 <20050927131959.GA30329@infradead.org>  <43395ED0.6070504@adaptec.com> <1127836380.4814.36.camel@mulgrave> <43399F17.4090004@adaptec.com> <4339ACDA.3090801@pobox.com> <4339BD58.7060300@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:41692 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965177AbVI0Vz7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Sep 2005 17:55:59 -0400
-In-Reply-To: <43384E28.8030207@adaptec.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965185AbVI0WBY@vger.kernel.org>
+In-Reply-To: <4339BD58.7060300@adaptec.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 Luben Tuikov wrote:
-> I request inclusion of the SAS Transport Layer
-> and the AIC-94xx SAS LLDD into the Linux kernel.
+> The driver and the infrastructure needs to go in.
+> 
+> Give it exposure to the people, let people play with it.
 
-Overall, I see the following major issues.  My recommendation is that 
-this driver live in -mm, or outside the kernel tree, for a while to let 
-things shake out.
+Merging into the upstream kernel is not necessary for exposure.
 
-
-Background
-----------
-* There is no question that Adaptec's aic94xx and SAS code is correct 
-WRT the SCSI specifications.  The maintainer eats, sleeps, and breathes 
-SAS specs.  :)
-
-* aic94xx hardware supports both SAS and SATA connections.  Since SAS 
-and SATA are intentionally similar electrically, other vendors are 
-coming out with SATA+SAS hardware too.
-
-* Acronym:  "HCIL"  Stands for Host/Channel/ID/LUN.  Pre-SAS legacy 
-addressing method.
+Historically, saying "no" to a single vendor pushing really hard -- as 
+you are doing -- has resulted in a superior solution.
 
 
-Issues
-------
-* Avoids existing SAS code, rather than working with it.
+> If we start "fixing" SCSI Core now (this in itself is JB red
+> herring), how long before it is "fixed" and we can "rest"?
+> And how long then before the driver and infrastructure
+> makes it in?
 
-* Avoids existing SATA code, rather than working with it.
-
-* Avoids (rather than fix) several SCSI core false dependencies on HCIL. 
-  Results in code duplication and/or avoidance of needed code.
-
-* So far, it's an Adaptec-only solution.  Since it pointedly avoids the 
-existing SAS transport code, this results in two SAS solutions in Linux: 
-one for Adaptec, one for {everyone else}.
-
-* Maintainer reminds me of my ATA mentor, Andre Hedrick:  knows his 
-shit, but has difficulties working with the community.  May need a 
-filter if we want long term maintenance to continue.
+Just follow the recipe Christoph outlined.  It's not difficult, just 
+requires some work.
 
 
-Resolution
-----------
-AFAICS, there are two paths:
+> At the end of the day the driver is not in, and business
+> suffers.  And its not like the driver is using 
+> static struct file_operations megasas_mgmt_fops, ;-)
+> IOCTLs or other char dev for management...
+> 
+> The driver does _not_ alter anything in the kernel, it only
+> integrates with it.
+> 
+> There needs to be a "passing gate":
+> Linus, let the driver and transport layer in, as is and then
+> patches "fixing SCSI Core" would start coming, naturally.
+>>From people, from me, from everybody.
 
-Easy path: make Adaptec's solution a block driver, which allows it to 
-sidestep all the "doesn't play well with others" issues.  Still an 
-Adaptec-only solution, but at least its in a separate playpen.
+So far, this is an Adaptec-only solution.
 
-Hard path: Update the SCSI core and libata to work with SATA+SAS 
-hardware such as Adaptec's.
-
-The hard path takes time, and won't be solved simply by shoving it in.
+It does an end run around 90% of the SCSI core.  You might as well make 
+it a block driver, if you're going to do that.
 
 	Jeff
-
-
