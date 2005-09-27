@@ -1,34 +1,31 @@
-From: Lukasz Kosewski <lkosewsk@gmail.com>
-Subject: Re: [PATCH 0/3] Add disk hotswap support to libata RESEND #5
-Date: Mon, 26 Sep 2005 22:30:56 -0400
-Message-ID: <355e5e5e05092619306a01d0f7@mail.gmail.com>
-References: <355e5e5e0509261800271c39b7@mail.gmail.com>
-Reply-To: Lukasz Kosewski <lkosewsk@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: rewriting drivers that use SCSI_ABORT_SUCCESS and so on (fwd)
+Date: Tue, 27 Sep 2005 10:26:09 +0200 (CEST)
+Message-ID: <Pine.LNX.4.62.0509271025560.23502@numbat.sonytel.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964799AbVI0CbA@vger.kernel.org>
-In-Reply-To: <355e5e5e0509261800271c39b7@mail.gmail.com>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from witte.sonytel.be ([80.88.33.193]:60372 "EHLO witte.sonytel.be")
+	by vger.kernel.org with ESMTP id S964859AbVI0I3R (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Sep 2005 04:29:17 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Igor Rondarev <igor.rondarev@lynx.ru>
 
-On 9/26/05, Lukasz Kosewski <lkosewsk@gmail.com> wrote:
-> The remaining vestiges of issues that I see might be related to
-> swapping strange combinations of disks... I"ve tried to properly reset
-> flags and such to allow swapping and switching arbitrary disks, but I
-> only have a few disks and so only observed a few errors.  If you get
-> strange errors trying to go from some disk of type A to another disk
-> of type B (for instance, LBA48 to non-LBA48 drives, vice versa,
-> different capacities being picked up wrong, etc), let me know!
+---------- Forwarded message ----------
+Date: Tue, 27 Sep 2005 11:44:46 +0400
+From: Igor Rondarev <igor.rondarev@lynx.ru>
+To: geert@linux-m68k.org
+Subject: rewriting drivers that use SCSI_ABORT_SUCCESS and so on
 
-I should point out that this paragraph doesn't imply what it looks
-like it's implying because I wrote it poorly.
-
-I have fixed all the disk issues I have observed.  I hypothesize that
-there are other ones which I don't know about.  That's what the
-paragraph SHOULD say.
-
-Luke Kosewski
+Hello Geert!
+I'm now trying to rewrite LSI Logic MegaRAID ATA 133-2 driver for 2.6.13 kernel.
+I saw you posts regarding to similar problem on some Internet forums. LSI driver
+also uses obsoleted SCSI_ABORT_SUCCESS and other definitions and scmd->state variable, which is not present in current SCSI source code. Have you found any solutions, or any ideas how to convert them correctly to the new SCSI API? Unfortunately, i'm not a big expert in linux kernel programming. LSI stopped supporting of this software RAID adapter, but i still need it in my linux box.
+Hope you'll answer me :)
+With best regards,
+Igor V. Rondarev
+Lynx BCC Company
+Saint-Petersburg, Russia
