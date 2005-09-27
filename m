@@ -1,123 +1,34 @@
 From: Lukasz Kosewski <lkosewsk@gmail.com>
-Subject: [PATCH 3/3] Add disk hotswap support to libata RESEND #5
-Date: Mon, 26 Sep 2005 21:01:51 -0400
-Message-ID: <355e5e5e050926180156e58f59@mail.gmail.com>
+Subject: Re: [PATCH 0/3] Add disk hotswap support to libata RESEND #5
+Date: Mon, 26 Sep 2005 22:30:56 -0400
+Message-ID: <355e5e5e05092619306a01d0f7@mail.gmail.com>
+References: <355e5e5e0509261800271c39b7@mail.gmail.com>
 Reply-To: Lukasz Kosewski <lkosewsk@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_24539_7349254.1127782911907"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.205]:16993 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S964792AbVI0BBw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Sep 2005 21:01:52 -0400
-Received: by zproxy.gmail.com with SMTP id i11so2222nzi
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2005 18:01:51 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964799AbVI0CbA@vger.kernel.org>
+In-Reply-To: <355e5e5e0509261800271c39b7@mail.gmail.com>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-------=_Part_24539_7349254.1127782911907
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On 9/26/05, Lukasz Kosewski <lkosewsk@gmail.com> wrote:
+> The remaining vestiges of issues that I see might be related to
+> swapping strange combinations of disks... I"ve tried to properly reset
+> flags and such to allow swapping and switching arbitrary disks, but I
+> only have a few disks and so only observed a few errors.  If you get
+> strange errors trying to go from some disk of type A to another disk
+> of type B (for instance, LBA48 to non-LBA48 drives, vice versa,
+> different capacities being picked up wrong, etc), let me know!
 
-Hey Jeff, all,
+I should point out that this paragraph doesn't imply what it looks
+like it's implying because I wrote it poorly.
 
-Patch 3/3 for libata hotswapping, the reference implementation for the
-API in Patch #2 for Promise SATA150 and SATAII150 Tx4 and Tx2 Plus
-controllers.  Seems to be working on UP machines (heavy, heavy
-testing) and SMP (2 processor Athlon machine, fairly heavy testing).
-
-Lots of comments available in patch and header, please review and
-apply if you like it!
-
-This patch depends on patch 1 to apply, and patch 1 and 2 to compile and wo=
-rk.
+I have fixed all the disk issues I have observed.  I hypothesize that
+there are other ones which I don't know about.  That's what the
+paragraph SHOULD say.
 
 Luke Kosewski
-
-------=_Part_24539_7349254.1127782911907
-Content-Type: text/x-patch; name="03-promise_hotswap_support-2.6.14-rc2-git5.diff"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="03-promise_hotswap_support-2.6.14-rc2-git5.diff"
-
-MjYuMDkuMDUgICAgTHVrZSBLb3Nld3NraSAgIDxsa29zZXdza0BuaXQuY2E+CgoJKiBBIHBhdGNo
-IHRvIHNhdGFfcHJvbWlzZS5jIChkZXBlbmRlbnQgb24gcGF0Y2hlcyAxIGFuZCAyIGluIHRoaXMK
-CSAgc2VyaWVzKSB3aGljaCBtYWtlcyBpdCB1c2UgdGhlIGhvdHN3YXAgQVBJIGluIHBhdGNoIDIu
-ICBUaGUgUHJvbWlzZQoJICBjb250cm9sbGVycyBhcmUgZmFpcmx5IHNpbXBsZSBpbiB0ZXJtcyBv
-ZiB0aGVpciBob3RwbHVnIG1lY2hhbmlzbSwKCSAgc28gbm9uZSBvZiB0aGUgZnVua3kgJ2phbml0
-b3InIGZ1bmN0aW9ucyBhcmUgdXNlZCBoZXJlLgoJICBhdGFfaG90cGx1Z19wbHVnIGlzIGNhbGxl
-ZCBvbiBhIHBsdWcgZXZlbnQsIGFuZCBhdGFfaG90cGx1Z191bnBsdWcgb24KCSAgYW4gdW5wbHVn
-LiAgU2ltcGxlLCBzaW1wbGUuCgkqIFBlbmRpbmcgc29tZSBjb25maXJtYXRpb24gYW5kIHN1Z2dl
-c3Rpb25zIGZyb20gSmltIFJhbXNheQoJICAoamltLnJhbXNheUBnbWFpbC5jb20pIHRoZSBpbnRl
-cnJ1cHQgaGFuZGxlciBtaWdodCBjaGFuZ2UgdG8gY2hlY2sgZm9yCgkgIERNQSBjb21tYW5kcyBj
-b21wbGV0aW5nIGFzIFdFTEwgYXMgaG90cGx1ZyBldmVudHMgaW4gdGhlIHNhbWUgcGFzcy4KCmRp
-ZmYgLXJwdU4gbGludXgtMi42LjE0LXJjMS9kcml2ZXJzL3Njc2kvc2F0YV9wcm9taXNlLmMgbGlu
-dXgtMi42LjE0LXJjMS1uZXcvZHJpdmVycy9zY3NpL3NhdGFfcHJvbWlzZS5jCi0tLSBsaW51eC0y
-LjYuMTQtcmMxL2RyaXZlcnMvc2NzaS9zYXRhX3Byb21pc2UuYwkyMDA1LTA5LTE0IDE5OjU3OjU0
-LjAwMDAwMDAwMCAtMDQwMAorKysgbGludXgtMi42LjE0LXJjMS1uZXcvZHJpdmVycy9zY3NpL3Nh
-dGFfcHJvbWlzZS5jCTIwMDUtMDktMTQgMjA6MTY6MDkuMDAwMDAwMDAwIC0wNDAwCkBAIC0zMzIs
-MTAgKzMzMiw0MyBAQCBzdGF0aWMgdm9pZCBwZGNfcmVzZXRfcG9ydChzdHJ1Y3QgYXRhX3BvCiAJ
-cmVhZGwobW1pbyk7CS8qIGZsdXNoICovCiB9CiAKKy8qIE1hc2sgaG90cGx1ZyBpbnRlcnJ1cHRz
-IGZvciBvbmUgY2hhbm5lbCAoYXApICovCitzdGF0aWMgaW5saW5lIHZvaWQgcGRjX2Rpc2FibGVf
-Y2hhbm5lbF9ob3RwbHVnX2ludGVycnVwdHMoc3RydWN0IGF0YV9wb3J0ICphcCkKK3sKKwlzdHJ1
-Y3QgcGRjX2hvc3RfcHJpdiAqaHAgPSBhcC0+aG9zdF9zZXQtPnByaXZhdGVfZGF0YTsKKwl2b2lk
-ICptbWlvID0gYXAtPmhvc3Rfc2V0LT5tbWlvX2Jhc2UgKyBocC0+aG90cGx1Z19vZmZzZXQgKyAy
-OworCisJdTggbWFza2ZsYWdzID0gcmVhZGIobW1pbyk7CisJbWFza2ZsYWdzIHw9ICgweDExIDw8
-ICh1OClhcC0+aGFyZF9wb3J0X25vKTsKKwl3cml0ZWIobWFza2ZsYWdzLCBtbWlvKTsKK30KKwor
-LyogQ2xlYXIgYW5kIHVubWFzayBob3RwbHVnIGludGVycnVwdHMgZm9yIG9uZSBjaGFubmVsIChh
-cCkgKi8KK3N0YXRpYyBpbmxpbmUgdm9pZCBwZGNfZW5hYmxlX2NoYW5uZWxfaG90cGx1Z19pbnRl
-cnJ1cHRzKHN0cnVjdCBhdGFfcG9ydCAqYXApCit7CisJc3RydWN0IHBkY19ob3N0X3ByaXYgKmhw
-ID0gYXAtPmhvc3Rfc2V0LT5wcml2YXRlX2RhdGE7CisJdm9pZCAqbW1pbyA9IGFwLT5ob3N0X3Nl
-dC0+bW1pb19iYXNlICsgaHAtPmhvdHBsdWdfb2Zmc2V0OworCisJLy9DbGVhciBjaGFubmVsIGhv
-dHBsdWcgaW50ZXJydXB0cworCXU4IG1hc2tmbGFncyA9IHJlYWRiKG1taW8pOworCW1hc2tmbGFn
-cyB8PSAoMHgxMSA8PCAodTgpYXAtPmhhcmRfcG9ydF9ubyk7CisJd3JpdGViKG1hc2tmbGFncywg
-bW1pbyk7CisKKwkvL1VubWFzayBjaGFubmVsIGhvdHBsdWcgaW50ZXJydXB0cworCW1hc2tmbGFn
-cyA9IHJlYWRiKG1taW8gKyAyKTsKKwltYXNrZmxhZ3MgJj0gfigweDExIDw8ICh1OClhcC0+aGFy
-ZF9wb3J0X25vKTsKKwl3cml0ZWIobWFza2ZsYWdzLCBtbWlvICsgMik7Cit9CisKIHN0YXRpYyB2
-b2lkIHBkY19zYXRhX3BoeV9yZXNldChzdHJ1Y3QgYXRhX3BvcnQgKmFwKQogewogCXBkY19yZXNl
-dF9wb3J0KGFwKTsKLQlzYXRhX3BoeV9yZXNldChhcCk7CisJaWYgKGFwLT5mbGFncyAmIEFUQV9G
-TEFHX1NBVEFfUkVTRVQpIHsKKwkJcGRjX2Rpc2FibGVfY2hhbm5lbF9ob3RwbHVnX2ludGVycnVw
-dHMoYXApOworCQlzYXRhX3BoeV9yZXNldChhcCk7CisJCXBkY19lbmFibGVfY2hhbm5lbF9ob3Rw
-bHVnX2ludGVycnVwdHMoYXApOworCX0gZWxzZQorCQlzYXRhX3BoeV9yZXNldChhcCk7CiB9CiAK
-IHN0YXRpYyB2b2lkIHBkY19wYXRhX3BoeV9yZXNldChzdHJ1Y3QgYXRhX3BvcnQgKmFwKQpAQCAt
-NDg1LDExICs1MTgsMTMgQEAgc3RhdGljIHZvaWQgcGRjX2lycV9jbGVhcihzdHJ1Y3QgYXRhX3Bv
-cgogc3RhdGljIGlycXJldHVybl90IHBkY19pbnRlcnJ1cHQgKGludCBpcnEsIHZvaWQgKmRldl9p
-bnN0YW5jZSwgc3RydWN0IHB0X3JlZ3MgKnJlZ3MpCiB7CiAJc3RydWN0IGF0YV9ob3N0X3NldCAq
-aG9zdF9zZXQgPSBkZXZfaW5zdGFuY2U7CisJc3RydWN0IHBkY19ob3N0X3ByaXYgKmhwID0gaG9z
-dF9zZXQtPnByaXZhdGVfZGF0YTsKIAlzdHJ1Y3QgYXRhX3BvcnQgKmFwOwogCXUzMiBtYXNrID0g
-MDsKIAl1bnNpZ25lZCBpbnQgaSwgdG1wOwotCXVuc2lnbmVkIGludCBoYW5kbGVkID0gMDsKKwl1
-bnNpZ25lZCBpbnQgaGFuZGxlZCA9IDAsIGhvdHBsdWdfb2Zmc2V0ID0gaHAtPmhvdHBsdWdfb2Zm
-c2V0OwogCXZvaWQgX19pb21lbSAqbW1pb19iYXNlOworCXU4IHBsdWdkYXRhLCBtYXNrZmxhZ3M7
-CiAKIAlWUFJJTlRLKCJFTlRFUlxuIik7CiAKQEAgLTUxMyw3ICs1NDgsNyBAQCBzdGF0aWMgaXJx
-cmV0dXJuX3QgcGRjX2ludGVycnVwdCAoaW50IGlyCiAJbWFzayAmPSAweGZmZmY7CQkvKiBvbmx5
-IDE2IHRhZ3MgcG9zc2libGUgKi8KIAlpZiAoIW1hc2spIHsKIAkJVlBSSU5USygiUVVJQ0sgRVhJ
-VCAzXG4iKTsKLQkJZ290byBkb25lX2lycTsKKwkJZ290byB0cnlfaG90cGx1ZzsKIAl9CiAKIAl3
-cml0ZWwobWFzaywgbW1pb19iYXNlICsgUERDX0lOVF9TRVFNQVNLKTsKQEAgLTUzMiw3ICs1Njcs
-MzYgQEAgc3RhdGljIGlycXJldHVybl90IHBkY19pbnRlcnJ1cHQgKGludCBpcgogCQl9CiAJfQog
-Ci0JVlBSSU5USygiRVhJVFxuIik7CisJaWYgKGhhbmRsZWQpIHsKKwkJVlBSSU5USygiRVhJVCA0
-XG4iKTsKKwkJZ290byBkb25lX2lycTsKKwl9CisKK3RyeV9ob3RwbHVnOgorCXBsdWdkYXRhID0g
-cmVhZGIobW1pb19iYXNlICsgaG90cGx1Z19vZmZzZXQpOworCW1hc2tmbGFncyA9IHJlYWRiKG1t
-aW9fYmFzZSArIGhvdHBsdWdfb2Zmc2V0ICsgMik7CisJcGx1Z2RhdGEgJj0gfm1hc2tmbGFnczsK
-KwlpZiAocGx1Z2RhdGEpIHsKKwkJd3JpdGViKHBsdWdkYXRhLCBtbWlvX2Jhc2UgKyBob3RwbHVn
-X29mZnNldCk7CisJCWZvciAoaSA9IDA7IGkgPCBob3N0X3NldC0+bl9wb3J0czsgKytpKSB7CisJ
-CQlhcCA9IGhvc3Rfc2V0LT5wb3J0c1tpXTsKKwkJCWlmICghKGFwLT5mbGFncyAmIEFUQV9GTEFH
-X1NBVEEpKQorCQkJCWNvbnRpbnVlOyAgLy9ObyBQQVRBIHN1cHBvcnQgaGVyZS4uLiB5ZXQKKwkJ
-CS8vIENoZWNrIHVucGx1ZyBmbGFnCisJCQlpZiAocGx1Z2RhdGEgJiAweDEpIHsKKwkJCQkvKiBE
-byBzdHVmZiByZWxhdGVkIHRvIHVucGx1Z2dpbmcgYSBkZXZpY2UgKi8KKwkJCQlhdGFfaG90cGx1
-Z191bnBsdWcoYXApOworCQkJCWhhbmRsZWQgPSAxOworCQkJfSBlbHNlIGlmICgocGx1Z2RhdGEg
-Pj4gNCkgJiAweDEpIHsgIC8vQ2hlY2sgcGx1ZyBmbGFnCisJCQkJLyogRG8gc3R1ZmYgcmVsYXRl
-ZCB0byBwbHVnZ2luZyBpbiBhIGRldmljZSAqLworCQkJCWF0YV9ob3RwbHVnX3BsdWcoYXApOwor
-CQkJCWhhbmRsZWQgPSAxOworCQkJfQorCQkJcGx1Z2RhdGEgPj49IDE7CisJCX0KKwl9CisKKwlW
-UFJJTlRLKCJFWElUIDVcbiIpOwogCiBkb25lX2lycToKIAlzcGluX3VubG9jaygmaG9zdF9zZXQt
-PmxvY2spOwpAQCAtNjMyLDkgKzY5Niw5IEBAIHN0YXRpYyB2b2lkIHBkY19ob3N0X2luaXQodW5z
-aWduZWQgaW50IGMKIAl0bXAgPSByZWFkbChtbWlvICsgaG90cGx1Z19vZmZzZXQpOwogCXdyaXRl
-bCh0bXAgfCAweGZmLCBtbWlvICsgaG90cGx1Z19vZmZzZXQpOwogCi0JLyogbWFzayBwbHVnL3Vu
-cGx1ZyBpbnRzICovCisJLyogdW5tYXNrIHBsdWcvdW5wbHVnIGludHMgKi8KIAl0bXAgPSByZWFk
-bChtbWlvICsgaG90cGx1Z19vZmZzZXQpOwotCXdyaXRlbCh0bXAgfCAweGZmMDAwMCwgbW1pbyAr
-IGhvdHBsdWdfb2Zmc2V0KTsKKwl3cml0ZWwodG1wICYgfjB4ZmYwMDAwLCBtbWlvICsgaG90cGx1
-Z19vZmZzZXQpOwogCiAJLyogcmVkdWNlIFRCRyBjbG9jayB0byAxMzMgTWh6LiAqLwogCXRtcCA9
-IHJlYWRsKG1taW8gKyBQRENfVEJHX01PREUpOwo=
-------=_Part_24539_7349254.1127782911907--
