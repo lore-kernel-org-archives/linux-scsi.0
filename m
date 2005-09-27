@@ -1,51 +1,108 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [Linux-usb-users] Possible bug in usb storage (2.6.11 kernel)
-Date: Tue, 27 Sep 2005 11:38:35 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0509271120370.5703-100000@iolanthe.rowland.org>
-References: <20050927.234616.36922370.anemo@mba.ocn.ne.jp>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+	the kernel
+Date: Tue, 27 Sep 2005 10:53:00 -0500
+Message-ID: <1127836380.4814.36.camel@mulgrave>
+References: <4339440C.6090107@adaptec.com>
+	 <20050927131959.GA30329@infradead.org>  <43395ED0.6070504@adaptec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964976AbVI0Pih@vger.kernel.org>
-In-Reply-To: <20050927.234616.36922370.anemo@mba.ocn.ne.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Cc: jim.ramsay@gmail.com, mdharm-kernel@one-eyed-alien.net, USB users list <linux-usb-users@lists.sourceforge.net>, Kernel development list <linux-kernel@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:64154 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964990AbVI0PyT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Sep 2005 11:54:19 -0400
+In-Reply-To: <43395ED0.6070504@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 27 Sep 2005, Atsushi Nemoto wrote:
+On Tue, 2005-09-27 at 11:01 -0400, Luben Tuikov wrote:
+> On 09/27/05 09:19, Christoph Hellwig wrote:
+> > On Tue, Sep 27, 2005 at 09:07:24AM -0400, Luben Tuikov wrote:
+> > 
+> >>P.S. This is a second resend of an identical message
+> >>I posted to lkml and lsml yesterday.
+> > 
+> > 
+> > And it's not gotten anymore includable.  Please fix the major structural
+> Christoph, why diseminate FUD, when we can concentrate on the
+> _technical_ merits of SCSI and SAS instead?
 
-> >>>>> On Tue, 27 Sep 2005 10:21:17 -0400 (EDT), Alan Stern <stern@rowland.harvard.edu> said:
+That's what *we* are concentrating on.  Technically, I have no problem
+with the aic94xx driver being based on a domain device.  However, you
+cannot have two separate transport classes for SAS.  So these two need
+to be unified before this driver becomes includable.
+
+It looks to me to be a fairly simple exercise to unify these two classes
+giving LSI a functional interface and you a domain device based one and
+removing all the duplication of mid-layer functionality as part of doing
+this.
+
+> Why talk non-constructive things, when we can have a SCSI Storage
+> discussion?
 > 
-> stern> Yes I did.  You can see it at
-> stern> https://lists.one-eyed-alien.net/pipermail/usb-storage/2005-September/001953.html
+> > issues pointed out when you first sent it out.  That's in the following
+> > order:
+> > 
+> >  - not trying to integrate with the sas transport class in Linus'
 > 
-> Thank you.  But 'kmalloc(US_SENSE_SIZE, GFP_KERNEL)' is not enough (at
-> least) for MIPS since some MIPS chips have 32 byte cacheline and
-> ARCH_KMALLOC_MINALIGN is 8 on linux-mips.
+> Well here we go _again_:
 > 
-> Using 'max(dma_get_cache_alignment(), US_SENSE_SIZE)' would be OK.
+> The SAS Transport Class (your an JB's incarnation) is _not_
+> a management infrastructure, it was _never_ _intended_ to be.
 
-If that is so, it's a bug in linux-mips.  ARCH_KMALLOC_MINALIGN is 
-supposed to be at least as large as a cacheline.  See this comment in 
-mm/slab.c:
+Actually, it was intended to be such.  The sysfs components of the
+transport class are the unified management interface to the transport.
 
-/*
- * Enforce a minimum alignment for the kmalloc caches.
- * Usually, the kmalloc caches are cache_line_size() aligned, except when
- * DEBUG and FORCED_DEBUG are enabled, then they are BYTES_PER_WORD aligned.
- * Some archs want to perform DMA into kmalloc caches and need a guaranteed
- * alignment larger than BYTES_PER_WORD. ARCH_KMALLOC_MINALIGN allows that.
- * Note that this flag disables some debug features.
- */
+> The whole point of it is to _export_ *attributes* of MPT-technology
+> like drivers.  All those drivers that it caters to _do_ _not_ need a
+> _management_ layer (Discovery, Expander configuration, etc.).
+> They "export" SCSI LUs directly to SCSI Core through their LLDDs.
 
-and also this comment (referring to the kmalloc caches):
+No, the point of a transport class is to export the underlying
+attributes of the actual devices that are present.  This is supposed to
+be independent of the driver used to connect to them (and that's what
+your sas class breaks).
 
-		/*
-		 * For performance, all the general caches are L1 aligned.
-		 * This should be particularly beneficial on SMP boxes, as it
-		 * eliminates "false sharing".
-		 * Note for systems short on memory removing the alignment will
-		 * allow tighter packing of the smaller caches.
-		 */
+> >  - duplicating the lun scanning code instead of using the scsi core one
+> 
+> The LUN scanning code is, uum, how to say this nicely... wrong?
+> It did its job for Parallel SCSI and for broken arrays who do not
+> respond to REPORT LUNS, but have a bunch of disks behind, but it is
+> wrong _by design_ and it is _not_ _relevant_ in SAS.  To properly see
+> how LUN scanning is done, look at sas_discover.c.
 
-Alan Stern
+I've told you before, if you find something that's broken send a patch
+in to fix it.  I've already told you why the code in sas_discover can't
+work for other drivers (although I still don't have an explanation from
+you of why scsi_scan_target can't work for sas_discover).
+
+> What needs fixing is, SCSI Core to
+> 	- not use HCIL,
+> 	- use 64 bit LUNs,
+> 	- know about SCSI devices with Target ports,
+> 	- proper representation of SCSI Domains
+>           (FC, USB, IEEE 1394, Infiniband, SAS, iSCSI)
+
+As I've already said several times you're welcome to send in a patch to
+change this as well ... as long as you either don't break every other
+driver, or fix them all with the patch.  You were given a step by step
+procedure at least for the I replacement piece.
+
+> Christoph how long are you and James Bottomley going to hold
+> SCSI Core _hostage_ to new technologies?
+
+The only power of a maintainer is to say "no".  So, although I cannot
+make you fix any of the problems in your submission, I can say no until
+an acceptable submission comes along for this driver.  At this point, I
+believe all the technical issues of what needs to happen are well
+understood; I also believe that this is an important enough piece of
+hardware that an acceptable driver will come along even if you want to
+play dog in the manger, so all I can do is wait.
+
+James
+
+
