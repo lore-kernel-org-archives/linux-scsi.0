@@ -1,439 +1,241 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: Re: [PATCH 3/7] aacraid: handle AIF hotplug events (update)
-Date: Mon, 26 Sep 2005 13:04:56 -0700
-Message-ID: <1127765096.29614.21.camel@markh1.pdx.osdl.net>
-References: <1127246183.1891.34.camel@markh1.pdx.osdl.net>
-	 <1127660195.4839.5.camel@mulgrave>
+From: Lukasz Kosewski <lkosewsk@gmail.com>
+Subject: [PATCH 2/3] Add disk hotswap support to libata RESEND #5
+Date: Mon, 26 Sep 2005 21:01:21 -0400
+Message-ID: <355e5e5e05092618018840fc3@mail.gmail.com>
+Reply-To: Lukasz Kosewski <lkosewsk@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:26827 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932493AbVIZUIO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Sep 2005 16:08:14 -0400
-In-Reply-To: <1127660195.4839.5.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+	boundary="----=_Part_24535_10568805.1127782881785"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964788AbVI0BB0@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-On Sun, 2005-09-25 at 09:56 -0500, James Bottomley wrote:
-> On Tue, 2005-09-20 at 12:56 -0700, Mark Haverkamp wrote:
-> > +       shost_for_each_device(device, dev->scsi_host_ptr)
-> > +       {
-> > +               if ((device->channel == CONTAINER_TO_CHANNEL
-> > (container))
-> > +                && (device->id == CONTAINER_TO_ID(container))
-> > +                && (device->lun == CONTAINER_TO_LUN(container))) {
-> > +                       switch (device_config_needed) {
-> > +                       case DELETE:
-> > +                               scsi_remove_device(device);
-> > +                               break;
-> > +                       case CHANGE:
-> > +                               if (!dev->fsa_dev[container].valid) {
-> > +                                       scsi_remove_device(device);
-> > +                                       break;
-> > +                               }
-> > +                               scsi_rescan_device(&device-
-> > >sdev_gendev);
-> > +
-> > +                       default:
-> > +                               break;
-> > +                       }
-> > +                       scsi_device_put(device);
-> > +                       break;
-> > +               }
-> > +       }
-> 
-> This is open coding scsi_lookup_device(); why not simply use that API?
-> It returns a device that also has to have scsi_device_put() called on it
-> when you're finished.  I suppose it won't necessarily matter for
-> aacraid, but if we have to make the lookup more efficient for large lun
-> configurations, you'll benefit.
-> 
-> James
-> 
+------=_Part_24535_10568805.1127782881785
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-James,
+Hey Jeff, all,
 
-Here is the patch again with scsi_device_lookup.
+Patch 2/3 for libata hotswapping, the 'general purpose glitch-free
+incredibly awesome' hotswapping API.
 
-----
+Lots of comments available in patch and header, please review, apply,
+and convert other drivers to it if you like it.
 
-Received from Mark Salyzyn from Adaptec.
+Refer to patch 3 for a reference implementation.
 
-Hotplug sniffs the AIFs (events) from the adapter and if a container
-change resulting in the device going offline (container zero), online
-(container zero completed) or changing capacity (morph) it will take
-actions by calling the appropriate API.
+Luke Kosewski
 
-Applies to the scsi-misc-2.6 git tree.
+------=_Part_24535_10568805.1127782881785
+Content-Type: text/x-patch; name="02-libata_hotswap_infrastructure-2.6.14-rc2-git5.diff"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="02-libata_hotswap_infrastructure-2.6.14-rc2-git5.diff"
 
-Updated from review comments since the last version of the patch.
-
-Signed-off-by: Mark Haverkamp <markh@osdl.org>
-
-
-Index: scsi-misc-aac-2/drivers/scsi/aacraid/aachba.c
-===================================================================
---- scsi-misc-aac-2.orig/drivers/scsi/aacraid/aachba.c	2005-09-26 09:13:26.000000000 -0700
-+++ scsi-misc-aac-2/drivers/scsi/aacraid/aachba.c	2005-09-26 09:18:48.000000000 -0700
-@@ -479,7 +479,7 @@
-  *	is updated in the struct fsa_dev_info structure rather than returned.
-  */
-  
--static int probe_container(struct aac_dev *dev, int cid)
-+int probe_container(struct aac_dev *dev, int cid)
- {
- 	struct fsa_dev_info *fsa_dev_ptr;
- 	int status;
-@@ -1471,6 +1471,8 @@
- 				case TEST_UNIT_READY:
- 					spin_unlock_irq(host->host_lock);
- 					probe_container(dev, cid);
-+					if ((fsa_dev_ptr[cid].valid & 1) == 0)
-+						fsa_dev_ptr[cid].valid = 0;
- 					spin_lock_irq(host->host_lock);
- 					if (fsa_dev_ptr[cid].valid == 0) {
- 						scsicmd->result = DID_NO_CONNECT << 16;
-Index: scsi-misc-aac-2/drivers/scsi/aacraid/aacraid.h
-===================================================================
---- scsi-misc-aac-2.orig/drivers/scsi/aacraid/aacraid.h	2005-09-26 09:13:26.000000000 -0700
-+++ scsi-misc-aac-2/drivers/scsi/aacraid/aacraid.h	2005-09-26 09:18:46.000000000 -0700
-@@ -780,7 +780,9 @@
- 	u64		last;
- 	u64		size;
- 	u32		type;
-+	u32		config_waiting_on;
- 	u16		queue_depth;
-+	u8		config_needed;
- 	u8		valid;
- 	u8		ro;
- 	u8		locked;
-@@ -1715,6 +1717,7 @@
- #define		AifCmdJobProgress	2	/* Progress report */
- #define			AifJobCtrZero	101	/* Array Zero progress */
- #define			AifJobStsSuccess 1	/* Job completes */
-+#define			AifJobStsRunning 102	/* Job running */
- #define		AifCmdAPIReport		3	/* Report from other user of API */
- #define		AifCmdDriverNotify	4	/* Notify host driver of event */
- #define			AifDenMorphComplete 200	/* A morph operation completed */
-@@ -1785,6 +1788,7 @@
- struct aac_driver_ident* aac_get_driver_ident(int devtype);
- int aac_get_adapter_info(struct aac_dev* dev);
- int aac_send_shutdown(struct aac_dev *dev);
-+int probe_container(struct aac_dev *dev, int cid);
- extern int numacb;
- extern int acbsize;
- extern char aac_driver_version[];
-Index: scsi-misc-aac-2/drivers/scsi/aacraid/commsup.c
-===================================================================
---- scsi-misc-aac-2.orig/drivers/scsi/aacraid/commsup.c	2005-09-26 09:14:25.000000000 -0700
-+++ scsi-misc-aac-2/drivers/scsi/aacraid/commsup.c	2005-09-26 09:23:32.000000000 -0700
-@@ -39,6 +39,7 @@
- #include <linux/completion.h>
- #include <linux/blkdev.h>
- #include <scsi/scsi_host.h>
-+#include <scsi/scsi_device.h>
- #include <asm/semaphore.h>
- 
- #include "aacraid.h"
-@@ -791,6 +792,268 @@
- 	memset(cp, 0,  256);
- }
- 
-+
-+/**
-+ *	aac_handle_aif		-	Handle a message from the firmware
-+ *	@dev: Which adapter this fib is from
-+ *	@fibptr: Pointer to fibptr from adapter
-+ *
-+ *	This routine handles a driver notify fib from the adapter and
-+ *	dispatches it to the appropriate routine for handling.
-+ */
-+
-+static void aac_handle_aif(struct aac_dev * dev, struct fib * fibptr)
-+{
-+	struct hw_fib * hw_fib = fibptr->hw_fib;
-+	struct aac_aifcmd * aifcmd = (struct aac_aifcmd *)hw_fib->data;
-+	int busy;
-+	u32 container;
-+	struct scsi_device *device;
-+	enum {
-+		NOTHING,
-+		DELETE,
-+		ADD,
-+		CHANGE
-+	} device_config_needed;
-+
-+	/* Sniff for container changes */
-+
-+	if (!dev)
-+		return;
-+	container = (u32)-1;
-+
-+	/*
-+	 *	We have set this up to try and minimize the number of
-+	 * re-configures that take place. As a result of this when
-+	 * certain AIF's come in we will set a flag waiting for another
-+	 * type of AIF before setting the re-config flag.
-+	 */
-+	switch (le32_to_cpu(aifcmd->command)) {
-+	case AifCmdDriverNotify:
-+		switch (le32_to_cpu(((u32 *)aifcmd->data)[0])) {
-+		/*
-+		 *	Morph or Expand complete
-+		 */
-+		case AifDenMorphComplete:
-+		case AifDenVolumeExtendComplete:
-+			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
-+			if (container >= dev->maximum_num_containers)
-+				break;
-+
-+			/*
-+			 *	Find the Scsi_Device associated with the SCSI
-+			 * address. Make sure we have the right array, and if
-+			 * so set the flag to initiate a new re-config once we
-+			 * see an AifEnConfigChange AIF come through.
-+			 */
-+
-+			if ((dev != NULL) && (dev->scsi_host_ptr != NULL)) {
-+				device = scsi_device_lookup(dev->scsi_host_ptr, 
-+					CONTAINER_TO_CHANNEL(container), 
-+					CONTAINER_TO_ID(container), 
-+					CONTAINER_TO_LUN(container));
-+				if (device) {
-+					dev->fsa_dev[container].config_needed = CHANGE;
-+					dev->fsa_dev[container].config_waiting_on = AifEnConfigChange;
-+					scsi_device_put(device);
-+				}
-+			}
-+		}
-+
-+		/*
-+		 *	If we are waiting on something and this happens to be
-+		 * that thing then set the re-configure flag.
-+		 */
-+		if (container != (u32)-1) {
-+			if (container >= dev->maximum_num_containers)
-+				break;
-+			if (dev->fsa_dev[container].config_waiting_on ==
-+			    le32_to_cpu(*(u32 *)aifcmd->data))
-+				dev->fsa_dev[container].config_waiting_on = 0;
-+		} else for (container = 0;
-+		    container < dev->maximum_num_containers; ++container) {
-+			if (dev->fsa_dev[container].config_waiting_on ==
-+			    le32_to_cpu(*(u32 *)aifcmd->data))
-+				dev->fsa_dev[container].config_waiting_on = 0;
-+		}
-+		break;
-+
-+	case AifCmdEventNotify:
-+		switch (le32_to_cpu(((u32 *)aifcmd->data)[0])) {
-+		/*
-+		 *	Add an Array.
-+		 */
-+		case AifEnAddContainer:
-+			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
-+			if (container >= dev->maximum_num_containers)
-+				break;
-+			dev->fsa_dev[container].config_needed = ADD;
-+			dev->fsa_dev[container].config_waiting_on =
-+				AifEnConfigChange;
-+			break;
-+
-+		/*
-+		 *	Delete an Array.
-+		 */
-+		case AifEnDeleteContainer:
-+			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
-+			if (container >= dev->maximum_num_containers)
-+				break;
-+			dev->fsa_dev[container].config_needed = DELETE;
-+			dev->fsa_dev[container].config_waiting_on =
-+				AifEnConfigChange;
-+			break;
-+
-+		/*
-+		 *	Container change detected. If we currently are not
-+		 * waiting on something else, setup to wait on a Config Change.
-+		 */
-+		case AifEnContainerChange:
-+			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
-+			if (container >= dev->maximum_num_containers)
-+				break;
-+			if (dev->fsa_dev[container].config_waiting_on)
-+				break;
-+			dev->fsa_dev[container].config_needed = CHANGE;
-+			dev->fsa_dev[container].config_waiting_on =
-+				AifEnConfigChange;
-+			break;
-+
-+		case AifEnConfigChange:
-+			break;
-+
-+		}
-+
-+		/*
-+		 *	If we are waiting on something and this happens to be
-+		 * that thing then set the re-configure flag.
-+		 */
-+		if (container != (u32)-1) {
-+			if (container >= dev->maximum_num_containers)
-+				break;
-+			if (dev->fsa_dev[container].config_waiting_on ==
-+			    le32_to_cpu(*(u32 *)aifcmd->data))
-+				dev->fsa_dev[container].config_waiting_on = 0;
-+		} else for (container = 0;
-+		    container < dev->maximum_num_containers; ++container) {
-+			if (dev->fsa_dev[container].config_waiting_on ==
-+			    le32_to_cpu(*(u32 *)aifcmd->data))
-+				dev->fsa_dev[container].config_waiting_on = 0;
-+		}
-+		break;
-+
-+	case AifCmdJobProgress:
-+		/*
-+		 *	These are job progress AIF's. When a Clear is being
-+		 * done on a container it is initially created then hidden from
-+		 * the OS. When the clear completes we don't get a config
-+		 * change so we monitor the job status complete on a clear then
-+		 * wait for a container change.
-+		 */
-+
-+		if ((((u32 *)aifcmd->data)[1] == cpu_to_le32(AifJobCtrZero))
-+		 && ((((u32 *)aifcmd->data)[6] == ((u32 *)aifcmd->data)[5])
-+		  || (((u32 *)aifcmd->data)[4] == cpu_to_le32(AifJobStsSuccess)))) {
-+			for (container = 0;
-+			    container < dev->maximum_num_containers;
-+			    ++container) {
-+				/*
-+				 * Stomp on all config sequencing for all
-+				 * containers?
-+				 */
-+				dev->fsa_dev[container].config_waiting_on =
-+					AifEnContainerChange;
-+				dev->fsa_dev[container].config_needed = ADD;
-+			}
-+		}
-+		if ((((u32 *)aifcmd->data)[1] == cpu_to_le32(AifJobCtrZero))
-+		 && (((u32 *)aifcmd->data)[6] == 0)
-+		 && (((u32 *)aifcmd->data)[4] == cpu_to_le32(AifJobStsRunning))) {
-+			for (container = 0;
-+			    container < dev->maximum_num_containers;
-+			    ++container) {
-+				/*
-+				 * Stomp on all config sequencing for all
-+				 * containers?
-+				 */
-+				dev->fsa_dev[container].config_waiting_on =
-+					AifEnContainerChange;
-+				dev->fsa_dev[container].config_needed = DELETE;
-+			}
-+		}
-+		break;
-+	}
-+
-+	device_config_needed = NOTHING;
-+	for (container = 0; container < dev->maximum_num_containers;
-+	    ++container) {
-+		if ((dev->fsa_dev[container].config_waiting_on == 0)
-+		 && (dev->fsa_dev[container].config_needed != NOTHING)) {
-+			device_config_needed =
-+				dev->fsa_dev[container].config_needed;
-+			dev->fsa_dev[container].config_needed = NOTHING;
-+			break;
-+		}
-+	}
-+	if (device_config_needed == NOTHING)
-+		return;
-+
-+	/*
-+	 *	If we decided that a re-configuration needs to be done,
-+	 * schedule it here on the way out the door, please close the door
-+	 * behind you.
-+	 */
-+
-+	busy = 0;
-+
-+
-+	/*
-+	 *	Find the Scsi_Device associated with the SCSI address,
-+	 * and mark it as changed, invalidating the cache. This deals
-+	 * with changes to existing device IDs.
-+	 */
-+
-+	if (!dev || !dev->scsi_host_ptr)
-+		return;
-+	/*
-+	 * force reload of disk info via probe_container
-+	 */
-+	if ((device_config_needed == CHANGE)
-+	 && (dev->fsa_dev[container].valid == 1))
-+		dev->fsa_dev[container].valid = 2;
-+	if ((device_config_needed == CHANGE) ||
-+			(device_config_needed == ADD))
-+		probe_container(dev, container);
-+	device = scsi_device_lookup(dev->scsi_host_ptr, 
-+		CONTAINER_TO_CHANNEL(container), 
-+		CONTAINER_TO_ID(container), 
-+		CONTAINER_TO_LUN(container));
-+	if (device) {
-+		switch (device_config_needed) {
-+		case DELETE:
-+			scsi_remove_device(device);
-+			break;
-+		case CHANGE:
-+			if (!dev->fsa_dev[container].valid) {
-+				scsi_remove_device(device);
-+				break;
-+			}
-+			scsi_rescan_device(&device->sdev_gendev);
-+
-+		default:
-+			break;
-+		}
-+		scsi_device_put(device);
-+	}
-+	if (device_config_needed == ADD) {
-+		scsi_add_device(dev->scsi_host_ptr,
-+		  CONTAINER_TO_CHANNEL(container),
-+		  CONTAINER_TO_ID(container),
-+		  CONTAINER_TO_LUN(container));
-+	}
-+
-+}
-+
- /**
-  *	aac_command_thread	-	command processing thread
-  *	@dev: Adapter to monitor
-@@ -860,6 +1123,7 @@
- 			aifcmd = (struct aac_aifcmd *) hw_fib->data;
- 			if (aifcmd->command == cpu_to_le32(AifCmdDriverNotify)) {
- 				/* Handle Driver Notify Events */
-+				aac_handle_aif(dev, fib);
- 				*(__le32 *)hw_fib->data = cpu_to_le32(ST_OK);
- 				fib_adapter_complete(fib, (u16)sizeof(u32));
- 			} else {
-@@ -872,7 +1136,15 @@
- 				unsigned num;
- 				struct hw_fib ** hw_fib_pool, ** hw_fib_p;
- 				struct fib ** fib_pool, ** fib_p;
--				
-+			
-+				/* Sniff events */
-+				if ((aifcmd->command == 
-+				     cpu_to_le32(AifCmdEventNotify)) ||
-+				    (aifcmd->command == 
-+				     cpu_to_le32(AifCmdJobProgress))) {
-+					aac_handle_aif(dev, fib);
-+				}
-+ 				
- 				time_now = jiffies/HZ;
- 
- 				/*
-
--- 
-Mark Haverkamp <markh@osdl.org>
-
+MjYuMDkuMDUgICAgTHVrZSBLb3Nld3NraSAgIDxsa29zZXdza0BuaXQuY2E+CgoJKiBBIHBhdGNo
+IHRvIGFkZCBhIGdlbmVyYWwtcHVycG9zZSBob3Rzd2FwIGZyYW1ld29yayB0byBsaWJhdGEuICBU
+aGlzIGlzCgkgIHJlc2VuZCAjNCB3aGVyZWluIHdlIG1haW50YWluIHNlbmQgIzMncyBBUEkhICBE
+cml2ZXIgd3JpdGVycyBjYWxsCgkgIGF0YV9ob3RwbHVnX3BsdWcgb3IgYXRhX2hvdHBsdWdfdW5w
+bHVnIHdoZW4gYSBwbHVnL3VucGx1ZyBldmVudAoJICBvY2N1cnMgLSBpdCB0YWtlcyBjYXJlIG9m
+IHRoZSByZXN0LiAgVGhlIGlkZWEgaXMgdG8gbWFrZSB0aGUgc2VxdWVuY2UKCSAgb2YgZXZlbnRz
+IGFzIHN0cmFpZ2h0Zm9yd2FyZCBhcyBwb3NzaWJsZSBhbmQgbm90IGNsdXR0ZXIgdGhlIGNvZGUK
+CSAgd2l0aCBleGNlcHRpb25zOyBhcyBhIHJlc3VsdCwgYSBzZXJpZXMgb2YgJ2hvb2tzJyBjYW4g
+YmUgcHJvdmlkZWQgYXQKCSAgcG9pbnRzIGluIHRoZSBjb2RlIGZvciBkcml2ZXJzIHRoYXQgbmVl
+ZCBpdCAoc3VjaCBhcyB0aGUgU2lsaWNvbgoJICBJbWFnZSBkcml2ZXJzIHdoaWNoIG5lZWQgYSBy
+ZXNldCBwZXJmb3JtZWQgb24gZGV2aWNlIHJlbW92YWwpLiAgU2VlCgkgICdob3RwbHVnXyh1bilw
+bHVnX2phbml0b3InIGZvciBtb3JlIGluZm8uCgkqIFRoaXMgZWRpdGlvbiBpcyB2ZXJ5IHN0cmVh
+bWxpbmVkLiAgSSBsaWtlIGl0LiAgQW4gYXJlYSBmb3IgaW1wcm92ZW1lbnQKCSAgbWlnaHQgZmFj
+aWxpdGF0ZSB0aGUgcmVtb3ZhbCBvZiB0aGUgYXRhX3Njc2lfcHJlcGFyZV9xY19hYm9ydCBmdW5j
+dGlvbgoJICBpbiBmYXZvdXIgb2YgY2hhbmdlcyB0byBhdGFfcWNfY29tcGxldGUsIGJ1dCB0aGF0
+IGNhbiBiZSB1cCB0byBkZWJhdGUuCgkgIEJhc2ljYWxseSB0aGlzIGNvdWxkIHByb2JhYmx5IGJl
+IHNsaWdodGx5IG1vcmUgcmVhZGFibGUgaWYgbW9yZSBFSAoJICBjb2RlIHdlcmUgaW4gcGxhY2Uu
+CgkqIFNtYWxsIGNoYW5nZSBoZXJlIHRvIGF0YV9zY3NpX2hhbmRsZV91bnBsdWcgdG8gc2V0IFNE
+RVZfQ0FOQ0VMIG9uIGEKCSAgZHJpdmUgYmVmb3JlIGtpbGxpbmcgb3V0c3RhbmRpbmcgcWMncywg
+b3IgZWxzZSB3ZSBtaWdodCBzZWUgYSBuZXcgcWMKCSAgYmUgcXVldWVkIGJlZm9yZSB0aGUgQ0FO
+Q0VMIGlzIHNldCwgd2hpY2ggbGVhZHMgdG8gdGltZW91dHMuCgpkaWZmIC1ycHVOIGxpbnV4LTIu
+Ni4xNC1yYzEvZHJpdmVycy9zY3NpL2xpYmF0YS1jb3JlLmMgbGludXgtMi42LjE0LXJjMS1uZXcv
+ZHJpdmVycy9zY3NpL2xpYmF0YS1jb3JlLmMKLS0tIGxpbnV4LTIuNi4xNC1yYzEvZHJpdmVycy9z
+Y3NpL2xpYmF0YS1jb3JlLmMJMjAwNS0wOS0xMiAyMzoxMjowOS4wMDAwMDAwMDAgLTA0MDAKKysr
+IGxpbnV4LTIuNi4xNC1yYzEtbmV3L2RyaXZlcnMvc2NzaS9saWJhdGEtY29yZS5jCTIwMDUtMDkt
+MTQgMjI6MTM6MzAuMDAwMDAwMDAwIC0wNDAwCkBAIC03NCw2ICs3NCw3IEBAIHN0YXRpYyB2b2lk
+IF9fYXRhX3FjX2NvbXBsZXRlKHN0cnVjdCBhdGEKIAogc3RhdGljIHVuc2lnbmVkIGludCBhdGFf
+dW5pcXVlX2lkID0gMTsKIHN0YXRpYyBzdHJ1Y3Qgd29ya3F1ZXVlX3N0cnVjdCAqYXRhX3dxOwor
+c3RhdGljIHN0cnVjdCB3b3JrcXVldWVfc3RydWN0ICphdGFfaG90cGx1Z193cTsKIAogaW50IGF0
+YXBpX2VuYWJsZWQgPSAwOwogbW9kdWxlX3BhcmFtKGF0YXBpX2VuYWJsZWQsIGludCwgMDQ0NCk7
+CkBAIC0xMTQ3LDYgKzExNDgsMTEgQEAgc3RhdGljIHZvaWQgYXRhX2Rldl9pZGVudGlmeShzdHJ1
+Y3QgYXRhXwogCQlyZXR1cm47CiAJfQogCisJLyogTmVjZXNzYXJ5IGlmIHdlIGhhZCBhbiBMQkE0
+OCBkcml2ZSBpbiwgd2UgcHVsbGVkIGl0IG91dCwgYW5kIHB1dCBhCisJICogbm9uLUxCQTQ4IGRy
+aXZlIG9uIHRoZSBzYW1lIGFwLgorCSAqLworCWRldi0+ZmxhZ3MgJj0gfkFUQV9ERkxBR19MQkE0
+ODsKKwogCWlmIChhcC0+ZmxhZ3MgJiAoQVRBX0ZMQUdfU1JTVCB8IEFUQV9GTEFHX1NBVEFfUkVT
+RVQpKQogCQl1c2luZ19lZGQgPSAwOwogCWVsc2UKQEAgLTM2OTIsNiArMzY5OCwxMDIgQEAgaWRs
+ZV9pcnE6CiAJcmV0dXJuIDA7CS8qIGlycSBub3QgaGFuZGxlZCAqLwogfQogCit2b2lkIGF0YV9j
+aGVja19raWxsX3FjKHN0cnVjdCBhdGFfcG9ydCAqYXApCit7CisJc3RydWN0IGF0YV9xdWV1ZWRf
+Y21kICpxYyA9IGF0YV9xY19mcm9tX3RhZyhhcCwgYXAtPmFjdGl2ZV90YWcpOworCisJaWYgKHVu
+bGlrZWx5KHFjKSkgeworCQkvKiBUaGlzIGlzIFNPIGJhZC4gIEJ1dCB3ZSBjYW4ndCBqdXN0IHJ1
+bgorCQkgKiBhdGFfcWNfY29tcGxldGUgd2l0aG91dCBkb2luZyB0aGlzLCBiZWNhdXNlCisJCSAq
+IGF0YV9zY3NpX3FjX2NvbXBsZXRlIHdhbnRzIHRvIHRhbGsgdG8gdGhlIGRldmljZSwKKwkJICog
+YW5kIHdlIGNhbid0IGxldCBpdCBkbyB0aGF0IHNpbmNlIGl0IGRvZXNuJ3QgZXhpc3QKKwkJICog
+YW55bW9yZS4KKwkJICovCisJCWF0YV9zY3NpX3ByZXBhcmVfcWNfYWJvcnQocWMpOworCQlhdGFf
+cWNfY29tcGxldGUocWMsIEFUQV9FUlIpOworCX0KK30KKworc3RhdGljIHZvaWQgYXRhX2hvdHBs
+dWdfdGFzayh2b2lkICpfZGF0YSkKK3sKKwlzdHJ1Y3QgYXRhX3BvcnQgKmFwID0gKHN0cnVjdCBh
+dGFfcG9ydCAqKV9kYXRhOworCWVudW0gaG90cGx1Z19zdGF0ZXMgaG90cGx1Z190b2RvOworCisJ
+c3Bpbl9sb2NrKCZhcC0+aG9zdF9zZXQtPmxvY2spOworCWhvdHBsdWdfdG9kbyA9IGFwLT5wbHVn
+OyAvLyBNYWtlIHN1cmUgd2UgZG9uJ3QgbW9kaWZ5IHdoaWxlIHJlYWRpbmchCisJc3Bpbl91bmxv
+Y2soJmFwLT5ob3N0X3NldC0+bG9jayk7CisKKwlpZiAoaG90cGx1Z190b2RvID09IEFUQV9IT1RQ
+TFVHX1BMVUcpIHsKKwkJRFBSSU5USygiR290IGEgcGx1ZyByZXF1ZXN0IG9uIHBvcnQgJWRcbiIs
+IGFwLT5pZCk7CisKKwkJLyogVGhpcyBtaWdodCBiZSBuZWNlc3NhcnkgaWYgd2UgdW5wbHVnIGFu
+ZCBwbHVnIGluIGEgZHJpdmUKKwkJICogd2l0aGluIEFUQV9UTU9VVF9IT1RTV0FQIC8gSFogc2Vj
+b25kcy4uLiBkdWUgdG8gdGhlIGRlYm91bmNlCisJCSAqIHRpbWVyLCBvbmUgZXZlbnQgaXMgZ2Vu
+ZXJhdGVkLiAgU2luY2UgdGhlIGxhc3QgZXZlbnQgd2FzIGEKKwkJICogcGx1ZywgdGhlIHVucGx1
+ZyByb3V0aW5lIG5ldmVyIGdldHMgY2FsbGVkLCBzbyB3ZSBuZWVkIHRvCisJCSAqIGNsZWFuIHVw
+IHRoZSBtZXNzIGZpcnN0LiAgSWYgdGhlcmUgd2FzIG5ldmVyIGEgZHJpdmUgaGVyZSBpbgorCQkg
+KiB0aGUgZmlyc3QgcGxhY2UsIHRoaXMgd2lsbCBqdXN0IGRvIG5vdGhpbmcuICBPdGhlcndpc2Us
+IGl0CisJCSAqIGJhc2ljYWxseSBwcmV2ZW50cyAncGx1ZycgZnJvbSBiZWluZyBjYWxsZWQgdHdp
+Y2Ugd2l0aCBubworCQkgKiB1bnBsdWcgaW4gYmV0d2Vlbi4KKwkJICovCisJCWF0YV9zY3NpX2hh
+bmRsZV91bnBsdWcoYXApOworCisJCS8vIFRoZSBmb2xsb3dpbmcgZmxhZyBpcyBuZWNlc3Nhcnkg
+b24gc29tZSBTZWFnYXRlIGRyaXZlcy4KKwkJYXAtPmZsYWdzIHw9IEFUQV9GTEFHX1NBVEFfUkVT
+RVQ7IAorCQlhcC0+dWRtYV9tYXNrID0gYXAtPm9yaWdfdWRtYV9tYXNrOworCisJCWlmICghYXRh
+X2J1c19wcm9iZShhcCkpICAvL0RyaXZlIGZvdW5kISAgVGVsbCB0aGUgU0NTSSBsYXllciEKKwkJ
+CWF0YV9zY3NpX2hhbmRsZV9wbHVnKGFwKTsJCisJfSBlbHNlIGlmIChob3RwbHVnX3RvZG8gPT0g
+QVRBX0hPVFBMVUdfVU5QTFVHKSB7CisJCURQUklOVEsoIkdvdCBhbiB1bnBsdWcgcmVxdWVzdCBv
+biBwb3J0ICVkXG4iLCBhcC0+aWQpOworCisJCWF0YV9zY3NpX2hhbmRsZV91bnBsdWcoYXApOwor
+CX0gZWxzZSAvKiBGSVhNRTogIFNvbWUga2luZCBvZiBlcnJvciBjb25kaXRpb24/ICovCisJCUJV
+RygpOworfQorCitzdGF0aWMgdm9pZCBhdGFfaG90cGx1Z190aW1lcl9mdW5jKHVuc2lnbmVkIGxv
+bmcgX2RhdGEpCit7CisJc3RydWN0IGF0YV9wb3J0ICphcCA9IChzdHJ1Y3QgYXRhX3BvcnQgKilf
+ZGF0YTsKKworCXF1ZXVlX3dvcmsoYXRhX2hvdHBsdWdfd3EsICZhcC0+aG90cGx1Z190YXNrKTsK
+K30KKwordm9pZCBhdGFfaG90cGx1Z19wbHVnKHN0cnVjdCBhdGFfcG9ydCAqYXApCit7CisJZGVs
+X3RpbWVyKCZhcC0+aG90cGx1Z190aW1lcik7CisKKwlpZiAoYXAtPm9wcy0+aG90cGx1Z19wbHVn
+X2phbml0b3IpCisJCWFwLT5vcHMtPmhvdHBsdWdfcGx1Z19qYW5pdG9yKGFwKTsKKworCS8qIFRo
+aXMgbGluZSBzaG91bGQgYmUgcHJvdGVjdGVkIGJ5IGEgaG9zdF9zZXQtPmxvY2suICBJZiB3ZSBm
+b2xsb3cgdGhlCisJICogY2FsbCBjaGFpbiB1cCBmcm9tIHRoaXMsIGl0IHNob3VsZCBiZSBjYWxs
+ZWQgZnJvbSBhdGFfaG90cGx1Z191bnBsdWcKKwkgKiBvciBhdGFfaG90cGx1Z19wbHVnLCB3aGlj
+aCBzaG91bGQgYmUgY2FsbGVkIGZyb20gYW4gaW50ZXJydXB0CisJICogaGFuZGxlci4gIE1ha2Ug
+c3VyZSB0aGUgY2FsbCB0byBlaXRoZXIgb2YgdGhvc2UgZnVuY3Rpb25zIGlzCisJICogcHJvdGVj
+dGVkLgorCSAqLworCWFwLT5wbHVnID0gQVRBX0hPVFBMVUdfUExVRzsKKworCWFwLT5ob3RwbHVn
+X3RpbWVyLmV4cGlyZXMgPSBqaWZmaWVzICsgQVRBX1RNT1VUX0hPVFNXQVA7CisJYWRkX3RpbWVy
+KCZhcC0+aG90cGx1Z190aW1lcik7Cit9CisKK3ZvaWQgYXRhX2hvdHBsdWdfdW5wbHVnKHN0cnVj
+dCBhdGFfcG9ydCAqYXApCit7CisJYXRhX3BvcnRfZGlzYWJsZShhcCk7ICAvL0dvbmUgZ29uZSBn
+b25lIQorCQorCWRlbF90aW1lcigmYXAtPmhvdHBsdWdfdGltZXIpOworCisJaWYgKGFwLT5vcHMt
+PmhvdHBsdWdfdW5wbHVnX2phbml0b3IpCisJCWFwLT5vcHMtPmhvdHBsdWdfdW5wbHVnX2phbml0
+b3IoYXApOworCQorCS8qIFNlZSBjb21tZW50IG5lYXIgc2ltaWxhciBsaW5lIGluIGF0YV9ob3Rw
+bHVnX3BsdWcgZnVuY3Rpb24uCisJICovCisJYXAtPnBsdWcgPSBBVEFfSE9UUExVR19VTlBMVUc7
+CisKKwlhcC0+aG90cGx1Z190aW1lci5leHBpcmVzID0gamlmZmllcyArIEFUQV9UTU9VVF9IT1RT
+V0FQOworCWFkZF90aW1lcigmYXAtPmhvdHBsdWdfdGltZXIpOworfQorCiAvKioKICAqCWF0YV9p
+bnRlcnJ1cHQgLSBEZWZhdWx0IEFUQSBob3N0IGludGVycnVwdCBoYW5kbGVyCiAgKglAaXJxOiBp
+cnEgbGluZSAodW51c2VkKQpAQCAtMzkyNSw3ICs0MDI3LDEyIEBAIHN0YXRpYyB2b2lkIGF0YV9o
+b3N0X2luaXQoc3RydWN0IGF0YV9wb3IKIAlhcC0+Y2JsID0gQVRBX0NCTF9OT05FOwogCWFwLT5h
+Y3RpdmVfdGFnID0gQVRBX1RBR19QT0lTT047CiAJYXAtPmxhc3RfY3RsID0gMHhGRjsKKwlhcC0+
+b3JpZ191ZG1hX21hc2sgPSBlbnQtPnVkbWFfbWFzazsKIAorCWFwLT5ob3RwbHVnX3RpbWVyLmZ1
+bmN0aW9uID0gYXRhX2hvdHBsdWdfdGltZXJfZnVuYzsKKwlhcC0+aG90cGx1Z190aW1lci5kYXRh
+ID0gKHVuc2lnbmVkIGludClhcDsKKwlpbml0X3RpbWVyKCZhcC0+aG90cGx1Z190aW1lcik7CisJ
+SU5JVF9XT1JLKCZhcC0+aG90cGx1Z190YXNrLCBhdGFfaG90cGx1Z190YXNrLCBhcCk7CiAJSU5J
+VF9XT1JLKCZhcC0+cGFja2V0X3Rhc2ssIGF0YXBpX3BhY2tldF90YXNrLCBhcCk7CiAJSU5JVF9X
+T1JLKCZhcC0+cGlvX3Rhc2ssIGF0YV9waW9fdGFzaywgYXApOwogCkBAIC00NTQxLDYgKzQ2NDgs
+MTEgQEAgc3RhdGljIGludCBfX2luaXQgYXRhX2luaXQodm9pZCkKIAlhdGFfd3EgPSBjcmVhdGVf
+d29ya3F1ZXVlKCJhdGEiKTsKIAlpZiAoIWF0YV93cSkKIAkJcmV0dXJuIC1FTk9NRU07CisJYXRh
+X2hvdHBsdWdfd3EgPSBjcmVhdGVfd29ya3F1ZXVlKCJhdGFfaG90cGx1ZyIpOworCWlmICghYXRh
+X2hvdHBsdWdfd3EpIHsKKwkJZGVzdHJveV93b3JrcXVldWUoYXRhX3dxKTsKKwkJcmV0dXJuIC1F
+Tk9NRU07CisJfQogCiAJcHJpbnRrKEtFUk5fREVCVUcgImxpYmF0YSB2ZXJzaW9uICIgRFJWX1ZF
+UlNJT04gIiBsb2FkZWQuXG4iKTsKIAlyZXR1cm4gMDsKQEAgLTQ1NDksNiArNDY2MSw3IEBAIHN0
+YXRpYyBpbnQgX19pbml0IGF0YV9pbml0KHZvaWQpCiBzdGF0aWMgdm9pZCBfX2V4aXQgYXRhX2V4
+aXQodm9pZCkKIHsKIAlkZXN0cm95X3dvcmtxdWV1ZShhdGFfd3EpOworCWRlc3Ryb3lfd29ya3F1
+ZXVlKGF0YV9ob3RwbHVnX3dxKTsKIH0KIAogbW9kdWxlX2luaXQoYXRhX2luaXQpOwpAQCAtNDYw
+NCw2ICs0NzE3LDggQEAgRVhQT1JUX1NZTUJPTF9HUEwoYXRhX2Rldl9jbGFzc2lmeSk7CiBFWFBP
+UlRfU1lNQk9MX0dQTChhdGFfZGV2X2lkX3N0cmluZyk7CiBFWFBPUlRfU1lNQk9MX0dQTChhdGFf
+ZGV2X2NvbmZpZyk7CiBFWFBPUlRfU1lNQk9MX0dQTChhdGFfc2NzaV9zaW11bGF0ZSk7CitFWFBP
+UlRfU1lNQk9MX0dQTChhdGFfaG90cGx1Z19wbHVnKTsKK0VYUE9SVF9TWU1CT0xfR1BMKGF0YV9o
+b3RwbHVnX3VucGx1Zyk7CiAKICNpZmRlZiBDT05GSUdfUENJCiBFWFBPUlRfU1lNQk9MX0dQTChw
+Y2lfdGVzdF9jb25maWdfYml0cyk7CmRpZmYgLXJwdU4gbGludXgtMi42LjE0LXJjMS9kcml2ZXJz
+L3Njc2kvbGliYXRhLmggbGludXgtMi42LjE0LXJjMS1uZXcvZHJpdmVycy9zY3NpL2xpYmF0YS5o
+Ci0tLSBsaW51eC0yLjYuMTQtcmMxL2RyaXZlcnMvc2NzaS9saWJhdGEuaAkyMDA1LTA5LTEyIDIz
+OjEyOjA5LjAwMDAwMDAwMCAtMDQwMAorKysgbGludXgtMi42LjE0LXJjMS1uZXcvZHJpdmVycy9z
+Y3NpL2xpYmF0YS5oCTIwMDUtMDktMTQgMTk6NTc6NTMuMDAwMDAwMDAwIC0wNDAwCkBAIC00NCw2
+ICs0NCw3IEBAIGV4dGVybiBzdHJ1Y3QgYXRhX3F1ZXVlZF9jbWQgKmF0YV9xY19uZXcKIGV4dGVy
+biB2b2lkIGF0YV9xY19mcmVlKHN0cnVjdCBhdGFfcXVldWVkX2NtZCAqcWMpOwogZXh0ZXJuIGlu
+dCBhdGFfcWNfaXNzdWUoc3RydWN0IGF0YV9xdWV1ZWRfY21kICpxYyk7CiBleHRlcm4gaW50IGF0
+YV9jaGVja19hdGFwaV9kbWEoc3RydWN0IGF0YV9xdWV1ZWRfY21kICpxYyk7CitleHRlcm4gdm9p
+ZCBhdGFfY2hlY2tfa2lsbF9xYyhzdHJ1Y3QgYXRhX3BvcnQgKmFwKTsKIGV4dGVybiB2b2lkIGF0
+YV9kZXZfc2VsZWN0KHN0cnVjdCBhdGFfcG9ydCAqYXAsIHVuc2lnbmVkIGludCBkZXZpY2UsCiAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICB1bnNpZ25lZCBpbnQgd2FpdCwgdW5zaWduZWQgaW50
+IGNhbl9zbGVlcCk7CiBleHRlcm4gdm9pZCBhdGFfdGZfdG9faG9zdF9ub2xvY2soc3RydWN0IGF0
+YV9wb3J0ICphcCwgc3RydWN0IGF0YV90YXNrZmlsZSAqdGYpOwpAQCAtNzksNiArODAsOSBAQCBl
+eHRlcm4gdm9pZCBhdGFfc2NzaV9iYWRjbWQoc3RydWN0IHNjc2lfCiBleHRlcm4gdm9pZCBhdGFf
+c2NzaV9yYnVmX2ZpbGwoc3RydWN0IGF0YV9zY3NpX2FyZ3MgKmFyZ3MsCiAgICAgICAgICAgICAg
+ICAgICAgICAgICB1bnNpZ25lZCBpbnQgKCphY3RvcikgKHN0cnVjdCBhdGFfc2NzaV9hcmdzICph
+cmdzLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHU4ICpyYnVm
+LCB1bnNpZ25lZCBpbnQgYnVmbGVuKSk7CitleHRlcm4gdm9pZCBhdGFfc2NzaV9wcmVwYXJlX3Fj
+X2Fib3J0KHN0cnVjdCBhdGFfcXVldWVkX2NtZCAqcWMpOworZXh0ZXJuIHZvaWQgYXRhX3Njc2lf
+aGFuZGxlX3BsdWcoc3RydWN0IGF0YV9wb3J0ICphcCk7CitleHRlcm4gdm9pZCBhdGFfc2NzaV9o
+YW5kbGVfdW5wbHVnKHN0cnVjdCBhdGFfcG9ydCAqYXApOwogCiBzdGF0aWMgaW5saW5lIHZvaWQg
+YXRhX2JhZF9zY3Npb3Aoc3RydWN0IHNjc2lfY21uZCAqY21kLCB2b2lkICgqZG9uZSkoc3RydWN0
+IHNjc2lfY21uZCAqKSkKIHsKZGlmZiAtcnB1TiBsaW51eC0yLjYuMTQtcmMxL2RyaXZlcnMvc2Nz
+aS9saWJhdGEtc2NzaS5jIGxpbnV4LTIuNi4xNC1yYzEtbmV3L2RyaXZlcnMvc2NzaS9saWJhdGEt
+c2NzaS5jCi0tLSBsaW51eC0yLjYuMTQtcmMxL2RyaXZlcnMvc2NzaS9saWJhdGEtc2NzaS5jCTIw
+MDUtMDktMTIgMjM6MTI6MDkuMDAwMDAwMDAwIC0wNDAwCisrKyBsaW51eC0yLjYuMTQtcmMxLW5l
+dy9kcml2ZXJzL3Njc2kvbGliYXRhLXNjc2kuYwkyMDA1LTA5LTE0IDE5OjU3OjUzLjAwMDAwMDAw
+MCAtMDQwMApAQCAtNzE2LDYgKzcxNiw1MyBAQCBzdGF0aWMgaW50IGF0YV9zY3NpX3FjX2NvbXBs
+ZXRlKHN0cnVjdCBhCiAJcmV0dXJuIDA7CiB9CiAKK3N0YXRpYyBpbnQgYXRhX3Njc2lfcWNfYWJv
+cnQoc3RydWN0IGF0YV9xdWV1ZWRfY21kICpxYywgdTggZHJ2X3N0YXQpCit7CisJc3RydWN0IHNj
+c2lfY21uZCAqY21kID0gcWMtPnNjc2ljbWQ7CisKKwljbWQtPnJlc3VsdCA9IFNBTV9TVEFUX1RB
+U0tfQUJPUlRFRDsgLy9GSVhNRTogIElzIHRoaXMgd2hhdCB3ZSB3YW50PworCisJcWMtPnNjc2lk
+b25lKGNtZCk7CisKKwlyZXR1cm4gMDsKK30KKwordm9pZCBhdGFfc2NzaV9wcmVwYXJlX3FjX2Fi
+b3J0KHN0cnVjdCBhdGFfcXVldWVkX2NtZCAqcWMpCit7CisJLyogRm9yIHNvbWUgcmVhc29uIG9y
+IGFub3RoZXIsIHdlIGNhbid0IGFsbG93IGEgbm9ybWFsIHNjc2lfcWNfY29tcGxldGUuCisJICog
+Tm90ZSB0aGF0IGF0IHRoaXMgcG9pbnQsIHdlIG11c3QgYmUgU1VSRSB0aGUgY29tbWFuZCBpcyBn
+b2luZyB0byB0aW1lCisJICogb3V0LCBvciBlbHNlIHdlIG1pZ2h0IGJlIGNoYW5naW5nIHRoaXMg
+YXMgaXQncyBiZWluZyBjYWxsZWQuICBOZXZlciBhCisJICogZ29vZCB0aGluZy4KKwkgKi8KKwlp
+ZiAocWMtPmNvbXBsZXRlX2ZuID09IGF0YV9zY3NpX3FjX2NvbXBsZXRlKTsKKwkJcWMtPmNvbXBs
+ZXRlX2ZuID0gYXRhX3Njc2lfcWNfYWJvcnQ7Cit9CisKK3ZvaWQgYXRhX3Njc2lfaGFuZGxlX3Bs
+dWcoc3RydWN0IGF0YV9wb3J0ICphcCkKK3sKKwkvL0N1cnJlbnRseSBTQVRBIG9ubHkKKwlzY3Np
+X2FkZF9kZXZpY2UoYXAtPmhvc3QsIDAsIDAsIDApOworfQorCit2b2lkIGF0YV9zY3NpX2hhbmRs
+ZV91bnBsdWcoc3RydWN0IGF0YV9wb3J0ICphcCkKK3sKKwkvL1NBVEEgb25seSwgbm8gUEFUQQor
+CXN0cnVjdCBzY3NpX2RldmljZSAqc2NkID0gc2NzaV9kZXZpY2VfbG9va3VwKGFwLT5ob3N0LCAw
+LCAwLCAwKTsKKworCWlmIChzY2QpICAvLyBTZXQgdG8gY2FuY2VsIHN0YXRlIHRvIGJsb2NrIGZ1
+cnRoZXIgSS9PCisJCXNjc2lfZGV2aWNlX3NldF9zdGF0ZShzY2QsIFNERVZfQ0FOQ0VMKTsKKwkv
+LyBXZSBtaWdodCBoYXZlIGEgcGVuZGluZyBxYyBvbiBJL08gdG8gYSByZW1vdmVkIGRldmljZS4K
+KwlhdGFfY2hlY2tfa2lsbF9xYyhhcCk7CisJLyogc2NkIG1pZ2h0IG5vdCBleGlzdDsgc29tZW9u
+ZSBkaWQgJ2VjaG8gInNjc2kgcmVtb3ZlLXNpbmdsZS1kZXZpY2UKKwkgKiAuLi4gIiA+IC9wcm9j
+L3Njc2kvc2NzaScgb3Igc29tZWJvZHkgIHdhcyB0dXJuaW5nIHRoZSBrZXkgaW4gdGhlCisJICog
+aG90c3dhcCBiYXkgYmV0d2VlbiBvbiBhbmQgb2ZmIHJlYWxseSByZWFsbHkgZmFzdC4KKwkgKi8K
+KwlpZiAoc2NkKSB7CisJCXNjc2lfcmVtb3ZlX2RldmljZShzY2QpOworCQlzY3NpX2RldmljZV9w
+dXQoc2NkKTsKKwl9Cit9CisKIC8qKgogICoJYXRhX3Njc2lfdHJhbnNsYXRlIC0gVHJhbnNsYXRl
+IHRoZW4gaXNzdWUgU0NTSSBjb21tYW5kIHRvIEFUQSBkZXZpY2UKICAqCUBhcDogQVRBIHBvcnQg
+dG8gd2hpY2ggdGhlIGNvbW1hbmQgaXMgYWRkcmVzc2VkCmRpZmYgLXJwdU4gbGludXgtMi42LjE0
+LXJjMS9pbmNsdWRlL2xpbnV4L2xpYmF0YS5oIGxpbnV4LTIuNi4xNC1yYzEtbmV3L2luY2x1ZGUv
+bGludXgvbGliYXRhLmgKLS0tIGxpbnV4LTIuNi4xNC1yYzEvaW5jbHVkZS9saW51eC9saWJhdGEu
+aAkyMDA1LTA5LTEyIDIzOjEyOjA5LjAwMDAwMDAwMCAtMDQwMAorKysgbGludXgtMi42LjE0LXJj
+MS1uZXcvaW5jbHVkZS9saW51eC9saWJhdGEuaAkyMDA1LTA5LTE0IDIyOjEyOjIwLjAwMDAwMDAw
+MCAtMDQwMApAQCAtMzIsNiArMzIsNyBAQAogI2luY2x1ZGUgPGFzbS9pby5oPgogI2luY2x1ZGUg
+PGxpbnV4L2F0YS5oPgogI2luY2x1ZGUgPGxpbnV4L3dvcmtxdWV1ZS5oPgorI2luY2x1ZGUgPGxp
+bnV4L3RpbWVyLmg+CiAKIC8qCiAgKiBjb21waWxlLXRpbWUgb3B0aW9ucwpAQCAtMTMwLDYgKzEz
+MSw3IEBAIGVudW0gewogCUFUQV9UTU9VVF9CT09UX1FVSUNLCT0gNyAqIEhaLAkvKiBodWVyaXN0
+aWMgKi8KIAlBVEFfVE1PVVRfQ0RCCQk9IDMwICogSFosCiAJQVRBX1RNT1VUX0NEQl9RVUlDSwk9
+IDUgKiBIWiwKKwlBVEFfVE1PVVRfSE9UU1dBUAk9IEhaIC8gMiwJLyogRklYTUU6ICBHdWVzcyB2
+YWx1ZT8gKi8KIAogCS8qIEFUQSBidXMgc3RhdGVzICovCiAJQlVTX1VOS05PV04JCT0gMCwKQEAg
+LTE2Nyw2ICsxNjksMTEgQEAgZW51bSBwaW9fdGFza19zdGF0ZXMgewogCVBJT19TVF9FUlIsCiB9
+OwogCitlbnVtIGhvdHBsdWdfc3RhdGVzIHsKKwlBVEFfSE9UUExVR19QTFVHLAorCUFUQV9IT1RQ
+TFVHX1VOUExVRywKK307CisKIC8qIGZvcndhcmQgZGVjbGFyYXRpb25zICovCiBzdHJ1Y3Qgc2Nz
+aV9kZXZpY2U7CiBzdHJ1Y3QgYXRhX3BvcnRfb3BlcmF0aW9uczsKQEAgLTMxNiw2ICszMjMsOCBA
+QCBzdHJ1Y3QgYXRhX3BvcnQgewogCXN0cnVjdCBhdGFfaG9zdF9zdGF0cwlzdGF0czsKIAlzdHJ1
+Y3QgYXRhX2hvc3Rfc2V0CSpob3N0X3NldDsKIAorCXN0cnVjdCB0aW1lcl9saXN0CWhvdHBsdWdf
+dGltZXI7CisJc3RydWN0IHdvcmtfc3RydWN0CWhvdHBsdWdfdGFzazsKIAlzdHJ1Y3Qgd29ya19z
+dHJ1Y3QJcGFja2V0X3Rhc2s7CiAKIAlzdHJ1Y3Qgd29ya19zdHJ1Y3QJcGlvX3Rhc2s7CkBAIC0z
+MjMsNiArMzMyLDkgQEAgc3RydWN0IGF0YV9wb3J0IHsKIAl1bnNpZ25lZCBsb25nCQlwaW9fdGFz
+a190aW1lb3V0OwogCiAJdm9pZAkJCSpwcml2YXRlX2RhdGE7CisKKwl1bnNpZ25lZCBpbnQJCW9y
+aWdfdWRtYV9tYXNrOworCWVudW0gaG90cGx1Z19zdGF0ZXMJcGx1ZzsKIH07CiAKIHN0cnVjdCBh
+dGFfcG9ydF9vcGVyYXRpb25zIHsKQEAgLTM2OSw2ICszODEsOCBAQCBzdHJ1Y3QgYXRhX3BvcnRf
+b3BlcmF0aW9ucyB7CiAKIAl2b2lkICgqYm1kbWFfc3RvcCkgKHN0cnVjdCBhdGFfcXVldWVkX2Nt
+ZCAqcWMpOwogCXU4ICAgKCpibWRtYV9zdGF0dXMpIChzdHJ1Y3QgYXRhX3BvcnQgKmFwKTsKKwl2
+b2lkICgqaG90cGx1Z19wbHVnX2phbml0b3IpIChzdHJ1Y3QgYXRhX3BvcnQgKmFwKTsKKwl2b2lk
+ICgqaG90cGx1Z191bnBsdWdfamFuaXRvcikgKHN0cnVjdCBhdGFfcG9ydCAqYXApOwogfTsKIAog
+c3RydWN0IGF0YV9wb3J0X2luZm8gewpAQCAtMzk5LDYgKzQxMyw4IEBAIGV4dGVybiBpbnQgYXRh
+X3Njc2lfcXVldWVjbWQoc3RydWN0IHNjc2kKIGV4dGVybiBpbnQgYXRhX3Njc2lfZXJyb3Ioc3Ry
+dWN0IFNjc2lfSG9zdCAqaG9zdCk7CiBleHRlcm4gaW50IGF0YV9zY3NpX3JlbGVhc2Uoc3RydWN0
+IFNjc2lfSG9zdCAqaG9zdCk7CiBleHRlcm4gdW5zaWduZWQgaW50IGF0YV9ob3N0X2ludHIoc3Ry
+dWN0IGF0YV9wb3J0ICphcCwgc3RydWN0IGF0YV9xdWV1ZWRfY21kICpxYyk7CitleHRlcm4gdm9p
+ZCBhdGFfaG90cGx1Z19wbHVnKHN0cnVjdCBhdGFfcG9ydCAqYXApOworZXh0ZXJuIHZvaWQgYXRh
+X2hvdHBsdWdfdW5wbHVnKHN0cnVjdCBhdGFfcG9ydCAqYXApOwogLyoKICAqIERlZmF1bHQgZHJp
+dmVyIG9wcyBpbXBsZW1lbnRhdGlvbnMKICAqLwo=
+------=_Part_24535_10568805.1127782881785--
