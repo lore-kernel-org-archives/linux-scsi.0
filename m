@@ -1,80 +1,217 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
+From: Andre Hedrick <andre@linux-ide.org>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
  the kernel
-Date: Tue, 27 Sep 2005 19:03:35 -0400
-Message-ID: <4339CFC7.6080507@adaptec.com>
-References: <4339440C.6090107@adaptec.com>	 <20050927131959.GA30329@infradead.org>  <43395ED0.6070504@adaptec.com> <1127836380.4814.36.camel@mulgrave> <43399F17.4090004@adaptec.com> <4339ACDA.3090801@pobox.com> <4339BD58.7060300@adaptec.com> <4339C12C.5020004@pobox.com>
+Date: Tue, 27 Sep 2005 16:14:42 -0700 (PDT)
+Message-ID: <Pine.LNX.4.10.10509271604510.14637-100000@master.linux-ide.org>
+References: <4339CCD6.5010409@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965229AbVI0XDw@vger.kernel.org>
-In-Reply-To: <4339C12C.5020004@pobox.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from astound-64-85-224-245.ca.astound.net ([64.85.224.245]:33547
+	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
+	id S1751165AbVI0X1t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Sep 2005 19:27:49 -0400
+In-Reply-To: <4339CCD6.5010409@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 09/27/05 18:01, Jeff Garzik wrote:
-> Luben Tuikov wrote:
+
+Luben,
+
+Welcome to the club ...
+
+You have managed to prove your knowledge base and forgot everything
+learned in kindergarden.  Since I have kids, and spent time back in
+kindergarden, there are some valuable lessons there many have forgotten.
+
+>From what I have seen here, both sides have some valid points.
+
+>From what I know from history and why I no longer maintain anything,
+(working to get sanity back) is the Maintainer defines direction while
+following a bigger picture.
+
+The issues wrt to HCIL v/s WWN v/s Multiplier v/s Target-Mode v/s blahblah
+blahblah are important questions.
+
+Remember, everything about storage is a lie.
+
+Help create a better lie by mapping into the design set forward by James
+and company.  If the goal of Adaptec is to have support then they need to
+buckup and play be to rules at hand.  Remember, most people are open to
+new ideas and better models.  Propose one and you will find backing.
+
+Since you are in the bay-area ... want to met who you have been associated
+with ... or is the idea to weird?
+
+Cheers,
+
+Andre
+
+
+On Tue, 27 Sep 2005, Luben Tuikov wrote:
+
+> On 09/27/05 17:55, Jeff Garzik wrote:
+> > * Avoids existing SAS code, rather than working with it.
 > 
->>The driver and the infrastructure needs to go in.
->>
->>Give it exposure to the people, let people play with it.
+> No, it's the _other_ way around.  There is NO existing
+> SAS code.
 > 
+> My SAS code has been around _long_ before Christophs
+> code.
 > 
-> Merging into the upstream kernel is not necessary for exposure.
+> Christoph's code is
+>  * MPT based only,
+>  * doesn't follow a spec to save its life,
+>  * far inferior in SAS capabilities and SAS representation
+>    again, due to the fact that it is MPT based.
 > 
-> Historically, saying "no" to a single vendor pushing really hard -- as 
-> you are doing -- has resulted in a superior solution.
-
-This of course implies that everything in Linux is a
-superiour solution _or_ if it is not, then everything in
-linux is a vendor solution.
-
->>If we start "fixing" SCSI Core now (this in itself is JB red
->>herring), how long before it is "fixed" and we can "rest"?
->>And how long then before the driver and infrastructure
->>makes it in?
+> Since the whole point of MPT is to _hide_ the transport.
 > 
-> Just follow the recipe Christoph outlined.  It's not difficult, just 
-> requires some work.
+> > * Avoids existing SATA code, rather than working with it.
+> 
+> FUD!  Why?  It does _not_ use SATA code at all.
+> 
+> Why?  SATA devices are discovered on the domain, but
+> there is _no_ SATL in the kernel to represent them.
+> 
+> And libata is _not_ SATL.  The reasons are that
+> libata is closely coupled to the hardware, i.e.
+> ata_port.
+> 
+> While in SAS open transport architecures, you'd have
+> execute ATA/SAS/SMP task just as you have in aic-94xx.
+> Why? Because all the chip is, is an interface to the
+> interconect.
+> 
+> But I'm sure you know all this having looked at the
+> specs of BCM8603.
+> 
+> > * Avoids (rather than fix) several SCSI core false dependencies on HCIL. 
+> >   Results in code duplication and/or avoidance of needed code.
+> 
+> No, not true.  It _integrates_ with SCSI Core.  The sad truth
+> is that SCSI Core knows only HCIL.
+> 
+> Jeff, please be more specific.
+> 
+> > * So far, it's an Adaptec-only solution.  Since it pointedly avoids the 
+> > existing SAS transport code, this results in two SAS solutions in Linux: 
+> > one for Adaptec, one for {everyone else}.
+> 
+> Hmm, again: _architecture_.  And you have to stop these
+> accusations: "pointedly avoids the existing SAS transport code".
+> 
+> I repeat again that I had this code _long_ before Christoph
+> ever dreamt up SAS.  And he got my code via James B sometime
+> before OLS this year.  I think he got it July 12, 2005.
+> 
+> The question is: why didn't _he_ use the solution already
+> available?
+> 
+> You have to understand the differences between MPT and open
+> transport architecture.
+> 
+> At some point I thought Christoph seemed to have understood it.
+> Now I'm not sure any more.
+> 
+> Now since the open transport solution completely encompasses
+> and _absolves_ MPT, it is not hard for an MPT driver to
+> generate a bunch of events and use that infrastructure.
+> 
+> > * Maintainer reminds me of my ATA mentor, Andre Hedrick:  knows his 
+> > shit, but has difficulties working with the community.  May need a 
+> > filter if we want long term maintenance to continue.
+> 
+> I take offence in your liking me to Andre -- I don't know
+> Andre personally, but is seems that you're expressing personal
+> opinion against him, against me and labeling me in some way.
+> 
+> I take offence in that, Jeff.
+> 
+> Why are you making this a _political_ and personal game?
+> 
+> All you're doing is trying to aliken me to someone and
+> brandish me as someone I'm not.
+> 
+> This is rude, offensive and done in desperation.
+> 
+> Shall we concentrate on the _technical_ part of
+> the argument?
+> 
+> I repeat again: _technical_ part of the argument.
+> 
+> > Easy path: make Adaptec's solution a block driver, which allows it to 
+> > sidestep all the "doesn't play well with others" issues.  Still an 
+> 
+> What _exactly_ does it mean "don't play well with others"?
+> 
+> Do you mean:
+>  - the solution is far superiour to anything available now
+>  - it presents the SAS Domain in sysfs as it looks in
+>    the physical world,
+>  - does domain discovery and expander configuration,
+>  - allows for complete control of the domain to user space,
+>  - it pokes at SCSI Core's 20 year old relics.
+>  - it's a thorn in the flesh to other people striving for
+>    similar functionality.
+> 
+> Or do you mean:
+>  - it does not change a single line of code in the kernel,
+>  - does not break anything existing,
+>  - etc, etc.
+> 
+> > Adaptec-only solution, but at least its in a separate playpen.
+> 
+> I'm sure James Bottomley will move from SCSI Core to the block
+> layer as he did for IDR. hehehe :-)
+> 
+> And no, it is not Adaptec's only solution.  Your BCM8603 SAS
+> LLDD when you write it could use it without any problems.
+> 
+> > Hard path: Update the SCSI core and libata to work with SATA+SAS 
+> > hardware such as Adaptec's.
+> 
+> Cannot do for libata -- ever.  Why?  You know best: because
+> libata uses direct access to the hardware!  There is no
+> layered architecture.
+> 
+> What you need to do is to write a SATL layer, just as you can
+> see in SAT-r6, page 2, Figure 3.  I'm on top of this already.
+> 
+> But in order to do this you need a unified architecture
+> for accessing ATA devices.
+> 
+> Now libata, uses ata_port to do this, which is _hardware_
+> access.
+> 
+> The SAS Transport layer uses Execute SCSI RPC (defined
+> in SAM, provided by aic94xx) to do this.
+> 
+> So in effect, what SATL would end up to be is a
+> data transformation function.   But I digress...
+> 
+> > The hard path takes time, and won't be solved simply by shoving it in.
+> 
+> No, you can do it now.  It will not affect anyone or anything.
+> (Other than hurting a couple of people's pride.)
+> 
+> The code doesn't alter Linux SCSI or anyone else's behaviour.
+> It only _provides_ SAS support to the kernel.
+> 
+> Including it in as is would does not hurt anyone as you can
+> see here:
+> http://linux.adaptec.com/sas/git/
+> 
+> Concentrate on the _technical_ merit, let's be more specific.
+> 
+> 	Luben
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
 
-Anyone have a clear technical plan and/or infrastructure
-on how to do this?  Any specs, plans, consolidations, etc?
-
-I know its a wishful thinking, but when the architectures
-differ, not sure how to do this.
-
-"You can do everything with a big long if ()".
-
-> So far, this is an Adaptec-only solution.
-
-Yes, since Adaptec is the first company to come out with
-open transport SAS chip.  Broadcom seems to be doing the same thing.
- 
-> It does an end run around 90% of the SCSI core.  You might as well make 
-> it a block driver, if you're going to do that.
-
-The "90%" part isn't quite true.
-
-But going with a block device isn't that bad:
-Now since the architecture _is_ SCSI after all, what would be
-needed is a minimal, fast, straightforward, SAM/SPC fully complient
-new SCSI Core.  That SCSI Core would register block devices
-with the block layer.  Maybe Jens can point out cool things
-to do and make the whole infrastructure fast and very fast.
-(since we don't need to be bound by this legacy stuff)
-
-Essentially other new technology LLDD and Transport layers
-can probably make use of this: Infiniband, USB2 Storage, etc.
-
-So if all you have is an AIC-94xx or BCM8603 storage chip
-you can exclule all of the legacy SCSI Core and compile this
-new mean, lean, fast SAM Core.
-
-Jeff, this isn't bad at all!
-
-Are you willing to contribute to such an effort?
-
-Thanks,
-	Luben
