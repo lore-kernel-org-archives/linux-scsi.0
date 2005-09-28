@@ -1,64 +1,56 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
- the kernel
-Date: Tue, 27 Sep 2005 22:07:07 -0400
-Message-ID: <4339FACB.2090606@pobox.com>
-References: <4339440C.6090107@adaptec.com>	 <20050927131959.GA30329@infradead.org>  <43395ED0.6070504@adaptec.com> <1127836380.4814.36.camel@mulgrave> <43399F17.4090004@adaptec.com> <4339ACDA.3090801@pobox.com> <4339BD58.7060300@adaptec.com> <4339C12C.5020004@pobox.com> <4339CFC7.6080507@adaptec.com>
+From: Ravi Parimi <rparimi@gmail.com>
+Subject: question about SG_ ioctls
+Date: Tue, 27 Sep 2005 19:12:00 -0700
+Message-ID: <21c20ce70509271912142ef77@mail.gmail.com>
+Reply-To: Ravi Parimi <rparimi@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965253AbVI1CHZ@vger.kernel.org>
-In-Reply-To: <4339CFC7.6080507@adaptec.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zproxy.gmail.com ([64.233.162.197]:22559 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S965250AbVI1CMB convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Sep 2005 22:12:01 -0400
+Received: by zproxy.gmail.com with SMTP id 13so537270nzn
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Sep 2005 19:12:00 -0700 (PDT)
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Luben Tuikov wrote:
-> On 09/27/05 18:01, Jeff Garzik wrote:
->>Just follow the recipe Christoph outlined.  It's not difficult, just 
->>requires some work.
-> 
-> 
-> Anyone have a clear technical plan and/or infrastructure
-> on how to do this?  Any specs, plans, consolidations, etc?
+Hi,
 
-Yes, read Christoph's todo list.
+I have a SCSI controller thats need to be tested for correct
+performance with all the SG_ and SCSI_ ioctls. I've been using the
+sg3_utils package to do this so far. The various programs in sg3_utils
+issue calls to different ioctls depending on the command line
+arguments passed onto them. I would like to have just one program that
+issues calls to a few IOCTLs that I really care about, and want to
+calls to these IOCTLs lined up in a C program like this:
 
-We need to separate out bits specific to parallel SCSI, moving the bits 
-to transport-specific code, since SAS doesn't need them.
+===================================================================
+   if ((res = ioctl(sg_fd, SG_GET_VERSION_NUM, &ver) < 0)) {
+      printf("IOCTL SG_GET_VERSION_NUM failed\n");
+      return 1;
+   }
+   printf("SG_GET_VERSION_NUM:\n");
+   printf("\tversion = %d\n", ver);
 
+   if ((res = ioctl(sg_fd, SCSI_IOCTL_GET_IDLUN, &my_idlun) < 0)) {
+      printf("IOCTL SCSI_IOCTL_GET_IDLUN failed\n");
+      return 1;
+   }
+   printf("SCSI_IOCTL_GET_IDLUN:\n");
+   printf("\tchannel = %d\n\tid = %d\t\n\tlun = %d\n",
+   (my_idlun.dev_id >> 16) & 0xff, my_idlun.dev_id & 0xff,
+   (my_idlun.dev_id >> 8) & 0xff);
+===================================================================
 
->>It does an end run around 90% of the SCSI core.  You might as well make 
->>it a block driver, if you're going to do that.
-> 
-> 
-> The "90%" part isn't quite true.
-> 
-> But going with a block device isn't that bad:
-> Now since the architecture _is_ SCSI after all, what would be
-> needed is a minimal, fast, straightforward, SAM/SPC fully complient
-> new SCSI Core.  That SCSI Core would register block devices
-> with the block layer.  Maybe Jens can point out cool things
-> to do and make the whole infrastructure fast and very fast.
-> (since we don't need to be bound by this legacy stuff)
-> 
-> Essentially other new technology LLDD and Transport layers
-> can probably make use of this: Infiniband, USB2 Storage, etc.
-> 
-> So if all you have is an AIC-94xx or BCM8603 storage chip
-> you can exclule all of the legacy SCSI Core and compile this
-> new mean, lean, fast SAM Core.
-> 
-> Jeff, this isn't bad at all!
-> 
-> Are you willing to contribute to such an effort?
+I want to know if doing the above is OK? I do not know if calling
+certain IOCTLs in a specific order has any problems/issues. Also, if
+the above program reports success for all the IOCTLs called, it is
+safe to assume that the scsi controller is able to handle all IOCTLs
+properly?
 
-No.  I'm much more willing to help integrate aic94xx and 
-Broadcom/ServerWorks into the existing SCSI core, working with the 
-community.
-
-As Andrew guessed, it's a way to get you your own playpen, where you 
-won't be constrained by members of the Linux-SCSI community.
-
-	Jeff
+Thanks a lot,
+--ravi
