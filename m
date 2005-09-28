@@ -1,28 +1,54 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Infinite interrupt loop, INTSTAT = 0
-Date: Wed, 28 Sep 2005 10:05:08 -0500
-Message-ID: <1127919909.4852.7.camel@mulgrave>
-References: <20050928134514.GA19734@dspnet.fr.eu.org>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: I request inclusion of SAS Transport Layer and AIC-94xx into
+	 the kernel
+Date: Wed, 28 Sep 2005 09:15:41 -0600
+Message-ID: <91888D455306F94EBD4D168954A9457C04388439@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751039AbVI1PFQ@vger.kernel.org>
-In-Reply-To: <20050928134514.GA19734@dspnet.fr.eu.org>
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751052AbVI1PP4@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Olivier Galibert <galibert@pobox.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "Hack inc." <linux-kernel@vger.kernel.org>
+To: ltuikov@yahoo.com, Luben Tuikov <luben_tuikov@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2005-09-28 at 15:45 +0200, Olivier Galibert wrote:
-> Sep 28 15:26:13 m82 kernel: scsi1:0:0:0: Attempting to abort cmd ffff8100bfe3e300: 0x28 0x0 0x0 0x50 0x0 0x3f 0x0 0x0 0x8 0x0
-> Sep 28 15:26:13 m82 kernel: Infinite interrupt loop, INTSTAT = 0scsi1: At time of recovery, card was not paused
-> Sep 28 15:26:13 m82 kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+On Wednesday, September 28, 2005 5:42 AM, Luben Tuikov wrote:
+> > Hi Luben,
+> > 
+> > OK, Man are you alright?
+> > 
+> > I've heard of other vendors planning to 
+> > provide solutions where sas is implemented
+> > in firmware, similar to MPT.  Christophs
+> > sas layer is going to work with other 
+> > solutions, don't think of it being 
+> > MPT centric.
+> 
+> Where in what I said above do I say that it will _not_
+> work with _other_ MPT based drivers?  Nowhere!
+> 
+> Yes it _will_ work with other MPT-like drivers but
+> to cut and paste again from above:
+>  * MPT based only,
+>  * doesn't follow a spec to save its life,
+>  * far inferior in SAS capabilities and SAS representation
+>    again, due to the fact that it is MPT based.
+> 
+> When I say MPT, I do not mean MPT(R), I mean MPT as
+> in technology, not as in trademark.
+> 
+>      Luben
+> 
 
-What was it doing before this?  i.e. what were all the messages from the
-card.  The message happens when the aic driver is unable to clear its
-pending workqueue after it suspends ... which is part of error recovery.
-So, what error was it trying to recover from?
+Luben: I guess you didn't get what I meant.
 
-By the way, your AIC-7892 is a different driver.
+I was referring that there are other
+*vendors* (not LSI, e.g MegaRAID) that are 
+working on sas solutions with sas firmware 
+implementation. One that comes to mind is
+Intel SunRise Lake, which is non a MPT based 
+solution, that would work with Christophs 
+Sas Layer. There maybe others, such as emulex.
+Perhaps James S. could comment on that.
 
-James
+Eric
