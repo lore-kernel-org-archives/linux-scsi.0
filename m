@@ -1,35 +1,63 @@
-From: Atsushi Nemoto <anemo@mba.ocn.ne.jp>
-Subject: Re: [Linux-usb-users] Possible bug in usb storage (2.6.11 kernel)
-Date: Thu, 29 Sep 2005 01:27:05 +0900 (JST)
-Message-ID: <20050929.012705.37532453.anemo@mba.ocn.ne.jp>
-References: <20050927.234616.36922370.anemo@mba.ocn.ne.jp>
-	<Pine.LNX.4.44L0.0509271120370.5703-100000@iolanthe.rowland.org>
+From: Valdis.Kletnieks@vt.edu
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
+Date: Wed, 28 Sep 2005 12:30:21 -0400
+Message-ID: <200509281630.j8SGULJi022471@turing-police.cc.vt.edu>
+References: <20050928113703.65626.qmail@web31806.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: multipart/signed; boundary="==_Exmh_1127925020_3988P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mba.ocn.ne.jp ([210.190.142.172]:49872 "EHLO smtp.mba.ocn.ne.jp")
-	by vger.kernel.org with ESMTP id S1751341AbVI1Q22 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Sep 2005 12:28:28 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0509271120370.5703-100000@iolanthe.rowland.org>
+Received: from turing-police.cc.vt.edu ([128.173.14.107]:21964 "EHLO
+	turing-police.cc.vt.edu") by vger.kernel.org with ESMTP
+	id S1751351AbVI1Qax (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Sep 2005 12:30:53 -0400
+In-Reply-To: Your message of "Wed, 28 Sep 2005 04:37:03 PDT."
+             <20050928113703.65626.qmail@web31806.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stern@rowland.harvard.edu
-Cc: jim.ramsay@gmail.com, mdharm-kernel@one-eyed-alien.net, ralf@linux-mips.org, linux-usb-users@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
+To: ltuikov@yahoo.com
+Cc: Andre Hedrick <andre@linux-ide.org>, Luben Tuikov <luben_tuikov@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
->>>>> On Tue, 27 Sep 2005 11:38:35 -0400 (EDT), Alan Stern <stern@rowland.harvard.edu> said:
+--==_Exmh_1127925020_3988P
+Content-Type: text/plain; charset=us-ascii
 
-stern> If that is so, it's a bug in linux-mips.  ARCH_KMALLOC_MINALIGN
-stern> is supposed to be at least as large as a cacheline.  See this
-stern> comment in mm/slab.c:
+On Wed, 28 Sep 2005 04:37:03 PDT, Luben Tuikov said:
 
-Thank you for pointing out this.
+> When it comes down to it SCSI Core is 20 years behind and thus Linux Storage
+> is 20 years behind.
 
-Some time ago I also supposed so, but I was told to use
-dma_get_cache_alignment() instead.  The comment was not exist at that
-time...
+Hmm.. 20 years ago I was hooking Fujitsu Super-Eagles to Sun3/280 servers.
+If you're going to claim that the current SCSI core is *that* far behind, you're
+going to have to back it up.  Remember that making exaggerated claims is a good
+way to make people not listen to the *rest* of your message.
 
-OK, I will talk to MIPS maintainar again.
----
-Atsushi Nemoto
+Seen in include/scsi/scsi.h:
+
+        /*
+         * FIXME: bit0 is listed as reserved in SCSI-2, but is
+         * significant in SCSI-3.  For now, we follow the SCSI-2
+         * behaviour and ignore reserved bits.
+         */
+
+So obviously, it's at least the number of years since SCSI-3 was defined,
+but no more than the time since SCSI-2.  According to http://home.comcast.net/~SCSIguy/SCSI_FAQ/scsifaq.html
+SCSI-2 devices started showing up in 1988, and X3.131-1994 came out in 1994.
+1996 saw the first SCSI-3 proposals.
+
+I'll give you *one* decade, but not two. :)
+
+
+--==_Exmh_1127925020_3988P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iD8DBQFDOsUccC3lWbTT17ARAvapAJ4hW/nwG/5mjFKK5J/oditAkzo/ZQCg0xop
+ldhssTgPTq/4havuCRkBS30=
+=RBaE
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1127925020_3988P--
