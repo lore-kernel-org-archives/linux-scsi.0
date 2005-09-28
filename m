@@ -1,96 +1,43 @@
-From: Olivier Galibert <galibert@pobox.com>
-Subject: Infinite interrupt loop, INTSTAT = 0
-Date: Wed, 28 Sep 2005 15:45:14 +0200
-Message-ID: <20050928134514.GA19734@dspnet.fr.eu.org>
+From: Yiannis Mavroukakis <jander@darthvader.us>
+Subject: Re: legacy megaraid status
+Date: Wed, 28 Sep 2005 15:30:55 +0100
+Message-ID: <433AA91F.7030403@darthvader.us>
+References: <433175AE.5070905@darthvader.us> <30E6DB5A16C820CE29D97507@[10.169.6.233]> <4332705E.6030905@darthvader.us> <C2A6572782C9593467A750C4@[10.169.6.233]> <43330F6E.9070303@shadowconnect.com> <4333CC60.4000705@darthvader.us> <FE99409D46B528642AB32FAA@[10.169.6.233]>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dspnet.fr.eu.org ([213.186.44.138]:8968 "EHLO dspnet.fr.eu.org")
-	by vger.kernel.org with ESMTP id S1750975AbVI1NpZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Sep 2005 09:45:25 -0400
-Content-Disposition: inline
+Received: from mail57.messagelabs.com ([195.245.230.115]:14979 "HELO
+	mail57.messagelabs.com") by vger.kernel.org with SMTP
+	id S1751327AbVI1OaH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Sep 2005 10:30:07 -0400
+In-Reply-To: <FE99409D46B528642AB32FAA@[10.169.6.233]>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, "Hack inc." <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-I'm having identical problems with a pair of Fibrenetix VP-1252-U4
-plugged on:
-- Dual Xeon 32 bits with a mobo-integrated:
-    03:02.0 SCSI storage controller: Adaptec AIC-7902B U320 (rev 10)
-    03:02.1 SCSI storage controller: Adaptec AIC-7902B U320 (rev 10)
-    and a 2.6.11-1.14_FC3.smp kernel
+Kenneth Porter wrote:
 
-- Dual Xeon 64 bits with a mobo-integrated:
-    02:02.0 SCSI storage controller: Adaptec AIC-7902B U320 (rev 10)
-    02:02.1 SCSI storage controller: Adaptec AIC-7902B U320 (rev 10)
-    and a 2.6.13.2 kernel (native 64bits)
+> --On Friday, September 23, 2005 10:35 AM +0100 Yiannis Mavroukakis 
+> <jander@darthvader.us> wrote:
+>
+>> However I am not quite about the SSID..Is this the Subsystem hex lspci
+>> reports?
+>
+>
+> I'm not at the machine right now to check, but I recall skimming 
+> through the source to the various macros and enumeration code to 
+> figure out how this information was extracted.
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+When you get a moment, if you could point me in the right direction I 
+would appreciate it
 
-It seems not to happen on a Dual Xeon 32 with a pci(x?) card:
-    01:02.0 SCSI storage controller: Adaptec AIC-7892A U160/m (rev 02)
-
-
-The error I get is:
-
-Sep 28 15:26:13 m82 kernel: scsi1:0:0:0: Attempting to abort cmd ffff8100bfe3e300: 0x28 0x0 0x0 0x50 0x0 0x3f 0x0 0x0 0x8 0x0
-Sep 28 15:26:13 m82 kernel: Infinite interrupt loop, INTSTAT = 0scsi1: At time of recovery, card was not paused
-Sep 28 15:26:13 m82 kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
-Sep 28 15:26:13 m82 kernel: scsi1: Dumping Card State at program address 0x26 Mode 0x33
-Sep 28 15:26:13 m82 kernel: Card was paused
-Sep 28 15:26:13 m82 kernel: HS_MAILBOX[0x0] INTCTL[0x80] SEQINTSTAT[0x0] SAVED_MODE[0x11] 
-Sep 28 15:26:13 m82 kernel: DFFSTAT[0x33] SCSISIGI[0x24] SCSIPHASE[0x0] SCSIBUS[0x0] 
-Sep 28 15:26:13 m82 kernel: LASTPHASE[0x1] SCSISEQ0[0x40] SCSISEQ1[0x12] SEQCTL0[0x0] 
-Sep 28 15:26:13 m82 kernel: SEQINTCTL[0x0] SEQ_FLAGS[0x0] SEQ_FLAGS2[0x0] SSTAT0[0x10] 
-Sep 28 15:26:13 m82 kernel: SSTAT1[0x0] SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0xc0] 
-Sep 28 15:26:13 m82 kernel: SIMODE1[0xac] LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x80] 
-Sep 28 15:26:13 m82 kernel: LQOSTAT0[0x0] LQOSTAT1[0x0] LQOSTAT2[0x40] 
-Sep 28 15:26:13 m82 kernel: 
-Sep 28 15:26:13 m82 kernel: SCB Count = 4 CMDS_PENDING = 3 LASTSCB 0x1 CURRSCB 0x1 NEXTSCB 0xff40
-Sep 28 15:26:13 m82 kernel: qinstart = 119 qinfifonext = 119
-Sep 28 15:26:13 m82 kernel: QINFIFO:
-Sep 28 15:26:13 m82 kernel: WAITING_TID_QUEUES:
-Sep 28 15:26:13 m82 kernel: Pending list:
-Sep 28 15:26:13 m82 kernel:   2 FIFO_USE[0x0] SCB_CONTROL[0x60] SCB_SCSIID[0x7] 
-Sep 28 15:26:13 m82 kernel:   3 FIFO_USE[0x0] SCB_CONTROL[0x60] SCB_SCSIID[0x7] 
-Sep 28 15:26:13 m82 kernel:   0 FIFO_USE[0x0] SCB_CONTROL[0x60] SCB_SCSIID[0x7] 
-Sep 28 15:26:13 m82 kernel: Total 3
-Sep 28 15:26:13 m82 kernel: Kernel Free SCB list: 1 
-Sep 28 15:26:13 m82 kernel: Sequencer Complete DMA-inprog list: 
-Sep 28 15:26:14 m82 kernel: Sequencer Complete list: 
-Sep 28 15:26:14 m82 kernel: Sequencer DMA-Up and Complete list: 
-Sep 28 15:26:14 m82 kernel: 
-Sep 28 15:26:14 m82 kernel: scsi1: FIFO0 Free, LONGJMP == 0x8252, SCB 0x1
-Sep 28 15:26:14 m82 kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89] 
-Sep 28 15:26:14 m82 kernel: SG_CACHE_SHADOW[0x2] SG_STATE[0x0] DFFSXFRCTL[0x0] 
-Sep 28 15:26:14 m82 kernel: SOFFCNT[0x0] MDFFSTAT[0x5] SHADDR = 0x00, SHCNT = 0x0 
-Sep 28 15:26:14 m82 kernel: HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10] 
-Sep 28 15:26:14 m82 kernel: scsi1: FIFO1 Free, LONGJMP == 0x8063, SCB 0x3
-Sep 28 15:26:14 m82 kernel: SEQIMODE[0x3f] SEQINTSRC[0x0] DFCNTRL[0x0] DFSTATUS[0x89] 
-Sep 28 15:26:14 m82 kernel: SG_CACHE_SHADOW[0x2] SG_STATE[0x0] DFFSXFRCTL[0x0] 
-Sep 28 15:26:14 m82 kernel: SOFFCNT[0x0] MDFFSTAT[0x5] SHADDR = 0x00, SHCNT = 0x0 
-Sep 28 15:26:14 m82 kernel: HADDR = 0x00, HCNT = 0x0 CCSGCTL[0x10] 
-Sep 28 15:26:14 m82 kernel: LQIN: 0x8 0x0 0x0 0x1 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 
-Sep 28 15:26:14 m82 kernel: scsi1: LQISTATE = 0x1, LQOSTATE = 0x1a, OPTIONMODE = 0x52
-Sep 28 15:26:14 m82 kernel: scsi1: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x0
-Sep 28 15:26:14 m82 kernel: SIMODE0[0xc] 
-Sep 28 15:26:14 m82 kernel: CCSCBCTL[0x4] 
-Sep 28 15:26:14 m82 kernel: scsi1: REG0 == 0x1, SINDEX = 0x102, DINDEX = 0x102
-Sep 28 15:26:14 m82 kernel: scsi1: SCBPTR == 0x1, SCB_NEXT == 0xff80, SCB_NEXT2 == 0xff01
-Sep 28 15:26:14 m82 kernel: CDB 0 0 0 0 0 0
-Sep 28 15:26:14 m82 kernel: STACK: 0x12 0x0 0x0 0x0 0x0 0x0 0x0 0x0
-Sep 28 15:26:14 m82 kernel: <<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
-Sep 28 15:26:14 m82 kernel: DevQ(0:0:0): 0 waiting
-Sep 28 15:26:14 m82 kernel: DevQ(0:0:1): 0 waiting
-Sep 28 15:26:14 m82 kernel: (scsi1:A:0:0): Device is disconnected, re-queuing SCB
-Sep 28 15:26:14 m82 kernel: Recovery code sleeping
-
-
-The Fibrenetix appears as a pair of 2Tb disks at 0/0/0 and 0/0/1.
-There is nothing else on the same scsi bus (there are things on scsi0
-though).
-
-What should I try ?
-
-  OG.
-
+______________________________________________________________________
+This email has been scanned by the MessageLabs Email Security System.
+For more information please visit http://www.messagelabs.com/email 
+______________________________________________________________________
