@@ -1,32 +1,33 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Infinite interrupt loop, INTSTAT = 0
-Date: Wed, 28 Sep 2005 11:24:46 -0500
-Message-ID: <1127924686.4852.11.camel@mulgrave>
-References: <20050928134514.GA19734@dspnet.fr.eu.org>
-	 <1127919909.4852.7.camel@mulgrave>
-	 <20050928160744.GA37975@dspnet.fr.eu.org>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
+Date: Wed, 28 Sep 2005 11:27:12 -0500
+Message-ID: <20050928162712.GA7615@us.ibm.com>
+References: <Pine.LNX.4.10.10509271604510.14637-100000@master.linux-ide.org> <20050928113703.65626.qmail@web31806.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:55719 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751108AbVI1QYw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Sep 2005 12:24:52 -0400
-In-Reply-To: <20050928160744.GA37975@dspnet.fr.eu.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751355AbVI1Q1v@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20050928113703.65626.qmail@web31806.mail.mud.yahoo.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Luben Tuikov <ltuikov@yahoo.com>
+Cc: Andre Hedrick <andre@linux-ide.org>, Luben Tuikov <luben_tuikov@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Olivier Galibert <galibert@pobox.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "Hack inc." <linux-kernel@vger.kernel.org>
 
-On Wed, 2005-09-28 at 18:07 +0200, Olivier Galibert wrote:
-> scsi1:0:0:0: Attempting to abort cmd ffff8101b1cdf880: 0x28 0x0 0x0
-> 0xbc 0x0 0x3f 0x0 0x0 0x8 0x0
+On Wed, Sep 28, 2005 at 04:37:03AM -0700, Luben Tuikov wrote:
 
-Hmm, that message doesn't appear in the current kernel driver.
+> never ever going in.  Why else do you think IBM-ers agree with him that
+> Linux SCSI doesn't need 64 bit LUNS?
 
-Is this a non-standard kernel or non-standard aic79xx driver?
+Please stop repeating that, no one said we should *not* implement a 64 bit
+LUN in linux scsi, and James posted a patch for 64 bit LUN. I posted a
+clarification in response to your earlier postings, you seem to have
+ignored or forgotten this post:
 
-James
+http://marc.theaimsgroup.com/?l=linux-scsi&m=112671847228275&w=2
 
+I said:
 
+"I am talking about the scsi spec, not the code. IMO linux scsi code
+should support W_LUN and 64 bit LUN."
+
+-- Patrick Mansfield
