@@ -1,87 +1,55 @@
 From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
-Date: Wed, 28 Sep 2005 04:37:03 -0700 (PDT)
-Message-ID: <20050928113703.65626.qmail@web31806.mail.mud.yahoo.com>
-References: <Pine.LNX.4.10.10509271604510.14637-100000@master.linux-ide.org>
+Subject: RE: I request inclusion of SAS Transport Layer and AIC-94xx into  the kernel
+Date: Wed, 28 Sep 2005 04:42:28 -0700 (PDT)
+Message-ID: <20050928114228.13609.qmail@web31802.mail.mud.yahoo.com>
+References: <91888D455306F94EBD4D168954A9457C0438823C@nacos172.co.lsil.com>
 Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31806.mail.mud.yahoo.com ([68.142.207.69]:31850 "HELO
-	web31806.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1751228AbVI1LhF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Sep 2005 07:37:05 -0400
-In-Reply-To: <Pine.LNX.4.10.10509271604510.14637-100000@master.linux-ide.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750885AbVI1Lma@vger.kernel.org>
+In-Reply-To: <91888D455306F94EBD4D168954A9457C0438823C@nacos172.co.lsil.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Moore, Eric Dean" <Eric.Moore@lsil.com>, Luben Tuikov <luben_tuikov@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andre Hedrick <andre@linux-ide.org>, Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi Andre,
+--- "Moore, Eric Dean" <Eric.Moore@lsil.com> wrote:
 
---- Andre Hedrick <andre@linux-ide.org> wrote:
-> From what I know from history and why I no longer maintain anything,
-> (working to get sanity back) is the Maintainer defines direction while
-> following a bigger picture.
+> On Tuesday, September 27, 2005 4:51 PM, Luben Tuikov wrote:
+> 
+> > Christoph's code is
+> >  * MPT based only,
+> >  * doesn't follow a spec to save its life,
+> >  * far inferior in SAS capabilities and SAS representation
+> >    again, due to the fact that it is MPT based.
+> > 
+> > Since the whole point of MPT is to _hide_ the transport.
+> > 
+> 
+> 
+> Hi Luben,
+> 
+> OK, Man are you alright?
+> 
+> I've heard of other vendors planning to 
+> provide solutions where sas is implemented
+> in firmware, similar to MPT.  Christophs
+> sas layer is going to work with other 
+> solutions, don't think of it being 
+> MPT centric.
 
-Yes, and I think you'll agree with me, the Maintainer isn't/shouldn't
-necessarily be the person "defining direction".  The reasons are
-many but mostly:
-  * Documentation/ManagingStyle document (valuable read),
-That document _really_ says it _all_.  I suggest all developers, maintainers,
-and corporate _management_ reading this thread to read it.
+Where in what I said above do I say that it will _not_
+work with _other_ MPT based drivers?  Nowhere!
 
-Why should the Maintainer be "defining direction"?  Is this some
-religous cult where "Beaver knows best?" (punt intended!)
-Or is this a theocratic society here at Linux SCSI? "Pi = 3" ;-)
+Yes it _will_ work with other MPT-like drivers but
+to cut and paste again from above:
+ * MPT based only,
+ * doesn't follow a spec to save its life,
+ * far inferior in SAS capabilities and SAS representation
+   again, due to the fact that it is MPT based.
 
-The maintainership role is and has been _clearly_ defined!  For the
-sake of eveyone else, take a look at 2.4 maintainer, 2.6 maintainer,
-other subsystem maintainers: defined by example and in word.
-So much unlike SCSI Core.
+When I say MPT, I do not mean MPT(R), I mean MPT as
+in technology, not as in trademark.
 
-Another also great reason is:
-  * Complete, utter and infinite _incompetence_ coupled with too much pride.
-It hurts us all.
-
-When it comes down to it SCSI Core is 20 years behind and thus Linux Storage
-is 20 years behind.
-
-> Help create a better lie by mapping into the design set forward by James
-> and company.  If the goal of Adaptec is to have support then they need to
-
-Yes, this is indeed a very valuable advice.  I hadn't ever looked at it
-like that.
-
-What I thought, albeit erroneously, mea culpa, is that Linux actually
-_wanted_ to be "the storage OS of choice".  Now I see and realize that
-due to neglected management, Linux has very little to do with _storage_.
-
-Linux need to thank the mutitude of storage ignorant customers
-willing to pay the buck, because it is _Linux_ (put gasping sound here).
-
-Linux _can_ be the "storage OS of choice", but this will not happen
-through neglect, or sheer incompetence coupled with lots of pride.
-
-Back on topic: I'll try to keep up this "Linux storage lie" set forth
-by the james-bottomleys of the Linux community.
-
-> buckup and play be to rules at hand.  Remember, most people are open to
-> new ideas and better models.  Propose one and you will find backing.
-
-I never have found backing.  It is all in the archives of linux-scsi
-mailing list.  What happens is that even if people like your idea
-and write to you _privately_ to tell you that they like your
-idea, somewhere in their email, they tell you not to cross-post
-their message to the list because they have storage products which
-need Linux.  The reason for this is that James Bottomley has established
-this politics that if you don't agree to his antics, your patches are
-never ever going in.  Why else do you think IBM-ers agree with him that
-Linux SCSI doesn't need 64 bit LUNS?
-
-_But_ I'm willing to try _again_.  So I'll be proposing something
-later this morning.  (You know, all engineers are optimists.)
-
-       Luben
-
+     Luben
