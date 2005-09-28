@@ -1,7 +1,7 @@
-From: Arjan van de Ven <arjan@infradead.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: Infinite interrupt loop, INTSTAT = 0
-Date: Wed, 28 Sep 2005 19:24:08 +0200
-Message-ID: <1127928249.2893.39.camel@laptopd505.fenrus.org>
+Date: Wed, 28 Sep 2005 12:51:49 -0500
+Message-ID: <1127929909.4852.34.camel@mulgrave>
 References: <20050928134514.GA19734@dspnet.fr.eu.org>
 	 <1127919909.4852.7.camel@mulgrave>
 	 <20050928160744.GA37975@dspnet.fr.eu.org>
@@ -10,11 +10,11 @@ References: <20050928134514.GA19734@dspnet.fr.eu.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751462AbVI1RYZ@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750835AbVI1Rw6@vger.kernel.org>
 In-Reply-To: <20050928171052.GA45082@dspnet.fr.eu.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Olivier Galibert <galibert@pobox.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, "Hack inc." <linux-kernel@vger.kernel.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "Hack inc." <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 On Wed, 2005-09-28 at 19:10 +0200, Olivier Galibert wrote:
@@ -30,12 +30,17 @@ On Wed, 2005-09-28 at 19:10 +0200, Olivier Galibert wrote:
 > Just reproduced the exact same message with a vanilla 2.6.13.2.
 > Checking the just-untarred sources, it _is_ in aix79xx_osm.c, in
 > ahd_linux_abort.  You must have typoed "Attempting" in your grep :-)
-> 
-> Want be to try to BUG() it or something to get a stack trace?  The
-> crash happens a handful of seconds after the card dumping, time enough
-> for a well-placed dmesg in an xterm.
-> 
-> Incidentally, how can one get a backtrace without crashing the kernel
-> in the operation?
 
-WARN_ON(1)
+Oh .. apparently that message got removed between 2.6.13 and current git
+head.
+
+Is there any chance you could try this with the latest git snapshot and
+post all the messages from the time the aic79xx is detected to the time
+this message appears ... what I'm trying to ascertain is if anything
+went wrong in negotiating with the device (2.6.13 unfortunately is a bit
+terse on the negotiation messages ... git head will be slightly more
+verbose).
+
+Thanks,
+
+James
