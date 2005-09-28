@@ -1,44 +1,87 @@
-From: "erich" <erich@areca.com.tw>
-Subject: ARECA 'arcmsr' new Linux SCSI RAID driver version 1.20.00.11
-Date: Wed, 28 Sep 2005 14:57:15 +0800
-Message-ID: <000b01c5c3f9$dda04b70$9300a8c0@erich2003>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
+Date: Wed, 28 Sep 2005 04:37:03 -0700 (PDT)
+Message-ID: <20050928113703.65626.qmail@web31806.mail.mud.yahoo.com>
+References: <Pine.LNX.4.10.10509271604510.14637-100000@master.linux-ide.org>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="big5";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 220-130-178-143.HINET-IP.hinet.net ([220.130.178.143]:30699
-	"EHLO areca.com.tw") by vger.kernel.org with ESMTP id S1751168AbVI1G6u
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Sep 2005 02:58:50 -0400
+Received: from web31806.mail.mud.yahoo.com ([68.142.207.69]:31850 "HELO
+	web31806.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1751228AbVI1LhF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Sep 2005 07:37:05 -0400
+In-Reply-To: <Pine.LNX.4.10.10509271604510.14637-100000@master.linux-ide.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, Linux Matt Dainty <matt@bodgit-n-scarper.com>, Linux Kornel Wieliczek <e0815w@onlinehome.de>, Linux James Bottomley <James.Bottomley@SteelEye.com>, Linux Christoph Hellwig <hch@infradead.org>, Linux Arjan van de Ven <arjan@infradead.org>, Linux Adrian Bunk <bunk@stusta.de>
+To: Andre Hedrick <andre@linux-ide.org>, Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi Dear all,
+Hi Andre,
 
-I  had modified some incorrect code about Arjan van de Ven comment.
-And change this driver version to 1.20.00.11 .
+--- Andre Hedrick <andre@linux-ide.org> wrote:
+> From what I know from history and why I no longer maintain anything,
+> (working to get sanity back) is the Maintainer defines direction while
+> following a bigger picture.
 
-     1.20.00.10    9/23/2005         enhance sysfs function for change 
-driver's max tag Q number.
-                                                   add DMA_64BIT_MASK for 
-backward compatible with all 2.6.x
-                                                   add some useful message 
-for abort command
-                                                   add ioctl code 
-'ARCMSR_IOCTL_FLUSH_ADAPTER_CACHE'
-                                                   customer can send this 
-command for sync raid volume data
+Yes, and I think you'll agree with me, the Maintainer isn't/shouldn't
+necessarily be the person "defining direction".  The reasons are
+many but mostly:
+  * Documentation/ManagingStyle document (valuable read),
+That document _really_ says it _all_.  I suggest all developers, maintainers,
+and corporate _management_ reading this thread to read it.
 
-     1.20.00.11    9/29/2005         by comment of Arjan van de Ven fix 
-incorrect msleep redefine
-                                                   cast off 
-sizeof(dma_addr_t) condition for 64bit pci_set_dma_mask
+Why should the Maintainer be "defining direction"?  Is this some
+religous cult where "Beaver knows best?" (punt intended!)
+Or is this a theocratic society here at Linux SCSI? "Pi = 3" ;-)
 
-Best Regards
-Erich Chen 
+The maintainership role is and has been _clearly_ defined!  For the
+sake of eveyone else, take a look at 2.4 maintainer, 2.6 maintainer,
+other subsystem maintainers: defined by example and in word.
+So much unlike SCSI Core.
+
+Another also great reason is:
+  * Complete, utter and infinite _incompetence_ coupled with too much pride.
+It hurts us all.
+
+When it comes down to it SCSI Core is 20 years behind and thus Linux Storage
+is 20 years behind.
+
+> Help create a better lie by mapping into the design set forward by James
+> and company.  If the goal of Adaptec is to have support then they need to
+
+Yes, this is indeed a very valuable advice.  I hadn't ever looked at it
+like that.
+
+What I thought, albeit erroneously, mea culpa, is that Linux actually
+_wanted_ to be "the storage OS of choice".  Now I see and realize that
+due to neglected management, Linux has very little to do with _storage_.
+
+Linux need to thank the mutitude of storage ignorant customers
+willing to pay the buck, because it is _Linux_ (put gasping sound here).
+
+Linux _can_ be the "storage OS of choice", but this will not happen
+through neglect, or sheer incompetence coupled with lots of pride.
+
+Back on topic: I'll try to keep up this "Linux storage lie" set forth
+by the james-bottomleys of the Linux community.
+
+> buckup and play be to rules at hand.  Remember, most people are open to
+> new ideas and better models.  Propose one and you will find backing.
+
+I never have found backing.  It is all in the archives of linux-scsi
+mailing list.  What happens is that even if people like your idea
+and write to you _privately_ to tell you that they like your
+idea, somewhere in their email, they tell you not to cross-post
+their message to the list because they have storage products which
+need Linux.  The reason for this is that James Bottomley has established
+this politics that if you don't agree to his antics, your patches are
+never ever going in.  Why else do you think IBM-ers agree with him that
+Linux SCSI doesn't need 64 bit LUNS?
+
+_But_ I'm willing to try _again_.  So I'll be proposing something
+later this morning.  (You know, all engineers are optimists.)
+
+       Luben
 
