@@ -1,33 +1,55 @@
-From: Olivier Galibert <galibert@pobox.com>
-Subject: Re: Infinite interrupt loop, INTSTAT = 0
-Date: Wed, 28 Sep 2005 18:42:37 +0200
-Message-ID: <20050928164237.GA40806@dspnet.fr.eu.org>
-References: <20050928134514.GA19734@dspnet.fr.eu.org> <1127919909.4852.7.camel@mulgrave> <20050928160744.GA37975@dspnet.fr.eu.org> <1127924686.4852.11.camel@mulgrave>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+ 	 the kernel
+Date: Wed, 28 Sep 2005 12:59:27 -0400
+Message-ID: <433ACBEF.9040006@adaptec.com>
+References: <91888D455306F94EBD4D168954A9457C04388439@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dspnet.fr.eu.org ([213.186.44.138]:7688 "EHLO dspnet.fr.eu.org")
-	by vger.kernel.org with ESMTP id S1751423AbVI1Qmq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Sep 2005 12:42:46 -0400
-Content-Disposition: inline
-In-Reply-To: <1127924686.4852.11.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751304AbVI1Q7l@vger.kernel.org>
+In-Reply-To: <91888D455306F94EBD4D168954A9457C04388439@nacos172.co.lsil.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Cc: ltuikov@yahoo.com, Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "Hack inc." <linux-kernel@vger.kernel.org>
 
-On Wed, Sep 28, 2005 at 11:24:46AM -0500, James Bottomley wrote:
-> On Wed, 2005-09-28 at 18:07 +0200, Olivier Galibert wrote:
-> > scsi1:0:0:0: Attempting to abort cmd ffff8101b1cdf880: 0x28 0x0 0x0
-> > 0xbc 0x0 0x3f 0x0 0x0 0x8 0x0
+On 09/28/05 11:15, Moore, Eric Dean wrote:
+> Luben: I guess you didn't get what I meant.
 > 
-> Hmm, that message doesn't appear in the current kernel driver.
-> 
-> Is this a non-standard kernel or non-standard aic79xx driver?
+> I was referring that there are other
+> *vendors* (not LSI, e.g MegaRAID) that are 
+> working on sas solutions with sas firmware 
+> implementation. One that comes to mind is
+> Intel SunRise Lake, which is non a MPT based 
+> solution, that would work with Christophs 
+> Sas Layer. There maybe others, such as emulex.
+> Perhaps James S. could comment on that.
 
-Hmmm, indeed, a leftover from when I was trying to debug some things
-(a message in ahd_linux_abort).  Lemme recompile a perfectly vanilla
-2.6.13.2.
+This means that they have an IOP on the same
+silicone or on the same packaging.
 
-  OG.
+This means, again that they'd done all transport
+specific tasks in the FW (by the IOP).
+
+Again, such solutions do _not_ need the
+SAS Transport Layer.
+
+They don't even need the attributes, but
+as a "nice to have" feature, you can use
+transport attributes.
+
+You, as technical person, should recognize
+the different needs and thus the different
+solutions between LSI's implementation and
+Adaptec's.
+
+I'm surprised you never chimed in in defense
+of the _different_ technology.
+
+See, I've mentioned many times that the two
+radically different technologies can coexist.
+But I've not heard any technical word
+from the other guys: you.
+
+	Luben
