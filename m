@@ -1,56 +1,44 @@
-From: Ravi Parimi <rparimi@gmail.com>
-Subject: question about SG_ ioctls
-Date: Tue, 27 Sep 2005 19:12:00 -0700
-Message-ID: <21c20ce70509271912142ef77@mail.gmail.com>
-Reply-To: Ravi Parimi <rparimi@gmail.com>
+From: "erich" <erich@areca.com.tw>
+Subject: ARECA 'arcmsr' new Linux SCSI RAID driver version 1.20.00.11
+Date: Wed, 28 Sep 2005 14:57:15 +0800
+Message-ID: <000b01c5c3f9$dda04b70$9300a8c0@erich2003>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	format=flowed;
+	charset="big5";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.197]:22559 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S965250AbVI1CMB convert rfc822-to-8bit
+Received: from 220-130-178-143.HINET-IP.hinet.net ([220.130.178.143]:30699
+	"EHLO areca.com.tw") by vger.kernel.org with ESMTP id S1751168AbVI1G6u
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Sep 2005 22:12:01 -0400
-Received: by zproxy.gmail.com with SMTP id 13so537270nzn
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Sep 2005 19:12:00 -0700 (PDT)
-Content-Disposition: inline
+	Wed, 28 Sep 2005 02:58:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Linux Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org, Linux Matt Dainty <matt@bodgit-n-scarper.com>, Linux Kornel Wieliczek <e0815w@onlinehome.de>, Linux James Bottomley <James.Bottomley@SteelEye.com>, Linux Christoph Hellwig <hch@infradead.org>, Linux Arjan van de Ven <arjan@infradead.org>, Linux Adrian Bunk <bunk@stusta.de>
 
-Hi,
+Hi Dear all,
 
-I have a SCSI controller thats need to be tested for correct
-performance with all the SG_ and SCSI_ ioctls. I've been using the
-sg3_utils package to do this so far. The various programs in sg3_utils
-issue calls to different ioctls depending on the command line
-arguments passed onto them. I would like to have just one program that
-issues calls to a few IOCTLs that I really care about, and want to
-calls to these IOCTLs lined up in a C program like this:
+I  had modified some incorrect code about Arjan van de Ven comment.
+And change this driver version to 1.20.00.11 .
 
-===================================================================
-   if ((res = ioctl(sg_fd, SG_GET_VERSION_NUM, &ver) < 0)) {
-      printf("IOCTL SG_GET_VERSION_NUM failed\n");
-      return 1;
-   }
-   printf("SG_GET_VERSION_NUM:\n");
-   printf("\tversion = %d\n", ver);
+     1.20.00.10    9/23/2005         enhance sysfs function for change 
+driver's max tag Q number.
+                                                   add DMA_64BIT_MASK for 
+backward compatible with all 2.6.x
+                                                   add some useful message 
+for abort command
+                                                   add ioctl code 
+'ARCMSR_IOCTL_FLUSH_ADAPTER_CACHE'
+                                                   customer can send this 
+command for sync raid volume data
 
-   if ((res = ioctl(sg_fd, SCSI_IOCTL_GET_IDLUN, &my_idlun) < 0)) {
-      printf("IOCTL SCSI_IOCTL_GET_IDLUN failed\n");
-      return 1;
-   }
-   printf("SCSI_IOCTL_GET_IDLUN:\n");
-   printf("\tchannel = %d\n\tid = %d\t\n\tlun = %d\n",
-   (my_idlun.dev_id >> 16) & 0xff, my_idlun.dev_id & 0xff,
-   (my_idlun.dev_id >> 8) & 0xff);
-===================================================================
+     1.20.00.11    9/29/2005         by comment of Arjan van de Ven fix 
+incorrect msleep redefine
+                                                   cast off 
+sizeof(dma_addr_t) condition for 64bit pci_set_dma_mask
 
-I want to know if doing the above is OK? I do not know if calling
-certain IOCTLs in a specific order has any problems/issues. Also, if
-the above program reports success for all the IOCTLs called, it is
-safe to assume that the scsi controller is able to handle all IOCTLs
-properly?
+Best Regards
+Erich Chen 
 
-Thanks a lot,
---ravi
