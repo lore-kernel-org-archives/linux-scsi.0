@@ -1,96 +1,220 @@
-From: Lukasz Kosewski <lkosewsk@gmail.com>
-Subject: Re: [PATCH 3/3] Add disk hotswap support to libata RESEND #5
-Date: Wed, 28 Sep 2005 16:21:16 -0400
-Message-ID: <355e5e5e05092813211f5ef825@mail.gmail.com>
-References: <355e5e5e050926180156e58f59@mail.gmail.com>
-	 <433AEB4F.7010502@pobox.com>
-	 <355e5e5e0509281258536e4be4@mail.gmail.com>
-	 <433AF897.2050400@pobox.com>
-Reply-To: Lukasz Kosewski <lkosewsk@gmail.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+ the kernel
+Date: Wed, 28 Sep 2005 16:36:02 -0400
+Message-ID: <433AFEB2.7090003@adaptec.com>
+References: <43384E28.8030207@adaptec.com> <4339BFE9.1060604@pobox.com> <4339CCD6.5010409@adaptec.com> <4339F9A8.2030709@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750773AbVI1UVT@vger.kernel.org>
-In-Reply-To: <433AF897.2050400@pobox.com>
-Content-Disposition: inline
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750811AbVI1UgP@vger.kernel.org>
+In-Reply-To: <4339F9A8.2030709@pobox.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 9/28/05, Jeff Garzik <jgarzik@pobox.com> wrote:
-> Lukasz Kosewski wrote:
-> >>>+     if (plugdata) {
-> >>>+             writeb(plugdata, mmio_base + hotplug_offset);
-> >>>+             for (i = 0; i < host_set->n_ports; ++i) {
-> >>>+                     ap = host_set->ports[i];
-> >>>+                     if (!(ap->flags & ATA_FLAG_SATA))
-> >>>+                             continue;  //No PATA support here... yet
-> >>>+                     // Check unplug flag
-> >>>+                     if (plugdata & 0x1) {
-> >>>+                             /* Do stuff related to unplugging a device */
-> >>>+                             ata_hotplug_unplug(ap);
-> >>>+                             handled = 1;
-> >>>+                     } else if ((plugdata >> 4) & 0x1) {  //Check plug flag
-> >>>+                             /* Do stuff related to plugging in a device */
-> >>>+                             ata_hotplug_plug(ap);
-> >>>+                             handled = 1;
-> >>
-> >>What happens if both bits are set?  Seems like that could happen, if a
-> >>plug+unplug (cable blip?) occurs in rapid succession.
-> >
-> >
-> > What IF both bits are set?  This is why we have a debounce timer to
-> > take care of the problem :P
-> >
-> > The way this is set up, unplugging will win out (plugging will come
-> > first, unplugging will come and destroy 'plug's timer, and then the
-> > unplug action will be performed on timer expiry).  Personally, I like
-> > it this way, but I can reverse the order of these two to make plugging
-> > the default action.  Which do you prefer?
->
-> The above logic
-> * acks multiple events
-> * handles only a single event
->
-> so either way you lose an event.  In the code as it is written above, if
-> both 'plug' and 'unplug' events are noted, then only the unplug get
-> handled, and the newly-plugged device is never noticed.
+On 09/27/05 22:02, Jeff Garzik wrote:
+> Luben Tuikov wrote:
+> 
+>>On 09/27/05 17:55, Jeff Garzik wrote:
+>>
+>>
+>>>* Avoids existing SAS code, rather than working with it.
+> 
+> 
+>>No, it's the _other_ way around.  There is NO existing
+>>SAS code.
+> 
+> 
+> Incorrect, just look in the latest upstream kernel.
 
-Yeah, that's exactly what it does.  I see your point, but no matter
-how I design this (debounce timer, no debounce timer, whatever), in
-such a situation we always have either:
-- plug/unplug
-or
-- unplug/plug
+Yes, because it was Christoph's code submitted right after
+I submitted and JB took his code right in.
 
-One of them will always win.
+Again, I had the infrastructure ready _before_ OLS.
 
-I will change this so that 'plug' wins (as in, the unplug call will be
-made first, the plug second).  This way if we have both bits set, but
-what we ACTUALLY wanted was an unplug:
-- the unplug API interface ata_port_disables the ap in question.  It
-queues up and unplug event.
-- the plug API interface deletes the queued plug event, and stores up
-a plug on the timer.
-- the plug timer event triggers, the first thing it does is execute
-ata_scsi_handle_unplug, which the unplug handler would have done
-anyways.  It removes the associated struct scsi_device from existence.
- Following this, it does a reset and attempts to detect a new device;
-there is none (we actually unplugged it), so it just fails, no device
-detected.  So this case works.
+> libata-scsi.c is the SAT translation layer.
 
-If we have both bits set but wanted a a plug:
-- the unplug API interface ata_port_disables the ap in question.  It
-queues up and unplug event.
-- the plug API interface deletes the queued plug event, and stores up
-a plug on the timer.
-- the plug timer fires off and does what we want.
+Not quite.
 
-Is this acceptable?  I'd love to make the hardware acknowledge only
-one request and interrupt me again with another, but there is no way
-to get it to do that; when you acknowledge a hotplug interrupt it
-clears the register of all hotplug events whether you handled them
-specifically or not.
+It has potential to become SATL but at its current
+form it cannot be:
 
-Luke
+int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+{
+	struct ata_port *ap;
+	struct ata_device *dev;
+	struct scsi_device *scsidev = cmd->device;
+
+	ap = (struct ata_port *) &scsidev->host->hostdata[0];
+
+If I want to use that I have to _simulate_ ata_port.
+Furthermore, scsidev->host->hostdata may not point
+to ata_port for SATA devices over a different transport.
+
+Ideally SATL is just a _data transformation function_ and
+getting to the ATA device is transport dependent.
+
+Jeff, would you be accepting patches?
+
+>>No, not true.  It _integrates_ with SCSI Core.  The sad truth
+>>is that SCSI Core knows only HCIL.
+> 
+> 
+> That's something that needs fixing, for SAS.
+
+Would you be accepting patches for the creation,
+and use of "struct scsi_domain_device { ... }"?
+
+This would be a "SCSI Device with a Z Port".
+Z could be target or initiator (most likely just T).
+
+Then for each scsi_domain_device, SCSI Core does
+REPORT LUNS and then INQUIRY for each LU it found.
+
+The old (current) code would still say as is, unchanged,
+since it supports older, broken hardware.
+
+Would you be accepting patches for this?
+
+>>I repeat again that I had this code _long_ before Christoph
+>>ever dreamt up SAS.  And he got my code via James B sometime
+>>before OLS this year.  I think he got it July 12, 2005.
+>>
+>>The question is: why didn't _he_ use the solution already
+>>available?
+> 
+> 
+> Because it has the problems listed time and again.
+
+What problems when there was no other code around.
+
+Look at it this way: _their_ code doesn't integrate
+with ours.  See?
+
+I simply cannot take an argument like this:
+   "Because it has the problems listed time and again."
+
+You have to be specific.
+
+> The SAS transport class is designed to support both firmware-based 
+> devices like MPT, and non-firmware devices such as Adaptec.
+
+No, it never has been.  It is an _attribute_ exporting framework
+only.
+
+If you understood how different those architectures are,
+you'd understand what I mean.
+
+> Sure it might need patches -- send patches, work with people, rather 
+> than ignoring existing work.
+
+I do not _know_ how to consolidate the completely broken
+"design" set forth by JB and company.
+
+It is _completely_ not to SAM spec.
+
+Exporting attributes from MPT-based drivers is not the same
+as managing a transport.
+
+I repeat again:
+  * MPT _hides_ the transport and the managment
+    of the transport from you -- so in effect there is
+    nothing to manage.
+  * MPT gives you Logical Units to work with, NOT ever domain
+    devices or anyhing domain like.
+  * MPT gives you a SAM/SPC hook to hook _right_ into SCSI Core.
+
+_This_ is why their LLDD _can_ use the host template.
+
+But an AIC-94xx and BCM8603 _is_ NOT a scsi_host material.  It is just
+an interface to the interconnect.
+
+To convince yourself of this: take a look at the _members_ of
+the scsi host/scsi host template: nothing in that structure is
+presented in the chip -- UNLIKE old Parallel SCSI device drivers.
+
+The scsi host template was written to cater to _old_ (then new)
+Parallel SCSI drivers!  Times have changed!  Time to evolve.
+
+> We've been over the technical stuff time and again.  That's the 
+>  maintainer problem. 
+
+No we haven't been over the technical stuff time and again.
+
+> We need someone who will listen to the community.
+
+I bet you're melting people's hearts when they read this.
+
+So to summarize for corporate management what you're saying
+here is:
+  - you're saying that I do not listen to "the community",
+  - you're saying that I'm an _outsider_ to "the community",
+  - you're saying that I'm no good to work with you, since
+    you are part of that community but not me.
+
+That is you cannot take it that someone will tell 
+"the community" anything.  "The community" knows all and it
+knows best.
+
+So in effect there are no good and knowlegable engineers
+anywhere but in the "Linux community".
+
+That is there is no people with new ideas, better ideas,
+innovative ideas, more knowlege about certain subject matter,
+_anywhere_ but in the "Linux community".
+
+So in effect, there will never be an "outsider" who will
+come in to the "linux community" and change things around,
+no fresh ideas, no better (right?) way to do things.
+
+"The community" is not going to listen to anyone but only to
+already politically established members on _any_ subject
+matter, even technical, even from "outsiders" who work with
+the technology every day.
+
+>>What _exactly_ does it mean "don't play well with others"?
+> 
+> 
+> It means not taking feedback, and working around rather than with the 
+> SCSI core.
+
+So does this mean, that if I submit patches "fixing" (oops,
+not meant to hurt anyone's bal^w^w^wpride) SCSI Core, they
+will be accepted.
+
+Or do you want me to do "your way of SAS"?
+Maybe JB et al, should write the "Linux SAS spec" and
+then we can recommend this to T10.org, so they can scrap
+their version and use "the community's"?
+
+I hear there was such a suggestion on the mailing lists
+for ATA and T13.org, but I'm sure I'm misunderstanding
+something here as usual.
+
+> Then you don't understand the ->qc_{prep,issue} hooks.  That should get 
+> you 90% of the way there, if not 99%.
+
+But I have to simulate struct ata_port, Jeff.
+
+Which isn't so bad, but speaks about the design.
+
+>>What you need to do is to write a SATL layer, just as you can
+>>see in SAT-r6, page 2, Figure 3.  I'm on top of this already.
+> 
+> Re-read libata-scsi.c, and submit any patches you feel are needed.
+
+Will do.
+
+>>The code doesn't alter Linux SCSI or anyone else's behaviour.
+>>It only _provides_ SAS support to the kernel.
+> 
+> 
+> That's one of the problems: It should update the SCSI core.
+
+Thank you for admitting this -- you're the first and only
+member of "the community" (since I'm not a member apparently)
+to admit this.
+
+	Luben
