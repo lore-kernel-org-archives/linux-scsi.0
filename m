@@ -1,55 +1,37 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: RE: I request inclusion of SAS Transport Layer and AIC-94xx into  the kernel
-Date: Wed, 28 Sep 2005 04:42:28 -0700 (PDT)
-Message-ID: <20050928114228.13609.qmail@web31802.mail.mud.yahoo.com>
-References: <91888D455306F94EBD4D168954A9457C0438823C@nacos172.co.lsil.com>
-Reply-To: ltuikov@yahoo.com
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
+Date: Wed, 28 Sep 2005 06:32:35 -0600
+Message-ID: <20050928123235.GJ1459@parisc-linux.org>
+References: <Pine.LNX.4.10.10509271604510.14637-100000@master.linux-ide.org> <20050928113703.65626.qmail@web31806.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750885AbVI1Lma@vger.kernel.org>
-In-Reply-To: <91888D455306F94EBD4D168954A9457C0438823C@nacos172.co.lsil.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>, Luben Tuikov <luben_tuikov@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:2969 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S1750898AbVI1Mcj
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Sep 2005 08:32:39 -0400
+Content-Disposition: inline
+In-Reply-To: <20050928113703.65626.qmail@web31806.mail.mud.yahoo.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <ltuikov@yahoo.com>
+Cc: Andre Hedrick <andre@linux-ide.org>, Luben Tuikov <luben_tuikov@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
---- "Moore, Eric Dean" <Eric.Moore@lsil.com> wrote:
+On Wed, Sep 28, 2005 at 04:37:03AM -0700, Luben Tuikov wrote:
+> Yes, and I think you'll agree with me, the Maintainer isn't/shouldn't
+> necessarily be the person "defining direction".  The reasons are
+> many but mostly:
+>   * Documentation/ManagingStyle document (valuable read),
+> That document _really_ says it _all_.  I suggest all developers, maintainers,
+> and corporate _management_ reading this thread to read it.
 
-> On Tuesday, September 27, 2005 4:51 PM, Luben Tuikov wrote:
-> 
-> > Christoph's code is
-> >  * MPT based only,
-> >  * doesn't follow a spec to save its life,
-> >  * far inferior in SAS capabilities and SAS representation
-> >    again, due to the fact that it is MPT based.
-> > 
-> > Since the whole point of MPT is to _hide_ the transport.
-> > 
-> 
-> 
-> Hi Luben,
-> 
-> OK, Man are you alright?
-> 
-> I've heard of other vendors planning to 
-> provide solutions where sas is implemented
-> in firmware, similar to MPT.  Christophs
-> sas layer is going to work with other 
-> solutions, don't think of it being 
-> MPT centric.
+Dude, that document is written in a very tongue-in-cheek style.  There's
+a few clues:
 
-Where in what I said above do I say that it will _not_
-work with _other_ MPT based drivers?  Nowhere!
+"the preferred (or made up, depending on who you ask) management style"
 
-Yes it _will_ work with other MPT-like drivers but
-to cut and paste again from above:
- * MPT based only,
- * doesn't follow a spec to save its life,
- * far inferior in SAS capabilities and SAS representation
-   again, due to the fact that it is MPT based.
+"this document may or may not have anything to do with reality.  It
+ started as a lark"
 
-When I say MPT, I do not mean MPT(R), I mean MPT as
-in technology, not as in trademark.
+It's really not a club for you to beat James with.
 
-     Luben
