@@ -1,60 +1,75 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
- 	the kernel
-Date: Thu, 29 Sep 2005 08:46:14 -0400
-Message-ID: <433BE216.1090108@adaptec.com>
-References: <91888D455306F94EBD4D168954A9457C043889D9@nacos172.co.lsil.com>
+From: James.Smart@Emulex.Com
+Subject: RE: SATA suspend/resume (was Re: [PATCH] updated version of Jens' SATA suspend-to-ram patch)
+Date: Thu, 29 Sep 2005 10:26:25 -0400
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7AC2@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751231AbVI2MrO@vger.kernel.org>
-In-Reply-To: <91888D455306F94EBD4D168954A9457C043889D9@nacos172.co.lsil.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: ltuikov@yahoo.com, Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:2479 "EHLO emulex.emulex.com")
+	by vger.kernel.org with ESMTP id S932164AbVI2O1L convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Sep 2005 10:27:11 -0400
+content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: hch@infradead.org, jgarzik@pobox.com, joshk@triplehelix.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de, torvalds@osdl.org, rdunlap@xenotime.net
 
-On 09/28/05 18:17, Moore, Eric Dean wrote:
-> Can you stop this tirade, e.g. conspiracy theory,
-> in regards to LSI/MPT and the transport layer?
+In other times when I implemented this....
 
-What conspiracy theory?
+You need to be careful on the power-up. Many JBODs share a single
+"enclosure" and that enclosure has a limited power supply. If all
+drives were spun up in parallel (and a drive may take 10-15seconds
+to spin up), then they can overload the enclosure's power limit.
+This issue, which normally occurs when an enclosure is first powered
+on, was solved by injecting sequence delays based on either jumpers
+or delays based on address/slot. But this won't help the software
+suspend/resume.
 
-Oh you mean that one _technology_ is in the kernel
-and another distinct, radically _different_ is NOT?
+There were not a lot of great answers on how to solve this as it usually
+required knowledge of how the hardware was packaged. What we defaulted
+to was limiting spin up to never concurrently start more than N drives
+on a scsi bus. N defaulted to 1, but allowed the admin to tune it.
 
-Oh you mean that conspiracy theory?
+-- james s
 
-> That is not the case.   There will be other sas 
-
-I don't see our driver in the kernel, do you?
-
-> solutions that implement discovery, and 
-> sas/sata translation in firmware, higher level
-> event handling.
-
-Yes, and they would all be MPT-like technology.
-I don't have a problem with that.
-
-What I have a problem with is that you folks
-just sit and watch this, while you could explain
-to James et al, that indeed the technologies
-are different and there is no reason NOT to include
-one but leave the other out.
-
->>See, I've mentioned many times that the two
->>radically different technologies can coexist.
->>But I've not heard any technical word
->>from the other guys: you.
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org
+> [mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of 
+> Christoph Hellwig
+> Sent: Thursday, September 29, 2005 4:12 AM
+> To: Christoph Hellwig; Jeff Garzik; Joshua Kwan;
+> linux-kernel@vger.kernel.org; linux-ide@vger.kernel.org;
+> linux-scsi@vger.kernel.org; axboe@suse.de; torvalds@osdl.org;
+> randy_dunlap
+> Subject: Re: SATA suspend/resume (was Re: [PATCH] updated version of
+> Jens' SATA suspend-to-ram patch)
 > 
-> I just don't have time to engage you.
-> I've got work to do, customer requests, issues,
-> etc.
-
-:-)  That a nice way to get out of the situation.
-
-I was hoping you'd say something like, "Yeah, the
-technologies are different -- I don't see why one
-should be in and another not."
-
-	Luben
+> 
+> On Thu, Sep 29, 2005 at 08:34:37AM +0100, Christoph Hellwig wrote:
+> > is an ULDD operation, not an LLDD one, and this fits the 
+> layering model
+> > much better.  The only complaints here are cosmetics:
+> > 
+> >  - generic_scsi_suspend/generic_scsi_resume are misnamed, 
+> they should
+> >    probably be scsi_device_suspend/resume.
+> >  - while we're at it they could probably move to 
+> scsi_sysfs.c to keep
+> >    them static in one file - they're just a tiny bit of glue anyway.
+> >  - get rid of all the CONFIG_PM ifdefs - it just clutters 
+> thing up far
+> >    too much.
+> 
+> Actually one important thing is missing, that is a way to 
+> avoid spinning
+> down external disks.  As a start a sysfs-controlable flag 
+> should do it,
+> later we can add transport-specific ways to find out whether a device
+> is external.
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
