@@ -1,72 +1,100 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
  the kernel
-Date: Thu, 29 Sep 2005 12:33:17 -0400
-Message-ID: <433C174D.4050302@adaptec.com>
-References: <Pine.LNX.4.10.10509281227570.19896-100000@master.linux-ide.org>	 <433B0374.4090100@adaptec.com> <20050928223542.GA12559@alpha.home.local>	 <433BFB1F.2020808@adaptec.com> <1128007032.11443.77.camel@tara.firmix.at>
+Date: Thu, 29 Sep 2005 12:54:57 -0400
+Message-ID: <433C1C61.30506@pobox.com>
+References: <Pine.LNX.4.10.10509281227570.19896-100000@master.linux-ide.org> <433B0374.4090100@adaptec.com> <20050928223542.GA12559@alpha.home.local> <433BFB1F.2020808@adaptec.com> <433BFEDB.6050505@pobox.com> <433C0D30.9050901@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932170AbVI2Qdb@vger.kernel.org>
-In-Reply-To: <1128007032.11443.77.camel@tara.firmix.at>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bernd Petrovitsch <bernd@firmix.at>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andre Hedrick <andre@linux-ide.org>, Patrick Mansfield <patmans@us.ibm.com>, Luben Tuikov <ltuikov@yahoo.com>, Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:41196 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932245AbVI2QzF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Sep 2005 12:55:05 -0400
+In-Reply-To: <433C0D30.9050901@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andre Hedrick <andre@linux-ide.org>, Patrick Mansfield <patmans@us.ibm.com>, Luben Tuikov <ltuikov@yahoo.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
-On 09/29/05 11:17, Bernd Petrovitsch wrote:
+Luben Tuikov wrote:
+> of SAS.  THE REASON THEY WERE INTRODUCED INTO LINUX BY JB IS TO
+> ACCOMODATE MPT-based SOLUTIONS FROM TWIDDLING WITH IOCTLS!
+
+Wrong.  This shows you fundamentally don't understand transport classes 
+at all.
+
+AFAIK, the first transport class was FC, for qla2xxx.
+
+Read the code to see how FC avoids the SPI-centric scan -- an example of 
+transport independence.
+
+
+> How do I know this: simple: JB's "transport attributes" have
+> NOTHING to do with SAM.
 > 
-> Then submit your driver as a (separate) block device in parallel to the
-> existing SCSI subsystem. People will use it for/with other parts if it
+> They break the layering architecture for one, and are
+> ATTRIBUTE EXPORTING FACILITY for another.
 
-SAS is ultimately SCSI.  I'll just have to write my own SCSI core.
-_We_ together can do this in parallel to the old SCSI Core.
+Transport class == transport layer.  Eventually this will sink in.
 
-This is the whole idea.
+Transport class allows for complete transport independence, be it SAS, 
+FC, iSCSI, or other.
 
-> makes sense (and you - as the maintainer - accept their patches). And in
 
-You see, at my age and my situation, I no longer see this as
-"my balls - your balls".  What matters to me is good design,
-quality code, customer satisfaction, bottom line.
+> And as you can see, Linux today is the most anal retentive as it
+> has ever been (e.g. SAS, reiser4, and other (revolutionary) technologies).
+> 
+> Remember, you can only go _down_ from the top.  So please
+> do not say
+>    "Linux is the most successful it's ever been."
 
-E.g. I'm quite a liberal person and I wouldn't block
-or stop new technologes from going into Linux on the basis
-and merit of my not understanidn that particular new technology.
+We've still got all that Microsoft and old-Unix marketshare to steal :)
 
-The bottom line is not "my balls - your balls" but the wide
-spread use of Linux and "storage OS of choice".  Not "hobbyist
-OS of choice" and not "let me play Robin Hood".
 
-> a few years the "old" SCSI core fades out as legacy drives fade out (or
-> they will happily coexist forever).
+> It's too immature as it means that it would either go down
+> or that it cannot become even _more_ successful.
+> 
+> 
+>>The rest of the Linux-SCSI devs are trying to make it less SPI-centric. 
+>>  Rather than just complain, we're doing something about it.
+> 
+> 
+> Oh this is such a political sap, Jeff -- I cannot believe
+> you're actually saying this.
 
-Yep, I've been saying this since 2002.  On the linux-scsi ML.
+I'm merely stating I'm submitting patches to clean up SCSI core.  Others 
+have submitted far more patches than I.  And further patches to SCSI 
+core are needed to properly integrate SAS as a transport completely 
+independent from SPI.  I'm going to be putting time and effort into 
+moving the SCSI core away from SPI, so that SAS can be properly integrated.
 
-> The point is: If *you* want it that way, *you* must go that way (and do
-> not expect others to do it just that *you* get *your* driver merged).
-> You are the maintainer of the new stuff and (almost) everything will
-> work as you want.
+All I've seen from you is
+(a) complaints that the SCSI core is too SPI-centric
+(b) a solution that does nothing to fix this
 
-And this is the problem: *you* and "the community" see things in
-*this* way:  "your balls - my balls", "yours/mine".
 
-While I see things like this: new technology, absolve, use, move on.
+> Who are you pleasing?  Your management?
 
-As to your comment above, it's not about how *I* see things.
-It's about how things _actually_ *are*:
-http://www.t10.org/ftp/t10/drafts/sam4/sam4r03.pdf
+My goal is Linux.  Always has been.  I put quality of Linux code, and 
+giving features to Linux users, above all else.  Have been doing so 
+regardless of who employs me, for many years now.
 
-> It might not be the cleanest or most elegant solution in the world, but
-> if it works, who cares and why?
+Maybe one day I will be independently wealthy, be a completely 
+independent Linux maintainer, and then people will have to find 
+something other than Red Hat as the reason for why their code is 
+receiving criticism.
 
-Turn the table around: can _I_ pose this question to JB and Christoph?
 
-(since they are the ones who think this of SAM/SPC)
+> I doubt you've ever been honest with me.*  The reason is that
+> you are trying to push down my throat JB's "transport classes",
+> all the while you're saying I'm supposed to change other people's
+> code?
 
-> Where is now the real problem?
-> I can't see one.
+To get a fully SPI-independent SCSI core, we must change other people's 
+code.  That's the way Linux works.  We evolve the existing code.
 
-Me neither.
+	Jeff
 
-	Luben
+
