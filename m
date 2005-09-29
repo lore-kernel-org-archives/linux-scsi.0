@@ -1,77 +1,49 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: "John Stoffel" <john@stoffel.org>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
  the kernel
-Date: Thu, 29 Sep 2005 13:29:01 -0400
-Message-ID: <433C245D.7070707@pobox.com>
-References: <43384E28.8030207@adaptec.com> <4339BFE9.1060604@pobox.com>	 <4339CCD6.5010409@adaptec.com> <4339F9A8.2030709@pobox.com>	 <433AFEB2.7090003@adaptec.com> <433B0457.7020509@pobox.com>	 <433B14E1.6080201@adaptec.com> <433B217F.4060509@pobox.com>	 <20050929040403.GE18716@alpha.home.local> <1127979848.2918.7.camel@laptopd505.fenrus.org> <433C2137.1040108@s5r6.in-berlin.de>
+Date: Thu, 29 Sep 2005 13:52:26 -0400
+Message-ID: <17212.10714.576797.424890@smtp.charter.net>
+References: <Pine.LNX.4.10.10509281227570.19896-100000@master.linux-ide.org>
+	<433B0374.4090100@adaptec.com>
+	<20050928223542.GA12559@alpha.home.local>
+	<433BFB1F.2020808@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:4077 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932278AbVI2R3H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Sep 2005 13:29:07 -0400
-In-Reply-To: <433C2137.1040108@s5r6.in-berlin.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932292AbVI2Rwe@vger.kernel.org>
+In-Reply-To: <433BFB1F.2020808@adaptec.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andre Hedrick <andre@linux-ide.org>, Patrick Mansfield <patmans@us.ibm.com>, Luben Tuikov <ltuikov@yahoo.com>, Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Arjan van de Ven <arjan@infradead.org>, Willy Tarreau <willy@w.ods.org>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Luben Tuikov <luben_tuikov@adaptec.com>
-
-Stefan Richter wrote:
-> Arjan van de Ven wrote:
-> 
->> On Thu, 2005-09-29 at 06:04 +0200, Willy Tarreau wrote:
->>
->>> On Wed, Sep 28, 2005 at 07:04:31PM -0400, Jeff Garzik wrote:
->>>
->>>> Linux is about getting things done, not being religious about 
->>>> specifications.  You are way too focused on the SCSI specs, and 
->>>> missing the path we need to take to achieve additional flexibility.
-> 
-> 
-> AFAIU, demands to get our concepts closer to SAM concepts are actually 
-> motivated by this: To achieve additional flexibility. (In particular, to 
-> ease integration of the various transports.)
-
-That's what transport classes help achieve.
-
-We just gotta move gunk from the core (HCIL etc.) to scsi_transport_spi 
-before we get there.
 
 
-> We implement drivers of initiators. (Well, targets too.) The specs 
-> describe _what_ initiators do. Thereby they partly describe _how_ 
-> drivers of initiators (our sw pieces) work.
+Luben,
 
-Mostly agreed.  Some of the firmware-based and emulated SCSI stuff is a 
-bit of an I_T mix.
+I'd really prefer if you'd just stop on your tirade and just send in a
+10 line patch for the existing linux SCSI subsystem to fix something
+you think is wrong. 
 
+Code talks, bullshit walks.  
 
-> However it is very desirable to reflect layers and concepts of the SAM 
-> in our stack. One class of reasons is maintainability. No person is able 
-> to understand the stack; nor is a person able to consume and understand 
-> all or even half of the SCSI specs. No person is able to construct a 
-> mapping between the whole stack and the whole SCSI-3 Architecture Model 
-> (in his mind or with pencil and paper...). Therefore there have to be 
-> _components_ of the stack's architecture model which map 1:1 to 
-> _components_ of the SCSI-3 Architecture Model.
-> 
-> Fortunately, SAM layers and concepts are already there in the stack, 
-> although incomplete and incoherent. It will always be disputable _how_ 
-> complete and coherent our software should be in this respect. However it 
-> is out of a question that our software's architecture model might 
-> arbitrarily differ from the SAM.
+Sure, Linux SCSI might not be ideal, but how many people do you know
+have SAS storage on their home PCs right now?  Heck, I don't have SATA
+or PIV on my home system!  
 
-I think just about everybody agrees with this.
+And as a customer of Adaptec hardware, I'm getting to the point of
+seriously taking my money and going elsewhere for my storage needs.
+If you are a general example of how Adaptec works with its customers,
+then I want nothing to do with you or your products.  
 
-The current thread is more about the path to take, to get there...
+Sure, I know you think Linux is stuck in the past, so help us move to
+the future in small baby steps.  It doesn't require big huge leaps
+like you're proposing.  I mean, have you actually tried to your old
+legacy SCSI controllers in a system with your new hardware?  How did
+your testing go?  
 
-The general point about specs is that you gotta think about them, not 
-just blindly implement them.  SNIA for example is notorious for 
-generating silly storage-related specifications.  And some of the T10 
-stuff is... well... obviously designed by committee :)
+Now I'm not a programmer, and I can't talk like one, but in my real
+life job I'm a SysAdmin and knowing what I know about Adaptec's
+interactions on this list will certainly color my perceptions of your
+hardware and trying to make it work with my company.
 
-	Jeff
-
-
+John
