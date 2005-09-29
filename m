@@ -1,69 +1,68 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: SATA suspend/resume (was Re: [PATCH] updated version of Jens' SATA
- suspend-to-ram patch)
-Date: Thu, 29 Sep 2005 01:21:28 -0400
-Message-ID: <433B79D8.9080305@pobox.com>
-References: <20050923163334.GA13567@triplehelix.org>
+From: Andre Hedrick <andre@linux-ide.org>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+ the kernel
+Date: Wed, 28 Sep 2005 22:30:58 -0700 (PDT)
+Message-ID: <Pine.LNX.4.10.10509282223570.19896-100000@master.linux-ide.org>
+References: <20050928.162929.50617923.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:32488 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751233AbVI2FVe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Sep 2005 01:21:34 -0400
-In-Reply-To: <20050923163334.GA13567@triplehelix.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751181AbVI2FoP@vger.kernel.org>
+In-Reply-To: <20050928.162929.50617923.davem@davemloft.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "David S. Miller" <davem@davemloft.net>
+Cc: jgarzik@pobox.com, willy@w.ods.org, luben_tuikov@adaptec.com, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joshua Kwan <joshk@triplehelix.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de, torvalds@osdl.org, randy_dunlap <rdunlap@xenotime.net>
 
-Joshua Kwan wrote:
-> Hello,
+
+Dave,
+
+Was it really necessary to this far and rude?
+
+I heard the snow is falling and there is a fresh shipment of hash headed
+out to the slopes, don't be late.
+
+Not sure who to credit the following to:
+
+When TOE's were introduced to Linux, there was a violent rejection of this
+hardware because Linux is superior in the NetStack than any other possible
+NetStack every created.
+
+The point is there is a known history in Linux to reject things which
+steps on peoples' egos.
+
+Have a great ski trip.
+
+Cheers,
+
+Andre
+
+On Wed, 28 Sep 2005, David S. Miller wrote:
+
+> From: Jeff Garzik <jgarzik@pobox.com>
+> Date: Wed, 28 Sep 2005 19:22:53 -0400
 > 
-> I had some time yesterday and decided to help Jens out by rediffing the
-> now-infamous SATA suspend-to-ram patch [1] against current git and
-> test-building it.
+> > Both Luben and his predecessor, Justin Gibbs, were severely dissatisfied 
+> > with the SCSI core.  Often they have raised valid issues that need 
+> > addressing, but their choice has been to work around or ignore existing 
+> > code (and maintainers), rather than work with it, and fix it.
 > 
-> For posterity,
+> I'm in violent agreement here.
 > 
-> This patch adds the ata_scsi_device_resume and ata_scsi_device_suspend
-> functions (along with helpers) to put to sleep and wake up Serial ATA
-> controllers when entering sleep states, and hooks the functions into
-> each SATA controller driver so that suspend-to-RAM is possible.
+> Justin was just as anti-social of an engineer as one could get.  And,
+> when you put an ex-FreeBSD guy onto Linux driver maintainence, what in
+> the world could anyone expect. :-)
 > 
-> Note that this patch is a holdover patch until it is possible to
-> generalize this concept for all SCSI devices, which requires more data
-> on which devices need to be put to sleep and which don't.
+> For example, instead of accepting that the symbol "current" is a
+> reserved symbol when compiling under the Linux kernel, he decided that
+> "sticking a square peg into a round hole" was a better way to deal
+> with this, and thus he put an "#undef current" into the adaptec driver
+> instead of simply renaming a structure member from "current" to
+> something else.
 > 
-> Signed-off-by: Joshua Kwan <joshk@triplehelix.org>
-
-Ah hah!  I found the other SCSI suspend patch:
-
-	http://lwn.net/Articles/97453/
-
-Anybody (Joshua?) up for reconciling and testing the two?
-
-The main change from Jens/Joshua's patch is that we use SCSI's 
-sd_shutdown() to call sync cache, eliminating the need for 
-ata_flush_cache(), since the SCSI layer would now perform that.
-
-For bonus points,
-
-1) sd should call START STOP UNIT on suspend, which eliminates the need 
-for ata_standby_drive(), and completely encompasses the suspend process 
-in the SCSI layer.
-
-2) sd should call START STOP UNIT on resume -- and as a SUPER BONUS, the 
-combination of these two changes ensures that there are no queue 
-synchronization issues, the likes of which would require hacks like 
-Jens' while-loop patch.
-
-None of these are huge changes requiring a lot of thinking/planning...
-
-Finally, ideally, we should be issuing a hardware or software reset on 
-suspend.
-
-	Jeff
-
-
+> I don't know how else to define "control freak".
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
