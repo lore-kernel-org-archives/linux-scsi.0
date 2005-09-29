@@ -1,58 +1,59 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
  the kernel
-Date: Thu, 29 Sep 2005 13:03:51 -0400
-Message-ID: <433C1E77.3000708@pobox.com>
-References: <Pine.LNX.4.10.10509281227570.19896-100000@master.linux-ide.org>	 <433B0374.4090100@adaptec.com> <20050928223542.GA12559@alpha.home.local>	 <433BFB1F.2020808@adaptec.com> <1128007032.11443.77.camel@tara.firmix.at> <433C174D.4050302@adaptec.com> <433C1CD0.9080906@pobox.com> <433C1D28.6080900@adaptec.com>
+Date: Thu, 29 Sep 2005 13:11:40 -0400
+Message-ID: <433C204C.7010602@pobox.com>
+References: <43384E28.8030207@adaptec.com> <4339BFE9.1060604@pobox.com>	 <4339CCD6.5010409@adaptec.com> <4339F9A8.2030709@pobox.com>	 <433AFEB2.7090003@adaptec.com> <433B0457.7020509@pobox.com>	 <433B14E1.6080201@adaptec.com> <433B217F.4060509@pobox.com>	 <20050929040403.GE18716@alpha.home.local> <1127979848.2918.7.camel@laptopd505.fenrus.org> <433C0398.4040302@adaptec.com> <433C0641.3030101@pobox.com> <433C1CA1.3080007@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:49644 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932269AbVI2RDz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Sep 2005 13:03:55 -0400
-In-Reply-To: <433C1D28.6080900@adaptec.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932270AbVI2RLs@vger.kernel.org>
+In-Reply-To: <433C1CA1.3080007@adaptec.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Bernd Petrovitsch <bernd@firmix.at>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andre Hedrick <andre@linux-ide.org>, Patrick Mansfield <patmans@us.ibm.com>, Luben Tuikov <ltuikov@yahoo.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: Arjan van de Ven <arjan@infradead.org>, Willy Tarreau <willy@w.ods.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
 Luben Tuikov wrote:
-> On 09/29/05 12:56, Jeff Garzik wrote:
+> On 09/29/05 11:20, Jeff Garzik wrote:
 > 
->>Luben Tuikov wrote:
+>>>Arjan, I'll be your best friend here:
+>>>Never say this in public or in an intervew.
 >>
 >>
->>>On 09/29/05 11:17, Bernd Petrovitsch wrote:
->>>
->>>
->>>
->>>>Then submit your driver as a (separate) block device in parallel to the
->>>>existing SCSI subsystem. People will use it for/with other parts if it
->>>
->>>
->>>SAS is ultimately SCSI.  I'll just have to write my own SCSI core.
->>>_We_ together can do this in parallel to the old SCSI Core.
->>
->>
->>You should have stated this plainly, from the start.
->>
->>If you want to do your own SCSI layer, you need to do it at the block 
->>layer rather than poking around drivers/scsi/
+>>It's hard-earned experience.  We constantly have to teach hardware 
+>>vendors how to write good drivers.
 > 
 > 
-> So now you are saying that I should _not_ poke at drivers/scsi?
-> (as I haven't done)
+> I'm sure you have.  Hardware vendors are lost without
+> Jeff, James Bottomley and Christoph.
 > 
-> Are you going to make up your mind?
+> You see, it is because of your _enormous_ ego as shown
+> above, that the code is being blocked.
 
-Are you:  are you going to rewrite the SCSI core, or work to improve the 
-existing one?
+No, I was referring to things such as, e.g.
+	http://people.redhat.com/arjanv/olspaper.pdf
+	http://people.redhat.com/arjanv/OLS.pdf
 
-Your choice, not mine.  Your time, not mine.
+It has nothing to do with ego, just hard-won experience.
+
+There are bunches of hardware vendors who have their patches merged 
+immediately after posting.  They get it.  They have internalized the 
+reasons why Linux drivers look the way they do.
+
+
+>>As a tangent, I already have a design for a Linux filesystem that makes 
+>>use of SCSI object-based storage (to James's horror, no doubt :)).  It's 
+>>a fun thing to ponder.
+> 
+> 
+> Ok, so the way I see it you want to show who has got
+> the bigger balls?
+> 
+> Jeff, I have *worked* on a Linux OBD-based filesystem.
+> 
+> Are you going to stop this self-gratifying stuff?
+
+Oh good grief.  It was an example, silly.  Trying to lighten the mood, even.
 
 	Jeff
-
-
-
