@@ -1,64 +1,76 @@
-From: Bernd Petrovitsch <bernd@firmix.at>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: I request inclusion of SAS Transport Layer and AIC-94xx into
 	the kernel
-Date: Thu, 29 Sep 2005 17:17:12 +0200
-Message-ID: <1128007032.11443.77.camel@tara.firmix.at>
-References: <Pine.LNX.4.10.10509281227570.19896-100000@master.linux-ide.org>
-	 <433B0374.4090100@adaptec.com> <20050928223542.GA12559@alpha.home.local>
-	 <433BFB1F.2020808@adaptec.com>
+Date: Thu, 29 Sep 2005 09:45:59 -0600
+Message-ID: <91888D455306F94EBD4D168954A9457C04388D88@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932206AbVI2PXH@vger.kernel.org>
-In-Reply-To: <433BFB1F.2020808@adaptec.com>
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932203AbVI2Pqc@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andre Hedrick <andre@linux-ide.org>, Patrick Mansfield <patmans@us.ibm.com>, Luben Tuikov <ltuikov@yahoo.com>, Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: ltuikov@yahoo.com, Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2005-09-29 at 10:33 -0400, Luben Tuikov wrote:
-[...]
-> Linux _development_ needs to catch up to Linux _deployment_.
+On Thursday, September 29, 2005 6:46 AM, Luben Tuikov wrote:
 
-That is probably the root and single cause of quality problems in
-companies: Deployment folks (read: sales) set the delivery date (and get
-the bonus for selling) and the rest (read: tech folks) have to follow,
-no matter what (and get the blame for being late and buggy).
-Or why do you think that MSFT has such quite crappy software?
-
-> Currently they are two different worlds.
-
-ACK - in the commercial world (and the bigger the company the worse
-because sales people are far more distant from the tech people).
-
-[ software rewrite ]
-> > Maybe it can simply coexist with another new subsystem. This is what
 > 
-> Now _this_ is a smart suggestion: it wouldn't break legacy hardware
-> _and_ it would give Linux SCSI a fresh start.
->
-> Next year, your new serverboard wouldn't have any of those old
-> cumbersome storage chips to worry about.  It would have only one
-> storage chip which could do SAS and SATA and that'd be that.
-> Why would anyone need this fat, old semanticaly overloaded,
-> SPI-centric SCSI Core?
+> On 09/28/05 18:17, Moore, Eric Dean wrote:
+> > Can you stop this tirade, e.g. conspiracy theory,
+> > in regards to LSI/MPT and the transport layer?
+> 
+> What conspiracy theory?
+> 
+> Oh you mean that one _technology_ is in the kernel
+> and another distinct, radically _different_ is NOT?
+> 
+> Oh you mean that conspiracy theory?
 
-Then submit your driver as a (separate) block device in parallel to the
-existing SCSI subsystem. People will use it for/with other parts if it
-makes sense (and you - as the maintainer - accept their patches). And in
-a few years the "old" SCSI core fades out as legacy drives fade out (or
-they will happily coexist forever).
-The point is: If *you* want it that way, *you* must go that way (and do
-not expect others to do it just that *you* get *your* driver merged).
-You are the maintainer of the new stuff and (almost) everything will
-work as you want.
-It might not be the cleanest or most elegant solution in the world, but
-if it works, who cares and why?
-Where is now the real problem?
-I can't see one.
+Thats just plain crap.  And your trash talking is plan crap.
+My sas drivers have been rejected for
+more than a year now. They were only accepted in the  
+past week.  During that time, I've had to endure many changes
+in the driver to get them where they were accepted.  And that
+has been very painful. I hope you know that we have support
+CSMI/SDI interface (yes, we are SAS by the way). 
+How do you suggest we do that? The IOCTLS were rejected.
 
-	Bernd
--- 
-Firmix Software GmbH                   http://www.firmix.at/
-mobil: +43 664 4416156                 fax: +43 1 7890849-55
-          Embedded Linux Development and Services
+> 
+> > That is not the case.   There will be other sas 
+> 
+> I don't see our driver in the kernel, do you?
+> 
+> > solutions that implement discovery, and 
+> > sas/sata translation in firmware, higher level
+> > event handling.
+> 
+> Yes, and they would all be MPT-like technology.
+> I don't have a problem with that.
+> 
+> What I have a problem with is that you folks
+> just sit and watch this, while you could explain
+> to James et al, that indeed the technologies
+> are different and there is no reason NOT to include
+> one but leave the other out.
+
+Ok, fine, James Let them all in.  
+
+I have never said to alientate any other technology.  
+When did I ever say that?
+I'm still not convinced that your sas transport will 
+work with any other technology but yours.  Or will it?
+
+Christophs sas transport layer is generic?  I see nothing there
+that says "this is MPT".   I thought all along since OLS, that you 
+were going to develop a layer that would work below it
+for cards that don't have firmware assist? 
+Are you working with these guys on that?   I thought that is 
+what you were doing, or maybe I'm misunderstanding something here.
+ 
+> 
+> I was hoping you'd say something like, "Yeah, the
+> technologies are different -- I don't see why one
+> should be in and another not."
+> 
+
+I agree with you.  
