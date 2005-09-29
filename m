@@ -1,34 +1,29 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
  the kernel
-Date: Thu, 29 Sep 2005 11:09:12 -0400
-Message-ID: <433C0398.4040302@adaptec.com>
-References: <43384E28.8030207@adaptec.com> <4339BFE9.1060604@pobox.com>	 <4339CCD6.5010409@adaptec.com> <4339F9A8.2030709@pobox.com>	 <433AFEB2.7090003@adaptec.com> <433B0457.7020509@pobox.com>	 <433B14E1.6080201@adaptec.com> <433B217F.4060509@pobox.com>	 <20050929040403.GE18716@alpha.home.local> <1127979848.2918.7.camel@laptopd505.fenrus.org>
+Date: Thu, 29 Sep 2005 11:08:50 -0400
+Message-ID: <433C0382.10404@pobox.com>
+References: <Pine.LNX.4.10.10509281530190.19896-100000@master.linux-ide.org> <433C0285.3050106@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:56724 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932180AbVI2PJX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Sep 2005 11:09:23 -0400
-In-Reply-To: <1127979848.2918.7.camel@laptopd505.fenrus.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932182AbVI2PI7@vger.kernel.org>
+In-Reply-To: <433C0285.3050106@adaptec.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Andre Hedrick <andre@linux-ide.org>, Patrick Mansfield <patmans@us.ibm.com>, Luben Tuikov <ltuikov@yahoo.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Willy Tarreau <willy@w.ods.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-On 09/29/05 03:44, Arjan van de Ven wrote:
-> 
-> a spec describes how the hw works... how we do the sw piece is up to
-> us ;)
+Luben Tuikov wrote:
+>   hardware implementation  (interconnect, SAM 4.15, 1.3)
+>       firmware implementation  (interconnect, SDS, SAM 4.6, 1.3)
+>           LLDD                     (SAM, section 5, 6, 7)
+>              Transport Layer          (SAM 4.15, SAS)
+>                   SCSI Core             (SAM section 4,5,8)
+>                      Commmand Sets        (SAM section 1)
 
-Arjan, I'll be your best friend here:
-Never say this in public or in an intervew.
+Transport class + libsas achieves this.
 
-Hardware folks needs to work with software folks and
-software folks need to work with hardware folks.
+Maybe I will have to demonstrate using code...
 
-This is what makes good design.
-
-	Luben
+	Jeff
