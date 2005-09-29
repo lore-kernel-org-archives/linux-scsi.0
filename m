@@ -1,61 +1,38 @@
-From: Willy Tarreau <willy@w.ods.org>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
-Date: Thu, 29 Sep 2005 06:04:03 +0200
-Message-ID: <20050929040403.GE18716@alpha.home.local>
-References: <43384E28.8030207@adaptec.com> <4339BFE9.1060604@pobox.com> <4339CCD6.5010409@adaptec.com> <4339F9A8.2030709@pobox.com> <433AFEB2.7090003@adaptec.com> <433B0457.7020509@pobox.com> <433B14E1.6080201@adaptec.com> <433B217F.4060509@pobox.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [Announce] sg3_utils-1.17 available
+Date: Thu, 29 Sep 2005 14:17:07 +1000
+Message-ID: <433B6AC3.2070903@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from willy.net1.nerim.net ([62.212.114.60]:42246 "EHLO
-	willy.net1.nerim.net") by vger.kernel.org with ESMTP
-	id S1750759AbVI2EJG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Sep 2005 00:09:06 -0400
-Content-Disposition: inline
-In-Reply-To: <433B217F.4060509@pobox.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751176AbVI2EQZ@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Sep 28, 2005 at 07:04:31PM -0400, Jeff Garzik wrote:
-> Linux is about getting things done, not being religious about 
-> specifications.  You are way too focused on the SCSI specs, and missing 
-> the path we need to take to achieve additional flexibility.
-> 
-> With Linux, it's all about evolution and the path we take.
+sg3_utils is a package of command line utilities for sending
+SCSI (and some ATA) commands to devices. This package targets
+the lk 2.6 and lk 2.4 series. In the lk 2.6 series these
+utilities (except sgp_dd) can be used with any devices that
+support the SG_IO ioctl.
 
-Hmmm... I'm fine with "not being religious about specs", but I hope we
-try to respect them as much as possible, because it's the only way to
-get everything working and not get the finger pointed to when there's
-a problem. When I put netfilter + window tracking in production 2 years
-ago, there were a lot of drops (about 2% of sessions = ~40/s), because
-shortcuts had been taken WRT rfc793 ("the specs"). Then, printing the
-whole RFC+erratas was the only way to get the code working and
-supporting the most bizarre cases that had previously been considered
-stupid or impossible by the developpers (including me during the first
-phase of the fixes).
+This version improves support for ATA(PI) devices in the sg_inq
+utility. For example, assuming /dev/hdc is an ATAPI DVD drive,
+"sg_inq /dev/hdc" shows the response to a SCSI INQUIRY command,
+while "sg_inq -A /dev/hdc" shows the response to an ATA IDENTIFY
+PACKET DEVICE command. See CHANGELOG for more information.
 
-I prefer that we stick to specs even if we just implement what we
-*need* from them, leaving lots of blank boxes on the diagram, rather
-than interprete them as we think would be better and get annoyed
-everytime a vendor tries to adapt it to support his hardware.
+A tarball, rpm and deb can be found on (see table 2):
+http://www.torque.net/sg
+For an overview of sg3_utils see this page:
+http://www.torque.net/sg/u_index.html
+The sg_dd utility has its own page at:
+http://www.torque.net/sg/sg_dd.html
+A changelog can be found at:
+http://www.torque.net/sg/p/sg3_utils.CHANGELOG
 
-> >By "too literal" do you mean "following specs too closely",
-> >or do you mean "being realistic without tweaking things".
-> 
-> I mean, paying too much attention to specs at the expense of 
-> understanding how Linux code needs to be shaped.
+A release announcement has been sent to freshmeat.net .
 
-Both are true : Linux code needs to be shaped to match specs. We
-must not spend time on what we don't need but we must respect the
-model and layering, and that's true in any subsystem. Networking
-for example, is very clean in this area. Even accelerations do
-not break layering, it's just that some of the work can be pushed
-down from layer to layer until one can process it (eg: checksums).
-And when I worked on bonding, I did not have problems with it
-breaking upper layers. I really believe that's important, it's
-the first step to avoid spending time in debugging.
-
-Cheers,
-Willy
-
+Doug Gilbert
