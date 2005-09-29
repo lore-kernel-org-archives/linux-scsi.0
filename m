@@ -1,57 +1,43 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
+From: Joel Becker <Joel.Becker@oracle.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
-Date: Thu, 29 Sep 2005 15:06:13 -0700 (PDT)
-Message-ID: <20050929220613.78655.qmail@web31806.mail.mud.yahoo.com>
-References: <433C3BD7.4090104@s5r6.in-berlin.de>
-Reply-To: ltuikov@yahoo.com
+Date: Thu, 29 Sep 2005 15:43:36 -0700
+Message-ID: <20050929224335.GK27375@ca-server1.us.oracle.com>
+References: <Pine.LNX.4.10.10509281227570.19896-100000@master.linux-ide.org> <433B0374.4090100@adaptec.com> <20050928223542.GA12559@alpha.home.local> <433BFB1F.2020808@adaptec.com> <1128007032.11443.77.camel@tara.firmix.at> <433C174D.4050302@adaptec.com> <1128014007.11443.108.camel@tara.firmix.at> <433C34F0.4080307@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751340AbVI2WGP@vger.kernel.org>
-In-Reply-To: <433C3BD7.4090104@s5r6.in-berlin.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Andre Hedrick <andre@linux-ide.org>, Patrick Mansfield <patmans@us.ibm.com>, Luben Tuikov <ltuikov@yahoo.com>, Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rgminet02.oracle.com ([148.87.122.31]:26969 "EHLO
+	rgminet02.oracle.com") by vger.kernel.org with ESMTP
+	id S932314AbVI2Wnz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Sep 2005 18:43:55 -0400
+Content-Disposition: inline
+In-Reply-To: <433C34F0.4080307@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Luben Tuikov <ltuikov@yahoo.com>, Jeff Garzik <jgarzik@pobox.com>
 
---- Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
-> Luben Tuikov wrote:
-> > What you'll see in the code is:
-> > 
-> >   hardware implementation  (interconnect, SAM 4.15, 1.3)
-> >       firmware implementation  (interconnect, SDS, SAM 4.6, 1.3)
-> >           LLDD                     (SAM, section 5, 6, 7)
-> >              Transport Layer          (SAM 4.15, SAS)
-> >                   SCSI Core             (SAM section 4,5,8)
-> >                      Commmand Sets        (SAM section 1)
-> > 
-> > A very nice explanation in latest SAM4r03,
-> > section 4.15 The SCSI model for distributed communications.
+On Thu, Sep 29, 2005 at 02:39:44PM -0400, Luben Tuikov wrote:
+> So you see, it is _not_ about accepting code, it is about
+> accepting _ideas_ and _innovation_.
 > 
-> BTW, Linux' implementations of transports like USB storage and SBP-2 
-> have always been similarly layered. (Actually they come with at least 
-> one more layer between LLDD and SCSI core.) Needless to say that these 
-> transports need their specific managing infrastructures. So this 
-> layering is not at all new to Linux.
+> James can still do everything _his_ way.  The question is
+> how many _years_ would this be relevant?
 
-True, true.
+	Is your cat sleeping on your underscore key?
 
-But those subsystems are shielded from SCSI Core.  Plus SCSI Core
-is managed by people unaware of SAM or the layering infrastructure.
+Joel
 
-    Luben
- 
-> > Now for MPT based solutions you have:
-> > 
-> >   LLDD                  (SAM, section 5, 6, 7)
-> >      SCSI Core             (SAM section 4,5,8)
-> >         Commmand Sets         (SAM section 1)
-> > 
-> > You see?  No Transport Layer between LLDD and SCSI Core!
-> > Why?  Because all this work is done in FIRMWARE!
-> 
-> -- 
-> Stefan Richter
-> -=====-=-=-= =--= ===-=
-> http://arcgraph.de/sr/
-> 
+-- 
+
+"There is no more evil thing on earth than race prejudice, none at 
+ all.  I write deliberately -- it is the worst single thing in life 
+ now.  It justifies and holds together more baseness, cruelty and
+ abomination than any other sort of error in the world." 
+        - H. G. Wells
+
+Joel Becker
+Principal Software Developer
+Oracle
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
