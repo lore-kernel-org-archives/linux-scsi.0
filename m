@@ -1,59 +1,53 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: SATA suspend/resume (was Re: [PATCH] updated version of Jens'
- SATA suspend-to-ram patch)
-Date: Thu, 29 Sep 2005 17:56:47 +0200
-Message-ID: <433C0EBF.7080605@s5r6.in-berlin.de>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7AC2@xbl3.ma.emulex.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+ the kernel
+Date: Thu, 29 Sep 2005 12:22:05 -0400
+Message-ID: <433C14AD.4070700@adaptec.com>
+References: <Pine.LNX.4.10.10509281530190.19896-100000@master.linux-ide.org> <433C0285.3050106@adaptec.com> <433C0382.10404@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932207AbVI2P6Y@vger.kernel.org>
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7AC2@xbl3.ma.emulex.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932234AbVI2QWX@vger.kernel.org>
+In-Reply-To: <433C0382.10404@pobox.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Smart@Emulex.Com, hch@infradead.org, jgarzik@pobox.com, joshk@triplehelix.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, axboe@suse.de, torvalds@osdl.org, rdunlap@xenotime.net
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Andre Hedrick <andre@linux-ide.org>, Patrick Mansfield <patmans@us.ibm.com>, Luben Tuikov <ltuikov@yahoo.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-I admit I haven't studied the patches. Anyway, here is what I have to 
-say about what I (mis?)understood from your posts:
+On 09/29/05 11:08, Jeff Garzik wrote:
+> Luben Tuikov wrote:
+> 
+>>  hardware implementation  (interconnect, SAM 4.15, 1.3)
+>>      firmware implementation  (interconnect, SDS, SAM 4.6, 1.3)
+>>          LLDD                     (SAM, section 5, 6, 7)
+>>             Transport Layer          (SAM 4.15, SAS)
+>>                  SCSI Core             (SAM section 4,5,8)
+>>                     Commmand Sets        (SAM section 1)
+> 
+> 
+> Transport class + libsas achieves this.
 
-James Smart wrote:
-> You need to be careful on the power-up. Many JBODs share a single
-> "enclosure" and that enclosure has a limited power supply. If all
-> drives were spun up in parallel (and a drive may take 10-15seconds
-> to spin up), then they can overload the enclosure's power limit.
-[...]
-> There were not a lot of great answers on how to solve this as it usually
-> required knowledge of how the hardware was packaged.
-[...]
+This is *WRONG*.  (see below)
 
->>On Thu, Sep 29, 2005 at 08:34:37AM +0100, Christoph Hellwig wrote:
->>>is an ULDD operation, not an LLDD one, and this fits the layering model
->>>much better.
+And it doesn't "achieve" this.  Stop the FUD.
+There is a _reason_ why it is the way it is.
 
-The operation _involves_ the high level, yes. But whether it may be/ 
-must not be performed has to be controlled by the transport layer. Take 
-FireWire as an example: IEEE 1394(a,b) has power management 
-specifications. (NB: Its indeed in IEEE 1394, not in the SBP-2 spec.) 
-One rule is that only one node on a FireWire bus may perform power 
-management; the node which is allowed to do this is determined by a 
-special protocol.
+> Maybe I will have to demonstrate using code...
 
->>Actually one important thing is missing, that is a way to avoid spinning
->>down external disks.  As a start a sysfs-controlable flag should do it,
->>later we can add transport-specific ways to find out whether a device
->>is external.
+Jeff,
 
-It is not a question of external vs. internal, at least not if you 
-consider more than SATA. Power management is the genuine task of 
-transport layers (specifically, of transport management layers). These 
-layers might need assistence from SCSI high-level protocol layer though.
+There is a _reason_ why technical people separate concepts
+in _layers_.
 
-IOW it's certainly correct to provide suspend/resume helpers in SCSI 
-high level (probably abstracted through SCSI core), but whether these 
-helpers are called or not has to be decided down in the SCSI low level, 
-or even further beneath that level.
--- 
-Stefan Richter
--=====-=-=-= =--= ===-=
-http://arcgraph.de/sr/
+There is a _reason_ why technical people use Object Oriented
+Paradigms describing models and design.
+
+Do you know _what_ that reason is?
+
+Or should I leave you to "demonstrate with code"?
+
+Seeing that you keep _persisting_ in your ways,
+I'll leave it for you to "enrich" Linux SCSI in
+your "demonstrate with code".
+
+	Luben
