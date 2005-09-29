@@ -1,59 +1,33 @@
-From: Willy Tarreau <willy@w.ods.org>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
-Date: Thu, 29 Sep 2005 21:32:25 +0200
-Message-ID: <20050929193225.GA16171@alpha.home.local>
-References: <43384E28.8030207@adaptec.com> <4339BFE9.1060604@pobox.com> <4339CCD6.5010409@adaptec.com> <4339F9A8.2030709@pobox.com> <433AFEB2.7090003@adaptec.com> <433B0457.7020509@pobox.com> <433B14E1.6080201@adaptec.com> <433B217F.4060509@pobox.com> <20050929040403.GE18716@alpha.home.local> <1127979848.2918.7.camel@laptopd505.fenrus.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+ the kernel
+Date: Thu, 29 Sep 2005 21:59:38 +0200
+Message-ID: <433C47AA.9040809@s5r6.in-berlin.de>
+References: <43384E28.8030207@adaptec.com> <4339BFE9.1060604@pobox.com> <4339CCD6.5010409@adaptec.com> <4339F9A8.2030709@pobox.com> <433AFEB2.7090003@adaptec.com> <433B0457.7020509@pobox.com> <433B14E1.6080201@adaptec.com> <433B217F.4060509@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from willy.net1.nerim.net ([62.212.114.60]:43526 "EHLO
-	willy.net1.nerim.net") by vger.kernel.org with ESMTP
-	id S964829AbVI2Thu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Sep 2005 15:37:50 -0400
-Content-Disposition: inline
-In-Reply-To: <1127979848.2918.7.camel@laptopd505.fenrus.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:31718 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S964881AbVI2UAo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Sep 2005 16:00:44 -0400
+In-Reply-To: <433B217F.4060509@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Luben Tuikov <luben_tuikov@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Luben Tuikov <luben_tuikov@adaptec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
-On Thu, Sep 29, 2005 at 09:44:08AM +0200, Arjan van de Ven wrote:
-> On Thu, 2005-09-29 at 06:04 +0200, Willy Tarreau wrote:
-> > On Wed, Sep 28, 2005 at 07:04:31PM -0400, Jeff Garzik wrote:
-> > > Linux is about getting things done, not being religious about 
-> > > specifications.  You are way too focused on the SCSI specs, and missing 
-> > > the path we need to take to achieve additional flexibility.
-> > > 
-> > > With Linux, it's all about evolution and the path we take.
-> > 
-> > Hmmm... I'm fine with "not being religious about specs", but I hope we
-> > try to respect them as much as possible
+Jeff Garzik wrote:
+[...]
+> HCIL stuff to move to SPI-specific transport code.
 > 
-> a spec describes how the hw works... how we do the sw piece is up to
-> us ;)
+> That is the task that must be completed BEFORE transport layer for SAS 
+> can be fully merged.
 
-No Arjan, you cannot say that ! (well, of course you can but in this case
-you may be wrong). A spec describes any process, whether it's soft or hard,
-and BTW, the frontier between soft and hard is diminishing. When I designed
-a PI-Bus-PCI bridge 10 years ago, I used PCI 2.1 Specification. And it was
-more related to software than hardware (FSMs, config registers, etc...).
-
-It's the *implementation* which is up to us, not the spec. A spec will never
-tell you that you have to be compliant with 4k stacks or things like this.
-This is implementation. What it tells you is when interrupt X strikes and
-you read bit Y from reg Z, then you must reset bit Y before leaving. And this
-is software specs, not hardware.
-
-> (I know the scsi stuff also provides sort of a reference "here is how
-> you can do it in sw" but I see that more as you "you need this
-> functionality" not "you need this exact architecture in your software")
-
-Keeping close to an accepted standard model makes it far easier to upgrade
-later, but you're right, the spec does not tell you what your implementation
-must look like.
-
-I think we agree but just don't give the exact same meaning to words.
-
-Regards,
-Willy
-
+So it could at least be _halfway_ merged, like it was done with the 
+other non-SPI transport layers long ago, couldn't it?
+-- 
+Stefan Richter
+-=====-=-=-= =--= ===-=
+http://arcgraph.de/sr/
