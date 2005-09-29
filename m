@@ -1,125 +1,78 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] Improve code for detecting errors near the end of a CD
-Date: Thu, 29 Sep 2005 14:44:48 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0509291416540.6137-100000@iolanthe.rowland.org>
+From: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
+Subject: mpt fusion driver performance issue in 2.6.14-rc2
+Date: Thu, 29 Sep 2005 11:59:19 -0700
+Message-ID: <200509291859.j8TIxKg13339@unix-os.sc.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:13787 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S932291AbVI2Sot
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Sep 2005 14:44:49 -0400
+Received: from fmr22.intel.com ([143.183.121.14]:26270 "EHLO
+	scsfmr002.sc.intel.com") by vger.kernel.org with ESMTP
+	id S964775AbVI2S7a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Sep 2005 14:59:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: "'Moore, Eric Dean'" <Eric.Moore@lsil.com>
 
-James:
-
-This patch (as572) beefs up the code in sr.c that detects where read/write
-errors occurred and moves it to a separate (but inline) routine for
-greater clarity.
-
-The original code contained one glaring mistake: testing
-(SCpnt->sense_buffer[0] & 0x90) to see if the Information field in the
-sense data is valid.  The Valid bit is 0x80; the test against 0x90 can
-never fail, thanks to the earlier test: (SCpnt->sense_buffer[0] & 0x7f) ==
-0x70).
-
-The code also contained a rather puzzling line:
-
-			error_sector &= ~(block_sectors - 1);
-
-This makes no sense at all, so I have removed it.  The patch does of 
-course check that error_sector is within the range of blocks that were 
-supposed to be transferred.
-
-The major enhancement is that the patch uses the Residue to calculate the 
-error sector, if the sense data doesn't already provide it.  This helps 
-with a drive I use.  Since the Residue isn't always reported correctly, 
-the patch is careful to check that it has a reasonable value: somewhere 
-strictly between 0 and the total transfer length.
-
-Alan Stern
+Something happened in between kernel 2.6.12 and 2.6.14-rc2, where
+disk performance went 20X slower on the latest release kernel. I
+suspect it has something to do with the fusion driver. This showed
+up in the boot log: "mptscsih: ioc0: DV: Release failed." is it
+significant?
 
 
+2.6.12 
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+[root]# hdparm -t /dev/sdc
+ Timing buffered disk reads:  174 MB in  3.03 seconds =  57.44 MB/sec
 
-Index: usb-2.6/drivers/scsi/sr.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/sr.c
-+++ usb-2.6/drivers/scsi/sr.c
-@@ -203,7 +203,41 @@ int sr_media_change(struct cdrom_device_
- 	}
- 	return retval;
- }
-- 
-+
-+/* 
-+ * Use the information from a failed command to compute how much data
-+ * was transferred successfully, and find the sector that caused the
-+ * error.
-+ */
-+static inline int calc_good_bytes(struct scsi_cmnd *SCpnt,
-+		long *error_sector, int blocksize)
-+{
-+	int num_bytes = SCpnt->bufflen;
-+	unsigned int start_block, error_block, num_blocks = 0;
-+
-+	start_block = (unsigned int) SCpnt->request->sector / (blocksize >> 9);
-+
-+	if (SCpnt->sense_buffer[0] & 0x80) {
-+		/* The Information field is valid; use it */
-+		error_block = (SCpnt->sense_buffer[3] << 24) |
-+				(SCpnt->sense_buffer[4] << 16) |
-+				(SCpnt->sense_buffer[5] << 8) |
-+				SCpnt->sense_buffer[6];
-+		if (error_block >= start_block)
-+			num_blocks = error_block - start_block;
-+
-+	} else {
-+		/* Fall back on the Residue */
-+		if (SCpnt->resid > 0 && SCpnt->resid < num_bytes)
-+			num_blocks = (num_bytes - SCpnt->resid) / blocksize;
-+	}
-+
-+	if (num_blocks >= num_bytes / blocksize)
-+		num_blocks = 0;
-+	*error_sector = (start_block + num_blocks) * (blocksize >> 9);
-+	return num_blocks * blocksize;
-+}
-+
- /*
-  * rw_intr is the interrupt routine for the device driver.
-  *
-@@ -235,25 +269,16 @@ static void rw_intr(struct scsi_cmnd * S
- 		case MEDIUM_ERROR:
- 		case VOLUME_OVERFLOW:
- 		case ILLEGAL_REQUEST:
--			if (!(SCpnt->sense_buffer[0] & 0x90))
--				break;
- 			if (!blk_fs_request(SCpnt->request))
- 				break;
--			error_sector = (SCpnt->sense_buffer[3] << 24) |
--				(SCpnt->sense_buffer[4] << 16) |
--				(SCpnt->sense_buffer[5] << 8) |
--				SCpnt->sense_buffer[6];
- 			if (SCpnt->request->bio != NULL)
- 				block_sectors =
- 					bio_sectors(SCpnt->request->bio);
- 			if (block_sectors < 4)
- 				block_sectors = 4;
--			if (cd->device->sector_size == 2048)
--				error_sector <<= 2;
--			error_sector &= ~(block_sectors - 1);
--			good_bytes = (error_sector - SCpnt->request->sector) << 9;
--			if (good_bytes < 0 || good_bytes >= this_count)
--				good_bytes = 0;
-+
-+			good_bytes = calc_good_bytes(SCpnt, &error_sector,
-+					cd->device->sector_size);
- 			/*
- 			 * The SCSI specification allows for the value
- 			 * returned by READ CAPACITY to be up to 75 2K
+2.6.14-rc2
+
+[root]# hdparm -t /dev/sdc
+ Timing buffered disk reads:    8 MB in  3.16 seconds =   2.53 MB/sec
+
+
+Partial boot log with 2.6.14-rc2:
+
+Fusion MPT base driver 3.03.02
+Copyright (c) 1999-2005 LSI Logic Corporation
+Fusion MPT SPI Host driver 3.03.02
+GSI 28 (level, low) -> CPU 0 (0xc618) vector 49
+ACPI: PCI Interrupt 0000:06:02.0[A] -> GSI 28 (level, low) -> IRQ 49
+mptbase: Initiating ioc0 bringup
+ioc0: 53C1030: Capabilities={Initiator}
+scsi0 : ioc0: LSI53C1030, FwRev=01030a00h, Ports=1, MaxQ=255, IRQ=49
+  Vendor: MAXTOR    Model: ATLAS10K3_18_SCA  Rev: B000
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+SCSI device sda: 35916548 512-byte hdwr sectors (18389 MB)
+SCSI device sda: drive cache: write back
+SCSI device sda: 35916548 512-byte hdwr sectors (18389 MB)
+SCSI device sda: drive cache: write back
+ sda: sda1 sda2 sda3
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+  Vendor: QUANTUM   Model: ATLAS IV 9 SCA    Rev: 0B0B
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+SCSI device sdb: 17942584 512-byte hdwr sectors (9187 MB)
+SCSI device sdb: drive cache: write back
+SCSI device sdb: 17942584 512-byte hdwr sectors (9187 MB)
+SCSI device sdb: drive cache: write back
+ sdb: sdb1
+Attached scsi disk sdb at scsi0, channel 0, id 1, lun 0
+  Vendor: SEAGATE   Model: ST336752LC        Rev: 0004
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+SCSI device sdc: 71687369 512-byte hdwr sectors (36704 MB)
+SCSI device sdc: drive cache: write back
+SCSI device sdc: 71687369 512-byte hdwr sectors (36704 MB)
+SCSI device sdc: drive cache: write back
+ sdc: sdc1 sdc2
+Attached scsi disk sdc at scsi0, channel 0, id 2, lun 0
+  Vendor: ESG-SHV   Model: SCA HSBP M17      Rev: 1.0D
+  Type:   Processor                          ANSI SCSI revision: 02
+GSI 29 (level, low) -> CPU 3 (0xc018) vector 50
+ACPI: PCI Interrupt 0000:06:02.1[B] -> GSI 29 (level, low) -> IRQ 50
+mptbase: Initiating ioc1 bringup
+mptscsih: ioc0: DV: Release failed. id 0<6>ioc1: 53C1030: Capabilities={Initiator}
+scsi1 : ioc1: LSI53C1030, FwRev=01030a00h, Ports=1, MaxQ=255, IRQ=50
 
