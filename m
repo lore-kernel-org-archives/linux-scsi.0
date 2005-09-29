@@ -1,49 +1,43 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [BUG] Yet another scsi_cmnd leak?
-Date: Thu, 29 Sep 2005 15:28:42 -0500
-Message-ID: <433C4E7A.7010205@cs.wisc.edu>
-References: <Pine.LNX.4.44L0.0509291538520.6137-100000@iolanthe.rowland.org>
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: Re: SATA suspend/resume (was Re: [PATCH] updated version of Jens'
+ SATA suspend-to-ram patch)
+Date: Thu, 29 Sep 2005 14:48:06 -0700 (PDT)
+Message-ID: <Pine.LNX.4.58.0509291446430.1424@shark.he.net>
+References: <20050923163334.GA13567@triplehelix.org> <433B79D8.9080305@pobox.com>
+ <Pine.LNX.4.58.0509291309050.1424@shark.he.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:35743 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S964885AbVI2U2v (ORCPT
+Received: from xenotime.net ([66.160.160.81]:61403 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S1030261AbVI2VsG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Sep 2005 16:28:51 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0509291538520.6137-100000@iolanthe.rowland.org>
+	Thu, 29 Sep 2005 17:48:06 -0400
+Received: from shark.he.net ([66.160.160.2]) by xenotime.net for <linux-scsi@vger.kernel.org>; Thu, 29 Sep 2005 14:48:06 -0700
+In-Reply-To: <Pine.LNX.4.58.0509291309050.1424@shark.he.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Joshua Kwan <joshk@triplehelix.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de, torvalds@osdl.org
 
-Alan Stern wrote:
-> James:
-> 
-> This report is based on 2.6.14-rc2-git6.  The code in your scsi-misc-2.6 
-> git tree is somewhat different (and I don't know which is more current), 
-> but it still contains the same bug.
-> 
-> 
-> In scsi_prep_fn, a request can get deferred if scsi_init_io fails to 
-> allocate an sg table.  When this happens, the scsi_cmnd isn't released and 
-> the request is not marked DONTPREP.
-> 
-> Then when scsi_prep_fn is called again, the request may be killed for 
-> a number of reasons.  The code branches to the kill: label near the end of 
-> the routine, which returns BLKPREP_KILL.
-> 
-> Isn't it true that when this happens, the scsi_cmnd allocated during the
-> original prep will never be released?
-> 
-> It appears that scsi_prep_fn is undecided about whether or not the request
-> is allowed to have a scsi_cmnd already.  The jumps to kill: seem to assume
-> that it isn't, but the code for allocating a new scsi_cmnd tests for an
-> existing one first.
-> 
+On Thu, 29 Sep 2005, Randy.Dunlap wrote:
 
-The gotos used to be just a return BLKPREP* and were added so I did not 
-have to write DID_NO_CONNECT or unplug multiple times :) I think you are 
-right and we need to further unwind what a previous prep had done 
-becuase when we return with BLKPREP_KILL we only hear about this command 
-again if it's request has a end_io function or waiting completion.
+> Here's Nathan Bryant's patch (from the lwn.ne article) updated
+> to 2.6.14-rc2-git7 + changes that Christoph suggested (except
+> that 'scsi_device_resume' name was already used, so I changed it
+> to 'scsi_device_wakeup' instead).
+>
+> I'll get back to Jeff's suggestion(s) and the sysfs flag next,
+> but others can use this as a basis if wanted.
+>
+> (also available from
+> http://www.xenotime.net/linux/scsi/scsi-suspend-resume.patch
+> )
+
+The inline version of this patch is whitespace-damaged  :(
+(thanx to pine).
+
+It's ok for review, but please download the one above
+for applying or patching.
+
+-- 
+~Randy
