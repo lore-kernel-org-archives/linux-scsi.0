@@ -1,33 +1,60 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: SATA suspend/resume (was Re: [PATCH] updated version of Jens' SATA suspend-to-ram patch)
-Date: Thu, 29 Sep 2005 09:11:51 +0100
-Message-ID: <20050929081151.GA10660@infradead.org>
-References: <20050923163334.GA13567@triplehelix.org> <433B79D8.9080305@pobox.com> <20050929073437.GC9669@infradead.org>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+ 	the kernel
+Date: Thu, 29 Sep 2005 08:46:14 -0400
+Message-ID: <433BE216.1090108@adaptec.com>
+References: <91888D455306F94EBD4D168954A9457C043889D9@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:5534 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751125AbVI2IL4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Sep 2005 04:11:56 -0400
-Content-Disposition: inline
-In-Reply-To: <20050929073437.GC9669@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751231AbVI2MrO@vger.kernel.org>
+In-Reply-To: <91888D455306F94EBD4D168954A9457C043889D9@nacos172.co.lsil.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Cc: ltuikov@yahoo.com, Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, Joshua Kwan <joshk@triplehelix.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de, torvalds@osdl.org, randy_dunlap <rdunlap@xenotime.net>
 
-On Thu, Sep 29, 2005 at 08:34:37AM +0100, Christoph Hellwig wrote:
-> is an ULDD operation, not an LLDD one, and this fits the layering model
-> much better.  The only complaints here are cosmetics:
+On 09/28/05 18:17, Moore, Eric Dean wrote:
+> Can you stop this tirade, e.g. conspiracy theory,
+> in regards to LSI/MPT and the transport layer?
+
+What conspiracy theory?
+
+Oh you mean that one _technology_ is in the kernel
+and another distinct, radically _different_ is NOT?
+
+Oh you mean that conspiracy theory?
+
+> That is not the case.   There will be other sas 
+
+I don't see our driver in the kernel, do you?
+
+> solutions that implement discovery, and 
+> sas/sata translation in firmware, higher level
+> event handling.
+
+Yes, and they would all be MPT-like technology.
+I don't have a problem with that.
+
+What I have a problem with is that you folks
+just sit and watch this, while you could explain
+to James et al, that indeed the technologies
+are different and there is no reason NOT to include
+one but leave the other out.
+
+>>See, I've mentioned many times that the two
+>>radically different technologies can coexist.
+>>But I've not heard any technical word
+>>from the other guys: you.
 > 
->  - generic_scsi_suspend/generic_scsi_resume are misnamed, they should
->    probably be scsi_device_suspend/resume.
->  - while we're at it they could probably move to scsi_sysfs.c to keep
->    them static in one file - they're just a tiny bit of glue anyway.
->  - get rid of all the CONFIG_PM ifdefs - it just clutters thing up far
->    too much.
+> I just don't have time to engage you.
+> I've got work to do, customer requests, issues,
+> etc.
 
-Actually one important thing is missing, that is a way to avoid spinning
-down external disks.  As a start a sysfs-controlable flag should do it,
-later we can add transport-specific ways to find out whether a device
-is external.
+:-)  That a nice way to get out of the situation.
+
+I was hoping you'd say something like, "Yeah, the
+technologies are different -- I don't see why one
+should be in and another not."
+
+	Luben
