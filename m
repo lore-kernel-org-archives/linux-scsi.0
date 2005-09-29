@@ -1,48 +1,54 @@
-From: grundig@teleline.es
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
  the kernel
-Date: Thu, 29 Sep 2005 17:15:41 +0200
-Message-ID: <20050929171541.94d6204c.grundig@teleline.es>
-References: <Pine.LNX.4.10.10509281227570.19896-100000@master.linux-ide.org>
-	<433B0374.4090100@adaptec.com>
-	<20050928223542.GA12559@alpha.home.local>
-	<433BFB1F.2020808@adaptec.com>
+Date: Thu, 29 Sep 2005 11:20:33 -0400
+Message-ID: <433C0641.3030101@pobox.com>
+References: <43384E28.8030207@adaptec.com> <4339BFE9.1060604@pobox.com>	 <4339CCD6.5010409@adaptec.com> <4339F9A8.2030709@pobox.com>	 <433AFEB2.7090003@adaptec.com> <433B0457.7020509@pobox.com>	 <433B14E1.6080201@adaptec.com> <433B217F.4060509@pobox.com>	 <20050929040403.GE18716@alpha.home.local> <1127979848.2918.7.camel@laptopd505.fenrus.org> <433C0398.4040302@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932192AbVI2PQH@vger.kernel.org>
-In-Reply-To: <433BFB1F.2020808@adaptec.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, andre@linux-ide.org, patmans@us.ibm.com, ltuikov@yahoo.com, jgarzik@pobox.com, akpm@osdl.org, torvalds@osdl.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:54251 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932196AbVI2PUn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Sep 2005 11:20:43 -0400
+In-Reply-To: <433C0398.4040302@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Arjan van de Ven <arjan@infradead.org>, Willy Tarreau <willy@w.ods.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-El Thu, 29 Sep 2005 10:33:03 -0400,
-Luben Tuikov <luben_tuikov@adaptec.com> escribi=F3:
+Luben Tuikov wrote:
+> On 09/29/05 03:44, Arjan van de Ven wrote:
+> 
+>>a spec describes how the hw works... how we do the sw piece is up to
+>>us ;)
+> 
+> 
+> Arjan, I'll be your best friend here:
+> Never say this in public or in an intervew.
 
-> The reason I'm saying this is that _every_ successful entity
-> (person, corporation, etc) knows that in order to _survive_
-> it needs to _quickly adapt to new things_: new technologies,
-> new trends, new fads, etc.
+It's hard-earned experience.  We constantly have to teach hardware 
+vendors how to write good drivers.
 
-[...]
+At some point you have to step away from the spec, and ask yourself what 
+makes sense for Linux.  I've already had to poke T10 when they put silly 
+things in the SAT spec.
 
-> I wish Linux would return to its roots.
-
-I don't know how things were when you started using linux but linux
-has never been about that AFAIK. People usually buys windows
-licenses for that ;)
+As a tangent, I already have a design for a Linux filesystem that makes 
+use of SCSI object-based storage (to James's horror, no doubt :)).  It's 
+a fun thing to ponder.
 
 
-> here.  (Other than ones I've seen at OLS.)  For all I know I could
-> be having a discussion with a 9 year old kid, repeating SAM and SPC
-> references over and over again.
+> Hardware folks needs to work with software folks and
+> software folks need to work with hardware folks.
 
-Oh well. May be Christoph and James are behaving like 9-years-old
-kids, but if that's true you're NOT BEING DIFFERENT than them if
-you look a bit to your mails.
+Certainly.  The historical disconnect is where hardware vendors tend to 
+presume They Know Best, when in reality it needs to be an equal 
+tradeoff.  Hardware vendors must admit they don't know Linux, and Linux 
+developers must admit that hardware vendors know their own hardware 
+better than anyone else.
 
-You can be pretty sure that at this stage everyone is looking you as a
-9-years-old kid who is raving because his mother don't buy him a
-candy. Maybe they're looking james and christoph int he same way
-aswell, but that's their issue.
+	Jeff
+
+
