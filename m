@@ -1,53 +1,72 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
  the kernel
-Date: Thu, 29 Sep 2005 12:22:05 -0400
-Message-ID: <433C14AD.4070700@adaptec.com>
-References: <Pine.LNX.4.10.10509281530190.19896-100000@master.linux-ide.org> <433C0285.3050106@adaptec.com> <433C0382.10404@pobox.com>
+Date: Thu, 29 Sep 2005 12:33:17 -0400
+Message-ID: <433C174D.4050302@adaptec.com>
+References: <Pine.LNX.4.10.10509281227570.19896-100000@master.linux-ide.org>	 <433B0374.4090100@adaptec.com> <20050928223542.GA12559@alpha.home.local>	 <433BFB1F.2020808@adaptec.com> <1128007032.11443.77.camel@tara.firmix.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932234AbVI2QWX@vger.kernel.org>
-In-Reply-To: <433C0382.10404@pobox.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932170AbVI2Qdb@vger.kernel.org>
+In-Reply-To: <1128007032.11443.77.camel@tara.firmix.at>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Andre Hedrick <andre@linux-ide.org>, Patrick Mansfield <patmans@us.ibm.com>, Luben Tuikov <ltuikov@yahoo.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Bernd Petrovitsch <bernd@firmix.at>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andre Hedrick <andre@linux-ide.org>, Patrick Mansfield <patmans@us.ibm.com>, Luben Tuikov <ltuikov@yahoo.com>, Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/29/05 11:08, Jeff Garzik wrote:
-> Luben Tuikov wrote:
+On 09/29/05 11:17, Bernd Petrovitsch wrote:
 > 
->>  hardware implementation  (interconnect, SAM 4.15, 1.3)
->>      firmware implementation  (interconnect, SDS, SAM 4.6, 1.3)
->>          LLDD                     (SAM, section 5, 6, 7)
->>             Transport Layer          (SAM 4.15, SAS)
->>                  SCSI Core             (SAM section 4,5,8)
->>                     Commmand Sets        (SAM section 1)
-> 
-> 
-> Transport class + libsas achieves this.
+> Then submit your driver as a (separate) block device in parallel to the
+> existing SCSI subsystem. People will use it for/with other parts if it
 
-This is *WRONG*.  (see below)
+SAS is ultimately SCSI.  I'll just have to write my own SCSI core.
+_We_ together can do this in parallel to the old SCSI Core.
 
-And it doesn't "achieve" this.  Stop the FUD.
-There is a _reason_ why it is the way it is.
+This is the whole idea.
 
-> Maybe I will have to demonstrate using code...
+> makes sense (and you - as the maintainer - accept their patches). And in
 
-Jeff,
+You see, at my age and my situation, I no longer see this as
+"my balls - your balls".  What matters to me is good design,
+quality code, customer satisfaction, bottom line.
 
-There is a _reason_ why technical people separate concepts
-in _layers_.
+E.g. I'm quite a liberal person and I wouldn't block
+or stop new technologes from going into Linux on the basis
+and merit of my not understanidn that particular new technology.
 
-There is a _reason_ why technical people use Object Oriented
-Paradigms describing models and design.
+The bottom line is not "my balls - your balls" but the wide
+spread use of Linux and "storage OS of choice".  Not "hobbyist
+OS of choice" and not "let me play Robin Hood".
 
-Do you know _what_ that reason is?
+> a few years the "old" SCSI core fades out as legacy drives fade out (or
+> they will happily coexist forever).
 
-Or should I leave you to "demonstrate with code"?
+Yep, I've been saying this since 2002.  On the linux-scsi ML.
 
-Seeing that you keep _persisting_ in your ways,
-I'll leave it for you to "enrich" Linux SCSI in
-your "demonstrate with code".
+> The point is: If *you* want it that way, *you* must go that way (and do
+> not expect others to do it just that *you* get *your* driver merged).
+> You are the maintainer of the new stuff and (almost) everything will
+> work as you want.
+
+And this is the problem: *you* and "the community" see things in
+*this* way:  "your balls - my balls", "yours/mine".
+
+While I see things like this: new technology, absolve, use, move on.
+
+As to your comment above, it's not about how *I* see things.
+It's about how things _actually_ *are*:
+http://www.t10.org/ftp/t10/drafts/sam4/sam4r03.pdf
+
+> It might not be the cleanest or most elegant solution in the world, but
+> if it works, who cares and why?
+
+Turn the table around: can _I_ pose this question to JB and Christoph?
+
+(since they are the ones who think this of SAM/SPC)
+
+> Where is now the real problem?
+> I can't see one.
+
+Me neither.
 
 	Luben
