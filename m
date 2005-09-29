@@ -1,39 +1,52 @@
-From: "David S. Miller" <davem@davemloft.net>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
- the kernel
-Date: Thu, 29 Sep 2005 00:24:23 -0700 (PDT)
-Message-ID: <20050929.002423.18974352.davem@davemloft.net>
-References: <20050928.162929.50617923.davem@davemloft.net>
-	<Pine.LNX.4.10.10509282223570.19896-100000@master.linux-ide.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: SATA suspend/resume (was Re: [PATCH] updated version of Jens' SATA suspend-to-ram patch)
+Date: Thu, 29 Sep 2005 08:34:37 +0100
+Message-ID: <20050929073437.GC9669@infradead.org>
+References: <20050923163334.GA13567@triplehelix.org> <433B79D8.9080305@pobox.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl027-180-168.sfo1.dsl.speakeasy.net ([216.27.180.168]:28348
-	"EHLO sunset.davemloft.net") by vger.kernel.org with ESMTP
-	id S932144AbVI2HYp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Sep 2005 03:24:45 -0400
-In-Reply-To: <Pine.LNX.4.10.10509282223570.19896-100000@master.linux-ide.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932080AbVI2Hen@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <433B79D8.9080305@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Joshua Kwan <joshk@triplehelix.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de, torvalds@osdl.org, randy_dunlap <rdunlap@xenotime.net>
 List-Id: linux-scsi@vger.kernel.org
-To: andre@linux-ide.org
-Cc: jgarzik@pobox.com, willy@w.ods.org, luben_tuikov@adaptec.com, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org
 
-From: Andre Hedrick <andre@linux-ide.org>
-Date: Wed, 28 Sep 2005 22:30:58 -0700 (PDT)
-
-> Not sure who to credit the following to:
+On Thu, Sep 29, 2005 at 01:21:28AM -0400, Jeff Garzik wrote:
+> Ah hah!  I found the other SCSI suspend patch:
 > 
-> When TOE's were introduced to Linux, there was a violent rejection of this
-> hardware because Linux is superior in the NetStack than any other possible
-> NetStack every created.
+> 	http://lwn.net/Articles/97453/
 > 
-> The point is there is a known history in Linux to reject things which
-> steps on peoples' egos.
+> Anybody (Joshua?) up for reconciling and testing the two?
+> 
+> The main change from Jens/Joshua's patch is that we use SCSI's 
+> sd_shutdown() to call sync cache, eliminating the need for 
+> ata_flush_cache(), since the SCSI layer would now perform that.
+> 
+> For bonus points,
+> 
+> 1) sd should call START STOP UNIT on suspend, which eliminates the need 
+> for ata_standby_drive(), and completely encompasses the suspend process 
+> in the SCSI layer.
+> 
+> 2) sd should call START STOP UNIT on resume -- and as a SUPER BONUS, the 
+> combination of these two changes ensures that there are no queue 
+> synchronization issues, the likes of which would require hacks like 
+> Jens' while-loop patch.
+> 
+> None of these are huge changes requiring a lot of thinking/planning...
+> 
+> Finally, ideally, we should be issuing a hardware or software reset on 
+> suspend.
 
-In that case, it is indeed a vendor trying to shove their particular
-solution down our throats.  They never even attempt to try out the
-alternatives, and we've even gone through the trouble of coming up
-with several.  And they do this because their whole buisness model is
-all about their scheme to the exclusion of anything else, not because
-what they have is better.
+I like this one much more than the other patch aswell, because suspsending
+is an ULDD operation, not an LLDD one, and this fits the layering model
+much better.  The only complaints here are cosmetics:
+
+ - generic_scsi_suspend/generic_scsi_resume are misnamed, they should
+   probably be scsi_device_suspend/resume.
+ - while we're at it they could probably move to scsi_sysfs.c to keep
+   them static in one file - they're just a tiny bit of glue anyway.
+ - get rid of all the CONFIG_PM ifdefs - it just clutters thing up far
+   too much.
