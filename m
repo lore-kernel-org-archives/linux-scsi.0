@@ -1,40 +1,61 @@
-From: "David S. Miller" <davem@davemloft.net>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
- the kernel
-Date: Wed, 28 Sep 2005 16:29:29 -0700 (PDT)
-Message-ID: <20050928.162929.50617923.davem@davemloft.net>
-References: <433B0374.4090100@adaptec.com>
-	<20050928223542.GA12559@alpha.home.local>
-	<433B25CD.7040809@pobox.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [dm-devel] RE: [RFC PATCH 4/4] convert scsi to blkerr error values
+Date: Wed, 28 Sep 2005 21:28:56 -0500
+Message-ID: <433B5168.1020405@cs.wisc.edu>
+References: <C2EEB4E538D3DC48BF57F391F422779321ACB6@SRMANNING.eng.emc.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751239AbVI1XaU@vger.kernel.org>
-In-Reply-To: <433B25CD.7040809@pobox.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: willy@w.ods.org, luben_tuikov@adaptec.com, andre@linux-ide.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:11163 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1751315AbVI2C3E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Sep 2005 22:29:04 -0400
+In-Reply-To: <C2EEB4E538D3DC48BF57F391F422779321ACB6@SRMANNING.eng.emc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: axboe@suse.de, linux-scsi@vger.kernel.org
 
-From: Jeff Garzik <jgarzik@pobox.com>
-Date: Wed, 28 Sep 2005 19:22:53 -0400
+goggin, edward wrote:
+> Mike,
+> 
+> I don't think it is reasonably possible to anticipate
+> all possible parsing requirements for the asc and ascq
+> portions of SCSI sense information across all device
+> models.  I'm in favor of having a "small" framework in
+> SCSI where a SCSI sense interpreter module (per
+> vendor & model possibly) could be registered
+> dynamically, by dm-emc.c for instance.
+> 
+> The extended error interpreter callout would be
+> triggered indirectly by a call from
+> __end_that_request_first to a extended error parser
+> associated with the io request's queue whenever it
+> sees a non-zero sense field of the io request.
+> Perhaps the sense and sense_len fields in the
+> request structure should be changed to not be
+> SCSI specific.
+> 
+> Also, in order to allow for more variation and detail
+> in the interpretation of device specific SCSI asc and
+> ascq values, the results of the interpretation should
+> not be required to be block layer generic, but instead
+> are saved in something like a void *bi_extended_error
+> field of the bio.  __end_that_request_first would push
+> the results of the extended_error interpretation to the
+> bi_extended_error field of each bio in the request,
+> similar to how Jens's code currently works.
+> 
 
-> Both Luben and his predecessor, Justin Gibbs, were severely dissatisfied 
-> with the SCSI core.  Often they have raised valid issues that need 
-> addressing, but their choice has been to work around or ignore existing 
-> code (and maintainers), rather than work with it, and fix it.
-
-I'm in violent agreement here.
-
-Justin was just as anti-social of an engineer as one could get.  And,
-when you put an ex-FreeBSD guy onto Linux driver maintainence, what in
-the world could anyone expect. :-)
-
-For example, instead of accepting that the symbol "current" is a
-reserved symbol when compiling under the Linux kernel, he decided that
-"sticking a square peg into a round hole" was a better way to deal
-with this, and thus he put an "#undef current" into the adaptec driver
-instead of simply renaming a structure member from "current" to
-something else.
-
-I don't know how else to define "control freak".
+I have been working on this but a issue I was wondering about is what to 
+do when someone other than dm-multipath wants to know about this special 
+error value. For example when we first discover devices if it is passive 
+path, we have to go through the pain of the regular setup and any 
+retires that arise from it. If people are not going to complain about 
+this anymore then you can ignore this mail :) But the problem (or issue 
+people gripe about) is that if there is a magic ASC/ASCQ value for 
+vendor XYZ that indicates we are sending requests to a passive path then 
+who decodes the bi_extended_error value when dm-mutliapth is not used? 
+Will we have to have a vendor specific bi_extended_error decoder for 
+dm-mpath, filesystems and buffer head code, and what about SCSI?
