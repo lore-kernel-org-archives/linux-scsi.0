@@ -1,30 +1,77 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
+From: Prasenjit Sarkar <psarkar@almaden.ibm.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
-Date: Thu, 29 Sep 2005 16:20:13 -0700 (PDT)
-Message-ID: <20050929232013.95117.qmail@web31810.mail.mud.yahoo.com>
-References: <Pine.LNX.4.58.0509291247040.3308@g5.osdl.org>
-Reply-To: ltuikov@yahoo.com
+Date: Thu, 29 Sep 2005 16:57:24 -0700
+Message-ID: <OF914B6D62.B2BEC145-ON8825708B.0082FAA5-8825708B.00839885@us.ibm.com>
+References: <20050929232013.95117.qmail@web31810.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31810.mail.mud.yahoo.com ([68.142.207.73]:3975 "HELO
-	web31810.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1751360AbVI2XUO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Sep 2005 19:20:14 -0400
-In-Reply-To: <Pine.LNX.4.58.0509291247040.3308@g5.osdl.org>
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:16851 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932385AbVI2X53 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Sep 2005 19:57:29 -0400
+In-Reply-To: <20050929232013.95117.qmail@web31810.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Arjan van de Ven <arjan@infradead.org>
-Cc: Willy Tarreau <willy@w.ods.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Luben Tuikov <luben_tuikov@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>
+To: ltuikov@yahoo.com
+Cc: Andrew Morton <akpm@osdl.org>, Arjan van de Ven <arjan@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-scsi-owner@vger.kernel.org, Luben Tuikov <luben_tuikov@adaptec.com>, Linus Torvalds <torvalds@osdl.org>, Willy Tarreau <willy@w.ods.org>
+
+Luben,
+
+The role of standard bodies is to primarily enforce interoperability but
+while they suggest FSMs and layering, those directives are not mandatory.
+
+I have also seen industrial SCSI Core implementations from various sources
+to come to the following conclusions (i) they do not implement all the
+manadatory stuff (ii) they implement just enough to get by with
+interoperability [who has the time] (iii) any layering design is
+evolutionary and (iv) none of them come close to the T10 FSMs.
+
+You may disagree, but there needs to be a balance between standards and
+implementations.
+
+
+
+
+                                                                           
+             Luben Tuikov                                                  
+             <ltuikov@yahoo.co                                             
+             m>                                                         To 
+             Sent by:                  Linus Torvalds <torvalds@osdl.org>, 
+             linux-scsi-owner@         Arjan van de Ven                    
+             vger.kernel.org           <arjan@infradead.org>               
+                                                                        cc 
+                                       Willy Tarreau <willy@w.ods.org>,    
+             09/29/2005 04:20          SCSI Mailing List                   
+             PM                        <linux-scsi@vger.kernel.org>,       
+                                       Andrew Morton <akpm@osdl.org>,      
+                                       Linux Kernel Mailing List           
+             Please respond to         <linux-kernel@vger.kernel.org>,     
+             ltuikov@yahoo.com         Luben Tuikov                        
+                                       <luben_tuikov@adaptec.com>, Jeff    
+                                       Garzik <jgarzik@pobox.com>          
+                                                                   Subject 
+                                       Re: I request inclusion of SAS      
+                                       Transport Layer and AIC-94xx into   
+                                       the kernel                          
+                                                                           
+                                                                           
+                                                                           
+                                                                           
+                                                                           
+                                                                           
+
+
+
 
 --- Linus Torvalds <torvalds@osdl.org> wrote:
-> 
-> A "spec" is close to useless. I have _never_ seen a spec that was both big 
+>
+> A "spec" is close to useless. I have _never_ seen a spec that was both
+big
 > enough to be useful _and_ accurate.
-> 
-> And I have seen _lots_ of total crap work that was based on specs. It's 
-> _the_ single worst way to write software, because it by definition means 
+>
+> And I have seen _lots_ of total crap work that was based on specs. It's
+> _the_ single worst way to write software, because it by definition means
 > that the software was written to match theory, not reality.
 
 A spec defines how a protocol works and behaves.  All SCSI specs
@@ -48,9 +95,9 @@ _right_, and I'm wrong.
 
 I see we differ in ideology.
 
->    It's like real science: if you have a theory that doesn't match 
+>    It's like real science: if you have a theory that doesn't match
 >    experiments, it doesn't matter _how_ much you like that theory. It's
->    wrong. You can use it as an approximation, but you MUST keep in mind 
+>    wrong. You can use it as an approximation, but you MUST keep in mind
 >    that it's an approximation.
 
 But this is _the_ definition of a theory.  No one is arguing that
@@ -60,33 +107,37 @@ What you have here is interoperability. Only possible because
 different vendors follow the same spec(s).
 
 >  - specs have an inevitably tendency to try to introduce abstractions
->    levels and wording and documentation policies that make sense for a 
->    written spec. Trying to implement actual code off the spec leads to the 
->    code looking and working like CRAP. 
+>    levels and wording and documentation policies that make sense for a
+>    written spec. Trying to implement actual code off the spec leads to
+the
+>    code looking and working like CRAP.
 
 Ok, I give up: I'm wrong and you and James B are right.
 
->    The classic example of this is the OSI network model protocols. Classic 
+>    The classic example of this is the OSI network model protocols.
+Classic
 
 Yes, it is a _classic_ example and OSI is _very_ old.
 
 _But_ the tendency of representing things in a _layered_, object oriented
 design has persisted.
 
->    spec-design, which had absolutely _zero_ relevance for the real world. 
->    We still talk about the seven layers model, because it's a convenient 
->    model for _discussion_, but that has absolutely zero to do with any 
->    real-life software engineering. In other words, it's a way to _talk_ 
+>    spec-design, which had absolutely _zero_ relevance for the real world.
+
+>    We still talk about the seven layers model, because it's a convenient
+>    model for _discussion_, but that has absolutely zero to do with any
+>    real-life software engineering. In other words, it's a way to _talk_
 >    about things, not to implement them.
 
 Ok.
- 
->    And that's important. Specs are a basis for _talking_about_ things. But 
+
+>    And that's important. Specs are a basis for _talking_about_ things.
+But
 >    they are _not_ a basis for implementing software.
 
 Ok.  Let's forget about maintenance and adding _new_ functionality.
- 
-> So please don't bother talking about specs. Real standards grow up 
+
+> So please don't bother talking about specs. Real standards grow up
 > _despite_ specs, not thanks to them.
 
 Yes, you're right. Linus is always right.
@@ -101,4 +152,10 @@ Regards,
     Luben
 
 P.S. I have to get this 8139too.c network card here working.
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
