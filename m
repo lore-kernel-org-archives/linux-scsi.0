@@ -1,102 +1,61 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: RE: [RFC PATCH 4/4] convert scsi to blkerr error v
-	alues
-Date: Wed, 28 Sep 2005 21:54:33 -0500
-Message-ID: <433B5769.3050304@cs.wisc.edu>
-References: <C2EEB4E538D3DC48BF57F391F422779321ACE4@SRMANNING.eng.emc.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Willy Tarreau <willy@w.ods.org>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
+Date: Thu, 29 Sep 2005 06:04:03 +0200
+Message-ID: <20050929040403.GE18716@alpha.home.local>
+References: <43384E28.8030207@adaptec.com> <4339BFE9.1060604@pobox.com> <4339CCD6.5010409@adaptec.com> <4339F9A8.2030709@pobox.com> <433AFEB2.7090003@adaptec.com> <433B0457.7020509@pobox.com> <433B14E1.6080201@adaptec.com> <433B217F.4060509@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <C2EEB4E538D3DC48BF57F391F422779321ACE4@SRMANNING.eng.emc.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: axboe@suse.de, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from willy.net1.nerim.net ([62.212.114.60]:42246 "EHLO
+	willy.net1.nerim.net") by vger.kernel.org with ESMTP
+	id S1750759AbVI2EJG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Sep 2005 00:09:06 -0400
+Content-Disposition: inline
+In-Reply-To: <433B217F.4060509@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-goggin, edward wrote:
->  
+On Wed, Sep 28, 2005 at 07:04:31PM -0400, Jeff Garzik wrote:
+> Linux is about getting things done, not being religious about 
+> specifications.  You are way too focused on the SCSI specs, and missing 
+> the path we need to take to achieve additional flexibility.
 > 
-> 
->>-----Original Message-----
->>From: linux-scsi-owner@vger.kernel.org 
->>[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Mike Christie
->>Sent: Wednesday, September 28, 2005 10:29 PM
->>To: device-mapper development
->>Cc: axboe@suse.de; linux-scsi@vger.kernel.org
->>Subject: Re: [dm-devel] RE: [RFC PATCH 4/4] convert scsi to 
->>blkerr error values
->>
->>goggin, edward wrote:
->>
->>>Mike,
->>>
->>>I don't think it is reasonably possible to anticipate
->>>all possible parsing requirements for the asc and ascq
->>>portions of SCSI sense information across all device
->>>models.  I'm in favor of having a "small" framework in
->>>SCSI where a SCSI sense interpreter module (per
->>>vendor & model possibly) could be registered
->>>dynamically, by dm-emc.c for instance.
->>>
->>>The extended error interpreter callout would be
->>>triggered indirectly by a call from
->>>__end_that_request_first to a extended error parser
->>>associated with the io request's queue whenever it
->>>sees a non-zero sense field of the io request.
->>>Perhaps the sense and sense_len fields in the
->>>request structure should be changed to not be
->>>SCSI specific.
->>>
->>>Also, in order to allow for more variation and detail
->>>in the interpretation of device specific SCSI asc and
->>>ascq values, the results of the interpretation should
->>>not be required to be block layer generic, but instead
->>>are saved in something like a void *bi_extended_error
->>>field of the bio.  __end_that_request_first would push
->>>the results of the extended_error interpretation to the
->>>bi_extended_error field of each bio in the request,
->>>similar to how Jens's code currently works.
->>>
->>
->>I have been working on this but a issue I was wondering about 
->>is what to 
->>do when someone other than dm-multipath wants to know about 
->>this special 
->>error value. For example when we first discover devices if it 
->>is passive 
->>path, we have to go through the pain of the regular setup and any 
->>retires that arise from it. If people are not going to complain about 
->>this anymore then you can ignore this mail :) But the problem 
->>(or issue 
->>people gripe about) is that if there is a magic ASC/ASCQ value for 
->>vendor XYZ that indicates we are sending requests to a 
->>passive path then 
->>who decodes the bi_extended_error value when dm-mutliapth is 
->>not used? 
->>Will we have to have a vendor specific bi_extended_error decoder for 
->>dm-mpath, filesystems and buffer head code,
-> 
-> 
-> Yes, that is what I was thinking anyway.
-> 
-> 
->>and what about SCSI?
-> 
-> 
-> Not clear why scsi would need a decoder.
-> 
+> With Linux, it's all about evolution and the path we take.
 
-If during scsi device setup we could continue to send something like a 
-read capacity command to a passive path since scsi-ml does not have a 
-way to tell that we are sending the command to a passive path and that 
-it is better to not retry the command in this case.
+Hmmm... I'm fine with "not being religious about specs", but I hope we
+try to respect them as much as possible, because it's the only way to
+get everything working and not get the finger pointed to when there's
+a problem. When I put netfilter + window tracking in production 2 years
+ago, there were a lot of drops (about 2% of sessions = ~40/s), because
+shortcuts had been taken WRT rfc793 ("the specs"). Then, printing the
+whole RFC+erratas was the only way to get the code working and
+supporting the most bizarre cases that had previously been considered
+stupid or impossible by the developpers (including me during the first
+phase of the fixes).
+
+I prefer that we stick to specs even if we just implement what we
+*need* from them, leaving lots of blank boxes on the diagram, rather
+than interprete them as we think would be better and get annoyed
+everytime a vendor tries to adapt it to support his hardware.
+
+> >By "too literal" do you mean "following specs too closely",
+> >or do you mean "being realistic without tweaking things".
+> 
+> I mean, paying too much attention to specs at the expense of 
+> understanding how Linux code needs to be shaped.
+
+Both are true : Linux code needs to be shaped to match specs. We
+must not spend time on what we don't need but we must respect the
+model and layering, and that's true in any subsystem. Networking
+for example, is very clean in this area. Even accelerations do
+not break layering, it's just that some of the work can be pushed
+down from layer to layer until one can process it (eg: checksums).
+And when I worked on bonding, I did not have problems with it
+breaking upper layers. I really believe that's important, it's
+the first step to avoid spending time in debugging.
+
+Cheers,
+Willy
+
