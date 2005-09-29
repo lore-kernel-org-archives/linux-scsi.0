@@ -1,59 +1,87 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Bernd Petrovitsch <bernd@firmix.at>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
- the kernel
-Date: Thu, 29 Sep 2005 13:11:40 -0400
-Message-ID: <433C204C.7010602@pobox.com>
-References: <43384E28.8030207@adaptec.com> <4339BFE9.1060604@pobox.com>	 <4339CCD6.5010409@adaptec.com> <4339F9A8.2030709@pobox.com>	 <433AFEB2.7090003@adaptec.com> <433B0457.7020509@pobox.com>	 <433B14E1.6080201@adaptec.com> <433B217F.4060509@pobox.com>	 <20050929040403.GE18716@alpha.home.local> <1127979848.2918.7.camel@laptopd505.fenrus.org> <433C0398.4040302@adaptec.com> <433C0641.3030101@pobox.com> <433C1CA1.3080007@adaptec.com>
+	the kernel
+Date: Thu, 29 Sep 2005 19:13:27 +0200
+Message-ID: <1128014007.11443.108.camel@tara.firmix.at>
+References: <Pine.LNX.4.10.10509281227570.19896-100000@master.linux-ide.org>
+	 <433B0374.4090100@adaptec.com> <20050928223542.GA12559@alpha.home.local>
+	 <433BFB1F.2020808@adaptec.com> <1128007032.11443.77.camel@tara.firmix.at>
+	 <433C174D.4050302@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932270AbVI2RLs@vger.kernel.org>
-In-Reply-To: <433C1CA1.3080007@adaptec.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, Willy Tarreau <willy@w.ods.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.firmix.at ([62.141.48.66]:26772 "EHLO ns.firmix.at")
+	by vger.kernel.org with ESMTP id S932267AbVI2RPs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Sep 2005 13:15:48 -0400
+In-Reply-To: <433C174D.4050302@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andre Hedrick <andre@linux-ide.org>, Patrick Mansfield <patmans@us.ibm.com>, Luben Tuikov <ltuikov@yahoo.com>, Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
 
-Luben Tuikov wrote:
-> On 09/29/05 11:20, Jeff Garzik wrote:
+On Thu, 2005-09-29 at 12:33 -0400, Luben Tuikov wrote:
+> On 09/29/05 11:17, Bernd Petrovitsch wrote:
+[...] 
+> > Then submit your driver as a (separate) block device in parallel to the
+> > existing SCSI subsystem. People will use it for/with other parts if it
 > 
->>>Arjan, I'll be your best friend here:
->>>Never say this in public or in an intervew.
->>
->>
->>It's hard-earned experience.  We constantly have to teach hardware 
->>vendors how to write good drivers.
-> 
-> 
-> I'm sure you have.  Hardware vendors are lost without
-> Jeff, James Bottomley and Christoph.
-> 
-> You see, it is because of your _enormous_ ego as shown
-> above, that the code is being blocked.
+> SAS is ultimately SCSI.  I'll just have to write my own SCSI core.
+> _We_ together can do this in parallel to the old SCSI Core.
+>
+> This is the whole idea.
 
-No, I was referring to things such as, e.g.
-	http://people.redhat.com/arjanv/olspaper.pdf
-	http://people.redhat.com/arjanv/OLS.pdf
+The question is: Who starts and leads seriously this effort (and takes
+in the course others with him)?
+Just telling others where to go and waiting until they carry you there
+usually doesn't succeed if you are not the boss of them (and/or they
+are free to leave at any time without significant punishment).
 
-It has nothing to do with ego, just hard-won experience.
-
-There are bunches of hardware vendors who have their patches merged 
-immediately after posting.  They get it.  They have internalized the 
-reasons why Linux drivers look the way they do.
-
-
->>As a tangent, I already have a design for a Linux filesystem that makes 
->>use of SCSI object-based storage (to James's horror, no doubt :)).  It's 
->>a fun thing to ponder.
+> > makes sense (and you - as the maintainer - accept their patches). And in
+[...]
+> > a few years the "old" SCSI core fades out as legacy drives fade out (or
+> > they will happily coexist forever).
 > 
-> 
-> Ok, so the way I see it you want to show who has got
-> the bigger balls?
-> 
-> Jeff, I have *worked* on a Linux OBD-based filesystem.
-> 
-> Are you going to stop this self-gratifying stuff?
+> Yep, I've been saying this since 2002.  On the linux-scsi ML.
 
-Oh good grief.  It was an example, silly.  Trying to lighten the mood, even.
+Perhaps speaking is not enough and work should follow?
+All people who really do the work like those others standing beneath
+(possibly doing their own thing) and telling them how to do their own
+work best.
 
-	Jeff
+> And this is the problem: *you* and "the community" see things in
+> *this* way:  "your balls - my balls", "yours/mine".
+
+It's at most (and actually exactly) "my work - your work", not "my balls
+- your balls" (or "code" or whatever).
+If you want to play "our work" (read: team[0] work), than you have to
+cope with others (and they with you), their - probably historically
+grown - design (even if it is wrong), etc.
+If this doesn't work (and ATM I have this impression) for whatever
+reason, the second step is "my work, your work".
+And if two (or more) people have different design opinions (and
+different opinions about "quality" and/or "correct vs wrong" - I can't
+decide since I have virtually no knowledge about SCSI core internals,
+discussions on the Linux-SCSI-ML, etc. to decide - not even for me -,
+who is "right" and/or "wrong" in which aspect or in general), it comes
+down to "better the not-so-good design and working code than the best
+design and no code".
+So just copy the old core, throw out what you don't want, need and/or
+like and voila. If it *is* "better", it will succeed and people will
+come and help.
+Of course it is probably more work in the short and in the long run to
+maintain a separate block driver for SAS storage, but it is at least a
+possible solution.
+Perhaps all relevant people will see that the difference is small enough
+to converge to some point in between.
+
+	Bernd
+
+[0]: Not in the ironic interpretation in German which translates roughly
+     to "great, another one does it".
+-- 
+Firmix Software GmbH                   http://www.firmix.at/
+mobil: +43 664 4416156                 fax: +43 1 7890849-55
+          Embedded Linux Development and Services
+
