@@ -1,103 +1,34 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
  the kernel
-Date: Thu, 29 Sep 2005 11:04:37 -0400
-Message-ID: <433C0285.3050106@adaptec.com>
-References: <Pine.LNX.4.10.10509281530190.19896-100000@master.linux-ide.org>
+Date: Thu, 29 Sep 2005 11:09:12 -0400
+Message-ID: <433C0398.4040302@adaptec.com>
+References: <43384E28.8030207@adaptec.com> <4339BFE9.1060604@pobox.com>	 <4339CCD6.5010409@adaptec.com> <4339F9A8.2030709@pobox.com>	 <433AFEB2.7090003@adaptec.com> <433B0457.7020509@pobox.com>	 <433B14E1.6080201@adaptec.com> <433B217F.4060509@pobox.com>	 <20050929040403.GE18716@alpha.home.local> <1127979848.2918.7.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:50323 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932172AbVI2PEx (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:56724 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932180AbVI2PJX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Sep 2005 11:04:53 -0400
-In-Reply-To: <Pine.LNX.4.10.10509281530190.19896-100000@master.linux-ide.org>
+	Thu, 29 Sep 2005 11:09:23 -0400
+In-Reply-To: <1127979848.2918.7.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andre Hedrick <andre@linux-ide.org>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Luben Tuikov <ltuikov@yahoo.com>, Jeff Garzik <jgarzik@pobox.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Willy Tarreau <willy@w.ods.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-On 09/28/05 18:43, Andre Hedrick wrote:
-> I have a vested interest in the improvement of the Linux SCSI Core and
-> wider adoption and support for SATA II and SAS controllers with their
-> associated domains and transport.
+On 09/29/05 03:44, Arjan van de Ven wrote:
+> 
+> a spec describes how the hw works... how we do the sw piece is up to
+> us ;)
 
-Us and other companies too.
+Arjan, I'll be your best friend here:
+Never say this in public or in an intervew.
 
-> Proving a better design with a migration path for integration is the key
-> for success; however, I am not the person to be the political voice in the
+Hardware folks needs to work with software folks and
+software folks need to work with hardware folks.
 
-Yes, _it is_ the key to success.
-
-> James is king of the hill, and is reasonable to a point.  James also
-
-Which "hill" is the question.  If he were reasonable, he'd
-understand that the two technologies _are_ completely different and
-distinct and he'd not try to shove HIS solution down my throat.
-Just as I do not shove my solution in his throat.
-
-The whole point is that MPT-based (IOP on package) solutions
-_do not_ need a Transport Layer, since that Transport Layer
-_is_ already present: in the firmware _and_ access to it
-is _firmware_ dependent.
-
-All the while open transport solutions (ours and apparently
-Broadcoms') _expose_ the whole infrastructure and _give_ you
-the chip as an interface to the interconnect.  So you actually
-_need_ a transport management layer.  Now that transport
-management layer sits _below_ SCSI Core and SCSI Core is
-_unaware_ of the transport.
-
-> follows a model of generalization v/s specific design.  Argh, this is not
-> going to be an easy one to explain or back away from now.  Erm, inclusive
-> API design is where I am wanting to go with this thought.
-
-You can have inclusive API design for chips like AIC-94xx and BCM8603,
-because they <see paragraph above>.
-
-MPT-based ones <see paragraph above> would also use inclusive
-design _for MPT-based chips_.
-
-> Have you and company considered the approach of mapping to a library of
-> sorts?
-
-Hmm, it is not a library.
-
-It is a layer, again, because of what the chip actually is, and because
-of what it implements.
-
-Take a look at the announcement text, I do give some description there
-and in the code the drivers/scsi/sas-class/README file describes
-the event/managment infrastructure.  Also you can take a look at the code.
-http://linux.adaptec.com/sas/
-
-What you'll see in the code is:
-
-  hardware implementation  (interconnect, SAM 4.15, 1.3)
-      firmware implementation  (interconnect, SDS, SAM 4.6, 1.3)
-          LLDD                     (SAM, section 5, 6, 7)
-             Transport Layer          (SAM 4.15, SAS)
-                  SCSI Core             (SAM section 4,5,8)
-                     Commmand Sets        (SAM section 1)
-
-A very nice explanation in latest SAM4r03,
-section 4.15 The SCSI model for distributed communications.
-
-Now for MPT based solutions you have:
-
-  LLDD                  (SAM, section 5, 6, 7)
-     SCSI Core             (SAM section 4,5,8)
-        Commmand Sets         (SAM section 1)
-
-You see?  No Transport Layer between LLDD and SCSI Core!
-Why?  Because all this work is done in FIRMWARE!
-
-That is, the LLDD exports the LUs right into SCSI Core,
-So in effect there is _no_ need for a software Transport
-Layer.
-
-Can we have a video/tele conference on this?
+This is what makes good design.
 
 	Luben
-
