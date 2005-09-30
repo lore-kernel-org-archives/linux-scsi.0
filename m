@@ -1,36 +1,32 @@
 From: Karthik Sarangan <karthiks@cdac.in>
 Subject: Re: Re: accessing the scsi disk from a kernel module
-Date: Fri, 30 Sep 2005 11:59:17 +0530
-Message-ID: <433CDB3D.9060905@cdac.in>
+Date: Fri, 30 Sep 2005 12:36:36 +0530
+Message-ID: <433CE3FC.7050806@cdac.in>
 References: <433CCCD2.3000003@cdac.in> <1e62d137050929230019fcbfb6@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.cdacindia.com ([203.199.132.35]:51911 "HELO
-	mailx.cdac.ernet.in") by vger.kernel.org with SMTP id S1030263AbVI3IF1
+Received: from mx1.cdacindia.com ([203.199.132.35]:50375 "HELO
+	mailx.cdac.ernet.in") by vger.kernel.org with SMTP id S1030261AbVI3IFY
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Sep 2005 04:05:27 -0400
+	Fri, 30 Sep 2005 04:05:24 -0400
 Received: from mailhub.cdac.in ([196.1.109.254])
- by mailx.cdac.ernet.in (SAVSMTP 3.1.0.29) with SMTP id M2005093013351105083
- for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2005 13:35:11 +0530
+ by mailx.cdac.ernet.in (SAVSMTP 3.1.0.29) with SMTP id M2005093013350805076
+ for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2005 13:35:08 +0530
 Received: from mailhub.cdac.in (mailhub [196.1.109.254])
-	by mailhub.cdac.in (8.13.4/8.13.4) with ESMTP id j8U84laO012773
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2005 13:34:53 +0530
+	by mailhub.cdac.in (8.13.4/8.13.4) with ESMTP id j8U84lLZ012772
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2005 13:34:52 +0530
 Received: from mailhub.cdac.in (mailhub [196.1.109.254])
-	by mailhub.cdac.in (8.13.4/8.13.4) with ESMTP id j8U7Ylik032762
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2005 13:04:55 +0530
+	by mailhub.cdac.in (8.13.4/8.13.4) with ESMTP id j8U7Ylic032762
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2005 13:04:54 +0530
 Received: from mailhub.cdac.in (mailhub [196.1.109.254])
-	by mailhub.cdac.in (8.13.4/8.13.4) with ESMTP id j8U74kYZ019184
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2005 12:34:52 +0530
-Received: from mailhub.cdac.in (mailhub [196.1.109.254])
-	by mailhub.cdac.in (8.13.4/8.13.4) with ESMTP id j8U6ZN63005183
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2005 12:05:23 +0530
+	by mailhub.cdac.in (8.13.4/8.13.4) with ESMTP id j8U7CgL6023262
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2005 12:42:42 +0530
 In-Reply-To: <1e62d137050929230019fcbfb6@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fawad Lateef <fawadlateef@gmail.com>
-Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Fawad Lateef <fawadlateef@gmail.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 Fawad Lateef wrote:
 
@@ -64,4 +60,6 @@ intermediate kernel buffers) to scsi disk from a kernel module.
 Hope this make my meaning clearer.
 
 Karthik Sarangan
+
+
 
