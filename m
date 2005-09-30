@@ -1,57 +1,117 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: 2.6.14-rc2-git7 crashed on amd64 (usenet gateway) after 18
- hours
-Date: Fri, 30 Sep 2005 00:13:01 -0700
-Message-ID: <20050930001301.08eeab9d.akpm@osdl.org>
-References: <dhinf5$skf$1@news.cistron.nl>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+ the kernel
+Date: Fri, 30 Sep 2005 17:29:37 +1000
+Message-ID: <433CE961.3040504@torque.net>
+References: <20050929232013.95117.qmail@web31810.mail.mud.yahoo.com> <Pine.LNX.4.64.0509291730360.3378@g5.osdl.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:27869 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932571AbVI3HNf (ORCPT
+Received: from zorg.st.net.au ([203.16.233.9]:57216 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S932572AbVI3H2x (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Sep 2005 03:13:35 -0400
-In-Reply-To: <dhinf5$skf$1@news.cistron.nl>
+	Fri, 30 Sep 2005 03:28:53 -0400
+In-Reply-To: <Pine.LNX.4.64.0509291730360.3378@g5.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Danny ter Haar <dth@cistron.nl>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-dth@cistron.nl (Danny ter Haar) wrote:
->
-> Known story:
-> last stable kernel for this machine is/was 2.6.12-mm1
+Linus Torvalds wrote:
 > 
-> Every 2.6.1[34] kernel panics so far.
-> Sometimes after 40 minutes, sometimes after 4 days.
+> On Thu, 29 Sep 2005, Luben Tuikov wrote:
 > 
-> Config/more info at:
-> http://newsgate.newsserver.nl/kernel/2.6.14-rc2-git7/
-
-The aic79xx driver shat itself.
-
-The log buffer starts with
-
-scsi1 (4:0): rejecting I/O to offline device
-scsi1 (4:0): rejecting I/O to offline device
-scsi1 (4:0): rejecting I/O to offline device
-
-So we've probably lost the info which will tell us how the problems
-started.  A serial console would be nice.
-
-> This time it was scsi system again which "blew-up"
+>>>   It's like real science: if you have a theory that doesn't match 
+>>>   experiments, it doesn't matter _how_ much you like that theory. It's
+>>>   wrong. You can use it as an approximation, but you MUST keep in mind 
+>>>   that it's an approximation.
+>>
+>>But this is _the_ definition of a theory.  No one is arguing that
+>>a theory is not an approximation to observed behaviour.
 > 
-> Obvious difference i see between 2.6.12 en 2.6.1[34] is that the 
-> scsi/ethernet cards have different IRQ's set. 
-> If i'm correct acpi code changed in 2.6.13, right ?
 > 
-> Since the 2.6.12-mm1 kernel survived 3 weeks+ and gave super performance
-> i'm convinced it's not a hardware issue.
+> No.
 > 
-> Just giving feedback.
+> A scientific theory is an approximation of observed behaviour WITH NO 
+> KNOWN HOLES.
 > 
-> Will try git8 and mm2 and of course report here when they fail.
+> Once there are known holes in the theory, it's not a scientific theory. At 
+> best it's an approximation, but quite possibly it's just plain wrong.
+> 
+> And that's my point. Specs are not only almost invariably badly written, 
+> they also never actually match reality. 
+> 
+> At which point at _best_ it's just an approximation. At worst, it's much 
+> worse. At worst, it causes people to ignore reality, and then it becomes 
+> religion.
+> 
+> And that's way _way_ too common. People who ignore reality are sadly not 
+> at all unusual.
+> 
+> "But the spec says ..." is pretty much always a sign of somebody who has 
+> just blocked out the fact that some device doesn't.
+> 
+> So don't talk about specs.
 
-Are all the failures due to the aic79xx driver failing in this manner?  If
-not then please report the different failures separately, thanks.
+Why not?
+
+There are good, bad and ill-timed specs. The bad ones are
+ignored. Ill-timed ones gather dust, for example the
+SCSI Ultra 640 standard (SPI-5) since the industry has
+bet on SAS; hope they weren't expecting timely driver
+support from Linux.
+
+As for a good spec how about the Multi Media Command (MMC)
+set which allows us to read music and data CDs written
+almost twenty years ago plus many different formats since
+then. It is currently (in MMC-5) being enhanced to cope
+with the next big bun fight in that space: Blue ray and
+HD-DVD (and their various content protection systems).
+
+In the t10.org hierarchy of specs, MMC is subservient to
+the primary commands (SPC) and the general architecture
+(SAM). The companies that work in the MMC space (and
+tend to define that standard) have "bent the rules" over
+the years. The response from the (different set of)
+companies that are behind SPC and SAM was to make
+allowance for MMC.
+The process seems to work pretty well and I am unaware
+of any proposed alternate interfaces. Transports have
+come and gone but the logical interface has remained.
+
+> Talk about working code that is _readable_ and _works_.
+
+For SAS we have a well thought out definition for what the
+interface should be to hardware specific drivers IMO. It is
+called CSMI, rechristened SDI. The editor of SDI is also
+the editor of SAS, SAS-1.1 and SAS-2. Judging from his work,
+he knows his stuff. Unfortunately SDI uses ioctls to define
+its interface, which is mainly between two kernel layers
+(if one ignores pass throughs). Sorry, did I mention "ioctl",
+oh that makes SDI unacceptable. Almost a year ago that is what
+happened to the first proposed SAS driver for Linux. That
+decision has pushed Luben (amongst others) into the position
+he is in now: come up with a "better" design, produce code
+and then watch it get rejected. So please cut Luben a bit
+of slack.
+
+Just in case people think that I agree with Luben on using
+sysfs to represent the whole SAS topology and interesting
+bits suspended in it (i.e. SAS expanders), then I don't.
+I am, however, prepared to argue the detail. Since the
+days of Eric Youngdale I have believed that SCSI Host Bus
+Adapters (HBAs) should be addressable devices, just like
+network interfaces. IMO it is the block layer and its
+associated end devices that are the legacy thinking.
+
+> There's an absolutely mindbogglingly huge difference between the two.
+
+It is ironic that as the author of the SG_IO
+passthrough ioctl the "specs" that I am
+often asked to help circumvent are the "we
+know better" variety built into various layers
+of the linux kernel :-)
+
+Doug Gilbert
