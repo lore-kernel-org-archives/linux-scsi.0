@@ -1,84 +1,66 @@
-From: Andrew Patterson <andrew.patterson@hp.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
-	the kernel
-Date: Fri, 30 Sep 2005 10:26:16 -0600
-Message-ID: <1128097576.10079.88.camel@bluto.andrew>
-References: <20050929232013.95117.qmail@web31810.mail.mud.yahoo.com>
-	 <Pine.LNX.4.64.0509291730360.3378@g5.osdl.org>
-	 <433CE961.3040504@torque.net>
-Reply-To: andrew.patterson@hp.com
+ the kernel
+Date: Fri, 30 Sep 2005 12:47:20 -0400
+Message-ID: <433D6C18.2070202@adaptec.com>
+References: <20050929232013.95117.qmail@web31810.mail.mud.yahoo.com>	 <Pine.LNX.4.64.0509291730360.3378@g5.osdl.org>	 <433CE961.3040504@torque.net> <1128097576.10079.88.camel@bluto.andrew>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atlrel7.hp.com ([156.153.255.213]:64230 "EHLO atlrel7.hp.com")
-	by vger.kernel.org with ESMTP id S1030359AbVI3Q0Y (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:15505 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1030369AbVI3Qr1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Sep 2005 12:26:24 -0400
-In-Reply-To: <433CE961.3040504@torque.net>
+	Fri, 30 Sep 2005 12:47:27 -0400
+In-Reply-To: <1128097576.10079.88.camel@bluto.andrew>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: andrew.patterson@hp.com
+Cc: dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-
-On Fri, 2005-09-30 at 17:29 +1000, Douglas Gilbert wrote:
-
-snippage.
-
+On 09/30/05 12:26, Andrew Patterson wrote:
 > 
-> For SAS we have a well thought out definition for what the
-> interface should be to hardware specific drivers IMO. It is
-> called CSMI, rechristened SDI. The editor of SDI is also
-> the editor of SAS, SAS-1.1 and SAS-2. Judging from his work,
-> he knows his stuff. Unfortunately SDI uses ioctls to define
-> its interface, which is mainly between two kernel layers
-> (if one ignores pass throughs). 
+> I talked to one of the authors of these specs.  SDI is an attempt to
+> create an open standard for the somewhat proprietary CSMI spec developed
+> by HP.  It is currently languishing in t10 due to the IOCTL problem you
+> describe below (the "no new IOCTL's" doctrine caught them by surprise).
+> There is some thought to going to a write()/read() on a character device
+> model, but this has various problems as well.  
 
-I talked to one of the authors of these specs.  SDI is an attempt to
-create an open standard for the somewhat proprietary CSMI spec developed
-by HP.  It is currently languishing in t10 due to the IOCTL problem you
-describe below (the "no new IOCTL's" doctrine caught them by surprise).
-There is some thought to going to a write()/read() on a character device
-model, but this has various problems as well.  
+I think that read/write from a char device is going away too.
 
-> Sorry, did I mention "ioctl",
-> oh that makes SDI unacceptable. Almost a year ago that is what
-> happened to the first proposed SAS driver for Linux. 
+For this reason I showed the whole picture of the SAS
+domain in sysfs _and_ created a binary file attr to
+send/receive SMP requests/responses to control
+the domain and get attributes ("smp_portal" binary
+attr of each expander).
 
-That was one of the reasons the MPT Fusion and Adaptec drivers were
-rejected.  There were others as well, such as lack of a SAS transport
-class.
+It is completely user space driven and a user space library
+is simple to write.
 
-Andrew
+See drivers/scsi/sas/expander_conf.c which is a user
+space utility.  For the output see Announcement 3:
+http://linux.adaptec.com/sas/Announce_2.txt or here:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=112629509318354&w=2
 
-> That
-> decision has pushed Luben (amongst others) into the position
-> he is in now: come up with a "better" design, produce code
-> and then watch it get rejected. So please cut Luben a bit
-> of slack.
+The code which implements it is very tiny, at the bottom
+of drivers/scsi/sas/sas_expander.c
+
+>>Sorry, did I mention "ioctl",
+>>oh that makes SDI unacceptable. Almost a year ago that is what
+>>happened to the first proposed SAS driver for Linux. 
 > 
-> Just in case people think that I agree with Luben on using
-> sysfs to represent the whole SAS topology and interesting
-> bits suspended in it (i.e. SAS expanders), then I don't.
-> I am, however, prepared to argue the detail. Since the
-> days of Eric Youngdale I have believed that SCSI Host Bus
-> Adapters (HBAs) should be addressable devices, just like
-> network interfaces. IMO it is the block layer and its
-> associated end devices that are the legacy thinking.
 > 
-> > There's an absolutely mindbogglingly huge difference between the two.
-> 
-> It is ironic that as the author of the SG_IO
-> passthrough ioctl the "specs" that I am
-> often asked to help circumvent are the "we
-> know better" variety built into various layers
-> of the linux kernel :-)
-> 
-> Doug Gilbert
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> That was one of the reasons the MPT Fusion and Adaptec drivers were
+> rejected.  There were others as well, such as lack of a SAS transport
+> class.
+
+You mean the first Adaptec SAS "adp94xx" driver.
+
+BTW, neither the original "adp94xx", nor the subsequent "aic94xx"
+Adaptec drivers implmented _any_ ioctls for CSMI/SDI.
+
+	Luben
+
+
 
