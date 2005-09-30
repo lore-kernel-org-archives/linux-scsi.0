@@ -1,52 +1,84 @@
-From: dth@cistron.nl (Danny ter Haar)
-Subject: Re: 2.6.14-rc2-git7 crashed on amd64 (usenet gateway) after 18 hours
-Date: Fri, 30 Sep 2005 16:22:30 +0000 (UTC)
-Message-ID: <dhjoo5$86q$1@news.cistron.nl>
-References: <dhinf5$skf$1@news.cistron.nl> <20050930001301.08eeab9d.akpm@osdl.org> <20050930073958.GA24985@dth.net> <20050930124448.GA12779@favonius>
+From: Andrew Patterson <andrew.patterson@hp.com>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+	the kernel
+Date: Fri, 30 Sep 2005 10:26:16 -0600
+Message-ID: <1128097576.10079.88.camel@bluto.andrew>
+References: <20050929232013.95117.qmail@web31810.mail.mud.yahoo.com>
+	 <Pine.LNX.4.64.0509291730360.3378@g5.osdl.org>
+	 <433CE961.3040504@torque.net>
+Reply-To: andrew.patterson@hp.com
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from news.cistron.nl ([62.216.30.38]:3977 "EHLO ncc1701.cistron.net")
-	by vger.kernel.org with ESMTP id S1030322AbVI3QWb (ORCPT
+Received: from atlrel7.hp.com ([156.153.255.213]:64230 "EHLO atlrel7.hp.com")
+	by vger.kernel.org with ESMTP id S1030359AbVI3Q0Y (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Sep 2005 12:22:31 -0400
+	Fri, 30 Sep 2005 12:26:24 -0400
+In-Reply-To: <433CE961.3040504@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: dougg@torque.net
+Cc: Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Sander  <sander@humilis.net> wrote:
->This might help?
->From 'man screen':
->       C-a H       (log)         Begins/ends logging of the current window  to
->                                 the file "screenlog.n".
 
-*thanks*
+On Fri, 2005-09-30 at 17:29 +1000, Douglas Gilbert wrote:
 
-done so.
+snippage.
 
-If it crashes i know now at leas i will have _all_ output!
+> 
+> For SAS we have a well thought out definition for what the
+> interface should be to hardware specific drivers IMO. It is
+> called CSMI, rechristened SDI. The editor of SDI is also
+> the editor of SAS, SAS-1.1 and SAS-2. Judging from his work,
+> he knows his stuff. Unfortunately SDI uses ioctls to define
+> its interface, which is mainly between two kernel layers
+> (if one ignores pass throughs). 
 
-git8 stil running:
--------------
-newsgate:~# procinfo
-Linux 2.6.14-rc2-git8 (root@newsgate) (gcc 4.0.2 ) #1 1CPU [newsgate.(none)]
+I talked to one of the authors of these specs.  SDI is an attempt to
+create an open standard for the somewhat proprietary CSMI spec developed
+by HP.  It is currently languishing in t10 due to the IOCTL problem you
+describe below (the "no new IOCTL's" doctrine caught them by surprise).
+There is some thought to going to a write()/read() on a character device
+model, but this has various problems as well.  
 
-Memory:      Total        Used        Free      Shared     Buffers
-Mem:       4062040     4041212       20828           0         568
-Swap:            0           0           0
+> Sorry, did I mention "ioctl",
+> oh that makes SDI unacceptable. Almost a year ago that is what
+> happened to the first proposed SAS driver for Linux. 
 
-Bootup: Fri Sep 30 10:21:34 2005    Load average: 4.73 4.60 4.47 5/74 23214
+That was one of the reasons the MPT Fusion and Adaptec drivers were
+rejected.  There were others as well, such as lack of a SAS transport
+class.
 
-user  :       0:57:57.56  12.1%  page in :        0
-nice  :       0:08:26.32   1.8%  page out:        0
-system:       2:23:25.64  29.9%  swap in :        0
-idle  :       0:01:16.27   0.3%  swap out:        0
-uptime:       7:59:59.89         context : 77591356
+Andrew
 
-irq  0:   7195064 timer                 irq 12:         3
-irq  1:         8 i8042                 irq 16:   7430483 aic79xx
-irq  4:       400 serial                irq 17:  73394066 aic79xx, eth3
-irq  9:         0 acpi                  irq 18: 138587870 acenic
-
---------------
-
-Danny
+> That
+> decision has pushed Luben (amongst others) into the position
+> he is in now: come up with a "better" design, produce code
+> and then watch it get rejected. So please cut Luben a bit
+> of slack.
+> 
+> Just in case people think that I agree with Luben on using
+> sysfs to represent the whole SAS topology and interesting
+> bits suspended in it (i.e. SAS expanders), then I don't.
+> I am, however, prepared to argue the detail. Since the
+> days of Eric Youngdale I have believed that SCSI Host Bus
+> Adapters (HBAs) should be addressable devices, just like
+> network interfaces. IMO it is the block layer and its
+> associated end devices that are the legacy thinking.
+> 
+> > There's an absolutely mindbogglingly huge difference between the two.
+> 
+> It is ironic that as the author of the SG_IO
+> passthrough ioctl the "specs" that I am
+> often asked to help circumvent are the "we
+> know better" variety built into various layers
+> of the linux kernel :-)
+> 
+> Doug Gilbert
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
