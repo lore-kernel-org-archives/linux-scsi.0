@@ -1,55 +1,58 @@
-From: Linus Torvalds <torvalds@osdl.org>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
- the kernel
-Date: Thu, 29 Sep 2005 17:35:27 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0509291730360.3378@g5.osdl.org>
+From: Hua Zhong <hzhong@gmail.com>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
+Date: Thu, 29 Sep 2005 18:25:22 -0700
+Message-ID: <924c28830509291825y10c1709bt9a648ef3fb89b22@mail.gmail.com>
 References: <20050929232013.95117.qmail@web31810.mail.mud.yahoo.com>
+	 <Pine.LNX.4.64.0509291730360.3378@g5.osdl.org>
+Reply-To: Hua Zhong <hzhong@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932421AbVI3Afj@vger.kernel.org>
-In-Reply-To: <20050929232013.95117.qmail@web31810.mail.mud.yahoo.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Luben Tuikov <ltuikov@yahoo.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, Willy Tarreau <willy@w.ods.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Luben Tuikov <luben_tuikov@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from xproxy.gmail.com ([66.249.82.205]:16773 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751404AbVI3BZX convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Sep 2005 21:25:23 -0400
+Received: by xproxy.gmail.com with SMTP id s14so1752762wxc
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Sep 2005 18:25:22 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.64.0509291730360.3378@g5.osdl.org>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Luben Tuikov <ltuikov@yahoo.com>, Arjan van de Ven <arjan@infradead.org>, Willy Tarreau <willy@w.ods.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Luben Tuikov <luben_tuikov@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>
 
+> Once there are known holes in the theory, it's not a
+> scientific theory. At best it's an approximation, but
+> quite possibly it's just plain wrong.
 
+You are right about scientific theory, but specs are not just a theory.
+You are mixing "discovery" and "invention".
 
-On Thu, 29 Sep 2005, Luben Tuikov wrote:
+A scientific theory has to match reality, because the universe deveops
+independently. There is no way you can enforce your theory down the
+throat on the "nature".
+
+But the roles of specs are more than that. There are two parts of it:
+1. unify/summarize the reality
+2. guide future implementations on a unified road
+
+It might do job 1 poorly (simply because the reality is a mess),
+but if everyone from the point on puts the effort to follow it, job 2 can
+be done, and it is the real goal. It can do this simply because *humans*
+can collaborate and be influenced for a goal that could eventually
+benefit everybody.
+
+> And that's my point. Specs are not only almost invariably
+> badly written, they also never actually match reality.
 >
-> >    It's like real science: if you have a theory that doesn't match 
-> >    experiments, it doesn't matter _how_ much you like that theory. It's
-> >    wrong. You can use it as an approximation, but you MUST keep in mind 
-> >    that it's an approximation.
-> 
-> But this is _the_ definition of a theory.  No one is arguing that
-> a theory is not an approximation to observed behaviour.
+> At which point at _best_ it's just an approximation. At
+> worst, it's much worse. At worst, it causes people to
+> ignore reality, and then it becomes religion.
 
-No.
+Let me add more to the moron/asshole argument:
 
-A scientific theory is an approximation of observed behaviour WITH NO 
-KNOWN HOLES.
+Anyone that thinks specs are reality is a moron.
 
-Once there are known holes in the theory, it's not a scientific theory. At 
-best it's an approximation, but quite possibly it's just plain wrong.
-
-And that's my point. Specs are not only almost invariably badly written, 
-they also never actually match reality. 
-
-At which point at _best_ it's just an approximation. At worst, it's much 
-worse. At worst, it causes people to ignore reality, and then it becomes 
-religion.
-
-And that's way _way_ too common. People who ignore reality are sadly not 
-at all unusual.
-
-"But the spec says ..." is pretty much always a sign of somebody who has 
-just blocked out the fact that some device doesn't.
-
-So don't talk about specs.
-
-Talk about working code that is _readable_ and _works_.
-
-There's an absolutely mindbogglingly huge difference between the two.
-
-			Linus
+Anyone that thinks specs are useless and refuses to collaborate
+is an asshole. :)
