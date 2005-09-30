@@ -1,100 +1,57 @@
-From: Andre Hedrick <andre@linux-ide.org>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
- the kernel
-Date: Thu, 29 Sep 2005 23:52:06 -0700 (PDT)
-Message-ID: <Pine.LNX.4.10.10509292345300.27623-100000@master.linux-ide.org>
-References: <Pine.LNX.4.58.0509291247040.3308@g5.osdl.org>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: 2.6.14-rc2-git7 crashed on amd64 (usenet gateway) after 18
+ hours
+Date: Fri, 30 Sep 2005 00:13:01 -0700
+Message-ID: <20050930001301.08eeab9d.akpm@osdl.org>
+References: <dhinf5$skf$1@news.cistron.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from astound-64-85-224-245.ca.astound.net ([64.85.224.245]:63246
-	"EHLO master.linux-ide.org") by vger.kernel.org with ESMTP
-	id S932567AbVI3HF0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Sep 2005 03:05:26 -0400
-In-Reply-To: <Pine.LNX.4.58.0509291247040.3308@g5.osdl.org>
+Received: from smtp.osdl.org ([65.172.181.4]:27869 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932571AbVI3HNf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Sep 2005 03:13:35 -0400
+In-Reply-To: <dhinf5$skf$1@news.cistron.nl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Arjan van de Ven <arjan@infradead.org>, Willy Tarreau <willy@w.ods.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Luben Tuikov <luben_tuikov@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>
+To: Danny ter Haar <dth@cistron.nl>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+dth@cistron.nl (Danny ter Haar) wrote:
+>
+> Known story:
+> last stable kernel for this machine is/was 2.6.12-mm1
+> 
+> Every 2.6.1[34] kernel panics so far.
+> Sometimes after 40 minutes, sometimes after 4 days.
+> 
+> Config/more info at:
+> http://newsgate.newsserver.nl/kernel/2.6.14-rc2-git7/
 
-Linus,
+The aic79xx driver shat itself.
 
-I have to tip my hat to you sir.
+The log buffer starts with
 
-As much as I wanted to believe and tried to make it happen ... ATA/IDE was
-forced to design many exception case events.  Regardless how hard I an
-others tried to invoke/create a driver to mimic the "SPEC", the hardware
-people broke most of the rules and each chipset was littered with
-exception cases.
+scsi1 (4:0): rejecting I/O to offline device
+scsi1 (4:0): rejecting I/O to offline device
+scsi1 (4:0): rejecting I/O to offline device
 
-It has been 7 years since you and I started butting heads, and in the end
-both of us were right.  A driver could be written to follow the standard
-exactly, and it would never work (alone, as-is) because the hardware was
-not paying attention the rules book.
+So we've probably lost the info which will tell us how the problems
+started.  A serial console would be nice.
 
-Hope you can kick back and laugh about the history, too!
+> This time it was scsi system again which "blew-up"
+> 
+> Obvious difference i see between 2.6.12 en 2.6.1[34] is that the 
+> scsi/ethernet cards have different IRQ's set. 
+> If i'm correct acpi code changed in 2.6.13, right ?
+> 
+> Since the 2.6.12-mm1 kernel survived 3 weeks+ and gave super performance
+> i'm convinced it's not a hardware issue.
+> 
+> Just giving feedback.
+> 
+> Will try git8 and mm2 and of course report here when they fail.
 
-Have a great Day!
-
-Andre Hedrick
-LAD Storage Consulting Group
-
-On Thu, 29 Sep 2005, Linus Torvalds wrote:
-
-> 
-> 
-> On Thu, 29 Sep 2005, Arjan van de Ven wrote:
-> > 
-> > a spec describes how the hw works... how we do the sw piece is up to
-> > us ;)
-> 
-> How we do the SW is indeed up to us, but I want to step in on your first 
-> point.
-> 
-> Again.
-> 
-> A "spec" is close to useless. I have _never_ seen a spec that was both big 
-> enough to be useful _and_ accurate.
-> 
-> And I have seen _lots_ of total crap work that was based on specs. It's 
-> _the_ single worst way to write software, because it by definition means 
-> that the software was written to match theory, not reality.
-> 
-> So there's two MAJOR reasons to avoid specs:
-> 
->  - they're dangerously wrong. Reality is different, and anybody who thinks 
->    specs matter over reality should get out of kernel programming NOW. 
->    When reality and specs clash, the spec has zero meaning. Zilch. Nada.
->    None.
-> 
->    It's like real science: if you have a theory that doesn't match 
->    experiments, it doesn't matter _how_ much you like that theory. It's
->    wrong. You can use it as an approximation, but you MUST keep in mind 
->    that it's an approximation.
-> 
->  - specs have an inevitably tendency to try to introduce abstractions
->    levels and wording and documentation policies that make sense for a 
->    written spec. Trying to implement actual code off the spec leads to the 
->    code looking and working like CRAP. 
-> 
->    The classic example of this is the OSI network model protocols. Classic 
->    spec-design, which had absolutely _zero_ relevance for the real world. 
->    We still talk about the seven layers model, because it's a convenient 
->    model for _discussion_, but that has absolutely zero to do with any 
->    real-life software engineering. In other words, it's a way to _talk_ 
->    about things, not to implement them.
-> 
->    And that's important. Specs are a basis for _talking_about_ things. But 
->    they are _not_ a basis for implementing software.
-> 
-> So please don't bother talking about specs. Real standards grow up 
-> _despite_ specs, not thanks to them.
-> 
-> 		Linus
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+Are all the failures due to the aic79xx driver failing in this manner?  If
+not then please report the different failures separately, thanks.
