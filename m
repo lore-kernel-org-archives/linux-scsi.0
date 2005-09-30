@@ -1,94 +1,41 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
- the kernel
-Date: Fri, 30 Sep 2005 16:32:31 -0400
-Message-ID: <433DA0DF.9080308@adaptec.com>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com>	 <1128105594.10079.109.camel@bluto.andrew>  <433D9035.6000504@adaptec.com> <1128111290.10079.147.camel@bluto.andrew>
+	the kernel
+Date: Fri, 30 Sep 2005 15:45:58 -0500
+Message-ID: <1128113158.12267.29.camel@mulgrave>
+References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org>
+	 <433D8542.1010601@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030387AbVI3Ucd@vger.kernel.org>
-In-Reply-To: <1128111290.10079.147.camel@bluto.andrew>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030395AbVI3Uq7@vger.kernel.org>
+In-Reply-To: <433D8542.1010601@adaptec.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: andrew.patterson@hp.com
-Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, Jeff Garzik <jgarzik@pobox.com>, willy@w.ods.org, Patrick Mansfield <patmans@us.ibm.com>, ltuikov@yahoo.com, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/30/05 16:14, Andrew Patterson wrote:
+On Fri, 2005-09-30 at 14:34 -0400, Luben Tuikov wrote:
+> James, Linus, can we have this driver in the kernel now, please?
+
+A while ago I told you that if you could show that the transport class
+abstraction could not support both the aic94xx and LSI SAS cards then we
+could look at doing SAS differently.  Since then you have asserted many
+times that a transport class could not work for the aic94xx (mostly by
+making inaccurate statements about what the transport class abstraction
+is) but have never actually provided any evidence for your assertion.
+
+In a recent prior email, you said:
+
+> Now to things more pertinent, which I'm sure people are interested in:
 > 
-> Yes you can, which is what I am trying to do.  However, is that library
-> also available on Solaris and Windows? Is it up to date?  These are the
+> Jeff has been appointed to the role of integrating the SAS code
+> with the Linux SCSI _model_, with James Bottomley's "transport
+> attributes".
+> So you can expect more patches from him.
 
-Is the kernel the latest one? Is it up to date?
+So very soon now, with proof by code, we shall have confirmation or
+negation of that assertion.  I'll wait quietly for this to happen, and I
+would suggest you do the same.
 
-See?  Same argument.
-
->>>Note that a sysfs implementation has problems.  Binary attributes are
->>>discouraged/not-allowed.
->>
->>I've never heard that.  Is this similar to the argument
->>"The sysfs tree would be too deep?"
-> 
-> 
->>From Documentation/filesystes/sysfs.txt
-> 
-> "Attributes should be ASCII text files, preferably with only one value
-> per file. It is noted that it may not be efficient to contain only
-> value per file, so it is socially acceptable to express an array of
-> values of the same type.
-> 
-> Mixing types, expressing multiple lines of data, and doing fancy
-> formatting of data is heavily frowned upon. Doing these things may get
-> you publically humiliated and your code rewritten without notice."
-
-I see this talk _only_ about non-binary attributes.
-
-Plus you have to admit: the SAS sysfs "smp_portal" binary
-attribute is very versatile: you completely control the
-expander from user space _if_ you can see it:  It is 
-almost like "point and click".
-
-I imagine there would be GUIs built on top of it, which would
-actually implement that "point, click, control".
-
-> My understanding is that sysfs is meant to be human-readable.  I do not
-
-But `cat /sysfs/.../smp_portal` _is_ human readable.  See?  Its size is
-0 bytes and when you read it you get 0 data read.
-
-> User space locking can only guarantee atomic operations in user space.  
-
-And user space is the whole audience of this interface.
-
-> Not sure at the moment, can I guarantee this for the future?
-
-How far in the future? 1, 3, 6 months?  1, 3, 6 years?
-Plus if you need an attribute larger than 4K, you've got
-other problems to worry about.
-
-> There are as many as one would want.  We now have 32 bit device numbers.
-> Old technology is fine as long as it works, especially if their is no
-> new technology to replace it.  Note that I don't like the character
-> device solution either. What would really be nice is something that will
-> allow us to pass an arbitrary request buffer, and get an arbitrary
-> response buffer back in a single transaction,
-
-Here:
-
-/* User space lock */
-
-fd = open(smp_portal, ...);
-write(fd, smp_req, smp_req_size);
-read(fd, smp_resp, smp_resp_size);
-close(fd);
-
-/* User space unlock */
-
-> See above.  This stuff works for trivial user-space apps.  It will not
-> suffice for most storage management apps.  
-
-Sorry but I completely fail to see this argument.
-
-How will it "fail for most storage managament apps"?
-
-	Luben
+James
