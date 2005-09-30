@@ -1,145 +1,111 @@
-From: Andrew Patterson <andrew.patterson@hp.com>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
-	the kernel
-Date: Fri, 30 Sep 2005 15:15:50 -0600
-Message-ID: <1128114950.10079.170.camel@bluto.andrew>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com>
-	 <1128105594.10079.109.camel@bluto.andrew>  <433D9035.6000504@adaptec.com>
-	 <1128111290.10079.147.camel@bluto.andrew>  <433DA0DF.9080308@adaptec.com>
-Reply-To: andrew.patterson@hp.com
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Kyle Moffett <mrmacman_g4@mac.com>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
+Date: Fri, 30 Sep 2005 17:31:35 -0400
+Message-ID: <0F03AA4B-D2D1-4C57-B81B-FC95CB863A98@mac.com>
+References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org> <433D8542.1010601@adaptec.com> <A0262C6F-6B0E-4790-BA42-FAFD6F026E0A@mac.com> <433D8D1F.1030005@adaptec.com>
+Mime-Version: 1.0 (Apple Message framework v734)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atlrel6.hp.com ([156.153.255.205]:18100 "EHLO atlrel6.hp.com")
-	by vger.kernel.org with ESMTP id S1030382AbVI3VP7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Sep 2005 17:15:59 -0400
-In-Reply-To: <433DA0DF.9080308@adaptec.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932591AbVI3Vcn@vger.kernel.org>
+In-Reply-To: <433D8D1F.1030005@adaptec.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, jgarzik@pobox.com, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2005-09-30 at 16:32 -0400, Luben Tuikov wrote:
-> On 09/30/05 16:14, Andrew Patterson wrote:
-> > 
-> > Yes you can, which is what I am trying to do.  However, is that library
-> > also available on Solaris and Windows? Is it up to date?  These are the
-> 
-> Is the kernel the latest one? Is it up to date?
-> 
-> See?  Same argument.
-> 
-> >>>Note that a sysfs implementation has problems.  Binary attributes are
-> >>>discouraged/not-allowed.
-> >>
-> >>I've never heard that.  Is this similar to the argument
-> >>"The sysfs tree would be too deep?"
-> > 
-> > 
-> >>From Documentation/filesystes/sysfs.txt
-> > 
-> > "Attributes should be ASCII text files, preferably with only one value
-> > per file. It is noted that it may not be efficient to contain only
-> > value per file, so it is socially acceptable to express an array of
-> > values of the same type.
-> > 
-> > Mixing types, expressing multiple lines of data, and doing fancy
-> > formatting of data is heavily frowned upon. Doing these things may get
-> > you publically humiliated and your code rewritten without notice."
-> 
-> I see this talk _only_ about non-binary attributes.
+On Sep 30, 2005, at 15:08:15, Luben Tuikov wrote:
+> On 09/30/05 14:50, Kyle Moffett wrote:
+>> On Sep 30, 2005, at 14:34:42, Luben Tuikov wrote:
+>>
+>>> This is how we have the SPI-centric EH methods in the scsi host  
+>>> template right now:
+>>>    int (* eh_abort_handler)(struct scsi_cmnd *);
+>>>    int (* eh_device_reset_handler)(struct scsi_cmnd *);
+>>>    int (* eh_bus_reset_handler)(struct scsi_cmnd *);
+>>>    int (* eh_host_reset_handler)(struct scsi_cmnd *);
+>>
+>> So submit patches to fix it!  You clearly understand what is  
+>> wrong, so why not help change it?
+>
+> Because
+>   - I do not want to give heart attack to all existing LLDDs
 
-I think that "ASCII text files" implies non-binary. As Willy has pointed
-out, this has already been violated.
+Significance of change is not an issue, assuming the change is broken  
+up into a collection of small obvious changes as highlighted in  
+Documentation/SubmittingPatches
 
-> 
-> Plus you have to admit: the SAS sysfs "smp_portal" binary
-> attribute is very versatile: you completely control the
-> expander from user space _if_ you can see it:  It is 
-> almost like "point and click".
+>   - Some LLDD would never be able to be changed
 
-No problem with this.  
+Why not?  It's easy to change APIs, even stuff as invasive as the VM,  
+the device driver model, etc, and those get changed all the time.
 
-> 
-> I imagine there would be GUIs built on top of it, which would
-> actually implement that "point, click, control".
-> 
-> > My understanding is that sysfs is meant to be human-readable.  I do not
-> 
-> But `cat /sysfs/.../smp_portal` _is_ human readable.  See?  Its size is
-> 0 bytes and when you read it you get 0 data read.
+>   - Some LLDD work on very _scarce_ hardware which we cannot test.
 
-I don't quite think your definition of human readable is the same as
-mine. I think the intention is to do something like:
+You don't have to worry all that much about testing.  If your patches  
+are small and obviously correct (like they should be), then they will  
+get enough review during submission that there will only be a very  
+small number of bugs.  The few remaining bugs will probably be ironed  
+out in -mm.  In any case, if nobody uses hardware anymore, eventually  
+the driver will get sufficiently crufty and out of date that it will  
+be recognized as such and removed.
 
-$ cat attribute
-3 Gb/s
+>   - plus such radical changes are neither warranted nor necessary.
 
-or 
+Jeff Garzik et. al. seem to think that they are necessary, and I  
+agree.  You don't need to fork SCSI-core; doing so would just double  
+the maintainer load, and _that_ is neither warranted nor necessary.
 
-$ echo "3 Gb/s" >attribute
+> It is better to keep legacy around, until all you'll have on your  
+> new serverboard is a SAS/SATA storage chip such as AIC-94xx or say  
+> BCM8603.  Then you can compile out most of the legacy stuff.
 
-Rather than
+Precisely.  When nobody uses the legacy drivers to the point that  
+they aren't fixed or maintained anymore because no-one reports bugs,  
+then said drivers can be removed from the kernel entirely, along with  
+any support code.  The model I describe here works better because it  
+keeps a _single_ clean core subsystem, and leaves any lack-of- 
+maintenance crap in the old drivers.
 
-$ cat attribute
-gibberish.
+> I think not breaking anything (for now at least) would be the  
+> _easiest_ and most painless way to transition.
 
-or
+Until somebody wants to add a new high-level SCSI feature that works  
+for both the new and the old devices.  Then they have to do it _twice_.
 
-$ echo "gibberish" >attribute
+>>> The way we do this is we slowly, without disruption to older  
+>>> drivers introduce, in parallel, emerge a new, simpler, slimmer,  
+>>> faster SCSI Core, whereby we accommodate new infrastructures,  
+>>> yet, have 100% backward compatibility, via the current older SCSI  
+>>> Core. After all, both would be a bunch of functions in a bunch of  
+>>> files.
+>>
+>> Except this introduces bloat and multiplies maintainer load.  Fix the
+>> existing one.  If it breaks other in-core drivers, fix those to
+>
+> Well, not necessarily.  It would be more painful and more  
+> maintainer load if we did what you suggest.  The overhead would be  
+> enormous.
 
-But again, this may be just a goal and not a hard and fast rule.  I can
-definitely see a use for binary attributes in sysfs. Configfs seems to
-be designed for this sort of thing.
+So you're saying fixing the current SCSI subsystem once *now* costs  
+more than applying all *future* SCSI fixes to _two_ SCSI subsystems,  
+handling bug reports for _two_ SCSI subsystems, etc.
 
-> 
-> > User space locking can only guarantee atomic operations in user space.  
-> 
-> And user space is the whole audience of this interface.
-> 
-> > Not sure at the moment, can I guarantee this for the future?
-> 
-> How far in the future? 1, 3, 6 months?  1, 3, 6 years?
-> Plus if you need an attribute larger than 4K, you've got
-> other problems to worry about.
-> 
-> > There are as many as one would want.  We now have 32 bit device numbers.
-> > Old technology is fine as long as it works, especially if their is no
-> > new technology to replace it.  Note that I don't like the character
-> > device solution either. What would really be nice is something that will
-> > allow us to pass an arbitrary request buffer, and get an arbitrary
-> > response buffer back in a single transaction,
-> , locks it, then hangs.
-> Here:
-> 
-> /* User space lock */
-> 
-> fd = open(smp_portal, ...);
-> write(fd, smp_req, smp_req_size);
-> read(fd, smp_resp, smp_resp_size);
-> close(fd);
-> 
-> /* User space unlock */
-> 
-> > See above.  This stuff works for trivial user-space apps.  It will not
-> > suffice for most storage management apps.  
-> 
-> Sorry but I completely fail to see this argument., locks it, then hangs.
-> 
-> How will it "fail for most storage managament apps"?
+>> s/Politics.*//g;  I hate politics.  Keep it off this list.
+>
+> Me too, but we are idealists.  Politics is an integral part of life.
 
-Let's see, one example:
+Politics are not an integral part of productive technical  
+discussions, though.  If you discuss technical topics and provide  
+realistic technical descriptions, examples, reasons, code, etc, then  
+politics tends not to matter in the discussion, and we're all happier  
+people.
 
-Process A opens an attribute and writes to it.  Process B opens another
-attribute and writes to it, affecting the result that process A will see
-from its subsequent read. I suppose you could lock every attribute, but
-that would be very error-prone, and not allow much concurrency.
+Cheers,
+Kyle Moffett
 
-Andrew
-
-> 
-> 	Luben
-> 
-
+-----BEGIN GEEK CODE BLOCK-----
+Version: 3.12
+GCM/CS/IT/U d- s++: a18 C++++>$ UB/L/X/*++++(+)>$ P+++(++++)>$ L++++(+ 
+++) E W++(+) N+++(++) o? K? w--- O? M++ V? PS+() PE+(-) Y+ PGP+++ t+(+ 
+++) 5 X R? tv-(--) b++++(++) DI+ D+ G e->++++$ h!*()>++$ r  !y?(-)
+------END GEEK CODE BLOCK------
