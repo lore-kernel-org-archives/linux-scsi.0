@@ -1,37 +1,93 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
  the kernel
-Date: Fri, 30 Sep 2005 10:07:50 -0400
-Message-ID: <433D46B6.1090608@adaptec.com>
-References: <20050929232013.95117.qmail@web31810.mail.mud.yahoo.com> <Pine.LNX.4.64.0509291730360.3378@g5.osdl.org>
+Date: Fri, 30 Sep 2005 10:23:22 -0400
+Message-ID: <433D4A5A.1090704@adaptec.com>
+References: <20050929232013.95117.qmail@web31810.mail.mud.yahoo.com> <Pine.LNX.4.64.0509291730360.3378@g5.osdl.org> <433CE961.3040504@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030306AbVI3OIE@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0509291730360.3378@g5.osdl.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030324AbVI3OXe@vger.kernel.org>
+In-Reply-To: <433CE961.3040504@torque.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Luben Tuikov <ltuikov@yahoo.com>, Arjan van de Ven <arjan@infradead.org>, Willy Tarreau <willy@w.ods.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: dougg@torque.net
+Cc: Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/29/05 20:35, Linus Torvalds wrote:
-> And that's my point. Specs are not only almost invariably badly written, 
-> they also never actually match reality. 
+On 09/30/05 03:29, Douglas Gilbert wrote:
+> 
+> For SAS we have a well thought out definition for what the
+> interface should be to hardware specific drivers IMO. It is
+> called CSMI, rechristened SDI. The editor of SDI is also
+> the editor of SAS, SAS-1.1 and SAS-2. Judging from his work,
+> he knows his stuff. Unfortunately SDI uses ioctls to define
+> its interface, which is mainly between two kernel layers
+> (if one ignores pass throughs). Sorry, did I mention "ioctl",
 
-Linus, the world has changed around you.
+Hi Doug,
 
-Take a look at the SAS spec and then at a SAS chip
-implementation, for example.
+Almost all of the SDI stuff can be extracted by a user space
+library reading the SAS sysfs domain tree (which is the result
+of domain discovery).
 
-(We're talking abou T10 specs, right?)
+Pictures of can be found here:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=112629509826900&w=2
 
-> And that's way _way_ too common. People who ignore reality are sadly not 
-> at all unusual.
+Since MPT-based hardware does domain discovery in the FIRMWARE,
+this is why you do not have the domain picture as easily.
 
-You are saying I ignored reality?
+> oh that makes SDI unacceptable. Almost a year ago that is what
+> happened to the first proposed SAS driver for Linux. That
+> decision has pushed Luben (amongst others) into the position
+> he is in now: come up with a "better" design, produce code
+> and then watch it get rejected. So please cut Luben a bit
+> of slack.
 
-> Talk about working code that is _readable_ and _works_.
+What James Bottomley et al. complained back then is that
+"common code" to SAS should be pulled out in a "common layer".
 
-http://linux.adaptec.com/sas/
+This layer is the SAS Transport layer.
+
+But in the mean time, LSI came out with SAS, whose driver
+as you can see had nothing to do with SAS -- it was an MPT
+driver after all, so James Bottomley decides that whatever
+else comes along, it would use _his_ design.  Whether it
+works for open transport, he doesn't want to listen.  He
+is using his political power to enforce it.
+
+> Just in case people think that I agree with Luben on using
+> sysfs to represent the whole SAS topology and interesting
+> bits suspended in it (i.e. SAS expanders), then I don't.
+> I am, however, prepared to argue the detail. Since the
+
+Sorry, since the discover process keeps an internal
+representation of "what is out there" via discovery,
+I just tacked a kobject to each structure I have anyway,
+and showed it in sysfs.
+
+I thought that was the whole purpose of sysfs -- to show
+kernel internal structures and dependencies.
+
+Plus, this is what it _actually_ looks in the physical world.
+
+Also you have to admit -- it looks cool:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=112629509826900&w=2
+
+> days of Eric Youngdale I have believed that SCSI Host Bus
+> Adapters (HBAs) should be addressable devices, just like
+> network interfaces. IMO it is the block layer and its
+> associated end devices that are the legacy thinking.
+
+Host Adapters are addressable -- if there's an initiator
+on the domain, the discover process will discover it
+and it will show up in the SAS sysfs tree.
+
+> It is ironic that as the author of the SG_IO
+> passthrough ioctl the "specs" that I am
+> often asked to help circumvent are the "we
+> know better" variety built into various layers
+> of the linux kernel :-)
+
+Indeed.
 
 	Luben
