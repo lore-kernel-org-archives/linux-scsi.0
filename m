@@ -1,111 +1,52 @@
-From: Kyle Moffett <mrmacman_g4@mac.com>
+From: Joel Becker <Joel.Becker@oracle.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
-Date: Fri, 30 Sep 2005 17:31:35 -0400
-Message-ID: <0F03AA4B-D2D1-4C57-B81B-FC95CB863A98@mac.com>
-References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org> <433D8542.1010601@adaptec.com> <A0262C6F-6B0E-4790-BA42-FAFD6F026E0A@mac.com> <433D8D1F.1030005@adaptec.com>
-Mime-Version: 1.0 (Apple Message framework v734)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932591AbVI3Vcn@vger.kernel.org>
-In-Reply-To: <433D8D1F.1030005@adaptec.com>
+Date: Fri, 30 Sep 2005 14:40:55 -0700
+Message-ID: <20050930214055.GY27375@ca-server1.us.oracle.com>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com> <1128105594.10079.109.camel@bluto.andrew> <433D9035.6000504@adaptec.com> <1128111290.10079.147.camel@bluto.andrew> <433DA0DF.9080308@adaptec.com> <1128114950.10079.170.camel@bluto.andrew>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030460AbVI3VlW@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1128114950.10079.170.camel@bluto.andrew>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, jgarzik@pobox.com, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: Andrew Patterson <andrew.patterson@hp.com>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sep 30, 2005, at 15:08:15, Luben Tuikov wrote:
-> On 09/30/05 14:50, Kyle Moffett wrote:
->> On Sep 30, 2005, at 14:34:42, Luben Tuikov wrote:
->>
->>> This is how we have the SPI-centric EH methods in the scsi host  
->>> template right now:
->>>    int (* eh_abort_handler)(struct scsi_cmnd *);
->>>    int (* eh_device_reset_handler)(struct scsi_cmnd *);
->>>    int (* eh_bus_reset_handler)(struct scsi_cmnd *);
->>>    int (* eh_host_reset_handler)(struct scsi_cmnd *);
->>
->> So submit patches to fix it!  You clearly understand what is  
->> wrong, so why not help change it?
->
-> Because
->   - I do not want to give heart attack to all existing LLDDs
+On Fri, Sep 30, 2005 at 03:15:50PM -0600, Andrew Patterson wrote:
+> But again, this may be just a goal and not a hard and fast rule.  I can
+> definitely see a use for binary attributes in sysfs. Configfs seems to
+> be designed for this sort of thing.
 
-Significance of change is not an issue, assuming the change is broken  
-up into a collection of small obvious changes as highlighted in  
-Documentation/SubmittingPatches
+	Configfs is designed for ascii or readable attributes.  It drops
+the bin_attribute type that sysfs still supports.  So if you are looking
+to fill a 64K binary attribute, configfs isn't the place you're going to
+be going.
 
->   - Some LLDD would never be able to be changed
+> > fd = open(smp_portal, ...);
+> > write(fd, smp_req, smp_req_size);
+> > read(fd, smp_resp, smp_resp_size);
+> > close(fd);
+> 
+> Process A opens an attribute and writes to it.  Process B opens another
+> attribute and writes to it, affecting the result that process A will see
+> from its subsequent read. I suppose you could lock every attribute, but
+> that would be very error-prone, and not allow much concurrency.
 
-Why not?  It's easy to change APIs, even stuff as invasive as the VM,  
-the device driver model, etc, and those get changed all the time.
+	Check out nfsctl.c and its transaction_file design.  process A
+and process B get different buffers on filp->f_private, and cannot
+influence each other's read/write operations.
 
->   - Some LLDD work on very _scarce_ hardware which we cannot test.
+Joel
 
-You don't have to worry all that much about testing.  If your patches  
-are small and obviously correct (like they should be), then they will  
-get enough review during submission that there will only be a very  
-small number of bugs.  The few remaining bugs will probably be ironed  
-out in -mm.  In any case, if nobody uses hardware anymore, eventually  
-the driver will get sufficiently crufty and out of date that it will  
-be recognized as such and removed.
+-- 
 
->   - plus such radical changes are neither warranted nor necessary.
+Life's Little Instruction Book #347
 
-Jeff Garzik et. al. seem to think that they are necessary, and I  
-agree.  You don't need to fork SCSI-core; doing so would just double  
-the maintainer load, and _that_ is neither warranted nor necessary.
+	"Never waste the oppourtunity to tell someone you love them."
 
-> It is better to keep legacy around, until all you'll have on your  
-> new serverboard is a SAS/SATA storage chip such as AIC-94xx or say  
-> BCM8603.  Then you can compile out most of the legacy stuff.
-
-Precisely.  When nobody uses the legacy drivers to the point that  
-they aren't fixed or maintained anymore because no-one reports bugs,  
-then said drivers can be removed from the kernel entirely, along with  
-any support code.  The model I describe here works better because it  
-keeps a _single_ clean core subsystem, and leaves any lack-of- 
-maintenance crap in the old drivers.
-
-> I think not breaking anything (for now at least) would be the  
-> _easiest_ and most painless way to transition.
-
-Until somebody wants to add a new high-level SCSI feature that works  
-for both the new and the old devices.  Then they have to do it _twice_.
-
->>> The way we do this is we slowly, without disruption to older  
->>> drivers introduce, in parallel, emerge a new, simpler, slimmer,  
->>> faster SCSI Core, whereby we accommodate new infrastructures,  
->>> yet, have 100% backward compatibility, via the current older SCSI  
->>> Core. After all, both would be a bunch of functions in a bunch of  
->>> files.
->>
->> Except this introduces bloat and multiplies maintainer load.  Fix the
->> existing one.  If it breaks other in-core drivers, fix those to
->
-> Well, not necessarily.  It would be more painful and more  
-> maintainer load if we did what you suggest.  The overhead would be  
-> enormous.
-
-So you're saying fixing the current SCSI subsystem once *now* costs  
-more than applying all *future* SCSI fixes to _two_ SCSI subsystems,  
-handling bug reports for _two_ SCSI subsystems, etc.
-
->> s/Politics.*//g;  I hate politics.  Keep it off this list.
->
-> Me too, but we are idealists.  Politics is an integral part of life.
-
-Politics are not an integral part of productive technical  
-discussions, though.  If you discuss technical topics and provide  
-realistic technical descriptions, examples, reasons, code, etc, then  
-politics tends not to matter in the discussion, and we're all happier  
-people.
-
-Cheers,
-Kyle Moffett
-
------BEGIN GEEK CODE BLOCK-----
-Version: 3.12
-GCM/CS/IT/U d- s++: a18 C++++>$ UB/L/X/*++++(+)>$ P+++(++++)>$ L++++(+ 
-++) E W++(+) N+++(++) o? K? w--- O? M++ V? PS+() PE+(-) Y+ PGP+++ t+(+ 
-++) 5 X R? tv-(--) b++++(++) DI+ D+ G e->++++$ h!*()>++$ r  !y?(-)
-------END GEEK CODE BLOCK------
+Joel Becker
+Principal Software Developer
+Oracle
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
