@@ -1,63 +1,31 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
-Date: Fri, 30 Sep 2005 13:07:27 -0400
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: RE: I request inclusion of SAS Transport Layer and AIC-94xx into
+	the kernel
+Date: Fri, 30 Sep 2005 19:53:57 +0200
+Message-ID: <1128102837.3012.15.camel@laptopd505.fenrus.org>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:8598 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1751221AbVI3RHe convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Sep 2005 13:07:34 -0400
-content-class: urn:content-classes:message
+Received: from pentafluge.infradead.org ([213.146.154.40]:44239 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932552AbVI3RyQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Sep 2005 13:54:16 -0400
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Tuikov, Luben" <Luben_Tuikov@adaptec.com>, andrew.patterson@hp.com
-Cc: dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: "Tuikov, Luben" <Luben_Tuikov@adaptec.com>, andrew.patterson@hp.com, dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-At the SAS BOF, I indicated that it would not be much trouble to
-translate the CSMI handler in the aacraid driver to a similar sysfs
-arrangement. If such info can be mined from a firmware based RAID card,
-every driver should be able to do so. The spec writers really need to
-consider rewriting SDI for sysfs (if they have not already) and move
-away from an ABI.
+On Fri, 2005-09-30 at 13:07 -0400, Salyzyn, Mark wrote:
+> At the SAS BOF, I indicated that it would not be much trouble to
+> translate the CSMI handler in the aacraid driver to a similar sysfs
+> arrangement. If such info can be mined from a firmware based RAID card,
+> every driver should be able to do so. The spec writers really need to
+> consider rewriting SDI for sysfs (if they have not already) and move
+> away from an ABI.
 
-Sincerely -- Mark Salyzyn
+that makes me wonder... why and how does T10 control linux abi's ??
 
------Original Message-----
-From: Tuikov, Luben
-Sent: Friday, September 30, 2005 12:47 PM
-To: andrew.patterson@hp.com
-Cc: dougg@torque.net; Linus Torvalds; Luben Tuikov; SCSI Mailing List;
-Linux Kernel Mailing List
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx
-into the kernel
 
-On 09/30/05 12:26, Andrew Patterson wrote:
-> 
-> I talked to one of the authors of these specs.  SDI is an attempt to 
-> create an open standard for the somewhat proprietary CSMI spec 
-> developed by HP.  It is currently languishing in t10 due to the IOCTL 
-> problem you describe below (the "no new IOCTL's" doctrine caught them 
-> by surprise). There is some thought to going to a write()/read() on a 
-> character device model, but this has various problems as well.
-
-I think that read/write from a char device is going away too.
-
-For this reason I showed the whole picture of the SAS
-domain in sysfs _and_ created a binary file attr to send/receive SMP
-requests/responses to control the domain and get attributes
-("smp_portal" binary attr of each expander).
-
-It is completely user space driven and a user space library
-is simple to write.
-
-See drivers/scsi/sas/expander_conf.c which is a user
-space utility.  For the output see Announcement 3:
-http://linux.adaptec.com/sas/Announce_2.txt or here:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112629509318354&w=2
-
-The code which implements it is very tiny, at the bottom
-of drivers/scsi/sas/sas_expander.c
