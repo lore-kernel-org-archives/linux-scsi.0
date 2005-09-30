@@ -1,33 +1,82 @@
-From: Joe Bob Spamtest <joebob@spamtest.viacore.net>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
  the kernel
-Date: Fri, 30 Sep 2005 12:12:34 -0700
-Message-ID: <433D8E22.9060505@spamtest.viacore.net>
-References: <20050929232013.95117.qmail@web31810.mail.mud.yahoo.com> <Pine.LNX.4.64.0509291730360.3378@g5.osdl.org> <92154686-787B-4254-B404-482E234B245D@neostrada.pl>
+Date: Fri, 30 Sep 2005 15:21:25 -0400
+Message-ID: <433D9035.6000504@adaptec.com>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com> <1128105594.10079.109.camel@bluto.andrew>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030314AbVI3TO0@vger.kernel.org>
-In-Reply-To: <92154686-787B-4254-B404-482E234B245D@neostrada.pl>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Marcin Dalecki <dalecki.marcin@neostrada.pl>
-Cc: Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:46775 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932587AbVI3TV2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Sep 2005 15:21:28 -0400
+In-Reply-To: <1128105594.10079.109.camel@bluto.andrew>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: andrew.patterson@hp.com
+Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Marcin Dalecki wrote:
-> On 2005-09-30, at 02:35, Linus Torvalds wrote:
->> A scientific theory is an approximation of observed behaviour WITH NO
->> KNOWN HOLES.
+On 09/30/05 14:39, Andrew Patterson wrote:
 > 
-> Since "approximation" is equivalent to a "known hole", there is no  
-> single scientific theory without known holes out there?! Well that's  a 
-> segfault in brain - unless you don't consider math science of course.
-> 
-> A scientific theory is just a set of axioms and deduction rules. Not  
-> much more by definition...
+> SDI is supposed to be a cross-platform spec, so mandating sysfs would
+> not work.
 
-I think a better explanation of 'scientific theory' is:
+True, sysfs is a Linux only thing.
 
-an explanation or definition of observed behaviour with no known error
+But you can write a user space library which uses sysfs or whatever
+_that_ OS uses to represent an SDI spec-ed out picture.
 
-which, is what I believe Linus was trying to say
+So a user space program would call (uniformly across all OSs)
+a libsdi library which will use whatever OS dependent way there is
+to get the information (be it sysfs or ioctl).
+
+> I suggested to the author to use a library like HPAAPI (used
+> by Fibre channel), so you could hide OS implementation details.  I am in
+> fact working on such a beasty (http://libsdi.berlios.de).  He thinks
+> that library solutions tend to not work, because the library version is
+> never in synch with the standard/LLDD's. Given Linux vendor lead-times,
+> he does have a valid point.
+
+Yes, but it would be the best of all the current ways there are
+to do it.
+
+> Note that a sysfs implementation has problems.  Binary attributes are
+> discouraged/not-allowed.
+
+I've never heard that.  Is this similar to the argument
+"The sysfs tree would be too deep?"
+
+> There is no atomic request/response operations
+
+For a reason: let user space do it, there is plenty of ways to
+do it, some assisted by the kernel.
+
+> buffers limited to page size, etc.
+
+"You have an attribute larger than 4k?  What is it?"
+
+As to SMP response/request is more than 4K/8K?  The largest
+I'm aware of is 64 bytes.
+
+> Other alternatives are
+> configfs, SG_IO, and the above mentioned character device.  None are a
+
+Again, char devices for controlling are discouraged.  There are not enough
+around and it is old technology.
+
+> complete replacement for the transactional nature of IOCTL's.  A group
+
+Here:
+
+/* User space lock */
+
+fd = open(smp_portal, ...);
+write(fd, smp_req, smp_req_size);
+read(fd, smp_resp, smp_resp_size);
+close(fd);
+
+/* User space unlock */
+
+	Luben
