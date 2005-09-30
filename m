@@ -1,68 +1,44 @@
-From: Andre Hedrick <andre@linux-ide.org>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
- the kernel
-Date: Fri, 30 Sep 2005 00:36:34 -0700 (PDT)
-Message-ID: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org>
-References: <20050929.002423.18974352.davem@davemloft.net>
+From: Fawad Lateef <fawadlateef@gmail.com>
+Subject: Re: Re: accessing the scsi disk from a kernel module
+Date: Fri, 30 Sep 2005 12:56:06 +0500
+Message-ID: <1e62d13705093000563a95972d@mail.gmail.com>
+References: <433CCCD2.3000003@cdac.in>
+	 <1e62d137050929230019fcbfb6@mail.gmail.com> <433CE0EB.6040803@cdac.in>
+Reply-To: Fawad Lateef <fawadlateef@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932573AbVI3Htw@vger.kernel.org>
-In-Reply-To: <20050929.002423.18974352.davem@davemloft.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>
-Cc: jgarzik@pobox.com, willy@w.ods.org, luben_tuikov@adaptec.com, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wproxy.gmail.com ([64.233.184.207]:4418 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1030236AbVI3H4H convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Sep 2005 03:56:07 -0400
+Received: by wproxy.gmail.com with SMTP id i2so188207wra
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2005 00:56:06 -0700 (PDT)
+In-Reply-To: <433CE0EB.6040803@cdac.in>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Karthik Sarangan <karthiks@cdac.in>
+Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+On 9/30/05, Karthik Sarangan <karthiks@cdac.in> wrote:
+> I dont want the buffer cache of the block device interfering.
+>
+> Basically I require to read/write data (without being cached or copied into
+> intermediate kernel buffers) to scsi disk from a kernel module.
+>
+> Hope this make my meaning clearer.
+>
+
+Ya, I havn't did thing what you want but for sending SCSI Commands to
+the SCSI Device directly you have to use SCSI Protocol, in
+Kernel-2.6.x I found generic SCSI Mid-Layer Driver
+(http://lxr.linux.no/source/drivers/scsi/scsi.c) and other files with
+name scsi_* in drivers/scsi/ from which you can get help and also look
+header files defined in include/scsi/ which actually has the
+structures holding the SCSI cmnds etc ......  (CMIIW)
 
 
-
-On Thu, 29 Sep 2005, David S. Miller wrote:
-
-Dave,
-
-Thanks for filling in the details I was missing about the TOE history.
-
-Glad to see you laugh about the ski stuff.  I thought about snowboarding
-then realized I would make a great mogal for someone to do an ali off.  If
-you are open to questions about TOE/RDMA stuff, would like to chat with
-you and see your POV on the subject.
-
-> In that case, it is indeed a vendor trying to shove their particular
-> solution down our throats.  They never even attempt to try out the
-> alternatives, and we've even gone through the trouble of coming up
-> with several.  And they do this because their whole buisness model is
-> all about their scheme to the exclusion of anything else, not because
-> what they have is better.
-
-Luben,
-
-Reading Dave's points above tends to point to adaptec's current direction,
-as we all know. TOEs were rejected.
-
-I stated I would help with SAS adoption because there is a SAS-Transport
-model.  I asked about a possible libadaptec + libsas, and still waiting to
-see if you and adaptec are up for the task.  Right now the only path open
-is the one Jeff Garzik is putting forward along with James and Christop.
-I have a vested interest in seeing SAS-Transport, otherwise I would have
-cut and run a long time ago.
-
-These long email threads where everyone is shout from the top of their
-hill never wins anything.  After a while the hill becomes flat (from all
-the stomping), and you become old and tired.
-
-LSI pointed out they mask there SAS in firmware and make it show up in a
-scsi-like or scsi state.  They also pointed out other vendors have taken
-this road.  Even if Adaptec did not go this way in hardware, there still
-has to be a way to map into SCSI ... sheesh this is Adaptec known for
-SCSI.
-
-Just an FYI, would suggest you cool your heels and listen for the quiet
-responses.  There is more heat than light right now; maybe this thread
-will offset some of the cost in the energy criss.  Will pass on advice
-handed to me (when I was a maintainer) relax and listen, nobody is out to
-get you (and they were right).
-
-Cheers,
-
-Andre
-
-PS I didn't listen to that advice back then, don't make the same mistake.
+--
+Fawad Lateef
