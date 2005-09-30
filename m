@@ -1,27 +1,38 @@
-From: Karthik Sarangan <karthiks@cdac.in>
-Subject: accessing the scsi disk from a kernel module
-Date: Fri, 30 Sep 2005 10:57:46 +0530
-Message-ID: <433CCCD2.3000003@cdac.in>
+From: Fawad Lateef <fawadlateef@gmail.com>
+Subject: Re: accessing the scsi disk from a kernel module
+Date: Fri, 30 Sep 2005 11:00:36 +0500
+Message-ID: <1e62d137050929230019fcbfb6@mail.gmail.com>
+References: <433CCCD2.3000003@cdac.in>
+Reply-To: Fawad Lateef <fawadlateef@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.cdacindia.com ([203.199.132.35]:63935 "HELO
-	mailx.cdac.ernet.in") by vger.kernel.org with SMTP id S1751098AbVI3FeQ
+Received: from wproxy.gmail.com ([64.233.184.192]:51865 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932559AbVI3GAh convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Sep 2005 01:34:16 -0400
-Received: from mailhub.cdac.in ([196.1.109.254])
- by mailx.cdac.ernet.in (SAVSMTP 3.1.0.29) with SMTP id M2005093011040001586
- for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2005 11:04:00 +0530
-Received: from mailhub.cdac.in (mailhub [196.1.109.254])
-	by mailhub.cdac.in (8.13.4/8.13.4) with ESMTP id j8U5Xps7007524
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2005 11:03:51 +0530
-Received: from [192.168.5.68] (karthiks.htdg.cdac.ernet.in [192.168.5.68])
-	by mailhub.cdac.in (8.13.4/8.13.4) with ESMTP id j8U5Xo3H007521
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2005 11:03:50 +0530
+	Fri, 30 Sep 2005 02:00:37 -0400
+Received: by wproxy.gmail.com with SMTP id i2so183111wra
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Sep 2005 23:00:36 -0700 (PDT)
+In-Reply-To: <433CCCD2.3000003@cdac.in>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Karthik Sarangan <karthiks@cdac.in>
+Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-what do I write in a kernel module for accessing a scsi disk device?
+On 9/30/05, Karthik Sarangan <karthiks@cdac.in> wrote:
+> what do I write in a kernel module for accessing a scsi disk device?
+>
 
+What do u mean by this ??? Are you writing a driver for SCSI Disk or
+Want to do read/write on it using its own driver ??? For read/write
+using its own driver you can use/call generic_make_request (function
+from block/ll_rw_blk.c) from your kernel module to send requests to
+any block device available on the system and kernel will do the
+creating and sending request to correct block device whether that will
+be a SCSI disk or any disk .... And if you want directly to use the
+SCSI device then you have to make requests using SCSI protocol .....
+
+--
+Fawad Lateef
