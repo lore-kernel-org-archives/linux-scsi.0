@@ -1,40 +1,67 @@
-From: Kenneth Porter <shiva@sewingwitch.com>
-Subject: Re: legacy megaraid status
-Date: Thu, 29 Sep 2005 20:18:54 -0700
-Message-ID: <FE3BEDDA06FC32CE9C660FBE@[10.170.7.6]>
-References: <433175AE.5070905@darthvader.us>
- <30E6DB5A16C820CE29D97507@[10.169.6.233]> <4332705E.6030905@darthvader.us>
- <C2A6572782C9593467A750C4@[10.169.6.233]>
- <43330F6E.9070303@shadowconnect.com> <4333CC60.4000705@darthvader.us>
- <FE99409D46B528642AB32FAA@[10.169.6.233]> <433AA91F.7030403@darthvader.us>
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
+Date: Fri, 30 Sep 2005 01:31:49 -0400
+Message-ID: <20050930053149.GA22199@thunk.org>
+References: <Pine.LNX.4.58.0509291247040.3308@g5.osdl.org> <20050929232013.95117.qmail@web31810.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from segw.microprecisionautomation.com ([69.17.55.168]:49874 "EHLO
-	segw.microprecisionautomation.com") by vger.kernel.org with ESMTP
-	id S1751361AbVI3DTE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Sep 2005 23:19:04 -0400
-In-Reply-To: <433AA91F.7030403@darthvader.us>
+Received: from thunk.org ([69.25.196.29]:61394 "EHLO thunker.thunk.org")
+	by vger.kernel.org with ESMTP id S932291AbVI3FcT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Sep 2005 01:32:19 -0400
 Content-Disposition: inline
+In-Reply-To: <20050929232013.95117.qmail@web31810.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Yiannis Mavroukakis <jander@darthvader.us>
+To: Luben Tuikov <ltuikov@yahoo.com>
+Cc: Linus Torvalds <torvalds@osdl.org>, Arjan van de Ven <arjan@infradead.org>, Willy Tarreau <willy@w.ods.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Luben Tuikov <luben_tuikov@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>
 
---On Wednesday, September 28, 2005 3:30 PM +0100 Yiannis Mavroukakis 
-<jander@darthvader.us> wrote:
-
->>> However I am not quite about the SSID..Is this the Subsystem hex lspci
->>> reports?
->>
->>
->> I'm not at the machine right now to check, but I recall skimming
->> through the source to the various macros and enumeration code to
->> figure out how this information was extracted.
+On Thu, Sep 29, 2005 at 04:20:13PM -0700, Luben Tuikov wrote:
 >
-> When you get a moment, if you could point me in the right direction I
-> would appreciate it
+> A spec defines how a protocol works and behaves.  All SCSI specs
+> are currently very layered and defined by FSMs.
 
-Took a little backtracking, but look at drivers/pci/probe.c and the symbols 
-in pci.h for the offsets in the configuration space.
+A spec defines how a protocol works and behaves --- *if* it is
+well-specified and unambiguous, and *if* vendors actually implement
+the spec correctly.  (And sometimes vendors have major economic
+incentives to cheat and either intentionally violate the
+specification, or simply not bother to test to make sure whether or
+not they implemented their hardware correctly.)
+
+Computing history has been literred with specifications that were
+incompentently written and/or incompentently implemented --- from the
+disaster known as ACPI, to FDDI (early FDDI networking gear was
+interoperable only if you bought all of your gear from one vendor,
+natch), consumer-grade disks which lied about when data had been
+safely written to iron oxide to garner better Winbench scores, and
+many, many, many others.
+
+This is one of the reasons why the IETF doesn't bless a networking
+standard until there are multiple independent, interoperable
+implementations --- and even _then_ there will be edge cases that
+won't be caught until much, much later.
+
+In those cases, if you implement something which is religiously
+adherent to the specification, and it doesn't interoperate with the
+real world (i.e., everybody else, or some large part of the industry)
+--- do you claim that you are right because you are following the
+specification, and everyone else in the world is wrong?  Or do you
+adapt to reality?  People who are too in love with specifications so
+that they are not willing to be flexible will generally not be able to
+achieve complete interoperability.  This is the reason for the IETF
+Maxim --- be conservative in what you send, liberal in what you will
+accept.  And it's why interoperability testing and reference
+implementations are critical.
+
+But it's also important to remember when there is a reference
+implementation, or pseudo-code in the specification, it's not the only
+way you can implement things.  Very often, as Linus has pointed out,
+there are reasons why the pseudo-code in the specification is wholely
+inappropriate for a particular implementation.  But that's OK; the
+implementation can use a different implementastion, as long as the
+result is interoperable.
+
+Regards,
+
+						- Ted
