@@ -1,117 +1,65 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
- the kernel
-Date: Fri, 30 Sep 2005 17:29:37 +1000
-Message-ID: <433CE961.3040504@torque.net>
-References: <20050929232013.95117.qmail@web31810.mail.mud.yahoo.com> <Pine.LNX.4.64.0509291730360.3378@g5.osdl.org>
-Reply-To: dougg@torque.net
+From: Karthik Sarangan <karthiks@cdac.in>
+Subject: Re: Re: accessing the scsi disk from a kernel module
+Date: Fri, 30 Sep 2005 12:23:31 +0530
+Message-ID: <433CE0EB.6040803@cdac.in>
+References: <433CCCD2.3000003@cdac.in> <1e62d137050929230019fcbfb6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:57216 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S932572AbVI3H2x (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Sep 2005 03:28:53 -0400
-In-Reply-To: <Pine.LNX.4.64.0509291730360.3378@g5.osdl.org>
+Received: from mx1.cdacindia.com ([203.199.132.35]:65221 "HELO
+	mailx.cdac.ernet.in") by vger.kernel.org with SMTP id S1751419AbVI3HhX
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Sep 2005 03:37:23 -0400
+Received: from mailhub.cdac.in ([196.1.109.254])
+ by mailx.cdac.ernet.in (SAVSMTP 3.1.0.29) with SMTP id M2005093013070204357
+ for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2005 13:07:03 +0530
+Received: from mailhub.cdac.in (mailhub [196.1.109.254])
+	by mailhub.cdac.in (8.13.4/8.13.4) with ESMTP id j8U7Ylim032762
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2005 13:04:56 +0530
+Received: from mailhub.cdac.in (mailhub [196.1.109.254])
+	by mailhub.cdac.in (8.13.4/8.13.4) with ESMTP id j8U74kYb019184
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2005 12:34:53 +0530
+Received: from mailhub.cdac.in (mailhub [196.1.109.254])
+	by mailhub.cdac.in (8.13.4/8.13.4) with ESMTP id j8U6xa2E016671
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2005 12:29:37 +0530
+In-Reply-To: <1e62d137050929230019fcbfb6@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Fawad Lateef <fawadlateef@gmail.com>
+Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Linus Torvalds wrote:
-> 
-> On Thu, 29 Sep 2005, Luben Tuikov wrote:
-> 
->>>   It's like real science: if you have a theory that doesn't match 
->>>   experiments, it doesn't matter _how_ much you like that theory. It's
->>>   wrong. You can use it as an approximation, but you MUST keep in mind 
->>>   that it's an approximation.
+Fawad Lateef wrote:
+
+>On 9/30/05, Karthik Sarangan <karthiks@cdac.in> wrote:
+>  
+>
+>>what do I write in a kernel module for accessing a scsi disk device?
 >>
->>But this is _the_ definition of a theory.  No one is arguing that
->>a theory is not an approximation to observed behaviour.
-> 
-> 
-> No.
-> 
-> A scientific theory is an approximation of observed behaviour WITH NO 
-> KNOWN HOLES.
-> 
-> Once there are known holes in the theory, it's not a scientific theory. At 
-> best it's an approximation, but quite possibly it's just plain wrong.
-> 
-> And that's my point. Specs are not only almost invariably badly written, 
-> they also never actually match reality. 
-> 
-> At which point at _best_ it's just an approximation. At worst, it's much 
-> worse. At worst, it causes people to ignore reality, and then it becomes 
-> religion.
-> 
-> And that's way _way_ too common. People who ignore reality are sadly not 
-> at all unusual.
-> 
-> "But the spec says ..." is pretty much always a sign of somebody who has 
-> just blocked out the fact that some device doesn't.
-> 
-> So don't talk about specs.
+>>    
+>>
+>
+>What do u mean by this ??? Are you writing a driver for SCSI Disk or
+>Want to do read/write on it using its own driver ??? For read/write
+>using its own driver you can use/call generic_make_request (function
+>from block/ll_rw_blk.c) from your kernel module to send requests to
+>any block device available on the system and kernel will do the
+>creating and sending request to correct block device whether that will
+>be a SCSI disk or any disk .... And if you want directly to use the
+>SCSI device then you have to make requests using SCSI protocol .....
+>
+>--
+>Fawad Lateef
+>
+>  
+>
+I dont want the buffer cache of the block device interfering.
 
-Why not?
+Basically I require to read/write data (without being cached or copied into
+intermediate kernel buffers) to scsi disk from a kernel module.
 
-There are good, bad and ill-timed specs. The bad ones are
-ignored. Ill-timed ones gather dust, for example the
-SCSI Ultra 640 standard (SPI-5) since the industry has
-bet on SAS; hope they weren't expecting timely driver
-support from Linux.
+Hope this make my meaning clearer.
 
-As for a good spec how about the Multi Media Command (MMC)
-set which allows us to read music and data CDs written
-almost twenty years ago plus many different formats since
-then. It is currently (in MMC-5) being enhanced to cope
-with the next big bun fight in that space: Blue ray and
-HD-DVD (and their various content protection systems).
+Karthik Sarangan
 
-In the t10.org hierarchy of specs, MMC is subservient to
-the primary commands (SPC) and the general architecture
-(SAM). The companies that work in the MMC space (and
-tend to define that standard) have "bent the rules" over
-the years. The response from the (different set of)
-companies that are behind SPC and SAM was to make
-allowance for MMC.
-The process seems to work pretty well and I am unaware
-of any proposed alternate interfaces. Transports have
-come and gone but the logical interface has remained.
 
-> Talk about working code that is _readable_ and _works_.
-
-For SAS we have a well thought out definition for what the
-interface should be to hardware specific drivers IMO. It is
-called CSMI, rechristened SDI. The editor of SDI is also
-the editor of SAS, SAS-1.1 and SAS-2. Judging from his work,
-he knows his stuff. Unfortunately SDI uses ioctls to define
-its interface, which is mainly between two kernel layers
-(if one ignores pass throughs). Sorry, did I mention "ioctl",
-oh that makes SDI unacceptable. Almost a year ago that is what
-happened to the first proposed SAS driver for Linux. That
-decision has pushed Luben (amongst others) into the position
-he is in now: come up with a "better" design, produce code
-and then watch it get rejected. So please cut Luben a bit
-of slack.
-
-Just in case people think that I agree with Luben on using
-sysfs to represent the whole SAS topology and interesting
-bits suspended in it (i.e. SAS expanders), then I don't.
-I am, however, prepared to argue the detail. Since the
-days of Eric Youngdale I have believed that SCSI Host Bus
-Adapters (HBAs) should be addressable devices, just like
-network interfaces. IMO it is the block layer and its
-associated end devices that are the legacy thinking.
-
-> There's an absolutely mindbogglingly huge difference between the two.
-
-It is ironic that as the author of the SG_IO
-passthrough ioctl the "specs" that I am
-often asked to help circumvent are the "we
-know better" variety built into various layers
-of the linux kernel :-)
-
-Doug Gilbert
