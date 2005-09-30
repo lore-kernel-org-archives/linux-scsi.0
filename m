@@ -1,29 +1,40 @@
-From: Marcin Dalecki <dalecki.marcin@neostrada.pl>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
-Date: Fri, 30 Sep 2005 04:42:19 +0200
-Message-ID: <92154686-787B-4254-B404-482E234B245D@neostrada.pl>
-References: <20050929232013.95117.qmail@web31810.mail.mud.yahoo.com> <Pine.LNX.4.64.0509291730360.3378@g5.osdl.org>
-Mime-Version: 1.0 (Apple Message framework v734)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: Kenneth Porter <shiva@sewingwitch.com>
+Subject: Re: legacy megaraid status
+Date: Thu, 29 Sep 2005 20:18:54 -0700
+Message-ID: <FE3BEDDA06FC32CE9C660FBE@[10.170.7.6]>
+References: <433175AE.5070905@darthvader.us>
+ <30E6DB5A16C820CE29D97507@[10.169.6.233]> <4332705E.6030905@darthvader.us>
+ <C2A6572782C9593467A750C4@[10.169.6.233]>
+ <43330F6E.9070303@shadowconnect.com> <4333CC60.4000705@darthvader.us>
+ <FE99409D46B528642AB32FAA@[10.169.6.233]> <433AA91F.7030403@darthvader.us>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932176AbVI3Cnp@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0509291730360.3378@g5.osdl.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>
-Cc: Luben Tuikov <ltuikov@yahoo.com>, Arjan van de Ven <arjan@infradead.org>, Willy Tarreau <willy@w.ods.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Luben Tuikov <luben_tuikov@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from segw.microprecisionautomation.com ([69.17.55.168]:49874 "EHLO
+	segw.microprecisionautomation.com") by vger.kernel.org with ESMTP
+	id S1751361AbVI3DTE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Sep 2005 23:19:04 -0400
+In-Reply-To: <433AA91F.7030403@darthvader.us>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Yiannis Mavroukakis <jander@darthvader.us>
 
+--On Wednesday, September 28, 2005 3:30 PM +0100 Yiannis Mavroukakis 
+<jander@darthvader.us> wrote:
 
-On 2005-09-30, at 02:35, Linus Torvalds wrote:
+>>> However I am not quite about the SSID..Is this the Subsystem hex lspci
+>>> reports?
+>>
+>>
+>> I'm not at the machine right now to check, but I recall skimming
+>> through the source to the various macros and enumeration code to
+>> figure out how this information was extracted.
 >
-> No.
->
-> A scientific theory is an approximation of observed behaviour WITH NO
-> KNOWN HOLES.
+> When you get a moment, if you could point me in the right direction I
+> would appreciate it
 
-Since "approximation" is equivalent to a "known hole", there is no  
-single scientific theory without known holes out there?! Well that's  
-a segfault in brain - unless you don't consider math science of course.
-
-A scientific theory is just a set of axioms and deduction rules. Not  
-much more by definition...
+Took a little backtracking, but look at drivers/pci/probe.c and the symbols 
+in pci.h for the offsets in the configuration space.
