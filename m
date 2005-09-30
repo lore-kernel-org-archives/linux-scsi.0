@@ -1,25 +1,52 @@
-From: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>
-Subject: RE: Re: accessing the scsi disk from a kernel module
-Date: Fri, 30 Sep 2005 12:00:55 -0400
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57060CD205@exa-atlanta>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: dth@cistron.nl (Danny ter Haar)
+Subject: Re: 2.6.14-rc2-git7 crashed on amd64 (usenet gateway) after 18 hours
+Date: Fri, 30 Sep 2005 16:22:30 +0000 (UTC)
+Message-ID: <dhjoo5$86q$1@news.cistron.nl>
+References: <dhinf5$skf$1@news.cistron.nl> <20050930001301.08eeab9d.akpm@osdl.org> <20050930073958.GA24985@dth.net> <20050930124448.GA12779@favonius>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:61896 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1030350AbVI3QBX (ORCPT
+Received: from news.cistron.nl ([62.216.30.38]:3977 "EHLO ncc1701.cistron.net")
+	by vger.kernel.org with ESMTP id S1030322AbVI3QWb (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Sep 2005 12:01:23 -0400
+	Fri, 30 Sep 2005 12:22:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Karthik Sarangan' <karthiks@cdac.in>, Fawad Lateef <fawadlateef@gmail.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
- 
->>
->I dont want the buffer cache of the block device interfering.
->
->Basically I require to read/write data (without being cached 
->or copied into intermediate kernel buffers) to scsi disk from 
->a kernel module.
->
+Sander  <sander@humilis.net> wrote:
+>This might help?
+>From 'man screen':
+>       C-a H       (log)         Begins/ends logging of the current window  to
+>                                 the file "screenlog.n".
 
-This is exactly what "raw" does. (Do man raw)
+*thanks*
+
+done so.
+
+If it crashes i know now at leas i will have _all_ output!
+
+git8 stil running:
+-------------
+newsgate:~# procinfo
+Linux 2.6.14-rc2-git8 (root@newsgate) (gcc 4.0.2 ) #1 1CPU [newsgate.(none)]
+
+Memory:      Total        Used        Free      Shared     Buffers
+Mem:       4062040     4041212       20828           0         568
+Swap:            0           0           0
+
+Bootup: Fri Sep 30 10:21:34 2005    Load average: 4.73 4.60 4.47 5/74 23214
+
+user  :       0:57:57.56  12.1%  page in :        0
+nice  :       0:08:26.32   1.8%  page out:        0
+system:       2:23:25.64  29.9%  swap in :        0
+idle  :       0:01:16.27   0.3%  swap out:        0
+uptime:       7:59:59.89         context : 77591356
+
+irq  0:   7195064 timer                 irq 12:         3
+irq  1:         8 i8042                 irq 16:   7430483 aic79xx
+irq  4:       400 serial                irq 17:  73394066 aic79xx, eth3
+irq  9:         0 acpi                  irq 18: 138587870 acenic
+
+--------------
+
+Danny
+
