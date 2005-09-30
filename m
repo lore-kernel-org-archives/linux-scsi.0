@@ -1,232 +1,86 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
- the kernel
-Date: Fri, 30 Sep 2005 14:34:42 -0400
-Message-ID: <433D8542.1010601@adaptec.com>
-References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org>
+From: Andrew Patterson <andrew.patterson@hp.com>
+Subject: RE: I request inclusion of SAS Transport Layer and AIC-94xx into
+	the kernel
+Date: Fri, 30 Sep 2005 12:39:54 -0600
+Message-ID: <1128105594.10079.109.camel@bluto.andrew>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com>
+Reply-To: andrew.patterson@hp.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030298AbVI3SfF@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965070AbVI3SkF@vger.kernel.org>
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andre Hedrick <andre@linux-ide.org>
-Cc: "David S. Miller" <davem@davemloft.net>, jgarzik@pobox.com, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: "Tuikov, Luben" <Luben_Tuikov@adaptec.com>, dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/30/05 03:36, Andre Hedrick wrote:
-> I stated I would help with SAS adoption because there is a SAS-Transport
-> model.  I asked about a possible libadaptec + libsas, and still waiting to
-> see if you and adaptec are up for the task.  Right now the only path open
-> is the one Jeff Garzik is putting forward along with James and Christop.
-> I have a vested interest in seeing SAS-Transport, otherwise I would have
-> cut and run a long time ago.
+On Fri, 2005-09-30 at 13:07 -0400, Salyzyn, Mark wrote:
+> At the SAS BOF, I indicated that it would not be much trouble to
+> translate the CSMI handler in the aacraid driver to a similar sysfs
+> arrangement. If such info can be mined from a firmware based RAID card,
+> every driver should be able to do so. The spec writers really need to
+> consider rewriting SDI for sysfs (if they have not already) and move
+> away from an ABI.
+
+SDI is supposed to be a cross-platform spec, so mandating sysfs would
+not work.  I suggested to the author to use a library like HPAAPI (used
+by Fibre channel), so you could hide OS implementation details.  I am in
+fact working on such a beasty (http://libsdi.berlios.de).  He thinks
+that library solutions tend to not work, because the library version is
+never in synch with the standard/LLDD's. Given Linux vendor lead-times,
+he does have a valid point.
+
+Note that a sysfs implementation has problems.  Binary attributes are
+discouraged/not-allowed.  There is no atomic request/response
+operations, buffers limited to page size, etc. Other alternatives are
+configfs, SG_IO, and the above mentioned character device.  None are a
+complete replacement for the transactional nature of IOCTL's.  A group
+of us are looking into this.  We probably should be taking it to
+linux-scsi, but didn't want to get it caught up in the current flamewar.
+
+Andrew
+
 > 
-> These long email threads where everyone is shout from the top of their
-> hill never wins anything.  After a while the hill becomes flat (from all
-> the stomping), and you become old and tired.
+> Sincerely -- Mark Salyzyn
 > 
-> LSI pointed out they mask there SAS in firmware and make it show up in a
-> scsi-like or scsi state.  They also pointed out other vendors have taken
-> this road.  Even if Adaptec did not go this way in hardware, there still
-> has to be a way to map into SCSI ... sheesh this is Adaptec known for
-> SCSI.
-
-Hi Andre,
-
-Let me know if this 4 section write up satisfies:
-
-Section 1: MPT, SCSI Core and JB's "transport attributes"
----------------------------------------------------------
-
-SPI drivers (say 5 years ago)
------------------------------
- hardware implementation     (bus connect)
-     firmware implementation   (transport: SPI)
-        LLDD                     (exports SCSI devices (LUs))
-           SCSI Core
-              Command Sets
-
-
-MPT-based drivers (now)
------------------------
- hardware implementation     (interconnect/physical)
--->  Transport Layer           (firmware: FC/SPI/SAS/etc)  <--
-        LLDD                     (exports SCSI devices (LUs))
-           SCSI Core
-              Command Sets
-
-As you can see SCSI Core is _unaware_ of the transport.
-The transport is completely implemented in FIRMWARE, relieving
-the LLDD from worrying about it.  Theoretically/ideally the same
-LLDD would work for _all_ transports, since the FW would
-export LUs to the LLDD, which would in turn register
-those with SCSI Core.
-
-The layout is the same as before, achieving 100% backward
-software compatibility.
-
-
-MPT-based drivers + James Bottomley's "transport attributes"
--------------------------------------------------------------
- hardware implementation
-     Transport Layer               <------+ FW/Transport dependent access method
-        LLDD                  <---------- + LLDD dependent access method
-           SCSI Core ---------------------'
-              Command Sets
-
-This picture is _identical_ to the one above, but
-I've also shown what the "transport attributes" achieve:
-They hook to the _LLDD_ to get to LLDD dependent way of
-accessing "transport attributes" (any transport).  This is
-JB's template unifying _all_ transports.
-
-Note that this isn't a _management_ layer or infrastructure,
-since, it _does not lie between_ the LLDD and SCSI Core.
-It merely implements attribute exporting.
-
-
-Section 2: USB/SBP/SAS and SCSI Core
-------------------------------------
-
-  hardware implementation            (interconnect/physical)
-      firmware implementation           (SDS: TMFs + Execute Command SCSI RPC)*
-          LLDD                             (Coherent interface to SDS)
--->         Transport Layer                   (Transport common to LLDDs) <--
-                 SCSI Core
-                    Command Sets
-
-* SDS, Service Delivery Subsystem (see SAM 4.6)
-  TMF, Task Management Function (see SAM 7)
-  Execute Command SCSI RPC (see SAM 5.1)
-
-Most immediate difference from Section 1 is that
-  - the Transport Layer is _above_ the LLDD (in top-down).
-  - no need for LLDD/Firmware dependent access method
-    to the Transport,
-  - Transport is accessed in the same way across all
-    LLDDs of the same transport (USB/SBP/SAS).
-
-Now since, the LLDDs all implement TMFs + Exec Cmnd SCSI RPC,
-you can have 
-  - a transport common error handling and
-  - a transport common "attribute" access (sysfs),
-across all LLDD of the same transport directly from userspace.
-
-The reason the LLDDs all implement TMFs + Exec Cmnd SCSI RPC,
-is that the Firmware implements it, and the reason that
-the Firmware implements it is that the chip implements
-it (following the transport spec).
-
-That is, you can have _different_ LLDDs connecting you
-to the _same place_ (maybe not at the same time, depending
-on the transport).
-
-SCSI Core should be completely unaware of the
-Transport being used and Transport specific
-Error handling is common to all such Transport
-specific LLDDs (via TMFs): one for SBP, one for
-USB, one for SAS. 
-
-The whole point of this USB/SBP/SAS Transport
-Layering is that you can access at each level,
-thus you can add new abstractions, e.g. SATL (libata),
-as is shown in the SATr06 spec.
-
-Furthermore, when you look at the USB/SBP/SAS chips
-you will see nothing about "scsi_host", and all about
-"transport".
-
-And the sysfs representation of the SAS domain is analogous
-to, say, the USB representation of the USB domain.
-
-
-Section 3: Legacy Thinking or Thinking Legacy
----------------------------------------------
-
-Traditionally Error Handling has been done in
-SCSI Core.  The reason for this is that the first
-and only SCSI was Parallel SCSI and no other
-SCSI was around (and that SAM didn't exist back then).
-
-This is how we have the SPI-centric EH methods
-in the scsi host template right now:
-	int (* eh_abort_handler)(struct scsi_cmnd *);
-	int (* eh_device_reset_handler)(struct scsi_cmnd *);
-	int (* eh_bus_reset_handler)(struct scsi_cmnd *);
-	int (* eh_host_reset_handler)(struct scsi_cmnd *);
-
-This is fine for Parallel SCSI (SPI) but for other
-transports it doesn't quite satisfy.
-
-Let's admit it, with HCIL and with the EH, SCSI Core
-is still very SPI centric.
-
-But we should _not_ break legacy drivers and backward
-support, yet we have to face the future.
-
-The way we do this is we slowly, without disruption
-to older drivers introduce, in parallel, emerge
-a new, simpler, slimmer, faster SCSI Core, whereby
-we accommodate new infrastructures, yet, have 100%
-backward compatibility, via the current older
-SCSI Core.  After all, both would be a bunch of
-functions in a bunch of files.
-
-If X works with Y, do not disrupt it.  Fix it if
-it's broken.  Introduce innovation, functionality,
-better design, but not at the expense of breaking
-legacy.
-
-To eliminate bugs, tweak old as little as possible,
-since you cannot test on _all_ hardware the old code
-works on.
-
-To achieve maximum innovation and relevance in the fast
-changing world of storage, create, innovate new
-better, more accommodating design and infrastructures.
-
-Section 4: Politics
--------------------
-
-Let's face it: SAS is a new emerging technology.
-It will be the technology for the next 10-15 years,
-and *everybody* in Linux SCSI wants a piece of it.
-Everybody wants their name and contribution to it.
-
-This is fine, but we need people who clearly understand
-the technology and clearly understand what, how
-and why it works.  We need well-read and well educated
-people.  Linux dedication is fine, but protocol knowlege
-is needed too.
-
-Can Linux afford people who have never even read SAS
-to write SAS Code for Linux.  Yes, sure.  It is the
-Linux's ideology: "specs are cr@p".
-
-Conclusion
-----------
-
-Even though the SAS Transport Layer follows an _already_
-establised layering infrastructure for more (less?) exotic
-transports such as USB and SBP, James Bottomley has resisted
-its inclusion in Linux SCSI.
-
-Have we lost our touch with the new calling it
-"non-traditional"?  Will Linux become a dinosaur?
-
-I'm not sure how many times one can split the SAS code?
-Will there be enough for everyone?
-
-> Just an FYI, would suggest you cool your heels and listen for the quiet
-> responses.  There is more heat than light right now; maybe this thread
-> will offset some of the cost in the energy criss.  Will pass on advice
-> handed to me (when I was a maintainer) relax and listen, nobody is out to
-> get you (and they were right).
-
-Thank you Andre for the warm advice.
-
-James, Linus, can we have this driver in the kernel now, please?
-
-Thank you,
-	Luben
+> -----Original Message-----
+> From: Tuikov, Luben
+> Sent: Friday, September 30, 2005 12:47 PM
+> To: andrew.patterson@hp.com
+> Cc: dougg@torque.net; Linus Torvalds; Luben Tuikov; SCSI Mailing List;
+> Linux Kernel Mailing List
+> Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx
+> into the kernel
+> 
+> On 09/30/05 12:26, Andrew Patterson wrote:
+> > 
+> > I talked to one of the authors of these specs.  SDI is an attempt to 
+> > create an open standard for the somewhat proprietary CSMI spec 
+> > developed by HP.  It is currently languishing in t10 due to the IOCTL 
+> > problem you describe below (the "no new IOCTL's" doctrine caught them 
+> > by surprise). There is some thought to going to a write()/read() on a 
+> > character device model, but this has various problems as well.
+> 
+> I think that read/write from a char device is going away too.
+> 
+> For this reason I showed the whole picture of the SAS
+> domain in sysfs _and_ created a binary file attr to send/receive SMP
+> requests/responses to control the domain and get attributes
+> ("smp_portal" binary attr of each expander).
+> 
+> It is completely user space driven and a user space library
+> is simple to write.
+> 
+> See drivers/scsi/sas/expander_conf.c which is a user
+> space utility.  For the output see Announcement 3:
+> http://linux.adaptec.com/sas/Announce_2.txt or here:
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=112629509318354&w=2
+> 
+> The code which implements it is very tiny, at the bottom
+> of drivers/scsi/sas/sas_expander.c
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
