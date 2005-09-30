@@ -1,48 +1,39 @@
-From: Linus Torvalds <torvalds@osdl.org>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
  the kernel
-Date: Fri, 30 Sep 2005 14:44:09 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0509301435040.3378@g5.osdl.org>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com>
- <1128105594.10079.109.camel@bluto.andrew> <433D9035.6000504@adaptec.com>
- <1128111290.10079.147.camel@bluto.andrew> <20050930202234.GA2571@parisc-linux.org>
+Date: Fri, 30 Sep 2005 18:01:59 -0400
+Message-ID: <433DB5D7.3020806@adaptec.com>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com>	 <1128105594.10079.109.camel@bluto.andrew>  <433D9035.6000504@adaptec.com>	 <1128111290.10079.147.camel@bluto.andrew>  <433DA0DF.9080308@adaptec.com> <1128114950.10079.170.camel@bluto.andrew>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932593AbVI3Vo3@vger.kernel.org>
-In-Reply-To: <20050930202234.GA2571@parisc-linux.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Andrew Patterson <andrew.patterson@hp.com>, Luben Tuikov <luben_tuikov@adaptec.com>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:42969 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932293AbVI3WCB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Sep 2005 18:02:01 -0400
+In-Reply-To: <1128114950.10079.170.camel@bluto.andrew>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: andrew.patterson@hp.com
+Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-
-
-On Fri, 30 Sep 2005, Matthew Wilcox wrote:
+On 09/30/05 17:15, Andrew Patterson wrote:
+>>Sorry but I completely fail to see this argument., locks it, then hangs.
+>>
+>>How will it "fail for most storage managament apps"?
 > 
-> There's precedent for binary data in sysfs -- pci config space is one.
+> 
+> Let's see, one example:
+> 
+> Process A opens an attribute and writes to it.  Process B opens another
+> attribute and writes to it, affecting the result that process A will see
+> from its subsequent read. I suppose you could lock every attribute, but
+> that would be very error-prone, and not allow much concurrency.
 
-In general, if the data has no semantic meaning (ie it's just a blob), and 
-there really is some point to exporting it, it should be exported as a 
-binary blob. There's no point in doing some random "ASCII conversion" if 
-the data doesn't have any known semantics. Bytes? Words? Longwords? 
-Byteorder? It's simply not a sensible operation, and the only sane 
-interface is to just read a binary blob with the raw data.
+Why should synchronization between Process A and Process B 
+reading storage attributes take place in the kernel?
 
-That's true in general of PCI config space. Of course, _some_ parts of PCI 
-config space do indeed have meaning, so you'll find the "device" and 
-"vendor" and other things like that as separate nodes in /sysfs with ASCII 
-representations. So sometimes you may have mixtures (but it would be 
-stupid to try to "remove" the semantic data from the blob - then it would 
-turn into a _true_ monster).
+They can synchronize in user space.
 
-So it's not like binary blobs are not allowed. In general, the rule should 
-be:
- - all independent values should show up as independent files (never mix 
-   stuff up that you don't need to)
- - anything with semantic meaning should have the appropriate semantic 
-   textual format (ie formatted ASCII, not just raw data).
-
-The _goal_ is that you can look at sysfs with a file manager, and the 
-results should make sense. 
-
-		Linus
+	Luben
