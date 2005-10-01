@@ -1,28 +1,36 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
-Date: Sat, 1 Oct 2005 10:46:09 -0700
-Message-ID: <20051001174609.GA13084@kroah.com>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com> <1128105594.10079.109.camel@bluto.andrew> <433D9035.6000504@adaptec.com> <1128111290.10079.147.camel@bluto.andrew> <20050930202234.GA2571@parisc-linux.org>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: SATA suspend/resume (was Re: [PATCH] updated version of Jens'
+ SATA suspend-to-ram patch)
+Date: Sat, 01 Oct 2005 14:24:12 -0400
+Message-ID: <433ED44C.3060805@rtr.ca>
+References: <20050923163334.GA13567@triplehelix.org> <433B79D8.9080305@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750734AbVJARq5@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20050930202234.GA2571@parisc-linux.org>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750780AbVJASYa@vger.kernel.org>
+In-Reply-To: <433B79D8.9080305@pobox.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Andrew Patterson <andrew.patterson@hp.com>, Luben Tuikov <luben_tuikov@adaptec.com>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Joshua Kwan <joshk@triplehelix.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@suse.de, torvalds@osdl.org, randy_dunlap <rdunlap@xenotime.net>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Sep 30, 2005 at 02:22:34PM -0600, Matthew Wilcox wrote:
-> There's precedent for binary data in sysfs -- pci config space is one.
+Jeff Garzik wrote:
+..
+> Ah hah!  I found the other SCSI suspend patch:
+>     http://lwn.net/Articles/97453/
+> Anybody (Joshua?) up for reconciling and testing the two?
 
-binary data in sysfs is for stuff that is just a "pass through" for the
-kernel.  Copying the pci config space, in raw form from the device to
-userspace is one such example.  Firmware blobs is another one.
+I just now tried out *only* "the other SCSI suspend patch",
+and by itself it hangs on resume.  Laptop computer, blank screen,
+no serial ports, no printk()s visible.
 
-Binary data in sysfs is _not_ for exporting kernel structures or other
-data that the kernel "understands" and manipulates.
+And there's one minor bug in that patch:  it uses GFP_KERNEL to
+alloc a buffer, but on resume it really should use GFP_ATOMIC instead,
+since the swap device is the same drive we're trying to resume..
 
-Hope this helps,
+> 2) sd should call START STOP UNIT on resume
 
-greg k-h
+That's probably why it hangs when used as-is by itself.
+I may do some further testing.
+
+Anyone else out there playing with this yet?
