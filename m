@@ -1,51 +1,37 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
- the kernel
-Date: Fri, 30 Sep 2005 20:38:39 -0400
-Message-ID: <433DDA8F.6050203@pobox.com>
-References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org>	 <433D8542.1010601@adaptec.com> <1128113158.12267.29.camel@mulgrave> <433DB6BE.4020706@adaptec.com>
+From: Willy Tarreau <willy@w.ods.org>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
+Date: Sat, 1 Oct 2005 06:58:13 +0200
+Message-ID: <20051001045812.GF18716@alpha.home.local>
+References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org> <433D8542.1010601@adaptec.com> <A0262C6F-6B0E-4790-BA42-FAFD6F026E0A@mac.com> <433D8D1F.1030005@adaptec.com> <0F03AA4B-D2D1-4C57-B81B-FC95CB863A98@mac.com> <87f94c370509301510nba59ac2m59f507f70de6e46b@mail.gmail.com> <433DD020.8000906@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:26505 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750705AbVJAAis (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Sep 2005 20:38:48 -0400
-In-Reply-To: <433DB6BE.4020706@adaptec.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750733AbVJAFEq@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <433DD020.8000906@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, Kyle Moffett <mrmacman_g4@mac.com>, Luben Tuikov <luben_tuikov@adaptec.com>, Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, Patrick Mansfield <patmans@us.ibm.com>, ltuikov@yahoo.com, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Luben Tuikov wrote:
-> I'm sure you'll do whatever humanly possible to show
-> that _your_ idea can be applied: you can do this now:
-> just use a big if () { ... } else { ... } statement and
-> you're done.
+On Fri, Sep 30, 2005 at 07:54:08PM -0400, Jeff Garzik wrote:
+> Greg Freemyer wrote:
+> >Luben has more than once called for adding a small number of
+> >additional calls to the existing SCSI core.  These calls would
+> >implement the new (reduced) functionallity.  The old calls would
+> >continue to support the full SPI functionallity.  No existing  LLDD
+> >would need modification.
+> 
+> IOW, what Luben wants is:
+> 
+> 	if (Luben)
+> 		do this
+> 	else
+> 		do current stuff
+> 
+> If this is the case, why bother touching drivers/scsi/* at all?
 
-This is not how we do things in Linux.  You're doubling the maintenance 
-burden.
+that's the reason why I proposed that this moved to drivers/sas/* or
+somewhere else so that there is no maintaining conflict.
 
-If you really want to do this, at least don't fill up drivers/scsi/ with 
-an additional, completely unrelated codepath.
-
-
-> Furthermore I do not see the reasons to umbrella both
-> "aic94xx and LSI cards" when they are _completely different_
-> in architecture: MPT and open transport (ala USB Storage and SBP).
-
-There is commonality between aic94xx and MPT/LSI stuff.  aic94xx SAS 
-transport layer is a superset of MPT/LSI SAS transport:  it clearly 
-needs far more management code.
-
-We understand this.  The part you don't understand is that we want to 
-emphasize the commonality, rather than let aic94xx and MPT/LSI go in 
-completely different directions.
-
-Read it again:  aic94xx/BCMxxx is a superset of functionality, not 
-completely different.
-
-	Jeff
-
-
+Regards,
+Willy
