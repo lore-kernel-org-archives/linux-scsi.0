@@ -1,85 +1,28 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Infinite interrupt loop, INTSTAT = 0
-Date: Sat, 01 Oct 2005 09:03:54 -0500
-Message-ID: <1128175434.4921.9.camel@mulgrave>
-References: <20050928134514.GA19734@dspnet.fr.eu.org>
-	 <1127919909.4852.7.camel@mulgrave>
-	 <20050928160744.GA37975@dspnet.fr.eu.org>
-	 <1127924686.4852.11.camel@mulgrave>
-	 <20050928171052.GA45082@dspnet.fr.eu.org>
-	 <1127929909.4852.34.camel@mulgrave>
-	 <20050928183324.GA51793@dspnet.fr.eu.org>
+From: Greg KH <greg@kroah.com>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
+Date: Sat, 1 Oct 2005 10:46:09 -0700
+Message-ID: <20051001174609.GA13084@kroah.com>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com> <1128105594.10079.109.camel@bluto.andrew> <433D9035.6000504@adaptec.com> <1128111290.10079.147.camel@bluto.andrew> <20050930202234.GA2571@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:1999 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750806AbVJAOEH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 1 Oct 2005 10:04:07 -0400
-In-Reply-To: <20050928183324.GA51793@dspnet.fr.eu.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750734AbVJARq5@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20050930202234.GA2571@parisc-linux.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Andrew Patterson <andrew.patterson@hp.com>, Luben Tuikov <luben_tuikov@adaptec.com>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Olivier Galibert <galibert@pobox.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "Hack inc." <linux-kernel@vger.kernel.org>
 
-On Wed, 2005-09-28 at 20:33 +0200, Olivier Galibert wrote:
-> Ok, for git HEAD 95001ee9256df846e374f116c92ca8e0beec1527.  The system
-> has the nice idea not to crash at the end, so I can fish everything
-> out of /var/log/messages (kernel messages only):
+On Fri, Sep 30, 2005 at 02:22:34PM -0600, Matthew Wilcox wrote:
+> There's precedent for binary data in sysfs -- pci config space is one.
 
-Well ... at least that's slightly better behaviour ...
+binary data in sysfs is for stuff that is just a "pass through" for the
+kernel.  Copying the pci config space, in raw form from the device to
+userspace is one such example.  Firmware blobs is another one.
 
-I'm afraid the initial analysis is that this is a bug in the adaptec
-sequencer (again) which no-one has the docs to fix.  Guessing about the
-cause, I'd say it's most likely some type of data overrun, so it might
-be possible to change the operating parameters of the system so it no
-longer trips ...
+Binary data in sysfs is _not_ for exporting kernel structures or other
+data that the kernel "understands" and manipulates.
 
-> Sep 28 20:21:16 m82 kernel: scsi0 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 1.3.11
-> Sep 28 20:21:16 m82 kernel:         <Adaptec AIC7902 Ultra320 SCSI adapter>
-> Sep 28 20:21:16 m82 kernel:         aic7902: Ultra320 Wide Channel A, SCSI Id=7, PCI-X 101-133Mhz, 512 SCBs
-> Sep 28 20:21:16 m82 kernel: 
-> Sep 28 20:21:16 m82 kernel:   Vendor: SEAGATE   Model: ST373207LC        Rev: 0003
-> Sep 28 20:21:16 m82 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 03
-> Sep 28 20:21:17 m82 kernel:  target0:0:0: asynchronous.
-> Sep 28 20:21:17 m82 kernel: scsi0:A:0:0: Tagged Queuing enabled.  Depth 4
-> Sep 28 20:21:17 m82 kernel:  target0:0:0: Beginning Domain Validation
-> Sep 28 20:21:17 m82 kernel:  target0:0:0: wide asynchronous.
-> Sep 28 20:21:17 m82 kernel:  target0:0:0: FAST-160 WIDE SCSI 320.0 MB/s DT IU QAS RDSTRM RTI WRFLOW PCOMP (6.25 ns, offset 63)
-> Sep 28 20:21:17 m82 kernel:  target0:0:0: Ending Domain Validation
-> Sep 28 20:21:17 m82 kernel:   Vendor: SUPER     Model: GEM318            Rev: 0   
-> Sep 28 20:21:17 m82 kernel:   Type:   Processor                          ANSI SCSI revision: 02
-> Sep 28 20:21:17 m82 kernel:  target0:0:6: asynchronous.
-> Sep 28 20:21:17 m82 kernel:  target0:0:6: Beginning Domain Validation
-> Sep 28 20:21:17 m82 kernel:  target0:0:6: Ending Domain Validation
-> Sep 28 20:21:17 m82 kernel: ACPI: PCI Interrupt 0000:02:02.1[B] -> GSI 33 (level, low) -> IRQ 209
-> Sep 28 20:21:17 m82 kernel: scsi1 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 1.3.11
-> Sep 28 20:21:17 m82 kernel:         <Adaptec AIC7902 Ultra320 SCSI adapter>
-> Sep 28 20:21:17 m82 kernel:         aic7902: Ultra320 Wide Channel B, SCSI Id=7, PCI-X 101-133Mhz, 512 SCBs
-> Sep 28 20:21:17 m82 kernel: 
-> Sep 28 20:21:17 m82 kernel:   Vendor: VP-1252-  Model: FB951223-VOL#00   Rev: R001
-> Sep 28 20:21:17 m82 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 03
-> Sep 28 20:21:17 m82 kernel:  target1:0:0: asynchronous.
-> Sep 28 20:21:17 m82 kernel: scsi1:A:0:0: Tagged Queuing enabled.  Depth 4
-> Sep 28 20:21:17 m82 kernel:  target1:0:0: Beginning Domain Validation
-> Sep 28 20:21:17 m82 kernel:  target1:0:0: wide asynchronous.
-> Sep 28 20:21:17 m82 kernel:  target1:0:0: FAST-160 WIDE SCSI 320.0 MB/s DT IU QAS RTI WRFLOW PCOMP (6.25 ns, offset 127)
+Hope this helps,
 
-The first thing to try here is to bring the offset down to 63 like all
-the other devices.  You can do this by
-
-echo 63 > /sys/class/spi_transport/target1\:0\:0/max_offset
-echo 1 > /sys/class/spi_transport/target1\:0\:0/revalidate
-
-Which should retrigger the above domain validation but this time come
-back with an offset of 63.
-
-*before* getting to the mount on /dev/sdb1.
-
-If that doesn't fix it, the next steps will be to begin lowering the
-transmission parameters.
-
-James
-
-
+greg k-h
