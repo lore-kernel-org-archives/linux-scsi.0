@@ -1,56 +1,48 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] aic79xx: fix module removal path not to panic
-Date: Sun, 02 Oct 2005 10:08:00 -0500
-Message-ID: <1128265680.4810.8.camel@mulgrave>
+From: "alfonsopinochet@virgilio.it" <alfonsopinochet@virgilio.it>
+Subject: PROPERTIES.
+Date: Sun, 2 Oct 2005 17:00:30 +0100 (GMT+01:00)
+Message-ID: <16667320.1128268830715.JavaMail.root__24727.1811160774$1128269027$gmane$org@pswm15.cp.tin.it>
+Reply-To: "alfonsopinochet@virgilio.it" <alfonsopinochet@virgilio.it>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:41944 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751106AbVJBPIC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 2 Oct 2005 11:08:02 -0400
-Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id j92F81A11893
-	for <linux-scsi@vger.kernel.org>; Sun, 2 Oct 2005 11:08:01 -0400
+Received: from vsmtp12.tin.it ([212.216.176.206]:41425 "EHLO vsmtp12.tin.it")
+	by vger.kernel.org with ESMTP id S1751117AbVJBQBm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Oct 2005 12:01:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: alfonsopinochet@aley.net
 
-Naturally, if aic7xxx has a bug, aic79xx has it too...
+Good Day,
 
-This applies the same fix to the aic79xx driver (call scsi_host_remove()
-before you shut down the sequencer).
+I wish to introduce myself to you. I am Col. Alfonso
+Pinochet (rtd).I am the brother to the exiled President of
+hile.Due to 
+the revolution against the goverment of my brother caused by our
+political opponents in Chile, we had to flee the Country for the
+Safety 
+of our lives.My wife, children and I managed to enter a red cross
+airplane that was evacuating foreigners and we are presently in Port
+Elizaberth, South Africa .We wish to invest in commercial,equine,
+residencial properties, hotels and equally start a new life in your 
+country with
+your assistance and cooperation.If you are in a good 
+position to help
+my family, please send an e-mail to the e-mail address 
+below
+indicating your desire to help my family invest
+this funds in 
+your country and beyond.
 
-James
+I urgently await your e-mail letter.
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -1192,11 +1192,6 @@ ahd_platform_free(struct ahd_softc *ahd)
- 	int i, j;
- 
- 	if (ahd->platform_data != NULL) {
--		if (ahd->platform_data->host != NULL) {
--			scsi_remove_host(ahd->platform_data->host);
--			scsi_host_put(ahd->platform_data->host);
--		}
--
- 		/* destroy all of the device and target objects */
- 		for (i = 0; i < AHD_NUM_TARGETS; i++) {
- 			starget = ahd->platform_data->starget[i];
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
---- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
-@@ -95,6 +95,9 @@ ahd_linux_pci_dev_remove(struct pci_dev 
- 	struct ahd_softc *ahd = pci_get_drvdata(pdev);
- 	u_long s;
- 
-+	if (ahd->platform_data && ahd->platform_data->host)
-+			scsi_remove_host(ahd->platform_data->host);
-+
- 	ahd_lock(ahd, &s);
- 	ahd_intr_enable(ahd, FALSE);
- 	ahd_unlock(ahd, &s);
+best 
+regards and hope to meet you soon.
 
+God bless,
 
+Col.Alfonso Pinochet 
+(Rtd)
+
+E-mail:alfonsopinochet@aley.net
