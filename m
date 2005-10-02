@@ -1,43 +1,41 @@
-From: Amazon <service@amazon.com>
-Subject: Amazon.com Inquiry
-Date: Sun, 02 Oct 2005 08:41:41 +0200
-Message-ID: <E1ELxXZ-0003N3-PF@ns1.ewdns.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: dth@cistron.nl (Danny ter Haar)
+Subject: report: 2.6.14-rc2-git8 crashed with scsi error after 40 hours
+Date: Sun, 2 Oct 2005 08:14:36 +0000 (UTC)
+Message-ID: <dho4tc$ilc$1@news.cistron.nl>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.ewdns.net ([62.70.6.81]:27561 "EHLO ns1.ewdns.net")
-	by vger.kernel.org with ESMTP id S1750991AbVJBGl5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Oct 2005 02:41:57 -0400
-Received: from nobody by ns1.ewdns.net with local (Exim 4.52)
-	id 1ELxXZ-0003N3-PF
-	for linux-scsi@vger.kernel.org; Sun, 02 Oct 2005 08:41:41 +0200
+Received: from news.cistron.nl ([62.216.30.38]:35238 "EHLO ncc1701.cistron.net")
+	by vger.kernel.org with ESMTP id S1751014AbVJBIOh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Oct 2005 04:14:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Dear Amazon member, 
+Here is the more than weekly error report about our usenetgateway.
+2.6.12-mm1 keeps running for weeks.
+2.6.1[34] keeps crashing within days
+Hardware isn't the problem, software is (my guess is acpi/irq)
+ethernet is doing >200megabit/s average on 2 cards simultanious.
 
-Due to concerns we have for the safety and integrity of the Amazon community we have issued this warning. 
+hardware:
+tyan amd64 - opteron 250 (dual cpu, but UP kernel)
+4Gig ram
+dual scsi controller
+8 x scsi disks
+acenic gig-E (FO)
+onboard gig-E (cupper)
 
-Per the User Agreement, Section 9, we may immediately issue a warning, temporarily suspend, indefinitely suspend or terminate your membership and refuse to provide our services to you if we believe that your actions may cause financial loss or legal liability for you, our users or us. We may also take these actions if we are unable to verify or authenticate any information you provide to us. 
-
-Please follow the link below: 
-
-http://www.amazon.com.encrypted-inquiry.cn?/exec/obidos
-
-and update your account information. 
-
-We apreciate your support and understanding, as we work together to keep Amazon market a safe place to trade. 
-
-Thank you for your attention on this serious matter.
-
-Regards,
-Amazon Safety Department
+software:
+debian-pure64 amd
 
 
-NOTE: This message was sent to you by an automated e-mail system. Please don't reply to it. Amazon treats your personal information with the utmost care, and our Privacy Policy is designed to protect you and your information.
+config/crash/dmesg @
+http://newsgate.newsserver.nl/kernel/2.6.14-rc2-git8
 
+Currently trying 2.6.14-rc2-mm2.
+When that fails i will try rc3-git[latest]
 
+Let me know when someone wants to have more info or a test
+setup.
 
+Danny
 
