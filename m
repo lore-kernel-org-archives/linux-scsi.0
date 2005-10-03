@@ -1,90 +1,73 @@
-From: brking@us.ibm.com
-Subject: [PATCH 1/1] scsi: scsi inquiry timeout config option
-Date: Mon, 03 Oct 2005 15:26:30 -0500
-Message-ID: <200510032026.j93KQViR015934@d01av04.pok.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Infinite interrupt loop, INTSTAT = 0
+Date: Mon, 03 Oct 2005 12:15:44 -0400
+Message-ID: <1128356144.4606.11.camel@mulgrave>
+References: <20050928134514.GA19734@dspnet.fr.eu.org>
+	 <1127919909.4852.7.camel@mulgrave>
+	 <20050928160744.GA37975@dspnet.fr.eu.org>
+	 <1127924686.4852.11.camel@mulgrave>
+	 <20050928171052.GA45082@dspnet.fr.eu.org>
+	 <1127929909.4852.34.camel@mulgrave>
+	 <20050928183324.GA51793@dspnet.fr.eu.org>
+	 <1128175434.4921.9.camel@mulgrave>
+	 <20051003134210.GA10641@dspnet.fr.eu.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:8915 "EHLO e6.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932686AbVJCU0g (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 16:26:36 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e6.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j93KQWNb031679
-	for <linux-scsi@vger.kernel.org>; Mon, 3 Oct 2005 16:26:32 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j93KQWVc090692
-	for <linux-scsi@vger.kernel.org>; Mon, 3 Oct 2005 16:26:32 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j93KQVqW015956
-	for <linux-scsi@vger.kernel.org>; Mon, 3 Oct 2005 16:26:32 -0400
+Received: from stat9.steeleye.com ([209.192.50.41]:4838 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932394AbVJCUa3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Oct 2005 16:30:29 -0400
+In-Reply-To: <20051003134210.GA10641@dspnet.fr.eu.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, linuxppc64-dev@ozlabs.org, brking@us.ibm.com
+To: Olivier Galibert <galibert@pobox.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "Hack inc." <linux-kernel@vger.kernel.org>
+
+On Mon, 2005-10-03 at 15:42 +0200, Olivier Galibert wrote:
+> Well, retriggering the DV blows:
+> 
+> Oct  3 15:39:03 m82 kernel:  target1:0:0: Beginning Domain Validation
+> Oct  3 15:39:03 m82 kernel:  target1:0:0: asynchronous.
+> Oct  3 15:39:03 m82 kernel: scsi1: Returning to Idle Loop
+> Oct  3 15:39:13 m82 kernel: scsi1:0:0:0: Attempting to queue an ABORT message:CDB: 0x12 0x0 0x0 0x0 0x62 0x0
+> Oct  3 15:39:13 m82 kernel: scsi1: At time of recovery, card was not paused
+> Oct  3 15:39:13 m82 kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+> Oct  3 15:39:13 m82 kernel: scsi1: Dumping Card State at program address 0x26 Mode 0x22
+> Oct  3 15:39:13 m82 kernel: Card was paused
+
+Oh, that's not pretty.  It means that the sequencer (or possibly the
+bus) was wedged as it exited domain validation and it won't even recover
+if we drop down to fully async.
+
+What type of array is this, by the way?  I don't recognise the vendor.
+But anyway, let's proceed on the theory that the array is having a hard
+time.  What I need you to do is lower the speed of the array target in
+the aic bios.  Unfortunately, the driver won't honour that setting at
+the moment:  I'll see if I can work up the code that will do it.  The
+attached patch will perform this artificially (for every device on every
+aic79xx).
+
+James
+
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -499,11 +499,13 @@ ahd_linux_target_alloc(struct scsi_targe
+ 	ahd_compile_devinfo(&devinfo, ahd->our_id, starget->id,
+ 			    CAM_LUN_WILDCARD, channel,
+ 			    ROLE_INITIATOR);
+-	spi_min_period(starget) = AHD_SYNCRATE_MAX; /* We can do U320 */
++	//spi_min_period(starget) = AHD_SYNCRATE_MAX; /* We can do U320 */
++	spi_min_period(starget) = AHD_SYNCRATE_DT;
+ 	if ((ahd->bugs & AHD_PACED_NEGTABLE_BUG) != 0)
+ 		spi_max_offset(starget) = MAX_OFFSET_PACED_BUG;
+ 	else
+ 		spi_max_offset(starget) = MAX_OFFSET_PACED;
++	spi_max_offset(starget) = 63;
+ 	spi_max_width(starget) = ahd->features & AHD_WIDE;
+ 
+ 	ahd_set_syncrate(ahd, &devinfo, 0, 0, 0,
 
 
-Add a .config option to default the scsi scan inquiry timeout.
-Due to a broken device (SCSI/ATA converter card) that is very
-common on IBM iSeries/pSeries machines, these architectures
-need a longer default inquiry timeout.
-
-Signed-off-by: Brian King <brking@us.ibm.com>
----
-
- linux-2.6-bjking1/arch/ppc64/configs/iSeries_defconfig |    1 +
- linux-2.6-bjking1/arch/ppc64/configs/pSeries_defconfig |    1 +
- linux-2.6-bjking1/drivers/scsi/Kconfig                 |    8 ++++++++
- linux-2.6-bjking1/drivers/scsi/scsi_scan.c             |    2 +-
- 4 files changed, 11 insertions(+), 1 deletion(-)
-
-diff -puN drivers/scsi/Kconfig~scsi_inq_timeout_config drivers/scsi/Kconfig
---- linux-2.6/drivers/scsi/Kconfig~scsi_inq_timeout_config	2005-10-03 11:15:08.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/Kconfig	2005-10-03 11:17:37.000000000 -0500
-@@ -209,6 +209,14 @@ config SCSI_LOGGING
- 	  there should be no noticeable performance impact as long as you have
- 	  logging turned off.
- 
-+config SCSI_INQUIRY_TIMEOUT
-+	int "default timeout in seconds for INQUIRY scan"
-+	depends on SCSI
-+	default "5"
-+	---help---
-+	  Timeout (in seconds) waiting for devices to answer INQUIRY.
-+	  Default is 5. Some non-compliant devices need more.
-+
- menu "SCSI Transport Attributes"
- 	depends on SCSI
- 
-diff -puN drivers/scsi/scsi_scan.c~scsi_inq_timeout_config drivers/scsi/scsi_scan.c
---- linux-2.6/drivers/scsi/scsi_scan.c~scsi_inq_timeout_config	2005-10-03 11:17:44.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/scsi_scan.c	2005-10-03 11:18:58.000000000 -0500
-@@ -102,7 +102,7 @@ MODULE_PARM_DESC(max_report_luns,
- 		 "REPORT LUNS maximum number of LUNS received (should be"
- 		 " between 1 and 16384)");
- 
--static unsigned int scsi_inq_timeout = SCSI_TIMEOUT/HZ+3;
-+static unsigned int scsi_inq_timeout = CONFIG_SCSI_INQUIRY_TIMEOUT;
- 
- module_param_named(inq_timeout, scsi_inq_timeout, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(inq_timeout, 
-diff -puN arch/ppc64/configs/pSeries_defconfig~scsi_inq_timeout_config arch/ppc64/configs/pSeries_defconfig
---- linux-2.6/arch/ppc64/configs/pSeries_defconfig~scsi_inq_timeout_config	2005-10-03 11:19:18.000000000 -0500
-+++ linux-2.6-bjking1/arch/ppc64/configs/pSeries_defconfig	2005-10-03 11:21:18.000000000 -0500
-@@ -436,6 +436,7 @@ CONFIG_CHR_DEV_SG=y
- CONFIG_SCSI_MULTI_LUN=y
- CONFIG_SCSI_CONSTANTS=y
- # CONFIG_SCSI_LOGGING is not set
-+CONFIG_SCSI_INQUIRY_TIMEOUT=30
- 
- #
- # SCSI Transport Attributes
-diff -puN arch/ppc64/configs/iSeries_defconfig~scsi_inq_timeout_config arch/ppc64/configs/iSeries_defconfig
---- linux-2.6/arch/ppc64/configs/iSeries_defconfig~scsi_inq_timeout_config	2005-10-03 11:24:14.000000000 -0500
-+++ linux-2.6-bjking1/arch/ppc64/configs/iSeries_defconfig	2005-10-03 11:24:29.000000000 -0500
-@@ -343,6 +343,7 @@ CONFIG_CHR_DEV_SG=y
- CONFIG_SCSI_MULTI_LUN=y
- CONFIG_SCSI_CONSTANTS=y
- # CONFIG_SCSI_LOGGING is not set
-+CONFIG_SCSI_INQUIRY_TIMEOUT=30
- 
- #
- # SCSI Transport Attributes
-_
