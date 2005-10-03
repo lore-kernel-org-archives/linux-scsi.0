@@ -1,50 +1,73 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
  the kernel
-Date: Mon, 03 Oct 2005 10:15:04 -0400
-Message-ID: <43413CE8.1090306@adaptec.com>
-References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org> <433D8542.1010601@adaptec.com> <433DD0F8.4000501@pobox.com>
+Date: Mon, 03 Oct 2005 10:18:04 -0400
+Message-ID: <43413D9C.2050904@adaptec.com>
+References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org> <433D8542.1010601@adaptec.com> <A0262C6F-6B0E-4790-BA42-FAFD6F026E0A@mac.com> <433D8D1F.1030005@adaptec.com> <0F03AA4B-D2D1-4C57-B81B-FC95CB863A98@mac.com> <433DB8AF.4090207@adaptec.com> <433DD95C.5050209@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:49857 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932239AbVJCOPU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 10:15:20 -0400
-In-Reply-To: <433DD0F8.4000501@pobox.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932241AbVJCOSL@vger.kernel.org>
+In-Reply-To: <433DD95C.5050209@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+Cc: Kyle Moffett <mrmacman_g4@mac.com>, Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+List-Id: linux-scsi@vger.kernel.org
 
-On 09/30/05 19:57, Jeff Garzik wrote:
+On 09/30/05 20:33, Jeff Garzik wrote:
 > Luben Tuikov wrote:
 > 
->>MPT-based drivers + James Bottomley's "transport attributes"
+>>But none of the ideas: 64 bit LUN, HCIL removal, etc.,
+>>were accepted with "submit a patch".
 > 
 > 
-> You continue to fail to see that a transport class is more than just 
-> transport attributes.
+> I concede this may have been the response in the past.  Its not, now.
 > 
-> You continue to fail to see that working on transport class support IS a 
-> transport layer, that includes management.
 > 
-> Is you don't understand this fundamental stuff, how can we expect you to 
-> get it right?
+> 
+> 
+>>>So you're saying fixing the current SCSI subsystem once *now* costs  
+>>>more than applying all *future* SCSI fixes to _two_ SCSI subsystems,  
+>>>handling bug reports for _two_ SCSI subsystems, etc.
+>>
+>>
+>>I'm saying that the current "old" one is already obsolete,
+>>when all you have is a SAS chip on your mainboard.
+>>
+>>All you need is a small, tiny, fast, slim SCSI Core.
+> 
+> 
+> Then don't use it at all.  Write a block driver, if you really feel we 
+> need two SCSI cores.
+> 
+> 
+> 
+>>Politics: "Nah, whatever you say, specs are *crap* and we'll
+>>do it our way.  We are not interested in your way, even if it
+>>were better.  Oh, and BTW, REQUEST SENSE clears ACA and LUN
+>>is a u64."
+> 
+> 
+> This is a misrepresentation.  -We- understand the stuff you have posted.
+> 
+> But you continue to demonstrate that you simply do not understand the 
+> existing SCSI core code.
+> 
+> The SAS transport class supports commonality across all SAS 
+> implementations.  This includes both MPT and Adaptec 94xx.
+> 
+> SAS transport class + libsas supports software implementations of SAS, 
+> including transport layer management.  This includes Adaptec 94xx but 
+> NOT MPT.
 
->From what I see, because of its *layering* position
-JB's "transport attributes" cannot satisfy open transport.
+You almost get it right, other than the layering infrastructure.
 
-The reason is that MPT-based drivers indeed do need host template
-in the LLDD.
+The SAS Transport Layer is a layer in its own right.  It is not
+a "libsas".
 
-Open Transport (SBP/USB/SAS) do not, since the chip is only
-an interface to the transport.
-
-The host template is implemented by a transport layer,
-say USB Storage or the SAS Transport Layer.
-
-This allows you to do great things, like layer
-intersection.
+MPT and open transport a very different, one hides the transport,
+i.e. the transport layer is in firmware; the other exposes it
+and needs a transport layer. See the pictures here:
+http://marc.theaimsgroup.com/?l=linux-kernel&m=112810649712793&w=2
 
 	Luben
