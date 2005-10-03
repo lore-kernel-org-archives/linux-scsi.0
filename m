@@ -1,70 +1,96 @@
-From: Ryan Anderson <ryan@autoweb.net>
+From: Linus Torvalds <torvalds@osdl.org>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
-	the kernel
-Date: Mon, 03 Oct 2005 18:04:35 -0400
-Message-ID: <1128377075.23932.5.camel@ryan2.internal.autoweb.net>
+ the kernel
+Date: Mon, 3 Oct 2005 15:56:50 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0510031531170.31407@g5.osdl.org>
 References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com>
-	 <1128105594.10079.109.camel@bluto.andrew>  <433D9035.6000504@adaptec.com>
-	 <1128111290.10079.147.camel@bluto.andrew>  <433DA0DF.9080308@adaptec.com>
-	 <1128114950.10079.170.camel@bluto.andrew> <433DB5D7.3020806@adaptec.com>
-	 <9B90AC8A-A678-4FFE-B42D-796C8D87D65B@neostrada.pl>
-	 <4341381D.2060807@adaptec.com>
-	 <E93AC7D5-4CC0-4872-A5B8-115D2BF3C1A9@neostrada.pl>
-	 <1128357350.10079.239.camel@bluto.andrew> <43415EC0.1010506@adaptec.com>
-	 <Pine.BSO.4.62.0510032103380.28198@rudy.mif.pg.gda.pl>
+  <1128105594.10079.109.camel@bluto.andrew>  <433D9035.6000504@adaptec.com>
+  <1128111290.10079.147.camel@bluto.andrew>  <433DA0DF.9080308@adaptec.com>
+  <1128114950.10079.170.camel@bluto.andrew> <433DB5D7.3020806@adaptec.com>
+ <9B90AC8A-A678-4FFE-B42D-796C8D87D65B@neostrada.pl>  <4341381D.2060807@adaptec.com>
+  <E93AC7D5-4CC0-4872-A5B8-115D2BF3C1A9@neostrada.pl>
+ <1128357350.10079.239.camel@bluto.andrew> <43415EC0.1010506@adaptec.com>
+ <Pine.BSO.4.62.0510032103380.28198@rudy.mif.pg.gda.pl>
+ <1128377075.23932.5.camel@ryan2.internal.autoweb.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-lYZfKBnkTQpkkNuDH3l1"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932643AbVJCWFt@vger.kernel.org>
-In-Reply-To: <Pine.BSO.4.62.0510032103380.28198@rudy.mif.pg.gda.pl>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932505AbVJCW5P@vger.kernel.org>
+In-Reply-To: <1128377075.23932.5.camel@ryan2.internal.autoweb.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tomasz =?iso-8859-2?Q?K=B3oczko?= <kloczek@rudy.mif.pg.gda.pl>
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>, andrew.patterson@hp.com, Marcin Dalecki <dalecki.marcin@neostrada.pl>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Ryan Anderson <ryan@autoweb.net>
+Cc: =?ISO-8859-1?Q?Tomasz_K=B3oczko?= <kloczek@rudy.mif.pg.gda.pl>, Luben Tuikov <luben_tuikov@adaptec.com>, andrew.patterson@hp.com, Marcin Dalecki <dalecki.marcin@neostrada.pl>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 
---=-lYZfKBnkTQpkkNuDH3l1
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, 2005-10-03 at 23:26 +0200, Tomasz K=B3oczko wrote:
-> If (cytation from Linus) "a 'spec' is close to useless" ..
-> Q: why the hell in kernel tree is included Documentation/ subdirectory ?
-> Is it raly content of this directory is "close to useless" or maybe it no=
-t
-> contains some specyfications ? :>
+On Mon, 3 Oct 2005, Ryan Anderson wrote:
+> 
+> Let me rephrase what Linus said, to help remove the misreading that
+> seems so common today.  I think a fair rewording would be, "A spec is a
+> guideline.  When it fails to match reality, continuing to follow it is a
+> tremendous mistake."
 
-Let me rephrase what Linus said, to help remove the misreading that
-seems so common today.  I think a fair rewording would be, "A spec is a
-guideline.  When it fails to match reality, continuing to follow it is a
-tremendous mistake."
+Yes (and that _should_ be obvious, but seldom is). But even stronger than 
+that.
 
-Additionally, I think the overall LKML feeling on hardware specs and the
-corresponding software abstractions to deal with it can be summarized
-something like this:
+Even in the case where a spec follows reality, the organization of the 
+spec very seldom has anything to do with organization of code.
 
-When the spec provides a software design that doesn't fit into the
-overall structure of the Linux kernel, the spec should be treated as a
-suggestion for a software design.  The *interface* that the spec
-documents should be followed, where it moves out of the overall
-structure, but internally, a design that fits into the Linux kernel is
-more important than following a spec that doesn't fit.
+A lot of people seem to think that spec abstractions should be translated 
+into code abstraction. Not so. It often makes no sense to do so at all.
 
---=20
-Ryan Anderson
-AutoWeb Communications, Inc.
-email: ryan@autoweb.net
+There are exceptions. I suspect that pretty much all of them are specs 
+that _used_ to be code (ie they are documentation of real 
+implementations).
 
+For example, Al Viro pointed out privately that the C preprocessor spec 
+actually matches what a C preprocessor is supposed to do, and that it was 
+easy to generate code from the spec. The reason? The code existed first, 
+the spec was written from that. Writing it back into software "just 
+works", because the spec really _was_ software to begin with, just 
+re-written as a spec.
 
---=-lYZfKBnkTQpkkNuDH3l1
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Description: This is a digitally signed message part
+But when it comes to hardware, almost all specs are written from the 
+standpoint of the hardware, not the standpoint of the software driving it. 
+The spec might even tell you accurately what the hardware does (hey, 
+miracles happen!), but that doesn't mean that you should organize your 
+software around it.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+And the undeniable fact is, that once a spec gets big and complex enough, 
+it won't be exhaustively tested. For example, we've seen time and time 
+again that the hardware testing has been totally not based on any spec, 
+but on just testing against (usually just one, and usually Windows) one 
+single implementation of the "other side".
 
-iD8DBQBDQarzIEfEr9d71YgRAnWLAKCS5Mjwkk2A6AfQ/FWYMjyl4cUJjQCeJP7r
-AHaVJ/elXKe3OrF136lWhQQ=
-=AzW1
------END PGP SIGNATURE-----
+So for example, you'll have a general spec that says that the hardware 
+reacts in certain ways, but the only case that has been _tested_ is the 
+particular ways that Windows uses. Which is why we have hardware that 
+locks up when given commands in the wrong order - where "wrong" is not 
+defined by the spec, but by what Windows just happens to do.
 
---=-lYZfKBnkTQpkkNuDH3l1--
+This is especially common in the "cheap" market. For example, for SCSI, 
+most of the violations tend to be USB storage - which is supposed to act 
+largely like SCSI, but in reality really doesn't. It locks up if you 
+try to access sectors that aren't there, etc.
+
+And this is where the spec people come in. They think that the "spec" is 
+right, and the reality is wrong. So they blame the broken hardware. Which 
+is "true" to some degree - there's a lot of broken hardware out there. But 
+it's _pointless_. Broken hardware is not an excuse - it's just a fact of 
+life. It's not acceptable to say "but the spec says.." 
+
+And yes, the real problem with people ignoring reality are often in the 
+high end. The high end tends to be the place where vendors are used to 
+saying "we don't use broken hardware". The high end is where people say 
+"if it doesn't conform to spec, we don't care: it's broken". In short, the 
+high end is where people are the most likely to just ignore the realities 
+_outside_ the high end. They'll point to the spec, and say "do it like 
+this". Without ever caring that doing it like that simply may not _work_ 
+on a lot of setups.
+
+So when the SAS people say that the SCSI layer should conform to their 
+needs, next time they should remember that it _also_ needs to conform to 
+the needs of things like USB storage. Which has totally different goals, 
+implementation issues, and bugs. 
+
+		Linus
