@@ -1,52 +1,73 @@
-From: Marcin Dalecki <dalecki.marcin@neostrada.pl>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
-Date: Mon, 3 Oct 2005 21:16:28 +0200
-Message-ID: <0D927995-1605-4AA7-B213-2AE7F3C6CD69@neostrada.pl>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com>	 <1128105594.10079.109.camel@bluto.andrew>  <433D9035.6000504@adaptec.com>	 <1128111290.10079.147.camel@bluto.andrew>  <433DA0DF.9080308@adaptec.com>	 <1128114950.10079.170.camel@bluto.andrew> <433DB5D7.3020806@adaptec.com>	 <9B90AC8A-A678-4FFE-B42D-796C8D87D65B@neostrada.pl>	 <4341381D.2060807@adaptec.com>	 <E93AC7D5-4CC0-4872-A5B8-115D2BF3C1A9@neostrada.pl> <1128357350.10079.239.camel@bluto.andrew> <43415EC0.1010506@adaptec.com>
-Mime-Version: 1.0 (Apple Message framework v734)
-Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+ the kernel
+Date: Mon, 03 Oct 2005 14:32:26 -0500
+Message-ID: <4341874A.7000703@cs.wisc.edu>
+References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org> <433D8542.1010601@adaptec.com> <433DD0F8.4000501@pobox.com> <43413CE8.1090306@adaptec.com> <434154F0.9070105@pobox.com> <43415AFC.5080501@adaptec.com> <434160ED.7050803@pobox.com> <43418076.4020706@adaptec.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932649AbVJCTTm@vger.kernel.org>
-In-Reply-To: <43415EC0.1010506@adaptec.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: andrew.patterson@hp.com, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:61165 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S932586AbVJCTd4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 15:33:56 -0400
+In-Reply-To: <43418076.4020706@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
+Luben Tuikov wrote:
+> On 10/03/05 12:48, Jeff Garzik wrote:
+> 
+>>No, transport class is its name.  Think about a standard object-oriented 
+> 
+> 
+> Not according to Kconfig:
+> 
+> menu "SCSI Transport Attributes"
+> 	depends on SCSI
+> 
+> config SCSI_SPI_ATTRS
+> 	tristate "Parallel SCSI (SPI) Transport Attributes"
+> 	depends on SCSI
+> 	help
+> 	  If you wish to export transport-specific information about
+> 	  each attached SCSI device to sysfs, say Y.  Otherwise, say N.
+> 
+> config SCSI_FC_ATTRS
+> 	tristate "FiberChannel Transport Attributes"
+> 	depends on SCSI
+> 	help
+> 	  If you wish to export transport-specific information about
+> 	  each attached FiberChannel device to sysfs, say Y.
+> 	  Otherwise, say N.
+> 
 
-On 2005-10-03, at 18:39, Luben Tuikov wrote:
+For FC there is code like the fc_rport stuff which exports a sysfs 
+interface but also does a lot more like probing and queue blocking.
 
-> On 10/03/05 12:35, Andrew Patterson wrote:
->
->> On Mon, 2005-10-03 at 18:29 +0200, Marcin Dalecki wrote:
->>
->>> They give a means of possible synchronization between beneviolent
->>> users, but not a mandatory lock on the shared resource.
->>
->> Nor do they protect against external events, such as disk
->> insertion/removals, and someone kicking a cable.
->
-> As has _always_ been the case in UNIX:  Provide capability,
-> not policy.
+> config SCSI_ISCSI_ATTRS
+> 	tristate "iSCSI Transport Attributes"
+> 	depends on SCSI
+> 	help
+> 	  If you wish to export transport-specific information about
+> 	  each attached iSCSI device to sysfs, say Y.
+> 	  Otherwise, say N.
 
-This is at least arguable and not applicable, since we are talking  
-about Linux and not UNIX here. UNIX is just fine using IOCTL or  
-SYSCTL instead of a crude pseudo file system for this kind of things.
+And the iSCSI class does do a lot more now too. This just has not been 
+updated. It handles the userspace to kernel communication, session and 
+connection sysfs interface setup, and there were some patches that added 
+the ability to tell scsi-ml to stop queueing commands to a iscsi driver.
 
-> The more things are off loaded to userspace the better.
+Structures like the fc_rport and iscsi_session are managed by the 
+transport classes so scsi-ml never knows about them (except for that 
+scanning bug). And it is possible to share them between HW and software 
+or partial software solutions. I do agree for some iscsi sitautions 
+having a layer over the eh or command exection where the transport 
+really is more of a layer like your design would be nice (I am not 
+refferring to the code duplication though becuase iSCSI would like some 
+of yrou fixes :), but at the same time there are places where code can 
+be shared between a interface that hides the lower level details and one 
+that implements them in software. Maybe it is not this way for SAS though.
 
-That is not the question at hand and an invalid statement per se.  
-It's not a design goal in itself to have everything in user space.  
-However you admitt indirectly that the problem in question is valid  
-and that it exists on the design level of the interface at hand and  
-that it's an inherent error in this interface, since you don't know a  
-solution to it.
-
-> Look at it this way: the deadbolt on your house door does
-> not _eliminate_ the possibility of someone cleaning out
-> your house, even if you have a security system and/or
-> a guard dog.
-
-Problems which can be solved by proper solutions easly and without  
-cost should be solved and not talked away to justify someones idee  
-fixe about interface desing.
