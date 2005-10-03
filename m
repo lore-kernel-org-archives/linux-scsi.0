@@ -1,76 +1,70 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH 1/1] scsi: scsi inquiry timeout config option
-Date: Mon, 3 Oct 2005 14:47:22 -0700 (PDT)
-Message-ID: <Pine.LNX.4.58.0510031444590.6944@shark.he.net>
-References: <200510032026.j93KQViR015934@d01av04.pok.ibm.com>
-	<1128373305.5825.3.camel@mulgrave> <4341A325.5070406@us.ibm.com>
-	<Pine.LNX.4.58.0510031433030.6944@shark.he.net>
-	<4341A5DE.5030804@us.ibm.com>
+From: Ryan Anderson <ryan@autoweb.net>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+	the kernel
+Date: Mon, 03 Oct 2005 18:04:35 -0400
+Message-ID: <1128377075.23932.5.camel@ryan2.internal.autoweb.net>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com>
+	 <1128105594.10079.109.camel@bluto.andrew>  <433D9035.6000504@adaptec.com>
+	 <1128111290.10079.147.camel@bluto.andrew>  <433DA0DF.9080308@adaptec.com>
+	 <1128114950.10079.170.camel@bluto.andrew> <433DB5D7.3020806@adaptec.com>
+	 <9B90AC8A-A678-4FFE-B42D-796C8D87D65B@neostrada.pl>
+	 <4341381D.2060807@adaptec.com>
+	 <E93AC7D5-4CC0-4872-A5B8-115D2BF3C1A9@neostrada.pl>
+	 <1128357350.10079.239.camel@bluto.andrew> <43415EC0.1010506@adaptec.com>
+	 <Pine.BSO.4.62.0510032103380.28198@rudy.mif.pg.gda.pl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linuxppc64-dev-bounces@ozlabs.org>
-In-Reply-To: <4341A5DE.5030804@us.ibm.com>
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc64-dev>,
-	<mailto:linuxppc64-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc64-dev>
-List-Post: <mailto:linuxppc64-dev@ozlabs.org>
-List-Help: <mailto:linuxppc64-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc64-dev>,
-	<mailto:linuxppc64-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc64-dev-bounces@ozlabs.org
-Errors-To: linuxppc64-dev-bounces@ozlabs.org
-To: Brian King <brking@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linuxppc64-dev@ozlabs.org, "Randy.Dunlap" <rdunlap@xenotime.net>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1; protocol="application/pgp-signature"; boundary="=-lYZfKBnkTQpkkNuDH3l1"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932643AbVJCWFt@vger.kernel.org>
+In-Reply-To: <Pine.BSO.4.62.0510032103380.28198@rudy.mif.pg.gda.pl>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomasz =?iso-8859-2?Q?K=B3oczko?= <kloczek@rudy.mif.pg.gda.pl>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, andrew.patterson@hp.com, Marcin Dalecki <dalecki.marcin@neostrada.pl>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 3 Oct 2005, Brian King wrote:
 
-> Randy.Dunlap wrote:
-> > On Mon, 3 Oct 2005, Brian King wrote:
-> >
-> >
-> >>James Bottomley wrote:
-> >>
-> >>>On Mon, 2005-10-03 at 15:26 -0500, brking@us.ibm.com wrote:
-> >>>
-> >>>
-> >>>>Add a .config option to default the scsi scan inquiry timeout.
-> >>>>Due to a broken device (SCSI/ATA converter card) that is very
-> >>>>common on IBM iSeries/pSeries machines, these architectures
-> >>>>need a longer default inquiry timeout.
-> >>>
-> >>>
-> >>>The inquiry timeout has already been changed a while ago to be a module
-> >>>parameter (or kernel parameter) for this very case.  Why does it now
-> >>>need to be a config option as well?
-> >>
-> >>So that when a distro goes off and builds a PPC64 install kernel,
-> >>it can boot on one of these broken DVD-ROMs without requiring each
-> >>distro to add special module options inside their initrd.
-> >
-> >
-> > My reading on mailing lists is that distros prefer
-> > module or kernel parameters more than they do kernel config
-> > options (in general) because they are more dynamic -- it
-> > allows them to build one kernel instead of many kernels
-> > with various config options.
->
-> I agree with that statement, however.... Right now I am sitting with
-> an install ISO, trying to boot off this broken DVD-ROM, with scsi
-> compiled as a module in the install kernel, so I can't pass any
-> boot parameters to it in order to make it boot...
+--=-lYZfKBnkTQpkkNuDH3l1
+Content-Type: text/plain; charset=iso-8859-2
+Content-Transfer-Encoding: quoted-printable
 
-and you can't modify the module parameters (on the DVD)...
-Yes, I've seen that kind of problem recently too (not the
-same problem, however).
+On Mon, 2005-10-03 at 23:26 +0200, Tomasz K=B3oczko wrote:
+> If (cytation from Linus) "a 'spec' is close to useless" ..
+> Q: why the hell in kernel tree is included Documentation/ subdirectory ?
+> Is it raly content of this directory is "close to useless" or maybe it no=
+t
+> contains some specyfications ? :>
 
-> Additionally, this kernel config option does not decrease this dynamic
-> ability. The config option simply alters the default inquiry timeout.
-> If a module parm is passed at module load time, it will override the
-> default.
+Let me rephrase what Linus said, to help remove the misreading that
+seems so common today.  I think a fair rewording would be, "A spec is a
+guideline.  When it fails to match reality, continuing to follow it is a
+tremendous mistake."
 
-True.  and we have precedent(s) for some options living in
-both .config and as kernel/module parameters/options.
+Additionally, I think the overall LKML feeling on hardware specs and the
+corresponding software abstractions to deal with it can be summarized
+something like this:
 
--- 
-~Randy
+When the spec provides a software design that doesn't fit into the
+overall structure of the Linux kernel, the spec should be treated as a
+suggestion for a software design.  The *interface* that the spec
+documents should be followed, where it moves out of the overall
+structure, but internally, a design that fits into the Linux kernel is
+more important than following a spec that doesn't fit.
+
+--=20
+Ryan Anderson
+AutoWeb Communications, Inc.
+email: ryan@autoweb.net
+
+
+--=-lYZfKBnkTQpkkNuDH3l1
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQBDQarzIEfEr9d71YgRAnWLAKCS5Mjwkk2A6AfQ/FWYMjyl4cUJjQCeJP7r
+AHaVJ/elXKe3OrF136lWhQQ=
+=AzW1
+-----END PGP SIGNATURE-----
+
+--=-lYZfKBnkTQpkkNuDH3l1--
