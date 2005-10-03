@@ -1,69 +1,64 @@
-From: David Lang <david.lang@digitalinsight.com>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx
- intothekernel
-Date: Mon, 3 Oct 2005 08:30:33 -0700 (PDT)
-Message-ID: <Pine.LNX.4.62.0510030824310.11541@qynat.qvtvafvgr.pbz>
-References: dlang@dlang.diginsite.com <Pine.LNX.4.62.0510030721540.11541@qynat.qvtvafvgr.pbz> <43414C06.2030501@adaptec.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [BUG] Yet another scsi_cmnd leak?
+Date: Mon, 3 Oct 2005 11:34:36 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0510031127470.4824-100000@iolanthe.rowland.org>
+References: <433C4E7A.7010205@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from warden2-p.diginsite.com ([209.195.52.120]:20435 "HELO
-	warden2.diginsite.com") by vger.kernel.org with SMTP
-	id S932287AbVJCPbD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Oct 2005 11:31:03 -0400
-In-Reply-To: <43414C06.2030501@adaptec.com>
-In-Reply-To: <43414C06.2030501@adaptec.com>
-References: dlang@dlang.diginsite.com <Pine.LNX.4.62.0510030721540.11541@qynat.qvtvafvgr.pbz>
- <43414C06.2030501@adaptec.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:63157 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S932300AbVJCPek
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Oct 2005 11:34:40 -0400
+In-Reply-To: <433C4E7A.7010205@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Kyle Moffett <mrmacman_g4@mac.com>, Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, 3 Oct 2005, Luben Tuikov wrote:
+On Thu, 29 Sep 2005, Mike Christie wrote:
 
-> On 10/03/05 10:26, David Lang wrote:
->> in this case wouldn't it be trivial to write a 'null transport' driver
->> that just passed things down to the card to let the firmware deal with it?
->> (reformatting the data if needed)
->
-> Hi David,
->
-> I think it is trivial.
->
-> Your LLDD would define the host template and register it
-> with SCSI Core.  This way you _bypass_ the Transport Layer.
-> (This is what you call null driver -- as is traditionally done
-> in SCSI Core due to the legacy LLDDs (to which MPT caters
-> for 100% backward software compatibility))
->
-> Else if your LLDD is just an inteface to the interconnect:
-> i.e. it only implements Execute SCSI RPC and TMFs, then
-> you'd register with the Transport Layer (SBP or USB or SAS)
-> which will do all Transport related tasks, and then that
-> Transport Layer (USB, SBP or SAS) would register a scsi host
-> with SCSI Core.
+> Alan Stern wrote:
+> > James:
+> > 
+> > This report is based on 2.6.14-rc2-git6.  The code in your scsi-misc-2.6 
+> > git tree is somewhat different (and I don't know which is more current), 
+> > but it still contains the same bug.
+> > 
+> > 
+> > In scsi_prep_fn, a request can get deferred if scsi_init_io fails to 
+> > allocate an sg table.  When this happens, the scsi_cmnd isn't released and 
+> > the request is not marked DONTPREP.
+> > 
+> > Then when scsi_prep_fn is called again, the request may be killed for 
+> > a number of reasons.  The code branches to the kill: label near the end of 
+> > the routine, which returns BLKPREP_KILL.
+> > 
+> > Isn't it true that when this happens, the scsi_cmnd allocated during the
+> > original prep will never be released?
+> > 
+> > It appears that scsi_prep_fn is undecided about whether or not the request
+> > is allowed to have a scsi_cmnd already.  The jumps to kill: seem to assume
+> > that it isn't, but the code for allocating a new scsi_cmnd tests for an
+> > existing one first.
+> > 
+> 
+> The gotos used to be just a return BLKPREP* and were added so I did not 
+> have to write DID_NO_CONNECT or unplug multiple times :) I think you are 
+> right and we need to further unwind what a previous prep had done 
+> becuase when we return with BLKPREP_KILL we only hear about this command 
+> again if it's request has a end_io function or waiting completion.
 
-the advantage of actually having a null transport driver rather then 
-bypassing the transport layer completely is that you avoid having to make 
-the SCSI core know about details of the interface to the chips, and 
-especially about any bugs that crop up and have to be worked around for 
-different chips.
+I'm still not very clear about the conditions under which a request on the
+queue can be partially prepared -- for example, scsi_cmnd assigned but 
+not the sg table.  For the normal submission pathways, it looks like this 
+happens only when the sg allocation fails.  In those cases it wouldn't 
+hurt to release the scsi_cmnd before deferring.  Or before returning 
+BLKPREP_KILL.
 
-or worse yet, as the spec of the interface to the hardware changes over 
-time the SCSI core would have to know about all the different variations 
-and how to deal with them.
+But what about other pathways?  As long as the special scsi_request things 
+exist, I don't know what should be done.  I saw you had submitted patches 
+to get rid of them; how far has that progressed?
 
-it's much cleaner to evict all that knowledge out of the SCSI core and let 
-a very lightweight transport driver deal with that instead.
+Alan Stern
 
-the drawback is that you may end up copying a little bit of data one time 
-more then you absolutly have to, but that's probably a very small cost for 
-the flexibility.
-
-think of this as a problem similar to the network card interface, vendors 
-want to implement TOE while the kernel folks are willing to do TSO, but 
-not TOE (see the letters being exchange on lwn.net in the letters to the 
-editor section the last few weeks for a good discussion on those issues)
-
-David Lang
