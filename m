@@ -1,53 +1,99 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx intothe
- kernel
-Date: Mon, 03 Oct 2005 11:19:34 -0400
-Message-ID: <43414C06.2030501@adaptec.com>
-References: dlang@dlang.diginsite.com <Pine.LNX.4.62.0510030721540.11541@qynat.qvtvafvgr.pbz>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+ the kernel
+Date: Mon, 03 Oct 2005 11:27:26 -0400
+Message-ID: <43414DDE.4050804@adaptec.com>
+References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org>	 <433D8542.1010601@adaptec.com> <1128113158.12267.29.camel@mulgrave> <433DB6BE.4020706@adaptec.com> <433DDA8F.6050203@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:5079 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1751101AbVJCPTl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 11:19:41 -0400
-In-Reply-To: <Pine.LNX.4.62.0510030721540.11541@qynat.qvtvafvgr.pbz>
+Received: from magic.adaptec.com ([216.52.22.17]:62941 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932285AbVJCP12 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 11:27:28 -0400
+In-Reply-To: <433DDA8F.6050203@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Lang <david.lang@digitalinsight.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Kyle Moffett <mrmacman_g4@mac.com>, Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, Patrick Mansfield <patmans@us.ibm.com>, ltuikov@yahoo.com, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 10/03/05 10:26, David Lang wrote:
-> in this case wouldn't it be trivial to write a 'null transport' driver 
-> that just passed things down to the card to let the firmware deal with it?
-> (reformatting the data if needed)
+On 09/30/05 20:38, Jeff Garzik wrote:
+> Luben Tuikov wrote:
+> 
+>>I'm sure you'll do whatever humanly possible to show
+>>that _your_ idea can be applied: you can do this now:
+>>just use a big if () { ... } else { ... } statement and
+>>you're done.
+> 
+> 
+> This is not how we do things in Linux.  You're doubling the maintenance 
+> burden.
 
-Hi David,
+No necessarily.  See below.
 
-I think it is trivial.
+> If you really want to do this, at least don't fill up drivers/scsi/ with 
+> an additional, completely unrelated codepath.
 
-Your LLDD would define the host template and register it
-with SCSI Core.  This way you _bypass_ the Transport Layer.
-(This is what you call null driver -- as is traditionally done
-in SCSI Core due to the legacy LLDDs (to which MPT caters
-for 100% backward software compatibility))
+How do you say it is unrelated?
 
-Else if your LLDD is just an inteface to the interconnect:
-i.e. it only implements Execute SCSI RPC and TMFs, then
-you'd register with the Transport Layer (SBP or USB or SAS)
-which will do all Transport related tasks, and then that
-Transport Layer (USB, SBP or SAS) would register a scsi host
-with SCSI Core.
+Is USB storage unrelated? (other than the fact that it doesn't live
+in drivers/scsi/)
+
+> There is commonality between aic94xx and MPT/LSI stuff.  aic94xx SAS 
+> transport layer is a superset of MPT/LSI SAS transport:  it clearly 
+> needs far more management code.
+
+And MPT/LSI SAS does not need this managament as this layer
+is completely implemented in FW and not exposed (and for a reason).
+
+> We understand this.  The part you don't understand is that we want to 
+> emphasize the commonality, rather than let aic94xx and MPT/LSI go in 
+> completely different directions.
+
+But this was LSI's decision, remember?  We did work together,
+until LSI and Dell decided that they'd rather let Christoph do it.
+(Since who cares about the technological merit of the code when it
+will be accepted into the kernel?)
+
+Now you want to integrate the two?  Apparently LSI and Dell haven't
+made up their mind.
+
+As I said: Vendors are completely playing to the tune of a couple
+of people at linux-scsi, for this reason we haven't seen _any_
+SCSI or Storage _innovation_ in SCSI Core.
+
+As opposed to those vendors saying: We _really_ need 64 bit LUNS
+and it would be really nice to get rid of HCIL, etc, etc.
+
+If all vendors pushed for that and were not afraid to speak
+up (because they have drivers to write and patches to submit
+and want acceptance), then SCSI Core would be a better place.
+
+IMO, 64 bit LUNs and no HCIL is more important than "transport
+attributes" and should've _preceded_ them.
+
+The fact that you're trying to umbrella them together, doesn't
+make it _technologically_ correct.
+
+Remember, a person's fall starts when they're surrounded by "Yes" men.
+
+> Read it again:  aic94xx/BCMxxx is a superset of functionality, not 
+> completely different.
+
+One implements all transport related tasks in FW and exposes only LUs
+to the LLDD, the other implements only the interface to the transport
+in the chip (the interconnect), and the rest is handed to upper layers.
+
+If you sit down with a clean sheet of _paper and a pencil_ and try
+to draw out the layering infrastructure for both and how they
+interface with SCSI Core, you'll see that with MPT, things are
+_upside_ down compared to USB/SBP/SAS.  Now trying to reconcile both,
+while possible, would be extremely _ugly_, unless say, you can fake out
+event formation in an MPT based LLDD, but then again, you'd need to
+resolve the host template thing...
+
+It would just be extremely ugly and not as flowing and straightforward
+as the current code is.
 
 	Luben
-
-> having a null driver for a layer for some hardware, and a much more 
-> complex driver for the same layer for other hardware is fairly common in 
-> Linux. I believe ti was Linus that said in an interview that Linux is now 
-> largely designed for an ideal abstracted CPU, with code put in on the 
-> architectures that don't have a feature to simulate that feature in 
-> software.
-> 
-> David Lang
-> 
 
