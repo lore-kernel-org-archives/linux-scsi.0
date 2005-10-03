@@ -1,61 +1,52 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
  the kernel
-Date: Mon, 03 Oct 2005 12:01:48 -0400
-Message-ID: <434155EC.6080100@pobox.com>
-References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org> <433D8542.1010601@adaptec.com> <A0262C6F-6B0E-4790-BA42-FAFD6F026E0A@mac.com> <433D8D1F.1030005@adaptec.com> <0F03AA4B-D2D1-4C57-B81B-FC95CB863A98@mac.com> <433DB8AF.4090207@adaptec.com> <433DD95C.5050209@pobox.com> <43413D9C.2050904@adaptec.com>
+Date: Mon, 03 Oct 2005 12:17:33 -0400
+Message-ID: <4341599D.70904@adaptec.com>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com>	 <1128102837.3012.15.camel@laptopd505.fenrus.org> <1128210952.17099.73.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:29340 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932338AbVJCQCB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 12:02:01 -0400
-In-Reply-To: <43413D9C.2050904@adaptec.com>
+Received: from magic.adaptec.com ([216.52.22.17]:12523 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932274AbVJCQRi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 12:17:38 -0400
+In-Reply-To: <1128210952.17099.73.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Kyle Moffett <mrmacman_g4@mac.com>, Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Arjan van de Ven <arjan@infradead.org>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, andrew.patterson@hp.com, dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Luben Tuikov wrote:
-> On 09/30/05 20:33, Jeff Garzik wrote:
->>This is a misrepresentation.  -We- understand the stuff you have posted.
->>
->>But you continue to demonstrate that you simply do not understand the 
->>existing SCSI core code.
->>
->>The SAS transport class supports commonality across all SAS 
->>implementations.  This includes both MPT and Adaptec 94xx.
->>
->>SAS transport class + libsas supports software implementations of SAS, 
->>including transport layer management.  This includes Adaptec 94xx but 
->>NOT MPT.
+On 10/01/05 19:55, Alan Cox wrote:
+> On Gwe, 2005-09-30 at 19:53 +0200, Arjan van de Ven wrote:
+> 
+>>that makes me wonder... why and how does T10 control linux abi's ??
 > 
 > 
-> You almost get it right, other than the layering infrastructure.
-> 
-> The SAS Transport Layer is a layer in its own right.  It is not
-> a "libsas".
+> Indirectly the standards do define APIs at the very least. A good
+> example is taskfile. ACPI methods (which we don't yet use) allow get/set
+> mode, get features on the motherboard ATA controller if you don't know
+> how to drive it. The objects they work in are taskfiles. No taskfiles,
+> no ACPI.
 
-Different open transport hardware will expose the underlying network at 
-different levels.
+Yes, that's true.
 
-Hardware A might provide direct access to SSP and IDENTIFY/CONNECT frame 
-handling, while Hardware B may handle that internally, while still 
-providing full SMP access for the transport layer to discovery topology 
-and build its routing table.
+Even more is true.  Standards and specs define the
+_layering infrastructure_ which if implemented, 
+allows for layer intersection.
 
-We cannot assume that all open transport hardware will function the 
-same, hence the better approach is a library of helpers that function in 
-concert with LLDD to form a transport layer.
+For example, if one needs to insert a SATL later just because
+the underlaying transport was found able to transport it,
+since the layering is well defined and _so_ implemented, it wouldn't
+be hard to interface antother well defined layer in.
 
+If, OTOH, things are conglomerated into a blob, just because
+the kernel engineers (not (storage) engineers per se) found _no_ current
+use of the layering infrastructure and separating the layers
+was found do add  "more maintenance", then this will turn around
+sooner or later to bite back.
 
-> MPT and open transport a very different, one hides the transport,
-> i.e. the transport layer is in firmware; the other exposes it
+After all, things are what they are.
 
-For the 1001th time, we know all this.
-
-	Jeff
-
-
+	Luben
 
