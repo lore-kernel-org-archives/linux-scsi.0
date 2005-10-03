@@ -1,52 +1,46 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
  the kernel
-Date: Mon, 03 Oct 2005 12:23:24 -0400
-Message-ID: <43415AFC.5080501@adaptec.com>
-References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org> <433D8542.1010601@adaptec.com> <433DD0F8.4000501@pobox.com> <43413CE8.1090306@adaptec.com> <434154F0.9070105@pobox.com>
+Date: Mon, 03 Oct 2005 12:28:12 -0400
+Message-ID: <43415C1C.70202@pobox.com>
+References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org>	 <433D8542.1010601@adaptec.com> <1128113158.12267.29.camel@mulgrave> <433DB6BE.4020706@adaptec.com> <433DDA8F.6050203@pobox.com> <43414DDE.4050804@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:47852 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1751105AbVJCQX1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 12:23:27 -0400
-In-Reply-To: <434154F0.9070105@pobox.com>
+Received: from mail.dvmed.net ([216.237.124.58]:41116 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751118AbVJCQ2U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 12:28:20 -0400
+In-Reply-To: <43414DDE.4050804@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, Patrick Mansfield <patmans@us.ibm.com>, ltuikov@yahoo.com, Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 10/03/05 11:57, Jeff Garzik wrote:
->>From what I see, because of its *layering* position
->>JB's "transport attributes" cannot satisfy open transport.
-> 
-> 
-> Repeating verbatim the above quote:  a transport class is more than just 
-> transport attributes.
+Luben Tuikov wrote:
+> As opposed to those vendors saying: We _really_ need 64 bit LUNS
+> and it would be really nice to get rid of HCIL, etc, etc.
 
-a) "Transport Attributes" _is_ its name,
-b) It sits across SCSI Core, i.e. on the same level.
-c) It was never intended to add management.
-d) Its inteface to SCSI Core is badly defined and an "invention",
-   (and very poor at that).
+Everybody agrees with this 100%
 
-The reason for d) is that
-1) it tries to unify different _transports_,
-2) does _not_ follow _any_ spec or standard.
+Note that James submitted a sdev_printk() patch in the past few days, 
+which assists in removing HCIL from the SCSI core.
 
-Look at this, while you repeat verbaitm a single
-quote, I give you technical arguments, then you just
-repeat a single quote verbatim... Sad.
 
-> Every chip is ultimately an interface to the transport, regardless of 
-> whether the transport layer is largely managed by software (aic94xx) or 
-> firmware (MPT).  SCSI host template can work just fine with open 
-> transport hardware.
+> IMO, 64 bit LUNs and no HCIL is more important than "transport
+> attributes" and should've _preceded_ them.
 
-Maybe the picures and the write up here will help:
-http://marc.theaimsgroup.com/?l=linux-kernel&m=112810649712793&w=2
+Agreed.  But that's a lot of work, and I doubt people want to delay SAS 
+further to wait for complete HCIL elimination.
 
-	Luben
+
+> The fact that you're trying to umbrella them together, doesn't
+> make it _technologically_ correct.
+
+It's muddled together, yes.  That doesn't make it any less correct. 
+It's just not a clean, immediate separation.  Its a separation that 
+takes time.
+
+	Jeff
 
 
