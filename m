@@ -1,159 +1,82 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
  the kernel
-Date: Mon, 03 Oct 2005 15:03:18 -0400
-Message-ID: <43418076.4020706@adaptec.com>
-References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org> <433D8542.1010601@adaptec.com> <433DD0F8.4000501@pobox.com> <43413CE8.1090306@adaptec.com> <434154F0.9070105@pobox.com> <43415AFC.5080501@adaptec.com> <434160ED.7050803@pobox.com>
+Date: Mon, 03 Oct 2005 14:10:48 -0500
+Message-ID: <43418238.1030000@cs.wisc.edu>
+References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org> <433D8542.1010601@adaptec.com> <433DD0F8.4000501@pobox.com> <43413CE8.1090306@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964773AbVJCTDZ@vger.kernel.org>
-In-Reply-To: <434160ED.7050803@pobox.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:47840 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S932626AbVJCTLX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 15:11:23 -0400
+In-Reply-To: <43413CE8.1090306@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-On 10/03/05 12:48, Jeff Garzik wrote:
-> No, transport class is its name.  Think about a standard object-oriented 
-
-Not according to Kconfig:
-
-menu "SCSI Transport Attributes"
-	depends on SCSI
-
-config SCSI_SPI_ATTRS
-	tristate "Parallel SCSI (SPI) Transport Attributes"
-	depends on SCSI
-	help
-	  If you wish to export transport-specific information about
-	  each attached SCSI device to sysfs, say Y.  Otherwise, say N.
-
-config SCSI_FC_ATTRS
-	tristate "FiberChannel Transport Attributes"
-	depends on SCSI
-	help
-	  If you wish to export transport-specific information about
-	  each attached FiberChannel device to sysfs, say Y.
-	  Otherwise, say N.
-
-config SCSI_ISCSI_ATTRS
-	tristate "iSCSI Transport Attributes"
-	depends on SCSI
-	help
-	  If you wish to export transport-specific information about
-	  each attached iSCSI device to sysfs, say Y.
-	  Otherwise, say N.
-
-config SCSI_SAS_ATTRS
-	tristate "SAS Transport Attributes"
-	depends on SCSI
-	help
-	  If you wish to export transport-specific information about
-	  each attached SAS device to sysfs, say Y.
-
-endmenu
-
-> paradigm.  Each transport has unique characteristics.  The proper place 
-> to export these and manage these characteristics is the transport layer, 
-> as SAM agrees.
-
-But:
-
->  The manifestation of the transport layer is the 
-> transport class.
-
-Bzzzt!  Wrong.
-
-This is where you and James Bottomley make the wrong assesment.
-
-Having the SCSI host template in the LLDD tells everyone immeditealy
-that you have it all wrong as far as anything SAM/SPC is concerned.
-
-Look at any transport spec, how little SCSI Host template is there.
-
-You need to understand that declaring the host template in the
-LLDD is, and has always been, the _exception_, not the rule.
-The reason is legacy Parallel SCSI.
-
-It is MPT based drivers who are the exception, not the rule,
-and JB's "transport attributes" makes it the rule, and a
-transport layer (what you call libsas), the exception.
-
-It is wrong for a host template to "branch out" to a
-transport layer as you're doing it now.  Think about it.
-The layering infrastructure is upside down.
-
-> You have to look beyond the current code, to see this.
-
-Eh, well, not that you put it like this, I expect that
-you'll completely pull out the implementation from my code
-and put it in the "transport attributes" and call it your own.
-
-I don't want to look beyond the current code, I'm discussing
-things now, as they are.  How many times is JB going to change
-the "transport attributes" just because FC needed one more thing
-or because of, as often has been recently seen, "brown paper bag"
-fix?
-
-> An implementation of a transport class, in conjunction with helper 
-> functions common to all transports (SCSI core), combines to form the 
-> transport layer for a specific transport.
-
-Should:
-
-The transport layer sits below SCSI Core and above the LLDD.
-SCSI Core is completely unaware of the transport layer.
-The LLDD communicates with the transport layer via
-the event interface (as shown in the SAS Transport layer)
-and the transport layer communicates with the LLDD via
-the Execute Command SCSI RPC and TMF.  All as outlined here:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112629423714248&w=2
-
->>b) It sits across SCSI Core, i.e. on the same level.
->>c) It was never intended to add management.
+Luben Tuikov wrote:
+> On 09/30/05 19:57, Jeff Garzik wrote:
+> 
+>>Luben Tuikov wrote:
+>>
+>>
+>>>MPT-based drivers + James Bottomley's "transport attributes"
+>>
+>>
+>>You continue to fail to see that a transport class is more than just 
+>>transport attributes.
+>>
+>>You continue to fail to see that working on transport class support IS a 
+>>transport layer, that includes management.
+>>
+>>Is you don't understand this fundamental stuff, how can we expect you to 
+>>get it right?
 > 
 > 
-> SCSI core is nothing but a set of helper functions and support code that 
-> enable the transport class and LLDD to implement the transport layer.
-
-Again you fail to see that the LLDD should _not_ implement
-the host template as has been traditionally done.
-The reason with this is that simply the LLDD has nothing to do
-with the host template.  Unless you're dealing with MPT-based
-LLDD which implement everything in FW and export LUs to
-SCSI Core (which is fine too, as long as they do not dictate
-how SCSI Core should work).
-
-Notice that for MPT-based solution, SCSI Core wouldn't even
-do LU discovery (unless you can turn that off via FW dependent
-ways).
-
->>d) Its inteface to SCSI Core is badly defined and an "invention",
->>   (and very poor at that).
+>>From what I see, because of its *layering* position
+> JB's "transport attributes" cannot satisfy open transport.
 > 
-> Strongly disagree.  This invention is defined by -needs-, as is other 
-> code in Linux.  If we have new needs, we change the code.
-
-You defence of your friends architecture is duly noted.
-But if, as has been pointed out, you take a look at the
-evolvement of this "invention" you'll see how it was and still
-is _meandering_ in the technological maze to find its place.
-
-All the while a transport layer like USB/SPB/SAS and maybe
-iSCSI just sits "right".  Think about it.
-
->>The reason for d) is that
->>2) does _not_ follow _any_ spec or standard.
+> The reason is that MPT-based drivers indeed do need host template
+> in the LLDD.
 > 
+> Open Transport (SBP/USB/SAS) do not, since the chip is only
+> an interface to the transport.
 > 
-> That's fine, since its an internal kernel API.
+> The host template is implemented by a transport layer,
+> say USB Storage or the SAS Transport Layer.
+> 
 
-Now, lets shove it down the throat of eveybody.
+I think I can understand some of Luben's reasons for the layering. We 
+are facing similar problems with software iscsi and hw iscsi. For 
+software iscsi it would be nice to consolodate some of the common 
+software iscsi code into a layer or lib. Following Luben's path for 
+example our queuecommand would be:
 
-You forgot to say something about
-1) it tries to unify different _transports_.
-I don't expect a blurb on that, btw.
+scsi-ml -> scsi_host_template->queuecommand -> iscsi transport common 
+queuecommand (do things like check session state, that we are not in 
+session level recovery, scsi to iscsi pdu prep like setting the data 
+direction, and other iSCSI PDU prep) -> iscsi_transport module -> 
+iscsi_transport->queuepdu (you can probably reccomend a better name) -> 
+tcp, sctp, iwarp, or some iSCSI HW that exposes a iSCSI interface rather 
+than SCSI (note that qla4xxx would use its own 
+scsi_host_template->queuecommand since it does not expose enough iSCSI 
+internals for it to be useful to plug in here).
 
+However, HW iscsi cards and software/partial-software iscsi solutions 
+can share code for things like session and connection creation where we 
+would have transport class lib functions: 
+iscsi_add_session/iscsi_remove_session which both the HW iscsi cards 
+like qla4xxx and software/partial-software iscsi drivers could use to 
+setup things like a common sysfs representation. 
+iscsi_add_session/iscsi_remove_session would work similar to the 
+fc_rport code where the midlayer doesn't really know they exist (this is 
+similar to our session and connection code today but it is bound to the 
+scsi host which prevents qla4xxx from using it).
 
-	Luben
+Is the direction we are going where iscsi would have to put the "iscsi 
+transport common queuecommand" code into something similar to libata? Or 
+  is it that Luben's transport layer code is performing something 
+different than software/partial-software iscsi?
