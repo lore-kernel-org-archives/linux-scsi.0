@@ -1,52 +1,93 @@
-From: dth@cistron.nl (Danny ter Haar)
-Subject: 2.6.14-rc2-mm2 barfed as well, was:  2.6.14-rc2-git8 crashed with scsi error after 40 hours
-Date: Mon, 3 Oct 2005 21:22:33 +0000 (UTC)
-Message-ID: <dhs7ep$i4l$1@news.cistron.nl>
-References: <dho4tc$ilc$1@news.cistron.nl>
+From: =?ISO-8859-2?Q?Tomasz_K=B3oczko?= <kloczek@rudy.mif.pg.gda.pl>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+ the kernel
+Date: Mon, 3 Oct 2005 23:26:34 +0200 (CEST)
+Message-ID: <Pine.BSO.4.62.0510032103380.28198@rudy.mif.pg.gda.pl>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com>
+  <1128105594.10079.109.camel@bluto.andrew>  <433D9035.6000504@adaptec.com>
+  <1128111290.10079.147.camel@bluto.andrew>  <433DA0DF.9080308@adaptec.com>
+  <1128114950.10079.170.camel@bluto.andrew> <433DB5D7.3020806@adaptec.com>
+ <9B90AC8A-A678-4FFE-B42D-796C8D87D65B@neostrada.pl>  <4341381D.2060807@adaptec.com>
+  <E93AC7D5-4CC0-4872-A5B8-115D2BF3C1A9@neostrada.pl> <1128357350.10079.239.camel@bluto.andrew>
+ <43415EC0.1010506@adaptec.com>
+Mime-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="0-679877017-1128370904=:28198"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from news.cistron.nl ([62.216.30.38]:13252 "EHLO ncc1701.cistron.net")
-	by vger.kernel.org with ESMTP id S964772AbVJCVWj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 17:22:39 -0400
+Received: from rudy.mif.pg.gda.pl ([153.19.42.16]:18440 "EHLO
+	rudy.mif.pg.gda.pl") by vger.kernel.org with ESMTP id S932630AbVJCV0g
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Oct 2005 17:26:36 -0400
+In-Reply-To: <43415EC0.1010506@adaptec.com>
+Content-ID: <Pine.BSO.4.62.0510032312200.28198@rudy.mif.pg.gda.pl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: andrew.patterson@hp.com, Marcin Dalecki <dalecki.marcin@neostrada.pl>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-2.6.14-rc2-mm2 just any other 2.6.1[34] kernel so far didn't get _my_
-sign of aproval ;-)
+--0-679877017-1128370904=:28198
+Content-Type: TEXT/PLAIN; CHARSET=ISO-8859-2; FORMAT=flowed
+Content-Transfer-Encoding: 8BIT
+Content-ID: <Pine.BSO.4.62.0510032312201.28198@rudy.mif.pg.gda.pl>
 
-reboot   system boot  2.6.14-rc2-mm2   Sun Oct  2 10:05 - crash (1+13:15)
+On Mon, 3 Oct 2005, Luben Tuikov wrote:
 
-----------
-scsi0:0:0:0: Attempting to queue an ABORT message:CDB: 0x2a 0x0 0x1 0xdc 0x49 0xca 0x0 0x0 0x8 0x0
-scsi0: At time of recovery, card was not paused
->>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
-scsi0: Dumping Card State at program address 0x26 Mode 0x22
-Card was paused
-HS_MAILBOX[0x0] INTCTL[0xc0]:(SWTMINTEN|SWTMINTMASK)
-SEQINTSTAT[0x10]:(SEQ_SWTMRTO) SAVED_MODE[0x11]
-DFFSTAT[0x33]:(CURRFIFO_NONE|FIFO0FREE|FIFO1FREE)
-SCSISIGI[0x0]:(P_DATAOUT) SCSIPHASE[0x0] SCSIBUS[0x0]
-LASTPHASE[0x1]:(P_DATAOUT|P_BUSFREE) SCSISEQ0[0x0]
-SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) SEQCTL0[0x0]
-SEQINTCTL[0x0] SEQ_FLAGS[0x0] SEQ_FLAGS2[0x0] SSTAT0[0x0]
-SSTAT1[0x0] SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0x0]
-SIMODE1[0xa4]:(ENSCSIPERR|ENSCSIRST|ENSELTIMO)
-LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0]
-LQOSTAT1[0x0] LQOSTAT2[0xe1]:(LQOSTOP0|LQOPKT)
+> On 10/03/05 12:35, Andrew Patterson wrote:
+>> On Mon, 2005-10-03 at 18:29 +0200, Marcin Dalecki wrote:
+>>> They give a means of possible synchronization between beneviolent
+>>> users, but not a mandatory lock on the shared resource.
+>>>
+>>
+>>
+>> Nor do they protect against external events, such as disk
+>> insertion/removals, and someone kicking a cable.
+>
+> As has _always_ been the case in UNIX:  Provide capability,
+> not policy.
+>
+> The more things are off loaded to userspace the better.
+>
+> Look at it this way: the deadbolt on your house door does
+> not _eliminate_ the possibility of someone cleaning out
+> your house, even if you have a security system and/or
+> a guard dog.
 
-SCB Count = 128 CMDS_PENDING = 32 LASTSCB 0x1a CURRSCB 0x1a NEXTSCB 0xff00
-qinstart = 27585 qinfifonext = 27585
-QINFIFO:
-WAITING_TID_QUEUES:
-Pending list:
- 36 FIFO_USE[0x0] SCB_CONTROL[0x60]:(TAG_ENB|DISCENB) SCB_SCSIID[0x7]
- 23 FIFO_USE[0x0] SCB_CONTROL[0x60]:(TAG_ENB|DISCENB) SCB_SCSIID[0x7]
-------------
+But using fs like "presentation" layer have some additional "possibilities"
+for race conditions because between open() and flock() some other process
+can try open the same file. Also this semantics does not provide locking
+tree or subtree of files (do I mention procfs and sysfs do not support
+locking ? :)
+Next is time/cpu concumption because operate on fs like structures
+requires open() -> (flock() ->) read()/write() -> close() .. three or more 
+context swiching. This is main reason why simple ps takes so many time on
+Linux.
 
-Full crash, dmesg/config etc @ http://newsgate.newsserver.nl/kernel/2.6.14-rc2-mm2/
+Something like simple MIB/OID like semantics for read, write, lock single 
+OID or subtree could be very good to mandatory locking for operate on
+atributes sets and probably will take less memory than sysfs.
 
-Now compiling 2.6.14-rc3-git3 ...
+<mode=cynic>
+But I know this is like fantasy because seems no one want work on
+stabilize kernel API. Even more .. Documentation/stable_api_nonsense.txt
+included in *stable* line documents real kernel strategy .. it is 
+*pure folclor* (because from this is possible suck something like: "we are
+using specyfication: 'we are hate use specyfications'").
+If (cytation from Linus) "a 'spec' is close to useless" ..
+Q: why the hell in kernel tree is included Documentation/ subdirectory ?
+Is it raly content of this directory is "close to useless" or maybe it not
+contains some specyfications ? :>
+If it is true maybe better will be remove this ? ;->
+Maybe after removing Documentation/ with stable_api_nonsense.txt some 
+people will can grant permission to start thinking on prepare
+specyfication for kernel API usable in longer chunk of time (?)
+</mode>
 
-Danny
-
+kloczek
+-- 
+-----------------------------------------------------------
+*Ludzie nie maj± problemów, tylko sobie sami je stwarzaj±*
+-----------------------------------------------------------
+Tomasz K³oczko, sys adm @zie.pg.gda.pl|*e-mail: kloczek@rudy.mif.pg.gda.pl*
+--0-679877017-1128370904=:28198--
