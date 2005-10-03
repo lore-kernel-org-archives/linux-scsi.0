@@ -1,58 +1,57 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2/3] Add disk hotswap support to libata RESEND #5
-Date: Mon, 03 Oct 2005 11:53:26 -0400
-Message-ID: <434153F6.2050405@pobox.com>
-References: <355e5e5e05092618018840fc3@mail.gmail.com>	 <433AEAAE.2070003@pobox.com>	 <1127949651.26686.11.camel@localhost.localdomain> <355e5e5e0510030819od4ef8e5l93708588990081da@mail.gmail.com>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+ the kernel
+Date: Mon, 03 Oct 2005 11:57:36 -0400
+Message-ID: <434154F0.9070105@pobox.com>
+References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org> <433D8542.1010601@adaptec.com> <433DD0F8.4000501@pobox.com> <43413CE8.1090306@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:21916 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932310AbVJCPxc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 11:53:32 -0400
-In-Reply-To: <355e5e5e0510030819od4ef8e5l93708588990081da@mail.gmail.com>
+Received: from mail.dvmed.net ([216.237.124.58]:25244 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932329AbVJCP5p (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 11:57:45 -0400
+In-Reply-To: <43413CE8.1090306@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lukasz Kosewski <lkosewsk@gmail.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-Lukasz Kosewski wrote:
-> How about this; I want this SATA hotswapping stuff to be tested, so
-> I'll commit my patches for 'SATA only' for the time being.  I'll stare
-> at them for a while and then see what kind of PATA-specific if
-> statements and hooks are necessary in the code?
+Luben Tuikov wrote:
+> On 09/30/05 19:57, Jeff Garzik wrote:
+>>Luben Tuikov wrote:
+>>>MPT-based drivers + James Bottomley's "transport attributes"
 
-Ideally we should just create hooks for any SATA-specific behavior, and 
-ensure that nothing SATA-specific is written into any of the core paths.
+>>You continue to fail to see that a transport class is more than just 
+>>transport attributes.
+>>
+>>You continue to fail to see that working on transport class support IS a 
+>>transport layer, that includes management.
+>>
+>>Is you don't understand this fundamental stuff, how can we expect you to 
+>>get it right?
+> 
+> 
+>>From what I see, because of its *layering* position
+> JB's "transport attributes" cannot satisfy open transport.
 
-One of the SATA controllers, Intel ICH5 & ICH6, does not have a hotplug 
-interrupt, but yet supports "coldplug":
+Repeating verbatim the above quote:  a transport class is more than just 
+transport attributes.
 
-	* user indicates to kernel, to disable the SATA port
-	* kernel says "OK, it's disabled"
-	* user disconnects hard drive
-and
-	* SATA port is disabled
-	* user connects hard drive
-	* user indicates to kernel, to enable SATA port
-	* kernel says "OK, I've turned it on" and probes it
 
-This is a real-world, high-volume SATA case, yet it functionally behaves 
-like PATA.
+> The reason is that MPT-based drivers indeed do need host template
+> in the LLDD.
 
-So that causes us to consider various entry points:
+> Open Transport (SBP/USB/SAS) do not, since the chip is only
+> an interface to the transport.
 
-* {something}, be it a hot-unplug interrupt or user write(2) to sysfs, 
-tells us a device is gone
-* {something}, be it a hot-plug interrupt or user write(2) to sysfs, 
-tells us a new device appeared
+> The host template is implemented by a transport layer,
+> say USB Storage or the SAS Transport Layer.
 
-So for either SATA or PATA, it should look similar in the core:  we just 
-need a "kick", a function call that triggers one of these two actions. 
-The handling of those actions [your code] should hopefully be pretty 
-generic.  ;-)
-
-Thanks for working on this!
+Every chip is ultimately an interface to the transport, regardless of 
+whether the transport layer is largely managed by software (aic94xx) or 
+firmware (MPT).  SCSI host template can work just fine with open 
+transport hardware.
 
 	Jeff
 
