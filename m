@@ -1,82 +1,52 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
- the kernel
-Date: Mon, 03 Oct 2005 14:10:48 -0500
-Message-ID: <43418238.1030000@cs.wisc.edu>
-References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org> <433D8542.1010601@adaptec.com> <433DD0F8.4000501@pobox.com> <43413CE8.1090306@adaptec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Marcin Dalecki <dalecki.marcin@neostrada.pl>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
+Date: Mon, 3 Oct 2005 21:16:28 +0200
+Message-ID: <0D927995-1605-4AA7-B213-2AE7F3C6CD69@neostrada.pl>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com>	 <1128105594.10079.109.camel@bluto.andrew>  <433D9035.6000504@adaptec.com>	 <1128111290.10079.147.camel@bluto.andrew>  <433DA0DF.9080308@adaptec.com>	 <1128114950.10079.170.camel@bluto.andrew> <433DB5D7.3020806@adaptec.com>	 <9B90AC8A-A678-4FFE-B42D-796C8D87D65B@neostrada.pl>	 <4341381D.2060807@adaptec.com>	 <E93AC7D5-4CC0-4872-A5B8-115D2BF3C1A9@neostrada.pl> <1128357350.10079.239.camel@bluto.andrew> <43415EC0.1010506@adaptec.com>
+Mime-Version: 1.0 (Apple Message framework v734)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47840 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S932626AbVJCTLX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 15:11:23 -0400
-In-Reply-To: <43413CE8.1090306@adaptec.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932649AbVJCTTm@vger.kernel.org>
+In-Reply-To: <43415EC0.1010506@adaptec.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+Cc: andrew.patterson@hp.com, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-Luben Tuikov wrote:
-> On 09/30/05 19:57, Jeff Garzik wrote:
-> 
->>Luben Tuikov wrote:
->>
->>
->>>MPT-based drivers + James Bottomley's "transport attributes"
->>
->>
->>You continue to fail to see that a transport class is more than just 
->>transport attributes.
->>
->>You continue to fail to see that working on transport class support IS a 
->>transport layer, that includes management.
->>
->>Is you don't understand this fundamental stuff, how can we expect you to 
->>get it right?
-> 
-> 
->>From what I see, because of its *layering* position
-> JB's "transport attributes" cannot satisfy open transport.
-> 
-> The reason is that MPT-based drivers indeed do need host template
-> in the LLDD.
-> 
-> Open Transport (SBP/USB/SAS) do not, since the chip is only
-> an interface to the transport.
-> 
-> The host template is implemented by a transport layer,
-> say USB Storage or the SAS Transport Layer.
-> 
 
-I think I can understand some of Luben's reasons for the layering. We 
-are facing similar problems with software iscsi and hw iscsi. For 
-software iscsi it would be nice to consolodate some of the common 
-software iscsi code into a layer or lib. Following Luben's path for 
-example our queuecommand would be:
+On 2005-10-03, at 18:39, Luben Tuikov wrote:
 
-scsi-ml -> scsi_host_template->queuecommand -> iscsi transport common 
-queuecommand (do things like check session state, that we are not in 
-session level recovery, scsi to iscsi pdu prep like setting the data 
-direction, and other iSCSI PDU prep) -> iscsi_transport module -> 
-iscsi_transport->queuepdu (you can probably reccomend a better name) -> 
-tcp, sctp, iwarp, or some iSCSI HW that exposes a iSCSI interface rather 
-than SCSI (note that qla4xxx would use its own 
-scsi_host_template->queuecommand since it does not expose enough iSCSI 
-internals for it to be useful to plug in here).
+> On 10/03/05 12:35, Andrew Patterson wrote:
+>
+>> On Mon, 2005-10-03 at 18:29 +0200, Marcin Dalecki wrote:
+>>
+>>> They give a means of possible synchronization between beneviolent
+>>> users, but not a mandatory lock on the shared resource.
+>>
+>> Nor do they protect against external events, such as disk
+>> insertion/removals, and someone kicking a cable.
+>
+> As has _always_ been the case in UNIX:  Provide capability,
+> not policy.
 
-However, HW iscsi cards and software/partial-software iscsi solutions 
-can share code for things like session and connection creation where we 
-would have transport class lib functions: 
-iscsi_add_session/iscsi_remove_session which both the HW iscsi cards 
-like qla4xxx and software/partial-software iscsi drivers could use to 
-setup things like a common sysfs representation. 
-iscsi_add_session/iscsi_remove_session would work similar to the 
-fc_rport code where the midlayer doesn't really know they exist (this is 
-similar to our session and connection code today but it is bound to the 
-scsi host which prevents qla4xxx from using it).
+This is at least arguable and not applicable, since we are talking  
+about Linux and not UNIX here. UNIX is just fine using IOCTL or  
+SYSCTL instead of a crude pseudo file system for this kind of things.
 
-Is the direction we are going where iscsi would have to put the "iscsi 
-transport common queuecommand" code into something similar to libata? Or 
-  is it that Luben's transport layer code is performing something 
-different than software/partial-software iscsi?
+> The more things are off loaded to userspace the better.
+
+That is not the question at hand and an invalid statement per se.  
+It's not a design goal in itself to have everything in user space.  
+However you admitt indirectly that the problem in question is valid  
+and that it exists on the design level of the interface at hand and  
+that it's an inherent error in this interface, since you don't know a  
+solution to it.
+
+> Look at it this way: the deadbolt on your house door does
+> not _eliminate_ the possibility of someone cleaning out
+> your house, even if you have a security system and/or
+> a guard dog.
+
+Problems which can be solved by proper solutions easly and without  
+cost should be solved and not talked away to justify someones idee  
+fixe about interface desing.
