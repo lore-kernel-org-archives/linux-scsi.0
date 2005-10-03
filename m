@@ -1,61 +1,91 @@
-From: David Lang <david.lang@digitalinsight.com>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx intothe
- kernel
-Date: Mon, 3 Oct 2005 07:26:38 -0700 (PDT)
-Message-ID: <Pine.LNX.4.62.0510030721540.11541@qynat.qvtvafvgr.pbz>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [GIT PATCH] SCSI Bug fixes for 2.6.14-rc3
+Date: Mon, 03 Oct 2005 09:41:55 -0500
+Message-ID: <1128350515.5733.4.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from warden3-p.diginsite.com ([208.147.64.186]:3308 "HELO
-	warden3.diginsite.com") by vger.kernel.org with SMTP
-	id S932260AbVJCObW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Oct 2005 10:31:22 -0400
-In-Reply-To: dlang@dlang.diginsite.com
-References: dlang@dlang.diginsite.com
-In-Reply-To: <43413D9C.2050904@adaptec.com>
-References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org>
- <433D8542.1010601@adaptec.com> <A0262C6F-6B0E-4790-BA42-FAFD6F026E0A@mac.com>
- <433D8D1F.1030005@adaptec.com> <0F03AA4B-D2D1-4C57-B81B-FC95CB863A98@mac.com>
- <433DB8AF.4090207@adaptec.com> <433DD95C.5050209@pobox.com>
- <43413D9C.2050904@adaptec.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:29154 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750892AbVJCOmL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Oct 2005 10:42:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Kyle Moffett <mrmacman_g4@mac.com>, Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, 3 Oct 2005, Luben Tuikov wrote:
+This is the set of bugfixes (plus new drivers) I have pending.  The
+aacraid update is the one that was delayed in review.
 
->>
->> The SAS transport class supports commonality across all SAS
->> implementations.  This includes both MPT and Adaptec 94xx.
->>
->> SAS transport class + libsas supports software implementations of SAS,
->> including transport layer management.  This includes Adaptec 94xx but
->> NOT MPT.
->
-> You almost get it right, other than the layering infrastructure.
->
-> The SAS Transport Layer is a layer in its own right.  It is not
-> a "libsas".
->
-> MPT and open transport a very different, one hides the transport,
-> i.e. the transport layer is in firmware; the other exposes it
-> and needs a transport layer. See the pictures here:
-> http://marc.theaimsgroup.com/?l=linux-kernel&m=112810649712793&w=2
+The update is here:
 
-in this case wouldn't it be trivial to write a 'null transport' driver 
-that just passed things down to the card to let the firmware deal with it?
-(reformatting the data if needed)
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-for-linus-2.6.git
 
-having a null driver for a layer for some hardware, and a much more 
-complex driver for the same layer for other hardware is fairly common in 
-Linux. I believe ti was Linus that said in an interview that Linux is now 
-largely designed for an ideal abstracted CPU, with code put in on the 
-architectures that don't have a feature to simulate that feature in 
-software.
+The short changelog is:
 
-David Lang
+adam radford:
+  o 3ware 9000: Add support for 9550SX controllers
 
--- 
-There are two ways of constructing a software design. One way is to make it so simple that there are obviously no deficiencies. And the other way is to make it so complicated that there are no obvious deficiencies.
-  -- C.A.R. Hoare
+Andrew Morton:
+  o lpfc build fix
+
+Andrew Vasquez:
+  o qla2xxx: fix remote port timeout with qla2xxx driver
+
+Christoph Hellwig:
+  o sas: fix remote phy removal
+
+James Bottomley:
+  o Legacy MegaRAID: Fix READ CAPACITY
+  o aic7xxx/aic79xx: fix module removal path not to panic
+  o fix potential panic with proc on module removal
+  o allow REPORT LUN scanning even for LUN 0 PQ of 3
+
+Mark Haverkamp:
+  o aacraid: remove aac_insert_entry
+  o aacraid: fib size math fix
+  o aacraid: initialization timeout
+  o aacraid: error return checking
+  o aacraid: handle AIF hotplug events (update)
+  o aacraid: aacraid: AIF preallocation (update)
+  o aacraid: Greater than 2TB capacity support
+
+Sreenivas Bagalkote:
+  o MegaRAID SAS RAID: new driver
+
+And the diffstat
+
+ drivers/scsi/3w-9xxx.c                 |   55 
+ drivers/scsi/3w-9xxx.h                 |   17 
+ drivers/scsi/Makefile                  |    1 
+ drivers/scsi/aacraid/aachba.c          |  283 ++-
+ drivers/scsi/aacraid/aacraid.h         |   17 
+ drivers/scsi/aacraid/comminit.c        |   17 
+ drivers/scsi/aacraid/commsup.c         |  581 +++++-
+ drivers/scsi/aacraid/linit.c           |   12 
+ drivers/scsi/aic7xxx/aic7770_osm.c     |    3 
+ drivers/scsi/aic7xxx/aic79xx_osm.c     |    8 
+ drivers/scsi/aic7xxx/aic79xx_osm_pci.c |    3 
+ drivers/scsi/aic7xxx/aic7xxx_osm.c     |    8 
+ drivers/scsi/aic7xxx/aic7xxx_osm_pci.c |    3 
+ drivers/scsi/hosts.c                   |    2 
+ drivers/scsi/lpfc/lpfc_attr.c          |    8 
+ drivers/scsi/lpfc/lpfc_hbadisc.c       |    4 
+ drivers/scsi/lpfc/lpfc_hw.h            |    4 
+ drivers/scsi/lpfc/lpfc_init.c          |    6 
+ drivers/scsi/megaraid.c                |   68 
+ drivers/scsi/megaraid/Kconfig.megaraid |    9 
+ drivers/scsi/megaraid/Makefile         |    1 
+ drivers/scsi/megaraid/megaraid_sas.c   | 2805 +++++++++++++++++++++++++++++++++
+ drivers/scsi/megaraid/megaraid_sas.h   | 1142 +++++++++++++
+ drivers/scsi/qla2xxx/qla_rscn.c        |    2 
+ drivers/scsi/scsi_scan.c               |   96 -
+ drivers/scsi/scsi_transport_sas.c      |    9 
+ include/linux/pci_ids.h                |    2 
+ include/scsi/scsi_device.h             |    1 
+ 28 files changed, 4858 insertions(+), 309 deletions(-)
+
+James
+
+
