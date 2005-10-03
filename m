@@ -1,105 +1,63 @@
-From: fordancers2004@tiscali.it
-Subject: The Ultimate Dance Competition Euorpe - Season 2006 - "Barcelona Danca Awards"
-Date: Mon, 3 Oct 2005 16:44:23 +0000 (UTC)
-Message-ID: <926.792241125618$1128357863@news.gmane.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+ the kernel
+Date: Mon, 03 Oct 2005 12:48:45 -0400
+Message-ID: <434160ED.7050803@pobox.com>
+References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org> <433D8542.1010601@adaptec.com> <433DD0F8.4000501@pobox.com> <43413CE8.1090306@adaptec.com> <434154F0.9070105@pobox.com> <43415AFC.5080501@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="DEFAULT_CHARSET"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vsmtp4.tin.it ([212.216.176.224]:56542 "EHLO vsmtp4.tin.it")
-	by vger.kernel.org with ESMTP id S932316AbVJCQmS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 12:42:18 -0400
-Date: Mon, 3 Oct 2005 18.18.03
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932618AbVJCQs6@vger.kernel.org>
+In-Reply-To: <43415AFC.5080501@adaptec.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux5250@midrange.com
+
+Luben Tuikov wrote:
+> On 10/03/05 11:57, Jeff Garzik wrote:
+> 
+>>>From what I see, because of its *layering* position
+>>
+>>>JB's "transport attributes" cannot satisfy open transport.
+>>
+>>
+>>Repeating verbatim the above quote:  a transport class is more than just 
+>>transport attributes.
+> 
+> 
+> a) "Transport Attributes" _is_ its name,
+
+No, transport class is its name.  Think about a standard object-oriented 
+paradigm.  Each transport has unique characteristics.  The proper place 
+to export these and manage these characteristics is the transport layer, 
+as SAM agrees.  The manifestation of the transport layer is the 
+transport class.
+
+You have to look beyond the current code, to see this.
+
+An implementation of a transport class, in conjunction with helper 
+functions common to all transports (SCSI core), combines to form the 
+transport layer for a specific transport.
 
 
-For Immediate release:
-For more information contact:
+> b) It sits across SCSI Core, i.e. on the same level.
+> c) It was never intended to add management.
 
-The Ultimate Dance Competition Europe 2006.
-
-Come with us to the International Dance Competition Europe in Spain (Barcelona and Madrid) on 13th to 17nd April 2006 (during the Easter Holiday Time),  
-16° EDITION for Dance Schools/Groups.
-
-The Director of Dance Competition Europe, present  the 16th International Choreographers Competition Europe WorlDancEventS and invite your dance group to performing and teaching at the most prestigious dance events in Europe the next season.
-
-5 days of...... Dance, Ballet, Contemporary and each other kind of dance arts, Parties, Dance Workshops, Beach Side Dancing, Dance Team Showcases & International Dance performs.
-
-Full Weekend Pass will get you full access to all workshops, shows, parties and theatre dance events.
-
-Don't stay at home! 
-
-Come with us to our next step: Travel, Dance, Compete, and enjoy the Workshops.
-
-Invitations are open for choreographers to boost their careers with this fabulous performance opportunity, in the next on 13th to 17nd April 2006 (during the Easter Holiday Time) in Spain and in June 25, 26, 27, 2006 in France and Italy.
-
-I'm inviting choreographers who are willing to invest in themselves and who are interested in expanding their knowledge of other cultures, as well as promoting their work abroad, says Mr. Barbieri  I'm looking for choreographers who see this thrilling event as an opportunity to benefit their professional development.
-
-Selected choreographers/dancers will receive a complete production package, which includes: three performances, lighting, sound, technical assistance, a professional level of publicity, pre-show rehearsal arrangements, printed materials, printed programs, and hotel accommodation based on two/three persons sharing twin bedded rooms with private bath/shower.
-
-In addition, the choreographers will have an opportunity to network and attend all performances by groups from all over the world.
-
-To find out how to qualifye mail the office space is limited, so choreographers should act right away.
-
-Marc Barbieri, director of Dance Competition Europe, initiated  The International Dance Festival Competition in 1996, premiering in the Prague Festival in Prague, CZ. Since then, Dance Competition Europe has delighted international festivals with exciting presentations of contemporary dance.
-
-Each showcase is a unique blend of distinguished choreographers and dancers from around the world.
-
-Through these artists' professional efforts and dedication to dance, art becomes reality across the globe.
-
-The showcase has appeared at prestigious festivals in Austria, France, Germany, Italy, CZ, Mexico, Monaco, the Netherlands, Scotland, Serbia, Spain and the USA.
-
-I look forward to your participation and I hope to see you at the next festival.
-
-If you need, Just in a few days you will receive some advertising materials from us, the new brochures and posters of the The International Choreographers Competition Europe 2006 Season please replay to this e.mail your free on charges request of info
+SCSI core is nothing but a set of helper functions and support code that 
+enable the transport class and LLDD to implement the transport layer.
 
 
-marcebarbieri(at)tiscali.it
+> d) Its inteface to SCSI Core is badly defined and an "invention",
+>    (and very poor at that).
 
-[of course send this e.mail address substitute (at) with @]
-
-
-marcebarbieri
-@
-tiscali.it
-
-(of course copy and send this e.mail address without the space after and before @ )
-
-Our web site:  <web.tiscali.it/danceawards2005/>
+Strongly disagree.  This invention is defined by -needs-, as is other 
+code in Linux.  If we have new needs, we change the code.
 
 
-Full Name:_____________________________________________
+> The reason for d) is that
+> 2) does _not_ follow _any_ spec or standard.
 
-School/Company Name:  _________________________________
+That's fine, since its an internal kernel API.
 
-Telephone:_____________________________________________
-
-Fax:___________________________________________________
-
-Email Address:_________________________________________* REQUIRED FIELD
-
-Shipping Address:______________________________________
-
-City:____________________ State/Province:______________
-
-Country:_________________________ZIP/Postal:___________
-
-________________________________________________________________________________
-REQUIRED DISCLAIMERS: THE INFORMATION HERE IN HAS BEEN PREPARED SOLELY FOR GENERAL INFORMATIONAL AND EDUCATIONAL & ARTISTIC
-PURPOSES AND ARE NOT AN OFFER TO BUY OR SELL, OR A SOLICITATION OF AN OFFER TO BUY OR SELL.
-
-You are receiving this e-mail because I believe you to be interested in developing your artistic career.
-If you fell you have received this e-mail by error and wish to be removed from future mailings,
-simply reply to remove please send to   write <remove>  in the subject line and click send.
-
-Marcebarbieri
-@
-tiscali.it
-
-(of course copy and send this e.mail address without the space after and before @ )
-
-marcebarbieri(at)tiscali.it
-
-[of course send this e.mail address substitute (at) with @]
-
+	Jeff
