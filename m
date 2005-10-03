@@ -1,91 +1,59 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH 2/3] Add disk hotswap support to libata RESEND #5
-Date: Mon, 03 Oct 2005 11:47:01 -0400
-Message-ID: <43415275.4020407@pobox.com>
-References: <355e5e5e05092618018840fc3@mail.gmail.com>	 <433AEAAE.2070003@pobox.com> <355e5e5e0510030730q2b3e295creaec6ebd129999f9@mail.gmail.com>
+Date: Mon, 03 Oct 2005 11:53:26 -0400
+Message-ID: <434153F6.2050405@pobox.com>
+References: <355e5e5e05092618018840fc3@mail.gmail.com>	 <433AEAAE.2070003@pobox.com>	 <1127949651.26686.11.camel@localhost.localdomain> <355e5e5e0510030819od4ef8e5l93708588990081da@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932312AbVJCPrO@vger.kernel.org>
-In-Reply-To: <355e5e5e0510030730q2b3e295creaec6ebd129999f9@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lukasz Kosewski <lkosewsk@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:21916 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932310AbVJCPxc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 11:53:32 -0400
+In-Reply-To: <355e5e5e0510030819od4ef8e5l93708588990081da@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lukasz Kosewski <lkosewsk@gmail.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
 Lukasz Kosewski wrote:
-> On 9/28/05, Jeff Garzik <jgarzik@pobox.com> wrote:
-> 
->>>+     dev->flags &= ~ATA_DFLAG_LBA48;
->>>+
->>
->>probably should just clear out all the flags...
-> 
-> 
-> I'll look into making this cleaner :)  During testing this was the
-> only one that was necessary, but I'll do some clean-up foo on this.
-> 
-> 
->>is ata_chk_err() call in ata_to_sense_error() the only place that needs
->>to talk to the hardware?  If so, maybe we could work around that by
->>making sure it is passed register values, avoiding the need to poke the h/w.
-> 
-> 
-> Yep, it is the only place as far as I can see.  As for passing
-> register values, the reason I decided not to do that is because, say,
-> a user unplugged his drive because there WAS some kind of error which
-> set ATA_ERR.  This would attempt to perform some kind of error check
-> which would compound the problem.  However, I agree this is dirty :)
-> Should I just check the register values, & ~ATA_ERR, and then pass that in?
-> 
-> 
->>>+     spin_lock(&ap->host_set->lock);
->>>+     hotplug_todo = ap->plug; // Make sure we don't modify while reading!
->>>+     spin_unlock(&ap->host_set->lock);
->>
->>this lock should always be acquired using spin_lock_irqsave()
-> 
-> 
-> Oops.
-> 
-> 
->>>+             ata_scsi_handle_unplug(ap);
->>>+
->>>+             // The following flag is necessary on some Seagate drives.
->>>+             ap->flags |= ATA_FLAG_SATA_RESET;
->>
->>we can't unconditionally set this for all controllers
->>
->>For PATA hotplug, which this code will eventually handle, the SATA
->>SControl register doesn't even exist :)
-> 
-> 
-> if (ap & ATA_FLAG_SATA) ap->flags |= ATA_FLAG_SATA_RESET
-> ? :)
-> 
-> 
->>>+             ap->udma_mask = ap->orig_udma_mask;
->>
->>dumb question -- what is this for?
->>
->>for hotplug we'll want to go through the entire probe sequence,
->>configuring pio/dma masks all over again.
-> 
-> 
-> OK I'll admit I may not have looked through the code enough on that
-> one, but here's a situation I remember about this:
-> Had a drive which supported UDMA 5 max.  Unplugged it, plugged in a
-> drive which supported UDMA 6, but libata reported UDMA 5 max.  Since
-> the flags aren't reset, and ata_mode_string() works from slowest to
-> fastest, this will always happen unless we reset the flags to some
-> default value.  So... voila.  Do you have a suggestion for making this
-> cleaner?
+> How about this; I want this SATA hotswapping stuff to be tested, so
+> I'll commit my patches for 'SATA only' for the time being.  I'll stare
+> at them for a while and then see what kind of PATA-specific if
+> statements and hooks are necessary in the code?
 
-Well, overall what needs to happen for newly-plugged-in devices is the a 
-re-run of the probe sequence.  The flags should certainly be reset to a 
-default value, the same value that the device would see had it been 
-plugged in when the driver loaded:  ata_bus_probe() call sequence, after 
-initialization from ata_host_init().  This may require saving a few 
-pieces of data, as you have done, agreed.
+Ideally we should just create hooks for any SATA-specific behavior, and 
+ensure that nothing SATA-specific is written into any of the core paths.
+
+One of the SATA controllers, Intel ICH5 & ICH6, does not have a hotplug 
+interrupt, but yet supports "coldplug":
+
+	* user indicates to kernel, to disable the SATA port
+	* kernel says "OK, it's disabled"
+	* user disconnects hard drive
+and
+	* SATA port is disabled
+	* user connects hard drive
+	* user indicates to kernel, to enable SATA port
+	* kernel says "OK, I've turned it on" and probes it
+
+This is a real-world, high-volume SATA case, yet it functionally behaves 
+like PATA.
+
+So that causes us to consider various entry points:
+
+* {something}, be it a hot-unplug interrupt or user write(2) to sysfs, 
+tells us a device is gone
+* {something}, be it a hot-plug interrupt or user write(2) to sysfs, 
+tells us a new device appeared
+
+So for either SATA or PATA, it should look similar in the core:  we just 
+need a "kick", a function call that triggers one of these two actions. 
+The handling of those actions [your code] should hopefully be pretty 
+generic.  ;-)
+
+Thanks for working on this!
 
 	Jeff
+
+
