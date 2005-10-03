@@ -1,47 +1,66 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
- the kernel
-Date: Mon, 03 Oct 2005 11:08:37 -0400
-Message-ID: <43414975.5090708@adaptec.com>
-References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org> <433D8542.1010601@adaptec.com> <A0262C6F-6B0E-4790-BA42-FAFD6F026E0A@mac.com> <433D8D1F.1030005@adaptec.com> <0F03AA4B-D2D1-4C57-B81B-FC95CB863A98@mac.com> <87f94c370509301510nba59ac2m59f507f70de6e46b@mail.gmail.com> <433DD020.8000906@pobox.com> <20051001045812.GF18716@alpha.home.local>
+From: Lukasz Kosewski <lkosewsk@gmail.com>
+Subject: Re: [PATCH 2/3] Add disk hotswap support to libata RESEND #5
+Date: Mon, 3 Oct 2005 11:19:51 -0400
+Message-ID: <355e5e5e0510030819od4ef8e5l93708588990081da@mail.gmail.com>
+References: <355e5e5e05092618018840fc3@mail.gmail.com>
+	 <433AEAAE.2070003@pobox.com>
+	 <1127949651.26686.11.camel@localhost.localdomain>
+Reply-To: Lukasz Kosewski <lkosewsk@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:25044 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1751037AbVJCPIn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 11:08:43 -0400
-In-Reply-To: <20051001045812.GF18716@alpha.home.local>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1127949651.26686.11.camel@localhost.localdomain>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Willy Tarreau <willy@w.ods.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Greg Freemyer <greg.freemyer@gmail.com>, Kyle Moffett <mrmacman_g4@mac.com>, Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-On 10/01/05 00:58, Willy Tarreau wrote:
-> On Fri, Sep 30, 2005 at 07:54:08PM -0400, Jeff Garzik wrote:
-> 
->>Greg Freemyer wrote:
->>
->>>Luben has more than once called for adding a small number of
->>>additional calls to the existing SCSI core.  These calls would
->>>implement the new (reduced) functionallity.  The old calls would
->>>continue to support the full SPI functionallity.  No existing  LLDD
->>>would need modification.
->>
->>IOW, what Luben wants is:
->>
->>	if (Luben)
->>		do this
->>	else
->>		do current stuff
->>
->>If this is the case, why bother touching drivers/scsi/* at all?
-> 
-> 
-> that's the reason why I proposed that this moved to drivers/sas/* or
-> somewhere else so that there is no maintaining conflict.
+Hey Alan,
 
-Yes, it has been moved already there.
-http://linux.adaptec.com/sas/
+On 9/28/05, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> For PATA the requirements I'm aware of are
+>
+> -       Interface for user to say "am about to swap"
 
-	Luben
+You mean something like "echo scsi-remove-single-device a b c d" >
+/proc/scsi/scsi?  I guess the sysfs equivalent?
+
+> -       Interface for user to say "have swapped"
+
+I suppose ditto.
+
+> -       Must quiesce both master and slave before swap (or one per cable)
+
+The way I've written my infrastructure, this seems as if it'll just
+require another carefully placed hook function.
+
+> -       Must reset to PIO_SLOW and then recompute modes for both devices
+> becuse it is possible that changing one changes the other timings
+
+This shouldn't be hard since I already do a similar reset by resetting
+udma_flags to a pre-init state.  Probably in an if (!(ap->flags &
+ATA_FLAG_SATA)).
+
+> -       The above is true for *unplug* too. A straight unplug may speed up the
+> other drive!
+> -       Post hotswap need to reconfigure both drives as if from scratch
+
+Hmm, this seems far more complicated... basically during a swap
+operation, we have to shut down all I/O to the other drive on the
+cable (if there is one), if I read you correctly, and then reconfigure
+both drives once one is plugged in.
+
+>From what you're saying, it seems to me that the infrastructure I put
+forth will work as is, plus some if statements and extraneous
+PATA-only functions (and functionality like shutting down the other
+disk on the cable until the user calls the 'warm-swap complete'
+function').
+
+How about this; I want this SATA hotswapping stuff to be tested, so
+I'll commit my patches for 'SATA only' for the time being.  I'll stare
+at them for a while and then see what kind of PATA-specific if
+statements and hooks are necessary in the code?
+
+Luke
