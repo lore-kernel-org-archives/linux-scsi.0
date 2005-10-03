@@ -1,32 +1,52 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 1/1] scsi: scsi inquiry timeout config option
-Date: Mon, 03 Oct 2005 17:01:45 -0400
-Message-ID: <1128373305.5825.3.camel@mulgrave>
-References: <200510032026.j93KQViR015934@d01av04.pok.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: dth@cistron.nl (Danny ter Haar)
+Subject: 2.6.14-rc2-mm2 barfed as well, was:  2.6.14-rc2-git8 crashed with scsi error after 40 hours
+Date: Mon, 3 Oct 2005 21:22:33 +0000 (UTC)
+Message-ID: <dhs7ep$i4l$1@news.cistron.nl>
+References: <dho4tc$ilc$1@news.cistron.nl>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:41702 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932400AbVJCVBt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Oct 2005 17:01:49 -0400
-In-Reply-To: <200510032026.j93KQViR015934@d01av04.pok.ibm.com>
+Received: from news.cistron.nl ([62.216.30.38]:13252 "EHLO ncc1701.cistron.net")
+	by vger.kernel.org with ESMTP id S964772AbVJCVWj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 17:22:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linuxppc64-dev@ozlabs.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2005-10-03 at 15:26 -0500, brking@us.ibm.com wrote:
-> Add a .config option to default the scsi scan inquiry timeout.
-> Due to a broken device (SCSI/ATA converter card) that is very
-> common on IBM iSeries/pSeries machines, these architectures
-> need a longer default inquiry timeout.
 
-The inquiry timeout has already been changed a while ago to be a module
-parameter (or kernel parameter) for this very case.  Why does it now
-need to be a config option as well?
+2.6.14-rc2-mm2 just any other 2.6.1[34] kernel so far didn't get _my_
+sign of aproval ;-)
 
-James
+reboot   system boot  2.6.14-rc2-mm2   Sun Oct  2 10:05 - crash (1+13:15)
 
+----------
+scsi0:0:0:0: Attempting to queue an ABORT message:CDB: 0x2a 0x0 0x1 0xdc 0x49 0xca 0x0 0x0 0x8 0x0
+scsi0: At time of recovery, card was not paused
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State at program address 0x26 Mode 0x22
+Card was paused
+HS_MAILBOX[0x0] INTCTL[0xc0]:(SWTMINTEN|SWTMINTMASK)
+SEQINTSTAT[0x10]:(SEQ_SWTMRTO) SAVED_MODE[0x11]
+DFFSTAT[0x33]:(CURRFIFO_NONE|FIFO0FREE|FIFO1FREE)
+SCSISIGI[0x0]:(P_DATAOUT) SCSIPHASE[0x0] SCSIBUS[0x0]
+LASTPHASE[0x1]:(P_DATAOUT|P_BUSFREE) SCSISEQ0[0x0]
+SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) SEQCTL0[0x0]
+SEQINTCTL[0x0] SEQ_FLAGS[0x0] SEQ_FLAGS2[0x0] SSTAT0[0x0]
+SSTAT1[0x0] SSTAT2[0x0] SSTAT3[0x0] PERRDIAG[0x0]
+SIMODE1[0xa4]:(ENSCSIPERR|ENSCSIRST|ENSELTIMO)
+LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] LQOSTAT0[0x0]
+LQOSTAT1[0x0] LQOSTAT2[0xe1]:(LQOSTOP0|LQOPKT)
+
+SCB Count = 128 CMDS_PENDING = 32 LASTSCB 0x1a CURRSCB 0x1a NEXTSCB 0xff00
+qinstart = 27585 qinfifonext = 27585
+QINFIFO:
+WAITING_TID_QUEUES:
+Pending list:
+ 36 FIFO_USE[0x0] SCB_CONTROL[0x60]:(TAG_ENB|DISCENB) SCB_SCSIID[0x7]
+ 23 FIFO_USE[0x0] SCB_CONTROL[0x60]:(TAG_ENB|DISCENB) SCB_SCSIID[0x7]
+------------
+
+Full crash, dmesg/config etc @ http://newsgate.newsserver.nl/kernel/2.6.14-rc2-mm2/
+
+Now compiling 2.6.14-rc3-git3 ...
+
+Danny
 
