@@ -1,73 +1,89 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
- the kernel
-Date: Mon, 03 Oct 2005 14:32:26 -0500
-Message-ID: <4341874A.7000703@cs.wisc.edu>
-References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org> <433D8542.1010601@adaptec.com> <433DD0F8.4000501@pobox.com> <43413CE8.1090306@adaptec.com> <434154F0.9070105@pobox.com> <43415AFC.5080501@adaptec.com> <434160ED.7050803@pobox.com> <43418076.4020706@adaptec.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [PATCH] libata: improve device scan
+Date: Mon, 03 Oct 2005 15:45:24 -0400
+Message-ID: <43418A54.8080709@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------090501050800040601080002"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:61165 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S932586AbVJCTd4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 15:33:56 -0400
-In-Reply-To: <43418076.4020706@adaptec.com>
+Received: from mail.dvmed.net ([216.237.124.58]:38814 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932393AbVJCTpa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 15:45:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Luben Tuikov wrote:
-> On 10/03/05 12:48, Jeff Garzik wrote:
-> 
->>No, transport class is its name.  Think about a standard object-oriented 
-> 
-> 
-> Not according to Kconfig:
-> 
-> menu "SCSI Transport Attributes"
-> 	depends on SCSI
-> 
-> config SCSI_SPI_ATTRS
-> 	tristate "Parallel SCSI (SPI) Transport Attributes"
-> 	depends on SCSI
-> 	help
-> 	  If you wish to export transport-specific information about
-> 	  each attached SCSI device to sysfs, say Y.  Otherwise, say N.
-> 
-> config SCSI_FC_ATTRS
-> 	tristate "FiberChannel Transport Attributes"
-> 	depends on SCSI
-> 	help
-> 	  If you wish to export transport-specific information about
-> 	  each attached FiberChannel device to sysfs, say Y.
-> 	  Otherwise, say N.
-> 
+This is a multi-part message in MIME format.
+--------------090501050800040601080002
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-For FC there is code like the fc_rport stuff which exports a sysfs 
-interface but also does a lot more like probing and queue blocking.
 
-> config SCSI_ISCSI_ATTRS
-> 	tristate "iSCSI Transport Attributes"
-> 	depends on SCSI
-> 	help
-> 	  If you wish to export transport-specific information about
-> 	  each attached iSCSI device to sysfs, say Y.
-> 	  Otherwise, say N.
+The attached patch changes libata device scanning from using the legacy 
+"bang at the door" method of probing devices, to one that calls 
+scsi_scan_target() for each target (ATA device) that the libata 
+transport layer found.
 
-And the iSCSI class does do a lot more now too. This just has not been 
-updated. It handles the userspace to kernel communication, session and 
-connection sysfs interface setup, and there were some patches that added 
-the ability to tell scsi-ml to stop queueing commands to a iscsi driver.
+Completely untested, feedback welcome.  This should improve the speed of 
+SATA probing a tad, and certainly makes it quite a bit less ugly.
 
-Structures like the fc_rport and iscsi_session are managed by the 
-transport classes so scsi-ml never knows about them (except for that 
-scanning bug). And it is possible to share them between HW and software 
-or partial software solutions. I do agree for some iscsi sitautions 
-having a layer over the eh or command exection where the transport 
-really is more of a layer like your design would be nice (I am not 
-refferring to the code duplication though becuase iSCSI would like some 
-of yrou fixes :), but at the same time there are places where code can 
-be shared between a interface that hides the lower level details and one 
-that implements them in software. Maybe it is not this way for SAS though.
+This might get moved, eventually, into an ATA transport class, depending 
+on how things shape up in the future.
 
+	Jeff
+
+
+
+
+--------------090501050800040601080002
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+diff --git a/drivers/scsi/libata-core.c b/drivers/scsi/libata-core.c
+--- a/drivers/scsi/libata-core.c
++++ b/drivers/scsi/libata-core.c
+@@ -4113,7 +4113,7 @@ int ata_device_add(struct ata_probe_ent 
+ 	for (i = 0; i < count; i++) {
+ 		struct ata_port *ap = host_set->ports[i];
+ 
+-		scsi_scan_host(ap->host);
++		ata_scsi_scan_host(ap);
+ 	}
+ 
+ 	dev_set_drvdata(dev, host_set);
+diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
+--- a/drivers/scsi/libata-scsi.c
++++ b/drivers/scsi/libata-scsi.c
+@@ -1678,3 +1678,15 @@ void ata_scsi_simulate(u16 *id,
+ 	}
+ }
+ 
++void ata_scsi_scan_host(struct ata_port *ap)
++{
++	unsigned int i;
++
++	if (ap->flags & ATA_FLAG_PORT_DISABLED)
++		return;
++
++	for (i = 0; i < ATA_MAX_DEVICES; i++)
++		if (ata_dev_present(&ap->device[i]))
++			scsi_scan_target(&ap->host->shost_gendev, 0, i, ~0, 0);
++}
++
+diff --git a/drivers/scsi/libata.h b/drivers/scsi/libata.h
+--- a/drivers/scsi/libata.h
++++ b/drivers/scsi/libata.h
+@@ -51,6 +51,7 @@ extern void swap_buf_le16(u16 *buf, unsi
+ 
+ 
+ /* libata-scsi.c */
++extern void ata_scsi_scan_host(struct ata_port *ap);
+ extern void ata_to_sense_error(struct ata_queued_cmd *qc, u8 drv_stat);
+ extern int ata_scsi_error(struct Scsi_Host *host);
+ extern unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf,
+
+--------------090501050800040601080002--
