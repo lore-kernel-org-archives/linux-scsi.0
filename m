@@ -1,52 +1,52 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
 Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
  the kernel
-Date: Mon, 03 Oct 2005 12:17:33 -0400
-Message-ID: <4341599D.70904@adaptec.com>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com>	 <1128102837.3012.15.camel@laptopd505.fenrus.org> <1128210952.17099.73.camel@localhost.localdomain>
+Date: Mon, 03 Oct 2005 12:23:24 -0400
+Message-ID: <43415AFC.5080501@adaptec.com>
+References: <Pine.LNX.4.10.10509300015100.27623-100000@master.linux-ide.org> <433D8542.1010601@adaptec.com> <433DD0F8.4000501@pobox.com> <43413CE8.1090306@adaptec.com> <434154F0.9070105@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:12523 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932274AbVJCQRi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 12:17:38 -0400
-In-Reply-To: <1128210952.17099.73.camel@localhost.localdomain>
+Received: from magic.adaptec.com ([216.52.22.17]:47852 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1751105AbVJCQX1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 12:23:27 -0400
+In-Reply-To: <434154F0.9070105@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Arjan van de Ven <arjan@infradead.org>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, andrew.patterson@hp.com, dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Andre Hedrick <andre@linux-ide.org>, "David S. Miller" <davem@davemloft.net>, willy@w.ods.org, patmans@us.ibm.com, ltuikov@yahoo.com, linux-kernel@vger.kernel.org, akpm@osdl.org, torvalds@osdl.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-On 10/01/05 19:55, Alan Cox wrote:
-> On Gwe, 2005-09-30 at 19:53 +0200, Arjan van de Ven wrote:
+On 10/03/05 11:57, Jeff Garzik wrote:
+>>From what I see, because of its *layering* position
+>>JB's "transport attributes" cannot satisfy open transport.
 > 
->>that makes me wonder... why and how does T10 control linux abi's ??
 > 
-> 
-> Indirectly the standards do define APIs at the very least. A good
-> example is taskfile. ACPI methods (which we don't yet use) allow get/set
-> mode, get features on the motherboard ATA controller if you don't know
-> how to drive it. The objects they work in are taskfiles. No taskfiles,
-> no ACPI.
+> Repeating verbatim the above quote:  a transport class is more than just 
+> transport attributes.
 
-Yes, that's true.
+a) "Transport Attributes" _is_ its name,
+b) It sits across SCSI Core, i.e. on the same level.
+c) It was never intended to add management.
+d) Its inteface to SCSI Core is badly defined and an "invention",
+   (and very poor at that).
 
-Even more is true.  Standards and specs define the
-_layering infrastructure_ which if implemented, 
-allows for layer intersection.
+The reason for d) is that
+1) it tries to unify different _transports_,
+2) does _not_ follow _any_ spec or standard.
 
-For example, if one needs to insert a SATL later just because
-the underlaying transport was found able to transport it,
-since the layering is well defined and _so_ implemented, it wouldn't
-be hard to interface antother well defined layer in.
+Look at this, while you repeat verbaitm a single
+quote, I give you technical arguments, then you just
+repeat a single quote verbatim... Sad.
 
-If, OTOH, things are conglomerated into a blob, just because
-the kernel engineers (not (storage) engineers per se) found _no_ current
-use of the layering infrastructure and separating the layers
-was found do add  "more maintenance", then this will turn around
-sooner or later to bite back.
+> Every chip is ultimately an interface to the transport, regardless of 
+> whether the transport layer is largely managed by software (aic94xx) or 
+> firmware (MPT).  SCSI host template can work just fine with open 
+> transport hardware.
 
-After all, things are what they are.
+Maybe the picures and the write up here will help:
+http://marc.theaimsgroup.com/?l=linux-kernel&m=112810649712793&w=2
 
 	Luben
+
 
