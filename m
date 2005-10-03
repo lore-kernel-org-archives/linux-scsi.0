@@ -1,73 +1,34 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Infinite interrupt loop, INTSTAT = 0
-Date: Mon, 03 Oct 2005 12:15:44 -0400
-Message-ID: <1128356144.4606.11.camel@mulgrave>
-References: <20050928134514.GA19734@dspnet.fr.eu.org>
-	 <1127919909.4852.7.camel@mulgrave>
-	 <20050928160744.GA37975@dspnet.fr.eu.org>
-	 <1127924686.4852.11.camel@mulgrave>
-	 <20050928171052.GA45082@dspnet.fr.eu.org>
-	 <1127929909.4852.34.camel@mulgrave>
-	 <20050928183324.GA51793@dspnet.fr.eu.org>
-	 <1128175434.4921.9.camel@mulgrave>
-	 <20051003134210.GA10641@dspnet.fr.eu.org>
+From: linas <linas@austin.ibm.com>
+Subject: Re: [PATCH 1/1] scsi: scsi inquiry timeout config option
+Date: Mon, 3 Oct 2005 15:39:24 -0500
+Message-ID: <20051003203924.GS29826@austin.ibm.com>
+References: <200510032026.j93KQViR015934@d01av04.pok.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:4838 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932394AbVJCUa3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Oct 2005 16:30:29 -0400
-In-Reply-To: <20051003134210.GA10641@dspnet.fr.eu.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linuxppc64-dev-bounces@ozlabs.org>
+Content-Disposition: inline
+In-Reply-To: <200510032026.j93KQViR015934@d01av04.pok.ibm.com>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc64-dev>,
+	<mailto:linuxppc64-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc64-dev>
+List-Post: <mailto:linuxppc64-dev@ozlabs.org>
+List-Help: <mailto:linuxppc64-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc64-dev>,
+	<mailto:linuxppc64-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc64-dev-bounces@ozlabs.org
+Errors-To: linuxppc64-dev-bounces@ozlabs.org
+To: brking@us.ibm.com
+Cc: James.Bottomley@steeleye.com, linuxppc64-dev@ozlabs.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Olivier Galibert <galibert@pobox.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "Hack inc." <linux-kernel@vger.kernel.org>
 
-On Mon, 2005-10-03 at 15:42 +0200, Olivier Galibert wrote:
-> Well, retriggering the DV blows:
+On Mon, Oct 03, 2005 at 03:26:30PM -0500, brking@us.ibm.com was heard to remark:
 > 
-> Oct  3 15:39:03 m82 kernel:  target1:0:0: Beginning Domain Validation
-> Oct  3 15:39:03 m82 kernel:  target1:0:0: asynchronous.
-> Oct  3 15:39:03 m82 kernel: scsi1: Returning to Idle Loop
-> Oct  3 15:39:13 m82 kernel: scsi1:0:0:0: Attempting to queue an ABORT message:CDB: 0x12 0x0 0x0 0x0 0x62 0x0
-> Oct  3 15:39:13 m82 kernel: scsi1: At time of recovery, card was not paused
-> Oct  3 15:39:13 m82 kernel: >>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
-> Oct  3 15:39:13 m82 kernel: scsi1: Dumping Card State at program address 0x26 Mode 0x22
-> Oct  3 15:39:13 m82 kernel: Card was paused
+> Add a .config option to default the scsi scan inquiry timeout.
+> Due to a broken device (SCSI/ATA converter card) that is very
+> common on IBM iSeries/pSeries machines, these architectures
+> need a longer default inquiry timeout.
 
-Oh, that's not pretty.  It means that the sequencer (or possibly the
-bus) was wedged as it exited domain validation and it won't even recover
-if we drop down to fully async.
+Hmm, I thought I fixed this several yeas ago. I guess it didn't 
+stay fixed? 
 
-What type of array is this, by the way?  I don't recognise the vendor.
-But anyway, let's proceed on the theory that the array is having a hard
-time.  What I need you to do is lower the speed of the array target in
-the aic bios.  Unfortunately, the driver won't honour that setting at
-the moment:  I'll see if I can work up the code that will do it.  The
-attached patch will perform this artificially (for every device on every
-aic79xx).
-
-James
-
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -499,11 +499,13 @@ ahd_linux_target_alloc(struct scsi_targe
- 	ahd_compile_devinfo(&devinfo, ahd->our_id, starget->id,
- 			    CAM_LUN_WILDCARD, channel,
- 			    ROLE_INITIATOR);
--	spi_min_period(starget) = AHD_SYNCRATE_MAX; /* We can do U320 */
-+	//spi_min_period(starget) = AHD_SYNCRATE_MAX; /* We can do U320 */
-+	spi_min_period(starget) = AHD_SYNCRATE_DT;
- 	if ((ahd->bugs & AHD_PACED_NEGTABLE_BUG) != 0)
- 		spi_max_offset(starget) = MAX_OFFSET_PACED_BUG;
- 	else
- 		spi_max_offset(starget) = MAX_OFFSET_PACED;
-+	spi_max_offset(starget) = 63;
- 	spi_max_width(starget) = ahd->features & AHD_WIDE;
- 
- 	ahd_set_syncrate(ahd, &devinfo, 0, 0, 0,
-
-
+--linas
