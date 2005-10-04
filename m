@@ -1,24 +1,31 @@
-From: Olivier Galibert <galibert@pobox.com>
-Subject: Re: Infinite interrupt loop, INTSTAT = 0
-Date: Tue, 4 Oct 2005 16:55:37 +0200
-Message-ID: <20051004145537.GA95274@dspnet.fr.eu.org>
-References: <20050928160744.GA37975@dspnet.fr.eu.org> <1127924686.4852.11.camel@mulgrave> <20050928171052.GA45082@dspnet.fr.eu.org> <1127929909.4852.34.camel@mulgrave> <20050928183324.GA51793@dspnet.fr.eu.org> <1128175434.4921.9.camel@mulgrave> <20051003134210.GA10641@dspnet.fr.eu.org> <1128356144.4606.11.camel@mulgrave> <20051004084533.GA59492@dspnet.fr.eu.org> <1128432181.4782.3.camel@mulgrave>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+ the kernel
+Date: Tue, 04 Oct 2005 10:54:01 -0400
+Message-ID: <43429789.8020102@pobox.com>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01A9FA11@otce2k03.adaptec.com>  <1128105594.10079.109.camel@bluto.andrew>  <433D9035.6000504@adaptec.com>  <1128111290.10079.147.camel@bluto.andrew>  <433DA0DF.9080308@adaptec.com>  <1128114950.10079.170.camel@bluto.andrew> <433DB5D7.3020806@adaptec.com>  <9B90AC8A-A678-4FFE-B42D-796C8D87D65B@neostrada.pl>  <4341381D.2060807@adaptec.com>  <E93AC7D5-4CC0-4872-A5B8-115D2BF3C1A9@neostrada.pl>  <1128357350.10079.239.camel@bluto.andrew> <43415EC0.1010506@adaptec.com>  <Pine.BSO.4.62.0510032103380.28198@rudy.mif.pg.gda.pl> <1128377075.23932.5.camel@ryan2.internal.autoweb.net> <Pine.LNX.4.64.0510031531170.31407@g5.osdl.org> <434293D8.50300@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932519AbVJDOzu@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1128432181.4782.3.camel@mulgrave>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "Hack inc." <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:13483 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932507AbVJDOye (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2005 10:54:34 -0400
+In-Reply-To: <434293D8.50300@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Linus Torvalds <torvalds@osdl.org>, Ryan Anderson <ryan@autoweb.net>, =?ISO-8859-1?Q?Tomasz_K=B3oczko?= <kloczek@rudy.mif.pg.gda.pl>, andrew.patterson@hp.com, Marcin Dalecki <dalecki.marcin@neostrada.pl>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Tue, Oct 04, 2005 at 09:23:01AM -0400, James Bottomley wrote:
-> OK, that sort of confirms the theory that there's a bad interaction at
-> u320.  What I'll try to do is to implement the bios parameter routines
-> for the aic79xx and you can set it to u160 in the bios.  Since I can't
-> test this, would you be a guinea pig when I come up with it?
+Luben Tuikov wrote:
+> The reason of all this hoopla is that James B, wants to decree
+> that LSI/MPT is the norm and everything else (USB/SAS/SBP) is
+> the exception, while in fact it is the other way around.
 
-No problem.
+False.  You continue to misunderstand basic stuff about the SCSI core.
 
-  OG.
+We are trying to support all these crazy configurations... at once :)
+
+	Jeff
+
+
