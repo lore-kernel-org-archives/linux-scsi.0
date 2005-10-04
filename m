@@ -1,80 +1,74 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [PATCH] 3ware: use scsi_scan_target()
-Date: Mon, 03 Oct 2005 20:57:46 -0400
-Message-ID: <4341D38A.40509@pobox.com>
+From: Andre Hedrick <andre@linux-ide.org>
+Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into
+ the kernel
+Date: Mon, 3 Oct 2005 23:30:49 -0700 (PDT)
+Message-ID: <Pine.LNX.4.10.10510032319070.410-100000@master.linux-ide.org>
+References: <1128377075.23932.5.camel@ryan2.internal.autoweb.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020901080806010202010106"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:26274 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751175AbVJDA5u (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2005 20:57:50 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932392AbVJDGds@vger.kernel.org>
+In-Reply-To: <1128377075.23932.5.camel@ryan2.internal.autoweb.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ryan Anderson <ryan@autoweb.net>
+Cc: Tomasz =?iso-8859-2?Q?K=B3oczko?= <kloczek@rudy.mif.pg.gda.pl>, Luben Tuikov <luben_tuikov@adaptec.com>, andrew.patterson@hp.com, Marcin Dalecki <dalecki.marcin@neostrada.pl>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, Linus Torvalds <torvalds@osdl.org>, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>, linuxraid@amcc.com
 
-This is a multi-part message in MIME format.
---------------020901080806010202010106
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
 
-This change updates the 3ware raid drivers to use scsi_scan_target(), 
-rather than scsi_scan_host().  This is especially nice for 3w-xxxx, 
-which does not support LUNs.  The device scan is a bit quicker and more 
-direct, even if it is a tiny bit more code in the driver.
 
-Patch untested.
+On Mon, 3 Oct 2005, Ryan Anderson wrote:
 
---------------020901080806010202010106
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
+> On Mon, 2005-10-03 at 23:26 +0200, Tomasz K=B3oczko wrote:
+> > If (cytation from Linus) "a 'spec' is close to useless" ..
+> > Q: why the hell in kernel tree is included Documentation/ subdirect=
+ory ?
+> > Is it raly content of this directory is "close to useless" or maybe=
+ it not
+> > contains some specyfications ? :>
+>=20
+> Let me rephrase what Linus said, to help remove the misreading that
+> seems so common today.  I think a fair rewording would be, "A spec is=
+ a
+> guideline.  When it fails to match reality, continuing to follow it i=
+s a
+> tremendous mistake."
+>=20
+> Additionally, I think the overall LKML feeling on hardware specs and =
+the
+> corresponding software abstractions to deal with it can be summarized
+> something like this:
+>=20
+> When the spec provides a software design that doesn't fit into the
+> overall structure of the Linux kernel, the spec should be treated as =
+a
+> suggestion for a software design.  The *interface* that the spec
+> documents should be followed, where it moves out of the overall
+> structure, but internally, a design that fits into the Linux kernel i=
+s
+> more important than following a spec that doesn't fit.
 
-diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
---- a/drivers/scsi/3w-9xxx.c
-+++ b/drivers/scsi/3w-9xxx.c
-@@ -1992,7 +1992,7 @@ static int __devinit twa_probe(struct pc
- 	struct Scsi_Host *host = NULL;
- 	TW_Device_Extension *tw_dev;
- 	u32 mem_addr;
--	int retval = -ENODEV;
-+	int retval = -ENODEV, i;
- 
- 	retval = pci_enable_device(pdev);
- 	if (retval) {
-@@ -2092,7 +2092,8 @@ static int __devinit twa_probe(struct pc
- 	TW_ENABLE_AND_CLEAR_INTERRUPTS(tw_dev);
- 
- 	/* Finally, scan the host */
--	scsi_scan_host(host);
-+	for (i = 0; i < TW_MAX_UNITS; i++)
-+		scsi_scan_target(&host->shost_gendev, 0, i, ~0, 0);
- 
- 	if (twa_major == -1) {
- 		if ((twa_major = register_chrdev (0, "twa", &twa_fops)) < 0)
-diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
---- a/drivers/scsi/3w-xxxx.c
-+++ b/drivers/scsi/3w-xxxx.c
-@@ -2315,7 +2315,7 @@ static int __devinit tw_probe(struct pci
- {
- 	struct Scsi_Host *host = NULL;
- 	TW_Device_Extension *tw_dev;
--	int retval = -ENODEV;
-+	int retval = -ENODEV, i;
- 
- 	retval = pci_enable_device(pdev);
- 	if (retval) {
-@@ -2404,7 +2404,8 @@ static int __devinit tw_probe(struct pci
- 	TW_ENABLE_AND_CLEAR_INTERRUPTS(tw_dev);
- 
- 	/* Finally, scan the host */
--	scsi_scan_host(host);
-+	for (i = 0; i < TW_MAX_UNITS; i++)
-+		scsi_scan_target(&host->shost_gendev, 0, i, 0, 0);
- 
- 	if (twe_major == -1) {
- 		if ((twe_major = register_chrdev (0, "twe", &tw_fops)) < 0)
+Please lets design against the transport or FSM of the storage transpor=
+t
+and never see data again.  NCITS specs generally (used loosely) define =
+the
+boundary conditions for stable operations.  One of jewels of linux in t=
+he
+past which (hopefully was fixed, was 1.2.X-2.5.X thingy) was buffer_hea=
+d
+walking and release to satisfy transfer of data-blocks of a spindle
+against the data-blocks of the kernel.  Spindle must win or one can not
+insure data integrity, thus the advent of BIO's from BH.
 
---------------020901080806010202010106--
+Linux changed to conform to data integrity issues.
+
+Somedays, Linux's API's or designs are OTS (Over The Shoulder).
+
+You get crap all over your back, if you reach OTS to finish your washro=
+om
+business.  It is functional but ends up stinky and messy.
+
+This thread is getting longer and I just added to piles ...
+
+Sigh
+
+Andre
