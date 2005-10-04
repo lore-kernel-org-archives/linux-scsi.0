@@ -1,170 +1,44 @@
-From: Serge Blondin <sblondin@abacom.com>
-Subject: aacraid  EXT3 errors
-Date: Tue, 04 Oct 2005 17:34:08 -0400
-Message-ID: <4342F550.9030908@abacom.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: SCSI disk speed inconsistency
+Date: Wed, 05 Oct 2005 08:00:15 +1000
+Message-ID: <4342FB6F.4070100@torque.net>
+References: <4340F4AB.3070107@cdac.in>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nic2.abacom.com ([66.129.128.4]:19142 "EHLO mrtg.abacom.com")
-	by vger.kernel.org with ESMTP id S964979AbVJDVeV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2005 17:34:21 -0400
+Received: from zorg.st.net.au ([203.16.233.9]:7091 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S964988AbVJDV71 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2005 17:59:27 -0400
+In-Reply-To: <4340F4AB.3070107@cdac.in>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: mark_salyzyn@adaptec.com
+To: Karthik Sarangan <karthiks@cdac.in>
+Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-First some system info
+Karthik Sarangan wrote:
+> I get a read speed of 69MBps from my SCSI disk and a write speed of
+> 49MBps from the same.
+> An IOMeter benchmark on the net says that 68MBps is the sustained speed
+> for a write.
+> 
+> Could someone tell me how to increase my IO speed?
+> 
+> I have a Linux Kernel 2.6 in a RedHat Enterprise Linux WS 4 and I used
+> the foll.
+> Read : sg_dd if=/dev/sdb  of=/dev/null bs=262144 count=1024 dio=1
+> Write: sg_dd if=/dev/zero of=/dev/sdb  bs=262144 count=1024 dio=1
 
-Dual Xeon 2.8ghz
-Motherboard Intel SE7320SP2
-2 gig DDR ECC
-Adaptec 2410sa card firmware 2348
-aacraid driver 1.1.5-2391
-RedHat Enterprise 3 / w kernel2.4.21-27.ELsmp running Plesk 7.5.4
+Karthik,
+For accurate timing with "sd" devices use "odir=1" rather
+than "dio=1". "dio=1" only applies to sg devices so it has
+no effect in your above example. [Perhaps I should add a
+warning about this in sg_dd.]
 
-Executing: container list
-Num          Total  Oth Stripe          Scsi   Partition
-Label Type   Size   Ctr Size   Usage   C:ID:L Offset:Size
------ ------ ------ --- ------ ------- ------ -------------
- 0    RAID-5  698GB      256KB Open    0:00:0 64.0KB: 232GB
- /dev/sda                              0:01:0 64.0KB: 232GB
-                                       0:02:0 64.0KB: 232GB
-                                       0:03:0 64.0KB: 232GB
-
-
-Here is the error I got with dmesg
-
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
-EXT3-fs error (device sd(8,2)): ext3_readdir: bad entry in directory 
-#10256387: rec_len % 4 !=
- 0 - offset=0, inode=825303089, rec_len=13618, name_len=54
+Also with sg_dd you should use "bs=512" and read about the
+"bpt=<n>" option in the man page. Also look at the "blk_sgio=0|1"
+and the "time=1" option.
 
 
--- 
-Serge Blondin
-Technicien Informatique
-Les Services Internet Abacom
-sblondin@abacom.com
-tel: (819) 820-2929 ext226
-fax: (819) 820-8866
-
+Doug Gilbert
