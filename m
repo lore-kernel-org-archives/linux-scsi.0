@@ -1,67 +1,78 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: I request inclusion of SAS Transport Layer and AIC-94xx into the kernel
-Date: Tue, 4 Oct 2005 09:46:55 -0600
-Message-ID: <20051004154655.GE20557@parisc-linux.org>
-References: <1128357350.10079.239.camel@bluto.andrew> <43415EC0.1010506@adaptec.com> <Pine.BSO.4.62.0510032103380.28198@rudy.mif.pg.gda.pl> <1128377075.23932.5.camel@ryan2.internal.autoweb.net> <Pine.LNX.4.64.0510031531170.31407@g5.osdl.org> <434293D8.50300@adaptec.com> <43429789.8020102@pobox.com> <43429D6C.8070909@adaptec.com> <43429F1B.1000002@pobox.com> <4342A261.1040808@adaptec.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [BUG] Yet another scsi_cmnd leak?
+Date: Tue, 04 Oct 2005 10:51:30 -0500
+Message-ID: <4342A502.6010204@cs.wisc.edu>
+References: <Pine.LNX.4.44L0.0510031127470.4824-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964825AbVJDPrG@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4342A261.1040808@adaptec.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Linus Torvalds <torvalds@osdl.org>, Ryan Anderson <ryan@autoweb.net>, Tomasz K?oczko <kloczek@rudy.mif.pg.gda.pl>, andrew.patterson@hp.com, Marcin Dalecki <dalecki.marcin@neostrada.pl>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, dougg@torque.net, Luben Tuikov <ltuikov@yahoo.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:36532 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S964826AbVJDPvj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2005 11:51:39 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0510031127470.4824-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, Oct 04, 2005 at 11:40:17AM -0400, Luben Tuikov wrote:
-> On 10/04/05 11:26, Jeff Garzik wrote:
-> > You continue to misunderstand everyone else's opinion.
+Alan Stern wrote:
+> On Thu, 29 Sep 2005, Mike Christie wrote:
 > 
-> Internet mailing lists are one such thing where anyone
-> can write anything they want and sound smart.  Like
-> the statement above.
 > 
-> Did you talk to "everyone else"?  Or is this just you,
-> James B and Christoph?
-
-It's mine too, but I hadn't seen the need to perpetuate this stupid
-thread.
-
-> "should", "will".
+>>Alan Stern wrote:
+>>
+>>>James:
+>>>
+>>>This report is based on 2.6.14-rc2-git6.  The code in your scsi-misc-2.6 
+>>>git tree is somewhat different (and I don't know which is more current), 
+>>>but it still contains the same bug.
+>>>
+>>>
+>>>In scsi_prep_fn, a request can get deferred if scsi_init_io fails to 
+>>>allocate an sg table.  When this happens, the scsi_cmnd isn't released and 
+>>>the request is not marked DONTPREP.
+>>>
+>>>Then when scsi_prep_fn is called again, the request may be killed for 
+>>>a number of reasons.  The code branches to the kill: label near the end of 
+>>>the routine, which returns BLKPREP_KILL.
+>>>
+>>>Isn't it true that when this happens, the scsi_cmnd allocated during the
+>>>original prep will never be released?
+>>>
+>>>It appears that scsi_prep_fn is undecided about whether or not the request
+>>>is allowed to have a scsi_cmnd already.  The jumps to kill: seem to assume
+>>>that it isn't, but the code for allocating a new scsi_cmnd tests for an
+>>>existing one first.
+>>>
+>>
+>>The gotos used to be just a return BLKPREP* and were added so I did not 
+>>have to write DID_NO_CONNECT or unplug multiple times :) I think you are 
+>>right and we need to further unwind what a previous prep had done 
+>>becuase when we return with BLKPREP_KILL we only hear about this command 
+>>again if it's request has a end_io function or waiting completion.
 > 
-> The question is then: Where were you Jeff all this time?
-
-Working on other things?  It's not like scsi core is the only armpit
-the kernel has.
-
-> Why did the SAS code had to be posted for SCSI Core to see how many
-> things it needs to repair.
 > 
-> I've been pointing those things out since, oh well, for many years
-> now.
-
-But people have been working on improving scsi core for many years.  The
-transport classes have a copyright daate of 2003 on them, for example.
-
-> If SCSI Core had seen the necessary over the years changes,
-> it wouldn't be in this situation now.
-
-Things take time.  Even standards committees.
-
-> > Nothing is upside down.  Transport details plug into an obvious location 
-> > -- the transport class, and associated helper libs (if any).
+> I'm still not very clear about the conditions under which a request on the
+> queue can be partially prepared -- for example, scsi_cmnd assigned but 
+> not the sg table.  For the normal submission pathways, it looks like this 
+> happens only when the sg allocation fails.  In those cases it wouldn't 
+> hurt to release the scsi_cmnd before deferring.  Or before returning 
+> BLKPREP_KILL.
 > 
-> USB/SAS/SBP:
-> HW -> LLDD -> Transport Layer -> SCSI Core
+> But what about other pathways?  As long as the special scsi_request things 
+> exist, I don't know what should be done.  I saw you had submitted patches 
+> to get rid of them; how far has that progressed?
 > 
-> MPT:
-> HW -> Transport Layer (FW) -> LLDD -> SCSI Core.
 
-That's why we still need each driver to have a scsi host template.  That
-way each driver can do what it needs to do.  For MPT, that's mostly 'ask
-firmware and present the results to sas'.  For other SAS drivers, that's
-probably 'call this function in the SAS trransport class that does
-everything you want'.
+I am not done. I still have osst to convert and I think Doug found a bug 
+I cannot reproduce. I was not sure if everyone was happy with the 
+max_sectors and the SCSI_MAX_PHYS_SEGMENTS compile option either.
 
-If you like, you can think of it as working around a bug.  Instead of
-doing it in the SAS class, we let the driver fix the layering bug.
+I think I need to change the interface too. Passing in a scatterlist is 
+nice beucase we do not have to touch the ULDs much, but I think if we 
+went Christoph's route and used a array of bio_bvecs it might be nicer. 
+We would need a bio helper function that could build bios from bvecs 
+though and I think maybe that should be done based on the bioset stuff. 
+I am not sure though.
+
