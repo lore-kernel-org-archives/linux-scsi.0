@@ -1,30 +1,46 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] 3ware: use scsi_scan_target()
-Date: Wed, 5 Oct 2005 17:28:50 +0100
-Message-ID: <20051005162850.GA17710@infradead.org>
-References: <4341D38A.40509@pobox.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: 2.6.13.2 aacraid regression
+Date: Wed, 5 Oct 2005 12:58:38 -0400
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01B02355@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:31705 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1030218AbVJEQ2w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Oct 2005 12:28:52 -0400
-Content-Disposition: inline
-In-Reply-To: <4341D38A.40509@pobox.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030251AbVJEQ6l@vger.kernel.org>
+content-class: urn:content-classes:message
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Juan D Ch <jchimienti@most.com.ar>, Mark Haverkamp <markh@osdl.org>, Martin Drab <drab@kepler.fjfi.cvut.cz>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linuxraid@amcc.com
 
-On Mon, Oct 03, 2005 at 08:57:46PM -0400, Jeff Garzik wrote:
-> This change updates the 3ware raid drivers to use scsi_scan_target(), 
-> rather than scsi_scan_host().  This is especially nice for 3w-xxxx, 
-> which does not support LUNs.  The device scan is a bit quicker and more 
-> direct, even if it is a tiny bit more code in the driver.
+Juan was kind enough to linger on site, and work on a production
+machine, to try the parameter to make the system stable. He discovered
+that reducing the maximum transfer size issued to the adapter to 128KB
+stabilized his system. This is related to an earlier change for the
+2.6.13 tree resulting from Martin Drab's testing where the transfer size
+was reduced from 4G to 256KB; we needed to go still further in scaling
+back the request size.
 
-if it doesn't support luns scsi_add_device sounds like the better
-interface to use.  How does 3x-9xxx support luns?  From reading the
-code it doesn't seem to support passthru and faking up LUNs for logical
-volumes sounds odd.
+Here is the patch that tames this regression.
 
+Applies to the 2.6.13.2 tree.
+
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+
+Index: linux-2.6.13.2/drivers/scsi/aacraid/aacraid.h
+===================================================================
+--- linux-2.6.13.2/drivers/scsi/aacraid/aacraid.h       2005-10-05
+12:45:16 -0400
++++ linux-2.6.13.2-aacraid-fix/drivers/scsi/aacraid/aacraid.h
+2005-09-16 21:02:12 -0400
+@@ -15,7 +15,7 @@
+ #define AAC_MAX_LUN            (8)
+
+ #define AAC_MAX_HOSTPHYSMEMPAGES (0xfffff)
+-#define AAC_MAX_32BIT_SGBCOUNT ((unsigned short)512)
++#define AAC_MAX_32BIT_SGBCOUNT ((unsigned short)256)
+
+ /*
+  * These macros convert from physical channels to virtual channels
+
+Sincerely -- Mark Salyzyn
