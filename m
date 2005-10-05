@@ -1,39 +1,47 @@
 From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: [PATCH] 3ware: use scsi_scan_target()
-Date: Wed, 05 Oct 2005 15:24:30 -0400
-Message-ID: <4344286E.5090306@pobox.com>
-References: <4341D38A.40509@pobox.com> <20051005162850.GA17710@infradead.org> <43442312.4030304@adaptec.com>
+Date: Wed, 05 Oct 2005 15:34:59 -0400
+Message-ID: <43442AE3.6030000@pobox.com>
+References: <4341D38A.40509@pobox.com> <20051005162850.GA17710@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:3547 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932634AbVJETYh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2005 15:24:37 -0400
-In-Reply-To: <43442312.4030304@adaptec.com>
+Received: from mail.dvmed.net ([216.237.124.58]:6363 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1030335AbVJETfH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2005 15:35:07 -0400
+In-Reply-To: <20051005162850.GA17710@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>, Christoph Hellwig <hch@infradead.org>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linuxraid@amcc.com
 
-Luben Tuikov wrote:
-> On 10/05/05 12:28, Christoph Hellwig wrote:
->>How does 3x-9xxx support luns?  From reading the
+Christoph Hellwig wrote:
+> On Mon, Oct 03, 2005 at 08:57:46PM -0400, Jeff Garzik wrote:
+> 
+>>This change updates the 3ware raid drivers to use scsi_scan_target(), 
+>>rather than scsi_scan_host().  This is especially nice for 3w-xxxx, 
+>>which does not support LUNs.  The device scan is a bit quicker and more 
+>>direct, even if it is a tiny bit more code in the driver.
+> 
+> 
+> if it doesn't support luns scsi_add_device sounds like the better
+> interface to use.
 
-> AFAIR the firmware just exports the LUs.  The FW doesn't
-> support REPORT LUNS; the LLDD exported LUs directly to SCSI Core.
+That applies to 3w-xxxx, certainly.
 
-Some 9xxx firmwares do support LUNs:
+I don't see a strong argument for scsi_add_device() over 
+scsi_scan_target(), though.  scsi_scan_target() directly supports the 
+generic struct device/class_device stuff, and supports both wildcard LUN 
+scans as well as no-LUN targets.  My vague preference would be to use 
+scsi_scan_target() unless there is a strong reason not to...
 
->         /* Check if this FW supports luns */
->         if ((SCpnt->device->lun != 0) && (tw_dev->working_srl < TW_FW_SRL_LUNS_SUPPORTED)) {
 
-and the newer 9xxx are quite different from 3w-xxxx, because 9xxx 
-firmware interface is largely just a execute-scsi-command message, 
-rather than the translation stuff the goes on in 3w-xxxx.
+> How does 3x-9xxx support luns?  From reading the
+> code it doesn't seem to support passthru and faking up LUNs for logical
+> volumes sounds odd.
 
-As to Christoph's question, _how_ does the firmware support LUNs?  No 
-idea.  It clearly does support it, though.
+[other emails appear to have addressed this]
 
 	Jeff
 
