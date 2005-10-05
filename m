@@ -1,97 +1,57 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [PATCH] libata ATAPI command completion fixes and FIXMEs
-Date: Wed, 05 Oct 2005 15:03:50 -0400
-Message-ID: <43442396.1090308@pobox.com>
+From: adam radford <aradford@gmail.com>
+Subject: Re: [PATCH] 3ware: use scsi_scan_target()
+Date: Wed, 5 Oct 2005 12:20:33 -0700
+Message-ID: <b1bc6a000510051220m5d6e60b7i74b0bba96046513c@mail.gmail.com>
+References: <4341D38A.40509@pobox.com> <20051005162850.GA17710@infradead.org>
+	 <43442312.4030304@adaptec.com>
+Reply-To: adam radford <aradford@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090604070406050600070606"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from xproxy.gmail.com ([66.249.82.202]:12958 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932542AbVJETUd convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Oct 2005 15:20:33 -0400
+Received: by xproxy.gmail.com with SMTP id s14so140764wxc
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Oct 2005 12:20:33 -0700 (PDT)
+In-Reply-To: <43442312.4030304@adaptec.com>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jgarzik@pobox.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linuxraid@amcc.com
 
-This is a multi-part message in MIME format.
---------------090604070406050600070606
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+The firmware for the 9000 series 3ware controllers definately does support
+the REPORT LUNS scsi opcode.  The only reason the LUN support is there
+is for older 2.4 customers who have carved up > 2TB arrays into several
+luns who then upgrade to kernel 2.6.
 
-Just checked this in:
+-Adam
 
-Author: Jeff Garzik <jgarzik@pobox.com>
-Date:   Wed Oct 5 15:02:14 2005 -0400
-
-   libata: ATAPI command completion tweaks and notes
-
-   1) note urgent bug, that completes command twice
-
-   2) only fix up INQUIRY data if the SCSI version is zero (typically
-   indicates ATAPI MMC-ish device)
-
-   3) if there is a problem on the ATA bus, don't bother with REQUEST
-   SENSE, just directly handle the error based on Status/Error registers.
-
-[patch attached]
-
-
---------------090604070406050600070606
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
-
-diff --git a/drivers/scsi/libata-scsi.c b/drivers/scsi/libata-scsi.c
---- a/drivers/scsi/libata-scsi.c
-+++ b/drivers/scsi/libata-scsi.c
-@@ -1483,9 +1483,18 @@ static int atapi_qc_complete(struct ata_
- {
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 
--	if (unlikely(drv_stat & (ATA_ERR | ATA_BUSY | ATA_DRQ))) {
-+	if (unlikely(drv_stat & (ATA_BUSY | ATA_DRQ)))
-+		ata_to_sense_error(qc, drv_stat);
-+	else if (unlikely(drv_stat & ATA_ERR)) {
- 		DPRINTK("request check condition\n");
- 
-+		/* FIXME: command completion with check condition
-+		 * but no sense causes the error handler to run,
-+		 * which then issues REQUEST SENSE, fills in the sense 
-+		 * buffer, and completes the command (for the second
-+		 * time).  We need to issue REQUEST SENSE some other
-+		 * way, to avoid completing the command twice.
-+		 */
- 		cmd->result = SAM_STAT_CHECK_CONDITION;
- 
- 		qc->scsidone(cmd);
-@@ -1499,10 +1508,26 @@ static int atapi_qc_complete(struct ata_
- 			unsigned int buflen;
- 
- 			buflen = ata_scsi_rbuf_get(cmd, &buf);
--			buf[2] = 0x5;
--			buf[3] = (buf[3] & 0xf0) | 2;
-+
-+	/* ATAPI devices typically report zero for their SCSI version,
-+	 * and sometimes deviate from the spec WRT response data
-+	 * format.  If SCSI version is reported as zero like normal,
-+	 * then we make the following fixups:  1) Fake MMC-5 version,
-+	 * to indicate to the Linux scsi midlayer this is a modern
-+	 * device.  2) Ensure response data format / ATAPI information
-+	 * are always correct.
-+	 */
-+	/* FIXME: do we ever override EVPD pages and the like, with
-+	 * this code?
-+	 */
-+			if (buf[2] == 0) {
-+				buf[2] = 0x5;
-+				buf[3] = 0x32;
-+			}
-+
- 			ata_scsi_rbuf_put(cmd, buf);
- 		}
-+
- 		cmd->result = SAM_STAT_GOOD;
- 	}
- 
-
---------------090604070406050600070606--
+On 10/5/05, Luben Tuikov <luben_tuikov@adaptec.com> wrote:
+> On 10/05/05 12:28, Christoph Hellwig wrote:
+> > On Mon, Oct 03, 2005 at 08:57:46PM -0400, Jeff Garzik wrote:
+> >
+> >>This change updates the 3ware raid drivers to use scsi_scan_target(),
+> >>rather than scsi_scan_host().  This is especially nice for 3w-xxxx,
+> >>which does not support LUNs.  The device scan is a bit quicker and more
+> >>direct, even if it is a tiny bit more code in the driver.
+> >
+> >
+> > if it doesn't support luns scsi_add_device sounds like the better
+> > interface to use.
+>
+> I agree.
+>
+> > How does 3x-9xxx support luns?  From reading the
+>
+> AFAIR the firmware just exports the LUs.  The FW doesn't
+> support REPORT LUNS; the LLDD exported LUs directly to SCSI Core.
+>
+>         Luben
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
