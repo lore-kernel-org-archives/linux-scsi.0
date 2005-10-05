@@ -1,54 +1,41 @@
-From: Andi Kleen <ak@suse.de>
-Subject: Removing BROKEN scsi drivers
-Date: Wed, 5 Oct 2005 13:14:32 +0200
-Message-ID: <200510051314.33411.ak@suse.de>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: Removing BROKEN scsi drivers
+Date: Wed, 05 Oct 2005 13:22:56 +0200
+Message-ID: <1128511377.2920.17.camel@laptopd505.fenrus.org>
+References: <200510051314.33411.ak@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:15302 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S932605AbVJELOP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2005 07:14:15 -0400
-Received: from Relay2.suse.de (mail2.suse.de [195.135.221.8])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx2.suse.de (Postfix) with ESMTP id 2A7861CC32
-	for <linux-scsi@vger.kernel.org>; Wed,  5 Oct 2005 13:14:14 +0200 (CEST)
-Content-Disposition: inline
+Received: from pentafluge.infradead.org ([213.146.154.40]:15800 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S965115AbVJELXA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Oct 2005 07:23:00 -0400
+In-Reply-To: <200510051314.33411.ak@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andi Kleen <ak@suse.de>
+Cc: linux-scsi@vger.kernel.org
+
+On Wed, 2005-10-05 at 13:14 +0200, Andi Kleen wrote:
+> In 2.6.14rc3:
+> 
+> linux/drivers/scsi> grep -c BROKEN Kconfig
+> 11
+> 
+> There are a lot of SCSI drivers who have been marked BROKEN forever. Or at 
+> least for all of 2.6 and one would expect if there are users left they would 
+> have fixed them by now. Would it make sense to remove them?
+
+I'd say so yes
 
 
-In 2.6.14rc3:
+> I think they could all go except perhaps the MCA driver. Or at least added
+> to Documentation/feature-removal-schedule.txt and then removed in a few 
+> months.
 
-linux/drivers/scsi> grep -c BROKEN Kconfig
-11
+sounds like the feature-removal should be done now before 2.6.14, and
+the removal right after 2.6.14 goes out (if anyone later wants to revive
+a driver they can always find the driver in the 2.6.14 tarbal after all)
 
-There are a lot of SCSI drivers who have been marked BROKEN forever. Or at 
-least for all of 2.6 and one would expect if there are users left they would 
-have fixed them by now. Would it make sense to remove them?
 
-In particular:
-
-SCSI_ADVANSYS - vendor went out of market afaik. Probably not many left.
-SCSI_CPQFCTS - suboption of another driver, incredibly ugly code defying all 
-coding standards.
-SCSI_EATA_PIO - really old ISA cards. Probably all left over cards are way 
-over their MTBF by now.
-SCSI_SEAGATE - extremly scary code, i doubt there is any such card left
-SCSI_MCA_53C9X - BROKEN_ON_SMP only. Ok I guess there are no SMP
-Micro Channel systems.
-SCSI_QLOGIC_ISP - afaik there is a newer driver for this
-SCSI_AMIGA7XX - no maintainer, broken forever
-ATARI_SCSI - no maintainer, broken forever
-MVME16x_SCSI - no maintainer, broken forever
-BVME6000_SCSI - same
-SUN3_SCSI - sun3 never worked in mainline anyways
-
-I think they could all go except perhaps the MCA driver. Or at least added
-to Documentation/feature-removal-schedule.txt and then removed in a few 
-months.
-
--Andi 
