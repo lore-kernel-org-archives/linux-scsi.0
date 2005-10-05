@@ -1,61 +1,46 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Removing BROKEN scsi drivers
-Date: Thu, 06 Oct 2005 08:36:27 +1000
-Message-ID: <4344556B.3030700@torque.net>
-References: <200510051314.33411.ak@suse.de>
-Reply-To: dougg@torque.net
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH] 3ware: use scsi_scan_target()
+Date: Wed, 5 Oct 2005 16:19:12 -0700 (PDT)
+Message-ID: <20051005231912.79866.qmail@web31807.mail.mud.yahoo.com>
+References: <43442AE3.6030000@pobox.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:40847 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1030404AbVJEWf4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2005 18:35:56 -0400
-In-Reply-To: <200510051314.33411.ak@suse.de>
+Received: from web31807.mail.mud.yahoo.com ([68.142.207.70]:8362 "HELO
+	web31807.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1030432AbVJEXTP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Oct 2005 19:19:15 -0400
+In-Reply-To: <43442AE3.6030000@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linuxraid@amcc.com
 
-Andi Kleen wrote:
-> In 2.6.14rc3:
-> 
-> linux/drivers/scsi> grep -c BROKEN Kconfig
-> 11
-> 
-> There are a lot of SCSI drivers who have been marked BROKEN forever. Or at 
-> least for all of 2.6 and one would expect if there are users left they would 
-> have fixed them by now. Would it make sense to remove them?
-> 
-> In particular:
-> 
-> SCSI_ADVANSYS - vendor went out of market afaik. Probably not many left.
+--- Jeff Garzik <jgarzik@pobox.com> wrote:
+> scans as well as no-LUN targets.  My vague preference would be to use 
+> scsi_scan_target() unless there is a strong reason not to...
 
-Andi,
-My advansys controllers work fine in lk 2.6 .
-Advansys itself (or its SCSI HBA line) was onsold
-several times. I'm not sure if they are still
-available (the last ones for sale that I noticed
-were for SCSI (SPI-based) scanners). When lk 2.5
-development changes broke the drivers, patches came
-in from several contributors to fix them (usually
-the minimum required). I believe they are still
-out there, probably in decreasing numbers (e.g.
-I decommissioned a server using one last week).
-It's nice (albeit aging) hardware whose reliability
-exceeds that of a few other HBA manufacturers'
-products I could name.
+This sounds good too.
 
-So whoever marked the advansys driver as broken
-was making some political statement IMO. If it
-ain't broken, it shouldn't be marked as BROKEN.
+I'd like to move sas_do_lu_discovery(struct domain_device *dev)
+into SCSI Core (as the comment therein says), for _new_ (non-legacy)
+devices, i.e. with newer FW.
 
+It also handles devices who do not even respond
+to REPORT LUNS on either LU 0 or RL WLUN (like early prototype
+SES FW), in which case it would register LU 0 for them since
+this is where tasks are sent.
 
-If the kernel source was split up at some stage (rather
-than one big source tarball), it may be appropriate
-to put the advansys driver in with the second tier
-(looking for a better term than "legacy") drivers.
+Example of those is seen in the domain sysfs tree here:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=112629509826900&w=2
 
-Doug Gilbert
+The code is at drivers/scsi/sas/sas_discover.c
+http://linux.adaptec.com/sas/ .
 
+     Luben
+P.S. REPORT LUNS is Mandatory as per SPC, so newer devices
+(SAS) support it.  Furthermore if their LUs are sparse they
+(really) support REPORT LUNS.
 
