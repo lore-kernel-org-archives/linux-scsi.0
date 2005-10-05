@@ -1,29 +1,30 @@
-From: "'Christoph Hellwig'" <hch@lst.de>
-Subject: Re: [PATCH] megaraid_sas: cleanup up queuecommand path
-Date: Wed, 5 Oct 2005 18:25:53 +0200
-Message-ID: <20051005162553.GB3930@lst.de>
-References: <0E3FA95632D6D047BA649F95DAB60E57060CD21C@exa-atlanta>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] 3ware: use scsi_scan_target()
+Date: Wed, 5 Oct 2005 17:28:50 +0100
+Message-ID: <20051005162850.GA17710@infradead.org>
+References: <4341D38A.40509@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:2492 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S1030222AbVJEQZ6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2005 12:25:58 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:31705 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1030218AbVJEQ2w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Oct 2005 12:28:52 -0400
 Content-Disposition: inline
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E57060CD21C@exa-atlanta>
+In-Reply-To: <4341D38A.40509@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>
-Cc: 'Christoph Hellwig' <hch@lst.de>, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linuxraid@amcc.com
 
-On Tue, Oct 04, 2005 at 06:56:55PM -0400, Bagalkote, Sreenivas wrote:
-> Christoph,
-> 
-> The patch looks fine to me. Thanks. But I would like to hold it until
-> I can align my next internal release. I am in a code-freeze mode right
-> now. Since this is a code cleanup rather than a fix, it would be great
-> if I can release these patches at lock step with my internal ones to
-> avoid maintaining different branches locally.
+On Mon, Oct 03, 2005 at 08:57:46PM -0400, Jeff Garzik wrote:
+> This change updates the 3ware raid drivers to use scsi_scan_target(), 
+> rather than scsi_scan_host().  This is especially nice for 3w-xxxx, 
+> which does not support LUNs.  The device scan is a bit quicker and more 
+> direct, even if it is a tiny bit more code in the driver.
 
-Sure, fine with me.
+if it doesn't support luns scsi_add_device sounds like the better
+interface to use.  How does 3x-9xxx support luns?  From reading the
+code it doesn't seem to support passthru and faking up LUNs for logical
+volumes sounds odd.
 
