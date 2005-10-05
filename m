@@ -1,48 +1,61 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] 3ware: use scsi_scan_target()
-Date: Wed, 05 Oct 2005 15:34:59 -0400
-Message-ID: <43442AE3.6030000@pobox.com>
-References: <4341D38A.40509@pobox.com> <20051005162850.GA17710@infradead.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Removing BROKEN scsi drivers
+Date: Thu, 06 Oct 2005 08:36:27 +1000
+Message-ID: <4344556B.3030700@torque.net>
+References: <200510051314.33411.ak@suse.de>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:6363 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030335AbVJETfH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2005 15:35:07 -0400
-In-Reply-To: <20051005162850.GA17710@infradead.org>
+Received: from zorg.st.net.au ([203.16.233.9]:40847 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1030404AbVJEWf4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2005 18:35:56 -0400
+In-Reply-To: <200510051314.33411.ak@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linuxraid@amcc.com
+To: Andi Kleen <ak@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-Christoph Hellwig wrote:
-> On Mon, Oct 03, 2005 at 08:57:46PM -0400, Jeff Garzik wrote:
+Andi Kleen wrote:
+> In 2.6.14rc3:
 > 
->>This change updates the 3ware raid drivers to use scsi_scan_target(), 
->>rather than scsi_scan_host().  This is especially nice for 3w-xxxx, 
->>which does not support LUNs.  The device scan is a bit quicker and more 
->>direct, even if it is a tiny bit more code in the driver.
+> linux/drivers/scsi> grep -c BROKEN Kconfig
+> 11
 > 
+> There are a lot of SCSI drivers who have been marked BROKEN forever. Or at 
+> least for all of 2.6 and one would expect if there are users left they would 
+> have fixed them by now. Would it make sense to remove them?
 > 
-> if it doesn't support luns scsi_add_device sounds like the better
-> interface to use.
+> In particular:
+> 
+> SCSI_ADVANSYS - vendor went out of market afaik. Probably not many left.
 
-That applies to 3w-xxxx, certainly.
+Andi,
+My advansys controllers work fine in lk 2.6 .
+Advansys itself (or its SCSI HBA line) was onsold
+several times. I'm not sure if they are still
+available (the last ones for sale that I noticed
+were for SCSI (SPI-based) scanners). When lk 2.5
+development changes broke the drivers, patches came
+in from several contributors to fix them (usually
+the minimum required). I believe they are still
+out there, probably in decreasing numbers (e.g.
+I decommissioned a server using one last week).
+It's nice (albeit aging) hardware whose reliability
+exceeds that of a few other HBA manufacturers'
+products I could name.
 
-I don't see a strong argument for scsi_add_device() over 
-scsi_scan_target(), though.  scsi_scan_target() directly supports the 
-generic struct device/class_device stuff, and supports both wildcard LUN 
-scans as well as no-LUN targets.  My vague preference would be to use 
-scsi_scan_target() unless there is a strong reason not to...
+So whoever marked the advansys driver as broken
+was making some political statement IMO. If it
+ain't broken, it shouldn't be marked as BROKEN.
 
 
-> How does 3x-9xxx support luns?  From reading the
-> code it doesn't seem to support passthru and faking up LUNs for logical
-> volumes sounds odd.
+If the kernel source was split up at some stage (rather
+than one big source tarball), it may be appropriate
+to put the advansys driver in with the second tier
+(looking for a better term than "legacy") drivers.
 
-[other emails appear to have addressed this]
-
-	Jeff
+Doug Gilbert
 
 
