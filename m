@@ -1,108 +1,149 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH] 3ware: use scsi_scan_target()
-Date: Thu, 06 Oct 2005 14:09:03 -0400
-Message-ID: <4345683F.6060709@adaptec.com>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7ADD@xbl3.ma.emulex.com>
+From: Olaf Hering <olh@suse.de>
+Subject: bad error handling in lpfc in 2.6.13
+Date: Fri, 7 Oct 2005 00:24:00 +0200
+Message-ID: <20051006222400.GA10273@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:4811 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1751266AbVJFSJK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2005 14:09:10 -0400
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7ADD@xbl3.ma.emulex.com>
+Received: from mx1.suse.de ([195.135.220.2]:29663 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S1751015AbVJFWYG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2005 18:24:06 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: ltuikov@yahoo.com, jgarzik@pobox.com, hch@infradead.org, linux-scsi@vger.kernel.org, linuxraid@amcc.com
+To: James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+Cc: Olof Johansson <olof@austin.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-On 10/06/05 09:13, James.Smart@Emulex.Com wrote:
->>I'd like to move sas_do_lu_discovery(struct domain_device *dev)
->>into SCSI Core (as the comment therein says), for _new_ (non-legacy)
->>devices, i.e. with newer FW.
-> 
+James,
 
-Hi James, how are you?
+we have LP9000 in a pSeries 520 (POWER5 hardware). 
+I had to upgrade the firmware, otherwise the newer lpfc which went into
+mainline and in SLES9 SP2 would not recognize the adapter properly.
 
-> My vote, for what it's worth, is to *not* have multiple discovery threads.
-> I don't care about "old" or "new", and in general, even things with "new"
-> interfaces behave in "old" manners, as they typically are existing
-> subsystems with new interface chips placed on them. It also makes life
-> hell for transport bridging devices, which want to map at the transport
-> endpoint level, and leave luns up to the actual SCSI task manager in the
-> device.
+There seems to be a hardcare configuration problem on our side, all
+kernels I have tried showed this error when installing onto a device:
 
-This is perfectly fine -- SAS FW supports REPORT LUNS.
+lpfc 0001:58:01.0: 0:0457 Adapter Hardware Error Data: x20000000 x17cf4 x50000003
 
-> Remember - devices are made to work with many OS's, and the level
-> of SCSI/SAM support in each os differs, so the devices choose a median
-> that allows them to function with the OS's they care about. It's no longer
-> a SAM thing.
+This happens with all driver versions I have tried (SLES9 SP1/2/3 and
+2.6.13). With 2.6.13 I get iommu failures, and a panic, shown below.
+I tried to install two times, once with each firmware version:
 
-Would you be presenting SAS devices as something else (FC, etc)?
-In which case the old, broken, semantically fat scanning technique
-would apply.  This is ok also.
+3.91a1 - with the panic below
+3.93a0 - this did not panic, I got some :
+ Badness in __iommu_free at arch/ppc64/kernel/iommu.c:208
 
-> Also - SAM/SPC/SBC/etc has many many grey areas, and SAM (the
-> original) was written such that SCSI-2 devices were still SAM compliant.
-> And if you say SAM - what rev of SAM (SAM, SAM-2, SAM-3) ?  There are
-> things allowed in SAM that are disallowed in SAM-3. Same with SPC and so on.
 
-SAM-3 and/or SAM-4.  (What you'd normally see is SAM-4 behaviour advertized
-as SAM-3.)
 
-> I've lived with a driver with it's own scan subsystem (which equates to
-> your own SAS scan functions) and all it did was create confusion for the
-> end users. If a device is mis-behaving, do you tweak driver/sas_transport
-> tunables, or do you tweak black/white list entries ? How do you deal with
+...
+lpfc 0001:58:01.0: 0:0327 Rsp ring 0 error -  command completion for iotag x6f7 not found
+lpfc 0001:58:01.0: 0:0327 Rsp ring 0 error -  command completion for iotag x6f5 not found
+lpfc 0001:58:01.0: 0:0327 Rsp ring 0 error -  command completion for iotag x6f6 not found
+lpfc 0001:58:01.0: 0:0748 abort handler timed out waiting for abort to complete. Data: x0 x1 x1 x7ac
+lpfc 0001:58:01.0: 0:0748 abort handler timed out waiting for abort to complete. Data: x0 x1 x1 x7ad
+lpfc 0001:58:01.0: 0:0748 abort handler timed out waiting for abort to complete. Data: x0 x1 x1 x7ae
+lpfc 0001:58:01.0: 0:0713 SCSI layer issued LUN reset (1, 1) Data: x2002 x0 x0
+lpfc 0001:58:01.0: 0:0457 Adapter Hardware Error Data: x20000000 x17cf4 x50000003
+...
 
-Yes, this is a good hypotethical _SAS_ situation.  Let's get there
-first, who knows, we may never do.
+Oops: Kernel access of bad area, sig: 11 [#1]
+SMP NR_CPUS=128 NUMA PSERIES LPAR
+Modules linked in: dm_snapshot multipath raid6 raid5 xor raid1 raid0 dm_mod st l
+pfc scsi_transport_fc ipr firmware_class ibmveth e1000 usb_storage ide_cd sg sr_
+mod sd_mod scsi_mod cdrom cramfs isofs vfat fat nls_iso8859_1 nls_cp437 nls_base
+ zlib_inflate
+NIP: C0000000000265AC XER: 00000001 LR: C000000000026594 CTR: C00000000002A620
+REGS: c00000000f72f530 TRAP: 0300   Not tainted  (2.6.13-15-ppc64)
+MSR: 8000000000001032 EE: 0 PR: 0 FP: 0 ME: 1 IR/DR: 11 CR: 24000084
+DAR: 0000000000000014 DSISR: 0000000040000000
+TASK: c00000000f5347e0[1047] 'lpfc_worker_0' THREAD: c00000000f72c000 CPU: 0
+GPR00: 0000000000000000 C00000000F72F7B0 C0000000006B7ED0 8000000000001032
+GPR04: 0000000000000000 0000000000000001 0000000000000C59 C0000000007A8400
+GPR08: C00000000F7137F8 0000000000000000 C00000000F7137E8 0000000000000000
+GPR12: D00000000028D860 C0000000004F3000 0000000000000000 0000000004010000
+GPR16: C0000000004B32F0 C0000000004B3538 000000000199FE38 00000000044C32F0
+GPR20: 0000000000000003 C00000000F6FA410 0000000000000378 C00000000F6FA418
+GPR24: C00000000F6FA6D8 C00000000F6FA458 8000000000001032 C000000004A96A50
+GPR28: C000000004A96A00 0000000000000000 0000000000000000 0000000000000001
+NIP [c0000000000265ac] .iommu_unmap_sg+0x6c/0x140
+LR [c000000000026594] .iommu_unmap_sg+0x54/0x140
+Call Trace:
+[c00000000f72f7b0] [c000000000026594] .iommu_unmap_sg+0x54/0x140 (unreliable)
+[c00000000f72f850] [c00000000002a64c] .pci_iommu_unmap_sg+0x2c/0x60
+--- Exception: d000000000287ddc at .lpfc_sli_brdreset+0x1e4/0x3d0 [lpfc]
+    LR = .lpfc_sli_brdreset+0x1ac/0x3d0 [lpfc]
+[c00000000f72f8c0] [c0000000000101e4] .dma_unmap_sg+0x64/0xc0 (unreliable)
+[c00000000f72f960] [d000000000287d64] .lpfc_free_scsi_buf+0xf4/0x130 [lpfc]
+[c00000000f72f9f0] [d000000000287ddc] .lpfc_scsi_cmd_iocb_cleanup+0x3c/0x70 [lpf
+c]
+[c00000000f72fa90] [d00000000026e738] .lpfc_sli_abort_iocb_ring+0x1c8/0x2f0 [lpf
+c]
+[c00000000f72fb40] [d0000000002711f0] .lpfc_sli_brdreset+0x380/0x3d0 [lpfc]
+[c00000000f72fbf0] [d0000000002715cc] .lpfc_sli_hba_down+0x38c/0x3d0 [lpfc]
+[c00000000f72fcc0] [d0000000002810c8] .lpfc_offline+0x138/0x1b0 [lpfc]
+[c00000000f72fd50] [d000000000281b5c] .lpfc_handle_eratt+0x13c/0x2b0 [lpfc]
+[c00000000f72fde0] [d00000000027f868] .lpfc_do_work+0x7c8/0xc60 [lpfc]
+[c00000000f72fee0] [c00000000007ed48] .kthread+0x178/0x190
+[c00000000f72ff90] [c0000000000145a8] .kernel_thread+0x4c/0x68
+Instruction dump:
+0b000000 2fa30000 419e0080 3b630050 7f63db78 483d0b01 60000000 381fffff
+7c7a1b78 7c1d07b4 2f9dffff 419e001c <801e0014> 3bfe0028 809e0010 3bc00000
+ smp_call_function on cpu 0: other cpus not responding (0)
+ rport-1:0-2: blocked FC remote port time out: removing target
 
-SAS FW writers are aware that REPORT LUNS is mandatory.
 
-Can you imagine a SAS device supporting more than one LUN and _not_
-supporting REPORT LUNS?
 
-As to transport bridging -- at least one thing the transport bridge
-would do is implement the _first_ command that would be sent to a
-SCSI device: REPORT LUNS.  Imagine a transport bridge device _not_
-supporting REPORT LUNS.
+This is with the newer firmware and 2.6.13:
 
-> the same SAS target device that behaves differently behind 2 different
-> adapters - one using the midlayers standard scanning functions (which the
-> device may already be supported by) vs the other using its own custom scan
-> logic.
+....
+lpfc 0001:58:01.0: 0:0748 abort handler timed out waiting for abort to complete. Data: x0 x1 x1 x57b
+lpfc 0001:58:01.0: 0:0713 SCSI layer issued LUN reset (1, 1) Data: x2002 x0 x0
+iommu_free: invalid entry
+        entry     = 0x10
+        dma_addr  = 0x10000
+        Table     = 0xc000000004eaca00
+        bus#      = 0x0
+        size      = 0x10000
+        startOff  = 0x18000
+        index     = 0x3
+Badness in __iommu_free at arch/ppc64/kernel/iommu.c:208
+Call Trace:  
+[c00000000f407a10] [c0000000000263a8] .__iommu_free+0x108/0x1e0 (unreliable)
+[c00000000f407ab0] [c000000000026654] .iommu_unmap_sg+0x114/0x140
+[c00000000f407b50] [c00000000002a64c] .pci_iommu_unmap_sg+0x2c/0x60
+[c00000000f407bc0] [c0000000000101e4] .dma_unmap_sg+0x64/0xc0
+[c00000000f407c60] [d000000000287d64] .lpfc_free_scsi_buf+0xf4/0x130 [lpfc]
+[c00000000f407cf0] [d000000000288a14] .lpfc_reset_lun_handler+0x174/0x3f0 [lpfc]
+[c00000000f407dc0] [d0000000001374cc] .scsi_try_bus_device_reset+0x4c/0xc0 [scsi_mod]
+[c00000000f407e40] [d0000000001395e4] .scsi_error_handler+0x9f4/0x1030 [scsi_mod]
+[c00000000f407f90] [c0000000000145a8] .kernel_thread+0x4c/0x68
+iommu_free: invalid entry
+        entry     = 0xc0000
+        dma_addr  = 0xc0000000
+        Table     = 0xc000000004eaca00
+        bus#      = 0x0
+        size      = 0x10000
+        startOff  = 0x18000
+        index     = 0x3
+Badness in __iommu_free at arch/ppc64/kernel/iommu.c:208
+Call Trace:
+[c00000000f407a10] [c0000000000263a8] .__iommu_free+0x108/0x1e0 (unreliable)
+[c00000000f407ab0] [c000000000026654] .iommu_unmap_sg+0x114/0x140
+[c00000000f407b50] [c00000000002a64c] .pci_iommu_unmap_sg+0x2c/0x60
+[c00000000f407bc0] [c0000000000101e4] .dma_unmap_sg+0x64/0xc0
+[c00000000f407c60] [d000000000287d64] .lpfc_free_scsi_buf+0xf4/0x130 [lpfc]
+[c00000000f407cf0] [d000000000288a14] .lpfc_reset_lun_handler+0x174/0x3f0 [lpfc]
+[c00000000f407dc0] [d0000000001374cc] .scsi_try_bus_device_reset+0x4c/0xc0 [scsi_mod]
+[c00000000f407e40] [d0000000001395e4] .scsi_error_handler+0x9f4/0x1030 [scsi_mod]
+[c00000000f407f90] [c0000000000145a8] .kernel_thread+0x4c/0x68
+ReiserFS: sde3: using ordered data mode
+ReiserFS: sde3: journal params: device sde3, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
+ReiserFS: sde3: checking transaction log (sde3)
+ReiserFS: sde3: Using r5 hash to sort names
+ReiserFS: sde3: warning: Created .reiserfs_priv on sde3 - reserved for xattr storage.
+Adding 720888k swap on /dev/sda2.  Priority:-1 extents:1
+...
 
-Then the bug is in the "adapters", since the task router hasn't changed.
-
-> I know you'll come back at this from the pristine view that SAS is
-> new - well true, the transport is new, but the devices aren't necessarily.
-
-Yes, as an engineer I'm an optimist.
-
-You have a good point, but if the underlying devices are _old_ and there's
-a SAS-to-whatever bridge, then _that_ bridge would have to properly implement
-REPORT LUNS (somehow).
-
-It would be quite unbelievable (to me) to find out a SAS device which
-does not support REPORT LUNS and we have to black listed it.
-
-> Go back and look at the exceptions I mentioned above.
-> 
-> Bottomline, this kind of choice just makes life confusing for the end user.
-> 
-> As has been said before on this list - replicating scan functions is silly.
-> Let's fix or extend the current scan behavior.
-
-That's fine James, but there is only so much crud the current code can
-take.  After a while, it starts breaking at the seams.
-
-So why don't we take it one step at a time.  If you have a specific
-SAS device which would not work with the proper LUN scan as shown
-in sas_discover.c::sas_do_lu_discovery(struct domain_device *dev),
-please let lsml know about it.
-
-	Luben
-
-P.S. How much crud can we add to older code?
+-- 
+short story of a lazy sysadmin:
+ alias appserv=wotan
