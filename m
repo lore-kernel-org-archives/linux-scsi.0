@@ -1,46 +1,65 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] 3ware: use scsi_scan_target()
-Date: Wed, 5 Oct 2005 16:19:12 -0700 (PDT)
-Message-ID: <20051005231912.79866.qmail@web31807.mail.mud.yahoo.com>
-References: <43442AE3.6030000@pobox.com>
-Reply-To: ltuikov@yahoo.com
+From: Douglas Gilbert <dougg@torque.net>
+Subject: scsi_debug: no_lun_0 and lun 49409
+Date: Thu, 06 Oct 2005 18:22:04 +1000
+Message-ID: <4344DEAC.4010908@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31807.mail.mud.yahoo.com ([68.142.207.70]:8362 "HELO
-	web31807.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1030432AbVJEXTP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Oct 2005 19:19:15 -0400
-In-Reply-To: <43442AE3.6030000@pobox.com>
+Received: from zorg.st.net.au ([203.16.233.9]:49288 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1750735AbVJFIVU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2005 04:21:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linuxraid@amcc.com
+To: linux-scsi@vger.kernel.org, patmans@us.ibm.com
 
---- Jeff Garzik <jgarzik@pobox.com> wrote:
-> scans as well as no-LUN targets.  My vague preference would be to use 
-> scsi_scan_target() unless there is a strong reason not to...
+In the downloads section of:
+http://www.torque.net/sg/sdebug26.html
 
-This sounds good too.
+is a beta version of scsi_debug version 1.77 .
+It simulates a single port of a dual ported SAS disk
+(with many of the VPD and mode page trimmings).
 
-I'd like to move sas_do_lu_discovery(struct domain_device *dev)
-into SCSI Core (as the comment therein says), for _new_ (non-legacy)
-devices, i.e. with newer FW.
+This beta adds an extra parameter: "no_lun_0" which
+when set to one implements the code suggested by
+Pat Mansfield in this post:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=112751597527556&w=2
 
-It also handles devices who do not even respond
-to REPORT LUNS on either LU 0 or RL WLUN (like early prototype
-SES FW), in which case it would register LU 0 for them since
-this is where tasks are sent.
+It also goes into unchartered territory and implements
+lun 49409 which is the REPORT LUNS well know logical unit.
+Those folks out there that are paranoid about "specs"
+will be glad (or perhaps disappointed) that it doesn't
+break anything. Why do it? Well the spec says that a SCSI
+target should either implement:
+  - the phantom lun=0 technique, or
+  - the REPORT LUNS well known lu
+to facilitate lu discovery.
 
-Example of those is seen in the domain sysfs tree here:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112629509826900&w=2
+This with lk 2.6.14-rc3 :
 
-The code is at drivers/scsi/sas/sas_discover.c
-http://linux.adaptec.com/sas/ .
+# modprobe scsi_debug no_lun_0=1 max_luns=2
+# modprobe sg
+# cd /sys/class/scsi_host/host0
+# echo "- - 49409" > scan
+#
+# lsscsi -g
+[0:0:0:1]    disk    Linux    scsi_debug       0004  /dev/sda  /dev/sg0
+[0:0:0:49409]wlun    Linux    scsi_debug       0004  -         /dev/sg1
+#
+# sg_luns --decode --select=2 /dev/sg1
+Lun list length = 16 which imples 2 lun entries
+Report luns [select_report=2]:
+    0001000000000000
+      Peripheral device addressing: lun=1
+    c101000000000000
+      REPORT LUNS well known logical unit
 
-     Luben
-P.S. REPORT LUNS is Mandatory as per SPC, so newer devices
-(SAS) support it.  Furthermore if their LUs are sparse they
-(really) support REPORT LUNS.
+Notice that 0:0:0:0 is missing but a trace will show that
+it did answer an INQUIRY and a REPORT LUNS.
 
+The scsi_debug driver needs to set its Scsi_Host::max_luns
+to 49409 so the "echo" above will work. Perhaps the scan
+code could be a bit more open minded.
+
+Doug Gilbert
