@@ -1,28 +1,38 @@
-From: Olaf Hering <olh@suse.de>
-Subject: Re: bad error handling in lpfc in 2.6.13
-Date: Fri, 7 Oct 2005 17:10:25 +0200
-Message-ID: <20051007151025.GA9969@suse.de>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7AE0@xbl3.ma.emulex.com> <20051007120707.GB32661@suse.de>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [patch] fix unnecessary activation of blk tag queue for qla2x00
+Date: Fri, 7 Oct 2005 10:03:56 -0700
+Message-ID: <20051007170356.GC8370@plap.qlogic.org>
+References: <B05667366EE6204181EABE9C1B1C0EB5086AEC35@scsmsx401.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:23021 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S1030316AbVJGPK1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2005 11:10:27 -0400
+Received: from pat.qlogic.com ([198.70.193.2]:39807 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S1030508AbVJGRD6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2005 13:03:58 -0400
 Content-Disposition: inline
-In-Reply-To: <20051007120707.GB32661@suse.de>
+In-Reply-To: <B05667366EE6204181EABE9C1B1C0EB5086AEC35@scsmsx401.amr.corp.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org, olof@austin.ibm.com, benh@kernel.crashing.org
+To: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
+Cc: linux-scsi@vger.kernel.org
 
- On Fri, Oct 07, Olaf Hering wrote:
+On Fri, 07 Oct 2005, Chen, Kenneth W wrote:
 
-> I will move the card to another box and see how it goes. I heard the
-> p520 we have is pre-GA level.
+> Regarding to discussion on LKML:
+> http://marc.theaimsgroup.com/?t=112865351000001&r=1&w=2
 
-I moved it into a p660 and SP3 works ok there.
+Ok, I had expected something like this to show on ls after the
+discussion on lk.
 
--- 
-short story of a lazy sysadmin:
- alias appserv=wotan
+> It turns out that qla2x00 driver unnecessarily activated generic
+> blk tag queue without actually use any of the tag maintained by
+> the block layer.  I suggest we turn that off until there is a
+> real consumer of the tag queuing in the qla driver. Please apply.
+> 
+> Signed-off-by: Ken Chen <kenneth.w.chen@intel.com>
+> 
+
+ACK.
+
+Thanks,
+Andrew Vasquez
