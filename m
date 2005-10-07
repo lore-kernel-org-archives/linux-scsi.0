@@ -1,38 +1,28 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [patch] fix unnecessary activation of blk tag queue for qla2x00
-Date: Fri, 7 Oct 2005 10:03:56 -0700
-Message-ID: <20051007170356.GC8370@plap.qlogic.org>
-References: <B05667366EE6204181EABE9C1B1C0EB5086AEC35@scsmsx401.amr.corp.intel.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: drivers/block/scsi_ioctl problem
+Date: Fri, 7 Oct 2005 19:41:47 +0200
+Message-ID: <20051007174146.GD2889@suse.de>
+References: <41BF7C18.9090303@us.ibm.com> <20041215071852.GM3157@suse.de> <41C08CD5.10309@us.ibm.com> <41C0BE3E.3060003@us.ibm.com> <20041216063218.GA22982@suse.de> <4346829F.7050009@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:39807 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S1030508AbVJGRD6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2005 13:03:58 -0400
+Received: from ns.virtualhost.dk ([195.184.98.160]:8714 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1030524AbVJGRlM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2005 13:41:12 -0400
 Content-Disposition: inline
-In-Reply-To: <B05667366EE6204181EABE9C1B1C0EB5086AEC35@scsmsx401.amr.corp.intel.com>
+In-Reply-To: <4346829F.7050009@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
-Cc: linux-scsi@vger.kernel.org
+To: Brian King <brking@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Anton Blanchard <anton@samba.org>
 
-On Fri, 07 Oct 2005, Chen, Kenneth W wrote:
-
-> Regarding to discussion on LKML:
-> http://marc.theaimsgroup.com/?t=112865351000001&r=1&w=2
-
-Ok, I had expected something like this to show on ls after the
-discussion on lk.
-
-> It turns out that qla2x00 driver unnecessarily activated generic
-> blk tag queue without actually use any of the tag maintained by
-> the block layer.  I suggest we turn that off until there is a
-> real consumer of the tag queuing in the qla driver. Please apply.
+On Fri, Oct 07 2005, Brian King wrote:
+> Jens,
 > 
-> Signed-off-by: Ken Chen <kenneth.w.chen@intel.com>
-> 
+> Looks like this patch got dropped for some reason.
 
-ACK.
+Indeed, I resubmitted it now.
 
-Thanks,
-Andrew Vasquez
+-- 
+Jens Axboe
+
