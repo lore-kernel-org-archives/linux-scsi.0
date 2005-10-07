@@ -1,323 +1,253 @@
-From: linas <linas@austin.ibm.com>
-Subject: [linas@austin.ibm.com: [PATCH 6/22] ppc64: PCI Error Recovery: documentation patch]
-Date: Fri, 7 Oct 2005 15:32:19 -0500
-Message-ID: <20051007203219.GI29826@austin.ibm.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [PATCH] 3ware: use scsi_scan_target()
+Date: Fri, 07 Oct 2005 17:36:12 -0400
+Message-ID: <4346EA4C.3020602@adaptec.com>
+References: <20051005231912.79866.qmail@web31807.mail.mud.yahoo.com> <1128647235.4623.28.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:5294 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1030550AbVJGUce (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2005 16:32:34 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e3.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j97KWWUf014894
-	for <linux-scsi@vger.kernel.org>; Fri, 7 Oct 2005 16:32:32 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j97KWWGk043032
-	for <linux-scsi@vger.kernel.org>; Fri, 7 Oct 2005 16:32:32 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j97KWLkp023319
-	for <linux-scsi@vger.kernel.org>; Fri, 7 Oct 2005 16:32:22 -0400
-Content-Disposition: inline
+Received: from magic.adaptec.com ([216.52.22.17]:25805 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932676AbVJGVgW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2005 17:36:22 -0400
+In-Reply-To: <1128647235.4623.28.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: groudier@free.fr, axboe@suse.de, dgilbert@interlog.com, James.Bottomley@SteelEye.com
-Cc: Kai.Makisara@kolumbus.fi, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: ltuikov@yahoo.com, Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linuxraid@amcc.com
 
+On 10/06/05 21:07, James Bottomley wrote:
+> 1. The domain device as you have implemented it requires a lot of
 
-Overview documentation for the previous email.
+The domain device as I've implemented it, is exactly a SAS domain
+device, supporting expanders, SAS, SATA, SATA PM, etc. devices.  It
+doesn't add any cruft, it is the minimum of what it should be.
 
---linas
+struct domain_device {
+	struct kobject    dev_obj;
+	enum sas_dev_type dev_type;
 
------ Forwarded message from linas <linas@austin.ibm.com> -----
+	enum sas_phy_linkrate linkrate;
+	enum sas_phy_linkrate min_linkrate;
+	enum sas_phy_linkrate max_linkrate;
 
-To: paulus@samba.org
-Cc: linuxppc64-dev@ozlabs.org, linux-kernel@vger.kernel.org,
-	linux-pci@atrey.karlin.mff.cuni.cz
-Subject: [PATCH 6/22] ppc64: PCI Error Recovery: documentation patch
+	int  pathways;
 
-PCI Error Recovery: documentation patch
+	struct domain_device *parent;
+	struct list_head siblings; /* devices on the same level */
+	struct sas_port *port;	  /* shortcut to root of the tree */
 
-Various PCI bus errors can be signaled by newer PCI controllers.
-Recovering from those errors requires an infrastructure to notify
-affected device drivers of the error, and a way of walking through
-a reset sequence.  This patch adds documentation describing the
-current error recovery proposal.
+	struct list_head dev_list_node;
 
-Signed-off-by: Linas Vepstas <linas@austin.ibm.com>
+	enum sas_proto    iproto;
+	enum sas_proto    tproto;
 
- Documentation/pci-error-recovery.txt |  246 +++++++++++++++++++++++++++++++++++
- MAINTAINERS                          |    7 
- 2 files changed, 253 insertions(+)
+	u8  sas_addr[SAS_ADDR_SIZE];
+	u8  hashed_sas_addr[HASHED_SAS_ADDR_SIZE];
 
-Index: linux-2.6.14-rc2-git6/Documentation/pci-error-recovery.txt
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ linux-2.6.14-rc2-git6/Documentation/pci-error-recovery.txt	2005-10-06 17:52:47.274692945 -0500
-@@ -0,0 +1,246 @@
-+
-+                       PCI Error Recovery
-+                       ------------------
-+                         May 31, 2005
-+
-+               Current document maintainer:
-+           Linas Vepstas <linas@austin.ibm.com>
-+
-+
-+Some PCI bus controllers are able to detect certain "hard" PCI errors
-+on the bus, such as parity errors on the data and address busses, as
-+well as SERR and PERR errors.  These chipsets are then able to disable
-+I/O to/from the affected device, so that, for example, a bad DMA
-+address doesn't end up corrupting system memory.  These same chipsets
-+are also able to reset the affected PCI device, and return it to
-+working condition.  This document describes a generic API form
-+performing error recovery.
-+
-+The core idea is that after a PCI error has been detected, there must
-+be a way for the kernel to coordinate with all affected device drivers
-+so that the pci card can be made operational again, possibly after
-+performing a full electrical #RST of the PCI card.  The API below
-+provides a generic API for device drivers to be notified of PCI
-+errors, and to be notified of, and respond to, a reset sequence.
-+
-+Preliminary sketch of API, cut-n-pasted-n-modified email from
-+Ben Herrenschmidt, circa 5 april 2005
-+
-+The error recovery API support is exposed to the driver in the form of
-+a structure of function pointers pointed to by a new field in struct
-+pci_driver. The absence of this pointer in pci_driver denotes an
-+"non-aware" driver, behaviour on these is platform dependant.
-+Platforms like ppc64 can try to simulate pci hotplug remove/add.
-+
-+The definition of "pci_error_token" is not covered here. It is based on
-+Seto's work on the synchronous error detection. We still need to define
-+functions for extracting infos out of an opaque error token. This is
-+separate from this API.
-+
-+This structure has the form:
-+
-+struct pci_error_handlers
-+{
-+	int (*error_detected)(struct pci_dev *dev, pci_error_token error);
-+	int (*mmio_enabled)(struct pci_dev *dev);
-+	int (*resume)(struct pci_dev *dev);
-+	int (*link_reset)(struct pci_dev *dev);
-+	int (*slot_reset)(struct pci_dev *dev);
-+};
-+
-+A driver doesn't have to implement all of these callbacks. The
-+only mandatory one is error_detected(). If a callback is not
-+implemented, the corresponding feature is considered unsupported.
-+For example, if mmio_enabled() and resume() aren't there, then the
-+driver is assumed as not doing any direct recovery and requires
-+a reset. If link_reset() is not implemented, the card is assumed as
-+not caring about link resets, in which case, if recover is supported,
-+the core can try recover (but not slot_reset() unless it really did
-+reset the slot). If slot_reset() is not supported, link_reset() can
-+be called instead on a slot reset.
-+
-+At first, the call will always be :
-+
-+	1) error_detected()
-+
-+	Error detected. This is sent once after an error has been detected. At
-+this point, the device might not be accessible anymore depending on the
-+platform (the slot will be isolated on ppc64). The driver may already
-+have "noticed" the error because of a failing IO, but this is the proper
-+"synchronisation point", that is, it gives a chance to the driver to
-+cleanup, waiting for pending stuff (timers, whatever, etc...) to
-+complete; it can take semaphores, schedule, etc... everything but touch
-+the device. Within this function and after it returns, the driver
-+shouldn't do any new IOs. Called in task context. This is sort of a
-+"quiesce" point. See note about interrupts at the end of this doc.
-+
-+	Result codes:
-+		- PCIERR_RESULT_CAN_RECOVER:
-+		  Driever returns this if it thinks it might be able to recover
-+		  the HW by just banging IOs or if it wants to be given
-+		  a chance to extract some diagnostic informations (see
-+		  below).
-+		- PCIERR_RESULT_NEED_RESET:
-+		  Driver returns this if it thinks it can't recover unless the
-+		  slot is reset.
-+		- PCIERR_RESULT_DISCONNECT:
-+		  Return this if driver thinks it won't recover at all,
-+		  (this will detach the driver ? or just leave it
-+		  dangling ? to be decided)
-+
-+So at this point, we have called error_detected() for all drivers
-+on the segment that had the error. On ppc64, the slot is isolated. What
-+happens now typically depends on the result from the drivers. If all
-+drivers on the segment/slot return PCIERR_RESULT_CAN_RECOVER, we would
-+re-enable IOs on the slot (or do nothing special if the platform doesn't
-+isolate slots) and call 2). If not and we can reset slots, we go to 4),
-+if neither, we have a dead slot. If it's an hotplug slot, we might
-+"simulate" reset by triggering HW unplug/replug though.
-+
-+>>> Current ppc64 implementation assumes that a device driver will
-+>>> *not* schedule or semaphore in this routine; the current ppc64
-+>>> implementation uses one kernel thread to notify all devices;
-+>>> thus, of one device sleeps/schedules, all devices are affected.
-+>>> Doing better requires complex multi-threaded logic in the error
-+>>> recovery implementation (e.g. waiting for all notification threads
-+>>> to "join" before proceeding with recovery.)  This seems excessively
-+>>> complex and not worth implementing.
-+
-+>>> The current ppc64 implementation doesn't much care if the device
-+>>> attempts i/o at this point, or not.  I/O's will fail, returning
-+>>> a value of 0xff on read, and writes will be dropped. If the device
-+>>> driver attempts more than 10K I/O's to a frozen adapter, it will
-+>>> assume that the device driver has gone into an infinite loop, and
-+>>> it will panic the the kernel.
-+
-+	2) mmio_enabled()
-+
-+	This is the "early recovery" call. IOs are allowed again, but DMA is
-+not (hrm... to be discussed, I prefer not), with some restrictions. This
-+is NOT a callback for the driver to start operations again, only to
-+peek/poke at the device, extract diagnostic information, if any, and
-+eventually do things like trigger a device local reset or some such,
-+but not restart operations. This is sent if all drivers on a segment
-+agree that they can try to recover and no automatic link reset was
-+performed by the HW. If the platform can't just re-enable IOs without
-+a slot reset or a link reset, it doesn't call this callback and goes
-+directly to 3) or 4). All IOs should be done _synchronously_ from
-+within this callback, errors triggered by them will be returned via
-+the normal pci_check_whatever() api, no new error_detected() callback
-+will be issued due to an error happening here. However, such an error
-+might cause IOs to be re-blocked for the whole segment, and thus
-+invalidate the recovery that other devices on the same segment might
-+have done, forcing the whole segment into one of the next states,
-+that is link reset or slot reset.
-+
-+	Result codes:
-+		- PCIERR_RESULT_RECOVERED
-+		  Driver returns this if it thinks the device is fully
-+		  functionnal and thinks it is ready to start
-+		  normal driver operations again. There is no
-+		  guarantee that the driver will actually be
-+		  allowed to proceed, as another driver on the
-+		  same segment might have failed and thus triggered a
-+		  slot reset on platforms that support it.
-+
-+		- PCIERR_RESULT_NEED_RESET
-+		  Driver returns this if it thinks the device is not
-+		  recoverable in it's current state and it needs a slot
-+		  reset to proceed.
-+
-+		- PCIERR_RESULT_DISCONNECT
-+		  Same as above. Total failure, no recovery even after
-+		  reset driver dead. (To be defined more precisely)
-+
-+>>> The current ppc64 implementation does not implement this callback.
-+
-+	3) link_reset()
-+
-+	This is called after the link has been reset. This is typically
-+a PCI Express specific state at this point and is done whenever a
-+non-fatal error has been detected that can be "solved" by resetting
-+the link. This call informs the driver of the reset and the driver
-+should check if the device appears to be in working condition.
-+This function acts a bit like 2) mmio_enabled(), in that the driver
-+is not supposed to restart normal driver I/O operations right away.
-+Instead, it should just "probe" the device to check it's recoverability
-+status. If all is right, then the core will call resume() once all
-+drivers have ack'd link_reset().
-+
-+	Result codes:
-+		(identical to mmio_enabled)
-+
-+>>> The current ppc64 implementation does not implement this callback.
-+
-+	4) slot_reset()
-+
-+	This is called after the slot has been soft or hard reset by the
-+platform.  A soft reset consists of asserting the adapter #RST line
-+and then restoring the PCI BARs and PCI configuration header. If the
-+platform supports PCI hotplug, then it might instead perform a hard
-+reset by toggling power on the slot off/on. This call gives drivers
-+the chance to re-initialize the hardware (re-download firmware, etc.),
-+but drivers shouldn't restart normal I/O processing operations at
-+this point.  (See note about interrupts; interrupts aren't guaranteed
-+to be delivered until the resume() callback has been called). If all
-+device drivers report success on this callback, the patform will call
-+resume() to complete the error handling and let the driver restart
-+normal I/O processing.
-+
-+A driver can still return a critical failure for this function if
-+it can't get the device operational after reset.  If the platform
-+previously tried a soft reset, it migh now try a hard reset (power
-+cycle) and then call slot_reset() again.  It the device still can't
-+be recovered, there is nothing more that can be done;  the platform
-+will typically report a "permanent failure" in such a case.  The
-+device will be considered "dead" in this case.
-+
-+	Result codes:
-+		- PCIERR_RESULT_DISCONNECT
-+		Same as above.
-+
-+>>> The current ppc64 implementation does not try a power-cycle reset
-+>>> if the driver returned PCIERR_RESULT_DISCONNECT. However, it should.
-+
-+	5) resume()
-+
-+	This is called if all drivers on the segment have returned
-+PCIERR_RESULT_RECOVERED from one of the 3 prevous callbacks.
-+That basically tells the driver to restart activity, tht everything
-+is back and running. No result code is taken into account here. If
-+a new error happens, it will restart a new error handling process.
-+
-+That's it. I think this covers all the possibilities. The way those
-+callbacks are called is platform policy. A platform with no slot reset
-+capability for example may want to just "ignore" drivers that can't
-+recover (disconnect them) and try to let other cards on the same segment
-+recover. Keep in mind that in most real life cases, though, there will
-+be only one driver per segment.
-+
-+Now, there is a note about interrupts. If you get an interrupt and your
-+device is dead or has been isolated, there is a problem :)
-+
-+After much thinking, I decided to leave that to the platform. That is,
-+the recovery API only precies that:
-+
-+ - There is no guarantee that interrupt delivery can proceed from any
-+device on the segment starting from the error detection and until the
-+restart callback is sent, at which point interrupts are expected to be
-+fully operational.
-+
-+ - There is no guarantee that interrupt delivery is stopped, that is, ad
-+river that gets an interrupts after detecting an error, or that detects
-+and error within the interrupt handler such that it prevents proper
-+ack'ing of the interrupt (and thus removal of the source) should just
-+return IRQ_NOTHANDLED. It's up to the platform to deal with taht
-+condition, typically by masking the irq source during the duration of
-+the error handling. It is expected that the platform "knows" which
-+interrupts are routed to error-management capable slots and can deal
-+with temporarily disabling that irq number during error processing (this
-+isn't terribly complex). That means some IRQ latency for other devices
-+sharing the interrupt, but there is simply no other way. High end
-+platforms aren't supposed to share interrupts between many devices
-+anyway :)
-+
-+
-+Revised: 31 May 2005 Linas Vepstas <linas@austin.ibm.com>
-Index: linux-2.6.14-rc2-git6/MAINTAINERS
-===================================================================
---- linux-2.6.14-rc2-git6.orig/MAINTAINERS	2005-10-06 17:50:30.073943549 -0500
-+++ linux-2.6.14-rc2-git6/MAINTAINERS	2005-10-06 17:52:47.296689858 -0500
-@@ -1859,6 +1859,13 @@
- L:	linux-abi-devel@lists.sourceforge.net
- S:	Maintained
- 
-+PCI ERROR RECOVERY
-+P: Linas Vepstas
-+M: linas@austin.ibm.com
-+L:	linux-kernel@vger.kernel.org
-+L:	linux-pci@atrey.karlin.mff.cuni.cz
-+S:	Supported
-+
- PCI SOUND DRIVERS (ES1370, ES1371 and SONICVIBES)
- P:	Thomas Sailer
- M:	sailer@ife.ee.ethz.ch
+	u8  frame_rcvd[32];
 
+	union {
+		struct expander_device ex_dev;
+		struct end_device      end_dev;
+		struct sata_device     sata_dev; /* STP & directly attached */
+	};
 
------ End forwarded message -----
+	void *lldd_dev;
+};
+
+> infrastructure support.  I'd like to see this refined in the transport
+
+I'm not sure that you can "refine" (take stuff out) from
+struct domain_device.
+
+You're better off creating struct scsi_domain_device { ... }; and starting
+from there.
+
+In effect struct scsi_domain_device { ... }; (non existant yet)
+would be a superclass (in OO sense) of the SAS struct domain_device, shown
+above.
+
+In contrast to "templates", the OO sense can be kept _by design_,
+by _SCSI_ design, not by code enforcement (i.e. struct template_abcd...).
+
+> 2. sas_do_lu_discovery() duplicates a lot of existing functionality, but
+> also lacks a lot of quirk processing.  I know the argument is that SAS
+
+It doesn't duplicate a lot of functionality.  While the code
+in SCSI Core does do LU discovery, the infrastructure is very broken
+in that
+  1) there is no native "target" (i.e. SCSI Device with Target port)
+     support (struct domain_device), and
+  2) that code uses HCIL, by scsi_scan_target definition and from
+     seeing things like:
+
+	if (shost->this_id == id)
+		/*
+		 * Don't scan the host adapter
+		 */
+		return;
+
+As to SAS, the comment is about the size of the function:
+
+/**
+ * sas_do_lu_discovery -- Discover LUs of a SCSI device
+ * @dev: pointer to a domain device of interest
+ *
+ * Discover logical units present in the SCSI device.  I'd like this
+ * to be moved to SCSI Core, but SCSI Core has no concept of a "SCSI
+ * device with a SCSI Target port".  A SCSI device with a SCSI Target
+ * port is a device which the _transport_ found, but other than that,
+ * the transport has little or _no_ knowledge about the device.
+ * Ideally, a LLDD would register a "SCSI device with a SCSI Target
+ * port" with SCSI Core and then SCSI Core would do LU discovery of
+ * that device.
+ *
+ * REPORT LUNS is mandatory.  If a device doesn't support it,
+ * it is broken and you should return it.  Nevertheless, we
+ * assume (optimistically) that the link hasn't been severed and
+ * that maybe we can get to the device anyhow.
+ */
+static int sas_do_lu_discovery(struct domain_device *dev)
+{
+	int  res;
+	u8  *buffer;
+	int  size;
+
+	res = sas_get_report_luns(dev, &buffer, &size);
+	if (res) {
+		SAS_DPRINTK("dev %llx didn't reply to REPORT LUNS, trying "
+			    "LUN 0 anyway\n",
+			    SAS_ADDR(dev->sas_addr));
+		size = 16;
+		buffer = kzalloc(size, GFP_KERNEL);
+	}
+
+	res = sas_register_lu(dev, buffer, size);
+	if (res) {
+		SAS_DPRINTK("dev %llx didn't report any LUs\n",
+			    SAS_ADDR(dev->sas_addr));
+		res = 0;
+	}
+
+	kfree(buffer);
+	return res;
+}
+
+> won't have any quirks, but I'd like to have this proven in the field
+> before I take it as read.
+
+Indeed, it doesn't have quirks (because there are none yet out there).
+
+Let's include it _without_ quirks, and add them as new devices come
+to the market, instead of crudding the code unnecessarily.  This gives
+more freedom of future "patching" and future "design".
+
+The reason is that if all you have is the SAS/SATA chip, then you do not
+need all the legacy quirks, code bloat, bigger binary.
+
+> I'm sure you're aware that not responding on either LUN 0 or the report
+> luns WLUN is a violation of SAM  ... however, if we really already have
+
+I am. I've repeated this about 100 million times on this list,
+and it is in the SAS code comments at sas_do_lu_discovery().
+
+> broken SAS devices with this problem, then you're welcome to expand
+> scsi_scan_target() to cope.
+
+I don't have a problem working on scsi_scan_target().
+But I have a problem with it using _HCIL_.
+
+What do you suggest?
+
+> WLUN support is really the only piece that scsi_scan_target() doesn't
+> currently possess and, as has been discussed before, that only really
+
+-------------------------------------------------------------------------
+> matters if we get a target that's not going to respond to an INQUIRY on
+> LUN0 (I expect most of them, even if they have no LUN0 will respond with
+> PQ 3 to the inquiry and thus be caught by scsi_scan_target() anyway).
+-------------------------------------------------------------------------
+
+I think you clarify your point below but as far as SAM-4 and
+thus SAS devices are concerned:
+
+REPORT LUNS is sent first, to figure out what LUs are contained
+in the SCSI device, and then for each LU, send an INQUIRY to the LU.
+>From the code:
+
+static int sas_register_lu(struct domain_device *dev, u8 *buf, int size)
+{
+	int res;
+
+	for (buf = buf+8, size -= 8; size > 0; size -= 8, buf += 8) {
+		struct LU *lu = sas_alloc_lu();
+
+		SAS_DPRINTK("%016llx probing LUN:%016llx\n",
+			    SAS_ADDR(dev->sas_addr),
+			    be64_to_cpu(*(__be64 *)buf));
+		if (lu) {
+			lu->parent = dev;
+			memcpy(lu->LUN, buf, 8);
+			res = sas_get_inquiry(lu);
+			if (res) {
+				SAS_DPRINTK("dev %llx LUN %016llx didn't reply"
+					    " to INQUIRY, forgotten\n",
+					    SAS_ADDR(dev->sas_addr),
+					    SAS_ADDR(lu->LUN));
+				kfree(lu);
+				continue;
+			}
+			lu->lu_obj.kset = &dev->end_dev.LU_kset;
+			kobject_set_name(&lu->lu_obj, "%016llx",
+					 SAS_ADDR(lu->LUN));
+			lu->lu_obj.ktype = dev->end_dev.LU_kset.ktype;
+			list_add_tail(&lu->list, &dev->end_dev.LU_list);
+		}
+	}
+
+	return list_empty(&dev->end_dev.LU_list) ? -ENODEV : 0;
+}
+
+> However, to add WLUN support to scsi_scan_target() looks pretty simple:
+> If the transport supports > 256 LUNs and the initial INQUIRY comes back
+> SCSI_SCAN_NO_RESPONSE then fire off a WLUN report lun scan anyway.  By
+> all means, submit a patch to do this.
+
+I did take a look and can see "transport" calls right in SCSI Core.
+Firthermore the "transport" calls are HCIL, for example:
+	shost->transportt->target_parent(shost, channel, id);
+
+"If the transport supports > 256 LUNs" -- as James S hints,
+it maybe the case that the transport does, but the device doesn't
+or vice versa.  Add to this the shaky REPORT LUN support for legacy
+devices.
+
+Also the order of operations... "initial INQUIRY comes back
+SCSI_SCAN_NO_RESPONSE then fire off a WLUN report lun scan anyway".
+
+When in fact REPORT LUNS should be the first thing sent, then if that
+fails we assume that LUN 0 is present anyway as you can see I've done
+in sas_do_lu_discovery() above.
+
+So it gets really messy if you can see what I mean.
+
+>>P.S. REPORT LUNS is Mandatory as per SPC, so newer devices
+>>(SAS) support it.  Furthermore if their LUs are sparse they
+>>(really) support REPORT LUNS.
+> 
+> 
+> Actually, it's optional per SPC; it's mandatory in SPC-2 but *only* if
+> your device is multi-LUN; and it finally became mandatory for everything
+> in SPC-3 (or I should say "becomes" since SPC-3 isn't ratified yet).
+
+"Actually" when I say SPC, I mean SPC-latest.  When I say SAM, I mean
+SAM-latest, when I say SCSI, I mean SCSI-3 which T10 says means SCSI.
+
+I don't see your point in "correcting" me, while SCSI Core uses
+HCIL extensively.
+
+	Luben
+http://linux.adaptec.com/sas/
+Disclaimer: Opinions stated in this email are my own, not of my employer.
+
