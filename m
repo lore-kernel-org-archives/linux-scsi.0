@@ -1,344 +1,135 @@
 From: linas <linas@austin.ibm.com>
-Subject: [linas@austin.ibm.com: [PATCH 19/22] PCI Error Recovery: Symbios SCSI device driver]
-Date: Fri, 7 Oct 2005 15:31:28 -0500
-Message-ID: <20051007203128.GH29826@austin.ibm.com>
+Subject: [linas@austin.ibm.com: [PATCH 7/22] PCI Error Recovery: header file patch]
+Date: Fri, 7 Oct 2005 15:33:13 -0500
+Message-ID: <20051007203313.GJ29826@austin.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:61421 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1030462AbVJGUcQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2005 16:32:16 -0400
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:42369 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1030553AbVJGUd0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2005 16:33:26 -0400
 Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e1.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j97KVwg5026419
-	for <linux-scsi@vger.kernel.org>; Fri, 7 Oct 2005 16:31:58 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j97KVwGk097594
-	for <linux-scsi@vger.kernel.org>; Fri, 7 Oct 2005 16:31:58 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j97KVlQG020600
-	for <linux-scsi@vger.kernel.org>; Fri, 7 Oct 2005 16:31:48 -0400
+	by e1.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id j97KXQMJ027499
+	for <linux-scsi@vger.kernel.org>; Fri, 7 Oct 2005 16:33:26 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j97KXQGk094226
+	for <linux-scsi@vger.kernel.org>; Fri, 7 Oct 2005 16:33:26 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11/8.13.3) with ESMTP id j97KXEmQ023829
+	for <linux-scsi@vger.kernel.org>; Fri, 7 Oct 2005 16:33:15 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: groudier@free.fr, axboe@suse.de, dgilbert@interlog.com, James.Bottomley@SteelEye.com
 Cc: Kai.Makisara@kolumbus.fi, linux-scsi@vger.kernel.org
 
-Hi,
 
-I'm not sure where to send this patch. Its a part of a much larger
-series of patches that imleent "PCI Bus Error Recovery".  Some
-background is in order:
-
-Some recent PCI bridge chips can detect a variety of PCI error
-conditions, and react to them by offlining the affected PCI device.
-These errors can be recovered by quiescing the affected device driver,
-resetting the PCI bridge chip, and then restarting the device driver.
-
-The big sequence of patches implements this whole system for the
-ppc64 architecture, plus it converts five "sample" drivers to use it.
-I've implemented the recovery for two SCSI device drivers: the Symbios
-53Cxx driver, included bewlo, and the "IBM power raid" ipr driver.
-
-I'm fishing for comments, suggestins, etc. These patches are submited
-for inclusion into mainline.
+Header file changes for the previous email.
 
 --linas
-
-p.s. The next emails will include the pci header changes, and the
-overview documentation.  The full set of patches for he whole system
-should be visible on the LKML.
-
-
-p.p.s I'm also wondering if there is some way to implement this in
-SCSI-generic.  Haven't thought much about this. Comments?
-
 
 ----- Forwarded message from linas <linas@austin.ibm.com> -----
 
 To: paulus@samba.org
 Cc: linuxppc64-dev@ozlabs.org, linux-pci@atrey.karlin.mff.cuni.cz,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 19/22] PCI Error Recovery: Symbios SCSI device driver
+Subject: [PATCH 7/22] PCI Error Recovery: header file patch
 
+PCI Error Recovery: header file patch
 
-PCI Error Recovery: Symbios SCSI device driver
+Various PCI bus errors can be signaled by newer PCI controllers. Recovering 
+from those errors requires an infrastructure to notify affected device drivers 
+of the error, and a way of walking through a reset sequence.  This patch adds 
+a set of callbacks to be used by error recovery routines to notify device 
+drivers of the various stages of recovery.
 
-Various PCI bus errors can be signaled by newer PCI controllers.  This
-patch adds the PCI error recovery callbacks to the Symbios SCSI device driver.
-The patch has been tested, and appears to work well.
-
-Signed-off-by: Linas Vepstas <linas@linas.org>
+Signed-off-by: Linas Vepstas <linas@austin.ibm.com>
 
 --
- arch/ppc64/configs/pSeries_defconfig |    1 
- drivers/scsi/Kconfig                 |    8 ++
- drivers/scsi/sym53c8xx_2/sym_glue.c  |  124 +++++++++++++++++++++++++++++++++++
- drivers/scsi/sym53c8xx_2/sym_glue.h  |    4 +
- drivers/scsi/sym53c8xx_2/sym_hipd.c  |   16 ++++
- 5 files changed, 153 insertions(+)
+ include/linux/pci.h |   49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 49 insertions(+)
 
-Index: linux-2.6.14-rc2-git6/arch/ppc64/configs/pSeries_defconfig
+Index: linux-2.6.14-rc2-git6/include/linux/pci.h
 ===================================================================
---- linux-2.6.14-rc2-git6.orig/arch/ppc64/configs/pSeries_defconfig	2005-10-06 10:36:42.939820924 -0500
-+++ linux-2.6.14-rc2-git6/arch/ppc64/configs/pSeries_defconfig	2005-10-06 10:36:46.735288291 -0500
-@@ -473,6 +473,7 @@
- CONFIG_SCSI_SYM53C8XX_DEFAULT_TAGS=16
- CONFIG_SCSI_SYM53C8XX_MAX_TAGS=64
- # CONFIG_SCSI_SYM53C8XX_IOMAPPED is not set
-+CONFIG_SCSI_SYM53C8XX_EEH_RECOVERY=y
- CONFIG_SCSI_IPR=y
- CONFIG_SCSI_IPR_TRACE=y
- CONFIG_SCSI_IPR_DUMP=y
-Index: linux-2.6.14-rc2-git6/drivers/scsi/Kconfig
-===================================================================
---- linux-2.6.14-rc2-git6.orig/drivers/scsi/Kconfig	2005-10-06 10:36:42.913824572 -0500
-+++ linux-2.6.14-rc2-git6/drivers/scsi/Kconfig	2005-10-06 10:36:46.738287870 -0500
-@@ -1062,6 +1062,14 @@
- 	  the card.  This is significantly slower then using memory
- 	  mapped IO.  Most people should answer N.
+--- linux-2.6.14-rc2-git6.orig/include/linux/pci.h	2005-10-06 17:50:29.442032212 -0500
++++ linux-2.6.14-rc2-git6/include/linux/pci.h	2005-10-06 17:52:50.634221570 -0500
+@@ -78,6 +78,16 @@
+ #define PCI_UNKNOWN	((pci_power_t __force) 5)
+ #define PCI_POWER_ERROR	((pci_power_t __force) -1)
  
-+config SCSI_SYM53C8XX_EEH_RECOVERY
-+	bool "Enable PCI bus error recovery"
-+	depends on SCSI_SYM53C8XX_2 && PPC_PSERIES
-+	help
-+		If you say Y here, the driver will be able to recover from
-+		PCI bus errors on many PowerPC platforms. IBM pSeries users
-+		should answer Y.
-+
- config SCSI_IPR
- 	tristate "IBM Power Linux RAID adapter support"
- 	depends on PCI && SCSI
-Index: linux-2.6.14-rc2-git6/drivers/scsi/sym53c8xx_2/sym_glue.c
-===================================================================
---- linux-2.6.14-rc2-git6.orig/drivers/scsi/sym53c8xx_2/sym_glue.c	2005-10-06 10:32:48.850671732 -0500
-+++ linux-2.6.14-rc2-git6/drivers/scsi/sym53c8xx_2/sym_glue.c	2005-10-06 10:36:46.741287449 -0500
-@@ -685,6 +685,10 @@
- 	struct sym_hcb *np = (struct sym_hcb *)dev_id;
- 
- 	if (DEBUG_FLAGS & DEBUG_TINY) printf_debug ("[");
-+#ifdef CONFIG_SCSI_SYM53C8XX_EEH_RECOVERY
-+	if (np->s.io_state != pci_channel_io_normal)
-+		return IRQ_HANDLED;
-+#endif /* CONFIG_SCSI_SYM53C8XX_EEH_RECOVERY */
- 
- 	spin_lock_irqsave(np->s.host->host_lock, flags);
- 	sym_interrupt(np);
-@@ -759,6 +763,27 @@
-  */
- static void sym_eh_timeout(u_long p) { __sym_eh_done((struct scsi_cmnd *)p, 1); }
- 
-+#ifdef CONFIG_SCSI_SYM53C8XX_EEH_RECOVERY
-+static void sym_eeh_timeout(u_long p)
-+{
-+	struct sym_eh_wait *ep = (struct sym_eh_wait *) p;
-+	if (!ep)
-+		return;
-+	complete(&ep->done);
-+}
-+
-+static void sym_eeh_done(struct sym_eh_wait *ep)
-+{
-+	if (!ep)
-+		return;
-+	ep->timed_out = 0;
-+	if (!del_timer(&ep->timer))
-+		return;
-+
-+	complete(&ep->done);
-+}
-+#endif /* CONFIG_SCSI_SYM53C8XX_EEH_RECOVERY */
-+
- /*
-  *  Generic method for our eh processing.
-  *  The 'op' argument tells what we have to do.
-@@ -799,6 +824,37 @@
- 
- 	/* Try to proceed the operation we have been asked for */
- 	sts = -1;
-+#ifdef CONFIG_SCSI_SYM53C8XX_EEH_RECOVERY
-+
-+	/* We may be in an error condition because the PCI bus
-+	 * went down. In this case, we need to wait until the
-+	 * PCI bus is reset, the card is reset, and only then
-+	 * proceed with the scsi error recovery.  We'll wait
-+	 * for 15 seconds for this to happen.
-+	 */
-+#define WAIT_FOR_PCI_RECOVERY	15
-+	if (np->s.io_state != pci_channel_io_normal) {
-+		struct sym_eh_wait eeh, *eep = &eeh;
-+		np->s.io_reset_wait = eep;
-+		init_completion(&eep->done);
-+		init_timer(&eep->timer);
-+		eep->to_do = SYM_EH_DO_WAIT;
-+		eep->timer.expires = jiffies + (WAIT_FOR_PCI_RECOVERY*HZ);
-+		eep->timer.function = sym_eeh_timeout;
-+		eep->timer.data = (u_long)eep;
-+		eep->timed_out = 1;	/* Be pessimistic for once :) */
-+		add_timer(&eep->timer);
-+		spin_unlock_irq(np->s.host->host_lock);
-+		wait_for_completion(&eep->done);
-+		spin_lock_irq(np->s.host->host_lock);
-+		if (eep->timed_out) {
-+			printk (KERN_ERR "%s: Timed out waiting for PCI reset\n",
-+			       sym_name(np));
-+		}
-+		np->s.io_reset_wait = NULL;
-+	}
-+#endif /* CONFIG_SCSI_SYM53C8XX_EEH_RECOVERY */
-+
- 	switch(op) {
- 	case SYM_EH_ABORT:
- 		sts = sym_abort_scsiio(np, cmd, 1);
-@@ -1584,6 +1640,10 @@
- 	np->maxoffs	= dev->chip.offset_max;
- 	np->maxburst	= dev->chip.burst_max;
- 	np->myaddr	= dev->host_id;
-+#ifdef CONFIG_SCSI_SYM53C8XX_EEH_RECOVERY
-+	np->s.io_state = pci_channel_io_normal;
-+	np->s.io_reset_wait = NULL;
-+#endif /* CONFIG_SCSI_SYM53C8XX_EEH_RECOVERY */
- 
- 	/*
- 	 *  Edit its name.
-@@ -1916,6 +1976,59 @@
- 	return 1;
- }
- 
-+#ifdef CONFIG_SCSI_SYM53C8XX_EEH_RECOVERY
-+/** sym2_io_error_detected() is called when PCI error is detected */
-+static int sym2_io_error_detected (struct pci_dev *pdev, enum pci_channel_state state)
-+{
-+	struct sym_hcb *np = pci_get_drvdata(pdev);
-+
-+	np->s.io_state = state;
-+	// XXX If slot is permanently frozen, then what?
-+	// Should we scsi_remove_host() maybe ??
-+
-+	/* Request a slot slot reset. */
-+	return PCIERR_RESULT_NEED_RESET;
-+}
-+
-+/** sym2_io_slot_reset is called when the pci bus has been reset.
-+ *  Restart the card from scratch. */
-+static int sym2_io_slot_reset (struct pci_dev *pdev)
-+{
-+	struct sym_hcb *np = pci_get_drvdata(pdev);
-+
-+	printk (KERN_INFO "%s: recovering from a PCI slot reset\n",
-+	    sym_name(np));
-+
-+	if (pci_enable_device(pdev))
-+		printk (KERN_ERR "%s: device setup failed most egregiously\n",
-+			    sym_name(np));
-+
-+	pci_set_master(pdev);
-+	enable_irq (pdev->irq);
-+
-+	/* Perform host reset only on one instance of the card */
-+	if (0 == PCI_FUNC (pdev->devfn))
-+		sym_reset_scsi_bus(np, 0);
-+
-+	return PCIERR_RESULT_RECOVERED;
-+}
-+
-+/** sym2_io_resume is called when the error recovery driver
-+ *  tells us that its OK to resume normal operation.
++/** The pci_channel state describes connectivity between the CPU and
++ *  the pci device.  If some PCI bus between here and the pci device
++ *  has crashed or locked up, this info is reflected here.
 + */
-+static void sym2_io_resume (struct pci_dev *pdev)
-+{
-+	struct sym_hcb *np = pci_get_drvdata(pdev);
-+
-+	/* Perform device startup only once for this card. */
-+	if (0 == PCI_FUNC (pdev->devfn))
-+		sym_start_up (np, 1);
-+
-+	np->s.io_state = pci_channel_io_normal;
-+	sym_eeh_done (np->s.io_reset_wait);
-+}
-+#endif /* CONFIG_SCSI_SYM53C8XX_EEH_RECOVERY */
++enum pci_channel_state {
++	pci_channel_io_normal = 0, /* I/O channel is in normal state */
++	pci_channel_io_frozen = 1, /* I/O to channel is blocked */
++	pci_channel_io_perm_failure, /* PCI card is dead */
++};
 +
  /*
-  * Driver host template.
+  * The pci_dev structure is used to describe PCI devices.
   */
-@@ -2169,11 +2282,22 @@
+@@ -110,6 +120,7 @@
+ 					   this is D0-D3, D0 being fully functional,
+ 					   and D3 being off. */
  
- MODULE_DEVICE_TABLE(pci, sym2_id_table);
++	enum pci_channel_state error_state;  /* current connectivity state */
+ 	struct	device	dev;		/* Generic device interface */
  
-+#ifdef CONFIG_SCSI_SYM53C8XX_EEH_RECOVERY
-+static struct pci_error_handlers sym2_err_handler = {
-+	.error_detected = sym2_io_error_detected,
-+	.slot_reset = sym2_io_slot_reset,
-+	.resume = sym2_io_resume,
-+};
-+#endif /* CONFIG_SCSI_SYM53C8XX_EEH_RECOVERY */
-+
- static struct pci_driver sym2_driver = {
- 	.name		= NAME53C8XX,
- 	.id_table	= sym2_id_table,
- 	.probe		= sym2_probe,
- 	.remove		= __devexit_p(sym2_remove),
-+#ifdef CONFIG_SCSI_SYM53C8XX_EEH_RECOVERY
-+	.err_handler = &sym2_err_handler,
-+#endif /* CONFIG_SCSI_SYM53C8XX_EEH_RECOVERY */
+ 	/* device is compatible with these IDs */
+@@ -231,6 +242,43 @@
+ 	unsigned int use_driver_data:1; /* pci_driver->driver_data is used */
  };
  
- static int __init sym2_init(void)
-Index: linux-2.6.14-rc2-git6/drivers/scsi/sym53c8xx_2/sym_glue.h
-===================================================================
---- linux-2.6.14-rc2-git6.orig/drivers/scsi/sym53c8xx_2/sym_glue.h	2005-10-06 10:32:48.851671592 -0500
-+++ linux-2.6.14-rc2-git6/drivers/scsi/sym53c8xx_2/sym_glue.h	2005-10-06 10:36:46.742287309 -0500
-@@ -181,6 +181,10 @@
- 	char		chip_name[8];
- 	struct pci_dev	*device;
- 
-+	/* pci bus i/o state; waiter for clearing of i/o state */
-+	enum pci_channel_state io_state;
-+	struct sym_eh_wait *io_reset_wait;
++/* ---------------------------------------------------------------- */
++/** PCI error recovery infrastructure.  If a PCI device driver provides
++ *  a set fof callbacks in struct pci_error_handlers, then that device driver
++ *  will be notified of PCI bus errors, and will be driven to recovery
++ *  when an error occurs.
++ */
 +
- 	struct Scsi_Host *host;
++enum pcierr_result {
++	PCIERR_RESULT_NONE=0,        /* no result/none/not supported in device driver */
++	PCIERR_RESULT_CAN_RECOVER=1, /* Device driver can recover without slot reset */
++	PCIERR_RESULT_NEED_RESET,    /* Device driver wants slot to be reset. */
++	PCIERR_RESULT_DISCONNECT,    /* Device has completely failed, is unrecoverable */
++	PCIERR_RESULT_RECOVERED,     /* Device driver is fully recovered and operational */
++};
++
++/* PCI bus error event callbacks */
++struct pci_error_handlers
++{
++	/* PCI bus error detected on this device */
++	int (*error_detected)(struct pci_dev *dev,
++	                      enum pci_channel_state error);
++
++	/* MMIO has been re-enabled, but not DMA */
++	int (*mmio_enabled)(struct pci_dev *dev);
++
++	/* PCI Express link has been reset */
++	int (*link_reset)(struct pci_dev *dev);
++
++	/* PCI slot has been reset */
++	int (*slot_reset)(struct pci_dev *dev);
++
++	/* Device driver may resume normal operations */
++	void (*resume)(struct pci_dev *dev);
++};
++
++/* ---------------------------------------------------------------- */
++
+ struct module;
+ struct pci_driver {
+ 	struct list_head node;
+@@ -244,6 +292,7 @@
+ 	int  (*enable_wake) (struct pci_dev *dev, pci_power_t state, int enable);   /* Enable wake event */
+ 	void (*shutdown) (struct pci_dev *dev);
  
- 	void __iomem *	ioaddr;		/* MMIO kernel io address	*/
-Index: linux-2.6.14-rc2-git6/drivers/scsi/sym53c8xx_2/sym_hipd.c
-===================================================================
---- linux-2.6.14-rc2-git6.orig/drivers/scsi/sym53c8xx_2/sym_hipd.c	2005-10-06 10:32:48.851671592 -0500
-+++ linux-2.6.14-rc2-git6/drivers/scsi/sym53c8xx_2/sym_hipd.c	2005-10-06 10:36:46.749286327 -0500
-@@ -2806,6 +2806,7 @@
- 	u_char	istat, istatc;
- 	u_char	dstat;
- 	u_short	sist;
-+	u_int    icnt;
- 
- 	/*
- 	 *  interrupt on the fly ?
-@@ -2847,6 +2848,7 @@
- 	sist	= 0;
- 	dstat	= 0;
- 	istatc	= istat;
-+	icnt = 0;
- 	do {
- 		if (istatc & SIP)
- 			sist  |= INW(np, nc_sist);
-@@ -2854,6 +2856,20 @@
- 			dstat |= INB(np, nc_dstat);
- 		istatc = INB(np, nc_istat);
- 		istat |= istatc;
-+#ifdef CONFIG_SCSI_SYM53C8XX_EEH_RECOVERY
-+		/* Prevent deadlock waiting on a condition that may never clear. */
-+		/* XXX this is a temporary kludge; the correct to detect
-+		 * a PCI bus error would be to use the io_check interfaces
-+		 * proposed by Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
-+		 * Problem with polling like that is the state flag might not
-+		 * be set.
-+		 */
-+		icnt ++;
-+		if (100 < icnt) {
-+			if (np->s.device->error_state != pci_channel_io_normal)
-+				return;
-+		}
-+#endif /* CONFIG_SCSI_SYM53C8XX_EEH_RECOVERY */
- 	} while (istatc & (SIP|DIP));
- 
- 	if (DEBUG_FLAGS & DEBUG_TINY)
++	struct pci_error_handlers *err_handler;
+ 	struct device_driver	driver;
+ 	struct pci_dynids dynids;
+ };
 _______________________________________________
 Linuxppc64-dev mailing list
 Linuxppc64-dev@ozlabs.org
