@@ -1,29 +1,30 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 0/3] libata: scsi error handling, encore
-Date: Sun, 09 Oct 2005 13:43:20 -0400
-Message-ID: <434956B8.1050105@pobox.com>
-References: <43490BC8.9060504@torque.net> <434919E4.1080601@pobox.com> <434953C4.4000201@adaptec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Olive Spears <pickle@geier.com>
+Subject: Men's health pills - order securely online.
+Date: Sun, 9 Oct 2005 11:21:14 -0700
+Message-ID: <3330060126.38944123785@201009239215.user.veloxzone.com.br>
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:28831 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932164AbVJIRnb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Oct 2005 13:43:31 -0400
-In-Reply-To: <434953C4.4000201@adaptec.com>
+Received: from zeus1.kernel.org ([204.152.191.4]:47255 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S932204AbVJISVd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Oct 2005 14:21:33 -0400
+Received: from 201009239215.user.veloxzone.com.br (201009239215.user.veloxzone.com.br [201.9.239.215])
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id j99ILEIC002804
+	for <linux-scsi@vger.kernel.org>; Sun, 9 Oct 2005 11:21:23 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: dougg@torque.net, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, htejun@gmail.com, russb@emc.com
+To: linux-scsi@vger.kernel.org
 
-Luben Tuikov wrote:
-> * libata-scsi would need a _lot_ of changes to become SATL.  Would
-> it be more efficient to start from a clean slate (drivers/scsi/satl/satl.c)
-> or change libata-scsi beyond recognition?  What is the political stance
-> on this?
+Fast, worldwide service using registered doctors and pharmacies
+http://mvu.dmix1z1x1s03dvd60dvo0vvd.gurianeh.com/?vpzos
 
-We don't need multiple ATA<->SCSI simulators in the kernel.
 
-	Jeff
+Virtue is insufficient temptation.         
+Democracy: The worship of jackals by jackasses.      
+If the world were a logical place, men would ride sidesaddle.  
 
+Praise youth and it will prosper.       
+In the halls of justice, the only justice is in the halls. 
+No one ever told me grief felt so much like fear.  
+It matters if you just don't give up.     
 
