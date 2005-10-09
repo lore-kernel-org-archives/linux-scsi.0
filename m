@@ -1,37 +1,58 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH 0/3] libata: scsi error handling, encore
-Date: Sun, 09 Oct 2005 22:23:36 +1000
-Message-ID: <43490BC8.9060504@torque.net>
+Subject: [PATCH 3/3] libata: scsi error handling, encore
+Date: Sun, 09 Oct 2005 22:26:03 +1000
+Message-ID: <43490C5B.1030903@torque.net>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:62947 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S932263AbVJIMWx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Oct 2005 08:22:53 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------010605080400030702080705"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, htejun@gmail.com, russb@emc.com
+List-Id: linux-scsi@vger.kernel.org
 
-This is a series of patches that are equivalent to
-one sent on 2005/09/19:
-"[PATCH] libata: scsi error handling, lk 2.6.14-rc1"
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112711945709949&w=2
+This is a multi-part message in MIME format.
+--------------010605080400030702080705
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-The aim is to build more general sense buffers for SCSI
-errors detected in the SCSI ATA translation layer in libata.
-These patches are against Jeff's libata-dev git repository,
+This patch is against Jeff's libata-dev git repository,
 upstream branch.
-Patch 1:  adds ata_scsi_set_sense() extern declaration and
-          definition
-Patch 2:  switch error processing in libata-scsi.c to use
-          ata_scsi_set_sense()
-Patch 3:  remove static inline definitions in libata.h that
-          are no longer used after patch 2
+
+Changelog:
+  - remove static inlines for ata_bad_scsiop() and
+    ata_bad_cdb() which are no longer used
 
 Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
 Doug Gilbert
 
+
+--------------010605080400030702080705
+Content-Type: text/x-patch;
+ name="libata_err3.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="libata_err3.diff"
+
+--- linux/drivers/scsi/libata.h	2005-10-09 15:46:14.000000000 +1000
++++ linux/drivers/scsi/libata.h3	2005-10-09 18:24:06.000000000 +1000
+@@ -86,14 +86,4 @@
+                         unsigned int (*actor) (struct ata_scsi_args *args,
+                                            u8 *rbuf, unsigned int buflen));
+ 
+-static inline void ata_bad_scsiop(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+-{
+-	ata_scsi_badcmd(cmd, done, 0x20, 0x00);
+-}
+-
+-static inline void ata_bad_cdb(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+-{
+-	ata_scsi_badcmd(cmd, done, 0x24, 0x00);
+-}
+-
+ #endif /* __LIBATA_H__ */
+
+
+--------------010605080400030702080705--
