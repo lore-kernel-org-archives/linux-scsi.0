@@ -1,90 +1,37 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH 1/3] libata: scsi error handling, encore
-Date: Sun, 09 Oct 2005 22:24:46 +1000
-Message-ID: <43490C0E.50704@torque.net>
+Subject: [PATCH 0/3] libata: scsi error handling, encore
+Date: Sun, 09 Oct 2005 22:23:36 +1000
+Message-ID: <43490BC8.9060504@torque.net>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050600010407070505010203"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, htejun@gmail.com, russb@emc.com
-List-Id: linux-scsi@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------050600010407070505010203
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zorg.st.net.au ([203.16.233.9]:62947 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S932263AbVJIMWx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Oct 2005 08:22:53 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, htejun@gmail.com, russb@emc.com
 
-This patch is against Jeff's libata-dev git repository,
+This is a series of patches that are equivalent to
+one sent on 2005/09/19:
+"[PATCH] libata: scsi error handling, lk 2.6.14-rc1"
+http://marc.theaimsgroup.com/?l=linux-scsi&m=112711945709949&w=2
+
+The aim is to build more general sense buffers for SCSI
+errors detected in the SCSI ATA translation layer in libata.
+These patches are against Jeff's libata-dev git repository,
 upstream branch.
-
-Changelog:
-  - add extern ata_scsi_set_sense() to build SCSI
-    fixed sense data and corresponding SCSI status
+Patch 1:  adds ata_scsi_set_sense() extern declaration and
+          definition
+Patch 2:  switch error processing in libata-scsi.c to use
+          ata_scsi_set_sense()
+Patch 3:  remove static inline definitions in libata.h that
+          are no longer used after patch 2
 
 Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
 Doug Gilbert
 
-
-
---------------050600010407070505010203
-Content-Type: text/x-patch;
- name="libata_err1.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata_err1.diff"
-
---- linux/drivers/scsi/libata.h	2005-10-08 17:20:02.000000000 +1000
-+++ linux/drivers/scsi/libata.h1	2005-10-09 15:46:14.000000000 +1000
-@@ -80,6 +80,8 @@
- extern void ata_scsi_badcmd(struct scsi_cmnd *cmd,
- 			    void (*done)(struct scsi_cmnd *),
- 			    u8 asc, u8 ascq);
-+extern void ata_scsi_set_sense(struct scsi_cmnd *cmd,
-+			       u8 sk, u8 asc, u8 ascq);
- extern void ata_scsi_rbuf_fill(struct ata_scsi_args *args,
-                         unsigned int (*actor) (struct ata_scsi_args *args,
-                                            u8 *rbuf, unsigned int buflen));
---- linux/drivers/scsi/libata-scsi.c	2005-10-08 17:20:02.000000000 +1000
-+++ linux/drivers/scsi/libata-scsi.c1	2005-10-09 15:46:22.000000000 +1000
-@@ -1451,6 +1451,34 @@
- }
- 
- /**
-+ *	ata_scsi_set_sense - Set SCSI sense data and status
-+ *	@cmd: SCSI request to be handled
-+ *	@sk: SCSI-defined sense key
-+ *	@asc: SCSI-defined additional sense code
-+ *	@ascq: SCSI-defined additional sense code qualifier
-+ *
-+ *	Helper function that builds a valid fixed format, current
-+ *	response code and the given sense key (sk), additional sense
-+ *	code (asc) and additional sense code qualifier (ascq) with
-+ *	a SCSI command status of %SAM_STAT_CHECK_CONDITION and
-+ *	DRIVER_SENSE set in the upper bits of scsi_cmnd::result .
-+ *
-+ *	LOCKING:
-+ *	Not required
-+ */
-+
-+void ata_scsi_set_sense(struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq)
-+{
-+	cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
-+
-+	cmd->sense_buffer[0] = 0x70;	/* fixed format, current */
-+	cmd->sense_buffer[2] = sk;
-+	cmd->sense_buffer[7] = 18 - 8;	/* additional sense length */
-+	cmd->sense_buffer[12] = asc;
-+	cmd->sense_buffer[13] = ascq;
-+}
-+
-+/**
-  *	ata_scsi_badcmd - End a SCSI request with an error
-  *	@cmd: SCSI request to be handled
-  *	@done: SCSI command completion function
-
-
---------------050600010407070505010203--
