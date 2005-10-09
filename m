@@ -1,101 +1,126 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 0/3] libata: scsi error handling, encore
-Date: Sun, 09 Oct 2005 09:23:48 -0400
-Message-ID: <434919E4.1080601@pobox.com>
-References: <43490BC8.9060504@torque.net>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [PATCH] 3ware: use scsi_scan_target()
+Date: Sun, 09 Oct 2005 12:25:51 -0400
+Message-ID: <4349448F.6040309@adaptec.com>
+References: <20051005231912.79866.qmail@web31807.mail.mud.yahoo.com>	 <1128647235.4623.28.camel@mulgrave>  <4346EA4C.3020602@adaptec.com> <1128781859.4824.14.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:59291 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1750705AbVJINYE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Oct 2005 09:24:04 -0400
-In-Reply-To: <43490BC8.9060504@torque.net>
+Received: from magic.adaptec.com ([216.52.22.17]:1422 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1750888AbVJIQZz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Oct 2005 12:25:55 -0400
+In-Reply-To: <1128781859.4824.14.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, htejun@gmail.com, russb@emc.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: ltuikov@yahoo.com, Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, linuxraid@amcc.com
 
-Douglas Gilbert wrote:
-> This is a series of patches that are equivalent to
-> one sent on 2005/09/19:
-> "[PATCH] libata: scsi error handling, lk 2.6.14-rc1"
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=112711945709949&w=2
+On 10/08/05 10:30, James Bottomley wrote:
+> But it doesn't represent a SCSI domain; it represents a particular type
+> of SCSI domain (as you say yourself, SAS or SATA).  I'm trying to eject
+
+That's true.
+
+> transport specific knowledge from the mid-layer, so a domain device that
+> would be used in the mid-layer should be capable of representing any
+> SCSI domain (FC/SPI/SBP etc ..).  I suppose in the worst case, anything
+> that comes back to the mid-layer from the transports should be relevant
+> to at least two separate transports.
+
+struct scsi_domain_device { ... }; (to be created) is your friend.
+
+The only way that that design
+	"should be capable of representing any 
+	 SCSI domain (FC/SPI/SBP etc ..)"
+
+Is if it _does not_ have any knowlege about the underlying
+physical domain -- just as it is shown in SAM (and that is the whole point).
+Else you get in this neverending cat-and-mouse game.  If you have the
+abstraction right, then whatever new transport comes along, it would
+be properly represented.
+
+> That's why I want SAS to prove itself to be quirk free.  If we have to
+> add them, then all we get is a parallel version of scsi_scan_target with
+> a parallel quirk table ... which is highly undesirable.
+
+Well, this way we get into the chicken and the egg problem.
+
+Pessimistically: "Yeah, SAS will have all the same problems, so might
+as well crud it up good, let's kill it from the get go."
+
+Optimistically: "No, SAS will not have the same problems.  FW writers
+have gotten smarter, they've read SAS and SAM at least once.  I'll
+give them the benefit of the doubt."
+
+Naturally (as an engineer), I'm on optimist, plus this is what
+I've observed with beta and release FW.
+
+> Let Jeff come up with the incorporation scheme and see how it looks.
+
+Hmm, I haven't seen or heard anything from Jeff.  Have you?
+
+I have no idea what his plans are.  If the idea is to create
+struct scsi_domain_device { ... }; and start from there,
+then I'd like to be involved since this was what I'd wanted
+for SCSI since 2002.
+
+> I know.  But, in the presence of quirks, this is wrong.  We need an
+> inquiry first so we have something to look up in the quirk capabilities
+> table.  report luns doesn't return enough information ... and since one
+> of the quirks is that report luns returns incorrect information ...
+
+Yes, it gets very messy.
+
+On a different note: I'd love to _buy_ a device which returns
+_incorrect_ REPORT LUNS.  Who hires those people?  (Or do they
+get the job because of politics? ;-) )
+
+> Nothing in the standard mandates exactly how discovery be done.  But for
+> the quirk reason outlined above, inquiry has to be first.
+
+That's true.  But think about it: you've just discovered
+a device on the SCSI Domain (using protocol) and you don't know
+anything about it (as stated in my code's comments).  The first
+thing you want to do is REPORT LUNS to figure out how many
+LUs are there.  LUs in a SCSI Device do not necessarily have to
+be homogeneous.
+
+As to quirks, I guess you're right.
+
+But SCSI Core has come to a breaking point: being so SPI-centric
+and outdated, full of quirks and legacy stuff.
+
+SCSI Core has a chance now with SAS to become what it had
+needed to start becoming in 2002: native target support,
+64 bit LUNs, etc.
+
+Note: when I say "native" target support, I do _not_ mean
+"struct scsi_target", but "struct scsi_domain_device" (to be
+created).  That is, the "native" indicates that the "target",
+"SCSI Device", can only be addressed by the transport --
+SCSI Core doesn't not know how to address the device (only
+LUs).  All the while, struct scsi_target has HCIL in it.
+
+> It takes time for standards to bubble into the field.  There are still
+> manufacturers today producing devices claiming scsi-2 compliance (I
+> suspect they tried scsi-3 found a problem in testing and "corrected" it
+> by dropping back to scsi-2, but they're still rolling off the production
+> lines).  Of all the arrays I see certified in my day job, one claims
+> SCSI-2, one claims SPC-3 and the rest seem to have a 50/50 split between
+> SPC and SPC-2.  So, fully 50% of these devices are not required to
+> support report LUNs; if they were single LUN devices, then the vast
+> majority wouldn't be required to support it.
 > 
-> The aim is to build more general sense buffers for SCSI
-> errors detected in the SCSI ATA translation layer in libata.
-> These patches are against Jeff's libata-dev git repository,
-> upstream branch.
-> Patch 1:  adds ata_scsi_set_sense() extern declaration and
->           definition
-> Patch 2:  switch error processing in libata-scsi.c to use
->           ata_scsi_set_sense()
-> Patch 3:  remove static inline definitions in libata.h that
->           are no longer used after patch 2
-> 
-> Signed-off-by: Douglas Gilbert <dougg@torque.net>
+> The point to all this is that the version of the standard matters a lot,
+> especially where the actual standards differ from version to version
+> because we have to provide support for what the devices were built to,
+> not what the latest standard says.
 
-First and foremost, applied all three patches.  Thanks for your 
-patience.  'upstream' branch will reflect your changes as soon as 
-master.kernel.org propagates to the public mirrors.
+Well, this sounds good, but I'd say give SAS a chance, let's be optimistic.
 
-The patches had to be hand-applied, for a few reasons, so I have some 
-follow-up notes.
-
-
-1) It would be nice if you could avoid using MIME attachments for 
-patches, but rather, include them inline.
-
-
-2) Your email subject should be descriptive and unique, since it is 
-copied verbatim into the Linux Kernel changelog by Linus's patch merging 
-tool, git-applymbox.  e.g.
-
-       [patch 1/3] libata scsi EH: add ata_scsi_set_sense()
-       [patch 2/3] libata scsi EH: upgrade EH using ata_scsi_set_sense()
-       [patch 3/3] libata scsi EH: remove now-unused helpers
-
-See http://linux.yyz.us/patch-format.html for more info.
-
-
-3) The following change should have been in a separate patch, since it 
-was largely unrelated to use of ata_scsi_set_sense() -- it changes 
-behavior, and its easy for a reviewer to miss this behavior change, if 
-it is buried deep inside a pile of unrelated changes:
-
->   - yield an error for mode sense requests for saved
->     values [sat-r06]
-
-But that's just a note for the future.  As I stated, I applied your 
-patches as-is...  The optimal, reviewer-friendly transformation IMO 
-would have been:
-
-       [patch 1/3] libata scsi EH: add ata_scsi_set_sense()
-       [patch 2/3] libata scsi EH: upgrade EH using ata_scsi_set_sense()
-       [patch 3/3] libata scsi EH: return err for MODE SENSE saved vals
-	[and obviously, patch #3 depends on patch #2]
-
-
-4) I excised the following chunk from patch #2, before applying:
-
-> @@ -1572,7 +1628,7 @@
->  		 * time).  We need to issue REQUEST SENSE some other
->  		 * way, to avoid completing the command twice.
->  		 */
-> -		cmd->result = SAM_STAT_CHECK_CONDITION;
-> +		cmd->result = (DRIVER_SENSE << 24) | SAM_STAT_CHECK_CONDITION;
->  
->  		qc->scsidone(cmd);
-
-We don't yet have sense at this point; the code above largely serves as 
-a trigger to a SCSI EH kthread, which will wake up and issue REQUEST 
-SENSE for us.  Its a bit of a weird setup, and I'm also working in this 
-area, so I simply removed the above quoted change from your patch, which 
-was applied otherwise unaltered.
-
-Thanks,
-
-	Jeff
-
-
-
+	Luben
+-- 
+http://linux.adaptec.com/sas/
+Disclaimer: Opinions stated in this email are my own, not of my employer.
+For inquiries write to: luben_tuikov@adaptec.com or ltuikov@yahoo.com.
