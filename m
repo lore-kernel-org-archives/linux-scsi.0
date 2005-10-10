@@ -1,28 +1,29 @@
 From: Karl Magnus Kolstoe <Karl.Kolsto@uib.no>
-Subject: [PATCH] 2.4.31; add Pioneer DRM-624x to drivers/scsi/scsi_scan.c
-Date: Mon, 10 Oct 2005 10:51:14 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0510101021450.29207@drazi.geo.uib.no>
+Subject: [PATCH] 2.6.13.3; add Pioneer DRM-624x to drivers/scsi/scsi_devinfo.c
+Date: Mon, 10 Oct 2005 10:59:52 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0510101056090.29207@drazi.geo.uib.no>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from noralf.uib.no ([129.177.30.12]:18389 "EHLO noralf.uib.no")
-	by vger.kernel.org with ESMTP id S1750743AbVJJIvL convert rfc822-to-8bit
+Received: from noralf.uib.no ([129.177.30.12]:14301 "EHLO noralf.uib.no")
+	by vger.kernel.org with ESMTP id S1750734AbVJJI7r convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Oct 2005 04:51:11 -0400
+	Mon, 10 Oct 2005 04:59:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: karl.kolsto@uib.no
 
 
-
 Hi,
 
-The patch below made my Pioneer DRM-624X automatically
+The patch below should make the Pioneer DRM-624X automatically
 be set up with all 6 "drives". (6 slot SCSI CD changer)
-(My DRM-604X already worked this way already.)
+
+I have not tested this patch on a 2.6-kernel, but the equivalent
+2.4-patch seems to work perfectly. (See other mail.)
 
 Please CC me on replies on this message since I am not on the
 mailing list.
@@ -34,22 +35,23 @@ Karl Magnus Kolst=F8 - Member of the first RFC 1149 implementation team=
 =2E
 
 
---- linux-2.4.31/drivers/scsi/scsi_scan.c.orig  2005-10-10 10:20:29.000=
+--- linux-2.6.13.3/drivers/scsi/scsi_devinfo.c.orig     2005-10-10 10:1=
+7:34.000000000 +0200
++++ linux-2.6.13.3/drivers/scsi/scsi_devinfo.c  2005-10-10 10:17:53.000=
 000000 +0200
-+++ linux-2.4.31/drivers/scsi/scsi_scan.c       2005-10-10 10:20:42.000=
-000000 +0200
-@@ -145,6 +145,7 @@ static struct dev_info device_list[] =3D
-         {"PIONEER", "CD-ROM DRM-600", "*", BLIST_FORCELUN | BLIST_SING=
-LELUN},
-         {"PIONEER", "CD-ROM DRM-602X", "*", BLIST_FORCELUN | BLIST_SIN=
+@@ -183,6 +183,7 @@ static struct {
+         {"PIONEER", "CD-ROM DRM-600", NULL, BLIST_FORCELUN | BLIST_SIN=
 GLELUN},
-         {"PIONEER", "CD-ROM DRM-604X", "*", BLIST_FORCELUN | BLIST_SIN=
+         {"PIONEER", "CD-ROM DRM-602X", NULL, BLIST_FORCELUN | BLIST_SI=
+NGLELUN},
+         {"PIONEER", "CD-ROM DRM-604X", NULL, BLIST_FORCELUN | BLIST_SI=
+NGLELUN},
++       {"PIONEER", "CD-ROM DRM-624X", NULL, BLIST_FORCELUN | BLIST_SIN=
 GLELUN},
-+       {"PIONEER", "CD-ROM DRM-624X", "*", BLIST_FORCELUN | BLIST_SING=
-LELUN},
-         {"EMULEX", "MD21/S2     ESDI", "*", BLIST_SINGLELUN},
-         {"CANON", "IPUBJD", "*", BLIST_SPARSELUN},
-         {"nCipher", "Fastness Crypto", "*", BLIST_FORCELUN},
+         {"REGAL", "CDC-4X", NULL, BLIST_MAX5LUN | BLIST_SINGLELUN},
+         {"SanDisk", "ImageMate CF-SD1", NULL, BLIST_FORCELUN},
+         {"SEAGATE", "ST34555N", "0930", BLIST_NOTQ},    /* Chokes on t=
+agged INQUIRY */
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
