@@ -1,46 +1,39 @@
-From: Olaf Hering <olh@suse.de>
-Subject: Re: [SCSI] qla2xxx: fix remote port timeout with qla2xxx driver
-Date: Mon, 10 Oct 2005 19:01:36 +0200
-Message-ID: <20051010170136.GA9736@suse.de>
-References: <200510031643.j93GhgRY023585@hera.kernel.org>
+From: Kenneth Porter <shiva@sewingwitch.com>
+Subject: Re: books on scsi for linux
+Date: Mon, 10 Oct 2005 14:08:34 -0700
+Message-ID: <A143EF527CF23FBAE56DA6FB@[10.0.0.14]>
+References: <43439CD5.3010808@cdac.in>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:31383 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S1750948AbVJJRBn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Oct 2005 13:01:43 -0400
+Received: from segw.microprecisionautomation.com ([69.17.55.168]:58344 "EHLO
+	segw.microprecisionautomation.com") by vger.kernel.org with ESMTP
+	id S1751192AbVJJVIy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Oct 2005 17:08:54 -0400
+In-Reply-To: <43439CD5.3010808@cdac.in>
 Content-Disposition: inline
-In-Reply-To: <200510031643.j93GhgRY023585@hera.kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Karthik Sarangan <karthiks@cdac.in>
 
- On Mon, Oct 03, Linux Kernel Mailing List wrote:
+No idea how relevant these are but probably a good place to start:
 
-> tree e50f57f9c85bacf3fc07359b1a339432dea31a7a
-> parent 6f3a20242db2597312c50abc11f1e747c5d2326a
-> author Andrew Vasquez <andrew.vasquez@qlogic.com> Wed, 21 Sep 2005 03:32:11 -0700
-> committer James Bottomley <jejb@mulgrave.(none)> Sun, 25 Sep 2005 22:11:35 -0500
-> 
-> [SCSI] qla2xxx: fix remote port timeout with qla2xxx driver
-> diff --git a/drivers/scsi/qla2xxx/qla_rscn.c b/drivers/scsi/qla2xxx/qla_rscn.c
-> --- a/drivers/scsi/qla2xxx/qla_rscn.c
-> +++ b/drivers/scsi/qla2xxx/qla_rscn.c
-> @@ -330,6 +330,8 @@ qla2x00_update_login_fcport(scsi_qla_hos
->  	fcport->flags &= ~FCF_FAILOVER_NEEDED;
->  	fcport->iodesc_idx_sent = IODESC_INVALID_INDEX;
->  	atomic_set(&fcport->state, FCS_ONLINE);
-> +	if (fcport->rport)
-> +		fc_remote_port_unblock(fcport->rport);
+<http://kernelbook.sourceforge.net/>
 
+<http://www.xml.com/ldd/chapter/book/ch04.html>
 
-This patch lacks an #include, probably scsi/scsi_transport_fc.h:
+Here's the search that turned these up:
 
-drivers/scsi/qla2xxx/qla_rscn.c:334: error: implicit declaration of function 'fc_remote_port_unblock'
+<http://www.google.com/search?hl=en&q=linux+source+code+book&btnG=Google+Search>
 
+The problem with your original question:
 
--- 
-short story of a lazy sysadmin:
- alias appserv=wotan
+> Can anyone tell me which books/ebooks/articles on scsi subsystem for
+> linux are good?
+
+is that it doesn't reflect the level of reader. If you don't know anything 
+about SCSI, you should start with something on the bus, independent of the 
+OS. Then read about the OS, using one of the above books. Then read the 
+source code, to see how they connect.
