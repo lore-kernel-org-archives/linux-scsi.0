@@ -1,40 +1,57 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [Bugme-new] [Bug 5378] New: aic7xxx deadlock/freeze on Adaptec
-	AIC-7899P
-Date: Mon, 10 Oct 2005 22:00:49 -0500
-Message-ID: <1128999650.4824.41.camel@mulgrave>
-References: <200510061626.j96GQxFD025499@fire-1.osdl.org>
-	 <20051010184144.4dfe2241.akpm@osdl.org>
+From: Karthik Sarangan <karthiks@cdac.in>
+Subject: Re: AIO!!
+Date: Tue, 11 Oct 2005 10:34:01 +0530
+Message-ID: <434B47C1.60106@cdac.in>
+References: <434A6EFC.4010100@cdac.in> <20051010160856.GI13986@kvack.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:25039 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751359AbVJKDBB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Oct 2005 23:01:01 -0400
-In-Reply-To: <20051010184144.4dfe2241.akpm@osdl.org>
+Received: from mx1.cdacindia.com ([203.199.132.35]:9909 "HELO
+	mailx.cdac.ernet.in") by vger.kernel.org with SMTP id S1751358AbVJKFKn
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Oct 2005 01:10:43 -0400
+In-Reply-To: <20051010160856.GI13986@kvack.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@kernel-bugs.osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Benjamin LaHaise <bcrl@kvack.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, 2005-10-10 at 18:41 -0700, Andrew Morton wrote:
-> ISTR that there have been several reports of this regression.
+ > Benjamin LaHaise wrote:
+> O_DIRECT buffers must be aligned on block sized boundaries (minimum 512 
+> bytes).  Check the actual return code from the aiocb and you'll find that 
+> it is likely -EINVAL, no -EINPROGRESS.  See the man page for 
+> posix_memalign() to properly align the pointer.
 > 
-> What could have caused this?
 
-Well ... the prior bug reports with this are in aic79xx, and there there
-were no significant code changes between the working and the non working
-versions.  The aic7xxx driver has been fairly significantly changed but
-all in the area of setup and initialisation.
+EEP!! I forgot all about buffer alignment!! Thanks for pointing it out
 
-This one looks like a sequencer error, possibly induced by a flakey bus.
-Apparently it actually managed to recover once, which is surprising for
-the aic driver, but then it died a second time around.  There actually
-was a sequencer change (backport from aic latest driver) that could be
-responsible.  However, it's in both 2.6.12 and 2.6.13.
+:)
 
-James
+------------------
 
+Two more questions.
+
+1. Is aio_fsync of any use while 'aio_read'ing and 'aio_write'ing to
+    a 'raw' device or a '/dev/sdb' with O_DIRECT?
+
+2. I have an Ultra320 SCSI disk whose datasheet says it has a max.
+    possible throughput of 78MBps
+
+    I did a 'aio_write' onto '/dev/sdb' with O_DIRECT.
+    Following are some throughput values.
+
+    Buffer for IO   |  Avg Speed
+    (in KBytes)     |
+    ----------------O-----------
+    Upto 512KB      |  69MBps
+    1024KB          |  125MBps
+    2048KB          |  250MBps
+    4096KB          |  500MBps
+    8192KB          |  1GBps		-- What the !! --
+
+    Buffer cache does not come into consideration.
+
+    Does this mean that the SCSI lower layer (aic79xx) can transfer data
+    only upto 512 KB?
 
