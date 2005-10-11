@@ -1,64 +1,108 @@
-From: Denis Vlasenko <vda@ilport.com.ua>
-Subject: Re: AIO!!
-Date: Tue, 11 Oct 2005 12:25:35 +0300
-Message-ID: <200510111225.35838.vda@ilport.com.ua>
-References: <434A6EFC.4010100@cdac.in> <20051010160856.GI13986@kvack.org> <434B47C1.60106@cdac.in>
+From: Bodo Stroesser <bstroesser@fujitsu-siemens.com>
+Subject: Errors while initializing mptspi on 53C1030
+Date: Tue, 11 Oct 2005 13:30:36 +0200
+Message-ID: <434BA25C.2040309@fujitsu-siemens.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751436AbVJKJ0e@vger.kernel.org>
-In-Reply-To: <434B47C1.60106@cdac.in>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Karthik Sarangan <karthiks@cdac.in>
-Cc: Benjamin LaHaise <bcrl@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: multipart/mixed;
+ boundary="------------020008030609090604000303"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from dgate1.fujitsu-siemens.com ([217.115.66.35]:31391 "EHLO
+	dgate1.fujitsu-siemens.com") by vger.kernel.org with ESMTP
+	id S932069AbVJKLaj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Oct 2005 07:30:39 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tuesday 11 October 2005 08:04, Karthik Sarangan wrote:
->  > Benjamin LaHaise wrote:
-> > O_DIRECT buffers must be aligned on block sized boundaries (minimum 512 
-> > bytes).  Check the actual return code from the aiocb and you'll find that 
-> > it is likely -EINVAL, no -EINPROGRESS.  See the man page for 
-> > posix_memalign() to properly align the pointer.
-> 
-> EEP!! I forgot all about buffer alignment!! Thanks for pointing it out
+This is a multi-part message in MIME format.
+--------------020008030609090604000303
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Why do you constantly shout?
+Hi,
 
-> ------------------
-> Two more questions.
-> 
-> 1. Is aio_fsync of any use while 'aio_read'ing and 'aio_write'ing to
->     a 'raw' device or a '/dev/sdb' with O_DIRECT?
+I have a server running SuSE-SLES9 from a RAID1 on 53C1030. There are two
+physical disks configured to make up one logical drive. Now I upgraded the
+machine to kernel 2.6.14-rc3.
 
-I suspect you did not do some research first.
+With 2.6.14-rc3 on each boot some errors occur while mptspi (mptscsih,
+mptbase) is initializing. AFAICS, having done some unsuccessful retries the
+driver resets the HW again and after that the system seems to run normally.
 
-> 2. I have an Ultra320 SCSI disk whose datasheet says it has a max.
->     possible throughput of 78MBps
-> 
->     I did a 'aio_write' onto '/dev/sdb' with O_DIRECT.
->     Following are some throughput values.
-> 
->     Buffer for IO   |  Avg Speed
->     (in KBytes)     |
->     ----------------O-----------
->     Upto 512KB      |  69MBps
->     1024KB          |  125MBps
->     2048KB          |  250MBps
->     4096KB          |  500MBps
->     8192KB          |  1GBps		-- What the !! --
+I've attached the relevant part of the logging.
 
-Most probably bug in your program.
+Please CC me, I'm not on the lists.
 
->     Buffer cache does not come into consideration.
-> 
->     Does this mean that the SCSI lower layer (aic79xx) can transfer data
->     only upto 512 KB?
+Regards
+	Bodo
 
-It means that you are in dire need of reading this:
 
-http://www.catb.org/~esr/faqs/smart-questions.html
+BTW, the "Release failed" messages in the driver are missing the '\n'.
 
---
-vda
+--------------020008030609090604000303
+Content-Type: text/plain;
+ name="dmesg_mpt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="dmesg_mpt"
+
+Linux version 2.6.14-rc3 (root@abg4507s) (gcc version 3.3.3 (SuSE Linux)) #1 SMP Tue Oct 11 11:34:10 CEST 2005
+
+... snip ...
+
+SCSI subsystem initialized
+Fusion MPT base driver 3.03.03
+Copyright (c) 1999-2005 LSI Logic Corporation
+Fusion MPT SPI Host driver 3.03.03
+ACPI: PCI Interrupt 0000:02:08.0[A] -> GSI 24 (level, low) -> IRQ 19
+mptbase: Initiating ioc0 bringup
+ioc0: 53C1030: Capabilities={Initiator}
+scsi0 : ioc0: LSI53C1030, FwRev=01032571h, Ports=1, MaxQ=222, IRQ=19
+  Vendor: LSILOGIC  Model: 1030          IM  Rev: 1000
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+SCSI device sda: 142131200 512-byte hdwr sectors (72771 MB)
+SCSI device sda: drive cache: write back
+SCSI device sda: 142131200 512-byte hdwr sectors (72771 MB)
+SCSI device sda: drive cache: write back
+ sda: sda1 sda2
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+  Vendor: SDR       Model: GEM318P           Rev: 1   
+  Type:   Processor                          ANSI SCSI revision: 02
+ACPI: PCI Interrupt 0000:02:08.1[B] -> GSI 25 (level, low) -> IRQ 20
+mptbase: Initiating ioc1 bringup
+mptscsih: ioc0: DV: Release failed. id 0<6>ioc1: 53C1030: Capabilities={Initiator}
+scsi1 : ioc1: LSI53C1030, FwRev=01032571h, Ports=1, MaxQ=222, IRQ=20
+mptscsih: ioc0: attempting task abort! (sc=f748b380)
+scsi0 : destination target 0, lun 0
+        command: Read (10): 28 00 00 80 34 4d 00 00 02 00
+mptscsih: ioc0: task abort: SUCCESS (sc=f748b380)
+mptscsih: ioc0: attempting task abort! (sc=f748b380)
+scsi0 : destination target 0, lun 0
+        command: Test Unit Ready: 00 00 00 00 00 00
+mptscsih: ioc0: task abort: SUCCESS (sc=f748b380)
+mptscsih: ioc0: attempting target reset! (sc=f748b380)
+scsi0 : destination target 0, lun 0
+        command: Read (10): 28 00 00 80 34 4d 00 00 02 00
+mptbase: ioc0: IOCStatus(0x0048): SCSI Task Terminated
+mptbase: ioc0: IOCStatus(0x0048): SCSI Task Terminated
+mptscsih: ioc0: target reset: SUCCESS (sc=f748b380)
+mptscsih: ioc0: attempting task abort! (sc=f748b380)
+scsi0 : destination target 0, lun 0
+        command: Test Unit Ready: 00 00 00 00 00 00
+mptscsih: ioc0: task abort: SUCCESS (sc=f748b380)
+mptscsih: ioc0: attempting bus reset! (sc=f748b380)
+scsi0 : destination target 0, lun 0
+        command: Read (10): 28 00 00 80 34 4d 00 00 02 00
+mptbase: ioc0: IOCStatus(0x0048): SCSI Task Terminated
+mptscsih: ioc0: bus reset: SUCCESS (sc=f748b380)
+mptscsih: ioc0: attempting task abort! (sc=f748b380)
+scsi0 : destination target 0, lun 0
+        command: Test Unit Ready: 00 00 00 00 00 00
+mptscsih: ioc0: task abort: SUCCESS (sc=f748b380)
+mptscsih: ioc0: Attempting host reset! (sc=f748b380)
+mptbase: Initiating ioc0 recovery
+EXT2-fs warning (device sda2): ext2_fill_super: mounting ext3 filesystem as ext2
+
+... snip ... (now the system runs fine! AFAICS ...)
+
+--------------020008030609090604000303--
