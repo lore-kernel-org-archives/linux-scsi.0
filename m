@@ -1,108 +1,449 @@
-From: Bodo Stroesser <bstroesser@fujitsu-siemens.com>
-Subject: Errors while initializing mptspi on 53C1030
-Date: Tue, 11 Oct 2005 13:30:36 +0200
-Message-ID: <434BA25C.2040309@fujitsu-siemens.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: Linux v2.6.14-rc4
+Date: Tue, 11 Oct 2005 09:28:39 -0400
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01B5188B@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020008030609090604000303"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dgate1.fujitsu-siemens.com ([217.115.66.35]:31391 "EHLO
-	dgate1.fujitsu-siemens.com") by vger.kernel.org with ESMTP
-	id S932069AbVJKLaj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Oct 2005 07:30:39 -0400
+Received: from magic.adaptec.com ([216.52.22.17]:38612 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1751206AbVJKN2t convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Oct 2005 09:28:49 -0400
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org, Mark Haverkamp <markh@osdl.org>, Tom Coughlan <coughlan@redhat.com>
 
-This is a multi-part message in MIME format.
---------------020008030609090604000303
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+A resend of the one-line patch to fix a regression that did not make it=
+ in ...
 
-Hi,
+Sincerely -- Mark Salyzyn
 
-I have a server running SuSE-SLES9 from a RAID1 on 53C1030. There are two
-physical disks configured to make up one logical drive. Now I upgraded the
-machine to kernel 2.6.14-rc3.
+-----Original Message-----
+=46rom: Salyzyn, Mark=20
+Sent: Wednesday, October 05, 2005 12:59 PM
+To: 'linux-kernel@vger.kernel.org'
+Cc: 'linux-scsi@vger.kernel.org'; 'Juan D Ch'; 'Mark Haverkamp'; 'Marti=
+n Drab'
+Subject: RE: 2.6.13.2 aacraid regression
 
-With 2.6.14-rc3 on each boot some errors occur while mptspi (mptscsih,
-mptbase) is initializing. AFAICS, having done some unsuccessful retries the
-driver resets the HW again and after that the system seems to run normally.
+Juan was kind enough to linger on site, and work on a production machin=
+e, to try the parameter to make the system stable. He discovered that r=
+educing the maximum transfer size issued to the adapter to 128KB stabil=
+ized his system. This is related to an earlier change for the 2.6.13 tr=
+ee resulting from Martin Drab's testing where the transfer size was red=
+uced from 4G to 256KB; we needed to go still further in scaling back th=
+e request size.
 
-I've attached the relevant part of the logging.
+Here is the patch that tames this regression.
 
-Please CC me, I'm not on the lists.
+Applies to the 2.6.13.2 tree.
 
-Regards
-	Bodo
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 
+Index: linux-2.6.13.2/drivers/scsi/aacraid/aacraid.h
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- linux-2.6.13.2/drivers/scsi/aacraid/aacraid.h       2005-10-05 12:4=
+5:16 -0400
++++ linux-2.6.13.2-aacraid-fix/drivers/scsi/aacraid/aacraid.h   2005-09=
+-16 21:02:12 -0400
+@@ -15,7 +15,7 @@
+ #define AAC_MAX_LUN            (8)
 
-BTW, the "Release failed" messages in the driver are missing the '\n'.
+ #define AAC_MAX_HOSTPHYSMEMPAGES (0xfffff)
+-#define AAC_MAX_32BIT_SGBCOUNT ((unsigned short)512)
++#define AAC_MAX_32BIT_SGBCOUNT ((unsigned short)256)
 
---------------020008030609090604000303
-Content-Type: text/plain;
- name="dmesg_mpt"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="dmesg_mpt"
+ /*
+  * These macros convert from physical channels to virtual channels
 
-Linux version 2.6.14-rc3 (root@abg4507s) (gcc version 3.3.3 (SuSE Linux)) #1 SMP Tue Oct 11 11:34:10 CEST 2005
+Sincerely -- Mark Salyzyn
 
-... snip ...
+-----Original Message-----
+=46rom: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-owner@v=
+ger.kernel.org] On Behalf Of Linus Torvalds
+Sent: Monday, October 10, 2005 9:31 PM
+To: Linux Kernel Mailing List
+Subject: Linux v2.6.14-rc4
 
-SCSI subsystem initialized
-Fusion MPT base driver 3.03.03
-Copyright (c) 1999-2005 LSI Logic Corporation
-Fusion MPT SPI Host driver 3.03.03
-ACPI: PCI Interrupt 0000:02:08.0[A] -> GSI 24 (level, low) -> IRQ 19
-mptbase: Initiating ioc0 bringup
-ioc0: 53C1030: Capabilities={Initiator}
-scsi0 : ioc0: LSI53C1030, FwRev=01032571h, Ports=1, MaxQ=222, IRQ=19
-  Vendor: LSILOGIC  Model: 1030          IM  Rev: 1000
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-SCSI device sda: 142131200 512-byte hdwr sectors (72771 MB)
-SCSI device sda: drive cache: write back
-SCSI device sda: 142131200 512-byte hdwr sectors (72771 MB)
-SCSI device sda: drive cache: write back
- sda: sda1 sda2
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-  Vendor: SDR       Model: GEM318P           Rev: 1   
-  Type:   Processor                          ANSI SCSI revision: 02
-ACPI: PCI Interrupt 0000:02:08.1[B] -> GSI 25 (level, low) -> IRQ 20
-mptbase: Initiating ioc1 bringup
-mptscsih: ioc0: DV: Release failed. id 0<6>ioc1: 53C1030: Capabilities={Initiator}
-scsi1 : ioc1: LSI53C1030, FwRev=01032571h, Ports=1, MaxQ=222, IRQ=20
-mptscsih: ioc0: attempting task abort! (sc=f748b380)
-scsi0 : destination target 0, lun 0
-        command: Read (10): 28 00 00 80 34 4d 00 00 02 00
-mptscsih: ioc0: task abort: SUCCESS (sc=f748b380)
-mptscsih: ioc0: attempting task abort! (sc=f748b380)
-scsi0 : destination target 0, lun 0
-        command: Test Unit Ready: 00 00 00 00 00 00
-mptscsih: ioc0: task abort: SUCCESS (sc=f748b380)
-mptscsih: ioc0: attempting target reset! (sc=f748b380)
-scsi0 : destination target 0, lun 0
-        command: Read (10): 28 00 00 80 34 4d 00 00 02 00
-mptbase: ioc0: IOCStatus(0x0048): SCSI Task Terminated
-mptbase: ioc0: IOCStatus(0x0048): SCSI Task Terminated
-mptscsih: ioc0: target reset: SUCCESS (sc=f748b380)
-mptscsih: ioc0: attempting task abort! (sc=f748b380)
-scsi0 : destination target 0, lun 0
-        command: Test Unit Ready: 00 00 00 00 00 00
-mptscsih: ioc0: task abort: SUCCESS (sc=f748b380)
-mptscsih: ioc0: attempting bus reset! (sc=f748b380)
-scsi0 : destination target 0, lun 0
-        command: Read (10): 28 00 00 80 34 4d 00 00 02 00
-mptbase: ioc0: IOCStatus(0x0048): SCSI Task Terminated
-mptscsih: ioc0: bus reset: SUCCESS (sc=f748b380)
-mptscsih: ioc0: attempting task abort! (sc=f748b380)
-scsi0 : destination target 0, lun 0
-        command: Test Unit Ready: 00 00 00 00 00 00
-mptscsih: ioc0: task abort: SUCCESS (sc=f748b380)
-mptscsih: ioc0: Attempting host reset! (sc=f748b380)
-mptbase: Initiating ioc0 recovery
-EXT2-fs warning (device sda2): ext2_fill_super: mounting ext3 filesystem as ext2
+Here's the final -rc before a 2.6.14 release.
 
-... snip ... (now the system runs fine! AFAICS ...)
+In the diffstat, most of the changes are one-liners, with the main=20
+exceptions being some sparc64 work (fix user-space corruption due to FP=
+=20
+save/restore) and the new Megaraid SAS driver. There's some networking=20
+fixes, and a couple of driver updates (scsi: aacraid, net: cassini, and=
+=20
+watchdog: pcwd_pci).
 
---------------020008030609090604000303--
+Along with a x86-64 suspend/resume page table corruption and some new=20
+defconfig files for ARM, that rounds out the bigger chunks.
+
+The shortlog (appended) should be a pretty good idea of the rest.
+
+		Linus
+
+---
+Adam Radford:
+      [SCSI] 3ware 9000: Add support for 9550SX controllers
+
+Adrian Bunk:
+      [SPARC]: "extern inline" doesn't make much sense.
+
+Al Viro:
+      [CASSINI]: Convert to ethtool_ops
+      missing include in megaraid_sas
+      bogus kfree() in ibmtr
+      bfs iget() abuses
+      fix the breakage in sparc headers
+      gfp flags annotations - part 1
+
+Alexey Dobriyan:
+      bfs endianness annotations
+
+Allan Graves:
+      uml: Fix sysrq-r support for skas mode
+
+Ananth N Mavinakayanahalli:
+      ppc64: fix up()/down() usage for kprobe_mutex
+
+Andi Kleen:
+      x86_64: Drop global bit from early low mappings
+      x86_64: Fix change_page_attr cache flushing
+      x86_64: Allocate cpu local data for all possible CPUs
+      i386: Don't discard upper 32bits of HWCR on K8
+
+Andrew Morton:
+      [SCSI] lpfc build fix
+
+Andrew Vasquez:
+      [SCSI] qla2xxx: fix remote port timeout with qla2xxx driver
+
+Anton Altaparmakov:
+      NTFS: Fix a stupid bug in __ntfs_bitmap_set_bits_in_run() which c=
+aused the
+      NTFS: Fix a 64-bitness bug where a left-shift could overflow a 32=
+-bit variable
+
+Bagalkote, Sreenivas:
+      [SCSI] MegaRAID SAS RAID: new driver
+
+Ben Dooks:
+      [ARM] 2963/1: S3C2410 - add .owner field to device_driver
+      [ARM] 2964/1: S3C2410 - serial: add .owner to driver
+
+Benjamin Herrenschmidt:
+      pmac: fix cpufreq for old tipb 550Mhz
+      ppc: Fix timekeeping with HZ=3D250 on some Mac models
+      ide: Workaround PM problem
+
+Bryan Sutula:
+      [IA64] Avoid kernel hang during CMC interrupt storm
+
+Catalin Marinas:
+      [ARM] 2943/1: Clear the exclusive monitor in v6_early_abort
+      [ARM] 2954/1: Allow D and I cache and branch prediction disabling=
+ for ARMv6
+
+Christoph Hellwig:
+      [SCSI] sas: fix remote phy removal
+
+Clemens Ladisch:
+      [ALSA] usb-audio: ignore Hercules DJ Console mixer errors
+      [ALSA] usb-audio: add Roland RD-700SX support
+      [ALSA] usb-audio: add more Yamaha USB MIDI devices
+      [ALSA] usb-audio: add another ID for the TerraTec PHASE26
+      [ALSA] usb-audio: increase max buffer size
+      [ALSA] korg1212: fix typo
+      [ALSA] usb-audio: add another ID for Hercules DJ Console
+      [ALSA] usb-audio: add MIDI quirk for Hercules DJ Console
+
+Daniel Ritz:
+      [ALSA] snd_opl3sa2: add missing pnp_unregister_driver() calls
+
+Dave Jones:
+      Fix drm 'debug' sysfs permissions
+
+David Howells:
+      key: plug request_key_auth memleak
+      Keys: Add request-key process documentation
+      Keys: Split key permissions checking into a .c file
+      Keys: Possessor permissions should be additive
+
+David S. Miller:
+      [IPV6]: Fix leak added by udp connect dst caching fix.
+      [IPV4]: Update icmp sysctl docs and disable broadcast ECHO/TIMEST=
+AMP by default
+      [TG3]: Update driver version and release date.
+      [SUNSU]: Fix bogus locking in sunsu_change_mouse_baud()
+      [SPARC64]: Replace cheetah+ code patching with variables.
+      [SPARC64]: Fix initrd when net booting.
+      [SPARC64]: Probe for power device on ISA bus too.
+      [SPARC64]: Fix userland FPU state corruption.
+      [SPARC64]: Fix Ultra5, Ultra60, et al. boot failures.
+
+David Vrabel:
+      yenta: fix build if YENTA && !CARDBUS
+
+Deepak Saxena:
+      Fix IXP2000 serial port resource range
+      ARM: Fix IXP2000 serial port resource range. For real this time.
+      Fix broken IXP4xx GPIO macro
+
+Diego Calleja:
+      trivial #if -> #ifdef
+
+Dirk Opfer:
+      [ALSA] Fix pm_message_t in PXA2XX-AC97 driver
+
+Eric Dumazet:
+      [INET]: speedup inet (tcp/dccp) lookups
+      [INET]: Shrink struct inet_ehash_bucket on 32 bits UP
+
+Eric Kinzie:
+      [ATM]: add support for LECS addresses learned from network
+
+=46rancois Romieu:
+      r8169: tone down the r8169 driver
+
+George G. Davis:
+      [ARM] 2959/1: Add test for invalid LDRD/STRD Rd cases in ARM alig=
+nment handler
+
+Grant Coady:
+      net/Kconfig: convert pocket_adapter ISA to PARPORT
+
+Harald Welte:
+      Fix signal sending in usbdevio on async URB completion
+
+Herbert Xu:
+      [NET]: Fix packet timestamping.
+      [IPV4]: Fix "Proxy ARP seems broken"
+      [IPV4]: Replace __in_dev_get with __in_dev_get_rcu/rtnl
+      [IPV4]: Get rid of bogus __in_put_dev in pktgen
+      [IPSEC]: Document that policy direction is derived from the index=
+=2E
+
+Horst H. von Brand:
+      [NETFILTER]: Fix Kconfig typo
+
+Ion Badulescu:
+      [netdrvr starfire] fix highmem and broken firmware issues
+
+Ivan Skytte J=F8rgensen:
+      [SCTP] Fix sctp_get{pl}addrs() API to work with 32-bit apps on 64=
+-bit kernels.
+
+James Bottomley:
+      [SCSI] allow REPORT LUN scanning even for LUN 0 PQ of 3
+      [SCSI] fix potential panic with proc on module removal
+      [SCSI] aic7xxx/aic79xx: fix module removal path not to panic
+      [SCSI] Legacy MegaRAID: Fix READ CAPACITY
+
+Jay Vosburgh:
+      fix bonding crash, remove old ABI support
+
+Jean-Denis Boyer:
+      [ATM]: [br2684] if we free the skb, we should return 0
+
+Jeff Dike:
+      UML - Fix Al's build tidying
+      uml: fix x86_64 with !CONFIG_FRAME_POINTER
+
+Jens Axboe:
+      scsi_ioctl: only warn for rejected commands
+
+John W. Linville:
+      [ALSA] fix HD audio ALC260 mono (un)mute
+      [ALSA] fix alc880_test_mixer typo
+      [ALSA] fix HD audio ALC882 lfe (un)mute
+
+Komuro:
+      [netdrvr] fix smc91c92_cs multicast bug
+
+Linus Torvalds:
+      Fix inequality comparison against "task->state"
+      Avoid 'names_cache' memory leak with CONFIG_AUDITSYSCALL
+      Use the new "kill_proc_info_as_uid()" for USB disconnect too
+      Linux v2.6.14-rc4
+
+Mark Haverkamp:
+      [SCSI] aacraid: Greater than 2TB capacity support
+      [SCSI] aacraid: aacraid: AIF preallocation (update)
+      [SCSI] aacraid: handle AIF hotplug events (update)
+      [SCSI] aacraid: error return checking
+      [SCSI] aacraid: initialization timeout
+      [SCSI] aacraid: fib size math fix
+      [SCSI] aacraid: remove aac_insert_entry
+
+Markus F.X.J. Oberhumer:
+      i386: fix stack alignment for signal handlers
+
+Martin Habets:
+      [SPARC]: Remove some duplicated sparc32 config items
+
+Michael Chan:
+      [TG3]: Refine AMD K8 write-reorder chipset test.
+
+Michael S. Tsirkin:
+      [IB] mthca: Fix memory leak on device close
+
+Nicolas Pitre:
+      [ARM] 2951/1: fix wrong comment
+      [ARM] 2952/1: fix a register clobber list
+      [ALSA] remove bogus match method for ac97_bus
+      [ALSA] remove redundent assignment to the ac97 device structure
+      [ALSA] clean suspend/resume calls for ac97_bus_type
+      [ARM] 2956/1: fix the "Fix gcc4 build errors in ucb1x00-core.c"
+
+Oleg Nesterov:
+      fix do_coredump() vs SIGSTOP race
+
+Paolo 'Blaisorblade' Giarrusso:
+      Uml: hide commands when not being verbose
+      uml: add mode=3Dskas0 as a synonym of skas0
+      uml: allow building .s/.i/.lst files from userspace files
+      uml: restore include breakage, breaking binary format of COW driv=
+er
+      uml: cleanup byte order macros for COW driver
+      uml: cleanup whitespace for COW driver
+
+Paul Jackson:
+      Document from line in patch format
+      Document patch subject line better
+
+Pavel Roskin:
+      orinoco: Information leakage due to incorrect padding
+
+Philippe De Muyter:
+      tulip DC21143 rev 48 10Mbit HDX fix
+
+Rafael J. Wysocki:
+      x86_64: Set up safe page tables during resume
+
+Ralf Baechle:
+      [AX.25]: Fix packet socket crash
+
+Randy Dunlap:
+      ns83820: fix gfp flags type
+      ieee80211: fix gfp flags type
+      ieee80211: fix gfp flags type
+      ns83820: fix gfp flags type
+      sungem: fix gfp flags type
+      [ATM]: fix sparse gfp nocast warnings
+      [BONDING]: fix sparse gfp nocast warnings
+      [CONNECTOR]: fix sparse gfp nocast warnings
+      [DECNET]: fix sparse gfp nocast warnings
+      [IPVS]: fix sparse gfp nocast warnings
+      [NETFILTER]: fix sparse gfp nocast warnings
+      [AF_KEY]: fix sparse gfp nocast warnings
+      [RPC]: fix sparse gfp nocast warnings
+      [TEXTSEARCH]: fix sparse gfp nocast warnings
+      [XFRM]: fix sparse gfp nocast warnings
+
+Ravikiran G Thirumalai:
+      x86_64: Fix numa node topology detection for srat based x86_64 bo=
+xes
+
+Richard Henderson:
+      alpha: fix kernel alignment traps
+
+Richard Purdie:
+      [ARM] 2960/1: collie: Add missing scoop call parameters
+      [ARM] 2961/1: corgi: Add missing include
+      [ARM] 2962/1: scoop: Allow GPIO pin suspend state to be specified
+
+Robert Olsson:
+      [IPV4]: fib_trie root-node expansion
+
+Roland Dreier:
+      [IPoIB] Rename IPoIB's path_lookup() to avoid name clashes
+
+Russell King:
+      [ARM] Fix EBSA110 network driver link detection
+      [ARM] Fix init printk for EBSA110 network driver, and link timer
+      [NET]: Fix "sysctl_net.c:36: error: 'core_table' undeclared here"
+      [MFD] Fix gcc4 build errors in ucb1x00-core.c
+      [ARM] Update mach-types
+
+Sascha Hauer:
+      [ARM] 2949/1: Hynix h720x Run mode
+      [ARM] 2950/1: i.MX gpio setup function
+      [ARM] 2957/1: imx UART Error handling
+      [ARM] 2958/1: fix definition in imx-regs.h
+
+Sasha Khapyorsky:
+      [ALSA] no templated index for mc97 controls
+      [ALSA] no templated index for si3036 modem controls
+      [ALSA] hda-codec - 'empty' generic mfg-only codec
+
+Sridhar Samudrala:
+      [SCTP] Fix SCTP socket options to work with 32-bit apps on 64-bit=
+ kernels.
+
+Stephen Hemminger:
+      skge: set mac address oops with bonding
+      [TCP]: BIC coding bug in Linux 2.6.13
+
+Steven Rostedt:
+      pcmcia: fix task state at pccard thread exit
+
+Sven Hartge:
+      [SPARC64]: Fix compile error in irq.c
+
+Sven Henkel:
+      pmac/radeonfb: Add suspend support for M11 chip in new iBook 12"
+      ppc32: Add new iBook 12" to PowerMac models table
+
+Takashi Iwai:
+      [ALSA] hda-intel - Disable DMA position auto-correction
+      [ALSA] via82xx - Add a dxs whitelist entry
+      [ALSA] Add iBook 1.33GHz support
+      [ALSA] Fix confliction of capture controls on ALC880 test model
+      [ALSA] via82xx - dxs_support entry for an ASUS mobo
+      [ALSA] emu10k1 - Fix loading of SBLive Game board
+      [ALSA] emu10k1 - Fix handling of ac97_chip=3D2
+      [ALSA] ali5451 - Don't build non-existing modem PCM
+
+Tom 'spot' Callaway:
+      [SPARC32]: Enable generic IOMAP.
+      [SPARC]: Fix p9100 framebuffer in 2.6
+
+Tom Zanussi:
+      relayfs: fix bogus param value in call to vmap
+
+Ursula Braun:
+      s390: qeth driver fixes
+
+Vincent Sanders:
+      [ARM] 2944/1: GCC 4 mx1ads serial driver compile fix
+      [ARM] 2945/1: ARM fortunet fails to build because of missing incl=
+ude
+      [ARM] 2965/1: defconfig for the ARM Spitz platform
+      [ARM] 2966/1: defconfig for the ARM Poodle platform
+      [ARM] 2967/1: defconfig for the ARM Corgi platform
+      [ARM] 2968/1: defconfig for the ARM Collie platform
+
+Wade Farnsworth:
+      emac: add support for platform-specific unsupported PHY features
+
+Wim Van Sebroeck:
+      [WATCHDOG] pcwd_pci.c control status + boot-code clean-up
+      [WATCHDOG] pcwd_pci.c add debug module_param
+
+Yan Zheng:
+      [IPV6]: Fix ipv6 fragment ID selection at slow path
+      [MCAST] ipv6: Fix address size in grec_size
+
+YOSHIFUJI Hideaki:
+      [IPV6]: Fix infinite loop in udp_v6_get_port().
+      [IPV6]: Fix NS handing for proxy/anycast address
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
