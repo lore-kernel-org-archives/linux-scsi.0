@@ -1,92 +1,61 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] mptsas: support link error attributes
-Date: Tue, 11 Oct 2005 17:31:09 -0600
-Message-ID: <91888D455306F94EBD4D168954A9457C046A765F@nacos172.co.lsil.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [SCSI] qla2xxx: fix remote port timeout with qla2xxx driver
+Date: Tue, 11 Oct 2005 16:31:08 -0700
+Message-ID: <20051011233108.GA25279@plap.qlogic.org>
+References: <200510031643.j93GhgRY023585@hera.kernel.org> <20051010170136.GA9736@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:35309 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932360AbVJKXbW (ORCPT
+Received: from pat.qlogic.com ([198.70.193.2]:2594 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S932352AbVJKXbL (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Oct 2005 19:31:22 -0400
+	Tue, 11 Oct 2005 19:31:11 -0400
+Content-Disposition: inline
+In-Reply-To: <20051010170136.GA9736@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: Olaf Hering <olh@suse.de>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-On Tuesday, October 11, 2005 12:36 PM, Christoph Hellwig wrote: 
+On Mon, 10 Oct 2005, Olaf Hering wrote:
+
+>  On Mon, Oct 03, Linux Kernel Mailing List wrote:
 > 
-> The patch I sent out (and attached again) applies perfect against
-> 2.6.14-rc4.  The comment is there in 2.6.14-rc4 aswell.
+> > tree e50f57f9c85bacf3fc07359b1a339432dea31a7a
+> > parent 6f3a20242db2597312c50abc11f1e747c5d2326a
+> > author Andrew Vasquez <andrew.vasquez@qlogic.com> Wed, 21 Sep 2005 03:32:11 -0700
+> > committer James Bottomley <jejb@mulgrave.(none)> Sun, 25 Sep 2005 22:11:35 -0500
+> > 
+> > [SCSI] qla2xxx: fix remote port timeout with qla2xxx driver
+> > diff --git a/drivers/scsi/qla2xxx/qla_rscn.c b/drivers/scsi/qla2xxx/qla_rscn.c
+> > --- a/drivers/scsi/qla2xxx/qla_rscn.c
+> > +++ b/drivers/scsi/qla2xxx/qla_rscn.c
+> > @@ -330,6 +330,8 @@ qla2x00_update_login_fcport(scsi_qla_hos
+> >  	fcport->flags &= ~FCF_FAILOVER_NEEDED;
+> >  	fcport->iodesc_idx_sent = IODESC_INVALID_INDEX;
+> >  	atomic_set(&fcport->state, FCS_ONLINE);
+> > +	if (fcport->rport)
+> > +		fc_remote_port_unblock(fcport->rport);
 > 
+> 
+> This patch lacks an #include, probably scsi/scsi_transport_fc.h:
+> 
+> drivers/scsi/qla2xxx/qla_rscn.c:334: error: implicit declaration of function 'fc_remote_port_unblock'
 
-My mistake.  I upgraded email clients today, and it
-was the culprit in malforming the patch. Sorry.
+Yes,  here's a one-liner to add the proper include.
 
+---
 
-> -static void mptsas_print_phy_pg0(SasPhyPage0_t *pg0)
-> +static int mptsas_get_linkerrors(struct sas_phy *phy)
->  {
-> -	__le64 sas_address;
-> +	MPT_ADAPTER *ioc = phy_to_ioc(phy);
-> +	ConfigExtendedPageHeader_t hdr;
-> +	CONFIGPARMS cfg;
-> +	SasPhyPage1_t *buffer;
-> +	dma_addr_t dma_handle;
-> +	int error;
->  
-> -	memcpy(&sas_address, &pg0->SASAddress, sizeof(__le64));
-> +	hdr.PageVersion = MPI_SASPHY1_PAGEVERSION;
-> +	hdr.ExtPageLength = 0;
-> +	hdr.PageNumber = 1 /* page number 1*/;
-> +	hdr.Reserved1 = 0;
-> +	hdr.Reserved2 = 0;
-> +	hdr.PageType = MPI_CONFIG_PAGETYPE_EXTENDED;
-> +	hdr.ExtPageType = MPI_CONFIG_EXTPAGETYPE_SAS_PHY;
->  
-> -	printk("---- SAS PHY PAGE 0 ------------\n");
-> -	printk("Attached Device Handle=0x%X\n",
-> -			le16_to_cpu(pg0->AttachedDevHandle));
-> -	printk("SAS Address=0x%llX\n",
-> -			(unsigned long long)le64_to_cpu(sas_address));
-> -	printk("Attached PHY Identifier=0x%X\n", 
-> pg0->AttachedPhyIdentifier);
-> -	printk("Attached Device Info=0x%X\n",
-> -			le32_to_cpu(pg0->AttachedDeviceInfo));
-> -	printk("Programmed Link Rate=0x%X\n", pg0->ProgrammedLinkRate);
-> -	printk("Change Count=0x%X\n", pg0->ChangeCount);
-> -	printk("PHY Info=0x%X\n", le32_to_cpu(pg0->PhyInfo));
-> -	printk("\n");
-> -}
-> +	cfg.cfghdr.ehdr = &hdr;
-> +	cfg.physAddr = -1;
-> +	cfg.pageAddr = phy->identify.phy_identifier;
-> +	cfg.action = MPI_CONFIG_ACTION_PAGE_HEADER;
-> +	cfg.dir = 0;    /* read */
-> +	cfg.timeout = 10;
->  
-
-The "phy->identify.phy_identifier" being passed is incorrect
-for this config page. 
-
-I noticed that in /sys/class/sas_phy/phy-0:x, that all the
-phy_identifier attributes is all zero for all the phys. 
-It should be the same as x.  
-
-The problem appears that in sas device page 0, it 
-returns zero for the PhyNum field.   For sas 
-device page 0, the first devices are all for the 
-direct attached(or identity) phys. So if you have a 
-four port sas card, the first four are the direct 
-attached phys.  Any other devices are actual sas 
-end devices, such as disks.  For the direct 
-attached(or identity) phys, it always returns zero. 
-In CSMI get_phy_info, I hard code those identity 
-phys from 0 to max expected phys(which you get
-from sas_io_unit_page 0).  It appears we may need
-to do the same here, perhaps in mptsas_probe_hba_phys
-after device page 0 is read.
-Also the expander pages seem to have the same issue.
-I'm investigating.
-
-Eric
+diff --git a/drivers/scsi/qla2xxx/qla_rscn.c b/drivers/scsi/qla2xxx/qla_rscn.c
+index 1eba988..11682a2 100644
+--- a/drivers/scsi/qla2xxx/qla_rscn.c
++++ b/drivers/scsi/qla2xxx/qla_rscn.c
+@@ -18,6 +18,8 @@
+  */
+ #include "qla_def.h"
+ 
++#include <scsi/scsi_transport_fc.h>
++
+ /**
+  * IO descriptor handle definitions.
+  *
