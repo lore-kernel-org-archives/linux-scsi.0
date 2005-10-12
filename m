@@ -1,38 +1,35 @@
-From: "Mr Burris Fran" <aidchg@cgocable.net>
-Subject: Human Gr0wth H0rm0ne
-Date: Wed, 12 Oct 2005 08:38:31 +0000 (UTC)
-Message-ID: <475082s8vk2u$40i6k6s0$9102u6x1__4198.58375466919$1129106311$gmane$org@francoise>
+From: "Graham" <graham@soundclashchampions.com>
+Subject: aacraid version confusion
+Date: Wed, 12 Oct 2005 10:24:06 -0700 (PDT)
+Message-ID: <4504.69.15.46.10.1129137846.squirrel@69.15.46.10>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [202.127.12.209] ([202.127.12.209]:44816 "HELO 209.132.176.167")
-	by vger.kernel.org with SMTP id S932396AbVJLIhR (ORCPT
+Received: from gnosis.slac.com ([208.185.215.36]:49872 "EHLO slac.com")
+	by vger.kernel.org with ESMTP id S932444AbVJLRYG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Oct 2005 04:37:17 -0400
+	Wed, 12 Oct 2005 13:24:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-laptop@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, postmaster@vger.kernel.org, ernel@vger.kernel.org, sparclinux@vger.kernel.org, linux-sound@vger.kernel.org, linux-x25@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Human Gr0wth H0r0mone is produced by the pituitary gland
-in your brain. After the age of 20, the horm0ne release
-rate greatly decreases, and by the age of 30 most people
-start to notice an acceleration in the aging process.
+I'm thoroughly confused about the versioning of the aacraid driver, and
+would very much appreciate it if someone could explain to me how it works.
 
+Firstly, I've found that the source for the aacraid driver differs vastly
+between kernels 2.6.8 and 2.6.13, yet both have the driver labeled as
+version "1.1.2-lk2".  If the code changed, shouldn't the version label
+change?
 
-Muscle mass restoring.
+Secondly, I don't understand what the 1.1.5 line is.  Where is the source
+code kept?  Is it actively merged into the mainline kernel source?  I found
+version 1.1.5-2326 on adaptec.com, seen talk of 1.1.5-2345 on this list, and
+found 1.1.5-2392 on dell.com.
 
-Body fat decrease.
+Thirdly, what is considered the latest "stable" version?
 
-Skin thickening, wrinkles reducing.
+Thanks in advance,
+  Graham
 
-Lost hair restoration & Hair color restoration.
-
-Energy and sexual function increase.
-
-http://fleacpeot.info
 
