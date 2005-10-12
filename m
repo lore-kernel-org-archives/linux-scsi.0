@@ -1,108 +1,104 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: scsi_eh: BUG in __schedule (was Re: Trouble installing 1394...)
-Date: Wed, 12 Oct 2005 02:26:48 +0200
-Message-ID: <434C5848.4010107@s5r6.in-berlin.de>
-References: <20051011163832.49397.qmail@web54611.mail.yahoo.com>	 <5bdc1c8b0510110943reb9c49fu8428f6d4f67d5d75@mail.gmail.com>	 <434C2D25.3050403@s5r6.in-berlin.de> <5bdc1c8b0510111609y1309484au7893f4c154922af@mail.gmail.com>
+From: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
+Subject: RE: mpt fusion driver performance issue in 2.6.14-rc2
+Date: Tue, 11 Oct 2005 18:10:46 -0700
+Message-ID: <200510120111.j9C1B9g14181@unix-os.sc.intel.com>
+References: <001a01c5c650$25719050$1b1015ac@ericmoore>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:6323 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S932355AbVJLA1p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Oct 2005 20:27:45 -0400
-In-Reply-To: <5bdc1c8b0510111609y1309484au7893f4c154922af@mail.gmail.com>
+Received: from fmr23.intel.com ([143.183.121.15]:28610 "EHLO
+	scsfmr003.sc.intel.com") by vger.kernel.org with ESMTP
+	id S932382AbVJLBLU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Oct 2005 21:11:20 -0400
+In-Reply-To: <001a01c5c650$25719050$1b1015ac@ericmoore>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Knecht <markknecht@gmail.com>
-Cc: linux1394-user@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: "'Moore, Eric Moore'" <Eric.Moore@lsil.com>, linux-scsi@vger.kernel.org
+Cc: 'James Bottomley' <James.Bottomley@SteelEye.com>
 
-Mark Knecht wrote to linux1394-user:
-> Hi Stefan,
->    You may have spotted this on the LKML or possibly not.
+On Friday, September 30, 2005 6:27 PM, Chen, Kenneth W wrote:
+> Chen, Kenneth W  wrote on Thursday, September 29, 2005 11:59 AM
+>> Something happened in between kernel 2.6.12 and 2.6.14-rc2, where
+>> disk performance went 20X slower on the latest release kernel. I
+>> suspect it has something to do with the fusion driver. This showed
+>> up in the boot log: "mptscsih: ioc0: DV: Release failed." is it
+>> significant?
+>
+> I think the bug is for real, and it is in the mpt fusion driver.  I'm
+> not an expert of LSI53C1030 host controller, and I won't pretend to be
+> one. Though I have data to show what is going on:
+>
+> There are two threads during driver initialization.  One does domain
+> validation (mptscsih_domainValidation) and one does host controller
+> initialization (mptspi_probe).  During 2nd host controller bringup,
+> i.e., bringing up ioc1, it temporary disables first channel (ioc0).
+> However, DV is in progress on ioc0 in another thread (and possibly
+> running on another CPU).  The effect of disabling ioc0 during in-
+> progress-domain-validation is that it causes all subsequent DV
+> commands to fail and resulting lowest possible performance setting
+> for almost all disks pending DV.
+>
+> Here is a fix that I propose: for the period that ioc0 need to be
+> disabled for bringing up ioc1, ioc->active is marked with a special
+> flag and have DV thread busy wait on that flag.  This avoid mptspi_probe
+> thread clash into the DV thread causing brain-damage to DV.
+>
+> With the patch, all disks are up to the performance expectation and it
+> also fixed the "mptscsih: ioc0: DV: Release failed" error message.
+>
 
-I am not subscribed there.
-
-> The messages
-> showed up a few minutes later. There were not there when I sent this
-> message, but a few minutes later I got a bug trace and then got the
-> messages. Looked like a bug to me but I wouldn't know if it was in the
-> kernel or the 1394 drivers.
+Moore, Eric Moore wrote on Friday, September 30, 2005 11:20 PM
+> Thanks for you findings into this.
 > 
-> Note that I have since rebuilt the kernel and didn't get this the next
-> time I booted. Here's what I saw:
-> 
-> ohci1394: fw-host0: OHCI-1394 1.1 (PCI): IRQ=[66]
-> MMIO=[da014000-da0147ff]  Max Packet=[4096]
-> sbp2: $Rev: 1306 $ Ben Collins <bcollins@debian.org>
-> ieee1394: Host added: ID:BUS[0-00:1023]  GUID[0800286410000f43]
-> eth0: no IPv6 routers present
-> ieee1394: Error parsing configrom for node 0-00:1023
-> ieee1394: Node changed: 0-00:1023 -> 0-01:1023
-> ieee1394: Node added: ID:BUS[0-00:1023]  GUID[0050c504e0006463]
+> I'm moving across town, and will not be in the office, nor have
+> internet access for the next couple days.  I will look into this when
+> I return.
 
-(Remark: One FireWire node is present at this point, plus the local node.)
+Any time frame when this is going to be looked into and have the bug
+fixed?  If no objection, please apply.
 
-> scsi4 : SCSI emulation for IEEE-1394 SBP-2 Devices
-> ieee1394: sbp2: Error logging into SBP-2 device - login timed-out
-> prev->state: 2 != TASK_RUNNING??
-> scsi_eh_4/7835[CPU#0]: BUG in __schedule at kernel/sched.c:3326
-> 
-> Call Trace:<ffffffff80132221>{__WARN_ON+97} <ffffffff803e79f0>{__schedule+608}
->       <ffffffff801342bf>{do_exit+1007}
-> <ffffffff801467c0>{keventd_create_kthread+0}
->       <ffffffff8010e5ed>{child_rip+15}
-> <ffffffff801467c0>{keventd_create_kthread+0}
->       <ffffffff801466b0>{kthread+0} <ffffffff8010e5de>{child_rip+0}
-> 
-> sbp2: probe of 0050c504e0006463-0 failed with error -16
-> ieee1394: Node added: ID:BUS[0-00:1023]  GUID[00303c020010645c]
+Simple "hdparm -t" shows:
 
-(Remark: Now there are two external FireWire nodes, plus local node.)
+vanilla 2.6.14-rc3:
+ Timing buffered disk reads:    8 MB in  3.16 seconds =   2.53 MB/sec
 
-> ieee1394: Node changed: 0-00:1023 -> 0-01:1023
-> ieee1394: Node changed: 0-01:1023 -> 0-02:1023
-> scsi5 : SCSI emulation for IEEE-1394 SBP-2 Devices
-> ieee1394: sbp2: Logged into SBP-2 device
-> ieee1394: Node 0-00:1023: Max speed [S800] - Max payload [4096]
->  Vendor: Maxtor 6  Model: Y160P0            Rev: YAR4
->  Type:   Direct-Access-RBC                  ANSI SCSI revision: 04
-> SCSI device sdb: 320173056 512-byte hdwr sectors (163929 MB)
-> sdb: asking for cache data failed
-> sdb: assuming drive cache: write through
-> SCSI device sdb: 320173056 512-byte hdwr sectors (163929 MB)
-> sdb: asking for cache data failed
-> sdb: assuming drive cache: write through
->  sdb: sdb1 sdb2
-> Attached scsi disk sdb at scsi5, channel 0, id 0, lun 0
-> scsi6 : SCSI emulation for IEEE-1394 SBP-2 Devices
-> ieee1394: sbp2: Logged into SBP-2 device
-> ieee1394: Node 0-01:1023: Max speed [S400] - Max payload [2048]
->  Vendor: Maxtor 6  Model: Y160P0            Rev: YAR4
->  Type:   Direct-Access-RBC                  ANSI SCSI revision: 04
-> SCSI device sdc: 320173056 512-byte hdwr sectors (163929 MB)
-> sdc: asking for cache data failed
-> sdc: assuming drive cache: write through
-> SCSI device sdc: 320173056 512-byte hdwr sectors (163929 MB)
-> sdc: asking for cache data failed
-> sdc: assuming drive cache: write through
->  sdc: sdc1 sdc2 sdc3
-> Attached scsi disk sdc at scsi6, channel 0, id 0, lun 0
-[...]
+2.6.14-rc3 + patch:
+ Timing buffered disk reads:  174 MB in  3.02 seconds =  57.55 MB/sec
 
-I gather from another post of yours that you got this from 2.6.14-rc4, 
-right?
 
-The way how the scsi_eh (error handler daemon of the scsi core) is 
-started and stopped was changed earlier in 2.6.14-rcX and was broken 
-before 2.6.14-rc3. Either there is still a bug in there, or sbp2 uses 
-the scsi core incorrectly again. I will have a closer look at how an 
-sbp2 login time-out situation may affect scsi_eh RSN. (Ideally, sbp2 
-should cause scsi core to start scsi_eh only after a successful login, 
-but that is another story.)
+---
 
-I cc'd linux-scsi because that is where scsi_eh's authors are.
--- 
-Stefan Richter
--=====-=-=-= =-=- -==--
-http://arcgraph.de/sr/
+Fix race between domain validation and host controller initialization
+for mpt fusion driver.
+
+Signed-off-by: Ken Chen <kenneth.w.chen@intel.com>
+
+--- ./drivers/message/fusion/mptbase.c.orig	2005-09-30 17:16:16.051906000 -0700
++++ ./drivers/message/fusion/mptbase.c	2005-09-30 17:18:50.811670000 -0700
+@@ -740,8 +740,12 @@ mpt_get_msg_frame(int handle, MPT_ADAPTE
+ #endif
+ 
+ 	/* If interrupts are not attached, do not return a request frame */
+-	if (!ioc->active)
+-		return NULL;
++	if (ioc->active <= 0) {
++		while (ioc->active == -1)
++			schedule_timeout_uninterruptible(1);
++		if (!ioc->active)
++			return NULL;
++	}
+ 
+ 	spin_lock_irqsave(&ioc->FreeQlock, flags);
+ 	if (!list_empty(&ioc->FreeQ)) {
+@@ -1495,7 +1499,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u3
+ 
+ 		/* Disable alt-IOC's reply interrupts (and FreeQ) for a bit ... */
+ 		CHIPREG_WRITE32(&ioc->alt_ioc->chip->IntMask, 0xFFFFFFFF);
+-		ioc->alt_ioc->active = 0;
++		ioc->alt_ioc->active = -1;
+ 	}
+ 
+ 	hard = 1;
+
