@@ -1,43 +1,44 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: RE: mpt fusion driver performance issue in 2.6.14-rc2
-Date: Wed, 12 Oct 2005 14:57:53 -0600
-Message-ID: <91888D455306F94EBD4D168954A9457C04746B82@nacos172.co.lsil.com>
+From: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
+Subject: RE: [patch] fix unnecessary activation of blk tag queue for qla2x00
+Date: Wed, 12 Oct 2005 13:55:04 -0700
+Message-ID: <200510122055.j9CKtRg28828@unix-os.sc.intel.com>
+References: <20051012200016.GA24096@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:20448 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751567AbVJLU56 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Oct 2005 16:57:58 -0400
+Received: from fmr24.intel.com ([143.183.121.16]:50051 "EHLO
+	scsfmr004.sc.intel.com") by vger.kernel.org with ESMTP
+	id S1751569AbVJLU7r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Oct 2005 16:59:47 -0400
+In-Reply-To: <20051012200016.GA24096@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Chen, Kenneth W" <kenneth.w.chen@intel.com>, linux-scsi@vger.kernel.org
-Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+To: 'Patrick Mansfield' <patmans@us.ibm.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Thursday, September 29, 2005 12:59 PM, Chen, Kenneth W wrote:  
-
+Patrick Mansfield wrote on Wednesday, October 12, 2005 1:00 PM
+> > > It turns out that qla2x00 driver unnecessarily activated
+> > > generic blk tag queue without actually use any of the tag
+> > > maintained by the block layer.  I suggest we turn that off
+> > > until there is a real consumer of the tag queuing in the
+> > > qla driver. Please apply.
+> > > 
+> > > Signed-off-by: Ken Chen <kenneth.w.chen@intel.com>
+> > 
+> > ACK.
 > 
-> Something happened in between kernel 2.6.12 and 2.6.14-rc2, where
-> disk performance went 20X slower on the latest release kernel. I
-> suspect it has something to do with the fusion driver. This showed
-> up in the boot log: "mptscsih: ioc0: DV: Release failed." is it
-> significant?
-> 
-> 
+> And then also remove scsi_populate_tag_msg() calls also in qla2xxx,
+> as that becomes dead code?
 
-There have been several post circulating about the "release failed"
-issue.  I thought I saw an email recently from someone at Intel
-that had root caused the problem. I'm been trying to find that all day
-to find that email. I believe it was on this or the linux-kernel
-forums.  Had you seen it?  We need to root cause that, however 
-I'm very much burried in SAS.
+Yeah, that would indeed be a very good thing to do.  It reminds me
+a while back, I was investigating cache miss profile and we
+consistently see cache misses on tag[2] variable defined in
+qla2x00_start_scsi (used by scsi_populate_tag_msg).  Removing it
+would be a very good thing for driver performance.
 
-Anyways the plan is to eventually go to SPI transport. Have you seen
-this post by James?
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112879629201766&w=2
+Should I generate the patch?
 
-I have it on my todo list, and plan to review this SPI updates 
-sometime this week.  Perhaps you can try this patch out and let us
-(and James) whether its solved.
+- Ken
 
-Eric Moore 
