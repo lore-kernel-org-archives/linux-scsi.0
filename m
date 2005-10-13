@@ -1,52 +1,27 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] cleanup up mpt_attach error handling
-Date: Thu, 13 Oct 2005 16:14:03 -0600
-Message-ID: <91888D455306F94EBD4D168954A9457C047475A4@nacos172.co.lsil.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 6/12]  qla2xxx: Resync with latest released firmware -- 4.00.12.
+Date: Thu, 13 Oct 2005 16:16:34 -0700 (PDT)
+Message-ID: <20051013231634.27191.52332.sendpatchset@plap.qlogic.com>
+References: <20051013231534.27191.19815.sendpatchset@plap.qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:5372 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751116AbVJMWOP (ORCPT
+Received: from pat.qlogic.com ([198.70.193.2]:423 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S932530AbVJMXQe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Oct 2005 18:14:15 -0400
+	Thu, 13 Oct 2005 19:16:34 -0400
+In-Reply-To: <20051013231534.27191.19815.sendpatchset@plap.qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On Thursday, October 13, 2005 12:15 PM, Grant Grundler wrote: 
-> 
-> Eric,
-> Minor cleanup to the error handling in mpt_attach.
-> Intent is to make this code a bit more maintainable.
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Thanks, nice cleanup.
+---
 
-> I'm also wondering if pci_disable_device() should be added to
-> the error handling code.
-> 
+This patch is too large for an inline patch, please download the
+bzip'd patch from:
 
-I guess that sounds good adding pci_disable_device().
-Can you resend with patch that handles 
-this(failure of pci_set_dma_mask, and the kmalloc 
-right below it); as well as calling 
-pci_disable_device() from mpt_detach() ?
+        ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.01.02k/0006-Resync-with-latest-released-firmware-4.00.12.diff.bz2
 
-
-> +mpterr_freeirq:
-> +	free_irq(ioc->pci_irq, ioc);
-> +mpterr_listdel:
-> +	list_del(&ioc->list);
-> +	iounmap(mem);
-> +mpterr_freeioc:
-> +	kfree(ioc);
-> +	pci_set_drvdata(pdev, NULL);
-> +	return r;
->  }
->  
-
-Howabout using out_free_irq, and out_free_ioc, instead
-of mpterr_freeirq, and mpterr_freeioc, respectively.
-
-Thankyou,
-Eric Moore
+-- 
+Andrew Vasquez
