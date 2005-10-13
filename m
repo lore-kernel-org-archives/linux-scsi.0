@@ -1,13 +1,13 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 5/12]  qla2xxx: Add support for embedded ISP24xx firmware.
-Date: Thu, 13 Oct 2005 16:16:24 -0700 (PDT)
-Message-ID: <20051013231624.27191.96727.sendpatchset@plap.qlogic.com>
+Subject: [PATCH 4/12]  qla2xxx: Update license.
+Date: Thu, 13 Oct 2005 16:16:14 -0700 (PDT)
+Message-ID: <20051013231614.27191.9897.sendpatchset@plap.qlogic.com>
 References: <20051013231534.27191.19815.sendpatchset@plap.qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:15782 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S932529AbVJMXQY (ORCPT
+Received: from pat.qlogic.com ([198.70.193.2]:41893 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S932532AbVJMXQO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Oct 2005 19:16:24 -0400
+	Thu, 13 Oct 2005 19:16:14 -0400
 In-Reply-To: <20051013231534.27191.19815.sendpatchset@plap.qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,389 +18,871 @@ Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
 ---
 
- drivers/scsi/qla2xxx/Makefile   |    3 +
- drivers/scsi/qla2xxx/ql2400.c   |  113 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_def.h  |    2 -
- drivers/scsi/qla2xxx/qla_gbl.h  |    1 
- drivers/scsi/qla2xxx/qla_init.c |   63 ++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_os.c   |   85 ++++++-----------------------
- 6 files changed, 196 insertions(+), 71 deletions(-)
- create mode 100644 drivers/scsi/qla2xxx/ql2400.c
+ Documentation/scsi/LICENSE.qla2xxx  |   59 +++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/ql2100.c       |    9 ++---
+ drivers/scsi/qla2xxx/ql2100_fw.c    |   22 +++----------
+ drivers/scsi/qla2xxx/ql2200.c       |    9 ++---
+ drivers/scsi/qla2xxx/ql2200_fw.c    |   22 +++----------
+ drivers/scsi/qla2xxx/ql2300.c       |    9 ++---
+ drivers/scsi/qla2xxx/ql2300_fw.c    |   22 +++----------
+ drivers/scsi/qla2xxx/ql2322.c       |    7 ++--
+ drivers/scsi/qla2xxx/ql2322_fw.c    |   22 +++----------
+ drivers/scsi/qla2xxx/ql6312.c       |    7 ++--
+ drivers/scsi/qla2xxx/ql6312_fw.c    |   22 +++----------
+ drivers/scsi/qla2xxx/qla_attr.c     |   18 ++---------
+ drivers/scsi/qla2xxx/qla_dbg.c      |   18 ++---------
+ drivers/scsi/qla2xxx/qla_dbg.h      |   23 +++-----------
+ drivers/scsi/qla2xxx/qla_def.h      |   25 ++++-----------
+ drivers/scsi/qla2xxx/qla_fw.h       |   26 ++++-----------
+ drivers/scsi/qla2xxx/qla_gbl.h      |   28 ++++-------------
+ drivers/scsi/qla2xxx/qla_gs.c       |   18 ++---------
+ drivers/scsi/qla2xxx/qla_init.c     |   18 ++---------
+ drivers/scsi/qla2xxx/qla_inline.h   |   19 ++---------
+ drivers/scsi/qla2xxx/qla_iocb.c     |   23 +++-----------
+ drivers/scsi/qla2xxx/qla_isr.c      |   18 ++---------
+ drivers/scsi/qla2xxx/qla_mbx.c      |   18 ++---------
+ drivers/scsi/qla2xxx/qla_os.c       |   18 ++---------
+ drivers/scsi/qla2xxx/qla_rscn.c     |   18 ++---------
+ drivers/scsi/qla2xxx/qla_settings.h |   22 +++----------
+ drivers/scsi/qla2xxx/qla_sup.c      |   23 +++-----------
+ drivers/scsi/qla2xxx/qla_version.h  |   22 +++----------
+ 28 files changed, 172 insertions(+), 393 deletions(-)
+ create mode 100644 Documentation/scsi/LICENSE.qla2xxx
 
-applies-to: fd35977ee7de3602087def1d4b490e31c9a383d2
-84910304aeb3d5db54db9e975309e21791b9baca
-diff --git a/drivers/scsi/qla2xxx/Makefile b/drivers/scsi/qla2xxx/Makefile
-index b169687..f1c3dfd 100644
---- a/drivers/scsi/qla2xxx/Makefile
-+++ b/drivers/scsi/qla2xxx/Makefile
-@@ -8,10 +8,11 @@ qla2200-y := ql2200.o ql2200_fw.o
- qla2300-y := ql2300.o ql2300_fw.o
- qla2322-y := ql2322.o ql2322_fw.o
- qla6312-y := ql6312.o ql6312_fw.o
-+qla2400-y := ql2400.o ql2400_fw.o
- 
- obj-$(CONFIG_SCSI_QLA21XX) += qla2xxx.o qla2100.o
- obj-$(CONFIG_SCSI_QLA22XX) += qla2xxx.o qla2200.o
- obj-$(CONFIG_SCSI_QLA2300) += qla2xxx.o qla2300.o
- obj-$(CONFIG_SCSI_QLA2322) += qla2xxx.o qla2322.o
- obj-$(CONFIG_SCSI_QLA6312) += qla2xxx.o qla6312.o
--obj-$(CONFIG_SCSI_QLA24XX) += qla2xxx.o
-+obj-$(CONFIG_SCSI_QLA24XX) += qla2xxx.o qla2400.o
-diff --git a/drivers/scsi/qla2xxx/ql2400.c b/drivers/scsi/qla2xxx/ql2400.c
+applies-to: 2a85611f196edcf230196ae7e73d5783255f2be1
+f31d3537cd77b14ded8c7eea8c6a1d0ca6a29f3e
+diff --git a/Documentation/scsi/LICENSE.qla2xxx b/Documentation/scsi/LICENSE.qla2xxx
 new file mode 100644
-index 0000000..76a48ed
+index 0000000..91d7e38
 --- /dev/null
-+++ b/drivers/scsi/qla2xxx/ql2400.c
-@@ -0,0 +1,113 @@
++++ b/Documentation/scsi/LICENSE.qla2xxx
+@@ -0,0 +1,59 @@
++Copyright (c)  2003-2005 QLogic Corporation
++QLogic Linux Fibre Channel HBA Driver
++
++This program includes a device driver for Linux 2.6 that may be
++distributed with QLogic hardware specific firmware binary file.
++You may modify and redistribute the device driver code under the
++GNU General Public License as published by the Free Software
++Foundation (version 2 or a later version) and/or under the
++following terms, as applicable:
++
++	1. Redistribution of source code must retain the above
++	   copyright notice, this list of conditions and the
++	   following disclaimer.
++
++	2. Redistribution in binary form must reproduce the above
++	   copyright notice, this list of conditions and the
++	   following disclaimer in the documentation and/or other
++	   materials provided with the distribution.
++
++	3. The name of QLogic Corporation may not be used to
++	   endorse or promote products derived from this software
++	   without specific prior written permission.
++
++You may redistribute the hardware specific firmware binary file
++under the following terms:
++
++	1. Redistribution of source code (only if applicable),
++	   must retain the above copyright notice, this list of
++	   conditions and the following disclaimer.
++
++	2. Redistribution in binary form must reproduce the above
++	   copyright notice, this list of conditions and the
++	   following disclaimer in the documentation and/or other
++	   materials provided with the distribution.
++
++	3. The name of QLogic Corporation may not be used to
++	   endorse or promote products derived from this software
++	   without specific prior written permission
++
++REGARDLESS OF WHAT LICENSING MECHANISM IS USED OR APPLICABLE,
++THIS PROGRAM IS PROVIDED BY QLOGIC CORPORATION "AS IS'' AND ANY
++EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
++PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR
++BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
++TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
++ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
++OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++POSSIBILITY OF SUCH DAMAGE.
++
++USER ACKNOWLEDGES AND AGREES THAT USE OF THIS PROGRAM WILL NOT
++CREATE OR GIVE GROUNDS FOR A LICENSE BY IMPLICATION, ESTOPPEL, OR
++OTHERWISE IN ANY INTELLECTUAL PROPERTY RIGHTS (PATENT, COPYRIGHT,
++TRADE SECRET, MASK WORK, OR OTHER PROPRIETARY RIGHT) EMBODIED IN
++ANY OTHER QLOGIC HARDWARE OR SOFTWARE EITHER SOLELY OR IN
++COMBINATION WITH THIS PROGRAM.
+diff --git a/drivers/scsi/qla2xxx/ql2100.c b/drivers/scsi/qla2xxx/ql2100.c
+index 058733d..f5db223 100644
+--- a/drivers/scsi/qla2xxx/ql2100.c
++++ b/drivers/scsi/qla2xxx/ql2100.c
+@@ -1,11 +1,10 @@
+ /*
+- * QLogic ISP2100 device driver for Linux 2.6.x
+- * Copyright (C) 2003 Christoph Hellwig.
+- * Copyright (C) 2003-2005 QLogic Corporation (www.qlogic.com)
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (C)  2003 Christoph Hellwig.
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
+- * Released under GPL v2.
++ * See LICENSE.qla2xxx for copyright and licensing details.
+  */
+-
+ #include <linux/init.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
+diff --git a/drivers/scsi/qla2xxx/ql2100_fw.c b/drivers/scsi/qla2xxx/ql2100_fw.c
+index 18376b8..5600616 100644
+--- a/drivers/scsi/qla2xxx/ql2100_fw.c
++++ b/drivers/scsi/qla2xxx/ql2100_fw.c
+@@ -1,21 +1,9 @@
+-/******************************************************************************
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++/*
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
+- *************************************************************************/
++ * See LICENSE.qla2xxx for copyright and licensing details.
++ */
+ 
+ /*
+  *	Firmware Version 1.19.25 (13:12 Dec 10, 2003)
+diff --git a/drivers/scsi/qla2xxx/ql2200.c b/drivers/scsi/qla2xxx/ql2200.c
+index 5b5ee73..0eef72d 100644
+--- a/drivers/scsi/qla2xxx/ql2200.c
++++ b/drivers/scsi/qla2xxx/ql2200.c
+@@ -1,11 +1,10 @@
+ /*
+- * QLogic ISP2200 device driver for Linux 2.6.x
+- * Copyright (C) 2003 Christoph Hellwig.
+- * Copyright (C) 2003-2005 QLogic Corporation (www.qlogic.com)
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (C)  2003 Christoph Hellwig.
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
+- * Released under GPL v2.
++ * See LICENSE.qla2xxx for copyright and licensing details.
+  */
+-
+ #include <linux/init.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
+diff --git a/drivers/scsi/qla2xxx/ql2200_fw.c b/drivers/scsi/qla2xxx/ql2200_fw.c
+index 6f103fd..ac07e18 100644
+--- a/drivers/scsi/qla2xxx/ql2200_fw.c
++++ b/drivers/scsi/qla2xxx/ql2200_fw.c
+@@ -1,21 +1,9 @@
+-/******************************************************************************
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++/*
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
+- *************************************************************************/
++ * See LICENSE.qla2xxx for copyright and licensing details.
++ */
+ 
+ /*
+  *	Firmware Version 2.02.08 (17:06 Mar 22, 2005)
+diff --git a/drivers/scsi/qla2xxx/ql2300.c b/drivers/scsi/qla2xxx/ql2300.c
+index 22371c8..fd2f4b7 100644
+--- a/drivers/scsi/qla2xxx/ql2300.c
++++ b/drivers/scsi/qla2xxx/ql2300.c
+@@ -1,11 +1,10 @@
+ /*
+- * QLogic ISP2300 device driver for Linux 2.6.x
+- * Copyright (C) 2003 Christoph Hellwig.
+- * Copyright (C) 2003-2005 QLogic Corporation (www.qlogic.com)
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (C)  2003 Christoph Hellwig.
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
+- * Released under GPL v2.
++ * See LICENSE.qla2xxx for copyright and licensing details.
+  */
+-
+ #include <linux/init.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
+diff --git a/drivers/scsi/qla2xxx/ql2300_fw.c b/drivers/scsi/qla2xxx/ql2300_fw.c
+index 4917ec5..1896a0e 100644
+--- a/drivers/scsi/qla2xxx/ql2300_fw.c
++++ b/drivers/scsi/qla2xxx/ql2300_fw.c
+@@ -1,21 +1,9 @@
+-/******************************************************************************
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++/*
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
+- ******************************************************************************/
++ * See LICENSE.qla2xxx for copyright and licensing details.
++ */
+ 
+ /*
+  *	Firmware Version 3.03.15 (10:03 May 26, 2005)
+diff --git a/drivers/scsi/qla2xxx/ql2322.c b/drivers/scsi/qla2xxx/ql2322.c
+index bfe918a..c88a22c 100644
+--- a/drivers/scsi/qla2xxx/ql2322.c
++++ b/drivers/scsi/qla2xxx/ql2322.c
+@@ -1,10 +1,9 @@
+ /*
+- * QLogic ISP2322 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation (www.qlogic.com)
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
+- * Released under GPL v2.
++ * See LICENSE.qla2xxx for copyright and licensing details.
+  */
+-
+ #include <linux/init.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
+diff --git a/drivers/scsi/qla2xxx/ql2322_fw.c b/drivers/scsi/qla2xxx/ql2322_fw.c
+index 2645d62..97b5578 100644
+--- a/drivers/scsi/qla2xxx/ql2322_fw.c
++++ b/drivers/scsi/qla2xxx/ql2322_fw.c
+@@ -1,21 +1,9 @@
+-/******************************************************************************
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++/*
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
+- ******************************************************************************/
++ * See LICENSE.qla2xxx for copyright and licensing details.
++ */
+ 
+ /*
+  *	Firmware Version 3.03.15 (10:09 May 26, 2005)
+diff --git a/drivers/scsi/qla2xxx/ql6312.c b/drivers/scsi/qla2xxx/ql6312.c
+index e75882d..de55397 100644
+--- a/drivers/scsi/qla2xxx/ql6312.c
++++ b/drivers/scsi/qla2xxx/ql6312.c
+@@ -1,10 +1,9 @@
+ /*
+- * QLogic ISP6312 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation (www.qlogic.com)
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
+- * Released under GPL v2.
++ * See LICENSE.qla2xxx for copyright and licensing details.
+  */
+-
+ #include <linux/init.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
+diff --git a/drivers/scsi/qla2xxx/ql6312_fw.c b/drivers/scsi/qla2xxx/ql6312_fw.c
+index 3579809..1f8744a 100644
+--- a/drivers/scsi/qla2xxx/ql6312_fw.c
++++ b/drivers/scsi/qla2xxx/ql6312_fw.c
+@@ -1,21 +1,9 @@
+-/******************************************************************************
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++/*
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
+- ******************************************************************************/
++ * See LICENSE.qla2xxx for copyright and licensing details.
++ */
+ 
+ /*
+  *	Firmware Version 3.03.15 (10:00 May 26, 2005)
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 47c9ecf..49696fa 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1,20 +1,8 @@
+ /*
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
++ * See LICENSE.qla2xxx for copyright and licensing details.
+  */
+ #include "qla_def.h"
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 9791496..89793c1 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -1,20 +1,8 @@
+ /*
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
++ * See LICENSE.qla2xxx for copyright and licensing details.
+  */
+ #include "qla_def.h"
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
+index 9684e7a..935a59a 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.h
++++ b/drivers/scsi/qla2xxx/qla_dbg.h
+@@ -1,22 +1,9 @@
+-/******************************************************************************
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++/*
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
+- ******************************************************************************/
+-
++ * See LICENSE.qla2xxx for copyright and licensing details.
++ */
+ /*
+  * Driver debug definitions.
+  */
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 522bb2d..fc3234c 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -1,22 +1,9 @@
+-/********************************************************************************
+-*                  QLOGIC LINUX SOFTWARE
+-*
+-* QLogic ISP2x00 device driver for Linux 2.6.x
+-* Copyright (C) 2003-2005 QLogic Corporation
+-* (www.qlogic.com)
+-*
+-* This program is free software; you can redistribute it and/or modify it
+-* under the terms of the GNU General Public License as published by the
+-* Free Software Foundation; either version 2, or (at your option) any
+-* later version.
+-*
+-* This program is distributed in the hope that it will be useful, but
+-* WITHOUT ANY WARRANTY; without even the implied warranty of
+-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-* General Public License for more details.
+-**
+-******************************************************************************/
+-
 +/*
 + * QLogic Fibre Channel HBA Driver
 + * Copyright (c)  2003-2005 QLogic Corporation
 + *
 + * See LICENSE.qla2xxx for copyright and licensing details.
 + */
-+#include <linux/init.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+
-+#include "qla_def.h"
-+
-+static char qla_driver_name[] = "qla2400";
-+
-+extern uint32_t fw2400_version_str[];
-+extern uint32_t fw2400_addr01;
-+extern uint32_t fw2400_code01[];
-+extern uint32_t fw2400_length01;
-+extern uint32_t fw2400_addr02;
-+extern uint32_t fw2400_code02[];
-+extern uint32_t fw2400_length02;
-+
-+static struct qla_fw_info qla_fw_tbl[] = {
-+	{
-+		.addressing	= FW_INFO_ADDR_EXTENDED,
-+		.fwcode		= (unsigned short *)&fw2400_code01[0],
-+		.fwlen		= (unsigned short *)&fw2400_length01,
-+		.lfwstart	= (unsigned long *)&fw2400_addr01,
-+	},
-+	{
-+		.addressing	= FW_INFO_ADDR_EXTENDED,
-+		.fwcode		= (unsigned short *)&fw2400_code02[0],
-+		.fwlen		= (unsigned short *)&fw2400_length02,
-+		.lfwstart	= (unsigned long *)&fw2400_addr02,
-+	},
-+	{ FW_INFO_ADDR_NOMORE, },
-+};
-+
-+static struct qla_board_info qla_board_tbl[] = {
-+	{
-+		.drv_name	= qla_driver_name,
-+		.isp_name	= "ISP2422",
-+		.fw_info	= qla_fw_tbl,
-+		.fw_fname	= "ql2400_fw.bin",
-+		.alternate_sht	= 1,
-+	},
-+	{
-+		.drv_name	= qla_driver_name,
-+		.isp_name	= "ISP2432",
-+		.fw_info	= qla_fw_tbl,
-+		.fw_fname	= "ql2400_fw.bin",
-+		.alternate_sht	= 1,
-+	},
-+};
-+
-+static struct pci_device_id qla24xx_pci_tbl[] = {
-+	{
-+		.vendor		= PCI_VENDOR_ID_QLOGIC,
-+		.device		= PCI_DEVICE_ID_QLOGIC_ISP2422,
-+		.subvendor	= PCI_ANY_ID,
-+		.subdevice	= PCI_ANY_ID,
-+		.driver_data	= (unsigned long)&qla_board_tbl[0],
-+	},
-+	{
-+		.vendor		= PCI_VENDOR_ID_QLOGIC,
-+		.device		= PCI_DEVICE_ID_QLOGIC_ISP2432,
-+		.subvendor	= PCI_ANY_ID,
-+		.subdevice	= PCI_ANY_ID,
-+		.driver_data	= (unsigned long)&qla_board_tbl[1],
-+	},
-+	{0, 0},
-+};
-+MODULE_DEVICE_TABLE(pci, qla24xx_pci_tbl);
-+
-+static int __devinit
-+qla24xx_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
-+{
-+	return qla2x00_probe_one(pdev,
-+	    (struct qla_board_info *)id->driver_data);
-+}
-+
-+static void __devexit
-+qla24xx_remove_one(struct pci_dev *pdev)
-+{
-+	qla2x00_remove_one(pdev);
-+}
-+
-+static struct pci_driver qla24xx_pci_driver = {
-+	.name		= "qla2400",
-+	.id_table	= qla24xx_pci_tbl,
-+	.probe		= qla24xx_probe_one,
-+	.remove		= __devexit_p(qla24xx_remove_one),
-+};
-+
-+static int __init
-+qla24xx_init(void)
-+{
-+	return pci_module_init(&qla24xx_pci_driver);
-+}
-+
-+static void __exit
-+qla24xx_exit(void)
-+{
-+	pci_unregister_driver(&qla24xx_pci_driver);
-+}
-+
-+module_init(qla24xx_init);
-+module_exit(qla24xx_exit);
-+
-+MODULE_AUTHOR("QLogic Corporation");
-+MODULE_DESCRIPTION("QLogic ISP24xx FC-SCSI Host Bus Adapter driver");
-+MODULE_LICENSE("GPL");
-+MODULE_VERSION(QLA2XXX_VERSION);
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index fc3234c..73a066c 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2118,7 +2118,7 @@ struct qla_board_info {
- 	char isp_name[8];
- 	struct qla_fw_info *fw_info;
- 	char *fw_fname;
--	struct scsi_host_template *sht;
-+	int alternate_sht;
- };
+ #ifndef __QLA_DEF_H
+ #define __QLA_DEF_H
  
- /* Return data from MBC_GET_ID_LIST call. */
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
+index fd9df16..2c68028 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -1,23 +1,9 @@
+-
+-/********************************************************************************
+-*                  QLOGIC LINUX SOFTWARE
+-*
+-* QLogic ISP2x00 device driver for Linux 2.6.x
+-* Copyright (C) 2003-2005 QLogic Corporation
+-* (www.qlogic.com)
+-*
+-* This program is free software; you can redistribute it and/or modify it
+-* under the terms of the GNU General Public License as published by the
+-* Free Software Foundation; either version 2, or (at your option) any
+-* later version.
+-*
+-* This program is distributed in the hope that it will be useful, but
+-* WITHOUT ANY WARRANTY; without even the implied warranty of
+-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-* General Public License for more details.
+-**
+-******************************************************************************/
+-
++/*
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
++ *
++ * See LICENSE.qla2xxx for copyright and licensing details.
++ */
+ #ifndef __QLA_FW_H
+ #define __QLA_FW_H
+ 
 diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index ba44636..ec30ac1 100644
+index 7680b95..ba44636 100644
 --- a/drivers/scsi/qla2xxx/qla_gbl.h
 +++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -35,6 +35,7 @@ extern void qla24xx_update_fw_options(sc
- extern int qla2x00_load_risc(struct scsi_qla_host *, uint32_t *);
- extern int qla24xx_load_risc_flash(scsi_qla_host_t *, uint32_t *);
- extern int qla24xx_load_risc_hotplug(scsi_qla_host_t *, uint32_t *);
-+extern int qla24xx_load_risc(scsi_qla_host_t *, uint32_t *);
+@@ -1,25 +1,9 @@
+-/********************************************************************************
+-*                  QLOGIC LINUX SOFTWARE
+-*
+-* QLogic ISP2x00 device driver for Linux 2.6.x
+-* Copyright (C) 2003-2005 QLogic Corporation
+-* (www.qlogic.com)
+-*
+-* This program is free software; you can redistribute it and/or modify it
+-* under the terms of the GNU General Public License as published by the
+-* Free Software Foundation; either version 2, or (at your option) any
+-* later version.
+-*
+-* This program is distributed in the hope that it will be useful, but
+-* WITHOUT ANY WARRANTY; without even the implied warranty of
+-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-* General Public License for more details.
+-*
+-******************************************************************************
+-* Global include file.
+-******************************************************************************/
+-
+-
++/*
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
++ *
++ * See LICENSE.qla2xxx for copyright and licensing details.
++ */
+ #ifndef __QLA_GBL_H
+ #define	__QLA_GBL_H
  
- extern fc_port_t *qla2x00_alloc_fcport(scsi_qla_host_t *, int);
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index e7b138c..cd6f7c3 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -1,20 +1,8 @@
+ /*
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
++ * See LICENSE.qla2xxx for copyright and licensing details.
+  */
+ #include "qla_def.h"
  
 diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 5ab88e7..7407780 100644
+index 81a2cf1..5ab88e7 100644
 --- a/drivers/scsi/qla2xxx/qla_init.c
 +++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -3729,3 +3729,66 @@ fail_fw_integrity:
- 	return QLA_FUNCTION_FAILED;
+@@ -1,20 +1,8 @@
+ /*
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
++ * See LICENSE.qla2xxx for copyright and licensing details.
+  */
+ #include "qla_def.h"
  
- }
-+
-+int
-+qla24xx_load_risc(scsi_qla_host_t *ha, uint32_t *srisc_addr)
-+{
-+	int	rval, num, i;
-+	uint32_t cnt;
-+	uint32_t *risc_code;
-+	uint32_t risc_address;
-+	uint32_t risc_code_size;
-+	uint32_t *req_ring;
-+	struct qla_fw_info *fw_iter;
-+
-+	rval = QLA_SUCCESS;
-+
-+	/* Load firmware sequences */
-+	fw_iter = ha->brd_info->fw_info;
-+	*srisc_addr = *((uint32_t *)fw_iter->lfwstart);
-+	while (fw_iter->addressing != FW_INFO_ADDR_NOMORE) {
-+		risc_code = (uint32_t *)fw_iter->fwcode;
-+		risc_code_size = *((uint32_t *)fw_iter->fwlen);
-+		risc_address = *((uint32_t *)fw_iter->lfwstart);
-+
-+		num = 0;
-+		rval = 0;
-+		while (risc_code_size > 0 && !rval) {
-+			cnt = (uint32_t)(ha->fw_transfer_size >> 2);
-+			if (cnt > risc_code_size)
-+				cnt = risc_code_size;
-+
-+			DEBUG7(printk("scsi(%ld): Loading risc segment@ "
-+			    "addr %p, number of bytes 0x%x, offset 0x%lx.\n",
-+			    ha->host_no, risc_code, cnt, risc_address));
-+
-+			req_ring = (uint32_t *)ha->request_ring;
-+			for (i = 0; i < cnt; i++)
-+				req_ring[i] = cpu_to_le32(risc_code[i]);
-+
-+			rval = qla2x00_load_ram_ext(ha, ha->request_dma,
-+			    risc_address, cnt);
-+			if (rval) {
-+				DEBUG(printk("scsi(%ld): [ERROR] Failed to "
-+				    "load segment %d of firmware\n",
-+				    ha->host_no, num));
-+				qla_printk(KERN_WARNING, ha,
-+				    "[ERROR] Failed to load segment %d of "
-+				    "firmware\n", num);
-+
-+				qla2x00_dump_regs(ha);
-+				break;
-+			}
-+
-+			risc_code += cnt;
-+			risc_address += cnt;
-+			risc_code_size -= cnt;
-+			num++;
-+		}
-+
-+		/* Next firmware sequence */
-+		fw_iter++;
-+	}
-+
-+	return rval;
-+}
+diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
+index b9ff85b..ecc3741 100644
+--- a/drivers/scsi/qla2xxx/qla_inline.h
++++ b/drivers/scsi/qla2xxx/qla_inline.h
+@@ -1,23 +1,10 @@
+ /*
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
++ * See LICENSE.qla2xxx for copyright and licensing details.
+  */
+ 
+-
+ static __inline__ uint16_t qla2x00_debounce_register(volatile uint16_t __iomem *);
+ /*
+  * qla2x00_debounce_register
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index d735562..ae63f8e 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -1,22 +1,9 @@
+-/******************************************************************************
+- *                  QLOGIC LINUX SOFTWARE
++/*
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- *
+- ******************************************************************************/
+-
++ * See LICENSE.qla2xxx for copyright and licensing details.
++ */
+ #include "qla_def.h"
+ 
+ #include <linux/blkdev.h>
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index cf6c6ce..09afc0f 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1,20 +1,8 @@
+ /*
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
++ * See LICENSE.qla2xxx for copyright and licensing details.
+  */
+ #include "qla_def.h"
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 13e1c90..ad3cacb 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -1,20 +1,8 @@
+ /*
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
++ * See LICENSE.qla2xxx for copyright and licensing details.
+  */
+ #include "qla_def.h"
+ 
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 42c53ea..40b124d 100644
+index 04d06a3..42c53ea 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -54,10 +54,15 @@ module_param(ql2xloginretrycount, int, S
- MODULE_PARM_DESC(ql2xloginretrycount,
- 		"Specify an alternate value for the NVRAM login retry count.");
+@@ -1,20 +1,8 @@
+ /*
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
++ * See LICENSE.qla2xxx for copyright and licensing details.
+  */
+ #include "qla_def.h"
  
--int ql2xfwloadbin=1;
-+int ql2xfwloadbin;
- module_param(ql2xfwloadbin, int, S_IRUGO|S_IRUSR);
- MODULE_PARM_DESC(ql2xfwloadbin,
--		"Load ISP2xxx firmware image via hotplug.");
-+		"Option to specify location in which to load ISP24xx firmware: "
-+		" 2 -- load firmware via the request_firmware() (hotplug) "
-+		"      interface.  A file, ql2400_fw.bin, (containing the "
-+		"      firmware image) should be hotplug accessible."
-+		" 1 -- load firmware from flash."
-+		" 0 -- load firmware embedded with driver (default).");
+diff --git a/drivers/scsi/qla2xxx/qla_rscn.c b/drivers/scsi/qla2xxx/qla_rscn.c
+index 1eba988..72104c2 100644
+--- a/drivers/scsi/qla2xxx/qla_rscn.c
++++ b/drivers/scsi/qla2xxx/qla_rscn.c
+@@ -1,20 +1,8 @@
+ /*
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
++ * See LICENSE.qla2xxx for copyright and licensing details.
+  */
+ #include "qla_def.h"
  
- static void qla2x00_free_device(scsi_qla_host_t *);
- 
-@@ -1210,8 +1215,9 @@ int qla2x00_probe_one(struct pci_dev *pd
- 	if (pci_enable_device(pdev))
- 		goto probe_out;
- 
--	host = scsi_host_alloc(brd_info->sht ? brd_info->sht:
--	    &qla2x00_driver_template, sizeof(scsi_qla_host_t));
-+	host = scsi_host_alloc(brd_info->alternate_sht ?
-+	    &qla24xx_driver_template: &qla2x00_driver_template,
-+	    sizeof(scsi_qla_host_t));
- 	if (host == NULL) {
- 		printk(KERN_WARNING
- 		    "qla2xxx: Couldn't allocate host from scsi layer!\n");
-@@ -1311,9 +1317,12 @@ int qla2x00_probe_one(struct pci_dev *pd
- 		ha->isp_ops.reset_adapter = qla24xx_reset_adapter;
- 		ha->isp_ops.nvram_config = qla24xx_nvram_config;
- 		ha->isp_ops.update_fw_options = qla24xx_update_fw_options;
--		ha->isp_ops.load_risc = qla24xx_load_risc_flash;
--		if (ql2xfwloadbin)
-+		if (ql2xfwloadbin == 2)
- 			ha->isp_ops.load_risc = qla24xx_load_risc_hotplug;
-+		else if (ql2xfwloadbin == 1)
-+			ha->isp_ops.load_risc = qla24xx_load_risc_flash;
-+		else
-+			ha->isp_ops.load_risc = qla24xx_load_risc;
- 		ha->isp_ops.pci_info_str = qla24xx_pci_info_str;
- 		ha->isp_ops.fw_version_str = qla24xx_fw_version_str;
- 		ha->isp_ops.intr_handler = qla24xx_intr_handler;
-@@ -2419,68 +2428,12 @@ qla2x00_down_timeout(struct semaphore *s
- 	return -ETIMEDOUT;
- }
- 
--static struct qla_board_info qla_board_tbl[] = {
--	{
--		.drv_name	= "qla2400",
--		.isp_name	= "ISP2422",
--		.fw_fname	= "ql2400_fw.bin",
--		.sht		= &qla24xx_driver_template,
--	},
--	{
--		.drv_name	= "qla2400",
--		.isp_name	= "ISP2432",
--		.fw_fname	= "ql2400_fw.bin",
--		.sht		= &qla24xx_driver_template,
--	},
--};
+diff --git a/drivers/scsi/qla2xxx/qla_settings.h b/drivers/scsi/qla2xxx/qla_settings.h
+index d85fbbe..363205c 100644
+--- a/drivers/scsi/qla2xxx/qla_settings.h
++++ b/drivers/scsi/qla2xxx/qla_settings.h
+@@ -1,21 +1,9 @@
+-/******************************************************************************
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++/*
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
+- ******************************************************************************/
++ * See LICENSE.qla2xxx for copyright and licensing details.
++ */
+ /*
+  * Compile time Options:
+  *     0 - Disable and 1 - Enable
+diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
+index c14abf7..4bec0b4 100644
+--- a/drivers/scsi/qla2xxx/qla_sup.c
++++ b/drivers/scsi/qla2xxx/qla_sup.c
+@@ -1,22 +1,9 @@
+-/******************************************************************************
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++/*
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
+- ******************************************************************************/
 -
--static struct pci_device_id qla2xxx_pci_tbl[] = {
--	{
--		.vendor		= PCI_VENDOR_ID_QLOGIC,
--		.device		= PCI_DEVICE_ID_QLOGIC_ISP2422,
--		.subvendor	= PCI_ANY_ID,
--		.subdevice	= PCI_ANY_ID,
--		.driver_data	= (unsigned long)&qla_board_tbl[0],
--	},
--	{
--		.vendor		= PCI_VENDOR_ID_QLOGIC,
--		.device		= PCI_DEVICE_ID_QLOGIC_ISP2432,
--		.subvendor	= PCI_ANY_ID,
--		.subdevice	= PCI_ANY_ID,
--		.driver_data	= (unsigned long)&qla_board_tbl[1],
--	},
--	{0, 0},
--};
--MODULE_DEVICE_TABLE(pci, qla2xxx_pci_tbl);
--
--static int __devinit
--qla2xxx_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
--{
--	return qla2x00_probe_one(pdev,
--	    (struct qla_board_info *)id->driver_data);
--}
--
--static void __devexit
--qla2xxx_remove_one(struct pci_dev *pdev)
--{
--	qla2x00_remove_one(pdev);
--}
--
--static struct pci_driver qla2xxx_pci_driver = {
--	.name		= "qla2xxx",
--	.id_table	= qla2xxx_pci_tbl,
--	.probe		= qla2xxx_probe_one,
--	.remove		= __devexit_p(qla2xxx_remove_one),
--};
--
- /**
-  * qla2x00_module_init - Module initialization.
-  **/
- static int __init
- qla2x00_module_init(void)
- {
--	int ret = 0;
--
- 	/* Allocate cache for SRBs. */
- 	srb_cachep = kmem_cache_create("qla2xxx_srbs", sizeof(srb_t), 0,
- 	    SLAB_HWCACHE_ALIGN, NULL, NULL);
-@@ -2501,12 +2454,7 @@ qla2x00_module_init(void)
- 		return -ENODEV;
++ * See LICENSE.qla2xxx for copyright and licensing details.
++ */
+ #include "qla_def.h"
  
- 	printk(KERN_INFO "QLogic Fibre Channel HBA Driver\n");
--	ret = pci_module_init(&qla2xxx_pci_driver);
--	if (ret) {
--		kmem_cache_destroy(srb_cachep);
--		fc_release_transport(qla2xxx_transport_template);
--	}
--	return ret;
-+	return 0;
- }
- 
- /**
-@@ -2515,7 +2463,6 @@ qla2x00_module_init(void)
- static void __exit
- qla2x00_module_exit(void)
- {
--	pci_unregister_driver(&qla2xxx_pci_driver);
- 	kmem_cache_destroy(srb_cachep);
- 	fc_release_transport(qla2xxx_transport_template);
- }
+ #include <linux/delay.h>
+diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
+index eae7d6e..0d5472f 100644
+--- a/drivers/scsi/qla2xxx/qla_version.h
++++ b/drivers/scsi/qla2xxx/qla_version.h
+@@ -1,21 +1,9 @@
+-/******************************************************************************
+- *                  QLOGIC LINUX SOFTWARE
+- *
+- * QLogic ISP2x00 device driver for Linux 2.6.x
+- * Copyright (C) 2003-2005 QLogic Corporation
+- * (www.qlogic.com)
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License as published by the
+- * Free Software Foundation; either version 2, or (at your option) any
+- * later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
++/*
++ * QLogic Fibre Channel HBA Driver
++ * Copyright (c)  2003-2005 QLogic Corporation
+  *
+- ******************************************************************************/
++ * See LICENSE.qla2xxx for copyright and licensing details.
++ */
+ /*
+  * Driver version
+  */
 ---
 0.99.8.GIT
 
