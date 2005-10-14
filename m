@@ -1,36 +1,60 @@
-From: Roger While <simrw@sim-basis.de>
-Subject: 2.6 megaraid_mbox MSI
-Date: Fri, 14 Oct 2005 08:28:40 +0200
-Message-ID: <6.1.1.1.2.20051014082527.026aba58@192.168.6.2>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH 4/12]  qla2xxx: Update license.
+Date: Fri, 14 Oct 2005 09:30:31 +0200
+Message-ID: <1129275031.2873.3.camel@laptopd505.fenrus.org>
+References: <20051013231534.27191.19815.sendpatchset@plap.qlogic.com>
+	 <20051013231614.27191.9897.sendpatchset@plap.qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout08.sul.t-online.com ([194.25.134.20]:31189 "EHLO
-	mailout08.sul.t-online.com") by vger.kernel.org with ESMTP
-	id S932214AbVJNG3m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Oct 2005 02:29:42 -0400
-Received: from simrog.sim-basis.de [192.168.6.50]
-	by sim-basis.de [192.168.6.2]
-	with SMTP (MDaemon.PRO.v5.0.4.R)
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Oct 2005 08:31:25 +0200
+Received: from pentafluge.infradead.org ([213.146.154.40]:9915 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751234AbVJNJbM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Oct 2005 05:31:12 -0400
+In-Reply-To: <20051013231614.27191.9897.sendpatchset@plap.qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
 
-Any reason the megaraid driver is not using MSI ?
+On Thu, 2005-10-13 at 16:16 -0700, Andrew Vasquez wrote:
+> Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-eg. On a Dell system, the Perc is MSI capable -
+> +++ b/Documentation/scsi/LICENSE.qla2xxx
+> @@ -0,0 +1,59 @@
+> +Copyright (c)  2003-2005 QLogic Corporation
+> +QLogic Linux Fibre Channel HBA Driver
+> +
+> +This program includes a device driver for Linux 2.6 that may be
+> +distributed with QLogic hardware specific firmware binary file.
+> +You may modify and redistribute the device driver code under the
+> +GNU General Public License as published by the Free Software
+> +Foundation (version 2 or a later version) and/or under the
+> +following terms, as applicable:
+> +
+> +	1. Redistribution of source code must retain the above
+> +	   copyright notice, this list of conditions and the
+> +	   following disclaimer.
+> +
+> +	2. Redistribution in binary form must reproduce the above
+> +	   copyright notice, this list of conditions and the
+> +	   following disclaimer in the documentation and/or other
+> +	   materials provided with the distribution.
+> +
+> +	3. The name of QLogic Corporation may not be used to
+> +	   endorse or promote products derived from this software
+> +	   without specific prior written permission.
+> +
 
-Subsystem: Dell PowerEdge Expandable RAID Controller 4e/Di
-Flags: bus master, stepping, 66Mhz, medium devsel, latency 64, IRQ 193
-Memory at f80f0000 (32-bit, prefetchable) [size=64K]
-Memory at fe9c0000 (32-bit, non-prefetchable) [size=256K]
-Expansion ROM at fea00000 [disabled] [size=128K]
-Capabilities: [c0] Power Management version 2
-Capabilities: [d0] Message Signalled Interrupts: 64bit+ Queue=0/1 Enable-
-Capabilities: [e0] PCI-X non-bridge device
 
-Roger While
+as one of the people who made significant changes to the qlogic driver I
+object to this license change, especially because it was a one sided
+change without consultation beforehand.
 
+James: please do not apply this.
+
+Andrew: you can't do this. You just CANNOT change the license of code
+you don't own fully without consent of ALL contributors.
 
 
