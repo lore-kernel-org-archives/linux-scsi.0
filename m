@@ -1,87 +1,128 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH 4/12]  qla2xxx: Update license.
-Date: Fri, 14 Oct 2005 20:47:23 +0200
-Message-ID: <1129315644.5359.7.camel@laptopd505.fenrus.org>
-References: <20051013231534.27191.19815.sendpatchset@plap.qlogic.com>
-	 <20051013231614.27191.9897.sendpatchset@plap.qlogic.com>
-	 <1129275031.2873.3.camel@laptopd505.fenrus.org>
-	 <20051014162701.GA19098@plap.qlogic.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH] Improve code for detecting errors near the end of a CD
+Date: Fri, 14 Oct 2005 16:07:47 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0510141603110.6253-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:59373 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1750867AbVJNSrc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Oct 2005 14:47:32 -0400
-In-Reply-To: <20051014162701.GA19098@plap.qlogic.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:44266 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP
+	id S1750732AbVJNUHs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Oct 2005 16:07:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, Arun Mittal <arun.mittal@qlogic.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jens Axboe <axboe@suse.de>, SCSI development list <linux-scsi@vger.kernel.org>
 
+James:
 
-> > 
-> > as one of the people who made significant changes to the qlogic driver I
-> > object to this license change, especially because it was a one sided
-> > change without consultation beforehand.
-> > 
-> > James: please do not apply this.
-> > 
-> > Andrew: you can't do this. You just CANNOT change the license of code
-> > you don't own fully without consent of ALL contributors.
-> 
-> During my talk at OLS, I had mentioned that QLogic Legal was
-> investigating solutions to the firmware-blob licensing issue with
-> respect to the qla2xxx driver. 
+This revised patch (as572b) improves the code in sr.c that detects where
+read/write errors occurred and moves it to a separate (but inline) routine
+for greater clarity.
 
-this is a really odd way to "solve" this, simply because by being part
-of the kernel tarbal, the GPL clause is the only one that matters (see
-the GPL text for collective works) and the BSD part of it is "dormant"
-until someone takes the driver outside the linux kernel context.
-So that isn't solving anything with respect to the firmware licensing
-issue/non-issue (depending from what angle you look at it)
+The original code contained a glaring mistake: testing
+(SCpnt->sense_buffer[0] & 0x90) to see if the Information field in the
+sense data is valid.  The Valid bit is 0x80; the test against 0x90 can
+never fail, thanks to an earlier test: (SCpnt->sense_buffer[0] & 0x7f) ==
+0x70).
 
+The patch is careful to check that the error sector is within the range of
+blocks that were supposed to be transferred, and it rounds the reported 
+number of bytes transferred down to a multiple of the block layer's block 
+size.
 
-> Since then, the license was was working its way through the
-> slow-moving pipelines of Legal.  During this time, it was my
-> understanding that the document had been vetted my several OEMs and
-> major distros
+The major enhancement is that the patch uses the Residue to calculate the 
+error sector, if the sense data doesn't already provide it.  This helps 
+with a drive I use.  Since the Residue isn't always reported correctly, 
+the patch is careful to check that it has a reasonable value: somewhere 
+strictly between 0 and the total transfer length.
 
-this is all irrelevant :)
-
-> .  Granted, I can understand that this would certainly
-> not get the broad exposure of the linux-kerne|scsi ditributions (which
-> if I'm reading correctly is one of your major concerns). 
-
-no my concern is that you failed to get consent from all people who
-contributed to the driver.
+Alan Stern
 
 
 
->   Given the heritage of the qla2xxx driver,
-> one concerns is -- at what point does one claim that total
-> contributors acceptance has been achieved given a proposed licensing
-> change.
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
 
-you need 100% of the people who contributed substantial changes. And
-even then it's a questionable change, given that the driver clearly is a
-derived work of the linux kernel (and that's fine, it's GPL) and is
-shipped with the linux kernel (see clause 2 of the GPL). Other licenses
-are not relevant as long as the driver is a linux kernel driver like
-this.
+---
 
-You need 100% because you are giving 3rd parties more rights the code
-than that the contributors have given you. That just can't be done
-without consent.
-
-
-
-If you want the firmware issue improved, make the *firmware* BSD
-licensed. And only the firmware. But leave the driver GPL.
-And probably make it optional and allow a request_firmware() interface
-as well, so that people/distributions who don't want the built in one
-can use the request_firmware() option instead.
-
-
+Index: usb-2.6/drivers/scsi/sr.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/sr.c
++++ usb-2.6/drivers/scsi/sr.c
+@@ -203,7 +203,44 @@ int sr_media_change(struct cdrom_device_
+ 	}
+ 	return retval;
+ }
+- 
++
++/* 
++ * Use the information from a failed command to compute how much data
++ * was transferred successfully, and find the sector that caused the
++ * error.  Be careful to avoid errors from numerical overflow.
++ */
++static inline int calc_good_bytes(struct scsi_cmnd *SCpnt,
++		long *error_sector, int hw_blocksize,
++		int sectors_per_bio_block)
++{
++	int req_bytes = SCpnt->bufflen;
++	unsigned int sectors = 0;
++
++	if (SCpnt->sense_buffer[0] & 0x80) {
++		/* The Information field is valid; use it */
++		unsigned int start_block, error_block, blocks;
++
++		start_block = (unsigned int) SCpnt->request->sector /
++				(hw_blocksize >> 9);
++		error_block = (SCpnt->sense_buffer[3] << 24) |
++				(SCpnt->sense_buffer[4] << 16) |
++				(SCpnt->sense_buffer[5] << 8) |
++				SCpnt->sense_buffer[6];
++		blocks = error_block - start_block;
++		if (blocks < req_bytes / hw_blocksize)
++			sectors = blocks * (hw_blocksize >> 9);
++	} else {
++		/* Fall back on the Residue */
++		if (SCpnt->resid > 0 && SCpnt->resid < req_bytes)
++			sectors = (req_bytes - SCpnt->resid) >> 9;
++	}
++	*error_sector = SCpnt->request->sector + sectors;
++
++	/* Round the amount to a multiple of the block layer's block size */
++	sectors &= ~(sectors_per_bio_block - 1);
++	return sectors << 9;
++}
++
+ /*
+  * rw_intr is the interrupt routine for the device driver.
+  *
+@@ -235,25 +272,17 @@ static void rw_intr(struct scsi_cmnd * S
+ 		case MEDIUM_ERROR:
+ 		case VOLUME_OVERFLOW:
+ 		case ILLEGAL_REQUEST:
+-			if (!(SCpnt->sense_buffer[0] & 0x90))
+-				break;
+ 			if (!blk_fs_request(SCpnt->request))
+ 				break;
+-			error_sector = (SCpnt->sense_buffer[3] << 24) |
+-				(SCpnt->sense_buffer[4] << 16) |
+-				(SCpnt->sense_buffer[5] << 8) |
+-				SCpnt->sense_buffer[6];
+ 			if (SCpnt->request->bio != NULL)
+ 				block_sectors =
+ 					bio_sectors(SCpnt->request->bio);
+ 			if (block_sectors < 4)
+ 				block_sectors = 4;
+-			if (cd->device->sector_size == 2048)
+-				error_sector <<= 2;
+-			error_sector &= ~(block_sectors - 1);
+-			good_bytes = (error_sector - SCpnt->request->sector) << 9;
+-			if (good_bytes < 0 || good_bytes >= this_count)
+-				good_bytes = 0;
++
++			good_bytes = calc_good_bytes(SCpnt, &error_sector,
++					cd->device->sector_size,
++					block_sectors);
+ 			/*
+ 			 * The SCSI specification allows for the value
+ 			 * returned by READ CAPACITY to be up to 75 2K
 
