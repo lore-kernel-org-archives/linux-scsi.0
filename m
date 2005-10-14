@@ -1,42 +1,52 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Followup on patches as571 and as572
-Date: Fri, 14 Oct 2005 14:39:33 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0510141424370.6253-100000@iolanthe.rowland.org>
-References: <1129311073.4824.21.camel@mulgrave>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH 4/12]  qla2xxx: Update license.
+Date: Fri, 14 Oct 2005 15:53:35 +0200
+Message-ID: <1129298016.2873.12.camel@laptopd505.fenrus.org>
+References: <20051013231534.27191.19815.sendpatchset@plap.qlogic.com>
+	 <20051013231614.27191.9897.sendpatchset@plap.qlogic.com>
+	 <1129275031.2873.3.camel@laptopd505.fenrus.org>
+	 <434FB4A4.2040904@torque.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:42116 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP
-	id S1750854AbVJNSje (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Oct 2005 14:39:34 -0400
-In-Reply-To: <1129311073.4824.21.camel@mulgrave>
+Received: from pentafluge.infradead.org ([213.146.154.40]:59629 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1750869AbVJNSrd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Oct 2005 14:47:33 -0400
+In-Reply-To: <434FB4A4.2040904@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jens Axboe <axboe@suse.de>, SCSI development list <linux-scsi@vger.kernel.org>
+To: dougg@torque.net
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
 
-On Fri, 14 Oct 2005, James Bottomley wrote:
+On Fri, 2005-10-14 at 23:37 +1000, Douglas Gilbert wrote:
 
-> On Fri, 2005-10-14 at 12:58 -0400, Alan Stern wrote:
-> >     (b) The bizarre line that said
-> > 
-> > 		error_sector &= ~(block_sectors - 1);
-> > 
-> > 	is now gone.  Do you know what that was intended to do?
+> Arjan,
+> Apart from not being consulted beforehand, what precisely
+> is objectionable in the above?
+
+It allows people to make binary only linux modules (in so far binary
+kernel modules are allowed at all, eg not that far, but still, this text
+would give people the impression that it would be allowed and even
+approved/OK to do so from this driver), or binary only <ANYTHING>
+modules from this driver, including the bits I worked on.
+
+ 
+> > Andrew: you can't do this. You just CANNOT change the license of code
+> > you don't own fully without consent of ALL contributors.
 > 
-> It's not a bizzare line ... it's rounding down to our current set block
-> size.  That was the difference I noticed in the reporting.  The bio
-> layer maintains a separate sector size from the actual device, so if the
-> error occurs in the middle of a block sector (because block sectors >
-> hard sectors) then we report as though it occurred at the beginning of
-> the block sector.
+> Often wondered about that. Someone sends me a bug fix,
+> I accept it, credit them and then at some later stage
+> want to broaden the license on that code from GPL to
+> BSD (say). Do I need the bug fixer's permission?
 
-I see.  I didn't understand the relation between bio->bi_size and anything
-else.  It wasn't clear that this size is always equal to a block-layer
-sector size, as opposed to an arbitrary memory buffer size.
+I think the lawyers will say "depends on the size of the contribution";
+for a single one liner it's "probably not" although politeness certainly
+would require it; for anything substantially bigger, you do need that.
 
-I will send a revised patch shortly.
+(and "substantially" is obviously subject to interpretation, and that's
+the bit where you need to talk to lawyers realistically if you want to
+know the exact boundary)
 
-Alan Stern
 
