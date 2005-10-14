@@ -1,67 +1,68 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Followup on patches as571 and as572
-Date: Fri, 14 Oct 2005 12:58:47 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0510141239400.6253-100000@iolanthe.rowland.org>
-References: <1129305716.4824.15.camel@mulgrave>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Fw: [Bugme-new] [Bug 5440] New: Perc4 megaraid: module doesn't
+ detect cache memory and writeback mode
+Date: Fri, 14 Oct 2005 10:11:07 -0700
+Message-ID: <20051014101107.3d8e39b9.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:64908 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP
-	id S1750797AbVJNQ6s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Oct 2005 12:58:48 -0400
-In-Reply-To: <1129305716.4824.15.camel@mulgrave>
+Received: from smtp.osdl.org ([65.172.181.4]:26500 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1750735AbVJNRLu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Oct 2005 13:11:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jens Axboe <axboe@suse.de>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@kernel-bugs.osdl.org>
 
-On Fri, 14 Oct 2005, James Bottomley wrote:
 
-> On Fri, 2005-10-14 at 11:09 -0400, Alan Stern wrote:
-> > I haven't heard anything back about these two patches:
-> > 
-> > http://marc.theaimsgroup.com/?l=linux-scsi&m=112801815229091&w=2
-> > http://marc.theaimsgroup.com/?l=linux-scsi&m=112801965207763&w=2
-> > 
-> > They were submitted a couple of weeks ago, and they don't appear in your 
-> > scsi-misc git repository.
-> 
-> I was waiting for Jens to comment since he's supposed to be the sr
-> maintainer.
-> 
-> To me, the first looks fine.  The second alters the behaviour of error
-> completion.  Previously we report the number of good bytes up to the
-> first bad block in linux filesystem terms.  Now we report it up to the
-> first bad block in hardsect terms.  I'm not sure if anything actually
-> cares, but I don't really see a reason to change it.
+(Could we pleeeeze have a megaraid entry in the MAINTAINERS file?)
 
-Thanks for responding so quickly.
+Begin forwarded message:
 
-I'm not sure I understand your comment on the second patch.  The patch 
-doesn't affect the value of good_bytes except in two respects:
+Date: Fri, 14 Oct 2005 03:52:20 -0700
+From: bugme-daemon@kernel-bugs.osdl.org
+To: bugme-new@lists.osdl.org
+Subject: [Bugme-new] [Bug 5440] New: Perc4 megaraid: module doesn't detect cache memory and writeback mode
 
-    (a) When the device does not provide valid information in
-	the Information field, the code will now realize it and
-	fall back on the Residue.
 
-    (b) The bizarre line that said
+http://bugzilla.kernel.org/show_bug.cgi?id=5440
 
-		error_sector &= ~(block_sectors - 1);
+           Summary: Perc4 megaraid:  module doesn't detect cache memory and
+                    writeback mode
+    Kernel Version: 2.6.9 -> 2.6.13
+            Status: NEW
+          Severity: high
+             Owner: andmike@us.ibm.com
+         Submitter: spirit@cscup.com
 
-	is now gone.  Do you know what that was intended to do?
 
-Otherwise the value should be exactly the same as before.  The new 
-calc_good_bytes routine does most of its work using 2048-byte hardware 
-blocks instead of 512-byte sectors, but the end result is unchanged.
+Most recent kernel where this bug did not occur:
+Distribution: debian sarge - gentoo 2005
+Hardware Environment: Dell Poweredge 2850 Perc4
+Software Environment:
+Problem Description:
 
-When the Information value is used, the good region must end on a hardware
-block boundary because the value is given in units of blocks.  When using
-the Residue, in principle the region could end at any byte.  Would you
-like me to change the patch so that the Residue-based calculation goes up
-to a 512-byte sector boundary instead of a block boundary?
+kernel doesn't detect cache memory of Perc4 card and go in write through mode.
 
-Or were you referring to something else entirely?
+writing performances are really bad. (i have a raid10 with 6 disks)
 
-Alan Stern
+here the dmesg:
 
+
+> megaraid: fw version:[513O] bios version:[H418]
+> scsi0 : LSI Logic MegaRAID driver
+> scsi[0]: scanning scsi channel 0 [Phy 0] for non-raid devices
+> scsi[0]: scanning scsi channel 1 [Phy 1] for non-raid devices
+>   Vendor: PE/PV     Model: 1x8 SCSI BP       Rev: 1.0
+>   Type:   Processor                          ANSI SCSI revision: 02
+> scsi[0]: scanning scsi channel 2 [virtual] for logical drives
+>   Vendor: MegaRAID  Model: LD 0 RAID5  139G  Rev: 513O
+>   Type:   Direct-Access                      ANSI SCSI revision: 02
+> SCSI device sda: 286228480 512-byte hdwr sectors (146549 MB)
+> sda: asking for cache data failed
+> sda: assuming drive cache: write through
+
+------- You are receiving this mail because: -------
+You are on the CC list for the bug, or are watching someone who is.
