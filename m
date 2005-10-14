@@ -1,47 +1,66 @@
-From: "Kolli, Neela Syam" <Neela.Kolli@engenio.com>
-Subject: RE: [Bugme-new] [Bug 5440] New: Perc4 megaraid: module doesn't de
-	tect cache memory and writeback mode
-Date: Fri, 14 Oct 2005 17:23:58 -0400
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E5707232011@exa-atlanta>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [PATCH 3/12]  qla2xxx: Collapse ISP2xxx queuecommand implementations.
+Date: Fri, 14 Oct 2005 15:43:48 -0700
+Message-ID: <20051014224348.GC28524@plap.qlogic.org>
+References: <20051013231534.27191.19815.sendpatchset@plap.qlogic.com> <20051013231604.27191.9981.sendpatchset@plap.qlogic.com> <20051014102434.GA23600@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:62602 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1750790AbVJNVYL (ORCPT
+Received: from pat.qlogic.com ([198.70.193.2]:21326 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S1750995AbVJNWnt (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Oct 2005 17:24:11 -0400
+	Fri, 14 Oct 2005 18:43:49 -0400
+Content-Disposition: inline
+In-Reply-To: <20051014102434.GA23600@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
-Cc: "Bagalkote, Sreenivas" <sreenib@lsil.com>, bugme-daemon@kernel-bugs.osdl.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
->(Could we pleeeeze have a megaraid entry in the MAINTAINERS file?)
+On Fri, 14 Oct 2005, Christoph Hellwig wrote:
 
-Hi Andrew,
-I am taking over all Megaraid SCSI drivers.  Here is the new patch for
-MAINTENERS file.  This will apply against 2.6.14-rc4.
-Thanks,
-Neela Syam Kolli.
+> On Thu, Oct 13, 2005 at 04:16:04PM -0700, Andrew Vasquez wrote:
+> > Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+> 
+> I don't like this at all.  Even the first variant with the indirect
+> function call seems better than this.
 
-Signed-off-by: Neela Syam Kolli <Neela.Kolli@engenio.com>
+The indirect function call is still there -- the resultant code hasn't
+changed with this patch.  This patch simply insures that common
+queueing code gets updated in one spot rather than two
+(qla2x00_queuecommand() qla24xx_queuecommand()).  The *only*
+difference between the two was the call to
+[qla2x00|qla24xx]_start_scsi().  So, beyond style, are there any other
+objections.
 
-diff -Naur 2.6.14-rc4-old/MAINTAINERS 2.6.14-rc4-new/MAINTAINERS
---- 2.6.14-rc4-old/MAINTAINERS  2005-10-14 18:12:08.355382552 -0400
-+++ 2.6.14-rc4-new/MAINTAINERS  2005-10-14 18:15:40.512129824 -0400
-@@ -1618,6 +1618,13 @@
- L:     linux-fbdev-devel@lists.sourceforge.net
- S:     Maintained
- 
-+MEGARAID SCSI DRIVERS
-+P:     Neela Syam Kolli
-+M:     Neela.Kolli@engenio.com
-+S:     linux-scsi@vger.kernel.org
-+W:     http://megaraid.lsilogic.com
-+S:     Maintained
-+
- MEMORY TECHNOLOGY DEVICES
- P:     David Woodhouse
- M:     dwmw2@infradead.org
+> > +#define QLA_QUEUE_COMMAND(isp)  \
+> > +static int \
+> > +isp##_queuecommand(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *)) \
+> > +{ \
+> > +	scsi_qla_host_t *ha = to_qla_host(cmd->device->host); \
+> > +	fc_port_t *fcport = (struct fc_port *) cmd->device->hostdata; \
+> > +	srb_t *sp; \
+> > +	int rval; \
+> > +	if (!fcport) { \
+> > +		cmd->result = DID_NO_CONNECT << 16; \
+> > +		goto fail_command; \
+> > +	} \
+> 
+> While we're at it, I don't think cmd->device->hostdata could ever be
+> NULL.
 
+Yes, with the target_parent checks in scsi_alloc_target():
 
+        if (shost->transportt->target_parent) {
+                spin_lock_irqsave(shost->host_lock, flags);
+                parent = shost->transportt->target_parent(shost, channel, id);
+                spin_unlock_irqrestore(shost->host_lock, flags);
+                if (!parent)
+                        return NULL;
+        }
 
+you are correct.  Yet another reason to collapse both -- change the
+code in one place.
+
+-- 
+Andrew Vasquez
