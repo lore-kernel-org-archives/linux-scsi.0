@@ -1,81 +1,40 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] Fix leak of Scsi_Cmnds
-Date: Fri, 14 Oct 2005 11:23:27 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0510141110250.5552-100000@iolanthe.rowland.org>
-References: <4342A502.6010204@cs.wisc.edu>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Followup on patches as571 and as572
+Date: Fri, 14 Oct 2005 11:01:56 -0500
+Message-ID: <1129305716.4824.15.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0510141103380.5552-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:65242 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP
-	id S1750761AbVJNPX2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Oct 2005 11:23:28 -0400
-In-Reply-To: <4342A502.6010204@cs.wisc.edu>
+Received: from stat9.steeleye.com ([209.192.50.41]:25999 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750774AbVJNQCI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Oct 2005 12:02:08 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0510141103380.5552-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@suse.de>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-James:
+On Fri, 2005-10-14 at 11:09 -0400, Alan Stern wrote:
+> I haven't heard anything back about these two patches:
+> 
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=112801815229091&w=2
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=112801965207763&w=2
+> 
+> They were submitted a couple of weeks ago, and they don't appear in your 
+> scsi-misc git repository.
 
-When a request is deferred in scsi_init_io because the sg table could not
-be allocated, the associated scsi_cmnd is not released and the request is
-not marked with REQ_DONTPREP.  When the command is retried, if
-scsi_prep_fn decides to kill it then the scsi_cmnd will never be released.
+I was waiting for Jens to comment since he's supposed to be the sr
+maintainer.
 
-This patch (as573) changes scsi_init_io so that it calls scsi_put_command 
-before deferring a request.
+To me, the first looks fine.  The second alters the behaviour of error
+completion.  Previously we report the number of good bytes up to the
+first bad block in linux filesystem terms.  Now we report it up to the
+first bad block in hardsect terms.  I'm not sure if anything actually
+cares, but I don't really see a reason to change it.
 
-Alan Stern
+James
 
-
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-
----
-
-It may still be too soon to apply this patch.  I don't know how it will 
-interact with the old scsi_request mechanism (if that is still being 
-used).
-
-Also, at some stage you will want to delete the code paths in scsi_prep_fn 
-that assign cmd = req->special, because unprepared requests will _never_ 
-have an already-associated scsi_cmnd.
-
-
-
-Index: usb-2.6/drivers/scsi/scsi_lib.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_lib.c
-+++ usb-2.6/drivers/scsi/scsi_lib.c
-@@ -97,7 +97,6 @@ int scsi_insert_special_req(struct scsi_
- }
- 
- static void scsi_run_queue(struct request_queue *q);
--static void scsi_release_buffers(struct scsi_cmnd *cmd);
- 
- /*
-  * Function:	scsi_unprep_request()
-@@ -1040,8 +1039,10 @@ static int scsi_init_io(struct scsi_cmnd
- 	 * if sg table allocation fails, requeue request later.
- 	 */
- 	sgpnt = scsi_alloc_sgtable(cmd, GFP_ATOMIC);
--	if (unlikely(!sgpnt))
-+	if (unlikely(!sgpnt)) {
-+		scsi_unprep_request(req);
- 		return BLKPREP_DEFER;
-+	}
- 
- 	cmd->request_buffer = (char *) sgpnt;
- 	cmd->request_bufflen = req->nr_sectors << 9;
-@@ -1245,8 +1246,8 @@ static int scsi_prep_fn(struct request_q
- 		 */
- 		ret = scsi_init_io(cmd);
- 		switch(ret) {
-+			/* For BLKPREP_KILL/DEFER the cmd was released */
- 		case BLKPREP_KILL:
--			/* BLKPREP_KILL return also releases the command */
- 			goto kill;
- 		case BLKPREP_DEFER:
- 			goto defer;
 
