@@ -1,59 +1,67 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH 5/12]  qla2xxx: Add support for embedded ISP24xx firmware.
-Date: Fri, 14 Oct 2005 09:50:35 -0700
-Message-ID: <20051014165035.GB19098@plap.qlogic.org>
-References: <20051013231534.27191.19815.sendpatchset@plap.qlogic.com> <20051013231624.27191.96727.sendpatchset@plap.qlogic.com> <20051014094717.GA22347@infradead.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Followup on patches as571 and as572
+Date: Fri, 14 Oct 2005 12:58:47 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0510141239400.6253-100000@iolanthe.rowland.org>
+References: <1129305716.4824.15.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:18950 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S1750796AbVJNQug (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Oct 2005 12:50:36 -0400
-Content-Disposition: inline
-In-Reply-To: <20051014094717.GA22347@infradead.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:64908 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP
+	id S1750797AbVJNQ6s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Oct 2005 12:58:48 -0400
+In-Reply-To: <1129305716.4824.15.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jens Axboe <axboe@suse.de>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Fri, 14 Oct 2005, Christoph Hellwig wrote:
+On Fri, 14 Oct 2005, James Bottomley wrote:
 
-> On Thu, Oct 13, 2005 at 04:16:24PM -0700, Andrew Vasquez wrote:
-> > Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+> On Fri, 2005-10-14 at 11:09 -0400, Alan Stern wrote:
+> > I haven't heard anything back about these two patches:
+> > 
+> > http://marc.theaimsgroup.com/?l=linux-scsi&m=112801815229091&w=2
+> > http://marc.theaimsgroup.com/?l=linux-scsi&m=112801965207763&w=2
+> > 
+> > They were submitted a couple of weeks ago, and they don't appear in your 
+> > scsi-misc git repository.
 > 
-> NACK.  No more embedded firmware.
+> I was waiting for Jens to comment since he's supposed to be the sr
+> maintainer.
+> 
+> To me, the first looks fine.  The second alters the behaviour of error
+> completion.  Previously we report the number of good bytes up to the
+> first bad block in linux filesystem terms.  Now we report it up to the
+> first bad block in hardsect terms.  I'm not sure if anything actually
+> cares, but I don't really see a reason to change it.
 
-Unfortunately, since OLS, it has been decided that for 24xx HBAs,
-firmware will *not* be present on the board during manufacturing time
-and thus, similarly to all our previous products, firmware will have
-to be embedded within the driver.  Yes, this is a complete 180 from my
-previous statements before and during OLS.
+Thanks for responding so quickly.
 
-The additional patch:
+I'm not sure I understand your comment on the second patch.  The patch 
+doesn't affect the value of good_bytes except in two respects:
 
-[PATCH 7/12]  qla2xxx: Add hotplug firmware-load support for all ISP types.
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112924541603555&w=2
+    (a) When the device does not provide valid information in
+	the Information field, the code will now realize it and
+	fall back on the Residue.
 
-as part of this patchset moves us one-step closer to having complete
-firmware-blob independence (and hell, perhaps some final resolution
-wrt this whole licensing issue) from the driver, but it is certainly
-not a panacea.  There is still the major issue of those users who
-depend on a root-boot across the SAN.  As it currently stands, I don't
-believe distros are currently at a state where the request-firmware
-interface is fully supported at boot-time (please correct me if I'm
-wrong).
+    (b) The bizarre line that said
 
-There's also an additional detail I'm trying to work out locally --
-distribution of these .bin files, this is entirely within my court,
-but as it stands, without an firmware image present, these 24xx users
-will have no way of initialising their cards.
+		error_sector &= ~(block_sectors - 1);
 
-I believe we spoke about this during OLS as well, and agreed that
-adding the request-firmware interface for all ISP types, waiting a
-year or so for distro infrastructure to mature now, then discarding
-the embedded blobs was the way to go.  Given that, embedded 24xx
-support will need to be present throughout that year.
+	is now gone.  Do you know what that was intended to do?
 
---
-Andrew
+Otherwise the value should be exactly the same as before.  The new 
+calc_good_bytes routine does most of its work using 2048-byte hardware 
+blocks instead of 512-byte sectors, but the end result is unchanged.
+
+When the Information value is used, the good region must end on a hardware
+block boundary because the value is given in units of blocks.  When using
+the Residue, in principle the region could end at any byte.  Would you
+like me to change the patch so that the Residue-based calculation goes up
+to a 512-byte sector boundary instead of a block boundary?
+
+Or were you referring to something else entirely?
+
+Alan Stern
+
