@@ -1,79 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 0/3] libata: scsi error handling, encore
-Date: Sat, 15 Oct 2005 12:55:44 +0900
-Message-ID: <43507DC0.90403@gmail.com>
-References: <43490BC8.9060504@torque.net> <434919E4.1080601@pobox.com> <435069E3.90306@torque.net> <43506AA3.3030502@pobox.com> <43507BA7.6090406@torque.net> <43507D5F.2050407@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Patty Dorsey <Weiner@calhoun.net>
+Subject: Nero Burning Rom 6.6.0.5 - $19.95
+Date: Fri, 14 Oct 2005 20:56:15 -0700
+Message-ID: <25641100587.5481413888@157.131.dsl.syd.iprimus.net.au>
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.198]:27756 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751064AbVJODzw (ORCPT
+Received: from zeus1.kernel.org ([204.152.191.4]:26533 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751067AbVJOD4Z (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Oct 2005 23:55:52 -0400
-Received: by zproxy.gmail.com with SMTP id i11so814070nzi
-        for <linux-scsi@vger.kernel.org>; Fri, 14 Oct 2005 20:55:51 -0700 (PDT)
-In-Reply-To: <43507D5F.2050407@gmail.com>
+	Fri, 14 Oct 2005 23:56:25 -0400
+Received: from 157.131.dsl.syd.iprimus.net.au (157.131.dsl.syd.iprimus.net.au [58.178.60.157])
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id j9F3uER1026175
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Oct 2005 20:56:20 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: dougg@torque.net, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, russb@emc.com
+To: linux-scsi@vger.kernel.org
 
-Tejun Heo wrote:
-> Douglas Gilbert wrote:
-> 
->> Jeff Garzik wrote:
->>
->>> Douglas Gilbert wrote:
->>>
->>>
->>>> Six days have passed and "git pull ..../libata-dev" still
->>>> does not reflect these changes. Am I doing something
->>>> wrong? Should I wait before submitting more changes?
->>>
->>>
->>>
->>> Your changes are committed to the 'upstream' branch.  Maybe you need 
->>> to do
->>>    git pull $url upstream
->>
->>
->>
->> Jeff,
->> Thanks, indeed I do. Obviously the fact the 'upstream'
->> was the active branch in the destination directory was
->> not sufficient. So do I need to do both
->> 'git pull $url' and 'git pull $url upstream' or is
->> the latter sufficient?
->>
->> "git" does seems an appropriate name :-)
->>
->> Doug Gilbert
->>
-> 
->  Hi, Doug,
-> 
->  I use the following script.
-> 
-> $ cat ~/bin/git-sync.sh
-> #!/bin/sh
-> 
-> if [ ! -r .git/origin ]; then
->         echo "not in git repo" 2>&1
->         exit 1
-> fi
-> 
-> rsync -avz --ignore-existing $(cat .git/origin)/ .git/
-> rsync -avz $(cat .git/origin)/refs/ .git/refs/
-> 
->  After syncing, you need to do 'git-read-tree -m upstream' 
-> 'git-checkout-cache -q -f -u -a'
-> 
+Microsoft Money Premium 2005 - $19.95
+http://Persia.misstip.com/
 
-  Oops, and my .git/origin contains url of the repository.
 
-$ cat .git/origin
-rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
--- 
-tejun
+Work and struggle and never accept an evil that you can change. 
+
+J.F.K.--The Man and the Airport        
+There it was, hidden in alphabetical order.      
+
+Obviously crime pays, or there'd be no crime.     
+Well-timed silence hath more eloquence than speech.      
+Egotism is the anesthetic that dulls the pain of stupidity.   
+There is nothing so absurd but some philosopher has said it.  
+
+
+
