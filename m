@@ -1,181 +1,96 @@
-From: James.Smart@Emulex.Com
-Subject: RE: Adaptec SAS integration notes
-Date: Sat, 15 Oct 2005 10:21:31 -0400
-Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7AED@xbl3.ma.emulex.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Adaptec SAS integration notes
+Date: Sat, 15 Oct 2005 18:01:05 +0200
+Message-ID: <435127C1.3060600@s5r6.in-berlin.de>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7AED@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-content-class: urn:content-classes:message
-Sender: linux-ide-owner@vger.kernel.org
-To: ltuikov@yahoo.com, jgarzik@pobox.com, linux-scsi@vger.kernel.org
-Cc: andmike@us.ibm.com, luben_tuikov@adaptec.com, James.Bottomley@steeleye.com, hch@infradead.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:54435 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1750876AbVJOQC7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 15 Oct 2005 12:02:59 -0400
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7AED@xbl3.ma.emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Smart@Emulex.Com, ltuikov@yahoo.com, jgarzik@pobox.com, andmike@us.ibm.com, luben_tuikov@adaptec.com, James.Bottomley@steeleye.com, hch@infradead.org, linux-ide@vger.kernel.org
 
-Luben,
+James.Smart@Emulex.Com wrote:
+> Luben,
+[Jeff Garzik wrote]
+>>> * Adaptec SAS abuses Scsi_Host_Template.  The host template 
+>>> is a set of ops for various layers, and it is fine as an
+>>> interface.  No need to avoid it.
 
-> > * Adaptec SAS abuses Scsi_Host_Template.  The host template 
-> is a set of
-> > ops for various layers, and it is fine as an interface.  No need to
-> > avoid it.
+The scsi_host_template is a set of ops for (and interface between) 
+exactly two layers. What is the abuse?
+
+>>Neither the Host Adapter, nor the FW, implements anything which has
+>>to do with the scsi host template.  What the Host Adapter 
+>>(the hardware) and
+>>the FW implement is access to the transport -- that' all.
+>>
+>>So in effect the LLDD is _access to the (SAS) transport_. Cf. 
+>>the USB Storage code and SBP code.
+>>
+>>Putting the host template back into the LLDD is a step 
+>>_backwards_, i.e. it's just a workaround, not a step forward.
 > 
-> Neither the Host Adapter, nor the FW, implements anything which has
-> to do with the scsi host template.  What the Host Adapter 
-> (the hardware) and
-> the FW implement is access to the transport -- that' all.
+> This statement absolutely amazes me....
 > 
-> So in effect the LLDD is _access to the (SAS) transport_. Cf. 
-> the USB Storage
-> code and SBP code.
+> Your first comment "Host Adapter, nor the FW ..." is true of every
+> adapter.
 > 
-> Putting the host template back into the LLDD is a step 
-> _backwards_, i.e.
-> it's just a workaround, not a step forward.
-
-This statement absolutely amazes me....
-
-Your first comment "Host Adapter, nor the FW ..." is true of every
-adapter.
-
-The job of a Device Driver is to map between the interface presented
-by the Host Adapter/FW and the interfaces of the host os. This is true
-of whatever the technology is - SCSI, Ethernet, rs232, whatever.
-
-As the current design of the scsi subsystem has SCSI-hba's attaching
-via the host template - of course the LLDD will contain the host
-template.
-
-So - if you want to change this there are only 2 options:
-A) Change the scsi subsystem LLDD interface
-B) Work within the existing scsi subsystem hba interface
-
-As this list has repeatedly stated:
-
-If you choose to do A :
-  As you are the one motivated for change, you better be able to 
-    back it up by effort (aka the coding).
-
-  The resulting work had better:
-    Support the midlayer and above to the same extent that
-      the existing LLDD interface does.
-    Be extensible to other LLDDs.
-      Minimally this means at least 2 LLDDs.
-      In the best world, this means any LLDD, supporting any
-        type of transport.
-      And what better way to prove extensible than by providing
-        an example!  (a 2nd LLDD)
-
-  As this is "new" and unproven, expect this work to evolve 
-    outside of the upstream kernel (in a parallel git tree).
-    It integrates upstream only when it is generally accepted by
-    the community that it meets the requirements of midlayer 
-    support and extensibility.
-
-If you choose B :
-  You are free to partition the implementation of your driver
-    in any way you want, which can include an upper "layer" that
-    contains the host template, but no hardware/fw knowledge,
-    leaving that for lower "layer".
-
-  And if other drivers can reuse those layers - great.
-  
-  Two thoughts to remember though:
-    This really is a driver implementation choice, not a mandated
-      "Specification" choice.  It may or may not be, for various
-      reasons, be based on an example in an external specification.
-
-    Every layer in the driver makes an expectation on what can
-      and cannot be done at that level. It is truth that
-      different adapters will have hardware/FW interfaces with
-      different capabilities. Not all adapters may align well with
-      all layers. Thus, the best re-use scenario is one
-      in which the layers are selectable, not all mandated.
-    
-    For it to become part of the upstream kernel, it must meet a
-      "style" that is acceptable to the community, as you will not
-      be the only one that will attempt to support the driver.
-
-
-> Before we start messing with what you suggest above, SCSI Core has a
-> _long_ way to go.
+> The job of a Device Driver is to map between the interface presented
+> by the Host Adapter/FW and the interfaces of the host os. This is true
+> of whatever the technology is - SCSI, Ethernet, rs232, whatever.
 > 
-> (BTW, we're already doing this.)
+> As the current design of the scsi subsystem has SCSI-hba's attaching
+> via the host template - of course the LLDD will contain the host
+> template.
 
-I assume from this statement, you are creating an implementation for A.
+The current SCSI subsystem has "low level drivers" attaching via the 
+scsi_host_template ("low level" from the perspective of the SCSI 
+subsystem). The SCSI low level drivers
+     (1)  provide access to a transport
+and either
+     (2a) drive interconnect hardware
+or
+     (2b) rely on another driver or entire subsystem which provides
+          access to the interconnect.
+In addition, it may
+     (3)  expose means to manage the transport and/or interconnect
+          infrastructure.
 
+The scsi_host_template only fulfills a role between the SCSI subsystem's 
+core driver and function (1) of the SCSI low level driver. As far as I 
+can tell, the scsi_host_template is irrelevant to any interface used for 
+(2b).
 
-> You cannot care about "remote" ports -- some types of device have _no_
-> port layer, as well you only care about the port "half" on your end.
-> SAS is quite clear on that.
+In http://marc.theaimsgroup.com/?l=linux-scsi&m=112629423714248 , Luben 
+used the following terms:
+| The infrastructure is broken into
+| 	* SAS LLDD,
+| 	* SAS Layer.
 
-Not quite true - you actually care about the other "half" as well. In other
-words, is it a SSP Target, etc.  If you start interacting (sending i/o)
-with that other half - of course you care about it.  There are functional
-levels that will care about phy's, and other functional levels that care
-about ports.
+The SAS LLDD is not the SCSI low level driver. The SAS Layer is the SCSI 
+low level driver.
 
+Similarly, usbcore and ieee1394 (together with [eou]hci_hcd, ohci1394, 
+pcilynx) are not SCSI low level drivers. Usb-storage and sbp2 are SCSI 
+low level drivers.
 
-> > * duplicates HCIL mapping code
-> 
-> True.  I've been meaning to remove that somehow, but calling
-> scsi_scan_target() and passing HCIL to _it_ is also ugly.
-> Ideally I'd like to see struct scsi_domain_device { ... }; in place.
-> My comments in sas_discover.c and sas_scsi_host.c are pretty 
-> clear on that.
+Whenever "LLDDs" are discussed, it should be clarified whether SCSI 
+LLDDs (like the SAS Layer) or other LLDDs (like the SAS LLDD) are meant, 
+if not apparent from context.
 
-Agreed. But this is another example of chosing option A or option B.
+> - of course the LLDD will contain the host template.
 
-
-> Yeah, I agree with you: the political BS is just overflowing 
-> and hitting
-> the fan all the time.
-
-IMHO - if you're going to ask for "specific" answers, replies, etc,
-the best way to obtain that is to lead by example....  These words
-provide no value.
-
-> A true SAM layer would be *much* _smaller_ and would have a more
-> straightforward path for tasks. (as does the SAS layer)
-
-IMHO - rarely does expectations meet reality when you go to truly
-make it work. Consider CAM and CAM-3, both are SAM-based scsi
-core implementations. [granted, it all depends on where you set
-your boundaries]
-
-> > * Using scsi_scan_target() would allow us to use the normal LUN scan
-> 
-> Again not my code.  Normal LUN "scan" is done through REPORT LUNS
-> as shown in sas_discover.c as I posted both functions to this list
-> in a recent email.
-
-FYI - in looking at SAS-1.1, I see nothing that describes LUN scanning.
-What I do see are things that state "may be" a SCSI Domain or SCSI
-Device - and use a general "see SAM-3" as a reference. No where
-do I see the spec stating that a SCSI Device "shall" be a SCSI Device
-as defined by SAM-3.
-
-Example: please look at the definition of "SCSI Target Device" and
-see if that definition could not apply to a SAM-1, or even a SCSI-2
-device.
-
-It should be evident what I'm highlighting. The spec is not as literal
-as your convictions. It may not be appropriate to base things on the
-literal assumptions.
-
-> You don't see the _big_ picture: ...
-> ...
-> "Helper libs" makes the code ugly and spaghetti like.
-> ...
-> Look at the big picture and how the layers interact with each other.
-> You need an _overall_ picture.
-
-Initially, I wanted to reitterate the "lead by example" statement.
-But quite frankly, the language used repeatedly in these threads with
-people that do not have the same opinion as you is repulsive. In this
-case it's a bit subtle, in others it has not been.
-
-Jeff is a very smart individual, as are you, and many others on this list.
-Please try to treat everyone with dignity and respect. There are many
-many ways to phrase things.
-
--- james s
+Yes, a SCSI LLDD does contain it. A driver of interconnect hardware does 
+not necessarily contain it.
+-- 
+Stefan Richter
+-=====-=-=-= =-=- -====
+http://arcgraph.de/sr/
