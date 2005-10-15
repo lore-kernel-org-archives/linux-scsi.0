@@ -1,45 +1,31 @@
-From: Kumba <kumba@gentoo.org>
-Subject: PCI Resource Collisions & qla1280
-Date: Sat, 15 Oct 2005 02:45:43 -0400
-Message-ID: <4350A597.1070304@gentoo.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Portia Lang <prudence@lonergan.com>
+Subject: 36 hours: for all your needs :)
+Date: Sat, 15 Oct 2005 04:02:28 -0700
+Message-ID: <1483799829.8111520664@211.231.83.93>
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sccrmhc11.comcast.net ([204.127.202.55]:46556 "EHLO
-	sccrmhc11.comcast.net") by vger.kernel.org with ESMTP
-	id S1751093AbVJOGpv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 15 Oct 2005 02:45:51 -0400
+Received: from zeus1.kernel.org ([204.152.191.4]:47752 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751125AbVJOLCg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 15 Oct 2005 07:02:36 -0400
+Received: from 211.231.83.93 ([211.231.83.93])
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id j9FB2STw013227
+	for <linux-scsi@vger.kernel.org>; Sat, 15 Oct 2005 04:02:30 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-
-Anyone got any tips on debugging a cranky SCSI adapter that's not getting 
-initialized due to resource collisions?  e.g.,
-
-qla1280: QLA1040 found on PCI bus 0, dev 0
-PCI: Device 0000:00:00.0 not available because of resource collisions
-qla1280: Failed to enabled pci device, aborting.
-qla1280: QLA1040 found on PCI bus 0, dev 1
-PCI: Device 0000:00:01.0 not available because of resource collisions
-qla1280: Failed to enabled pci device, aborting.
+Amaze your partner with the talents in sexual area!
+http://bcj.h05t4b56n3npzhza4hha4zhh.deprivalai.com/?axloa
 
 
-This happens on 2.6.13.4 on an SGI Origin (IP27).  2.6.12.5 seems to have better 
-luck; actually seeing the drives/partitions, but gets stuck on something (unsure 
-what), then issues several adapter/bus resets and either oopses or continues on 
-normally.  Rather than focus on 2.6.12.5's oddities, though, I figured better to 
-take a stab at 2.6.13.4.  Unsure if it's entirely mips-specific (probably is), 
-but I can't seem to find any changes in git that would immediately stand out as 
-being the cause.
+It is only to the individual that a soul is given.  
+Nothing ever goes away.         
+We need to make a decision, no matter what it is.  
 
+Reason has always existed, but not always in a reasonable form.  
+Maybe this world is another planet's hell.      
+Ability is nothing without opportunity.        
+The actions of men are the best interpreters of their thoughts.  
 
---Kumba
-
--- 
-Gentoo/MIPS Team Lead
-Gentoo Foundation Board of Trustees
-
-"Such is oft the course of deeds that move the wheels of the world: small hands 
-do them because they must, while the eyes of the great are elsewhere."  --Elrond
