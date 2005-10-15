@@ -1,68 +1,79 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [PATCH 0/3] libata: scsi error handling, encore
-Date: Sat, 15 Oct 2005 12:54:07 +0900
-Message-ID: <43507D5F.2050407@gmail.com>
-References: <43490BC8.9060504@torque.net> <434919E4.1080601@pobox.com> <435069E3.90306@torque.net> <43506AA3.3030502@pobox.com> <43507BA7.6090406@torque.net>
+Date: Sat, 15 Oct 2005 12:55:44 +0900
+Message-ID: <43507DC0.90403@gmail.com>
+References: <43490BC8.9060504@torque.net> <434919E4.1080601@pobox.com> <435069E3.90306@torque.net> <43506AA3.3030502@pobox.com> <43507BA7.6090406@torque.net> <43507D5F.2050407@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.207]:9816 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751058AbVJODyl (ORCPT
+Received: from zproxy.gmail.com ([64.233.162.198]:27756 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751064AbVJODzw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Oct 2005 23:54:41 -0400
-Received: by zproxy.gmail.com with SMTP id i11so813961nzi
-        for <linux-scsi@vger.kernel.org>; Fri, 14 Oct 2005 20:54:41 -0700 (PDT)
-In-Reply-To: <43507BA7.6090406@torque.net>
+	Fri, 14 Oct 2005 23:55:52 -0400
+Received: by zproxy.gmail.com with SMTP id i11so814070nzi
+        for <linux-scsi@vger.kernel.org>; Fri, 14 Oct 2005 20:55:51 -0700 (PDT)
+In-Reply-To: <43507D5F.2050407@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, russb@emc.com
+To: Tejun Heo <htejun@gmail.com>
+Cc: dougg@torque.net, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, russb@emc.com
 
-Douglas Gilbert wrote:
-> Jeff Garzik wrote:
+Tejun Heo wrote:
+> Douglas Gilbert wrote:
 > 
->>Douglas Gilbert wrote:
+>> Jeff Garzik wrote:
+>>
+>>> Douglas Gilbert wrote:
+>>>
+>>>
+>>>> Six days have passed and "git pull ..../libata-dev" still
+>>>> does not reflect these changes. Am I doing something
+>>>> wrong? Should I wait before submitting more changes?
+>>>
+>>>
+>>>
+>>> Your changes are committed to the 'upstream' branch.  Maybe you need 
+>>> to do
+>>>    git pull $url upstream
 >>
 >>
->>>Six days have passed and "git pull ..../libata-dev" still
->>>does not reflect these changes. Am I doing something
->>>wrong? Should I wait before submitting more changes?
 >>
+>> Jeff,
+>> Thanks, indeed I do. Obviously the fact the 'upstream'
+>> was the active branch in the destination directory was
+>> not sufficient. So do I need to do both
+>> 'git pull $url' and 'git pull $url upstream' or is
+>> the latter sufficient?
 >>
->>Your changes are committed to the 'upstream' branch.  Maybe you need to do
->>    git pull $url upstream
+>> "git" does seems an appropriate name :-)
+>>
+>> Doug Gilbert
+>>
 > 
+>  Hi, Doug,
 > 
-> Jeff,
-> Thanks, indeed I do. Obviously the fact the 'upstream'
-> was the active branch in the destination directory was
-> not sufficient. So do I need to do both
-> 'git pull $url' and 'git pull $url upstream' or is
-> the latter sufficient?
+>  I use the following script.
 > 
-> "git" does seems an appropriate name :-)
+> $ cat ~/bin/git-sync.sh
+> #!/bin/sh
 > 
-> Doug Gilbert
+> if [ ! -r .git/origin ]; then
+>         echo "not in git repo" 2>&1
+>         exit 1
+> fi
+> 
+> rsync -avz --ignore-existing $(cat .git/origin)/ .git/
+> rsync -avz $(cat .git/origin)/refs/ .git/refs/
+> 
+>  After syncing, you need to do 'git-read-tree -m upstream' 
+> 'git-checkout-cache -q -f -u -a'
 > 
 
-  Hi, Doug,
+  Oops, and my .git/origin contains url of the repository.
 
-  I use the following script.
-
-$ cat ~/bin/git-sync.sh
-#!/bin/sh
-
-if [ ! -r .git/origin ]; then
-         echo "not in git repo" 2>&1
-         exit 1
-fi
-
-rsync -avz --ignore-existing $(cat .git/origin)/ .git/
-rsync -avz $(cat .git/origin)/refs/ .git/refs/
-
-  After syncing, you need to do 'git-read-tree -m upstream' 
-'git-checkout-cache -q -f -u -a'
+$ cat .git/origin
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
 -- 
 tejun
