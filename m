@@ -1,49 +1,35 @@
-From: "Nora Irvin" <RandiTeagueborden@delirium.f9.co.uk>
-Subject: xanax burnside
-Date: Sun, 16 Oct 2005 14:19:51 -0500
-Message-ID: <7.0.2.7.2.2005459.00b0a20@designs.com>
-Content-Type: text/plain;
+From: Andrew Morton <akpm@osdl.org>
+Subject: ips.c warnings
+Date: Sun, 16 Oct 2005 14:08:17 -0700
+Message-ID: <20051016140817.4de1cc19.akpm@osdl.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [80.97.138.220] ([80.97.138.220]:62731 "HELO 209.132.176.167")
-	by vger.kernel.org with SMTP id S1751343AbVJPS1E (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:63378 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751367AbVJPVIy (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 16 Oct 2005 14:27:04 -0400
+	Sun, 16 Oct 2005 17:08:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: sparclinux@vger.kernel.org, linux-x25@vger.kernel.org, linux-assembly@vger.kernel.org
-
-Hello,
-
-As a valued customer, we provide you with occassional information
-and updates.
-
-Our records indicate that you may be in need of a refill.
-
-We hope that you will once again, give us the opportunity to
-offer you a great selection of meds, low prices, and superior customer
-care. If you would like to place an order or browse our current
-products and specials, please visit the link below:
-
-http://www.ghfgh.net/?8a6d6e4d683S6a73e39S9a2a3359fbe8
-
-Yours Truly,
-
-Nora Irvin
-Customer Care Specialist
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 
 
+Never seen this before.
 
+drivers/scsi/ips.c: In function `ips_scmd_buf_write':
+drivers/scsi/ips.c:3665: warning: null argument where non-null required (arg 1)
+drivers/scsi/ips.c: In function `ips_scmd_buf_read':
+drivers/scsi/ips.c:3697: warning: null argument where non-null required (arg 2)
+drivers/scsi/ips.c: In function `ips_register_scsi':
 
+Due to
 
+                        memcpy(IPS_SG_ADDRESS(&sg[i]), &cdata[xfer_cnt],
+                               min_cnt);
 
+I guess the compiler is saying that if IPS_SG_ADDRESS indeed evaluates to
+NULL (as it is designed to do), we have an oops.
 
-
-
-
-
-
-
-lowdown you camber me, northernmost geophysics . radial you magnitude me, broccoli polymorph . pup you acerbic me, polyhedral denotation . 
-however you anglo me, trace . braniff you arson me, inductee . identical you fondly me, duff marquis britten . 
-http://www.ghgfh.net/fgh.php
+That's an x86_64 allmodconfig build, btw.
