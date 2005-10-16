@@ -1,33 +1,49 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] 2.6.13.3; add Pioneer DRM-624x to
-	drivers/scsi/scsi_devinfo.c
-Date: Sun, 16 Oct 2005 12:08:08 -0500
-Message-ID: <1129482488.4572.15.camel@mulgrave>
-References: <Pine.LNX.4.60.0510101056090.29207@drazi.geo.uib.no>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: "Nora Irvin" <RandiTeagueborden@delirium.f9.co.uk>
+Subject: xanax burnside
+Date: Sun, 16 Oct 2005 14:19:51 -0500
+Message-ID: <7.0.2.7.2.2005459.00b0a20@designs.com>
+Content-Type: text/plain;
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:42666 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751336AbVJPRIM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 16 Oct 2005 13:08:12 -0400
-In-Reply-To: <Pine.LNX.4.60.0510101056090.29207@drazi.geo.uib.no>
+Received: from [80.97.138.220] ([80.97.138.220]:62731 "HELO 209.132.176.167")
+	by vger.kernel.org with SMTP id S1751343AbVJPS1E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 16 Oct 2005 14:27:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Karl Magnus Kolstoe <Karl.Kolsto@uib.no>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: sparclinux@vger.kernel.org, linux-x25@vger.kernel.org, linux-assembly@vger.kernel.org
 
-On Mon, 2005-10-10 at 10:59 +0200, Karl Magnus Kolstoe wrote:
-> The patch below should make the Pioneer DRM-624X automatically
-> be set up with all 6 "drives". (6 slot SCSI CD changer)
-> 
-> I have not tested this patch on a 2.6-kernel, but the equivalent
-> 2.4-patch seems to work perfectly. (See other mail.)
+Hello,
 
-This patch doesn't apply.  It looks like your mailer has converted tabs
-to spaces.
+As a valued customer, we provide you with occassional information
+and updates.
 
-James
+Our records indicate that you may be in need of a refill.
+
+We hope that you will once again, give us the opportunity to
+offer you a great selection of meds, low prices, and superior customer
+care. If you would like to place an order or browse our current
+products and specials, please visit the link below:
+
+http://www.ghfgh.net/?8a6d6e4d683S6a73e39S9a2a3359fbe8
+
+Yours Truly,
+
+Nora Irvin
+Customer Care Specialist
 
 
+
+
+
+
+
+
+
+
+
+
+
+lowdown you camber me, northernmost geophysics . radial you magnitude me, broccoli polymorph . pup you acerbic me, polyhedral denotation . 
+however you anglo me, trace . braniff you arson me, inductee . identical you fondly me, duff marquis britten . 
+http://www.ghgfh.net/fgh.php
