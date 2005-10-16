@@ -1,58 +1,46 @@
-From: "Saeed Bishara" <saeed@marvell.com>
-Subject: bad refcount of the sdev when using scsi_device_add
-Date: Sun, 16 Oct 2005 10:28:48 +0200
-Message-ID: <B9FFC3F97441D04093A504CEA31B7C41591BB7@msilexch01.marvell.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH 4/12]  qla2xxx: Update license.
+Date: Sun, 16 Oct 2005 10:32:00 +0200
+Message-ID: <1129451520.2911.12.camel@laptopd505.fenrus.org>
+References: <20051013231534.27191.19815.sendpatchset@plap.qlogic.com>
+	 <20051013231614.27191.9897.sendpatchset@plap.qlogic.com>
+	 <20051015115654.GA24919@infradead.org>  <4351A123.9040104@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1255
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shoshil.marvell.com ([199.203.130.250]:37929 "EHLO
-	il.marvell.com") by vger.kernel.org with ESMTP id S1751314AbVJPI2u convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 16 Oct 2005 04:28:50 -0400
-Received: from msilexch01.marvell.com (msilexch01.il.marvell.com [10.4.5.104])
-	by il.marvell.com (8.13.1/8.13.1) with ESMTP id j9G8SmIZ001945
-	for <linux-scsi@vger.kernel.org>; Sun, 16 Oct 2005 11:28:48 +0300 (IST)
-Content-class: urn:content-classes:message
+Received: from pentafluge.infradead.org ([213.146.154.40]:9178 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751316AbVJPIcG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 16 Oct 2005 04:32:06 -0400
+In-Reply-To: <4351A123.9040104@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Saeed Bishara <saeed@marvell.com>
+To: dougg@torque.net
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Christoph Hellwig <hch@infradead.org>
 
-Hi,=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 My driver calles scsi_add_device for =
-adding single scsi device, and the following flow for removing device:
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 sdev =3D scsi_device_lookup(host, 0, =
-target, 0);
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 if (sdev !=3D NULL)
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 {
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 //=A0=A0=A0 scsi_device_cancel(sdev, =
-0);
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 scsi_remove_device(sdev);
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 scsi_device_put(sdev);
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 }
+On Sun, 2005-10-16 at 10:38 +1000, Douglas Gilbert wrote:
+> Christoph Hellwig wrote:
+> > On Thu, Oct 13, 2005 at 04:16:14PM -0700, Andrew Vasquez wrote:
+> > 
+> >>Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+> > 
+> > 
+> > NACK.  My contributions won't be relicensed under such an odd license.
+> > The real fix is to allow userspace firmware loading for all HBA types
+> > (as done in one of the later patches) and eventually remove the firmware
+> > completely.
+> 
+> Andrew,
+> Another approach is to separate out changes made
+> by Christoph and Arjan into a separate file (or
+> files) and leave the GPL on that file.
 
+..as well as any other contributor that isn't qlogic...
 
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 But I see that after doing several ho=
-tplugs for the scsi device, the scsi device entry under /sys/bus/scsi/d=
-evices will remain even if the hotplug ends with unconnected device.
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Adding and removing single device usi=
-ng echo =93add/remove =85.=94 > /proc/scsi/scsi works fine.
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 I found that the flow of adding devic=
-e using scsi_scan_target ends with different refcount of the sdev than =
-using the scsi_add_device, in the former one the refcount is less by 1.=
- the scsi_scan_target calls scsi_device_put, but there is no analogous =
-put in the scsi_add_device function. Now, when I add scsi_device_put af=
-ter scsi_add_device, the issue get fixed.
+to be honest I suspect there will be nothing left for that though. It
+also voids the goal of this license change as far as I can see..
+(and also I think that is legally iffy as well; one could argue that
+half the driver is a derived work of the other half (as well as probably
+a derived work of linux) and as such it needs to be GPL as well)
 
-=A0Is it a bug in the scsi_device_add? Is there any problem with my wor=
-karound?
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
-Saeed Bishara
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
