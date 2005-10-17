@@ -1,50 +1,41 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+From: Jesper Juhl <jesper.juhl@gmail.com>
 Subject: Re: [PATCH] fix implicit declaration compile warning in qla2xxx
-Date: Mon, 17 Oct 2005 11:00:29 -0700
-Message-ID: <20051017180029.GA9192@plap.qlogic.org>
+Date: Mon, 17 Oct 2005 20:03:06 +0200
+Message-ID: <9a8748490510171103s62bdb84ap3d0ba55b65af32e@mail.gmail.com>
 References: <200510171959.23585.jesper.juhl@gmail.com>
+	 <20051017180029.GA9192@plap.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751286AbVJQSAd@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932079AbVJQSDL@vger.kernel.org>
+In-Reply-To: <20051017180029.GA9192@plap.qlogic.org>
 Content-Disposition: inline
-In-Reply-To: <200510171959.23585.jesper.juhl@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jesper Juhl <jesper.juhl@gmail.com>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 17 Oct 2005, Jesper Juhl wrote:
-
-> Fix warning about implicitly declared function in qla_rscn.c
->   drivers/scsi/qla2xxx/qla_rscn.c:334: warning: implicit declaration of function `fc_remote_port_unblock'
-> 
-> From: Jesper Juhl <jesper.juhl@gmail.com>
-> Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
-> ---
-> 
->  drivers/scsi/qla2xxx/qla_rscn.c |    1 +
->  1 files changed, 1 insertion(+)
-> 
-> --- linux-2.6.14-rc4-mm1-orig/drivers/scsi/qla2xxx/qla_rscn.c	2005-10-11 22:41:20.000000000 +0200
-> +++ linux-2.6.14-rc4-mm1/drivers/scsi/qla2xxx/qla_rscn.c	2005-10-17 19:53:50.000000000 +0200
-> @@ -17,6 +17,7 @@
->   *
->   */
->  #include "qla_def.h"
-> +#include <scsi/scsi_transport_fc.h>
->  
->  /**
->   * IO descriptor handle definitions.
-> 
-> 
+On 10/17/05, Andrew Vasquez <andrew.vasquez@qlogic.com> wrote:
+> On Mon, 17 Oct 2005, Jesper Juhl wrote:
+>
+> > Fix warning about implicitly declared function in qla_rscn.c
+> >   drivers/scsi/qla2xxx/qla_rscn.c:334: warning: implicit declaration of function `fc_remote_port_unblock'
+> >
+[snip]
+>
+> Sent earlier:
+>
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=112907350209822&w=2
+>
+Hmm, I guess I did a lousy job of searching the archives :(
 
 
-Sent earlier:
-
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112907350209822&w=2
-
-Awaiting inclusion.
+> Awaiting inclusion.
+>
+Great :)
 
 
-Thanks,
-Andrew Vasquez
+--
+Jesper Juhl <jesper.juhl@gmail.com>
+Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
+Plain text mails only, please      http://www.expita.com/nomime.html
