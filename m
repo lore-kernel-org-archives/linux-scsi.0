@@ -1,44 +1,38 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Fw: slab error in cache_free_debugcheck(): cache `sgpool-8':
-Date: Mon, 17 Oct 2005 22:26:28 +0200
-Message-ID: <435408F4.4090907@s5r6.in-berlin.de>
-References: <20051017002339.5156d7f4.akpm@osdl.org> <4353754B.1040500@s5r6.in-berlin.de> <4353FDAD.1010204@chello.be>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [PATCH 5/12]  qla2xxx: Add support for embedded ISP24xx firmware.
+Date: Mon, 17 Oct 2005 14:34:05 -0700
+Message-ID: <20051017213405.GG9192@plap.qlogic.org>
+References: <20051013231534.27191.19815.sendpatchset@plap.qlogic.com> <20051013231624.27191.96727.sendpatchset@plap.qlogic.com> <20051014094717.GA22347@infradead.org> <20051014165035.GB19098@plap.qlogic.org> <20051015115801.GB24919@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:51677 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1751343AbVJQU2q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Oct 2005 16:28:46 -0400
-In-Reply-To: <4353FDAD.1010204@chello.be>
+Received: from pat.qlogic.com ([198.70.193.2]:22001 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S932336AbVJQVeM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Oct 2005 17:34:12 -0400
+Content-Disposition: inline
+In-Reply-To: <20051015115801.GB24919@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
-Cc: "F. Poncin" <cr27587@chello.be>, Andrew Morton <akpm@osdl.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-F. Poncin wrote:
-> Brand new Seagate USB/FireWire External Hard Drive - 
-> http://www.seagate.com/products/personal/external.html
-> Connected through FireWire to PCI card: FireWire (IEEE 1394): Agere 
-> Systems (former Lucent Microelectronics) FW323 (rev 61)
+On Sat, 15 Oct 2005, Christoph Hellwig wrote:
+
+> On Fri, Oct 14, 2005 at 09:50:35AM -0700, Andrew Vasquez wrote:
+> > 
+> > I believe we spoke about this during OLS as well, and agreed that
+> > adding the request-firmware interface for all ISP types, waiting a
+> > year or so for distro infrastructure to mature now, then discarding
+> > the embedded blobs was the way to go.  Given that, embedded 24xx
+> > support will need to be present throughout that year.
 > 
-> The older Seagate model (same size) is not affected.
-> Vendor: ST340083 Model: 2A Rev:
-> Type: Direct-Access-RBC ANSI SCSI revision: 04
-...
->>> scsi2 : SCSI emulation for IEEE-1394 SBP-2 Devices
->>> ieee1394: sbp2: Logged into SBP-2 device
->>> ieee1394: Node 0-00:1023: Max speed [S400] - Max payload [2048]
->>> Vendor: Initio Model: ST3400832A Rev: 4.07
->>> Type: Direct-Access ANSI SCSI revision: 00
+> No, we shouldn't add more firmware.  I think we need to play out you
+> against the distros here so that they finally fix their infrastructure ;-)
 
-I suspect that most of these alleged Direct-Access FireWire bridges are 
-actually more or less Direct-Access-RBC bridges. I have two bridges that 
-report to be of the Direct-Access type; the Initio based one (although 
-1394b/S800, not 1394a like yours) and an older based on TI StorageLynx. 
-Both feature different firmware quirks.
--- 
-Stefan Richter
--=====-=-=-= =-=- =---=
-http://arcgraph.de/sr/
+Ok, so what's going to be the policy regarding firmware updates:
+
+http://marc.theaimsgroup.com/?l=linux-scsi&m=112924541725072&w=2
+
+--
+av
