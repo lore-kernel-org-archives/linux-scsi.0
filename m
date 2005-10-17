@@ -1,32 +1,27 @@
-From: Arjan van de Ven <arjan@infradead.org>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH] procfs support for sgiwd93
-Date: Mon, 17 Oct 2005 12:19:32 +0200
-Message-ID: <1129544373.2907.18.camel@laptopd505.fenrus.org>
+Date: Mon, 17 Oct 2005 11:43:12 +0100
+Message-ID: <20051017104312.GB22710@infradead.org>
 References: <20051015013824.GA25248@linux-mips.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:43137 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:10417 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932256AbVJQKTl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Oct 2005 06:19:41 -0400
+	id S932261AbVJQKnN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Oct 2005 06:43:13 -0400
+Content-Disposition: inline
 In-Reply-To: <20051015013824.GA25248@linux-mips.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Ralf Baechle <ralf@linux-mips.org>
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-On Sat, 2005-10-15 at 02:38 +0100, Ralf Baechle wrote:
+On Sat, Oct 15, 2005 at 02:38:24AM +0100, Ralf Baechle wrote:
 > FYI and reviewing pleassure.
-> 
-> Author: Thiemo Seufer <ths@networkno.de>
-> Date:   Tue Apr 12 14:00:38 2005 +0000
-> 
-> Enable proc support, minor code cleanup.
 
-isn't this the wrong way around; eg afaik we're deprecating proc support
-from LLDD's...
+NACK, no more new procfs support for scsi driver.
 
-
+The sgiwd93.h removal is fine, but please also mark all functions that
+were in it previously static.
 
