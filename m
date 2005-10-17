@@ -1,33 +1,46 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: Douglas Gilbert <dougg@torque.net>
 Subject: Re: [PATCH] procfs support for sgiwd93
-Date: Mon, 17 Oct 2005 11:49:49 +0100
-Message-ID: <20051017104949.GA22861@infradead.org>
-References: <20051015013824.GA25248@linux-mips.org> <20051017104312.GB22710@infradead.org> <20051017104729.GB4884@linux-mips.org>
+Date: Mon, 17 Oct 2005 20:55:11 +1000
+Message-ID: <4353830F.3010104@torque.net>
+References: <20051015013824.GA25248@linux-mips.org> <1129544373.2907.18.camel@laptopd505.fenrus.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:7343 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932263AbVJQKtu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Oct 2005 06:49:50 -0400
-Content-Disposition: inline
-In-Reply-To: <20051017104729.GB4884@linux-mips.org>
+Received: from zorg.st.net.au ([203.16.233.9]:15828 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S932255AbVJQKy1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Oct 2005 06:54:27 -0400
+In-Reply-To: <1129544373.2907.18.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ralf Baechle <ralf@linux-mips.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Ralf Baechle <ralf@linux-mips.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
-On Mon, Oct 17, 2005 at 11:47:29AM +0100, Ralf Baechle wrote:
-> On Mon, Oct 17, 2005 at 11:43:12AM +0100, Christoph Hellwig wrote:
+Arjan van de Ven wrote:
+> On Sat, 2005-10-15 at 02:38 +0100, Ralf Baechle wrote:
 > 
-> > NACK, no more new procfs support for scsi driver.
-> > 
-> > The sgiwd93.h removal is fine, but please also mark all functions that
-> > were in it previously static.
+>>FYI and reviewing pleassure.
+>>
+>>Author: Thiemo Seufer <ths@networkno.de>
+>>Date:   Tue Apr 12 14:00:38 2005 +0000
+>>
+>>Enable proc support, minor code cleanup.
 > 
-> It's not like this is really adding procfs support; it's more wiring up a
-> function in sgiwd93.c that exists anyway in wd33c93.c.
+> 
+> isn't this the wrong way around; eg afaik we're deprecating proc support
+> from LLDD's...
 
-Which is bad enough.  A patch to remove the procfs code code from wd33c93.c
-would be gentley accepted, though ;-)
+No more ioctls for LLDDs, no more procfs, just a sysfs
+straight jacket; until sysfs goes the way of devfs ...
 
+A subversive thought: a SAS LLDD supporting a SMP target
+(as well as the standard SSP,SMP and STP initiators).
+Then, via vendor specific SMP functions, control apps
+can access the HBA to do things that linux disallows
+or makes difficult :-)
+[May not work unless HBAs have the equivalent of
+the network "lo" interface.]
+
+Doug Gilbert
