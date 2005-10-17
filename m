@@ -1,55 +1,47 @@
-From: Ted Ede <ted@ede.com>
-Subject: Adaptec 2120S not being recognized by aacraid
-Date: Mon, 17 Oct 2005 08:01:36 -0400
-Message-ID: <435392A0.7080405@ede.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH ] mptsas: support link error attributes[2 round] - and phy_reset attributes
+Date: Mon, 17 Oct 2005 13:53:57 +0100
+Message-ID: <20051017125357.GA29491@infradead.org>
+References: <200510121816.02479.Eric.Moore@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gator18.hostgator.com ([70.85.214.66]:8155 "EHLO
-	gator18.hostgator.com") by vger.kernel.org with ESMTP
-	id S932287AbVJQMBM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Oct 2005 08:01:12 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:12258 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932303AbVJQMyB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Oct 2005 08:54:01 -0400
+Content-Disposition: inline
+In-Reply-To: <200510121816.02479.Eric.Moore@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@SteelEye.com>, linux scsi <linux-scsi@vger.kernel.org>
 
-I'm not sure if this is the proper place to post this, so if I should be 
-asking elsewhere, a pointer would be appreciated.
+On Wed, Oct 12, 2005 at 06:16:02PM -0600, Moore, Eric Dean wrote:
+> This patch applies ontop of 2.6.14-rc4
+> and two patches previous posted by Christoph
+> 
+> (1) [PATCH] mptsas: support link error attributes
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=112716006932685&w=2
+> 
+> (2)  [PATCH] scsi_transport_sas: support link error attributes
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=112716000904268&w=2
+> 
+> This attached patch changelog as follows:
+> 
+> (1) fix?s the proper phy_identifier attribute to be set properly
+> so link_attributes returns correct values from firmware.
+> 
+> (2) Only link_attributes work for hba attached phys. Its not implemented
+> for expanders.
+> 
+> (3) Add phy link_reset and hard_reset support.  These work for
+> hba attached phys, not for expanders. This was a patch previously
+> provided by Christoph - added support in scsi_transport_sas.
 
-Summary:
-scanpci shows the card on the PCI bus, but the kernel does not recognize it.
-
-Details:
-
-I'm booting off of a standard serail-ata drive and trying to configure a 
-2120S with four scsi drives as a RAID10 device for some performance testing.
-
-I was able to create a RAID10 array using the on-card bios.  Each boot, 
-the array is listed and its status is "Optimal"
-
-I've got a Tyan Thunder K8WE S2895 rev 1.0 with two dual-core Opterons.
-I'm running Centos 4.2 with kernel 2.6.9-22ELsmp.  I downloaded the 
-1.1.5.2400 version of the aacraid driver from adaptec and 
-built/installed it using dkms.
-
-It appears to be part of the part of the kernel, but this is the only 
-message I get upon boot:
-[root@localhost tmp]# dmesg | grep -i aac
-Adaptec aacraid driver (1.1-5 Oct 16 2005 19:29:08)
-
-scanpci includes:
-pci bus 0x000a cardnum 0x09 function 0x00: vendor 0x9005 device 0x0285
-  Adaptec AAC-RAID
-scanpci shows nothing else on pci bus 0x000a.
-
-"scanpci -O" and lspci reveal nothing.  which leads me to believe the 
-kernel is not recognizing it.
-
-Any thoughts or next debugging steps would be greatly appreciated.
-
-ted
-
-
-
+Except for some whitespace changes and some odd bits about the reply
+handle this looks good.  But it really needs to be split up, we should
+try to get the phy identifier fix into 2.6.14 if possible, and the
+transport class bits needs to be separate from the mptsas changes for
+the link reset.  I'll resend some split-up patches.
 
