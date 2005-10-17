@@ -1,41 +1,46 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 2/2] Convert megaraid to use pci_driver shutdown metho d
-Date: Mon, 17 Oct 2005 10:17:13 -0700
-Message-ID: <20051017171713.GE1251@kroah.com>
-References: <0E3FA95632D6D047BA649F95DAB60E5707232141@exa-atlanta> <20051017134228.GA31938@infradead.org> <20051017170855.GA1251@kroah.com> <20051017171025.GA9540@infradead.org>
+From: Jesper Juhl <jesper.juhl@gmail.com>
+Subject: [PATCH] fix implicit declaration compile warning in qla2xxx
+Date: Mon, 17 Oct 2005 19:59:23 +0200
+Message-ID: <200510171959.23585.jesper.juhl@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751133AbVJQRRq@vger.kernel.org>
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751074AbVJQR4Y@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20051017171025.GA9540@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, "Kolli, Neela Syam" <Neela.Kolli@engenio.com>, Russell King <rmk+lkml@arm.linux.org.uk>, Linux Kernel List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Oct 17, 2005 at 06:10:25PM +0100, Christoph Hellwig wrote:
-> On Mon, Oct 17, 2005 at 10:08:55AM -0700, Greg KH wrote:
-> > On Mon, Oct 17, 2005 at 02:42:28PM +0100, Christoph Hellwig wrote:
-> > > On Mon, Oct 17, 2005 at 09:26:12AM -0400, Kolli, Neela Syam wrote:
-> > > > Patch looks good.  Thanks for the patch.
-> > > 
-> > > another 2.6.14 candidate, without it we'd easily get corruption
-> > > on shutdown when the root filesystem is on megaraid.
-> > 
-> > No, the megaraid shutdown method will be called, only if that member
-> > isn't set will the pci shutdown call be made.  So this should be safe
-> > today, right?
-> 
-> If that actually got fixed it's fine indeed.
 
-The code today is:
+Fix warning about implicitly declared function in qla_rscn.c
+  drivers/scsi/qla2xxx/qla_rscn.c:334: warning: implicit declaration of function `fc_remote_port_unblock'
 
-        /* FIXME, once all of the existing PCI drivers have been fixed to set
-         * the pci shutdown function, this test can go away. */
-        if (!drv->driver.shutdown)
-                drv->driver.shutdown = pci_device_shutdown;
+From: Jesper Juhl <jesper.juhl@gmail.com>
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+---
 
-so we should be fine.
+ drivers/scsi/qla2xxx/qla_rscn.c |    1 +
+ 1 files changed, 1 insertion(+)
 
-thanks,
+--- linux-2.6.14-rc4-mm1-orig/drivers/scsi/qla2xxx/qla_rscn.c	2005-10-11 22:41:20.000000000 +0200
++++ linux-2.6.14-rc4-mm1/drivers/scsi/qla2xxx/qla_rscn.c	2005-10-17 19:53:50.000000000 +0200
+@@ -17,6 +17,7 @@
+  *
+  */
+ #include "qla_def.h"
++#include <scsi/scsi_transport_fc.h>
+ 
+ /**
+  * IO descriptor handle definitions.
 
-greg k-h
+
+
+
+
+/Jesper Juhl
+
+
+PS. 
+ Please CC me on replies.
