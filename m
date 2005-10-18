@@ -1,54 +1,32 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH ] mptsas: support link error attributes[2 round] - and
-	 phy_reset attributes
-Date: Tue, 18 Oct 2005 07:57:15 -0600
-Message-ID: <91888D455306F94EBD4D168954A9457C048719B2@nacos172.co.lsil.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: Adaptec SAS integration notes
+Date: Tue, 18 Oct 2005 11:06:57 -0400
+Message-ID: <43550F91.50307@adaptec.com>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7AED@xbl3.ma.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:5761 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1750734AbVJRN6D (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:48864 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1750784AbVJRPHs (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Oct 2005 09:58:03 -0400
+	Tue, 18 Oct 2005 11:07:48 -0400
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7AED@xbl3.ma.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux scsi <linux-scsi@vger.kernel.org>
+To: James.Smart@Emulex.Com
+Cc: ltuikov@yahoo.com, jgarzik@pobox.com, linux-scsi@vger.kernel.org, andmike@us.ibm.com, James.Bottomley@steeleye.com, hch@infradead.org, linux-ide@vger.kernel.org
 
-On Monday, October 17, 2005 6:54 AM, Christoph Hellwig wrote: 
-> On Wed, Oct 12, 2005 at 06:16:02PM -0600, Moore, Eric Dean wrote:
-> > This patch applies ontop of 2.6.14-rc4
-> > and two patches previous posted by Christoph
-> > 
-> > (1) [PATCH] mptsas: support link error attributes
-> > http://marc.theaimsgroup.com/?l=linux-scsi&m=112716006932685&w=2
-> > 
-> > (2)  [PATCH] scsi_transport_sas: support link error attributes
-> > http://marc.theaimsgroup.com/?l=linux-scsi&m=112716000904268&w=2
-> > 
-> > This attached patch changelog as follows:
-> > 
-> > (1) fix?s the proper phy_identifier attribute to be set properly
-> > so link_attributes returns correct values from firmware.
-> > 
-> > (2) Only link_attributes work for hba attached phys. Its 
-> not implemented
-> > for expanders.
-> > 
-> > (3) Add phy link_reset and hard_reset support.  These work for
-> > hba attached phys, not for expanders. This was a patch previously
-> > provided by Christoph - added support in scsi_transport_sas.
+On 10/15/05 10:21, James.Smart@Emulex.Com wrote:
+> Initially, I wanted to reitterate the "lead by example" statement.
+> But quite frankly, the language used repeatedly in these threads with
+> people that do not have the same opinion as you is repulsive. In this
+> case it's a bit subtle, in others it has not been.
 > 
-> Except for some whitespace changes and some odd bits about the reply
-> handle this looks good.  But it really needs to be split up, we should
-> try to get the phy identifier fix into 2.6.14 if possible, and the
-> transport class bits needs to be separate from the mptsas changes for
-> the link reset.  I'll resend some split-up patches.
->
+> Jeff is a very smart individual, as are you, and many others on this list.
+> Please try to treat everyone with dignity and respect. There are many
+> many ways to phrase things.
 
-Thanks for the other post; e.g. "fix phy identifiers".
+Ok, sorry, you're right.
 
-For the link/phy reset support, were you planning to submit
-seperate patch's for this, or were you wanting me to handle that?
-
-Eric Moore  
+	Luben
