@@ -1,206 +1,61 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: Adaptec SAS integration notes
-Date: Tue, 18 Oct 2005 16:16:32 -0400
-Message-ID: <43555820.4000106@pobox.com>
-References: <20051014180615.5604.qmail@web31808.mail.mud.yahoo.com> <43552650.2090104@pobox.com> <43554D43.7010704@adaptec.com>
+Date: Tue, 18 Oct 2005 22:36:17 +0200
+Message-ID: <43555CC1.8040200@s5r6.in-berlin.de>
+References: <20051014180615.5604.qmail@web31808.mail.mud.yahoo.com> <43552650.2090104@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:922 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751485AbVJRUQi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Oct 2005 16:16:38 -0400
-In-Reply-To: <43554D43.7010704@adaptec.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <43552650.2090104@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, ltuikov@yahoo.com, Mike Anderson <andmike@us.ibm.com>, Luben Tuikov <luben_tuikov@adaptec.com>, James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: ltuikov@yahoo.com, linux-scsi@vger.kernel.org, Mike Anderson <andmike@us.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@infradead.org>, linux-ide@vger.kernel.org
 
-Luben Tuikov wrote:
-> On 10/18/05 12:44, Jeff Garzik wrote:
->>Wrong.  DMA boundary is a trivial counterexample.
-> 
-> 
-> I've addressed DMA boundary in another email which I posted 2 hours ago
-> to this list.
-> 
-> Our controller has no limitation as to DMA boundaries.  All 64 bit space
-> is fair game.  There is also no sg list size limitation.
-
-These are an Adaptec-only assumptions, at the present time.
-
-The DMA boundary, s/g stuff etc. are there for the LLDD to communicate 
-that to the SCSI and block layers that need that info.
-
-Once you encounter non-Adaptec hardware with limitations on these 
-details, you'll either be forced to reinvent the wheel, duplicating this 
-stuff, or backtrack and use the scsi-host-template as it was intended to 
-be used.
-
-
-> For this reason I did not overengineer the code.
-> 
-> Adding HW specific stuff is trivial.  In fact I'll add it to my code
-> today and update the code.
-> 
-> The aic94xx code does include it: struct hw_profile { ... }; embedded in
-> struct asd_ha_struct { ... };  See drivers/scsi/aic94xx/aic94xx_hwi.h.
-> 
-> Exactly the same concept applies to struct sas_ha_struct { ... };.
-> I'll embed struct hw_profile { ... }; into it later today.  sg lists
-> max lengths, DMA maps, would be there (all ~0).
-
-No.  This would simply be duplicating more of the SCSI core, because you 
-don't like scsi-host-template.
-
-
->>>What it actually means, as the name _also_ suggest is a device on
->>>the domain, which is transport addressible.  See SAM chapter 4 and 5.
+Jeff Garzik wrote:
+> Luben Tuikov wrote:
+[Jeff Garzik wrote:]
+>>> * Put HCIL mapping into top-level helper code, for sharing between FC
+>>> and SAS (hopefully!)
 >>
->>
->>I'm discussing the topic at hand at a higher level than SAM.
+>> One step further: eliminate the ugly legacy SPI-centric HCIL from
+>> SCSI Core.  Minimise and streamline SCSI Core.
 > 
+> How many times must we repeat:  that's the long term goal.
 > 
-> Can you give us a reference to this "higher level than SAM"?
-> I'd like to read about it.
+> Rome wasn't built in a day.
 
-<shrug>  Any literature on messaging, networks, and RPC.
+All transports implement HCIL mappings. (SPI drivers enjoy the easiest 
+mapping, hcil<->HCIL.) They are all faced with the necessity of mapping 
+and solve it in different ways, for different reasons. Why stop at FC + 
+SAS and try to find a unified solution for just those two? Also, when 
+you are working out how FC and SAS could interface to a common HCIL 
+mapping library (or HCIL mapping layer?), you are effectively designing 
+aspects of how an interface between FC|SAS and SCSI core should look 
+like. Or, why not provide the HCIL mapping helpers in the core and 
+subsequently make users of this new interface completely unaware of the 
+existence of HCIL...?
 
-Block layer, and Dragonfly BSD concepts are along these lines.
+Moreover, HCIL mapping is but one aspect of a common problem. As an 
+example, I think yet another aspect of the same problem is that device 
+properties like target names and LUNs get lost below the 
+transport<->core interface. We want to present these device properties 
+to userspace in a unified manner. Here it becomes even more clear: 
+Neither is it a problem for FC and SAS alone, nor are transport-level 
+helpers a good solution to the problem.
 
-
->>>You cannot care about "remote" ports -- some types of device have _no_
->>>port layer, as well you only care about the port "half" on your end.
->>>SAS is quite clear on that.
->>
->>Remote ports deals with the other half of the connection.  You gotta 
->>deal with it somewhere.
-> 
-> 
-> I do deal with it.  Just look at the code and how it shows you the
-> ports that have been formed (from Announcement 1 at 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=112629509826900&w=2)
-
-The quoted part you deleted was referring to the existing SAS transport 
-class, unless I'm completely lost in this thread.
-
-
->>>>* very poor SATA interface
->>>
->>>
->>>Hmm, no sorry, I'm not going to accept the BS FUD, generalized
->>>comment.
->>
->>
->>If it doesn't interface with libata, the current SATA interface, then 
->>the code needs improvement.  Its a statement of fact.
-> 
-> 
-> Aaah, _that's_ what you meant. "If it doesn't use my code, it bad code."
-
-If it duplicates SCSI<->ATA translation, and ignores existing kernel 
-facilities...
-
-
->>>Look, I've even included comments on how to integrate the code with
->>>a SATL (which libata is _not_, but it does implement some SATL tasks).
->>>
->>>I know that you're pushing for libata-scsi to become SATL, but this
->>>is hard when your devices belong to a port in an _array_.
->>
->>
->>I've simply stated that there will not be more than one SCSI<->ATA 
->>simulator in the kernel.
->>
->>All implementation decisions trickle down from that overall path.
-> 
-> 
-> And you're forcing libata-scsi to be SATL which it is currently not.
-
-I'm describing the path that needs to be taken, moving forward.
-
-
->>SAM is ultimately message passing RPC over a network.
-> 
-> 
-> While I understand what you mean, according to the Abstract it is:
-> 
-> 	"This standard specifies the SCSI Architecture Model.
-> 	The purpose of the architecture is to provide a common
-> 	basis for the coordination of SCSI standards and to specify
-> 	those aspects of SCSI I/O system behavior that are independent
-> 	of a particular technology and common to all implementations."
-> 
-> Not all transports would be a "network".  Anyway this isn't important
-> to the tasks at hand.
-
-It's quite important.
-
-SAS is networking -- we have packets, we have routing.
-
-
->>>>* Using scsi_scan_target() would allow us to use the normal LUN scan
->>>
->>>
->>>Again not my code.  Normal LUN "scan" is done through REPORT LUNS
->>>as shown in sas_discover.c as I posted both functions to this list
->>>in a recent email.
->>
->>
->>SCSI core does REPORT LUNS, so we should use that.
-> 
-> 
-> HCIL.
-
-That's a reason to work with the SCSI layer to update it, not work 
-around it.
-
-
->>>>* Avoid writing a separate SMP driver for now, and see how things
->>>>shake out with future SAS+SATA hardware.
->>>
->>>
->>>No such intentions.  SMP should not be in a separate driver.
->>>For SMP you need _addressing_ and the solution to this problem
->>>has been showin in driver/scsi/sas/README and in the announcement
->>>emails to linux-kernel and linux-scsi here:
->>>http://linux.adaptec.com/sas/
->>
->>
->>As I said above, this entire thread is talking about your code, and how 
->>it will integrate into the upstream kernel.  There is little value in 
->>repeatedly posting a URL to code we're already discussing.
-> 
-> 
-> Well, in all honesty and actuallity the code has already been integrated
-> and it works.  The link is here:
-> http://linux.adaptec.com/sas/
-
-How many times are you going to post this link in each message?
-
-
->>>libata is two layers: SATL and HW interface -- given ata_port and how
->>
->>Obviously.  ls(1) would have told you that:
->>
->>[jgarzik@pretzel sas-2.6]$ ls drivers/scsi/libata*.c
->>drivers/scsi/libata-core.c  drivers/scsi/libata-scsi.c
->>
->>The hardware interface is separate from the SCSI simulator.
-> 
-> 
-> The exported to the kernel ata_scsi_queuecommand() defined in
-> libata-scsi.c dereferences struct ata_port.
-> 
-> That is, if, say SAS Transport Layer wanted translation for
-> a SATA device it would have to conjure up ata_port, which
-> would need to be made up.
-
-Again, I'm stating the path to move forward.  Obviously, code changes 
-are needed.  Rather than continually pointing to a URL, I'm trying to 
-point out where those code changes should occur.
-
-	Jeff
-
-
+I freely admit that I don't have a picture of where the real 
+difficulties lie; I am far too unfamiliar with the innards of scsi core. 
+But time spent on transport-level helpers which are meant to ease 
+symptoms of the transport<->core difficulties seems to be spent rather 
+ineffectively to me. More concrete, what is the ratio of benefit to cost 
+of HCIL mapping code sharing between SAS and FC? Especially since that 
+mapping is deemed obsolete already (in the long term or perhaps even mid 
+term). And to completely go back to the subject: Will attempts on code 
+sharing between FC layer and SAS layer bring things forward in the 
+short-term goal of SAS integration?
+-- 
+Stefan Richter
+-=====-=-=-= =-=- =--=-
+http://arcgraph.de/sr/
