@@ -1,41 +1,47 @@
-From: "Jayachandran C." <jchandra@digeo.com>
-Subject: [PATCH] scsi: remove dead code from sr.c
-Date: Tue, 18 Oct 2005 17:11:16 -0700
-Message-ID: <20051019001116.GA5338@random.pao.digeo.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 0/3] libata: scsi error handling, encore
+Date: Wed, 19 Oct 2005 12:47:05 +0900
+Message-ID: <4355C1B9.3080700@gmail.com>
+References: <43490BC8.9060504@torque.net> <434919E4.1080601@pobox.com> <435069E3.90306@torque.net> <43506AA3.3030502@pobox.com> <43507BA7.6090406@torque.net> <43507D5F.2050407@gmail.com> <435563D0.7050502@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from packet.digeo.com ([12.110.80.53]:56773 "EHLO packet.digeo.com")
-	by vger.kernel.org with ESMTP id S932182AbVJSALm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Oct 2005 20:11:42 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <435563D0.7050502@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: dougg@torque.net, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, russb@emc.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com, akpm@osdl.org
 
-This patch fixes an issue reported in drivers/scsi/sr.c by Coverity
+Jeff Garzik wrote:
+> Tejun Heo wrote:
+> 
+>> $ cat ~/bin/git-sync.sh
+>> #!/bin/sh
+>>
+>> if [ ! -r .git/origin ]; then
+>>         echo "not in git repo" 2>&1
+>>         exit 1
+>> fi
+>>
+>> rsync -avz --ignore-existing $(cat .git/origin)/ .git/
+>> rsync -avz $(cat .git/origin)/refs/ .git/refs/
+>>
+>>  After syncing, you need to do 'git-read-tree -m upstream' 
+>> 'git-checkout-cache -q -f -u -a'
+> 
+> 
+> 
+> In the fast-moving world of git, this is a bit outdated.  You should use
+> 
+>     git checkout -f upstream
+> 
+> to check out a specific branch.
+> 
 
-Error reported: Pointer returned from "scsi_cd" is never used
+  Oh.. there was the '-f' switch.  I always hit 'xxx changed' message 
+without the option and have gotten into the habit of using 
+read-tree/checkout-cache after a while.  Thanks for the tip.
 
-Patch description:
- Remove the scsi_cd() call as it does not have any effect.
-
-Signed-off-by: Jayachandran C. <c.jayachandran at gmail.com>
----
-
- sr.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
-
---- linux-2.6.13-rc4-git2.clean/drivers/scsi/sr.c	2005-10-13 11:42:33.000000000 -0700
-+++ linux-2.6.13-rc4-git2.jc/drivers/scsi/sr.c	2005-10-14 15:28:32.961695641 -0700
-@@ -455,7 +455,7 @@
- static int sr_block_open(struct inode *inode, struct file *file)
- {
- 	struct gendisk *disk = inode->i_bdev->bd_disk;
--	struct scsi_cd *cd = scsi_cd(inode->i_bdev->bd_disk);
-+	struct scsi_cd *cd;
- 	int ret = 0;
- 
- 	if(!(cd = scsi_cd_get(disk)))
+-- 
+tejun
