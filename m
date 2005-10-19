@@ -1,46 +1,83 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH 4/12]  qla2xxx: Update license.
-Date: Wed, 19 Oct 2005 10:50:09 -0700
-Message-ID: <20051019175009.GQ9087@plap.qlogic.org>
-References: <20051013231534.27191.19815.sendpatchset@plap.qlogic.com> <20051013231614.27191.9897.sendpatchset@plap.qlogic.com> <1129275031.2873.3.camel@laptopd505.fenrus.org> <20051014162701.GA19098@plap.qlogic.org> <1129315644.5359.7.camel@laptopd505.fenrus.org> <20051019173707.GO9087@plap.qlogic.org> <20051019174312.GA5103@infradead.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 4/4] mptsas: white space fixes and version bump
+Date: Wed, 19 Oct 2005 20:01:47 +0200
+Message-ID: <20051019180147.GE21488@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:37054 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751104AbVJSRuK (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:30600 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S1751209AbVJSSBu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Oct 2005 13:50:10 -0400
+	Wed, 19 Oct 2005 14:01:50 -0400
 Content-Disposition: inline
-In-Reply-To: <20051019174312.GA5103@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Arjan van de Ven <arjan@infradead.org>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, Arun Mittal <arun.mittal@qlogic.com>
+To: jejb@steeleye.com, Eric.Moore@lsil.com
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 19 Oct 2005, Christoph Hellwig wrote:
+Various whitespace and comment fixes from Eric, aswell as a version
+bump.
 
-> On Wed, Oct 19, 2005 at 10:37:07AM -0700, Andrew Vasquez wrote:
-> > Here's the updated license we'd like to propose.  Please note the
-> > verbiage regarding the questionable relicensing of the driver codes
-> > has been removed.
-> 
-> please don't hard-code qlogic in the license, you're not the only
-> copytight holder and adding everyone gets to long.  The only license
-> I'd be willing to dual-license my code under is the extremly simple
-> mit-style license used by the openbsd project:
-> 
->  http://www.openbsd.org/cgi-bin/cvsweb/src/share/misc/license.template?rev=1.2&content-type=text/x-cvsweb-markup
-> 
-> I'll also send you a list of the files that have singnificant contributions
-> from me so you can add me to the copyright lines.I though that wasn't
-> nessecary, but who knows what odd ideas legal departments will come up
-> with next.
 
-Sorry, but QLogic is not requesting that the driver codes be
-dual-licensed.  The license explcitely states the codes are under the
-GPL and the firmware blobs are under the BSD style license.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Where's the disconnect?
-
--- 
-Andrew Vasquez
+Index: linux-2.6/drivers/message/fusion/mptbase.h
+===================================================================
+--- linux-2.6.orig/drivers/message/fusion/mptbase.h	2005-10-19 15:07:26.000000000 +0200
++++ linux-2.6/drivers/message/fusion/mptbase.h	2005-10-19 15:09:35.000000000 +0200
+@@ -77,8 +77,8 @@
+ #define COPYRIGHT	"Copyright (c) 1999-2005 " MODULEAUTHOR
+ #endif
+ 
+-#define MPT_LINUX_VERSION_COMMON	"3.03.03"
+-#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.03.03"
++#define MPT_LINUX_VERSION_COMMON	"3.03.04"
++#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.03.04"
+ #define WHAT_MAGIC_STRING		"@" "(" "#" ")"
+ 
+ #define show_mptmod_ver(s,ver)  \
+Index: linux-2.6/drivers/message/fusion/mptsas.c
+===================================================================
+--- linux-2.6.orig/drivers/message/fusion/mptsas.c	2005-10-19 15:07:26.000000000 +0200
++++ linux-2.6/drivers/message/fusion/mptsas.c	2005-10-19 15:09:35.000000000 +0200
+@@ -167,12 +167,12 @@
+ static void mptsas_print_phy_pg1(SasPhyPage1_t *pg1)
+ {
+ 	printk("---- SAS PHY PAGE 1 ------------\n");
+-        printk("Invalid Dword Count=0x%x\n", pg1->InvalidDwordCount);
+-        printk("Running Disparity Error Count=0x%x\n",
++	printk("Invalid Dword Count=0x%x\n", pg1->InvalidDwordCount);
++	printk("Running Disparity Error Count=0x%x\n",
+ 			pg1->RunningDisparityErrorCount);
+-        printk("Loss Dword Synch Count=0x%x\n", pg1->LossDwordSynchCount);
+-        printk("PHY Reset Problem Count=0x%x\n", pg1->PhyResetProblemCount);
+-        printk("\n");
++	printk("Loss Dword Synch Count=0x%x\n", pg1->LossDwordSynchCount);
++	printk("PHY Reset Problem Count=0x%x\n", pg1->PhyResetProblemCount);
++	printk("\n");
+ }
+ 
+ static void mptsas_print_device_pg0(SasDevicePage0_t *pg0)
+@@ -188,8 +188,11 @@
+ 	printk("SAS Address=0x%llX\n", le64_to_cpu(sas_address));
+ 	printk("Target ID=0x%X\n", pg0->TargetID);
+ 	printk("Bus=0x%X\n", pg0->Bus);
+-	printk("PhyNum=0x%X\n", pg0->PhyNum);
+-	printk("AccessStatus=0x%X\n", le16_to_cpu(pg0->AccessStatus));
++	/* The PhyNum field specifies the PHY number of the parent
++	 * device this device is linked to
++	 */
++	printk("Parent Phy Num=0x%X\n", pg0->PhyNum);
++	printk("Access Status=0x%X\n", le16_to_cpu(pg0->AccessStatus));
+ 	printk("Device Info=0x%X\n", le32_to_cpu(pg0->DeviceInfo));
+ 	printk("Flags=0x%X\n", le16_to_cpu(pg0->Flags));
+ 	printk("Physical Port=0x%X\n", pg0->PhysicalPort);
+@@ -201,7 +204,7 @@
+ 	printk("---- SAS EXPANDER PAGE 1 ------------\n");
+ 
+ 	printk("Physical Port=0x%X\n", pg1->PhysicalPort);
+-	printk("PHY Identifier=0x%X\n", pg1->Phy);
++	printk("PHY Identifier=0x%X\n", pg1->PhyIdentifier);
+ 	printk("Negotiated Link Rate=0x%X\n", pg1->NegotiatedLinkRate);
+ 	printk("Programmed Link Rate=0x%X\n", pg1->ProgrammedLinkRate);
+ 	printk("Hardware Link Rate=0x%X\n", pg1->HwLinkRate);
