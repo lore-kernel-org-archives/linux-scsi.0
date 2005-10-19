@@ -1,58 +1,24 @@
-From: Steven Rostedt <rostedt@goodmis.org>
-Subject: Re: [PATCH] scsi_error thread exits in TASK_INTERRUPTIBLE state.
-Date: Wed, 19 Oct 2005 08:22:13 -0400 (EDT)
-Message-ID: <Pine.LNX.4.58.0510190811380.20634@localhost.localdomain>
-References: <5bdc1c8b0510181402o2d9badb0sd18012cf7ff2a329@mail.gmail.com>
- <1129693423.8910.54.camel@mindpipe> <1129695564.8910.64.camel@mindpipe>
- <Pine.LNX.4.58.0510190300010.20634@localhost.localdomain>
- <Pine.LNX.4.58.0510190349590.20634@localhost.localdomain>
- <20051019113131.GA30553@infradead.org> <Pine.LNX.4.58.0510190751070.20634@localhost.localdomain>
- <20051019115435.GA31007@infradead.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 5/12]  qla2xxx: Add support for embedded ISP24xx firmware.
+Date: Wed, 19 Oct 2005 17:19:30 +0100
+Message-ID: <20051019161929.GA3862@infradead.org>
+References: <20051013231534.27191.19815.sendpatchset@plap.qlogic.com> <20051013231624.27191.96727.sendpatchset@plap.qlogic.com> <20051014094717.GA22347@infradead.org> <20051014165035.GB19098@plap.qlogic.org> <20051015115801.GB24919@infradead.org> <20051017213405.GG9192@plap.qlogic.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-01.nyroc.rr.com ([24.24.2.55]:36058 "EHLO
-	ms-smtp-01.nyroc.rr.com") by vger.kernel.org with ESMTP
-	id S1750848AbVJSMWr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Oct 2005 08:22:47 -0400
-In-Reply-To: <20051019115435.GA31007@infradead.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:27015 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1750838AbVJSQTc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Oct 2005 12:19:32 -0400
+Content-Disposition: inline
+In-Reply-To: <20051017213405.GG9192@plap.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Lee Revell <rlrevell@joe-job.com>, Mark Knecht <markknecht@gmail.com>, linux-kernel@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, rmk@arm.linux.org.uk, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, andmike@us.ibm.com, linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+On Mon, Oct 17, 2005 at 02:34:05PM -0700, Andrew Vasquez wrote:
+> Ok, so what's going to be the policy regarding firmware updates:
 
-Once again here's the patch.
-
-Andrew, can you pull my previous one in favor of this one
-
-I'm one of the rare breeds of programmers that over document, at least I
-didn't comment "x equals a plus b" for "x = a + b" but I'm sure Christoph
-would say that I was pretty close ;-)
-
-Description:
-
-Found in the -rt patch set.  The scsi_error thread likely will be in the
-TASK_INTERRUPTIBLE state upon exit.  This patch fixes this bug.
-
-Ingo,
-
-I take it that you don't care about the comment for RT.
-
--- Steve
-
-Signed-off-by: Steven Rostedt <rostedt@goodmis.org>
-
-Index: linux-2.6.14-rc4/drivers/scsi/scsi_error.c
-===================================================================
---- linux-2.6.14-rc4.orig/drivers/scsi/scsi_error.c	2005-10-19 03:37:55.000000000 -0400
-+++ linux-2.6.14-rc4/drivers/scsi/scsi_error.c	2005-10-19 08:10:23.000000000 -0400
-@@ -1645,6 +1645,8 @@
- 		set_current_state(TASK_INTERRUPTIBLE);
- 	}
-
-+	__set_current_state(TASK_RUNNING);
-+
- 	SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler scsi_eh_%d"
- 					  " exiting\n",shost->host_no));
-
+Updates for existing drivers are fine mid-term, just please avoid adding new
+ones.
