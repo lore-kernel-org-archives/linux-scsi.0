@@ -1,56 +1,32 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] procfs support for sgiwd93
-Date: Wed, 19 Oct 2005 17:40:33 -0400
-Message-ID: <1129758034.9618.14.camel@mulgrave>
-References: <20051015013824.GA25248@linux-mips.org>
-	 <20051017104312.GB22710@infradead.org>  <43538988.3000204@torque.net>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Basil Snyder <solicited@phlexmall.com>
+Subject: sshs.. get low cost software cds or download!
+Date: Wed, 19 Oct 2005 15:10:52 -0700
+Message-ID: <10669012031.11444457561@host242-122.pool8254.interbusiness.it>
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:39132 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751368AbVJSVkx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Oct 2005 17:40:53 -0400
-In-Reply-To: <43538988.3000204@torque.net>
+Received: from zeus1.kernel.org ([204.152.191.4]:47296 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751578AbVJSWLH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Oct 2005 18:11:07 -0400
+Received: from host242-122.pool8254.interbusiness.it (host242-122.pool8254.interbusiness.it [82.54.122.242])
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id j9JMAqkG026018
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Oct 2005 15:10:54 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, Christoph Hellwig <hch@infradead.org>
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2005-10-17 at 21:22 +1000, Douglas Gilbert wrote: 
-> Is there any such policy?
+Software should be easy to use!
+http://ivz.46sg98sv9wrc4m4z9m4zr444.vicelessai.com/?iiun
 
-Yes, there is.  It's not actually mine, it's the direction coming out of
-several kernel summits.  /proc is to be moved back to handling process
-information. /sys should be used for other ancillary information
-exporting.
 
-This policy can be interpreted with some elasticity depending on what an
-author wants to do.
+What you don't see with your eyes, don't invent with your mouth. 
+Just trust yourself, then you will know how to live.   
 
-> Christoph Hellwig previously has used this purported policy
-> to reject scsi procfs bug fixes:
-> "[PATCH] scsi: /proc/scsi/scsi patch for large number of devices"
-> As for alternate tools to 'cat /proc/scsi/scsi', I
-> am not aware of many distributions using lsscsi (debian
-> and gentoo do), perhaps there are other tools. I
-> suspect a lot of folks are still using 'cat /proc/scsi/scsi'.
+Do not employ handsome servants.        
+Military intelligence is a contradiction in terms.      
 
-/proc/scsi/scsi has an awful lot of failure cases.  The most annoying
-one seems to be periodically losing hot added devices.
-
-The reason for not fixing something if it's not a severe bug is simply
-that if we keep /proc/scsi/scsi fully functional and up to date, then
-the distributions will have no incentive to move away from it.
-
-> Does Christoph Hellwig have the right to NACK/veto
-> etc work that is not his when you are the SCSI maintainer?
-
-Technically no-one truly gets a veto since there are many ways code can
-end up in the vanilla kernel; however, everyone gets to express their
-opinion ...
-
-James
+'Tisn't life that matters! 'Tis the courage you bring to it.  
+Hope is nature's veil for hiding truth's nakedness.     
 
 
