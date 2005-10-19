@@ -1,83 +1,96 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/4] mptsas: white space fixes and version bump
-Date: Wed, 19 Oct 2005 20:01:47 +0200
-Message-ID: <20051019180147.GE21488@lst.de>
+Subject: [PATCH 1/4] sas: add flag for locally attached PHYs
+Date: Wed, 19 Oct 2005 20:01:17 +0200
+Message-ID: <20051019180117.GB21488@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:30600 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S1751209AbVJSSBu (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:28552 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S1751207AbVJSSBk (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Oct 2005 14:01:50 -0400
+	Wed, 19 Oct 2005 14:01:40 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@steeleye.com, Eric.Moore@lsil.com
 Cc: linux-scsi@vger.kernel.org
 
-Various whitespace and comment fixes from Eric, aswell as a version
-bump.
+Add a flag to mark a PHY as attached to the HBA as opposed to beeing on
+an expander.  This is needed because various features are only supported
+on those.  This is a crude hack, the proper fix would be to use
+different classes for host-attached vs expander phys.  I'm looking into
+that.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/drivers/message/fusion/mptbase.h
-===================================================================
---- linux-2.6.orig/drivers/message/fusion/mptbase.h	2005-10-19 15:07:26.000000000 +0200
-+++ linux-2.6/drivers/message/fusion/mptbase.h	2005-10-19 15:09:35.000000000 +0200
-@@ -77,8 +77,8 @@
- #define COPYRIGHT	"Copyright (c) 1999-2005 " MODULEAUTHOR
- #endif
- 
--#define MPT_LINUX_VERSION_COMMON	"3.03.03"
--#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.03.03"
-+#define MPT_LINUX_VERSION_COMMON	"3.03.04"
-+#define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.03.04"
- #define WHAT_MAGIC_STRING		"@" "(" "#" ")"
- 
- #define show_mptmod_ver(s,ver)  \
 Index: linux-2.6/drivers/message/fusion/mptsas.c
 ===================================================================
---- linux-2.6.orig/drivers/message/fusion/mptsas.c	2005-10-19 15:07:26.000000000 +0200
-+++ linux-2.6/drivers/message/fusion/mptsas.c	2005-10-19 15:09:35.000000000 +0200
-@@ -167,12 +167,12 @@
- static void mptsas_print_phy_pg1(SasPhyPage1_t *pg1)
- {
- 	printk("---- SAS PHY PAGE 1 ------------\n");
--        printk("Invalid Dword Count=0x%x\n", pg1->InvalidDwordCount);
--        printk("Running Disparity Error Count=0x%x\n",
-+	printk("Invalid Dword Count=0x%x\n", pg1->InvalidDwordCount);
-+	printk("Running Disparity Error Count=0x%x\n",
- 			pg1->RunningDisparityErrorCount);
--        printk("Loss Dword Synch Count=0x%x\n", pg1->LossDwordSynchCount);
--        printk("PHY Reset Problem Count=0x%x\n", pg1->PhyResetProblemCount);
--        printk("\n");
-+	printk("Loss Dword Synch Count=0x%x\n", pg1->LossDwordSynchCount);
-+	printk("PHY Reset Problem Count=0x%x\n", pg1->PhyResetProblemCount);
-+	printk("\n");
+--- linux-2.6.orig/drivers/message/fusion/mptsas.c	2005-10-19 15:30:29.000000000 +0200
++++ linux-2.6/drivers/message/fusion/mptsas.c	2005-10-19 19:49:35.000000000 +0200
+@@ -760,7 +760,7 @@
  }
  
- static void mptsas_print_device_pg0(SasDevicePage0_t *pg0)
-@@ -188,8 +188,11 @@
- 	printk("SAS Address=0x%llX\n", le64_to_cpu(sas_address));
- 	printk("Target ID=0x%X\n", pg0->TargetID);
- 	printk("Bus=0x%X\n", pg0->Bus);
--	printk("PhyNum=0x%X\n", pg0->PhyNum);
--	printk("AccessStatus=0x%X\n", le16_to_cpu(pg0->AccessStatus));
-+	/* The PhyNum field specifies the PHY number of the parent
-+	 * device this device is linked to
-+	 */
-+	printk("Parent Phy Num=0x%X\n", pg0->PhyNum);
-+	printk("Access Status=0x%X\n", le16_to_cpu(pg0->AccessStatus));
- 	printk("Device Info=0x%X\n", le32_to_cpu(pg0->DeviceInfo));
- 	printk("Flags=0x%X\n", le16_to_cpu(pg0->Flags));
- 	printk("Physical Port=0x%X\n", pg0->PhysicalPort);
-@@ -201,7 +204,7 @@
- 	printk("---- SAS EXPANDER PAGE 1 ------------\n");
+ static int mptsas_probe_one_phy(struct device *dev,
+-		struct mptsas_phyinfo *phy_info, int index)
++		struct mptsas_phyinfo *phy_info, int index, int local)
+ {
+ 	struct sas_phy *port;
+ 	int error;
+@@ -853,6 +853,9 @@
+ 		break;
+ 	}
  
- 	printk("Physical Port=0x%X\n", pg1->PhysicalPort);
--	printk("PHY Identifier=0x%X\n", pg1->Phy);
-+	printk("PHY Identifier=0x%X\n", pg1->PhyIdentifier);
- 	printk("Negotiated Link Rate=0x%X\n", pg1->NegotiatedLinkRate);
- 	printk("Programmed Link Rate=0x%X\n", pg1->ProgrammedLinkRate);
- 	printk("Hardware Link Rate=0x%X\n", pg1->HwLinkRate);
++	if (local)
++		port->local_attached = 1;
++
+ 	error = sas_phy_add(port);
+ 	if (error) {
+ 		sas_phy_free(port);
+@@ -918,7 +921,7 @@
+ 		}
+ 
+ 		mptsas_probe_one_phy(&ioc->sh->shost_gendev,
+-				     &port_info->phy_info[i], *index);
++				     &port_info->phy_info[i], *index, 1);
+ 		(*index)++;
+ 	}
+ 
+@@ -989,7 +992,8 @@
+ 			}
+ 		}
+ 
+-		mptsas_probe_one_phy(parent, &port_info->phy_info[i], *index);
++		mptsas_probe_one_phy(parent, &port_info->phy_info[i],
++				     *index, 0);
+ 		(*index)++;
+ 	}
+ 
+Index: linux-2.6/include/scsi/scsi_transport_sas.h
+===================================================================
+--- linux-2.6.orig/include/scsi/scsi_transport_sas.h	2005-10-19 15:30:29.000000000 +0200
++++ linux-2.6/include/scsi/scsi_transport_sas.h	2005-10-19 19:49:35.000000000 +0200
+@@ -56,6 +56,9 @@
+ 	enum sas_linkrate	maximum_linkrate;
+ 	u8			port_identifier;
+ 
++	/* internal state */
++	unsigned int		local_attached : 1;
++
+ 	/* link error statistics */
+ 	u32			invalid_dword_count;
+ 	u32			running_disparity_error_count;
+Index: linux-2.6/drivers/scsi/scsi_transport_sas.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/scsi_transport_sas.c	2005-10-19 19:49:35.000000000 +0200
++++ linux-2.6/drivers/scsi/scsi_transport_sas.c	2005-10-19 19:50:55.000000000 +0200
+@@ -266,6 +266,9 @@
+ 	struct sas_internal *i = to_sas_internal(shost->transportt);	\
+ 	int error;							\
+ 									\
++	if (!phy->local_attached)					\
++		return -EINVAL;						\
++									\
+ 	error = i->f->get_linkerrors(phy);				\
+ 	if (error)							\
+ 		return error;						\
