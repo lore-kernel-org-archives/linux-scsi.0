@@ -1,32 +1,78 @@
-From: Basil Snyder <solicited@phlexmall.com>
-Subject: sshs.. get low cost software cds or download!
-Date: Wed, 19 Oct 2005 15:10:52 -0700
-Message-ID: <10669012031.11444457561@host242-122.pool8254.interbusiness.it>
-Content-Type: text/plain; charset=us-ascii
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] Improve code for detecting errors near the end of a CD
+Date: Thu, 20 Oct 2005 12:56:46 +1000
+Message-ID: <4357076E.2000006@torque.net>
+References: <Pine.LNX.4.44L0.0510191627270.4439-100000@iolanthe.rowland.org>
+Reply-To: dougg@torque.net
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:47296 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751578AbVJSWLH (ORCPT
+Received: from zorg.st.net.au ([203.16.233.9]:60324 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1751710AbVJTCzy (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Oct 2005 18:11:07 -0400
-Received: from host242-122.pool8254.interbusiness.it (host242-122.pool8254.interbusiness.it [82.54.122.242])
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id j9JMAqkG026018
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Oct 2005 15:10:54 -0700
+	Wed, 19 Oct 2005 22:55:54 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0510191627270.4439-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-Software should be easy to use!
-http://ivz.46sg98sv9wrc4m4z9m4zr444.vicelessai.com/?iiun
+Alan Stern wrote:
+> On Sat, 15 Oct 2005, Douglas Gilbert wrote:
+> 
+> 
+>>Alan,
+>>In include/scsi/scsi_eh.h there are several helper functions
+>>to aid processing SCSI errors. This includes SCSI sense data
+>>descriptor format (which won't be needed for DVD/HD/BD for
+>>some time with a (2**32 * 2048) byte maximum using existing
+>>fixed sense data format). However there is
+>>scsi_get_sense_info_fld() to fetch the info field.
+>>
+>>sd, st and sg have been converted to use these helpers,
+>>where appropriate.
+>>
+>>MMC-4 does not mention that the valid bit needs to
+>>be set on a MEDIUM/HARDWARE error and I have seen
+>>real life examples of this. [So it's poorly defined
+>>if one gets a medium error on lba 0.] You may also like to
+>>consider deferred errors which can occur according to
+>>MMC-4.
+> 
+> 
+> I just read the scsi_get_sense_info_fld routine.  For fixed format data, 
+> it won't return anything if the Valid bit isn't set!
+> 
+> This makes it hard to adopt both your first two suggestions... :-)
 
+Alan,
+Ouch.
+Here is the linux kernel version (scsi_error.c):
 
-What you don't see with your eyes, don't invent with your mouth. 
-Just trust yourself, then you will know how to live.   
+    case 0x70:
+    case 0x71:
+        if (sense_buffer[0] & 0x80) {
+            *info_out = (sense_buffer[3] << 24) +
+                        (sense_buffer[4] << 16) +
+                        (sense_buffer[5] << 8) +
+                        sense_buffer[6];
+            return 1;
+        } else
+            return 0;
 
-Do not employ handsome servants.        
-Military intelligence is a contradiction in terms.      
+and here is the sg3_utils version (sg_lib.c):
 
-'Tisn't life that matters! 'Tis the courage you bring to it.  
-Hope is nature's veil for hiding truth's nakedness.     
+    case 0x70:
+    case 0x71:
+        if (info_outp)
+            *info_outp = (sensep[3] << 24) + (sensep[4] << 16) +
+                         (sensep[5] << 8) + sensep[6];
+        return (sensep[0] & 0x80) ? 1 : 0;
+
+The latter implementation takes account of MMC devices.
+So I probably need to send a patch.
+
+Doug Gilbert
 
 
