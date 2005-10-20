@@ -1,76 +1,42 @@
-From: Robin Bowes <robin-lists@robinbowes.com>
-Subject: Re: Recover SCSI disks
-Date: Fri, 21 Oct 2005 13:43:28 +0100
-Message-ID: <djanpg$h11$1@sea.gmane.org>
-References: <dj8a8v$ta0$1@sea.gmane.org> <4358404B.9080006@torque.net> <4358D336.7040303@robinbowes.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 0/16]  qla2xxx: update qla2xxx driver to 8.01.02-k.
+Date: Thu, 20 Oct 2005 18:47:44 -0500
+Message-ID: <1129852064.3115.18.camel@mulgrave>
+References: <20051013231534.27191.19815.sendpatchset@plap.qlogic.com>
+	 <20051019174209.GP9087@plap.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:25498 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S964927AbVJUMpu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Oct 2005 08:45:50 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1ESwHG-0003Xa-56
-	for linux-scsi@vger.kernel.org; Fri, 21 Oct 2005 14:45:42 +0200
-Received: from 83-216-145-213.pambow882.adsl.metronet.co.uk ([83.216.145.213])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Oct 2005 14:45:42 +0200
-Received: from robin-lists by 83-216-145-213.pambow882.adsl.metronet.co.uk with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Oct 2005 14:45:42 +0200
-In-Reply-To: <4358D336.7040303@robinbowes.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:55172 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964948AbVJUOTN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Oct 2005 10:19:13 -0400
+In-Reply-To: <20051019174209.GP9087@plap.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Robin Bowes said the following on 21/10/2005 12:38:
-> Douglas Gilbert said the following on 21/10/2005 02:11:
+On Wed, 2005-10-19 at 10:42 -0700, Andrew Vasquez wrote:
+> Given all the activity promted with this patchset, could you provide
+> some insight on which patches you have queued for inclusion into
+> scsi-misc?
 > 
->> Robin,
->> You may like to fetch sg3_utils and try sg_format thus:
->>    sg_format /dev/sda
->> assuming a disk you have fetched from the array is placed
->> at /dev/sda .
-> 
-> 
-> Hmm, sg3_utils doesn't seem to contain sg_format:
-> 
-> [root@compact ~]# rpm -ql sg3_utils
-> /usr/bin/scsi_devfs_scan
-> /usr/bin/sg_dd
-> /usr/bin/sg_inq
-> /usr/bin/sg_logs
-> /usr/bin/sg_map
-> /usr/bin/sg_modes
-> /usr/bin/sg_rbuf
-> /usr/bin/sg_read
-> /usr/bin/sg_readcap
-> /usr/bin/sg_reset
-> /usr/bin/sg_scan
-> /usr/bin/sg_senddiag
-> /usr/bin/sg_start
-> /usr/bin/sg_test_rwbuf
-> /usr/bin/sg_turs
-> /usr/bin/sginfo
-> /usr/bin/sgm_dd
-> /usr/bin/sgp_dd
-> (man pages snipped)
+> The scsi-misc-2.6 GIT tree has been dormant for some time and I would
+> like to have some direction on which patches I should cherrypick and
+> rebase given a number of updates to linux-2.6.git for the qla2xxx
+> driver as well as the rport interface updates proposed by James S.
 
-Let me re-phrase that, the Fedora Core 4 sg3_utils-1.06-5 rpm doesn't 
-contain sg_format (the above listing is from there).
+Actually, none at the moment.  When a patch set comes as a list of
+patches, I generally tend to assume that they are all interdependent
+(although sometimes if there's objection to only a single component
+patch, I will pull that out if possible).
 
-I see from rpmfind that it is in the mandrake sg3_utils-1.16-1mdk rpm.
+So for the monolithic set, I'll put them in when all the objections are
+worked out on the list.  If there are pieces I can apply now which
+everyone's happy with, tell me what they are.
 
-Ah, I've got the latest version from http://sg.torque.net/sg/index.html
+James
 
-R.
--- 
-http://robinbowes.com
-
-If a man speaks in a forest,
-and his wife's not there,
-is he still wrong?
 
