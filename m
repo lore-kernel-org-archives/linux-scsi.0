@@ -1,49 +1,58 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/4] sas: add flag for locally attached PHYs
-Date: Thu, 20 Oct 2005 19:03:30 +0200
-Message-ID: <20051020170330.GA16458@lst.de>
-References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com> <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>
+From: Jack Hammer <jack_hammer@adaptec.com>
+Subject: ips.c warnings
+Date: Thu, 20 Oct 2005 12:59:54 -0400
+Message-ID: <4357CD0A.10300@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:49827 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S932488AbVJTRDk (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:13740 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932451AbVJTRAB (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Oct 2005 13:03:40 -0400
-Content-Disposition: inline
-In-Reply-To: <4357CB03.4020400@adaptec.com>
+	Thu, 20 Oct 2005 13:00:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: akmpm@osdl.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, ipslinux@adaptec.com
 
-On Thu, Oct 20, 2005 at 12:51:15PM -0400, Luben Tuikov wrote:
-> On 10/20/05 12:01, Christoph Hellwig wrote:
-> > 
-> > As you mentioned doing link reset and reporting stats on expanders
-> > is done using SMP, and thus totally independent of the driver used.
-> 
-> Not quite. "Dispatching to" would be driver dependent.  If you implement
-> sdi_register_provider(struct ...); then you can make everyone happy
-> in the _shortest_ amount of time.
-> 
-> I'd suggest a reading of the SDI, SAS and SAM specs for an insight
-> of how it all ties together.
+This patch ( applied to 2.6.14-rc4-mm1 ) keeps all the ips code intact for both 2.4 and 2.6 kernels, and should eliminate the compiler warnings ( in 2.6 ) reported by Andrew.
 
-Thanks Luben.  You might not be able to imagine it, but there are people
-other than you who are able to read specs, and despite having read them
-they can actually talk like a normal human without referencing them in
-every second sentence.  That beeing said SDI is not a final
-specification.  It's a draft that's probablt not going to make it as a
-t10 standard because the main pushers have backed of a bit again.
+I did not use kmap() because these routines can be called from the interrupt handler context and kmap() can sleep.
 
-We are not going to implement SDI in the kernel.  Long before SDI or
-it's predecessor, HP CSMI were designed we made it clear we're not going
-to accept wide ioctl-APIs, especially when they're even bad for old
-ioctl API standards.  The CSMI spec has been passed around in an early
-phase and been totally rejected, I think even publically on linux-scsi.
-HP decided to move ahead despite that and did a huge mis-services to
-their customers.  It's not my problem if big companies can't listen and
-do things their customers have to pay for, and it's certainly not our
-job to work around their idiocy.
 
+--- 2.6.14-rc4/drivers/scsi/ips.c	Thu Oct 20 11:26:50 2005
++++ devel/drivers/scsi/ips.c	Thu Oct 20 11:33:39 2005
+@@ -220,13 +220,15 @@
+ #include <linux/blk.h>
+ #include "sd.h"
+ #define IPS_SG_ADDRESS(sg)       ((sg)->address)
++#define IPS_CHECK_SG_ADDRESS(sg) ((sg)->address)
+ #define IPS_LOCK_SAVE(lock,flags) spin_lock_irqsave(&io_request_lock,flags)
+ #define IPS_UNLOCK_RESTORE(lock,flags) spin_unlock_irqrestore(&io_request_lock,flags)
+ #ifndef __devexit_p
+ #define __devexit_p(x) x
+ #endif
+ #else
+-#define IPS_SG_ADDRESS(sg)      (page_address((sg)->page) ? \
++#define IPS_SG_ADDRESS(sg)       page_address((sg)->page)+(sg)->offset
++#define IPS_CHECK_SG_ADDRESS(sg) (page_address((sg)->page) ? \
+                                    page_address((sg)->page)+(sg)->offset : NULL)
+ #define IPS_LOCK_SAVE(lock,flags) do{spin_lock(lock);(void)flags;}while(0)
+ #define IPS_UNLOCK_RESTORE(lock,flags) do{spin_unlock(lock);(void)flags;}while(0)
+@@ -3659,7 +3661,7 @@
+ 		struct scatterlist *sg = scmd->request_buffer;
+ 		for (i = 0, xfer_cnt = 0;
+ 		     (i < scmd->use_sg) && (xfer_cnt < count); i++) {
+-			if (!IPS_SG_ADDRESS(&sg[i]))
++			if (!IPS_CHECK_SG_ADDRESS(&sg[i]))
+ 				return;
+ 			min_cnt = min(count - xfer_cnt, sg[i].length);
+ 			memcpy(IPS_SG_ADDRESS(&sg[i]), &cdata[xfer_cnt],
+@@ -3691,7 +3693,7 @@
+ 		struct scatterlist *sg = scmd->request_buffer;
+ 		for (i = 0, xfer_cnt = 0;
+ 		     (i < scmd->use_sg) && (xfer_cnt < count); i++) {
+-			if (!IPS_SG_ADDRESS(&sg[i]))
++			if (!IPS_CHECK_SG_ADDRESS(&sg[i]))
+ 				return;
+ 			min_cnt = min(count - xfer_cnt, sg[i].length);
+ 			memcpy(&cdata[xfer_cnt], IPS_SG_ADDRESS(&sg[i]),
