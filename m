@@ -1,51 +1,67 @@
-From: Robin Bowes <robin-lists@robinbowes.com>
-Subject: Recover SCSI disks
-Date: Thu, 20 Oct 2005 15:40:31 +0100
-Message-ID: <dj8a8v$ta0$1@sea.gmane.org>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH 1/4] sas: add flag for locally attached PHYs
+Date: Thu, 20 Oct 2005 09:25:54 -0600
+Message-ID: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:9374 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S1751124AbVJTO5g (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:9348 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S932138AbVJTP0L (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Oct 2005 10:57:36 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1ESblI-0006Da-6O
-	for linux-scsi@vger.kernel.org; Thu, 20 Oct 2005 16:51:20 +0200
-Received: from 83-216-145-213.pambow882.adsl.metronet.co.uk ([83.216.145.213])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2005 16:51:20 +0200
-Received: from robin-lists by 83-216-145-213.pambow882.adsl.metronet.co.uk with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2005 16:51:20 +0200
+	Thu, 20 Oct 2005 11:26:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>, "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Cc: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-Hi,
+On Wednesday, October 19, 2005 3:00 PM, Luben Tuikov wrote: 
 
-I've got a Compaq U2 storage array connected to a Compaw Smart 2/p
-controller with an assortment of 4.3GB and 9.1GB disks that I use for
-testing purposes.
+> 
+> On 10/19/05 16:08, Moore, Eric Dean wrote:
+> > Luben:  He is adding support for linkerrors and link/phy reset;
+> > these for for CSMI/SDI API.
+> > 
+> > Can you in your driver retreive link errors for the links 
+> on the expanders?
+> 
+> Yes. (offloaded to user space)
+> 
 
-Some of the drives have "died" on me, i.e. I get yellow lights when they
-are plugged into the arrays.
+I had a very good discussion with Luben over the 
+phone last night.
 
-Is it possible to do anything low-level to ressurect these drives? e.g.
-take them out of their caddies, connected them directly to a SCSI
-controller and low-level format them or something?
+Luben clarified this for me in regards to expanders:
 
-(There's no data on them - I just want them to work again!)
+http://www.t10.org/drafts.htm#sas2 
+The linkerrors can be done by issuing a SMP passthru
+sending SMP_REPORT_ERROR_LOG. Section 10.4.3.6
 
-Any suggestions appreciated.
+The link/phy reset can be done by issuing a SMP passthru
+sending SMP_PHY_CONTROL. Section 10.4.3.10
 
-R.
--- 
-http://robinbowes.com
+The mpt fusion f/w supports smp passthru, and we could for
+these attributes do SMP passthru if we wanted to return
+this data for expanders.  Our f/w only provides a easy special 
+wrapper config page for hba phys. For expanders, we
+are going to have to do smp passthru.
 
-If a man speaks in a forest,
-and his wife's not there,
-is he still wrong?
+So Christoph what should we do in driver?  Ignore returning
+data for expanders?  
 
+Luben suggestion(correct me if I'm wrong) is this should be 
+done thru user space, instead of exporting this in the 
+/sys/class/sas_phy attributes.  Thus we need to export a 
+SMP_PASSTHRU mechanism.  I believe there is discussion
+by Christoph ( and I believe Luben backs this idea) of doing 
+all this thru the /dev/sg interface.
+
+
+> 
+> > What and where can I get this?
+> 
+> http://linux.adaptec.com/sas/
+> Also see my sig.
+
+Thanks. I will check it out.
+
+Eric Moore
