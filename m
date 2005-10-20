@@ -1,78 +1,33 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
+From: Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH 1/4] sas: add flag for locally attached PHYs
-Date: Thu, 20 Oct 2005 11:55:45 -0400
-Message-ID: <4357BE01.5060501@adaptec.com>
+Date: Thu, 20 Oct 2005 18:01:56 +0200
+Message-ID: <20051020160155.GA14296@lst.de>
 References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:38554 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932344AbVJTPzu (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:39586 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S932366AbVJTQCG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Oct 2005 11:55:50 -0400
+	Thu, 20 Oct 2005 12:02:06 -0400
+Content-Disposition: inline
 In-Reply-To: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com, linux-scsi@vger.kernel.org
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Christoph Hellwig <hch@lst.de>, jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-On 10/20/05 11:25, Moore, Eric Dean wrote:
-> 
-> I had a very good discussion with Luben over the 
-> phone last night.
-> 
-> Luben clarified this for me in regards to expanders:
-> 
-> http://www.t10.org/drafts.htm#sas2 
-> The linkerrors can be done by issuing a SMP passthru
-> sending SMP_REPORT_ERROR_LOG. Section 10.4.3.6
-
-Example of it being used is shown in this user space program
-drivers/scsi/sas/expanders_conf.c:343:
-static int report_phy_error_log(char *smp_portal_name, int phy_id)
-
-> The link/phy reset can be done by issuing a SMP passthru
-> sending SMP_PHY_CONTROL. Section 10.4.3.10
-
-Example of it being use is shown in
-drivers/scsi/sas/sas_expander.c:484:
-static int smp_phy_control(struct domain_device *dev, int phy_id,
-			   enum phy_func phy_func)
-
-> The mpt fusion f/w supports smp passthru, and we could for
-> these attributes do SMP passthru if we wanted to return
-> this data for expanders.
-
-> Our f/w only provides a easy special 
-> wrapper config page for hba phys.
-
-And this is correct in in line with SDI/SAS.
-
-This method can be used by drivers/scsi/sdi.c.
-And it fits both yours and our simplementation.
-
-Dispatching to your implementation would go to FW, whose
-interface you'll have to implement.  Remember you have
-2 tasks: drivers/scsi/sdi.c and the FW dependent way
-of dispatching this to the FW for LSI.
-
-As to ours, it would go to
-
-	/* Phy management */
-	int (*lldd_control_phy)(struct sas_phy *, enum phy_func);
-
-function stub in the of the sas_ha_struct structure as I showed
-yesterday in this thread.
-
-> For expanders, we
-> are going to have to do smp passthru.
-
-Makes sense.
-
+On Thu, Oct 20, 2005 at 09:25:54AM -0600, Moore, Eric Dean wrote:
 > So Christoph what should we do in driver?  Ignore returning
 > data for expanders?  
-> 
+
+As you mentioned doing link reset and reporting stats on expanders
+is done using SMP, and thus totally independent of the driver used.
+It should be either implemented in the transport class or in userland.
+Doing it in the transport class has the advantage of a unified interface
+for hba phys and expander phys, doing it in userland has the advantage
+of less kernel bloat.
+
 > Luben suggestion(correct me if I'm wrong) is this should be 
 > done thru user space, instead of exporting this in the 
 > /sys/class/sas_phy attributes.  Thus we need to export a 
@@ -80,11 +35,8 @@ Makes sense.
 > by Christoph ( and I believe Luben backs this idea) of doing 
 > all this thru the /dev/sg interface.
 
-sg would be a good choice if the ioctl headers can be "translated"
-easily into sg headers -- this would make the whole task
-so much easier and straightforward.
+I've done a prototype using an SG_IO interface, but I'm not totally
+happy about.  I've also seen lubens interface and I'm not totally
+happy about it either.  Getting the interface right for SMP passthru
+is very hard.
 
-	Luben
--- 
-http://linux.adaptec.com/sas/
-http://www.adaptec.com/sas/
