@@ -1,50 +1,35 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH 1/4] sas: add flag for locally attached PHYs
-Date: Thu, 20 Oct 2005 09:45:39 -0600
-Message-ID: <91888D455306F94EBD4D168954A9457C048F0E9C@nacos172.co.lsil.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/4] sas: add flag for locally attached PHYs
+Date: Thu, 20 Oct 2005 17:49:42 +0200
+Message-ID: <20051020154942.GA12809@lst.de>
+References: <91888D455306F94EBD4D168954A9457C048F08AE@nacos172.co.lsil.com> <4356B3D3.1010203@adaptec.com> <20051020141123.GA7119@lst.de> <4357B7C5.9000709@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:40070 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932209AbVJTPp7 (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:27554 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S932215AbVJTPtu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Oct 2005 11:45:59 -0400
+	Thu, 20 Oct 2005 11:49:50 -0400
+Content-Disposition: inline
+In-Reply-To: <4357B7C5.9000709@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>, Christoph Hellwig <hch@lst.de>
-Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-On Thursday, October 20, 2005 9:29 AM,  Luben Tuikov wrote:
- 
-> >  That's why I need the local_attached flag as an internal
-> > helper - it's not actually exposed to userland so the implementation
-> 
-> 1) LSI does have SMP pass through.
-> 2) You absolutely do not need to represent all phys on the domain,
-> which is, as I said, a completely _crazy_ idea.  Look, even 
-> SDI doesn't
-> want you to do that.  What SDI wants you to do is issue SMP out.
-> LSI does have SMP pass through in FW so use that.
-> 3) All you care about is SDI, and SDI has a _spec_.  Your job is
-> twofold:
-> 	- implement drivers/scsi/sdi.c so we can all use it,
-> 	- implement the implementation/hw dependent way to
-> 	access SDI functionality for Fusion as described above
-> 	where I mention that this would be implementation dependent
-> 	(dispatching to).
-> 
+<lots of useless rants snipped>
 
-Thanks Luben - My concern is converting our SDI/CSMI ioctls
-into what is acceptable in mainstream kernel.  Agreed with Luben,
-all the expander data gathering, and configuration can be done 
-in user space, which is what is being done by the HP application
-folks which are currently using our internal CSMI enabled drivers.
- 
-I added expander support a couple rev's back since none of the 
-non-direct attached sas/sata devices were not scanned and reported
-to the block layer above.  This was a problem when our sas driver 
-was converted to work with sas_transport.
+Yes, we have two cases, local phy and phy on an expander.  The proper
+way to support remote phys is via smp passthru as we hopefully agree.
+Right now the sas transport class doesn't do smp passthru (although
+I'm working on it) so we only implement local link stats.  Once we have
+smp passthru we can support link stats, in one of two ways:
 
-Best Regards,
-Eric Moore
+ - do it in userland as in your example program.  in that case we don't
+   need to do anything in kernel land and need the local_attached flag
+   to disable this functionality for expander phys.
+ - do it in kernel, in which case the transport class must call the smp
+   passthru entry point of the driver to query link stats, so it needs
+   the local_attached flag aswell for that.
 
+What's your problem with the flag now?
