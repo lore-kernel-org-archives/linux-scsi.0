@@ -1,40 +1,31 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH 1/4] sas: add flag for locally attached PHYs
-Date: Thu, 20 Oct 2005 19:22:39 +0200
-Message-ID: <1129828959.2807.18.camel@laptopd505.fenrus.org>
-References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>
-	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>
-	 <20051020170330.GA16458@lst.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: ips.c warnings
+Date: Thu, 20 Oct 2005 18:29:14 +0100
+Message-ID: <20051020172914.GA32307@infradead.org>
+References: <A121ABA5B472B74EB59076B8E3C8F0190195F824@rtpe2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:22711 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:60599 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932496AbVJTRWu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Oct 2005 13:22:50 -0400
-In-Reply-To: <20051020170330.GA16458@lst.de>
+	id S932498AbVJTR3R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Oct 2005 13:29:17 -0400
+Content-Disposition: inline
+In-Reply-To: <A121ABA5B472B74EB59076B8E3C8F0190195F824@rtpe2k01.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, jejb@steeleye.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>, Luben Tuikov <luben_tuikov@adaptec.com>
+To: "Hammer, Jack" <Jack_Hammer@adaptec.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, akmpm@osdl.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, IpsLinux <ipslinux@adaptec.com>
 
+On Thu, Oct 20, 2005 at 01:25:28PM -0400, Hammer, Jack wrote:
+> 
+> I have no problem trying kmap_atomic() as long as there's a sound,
+> technical reason for changing code that's worked well for years.
+> 
+> What are the advantages/reasons of changing to use kmap_atomic() ?   It
+> appears very few SCSI drivers use it.
 
-> We are not going to implement SDI in the kernel.  Long before SDI or
-> it's predecessor, HP CSMI were designed we made it clear we're not going
-> to accept wide ioctl-APIs, especially when they're even bad for old
-> ioctl API standards.  The CSMI spec has been passed around in an early
-> phase and been totally rejected, 
-
-Just to say AYE on this:
-
-the problem with these things is that they define an IOCTL interface,
-while a library level interface would have been a LOT better. By far.
-That way the spec doesn't define the implementation, but only a real
-INTERFACE while allowing flexibility and compatibility. IOCTLs are just
-very very much the wrong layer to put such an interface. (just as
-posix/sus specify the (g)libc interface and not the kernel interface,
-although of course they impact it somewhat and glibc can for several
-things do a straight pass-through to the raw kernel interface).
-
+I think the real question is: what are these checks for.  You should never
+get an SG list with a NULL struct page or an SGL entry that points to address
+0 from the higher level code, and no other drivers checks for that condition.
 
