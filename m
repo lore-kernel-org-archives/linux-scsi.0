@@ -1,36 +1,37 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/4] sas: add flag for locally attached PHYs
-Date: Thu, 20 Oct 2005 16:11:23 +0200
-Message-ID: <20051020141123.GA7119@lst.de>
-References: <91888D455306F94EBD4D168954A9457C048F08AE@nacos172.co.lsil.com> <4356B3D3.1010203@adaptec.com>
+From: "Heck, Steve" <Steve.Heck@am.sony.com>
+Subject: ide-scsi module with SATA tape drive?
+Date: Thu, 20 Oct 2005 10:23:27 -0400
+Message-ID: <FFB1FA1FB113D3119E0E0090273AE57709539D54@US-BC-XMSG-1>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:57248 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S932075AbVJTOLw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Oct 2005 10:11:52 -0400
-Content-Disposition: inline
-In-Reply-To: <4356B3D3.1010203@adaptec.com>
+Received: from mail-kan.bigfish.com ([63.161.60.29]:20348 "EHLO
+	mail51-kan-R.bigfish.com") by vger.kernel.org with ESMTP
+	id S932170AbVJTOX3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2005 10:23:29 -0400
+Received: from mail51-kan.bigfish.com (localhost.localdomain [127.0.0.1])
+	by mail51-kan-R.bigfish.com (Postfix) with ESMTP id 705A6133294
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2005 14:23:29 +0000 (UTC)
+Received: from mail8.fw-bc.sony.com (mail8.fw-bc.sony.com [160.33.98.75])
+	(using TLSv1 with cipher EDH-RSA-DES-CBC3-SHA (168/168 bits))
+	(No client certificate requested)
+	by mail51-kan.bigfish.com (Postfix) with ESMTP id 49582132C74
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2005 14:23:29 +0000 (UTC)
+Received: from mail1.bc.in.sel.sony.com (mail1.bc.in.sel.sony.com [43.144.65.111])
+	by mail8.fw-bc.sony.com (8.12.11/8.12.11) with ESMTP id j9KENShU021557
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2005 14:23:28 GMT
+Received: from USBMAXIM01.am.sony.com (usbmaxim01.am.sony.com [43.145.108.25])
+	by mail1.bc.in.sel.sony.com (8.12.11/8.12.11) with ESMTP id j9KENSCb025769
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2005 14:23:28 GMT
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>, Christoph Hellwig <hch@lst.de>, jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, Oct 19, 2005 at 05:00:03PM -0400, Luben Tuikov wrote:
-> On 10/19/05 16:08, Moore, Eric Dean wrote:
-> > Luben:  He is adding support for linkerrors and link/phy reset;
-> > these for for CSMI/SDI API.
-> > 
-> > Can you in your driver retreive link errors for the links on the expanders?
-> 
-> Yes. (offloaded to user space)
-> 
-> You use the user space program called "expander_conf.c" to
-> send SMP requests and receive SMP responses.
+Does the ide-scsi module support SATA?  I have a SATA tape drive thay I
+want to use with the st and sg drivers.
 
-Yes, exactly.  On the other hand we don't have standard
-hardware-indepent ways of doing that for the PHYs of the HBA because
-the programming interfaces are to different and need to abstract it away
-in the kernel.  That's why I need the local_attached flag as an internal
-helper - it's not actually exposed to userland so the implementation
+Thanks!
+
