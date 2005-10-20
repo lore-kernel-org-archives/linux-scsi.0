@@ -1,46 +1,40 @@
-From: "Hammer, Jack" <Jack_Hammer@adaptec.com>
-Subject: RE: ips.c warnings
-Date: Thu, 20 Oct 2005 13:25:28 -0400
-Message-ID: <A121ABA5B472B74EB59076B8E3C8F0190195F824@rtpe2k01.adaptec.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH 1/4] sas: add flag for locally attached PHYs
+Date: Thu, 20 Oct 2005 19:22:39 +0200
+Message-ID: <1129828959.2807.18.camel@laptopd505.fenrus.org>
+References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>
+	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>
+	 <20051020170330.GA16458@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:33719 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932428AbVJTRZ3 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Oct 2005 13:25:29 -0400
-Content-Class: urn:content-classes:message
+Received: from pentafluge.infradead.org ([213.146.154.40]:22711 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932496AbVJTRWu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Oct 2005 13:22:50 -0400
+In-Reply-To: <20051020170330.GA16458@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: akmpm@osdl.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, IpsLinux <ipslinux@adaptec.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, jejb@steeleye.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>, Luben Tuikov <luben_tuikov@adaptec.com>
 
 
-I have no problem trying kmap_atomic() as long as there's a sound,
-technical reason for changing code that's worked well for years.
+> We are not going to implement SDI in the kernel.  Long before SDI or
+> it's predecessor, HP CSMI were designed we made it clear we're not going
+> to accept wide ioctl-APIs, especially when they're even bad for old
+> ioctl API standards.  The CSMI spec has been passed around in an early
+> phase and been totally rejected, 
 
-What are the advantages/reasons of changing to use kmap_atomic() ?   It
-appears very few SCSI drivers use it.
+Just to say AYE on this:
 
+the problem with these things is that they define an IOCTL interface,
+while a library level interface would have been a LOT better. By far.
+That way the spec doesn't define the implementation, but only a real
+INTERFACE while allowing flexibility and compatibility. IOCTLs are just
+very very much the wrong layer to put such an interface. (just as
+posix/sus specify the (g)libc interface and not the kernel interface,
+although of course they impact it somewhat and glibc can for several
+things do a straight pass-through to the raw kernel interface).
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Matthew Wilcox
-Sent: Thursday, October 20, 2005 1:06 PM
-To: Hammer, Jack
-Cc: akmpm@osdl.org; James.Bottomley@steeleye.com;
-linux-scsi@vger.kernel.org; IpsLinux
-Subject: Re: ips.c warnings
-
-On Thu, Oct 20, 2005 at 12:59:54PM -0400, Jack Hammer wrote:
-> I did not use kmap() because these routines can be called from the
-interrupt handler context and kmap() can sleep.
-
-Is there a reason you can't use kmap_atomic() then?
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org More majordomo info
-at  http://vger.kernel.org/majordomo-info.html
 
