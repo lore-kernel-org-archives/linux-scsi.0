@@ -1,37 +1,51 @@
-From: "Heck, Steve" <Steve.Heck@am.sony.com>
-Subject: ide-scsi module with SATA tape drive?
-Date: Thu, 20 Oct 2005 10:23:27 -0400
-Message-ID: <FFB1FA1FB113D3119E0E0090273AE57709539D54@US-BC-XMSG-1>
+From: Robin Bowes <robin-lists@robinbowes.com>
+Subject: Recover SCSI disks
+Date: Thu, 20 Oct 2005 15:40:31 +0100
+Message-ID: <dj8a8v$ta0$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-kan.bigfish.com ([63.161.60.29]:20348 "EHLO
-	mail51-kan-R.bigfish.com") by vger.kernel.org with ESMTP
-	id S932170AbVJTOX3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2005 10:23:29 -0400
-Received: from mail51-kan.bigfish.com (localhost.localdomain [127.0.0.1])
-	by mail51-kan-R.bigfish.com (Postfix) with ESMTP id 705A6133294
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2005 14:23:29 +0000 (UTC)
-Received: from mail8.fw-bc.sony.com (mail8.fw-bc.sony.com [160.33.98.75])
-	(using TLSv1 with cipher EDH-RSA-DES-CBC3-SHA (168/168 bits))
-	(No client certificate requested)
-	by mail51-kan.bigfish.com (Postfix) with ESMTP id 49582132C74
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2005 14:23:29 +0000 (UTC)
-Received: from mail1.bc.in.sel.sony.com (mail1.bc.in.sel.sony.com [43.144.65.111])
-	by mail8.fw-bc.sony.com (8.12.11/8.12.11) with ESMTP id j9KENShU021557
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2005 14:23:28 GMT
-Received: from USBMAXIM01.am.sony.com (usbmaxim01.am.sony.com [43.145.108.25])
-	by mail1.bc.in.sel.sony.com (8.12.11/8.12.11) with ESMTP id j9KENSCb025769
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2005 14:23:28 GMT
-content-class: urn:content-classes:message
+Received: from main.gmane.org ([80.91.229.2]:9374 "EHLO ciao.gmane.org")
+	by vger.kernel.org with ESMTP id S1751124AbVJTO5g (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Oct 2005 10:57:36 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1ESblI-0006Da-6O
+	for linux-scsi@vger.kernel.org; Thu, 20 Oct 2005 16:51:20 +0200
+Received: from 83-216-145-213.pambow882.adsl.metronet.co.uk ([83.216.145.213])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2005 16:51:20 +0200
+Received: from robin-lists by 83-216-145-213.pambow882.adsl.metronet.co.uk with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2005 16:51:20 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Does the ide-scsi module support SATA?  I have a SATA tape drive thay I
-want to use with the st and sg drivers.
+Hi,
 
-Thanks!
+I've got a Compaq U2 storage array connected to a Compaw Smart 2/p
+controller with an assortment of 4.3GB and 9.1GB disks that I use for
+testing purposes.
+
+Some of the drives have "died" on me, i.e. I get yellow lights when they
+are plugged into the arrays.
+
+Is it possible to do anything low-level to ressurect these drives? e.g.
+take them out of their caddies, connected them directly to a SCSI
+controller and low-level format them or something?
+
+(There's no data on them - I just want them to work again!)
+
+Any suggestions appreciated.
+
+R.
+-- 
+http://robinbowes.com
+
+If a man speaks in a forest,
+and his wife's not there,
+is he still wrong?
 
