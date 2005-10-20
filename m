@@ -1,86 +1,98 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH 1/4] sas: add flag for locally attached PHYs
-Date: Thu, 20 Oct 2005 16:10:56 -0400
-Message-ID: <4357F9D0.3090602@adaptec.com>
-References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>	 <20051020170330.GA16458@lst.de> <1129828959.2807.18.camel@laptopd505.fenrus.org>
+From: Bill Davidsen <davidsen@tmr.com>
+Subject: Re: scsi disk size reporting in dmesg
+Date: Thu, 20 Oct 2005 19:04:47 -0400
+Message-ID: <4358228F.1020604@tmr.com>
+References: <1129577044.17327.11.camel@dale.velocity.net>  <20051019220920.7c91b922.rdunlap@xenotime.net> <1129810635.22387.11.camel@dale.velocity.net> <Pine.LNX.4.58.0510201206570.11550@shark.he.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:19436 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932519AbVJTULD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Oct 2005 16:11:03 -0400
-In-Reply-To: <1129828959.2807.18.camel@laptopd505.fenrus.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964783AbVJTXEY@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.58.0510201206570.11550@shark.he.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Randy.Dunlap" <rdunlap@xenotime.net>
+Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, akpm@osdl.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, jejb@steeleye.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>
 
-On 10/20/05 13:22, Arjan van de Ven wrote:
->>We are not going to implement SDI in the kernel.  Long before SDI or
->>it's predecessor, HP CSMI were designed we made it clear we're not going
->>to accept wide ioctl-APIs, especially when they're even bad for old
->>ioctl API standards.  The CSMI spec has been passed around in an early
->>phase and been totally rejected, 
+Randy.Dunlap wrote:
+> On Thu, 20 Oct 2005, Dale Blount wrote:
 > 
 > 
-> Just to say AYE on this:
+>>On Wed, 2005-10-19 at 22:09 -0700, Randy.Dunlap wrote:
+>>
+>>>On Mon, 17 Oct 2005 15:24:04 -0400 Dale Blount wrote:
+>>>
+>>>
+>>>>Hello,
+>>>>
+>>>>I just added 2 external 1TB+ scsi devices to my i686 linux server
+>>>>running 2.6.13.4 connected to external LSI MPT card.  fdisk and df both
+>>>>show the sizes correctly (see below), but I'm worried that dmesg reports
+>>>>them incorrectly.
+>>>>
+>>>>SCSI device sda: 2460934144 512-byte hdwr sectors (160487 MB)
+>>>>SCSI device sdb: 3790438400 512-byte hdwr sectors (841193 MB)
+>>>>
+>>>>I don't think it's as simple as a variable overflow because both
+>>>>sdkp->capacity and mb look to be cast as unsigned long longs.  I know a
+>>>>workaround is to present less data per LUN, but I'd like to use it as
+>>>>it's setup currently if possible.  Is this just printing incorrectly or
+>>>>will I run into trouble when the device gets more full?
+>>>
+>>>The casts to (unsigned long long) just fix the printk() args to match
+>>>the format strings (and eliminate warnings).
+>>>
+>>>Looks to me like sdkp->capacity is correct.  The <mb> value looks
+>>>way off.  Since it's just printed here for user info, I don't see
+>>>how it can be a problem later on.
+>>>
+>>
+>>That's what I was hoping, but I didn't know for sure.  I figured I'd
+>>better ask to make sure my data wouldn't get truncated when the disk got
+>>fuller.  Between my first post and now, I've tested it by filling the
+>>drive with data and testing the md5sums for each file and it seems to
+>>work.  Other than the odd MB size reported, it seems to work just fine.
+>>
+>>
+>>>I don't see the error just yet.  Are there any other SCSI device-
+>>>related messages near these?  And just to confirm, but you must
+>>>have CONFIG_LBD (Large Block Device) enabled, right?
+>>>
+>>
+>>No, there are no other related messages near these other than the
+>>standard vendor/versions.  I did not enable CONFIG_LBD since the help
+>>says "bigger than 2TB", and I partitioned the storage system to present
+>>disks smaller than that.
 > 
-> the problem with these things is that they define an IOCTL interface,
-> while a library level interface would have been a LOT better. By far.
-> That way the spec doesn't define the implementation, but only a real
-> INTERFACE while allowing flexibility and compatibility. IOCTLs are just
-> very very much the wrong layer to put such an interface. (just as
-> posix/sus specify the (g)libc interface and not the kernel interface,
-> although of course they impact it somewhat and glibc can for several
-> things do a straight pass-through to the raw kernel interface).
+> 
+> I guessed at CONFIG_LBD=y last night.  Today I did the arithmetic
+> with CONFIG_LBD=n... and found the overflow.
+> 
+> In drivers/scsi/sd.c, approx. line #1260:
+> 
+> 		sector_t sz = sdkp->capacity * (hard_sector/256);
+> 
+> sz is 32 bits.
+> capacity is 32 bits with a value of 2,460,934,144 == 0x92ae_e000.
+> Then we multiply that by 2 (512 / 256)... and it overflows.
+> Should be hex 1_255d_c000, but we drop the '1'.
+> The rest of the calculation (with this new value) does result
+> in the 160487 MB, matching your log message.
+> 
+> I think that you can fix it (patch it) by changing that line
+> to make 'sz' be type 'u64' for now.
+> 
+> 		u64 sz = sdkp->capacity * (hard_sector/256);
+> 
+> But those divides by 1250 and 1950 are still voodoo to me.
+> 
+I think that just hides the real problem, and while that's useful to 
+stop the annoying numbers, the real problem is either (a) the value 
+calculated is wrong, (b) the size of sector_t is no longer large enough, 
+or (c) the type has been wrong all along and shouldn't be sector_t.
 
-Hi Arjan, how are you?
+If I understand what sector_t really is, (b) is my candidate.
 
-As I mentioned already, you do not have to take section 4 of SDI
-literally.  If you implement section 5 of SDI, the back end, then
-the front end is ajustable: sg/sysfs/whathaveyou1/whathaveyou2, etc.
-
-Here is an excerpt sent by me to another storage engineer:
---cut--
-Example of include/scsi/sdi/sdi.h (back-end):
-
-/* This struct describes section 5 of the SDI spec */
-struct sdi_functions_struct {
-	int (*sdi_get_driver_info)(struct sdi_header *header,
-				   struct sdi_driver_info *info);
-	int (*sdi_get_controller_config)(struct sdi_header *header,
-					 struct sdi_controller_config *config);
-	/* the rest of the stub SDI functions defined here */
-	...
-};
-	
-/* This struct describes the provider */
-struct sdi_provider_struct {
-	char *provider_name; /* some name, whatever, may not be necessary */
-	...
-	struct sdi_functions_struct sdi_functions;   /* see above */
-	...
-};
-
-And then the _calling_ of those functions is either via sg or sysfs
-or whatever makes people happy (done in drivers/scsi/sdi.c).
-
-Dispatching of those is driver/fw/hw/whatever dependent depending on
-the provider and what they registered.
-
-This will live in drivers/scsi/sdi.c and include/scsi/sdi/sdi.h
---cut--
-
-You see?  You don't need IOCTLs, yet you can be fully compliant
-to the spec so that already existing user space management programs
-can transition with minimal change to their code (over to the front
-end: sg/whatever).  This cuts down production costs in testing,
-verification/etc.  Makes things cheaper to deploy and customers
-are happy.
-
-	Luben
 -- 
-http://linux.adaptec.com/sas/
-http://www.adaptec.com/sas/
+    -bill davidsen (davidsen@tmr.com)
+"The secret to procrastination is to put things off until the
+  last possible moment - but no longer"  -me
