@@ -1,78 +1,44 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: ips.c warnings
-Date: Thu, 20 Oct 2005 13:38:30 -0400
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01C09D9E@otce2k03.adaptec.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: ips.c warnings
+Date: Thu, 20 Oct 2005 13:54:54 -0400
+Message-ID: <1129830894.3327.11.camel@mulgrave>
+References: <A121ABA5B472B74EB59076B8E3C8F0190195F824@rtpe2k01.adaptec.com>
+	 <20051020172914.GA32307@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:26811 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932501AbVJTRif convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Oct 2005 13:38:35 -0400
-content-class: urn:content-classes:message
+Received: from stat9.steeleye.com ([209.192.50.41]:38631 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932508AbVJTRzJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Oct 2005 13:55:09 -0400
+In-Reply-To: <20051020172914.GA32307@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: IpsLinux <ipslinux@adaptec.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, akmpm@osdl.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Hammer, Jack" <Jack_Hammer@adaptec.com>, Matthew Wilcox <matthew@wil.cx>, akmpm@osdl.org, linux-scsi@vger.kernel.org, IpsLinux <ipslinux@adaptec.com>
 
-Jack, do not forget legacy kernels. Christoph is notorious for dealing
-only with latest kernel only.
+On Thu, 2005-10-20 at 18:29 +0100, Christoph Hellwig wrote:
+> I think the real question is: what are these checks for.  You should never
+> get an SG list with a NULL struct page or an SGL entry that points to address
+> 0 from the higher level code, and no other drivers checks for that condition.
 
-Christoph, has this always been true? I believe it to be, but just in
-case ...
+Actually, no, that's not the problem.
 
-Sincerely -- Mark Salyzyn
+The macro is taking page_address((sgl)->page).  That can be null if the
+page isn't mapped into the kernel.  According to my reading of the code
+it's doing this for some type of buffering reasons which require an
+in-kernel memcpy().  If it finds page_address() to be NULL then it
+simply doesn't do the operation.  Scatter/Gather lists, by and large,
+come from a user so this operation should be failing all the time in any
+x86 machine that has > 1GB of memory, I would have thought.
 
+That's why I advocated using kmap (or kmap_atomic) because you need to
+make the page exist in the kernel while you do the copy (and then unmap
+it afterwards).  We've been having to add this operation to quite a lot
+of raid drivers recently because of the changes to SCSI that make all
+operations go via block layer scatter/gather lists.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of IpsLinux
-Sent: Thursday, October 20, 2005 1:33 PM
-To: Christoph Hellwig
-Cc: Matthew Wilcox; akmpm@osdl.org; James.Bottomley@steeleye.com;
-linux-scsi@vger.kernel.org; IpsLinux
-Subject: RE: ips.c warnings
-
-
-Sounds good to me.  That's easy enough to do.
-
-I was just hesitant to take out an error check ( in code I didn't
-originate ) without a 100% guarantee that it's OK without it.
-
-I'll send a new patch and totally eliminate the checks and extra macros
-...
-
-Thanks.
+James
 
 
-
------Original Message-----
-From: Christoph Hellwig [mailto:hch@infradead.org] 
-Sent: Thursday, October 20, 2005 1:29 PM
-To: Hammer, Jack
-Cc: Matthew Wilcox; akmpm@osdl.org; James.Bottomley@steeleye.com;
-linux-scsi@vger.kernel.org; IpsLinux
-Subject: Re: ips.c warnings
-
-On Thu, Oct 20, 2005 at 01:25:28PM -0400, Hammer, Jack wrote:
-> 
-> I have no problem trying kmap_atomic() as long as there's a sound,
-> technical reason for changing code that's worked well for years.
-> 
-> What are the advantages/reasons of changing to use kmap_atomic() ?
-It
-> appears very few SCSI drivers use it.
-
-I think the real question is: what are these checks for.  You should
-never get an SG list with a NULL struct page or an SGL entry that points
-to address 0 from the higher level code, and no other drivers checks for
-that condition.
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org More majordomo info
-at  http://vger.kernel.org/majordomo-info.html
