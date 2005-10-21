@@ -1,31 +1,41 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attached
- PHYs)
-Date: Fri, 21 Oct 2005 00:09:25 -0500
-Message-ID: <43587805.7060306@cs.wisc.edu>
-References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>	 <20051020170330.GA16458@lst.de>  <4357F7DE.7050004@adaptec.com> <1129852879.30258.137.camel@bluto.andrew> <43583A53.2090904@pobox.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH 1/4] sas: add flag for locally attached PHYs
+Date: Fri, 21 Oct 2005 10:16:30 +0200
+Message-ID: <1129882591.2786.9.camel@laptopd505.fenrus.org>
+References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>
+	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>
+	 <20051020170330.GA16458@lst.de>
+	 <1129828959.2807.18.camel@laptopd505.fenrus.org>
+	 <4357F9D0.3090602@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:8898 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S964890AbVJUHKF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Oct 2005 03:10:05 -0400
-In-Reply-To: <43583A53.2090904@pobox.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:60067 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932114AbVJUIQg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Oct 2005 04:16:36 -0400
+In-Reply-To: <4357F9D0.3090602@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: andrew.patterson@hp.com, Luben Tuikov <luben_tuikov@adaptec.com>, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, jejb@steeleye.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>
 
-Jeff Garzik wrote:
-> 
-> Which is best?  I don't have a good answer.  Largely depends on the 
-> situation, particularly queueing needs.  Networking and storage are 
-> rapidly converging into "messaging", so the situation is highly fluid in 
-> any case.  Coming from a networking background, I sorta lean towards the 
-> solution noone has attempted yet:  netlink.
+On Thu, 2005-10-20 at 16:10 -0400, Luben Tuikov wrote:
+> You see?  You don't need IOCTLs, yet you can be fully compliant
+> to the spec so that already existing user space management programs
+> can transition with minimal change to their code (over to the front
+> end: sg/whatever). 
 
-Dimitry and Alex did netlink for scsi_tranport_iscsi.c in scsi-misc. 
-Which reminds me of some of the problems they discovered. See here
-http://marc.theaimsgroup.com/?l=linux-netdev&m=111273099708516&w=2
+this is EXACTLY my point.  A proper API would NOT need the userland apps
+to change if the underlying mechanism changes. Or in other words: today
+it may be SG, tomorrow BSG or SysFS, and when we open 2.7 the mechanism
+may be WokkieWokkie. The implementation of the interface library may
+need to change for this, but the management app should not. 
+
+There is a parallel in the glibc/posix/sus world: With the 2.6 kernel
+there is a new syscall mechanism (sysenter) on x86 kernels available.
+NONE of the applications needed changing, fopen() remained fopen(), not
+just as API but also as ABI. All that needed some adjustments were glibc
+internals.
+
