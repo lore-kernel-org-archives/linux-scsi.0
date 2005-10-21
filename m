@@ -1,41 +1,53 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [PATCH 1/4] sas: add flag for locally attached PHYs
-Date: Fri, 21 Oct 2005 14:57:54 -0400
-Message-ID: <43593A32.7040802@adaptec.com>
-References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>	 <20051020170330.GA16458@lst.de>  <4357F7DE.7050004@adaptec.com>	 <1129852879.30258.137.camel@bluto.andrew>	 <1129885586.2786.12.camel@laptopd505.fenrus.org> <1129914336.30258.179.camel@bluto.andrew>
+Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attached
+ PHYs)
+Date: Fri, 21 Oct 2005 15:13:18 -0400
+Message-ID: <43593DCE.1030603@adaptec.com>
+References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>	 <20051020170330.GA16458@lst.de>  <4357F7DE.7050004@adaptec.com> <1129852879.30258.137.camel@bluto.andrew> <43583A53.2090904@pobox.com> <435929FD.4070304@adaptec.com> <43593100.5040708@pobox.com> <43593884.7000800@adaptec.com> <4359395B.9030402@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:64910 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S965093AbVJUS6I (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Oct 2005 14:58:08 -0400
-In-Reply-To: <1129914336.30258.179.camel@bluto.andrew>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965104AbVJUTN0@vger.kernel.org>
+In-Reply-To: <4359395B.9030402@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: andrew.patterson@hp.com
-Cc: Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, jejb@steeleye.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>, Christoph Hellwig <hch@lst.de>
 
-On 10/21/05 13:05, Andrew Patterson wrote:
->>but why didn't CSMI specify the library interface then? If it did that,
->>then none of the "ioctls are deprecated for 3 years now" would have come
->>as a surprise. Or rather, it maybe would have, but it wouldn't have
->>mattered to the management app.
+On 10/21/05 14:54, Jeff Garzik wrote:
+>>Thank you for spreading FUD -- I'm sure you've impressed your managament,
+>>how great of a Linux programmer you are and how I don't know anything.
+>>I'd suggest you keep pushing the politics _behind_ the scences.
 > 
-> I asked one of the authors, Steve Fairchild, about this.  He said that
-> they had had a bad experience with HBAAPI, the FC library.  They had a
-> lot of problems with vendors keeping the library up to date, multiple
-> vendors shipping multiple incompatible versions, etc.  I wasn't entirely
-> convinced, since they seem to have just replaced one set of problems for
-> another.
+> I'm trying to tell it like it is, in the hopes that you will eventually 
+> learn the process, and be a good upstream maintainer we can all work with.
 
-The user app would read the SDI major and minor from SDI_GET_DRIVER_INFO
-and then know which spec to use.
+You're again spreading FUD and playing this political game hoping
+your management is reading this and merely because of this they'll award you.
+I cannot blame you -- how many of them read C code or specs...  I mean, even
+"the community" has said "no" to specs.  All you're doing is just playing
+your political game, spreading FUD.
 
-After that just sending bytes of data (forming units) one after the other
-(as in "smp_portal") would suffice for 32/64 bit (similarly to SG).
+And what "process" are you talking about?  Do you have any idea the
+_amazement_ people get when learing that Linux is going to implement
+showing all phys on the domain in sysfs...?  Do you have any idea
+the effort in keeping customers happy when the whims of "the community"
+change on an a hourly basis (as the community is learning)?  Shall I give
+examples?
 
+As to your reply above:
+Jeff, not so according to people I work with on a daily basis from all
+over the world.
+
+When you said in your email:
+
+On Oct 21, 2005, Jeff Garzik <jgarzik@pobox> wrote:
+>
+> We have plenty of specs.  It's called source code.
+
+That pretty much seals it.
+
+Have a nice day,
 	Luben
 -- 
 http://linux.adaptec.com/sas/
