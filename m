@@ -1,39 +1,53 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH 1/4] sas: add flag for locally attached PHYs
-Date: Fri, 21 Oct 2005 11:06:25 +0200
-Message-ID: <1129885586.2786.12.camel@laptopd505.fenrus.org>
-References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>
-	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>
-	 <20051020170330.GA16458@lst.de>  <4357F7DE.7050004@adaptec.com>
-	 <1129852879.30258.137.camel@bluto.andrew>
+From: Robin Bowes <robin-lists@robinbowes.com>
+Subject: Re: Recover SCSI disks
+Date: Fri, 21 Oct 2005 12:35:59 +0100
+Message-ID: <4358D29F.1010206@robinbowes.com>
+References: <dj8a8v$ta0$1@sea.gmane.org> <4358404B.9080006@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:31697 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932560AbVJUJGh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Oct 2005 05:06:37 -0400
-In-Reply-To: <1129852879.30258.137.camel@bluto.andrew>
+Received: from mail.metronet.co.uk ([213.162.97.75]:36307 "EHLO
+	mail.metronet.co.uk") by vger.kernel.org with ESMTP id S964842AbVJULgZ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Oct 2005 07:36:25 -0400
+In-Reply-To: <4358404B.9080006@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andrew.patterson@hp.com
-Cc: linux-scsi@vger.kernel.org, jejb@steeleye.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>, Christoph Hellwig <hch@lst.de>, Luben Tuikov <luben_tuikov@adaptec.com>
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2005-10-20 at 18:01 -0600, Andrew Patterson wrote:
+Douglas Gilbert said the following on 21/10/2005 02:11:
+> Robin,
+> You may like to fetch sg3_utils and try sg_format thus:
+>    sg_format /dev/sda
+> assuming a disk you have fetched from the array is placed
+> at /dev/sda .
 
-> Yes, CSMI should have had more Linux input when it was developed.  The
-> no-new IOCTL policy certainly came as a surprise to the authors. Still,
-> there doesn't seem to be any other usable cross-platform interface that
-> is acceptable to the linux community (or at least to Christoph)'s corner
-> of it).  My personal preference is to hide this stuff in a library, so
-> the kernel implementation is hidden. But even a library needs an
-> underlying kernel implementation.
+Douglas,
 
+THanks for the tip, I'll give it a go.
 
-but why didn't CSMI specify the library interface then? If it did that,
-then none of the "ioctls are deprecated for 3 years now" would have come
-as a surprise. Or rather, it maybe would have, but it wouldn't have
-mattered to the management app.
+> If that fails, the disk is probably dead. Otherwise it
+> should tell you several things (and doesn't change
+> anything). Often drives in RAIDs are formatted
+> to a sector size slightly greater than 512 bytes. To
+> re-use the disk (freestanding) in linux you will need to
+> format it back 512 bytes thus:
+>    sg_format --format --size=512 /dev/sda
+> 
+> A format may not be needed. In any case, the next step
+> would usually be to partition the disk (e.g. with fdisk)
+> then make a file system on one or more of its partitions
+> (e.g. with mkfs.ext3 ). The disk (or at least its partition)
+> should then be ready to mount and use.
 
+Thanks again,
 
+R.
+-- 
+http://robinbowes.com
+
+If a man speaks in a forest,
+and his wife's not there,
+is he still wrong?
