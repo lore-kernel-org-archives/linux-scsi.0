@@ -1,49 +1,65 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 1/4] sas: add flag for locally attached PHYs
-Date: Fri, 21 Oct 2005 13:25:46 +1000
-Message-ID: <43585FBA.20506@torque.net>
-References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com> <4358497E.6070107@torque.net> <43584F8F.4070403@pobox.com>
-Reply-To: dougg@torque.net
+From: "Randy.Dunlap" <rdunlap@xenotime.net>
+Subject: [PATCH] scsi disk: report size without overflow
+Date: Thu, 20 Oct 2005 20:55:32 -0700
+Message-ID: <20051020205532.16b65fa7.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:16016 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S964853AbVJUDYp (ORCPT
+Received: from xenotime.net ([66.160.160.81]:21980 "HELO xenotime.net")
+	by vger.kernel.org with SMTP id S964859AbVJUDzf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Oct 2005 23:24:45 -0400
-In-Reply-To: <43584F8F.4070403@pobox.com>
+	Thu, 20 Oct 2005 23:55:35 -0400
+Received: from midway ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2005 20:55:33 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>, Luben Tuikov <luben_tuikov@adaptec.com>, Christoph Hellwig <hch@lst.de>, jejb@steeleye.com, linux-scsi@vger.kernel.org
+To: scsi <linux-scsi@vger.kernel.org>, jejb <james.bottomley@steeleye.com>
+Cc: akpm <akpm@osdl.org>, Dale Blount <linux-kernel@dale.us>
 
-Jeff Garzik wrote:
-> Douglas Gilbert wrote:
-> 
->> Just a suggestion if you want to bring /dev/sg into
->> the picture for a SMP (and even a STP) passthrough.
-> 
-> 
-> Yep.  That's another possibility, that falls into the 'block driver'
-> category [see list of categories in my 'ioctl' email], since it is
-> translated into a 'special' block request, and then sent to a normal
-> request_queue.
-> 
-> Jens Axboe's bsg[1] has also been mentioned in the context of SMP.
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-Jeff,
-Yes, I like the bsg model: one well known device (/dev/bsg),
-get a file descriptor and then bind to a "target". It
-reminded me of a network interface.
+With CONFIG_LBD=n, 'sz' (32 bits) can overflow when capacity is
+multiplied (even * 2), as seen in a report from Dale Blount
+on lkml.  Also make sure that 'mb' will not overflow.
 
-As presented, it only bound to a block (or char?) device
-node (e.g. /dev/sda). I asked some questions about widening
-the variety of things it could bind to but Peter Jones
-suggested that binding was a necessary evil that should
-not be encouraged.
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+---
 
-So perhaps we could bind to a SAS host ... (and a SCSI device
-for those pesky things like safte, ses and wluns).
+ drivers/scsi/sd.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
-Doug Gilbert
+diff -Naurp linux-2614-rc5/drivers/scsi/sd.c~scsi_disk_capacity linux-2614-rc5/drivers/scsi/sd.c
+--- linux-2614-rc5/drivers/scsi/sd.c~scsi_disk_capacity	2005-10-20 18:55:35.000000000 -0700
++++ linux-2614-rc5/drivers/scsi/sd.c	2005-10-20 20:44:44.000000000 -0700
+@@ -49,6 +49,7 @@
+ #include <linux/blkpg.h>
+ #include <linux/kref.h>
+ #include <linux/delay.h>
++#include <asm/div64.h>
+ #include <asm/uaccess.h>
+ 
+ #include <scsi/scsi.h>
+@@ -1253,16 +1254,16 @@ got_data:
+ 		 * Jacques Gelinas (Jacques@solucorp.qc.ca)
+ 		 */
+ 		int hard_sector = sector_size;
+-		sector_t sz = sdkp->capacity * (hard_sector/256);
++		u64 sz = sdkp->capacity * (hard_sector/256);
+ 		request_queue_t *queue = sdp->request_queue;
+-		sector_t mb;
++		u64 mb;
+ 
+ 		blk_queue_hardsect_size(queue, hard_sector);
+ 		/* avoid 64-bit division on 32-bit platforms */
+ 		mb = sz >> 1;
+-		sector_div(sz, 1250);
++		do_div(sz, 1250);
+ 		mb -= sz - 974;
+-		sector_div(mb, 1950);
++		do_div(mb, 1950);
+ 
+ 		printk(KERN_NOTICE "SCSI device %s: "
+ 		       "%llu %d-byte hdwr sectors (%llu MB)\n",
+
+
+---
