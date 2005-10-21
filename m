@@ -1,98 +1,142 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: scsi disk size reporting in dmesg
-Date: Thu, 20 Oct 2005 19:04:47 -0400
-Message-ID: <4358228F.1020604@tmr.com>
-References: <1129577044.17327.11.camel@dale.velocity.net>  <20051019220920.7c91b922.rdunlap@xenotime.net> <1129810635.22387.11.camel@dale.velocity.net> <Pine.LNX.4.58.0510201206570.11550@shark.he.net>
+From: Andrew Patterson <andrew.patterson@hp.com>
+Subject: Re: [PATCH 1/4] sas: add flag for locally attached PHYs
+Date: Thu, 20 Oct 2005 18:01:17 -0600
+Message-ID: <1129852879.30258.137.camel@bluto.andrew>
+References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>
+	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>
+	 <20051020170330.GA16458@lst.de>  <4357F7DE.7050004@adaptec.com>
+Reply-To: andrew.patterson@hp.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964783AbVJTXEY@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.58.0510201206570.11550@shark.he.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, akpm@osdl.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from atlrel9.hp.com ([156.153.255.214]:58315 "EHLO atlrel9.hp.com")
+	by vger.kernel.org with ESMTP id S932558AbVJUABd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Oct 2005 20:01:33 -0400
+In-Reply-To: <4357F7DE.7050004@adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-Randy.Dunlap wrote:
-> On Thu, 20 Oct 2005, Dale Blount wrote:
+On Thu, 2005-10-20 at 16:02 -0400, Luben Tuikov wrote:
+> On 10/20/05 13:03, Christoph Hellwig wrote:
+> >>I'd suggest a reading of the SDI, SAS and SAM specs for an insight
+> >>of how it all ties together.
+> > 
+> > 
+> > Thanks Luben.  You might not be able to imagine it, but there are people
+> > other than you who are able to read specs, and despite having read them
+> > they can actually talk like a normal human without referencing them in
+> > every second sentence.  That beeing said SDI is not a final
+> > specification.  It's a draft that's probablt not going to make it as a
+> > t10 standard because the main pushers have backed of a bit again.
 > 
-> 
->>On Wed, 2005-10-19 at 22:09 -0700, Randy.Dunlap wrote:
->>
->>>On Mon, 17 Oct 2005 15:24:04 -0400 Dale Blount wrote:
->>>
->>>
->>>>Hello,
->>>>
->>>>I just added 2 external 1TB+ scsi devices to my i686 linux server
->>>>running 2.6.13.4 connected to external LSI MPT card.  fdisk and df both
->>>>show the sizes correctly (see below), but I'm worried that dmesg reports
->>>>them incorrectly.
->>>>
->>>>SCSI device sda: 2460934144 512-byte hdwr sectors (160487 MB)
->>>>SCSI device sdb: 3790438400 512-byte hdwr sectors (841193 MB)
->>>>
->>>>I don't think it's as simple as a variable overflow because both
->>>>sdkp->capacity and mb look to be cast as unsigned long longs.  I know a
->>>>workaround is to present less data per LUN, but I'd like to use it as
->>>>it's setup currently if possible.  Is this just printing incorrectly or
->>>>will I run into trouble when the device gets more full?
->>>
->>>The casts to (unsigned long long) just fix the printk() args to match
->>>the format strings (and eliminate warnings).
->>>
->>>Looks to me like sdkp->capacity is correct.  The <mb> value looks
->>>way off.  Since it's just printed here for user info, I don't see
->>>how it can be a problem later on.
->>>
->>
->>That's what I was hoping, but I didn't know for sure.  I figured I'd
->>better ask to make sure my data wouldn't get truncated when the disk got
->>fuller.  Between my first post and now, I've tested it by filling the
->>drive with data and testing the md5sums for each file and it seems to
->>work.  Other than the odd MB size reported, it seems to work just fine.
->>
->>
->>>I don't see the error just yet.  Are there any other SCSI device-
->>>related messages near these?  And just to confirm, but you must
->>>have CONFIG_LBD (Large Block Device) enabled, right?
->>>
->>
->>No, there are no other related messages near these other than the
->>standard vendor/versions.  I did not enable CONFIG_LBD since the help
->>says "bigger than 2TB", and I partitioned the storage system to present
->>disks smaller than that.
-> 
-> 
-> I guessed at CONFIG_LBD=y last night.  Today I did the arithmetic
-> with CONFIG_LBD=n... and found the overflow.
-> 
-> In drivers/scsi/sd.c, approx. line #1260:
-> 
-> 		sector_t sz = sdkp->capacity * (hard_sector/256);
-> 
-> sz is 32 bits.
-> capacity is 32 bits with a value of 2,460,934,144 == 0x92ae_e000.
-> Then we multiply that by 2 (512 / 256)... and it overflows.
-> Should be hex 1_255d_c000, but we drop the '1'.
-> The rest of the calculation (with this new value) does result
-> in the 160487 MB, matching your log message.
-> 
-> I think that you can fix it (patch it) by changing that line
-> to make 'sz' be type 'u64' for now.
-> 
-> 		u64 sz = sdkp->capacity * (hard_sector/256);
-> 
-> But those divides by 1250 and 1950 are still voodoo to me.
-> 
-I think that just hides the real problem, and while that's useful to 
-stop the annoying numbers, the real problem is either (a) the value 
-calculated is wrong, (b) the size of sector_t is no longer large enough, 
-or (c) the type has been wrong all along and shouldn't be sector_t.
+> The whole point is that LSI/HP/Adaptec are _using_ SDI in one form
+> or another and would like to have it officially in the kernel.
 
-If I understand what sector_t really is, (b) is my candidate.
+I would hope that other users/vendors might find a use for this as well.
 
--- 
-    -bill davidsen (davidsen@tmr.com)
-"The secret to procrastination is to put things off until the
-  last possible moment - but no longer"  -me
+> 
+> > We are not going to implement SDI in the kernel.  Long before SDI or
+> 
+> Who is "we"?
+> 
+> > it's predecessor, HP CSMI were designed we made it clear we're not going
+> > to accept wide ioctl-APIs, especially when they're even bad for old
+> 
+
+CSMI is a semi-proprietary spec.  SDI is an attempt to turn this into an
+open spec.  One of the reasons it has not been made into a standard is
+the whole IOCTL issue.  Other OS's, Windows, HP-UX, Solaris allow them,
+Linux has recently banned them (at least in the SCSI sub-system). 
+
+> You do not have to take section 4 of SDI literally, but what everyone
+> wants is the _functionality_ of section 5 of SDI. 
+
+My guess is that what current app writers want is to use IOCTL's so they
+don't have to special-case Linux.  Next best thing would be something
+that closely approaches it, to avoid re-writing a lot of code.  
+
+>  That can be implemented
+> as a backend, see my next message to Arjan on this thread, and the front
+> end can be anything at all (sg/sysfs/whatever1/whatever2).
+> 
+> > ioctl API standards.  The CSMI spec has been passed around in an early
+> > phase and been totally rejected, I think even publically on linux-scsi.
+
+The LSI driver attempted go in with CSMI. One of the reasons it was
+rejected was because it used IOCTL's to implement CSMI.  I don't think
+CSMI itself was rejected (other than the fact that is required IOCTL's
+of course).  The SDI authors are willing to use another type of
+interface, but have had no help in suggesting alternatives.
+
+> 
+> Rejected by whom?  "The community" or by you?
+
+I believe there is a common understanding that IOCTL's are bad and
+should be avoided. See:
+
+http://lkml.org/lkml/2001/5/20/81
+
+> 
+> Let me understand this properly: LSI/HP/Adaptec are using SDI in one
+> form or another and would like to see something like it in the kernel,
+> but "the community", the "we" you refer to above, rejects it?
+> 
+> > HP decided to move ahead despite that and did a huge mis-services to
+> > their customers.
+
+Perhaps.  Given that there seems to be no alternative, we don't have
+much of a choice.
+
+> 
+> Yes, because there is a _need_ for it.
+> 
+> > It's not my problem if big companies can't listen and do things their
+> > customers have to pay for, and it's certainly not our job to work
+> > around their idiocy.
+
+Yes, CSMI should have had more Linux input when it was developed.  The
+no-new IOCTL policy certainly came as a surprise to the authors. Still,
+there doesn't seem to be any other usable cross-platform interface that
+is acceptable to the linux community (or at least to Christoph)'s corner
+of it).  My personal preference is to hide this stuff in a library, so
+the kernel implementation is hidden. But even a library needs an
+underlying kernel implementation.
+
+> 
+> Bold statment.
+> 
+> Who should "big companies" listen to?  You?  "The community?"
+> Are you saying "big companies" whould listen to Linux which
+> says "no to specs" among other things?
+> 
+> Often enough what "big companies" agree on and use and deploy is
+> what Linux (you?) should _listen_ to, try to understand and maybe
+> get out of the way.
+> 
+
+Big companies often want to do things in a proprietary fashion.  I
+personally would prefer to see a standard's-based approach.
+
+> It is all about customer satisfaction, which is completely
+> foreign to Linux, simply because of the _nature_ of Linux.
+
+More bold statements? ;-)
+
+> 
+> Why is there a need to _reinvent_ things?
+> Aren't there engineers at those "big companies" who know
+> OS design and programming?
+> 
+> Why do you feel the need to antiquate engineers from
+> companies submitting drivers/patches/solutions to the
+> Linux kernel?
+> 
+> Surely this isn't good for the Linux kernel in the long term.
+> Or is it?
+> 
+> 	Luben
+
