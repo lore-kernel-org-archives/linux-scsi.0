@@ -1,72 +1,25 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attached
  PHYs)
-Date: Fri, 21 Oct 2005 18:14:49 -0400
-Message-ID: <43596859.3020801@adaptec.com>
-References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>	 <20051020170330.GA16458@lst.de>  <4357F7DE.7050004@adaptec.com> <1129852879.30258.137.camel@bluto.andrew> <43583A53.2090904@pobox.com> <435929FD.4070304@adaptec.com> <43593100.5040708@pobox.com> <43593884.7000800@adaptec.com> <4359395B.9030402@pobox.com> <43593FE1.7020506@adaptec.com> <4359440E.2050702@pobox.com> <43595275.1000308@adaptec.com> <435959BE.5040101@pobox.com> <43595CA6.9010802@adaptec.com> <43596070.3090902@pobox.com>
+Date: Sat, 22 Oct 2005 00:20:35 +0200
+Message-ID: <435969B3.2050502@s5r6.in-berlin.de>
+References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>	 <20051020170330.GA16458@lst.de>  <4357F7DE.7050004@adaptec.com> <1129852879.30258.137.camel@bluto.andrew> <43583A53.2090904@pobox.com> <435929FD.4070304@adaptec.com> <43593100.5040708@pobox.com> <43593884.7000800@adaptec.com> <4359395B.9030402@pobox.com> <43593DCE.1030603@adaptec.com> <4359403E.3080301@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:51906 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S965039AbVJUWPO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Oct 2005 18:15:14 -0400
-In-Reply-To: <43596070.3090902@pobox.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965183AbVJUWXj@vger.kernel.org>
+In-Reply-To: <4359403E.3080301@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Luben Tuikov <luben_tuikov@adaptec.com>, andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>
 
-On 10/21/05 17:41, Jeff Garzik wrote:
->>>I already described why.  Examples are DMA boundary and s/g limit, among 
->>>others.  When confronted with this, you proposed an additional hardware 
->>>information struct which duplicates Scsi_Host_Template.
->>
->>
->>I told you -- I have this in the struct asd_ha_struct and it was merely
->>a downplay that I didn't include the same thing in struct sas_ha_struct.
+Jeff Garzik wrote:
+> Linux is result of evolution as "nature" as dictated.  This 
+> drives some people nuts, but at the end of the day, it _works_.
 
-Here is the commit in question:
-http://linux.adaptec.com/sas/git/?p=linux-2.6-sas.git;a=commit;h=785747ddc631f7618d728a377346965f7db2256a
-
->>>Solution?  Just use Scsi_Host_Template.  Take a look at how each libata 
->>
->>
->>No, this is the solution which would turn everything upside down.
->>The easiest and smallest solution is to just include this tiny struct
->>and end this.  It would have 0 impact on code.  In fact I'll
->>implement it now and push it to the git tree. ;-)
->>
->>The host template _mixes_ hw, scsi core, and protocol knowlege into
->>one ugly blob.
-> 
-> 
-> True.
-> 
-> If you do not like the current situation, evolve the SCSI core (and all 
-> drivers) to where you think they should be.
-
-While the architecture in my mind is clear, I cannot do this myself
-(and for all drivers).  Such a change would be gradual, involving more
-than one developer, for more than one (new) driver, etc.
-
-First we need SDI to make everyone happy.  This way HP/LSI/Adaptec
-can move quickest to the customers with minimal pain to the customers
-and to the companies which would have to change software (minimal change).
-
-> Thus, regardless of whether or not libata-scsi meets the needs of 
-> SAS+SATA hardware, libata-scsi is where all SCSI<->ATA translation 
-> should occur.  If you are dissatisfied, evolve the code to where it 
-> needs to be.
-
-Ok.
-
-> Naming is completely irrelevant.  Just modify the code.
-
-Ok.
-
-	Luben
+The last two words sound a bit general.
 -- 
-http://linux.adaptec.com/sas/
-http://www.adaptec.com/sas/
+Stefan Richter
+-=====-=-=-= =-=- =-=-=
+http://arcgraph.de/sr/
