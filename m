@@ -1,42 +1,52 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 0/16]  qla2xxx: update qla2xxx driver to 8.01.02-k.
-Date: Thu, 20 Oct 2005 18:47:44 -0500
-Message-ID: <1129852064.3115.18.camel@mulgrave>
-References: <20051013231534.27191.19815.sendpatchset@plap.qlogic.com>
-	 <20051019174209.GP9087@plap.qlogic.org>
+From: Andrew Patterson <andrew.patterson@hp.com>
+Subject: Re: [PATCH 1/4] sas: add flag for locally attached PHYs
+Date: Fri, 21 Oct 2005 11:05:36 -0600
+Message-ID: <1129914336.30258.179.camel@bluto.andrew>
+References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>
+	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>
+	 <20051020170330.GA16458@lst.de>  <4357F7DE.7050004@adaptec.com>
+	 <1129852879.30258.137.camel@bluto.andrew>
+	 <1129885586.2786.12.camel@laptopd505.fenrus.org>
+Reply-To: andrew.patterson@hp.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:55172 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S964948AbVJUOTN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Oct 2005 10:19:13 -0400
-In-Reply-To: <20051019174209.GP9087@plap.qlogic.org>
+Received: from atlrel8.hp.com ([156.153.255.206]:45255 "EHLO atlrel8.hp.com")
+	by vger.kernel.org with ESMTP id S965034AbVJURFx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Oct 2005 13:05:53 -0400
+In-Reply-To: <1129885586.2786.12.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: linux-scsi@vger.kernel.org, jejb@steeleye.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>, Christoph Hellwig <hch@lst.de>, Luben Tuikov <luben_tuikov@adaptec.com>
 
-On Wed, 2005-10-19 at 10:42 -0700, Andrew Vasquez wrote:
-> Given all the activity promted with this patchset, could you provide
-> some insight on which patches you have queued for inclusion into
-> scsi-misc?
+On Fri, 2005-10-21 at 11:06 +0200, Arjan van de Ven wrote:
+> On Thu, 2005-10-20 at 18:01 -0600, Andrew Patterson wrote:
 > 
-> The scsi-misc-2.6 GIT tree has been dormant for some time and I would
-> like to have some direction on which patches I should cherrypick and
-> rebase given a number of updates to linux-2.6.git for the qla2xxx
-> driver as well as the rport interface updates proposed by James S.
+> > Yes, CSMI should have had more Linux input when it was developed.  The
+> > no-new IOCTL policy certainly came as a surprise to the authors. Still,
+> > there doesn't seem to be any other usable cross-platform interface that
+> > is acceptable to the linux community (or at least to Christoph)'s corner
+> > of it).  My personal preference is to hide this stuff in a library, so
+> > the kernel implementation is hidden. But even a library needs an
+> > underlying kernel implementation.
+> 
+> 
+> but why didn't CSMI specify the library interface then? If it did that,
+> then none of the "ioctls are deprecated for 3 years now" would have come
+> as a surprise. Or rather, it maybe would have, but it wouldn't have
+> mattered to the management app.
+> 
 
-Actually, none at the moment.  When a patch set comes as a list of
-patches, I generally tend to assume that they are all interdependent
-(although sometimes if there's objection to only a single component
-patch, I will pull that out if possible).
+I asked one of the authors, Steve Fairchild, about this.  He said that
+they had had a bad experience with HBAAPI, the FC library.  They had a
+lot of problems with vendors keeping the library up to date, multiple
+vendors shipping multiple incompatible versions, etc.  I wasn't entirely
+convinced, since they seem to have just replaced one set of problems for
+another.
 
-So for the monolithic set, I'll put them in when all the objections are
-worked out on the list.  If there are pieces I can apply now which
-everyone's happy with, tell me what they are.
-
-James
+Andrew
 
 
