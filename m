@@ -1,43 +1,42 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attached
- PHYs)
-Date: Fri, 21 Oct 2005 14:54:19 -0400
-Message-ID: <4359395B.9030402@pobox.com>
-References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>	 <20051020170330.GA16458@lst.de>  <4357F7DE.7050004@adaptec.com> <1129852879.30258.137.camel@bluto.andrew> <43583A53.2090904@pobox.com> <435929FD.4070304@adaptec.com> <43593100.5040708@pobox.com> <43593884.7000800@adaptec.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [PATCH 1/4] sas: add flag for locally attached PHYs
+Date: Fri, 21 Oct 2005 14:57:54 -0400
+Message-ID: <43593A32.7040802@adaptec.com>
+References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>	 <20051020170330.GA16458@lst.de>  <4357F7DE.7050004@adaptec.com>	 <1129852879.30258.137.camel@bluto.andrew>	 <1129885586.2786.12.camel@laptopd505.fenrus.org> <1129914336.30258.179.camel@bluto.andrew>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:59830 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965088AbVJUSy1 (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:64910 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S965093AbVJUS6I (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Oct 2005 14:54:27 -0400
-In-Reply-To: <43593884.7000800@adaptec.com>
+	Fri, 21 Oct 2005 14:58:08 -0400
+In-Reply-To: <1129914336.30258.179.camel@bluto.andrew>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>
+To: andrew.patterson@hp.com
+Cc: Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, jejb@steeleye.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>, Christoph Hellwig <hch@lst.de>
 
-Luben Tuikov wrote:
-> On 10/21/05 14:18, Jeff Garzik wrote:
->>We have plenty of specs.  It's called source code.
->>
->>You don't understand the Linux development process (think its more 
->>political than technical) and you don't understand even what a block 
->>driver is, and you wonder why you have difficulty getting code into the 
->>kernel?
+On 10/21/05 13:05, Andrew Patterson wrote:
+>>but why didn't CSMI specify the library interface then? If it did that,
+>>then none of the "ioctls are deprecated for 3 years now" would have come
+>>as a surprise. Or rather, it maybe would have, but it wouldn't have
+>>mattered to the management app.
 > 
-> 
-> Again, when people start getting personal, you know that they are losing it.
-> 
-> Thank you for spreading FUD -- I'm sure you've impressed your managament,
-> how great of a Linux programmer you are and how I don't know anything.
-> I'd suggest you keep pushing the politics _behind_ the scences.
+> I asked one of the authors, Steve Fairchild, about this.  He said that
+> they had had a bad experience with HBAAPI, the FC library.  They had a
+> lot of problems with vendors keeping the library up to date, multiple
+> vendors shipping multiple incompatible versions, etc.  I wasn't entirely
+> convinced, since they seem to have just replaced one set of problems for
+> another.
 
+The user app would read the SDI major and minor from SDI_GET_DRIVER_INFO
+and then know which spec to use.
 
-I'm trying to tell it like it is, in the hopes that you will eventually 
-learn the process, and be a good upstream maintainer we can all work with.
+After that just sending bytes of data (forming units) one after the other
+(as in "smp_portal") would suffice for 32/64 bit (similarly to SG).
 
-	Jeff
-
-
+	Luben
+-- 
+http://linux.adaptec.com/sas/
+http://www.adaptec.com/sas/
