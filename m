@@ -1,45 +1,36 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally	attached
- PHYs)
-Date: Fri, 21 Oct 2005 15:50:15 -0400
-Message-ID: <43594677.5050305@adaptec.com>
-References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>	 <20051020170330.GA16458@lst.de>  <4357F7DE.7050004@adaptec.com>	 <1129852879.30258.137.camel@bluto.andrew> <43583A53.2090904@pobox.com>	 <435929FD.4070304@adaptec.com> <43593100.5040708@pobox.com>	 <43593884.7000800@adaptec.com> <4359395B.9030402@pobox.com>	 <43593FE1.7020506@adaptec.com> <1129923996.2786.36.camel@laptopd505.fenrus.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attached PHYs)
+Date: Fri, 21 Oct 2005 13:54:57 -0600
+Message-ID: <20051021195457.GC3364@parisc-linux.org>
+References: <4357F7DE.7050004@adaptec.com> <1129852879.30258.137.camel@bluto.andrew> <43583A53.2090904@pobox.com> <435929FD.4070304@adaptec.com> <43593100.5040708@pobox.com> <43593884.7000800@adaptec.com> <4359395B.9030402@pobox.com> <43593FE1.7020506@adaptec.com> <20051021194105.GB3364@parisc-linux.org> <435945F4.3000005@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:61082 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S965132AbVJUTuV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Oct 2005 15:50:21 -0400
-In-Reply-To: <1129923996.2786.36.camel@laptopd505.fenrus.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:65218 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S965137AbVJUTy6
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Oct 2005 15:54:58 -0400
+Content-Disposition: inline
+In-Reply-To: <435945F4.3000005@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Linus Torvalds <torvalds@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, jejb@steeleye.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>, Christoph Hellwig <hch@lst.de>, andrew.patterson@hp.com, Jeff Garzik <jgarzik@pobox.com>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>
 
-On 10/21/05 15:46, Arjan van de Ven wrote:
->>I say, when people are losing it on the technical front, they try to attack
->>personally and on political basis.
+On Fri, Oct 21, 2005 at 03:48:04PM -0400, Luben Tuikov wrote:
+> On 10/21/05 15:41, Matthew Wilcox wrote:
+> > 
+> > Since you asked, I found you quite impossible to deal with at the OLS
+> > BOF you held, and I wasn't the only one.  I was hoping you'd learn, but
+> > you seem unwilling to listen to other people's ideas.
 > 
-> 
-> Luben,
-> 
-> to be honest, a lot of people got exactly the impression that you've
-> been doing that from the start in this saga, by attacking Christophs and
-> James' integrity early on etc. Jeff has been just about the only person
-> who ignored that and kept talking to you, and now you're attacking him
-> too... I'm not sure what you're trying to achieve. But I'm pretty sure
-> this way isn't the best or easiest way to achieve that. 
+> Be specific, be technical.  All I did was merely present SAS.
 
-No, look back on this thread -- he started a personal attack first.
-Here is the email:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112991877716308&w=2
+No.  What was advertised was a SCSI BOF which you then took over and
+spent the entire time talking about the Adaptec SAS driver.  You weren't
+interested in discussing wider SCSI issues.  You weren't interested in
+talking about how other vendors implemented SAS.  You weren't interested
+in discussing how we could get the best possible SAS interface in Linux.
+You shut down other people when they tried to discuss these things.
+It was a complete waste of time.
 
-This is where the "you don't understand" personal attacks from Jeff
-start.
-
-	Luben
--- 
-http://linux.adaptec.com/sas/
-http://www.adaptec.com/sas/
