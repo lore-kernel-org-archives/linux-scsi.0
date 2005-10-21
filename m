@@ -1,41 +1,39 @@
 From: Arjan van de Ven <arjan@infradead.org>
 Subject: Re: [PATCH 1/4] sas: add flag for locally attached PHYs
-Date: Fri, 21 Oct 2005 10:16:30 +0200
-Message-ID: <1129882591.2786.9.camel@laptopd505.fenrus.org>
+Date: Fri, 21 Oct 2005 11:06:25 +0200
+Message-ID: <1129885586.2786.12.camel@laptopd505.fenrus.org>
 References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>
 	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>
-	 <20051020170330.GA16458@lst.de>
-	 <1129828959.2807.18.camel@laptopd505.fenrus.org>
-	 <4357F9D0.3090602@adaptec.com>
+	 <20051020170330.GA16458@lst.de>  <4357F7DE.7050004@adaptec.com>
+	 <1129852879.30258.137.camel@bluto.andrew>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:60067 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:31697 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932114AbVJUIQg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Oct 2005 04:16:36 -0400
-In-Reply-To: <4357F9D0.3090602@adaptec.com>
+	id S932560AbVJUJGh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Oct 2005 05:06:37 -0400
+In-Reply-To: <1129852879.30258.137.camel@bluto.andrew>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, jejb@steeleye.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>
+To: andrew.patterson@hp.com
+Cc: linux-scsi@vger.kernel.org, jejb@steeleye.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>, Christoph Hellwig <hch@lst.de>, Luben Tuikov <luben_tuikov@adaptec.com>
 
-On Thu, 2005-10-20 at 16:10 -0400, Luben Tuikov wrote:
-> You see?  You don't need IOCTLs, yet you can be fully compliant
-> to the spec so that already existing user space management programs
-> can transition with minimal change to their code (over to the front
-> end: sg/whatever). 
+On Thu, 2005-10-20 at 18:01 -0600, Andrew Patterson wrote:
 
-this is EXACTLY my point.  A proper API would NOT need the userland apps
-to change if the underlying mechanism changes. Or in other words: today
-it may be SG, tomorrow BSG or SysFS, and when we open 2.7 the mechanism
-may be WokkieWokkie. The implementation of the interface library may
-need to change for this, but the management app should not. 
+> Yes, CSMI should have had more Linux input when it was developed.  The
+> no-new IOCTL policy certainly came as a surprise to the authors. Still,
+> there doesn't seem to be any other usable cross-platform interface that
+> is acceptable to the linux community (or at least to Christoph)'s corner
+> of it).  My personal preference is to hide this stuff in a library, so
+> the kernel implementation is hidden. But even a library needs an
+> underlying kernel implementation.
 
-There is a parallel in the glibc/posix/sus world: With the 2.6 kernel
-there is a new syscall mechanism (sysenter) on x86 kernels available.
-NONE of the applications needed changing, fopen() remained fopen(), not
-just as API but also as ABI. All that needed some adjustments were glibc
-internals.
+
+but why didn't CSMI specify the library interface then? If it did that,
+then none of the "ioctls are deprecated for 3 years now" would have come
+as a surprise. Or rather, it maybe would have, but it wouldn't have
+mattered to the management app.
+
 
