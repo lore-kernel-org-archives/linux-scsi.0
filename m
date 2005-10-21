@@ -1,85 +1,61 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attached
- PHYs)
-Date: Thu, 20 Oct 2005 20:46:11 -0400
-Message-ID: <43583A53.2090904@pobox.com>
-References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>	 <20051020170330.GA16458@lst.de>  <4357F7DE.7050004@adaptec.com> <1129852879.30258.137.camel@bluto.andrew>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Recover SCSI disks
+Date: Fri, 21 Oct 2005 11:11:39 +1000
+Message-ID: <4358404B.9080006@torque.net>
+References: <dj8a8v$ta0$1@sea.gmane.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:53168 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S964821AbVJUAqk (ORCPT
+Received: from zorg.st.net.au ([203.16.233.9]:10981 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S964820AbVJUBKh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Oct 2005 20:46:40 -0400
-In-Reply-To: <1129852879.30258.137.camel@bluto.andrew>
+	Thu, 20 Oct 2005 21:10:37 -0400
+In-Reply-To: <dj8a8v$ta0$1@sea.gmane.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andrew.patterson@hp.com
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>
+To: Robin Bowes <robin-lists@robinbowes.com>
+Cc: linux-scsi@vger.kernel.org
 
-Andrew Patterson wrote:
-> I believe there is a common understanding that IOCTL's are bad and
-> should be avoided. See:
+Robin Bowes wrote:
+> Hi,
 > 
-> http://lkml.org/lkml/2001/5/20/81
+> I've got a Compaq U2 storage array connected to a Compaw Smart 2/p
+> controller with an assortment of 4.3GB and 9.1GB disks that I use for
+> testing purposes.
+> 
+> Some of the drives have "died" on me, i.e. I get yellow lights when they
+> are plugged into the arrays.
+> 
+> Is it possible to do anything low-level to ressurect these drives? e.g.
+> take them out of their caddies, connected them directly to a SCSI
+> controller and low-level format them or something?
+> 
+> (There's no data on them - I just want them to work again!)
+> 
+> Any suggestions appreciated.
 
-Yep.  Linus's rant here reflects not only his opinion, but general 
-consensus, I feel.
+Robin,
+You may like to fetch sg3_utils and try sg_format thus:
+   sg_format /dev/sda
+assuming a disk you have fetched from the array is placed
+at /dev/sda .
 
+If that fails, the disk is probably dead. Otherwise it
+should tell you several things (and doesn't change
+anything). Often drives in RAIDs are formatted
+to a sector size slightly greater than 512 bytes. To
+re-use the disk (freestanding) in linux you will need to
+format it back 512 bytes thus:
+   sg_format --format --size=512 /dev/sda
 
-> Yes, CSMI should have had more Linux input when it was developed.  The
-> no-new IOCTL policy certainly came as a surprise to the authors. Still,
-> there doesn't seem to be any other usable cross-platform interface that
-> is acceptable to the linux community (or at least to Christoph)'s corner
+A format may not be needed. In any case, the next step
+would usually be to partition the disk (e.g. with fdisk)
+then make a file system on one or more of its partitions
+(e.g. with mkfs.ext3 ). The disk (or at least its partition)
+should then be ready to mount and use.
 
-Beyond Linus's rant, ioctls have a practical limitation, too:  because 
-they are untyped, we have to deal with stuff like the 32<->64 compat 
-ioctl thunking.
-
-Consider what an ioctl is, overall:  a domain-specific "do this 
-operation" interface.  Which, further, is nothing but a wrapping of a 
-"send message" + "receive response" interface.  There are several ways 
-to do this in Linux:
-
-* block driver.  a block driver is nothing but a message queue.  This is 
-why James has suggested implementing SMP as a block driver.  People get 
-stuck into thinking "block driver == block device", which is wrong.  The 
-Linux block layer is nothing but a message queueing interface.
-
-* netlink.  You connect to <an object> and send/receive messages.  Not 
-strictly limited to networking, as this is used in some areas of the 
-kernel now for generic event delivery.
-
-* char driver.  Poor man's netlink.  Unless its done right, it suffers 
-from the same binary problems as ioctls.  I don't recommend this path.
-
-* sysfs.  This has no inherent message/queue properties by itself, and 
-is less structured than blockdrvr or netlink, so dealing with more than 
-one outstanding operation at a time requires some coding.
-
-sysfs's attractiveness is in its ease of use.  It works with standard 
-Unix filesystem tools.  You don't need to use a library to read 
-information, cat(1) often suffices.  sysfs, since its normal ASCII 
-(UTF8), also has none of the annoying 32<->64 compatibility issues that 
-ioctls suffer from.
-
-Which is best?  I don't have a good answer.  Largely depends on the 
-situation, particularly queueing needs.  Networking and storage are 
-rapidly converging into "messaging", so the situation is highly fluid in 
-any case.  Coming from a networking background, I sorta lean towards the 
-solution noone has attempted yet:  netlink.
-
-
-> of it).  My personal preference is to hide this stuff in a library, so
-> the kernel implementation is hidden. But even a library needs an
-> underlying kernel implementation.
-
-Strongly agree here.  libc shelters userspace from [most] kernel 
-changes, by exporting syscalls in a standard manner.  alsa-lib was 
-created to shelter userspace from current and future changes in the 
-kernel audio interface.  libsdi is quite reasonable.
-
-	Jeff
+Doug Gilbert
 
 
