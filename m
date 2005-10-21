@@ -1,71 +1,35 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attached
- PHYs)
-Date: Fri, 21 Oct 2005 14:18:40 -0400
-Message-ID: <43593100.5040708@pobox.com>
-References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>	 <20051020170330.GA16458@lst.de>  <4357F7DE.7050004@adaptec.com> <1129852879.30258.137.camel@bluto.andrew> <43583A53.2090904@pobox.com> <435929FD.4070304@adaptec.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attached PHYs)
+Date: Fri, 21 Oct 2005 12:20:09 -0600
+Message-ID: <20051021182009.GA3364@parisc-linux.org>
+References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com> <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com> <20051020170330.GA16458@lst.de> <4357F7DE.7050004@adaptec.com> <1129852879.30258.137.camel@bluto.andrew> <43583A53.2090904@pobox.com> <435929FD.4070304@adaptec.com> <20051021180455.GA6834@lst.de> <43592FA1.8000206@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:41654 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965065AbVJUSTA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Oct 2005 14:19:00 -0400
-In-Reply-To: <435929FD.4070304@adaptec.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:14474 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S965072AbVJUSUM
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Oct 2005 14:20:12 -0400
+Content-Disposition: inline
+In-Reply-To: <43592FA1.8000206@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: Christoph Hellwig <hch@lst.de>, Jeff Garzik <jgarzik@pobox.com>, andrew.patterson@hp.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>
 
-Luben Tuikov wrote:
-> On 10/20/05 20:46, Jeff Garzik wrote:
+On Fri, Oct 21, 2005 at 02:12:49PM -0400, Luben Tuikov wrote:
+> > That beeing said I tried this approach.  It looks pretty cool when you
+> > think about it, but the block layer is quite a bit too heavyweight for
+> > queueing up a few SMP requests, and we need to carry too much useless
+> > code around for it.
 > 
->>Consider what an ioctl is, overall:  a domain-specific "do this 
->>operation" interface.  Which, further, is nothing but a wrapping of a 
->>"send message" + "receive response" interface.  There are several ways 
->>to do this in Linux:
->>
->>* block driver.  a block driver is nothing but a message queue.  This is 
-> 
-> 
-> Not quite.  This maybe the way it operates, but it is called "block"
-> for a reason.
+> That's the last reason not to implement SMP as a block device.
+> But this is good that you tried it and it "flopped".  This way
+> people will stop repeating "SMP... block device".
 
-This illustrates you fundamentally don't understand a lot of Linux, and 
-SCSI too.
+Block layer != Block device.
 
-Several non-blkdev device classes (Christoph listed them) use block 
-layer request_queue for command transit, as does SG_IO and /dev/sg.
+Nobody wants to implement SMP as a block device.
 
-
->>why James has suggested implementing SMP as a block driver.  People get 
->>stuck into thinking "block driver == block device", which is wrong.  The 
->>Linux block layer is nothing but a message queueing interface.
-> 
-> 
-> Now, just because James suggested implementing the SMP service as a block
-> device you think this is the right thing to do?
-
-I very clearly said I don't know the best answer.  Perhaps you need to 
-re-read the quoted email?
-
-
-> How about this: Why not as a char device?
-
-I covered that in the quoted email.
-
-
-> At least MS isn't suffering from the "no to specs" syndrome which
-> the Linux community seems to be suffering...
-
-We have plenty of specs.  It's called source code.
-
-You don't understand the Linux development process (think its more 
-political than technical) and you don't understand even what a block 
-driver is, and you wonder why you have difficulty getting code into the 
-kernel?
-
-	Jeff
-
-
+The question is whether the SMP interface should be implemented as part
+of the block layer.
