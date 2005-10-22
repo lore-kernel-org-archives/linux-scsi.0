@@ -1,56 +1,98 @@
 From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attached
  PHYs)
-Date: Sat, 22 Oct 2005 11:26:53 +0200
-Message-ID: <435A05DD.7040003@s5r6.in-berlin.de>
+Date: Sat, 22 Oct 2005 12:42:27 +0200
+Message-ID: <435A1793.1050805@s5r6.in-berlin.de>
 References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com>	 <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>	 <20051020170330.GA16458@lst.de>  <4357F7DE.7050004@adaptec.com> <1129852879.30258.137.camel@bluto.andrew> <43583A53.2090904@pobox.com> <435929FD.4070304@adaptec.com> <43593100.5040708@pobox.com> <43593884.7000800@adaptec.com> <4359395B.9030402@pobox.com> <43593FE1.7020506@adaptec.com> <4359440E.2050702@pobox.com> <43595275.1000308@adaptec.com> <435959BE.5040101@pobox.com> <43595CA6.9010802@adaptec.com> <43596070.3090902@pobox.com> <43596859.3020801@adaptec.com> <43596F16.7000606@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:27852 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1751329AbVJVJ3r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 Oct 2005 05:29:47 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932216AbVJVKp1@vger.kernel.org>
 In-Reply-To: <43596F16.7000606@pobox.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
 Cc: Jeff Garzik <jgarzik@pobox.com>, Luben Tuikov <luben_tuikov@adaptec.com>, andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, Linus Torvalds <torvalds@osdl.org>
+List-Id: linux-scsi@vger.kernel.org
 
 Jeff Garzik wrote:
 > Luben Tuikov wrote:
->>>>> Examples are DMA boundary and s/g limit, 
->>>>> among others.  When confronted with this, you proposed an 
->>>>> additional hardware information struct which duplicates 
->>>>> Scsi_Host_Template.
->>>>
->>>> I told you -- I have this in the struct asd_ha_struct and it was merely
->>>> a downplay that I didn't include the same thing in struct 
->>>> sas_ha_struct.
+>>>> The host template _mixes_ hw, scsi core, and protocol knowlege into
+>>>> one ugly blob.
+>>>
+>>> True.
+>>>
+>>> If you do not like the current situation, evolve the SCSI core (and 
+>>> all drivers) to where you think they should be.
 >>
->> Here is the commit in question:
->> http://linux.adaptec.com/sas/git/?p=linux-2.6-sas.git;a=commit;h=785747ddc631f7618d728a377346965f7db2256a 
+>> While the architecture in my mind is clear, I cannot do this myself
+>> (and for all drivers).  Such a change would be gradual, involving more
+>> than one developer, for more than one (new) driver, etc.
 > 
-> This effectively illustrates the wrong thing to do:  duplicating 
-> information that's already in Scsi_Host_Template.
+> Correct.  That's why there is resistance to aic94xx's approach of 
+> creating a totally new "strict SAM" path, existing in parallel with the 
+> traditional SCSI core.  You need to evolve the existing code to get 
+> there.  Such changes are gradual, involving more than one developer, etc.
 > 
-> Just use Scsi_Host_Template in the LLDD and see where that goes.
+> We don't need one small set of SCSI drivers behaving differently from 
+> the vast majority of existing SCSI drivers.
+> 
+> Hear me now, and believe me later:  we all largely agree on the points 
+> you've raised about legacy crapola in the SCSI core.  James, Christoph, 
+> myself, and several others disagree with your assertion that the old 
+> SCSI core should exist in parallel with your new SCSI core.
+> 
+> We differ on the path, not the goal.  As a thought experiment, you could 
+> try simply implementing the changes requested, and see where that goes.
 
-Will cmd_per_lun, sg_tablesize, max_sectors, dma_boundary, 
-use_clustering ever have to be adjusted specifically for a SAS hardware?
+I am not familiar with most parts of the SCSI subsystem. However from 
+what I understood, some existing concepts in the core need to be removed 
+from SCSI core entirely, others need to be cleaned up WRT what they mean 
+and how they represent it. It seems to me that a practical path to go 
+would be:
 
-Obviuosly none of this is required _at the moment_. IOW neither the 
-introduction of a sas_ha_hw_profile nor a pass-through of 
-scsi_host_template down to SAS interconnect drivers is required right 
-now. So why do one or the other now? Isn't it a sensible rule to not 
-solve problems now which do not exist yet?
+A. Post mock-ups and pseudo code about how to change the core, discuss.
+B. Set up a scsi-cleanup tree. In this tree,
+      1. renovate the core (thereby break all command set drivers and
+         all transport subsystems),
+      2. update ~2 command set drivers and ~2 transport subsystems
+      3. validate the renovated core,
+      4. fix the conceptual errors of the renovated core (as well as
+         first few discovered bugs in the implementation),
+      5. update all other command set drivers,
+      6. update all transport subsystems where resources to do so are
+         available,
+      7. test all command set drivers as far as hardware is accessible,
+      8. test the updated transport subsystems as far as hardware is
+         accessible,
+      9. fix prominent bugs.
+C. In mainline,
+      i. mark all drivers which cannot be updated in the mid term as
+         scheduled for temporary feature removal (i.e. they will be
+         broken for an undetermined period),
+     ii. mark all drivers which have been updated in scsi-cleanup tree,
+         but were not thoroughly tested, as scheduled for temporary
+         feature regression (i.e. they will be experimental for an
+         undetermined period).
+D. Push scsi-cleanup tree to -mm and shake out bugs.
+E. Push to mainline.
+F. Fix remaining drivers as time goes by, remove drivers which remain
+    broken for too long.
 
-(I guess Luben only introduced sas_ha_hw_profile to demonstrate that 
-there will never be an absolute requirement for scsi_host_template --- 
-in its present form --- to be visible in a SAS transport layer <-> SAS 
-interconnect driver interface. And there are certainly more alternatives 
-to these two approaches.)
+Most steps may overlap, some steps may repeat. Step A is fortunately 
+already going on for quite some time.
+
+Step 1.-4. could involve much dispute, thus taking much more time than 
+technically necessary -or- (and that would be less fortunate) being 
+dragged out into later stages when a conceptually stabilized core is 
+desirable. Much of that may be prevented in step A.
+
+I doubt that the desired cleanup of the SCSI core could be done 
+on-the-go, i.e. without temporary breakage of larger parts of the 
+subsystem (out of mainline). But then again, I don't know much of the 
+subsystem, so what am I talking about here?
+
+Also, long-term breakage of smaller parts of the SCSI subsystem in 
+mainline is to be expected; breakage which is to be announced and scheduled.
 -- 
 Stefan Richter
 -=====-=-=-= =-=- =-==-
