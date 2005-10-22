@@ -1,131 +1,43 @@
 From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attachedPHYs)
-Date: Sat, 22 Oct 2005 19:41:08 +0200
-Message-ID: <435A79B4.9070201@s5r6.in-berlin.de>
-References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com> <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>  <20051020170330.GA16458@lst.de>  <4357F7DE.7050004@adaptec.com> <1129852879.30258.137.camel@bluto.andrew> <43583A53.2090904@pobox.com> <435929FD.4070304@adaptec.com> <43593100.5040708@pobox.com> <43593884.7000800@adaptec.com> <4359395B.9030402@pobox.com> <43593FE1.7020506@adaptec.com> <4359440E.2050702@pobox.com> <43595275.1000308@adaptec.com> <435959BE.5040101@pobox.com> <43595CA6.9010802@adaptec.com> <43596070.3090902@pobox.com> <43596859.3020801@adaptec.com> <43596F16.7000606@pobox.com> <435A1793.1050805@s5r6.in-berlin.de> <Pine.LNX.4.62.0510220357250.4997@qynat.qvtvafvgr.pbz>
+Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attached
+ PHYs)
+Date: Sat, 22 Oct 2005 19:49:29 +0200
+Message-ID: <435A7BA9.4090502@s5r6.in-berlin.de>
+References: <4359395B.9030402@pobox.com> <43593FE1.7020506@adaptec.com> <4359440E.2050702@pobox.com> <43595275.1000308@adaptec.com> <435959BE.5040101@pobox.com> <43595CA6.9010802@adaptec.com> <43596070.3090902@pobox.com> <43596859.3020801@adaptec.com> <43596F16.7000606@pobox.com> <435A1793.1050805@s5r6.in-berlin.de> <20051022105815.GB3027@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750960AbVJVRl7@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.62.0510220357250.4997@qynat.qvtvafvgr.pbz>
-Sender: linux-kernel-owner@vger.kernel.org
-To: David Lang <david.lang@digitalinsight.com>, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Luben Tuikov <luben_tuikov@adaptec.com>, andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, Linus Torvalds <torvalds@osdl.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:5614 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1750814AbVJVRuD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 22 Oct 2005 13:50:03 -0400
+In-Reply-To: <20051022105815.GB3027@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Luben Tuikov <luben_tuikov@adaptec.com>, andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, Linus Torvalds <torvalds@osdl.org>
 
-David Lang wrote:
-> On Sat, 22 Oct 2005, Stefan Richter wrote:
->> I doubt that the desired cleanup of the SCSI core could be done 
->> on-the-go, i.e. without temporary breakage of larger parts of the 
->> subsystem (out of mainline). But then again, I don't know much of the 
->> subsystem, so what am I talking about here?
->>
->> Also, long-term breakage of smaller parts of the SCSI subsystem in 
->> mainline is to be expected; breakage which is to be announced and 
->> scheduled.
+Christoph Hellwig wrote:
+> On Sat, Oct 22, 2005 at 12:42:27PM +0200, Stefan Richter wrote:
+>>A. Post mock-ups and pseudo code about how to change the core, discuss.
+>>B. Set up a scsi-cleanup tree. In this tree,
+>>     1. renovate the core (thereby break all command set drivers and
+>>        all transport subsystems),
 > 
-> Stefan, what you and Luben are missing is that big-bang changes like you 
-> are proposing are simply not acceptable anymore.
+> No way.  Doing things from scatch is a really bad idea.  See how far we came
+> with Linux 2.6 scsi vs 2.4 scsi without throwing everything away and break the
+> world.  Please submit changes to fix _one_ thing at a time and fix all users.
+> Repeat until done or you don't care anymore.
 
-I agree with you that big-bang changes are not acceptable. This wasn't 
-however what I had in mind.
+I agree with you. Alas my wording was misunderstandable und obviously 
+carried a wrong tone.
 
-> a few years ago when the 2.5 kernel series opened a similar big-bang 
-> approach was attempted for the IDE drivers. the instability that 
-> resulted (and rumors of the instability being worse then it was) 
-> eliminated a lot of people from testing things. things finally got bad 
-> enough that the entire system was reverted, and then a developer (one 
-> who had previously stated that such drastic changes were impossible) sat 
-> down and produced a long series of patches, each of which did a small 
-> amount of changes, each of which left the kernel in a working state (and 
-> each of which provided an advantage that could be identified at the time 
-> of the patch, either a better abstraction or a code cleanup). over a 
-> very few months (especially relative to the time spent working on the 
-> big-bang patches) the entire system was re-written.
-
-What I proposed was to "renovate" a _part_ of the SCSI subsystem (the 
-core and the interfaces of the rest of the subsystem to the core) with 
-the 2.6 kernel as a basis. This is a huge difference to 2.5. Changes 
-took place everywhere in 2.5, many of them drastic.
-
-I agree with you that the incremental approach is preferrable whenever 
-possible. I even believe that this method could be applied to the SCSI 
-core cleanup. However, concerns were voiced that this method would 
-effectively lead to a double SCSI core: The old one, and a new one in 
-parallel to it which doesn't share much code with the old one. (At least 
-for some time, perhaps for a too long time.)
-
-It has been said multiple times that this would not be desirable for 
-reasons of /a/ more kernel bloat (while the goal was to remove existing 
-bloat and lay foundations to avoid future bloat), and /b/ massive 
-maintenance burden of two parallel infrastructures.
-
-So that's why I said that *short-term* breakage right on top and right 
-below the core should be accepted.
-
-Again, the huge difference to the 2.5 times would be that all this would 
-happen on top of a relatively stable kernel. (Stable in two senses.)
-
-> This is what Jeff is trying to tell you. you can't just produce an 
-> entirely new SCSI subsystem and drop it into the kernel one day, you can 
-
-What I was referring to was to clean up a _part_ of the subsystem (the 
-core), not to replace the subsystem. I admit though that my wording left 
-much room for misunderstanding.
-
-Furthermore, note that the "scsi-cleanup tree" which I referred to is 
-not meant to be a fork. It should merely be another working stage before 
-the -mm stage. And let me add that this stage should be left as soon as 
-possible.
-
-> all agree on a goal (this has almost been done, but nto quite), but 
-> that's only the first step. After you have some idea of the goal you 
-> then have to look at how to move to that goal without breaking things in 
-> the meantime. This requires that each step along the way keeps things 
-> working and is relativly straightforward in and of itself.
-> 
-> this definantly sounds a LOT harder then the 'throw it out and replace 
-> it all' approach, and it is (from the point of view of the programmer), 
-> however the result ends up being far more reliable as the process forces 
-> better examination of all the details,
-
-I agree with you on that. Again, although my post may have sounded like 
-it, I did not want to advocate the "throw it out and replace it all" 
-approach.
-
-> and allows more people to 
-> understand what's happening each step of the way.
-
-Absolutely.
-
-However I don't agree with you that _every_ little step must keep 
-everything working. I believe that this may actually make the transition 
-less easy to follow.
-
-> And since there are no 
-> releases that are made unuseable for people deliberatly, you also get 
-
-I did not suggest to make unuseable releases.
-
-> extensive testing of all the steps along the way. This not only finds 
-> bugs sooner, it also makes it far more obvious where performance issues 
-> show up
-
-I agree with you on these advantages of the "(try to) keep everything 
-working after each patch". Although the monitoring of performance is 
-less important during the initial stage of the cleanup of the core.
-
-> so please accept that you aren't going to be able to replace any 
-> significant system in one massive change
-
-Agreed. This is absolutely not what should be done.
-
-> and instead start looking for 
-> ways to move the existing design towards where you want it to be and you 
-> will receive a lot of assistance in the process instead of banging heads 
-> with everyone.
-
-OK.
+I did not say "replace the core" in step 1. Also, the breakage which I 
+refer to in step 1 would have to be immediately corrected in step 2 
+(although not for the whole subsystem at once, to allow for a fast cycle 
+of validation of what happened in step 1). Furthermore I specifically 
+said that most steps may (let me add: and should) overlap.
 -- 
 Stefan Richter
 -=====-=-=-= =-=- =-==-
