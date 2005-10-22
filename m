@@ -1,28 +1,39 @@
-From: Francois Romieu <romieu@fr.zoreil.com>
-Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attached PHYs)
-Date: Sat, 22 Oct 2005 19:49:58 +0200
-Message-ID: <20051022174958.GA2096@electric-eye.fr.zoreil.com>
-References: <4359B7CF.5060509@pobox.com> <20051022171412.16830.qmail@web31801.mail.mud.yahoo.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attachedPHYs)
+Date: Sat, 22 Oct 2005 18:51:55 +0100
+Message-ID: <20051022175155.GA8079@infradead.org>
+References: <4359440E.2050702@pobox.com> <43595275.1000308@adaptec.com> <435959BE.5040101@pobox.com> <43595CA6.9010802@adaptec.com> <43596070.3090902@pobox.com> <43596859.3020801@adaptec.com> <43596F16.7000606@pobox.com> <435A1793.1050805@s5r6.in-berlin.de> <Pine.LNX.4.62.0510220357250.4997@qynat.qvtvafvgr.pbz> <435A79B4.9070201@s5r6.in-berlin.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from electric-eye.fr.zoreil.com ([213.41.134.224]:26306 "EHLO
-	fr.zoreil.com") by vger.kernel.org with ESMTP id S1750995AbVJVRwI
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 Oct 2005 13:52:08 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750875AbVJVRv7@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20051022171412.16830.qmail@web31801.mail.mud.yahoo.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <435A79B4.9070201@s5r6.in-berlin.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: David Lang <david.lang@digitalinsight.com>, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Luben Tuikov <luben_tuikov@adaptec.com>, andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <ltuikov@yahoo.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, dougg@torque.net, Luben Tuikov <luben_tuikov@adaptec.com>, Christoph Hellwig <hch@lst.de>, jejb@steeleye.com, Matthew Wilcox <matthew@wil.cx>, andrew.patterson@hp.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>
 
-Luben Tuikov <ltuikov@yahoo.com> :
-[...]
-> Let everyone see what is happening:
+On Sat, Oct 22, 2005 at 07:41:08PM +0200, Stefan Richter wrote:
+> What I was referring to was to clean up a _part_ of the subsystem (the 
+> core), not to replace the subsystem. I admit though that my wording left 
+> much room for misunderstanding.
+> 
+> Furthermore, note that the "scsi-cleanup tree" which I referred to is 
+> not meant to be a fork. It should merely be another working stage before 
+> the -mm stage. And let me add that this stage should be left as soon as 
+> possible.
 
-Is there any chance that you can put this kind of content on a different
-medium, say blob, rss feed, whatever instead of loading l-k ?
+gosh, could you please shut up and code now?
 
---
-Ueimor
+There's been various TODO items posted:
+
+ (1) my TODO list for making the core HCIL idependent
+ (2) finishing the transition to remove struct scsi_request and only
+     send down S/G list
+ (3) get rid of legacy host probing
+
+and we'd all be happy if you added to the list.  Talking doesn't change
+anything, please submit patches and help moving things forward.  Thanks.
+
+And please start a new thread for such suggestions, this thread has finally
+managed to get into my killfile.
