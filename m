@@ -1,54 +1,132 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attachedPHYs)
-Date: Sat, 22 Oct 2005 10:39:36 -0700 (PDT)
-Message-ID: <20051022173936.26998.qmail@web31807.mail.mud.yahoo.com>
-References: <Pine.LNX.4.62.0510220357250.4997@qynat.qvtvafvgr.pbz>
-Reply-To: ltuikov@yahoo.com
+Date: Sat, 22 Oct 2005 19:41:08 +0200
+Message-ID: <435A79B4.9070201@s5r6.in-berlin.de>
+References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com> <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com>  <20051020170330.GA16458@lst.de>  <4357F7DE.7050004@adaptec.com> <1129852879.30258.137.camel@bluto.andrew> <43583A53.2090904@pobox.com> <435929FD.4070304@adaptec.com> <43593100.5040708@pobox.com> <43593884.7000800@adaptec.com> <4359395B.9030402@pobox.com> <43593FE1.7020506@adaptec.com> <4359440E.2050702@pobox.com> <43595275.1000308@adaptec.com> <435959BE.5040101@pobox.com> <43595CA6.9010802@adaptec.com> <43596070.3090902@pobox.com> <43596859.3020801@adaptec.com> <43596F16.7000606@pobox.com> <435A1793.1050805@s5r6.in-berlin.de> <Pine.LNX.4.62.0510220357250.4997@qynat.qvtvafvgr.pbz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751371AbVJVRji@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750960AbVJVRl7@vger.kernel.org>
 In-Reply-To: <Pine.LNX.4.62.0510220357250.4997@qynat.qvtvafvgr.pbz>
 Sender: linux-kernel-owner@vger.kernel.org
-To: David Lang <david.lang@digitalinsight.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Luben Tuikov <luben_tuikov@adaptec.com>, andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, Linus Torvalds <torvalds@osdl.org>
+To: David Lang <david.lang@digitalinsight.com>, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Luben Tuikov <luben_tuikov@adaptec.com>, andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
 
---- David Lang <david.lang@digitalinsight.com> wrote:
+David Lang wrote:
+> On Sat, 22 Oct 2005, Stefan Richter wrote:
+>> I doubt that the desired cleanup of the SCSI core could be done 
+>> on-the-go, i.e. without temporary breakage of larger parts of the 
+>> subsystem (out of mainline). But then again, I don't know much of the 
+>> subsystem, so what am I talking about here?
+>>
+>> Also, long-term breakage of smaller parts of the SCSI subsystem in 
+>> mainline is to be expected; breakage which is to be announced and 
+>> scheduled.
+> 
 > Stefan, what you and Luben are missing is that big-bang changes like you 
 > are proposing are simply not acceptable anymore.
 
-Take a look at the link below, working SAS code with the current
-kernel.  No one is trying to produce big-bang changes.  This is what
-Jeff want's you to believe that I'm trying to do -- this is part of his
-political game and FUD and apparently he's succeeding.
+I agree with you that big-bang changes are not acceptable. This wasn't 
+however what I had in mind.
 
-I repeat: no on is trying to produce a new "big-bang changes" as you
-call them. See the working code in the link at my sig.  This is
-_current_ Linus's tree with SAS Stack in it.
+> a few years ago when the 2.5 kernel series opened a similar big-bang 
+> approach was attempted for the IDE drivers. the instability that 
+> resulted (and rumors of the instability being worse then it was) 
+> eliminated a lot of people from testing things. things finally got bad 
+> enough that the entire system was reverted, and then a developer (one 
+> who had previously stated that such drastic changes were impossible) sat 
+> down and produced a long series of patches, each of which did a small 
+> amount of changes, each of which left the kernel in a working state (and 
+> each of which provided an advantage that could be identified at the time 
+> of the patch, either a better abstraction or a code cleanup). over a 
+> very few months (especially relative to the time spent working on the 
+> big-bang patches) the entire system was re-written.
 
-Don't yield to the FUD.
+What I proposed was to "renovate" a _part_ of the SCSI subsystem (the 
+core and the interfaces of the rest of the subsystem to the core) with 
+the 2.6 kernel as a basis. This is a huge difference to 2.5. Changes 
+took place everywhere in 2.5, many of them drastic.
+
+I agree with you that the incremental approach is preferrable whenever 
+possible. I even believe that this method could be applied to the SCSI 
+core cleanup. However, concerns were voiced that this method would 
+effectively lead to a double SCSI core: The old one, and a new one in 
+parallel to it which doesn't share much code with the old one. (At least 
+for some time, perhaps for a too long time.)
+
+It has been said multiple times that this would not be desirable for 
+reasons of /a/ more kernel bloat (while the goal was to remove existing 
+bloat and lay foundations to avoid future bloat), and /b/ massive 
+maintenance burden of two parallel infrastructures.
+
+So that's why I said that *short-term* breakage right on top and right 
+below the core should be accepted.
+
+Again, the huge difference to the 2.5 times would be that all this would 
+happen on top of a relatively stable kernel. (Stable in two senses.)
 
 > This is what Jeff is trying to tell you. you can't just produce an 
 > entirely new SCSI subsystem and drop it into the kernel one day, you can 
 
-No, this is what he wants you to believe that I'm trying to do.  This is what
-people start doing when they loose on technological ground.  Do not
-yield to the FUD and politics.  See the working code of current Linus's tree
-with SAS in it in my sig link.
+What I was referring to was to clean up a _part_ of the subsystem (the 
+core), not to replace the subsystem. I admit though that my wording left 
+much room for misunderstanding.
 
-I repeat, no one is trying to replace anything or throw anything out.
-This is just FUD and politics which Jeff is spreading because he's got
-an agenda in convincing certain people certain things.
+Furthermore, note that the "scsi-cleanup tree" which I referred to is 
+not meant to be a fork. It should merely be another working stage before 
+the -mm stage. And let me add that this stage should be left as soon as 
+possible.
 
-See the working SAS code in the link below -- current Linus' tree with
-SAS in it.  Soon enough it would contain SDI back-end and then HP and LSI
-would be able to plug right in, and I think there's an engineer out there
-who's already implemented a front end.
+> all agree on a goal (this has almost been done, but nto quite), but 
+> that's only the first step. After you have some idea of the goal you 
+> then have to look at how to move to that goal without breaking things in 
+> the meantime. This requires that each step along the way keeps things 
+> working and is relativly straightforward in and of itself.
+> 
+> this definantly sounds a LOT harder then the 'throw it out and replace 
+> it all' approach, and it is (from the point of view of the programmer), 
+> however the result ends up being far more reliable as the process forces 
+> better examination of all the details,
 
-    Luben
+I agree with you on that. Again, although my post may have sounded like 
+it, I did not want to advocate the "throw it out and replace it all" 
+approach.
 
+> and allows more people to 
+> understand what's happening each step of the way.
 
+Absolutely.
+
+However I don't agree with you that _every_ little step must keep 
+everything working. I believe that this may actually make the transition 
+less easy to follow.
+
+> And since there are no 
+> releases that are made unuseable for people deliberatly, you also get 
+
+I did not suggest to make unuseable releases.
+
+> extensive testing of all the steps along the way. This not only finds 
+> bugs sooner, it also makes it far more obvious where performance issues 
+> show up
+
+I agree with you on these advantages of the "(try to) keep everything 
+working after each patch". Although the monitoring of performance is 
+less important during the initial stage of the cleanup of the core.
+
+> so please accept that you aren't going to be able to replace any 
+> significant system in one massive change
+
+Agreed. This is absolutely not what should be done.
+
+> and instead start looking for 
+> ways to move the existing design towards where you want it to be and you 
+> will receive a lot of assistance in the process instead of banging heads 
+> with everyone.
+
+OK.
 -- 
-http://linux.adaptec.com/sas/
-http://www.adaptec.com/sas/
+Stefan Richter
+-=====-=-=-= =-=- =-==-
+http://arcgraph.de/sr/
