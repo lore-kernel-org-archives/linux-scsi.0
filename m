@@ -1,65 +1,30 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attached PHYs)
-Date: Sat, 22 Oct 2005 10:14:12 -0700 (PDT)
-Message-ID: <20051022171412.16830.qmail@web31801.mail.mud.yahoo.com>
-References: <4359B7CF.5060509@pobox.com>
-Reply-To: ltuikov@yahoo.com
+Date: Sat, 22 Oct 2005 18:19:43 +0100
+Message-ID: <20051022171943.GA7546@infradead.org>
+References: <4359440E.2050702@pobox.com> <43595275.1000308@adaptec.com> <435959BE.5040101@pobox.com> <43595CA6.9010802@adaptec.com> <43596070.3090902@pobox.com> <43596859.3020801@adaptec.com> <43596F16.7000606@pobox.com> <435A1793.1050805@s5r6.in-berlin.de> <20051022105815.GB3027@infradead.org> <1129994910.6286.21.camel@sipan.sipan.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31801.mail.mud.yahoo.com ([68.142.207.64]:56492 "HELO
-	web31801.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S932271AbVJVRON (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 Oct 2005 13:14:13 -0400
-In-Reply-To: <4359B7CF.5060509@pobox.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750806AbVJVRTz@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1129994910.6286.21.camel@sipan.sipan.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sergey Panov <sipan@sipan.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Luben Tuikov <luben_tuikov@adaptec.com>, andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, dougg@torque.net, Luben Tuikov <luben_tuikov@adaptec.com>, Christoph Hellwig <hch@lst.de>, jejb@steeleye.com
-Cc: Matthew Wilcox <matthew@wil.cx>, andrew.patterson@hp.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>
 
---- Jeff Garzik <jgarzik@pobox.com> wrote:
-> Since people are having such a tough time grasping the use of 
+On Sat, Oct 22, 2005 at 11:28:30AM -0400, Sergey Panov wrote:
+>  It is a mistake to think that you can not do a big rework and keep SCSI
+> sub-system stable. You just have to make sure the OLD way is supported
+> for as log as it is needed.
 
-Please drop the generalizaion and FUD.
+No.  Rewriting something from scratch is horrible engineering practice.
+It's impossible to very huge changes, small incremental changes OTOH
+allow easier planning, easier calculation of the risks and cost and most
+import better test coverage.  There's nothing specific to scsi or linux
+kernel code about it.  It'd suggest you read:
 
-You are missing the point, and the point is that using the
-block layer for SMP is so, so heavyweight, that no sane OS engineer
-would do that.
+ http://www.joelonsoftware.com/articles/fog0000000069.html
 
-Ready to see example:
- - see "smp_portal" in the complete and working SAS Transport Layer/Stack
-from the 1st link of my signature.  See that the overhead of sending an SMP
-task from user space to the domain device is _zero_, zero overhead.  As soon
-as the user process does a read(2), the SMP task it wrote(2), is immediately
-sent to the domain device, using the interconnect.  No bloat, no going around
-in circles.
-
-SDI does exactly the same things as it binds to the controller, the PCI device
-implementing the domain interconnect functions (exported via SDI).
-
-> It remains an open question whether the _complexity_ of this approach is 
-> more than is warranted for SMP.  But we've departed from that question, 
-> in this sub-thread :)
-
-Let everyone see what is happening:
-1. The industry submits a driver which clearly shows that SMP is not a block
-device and there is no technical merit to do it this way.  The industry shows
-a proper implementation of SMP access to the domain.
-2. Then the Linux SCSI community decides, on their own, without ANY TECHNICAL
-MERIT, or knowlege of the technology that they should try to implement SMP as
-a block device.  Then they see that this isn't viable since it adds bloat and
-SMP doesn't warrant it, and then we're back to 1.
-
-The parent says: here is how you do it.  The child though, ignores the parent's
-advice and does it its own way only to find out that the parent was right
-all along.
-
-My question is: at what point is this process going to stop?
-
-   Luben
-
-
--- 
-http://linux.adaptec.com/sas/
-http://www.adaptec.com/sas/
+or various similar articles.  Full scale rewrites almost never work
+out.
