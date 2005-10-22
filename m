@@ -1,60 +1,52 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [GIT PATCH] SCSI bug fixes for 2.6.14-rc5
-Date: Sat, 22 Oct 2005 16:15:28 +0000
-Message-ID: <1129997728.6461.3.camel@mulgrave>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attached PHYs)
+Date: Sat, 22 Oct 2005 09:51:17 -0700 (PDT)
+Message-ID: <20051022165117.95751.qmail@web31803.mail.mud.yahoo.com>
+References: <4359A9FE.4010503@pobox.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:45202 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751364AbVJVQPh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 Oct 2005 12:15:37 -0400
+Received: from web31803.mail.mud.yahoo.com ([68.142.207.66]:36795 "HELO
+	web31803.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S1750714AbVJVQvS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 22 Oct 2005 12:51:18 -0400
+In-Reply-To: <4359A9FE.4010503@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>, dougg@torque.net
+Cc: Matthew Wilcox <matthew@wil.cx>, Luben Tuikov <luben_tuikov@adaptec.com>, Christoph Hellwig <hch@lst.de>, andrew.patterson@hp.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>
 
-This represents hopefully the final bug fixes for 2.6.14-rc5
+--- Jeff Garzik <jgarzik@pobox.com> wrote:
+> Invalid example.  All of the methods listed -- request_queue, netlink, 
+> chrdev, sysfs, ioctl -- will work just fine when the root filesystem is 
+> on the far side of a SAS expander.  These are just methods of 
+> communication, nothing more.
 
-The patch is here:
+Jeff, why don't you listen from time to time to people who work with
+the technology on a daily basis who have experience with it, who
+have _insight_ of the technology?  Such insight gives them great
+intuition when it comes to design, among other things.
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-for-linus-2.6.git
+> In your example -- userspace discovery required before root filesystem 
+> can be found -- a program running from initrd/initramfs would create an 
+> SMP device node, open it, and then proceed with the discovery and 
 
-The short changelog is:
+SMP is part of the protocol, of what the device (PCI) implements.  It is always
+there, just like phys.  You do not need to create it from user space. It
+will be there for a user process to use, via say SDI.  SDI provides this as
+part of the controller.  Read the SDI spec.
 
-Alan Stern:
-  o Fix leak of Scsi_Cmnds
+Insight of the whole architecture is irreplacable to create good design.
 
-Christoph Hellwig:
-  o mptsas: fix phy identifiers
+> configuration process, which in turn creates the device nodes necessary 
+> to mount the root filesystem.
 
-James Smart:
-  o FW: [PATCH] for Deadlock in transport_fc
+Also note that everyone does domain discovery in the kernel/FW and not
+only for SAS but for other domains (even non-SCSI).  While domain
+discovery is in the kernel/FW, _control_ of the domain is given to
+user space, via say SDI -- everyone agrees on this.
 
-Karl Magnus Kolstoe:
-  o 2.6.13.3; add Pioneer DRM-624x to drivers/scsi/scsi_devinfo.c
-
-Mark Salyzyn:
-  o Fix aacraid regression
-
-Randy Dunlap:
-  o NCR5380: fix undefined preprocessor identifier
-
-Steven Rostedt:
-  o scsi_error thread exits in TASK_INTERRUPTIBLE state
-
-And the diffstat:
-
- message/fusion/mptsas.c  |   12 ++++++++----
- scsi/NCR5380.c           |    2 +-
- scsi/aacraid/aacraid.h   |    2 +-
- scsi/scsi_devinfo.c      |    1 +
- scsi/scsi_error.c        |    2 ++
- scsi/scsi_lib.c          |    7 ++++---
- scsi/scsi_transport_fc.c |   13 ++++++++++---
- 7 files changed, 27 insertions(+), 12 deletions(-)
-
-James
-
+   Luben
 
