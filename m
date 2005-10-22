@@ -1,49 +1,51 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: [PATCH] scsi disk: report size without overflow
-Date: Fri, 21 Oct 2005 19:24:59 -0700
-Message-ID: <20051021192459.52a749b7.rdunlap@xenotime.net>
-References: <20051020205532.16b65fa7.rdunlap@xenotime.net>
-	<1129915249.3440.42.camel@mulgrave>
-	<Pine.LNX.4.58.0510211345080.32061@shark.he.net>
-	<1129929437.3440.60.camel@mulgrave>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attached
+ PHYs)
+Date: Sat, 22 Oct 2005 12:30:35 +1000
+Message-ID: <4359A44B.3090804@torque.net>
+References: <91888D455306F94EBD4D168954A9457C048F0E34@nacos172.co.lsil.com> <20051020160155.GA14296@lst.de> <4357CB03.4020400@adaptec.com> <20051020170330.GA16458@lst.de> <4357F7DE.7050004@adaptec.com> <1129852879.30258.137.camel@bluto.andrew> <43583A53.2090904@pobox.com> <435929FD.4070304@adaptec.com> <20051021180455.GA6834@lst.de> <43592FA1.8000206@adaptec.com> <20051021182009.GA3364@parisc-linux.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:64131 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S932065AbVJVCZB (ORCPT
+Received: from zorg.st.net.au ([203.16.233.9]:53434 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S932119AbVJVC3e (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Oct 2005 22:25:01 -0400
-Received: from midway ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Fri, 21 Oct 2005 19:25:00 -0700
-In-Reply-To: <1129929437.3440.60.camel@mulgrave>
+	Fri, 21 Oct 2005 22:29:34 -0400
+In-Reply-To: <20051021182009.GA3364@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@dale.us
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Christoph Hellwig <hch@lst.de>, Jeff Garzik <jgarzik@pobox.com>, andrew.patterson@hp.com, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>
 
-On Fri, 21 Oct 2005 16:17:17 -0500 James Bottomley wrote:
-
-> On Fri, 2005-10-21 at 13:46 -0700, Randy.Dunlap wrote:
-> > On Fri, 21 Oct 2005, James Bottomley wrote:
-> > > what's wrong with the attached?  It looks like the code once allowed 256
-> > > byte sectors, but the if statement above now forbids them.
-> > 
-> > What if statement forbids 256-byte sectors?  I don't see it.
-> > 
-> > 	if (sector_size != 512 &&
-> > 	    sector_size != 1024 &&
-> > 	    sector_size != 2048 &&
-> > 	    sector_size != 4096 &&
-> > 	    sector_size != 256) {
+Matthew Wilcox wrote:
+> On Fri, Oct 21, 2005 at 02:12:49PM -0400, Luben Tuikov wrote:
 > 
-> Sorry, didn't read far enough down the if statement.
+>>>That beeing said I tried this approach.  It looks pretty cool when you
+>>>think about it, but the block layer is quite a bit too heavyweight for
+>>>queueing up a few SMP requests, and we need to carry too much useless
+>>>code around for it.
+>>
+>>That's the last reason not to implement SMP as a block device.
+>>But this is good that you tried it and it "flopped".  This way
+>>people will stop repeating "SMP... block device".
 > 
-> To support 256, we can still do it, but the assignment has to become
 > 
-> sector_t sz = (sdkp->capacity/2) * (hard_sector/256);
+> Block layer != Block device.
+> 
+> Nobody wants to implement SMP as a block device.
+> 
+> The question is whether the SMP interface should be implemented as part
+> of the block layer.
 
-OK by me.
+However, the block layer is used in the context of a
+block device (and in some cases a char device).
+If SAS domain discovery is done from the user space, and
+the root file system is the far side of a SAS expander,
+there are no suitable devices, just the SAS initiator
+(HBA) which currently we cannot address via the block layer.
 
-Thanks,
----
-~Randy
+
+Doug Gilbert
+
