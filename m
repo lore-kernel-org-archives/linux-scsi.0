@@ -1,55 +1,141 @@
-From: Sergey Panov <sipan@sipan.org>
-Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally
-	attached PHYs)
-Date: Sat, 22 Oct 2005 11:28:30 -0400
-Message-ID: <1129994910.6286.21.camel@sipan.sipan.org>
-References: <4359395B.9030402@pobox.com> <43593FE1.7020506@adaptec.com>
-	 <4359440E.2050702@pobox.com> <43595275.1000308@adaptec.com>
-	 <435959BE.5040101@pobox.com> <43595CA6.9010802@adaptec.com>
-	 <43596070.3090902@pobox.com> <43596859.3020801@adaptec.com>
-	 <43596F16.7000606@pobox.com> <435A1793.1050805@s5r6.in-berlin.de>
-	 <20051022105815.GB3027@infradead.org>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally attached PHYs)
+Date: Sat, 22 Oct 2005 09:09:14 -0700 (PDT)
+Message-ID: <20051022160915.9570.qmail@web31802.mail.mud.yahoo.com>
+References: <43596F16.7000606@pobox.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rwcrmhc11.comcast.net ([204.127.198.35]:45038 "EHLO
-	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
-	id S1751341AbVJVP3S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 Oct 2005 11:29:18 -0400
-In-Reply-To: <20051022105815.GB3027@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751322AbVJVQJT@vger.kernel.org>
+In-Reply-To: <43596F16.7000606@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Luben Tuikov <luben_tuikov@adaptec.com>, andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, Linus Torvalds <torvalds@osdl.org>
 
-On Sat, 2005-10-22 at 11:58 +0100, Christoph Hellwig wrote:
-> On Sat, Oct 22, 2005 at 12:42:27PM +0200, Stefan Richter wrote:
-> > A. Post mock-ups and pseudo code about how to change the core, discuss.
-> > B. Set up a scsi-cleanup tree. In this tree,
-> >      1. renovate the core (thereby break all command set drivers and
-> >         all transport subsystems),
+--- Jeff Garzik <jgarzik@pobox.com> wrote:
+>
+http://linux.adaptec.com/sas/git/?p=linux-2.6-sas.git;a=commit;h=785747ddc631f7618d728a377346965f7db2256a
 > 
-> No way.  Doing things from scatch is a really bad idea.  See how far we came
-> with Linux 2.6 scsi vs 2.4 scsi without throwing everything away and break the
-> world.  Please submit changes to fix _one_ thing at a time and fix all users.
-> Repeat until done or you don't care anymore.
+> This effectively illustrates the wrong thing to do:  duplicating 
+> information that's already in Scsi_Host_Template.
 
- It is a mistake to think that you can not do a big rework and keep SCSI
-sub-system stable. You just have to make sure the OLD way is supported
-for as log as it is needed.
+No, it doesn't.  It shows you that accomodating of this is so very easy. Easy
+and straightforward, just as the comming shows.
 
- E.g. before moving in the RIGHT direction and weeding out parallel SCSI
-atavism from the common SCSI layer (or should I say SAM, to please
-Luben) you can insert "generic" transport layer at the bottom (just like
-Luben inserted his SAS) and use it to keep all currently supported
-drivers stable. SCSI mid-layer can be reworked in any number of steps,
-even in one step, because is not a big thing, it is just 11k lines plus
-4k of recently added transport modules.
+> Just use Scsi_Host_Template in the LLDD and see where that goes.
 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+We've done this already: adp94xx submitted earlier this year, rejected by
+the community, because "common SAS tasks should go to a common layer".  Now
+you _have_ that common layer, the SAS Transport Stack/Layer.  But the
+requirements of the community seem to change on a daily basis.
 
+It looks like "the community" got more than it bargained for, and since
+it doesn't understand it, it wants to bastardize the code and the layering.
+
+> > While the architecture in my mind is clear, I cannot do this myself
+> > (and for all drivers).  Such a change would be gradual, involving more
+> > than one developer, for more than one (new) driver, etc.
+> 
+> Correct.  That's why there is resistance to aic94xx's approach of 
+> creating a totally new "strict SAM" path, existing in parallel with the 
+
+No, it is not correct -- you complety turn around anything I say to make
+yourself look right.
+
+Here is what I meant: the resistance is because a few people of Linux SCSI
+want things done _their_ way, using _their_ code, reinventing code and concepts
+done already by engineers who use the technology every day.
+
+Why else is there a COMPLETLY BROKEN and WRONG "SAS transport attributes"?
+Politics and influence, thats why.  So that you can say "change already
+existing code".  So in effect politically "correct" people can submit
+COMPLETY WRONG AND BROKEN CODE with their name on it, and when there is
+a proper code wating to go in, they can BLOCK IT and ask that
+current BROKEN code be changed (beyond recognition) code which made it
+in, NOT because of technological merit but because of political influence.
+
+Linux SCSI people should start _listening_ to technology engineers who
+work with this technology every day.  If they showed this open attitude,
+I can tell you that _a lot more_ engineers would get involved to _improve_
+further Linux SCSI, who are holding out now just because of this "my way
+or no way" attitude of a few folks at Linux SCSI.
+
+Furthermore, "aic94xx" is NOT CREATING ANYTHING NEW.  This is how
+USB Storage and SBP already work.  There is clearly separated transport
+layer, independent of the interconnect.  That layer depends on the type
+of device connected.  Using such an infrastructure you can layer more
+varied architectures, as opposed to dictating that aic94xx needs the
+host template in it, short-circuting proper layring.
+
+I repeat again: apd94xx already has the Host Template IN IT.
+I repeat again: nothing in the Hardware of AIC-94XX Host Adapter has
+_anything_ to do with Host Templates.  Host Templates are a SCSI thing.
+The hardware implements an access point to the _interconnect_: Execute
+Command SCSI RPC and TMFs.  It is completely backwards to force something
+at a place where it does not belong.
+I repeat again: USB Storage and SBP _already_ implement such an architecture
+as shown by SAS.
+
+Had we had multiple Transport Layers back when SCSI Core was written (imported
+from BSD?) I can tell you that there'd be such a layering disposistion as
+shown in USB/SBP/SAS _already_ in the kernel -- just because IT MAKES SENSE.
+
+> traditional SCSI core.  You need to evolve the existing code to get 
+> there.  Such changes are gradual, involving more than one developer, etc.
+
+Thank you for the mockery.  What I meant is that I don't mind working towards
+this goal, with storage engineers who _know_ and _understand_ SCSI Technology,
+not necessarily SAS, but SCSI in general.  There is only a few folks
+like that here at lsml who are active and at least one whom I know of
+who is not active.
+
+What actually seems to be happening at Linux SCSI is not "working together"
+but "If you do not do it _my_ way, I'll spin your words and say that
+you are not willing to ``work together''." which is _exactly_ what you
+do.
+
+Is it possible for Linux SCSI to learn that they are doing something wrong?
+Is it possible for Linux SCSI to learn that they need to listen and learn
+from company engineers, as opposed to doing things _their_ way?
+Apparently not.
+
+> We don't need one small set of SCSI drivers behaving differently from 
+> the vast majority of existing SCSI drivers.
+
+USB Storage and SBP are already like that.
+
+Then again why are you saying this?  Would you loose control?
+Cannot you see that such changes are necessary to go forward towards
+the future?  Do you think that such changes would be happening only
+in Linux SCSI?
+
+If Linux overall has the attitude you are showing, Linux would go extinct
+in just a few years.  Just enough time for such antics to get to paying
+customers (who not necessarily have technological know-how, but it would
+eventually get to them).
+
+> Hear me now, and believe me later:  we all largely agree on the points
+
+You are a very good politican -- just keep repeating this.
+ 
+> you've raised about legacy crapola in the SCSI core.  James, Christoph, 
+> myself, and several others disagree with your assertion that the old 
+> SCSI core should exist in parallel with your new SCSI core.
+
+This isn't my new SCSI Core.  I don't have a new SCSI Core.
+But I'm flattered that you feel this way.
+
+> We differ on the path, not the goal.  As a thought experiment, you could 
+> try simply implementing the changes requested, and see where that goes.
+
+Been there, done that: adp94xx, rejected by none other but "the community".
+Here is now the Linux SAS Stack and aic94xx, working completely fine,
+full source code, git tree, patch file, whole working tree (Linus' as of
+Friday evening + SAS Stack + aic94xx) present at the link in my sig.
+
+   Luben
+-- 
+http://linux.adaptec.com/sas/
+http://www.adaptec.com/sas/
