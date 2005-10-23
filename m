@@ -1,39 +1,34 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [patch 0/6] marginalize HCIL a bit
-Date: Sat, 22 Oct 2005 21:45:49 -0400
-Message-ID: <435AEB4D.1050602@pobox.com>
-References: <20051023013618.GA18201@havoc.gtf.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [patch 3/6] SCSI HCIL: add scsi_scan_target()
+Date: Sat, 22 Oct 2005 19:50:42 -0600
+Message-ID: <20051023015042.GB1605@parisc-linux.org>
+References: <20051023013618.GA18201@havoc.gtf.org> <20051023013849.GC18279@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:54975 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751380AbVJWBpy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 Oct 2005 21:45:54 -0400
-Received: from cpe-069-134-188-146.nc.res.rr.com ([69.134.188.146] helo=[10.10.10.88])
-	by mail.dvmed.net with esmtpsa (Exim 4.52 #1 (Red Hat Linux))
-	id 1ETUvo-00016T-HD
-	for linux-scsi@vger.kernel.org; Sun, 23 Oct 2005 01:45:53 +0000
-In-Reply-To: <20051023013618.GA18201@havoc.gtf.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:45730 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S1751383AbVJWBun
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 22 Oct 2005 21:50:43 -0400
+Content-Disposition: inline
+In-Reply-To: <20051023013849.GC18279@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-scsi@vger.kernel.org
 
-Jeff Garzik wrote:
-> This patch series makes a tiny bit of progress on the marginalize-SPI
-> todo list.
-> 
-> Patches:
-> 1) s/scsi_scan_target/spi_scan_target/
-> 2) remove unused scsi_scan_single_target()
-> 3) add scsi_scan_target()
-> 4) kill all uses of spi_scan_target()
-> 5) kill spi_scan_target(), __spi_scan_target()
-> 6) misc cleanups
+On Sat, Oct 22, 2005 at 09:38:49PM -0400, Jeff Garzik wrote:
+> +/**
+> + * scsi_scan_target - scan a target id, possibly including all LUNs on the
+> + *     target.
+> + * @target:	target to scan
+> + * @lun:	Specific LUN to scan or SCAN_WILD_CARD
+> + * @rescan:	passed to LUN scanning routines
+> + *
+> + * Description:
+> + *     Scan the target id on @parent, @channel, and @id. Scan at least LUN 0,
+> + *     and possibly all LUNs on the target id.
 
-
-hmmm.  On second thought, I should probably leave __spi_scan_target() in 
-there as a static function, to delete the now duplicated code in 
-spi_scan_channel().
+Need to fix @parent, @channel and @id in the kerneldoc.  I think Randy
+has some automatic kerneldoc checking scripts?
 
