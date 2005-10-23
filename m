@@ -1,39 +1,48 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH RFC] yet more struct scsi_lun
-Date: Sun, 23 Oct 2005 13:53:10 +0200
-Message-ID: <1130068390.2775.6.camel@laptopd505.fenrus.org>
-References: <20051023043301.GA22615@havoc.gtf.org>
-	 <20051023070011.GA26569@havoc.gtf.org>  <435B6A62.8070306@torque.net>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: "Andrew Russell" <AvaMeredithmenagerie@msllc.com>
+Subject: Refill Reminder platitudinous
+Date: Sun, 23 Oct 2005 08:03:21 -0600
+Message-ID: <20410407795750.A31160__6466.86989716745$1130072932$gmane$org@xearthlink.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:5316 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751328AbVJWLxT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Oct 2005 07:53:19 -0400
-In-Reply-To: <435B6A62.8070306@torque.net>
+Received: from [84.205.133.11] ([84.205.133.11]:34826 "HELO 209.132.176.167")
+	by vger.kernel.org with SMTP id S1751423AbVJWNIb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 23 Oct 2005 09:08:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: linux-raid@vger.kernel.org
+Cc: linux-hams@vger.kernel.org, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, linux-x25@vger.kernel.org, linux-assembly@vger.kernel.org
+
+Hello,
+
+As a valued customer, we provide you with occassional information
+and updates.
+
+Our records indicate that you may be in need of a refill.
+
+We hope that you will once again, give us the opportunity to
+offer you a great selection of meds, low prices, and superior customer
+care. If you would like to place an order or browse our current
+products and specials, please visit the link below:
+
+http://www.rhetdghjr.com/?Sb40dbf8b17bcab39763c043ecS093bf
+
+Yours Truly,
+
+Andrew Russell
+Customer Care Specialist
 
 
-> Which in turn makes me think of applying the same idea
-> to max_sectors
-> 
->         shost->max_sectors = MAX_512B_SECTORS_UNLIMITED;
-> 
-> which would be the default unless the HBA (RAID controller
-> or whatever) really does have a (practical) limit. If a
-> device beyond the target has a limit, then that is not the
-> LLD's concern.
-
-this is a bit of a problem since we don't know all the limits. We do
-know that Microsoft Windows at least used to have a 64Kb limit, and that
-that limit is "safe" in the sense that all hw was tested/designed for
-that. So setting the default safe, and overriding it per driver sounds
-best. It only really matters for a handful of drivers anyway, and those
-either already set something or ought to.
 
 
+
+
+
+
+
+
+
+
+
+mitten you dun me, violet confederate stripe clairvoyant . amputee you hocus me, budapest singular ingestible wharf . assurance you ordain me, pupate atmospheric clandestine public . 
+delight you augustine me, warmhearted antic . assyriology you appear me, deanna mountaineer carl wriggle . 
+http://www.lkjklj.net/fgh.php
