@@ -1,35 +1,50 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH RFC] use struct scsi_lun in generic code
-Date: Sun, 23 Oct 2005 01:20:09 -0400
-Message-ID: <435B1D89.5070500@pobox.com>
-References: <20051023043301.GA22615@havoc.gtf.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH 0/2] libata: MODE SELECT
+Date: Sun, 23 Oct 2005 16:23:03 +1000
+Message-ID: <435B2C47.8070708@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:47808 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751401AbVJWFUQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Oct 2005 01:20:16 -0400
-Received: from cpe-069-134-188-146.nc.res.rr.com ([69.134.188.146] helo=[10.10.10.88])
-	by mail.dvmed.net with esmtpsa (Exim 4.52 #1 (Red Hat Linux))
-	id 1ETYHE-0000AS-5g
-	for linux-scsi@vger.kernel.org; Sun, 23 Oct 2005 05:20:15 +0000
-In-Reply-To: <20051023043301.GA22615@havoc.gtf.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, htejun@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Jeff Garzik wrote:
-> A further experiment:  once dev_printk() has been used to eliminate
-> direct references to HCIL address (see previous patch), we can see what
-> happens when we update the core to use struct scsi_lun.
+Jeff,
+Here is another shot at adding MODE SELECT to
+libata. I have used sat-r06, sbc-3 and spc-4 as
+a guide. Compliance on the ATA side has some issues:
+  - no mechanism to issue 2 or more ATA commands
+    when translating a single SCSI command [in the
+    upstream branch, there have been patches ...]
+  - relies on the dev->id array (IDENTIFY DEVICE response)
+    always being up to date. Despite assurances I cannot
+    see how that is the case when multiple hosts
+    (initiators) can access a SATA disk.
 
-Two notes to this patch:
+This patch is broken into two parts and is against
+libata-dev's upstream branch:
+  1) strengthen MODE SENSE processing and make
+     default mode pages visible within libata-scsi.c
+  2) add MODE SELECT SCSI command support.
 
-1) A REPORT LUNS [non-sequential] scan works quite nicely with this patch.
+Two attributes can be changed with these patches:
+  - WCE: write cache enable [cache mode page]
+  - DRA: disable read ahead [cache mode page]
 
-2) However, display a valid LUN received from REPORT LUNS will 
-inevitably be mangled by scsilun_to_str().  The lun data itself is NOT 
-mangled, of course; just the display.
+Testing: upstream branch seems to be broken wrt SG_IO
+as the largest amount of data that can be sent per
+command is 4 KB. A 50 MB write (segmented to 4 KB per
+command) slowed down from 14 seconds with WCE=1 to
+107 seconds with WCE=0. sg_dd was used for the transfer
+and sdparm to change WCE. ST380013AS disk and
+sata_sil LLD.
 
+The attachments are mime text because I wasn't able
+to do otherwise.
+
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
+
+Doug Gilbert
