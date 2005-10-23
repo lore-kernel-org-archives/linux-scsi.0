@@ -1,38 +1,42 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [patch 2/6] SCSI HCIL: remove unused scsi_scan_single_target()
-Date: Sat, 22 Oct 2005 19:53:04 -0600
-Message-ID: <20051023015304.GC1605@parisc-linux.org>
-References: <20051023013618.GA18201@havoc.gtf.org> <20051023013810.GB18279@havoc.gtf.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [patch 3/6] SCSI HCIL: add scsi_scan_target()
+Date: Sat, 22 Oct 2005 21:54:49 -0400
+Message-ID: <435AED69.80609@pobox.com>
+References: <20051023013618.GA18201@havoc.gtf.org> <20051023013849.GC18279@havoc.gtf.org> <20051023015042.GB1605@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:49626 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1751382AbVJWBxF
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 Oct 2005 21:53:05 -0400
-Content-Disposition: inline
-In-Reply-To: <20051023013810.GB18279@havoc.gtf.org>
+Received: from mail.dvmed.net ([216.237.124.58]:58303 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751384AbVJWByw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 22 Oct 2005 21:54:52 -0400
+In-Reply-To: <20051023015042.GB1605@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Matthew Wilcox <matthew@wil.cx>
 Cc: linux-scsi@vger.kernel.org
 
-On Sat, Oct 22, 2005 at 09:38:10PM -0400, Jeff Garzik wrote:
-> -/**
-> - * scsi_scan_single_target - scan the given SCSI target
-> - * @shost:         adapter to scan
-> - * @chan:          channel to scan
-> - * @id:            target id to scan
-> - **/
-> -void scsi_scan_single_target(struct Scsi_Host *shost, 
-> -	unsigned int chan, unsigned int id)
-> -{
-> -	scsi_scan_host_selected(shost, chan, id, SCAN_WILD_CARD, 1);
-> -}
-> -EXPORT_SYMBOL(scsi_scan_single_target);
-> -
+Matthew Wilcox wrote:
+> On Sat, Oct 22, 2005 at 09:38:49PM -0400, Jeff Garzik wrote:
+> 
+>>+/**
+>>+ * scsi_scan_target - scan a target id, possibly including all LUNs on the
+>>+ *     target.
+>>+ * @target:	target to scan
+>>+ * @lun:	Specific LUN to scan or SCAN_WILD_CARD
+>>+ * @rescan:	passed to LUN scanning routines
+>>+ *
+>>+ * Description:
+>>+ *     Scan the target id on @parent, @channel, and @id. Scan at least LUN 0,
+>>+ *     and possibly all LUNs on the target id.
+> 
+> 
+> Need to fix @parent, @channel and @id in the kerneldoc.
 
-Adrian Bunk already tried to kill this one in February and hch NAKed it:
-http://www.uwsg.iu.edu/hypermail/linux/kernel/0502.3/1115.html
+where?  The above looks right to me.
 
-Christoph, can it be killed yet?  ;-)
+	Jeff
+
+
+
