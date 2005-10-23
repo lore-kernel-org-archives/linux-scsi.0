@@ -1,316 +1,131 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [PATCH 2/2] libata: MODE SELECT, add command
-Date: Sun, 23 Oct 2005 16:25:07 +1000
-Message-ID: <435B2CC3.9040203@torque.net>
-Reply-To: dougg@torque.net
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [PATCH RFC] yet more struct scsi_lun
+Date: Sun, 23 Oct 2005 03:00:11 -0400
+Message-ID: <20051023070011.GA26569@havoc.gtf.org>
+References: <20051023043301.GA22615@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060900020908040705030608"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, htejun@gmail.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from havoc.gtf.org ([69.61.125.42]:22241 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1751100AbVJWHAP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 23 Oct 2005 03:00:15 -0400
+Received: from havoc.gtf.org (havoc.gtf.org [127.0.0.1])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by havoc.gtf.org (Postfix) with ESMTP id ED59D1C095D4
+	for <linux-scsi@vger.kernel.org>; Sun, 23 Oct 2005 03:00:11 -0400 (EDT)
+Received: (from garzik@localhost)
+	by havoc.gtf.org (8.13.1/8.13.1/Submit) id j9N70B35027000
+	for linux-scsi@vger.kernel.org; Sun, 23 Oct 2005 03:00:11 -0400
+Content-Disposition: inline
+In-Reply-To: <20051023043301.GA22615@havoc.gtf.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------060900020908040705030608
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 
-Patch against libata-dev git tree, upstream branch
+Douglas Gilbert reminded me of a lun limitation I could kill.  This
+patch applied on top of the previous two lun patches.
 
-Changelog:
-  - decode MODE SELECT SCSI command
-  - only two attributes are translated to the SET FEATURES
-    ATA command: WCE and DRA
-  - moved relative position of ata_scsi_rbuf_get+put() to
-    make them visible to ata_scsi_mode_select_xlat()
+DO NOT APPLY.  For discussion only.
 
-Signed-off-by: Douglas Gilbert <dougg@torque.net>
+Changes:
+* add SCSILUN_UNLIMITED for LLDDs without lun limits; set
+	shost->max_lun = SCSILUN_UNLIMITED;
 
-Doug Gilbert
+* remove the lun limits in scsi_report_lun_scan()
 
---------------060900020908040705030608
-Content-Type: text/x-patch;
- name="libata-scsi051023ms2.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="libata-scsi051023ms2.diff"
 
---- libata-dev/drivers/scsi/libata-scsi.c	2005-10-23 14:15:01.000000000 +1000
-+++ libata-dev/drivers/scsi/libata-scsi.c051023ms2	2005-10-23 14:47:07.000000000 +1000
-@@ -922,6 +922,188 @@
- }
+Special note:
+With this patch (and previous patches in series), max_lun limitation
+only remains in two areas, AFAICS:
+
+  1) legacy LLDDs that perform sequential lun scans
+  2) legacy userspace interfaces
+  3) Any LLDD that fails to set max_lun = SCSILUN_UNLIMITED.
+
+
+
+ drivers/scsi/scsi_scan.c |   39 ++++++++++++++-------------------------
+ include/scsi/scsi.h      |    1 +
+ 2 files changed, 15 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index fb1d9c7..09df4e7 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1070,7 +1070,6 @@ static int scsi_report_lun_scan(struct s
+ 	char devname[64];
+ 	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
+ 	unsigned int length;
+-	unsigned int lun;
+ 	unsigned int num_luns;
+ 	unsigned int retries;
+ 	int result;
+@@ -1202,29 +1201,17 @@ static int scsi_report_lun_scan(struct s
+ 	 * the header, so start at 1 and go up to and including num_luns.
+ 	 */
+ 	for (lunp = &lun_data[1]; lunp <= &lun_data[num_luns]; lunp++) {
+-		lun = scsilun_to_int(lunp);
++		int lun;
++		char lunstr[SCSILUN_STR_LEN];
  
- /**
-+ *	ata_scsi_rbuf_get - Map response buffer.
-+ *	@cmd: SCSI command containing buffer to be mapped.
-+ *	@buf_out: Pointer to mapped area.
-+ *
-+ *	Maps buffer contained within SCSI command @cmd.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host_set lock)
-+ *
-+ *	RETURNS:
-+ *	Length of response buffer.
-+ */
-+
-+static unsigned int ata_scsi_rbuf_get(struct scsi_cmnd *cmd, u8 **buf_out)
-+{
-+	u8 *buf;
-+	unsigned int buflen;
-+
-+	if (cmd->use_sg) {
-+		struct scatterlist *sg;
-+
-+		sg = (struct scatterlist *) cmd->request_buffer;
-+		buf = kmap_atomic(sg->page, KM_USER0) + sg->offset;
-+		buflen = sg->length;
-+	} else {
-+		buf = cmd->request_buffer;
-+		buflen = cmd->request_bufflen;
-+	}
-+
-+	*buf_out = buf;
-+	return buflen;
-+}
-+
-+/**
-+ *	ata_scsi_rbuf_put - Unmap response buffer.
-+ *	@cmd: SCSI command containing buffer to be unmapped.
-+ *	@buf: buffer to unmap
-+ *
-+ *	Unmaps response buffer contained within @cmd.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host_set lock)
-+ */
-+
-+static inline void ata_scsi_rbuf_put(struct scsi_cmnd *cmd, u8 *buf)
-+{
-+	if (cmd->use_sg) {
-+		struct scatterlist *sg;
-+
-+		sg = (struct scatterlist *) cmd->request_buffer;
-+		kunmap_atomic(buf - sg->offset, KM_USER0);
-+	}
-+}
-+
-+/**
-+ *	ata_scsi_mode_select_xlat - Translate SCSI MODE SELECT commands
-+ *	@qc: Storage for translated ATA taskfile
-+ *	@scsicmd: SCSI command to translate
-+ *
-+ *	Sets up an ATA taskfile to issue SET FEATURES, if required.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host_set lock)
-+ *
-+ *	RETURNS:
-+ *	Zero on success and setup ATA command to execute,
-+ *	returns 1 otherwise which includes no ATA command to execute.
-+ */
-+
-+static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc,
-+					      const u8 *scsicmd)
-+{
-+	struct ata_taskfile *tf = &qc->tf;
-+	struct scsi_cmnd *cmd = qc->scsicmd;
-+	unsigned int param_len, ten, buflen, minlen, bdlen, offset;
-+	unsigned int pglen, spf, mpg, wce, dra;
-+	u8 *rbuf;
-+	u8 apage[64];
-+
-+	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
-+	tf->protocol = ATA_PROT_NODATA;
-+	cmd->result = SAM_STAT_GOOD;
-+	if (! (scsicmd[1] & 0x10))
-+		goto invalid_fld;	/* require PF bit set */
-+	ten = (scsicmd[0] == MODE_SELECT_10) ? 1 : 0;
-+	param_len =  ten ? ((scsicmd[7] << 8) + scsicmd[8]) : scsicmd[4];
-+	if (param_len < (ten ? 8 : 4))
-+		goto nothing_to_do;	/* not defined as an error but */
-+        buflen = ata_scsi_rbuf_get(cmd, &rbuf);
-+	minlen = (param_len < buflen) ? param_len : buflen;
-+	bdlen = ten ? ((rbuf[6] << 8) + rbuf[7]) : rbuf[3];
-+	offset = (ten ? 8 : 4) + bdlen;
-+	if (minlen > offset) {
-+		memset(apage, 0, sizeof(apage));
-+		pglen = minlen - offset;
-+		pglen = (pglen < sizeof(apage)) ? pglen : sizeof(apage);
-+		memcpy(apage, rbuf + offset, pglen);
-+	}
-+	ata_scsi_rbuf_put(cmd, rbuf);
-+	if (minlen == offset)
-+		goto nothing_to_do;	/* not defined as an error but */
-+	if (minlen < offset)
-+		goto bad_param;
-+	minlen -= offset;
-+	spf = !!(apage[0] & 0x40);
-+	mpg = apage[0] & 0x3f;
-+	/* mspg = spf ? apage[1] : 0; */
-+	if (spf)
-+		goto bad_param;
-+	else
-+		pglen = apage[1];
-+		if (pglen + 2 < minlen)
-+			goto bad_param;
-+	switch (mpg) {
-+	case RW_RECOVERY_MPAGE:
-+		if (pglen != def_rw_recovery_mpage[1])
-+			goto bad_param;
-+		break;
-+	case CACHE_MPAGE:
-+		if (pglen != def_cache_mpage[1])
-+			goto bad_param;
-+		wce = !!(apage[2] & 0x4);
-+		dra = !!(apage[12] & 0x20);
-+		if (wce != !!(ata_id_wcache_enabled(qc->dev->id))) {
-+			/* write(back) cache */
-+			if (wce)
-+				tf->feature = 0x2;	/* WCE -> enable */
-+			else
-+				tf->feature = 0x82;	/* disable */
-+			tf->command = ATA_CMD_SET_FEATURES;
-+			/* <<< If success, should dev->id be updated? >>> */
-+			/* vvvvvvv   start of dubious code   vvvvvvvvvv */
-+			if (wce)
-+				qc->dev->id[85] |= 0x20;
-+			else
-+				qc->dev->id[85] &= ~0x20;
-+			/* vvvvvvv   end of dubious code   vvvvvvvvvv */
-+			return 0;
-+		}
-+/* FIXME: we may want to issue two SET FEATURES commands here */
-+		if (dra != !(ata_id_rahead_enabled(qc->dev->id))) {
-+			/* read look ahead */
-+			if (dra)
-+				tf->feature = 0x55;	/* DRA -> disable */
-+			else
-+				tf->feature = 0xaa;	/* enable */
-+			tf->command = ATA_CMD_SET_FEATURES;
-+			/* <<< If success, should dev->id be updated? >>> */
-+			/* vvvvvvv   start of dubious code   vvvvvvvvvv */
-+			if (dra)
-+				qc->dev->id[85] &= ~0x40;
-+			else
-+				qc->dev->id[85] |= 0x40;
-+			/* vvvvvvv   end of dubious code   vvvvvvvvvv */
-+			return 0;
-+		} 
-+		break;
-+	case CONTROL_MPAGE:
-+		if (pglen != def_control_mpage[1])
-+			goto bad_param;
-+		break;
-+	default:
-+		goto bad_param;
-+	}
-+	/* fall through, nothing to do */
-+
-+nothing_to_do:
-+	qc->scsicmd->result = SAM_STAT_GOOD;
-+	return 1;
-+
-+invalid_fld:
-+	ata_scsi_set_sense(qc->scsicmd, ILLEGAL_REQUEST, 0x24, 0x0);
-+	/* "Invalid field in cbd" */
-+	return 1;
-+
-+bad_param:
-+	ata_scsi_set_sense(cmd, ILLEGAL_REQUEST, 0x26, 0x0);
-+        /* "Invalid field in parameter list" */
-+	return 1;
-+}
-+
-+/**
-  *	ata_scsi_translate - Translate then issue SCSI command to ATA device
-  *	@ap: ATA port to which the command is addressed
-  *	@dev: ATA device to which the command is addressed
-@@ -1006,61 +1188,6 @@
- }
+-		/*
+-		 * Check if the unused part of lunp is non-zero, and so
+-		 * does not fit in lun.
+-		 */
+-		if (memcmp(&lunp->scsi_lun[sizeof(lun)], "\0\0\0\0", 4)) {
+-			int i;
++		lun = scsilun_to_int(lunp);
  
- /**
-- *	ata_scsi_rbuf_get - Map response buffer.
-- *	@cmd: SCSI command containing buffer to be mapped.
-- *	@buf_out: Pointer to mapped area.
-- *
-- *	Maps buffer contained within SCSI command @cmd.
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host_set lock)
-- *
-- *	RETURNS:
-- *	Length of response buffer.
-- */
--
--static unsigned int ata_scsi_rbuf_get(struct scsi_cmnd *cmd, u8 **buf_out)
--{
--	u8 *buf;
--	unsigned int buflen;
--
--	if (cmd->use_sg) {
--		struct scatterlist *sg;
--
--		sg = (struct scatterlist *) cmd->request_buffer;
--		buf = kmap_atomic(sg->page, KM_USER0) + sg->offset;
--		buflen = sg->length;
--	} else {
--		buf = cmd->request_buffer;
--		buflen = cmd->request_bufflen;
--	}
--
--	*buf_out = buf;
--	return buflen;
--}
--
--/**
-- *	ata_scsi_rbuf_put - Unmap response buffer.
-- *	@cmd: SCSI command containing buffer to be unmapped.
-- *	@buf: buffer to unmap
-- *
-- *	Unmaps response buffer contained within @cmd.
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host_set lock)
-- */
--
--static inline void ata_scsi_rbuf_put(struct scsi_cmnd *cmd, u8 *buf)
--{
--	if (cmd->use_sg) {
--		struct scatterlist *sg;
--
--		sg = (struct scatterlist *) cmd->request_buffer;
--		kunmap_atomic(buf - sg->offset, KM_USER0);
--	}
--}
--
--/**
-  *	ata_scsi_rbuf_fill - wrapper for SCSI command simulators
-  *	@args: device IDENTIFY data / SCSI command of interest.
-  *	@actor: Callback hook for desired SCSI command simulator
-@@ -1878,6 +2005,9 @@
- 		return ata_scsi_verify_xlat;
- 	case START_STOP:
- 		return ata_scsi_start_stop_xlat;
-+	case MODE_SELECT:
-+	case MODE_SELECT_10:
-+		return ata_scsi_mode_select_xlat;
- 	}
+-			/*
+-			 * Output an error displaying the LUN in byte order,
+-			 * this differs from what linux would print for the
+-			 * integer LUN value.
+-			 */
+-			printk(KERN_WARNING "scsi: %s lun 0x", devname);
+-			data = (char *)lunp->scsi_lun;
+-			for (i = 0; i < sizeof(struct scsi_lun); i++)
+-				printk("%02x", data[i]);
+-			printk(" has a LUN larger than currently supported.\n");
+-		} else if (lun > sdev->host->max_lun) {
+-			printk(KERN_WARNING "scsi: %s lun%d has a LUN larger"
+-			       " than allowed by the host adapter\n",
+-			       devname, lun);
++		if ((sdev->host->max_lun != SCSILUN_UNLIMITED) &&
++		    (lun > sdev->host->max_lun)) {
++			dev_printk(KERN_WARNING, &sdev->sdev_gendev,
++				"lun %s larger"
++				" than allowed by the host adapter\n",
++				scsilun_to_str(lunp, lunstr));
+ 		} else {
+ 			int res;
  
- 	return NULL;
-@@ -2014,11 +2144,6 @@
- 			ata_scsi_rbuf_fill(&args, ata_scsiop_mode_sense);
- 			break;
+@@ -1234,9 +1221,11 @@ static int scsi_report_lun_scan(struct s
+ 				/*
+ 				 * Got some results, but now none, abort.
+ 				 */
+-				printk(KERN_ERR "scsi: Unexpected response"
+-				       " from %s lun %d while scanning, scan"
+-				       " aborted\n", devname, lun);
++				dev_printk(KERN_ERR, &sdev->sdev_gendev,
++					"Unexpected response"
++					" from lun %s while scanning, scan"
++					" aborted\n",
++					scsilun_to_str(lunp, lunstr));
+ 				break;
+ 			}
+ 		}
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index deb1a27..7876a64 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -242,6 +242,7 @@ struct scsi_lun {
+ 	__u8 scsi_lun[8];
+ };
+ #define SCSILUN_STR_LEN 33
++#define SCSILUN_UNLIMITED ~0
  
--		case MODE_SELECT:	/* unconditionally return */
--		case MODE_SELECT_10:	/* bad-field-in-cdb */
--			ata_scsi_invalid_field(cmd, done);
--			break;
--
- 		case READ_CAPACITY:
- 			ata_scsi_rbuf_fill(&args, ata_scsiop_read_cap);
- 			break;
-
---------------060900020908040705030608--
+ /*
+  *  MESSAGE CODES
