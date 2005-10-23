@@ -1,1348 +1,1420 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [PATCH RFC 1/2] HCIL drivers update
-Date: Sun, 23 Oct 2005 15:51:28 -0400
-Message-ID: <20051023195128.GA12102@havoc.gtf.org>
-References: <20051023024104.GA20128@havoc.gtf.org>
+Subject: [PATCH RFC 2/2] HCIL drivers update
+Date: Sun, 23 Oct 2005 15:52:07 -0400
+Message-ID: <20051023195207.GB12102@havoc.gtf.org>
+References: <20051023024104.GA20128@havoc.gtf.org> <20051023195128.GA12102@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:33255 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1750723AbVJWTva (ORCPT
+Received: from havoc.gtf.org ([69.61.125.42]:33511 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1750740AbVJWTwI (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Oct 2005 15:51:30 -0400
+	Sun, 23 Oct 2005 15:52:08 -0400
 Received: from havoc.gtf.org (havoc.gtf.org [127.0.0.1])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by havoc.gtf.org (Postfix) with ESMTP id AC6BE1C095A7
-	for <linux-scsi@vger.kernel.org>; Sun, 23 Oct 2005 15:51:28 -0400 (EDT)
+	by havoc.gtf.org (Postfix) with ESMTP id 7DF031C095A7
+	for <linux-scsi@vger.kernel.org>; Sun, 23 Oct 2005 15:52:07 -0400 (EDT)
 Received: (from garzik@localhost)
-	by havoc.gtf.org (8.13.1/8.13.1/Submit) id j9NJpS11012145
-	for linux-scsi@vger.kernel.org; Sun, 23 Oct 2005 15:51:28 -0400
+	by havoc.gtf.org (8.13.1/8.13.1/Submit) id j9NJq7Jv012176
+	for linux-scsi@vger.kernel.org; Sun, 23 Oct 2005 15:52:07 -0400
 Content-Disposition: inline
-In-Reply-To: <20051023024104.GA20128@havoc.gtf.org>
+In-Reply-To: <20051023195128.GA12102@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hacking on drivers, to see where the death of sdev->{channel,id}
-and sdev->lun type change leads.  DO NOT APPLY.
 
+See patch 1/2 for description.  DO NOT APPLY.
 
- drivers/scsi/53c700.c              |  111 +++++++++++++++++-------------------
- drivers/scsi/53c700.h              |    6 -
- drivers/scsi/BusLogic.c            |   12 +--
- drivers/scsi/aacraid/aachba.c      |   32 +++++-----
- drivers/scsi/aacraid/aacraid.h     |    1 
- drivers/scsi/advansys.c            |   43 +++++++-------
- drivers/scsi/aha152x.c             |    5 -
- drivers/scsi/aic7xxx/aic79xx_osm.c |   96 +++++++++++++++----------------
- drivers/scsi/aic7xxx/aic7xxx_osm.c |  113 +++++++++++++++++--------------------
- drivers/scsi/dpt_i2o.c             |   31 ++++++----
- drivers/scsi/fdomain.c             |    4 -
- 11 files changed, 225 insertions(+), 229 deletions(-)
+ drivers/scsi/lpfc/lpfc_scsi.c         |   80 ++++++++++++++++++----------
+ drivers/scsi/lpfc/lpfc_sli.c          |    7 +-
+ drivers/scsi/megaraid/mega_common.h   |    8 +-
+ drivers/scsi/megaraid/megaraid_mbox.c |    8 +-
+ drivers/scsi/megaraid/megaraid_sas.c  |   14 ++---
+ drivers/scsi/megaraid/megaraid_sas.h  |    6 +-
+ drivers/scsi/pcmcia/nsp_cs.c          |   14 ++---
+ drivers/scsi/pcmcia/sym53c500_cs.c    |    2 
+ drivers/scsi/psi240i.c                |    4 -
+ drivers/scsi/qla2xxx/qla_dbg.c        |    7 +-
+ drivers/scsi/qla2xxx/qla_iocb.c       |    6 +-
+ drivers/scsi/qla2xxx/qla_isr.c        |    7 +-
+ drivers/scsi/qla2xxx/qla_mbx.c        |    2 
+ drivers/scsi/qla2xxx/qla_os.c         |   43 ++++++---------
+ drivers/scsi/scsi_scan.c              |    2 
+ drivers/scsi/sym53c8xx_2/sym_glue.c   |   44 +++++++++------
+ drivers/scsi/sym53c8xx_2/sym_hipd.c   |   94 ++++++++++++++++++----------------
+ drivers/scsi/sym53c8xx_2/sym_hipd.h   |   13 +++-
+ drivers/scsi/sym53c8xx_2/sym_misc.h   |   10 ++-
+ drivers/usb/storage/dpcm.c            |   17 ++++--
+ drivers/usb/storage/transport.c       |    4 -
+ drivers/usb/storage/usb.c             |   22 +++++--
+ include/scsi/scsi.h                   |    2 
+ include/scsi/scsi_device.h            |   11 +++
+ 24 files changed, 250 insertions(+), 177 deletions(-)
 
-iff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
-index a7620fc..51f9422 100644
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -796,12 +796,6 @@ process_extended_message(struct Scsi_Hos
- 			 struct scsi_cmnd *SCp, __u32 dsp, __u32 dsps)
- {
- 	__u32 resume_offset = dsp, temp = dsp + 8;
--	__u8 pun = 0xff, lun = 0xff;
--
--	if(SCp != NULL) {
--		pun = SCp->device->id;
--		lun = SCp->device->lun;
--	}
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index b5ad187..a162174 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -370,6 +370,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba 
+ 	struct lpfc_nodelist *pnode = rdata->pnode;
+ 	struct scsi_cmnd *cmd = lpfc_cmd->pCmd;
+ 	unsigned long iflag;
++	char lunstr[SCSILUN_STR_LEN];
  
- 	switch(hostdata->msgin[2]) {
- 	case A_SDTR_MSG:
-@@ -843,8 +837,8 @@ process_extended_message(struct Scsi_Hos
- 		break;
- 	
- 	case A_WDTR_MSG:
--		printk(KERN_INFO "scsi%d: (%d:%d), Unsolicited WDTR after CMD, Rejecting\n",
--		       host->host_no, pun, lun);
-+		dev_printk(KERN_INFO, &SCp->device->sdev_gendev,
-+			"Unsolicited WDTR after CMD, Rejecting\n");
- 		hostdata->msgout[0] = A_REJECT_MSG;
- 		dma_cache_sync(hostdata->msgout, 1, DMA_TO_DEVICE);
- 		script_patch_16(hostdata->script, MessageCount, 1);
-@@ -853,8 +847,8 @@ process_extended_message(struct Scsi_Hos
- 		break;
+ 	lpfc_cmd->result = pIocbOut->iocb.un.ulpWord[4];
+ 	lpfc_cmd->status = pIocbOut->iocb.ulpStatus;
+@@ -382,10 +383,11 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba 
+ 			lpfc_cmd->status = IOSTAT_DEFAULT;
  
- 	default:
--		printk(KERN_INFO "scsi%d (%d:%d): Unexpected message %s: ",
--		       host->host_no, pun, lun,
-+		dev_printk(KERN_INFO, &SCp->device->sdev_gendev,
-+			"Unexpected message %s: ",
- 		       NCR_700_phase[(dsps & 0xf00) >> 8]);
- 		scsi_print_msg(hostdata->msgin);
- 		printk("\n");
-@@ -876,15 +870,10 @@ process_message(struct Scsi_Host *host,	
- {
- 	/* work out where to return to */
- 	__u32 temp = dsp + 8, resume_offset = dsp;
--	__u8 pun = 0xff, lun = 0xff;
--
--	if(SCp != NULL) {
--		pun = SCp->device->id;
--		lun = SCp->device->lun;
--	}
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP,
+-				"%d:0729 FCP cmd x%x failed <%d/%d> status: "
++				"%d:0729 FCP cmd x%x failed <%d/%s> status: "
+ 				"x%x result: x%x Data: x%x x%x\n",
+-				phba->brd_no, cmd->cmnd[0], cmd->device->id,
+-				cmd->device->lun, lpfc_cmd->status,
++				phba->brd_no, cmd->cmnd[0], sdev_id(cmd->device),
++				scsilun_to_str(&cmd->device->lun, lunstr),
++				lpfc_cmd->status,
+ 				lpfc_cmd->result, pIocbOut->iocb.ulpContext,
+ 				lpfc_cmd->cur_iocbq.iocb.ulpIoTag);
  
- #ifdef NCR_700_DEBUG
--	printk("scsi%d (%d:%d): message %s: ", host->host_no, pun, lun,
-+	dev_printk(KERN_INFO, &SCp->device->sdev_gendev,
-+		"message %s: ",
- 	       NCR_700_phase[(dsps & 0xf00) >> 8]);
- 	scsi_print_msg(hostdata->msgin);
- 	printk("\n");
-@@ -906,34 +895,36 @@ process_message(struct Scsi_Host *host,	
- 			NCR_700_clear_flag(SCp->device, NCR_700_DEV_BEGIN_SYNC_NEGOTIATION);
- 		} else if(SCp != NULL && NCR_700_get_tag_neg_state(SCp->device) == NCR_700_DURING_TAG_NEGOTIATION) {
- 			/* rejected our first simple tag message */
--			printk(KERN_WARNING "scsi%d (%d:%d) Rejected first tag queue attempt, turning off tag queueing\n", host->host_no, pun, lun);
-+			dev_printk(KERN_WARNING, &SCp->device->sdev_gendev,
-+				"Rejected first tag queue attempt, turning off tag queueing\n");
- 			/* we're done negotiating */
- 			NCR_700_set_tag_neg_state(SCp->device, NCR_700_FINISHED_TAG_NEGOTIATION);
--			hostdata->tag_negotiated &= ~(1<<SCp->device->id);
-+			hostdata->tag_negotiated &= ~(1<<sdev_id(SCp->device));
- 			SCp->device->tagged_supported = 0;
- 			scsi_deactivate_tcq(SCp->device, host->cmd_per_lun);
- 		} else {
--			printk(KERN_WARNING "scsi%d (%d:%d) Unexpected REJECT Message %s\n",
--			       host->host_no, pun, lun,
-+			dev_printk(KERN_WARNING, &SCp->device->sdev_gendev,
-+				"Unexpected REJECT Message %s\n",
- 			       NCR_700_phase[(dsps & 0xf00) >> 8]);
- 			/* however, just ignore it */
- 		}
- 		break;
+@@ -419,10 +421,11 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba 
+ 		uint32_t *lp = (uint32_t *)cmd->sense_buffer;
  
- 	case A_PARITY_ERROR_MSG:
--		printk(KERN_ERR "scsi%d (%d:%d) Parity Error!\n", host->host_no,
--		       pun, lun);
-+		dev_printk(KERN_ERR, &SCp->device->sdev_gendev,
-+			"Parity Error!\n");
- 		NCR_700_internal_bus_reset(host);
- 		break;
- 	case A_SIMPLE_TAG_MSG:
--		printk(KERN_INFO "scsi%d (%d:%d) SIMPLE TAG %d %s\n", host->host_no,
--		       pun, lun, hostdata->msgin[1],
-+		dev_printk(KERN_INFO, &SCp->device->sdev_gendev,
-+			"SIMPLE TAG %d %s\n",
-+		       hostdata->msgin[1],
- 		       NCR_700_phase[(dsps & 0xf00) >> 8]);
- 		/* just ignore it */
- 		break;
- 	default:
--		printk(KERN_INFO "scsi%d (%d:%d): Unexpected message %s: ",
--		       host->host_no, pun, lun,
-+		dev_printk(KERN_INFO, &SCp->device->sdev_gendev,
-+			"Unexpected message %s: ",
- 		       NCR_700_phase[(dsps & 0xf00) >> 8]);
- 
- 		scsi_print_msg(hostdata->msgin);
-@@ -960,12 +951,6 @@ process_script_interrupt(__u32 dsps, __u
- 			 struct NCR_700_Host_Parameters *hostdata)
- {
- 	__u32 resume_offset = 0;
--	__u8 pun = 0xff, lun=0xff;
--
--	if(SCp != NULL) {
--		pun = SCp->device->id;
--		lun = SCp->device->lun;
--	}
- 
- 	if(dsps == A_GOOD_STATUS_AFTER_STATUS) {
- 		DEBUG(("  COMMAND COMPLETE, status=%02x\n",
-@@ -983,7 +968,8 @@ process_script_interrupt(__u32 dsps, __u
- 			if(SCp->cmnd[0] == REQUEST_SENSE) {
- 				/* OOPS: bad device, returning another
- 				 * contingent allegiance condition */
--				printk(KERN_ERR "scsi%d (%d:%d) broken device is looping in contingent allegiance: ignoring\n", host->host_no, pun, lun);
-+				dev_printk(KERN_ERR, &SCp->device->sdev_gendev,
-+					"broken device is looping in contingent allegiance: ignoring\n");
- 				NCR_700_scsi_done(hostdata, SCp, hostdata->status[0]);
- 			} else {
- #ifdef NCR_DEBUG
-@@ -1001,7 +987,7 @@ process_script_interrupt(__u32 dsps, __u
- 				NCR_700_unmap(hostdata, SCp, slot);
- 
- 				SCp->cmnd[0] = REQUEST_SENSE;
--				SCp->cmnd[1] = (SCp->device->lun & 0x7) << 5;
-+				SCp->cmnd[1] = (scsilun_to_int(&SCp->device->lun) & 0x7) << 5;
- 				SCp->cmnd[2] = 0;
- 				SCp->cmnd[3] = 0;
- 				SCp->cmnd[4] = sizeof(SCp->sense_buffer);
-@@ -1047,12 +1033,13 @@ process_script_interrupt(__u32 dsps, __u
- 			//			    SCp->request_bufflen,
- 			//			    DMA_FROM_DEVICE);
- 			//	if(((char *)SCp->request_buffer)[7] & 0x02) {
--			//		printk(KERN_INFO "scsi%d: (%d:%d) Enabling Tag Command Queuing\n", host->host_no, pun, lun);
--			//		hostdata->tag_negotiated |= (1<<SCp->device->id);
-+			//		dev_printk(KERN_INFO, &SCp->device->sdev_gendev,
-+			//		"Enabling Tag Command Queuing\n");
-+			//		hostdata->tag_negotiated |= (1 << sdev_id(SCp->device));
- 			//		NCR_700_set_flag(SCp->device, NCR_700_DEV_BEGIN_TAG_QUEUEING);
- 			//	} else {
- 			//		NCR_700_clear_flag(SCp->device, NCR_700_DEV_BEGIN_TAG_QUEUEING);
--			//		hostdata->tag_negotiated &= ~(1<<SCp->device->id);
-+			//		hostdata->tag_negotiated &= ~(1 << sdev_id(SCp->device));
- 			//	}
- 			//}
- 			NCR_700_scsi_done(hostdata, SCp, hostdata->status[0]);
-@@ -1060,8 +1047,8 @@ process_script_interrupt(__u32 dsps, __u
- 	} else if((dsps & 0xfffff0f0) == A_UNEXPECTED_PHASE) {
- 		__u8 i = (dsps & 0xf00) >> 8;
- 
--		printk(KERN_ERR "scsi%d: (%d:%d), UNEXPECTED PHASE %s (%s)\n",
--		       host->host_no, pun, lun,
-+		dev_printk(KERN_ERR, &SCp->device->sdev_gendev,
-+			"UNEXPECTED PHASE %s (%s)\n",
- 		       NCR_700_phase[i],
- 		       sbcl_to_string(NCR_700_readb(host, SBCL_REG)));
- 		printk(KERN_ERR "         len = %d, cmd =", SCp->cmd_len);
-@@ -1071,8 +1058,9 @@ process_script_interrupt(__u32 dsps, __u
- 	} else if((dsps & 0xfffff000) == A_FATAL) {
- 		int i = (dsps & 0xfff);
- 
--		printk(KERN_ERR "scsi%d: (%d:%d) FATAL ERROR: %s\n",
--		       host->host_no, pun, lun, NCR_700_fatal_messages[i]);
-+		dev_printk(KERN_ERR, &SCp->device->sdev_gendev,
-+			"FATAL ERROR: %s\n",
-+		       NCR_700_fatal_messages[i]);
- 		if(dsps == A_FATAL_ILLEGAL_MSG_LENGTH) {
- 			printk(KERN_ERR "     msg begins %02x %02x\n",
- 			       hostdata->msgin[0], hostdata->msgin[1]);
-@@ -1082,8 +1070,8 @@ process_script_interrupt(__u32 dsps, __u
- #ifdef NCR_700_DEBUG
- 		__u8 i = (dsps & 0xf00) >> 8;
- 
--		printk("scsi%d: (%d:%d), DISCONNECTED (%d) %s\n",
--		       host->host_no, pun, lun,
-+		dev_printk(KERN_DEBUG, &SCp->device->sdev_gendev,
-+			"DISCONNECTED (%d) %s\n",
- 		       i, NCR_700_phase[i]);
- #endif
- 		save_for_reselection(hostdata, SCp, dsp);
-@@ -1093,14 +1081,16 @@ process_script_interrupt(__u32 dsps, __u
- 		struct NCR_700_command_slot *slot;
- 		__u8 reselection_id = hostdata->reselection_id;
- 		struct scsi_device *SDp;
-+		struct scsi_lun __lun;
- 
- 		lun = hostdata->msgin[0] & 0x1f;
-+		int_to_scsilun(lun, &__lun);
- 
- 		hostdata->reselection_id = 0xff;
- 		DEBUG(("scsi%d: (%d:%d) RESELECTED!\n",
- 		       host->host_no, reselection_id, lun));
- 		/* clear the reselection indicator */
--		SDp = __scsi_device_lookup(host, 0, reselection_id, lun);
-+		SDp = __scsi_device_lookup(host, 0, reselection_id, &__lun);
- 		if(unlikely(SDp == NULL)) {
- 			printk(KERN_ERR "scsi%d: (%d:%d) HAS NO device\n",
- 			       host->host_no, reselection_id, lun);
-@@ -1242,8 +1232,9 @@ process_script_interrupt(__u32 dsps, __u
- 						dsp, dsps);
- 	} else if((dsps &  0xfffff000) == 0) {
- 		__u8 i = (dsps & 0xf0) >> 4, j = (dsps & 0xf00) >> 8;
--		printk(KERN_ERR "scsi%d: (%d:%d), unhandled script condition %s %s at %04x\n",
--		       host->host_no, pun, lun, NCR_700_condition[i],
-+		dev_printk(KERN_ERR, &SCp->device->sdev_gendev,
-+			"unhandled script condition %s %s at %04x\n",
-+		       NCR_700_condition[i],
- 		       NCR_700_phase[j], dsp - hostdata->pScript);
- 		if(SCp != NULL) {
- 			scsi_print_command(SCp);
-@@ -1256,12 +1247,14 @@ process_script_interrupt(__u32 dsps, __u
- 		}	       
- 		NCR_700_internal_bus_reset(host);
- 	} else if((dsps & 0xfffff000) == A_DEBUG_INTERRUPT) {
--		printk(KERN_NOTICE "scsi%d (%d:%d) DEBUG INTERRUPT %d AT %08x[%04x], continuing\n",
--		       host->host_no, pun, lun, dsps & 0xfff, dsp, dsp - hostdata->pScript);
-+		dev_printk(KERN_NOTICE, &SCp->device->sdev_gendev,
-+			"DEBUG INTERRUPT %d AT %08x[%04x], continuing\n",
-+		       dsps & 0xfff, dsp, dsp - hostdata->pScript);
- 		resume_offset = dsp;
- 	} else {
--		printk(KERN_ERR "scsi%d: (%d:%d), unidentified script interrupt 0x%x at %04x\n",
--		       host->host_no, pun, lun, dsps, dsp - hostdata->pScript);
-+		dev_printk(KERN_ERR, &SCp->device->sdev_gendev,
-+			"unidentified script interrupt 0x%x at %04x\n",
-+		       dsps, dsp - hostdata->pScript);
- 		NCR_700_internal_bus_reset(host);
- 	}
- 	return resume_offset;
-@@ -1422,7 +1415,7 @@ NCR_700_start_command(struct scsi_cmnd *
- 	 * If a contingent allegiance condition exists, the device
- 	 * will refuse all tags, so send the request sense as untagged
- 	 * */
--	if((hostdata->tag_negotiated & (1<<SCp->device->id))
-+	if((hostdata->tag_negotiated & (1 << sdev_id(SCp->device)))
- 	   && (slot->tag != SCSI_NO_TAG && SCp->cmnd[0] != REQUEST_SENSE)) {
- 		count += scsi_populate_tag_msg(SCp, &hostdata->msgout[count]);
- 	}
-@@ -1441,7 +1434,7 @@ NCR_700_start_command(struct scsi_cmnd *
- 
- 
- 	script_patch_ID(hostdata->script,
--			Device_ID, 1<<SCp->device->id);
-+			Device_ID, 1 << sdev_id(SCp->device));
- 
- 	script_patch_32_abs(hostdata->script, CommandAddress, 
- 			    slot->pCmd);
-@@ -1764,7 +1757,7 @@ NCR_700_queuecommand(struct scsi_cmnd *S
- 	 * - The blk layer sent and untagged command
- 	 */
- 	if(NCR_700_get_depth(SCp->device) != 0
--	   && (!(hostdata->tag_negotiated & (1<<SCp->device->id))
-+	   && (!(hostdata->tag_negotiated & (1 << sdev_id(SCp->device)))
- 	       || !blk_rq_tagged(SCp->request))) {
- 		DEBUG((KERN_ERR "scsi%d (%d:%d) has non zero depth %d\n",
- 		       SCp->device->host->host_no, SCp->device->id, SCp->device->lun,
-@@ -1796,10 +1789,10 @@ NCR_700_queuecommand(struct scsi_cmnd *S
- 	scsi_print_command(SCp);
- #endif
- 	if(blk_rq_tagged(SCp->request)
--	   && (hostdata->tag_negotiated &(1<<SCp->device->id)) == 0
-+	   && (hostdata->tag_negotiated &(1 << sdev_id(SCp->device))) == 0
- 	   && NCR_700_get_tag_neg_state(SCp->device) == NCR_700_START_TAG_NEGOTIATION) {
- 		printk(KERN_ERR "scsi%d: (%d:%d) Enabling Tag Command Queuing\n", SCp->device->host->host_no, SCp->device->id, SCp->device->lun);
--		hostdata->tag_negotiated |= (1<<SCp->device->id);
-+		hostdata->tag_negotiated |= (1 << sdev_id(SCp->device));
- 		NCR_700_set_tag_neg_state(SCp->device, NCR_700_DURING_TAG_NEGOTIATION);
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_FCP,
+-				"%d:0710 Iodone <%d/%d> cmd %p, error x%x "
++				"%d:0710 Iodone <%d/%s> cmd %p, error x%x "
+ 				"SNS x%x x%x Data: x%x x%x\n",
+-				phba->brd_no, cmd->device->id,
+-				cmd->device->lun, cmd, cmd->result,
++				phba->brd_no, sdev_id(cmd->device),
++				scsilun_to_str(&cmd->device->lun, lunstr),
++				cmd, cmd->result,
+ 				*lp, *(lp + 3), cmd->retries, cmd->resid);
  	}
  
-@@ -1810,12 +1803,12 @@ NCR_700_queuecommand(struct scsi_cmnd *S
- 	 * FIXME: This will royally screw up on multiple LUN devices
- 	 * */
- 	if(!blk_rq_tagged(SCp->request)
--	   && (hostdata->tag_negotiated &(1<<SCp->device->id))) {
-+	   && (hostdata->tag_negotiated &(1 << sdev_id(SCp->device)))) {
- 		printk(KERN_INFO "scsi%d: (%d:%d) Disabling Tag Command Queuing\n", SCp->device->host->host_no, SCp->device->id, SCp->device->lun);
--		hostdata->tag_negotiated &= ~(1<<SCp->device->id);
-+		hostdata->tag_negotiated &= ~(1 << sdev_id(SCp->device));
- 	}
+@@ -448,8 +451,7 @@ lpfc_scsi_prep_cmnd(struct lpfc_hba * ph
+ 	/* clear task management bits */
+ 	lpfc_cmd->fcp_cmnd->fcpCntl2 = 0;
  
--	if((hostdata->tag_negotiated &(1<<SCp->device->id))
-+	if((hostdata->tag_negotiated &(1 << sdev_id(SCp->device)))
- 	   && scsi_get_tag_type(SCp->device)) {
- 		slot->tag = SCp->request->tag;
- 		DEBUG(("53c700 %d:%d:%d, sending out tag %d, slot %p\n",
-diff --git a/drivers/scsi/53c700.h b/drivers/scsi/53c700.h
-index e86012c..07a1ec3 100644
---- a/drivers/scsi/53c700.h
-+++ b/drivers/scsi/53c700.h
-@@ -15,15 +15,15 @@
+-	int_to_scsilun(lpfc_cmd->pCmd->device->lun,
+-			&lpfc_cmd->fcp_cmnd->fcp_lun);
++	scsilun_cp(&lpfc_cmd->fcp_cmnd->fcp_lun, &lpfc_cmd->pCmd->device->lun);
  
+ 	memcpy(&fcp_cmnd->fcpCdb[0], scsi_cmnd->cmnd, 16);
  
- /* Turn on for general debugging---too verbose for normal use */
--#undef	NCR_700_DEBUG
-+#define	NCR_700_DEBUG
- /* Debug the tag queues, checking hash queue allocation and deallocation
-  * and search for duplicate tags */
- #undef NCR_700_TAG_DEBUG
+@@ -538,6 +540,7 @@ lpfc_scsi_prep_task_mgmt_cmd(struct lpfc
+ 	struct scsi_device *scsi_dev = lpfc_cmd->pCmd->device;
+ 	struct lpfc_rport_data *rdata = scsi_dev->hostdata;
+ 	struct lpfc_nodelist *ndlp = rdata->pnode;
++	char lunstr[SCSILUN_STR_LEN];
  
- #ifdef NCR_700_DEBUG
--#define DEBUG(x)	printk x
-+#define DEBUG(dev,args...)	dev_printk(KERN_DEBUG, (dev), ## args)
- #else
--#define DEBUG(x)
-+#define DEBUG(dev,args...)
- #endif
- 
- /* The number of available command slots */
-diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-index 9d6040b..84c05c7 100644
---- a/drivers/scsi/BusLogic.c
-+++ b/drivers/scsi/BusLogic.c
-@@ -2139,7 +2139,7 @@ static void __init BusLogic_InitializeHo
- static int BusLogic_SlaveConfigure(struct scsi_device *Device)
- {
- 	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) Device->host->hostdata;
--	int TargetID = Device->id;
-+	int TargetID = sdev_id(Device);
- 	int QueueDepth = HostAdapter->QueueDepth[TargetID];
- 
- 	if (HostAdapter->TargetFlags[TargetID].TaggedQueuingSupported && (HostAdapter->TaggedQueuingPermitted & (1 << TargetID))) {
-@@ -2744,7 +2744,7 @@ static int BusLogic_host_reset(struct sc
- {
- 	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) SCpnt->device->host->hostdata;
- 
--	unsigned int id = SCpnt->device->id;
-+	unsigned int id = sdev_id(SCpnt->device);
- 	struct BusLogic_TargetStatistics *stats = &HostAdapter->TargetStatistics[id];
- 	int rc;
- 
-@@ -2765,12 +2765,12 @@ static int BusLogic_host_reset(struct sc
- static int BusLogic_QueueCommand(struct scsi_cmnd *Command, void (*CompletionRoutine) (struct scsi_cmnd *))
- {
- 	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) Command->device->host->hostdata;
--	struct BusLogic_TargetFlags *TargetFlags = &HostAdapter->TargetFlags[Command->device->id];
-+	struct BusLogic_TargetFlags *TargetFlags = &HostAdapter->TargetFlags[sdev_id(Command->device)];
- 	struct BusLogic_TargetStatistics *TargetStatistics = HostAdapter->TargetStatistics;
- 	unsigned char *CDB = Command->cmnd;
- 	int CDB_Length = Command->cmd_len;
--	int TargetID = Command->device->id;
--	int LogicalUnit = Command->device->lun;
-+	int TargetID = sdev_id(Command->device);
-+	int LogicalUnit = scsilun_to_int(&Command->device->lun);
- 	void *BufferPointer = Command->request_buffer;
- 	int BufferLength = Command->request_bufflen;
- 	int SegmentCount = Command->use_sg;
-@@ -2960,7 +2960,7 @@ static int BusLogic_AbortCommand(struct 
- {
- 	struct BusLogic_HostAdapter *HostAdapter = (struct BusLogic_HostAdapter *) Command->device->host->hostdata;
- 
--	int TargetID = Command->device->id;
-+	int TargetID = sdev_id(Command->device);
- 	struct BusLogic_CCB *CCB;
- 	BusLogic_IncrementErrorCounter(&HostAdapter->TargetStatistics[TargetID].CommandAbortsRequested);
- 	/*
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 93416f7..8528931 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -889,7 +889,7 @@ static void io_callback(void *context, s
- 	scsicmd = (struct scsi_cmnd *) context;
- 
- 	dev = (struct aac_dev *)scsicmd->device->host->hostdata;
--	cid = ID_LUN_TO_CONTAINER(scsicmd->device->id, scsicmd->device->lun);
-+	cid = sdev_id(scsicmd->device);
- 
- 	if (nblank(dprintk(x))) {
- 		u64 lba;
-@@ -1334,7 +1334,7 @@ static void synchronize_callback(void *c
- 	else {
- 		struct scsi_device *sdev = cmd->device;
- 		struct aac_dev *dev = (struct aac_dev *)sdev->host->hostdata;
--		u32 cid = ID_LUN_TO_CONTAINER(sdev->id, sdev->lun);
-+		u32 cid = sdev_id(sdev);
- 		printk(KERN_WARNING 
- 		     "synchronize_callback: synchronize failed, status = %d\n",
- 		     le32_to_cpu(synchronizereply->status));
-@@ -1446,14 +1446,14 @@ int aac_scsi_cmd(struct scsi_cmnd * scsi
- 	 *	Test does not apply to ID 16, the pseudo id for the controller
- 	 *	itself.
- 	 */
--	if (scsicmd->device->id != host->this_id) {
--		if ((scsicmd->device->channel == 0) ){
--			if( (scsicmd->device->id >= dev->maximum_num_containers) || (scsicmd->device->lun != 0)){ 
-+	if (sdev_id(scsicmd->device) != host->this_id) {
-+		if ((sdev_channel(scsicmd->device) == 0) ){
-+			if( (sdev_id(scsicmd->device) >= dev->maximum_num_containers) || (!scsilun_zero(&scsicmd->device->lun))){ 
- 				scsicmd->result = DID_NO_CONNECT << 16;
- 				scsicmd->scsi_done(scsicmd);
- 				return 0;
- 			}
--			cid = ID_LUN_TO_CONTAINER(scsicmd->device->id, scsicmd->device->lun);
-+			cid = sdev_id(scsicmd->device);
- 
- 			/*
- 			 *	If the target container doesn't exist, it may have
-@@ -1529,7 +1529,7 @@ int aac_scsi_cmd(struct scsi_cmnd * scsi
- 	{
- 		struct inquiry_data inq_data;
- 
--		dprintk((KERN_DEBUG "INQUIRY command, ID: %d.\n", scsicmd->device->id));
-+		dprintk((KERN_DEBUG "INQUIRY command, ID: %d.\n", sdev_id(scsicmd->device)));
- 		memset(&inq_data, 0, sizeof (struct inquiry_data));
- 
- 		inq_data.inqd_ver = 2;	/* claim compliance to SCSI-2 */
-@@ -1541,7 +1541,7 @@ int aac_scsi_cmd(struct scsi_cmnd * scsi
- 		 *	Set the Vendor, Product, and Revision Level
- 		 *	see: <vendor>.c i.e. aac.c
- 		 */
--		if (scsicmd->device->id == host->this_id) {
-+		if (sdev_id(scsicmd->device) == host->this_id) {
- 			setinqstr(cardtype, (void *) (inq_data.inqd_vid), (sizeof(container_types)/sizeof(char *)));
- 			inq_data.inqd_pdt = INQD_PDT_PROC;	/* Processor device */
- 			aac_internal_transfer(scsicmd, &inq_data, 0, sizeof(inq_data));
-@@ -1756,7 +1756,7 @@ static int query_disk(struct aac_dev *de
- 	if (copy_from_user(&qd, arg, sizeof (struct aac_query_disk)))
- 		return -EFAULT;
- 	if (qd.cnum == -1)
--		qd.cnum = ID_LUN_TO_CONTAINER(qd.id, qd.lun);
-+		qd.cnum = qd.id;
- 	else if ((qd.bus == -1) && (qd.id == -1) && (qd.lun == -1)) 
- 	{
- 		if (qd.cnum < 0 || qd.cnum >= dev->maximum_num_containers)
-@@ -1931,7 +1931,7 @@ static void aac_srb_callback(void *conte
- 			 * the channel is 2
- 			 */
- 			} else if ((dev->raid_scsi_mode) &&
--					(scsicmd->device->channel == 2)) {
-+					(sdev_channel(scsicmd->device) == 2)) {
- 				scsicmd->result = DID_OK << 16 | 
- 						COMMAND_COMPLETE << 8;
- 			} else {
-@@ -1975,7 +1975,7 @@ static void aac_srb_callback(void *conte
- 			 * the channel is 2
- 			 */
- 			} else if ((dev->raid_scsi_mode) &&
--					(scsicmd->device->channel == 2)) {
-+					(sdev_channel(scsicmd->device) == 2)) {
- 				scsicmd->result = DID_OK << 16 | 
- 						COMMAND_COMPLETE << 8;
- 			} else {
-@@ -2093,8 +2093,8 @@ static int aac_send_srb_fib(struct scsi_
- 	u32 timeout;
- 
- 	dev = (struct aac_dev *)scsicmd->device->host->hostdata;
--	if (scsicmd->device->id >= dev->maximum_num_physicals || 
--			scsicmd->device->lun > 7) {
-+	if (sdev_id(scsicmd->device) >= dev->maximum_num_physicals || 
-+			scsilun_to_int(&scsicmd->device->lun) > 7) {
- 		scsicmd->result = DID_NO_CONNECT << 16;
- 		scsicmd->scsi_done(scsicmd);
+ 	if ((ndlp == 0) || (ndlp->nlp_state != NLP_STE_MAPPED_NODE)) {
  		return 0;
-@@ -2128,9 +2128,9 @@ static int aac_send_srb_fib(struct scsi_
+@@ -548,8 +551,7 @@ lpfc_scsi_prep_task_mgmt_cmd(struct lpfc
+ 	piocb = &piocbq->iocb;
  
- 	srbcmd = (struct aac_srb*) fib_data(cmd_fibcontext);
- 	srbcmd->function = cpu_to_le32(SRBF_ExecuteScsi);
--	srbcmd->channel  = cpu_to_le32(aac_logical_to_phys(scsicmd->device->channel));
--	srbcmd->id   = cpu_to_le32(scsicmd->device->id);
--	srbcmd->lun      = cpu_to_le32(scsicmd->device->lun);
-+	srbcmd->channel  = cpu_to_le32(aac_logical_to_phys(sdev_channel(scsicmd->device)));
-+	srbcmd->id   = cpu_to_le32(sdev_id(scsicmd->device));
-+	srbcmd->lun      = cpu_to_le32(scsilun_to_int(&scsicmd->device->lun));
- 	srbcmd->flags    = cpu_to_le32(flag);
- 	timeout = scsicmd->timeout_per_command/HZ;
- 	if(timeout == 0){
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 4a99d2f..92fd4a3 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -25,7 +25,6 @@
-  * These macros convert from physical channels to virtual channels
-  */
- #define CONTAINER_CHANNEL		(0)
--#define ID_LUN_TO_CONTAINER(id, lun)	(id)
- #define CONTAINER_TO_CHANNEL(cont)	(CONTAINER_CHANNEL)
- #define CONTAINER_TO_ID(cont)		(cont)
- #define CONTAINER_TO_LUN(cont)		(0)
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 37ec541..f31e293 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -3523,7 +3523,7 @@ typedef struct {
- typedef struct scsi_cmnd     REQ, *REQP;
- #define REQPNEXT(reqp)       ((REQP) ((reqp)->host_scribble))
- #define REQPNEXTP(reqp)      ((REQP *) &((reqp)->host_scribble))
--#define REQPTID(reqp)        ((reqp)->device->id)
-+#define REQPTID(reqp)        (sdev_id((reqp)->device))
- #define REQPTIME(reqp)       ((reqp)->SCp.this_residual)
- #define REQTIMESTAMP()       (jiffies)
+ 	fcp_cmnd = lpfc_cmd->fcp_cmnd;
+-	int_to_scsilun(lpfc_cmd->pCmd->device->lun,
+-			&lpfc_cmd->fcp_cmnd->fcp_lun);
++	scsilun_cp(&lpfc_cmd->fcp_cmnd->fcp_lun, &lpfc_cmd->pCmd->device->lun);
+ 	fcp_cmnd->fcpCntl2 = task_mgmt_cmd;
  
-@@ -6120,12 +6120,12 @@ advansys_slave_configure(struct scsi_dev
-      * Save a pointer to the device and set its initial/maximum
-      * queue depth.  Only save the pointer for a lun0 dev though.
-      */
--    if(device->lun == 0)
--        boardp->device[device->id] = device;
-+    if(scsilun_zero(&device->lun))
-+        boardp->device[sdev_id(device)] = device;
-     if(device->tagged_supported) {
-         if (ASC_NARROW_BOARD(boardp)) {
- 	    scsi_adjust_queue_depth(device, MSG_ORDERED_TAG,
--                boardp->dvc_var.asc_dvc_var.max_dvc_qng[device->id]);
-+                boardp->dvc_var.asc_dvc_var.max_dvc_qng[sdev_id(device)]);
-         } else {
- 	    scsi_adjust_queue_depth(device, MSG_ORDERED_TAG,
-                 boardp->dvc_var.adv_dvc_var.max_dvc_qng);
-@@ -6243,7 +6243,7 @@ asc_execute_scsi_cmnd(struct scsi_cmnd *
-         (ulong) scp, (ulong) scp->scsi_done);
+ 	piocb->ulpCommand = CMD_FCP_ICMND64_CR;
+@@ -579,10 +581,11 @@ lpfc_scsi_prep_task_mgmt_cmd(struct lpfc
+ 		lpfc_printf_log(phba,
+ 				KERN_INFO,
+ 				LOG_FCP,
+-				"%d:0703 Issue LUN Reset to TGT %d LUN %d "
++				"%d:0703 Issue LUN Reset to TGT %d LUN %s "
+ 				"Data: x%x x%x\n",
+ 				phba->brd_no,
+-				scsi_dev->id, scsi_dev->lun,
++				sdev_id(scsi_dev),
++				scsilun_to_str(&scsi_dev->lun, lunstr),
+ 				ndlp->nlp_rpi, ndlp->nlp_flag);
  
-     boardp = ASC_BOARDP(scp->device->host);
--    device = boardp->device[scp->device->id];
-+    device = boardp->device[sdev_id(scp->device)];
+ 		break;
+@@ -591,10 +594,11 @@ lpfc_scsi_prep_task_mgmt_cmd(struct lpfc
+ 		lpfc_printf_log(phba,
+ 				KERN_INFO,
+ 				LOG_FCP,
+-				"%d:0701 Issue Abort Task Set to TGT %d LUN %d "
++				"%d:0701 Issue Abort Task Set to TGT %d LUN %s "
+ 				"Data: x%x x%x\n",
+ 				phba->brd_no,
+-				scsi_dev->id, scsi_dev->lun,
++				sdev_id(scsi_dev),
++				scsilun_to_str(&scsi_dev->lun, lunstr),
+ 				ndlp->nlp_rpi, ndlp->nlp_flag);
  
-     if (ASC_NARROW_BOARD(boardp)) {
-         /*
-@@ -6278,7 +6278,7 @@ asc_execute_scsi_cmnd(struct scsi_cmnd *
-              * Increment monotonically increasing per device successful
-              * request counter. Wrapping doesn't matter.
-              */
--            boardp->reqcnt[scp->device->id]++;
-+            boardp->reqcnt[sdev_id(scp->device)]++;
-             asc_enqueue(&boardp->active, scp, ASC_BACK);
-             ASC_DBG(1,
-                 "asc_execute_scsi_cmnd: AscExeScsiQueue(), ASC_NOERROR\n");
-@@ -6358,7 +6358,7 @@ asc_execute_scsi_cmnd(struct scsi_cmnd *
-              * Increment monotonically increasing per device successful
-              * request counter. Wrapping doesn't matter.
-              */
--            boardp->reqcnt[scp->device->id]++;
-+            boardp->reqcnt[sdev_id(scp->device)]++;
-             asc_enqueue(&boardp->active, scp, ASC_BACK);
-             ASC_DBG(1,
-                 "asc_execute_scsi_cmnd: AdvExeScsiQueue(), ASC_NOERROR\n");
-@@ -6434,9 +6434,9 @@ asc_build_req(asc_board_t *boardp, struc
-     }
-     asc_scsi_q.cdbptr = &scp->cmnd[0];
-     asc_scsi_q.q2.cdb_len = scp->cmd_len;
--    asc_scsi_q.q1.target_id = ASC_TID_TO_TARGET_ID(scp->device->id);
--    asc_scsi_q.q1.target_lun = scp->device->lun;
--    asc_scsi_q.q2.target_ix = ASC_TIDLUN_TO_IX(scp->device->id, scp->device->lun);
-+    asc_scsi_q.q1.target_id = ASC_TID_TO_TARGET_ID(sdev_id(scp->device));
-+    asc_scsi_q.q1.target_lun = scsilun_to_int(&scp->device->lun);
-+    asc_scsi_q.q2.target_ix = ASC_TIDLUN_TO_IX(sdev_id(scp->device), scsilun_to_int(&scp->device->lun));
-     asc_scsi_q.q1.sense_addr = cpu_to_le32(virt_to_bus(&scp->sense_buffer[0]));
-     asc_scsi_q.q1.sense_len = sizeof(scp->sense_buffer);
- 
-@@ -6451,8 +6451,8 @@ asc_build_req(asc_board_t *boardp, struc
-      * started request.
-      *
-      */
--    if ((boardp->dvc_var.asc_dvc_var.cur_dvc_qng[scp->device->id] > 0) &&
--        (boardp->reqcnt[scp->device->id] % 255) == 0) {
-+    if ((boardp->dvc_var.asc_dvc_var.cur_dvc_qng[sdev_id(scp->device)] > 0) &&
-+        (boardp->reqcnt[sdev_id(scp->device)] % 255) == 0) {
-         asc_scsi_q.q2.tag_code = MSG_ORDERED_TAG;
-     } else {
-         asc_scsi_q.q2.tag_code = MSG_SIMPLE_TAG;
-@@ -6610,8 +6610,8 @@ adv_build_req(asc_board_t *boardp, struc
-         scsiqp->cdb16[i - 12] = scp->cmnd[i];
-     }
- 
--    scsiqp->target_id = scp->device->id;
--    scsiqp->target_lun = scp->device->lun;
-+    scsiqp->target_id = sdev_id(scp->device);
-+    scsiqp->target_lun = scsilun_to_int(&scp->device->lun);
- 
-     scsiqp->sense_addr = cpu_to_le32(virt_to_bus(&scp->sense_buffer[0]));
-     scsiqp->sense_len = sizeof(scp->sense_buffer);
-@@ -6889,10 +6889,10 @@ asc_isr_callback(ASC_DVC_VAR *asc_dvc_va
-          * If an INQUIRY command completed successfully, then call
-          * the AscInquiryHandling() function to set-up the device.
-          */
--        if (scp->cmnd[0] == INQUIRY && scp->device->lun == 0 &&
-+        if (scp->cmnd[0] == INQUIRY && scsilun_zero(&scp->device->lun) &&
-             (scp->request_bufflen - qdonep->remain_bytes) >= 8)
-         {
--            AscInquiryHandling(asc_dvc_varp, scp->device->id & 0x7,
-+            AscInquiryHandling(asc_dvc_varp, sdev_id(scp->device) & 0x7,
-                 (ASC_SCSI_INQUIRY *) scp->request_buffer);
-         }
- 
-@@ -6962,10 +6962,10 @@ asc_isr_callback(ASC_DVC_VAR *asc_dvc_va
-      * current request finished normally, then set the bit for the target
-      * to indicate that a device is present.
-      */
--    if ((boardp->init_tidmask & ADV_TID_TO_TIDMASK(scp->device->id)) == 0 &&
-+    if ((boardp->init_tidmask & ADV_TID_TO_TIDMASK(sdev_id(scp->device))) == 0 &&
-         qdonep->d3.done_stat == QD_NO_ERROR &&
-         qdonep->d3.host_stat == QHSTA_NO_ERROR) {
--        boardp->init_tidmask |= ADV_TID_TO_TIDMASK(scp->device->id);
-+        boardp->init_tidmask |= ADV_TID_TO_TIDMASK(sdev_id(scp->device));
-     }
- 
-     /*
-@@ -7141,10 +7141,10 @@ adv_isr_callback(ADV_DVC_VAR *adv_dvc_va
-      * current request finished normally, then set the bit for the target
-      * to indicate that a device is present.
-      */
--    if ((boardp->init_tidmask & ADV_TID_TO_TIDMASK(scp->device->id)) == 0 &&
-+    if ((boardp->init_tidmask & ADV_TID_TO_TIDMASK(sdev_id(scp->device))) == 0 &&
-         scsiqp->done_status == QD_NO_ERROR &&
-         scsiqp->host_status == QHSTA_NO_ERROR) {
--        boardp->init_tidmask |= ADV_TID_TO_TIDMASK(scp->device->id);
-+        boardp->init_tidmask |= ADV_TID_TO_TIDMASK(sdev_id(scp->device));
-     }
- 
-     /*
-@@ -7384,7 +7384,8 @@ asc_dequeue_list(asc_queue_t *ascq, REQP
-         {
-             REQP reqp;
-             for (reqp = firstp; reqp; reqp = REQPNEXT(reqp)) {
--                REQTIMESTAT("asc_dequeue_list", ascq, reqp, reqp->device->id);
-+                REQTIMESTAT("asc_dequeue_list", ascq, reqp,
-+			    sdev_id(reqp->device));
-             }
-         }
- #endif /* ADVANSYS_STATS */
-diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-index 630b115..dda5706 100644
---- a/drivers/scsi/aha152x.c
-+++ b/drivers/scsi/aha152x.c
-@@ -2921,8 +2921,9 @@ static void disp_enintr(struct Scsi_Host
-  */
- static void show_command(Scsi_Cmnd *ptr)
- {
--	printk(KERN_DEBUG "0x%08x: target=%d; lun=%d; cmnd=(",
--	       (unsigned int) ptr, ptr->device->id, ptr->device->lun);
-+	dev_printk(KERN_DEBUG, &ptr->device->sdev_gendev,
-+		"0x%08x: cmnd=(",
-+	       (unsigned int) ptr);
- 
- 	__scsi_print_command(ptr->cmnd);
- 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
-index 95c285c..24a4040 100644
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -52,6 +52,7 @@ static struct scsi_transport_template *a
- #include <linux/mm.h>		/* For fetching system memory size */
- #include <linux/blkdev.h>		/* For block_size() */
- #include <linux/delay.h>	/* For ssleep/msleep */
-+#include <linux/device.h>
- 
- /*
-  * Bucket size for counting good commands in between bad ones.
-@@ -397,7 +398,7 @@ ahd_linux_unmap_scb(struct ahd_softc *ah
- 
- /******************************** Macros **************************************/
- #define BUILD_SCSIID(ahd, cmd)						\
--	((((cmd)->device->id << TID_SHIFT) & TID) | (ahd)->our_id)
-+	(((sdev_id((cmd)->device) << TID_SHIFT) & TID) | (ahd)->our_id)
- 
- /*
-  * Return a string describing the driver.
-@@ -526,16 +527,14 @@ ahd_linux_target_destroy(struct scsi_tar
- static int
- ahd_linux_slave_alloc(struct scsi_device *sdev)
- {
--	struct	ahd_softc *ahd =
--		*((struct ahd_softc **)sdev->host->hostdata);
- 	struct scsi_target *starget = sdev->sdev_target;
- 	struct ahd_linux_target *targ = scsi_transport_target_data(starget);
- 	struct ahd_linux_device *dev;
- 
- 	if (bootverbose)
--		printf("%s: Slave Alloc %d\n", ahd_name(ahd), sdev->id);
-+		dev_printk(KERN_INFO, &sdev->sdev_gendev, "Slave Alloc\n");
- 
--	BUG_ON(targ->sdev[sdev->lun] != NULL);
-+	BUG_ON(targ->sdev[scsilun_to_int(&sdev->lun)] != NULL);
- 
- 	dev = scsi_transport_device_data(sdev);
- 	memset(dev, 0, sizeof(*dev));
-@@ -553,7 +552,7 @@ ahd_linux_slave_alloc(struct scsi_device
+ 		break;
+@@ -606,7 +610,8 @@ lpfc_scsi_prep_task_mgmt_cmd(struct lpfc
+ 				"%d:0702 Issue Target Reset to TGT %d "
+ 				"Data: x%x x%x\n",
+ 				phba->brd_no,
+-				scsi_dev->id, ndlp->nlp_rpi,
++				sdev_id(scsi_dev),
++				ndlp->nlp_rpi,
+ 				ndlp->nlp_flag);
+ 		break;
+ 	}
+@@ -657,8 +662,9 @@ lpfc_scsi_tgt_reset(struct lpfc_scsi_buf
+ 	 * to double check.
  	 */
- 	dev->maxtags = 0;
- 	
--	targ->sdev[sdev->lun] = sdev;
-+	targ->sdev[scsilun_to_int(&sdev->lun)] = sdev;
+ 	lpfc_sli_abort_iocb(phba, &phba->sli.ring[phba->sli.fcp_ring],
+-			    lpfc_cmd->pCmd->device->id,
+-			    lpfc_cmd->pCmd->device->lun, 0, LPFC_CTX_TGT);
++			    sdev_id(lpfc_cmd->pCmd->device),
++			    scsilun_to_int(&lpfc_cmd->pCmd->device->lun),
++			    0, LPFC_CTX_TGT);
  
- 	return (0);
- }
-@@ -565,7 +564,7 @@ ahd_linux_slave_configure(struct scsi_de
+ 	/* Return response IOCB to free list. */
+ 	list_add_tail(&iocbqrsp->list, lpfc_iocb_list);
+@@ -828,8 +834,8 @@ __lpfc_abort_handler(struct scsi_cmnd *c
+ 		return SUCCESS;
  
- 	ahd = *((struct ahd_softc **)sdev->host->hostdata);
- 	if (bootverbose)
--		printf("%s: Slave Configure %d\n", ahd_name(ahd), sdev->id);
-+		dev_printk(KERN_INFO, &sdev->sdev_gendev, "Slave Configure\n");
+ 	/* save these now since lpfc_cmd can be freed */
+-	id   = lpfc_cmd->pCmd->device->id;
+-	lun  = lpfc_cmd->pCmd->device->lun;
++	id   = sdev_id(lpfc_cmd->pCmd->device);
++	lun  = scsilun_to_int(&lpfc_cmd->pCmd->device->lun);
+ 	snum = lpfc_cmd->pCmd->serial_number;
  
- 	ahd_linux_device_queue_depth(sdev);
+ 	list_for_each_entry_safe(iocb, next_iocb, &pring->txq, list) {
+@@ -947,6 +953,7 @@ __lpfc_reset_lun_handler(struct scsi_cmn
+ 	struct lpfc_nodelist *pnode = rdata->pnode;
+ 	int ret = FAILED;
+ 	int cnt, loopcnt;
++	char lunstr[SCSILUN_STR_LEN];
  
-@@ -585,11 +584,11 @@ ahd_linux_slave_destroy(struct scsi_devi
- 
- 	ahd = *((struct ahd_softc **)sdev->host->hostdata);
- 	if (bootverbose)
--		printf("%s: Slave Destroy %d\n", ahd_name(ahd), sdev->id);
-+		dev_printk(KERN_INFO, &sdev->sdev_gendev, "Slave Destroy\n");
- 
- 	BUG_ON(dev->active);
- 
--	targ->sdev[sdev->lun] = NULL;
-+	targ->sdev[scsilun_to_int(&sdev->lun)] = NULL;
- 
- }
- 
-@@ -684,7 +683,7 @@ ahd_linux_bus_reset(struct scsi_cmnd *cm
- 		       ahd_name(ahd), cmd);
- #endif
- 	ahd_lock(ahd, &s);
--	found = ahd_reset_channel(ahd, cmd->device->channel + 'A',
-+	found = ahd_reset_channel(ahd, sdev_channel(cmd->device) + 'A',
- 				  /*initiate reset*/TRUE);
- 	ahd_unlock(ahd, &s);
- 
-@@ -1405,7 +1404,8 @@ ahd_linux_device_queue_depth(struct scsi
- 
- 	ahd_compile_devinfo(&devinfo,
- 			    ahd->our_id,
--			    sdev->sdev_target->id, sdev->lun,
-+			    sdev->sdev_target->id,
-+			    scsilun_to_int(&sdev->lun),
- 			    sdev->sdev_target->channel == 0 ? 'A' : 'B',
- 			    ROLE_INITIATOR);
- 	tags = ahd_linux_user_tagdepth(ahd, &devinfo);
-@@ -1434,13 +1434,13 @@ ahd_linux_run_command(struct ahd_softc *
- 	 * Get an scb to use.
+ 	/*
+ 	 * If target is not in a MAPPED state, delay the reset until
+@@ -1008,13 +1015,15 @@ __lpfc_reset_lun_handler(struct scsi_cmn
+ 	 * to double check.
  	 */
- 	tinfo = ahd_fetch_transinfo(ahd, 'A', ahd->our_id,
--				    cmd->device->id, &tstate);
-+				    sdev_id(cmd->device), &tstate);
- 	if ((dev->flags & (AHD_DEV_Q_TAGGED|AHD_DEV_Q_BASIC)) == 0
- 	 || (tinfo->curr.ppr_options & MSG_EXT_PPR_IU_REQ) != 0) {
- 		col_idx = AHD_NEVER_COL_IDX;
- 	} else {
--		col_idx = AHD_BUILD_COL_IDX(cmd->device->id,
--					    cmd->device->lun);
-+		col_idx = AHD_BUILD_COL_IDX(sdev_id(cmd->device),
-+					    scsilun_to_int(&cmd->device->lun));
- 	}
- 	if ((scb = ahd_get_scb(ahd, col_idx)) == NULL) {
- 		ahd->flags |= AHD_RESOURCE_SHORTAGE;
-@@ -1457,7 +1457,7 @@ ahd_linux_run_command(struct ahd_softc *
+ 	lpfc_sli_abort_iocb(phba, &phba->sli.ring[phba->sli.fcp_ring],
+-			    cmnd->device->id, cmnd->device->lun, 0,
++			    sdev_id(cmnd->device),
++			    scsilun_to_int(&cmnd->device->lun), 0,
+ 			    LPFC_CTX_LUN);
+ 
+ 	loopcnt = 0;
+ 	while((cnt = lpfc_sli_sum_iocb(phba,
+ 				       &phba->sli.ring[phba->sli.fcp_ring],
+-				       cmnd->device->id, cmnd->device->lun,
++				       sdev_id(cmnd->device),
++				       scsilun_to_int(&cmnd->device->lun),
+ 				       LPFC_CTX_LUN))) {
+ 		spin_unlock_irq(phba->host->host_lock);
+ 		set_current_state(TASK_UNINTERRUPTIBLE);
+@@ -1036,10 +1045,12 @@ __lpfc_reset_lun_handler(struct scsi_cmn
+ 
+ out_free_scsi_buf:
+ 	lpfc_printf_log(phba, KERN_ERR, LOG_FCP,
+-			"%d:0713 SCSI layer issued LUN reset (%d, %d) "
++			"%d:0713 SCSI layer issued LUN reset (%d, %s) "
+ 			"Data: x%x x%x x%x\n",
+-			phba->brd_no, lpfc_cmd->pCmd->device->id,
+-			lpfc_cmd->pCmd->device->lun, ret, lpfc_cmd->status,
++			phba->brd_no,
++			sdev_id(lpfc_cmd->pCmd->device),
++			scsilun_to_str(&lpfc_cmd->pCmd->device->lun, lunstr),
++			ret, lpfc_cmd->status,
+ 			lpfc_cmd->result);
+ 	lpfc_free_scsi_buf(lpfc_cmd);
+ out:
+@@ -1086,7 +1097,7 @@ __lpfc_reset_bus_handler(struct scsi_cmn
+ 	 * targets known to the driver.  Should any target reset
+ 	 * fail, this routine returns failure to the midlayer.
  	 */
- 	hscb->control = 0;
- 	hscb->scsiid = BUILD_SCSIID(ahd, cmd);
--	hscb->lun = cmd->device->lun;
-+	hscb->lun = scsilun_to_int(&cmd->device->lun);
- 	scb->hscb->task_management = 0;
- 	mask = SCB_GET_TARGET_MASK(ahd, scb);
+-	midlayer_id = cmnd->device->id;
++	midlayer_id = sdev_id(cmnd->device);
+ 	for (i = 0; i < MAX_FCP_TARGET; i++) {
+ 		/* Search the mapped list for this target ID */
+ 		match = 0;
+@@ -1099,7 +1110,14 @@ __lpfc_reset_bus_handler(struct scsi_cmn
+ 		if (!match)
+ 			continue;
  
-@@ -1784,7 +1784,8 @@ ahd_linux_handle_scsi_status(struct ahd_
- 
- 	ahd_compile_devinfo(&devinfo,
- 			    ahd->our_id,
--			    sdev->sdev_target->id, sdev->lun,
-+			    sdev->sdev_target->id,
-+			    scsilun_to_int(&sdev->lun),
- 			    sdev->sdev_target->channel == 0 ? 'A' : 'B',
- 			    ROLE_INITIATOR);
- 	
-@@ -2067,9 +2068,8 @@ ahd_linux_queue_recovery_cmd(struct scsi
- 	wait = FALSE;
- 	ahd = *(struct ahd_softc **)cmd->device->host->hostdata;
- 
--	printf("%s:%d:%d:%d: Attempting to queue a%s message:",
--	       ahd_name(ahd), cmd->device->channel,
--	       cmd->device->id, cmd->device->lun,
-+	dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
-+	       "Attempting to queue a%s message:",
- 	       flag == SCB_ABORT ? "n ABORT" : " TARGET RESET");
- 
- 	printf("CDB:");
-@@ -2093,9 +2093,8 @@ ahd_linux_queue_recovery_cmd(struct scsi
- 		 * No target device for this command exists,
- 		 * so we must not still own the command.
- 		 */
--		printf("%s:%d:%d:%d: Is not an active device\n",
--		       ahd_name(ahd), cmd->device->channel, cmd->device->id,
--		       cmd->device->lun);
-+		dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
-+		       "Is not an active device\n");
- 		retval = SUCCESS;
- 		goto no_cmd;
- 	}
-@@ -2112,8 +2111,9 @@ ahd_linux_queue_recovery_cmd(struct scsi
- 
- 		/* Any SCB for this device will do for a target reset */
- 		LIST_FOREACH(pending_scb, &ahd->pending_scbs, pending_links) {
--		  	if (ahd_match_scb(ahd, pending_scb, cmd->device->id,
--					  cmd->device->channel + 'A',
-+		  	if (ahd_match_scb(ahd, pending_scb,
-+					  sdev_id(cmd->device),
-+					  sdev_channel(cmd->device) + 'A',
- 					  CAM_LUN_WILDCARD,
- 					  SCB_LIST_NULL, ROLE_INITIATOR) == 0)
- 				break;
-@@ -2121,9 +2121,8 @@ ahd_linux_queue_recovery_cmd(struct scsi
- 	}
- 
- 	if (pending_scb == NULL) {
--		printf("%s:%d:%d:%d: Command not found\n",
--		       ahd_name(ahd), cmd->device->channel, cmd->device->id,
--		       cmd->device->lun);
-+		dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
-+			"Command not found\n");
- 		goto no_cmd;
- 	}
- 
-@@ -2146,9 +2145,8 @@ ahd_linux_queue_recovery_cmd(struct scsi
- 	paused = TRUE;
- 
- 	if ((pending_scb->flags & SCB_ACTIVE) == 0) {
--		printf("%s:%d:%d:%d: Command already completed\n",
--		       ahd_name(ahd), cmd->device->channel, cmd->device->id,
--		       cmd->device->lun);
-+		dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
-+			"Command already completed\n");
- 		goto no_cmd;
- 	}
- 
-@@ -2158,21 +2156,23 @@ ahd_linux_queue_recovery_cmd(struct scsi
- 
- 	disconnected = TRUE;
- 	if (flag == SCB_ABORT) {
--		if (ahd_search_qinfifo(ahd, cmd->device->id, 
--				       cmd->device->channel + 'A',
--				       cmd->device->lun, 
-+		if (ahd_search_qinfifo(ahd,
-+				       sdev_id(cmd->device),
-+				       sdev_channel(cmd->device) + 'A',
-+				       scsilun_to_int(&cmd->device->lun), 
- 				       pending_scb->hscb->tag,
- 				       ROLE_INITIATOR, CAM_REQ_ABORTED,
- 				       SEARCH_COMPLETE) > 0) {
--			printf("%s:%d:%d:%d: Cmd aborted from QINFIFO\n",
--			       ahd_name(ahd), cmd->device->channel, 
--			       cmd->device->id, cmd->device->lun);
-+			dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
-+				"Cmd aborted from QINFIFO\n");
- 			retval = SUCCESS;
- 			goto done;
+-		lpfc_cmd->pCmd->device->id = i;
++		/* FIXME: what is this doing?  presumably,
++		 * sdev->id == sdev->sdev_target->id, but the following
++		 * code breaks that assumption.  We guess at a fix,
++		 * for now.
++		 */
++		/* PREV: lpfc_cmd->pCmd->device->id = i; */
++		lpfc_cmd->pCmd->device->sdev_target->id = i;
++
+ 		lpfc_cmd->pCmd->device->hostdata = ndlp->rport->dd_data;
+ 		ret = lpfc_scsi_tgt_reset(lpfc_cmd, phba);
+ 		if (ret != SUCCESS) {
+@@ -1110,7 +1128,13 @@ __lpfc_reset_bus_handler(struct scsi_cmn
  		}
--	} else if (ahd_search_qinfifo(ahd, cmd->device->id,
--				      cmd->device->channel + 'A',
--				      cmd->device->lun, pending_scb->hscb->tag,
-+	} else if (ahd_search_qinfifo(ahd,
-+				      sdev_id(cmd->device),
-+				      sdev_channel(cmd->device) + 'A',
-+				      scsilun_to_int(&cmd->device->lun),
-+				      pending_scb->hscb->tag,
- 				      ROLE_INITIATOR, /*status*/0,
- 				      SEARCH_COUNT) > 0) {
- 		disconnected = FALSE;
-@@ -2204,7 +2204,7 @@ ahd_linux_queue_recovery_cmd(struct scsi
- 	if (last_phase != P_BUSFREE
- 	 && (SCB_GET_TAG(pending_scb) == active_scbptr
- 	     || (flag == SCB_DEVICE_RESET
--		 && SCSIID_TARGET(ahd, saved_scsiid) == cmd->device->id))) {
-+		 && SCSIID_TARGET(ahd, saved_scsiid) == sdev_id(cmd->device)))) {
- 
- 		/*
- 		 * We're active on the bus, so assert ATN
-@@ -2214,9 +2214,8 @@ ahd_linux_queue_recovery_cmd(struct scsi
- 		pending_scb->flags |= SCB_RECOVERY_SCB|flag;
- 		ahd_outb(ahd, MSG_OUT, HOST_MSG);
- 		ahd_outb(ahd, SCSISIGO, last_phase|ATNO);
--		printf("%s:%d:%d:%d: Device is active, asserting ATN\n",
--		       ahd_name(ahd), cmd->device->channel,
--		       cmd->device->id, cmd->device->lun);
-+		dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
-+			"Device is active, asserting ATN\n");
- 		wait = TRUE;
- 	} else if (disconnected) {
- 
-@@ -2267,8 +2266,10 @@ ahd_linux_queue_recovery_cmd(struct scsi
- 		 * so we are the next SCB for this target
- 		 * to run.
- 		 */
--		ahd_search_qinfifo(ahd, cmd->device->id,
--				   cmd->device->channel + 'A', cmd->device->lun,
-+		ahd_search_qinfifo(ahd,
-+				   sdev_id(cmd->device),
-+				   sdev_channel(cmd->device) + 'A',
-+				   scsilun_to_int(&cmd->device->lun),
- 				   SCB_LIST_NULL, ROLE_INITIATOR,
- 				   CAM_REQUEUE_REQ, SEARCH_COMPLETE);
- 		ahd_qinfifo_requeue_tail(ahd, pending_scb);
-@@ -2277,9 +2278,8 @@ ahd_linux_queue_recovery_cmd(struct scsi
- 		printf("Device is disconnected, re-queuing SCB\n");
- 		wait = TRUE;
- 	} else {
--		printf("%s:%d:%d:%d: Unable to deliver message\n",
--		       ahd_name(ahd), cmd->device->channel,
--		       cmd->device->id, cmd->device->lun);
-+		dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
-+			"Unable to deliver message\n");
- 		retval = FAILED;
- 		goto done;
- 	}
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-index 6ee1435..1632db6 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -599,16 +599,14 @@ ahc_linux_target_destroy(struct scsi_tar
- static int
- ahc_linux_slave_alloc(struct scsi_device *sdev)
- {
--	struct	ahc_softc *ahc =
--		*((struct ahc_softc **)sdev->host->hostdata);
- 	struct scsi_target *starget = sdev->sdev_target;
- 	struct ahc_linux_target *targ = scsi_transport_target_data(starget);
- 	struct ahc_linux_device *dev;
- 
- 	if (bootverbose)
--		printf("%s: Slave Alloc %d\n", ahc_name(ahc), sdev->id);
-+		dev_printk(KERN_INFO, &sdev->sdev_gendev, "Slave Alloc\n");
- 
--	BUG_ON(targ->sdev[sdev->lun] != NULL);
-+	BUG_ON(targ->sdev[scsilun_to_int(&sdev->lun)] != NULL);
- 
- 	dev = scsi_transport_device_data(sdev);
- 	memset(dev, 0, sizeof(*dev));
-@@ -626,7 +624,7 @@ ahc_linux_slave_alloc(struct scsi_device
- 	 */
- 	dev->maxtags = 0;
- 	
--	targ->sdev[sdev->lun] = sdev;
-+	targ->sdev[scsilun_to_int(&sdev->lun)] = sdev;
- 
- 	spi_period(starget) = 0;
- 
-@@ -641,7 +639,7 @@ ahc_linux_slave_configure(struct scsi_de
- 	ahc = *((struct ahc_softc **)sdev->host->hostdata);
- 
- 	if (bootverbose)
--		printf("%s: Slave Configure %d\n", ahc_name(ahc), sdev->id);
-+		dev_printk(KERN_INFO, &sdev->sdev_gendev, "Slave Configure\n");
- 
- 	ahc_linux_device_queue_depth(sdev);
- 
-@@ -661,11 +659,11 @@ ahc_linux_slave_destroy(struct scsi_devi
- 
- 	ahc = *((struct ahc_softc **)sdev->host->hostdata);
- 	if (bootverbose)
--		printf("%s: Slave Destroy %d\n", ahc_name(ahc), sdev->id);
-+		dev_printk(KERN_INFO, &sdev->sdev_gendev, "Slave Destroy\n");
- 
- 	BUG_ON(dev->active);
- 
--	targ->sdev[sdev->lun] = NULL;
-+	targ->sdev[scsilun_to_int(&sdev->lun)] = NULL;
- }
- 
- #if defined(__i386__)
-@@ -686,7 +684,7 @@ ahc_linux_biosparam(struct scsi_device *
- 	u_int	 channel;
- 
- 	ahc = *((struct ahc_softc **)sdev->host->hostdata);
--	channel = sdev->channel;
-+	channel = sdev_channel(sdev);
- 
- 	bh = scsi_bios_ptable(bdev);
- 	if (bh) {
-@@ -759,7 +757,7 @@ ahc_linux_bus_reset(struct scsi_cmnd *cm
- 	ahc = *(struct ahc_softc **)cmd->device->host->hostdata;
- 
- 	ahc_lock(ahc, &flags);
--	found = ahc_reset_channel(ahc, cmd->device->channel + 'A',
-+	found = ahc_reset_channel(ahc, sdev_channel(cmd->device) + 'A',
- 				  /*initiate reset*/TRUE);
- 	ahc_unlock(ahc, &flags);
- 
-@@ -798,9 +796,9 @@ struct scsi_host_template aic7xxx_driver
- 
- /******************************** Macros **************************************/
- #define BUILD_SCSIID(ahc, cmd)						    \
--	((((cmd)->device->id << TID_SHIFT) & TID)			    \
--	| (((cmd)->device->channel == 0) ? (ahc)->our_id : (ahc)->our_id_b) \
--	| (((cmd)->device->channel == 0) ? 0 : TWIN_CHNLB))
-+	(((sdev_id((cmd)->device) << TID_SHIFT) & TID)			    \
-+	| ((sdev_channel((cmd)->device) == 0) ? (ahc)->our_id : (ahc)->our_id_b) \
-+	| ((sdev_channel((cmd)->device) == 0) ? 0 : TWIN_CHNLB))
- 
- /******************************** Bus DMA *************************************/
- int
-@@ -1398,7 +1396,8 @@ ahc_linux_device_queue_depth(struct scsi
- 	ahc_compile_devinfo(&devinfo,
- 			    sdev->sdev_target->channel == 0
- 			  ? ahc->our_id : ahc->our_id_b,
--			    sdev->sdev_target->id, sdev->lun,
-+			    sdev->sdev_target->id,
-+			    scsilun_to_int(&sdev->lun),
- 			    sdev->sdev_target->channel == 0 ? 'A' : 'B',
- 			    ROLE_INITIATOR);
- 	tags = ahc_linux_user_tagdepth(ahc, &devinfo);
-@@ -1440,7 +1439,7 @@ ahc_linux_run_command(struct ahc_softc *
- 	    && (ahc->features & AHC_SCB_BTT) == 0) {
- 		int target_offset;
- 
--		target_offset = cmd->device->id + cmd->device->channel * 8;
-+		target_offset = sdev_id(cmd->device) + sdev_channel(cmd->device) * 8;
- 		untagged_q = &(ahc->untagged_queues[target_offset]);
- 		if (!TAILQ_EMPTY(untagged_q))
- 			/* if we're already executing an untagged command
-@@ -1465,7 +1464,7 @@ ahc_linux_run_command(struct ahc_softc *
- 	 */
- 	hscb->control = 0;
- 	hscb->scsiid = BUILD_SCSIID(ahc, cmd);
--	hscb->lun = cmd->device->lun;
-+	hscb->lun = scsilun_to_int(&cmd->device->lun);
- 	mask = SCB_GET_TARGET_MASK(ahc, scb);
- 	tinfo = ahc_fetch_transinfo(ahc, SCB_GET_CHANNEL(ahc, scb),
- 				    SCB_GET_OUR_ID(scb),
-@@ -1849,7 +1848,8 @@ ahc_linux_handle_scsi_status(struct ahc_
- 
- 	ahc_compile_devinfo(&devinfo,
- 			    ahc->our_id,
--			    sdev->sdev_target->id, sdev->lun,
-+			    sdev->sdev_target->id,
-+			    scsilun_to_int(&sdev->lun),
- 			    sdev->sdev_target->channel == 0 ? 'A' : 'B',
- 			    ROLE_INITIATOR);
- 	
-@@ -2117,9 +2117,8 @@ ahc_linux_queue_recovery_cmd(struct scsi
- 	wait = FALSE;
- 	ahc = *(struct ahc_softc **)cmd->device->host->hostdata;
- 
--	printf("%s:%d:%d:%d: Attempting to queue a%s message\n",
--	       ahc_name(ahc), cmd->device->channel,
--	       cmd->device->id, cmd->device->lun,
-+	dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
-+		"Attempting to queue a%s message\n",
- 	       flag == SCB_ABORT ? "n ABORT" : " TARGET RESET");
- 
- 	printf("CDB:");
-@@ -2143,21 +2142,19 @@ ahc_linux_queue_recovery_cmd(struct scsi
- 		 * No target device for this command exists,
- 		 * so we must not still own the command.
- 		 */
--		printf("%s:%d:%d:%d: Is not an active device\n",
--		       ahc_name(ahc), cmd->device->channel, cmd->device->id,
--		       cmd->device->lun);
-+		dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
-+			"Is not an active device\n");
- 		retval = SUCCESS;
- 		goto no_cmd;
  	}
  
- 	if ((dev->flags & (AHC_DEV_Q_BASIC|AHC_DEV_Q_TAGGED)) == 0
--	 && ahc_search_untagged_queues(ahc, cmd, cmd->device->id,
--				       cmd->device->channel + 'A',
--				       cmd->device->lun,
-+	 && ahc_search_untagged_queues(ahc, cmd, sdev_id(cmd->device),
-+				       sdev_channel(cmd->device) + 'A',
-+				       scsilun_to_int(&cmd->device->lun),
- 				       CAM_REQ_ABORTED, SEARCH_COMPLETE) != 0) {
--		printf("%s:%d:%d:%d: Command found on untagged queue\n",
--		       ahc_name(ahc), cmd->device->channel, cmd->device->id,
--		       cmd->device->lun);
-+		dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
-+			"Command found on untagged queue\n");
- 		retval = SUCCESS;
- 		goto done;
- 	}
-@@ -2174,8 +2171,8 @@ ahc_linux_queue_recovery_cmd(struct scsi
- 
- 		/* Any SCB for this device will do for a target reset */
- 		LIST_FOREACH(pending_scb, &ahc->pending_scbs, pending_links) {
--		  	if (ahc_match_scb(ahc, pending_scb, cmd->device->id,
--					  cmd->device->channel + 'A',
-+		  	if (ahc_match_scb(ahc, pending_scb, sdev_id(cmd->device),
-+					  sdev_channel(cmd->device) + 'A',
- 					  CAM_LUN_WILDCARD,
- 					  SCB_LIST_NULL, ROLE_INITIATOR) == 0)
+-	cmnd->device->id = midlayer_id;
++	/* FIXME: what is this doing?  presumably,
++	 * sdev->id == sdev->sdev_target->id, but the following
++	 * code breaks that assumption.  We guess at a fix,
++	 * for now.
++	 */
++	/* PREV: cmnd->device->id = midlayer_id; */
++	cmnd->device->sdev_target->id = midlayer_id;
+ 	loopcnt = 0;
+ 	while((cnt = lpfc_sli_sum_iocb(phba,
+ 				&phba->sli.ring[phba->sli.fcp_ring],
+@@ -1190,7 +1214,7 @@ lpfc_slave_alloc(struct scsi_device *sde
+ 		if (list_empty(listp))
+ 			continue;
+ 		list_for_each_entry(ndlp, listp, nlp_listp) {
+-			if ((sdev->id == ndlp->nlp_sid) && ndlp->rport) {
++			if ((sdev_id(sdev) == ndlp->nlp_sid) && ndlp->rport) {
+ 				match = 1;
  				break;
-@@ -2183,9 +2180,8 @@ ahc_linux_queue_recovery_cmd(struct scsi
- 	}
- 
- 	if (pending_scb == NULL) {
--		printf("%s:%d:%d:%d: Command not found\n",
--		       ahc_name(ahc), cmd->device->channel, cmd->device->id,
--		       cmd->device->lun);
-+		dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
-+			"Command not found\n");
- 		goto no_cmd;
- 	}
- 
-@@ -2207,9 +2203,8 @@ ahc_linux_queue_recovery_cmd(struct scsi
- 	paused = TRUE;
- 
- 	if ((pending_scb->flags & SCB_ACTIVE) == 0) {
--		printf("%s:%d:%d:%d: Command already completed\n",
--		       ahc_name(ahc), cmd->device->channel, cmd->device->id,
--		       cmd->device->lun);
-+		dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
-+			"Command already completed\n");
- 		goto no_cmd;
- 	}
- 
-@@ -2219,21 +2214,21 @@ ahc_linux_queue_recovery_cmd(struct scsi
- 
- 	disconnected = TRUE;
- 	if (flag == SCB_ABORT) {
--		if (ahc_search_qinfifo(ahc, cmd->device->id,
--				       cmd->device->channel + 'A',
--				       cmd->device->lun,
-+		if (ahc_search_qinfifo(ahc, sdev_id(cmd->device),
-+				       sdev_channel(cmd->device) + 'A',
-+				       scsilun_to_int(&cmd->device->lun),
- 				       pending_scb->hscb->tag,
- 				       ROLE_INITIATOR, CAM_REQ_ABORTED,
- 				       SEARCH_COMPLETE) > 0) {
--			printf("%s:%d:%d:%d: Cmd aborted from QINFIFO\n",
--			       ahc_name(ahc), cmd->device->channel,
--					cmd->device->id, cmd->device->lun);
-+			dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
-+				"Cmd aborted from QINFIFO\n");
- 			retval = SUCCESS;
- 			goto done;
- 		}
--	} else if (ahc_search_qinfifo(ahc, cmd->device->id,
--				      cmd->device->channel + 'A',
--				      cmd->device->lun, pending_scb->hscb->tag,
-+	} else if (ahc_search_qinfifo(ahc, sdev_id(cmd->device),
-+				      sdev_channel(cmd->device) + 'A',
-+				      scsilun_to_int(&cmd->device->lun),
-+				      pending_scb->hscb->tag,
- 				      ROLE_INITIATOR, /*status*/0,
- 				      SEARCH_COUNT) > 0) {
- 		disconnected = FALSE;
-@@ -2266,7 +2261,7 @@ ahc_linux_queue_recovery_cmd(struct scsi
- 	if (last_phase != P_BUSFREE
- 	 && (pending_scb->hscb->tag == active_scb_index
- 	  || (flag == SCB_DEVICE_RESET
--	   && SCSIID_TARGET(ahc, saved_scsiid) == cmd->device->id))) {
-+	   && SCSIID_TARGET(ahc, saved_scsiid) == sdev_id(cmd->device)))) {
- 
- 		/*
- 		 * We're active on the bus, so assert ATN
-@@ -2276,9 +2271,8 @@ ahc_linux_queue_recovery_cmd(struct scsi
- 		pending_scb->flags |= SCB_RECOVERY_SCB|flag;
- 		ahc_outb(ahc, MSG_OUT, HOST_MSG);
- 		ahc_outb(ahc, SCSISIGO, last_phase|ATNO);
--		printf("%s:%d:%d:%d: Device is active, asserting ATN\n",
--		       ahc_name(ahc), cmd->device->channel, cmd->device->id,
--		       cmd->device->lun);
-+		dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
-+			"Device is active, asserting ATN\n");
- 		wait = TRUE;
- 	} else if (disconnected) {
- 
-@@ -2308,9 +2302,10 @@ ahc_linux_queue_recovery_cmd(struct scsi
- 		 * same element in the SCB, SCB_NEXT, for
- 		 * both the qinfifo and the disconnected list.
- 		 */
--		ahc_search_disc_list(ahc, cmd->device->id,
--				     cmd->device->channel + 'A',
--				     cmd->device->lun, pending_scb->hscb->tag,
-+		ahc_search_disc_list(ahc, sdev_id(cmd->device),
-+				     sdev_channel(cmd->device) + 'A',
-+				     scsilun_to_int(&cmd->device->lun),
-+				     pending_scb->hscb->tag,
- 				     /*stop_on_first*/TRUE,
- 				     /*remove*/TRUE,
- 				     /*save_state*/FALSE);
-@@ -2333,9 +2328,10 @@ ahc_linux_queue_recovery_cmd(struct scsi
- 		 * so we are the next SCB for this target
- 		 * to run.
- 		 */
--		ahc_search_qinfifo(ahc, cmd->device->id,
--				   cmd->device->channel + 'A',
--				   cmd->device->lun, SCB_LIST_NULL,
-+		ahc_search_qinfifo(ahc, sdev_id(cmd->device),
-+				   sdev_channel(cmd->device) + 'A',
-+				   scsilun_to_int(&cmd->device->lun),
-+				   SCB_LIST_NULL,
- 				   ROLE_INITIATOR, CAM_REQUEUE_REQ,
- 				   SEARCH_COMPLETE);
- 		ahc_qinfifo_requeue_tail(ahc, pending_scb);
-@@ -2344,9 +2340,8 @@ ahc_linux_queue_recovery_cmd(struct scsi
- 		printf("Device is disconnected, re-queuing SCB\n");
- 		wait = TRUE;
- 	} else {
--		printf("%s:%d:%d:%d: Unable to deliver message\n",
--		       ahc_name(ahc), cmd->device->channel, cmd->device->id,
--		       cmd->device->lun);
-+		dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
-+			"Unable to deliver message\n");
- 		retval = FAILED;
- 		goto done;
- 	}
-diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-index 7235f94..c3a13e0 100644
---- a/drivers/scsi/dpt_i2o.c
-+++ b/drivers/scsi/dpt_i2o.c
-@@ -425,7 +425,10 @@ static int adpt_queue(struct scsi_cmnd *
- 		 * to the device structure.  This should be a TEST_UNIT_READY
- 		 * command from scan_scsis_single.
- 		 */
--		if ((pDev = adpt_find_device(pHba, (u32)cmd->device->channel, (u32)cmd->device->id, (u32)cmd->device->lun)) == NULL) {
-+		if ((pDev = adpt_find_device(pHba,
-+			sdev_channel(cmd->device),
-+			sdev_id(cmd->device),
-+			scsilun_to_int(&cmd->device->lun))) == NULL) {
- 			// TODO: if any luns are at this bus, scsi id then fake a TEST_UNIT_READY and INQUIRY response 
- 			// with type 7F (for all luns less than the max for this bus,id) so the lun scan will continue.
- 			cmd->result = (DID_NO_CONNECT << 16);
-@@ -724,9 +727,10 @@ static int adpt_bus_reset(struct scsi_cm
- 
- 	pHba = (adpt_hba*)cmd->device->host->hostdata[0];
- 	memset(msg, 0, sizeof(msg));
--	printk(KERN_WARNING"%s: Bus reset: SCSI Bus %d: tid: %d\n",pHba->name, cmd->device->channel,pHba->channel[cmd->device->channel].tid );
-+	dev_printk(KERN_WARNING, &cmd->device->sdev_gendev,
-+		"Bus reset: tid: %d\n", pHba->channel[sdev_channel(cmd->device)].tid );
- 	msg[0] = FOUR_WORD_MSG_SIZE|SGL_OFFSET_0;
--	msg[1] = (I2O_HBA_BUS_RESET<<24|HOST_TID<<12|pHba->channel[cmd->device->channel].tid);
-+	msg[1] = (I2O_HBA_BUS_RESET<<24|HOST_TID<<12|pHba->channel[sdev_channel(cmd->device)].tid);
- 	msg[2] = 0;
- 	msg[3] = 0;
- 	if(adpt_i2o_post_wait(pHba, msg,sizeof(msg), FOREVER) ){
-@@ -744,7 +748,8 @@ static int __adpt_reset(struct scsi_cmnd
- 	adpt_hba* pHba;
- 	int rcode;
- 	pHba = (adpt_hba*)cmd->device->host->hostdata[0];
--	printk(KERN_WARNING"%s: Hba Reset: scsi id %d: tid: %d\n",pHba->name,cmd->device->channel,pHba->channel[cmd->device->channel].tid );
-+	dev_printk(KERN_WARNING, &cmd->device->sdev_gendev,
-+		"Hba Reset: tid: %d\n", pHba->channel[sdev_channel(cmd->device)].tid );
- 	rcode =  adpt_hba_reset(pHba);
- 	if(rcode == 0){
- 		printk(KERN_WARNING"%s: HBA reset complete\n",pHba->name);
-@@ -2256,8 +2261,9 @@ static s32 adpt_i2o_to_scsi(void __iomem
- 		case I2O_SCSI_DSC_COMMAND_TIMEOUT:
- 		case I2O_SCSI_DSC_NO_ADAPTER:
- 		case I2O_SCSI_DSC_RESOURCE_UNAVAILABLE:
--			printk(KERN_WARNING"%s: SCSI Timeout-Device (%d,%d,%d) hba status=0x%x, dev status=0x%x, cmd=0x%x\n",
--				pHba->name, (u32)cmd->device->channel, (u32)cmd->device->id, (u32)cmd->device->lun, hba_status, dev_status, cmd->cmnd[0]);
-+			dev_printk(KERN_WARNING, &cmd->device->sdev_gendev,
-+				"SCSI Timeout-Device hba status=0x%x, dev status=0x%x, cmd=0x%x\n",
-+				hba_status, dev_status, cmd->cmnd[0]);
- 			cmd->result = (DID_TIME_OUT << 16);
- 			break;
- 		case I2O_SCSI_DSC_ADAPTER_BUSY:
-@@ -2296,8 +2302,9 @@ static s32 adpt_i2o_to_scsi(void __iomem
- 		case I2O_SCSI_DSC_QUEUE_FROZEN:
- 		case I2O_SCSI_DSC_REQUEST_INVALID:
- 		default:
--			printk(KERN_WARNING"%s: SCSI error %0x-Device(%d,%d,%d) hba_status=0x%x, dev_status=0x%x, cmd=0x%x\n",
--				pHba->name, detailed_status & I2O_SCSI_DSC_MASK, (u32)cmd->device->channel, (u32)cmd->device->id, (u32)cmd->device->lun,
-+			dev_printk(KERN_WARNING, &cmd->device->sdev_gendev,
-+				"SCSI error %0x-Device hba_status=0x%x, dev_status=0x%x, cmd=0x%x\n",
-+				detailed_status & I2O_SCSI_DSC_MASK,
- 			       hba_status, dev_status, cmd->cmnd[0]);
- 			cmd->result = (DID_ERROR << 16);
- 			break;
-@@ -2314,8 +2321,8 @@ static s32 adpt_i2o_to_scsi(void __iomem
- 			   cmd->sense_buffer[2] == DATA_PROTECT ){
- 				/* This is to handle an array failed */
- 				cmd->result = (DID_TIME_OUT << 16);
--				printk(KERN_WARNING"%s: SCSI Data Protect-Device (%d,%d,%d) hba_status=0x%x, dev_status=0x%x, cmd=0x%x\n",
--					pHba->name, (u32)cmd->device->channel, (u32)cmd->device->id, (u32)cmd->device->lun, 
-+				dev_printk(KERN_WARNING, &cmd->device->sdev_gendev,
-+					"SCSI Data Protect-Device hba_status=0x%x, dev_status=0x%x, cmd=0x%x\n",
- 					hba_status, dev_status, cmd->cmnd[0]);
- 
  			}
-@@ -2326,8 +2333,8 @@ static s32 adpt_i2o_to_scsi(void __iomem
- 		 * for a limitted number of retries.
- 		 */
- 		cmd->result = (DID_TIME_OUT << 16);
--		printk(KERN_WARNING"%s: I2O MSG_FAIL - Device (%d,%d,%d) tid=%d, cmd=0x%x\n",
--			pHba->name, (u32)cmd->device->channel, (u32)cmd->device->id, (u32)cmd->device->lun,
-+		dev_printk(KERN_WARNING, &cmd->device->sdev_gendev,
-+			"I2O MSG_FAIL - Device tid=%d, cmd=0x%x\n",
- 			((struct adpt_device*)(cmd->device->hostdata))->tid, cmd->cmnd[0]);
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index e74e224..153c69a 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -2504,12 +2504,13 @@ lpfc_sli_validate_iocb_cmd(struct lpfc_s
+ 
+ 	switch (ctx_cmd) {
+ 	case LPFC_CTX_LUN:
+-		if ((lpfc_cmd->pCmd->device->id == tgt_id) &&
+-		    (lpfc_cmd->pCmd->device->lun == lun_id))
++		/* FIXME: use scsilun_eq() */
++		if ((sdev_id(lpfc_cmd->pCmd->device) == tgt_id) &&
++		    (scsilun_to_int(&lpfc_cmd->pCmd->device->lun) == lun_id))
+ 			rc = 0;
+ 		break;
+ 	case LPFC_CTX_TGT:
+-		if (lpfc_cmd->pCmd->device->id == tgt_id)
++		if (sdev_id(lpfc_cmd->pCmd->device) == tgt_id)
+ 			rc = 0;
+ 		break;
+ 	case LPFC_CTX_CTX:
+diff --git a/drivers/scsi/megaraid/mega_common.h b/drivers/scsi/megaraid/mega_common.h
+index 69df1a9..87b3ec7 100644
+--- a/drivers/scsi/megaraid/mega_common.h
++++ b/drivers/scsi/megaraid/mega_common.h
+@@ -199,9 +199,9 @@ typedef struct {
+ // conversion from scsi command
+ #define SCP2HOST(scp)			(scp)->device->host	// to host
+ #define SCP2HOSTDATA(scp)		SCP2HOST(scp)->hostdata	// to soft state
+-#define SCP2CHANNEL(scp)		(scp)->device->channel	// to channel
+-#define SCP2TARGET(scp)			(scp)->device->id	// to target
+-#define SCP2LUN(scp)			(scp)->device->lun	// to LUN
++#define SCP2CHANNEL(scp)		sdev_channel((scp)->device) // to channel
++#define SCP2TARGET(scp)			sdev_id((scp)->device)	// to target
++#define SCP2LUN(scp)			scsilun_to_int(&(scp)->device->lun) // to LUN
+ 
+ // generic macro to convert scsi command and host to controller's soft state
+ #define SCSIHOST2ADAP(host)	(((caddr_t *)(host->hostdata))[0])
+@@ -223,7 +223,7 @@ typedef struct {
+ 	(SCP2CHANNEL(scp) == (adp)->max_channel) ? 1 : 0
+ 
+ #define MRAID_IS_LOGICAL_SDEV(adp, sdev)	\
+-	(sdev->channel == (adp)->max_channel) ? 1 : 0
++	(sdev_channel(sdev) == (adp)->max_channel) ? 1 : 0
+ 
+ #define MRAID_GET_DEVICE_MAP(adp, scp, p_chan, target, islogical)	\
+ 	/*								\
+diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
+index d47be8e..6749b34 100644
+--- a/drivers/scsi/megaraid/megaraid_mbox.c
++++ b/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -1712,7 +1712,7 @@ megaraid_mbox_build_cmd(adapter_t *adapt
+ 			 * Do not allow LUN > 0 for logical drives and
+ 			 * requests for more than 40 logical drives
+ 			 */
+-			if (SCP2LUN(scp)) {
++			if (!scsilun_zero(&scp->device->lun)) {
+ 				scp->result = (DID_BAD_TARGET << 16);
+ 				return NULL;
+ 			}
+@@ -4165,15 +4165,15 @@ megaraid_sysfs_show_ldnum(struct device 
+ 
+ 			for (i = 0; i < MAX_LOGICAL_DRIVES_40LD; i++) {
+ 
+-				mapped_sdev_id = sdev->id;
++				mapped_sdev_id = sdev_id(sdev);
+ 
+-				if (sdev->id > adapter->init_id) {
++				if (sdev_id(sdev) > adapter->init_id) {
+ 					mapped_sdev_id -= 1;
+ 				}
+ 
+ 				if (raid_dev->curr_ldmap[i] == mapped_sdev_id) {
+ 
+-					scsi_id = sdev->id;
++					scsi_id = sdev_id(sdev);
+ 
+ 					logical_drv = i;
+ 
+diff --git a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
+index c3f6373..8dcec7c 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.c
++++ b/drivers/scsi/megaraid/megaraid_sas.c
+@@ -389,7 +389,7 @@ megasas_build_dcdb(struct megasas_instan
+ 	pthru->cmd_status = 0x0;
+ 	pthru->scsi_status = 0x0;
+ 	pthru->target_id = device_id;
+-	pthru->lun = scp->device->lun;
++	pthru->lun = scsilun_to_int(&scp->device->lun);
+ 	pthru->cdb_len = scp->cmd_len;
+ 	pthru->timeout = 0;
+ 	pthru->flags = flags;
+@@ -581,7 +581,7 @@ static inline struct megasas_cmd *megasa
+ 	 */
+ 	if (logical_cmd) {
+ 
+-		if (scp->device->id >= MEGASAS_MAX_LD) {
++		if (sdev_id(scp->device) >= MEGASAS_MAX_LD) {
+ 			scp->result = DID_BAD_TARGET << 16;
+ 			return NULL;
+ 		}
+@@ -599,7 +599,7 @@ static inline struct megasas_cmd *megasa
+ 			/*
+ 			 * Fail for LUN > 0
+ 			 */
+-			if (scp->device->lun) {
++			if (!scsilun_zero(&scp->device->lun)) {
+ 				scp->result = DID_BAD_TARGET << 16;
+ 				return NULL;
+ 			}
+@@ -624,7 +624,7 @@ static inline struct megasas_cmd *megasa
+ 			/*
+ 			 * Fail for LUN > 0
+ 			 */
+-			if (scp->device->lun) {
++			if (!scsilun_zero(&scp->device->lun)) {
+ 				scp->result = DID_BAD_TARGET << 16;
+ 				return NULL;
+ 			}
+@@ -758,9 +758,9 @@ static int megasas_generic_reset(struct 
+ 
+ 	instance = (struct megasas_instance *)scmd->device->host->hostdata;
+ 
+-	printk(KERN_NOTICE "megasas: RESET -%ld cmd=%x <c=%d t=%d l=%d>\n",
+-	       scmd->serial_number, scmd->cmnd[0], scmd->device->channel,
+-	       scmd->device->id, scmd->device->lun);
++	dev_printk(KERN_NOTICE, &scmd->device->sdev_gendev,
++		"megasas: RESET -%ld cmd=%x\n",
++	       scmd->serial_number, scmd->cmnd[0]);
+ 
+ 	if (instance->hw_crit_error) {
+ 		printk(KERN_ERR "megasas: cannot recover from previous reset "
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index eaec9d5..f86a80d 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -1059,11 +1059,11 @@ struct megasas_instance {
+ };
+ 
+ #define MEGASAS_IS_LOGICAL(scp)						\
+-	(scp->device->channel < MEGASAS_MAX_PD_CHANNELS) ? 0 : 1
++	(sdev_channel(scp->device) < MEGASAS_MAX_PD_CHANNELS) ? 0 : 1
+ 
+ #define MEGASAS_DEV_INDEX(inst, scp)					\
+-	((scp->device->channel % 2) * MEGASAS_MAX_DEV_PER_CHANNEL) + 	\
+-	scp->device->id
++	((sdev_channel(scp->device) % 2) * MEGASAS_MAX_DEV_PER_CHANNEL) + \
++	sdev_id(scp->device)
+ 
+ struct megasas_cmd {
+ 
+diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
+index 3cd3b40..b5fb13d 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.c
++++ b/drivers/scsi/pcmcia/nsp_cs.c
+@@ -201,7 +201,7 @@ static int nsp_queuecommand(Scsi_Cmnd *S
+ #ifdef NSP_DEBUG
+ 	/*unsigned int host_id = SCpnt->device->host->this_id;*/
+ 	/*unsigned int base    = SCpnt->device->host->io_port;*/
+-	unsigned char target = SCpnt->device->id;
++	unsigned char target = sdev_id(SCpnt->device);
+ #endif
+ 	nsp_hw_data *data = (nsp_hw_data *)SCpnt->device->host->hostdata;
+ 
+@@ -373,7 +373,7 @@ static int nsphw_start_selection(Scsi_Cm
+ {
+ 	unsigned int  host_id	 = SCpnt->device->host->this_id;
+ 	unsigned int  base	 = SCpnt->device->host->io_port;
+-	unsigned char target	 = SCpnt->device->id;
++	unsigned char target	 = sdev_id(SCpnt->device);
+ 	nsp_hw_data  *data = (nsp_hw_data *)SCpnt->device->host->hostdata;
+ 	int	      time_out;
+ 	unsigned char phase, arbit;
+@@ -452,7 +452,7 @@ static struct nsp_sync_table nsp_sync_ta
+  */
+ static int nsp_analyze_sdtr(Scsi_Cmnd *SCpnt)
+ {
+-	unsigned char	       target = SCpnt->device->id;
++	unsigned char	       target = sdev_id(SCpnt->device);
+ //	unsigned char	       lun    = SCpnt->device->lun;
+ 	nsp_hw_data           *data   = (nsp_hw_data *)SCpnt->device->host->hostdata;
+ 	sync_data	      *sync   = &(data->Sync[target]);
+@@ -677,7 +677,7 @@ static int nsp_reselected(Scsi_Cmnd *SCp
+ 		target++;
  	}
  
-diff --git a/drivers/scsi/fdomain.c b/drivers/scsi/fdomain.c
-index 3b2a5bf..9353598 100644
---- a/drivers/scsi/fdomain.c
-+++ b/drivers/scsi/fdomain.c
-@@ -1154,7 +1154,7 @@ static irqreturn_t do_fdomain_16x0_intr(
-       outb(0x40 | FIFO_COUNT, port_base + Interrupt_Cntl);
+-	if (SCpnt->device->id != target) {
++	if (sdev_id(SCpnt->device) != target) {
+ 		nsp_msg(KERN_ERR, "XXX: reselect ID must be %d in this implementation.", target);
+ 	}
  
-       outb(0x82, port_base + SCSI_Cntl); /* Bus Enable + Select */
--      outb(adapter_mask | (1 << current_SC->device->id), port_base + SCSI_Data_NoACK);
-+      outb(adapter_mask | (1 << sdev_id(current_SC->device)), port_base + SCSI_Data_NoACK);
-       
-       /* Stop arbitration and enable parity */
-       outb(0x10 | PARITY_MASK, port_base + TMC_Cntl);
-@@ -1166,7 +1166,7 @@ static irqreturn_t do_fdomain_16x0_intr(
-       status = inb(port_base + SCSI_Status);
-       if (!(status & 0x01)) {
- 	 /* Try again, for slow devices */
--	 if (fdomain_select( current_SC->device->id )) {
-+	 if (fdomain_select( sdev_id(current_SC->device) )) {
- #if EVERY_ACCESS
- 	    printk( " SFAIL " );
+@@ -912,7 +912,7 @@ static void nsp_pio_write(Scsi_Cmnd *SCp
+ static int nsp_nexus(Scsi_Cmnd *SCpnt)
+ {
+ 	unsigned int   base   = SCpnt->device->host->io_port;
+-	unsigned char  target = SCpnt->device->id;
++	unsigned char  target = sdev_id(SCpnt->device);
+ //	unsigned char  lun    = SCpnt->device->lun;
+ 	nsp_hw_data *data = (nsp_hw_data *)SCpnt->device->host->hostdata;
+ 	sync_data     *sync   = &(data->Sync[target]);
+@@ -1051,8 +1051,8 @@ static irqreturn_t nspintr(int irq, void
+ 	}
+ 
+ 	tmpSC    = data->CurrentSC;
+-	target   = tmpSC->device->id;
+-	lun      = tmpSC->device->lun;
++	target   = sdev_id(tmpSC->device);
++	lun      = scsilun_to_int(&tmpSC->device->lun);
+ 	sync_neg = &(data->Sync[target].SyncNegotiation);
+ 
+ 	/*
+diff --git a/drivers/scsi/pcmcia/sym53c500_cs.c b/drivers/scsi/pcmcia/sym53c500_cs.c
+index b4b3a1a..11ee73e 100644
+--- a/drivers/scsi/pcmcia/sym53c500_cs.c
++++ b/drivers/scsi/pcmcia/sym53c500_cs.c
+@@ -610,7 +610,7 @@ SYM53C500_queue(struct scsi_cmnd *SCpnt,
+ 
+ 	/* We are locked here already by the mid layer */
+ 	REG0(port_base);
+-	outb(SCpnt->device->id, port_base + DEST_ID);	/* set destination */
++	outb(sdev_id(SCpnt->device), port_base + DEST_ID);	/* set destination */
+ 	outb(FLUSH_FIFO, port_base + CMD_REG);	/* reset the fifos */
+ 
+ 	for (i = 0; i < SCpnt->cmd_len; i++) {
+diff --git a/drivers/scsi/psi240i.c b/drivers/scsi/psi240i.c
+index 0f576d4..2a673de 100644
+--- a/drivers/scsi/psi240i.c
++++ b/drivers/scsi/psi240i.c
+@@ -394,7 +394,7 @@ static int Psi240i_QueueCommand (Scsi_Cm
+ 	{
+ 	UCHAR		   *cdb = (UCHAR *)SCpnt->cmnd;					// Pointer to SCSI CDB
+ 	PADAPTER240I	padapter = HOSTDATA (SCpnt->device->host); 			// Pointer to adapter control structure
+-	POUR_DEVICE 		pdev	 = &padapter->device [SCpnt->device->id];// Pointer to device information
++	POUR_DEVICE 		pdev	 = &padapter->device [sdev_id(SCpnt->device)];// Pointer to device information
+ 	UCHAR			rc;											// command return code
+ 
+ 	SCpnt->scsi_done = done;
+@@ -659,7 +659,7 @@ static int Psi240i_BiosParam (struct scs
+ 	{
+ 	POUR_DEVICE	pdev;
+ 
+-	pdev = &(HOSTDATA(sdev->host)->device[sdev->id]);
++	pdev = &(HOSTDATA(sdev->host)->device[sdev_id(sdev)]);
+ 
+ 	geom[0] = pdev->heads;
+ 	geom[1] = pdev->sectors;
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 9791496..3590a46 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -1985,9 +1985,10 @@ qla2x00_print_scsi_cmd(struct scsi_cmnd 
+ 	ha = (struct scsi_qla_host *)cmd->device->host->hostdata;
+ 
+ 	sp = (srb_t *) cmd->SCp.ptr;
+-	printk("SCSI Command @=0x%p, Handle=0x%p\n", cmd, cmd->host_scribble);
+-	printk("  chan=0x%02x, target=0x%02x, lun=0x%02x, cmd_len=0x%02x\n",
+-	    cmd->device->channel, cmd->device->id, cmd->device->lun,
++	dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
++		"SCSI Command @=0x%p, Handle=0x%p\n", cmd, cmd->host_scribble);
++	dev_printk(KERN_INFO, &cmd->device->sdev_gendev,
++		"  cmd_len=0x%02x\n",
+ 	    cmd->cmd_len);
+ 	printk(" CDB: ");
+ 	for (i = 0; i < cmd->cmd_len; i++) {
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 37f82e2..307c7da 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -397,7 +397,7 @@ qla2x00_start_scsi(srb_t *sp)
+ 
+ 	/* Set target ID and LUN number*/
+ 	SET_TARGET_ID(ha, cmd_pkt->target, sp->fcport->loop_id);
+-	cmd_pkt->lun = cpu_to_le16(sp->cmd->device->lun);
++	cmd_pkt->lun = cpu_to_le16(scsilun_to_int(&sp->cmd->device->lun));
+ 
+ 	/* Update tagged queuing modifier */
+ 	cmd_pkt->control_flags = __constant_cpu_to_le16(CF_SIMPLE_TAG);
+@@ -834,8 +834,8 @@ qla24xx_start_scsi(srb_t *sp)
+ 	cmd_pkt->port_id[1] = sp->fcport->d_id.b.area;
+ 	cmd_pkt->port_id[2] = sp->fcport->d_id.b.domain;
+ 
+-	cmd_pkt->lun[1] = LSB(sp->cmd->device->lun);
+-	cmd_pkt->lun[2] = MSB(sp->cmd->device->lun);
++	cmd_pkt->lun[1] = LSB(scsilun_to_int(&sp->cmd->device->lun));
++	cmd_pkt->lun[2] = MSB(scsilun_to_int(&sp->cmd->device->lun));
+ 
+ 	/* Update tagged queuing modifier -- default is TSK_SIMPLE (0). */
+ 	if (scsi_populate_tag_msg(cmd, tag)) {
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index c255bb0..a51235d 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1034,11 +1034,10 @@ qla2x00_status_entry(scsi_qla_host_t *ha
+ 			if ((unsigned)(cp->request_bufflen - resid) <
+ 			    cp->underflow) {
+ 				qla_printk(KERN_INFO, ha,
+-				    "scsi(%ld:%d:%d:%d): Mid-layer underflow "
++				    "Mid-layer underflow "
+ 				    "detected (%x of %x bytes)...returning "
+-				    "error status.\n", ha->host_no,
+-				    cp->device->channel, cp->device->id,
+-				    cp->device->lun, resid,
++				    "error status.\n",
++				    resid,
+ 				    cp->request_bufflen);
+ 
+ 				cp->result = DID_ERROR << 16;
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 13e1c90..6e511b8 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -904,7 +904,7 @@ qla2x00_abort_command(scsi_qla_host_t *h
+ 		mcp->mb[1] = fcport->loop_id << 8;
+ 	mcp->mb[2] = (uint16_t)handle;
+ 	mcp->mb[3] = (uint16_t)(handle >> 16);
+-	mcp->mb[6] = (uint16_t)sp->cmd->device->lun;
++	mcp->mb[6] = (uint16_t)scsilun_to_int(&sp->cmd->device->lun);
+ 	mcp->out_mb = MBX_6|MBX_3|MBX_2|MBX_1|MBX_0;
+ 	mcp->in_mb = MBX_0;
+ 	mcp->tov = 30;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 8982978..588aa08 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -617,7 +617,7 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+ 	srb_t *sp;
+ 	int ret, i;
+-	unsigned int id, lun;
++	unsigned int id;
+ 	unsigned long serial;
+ 	unsigned long flags;
+ 
+@@ -626,8 +626,7 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ 
+ 	ret = FAILED;
+ 
+-	id = cmd->device->id;
+-	lun = cmd->device->lun;
++	id = sdev_id(cmd->device);
+ 	serial = cmd->serial_number;
+ 
+ 	/* Check active list for command command. */
+@@ -665,14 +664,13 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ 	if (ret == SUCCESS) {
+ 		if (qla2x00_eh_wait_on_command(ha, cmd) != QLA_SUCCESS) {
+ 			qla_printk(KERN_ERR, ha,
+-			    "scsi(%ld:%d:%d): Abort handler timed out -- %lx "
+-			    "%x.\n", ha->host_no, id, lun, serial, ret);
++			    "Abort handler timed out -- %lx "
++			    "%x.\n", serial, ret);
+ 		}
+ 	}
+ 
+-	qla_printk(KERN_INFO, ha,
+-	    "scsi(%ld:%d:%d): Abort command issued -- %lx %x.\n", ha->host_no,
+-	    id, lun, serial, ret);
++	qla_printk(KERN_INFO, ha, "Abort command issued -- %lx %x.\n",
++	    serial, ret);
+ 
+ 	return ret;
+ }
+@@ -712,7 +710,7 @@ qla2x00_eh_wait_for_pending_target_comma
+ 		if (sp) {
+ 			cmd = sp->cmd;
+ 			spin_unlock_irqrestore(&ha->hardware_lock, flags);
+-			if (cmd->device->id == t) {
++			if (sdev_id(cmd->device) == t) {
+ 				if (!qla2x00_eh_wait_on_command(ha, cmd)) {
+ 					status = 1;
+ 					break;
+@@ -752,21 +750,19 @@ qla2xxx_eh_device_reset(struct scsi_cmnd
+ 	fc_port_t *fcport = (struct fc_port *) cmd->device->hostdata;
+ 	srb_t *sp;
+ 	int ret;
+-	unsigned int id, lun;
++	unsigned int id;
+ 	unsigned long serial;
+ 
+ 	ret = FAILED;
+ 
+-	id = cmd->device->id;
+-	lun = cmd->device->lun;
++	id = sdev_id(cmd->device);
+ 	serial = cmd->serial_number;
+ 
+ 	sp = (srb_t *) CMD_SP(cmd);
+ 	if (!sp || !fcport)
+ 		return ret;
+ 
+-	qla_printk(KERN_INFO, ha,
+-	    "scsi(%ld:%d:%d): DEVICE RESET ISSUED.\n", ha->host_no, id, lun);
++	qla_printk(KERN_INFO, ha, "DEVICE RESET ISSUED.\n");
+ 
+ 	if (qla2x00_wait_for_hba_online(ha) != QLA_SUCCESS)
+ 		goto eh_dev_reset_done;
+@@ -816,8 +812,7 @@ qla2xxx_eh_device_reset(struct scsi_cmnd
+ 		}
+ 	}
+ 
+-	qla_printk(KERN_INFO, ha,
+-	    "scsi(%ld:%d:%d): DEVICE RESET SUCCEEDED.\n", ha->host_no, id, lun);
++	qla_printk(KERN_INFO, ha, "DEVICE RESET SUCCEEDED.\n");
+ 
+ eh_dev_reset_done:
+ 	return ret;
+@@ -893,21 +888,19 @@ qla2xxx_eh_bus_reset(struct scsi_cmnd *c
+ 	fc_port_t *fcport = (struct fc_port *) cmd->device->hostdata;
+ 	srb_t *sp;
+ 	int ret;
+-	unsigned int id, lun;
++	unsigned int id;
+ 	unsigned long serial;
+ 
+ 	ret = FAILED;
+ 
+-	id = cmd->device->id;
+-	lun = cmd->device->lun;
++	id = sdev_id(cmd->device);
+ 	serial = cmd->serial_number;
+ 
+ 	sp = (srb_t *) CMD_SP(cmd);
+ 	if (!sp || !fcport)
+ 		return ret;
+ 
+-	qla_printk(KERN_INFO, ha,
+-	    "scsi(%ld:%d:%d): LOOP RESET ISSUED.\n", ha->host_no, id, lun);
++	qla_printk(KERN_INFO, ha, "LOOP RESET ISSUED.\n");
+ 
+ 	if (qla2x00_wait_for_hba_online(ha) != QLA_SUCCESS) {
+ 		DEBUG2(printk("%s failed:board disabled\n",__func__));
+@@ -955,21 +948,19 @@ qla2xxx_eh_host_reset(struct scsi_cmnd *
+ 	fc_port_t *fcport = (struct fc_port *) cmd->device->hostdata;
+ 	srb_t *sp;
+ 	int ret;
+-	unsigned int id, lun;
++	unsigned int id;
+ 	unsigned long serial;
+ 
+ 	ret = FAILED;
+ 
+-	id = cmd->device->id;
+-	lun = cmd->device->lun;
++	id = sdev_id(cmd->device);
+ 	serial = cmd->serial_number;
+ 
+ 	sp = (srb_t *) CMD_SP(cmd);
+ 	if (!sp || !fcport)
+ 		return ret;
+ 
+-	qla_printk(KERN_INFO, ha,
+-	    "scsi(%ld:%d:%d): ADAPTER RESET ISSUED.\n", ha->host_no, id, lun);
++	qla_printk(KERN_INFO, ha, "ADAPTER RESET ISSUED.\n");
+ 
+ 	if (qla2x00_wait_for_hba_online(ha) != QLA_SUCCESS)
+ 		goto eh_host_reset_lock;
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 2edf967..df9fa91 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -215,7 +215,7 @@ static struct scsi_device *scsi_alloc_sd
+ 	sdev->model = scsi_null_device_strs;
+ 	sdev->rev = scsi_null_device_strs;
+ 	sdev->host = shost;
+-	memcpy(&sdev->lun, lun, sizeof(*lun));
++	scsilun_cp(&sdev->lun, lun);
+ 	sdev->sdev_state = SDEV_CREATED;
+ 	INIT_LIST_HEAD(&sdev->siblings);
+ 	INIT_LIST_HEAD(&sdev->same_target_siblings);
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index d76766c..2ce0f7f 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -357,7 +357,7 @@ void sym_set_cam_result_error(struct sym
+ 			 * condition otherwise the device will always return
+ 			 * BUSY.  Use a big stick.
+ 			 */
+-			sym_reset_scsi_target(np, cmd->device->id);
++			sym_reset_scsi_target(np, sdev_id(cmd->device));
+ 			cam_status = DID_ERROR;
+ 		}
+ 	} else if (cp->host_status == HS_COMPLETE) 	/* Bad SCSI status */
+@@ -470,7 +470,7 @@ static int sym_queue_command(struct sym_
+ 	 *  Minimal checkings, so that we will not 
+ 	 *  go outside our tables.
+ 	 */
+-	if (sdev->id == np->myaddr) {
++	if (sdev_id(sdev) == np->myaddr) {
+ 		sym_xpt_done2(np, cmd, DID_NO_CONNECT);
+ 		return 0;
+ 	}
+@@ -478,12 +478,12 @@ static int sym_queue_command(struct sym_
+ 	/*
+ 	 *  Retrieve the target descriptor.
+ 	 */
+-	tp = &np->target[sdev->id];
++	tp = &np->target[sdev_id(sdev)];
+ 
+ 	/*
+ 	 *  Select tagged/untagged.
+ 	 */
+-	lp = sym_lp(tp, sdev->lun);
++	lp = sym_lp(tp, &sdev->lun);
+ 	order = (lp && lp->s.reqtags) ? M_SIMPLE_TAG : 0;
+ 
+ 	/*
+@@ -516,7 +516,7 @@ int sym_setup_data_and_start(struct sym_
+ {
+ 	int dir;
+ 	struct sym_tcb *tp = &np->target[cp->target];
+-	struct sym_lcb *lp = sym_lp(tp, cp->lun);
++	struct sym_lcb *lp = sym_lp(tp, &cp->lun);
+ 
+ 	/*
+ 	 *  Build the CDB.
+@@ -804,7 +804,7 @@ prepare:
+ 		sts = sym_abort_scsiio(np, cmd, 1);
+ 		break;
+ 	case SYM_EH_DEVICE_RESET:
+-		sts = sym_reset_scsi_target(np, cmd->device->id);
++		sts = sym_reset_scsi_target(np, sdev_id(cmd->device));
+ 		break;
+ 	case SYM_EH_BUS_RESET:
+ 		sym_reset_scsi_bus(np, 1);
+@@ -901,7 +901,8 @@ static int sym53c8xx_eh_host_reset_handl
+ /*
+  *  Tune device queuing depth, according to various limits.
+  */
+-static void sym_tune_dev_queuing(struct sym_tcb *tp, int lun, u_short reqtags)
++static void sym_tune_dev_queuing(struct sym_tcb *tp,
++				const struct scsi_lun *lun, u_short reqtags)
+ {
+ 	struct sym_lcb *lp = sym_lp(tp, lun);
+ 	u_short	oldtags;
+@@ -984,11 +985,12 @@ static int sym53c8xx_slave_alloc(struct 
+ 	struct sym_hcb *np;
+ 	struct sym_tcb *tp;
+ 
+-	if (sdev->id >= SYM_CONF_MAX_TARGET || sdev->lun >= SYM_CONF_MAX_LUN)
++	if (sdev_id(sdev) >= SYM_CONF_MAX_TARGET ||
++	    scsilun_to_int(&sdev->lun) >= SYM_CONF_MAX_LUN)
+ 		return -ENXIO;
+ 
+ 	np = sym_get_hcb(sdev->host);
+-	tp = &np->target[sdev->id];
++	tp = &np->target[sdev_id(sdev)];
+ 
+ 	/*
+ 	 * Fail the device init if the device is flagged NOSCAN at BOOT in
+@@ -1000,7 +1002,7 @@ static int sym53c8xx_slave_alloc(struct 
+ 	 */
+ 
+ 	if ((tp->usrflags & SYM_SCAN_BOOT_DISABLED) ||
+-	    ((tp->usrflags & SYM_SCAN_LUNS_DISABLED) && sdev->lun != 0)) {
++	    ((tp->usrflags & SYM_SCAN_LUNS_DISABLED) && !scsilun_zero(&sdev->lun))) {
+ 		tp->usrflags &= ~SYM_SCAN_BOOT_DISABLED;
+ 		return -ENXIO;
+ 	}
+@@ -1015,7 +1017,7 @@ static int sym53c8xx_slave_alloc(struct 
+ static int sym53c8xx_slave_configure(struct scsi_device *device)
+ {
+ 	struct sym_hcb *np = sym_get_hcb(device->host);
+-	struct sym_tcb *tp = &np->target[device->id];
++	struct sym_tcb *tp = &np->target[sdev_id(device)];
+ 	struct sym_lcb *lp;
+ 	int reqtags, depth_to_use;
+ 
+@@ -1023,7 +1025,7 @@ static int sym53c8xx_slave_configure(str
+ 	 *  Allocate the LCB if not yet.
+ 	 *  If it fail, we may well be in the sh*t. :)
+ 	 */
+-	lp = sym_alloc_lcb(np, device->id, device->lun);
++	lp = sym_alloc_lcb(np, sdev_id(device), &device->lun);
+ 	if (!lp)
+ 		return -ENOMEM;
+ 
+@@ -1038,7 +1040,8 @@ static int sym53c8xx_slave_configure(str
+ 	 *  Use at least 2.
+ 	 *  Donnot use more than our maximum.
+ 	 */
+-	reqtags = device_queue_depth(np, device->id, device->lun);
++	reqtags = device_queue_depth(np, sdev_id(device),
++				scsilun_to_int(&device->lun));
+ 	if (reqtags > tp->usrtags)
+ 		reqtags = tp->usrtags;
+ 	if (!device->tagged_supported)
+@@ -1055,7 +1058,7 @@ static int sym53c8xx_slave_configure(str
+ 				 MSG_SIMPLE_TAG : 0),
+ 				depth_to_use);
+ 	lp->s.scdev_depth = depth_to_use;
+-	sym_tune_dev_queuing(tp, device->lun, reqtags);
++	sym_tune_dev_queuing(tp, &device->lun, reqtags);
+ 
+ 	if (!spi_initial_dv(device->sdev_target))
+ 		spi_dv_device(device);
+@@ -1157,8 +1160,11 @@ static void sym_exec_user_command (struc
+ 				tp->tgoal.check_nego = 1;
+ 				break;
+ 			case UC_SETTAGS:
+-				for (l = 0; l < SYM_CONF_MAX_LUN; l++)
+-					sym_tune_dev_queuing(tp, l, uc->data);
++				for (l = 0; l < SYM_CONF_MAX_LUN; l++) {
++					struct scsi_lun __l;
++					int_to_scsilun(l, &__l);
++					sym_tune_dev_queuing(tp, &__l,uc->data);
++				}
+ 				break;
+ 			case UC_RESETDEV:
+ 				tp->to_reset = 1;
+@@ -1167,7 +1173,11 @@ static void sym_exec_user_command (struc
+ 				break;
+ 			case UC_CLEARDEV:
+ 				for (l = 0; l < SYM_CONF_MAX_LUN; l++) {
+-					struct sym_lcb *lp = sym_lp(tp, l);
++					struct scsi_lun __l;
++					struct sym_lcb *lp;
++
++					int_to_scsilun(l, &__l);
++					lp = sym_lp(tp, &__l);
+ 					if (lp) lp->to_clear = 1;
+ 				}
+ 				np->istat_sem = SEM;
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+index e753ba2..68f7b97 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+@@ -51,7 +51,7 @@ static void sym_int_ma (struct sym_hcb *
+ static void sym_int_sir (struct sym_hcb *np);
+ static struct sym_ccb *sym_alloc_ccb(struct sym_hcb *np);
+ static struct sym_ccb *sym_ccb_from_dsa(struct sym_hcb *np, u32 dsa);
+-static void sym_alloc_lcb_tags (struct sym_hcb *np, u_char tn, u_char ln);
++static void sym_alloc_lcb_tags (struct sym_hcb *np, u_char tn, const struct scsi_lun *ln);
+ static void sym_complete_error (struct sym_hcb *np, struct sym_ccb *cp);
+ static void sym_complete_ok (struct sym_hcb *np, struct sym_ccb *cp);
+ static int sym_compute_residual(struct sym_hcb *np, struct sym_ccb *cp);
+@@ -1697,7 +1697,7 @@ static void sym_flush_comp_queue(struct 
+ #ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+ 		if (sym_get_cam_status(cmd) == DID_SOFT_ERROR) {
+ 			struct sym_tcb *tp = &np->target[cp->target];
+-			struct sym_lcb *lp = sym_lp(tp, cp->lun);
++			struct sym_lcb *lp = sym_lp(tp, &cp->lun);
+ 			if (lp) {
+ 				sym_remque(&cp->link2_ccbq);
+ 				sym_insque_tail(&cp->link2_ccbq,
+@@ -2706,7 +2706,7 @@ unexpected_phase:
+ 		if	(dsp == SCRIPTA_BA(np, send_ident)) {
+ 			if (cp->tag != NO_TAG && olen - rest <= 3) {
+ 				cp->host_status = HS_BUSY;
+-				np->msgout[0] = IDENTIFY(0, cp->lun);
++				np->msgout[0] = IDENTIFY(0, &cp->lun);
+ 				nxtdsp = SCRIPTB_BA(np, ident_break_atn);
+ 			}
+ 			else
+@@ -2956,7 +2956,8 @@ unknown_int:
+  *  It is called with SCRIPTS not running.
+  */
+ static int 
+-sym_dequeue_from_squeue(struct sym_hcb *np, int i, int target, int lun, int task)
++sym_dequeue_from_squeue(struct sym_hcb *np, int i, int target,
++			const struct scsi_lun *lun, int task)
+ {
+ 	int j;
+ 	struct sym_ccb *cp;
+@@ -2979,7 +2980,7 @@ sym_dequeue_from_squeue(struct sym_hcb *
+ 		cp->host_flags &= ~HF_HINT_IARB;
  #endif
+ 		if ((target == -1 || cp->target == target) &&
+-		    (lun    == -1 || cp->lun    == lun)    &&
++		    (lun  == NULL || scsilun_eq(&cp->lun, lun))    &&
+ 		    (task   == -1 || cp->tag    == task)) {
+ 			sym_set_cam_status(cp->cmd, DID_SOFT_ERROR);
+ 			sym_remque(&cp->link_ccbq);
+@@ -3066,7 +3067,7 @@ static void sym_sir_bad_scsi_status(stru
+ 		 *  Dequeue all queued CCBs for that device not yet started,
+ 		 *  and restart the SCRIPTS processor immediately.
+ 		 */
+-		sym_dequeue_from_squeue(np, i, cp->target, cp->lun, -1);
++		sym_dequeue_from_squeue(np, i, cp->target, &cp->lun, -1);
+ 		OUTL_DSP(np, SCRIPTA_BA(np, start));
+ 
+  		/*
+@@ -3082,7 +3083,7 @@ static void sym_sir_bad_scsi_status(stru
+ 		 *  requesting sense data.
+ 		 */
+ 
+-		cp->scsi_smsg2[0] = IDENTIFY(0, cp->lun);
++		cp->scsi_smsg2[0] = IDENTIFY(0, &cp->lun);
+ 		msglen = 1;
+ 
+ 		/*
+@@ -3114,8 +3115,9 @@ static void sym_sir_bad_scsi_status(stru
+ 		 */
+ 		cp->sensecmd[0]		= REQUEST_SENSE;
+ 		cp->sensecmd[1]		= 0;
+-		if (cp->cmd->device->scsi_level <= SCSI_2 && cp->lun <= 7)
+-			cp->sensecmd[1]	= cp->lun << 5;
++		if (cp->cmd->device->scsi_level <= SCSI_2 &&
++		    scsilun_to_int(&cp->lun) <= 7)
++			cp->sensecmd[1]	= scsilun_to_int(&cp->lun) << 5;
+ 		cp->sensecmd[4]		= SYM_SNS_BBUF_LEN;
+ 		cp->data_len		= SYM_SNS_BBUF_LEN;
+ 
+@@ -3172,7 +3174,8 @@ static void sym_sir_bad_scsi_status(stru
+  *  - lun=-1  means any logical UNIT otherwise a given one.
+  *  - task=-1 means any task, otherwise a given one.
+  */
+-int sym_clear_tasks(struct sym_hcb *np, int cam_status, int target, int lun, int task)
++int sym_clear_tasks(struct sym_hcb *np, int cam_status, int target,
++		    const struct scsi_lun *lun, int task)
+ {
+ 	SYM_QUEHEAD qtmp, *qp;
+ 	int i = 0;
+@@ -3196,7 +3199,7 @@ int sym_clear_tasks(struct sym_hcb *np, 
+ 		cmd = cp->cmd;
+ 		if (cp->host_status != HS_DISCONNECT ||
+ 		    cp->target != target	     ||
+-		    (lun  != -1 && cp->lun != lun)   ||
++		    (lun != NULL && !scsilun_eq(&cp->lun, lun))   ||
+ 		    (task != -1 && 
+ 			(cp->tag != NO_TAG && cp->scsi_smsg[2] != task))) {
+ 			sym_insque_tail(&cp->link_ccbq, &np->busy_ccbq);
+@@ -3261,7 +3264,9 @@ static void sym_sir_task_recovery(struct
+ 	struct sym_ccb *cp;
+ 	struct sym_tcb *tp = NULL; /* gcc isn't quite smart enough yet */
+ 	struct scsi_target *starget;
+-	int target=-1, lun=-1, task;
++	int target=-1, task;
++	struct scsi_lun lunv;
++	struct scsi_lun *lunp = NULL;
+ 	int i, k;
+ 
+ 	switch(num) {
+@@ -3367,7 +3372,7 @@ static void sym_sir_task_recovery(struct
+ 		 *  all CCBs for that device that haven't been started.
+ 		 */
+ 		i = (INL(np, nc_scratcha) - np->squeue_ba) / 4;
+-		i = sym_dequeue_from_squeue(np, i, cp->target, cp->lun, -1);
++		i = sym_dequeue_from_squeue(np, i, cp->target, &cp->lun, -1);
+ 
+ 		/*
+ 		 *  Make sure at least our IO to abort has been dequeued.
+@@ -3416,12 +3421,14 @@ static void sym_sir_task_recovery(struct
+ 		/*
+ 		 *  Otherwise, look for some logical unit to be cleared.
+ 		 */
+-		if (tp->lun0p && tp->lun0p->to_clear)
+-			lun = 0;
+-		else if (tp->lunmp) {
++		if (tp->lun0p && tp->lun0p->to_clear) {
++			lunp = &lunv;
++			int_to_scsilun(0, lunp);
++		} else if (tp->lunmp) {
+ 			for (k = 1 ; k < SYM_CONF_MAX_LUN ; k++) {
+ 				if (tp->lunmp[k] && tp->lunmp[k]->to_clear) {
+-					lun = k;
++					lunp = &lunv;
++					int_to_scsilun(k, lunp);
+ 					break;
+ 				}
+ 			}
+@@ -3431,10 +3438,10 @@ static void sym_sir_task_recovery(struct
+ 		 *  If a logical unit is to be cleared, prepare 
+ 		 *  an IDENTIFY(lun) + ABORT MESSAGE.
+ 		 */
+-		if (lun != -1) {
+-			struct sym_lcb *lp = sym_lp(tp, lun);
++		if (lunp != NULL) {
++			struct sym_lcb *lp = sym_lp(tp, lunp);
+ 			lp->to_clear = 0; /* We don't expect to fail here */
+-			np->abrt_msg[0] = IDENTIFY(0, lun);
++			np->abrt_msg[0] = IDENTIFY(0, lunp);
+ 			np->abrt_msg[1] = M_ABORT;
+ 			np->abrt_tbl.size = 2;
+ 			break;
+@@ -3475,7 +3482,7 @@ static void sym_sir_task_recovery(struct
+ 		 *  We have some task to abort.
+ 		 *  Set the IDENTIFY(lun)
+ 		 */
+-		np->abrt_msg[0] = IDENTIFY(0, cp->lun);
++		np->abrt_msg[0] = IDENTIFY(0, &cp->lun);
+ 
+ 		/*
+ 		 *  If we want to abort an untagged command, we 
+@@ -3525,7 +3532,7 @@ static void sym_sir_task_recovery(struct
+ 		 *  - Prepare to clear all disconnected CCBs for 
+ 		 *    this target from our task list (lun=task=-1)
+ 		 */
+-		lun = -1;
++		lunp = NULL;
+ 		task = -1;
+ 		if (np->abrt_msg[0] == M_RESET) {
+ 			tp->head.sval = 0;
+@@ -3547,7 +3554,8 @@ static void sym_sir_task_recovery(struct
+ 		 *  or an ABORT message :-)
+ 		 */
+ 		else {
+-			lun = np->abrt_msg[0] & 0x3f;
++			lunp = &lunv;
++			int_to_scsilun(np->abrt_msg[0] & 0x3f, lunp);
+ 			if (np->abrt_msg[1] == M_ABORT_TAG)
+ 				task = np->abrt_msg[2];
+ 		}
+@@ -3557,8 +3565,8 @@ static void sym_sir_task_recovery(struct
+ 		 *  aborted due to our 'kiss of death' message.
+ 		 */
+ 		i = (INL(np, nc_scratcha) - np->squeue_ba) / 4;
+-		sym_dequeue_from_squeue(np, i, target, lun, -1);
+-		sym_clear_tasks(np, DID_ABORT, target, lun, task);
++		sym_dequeue_from_squeue(np, i, target, lunp, -1);
++		sym_clear_tasks(np, DID_ABORT, target, lunp, task);
+ 		sym_flush_comp_queue(np, 0);
+ 
+  		/*
+@@ -4642,8 +4650,8 @@ out_stuck:
+  */
+ struct sym_ccb *sym_get_ccb (struct sym_hcb *np, struct scsi_cmnd *cmd, u_char tag_order)
+ {
+-	u_char tn = cmd->device->id;
+-	u_char ln = cmd->device->lun;
++	u_char tn = sdev_id(cmd->device);
++	const struct scsi_lun *ln = &cmd->device->lun;
+ 	struct sym_tcb *tp = &np->target[tn];
+ 	struct sym_lcb *lp = sym_lp(tp, ln);
+ 	u_short tag = NO_TAG;
+@@ -4772,7 +4780,7 @@ struct sym_ccb *sym_get_ccb (struct sym_
+ 	cp->tag	   = tag;
+ 	cp->order  = tag_order;
+ 	cp->target = tn;
+-	cp->lun    = ln;
++	scsilun_cp(&cp->lun, ln);
+ 
+ 	if (DEBUG_FLAGS & DEBUG_TAGS) {
+ 		sym_print_addr(cmd, "ccb @%p using tag %d.\n", cp, tag);
+@@ -4791,7 +4799,7 @@ out_free:
+ void sym_free_ccb (struct sym_hcb *np, struct sym_ccb *cp)
+ {
+ 	struct sym_tcb *tp = &np->target[cp->target];
+-	struct sym_lcb *lp = sym_lp(tp, cp->lun);
++	struct sym_lcb *lp = sym_lp(tp, &cp->lun);
+ 
+ 	if (DEBUG_FLAGS & DEBUG_TAGS) {
+ 		sym_print_addr(cp->cmd, "ccb @%p freeing tag %d.\n",
+@@ -4841,7 +4849,7 @@ void sym_free_ccb (struct sym_hcb *np, s
+ 	 *  Clear the bit that keeps track of this IO.
+ 	 */
+ 	else
+-		sym_clr_bit(tp->busy0_map, cp->lun);
++		sym_clr_bit(tp->busy0_map, &cp->lun);
+ 
+ 	/*
+ 	 *  We donnot queue more than 1 ccb per target 
+@@ -4990,7 +4998,7 @@ static void sym_init_tcb (struct sym_hcb
+ /*
+  *  Lun control block allocation and initialization.
+  */
+-struct sym_lcb *sym_alloc_lcb (struct sym_hcb *np, u_char tn, u_char ln)
++struct sym_lcb *sym_alloc_lcb (struct sym_hcb *np, u_char tn, const struct scsi_lun *ln)
+ {
+ 	struct sym_tcb *tp = &np->target[tn];
+ 	struct sym_lcb *lp = sym_lp(tp, ln);
+@@ -5045,9 +5053,9 @@ struct sym_lcb *sym_alloc_lcb (struct sy
+ 	lp = sym_calloc_dma(sizeof(struct sym_lcb), "LCB");
+ 	if (!lp)
+ 		goto fail;
+-	if (ln) {
+-		tp->lunmp[ln] = lp;
+-		tp->luntbl[ln] = cpu_to_scr(vtobus(lp));
++	if (!scsilun_zero(ln)) {
++		tp->lunmp[scsilun_to_int(ln)] = lp;
++		tp->luntbl[scsilun_to_int(ln)] = cpu_to_scr(vtobus(lp));
+ 	}
+ 	else {
+ 		tp->lun0p = lp;
+@@ -5092,7 +5100,7 @@ fail:
+ /*
+  *  Allocate LCB resources for tagged command queuing.
+  */
+-static void sym_alloc_lcb_tags (struct sym_hcb *np, u_char tn, u_char ln)
++static void sym_alloc_lcb_tags (struct sym_hcb *np, u_char tn, const struct scsi_lun *ln)
+ {
+ 	struct sym_tcb *tp = &np->target[tn];
+ 	struct sym_lcb *lp = sym_lp(tp, ln);
+@@ -5166,14 +5174,14 @@ int sym_queue_scsiio(struct sym_hcb *np,
+ 	/*
+ 	 *  Retrieve the lun descriptor.
+ 	 */
+-	lp = sym_lp(tp, sdev->lun);
++	lp = sym_lp(tp, &sdev->lun);
+ 
+ 	can_disconnect = (cp->tag != NO_TAG) ||
+ 		(lp && (lp->curr_flags & SYM_DISC_ENABLED));
+ 
+ 	msgptr = cp->scsi_smsg;
+ 	msglen = 0;
+-	msgptr[msglen++] = IDENTIFY(can_disconnect, sdev->lun);
++	msgptr[msglen++] = IDENTIFY(can_disconnect, &sdev->lun);
+ 
+ 	/*
+ 	 *  Build the tag message if present.
+@@ -5385,7 +5393,7 @@ void sym_complete_error(struct sym_hcb *
+ 	 *  Get target and lun pointers.
+ 	 */
+ 	tp = &np->target[cp->target];
+-	lp = sym_lp(tp, sdev->lun);
++	lp = sym_lp(tp, &sdev->lun);
+ 
+ 	/*
+ 	 *  Check for extended errors.
+@@ -5416,7 +5424,7 @@ if (resid)
+ 	 *  not yet started by SCRIPTS.
+ 	 */
+ 	i = (INL(np, nc_scratcha) - np->squeue_ba) / 4;
+-	i = sym_dequeue_from_squeue(np, i, cp->target, sdev->lun, -1);
++	i = sym_dequeue_from_squeue(np, i, cp->target, &sdev->lun, -1);
+ 
+ 	/*
+ 	 *  Restart the SCRIPTS processor.
+@@ -5514,13 +5522,13 @@ void sym_complete_ok (struct sym_hcb *np
+ 	 *  Get target and lun pointers.
+ 	 */
+ 	tp = &np->target[cp->target];
+-	lp = sym_lp(tp, cp->lun);
++	lp = sym_lp(tp, &cp->lun);
+ 
+ 	/*
+ 	 *  Assume device discovered on first success.
+ 	 */
+ 	if (!lp)
+-		sym_set_bit(tp->lun_map, cp->lun);
++		sym_set_bit(tp->lun_map, &cp->lun);
+ 
+ 	/*
+ 	 *  If all data have been transferred, given than no
+@@ -5854,7 +5862,9 @@ void sym_hcb_free(struct sym_hcb *np)
+ 	for (target = 0; target < SYM_CONF_MAX_TARGET ; target++) {
+ 		tp = &np->target[target];
+ 		for (lun = 0 ; lun < SYM_CONF_MAX_LUN ; lun++) {
+-			lp = sym_lp(tp, lun);
++			struct scsi_lun __lun;
++			int_to_scsilun(lun, &__lun);
++			lp = sym_lp(tp, &__lun);
+ 			if (!lp)
+ 				continue;
+ 			if (lp->itlq_tbl)
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.h b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+index 3131a6b..adb105d 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.h
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+@@ -589,10 +589,11 @@ struct sym_pmc {
+  *  LUN(s) > 0.
+  */
+ #if SYM_CONF_MAX_LUN <= 1
+-#define sym_lp(tp, lun) (!lun) ? (tp)->lun0p : NULL
++#define sym_lp(tp, lun) (scsilun_zero(lun)) ? (tp)->lun0p : NULL
+ #else
+ #define sym_lp(tp, lun) \
+-	(!lun) ? (tp)->lun0p : (tp)->lunmp ? (tp)->lunmp[(lun)] : NULL
++	(scsilun_zero(lun)) ? \
++	(tp)->lun0p : (tp)->lunmp ? (tp)->lunmp[scsilun_to_int(lun)] : NULL
+ #endif
+ 
+ /*
+@@ -797,7 +798,11 @@ struct sym_ccb {
+ 	u_short	tag;		/* Tag for this transfer	*/
+ 				/*  NO_TAG means no tag		*/
+ 	u_char	target;
++#if 0
+ 	u_char	lun;
++#else
++	struct scsi_lun lun;
++#endif
+ 	struct sym_ccb *link_ccbh;	/* Host adapter CCB hash chain	*/
+ 	SYM_QUEHEAD link_ccbq;	/* Link to free/busy CCB queue	*/
+ 	u32	startp;		/* Initial data pointer		*/
+@@ -1081,10 +1086,10 @@ void sym_start_next_ccbs(struct sym_hcb 
+ #endif
+ void sym_start_up(struct sym_hcb *np, int reason);
+ void sym_interrupt(struct sym_hcb *np);
+-int sym_clear_tasks(struct sym_hcb *np, int cam_status, int target, int lun, int task);
++int sym_clear_tasks(struct sym_hcb *np, int cam_status, int target, const struct scsi_lun *lun, int task);
+ struct sym_ccb *sym_get_ccb(struct sym_hcb *np, struct scsi_cmnd *cmd, u_char tag_order);
+ void sym_free_ccb(struct sym_hcb *np, struct sym_ccb *cp);
+-struct sym_lcb *sym_alloc_lcb(struct sym_hcb *np, u_char tn, u_char ln);
++struct sym_lcb *sym_alloc_lcb(struct sym_hcb *np, u_char tn, const struct scsi_lun *ln);
+ int sym_queue_scsiio(struct sym_hcb *np, struct scsi_cmnd *csio, struct sym_ccb *cp);
+ int sym_abort_scsiio(struct sym_hcb *np, struct scsi_cmnd *ccb, int timed_out);
+ int sym_reset_scsi_target(struct sym_hcb *np, int target);
+diff --git a/drivers/scsi/sym53c8xx_2/sym_misc.h b/drivers/scsi/sym53c8xx_2/sym_misc.h
+index 0433d5d..344e732 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_misc.h
++++ b/drivers/scsi/sym53c8xx_2/sym_misc.h
+@@ -169,9 +169,13 @@ static __inline struct sym_quehead *sym_
+ /*
+  *  Simple bitmap operations.
+  */ 
+-#define sym_set_bit(p, n)	(((u32 *)(p))[(n)>>5] |=  (1<<((n)&0x1f)))
+-#define sym_clr_bit(p, n)	(((u32 *)(p))[(n)>>5] &= ~(1<<((n)&0x1f)))
+-#define sym_is_bit(p, n)	(((u32 *)(p))[(n)>>5] &   (1<<((n)&0x1f)))
++#define __sym_set_bit(p, n)	(((u32 *)(p))[(n)>>5] |=  (1<<((n)&0x1f)))
++#define __sym_clr_bit(p, n)	(((u32 *)(p))[(n)>>5] &= ~(1<<((n)&0x1f)))
++#define __sym_is_bit(p, n)	(((u32 *)(p))[(n)>>5] &   (1<<((n)&0x1f)))
++
++#define sym_set_bit(p, lun) __sym_set_bit((p), scsilun_to_int(lun))
++#define sym_clr_bit(p, lun) __sym_clr_bit((p), scsilun_to_int(lun))
++#define sym_is_bit(p, lun) __sym_is_bit((p), scsilun_to_int(lun))
+ 
+ /*
+  * The below round up/down macros are to be used with a constant 
+diff --git a/drivers/usb/storage/dpcm.c b/drivers/usb/storage/dpcm.c
+index 92b69e4..3ce376a 100644
+--- a/drivers/usb/storage/dpcm.c
++++ b/drivers/usb/storage/dpcm.c
+@@ -48,13 +48,16 @@
+ int dpcm_transport(struct scsi_cmnd *srb, struct us_data *us)
+ {
+   int ret;
++  unsigned int tmp_lun;
++
++  tmp_lun = scsilun_to_int(&srb->device->lun);
+ 
+   if(srb == NULL)
+     return USB_STOR_TRANSPORT_ERROR;
+ 
+-  US_DEBUGP("dpcm_transport: LUN=%d\n", srb->device->lun);
++  US_DEBUGP("dpcm_transport: LUN=%u\n", tmp_lun);
+ 
+-  switch(srb->device->lun) {
++  switch(tmp_lun) {
+   case 0:
+ 
+     /*
+@@ -73,15 +76,19 @@ int dpcm_transport(struct scsi_cmnd *srb
+     /*
+      * Set the LUN to 0 (just in case).
+      */
+-    srb->device->lun = 0; us->srb->device->lun = 0;
++    int_to_scsilun(0, &srb->device->lun);
++    int_to_scsilun(0, &us->srb->device->lun);
++
+     ret = sddr09_transport(srb, us);
+-    srb->device->lun = 1; us->srb->device->lun = 1;
++
++    int_to_scsilun(1, &srb->device->lun);
++    int_to_scsilun(1, &us->srb->device->lun);
+     break;
+ 
+ #endif
+ 
+   default:
+-    US_DEBUGP("dpcm_transport: Invalid LUN %d\n", srb->device->lun);
++    US_DEBUGP("dpcm_transport: Invalid LUN %d\n", tmp_lun);
+     ret = USB_STOR_TRANSPORT_ERROR;
+     break;
+   }
+diff --git a/drivers/usb/storage/transport.c b/drivers/usb/storage/transport.c
+index c1ba530..42edb19 100644
+--- a/drivers/usb/storage/transport.c
++++ b/drivers/usb/storage/transport.c
+@@ -979,9 +979,9 @@ int usb_stor_Bulk_transport(struct scsi_
+ 	bcb->DataTransferLength = cpu_to_le32(transfer_length);
+ 	bcb->Flags = srb->sc_data_direction == DMA_FROM_DEVICE ? 1 << 7 : 0;
+ 	bcb->Tag = ++us->tag;
+-	bcb->Lun = srb->device->lun;
++	bcb->Lun = scsilun_to_int(&srb->device->lun);
+ 	if (us->flags & US_FL_SCM_MULT_TARG)
+-		bcb->Lun |= srb->device->id << 4;
++		bcb->Lun |= sdev_id(srb->device) << 4;
+ 	bcb->Length = srb->cmd_len;
+ 
+ 	/* copy the command payload */
+diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
+index f9a9bfa..0b484a9 100644
+--- a/drivers/usb/storage/usb.c
++++ b/drivers/usb/storage/usb.c
+@@ -344,17 +344,27 @@ static int usb_stor_control_thread(void 
+ 		/* reject if target != 0 or if LUN is higher than
+ 		 * the maximum known LUN
+ 		 */
+-		else if (us->srb->device->id && 
++		else if (sdev_id(us->srb->device) && 
+ 				!(us->flags & US_FL_SCM_MULT_TARG)) {
+-			US_DEBUGP("Bad target number (%d:%d)\n",
+-				  us->srb->device->id, us->srb->device->lun);
++			char lunstr[SCSILUN_STR_LEN];
++
++			US_DEBUGP("Bad target number (%d:%s)\n",
++				  sdev_id(us->srb->device),
++				  scsilun_to_str(&us->srb->device->lun, lunstr));
+ 			us->srb->result = DID_BAD_TARGET << 16;
++
++			(void) lunstr;	/* avoid warn, if debug disabled */
+ 		}
+ 
+-		else if (us->srb->device->lun > us->max_lun) {
+-			US_DEBUGP("Bad LUN (%d:%d)\n",
+-				  us->srb->device->id, us->srb->device->lun);
++		else if (scsilun_to_int(&us->srb->device->lun) > us->max_lun) {
++			char lunstr[SCSILUN_STR_LEN];
++
++			US_DEBUGP("Bad LUN (%d:%s)\n",
++				  sdev_id(us->srb->device),
++				  scsilun_to_str(&us->srb->device->lun, lunstr));
+ 			us->srb->result = DID_BAD_TARGET << 16;
++
++			(void) lunstr;	/* avoid warn, if debug disabled */
+ 		}
+ 
+ 		/* Handle those devices which need us to fake 
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index deb1a27..9d5ba34 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -380,7 +380,7 @@ struct scsi_lun {
+ #define IDENTIFY_BASE       0x80
+ #define IDENTIFY(can_disconnect, lun)   (IDENTIFY_BASE |\
+ 		     ((can_disconnect) ?  0x40 : 0) |\
+-		     ((lun) & 0x07))
++		     (scsilun_to_int(lun) & 0x07))
+ 
+ /*
+  *  struct scsi_device::scsi_level values. For SCSI devices other than those
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 769469c..9e22d3b 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -289,6 +289,17 @@ static inline int scsilun_eq(const struc
+ 	return (memcmp(a, b, sizeof(struct scsi_lun)) == 0);
+ }
+ 
++static inline int scsilun_zero(const struct scsi_lun *lun)
++{
++	return (memcmp(lun, "\0\0\0\0\0\0\0\0", 8) == 0);
++}
++
++static inline void scsilun_cp(struct scsi_lun *dest_lun,
++			     const struct scsi_lun *src_lun)
++{
++	memcpy(dest_lun, src_lun, sizeof(struct scsi_lun));
++}
++
+ static inline int scsi_device_online(struct scsi_device *sdev)
+ {
+ 	return sdev->sdev_state != SDEV_OFFLINE;
