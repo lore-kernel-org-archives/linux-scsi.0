@@ -1,88 +1,96 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch 0/6] marginalize HCIL a bit
-Date: Mon, 24 Oct 2005 15:28:08 -0500
-Message-ID: <1130185688.3325.88.camel@mulgrave>
-References: <20051023013618.GA18201@havoc.gtf.org>
-	 <1130081372.3437.33.camel@mulgrave>  <435D0283.40505@adaptec.com>
-	 <1130172627.3325.57.camel@mulgrave>  <435D176E.5000201@adaptec.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Mark Rustad <mrustad@mac.com>
+Subject: Re: [PATCH RFC] more struct scsi_lun
+Date: Mon, 24 Oct 2005 15:28:15 -0500
+Message-ID: <8E97BC19-D2D2-486A-9CFE-8199970AED13@mac.com>
+References: <20051023043301.GA22615@havoc.gtf.org> <20051023044953.GA23354@havoc.gtf.org> <435B5C15.5070106@s5r6.in-berlin.de> <435B8CC9.5000600@s5r6.in-berlin.de> <435BBF05.6010109@pobox.com> <435D0B5B.7010706@adaptec.com> <435D3E07.5050709@s5r6.in-berlin.de>
+Mime-Version: 1.0 (Apple Message framework v734)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:16816 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751247AbVJXU2Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Oct 2005 16:28:16 -0400
-In-Reply-To: <435D176E.5000201@adaptec.com>
+Received: from smtpout.mac.com ([17.250.248.45]:49656 "EHLO smtpout.mac.com")
+	by vger.kernel.org with ESMTP id S1751258AbVJXU2e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Oct 2005 16:28:34 -0400
+In-Reply-To: <435D3E07.5050709@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi@vger.kernel.org, Luben Tuikov <luben_tuikov@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>
 
-On Mon, 2005-10-24 at 13:18 -0400, Luben Tuikov wrote:
-> >>All of this functionality and infrastructure is present in the
-> >>SAS Stack and could be taken almost as is.
-> > 
-> > 
-> > Amazingly enough, it's also already present in the transport classes
-> > (see vanilla linux kernel source code).
-> 
-> 1. What are we talking about here?
-> 2. File location, name and line please.  Thank you.
+On Oct 24, 2005, at 3:03 PM, Stefan Richter wrote:
 
-The best commented file is scsi_transport_spi.c; you can see how it adds
-spi specific pieces to the scsi_target structure using the generic
-transport class capabilities.
+> Luben Tuikov wrote:
+>
+>> On 10/23/05 12:49, Jeff Garzik wrote:
+>>
+>>> Stefan Richter wrote:
+>>>
+>>>>                sprintf(s+2*i, "%02x", lun.scsi_lun[i]);
+>>>
+>>> There is obviously room for improvement.  Any naive  
+>>> representation is sub-optimal, be it for small luns (my current  
+>>> code) or larger luns (your example).
+>>>
+>>> For situations with smaller luns, we should probably continue to  
+>>> use the current scsilun_to_int() conversion, while using your  
+>>> example for larger luns, i.e.
+>>>
+>>>     if (upper 4 bytes zero)
+>>>         scsilun to int
+>>>         printk %d
+>>>     else
+>>>         for each byte
+>>>             printk %x
+>>>
+>>> But Douglas's code suggested that if we are more motivated, we  
+>>> could provide an even better representation.
+>
+> A plain, non-interpreted representation should suffice. Compact but
+> easily parseable, i.e. uniform.
+>
+>> If a LUN is u8[8], then,
+>> #define SAS_ADDR(_sa)   ((unsigned long long) be64_to_cpu(*(__be64  
+>> *)(_sa)))
 
-> > If you look at your domain device with all the sas pieces removed,
-> > you'll see that scsi_target actually covers all the remaining bits
-> > (there are one or two pieces covered by struct generic_device which you
-> > have to have extra components for because you implemented kobjects
-> > instead of a generic device).
-> 
-> And there is a reason for this: domain devices are NOT and WILL NEVER
-> BE "generic device".  Domain device representations exist only in
-> the Transport Layer.  What you seem to suggest with your "transport
-> attributes" is this "appendages-modules" which intersperse everywhere
-> in SCSI Core and LLDD like octopus's arms.  See USB Storage and SBP.
+This could be a problem because if a LUN is u8[8], it may not be  
+aligned, so casting to __be64 and such could be a problem in some  
+architectures.
 
-I think you don't quite understand what a generic device is:  It's a
-structure which is embedded within other structures, exactly like a
-kobject.  The reason for using generic devices instead of kobjects is
-that they provide a wider range of useful functionality.
+>> "%016llx", SAS_ADDR(LUN)  prints it like this (e.g.):
+>> sas: 5000c50000513329 probing LUN:0000000000000000
+>> sas: device 500000e000031c12 LUN: 0000000000000000 powering up or  
+>> not ready yet, sleeping...
+>> sas: 500000e000031c12 probing LUN:0000000000000000
+>> sas: device 50001c171601060d LUN: 0000000000000000 powering up or  
+>> not ready yet, sleeping...
+>> This is from drivers/scsi/sas/sas_discover.c.
+>>     Luben
+>
+> What about an 64bit integer as carrier of LUN in the first place? The
+> most frequent occurrence of LUN data is when it is passed through in
+> function calls but it seems rarely to be manipulated.
+>
+> --- linux/include/scsi/scsi.h.orig      2005-10-20  
+> 08:23:05.000000000 +0200
+> +++ linux/include/scsi/scsi.h   2005-10-24 21:45:41.000000000 +0200
+> @@ -238,9 +238,7 @@
+>  /*
+>   * ScsiLun: 8 byte LUN.
+>   */
+> -struct scsi_lun {
+> -       __u8 scsi_lun[8];
+> -};
+> +typedef __be64 scsi_lun;
+>
+>  /*
+>   *  MESSAGE CODES
 
-> > scsi_target contains a variable space for
-> > the transport classes to use for their transport specific pieces (which
-> > is where you could have put all the sas specific bits).
-> 
-> Absolutely NOT.  Those "transport specific pieces" should be completely
-> OPAQUE to SCSI Core -- as you saw in my previous email, the
-> "transport specific pieces" as you called them were 
-> "void *domain_device;  /* opaque to SCSI Core */".
+Typedef-ing to __be64 would seem to avoid the likely alignment  
+problem that the casting solution above could run into. I have to say  
+that I don't know enough about SCSI to make a recommendation, but I  
+know enough about alignment problems in some architectures to worry  
+about that.
 
-They *are* opaque to the scsi mid-layer.  Refer to the code in the
-vanilla kernel.
-
-> I guess the proper question to ask now is: "Can you envision it?"
-> 
-> > The only real difference is that under the current infrastructure scsi
-> > targets aren't designed to stack.  Realistically, the way you have it
-> > implemented, you have several different devices lumped into your domain
-> > device (end, edge, fanout, sata) with different initialisations and
-> 
-> 1. How this is implemented is Layer dependent (USB/SBP/FC/SAS/iSCSI/etc).
-> 2. A struct domain_device can be _only_ one of end/edge/fanout/sata/etc,
->    and only one of those.
-> Only devices which _make_sense_ to SCSI Core are registered with SCSI Core,
-> i.e. end devices.  Other type of devices (e.g. expanders) that are
-> NOT SCSI devices are not registered with SCSI Core, neither should they
-> be visible anywhere outside of the respective Layer (SAS in this case).
-
-That *is* how the transport classes work.  The obvious example being a
-FC rport which has no existence outside of the FC transport class and is
-not understood at all by the mid-layer.  Refer to the code in the
-vanilla kernel.
-
-James
-
+-- 
+Mark Rustad, MRustad@mac.com
 
