@@ -1,142 +1,124 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch 0/6] marginalize HCIL a bit
-Date: Mon, 24 Oct 2005 16:12:33 -0500
-Message-ID: <1130188353.3325.123.camel@mulgrave>
-References: <20051023013618.GA18201@havoc.gtf.org>
-	 <1130081372.3437.33.camel@mulgrave>  <435D0283.40505@adaptec.com>
-	 <1130172627.3325.57.camel@mulgrave>  <435D176E.5000201@adaptec.com>
-	 <1130185688.3325.88.camel@mulgrave>  <435D46DD.9030009@adaptec.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: 2.6.14-rc5-mm1
+Date: Mon, 24 Oct 2005 14:16:46 -0700
+Message-ID: <20051024141646.6265c0da.akpm@osdl.org>
+References: <20051024014838.0dd491bb.akpm@osdl.org>
+	<1130186927.6831.23.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:48560 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751296AbVJXVMi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Oct 2005 17:12:38 -0400
-In-Reply-To: <435D46DD.9030009@adaptec.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751302AbVJXVQu@vger.kernel.org>
+In-Reply-To: <1130186927.6831.23.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Badari Pulavarty <pbadari@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org
 
-On Mon, 2005-10-24 at 16:41 -0400, Luben Tuikov wrote:
-> > The best commented file is scsi_transport_spi.c; you can see how it adds
-> > spi specific pieces to the scsi_target structure using the generic
-> > transport class capabilities.
-> 
-> Again, no file name or line number, plus at that point I can see that
-> this is going nowhere, well past the "all of this functinality...".
-
-I consider scsi_transport_spi.c to be a file name.  Try lines 38-1219.
-
-> > I think you don't quite understand what a generic device is:  It's a
-> 
-> Hey, in those recent threads, I've been told by you and Jeff that I don't
-> understand anything.  Why does this now surprise you?  Apparently only you
-> and Jeff understand everything.  Can we move on now.
-> 
-> > structure which is embedded within other structures, exactly like a
-> > kobject.  The reason for using generic devices instead of kobjects is
-> > that they provide a wider range of useful functionality.
-> 
-> Again, domain devices should stay only in the transport layer.  There
-> is no _need_ to represent them with "generic device" as they have
-> no _meaning_ outisde the transport (layer).
-
-Um, that's not what you said here:
-
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112887522221936&w=2
-
-You said:
-
-> struct scsi_domain_device { ... }; (to be created) is your friend.
-> 
-> The only way that that design
-> 	"should be capable of representing any 
-> 	 SCSI domain (FC/SPI/SBP etc ..)"
-> 
-> Is if it _does not_ have any knowlege about the underlying
-> physical domain -- just as it is shown in SAM (and that is the whole point).
-> Else you get in this neverending cat-and-mouse game.  If you have the
-> abstraction right, then whatever new transport comes along, it would
-> be properly represented.
-
-So that's precisely a generic domain device.
-
-But my point is that what's in include/device.h which the kernel calls a
-generic device is simply an abstraction that has certain useful
-properties; properties which we make use of.  Identical to the way a
-kobject has a more limited set of useful properties.
-
-> >>>scsi_target contains a variable space for
-> >>>the transport classes to use for their transport specific pieces (which
-> >>>is where you could have put all the sas specific bits).
-> >>
-> >>Absolutely NOT.  Those "transport specific pieces" should be completely
-> >>OPAQUE to SCSI Core -- as you saw in my previous email, the
-> >>"transport specific pieces" as you called them were 
-> >>"void *domain_device;  /* opaque to SCSI Core */".
+Badari Pulavarty <pbadari@gmail.com> wrote:
+>
+> On Mon, 2005-10-24 at 01:48 -0700, Andrew Morton wrote:
+> > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.14-rc5/2.6.14-rc5-mm1/
 > > 
-> > 
-> > They *are* opaque to the scsi mid-layer.  Refer to the code in the
-> > vanilla kernel.
 > 
-> The vanilla kernel has nothing, not even remotely similar to what
-> I have in the SAS Stack.  Other than the USB and SBP code.
+> I can't seem to keep my AMD64 machine up with 2.6.14-rc5-mm1.
+> Keep running into following. qlogic driver problem ?
 
-You've changed the grounds.  Your original claim was that the added
-properties weren't opaque, which they are.
+I don't know why the qlogic driver has suddenly started doing this - were
+there any earlier messages which might tell us?  Is it possible to increase
+the debugging level?
 
-> >>>The only real difference is that under the current infrastructure scsi
-> >>>targets aren't designed to stack.  Realistically, the way you have it
-> >>>implemented, you have several different devices lumped into your domain
-> >>>device (end, edge, fanout, sata) with different initialisations and
-> >>
-> >>1. How this is implemented is Layer dependent (USB/SBP/FC/SAS/iSCSI/etc).
-> >>2. A struct domain_device can be _only_ one of end/edge/fanout/sata/etc,
-> >>   and only one of those.
-> >>Only devices which _make_sense_ to SCSI Core are registered with SCSI Core,
-> >>i.e. end devices.  Other type of devices (e.g. expanders) that are
-> >>NOT SCSI devices are not registered with SCSI Core, neither should they
-> >>be visible anywhere outside of the respective Layer (SAS in this case).
-> > 
-> > 
-> > That *is* how the transport classes work.  The obvious example being a
+I can spot one bug in there, but the lockup is just a symptom.
+
+There are no qlogic changes in 2.6.14-rc5-mm1.
+
+> Thanks,
+> Badari
 > 
-> It *is not*.  What your "transport attribute classes" are is a work around
-> SDI.  The template they stem off of, transport_class, is just exporting
-> _attributes_.
+> NMI Watchdog detected LOCKUP on CPU 0
+> CPU 0
+> Modules linked in: qlogicfc qla2300 qla2200 qla2xxx firmware_class
+> ohci_hcd hw_r andom usbcore dm_mod
+> Pid: 4414, comm: modprobe Not tainted 2.6.14-rc5-mm1 #3
+> RIP: 0010:[<ffffffff80401d94>] <ffffffff80401d94>{.text.lock.spinlock
+> +34}
 
-No, that's what you keep trying to claim they are.  In fact they're
-attributes coupled with library functions.  A good example being
-spi_dv_device(struct scsi_device *sdev) which performs Domain Validation
-(an SPI specific function) on a given SCSI device.  That is contained
-within the SPI transport class and definitely isn't an attribute, it's a
-service used by SPI specific drivers.
+That's a corrupted spinlock.
 
-> For example take a look at the event management in the SAS Stack.  Take
-> a look at all other things it implements.  Such concepts belong to
-> a separate layer, which doesn't yield to generalization as you've tried
-> to do.
+> RSP: 0000:ffff81019da91c28  EFLAGS: 00000086
+> RAX: 0000000000000000 RBX: ffff81017991f288 RCX: 0000000000000000
+> RDX: 0000000000000000 RSI: 0000000000000286 RDI: ffff81017991f290
+> RBP: ffff81019da91c28 R08: 0000000000000034 R09: 0000000000000000
+> R10: ffff81019da91c08 R11: 0000000000000000 R12: ffff81017991f290
+> R13: 00000000fffffff4 R14: ffff81017991c000 R15: 0000000000000100
+> FS:  00002aaaaade36e0(0000) GS:ffffffff80649800(0000)
+> knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+> CR2: 0000000000836018 CR3: 00000001bdf2a000 CR4: 00000000000006e0
+> Process modprobe (pid: 4414, threadinfo ffff81019da90000, task
+> ffff81019e3bb500)
+> Stack: ffff81019da91cb8 ffffffff80400dec ffff81019da91c78
+> ffffffff80142ed0
+>        0000000000000000 0000000000000000 0000000000000001
+> 0000000000000001
+>        ffff81017991c000 0000000000000100
+> Call Trace:<ffffffff80400dec>{wait_for_completion+28}
+> <ffffffff80142ed0>{group_s end_sig_info+128}
+>        <ffffffff80142f89>{kill_proc_info+73}
+> <ffffffff8805753c>{:qla2xxx:qla2x00 _free_device+188}
+>        <ffffffff8805880b>{:qla2xxx:qla2x00_probe_one+4187}
+>        <ffffffff80132ce0>{set_cpus_allowed+336}
+> <ffffffff8012dca3>{__wake_up_com mon+67}
+>        <ffffffff8029741a>{kobject_get+26}
+> <ffffffff8807c01d>{:qla2200:qla2200_pr obe_one+13}
+>        <ffffffff802a516c>{pci_device_probe+252}
+> <ffffffff80308d29>{driver_probe_ device+89}
+>        <ffffffff80308da0>{__driver_attach+0}
+> <ffffffff80308de2>{__driver_attach+ 66}
+>        <ffffffff803086af>{bus_for_each_dev+79}
+> <ffffffff80308bbc>{driver_attach+ 28}
+>        <ffffffff80308108>{bus_add_driver+136}
+> <ffffffff80308f0c>{driver_register +76}
+>        <ffffffff802a4ebe>{pci_register_driver+158}
+> <ffffffff8804d010>{:qla2200:q la2200_init+16}
+>        <ffffffff80154072>{sys_init_module+274}
+> <ffffffff8010dd2e>{system_call+12 6}
 
-In the transport classes, layer specific code is confined, that's what
-the spi_ functions do in the spi transport class.  There's no equivalent
-in the generic code, it's just a template builder for the transport
-specific code.
+qla2x00_probe_one() has called qla2x00_free_device() and
+qla2x00_free_device() has locked up in
+wait_for_completion(&ha->dpc_exited);
 
-> > FC rport which has no existence outside of the FC transport class and is
-> > not understood at all by the mid-layer.  Refer to the code in the
-> > vanilla kernel.
-> 
-> FC is the last example I'd look at as far as anything "proper" is to
-> be implemented.  I mean how many variations did it go over?
+Presumably, ha->dpc_exited is not initialised yet.
 
-Ah, so you accept that the FC transport class does do this but you just
-don't want it to be admitted as a valid example because the class grew
-organically?  As Jeff has tried to explain, that's how linux development
-goes.
+The first `goto probe_failed' in qla2x00_probe_one() will cause
+qla2x00_free_device() to run wait_for_completion() against an uninitialised
+completion struct.  Because ha->dpc_pid will be >= 0.
 
-James
+This patch might fix the lockup, but if so, qla2x00_iospace_config()
+failed.  Please debug that a bit for us?
+
+Andrew, this driver should be converted to use the kthread API - using
+kill_proc() from within a driver to terminate a kernel thread is kinda
+gross.
 
 
+diff -puN drivers/scsi/qla2xxx/qla_os.c~qlogic-lockup-fix drivers/scsi/qla2xxx/qla_os.c
+--- 25/drivers/scsi/qla2xxx/qla_os.c~qlogic-lockup-fix	Mon Oct 24 14:14:20 2005
++++ 25-akpm/drivers/scsi/qla2xxx/qla_os.c	Mon Oct 24 14:14:37 2005
+@@ -1325,6 +1325,8 @@ int qla2x00_probe_one(struct pci_dev *pd
+ 	ha->brd_info = brd_info;
+ 	sprintf(ha->host_str, "%s_%ld", ha->brd_info->drv_name, ha->host_no);
+ 
++	ha->dpc_pid = -1;
++
+ 	/* Configure PCI I/O space */
+ 	ret = qla2x00_iospace_config(ha);
+ 	if (ret)
+@@ -1448,7 +1450,6 @@ int qla2x00_probe_one(struct pci_dev *pd
+ 	 */
+ 	spin_lock_init(&ha->mbx_reg_lock);
+ 
+-	ha->dpc_pid = -1;
+ 	init_completion(&ha->dpc_inited);
+ 	init_completion(&ha->dpc_exited);
+ 
+_
