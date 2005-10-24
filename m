@@ -1,79 +1,73 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: [patch 0/6] marginalize HCIL a bit
-Date: Mon, 24 Oct 2005 11:49:23 -0400
-Message-ID: <435D0283.40505@adaptec.com>
-References: <20051023013618.GA18201@havoc.gtf.org> <1130081372.3437.33.camel@mulgrave>
+From: "Regala" <matt@regala.cx>
+Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally	attached PHYs)
+Date: Mon, 24 Oct 2005 16:03:42 +0000 (UTC)
+Message-ID: <87vezm7vox.fsf@barad-dur.minas-morgul.org>
+References: <4359440E.2050702@pobox.com> <43595275.1000308@adaptec.com>
+	<435959BE.5040101@pobox.com> <43595CA6.9010802@adaptec.com>
+	<43596070.3090902@pobox.com> <43596859.3020801@adaptec.com>
+	<43596F16.7000606@pobox.com> <435A1793.1050805@s5r6.in-berlin.de>
+	<20051022105815.GB3027@infradead.org>
+	<1129994910.6286.21.camel@sipan.sipan.org>
+	<20051022171943.GA7546@infradead.org> <435CE6CA.4070704@adaptec.com>
+	<1130168495.12873.27.camel@localhost.localdomain>
+	<435CFA5A.2030104@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:19157 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1751107AbVJXPta (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Oct 2005 11:49:30 -0400
-In-Reply-To: <1130081372.3437.33.camel@mulgrave>
+Received: from barad-dur.crans.org ([138.231.141.187]:45775 "EHLO
+	barad-dur.minas-morgul.org") by vger.kernel.org with ESMTP
+	id S1751121AbVJXP7M convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Oct 2005 11:59:12 -0400
+Date: lun, 24 oct 2005 17:59:10 +0200
+In-Reply-To: <435CFA5A.2030104@adaptec.com> (Luben Tuikov's message of "Mon,
+	24 Oct 2005 11:14:34 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org
+To: Luben Tuikov <luben_tuikov@adaptec.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Christoph Hellwig <hch@infradead.org>, Sergey Panov <sipan@sipan.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, Linus Torvalds <torvalds@osdl.org>
 
-On 10/23/05 11:29, James Bottomley wrote:
-> There's an unaddressed lifetime problem in all of this:  Originally the
-> target object exists solely internally and has its lifetime managed by
-> the mid-layer (it actually exists only as long as there are LUNs on it).
+Luben Tuikov <luben_tuikov@adaptec.com> disait derni=E8rement que :
 
-And this has always been wrong and I objected to this back when it
-was introduced a few years ago.
+> On 10/24/05 11:41, Alan Cox wrote:
+>> On Llu, 2005-10-24 at 09:51 -0400, Luben Tuikov wrote:
+>>=20
+>>>controls and how.  Understanding how the factory workers use it and =
+what
+>>>they expect.  Understanding the code (which may not be as easy).  Th=
+en it
+>>>is rewritten so that it can be easily supported and maintained.
+>>=20
+>>=20
+>> Very very rarely, because it means down time and supporting two syst=
+ems
+>> at once. Take a look at the australian customs fiasco or the british
+>> passport office disaster to see why (actually almost any large
+>> government IT project where politics dictated 'write new stuff so I =
+can
+>> announce it in parliament').
+>>=20
+>> The smart factory update would occur piece by piece. Starting with t=
+he
+>> most pressing problems (ie fastest ROI) and working to a plan that e=
+nds
+>> up with the system modular and clean.
+>>=20
+>> You don't turn a steel plant off for a software upgrade.
+>
+> There was 0 (zero) effective downtime to the factory.
 
-> In your code cleanups, you keep the scsi_target_reap() function (which
-> is what checks the children and tries to destroy the device if it
-> doesn't find any) private (well, unexported).  So, on return from your
-> new scsi_scan_target(), the target pointer might be invalid (already
-> freed) if you didn't take a reference to starget->dev.  That's counter
-> to the way lifetime management of objects usually works.
-> 
-> I think the choices are
-> 
-> 1. Make the target an explicit object (like it's peers scsi_device and
-> scsi_host), so the layer creating it is responsible for managing it.
+but refactoring can be done in incremental pieces, can't be ?
+rewriting it from scratch is, in this very case, really for the sake
+of self-pride and brain-masturbation.
+Bravo
 
-Which is exactly what I've been proposing: struct scsi_domain_device { };
-similarly to how it is done in the SAS Transport Layer/Stack in the link
-of my signature.
+This is not a really convincing example...
 
-The new struct scsi_domain_device { } would be a logial (not imposed)
-superclass around the transport's domain device representation.
-The Transport Layer _registers_ a struct scsi_domain_device { };
-and then SCSI Core scans for LUs and does LU bookkeeping.
-
-LUs -> SCSI Core
-SCSI Domain Targets -> Transport Layer around its own domain device
-representation:
-
-struct scsi_domain_device {
-	void *domain_device;    /* opaque to SCSI Core */
-	
-	struct list_head LU_list;
-	...
-};
-
-All of this functionality and infrastructure is present in the
-SAS Stack and could be taken almost as is.
-
-> This will get tricky, particularly as we'd need at least lun removal
-> notifications so the creating layer can decide on destruction.
-
-LU management is SCSI Core's task -- you'll get notified if
-the _domain_ device went away, so that you can clean up your LU
-representation.
-
-See for example sas_discover_event(struct sas_port *, enum discover_event ev)
-for event DISCE_PORT_GONE handled in the discover thread.
-sas_unregister_domain_devices() eventually bubbles up to SCSI Core,
-and dynamically allocated are handled by their release method (kobject
-infrastructure).
-
-	Luben
--- 
-http://linux.adaptec.com/sas/
-http://www.adaptec.com/sas/
+--=20
+Mathieu Segaud
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
