@@ -1,75 +1,33 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [PATCH RFC 15/n] HCIL drivers update
-Date: Mon, 24 Oct 2005 14:00:38 -0400
-Message-ID: <20051024180038.GA29082@havoc.gtf.org>
-References: <20051023024104.GA20128@havoc.gtf.org> <20051023195128.GA12102@havoc.gtf.org>
+Subject: git tree for HCIL work: scsilun-2.6.git
+Date: Mon, 24 Oct 2005 14:07:49 -0400
+Message-ID: <435D22F5.6020401@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:4234 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1751206AbVJXSAj (ORCPT
+Received: from mail.dvmed.net ([216.237.124.58]:56521 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751212AbVJXSH4 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Oct 2005 14:00:39 -0400
-Received: from havoc.gtf.org (havoc.gtf.org [127.0.0.1])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by havoc.gtf.org (Postfix) with ESMTP id A01671C0A7A2
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2005 14:00:38 -0400 (EDT)
-Received: (from garzik@localhost)
-	by havoc.gtf.org (8.13.1/8.13.1/Submit) id j9OI0c7t029150
-	for linux-scsi@vger.kernel.org; Mon, 24 Oct 2005 14:00:38 -0400
-Content-Disposition: inline
-In-Reply-To: <20051023195128.GA12102@havoc.gtf.org>
+	Mon, 24 Oct 2005 14:07:56 -0400
+Received: from cpe-069-134-188-146.nc.res.rr.com ([69.134.188.146] helo=[10.10.10.88])
+	by mail.dvmed.net with esmtpsa (Exim 4.52 #1 (Red Hat Linux))
+	id 1EU6jg-0001NZ-7K
+	for linux-scsi@vger.kernel.org; Mon, 24 Oct 2005 18:07:53 +0000
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+I've been committing all these "[PATCH RFC]" patches to a git repository 
+locally.  I just stuck it on kernel.org, so that others can easily take 
+a look at the end result:
 
-fix cases where 0 is passed as lun0, when we really want scsi_lun*
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/scsilun-2.6.git
 
- drivers/scsi/scsi_scan.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+This is PURELY EXPERIMENTAL code with NOT FOR UPSTREAM stuff in it. 
+Bits will be extracted and sent upstream once they are ready.
 
-1a13759a275199b7b6bb58dbddfee1e843b1ea2a
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index abf4e42..1ccc4b1 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1074,6 +1074,7 @@ static int scsi_report_lun_scan(struct s
- 	unsigned int retries;
- 	int result;
- 	struct scsi_lun *lunp, *lun_data;
-+	struct scsi_lun lun0;
- 	u8 *data;
- 	struct scsi_sense_hdr sshdr;
- 	struct scsi_device *sdev;
-@@ -1092,8 +1093,9 @@ static int scsi_report_lun_scan(struct s
- 	if (bflags & BLIST_NOLUN)
- 		return 0;
- 
--	if (!(sdev = scsi_device_lookup_by_target(starget, 0))) {
--		sdev = scsi_alloc_sdev(starget, 0, NULL);
-+	int_to_scsilun(0, &lun0);
-+	if (!(sdev = scsi_device_lookup_by_target(starget, &lun0))) {
-+		sdev = scsi_alloc_sdev(starget, &lun0, NULL);
- 		if (!sdev)
- 			return 0;
- 		if (scsi_device_get(sdev))
-@@ -1499,6 +1501,7 @@ struct scsi_device *scsi_get_host_dev(st
- {
- 	struct scsi_device *sdev = NULL;
- 	struct scsi_target *starget;
-+	struct scsi_lun lun0;
- 
- 	down(&shost->scan_mutex);
- 	if (!scsi_host_scan_allowed(shost))
-@@ -1507,7 +1510,8 @@ struct scsi_device *scsi_get_host_dev(st
- 	if (!starget)
- 		goto out;
- 
--	sdev = scsi_alloc_sdev(starget, 0, NULL);
-+	int_to_scsilun(0, &lun0);
-+	sdev = scsi_alloc_sdev(starget, &lun0, NULL);
- 	if (sdev) {
- 		sdev->sdev_gendev.parent = get_device(&starget->dev);
- 		sdev->borken = 0;
+The repo is mirroring out to *.kernel.org now, so give it a while before 
+cloning.  kernel.org mirrors are slow these days, sometimes on the order 
+of an hour or more.
+
