@@ -1,181 +1,412 @@
-From: Ashutosh Naik <ashutosh_naik@adaptec.com>
-Subject: [PATCH] sata: Fixes several warnings in sata_vsc.c and sata_svw.c
-Date: Mon, 24 Oct 2005 16:03:33 +0530
-Message-ID: <1130150013.16820.66.camel@kir9060.adaptec.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: requesting advice: oops when doing sg_dd IO and device is removed
+Date: Mon, 24 Oct 2005 23:04:51 +1000
+Message-ID: <435CDBF3.5020202@torque.net>
+References: <92952AEF1F064042B6EF2522E0EEF43702433512@EXNA.corp.stratus.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-Ce8EcRnZpxbWkN8ZVbx+"
+Content-Type: multipart/mixed;
+ boundary="------------060706020508000704070807"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:24453 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1750838AbVJXKd2 (ORCPT
+Received: from zorg.st.net.au ([203.16.233.9]:22705 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1750975AbVJXND7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Oct 2005 06:33:28 -0400
+	Mon, 24 Oct 2005 09:03:59 -0400
+In-Reply-To: <92952AEF1F064042B6EF2522E0EEF43702433512@EXNA.corp.stratus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jeremy@sgi.com, benh@kernel.crashing.org, jgarzik@pobox.com, Andrew Morton <akpm@osdl.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Dailey, Nate" <Nate.Dailey@stratus.com>
+Cc: linux-scsi@vger.kernel.org
 
-
---=-Ce8EcRnZpxbWkN8ZVbx+
-Content-Type: text/plain
+This is a multi-part message in MIME format.
+--------------060706020508000704070807
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 
-This patch fixes several types in sata_vsc.c and sata_svw.c and hence
-fixes tons of compiler warnings.
+Dailey, Nate wrote:
+> Doug, I'm attaching a new patch (again, against 2.6.9)... the primary
+> difference from my previous patch is that this one now schedules a work
+> item from sg_cmd_done. This work item drops the reference on the device,
+> so this gets rid of the problems of calling scsi_device_put from
+> sg_cmd_done or of sleeping in sg_release. Does this look okay?
 
-Signed-off-by: Ashutosh Naik <ashutosh_naik@adaptec.com>
+Nate,
+I haven't had a close look at the logic but I have
+been using this patch for several days. So far I have
+been testing other things with sg and have detected
+no regression from this patch.
 
---=-Ce8EcRnZpxbWkN8ZVbx+
-Content-Disposition: attachment; filename=sata-patch.txt
-Content-Type: text/plain; name=sata-patch.txt; charset=UTF-8
+Since your patch was against 2.6.9, it needed a few
+changes to apply to lk 2.6.14-rc5 . The patch against
+2.6.14-rc5 is attached.
+
+Hopefully in the next few days I can focus on
+testing this patch.
+
+Doug Gilbert
+
+--------------060706020508000704070807
+Content-Type: text/x-patch;
+ name="sg_2614rc5nd2.diff"
 Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sg_2614rc5nd2.diff"
 
-diff -ruNp linux-sata/drivers/scsi/sata_svw.c linux-2.6.14-rc5/drivers/scsi/sata_svw.c
---- linux-sata/drivers/scsi/sata_svw.c	2005-10-24 15:16:31.000000000 +0530
-+++ linux-2.6.14-rc5/drivers/scsi/sata_svw.c	2005-10-24 14:36:51.000000000 +0530
-@@ -108,26 +108,26 @@ static void k2_sata_tf_load(struct ata_p
- 	unsigned int is_addr = tf->flags & ATA_TFLAG_ISADDR;
+--- linux/drivers/scsi/sg.c	2005-10-05 12:09:27.000000000 +1000
++++ linux/drivers/scsi/sg.c2614rc5nd2	2005-10-24 12:11:32.000000000 +1000
+@@ -49,6 +49,7 @@
+ #include <linux/seq_file.h>
+ #include <linux/blkdev.h>
+ #include <linux/delay.h>
++#include <linux/kref.h>
  
- 	if (tf->ctl != ap->last_ctl) {
--		writeb(tf->ctl, (unsigned long *)ioaddr->ctl_addr);
-+		writeb(tf->ctl, ioaddr->ctl_addr);
- 		ap->last_ctl = tf->ctl;
- 		ata_wait_idle(ap);
- 	}
- 	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
--		writew(tf->feature | (((u16)tf->hob_feature) << 8), (unsigned long *)ioaddr->feature_addr);
--		writew(tf->nsect | (((u16)tf->hob_nsect) << 8), (unsigned long *)ioaddr->nsect_addr);
--		writew(tf->lbal | (((u16)tf->hob_lbal) << 8), (unsigned long *)ioaddr->lbal_addr);
--		writew(tf->lbam | (((u16)tf->hob_lbam) << 8), (unsigned long *)ioaddr->lbam_addr);
--		writew(tf->lbah | (((u16)tf->hob_lbah) << 8), (unsigned long *)ioaddr->lbah_addr);
-+		writew(tf->feature | (((u16)tf->hob_feature) << 8), ioaddr->feature_addr);
-+		writew(tf->nsect | (((u16)tf->hob_nsect) << 8), ioaddr->nsect_addr);
-+		writew(tf->lbal | (((u16)tf->hob_lbal) << 8), ioaddr->lbal_addr);
-+		writew(tf->lbam | (((u16)tf->hob_lbam) << 8), ioaddr->lbam_addr);
-+		writew(tf->lbah | (((u16)tf->hob_lbah) << 8), ioaddr->lbah_addr);
- 	} else if (is_addr) {
--		writew(tf->feature, (unsigned long *)ioaddr->feature_addr);
--		writew(tf->nsect, (unsigned long *)ioaddr->nsect_addr);
--		writew(tf->lbal, (unsigned long *)ioaddr->lbal_addr);
--		writew(tf->lbam, (unsigned long *)ioaddr->lbam_addr);
--		writew(tf->lbah, (unsigned long *)ioaddr->lbah_addr);
-+		writew(tf->feature, ioaddr->feature_addr);
-+		writew(tf->nsect, ioaddr->nsect_addr);
-+		writew(tf->lbal, ioaddr->lbal_addr);
-+		writew(tf->lbam, ioaddr->lbam_addr);
-+		writew(tf->lbah, ioaddr->lbah_addr);
- 	}
+ #include "scsi.h"
+ #include <scsi/scsi_dbg.h>
+@@ -174,6 +175,7 @@
+ 	char sgdebug;		/* 0->off, 1->sense, 9->dump dev, 10-> all devs */
+ 	struct gendisk *disk;
+ 	struct cdev * cdev;	/* char_dev [sysfs: /sys/cdev/major/sg<n>] */
++	struct kref kref;
+ } Sg_device;
  
- 	if (tf->flags & ATA_TFLAG_DEVICE)
--		writeb(tf->device, (unsigned long *)ioaddr->device_addr);
-+		writeb(tf->device, ioaddr->device_addr);
+ static int sg_fasync(int fd, struct file *filp, int mode);
+@@ -219,11 +221,89 @@
+ static int sg_dev_max;
+ static int sg_nr_dev;
  
- 	ata_wait_idle(ap);
- }
-@@ -138,14 +138,14 @@ static void k2_sata_tf_read(struct ata_p
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 	u16 nsect, lbal, lbam, lbah;
++/* This semaphore is used to mediate the 0->1 reference get in the
++ * face of object destruction (i.e. we can't allow a get on an
++ * object after last put) */
++static DECLARE_MUTEX(sg_ref_sem);
++
++static void scsi_generic_release(struct kref *kref);
++#define to_scsi_generic(obj) container_of(obj,Sg_device,kref)
++
+ #define SZ_SG_HEADER sizeof(struct sg_header)
+ #define SZ_SG_IO_HDR sizeof(sg_io_hdr_t)
+ #define SZ_SG_IOVEC sizeof(sg_iovec_t)
+ #define SZ_SG_REQ_INFO sizeof(sg_req_info_t)
  
--	nsect = tf->nsect = readw((unsigned long *)ioaddr->nsect_addr);
--	lbal = tf->lbal = readw((unsigned long *)ioaddr->lbal_addr);
--	lbam = tf->lbam = readw((unsigned long *)ioaddr->lbam_addr);
--	lbah = tf->lbah = readw((unsigned long *)ioaddr->lbah_addr);
--	tf->device = readw((unsigned long *)ioaddr->device_addr);
-+	nsect = tf->nsect = readw(ioaddr->nsect_addr);
-+	lbal = tf->lbal = readw(ioaddr->lbal_addr);
-+	lbam = tf->lbam = readw(ioaddr->lbam_addr);
-+	lbah = tf->lbah = readw(ioaddr->lbah_addr);
-+	tf->device = readw(ioaddr->device_addr);
++static Sg_device *scsi_generic_get(int dev)
++{
++	Sg_device *sdp = NULL;
++
++	down(&sg_ref_sem);
++
++	sdp = sg_get_dev (dev);
++	if (!sdp) goto out;
++
++	if (sdp->detached) {
++		sdp = NULL;
++		goto out;
++	}
++
++	kref_get(&sdp->kref);
++
++	if (!sdp->device)
++		goto out_put;
++
++	if (scsi_device_get(sdp->device))
++		goto out_put;
++
++	goto out;
++
++out_put:
++	kref_put(&sdp->kref, scsi_generic_release);
++	sdp = NULL;
++out:
++	up(&sg_ref_sem);
++	return sdp;
++}
++
++static void scsi_generic_put(Sg_device *sdp)
++{
++	struct scsi_device *sdev = sdp->device;
++
++	down(&sg_ref_sem);
++	kref_put(&sdp->kref, scsi_generic_release);
++	scsi_device_put(sdev);
++	up(&sg_ref_sem);
++}
++
++struct scsi_generic_put_work_item {
++	Sg_device *sdp;
++        struct work_struct work;
++};
++
++void scsi_generic_put_work_handler(void *data)
++{
++	Sg_device *sdp = ((struct scsi_generic_put_work_item*)data)->sdp;
++
++        scsi_generic_put(sdp);
++	kfree(data);
++}
++
++static int scsi_generic_put_schedule_work(Sg_device *sdp)
++{
++	struct scsi_generic_put_work_item *data;
++
++	if ((data = kmalloc(sizeof(*data), GFP_ATOMIC)) == NULL)
++		return -ENOMEM;
++
++	memset(data, 0, sizeof(*data));
++        INIT_WORK(&data->work, scsi_generic_put_work_handler, data);
++	data->sdp = sdp;
++
++        schedule_work(&data->work);
++	return 0;
++}
++
+ static int
+ sg_open(struct inode *inode, struct file *filp)
+ {
+@@ -236,17 +316,8 @@
  
- 	if (tf->flags & ATA_TFLAG_LBA48) {
--		tf->hob_feature = readw((unsigned long *)ioaddr->error_addr) >> 8;
-+		tf->hob_feature = readw(ioaddr->error_addr) >> 8;
- 		tf->hob_nsect = nsect >> 8;
- 		tf->hob_lbal = lbal >> 8;
- 		tf->hob_lbam = lbam >> 8;
-diff -ruNp linux-sata/drivers/scsi/sata_vsc.c linux-2.6.14-rc5/drivers/scsi/sata_vsc.c
---- linux-sata/drivers/scsi/sata_vsc.c	2005-10-24 15:16:30.000000000 +0530
-+++ linux-2.6.14-rc5/drivers/scsi/sata_vsc.c	2005-10-24 14:36:51.000000000 +0530
-@@ -106,12 +106,12 @@ static void vsc_intr_mask_update(struct 
+ 	nonseekable_open(inode, filp);
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_open: dev=%d, flags=0x%x\n", dev, flags));
+-	sdp = sg_get_dev(dev);
+-	if ((!sdp) || (!sdp->device))
++	if (!(sdp = scsi_generic_get(dev)))
+ 		return -ENXIO;
+-	if (sdp->detached)
+-		return -ENODEV;
+-
+-	/* This driver's module count bumped by fops_get in <linux/fs.h> */
+-	/* Prevent the device driver from vanishing while we sleep */
+-	retval = scsi_device_get(sdp->device);
+-	if (retval)
+-		return retval;
  
- 	mask_addr = (unsigned long) ap->host_set->mmio_base +
- 		VSC_SATA_INT_MASK_OFFSET + ap->port_no;
--	mask = readb((unsigned long *)mask_addr);
-+	mask = readb(mask_addr);
- 	if (ctl & ATA_NIEN)
- 		mask |= 0x80;
- 	else
- 		mask &= 0x7F;
--	writeb(mask, (unsigned long *)mask_addr);
-+	writeb(mask, mask_addr);
- }
+ 	if (!((flags & O_NONBLOCK) ||
+ 	      scsi_block_when_processing_errors(sdp->device))) {
+@@ -303,7 +374,7 @@
+ 	return 0;
  
- 
-@@ -130,21 +130,21 @@ static void vsc_sata_tf_load(struct ata_
- 		vsc_intr_mask_update(ap, tf->ctl & ATA_NIEN);
- 	}
- 	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
--		writew(tf->feature | (((u16)tf->hob_feature) << 8), (unsigned long *)ioaddr->feature_addr);
--		writew(tf->nsect | (((u16)tf->hob_nsect) << 8), (unsigned long *)ioaddr->nsect_addr);
--		writew(tf->lbal | (((u16)tf->hob_lbal) << 8), (unsigned long *)ioaddr->lbal_addr);
--		writew(tf->lbam | (((u16)tf->hob_lbam) << 8), (unsigned long *)ioaddr->lbam_addr);
--		writew(tf->lbah | (((u16)tf->hob_lbah) << 8), (unsigned long *)ioaddr->lbah_addr);
-+		writew(tf->feature | (((u16)tf->hob_feature) << 8), ioaddr->feature_addr);
-+		writew(tf->nsect | (((u16)tf->hob_nsect) << 8), ioaddr->nsect_addr);
-+		writew(tf->lbal | (((u16)tf->hob_lbal) << 8), ioaddr->lbal_addr);
-+		writew(tf->lbam | (((u16)tf->hob_lbam) << 8), ioaddr->lbam_addr);
-+		writew(tf->lbah | (((u16)tf->hob_lbah) << 8), ioaddr->lbah_addr);
- 	} else if (is_addr) {
--		writew(tf->feature, (unsigned long *)ioaddr->feature_addr);
--		writew(tf->nsect, (unsigned long *)ioaddr->nsect_addr);
--		writew(tf->lbal, (unsigned long *)ioaddr->lbal_addr);
--		writew(tf->lbam, (unsigned long *)ioaddr->lbam_addr);
--		writew(tf->lbah, (unsigned long *)ioaddr->lbah_addr);
-+		writew(tf->feature, ioaddr->feature_addr);
-+		writew(tf->nsect, ioaddr->nsect_addr);
-+		writew(tf->lbal, ioaddr->lbal_addr);
-+		writew(tf->lbam, ioaddr->lbam_addr);
-+		writew(tf->lbah, ioaddr->lbah_addr);
- 	}
- 
- 	if (tf->flags & ATA_TFLAG_DEVICE)
--		writeb(tf->device, (unsigned long *)ioaddr->device_addr);
-+		writeb(tf->device, ioaddr->device_addr);
- 
- 	ata_wait_idle(ap);
- }
-@@ -155,14 +155,14 @@ static void vsc_sata_tf_read(struct ata_
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 	u16 nsect, lbal, lbam, lbah;
- 
--	nsect = tf->nsect = readw((unsigned long *)ioaddr->nsect_addr);
--	lbal = tf->lbal = readw((unsigned long *)ioaddr->lbal_addr);
--	lbam = tf->lbam = readw((unsigned long *)ioaddr->lbam_addr);
--	lbah = tf->lbah = readw((unsigned long *)ioaddr->lbah_addr);
--	tf->device = readw((unsigned long *)ioaddr->device_addr);
-+	nsect = tf->nsect = readw(ioaddr->nsect_addr);
-+	lbal = tf->lbal = readw(ioaddr->lbal_addr);
-+	lbam = tf->lbam = readw(ioaddr->lbam_addr);
-+	lbah = tf->lbah = readw(ioaddr->lbah_addr);
-+	tf->device = readw(ioaddr->device_addr);
- 
- 	if (tf->flags & ATA_TFLAG_LBA48) {
--		tf->hob_feature = readb((unsigned long *)ioaddr->error_addr);
-+		tf->hob_feature = readb(ioaddr->error_addr);
- 		tf->hob_nsect = nsect >> 8;
- 		tf->hob_lbal = lbal >> 8;
- 		tf->hob_lbam = lbam >> 8;
-@@ -272,8 +272,8 @@ static void __devinit vsc_sata_setup_por
- 	port->ctl_addr		= base + VSC_SATA_TF_CTL_OFFSET;
- 	port->bmdma_addr	= base + VSC_SATA_DMA_CMD_OFFSET;
- 	port->scr_addr		= base + VSC_SATA_SCR_STATUS_OFFSET;
--	writel(0, (unsigned long *)base + VSC_SATA_UP_DESCRIPTOR_OFFSET);
--	writel(0, (unsigned long *)base + VSC_SATA_UP_DATA_BUFFER_OFFSET);
-+	writel(0, base + VSC_SATA_UP_DESCRIPTOR_OFFSET);
-+	writel(0, base + VSC_SATA_UP_DATA_BUFFER_OFFSET);
+       error_out:
+-	scsi_device_put(sdp->device);
++	scsi_generic_put(sdp);
+ 	return retval;
  }
  
+@@ -313,18 +384,21 @@
+ {
+ 	Sg_device *sdp;
+ 	Sg_fd *sfp;
++	int dirty;
  
+ 	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
+ 		return -ENXIO;
+ 	SCSI_LOG_TIMEOUT(3, printk("sg_release: %s\n", sdp->disk->disk_name));
+ 	sg_fasync(-1, filp, 0);	/* remove filp from async notification list */
+-	if (0 == sg_remove_sfp(sdp, sfp)) {	/* Returns 1 when sdp gone */
+-		if (!sdp->detached) {
+-			scsi_device_put(sdp->device);
+-		}
+-		sdp->exclude = 0;
+-		wake_up_interruptible(&sdp->o_excl_wait);
+-	}
++	dirty = sg_remove_sfp(sdp, sfp);
++	sdp->exclude = 0;
++	wake_up_interruptible(&sdp->o_excl_wait);
++
++	/* Only drop the reference if sg_remove_sfp returned 0
++	   (otherwise, there's IO outstanding & we must keep the reference). */
++	if (!dirty)
++		scsi_generic_put(sdp);
++
+ 	return 0;
+ }
+ 
+@@ -1328,7 +1402,7 @@
+ 	sfp = srp->parentfp;
+ 	if (sfp)
+ 		sdp = sfp->parentdp;
+-	if ((NULL == sdp) || sdp->detached) {
++	if (NULL == sdp) {
+ 		printk(KERN_INFO "sg_cmd_done: device detached\n");
+ 		scsi_release_request(SRpnt);
+ 		return;
+@@ -1391,8 +1465,16 @@
+ 		srp = NULL;
+ 		if (NULL == sfp->headrp) {
+ 			SCSI_LOG_TIMEOUT(1, printk("sg...bh: already closed, final cleanup\n"));
+-			if (0 == sg_remove_sfp(sdp, sfp)) {	/* device still present */
+-				scsi_device_put(sdp->device);
++
++			/* Drop a reference if sg_remove_sfp returns 0
++			   (no IO outstanding). */
++			if (0 == sg_remove_sfp(sdp, sfp)) {
++				if (scsi_generic_put_schedule_work(sdp))
++				{
++					/* Error scheduling the work...
++					   just drop the reference. */
++					scsi_generic_put(sdp);
++				}
+ 			}
+ 			sfp = NULL;
+ 		}
+@@ -1537,6 +1619,7 @@
+ 	}
+ 	k = error;
+ 	sdp = sg_dev_arr[k];
++	kref_init(&sdp->kref);
+ 
+ 	devfs_mk_cdev(MKDEV(SCSI_GENERIC_MAJOR, k),
+ 			S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP,
+@@ -1589,45 +1672,33 @@
+ 	unsigned long iflags;
+ 	Sg_fd *sfp;
+ 	Sg_fd *tsfp;
+-	Sg_request *srp;
+-	Sg_request *tsrp;
+-	int k, delay;
++	int k;
+ 
+ 	if (NULL == sg_dev_arr)
+ 		return;
+-	delay = 0;
+ 	write_lock_irqsave(&sg_dev_arr_lock, iflags);
+ 	for (k = 0; k < sg_dev_max; k++) {
+-		sdp = sg_dev_arr[k];
+-		if ((NULL == sdp) || (sdp->device != scsidp))
++		if ((NULL == sg_dev_arr[k]) ||
++		    (sg_dev_arr[k]->device != scsidp))
+ 			continue;	/* dirty but lowers nesting */
++		sdp = sg_dev_arr[k];
++		sdp->detached = 1;
++
+ 		if (sdp->headfp) {
+-			sdp->detached = 1;
+ 			for (sfp = sdp->headfp; sfp; sfp = tsfp) {
+ 				tsfp = sfp->nextfp;
+-				for (srp = sfp->headrp; srp; srp = tsrp) {
+-					tsrp = srp->nextrp;
+-					if (sfp->closed || (0 == sg_srp_done(srp, sfp)))
+-						sg_finish_rem_req(srp);
+-				}
+-				if (sfp->closed) {
+-					scsi_device_put(sdp->device);
+-					__sg_remove_sfp(sdp, sfp);
+-				} else {
+-					delay = 1;
++				if (!(sfp->closed)) {
+ 					wake_up_interruptible(&sfp->read_wait);
+ 					kill_fasync(&sfp->async_qp, SIGPOLL,
+ 						    POLL_HUP);
+ 				}
+ 			}
+ 			SCSI_LOG_TIMEOUT(3, printk("sg_detach: dev=%d, dirty\n", k));
+-			if (NULL == sdp->headfp) {
+-				sg_dev_arr[k] = NULL;
+-			}
+ 		} else {	/* nothing active, simple case */
+ 			SCSI_LOG_TIMEOUT(3, printk("sg_detach: dev=%d\n", k));
+-			sg_dev_arr[k] = NULL;
+ 		}
++
++		sg_dev_arr[k] = NULL;
+ 		sg_nr_dev--;
+ 		break;
+ 	}
+@@ -1639,14 +1710,32 @@
+ 		cdev_del(sdp->cdev);
+ 		sdp->cdev = NULL;
+ 		devfs_remove("%s/generic", scsidp->devfs_name);
+-		put_disk(sdp->disk);
+-		sdp->disk = NULL;
+-		if (NULL == sdp->headfp)
+-			kfree((char *) sdp);
++
++		down(&sg_ref_sem);
++		kref_put(&sdp->kref, scsi_generic_release);
++		up(&sg_ref_sem);
+ 	}
++}
+ 
+-	if (delay)
+-		msleep(10);	/* dirty detach so delay device destruction */
++/**
++ *      scsi_generic_release - Called to free the Sg_device structure
++ *      @kref: pointer to embedded kref
++ *
++ *      sg_ref_sem must be held entering this routine.  Because it is
++ *      called on last put, you should always use the scsi_generic_get()
++ *      and scsi_generic_put() helpers which manipulate the semaphore
++ *      directly and never do a direct kref_put().
++ **/
++static void scsi_generic_release(struct kref *kref)
++{
++	Sg_device *sdp = to_scsi_generic(kref);
++	struct gendisk *disk = sdp->disk;
++
++	disk->private_data = NULL;
++	put_disk(disk);
++
++	kfree((char *) sdp);
++	return;
+ }
+ 
+ /* Set 'perm' (4th argument) to 0 to disable module_param's definition
+@@ -1698,6 +1787,9 @@
+ static void __exit
+ exit_sg(void)
+ {
++	/* sg_cmd_done can schedule work... wait for it to complete. */
++	flush_scheduled_work();
++
+ #ifdef CONFIG_SCSI_PROC_FS
+ 	sg_proc_cleanup();
+ #endif				/* CONFIG_SCSI_PROC_FS */
+@@ -2578,14 +2670,13 @@
+ 	sg_page_free((char *) sfp, sizeof (Sg_fd));
+ }
+ 
+-/* Returns 0 in normal case, 1 when detached and sdp object removed */
++/* Returns a count of IOs still in progress. */
+ static int
+ sg_remove_sfp(Sg_device * sdp, Sg_fd * sfp)
+ {
+ 	Sg_request *srp;
+ 	Sg_request *tsrp;
+ 	int dirty = 0;
+-	int res = 0;
+ 
+ 	for (srp = sfp->headrp; srp; srp = tsrp) {
+ 		tsrp = srp->nextrp;
+@@ -2599,30 +2690,16 @@
+ 
+ 		write_lock_irqsave(&sg_dev_arr_lock, iflags);
+ 		__sg_remove_sfp(sdp, sfp);
+-		if (sdp->detached && (NULL == sdp->headfp)) {
+-			int k, maxd;
+-
+-			maxd = sg_dev_max;
+-			for (k = 0; k < maxd; ++k) {
+-				if (sdp == sg_dev_arr[k])
+-					break;
+-			}
+-			if (k < maxd)
+-				sg_dev_arr[k] = NULL;
+-			kfree((char *) sdp);
+-			res = 1;
+-		}
+ 		write_unlock_irqrestore(&sg_dev_arr_lock, iflags);
+ 	} else {
+-		/* MOD_INC's to inhibit unloading sg and associated adapter driver */
+-		/* only bump the access_count if we actually succeeded in
+-		 * throwing another counter on the host module */
+-		scsi_device_get(sdp->device);	/* XXX: retval ignored? */	
++		/* The non-zero dirty count will be returned. This will tell
++		   the caller not to drop the reference on this device. */
++
+ 		sfp->closed = 1;	/* flag dirty state on this fd */
+ 		SCSI_LOG_TIMEOUT(1, printk("sg_remove_sfp: worrisome, %d writes pending\n",
+ 				  dirty));
+ 	}
+-	return res;
++	return dirty;
+ }
+ 
+ static int
 
---=-Ce8EcRnZpxbWkN8ZVbx+--
-
-
+--------------060706020508000704070807--
