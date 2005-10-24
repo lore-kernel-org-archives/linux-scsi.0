@@ -1,46 +1,43 @@
-From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally	attached
- PHYs)
-Date: Mon, 24 Oct 2005 11:14:34 -0400
-Message-ID: <435CFA5A.2030104@adaptec.com>
-References: <4359440E.2050702@pobox.com> <43595275.1000308@adaptec.com>	 <435959BE.5040101@pobox.com> <43595CA6.9010802@adaptec.com>	 <43596070.3090902@pobox.com> <43596859.3020801@adaptec.com>	 <43596F16.7000606@pobox.com> <435A1793.1050805@s5r6.in-berlin.de>	 <20051022105815.GB3027@infradead.org>	 <1129994910.6286.21.camel@sipan.sipan.org>	 <20051022171943.GA7546@infradead.org>  <435CE6CA.4070704@adaptec.com> <1130168495.12873.27.camel@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally
+	attached PHYs)
+Date: Mon, 24 Oct 2005 16:41:35 +0100
+Message-ID: <1130168495.12873.27.camel@localhost.localdomain>
+References: <4359440E.2050702@pobox.com> <43595275.1000308@adaptec.com>
+	 <435959BE.5040101@pobox.com> <43595CA6.9010802@adaptec.com>
+	 <43596070.3090902@pobox.com> <43596859.3020801@adaptec.com>
+	 <43596F16.7000606@pobox.com> <435A1793.1050805@s5r6.in-berlin.de>
+	 <20051022105815.GB3027@infradead.org>
+	 <1129994910.6286.21.camel@sipan.sipan.org>
+	 <20051022171943.GA7546@infradead.org>  <435CE6CA.4070704@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:58572 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1751078AbVJXPOo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Oct 2005 11:14:44 -0400
-In-Reply-To: <1130168495.12873.27.camel@localhost.localdomain>
+Received: from clock-tower.bc.nu ([81.2.110.250]:7816 "EHLO
+	lxorguk.ukuu.org.uk") by vger.kernel.org with ESMTP
+	id S1751077AbVJXPNh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Oct 2005 11:13:37 -0400
+In-Reply-To: <435CE6CA.4070704@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Luben Tuikov <luben_tuikov@adaptec.com>
 Cc: Christoph Hellwig <hch@infradead.org>, Sergey Panov <sipan@sipan.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, Linus Torvalds <torvalds@osdl.org>
 
-On 10/24/05 11:41, Alan Cox wrote:
-> On Llu, 2005-10-24 at 09:51 -0400, Luben Tuikov wrote:
-> 
->>controls and how.  Understanding how the factory workers use it and what
->>they expect.  Understanding the code (which may not be as easy).  Then it
->>is rewritten so that it can be easily supported and maintained.
-> 
-> 
-> Very very rarely, because it means down time and supporting two systems
-> at once. Take a look at the australian customs fiasco or the british
-> passport office disaster to see why (actually almost any large
-> government IT project where politics dictated 'write new stuff so I can
-> announce it in parliament').
-> 
-> The smart factory update would occur piece by piece. Starting with the
-> most pressing problems (ie fastest ROI) and working to a plan that ends
-> up with the system modular and clean.
-> 
-> You don't turn a steel plant off for a software upgrade.
+On Llu, 2005-10-24 at 09:51 -0400, Luben Tuikov wrote:
+> controls and how.  Understanding how the factory workers use it and what
+> they expect.  Understanding the code (which may not be as easy).  Then it
+> is rewritten so that it can be easily supported and maintained.
 
-There was 0 (zero) effective downtime to the factory.
+Very very rarely, because it means down time and supporting two systems
+at once. Take a look at the australian customs fiasco or the british
+passport office disaster to see why (actually almost any large
+government IT project where politics dictated 'write new stuff so I can
+announce it in parliament').
 
-	Luben
--- 
-http://linux.adaptec.com/sas/
-http://www.adaptec.com/sas/
+The smart factory update would occur piece by piece. Starting with the
+most pressing problems (ie fastest ROI) and working to a plan that ends
+up with the system modular and clean.
+
+You don't turn a steel plant off for a software upgrade.
+
