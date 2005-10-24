@@ -1,7 +1,7 @@
 From: "Regala" <matt@regala.cx>
 Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally	attached PHYs)
-Date: Mon, 24 Oct 2005 16:03:42 +0000 (UTC)
-Message-ID: <87vezm7vox.fsf@barad-dur.minas-morgul.org>
+Date: Mon, 24 Oct 2005 16:04:36 +0000 (UTC)
+Message-ID: <87vezm7vox.fsf__35255.826477851$1130169876$gmane$org@barad-dur.minas-morgul.org>
 References: <4359440E.2050702@pobox.com> <43595275.1000308@adaptec.com>
 	<435959BE.5040101@pobox.com> <43595CA6.9010802@adaptec.com>
 	<43596070.3090902@pobox.com> <43596859.3020801@adaptec.com>
@@ -14,18 +14,14 @@ References: <4359440E.2050702@pobox.com> <43595275.1000308@adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from barad-dur.crans.org ([138.231.141.187]:45775 "EHLO
-	barad-dur.minas-morgul.org") by vger.kernel.org with ESMTP
-	id S1751121AbVJXP7M convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Oct 2005 11:59:12 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751121AbVJXP7O@vger.kernel.org>
 Date: lun, 24 oct 2005 17:59:10 +0200
 In-Reply-To: <435CFA5A.2030104@adaptec.com> (Luben Tuikov's message of "Mon,
 	24 Oct 2005 11:14:34 -0400")
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Luben Tuikov <luben_tuikov@adaptec.com>
 Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Christoph Hellwig <hch@infradead.org>, Sergey Panov <sipan@sipan.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, Linus Torvalds <torvalds@osdl.org>
+List-Id: linux-scsi@vger.kernel.org
 
 Luben Tuikov <luben_tuikov@adaptec.com> disait derni=E8rement que :
 
@@ -66,8 +62,3 @@ This is not a really convincing example...
 
 --=20
 Mathieu Segaud
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
