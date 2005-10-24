@@ -1,121 +1,181 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [PATCH RFC 12/n] HCIL drivers update
-Date: Mon, 24 Oct 2005 04:17:36 -0400
-Message-ID: <20051024081736.GC7160@havoc.gtf.org>
-References: <20051023024104.GA20128@havoc.gtf.org> <20051023195128.GA12102@havoc.gtf.org>
+From: Ashutosh Naik <ashutosh_naik@adaptec.com>
+Subject: [PATCH] sata: Fixes several warnings in sata_vsc.c and sata_svw.c
+Date: Mon, 24 Oct 2005 16:03:33 +0530
+Message-ID: <1130150013.16820.66.camel@kir9060.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="=-Ce8EcRnZpxbWkN8ZVbx+"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:45440 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1750730AbVJXIRh (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:24453 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1750838AbVJXKd2 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Oct 2005 04:17:37 -0400
-Received: from havoc.gtf.org (havoc.gtf.org [127.0.0.1])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by havoc.gtf.org (Postfix) with ESMTP id AA3D71C095AF
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2005 04:17:36 -0400 (EDT)
-Received: (from garzik@localhost)
-	by havoc.gtf.org (8.13.1/8.13.1/Submit) id j9O8Ha22007340
-	for linux-scsi@vger.kernel.org; Mon, 24 Oct 2005 04:17:36 -0400
-Content-Disposition: inline
-In-Reply-To: <20051023195128.GA12102@havoc.gtf.org>
+	Mon, 24 Oct 2005 06:33:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: jeremy@sgi.com, benh@kernel.crashing.org, jgarzik@pobox.com, Andrew Morton <akpm@osdl.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-Missed updates to scsi_add_device() callers.
+--=-Ce8EcRnZpxbWkN8ZVbx+
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
- drivers/ieee1394/sbp2.c        |    4 +++-
- drivers/message/i2o/i2o_scsi.c |    6 ++++--
- drivers/s390/scsi/zfcp_erp.c   |    8 ++++++--
- drivers/scsi/aacraid/commsup.c |    5 +++--
- 4 files changed, 16 insertions(+), 7 deletions(-)
+This patch fixes several types in sata_vsc.c and sata_svw.c and hence
+fixes tons of compiler warnings.
 
-7c5c2cdf4c64c9114eff7764e1fb0a4da7ed9313
-diff --git a/drivers/ieee1394/sbp2.c b/drivers/ieee1394/sbp2.c
-index 87d381d..8982d36 100644
---- a/drivers/ieee1394/sbp2.c
-+++ b/drivers/ieee1394/sbp2.c
-@@ -813,6 +813,7 @@ static int sbp2_start_device(struct scsi
- {
- 	struct sbp2scsi_host_info *hi = scsi_id->hi;
- 	int error;
-+	struct scsi_lun lun0;
+Signed-off-by: Ashutosh Naik <ashutosh_naik@adaptec.com>
+
+--=-Ce8EcRnZpxbWkN8ZVbx+
+Content-Disposition: attachment; filename=sata-patch.txt
+Content-Type: text/plain; name=sata-patch.txt; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+diff -ruNp linux-sata/drivers/scsi/sata_svw.c linux-2.6.14-rc5/drivers/scsi/sata_svw.c
+--- linux-sata/drivers/scsi/sata_svw.c	2005-10-24 15:16:31.000000000 +0530
++++ linux-2.6.14-rc5/drivers/scsi/sata_svw.c	2005-10-24 14:36:51.000000000 +0530
+@@ -108,26 +108,26 @@ static void k2_sata_tf_load(struct ata_p
+ 	unsigned int is_addr = tf->flags & ATA_TFLAG_ISADDR;
  
- 	SBP2_DEBUG("sbp2_start_device");
- 
-@@ -961,7 +962,8 @@ alloc_fail:
- 	sbp2_max_speed_and_size(scsi_id);
- 
- 	/* Add this device to the scsi layer now */
--	error = scsi_add_device(scsi_id->scsi_host, 0, scsi_id->ud->id, 0);
-+	int_to_scsilun(0, &lun0);
-+	error = scsi_add_device(scsi_id->scsi_host, 0, scsi_id->ud->id, &lun0);
- 	if (error) {
- 		SBP2_ERR("scsi_add_device failed");
- 		return error;
-diff --git a/drivers/message/i2o/i2o_scsi.c b/drivers/message/i2o/i2o_scsi.c
-index 9f1744c..87e6c6e 100644
---- a/drivers/message/i2o/i2o_scsi.c
-+++ b/drivers/message/i2o/i2o_scsi.c
-@@ -223,6 +223,7 @@ static int i2o_scsi_probe(struct device 
- 	u64 lun = -1;
- 	int channel = -1;
- 	int i;
-+	struct scsi_lun slun;
- 
- 	i2o_shost = i2o_scsi_get_host(c);
- 	if (!i2o_shost)
-@@ -293,8 +294,9 @@ static int i2o_scsi_probe(struct device 
- 		return -EFAULT;
+ 	if (tf->ctl != ap->last_ctl) {
+-		writeb(tf->ctl, (unsigned long *)ioaddr->ctl_addr);
++		writeb(tf->ctl, ioaddr->ctl_addr);
+ 		ap->last_ctl = tf->ctl;
+ 		ata_wait_idle(ap);
+ 	}
+ 	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
+-		writew(tf->feature | (((u16)tf->hob_feature) << 8), (unsigned long *)ioaddr->feature_addr);
+-		writew(tf->nsect | (((u16)tf->hob_nsect) << 8), (unsigned long *)ioaddr->nsect_addr);
+-		writew(tf->lbal | (((u16)tf->hob_lbal) << 8), (unsigned long *)ioaddr->lbal_addr);
+-		writew(tf->lbam | (((u16)tf->hob_lbam) << 8), (unsigned long *)ioaddr->lbam_addr);
+-		writew(tf->lbah | (((u16)tf->hob_lbah) << 8), (unsigned long *)ioaddr->lbah_addr);
++		writew(tf->feature | (((u16)tf->hob_feature) << 8), ioaddr->feature_addr);
++		writew(tf->nsect | (((u16)tf->hob_nsect) << 8), ioaddr->nsect_addr);
++		writew(tf->lbal | (((u16)tf->hob_lbal) << 8), ioaddr->lbal_addr);
++		writew(tf->lbam | (((u16)tf->hob_lbam) << 8), ioaddr->lbam_addr);
++		writew(tf->lbah | (((u16)tf->hob_lbah) << 8), ioaddr->lbah_addr);
+ 	} else if (is_addr) {
+-		writew(tf->feature, (unsigned long *)ioaddr->feature_addr);
+-		writew(tf->nsect, (unsigned long *)ioaddr->nsect_addr);
+-		writew(tf->lbal, (unsigned long *)ioaddr->lbal_addr);
+-		writew(tf->lbam, (unsigned long *)ioaddr->lbam_addr);
+-		writew(tf->lbah, (unsigned long *)ioaddr->lbah_addr);
++		writew(tf->feature, ioaddr->feature_addr);
++		writew(tf->nsect, ioaddr->nsect_addr);
++		writew(tf->lbal, ioaddr->lbal_addr);
++		writew(tf->lbam, ioaddr->lbam_addr);
++		writew(tf->lbah, ioaddr->lbah_addr);
  	}
  
--	scsi_dev =
--	    __scsi_add_device(i2o_shost->scsi_host, channel, id, lun, i2o_dev);
-+	int_to_scsilun(lun, &slun);
-+	scsi_dev = __scsi_add_device(i2o_shost->scsi_host, channel, id,
-+				     &slun, i2o_dev);
+ 	if (tf->flags & ATA_TFLAG_DEVICE)
+-		writeb(tf->device, (unsigned long *)ioaddr->device_addr);
++		writeb(tf->device, ioaddr->device_addr);
  
- 	if (IS_ERR(scsi_dev)) {
- 		osm_warn("can not add SCSI device %03x\n",
-diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
-index 023f4e5..debec77 100644
---- a/drivers/s390/scsi/zfcp_erp.c
-+++ b/drivers/s390/scsi/zfcp_erp.c
-@@ -3447,10 +3447,14 @@ zfcp_erp_action_cleanup(int action, stru
- 		    && (!atomic_test_mask(ZFCP_STATUS_UNIT_TEMPORARY,
- 					  &unit->status))
- 		    && !unit->device
--		    && port->rport)
-+		    && port->rport) {
-+			/* FIXME XXX this driver can do better */
-+			struct scsi_lun slun;
-+			int_to_scsilun(unit->scsi_lun, &slun);
-  			scsi_add_device(port->adapter->scsi_host, 0,
-  					port->rport->scsi_target_id,
--					unit->scsi_lun);
-+					&slun);
-+		}
- 		zfcp_unit_put(unit);
- 		break;
- 	case ZFCP_ERP_ACTION_REOPEN_PORT_FORCED:
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index e4d543a..d50a024 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -997,10 +997,11 @@ static void aac_handle_aif(struct aac_de
- 		scsi_device_put(device);
- 	}
- 	if (device_config_needed == ADD) {
-+		struct scsi_lun slun;
-+		int_to_scsilun(CONTAINER_TO_LUN(container), &slun);
- 		scsi_add_device(dev->scsi_host_ptr,
- 		  CONTAINER_TO_CHANNEL(container),
--		  CONTAINER_TO_ID(container),
--		  CONTAINER_TO_LUN(container));
-+		  CONTAINER_TO_ID(container), &slun);
- 	}
- 
+ 	ata_wait_idle(ap);
  }
+@@ -138,14 +138,14 @@ static void k2_sata_tf_read(struct ata_p
+ 	struct ata_ioports *ioaddr = &ap->ioaddr;
+ 	u16 nsect, lbal, lbam, lbah;
+ 
+-	nsect = tf->nsect = readw((unsigned long *)ioaddr->nsect_addr);
+-	lbal = tf->lbal = readw((unsigned long *)ioaddr->lbal_addr);
+-	lbam = tf->lbam = readw((unsigned long *)ioaddr->lbam_addr);
+-	lbah = tf->lbah = readw((unsigned long *)ioaddr->lbah_addr);
+-	tf->device = readw((unsigned long *)ioaddr->device_addr);
++	nsect = tf->nsect = readw(ioaddr->nsect_addr);
++	lbal = tf->lbal = readw(ioaddr->lbal_addr);
++	lbam = tf->lbam = readw(ioaddr->lbam_addr);
++	lbah = tf->lbah = readw(ioaddr->lbah_addr);
++	tf->device = readw(ioaddr->device_addr);
+ 
+ 	if (tf->flags & ATA_TFLAG_LBA48) {
+-		tf->hob_feature = readw((unsigned long *)ioaddr->error_addr) >> 8;
++		tf->hob_feature = readw(ioaddr->error_addr) >> 8;
+ 		tf->hob_nsect = nsect >> 8;
+ 		tf->hob_lbal = lbal >> 8;
+ 		tf->hob_lbam = lbam >> 8;
+diff -ruNp linux-sata/drivers/scsi/sata_vsc.c linux-2.6.14-rc5/drivers/scsi/sata_vsc.c
+--- linux-sata/drivers/scsi/sata_vsc.c	2005-10-24 15:16:30.000000000 +0530
++++ linux-2.6.14-rc5/drivers/scsi/sata_vsc.c	2005-10-24 14:36:51.000000000 +0530
+@@ -106,12 +106,12 @@ static void vsc_intr_mask_update(struct 
+ 
+ 	mask_addr = (unsigned long) ap->host_set->mmio_base +
+ 		VSC_SATA_INT_MASK_OFFSET + ap->port_no;
+-	mask = readb((unsigned long *)mask_addr);
++	mask = readb(mask_addr);
+ 	if (ctl & ATA_NIEN)
+ 		mask |= 0x80;
+ 	else
+ 		mask &= 0x7F;
+-	writeb(mask, (unsigned long *)mask_addr);
++	writeb(mask, mask_addr);
+ }
+ 
+ 
+@@ -130,21 +130,21 @@ static void vsc_sata_tf_load(struct ata_
+ 		vsc_intr_mask_update(ap, tf->ctl & ATA_NIEN);
+ 	}
+ 	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
+-		writew(tf->feature | (((u16)tf->hob_feature) << 8), (unsigned long *)ioaddr->feature_addr);
+-		writew(tf->nsect | (((u16)tf->hob_nsect) << 8), (unsigned long *)ioaddr->nsect_addr);
+-		writew(tf->lbal | (((u16)tf->hob_lbal) << 8), (unsigned long *)ioaddr->lbal_addr);
+-		writew(tf->lbam | (((u16)tf->hob_lbam) << 8), (unsigned long *)ioaddr->lbam_addr);
+-		writew(tf->lbah | (((u16)tf->hob_lbah) << 8), (unsigned long *)ioaddr->lbah_addr);
++		writew(tf->feature | (((u16)tf->hob_feature) << 8), ioaddr->feature_addr);
++		writew(tf->nsect | (((u16)tf->hob_nsect) << 8), ioaddr->nsect_addr);
++		writew(tf->lbal | (((u16)tf->hob_lbal) << 8), ioaddr->lbal_addr);
++		writew(tf->lbam | (((u16)tf->hob_lbam) << 8), ioaddr->lbam_addr);
++		writew(tf->lbah | (((u16)tf->hob_lbah) << 8), ioaddr->lbah_addr);
+ 	} else if (is_addr) {
+-		writew(tf->feature, (unsigned long *)ioaddr->feature_addr);
+-		writew(tf->nsect, (unsigned long *)ioaddr->nsect_addr);
+-		writew(tf->lbal, (unsigned long *)ioaddr->lbal_addr);
+-		writew(tf->lbam, (unsigned long *)ioaddr->lbam_addr);
+-		writew(tf->lbah, (unsigned long *)ioaddr->lbah_addr);
++		writew(tf->feature, ioaddr->feature_addr);
++		writew(tf->nsect, ioaddr->nsect_addr);
++		writew(tf->lbal, ioaddr->lbal_addr);
++		writew(tf->lbam, ioaddr->lbam_addr);
++		writew(tf->lbah, ioaddr->lbah_addr);
+ 	}
+ 
+ 	if (tf->flags & ATA_TFLAG_DEVICE)
+-		writeb(tf->device, (unsigned long *)ioaddr->device_addr);
++		writeb(tf->device, ioaddr->device_addr);
+ 
+ 	ata_wait_idle(ap);
+ }
+@@ -155,14 +155,14 @@ static void vsc_sata_tf_read(struct ata_
+ 	struct ata_ioports *ioaddr = &ap->ioaddr;
+ 	u16 nsect, lbal, lbam, lbah;
+ 
+-	nsect = tf->nsect = readw((unsigned long *)ioaddr->nsect_addr);
+-	lbal = tf->lbal = readw((unsigned long *)ioaddr->lbal_addr);
+-	lbam = tf->lbam = readw((unsigned long *)ioaddr->lbam_addr);
+-	lbah = tf->lbah = readw((unsigned long *)ioaddr->lbah_addr);
+-	tf->device = readw((unsigned long *)ioaddr->device_addr);
++	nsect = tf->nsect = readw(ioaddr->nsect_addr);
++	lbal = tf->lbal = readw(ioaddr->lbal_addr);
++	lbam = tf->lbam = readw(ioaddr->lbam_addr);
++	lbah = tf->lbah = readw(ioaddr->lbah_addr);
++	tf->device = readw(ioaddr->device_addr);
+ 
+ 	if (tf->flags & ATA_TFLAG_LBA48) {
+-		tf->hob_feature = readb((unsigned long *)ioaddr->error_addr);
++		tf->hob_feature = readb(ioaddr->error_addr);
+ 		tf->hob_nsect = nsect >> 8;
+ 		tf->hob_lbal = lbal >> 8;
+ 		tf->hob_lbam = lbam >> 8;
+@@ -272,8 +272,8 @@ static void __devinit vsc_sata_setup_por
+ 	port->ctl_addr		= base + VSC_SATA_TF_CTL_OFFSET;
+ 	port->bmdma_addr	= base + VSC_SATA_DMA_CMD_OFFSET;
+ 	port->scr_addr		= base + VSC_SATA_SCR_STATUS_OFFSET;
+-	writel(0, (unsigned long *)base + VSC_SATA_UP_DESCRIPTOR_OFFSET);
+-	writel(0, (unsigned long *)base + VSC_SATA_UP_DATA_BUFFER_OFFSET);
++	writel(0, base + VSC_SATA_UP_DESCRIPTOR_OFFSET);
++	writel(0, base + VSC_SATA_UP_DATA_BUFFER_OFFSET);
+ }
+ 
+ 
+
+--=-Ce8EcRnZpxbWkN8ZVbx+--
+
+
