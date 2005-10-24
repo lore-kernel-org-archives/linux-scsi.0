@@ -1,96 +1,91 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [scsi hcil 3/9] misc cleanups
-Date: Mon, 24 Oct 2005 18:02:05 -0400
-Message-ID: <20051024220205.GC10567@havoc.gtf.org>
-References: <20051024220013.GA10070@havoc.gtf.org>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH RFC] use struct scsi_lun in generic code
+Date: Mon, 24 Oct 2005 08:27:30 -0700
+Message-ID: <20051024152730.GA28341@us.ibm.com>
+References: <20051023043301.GA22615@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:49039 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1751332AbVJXWCG (ORCPT
+Received: from e31.co.us.ibm.com ([32.97.110.149]:4287 "EHLO e31.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751340AbVJXWCn (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Oct 2005 18:02:06 -0400
-Received: from havoc.gtf.org (havoc.gtf.org [127.0.0.1])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by havoc.gtf.org (Postfix) with ESMTP id 067B31C0A7BA
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2005 18:02:06 -0400 (EDT)
-Received: (from garzik@localhost)
-	by havoc.gtf.org (8.13.1/8.13.1/Submit) id j9OM25Xv010650
-	for linux-scsi@vger.kernel.org; Mon, 24 Oct 2005 18:02:05 -0400
+	Mon, 24 Oct 2005 18:02:43 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e31.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id j9OM2hdc012630
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2005 18:02:43 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id j9OM3eNM538640
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2005 16:03:40 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id j9OM2ghI014145
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2005 16:02:43 -0600
 Content-Disposition: inline
-In-Reply-To: <20051024220013.GA10070@havoc.gtf.org>
+In-Reply-To: <20051023043301.GA22615@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-scsi@vger.kernel.org
 
+Nice work Jeff ...
 
-commit 4e7dd2d43e3b5aa5868de81bd62a4f1dc5ff51c4
-Author: Jeff Garzik <jgarzik@pobox.com>
-Date:   Mon Oct 24 15:07:05 2005 -0400
+On Sun, Oct 23, 2005 at 12:33:01AM -0400, Jeff Garzik wrote:
 
-    [SCSI] misc cleanups
-    
-    - eliminate use of 'channel' and 'id' in starget_for_each_device()
-    - unexport __scsi_device_lookup_by_target()
-    - add some whitespace after '==', on one line
+> * export scsilun_to_int()
+> 
+> * create scsilun_to_str() helper
 
- drivers/scsi/scsi.c        |   12 ++++--------
- include/scsi/scsi_device.h |    2 --
- 2 files changed, 4 insertions(+), 10 deletions(-)
+> -	if (sdev->scsi_level <= SCSI_2)
+> +	if (sdev->scsi_level <= SCSI_2) {
+> +		unsigned int tmp_lun = scsilun_to_int(&sdev->lun);
+>  		scmd->cmnd[1] = (scmd->cmnd[1] & 0x1f) |
+> -			(sdev->lun << 5 & 0xe0);
+> +			(tmp_lun << 5 & 0xe0);
+> +	}
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 1f0ebab..88aea32 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -1108,13 +1108,10 @@ EXPORT_SYMBOL(__scsi_iterate_devices);
- void starget_for_each_device(struct scsi_target *starget, void * data,
- 		     void (*fn)(struct scsi_device *, void *))
- {
--	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
- 	struct scsi_device *sdev;
- 
--	shost_for_each_device(sdev, shost) {
--		if ((sdev->channel == starget->channel) &&
--		    (sdev->id == starget->id))
--			fn(sdev, data);
-+	list_for_each_entry(sdev, &starget->devices, same_target_siblings) {
-+		fn(sdev, data);
- 	}
- }
- EXPORT_SYMBOL(starget_for_each_device);
-@@ -1133,19 +1130,18 @@ EXPORT_SYMBOL(starget_for_each_device);
-  * they're need to access the device list in irq context.  Otherwise you
-  * really want to use scsi_device_lookup_by_target instead.
-  **/
--struct scsi_device *__scsi_device_lookup_by_target(struct scsi_target *starget,
-+static struct scsi_device *__scsi_device_lookup_by_target(struct scsi_target *starget,
- 						   uint lun)
- {
- 	struct scsi_device *sdev;
- 
- 	list_for_each_entry(sdev, &starget->devices, same_target_siblings) {
--		if (sdev->lun ==lun)
-+		if (sdev->lun == lun)
- 			return sdev;
- 	}
- 
- 	return NULL;
- }
--EXPORT_SYMBOL(__scsi_device_lookup_by_target);
- 
- /**
-  * scsi_device_lookup_by_target - find a device given the target
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 7ece056..233b053 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -192,8 +192,6 @@ extern struct scsi_device *__scsi_device
- 						uint, uint, uint);
- extern struct scsi_device *scsi_device_lookup_by_target(struct scsi_target *,
- 							uint);
--extern struct scsi_device *__scsi_device_lookup_by_target(struct scsi_target *,
--							  uint);
- extern void starget_for_each_device(struct scsi_target *, void *,
- 		     void (*fn)(struct scsi_device *, void *));
- 
+Why convert the lun value for every IO? Not efficient here and in the
+driver code.
+
+Instead call scsilun_to_int once per sdev, and store the value in
+sdev->lun, sort of like James earlier patch, but only do so based on a
+shost->opaque_lun_value or better if we could call a transport function
+once to setup sdev->lun as needed by the driver, except we have transports
+that include drivers/HBA's that use different sized LUNs.
+
+Then struct scsi_lun has to be a u64 or another sXXX_lun(XXX).
+
+>  	snprintf(sdev->sdev_classdev.class_id, BUS_ID_SIZE,
+> -		 "%d:%d:%d:%d", sdev->host->host_no,
+> -		 sdev_channel(sdev), sdev_id(sdev), sdev->lun);
+> +		 "%d:%d:%d:%s", sdev->host->host_no,
+> +		 sdev_channel(sdev), sdev_id(sdev),
+> +		scsilun_to_str(sdev, lunstr));
+
+BUS_ID_SIZE is KOBJ_NAME_LEN is still 20. I thought we were moving to hex
+for the bus_id value?
+
+> +static inline char *scsilun_to_str(struct scsi_device *sdev, char *s)
+> +{
+> +	sprintf(s, "%d", scsilun_to_int(&sdev->lun));
+> +	return s;
+
+And format the LUN output based on the shost->opaque_luns. IMO for
+!opaque_lun_value print LUN in the same order as today, else print 8 byte
+hex string.
+
+Some (probably most) users of drivers/transports with 8 byte LUN support
+will be confused one way or another. Yes, most will expect to see 1 for
+LUN 0001000000000000. We can't always display the LUN the same as used by
+storage vendors in their setup/administration tools.
+
+Perhaps base parsing of user space LUN values on the shost->opaque_lun_value,
+I don't know how we can support 8 byte LUNs from user space and be
+backwards compatible without adding another attribute or interface.
+
+Note that current SAM (sam4r02) sort of allows for different sized LUNs,
+it says "A logical unit number shall contain 64 bits or 16 bits, with the
+size being defined by the SCSI transport protocol.  For SCSI transport
+protocols that define 16-bit logical unit numbers, the two bytes shall be
+formatted as described for the FIRST LEVEL ADDRESSING field (see table 5
+in 4.9.5)."
+
+-- Patrick Mansfield
