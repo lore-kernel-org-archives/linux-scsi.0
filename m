@@ -1,33 +1,56 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: infinite loop with 36 Byte inquiry (sbp2 regression in	2.6.14-rcX)
-Date: Mon, 24 Oct 2005 09:17:38 +0200
-Message-ID: <435C8A92.2080803@s5r6.in-berlin.de>
-References: <435ADA6D.4040705@s5r6.in-berlin.de> <1130107402.3437.54.camel@mulgrave>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH RFC] yet more struct scsi_lun
+Date: Mon, 24 Oct 2005 09:59:35 +0200
+Message-ID: <20051024075934.GK2811@suse.de>
+References: <20051023043301.GA22615@havoc.gtf.org> <20051023070011.GA26569@havoc.gtf.org> <435B6A62.8070306@torque.net> <435BBD9A.80603@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:48797 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1751059AbVJXHSM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Oct 2005 03:18:12 -0400
-In-Reply-To: <1130107402.3437.54.camel@mulgrave>
+Received: from ns.virtualhost.dk ([195.184.98.160]:65105 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1750780AbVJXH6s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Oct 2005 03:58:48 -0400
+Content-Disposition: inline
+In-Reply-To: <435BBD9A.80603@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
-Cc: Ben Collins <bcollins@debian.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: dougg@torque.net, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> However, at a brief examination it looks like you do quite a lot of
-> response snooping.  This always was broken for commands from userspace,
-> but it's completely broken now we only use scatter/gather commands from
-> block.
+On Sun, Oct 23 2005, Jeff Garzik wrote:
+> Douglas Gilbert wrote:
+> >Which in turn makes me think of applying the same idea
+> >to max_sectors
+> >
+> >        shost->max_sectors = MAX_512B_SECTORS_UNLIMITED;
+> 
+> 
+> Won't work.  max_sectors is communicated to the block layer, where we 
+> limit the overall size of the request for practical reasons.
+> 
+> Read the comment in libata-scsi's slave_configure:
+> 
+>                 /* TODO: 1024 is an arbitrary number, not the
+>                  * hardware maximum.  This should be increased to
+>                  * 65534 when Jens Axboe's patch for dynamically
+>                  * determining max_sectors is merged.
+>                  */
+> 
+> Right now, setting the true hardware / command set maximum would use way 
+> too much memory, with no way to get feedback from the VM.
+> 
+> This is why SCSI_DEFAULT_MAX_SECTORS is defined to 1024.
 
-BTW, a lot of the snooping and mangling in sbp2 was removed a while ago
-by the RBC cache patch. The sbp2 portion of the patch was backed out
-from mainline (but kept in the linux1394.org trunk) due to initial
-stability issues. It will be merged soon.
+The block layer has had split values for quite some time, ->max_sectors
+and max_hw_sectors. scsi_ioctl.c needs a patch to look at max_hw_sectors
+instead and SCSI drivers could then easily be updated to advertise a
+real hardware value as well. That is what shost->max_sectors should be,
+SCSI mid layer would then set q->max_sectors to SCSI_DEFAULT_MAX_SECTORS
+and q->max_hw_sectors to shost->max_sectors.
+
+Then the limiting factor becomes BIO_MAX_PAGES for mapping in the user
+data, which caps us at 1MiB currently.
+
 -- 
-Stefan Richter
--=====-=-=-= =-=- ==---
-http://arcgraph.de/sr/
+Jens Axboe
+
