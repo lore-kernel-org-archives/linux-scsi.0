@@ -1,124 +1,48 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: 2.6.14-rc5-mm1
-Date: Mon, 24 Oct 2005 14:16:46 -0700
-Message-ID: <20051024141646.6265c0da.akpm@osdl.org>
-References: <20051024014838.0dd491bb.akpm@osdl.org>
-	<1130186927.6831.23.camel@localhost.localdomain>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: [scsi hcil 0/9] marginalize HCIL a bit
+Date: Mon, 24 Oct 2005 18:00:13 -0400
+Message-ID: <20051024220013.GA10070@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751302AbVJXVQu@vger.kernel.org>
-In-Reply-To: <1130186927.6831.23.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Badari Pulavarty <pbadari@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from havoc.gtf.org ([69.61.125.42]:47503 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1751331AbVJXWAO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Oct 2005 18:00:14 -0400
+Received: from havoc.gtf.org (havoc.gtf.org [127.0.0.1])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by havoc.gtf.org (Postfix) with ESMTP id 0D54C1C0A80A
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2005 18:00:14 -0400 (EDT)
+Received: (from garzik@localhost)
+	by havoc.gtf.org (8.13.1/8.13.1/Submit) id j9OM0Dsc010561
+	for linux-scsi@vger.kernel.org; Mon, 24 Oct 2005 18:00:13 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-Badari Pulavarty <pbadari@gmail.com> wrote:
->
-> On Mon, 2005-10-24 at 01:48 -0700, Andrew Morton wrote:
-> > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.14-rc5/2.6.14-rc5-mm1/
-> > 
-> 
-> I can't seem to keep my AMD64 machine up with 2.6.14-rc5-mm1.
-> Keep running into following. qlogic driver problem ?
-
-I don't know why the qlogic driver has suddenly started doing this - were
-there any earlier messages which might tell us?  Is it possible to increase
-the debugging level?
-
-I can spot one bug in there, but the lockup is just a symptom.
-
-There are no qlogic changes in 2.6.14-rc5-mm1.
-
-> Thanks,
-> Badari
-> 
-> NMI Watchdog detected LOCKUP on CPU 0
-> CPU 0
-> Modules linked in: qlogicfc qla2300 qla2200 qla2xxx firmware_class
-> ohci_hcd hw_r andom usbcore dm_mod
-> Pid: 4414, comm: modprobe Not tainted 2.6.14-rc5-mm1 #3
-> RIP: 0010:[<ffffffff80401d94>] <ffffffff80401d94>{.text.lock.spinlock
-> +34}
-
-That's a corrupted spinlock.
-
-> RSP: 0000:ffff81019da91c28  EFLAGS: 00000086
-> RAX: 0000000000000000 RBX: ffff81017991f288 RCX: 0000000000000000
-> RDX: 0000000000000000 RSI: 0000000000000286 RDI: ffff81017991f290
-> RBP: ffff81019da91c28 R08: 0000000000000034 R09: 0000000000000000
-> R10: ffff81019da91c08 R11: 0000000000000000 R12: ffff81017991f290
-> R13: 00000000fffffff4 R14: ffff81017991c000 R15: 0000000000000100
-> FS:  00002aaaaade36e0(0000) GS:ffffffff80649800(0000)
-> knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> CR2: 0000000000836018 CR3: 00000001bdf2a000 CR4: 00000000000006e0
-> Process modprobe (pid: 4414, threadinfo ffff81019da90000, task
-> ffff81019e3bb500)
-> Stack: ffff81019da91cb8 ffffffff80400dec ffff81019da91c78
-> ffffffff80142ed0
->        0000000000000000 0000000000000000 0000000000000001
-> 0000000000000001
->        ffff81017991c000 0000000000000100
-> Call Trace:<ffffffff80400dec>{wait_for_completion+28}
-> <ffffffff80142ed0>{group_s end_sig_info+128}
->        <ffffffff80142f89>{kill_proc_info+73}
-> <ffffffff8805753c>{:qla2xxx:qla2x00 _free_device+188}
->        <ffffffff8805880b>{:qla2xxx:qla2x00_probe_one+4187}
->        <ffffffff80132ce0>{set_cpus_allowed+336}
-> <ffffffff8012dca3>{__wake_up_com mon+67}
->        <ffffffff8029741a>{kobject_get+26}
-> <ffffffff8807c01d>{:qla2200:qla2200_pr obe_one+13}
->        <ffffffff802a516c>{pci_device_probe+252}
-> <ffffffff80308d29>{driver_probe_ device+89}
->        <ffffffff80308da0>{__driver_attach+0}
-> <ffffffff80308de2>{__driver_attach+ 66}
->        <ffffffff803086af>{bus_for_each_dev+79}
-> <ffffffff80308bbc>{driver_attach+ 28}
->        <ffffffff80308108>{bus_add_driver+136}
-> <ffffffff80308f0c>{driver_register +76}
->        <ffffffff802a4ebe>{pci_register_driver+158}
-> <ffffffff8804d010>{:qla2200:q la2200_init+16}
->        <ffffffff80154072>{sys_init_module+274}
-> <ffffffff8010dd2e>{system_call+12 6}
-
-qla2x00_probe_one() has called qla2x00_free_device() and
-qla2x00_free_device() has locked up in
-wait_for_completion(&ha->dpc_exited);
-
-Presumably, ha->dpc_exited is not initialised yet.
-
-The first `goto probe_failed' in qla2x00_probe_one() will cause
-qla2x00_free_device() to run wait_for_completion() against an uninitialised
-completion struct.  Because ha->dpc_pid will be >= 0.
-
-This patch might fix the lockup, but if so, qla2x00_iospace_config()
-failed.  Please debug that a bit for us?
-
-Andrew, this driver should be converted to use the kthread API - using
-kill_proc() from within a driver to terminate a kernel thread is kinda
-gross.
+To: linux-scsi@vger.kernel.org
 
 
-diff -puN drivers/scsi/qla2xxx/qla_os.c~qlogic-lockup-fix drivers/scsi/qla2xxx/qla_os.c
---- 25/drivers/scsi/qla2xxx/qla_os.c~qlogic-lockup-fix	Mon Oct 24 14:14:20 2005
-+++ 25-akpm/drivers/scsi/qla2xxx/qla_os.c	Mon Oct 24 14:14:37 2005
-@@ -1325,6 +1325,8 @@ int qla2x00_probe_one(struct pci_dev *pd
- 	ha->brd_info = brd_info;
- 	sprintf(ha->host_str, "%s_%ld", ha->brd_info->drv_name, ha->host_no);
- 
-+	ha->dpc_pid = -1;
-+
- 	/* Configure PCI I/O space */
- 	ret = qla2x00_iospace_config(ha);
- 	if (ret)
-@@ -1448,7 +1450,6 @@ int qla2x00_probe_one(struct pci_dev *pd
- 	 */
- 	spin_lock_init(&ha->mbx_reg_lock);
- 
--	ha->dpc_pid = -1;
- 	init_completion(&ha->dpc_inited);
- 	init_completion(&ha->dpc_exited);
- 
-_
+The following patches are in the 'submit9' branch of
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/scsilun-2.6.git
+
+1     [SCSI] kill unused scsi_scan_single_target()
+2     [SCSI] remove cpqfcTS driver, long uncompilable
+3     [SCSI] misc cleanups
+4     [SCSI] s/scsi_scan_target/spi_scan_target/
+5     [SCSI] split up __spi_scan_target()
+6     [SCSI] introduce sfoo_printk, sfoo_id, sfoo_channel helpers
+7     [SCSI] use {sdev,scmd,starget,shost}_printk in generic code
+8     [SCSI] use sfoo_printk() in drivers
+9     [SCSI] use scmd_id(), scmd_channel() throughout code
+
+Except for patch #2, which is too large to post, the above patches will
+follow this email.
+
+If you are pulling the git repo, then you may branches submit0 (==Linus)
+through submit9 (==all patches).  Each is cumulative:  submit0 is empty.
+submit1 contains patch #1.  submit2 contains patch #1 and #2.  etc.
+
+These patches are properly split up, and should be OK for upstream
+once 2.6.14 is released (any day now).
+
