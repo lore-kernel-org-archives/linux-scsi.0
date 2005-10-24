@@ -1,32 +1,66 @@
 From: Luben Tuikov <luben_tuikov@adaptec.com>
-Subject: Re: ioctls, etc. (was Re: [PATCH 1/4] sas: add flag for locally	attached
- PHYs)
-Date: Mon, 24 Oct 2005 12:13:28 -0400
-Message-ID: <435D0828.4020307@adaptec.com>
-References: <4359440E.2050702@pobox.com> <43595275.1000308@adaptec.com>	<435959BE.5040101@pobox.com> <43595CA6.9010802@adaptec.com>	<43596070.3090902@pobox.com> <43596859.3020801@adaptec.com>	<43596F16.7000606@pobox.com> <435A1793.1050805@s5r6.in-berlin.de>	<20051022105815.GB3027@infradead.org>	<1129994910.6286.21.camel@sipan.sipan.org>	<20051022171943.GA7546@infradead.org> <435CE6CA.4070704@adaptec.com>	<1130168495.12873.27.camel@localhost.localdomain>	<435CFA5A.2030104@adaptec.com> <87vezm7vox.fsf@barad-dur.minas-morgul.org>
+Subject: Re: [PATCH RFC] more struct scsi_lun
+Date: Mon, 24 Oct 2005 12:27:07 -0400
+Message-ID: <435D0B5B.7010706@adaptec.com>
+References: <20051023043301.GA22615@havoc.gtf.org> <20051023044953.GA23354@havoc.gtf.org> <435B5C15.5070106@s5r6.in-berlin.de> <435B8CC9.5000600@s5r6.in-berlin.de> <435BBF05.6010109@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751127AbVJXQNh@vger.kernel.org>
-In-Reply-To: <87vezm7vox.fsf@barad-dur.minas-morgul.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Regala <matt@regala.cx>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Christoph Hellwig <hch@infradead.org>, Sergey Panov <sipan@sipan.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, andrew.patterson@hp.com, Christoph Hellwig <hch@lst.de>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, jejb@steeleye.com, Linus Torvalds <torvalds@osdl.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:36321 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1751140AbVJXQ1N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Oct 2005 12:27:13 -0400
+In-Reply-To: <435BBF05.6010109@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org
 
-On 10/24/05 11:59, Regala wrote:
-> but refactoring can be done in incremental pieces, can't be ?
-> rewriting it from scratch is, in this very case, really for the sake
-> of self-pride and brain-masturbation.
-> Bravo
+On 10/23/05 12:49, Jeff Garzik wrote:
+> Stefan Richter wrote:
 > 
-> This is not a really convincing example...
+>>I wrote:
+>>
+>>
+>>>       for (i = 0; i < 8; ++i)
+>>>               sprintf(s+2*i, %02x, lun[i]);
+>>
+>>                 sprintf(s+2*i, "%02x", lun.scsi_lun[i]);
+>>#-)
 > 
-> -- 
-> Mathieu Segaud
+> 
+> 
+> There is obviously room for improvement.  Any naive representation is 
+> sub-optimal, be it for small luns (my current code) or larger luns (your 
+> example).
+> 
+> For situations with smaller luns, we should probably continue to use the 
+> current scsilun_to_int() conversion, while using your example for larger 
+> luns, i.e.
+> 
+> 	if (upper 4 bytes zero)
+> 		scsilun to int
+> 		printk %d
+> 	else
+> 		for each byte
+> 			printk %x
+> 
+> But Douglas's code suggested that if we are more motivated, we could 
+> provide an even better representation.
 
-They, the factory, wanted it rewritten from scratch,
-so that they can maintain and support it themselves.
+If a LUN is u8[8], then,
+
+#define SAS_ADDR(_sa)   ((unsigned long long) be64_to_cpu(*(__be64 *)(_sa)))
+
+"%016llx", SAS_ADDR(LUN)  prints it like this (e.g.):
+
+sas: 5000c50000513329 probing LUN:0000000000000000
+sas: device 500000e000031c12 LUN: 0000000000000000 powering up or not ready yet, sleeping...
+sas: 500000e000031c12 probing LUN:0000000000000000
+sas: device 50001c171601060d LUN: 0000000000000000 powering up or not ready yet, sleeping...
+
+This is from drivers/scsi/sas/sas_discover.c.
 
 	Luben
 -- 
