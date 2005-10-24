@@ -1,86 +1,110 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 1/2] libata: Remove dependence on host_set->dev for SAS
-Date: Mon, 24 Oct 2005 17:19:17 -0500
-Message-ID: <435D5DE5.7010306@us.ibm.com>
-References: <4341A91A.3020000@us.ibm.com> <434251E0.9060000@pobox.com>	 <58cb370e0510040322q1cb7a13bjfc6c7875140d20a9@mail.gmail.com> <58cb370e0510041356h780e7a5aifda0c232f677471e@mail.gmail.com> <43443E99.4090008@pobox.com> <435D5D83.1060201@us.ibm.com>
-Reply-To: brking@us.ibm.com
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH RFC] more struct scsi_lun
+Date: Tue, 25 Oct 2005 08:27:04 +1000
+Message-ID: <435D5FB8.7000407@torque.net>
+References: <20051023043301.GA22615@havoc.gtf.org> <20051023044953.GA23354@havoc.gtf.org> <435B5C15.5070106@s5r6.in-berlin.de> <435B8CC9.5000600@s5r6.in-berlin.de> <435BBF05.6010109@pobox.com> <435D0B5B.7010706@adaptec.com> <435D3E07.5050709@s5r6.in-berlin.de>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000309020601090102030601"
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <435D5D83.1060201@us.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: brking@us.ibm.com
-Cc: Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------000309020601090102030601
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zorg.st.net.au ([203.16.233.9]:12509 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1751352AbVJXW0A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Oct 2005 18:26:00 -0400
+In-Reply-To: <435D3E07.5050709@s5r6.in-berlin.de>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi@vger.kernel.org, Luben Tuikov <luben_tuikov@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>
 
+Stefan Richter wrote:
+> Luben Tuikov wrote:
+> 
+>> On 10/23/05 12:49, Jeff Garzik wrote:
+>>
+>>> Stefan Richter wrote:
+>>>
+>>>>                sprintf(s+2*i, "%02x", lun.scsi_lun[i]);
+>>>
+>>>
+>>> There is obviously room for improvement.  Any naive representation is
+>>> sub-optimal, be it for small luns (my current code) or larger luns
+>>> (your example).
+>>>
+>>> For situations with smaller luns, we should probably continue to use
+>>> the current scsilun_to_int() conversion, while using your example for
+>>> larger luns, i.e.
+>>>
+>>>     if (upper 4 bytes zero)
+>>>         scsilun to int
+>>>         printk %d
+>>>     else
+>>>         for each byte
+>>>             printk %x
+>>>
+>>> But Douglas's code suggested that if we are more motivated, we could
+>>> provide an even better representation.
+> 
+> 
+> A plain, non-interpreted representation should suffice. Compact but
+> easily parseable, i.e. uniform.
+> 
+>> If a LUN is u8[8], then,
+>>
+>> #define SAS_ADDR(_sa)   ((unsigned long long) be64_to_cpu(*(__be64
+>> *)(_sa)))
+>>
+>> "%016llx", SAS_ADDR(LUN)  prints it like this (e.g.):
+>>
+>> sas: 5000c50000513329 probing LUN:0000000000000000
+>> sas: device 500000e000031c12 LUN: 0000000000000000 powering up or not
+>> ready yet, sleeping...
+>> sas: 500000e000031c12 probing LUN:0000000000000000
+>> sas: device 50001c171601060d LUN: 0000000000000000 powering up or not
+>> ready yet, sleeping...
+>>
+>> This is from drivers/scsi/sas/sas_discover.c.
+>>
+>>     Luben
+> 
+> 
+> What about an 64bit integer as carrier of LUN in the first place? The
+> most frequent occurrence of LUN data is when it is passed through in
+> function calls but it seems rarely to be manipulated.
+> 
+> --- linux/include/scsi/scsi.h.orig      2005-10-20 08:23:05.000000000 +0200
+> +++ linux/include/scsi/scsi.h   2005-10-24 21:45:41.000000000 +0200
+> @@ -238,9 +238,7 @@
+>  /*
+>   * ScsiLun: 8 byte LUN.
+>   */
+> -struct scsi_lun {
+> -       __u8 scsi_lun[8];
+> -};
+> +typedef __be64 scsi_lun;
 
---------------000309020601090102030601
-Content-Type: text/plain;
- name="libata_host_set_dev.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="libata_host_set_dev.patch"
+Stefan,
+IMO it is very important to keep luns as __u8[8]. Lots
+of different lun conventions map into that array, almost
+all of which would look horrible viewed as hex or
+decimal integers. For example SCSI-2 luns (embedded
+in cbds) run from 0 to 7 and map (in hex) to:
+  00 00 00 00 00 00 00 00
+  00 07 00 00 00 00 00 00
 
-ClJlbW92ZSBzb21lIG9mIHRoZSBkZXBlbmRlbmNlIG9uIHRoZSBob3N0X3NldCBzdHJ1Y3QK
-aW4gcHJlcGFyYXRpb24gZm9yIHN1cHBvcnRpbmcgU0FTIEhCQXMuIEFkZHMgYSBzdHJ1Y3Qg
-ZGV2aWNlCnBvaW50ZXIgdG8gdGhlIGF0YV9wb3J0IHN0cnVjdC4KClRoaXMgcGF0Y2ggZGVw
-ZW5kcyBvbiB0aGUgcWNfdHJhbnNwb3J0IHBhdGNoOgoKaHR0cDovL21hcmMudGhlYWltc2dy
-b3VwLmNvbS8/bD1saW51eC1pZGUmbT0xMTI4NDU5MzkyMTUyODYmdz0yCgpTaWduZWQtb2Zm
-LWJ5OiBCcmlhbiBLaW5nIDxicmtpbmdAdXMuaWJtLmNvbT4KLS0tCgogbGludXgtMi42LWJq
-a2luZzEvZHJpdmVycy9zY3NpL2xpYmF0YS1jb3JlLmMgfCAgIDEzICsrKysrKystLS0tLS0K
-IGxpbnV4LTIuNi1iamtpbmcxL2luY2x1ZGUvbGludXgvbGliYXRhLmggICAgIHwgICAgMSAr
-CiAyIGZpbGVzIGNoYW5nZWQsIDggaW5zZXJ0aW9ucygrKSwgNiBkZWxldGlvbnMoLSkKCmRp
-ZmYgLXB1TiBpbmNsdWRlL2xpbnV4L2xpYmF0YS5ofmxpYmF0YV9ob3N0X3NldF9kZXYgaW5j
-bHVkZS9saW51eC9saWJhdGEuaAotLS0gbGludXgtMi42L2luY2x1ZGUvbGludXgvbGliYXRh
-Lmh+bGliYXRhX2hvc3Rfc2V0X2RldgkyMDA1LTEwLTI0IDE1OjA0OjIyLjAwMDAwMDAwMCAt
-MDUwMAorKysgbGludXgtMi42LWJqa2luZzEvaW5jbHVkZS9saW51eC9saWJhdGEuaAkyMDA1
-LTEwLTI0IDE1OjA0OjIyLjAwMDAwMDAwMCAtMDUwMApAQCAtMzE1LDYgKzMxNSw3IEBAIHN0
-cnVjdCBhdGFfcG9ydCB7CiAKIAlzdHJ1Y3QgYXRhX2hvc3Rfc3RhdHMJc3RhdHM7CiAJc3Ry
-dWN0IGF0YV9ob3N0X3NldAkqaG9zdF9zZXQ7CisJc3RydWN0IGRldmljZSAJCSpkZXY7CiAK
-IAlzdHJ1Y3Qgd29ya19zdHJ1Y3QJcGFja2V0X3Rhc2s7CiAKZGlmZiAtcHVOIGRyaXZlcnMv
-c2NzaS9saWJhdGEtY29yZS5jfmxpYmF0YV9ob3N0X3NldF9kZXYgZHJpdmVycy9zY3NpL2xp
-YmF0YS1jb3JlLmMKLS0tIGxpbnV4LTIuNi9kcml2ZXJzL3Njc2kvbGliYXRhLWNvcmUuY35s
-aWJhdGFfaG9zdF9zZXRfZGV2CTIwMDUtMTAtMjQgMTU6MDQ6MjIuMDAwMDAwMDAwIC0wNTAw
-CisrKyBsaW51eC0yLjYtYmpraW5nMS9kcml2ZXJzL3Njc2kvbGliYXRhLWNvcmUuYwkyMDA1
-LTEwLTI0IDE1OjA0OjIyLjAwMDAwMDAwMCAtMDUwMApAQCAtMjE2Miw5ICsyMTYyLDkgQEAg
-c3RhdGljIHZvaWQgYXRhX3NnX2NsZWFuKHN0cnVjdCBhdGFfcXVldQogCURQUklOVEsoInVu
-bWFwcGluZyAldSBzZyBlbGVtZW50c1xuIiwgcWMtPm5fZWxlbSk7CiAKIAlpZiAocWMtPmZs
-YWdzICYgQVRBX1FDRkxBR19TRykKLQkJZG1hX3VubWFwX3NnKGFwLT5ob3N0X3NldC0+ZGV2
-LCBzZywgcWMtPm5fZWxlbSwgZGlyKTsKKwkJZG1hX3VubWFwX3NnKGFwLT5kZXYsIHNnLCBx
-Yy0+bl9lbGVtLCBkaXIpOwogCWVsc2UKLQkJZG1hX3VubWFwX3NpbmdsZShhcC0+aG9zdF9z
-ZXQtPmRldiwgc2dfZG1hX2FkZHJlc3MoJnNnWzBdKSwKKwkJZG1hX3VubWFwX3NpbmdsZShh
-cC0+ZGV2LCBzZ19kbWFfYWRkcmVzcygmc2dbMF0pLAogCQkJCSBzZ19kbWFfbGVuKCZzZ1sw
-XSksIGRpcik7CiAKIAlxYy0+ZmxhZ3MgJj0gfkFUQV9RQ0ZMQUdfRE1BTUFQOwpAQCAtMjMz
-NSw3ICsyMzM1LDcgQEAgc3RhdGljIGludCBhdGFfc2dfc2V0dXBfb25lKHN0cnVjdCBhdGFf
-cQogCXN0cnVjdCBzY2F0dGVybGlzdCAqc2cgPSBxYy0+c2c7CiAJZG1hX2FkZHJfdCBkbWFf
-YWRkcmVzczsKIAotCWRtYV9hZGRyZXNzID0gZG1hX21hcF9zaW5nbGUoYXAtPmhvc3Rfc2V0
-LT5kZXYsIHFjLT5idWZfdmlydCwKKwlkbWFfYWRkcmVzcyA9IGRtYV9tYXBfc2luZ2xlKGFw
-LT5kZXYsIHFjLT5idWZfdmlydCwKIAkJCQkgICAgIHNnLT5sZW5ndGgsIGRpcik7CiAJaWYg
-KGRtYV9tYXBwaW5nX2Vycm9yKGRtYV9hZGRyZXNzKSkKIAkJcmV0dXJuIC0xOwpAQCAtMjM3
-Myw3ICsyMzczLDcgQEAgc3RhdGljIGludCBhdGFfc2dfc2V0dXAoc3RydWN0IGF0YV9xdWV1
-ZQogCWFzc2VydChxYy0+ZmxhZ3MgJiBBVEFfUUNGTEFHX1NHKTsKIAogCWRpciA9IHFjLT5k
-bWFfZGlyOwotCW5fZWxlbSA9IGRtYV9tYXBfc2coYXAtPmhvc3Rfc2V0LT5kZXYsIHNnLCBx
-Yy0+bl9lbGVtLCBkaXIpOworCW5fZWxlbSA9IGRtYV9tYXBfc2coYXAtPmRldiwgc2csIHFj
-LT5uX2VsZW0sIGRpcik7CiAJaWYgKG5fZWxlbSA8IDEpCiAJCXJldHVybiAtMTsKIApAQCAt
-Mzg0NSw3ICszODQ1LDcgQEAgZXJyX291dDoKIAogaW50IGF0YV9wb3J0X3N0YXJ0IChzdHJ1
-Y3QgYXRhX3BvcnQgKmFwKQogewotCXN0cnVjdCBkZXZpY2UgKmRldiA9IGFwLT5ob3N0X3Nl
-dC0+ZGV2OworCXN0cnVjdCBkZXZpY2UgKmRldiA9IGFwLT5kZXY7CiAKIAlhcC0+cHJkID0g
-ZG1hX2FsbG9jX2NvaGVyZW50KGRldiwgQVRBX1BSRF9UQkxfU1osICZhcC0+cHJkX2RtYSwg
-R0ZQX0tFUk5FTCk7CiAJaWYgKCFhcC0+cHJkKQpAQCAtMzg3MCw3ICszODcwLDcgQEAgaW50
-IGF0YV9wb3J0X3N0YXJ0IChzdHJ1Y3QgYXRhX3BvcnQgKmFwKQogCiB2b2lkIGF0YV9wb3J0
-X3N0b3AgKHN0cnVjdCBhdGFfcG9ydCAqYXApCiB7Ci0Jc3RydWN0IGRldmljZSAqZGV2ID0g
-YXAtPmhvc3Rfc2V0LT5kZXY7CisJc3RydWN0IGRldmljZSAqZGV2ID0gYXAtPmRldjsKIAog
-CWRtYV9mcmVlX2NvaGVyZW50KGRldiwgQVRBX1BSRF9UQkxfU1osIGFwLT5wcmQsIGFwLT5w
-cmRfZG1hKTsKIH0KQEAgLTM5MzcsNiArMzkzNyw3IEBAIHN0YXRpYyB2b2lkIGF0YV9ob3N0
-X2luaXQoc3RydWN0IGF0YV9wb3IKIAlhcC0+aG9zdCA9IGhvc3Q7CiAJYXAtPmN0bCA9IEFU
-QV9ERVZDVExfT0JTOwogCWFwLT5ob3N0X3NldCA9IGhvc3Rfc2V0OworCWFwLT5kZXYgPSBl
-bnQtPmRldjsKIAlhcC0+cG9ydF9ubyA9IHBvcnRfbm87CiAJYXAtPmhhcmRfcG9ydF9ubyA9
-CiAJCWVudC0+bGVnYWN5X21vZGUgPyBlbnQtPmhhcmRfcG9ydF9ubyA6IHBvcnRfbm87Cl8K
+Just like a SCSI cdb, to decode a lun, first one needs
+to examine scsi_lun[0], then depending on ... . As
+you are no doubt aware, the only current transport
+defined to have 2 byte luns is sbp-2/sbp-3 and it is
+obvious what those 2 bytes will be: scsi_lun[0] and
+scsi_lun[1].
 
---------------000309020601090102030601--
+Generic target+initiator (port) identifiers in SAM
+(see sam4r03.pdf Annex A) should also be a sequence of
+bytes (not an integer). iSCSI seems to be the limiting
+case with up to 241 (utf-8) bytes. Linux may want to keep
+its enumerating "id" integer, in which case a mapping
+should be visible (as SDI does).
+
+Doug Gilbert
