@@ -1,32 +1,44 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/2] libata: Remove dependence on host_set->dev for SAS
-Date: Tue, 25 Oct 2005 15:43:03 -0400
-Message-ID: <435E8AC7.1080407@pobox.com>
-References: <4341A91A.3020000@us.ibm.com> <434251E0.9060000@pobox.com>	 <58cb370e0510040322q1cb7a13bjfc6c7875140d20a9@mail.gmail.com> <58cb370e0510041356h780e7a5aifda0c232f677471e@mail.gmail.com> <43443E99.4090008@pobox.com> <435D5D83.1060201@us.ibm.com> <435D5DE5.7010306@us.ibm.com> <435E7105.4010105@pobox.com> <435E87E8.9010506@us.ibm.com>
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Subject: Re: [PATCH/RFC] SCSI mid-layer suspend/resume
+Date: Tue, 25 Oct 2005 14:22:02 -0700
+Message-ID: <20051025142202.226a5746.randy_d_dunlap@linux.intel.com>
+References: <20051024160531.7d879a7c.randy_d_dunlap@linux.intel.com>
+	<435DA193.9010805@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:39122 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S932326AbVJYTnL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Oct 2005 15:43:11 -0400
-In-Reply-To: <435E87E8.9010506@us.ibm.com>
+Received: from fmr19.intel.com ([134.134.136.18]:48845 "EHLO
+	orsfmr004.jf.intel.com") by vger.kernel.org with ESMTP
+	id S932386AbVJYVUh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Oct 2005 17:20:37 -0400
+In-Reply-To: <435DA193.9010805@rtr.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, axboe@suse.de, jgarzik@pobox.com, hch@lst.de
 
-Brian King wrote:
-> Or, we just live with the duplication...
+On Mon, 24 Oct 2005 23:08:03 -0400
+Mark Lord <liml@rtr.ca> wrote:
 
-That may be the best practical solution.
+> Randy Dunlap wrote:
+> > Although Jens's SATA suspend/resume patch works, it seems that the
+> > SCSI maintainer(s) want something different, e.g., Nathan Bryant's
+> > 2004 patch[1] with some changes:
+> ..
+> As-is, the patch fails the practical examination:
+> 
+> My notebook fails to come back from suspend (to-RAM) using this patch,
+> but works fine with Jens' patch.
 
-I wonder, additionally, if we need to be getting a reference each time 
-we store the pointer.  Traditionally the struct device object lifetime 
-has always been entirely within the bus device lifetime, but with this 
-new work that may need rethinking.
+Maybe I should have used Jeff's "DO NOT APPLY" wording here.
+I didn't mean to give the impression that the patch was complete.
+It's a work in progress, looking for constructive feedback,
+which yours is, of course.
 
-	Jeff
+> Modern notebook, no serial port, backlight still off so no on-screen messages.
+> Using ata_piix (libata) for hard disk.
 
 
+---
+~Randy
