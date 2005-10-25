@@ -1,46 +1,76 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH/RFC] SCSI mid-layer suspend/resume
-Date: Tue, 25 Oct 2005 17:37:47 -0400
-Message-ID: <435EA5AB.9010805@pobox.com>
-References: <20051024160531.7d879a7c.randy_d_dunlap@linux.intel.com>	<435D6E47.1030409@pobox.com> <20051025142529.7b23bbc0.randy_d_dunlap@linux.intel.com>
+From: Luben Tuikov <luben_tuikov@adaptec.com>
+Subject: Re: [PATCH 1/2] libata: Remove dependence on host_set->dev for SAS
+Date: Tue, 25 Oct 2005 18:48:54 -0400
+Message-ID: <435EB656.1040502@adaptec.com>
+References: <4341A91A.3020000@us.ibm.com> <434251E0.9060000@pobox.com>	 <58cb370e0510040322q1cb7a13bjfc6c7875140d20a9@mail.gmail.com> <58cb370e0510041356h780e7a5aifda0c232f677471e@mail.gmail.com> <43443E99.4090008@pobox.com> <435D5D83.1060201@us.ibm.com> <435D5DE5.7010306@us.ibm.com> <435E7105.4010105@pobox.com> <435E87E8.9010506@us.ibm.com> <435E8AC7.1080407@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20051025142529.7b23bbc0.randy_d_dunlap@linux.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, axboe@suse.de, hch@lst.de
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:59030 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932457AbVJYWtw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Oct 2005 18:49:52 -0400
+In-Reply-To: <435E8AC7.1080407@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: brking@us.ibm.com, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Randy Dunlap wrote:
-> On Mon, 24 Oct 2005 19:29:11 -0400
-> Jeff Garzik <jgarzik@pobox.com> wrote:
+On 10/25/05 15:43, Jeff Garzik wrote:
+> Brian King wrote:
+> 
+>>Or, we just live with the duplication...
 > 
 > 
->>Randy Dunlap wrote:
->>
->>>Jeff's comments[2]:
->>>- Issue hardware or software reset on suspend (not done).
->>
->>Note that's an ATA-specific comment.
+> That may be the best practical solution.
 > 
-> 
-> So it is.  Thanks for the reminder.
-> 
-> How/where can I put low-level driver specific suspend/resume
-> code, for PATA or SATA or usb-storage or ieee1394 or SCSI?
-> What is the linkage (chain, pointers, whatever) thru the
-> SCSI stack to each driver's "methods"?  Or do those not
-> exist yet?
+> I wonder, additionally, if we need to be getting a reference each time 
+> we store the pointer.  Traditionally the struct device object lifetime 
+> has always been entirely within the bus device lifetime, but with this 
+> new work that may need rethinking.
 
-Want the completely honest answer?  :)  I have no clue, and thinking 
-about suspend gives me a headache  Anytime I start reading the actual 
-suspend code, I wind up either confused or depressed, or both.
+Would it be a good idea to abstract most of this in
+say something like 
 
-We have emperical evidence that Jens' patch works on SATA, so see if the 
-two patches can meet in the middle somewhere?
+	struct satl_device_struct {
+		-- data... ;
+		
+		/* The registering entity calls this for SATL to translate
+		   to an ATA task(s) and execute. Filled in by the SATL Layer. */
+		int (*execute_scsi_task)(struct satl_device_struct *, struct scsi_cmnd *);
+		
+		/* SATL layer calls this to send an ata_task to the device.
+		   Filled in by the registering entity. */
+		int (*execute_ata_task)(struct satl_device_struct *, struct ata_task *);
 
-	Jeff
+		-- recovery methods common to SATA-over-anything; filled in by registering
+			\ entity
+	};
 
+(ata task to be properly constructed: FIS, sg lists, etc.)
 
+Then libata-scsi would only have to export two (2) functions:
+
+int  satl_register_device(struct satl_device_struct *);
+void satl_unregister_device(struct satl_device_struct *);
+
+EXPORT_SYMBOL_GPL(satl_register_device);
+EXPORT_SYMBOL_GPL(satl_unregister_device);
+
+And the rest are in the struct satl_device_struct for which
+translation is being provided.
+
+Thus, error handling can also be "commonalized" as per
+the entity registering for the service.
+
+The whole point is to have this at device level as opposed
+to libata's port level.  Plus it simplifies the code of entities
+registering for this service.
+
+<I was going to draw ascii art, but ran out of time>
+
+	Luben
+-- 
+http://linux.adaptec.com/sas/
+http://www.adaptec.com/sas/
