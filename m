@@ -1,36 +1,30 @@
-From: "Maciej W. Rozycki" <macro@linux-mips.org>
-Subject: Re: [PATCH] dec_esp: Use physical addresses
-Date: Tue, 25 Oct 2005 16:13:42 +0100 (BST)
-Message-ID: <Pine.LNX.4.55.0510251559570.8058@blysk.ds.pg.gda.pl>
-References: <20051015012630.GA20981@linux-mips.org> <20051017104207.GA22710@infradead.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: 2.6.14-rc5-mm1
+Date: Tue, 25 Oct 2005 17:13:26 +0100
+Message-ID: <20051025161326.GA31122@infradead.org>
+References: <20051024014838.0dd491bb.akpm@osdl.org> <1130186927.6831.23.camel@localhost.localdomain> <20051024141646.6265c0da.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pollux.ds.pg.gda.pl ([153.19.208.7]:58639 "EHLO
-	pollux.ds.pg.gda.pl") by vger.kernel.org with ESMTP id S932171AbVJYPNh
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Oct 2005 11:13:37 -0400
-In-Reply-To: <20051017104207.GA22710@infradead.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:40136 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932198AbVJYQNb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Oct 2005 12:13:31 -0400
+Content-Disposition: inline
+In-Reply-To: <20051024141646.6265c0da.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ralf Baechle <ralf@linux-mips.org>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: Badari Pulavarty <pbadari@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On Mon, 17 Oct 2005, Christoph Hellwig wrote:
+On Mon, Oct 24, 2005 at 02:16:46PM -0700, Andrew Morton wrote:
+> qla2x00_probe_one() has called qla2x00_free_device() and
+> qla2x00_free_device() has locked up in
+> wait_for_completion(&ha->dpc_exited);
 
-> > Use physical addresses at the interface level, letting drivers remap
-> > them as appropriate.
-> 
-> > -		esp->eregs = (struct ESP_regs *) (system_base + IOASIC_SCSI);
-> > +		esp->eregs = (void *)CKSEG1ADDR(dec_kn_slot_base +
-> > +						IOASIC_SCSI);
-> 
-> Both the old and new code look very odd.  This looks like iomaped-ish
-> memory and should be using some iomap variant.  The patch is probably
-> okay for now, but I'd prefer if this used the proper APIs.
+one more reason to use one-for-one goto-style unwinding instead of
+calling _free routines ;-)
 
- It's a step in the transition to modern I/O bus APIs for TURBOchannel
-systems.  It's certainly not going to stay there any longer than necessary
-as this driver is meant to support Alphas and VAXen eventually.
+While we're at it -  Andew, would you converting qla2xxx to the
+kthread_ API for thread handling?
 
-  Maciej
