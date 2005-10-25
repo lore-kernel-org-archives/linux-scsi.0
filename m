@@ -1,40 +1,36 @@
-From: Badari Pulavarty <pbadari@gmail.com>
-Subject: Re: 2.6.14-rc5-mm1
-Date: Tue, 25 Oct 2005 08:12:56 -0700
-Message-ID: <1130253176.6831.48.camel@localhost.localdomain>
-References: <20051024014838.0dd491bb.akpm@osdl.org>
-	 <1130186927.6831.23.camel@localhost.localdomain>
-	 <20051024141646.6265c0da.akpm@osdl.org>
+From: "Maciej W. Rozycki" <macro@linux-mips.org>
+Subject: Re: [PATCH] dec_esp: Use physical addresses
+Date: Tue, 25 Oct 2005 16:13:42 +0100 (BST)
+Message-ID: <Pine.LNX.4.55.0510251559570.8058@blysk.ds.pg.gda.pl>
+References: <20051015012630.GA20981@linux-mips.org> <20051017104207.GA22710@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932172AbVJYPNp@vger.kernel.org>
-In-Reply-To: <20051024141646.6265c0da.akpm@osdl.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pollux.ds.pg.gda.pl ([153.19.208.7]:58639 "EHLO
+	pollux.ds.pg.gda.pl") by vger.kernel.org with ESMTP id S932171AbVJYPNh
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Oct 2005 11:13:37 -0400
+In-Reply-To: <20051017104207.GA22710@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ralf Baechle <ralf@linux-mips.org>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>
 
-On Mon, 2005-10-24 at 14:16 -0700, Andrew Morton wrote:
-..
-> 
-> qla2x00_probe_one() has called qla2x00_free_device() and
-> qla2x00_free_device() has locked up in
-> wait_for_completion(&ha->dpc_exited);
-> 
-> Presumably, ha->dpc_exited is not initialised yet.
-> 
-> The first `goto probe_failed' in qla2x00_probe_one() will cause
-> qla2x00_free_device() to run wait_for_completion() against an uninitialised
-> completion struct.  Because ha->dpc_pid will be >= 0.
-> 
-> This patch might fix the lockup, but if so, qla2x00_iospace_config()
-> failed.  Please debug that a bit for us?
+On Mon, 17 Oct 2005, Christoph Hellwig wrote:
 
-Yes. This patch helped. Due to power failures, my disk trays are
-powered off. qla2x00_iospace_config() is failing and causing the
-panic on -mm kernel. For odd reasons, older -mm kernels & mainline
-kernels doesn't panic.
+> > Use physical addresses at the interface level, letting drivers remap
+> > them as appropriate.
+> 
+> > -		esp->eregs = (struct ESP_regs *) (system_base + IOASIC_SCSI);
+> > +		esp->eregs = (void *)CKSEG1ADDR(dec_kn_slot_base +
+> > +						IOASIC_SCSI);
+> 
+> Both the old and new code look very odd.  This looks like iomaped-ish
+> memory and should be using some iomap variant.  The patch is probably
+> okay for now, but I'd prefer if this used the proper APIs.
 
-Thanks,
-Badari
+ It's a step in the transition to modern I/O bus APIs for TURBOchannel
+systems.  It's certainly not going to stay there any longer than necessary
+as this driver is meant to support Alphas and VAXen eventually.
+
+  Maciej
