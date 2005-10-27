@@ -1,51 +1,57 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: 2.6.14-rc5-mm1
-Date: Thu, 27 Oct 2005 14:53:13 -0700
-Message-ID: <20051027215313.GB7889@plap.qlogic.org>
-References: <20051024014838.0dd491bb.akpm@osdl.org> <1130186927.6831.23.camel@localhost.localdomain> <20051024141646.6265c0da.akpm@osdl.org> <20051027152637.GC7889@plap.qlogic.org> <20051027190227.GA16211@infradead.org>
+From: "Jayachandran C." <jchandra@digeo.com>
+Subject: [PATCH] Fix issue reported by coverity in drivers/scsi/scsi_ioctl.c
+Date: Thu, 27 Oct 2005 15:51:13 -0700
+Message-ID: <20051027225113.GE20378@random.pao.digeo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932654AbVJ0VxP@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from packet.digeo.com ([12.110.80.53]:16550 "EHLO packet.digeo.com")
+	by vger.kernel.org with ESMTP id S932648AbVJ0WvW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Oct 2005 18:51:22 -0400
 Content-Disposition: inline
-In-Reply-To: <20051027190227.GA16211@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, Badari Pulavarty <pbadari@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@SteelEye.com, Andrew Morton <akpm@osdl.org>
 
-On Thu, 27 Oct 2005, Christoph Hellwig wrote:
+This patch attempts to fix an issue found in drivers/scsi/scsi_ioctl.c by Coverity.
 
-> On Thu, Oct 27, 2005 at 08:26:37AM -0700, Andrew Vasquez wrote:
-> > qlogicfc attaches to both 2100 and 2200 ISPs.  It seems you're then
-> > trying to load qla2xxx driver along with the 2300 and 2200 firmware
-> > loader modules.  The pci_request_regions() call during 2200 probing
-> > fails.
-> 
-> Btw, now that devfs is gone and thus DaveM's host renumbering issues
-> are modd we'd like to kill qlogicfc.  I vaguely remember people complaing
-> qla2xxx made trouble on qla2100 hardware.  Andrew do you have any success
-> or error reports for that hardware?
+Error reported: 
+CID: 3437
+Checker: FORWARD_NULL (help)
+File: /export2/p4-coverity/mc2/linux26/drivers/scsi/scsi_ioctl.c
+Function: scsi_ioctl_send_command
+Description: Variable "buf" tracked as NULL was passed to a function that dereferences it.
 
-A couple of months ago I had worked with a 2100 user who was having
-some serious problems within a configuration.  I was able to reproduce
-something similar in-house and (to make a long-story, short), it turns
-out there are some error-recovery problems in the firmware version
-currently shipping in qla2xxx (1.19.25 TP firmware to be exact).
+Patch description:
+buf can be NULL if inlen and outlen are both 0. This patch adds check if the
+length is non-zero before calling copy from/to user.
 
-After numerous trial and error efforts, we were able to find a
-reasonbly stable release with which the customer's configuration could
-recover and run (1.17.38 EF, quite old).
+Signed-off-by: Jayachandran C. <c.jayachandran at gmail.com>
 
-In any case, formally, QLogic has dropped *all* support for ISP2100
-cards, and thus, it's quite difficult to get any type of traction
-from the firmware folk to begin to root-cause the failures.
+---
 
-I'm still in the process of ironing out the .bin distribution details
-locally, but perhaps once we migrate to firmware-loading exclusively
-via request_firmware(), the (small?) contigent of 2100 could use the
-EF variant I referenced above.
+ scsi_ioctl.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Could I get another informal count of 2100 users who are still having
-problems with qla2xxx?
-
-Regards,
-Andrew Vasquez
+--- linux-2.6.14-rc4-git2.clean/drivers/scsi/scsi_ioctl.c	2005-10-13 11:42:32.000000000 -0700
++++ linux-2.6.14-rc4-git2/drivers/scsi/scsi_ioctl.c	2005-10-26 11:51:50.171230856 -0700
+@@ -281,7 +281,7 @@
+ 	 * Obtain the data to be sent to the device (if any).
+ 	 */
+ 
+-	if(copy_from_user(buf, cmd_in + cmdlen, inlen))
++	if(inlen && copy_from_user(buf, cmd_in + cmdlen, inlen))
+ 		goto error;
+ 
+ 	switch (opcode) {
+@@ -325,7 +325,7 @@
+ 		if (copy_to_user(cmd_in, sense, sb_len))
+ 			result = -EFAULT;
+ 	} else {
+-		if (copy_to_user(cmd_in, buf, outlen))
++		if (outlen && copy_to_user(cmd_in, buf, outlen))
+ 			result = -EFAULT;
+ 	}	
+ 
