@@ -1,83 +1,27 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: 2.6.14-rc5-mm1
-Date: Thu, 27 Oct 2005 09:48:50 -0700
-Message-ID: <20051027164850.GJ7889@plap.qlogic.org>
-References: <20051024014838.0dd491bb.akpm@osdl.org> <1130186927.6831.23.camel@localhost.localdomain> <20051024141646.6265c0da.akpm@osdl.org> <20051027152637.GC7889@plap.qlogic.org> <1130427867.23729.73.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH 5/5]  qla2xxx: Resync with latest released ISP23xx/63xx firmware -- 3.03.18.
+Date: Thu, 27 Oct 2005 11:10:18 -0700 (PDT)
+Message-ID: <20051027181018.11768.17056.sendpatchset@plap.qlogic.com>
+References: <20051027180928.11768.90833.sendpatchset@plap.qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:49883 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751268AbVJ0Qsv (ORCPT
+Received: from pat.qlogic.com ([198.70.193.2]:26986 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751433AbVJ0SKX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Oct 2005 12:48:51 -0400
-Content-Disposition: inline
-In-Reply-To: <1130427867.23729.73.camel@localhost.localdomain>
+	Thu, 27 Oct 2005 14:10:23 -0400
+In-Reply-To: <20051027180928.11768.90833.sendpatchset@plap.qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Badari Pulavarty <pbadari@gmail.com>
-Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On Thu, 27 Oct 2005, Badari Pulavarty wrote:
-> On Thu, 2005-10-27 at 08:26 -0700, Andrew Vasquez wrote:
-> > qlogicfc attaches to both 2100 and 2200 ISPs.  It seems you're then
-> > trying to load qla2xxx driver along with the 2300 and 2200 firmware
-> > loader modules.  The pci_request_regions() call during 2200 probing
-> > fails.
-> 
-> Hmm. This is happening because I have both qlogicfc and qla2200 as
-> modules ?
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Yes.  You don't need (unless there is a compeling reason) to compile
-qlogicfc (CONFIG_SCSI_QLOGIC_FC) as the qla2xxx driver along with the
-2200 and 2300 firmware mofules:
+---
 
-	CONFIG_SCSI_QLA2XXX=m
-	CONFIG_SCSI_QLA22XX=m
-	CONFIG_SCSI_QLA2300=m
+This patch is too large for an inline patch, please download the
+bzip'd patch from:
 
-will be fine.
+        ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.01.02k/2005-Resync-with-latest-released-ISP23xx-63xx-firmware-3.03.18.diff.bz2
 
-> > Badari, is there some reason you are using qlogicfc?  THe qla2xxx
-> > driver supports all QLogic ISP parts.
-> 
-> Not intentionally. I have qla2200, qla2300 cards in my machine.
-> I build all the qlogic drivers as modules.
-
-Could you send me your .config file?  I have a fealing you have and
-entry similar to the following:
-
-	CONFIG_SCSI_QLOGIC_FC=m
-
-in there.  Don't compile the qlogicfc driver.
-
-> I hate to admit it - but I do use modules for qlogic disks.
-
-Thats fine.
-
-> I can't seem to compile the qlogic drivers (2200, 2300) into the
-> kernel and boot without problems (consistently on all my machines 
-> - I run into few issues):
-> 
-> (1) Between kernels, sometimes probing order changes and my local
-> disks get probed last and screws up my boot process - I don't
-> think this is a qlogic problem.
-
-Not sure there, but the removal of the qlogicfc driver could help
-clear up some of the noise, like...
-
-> (2) Sometimes, one of the driver complains something like 
-> "PCI region already in use" and hangs on boot.
-
-this.  the qlogicfc driver is being loaded before qla2xxx and the
-supporting 2200 firmware module.
-
-> BTW, (2) happens even if its modules and I can't boot my
-> machine. Sometimes I had to boot with old kernel and hide
-> the modules - so boot process can't find them to workaround
-> the problem.
-> 
-> Is there a "dont-load-modules" option or don't load a specific
-> module option on boot ?
-
---
+-- 
 Andrew Vasquez
