@@ -1,67 +1,83 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH 1/2] libata: Remove dependence on host_set->dev for SAS
-Date: Thu, 27 Oct 2005 11:05:21 -0500
-Message-ID: <4360FAC1.8020409@us.ibm.com>
-References: <4341A91A.3020000@us.ibm.com> <434251E0.9060000@pobox.com>	 <58cb370e0510040322q1cb7a13bjfc6c7875140d20a9@mail.gmail.com> <58cb370e0510041356h780e7a5aifda0c232f677471e@mail.gmail.com> <43443E99.4090008@pobox.com> <435D5D83.1060201@us.ibm.com> <435D5DE5.7010306@us.ibm.com> <435E7105.4010105@pobox.com> <435E87E8.9010506@us.ibm.com> <435E8AC7.1080407@pobox.com> <435EB656.1040502@adaptec.com>
-Reply-To: brking@us.ibm.com
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: 2.6.14-rc5-mm1
+Date: Thu, 27 Oct 2005 09:48:50 -0700
+Message-ID: <20051027164850.GJ7889@plap.qlogic.org>
+References: <20051024014838.0dd491bb.akpm@osdl.org> <1130186927.6831.23.camel@localhost.localdomain> <20051024141646.6265c0da.akpm@osdl.org> <20051027152637.GC7889@plap.qlogic.org> <1130427867.23729.73.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <435EB656.1040502@adaptec.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Luben Tuikov <luben_tuikov@adaptec.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pat.qlogic.com ([198.70.193.2]:49883 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751268AbVJ0Qsv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Oct 2005 12:48:51 -0400
+Content-Disposition: inline
+In-Reply-To: <1130427867.23729.73.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Badari Pulavarty <pbadari@gmail.com>
+Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Luben Tuikov wrote:
-> Would it be a good idea to abstract most of this in
-> say something like 
+On Thu, 27 Oct 2005, Badari Pulavarty wrote:
+> On Thu, 2005-10-27 at 08:26 -0700, Andrew Vasquez wrote:
+> > qlogicfc attaches to both 2100 and 2200 ISPs.  It seems you're then
+> > trying to load qla2xxx driver along with the 2300 and 2200 firmware
+> > loader modules.  The pci_request_regions() call during 2200 probing
+> > fails.
 > 
-> 	struct satl_device_struct {
-> 		-- data... ;
-> 		
-> 		/* The registering entity calls this for SATL to translate
-> 		   to an ATA task(s) and execute. Filled in by the SATL Layer. */
-> 		int (*execute_scsi_task)(struct satl_device_struct *, struct scsi_cmnd *);
-> 		
-> 		/* SATL layer calls this to send an ata_task to the device.
-> 		   Filled in by the registering entity. */
-> 		int (*execute_ata_task)(struct satl_device_struct *, struct ata_task *);
+> Hmm. This is happening because I have both qlogicfc and qla2200 as
+> modules ?
+
+Yes.  You don't need (unless there is a compeling reason) to compile
+qlogicfc (CONFIG_SCSI_QLOGIC_FC) as the qla2xxx driver along with the
+2200 and 2300 firmware mofules:
+
+	CONFIG_SCSI_QLA2XXX=m
+	CONFIG_SCSI_QLA22XX=m
+	CONFIG_SCSI_QLA2300=m
+
+will be fine.
+
+> > Badari, is there some reason you are using qlogicfc?  THe qla2xxx
+> > driver supports all QLogic ISP parts.
 > 
-> 		-- recovery methods common to SATA-over-anything; filled in by registering
-> 			\ entity
-> 	};
+> Not intentionally. I have qla2200, qla2300 cards in my machine.
+> I build all the qlogic drivers as modules.
+
+Could you send me your .config file?  I have a fealing you have and
+entry similar to the following:
+
+	CONFIG_SCSI_QLOGIC_FC=m
+
+in there.  Don't compile the qlogicfc driver.
+
+> I hate to admit it - but I do use modules for qlogic disks.
+
+Thats fine.
+
+> I can't seem to compile the qlogic drivers (2200, 2300) into the
+> kernel and boot without problems (consistently on all my machines 
+> - I run into few issues):
 > 
-> (ata task to be properly constructed: FIS, sg lists, etc.)
+> (1) Between kernels, sometimes probing order changes and my local
+> disks get probed last and screws up my boot process - I don't
+> think this is a qlogic problem.
+
+Not sure there, but the removal of the qlogicfc driver could help
+clear up some of the noise, like...
+
+> (2) Sometimes, one of the driver complains something like 
+> "PCI region already in use" and hangs on boot.
+
+this.  the qlogicfc driver is being loaded before qla2xxx and the
+supporting 2200 firmware module.
+
+> BTW, (2) happens even if its modules and I can't boot my
+> machine. Sometimes I had to boot with old kernel and hide
+> the modules - so boot process can't find them to workaround
+> the problem.
 > 
-> Then libata-scsi would only have to export two (2) functions:
-> 
-> int  satl_register_device(struct satl_device_struct *);
-> void satl_unregister_device(struct satl_device_struct *);
-> 
-> EXPORT_SYMBOL_GPL(satl_register_device);
-> EXPORT_SYMBOL_GPL(satl_unregister_device);
+> Is there a "dont-load-modules" option or don't load a specific
+> module option on boot ?
 
-Where would you be calling satl_register_device in your SAS class?
-
-It looks like this would force libata to be the one to attach the ULD,
-which would also force it to create a separate scsi_host for each
-device, which is something I wanted to avoid. I think you really need a
-libata API that the LLDD can call from its queuecommand function
-to translate and send a command, which then calls back into the LLDD
-to send the FIS to the hardware. This allows for all SAS/SATA devices
-under the same HBA to show up under the same scsi_host.
-
-
-Brian
-
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
-
-
-
-
+--
+Andrew Vasquez
