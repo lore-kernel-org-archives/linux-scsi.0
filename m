@@ -1,32 +1,31 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH/RFC] SCSI mid-layer suspend/resume
-Date: Thu, 27 Oct 2005 08:51:35 -0400
-Message-ID: <4360CD57.7080208@rtr.ca>
-References: <20051024160531.7d879a7c.randy_d_dunlap@linux.intel.com>	 <435D6E47.1030409@pobox.com>	 <20051025142529.7b23bbc0.randy_d_dunlap@linux.intel.com>	 <435EA5AB.9010805@pobox.com>  <43604B14.7080903@rtr.ca> <1130404638.8768.4.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: slow external firewire drive
+Date: Thu, 27 Oct 2005 09:42:25 -0500
+Message-ID: <1130424145.3369.4.camel@mulgrave>
+References: <20051027015655.GC14010@toucan.gentoo.org>
+	 <43608663.7020103@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1130404638.8768.4.camel@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-To: Erik Slagter <erik@slagter.name>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Randy Dunlap <randy_d_dunlap@linux.intel.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, axboe@suse.de, hch@lst.de
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:9177 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750783AbVJ0Oma (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Oct 2005 10:42:30 -0400
+In-Reply-To: <43608663.7020103@s5r6.in-berlin.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi@vger.kernel.org, Eric Edgar <rocket@gentoo.org>, Matthew Wilcox <matthew@wil.cx>
 
-Erik Slagter wrote:
-> On Wed, 2005-10-26 at 23:35 -0400, Mark Lord wrote:
->  
->>I have an extra hard drive caddy for my Dell notebook,
->>with a different 2.5" drive mounted in it.
-..
-> Any idea how this extra drive is actually connected? I was thinking PATA
-> drive with SATA bridge, PATA directly (comes to mind...) or maybe it's
-> even a SATA drive connected directly...
+On Thu, 2005-10-27 at 09:48 +0200, Stefan Richter wrote:
+> I did not hear of a serious performance regression with that kernel yet. 
+> I tested 2.6.14-rc3 and -rc5 myself but they should behave like -rc4.
 
-Definitely, absolutely, I have it in the palm of my hand,
-this is a PATA drive.
+Yes, for unrelated reasons, I've done u320 testing with -rc5.  I can
+actually get it up to 320MB/s if I read and write entirely from the disk
+cache, so I think our current throughput is OK in the generic systems.
 
-Jeff suspects that there must be a SATA bridge
-inside the notebook itself.
+James
 
-Cheers
+
