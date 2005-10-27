@@ -1,44 +1,40 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: [PATCH/RFC] SCSI mid-layer suspend/resume
-Date: Wed, 26 Oct 2005 23:35:48 -0400
-Message-ID: <43604B14.7080903@rtr.ca>
-References: <20051024160531.7d879a7c.randy_d_dunlap@linux.intel.com>	<435D6E47.1030409@pobox.com> <20051025142529.7b23bbc0.randy_d_dunlap@linux.intel.com> <435EA5AB.9010805@pobox.com>
+From: <linux-scsi@vger.kernel.org>
+Subject: ahorre combustible
+Date: Thu, 27 Oct 2005 05:22:37 +0000 (UTC)
+Message-ID: <171a001c5db7f$c3a11310$1400a8c0@hire4b08e372f0>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <435EA5AB.9010805@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Randy Dunlap <randy_d_dunlap@linux.intel.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, axboe@suse.de, hch@lst.de
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 62-15-156-144.inversas.jazztel.es ([62.15.156.144]:32834 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S964968AbVJ0FUo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Oct 2005 01:20:44 -0400
+Received: from hire4b08e372f0 ([192.168.0.20])
+	by localhost.localdomain (8.13.4/8.13.4/Debian-3) with SMTP id j9S5N90J029528
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Oct 2005 07:23:10 +0200
+Date: Fri, 28 Oct 2005 07:23:43 +0200
+Content-Class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Jeff Garzik wrote:
->
-> We have emperical evidence that Jens' patch works on SATA, so see if the 
-> two patches can meet in the middle somewhere?
+No sucumbas ante los exagerados precios de la gasolina y el diesel
 
-And just to muddy the waters somewhat..
+La Ubiee PowerPill es un reconocido producto que brinda beneficios a los motores de gasolina y diesel de todos los tamaos y pases.
 
-I have an extra hard drive caddy for my Dell notebook,
-with a different 2.5" drive mounted in it.
+Puede ser usado para optimizar la fuerza del motor, no daa al medio ambiente, reduce los depsitos de carbn, y maximiza la economa del combustible, por lo tanto, reduce los costos de operacin.
 
-When using THAT drive, my machine cannot resume successully
-from suspend-to-RAM.  Hangs with the hard drive light on solid
-some of the time, and not on other times.
-Drove me crazy figuring this out, but I eventually tried a
-different drive and it worked fine.
+Dedique solo 5 minutos a examinar este enlace y vera lo fcil que es ahorrar hasta un 42% de combustible
 
-So.. not all drives work for me.
+http://www.bestsevendiamonds.com/past/
 
-Now, the drive that doesn't work with suspend/resume (RAM)
-happens to claim to support Advanced Power Management.
-Except that "hdparm -Bxx" has zero effect on it -- cannot enable
-it or modify the setting in anyway.
+Si no desea recibir ns publicidad use el siguiente enlace y anote su direccin e.mail. Es la unica manera para dar de baja su sireccin
 
-My other drives also have the APM feature, and have it turned *on*,
-and "hdparm -Bxx" can be used to turn it on/off and modify the setting.
+http://www.bestsevendiamonds.com/past/bajas.asp
 
-Very weird, possibly not related to the resume failures.  Or maybe.
+Muchas gracias
 
-Cheers
+
+
