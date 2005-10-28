@@ -1,30 +1,57 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 11/12] qla2xxx: Add an 'Issue LIP' device attribute.
-Date: Fri, 28 Oct 2005 23:53:21 +0100
-Message-ID: <20051028225321.GB13958@infradead.org>
-References: <20051013231534.27191.19815.sendpatchset@plap.qlogic.com> <20051013231724.27191.33356.sendpatchset@plap.qlogic.com> <20051014094843.GB22347@infradead.org> <20051027230337.GE7889@plap.qlogic.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/2] remove Scsi_Host.eh_active
+Date: Sat, 29 Oct 2005 01:02:43 +0200
+Message-ID: <20051028230242.GB13083@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:55500 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1030307AbVJ1WxX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Oct 2005 18:53:23 -0400
+Received: from verein.lst.de ([213.95.11.210]:22711 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S1750700AbVJ1XCp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Oct 2005 19:02:45 -0400
 Content-Disposition: inline
-In-Reply-To: <20051027230337.GE7889@plap.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Smart <james.smart@emulex.com>
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Oct 27, 2005 at 04:03:37PM -0700, Andrew Vasquez wrote:
-> Ok, here's a patch to add such a common API for fc transport users.
-> Relevant LLD changes (lpfc and qla2xxx) also present.
-> 
-> Reasonable?
+now that the abuse in qla2xxx is gone this field can be remove.
 
-Looks good, thanks.
 
-And sorry for not noticing that lpfc sneaked it in already, otherwise
-I would have made Emulex do this :)
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
+Index: linux-2.6/drivers/scsi/scsi_error.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/scsi_error.c	2005-10-22 13:33:15.000000000 +0200
++++ linux-2.6/drivers/scsi/scsi_error.c	2005-10-24 22:29:31.000000000 +0200
+@@ -1613,8 +1613,6 @@
+ 			printk("Error handler scsi_eh_%d waking up\n",
+ 				shost->host_no));
+ 
+-		shost->eh_active = 1;
+-
+ 		/*
+ 		 * We have a host that is failing for some reason.  Figure out
+ 		 * what we need to do to get it up and online again (if we can).
+@@ -1625,8 +1623,6 @@
+ 		else
+ 			scsi_unjam_host(shost);
+ 
+-		shost->eh_active = 0;
+-
+ 		/*
+ 		 * Note - if the above fails completely, the action is to take
+ 		 * individual devices offline and flush the queue of any
+Index: linux-2.6/include/scsi/scsi_host.h
+===================================================================
+--- linux-2.6.orig/include/scsi/scsi_host.h	2005-09-20 23:58:44.000000000 +0200
++++ linux-2.6/include/scsi/scsi_host.h	2005-10-24 22:29:31.000000000 +0200
+@@ -469,8 +469,6 @@
+ 	struct task_struct    * ehandler;  /* Error recovery thread. */
+ 	struct semaphore      * eh_action; /* Wait for specific actions on the
+                                           host. */
+-	unsigned int            eh_active:1; /* Indicates the eh thread is awake and active if
+-                                          this is true. */
+ 	wait_queue_head_t       host_wait;
+ 	struct scsi_host_template *hostt;
+ 	struct scsi_transport_template *transportt;
