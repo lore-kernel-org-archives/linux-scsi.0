@@ -1,56 +1,103 @@
-From: Steven Rostedt <rostedt@goodmis.org>
-Subject: Re: [patch 2/5] scsi_error thread exits in TASK_INTERRUPTIBLE
-	state.
-Date: Fri, 28 Oct 2005 18:28:22 -0400
-Message-ID: <1130538502.6169.21.camel@localhost.localdomain>
-References: <200510282207.j9SM7WuB022257@shell0.pdx.osdl.net>
-	 <1130538105.3328.21.camel@mulgrave>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: eh_active checks in qla2xxx error handling
+Date: Fri, 28 Oct 2005 23:48:23 +0100
+Message-ID: <20051028224823.GA13887@infradead.org>
+References: <20050906122028.GA22963@lst.de> <20050920202553.GJ19002@plap.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-03.nyroc.rr.com ([24.24.2.57]:34218 "EHLO
-	ms-smtp-03.nyroc.rr.com") by vger.kernel.org with ESMTP
-	id S1751911AbVJ1W2c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Oct 2005 18:28:32 -0400
-In-Reply-To: <1130538105.3328.21.camel@mulgrave>
+Received: from pentafluge.infradead.org ([213.146.154.40]:30359 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751953AbVJ1Ws0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Oct 2005 18:48:26 -0400
+Content-Disposition: inline
+In-Reply-To: <20050920202553.GJ19002@plap.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: akpm@osdl.org, linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Duane Grigsby <duane.grigsby@qlogic.com>
 
-On Fri, 2005-10-28 at 17:21 -0500, James Bottomley wrote:
-> On Fri, 2005-10-28 at 15:07 -0700, akpm@osdl.org wrote:
-> > From: Steven Rostedt <rostedt@goodmis.org>
-> > 
-> > Found in the -rt patch set.  The scsi_error thread likely will be in the
-> > TASK_INTERRUPTIBLE state upon exit.  This patch fixes this bug.
-> > 
-> > Signed-off-by: Steven Rostedt <rostedt@goodmis.org>
-> > Cc: James Bottomley <James.Bottomley@steeleye.com>
-> > Signed-off-by: Andrew Morton <akpm@osdl.org>
-> > ---
-> > 
-> >  drivers/scsi/scsi_error.c |    1 +
-> >  1 files changed, 1 insertion(+)
-> > 
-> > diff -puN drivers/scsi/scsi_error.c~scsi_error-thread-exits-in-task_interruptible-state drivers/scsi/scsi_error.c
-> > --- 25/drivers/scsi/scsi_error.c~scsi_error-thread-exits-in-task_interruptible-state	Fri Oct 28 15:06:03 2005
-> > +++ 25-akpm/drivers/scsi/scsi_error.c	Fri Oct 28 15:06:03 2005
-> > @@ -1644,6 +1644,7 @@ int scsi_error_handler(void *data)
-> >  		scsi_restart_operations(shost);
-> >  		set_current_state(TASK_INTERRUPTIBLE);
-> >  	}
-> > +	__set_current_state(TASK_RUNNING);
-> ^^^^^^^^^^^^^^^^^^^^^
-> >  	__set_current_state(TASK_RUNNING);
-> ^^^^^^^^^^^^^^^^^^^^^
+On Tue, Sep 20, 2005 at 01:25:53PM -0700, Andrew Vasquez wrote:
+> On Tue, 06 Sep 2005, Christoph Hellwig wrote:
 > 
-> Mismerge, I think (of a patch which is already present)
+> > qla2xxx is the only driver looking at eh_active, and doing the wait
+> > for oustanding commands only from EH thread resets but not from the
+> > ioctls looks rather wrong to me.  Do you remember the rational for it?
+> 
+> As Duane mentioned, this looks to be some residual from the 2.4 era
+> which unfortunately I've yet to find a reasonably valid justification
+> for...Alas, another loss of history...
+> 
+> ---
+> Here's a patch which drops the eh_active checks in the qla2xxx
+> eh_handler callbacks.
+> 
+> Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Yeah, I noticed that Linus pulled it into the 2.6.14 release, since it
-was a small minor fix. So this can be dropped.
-
--- Steve
+James, can you put this patch in?  I have a patch pending that depends
+on it.
 
 
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -797,29 +797,19 @@ qla2xxx_eh_device_reset(struct scsi_cmnd
+ 		goto eh_dev_reset_done;
+ 	}
+ 
+-	/*
+-	 * If we are coming down the EH path, wait for all commands to
+-	 * complete for the device.
+-	 */
+-	if (cmd->device->host->eh_active) {
+-		if (qla2x00_eh_wait_for_pending_target_commands(ha, id))
+-			ret = FAILED;
+-
+-		if (ret == FAILED) {
+-			DEBUG3(printk("%s(%ld): failed while waiting for "
+-			    "commands\n", __func__, ha->host_no));
+-			qla_printk(KERN_INFO, ha,
+-			    "%s: failed while waiting for commands\n",
+-			    __func__);
+-
+-			goto eh_dev_reset_done;
+-		}
+-	}
+-
+-	qla_printk(KERN_INFO, ha,
+-	    "scsi(%ld:%d:%d): DEVICE RESET SUCCEEDED.\n", ha->host_no, id, lun);
++	/* Flush outstanding commands. */
++	if (qla2x00_eh_wait_for_pending_target_commands(ha, id))
++		ret = FAILED;
++	if (ret == FAILED) {
++		DEBUG3(printk("%s(%ld): failed while waiting for commands\n",
++		    __func__, ha->host_no));
++		qla_printk(KERN_INFO, ha,
++		    "%s: failed while waiting for commands\n", __func__);
++	} else
++		qla_printk(KERN_INFO, ha,
++		    "scsi(%ld:%d:%d): DEVICE RESET SUCCEEDED.\n", ha->host_no,
++		    id, lun);
+ 
+-eh_dev_reset_done:
+ 	return ret;
+ }
+ 
+@@ -921,10 +911,9 @@ qla2xxx_eh_bus_reset(struct scsi_cmnd *c
+ 	if (ret == FAILED)
+ 		goto eh_bus_reset_done;
+ 
+-	/* Waiting for our command in done_queue to be returned to OS.*/
+-	if (cmd->device->host->eh_active)
+-		if (!qla2x00_eh_wait_for_pending_commands(ha))
+-			ret = FAILED;
++	/* Flush outstanding commands. */
++	if (!qla2x00_eh_wait_for_pending_commands(ha))
++		ret = FAILED;
+ 
+ eh_bus_reset_done:
+ 	qla_printk(KERN_INFO, ha, "%s: reset %s\n", __func__,
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
