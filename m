@@ -1,61 +1,61 @@
 From: akpm@osdl.org
-Subject: [patch 4/5] Fix issue reported by coverity in drivers/scsi/scsi_ioctl.c
+Subject: [patch 3/5] scsi disk: report size without overflow
 Date: Fri, 28 Oct 2005 15:07:51 -0700
-Message-ID: <200510282207.j9SM7XKW022284@shell0.pdx.osdl.net>
+Message-ID: <200510282207.j9SM7XvR022280@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:48310 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1030263AbVJ1WHk (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:44214 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751886AbVJ1WHf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Oct 2005 18:07:40 -0400
+	Fri, 28 Oct 2005 18:07:35 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, jchandra@digeo.com, c.jayachandran@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rdunlap@xenotime.net
 
 
-From: "Jayachandran C." <jchandra@digeo.com>
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-This patch attempts to fix an issue found in drivers/scsi/scsi_ioctl.c by
-Coverity.
+With CONFIG_LBD=n, 'sz' (32 bits) can overflow when capacity is multiplied
+(even * 2), as seen in a report from Dale Blount on lkml.  Also make sure
+that 'mb' will not overflow.
 
-Error reported:
-CID: 3437
-Checker: FORWARD_NULL (help)
-File: /export2/p4-coverity/mc2/linux26/drivers/scsi/scsi_ioctl.c
-Function: scsi_ioctl_send_command
-Description: Variable "buf" tracked as NULL was passed to a function that dereferences it.
-
-Patch description:
-buf can be NULL if inlen and outlen are both 0. This patch adds check if the
-length is non-zero before calling copy from/to user.
-
-Signed-off-by: Jayachandran C. <c.jayachandran@gmail.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
 Signed-off-by: Andrew Morton <akpm@osdl.org>
 ---
 
- drivers/scsi/scsi_ioctl.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/sd.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
-diff -puN drivers/scsi/scsi_ioctl.c~fix-issue-reported-by-coverity-in-drivers-scsi-scsi_ioctlc drivers/scsi/scsi_ioctl.c
---- 25/drivers/scsi/scsi_ioctl.c~fix-issue-reported-by-coverity-in-drivers-scsi-scsi_ioctlc	Fri Oct 28 15:06:39 2005
-+++ 25-akpm/drivers/scsi/scsi_ioctl.c	Fri Oct 28 15:06:39 2005
-@@ -281,7 +281,7 @@ int scsi_ioctl_send_command(struct scsi_
- 	 * Obtain the data to be sent to the device (if any).
- 	 */
+diff -puN drivers/scsi/sd.c~scsi-disk-report-size-without-overflow drivers/scsi/sd.c
+--- 25/drivers/scsi/sd.c~scsi-disk-report-size-without-overflow	Fri Oct 28 15:06:07 2005
++++ 25-akpm/drivers/scsi/sd.c	Fri Oct 28 15:06:07 2005
+@@ -49,6 +49,7 @@
+ #include <linux/blkpg.h>
+ #include <linux/kref.h>
+ #include <linux/delay.h>
++#include <asm/div64.h>
+ #include <asm/uaccess.h>
  
--	if(copy_from_user(buf, cmd_in + cmdlen, inlen))
-+	if(inlen && copy_from_user(buf, cmd_in + cmdlen, inlen))
- 		goto error;
+ #include <scsi/scsi.h>
+@@ -1253,16 +1254,16 @@ got_data:
+ 		 * Jacques Gelinas (Jacques@solucorp.qc.ca)
+ 		 */
+ 		int hard_sector = sector_size;
+-		sector_t sz = sdkp->capacity * (hard_sector/256);
++		u64 sz = sdkp->capacity * (hard_sector/256);
+ 		request_queue_t *queue = sdp->request_queue;
+-		sector_t mb;
++		u64 mb;
  
- 	switch (opcode) {
-@@ -325,7 +325,7 @@ int scsi_ioctl_send_command(struct scsi_
- 		if (copy_to_user(cmd_in, sense, sb_len))
- 			result = -EFAULT;
- 	} else {
--		if (copy_to_user(cmd_in, buf, outlen))
-+		if (outlen && copy_to_user(cmd_in, buf, outlen))
- 			result = -EFAULT;
- 	}	
+ 		blk_queue_hardsect_size(queue, hard_sector);
+ 		/* avoid 64-bit division on 32-bit platforms */
+ 		mb = sz >> 1;
+-		sector_div(sz, 1250);
++		do_div(sz, 1250);
+ 		mb -= sz - 974;
+-		sector_div(mb, 1950);
++		do_div(mb, 1950);
  
+ 		printk(KERN_NOTICE "SCSI device %s: "
+ 		       "%llu %d-byte hdwr sectors (%llu MB)\n",
 _
