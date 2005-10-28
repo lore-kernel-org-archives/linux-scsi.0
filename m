@@ -1,116 +1,97 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/2] tidy up scsi_error_handler
-Date: Sat, 29 Oct 2005 01:01:55 +0200
-Message-ID: <20051028230155.GA13083@lst.de>
+Subject: [PATCH] remove scsi_wait_req
+Date: Sat, 29 Oct 2005 01:09:12 +0200
+Message-ID: <20051028230912.GA13193@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:21431 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S1751896AbVJ1XCI (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:28599 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S1750749AbVJ1XJP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Oct 2005 19:02:08 -0400
+	Fri, 28 Oct 2005 19:09:15 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-adjust comments, remove a useless cast and remove a write-only variable.
+This function has been superceeded by the block request based interfaces
+and is unused (except for the uncompilable cpqfc driver).
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/drivers/scsi/scsi_error.c
+Index: linux-2.6/drivers/scsi/scsi_lib.c
 ===================================================================
---- linux-2.6.orig/drivers/scsi/scsi_error.c	2005-10-22 13:25:08.000000000 +0200
-+++ linux-2.6/drivers/scsi/scsi_error.c	2005-10-22 13:33:15.000000000 +0200
-@@ -1577,48 +1577,41 @@
+--- linux-2.6.orig/drivers/scsi/scsi_lib.c	2005-10-28 19:49:55.000000000 +0200
++++ linux-2.6/drivers/scsi/scsi_lib.c	2005-10-29 01:06:41.000000000 +0200
+@@ -254,55 +254,6 @@
  }
+ EXPORT_SYMBOL(scsi_do_req);
  
+-/* This is the end routine we get to if a command was never attached
+- * to the request.  Simply complete the request without changing
+- * rq_status; this will cause a DRIVER_ERROR. */
+-static void scsi_wait_req_end_io(struct request *req)
+-{
+-	BUG_ON(!req->waiting);
+-
+-	complete(req->waiting);
+-}
+-
+-void scsi_wait_req(struct scsi_request *sreq, const void *cmnd, void *buffer,
+-		   unsigned bufflen, int timeout, int retries)
+-{
+-	DECLARE_COMPLETION(wait);
+-	int write = (sreq->sr_data_direction == DMA_TO_DEVICE);
+-	struct request *req;
+-
+-	req = blk_get_request(sreq->sr_device->request_queue, write,
+-			      __GFP_WAIT);
+-	if (bufflen && blk_rq_map_kern(sreq->sr_device->request_queue, req,
+-				       buffer, bufflen, __GFP_WAIT)) {
+-		sreq->sr_result = DRIVER_ERROR << 24;
+-		blk_put_request(req);
+-		return;
+-	}
+-
+-	req->flags |= REQ_NOMERGE;
+-	req->waiting = &wait;
+-	req->end_io = scsi_wait_req_end_io;
+-	req->cmd_len = COMMAND_SIZE(((u8 *)cmnd)[0]);
+-	req->sense = sreq->sr_sense_buffer;
+-	req->sense_len = 0;
+-	memcpy(req->cmd, cmnd, req->cmd_len);
+-	req->timeout = timeout;
+-	req->flags |= REQ_BLOCK_PC;
+-	req->rq_disk = NULL;
+-	blk_insert_request(sreq->sr_device->request_queue, req,
+-			   sreq->sr_data_direction == DMA_TO_DEVICE, NULL);
+-	wait_for_completion(&wait);
+-	sreq->sr_request->waiting = NULL;
+-	sreq->sr_result = req->errors;
+-	if (req->errors)
+-		sreq->sr_result |= (DRIVER_ERROR << 24);
+-
+-	blk_put_request(req);
+-}
+-
+-EXPORT_SYMBOL(scsi_wait_req);
+-
  /**
-- * scsi_error_handler - Handle errors/timeouts of SCSI cmds.
-+ * scsi_error_handler - SCSI error handler thread
-  * @data:	Host for which we are running.
-  *
-  * Notes:
-- *    This is always run in the context of a kernel thread.  The idea is
-- *    that we start this thing up when the kernel starts up (one per host
-- *    that we detect), and it immediately goes to sleep and waits for some
-- *    event (i.e. failure).  When this takes place, we have the job of
-- *    trying to unjam the bus and restarting things.
-+ *    This is the main error handling loop.  This is run as a kernel thread
-+ *    for every SCSI host and handles all error handling activity.
-  **/
- int scsi_error_handler(void *data)
- {
--	struct Scsi_Host *shost = (struct Scsi_Host *) data;
--	int rtn;
-+	struct Scsi_Host *shost = data;
+  * scsi_execute - insert request and wait for the result
+  * @sdev:	scsi device
+Index: linux-2.6/include/scsi/scsi_request.h
+===================================================================
+--- linux-2.6.orig/include/scsi/scsi_request.h	2005-10-28 19:49:56.000000000 +0200
++++ linux-2.6/include/scsi/scsi_request.h	2005-10-29 01:06:11.000000000 +0200
+@@ -47,9 +47,6 @@
  
- 	current->flags |= PF_NOFREEZE;
- 
--	
- 	/*
--	 * Note - we always use TASK_INTERRUPTIBLE even if the module
--	 * was loaded as part of the kernel.  The reason is that
--	 * UNINTERRUPTIBLE would cause this thread to be counted in
--	 * the load average as a running process, and an interruptible
--	 * wait doesn't.
-+	 * We use TASK_INTERRUPTIBLE so that the thread is not
-+	 * counted against the load average as a running process.
-+	 * We never actually get interrupted because kthread_run
-+	 * disables singal delivery for the created thread.
- 	 */
- 	set_current_state(TASK_INTERRUPTIBLE);
- 	while (!kthread_should_stop()) {
- 		if (shost->host_failed == 0 ||
- 		    shost->host_failed != shost->host_busy) {
--			SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler"
--							  " scsi_eh_%d"
--							  " sleeping\n",
--							  shost->host_no));
-+			SCSI_LOG_ERROR_RECOVERY(1,
-+				printk("Error handler scsi_eh_%d sleeping\n",
-+					shost->host_no));
- 			schedule();
- 			set_current_state(TASK_INTERRUPTIBLE);
- 			continue;
- 		}
- 
- 		__set_current_state(TASK_RUNNING);
--		SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler"
--						  " scsi_eh_%d waking"
--						  " up\n",shost->host_no));
-+		SCSI_LOG_ERROR_RECOVERY(1,
-+			printk("Error handler scsi_eh_%d waking up\n",
-+				shost->host_no));
- 
- 		shost->eh_active = 1;
- 
-@@ -1628,7 +1621,7 @@
- 		 * If we fail, we end up taking the thing offline.
- 		 */
- 		if (shost->hostt->eh_strategy_handler) 
--			rtn = shost->hostt->eh_strategy_handler(shost);
-+			shost->hostt->eh_strategy_handler(shost);
- 		else
- 			scsi_unjam_host(shost);
- 
-@@ -1644,15 +1637,10 @@
- 		scsi_restart_operations(shost);
- 		set_current_state(TASK_INTERRUPTIBLE);
- 	}
--
- 	__set_current_state(TASK_RUNNING);
- 
--	SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler scsi_eh_%d"
--					  " exiting\n",shost->host_no));
--
--	/*
--	 * Make sure that nobody tries to wake us up again.
--	 */
-+	SCSI_LOG_ERROR_RECOVERY(1,
-+		printk("Error handler scsi_eh_%d exiting\n", shost->host_no));
- 	shost->ehandler = NULL;
- 	return 0;
- }
+ extern struct scsi_request *scsi_allocate_request(struct scsi_device *, gfp_t);
+ extern void scsi_release_request(struct scsi_request *);
+-extern void scsi_wait_req(struct scsi_request *, const void *cmnd,
+-			  void *buffer, unsigned bufflen,
+-			  int timeout, int retries);
+ extern void scsi_do_req(struct scsi_request *, const void *cmnd,
+ 			void *buffer, unsigned bufflen,
+ 			void (*done) (struct scsi_cmnd *),
