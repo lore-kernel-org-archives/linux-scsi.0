@@ -1,41 +1,40 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 0/2] libata: MODE SELECT
-Date: Fri, 28 Oct 2005 15:59:51 -0400
-Message-ID: <43628337.30208@pobox.com>
-References: <435B2C47.8070708@torque.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <435B2C47.8070708@torque.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, htejun@gmail.com
+From: akpm@osdl.org
+Subject: [patch 2/5] scsi_error thread exits in TASK_INTERRUPTIBLE state.
+Date: Fri, 28 Oct 2005 15:07:50 -0700
+Message-ID: <200510282207.j9SM7WuB022257@shell0.pdx.osdl.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.osdl.org ([65.172.181.4]:49846 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1030263AbVJ1WHn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Oct 2005 18:07:43 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-Douglas Gilbert wrote:
-> Jeff,
-> Here is another shot at adding MODE SELECT to
-> libata. I have used sat-r06, sbc-3 and spc-4 as
-> a guide. Compliance on the ATA side has some issues:
->   - no mechanism to issue 2 or more ATA commands
->     when translating a single SCSI command [in the
->     upstream branch, there have been patches ...]
->   - relies on the dev->id array (IDENTIFY DEVICE response)
->     always being up to date. Despite assurances I cannot
->     see how that is the case when multiple hosts
->     (initiators) can access a SATA disk.
-> 
-> This patch is broken into two parts and is against
-> libata-dev's upstream branch:
->   1) strengthen MODE SENSE processing and make
->      default mode pages visible within libata-scsi.c
->   2) add MODE SELECT SCSI command support.
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, rostedt@goodmis.org
 
 
-Thanks for splitting it up.  I'm going to mess around with the best way 
-to issue multiple commands, and hold on to your patch #2 until that happens.
+From: Steven Rostedt <rostedt@goodmis.org>
 
-	Jeff
+Found in the -rt patch set.  The scsi_error thread likely will be in the
+TASK_INTERRUPTIBLE state upon exit.  This patch fixes this bug.
 
+Signed-off-by: Steven Rostedt <rostedt@goodmis.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Andrew Morton <akpm@osdl.org>
+---
 
+ drivers/scsi/scsi_error.c |    1 +
+ 1 files changed, 1 insertion(+)
+
+diff -puN drivers/scsi/scsi_error.c~scsi_error-thread-exits-in-task_interruptible-state drivers/scsi/scsi_error.c
+--- 25/drivers/scsi/scsi_error.c~scsi_error-thread-exits-in-task_interruptible-state	Fri Oct 28 15:06:03 2005
++++ 25-akpm/drivers/scsi/scsi_error.c	Fri Oct 28 15:06:03 2005
+@@ -1644,6 +1644,7 @@ int scsi_error_handler(void *data)
+ 		scsi_restart_operations(shost);
+ 		set_current_state(TASK_INTERRUPTIBLE);
+ 	}
++	__set_current_state(TASK_RUNNING);
+ 
+ 	__set_current_state(TASK_RUNNING);
+ 
+_
