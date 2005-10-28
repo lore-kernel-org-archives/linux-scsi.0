@@ -1,57 +1,44 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/2] remove Scsi_Host.eh_active
-Date: Sat, 29 Oct 2005 01:02:43 +0200
-Message-ID: <20051028230242.GB13083@lst.de>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: HEADS UP for QLA2100 users
+Date: Fri, 28 Oct 2005 16:03:03 -0700
+Message-ID: <20051028230303.GI15018@plap.qlogic.org>
+References: <20051024014838.0dd491bb.akpm@osdl.org> <1130186927.6831.23.camel@localhost.localdomain> <20051024141646.6265c0da.akpm@osdl.org> <20051027152637.GC7889@plap.qlogic.org> <20051027190227.GA16211@infradead.org> <20051027215313.GB7889@plap.qlogic.org> <20051028225155.GA13958@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:22711 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S1750700AbVJ1XCp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Oct 2005 19:02:45 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750734AbVJ1XDF@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20051028225155.GA13958@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@steeleye.com
-Cc: linux-scsi@vger.kernel.org
 
-now that the abuse in qla2xxx is gone this field can be remove.
+On Fri, 28 Oct 2005, Christoph Hellwig wrote:
 
+> On Thu, Oct 27, 2005 at 02:53:13PM -0700, Andrew Vasquez wrote:
+> 
+> > I'm still in the process of ironing out the .bin distribution details
+> > locally, but perhaps once we migrate to firmware-loading exclusively
+> > via request_firmware(), the (small?) contigent of 2100 could use the
+> > EF variant I referenced above.
+> 
+> You know, I'm in favour of getting firmware images in the kernel image,
+> but what's the problem of simply downgrading the 2100 firmware until
+> we get rid of the builtin firmware for all qla2xxx variants?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+I have no problems with submitting 1.17.38 EF for inclusion upstream.
+My only hope is that for the (other) 2100 user out there that use the
+latest 2100 firmware and are not experiencing problems, the downgrade
+does not break anything.
 
-Index: linux-2.6/drivers/scsi/scsi_error.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/scsi_error.c	2005-10-22 13:33:15.000000000 +0200
-+++ linux-2.6/drivers/scsi/scsi_error.c	2005-10-24 22:29:31.000000000 +0200
-@@ -1613,8 +1613,6 @@
- 			printk("Error handler scsi_eh_%d waking up\n",
- 				shost->host_no));
- 
--		shost->eh_active = 1;
--
- 		/*
- 		 * We have a host that is failing for some reason.  Figure out
- 		 * what we need to do to get it up and online again (if we can).
-@@ -1625,8 +1623,6 @@
- 		else
- 			scsi_unjam_host(shost);
- 
--		shost->eh_active = 0;
--
- 		/*
- 		 * Note - if the above fails completely, the action is to take
- 		 * individual devices offline and flush the queue of any
-Index: linux-2.6/include/scsi/scsi_host.h
-===================================================================
---- linux-2.6.orig/include/scsi/scsi_host.h	2005-09-20 23:58:44.000000000 +0200
-+++ linux-2.6/include/scsi/scsi_host.h	2005-10-24 22:29:31.000000000 +0200
-@@ -469,8 +469,6 @@
- 	struct task_struct    * ehandler;  /* Error recovery thread. */
- 	struct semaphore      * eh_action; /* Wait for specific actions on the
-                                           host. */
--	unsigned int            eh_active:1; /* Indicates the eh thread is awake and active if
--                                          this is true. */
- 	wait_queue_head_t       host_wait;
- 	struct scsi_host_template *hostt;
- 	struct scsi_transport_template *transportt;
+That's another reason I posed the following question:
+
+> > Could I get another informal count of 2100 users who are still having
+> > problems with qla2xxx?
+
+Perhaps I should also ask:
+
+	Who's running 2100 cards with the latest qla2xxx driver and
+	are experiencing no problems?
+
+--
+AV
