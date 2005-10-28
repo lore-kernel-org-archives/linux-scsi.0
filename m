@@ -1,44 +1,116 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: HEADS UP for QLA2100 users
-Date: Fri, 28 Oct 2005 16:03:03 -0700
-Message-ID: <20051028230303.GI15018@plap.qlogic.org>
-References: <20051024014838.0dd491bb.akpm@osdl.org> <1130186927.6831.23.camel@localhost.localdomain> <20051024141646.6265c0da.akpm@osdl.org> <20051027152637.GC7889@plap.qlogic.org> <20051027190227.GA16211@infradead.org> <20051027215313.GB7889@plap.qlogic.org> <20051028225155.GA13958@infradead.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/2] tidy up scsi_error_handler
+Date: Sat, 29 Oct 2005 01:01:55 +0200
+Message-ID: <20051028230155.GA13083@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750734AbVJ1XDF@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.210]:21431 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S1751896AbVJ1XCI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Oct 2005 19:02:08 -0400
 Content-Disposition: inline
-In-Reply-To: <20051028225155.GA13958@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 28 Oct 2005, Christoph Hellwig wrote:
+adjust comments, remove a useless cast and remove a write-only variable.
 
-> On Thu, Oct 27, 2005 at 02:53:13PM -0700, Andrew Vasquez wrote:
-> 
-> > I'm still in the process of ironing out the .bin distribution details
-> > locally, but perhaps once we migrate to firmware-loading exclusively
-> > via request_firmware(), the (small?) contigent of 2100 could use the
-> > EF variant I referenced above.
-> 
-> You know, I'm in favour of getting firmware images in the kernel image,
-> but what's the problem of simply downgrading the 2100 firmware until
-> we get rid of the builtin firmware for all qla2xxx variants?
 
-I have no problems with submitting 1.17.38 EF for inclusion upstream.
-My only hope is that for the (other) 2100 user out there that use the
-latest 2100 firmware and are not experiencing problems, the downgrade
-does not break anything.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-That's another reason I posed the following question:
-
-> > Could I get another informal count of 2100 users who are still having
-> > problems with qla2xxx?
-
-Perhaps I should also ask:
-
-	Who's running 2100 cards with the latest qla2xxx driver and
-	are experiencing no problems?
-
---
-AV
+Index: linux-2.6/drivers/scsi/scsi_error.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/scsi_error.c	2005-10-22 13:25:08.000000000 +0200
++++ linux-2.6/drivers/scsi/scsi_error.c	2005-10-22 13:33:15.000000000 +0200
+@@ -1577,48 +1577,41 @@
+ }
+ 
+ /**
+- * scsi_error_handler - Handle errors/timeouts of SCSI cmds.
++ * scsi_error_handler - SCSI error handler thread
+  * @data:	Host for which we are running.
+  *
+  * Notes:
+- *    This is always run in the context of a kernel thread.  The idea is
+- *    that we start this thing up when the kernel starts up (one per host
+- *    that we detect), and it immediately goes to sleep and waits for some
+- *    event (i.e. failure).  When this takes place, we have the job of
+- *    trying to unjam the bus and restarting things.
++ *    This is the main error handling loop.  This is run as a kernel thread
++ *    for every SCSI host and handles all error handling activity.
+  **/
+ int scsi_error_handler(void *data)
+ {
+-	struct Scsi_Host *shost = (struct Scsi_Host *) data;
+-	int rtn;
++	struct Scsi_Host *shost = data;
+ 
+ 	current->flags |= PF_NOFREEZE;
+ 
+-	
+ 	/*
+-	 * Note - we always use TASK_INTERRUPTIBLE even if the module
+-	 * was loaded as part of the kernel.  The reason is that
+-	 * UNINTERRUPTIBLE would cause this thread to be counted in
+-	 * the load average as a running process, and an interruptible
+-	 * wait doesn't.
++	 * We use TASK_INTERRUPTIBLE so that the thread is not
++	 * counted against the load average as a running process.
++	 * We never actually get interrupted because kthread_run
++	 * disables singal delivery for the created thread.
+ 	 */
+ 	set_current_state(TASK_INTERRUPTIBLE);
+ 	while (!kthread_should_stop()) {
+ 		if (shost->host_failed == 0 ||
+ 		    shost->host_failed != shost->host_busy) {
+-			SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler"
+-							  " scsi_eh_%d"
+-							  " sleeping\n",
+-							  shost->host_no));
++			SCSI_LOG_ERROR_RECOVERY(1,
++				printk("Error handler scsi_eh_%d sleeping\n",
++					shost->host_no));
+ 			schedule();
+ 			set_current_state(TASK_INTERRUPTIBLE);
+ 			continue;
+ 		}
+ 
+ 		__set_current_state(TASK_RUNNING);
+-		SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler"
+-						  " scsi_eh_%d waking"
+-						  " up\n",shost->host_no));
++		SCSI_LOG_ERROR_RECOVERY(1,
++			printk("Error handler scsi_eh_%d waking up\n",
++				shost->host_no));
+ 
+ 		shost->eh_active = 1;
+ 
+@@ -1628,7 +1621,7 @@
+ 		 * If we fail, we end up taking the thing offline.
+ 		 */
+ 		if (shost->hostt->eh_strategy_handler) 
+-			rtn = shost->hostt->eh_strategy_handler(shost);
++			shost->hostt->eh_strategy_handler(shost);
+ 		else
+ 			scsi_unjam_host(shost);
+ 
+@@ -1644,15 +1637,10 @@
+ 		scsi_restart_operations(shost);
+ 		set_current_state(TASK_INTERRUPTIBLE);
+ 	}
+-
+ 	__set_current_state(TASK_RUNNING);
+ 
+-	SCSI_LOG_ERROR_RECOVERY(1, printk("Error handler scsi_eh_%d"
+-					  " exiting\n",shost->host_no));
+-
+-	/*
+-	 * Make sure that nobody tries to wake us up again.
+-	 */
++	SCSI_LOG_ERROR_RECOVERY(1,
++		printk("Error handler scsi_eh_%d exiting\n", shost->host_no));
+ 	shost->ehandler = NULL;
+ 	return 0;
+ }
