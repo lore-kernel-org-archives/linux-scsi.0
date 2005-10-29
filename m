@@ -1,34 +1,32 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [scsi hcil 3/9] misc cleanups
-Date: Fri, 28 Oct 2005 20:34:19 -0500
-Message-ID: <1130549660.3328.35.camel@mulgrave>
-References: <20051024220013.GA10070@havoc.gtf.org>
-	 <20051024220205.GC10567@havoc.gtf.org>
+From: Meelis Roos <mroos@linux.ee>
+Subject: Re: Fw: 2.6.14: aic7xxx broken with blktool
+Date: Sat, 29 Oct 2005 13:17:03 +0300 (EEST)
+Message-ID: <Pine.SOC.4.61.0510291310160.19371@math.ut.ee>
+References: <20051028040227.37dfef86.akpm@osdl.org> <1130512908.3328.8.camel@mulgrave>
+ <Pine.SOC.4.61.0510282124200.16664@math.ut.ee> <4362C5D1.80308@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:3566 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750966AbVJ2Bej (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Oct 2005 21:34:39 -0400
-In-Reply-To: <20051024220205.GC10567@havoc.gtf.org>
+Received: from math.ut.ee ([193.40.36.2]:22914 "EHLO math.ut.ee")
+	by vger.kernel.org with ESMTP id S1750831AbVJ2KR3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Oct 2005 06:17:29 -0400
+In-Reply-To: <4362C5D1.80308@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
-On Mon, 2005-10-24 at 18:02 -0400, Jeff Garzik wrote:
->     - eliminate use of 'channel' and 'id' in starget_for_each_device()
+>> But blktool outputs memory fragments that seems to come from other
+>> processes. I saw string "bash", "lled with unallocated bl" and other
+>> strings that do not appear in blktools image. Without further
+>> investigation it seems that in case of the error, soma data ise leaked
+>> from kernel to the buggy program in userspace (blktool in this case).
 
-Actually, we can't do this.  The reason for the way it looks today is
-that shost_for_each_device() actually performs a lot of magic assuming
-that the list can be changing under it (it was a long precursor to the
-klists, if you like).  list_for_each_entry() does no such magic.
+Meanwhile I have identified that "lled ..." message is contained in 
+glibc. Don't know about "bash" but it might have come from environment 
+or other places since it's my login shell. So there need not be a kernel 
+leak.
 
-We could convert to klists to get this, or simply replicate the host
-magic per target.
-
-James
-
-
+-- 
+Meelis Roos (mroos@linux.ee)
