@@ -1,325 +1,185 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: [PATCH] qlogic and lpfc messaging update
-Date: Sat, 29 Oct 2005 17:17:00 -0400
-Message-ID: <4363E6CC.1070606@pobox.com>
+Subject: [patch 1/3] HCIL: more sfoo_printk()
+Date: Sat, 29 Oct 2005 17:38:13 -0400
+Message-ID: <20051029213813.GA23180@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070901020607030005060509"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:14726 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1751241AbVJ2VRG (ORCPT
+Received: from havoc.gtf.org ([69.61.125.42]:22917 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1751255AbVJ2ViR (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Oct 2005 17:17:06 -0400
+	Sat, 29 Oct 2005 17:38:17 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>, James Smart <James.Smart@emulex.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
-
-This is a multi-part message in MIME format.
---------------070901020607030005060509
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Gentlemen,
-
-I would like to get these changes upstream, now that scsi-misc-2.6 has 
-the appropriate infrastructure.  These changes eliminate unneeded 
-references to sdev->{id,channel,lun}, since the drivers' respective 
-messaging infrastructure should already expose this.
-
-Review requested...  patch against latest scsi-misc-2.6 
-(a3632fa3ecefe50d88fc70af90610f79b99e0715).
-
-	Jeff
+To: linux-scsi@vger.kernel.org
 
 
+commit bab4e339d19ea45eaea3ea252a545d9d0efcae9f
+Author: Jeff Garzik <jgarzik@pobox.com>
+Date:   Sat Oct 29 17:13:28 2005 -0400
 
---------------070901020607030005060509
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
+    [SCSI] more uses of sfoo_printk()
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index c34d3cf..f4e41fc 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -402,10 +402,10 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba 
- 			lpfc_cmd->status = IOSTAT_DEFAULT;
- 
- 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP,
--				"%d:0729 FCP cmd x%x failed <%d/%d> status: "
-+				"0729 FCP cmd x%x failed status: "
- 				"x%x result: x%x Data: x%x x%x\n",
--				phba->brd_no, cmd->cmnd[0], cmd->device->id,
--				cmd->device->lun, lpfc_cmd->status,
-+				cmd->cmnd[0],
-+				lpfc_cmd->status,
- 				lpfc_cmd->result, pIocbOut->iocb.ulpContext,
- 				lpfc_cmd->cur_iocbq.iocb.ulpIoTag);
- 
-@@ -434,10 +434,9 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba 
- 		uint32_t *lp = (uint32_t *)cmd->sense_buffer;
- 
- 		lpfc_printf_log(phba, KERN_INFO, LOG_FCP,
--				"%d:0710 Iodone <%d/%d> cmd %p, error x%x "
-+				"0710 Iodone cmd %p, error x%x "
- 				"SNS x%x x%x Data: x%x x%x\n",
--				phba->brd_no, cmd->device->id,
--				cmd->device->lun, cmd, cmd->result,
-+				cmd, cmd->result,
- 				*lp, *(lp + 3), cmd->retries, cmd->resid);
- 	}
- 
-@@ -593,10 +592,8 @@ lpfc_scsi_prep_task_mgmt_cmd(struct lpfc
- 		lpfc_printf_log(phba,
- 				KERN_INFO,
- 				LOG_FCP,
--				"%d:0703 Issue LUN Reset to TGT %d LUN %d "
-+				"0703 Issue LUN Reset "
- 				"Data: x%x x%x\n",
--				phba->brd_no,
--				scsi_dev->id, scsi_dev->lun,
- 				ndlp->nlp_rpi, ndlp->nlp_flag);
- 
- 		break;
-@@ -605,10 +602,8 @@ lpfc_scsi_prep_task_mgmt_cmd(struct lpfc
- 		lpfc_printf_log(phba,
- 				KERN_INFO,
- 				LOG_FCP,
--				"%d:0701 Issue Abort Task Set to TGT %d LUN %d "
-+				"0701 Issue Abort Task Set "
- 				"Data: x%x x%x\n",
--				phba->brd_no,
--				scsi_dev->id, scsi_dev->lun,
- 				ndlp->nlp_rpi, ndlp->nlp_flag);
- 
- 		break;
-@@ -617,10 +612,9 @@ lpfc_scsi_prep_task_mgmt_cmd(struct lpfc
- 		lpfc_printf_log(phba,
- 				KERN_INFO,
- 				LOG_FCP,
--				"%d:0702 Issue Target Reset to TGT %d "
-+				"0702 Issue Target Reset "
- 				"Data: x%x x%x\n",
--				phba->brd_no,
--				scsi_dev->id, ndlp->nlp_rpi,
-+				ndlp->nlp_rpi,
- 				ndlp->nlp_flag);
- 		break;
- 	}
-@@ -837,18 +831,16 @@ __lpfc_abort_handler(struct scsi_cmnd *c
- 		ret = FAILED;
- 		lpfc_printf_log(phba, KERN_ERR, LOG_FCP,
- 				"%d:0748 abort handler timed out waiting for "
--				"abort to complete: ret %#x, ID %d, LUN %d, "
-+				"abort to complete: ret %#x, "
- 				"snum %#lx\n",
--				phba->brd_no,  ret, cmnd->device->id,
--				cmnd->device->lun, cmnd->serial_number);
-+				phba->brd_no,  ret, cmnd->serial_number);
- 	}
- 
-  out:
- 	lpfc_printf_log(phba, KERN_WARNING, LOG_FCP,
- 			"%d:0749 SCSI layer issued abort device: ret %#x, "
--			"ID %d, LUN %d, snum %#lx\n",
--			phba->brd_no, ret, cmnd->device->id,
--			cmnd->device->lun, cmnd->serial_number);
-+			"snum %#lx\n",
-+			phba->brd_no, ret, cmnd->serial_number);
- 
- 	return ret;
- }
-@@ -959,10 +951,9 @@ __lpfc_reset_lun_handler(struct scsi_cmn
- 
- out_free_scsi_buf:
- 	lpfc_printf_log(phba, KERN_ERR, LOG_FCP,
--			"%d:0713 SCSI layer issued LUN reset (%d, %d) "
-+			"0713 SCSI layer issued LUN reset "
- 			"Data: x%x x%x x%x\n",
--			phba->brd_no, lpfc_cmd->pCmd->device->id,
--			lpfc_cmd->pCmd->device->lun, ret, lpfc_cmd->status,
-+			ret, lpfc_cmd->status,
- 			lpfc_cmd->result);
- 	lpfc_release_scsi_buf(phba, lpfc_cmd);
- out:
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 89793c1..c28901d 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -1973,10 +1973,11 @@ qla2x00_print_scsi_cmd(struct scsi_cmnd 
- 	ha = (struct scsi_qla_host *)cmd->device->host->hostdata;
- 
- 	sp = (srb_t *) cmd->SCp.ptr;
--	printk("SCSI Command @=0x%p, Handle=0x%p\n", cmd, cmd->host_scribble);
--	printk("  chan=0x%02x, target=0x%02x, lun=0x%02x, cmd_len=0x%02x\n",
--	    cmd->device->channel, cmd->device->id, cmd->device->lun,
--	    cmd->cmd_len);
-+	scmd_printk(KERN_INFO, cmd,
-+		"SCSI Command @=0x%p, Handle=0x%p\n", cmd, cmd->host_scribble);
-+	scmd_printk(KERN_INFO, cmd,
-+		"  cmd_len=0x%02x\n", cmd->cmd_len);
+ drivers/scsi/NCR5380.c    |   11 ++++++++---
+ drivers/scsi/NCR5380.h    |    8 ++++++++
+ drivers/scsi/constants.c  |    3 +--
+ drivers/scsi/eata.c       |   12 +++++-------
+ drivers/scsi/scsi.c       |    2 +-
+ drivers/scsi/scsi_error.c |    9 ++++-----
+ drivers/scsi/sd.c         |    3 +--
+ 7 files changed, 28 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index cc9ecb3..9e2764f 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -1120,7 +1120,8 @@ static void NCR5380_main(void *p)
+ 				   this is needed for Mustek scanners, that
+ 				   do not respond to commands immediately
+ 				   after a scan */
+-				printk(KERN_DEBUG "scsi%d: device %d did not respond in time\n", instance->host_no, tmp->device->id);
++				scmd_printk(KERN_DEBUG, tmp,
++					"device did not respond in time\n");
+ 				LIST(tmp, hostdata->issue_queue);
+ 				tmp->host_scribble = (unsigned char *) hostdata->issue_queue;
+ 				hostdata->issue_queue = tmp;
+@@ -2244,7 +2245,8 @@ static void NCR5380_information_transfer
+ 					/* The next command is still part of this process */
+ 					cmd->next_link->tag = cmd->tag;
+ 					cmd->result = cmd->SCp.Status | (cmd->SCp.Message << 8);
+-					dprintk(NDEBUG_LINKED, ("scsi%d : target %d lun %d linked request done, calling scsi_done().\n", instance->host_no, cmd->device->id, cmd->device->lun));
++					ddprintk(KERN_DEBUG, cmd,
++						"linked request done, calling scsi_done().\n");
+ 					collect_stats(hostdata, cmd);
+ 					cmd->scsi_done(cmd);
+ 					cmd = hostdata->connected;
+@@ -2339,7 +2341,10 @@ static void NCR5380_information_transfer
+ 						    hostdata->disconnected_queue;
+ 						hostdata->connected = NULL;
+ 						hostdata->disconnected_queue = cmd;
+-						dprintk(NDEBUG_QUEUES, ("scsi%d : command for target %d lun %d was moved from connected to" "  the disconnected_queue\n", instance->host_no, cmd->device->id, cmd->device->lun));
++						ddprintk(KERN_DEBUG, cmd,
++						"command for target was moved from connected to"
++						"  the disconnected_queue\n");
 +
- 	printk(" CDB: ");
- 	for (i = 0; i < cmd->cmd_len; i++) {
- 		printk("0x%02x ", cmd->cmnd[i]);
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 09afc0f..9fddf10 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1023,11 +1023,10 @@ qla2x00_status_entry(scsi_qla_host_t *ha
- 			if ((unsigned)(cp->request_bufflen - resid) <
- 			    cp->underflow) {
- 				qla_printk(KERN_INFO, ha,
--				    "scsi(%ld:%d:%d:%d): Mid-layer underflow "
-+				    "Mid-layer underflow "
- 				    "detected (%x of %x bytes)...returning "
--				    "error status.\n", ha->host_no,
--				    cp->device->channel, cp->device->id,
--				    cp->device->lun, resid,
-+				    "error status.\n",
-+				    resid,
- 				    cp->request_bufflen);
+ 						/* 
+ 						 * Restore phase bits to 0 so an interrupted selection, 
+ 						 * arbitration can resume.
+diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
+index c3462e3..298b2df 100644
+--- a/drivers/scsi/NCR5380.h
++++ b/drivers/scsi/NCR5380.h
+@@ -289,6 +289,14 @@ struct NCR5380_hostdata {
+ #define NCR5380_dprint(a,b)		do {} while(0)
+ #define NCR5380_dprint_phase(a,b)	do {} while(0)
  
- 				cp->result = DID_ERROR << 16;
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index c58c9d9..0e64ec2 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -586,7 +586,7 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
- 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
- 	srb_t *sp;
- 	int ret, i;
--	unsigned int id, lun;
-+	unsigned int id;
- 	unsigned long serial;
- 	unsigned long flags;
- 
-@@ -595,8 +595,7 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
- 
- 	ret = FAILED;
- 
--	id = cmd->device->id;
--	lun = cmd->device->lun;
-+	id = scmd_id(cmd);
- 	serial = cmd->serial_number;
- 
- 	/* Check active list for command command. */
-@@ -634,14 +633,13 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
- 	if (ret == SUCCESS) {
- 		if (qla2x00_eh_wait_on_command(ha, cmd) != QLA_SUCCESS) {
- 			qla_printk(KERN_ERR, ha,
--			    "scsi(%ld:%d:%d): Abort handler timed out -- %lx "
--			    "%x.\n", ha->host_no, id, lun, serial, ret);
-+			    "Abort handler timed out -- %lx "
-+			    "%x.\n", serial, ret);
- 		}
- 	}
- 
--	qla_printk(KERN_INFO, ha,
--	    "scsi(%ld:%d:%d): Abort command issued -- %lx %x.\n", ha->host_no,
--	    id, lun, serial, ret);
-+	qla_printk(KERN_INFO, ha, "Abort command issued -- %lx %x.\n",
-+	    serial, ret);
- 
- 	return ret;
++#if 0
++#define ddprintk(prefix, scmd, fmt, a...) \
++	scmd_printk(prefix, scmd, fmt, ##a)
++#else
++#define ddprintk(prefix, scmd, fmt, a...) \
++	do {} while (0)
++#endif
++
+ #if defined(AUTOPROBE_IRQ)
+ static int NCR5380_probe_irq(struct Scsi_Host *instance, int possible);
+ #endif
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index 09bc815..8bd936b 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -1389,8 +1389,7 @@ EXPORT_SYMBOL(scsi_print_msg);
+ void scsi_print_command(struct scsi_cmnd *cmd)
+ {
+ 	/* Assume appended output (i.e. not at start of line) */
+-	sdev_printk("", cmd->device, "\n");
+-	printk(KERN_INFO "        command: ");
++	scmd_printk(KERN_INFO, cmd, "command:\n\t");
+ 	scsi_print_cdb(cmd->cmnd, cmd->cmd_len, 0);
  }
-@@ -681,7 +679,7 @@ qla2x00_eh_wait_for_pending_target_comma
- 		if (sp) {
- 			cmd = sp->cmd;
- 			spin_unlock_irqrestore(&ha->hardware_lock, flags);
--			if (cmd->device->id == t) {
-+			if (scmd_id(cmd) == t) {
- 				if (!qla2x00_eh_wait_on_command(ha, cmd)) {
- 					status = 1;
- 					break;
-@@ -721,21 +719,19 @@ qla2xxx_eh_device_reset(struct scsi_cmnd
- 	fc_port_t *fcport = (struct fc_port *) cmd->device->hostdata;
- 	srb_t *sp;
- 	int ret;
--	unsigned int id, lun;
-+	unsigned int id;
- 	unsigned long serial;
+ EXPORT_SYMBOL(scsi_print_command);
+diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
+index b45a4c7..cd0fc64 100644
+--- a/drivers/scsi/eata.c
++++ b/drivers/scsi/eata.c
+@@ -2455,20 +2455,18 @@ static irqreturn_t ihdlr(int irq, struct
+ 			status = DID_OK << 16;
  
- 	ret = FAILED;
+ 		if (tstatus == GOOD)
+-			ha->target_redo[SCpnt->device->id][SCpnt->device->
+-							      channel] = 0;
++			ha->target_redo[scmd_id(SCpnt)][scmd_channel(SCpnt)] = 0;
  
--	id = cmd->device->id;
--	lun = cmd->device->lun;
-+	id = scmd_id(cmd);
- 	serial = cmd->serial_number;
+ 		if (spp->target_status && SCpnt->device->type == TYPE_DISK &&
+ 		    (!(tstatus == CHECK_CONDITION && ha->iocount <= 1000 &&
+ 		       (SCpnt->sense_buffer[2] & 0xf) == NOT_READY)))
+-			printk("%s: ihdlr, target %d.%d:%d, pid %ld, "
++			scmd_printk(KERN_INFO, SCpnt,
++				"ihdlr, pid %ld, "
+ 			       "target_status 0x%x, sense key 0x%x.\n",
+-			       ha->board_name,
+-			       SCpnt->device->channel, SCpnt->device->id,
+-			       SCpnt->device->lun, SCpnt->pid,
++			       SCpnt->pid,
+ 			       spp->target_status, SCpnt->sense_buffer[2]);
  
- 	sp = (srb_t *) CMD_SP(cmd);
- 	if (!sp || !fcport)
- 		return ret;
+-		ha->target_to[SCpnt->device->id][SCpnt->device->channel] = 0;
++		ha->target_to[scmd_id(SCpnt)][scmd_channel(SCpnt)] = 0;
  
--	qla_printk(KERN_INFO, ha,
--	    "scsi(%ld:%d:%d): DEVICE RESET ISSUED.\n", ha->host_no, id, lun);
-+	qla_printk(KERN_INFO, ha, "DEVICE RESET ISSUED.\n");
+ 		if (ha->last_retried_pid == SCpnt->pid)
+ 			ha->retries = 0;
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 0be60bb..4f86215 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -806,7 +806,7 @@ static void scsi_softirq(struct softirq_
+ 		disposition = scsi_decide_disposition(cmd);
+ 		if (disposition != SUCCESS &&
+ 		    time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
+-			sdev_printk(KERN_ERR, cmd->device,
++			scmd_printk(KERN_ERR, cmd,
+ 				    "timing out command, waited %lus\n",
+ 				    wait_for/HZ);
+ 			disposition = SUCCESS;
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 0c5b02d..4fddb9b 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1174,9 +1174,9 @@ static void scsi_eh_offline_sdevs(struct
+ 	struct scsi_cmnd *scmd, *next;
  
- 	if (qla2x00_wait_for_hba_online(ha) != QLA_SUCCESS)
- 		goto eh_dev_reset_done;
-@@ -775,9 +771,7 @@ qla2xxx_eh_device_reset(struct scsi_cmnd
- 		qla_printk(KERN_INFO, ha,
- 		    "%s: failed while waiting for commands\n", __func__);
- 	} else
--		qla_printk(KERN_INFO, ha,
--		    "scsi(%ld:%d:%d): DEVICE RESET SUCCEEDED.\n", ha->host_no,
--		    id, lun);
-+		qla_printk(KERN_INFO, ha, "DEVICE RESET SUCCEEDED.\n");
-  eh_dev_reset_done:
- 	return ret;
- }
-@@ -852,21 +846,19 @@ qla2xxx_eh_bus_reset(struct scsi_cmnd *c
- 	fc_port_t *fcport = (struct fc_port *) cmd->device->hostdata;
- 	srb_t *sp;
- 	int ret;
--	unsigned int id, lun;
-+	unsigned int id;
- 	unsigned long serial;
+ 	list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
+-		sdev_printk(KERN_INFO, scmd->device,
+-			    "scsi: Device offlined - not"
+-			    " ready after error recovery\n");
++		scmd_printk(KERN_INFO, scmd,
++			    "Device offlined - not"
++		       	    " ready after error recovery\n");
+ 		scsi_device_set_state(scmd->device, SDEV_OFFLINE);
+ 		if (scmd->eh_eflags & SCSI_EH_CANCEL_CMD) {
+ 			/*
+@@ -1338,8 +1338,7 @@ int scsi_decide_disposition(struct scsi_
+ 		return SUCCESS;
  
- 	ret = FAILED;
+ 	case RESERVATION_CONFLICT:
+-		sdev_printk(KERN_INFO, scmd->device,
+-			    "reservation conflict\n");
++		scmd_printk(KERN_INFO, scmd, "reservation conflict\n");
+ 		return SUCCESS; /* causes immediate i/o error */
+ 	default:
+ 		return FAILED;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 9de8e18..fca6e0e 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1534,8 +1534,7 @@ static int sd_probe(struct device *dev)
+ 	if (sdp->type != TYPE_DISK && sdp->type != TYPE_MOD && sdp->type != TYPE_RBC)
+ 		goto out;
  
--	id = cmd->device->id;
--	lun = cmd->device->lun;
-+	id = scmd_id(cmd);
- 	serial = cmd->serial_number;
+-	SCSI_LOG_HLQUEUE(3, sdev_printk(KERN_INFO, sdp,
+-					"sd_attach\n"));
++	SCSI_LOG_HLQUEUE(3, sdev_printk(KERN_INFO, sdp, "sd_attach\n"));
  
- 	sp = (srb_t *) CMD_SP(cmd);
- 	if (!sp || !fcport)
- 		return ret;
- 
--	qla_printk(KERN_INFO, ha,
--	    "scsi(%ld:%d:%d): LOOP RESET ISSUED.\n", ha->host_no, id, lun);
-+	qla_printk(KERN_INFO, ha, "LOOP RESET ISSUED.\n");
- 
- 	if (qla2x00_wait_for_hba_online(ha) != QLA_SUCCESS) {
- 		DEBUG2(printk("%s failed:board disabled\n",__func__));
-@@ -913,21 +905,19 @@ qla2xxx_eh_host_reset(struct scsi_cmnd *
- 	fc_port_t *fcport = (struct fc_port *) cmd->device->hostdata;
- 	srb_t *sp;
- 	int ret;
--	unsigned int id, lun;
-+	unsigned int id;
- 	unsigned long serial;
- 
- 	ret = FAILED;
- 
--	id = cmd->device->id;
--	lun = cmd->device->lun;
-+	id = scmd_id(cmd);
- 	serial = cmd->serial_number;
- 
- 	sp = (srb_t *) CMD_SP(cmd);
- 	if (!sp || !fcport)
- 		return ret;
- 
--	qla_printk(KERN_INFO, ha,
--	    "scsi(%ld:%d:%d): ADAPTER RESET ISSUED.\n", ha->host_no, id, lun);
-+	qla_printk(KERN_INFO, ha, "ADAPTER RESET ISSUED.\n");
- 
- 	if (qla2x00_wait_for_hba_online(ha) != QLA_SUCCESS)
- 		goto eh_host_reset_lock;
-
---------------070901020607030005060509--
+ 	error = -ENOMEM;
+ 	sdkp = kmalloc(sizeof(*sdkp), GFP_KERNEL);
