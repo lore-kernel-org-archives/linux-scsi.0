@@ -1,57 +1,73 @@
-From: =?ISO-8859-1?Q?=20=22G=F6rsel?=  =?ISO-8859-1?Q?=20Tasar=FDm?= -  =?ISO-8859-1?Q?=20Foto=F0?=
-	=?ISO-8859-1?Q?rafc=FDl=FDk?=  =?ISO-8859-1?Q?=20Reklamc=FDl=FDk?= Hizmetleri"
-	<ismailacar.net@gmail.com>
-Subject: =?ISO-8859-1?Q?=20=DEirketlere?=  =?ISO-8859-1?Q?=20=F6zel?= Katalog - Profesyonel  =?ISO-8859-1?Q?=20g?=
-	=?ISO-8859-1?Q?=F6rsel?= Hizmetlerimiz  =?ISO-8859-1?Q?=20Hakk=FDnda?=
-Date: Sun, 30 Oct 2005 02:08:03 +0200
-Message-ID: <200510300008.j9U080FD018894@zeus1.kernel.org>
-Reply-To: ismailacar.net@gmail.com
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: slow external firewire drive
+Date: Sun, 30 Oct 2005 08:47:37 +0100
+Message-ID: <43647A99.60607@s5r6.in-berlin.de>
+References: <20051027015655.GC14010@toucan.gentoo.org> <43608663.7020103@s5r6.in-berlin.de> <20051027124154.GD14010@toucan.gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1254
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:34000 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751179AbVJ3AIE convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Oct 2005 20:08:04 -0400
-Received: from ommo.net (dsl.static8597204246.ttnet.net.tr [85.97.204.246] (may be forged))
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id j9U080FD018894
-	for <linux-scsi@vger.kernel.org>; Sat, 29 Oct 2005 17:08:02 -0700
+Received: from einhorn.in-berlin.de ([192.109.42.8]:46278 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S932773AbVJ3Hs6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 30 Oct 2005 02:48:58 -0500
+In-Reply-To: <20051027124154.GD14010@toucan.gentoo.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Eric Edgar <rocket@gentoo.org>
 
+Eric Edgar wrote on 2005-10-27:
+> I have tried the different serialize_io option and it didnt help much.
+> 
+> it is a s400 based card.
+> 
+> Here are the numbers off the 2 biggest chips on the card.
+> 
+> belkin f5u503
+> 
+> CHIP 1
+> tsb12lv26
+> ca-22a752t
+> f731652a
+> 
+> CHIP 2 
+> 22any0ct
+> tsb41ab3
+...
 
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * *=20
-          ISMAIL ACAR TANITIM H=DDZMETLERI
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * *=20
-     Iyi g=FCnler...
-      =20
-    Tan=FDt=FDm foto=F0raf=E7=FDl=FD=F0=FD yapan firmam=FDz size profes=
-yonel alternatif=20
- g=F6rsel =E7=F6z=FCmler sunuyor.Bizi arayarak Katalaog tasar=FDmlar=FD=
-n=FDz ve=20
- firmam=FDz=FDn =E7al=FD=FEmalar=FD ve referanslar=FD hakk=FDnda bilgi =
-alabilirsiniz.
+I have not heard anything negative about Belkin hardware so far. Also, 
+TI lists only one erratum concerning the TSB41AB3 which is not related 
+to the low throughput. The culprit is probably either the Maxtor 
+FireWire enclosure (PHY, link layer controller & IDE bridge, firmware, 
+or perhaps even the included HDD) or our software...
 
- Bize 212 2191782=20
-        536 2768940 ' dan yada
- ismailacar.net-den bize ula=FEabilirsiniz.
+>>> Vendor: Maxtor    Model: 1394 storage      Rev: v1.3
+>>> Type:   Direct-Access-RBC                  ANSI SCSI revision: 04
+>>>SCSI device sda: 156355584 512-byte hdwr sectors (80054 MB)
+...
+>>>hdparm -tT /dev/sda
+>>>
+>>>/dev/sda:
+>>>Timing cached reads:   644 MB in  2.01 seconds = 320.40 MB/sec
+>>>Timing buffered disk reads:    8 MB in  3.09 seconds =   2.59 MB/sec
+...
+>>>2.6.14-rc4
+>>> 
+>>>I dont seem to see any error messages ... just bad performance.
 
-                                                               Sayg=FDl=
-ar=FDmla
-                                                               Ismail A=
-CAR
+Maxtor's currently available enclosures are noticeable slower than 
+comparable products:
+http://www.macworld.com/2005/10/reviews/firewiremain/index1.php
+Although according to these application test on OS X, they should not be 
+as extremely slow as hdparm measures.
 
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-          REKLAMCILIK VE TANITIM HIZMETLER=DD
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+I remember though that Maxtor FireWire drives have been used under Linux 
+before. Alas www.linux1394.org and its hardware compatibility list are 
+offline again at the moment.
 
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+That is all I can say about it so far.
+-- 
+Stefan Richter
+-=====-=-=-= =-=- ====-
+http://arcgraph.de/sr/
