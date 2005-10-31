@@ -1,112 +1,191 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] aic79xx: remove scsi_assign_lock usage
-Date: Mon, 31 Oct 2005 20:05:01 +0100
-Message-ID: <20051031190501.GB16590@lst.de>
+Subject: [PATCH] megaraid (legacy): remove scsi_assign_lock usage
+Date: Mon, 31 Oct 2005 20:12:07 +0100
+Message-ID: <20051031191207.GA16794@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:63136 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S932482AbVJaTFE (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:9121 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S964798AbVJaTMK (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Oct 2005 14:05:04 -0500
+	Mon, 31 Oct 2005 14:12:10 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
-just take the internal lock in queuecommand instead.  also switch
-the only direct use of the internal lock to the wrappers used elsewhere.
+just take the adapter lock in megaraid_queue.  Additional benefit is
+that we can get rid of the awkward conditional locking in
+mega_internal_command.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/drivers/scsi/aic7xxx/aic79xx_osm.c
+Index: linux-2.6/drivers/scsi/megaraid.c
 ===================================================================
---- linux-2.6.orig/drivers/scsi/aic7xxx/aic79xx_osm.c	2005-10-04 20:07:32.000000000 +0200
-+++ linux-2.6/drivers/scsi/aic7xxx/aic79xx_osm.c	2005-10-31 10:24:59.000000000 +0100
-@@ -435,29 +435,20 @@
- {
- 	struct	 ahd_softc *ahd;
- 	struct	 ahd_linux_device *dev = scsi_transport_device_data(cmd->device);
-+	int rtn = SCSI_MLQUEUE_HOST_BUSY;
+--- linux-2.6.orig/drivers/scsi/megaraid.c	2005-10-31 03:05:16.000000000 +0100
++++ linux-2.6/drivers/scsi/megaraid.c	2005-10-31 10:33:44.000000000 +0100
+@@ -362,6 +362,7 @@
+ 	adapter_t	*adapter;
+ 	scb_t	*scb;
+ 	int	busy=0;
 +	unsigned long flags;
  
- 	ahd = *(struct ahd_softc **)cmd->device->host->hostdata;
+ 	adapter = (adapter_t *)scmd->device->host->hostdata;
  
--	/*
--	 * Close the race of a command that was in the process of
--	 * being queued to us just as our simq was frozen.  Let
--	 * DV commands through so long as we are only frozen to
--	 * perform DV.
--	 */
--	if (ahd->platform_data->qfrozen != 0) {
--		printf("%s: queue frozen\n", ahd_name(ahd));
-+	ahd_lock(ahd, &flags);
-+	if (ahd->platform_data->qfrozen == 0) {
-+		cmd->scsi_done = scsi_done;
-+		cmd->result = CAM_REQ_INPROG << 16;
-+		rtn = ahd_linux_run_command(ahd, dev, cmd);
+@@ -377,6 +378,7 @@
+ 	 * return 0 in that case.
+ 	 */
  
--		return SCSI_MLQUEUE_HOST_BUSY;
- 	}
--
--	/*
--	 * Save the callback on completion function.
--	 */
--	cmd->scsi_done = scsi_done;
--
--	cmd->result = CAM_REQ_INPROG << 16;
--
--	return ahd_linux_run_command(ahd, dev, cmd);
-+	ahd_unlock(ahd, &flags);
-+	return rtn;
- }
++	spin_lock_irqsave(&adapter->lock, flags);
+ 	scb = mega_build_cmd(adapter, scmd, &busy);
  
- static inline struct scsi_target **
-@@ -1080,7 +1071,6 @@
- 
- 	*((struct ahd_softc **)host->hostdata) = ahd;
- 	ahd_lock(ahd, &s);
--	scsi_assign_lock(host, &ahd->platform_data->spin_lock);
- 	ahd->platform_data->host = host;
- 	host->can_queue = AHD_MAX_QUEUE;
- 	host->cmd_per_lun = 2;
-@@ -2061,6 +2051,7 @@
- 	int    wait;
- 	int    disconnected;
- 	ahd_mode_state saved_modes;
-+	unsigned long flags;
- 
- 	pending_scb = NULL;
- 	paused = FALSE;
-@@ -2077,7 +2068,7 @@
- 		printf(" 0x%x", cmd->cmnd[cdb_byte]);
- 	printf("\n");
- 
--	spin_lock_irq(&ahd->platform_data->spin_lock);
-+	ahd_lock(ahd, &flags);
- 
- 	/*
- 	 * First determine if we currently own this command.
-@@ -2300,7 +2291,8 @@
- 		int ret;
- 
- 		ahd->platform_data->flags |= AHD_SCB_UP_EH_SEM;
--		spin_unlock_irq(&ahd->platform_data->spin_lock);
-+		ahd_unlock(ahd, &flags);
-+
- 		init_timer(&timer);
- 		timer.data = (u_long)ahd;
- 		timer.expires = jiffies + (5 * HZ);
-@@ -2314,9 +2306,8 @@
- 			printf("Timer Expired\n");
- 			retval = FAILED;
+ 	if(scb) {
+@@ -393,6 +395,7 @@
  		}
--		spin_lock_irq(&ahd->platform_data->spin_lock);
+ 		return 0;
  	}
--	spin_unlock_irq(&ahd->platform_data->spin_lock);
-+		ahd_unlock(ahd, &flags);
- 	return (retval);
- }
++	spin_unlock_irqrestore(&adapter->lock, flags);
  
+ 	return busy;
+ }
+@@ -1981,7 +1984,7 @@
+ 	mc.cmd = MEGA_CLUSTER_CMD;
+ 	mc.opcode = MEGA_RESET_RESERVATIONS;
+ 
+-	if( mega_internal_command(adapter, LOCK_INT, &mc, NULL) != 0 ) {
++	if( mega_internal_command(adapter, &mc, NULL) != 0 ) {
+ 		printk(KERN_WARNING
+ 				"megaraid: reservation reset failed.\n");
+ 	}
+@@ -3011,7 +3014,7 @@
+ 		mc.cmd = FC_NEW_CONFIG;
+ 		mc.opcode = OP_DCMD_READ_CONFIG;
+ 
+-		if( mega_internal_command(adapter, LOCK_INT, &mc, NULL) ) {
++		if( mega_internal_command(adapter, &mc, NULL) ) {
+ 
+ 			len = sprintf(page, "40LD read config failed.\n");
+ 
+@@ -3029,11 +3032,11 @@
+ 	else {
+ 		mc.cmd = NEW_READ_CONFIG_8LD;
+ 
+-		if( mega_internal_command(adapter, LOCK_INT, &mc, NULL) ) {
++		if( mega_internal_command(adapter, &mc, NULL) ) {
+ 
+ 			mc.cmd = READ_CONFIG_8LD;
+ 
+-			if( mega_internal_command(adapter, LOCK_INT, &mc,
++			if( mega_internal_command(adapter, &mc,
+ 						NULL) ){
+ 
+ 				len = sprintf(page,
+@@ -3632,7 +3635,7 @@
+ 			/*
+ 			 * Issue the command
+ 			 */
+-			mega_internal_command(adapter, LOCK_INT, &mc, pthru);
++			mega_internal_command(adapter, &mc, pthru);
+ 
+ 			rval = mega_n_to_m((void __user *)arg, &mc);
+ 
+@@ -3715,7 +3718,7 @@
+ 			/*
+ 			 * Issue the command
+ 			 */
+-			mega_internal_command(adapter, LOCK_INT, &mc, NULL);
++			mega_internal_command(adapter, &mc, NULL);
+ 
+ 			rval = mega_n_to_m((void __user *)arg, &mc);
+ 
+@@ -4234,7 +4237,7 @@
+ 	mc.opcode = OP_DEL_LOGDRV;
+ 	mc.subopcode = logdrv;
+ 
+-	rval = mega_internal_command(adapter, LOCK_INT, &mc, NULL);
++	rval = mega_internal_command(adapter, &mc, NULL);
+ 
+ 	/* log this event */
+ 	if(rval) {
+@@ -4367,7 +4370,7 @@
+ 
+ 	mc.xferaddr = (u32)dma_handle;
+ 
+-	if ( mega_internal_command(adapter, LOCK_INT, &mc, NULL) != 0 ) {
++	if ( mega_internal_command(adapter, &mc, NULL) != 0 ) {
+ 		return -1;
+ 	}
+ 
+@@ -4435,7 +4438,7 @@
+ 	mc.cmd = MEGA_MBOXCMD_PASSTHRU;
+ 	mc.xferaddr = (u32)pthru_dma_handle;
+ 
+-	rval = mega_internal_command(adapter, LOCK_INT, &mc, pthru);
++	rval = mega_internal_command(adapter, &mc, pthru);
+ 
+ 	pci_free_consistent(pdev, sizeof(mega_passthru), pthru,
+ 			pthru_dma_handle);
+@@ -4449,7 +4452,6 @@
+ /**
+  * mega_internal_command()
+  * @adapter - pointer to our soft state
+- * @ls - the scope of the exclusion lock.
+  * @mc - the mailbox command
+  * @pthru - Passthru structure for DCDB commands
+  *
+@@ -4463,8 +4465,7 @@
+  * Note: parameter 'pthru' is null for non-passthru commands.
+  */
+ static int
+-mega_internal_command(adapter_t *adapter, lockscope_t ls, megacmd_t *mc,
+-		mega_passthru *pthru )
++mega_internal_command(adapter_t *adapter, megacmd_t *mc, mega_passthru *pthru)
+ {
+ 	Scsi_Cmnd	*scmd;
+ 	struct	scsi_device *sdev;
+@@ -4508,15 +4509,8 @@
+ 
+ 	scb->idx = CMDID_INT_CMDS;
+ 
+-	/*
+-	 * Get the lock only if the caller has not acquired it already
+-	 */
+-	if( ls == LOCK_INT ) spin_lock_irqsave(&adapter->lock, flags);
+-
+ 	megaraid_queue(scmd, mega_internal_done);
+ 
+-	if( ls == LOCK_INT ) spin_unlock_irqrestore(&adapter->lock, flags);
+-
+ 	wait_for_completion(&adapter->int_waitq);
+ 
+ 	rval = scmd->result;
+Index: linux-2.6/drivers/scsi/megaraid.h
+===================================================================
+--- linux-2.6.orig/drivers/scsi/megaraid.h	2005-08-11 16:46:00.000000000 +0200
++++ linux-2.6/drivers/scsi/megaraid.h	2005-10-31 10:32:22.000000000 +0100
+@@ -926,13 +926,6 @@
+ #define MEGA_SGLIST			0x0002
+ 
+ /*
+- * lockscope definitions, callers can specify the lock scope with this data
+- * type. LOCK_INT would mean the caller has not acquired the lock before
+- * making the call and LOCK_EXT would mean otherwise.
+- */
+-typedef enum { LOCK_INT, LOCK_EXT } lockscope_t;
+-
+-/*
+  * Parameters for the io-mapped controllers
+  */
+ 
+@@ -1062,8 +1055,7 @@
+ static int mega_del_logdrv(adapter_t *, int);
+ static int mega_do_del_logdrv(adapter_t *, int);
+ static void mega_get_max_sgl(adapter_t *);
+-static int mega_internal_command(adapter_t *, lockscope_t, megacmd_t *,
+-		mega_passthru *);
++static int mega_internal_command(adapter_t *, megacmd_t *, mega_passthru *);
+ static void mega_internal_done(Scsi_Cmnd *);
+ static int mega_support_cluster(adapter_t *);
+ #endif
