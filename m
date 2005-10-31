@@ -1,20 +1,39 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 0/4] remove Scsi_ typedefs
-Date: Mon, 31 Oct 2005 18:31:27 +0100
-Message-ID: <20051031173127.GA14182@lst.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Latest update to scsi-misc-2.6
+Date: Mon, 31 Oct 2005 11:32:28 -0600
+Message-ID: <1130779948.3293.35.camel@mulgrave>
+References: <1130778840.24530.20.camel@markh1.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:17310 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S964795AbVJaRba (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Oct 2005 12:31:30 -0500
-Content-Disposition: inline
+Received: from stat9.steeleye.com ([209.192.50.41]:2972 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964803AbVJaRcj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 Oct 2005 12:32:39 -0500
+In-Reply-To: <1130778840.24530.20.camel@markh1.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: Mark Haverkamp <markh@osdl.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Jeff agreed on killing them post-2.6.14 so here we go.
-I'm not killing Scsi_Request because we'll hopefulyl get rid of the
-underlying type before 2.6.15.
+On Mon, 2005-10-31 at 09:13 -0800, Mark Haverkamp wrote:
+> I updated my local scsi-misc-2.6 tree today and had merge conflicts
+> somehow.  The tree had not been previously locally modified and was up
+> to date as of last week.  I used the cg-update command to perform the
+> update.  After receiving the changes it got a merge conflict:
+> 
+> Applying changes...
+> Merging fe607aa94f5d25ee84f9a9a4fdf2cce3765e12e4 -> d078650986b117520f2b10cb72c04bc1904e3ba7
+>         to a25bbd9e2f6c6907672301fe934a8f9989e60330...
+> ... Auto-merging drivers/scsi/scsi_scan.c
+> merge: warning: conflicts during merge
+
+My best guess is that your merge programme is confused.  I've had to
+merge the tree up several times to fix conflicts, but it's the same
+tree.  It looks like whatever tool you used to merge failed to recognise
+this.
+
+James
+
+
