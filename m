@@ -1,2087 +1,2144 @@
-From: Roland Dreier <rolandd@cisco.com>
-Subject: [PATCH/RFC] IB: Add SCSI RDMA Protocol (SRP) initiator
-Date: Mon, 31 Oct 2005 09:23:06 -0800
-Message-ID: <52wtjtk3d1.fsf@cisco.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/4] remove Scsi_Host_Template typedef
+Date: Mon, 31 Oct 2005 18:31:40 +0100
+Message-ID: <20051031173140.GB14182@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ams-iport-1.cisco.com ([144.254.224.140]:61473 "EHLO
-	ams-iport-1.cisco.com") by vger.kernel.org with ESMTP
-	id S932502AbVJaRXS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Oct 2005 12:23:18 -0500
+Received: from verein.lst.de ([213.95.11.210]:21662 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S964801AbVJaRbs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 Oct 2005 12:31:48 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, openib-general@openib.org
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-I've posted this several times for review and gotten some (but not
-very much) feedback.  Is there any objection to me asking Linus to
-pull this for 2.6.15?
-
-Thanks,
-  Roland
-
-
-
-Add an InfiniBand SCSI RDMA Protocol (SRP) initiator.  This lets us
-talk to InfiniBand SRP targets (storage devices).
-
-Signed-off-by: Roland Dreier <rolandd@cisco.com>
-
----
-
- drivers/infiniband/Kconfig          |    2 
- drivers/infiniband/Makefile         |    1 
- drivers/infiniband/ulp/srp/Kbuild   |    3 
- drivers/infiniband/ulp/srp/Kconfig  |   11 
- drivers/infiniband/ulp/srp/ib_srp.c | 1650 +++++++++++++++++++++++++++++++++++
- drivers/infiniband/ulp/srp/ib_srp.h |  334 +++++++
- 6 files changed, 2001 insertions(+), 0 deletions(-)
- create mode 100644 drivers/infiniband/ulp/srp/Kbuild
- create mode 100644 drivers/infiniband/ulp/srp/Kconfig
- create mode 100644 drivers/infiniband/ulp/srp/ib_srp.c
- create mode 100644 drivers/infiniband/ulp/srp/ib_srp.h
-
-applies-to: d918cd1ba0ef9afa692cef281afee2f6d6634a1e
-6424304e0c52070dc39c7bf329542267c72754be
-diff --git a/drivers/infiniband/Kconfig b/drivers/infiniband/Kconfig
-index 325d502..bdf0891 100644
---- a/drivers/infiniband/Kconfig
-+++ b/drivers/infiniband/Kconfig
-@@ -33,4 +33,6 @@ source "drivers/infiniband/hw/mthca/Kcon
+Index: scsi-misc-2.6/Documentation/scsi/scsi_mid_low_api.txt
+===================================================================
+--- scsi-misc-2.6.orig/Documentation/scsi/scsi_mid_low_api.txt	2005-10-29 19:20:27.000000000 +0200
++++ scsi-misc-2.6/Documentation/scsi/scsi_mid_low_api.txt	2005-10-29 19:24:21.000000000 +0200
+@@ -346,7 +346,7 @@
+ struct tags. Both can be still found in the SCSI subsystem, but
+ the typedefs have been moved to a single file, scsi_typedefs.h to
+ make their future removal easier, for example: 
+-"typedef struct scsi_host_template Scsi_Host_Template;"
++"typedef struct scsi_cmnd Scsi_Cmnd;"
  
- source "drivers/infiniband/ulp/ipoib/Kconfig"
+ Also, most C99 enhancements are encouraged to the extent they are supported
+ by the relevant gcc compilers. So C99 style structure and array
+Index: scsi-misc-2.6/drivers/scsi/53c7xx.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/53c7xx.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/53c7xx.c	2005-10-29 19:24:21.000000000 +0200
+@@ -343,7 +343,7 @@
+ /* Size of event list (per host adapter) */
+ static int track_events = 0;
+ static struct Scsi_Host *first_host = NULL;	/* Head of list of NCR boards */
+-static Scsi_Host_Template *the_template = NULL;	
++static struct scsi_host_template *the_template = NULL;
  
-+source "drivers/infiniband/ulp/srp/Kconfig"
-+
- endmenu
-diff --git a/drivers/infiniband/Makefile b/drivers/infiniband/Makefile
-index d256cf7..a43fb34 100644
---- a/drivers/infiniband/Makefile
-+++ b/drivers/infiniband/Makefile
-@@ -1,3 +1,4 @@
- obj-$(CONFIG_INFINIBAND)		+= core/
- obj-$(CONFIG_INFINIBAND_MTHCA)		+= hw/mthca/
- obj-$(CONFIG_INFINIBAND_IPOIB)		+= ulp/ipoib/
-+obj-$(CONFIG_INFINIBAND_SRP)		+= ulp/srp/
-diff --git a/drivers/infiniband/ulp/srp/Kbuild b/drivers/infiniband/ulp/srp/Kbuild
-new file mode 100644
-index 0000000..f966e94
---- /dev/null
-+++ b/drivers/infiniband/ulp/srp/Kbuild
-@@ -0,0 +1,3 @@
-+EXTRA_CFLAGS += -Idrivers/infiniband/include
-+
-+obj-$(CONFIG_INFINIBAND_SRP)			+= ib_srp.o
-diff --git a/drivers/infiniband/ulp/srp/Kconfig b/drivers/infiniband/ulp/srp/Kconfig
-new file mode 100644
-index 0000000..8fe3be4
---- /dev/null
-+++ b/drivers/infiniband/ulp/srp/Kconfig
-@@ -0,0 +1,11 @@
-+config INFINIBAND_SRP
-+	tristate "InfiniBand SCSI RDMA Protocol"
-+	depends on INFINIBAND && SCSI
-+	---help---
-+	  Support for the SCSI RDMA Protocol over InfiniBand.  This
-+	  allows you to access storage devices that speak SRP over
-+	  InfiniBand.
-+
-+	  The SRP protocol is defined by the INCITS T10 technical
-+	  committee.  See <http://www.t10.org/>.
-+
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-new file mode 100644
-index 0000000..f2cee76
---- /dev/null
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -0,0 +1,1650 @@
-+/*
-+ * Copyright (c) 2005 Cisco Systems.  All rights reserved.
-+ *
-+ * This software is available to you under a choice of one of two
-+ * licenses.  You may choose to be licensed under the terms of the GNU
-+ * General Public License (GPL) Version 2, available from the file
-+ * COPYING in the main directory of this source tree, or the
-+ * OpenIB.org BSD license below:
-+ *
-+ *     Redistribution and use in source and binary forms, with or
-+ *     without modification, are permitted provided that the following
-+ *     conditions are met:
-+ *
-+ *      - Redistributions of source code must retain the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer.
-+ *
-+ *      - Redistributions in binary form must reproduce the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer in the documentation and/or other materials
-+ *        provided with the distribution.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-+ * SOFTWARE.
-+ *
-+ * $Id: ib_srp.c 3895 2005-10-28 21:20:11Z roland $
-+ */
-+
-+#include <linux/version.h>
-+#include <linux/module.h>
-+#include <linux/init.h>
-+#include <linux/slab.h>
-+#include <linux/err.h>
-+#include <linux/string.h>
-+#include <linux/parser.h>
-+
-+#include <asm/atomic.h>
-+
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_dbg.h>
-+
-+#include <rdma/ib_cache.h>
-+
-+#include "ib_srp.h"
-+
-+#define DRV_NAME	"ib_srp"
-+#define PFX		DRV_NAME ": "
-+#define DRV_VERSION	"0.01"
-+#define DRV_RELDATE	"January 11, 2005"
-+
-+MODULE_AUTHOR("Roland Dreier");
-+MODULE_DESCRIPTION("InfiniBand SCSI RDMA Protocol driver");
-+MODULE_LICENSE("Dual BSD/GPL");
-+
-+static int topspin_workarounds = 1;
-+
-+module_param(topspin_workarounds, int, 0444);
-+MODULE_PARM_DESC(topspin_workarounds,
-+		 "Enable workarounds for Topspin/Cisco SRP target bugs if != 0");
-+
-+static const u8 topspin_oui[3] = { 0x00, 0x05, 0xad };
-+
-+static void srp_add_one(struct ib_device *device);
-+static void srp_remove_one(struct ib_device *device);
-+static void srp_completion(struct ib_cq *cq, void *target_ptr);
-+static int srp_cm_handler(struct ib_cm_id *cm_id, struct ib_cm_event *event);
-+
-+static struct ib_client srp_client = {
-+	.name   = "srp",
-+	.add    = srp_add_one,
-+	.remove = srp_remove_one
-+};
-+
-+static inline struct srp_target_port *host_to_target(struct Scsi_Host *host)
-+{
-+	return (struct srp_target_port *) host->hostdata;
-+}
-+
-+static const char *srp_target_info(struct Scsi_Host *host)
-+{
-+	return host_to_target(host)->target_name;
-+}
-+
-+static struct srp_iu *srp_alloc_iu(struct srp_host *host, size_t size,
-+				   gfp_t gfp_mask,
-+				   enum dma_data_direction direction)
-+{
-+	struct srp_iu *iu;
-+
-+	iu = kmalloc(sizeof *iu, gfp_mask);
-+	if (!iu)
-+		goto out;
-+
-+	iu->buf = kzalloc(size, gfp_mask);
-+	if (!iu->buf)
-+		goto out_free_iu;
-+
-+	iu->dma = dma_map_single(host->dev->dma_device, iu->buf, size, direction);
-+	if (dma_mapping_error(iu->dma))
-+		goto out_free_buf;
-+
-+	iu->size      = size;
-+	iu->direction = direction;
-+
-+	return iu;
-+
-+out_free_buf:
-+	kfree(iu->buf);
-+out_free_iu:
-+	kfree(iu);
-+out:
-+	return NULL;
-+}
-+
-+static void srp_free_iu(struct srp_host *host, struct srp_iu *iu)
-+{
-+	if (!iu)
-+		return;
-+
-+	dma_unmap_single(host->dev->dma_device, iu->dma, iu->size, iu->direction);
-+	kfree(iu->buf);
-+	kfree(iu);
-+}
-+
-+static void srp_qp_event(struct ib_event *event, void *context)
-+{
-+	printk(KERN_ERR PFX "QP event %d\n", event->event);
-+}
-+
-+static int srp_init_qp(struct srp_target_port *target,
-+		       struct ib_qp *qp)
-+{
-+	struct ib_qp_attr *attr;
-+	int ret;
-+
-+	attr = kmalloc(sizeof *attr, GFP_KERNEL);
-+	if (!attr)
-+		return -ENOMEM;
-+
-+	ret = ib_find_cached_pkey(target->srp_host->dev,
-+				  target->srp_host->port,
-+				  be16_to_cpu(target->path.pkey),
-+				  &attr->pkey_index);
-+	if (ret)
-+		return ret;
-+
-+	attr->qp_state        = IB_QPS_INIT;
-+	attr->qp_access_flags = (IB_ACCESS_REMOTE_READ |
-+				    IB_ACCESS_REMOTE_WRITE);
-+	attr->port_num        = target->srp_host->port;
-+
-+	return ib_modify_qp(qp, attr,
-+			    IB_QP_STATE		|
-+			    IB_QP_PKEY_INDEX	|
-+			    IB_QP_ACCESS_FLAGS	|
-+			    IB_QP_PORT);
-+}
-+
-+static int srp_create_target_ib(struct srp_target_port *target)
-+{
-+	struct ib_qp_init_attr *init_attr = NULL;
-+	int ret;
-+
-+	init_attr = kzalloc(sizeof *init_attr, GFP_KERNEL);
-+	if (!init_attr)
-+		return -ENOMEM;
-+
-+	target->cq = ib_create_cq(target->srp_host->dev, srp_completion,
-+				  NULL, target, SRP_CQ_SIZE);
-+	if (IS_ERR(target->cq)) {
-+		ret = PTR_ERR(target->cq);
-+		goto out;
-+	}
-+
-+	ib_req_notify_cq(target->cq, IB_CQ_NEXT_COMP);
-+
-+	init_attr->event_handler       = srp_qp_event;
-+	init_attr->cap.max_send_wr     = SRP_SQ_SIZE;
-+	init_attr->cap.max_recv_wr     = SRP_RQ_SIZE;
-+	init_attr->cap.max_recv_sge    = 1;
-+	init_attr->cap.max_send_sge    = 1;
-+	init_attr->sq_sig_type         = IB_SIGNAL_ALL_WR;
-+	init_attr->qp_type             = IB_QPT_RC;
-+	init_attr->send_cq             = target->cq;
-+	init_attr->recv_cq             = target->cq;
-+
-+	target->qp = ib_create_qp(target->srp_host->pd, init_attr);
-+	if (IS_ERR(target->qp)) {
-+		ret = PTR_ERR(target->qp);
-+		ib_destroy_cq(target->cq);
-+		goto out;
-+	}
-+
-+	ret = srp_init_qp(target, target->qp);
-+	if (ret) {
-+		ib_destroy_qp(target->qp);
-+		ib_destroy_cq(target->cq);
-+		goto out;
-+	}
-+
-+out:
-+	kfree(init_attr);
-+	return ret;
-+}
-+
-+static void srp_free_target_ib(struct srp_target_port *target)
-+{
-+	int i;
-+
-+	ib_destroy_qp(target->qp);
-+	ib_destroy_cq(target->cq);
-+
-+	for (i = 0; i < SRP_RQ_SIZE; ++i)
-+		srp_free_iu(target->srp_host, target->rx_ring[i]);
-+	for (i = 0; i < SRP_SQ_SIZE + 1; ++i)
-+		srp_free_iu(target->srp_host, target->tx_ring[i]);
-+}
-+
-+static void srp_path_rec_completion(int status,
-+				    struct ib_sa_path_rec *pathrec,
-+				    void *target_ptr)
-+{
-+	struct srp_target_port *target = target_ptr;
-+
-+	target->status = status;
-+	if (status)
-+		printk(KERN_ERR PFX "Got failed path rec status %d\n", status);
-+	else
-+		target->path = *pathrec;
-+	complete(&target->done);
-+}
-+
-+static int srp_lookup_path(struct srp_target_port *target)
-+{
-+	target->path.numb_path = 1;
-+
-+	init_completion(&target->done);
-+
-+	target->path_query_id = ib_sa_path_rec_get(target->srp_host->dev,
-+						   target->srp_host->port,
-+						   &target->path,
-+						   IB_SA_PATH_REC_DGID		|
-+						   IB_SA_PATH_REC_SGID		|
-+						   IB_SA_PATH_REC_NUMB_PATH	|
-+						   IB_SA_PATH_REC_PKEY,
-+						   SRP_PATH_REC_TIMEOUT_MS,
-+						   GFP_KERNEL,
-+						   srp_path_rec_completion,
-+						   target, &target->path_query);
-+	if (target->path_query_id < 0)
-+		return target->path_query_id;
-+
-+	wait_for_completion(&target->done);
-+
-+	if (target->status < 0)
-+		printk(KERN_WARNING PFX "Path record query failed\n");
-+
-+	return target->status;
-+}
-+
-+static int srp_send_req(struct srp_target_port *target)
-+{
-+	struct {
-+		struct ib_cm_req_param param;
-+		struct srp_login_req   priv;
-+	} *req = NULL;
-+	int status;
-+
-+	req = kzalloc(sizeof *req, GFP_KERNEL);
-+	if (!req)
-+		return -ENOMEM;
-+
-+	req->param.primary_path 	      = &target->path;
-+	req->param.alternate_path 	      = NULL;
-+	req->param.service_id 		      = target->service_id;
-+	req->param.qp_num 		      = target->qp->qp_num;
-+	req->param.qp_type 		      = target->qp->qp_type;
-+	req->param.starting_psn 	      = 0; /* XXX */
-+	req->param.private_data 	      = &req->priv;
-+	req->param.private_data_len 	      = sizeof req->priv;
-+	req->param.responder_resources	      = 4;
-+	req->param.remote_cm_response_timeout = 20;
-+	req->param.flow_control 	      = 1;
-+	req->param.local_cm_response_timeout  = 20;
-+	req->param.retry_count 		      = 7;
-+	req->param.rnr_retry_count 	      = 7;
-+	req->param.max_cm_retries 	      = 15;
-+
-+	req->priv.opcode     	= SRP_LOGIN_REQ;
-+	req->priv.tag        	= 0;
-+	req->priv.req_it_iu_len = cpu_to_be32(SRP_MAX_IU_LEN);
-+	req->priv.req_buf_fmt 	= cpu_to_be16(SRP_BUF_FORMAT_DIRECT |
-+					      SRP_BUF_FORMAT_INDIRECT);
-+	memcpy(req->priv.initiator_port_id, target->srp_host->initiator_port_id, 16);
-+	/*
-+	 * Topspin/Cisco SRP targets will reject our login unless we
-+	 * zero out the first 8 bytes of our initiator port ID.  The
-+	 * second 8 bytes must be our local node GUID, but we always
-+	 * use that anyway.
-+	 */
-+	if (topspin_workarounds && !memcmp(&target->ioc_guid, topspin_oui, 3)) {
-+		printk(KERN_DEBUG PFX "Topspin/Cisco initiator port ID workaround "
-+		       "activated for target GUID %016llx\n",
-+		       (unsigned long long) be64_to_cpu(target->ioc_guid));
-+		memset(req->priv.initiator_port_id, 0, 8);
-+	}
-+	memcpy(req->priv.target_port_id,     &target->id_ext, 8);
-+	memcpy(req->priv.target_port_id + 8, &target->ioc_guid, 8);
-+
-+	status = ib_send_cm_req(target->cm_id, &req->param);
-+
-+	kfree(req);
-+
-+	return status;
-+}
-+
-+static void srp_disconnect_target(struct srp_target_port *target)
-+{
-+	/* XXX should send SRP_I_LOGOUT request */
-+
-+	init_completion(&target->done);
-+	ib_send_cm_dreq(target->cm_id, NULL, 0);
-+	wait_for_completion(&target->done);
-+}
-+
-+static void srp_remove_work(void *target_ptr)
-+{
-+	struct srp_target_port *target = target_ptr;
-+
-+	spin_lock_irq(target->scsi_host->host_lock);
-+	if (target->state != SRP_TARGET_DEAD) {
-+		spin_unlock_irq(target->scsi_host->host_lock);
-+		scsi_host_put(target->scsi_host);
-+		return;
-+	}
-+	target->state = SRP_TARGET_REMOVED;
-+	spin_unlock_irq(target->scsi_host->host_lock);
-+
-+	down(&target->srp_host->target_mutex);
-+	list_del(&target->list);
-+	up(&target->srp_host->target_mutex);
-+
-+	scsi_remove_host(target->scsi_host);
-+	ib_destroy_cm_id(target->cm_id);
-+	srp_free_target_ib(target);
-+	scsi_host_put(target->scsi_host);
-+	/* And another put to really free the target port... */
-+	scsi_host_put(target->scsi_host);
-+}
-+
-+static int srp_connect_target(struct srp_target_port *target)
-+{
-+	int ret;
-+
-+	ret = srp_lookup_path(target);
-+	if (ret)
-+		return ret;
-+
-+	while (1) {
-+		init_completion(&target->done);
-+		ret = srp_send_req(target);
-+		if (ret)
-+			return ret;
-+		wait_for_completion(&target->done);
-+
-+		/*
-+		 * The CM event handling code will set status to
-+		 * SRP_PORT_REDIRECT if we get a port redirect REJ
-+		 * back, or SRP_DLID_REDIRECT if we get a lid/qp
-+		 * redirect REJ back.
-+		 */
-+		switch (target->status) {
-+		case 0:
-+			return 0;
-+
-+		case SRP_PORT_REDIRECT:
-+			ret = srp_lookup_path(target);
-+			if (ret)
-+				return ret;
-+			break;
-+
-+		case SRP_DLID_REDIRECT:
-+			break;
-+
-+		default:
-+			return target->status;
-+		}
-+	}
-+}
-+
-+static int srp_reconnect_target(struct srp_target_port *target)
-+{
-+	struct ib_cm_id *new_cm_id;
-+	struct ib_qp_attr qp_attr;
-+	struct srp_request *req;
-+	struct ib_wc wc;
-+	int ret;
-+	int i;
-+
-+	spin_lock_irq(target->scsi_host->host_lock);
-+	if (target->state != SRP_TARGET_LIVE) {
-+		spin_unlock_irq(target->scsi_host->host_lock);
-+		return -EAGAIN;
-+	}
-+	target->state = SRP_TARGET_CONNECTING;
-+	spin_unlock_irq(target->scsi_host->host_lock);
-+
-+	srp_disconnect_target(target);
-+	/*
-+	 * Now get a new local CM ID so that we avoid confusing the
-+	 * target in case things are really fouled up.
-+	 */
-+	new_cm_id = ib_create_cm_id(target->srp_host->dev,
-+				    srp_cm_handler, target);
-+	if (IS_ERR(new_cm_id)) {
-+		ret = PTR_ERR(new_cm_id);
-+		goto err;
-+	}
-+	ib_destroy_cm_id(target->cm_id);
-+	target->cm_id = new_cm_id;
-+
-+	qp_attr.qp_state = IB_QPS_RESET;
-+	ret = ib_modify_qp(target->qp, &qp_attr, IB_QP_STATE);
-+	if (ret)
-+		goto err;
-+
-+	ret = srp_init_qp(target, target->qp);
-+	if (ret)
-+		goto err;
-+
-+	while (ib_poll_cq(target->cq, 1, &wc) > 0)
-+		; /* nothing */
-+
-+	list_for_each_entry(req, &target->req_queue, list) {
-+		req->scmnd->result = DID_RESET << 16;
-+		req->scmnd->scsi_done(req->scmnd);
-+	}
-+
-+	target->rx_head	 = 0;
-+	target->tx_head	 = 0;
-+	target->tx_tail  = 0;
-+	target->req_head = 0;
-+	for (i = 0; i < SRP_SQ_SIZE - 1; ++i)
-+		target->req_ring[i].next = i + 1;
-+	target->req_ring[SRP_SQ_SIZE - 1].next = -1;
-+	INIT_LIST_HEAD(&target->req_queue);
-+
-+	ret = srp_connect_target(target);
-+	if (ret)
-+		goto err;
-+
-+	spin_lock_irq(target->scsi_host->host_lock);
-+	if (target->state == SRP_TARGET_CONNECTING) {
-+		ret = 0;
-+		target->state = SRP_TARGET_LIVE;
-+	} else
-+		ret = -EAGAIN;
-+	spin_unlock_irq(target->scsi_host->host_lock);
-+
-+	return ret;
-+
-+err:
-+	printk(KERN_ERR PFX "reconnect failed (%d), removing target port.\n", ret);
-+
-+	/*
-+	 * We couldn't reconnect, so kill our target port off.
-+	 * However, we have to defer the real removal because we might
-+	 * be in the context of the SCSI error handler now, which
-+	 * would deadlock if we call scsi_remove_host().
-+	 */
-+	spin_lock_irq(target->scsi_host->host_lock);
-+	if (target->state == SRP_TARGET_CONNECTING) {
-+		target->state = SRP_TARGET_DEAD;
-+		INIT_WORK(&target->work, srp_remove_work, target);
-+		schedule_work(&target->work);
-+	}
-+	spin_unlock_irq(target->scsi_host->host_lock);
-+
-+	return ret;
-+}
-+
-+static int srp_map_data(struct scsi_cmnd *scmnd, struct srp_target_port *target,
-+			struct srp_request *req)
-+{
-+	struct srp_cmd *cmd = req->cmd->buf;
-+	int len;
-+	u8 fmt;
-+
-+	if (!scmnd->request_buffer || scmnd->sc_data_direction == DMA_NONE)
-+		return sizeof (struct srp_cmd);
-+
-+	if (scmnd->sc_data_direction != DMA_FROM_DEVICE &&
-+	    scmnd->sc_data_direction != DMA_TO_DEVICE) {
-+		printk(KERN_WARNING PFX "Unhandled data direction %d\n",
-+		       scmnd->sc_data_direction);
-+		return -EINVAL;
-+	}
-+
-+	if (scmnd->use_sg) {
-+		struct scatterlist *scat = scmnd->request_buffer;
-+		int n;
-+		int i;
-+
-+		n = dma_map_sg(target->srp_host->dev->dma_device,
-+			       scat, scmnd->use_sg, scmnd->sc_data_direction);
-+
-+		if (n == 1) {
-+			struct srp_direct_buf *buf = (void *) cmd->add_data;
-+
-+			fmt = SRP_DATA_DESC_DIRECT;
-+
-+			buf->va  = cpu_to_be64(sg_dma_address(scat));
-+			buf->key = cpu_to_be32(target->srp_host->mr->rkey);
-+			buf->len = cpu_to_be32(sg_dma_len(scat));
-+
-+			len = sizeof (struct srp_cmd) +
-+				sizeof (struct srp_direct_buf);
-+		} else {
-+			struct srp_indirect_buf *buf = (void *) cmd->add_data;
-+			u32 datalen = 0;
-+
-+			fmt = SRP_DATA_DESC_INDIRECT;
-+
-+			if (scmnd->sc_data_direction == DMA_TO_DEVICE)
-+				cmd->data_out_desc_cnt = n;
-+			else
-+				cmd->data_in_desc_cnt = n;
-+
-+			buf->table_desc.va  = cpu_to_be64(req->cmd->dma +
-+							  sizeof *cmd +
-+							  sizeof *buf);
-+			buf->table_desc.key =
-+				cpu_to_be32(target->srp_host->mr->rkey);
-+			buf->table_desc.len =
-+				cpu_to_be32(n * sizeof (struct srp_direct_buf));
-+
-+			for (i = 0; i < n; ++i) {
-+				buf->desc_list[i].va  = cpu_to_be64(sg_dma_address(&scat[i]));
-+				buf->desc_list[i].key =
-+					cpu_to_be32(target->srp_host->mr->rkey);
-+				buf->desc_list[i].len = cpu_to_be32(sg_dma_len(&scat[i]));
-+
-+				datalen += sg_dma_len(&scat[i]);
-+			}
-+
-+			buf->len = cpu_to_be32(datalen);
-+
-+			len = sizeof (struct srp_cmd) +
-+				sizeof (struct srp_indirect_buf) +
-+				n * sizeof (struct srp_direct_buf);
-+		}
-+	} else {
-+		struct srp_direct_buf *buf = (void *) cmd->add_data;
-+		dma_addr_t dma;
-+
-+		dma = dma_map_single(target->srp_host->dev->dma_device,
-+				     scmnd->request_buffer, scmnd->request_bufflen,
-+				     scmnd->sc_data_direction);
-+		if (dma_mapping_error(dma)) {
-+			printk(KERN_WARNING PFX "unable to map %p/%d (dir %d)\n",
-+			       scmnd->request_buffer, (int) scmnd->request_bufflen,
-+			       scmnd->sc_data_direction);
-+			return -EINVAL;
-+		}
-+
-+		pci_unmap_addr_set(req, direct_mapping, dma);
-+
-+		buf->va  = cpu_to_be64(dma);
-+		buf->key = cpu_to_be32(target->srp_host->mr->rkey);
-+		buf->len = cpu_to_be32(scmnd->request_bufflen);
-+
-+		fmt = SRP_DATA_DESC_DIRECT;
-+
-+		len = sizeof (struct srp_cmd) + sizeof (struct srp_direct_buf);
-+	}
-+
-+	if (scmnd->sc_data_direction == DMA_TO_DEVICE)
-+		cmd->buf_fmt = fmt << 4;
-+	else
-+		cmd->buf_fmt = fmt;
-+
-+
-+	return len;
-+}
-+
-+static void srp_unmap_data(struct scsi_cmnd *scmnd,
-+			   struct srp_target_port *target,
-+			   struct srp_request *req)
-+{
-+	if (!scmnd->request_buffer ||
-+	    (scmnd->sc_data_direction != DMA_TO_DEVICE &&
-+	     scmnd->sc_data_direction != DMA_FROM_DEVICE))
-+	    return;
-+
-+	if (scmnd->use_sg)
-+		dma_unmap_sg(target->srp_host->dev->dma_device,
-+			     (struct scatterlist *) scmnd->request_buffer,
-+			     scmnd->use_sg, scmnd->sc_data_direction);
-+	else
-+		dma_unmap_single(target->srp_host->dev->dma_device,
-+				 pci_unmap_addr(req, direct_mapping),
-+				 scmnd->request_bufflen,
-+				 scmnd->sc_data_direction);
-+}
-+
-+static void srp_process_rsp(struct srp_target_port *target, struct srp_rsp *rsp)
-+{
-+	struct srp_request *req;
-+	struct scsi_cmnd *scmnd;
-+	unsigned long flags;
-+	s32 delta;
-+
-+	delta = (s32) be32_to_cpu(rsp->req_lim_delta);
-+
-+	spin_lock_irqsave(target->scsi_host->host_lock, flags);
-+
-+	target->req_lim += delta;
-+
-+	req = &target->req_ring[rsp->tag & ~SRP_TAG_TSK_MGMT];
-+
-+	if (unlikely(rsp->tag & SRP_TAG_TSK_MGMT)) {
-+		if (be32_to_cpu(rsp->resp_data_len) < 4)
-+			req->tsk_status = -1;
-+		else
-+			req->tsk_status = rsp->data[3];
-+		complete(&req->done);
-+	} else {
-+		scmnd 	      = req->scmnd;
-+		if (!scmnd)
-+			printk(KERN_ERR "Null scmnd for RSP w/tag %016llx\n",
-+			       (unsigned long long) rsp->tag);
-+		scmnd->result = rsp->status;
-+
-+		if (rsp->flags & SRP_RSP_FLAG_SNSVALID) {
-+			memcpy(scmnd->sense_buffer, rsp->data +
-+			       be32_to_cpu(rsp->resp_data_len),
-+			       min_t(int, be32_to_cpu(rsp->sense_data_len),
-+				     SCSI_SENSE_BUFFERSIZE));
-+		}
-+
-+		if (rsp->flags & (SRP_RSP_FLAG_DOOVER | SRP_RSP_FLAG_DOUNDER))
-+			scmnd->resid = be32_to_cpu(rsp->data_out_res_cnt);
-+		else if (rsp->flags & (SRP_RSP_FLAG_DIOVER | SRP_RSP_FLAG_DIUNDER))
-+			scmnd->resid = be32_to_cpu(rsp->data_in_res_cnt);
-+
-+		srp_unmap_data(scmnd, target, req);
-+
-+		if (!req->tsk_mgmt) {
-+			req->scmnd = NULL;
-+			scmnd->host_scribble = (void *) -1L;
-+			scmnd->scsi_done(scmnd);
-+
-+			list_del(&req->list);
-+			req->next = target->req_head;
-+			target->req_head = rsp->tag & ~SRP_TAG_TSK_MGMT;
-+		} else
-+			req->cmd_done = 1;
-+	}
-+
-+	spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
-+}
-+
-+static void srp_reconnect_work(void *target_ptr)
-+{
-+	struct srp_target_port *target = target_ptr;
-+
-+	srp_reconnect_target(target);
-+}
-+
-+static void srp_handle_recv(struct srp_target_port *target, struct ib_wc *wc)
-+{
-+	struct srp_iu *iu;
-+	u8 opcode;
-+
-+	iu = target->rx_ring[wc->wr_id & ~SRP_OP_RECV];
-+
-+	dma_sync_single_for_cpu(target->srp_host->dev->dma_device, iu->dma,
-+				target->max_ti_iu_len, DMA_FROM_DEVICE);
-+
-+	opcode = *(u8 *) iu->buf;
-+
-+	if (0) {
-+		int i;
-+
-+		printk(KERN_ERR PFX "recv completion, opcode 0x%02x\n", opcode);
-+
-+		for (i = 0; i < wc->byte_len; ++i) {
-+			if (i % 8 == 0)
-+				printk(KERN_ERR "  [%02x] ", i);
-+			printk(" %02x", ((u8 *) iu->buf)[i]);
-+			if ((i + 1) % 8 == 0)
-+				printk("\n");
-+		}
-+
-+		if (wc->byte_len % 8)
-+			printk("\n");
-+	}
-+
-+	switch (opcode) {
-+	case SRP_RSP:
-+		srp_process_rsp(target, iu->buf);
-+		break;
-+
-+	case SRP_T_LOGOUT:
-+		/* XXX Handle target logout */
-+		printk(KERN_WARNING PFX "Got target logout request\n");
-+		break;
-+
-+	default:
-+		printk(KERN_WARNING PFX "Unhandled SRP opcode 0x%02x\n", opcode);
-+		break;
-+	}
-+
-+	dma_sync_single_for_device(target->srp_host->dev->dma_device, iu->dma,
-+				   target->max_ti_iu_len, DMA_FROM_DEVICE);
-+}
-+
-+static void srp_completion(struct ib_cq *cq, void *target_ptr)
-+{
-+	struct srp_target_port *target = target_ptr;
-+	struct ib_wc wc;
-+	unsigned long flags;
-+
-+	ib_req_notify_cq(cq, IB_CQ_NEXT_COMP);
-+	while (ib_poll_cq(cq, 1, &wc) > 0) {
-+		if (wc.status) {
-+			printk(KERN_ERR PFX "failed %s status %d\n",
-+			       wc.wr_id & SRP_OP_RECV ? "receive" : "send",
-+			       wc.status);
-+			spin_lock_irqsave(target->scsi_host->host_lock, flags);
-+			if (target->state == SRP_TARGET_LIVE)
-+				schedule_work(&target->work);
-+			spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
-+			break;
-+		}
-+
-+		if (wc.wr_id & SRP_OP_RECV)
-+			srp_handle_recv(target, &wc);
-+		else
-+			++target->tx_tail;
-+	}
-+}
-+
-+static int __srp_post_recv(struct srp_target_port *target)
-+{
-+	struct srp_iu *iu;
-+	struct ib_sge list;
-+	struct ib_recv_wr wr, *bad_wr;
-+	unsigned int next;
-+	int ret;
-+
-+	next 	 = target->rx_head & (SRP_RQ_SIZE - 1);
-+	wr.wr_id = next | SRP_OP_RECV;
-+	iu 	 = target->rx_ring[next];
-+
-+	list.addr   = iu->dma;
-+	list.length = iu->size;
-+	list.lkey   = target->srp_host->mr->lkey;
-+
-+	wr.next     = NULL;
-+	wr.sg_list  = &list;
-+	wr.num_sge  = 1;
-+
-+	ret = ib_post_recv(target->qp, &wr, &bad_wr);
-+	if (!ret)
-+		++target->rx_head;
-+
-+	return ret;
-+}
-+
-+static int srp_post_recv(struct srp_target_port *target)
-+{
-+	unsigned long flags;
-+	int ret;
-+
-+	spin_lock_irqsave(target->scsi_host->host_lock, flags);
-+	ret = __srp_post_recv(target);
-+	spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
-+
-+	return ret;
-+}
-+
-+/*
-+ * Must be called with target->scsi_host->host_lock held to protect
-+ * req_lim and tx_head.
-+ */
-+static struct srp_iu *__srp_get_tx_iu(struct srp_target_port *target)
-+{
-+	if (target->tx_head - target->tx_tail >= SRP_SQ_SIZE)
-+		return NULL;
-+
-+	return target->tx_ring[target->tx_head & SRP_SQ_SIZE];
-+}
-+
-+/*
-+ * Must be called with target->scsi_host->host_lock held to protect
-+ * req_lim and tx_head.
-+ */
-+static int __srp_post_send(struct srp_target_port *target,
-+			   struct srp_iu *iu, int len)
-+{
-+	struct ib_sge list;
-+	struct ib_send_wr wr, *bad_wr;
-+	int ret = 0;
-+
-+	if (target->req_lim < 1) {
-+		printk(KERN_ERR PFX "Target has req_lim %d\n", target->req_lim);
-+		return -EAGAIN;
-+	}
-+
-+	list.addr   = iu->dma;
-+	list.length = len;
-+	list.lkey   = target->srp_host->mr->lkey;
-+
-+	wr.next       = NULL;
-+	wr.wr_id      = target->tx_head & SRP_SQ_SIZE;
-+	wr.sg_list    = &list;
-+	wr.num_sge    = 1;
-+	wr.opcode     = IB_WR_SEND;
-+	wr.send_flags = IB_SEND_SIGNALED;
-+
-+	ret = ib_post_send(target->qp, &wr, &bad_wr);
-+
-+	if (!ret) {
-+		++target->tx_head;
-+		--target->req_lim;
-+	}
-+
-+	return ret;
-+}
-+
-+static int srp_queuecommand(struct scsi_cmnd *scmnd,
-+			    void (*done)(struct scsi_cmnd *))
-+{
-+	struct srp_target_port *target = host_to_target(scmnd->device->host);
-+	struct srp_request *req;
-+	struct srp_iu *iu;
-+	struct srp_cmd *cmd;
-+	long req_index;
-+	int len;
-+
-+	if (target->state == SRP_TARGET_CONNECTING)
-+		goto err;
-+
-+	if (target->state == SRP_TARGET_DEAD ||
-+	    target->state == SRP_TARGET_REMOVED) {
-+		scmnd->result = DID_BAD_TARGET << 16;
-+		done(scmnd);
-+		return 0;
-+	}
-+
-+	iu = __srp_get_tx_iu(target);
-+	if (!iu)
-+		goto err;
-+
-+	dma_sync_single_for_cpu(target->srp_host->dev->dma_device, iu->dma,
-+				SRP_MAX_IU_LEN, DMA_TO_DEVICE);
-+
-+	req_index = target->req_head;
-+
-+	scmnd->scsi_done     = done;
-+	scmnd->result        = 0;
-+	scmnd->host_scribble = (void *) req_index;
-+
-+	cmd = iu->buf;
-+	memset(cmd, 0, sizeof *cmd);
-+
-+	cmd->opcode = SRP_CMD;
-+	cmd->lun    = cpu_to_be64((u64) scmnd->device->lun << 48);
-+	cmd->tag    = req_index;
-+	memcpy(cmd->cdb, scmnd->cmnd, scmnd->cmd_len);
-+
-+	req = &target->req_ring[req_index];
-+
-+	req->scmnd    = scmnd;
-+	req->cmd      = iu;
-+	req->cmd_done = 0;
-+	req->tsk_mgmt = NULL;
-+
-+	len = srp_map_data(scmnd, target, req);
-+	if (len < 0) {
-+		printk(KERN_ERR PFX "Failed to map data\n");
-+		goto err;
-+	}
-+
-+	if (__srp_post_recv(target)) {
-+		printk(KERN_ERR PFX "Recv failed\n");
-+		goto err_unmap;
-+	}
-+
-+	dma_sync_single_for_device(target->srp_host->dev->dma_device, iu->dma,
-+				   SRP_MAX_IU_LEN, DMA_TO_DEVICE);
-+
-+	if (__srp_post_send(target, iu, len)) {
-+		printk(KERN_ERR PFX "Send failed\n");
-+		goto err_unmap;
-+	}
-+
-+	target->req_head = req->next;
-+	list_add_tail(&req->list, &target->req_queue);
-+
-+	return 0;
-+
-+err_unmap:
-+	srp_unmap_data(scmnd, target, req);
-+
-+err:
-+	return SCSI_MLQUEUE_HOST_BUSY;
-+}
-+
-+static int srp_alloc_iu_bufs(struct srp_target_port *target)
-+{
-+	int i;
-+
-+	for (i = 0; i < SRP_RQ_SIZE; ++i) {
-+		target->rx_ring[i] = srp_alloc_iu(target->srp_host,
-+						  target->max_ti_iu_len,
-+						  GFP_KERNEL, DMA_FROM_DEVICE);
-+		if (!target->rx_ring[i])
-+			goto err;
-+	}
-+
-+	for (i = 0; i < SRP_SQ_SIZE + 1; ++i) {
-+		target->tx_ring[i] = srp_alloc_iu(target->srp_host,
-+						  SRP_MAX_IU_LEN,
-+						  GFP_KERNEL, DMA_TO_DEVICE);
-+		if (!target->tx_ring[i])
-+			goto err;
-+	}
-+
-+	return 0;
-+
-+err:
-+	for (i = 0; i < SRP_RQ_SIZE; ++i) {
-+		srp_free_iu(target->srp_host, target->rx_ring[i]);
-+		target->rx_ring[i] = NULL;
-+	}
-+
-+	for (i = 0; i < SRP_SQ_SIZE + 1; ++i) {
-+		srp_free_iu(target->srp_host, target->tx_ring[i]);
-+		target->tx_ring[i] = NULL;
-+	}
-+
-+	return -ENOMEM;
-+}
-+
-+static void srp_cm_rej_handler(struct ib_cm_id *cm_id,
-+			       struct ib_cm_event *event,
-+			       struct srp_target_port *target)
-+{
-+	struct ib_class_port_info *cpi;
-+	int opcode;
-+
-+	switch (event->param.rej_rcvd.reason) {
-+	case IB_CM_REJ_PORT_CM_REDIRECT:
-+		cpi = event->param.rej_rcvd.ari;
-+		target->path.dlid = cpi->redirect_lid;
-+		target->path.pkey = cpi->redirect_pkey;
-+		cm_id->remote_cm_qpn = be32_to_cpu(cpi->redirect_qp) & 0x00ffffff;
-+		memcpy(target->path.dgid.raw, cpi->redirect_gid, 16);
-+
-+		target->status = target->path.dlid ?
-+			SRP_DLID_REDIRECT : SRP_PORT_REDIRECT;
-+		break;
-+
-+	case IB_CM_REJ_PORT_REDIRECT:
-+		if (topspin_workarounds &&
-+		    !memcmp(&target->ioc_guid, topspin_oui, 3)) {
-+			/*
-+			 * Topspin/Cisco SRP gateways incorrectly send
-+			 * reject reason code 25 when they mean 24
-+			 * (port redirect).
-+			 */
-+			memcpy(target->path.dgid.raw,
-+			       event->param.rej_rcvd.ari, 16);
-+
-+			printk(KERN_DEBUG PFX "Topspin/Cisco redirect to target port GID %016llx%016llx\n",
-+			       (unsigned long long) be64_to_cpu(target->path.dgid.global.subnet_prefix),
-+			       (unsigned long long) be64_to_cpu(target->path.dgid.global.interface_id));
-+
-+			target->status = SRP_PORT_REDIRECT;
-+		} else {
-+			printk(KERN_WARNING "  REJ reason: IB_CM_REJ_PORT_REDIRECT\n");
-+			target->status = -ECONNRESET;
-+		}
-+		break;
-+
-+	case IB_CM_REJ_DUPLICATE_LOCAL_COMM_ID:
-+		printk(KERN_WARNING "  REJ reason: IB_CM_REJ_DUPLICATE_LOCAL_COMM_ID\n");
-+		target->status = -ECONNRESET;
-+		break;
-+
-+	case IB_CM_REJ_CONSUMER_DEFINED:
-+		opcode = *(u8 *) event->private_data;
-+		if (opcode == SRP_LOGIN_REJ) {
-+			struct srp_login_rej *rej = event->private_data;
-+			u32 reason = be32_to_cpu(rej->reason);
-+
-+			if (reason == SRP_LOGIN_REJ_REQ_IT_IU_LENGTH_TOO_LARGE)
-+				printk(KERN_WARNING PFX
-+				       "SRP_LOGIN_REJ: requested max_it_iu_len too large\n");
-+			else
-+				printk(KERN_WARNING PFX
-+				       "SRP LOGIN REJECTED, reason 0x%08x\n", reason);
-+		} else
-+			printk(KERN_WARNING "  REJ reason: IB_CM_REJ_CONSUMER_DEFINED,"
-+			       " opcode 0x%02x\n", opcode);
-+		target->status = -ECONNRESET;
-+		break;
-+
-+	default:
-+		printk(KERN_WARNING "  REJ reason 0x%x\n",
-+		       event->param.rej_rcvd.reason);
-+		target->status = -ECONNRESET;
-+	}
-+}
-+
-+static int srp_cm_handler(struct ib_cm_id *cm_id, struct ib_cm_event *event)
-+{
-+	struct srp_target_port *target = cm_id->context;
-+	struct ib_qp_attr *qp_attr = NULL;
-+	int attr_mask = 0;
-+	int comp = 0;
-+	int opcode = 0;
-+
-+	switch (event->event) {
-+	case IB_CM_REQ_ERROR:
-+		printk(KERN_DEBUG PFX "Sending CM REQ failed\n");
-+		comp = 1;
-+		target->status = -ECONNRESET;
-+		break;
-+
-+	case IB_CM_REP_RECEIVED:
-+		comp = 1;
-+		opcode = *(u8 *) event->private_data;
-+
-+		if (opcode == SRP_LOGIN_RSP) {
-+			struct srp_login_rsp *rsp = event->private_data;
-+
-+			target->max_ti_iu_len = be32_to_cpu(rsp->max_ti_iu_len);
-+			target->req_lim       = be32_to_cpu(rsp->req_lim_delta);
-+
-+			target->scsi_host->can_queue = min(target->req_lim,
-+							   target->scsi_host->can_queue);
-+		} else {
-+			printk(KERN_WARNING PFX "Unhandled RSP opcode %#x\n", opcode);
-+			target->status = -ECONNRESET;
-+			break;
-+		}
-+
-+		target->status = srp_alloc_iu_bufs(target);
-+		if (target->status)
-+			break;
-+
-+		qp_attr = kmalloc(sizeof *qp_attr, GFP_KERNEL);
-+		if (!qp_attr) {
-+			target->status = -ENOMEM;
-+			break;
-+		}
-+
-+		qp_attr->qp_state = IB_QPS_RTR;
-+		target->status = ib_cm_init_qp_attr(cm_id, qp_attr, &attr_mask);
-+		if (target->status)
-+			break;
-+
-+		qp_attr->rq_psn = 0; /* XXX */
-+		attr_mask |= IB_QP_RQ_PSN;
-+
-+		target->status = ib_modify_qp(target->qp, qp_attr, attr_mask);
-+		if (target->status)
-+			break;
-+
-+		target->status = srp_post_recv(target);
-+		if (target->status)
-+			break;
-+
-+		qp_attr->qp_state = IB_QPS_RTS;
-+		target->status = ib_cm_init_qp_attr(cm_id, qp_attr, &attr_mask);
-+		if (target->status)
-+			break;
-+
-+		target->status = ib_modify_qp(target->qp, qp_attr, attr_mask);
-+		if (target->status)
-+			break;
-+
-+		target->status = ib_send_cm_rtu(cm_id, NULL, 0);
-+		if (target->status)
-+			break;
-+
-+		break;
-+
-+	case IB_CM_REJ_RECEIVED:
-+		printk(KERN_DEBUG PFX "REJ received\n");
-+		comp = 1;
-+
-+		srp_cm_rej_handler(cm_id, event, target);
-+		break;
-+
-+	case IB_CM_MRA_RECEIVED:
-+		printk(KERN_ERR PFX "MRA received\n");
-+		break;
-+
-+	case IB_CM_DREP_RECEIVED:
-+		break;
-+
-+	case IB_CM_TIMEWAIT_EXIT:
-+		printk(KERN_ERR PFX "connection closed\n");
-+
-+		comp = 1;
-+		target->status = 0;
-+		break;
-+
-+	default:
-+		printk(KERN_WARNING PFX "Unhandled CM event %d\n", event->event);
-+		break;
-+	}
-+
-+	if (comp)
-+		complete(&target->done);
-+
-+	kfree(qp_attr);
-+
-+	return 0;
-+}
-+
-+static int srp_send_tsk_mgmt(struct scsi_cmnd *scmnd, u8 func)
-+{
-+	struct srp_target_port *target = host_to_target(scmnd->device->host);
-+	struct srp_request *req;
-+	struct srp_iu *iu;
-+	struct srp_tsk_mgmt *tsk_mgmt;
-+	int req_index;
-+	int ret = FAILED;
-+
-+	spin_lock_irq(target->scsi_host->host_lock);
-+
-+	if (scmnd->host_scribble == (void *) -1L)
-+		goto out;
-+
-+	req_index = (long) scmnd->host_scribble;
-+	printk(KERN_ERR "Abort for req_index %d\n", req_index);
-+
-+	req = &target->req_ring[req_index];
-+	init_completion(&req->done);
-+
-+	iu = __srp_get_tx_iu(target);
-+	if (!iu)
-+		goto out;
-+
-+	tsk_mgmt = iu->buf;
-+	memset(tsk_mgmt, 0, sizeof *tsk_mgmt);
-+
-+	tsk_mgmt->opcode 	= SRP_TSK_MGMT;
-+	tsk_mgmt->lun 		= cpu_to_be64((u64) scmnd->device->lun << 48);
-+	tsk_mgmt->tag 		= req_index | SRP_TAG_TSK_MGMT;
-+	tsk_mgmt->tsk_mgmt_func = func;
-+	tsk_mgmt->task_tag 	= req_index;
-+
-+	if (__srp_post_send(target, iu, sizeof *tsk_mgmt))
-+		goto out;
-+
-+	req->tsk_mgmt = iu;
-+
-+	spin_unlock_irq(target->scsi_host->host_lock);
-+	if (!wait_for_completion_timeout(&req->done,
-+					 msecs_to_jiffies(SRP_ABORT_TIMEOUT_MS)))
-+		return FAILED;
-+	spin_lock_irq(target->scsi_host->host_lock);
-+
-+	if (req->cmd_done) {
-+		list_del(&req->list);
-+		req->next = target->req_head;
-+		target->req_head = req_index;
-+
-+		scmnd->scsi_done(scmnd);
-+	} else if (!req->tsk_status) {
-+		scmnd->result = DID_ABORT << 16;
-+		ret = SUCCESS;
-+	}
-+
-+out:
-+	spin_unlock_irq(target->scsi_host->host_lock);
-+	return ret;
-+}
-+
-+static int srp_abort(struct scsi_cmnd *scmnd)
-+{
-+	printk(KERN_ERR "SRP abort called\n");
-+
-+	return srp_send_tsk_mgmt(scmnd, SRP_TSK_ABORT_TASK);
-+}
-+
-+static int srp_reset_device(struct scsi_cmnd *scmnd)
-+{
-+	printk(KERN_ERR "SRP reset_device called\n");
-+
-+	return srp_send_tsk_mgmt(scmnd, SRP_TSK_LUN_RESET);
-+}
-+
-+static int srp_reset_host(struct scsi_cmnd *scmnd)
-+{
-+	struct srp_target_port *target = host_to_target(scmnd->device->host);
-+	int ret = FAILED;
-+
-+	printk(KERN_ERR PFX "SRP reset_host called\n");
-+
-+	if (!srp_reconnect_target(target))
-+		ret = SUCCESS;
-+
-+	return ret;
-+}
-+
-+static struct scsi_host_template srp_template = {
-+	.module				= THIS_MODULE,
-+	.name				= DRV_NAME,
-+	.info				= srp_target_info,
-+	.queuecommand			= srp_queuecommand,
-+	.eh_abort_handler		= srp_abort,
-+	.eh_device_reset_handler	= srp_reset_device,
-+	.eh_host_reset_handler		= srp_reset_host,
-+	.can_queue			= SRP_SQ_SIZE,
-+	.this_id			= -1,
-+	.sg_tablesize			= SRP_MAX_INDIRECT,
-+	.cmd_per_lun			= SRP_SQ_SIZE,
-+	.use_clustering			= ENABLE_CLUSTERING
-+};
-+
-+static int srp_add_target(struct srp_host *host, struct srp_target_port *target)
-+{
-+	sprintf(target->target_name, "SRP.T10:%016llX",
-+		 (unsigned long long) be64_to_cpu(target->id_ext));
-+
-+	if (scsi_add_host(target->scsi_host, host->dev->dma_device))
-+		return -ENODEV;
-+
-+	down(&host->target_mutex);
-+	list_add_tail(&target->list, &host->target_list);
-+	up(&host->target_mutex);
-+
-+	target->state = SRP_TARGET_LIVE;
-+
-+	/* XXX: are we supposed to have a definition of SCAN_WILD_CARD ?? */
-+	scsi_scan_target(&target->scsi_host->shost_gendev,
-+			 0, target->scsi_id, ~0, 0);
-+
-+	return 0;
-+}
-+
-+static void srp_release_class_dev(struct class_device *class_dev)
-+{
-+	struct srp_host *host =
-+		container_of(class_dev, struct srp_host, class_dev);
-+
-+	complete(&host->released);
-+}
-+
-+static struct class srp_class = {
-+	.name    = "infiniband_srp",
-+	.release = srp_release_class_dev
-+};
-+
-+/*
-+ * Target ports are added by writing
-+ *
-+ *     id_ext=<SRP ID ext>,ioc_guid=<SRP IOC GUID>,dgid=<dest GID>,
-+ *     pkey=<P_Key>,service_id=<service ID>
-+ *
-+ * to the add_target sysfs attribute.
-+ */
-+enum {
-+	SRP_OPT_ERR		= 0,
-+	SRP_OPT_ID_EXT		= 1 << 0,
-+	SRP_OPT_IOC_GUID	= 1 << 1,
-+	SRP_OPT_DGID		= 1 << 2,
-+	SRP_OPT_PKEY		= 1 << 3,
-+	SRP_OPT_SERVICE_ID	= 1 << 4,
-+	SRP_OPT_MAX_SECT	= 1 << 5,
-+	SRP_OPT_ALL		= (SRP_OPT_ID_EXT	|
-+				   SRP_OPT_IOC_GUID	|
-+				   SRP_OPT_DGID		|
-+				   SRP_OPT_PKEY		|
-+				   SRP_OPT_SERVICE_ID),
-+};
-+
-+static match_table_t srp_opt_tokens = {
-+	{ SRP_OPT_ID_EXT,	"id_ext=%s" 	},
-+	{ SRP_OPT_IOC_GUID,	"ioc_guid=%s" 	},
-+	{ SRP_OPT_DGID,		"dgid=%s" 	},
-+	{ SRP_OPT_PKEY,		"pkey=%x" 	},
-+	{ SRP_OPT_SERVICE_ID,	"service_id=%s" },
-+	{ SRP_OPT_MAX_SECT,     "max_sect=%d" 	},
-+	{ SRP_OPT_ERR,		NULL 		}
-+};
-+
-+static int srp_parse_options(const char *buf, struct srp_target_port *target)
-+{
-+	char *options;
-+	char *p;
-+	char dgid[3];
-+	substring_t args[MAX_OPT_ARGS];
-+	int opt_mask = 0;
-+	int token;
-+	int ret = -EINVAL;
-+	int i;
-+
-+	options = kstrdup(buf, GFP_KERNEL);
-+	if (!options)
-+		return -ENOMEM;
-+
-+	while ((p = strsep(&options, ",")) != NULL) {
-+		if (!*p)
-+			continue;
-+
-+		token = match_token(p, srp_opt_tokens, args);
-+		opt_mask |= token;
-+
-+		switch (token) {
-+		case SRP_OPT_ID_EXT:
-+			p = match_strdup(args);
-+			target->id_ext = cpu_to_be64(simple_strtoull(p, NULL, 16));
-+			kfree(p);
-+			break;
-+
-+		case SRP_OPT_IOC_GUID:
-+			p = match_strdup(args);
-+			target->ioc_guid = cpu_to_be64(simple_strtoull(p, NULL, 16));
-+			kfree(p);
-+			break;
-+
-+		case SRP_OPT_DGID:
-+			p = match_strdup(args);
-+			if (strlen(p) != 32)
-+				goto out;
-+
-+			for (i = 0; i < 16; ++i) {
-+				strlcpy(dgid, p + i * 2, 3);
-+				target->path.dgid.raw[i] = simple_strtoul(dgid, NULL, 16);
-+			}
-+			break;
-+
-+		case SRP_OPT_PKEY:
-+			if (match_hex(args, &token))
-+				goto out;
-+			target->path.pkey = cpu_to_be16(token);
-+			break;
-+
-+		case SRP_OPT_SERVICE_ID:
-+			p = match_strdup(args);
-+			target->service_id = cpu_to_be64(simple_strtoull(p, NULL, 16));
-+			kfree(p);
-+			break;
-+
-+		case SRP_OPT_MAX_SECT:
-+			if (match_int(args, &token))
-+				goto out;
-+			target->scsi_host->max_sectors = token;
-+			break;
-+
-+		default:
-+			goto out;
-+		}
-+	}
-+
-+	if (opt_mask == SRP_OPT_ALL)
-+		ret = 0;
-+
-+out:
-+	kfree(options);
-+	return ret;
-+}
-+
-+static ssize_t srp_create_target(struct class_device *class_dev,
-+				 const char *buf, size_t count)
-+{
-+	struct srp_host *host =
-+		container_of(class_dev, struct srp_host, class_dev);
-+	struct Scsi_Host *target_host;
-+	struct srp_target_port *target;
-+	int ret;
-+	int i;
-+
-+	target_host = scsi_host_alloc(&srp_template,
-+				      sizeof (struct srp_target_port));
-+	if (!target_host)
-+		return -ENOMEM;
-+
-+	target = host_to_target(target_host);
-+	memset(target, 0, sizeof *target);
-+
-+	target->scsi_host  = target_host;
-+	target->srp_host   = host;
-+
-+	INIT_WORK(&target->work, srp_reconnect_work, target);
-+
-+	for (i = 0; i < SRP_SQ_SIZE - 1; ++i)
-+		target->req_ring[i].next = i + 1;
-+	target->req_ring[SRP_SQ_SIZE - 1].next = -1;
-+	INIT_LIST_HEAD(&target->req_queue);
-+
-+	ret = srp_parse_options(buf, target);
-+	if (ret)
-+		goto err;
-+
-+	ib_get_cached_gid(host->dev, host->port, 0, &target->path.sgid);
-+
-+	printk(KERN_DEBUG PFX "new target: id_ext %016llx ioc_guid %016llx pkey %04x "
-+	       "service_id %016llx dgid %04x:%04x:%04x:%04x:%04x:%04x:%04x:%04x\n",
-+	       (unsigned long long) be64_to_cpu(target->id_ext),
-+	       (unsigned long long) be64_to_cpu(target->ioc_guid),
-+	       be16_to_cpu(target->path.pkey),
-+	       (unsigned long long) be64_to_cpu(target->service_id),
-+	       (int) be16_to_cpu(*(__be16 *) &target->path.dgid.raw[0]),
-+	       (int) be16_to_cpu(*(__be16 *) &target->path.dgid.raw[2]),
-+	       (int) be16_to_cpu(*(__be16 *) &target->path.dgid.raw[4]),
-+	       (int) be16_to_cpu(*(__be16 *) &target->path.dgid.raw[6]),
-+	       (int) be16_to_cpu(*(__be16 *) &target->path.dgid.raw[8]),
-+	       (int) be16_to_cpu(*(__be16 *) &target->path.dgid.raw[10]),
-+	       (int) be16_to_cpu(*(__be16 *) &target->path.dgid.raw[12]),
-+	       (int) be16_to_cpu(*(__be16 *) &target->path.dgid.raw[14]));
-+
-+	ret = srp_create_target_ib(target);
-+	if (ret)
-+		goto err;
-+
-+	target->cm_id = ib_create_cm_id(host->dev, srp_cm_handler, target);
-+	if (IS_ERR(target->cm_id)) {
-+		ret = PTR_ERR(target->cm_id);
-+		goto err_free;
-+	}
-+
-+	ret = srp_connect_target(target);
-+	if (ret) {
-+		printk(KERN_ERR PFX "Connection failed\n");
-+		goto err_cm_id;
-+	}
-+
-+	ret = srp_add_target(host, target);
-+	if (ret)
-+		goto err_disconnect;
-+
-+	return count;
-+
-+err_disconnect:
-+	srp_disconnect_target(target);
-+
-+err_cm_id:
-+	ib_destroy_cm_id(target->cm_id);
-+
-+err_free:
-+	srp_free_target_ib(target);
-+
-+err:
-+	scsi_host_put(target_host);
-+
-+	return ret;
-+}
-+
-+static CLASS_DEVICE_ATTR(add_target, S_IWUSR, NULL, srp_create_target);
-+
-+static struct srp_host *srp_add_port(struct ib_device *device,
-+				     __be64 node_guid, u8 port)
-+{
-+	struct srp_host *host;
-+
-+	host = kzalloc(sizeof *host, GFP_KERNEL);
-+	if (!host)
-+		return NULL;
-+
-+	INIT_LIST_HEAD(&host->target_list);
-+	init_MUTEX(&host->target_mutex);
-+	init_completion(&host->released);
-+	host->dev  = device;
-+	host->port = port;
-+
-+	host->initiator_port_id[7] = port;
-+	memcpy(host->initiator_port_id + 8, &node_guid, 8);
-+
-+	host->pd   = ib_alloc_pd(device);
-+	if (IS_ERR(host->pd))
-+		goto err_free;
-+
-+	host->mr   = ib_get_dma_mr(host->pd,
-+				   IB_ACCESS_LOCAL_WRITE |
-+				   IB_ACCESS_REMOTE_READ |
-+				   IB_ACCESS_REMOTE_WRITE);
-+	if (IS_ERR(host->mr))
-+		goto err_pd;
-+
-+	host->class_dev.class = &srp_class;
-+	host->class_dev.dev   = device->dma_device;
-+	snprintf(host->class_dev.class_id, BUS_ID_SIZE, "srp-%s-%d",
-+		 device->name, port);
-+
-+	if (class_device_register(&host->class_dev))
-+		goto err_mr;
-+	if (class_device_create_file(&host->class_dev, &class_device_attr_add_target))
-+		goto err_class;
-+	/* XXX ibdev / port files as well */
-+
-+	return host;
-+
-+err_class:
-+	class_device_unregister(&host->class_dev);
-+
-+err_mr:
-+	ib_dereg_mr(host->mr);
-+
-+err_pd:
-+	ib_dealloc_pd(host->pd);
-+
-+err_free:
-+	kfree(host);
-+
-+	return NULL;
-+}
-+
-+static void srp_add_one(struct ib_device *device)
-+{
-+	struct list_head *dev_list;
-+	struct srp_host *host;
-+	struct ib_device_attr *dev_attr;
-+	int s, e, p;
-+
-+	dev_attr = kmalloc(sizeof *dev_attr, GFP_KERNEL);
-+	if (!dev_attr)
-+		return;
-+
-+	if (ib_query_device(device, dev_attr)) {
-+		printk(KERN_WARNING PFX "Couldn't query node GUID for %s.\n",
-+		       device->name);
-+		goto out;
-+	}
-+
-+	dev_list = kmalloc(sizeof *dev_list, GFP_KERNEL);
-+	if (!dev_list)
-+		goto out;
-+
-+	INIT_LIST_HEAD(dev_list);
-+
-+	if (device->node_type == IB_NODE_SWITCH) {
-+		s = 0;
-+		e = 0;
-+	} else {
-+		s = 1;
-+		e = device->phys_port_cnt;
-+	}
-+
-+	for (p = s; p <= e; ++p) {
-+		host = srp_add_port(device, dev_attr->node_guid, p);
-+		if (host)
-+			list_add_tail(&host->list, dev_list);
-+	}
-+
-+	ib_set_client_data(device, &srp_client, dev_list);
-+
-+out:
-+	kfree(dev_attr);
-+}
-+
-+static void srp_remove_one(struct ib_device *device)
-+{
-+	struct list_head *dev_list;
-+	struct srp_host *host, *tmp_host;
-+	LIST_HEAD(target_list);
-+	struct srp_target_port *target, *tmp_target;
-+	unsigned long flags;
-+
-+	dev_list = ib_get_client_data(device, &srp_client);
-+
-+	list_for_each_entry_safe(host, tmp_host, dev_list, list) {
-+		class_device_unregister(&host->class_dev);
-+		/*
-+		 * Wait for the sysfs entry to go away, so that no new
-+		 * target ports can be created.
-+		 */
-+		wait_for_completion(&host->released);
-+
-+		/*
-+		 * Mark all target ports as removed, so we stop queueing
-+		 * commands and don't try to reconnect.
-+		 */
-+		down(&host->target_mutex);
-+		list_for_each_entry_safe(target, tmp_target,
-+					 &host->target_list, list) {
-+			spin_lock_irqsave(target->scsi_host->host_lock, flags);
-+			if (target->state != SRP_TARGET_REMOVED)
-+				target->state = SRP_TARGET_REMOVED;
-+			spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
-+		}
-+		up(&host->target_mutex);
-+
-+		/*
-+		 * Wait for any reconnection tasks that may have
-+		 * started before we marked our target ports as
-+		 * removed, and any target port removal tasks.
-+		 */
-+		flush_scheduled_work();
-+
-+		list_for_each_entry_safe(target, tmp_target,
-+					 &host->target_list, list) {
-+			scsi_remove_host(target->scsi_host);
-+			srp_disconnect_target(target);
-+			ib_destroy_cm_id(target->cm_id);
-+			srp_free_target_ib(target);
-+			scsi_host_put(target->scsi_host);
-+		}
-+
-+		ib_dereg_mr(host->mr);
-+		ib_dealloc_pd(host->pd);
-+		kfree(host);
-+	}
-+
-+	kfree(dev_list);
-+}
-+
-+static int __init srp_init_module(void)
-+{
-+	int ret;
-+
-+	ret = class_register(&srp_class);
-+	if (ret) {
-+		printk(KERN_ERR PFX "couldn't register class infiniband_srp\n");
-+		return ret;
-+	}
-+
-+	ret = ib_register_client(&srp_client);
-+	if (ret) {
-+		printk(KERN_ERR PFX "couldn't register IB client\n");
-+		class_unregister(&srp_class);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static void __exit srp_cleanup_module(void)
-+{
-+	ib_unregister_client(&srp_client);
-+	class_unregister(&srp_class);
-+}
-+
-+module_init(srp_init_module);
-+module_exit(srp_cleanup_module);
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.h b/drivers/infiniband/ulp/srp/ib_srp.h
-new file mode 100644
-index 0000000..f536252
---- /dev/null
-+++ b/drivers/infiniband/ulp/srp/ib_srp.h
-@@ -0,0 +1,334 @@
-+/*
-+ * Copyright (c) 2005 Cisco Systems.  All rights reserved.
-+ *
-+ * This software is available to you under a choice of one of two
-+ * licenses.  You may choose to be licensed under the terms of the GNU
-+ * General Public License (GPL) Version 2, available from the file
-+ * COPYING in the main directory of this source tree, or the
-+ * OpenIB.org BSD license below:
-+ *
-+ *     Redistribution and use in source and binary forms, with or
-+ *     without modification, are permitted provided that the following
-+ *     conditions are met:
-+ *
-+ *      - Redistributions of source code must retain the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer.
-+ *
-+ *      - Redistributions in binary form must reproduce the above
-+ *        copyright notice, this list of conditions and the following
-+ *        disclaimer in the documentation and/or other materials
-+ *        provided with the distribution.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-+ * BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-+ * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-+ * SOFTWARE.
-+ *
-+ * $Id: ib_srp.h 3893 2005-10-28 21:15:40Z roland $
-+ */
-+
-+#ifndef IB_SRP_H
-+#define IB_SRP_H
-+
-+#include <linux/types.h>
-+#include <linux/list.h>
-+
-+#include <asm/semaphore.h>
-+
-+#include <scsi/scsi_host.h>
-+#include <scsi/scsi_cmnd.h>
-+
-+#include <rdma/ib_verbs.h>
-+#include <rdma/ib_sa.h>
-+#include <rdma/ib_cm.h>
-+
-+enum {
-+	SRP_PATH_REC_TIMEOUT_MS	= 1000,
-+	SRP_ABORT_TIMEOUT_MS	= 5000,
-+
-+	SRP_PORT_REDIRECT	= 1,
-+	SRP_DLID_REDIRECT	= 2,
-+
-+	SRP_MAX_IU_LEN		= 256,
-+
-+	SRP_RQ_SHIFT    	= 6,
-+	SRP_RQ_SIZE		= 1 << SRP_RQ_SHIFT,
-+	SRP_SQ_SIZE		= SRP_RQ_SIZE - 1,
-+	SRP_CQ_SIZE		= SRP_SQ_SIZE + SRP_RQ_SIZE,
-+
-+	SRP_TAG_TSK_MGMT	= 1 << (SRP_RQ_SHIFT + 1)
-+};
-+
-+#define SRP_OP_RECV		(1 << 31)
-+#define SRP_MAX_INDIRECT	((SRP_MAX_IU_LEN -			\
-+				  sizeof (struct srp_cmd) -		\
-+				  sizeof (struct srp_indirect_buf)) / 16)
-+
-+enum srp_target_state {
-+	SRP_TARGET_LIVE,
-+	SRP_TARGET_CONNECTING,
-+	SRP_TARGET_DEAD,
-+	SRP_TARGET_REMOVED
-+};
-+
-+struct srp_host {
-+	u8			initiator_port_id[16];
-+	struct ib_device       *dev;
-+	u8                      port;
-+	struct ib_pd	       *pd;
-+	struct ib_mr	       *mr;
-+	struct class_device	class_dev;
-+	struct list_head	target_list;
-+	struct semaphore        target_mutex;
-+	struct completion	released;
-+	struct list_head	list;
-+};
-+
-+struct srp_request {
-+	struct list_head	list;
-+	struct scsi_cmnd       *scmnd;
-+	struct srp_iu	       *cmd;
-+	struct srp_iu	       *tsk_mgmt;
-+	DECLARE_PCI_UNMAP_ADDR(direct_mapping)
-+	struct completion	done;
-+	short			next;
-+	u8			cmd_done;
-+	u8			tsk_status;
-+};
-+
-+struct srp_target_port {
-+	__be64			id_ext;
-+	__be64			ioc_guid;
-+	__be64			service_id;
-+	struct srp_host	       *srp_host;
-+	struct Scsi_Host       *scsi_host;
-+	char			target_name[32];
-+	unsigned int		scsi_id;
-+
-+	struct ib_sa_path_rec	path;
-+	struct ib_sa_query     *path_query;
-+	int			path_query_id;
-+
-+	struct ib_cm_id	       *cm_id;
-+	struct ib_cq	       *cq;
-+	struct ib_qp	       *qp;
-+
-+	int			max_ti_iu_len;
-+	s32			req_lim;
-+
-+	unsigned		rx_head;
-+	struct srp_iu	       *rx_ring[SRP_RQ_SIZE];
-+
-+	unsigned		tx_head;
-+	unsigned		tx_tail;
-+	struct srp_iu	       *tx_ring[SRP_SQ_SIZE + 1];
-+
-+	int			req_head;
-+	struct list_head	req_queue;
-+	struct srp_request	req_ring[SRP_SQ_SIZE];
-+
-+	struct work_struct	work;
-+
-+	struct list_head	list;
-+	struct completion	done;
-+	int			status;
-+	enum srp_target_state	state;
-+};
-+
-+struct srp_iu {
-+	dma_addr_t		dma;
-+	void		       *buf;
-+	size_t			size;
-+	enum dma_data_direction	direction;
-+};
-+
-+/*
-+ * SRP protocol definitions
-+ */
-+
-+enum {
-+	SRP_LOGIN_REQ	= 0x00,
-+	SRP_TSK_MGMT	= 0x01,
-+	SRP_CMD		= 0x02,
-+	SRP_I_LOGOUT	= 0x03,
-+	SRP_LOGIN_RSP	= 0xc0,
-+	SRP_RSP		= 0xc1,
-+	SRP_LOGIN_REJ	= 0xc2,
-+	SRP_T_LOGOUT	= 0x80,
-+	SRP_CRED_REQ	= 0x81,
-+	SRP_AER_REQ	= 0x82,
-+	SRP_CRED_RSP	= 0x41,
-+	SRP_AER_RSP	= 0x42
-+};
-+
-+enum {
-+	SRP_BUF_FORMAT_DIRECT	= 1 << 1,
-+	SRP_BUF_FORMAT_INDIRECT	= 1 << 2
-+};
-+
-+enum {
-+	SRP_NO_DATA_DESC	= 0,
-+	SRP_DATA_DESC_DIRECT	= 1,
-+	SRP_DATA_DESC_INDIRECT	= 2
-+};
-+
-+enum {
-+	SRP_TSK_ABORT_TASK	= 0x01,
-+	SRP_TSK_ABORT_TASK_SET	= 0x02,
-+	SRP_TSK_CLEAR_TASK_SET	= 0x04,
-+	SRP_TSK_LUN_RESET	= 0x08,
-+	SRP_TSK_CLEAR_ACA	= 0x40
-+};
-+
-+enum srp_login_rej_reason {
-+	SRP_LOGIN_REJ_UNABLE_ESTABLISH_CHANNEL		= 0x00010000,
-+	SRP_LOGIN_REJ_INSUFFICIENT_RESOURCES		= 0x00010001,
-+	SRP_LOGIN_REJ_REQ_IT_IU_LENGTH_TOO_LARGE	= 0x00010002,
-+	SRP_LOGIN_REJ_UNABLE_ASSOCIATE_CHANNEL		= 0x00010003,
-+	SRP_LOGIN_REJ_UNSUPPORTED_DESCRIPTOR_FMT	= 0x00010004,
-+	SRP_LOGIN_REJ_MULTI_CHANNEL_UNSUPPORTED		= 0x00010005,
-+	SRP_LOGIN_REJ_CHANNEL_LIMIT_REACHED		= 0x00010006
-+};
-+
-+struct srp_direct_buf {
-+	__be64	va;
-+	__be32	key;
-+	__be32  len;
-+};
-+
-+/*
-+ * We need the packed attribute because the SRP spec puts the list of
-+ * descriptors at an offset of 20, which is not aligned to the size
-+ * of struct srp_direct_buf.
-+ */
-+struct srp_indirect_buf {
-+	struct srp_direct_buf	table_desc;
-+	__be32			len;
-+	struct srp_direct_buf	desc_list[0] __attribute__((packed));
-+};
-+
-+enum {
-+	SRP_MULTICHAN_SINGLE = 0,
-+	SRP_MULTICHAN_MULTI  = 1
-+};
-+
-+struct srp_login_req {
-+	u8	opcode;
-+	u8	reserved1[7];
-+	u64	tag;
-+	__be32	req_it_iu_len;
-+	u8	reserved2[4];
-+	__be16	req_buf_fmt;
-+	u8	req_flags;
-+	u8	reserved3[5];
-+	u8	initiator_port_id[16];
-+	u8	target_port_id[16];
-+};
-+
-+struct srp_login_rsp {
-+	u8	opcode;
-+	u8	reserved1[3];
-+	__be32	req_lim_delta;
-+	u64	tag;
-+	__be32	max_it_iu_len;
-+	__be32	max_ti_iu_len;
-+	__be16	buf_fmt;
-+	u8	rsp_flags;
-+	u8	reserved2[25];
-+};
-+
-+struct srp_login_rej {
-+	u8	opcode;
-+	u8	reserved1[3];
-+	__be32	reason;
-+	u64	tag;
-+	u8	reserved2[8];
-+	__be16	buf_fmt;
-+	u8	reserved3[6];
-+};
-+
-+struct srp_i_logout {
-+	u8	opcode;
-+	u8	reserved[7];
-+	u64	tag;
-+};
-+
-+struct srp_t_logout {
-+	u8	opcode;
-+	u8	sol_not;
-+	u8	reserved[2];
-+	__be32	reason;
-+	u64	tag;
-+};
-+
-+/*
-+ * We need the packed attribute because the SRP spec only aligns the
-+ * 8-byte LUN field to 4 bytes.
-+ */
-+struct srp_tsk_mgmt {
-+	u8	opcode;
-+	u8	sol_not;
-+	u8	reserved1[6];
-+	u64	tag;
-+	u8	reserved2[4];
-+	__be64	lun __attribute__((packed));
-+	u8	reserved3[2];
-+	u8	tsk_mgmt_func;
-+	u8	reserved4;
-+	u64	task_tag;
-+	u8	reserved5[8];
-+};
-+
-+/*
-+ * We need the packed attribute because the SRP spec only aligns the
-+ * 8-byte LUN field to 4 bytes.
-+ */
-+struct srp_cmd {
-+	u8	opcode;
-+	u8	sol_not;
-+	u8	reserved1[3];
-+	u8	buf_fmt;
-+	u8	data_out_desc_cnt;
-+	u8	data_in_desc_cnt;
-+	u64	tag;
-+	u8	reserved2[4];
-+	__be64	lun __attribute__((packed));
-+	u8	reserved3;
-+	u8	task_attr;
-+	u8	reserved4;
-+	u8	add_cdb_len;
-+	u8	cdb[16];
-+	u8	add_data[0];
-+};
-+
-+enum {
-+	SRP_RSP_FLAG_RSPVALID = 1 << 0,
-+	SRP_RSP_FLAG_SNSVALID = 1 << 1,
-+	SRP_RSP_FLAG_DOOVER   = 1 << 2,
-+	SRP_RSP_FLAG_DOUNDER  = 1 << 3,
-+	SRP_RSP_FLAG_DIOVER   = 1 << 4,
-+	SRP_RSP_FLAG_DIUNDER  = 1 << 5
-+};
-+
-+struct srp_rsp {
-+	u8	opcode;
-+	u8	sol_not;
-+	u8	reserved1[2];
-+	__be32	req_lim_delta;
-+	u64	tag;
-+	u8	reserved2[2];
-+	u8	flags;
-+	u8	status;
-+	__be32	data_out_res_cnt;
-+	__be32	data_in_res_cnt;
-+	__be32	sense_data_len;
-+	__be32	resp_data_len;
-+	u8	data[0];
-+};
-+
-+#endif /* IB_SRP_H */
+ /* NCR53c710 script handling code */
+ 
+@@ -1103,7 +1103,7 @@
+ }
+ 
+ /* 
+- * Function : int ncr53c7xx_init(Scsi_Host_Template *tpnt, int board, int chip,
++ * Function : int ncr53c7xx_init(struct scsi_host_template *tpnt, int board, int chip,
+  *	unsigned long base, int io_port, int irq, int dma, long long options,
+  *	int clock);
+  *
+@@ -1118,7 +1118,7 @@
+  */
+ 
+ int 
+-ncr53c7xx_init (Scsi_Host_Template *tpnt, int board, int chip,
++ncr53c7xx_init (struct scsi_host_template *tpnt, int board, int chip,
+     unsigned long base, int io_port, int irq, int dma, 
+     long long options, int clock)
+ {
+Index: scsi-misc-2.6/drivers/scsi/53c7xx.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/53c7xx.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/53c7xx.h	2005-10-29 19:24:21.000000000 +0200
+@@ -1600,7 +1600,7 @@
+ /* Paranoid people could use panic() here. */
+ #define FATAL(host) shutdown((host));
+ 
+-extern int ncr53c7xx_init(Scsi_Host_Template *tpnt, int board, int chip,
++extern int ncr53c7xx_init(struct scsi_host_template *tpnt, int board, int chip,
+ 			  unsigned long base, int io_port, int irq, int dma,
+ 			  long long options, int clock);
+ 
+Index: scsi-misc-2.6/drivers/scsi/NCR53C9x.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/NCR53C9x.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/NCR53C9x.c	2005-10-29 19:24:21.000000000 +0200
+@@ -529,7 +529,7 @@
+ /* Allocate structure and insert basic data such as SCSI chip frequency
+  * data and a pointer to the device
+  */
+-struct NCR_ESP* esp_allocate(Scsi_Host_Template *tpnt, void *esp_dev)
++struct NCR_ESP* esp_allocate(struct scsi_host_template *tpnt, void *esp_dev)
+ {
+ 	struct NCR_ESP *esp, *elink;
+ 	struct Scsi_Host *esp_host;
+Index: scsi-misc-2.6/drivers/scsi/NCR53C9x.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/NCR53C9x.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/NCR53C9x.h	2005-10-29 19:24:21.000000000 +0200
+@@ -653,7 +653,7 @@
+ 
+ /* External functions */
+ extern void esp_bootup_reset(struct NCR_ESP *esp, struct ESP_regs *eregs);
+-extern struct NCR_ESP *esp_allocate(Scsi_Host_Template *, void *);
++extern struct NCR_ESP *esp_allocate(struct scsi_host_template *, void *);
+ extern void esp_deallocate(struct NCR_ESP *);
+ extern void esp_release(void);
+ extern void esp_initialize(struct NCR_ESP *);
+Index: scsi-misc-2.6/drivers/scsi/NCR53c406a.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/NCR53c406a.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/NCR53c406a.c	2005-10-29 19:24:21.000000000 +0200
+@@ -447,7 +447,7 @@
+ }
+ #endif				/* USE_PIO */
+ 
+-static int __init NCR53c406a_detect(Scsi_Host_Template * tpnt)
++static int __init NCR53c406a_detect(struct scsi_host_template * tpnt)
+ {
+ 	int present = 0;
+ 	struct Scsi_Host *shpnt = NULL;
+@@ -1057,7 +1057,7 @@
+  * Use SG_NONE if DMA mode is enabled!
+  */
+ 
+-static Scsi_Host_Template driver_template = 
++static struct scsi_host_template driver_template =
+ {
+      .proc_name         	= "NCR53c406a"		/* proc_name */,        
+      .name              	= "NCR53c406a"		/* name */,             
+Index: scsi-misc-2.6/drivers/scsi/a2091.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/a2091.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/a2091.c	2005-10-29 19:24:21.000000000 +0200
+@@ -173,7 +173,7 @@
+     }
+ }
+ 
+-int __init a2091_detect(Scsi_Host_Template *tpnt)
++int __init a2091_detect(struct scsi_host_template *tpnt)
+ {
+     static unsigned char called = 0;
+     struct Scsi_Host *instance;
+@@ -234,7 +234,7 @@
+ 
+ #define HOSTS_C
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name		= "A2901",
+ 	.name			= "Commodore A2091/A590 SCSI",
+ 	.detect			= a2091_detect,
+Index: scsi-misc-2.6/drivers/scsi/a2091.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/a2091.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/a2091.h	2005-10-29 19:24:22.000000000 +0200
+@@ -11,7 +11,7 @@
+ 
+ #include <linux/types.h>
+ 
+-int a2091_detect(Scsi_Host_Template *);
++int a2091_detect(struct scsi_host_template *);
+ int a2091_release(struct Scsi_Host *);
+ const char *wd33c93_info(void);
+ int wd33c93_queuecommand(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+Index: scsi-misc-2.6/drivers/scsi/a3000.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/a3000.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/a3000.c	2005-10-29 19:24:22.000000000 +0200
+@@ -168,7 +168,7 @@
+     }
+ }
+ 
+-int __init a3000_detect(Scsi_Host_Template *tpnt)
++int __init a3000_detect(struct scsi_host_template *tpnt)
+ {
+     wd33c93_regs regs;
+ 
+@@ -221,7 +221,7 @@
+ 
+ #define HOSTS_C
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name		= "A3000",
+ 	.name			= "Amiga 3000 built-in SCSI",
+ 	.detect			= a3000_detect,
+Index: scsi-misc-2.6/drivers/scsi/a3000.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/a3000.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/a3000.h	2005-10-29 19:24:22.000000000 +0200
+@@ -11,7 +11,7 @@
+ 
+ #include <linux/types.h>
+ 
+-int a3000_detect(Scsi_Host_Template *);
++int a3000_detect(struct scsi_host_template *);
+ int a3000_release(struct Scsi_Host *);
+ const char *wd33c93_info(void);
+ int wd33c93_queuecommand(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+Index: scsi-misc-2.6/drivers/scsi/advansys.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/advansys.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/advansys.c	2005-10-29 19:24:22.000000000 +0200
+@@ -114,7 +114,7 @@
+           #include "advansys.h"
+           #endif
+ 
+-        and after "static Scsi_Host_Template builtin_scsi_hosts[] =":
++        and after "static struct scsi_host_template builtin_scsi_hosts[] =":
+ 
+           #ifdef CONFIG_SCSI_ADVANSYS
+           ADVANSYS,
+@@ -160,7 +160,7 @@
+            --- Driver Structures
+            --- Driver Data
+            --- Driver Function Prototypes
+-           --- Linux 'Scsi_Host_Template' and advansys_setup() Functions
++           --- Linux 'struct scsi_host_template' and advansys_setup() Functions
+            --- Loadable Driver Support
+            --- Miscellaneous Driver Functions
+            --- Functions Required by the Asc Library
+@@ -4068,7 +4068,7 @@
+ 
+ 
+ /*
+- * --- Linux 'Scsi_Host_Template' and advansys_setup() Functions
++ * --- Linux 'struct scsi_host_template' and advansys_setup() Functions
+  */
+ 
+ #ifdef CONFIG_PROC_FS
+Index: scsi-misc-2.6/drivers/scsi/advansys.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/advansys.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/advansys.h	2005-10-29 19:24:22.000000000 +0200
+@@ -19,7 +19,7 @@
+ #define _ADVANSYS_H
+ 
+ /*
+- * Scsi_Host_Template function prototypes.
++ * struct scsi_host_template function prototypes.
+  */
+ int advansys_detect(struct scsi_host_template *);
+ int advansys_release(struct Scsi_Host *);
+Index: scsi-misc-2.6/drivers/scsi/aha152x.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/aha152x.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/aha152x.c	2005-10-29 19:24:22.000000000 +0200
+@@ -424,7 +424,7 @@
+ 
+ static int registered_count=0;
+ static struct Scsi_Host *aha152x_host[2];
+-static Scsi_Host_Template aha152x_driver_template;
++static struct scsi_host_template aha152x_driver_template;
+ 
+ /*
+  * internal states of the host
+@@ -3464,7 +3464,7 @@
+ 	return thislength < length ? thislength : length;
+ }
+ 
+-static Scsi_Host_Template aha152x_driver_template = {
++static struct scsi_host_template aha152x_driver_template = {
+ 	.module				= THIS_MODULE,
+ 	.name				= AHA152X_REVID,
+ 	.proc_name			= "aha152x",
+Index: scsi-misc-2.6/drivers/scsi/aha1542.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/aha1542.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/aha1542.c	2005-10-29 19:24:22.000000000 +0200
+@@ -1023,7 +1023,7 @@
+ #endif
+ 
+ /* return non-zero on detection */
+-static int __init aha1542_detect(Scsi_Host_Template * tpnt)
++static int __init aha1542_detect(struct scsi_host_template * tpnt)
+ {
+ 	unsigned char dma_chan;
+ 	unsigned char irq_level;
+@@ -1801,7 +1801,7 @@
+ MODULE_LICENSE("GPL");
+ 
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name		= "aha1542",
+ 	.name			= "Adaptec 1542",
+ 	.detect			= aha1542_detect,
+Index: scsi-misc-2.6/drivers/scsi/aha1542.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/aha1542.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/aha1542.h	2005-10-29 19:24:22.000000000 +0200
+@@ -131,7 +131,7 @@
+ 				/* REQUEST SENSE */
+ };
+ 
+-static int aha1542_detect(Scsi_Host_Template *);
++static int aha1542_detect(struct scsi_host_template *);
+ static int aha1542_queuecommand(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+ static int aha1542_bus_reset(Scsi_Cmnd * SCpnt);
+ static int aha1542_dev_reset(Scsi_Cmnd * SCpnt);
+Index: scsi-misc-2.6/drivers/scsi/aha1740.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/aha1740.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/aha1740.c	2005-10-29 19:24:22.000000000 +0200
+@@ -570,7 +570,7 @@
+ 	return 0;
+ }
+ 
+-static Scsi_Host_Template aha1740_template = {
++static struct scsi_host_template aha1740_template = {
+ 	.module           = THIS_MODULE,
+ 	.proc_name        = "aha1740",
+ 	.proc_info        = aha1740_proc_info,
+Index: scsi-misc-2.6/drivers/scsi/ahci.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/ahci.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/ahci.c	2005-10-29 19:24:22.000000000 +0200
+@@ -196,7 +196,7 @@
+ static inline int ahci_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
+ static void ahci_remove_one (struct pci_dev *pdev);
+ 
+-static Scsi_Host_Template ahci_sht = {
++static struct scsi_host_template ahci_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+Index: scsi-misc-2.6/drivers/scsi/aic7xxx_old.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/aic7xxx_old.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/aic7xxx_old.c	2005-10-29 19:24:22.000000000 +0200
+@@ -7865,7 +7865,7 @@
+  *   Register a Adaptec aic7xxx chip SCSI controller with the kernel.
+  *-F*************************************************************************/
+ static int
+-aic7xxx_register(Scsi_Host_Template *template, struct aic7xxx_host *p,
++aic7xxx_register(struct scsi_host_template *template, struct aic7xxx_host *p,
+   int reset_delay)
+ {
+   int i, result;
+@@ -8412,7 +8412,7 @@
+  *   and a pointer to a aic7xxx_host struct upon success.
+  *-F*************************************************************************/
+ static struct aic7xxx_host *
+-aic7xxx_alloc(Scsi_Host_Template *sht, struct aic7xxx_host *temp)
++aic7xxx_alloc(struct scsi_host_template *sht, struct aic7xxx_host *temp)
+ {
+   struct aic7xxx_host *p = NULL;
+   struct Scsi_Host *host;
+@@ -8992,7 +8992,7 @@
+  *       mid-level SCSI code is overhauled.
+  *-F*************************************************************************/
+ static int
+-aic7xxx_detect(Scsi_Host_Template *template)
++aic7xxx_detect(struct scsi_host_template *template)
+ {
+   struct aic7xxx_host *temp_p = NULL;
+   struct aic7xxx_host *current_p = NULL;
+@@ -11162,7 +11162,7 @@
+ MODULE_VERSION(AIC7XXX_H_VERSION);
+ 
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_info		= aic7xxx_proc_info,
+ 	.detect			= aic7xxx_detect,
+ 	.release		= aic7xxx_release,
+Index: scsi-misc-2.6/drivers/scsi/amiga7xx.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/amiga7xx.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/amiga7xx.c	2005-10-29 19:24:22.000000000 +0200
+@@ -30,7 +30,7 @@
+ #include "amiga7xx.h"
+ 
+ 
+-static int amiga7xx_register_one(Scsi_Host_Template *tpnt,
++static int amiga7xx_register_one(struct scsi_host_template *tpnt,
+ 				 unsigned long address)
+ {
+     long long options;
+@@ -66,7 +66,7 @@
+     { 0 }
+ };
+ 
+-static int __init amiga7xx_zorro_detect(Scsi_Host_Template *tpnt)
++static int __init amiga7xx_zorro_detect(struct scsi_host_template *tpnt)
+ {
+     int num = 0, i;
+     struct zorro_dev *z = NULL;
+@@ -90,7 +90,7 @@
+ #endif /* CONFIG_ZORRO */
+ 
+ 
+-int __init amiga7xx_detect(Scsi_Host_Template *tpnt)
++int __init amiga7xx_detect(struct scsi_host_template *tpnt)
+ {
+     static unsigned char called = 0;
+     int num = 0;
+@@ -123,7 +123,7 @@
+ 	return 0;
+ }
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.name			= "Amiga NCR53c710 SCSI",
+ 	.detect			= amiga7xx_detect,
+ 	.release		= amiga7xx_release,
+Index: scsi-misc-2.6/drivers/scsi/amiga7xx.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/amiga7xx.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/amiga7xx.h	2005-10-29 19:24:22.000000000 +0200
+@@ -2,7 +2,7 @@
+ 
+ #include <linux/types.h>
+ 
+-int amiga7xx_detect(Scsi_Host_Template *);
++int amiga7xx_detect(struct scsi_host_template *);
+ const char *NCR53c7x0_info(void);
+ int NCR53c7xx_queue_command(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+ int NCR53c7xx_abort(Scsi_Cmnd *);
+Index: scsi-misc-2.6/drivers/scsi/arm/acornscsi.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/arm/acornscsi.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/arm/acornscsi.c	2005-10-29 19:24:22.000000000 +0200
+@@ -2971,7 +2971,7 @@
+     return pos;
+ }
+ 
+-static Scsi_Host_Template acornscsi_template = {
++static struct scsi_host_template acornscsi_template = {
+ 	.module			= THIS_MODULE,
+ 	.proc_info		= acornscsi_proc_info,
+ 	.name			= "AcornSCSI",
+Index: scsi-misc-2.6/drivers/scsi/arm/arxescsi.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/arm/arxescsi.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/arm/arxescsi.c	2005-10-29 19:24:22.000000000 +0200
+@@ -261,7 +261,7 @@
+ 	return pos;
+ }
+ 
+-static Scsi_Host_Template arxescsi_template = {
++static struct scsi_host_template arxescsi_template = {
+ 	.proc_info			= arxescsi_proc_info,
+ 	.name				= "ARXE SCSI card",
+ 	.info				= arxescsi_info,
+Index: scsi-misc-2.6/drivers/scsi/arm/cumana_1.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/arm/cumana_1.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/arm/cumana_1.c	2005-10-29 19:24:22.000000000 +0200
+@@ -238,7 +238,7 @@
+ 
+ #include "../NCR5380.c"
+ 
+-static Scsi_Host_Template cumanascsi_template = {
++static struct scsi_host_template cumanascsi_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= "Cumana 16-bit SCSI",
+ 	.info			= cumanascsi_info,
+Index: scsi-misc-2.6/drivers/scsi/arm/cumana_2.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/arm/cumana_2.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/arm/cumana_2.c	2005-10-29 19:24:22.000000000 +0200
+@@ -381,7 +381,7 @@
+ 	return pos;
+ }
+ 
+-static Scsi_Host_Template cumanascsi2_template = {
++static struct scsi_host_template cumanascsi2_template = {
+ 	.module				= THIS_MODULE,
+ 	.proc_info			= cumanascsi_2_proc_info,
+ 	.name				= "Cumana SCSI II",
+Index: scsi-misc-2.6/drivers/scsi/arm/ecoscsi.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/arm/ecoscsi.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/arm/ecoscsi.c	2005-10-29 19:24:22.000000000 +0200
+@@ -155,7 +155,7 @@
+ 
+ #include "../NCR5380.c"
+ 
+-static Scsi_Host_Template ecoscsi_template =  {
++static struct scsi_host_template ecoscsi_template =  {
+ 	.module		= THIS_MODULE,
+ 	.name		= "Serial Port EcoSCSI NCR5380",
+ 	.proc_name	= "ecoscsi",
+Index: scsi-misc-2.6/drivers/scsi/arm/eesox.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/arm/eesox.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/arm/eesox.c	2005-10-29 19:24:22.000000000 +0200
+@@ -499,7 +499,7 @@
+ static DEVICE_ATTR(bus_term, S_IRUGO | S_IWUSR,
+ 		   eesoxscsi_show_term, eesoxscsi_store_term);
+ 
+-static Scsi_Host_Template eesox_template = {
++static struct scsi_host_template eesox_template = {
+ 	.module				= THIS_MODULE,
+ 	.proc_info			= eesoxscsi_proc_info,
+ 	.name				= "EESOX SCSI",
+Index: scsi-misc-2.6/drivers/scsi/arm/oak.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/arm/oak.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/arm/oak.c	2005-10-29 19:24:22.000000000 +0200
+@@ -111,7 +111,7 @@
+ 
+ #include "../NCR5380.c"
+ 
+-static Scsi_Host_Template oakscsi_template = {
++static struct scsi_host_template oakscsi_template = {
+ 	.module			= THIS_MODULE,
+ 	.proc_info		= oakscsi_proc_info,
+ 	.name			= "Oak 16-bit SCSI",
+Index: scsi-misc-2.6/drivers/scsi/arm/powertec.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/arm/powertec.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/arm/powertec.c	2005-10-29 19:24:22.000000000 +0200
+@@ -293,7 +293,7 @@
+ static DEVICE_ATTR(bus_term, S_IRUGO | S_IWUSR,
+ 		   powertecscsi_show_term, powertecscsi_store_term);
+ 
+-static Scsi_Host_Template powertecscsi_template = {
++static struct scsi_host_template powertecscsi_template = {
+ 	.module				= THIS_MODULE,
+ 	.proc_info			= powertecscsi_proc_info,
+ 	.name				= "PowerTec SCSI",
+Index: scsi-misc-2.6/drivers/scsi/ata_piix.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/ata_piix.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/ata_piix.c	2005-10-29 19:24:22.000000000 +0200
+@@ -127,7 +127,7 @@
+ 	.remove			= ata_pci_remove_one,
+ };
+ 
+-static Scsi_Host_Template piix_sht = {
++static struct scsi_host_template piix_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+Index: scsi-misc-2.6/drivers/scsi/atari_NCR5380.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/atari_NCR5380.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/atari_NCR5380.c	2005-10-29 19:24:22.000000000 +0200
+@@ -255,7 +255,7 @@
+  */
+ 
+ static struct Scsi_Host *first_instance = NULL;
+-static Scsi_Host_Template *the_template = NULL;
++static struct scsi_host_template *the_template = NULL;
+ 
+ /* Macros ease life... :-) */
+ #define	SETUP_HOSTDATA(in)				\
+Index: scsi-misc-2.6/drivers/scsi/atari_scsi.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/atari_scsi.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/atari_scsi.c	2005-10-29 19:24:22.000000000 +0200
+@@ -600,7 +600,7 @@
+ #endif
+ 
+ 
+-int atari_scsi_detect (Scsi_Host_Template *host)
++int atari_scsi_detect (struct scsi_host_template *host)
+ {
+ 	static int called = 0;
+ 	struct Scsi_Host *instance;
+@@ -1141,7 +1141,7 @@
+ 
+ #include "atari_NCR5380.c"
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_info		= atari_scsi_proc_info,
+ 	.name			= "Atari native SCSI",
+ 	.detect			= atari_scsi_detect,
+Index: scsi-misc-2.6/drivers/scsi/atari_scsi.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/atari_scsi.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/atari_scsi.h	2005-10-29 19:24:22.000000000 +0200
+@@ -18,7 +18,7 @@
+ /* (I_HAVE_OVERRUNS stuff removed) */
+ 
+ #ifndef ASM
+-int atari_scsi_detect (Scsi_Host_Template *);
++int atari_scsi_detect (struct scsi_host_template *);
+ const char *atari_scsi_info (struct Scsi_Host *);
+ int atari_scsi_reset (Scsi_Cmnd *, unsigned int);
+ #ifdef MODULE
+Index: scsi-misc-2.6/drivers/scsi/blz1230.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/blz1230.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/blz1230.c	2005-10-29 19:24:22.000000000 +0200
+@@ -94,7 +94,7 @@
+ 				 */
+ 
+ /***************************************************************** Detection */
+-int __init blz1230_esp_detect(Scsi_Host_Template *tpnt)
++int __init blz1230_esp_detect(struct scsi_host_template *tpnt)
+ {
+ 	struct NCR_ESP *esp;
+ 	struct zorro_dev *z = NULL;
+@@ -328,7 +328,7 @@
+ }
+ 
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name		= "esp-blz1230",
+ 	.proc_info		= esp_proc_info,
+ 	.name			= "Blizzard1230 SCSI IV",
+Index: scsi-misc-2.6/drivers/scsi/blz2060.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/blz2060.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/blz2060.c	2005-10-29 19:24:22.000000000 +0200
+@@ -90,7 +90,7 @@
+ 				 */
+ 
+ /***************************************************************** Detection */
+-int __init blz2060_esp_detect(Scsi_Host_Template *tpnt)
++int __init blz2060_esp_detect(struct scsi_host_template *tpnt)
+ {
+ 	struct NCR_ESP *esp;
+ 	struct zorro_dev *z = NULL;
+@@ -282,7 +282,7 @@
+ }
+ 
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name		= "esp-blz2060",
+ 	.proc_info		= esp_proc_info,
+ 	.name			= "Blizzard2060 SCSI",
+Index: scsi-misc-2.6/drivers/scsi/bvme6000.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/bvme6000.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/bvme6000.c	2005-10-29 19:24:22.000000000 +0200
+@@ -24,7 +24,7 @@
+ #include<linux/stat.h>
+ 
+ 
+-int bvme6000_scsi_detect(Scsi_Host_Template *tpnt)
++int bvme6000_scsi_detect(struct scsi_host_template *tpnt)
+ {
+     static unsigned char called = 0;
+     int clock;
+@@ -60,7 +60,7 @@
+ 	return 0;
+ }
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.name			= "BVME6000 NCR53c710 SCSI",
+ 	.detect			= bvme6000_scsi_detect,
+ 	.release		= bvme6000_scsi_release,
+Index: scsi-misc-2.6/drivers/scsi/bvme6000.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/bvme6000.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/bvme6000.h	2005-10-29 19:24:22.000000000 +0200
+@@ -3,7 +3,7 @@
+ 
+ #include <linux/types.h>
+ 
+-int bvme6000_scsi_detect(Scsi_Host_Template *);
++int bvme6000_scsi_detect(struct scsi_host_template *);
+ const char *NCR53c7x0_info(void);
+ int NCR53c7xx_queue_command(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+ int NCR53c7xx_abort(Scsi_Cmnd *);
+Index: scsi-misc-2.6/drivers/scsi/cyberstorm.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/cyberstorm.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/cyberstorm.c	2005-10-29 19:24:22.000000000 +0200
+@@ -104,7 +104,7 @@
+ 				 */
+ 
+ /***************************************************************** Detection */
+-int __init cyber_esp_detect(Scsi_Host_Template *tpnt)
++int __init cyber_esp_detect(struct scsi_host_template *tpnt)
+ {
+ 	struct NCR_ESP *esp;
+ 	struct zorro_dev *z = NULL;
+@@ -353,7 +353,7 @@
+ }
+ 
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name		= "esp-cyberstorm",
+ 	.proc_info		= esp_proc_info,
+ 	.name			= "CyberStorm SCSI",
+Index: scsi-misc-2.6/drivers/scsi/cyberstormII.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/cyberstormII.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/cyberstormII.c	2005-10-29 19:24:22.000000000 +0200
+@@ -81,7 +81,7 @@
+ 				 */
+ 
+ /***************************************************************** Detection */
+-int __init cyberII_esp_detect(Scsi_Host_Template *tpnt)
++int __init cyberII_esp_detect(struct scsi_host_template *tpnt)
+ {
+ 	struct NCR_ESP *esp;
+ 	struct zorro_dev *z = NULL;
+@@ -290,7 +290,7 @@
+ }
+ 
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name		= "esp-cyberstormII",
+ 	.proc_info		= esp_proc_info,
+ 	.name			= "CyberStorm Mk II SCSI",
+Index: scsi-misc-2.6/drivers/scsi/dec_esp.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/dec_esp.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/dec_esp.c	2005-10-29 19:24:22.000000000 +0200
+@@ -133,7 +133,7 @@
+ #include "scsi_module.c"
+ 
+ /***************************************************************** Detection */
+-static int dec_esp_detect(Scsi_Host_Template * tpnt)
++static int dec_esp_detect(struct scsi_host_template * tpnt)
+ {
+ 	struct NCR_ESP *esp;
+ 	struct ConfigDev *esp_dev;
+Index: scsi-misc-2.6/drivers/scsi/dpti.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/dpti.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/dpti.h	2005-10-29 19:24:22.000000000 +0200
+@@ -44,7 +44,7 @@
+ 
+ 
+ /*
+- * Scsi_Host_Template (see hosts.h) 
++ * struct scsi_host_template (see hosts.h)
+  */
+ 
+ #define DPT_DRIVER_NAME	"Adaptec I2O RAID"
+Index: scsi-misc-2.6/drivers/scsi/dtc.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/dtc.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/dtc.c	2005-10-29 19:24:22.000000000 +0200
+@@ -199,7 +199,7 @@
+ #endif
+ 
+ /* 
+- * Function : int dtc_detect(Scsi_Host_Template * tpnt)
++ * Function : int dtc_detect(struct scsi_host_template * tpnt)
+  *
+  * Purpose : detects and initializes DTC 3180/3280 controllers
+  *	that were autoprobed, overridden on the LILO command line, 
+@@ -211,7 +211,7 @@
+  *
+ */
+ 
+-static int __init dtc_detect(Scsi_Host_Template * tpnt)
++static int __init dtc_detect(struct scsi_host_template * tpnt)
+ {
+ 	static int current_override = 0, current_base = 0;
+ 	struct Scsi_Host *instance;
+@@ -471,7 +471,7 @@
+ 	return 0;
+ }
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.name				= "DTC 3180/3280 ",
+ 	.detect				= dtc_detect,
+ 	.release			= dtc_release,
+Index: scsi-misc-2.6/drivers/scsi/dtc.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/dtc.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/dtc.h	2005-10-29 19:24:22.000000000 +0200
+@@ -35,7 +35,7 @@
+ static int dtc_abort(Scsi_Cmnd *);
+ static int dtc_biosparam(struct scsi_device *, struct block_device *,
+ 		         sector_t, int*);
+-static int dtc_detect(Scsi_Host_Template *);
++static int dtc_detect(struct scsi_host_template *);
+ static int dtc_queue_command(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+ static int dtc_bus_reset(Scsi_Cmnd *);
+ 
+Index: scsi-misc-2.6/drivers/scsi/fastlane.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/fastlane.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/fastlane.c	2005-10-29 19:24:22.000000000 +0200
+@@ -125,7 +125,7 @@
+ }
+ 
+ /***************************************************************** Detection */
+-int __init fastlane_esp_detect(Scsi_Host_Template *tpnt)
++int __init fastlane_esp_detect(struct scsi_host_template *tpnt)
+ {
+ 	struct NCR_ESP *esp;
+ 	struct zorro_dev *z = NULL;
+@@ -398,7 +398,7 @@
+ }
+ 
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name		= "esp-fastlane",
+ 	.proc_info		= esp_proc_info,
+ 	.name			= "Fastlane SCSI",
+Index: scsi-misc-2.6/drivers/scsi/fcal.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/fcal.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/fcal.c	2005-10-29 19:24:22.000000000 +0200
+@@ -89,7 +89,7 @@
+ 
+ /* Detect all FC Arbitrated Loops attached to the machine.
+    fc4 module has done all the work for us... */
+-int __init fcal_detect(Scsi_Host_Template *tpnt)
++int __init fcal_detect(struct scsi_host_template *tpnt)
+ {
+ 	int nfcals = 0;
+ 	fc_channel *fc;
+@@ -297,7 +297,7 @@
+ 	return 0;
+ }
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.name			= "Fibre Channel Arbitrated Loop",
+ 	.detect			= fcal_detect,
+ 	.release		= fcal_release,	
+Index: scsi-misc-2.6/drivers/scsi/fcal.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/fcal.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/fcal.h	2005-10-29 19:24:22.000000000 +0200
+@@ -20,7 +20,7 @@
+    for a particular channel */
+ #define FCAL_CAN_QUEUE		512
+ 
+-int fcal_detect(Scsi_Host_Template *);
++int fcal_detect(struct scsi_host_template *);
+ int fcal_release(struct Scsi_Host *);
+ int fcal_slave_configure(Scsi_Device *);
+ 
+Index: scsi-misc-2.6/drivers/scsi/fd_mcs.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/fd_mcs.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/fd_mcs.c	2005-10-29 19:24:22.000000000 +0200
+@@ -343,7 +343,7 @@
+ 		outb(0x01 | PARITY_MASK, TMC_Cntl_port);
+ }
+ 
+-static int fd_mcs_detect(Scsi_Host_Template * tpnt)
++static int fd_mcs_detect(struct scsi_host_template * tpnt)
+ {
+ 	int loop;
+ 	struct Scsi_Host *shpnt;
+@@ -1343,7 +1343,7 @@
+ 	return 0;
+ }
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name			= "fd_mcs",
+ 	.proc_info			= fd_mcs_proc_info,
+ 	.detect				= fd_mcs_detect,
+Index: scsi-misc-2.6/drivers/scsi/g_NCR5380.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/g_NCR5380.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/g_NCR5380.c	2005-10-29 19:24:22.000000000 +0200
+@@ -285,7 +285,7 @@
+  *	Locks: none
+  */
+ 
+-int __init generic_NCR5380_detect(Scsi_Host_Template * tpnt)
++int __init generic_NCR5380_detect(struct scsi_host_template * tpnt)
+ {
+ 	static int current_override = 0;
+ 	int count, i;
+@@ -899,7 +899,7 @@
+ #undef PRINTP
+ #undef ANDP
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_info      	= generic_NCR5380_proc_info,
+ 	.name           	= "Generic NCR5380/NCR53C400 Scsi Driver",
+ 	.detect         	= generic_NCR5380_detect,
+Index: scsi-misc-2.6/drivers/scsi/g_NCR5380.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/g_NCR5380.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/g_NCR5380.h	2005-10-29 19:24:22.000000000 +0200
+@@ -45,7 +45,7 @@
+ 
+ #ifndef ASM
+ static int generic_NCR5380_abort(Scsi_Cmnd *);
+-static int generic_NCR5380_detect(Scsi_Host_Template *);
++static int generic_NCR5380_detect(struct scsi_host_template *);
+ static int generic_NCR5380_release_resources(struct Scsi_Host *);
+ static int generic_NCR5380_queue_command(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+ static int generic_NCR5380_bus_reset(Scsi_Cmnd *);
+Index: scsi-misc-2.6/drivers/scsi/gdth.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/gdth.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/gdth.c	2005-10-29 19:24:22.000000000 +0200
+@@ -94,7 +94,7 @@
+  * Bugfix free_irq()
+  *
+  * Revision 1.56  2001/08/09 11:19:39  achim
+- * Scsi_Host_Template changes
++ * struct scsi_host_template changes
+  *
+  * Revision 1.55  2001/08/09 10:11:28  achim
+  * Command HOST_UNFREEZE_IO before cache service init.
+@@ -4153,7 +4153,7 @@
+     return 1;
+ }
+ 
+-static int __init gdth_detect(Scsi_Host_Template *shtp)
++static int __init gdth_detect(struct scsi_host_template *shtp)
+ {
+     struct Scsi_Host *shp;
+     gdth_pci_str pcistr[MAXHA];
+@@ -5683,7 +5683,7 @@
+     return NOTIFY_OK;
+ }
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+         .proc_name              = "gdth", 
+         .proc_info              = gdth_proc_info,
+         .name                   = "GDT SCSI Disk Array Controller",
+Index: scsi-misc-2.6/drivers/scsi/gvp11.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/gvp11.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/gvp11.c	2005-10-29 19:24:22.000000000 +0200
+@@ -170,7 +170,7 @@
+ 
+ #define CHECK_WD33C93
+ 
+-int __init gvp11_detect(Scsi_Host_Template *tpnt)
++int __init gvp11_detect(struct scsi_host_template *tpnt)
+ {
+     static unsigned char called = 0;
+     struct Scsi_Host *instance;
+@@ -362,7 +362,7 @@
+ 
+ #include "gvp11.h"
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name		= "GVP11",
+ 	.name			= "GVP Series II SCSI",
+ 	.detect			= gvp11_detect,
+Index: scsi-misc-2.6/drivers/scsi/gvp11.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/gvp11.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/gvp11.h	2005-10-29 19:24:22.000000000 +0200
+@@ -11,7 +11,7 @@
+ 
+ #include <linux/types.h>
+ 
+-int gvp11_detect(Scsi_Host_Template *);
++int gvp11_detect(struct scsi_host_template *);
+ int gvp11_release(struct Scsi_Host *);
+ const char *wd33c93_info(void);
+ int wd33c93_queuecommand(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+Index: scsi-misc-2.6/drivers/scsi/ibmmca.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/ibmmca.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/ibmmca.c	2005-10-29 19:24:22.000000000 +0200
+@@ -498,7 +498,7 @@
+ static int probe_display(int);
+ static int probe_bus_mode(int);
+ static int device_exists(int, int, int *, int *);
+-static struct Scsi_Host *ibmmca_register(Scsi_Host_Template *, int, int, int, char *);
++static struct Scsi_Host *ibmmca_register(struct scsi_host_template *, int, int, int, char *);
+ static int option_setup(char *);
+ /* local functions needed for proc_info */
+ static int ldn_access_load(int, int);
+@@ -1489,7 +1489,7 @@
+ 	return len;
+ }
+ 
+-int ibmmca_detect(Scsi_Host_Template * scsi_template)
++int ibmmca_detect(struct scsi_host_template * scsi_template)
+ {
+ 	struct Scsi_Host *shpnt;
+ 	int port, id, i, j, k, list_size, slot;
+@@ -1742,7 +1742,7 @@
+ 	return found;		/* return the number of found SCSI hosts. Should be 1 or 0. */
+ }
+ 
+-static struct Scsi_Host *ibmmca_register(Scsi_Host_Template * scsi_template, int port, int id, int adaptertype, char *hostname)
++static struct Scsi_Host *ibmmca_register(struct scsi_host_template * scsi_template, int port, int id, int adaptertype, char *hostname)
+ {
+ 	struct Scsi_Host *shpnt;
+ 	int i, j;
+@@ -2500,7 +2500,7 @@
+ 
+ __setup("ibmmcascsi=", option_setup);
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+           .proc_name      = "ibmmca",
+ 	  .proc_info	  = ibmmca_proc_info,
+           .name           = "IBM SCSI-Subsystem",
+Index: scsi-misc-2.6/drivers/scsi/ibmmca.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/ibmmca.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/ibmmca.h	2005-10-29 19:24:22.000000000 +0200
+@@ -11,7 +11,7 @@
+ /* Common forward declarations for all Linux-versions: */
+ 
+ /* Interfaces to the midlevel Linux SCSI driver */
+-static int ibmmca_detect (Scsi_Host_Template *);
++static int ibmmca_detect (struct scsi_host_template *);
+ static int ibmmca_release (struct Scsi_Host *);
+ static int ibmmca_queuecommand (Scsi_Cmnd *, void (*done) (Scsi_Cmnd *));
+ static int ibmmca_abort (Scsi_Cmnd *);
+Index: scsi-misc-2.6/drivers/scsi/in2000.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/in2000.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/in2000.c	2005-10-29 19:24:22.000000000 +0200
+@@ -1899,7 +1899,7 @@
+ };
+ 
+ 
+-static int __init in2000_detect(Scsi_Host_Template * tpnt)
++static int __init in2000_detect(struct scsi_host_template * tpnt)
+ {
+ 	struct Scsi_Host *instance;
+ 	struct IN2000_hostdata *hostdata;
+@@ -2305,7 +2305,7 @@
+ MODULE_LICENSE("GPL");
+ 
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name       		= "in2000",
+ 	.proc_info       		= in2000_proc_info,
+ 	.name            		= "Always IN2000",
+Index: scsi-misc-2.6/drivers/scsi/in2000.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/in2000.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/in2000.h	2005-10-29 19:24:22.000000000 +0200
+@@ -395,7 +395,7 @@
+ # define CLISPIN_UNLOCK(host,flags) spin_unlock_irqrestore(host->host_lock, \
+ 							   flags)
+ 
+-static int in2000_detect(Scsi_Host_Template *) in2000__INIT;
++static int in2000_detect(struct scsi_host_template *) in2000__INIT;
+ static int in2000_queuecommand(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+ static int in2000_abort(Scsi_Cmnd *);
+ static void in2000_setup(char *, int *) in2000__INIT;
+Index: scsi-misc-2.6/drivers/scsi/ips.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/ips.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/ips.c	2005-10-29 19:24:22.000000000 +0200
+@@ -247,7 +247,7 @@
+ /*
+  * Function prototypes
+  */
+-static int ips_detect(Scsi_Host_Template *);
++static int ips_detect(struct scsi_host_template *);
+ static int ips_release(struct Scsi_Host *);
+ static int ips_eh_abort(Scsi_Cmnd *);
+ static int ips_eh_reset(Scsi_Cmnd *);
+@@ -375,7 +375,7 @@
+ static dma_addr_t ips_flashbusaddr;
+ static long ips_FlashDataInUse;		/* CD Boot - Flash Data In Use Flag */
+ static uint32_t MaxLiteCmds = 32;	/* Max Active Cmds for a Lite Adapter */
+-static Scsi_Host_Template ips_driver_template = {
++static struct scsi_host_template ips_driver_template = {
+ 	.detect			= ips_detect,
+ 	.release		= ips_release,
+ 	.info			= ips_info,
+@@ -587,7 +587,7 @@
+ /*                                                                          */
+ /****************************************************************************/
+ static int
+-ips_detect(Scsi_Host_Template * SHT)
++ips_detect(struct scsi_host_template * SHT)
+ {
+ 	int i;
+ 
+Index: scsi-misc-2.6/drivers/scsi/jazz_esp.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/jazz_esp.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/jazz_esp.c	2005-10-29 19:24:22.000000000 +0200
+@@ -52,7 +52,7 @@
+ 				 * via PIO.
+ 				 */
+ 
+-int jazz_esp_detect(Scsi_Host_Template *tpnt);
++int jazz_esp_detect(struct scsi_host_template *tpnt);
+ static int jazz_esp_release(struct Scsi_Host *shost)
+ {
+ 	if (shost->irq)
+@@ -65,7 +65,7 @@
+ 	return 0;
+ }
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name		= "jazz_esp",
+ 	.proc_info		= &esp_proc_info,
+ 	.name			= "ESP 100/100a/200",
+Index: scsi-misc-2.6/drivers/scsi/mac_esp.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/mac_esp.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/mac_esp.c	2005-10-29 19:24:22.000000000 +0200
+@@ -300,7 +300,7 @@
+  * Model dependent ESP setup
+  */
+ 
+-int mac_esp_detect(Scsi_Host_Template * tpnt)
++int mac_esp_detect(struct scsi_host_template * tpnt)
+ {
+ 	int quick = 0;
+ 	int chipnum, chipspresent = 0;
+@@ -730,7 +730,7 @@
+ #endif
+ }
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name		= "mac_esp",
+ 	.name			= "Mac 53C9x SCSI",
+ 	.detect			= mac_esp_detect,
+Index: scsi-misc-2.6/drivers/scsi/mac_scsi.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/mac_scsi.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/mac_scsi.c	2005-10-29 19:24:22.000000000 +0200
+@@ -222,7 +222,7 @@
+ #endif
+ 
+ /*
+- * Function : int macscsi_detect(Scsi_Host_Template * tpnt)
++ * Function : int macscsi_detect(struct scsi_host_template * tpnt)
+  *
+  * Purpose : initializes mac NCR5380 driver based on the
+  *	command line / compile time port and irq definitions.
+@@ -233,7 +233,7 @@
+  *
+  */
+  
+-int macscsi_detect(Scsi_Host_Template * tpnt)
++int macscsi_detect(struct scsi_host_template * tpnt)
+ {
+     static int called = 0;
+     int flags = 0;
+@@ -581,7 +581,7 @@
+ 
+ #include "NCR5380.c"
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name			= "Mac5380",
+ 	.proc_info			= macscsi_proc_info,
+ 	.name				= "Macintosh NCR5380 SCSI",
+Index: scsi-misc-2.6/drivers/scsi/mca_53c9x.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/mca_53c9x.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/mca_53c9x.c	2005-10-29 19:24:22.000000000 +0200
+@@ -103,7 +103,7 @@
+ static struct ESP_regs eregs;
+ 
+ /***************************************************************** Detection */
+-static int mca_esp_detect(Scsi_Host_Template *tpnt)
++static int mca_esp_detect(struct scsi_host_template *tpnt)
+ {
+ 	struct NCR_ESP *esp;
+ 	static int io_port_by_pos[] = MCA_53C9X_IO_PORTS;
+@@ -444,7 +444,7 @@
+ 	outb(inb(PS2_SYS_CTR) & 0x3f, PS2_SYS_CTR);
+ }
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name		= "mca_53c9x",
+ 	.name			= "NCR 53c9x SCSI",
+ 	.detect			= mca_esp_detect,
+Index: scsi-misc-2.6/drivers/scsi/mvme147.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/mvme147.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/mvme147.c	2005-10-29 19:24:22.000000000 +0200
+@@ -64,7 +64,7 @@
+     m147_pcc->dma_cntrl = 0;
+ }
+ 
+-int mvme147_detect(Scsi_Host_Template *tpnt)
++int mvme147_detect(struct scsi_host_template *tpnt)
+ {
+     static unsigned char called = 0;
+     wd33c93_regs regs;
+@@ -131,7 +131,7 @@
+ 
+ #include "mvme147.h"
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name		= "MVME147",
+ 	.name			= "MVME147 built-in SCSI",
+ 	.detect			= mvme147_detect,
+Index: scsi-misc-2.6/drivers/scsi/mvme147.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/mvme147.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/mvme147.h	2005-10-29 19:24:22.000000000 +0200
+@@ -10,7 +10,7 @@
+ 
+ #include <linux/types.h>
+ 
+-int mvme147_detect(Scsi_Host_Template *);
++int mvme147_detect(struct scsi_host_template *);
+ int mvme147_release(struct Scsi_Host *);
+ const char *wd33c93_info(void);
+ int wd33c93_queuecommand(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+Index: scsi-misc-2.6/drivers/scsi/mvme16x.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/mvme16x.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/mvme16x.c	2005-10-29 19:24:22.000000000 +0200
+@@ -22,7 +22,7 @@
+ #include<linux/stat.h>
+ 
+ 
+-int mvme16x_scsi_detect(Scsi_Host_Template *tpnt)
++int mvme16x_scsi_detect(struct scsi_host_template *tpnt)
+ {
+     static unsigned char called = 0;
+     int clock;
+@@ -62,7 +62,7 @@
+ 	return 0;
+ }
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.name			= "MVME16x NCR53c710 SCSI",
+ 	.detect			= mvme16x_scsi_detect,
+ 	.release		= mvme16x_scsi_release,
+Index: scsi-misc-2.6/drivers/scsi/mvme16x.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/mvme16x.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/mvme16x.h	2005-10-29 19:24:22.000000000 +0200
+@@ -3,7 +3,7 @@
+ 
+ #include <linux/types.h>
+ 
+-int mvme16x_scsi_detect(Scsi_Host_Template *);
++int mvme16x_scsi_detect(struct scsi_host_template *);
+ const char *NCR53c7x0_info(void);
+ int NCR53c7xx_queue_command(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+ int NCR53c7xx_abort(Scsi_Cmnd *);
+Index: scsi-misc-2.6/drivers/scsi/nsp32.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/nsp32.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/nsp32.c	2005-10-29 19:24:22.000000000 +0200
+@@ -198,7 +198,7 @@
+ static int  __init    init_nsp32  (void);
+ static void __exit    exit_nsp32  (void);
+ 
+-/* struct Scsi_Host_Template */
++/* struct struct scsi_host_template */
+ #if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+ static int         nsp32_proc_info   (struct Scsi_Host *, char *, char **, off_t, int, int);
+ #else
+@@ -208,7 +208,7 @@
+ #if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+ static int         nsp32_detect      (struct pci_dev *pdev);
+ #else
+-static int         nsp32_detect      (Scsi_Host_Template *);
++static int         nsp32_detect      (struct scsi_host_template *);
+ #endif
+ static int         nsp32_queuecommand(struct scsi_cmnd *,
+ 		void (*done)(struct scsi_cmnd *));
+@@ -2683,7 +2683,7 @@
+ #define DETECT_OK 1
+ #define DETECT_NG 0
+ #define PCIDEV    (data->Pci)
+-static int nsp32_detect(Scsi_Host_Template *sht)
++static int nsp32_detect(struct scsi_host_template *sht)
+ #endif
+ {
+ 	struct Scsi_Host *host;	/* registered host structure */
+Index: scsi-misc-2.6/drivers/scsi/oktagon_esp.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/oktagon_esp.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/oktagon_esp.c	2005-10-29 19:24:22.000000000 +0200
+@@ -114,7 +114,7 @@
+ 				 */
+ 
+ /***************************************************************** Detection */
+-int oktagon_esp_detect(Scsi_Host_Template *tpnt)
++int oktagon_esp_detect(struct scsi_host_template *tpnt)
+ {
+ 	struct NCR_ESP *esp;
+ 	struct zorro_dev *z = NULL;
+@@ -585,7 +585,7 @@
+ }
+ 
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name		= "esp-oktagon",
+ 	.proc_info		= &esp_proc_info,
+ 	.name			= "BSC Oktagon SCSI",
+Index: scsi-misc-2.6/drivers/scsi/pas16.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/pas16.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/pas16.c	2005-10-29 19:24:22.000000000 +0200
+@@ -369,7 +369,7 @@
+ }
+ 
+ /* 
+- * Function : int pas16_detect(Scsi_Host_Template * tpnt)
++ * Function : int pas16_detect(struct scsi_host_template * tpnt)
+  *
+  * Purpose : detects and initializes PAS16 controllers
+  *	that were autoprobed, overridden on the LILO command line, 
+@@ -381,7 +381,7 @@
+  *
+  */
+ 
+-int __init pas16_detect(Scsi_Host_Template * tpnt)
++int __init pas16_detect(struct scsi_host_template * tpnt)
+ {
+     static int current_override = 0;
+     static unsigned short current_base = 0;
+@@ -615,7 +615,7 @@
+ 	return 0;
+ }
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.name           = "Pro Audio Spectrum-16 SCSI",
+ 	.detect         = pas16_detect,
+ 	.release        = pas16_release,
+Index: scsi-misc-2.6/drivers/scsi/pas16.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/pas16.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/pas16.h	2005-10-29 19:24:22.000000000 +0200
+@@ -117,7 +117,7 @@
+ static int pas16_abort(Scsi_Cmnd *);
+ static int pas16_biosparam(struct scsi_device *, struct block_device *,
+ 			   sector_t, int*);
+-static int pas16_detect(Scsi_Host_Template *);
++static int pas16_detect(struct scsi_host_template *);
+ static int pas16_queue_command(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+ static int pas16_bus_reset(Scsi_Cmnd *);
+ 
+Index: scsi-misc-2.6/drivers/scsi/pci2000.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/pci2000.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/pci2000.h	2005-10-29 19:24:22.000000000 +0200
+@@ -187,7 +187,7 @@
+ #endif
+ 
+ // function prototypes
+-int Pci2000_Detect			(Scsi_Host_Template *tpnt);
++int Pci2000_Detect			(struct scsi_host_template *tpnt);
+ int Pci2000_Command			(Scsi_Cmnd *SCpnt);
+ int Pci2000_QueueCommand	(Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *));
+ int Pci2000_Abort			(Scsi_Cmnd *SCpnt);
+Index: scsi-misc-2.6/drivers/scsi/pcmcia/nsp_cs.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/pcmcia/nsp_cs.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/pcmcia/nsp_cs.c	2005-10-29 19:24:22.000000000 +0200
+@@ -81,7 +81,7 @@
+ MODULE_PARM_DESC(free_ports, "Release IO ports after configuration? (default: 0 (=no))");
+ 
+ /* /usr/src/linux/drivers/scsi/hosts.h */
+-static Scsi_Host_Template nsp_driver_template = {
++static struct scsi_host_template nsp_driver_template = {
+ 	.proc_name	         = "nsp_cs",
+ 	.proc_info		 = nsp_proc_info,
+ 	.name			 = "WorkBit NinjaSCSI-3/32Bi(16bit)",
+@@ -1310,7 +1310,7 @@
+ /*----------------------------------------------------------------*/
+ /* look for ninja3 card and init if found			  */
+ /*----------------------------------------------------------------*/
+-static struct Scsi_Host *nsp_detect(Scsi_Host_Template *sht)
++static struct Scsi_Host *nsp_detect(struct scsi_host_template *sht)
+ {
+ 	struct Scsi_Host *host;	/* registered host structure */
+ 	nsp_hw_data *data_b = &nsp_data_base, *data;
+@@ -1358,7 +1358,7 @@
+ }
+ 
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0))
+-static int nsp_detect_old(Scsi_Host_Template *sht)
++static int nsp_detect_old(struct scsi_host_template *sht)
+ {
+ 	if (nsp_detect(sht) == NULL) {
+ 		return 0;
+Index: scsi-misc-2.6/drivers/scsi/pcmcia/nsp_cs.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/pcmcia/nsp_cs.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/pcmcia/nsp_cs.h	2005-10-29 19:24:22.000000000 +0200
+@@ -303,9 +303,9 @@
+ static int         nsp_cs_event  (event_t event, int priority, event_callback_args_t *args);
+ 
+ /* Linux SCSI subsystem specific functions */
+-static struct Scsi_Host *nsp_detect     (Scsi_Host_Template *sht);
++static struct Scsi_Host *nsp_detect     (struct scsi_host_template *sht);
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,5,0))
+-static        int        nsp_detect_old (Scsi_Host_Template *sht);
++static        int        nsp_detect_old (struct scsi_host_template *sht);
+ static        int        nsp_release_old(struct Scsi_Host *shpnt);
+ #endif
+ static const  char      *nsp_info       (struct Scsi_Host *shpnt);
+@@ -345,7 +345,7 @@
+ static int  nsp_xfer             (Scsi_Cmnd *SCpnt, int phase);
+ static int  nsp_dataphase_bypass (Scsi_Cmnd *SCpnt);
+ static int  nsp_reselected       (Scsi_Cmnd *SCpnt);
+-static struct Scsi_Host *nsp_detect(Scsi_Host_Template *sht);
++static struct Scsi_Host *nsp_detect(struct scsi_host_template *sht);
+ 
+ /* Interrupt handler */
+ //static irqreturn_t nspintr(int irq, void *dev_id, struct pt_regs *regs);
+Index: scsi-misc-2.6/drivers/scsi/pcmcia/qlogic_stub.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/pcmcia/qlogic_stub.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/pcmcia/qlogic_stub.c	2005-10-29 19:24:23.000000000 +0200
+@@ -72,7 +72,7 @@
+ #define DEBUG(n, args...)
+ #endif
+ 
+-static Scsi_Host_Template qlogicfas_driver_template = {
++static struct scsi_host_template qlogicfas_driver_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= qlogic_name,
+ 	.proc_name		= qlogic_name,
+@@ -108,7 +108,7 @@
+ 
+ static dev_info_t dev_info = "qlogic_cs";
+ 
+-static struct Scsi_Host *qlogic_detect(Scsi_Host_Template *host,
++static struct Scsi_Host *qlogic_detect(struct scsi_host_template *host,
+ 				dev_link_t *link, int qbase, int qlirq)
+ {
+ 	int qltyp;		/* type of chip */
+Index: scsi-misc-2.6/drivers/scsi/pluto.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/pluto.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/pluto.c	2005-10-29 19:24:23.000000000 +0200
+@@ -90,7 +90,7 @@
+ 
+ /* Detect all SSAs attached to the machine.
+    To be fast, do it on all online FC channels at the same time. */
+-int __init pluto_detect(Scsi_Host_Template *tpnt)
++int __init pluto_detect(struct scsi_host_template *tpnt)
+ {
+ 	int i, retry, nplutos;
+ 	fc_channel *fc;
+@@ -339,7 +339,7 @@
+ 	return 0;
+ }
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.name			= "Sparc Storage Array 100/200",
+ 	.detect			= pluto_detect,
+ 	.release		= pluto_release,
+Index: scsi-misc-2.6/drivers/scsi/pluto.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/pluto.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/pluto.h	2005-10-29 19:24:23.000000000 +0200
+@@ -38,7 +38,7 @@
+ /* This is the max number of outstanding SCSI commands per pluto */
+ #define PLUTO_CAN_QUEUE		254
+ 
+-int pluto_detect(Scsi_Host_Template *);
++int pluto_detect(struct scsi_host_template *);
+ int pluto_release(struct Scsi_Host *);
+ const char * pluto_info(struct Scsi_Host *);
+ int pluto_slave_configure(Scsi_Device *);
+Index: scsi-misc-2.6/drivers/scsi/psi240i.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/psi240i.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/psi240i.c	2005-10-29 19:24:23.000000000 +0200
+@@ -538,7 +538,7 @@
+  *	Returns:		Number of adapters found.
+  *
+  ****************************************************************/
+-static int Psi240i_Detect (Scsi_Host_Template *tpnt)
++static int Psi240i_Detect (struct scsi_host_template *tpnt)
+ 	{
+ 	int					board;
+ 	int					count = 0;
+@@ -669,7 +669,7 @@
+ 
+ MODULE_LICENSE("GPL");
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name		= "psi240i", 
+ 	.name			= "PSI-240I EIDE Disk Controller",
+ 	.detect			= Psi240i_Detect,
+Index: scsi-misc-2.6/drivers/scsi/qla1280.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/qla1280.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/qla1280.c	2005-10-29 19:24:23.000000000 +0200
+@@ -465,7 +465,7 @@
+ 	}
+ 	device->queue_depth = depth;
+ }
+-static inline struct Scsi_Host *scsi_host_alloc(Scsi_Host_Template *t, size_t s)
++static inline struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *t, size_t s)
+ {
+ 	return scsi_register(t, s);
+ }
+@@ -1177,7 +1177,7 @@
+ 
+ #if LINUX_VERSION_CODE < 0x020600
+ static int
+-qla1280_detect(Scsi_Host_Template *template)
++qla1280_detect(struct scsi_host_template *template)
+ {
+ 	struct pci_device_id *id = &qla1280_pci_tbl[0];
+ 	struct pci_dev *pdev = NULL;
+@@ -4507,7 +4507,7 @@
+ 	.use_clustering		= ENABLE_CLUSTERING,
+ };
+ #else
+-static Scsi_Host_Template qla1280_driver_template = {
++static struct scsi_host_template qla1280_driver_template = {
+ 	.proc_name		= "qla1280",
+ 	.name			= "Qlogic ISP 1280/12160",
+ 	.detect			= qla1280_detect,
+Index: scsi-misc-2.6/drivers/scsi/qlogicfas.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/qlogicfas.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/qlogicfas.c	2005-10-29 19:24:23.000000000 +0200
+@@ -47,7 +47,7 @@
+  *	Look for qlogic card and init if found 
+  */
+  
+-static struct Scsi_Host *__qlogicfas_detect(Scsi_Host_Template *host,
++static struct Scsi_Host *__qlogicfas_detect(struct scsi_host_template *host,
+ 								int qbase,
+ 								int qlirq)
+ {
+@@ -142,7 +142,7 @@
+ MODULE_PARM_DESC(iobase, "I/O address");
+ MODULE_PARM_DESC(irq, "IRQ");
+ 
+-static int __devinit qlogicfas_detect(Scsi_Host_Template *sht)
++static int __devinit qlogicfas_detect(struct scsi_host_template *sht)
+ {
+ 	struct Scsi_Host *shost;
+ 	struct qlogicfas408_priv *priv;
+@@ -183,7 +183,7 @@
+ /*
+  *	The driver template is also needed for PCMCIA
+  */
+-static Scsi_Host_Template qlogicfas_driver_template = {
++static struct scsi_host_template qlogicfas_driver_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= qlogicfas_name,
+ 	.proc_name		= qlogicfas_name,
+Index: scsi-misc-2.6/drivers/scsi/qlogicfc.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/qlogicfc.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/qlogicfc.c	2005-10-29 19:24:23.000000000 +0200
+@@ -711,7 +711,7 @@
+ }
+ 
+ 
+-static int isp2x00_detect(Scsi_Host_Template * tmpt)
++static int isp2x00_detect(struct scsi_host_template * tmpt)
+ {
+ 	int hosts = 0;
+ 	unsigned long wait_time;
+@@ -2210,7 +2210,7 @@
+ 
+ MODULE_LICENSE("GPL");
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+         .detect                 = isp2x00_detect,
+         .release                = isp2x00_release,
+         .info                   = isp2x00_info,
+Index: scsi-misc-2.6/drivers/scsi/qlogicisp.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/qlogicisp.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/qlogicisp.c	2005-10-29 19:24:23.000000000 +0200
+@@ -669,7 +669,7 @@
+ }
+ 
+ 
+-static int isp1020_detect(Scsi_Host_Template *tmpt)
++static int isp1020_detect(struct scsi_host_template *tmpt)
+ {
+ 	int hosts = 0;
+ 	struct Scsi_Host *host;
+@@ -1919,7 +1919,7 @@
+ 
+ MODULE_LICENSE("GPL");
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.detect			= isp1020_detect,
+ 	.release		= isp1020_release,
+ 	.info			= isp1020_info,	
+Index: scsi-misc-2.6/drivers/scsi/sata_nv.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sata_nv.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sata_nv.c	2005-10-29 19:24:23.000000000 +0200
+@@ -218,7 +218,7 @@
+ 	.remove			= ata_pci_remove_one,
+ };
+ 
+-static Scsi_Host_Template nv_sht = {
++static struct scsi_host_template nv_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+Index: scsi-misc-2.6/drivers/scsi/sata_promise.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sata_promise.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sata_promise.c	2005-10-29 19:24:23.000000000 +0200
+@@ -93,7 +93,7 @@
+ static int pdc_qc_issue_prot(struct ata_queued_cmd *qc);
+ 
+ 
+-static Scsi_Host_Template pdc_ata_sht = {
++static struct scsi_host_template pdc_ata_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+Index: scsi-misc-2.6/drivers/scsi/sata_qstor.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sata_qstor.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sata_qstor.c	2005-10-29 19:24:23.000000000 +0200
+@@ -127,7 +127,7 @@
+ static void qs_irq_clear(struct ata_port *ap);
+ static void qs_eng_timeout(struct ata_port *ap);
+ 
+-static Scsi_Host_Template qs_ata_sht = {
++static struct scsi_host_template qs_ata_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+Index: scsi-misc-2.6/drivers/scsi/sata_sil.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sata_sil.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sata_sil.c	2005-10-29 19:24:23.000000000 +0200
+@@ -130,7 +130,7 @@
+ 	.remove			= ata_pci_remove_one,
+ };
+ 
+-static Scsi_Host_Template sil_sht = {
++static struct scsi_host_template sil_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+Index: scsi-misc-2.6/drivers/scsi/sata_sis.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sata_sis.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sata_sis.c	2005-10-29 19:24:23.000000000 +0200
+@@ -82,7 +82,7 @@
+ 	.remove			= ata_pci_remove_one,
+ };
+ 
+-static Scsi_Host_Template sis_sht = {
++static struct scsi_host_template sis_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+Index: scsi-misc-2.6/drivers/scsi/sata_svw.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sata_svw.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sata_svw.c	2005-10-29 19:24:23.000000000 +0200
+@@ -273,7 +273,7 @@
+ #endif /* CONFIG_PPC_OF */
+ 
+ 
+-static Scsi_Host_Template k2_sata_sht = {
++static struct scsi_host_template k2_sata_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+Index: scsi-misc-2.6/drivers/scsi/sata_sx4.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sata_sx4.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sata_sx4.c	2005-10-29 19:24:23.000000000 +0200
+@@ -176,7 +176,7 @@
+ static int pdc20621_qc_issue_prot(struct ata_queued_cmd *qc);
+ 
+ 
+-static Scsi_Host_Template pdc_sata_sht = {
++static struct scsi_host_template pdc_sata_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+Index: scsi-misc-2.6/drivers/scsi/sata_uli.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sata_uli.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sata_uli.c	2005-10-29 19:24:23.000000000 +0200
+@@ -70,7 +70,7 @@
+ 	.remove			= ata_pci_remove_one,
+ };
+ 
+-static Scsi_Host_Template uli_sht = {
++static struct scsi_host_template uli_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+Index: scsi-misc-2.6/drivers/scsi/sata_via.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sata_via.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sata_via.c	2005-10-29 19:24:23.000000000 +0200
+@@ -89,7 +89,7 @@
+ 	.remove			= ata_pci_remove_one,
+ };
+ 
+-static Scsi_Host_Template svia_sht = {
++static struct scsi_host_template svia_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+Index: scsi-misc-2.6/drivers/scsi/sata_vsc.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sata_vsc.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sata_vsc.c	2005-10-29 19:24:23.000000000 +0200
+@@ -210,7 +210,7 @@
+ }
+ 
+ 
+-static Scsi_Host_Template vsc_sata_sht = {
++static struct scsi_host_template vsc_sata_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+Index: scsi-misc-2.6/drivers/scsi/scsi_debug.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/scsi_debug.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/scsi_debug.c	2005-10-29 19:24:23.000000000 +0200
+@@ -182,7 +182,7 @@
+ };
+ static struct sdebug_queued_cmd queued_arr[SCSI_DEBUG_CANQUEUE];
+ 
+-static Scsi_Host_Template sdebug_driver_template = {
++static struct scsi_host_template sdebug_driver_template = {
+ 	.proc_info =		scsi_debug_proc_info,
+ 	.name =			"SCSI DEBUG",
+ 	.info =			scsi_debug_info,
+Index: scsi-misc-2.6/drivers/scsi/scsi_typedefs.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/scsi_typedefs.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/scsi_typedefs.h	2005-10-29 19:24:23.000000000 +0200
+@@ -1,5 +1,4 @@
+ 
+-typedef struct scsi_host_template Scsi_Host_Template;
+ typedef struct scsi_device Scsi_Device;
+ typedef struct scsi_cmnd Scsi_Cmnd;
+ typedef struct scsi_request Scsi_Request;
+Index: scsi-misc-2.6/drivers/scsi/seagate.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/seagate.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/seagate.c	2005-10-29 19:24:23.000000000 +0200
+@@ -418,7 +418,7 @@
+ #define ULOOP( i ) for (clock = i*8;;)
+ #define TIMEOUT (!(clock--))
+ 
+-int __init seagate_st0x_detect (Scsi_Host_Template * tpnt)
++int __init seagate_st0x_detect (struct scsi_host_template * tpnt)
+ {
+ 	struct Scsi_Host *instance;
+ 	int i, j;
+@@ -1649,7 +1649,7 @@
+ 	return 0;
+ }
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.detect         	= seagate_st0x_detect,
+ 	.release        	= seagate_st0x_release,
+ 	.info           	= seagate_st0x_info,
+Index: scsi-misc-2.6/drivers/scsi/seagate.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/seagate.h	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/seagate.h	2005-10-29 19:24:23.000000000 +0200
+@@ -9,7 +9,7 @@
+ #ifndef _SEAGATE_H
+ #define SEAGATE_H
+ 
+-static int seagate_st0x_detect(Scsi_Host_Template *);
++static int seagate_st0x_detect(struct scsi_host_template *);
+ static int seagate_st0x_queue_command(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+ 
+ static int seagate_st0x_abort(Scsi_Cmnd *);
+Index: scsi-misc-2.6/drivers/scsi/sgiwd93.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sgiwd93.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sgiwd93.c	2005-10-29 19:24:23.000000000 +0200
+@@ -218,7 +218,7 @@
+ }
+ 
+ static struct Scsi_Host * __init sgiwd93_setup_scsi(
+-	Scsi_Host_Template *SGIblows, int unit, int irq,
++	struct scsi_host_template *SGIblows, int unit, int irq,
+ 	struct hpc3_scsiregs *hregs, unsigned char *wdregs)
+ {
+ 	struct ip22_hostdata *hdata;
+@@ -266,7 +266,7 @@
+ 	return NULL;
+ }
+ 
+-int __init sgiwd93_detect(Scsi_Host_Template *SGIblows)
++int __init sgiwd93_detect(struct scsi_host_template *SGIblows)
+ {
+ 	int found = 0;
+ 
+@@ -325,7 +325,7 @@
+  * arguments not with pointers.  So this is going to blow up beautyfully
+  * on 64-bit systems with memory outside the compat address spaces.
+  */
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name		= "SGIWD93",
+ 	.name			= "SGI WD93",
+ 	.detect			= sgiwd93_detect,
+Index: scsi-misc-2.6/drivers/scsi/sun3_NCR5380.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sun3_NCR5380.c	2005-10-29 19:20:34.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sun3_NCR5380.c	2005-10-29 19:24:23.000000000 +0200
+@@ -257,7 +257,7 @@
+  */
+ 
+ static struct Scsi_Host *first_instance = NULL;
+-static Scsi_Host_Template *the_template = NULL;
++static struct scsi_host_template *the_template = NULL;
+ 
+ /* Macros ease life... :-) */
+ #define	SETUP_HOSTDATA(in)				\
+Index: scsi-misc-2.6/drivers/scsi/sun3_scsi.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sun3_scsi.c	2005-10-29 19:20:34.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sun3_scsi.c	2005-10-29 19:24:23.000000000 +0200
+@@ -185,7 +185,7 @@
+ static struct Scsi_Host *default_instance;
+ 
+ /*
+- * Function : int sun3scsi_detect(Scsi_Host_Template * tpnt)
++ * Function : int sun3scsi_detect(struct scsi_host_template * tpnt)
+  *
+  * Purpose : initializes mac NCR5380 driver based on the
+  *	command line / compile time port and irq definitions.
+@@ -196,7 +196,7 @@
+  *
+  */
+  
+-int sun3scsi_detect(Scsi_Host_Template * tpnt)
++int sun3scsi_detect(struct scsi_host_template * tpnt)
+ {
+ 	unsigned long ioaddr;
+ 	static int called = 0;
+@@ -621,7 +621,7 @@
+ 	
+ #include "sun3_NCR5380.c"
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.name			= SUN3_SCSI_NAME,
+ 	.detect			= sun3scsi_detect,
+ 	.release		= sun3scsi_release,
+Index: scsi-misc-2.6/drivers/scsi/sun3_scsi.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sun3_scsi.h	2005-10-29 19:20:34.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sun3_scsi.h	2005-10-29 19:24:23.000000000 +0200
+@@ -48,7 +48,7 @@
+ #define IOBASE_SUN3_VMESCSI 0xff200000
+ 
+ static int sun3scsi_abort (Scsi_Cmnd *);
+-static int sun3scsi_detect (Scsi_Host_Template *);
++static int sun3scsi_detect (struct scsi_host_template *);
+ static const char *sun3scsi_info (struct Scsi_Host *);
+ static int sun3scsi_bus_reset(Scsi_Cmnd *);
+ static int sun3scsi_queue_command (Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+Index: scsi-misc-2.6/drivers/scsi/sun3_scsi_vme.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sun3_scsi_vme.c	2005-10-29 19:20:34.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sun3_scsi_vme.c	2005-10-29 19:24:23.000000000 +0200
+@@ -127,7 +127,7 @@
+ static struct Scsi_Host *default_instance;
+ 
+ /*
+- * Function : int sun3scsi_detect(Scsi_Host_Template * tpnt)
++ * Function : int sun3scsi_detect(struct scsi_host_template * tpnt)
+  *
+  * Purpose : initializes mac NCR5380 driver based on the
+  *	command line / compile time port and irq definitions.
+@@ -138,7 +138,7 @@
+  *
+  */
+  
+-static int sun3scsi_detect(Scsi_Host_Template * tpnt)
++static int sun3scsi_detect(struct scsi_host_template * tpnt)
+ {
+ 	unsigned long ioaddr, irq = 0;
+ 	static int called = 0;
+@@ -564,7 +564,7 @@
+ 
+ #include "sun3_NCR5380.c"
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.name			= SUN3_SCSI_NAME,
+ 	.detect			= sun3scsi_detect,
+ 	.release		= sun3scsi_release,
+Index: scsi-misc-2.6/drivers/scsi/sun3x_esp.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sun3x_esp.c	2005-10-29 19:20:34.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sun3x_esp.c	2005-10-29 19:24:23.000000000 +0200
+@@ -47,7 +47,7 @@
+ /* Detecting ESP chips on the machine.  This is the simple and easy
+  * version.
+  */
+-int sun3x_esp_detect(Scsi_Host_Template *tpnt)
++int sun3x_esp_detect(struct scsi_host_template *tpnt)
+ {
+ 	struct NCR_ESP *esp;
+ 	struct ConfigDev *esp_dev;
+@@ -367,7 +367,7 @@
+ 
+ }
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name		= "sun3x_esp",
+ 	.proc_info		= &esp_proc_info,
+ 	.name			= "Sun ESP 100/100a/200",
+Index: scsi-misc-2.6/drivers/scsi/sym53c416.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sym53c416.c	2005-10-29 19:20:34.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sym53c416.c	2005-10-29 19:24:23.000000000 +0200
+@@ -633,7 +633,7 @@
+ 	}
+ }
+ 
+-int __init sym53c416_detect(Scsi_Host_Template *tpnt)
++int __init sym53c416_detect(struct scsi_host_template *tpnt)
+ {
+ 	unsigned long flags;
+ 	struct Scsi_Host * shpnt = NULL;
+@@ -849,7 +849,7 @@
+ 
+ #endif
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.proc_name =		"sym53c416",
+ 	.name =			"Symbios Logic 53c416",
+ 	.detect =		sym53c416_detect,
+Index: scsi-misc-2.6/drivers/scsi/sym53c416.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sym53c416.h	2005-10-29 19:20:34.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sym53c416.h	2005-10-29 19:24:23.000000000 +0200
+@@ -22,7 +22,7 @@
+ 
+ #define SYM53C416_SCSI_ID 7
+ 
+-static int sym53c416_detect(Scsi_Host_Template *);
++static int sym53c416_detect(struct scsi_host_template *);
+ static const char *sym53c416_info(struct Scsi_Host *);
+ static int sym53c416_release(struct Scsi_Host *);
+ static int sym53c416_queuecommand(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+Index: scsi-misc-2.6/drivers/scsi/t128.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/t128.c	2005-10-29 19:20:34.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/t128.c	2005-10-29 19:24:23.000000000 +0200
+@@ -183,7 +183,7 @@
+ }
+ 
+ /* 
+- * Function : int t128_detect(Scsi_Host_Template * tpnt)
++ * Function : int t128_detect(struct scsi_host_template * tpnt)
+  *
+  * Purpose : detects and initializes T128,T128F, or T228 controllers
+  *	that were autoprobed, overridden on the LILO command line, 
+@@ -195,7 +195,7 @@
+  *
+  */
+ 
+-int __init t128_detect(Scsi_Host_Template * tpnt){
++int __init t128_detect(struct scsi_host_template * tpnt){
+     static int current_override = 0, current_base = 0;
+     struct Scsi_Host *instance;
+     unsigned long base;
+@@ -430,7 +430,7 @@
+ 
+ #include "NCR5380.c"
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.name           = "Trantor T128/T128F/T228",
+ 	.detect         = t128_detect,
+ 	.release        = t128_release,
+Index: scsi-misc-2.6/drivers/scsi/t128.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/t128.h	2005-10-29 19:20:34.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/t128.h	2005-10-29 19:24:23.000000000 +0200
+@@ -95,7 +95,7 @@
+ static int t128_abort(Scsi_Cmnd *);
+ static int t128_biosparam(struct scsi_device *, struct block_device *,
+ 			  sector_t, int*);
+-static int t128_detect(Scsi_Host_Template *);
++static int t128_detect(struct scsi_host_template *);
+ static int t128_queue_command(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+ static int t128_bus_reset(Scsi_Cmnd *);
+ 
+Index: scsi-misc-2.6/drivers/scsi/u14-34f.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/u14-34f.c	2005-10-29 19:20:34.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/u14-34f.c	2005-10-29 19:24:23.000000000 +0200
+@@ -282,7 +282,7 @@
+  *  clustering is enabled. ENABLE_CLUSTERING provides a performance increase
+  *  up to 50% on sequential access.
+  *
+- *  Since the Scsi_Host_Template structure is shared among all 14F and 34F,
++ *  Since the struct scsi_host_template structure is shared among all 14F and 34F,
+  *  the last setting of use_clustering is in effect for all of these boards.
+  *
+  *  Here a sample configuration using two U14F boards:
+Index: scsi-misc-2.6/drivers/scsi/ultrastor.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/ultrastor.c	2005-10-29 19:20:34.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/ultrastor.c	2005-10-29 19:24:23.000000000 +0200
+@@ -343,7 +343,7 @@
+ }
+ #endif
+ 
+-static int ultrastor_14f_detect(Scsi_Host_Template * tpnt)
++static int ultrastor_14f_detect(struct scsi_host_template * tpnt)
+ {
+     size_t i;
+     unsigned char in_byte, version_byte = 0;
+@@ -525,7 +525,7 @@
+     return FALSE;
+ }
+ 
+-static int ultrastor_24f_detect(Scsi_Host_Template * tpnt)
++static int ultrastor_24f_detect(struct scsi_host_template * tpnt)
+ {
+   int i;
+   struct Scsi_Host * shpnt = NULL;
+@@ -637,7 +637,7 @@
+   return FALSE;
+ }
+ 
+-static int ultrastor_detect(Scsi_Host_Template * tpnt)
++static int ultrastor_detect(struct scsi_host_template * tpnt)
+ {
+ 	tpnt->proc_name = "ultrastor";
+ 	return ultrastor_14f_detect(tpnt) || ultrastor_24f_detect(tpnt);
+@@ -1184,7 +1184,7 @@
+ 
+ MODULE_LICENSE("GPL");
+ 
+-static Scsi_Host_Template driver_template = {
++static struct scsi_host_template driver_template = {
+ 	.name              = "UltraStor 14F/24F/34F",
+ 	.detect            = ultrastor_detect,
+ 	.release	   = ultrastor_release,
+Index: scsi-misc-2.6/drivers/scsi/ultrastor.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/ultrastor.h	2005-10-29 19:20:34.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/ultrastor.h	2005-10-29 19:24:23.000000000 +0200
+@@ -13,7 +13,7 @@
+ #ifndef _ULTRASTOR_H
+ #define _ULTRASTOR_H
+ 
+-static int ultrastor_detect(Scsi_Host_Template *);
++static int ultrastor_detect(struct scsi_host_template *);
+ static const char *ultrastor_info(struct Scsi_Host * shpnt);
+ static int ultrastor_queuecommand(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+ static int ultrastor_abort(Scsi_Cmnd *);
+Index: scsi-misc-2.6/drivers/usb/image/microtek.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/usb/image/microtek.c	2005-10-29 19:20:34.000000000 +0200
++++ scsi-misc-2.6/drivers/usb/image/microtek.c	2005-10-29 19:24:23.000000000 +0200
+@@ -632,7 +632,7 @@
+ 	return err;
+ }
+ 
+-static Scsi_Host_Template mts_scsi_host_template = {
++static struct scsi_host_template mts_scsi_host_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= "microtekX6",
+ 	.proc_name		= "microtekX6",
+Index: scsi-misc-2.6/include/linux/libata.h
+===================================================================
+--- scsi-misc-2.6.orig/include/linux/libata.h	2005-10-29 19:20:38.000000000 +0200
++++ scsi-misc-2.6/include/linux/libata.h	2005-10-29 19:24:23.000000000 +0200
+@@ -203,7 +203,7 @@
+ 	struct list_head	node;
+ 	struct device 		*dev;
+ 	const struct ata_port_operations *port_ops;
+-	Scsi_Host_Template	*sht;
++	struct scsi_host_template *sht;
+ 	struct ata_ioports	port[ATA_MAX_PORTS];
+ 	unsigned int		n_ports;
+ 	unsigned int		hard_port_no;
+@@ -380,7 +380,7 @@
+ };
+ 
+ struct ata_port_info {
+-	Scsi_Host_Template	*sht;
++	struct scsi_host_template	*sht;
+ 	unsigned long		host_flags;
+ 	unsigned long		pio_mask;
+ 	unsigned long		mwdma_mask;
+@@ -415,7 +415,7 @@
+ #endif /* CONFIG_PCI */
+ extern int ata_device_add(const struct ata_probe_ent *ent);
+ extern void ata_host_set_remove(struct ata_host_set *host_set);
+-extern int ata_scsi_detect(Scsi_Host_Template *sht);
++extern int ata_scsi_detect(struct scsi_host_template *sht);
+ extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
+ extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
+ extern int ata_scsi_error(struct Scsi_Host *host);
+Index: scsi-misc-2.6/drivers/scsi/pdc_adma.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/pdc_adma.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/pdc_adma.c	2005-10-29 19:24:23.000000000 +0200
+@@ -139,7 +139,7 @@
+ static void adma_irq_clear(struct ata_port *ap);
+ static void adma_eng_timeout(struct ata_port *ap);
+ 
+-static Scsi_Host_Template adma_ata_sht = {
++static struct scsi_host_template adma_ata_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+Index: scsi-misc-2.6/drivers/scsi/sata_mv.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sata_mv.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sata_mv.c	2005-10-29 19:24:23.000000000 +0200
+@@ -270,7 +270,7 @@
+ static void mv_eng_timeout(struct ata_port *ap);
+ static int mv_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+ 
+-static Scsi_Host_Template mv_sht = {
++static struct scsi_host_template mv_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
+Index: scsi-misc-2.6/drivers/scsi/sata_sil24.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/sata_sil24.c	2005-10-29 19:20:33.000000000 +0200
++++ scsi-misc-2.6/drivers/scsi/sata_sil24.c	2005-10-29 19:24:23.000000000 +0200
+@@ -255,7 +255,7 @@
+ 	.remove			= ata_pci_remove_one, /* safe? */
+ };
+ 
+-static Scsi_Host_Template sil24_sht = {
++static struct scsi_host_template sil24_sht = {
+ 	.module			= THIS_MODULE,
+ 	.name			= DRV_NAME,
+ 	.ioctl			= ata_scsi_ioctl,
