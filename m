@@ -1,54 +1,112 @@
-From: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>
-Subject: RE: [PATCH] megaraid_sas: fix EH locking
-Date: Mon, 31 Oct 2005 13:52:57 -0500
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E57060CD2BF@exa-atlanta>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] aic7xxx: remove scsi_assign_lock usage
+Date: Mon, 31 Oct 2005 20:03:48 +0100
+Message-ID: <20051031190348.GA16590@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:19939 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932481AbVJaSxW (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:59808 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S932340AbVJaTDv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Oct 2005 13:53:22 -0500
+	Mon, 31 Oct 2005 14:03:51 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Christoph Hellwig' <hch@lst.de>, jejb@steeleye.com
+To: jejb@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
->Subject: [PATCH] megaraid_sas: fix EH locking
->
->recent kernels call the eh_ methods without the host lock held.
->megaraid_sas doesn't need it but drops it before calling a sleeping
->routine and reqcquires it afterwards.  Just remove the
->spin_unlock/spin_lock calls.
->
+just take the internal lock in queuecommand instead.  also switch
+the only direct use of the internal lock to the wrappers used elsewhere.
 
-Thank you.
 
->
->Signed-off-by: Christoph Hellwig <hch@lst.de>
->
->Index: linux-2.6/drivers/scsi/megaraid/megaraid_sas.c
->===================================================================
->--- linux-2.6.orig/drivers/scsi/megaraid/megaraid_sas.c	
->2005-10-11 19:53:19.000000000 +0200
->+++ linux-2.6/drivers/scsi/megaraid/megaraid_sas.c	
->2005-10-31 11:01:39.000000000 +0100
->@@ -768,17 +764,12 @@
-> 		return FAILED;
-> 	}
-> 
->-	spin_unlock(scmd->device->host->host_lock);
->-
-> 	ret_val = megasas_wait_for_outstanding(instance);
->-
-> 	if (ret_val == SUCCESS)
-> 		printk(KERN_NOTICE "megasas: reset successful \n");
-> 	else
-> 		printk(KERN_ERR "megasas: failed to do reset\n");
-> 
->-	spin_lock(scmd->device->host->host_lock);
->-
-> 	return ret_val;
-> }
-> 
->
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: linux-2.6/drivers/scsi/aic7xxx/aic7xxx_osm.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-10-04 20:07:32.000000000 +0200
++++ linux-2.6/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-10-31 10:25:42.000000000 +0100
+@@ -476,26 +476,20 @@
+ {
+ 	struct	 ahc_softc *ahc;
+ 	struct	 ahc_linux_device *dev = scsi_transport_device_data(cmd->device);
++	int rtn = SCSI_MLQUEUE_HOST_BUSY;
++	unsigned long flags;
+ 
+ 	ahc = *(struct ahc_softc **)cmd->device->host->hostdata;
+ 
+-	/*
+-	 * Save the callback on completion function.
+-	 */
+-	cmd->scsi_done = scsi_done;
+-
+-	/*
+-	 * Close the race of a command that was in the process of
+-	 * being queued to us just as our simq was frozen.  Let
+-	 * DV commands through so long as we are only frozen to
+-	 * perform DV.
+-	 */
+-	if (ahc->platform_data->qfrozen != 0)
+-		return SCSI_MLQUEUE_HOST_BUSY;
+-
+-	cmd->result = CAM_REQ_INPROG << 16;
++	ahc_lock(ahc, &flags);
++	if (ahc->platform_data->qfrozen == 0) {
++		cmd->scsi_done = scsi_done;
++		cmd->result = CAM_REQ_INPROG << 16;
++		rtn = ahc_linux_run_command(ahc, dev, cmd);
++	}
++	ahc_unlock(ahc, &flags);
+ 
+-	return ahc_linux_run_command(ahc, dev, cmd);
++	return rtn;
+ }
+ 
+ static inline struct scsi_target **
+@@ -1079,7 +1073,6 @@
+ 
+ 	*((struct ahc_softc **)host->hostdata) = ahc;
+ 	ahc_lock(ahc, &s);
+-	scsi_assign_lock(host, &ahc->platform_data->spin_lock);
+ 	ahc->platform_data->host = host;
+ 	host->can_queue = AHC_MAX_QUEUE;
+ 	host->cmd_per_lun = 2;
+@@ -2111,6 +2104,7 @@
+ 	int    paused;
+ 	int    wait;
+ 	int    disconnected;
++	unsigned long flags;
+ 
+ 	pending_scb = NULL;
+ 	paused = FALSE;
+@@ -2127,7 +2121,7 @@
+ 		printf(" 0x%x", cmd->cmnd[cdb_byte]);
+ 	printf("\n");
+ 
+-	spin_lock_irq(&ahc->platform_data->spin_lock);
++	ahc_lock(ahc, &flags);
+ 
+ 	/*
+ 	 * First determine if we currently own this command.
+@@ -2367,7 +2361,8 @@
+ 		int ret;
+ 
+ 		ahc->platform_data->flags |= AHC_UP_EH_SEMAPHORE;
+-		spin_unlock_irq(&ahc->platform_data->spin_lock);
++		ahc_unlock(ahc, &flags);
++
+ 		init_timer(&timer);
+ 		timer.data = (u_long)ahc;
+ 		timer.expires = jiffies + (5 * HZ);
+@@ -2381,10 +2376,8 @@
+ 			printf("Timer Expired\n");
+ 			retval = FAILED;
+ 		}
+-		spin_lock_irq(&ahc->platform_data->spin_lock);
+-	}
+-
+-	spin_unlock_irq(&ahc->platform_data->spin_lock);
++	} else
++		ahc_unlock(ahc, &flags);
+ 	return (retval);
+ }
+ 
