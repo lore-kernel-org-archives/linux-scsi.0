@@ -1,228 +1,161 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] use a completion in scsi_send_eh_cmnd
-Date: Mon, 31 Oct 2005 18:49:52 +0100
-Message-ID: <20051031174952.GA14954@lst.de>
+From: Jack Hammer <jack_hammer@adaptec.com>
+Subject: Re: ips init / kdump
+Date: Mon, 31 Oct 2005 13:17:57 -0500
+Message-ID: <43665FD5.7070409@adaptec.com>
+References: <43131F52.2040307@adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:10399 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S932516AbVJaRt5 (ORCPT
+Received: from magic.adaptec.com ([216.52.22.17]:17608 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932287AbVJaSSD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Oct 2005 12:49:57 -0500
-Content-Disposition: inline
+	Mon, 31 Oct 2005 13:18:03 -0500
+In-Reply-To: <43131F52.2040307@adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@steeleye.com
-Cc: htejun@gmail.com, linux-scsi@vger.kernel.org
+To: ipslinux@adaptec.com
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-scsi_send_eh_cmnd currently uses a semaphore and an overload of eh_timer
-to either get a completion for a command for a timeout.
-Switch to using a completion and wait_for_completion_timeout to simply
-the code and not having to deal with the races ourselves.
+I don't see this in any tree.
+Please apply this patch if you have not already done so.
+Thanks.
 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+On 8/29/2005 10:44 AM, Jack Hammer wrote:
+> This patch, applied to ips version 7.12.02 in the 2.6.13 kernel, fixes an
+> initialization bug found with kdump.
+> 
+> If I/O is active on the adapter, and an unexpected interrupt is pending 
+> during initialization, the driver blows it's brains out. Since the driver
+> didn't initiate the I/O, the data in it's internal tables will contain NULL
+> pointers.
+> 
+> When this condition is detected, a "flush cache and reset" is performed. 
+> The flush cache allows any pending "lazy writes" that the adapter is 
+> processing to complete ( a "must have" for a RAID adapter ) and the reset
+> puts the adapter back into a known, good state.
+> 
+> 
+> Signed-off-by: Jack Hammer <jack_hammer@adaptec.com>
+> 
+> 
+> 
+> --- a/drivers/scsi/ips.c	Mon Aug  8 12:22:19 2005
+> +++ b/drivers/scsi/ips.c	Mon Aug  8 12:22:08 2005
+> @@ -358,6 +358,9 @@
+>  static int ips_init_phase1(struct pci_dev *pci_dev, int *indexPtr);
+>  static int ips_register_scsi(int index);
+>  
+> +static int  ips_poll_for_flush_complete(ips_ha_t * ha);
+> +static void ips_flush_and_reset(ips_ha_t *ha);
+> +
+>  /*
+>   * global variables
+>   */
+> @@ -4807,6 +4810,9 @@
+>  	uint32_t bits;
+>  
+>  	METHOD_TRACE("ips_is_init_morpheus", 1);
+> +   
+> +	if (ips_isintr_morpheus(ha)) 
+> +	    ips_flush_and_reset(ha);
+>  
+>  	post = readl(ha->mem_ptr + IPS_REG_I960_MSG0);
+>  	bits = readl(ha->mem_ptr + IPS_REG_I2O_HIR);
+> @@ -4818,6 +4824,93 @@
+>  	else
+>  		return (1);
+>  }
+> +
+> +/****************************************************************************/
+> +/*                                                                          */
+> +/* Routine Name: ips_flush_and_reset                                        */
+> +/*                                                                          */
+> +/* Routine Description:                                                     */
+> +/*                                                                          */
+> +/*   Perform cleanup ( FLUSH and RESET ) when the adapter is in an unknown  */
+> +/*   state ( was trying to INIT and an interrupt was already pending ) ...  */
+> +/*                                                                          */
+> +/****************************************************************************/
+> +static void 
+> +ips_flush_and_reset(ips_ha_t *ha)
+> +{
+> +	ips_scb_t *scb;
+> +	int  ret;
+> + 	int  time;
+> +	int  done;
+> +	dma_addr_t command_dma;
+> +
+> +	/* Create a usuable SCB */
+> +	scb = pci_alloc_consistent(ha->pcidev, sizeof(ips_scb_t), &command_dma);
+> +	if (scb) {
+> +	    memset(scb, 0, sizeof(ips_scb_t));
+> +	    ips_init_scb(ha, scb);
+> +	    scb->scb_busaddr = command_dma;
+> +
+> +	    scb->timeout = ips_cmd_timeout;
+> +	    scb->cdb[0] = IPS_CMD_FLUSH;
+> +
+> +	    scb->cmd.flush_cache.op_code = IPS_CMD_FLUSH;
+> +	    scb->cmd.flush_cache.command_id = IPS_MAX_CMDS;   /* Use an ID that would otherwise not exist */
+> +	    scb->cmd.flush_cache.state = IPS_NORM_STATE;
+> +	    scb->cmd.flush_cache.reserved = 0;
+> +	    scb->cmd.flush_cache.reserved2 = 0;
+> +	    scb->cmd.flush_cache.reserved3 = 0;
+> +	    scb->cmd.flush_cache.reserved4 = 0;
+> +
+> +	    ret = ips_send_cmd(ha, scb);                      /* Send the Flush Command */
+> +
+> +	    if (ret == IPS_SUCCESS) {
+> +	        time = 60 * IPS_ONE_SEC;	              /* Max Wait time is 60 seconds */
+> +	        done = 0;
+> +	            
+> +	        while ((time > 0) && (!done)) {
+> +	           done = ips_poll_for_flush_complete(ha); 	   
+> +	           /* This may look evil, but it's only done during extremely rare start-up conditions ! */
+> +	           udelay(1000);
+> +	           time--;
+> +	        }
+> +        }
+> +	}
+> +
+> +	/* Now RESET and INIT the adapter */
+> +	(*ha->func.reset) (ha);
+> +
+> +	pci_free_consistent(ha->pcidev, sizeof(ips_scb_t), scb, command_dma);
+> +	return;
+> +}
+> +
+> +/****************************************************************************/
+> +/*                                                                          */
+> +/* Routine Name: ips_poll_for_flush_complete                                */
+> +/*                                                                          */
+> +/* Routine Description:                                                     */
+> +/*                                                                          */
+> +/*   Poll for the Flush Command issued by ips_flush_and_reset() to complete */
+> +/*   All other responses are just taken off the queue and ignored           */
+> +/*                                                                          */
+> +/****************************************************************************/
+> +static int
+> +ips_poll_for_flush_complete(ips_ha_t * ha)
+> +{
+> +	IPS_STATUS cstatus;
+> +    
+> +	while (TRUE) {
+> +	    cstatus.value = (*ha->func.statupd) (ha);
+> +
+> +	    if (cstatus.value == 0xffffffff)      /* If No Interrupt to process */
+> +			break;
+> +            
+> +	    /* Success is when we see the Flush Command ID */
+> +	    if (cstatus.fields.command_id == IPS_MAX_CMDS ) 
+> +	        return 1;
+> +	 }	
+> +
+> +	return 0;
+>  
+>  /****************************************************************************/
+>  /*                                                                          */
+> 
 
-Index: scsi-misc-2.6/drivers/scsi/scsi_error.c
-===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/scsi_error.c	2005-10-29 19:22:47.000000000 +0200
-+++ scsi-misc-2.6/drivers/scsi/scsi_error.c	2005-10-29 19:23:00.000000000 +0200
-@@ -417,43 +417,15 @@
- }
- 
- /**
-- * scsi_eh_times_out - timeout function for error handling.
-- * @scmd:	Cmd that is timing out.
-- *
-- * Notes:
-- *    During error handling, the kernel thread will be sleeping waiting
-- *    for some action to complete on the device.  our only job is to
-- *    record that it timed out, and to wake up the thread.
-- **/
--static void scsi_eh_times_out(struct scsi_cmnd *scmd)
--{
--	scmd->eh_eflags |= SCSI_EH_REC_TIMEOUT;
--	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: scmd:%p\n", __FUNCTION__,
--					  scmd));
--
--	up(scmd->device->host->eh_action);
--}
--
--/**
-  * scsi_eh_done - Completion function for error handling.
-  * @scmd:	Cmd that is done.
-  **/
- static void scsi_eh_done(struct scsi_cmnd *scmd)
- {
--	/*
--	 * if the timeout handler is already running, then just set the
--	 * flag which says we finished late, and return.  we have no
--	 * way of stopping the timeout handler from running, so we must
--	 * always defer to it.
--	 */
--	if (del_timer(&scmd->eh_timeout)) {
--		scmd->request->rq_status = RQ_SCSI_DONE;
--
--		SCSI_LOG_ERROR_RECOVERY(3, printk("%s scmd: %p result: %x\n",
--					   __FUNCTION__, scmd, scmd->result));
--
--		up(scmd->device->host->eh_action);
--	}
-+	SCSI_LOG_ERROR_RECOVERY(3,
-+		printk("%s scmd: %p result: %x\n",
-+			__FUNCTION__, scmd, scmd->result));
-+	complete(scmd->device->host->eh_action);
- }
- 
- /**
-@@ -461,10 +433,6 @@
-  * @scmd:	SCSI Cmd to send.
-  * @timeout:	Timeout for cmd.
-  *
-- * Notes:
-- *    The initialization of the structures is quite a bit different in
-- *    this case, and furthermore, there is a different completion handler
-- *    vs scsi_dispatch_cmd.
-  * Return value:
-  *    SUCCESS or FAILED or NEEDS_RETRY
-  **/
-@@ -472,24 +440,16 @@
- {
- 	struct scsi_device *sdev = scmd->device;
- 	struct Scsi_Host *shost = sdev->host;
--	DECLARE_MUTEX_LOCKED(sem);
-+	DECLARE_COMPLETION(done);
-+	unsigned long timeleft;
- 	unsigned long flags;
--	int rtn = SUCCESS;
-+	int rtn;
- 
--	/*
--	 * we will use a queued command if possible, otherwise we will
--	 * emulate the queuing and calling of completion function ourselves.
--	 */
- 	if (sdev->scsi_level <= SCSI_2)
- 		scmd->cmnd[1] = (scmd->cmnd[1] & 0x1f) |
- 			(sdev->lun << 5 & 0xe0);
- 
--	scsi_add_timer(scmd, timeout, scsi_eh_times_out);
--
--	/*
--	 * set up the semaphore so we wait for the command to complete.
--	 */
--	shost->eh_action = &sem;
-+	shost->eh_action = &done;
- 	scmd->request->rq_status = RQ_SCSI_BUSY;
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
-@@ -497,47 +457,29 @@
- 	shost->hostt->queuecommand(scmd, scsi_eh_done);
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 
--	down(&sem);
--	scsi_log_completion(scmd, SUCCESS);
-+	timeleft = wait_for_completion_timeout(&done, timeout);
- 
-+	scmd->request->rq_status = RQ_SCSI_DONE;
- 	shost->eh_action = NULL;
- 
--	/*
--	 * see if timeout.  if so, tell the host to forget about it.
--	 * in other words, we don't want a callback any more.
--	 */
--	if (scmd->eh_eflags & SCSI_EH_REC_TIMEOUT) {
--		scmd->eh_eflags &= ~SCSI_EH_REC_TIMEOUT;
--
--		/*
--		 * as far as the low level driver is
--		 * concerned, this command is still active, so
--		 * we must give the low level driver a chance
--		 * to abort it. (db) 
--		 *
--		 * FIXME(eric) - we are not tracking whether we could
--		 * abort a timed out command or not.  not sure how
--		 * we should treat them differently anyways.
--		 */
--		if (shost->hostt->eh_abort_handler)
--			shost->hostt->eh_abort_handler(scmd);
--			
--		scmd->request->rq_status = RQ_SCSI_DONE;
--		rtn = FAILED;
--	}
-+	scsi_log_completion(scmd, SUCCESS);
- 
--	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: scmd: %p, rtn:%x\n",
--					  __FUNCTION__, scmd, rtn));
-+	SCSI_LOG_ERROR_RECOVERY(3,
-+		printk("%s: scmd: %p, timeleft: %ld\n",
-+			__FUNCTION__, scmd, timeleft));
- 
- 	/*
--	 * now examine the actual status codes to see whether the command
--	 * actually did complete normally.
-+	 * If there is time left scsi_eh_done got called, and we will
-+	 * examine the actual status codes to see whether the command
-+	 * actually did complete normally, else tell the host to forget
-+	 * about this command.
- 	 */
--	if (rtn == SUCCESS) {
-+	if (timeleft) {
- 		rtn = scsi_eh_completed_normally(scmd);
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			printk("%s: scsi_eh_completed_normally %x\n",
- 			       __FUNCTION__, rtn));
-+
- 		switch (rtn) {
- 		case SUCCESS:
- 		case NEEDS_RETRY:
-@@ -547,6 +489,15 @@
- 			rtn = FAILED;
- 			break;
- 		}
-+	} else {
-+		/*
-+		 * FIXME(eric) - we are not tracking whether we could
-+		 * abort a timed out command or not.  not sure how
-+		 * we should treat them differently anyways.
-+		 */
-+		if (shost->hostt->eh_abort_handler)
-+			shost->hostt->eh_abort_handler(scmd);
-+		rtn = FAILED;
- 	}
- 
- 	return rtn;
-Index: scsi-misc-2.6/drivers/scsi/scsi_priv.h
-===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/scsi_priv.h	2005-10-29 19:20:33.000000000 +0200
-+++ scsi-misc-2.6/drivers/scsi/scsi_priv.h	2005-10-29 19:23:00.000000000 +0200
-@@ -22,7 +22,6 @@
-  * Scsi Error Handler Flags
-  */
- #define SCSI_EH_CANCEL_CMD	0x0001	/* Cancel this cmd */
--#define SCSI_EH_REC_TIMEOUT	0x0002	/* EH retry timed out */
- 
- #define SCSI_SENSE_VALID(scmd) \
- 	(((scmd)->sense_buffer[0] & 0x70) == 0x70)
-Index: scsi-misc-2.6/include/scsi/scsi_host.h
-===================================================================
---- scsi-misc-2.6.orig/include/scsi/scsi_host.h	2005-10-29 19:22:47.000000000 +0200
-+++ scsi-misc-2.6/include/scsi/scsi_host.h	2005-10-29 19:23:00.000000000 +0200
-@@ -7,6 +7,7 @@
- #include <linux/workqueue.h>
- 
- struct block_device;
-+struct completion;
- struct module;
- struct scsi_cmnd;
- struct scsi_device;
-@@ -467,8 +468,8 @@
- 
- 	struct list_head	eh_cmd_q;
- 	struct task_struct    * ehandler;  /* Error recovery thread. */
--	struct semaphore      * eh_action; /* Wait for specific actions on the
--                                          host. */
-+	struct completion     * eh_action; /* Wait for specific actions on the
-+					      host. */
- 	wait_queue_head_t       host_wait;
- 	struct scsi_host_template *hostt;
- 	struct scsi_transport_template *transportt;
