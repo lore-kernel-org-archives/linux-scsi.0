@@ -1,230 +1,268 @@
-From: "Ju, Seokmann" <Seokmann.Ju@engenio.com>
-Subject: RE: [PATCH] megaraid (legacy): remove scsi_assign_lock usage
-Date: Mon, 31 Oct 2005 14:49:40 -0500
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E5703662BDF@exa-atlanta>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] megaraid_mbox: remove scsi_assign_lock usage
+Date: Mon, 31 Oct 2005 21:06:02 +0100
+Message-ID: <20051031200602.GA17753@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:15850 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S964812AbVJaTtt (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:32418 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S964815AbVJaUGJ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Oct 2005 14:49:49 -0500
+	Mon, 31 Oct 2005 15:06:09 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Christoph Hellwig' <hch@lst.de>, jejb@steeleye.com
+To: jejb@steeleye.com, Seokmann.Ju@engenio.com
 Cc: linux-scsi@vger.kernel.org
 
-On Monday, October 31, 2005 2:12 PM, Christoph Hellwig wrote:
-> just take the adapter lock in megaraid_queue.  Additional benefit is
-> that we can get rid of the awkward conditional locking in
-> mega_internal_command.
-Thank you for the changes. It looks good for me.
+also remove the adapter->host_lock alias for adapter->lock and remove
+some superflous locking aswell as removing the tiny locking wrappers
+for the EH routines.
 
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@lst.de] 
-> Sent: Monday, October 31, 2005 2:12 PM
-> To: jejb@steeleye.com
-> Cc: linux-scsi@vger.kernel.org
-> Subject: [PATCH] megaraid (legacy): remove scsi_assign_lock usage
-> 
-> just take the adapter lock in megaraid_queue.  Additional benefit is
-> that we can get rid of the awkward conditional locking in
-> mega_internal_command.
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: linux-2.6/drivers/scsi/megaraid.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/scsi/megaraid.c	2005-10-31 
-> 03:05:16.000000000 +0100
-> +++ linux-2.6/drivers/scsi/megaraid.c	2005-10-31 
-> 10:33:44.000000000 +0100
-> @@ -362,6 +362,7 @@
->  	adapter_t	*adapter;
->  	scb_t	*scb;
->  	int	busy=0;
-> +	unsigned long flags;
->  
->  	adapter = (adapter_t *)scmd->device->host->hostdata;
->  
-> @@ -377,6 +378,7 @@
->  	 * return 0 in that case.
->  	 */
->  
-> +	spin_lock_irqsave(&adapter->lock, flags);
->  	scb = mega_build_cmd(adapter, scmd, &busy);
->  
->  	if(scb) {
-> @@ -393,6 +395,7 @@
->  		}
->  		return 0;
->  	}
-> +	spin_unlock_irqrestore(&adapter->lock, flags);
->  
->  	return busy;
->  }
-> @@ -1981,7 +1984,7 @@
->  	mc.cmd = MEGA_CLUSTER_CMD;
->  	mc.opcode = MEGA_RESET_RESERVATIONS;
->  
-> -	if( mega_internal_command(adapter, LOCK_INT, &mc, NULL) != 0 ) {
-> +	if( mega_internal_command(adapter, &mc, NULL) != 0 ) {
->  		printk(KERN_WARNING
->  				"megaraid: reservation reset 
-> failed.\n");
->  	}
-> @@ -3011,7 +3014,7 @@
->  		mc.cmd = FC_NEW_CONFIG;
->  		mc.opcode = OP_DCMD_READ_CONFIG;
->  
-> -		if( mega_internal_command(adapter, LOCK_INT, 
-> &mc, NULL) ) {
-> +		if( mega_internal_command(adapter, &mc, NULL) ) {
->  
->  			len = sprintf(page, "40LD read config 
-> failed.\n");
->  
-> @@ -3029,11 +3032,11 @@
->  	else {
->  		mc.cmd = NEW_READ_CONFIG_8LD;
->  
-> -		if( mega_internal_command(adapter, LOCK_INT, 
-> &mc, NULL) ) {
-> +		if( mega_internal_command(adapter, &mc, NULL) ) {
->  
->  			mc.cmd = READ_CONFIG_8LD;
->  
-> -			if( mega_internal_command(adapter, 
-> LOCK_INT, &mc,
-> +			if( mega_internal_command(adapter, &mc,
->  						NULL) ){
->  
->  				len = sprintf(page,
-> @@ -3632,7 +3635,7 @@
->  			/*
->  			 * Issue the command
->  			 */
-> -			mega_internal_command(adapter, 
-> LOCK_INT, &mc, pthru);
-> +			mega_internal_command(adapter, &mc, pthru);
->  
->  			rval = mega_n_to_m((void __user *)arg, &mc);
->  
-> @@ -3715,7 +3718,7 @@
->  			/*
->  			 * Issue the command
->  			 */
-> -			mega_internal_command(adapter, 
-> LOCK_INT, &mc, NULL);
-> +			mega_internal_command(adapter, &mc, NULL);
->  
->  			rval = mega_n_to_m((void __user *)arg, &mc);
->  
-> @@ -4234,7 +4237,7 @@
->  	mc.opcode = OP_DEL_LOGDRV;
->  	mc.subopcode = logdrv;
->  
-> -	rval = mega_internal_command(adapter, LOCK_INT, &mc, NULL);
-> +	rval = mega_internal_command(adapter, &mc, NULL);
->  
->  	/* log this event */
->  	if(rval) {
-> @@ -4367,7 +4370,7 @@
->  
->  	mc.xferaddr = (u32)dma_handle;
->  
-> -	if ( mega_internal_command(adapter, LOCK_INT, &mc, 
-> NULL) != 0 ) {
-> +	if ( mega_internal_command(adapter, &mc, NULL) != 0 ) {
->  		return -1;
->  	}
->  
-> @@ -4435,7 +4438,7 @@
->  	mc.cmd = MEGA_MBOXCMD_PASSTHRU;
->  	mc.xferaddr = (u32)pthru_dma_handle;
->  
-> -	rval = mega_internal_command(adapter, LOCK_INT, &mc, pthru);
-> +	rval = mega_internal_command(adapter, &mc, pthru);
->  
->  	pci_free_consistent(pdev, sizeof(mega_passthru), pthru,
->  			pthru_dma_handle);
-> @@ -4449,7 +4452,6 @@
->  /**
->   * mega_internal_command()
->   * @adapter - pointer to our soft state
-> - * @ls - the scope of the exclusion lock.
->   * @mc - the mailbox command
->   * @pthru - Passthru structure for DCDB commands
->   *
-> @@ -4463,8 +4465,7 @@
->   * Note: parameter 'pthru' is null for non-passthru commands.
->   */
->  static int
-> -mega_internal_command(adapter_t *adapter, lockscope_t ls, 
-> megacmd_t *mc,
-> -		mega_passthru *pthru )
-> +mega_internal_command(adapter_t *adapter, megacmd_t *mc, 
-> mega_passthru *pthru)
->  {
->  	Scsi_Cmnd	*scmd;
->  	struct	scsi_device *sdev;
-> @@ -4508,15 +4509,8 @@
->  
->  	scb->idx = CMDID_INT_CMDS;
->  
-> -	/*
-> -	 * Get the lock only if the caller has not acquired it already
-> -	 */
-> -	if( ls == LOCK_INT ) spin_lock_irqsave(&adapter->lock, flags);
-> -
->  	megaraid_queue(scmd, mega_internal_done);
->  
-> -	if( ls == LOCK_INT ) 
-> spin_unlock_irqrestore(&adapter->lock, flags);
-> -
->  	wait_for_completion(&adapter->int_waitq);
->  
->  	rval = scmd->result;
-> Index: linux-2.6/drivers/scsi/megaraid.h
-> ===================================================================
-> --- linux-2.6.orig/drivers/scsi/megaraid.h	2005-08-11 
-> 16:46:00.000000000 +0200
-> +++ linux-2.6/drivers/scsi/megaraid.h	2005-10-31 
-> 10:32:22.000000000 +0100
-> @@ -926,13 +926,6 @@
->  #define MEGA_SGLIST			0x0002
->  
->  /*
-> - * lockscope definitions, callers can specify the lock scope 
-> with this data
-> - * type. LOCK_INT would mean the caller has not acquired the 
-> lock before
-> - * making the call and LOCK_EXT would mean otherwise.
-> - */
-> -typedef enum { LOCK_INT, LOCK_EXT } lockscope_t;
-> -
-> -/*
->   * Parameters for the io-mapped controllers
->   */
->  
-> @@ -1062,8 +1055,7 @@
->  static int mega_del_logdrv(adapter_t *, int);
->  static int mega_do_del_logdrv(adapter_t *, int);
->  static void mega_get_max_sgl(adapter_t *);
-> -static int mega_internal_command(adapter_t *, lockscope_t, 
-> megacmd_t *,
-> -		mega_passthru *);
-> +static int mega_internal_command(adapter_t *, megacmd_t *, 
-> mega_passthru *);
->  static void mega_internal_done(Scsi_Cmnd *);
->  static int mega_support_cluster(adapter_t *);
->  #endif
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: linux-2.6/drivers/scsi/megaraid/mega_common.h
+===================================================================
+--- linux-2.6.orig/drivers/scsi/megaraid/mega_common.h	2005-08-11 16:46:00.000000000 +0200
++++ linux-2.6/drivers/scsi/megaraid/mega_common.h	2005-10-31 10:36:40.000000000 +0100
+@@ -97,7 +97,6 @@
+  * @param dpc_h			: tasklet handle
+  * @param pdev			: pci configuration pointer for kernel
+  * @param host			: pointer to host structure of mid-layer
+- * @param host_lock		: pointer to appropriate lock
+  * @param lock			: synchronization lock for mid-layer and driver
+  * @param quiescent		: driver is quiescent for now.
+  * @param outstanding_cmds	: number of commands pending in the driver
+@@ -152,7 +151,6 @@
+ 	struct tasklet_struct	dpc_h;
+ 	struct pci_dev		*pdev;
+ 	struct Scsi_Host	*host;
+-	spinlock_t		*host_lock;
+ 	spinlock_t		lock;
+ 	uint8_t			quiescent;
+ 	int			outstanding_cmds;
+Index: linux-2.6/drivers/scsi/megaraid/megaraid_mbox.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/megaraid/megaraid_mbox.c	2005-10-29 01:42:46.000000000 +0200
++++ linux-2.6/drivers/scsi/megaraid/megaraid_mbox.c	2005-10-31 10:45:31.000000000 +0100
+@@ -533,8 +533,6 @@
+ 
+ 	// Initialize the synchronization lock for kernel and LLD
+ 	spin_lock_init(&adapter->lock);
+-	adapter->host_lock = &adapter->lock;
+-
+ 
+ 	// Initialize the command queues: the list of free SCBs and the list
+ 	// of pending SCBs.
+@@ -715,9 +713,6 @@
+ 	SCSIHOST2ADAP(host)	= (caddr_t)adapter;
+ 	adapter->host		= host;
+ 
+-	// export the parameters required by the mid-layer
+-	scsi_assign_lock(host, adapter->host_lock);
+-
+ 	host->irq		= adapter->irq;
+ 	host->unique_id		= adapter->unique_id;
+ 	host->can_queue		= adapter->max_cmds;
+@@ -1560,10 +1555,6 @@
+ 	scp->scsi_done	= done;
+ 	scp->result	= 0;
+ 
+-	assert_spin_locked(adapter->host_lock);
+-
+-	spin_unlock(adapter->host_lock);
+-
+ 	/*
+ 	 * Allocate and build a SCB request
+ 	 * if_busy flag will be set if megaraid_mbox_build_cmd() command could
+@@ -1573,23 +1564,16 @@
+ 	 * return 0 in that case, and we would do the callback right away.
+ 	 */
+ 	if_busy	= 0;
+-	scb	= megaraid_mbox_build_cmd(adapter, scp, &if_busy);
+-
+-	if (scb) {
+-		megaraid_mbox_runpendq(adapter, scb);
+-	}
+-
+-	spin_lock(adapter->host_lock);
+-
++	scb = megaraid_mbox_build_cmd(adapter, scp, &if_busy);
+ 	if (!scb) {	// command already completed
+ 		done(scp);
+ 		return 0;
+ 	}
+ 
++	megaraid_mbox_runpendq(adapter, scb);
+ 	return if_busy;
+ }
+ 
+-
+ /**
+  * megaraid_mbox_build_cmd - transform the mid-layer scsi command to megaraid
+  * firmware lingua
+@@ -2546,9 +2530,7 @@
+ 		megaraid_dealloc_scb(adapter, scb);
+ 
+ 		// send the scsi packet back to kernel
+-		spin_lock(adapter->host_lock);
+ 		scp->scsi_done(scp);
+-		spin_unlock(adapter->host_lock);
+ 	}
+ 
+ 	return;
+@@ -2563,7 +2545,7 @@
+  * aborted. All the commands issued to the F/W must complete.
+  **/
+ static int
+-__megaraid_abort_handler(struct scsi_cmnd *scp)
++megaraid_abort_handler(struct scsi_cmnd *scp)
+ {
+ 	adapter_t		*adapter;
+ 	mraid_device_t		*raid_dev;
+@@ -2577,8 +2559,6 @@
+ 	adapter		= SCP2ADAPTER(scp);
+ 	raid_dev	= ADAP2RAIDDEV(adapter);
+ 
+-	assert_spin_locked(adapter->host_lock);
+-
+ 	con_log(CL_ANN, (KERN_WARNING
+ 		"megaraid: aborting-%ld cmd=%x <c=%d t=%d l=%d>\n",
+ 		scp->serial_number, scp->cmnd[0], SCP2CHANNEL(scp),
+@@ -2658,6 +2638,7 @@
+ 	// traverse through the list of all SCB, since driver does not
+ 	// maintain these SCBs on any list
+ 	found = 0;
++	spin_lock_irq(&adapter->lock);
+ 	for (i = 0; i < MBOX_MAX_SCSI_CMDS; i++) {
+ 		scb = adapter->kscb_list + i;
+ 
+@@ -2680,6 +2661,7 @@
+ 			}
+ 		}
+ 	}
++	spin_unlock_irq(&adapter->lock);
+ 
+ 	if (!found) {
+ 		con_log(CL_ANN, (KERN_WARNING
+@@ -2696,22 +2678,6 @@
+ 	return FAILED;
+ }
+ 
+-static int
+-megaraid_abort_handler(struct scsi_cmnd *scp)
+-{
+-	adapter_t	*adapter;
+-	int rc;
+-
+-	adapter		= SCP2ADAPTER(scp);
+-
+-	spin_lock_irq(adapter->host_lock);
+-	rc = __megaraid_abort_handler(scp);
+-	spin_unlock_irq(adapter->host_lock);
+-
+-	return rc;
+-}
+-
+-
+ /**
+  * megaraid_reset_handler - device reset hadler for mailbox based driver
+  * @scp		: reference command
+@@ -2723,7 +2689,7 @@
+  * host
+  **/
+ static int
+-__megaraid_reset_handler(struct scsi_cmnd *scp)
++megaraid_reset_handler(struct scsi_cmnd *scp)
+ {
+ 	adapter_t	*adapter;
+ 	scb_t		*scb;
+@@ -2739,10 +2705,6 @@
+ 	adapter		= SCP2ADAPTER(scp);
+ 	raid_dev	= ADAP2RAIDDEV(adapter);
+ 
+-	assert_spin_locked(adapter->host_lock);
+-
+-	con_log(CL_ANN, (KERN_WARNING "megaraid: reseting the host...\n"));
+-
+ 	// return failure if adapter is not responding
+ 	if (raid_dev->hw_error) {
+ 		con_log(CL_ANN, (KERN_NOTICE
+@@ -2779,8 +2741,6 @@
+ 			adapter->outstanding_cmds, MBOX_RESET_WAIT));
+ 	}
+ 
+-	spin_unlock(adapter->host_lock);
+-
+ 	recovery_window = MBOX_RESET_WAIT + MBOX_RESET_EXT_WAIT;
+ 
+ 	recovering = adapter->outstanding_cmds;
+@@ -2806,7 +2766,7 @@
+ 		msleep(1000);
+ 	}
+ 
+-	spin_lock(adapter->host_lock);
++	spin_lock(&adapter->lock);
+ 
+ 	// If still outstanding commands, bail out
+ 	if (adapter->outstanding_cmds) {
+@@ -2815,7 +2775,8 @@
+ 
+ 		raid_dev->hw_error = 1;
+ 
+-		return FAILED;
++		rval = FAILED;
++		goto out;
+ 	}
+ 	else {
+ 		con_log(CL_ANN, (KERN_NOTICE
+@@ -2824,7 +2785,10 @@
+ 
+ 
+ 	// If the controller supports clustering, reset reservations
+-	if (!adapter->ha) return SUCCESS;
++	if (!adapter->ha) {
++		rval = SUCCESS;
++		goto out;
++	}
+ 
+ 	// clear reservations if any
+ 	raw_mbox[0] = CLUSTER_CMD;
+@@ -2841,22 +2805,11 @@
+ 				"megaraid: reservation reset failed\n"));
+ 	}
+ 
++ out:
++	spin_unlock_irq(&adapter->lock);
+ 	return rval;
+ }
+ 
+-static int
+-megaraid_reset_handler(struct scsi_cmnd *cmd)
+-{
+-	int rc;
+-
+-	spin_lock_irq(cmd->device->host->host_lock);
+-	rc = __megaraid_reset_handler(cmd);
+-	spin_unlock_irq(cmd->device->host->host_lock);
+-
+-	return rc;
+-}
+-
+-
+ /*
+  * START: internal commands library
+  *
+@@ -3776,9 +3729,9 @@
+ 	/*
+ 	 * Set the quiescent flag to stop issuing cmds to FW.
+ 	 */
+-	spin_lock_irqsave(adapter->host_lock, flags);
++	spin_lock_irqsave(&adapter->lock, flags);
+ 	adapter->quiescent++;
+-	spin_unlock_irqrestore(adapter->host_lock, flags);
++	spin_unlock_irqrestore(&adapter->lock, flags);
+ 
+ 	/*
+ 	 * Wait till there are no more cmds outstanding at FW. Try for at most
