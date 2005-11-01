@@ -1,50 +1,37 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [openib-general] Re: [PATCH/RFC] IB: Add SCSI RDMA Protocol (SRP) initiator
-Date: Tue, 1 Nov 2005 05:58:00 +0100
-Message-ID: <20051101045800.GA25519@lst.de>
-References: <52wtjtk3d1.fsf@cisco.com> <20051101110409V.fujita.tomonori@lab.ntt.co.jp> <52irvdge6c.fsf@cisco.com>
+From: Roland Dreier <rolandd@cisco.com>
+Subject: Re: Re: [PATCH/RFC] IB: Add SCSI RDMA Protocol
+	(SRP) initiator
+Date: Mon, 31 Oct 2005 21:03:35 -0800
+Message-ID: <52acgpgdso.fsf@cisco.com>
+References: <52wtjtk3d1.fsf@cisco.com>
+	<20051101110409V.fujita.tomonori@lab.ntt.co.jp>
+	<52irvdge6c.fsf@cisco.com> <20051101045800.GA25519@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:6317 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S932575AbVKAE6K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Oct 2005 23:58:10 -0500
-Content-Disposition: inline
-In-Reply-To: <52irvdge6c.fsf@cisco.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Return-path: <openib-general-bounces@openib.org>
+In-Reply-To: <20051101045800.GA25519@lst.de> (Christoph Hellwig's message of
+	"Tue, 1 Nov 2005 05:58:00 +0100")
+List-Unsubscribe: <http://openib.org/mailman/listinfo/openib-general>,
+	<mailto:openib-general-request@openib.org?subject=unsubscribe>
+List-Archive: <http://openib.org/pipermail/openib-general>
+List-Post: <mailto:openib-general@openib.org>
+List-Help: <mailto:openib-general-request@openib.org?subject=help>
+List-Subscribe: <http://openib.org/mailman/listinfo/openib-general>,
+	<mailto:openib-general-request@openib.org?subject=subscribe>
+Sender: openib-general-bounces@openib.org
+Errors-To: openib-general-bounces@openib.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, openib-general@openib.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <rolandd@cisco.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, openib-general@openib.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Oct 31, 2005 at 08:55:23PM -0800, Roland Dreier wrote:
-> Anyway, looking at drivers/scsi/ibmvscsi/srp.h, the main problem I see
-> is that the file has a bunch of bitfields that are big-endian only
-> (which makes sense because the driver can only be compiled for pSeries
-> or iSeries anyway).
-> 
-> But I have no objection to moving the file to include/scsi/srp.h,
-> adding a bunch of
-> 
->     #if defined(__LITTLE_ENDIAN_BITFIELD)
->     #elif defined(__BIG_ENDIAN_BITFIELD)
->     #endif
-> 
-> and adding a few missing defines, and then converting ib_srp to use
-> the same file.
-> 
-> Does that seem like the right thing to do?
+    Christoph> No. Bitfields for accessing hardware/wire
+    Christoph> datastructures are wrong and will always break in some
+    Christoph> circumstances.  Your header is much better.
 
-No. Bitfields for accessing hardware/wire datastructures are wrong and
-will always break in some circumstances.  Your header is much better.
+OK, that's my feeling as well.
 
-> 
-> Thanks,
->   Roland
-> _______________________________________________
-> openib-general mailing list
-> openib-general@openib.org
-> http://openib.org/mailman/listinfo/openib-general
-> 
-> To unsubscribe, please visit http://openib.org/mailman/listinfo/openib-general
----end quoted text---
+Would it make sense for me to split the pure SRP spec structures and
+so on into a separate file and put it in include/scsi/srp.h?  Then we
+can move ibmvscsi towards using that file.
+
+ - R.
