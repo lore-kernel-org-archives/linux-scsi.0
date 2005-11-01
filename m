@@ -1,238 +1,211 @@
 From: brking@us.ibm.com
-Subject: [PATCH 02/26] ipr: Cleanup error structures
-Date: Tue, 01 Nov 2005 17:00:18 -0600
-Message-ID: <200511012300.jA1N0L6J010112@d01av01.pok.ibm.com>
+Subject: [PATCH 12/26] ipr: Fix adapter microcode update DMA mapping leak
+Date: Tue, 01 Nov 2005 17:01:27 -0600
+Message-ID: <200511012301.jA1N1SxX014736@d01av01.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:60362 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751398AbVKAXAX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2005 18:00:23 -0500
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:60042 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751408AbVKAXB3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2005 18:01:29 -0500
 Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id jA1N0M2h014142
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Nov 2005 18:00:22 -0500
+	by e1.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id jA1N1Txb021811
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Nov 2005 18:01:29 -0500
 Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id jA1N0Mbn057144
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Nov 2005 18:00:22 -0500
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id jA1N1Tbn082314
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Nov 2005 18:01:29 -0500
 Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11/8.13.3) with ESMTP id jA1N0M2V010245
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Nov 2005 18:00:22 -0500
+	by d01av01.pok.ibm.com (8.12.11/8.13.3) with ESMTP id jA1N1Svl014756
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Nov 2005 18:01:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org, brking@us.ibm.com
 
 
-Simplify the ipr error structures a bit by removing some duplication.
+If the write buffer command that is issued to the ipr adapter
+to update its microcode fails for some reason, the DMA buffer
+will never get unmapped. Move the pci_map/unmap out of the
+IOA reset job so that the buffer is always clearly mapped
+and unmapped.
 
 Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- linux-2.6-bjking1/drivers/scsi/ipr.c |   37 ++++++++++--------------
- linux-2.6-bjking1/drivers/scsi/ipr.h |   52 +++++++++++++----------------------
- 2 files changed, 36 insertions(+), 53 deletions(-)
+ drivers/scsi/ipr.c |  104 ++++++++++++++++++++++++++++-------------------------
+ drivers/scsi/ipr.h |    1 
+ 2 files changed, 56 insertions(+), 49 deletions(-)
 
-diff -puN drivers/scsi/ipr.h~ipr_cleanup_error_types drivers/scsi/ipr.h
---- linux-2.6/drivers/scsi/ipr.h~ipr_cleanup_error_types	2005-08-30 10:17:43.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ipr.h	2005-08-30 10:17:43.000000000 -0500
-@@ -261,6 +261,11 @@ struct ipr_std_inq_vpids {
- 	u8 product_id[IPR_PROD_ID_LEN];
- }__attribute__((packed));
- 
-+struct ipr_vpd {
-+	struct ipr_std_inq_vpids vpids;
-+	u8 sn[IPR_SERIAL_NUM_LEN];
-+}__attribute__((packed));
-+
- struct ipr_std_inq_data {
- 	u8 peri_qual_dev_type;
- #define IPR_STD_INQ_PERI_QUAL(peri) ((peri) >> 5)
-@@ -537,21 +542,16 @@ struct ipr_inquiry_page3 {
- }__attribute__((packed));
- 
- struct ipr_hostrcb_device_data_entry {
--	struct ipr_std_inq_vpids dev_vpids;
--	u8 dev_sn[IPR_SERIAL_NUM_LEN];
-+	struct ipr_vpd vpd;
- 	struct ipr_res_addr dev_res_addr;
--	struct ipr_std_inq_vpids new_dev_vpids;
--	u8 new_dev_sn[IPR_SERIAL_NUM_LEN];
--	struct ipr_std_inq_vpids ioa_last_with_dev_vpids;
--	u8 ioa_last_with_dev_sn[IPR_SERIAL_NUM_LEN];
--	struct ipr_std_inq_vpids cfc_last_with_dev_vpids;
--	u8 cfc_last_with_dev_sn[IPR_SERIAL_NUM_LEN];
-+	struct ipr_vpd new_vpd;
-+	struct ipr_vpd ioa_last_with_dev_vpd;
-+	struct ipr_vpd cfc_last_with_dev_vpd;
- 	__be32 ioa_data[5];
- }__attribute__((packed, aligned (4)));
- 
- struct ipr_hostrcb_array_data_entry {
--	struct ipr_std_inq_vpids vpids;
--	u8 serial_num[IPR_SERIAL_NUM_LEN];
-+	struct ipr_vpd vpd;
- 	struct ipr_res_addr expected_dev_res_addr;
- 	struct ipr_res_addr dev_res_addr;
- }__attribute__((packed, aligned (4)));
-@@ -568,47 +568,35 @@ struct ipr_hostrcb_type_01_error {
- }__attribute__((packed, aligned (4)));
- 
- struct ipr_hostrcb_type_02_error {
--	struct ipr_std_inq_vpids ioa_vpids;
--	u8 ioa_sn[IPR_SERIAL_NUM_LEN];
--	struct ipr_std_inq_vpids cfc_vpids;
--	u8 cfc_sn[IPR_SERIAL_NUM_LEN];
--	struct ipr_std_inq_vpids ioa_last_attached_to_cfc_vpids;
--	u8 ioa_last_attached_to_cfc_sn[IPR_SERIAL_NUM_LEN];
--	struct ipr_std_inq_vpids cfc_last_attached_to_ioa_vpids;
--	u8 cfc_last_attached_to_ioa_sn[IPR_SERIAL_NUM_LEN];
-+	struct ipr_vpd ioa_vpd;
-+	struct ipr_vpd cfc_vpd;
-+	struct ipr_vpd ioa_last_attached_to_cfc_vpd;
-+	struct ipr_vpd cfc_last_attached_to_ioa_vpd;
- 	__be32 ioa_data[3];
--	u8 reserved[844];
- }__attribute__((packed, aligned (4)));
- 
- struct ipr_hostrcb_type_03_error {
--	struct ipr_std_inq_vpids ioa_vpids;
--	u8 ioa_sn[IPR_SERIAL_NUM_LEN];
--	struct ipr_std_inq_vpids cfc_vpids;
--	u8 cfc_sn[IPR_SERIAL_NUM_LEN];
-+	struct ipr_vpd ioa_vpd;
-+	struct ipr_vpd cfc_vpd;
- 	__be32 errors_detected;
- 	__be32 errors_logged;
- 	u8 ioa_data[12];
--	struct ipr_hostrcb_device_data_entry dev_entry[3];
--	u8 reserved[444];
-+	struct ipr_hostrcb_device_data_entry dev[3];
- }__attribute__((packed, aligned (4)));
- 
- struct ipr_hostrcb_type_04_error {
--	struct ipr_std_inq_vpids ioa_vpids;
--	u8 ioa_sn[IPR_SERIAL_NUM_LEN];
--	struct ipr_std_inq_vpids cfc_vpids;
--	u8 cfc_sn[IPR_SERIAL_NUM_LEN];
-+	struct ipr_vpd ioa_vpd;
-+	struct ipr_vpd cfc_vpd;
- 	u8 ioa_data[12];
- 	struct ipr_hostrcb_array_data_entry array_member[10];
- 	__be32 exposed_mode_adn;
- 	__be32 array_id;
--	struct ipr_std_inq_vpids incomp_dev_vpids;
--	u8 incomp_dev_sn[IPR_SERIAL_NUM_LEN];
-+	struct ipr_vpd incomp_dev_vpd;
- 	__be32 ioa_data2;
- 	struct ipr_hostrcb_array_data_entry array_member2[8];
- 	struct ipr_res_addr last_func_vset_res_addr;
- 	u8 vset_serial_num[IPR_SERIAL_NUM_LEN];
- 	u8 protection_level[8];
--	u8 reserved[124];
- }__attribute__((packed, aligned (4)));
- 
- struct ipr_hostrcb_error {
-diff -puN drivers/scsi/ipr.c~ipr_cleanup_error_types drivers/scsi/ipr.c
---- linux-2.6/drivers/scsi/ipr.c~ipr_cleanup_error_types	2005-08-30 10:17:43.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ipr.c	2005-08-30 10:17:43.000000000 -0500
-@@ -889,24 +889,23 @@ static void ipr_process_ccn(struct ipr_c
+diff -puN drivers/scsi/ipr.c~ipr_write_buffer_leak drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_write_buffer_leak	2005-10-31 21:53:12.040957856 -0600
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2005-10-31 21:53:12.099948888 -0600
+@@ -2351,31 +2351,24 @@ static int ipr_copy_ucode_buffer(struct 
+ }
  
  /**
-  * ipr_log_vpd - Log the passed VPD to the error log.
-- * @vpids:			vendor/product id struct
-- * @serial_num:		serial number string
-+ * @vpd:		vendor/product id/sn struct
+- * ipr_map_ucode_buffer - Map a microcode download buffer
++ * ipr_build_ucode_ioadl - Build a microcode download IOADL
+  * @ipr_cmd:	ipr command struct
+  * @sglist:		scatter/gather list
+- * @len:		total length of download buffer
   *
-  * Return value:
-  * 	none
+- * Maps a microcode download scatter/gather list for DMA and
+- * builds the IOADL.
++ * Builds a microcode download IOA data list (IOADL).
+  *
+- * Return value:
+- * 	0 on success / -EIO on failure
   **/
--static void ipr_log_vpd(struct ipr_std_inq_vpids *vpids, u8 *serial_num)
-+static void ipr_log_vpd(struct ipr_vpd *vpd)
+-static int ipr_map_ucode_buffer(struct ipr_cmnd *ipr_cmd,
+-				struct ipr_sglist *sglist, int len)
++static void ipr_build_ucode_ioadl(struct ipr_cmnd *ipr_cmd,
++				  struct ipr_sglist *sglist)
  {
- 	char buffer[IPR_VENDOR_ID_LEN + IPR_PROD_ID_LEN
- 		    + IPR_SERIAL_NUM_LEN];
+-	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+ 	struct ipr_ioarcb *ioarcb = &ipr_cmd->ioarcb;
+ 	struct ipr_ioadl_desc *ioadl = ipr_cmd->ioadl;
+ 	struct scatterlist *scatterlist = sglist->scatterlist;
+ 	int i;
  
--	memcpy(buffer, vpids->vendor_id, IPR_VENDOR_ID_LEN);
--	memcpy(buffer + IPR_VENDOR_ID_LEN, vpids->product_id,
-+	memcpy(buffer, vpd->vpids.vendor_id, IPR_VENDOR_ID_LEN);
-+	memcpy(buffer + IPR_VENDOR_ID_LEN, vpd->vpids.product_id,
- 	       IPR_PROD_ID_LEN);
- 	buffer[IPR_VENDOR_ID_LEN + IPR_PROD_ID_LEN] = '\0';
- 	ipr_err("Vendor/Product ID: %s\n", buffer);
+-	ipr_cmd->dma_use_sg = pci_map_sg(ioa_cfg->pdev, scatterlist,
+-					 sglist->num_sg, DMA_TO_DEVICE);
+-
++	ipr_cmd->dma_use_sg = sglist->num_dma_sg;
+ 	ioarcb->cmd_pkt.flags_hi |= IPR_FLAGS_HI_WRITE_NOT_READ;
+-	ioarcb->write_data_transfer_length = cpu_to_be32(len);
++	ioarcb->write_data_transfer_length = cpu_to_be32(sglist->buffer_len);
+ 	ioarcb->write_ioadl_len =
+ 		cpu_to_be32(sizeof(struct ipr_ioadl_desc) * ipr_cmd->dma_use_sg);
  
--	memcpy(buffer, serial_num, IPR_SERIAL_NUM_LEN);
-+	memcpy(buffer, vpd->sn, IPR_SERIAL_NUM_LEN);
- 	buffer[IPR_SERIAL_NUM_LEN] = '\0';
- 	ipr_err("    Serial Number: %s\n", buffer);
+@@ -2386,15 +2379,52 @@ static int ipr_map_ucode_buffer(struct i
+ 			cpu_to_be32(sg_dma_address(&scatterlist[i]));
+ 	}
+ 
+-	if (likely(ipr_cmd->dma_use_sg)) {
+-		ioadl[i-1].flags_and_data_len |=
+-			cpu_to_be32(IPR_IOADL_FLAGS_LAST);
++	ioadl[i-1].flags_and_data_len |=
++		cpu_to_be32(IPR_IOADL_FLAGS_LAST);
++}
++
++/**
++ * ipr_update_ioa_ucode - Update IOA's microcode
++ * @ioa_cfg:	ioa config struct
++ * @sglist:		scatter/gather list
++ *
++ * Initiate an adapter reset to update the IOA's microcode
++ *
++ * Return value:
++ * 	0 on success / -EIO on failure
++ **/
++static int ipr_update_ioa_ucode(struct ipr_ioa_cfg *ioa_cfg,
++				struct ipr_sglist *sglist)
++{
++	unsigned long lock_flags;
++
++	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
++
++	if (ioa_cfg->ucode_sglist) {
++		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
++		dev_err(&ioa_cfg->pdev->dev,
++			"Microcode download already in progress\n");
++		return -EIO;
+ 	}
+-	else {
+-		dev_err(&ioa_cfg->pdev->dev, "pci_map_sg failed!\n");
++
++	sglist->num_dma_sg = pci_map_sg(ioa_cfg->pdev, sglist->scatterlist,
++					sglist->num_sg, DMA_TO_DEVICE);
++
++	if (!sglist->num_dma_sg) {
++		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
++		dev_err(&ioa_cfg->pdev->dev,
++			"Failed to map microcode download buffer!\n");
+ 		return -EIO;
+ 	}
+ 
++	ioa_cfg->ucode_sglist = sglist;
++	ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_NORMAL);
++	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
++	wait_event(ioa_cfg->reset_wait_q, !ioa_cfg->in_reset_reload);
++
++	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
++	ioa_cfg->ucode_sglist = NULL;
++	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 	return 0;
  }
-@@ -927,17 +926,15 @@ static void ipr_log_cache_error(struct i
  
- 	ipr_err("-----Current Configuration-----\n");
- 	ipr_err("Cache Directory Card Information:\n");
--	ipr_log_vpd(&error->ioa_vpids, error->ioa_sn);
-+	ipr_log_vpd(&error->ioa_vpd);
- 	ipr_err("Adapter Card Information:\n");
--	ipr_log_vpd(&error->cfc_vpids, error->cfc_sn);
-+	ipr_log_vpd(&error->cfc_vpd);
+@@ -2417,7 +2447,6 @@ static ssize_t ipr_store_update_fw(struc
+ 	struct ipr_ucode_image_header *image_hdr;
+ 	const struct firmware *fw_entry;
+ 	struct ipr_sglist *sglist;
+-	unsigned long lock_flags;
+ 	char fname[100];
+ 	char *src;
+ 	int len, result, dnld_size;
+@@ -2458,35 +2487,17 @@ static ssize_t ipr_store_update_fw(struc
+ 	if (result) {
+ 		dev_err(&ioa_cfg->pdev->dev,
+ 			"Microcode buffer copy to DMA buffer failed\n");
+-		ipr_free_ucode_buffer(sglist);
+-		release_firmware(fw_entry);
+-		return result;
+-	}
+-
+-	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+-
+-	if (ioa_cfg->ucode_sglist) {
+-		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+-		dev_err(&ioa_cfg->pdev->dev,
+-			"Microcode download already in progress\n");
+-		ipr_free_ucode_buffer(sglist);
+-		release_firmware(fw_entry);
+-		return -EIO;
++		goto out;
+ 	}
  
- 	ipr_err("-----Expected Configuration-----\n");
- 	ipr_err("Cache Directory Card Information:\n");
--	ipr_log_vpd(&error->ioa_last_attached_to_cfc_vpids,
--		    error->ioa_last_attached_to_cfc_sn);
-+	ipr_log_vpd(&error->ioa_last_attached_to_cfc_vpd);
- 	ipr_err("Adapter Card Information:\n");
--	ipr_log_vpd(&error->cfc_last_attached_to_ioa_vpids,
--		    error->cfc_last_attached_to_ioa_sn);
-+	ipr_log_vpd(&error->cfc_last_attached_to_ioa_vpd);
+-	ioa_cfg->ucode_sglist = sglist;
+-	ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_NORMAL);
+-	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+-	wait_event(ioa_cfg->reset_wait_q, !ioa_cfg->in_reset_reload);
+-
+-	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+-	ioa_cfg->ucode_sglist = NULL;
+-	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
++	result = ipr_update_ioa_ucode(ioa_cfg, sglist);
  
- 	ipr_err("Additional IOA Data: %08X %08X %08X\n",
- 		     be32_to_cpu(error->ioa_data[0]),
-@@ -966,7 +963,7 @@ static void ipr_log_config_error(struct 
- 	ipr_err("Device Errors Detected/Logged: %d/%d\n",
- 		be32_to_cpu(error->errors_detected), errors_logged);
++	if (!result)
++		result = count;
++out:
+ 	ipr_free_ucode_buffer(sglist);
+ 	release_firmware(fw_entry);
+-
+-	return count;
++	return result;
+ }
  
--	dev_entry = error->dev_entry;
-+	dev_entry = error->dev;
+ static struct class_device_attribute ipr_update_fw_attr = {
+@@ -5291,12 +5302,7 @@ static int ipr_reset_ucode_download(stru
+ 	ipr_cmd->ioarcb.cmd_pkt.cdb[7] = (sglist->buffer_len & 0x00ff00) >> 8;
+ 	ipr_cmd->ioarcb.cmd_pkt.cdb[8] = sglist->buffer_len & 0x0000ff;
  
- 	for (i = 0; i < errors_logged; i++, dev_entry++) {
- 		ipr_err_separator;
-@@ -978,18 +975,16 @@ static void ipr_log_config_error(struct 
- 				ioa_cfg->host->host_no, dev_entry->dev_res_addr.bus,
- 				dev_entry->dev_res_addr.target, dev_entry->dev_res_addr.lun);
- 		}
--		ipr_log_vpd(&dev_entry->dev_vpids, dev_entry->dev_sn);
-+		ipr_log_vpd(&dev_entry->vpd);
+-	if (ipr_map_ucode_buffer(ipr_cmd, sglist, sglist->buffer_len)) {
+-		dev_err(&ioa_cfg->pdev->dev,
+-			"Failed to map microcode download buffer\n");
+-		return IPR_RC_JOB_CONTINUE;
+-	}
+-
++	ipr_build_ucode_ioadl(ipr_cmd, sglist);
+ 	ipr_cmd->job_step = ipr_reset_ucode_download_done;
  
- 		ipr_err("-----New Device Information-----\n");
--		ipr_log_vpd(&dev_entry->new_dev_vpids, dev_entry->new_dev_sn);
-+		ipr_log_vpd(&dev_entry->new_vpd);
- 
- 		ipr_err("Cache Directory Card Information:\n");
--		ipr_log_vpd(&dev_entry->ioa_last_with_dev_vpids,
--			    dev_entry->ioa_last_with_dev_sn);
-+		ipr_log_vpd(&dev_entry->ioa_last_with_dev_vpd);
- 
- 		ipr_err("Adapter Card Information:\n");
--		ipr_log_vpd(&dev_entry->cfc_last_with_dev_vpids,
--			    dev_entry->cfc_last_with_dev_sn);
-+		ipr_log_vpd(&dev_entry->cfc_last_with_dev_vpd);
- 
- 		ipr_err("Additional IOA Data: %08X %08X %08X %08X %08X\n",
- 			be32_to_cpu(dev_entry->ioa_data[0]),
-@@ -1032,7 +1027,7 @@ static void ipr_log_array_error(struct i
- 	array_entry = error->array_member;
- 
- 	for (i = 0; i < 18; i++) {
--		if (!memcmp(array_entry->serial_num, zero_sn, IPR_SERIAL_NUM_LEN))
-+		if (!memcmp(array_entry->vpd.sn, zero_sn, IPR_SERIAL_NUM_LEN))
- 			continue;
- 
- 		if (be32_to_cpu(error->exposed_mode_adn) == i) {
-@@ -1041,7 +1036,7 @@ static void ipr_log_array_error(struct i
- 			ipr_err("Array Member %d:\n", i);
- 		}
- 
--		ipr_log_vpd(&array_entry->vpids, array_entry->serial_num);
-+		ipr_log_vpd(&array_entry->vpd);
- 
- 		if (array_entry->dev_res_addr.bus >= IPR_MAX_NUM_BUSES) {
- 			ipr_err("Current Location: unknown\n");
+ 	ipr_do_req(ipr_cmd, ipr_reset_ioa_job, ipr_timeout,
+diff -puN drivers/scsi/ipr.h~ipr_write_buffer_leak drivers/scsi/ipr.h
+--- linux-2.6/drivers/scsi/ipr.h~ipr_write_buffer_leak	2005-10-31 21:53:12.043957400 -0600
++++ linux-2.6-bjking1/drivers/scsi/ipr.h	2005-10-31 21:53:12.100948736 -0600
+@@ -811,6 +811,7 @@ struct ipr_trace_entry {
+ struct ipr_sglist {
+ 	u32 order;
+ 	u32 num_sg;
++	u32 num_dma_sg;
+ 	u32 buffer_len;
+ 	struct scatterlist scatterlist[1];
+ };
 _
