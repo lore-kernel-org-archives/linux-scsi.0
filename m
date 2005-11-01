@@ -1,46 +1,68 @@
 From: brking@us.ibm.com
-Subject: [PATCH 07/26] ipr: Include all disks in supported list
-Date: Tue, 01 Nov 2005 17:00:54 -0600
-Message-ID: <200511012300.jA1N0tFa015402@d03av03.boulder.ibm.com>
+Subject: [PATCH 09/26] ipr: slave_alloc optimization
+Date: Tue, 01 Nov 2005 17:01:07 -0600
+Message-ID: <200511012301.jA1N180B023870@d03av01.boulder.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:28061 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1751403AbVKAXA4
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Nov 2005 18:00:56 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e34.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id jA1N0u3h017476
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Nov 2005 18:00:56 -0500
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VERS6.7) with ESMTP id jA1N0uXg528110
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Nov 2005 16:00:56 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id jA1N0tq7015415
-	for <linux-scsi@vger.kernel.org>; Tue, 1 Nov 2005 16:00:55 -0700
+Received: from e33.co.us.ibm.com ([32.97.110.151]:4311 "EHLO e33.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751405AbVKAXBJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2005 18:01:09 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e33.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id jA1N19wC020853
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Nov 2005 18:01:09 -0500
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id jA1N2CDC519284
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Nov 2005 16:02:12 -0700
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id jA1N18LQ023887
+	for <linux-scsi@vger.kernel.org>; Tue, 1 Nov 2005 16:01:09 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org, brking@us.ibm.com
 
 
-Fix ipr to include all disks in the supported device list,
-not just disks formatted to advanced function format.
+Optimize ipr's slave_alloc to return -ENXIO for devices that
+do not exist.
 
 Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- drivers/scsi/ipr.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ipr.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/ipr.c~ipr_set_supported_devs drivers/scsi/ipr.c
---- linux-2.6/drivers/scsi/ipr.c~ipr_set_supported_devs	2005-10-31 21:52:59.299894792 -0600
-+++ linux-2.6-bjking1/drivers/scsi/ipr.c	2005-10-31 21:53:00.039782312 -0600
-@@ -4111,7 +4111,7 @@ static int ipr_set_supported_devs(struct
- 	ipr_cmd->job_step = ipr_ioa_reset_done;
+diff -puN drivers/scsi/ipr.c~ipr_slave_alloc_optimization drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_slave_alloc_optimization	2005-10-31 21:53:05.562942664 -0600
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2005-10-31 21:53:05.618934152 -0600
+@@ -2815,13 +2815,14 @@ static int ipr_slave_configure(struct sc
+  * handling new commands.
+  *
+  * Return value:
+- * 	0 on success
++ * 	0 on success / -ENXIO if device does not exist
+  **/
+ static int ipr_slave_alloc(struct scsi_device *sdev)
+ {
+ 	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *) sdev->host->hostdata;
+ 	struct ipr_resource_entry *res;
+ 	unsigned long lock_flags;
++	int rc = -ENXIO;
  
- 	list_for_each_entry_continue(res, &ioa_cfg->used_res_q, queue) {
--		if (!ipr_is_af_dasd_device(res))
-+		if (!IPR_IS_DASD_DEVICE(res->cfgte.std_inq_data))
- 			continue;
+ 	sdev->hostdata = NULL;
  
- 		ipr_cmd->u.res = res;
+@@ -2836,13 +2837,14 @@ static int ipr_slave_alloc(struct scsi_d
+ 			res->in_erp = 0;
+ 			sdev->hostdata = res;
+ 			res->needs_sync_complete = 1;
++			rc = 0;
+ 			break;
+ 		}
+ 	}
+ 
+ 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 
+-	return 0;
++	return rc;
+ }
+ 
+ /**
 _
