@@ -1,8 +1,8 @@
 From: Roland Dreier <rolandd@cisco.com>
 Subject: Re: [PATCH/RFC v2] IB: Add SCSI RDMA Protocol
 	(SRP) initiator
-Date: Wed, 02 Nov 2005 14:04:41 -0800
-Message-ID: <52mzkm905i.fsf@cisco.com>
+Date: Wed, 02 Nov 2005 14:08:35 -0800
+Message-ID: <52irva8zz0.fsf@cisco.com>
 References: <52r79y91jz.fsf_-_@cisco.com>
 	<20051102220358.GA27132@mellanox.co.il>
 Mime-Version: 1.0
@@ -23,10 +23,37 @@ To: "Michael S. Tsirkin" <mst@mellanox.co.il>
 Cc: openib-general@openib.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-    Michael> This seems to leak sizeof *attr bytes if
-    Michael> ib_find_cached_pkey returns an error.
+OK, I replaced the function with:
 
-Good catch.  It actually seems to leak attr unconditionally...
-I'll fix it up now.
-
- - R.
++static int srp_init_qp(struct srp_target_port *target,
++		       struct ib_qp *qp)
++{
++	struct ib_qp_attr *attr;
++	int ret;
++
++	attr = kmalloc(sizeof *attr, GFP_KERNEL);
++	if (!attr)
++		return -ENOMEM;
++
++	ret = ib_find_cached_pkey(target->srp_host->dev,
++				  target->srp_host->port,
++				  be16_to_cpu(target->path.pkey),
++				  &attr->pkey_index);
++	if (ret)
++		goto out;
++
++	attr->qp_state        = IB_QPS_INIT;
++	attr->qp_access_flags = (IB_ACCESS_REMOTE_READ |
++				    IB_ACCESS_REMOTE_WRITE);
++	attr->port_num        = target->srp_host->port;
++
++	ret = ib_modify_qp(qp, attr,
++			   IB_QP_STATE		|
++			   IB_QP_PKEY_INDEX	|
++			   IB_QP_ACCESS_FLAGS	|
++			   IB_QP_PORT);
++
++out:
++	kfree(attr);
++	return ret;
++}
