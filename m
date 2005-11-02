@@ -1,59 +1,66 @@
-From: Roland Dreier <rolandd@cisco.com>
-Subject: Re: [PATCH/RFC v2] IB: Add SCSI RDMA Protocol
-	(SRP) initiator
-Date: Wed, 02 Nov 2005 14:08:35 -0800
-Message-ID: <52irva8zz0.fsf@cisco.com>
-References: <52r79y91jz.fsf_-_@cisco.com>
-	<20051102220358.GA27132@mellanox.co.il>
+From: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security in usb-storage driver
+Date: Wed, 2 Nov 2005 15:45:32 -0800
+Message-ID: <20051102234532.GC26148@one-eyed-alien.net>
+References: <CA45571DE57E1C45BF3552118BA92C9D69BF3A@WDSCEXBECL03.sc.wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Return-path: <openib-general-bounces@openib.org>
-In-Reply-To: <20051102220358.GA27132@mellanox.co.il> (Michael S. Tsirkin's
-	message of "Thu, 3 Nov 2005 00:03:58 +0200")
-List-Unsubscribe: <http://openib.org/mailman/listinfo/openib-general>,
-	<mailto:openib-general-request@openib.org?subject=unsubscribe>
-List-Archive: <http://openib.org/pipermail/openib-general>
-List-Post: <mailto:openib-general@openib.org>
-List-Help: <mailto:openib-general-request@openib.org?subject=help>
-List-Subscribe: <http://openib.org/mailman/listinfo/openib-general>,
-	<mailto:openib-general-request@openib.org?subject=subscribe>
-Sender: openib-general-bounces@openib.org
-Errors-To: openib-general-bounces@openib.org
-To: "Michael S. Tsirkin" <mst@mellanox.co.il>
-Cc: openib-general@openib.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="PNTmBPCT7hxwcZjr"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from multivac.one-eyed-alien.net ([64.169.228.101]:27572 "EHLO
+	multivac.one-eyed-alien.net") by vger.kernel.org with ESMTP
+	id S1030210AbVKBXpi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Nov 2005 18:45:38 -0500
+Content-Disposition: inline
+In-Reply-To: <CA45571DE57E1C45BF3552118BA92C9D69BF3A@WDSCEXBECL03.sc.wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Timothy Thelin <Timothy.Thelin@wdc.com>
+Cc: t.schorpp@gmx.de, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-OK, I replaced the function with:
 
-+static int srp_init_qp(struct srp_target_port *target,
-+		       struct ib_qp *qp)
-+{
-+	struct ib_qp_attr *attr;
-+	int ret;
-+
-+	attr = kmalloc(sizeof *attr, GFP_KERNEL);
-+	if (!attr)
-+		return -ENOMEM;
-+
-+	ret = ib_find_cached_pkey(target->srp_host->dev,
-+				  target->srp_host->port,
-+				  be16_to_cpu(target->path.pkey),
-+				  &attr->pkey_index);
-+	if (ret)
-+		goto out;
-+
-+	attr->qp_state        = IB_QPS_INIT;
-+	attr->qp_access_flags = (IB_ACCESS_REMOTE_READ |
-+				    IB_ACCESS_REMOTE_WRITE);
-+	attr->port_num        = target->srp_host->port;
-+
-+	ret = ib_modify_qp(qp, attr,
-+			   IB_QP_STATE		|
-+			   IB_QP_PKEY_INDEX	|
-+			   IB_QP_ACCESS_FLAGS	|
-+			   IB_QP_PORT);
-+
-+out:
-+	kfree(attr);
-+	return ret;
-+}
+--PNTmBPCT7hxwcZjr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, Nov 02, 2005 at 02:18:52PM -0800, Timothy Thelin wrote:
+>=20
+> If you had time to spare, instead of touching usb-storage,
+> it might be better spent resurecting SG_FLAG_LUN_INHIBIT to
+> stop the above behavior so that SG_IO cdbs can be passed
+> through untouched.
+> (SG_FLAG_FUN_INHIBIT was a flag SG_IO used to support a long
+> time ago, and I have no idea why it was dropped, but it was)
+
+I didn't realize that had been removed.  Anyone that sends a
+vendor-specific command to a device needs this flag to make sure it goes
+through unmangled.
+
+Perhaps someone on linux-scsi can comment on why this was removed and how
+we might get it back?
+
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+We can customize our colonels.
+					-- Tux
+User Friendly, 12/1/1998
+
+--PNTmBPCT7hxwcZjr
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFDaU+cHL9iwnUZqnkRAisdAJ0Wf12qSDjyXG4HIVhLFEz3ctzrDwCfXmXP
+7H9nxo1rXSTeT8CqvzjtMks=
+=OBZX
+-----END PGP SIGNATURE-----
+
+--PNTmBPCT7hxwcZjr--
