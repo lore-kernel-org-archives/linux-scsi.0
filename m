@@ -1,41 +1,72 @@
-From: Ashutosh Naik <ashutosh.naik@gmail.com>
-Subject: [PATCH] scsi - Fix Broken Qlogic ISP2x00 Device Driver
-Date: Wed, 2 Nov 2005 12:43:22 +0530
-Message-ID: <81083a450511012313v25e292duf7b64da0ebf07835@mail.gmail.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [linux-usb-devel] Re: oops with USB Storage on 2.6.14
+Date: Wed, 2 Nov 2005 17:21:44 +1100
+Message-ID: <20051102172144.757fe643.akpm@osdl.org>
+References: <20051030170244.4a8c06b7.akpm@osdl.org>
+	<Pine.LNX.4.44L0.0510311055270.13355-100000@iolanthe.rowland.org>
+	<38bdcd1f0511011856i3780bf55q3013956dc7e06e3e@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.202]:52407 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932610AbVKBHN3 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Nov 2005 02:13:29 -0500
-Received: by zproxy.gmail.com with SMTP id j2so43836nzf
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Nov 2005 23:13:22 -0800 (PST)
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932617AbVKBHXL@vger.kernel.org>
+In-Reply-To: <38bdcd1f0511011856i3780bf55q3013956dc7e06e3e@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Masanari Iida <standby24x7@gmail.com>
+Cc: stern@rowland.harvard.edu, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, support@qlogic.com, akpm@osdl.org, stable@kernel.org
 
-This patch fixes the fact that although the scsi_transport_fc.h header
-file is not included in qla_def.h, we still reference the function
-fc_remote_port_unlock in the qlogic  ISP2x00 device driver ,
-qla2xxx/qla_rscn.c
+Masanari Iida <standby24x7@gmail.com> wrote:
+>
+> On 11/1/05, Alan Stern <stern@rowland.harvard.edu> wrote:
+> > On Sun, 30 Oct 2005, Andrew Morton wrote:
+> >
+> > > Masanari Iida <standby24x7@gmail.com> wrote:
+> >
+> > > > Hello Andrew,
+> > > >
+> > > > I did disabled CONFIG_DEBUG_PAGEALLOC and re-tested on 2.6.14-rc1.
+> > > > Now the oops didn't happen when I connect digital camera to the USB.
+> > >
+> > > So the first oops was probably use-after-free.
+> > >
+> > > > I could mount the camera as USB storage.
+> > > > But oops still happen when I turned the camera power off.
+> > > > (This oops didn't halt my system, BTW)
+> > > >
+> > > > # Unable to handle kernel paging request at virtual address 6b6b6bb3
+> > > >   printing eip:
+> > > > c02b88ca
+> > > > *pde = 00000000
+> > > > Oops: 0002 [#1]
+> > > > SMP
+> > > > Modules linked in: autofs e100 ipt_LOG ipt_state ip_conntrack
+> > > > ipt_recent iptable_filter ip_tables video rtc
+> > > > CPU:    0
+> > > > EIP:    0060:[<c02b88ca>]    Not tainted VLI
+> > > > EFLAGS: 00010296   (2.6.14-rc1)
+> > > > EIP is at scsi_remove_device+0x3a/0x50
+> >
+> > > > If you need some more test, let me know.
+> > > > In that case, please specify which version of kernel you want me to test.
+> > > >
+> > >
+> > > OK, thanks.  This is a different bug.  Presumably in USB.
+> >
+> > This was fixed in later releases of 2.6.14-rc.
+> >
+> > I wasn't able to reproduce the original problem, even after setting
+> > CONFIG_DEBUG_PAGEALLOC.
+> >
+> > Alan Stern
+> >
+> Alan,
+> 
+> Confirm the " scsi_remove_device " oops didn't happen on 2.4.14.
 
-Signed-off-by: Ashutosh Naik <ashutosh.naik@gmail.com>
+2.6.14, I assume.
 
---
-diff -Naurp linux-2.6.14-git1/drivers/scsi/qla2xxx/qla_def.h
-linux-2.6.14/drivers/scsi/qla2xxx/qla_def.h
---- linux-2.6.14-git1/drivers/scsi/qla2xxx/qla_def.h	2005-10-28
-05:32:08.000000000 +0530
-+++ linux-2.6.14/drivers/scsi/qla2xxx/qla_def.h	2005-11-01
-11:54:25.000000000 +0530
-@@ -40,6 +40,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_transport_fc.h>
+> Talking about the original PANIC, as I have a workaround
+> (CONFIG_DEBUG_PAGEALLOC disabled),  I agree to close my report, now.
 
- #if defined(CONFIG_SCSI_QLA21XX) || defined(CONFIG_SCSI_QLA21XX_MODULE)
- #define IS_QLA2100(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2100)
+That's not a valid workaround.  We're touching freed, unallocated or simply
+wild memory and that is a bad bug.
