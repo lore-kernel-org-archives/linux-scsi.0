@@ -1,66 +1,43 @@
-From: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
-Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security in usb-storage driver
-Date: Wed, 2 Nov 2005 15:45:32 -0800
-Message-ID: <20051102234532.GC26148@one-eyed-alien.net>
-References: <CA45571DE57E1C45BF3552118BA92C9D69BF3A@WDSCEXBECL03.sc.wdc.com>
+From: <thomas_clark@mighty.co.za>
+Subject: Press release 07314506535
+Date: Wed, 02 Nov 2005 21:11:18 +1100
+Message-ID: <0b2e01c5dff1$f7606810$b695ba29@thomas_clark>
+Reply-To: <thomas_clark@mighty.co.za>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="PNTmBPCT7hxwcZjr"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from multivac.one-eyed-alien.net ([64.169.228.101]:27572 "EHLO
-	multivac.one-eyed-alien.net") by vger.kernel.org with ESMTP
-	id S1030210AbVKBXpi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Nov 2005 18:45:38 -0500
-Content-Disposition: inline
-In-Reply-To: <CA45571DE57E1C45BF3552118BA92C9D69BF3A@WDSCEXBECL03.sc.wdc.com>
+Received: from zeus2.kernel.org ([204.152.191.36]:35297 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S1750786AbVKCIQR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2005 03:16:17 -0500
+Received: from mighty.co.za (atik-ppp-66-186-91-190.vianet.ca [66.186.91.190])
+	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id jA38G9fZ030291
+	for <linux-scsi@vger.kernel.org>; Thu, 3 Nov 2005 00:16:10 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Timothy Thelin <Timothy.Thelin@wdc.com>
-Cc: t.schorpp@gmx.de, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+
+PRESS RELEASE
+
+2005 Subsidy, Grants & Loans guide
+
+The most complete and affordable reference for anyone looking for
+financing.
+It is the perfect tool for new and existing businesses, individuals, 
+foundations and associations.
+
+Complete guide containing more than 3000 programs
+New 2005 edition
+
+Legal Deposit-National-Library-of-Canada
+
+Business.................$ 69.95 CD-Rom
+Academic printed....$ 149.95 (430 pages)
+
+Toll free:   8  6  6  *  3  2  2  *  3  3  7  6
+Local:       8  1 9   *  3  2  2  *  5  7  5  6
 
 
---PNTmBPCT7hxwcZjr
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Message ID: e-5810488033020302827012604372188843380
 
-On Wed, Nov 02, 2005 at 02:18:52PM -0800, Timothy Thelin wrote:
->=20
-> If you had time to spare, instead of touching usb-storage,
-> it might be better spent resurecting SG_FLAG_LUN_INHIBIT to
-> stop the above behavior so that SG_IO cdbs can be passed
-> through untouched.
-> (SG_FLAG_FUN_INHIBIT was a flag SG_IO used to support a long
-> time ago, and I have no idea why it was dropped, but it was)
-
-I didn't realize that had been removed.  Anyone that sends a
-vendor-specific command to a device needs this flag to make sure it goes
-through unmangled.
-
-Perhaps someone on linux-scsi can comment on why this was removed and how
-we might get it back?
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-We can customize our colonels.
-					-- Tux
-User Friendly, 12/1/1998
-
---PNTmBPCT7hxwcZjr
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFDaU+cHL9iwnUZqnkRAisdAJ0Wf12qSDjyXG4HIVhLFEz3ctzrDwCfXmXP
-7H9nxo1rXSTeT8CqvzjtMks=
-=OBZX
------END PGP SIGNATURE-----
-
---PNTmBPCT7hxwcZjr--
