@@ -1,30 +1,43 @@
-From: Chris Wright <chrisw@osdl.org>
-Subject: Re: [stable] Re: [PATCH] scsi - Fix Broken Qlogic ISP2x00 Device Driver
-Date: Wed, 2 Nov 2005 00:21:42 -0800
-Message-ID: <20051102082142.GW5856@shell0.pdx.osdl.net>
-References: <81083a450511012313v25e292duf7b64da0ebf07835@mail.gmail.com> <20051102080711.GB626@plapn>
+From: Martin Devera <devik@cdi.cz>
+Subject: Re: [PATCH]: Fusion-MPT slowness workaround
+Date: Wed, 02 Nov 2005 11:18:09 +0100
+Message-ID: <43689261.2070802@cdi.cz>
+References: <200511012227.jA1MRvg01220@unix-os.sc.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932647AbVKBIWD@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20051102080711.GB626@plapn>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Ashutosh Naik <ashutosh.naik@gmail.com>, support@qlogic.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, stable@kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from www1.cdi.cz ([194.213.194.49]:51638 "EHLO www1.cdi.cz")
+	by vger.kernel.org with ESMTP id S1751538AbVKBKS0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2005 05:18:26 -0500
+In-Reply-To: <200511012227.jA1MRvg01220@unix-os.sc.intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
+Cc: "'Moore, Eric Dean'" <Eric.Moore@lsil.com>, bstroesser@fujitsu-siemens.com, rupert@aquabolt.com, linux-scsi@vger.kernel.org
 
-* Andrew Vasquez (andrew.vasquez@qlogic.com) wrote:
-> On Wed, 02 Nov 2005, Ashutosh Naik wrote:
+Chen, Kenneth W wrote:
+> Moore, Eric Dean wrote on Tuesday, November 01, 2005 2:09 PM
 > 
-> > This patch fixes the fact that although the scsi_transport_fc.h header
-> > file is not included in qla_def.h, we still reference the function
-> > fc_remote_port_unlock in the qlogic  ISP2x00 device driver ,
-> > qla2xxx/qla_rscn.c
+>>On Tuesday, November 01, 2005 2:39 PM, Chen, Kenneth W wrote:
+>>
+>>>>I've added spin-lock to control domain validation, and 
+>>>>alternate controller bringup which are occuring at the same time,
+>>>>and causing dv to fail.  Thanks to Kenneth Chen and Bodo Stroesser.
+>>>
+>>>With the patch, Kernel hung at boot (2.6.14 is used).
+>>>
+>>
+>>Try this patch instead.  Use it over 2.6.14, not over the
+>>previous post.
+>>
+>>This patch is one that Bodo provided.  Let me know the results.
 > 
-> Perhaps for the stable tree (2.6.14.x) this fix is appropriate.  The
-> scsi-misc-2.6.git tree already has codes which address this issue.
+> Looks OK, kernel boots and DV appears to be running correctly.
 
-It's preferable to have that fix pending in scsi-misc for -stable.
+Not here. Both performance*patch patches boot ok here but I/O remains
+slow in both cases. I double checked against mixing patches but only
+disabling DV works here.
+Tested with 2.6.14 kernel, no modules.
 
-thanks,
--chris
+regards, Martin
