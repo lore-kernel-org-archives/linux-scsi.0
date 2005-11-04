@@ -1,70 +1,45 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [2.6 patch] SCSI_AACRAID: add a help text
-Date: Fri, 4 Nov 2005 08:35:29 -0500
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01D127E0@otce2k03.adaptec.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [usb-storage] [Merging ATA passthru] on integrating
+	SMART/ATA-Security in usb-storage driver
+Date: Thu, 03 Nov 2005 23:08:07 -0500
+Message-ID: <1131077287.3117.22.camel@mulgrave>
+References: <CA45571DE57E1C45BF3552118BA92C9D69BF3A@WDSCEXBECL03.sc.wdc.com>
+	 <20051102234532.GC26148@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932739AbVKDNfc@vger.kernel.org>
-Content-class: urn:content-classes:message
-Sender: linux-kernel-owner@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20051102234532.GC26148@one-eyed-alien.net>
+Sender: linux-ide-owner@vger.kernel.org
+To: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Cc: Timothy Thelin <Timothy.Thelin@wdc.com>, t.schorpp@gmx.de, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-It's a good start! I approve. The time stamp and kernel version must
-have come out of a rift though ;->
+On Wed, 2005-11-02 at 15:45 -0800, Matthew Dharm wrote:
+> On Wed, Nov 02, 2005 at 02:18:52PM -0800, Timothy Thelin wrote:
+> > 
+> > If you had time to spare, instead of touching usb-storage,
+> > it might be better spent resurecting SG_FLAG_LUN_INHIBIT to
+> > stop the above behavior so that SG_IO cdbs can be passed
+> > through untouched.
+> > (SG_FLAG_FUN_INHIBIT was a flag SG_IO used to support a long
+> > time ago, and I have no idea why it was dropped, but it was)
+> 
+> I didn't realize that had been removed.  Anyone that sends a
+> vendor-specific command to a device needs this flag to make sure it goes
+> through unmangled.
+> 
+> Perhaps someone on linux-scsi can comment on why this was removed and how
+> we might get it back?
 
-The web page covers a broad line of our products, many of which are
-*not* aacraid based. No big deal, but I must admit Adaptec has not
-placed a clear delineation. All late model RAID cards from Adaptec are
-based on the aacraid interface.
+I've no distinct recollection of someone removing this, but if I
+remember correctly what it used to do, it was a hack to stop us from
+mangling SCSI-3 CDB's.  We fixed the mid-layer not to require the hack
+by only setting the CDB[1] lun field for SCSI-1 and SCSI-2 devices (as
+the standards mandate).  What's the actual problem?  No SCSI-1 or SCSI-2
+device should have any vendor specific CDBs that uses these bits in
+CDB[1].
 
-Dell CERC, IBM ServeRAID 7t, 8i & 8k and ICP 9014, 9024, 9047, 9087,
-5085, 9085 & 9067 SATA and SAS cards are missing.
+James
 
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 
---- linux-2.6.6/drivers/scsi/Kconfig        2004-05-17
-20:55:52.074925760 -0500
-+++ linux-2.6.6/drivers/scsi/Kconfig.new    2005-10-4 08:28:09
-@@ -318,6 +318,7 @@
- 	help
- 	  This driver supports the Dell PERC2, 2/Si, 3/Si, 3/Di,
--	  HP NetRAID-4M SCSI and the Adaptec Advanced Raid Products
-+	  CERC, HP NetRAID-4M SCSI, Adaptec Advanced Raid Products
- 	  <http://www.adaptec.com/products/solutions/raid.html>
-+	  late model IBM ServeRAID and ICP SATA & SAS products.
- 
- 	  To compile this driver as a module, choose M here: the module
-
-Sincerely -- Mark Salyzyn
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Adrian Bunk
-Sent: Thursday, November 03, 2005 8:01 PM
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [2.6 patch] SCSI_AACRAID: add a help text
-
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
---- linux-2.6.6/drivers/scsi/Kconfig.old        2004-05-17
-20:51:21.395075352 -0500
-+++ linux-2.6.6/drivers/scsi/Kconfig    2004-05-17 20:55:52.074925760
--0500
-@@ -315,6 +315,13 @@
- config SCSI_AACRAID
- 	tristate "Adaptec AACRAID support"
- 	depends on SCSI && PCI
-+	help
-+	  This driver supports the Dell PERC2, 2/Si, 3/Si, 3/Di,
-+	  HP NetRAID-4M SCSI and the Adaptec Advanced Raid Products
-+	  <http://www.adaptec.com/products/solutions/raid.html>
-+
-+	  To compile this driver as a module, choose M here: the module
-+	  will be called aacraid.
-
- source "drivers/scsi/aic7xxx/Kconfig.aic7xxx"
