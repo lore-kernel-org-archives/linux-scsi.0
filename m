@@ -1,123 +1,108 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] sd: fix race between rescan and remove
-Date: Fri, 04 Nov 2005 11:45:08 -0600
-Message-ID: <1131126308.3532.34.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0511041039180.4812-100000@iolanthe.rowland.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH RFC] yet more struct scsi_lun
+Date: Fri, 04 Nov 2005 11:27:45 -0600
+Message-ID: <436B9A11.3040704@cs.wisc.edu>
+References: <20051023043301.GA22615@havoc.gtf.org> <20051023070011.GA26569@havoc.gtf.org> <435B6A62.8070306@torque.net> <435BBD9A.80603@pobox.com> <20051024075934.GK2811@suse.de> <43625EC3.9060708@cs.wisc.edu> <20051031102451.GR19267@suse.de> <436AC620.20505@cs.wisc.edu> <20051104073718.GY26049@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:9904 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750763AbVKDRpM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Nov 2005 12:45:12 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0511041039180.4812-100000@iolanthe.rowland.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:42378 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1750791AbVKDS16 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Nov 2005 13:27:58 -0500
+In-Reply-To: <20051104073718.GY26049@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, dougg@torque.net, linux-scsi@vger.kernel.org
 
-On Fri, 2005-11-04 at 11:40 -0500, Alan Stern wrote:
-> On Thu, 3 Nov 2005, James Bottomley wrote:
+Jens Axboe wrote:
+> On Thu, Nov 03 2005, Mike Christie wrote:
 > 
-> > Thanks for investigating this ... I really hate debugging these obscure
-> > object reference races.
+>>Jens Axboe wrote:
+>>
+>>>On the SCSI side, I would suggest just making shost->max_sectors set
+>>>q->max_hw_sectors and leave q->max_sectors to some generic kernel-wide
+>>>block layer define (of course making sure that ->max_sectors <=
+>>
+>>If the value for this block layer define was around 16,000 sectors, 
+>>would that be ok? The reason I ask is becuase when I get .....
 > 
-> Yeah, it was a real pain to find the cause.  Took most of two days.  And 
-> yet it should have been obvious where to look...
-
-That's what I usually end up saying after days of staring at the
-code ...
-
-> > I'm afraid that your fix isn't quite right:  The problem occurs because
-> > in most cases scsi_remove_device will call sd_remove (via the driver
-> > model call backs from device_del).  The kref_put in sd_remove will
-> > (almost always) trigger scsi_disk_release which frees sdkp.  So, I'm
-> > afraid you can't rely on sdkp->device being correct.
 > 
-> Hmm.  Surely that's a problem for the old scsi_disk_get routine rather 
-> than the new scsi_disk_get_from_dev routine?
+> Nope :)
 
-No .. we rely on support from the way block operation works for the
-scsi_disk_get() routine to work.  The problem I was trying to prevent is
-the race where scsi_remove_disk is freeing sdkp as sd_rescan is being
-called.
+Didn't think so :)
 
-> The problem I fixed was different: sdkp was getting freed while it was 
-> still in use by the rescan procedure.  But I agree that after sd_remove 
-> returns, we can't depend on sdkp->device being correct.
-
-Yes, but I also wanted to fix the race between acquiring a reference to
-sdkp and having it freed.
-
-> > The fix for this one is a bit nasty because it's a reversal in the
-> > logic.  The usual logic is that the user does something, so we have a
-> > refcounted gendisk object that we tie to scsi_disk and then scsi_device.
-> > In this case, we actually get a scsi_device and we have to try to work
-> > out how to get a valid refcounted scsi_disk object out of it.
-> > Unfortunately, this problem doesn't just affect sd_rescan, it affects
-> > the flush functions too where they try to do the same thing.
 > 
-> I wasn't sure about them.  It wasn't clear if they could get called after 
-> sd_remove.  However it certainly doesn't hurt to make them call the new 
-> routine.
 > 
-> > Could you take a look at the attached?  I just threw it together on a
-> > 'plane, so it's completely untested.  It tries to implement the secure
-> > get of struct scsi_disk by tying the nulling out of drvdata to the
-> > sd_ref_sem, so we can now either get a reference to the scsi_disk or
-> > return NULL.  I also fixed all the other relevant driver data users to
-> > follow this model.
+>>>->max_hw_sectors). That's the easy part.
+>>>
+>>>The bio_add_page() stuff is a little trickier, since it wants to know if
+>>>this is fs or 'generic' io. For fs io, we would like to cap the building
+>>>of the bio to ->max_sectors, but for eg SG_IO issued io it should go as
+>>>high as ->max_hw_sectors. Perhaps the easiest is just to have
+>>>bio_fs_add_page() and bio_pc_add_page(), each just passing in the max
+>>>value as an integer to bio_add_page(). But it's not exactly pretty.
+>>>
+>>>The ll_rw_blk.c merging is easy, since you don't need to do anything
+>>>there. It should test against ->max_sectors as it already does, since
+>>>this (sadly) is still the primary way we build large ios.
+>>>
+>>
+>>.... here, I am running into a problem. Basically, as you know the 
+>>largest BIO we can make is 1 MB due to BIO_MAX_PAGES, and for st and sg 
+>>we need to support commands around 6 MB, so we would have a request with 
+>> 6 BIOs. To make this monster request I wanted to use the block layer 
+>>functions and do something like this:
+>>
+>>+       for (i = 0; i < nsegs; i++) {
+>>+               bio = bio_map_pages(q, sg[i].page, sg[i].length, 
+>>sg[i].offset, gfp);
+>>+               if (IS_ERR(bio)) {
+>>+                       err = PTR_ERR(bio);
+>>+                       goto free_bios;
+>>+               }
+>>+               len += sg[i].length;
+>>+
+>>+               bio->bi_flags &= ~(1 << BIO_SEG_VALID);
+>>+               if (rq_data_dir(rq) == WRITE)
+>>+                       bio->bi_rw |= (1 << BIO_RW);
+>>+               blk_queue_bounce(q, &bio);
+>>+
+>>+               if (i == 0)
+>>+                       blk_rq_bio_prep(q, rq, bio);
+>>
+>>/* hope to carve out the __make_request code that does the below 
+>>operations and make a fucntion that can be shared */
+>>
+>>+               else if (!q->back_merge_fn(q, rq, bio)) {
+>>+                       err = -EINVAL;
+>>+                       bio_endio(bio, bio->bi_size, 0);
+>>+                       goto free_bios;
+>>+               } else {
+>>+                       rq->biotail->bi_next = bio;
+>>+                       rq->biotail = bio;
+>>+                       rq->hard_nr_sectors += bio_sectors(bio);
+>>+                       rq->nr_sectors = rq->hard_nr_sectors;
+>>
+>>........
+>>
+>>But since q->back_merge_fn() tests against q->max_sectors, it must be a 
+>>high value so that we can merge in those BIOs. I mean if q->max_sectors 
+>>is some reasonable number like only 1024 sectors, q->back_merge_fn will 
+>>return a failure. Should I instead seperate ll_back_merge_fn into two 
+>>functions, one that checks the sectors and one that checks the segments 
+>>or if ll_back_merge_fn tested for max_hw_sectors we would be ok too?
 > 
-> I see three differences between your patch and mine:
 > 
-> 	You refactored the common code in scsi_disk_get and
-> 	scsi_disk_get_from_dev.  Okay, that's fine, although
-> 	it looks a little strange to be going all the way
-> 	down to the disk just to go back up to the sdkp.
-> 	Note that when scsi_disk_get_from_dev calls __scsi_disk_get,
-> 	it's not possible for disk->private_data to be NULL.
-
-Yes, I just wanted the tying in a single routine rather than being open
-coded in two different routines.
-
-> 	You added calls to scsi_disk_get_from_dev in the flush
-> 	and shutdown routines.  That's good; I would have done
-> 	it originally had I known it was needed.
+> It will take a whole lot of factoring out to make this happen I fear,
+> the results will not be easier for the eyes.
 > 
-> 	You added dev_set_drvdata(dev, NULL) to sd_remove.
-> 	Actually I'm astonished it wasn't there before and that
-> 	I didn't realize it was missing.  I guess nobody
-> 	considered that the scsi_device might outlive the disk.
+> How about just keeping it simple - add a bio and request flag that
+> basically just says "don't honor soft max size" and whenever that is
+> set, you check for ->max_hw_sectors instead of ->max_sectors? Might even
+> be enough to just do this for the request and just require stuffing more
+> bio's into the request. But the bio has plenty of flag room left, so...
+> 
 
-Yes, that's the key to mediating the final race.
-
-> This is all good.  I've made a few stylistic changes (mostly to avoid goto
-> statements).  By the way, is there any reason that disk->private_data is
-> set to &sdkp->driver instead of to sdkp?  I don't see any, so I'll change
-> it.
-
-Actually, it is necessary, it's a way of overloading private_data so we
-can get the driver even if we don't know the ULD type (we use this in
-scsi_lib.c), but also so that the ULD can get its specific structure as
-well.
-
-> However this still doesn't solve the problem you mentioned.  Somehow
-> sd_remove has to tell __scsi_disk_get that sdkp->device might be gone.  
-> The only way I can think of is to add an extra bitfield to the scsi_disk
-> structure.
-
-Hmm, OK, but you don't need a gone field to mediate that.  just do a
-get_device(&sdp->sdev_gendev) before setting the sdkp->device pointer
-and do a put_device() in the release method.  That won't interfere with
-the scsi_remove_device logic, but it will ensure that the pointer is
-always valid until we release it.
-
-> This patch solves the original problem and works okay on my system.  If it 
-> looks okay to you, I'll resend it as a proper patch submission.
-
-Great, thanks.
-
-James
-
-
+ok this works, thanks.
