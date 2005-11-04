@@ -1,80 +1,70 @@
-From: Christian Krause <chkr@plauener.de>
-Subject: MEDIUM_NOT_PRESENT ignored in some cases
-Date: Fri,  4 Nov 2005 13:58:42 +0100
-Message-ID: <20051104135842.f0s0urfd68ssw0c0@mail.tu-chemnitz.de>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [2.6 patch] SCSI_AACRAID: add a help text
+Date: Fri, 4 Nov 2005 08:35:29 -0500
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01D127E0@otce2k03.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset=ISO-8859-1;
-	format="flowed"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from john.hrz.tu-chemnitz.de ([134.109.132.2]:62933 "EHLO
-	john.hrz.tu-chemnitz.de") by vger.kernel.org with ESMTP
-	id S932738AbVKDM6O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Nov 2005 07:58:14 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932739AbVKDNfc@vger.kernel.org>
+Content-class: urn:content-classes:message
+Sender: linux-kernel-owner@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+
+It's a good start! I approve. The time stamp and kernel version must
+have come out of a rift though ;->
+
+The web page covers a broad line of our products, many of which are
+*not* aacraid based. No big deal, but I must admit Adaptec has not
+placed a clear delineation. All late model RAID cards from Adaptec are
+based on the aacraid interface.
+
+Dell CERC, IBM ServeRAID 7t, 8i & 8k and ICP 9014, 9024, 9047, 9087,
+5085, 9085 & 9067 SATA and SAS cards are missing.
+
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+
+--- linux-2.6.6/drivers/scsi/Kconfig        2004-05-17
+20:55:52.074925760 -0500
++++ linux-2.6.6/drivers/scsi/Kconfig.new    2005-10-4 08:28:09
+@@ -318,6 +318,7 @@
+ 	help
+ 	  This driver supports the Dell PERC2, 2/Si, 3/Si, 3/Di,
+-	  HP NetRAID-4M SCSI and the Adaptec Advanced Raid Products
++	  CERC, HP NetRAID-4M SCSI, Adaptec Advanced Raid Products
+ 	  <http://www.adaptec.com/products/solutions/raid.html>
++	  late model IBM ServeRAID and ICP SATA & SAS products.
+ 
+ 	  To compile this driver as a module, choose M here: the module
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Adrian Bunk
+Sent: Thursday, November 03, 2005 8:01 PM
 To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [2.6 patch] SCSI_AACRAID: add a help text
 
-Hi,
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-here are my thoughts about a second issue I found in sd.c:
+--- linux-2.6.6/drivers/scsi/Kconfig.old        2004-05-17
+20:51:21.395075352 -0500
++++ linux-2.6.6/drivers/scsi/Kconfig    2004-05-17 20:55:52.074925760
+-0500
+@@ -315,6 +315,13 @@
+ config SCSI_AACRAID
+ 	tristate "Adaptec AACRAID support"
+ 	depends on SCSI && PCI
++	help
++	  This driver supports the Dell PERC2, 2/Si, 3/Si, 3/Di,
++	  HP NetRAID-4M SCSI and the Adaptec Advanced Raid Products
++	  <http://www.adaptec.com/products/solutions/raid.html>
++
++	  To compile this driver as a module, choose M here: the module
++	  will be called aacraid.
 
-function media_not_present, line 952:
-
----------------
-      if (!scsi_sense_valid(sshdr))
-                return 0;
-        /* not invoked for commands that could return deferred errors */
-        if (sshdr->sense_key != NOT_READY &&
-            sshdr->sense_key != UNIT_ATTENTION)
-                return 0;
-        if (sshdr->asc != 0x3A) /* medium not present */
-                return 0;
---------------------------
-
-
-The source indicates, that in case of
-sense_key == NOT_READY and
-asc == MEDIUM_NOT_PRESENT
-(or the same with sense_key == UNIT_ATTENTION) set_media_not_present
-is not called and hence media_present is not set to 0.
-
-As reason for this behaviour the following comment is given in the
-source: "not invoked for commands that could return deferred errors".
-
-Sure, this is true, but as far as I understand this assumption covers
-even cases in which the error is not deferred.
-
-The sense data format contains a member "Response Code" which is
-normally 0x70 or 0x71 [1]. 0x70 means: "current errors" and 0x71 means
-"deferred errors". So it seems to me that a good solution would be
-to accept asc == MEDIUM_NOT_PRESENT even if sense_key == NOT_READY or 
-== UNIT_ATTENTION, given that the
-response code == 0x70.
-
-
-I've discovered this problem during developing a usb mass storage device
-which uses the "transparent SCSI" command set and reports itself as
-"direct access device" (DeviceType == 0x0 in the Inquiry data). If I
-attach this device with no medium inserted (virtually, because its
-just an emulation of a SCSI device), the kernel repeats "Test Unit
-Ready" and "Request Sense" for more than a minute (the last kernel
-output is: sda: "Spinning up disk........."). Because of this I've 
-started to look into the source of the linux scsi
-subsystem and found the mentioned issue.
-
-
-What do you think about this issue? Would it make sense to honor the 
-ResponseCode and to accept "MEDIUM_NOT_PRESENT" in the case the current
-error is returned? If yes, I would create an appropriate patch.
-
-
-
-Best regards,
-Christian
-
-[1]: SPC-2, 7.20.2, Sense Data format
-
-
+ source "drivers/scsi/aic7xxx/Kconfig.aic7xxx"
