@@ -1,197 +1,86 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] sd: fix race between rescan and remove
-Date: Thu, 03 Nov 2005 21:08:33 -0500
-Message-ID: <1131070114.3352.14.camel@mulgrave>
-References: <Pine.LNX.4.44L0.0511031047350.5056-100000@iolanthe.rowland.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH RFC] yet more struct scsi_lun
+Date: Thu, 03 Nov 2005 20:23:28 -0600
+Message-ID: <436AC620.20505@cs.wisc.edu>
+References: <20051023043301.GA22615@havoc.gtf.org> <20051023070011.GA26569@havoc.gtf.org> <435B6A62.8070306@torque.net> <435BBD9A.80603@pobox.com> <20051024075934.GK2811@suse.de> <43625EC3.9060708@cs.wisc.edu> <20051031102451.GR19267@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:15577 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1030587AbVKDCJN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Nov 2005 21:09:13 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0511031047350.5056-100000@iolanthe.rowland.org>
+Received: from mx1.redhat.com ([66.187.233.31]:47078 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S1161107AbVKDCYK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2005 21:24:10 -0500
+In-Reply-To: <20051031102451.GR19267@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, dougg@torque.net, linux-scsi@vger.kernel.org
 
-On Thu, 2005-11-03 at 10:54 -0500, Alan Stern wrote: 
-> When the well-known open/remove race was fixed in sd.c, a closely-related
-> race between rescan and remove was ignored.  Probably because rescan gets 
-> called from an unusual pathway (via sysfs).  It's easy for this race to
-> trigger an oops, especially if you unplug a USB storage device while a
-> user program continually writes to the "rescan" attribute file.
+Jens Axboe wrote:
 > 
-> This patch (as597) fixes the race by making the rescan routine acquire the 
-> appropriate references.  It also cleans up the code scsi_disk_get 
-> somewhat.  This resolves Bugzilla entry #5237.
+> On the SCSI side, I would suggest just making shost->max_sectors set
+> q->max_hw_sectors and leave q->max_sectors to some generic kernel-wide
+> block layer define (of course making sure that ->max_sectors <=
 
-Thanks for investigating this ... I really hate debugging these obscure
-object reference races.
+If the value for this block layer define was around 16,000 sectors, 
+would that be ok? The reason I ask is becuase when I get .....
 
-I'm afraid that your fix isn't quite right:  The problem occurs because
-in most cases scsi_remove_device will call sd_remove (via the driver
-model call backs from device_del).  The kref_put in sd_remove will
-(almost always) trigger scsi_disk_release which frees sdkp.  So, I'm
-afraid you can't rely on sdkp->device being correct.
 
-The fix for this one is a bit nasty because it's a reversal in the
-logic.  The usual logic is that the user does something, so we have a
-refcounted gendisk object that we tie to scsi_disk and then scsi_device.
-In this case, we actually get a scsi_device and we have to try to work
-out how to get a valid refcounted scsi_disk object out of it.
-Unfortunately, this problem doesn't just affect sd_rescan, it affects
-the flush functions too where they try to do the same thing.
+> ->max_hw_sectors). That's the easy part.
+> 
+> The bio_add_page() stuff is a little trickier, since it wants to know if
+> this is fs or 'generic' io. For fs io, we would like to cap the building
+> of the bio to ->max_sectors, but for eg SG_IO issued io it should go as
+> high as ->max_hw_sectors. Perhaps the easiest is just to have
+> bio_fs_add_page() and bio_pc_add_page(), each just passing in the max
+> value as an integer to bio_add_page(). But it's not exactly pretty.
+> 
+> The ll_rw_blk.c merging is easy, since you don't need to do anything
+> there. It should test against ->max_sectors as it already does, since
+> this (sadly) is still the primary way we build large ios.
+> 
 
-Could you take a look at the attached?  I just threw it together on a
-'plane, so it's completely untested.  It tries to implement the secure
-get of struct scsi_disk by tying the nulling out of drvdata to the
-sd_ref_sem, so we can now either get a reference to the scsi_disk or
-return NULL.  I also fixed all the other relevant driver data users to
-follow this model.
+.... here, I am running into a problem. Basically, as you know the 
+largest BIO we can make is 1 MB due to BIO_MAX_PAGES, and for st and sg 
+we need to support commands around 6 MB, so we would have a request with 
+  6 BIOs. To make this monster request I wanted to use the block layer 
+functions and do something like this:
 
-Thanks,
-
-James
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -177,24 +177,38 @@ static inline struct scsi_disk *scsi_dis
- 	return container_of(disk->private_data, struct scsi_disk, driver);
- }
- 
--static struct scsi_disk *scsi_disk_get(struct gendisk *disk)
-+static struct scsi_disk *__scsi_disk_get(struct gendisk *disk)
- {
- 	struct scsi_disk *sdkp = NULL;
- 
--	down(&sd_ref_sem);
- 	if (disk->private_data == NULL)
- 		goto out;
- 	sdkp = scsi_disk(disk);
-+	if (scsi_device_get(sdkp->device)) {
-+		sdkp = NULL;
-+		goto out;
-+	}
- 	kref_get(&sdkp->kref);
--	if (scsi_device_get(sdkp->device))
--		goto out_put;
-+ out:
-+	return sdkp;
-+}
++       for (i = 0; i < nsegs; i++) {
++               bio = bio_map_pages(q, sg[i].page, sg[i].length, 
+sg[i].offset, gfp);
++               if (IS_ERR(bio)) {
++                       err = PTR_ERR(bio);
++                       goto free_bios;
++               }
++               len += sg[i].length;
 +
-+static struct scsi_disk *scsi_disk_get(struct gendisk *disk)
-+{
-+	struct scsi_disk *sdkp;
-+	down(&sd_ref_sem);
-+	sdkp = __scsi_disk_get(disk);
- 	up(&sd_ref_sem);
- 	return sdkp;
-+}
- 
-- out_put:
--	kref_put(&sdkp->kref, scsi_disk_release);
--	sdkp = NULL;
-- out:
-+static struct scsi_disk *scsi_disk_get_from_dev(struct device *dev)
-+{
-+	struct scsi_disk *sdkp;
-+	down(&sd_ref_sem);
-+	sdkp = dev_get_drvdata(dev);
-+	if (sdkp)
-+		sdkp = __scsi_disk_get(sdkp->disk);
- 	up(&sd_ref_sem);
- 	return sdkp;
- }
-@@ -716,16 +730,20 @@ static int sd_sync_cache(struct scsi_dev
- 
- static int sd_issue_flush(struct device *dev, sector_t *error_sector)
- {
-+	int ret = 0;
- 	struct scsi_device *sdp = to_scsi_device(dev);
--	struct scsi_disk *sdkp = dev_get_drvdata(dev);
-+	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
- 
- 	if (!sdkp)
-                return -ENODEV;
- 
- 	if (!sdkp->WCE)
--		return 0;
-+		goto out;
- 
--	return sd_sync_cache(sdp);
-+	ret = sd_sync_cache(sdp);
-+ out:
-+	scsi_disk_put(sdkp);
-+	return ret;
- }
- 
- static void sd_end_flush(request_queue_t *q, struct request *flush_rq)
-@@ -754,13 +772,14 @@ static void sd_end_flush(request_queue_t
- static int sd_prepare_flush(request_queue_t *q, struct request *rq)
- {
- 	struct scsi_device *sdev = q->queuedata;
--	struct scsi_disk *sdkp = dev_get_drvdata(&sdev->sdev_gendev);
-+	struct scsi_disk *sdkp = scsi_disk_get_from_dev(&sdev->sdev_gendev);
- 
--	if (sdkp->WCE) {
-+	if (sdkp && sdkp->WCE) {
- 		memset(rq->cmd, 0, sizeof(rq->cmd));
- 		rq->flags |= REQ_BLOCK_PC | REQ_SOFTBARRIER;
- 		rq->timeout = SD_TIMEOUT;
- 		rq->cmd[0] = SYNCHRONIZE_CACHE;
-+		scsi_disk_put(sdkp);
- 		return 1;
- 	}
- 
-@@ -769,8 +788,11 @@ static int sd_prepare_flush(request_queu
- 
- static void sd_rescan(struct device *dev)
- {
--	struct scsi_disk *sdkp = dev_get_drvdata(dev);
--	sd_revalidate_disk(sdkp->disk);
-+	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	if (sdkp) {
-+		sd_revalidate_disk(sdkp->disk);
-+		scsi_disk_put(sdkp);
-+	}
- }
- 
- 
-@@ -1641,6 +1663,7 @@ static int sd_remove(struct device *dev)
- 	del_gendisk(sdkp->disk);
- 	sd_shutdown(dev);
- 	down(&sd_ref_sem);
-+	dev_set_drvdata(dev, NULL);
- 	kref_put(&sdkp->kref, scsi_disk_release);
- 	up(&sd_ref_sem);
- 
-@@ -1680,18 +1703,20 @@ static void scsi_disk_release(struct kre
- static void sd_shutdown(struct device *dev)
- {
- 	struct scsi_device *sdp = to_scsi_device(dev);
--	struct scsi_disk *sdkp = dev_get_drvdata(dev);
-+	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
- 
- 	if (!sdkp)
- 		return;         /* this can happen */
- 
- 	if (!sdkp->WCE)
--		return;
-+		goto out;
- 
- 	printk(KERN_NOTICE "Synchronizing SCSI cache for disk %s: \n",
- 			sdkp->disk->disk_name);
- 	sd_sync_cache(sdp);
--}	
-+ out:
-+	scsi_disk_put(sdkp);
-+}
- 
- /**
-  *	init_sd - entry point for this driver (both when built in or when
++               bio->bi_flags &= ~(1 << BIO_SEG_VALID);
++               if (rq_data_dir(rq) == WRITE)
++                       bio->bi_rw |= (1 << BIO_RW);
++               blk_queue_bounce(q, &bio);
++
++               if (i == 0)
++                       blk_rq_bio_prep(q, rq, bio);
 
+/* hope to carve out the __make_request code that does the below 
+operations and make a fucntion that can be shared */
 
++               else if (!q->back_merge_fn(q, rq, bio)) {
++                       err = -EINVAL;
++                       bio_endio(bio, bio->bi_size, 0);
++                       goto free_bios;
++               } else {
++                       rq->biotail->bi_next = bio;
++                       rq->biotail = bio;
++                       rq->hard_nr_sectors += bio_sectors(bio);
++                       rq->nr_sectors = rq->hard_nr_sectors;
+
+........
+
+But since q->back_merge_fn() tests against q->max_sectors, it must be a 
+high value so that we can merge in those BIOs. I mean if q->max_sectors 
+is some reasonable number like only 1024 sectors, q->back_merge_fn will 
+return a failure. Should I instead seperate ll_back_merge_fn into two 
+functions, one that checks the sectors and one that checks the segments 
+or if ll_back_merge_fn tested for max_hw_sectors we would be ok too?
