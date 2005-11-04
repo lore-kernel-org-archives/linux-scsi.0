@@ -1,81 +1,101 @@
-From: Matthew Schumacher <matt.s@aptalaska.net>
-Subject: Problems getting linux-2.4.31 to detect logical drive on megaraid
- ATA card.
-Date: Fri, 04 Nov 2005 00:05:15 -0900
-Message-ID: <436B244B.8040506@aptalaska.net>
+From: Christian Krause <chkr@plauener.de>
+Subject: minor issue with READ_10 -> READ_6 fallback
+Date: Fri,  4 Nov 2005 13:54:25 +0100
+Message-ID: <20051104135425.ehyu430xfwook4o0@mail.tu-chemnitz.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	format="flowed"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from larry.aptalaska.net ([64.186.96.3]:25504 "EHLO
-	larry.aptalaska.net") by vger.kernel.org with ESMTP
-	id S1161114AbVKDJFR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Nov 2005 04:05:17 -0500
-Received: from [192.168.98.9] (rdbck-static-287.palmer.mtaonline.net [64.4.232.33])
-	(authenticated bits=0)
-	by larry.aptalaska.net (8.13.4/8.13.4) with ESMTP id jA495FtM025611
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 4 Nov 2005 00:05:16 -0900
+Received: from lana.hrz.tu-chemnitz.de ([134.109.132.3]:43966 "EHLO
+	lana.hrz.tu-chemnitz.de") by vger.kernel.org with ESMTP
+	id S932092AbVKDMyF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Nov 2005 07:54:05 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-List,
+Hi,
 
-I have a problem I just can't seem to figure out. linux 2.4.27 can see
-the logical drive just fine:
+Recently I've found some minor issues in the current linux scsi
+implementation. Before I'll submit any patches I want to discuss
+these problems with you, maybe I'm wrong and there are some reasons
+for the way it's implemented, which I don't know so far.
 
-megaraid: v2.10.3 (Release Date: Thu Apr  8 16:16:05 EDT 2004)
-megaraid: found 0x101e:0x1960:bus 0:slot 3:func 0
-scsi0:Found MegaRAID controller at 0xf89c3000, IRQ:17
-megaraid: [6.62:1.03] detected 1 logical drives.
-megaraid: supports extended CDBs.
-megaraid: channel[0] is raid.
-megaraid: channel[1] is raid.
-megaraid: channel[2] is raid.
-megaraid: channel[3] is raid.
-scsi0 : LSI Logic MegaRAID 6.62 254 commands 16 targs 7 chans 7 luns
-scsi0: scanning scsi channel 0 for logical drives.
-  Vendor: MegaRAID  Model: LD 0 RAID1  114G  Rev: 6.62
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-scsi0: scanning scsi channel 1 for logical drives.
-scsi0: scanning scsi channel 2 for logical drives.
-scsi0: scanning scsi channel 4 [P0] for physical devices.
-scsi0: scanning scsi channel 5 [P1] for physical devices.
-scsi0: scanning scsi channel 6 [P2] for physical devices.
-scsi0: scanning scsi channel 7 [P3] for physical devices.
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-SCSI device sda: 234348544 512-byte hdwr sectors (119986 MB)
-Partition check:
- sda: sda1 sda2 sda3 < sda5 sda6 sda7 sda8 >
-usb.c: registered new driver usbdevfs
+I've found these issues during developing a USB mass storage device
+for the company I work for at the moment.
 
-However linux-2.4.31 doesn't see it:
 
-SCSI subsystem driver Revision: 1.00
-megaraid: v2.10.8.2 (Release Date: Mon Jul 26 12:15:51 EDT 2004)
-megaraid: found 0x101e:0x1960:bus 0:slot 3:func 0
-scsi0:Found MegaRAID controller at 0xf8855000, IRQ:15
-megaraid: [6.62:1.03] detected 1 logical drives.
-megaraid: supports extended CDBs.
-megaraid: channel[0] is raid.
-megaraid: channel[1] is raid.
-megaraid: channel[2] is raid.
-megaraid: channel[3] is raid.
-scsi0 : LSI Logic MegaRAID 6.62 254 commands 16 targs 7 chans 7 luns
-scsi0: scanning scsi channel 0 for logical drives.
-scsi0: scanning scsi channel 1 for logical drives.
-scsi0: scanning scsi channel 2 for logical drives.
-scsi0: scanning scsi channel 3 for logical drives.
-scsi0: scanning scsi channel 4 [P0] for physical devices.
-scsi0: scanning scsi channel 5 [P1] for physical devices.
-scsi0: scanning scsi channel 6 [P2] for physical devices.
-scsi0: scanning scsi channel 7 [P3] for physical devices.
+linux-2.6.14/drivers/scsi/sd.c, line 929:
 
-The card is a LSI ATA megaraid controller sold by dell as a CERT card.
-I have the latest firmware on it.
+static void sd_rw_intr(struct scsi_cmnd * SCpnt):
+[...]
+                case ILLEGAL_REQUEST:
+                        if (SCpnt->device->use_10_for_rw &&
+                            (SCpnt->cmnd[0] == READ_10 ||
+                             SCpnt->cmnd[0] == WRITE_10))
+                                SCpnt->device->use_10_for_rw = 0;
+                        if (SCpnt->device->use_10_for_ms &&
+                            (SCpnt->cmnd[0] == MODE_SENSE_10 ||
+                             SCpnt->cmnd[0] == MODE_SELECT_10))
+                                SCpnt->device->use_10_for_ms = 0;
+                        break;
 
-At this point I'm not sure what to do.  Any ideas on how to make the
-newer megaraid driver see the logical drive?
+This function is called after the lower layer has completeda scsi
+command.
 
-schu
+Similar code is in scsi_lib.c, line 920, in a function which is
+called after the completion of a scsi command.
+
+"use_10_for_rw" is set to 1 per default (in libata-scsi.c or
+scsi_scan.c).
+
+The purpose of the mentioned code pieces seems to be to fall back
+to READ/WRITE_6 if READ/WRITE_10 (the same for MODE_SENSE/SELECT)
+is not available.
+
+
+But the assumption, that Sensekey==ILLEGAL_REQUEST does always mean
+"I don't support the command" is just wrong.
+
+One example (this is the one where I discovered the problem):
+If a READ_10 is issued which tries to read a block which is not within
+the range of blocks of the device (means: requested block number is
+greater than the one which is reported by READ_CAPACITY), the device
+must [1] return CHECK_CONDITION and set its sense data to
+
+SenseKey = ILLEGAL REQUEST
+Additional Sense Code = LOGICAL BLOCK ADDRESS OUT OF RANGE
+
+
+This means, that a sense key of ILLEGAL_REQUEST in response to
+a READ_10 does not always mean that the device doesn't support
+READ_10 and a fallback to READ_6 makes sense.
+
+Sure, it could be a bug that a read outside the range of the device
+is issued, but nevertheless the mentioned pieces of code are
+not completely correct.
+
+I suggest to check the additional sense code which the device must
+have set to INVALID COMMAND OPERATION CODE if it hasn't implemented
+the command. In this case the fallback to READ_6, ... makes sense.
+
+
+
+
+
+Please can you comment on whether my investigations are correct?
+If so, I'll create appropriate patches.
+
+
+Best regards,
+Christian
+
+
+references to SCSI specifications:
+[1]: SBC-2, 4.4 Logical blocks
+[2]: SPC-3, 4.3.1 CDB Usage and structure
+
+
