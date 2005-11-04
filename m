@@ -1,61 +1,57 @@
-From: Matthew Schumacher <matt.s@aptalaska.net>
-Subject: Re: Problems getting linux-2.4.31 to detect logical drive on mega
- raid ATA card.
-Date: Fri, 04 Nov 2005 10:57:52 -0900
-Message-ID: <436BBD40.2030401@aptalaska.net>
-References: <0E3FA95632D6D047BA649F95DAB60E5703662C0C@exa-atlanta>
+From: "Timothy Thelin" <Timothy.Thelin@wdc.com>
+Subject: RE: [usb-storage] [Merging ATA passthru] on integratingSMART/ATA-Security in usb-storage driver
+Date: Fri, 4 Nov 2005 11:59:41 -0800
+Message-ID: <CA45571DE57E1C45BF3552118BA92C9D69BF40@WDSCEXBECL03.sc.wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from larry.aptalaska.net ([64.186.96.3]:39127 "EHLO
-	larry.aptalaska.net") by vger.kernel.org with ESMTP
-	id S1750720AbVKDT6A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Nov 2005 14:58:00 -0500
-In-Reply-To: <0E3FA95632D6D047BA649F95DAB60E5703662C0C@exa-atlanta>
+Received: from wdscexfe02.sc.wdc.com ([129.253.170.52]:58593 "EHLO
+	wdscexfe02.sc.wdc.com") by vger.kernel.org with ESMTP
+	id S1750745AbVKDT7q convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Nov 2005 14:59:46 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ju, Seokmann" <Seokmann.Ju@engenio.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, t.schorpp@gmx.de, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Ju, Seokmann wrote:
-> On Friday, November 04, 2005 4:05 AM, Matthew Schumacher wrote:
 > 
->>At this point I'm not sure what to do.  Any ideas on how to make the
->>newer megaraid driver see the logical drive?
+> On Fri, 2005-11-04 at 10:30 -0800, Timothy Thelin wrote:
+> > And for an even more concrete example:
+> > The CY7C68300B cypress bridge board (has various siblings as well
+> > on their site that act very similar) implements SCSI spec 0 (ie it
+> > doesn't claim to support any scsi spec).  Now usb-storage sees
+> > this in inquiry, and decides to export the device as a scsi2 device
+> > since based on the usb-storage devs' experience most usb devices
+> > really want scsi2 cdbs.  So SCSI core thinks this is a scsi2 device
+> > and procedes to mangle the cdbs as they're going through.
 > 
-> I assume you are using DELL system.
-> Can you provide detail system configuration (like, # of CPU and speed, size
-> of memory, MegaRAID ATA controller model, etc)?
+> What happens if you prevent USB mangling the scsi_level?  I think, for
+> the most part, we would handle 0 in about the same way as we handle 2.
+> However, we could gate the if around the CDB[1] mangling as
 > 
-> It seems like the kernel (or the driver) is NOT detecting the device for
-> some reason. We will post update as we make.
+> if (scsi_level != SCSI_UNKNOWN && scsi_level <= SCSI_2)
 > 
-> Thank you,
+> which should fix your problem, I think.
+> 
+> James
 > 
 
-Thanks for the reply Ju,
+Irconically that was one of the solutions I was investigating
+first.  Here is the usb mailing list discussion on it:
+http://marc.theaimsgroup.com/?t=112672009700004&r=1&w=2
 
-Here is the information I have:
+In summary, the idea of making the scsi stack "level 0 aware" was
+suggested and rejected because usb devs want to keep promoting
+the devices to level 2 for various reaons.  At the end of it
+they suggested using SG_FLAG_LUN_INHIBIT so that the usb device
+could stay level 2 yet vendor specific commands could get passed
+through un-touched. Neither of us knew that flag didn't work
+anymore, and after I wasn't able to get it to work, that
+other conversation I posted previously occured to figure out
+what was going on with SG_FLAG_LUN_INHIBIT.
 
-System: Power Edge 650
-CPU: Intel(R) Pentium(R) 4 CPU 3.06GHz (SMP is on because of the HT cpu)
-Memory: 1G (himem enabled)
-
-The controller is:
-v2.10.3 (Release Date: Thu Apr  8 16:16:05 EDT 2004)
-CERC ATA100/4ch
-Controller Type: 438/466/467/471/493/518/520/531/532
-Controller Supports 40 Logical Drives
-Controller capable of 64-bit memory addressing
-Controller is not using 64-bit memory addressing
-Base = f89c3000, Irq = 17, Initial Logical Drives = 1, Channels = 4
-Version =6.62:1.03, DRAM = 16Mb
-
-The strange part is that the kernel detects the controller, just not the
-logical drive on the controller.
-
-Let me know if there is any information I can provide, I would love to
-have this working....
-
-schu
+Regards,
+Tim Thelin
