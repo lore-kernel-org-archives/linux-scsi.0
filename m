@@ -1,101 +1,81 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH RFC] yet more struct scsi_lun
-Date: Fri, 4 Nov 2005 08:37:19 +0100
-Message-ID: <20051104073718.GY26049@suse.de>
-References: <20051023043301.GA22615@havoc.gtf.org> <20051023070011.GA26569@havoc.gtf.org> <435B6A62.8070306@torque.net> <435BBD9A.80603@pobox.com> <20051024075934.GK2811@suse.de> <43625EC3.9060708@cs.wisc.edu> <20051031102451.GR19267@suse.de> <436AC620.20505@cs.wisc.edu>
+From: Matthew Schumacher <matt.s@aptalaska.net>
+Subject: Problems getting linux-2.4.31 to detect logical drive on megaraid
+ ATA card.
+Date: Fri, 04 Nov 2005 00:05:15 -0900
+Message-ID: <436B244B.8040506@aptalaska.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:58384 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1030475AbVKDHgd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Nov 2005 02:36:33 -0500
-Content-Disposition: inline
-In-Reply-To: <436AC620.20505@cs.wisc.edu>
+Received: from larry.aptalaska.net ([64.186.96.3]:25504 "EHLO
+	larry.aptalaska.net") by vger.kernel.org with ESMTP
+	id S1161114AbVKDJFR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Nov 2005 04:05:17 -0500
+Received: from [192.168.98.9] (rdbck-static-287.palmer.mtaonline.net [64.4.232.33])
+	(authenticated bits=0)
+	by larry.aptalaska.net (8.13.4/8.13.4) with ESMTP id jA495FtM025611
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 4 Nov 2005 00:05:16 -0900
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Jeff Garzik <jgarzik@pobox.com>, dougg@torque.net, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, Nov 03 2005, Mike Christie wrote:
-> Jens Axboe wrote:
-> >
-> >On the SCSI side, I would suggest just making shost->max_sectors set
-> >q->max_hw_sectors and leave q->max_sectors to some generic kernel-wide
-> >block layer define (of course making sure that ->max_sectors <=
-> 
-> If the value for this block layer define was around 16,000 sectors, 
-> would that be ok? The reason I ask is becuase when I get .....
+List,
 
-Nope :)
+I have a problem I just can't seem to figure out. linux 2.4.27 can see
+the logical drive just fine:
 
-> >->max_hw_sectors). That's the easy part.
-> >
-> >The bio_add_page() stuff is a little trickier, since it wants to know if
-> >this is fs or 'generic' io. For fs io, we would like to cap the building
-> >of the bio to ->max_sectors, but for eg SG_IO issued io it should go as
-> >high as ->max_hw_sectors. Perhaps the easiest is just to have
-> >bio_fs_add_page() and bio_pc_add_page(), each just passing in the max
-> >value as an integer to bio_add_page(). But it's not exactly pretty.
-> >
-> >The ll_rw_blk.c merging is easy, since you don't need to do anything
-> >there. It should test against ->max_sectors as it already does, since
-> >this (sadly) is still the primary way we build large ios.
-> >
-> 
-> .... here, I am running into a problem. Basically, as you know the 
-> largest BIO we can make is 1 MB due to BIO_MAX_PAGES, and for st and sg 
-> we need to support commands around 6 MB, so we would have a request with 
->  6 BIOs. To make this monster request I wanted to use the block layer 
-> functions and do something like this:
-> 
-> +       for (i = 0; i < nsegs; i++) {
-> +               bio = bio_map_pages(q, sg[i].page, sg[i].length, 
-> sg[i].offset, gfp);
-> +               if (IS_ERR(bio)) {
-> +                       err = PTR_ERR(bio);
-> +                       goto free_bios;
-> +               }
-> +               len += sg[i].length;
-> +
-> +               bio->bi_flags &= ~(1 << BIO_SEG_VALID);
-> +               if (rq_data_dir(rq) == WRITE)
-> +                       bio->bi_rw |= (1 << BIO_RW);
-> +               blk_queue_bounce(q, &bio);
-> +
-> +               if (i == 0)
-> +                       blk_rq_bio_prep(q, rq, bio);
-> 
-> /* hope to carve out the __make_request code that does the below 
-> operations and make a fucntion that can be shared */
-> 
-> +               else if (!q->back_merge_fn(q, rq, bio)) {
-> +                       err = -EINVAL;
-> +                       bio_endio(bio, bio->bi_size, 0);
-> +                       goto free_bios;
-> +               } else {
-> +                       rq->biotail->bi_next = bio;
-> +                       rq->biotail = bio;
-> +                       rq->hard_nr_sectors += bio_sectors(bio);
-> +                       rq->nr_sectors = rq->hard_nr_sectors;
-> 
-> ........
-> 
-> But since q->back_merge_fn() tests against q->max_sectors, it must be a 
-> high value so that we can merge in those BIOs. I mean if q->max_sectors 
-> is some reasonable number like only 1024 sectors, q->back_merge_fn will 
-> return a failure. Should I instead seperate ll_back_merge_fn into two 
-> functions, one that checks the sectors and one that checks the segments 
-> or if ll_back_merge_fn tested for max_hw_sectors we would be ok too?
+megaraid: v2.10.3 (Release Date: Thu Apr  8 16:16:05 EDT 2004)
+megaraid: found 0x101e:0x1960:bus 0:slot 3:func 0
+scsi0:Found MegaRAID controller at 0xf89c3000, IRQ:17
+megaraid: [6.62:1.03] detected 1 logical drives.
+megaraid: supports extended CDBs.
+megaraid: channel[0] is raid.
+megaraid: channel[1] is raid.
+megaraid: channel[2] is raid.
+megaraid: channel[3] is raid.
+scsi0 : LSI Logic MegaRAID 6.62 254 commands 16 targs 7 chans 7 luns
+scsi0: scanning scsi channel 0 for logical drives.
+  Vendor: MegaRAID  Model: LD 0 RAID1  114G  Rev: 6.62
+  Type:   Direct-Access                      ANSI SCSI revision: 02
+scsi0: scanning scsi channel 1 for logical drives.
+scsi0: scanning scsi channel 2 for logical drives.
+scsi0: scanning scsi channel 4 [P0] for physical devices.
+scsi0: scanning scsi channel 5 [P1] for physical devices.
+scsi0: scanning scsi channel 6 [P2] for physical devices.
+scsi0: scanning scsi channel 7 [P3] for physical devices.
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+SCSI device sda: 234348544 512-byte hdwr sectors (119986 MB)
+Partition check:
+ sda: sda1 sda2 sda3 < sda5 sda6 sda7 sda8 >
+usb.c: registered new driver usbdevfs
 
-It will take a whole lot of factoring out to make this happen I fear,
-the results will not be easier for the eyes.
+However linux-2.4.31 doesn't see it:
 
-How about just keeping it simple - add a bio and request flag that
-basically just says "don't honor soft max size" and whenever that is
-set, you check for ->max_hw_sectors instead of ->max_sectors? Might even
-be enough to just do this for the request and just require stuffing more
-bio's into the request. But the bio has plenty of flag room left, so...
+SCSI subsystem driver Revision: 1.00
+megaraid: v2.10.8.2 (Release Date: Mon Jul 26 12:15:51 EDT 2004)
+megaraid: found 0x101e:0x1960:bus 0:slot 3:func 0
+scsi0:Found MegaRAID controller at 0xf8855000, IRQ:15
+megaraid: [6.62:1.03] detected 1 logical drives.
+megaraid: supports extended CDBs.
+megaraid: channel[0] is raid.
+megaraid: channel[1] is raid.
+megaraid: channel[2] is raid.
+megaraid: channel[3] is raid.
+scsi0 : LSI Logic MegaRAID 6.62 254 commands 16 targs 7 chans 7 luns
+scsi0: scanning scsi channel 0 for logical drives.
+scsi0: scanning scsi channel 1 for logical drives.
+scsi0: scanning scsi channel 2 for logical drives.
+scsi0: scanning scsi channel 3 for logical drives.
+scsi0: scanning scsi channel 4 [P0] for physical devices.
+scsi0: scanning scsi channel 5 [P1] for physical devices.
+scsi0: scanning scsi channel 6 [P2] for physical devices.
+scsi0: scanning scsi channel 7 [P3] for physical devices.
 
--- 
-Jens Axboe
+The card is a LSI ATA megaraid controller sold by dell as a CERT card.
+I have the latest firmware on it.
 
+At this point I'm not sure what to do.  Any ideas on how to make the
+newer megaraid driver see the logical drive?
+
+schu
