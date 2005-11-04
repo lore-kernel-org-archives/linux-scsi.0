@@ -1,17 +1,17 @@
 From: Christian Krause <chkr@plauener.de>
-Subject: minor issue with READ_10 -> READ_6 fallback
-Date: Fri,  4 Nov 2005 13:54:25 +0100
-Message-ID: <20051104135425.ehyu430xfwook4o0@mail.tu-chemnitz.de>
+Subject: MEDIUM_NOT_PRESENT ignored in some cases
+Date: Fri,  4 Nov 2005 13:58:42 +0100
+Message-ID: <20051104135842.f0s0urfd68ssw0c0@mail.tu-chemnitz.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset=ISO-8859-1;
 	format="flowed"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lana.hrz.tu-chemnitz.de ([134.109.132.3]:43966 "EHLO
-	lana.hrz.tu-chemnitz.de") by vger.kernel.org with ESMTP
-	id S932092AbVKDMyF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Nov 2005 07:54:05 -0500
+Received: from john.hrz.tu-chemnitz.de ([134.109.132.2]:62933 "EHLO
+	john.hrz.tu-chemnitz.de") by vger.kernel.org with ESMTP
+	id S932738AbVKDM6O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Nov 2005 07:58:14 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,83 +19,62 @@ To: linux-scsi@vger.kernel.org
 
 Hi,
 
-Recently I've found some minor issues in the current linux scsi
-implementation. Before I'll submit any patches I want to discuss
-these problems with you, maybe I'm wrong and there are some reasons
-for the way it's implemented, which I don't know so far.
+here are my thoughts about a second issue I found in sd.c:
 
-I've found these issues during developing a USB mass storage device
-for the company I work for at the moment.
+function media_not_present, line 952:
 
-
-linux-2.6.14/drivers/scsi/sd.c, line 929:
-
-static void sd_rw_intr(struct scsi_cmnd * SCpnt):
-[...]
-                case ILLEGAL_REQUEST:
-                        if (SCpnt->device->use_10_for_rw &&
-                            (SCpnt->cmnd[0] == READ_10 ||
-                             SCpnt->cmnd[0] == WRITE_10))
-                                SCpnt->device->use_10_for_rw = 0;
-                        if (SCpnt->device->use_10_for_ms &&
-                            (SCpnt->cmnd[0] == MODE_SENSE_10 ||
-                             SCpnt->cmnd[0] == MODE_SELECT_10))
-                                SCpnt->device->use_10_for_ms = 0;
-                        break;
-
-This function is called after the lower layer has completeda scsi
-command.
-
-Similar code is in scsi_lib.c, line 920, in a function which is
-called after the completion of a scsi command.
-
-"use_10_for_rw" is set to 1 per default (in libata-scsi.c or
-scsi_scan.c).
-
-The purpose of the mentioned code pieces seems to be to fall back
-to READ/WRITE_6 if READ/WRITE_10 (the same for MODE_SENSE/SELECT)
-is not available.
+---------------
+      if (!scsi_sense_valid(sshdr))
+                return 0;
+        /* not invoked for commands that could return deferred errors */
+        if (sshdr->sense_key != NOT_READY &&
+            sshdr->sense_key != UNIT_ATTENTION)
+                return 0;
+        if (sshdr->asc != 0x3A) /* medium not present */
+                return 0;
+--------------------------
 
 
-But the assumption, that Sensekey==ILLEGAL_REQUEST does always mean
-"I don't support the command" is just wrong.
+The source indicates, that in case of
+sense_key == NOT_READY and
+asc == MEDIUM_NOT_PRESENT
+(or the same with sense_key == UNIT_ATTENTION) set_media_not_present
+is not called and hence media_present is not set to 0.
 
-One example (this is the one where I discovered the problem):
-If a READ_10 is issued which tries to read a block which is not within
-the range of blocks of the device (means: requested block number is
-greater than the one which is reported by READ_CAPACITY), the device
-must [1] return CHECK_CONDITION and set its sense data to
+As reason for this behaviour the following comment is given in the
+source: "not invoked for commands that could return deferred errors".
 
-SenseKey = ILLEGAL REQUEST
-Additional Sense Code = LOGICAL BLOCK ADDRESS OUT OF RANGE
+Sure, this is true, but as far as I understand this assumption covers
+even cases in which the error is not deferred.
 
-
-This means, that a sense key of ILLEGAL_REQUEST in response to
-a READ_10 does not always mean that the device doesn't support
-READ_10 and a fallback to READ_6 makes sense.
-
-Sure, it could be a bug that a read outside the range of the device
-is issued, but nevertheless the mentioned pieces of code are
-not completely correct.
-
-I suggest to check the additional sense code which the device must
-have set to INVALID COMMAND OPERATION CODE if it hasn't implemented
-the command. In this case the fallback to READ_6, ... makes sense.
+The sense data format contains a member "Response Code" which is
+normally 0x70 or 0x71 [1]. 0x70 means: "current errors" and 0x71 means
+"deferred errors". So it seems to me that a good solution would be
+to accept asc == MEDIUM_NOT_PRESENT even if sense_key == NOT_READY or 
+== UNIT_ATTENTION, given that the
+response code == 0x70.
 
 
+I've discovered this problem during developing a usb mass storage device
+which uses the "transparent SCSI" command set and reports itself as
+"direct access device" (DeviceType == 0x0 in the Inquiry data). If I
+attach this device with no medium inserted (virtually, because its
+just an emulation of a SCSI device), the kernel repeats "Test Unit
+Ready" and "Request Sense" for more than a minute (the last kernel
+output is: sda: "Spinning up disk........."). Because of this I've 
+started to look into the source of the linux scsi
+subsystem and found the mentioned issue.
 
 
+What do you think about this issue? Would it make sense to honor the 
+ResponseCode and to accept "MEDIUM_NOT_PRESENT" in the case the current
+error is returned? If yes, I would create an appropriate patch.
 
-Please can you comment on whether my investigations are correct?
-If so, I'll create appropriate patches.
 
 
 Best regards,
 Christian
 
-
-references to SCSI specifications:
-[1]: SBC-2, 4.4 Logical blocks
-[2]: SPC-3, 4.3.1 CDB Usage and structure
+[1]: SPC-2, 7.20.2, Sense Data format
 
 
