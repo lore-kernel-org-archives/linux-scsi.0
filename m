@@ -1,100 +1,123 @@
-From: "Ju, Seokmann" <Seokmann.Ju@engenio.com>
-Subject: RE: Problems getting linux-2.4.31 to detect logical drive on mega
-	raid ATA card.
-Date: Fri, 4 Nov 2005 12:36:56 -0500
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E5703662C0C@exa-atlanta>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] sd: fix race between rescan and remove
+Date: Fri, 04 Nov 2005 11:45:08 -0600
+Message-ID: <1131126308.3532.34.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0511041039180.4812-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:26816 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1750755AbVKDRhQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Nov 2005 12:37:16 -0500
+Received: from stat9.steeleye.com ([209.192.50.41]:9904 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750763AbVKDRpM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Nov 2005 12:45:12 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0511041039180.4812-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Matthew Schumacher' <matt.s@aptalaska.net>, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Friday, November 04, 2005 4:05 AM, Matthew Schumacher wrote:
-> At this point I'm not sure what to do.  Any ideas on how to make the
-> newer megaraid driver see the logical drive?
-I assume you are using DELL system.
-Can you provide detail system configuration (like, # of CPU and speed, size
-of memory, MegaRAID ATA controller model, etc)?
+On Fri, 2005-11-04 at 11:40 -0500, Alan Stern wrote:
+> On Thu, 3 Nov 2005, James Bottomley wrote:
+> 
+> > Thanks for investigating this ... I really hate debugging these obscure
+> > object reference races.
+> 
+> Yeah, it was a real pain to find the cause.  Took most of two days.  And 
+> yet it should have been obvious where to look...
 
-It seems like the kernel (or the driver) is NOT detecting the device for
-some reason. We will post update as we make.
+That's what I usually end up saying after days of staring at the
+code ...
 
-Thank you,
+> > I'm afraid that your fix isn't quite right:  The problem occurs because
+> > in most cases scsi_remove_device will call sd_remove (via the driver
+> > model call backs from device_del).  The kref_put in sd_remove will
+> > (almost always) trigger scsi_disk_release which frees sdkp.  So, I'm
+> > afraid you can't rely on sdkp->device being correct.
+> 
+> Hmm.  Surely that's a problem for the old scsi_disk_get routine rather 
+> than the new scsi_disk_get_from_dev routine?
 
-> -----Original Message-----
-> From: Matthew Schumacher [mailto:matt.s@aptalaska.net] 
-> Sent: Friday, November 04, 2005 4:05 AM
-> To: linux-scsi@vger.kernel.org
-> Subject: Problems getting linux-2.4.31 to detect logical 
-> drive on megaraid ATA card.
+No .. we rely on support from the way block operation works for the
+scsi_disk_get() routine to work.  The problem I was trying to prevent is
+the race where scsi_remove_disk is freeing sdkp as sd_rescan is being
+called.
+
+> The problem I fixed was different: sdkp was getting freed while it was 
+> still in use by the rescan procedure.  But I agree that after sd_remove 
+> returns, we can't depend on sdkp->device being correct.
+
+Yes, but I also wanted to fix the race between acquiring a reference to
+sdkp and having it freed.
+
+> > The fix for this one is a bit nasty because it's a reversal in the
+> > logic.  The usual logic is that the user does something, so we have a
+> > refcounted gendisk object that we tie to scsi_disk and then scsi_device.
+> > In this case, we actually get a scsi_device and we have to try to work
+> > out how to get a valid refcounted scsi_disk object out of it.
+> > Unfortunately, this problem doesn't just affect sd_rescan, it affects
+> > the flush functions too where they try to do the same thing.
 > 
-> List,
+> I wasn't sure about them.  It wasn't clear if they could get called after 
+> sd_remove.  However it certainly doesn't hurt to make them call the new 
+> routine.
 > 
-> I have a problem I just can't seem to figure out. linux 2.4.27 can see
-> the logical drive just fine:
+> > Could you take a look at the attached?  I just threw it together on a
+> > 'plane, so it's completely untested.  It tries to implement the secure
+> > get of struct scsi_disk by tying the nulling out of drvdata to the
+> > sd_ref_sem, so we can now either get a reference to the scsi_disk or
+> > return NULL.  I also fixed all the other relevant driver data users to
+> > follow this model.
 > 
-> megaraid: v2.10.3 (Release Date: Thu Apr  8 16:16:05 EDT 2004)
-> megaraid: found 0x101e:0x1960:bus 0:slot 3:func 0
-> scsi0:Found MegaRAID controller at 0xf89c3000, IRQ:17
-> megaraid: [6.62:1.03] detected 1 logical drives.
-> megaraid: supports extended CDBs.
-> megaraid: channel[0] is raid.
-> megaraid: channel[1] is raid.
-> megaraid: channel[2] is raid.
-> megaraid: channel[3] is raid.
-> scsi0 : LSI Logic MegaRAID 6.62 254 commands 16 targs 7 chans 7 luns
-> scsi0: scanning scsi channel 0 for logical drives.
->   Vendor: MegaRAID  Model: LD 0 RAID1  114G  Rev: 6.62
->   Type:   Direct-Access                      ANSI SCSI revision: 02
-> scsi0: scanning scsi channel 1 for logical drives.
-> scsi0: scanning scsi channel 2 for logical drives.
-> scsi0: scanning scsi channel 4 [P0] for physical devices.
-> scsi0: scanning scsi channel 5 [P1] for physical devices.
-> scsi0: scanning scsi channel 6 [P2] for physical devices.
-> scsi0: scanning scsi channel 7 [P3] for physical devices.
-> Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-> SCSI device sda: 234348544 512-byte hdwr sectors (119986 MB)
-> Partition check:
->  sda: sda1 sda2 sda3 < sda5 sda6 sda7 sda8 >
-> usb.c: registered new driver usbdevfs
+> I see three differences between your patch and mine:
 > 
-> However linux-2.4.31 doesn't see it:
+> 	You refactored the common code in scsi_disk_get and
+> 	scsi_disk_get_from_dev.  Okay, that's fine, although
+> 	it looks a little strange to be going all the way
+> 	down to the disk just to go back up to the sdkp.
+> 	Note that when scsi_disk_get_from_dev calls __scsi_disk_get,
+> 	it's not possible for disk->private_data to be NULL.
+
+Yes, I just wanted the tying in a single routine rather than being open
+coded in two different routines.
+
+> 	You added calls to scsi_disk_get_from_dev in the flush
+> 	and shutdown routines.  That's good; I would have done
+> 	it originally had I known it was needed.
 > 
-> SCSI subsystem driver Revision: 1.00
-> megaraid: v2.10.8.2 (Release Date: Mon Jul 26 12:15:51 EDT 2004)
-> megaraid: found 0x101e:0x1960:bus 0:slot 3:func 0
-> scsi0:Found MegaRAID controller at 0xf8855000, IRQ:15
-> megaraid: [6.62:1.03] detected 1 logical drives.
-> megaraid: supports extended CDBs.
-> megaraid: channel[0] is raid.
-> megaraid: channel[1] is raid.
-> megaraid: channel[2] is raid.
-> megaraid: channel[3] is raid.
-> scsi0 : LSI Logic MegaRAID 6.62 254 commands 16 targs 7 chans 7 luns
-> scsi0: scanning scsi channel 0 for logical drives.
-> scsi0: scanning scsi channel 1 for logical drives.
-> scsi0: scanning scsi channel 2 for logical drives.
-> scsi0: scanning scsi channel 3 for logical drives.
-> scsi0: scanning scsi channel 4 [P0] for physical devices.
-> scsi0: scanning scsi channel 5 [P1] for physical devices.
-> scsi0: scanning scsi channel 6 [P2] for physical devices.
-> scsi0: scanning scsi channel 7 [P3] for physical devices.
-> 
-> The card is a LSI ATA megaraid controller sold by dell as a CERT card.
-> I have the latest firmware on it.
-> 
-> At this point I'm not sure what to do.  Any ideas on how to make the
-> newer megaraid driver see the logical drive?
-> 
-> schu
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> 	You added dev_set_drvdata(dev, NULL) to sd_remove.
+> 	Actually I'm astonished it wasn't there before and that
+> 	I didn't realize it was missing.  I guess nobody
+> 	considered that the scsi_device might outlive the disk.
+
+Yes, that's the key to mediating the final race.
+
+> This is all good.  I've made a few stylistic changes (mostly to avoid goto
+> statements).  By the way, is there any reason that disk->private_data is
+> set to &sdkp->driver instead of to sdkp?  I don't see any, so I'll change
+> it.
+
+Actually, it is necessary, it's a way of overloading private_data so we
+can get the driver even if we don't know the ULD type (we use this in
+scsi_lib.c), but also so that the ULD can get its specific structure as
+well.
+
+> However this still doesn't solve the problem you mentioned.  Somehow
+> sd_remove has to tell __scsi_disk_get that sdkp->device might be gone.  
+> The only way I can think of is to add an extra bitfield to the scsi_disk
+> structure.
+
+Hmm, OK, but you don't need a gone field to mediate that.  just do a
+get_device(&sdp->sdev_gendev) before setting the sdkp->device pointer
+and do a put_device() in the release method.  That won't interfere with
+the scsi_remove_device logic, but it will ensure that the pointer is
+always valid until we release it.
+
+> This patch solves the original problem and works okay on my system.  If it 
+> looks okay to you, I'll resend it as a proper patch submission.
+
+Great, thanks.
+
+James
+
+
