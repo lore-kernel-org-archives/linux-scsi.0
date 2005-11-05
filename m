@@ -1,43 +1,44 @@
-From: Ashutosh Naik <ashutosh.lkml@gmail.com>
-Subject: Re: [stable] Re: [PATCH] scsi - Fix Broken Qlogic ISP2x00 Device Driver
-Date: Sat, 5 Nov 2005 10:26:16 +0530
-Message-ID: <c216304e0511042056t79f07d0bi7b4c763838b2c401@mail.gmail.com>
-References: <81083a450511012313v25e292duf7b64da0ebf07835@mail.gmail.com>
-	 <20051102080711.GB626@plapn>
-	 <20051102082142.GW5856@shell0.pdx.osdl.net>
-	 <20051102184705.GD5889@plapn>
+From: "Incorrect O. Tempe" <synap@takuyakimura.com>
+Subject: Software
+Date: Sat, 05 Nov 2005 12:11:48 -0600
+Message-ID: <0969477040.20051105121148@takuyakimura.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.199]:26064 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751204AbVKEE4R convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Nov 2005 23:56:17 -0500
-Received: by nproxy.gmail.com with SMTP id q29so5501nfc
-        for <linux-scsi@vger.kernel.org>; Fri, 04 Nov 2005 20:56:16 -0800 (PST)
-In-Reply-To: <20051102184705.GD5889@plapn>
-Content-Disposition: inline
+Received: from zeus2.kernel.org ([204.152.191.36]:42442 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S1751494AbVKEFJO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Nov 2005 00:09:14 -0500
+Received: from -189586304 ([211.199.215.92])
+	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id jA558NHW002467
+	for <linux-scsi@vger.kernel.org>; Fri, 4 Nov 2005 21:09:13 -0800
+Received: from takuyakimura.com (-189373384 [-189063792])
+	by horafeliz.com (Qmailv1) with ESMTP id C1685C1A9C
+	for <linux-scsi@vger.kernel.org>; Sat, 05 Nov 2005 12:11:48 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Chris Wright <chrisw@osdl.org>, Ashutosh Naik <ashutosh.naik@gmail.com>, support@qlogic.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, stable@kernel.org
+To: Linux <linux-scsi@vger.kernel.org>
 
-Hi,
+Learn to build simple and clean websites that can bring in the dough... 
+OEM cd`s download and by post.
 
-On 11/3/05, Andrew Vasquez <andrew.vasquez@qlogic.com> wrote:
+New software on our site:
 
-> Sure.  But, the interface changes present in scsi-misc-2.6, notably:
->
-> http://kernel.org/git/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=19a7b4aebf9ad435c69a7e39930338499af4d152
->
-> obviate the need for the explicit '#include' -- there are no longer
-> any explicit calls to the fc_remote_port_*() functions within
-> qla_rscn.c.
+Freehand MX 11 - $69.95
+Extensis Portfolio 7.0 - $59.95
+Studio MX 2004 with Director MX 2004 - $139.95
+Office XP Professional - $79.95
+Office 2000 Premium Edition PE (2CD) - $59.95
+Streets and Trips 2004 North America (2CD) - $69.95
+PageMaker 7 (2CD) - $69.95
+SQL Server 2000 Enterprise Edition - $69.95
+Flash MX 2004 - $69.95
+Works 7 - $69.95
+Painter 8 - $59.95
+Money 2004 - $69.95
+Office 2003 Professional (1 CD Edition) - $89.95
+Acrobat 6 Professional - $79.95
 
-Well, hopefully the above code should get merged soon ( in 2.6.15 
-hopefully), but until then, I think the current tree should be fixed
-with the patch, if the interface changes are not reflected in 2.6.15
+Our site:
+http://jdxhnd.n7bua2snb7t06nnis5n0s55n.compsoagg.com
 
-Regards
-Ashutosh
