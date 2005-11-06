@@ -1,36 +1,36 @@
-From: "Charity" <esmutzdnef@turns.com>
-Subject: MS Office XP Pro $49.95
-Date: Sun, 6 Nov 2005 07:00:45 -0500
-Message-ID: <9555611653.176024150472@turns.com>
-Reply-To: "Charity Cordova" <esmutzdnef@turns.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+From: "Rafael Luna" <SXNVZQXAECJ@yahoo.com>
+Subject: Exclusive Branded Watches at 85% Off xG
+Date: Sun, 06 Nov 2005 19:01:57 +0500
+Message-ID: <5286277.103133SXNVZQXAECJ__30666.6643162773$1131285914$gmane$org@yahoo.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nat-b7-17.foxnet.com.pl ([193.151.101.17]:12048 "HELO
-	nat-b7-17.foxnet.com.pl") by vger.kernel.org with SMTP
-	id S1750829AbVKFL7O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 6 Nov 2005 06:59:14 -0500
-Received: from mail.global.sprint.com
-	by nat-b7-17.foxnet.com.pl (8.9.3/8.9.3) with ESMTP id mDphTN5BJvxN
-	for <linux-scsi@vger.kernel.org>; Sun, 6 Nov 2005 07:00:45 -0500
-Received: from passamon ([20.181.118.44])
-	by mail.global.sprint.com with ESMTP
-	for <linux-scsi@vger.kernel.org>; Sun, 6 Nov 2005 07:00:45 -0500
+Received: from dsl.Har.073.19.101.203.touchtelindia.net ([203.101.19.73]:45070
+	"HELO dsl.Har.073.19.101.203.touchtelindia.net") by vger.kernel.org
+	with SMTP id S1750870AbVKFOEK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Nov 2005 09:04:10 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-raid@vger.kernel.org
 
 
-Haven't we met somewhere before? :)))
 
-Microsoft Exchange Server 2003 Enterprise $59.95
-Adobe InDesign CS V 3.0 PC $49.95
-Autodesk AutoCAD Electrical 2004 $49.95
-Macromedia Fontographer 4 $19.95
+Why pay more for originals when replikas are 
+look 99.9% alike?
+Highest quality of replikas assured which
+can't differentiate the difference with originals.
+And available at 95% original prices.
 
-Save about: 80-85%
+Try us out today..
 
-http://doesoft.net
+http://043.rolaixisnce.com
 
 
+
+
+
+
+
+
+o-ut of mai-lling lisst:
+http://043.intrnetprodct.com/rm/
+
+va0SGH
