@@ -1,68 +1,65 @@
-From: "Timothy Thelin" <Timothy.Thelin@wdc.com>
-Subject: RE: [usb-storage] [Merging ATA passthru] on integratingSMART/ATA-Security in usb-storage driver
-Date: Mon, 7 Nov 2005 10:53:00 -0800
-Message-ID: <CA45571DE57E1C45BF3552118BA92C9D69BF44@WDSCEXBECL03.sc.wdc.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: 2.6.14-mm1
+Date: Mon, 7 Nov 2005 10:52:57 -0800
+Message-ID: <20051107105257.333248c0.akpm@osdl.org>
+References: <20051106182447.5f571a46.akpm@osdl.org>
+	<436F2452.9020207@reub.net>
+	<20051107020905.69c0b6dc.akpm@osdl.org>
+	<17263.11214.992300.34384@cse.unsw.edu.au>
+	<20051107023723.5cf63393.akpm@osdl.org>
+	<436F3020.1040209@reub.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wdscexfe02.sc.wdc.com ([129.253.170.52]:51816 "EHLO
-	wdscexfe02.sc.wdc.com") by vger.kernel.org with ESMTP
-	id S964916AbVKGSxF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2005 13:53:05 -0500
-Content-class: urn:content-classes:message
+Received: from smtp.osdl.org ([65.172.181.4]:59858 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S964925AbVKGSxU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2005 13:53:20 -0500
+In-Reply-To: <436F3020.1040209@reub.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Cc: t.schorpp@gmx.de, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Reuben Farrelly <reuben-lkml@reub.net>
+Cc: neilb@suse.de, linux-kernel@vger.kernel.org, n@suse.de, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-
-> 
-> Well, that might be a problem if it weren't for the fact that this
-> LUN_INHIBIT flag was removed in 2002.  If it's taken three 
-> years to find
-> a device that has a problem with it, I don't really think it's a
-> particularly widespread problem.  
+Reuben Farrelly <reuben-lkml@reub.net> wrote:
 >
-> ...snip....
->
-> James
-> 
+>  Debug: sleeping function called from invalid context at include/asm/semaphore.h:99
+>  in_atomic():1, irqs_disabled():1
+>    [<c0103c46>] dump_stack+0x17/0x19
+>    [<c011a173>] __might_sleep+0x9c/0xae
+>    [<c028f82b>] scsi_disk_get_from_dev+0x15/0x48
+>    [<c029006e>] sd_prepare_flush+0x17/0x5a
+>    [<c027f8ff>] scsi_prepare_flush_fn+0x30/0x33
+>    [<c0259da0>] blk_start_pre_flush+0xd5/0x13f
+>    [<c025936b>] elv_next_request+0x113/0x170
+>    [<c027fd45>] scsi_request_fn+0x4b/0x2fd
+>    [<c025b393>] blk_run_queue+0x2b/0x3c
+>    [<c027f0b3>] scsi_run_queue+0xa4/0xb6
+>    [<c027f11f>] scsi_next_command+0x16/0x19
+>    [<c027f1db>] scsi_end_request+0x93/0xc5
+>    [<c027f494>] scsi_io_completion+0x141/0x46b
+>    [<c02901e9>] sd_rw_intr+0x117/0x22b
+>    [<c027ae5f>] scsi_finish_command+0x7f/0x93
+>    [<c027ad43>] scsi_softirq+0xa8/0x11a
+>    [<c0121eb8>] __do_softirq+0x88/0x141
+>    [<c0104fd9>] do_softirq+0x77/0x81
+>    =======================
+>    [<c012205a>] irq_exit+0x48/0x4a
+>    [<c0104e84>] do_IRQ+0x74/0xa7
+>    [<c010374e>] common_interrupt+0x1a/0x20
+>    [<f8918c04>] acpi_processor_idle+0x11f/0x2c7 [processor]
+>    [<c0100d71>] cpu_idle+0x49/0xa0
+>    [<c01002d7>] rest_init+0x37/0x39
+>    [<c03fd8c5>] start_kernel+0x166/0x179
+>    [<c0100210>] 0xc0100210
 
-Just as an FYI to shed some light....
+ah-hah, that's a different trace.
 
-It took Western Digital 3 years to find the problem because September
-(back when I started the other conversation about this topic) was the
-first time we've tried to get access to a USB storage device under
-Linux using a passthru CDB.  Maxtor and Seagate might be in a similar
-boat (but obviously that's just speculation), and it's not like thumb
-drives need ATA passthru support.
+sd_issue_flush() has been altered to run scsi_disk_get_from_dev(), which
+takes a semaphore.  It does this from within spinlock and, as we see here,
+from within softirq.
 
-This also isn't the first time a kernel issue has been around for a
-while, but nobody noticed. Fixed in 2.6.14 was a bug that existed for
-(as far as I can tell) all of 2.6.x.  The kernel would oops on pio-out
-HDIO_DRIVE_TASKFILE ioctls because of a null pointer.  The first
-time I tried to do a pio-out command I hit it, yet nobody had
-complained about it as far as I could tell.  The kernel 2.6.x series
-has been out how long?  I was baffled and my only guess was that
-even though the API was there for pio-out, nobody was using it.
+Methinks the people who developed and tested that patch forgot to enable
+CONFIG_PREEMPT, CONFIG_DEBUG_KERNEL, CONFIG_DEBUG_SLAB,
+CONFIG_DEBUG_SPINLOCK and CONFIG_DEBUG_SPINLOCK_SLEEP.
 
-I wonder if it's the same issue with vendor specific cdbs to USB
-storage devices; nobody is really using it?
-
-The cypress passthru CDB works fine under Windows, and since
-most companies only care about Windows, they probably didn't
-even try to get it to work under Linux.  For instance I wasn't
-even told to support it under Linux until some people hit a 
-Windows limitation they couldn't get around.
-
-The other possibility is that for groups that do use vendor specific
-CDBs and have never had this issue, they probably have CDBs that don't
-stick meaningful bits where the LUN goes, so therefore it was never an
-issue.  However, both the ATACB and the SAT passthru CDB have
-meaningful bits there.
-
-
-Regards,
-Tim Thelin
