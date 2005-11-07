@@ -1,65 +1,54 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: 2.6.14-mm1
-Date: Mon, 7 Nov 2005 10:52:57 -0800
-Message-ID: <20051107105257.333248c0.akpm@osdl.org>
-References: <20051106182447.5f571a46.akpm@osdl.org>
-	<436F2452.9020207@reub.net>
-	<20051107020905.69c0b6dc.akpm@osdl.org>
-	<17263.11214.992300.34384@cse.unsw.edu.au>
-	<20051107023723.5cf63393.akpm@osdl.org>
-	<436F3020.1040209@reub.net>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security in usb-storage driver
+Date: Mon, 7 Nov 2005 10:57:18 -0800
+Message-ID: <20051107185718.GA16791@us.ibm.com>
+References: <20051104203004.GF12384@one-eyed-alien.net> <1131137395.3532.57.camel@mulgrave> <20051105235522.GA21733@one-eyed-alien.net> <1131238146.9430.7.camel@mulgrave> <20051106215856.GA28452@one-eyed-alien.net> <436E8394.2010600@gmx.de> <20051106235213.GA479@us.ibm.com> <20051107170525.GB26509@one-eyed-alien.net> <20051107172421.GA15710@us.ibm.com> <436F94F2.2080306@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:59858 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S964925AbVKGSxU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2005 13:53:20 -0500
-In-Reply-To: <436F3020.1040209@reub.net>
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:3303 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S964943AbVKGS5X (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2005 13:57:23 -0500
+Content-Disposition: inline
+In-Reply-To: <436F94F2.2080306@gmx.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Reuben Farrelly <reuben-lkml@reub.net>
-Cc: neilb@suse.de, linux-kernel@vger.kernel.org, n@suse.de, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: thomas schorpp <t.schorpp@gmx.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Timothy Thelin <Timothy.Thelin@wdc.com>, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Reuben Farrelly <reuben-lkml@reub.net> wrote:
->
->  Debug: sleeping function called from invalid context at include/asm/semaphore.h:99
->  in_atomic():1, irqs_disabled():1
->    [<c0103c46>] dump_stack+0x17/0x19
->    [<c011a173>] __might_sleep+0x9c/0xae
->    [<c028f82b>] scsi_disk_get_from_dev+0x15/0x48
->    [<c029006e>] sd_prepare_flush+0x17/0x5a
->    [<c027f8ff>] scsi_prepare_flush_fn+0x30/0x33
->    [<c0259da0>] blk_start_pre_flush+0xd5/0x13f
->    [<c025936b>] elv_next_request+0x113/0x170
->    [<c027fd45>] scsi_request_fn+0x4b/0x2fd
->    [<c025b393>] blk_run_queue+0x2b/0x3c
->    [<c027f0b3>] scsi_run_queue+0xa4/0xb6
->    [<c027f11f>] scsi_next_command+0x16/0x19
->    [<c027f1db>] scsi_end_request+0x93/0xc5
->    [<c027f494>] scsi_io_completion+0x141/0x46b
->    [<c02901e9>] sd_rw_intr+0x117/0x22b
->    [<c027ae5f>] scsi_finish_command+0x7f/0x93
->    [<c027ad43>] scsi_softirq+0xa8/0x11a
->    [<c0121eb8>] __do_softirq+0x88/0x141
->    [<c0104fd9>] do_softirq+0x77/0x81
->    =======================
->    [<c012205a>] irq_exit+0x48/0x4a
->    [<c0104e84>] do_IRQ+0x74/0xa7
->    [<c010374e>] common_interrupt+0x1a/0x20
->    [<f8918c04>] acpi_processor_idle+0x11f/0x2c7 [processor]
->    [<c0100d71>] cpu_idle+0x49/0xa0
->    [<c01002d7>] rest_init+0x37/0x39
->    [<c03fd8c5>] start_kernel+0x166/0x179
->    [<c0100210>] 0xc0100210
+On Mon, Nov 07, 2005 at 06:54:58PM +0100, thomas schorpp wrote:
+> Bus 004 Device 003: ID 04b4:6830 Cypress Semiconductor Corp. USB-2.0 IDE Adapter
+> Device Descriptor:
+>   bLength                18
+>   bDescriptorType         1
+>   bcdUSB               2.00
+>   bDeviceClass            0 (Defined at Interface level)
+>   bDeviceSubClass         0
+>   bDeviceProtocol         0
+>   bMaxPacketSize0        64
+>   idVendor           0x04b4 Cypress Semiconductor Corp.
+>   idProduct          0x6830 USB-2.0 IDE Adapter
 
-ah-hah, that's a different trace.
+So this is a USB to ATA/ATAPI bridge?
 
-sd_issue_flush() has been altered to run scsi_disk_get_from_dev(), which
-takes a semaphore.  It does this from within spinlock and, as we see here,
-from within softirq.
+Can we trigger black listing based on the above vendor/product values?
+i.e. can you check for these values in usb-storage slave_configure code?
 
-Methinks the people who developed and tested that patch forgot to enable
-CONFIG_PREEMPT, CONFIG_DEBUG_KERNEL, CONFIG_DEBUG_SLAB,
-CONFIG_DEBUG_SPINLOCK and CONFIG_DEBUG_SPINLOCK_SLEEP.
+I am ATA ignorant ... how does this thing pass multi-lun values to the ATA
+side? Is it just effectively not allowed in ATA?
 
+Per earlier email, datasheet is here:
+
+http://www.cypress.com/portal/server.pt?space=CommunityPage&control=SetCommunity&CommunityID=209&PageID=259&fid=14&rpn=CY7C68320
+
+On page 13 of datasheet:
+
+Sounds like this device has special snooping of cdb[1], so if it sees 0x24
+in there it looks for an embedded ATA command, and translates and sends
+that to the underlying device, so we can never black list based on the
+device that we are using to send the SG_IO ioctl.
+
+Yeh, some other hardware might want lun inihibit in the future, and that
+could still be added back, but IMHO black list is better.
+
+-- Patrick Mansfield
