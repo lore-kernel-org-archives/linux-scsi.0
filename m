@@ -1,47 +1,33 @@
-From: thomas schorpp <t.schorpp@gmx.de>
-Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security
- in usb-storage driver
-Date: Mon, 07 Nov 2005 19:06:54 +0100
-Message-ID: <436F97BE.1030406@gmx.de>
-References: <Pine.LNX.4.44L0.0511071244100.5078-100000@iolanthe.rowland.org>
-Reply-To: t.schorpp@gmx.de
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security in usb-storage driver
+Date: Mon, 7 Nov 2005 10:14:53 -0800
+Message-ID: <20051107181453.GA16363@us.ibm.com>
+References: <CA45571DE57E1C45BF3552118BA92C9D69BF3F@WDSCEXBECL03.sc.wdc.com> <1131130707.3532.45.camel@mulgrave> <20051104203004.GF12384@one-eyed-alien.net> <1131137395.3532.57.camel@mulgrave> <20051105235522.GA21733@one-eyed-alien.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from imap.gmx.net ([213.165.64.20]:42890 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S965097AbVKGSG7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2005 13:06:59 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0511071244100.5078-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20051105235522.GA21733@one-eyed-alien.net>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Timothy Thelin <Timothy.Thelin@wdc.com>, t.schorpp@gmx.de, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, Timothy Thelin <Timothy.Thelin@wdc.com>, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-Alan Stern wrote:
-> On Mon, 7 Nov 2005, Patrick Mansfield wrote:
+On Sat, Nov 05, 2005 at 03:55:22PM -0800, Matthew Dharm wrote:
+
+> I just realized this plan has a problem...
 > 
-> 
+> The reported SCSI level of a device is mostly garbage, but not always.
+> I've seen 0, 1, 2, 3, and 0xff all reported.  HOWEVER, the reported value
+> seems independent of what devices have vendor-specific commands (and thus
+> need the CDB[1] not messed with).
 
-> 
-> I don't think blacklisting is a good way to do this.  In principle any USB 
-> mass storage device -- any SCSI device, in fact -- might have a 
-> vendor-specific pass-thru needing special handling.
+But it is only a problem for devices that require us to set values in
+cdb[1] that conflict with the scsi spec, not for all devices that have
+vendor specific commands.
 
-no. that would be not industry best practice and uneconomical sw effort.
-remember this devices are mainly "designed for windows" and WHQL certification 
-is expensive for every single driver. and ms has only one driver for all usb storage 
-right now, all boxes and sticks i had here use it.
+Do the devices in question that don't want the LUN in cdb[1] report as
+scsi-3 or later? If so we can still pass through the scsi level and it
+would work fine. Yeh, if we later hit scsi-2 devices that want it we
+have a problem.
 
->  It doesn't have to be 
-> correlated with the vendor, the product, the SCSI level, the transport, or 
-> anything else.
-
-yes. the sheet for design recommended cypress chips state all ATACB and ATA-Security.
-i would be make no sense to implement different behaviuors in chips for the same purpose.
-
-> 
-> Alan Stern
-> 
-
-tom schorpp
+-- Patrick Mansfield
