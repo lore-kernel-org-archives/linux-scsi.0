@@ -1,66 +1,57 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: 2.6.14-mm1
-Date: Mon, 7 Nov 2005 14:27:29 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0511071421540.5078-100000@iolanthe.rowland.org>
-References: <20051107105257.333248c0.akpm@osdl.org>
+Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security
+ in usb-storage driver
+Date: Mon, 7 Nov 2005 14:33:40 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0511071427580.5078-100000@iolanthe.rowland.org>
+References: <436F97BE.1030406@gmx.de>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965158AbVKGT1b@vger.kernel.org>
-In-Reply-To: <20051107105257.333248c0.akpm@osdl.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Reuben Farrelly <reuben-lkml@reub.net>, neilb@suse.de, linux-kernel@vger.kernel.org, n@suse.de, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:49821 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S964914AbVKGTdl
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Nov 2005 14:33:41 -0500
+In-Reply-To: <436F97BE.1030406@gmx.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: thomas schorpp <t.schorpp@gmx.de>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, Timothy Thelin <Timothy.Thelin@wdc.com>, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-On Mon, 7 Nov 2005, Andrew Morton wrote:
+On Mon, 7 Nov 2005, thomas schorpp wrote:
 
-> Reuben Farrelly <reuben-lkml@reub.net> wrote:
-> >
-> >  Debug: sleeping function called from invalid context at include/asm/semaphore.h:99
-> >  in_atomic():1, irqs_disabled():1
-> >    [<c0103c46>] dump_stack+0x17/0x19
-> >    [<c011a173>] __might_sleep+0x9c/0xae
-> >    [<c028f82b>] scsi_disk_get_from_dev+0x15/0x48
-> >    [<c029006e>] sd_prepare_flush+0x17/0x5a
-> >    [<c027f8ff>] scsi_prepare_flush_fn+0x30/0x33
-> >    [<c0259da0>] blk_start_pre_flush+0xd5/0x13f
-> >    [<c025936b>] elv_next_request+0x113/0x170
-> >    [<c027fd45>] scsi_request_fn+0x4b/0x2fd
-> >    [<c025b393>] blk_run_queue+0x2b/0x3c
-> >    [<c027f0b3>] scsi_run_queue+0xa4/0xb6
-> >    [<c027f11f>] scsi_next_command+0x16/0x19
-> >    [<c027f1db>] scsi_end_request+0x93/0xc5
-> >    [<c027f494>] scsi_io_completion+0x141/0x46b
-> >    [<c02901e9>] sd_rw_intr+0x117/0x22b
-> >    [<c027ae5f>] scsi_finish_command+0x7f/0x93
-> >    [<c027ad43>] scsi_softirq+0xa8/0x11a
-> >    [<c0121eb8>] __do_softirq+0x88/0x141
-> >    [<c0104fd9>] do_softirq+0x77/0x81
-> >    =======================
-> >    [<c012205a>] irq_exit+0x48/0x4a
-> >    [<c0104e84>] do_IRQ+0x74/0xa7
-> >    [<c010374e>] common_interrupt+0x1a/0x20
-> >    [<f8918c04>] acpi_processor_idle+0x11f/0x2c7 [processor]
-> >    [<c0100d71>] cpu_idle+0x49/0xa0
-> >    [<c01002d7>] rest_init+0x37/0x39
-> >    [<c03fd8c5>] start_kernel+0x166/0x179
-> >    [<c0100210>] 0xc0100210
+> > I don't think blacklisting is a good way to do this.  In principle any USB 
+> > mass storage device -- any SCSI device, in fact -- might have a 
+> > vendor-specific pass-thru needing special handling.
 > 
-> ah-hah, that's a different trace.
-> 
-> sd_issue_flush() has been altered to run scsi_disk_get_from_dev(), which
-> takes a semaphore.  It does this from within spinlock and, as we see here,
-> from within softirq.
-> 
-> Methinks the people who developed and tested that patch forgot to enable
-> CONFIG_PREEMPT, CONFIG_DEBUG_KERNEL, CONFIG_DEBUG_SLAB,
-> CONFIG_DEBUG_SPINLOCK and CONFIG_DEBUG_SPINLOCK_SLEEP.
+> no. that would be not industry best practice and uneconomical sw effort.
 
-No, believe it or not, all those items are enabled in my .config.  What I
-didn't do was test the patch with anything that would force a call to
-sd_prepare_flush.  In fact, I'm not sure how to do such a thing.
+Adding vendor-specific codes to SCSI devices isn't industry best practice?  
+I can't argue with that, but it is very common nevertheless.
 
-I don't know how this should be fixed.  James will have to come up with 
-something.
+Is it an uneconomical software effort?  Ridiculous -- it's not software at 
+all, it's part of the firmware.
+
+> remember this devices are mainly "designed for windows" and WHQL certification 
+> is expensive for every single driver. and ms has only one driver for all usb storage 
+> right now, all boxes and sticks i had here use it.
+
+I think you have a very limited view of how devices are "designed".  
+Besides, I specifically said I was talking about _all_ SCSI devices, not 
+just USB ones.
+
+> >  It doesn't have to be 
+> > correlated with the vendor, the product, the SCSI level, the transport, or 
+> > anything else.
+> 
+> yes. the sheet for design recommended cypress chips state all ATACB and ATA-Security.
+> i would be make no sense to implement different behaviuors in chips for the same purpose.
+
+That's what Cypress does, sure.  But who says that other vendors have to 
+copy Cypress?  For the most part they don't.  Neither does T10.
+
+As for whether it makes no sense -- you have your point of view.  Business 
+people have a very different point of view; to them it might make 
+excellent sense, to help secure a competitive advantage.
 
 Alan Stern
+
