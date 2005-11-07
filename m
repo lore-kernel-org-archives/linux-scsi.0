@@ -1,60 +1,45 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [RFC] raid class support for mptfusion
-Date: Mon, 07 Nov 2005 17:02:36 -0500
-Message-ID: <1131400957.3333.3.camel@mulgrave>
-References: <91888D455306F94EBD4D168954A9457C04CDA56F@nacos172.co.lsil.com>
+Subject: Re: [usb-storage] [Merging ATA passthru] on integrating
+	SMART/ATA-Security in usb-storage driver
+Date: Mon, 07 Nov 2005 17:05:52 -0500
+Message-ID: <1131401153.3333.6.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0511071552360.5165-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:13514 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S965237AbVKGWCk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Nov 2005 17:02:40 -0500
-In-Reply-To: <91888D455306F94EBD4D168954A9457C04CDA56F@nacos172.co.lsil.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.0511071552360.5165-100000@iolanthe.rowland.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, thomas schorpp <t.schorpp@gmx.de>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, Timothy Thelin <Timothy.Thelin@wdc.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, hch@lst.de
 
-On Mon, 2005-11-07 at 14:50 -0700, Moore, Eric Dean wrote:
-> > On Sunday, November 06, 2005 11:03 AM, James Bottomley wrote: 
-> > 
+On Mon, 2005-11-07 at 15:59 -0500, Alan Stern wrote:
+> > That is, is usb-storage forcing scsi-2 when the device tells us it is
+> > scsi-3 compliant, or is the hardware reporting devices are scsi-2, yet
+> > requiring non-LUN value in cdb[1]?
 > 
-> 
-> > @@ -2598,24 +2544,6 @@ mptscsih_event_process(MPT_ADAPTER *ioc,
-> >  		break;
-> >  
-> >  	case MPI_EVENT_INTEGRATED_RAID:			/* 0B */
-> > -	{
-> > -		pMpiEventDataRaid_t pRaidEventData =
-> > -		    (pMpiEventDataRaid_t) pEvReply->Data;
-> > -#ifdef MPTSCSIH_ENABLE_DOMAIN_VALIDATION
-> > -		/* Domain Validation Needed */
-> > -		if (ioc->bus_type == SCSI &&
-> > -		    pRaidEventData->ReasonCode ==
-> > -		    MPI_EVENT_RAID_RC_DOMAIN_VAL_NEEDED)
-> > -			mptscsih_set_dvflags_raid(hd, 
-> > pRaidEventData->PhysDiskNum);
-> > -#endif
-> > -		break;
-> > -	}
-> > -
-> 
-> 
-> I forgot to mention in previous email, we can't just delete
-> the handling of MPI_EVENT_RAID_RC_DOMAIN_VAL_NEEDED asyn event.
-> 
-> Someone that has a degraded fault tolerant array, such as RAID1 or
-> RAID1E, will have poor performance(asyn narrow) once they replace the failed
-> drive with an optimal drive.  This event is needed so when the new
-> drive is added, we can perform domain validation on the hidden disk.
-> Thus James, can you handle notifying the spi transport layer of this new
-> disk?
+> I think we may have both.  However I don't know how this Cypress chip
+> reports itself.  A system log showing the INQUIRY data would be very
+> helpful.
 
-Yes, easily ... this looks like some type of mismerge, since I was sure
-I had the integrated raid DV even hooked directly into domain
-validation.  I can add it, though.
+We were told in prior emails that it actually reports a level of zero
+(i.e. no compliance with any SCSI standard).  My original proposal was
+just not to modify the CDB[1] for this case if we could get the INQUIRY
+passed through unmangled.
+
+> It's quite possible that usb-storage no longer needs to force the 
+> scsi-level to 2.  No one has recently tested what would happen without 
+> it.  Matt probably has the best selection of devices for testing...
+> 
+> There is one problem we have with devices that report themselves as SCSI-3 
+> or SCSI-4 but hang when they receive a REPORT LUNS command.  That's easily 
+> handled by making usb-storage set the NOREPORTLUN flag.  Maybe that's all 
+> we need to do.
+
+If you could try this out, I'd be grateful.
+
+Thanks,
 
 James
 
