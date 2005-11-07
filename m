@@ -1,40 +1,54 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security in usb-storage driver
-Date: Mon, 7 Nov 2005 09:24:21 -0800
-Message-ID: <20051107172421.GA15710@us.ibm.com>
-References: <CA45571DE57E1C45BF3552118BA92C9D69BF3F@WDSCEXBECL03.sc.wdc.com> <1131130707.3532.45.camel@mulgrave> <20051104203004.GF12384@one-eyed-alien.net> <1131137395.3532.57.camel@mulgrave> <20051105235522.GA21733@one-eyed-alien.net> <1131238146.9430.7.camel@mulgrave> <20051106215856.GA28452@one-eyed-alien.net> <436E8394.2010600@gmx.de> <20051106235213.GA479@us.ibm.com> <20051107170525.GB26509@one-eyed-alien.net>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security
+ in usb-storage driver
+Date: Mon, 7 Nov 2005 12:46:37 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0511071244100.5078-100000@iolanthe.rowland.org>
+References: <20051107172421.GA15710@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20051107170525.GB26509@one-eyed-alien.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: thomas schorpp <t.schorpp@gmx.de>, James Bottomley <James.Bottomley@SteelEye.com>, Timothy Thelin <Timothy.Thelin@wdc.com>, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:14225 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S964937AbVKGRqk
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Nov 2005 12:46:40 -0500
+In-Reply-To: <20051107172421.GA15710@us.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: thomas schorpp <t.schorpp@gmx.de>, James Bottomley <James.Bottomley@SteelEye.com>, Timothy Thelin <Timothy.Thelin@wdc.com>, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-On Mon, Nov 07, 2005 at 09:05:25AM -0800, Matthew Dharm wrote:
+On Mon, 7 Nov 2005, Patrick Mansfield wrote:
 
-> Okay, what am I missing?
+> On Mon, Nov 07, 2005 at 09:05:25AM -0800, Matthew Dharm wrote:
 > 
-> Looking at that patch, it looks to me like if sg.c set a flag in the SCSI
-> command block then scsi_core.c could use that flag in the test to determine
-> if the LUN should be masked-in.
+> > Okay, what am I missing?
+> > 
+> > Looking at that patch, it looks to me like if sg.c set a flag in the SCSI
+> > command block then scsi_core.c could use that flag in the test to determine
+> > if the LUN should be masked-in.
+> > 
+> > HOWEVER, I keep hearing that the changes will be extensive.  What am I
+> > missing?
 > 
-> HOWEVER, I keep hearing that the changes will be extensive.  What am I
-> missing?
+> Not extensive AFAICT ... 
+> 
+> The scmd/cdb is not available until we call scsi_get_command() in the
+> request function. So you would have to add a field into scsi_request, set
+> it in sg (in both sg.c block/scsi_ioctl.c, test via sd and sg when you are
+> done), and add the field in scsi_cmnd, and set scmd one in
+> scsi_init_cmd_from_req().
 
-Not extensive AFAICT ... 
+Isn't it true that scsi_request is going away?  Everything will have to 
+use generic request structures.
 
-The scmd/cdb is not available until we call scsi_get_command() in the
-request function. So you would have to add a field into scsi_request, set
-it in sg (in both sg.c block/scsi_ioctl.c, test via sd and sg when you are
-done), and add the field in scsi_cmnd, and set scmd one in
-scsi_init_cmd_from_req().
+> But as far as black listing, it does seem like a better solution in that
+> user apps do not need special code.
 
-But as far as black listing, it does seem like a better solution in that
-user apps do not need special code.
+I don't think blacklisting is a good way to do this.  In principle any USB 
+mass storage device -- any SCSI device, in fact -- might have a 
+vendor-specific pass-thru needing special handling.  It doesn't have to be 
+correlated with the vendor, the product, the SCSI level, the transport, or 
+anything else.
 
-Do the devices that require it (well so far) have useable vendor + model
-strings or usb id's?
+Alan Stern
 
--- Patrick Mansfield
