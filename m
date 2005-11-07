@@ -1,85 +1,61 @@
-From: thomas schorpp <t.schorpp@gmx.de>
-Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security
- in usb-storage driver
-Date: Mon, 07 Nov 2005 21:07:10 +0100
-Message-ID: <436FB3EE.1090406@gmx.de>
-References: <Pine.LNX.4.44L0.0511071427580.5078-100000@iolanthe.rowland.org>
-Reply-To: t.schorpp@gmx.de
+From: "Timothy Thelin" <Timothy.Thelin@wdc.com>
+Subject: RE: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security in usb-storage driver
+Date: Mon, 7 Nov 2005 12:18:05 -0800
+Message-ID: <CA45571DE57E1C45BF3552118BA92C9D69BF45@WDSCEXBECL03.sc.wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.net ([213.165.64.20]:25528 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S964901AbVKGUHQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2005 15:07:16 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0511071427580.5078-100000@iolanthe.rowland.org>
+Received: from wdscexfe02.sc.wdc.com ([129.253.170.52]:31892 "EHLO
+	wdscexfe02.sc.wdc.com") by vger.kernel.org with ESMTP
+	id S964923AbVKGUSJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2005 15:18:09 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, Timothy Thelin <Timothy.Thelin@wdc.com>, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>, Patrick Mansfield <patmans@us.ibm.com>
+Cc: thomas schorpp <t.schorpp@gmx.de>, James Bottomley <James.Bottomley@SteelEye.com>, usb-storage@lists.one-eyed-alien.net, Linux SCSI list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Alan Stern wrote:
-> On Mon, 7 Nov 2005, thomas schorpp wrote:
-> 
-> 
->>>I don't think blacklisting is a good way to do this.  In principle any USB 
->>>mass storage device -- any SCSI device, in fact -- might have a 
->>>vendor-specific pass-thru needing special handling.
->>
->>no. that would be not industry best practice and uneconomical sw effort.
-> 
-> 
-> Adding vendor-specific codes to SCSI devices isn't industry best practice?  
-> I can't argue with that, but it is very common nevertheless.
 
-not for all the cheap noname consumer stuff around. maybe in your scsi-320 server 
-world i cant afford.
-
+> > 
+> > Can we trigger black listing based on the above 
+> vendor/product values?
+> > i.e. can you check for these values in usb-storage 
+> slave_configure code?
 > 
-> Is it an uneconomical software effort?  Ridiculous -- it's not software at 
-> all, it's part of the firmware.
+> Yes.  The patch below illustrates how.  You'll have to change 
+> the name of 
+> the sdev flag to something sensible...
+> 
+> I firmly believe this is the wrong approach, however.  It's a 
+> specific 
+> solution to a general problem.  I would much prefer to add a 
+> new flag to 
+> struct request.
 
-i thought were speaking of OS drivers here?
+I totally agree.
 
 > 
+> > Yeh, some other hardware might want lun inihibit in the 
+> future, and that
+> > could still be added back, but IMHO black list is better.
 > 
->>remember this devices are mainly "designed for windows" and WHQL certification 
->>is expensive for every single driver. and ms has only one driver for all usb storage 
->>right now, all boxes and sticks i had here use it.
-> 
-> 
-> I think you have a very limited view of how devices are "designed".  
-> Besides, I specifically said I was talking about _all_ SCSI devices, not 
-> just USB ones.
-> 
+> I'd say it's inevitable.  And it may even end up being 
+> standard-based, not 
+> vendor/product based.
 
-yes, for the second sentence, this is made clear now.
+Within a year from now, there are going to be USB devices
+natively supporting the SAT passthru CDB.  Once this happens,
+its going to be CDB based and not vendor/product based on
+when to not mangle the CDB; chips from different vendors
+will support the CDB.  The blacklist approach really isn't
+going to scale, where the flag approch will.  Plus with
+a blacklist there would always be a lead time until a
+device with passthru supported works correctly under the
+kernel (blacklist update), where with a flag approach,
+support is automatic.
 
-> 
->>> It doesn't have to be 
->>>correlated with the vendor, the product, the SCSI level, the transport, or 
->>>anything else.
->>
->>yes. the sheet for design recommended cypress chips state all ATACB and ATA-Security.
->>i would be make no sense to implement different behaviuors in chips for the same purpose.
-> 
-> 
-> That's what Cypress does, sure.  But who says that other vendors have to 
-> copy Cypress?  For the most part they don't.  Neither does T10.
+Regards,
+Tim Thelin
 
-they dont copy cypress, they want to reduce costs, processes and resulting 
-"standards" should be compatible, therefore.
-
-> 
-> As for whether it makes no sense -- you have your point of view.  Business 
-> people have a very different point of view; to them it might make 
-> excellent sense, to help secure a competitive advantage.
-
-:D i'm no business man. i am a generalist and i just want to lock my external hdd.
-
-> 
-> Alan Stern
-> 
-> -
-
-tom schorpp
