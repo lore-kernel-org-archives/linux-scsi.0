@@ -1,57 +1,95 @@
 From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security
  in usb-storage driver
-Date: Mon, 7 Nov 2005 14:33:40 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0511071427580.5078-100000@iolanthe.rowland.org>
-References: <436F97BE.1030406@gmx.de>
+Date: Mon, 7 Nov 2005 14:53:34 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0511071449560.5078-100000@iolanthe.rowland.org>
+References: <20051107185718.GA16791@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:49821 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S964914AbVKGTdl
+Received: from iolanthe.rowland.org ([192.131.102.54]:39627 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S932325AbVKGTxf
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Nov 2005 14:33:41 -0500
-In-Reply-To: <436F97BE.1030406@gmx.de>
+	Mon, 7 Nov 2005 14:53:35 -0500
+In-Reply-To: <20051107185718.GA16791@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: thomas schorpp <t.schorpp@gmx.de>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, Timothy Thelin <Timothy.Thelin@wdc.com>, usb-storage@lists.one-eyed-alien.net, linux-ide@vger.kernel.org, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: thomas schorpp <t.schorpp@gmx.de>, James Bottomley <James.Bottomley@SteelEye.com>, usb-storage@lists.one-eyed-alien.net, Timothy Thelin <Timothy.Thelin@wdc.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Mon, 7 Nov 2005, thomas schorpp wrote:
+On Mon, 7 Nov 2005, Patrick Mansfield wrote:
 
-> > I don't think blacklisting is a good way to do this.  In principle any USB 
-> > mass storage device -- any SCSI device, in fact -- might have a 
-> > vendor-specific pass-thru needing special handling.
+> On Mon, Nov 07, 2005 at 06:54:58PM +0100, thomas schorpp wrote:
+> > Bus 004 Device 003: ID 04b4:6830 Cypress Semiconductor Corp. USB-2.0 IDE Adapter
+> > Device Descriptor:
+> >   bLength                18
+> >   bDescriptorType         1
+> >   bcdUSB               2.00
+> >   bDeviceClass            0 (Defined at Interface level)
+> >   bDeviceSubClass         0
+> >   bDeviceProtocol         0
+> >   bMaxPacketSize0        64
+> >   idVendor           0x04b4 Cypress Semiconductor Corp.
+> >   idProduct          0x6830 USB-2.0 IDE Adapter
 > 
-> no. that would be not industry best practice and uneconomical sw effort.
-
-Adding vendor-specific codes to SCSI devices isn't industry best practice?  
-I can't argue with that, but it is very common nevertheless.
-
-Is it an uneconomical software effort?  Ridiculous -- it's not software at 
-all, it's part of the firmware.
-
-> remember this devices are mainly "designed for windows" and WHQL certification 
-> is expensive for every single driver. and ms has only one driver for all usb storage 
-> right now, all boxes and sticks i had here use it.
-
-I think you have a very limited view of how devices are "designed".  
-Besides, I specifically said I was talking about _all_ SCSI devices, not 
-just USB ones.
-
-> >  It doesn't have to be 
-> > correlated with the vendor, the product, the SCSI level, the transport, or 
-> > anything else.
+> So this is a USB to ATA/ATAPI bridge?
 > 
-> yes. the sheet for design recommended cypress chips state all ATACB and ATA-Security.
-> i would be make no sense to implement different behaviuors in chips for the same purpose.
+> Can we trigger black listing based on the above vendor/product values?
+> i.e. can you check for these values in usb-storage slave_configure code?
 
-That's what Cypress does, sure.  But who says that other vendors have to 
-copy Cypress?  For the most part they don't.  Neither does T10.
+Yes.  The patch below illustrates how.  You'll have to change the name of 
+the sdev flag to something sensible...
 
-As for whether it makes no sense -- you have your point of view.  Business 
-people have a very different point of view; to them it might make 
-excellent sense, to help secure a competitive advantage.
+I firmly believe this is the wrong approach, however.  It's a specific 
+solution to a general problem.  I would much prefer to add a new flag to 
+struct request.
+
+> Yeh, some other hardware might want lun inihibit in the future, and that
+> could still be added back, but IMHO black list is better.
+
+I'd say it's inevitable.  And it may even end up being standard-based, not 
+vendor/product based.
 
 Alan Stern
+
+
+
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+
+---
+
+Index: usb-2.6/drivers/usb/storage/scsiglue.c
+===================================================================
+--- usb-2.6.orig/drivers/usb/storage/scsiglue.c
++++ usb-2.6/drivers/usb/storage/scsiglue.c
+@@ -185,6 +185,13 @@ static int slave_configure(struct scsi_d
+ 	if (us->flags & US_FL_NOT_LOCKABLE)
+ 		sdev->lockable = 0;
+ 
++	/* SCSI-ATA pass-thru whitelist for Cypress chip */
++	if (le16_to_cpu(us->pusb_dev->descriptor.idVendor) == 
++				USB_VENDOR_ID_CYPRESS &&
++			le16_to_cpu(us->pusb_dev->descriptor.idProduct) ==
++				USB_PRODUCT_ID_CYPRESS_CY7C68320)
++		sdev->ata_passthru = 1;
++
+ 	/* this is to satisfy the compiler, tho I don't think the 
+ 	 * return code is ever checked anywhere. */
+ 	return 0;
+Index: usb-2.6/drivers/usb/storage/usb.h
+===================================================================
+--- usb-2.6.orig/drivers/usb/storage/usb.h
++++ usb-2.6/drivers/usb/storage/usb.h
+@@ -169,7 +169,10 @@ extern void fill_inquiry_response(struct
+ #define scsi_lock(host)		spin_lock_irq(host->host_lock)
+ 
+ 
+-/* Vendor ID list for devices that require special handling */
++/* Vendor/Product ID list for devices that require special handling */
+ #define USB_VENDOR_ID_GENESYS		0x05e3	/* Genesys Logic */
+ 
++#define USB_VENDOR_ID_CYPRESS		0x04b4	/* Cypress Semiconductor */
++#define USB_PRODUCT_ID_CYPRESS_CY7C68320	0x6830
++
+ #endif
 
