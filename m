@@ -1,53 +1,39 @@
-From: Mike Anderson <andmike@us.ibm.com>
-Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security in usb-storage driver
-Date: Tue, 8 Nov 2005 15:05:36 -0800
-Message-ID: <20051108230536.GB5388@us.ibm.com>
-References: <1131401153.3333.6.camel@mulgrave> <Pine.LNX.4.44L0.0511081203280.4438-100000@iolanthe.rowland.org>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: [PATCH 3/10] add scsi_execute_async and scsi helpers
+Date: Tue, 8 Nov 2005 15:05:50 -0800
+Message-ID: <20051108230550.GA26528@us.ibm.com>
+References: <1131444398.23111.64.camel@max>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:21895 "EHLO
-	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S1030391AbVKHXFa
+Received: from e34.co.us.ibm.com ([32.97.110.152]:25494 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1030397AbVKHXFx
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Nov 2005 18:05:30 -0500
+	Tue, 8 Nov 2005 18:05:53 -0500
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e34.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id jA8N5rt0026102
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Nov 2005 18:05:53 -0500
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by westrelay02.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id jA8N5ouN022702
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Nov 2005 16:05:50 -0700
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id jA8N5qVm029178
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Nov 2005 16:05:52 -0700
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0511081203280.4438-100000@iolanthe.rowland.org>
+In-Reply-To: <1131444398.23111.64.camel@max>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Patrick Mansfield <patmans@us.ibm.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, thomas schorpp <t.schorpp@gmx.de>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, Timothy Thelin <Timothy.Thelin@wdc.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: axboe@suse.de, linux-scsi@vger.kernel.org
 
-Alan Stern <stern@rowland.harvard.edu> wrote:
-> ===================================================================
-> --- usb-2.6.orig/include/scsi/scsi_device.h
-> +++ usb-2.6/include/scsi/scsi_device.h
-> @@ -161,7 +161,8 @@ struct scsi_target {
->  	unsigned int		channel;
->  	unsigned int		id; /* target id ... replace
->  				     * scsi_device.id eventually */
-> -	unsigned long		create:1; /* signal that it needs to be added */
-> +	unsigned int		create:1; /* signal that it needs to be added */
-> +	unsigned int		no_report_lun:1; /* do not use REPORT LUNS */
->  	char			scsi_level;
->  	void 			*hostdata; /* available to low-level driver */
->  	unsigned long		starget_data[0]; /* for the transport */
+On Tue, Nov 08, 2005 at 04:06:38AM -0600, Mike Christie wrote:
 
-Alan,
+> +
+> +	sioc = kzalloc(sizeof(*sioc), gfp);
+> +	if (!sioc)
+> +		return DRIVER_ERROR << 24;
 
-Instead of adding a new bit field to scsi_target could we utilize bflags
-in the scsi_target. Currently we have sdev_bflags in the scsi_device which
-we are not utilizing. We could remove sdev_bflags and add a bflags to
-scsi_target
+I know we don't have one today for scsi_request, but should we use a kmem
+cache for these?
 
-In the usb slave configure we could "or" in BLIST_NOREPORTLUN.
-
-Then in the function scsi_get_device_flags we could reference the
-scsi_target bflags instead of sdev_bflags.
-
-The bflags check in scsi_scan.c for BLIST_NOREPORTLUN could stay the same
-and we would not have two flags for a similar no report luns check.
-
--andmike
---
-Michael Anderson
-andmike@us.ibm.com
+-- Patrick Mansfield
