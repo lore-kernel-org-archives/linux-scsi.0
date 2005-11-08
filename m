@@ -1,106 +1,58 @@
-From: Anil kumar <anils_r@yahoo.com>
-Subject: Re: bus_to_virt equivalent
-Date: Tue, 8 Nov 2005 14:47:00 -0800 (PST)
-Message-ID: <20051108224700.68513.qmail@web32406.mail.mud.yahoo.com>
-References: <20051108013722.GK23749@parisc-linux.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: [PATCH 11/10] fix leak in scsi_req_map_sg
+Date: Tue, 08 Nov 2005 16:52:26 -0600
+Message-ID: <1131490346.3787.2.camel@max>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030266AbVKHWrD@vger.kernel.org>
-In-Reply-To: <20051108013722.GK23749@parisc-linux.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:30883 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S965265AbVKHWwf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2005 17:52:35 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>, linux-scsi@vger.kernel.org
 
-Hi Matthew,
+I guess this would be 11/10. I found a bug in testing.
 
-Thanks for the reply.
-I can store the returned dma_addr from
-pci_map_sg/single or pci_map_page in a driver
-structure.
+I should not have been testing against bi_max_vecs. For odd
+IO sizes it would cause us to leak bios. We should test against
+the number of vecs we requested and were planning on adding.
 
-struct page *page =
-virt_to_page(Cmnd->request_buffer);
-                unsigned long offset = ((unsigned
-long)Cmnd->request_buffer &
-                                        ~PAGE_MASK);
-                dma_addr_t busaddr =
-pci_map_page(hostdata->pci_dev,
-                                                 
-page, offset,
-                                                 
-Cmnd->request_bufflen,
-                                                 
-scsi_to_pci_dma_dir(Cmnd->sc_data_direction));
-
-But how do I convert this returned "busaddr" into a
-virtual addr?
-
-regards,
-Anil
-
---- Matthew Wilcox <matthew@wil.cx> wrote:
-
-> On Mon, Nov 07, 2005 at 03:52:47PM -0800, Anil kumar
-> wrote:
-> > Hi,
-> > 
-> > I am trying to port bus_to_virt and virt_to_bus to
-> the
-> > DMA-mapping scheme.
-> > I found a way to move virt_to_bus() as follows:
-> > page = virt_to_page(cmd->request_buffer);
-> > offset = (unsigned long)address & ~PAGE_MASK;
-> > dma_addr_t addr = pci_map_page(dev, page, offset,
-> > size,direction);
-> > 
-> > But now I want to get virtual address for
-> dma_addr_t.
-> 
-> Did you *read* DMA-mapping.txt?
-> 
->   Drivers converted fully to this interface should
-> not use virt_to_bus
->   any longer, nor should they use bus_to_virt. Some
-> drivers have to
->   be changed a little bit, because
->   *there is no longer an equivalent to bus_to_virt
-> in the dynamic
->   DMA mapping scheme*
->   - you have to always store the DMA addresses
-> returned by the
->   pci_alloc_consistent, pci_pool_alloc, and
-> pci_map_single calls
->   (pci_map_sg stores them in the scatterlist itself
-> if the platform
->   supports dynamic DMA mapping in hardware) in your
-> driver structures
->   and/or in the card registers.
-> 
-> The reason for this is that there may be many
-> physical addresses which
-> correspond to the same bus address.  For example
-> (this is on an HP rx8620)
-> the bus address c001b000 maps to 00000f000001b000
-> for device 00:03.0,
-> 00000f010001b000 for device 40:03.0,
-> 00000f020001b000 for device 80:03.0
-> and 00000f030001b000 for device c0:03.0.
-> 
-> Now, maybe we should add a function:
-> 
-> unsigned long device_bus_addr_to_phys(struct device
-> *dev, dma_addr_t handle);
-> 
-> but we don't have one yet.  So you have to follow
-> the rules above.
-> 
+All my patches are here
+http://www.cs.wisc.edu/~michaelc/block/use-sg/v9/
+this includes fixups Jens requested (hopefully they
+are correct now). And they were made against scsi-misc.
 
 
+--- scsi-misc-2.6/drivers/scsi/scsi_lib.c.orig	2005-11-08 16:45:28.000000000 -0600
++++ scsi-misc-2.6/drivers/scsi/scsi_lib.c	2005-11-08 16:45:55.000000000 -0600
+@@ -369,7 +369,7 @@ static int scsi_req_map_sg(struct reques
+ 	unsigned int data_len = 0, len, bytes, off;
+ 	struct page *page;
+ 	struct bio *bio = NULL;
+-	int i, err;
++	int i, err, nr_vecs = 0;
+ 
+ 	for (i = 0; i < nsegs; i++) {
+ 		page = sgl[i].page;
+@@ -381,8 +381,6 @@ static int scsi_req_map_sg(struct reques
+ 			bytes = min_t(unsigned int, len, PAGE_SIZE - off);
+ 
+ 			if (!bio) {
+-				int nr_vecs;
+-
+ 				nr_vecs = min_t(int, BIO_MAX_PAGES, nr_pages);
+ 				nr_pages -= nr_vecs;
+ 
+@@ -401,7 +399,7 @@ static int scsi_req_map_sg(struct reques
+ 				goto free_bios;
+ 			}
+ 
+-			if (bio->bi_vcnt >= bio->bi_max_vecs) {
++			if (bio->bi_vcnt >= nr_vecs) {
+ 				err = scsi_merge_bio(rq, bio);
+ 				if (err) {
+ 					bio_endio(bio, bio->bi_size, 0);
 
-	
-		
-__________________________________ 
-Yahoo! Mail - PC Magazine Editors' Choice 2005 
-http://mail.yahoo.com
+
