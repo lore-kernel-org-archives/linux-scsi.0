@@ -1,63 +1,83 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH 2/10] seperate max sectors and max hw sectors
-Date: Tue, 8 Nov 2005 18:57:07 +0100
-Message-ID: <20051108175707.GL3699@suse.de>
-References: <1131444395.23111.62.camel@max> <20051108174723.GK3699@suse.de> <4370E5ED.60901@cs.wisc.edu>
+From: "goggin, edward" <egoggin@emc.com>
+Subject: RE: oops with USB Storage on 2.6.14
+Date: Tue, 8 Nov 2005 13:02:45 -0500
+Message-ID: <C2EEB4E538D3DC48BF57F391F422779321ADBE@srmanning.eng.emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:50282 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S932498AbVKHR4H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2005 12:56:07 -0500
-Content-Disposition: inline
-In-Reply-To: <4370E5ED.60901@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>, "goggin, edward" <egoggin@emc.com>
+Cc: 'Andrew Morton' <akpm@osdl.org>, Masanari Iida <standby24x7@gmail.com>, linux-kernel@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org
 
-On Tue, Nov 08 2005, Mike Christie wrote:
-> Jens Axboe wrote:
-> >On Tue, Nov 08 2005, Mike Christie wrote:
-> >
-> >>Seperate max_hw_sectors and max_sectors.
-> >>
-> >>LLDs call blk_queue_max_hw_sectors() to set max_hw_sectors.
-> >>blk_queue_max_sectors will also set max_sectors to a safe
-> >>default value.
-> >>
-> >>blk_init_queue still calls blk_queue_max_sectors so if there
-> >>are any LLDs that do not call blk_queue_max_hw_sectors() and
-> >>were expecting both the max_sectors and max_hw_sectors to be
-> >>255 they do not have to do anything.
-> >>
-> >>I was not able to test every driver I touched, but I think the
-> >>only place I may have messed up is MD so some testing is needed.
-> >
-> >
-> >->max_sectors will become less of a driver property and more of a
-> >block/vm propery, so I think the best way to do this is just to have
-> >blk_queue_max_sectors() set ->max_hw_sectors directly and lower
-> >->max_sectors appropriately if it is lower. That also comes with the
-> >bonus of not having to modify drivers.
-> >
+Good point.
+
+I tested your suggested patch fix and it works well in my test use case.
+
+BTW, I've got test code in my just tested version of your patch to read the
+kref of the sdev_gendev between the calls to scsi_run_queue and
+put_device to increase the likelihood that the use case has actually
+been tested.
+
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
+> Sent: Tuesday, November 08, 2005 12:02 PM
+> To: goggin, edward
+> Cc: 'Andrew Morton'; Masanari Iida; 
+> linux-kernel@vger.kernel.org; 
+> linux-usb-devel@lists.sourceforge.net; linux-scsi@vger.kernel.org
+> Subject: RE: oops with USB Storage on 2.6.14
 > 
-> Ugggh. I did this in reverse to make the naming nicer. So I added a 
-> blk_queue_max_hw_sectors() which sets ->max_sectors to some Block layer 
-> default and ->max_hw_sectors to the hw limit (for SCSI this is the scsi 
-> host template ->max_sectors). Is this ok? It is more clear for driver 
-> writers that they are setting max_hw_sectors when calling 
-> blk_queue_max_hw_sectors(). I also converted all the 
-> blk_queue_max_sectors() to blk_queue_max_hw_sectors().
+> On Tue, 2005-11-08 at 11:24 -0500, goggin, edward wrote:
+> > ! 	struct scsi_device *sdev = cmd->device;
+> > ! 	struct request_queue *q = sdev->request_queue;
+> > ! 
+> > ! 	// need to hold a reference on the device before we let 
+> go of the
+> > cmd
+> > ! 	if (scsi_device_get(sdev)) {
+> > ! 		scsi_put_command(cmd);
+> > ! 		return;		// maybe sdev_state == 
+> SDEV_CANCEL, SDEV_DEL
+> > ! 	}
+> >   
+> >   	scsi_put_command(cmd);
+> >   	scsi_run_queue(q);
+> > + 
+> > + 	// ok to remove device now
+> > + 	scsi_device_put(sdev);
+> 
+> This is the right idea, I think, but not necessarily the right fix.
+> scsi_device_get() will fail if the device is going offline, 
+> but we would
+> still need to run the queues.
+> 
+> try this sequence instead:
+> 
+> get_device(&sdev->sdev_gendev);
+> scsi_put_command(cmd);
+> scsi_run_queue(q);
+> put_device(&sdev->sdev_gendev);
+> 
+> James
+> 
+> 
 
-Driver writers need not know. They call blk_queue_max_sectors() to set
-the maximum value of a request they can handle, they could not care less
-what internal field in the queue is actually used for that. From their
-perspective, blk_queue_max_sectors() defines their hard limit. We may
-(and will) adjust the soft limit behind their back - which is ok, as
-long as we honor the value they defined by calling
-blk_queue_max_sectors().
 
--- 
-Jens Axboe
-
+-------------------------------------------------------
+SF.Net email is sponsored by:
+Tame your development challenges with Apache's Geronimo App Server. Download
+it for free - -and be entered to win a 42" plasma tv or your very own
+Sony(tm)PSP.  Click here to play: http://sourceforge.net/geronimo.php
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
