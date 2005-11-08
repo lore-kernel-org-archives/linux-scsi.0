@@ -1,37 +1,62 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 0/10] remove scsi_request usage from sg and st
-Date: Tue, 08 Nov 2005 04:10:31 -0600
-Message-ID: <43707997.7020404@cs.wisc.edu>
-References: <1131444389.23111.56.camel@max>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: [usb-storage] [Merging ATA passthru] on  integratingSMART/ATA-Security in usb-storage driver
+Date: Tue, 8 Nov 2005 05:51:20 -0800
+Message-ID: <464EE07F-3B48-4AD5-9F01-3B51EE0E3E5C@ieee.org>
+References: <20051107185718.GA16791@us.ibm.com><Pine.LNX.4.44L0.051107144956 0.5078-100000@iolanthe.rowland.org> <20051107204720.GA18608@us.ibm.com>
+Mime-Version: 1.0 (Apple Message framework v746.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:13727 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932391AbVKHKKm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2005 05:10:42 -0500
-In-Reply-To: <1131444389.23111.56.camel@max>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20051107204720.GA18608@us.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Pat LaVarre <p.lavarre@ieee.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@SteelEye.com>, linux-ide@vger.kernel.org, Patrick Mansfield <patmans@us.ibm.com>, Timothy Thelin <Timothy.Thelin@wdc.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net, Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: axboe@suse.de, linux-scsi@vger.kernel.org
 
-Mike Christie wrote:
-> The following patches, made against scsi-misc, remove the scsi_request
-> usage from st and sg, do some tiny cleanup on sg, and make sg and st
-> always perform scatterlist IO.
-> 
-> I have tested against libata and scsi_debug for disks. There are slight
-> changes, so someone with a tape device should test the patches, but Kai
-> since Kai did all the debugging last round I have not made many changes.
-> We will probably hit many problems with LLDs using low max_hw_sectors,
-> because they have not been converted to export their real values on the
-> host template so I think these patches should sit in scsi-misc for a
-> good deal of time.
-> 
+> ... is usb-storage forcing scsi-2 when the device tells us it is
+> scsi-3 compliant, or is the hardware reporting devices are scsi-2, yet
+> requiring non-LUN value in cdb[1]?
 
-I for got to cc the st and sg maintainers. In case you guys do not 
-follow linux-scsi closely and do not want all those patches sent to you 
-I put them here
-http://www.cs.wisc.edu/~michaelc/block/use-sg/v8/
-I can email them again too if you want.
+The very newest devices that pass info thru mask xE0 of cdb[1] may be  
+reporting SCSI zero, especially when the cable is not SPI &  
+especially when Peripheral Device Type (mask x1F of byte 0 of Inquiry  
+data) is nonzero.
+
+> We were told in prior emails that it actually reports a level of zero
+> (i.e. no compliance with any SCSI standard)
+
+People dispute what zero means in byte 2 of SCSI Inquiry data.  Here  
+are five widely disseminated opinions:
+
+a) T10 s1-r17b: "Version is unspecified.  (Use this code if you are  
+implementing to this document - it is not published, yet.)"
+
+b) T10 s1-r17b: "does not claim compliance to the ISO or ECMA  
+versions of SCSI".
+
+c) T10 s2-r10l.pdf: "might or might not comply to an ANSI-approved  
+standard"
+
+d) T10 s2-r10l.pdf: "does not claim compliance to the ISO or ECMA  
+versions of SCSI".
+
+e) SFF sff8020i.pdf: [mask x07] "must contain a zero to comply with  
+this version of the Specification"
+
+See that?  Often, the very same document disagrees with itself.
+
+Nowadays, the SFF heresy has grown to where T10 simultaneous  
+publishes two or more distinct definitions of Inquiry - the SPC  
+definition and the MMC definition.
+
+SPC Inquiry data bytes 58 and following now have "version descriptor"  
+definitions that let a device that zeroes byte 2 say more, in  
+theory.  I haven't actually seen anyone populate those fields in a  
+mass market product?
+
+> ...
+
+I'd think that everyone should accept that trying to reclaim mask xFF  
+in the last CDB byte and mask xE0 of CDB byte 1 is rude ... I'm not  
+sure what rationally motivates those movements in device design that  
+demand greater transparency of a pass thru SCSI host.
