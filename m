@@ -1,65 +1,52 @@
-From: "J.A. Magallon" <jamagallon@able.es>
-Subject: Re: 2.6.14-mm1
-Date: Tue, 8 Nov 2005 01:07:08 +0100
-Message-ID: <20051108010708.46a6f577@werewolf.auna.net>
-References: <20051106182447.5f571a46.akpm@osdl.org>
-	<436F2452.9020207@reub.net>
-	<20051107020905.69c0b6dc.akpm@osdl.org>
-	<17263.11214.992300.34384@cse.unsw.edu.au>
-	<20051107023723.5cf63393.akpm@osdl.org>
-	<436F3020.1040209@reub.net>
-	<20051107105257.333248c0.akpm@osdl.org>
-	<20051107224307.698da24b@werewolf.auna.net>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: bus_to_virt equivalent
+Date: Mon, 7 Nov 2005 18:37:22 -0700
+Message-ID: <20051108013722.GK23749@parisc-linux.org>
+References: <20051107235247.67981.qmail@web32402.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_t3ON29Ui/5rogOV+wFFbL/y";
- protocol="application/pgp-signature"; micalg=PGP-SHA1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp06.auna.com ([62.81.186.16]:38547 "EHLO smtp06.retemail.es")
-	by vger.kernel.org with ESMTP id S965613AbVKHAH7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2005 19:07:59 -0500
-In-Reply-To: <20051107224307.698da24b@werewolf.auna.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965120AbVKHBh0@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20051107235247.67981.qmail@web32402.mail.mud.yahoo.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Anil kumar <anils_r@yahoo.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
 
---Sig_t3ON29Ui/5rogOV+wFFbL/y
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Mon, Nov 07, 2005 at 03:52:47PM -0800, Anil kumar wrote:
+> Hi,
+> 
+> I am trying to port bus_to_virt and virt_to_bus to the
+> DMA-mapping scheme.
+> I found a way to move virt_to_bus() as follows:
+> page = virt_to_page(cmd->request_buffer);
+> offset = (unsigned long)address & ~PAGE_MASK;
+> dma_addr_t addr = pci_map_page(dev, page, offset,
+> size,direction);
+> 
+> But now I want to get virtual address for dma_addr_t.
 
-On Mon, 7 Nov 2005 22:43:07 +0100, "J.A. Magallon" <jamagallon@able.es> wro=
-te:
+Did you *read* DMA-mapping.txt?
 
-> On Mon, 7 Nov 2005 10:52:57 -0800, Andrew Morton <akpm@osdl.org> wrote:
->=20
-> > Reuben Farrelly <reuben-lkml@reub.net> wrote:
-> > >
-> > >  Debug: sleeping function called from invalid context at include/asm/=
-semaphore.h:99
-> > >  in_atomic():1, irqs_disabled():1
-> > >    [<c0103c46>] dump_stack+0x17/0x19
->
+  Drivers converted fully to this interface should not use virt_to_bus
+  any longer, nor should they use bus_to_virt. Some drivers have to
+  be changed a little bit, because
+  *there is no longer an equivalent to bus_to_virt in the dynamic
+  DMA mapping scheme*
+  - you have to always store the DMA addresses returned by the
+  pci_alloc_consistent, pci_pool_alloc, and pci_map_single calls
+  (pci_map_sg stores them in the scatterlist itself if the platform
+  supports dynamic DMA mapping in hardware) in your driver structures
+  and/or in the card registers.
 
-Any idea on this ? It kills my raid box in a couple minutes... ;)
+The reason for this is that there may be many physical addresses which
+correspond to the same bus address.  For example (this is on an HP rx8620)
+the bus address c001b000 maps to 00000f000001b000 for device 00:03.0,
+00000f010001b000 for device 40:03.0, 00000f020001b000 for device 80:03.0
+and 00000f030001b000 for device c0:03.0.
 
---
-J.A. Magallon <jamagallon()able!es>     \               Software is like se=
-x:
-werewolf!able!es                         \         It's better when it's fr=
-ee
-Mandriva Linux release 2006.1 (Cooker) for i586
-Linux 2.6.14-jam1 (gcc 4.0.2 (4.0.2-1mdk for Mandriva Linux release 2006.1))
+Now, maybe we should add a function:
 
---Sig_t3ON29Ui/5rogOV+wFFbL/y
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+unsigned long device_bus_addr_to_phys(struct device *dev, dma_addr_t handle);
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-
-iD8DBQFDb+wsRlIHNEGnKMMRAs8iAJ9+4r6sDYSSfoqwJGdEDOgKVGYi9ACdGQ3p
-Q5bZR6sBUF3mD+o9XudvFBA=
-=JzV2
------END PGP SIGNATURE-----
-
---Sig_t3ON29Ui/5rogOV+wFFbL/y--
+but we don't have one yet.  So you have to follow the rules above.
