@@ -1,38 +1,65 @@
-From: Anil kumar <anils_r@yahoo.com>
-Subject: bus_to_virt equivalent
-Date: Mon, 7 Nov 2005 15:52:47 -0800 (PST)
-Message-ID: <20051107235247.67981.qmail@web32402.mail.mud.yahoo.com>
+From: "J.A. Magallon" <jamagallon@able.es>
+Subject: Re: 2.6.14-mm1
+Date: Tue, 8 Nov 2005 01:07:08 +0100
+Message-ID: <20051108010708.46a6f577@werewolf.auna.net>
+References: <20051106182447.5f571a46.akpm@osdl.org>
+	<436F2452.9020207@reub.net>
+	<20051107020905.69c0b6dc.akpm@osdl.org>
+	<17263.11214.992300.34384@cse.unsw.edu.au>
+	<20051107023723.5cf63393.akpm@osdl.org>
+	<436F3020.1040209@reub.net>
+	<20051107105257.333248c0.akpm@osdl.org>
+	<20051107224307.698da24b@werewolf.auna.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: multipart/signed; boundary="Sig_t3ON29Ui/5rogOV+wFFbL/y";
+ protocol="application/pgp-signature"; micalg=PGP-SHA1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web32402.mail.mud.yahoo.com ([68.142.207.195]:37240 "HELO
-	web32402.mail.mud.yahoo.com") by vger.kernel.org with SMTP
-	id S1030198AbVKGXwu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Nov 2005 18:52:50 -0500
+Received: from smtp06.auna.com ([62.81.186.16]:38547 "EHLO smtp06.retemail.es")
+	by vger.kernel.org with ESMTP id S965613AbVKHAH7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2005 19:07:59 -0500
+In-Reply-To: <20051107224307.698da24b@werewolf.auna.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+--Sig_t3ON29Ui/5rogOV+wFFbL/y
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I am trying to port bus_to_virt and virt_to_bus to the
-DMA-mapping scheme.
-I found a way to move virt_to_bus() as follows:
-page = virt_to_page(cmd->request_buffer);
-offset = (unsigned long)address & ~PAGE_MASK;
-dma_addr_t addr = pci_map_page(dev, page, offset,
-size,direction);
+On Mon, 7 Nov 2005 22:43:07 +0100, "J.A. Magallon" <jamagallon@able.es> wro=
+te:
 
-But now I want to get virtual address for dma_addr_t.
+> On Mon, 7 Nov 2005 10:52:57 -0800, Andrew Morton <akpm@osdl.org> wrote:
+>=20
+> > Reuben Farrelly <reuben-lkml@reub.net> wrote:
+> > >
+> > >  Debug: sleeping function called from invalid context at include/asm/=
+semaphore.h:99
+> > >  in_atomic():1, irqs_disabled():1
+> > >    [<c0103c46>] dump_stack+0x17/0x19
+>
 
-Any help is greatly appreciated.
+Any idea on this ? It kills my raid box in a couple minutes... ;)
 
-with regards,
-  Anil
+--
+J.A. Magallon <jamagallon()able!es>     \               Software is like se=
+x:
+werewolf!able!es                         \         It's better when it's fr=
+ee
+Mandriva Linux release 2006.1 (Cooker) for i586
+Linux 2.6.14-jam1 (gcc 4.0.2 (4.0.2-1mdk for Mandriva Linux release 2006.1))
 
+--Sig_t3ON29Ui/5rogOV+wFFbL/y
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-		
-__________________________________ 
-Yahoo! FareChase: Search multiple travel sites in one click.
-http://farechase.yahoo.com
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+
+iD8DBQFDb+wsRlIHNEGnKMMRAs8iAJ9+4r6sDYSSfoqwJGdEDOgKVGYi9ACdGQ3p
+Q5bZR6sBUF3mD+o9XudvFBA=
+=JzV2
+-----END PGP SIGNATURE-----
+
+--Sig_t3ON29Ui/5rogOV+wFFbL/y--
