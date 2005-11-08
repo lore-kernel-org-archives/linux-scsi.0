@@ -1,58 +1,53 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: bus_to_virt equivalent
-Date: Tue, 8 Nov 2005 22:53:46 +0000
-Message-ID: <20051108225346.GF13357@flint.arm.linux.org.uk>
-References: <20051108013722.GK23749@parisc-linux.org> <20051108224700.68513.qmail@web32406.mail.mud.yahoo.com>
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security in usb-storage driver
+Date: Tue, 8 Nov 2005 15:05:36 -0800
+Message-ID: <20051108230536.GB5388@us.ibm.com>
+References: <1131401153.3333.6.camel@mulgrave> <Pine.LNX.4.44L0.0511081203280.4438-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([212.18.232.186]:6416 "EHLO
-	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
-	id S965302AbVKHWxw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Nov 2005 17:53:52 -0500
+Received: from e31.co.us.ibm.com ([32.97.110.149]:21895 "EHLO
+	e31.co.us.ibm.com") by vger.kernel.org with ESMTP id S1030391AbVKHXFa
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Nov 2005 18:05:30 -0500
 Content-Disposition: inline
-In-Reply-To: <20051108224700.68513.qmail@web32406.mail.mud.yahoo.com>
+In-Reply-To: <Pine.LNX.4.44L0.0511081203280.4438-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anil kumar <anils_r@yahoo.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Patrick Mansfield <patmans@us.ibm.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, thomas schorpp <t.schorpp@gmx.de>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, Timothy Thelin <Timothy.Thelin@wdc.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Tue, Nov 08, 2005 at 02:47:00PM -0800, Anil kumar wrote:
-> Hi Matthew,
-> 
-> Thanks for the reply.
-> I can store the returned dma_addr from
-> pci_map_sg/single or pci_map_page in a driver
-> structure.
-> 
-> struct page *page =
-> virt_to_page(Cmnd->request_buffer);
->                 unsigned long offset = ((unsigned
-> long)Cmnd->request_buffer &
->                                         ~PAGE_MASK);
->                 dma_addr_t busaddr =
-> pci_map_page(hostdata->pci_dev,
->                                                  
-> page, offset,
->                                                  
-> Cmnd->request_bufflen,
->                                                  
-> scsi_to_pci_dma_dir(Cmnd->sc_data_direction));
-> 
-> But how do I convert this returned "busaddr" into a
-> virtual addr?
+Alan Stern <stern@rowland.harvard.edu> wrote:
+> ===================================================================
+> --- usb-2.6.orig/include/scsi/scsi_device.h
+> +++ usb-2.6/include/scsi/scsi_device.h
+> @@ -161,7 +161,8 @@ struct scsi_target {
+>  	unsigned int		channel;
+>  	unsigned int		id; /* target id ... replace
+>  				     * scsi_device.id eventually */
+> -	unsigned long		create:1; /* signal that it needs to be added */
+> +	unsigned int		create:1; /* signal that it needs to be added */
+> +	unsigned int		no_report_lun:1; /* do not use REPORT LUNS */
+>  	char			scsi_level;
+>  	void 			*hostdata; /* available to low-level driver */
+>  	unsigned long		starget_data[0]; /* for the transport */
 
-You don't - that's architecture implementation detail which drivers
-have _zero_ business knowing about.
+Alan,
 
-As far as you're concerned, the virtual address is Cmnd->request_buffer.
+Instead of adding a new bit field to scsi_target could we utilize bflags
+in the scsi_target. Currently we have sdev_bflags in the scsi_device which
+we are not utilizing. We could remove sdev_bflags and add a bflags to
+scsi_target
 
-Anyway, you're using the wrong interface - pci_map_single() takes
-a virtual address.  No need to play around getting the offset and
-struct page for pci_map_page() when pci_map_single() implements
-what you require.
+In the usb slave configure we could "or" in BLIST_NOREPORTLUN.
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:  2.6 Serial core
+Then in the function scsi_get_device_flags we could reference the
+scsi_target bflags instead of sdev_bflags.
+
+The bflags check in scsi_scan.c for BLIST_NOREPORTLUN could stay the same
+and we would not have two flags for a similar no report luns check.
+
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
