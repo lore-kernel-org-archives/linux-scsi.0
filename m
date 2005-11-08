@@ -1,39 +1,33 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: [PATCH 3/10] add scsi_execute_async and scsi helpers
-Date: Tue, 8 Nov 2005 15:05:50 -0800
-Message-ID: <20051108230550.GA26528@us.ibm.com>
-References: <1131444398.23111.64.camel@max>
+From: Dave C Boutcher <sleddog@us.ibm.com>
+Subject: Re: [GIT PATCH] SCSI updates for 2.6.14
+Date: Tue, 8 Nov 2005 17:35:46 -0600
+Message-ID: <20051108233546.GA21618@cs.umn.edu>
+References: <1131207491.3614.5.camel@mulgrave>
+Reply-To: boutcher@cs.umn.edu
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:25494 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S1030397AbVKHXFx
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Nov 2005 18:05:53 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e34.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id jA8N5rt0026102
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Nov 2005 18:05:53 -0500
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id jA8N5ouN022702
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Nov 2005 16:05:50 -0700
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id jA8N5qVm029178
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Nov 2005 16:05:52 -0700
+Received: from mail.cs.umn.edu ([128.101.34.202]:31186 "EHLO mail.cs.umn.edu")
+	by vger.kernel.org with ESMTP id S964955AbVKHXfu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2005 18:35:50 -0500
 Content-Disposition: inline
-In-Reply-To: <1131444398.23111.64.camel@max>
+In-Reply-To: <1131207491.3614.5.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: axboe@suse.de, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, Nov 08, 2005 at 04:06:38AM -0600, Mike Christie wrote:
+On Sat, Nov 05, 2005 at 10:18:11AM -0600, James Bottomley wrote:
+> This is Part I of the pending SCSI patches (I still need to go over all
+> the flood that came in after 2.6.14 was declared).
+> 
+> This patch is available from:
+> 
+> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-for-linus-2.6.git
 
-> +
-> +	sioc = kzalloc(sizeof(*sioc), gfp);
-> +	if (!sioc)
-> +		return DRIVER_ERROR << 24;
+James, I note that my favorite masterpiece of ibmvscsis.c is not
+currently included.  Does that fall into part of the "flood"?
 
-I know we don't have one today for scsi_request, but should we use a kmem
-cache for these?
+Thanks
 
--- Patrick Mansfield
+Dave B
