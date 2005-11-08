@@ -1,58 +1,58 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 11/10] fix leak in scsi_req_map_sg
-Date: Tue, 08 Nov 2005 16:52:26 -0600
-Message-ID: <1131490346.3787.2.camel@max>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: bus_to_virt equivalent
+Date: Tue, 8 Nov 2005 22:53:46 +0000
+Message-ID: <20051108225346.GF13357@flint.arm.linux.org.uk>
+References: <20051108013722.GK23749@parisc-linux.org> <20051108224700.68513.qmail@web32406.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:30883 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S965265AbVKHWwf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2005 17:52:35 -0500
+Received: from caramon.arm.linux.org.uk ([212.18.232.186]:6416 "EHLO
+	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
+	id S965302AbVKHWxw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Nov 2005 17:53:52 -0500
+Content-Disposition: inline
+In-Reply-To: <20051108224700.68513.qmail@web32406.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>, linux-scsi@vger.kernel.org
+To: Anil kumar <anils_r@yahoo.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I guess this would be 11/10. I found a bug in testing.
+On Tue, Nov 08, 2005 at 02:47:00PM -0800, Anil kumar wrote:
+> Hi Matthew,
+> 
+> Thanks for the reply.
+> I can store the returned dma_addr from
+> pci_map_sg/single or pci_map_page in a driver
+> structure.
+> 
+> struct page *page =
+> virt_to_page(Cmnd->request_buffer);
+>                 unsigned long offset = ((unsigned
+> long)Cmnd->request_buffer &
+>                                         ~PAGE_MASK);
+>                 dma_addr_t busaddr =
+> pci_map_page(hostdata->pci_dev,
+>                                                  
+> page, offset,
+>                                                  
+> Cmnd->request_bufflen,
+>                                                  
+> scsi_to_pci_dma_dir(Cmnd->sc_data_direction));
+> 
+> But how do I convert this returned "busaddr" into a
+> virtual addr?
 
-I should not have been testing against bi_max_vecs. For odd
-IO sizes it would cause us to leak bios. We should test against
-the number of vecs we requested and were planning on adding.
+You don't - that's architecture implementation detail which drivers
+have _zero_ business knowing about.
 
-All my patches are here
-http://www.cs.wisc.edu/~michaelc/block/use-sg/v9/
-this includes fixups Jens requested (hopefully they
-are correct now). And they were made against scsi-misc.
+As far as you're concerned, the virtual address is Cmnd->request_buffer.
 
+Anyway, you're using the wrong interface - pci_map_single() takes
+a virtual address.  No need to play around getting the offset and
+struct page for pci_map_page() when pci_map_single() implements
+what you require.
 
---- scsi-misc-2.6/drivers/scsi/scsi_lib.c.orig	2005-11-08 16:45:28.000000000 -0600
-+++ scsi-misc-2.6/drivers/scsi/scsi_lib.c	2005-11-08 16:45:55.000000000 -0600
-@@ -369,7 +369,7 @@ static int scsi_req_map_sg(struct reques
- 	unsigned int data_len = 0, len, bytes, off;
- 	struct page *page;
- 	struct bio *bio = NULL;
--	int i, err;
-+	int i, err, nr_vecs = 0;
- 
- 	for (i = 0; i < nsegs; i++) {
- 		page = sgl[i].page;
-@@ -381,8 +381,6 @@ static int scsi_req_map_sg(struct reques
- 			bytes = min_t(unsigned int, len, PAGE_SIZE - off);
- 
- 			if (!bio) {
--				int nr_vecs;
--
- 				nr_vecs = min_t(int, BIO_MAX_PAGES, nr_pages);
- 				nr_pages -= nr_vecs;
- 
-@@ -401,7 +399,7 @@ static int scsi_req_map_sg(struct reques
- 				goto free_bios;
- 			}
- 
--			if (bio->bi_vcnt >= bio->bi_max_vecs) {
-+			if (bio->bi_vcnt >= nr_vecs) {
- 				err = scsi_merge_bio(rq, bio);
- 				if (err) {
- 					bio_endio(bio, bio->bi_size, 0);
-
-
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 Serial core
