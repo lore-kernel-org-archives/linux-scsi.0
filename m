@@ -1,64 +1,77 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Bug#338089: New aic7xxx driver fails spectacularly on 2940UW
-Date: Tue, 08 Nov 2005 09:10:14 -0500
-Message-ID: <1131459014.3270.1.camel@mulgrave>
-References: <20051108024523.35622.qmail@web88006.mail.re2.yahoo.com>
-	 <20051108033118.GL3413@verge.net.au>
+Subject: Re: 2.6.14-mm1
+Date: Tue, 08 Nov 2005 09:21:07 -0500
+Message-ID: <1131459667.3270.8.camel@mulgrave>
+References: <20051106182447.5f571a46.akpm@osdl.org>
+	 <436F2452.9020207@reub.net> <20051107020905.69c0b6dc.akpm@osdl.org>
+	 <17263.11214.992300.34384@cse.unsw.edu.au>
+	 <20051107023723.5cf63393.akpm@osdl.org> <436F3020.1040209@reub.net>
+	 <20051107105257.333248c0.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:38031 "EHLO
+Received: from stat9.steeleye.com ([209.192.50.41]:41105 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S964950AbVKHOKW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Nov 2005 09:10:22 -0500
-In-Reply-To: <20051108033118.GL3413@verge.net.au>
+	id S965217AbVKHOV2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Nov 2005 09:21:28 -0500
+In-Reply-To: <20051107105257.333248c0.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Horms <horms@debian.org>
-Cc: Graham Knap <graham.knap@rogers.com>, 338089@bugs.debian.org, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Reuben Farrelly <reuben-lkml@reub.net>, neilb@suse.de, linux-kernel@vger.kernel.org, n@suse.de, Alan Stern <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org
 
-On Tue, 2005-11-08 at 12:31 +0900, Horms wrote:
-> On Mon, Nov 07, 2005 at 09:45:23PM -0500, Graham Knap wrote:
-> > Package: linux-image-2.6.14-1-686
-> > Version: 2.6.14-2
-> > 
-> > Recent versions of the aic7xxx driver will not boot on my secondary PC.
-> > The 2.6.8 kernel shipped with sarge works perfectly, but neither the
-> > 2.6.12 kernel in testing nor the 2.6.14 kernel in unstable will boot.
-> > 
-> > This is an older system: 
-> > Asus P2L-B, Celeron 500MHz, 384MB RAM, GeForce2 MX AGP
-> > Adaptec 2940UW, IBM DDYS-T09170 (9GB disk)
-> > 
-> > I can't understand what exactly is failing, but I will attach a boot
-> > log. (So null modem cables *are* still useful for something!)
-> > 
-> > I've tried adding "aic7xxx=dv:{0}" to the boot arguments but that
-> > doesn't seem to make a difference. Also, "aic7xxx=verbose" doesn't seem
-> > to do anything either.
-> > 
-> > I don't know if this makes a difference but my 2940UW reports its BIOS
-> > revision as "1.34.3" during POST.
-> > 
-> > Any help would be much appreciated.
+On Mon, 2005-11-07 at 10:52 -0800, Andrew Morton wrote:
+> sd_issue_flush() has been altered to run scsi_disk_get_from_dev(), which
+> takes a semaphore.  It does this from within spinlock and, as we see here,
+> from within softirq.
 > 
-> Hi Graham, 
-> 
-> thanks for your detailed report. This does smell a lot like a driver
-> bug, and as such, its proably best passed onto the upstream maintainers.
-> As such I've CCed James Bottomley and linux-scsi for comment.
-> 
-> The other main possiblility, is that perhaps the aic7xxx_old driver would
-> work. Or perhaps some other module loading foo, though its seems the
-> module is loaded fine, it just doesn't like your card very much.
+> Methinks the people who developed and tested that patch forgot to enable
+> CONFIG_PREEMPT, CONFIG_DEBUG_KERNEL, CONFIG_DEBUG_SLAB,
+> CONFIG_DEBUG_SPINLOCK and CONFIG_DEBUG_SPINLOCK_SLEEP.
 
-This is an older drive, so it looks like it passes domain validation
-(read only) but then chokes on the next command.  On 2.6.8, what do the
-transport settings report? (that's cat /proc/scsi/aic7xxx/0)?
+Actually, I do too (as far as I can on non-x86).  I assume you also need
+a filesystem that excites this, though.
 
-Thanks,
+Try the attached: We can probably rely on the block device having opened
+the sd device, so there should already be a reference held on the
+scsi_disk ... well that's my theory and I'm sticking to it.
 
 James
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -769,20 +769,16 @@ static void sd_end_flush(request_queue_t
+ static int sd_prepare_flush(request_queue_t *q, struct request *rq)
+ {
+ 	struct scsi_device *sdev = q->queuedata;
+-	struct scsi_disk *sdkp = scsi_disk_get_from_dev(&sdev->sdev_gendev);
+-	int ret = 0;
++	struct scsi_disk *sdkp = dev_get_drvdata(&sdev->sdev_gendev);
+ 
+-	if (sdkp) {
+-		if (sdkp->WCE) {
+-			memset(rq->cmd, 0, sizeof(rq->cmd));
+-			rq->flags |= REQ_BLOCK_PC | REQ_SOFTBARRIER;
+-			rq->timeout = SD_TIMEOUT;
+-			rq->cmd[0] = SYNCHRONIZE_CACHE;
+-			ret = 1;
+-		}
+-		scsi_disk_put(sdkp);
+-	}
+-	return ret;
++	if (!sdkp || !sdkp->WCE)
++		return 0;
++
++	memset(rq->cmd, 0, sizeof(rq->cmd));
++	rq->flags |= REQ_BLOCK_PC | REQ_SOFTBARRIER;
++	rq->timeout = SD_TIMEOUT;
++	rq->cmd[0] = SYNCHRONIZE_CACHE;
++	return 1;
+ }
+ 
+ static void sd_rescan(struct device *dev)
+
 
 
