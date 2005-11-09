@@ -1,50 +1,33 @@
-From: thomas schorpp <t.schorpp@gmx.de>
-Subject: Re: [usb-storage] [Merging ATA passthru] on integrating	SMART/ATA-Security
- in usb-storage driver
-Date: Wed, 09 Nov 2005 11:05:09 +0100
-Message-ID: <4371C9D5.1010202@gmx.de>
-References: <CA45571DE57E1C45BF3552118BA92C9D69BF4A@WDSCEXBECL03.sc.wdc.com>	<4371BB82.3090208@gmx.de> <4371C557.80807@gmx.de>
-Reply-To: t.schorpp@gmx.de
+From: Aldo Gavioli <aldo.gavioli@netstorage.it>
+Subject: Block size 8192
+Date: Wed, 09 Nov 2005 11:31:57 +0100
+Message-ID: <4371D01D.5090404@netstorage.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4371C557.80807@gmx.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: USB Storage list <usb-storage@lists.one-eyed-alien.net>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-ide@vger.kernel.org, Timothy Thelin <Timothy.Thelin@wdc.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Patrick Mansfield <patmans@us.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtpout11.attiva.biz ([85.37.16.13]:6480 "EHLO
+	smtpout11.attiva.biz") by vger.kernel.org with ESMTP
+	id S1030477AbVKIKcc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Nov 2005 05:32:32 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-thomas schorpp wrote:
-> thomas schorpp wrote:
-> 
->>Timothy Thelin wrote:
->>
->>
->>>>On Mon, 7 Nov 2005, James Bottomley wrote:
->>>>
->>>
->>>It was generated against Linus' git repo after
->>>applying Alan's patch.
->>>
->>>With both patches applied I can now do passthru cdbs on the
->>>cypress part without issue, and I still don't see any IO issues.
->>>
->>>Anyone out there have a better selection of hardware to test with?
->>>
->>
->>
->>first i need better software, the 2.6.14-git-11 snapshot wont boot, cause
->>it tries to mount root without detecting partitions before :/
->>
->>did i miss some patch since this snapshot?
->>
-> 
-> 
-> ok, applies against 2.6.14.0. device: cypress -A- bridge.
-> 
-> no change with smartctl:
-> 
+Hello All.
+I'm deciding to  port  our application on kernel 2.6 but we have problem 
+in inserting  our SCSI driver. I seems that sd get control of optical 
+disk connected and the kernel  did not attach our driver. We  can also 
+decide to use sd or sg without our provate driver but sd doesn't support 
+8192 block size.
+Any idea to pilot one optical disk of 8192 block size ?
+Thanks
+Aldo
 
-err, ok, surely not with missing ata-passthru code ;)
+-- 
+Aldo Gavioli
+Product Manager
+NetStorage Software s.r.l
+Viale Europa,74 - 20090 Cusago (Milan) Italy - Web: www.netstorage.it 
+
 
