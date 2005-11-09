@@ -1,26 +1,34 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/5]  qla2xxx: small fixes for 2.6.14-rc1.
-Date: Wed, 9 Nov 2005 06:18:23 +0000
-Message-ID: <20051109061823.GA4267@infradead.org>
-References: <20051108223647.25189.23124.sendpatchset@andrew-vasquezs-powerbook-g4-15.local>
+From: thomas schorpp <t.schorpp@gmx.de>
+Subject: Re: [usb-storage] [Merging ATA passthru] on integrating SMART/ATA-Security
+ in usb-storage driver
+Date: Wed, 09 Nov 2005 10:04:02 +0100
+Message-ID: <4371BB82.3090208@gmx.de>
+References: <CA45571DE57E1C45BF3552118BA92C9D69BF4A@WDSCEXBECL03.sc.wdc.com>
+Reply-To: t.schorpp@gmx.de
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:18352 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1030417AbVKIGSZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Nov 2005 01:18:25 -0500
-Content-Disposition: inline
-In-Reply-To: <20051108223647.25189.23124.sendpatchset@andrew-vasquezs-powerbook-g4-15.local>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <CA45571DE57E1C45BF3552118BA92C9D69BF4A@WDSCEXBECL03.sc.wdc.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Timothy Thelin <Timothy.Thelin@wdc.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@SteelEye.com>, Patrick Mansfield <patmans@us.ibm.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, Linux SCSI list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, Nov 08, 2005 at 02:36:51PM -0800, Andrew Vasquez wrote:
-> James,
+Timothy Thelin wrote:
+>>On Mon, 7 Nov 2005, James Bottomley wrote:
+>>
+> It was generated against Linus' git repo after
+> applying Alan's patch.
 > 
-> Here's a small set of bug-fixes for the qla2xxx driver.  Please apply.
+> With both patches applied I can now do passthru cdbs on the
+> cypress part without issue, and I still don't see any IO issues.
+> 
+> Anyone out there have a better selection of hardware to test with?
+> 
 
-2.6.14-rc1 sounds odd.  But the actual patches all look good. thanks.
+first i need better software, the 2.6.14-git-11 snapshot wont boot, cause
+it tries to mount root without detecting partitions before :/
+
+did i miss some patch since this snapshot?
 
