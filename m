@@ -1,35 +1,74 @@
-From: <linux-scsi@vger.kernel.org>
-Subject: separadores para su jardin
-Date: Wed, 9 Nov 2005 01:56:23 +0100
-Message-ID: <14ced01c5e4c8$67885ff0$0500a8c0@hire7b58743925>
+From: Graham Knap <graham.knap@rogers.com>
+Subject: Re: Bug#338089: New aic7xxx driver fails spectacularly on 2940UW
+Date: Tue, 8 Nov 2005 20:47:13 -0500 (EST)
+Message-ID: <20051109014713.78691.qmail@web88003.mail.re2.yahoo.com>
+References: <1131459014.3270.1.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 62-15-156-23.inversas.jazztel.es ([62.15.156.23]:34625 "EHLO
-	localhost.localdomain") by vger.kernel.org with ESMTP
-	id S932391AbVKIAzc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Nov 2005 19:55:32 -0500
-Received: from hire7b58743925 ([192.168.0.5])
-	by localhost.localdomain (8.13.4/8.13.4/Debian-3) with SMTP id jA80u4hj003828
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Nov 2005 01:56:07 +0100
-Content-Class: urn:content-classes:message
+Received: from web88003.mail.re2.yahoo.com ([206.190.37.190]:60542 "HELO
+	web88003.mail.re2.yahoo.com") by vger.kernel.org with SMTP
+	id S964987AbVKIBrO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Nov 2005 20:47:14 -0500
+In-Reply-To: <1131459014.3270.1.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Horms <horms@debian.org>
+Cc: Graham Knap <graham.knap@rogers.com>, 338089@bugs.debian.org, linux-scsi@vger.kernel.org
 
-Seguridad total para su escalera o piscina particular.
-En solo un instantes sus nios pueden tener un accidente, que le puede perjudicar para toda su vida.
-mediante este enlace tiene toda la informacin.
+Graham Knap <graham.knap@rogers.com> wrote:
+> Recent versions of the aic7xxx driver will not boot on my secondary
+> PC. The 2.6.8 kernel shipped with sarge works, but neither the 2.6.12
+> kernel in testing nor the 2.6.14 kernel in unstable will boot.
+> This is an older system: 
+> Asus P2L-B, Celeron 500MHz, 384MB RAM, GeForce2 MX AGP
+> Adaptec 2940UW, IBM DDYS-T09170 (9GB disk)
 
-http://www.bestsevendiamonds.com/vinyl/
+Horms <horms@debian.org> wrote:
+> This does smell a lot like a driver bug, and as such, its proably
+> best passed onto the upstream maintainers.
 
-Desea representar nuestros productos?
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> This is an older drive, so it looks like it passes domain validation
+> (read only) but then chokes on the next command.  On 2.6.8, what do
+> the transport settings report? (that's cat /proc/scsi/aic7xxx/0)?
 
-Si es su deseo darse de baja, para no recibir ms publicidad es necesario lo haga en el siguiente enlace.
 
-http://www.bestsevendiamonds.com/vinyl/bajas.asp
+Thanks for responding so quickly. Here's what I see on 2.6.8.
 
-Muchas gracias
+graham@testbox:~$ uname -a
+Linux testbox 2.6.8-2-686 #1 Thu May 19 17:53:30 JST 2005 i686
+GNU/Linux
 
+graham@testbox:~$ cat /proc/scsi/aic7xxx/0
+Adaptec AIC7xxx driver version: 6.2.36
+Adaptec 2940 Ultra SCSI adapter
+aic7880: Ultra Wide Channel A, SCSI Id=7, 16/253 SCBs
+Allocated SCBs: 12, SG List Length: 128
+
+Serial EEPROM:
+0x02f8 0x02f8 0x02f8 0x02f8 0x02f8 0x02f8 0x02f8 0x02f8
+0x02f8 0x02f8 0x02f8 0x02f8 0x02f8 0x02f8 0x02f8 0x02f8
+0x18a6 0x005f 0x2807 0x0010 0xff00 0xffff 0xffff 0xffff
+0xffff 0xffff 0xffff 0xffff 0xffff 0xffff 0x00ff 0x7092
+
+Target 0 Negotiation Settings
+        User: 40.000MB/s transfers (20.000MHz, offset 127, 16bit)
+        Goal: 40.000MB/s transfers (20.000MHz, offset 8, 16bit)
+        Curr: 40.000MB/s transfers (20.000MHz, offset 8, 16bit)
+        Channel A Target 0 Lun 0 Settings
+                Commands Queued 49075
+                Commands Active 0
+                Command Openings 8
+                Max Tagged Openings 8
+                Device Queue Frozen Count 0
+Target 1 Negotiation Settings
+        User: 40.000MB/s transfers (20.000MHz, offset 127, 16bit)
+
+<snip> ... Target 0 is the only device, so I assume that the remaining
+output is meaningless.
+
+Let me know if there's anything else I can do to help.
+
+-- graham
