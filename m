@@ -1,35 +1,49 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [DOC PATCH]  T10/04-262r8
-Date: Wed, 09 Nov 2005 11:22:43 -0500
-Message-ID: <1131553363.3271.1.camel@mulgrave>
-References: <CA45571DE57E1C45BF3552118BA92C9D69BF4A@WDSCEXBECL03.sc.wdc.com>
-	 <4371BB82.3090208@gmx.de> <4371C557.80807@gmx.de> <4371F7C3.5080702@rtr.ca>
-	 <43720232.6090609@gmx.de> <4372172A.50003@gmx.de>
-	 <43721C3C.1010103@pobox.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [GIT PATCH] SCSI updates for 2.6.14
+Date: Wed, 09 Nov 2005 12:30:54 -0600
+Message-ID: <4372405E.6020302@cs.wisc.edu>
+References: <1131207491.3614.5.camel@mulgrave> <20051108233546.GA21618@cs.umn.edu> <20051109050911.GA3202@infradead.org> <20051109150709.GA19002@cs.umn.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:3288 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751452AbVKIQW7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Nov 2005 11:22:59 -0500
-In-Reply-To: <43721C3C.1010103@pobox.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:55721 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1750705AbVKISbO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2005 13:31:14 -0500
+In-Reply-To: <20051109150709.GA19002@cs.umn.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: t.schorpp@gmx.de, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: boutcher@cs.umn.edu
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-> >  #define	ATA_16		      0x85	/* 16-byte pass-thru */
-> >  #define	ATA_12		      0xa1	/* 12-byte pass-thru */
+Dave C Boutcher wrote:
+> On Wed, Nov 09, 2005 at 05:09:11AM +0000, Christoph Hellwig wrote:
 > 
-> This is a bit silly.  We should just remove the T10 doc reference, if 
-> people are going to be continually submitting patches to update this doc id.
+>>On Tue, Nov 08, 2005 at 05:35:46PM -0600, Dave C Boutcher wrote:
+>>
+>>>On Sat, Nov 05, 2005 at 10:18:11AM -0600, James Bottomley wrote:
+>>>
+>>>>This is Part I of the pending SCSI patches (I still need to go over all
+>>>>the flood that came in after 2.6.14 was declared).
+>>>>
+>>>>This patch is available from:
+>>>>
+>>>>master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-for-linus-2.6.git
+>>>
+>>>James, I note that my favorite masterpiece of ibmvscsis.c is not
+>>>currently included.  Does that fall into part of the "flood"?
+>>
+>>it shouldn't go in.  we already have a version using the proper target
+>>framework, that should be imroved upon to get production quality and then
+>>merged.
+> 
+> 
+> My only problem with that is the amount of time it is going to keep the
+> driver out of the tree.  I'm happy to commit to merging to a converged
+> infrastructure as soon as it is available.
+> 
 
-Agreed ... especially since 04-262 is just a proposed update to SAT
-which is what actually defines these command opcodes, so the comment
-isn't even correct.
-
-James
-
-
+Your driver needs some work as it is. We are trying to kill scsi_request 
+usage, your bio segments are wrong if cluster is not used (iscsi in 
+mainline does not use clustering), and you could use bio_map_kern(). 
+There are others, but I did not review it so closely.
