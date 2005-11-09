@@ -1,33 +1,77 @@
-From: Dave C Boutcher <sleddog@us.ibm.com>
-Subject: Re: [GIT PATCH] SCSI updates for 2.6.14
-Date: Tue, 8 Nov 2005 17:35:46 -0600
-Message-ID: <20051108233546.GA21618@cs.umn.edu>
-References: <1131207491.3614.5.camel@mulgrave>
-Reply-To: boutcher@cs.umn.edu
+From: Reuben Farrelly <reuben-lkml@reub.net>
+Subject: Re: 2.6.14-mm1
+Date: Wed, 09 Nov 2005 13:30:53 +1300
+Message-ID: <4371433D.3080402@reub.net>
+References: <20051106182447.5f571a46.akpm@osdl.org>	 <436F2452.9020207@reub.net> <20051107020905.69c0b6dc.akpm@osdl.org>	 <17263.11214.992300.34384@cse.unsw.edu.au>	 <20051107023723.5cf63393.akpm@osdl.org> <436F3020.1040209@reub.net>	 <20051107105257.333248c0.akpm@osdl.org> <1131459667.3270.8.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.cs.umn.edu ([128.101.34.202]:31186 "EHLO mail.cs.umn.edu")
-	by vger.kernel.org with ESMTP id S964955AbVKHXfu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2005 18:35:50 -0500
-Content-Disposition: inline
-In-Reply-To: <1131207491.3614.5.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030470AbVKIAa5@vger.kernel.org>
+In-Reply-To: <1131459667.3270.8.camel@mulgrave>
+Sender: linux-kernel-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Andrew Morton <akpm@osdl.org>, neilb@suse.de, linux-kernel@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Nov 05, 2005 at 10:18:11AM -0600, James Bottomley wrote:
-> This is Part I of the pending SCSI patches (I still need to go over all
-> the flood that came in after 2.6.14 was declared).
+
+
+Hi,
+
+On 9/11/2005 3:21 a.m., James Bottomley wrote:
+> On Mon, 2005-11-07 at 10:52 -0800, Andrew Morton wrote:
+>> sd_issue_flush() has been altered to run scsi_disk_get_from_dev(), which
+>> takes a semaphore.  It does this from within spinlock and, as we see here,
+>> from within softirq.
+>>
+>> Methinks the people who developed and tested that patch forgot to enable
+>> CONFIG_PREEMPT, CONFIG_DEBUG_KERNEL, CONFIG_DEBUG_SLAB,
+>> CONFIG_DEBUG_SPINLOCK and CONFIG_DEBUG_SPINLOCK_SLEEP.
 > 
-> This patch is available from:
+> Actually, I do too (as far as I can on non-x86).  I assume you also need
+> a filesystem that excites this, though.
 > 
-> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-for-linus-2.6.git
+> Try the attached: We can probably rely on the block device having opened
+> the sd device, so there should already be a reference held on the
+> scsi_disk ... well that's my theory and I'm sticking to it.
+> 
+> James
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -769,20 +769,16 @@ static void sd_end_flush(request_queue_t
+>  static int sd_prepare_flush(request_queue_t *q, struct request *rq)
+>  {
+>  	struct scsi_device *sdev = q->queuedata;
+> -	struct scsi_disk *sdkp = scsi_disk_get_from_dev(&sdev->sdev_gendev);
+> -	int ret = 0;
+> +	struct scsi_disk *sdkp = dev_get_drvdata(&sdev->sdev_gendev);
+>  
+> -	if (sdkp) {
+> -		if (sdkp->WCE) {
+> -			memset(rq->cmd, 0, sizeof(rq->cmd));
+> -			rq->flags |= REQ_BLOCK_PC | REQ_SOFTBARRIER;
+> -			rq->timeout = SD_TIMEOUT;
+> -			rq->cmd[0] = SYNCHRONIZE_CACHE;
+> -			ret = 1;
+> -		}
+> -		scsi_disk_put(sdkp);
+> -	}
+> -	return ret;
+> +	if (!sdkp || !sdkp->WCE)
+> +		return 0;
+> +
+> +	memset(rq->cmd, 0, sizeof(rq->cmd));
+> +	rq->flags |= REQ_BLOCK_PC | REQ_SOFTBARRIER;
+> +	rq->timeout = SD_TIMEOUT;
+> +	rq->cmd[0] = SYNCHRONIZE_CACHE;
+> +	return 1;
+>  }
+>  
+>  static void sd_rescan(struct device *dev)
 
-James, I note that my favorite masterpiece of ibmvscsis.c is not
-currently included.  Does that fall into part of the "flood"?
+Yup, with that patch it all works now.  Thanks James!
 
-Thanks
+FWIW, the filesystem on the raid md's is a reiserfs (reiserfs v3 that is).
 
-Dave B
+reuben
