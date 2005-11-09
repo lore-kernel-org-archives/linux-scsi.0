@@ -1,77 +1,35 @@
-From: Reuben Farrelly <reuben-lkml@reub.net>
-Subject: Re: 2.6.14-mm1
-Date: Wed, 09 Nov 2005 13:30:53 +1300
-Message-ID: <4371433D.3080402@reub.net>
-References: <20051106182447.5f571a46.akpm@osdl.org>	 <436F2452.9020207@reub.net> <20051107020905.69c0b6dc.akpm@osdl.org>	 <17263.11214.992300.34384@cse.unsw.edu.au>	 <20051107023723.5cf63393.akpm@osdl.org> <436F3020.1040209@reub.net>	 <20051107105257.333248c0.akpm@osdl.org> <1131459667.3270.8.camel@mulgrave>
+From: <linux-scsi@vger.kernel.org>
+Subject: separadores para su jardin
+Date: Wed, 9 Nov 2005 01:56:23 +0100
+Message-ID: <14ced01c5e4c8$67885ff0$0500a8c0@hire7b58743925>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030470AbVKIAa5@vger.kernel.org>
-In-Reply-To: <1131459667.3270.8.camel@mulgrave>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@osdl.org>, neilb@suse.de, linux-kernel@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 62-15-156-23.inversas.jazztel.es ([62.15.156.23]:34625 "EHLO
+	localhost.localdomain") by vger.kernel.org with ESMTP
+	id S932391AbVKIAzc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Nov 2005 19:55:32 -0500
+Received: from hire7b58743925 ([192.168.0.5])
+	by localhost.localdomain (8.13.4/8.13.4/Debian-3) with SMTP id jA80u4hj003828
+	for <linux-scsi@vger.kernel.org>; Tue, 8 Nov 2005 01:56:07 +0100
+Content-Class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+Seguridad total para su escalera o piscina particular.
+En solo un instantes sus nios pueden tener un accidente, que le puede perjudicar para toda su vida.
+mediante este enlace tiene toda la informacin.
 
+http://www.bestsevendiamonds.com/vinyl/
 
-Hi,
+Desea representar nuestros productos?
 
-On 9/11/2005 3:21 a.m., James Bottomley wrote:
-> On Mon, 2005-11-07 at 10:52 -0800, Andrew Morton wrote:
->> sd_issue_flush() has been altered to run scsi_disk_get_from_dev(), which
->> takes a semaphore.  It does this from within spinlock and, as we see here,
->> from within softirq.
->>
->> Methinks the people who developed and tested that patch forgot to enable
->> CONFIG_PREEMPT, CONFIG_DEBUG_KERNEL, CONFIG_DEBUG_SLAB,
->> CONFIG_DEBUG_SPINLOCK and CONFIG_DEBUG_SPINLOCK_SLEEP.
-> 
-> Actually, I do too (as far as I can on non-x86).  I assume you also need
-> a filesystem that excites this, though.
-> 
-> Try the attached: We can probably rely on the block device having opened
-> the sd device, so there should already be a reference held on the
-> scsi_disk ... well that's my theory and I'm sticking to it.
-> 
-> James
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -769,20 +769,16 @@ static void sd_end_flush(request_queue_t
->  static int sd_prepare_flush(request_queue_t *q, struct request *rq)
->  {
->  	struct scsi_device *sdev = q->queuedata;
-> -	struct scsi_disk *sdkp = scsi_disk_get_from_dev(&sdev->sdev_gendev);
-> -	int ret = 0;
-> +	struct scsi_disk *sdkp = dev_get_drvdata(&sdev->sdev_gendev);
->  
-> -	if (sdkp) {
-> -		if (sdkp->WCE) {
-> -			memset(rq->cmd, 0, sizeof(rq->cmd));
-> -			rq->flags |= REQ_BLOCK_PC | REQ_SOFTBARRIER;
-> -			rq->timeout = SD_TIMEOUT;
-> -			rq->cmd[0] = SYNCHRONIZE_CACHE;
-> -			ret = 1;
-> -		}
-> -		scsi_disk_put(sdkp);
-> -	}
-> -	return ret;
-> +	if (!sdkp || !sdkp->WCE)
-> +		return 0;
-> +
-> +	memset(rq->cmd, 0, sizeof(rq->cmd));
-> +	rq->flags |= REQ_BLOCK_PC | REQ_SOFTBARRIER;
-> +	rq->timeout = SD_TIMEOUT;
-> +	rq->cmd[0] = SYNCHRONIZE_CACHE;
-> +	return 1;
->  }
->  
->  static void sd_rescan(struct device *dev)
+Si es su deseo darse de baja, para no recibir ms publicidad es necesario lo haga en el siguiente enlace.
 
-Yup, with that patch it all works now.  Thanks James!
+http://www.bestsevendiamonds.com/vinyl/bajas.asp
 
-FWIW, the filesystem on the raid md's is a reiserfs (reiserfs v3 that is).
+Muchas gracias
 
-reuben
