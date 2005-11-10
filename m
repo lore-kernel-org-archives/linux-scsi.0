@@ -1,26 +1,39 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/10] remove scsi_request usage from sg and st
-Date: Thu, 10 Nov 2005 13:02:45 +0000
-Message-ID: <20051110130245.GA11364@infradead.org>
-References: <1131444389.23111.56.camel@max> <20051110105513.GA9118@infradead.org> <43734249.3030800@cs.wisc.edu>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: [DOC PATCH]  T10/04-262r8
+Date: Thu, 10 Nov 2005 09:27:54 -0500
+Message-ID: <437358EA.3090406@rtr.ca>
+References: <CA45571DE57E1C45BF3552118BA92C9D69BF4A@WDSCEXBECL03.sc.wdc.com>	 <4371BB82.3090208@gmx.de> <4371C557.80807@gmx.de> <4371F7C3.5080702@rtr.ca>	 <43720232.6090609@gmx.de> <4372172A.50003@gmx.de>	 <43721C3C.1010103@pobox.com> <1131553363.3271.1.camel@mulgrave> <4372E66F.5070802@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:35037 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1750830AbVKJNCw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Nov 2005 08:02:52 -0500
-Content-Disposition: inline
-In-Reply-To: <43734249.3030800@cs.wisc.edu>
+Received: from rtr.ca ([64.26.128.89]:64938 "EHLO mail.rtr.ca")
+	by vger.kernel.org with ESMTP id S1750951AbVKJO1o (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Nov 2005 09:27:44 -0500
+In-Reply-To: <4372E66F.5070802@gmx.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Christoph Hellwig <hch@infradead.org>, axboe@suse.de, linux-scsi@vger.kernel.org
+Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Thu, Nov 10, 2005 at 06:51:21AM -0600, Mike Christie wrote:
-> Oh yeah was my last max_sectors close
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=113147482216587&w=2
-> or did it need work, or do I just need to get LLD writers to set their 
-> sht->max_sectors correctly?
+thomas schorpp wrote:
+>
+> for hdparm ata-security theres ide taskfile used, can scsi command sequences combined with ide taskfiles 
+> which use own ioctls?
 
-Looks good to me.
+As Jeff said, libata translates some of the HDIO_TASK* functions
+into SCSI passthru commands, which then get translated back
+into ATA commands at the time of issue to the device.
+
+Once passthru makes it out into the wild (Linus kernels),
+I'll update hdparm to have it use SCSI passthru instead
+when available/appropriate.
+
+There will have to be about a year or so of full overlap
+(hdparm, smartmontools, and kernel), to give distros time
+to update/release with all of the affected components.
+
+After that, I imagine Jeff may want to remove the HDIO_TASK*
+calls again.
+
+Cheers
