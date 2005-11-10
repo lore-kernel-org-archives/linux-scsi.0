@@ -1,27 +1,43 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 3/3]  qla2xxx: Resync with latest released ISP24xx firmware -- 4.00.16.
-Date: 9 Nov 2005 15:49:33 -0800
-Message-ID: <20051109234929.4868.8329.sendpatchset@andrew-vasquezs-powerbook-g4-15.local>
-References: <20051109234846.4868.25487.sendpatchset@andrew-vasquezs-powerbook-g4-15.local>
+From: "Jerome Newell" <dhayesqljg@hendersonmhc.org>
+Subject: You the student also require money? You should begin with us
+Date: Wed, 9 Nov 2005 17:51:58 -0800
+Message-ID: <9547370044.9883370625@hendersonmhc.org>
+Reply-To: "Jerome Newell" <dhayesqljg@hendersonmhc.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:21317 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751638AbVKIXtd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2005 18:49:33 -0500
-In-Reply-To: <20051109234846.4868.25487.sendpatchset@andrew-vasquezs-powerbook-g4-15.local>
+Received: from pool-71-110-174-239.lsanca.dsl-w.verizon.net ([71.110.174.239]:3526
+	"HELO pool-71-110-174-239.lsanca.dsl-w.verizon.net")
+	by vger.kernel.org with SMTP id S1751712AbVKJDIc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2005 22:08:32 -0500
+Received: from mail.hendersonmhc.org
+	by pool-71-110-174-239.lsanca.dsl-w.verizon.net (8.9.3/8.9.3) with SMTP id 1ydqyeabhiP5
+	for <linux-scsi@vger.kernel.org>; Wed, 9 Nov 2005 17:51:58 -0800
+Received: from ensim (88.0.41.84)
+	by mail.hendersonmhc.org (Postfix) with ESMTP id SAaEeNvKeFrT
+	for <linux-scsi@vger.kernel.org>; Wed, 9 Nov 2005 17:51:58 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: linux-scsi@vger.kernel.org
+
+Thank You for Your interest.stats  
 
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Job for you! get  
 
----
 
-This patch is too large for an inline patch, please download the
-bzip'd patch from:
+MakePay Corporation offers the External Financial Management Services leadership, 
+experience and results in cash flow management.  will  
+We offer You the job of finance manager. dream
+Thank You for Your interest.check
+Contact us on our post client and specify the.  we
+Full name
+Address
+Contact info (e-mail, phone, fax)
+And we shall contact you within one day
 
-        ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.01.03k/5003-Resync-with-latest-released-ISP24xx-firmware-4.00.16.txt.bz2
+Details on a site www.makepay.biz
 
--- 
-Andrew Vasquez
+Contact as support@makepay.biz
+
