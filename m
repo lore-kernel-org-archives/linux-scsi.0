@@ -1,60 +1,42 @@
-From: thomas schorpp <t.schorpp@gmx.de>
-Subject: (SAT) libata + hdparm/smartctl
-Date: Thu, 10 Nov 2005 16:05:51 +0100
-Message-ID: <437361CF.2040909@gmx.de>
-References: <CA45571DE57E1C45BF3552118BA92C9D69BF4A@WDSCEXBECL03.sc.wdc.com>	 <4371BB82.3090208@gmx.de> <4371C557.80807@gmx.de> <4371F7C3.5080702@rtr.ca>	 <43720232.6090609@gmx.de> <4372172A.50003@gmx.de>	 <43721C3C.1010103@pobox.com> <1131553363.3271.1.camel@mulgrave> <4372E66F.5070802@gmx.de> <437358EA.3090406@rtr.ca>
-Reply-To: t.schorpp@gmx.de
+From: "Kolli, Neela Syam" <Neela.Kolli@engenio.com>
+Subject: RE: [PATCH] Schedule removal of megaraid hardware support overlap
+Date: Thu, 10 Nov 2005 10:36:09 -0500
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E570751D274@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pop.gmx.net ([213.165.64.20]:32922 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1750711AbVKJPGn (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:40859 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1750943AbVKJPhB (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Nov 2005 10:06:43 -0500
-In-Reply-To: <437358EA.3090406@rtr.ca>
+	Thu, 10 Nov 2005 10:37:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI list <linux-scsi@vger.kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: Daniel Drake <dsd@gentoo.org>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>, 'Christoph Hellwig' <hch@infradead.org>, linux-scsi@vger.kernel.org, "Ju, Seokmann" <Seokmann.Ju@engenio.com>
 
-Mark Lord wrote:
-> thomas schorpp wrote:
-> 
->>
->> for hdparm ata-security theres ide taskfile used, can scsi command
->> sequences combined with ide taskfiles which use own ioctls?
-> 
-> 
-> As Jeff said, libata translates some of the HDIO_TASK* functions
-> into SCSI passthru commands, which then get translated back
-> into ATA commands at the time of issue to the device.
-> 
-> Once passthru makes it out into the wild (Linus kernels),
-> I'll update hdparm to have it use SCSI passthru instead
-> when available/appropriate.
-> 
-> There will have to be about a year or so of full overlap
-> (hdparm, smartmontools, and kernel), to give distros time
-> to update/release with all of the affected components.
-> 
-> After that, I imagine Jeff may want to remove the HDIO_TASK*
-> calls again.
-> 
-> Cheers
+This patch is good.  Thanks for the patch.  
+In the meantime, we are working on removing the hardware support overlap in
+megaraid drivers.  We should be getting this patch out in coming weeks.
 
-ive tried the whole day to make this driver helper libata or parts of it available to the user space
-and it didnt work out, sorry, you cant include the header in user-space apps and theres no interface to it.
+Thanks,
+Neela Syam Kolli.
 
-but if You say so, i'll take a closer look at libatas HDIO_TASKs but this has to be utilized automatic then,
-at this time libata.ko does not get loaded or used by usbstorage devices.
 
-when it is a driver library i will use it with drivers, as it should be:
+-----Original Message-----
+From: Daniel Drake [mailto:dsd@gentoo.org] 
+Sent: Monday, November 07, 2005 9:09 AM
+To: James Bottomley
+Cc: Bagalkote, Sreenivas; 'Christoph Hellwig'; Kolli, Neela Syam;
+linux-scsi@vger.kernel.org; Ju, Seokmann
+Subject: [PATCH] Schedule removal of megaraid hardware support overlap
 
-so i look if i can modify sg, sd_mod or/and usb-storage to detect passthru needing devices automatic and to
-take action on passthru needing functionality, then none of the user space apps should need to be worked on.
+Hopefully we'll be getting the build restriction zapped much sooner, but we 
+should also be thinking about totally removing the hardware support overlap
+in 
+the megaraid drivers.
 
-(hopefully) 
+This patch pencils in a date of Feb 06 for this, and performs some printk 
+abuse in hope that existing legacy users might pick up on what's going on.
 
-y
-tom
+Signed-off-by: Daniel Drake <dsd@gentoo.org>
+
