@@ -1,42 +1,59 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [DOC PATCH]  T10/04-262r8
-Date: Thu, 10 Nov 2005 02:44:42 -0500
-Message-ID: <4372FA6A.3090903@pobox.com>
-References: <CA45571DE57E1C45BF3552118BA92C9D69BF4A@WDSCEXBECL03.sc.wdc.com>	 <4371BB82.3090208@gmx.de> <4371C557.80807@gmx.de> <4371F7C3.5080702@rtr.ca>	 <43720232.6090609@gmx.de> <4372172A.50003@gmx.de>	 <43721C3C.1010103@pobox.com> <1131553363.3271.1.camel@mulgrave> <4372E66F.5070802@gmx.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] remove CONFIG_SCSI_QLOGIC_1280_1040
+Date: Thu, 10 Nov 2005 11:41:59 +0100
+Message-ID: <20051110104159.GA689@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4372E66F.5070802@gmx.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: t.schorpp@gmx.de
-Cc: Linux SCSI list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.210]:64460 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S1750765AbVKJKmD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Nov 2005 05:42:03 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-thomas schorpp wrote:
-> James Bottomley wrote:
-> 
->>>>#define	ATA_16		      0x85	/* 16-byte pass-thru */
->>>>#define	ATA_12		      0xa1	/* 12-byte pass-thru */
->>>
-> 
-> is this all, or do we have a preliminary SATL in kernel yet? cant find.
+now that qlogicisp is gone there is not reason not to support the 1040
+unconditionally in qla1280.
 
-It's been there for more than a year:  drivers/scsi/libata-scsi.c
+Would be nice to get this into 2.6.15 still.
 
 
-> how about full definitions of the pasthru cdb's in kernel structs and approbiate ioctls?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-upstream as of 2.6.14-git
-
-
-> for hdparm ata-security theres ide taskfile used, can scsi command sequences combined with ide taskfiles 
-> which use own ioctls?
-> are taskfiles needed for this in any case?
-
-in libata, the HDIO ioctls are implemented by creating issuing a SCSI 
-command (ATA passthru).
-
-	Jeff
-
-
+Index: linux-2.6/drivers/scsi/Kconfig
+===================================================================
+--- linux-2.6.orig/drivers/scsi/Kconfig	2005-11-06 20:09:10.000000000 +0100
++++ linux-2.6/drivers/scsi/Kconfig	2005-11-08 12:43:05.000000000 +0100
+@@ -1342,14 +1342,6 @@
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called qla1280.
+ 
+-config SCSI_QLOGIC_1280_1040
+-	bool "Qlogic QLA 1020/1040 SCSI support"
+-	depends on SCSI_QLOGIC_1280 && SCSI_QLOGIC_ISP!=y
+-	help
+-	  Say Y here if you have a QLogic ISP1020/1040 SCSI host adapter and
+-	  do not want to use the old driver.  This option enables support in
+-	  the qla1280 driver for those host adapters.
+-
+ config SCSI_QLOGICPTI
+ 	tristate "PTI Qlogic, ISP Driver"
+ 	depends on SBUS && SCSI
+Index: linux-2.6/drivers/scsi/qla1280.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/qla1280.c	2005-10-31 12:23:47.000000000 +0100
++++ linux-2.6/drivers/scsi/qla1280.c	2005-11-08 12:42:55.000000000 +0100
+@@ -639,10 +639,8 @@
+ static struct pci_device_id qla1280_pci_tbl[] = {
+ 	{PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP12160,
+ 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-#ifdef CONFIG_SCSI_QLOGIC_1280_1040
+ 	{PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP1020,
+ 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
+-#endif
+ 	{PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP1080,
+ 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2},
+ 	{PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP1240,
