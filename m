@@ -1,42 +1,43 @@
-From: "Kolli, Neela Syam" <Neela.Kolli@engenio.com>
-Subject: RE: [PATCH] Schedule removal of megaraid hardware support overlap
-Date: Thu, 10 Nov 2005 10:36:09 -0500
-Message-ID: <0E3FA95632D6D047BA649F95DAB60E570751D274@exa-atlanta>
+From: Matt Compton <ingal000whxj@mail.genmills.com>
+Subject: The company of all world invites to work partial and full employment?
+Date: Thu, 10 Nov 2005 05:36:13 -0800
+Message-ID: <062183997420.056025748030@mail.genmills.com>
+Reply-To: Matt Compton <ingal000whxj@mail.genmills.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:40859 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1750943AbVKJPhB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Nov 2005 10:37:01 -0500
+Received: from gb.jb.86.73.revip.asianet.co.th ([61.91.86.73]:20745 "HELO
+	gb.jb.86.73.revip.asianet.co.th") by vger.kernel.org with SMTP
+	id S1751036AbVKJPnL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Nov 2005 10:43:11 -0500
+Received: from smtp1a.genmills.com
+	by gb.jb.86.73.revip.asianet.co.th (8.9.3/8.9.3) with ESMTP id 0hcU7pueoaUy
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2005 05:36:13 -0800
+Received: from linx (96.182.10.74)
+	by smtp1a.genmills.com via HTTP
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2005 05:36:13 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel Drake <dsd@gentoo.org>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>, 'Christoph Hellwig' <hch@infradead.org>, linux-scsi@vger.kernel.org, "Ju, Seokmann" <Seokmann.Ju@engenio.com>
+To: linux-scsi@vger.kernel.org
 
-This patch is good.  Thanks for the patch.  
-In the meantime, we are working on removing the hardware support overlap in
-megaraid drivers.  We should be getting this patch out in coming weeks.
-
-Thanks,
-Neela Syam Kolli.
+Thank You for Your interest.only  
 
 
------Original Message-----
-From: Daniel Drake [mailto:dsd@gentoo.org] 
-Sent: Monday, November 07, 2005 9:09 AM
-To: James Bottomley
-Cc: Bagalkote, Sreenivas; 'Christoph Hellwig'; Kolli, Neela Syam;
-linux-scsi@vger.kernel.org; Ju, Seokmann
-Subject: [PATCH] Schedule removal of megaraid hardware support overlap
+Job for you! site  
 
-Hopefully we'll be getting the build restriction zapped much sooner, but we 
-should also be thinking about totally removing the hardware support overlap
-in 
-the megaraid drivers.
 
-This patch pencils in a date of Feb 06 for this, and performs some printk 
-abuse in hope that existing legacy users might pick up on what's going on.
+MakePay Corporation offers the External Financial Management Services leadership, 
+experience and results in cash flow management.  here  
+We offer You the job of finance manager. other
+Thank You for Your interest.other
+Contact us on our post client and specify the.  out
+Full name
+Address
+Contact info (e-mail, phone, fax)
+And we shall contact you within one day
 
-Signed-off-by: Daniel Drake <dsd@gentoo.org>
+Details on a site www.makepay.biz
+
+Contact as support@makepay.biz
 
