@@ -1,59 +1,37 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] remove CONFIG_SCSI_QLOGIC_1280_1040
-Date: Thu, 10 Nov 2005 11:41:59 +0100
-Message-ID: <20051110104159.GA689@lst.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/10] remove scsi_request usage from sg and st
+Date: Thu, 10 Nov 2005 10:55:13 +0000
+Message-ID: <20051110105513.GA9118@infradead.org>
+References: <1131444389.23111.56.camel@max>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:64460 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S1750765AbVKJKmD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Nov 2005 05:42:03 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:61888 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1750775AbVKJKzU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Nov 2005 05:55:20 -0500
 Content-Disposition: inline
+In-Reply-To: <1131444389.23111.56.camel@max>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: axboe@suse.de, linux-scsi@vger.kernel.org
 
-now that qlogicisp is gone there is not reason not to support the 1040
-unconditionally in qla1280.
+On Tue, Nov 08, 2005 at 04:06:29AM -0600, Mike Christie wrote:
+> The following patches, made against scsi-misc, remove the scsi_request
+> usage from st and sg, do some tiny cleanup on sg, and make sg and st
+> always perform scatterlist IO.
+> 
+> I have tested against libata and scsi_debug for disks. There are slight
+> changes, so someone with a tape device should test the patches, but Kai
+> since Kai did all the debugging last round I have not made many changes.
+> We will probably hit many problems with LLDs using low max_hw_sectors,
+> because they have not been converted to export their real values on the
+> host template so I think these patches should sit in scsi-misc for a
+> good deal of time.
 
-Would be nice to get this into 2.6.15 still.
+looks like linus is closing the big merge window for 2.6.15, so we won't
+be able to get this in fully.  What do you thing about getting in the
+infrastructure at least, that is patches: 1,3,6,7 for 2.6.15 and the rest
+afterwards, after the max_sectors thing has settled a little?
 
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Index: linux-2.6/drivers/scsi/Kconfig
-===================================================================
---- linux-2.6.orig/drivers/scsi/Kconfig	2005-11-06 20:09:10.000000000 +0100
-+++ linux-2.6/drivers/scsi/Kconfig	2005-11-08 12:43:05.000000000 +0100
-@@ -1342,14 +1342,6 @@
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called qla1280.
- 
--config SCSI_QLOGIC_1280_1040
--	bool "Qlogic QLA 1020/1040 SCSI support"
--	depends on SCSI_QLOGIC_1280 && SCSI_QLOGIC_ISP!=y
--	help
--	  Say Y here if you have a QLogic ISP1020/1040 SCSI host adapter and
--	  do not want to use the old driver.  This option enables support in
--	  the qla1280 driver for those host adapters.
--
- config SCSI_QLOGICPTI
- 	tristate "PTI Qlogic, ISP Driver"
- 	depends on SBUS && SCSI
-Index: linux-2.6/drivers/scsi/qla1280.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/qla1280.c	2005-10-31 12:23:47.000000000 +0100
-+++ linux-2.6/drivers/scsi/qla1280.c	2005-11-08 12:42:55.000000000 +0100
-@@ -639,10 +639,8 @@
- static struct pci_device_id qla1280_pci_tbl[] = {
- 	{PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP12160,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--#ifdef CONFIG_SCSI_QLOGIC_1280_1040
- 	{PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP1020,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 1},
--#endif
- 	{PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP1080,
- 		PCI_ANY_ID, PCI_ANY_ID, 0, 0, 2},
- 	{PCI_VENDOR_ID_QLOGIC, PCI_DEVICE_ID_QLOGIC_ISP1240,
