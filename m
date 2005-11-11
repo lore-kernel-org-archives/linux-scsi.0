@@ -1,36 +1,26 @@
-From: "Cameron, Steve" <Steve.Cameron@hp.com>
-Subject: RE: [PATCH 1/1] cciss: scsi error handling
-Date: Fri, 11 Nov 2005 16:01:45 -0600
-Message-ID: <45B36A38D959B44CB032DA427A6E10640A7A5411@cceexc18.americas.cpqcorp.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [GIT PATCH] final pre -rc pieces of SCSI for 2.6.14
+Date: Fri, 11 Nov 2005 22:23:41 +0000
+Message-ID: <20051111222341.GA20077@infradead.org>
+References: <1131745742.3505.47.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ccerelbas04.cce.hp.com ([161.114.21.107]:11757 "EHLO
-	ccerelbas04.cce.hp.com") by vger.kernel.org with ESMTP
-	id S1751266AbVKKWBw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2005 17:01:52 -0500
-Content-class: urn:content-classes:message
+Received: from pentafluge.infradead.org ([213.146.154.40]:51937 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751126AbVKKWXs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Nov 2005 17:23:48 -0500
+Content-Disposition: inline
+In-Reply-To: <1131745742.3505.47.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
+On Fri, Nov 11, 2005 at 03:49:01PM -0600, James Bottomley wrote:
+>   o remove scsi_wait_req
 
-> No, the pointers are all held in place.  Even if everyone else releases
-> their references, the commmand still contains a reference to the device
-> (which holds it from being released) and the device likewise contains a
-> reference to the host.
-
-Ok, then I think it's good to go as far as locking is concerned.
-
-Thanks for the explanation.
-
-Regarding the CISS vs. CCISS in the config variable, is that going
-to hold up this patch?  I can make a patch to change that, but it's
-not really related to this patch, this patch just happens to use 
-that config variable.
-
--- steve
-
+This requires '[PATCH] kill libata scsi_wait_req usage (make libata compile in
+scsi-misc)' from Mike, because libata started to use this function in mainline
+about the same time it was removed in scsi-misc.
 
