@@ -1,51 +1,57 @@
-From: James.Smart@Emulex.Com
-Subject: RE: [PATCH] lpfc build fix
-Date: Thu, 10 Nov 2005 22:51:31 -0500
-Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276B53@xbl3.ma.emulex.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/3]  qla2xxx: Add full firmware(-request) hotplug support for all ISPs.
+Date: Fri, 11 Nov 2005 07:30:02 +0000
+Message-ID: <20051111073002.GA3233@infradead.org>
+References: <20051109234846.4868.25487.sendpatchset@andrew-vasquezs-powerbook-g4-15.local> <20051109234901.4868.27256.sendpatchset@andrew-vasquezs-powerbook-g4-15.local> <20051110105846.GA9222@infradead.org> <20051111004718.GP5678@andrew-vasquezs-powerbook-g4-15.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932355AbVKKDvz@vger.kernel.org>
-content-class: urn:content-classes:message
-Sender: linux-kernel-owner@vger.kernel.org
-To: jgarzik@pobox.com, akpm@osdl.org, torvalds@osdl.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, gregkh@suse.de
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:48348 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751069AbVKKHaF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Nov 2005 02:30:05 -0500
+Content-Disposition: inline
+In-Reply-To: <20051111004718.GP5678@andrew-vasquezs-powerbook-g4-15.local>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-ok...
+On Thu, Nov 10, 2005 at 04:47:18PM -0800, Andrew Vasquez wrote:
+> Sure, sounds reasonable -- perhaps we can get some consensus from the
+> list and come up with the date (arbitrary as it may be), at least it
+> would motivate those affected (QLogic)...
 
--- james s
+sure.  Does June 2006 sounds reasonable?
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org
-> [mailto:linux-scsi-owner@vger.kernel.org]On Behalf Of Jeff Garzik
-> Sent: Thursday, November 10, 2005 8:34 PM
-> To: Andrew Morton; Linus Torvalds
-> Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Greg KH
-> Subject: [PATCH] lpfc build fix
+> > > +config SCSI_QLA21XX
+> > > +	tristate "  Build QLogic ISP2100 firmware-module"
+> > > +	depends on SCSI_QLA2XXX_EMBEDDED_FIRMWARE
+> > >  	---help---
+> > >  	This driver supports the QLogic 21xx (ISP2100) host adapter family.
+> > 
+> > don't the help-text need some update?
 > 
+> I'm inclined to drop the help-text entirely for the firmware-module
+> entries, as I'm not sure one needs more info than the menu-item:
 > 
-> Current upstream 'allmodconfig' build is broken.  This is the obvious
-> patch...
+> 	[ ] Build QLogic ISP2100 firmware-module
 > 
-> Signed-off-by: Jeff Garzik <jgarzik@pobox.com>
+> already states.  What were you looking for?
+
+Dropping the help text makes sense.
+
+> > I'd say just use this else clause unconditionally.  no need to optimize for
+> > the 1% users using the deprecated builtin-firmware and compile just for
+> > a subsystet of the supported cards.
 > 
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c 
-> b/drivers/scsi/lpfc/lpfc_init.c
-> index c907238..0749811 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -1704,7 +1704,6 @@ MODULE_DEVICE_TABLE(pci, lpfc_id_table);
->  
->  static struct pci_driver lpfc_driver = {
->  	.name		= LPFC_DRIVER_NAME,
-> -	.owner		= THIS_MODULE,
->  	.id_table	= lpfc_id_table,
->  	.probe		= lpfc_pci_probe_one,
->  	.remove		= __devexit_p(lpfc_pci_remove_one),
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> As this patchset looks to be more 2.6.16 material, I'll redo the
+> patches with this change along with any additional feedback and a few
+> minor bits.
 > 
+> James, would you like me to resubmit now for staging in scsi-misc-2.6
+> for 2.6.16?
+
+Given that it's needed to support the ISP24xx i'd love to see it in
+2.6.15
+
