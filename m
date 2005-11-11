@@ -1,58 +1,71 @@
-From: Michael Renner <michael.renner@geizhals.at>
-Subject: Bad SCSI performance with 2.6.14 and Fusion-MPT
-Date: Thu, 10 Nov 2005 20:18:29 +0000 (UTC)
-Message-ID: <loom.20051110T204455-697@post.gmane.org>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [PATCH 1/3]  qla2xxx: Add full firmware(-request) hotplug support for all ISPs.
+Date: Thu, 10 Nov 2005 16:47:18 -0800
+Message-ID: <20051111004718.GP5678@andrew-vasquezs-powerbook-g4-15.local>
+References: <20051109234846.4868.25487.sendpatchset@andrew-vasquezs-powerbook-g4-15.local> <20051109234901.4868.27256.sendpatchset@andrew-vasquezs-powerbook-g4-15.local> <20051110105846.GA9222@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:31198 "EHLO ciao.gmane.org")
-	by vger.kernel.org with ESMTP id S932209AbVKJWdK (ORCPT
+Received: from pat.qlogic.com ([198.70.193.2]:702 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S932292AbVKKArY (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Nov 2005 17:33:10 -0500
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1EaKwd-0006R0-HD
-	for linux-scsi@vger.kernel.org; Thu, 10 Nov 2005 23:30:59 +0100
-Received: from das.geizhals.buero.ist.geiler.at ([213.229.14.38])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2005 23:30:58 +0100
-Received: from michael.renner by das.geizhals.buero.ist.geiler.at with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2005 23:30:58 +0100
+	Thu, 10 Nov 2005 19:47:24 -0500
+Content-Disposition: inline
+In-Reply-To: <20051110105846.GA9222@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hi,
+On Thu, 10 Nov 2005, Christoph Hellwig wrote:
 
-I'm seeing really bad scsi performance with 2.6.14 in combination with Fusion
-MPT and amd64. The same behavior was seen in 2.6.14-git13.
+> this patchkit looks good.  one thing we discussed and should go in ontop is a
+> scsi-wide option the firmware depends on, with
+> a clear deprecation date for the builtin firmware.  that way we can enforce
+> that all new drivers support request_firmware, but can have in-kernel firmware
+> for until that deprecation date.
 
-The controller in question identifies itself as "LSI Logic / Symbios Logic
-53c1030 PCI-X Fusion-MPT Dual Ultra320 SCSI (rev 07)", PCI ID 1000:0030.
+Sure, sounds reasonable -- perhaps we can get some consensus from the
+list and come up with the date (arbitrary as it may be), at least it
+would motivate those affected (QLogic)...
 
-Starting with 2.6.14 (didn't test the releases between 2.6.13 and 2.6.14) the
-resync rate of the software raid dropped to about 2mb/sec on a raid1 array over
-two scsi disks (normally I get around 60-80mb/sec), doing a dd from one disk to
-the other supported those values. I can't give exact measures since a "sync"
-call hangs since half an hour (was a bit too much data for testing) but vmstat
-shows:
+> > +config SCSI_QLA21XX
+> > +	tristate "  Build QLogic ISP2100 firmware-module"
+> > +	depends on SCSI_QLA2XXX_EMBEDDED_FIRMWARE
+> >  	---help---
+> >  	This driver supports the QLogic 21xx (ISP2100) host adapter family.
+> 
+> don't the help-text need some update?
 
-procs -----------memory---------- ---swap-- -----io---- --system-- ----cpu----
- r  b   swpd   free   buff  cache   si   so    bi    bo   in    cs us sy id wa
- 0  5      0 23873224 8198000  24288    0    0   463   259   71    23  0  0 83 17
- 0  5      0 23872968 8198000  24288    0    0     0  4096  273    48  0  0 75 25
- 0  5      0 23873340 8198000  24288    0    0     0     0  271    50  0  0 75 25
- 0  4      0 23873084 8198000  24288    0    0     0  4096  270    49  0  0 75 24
- 0  4      0 23873120 8198000  24288    0    0     0  4096  274    54  0  0 75 25
- 0  4      0 23873120 8198000  24288    0    0     0     0  270    44  0  0 75 25
- 0  4      0 23873136 8198000  24288    0    0     0  4096  272    51  0  0 75 25
+I'm inclined to drop the help-text entirely for the firmware-module
+entries, as I'm not sure one needs more info than the menu-item:
 
-which is bad.
+	[ ] Build QLogic ISP2100 firmware-module
 
-Any ideas?
+already states.  What were you looking for?
 
-best regards,
-Michael Renner
+> > +#if defined(CONFIG_SCSI_QLA2XXX_EMBEDDED_FIRMWARE)
+> >  #if defined(CONFIG_SCSI_QLA21XX) || defined(CONFIG_SCSI_QLA21XX_MODULE)
+> >  #define IS_QLA2100(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2100)
+> >  #else
+> > @@ -79,9 +81,23 @@
+> >  #define IS_QLA2522(ha)	0
+> >  #endif
+> >  
+> > +#else	/* !defined(CONFIG_SCSI_QLA2XXX_EMBEDDED_FIRMWARE) */
+> > +
+> > +#define IS_QLA2100(ha)	((ha)->pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2100)
+> 
+> I'd say just use this else clause unconditionally.  no need to optimize for
+> the 1% users using the deprecated builtin-firmware and compile just for
+> a subsystet of the supported cards.
 
+As this patchset looks to be more 2.6.16 material, I'll redo the
+patches with this change along with any additional feedback and a few
+minor bits.
+
+James, would you like me to resubmit now for staging in scsi-misc-2.6
+for 2.6.16?
+
+--
+av
