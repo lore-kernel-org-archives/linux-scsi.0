@@ -1,53 +1,40 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: [Bugme-new] [Bug 5566] New: scsi_eh_x/scsi_wq_x "zombie"
- processes in kernel 2.6.13+
-Date: Fri, 11 Nov 2005 02:06:19 -0800
-Message-ID: <20051111020619.5a73ad37.akpm@osdl.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: SAS + Adaptec 94xx git tree updated
+Date: Fri, 11 Nov 2005 05:39:55 -0500
+Message-ID: <437474FB.2030407@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:21961 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751246AbVKKKGh (ORCPT
+Received: from mail.dvmed.net ([216.237.124.58]:7559 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932356AbVKKKkA (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Nov 2005 05:06:37 -0500
+	Fri, 11 Nov 2005 05:40:00 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+
+
+Due to a horribly broken git merge, I was forced to rebase the sas-2.6 
+tree against the latest upstream tree, rather than scsi-misc-2.6.
+
+So, people interested in SAS and Adaptec 94xx, please pull from 'ALL' 
+branch of
+rsync://rsync.kernel.org/pub/scm/linux/kernel/git/jgarzik/sas-2.6.git
+
+to receive Adaptec's SAS & 94xx code, plus my layering and code 
+duplication fixes.
+
+Since it needs my bare minimum merge goals -- use scsi_scan_target() and 
+put host template in aic94xx -- and since the upstream SAS transport 
+class may require a few changes to fully work with a all-software SAS 
+stack, I'm leaning towards pushing this sooner rather than later.
+
+That will get everybody working on the same codebase, which providing a 
+working driver for hardware that's already in the field.
+
+	Jeff
 
 
 
-Begin forwarded message:
-
-Date: Mon, 7 Nov 2005 14:49:17 -0800
-From: bugme-daemon@bugzilla.kernel.org
-To: bugme-new@lists.osdl.org
-Subject: [Bugme-new] [Bug 5566] New: scsi_eh_x/scsi_wq_x "zombie" processes in kernel 2.6.13+
-
-
-http://bugzilla.kernel.org/show_bug.cgi?id=5566
-
-           Summary: scsi_eh_x/scsi_wq_x "zombie" processes in kernel 2.6.13+
-    Kernel Version: 2.6.13+
-            Status: NEW
-          Severity: normal
-             Owner: andrew.vasquez@qlogic.com
-         Submitter: gator@cs.tu-berlin.de
-
-
-Most recent kernel where this bug did not occur: 2.6.12
-Starting around kernel version 2.6.13, the scsi_eh_x and scsi_wq_x
-processes that are created per scsi host will not terminate if the
-driver for the scsi interface is removed. I don't know whether there
-are any serious problems involved with this, but one thing that is
-definitely annoying, is that the process list fills very quickly when
-modules are loaded/unloaded on demand, because 2 new processes will
-be created every time the driver for a scsi adapter gets loaded.
-
-(I guess, this happens with all scsi host modules - in my case, the
-"culprit" is a qlogic fibre channel driver that gets loaded only when
-needed.)
-
-------- You are receiving this mail because: -------
-You are on the CC list for the bug, or are watching someone who is.
