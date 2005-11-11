@@ -1,59 +1,53 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH 1/3]  qla2xxx: Add full firmware(-request) hotplug support for all ISPs.
-Date: Fri, 11 Nov 2005 00:08:37 -0800
-Message-ID: <20051111080837.GB11653@andrew-vasquezs-powerbook-g4-15.local>
-References: <20051109234846.4868.25487.sendpatchset@andrew-vasquezs-powerbook-g4-15.local> <20051109234901.4868.27256.sendpatchset@andrew-vasquezs-powerbook-g4-15.local> <20051110105846.GA9222@infradead.org> <20051111004718.GP5678@andrew-vasquezs-powerbook-g4-15.local> <20051111073002.GA3233@infradead.org>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Fw: [Bugme-new] [Bug 5566] New: scsi_eh_x/scsi_wq_x "zombie"
+ processes in kernel 2.6.13+
+Date: Fri, 11 Nov 2005 02:06:19 -0800
+Message-ID: <20051111020619.5a73ad37.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:51088 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751255AbVKKIIk (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:21961 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751246AbVKKKGh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Nov 2005 03:08:40 -0500
-Content-Disposition: inline
-In-Reply-To: <20051111073002.GA3233@infradead.org>
+	Fri, 11 Nov 2005 05:06:37 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>
 
-On Fri, 11 Nov 2005, Christoph Hellwig wrote:
 
-> On Thu, Nov 10, 2005 at 04:47:18PM -0800, Andrew Vasquez wrote:
-> > Sure, sounds reasonable -- perhaps we can get some consensus from the
-> > list and come up with the date (arbitrary as it may be), at least it
-> > would motivate those affected (QLogic)...
-> 
-> sure.  Does June 2006 sounds reasonable?
 
-Fine with me.
+Begin forwarded message:
 
-> > I'm inclined to drop the help-text entirely for the firmware-module
-> > entries, as I'm not sure one needs more info than the menu-item:
-> > 
-> > 	[ ] Build QLogic ISP2100 firmware-module
-> > 
-> > already states.  What were you looking for?
-> 
-> Dropping the help text makes sense.
+Date: Mon, 7 Nov 2005 14:49:17 -0800
+From: bugme-daemon@bugzilla.kernel.org
+To: bugme-new@lists.osdl.org
+Subject: [Bugme-new] [Bug 5566] New: scsi_eh_x/scsi_wq_x "zombie" processes in kernel 2.6.13+
 
-done.
 
-> > > I'd say just use this else clause unconditionally.  no need to optimize for
-> > > the 1% users using the deprecated builtin-firmware and compile just for
-> > > a subsystet of the supported cards.
-> > 
-> > As this patchset looks to be more 2.6.16 material, I'll redo the
-> > patches with this change along with any additional feedback and a few
-> > minor bits.
-> > 
-> > James, would you like me to resubmit now for staging in scsi-misc-2.6
-> > for 2.6.16?
-> 
-> Given that it's needed to support the ISP24xx i'd love to see it in
-> 2.6.15
+http://bugzilla.kernel.org/show_bug.cgi?id=5566
 
-Sending the updated patchset now...
+           Summary: scsi_eh_x/scsi_wq_x "zombie" processes in kernel 2.6.13+
+    Kernel Version: 2.6.13+
+            Status: NEW
+          Severity: normal
+             Owner: andrew.vasquez@qlogic.com
+         Submitter: gator@cs.tu-berlin.de
 
--- 
-Andrew Vasquez
+
+Most recent kernel where this bug did not occur: 2.6.12
+Starting around kernel version 2.6.13, the scsi_eh_x and scsi_wq_x
+processes that are created per scsi host will not terminate if the
+driver for the scsi interface is removed. I don't know whether there
+are any serious problems involved with this, but one thing that is
+definitely annoying, is that the process list fills very quickly when
+modules are loaded/unloaded on demand, because 2 new processes will
+be created every time the driver for a scsi adapter gets loaded.
+
+(I guess, this happens with all scsi host modules - in my case, the
+"culprit" is a qlogic fibre channel driver that gets loaded only when
+needed.)
+
+------- You are receiving this mail because: -------
+You are on the CC list for the bug, or are watching someone who is.
