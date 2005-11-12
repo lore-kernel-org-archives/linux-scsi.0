@@ -1,26 +1,46 @@
-From: Al Viro <viro@ftp.linux.org.uk>
-Subject: Re: [RFC: 2.6 patch] remove ISA legacy functions
-Date: Sat, 12 Nov 2005 13:48:20 +0000
-Message-ID: <20051112134820.GG7992@ftp.linux.org.uk>
-References: <20051111021258.GK5376@stusta.de> <20051110182443.514622ed.akpm@osdl.org> <20051111201849.GP5376@stusta.de> <20051111202005.GQ5376@stusta.de> <20051111203601.GR5376@stusta.de> <20051112045216.GY5376@stusta.de> <437578CD.1080501@pobox.com> <20051112051102.GF1658@parisc-linux.org> <43757D5C.8030308@pobox.com> <20051112052918.GG1658@parisc-linux.org>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCH 5/10] convert st to use scsi_execute_async
+Date: Sat, 12 Nov 2005 19:03:51 +0200 (EET)
+Message-ID: <Pine.LNX.4.63.0511121859070.10335@kai.makisara.local>
+References: <1131444404.23111.66.camel@max>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:30136 "EHLO
-	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S932370AbVKLNvm
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Nov 2005 08:51:42 -0500
-Content-Disposition: inline
-In-Reply-To: <20051112052918.GG1658@parisc-linux.org>
+Received: from fep30-0.kolumbus.fi ([193.229.0.32]:12368 "EHLO
+	fep30-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S932415AbVKLRDv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Nov 2005 12:03:51 -0500
+In-Reply-To: <1131444404.23111.66.camel@max>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, jonathan@buzzard.org.uk, tlinux-users@tce.toshiba-dme.co.jp, Jaroslav Kysela <perex@suse.cz>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Jens Axboe <axboe@suse.de>, linux-scsi@vger.kernel.org
 
-On Fri, Nov 11, 2005 at 10:29:18PM -0700, Matthew Wilcox wrote:
-> I think they work fine everywhere.  Adrian wants to remove the API they
-> use.
+On Tue, 8 Nov 2005, Mike Christie wrote:
+
+> convert st to always send scatterlists and kill scsi_request
+> usage.
 > 
-> I think this is a bad idea.  The drivers should be converted.
+> This is the same as last time as it was posted, but with Kai's patches
+> merged and we now pass the bytes value to scsi_execute_async.
+> 
+This does not work "out of the box". The changes in st are almost the same 
+ones than before but the world around st has changed ;-) This has revealed 
+at least one bug in st that is fixed by the patch at the end of this 
+message. After this patch some simple tests succeed but there seem to be 
+still problems with larger requests. I don't have time to continue 
+debugging just now but I should be able to post more results during this 
+weekend.
 
-They are - I'll send patches later today...
+Kai
+
+--- linux-2.6.14-blk1/drivers/scsi/st.c.org	2005-11-09 22:36:56.000000000 +0200
++++ linux-2.6.14-blk1/drivers/scsi/st.c	2005-11-12 17:59:22.000000000 +0200
+@@ -3666,6 +3666,7 @@
+ 	}
+ 	STbuffer->frp_segs = STbuffer->orig_frp_segs;
+ 	STbuffer->frp_sg_current = 0;
++	STbuffer->sg_segs = 0;
+ }
+ 
+ 
