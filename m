@@ -1,227 +1,608 @@
 From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] removed useless SCSI_GENERIC_NCR5380_MMIO
-Date: Sat, 12 Nov 2005 05:37:07 +0100
-Message-ID: <20051112043707.GX5376@stusta.de>
+Subject: [RFC: 2.6 patch] remove ISA legacy functions
+Date: Sat, 12 Nov 2005 05:52:16 +0100
+Message-ID: <20051112045216.GY5376@stusta.de>
+References: <20051107200336.GH3847@stusta.de> <20051110042857.38b4635b.akpm@osdl.org> <20051111021258.GK5376@stusta.de> <20051110182443.514622ed.akpm@osdl.org> <20051111201849.GP5376@stusta.de> <20051111202005.GQ5376@stusta.de> <20051111203601.GR5376@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751294AbVKLEhO@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:9481 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1751352AbVKLEwW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Nov 2005 23:52:22 -0500
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20051111203601.GR5376@stusta.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, jonathan@buzzard.org.uk, tlinux-users@tce.toshiba-dme.co.jp, Jaroslav Kysela <perex@suse.cz>
 
-This patch removes the useless SCSI_GENERIC_NCR5380_MMIO.
+This patch removes the ISA legacy functions that are deprecated since 
+kernel 2.4 and that aren't available on all architectures.
 
-It's useless, since SCSI_G_NCR5380_MEM != CONFIG_SCSI_G_NCR5380_MEM.
-
-This issue exists at least since kernel 2.6.0 and since it seems noone 
-noticed it I'd say we can safely remove it.
+The 7 drivers that were still using this obsolete API are now marked
+as BROKEN.
 
 
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
 ---
 
- drivers/scsi/Kconfig          |   14 -------------
- drivers/scsi/Makefile         |    1 
- drivers/scsi/g_NCR5380.c      |   36 ----------------------------------
- drivers/scsi/g_NCR5380.h      |   19 -----------------
- drivers/scsi/g_NCR5380_mmio.c |   10 ---------
- 5 files changed, 80 deletions(-)
+ Documentation/DocBook/deviceiobook.tmpl |   19 -----
+ arch/i386/Kconfig                       |    1 
+ drivers/net/Kconfig                     |    6 -
+ drivers/net/arcnet/Kconfig              |    4 -
+ drivers/scsi/Kconfig                    |    2 
+ include/asm-alpha/io.h                  |   83 ------------------------
+ include/asm-arm/arch-aaec2000/io.h      |    1 
+ include/asm-arm/arch-clps711x/io.h      |    1 
+ include/asm-arm/arch-ebsa285/io.h       |    8 --
+ include/asm-arm/arch-integrator/io.h    |    1 
+ include/asm-arm/arch-iop3xx/io.h        |    1 
+ include/asm-arm/arch-l7200/io.h         |    1 
+ include/asm-arm/arch-lh7a40x/io.h       |    1 
+ include/asm-arm/arch-omap/io.h          |    1 
+ include/asm-arm/arch-pxa/io.h           |    1 
+ include/asm-arm/arch-realview/io.h      |    1 
+ include/asm-arm/arch-sa1100/io.h        |    1 
+ include/asm-arm/arch-versatile/io.h     |    1 
+ include/asm-arm/io.h                    |   36 ----------
+ include/asm-i386/io.h                   |   11 ---
+ include/asm-m68k/io.h                   |   21 ++----
+ include/asm-mips/io.h                   |   23 ------
+ include/asm-parisc/io.h                 |   18 -----
+ include/asm-sh/io.h                     |   13 ---
+ include/asm-x86_64/io.h                 |   11 ---
+ 25 files changed, 15 insertions(+), 252 deletions(-)
 
---- linux-2.6.14-mm2-full/drivers/scsi/Kconfig.old	2005-11-12 01:16:47.000000000 +0100
-+++ linux-2.6.14-mm2-full/drivers/scsi/Kconfig	2005-11-12 01:17:05.000000000 +0100
-@@ -846,20 +846,6 @@
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called g_NCR5380.
+--- linux-2.6.14-mm2-full/Documentation/DocBook/deviceiobook.tmpl.old	2005-11-11 21:44:08.000000000 +0100
++++ linux-2.6.14-mm2-full/Documentation/DocBook/deviceiobook.tmpl	2005-11-11 21:44:18.000000000 +0100
+@@ -270,25 +270,6 @@
+       </para>
+     </sect1>
  
--config SCSI_GENERIC_NCR5380_MMIO
--	tristate "Generic NCR5380/53c400 SCSI MMIO support"
--	depends on ISA && SCSI
--	---help---
--	  This is a driver for the old NCR 53c80 series of SCSI controllers
--	  on boards using memory mapped I/O. 
--	  It is explained in section 3.8 of the SCSI-HOWTO, available from
--	  <http://www.tldp.org/docs.html#howto>.  If it doesn't work out
--	  of the box, you may have to change some settings in
--	  <file:drivers/scsi/g_NCR5380.h>.
+-    <sect1>
+-      <title>ISA legacy functions</title>
+-      <para>
+-	On older kernels (2.2 and earlier) the ISA bus could be read or
+-	written with these functions and without ioremap being used. This is
+-	no longer true in Linux 2.4. A set of equivalent functions exist for
+-	easy legacy driver porting. The functions available are prefixed
+-	with 'isa_' and are <function>isa_readb</function>,
+-	<function>isa_writeb</function>, <function>isa_readw</function>, 
+-	<function>isa_writew</function>, <function>isa_readl</function>,
+-	<function>isa_writel</function>, <function>isa_memcpy_fromio</function>
+-	and <function>isa_memcpy_toio</function>
+-      </para>
+-      <para>
+-	These functions should not be used in new drivers, and will
+-	eventually be going away.
+-      </para>
+-    </sect1>
 -
--	  To compile this driver as a module, choose M here: the
--	  module will be called g_NCR5380_mmio.
+   </chapter>
+ 
+   <chapter>
+--- linux-2.6.14-mm2-full/include/asm-alpha/io.h.old	2005-11-11 21:39:55.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-alpha/io.h	2005-11-11 21:59:27.000000000 +0100
+@@ -534,9 +534,6 @@
+ #define eth_io_copy_and_sum(skb,src,len,unused) \
+   memcpy_fromio((skb)->data,src,len)
+ 
+-#define isa_eth_io_copy_and_sum(skb,src,len,unused) \
+-  isa_memcpy_fromio((skb)->data,src,len)
 -
- config SCSI_GENERIC_NCR53C400
- 	bool "Enable NCR53c400 extensions"
- 	depends on SCSI_GENERIC_NCR5380
---- linux-2.6.14-mm2-full/drivers/scsi/Makefile.old	2005-11-12 01:17:15.000000000 +0100
-+++ linux-2.6.14-mm2-full/drivers/scsi/Makefile	2005-11-12 01:17:21.000000000 +0100
-@@ -74,7 +74,6 @@
- obj-$(CONFIG_SCSI_FUTURE_DOMAIN)+= fdomain.o
- obj-$(CONFIG_SCSI_IN2000)	+= in2000.o
- obj-$(CONFIG_SCSI_GENERIC_NCR5380) += g_NCR5380.o
--obj-$(CONFIG_SCSI_GENERIC_NCR5380_MMIO) += g_NCR5380_mmio.o
- obj-$(CONFIG_SCSI_NCR53C406A)	+= NCR53c406a.o
- obj-$(CONFIG_SCSI_NCR_D700)	+= 53c700.o NCR_D700.o
- obj-$(CONFIG_SCSI_NCR_Q720)	+= NCR_Q720_mod.o
---- linux-2.6.14-mm2-full/drivers/scsi/g_NCR5380.h.old	2005-11-12 01:17:34.000000000 +0100
-+++ linux-2.6.14-mm2-full/drivers/scsi/g_NCR5380.h	2005-11-12 01:17:48.000000000 +0100
-@@ -64,8 +64,6 @@
- #define __STRVAL(x) #x
- #define STRVAL(x) __STRVAL(x)
+ static inline int
+ check_signature(const volatile void __iomem *io_addr,
+ 		const unsigned char *signature, int length)
+@@ -552,86 +549,6 @@
  
--#ifndef CONFIG_SCSI_G_NCR5380_MEM
--
- #define NCR5380_map_config port
- #define NCR5380_map_type int
- #define NCR5380_map_name port
-@@ -82,23 +80,6 @@
- #define NCR5380_read(reg) (inb(NCR5380_map_name + (reg)))
- #define NCR5380_write(reg, value) (outb((value), (NCR5380_map_name + (reg))))
  
--#else 
--/* therefore CONFIG_SCSI_G_NCR5380_MEM */
--
--#define NCR5380_map_config memory
--#define NCR5380_map_type unsigned long
--#define NCR5380_map_name base
--#define NCR5380_instance_name base
--#define NCR53C400_register_offset 0x108
--#define NCR53C400_address_adjust 0
--#define NCR53C400_mem_base 0x3880
--#define NCR53C400_host_buffer 0x3900
--#define NCR5380_region_size 0x3a00
--
--#define NCR5380_read(reg) isa_readb(NCR5380_map_name + NCR53C400_mem_base + (reg))
--#define NCR5380_write(reg, value) isa_writeb(value, NCR5380_map_name + NCR53C400_mem_base + (reg))
--#endif
--
- #define NCR5380_implementation_fields \
-     NCR5380_map_type NCR5380_map_name
- 
---- linux-2.6.14-mm2-full/drivers/scsi/g_NCR5380.c.old	2005-11-12 01:17:57.000000000 +0100
-+++ linux-2.6.14-mm2-full/drivers/scsi/g_NCR5380.c	2005-11-12 01:19:01.000000000 +0100
-@@ -373,7 +373,6 @@
- 			break;
- 		}
- 
--#ifndef CONFIG_SCSI_G_NCR5380_MEM
- 		if (ports) {
- 			/* wakeup sequence for the NCR53C400A and DTC3181E */
- 
-@@ -423,24 +422,14 @@
- 				continue;
- 			region_size = NCR5380_region_size;
- 		}
--#else
--		if(!request_mem_region(overrides[current_override].NCR5380_map_name, NCR5380_region_size, "ncr5380"))
--			continue;
--#endif
- 		instance = scsi_register(tpnt, sizeof(struct NCR5380_hostdata));
- 		if (instance == NULL) {
--#ifndef CONFIG_SCSI_G_NCR5380_MEM
- 			release_region(overrides[current_override].NCR5380_map_name, region_size);
--#else
--			release_mem_region(overrides[current_override].NCR5380_map_name, NCR5380_region_size);
--#endif
- 			continue;
- 		}
- 
- 		instance->NCR5380_instance_name = overrides[current_override].NCR5380_map_name;
--#ifndef CONFIG_SCSI_G_NCR5380_MEM
- 		instance->n_io_port = region_size;
--#endif
- 
- 		NCR5380_init(instance, flags);
- 
-@@ -506,12 +495,7 @@
- 		free_irq(instance->irq, NULL);
- 	NCR5380_exit(instance);
- 
--#ifndef CONFIG_SCSI_G_NCR5380_MEM
- 	release_region(instance->NCR5380_instance_name, instance->n_io_port);
--#else
--	release_mem_region(instance->NCR5380_instance_name, NCR5380_region_size);
--#endif
--
- 
- 	return 0;
- }
-@@ -578,16 +562,11 @@
- 		}
- 		while (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_HOST_BUF_NOT_RDY);
- 
--#ifndef CONFIG_SCSI_G_NCR5380_MEM
- 		{
- 			int i;
- 			for (i = 0; i < 128; i++)
- 				dst[start + i] = NCR5380_read(C400_HOST_BUFFER);
- 		}
--#else
--		/* implies CONFIG_SCSI_G_NCR5380_MEM */
--		isa_memcpy_fromio(dst + start, NCR53C400_host_buffer + NCR5380_map_name, 128);
--#endif
- 		start += 128;
- 		blocks--;
- 	}
-@@ -598,16 +577,11 @@
- 			// FIXME - no timeout
- 		}
- 
--#ifndef CONFIG_SCSI_G_NCR5380_MEM
- 		{
- 			int i;	
- 			for (i = 0; i < 128; i++)
- 				dst[start + i] = NCR5380_read(C400_HOST_BUFFER);
- 		}
--#else
--		/* implies CONFIG_SCSI_G_NCR5380_MEM */
--		isa_memcpy_fromio(dst + start, NCR53C400_host_buffer + NCR5380_map_name, 128);
--#endif
- 		start += 128;
- 		blocks--;
- 	}
-@@ -664,15 +638,10 @@
- 		}
- 		while (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_HOST_BUF_NOT_RDY)
- 			; // FIXME - timeout
--#ifndef CONFIG_SCSI_G_NCR5380_MEM
- 		{
- 			for (i = 0; i < 128; i++)
- 				NCR5380_write(C400_HOST_BUFFER, src[start + i]);
- 		}
--#else
--		/* implies CONFIG_SCSI_G_NCR5380_MEM */
--		isa_memcpy_toio(NCR53C400_host_buffer + NCR5380_map_name, src + start, 128);
--#endif
- 		start += 128;
- 		blocks--;
- 	}
-@@ -680,15 +649,10 @@
- 		while (NCR5380_read(C400_CONTROL_STATUS_REG) & CSR_HOST_BUF_NOT_RDY)
- 			; // FIXME - no timeout
- 
--#ifndef CONFIG_SCSI_G_NCR5380_MEM
- 		{
- 			for (i = 0; i < 128; i++)
- 				NCR5380_write(C400_HOST_BUFFER, src[start + i]);
- 		}
--#else
--		/* implies CONFIG_SCSI_G_NCR5380_MEM */
--		isa_memcpy_toio(NCR53C400_host_buffer + NCR5380_map_name, src + start, 128);
--#endif
- 		start += 128;
- 		blocks--;
- 	}
---- linux-2.6.14-mm2-full/drivers/scsi/g_NCR5380_mmio.c	2005-10-28 02:02:08.000000000 +0200
-+++ /dev/null	2005-11-08 19:07:57.000000000 +0100
-@@ -1,10 +0,0 @@
--/*
-- *	There is probably a nicer way to do this but this one makes
-- *	pretty obvious what is happening. We rebuild the same file with
-- *	different options for mmio versus pio.
+ /*
+- * ISA space is mapped to some machine-specific location on Alpha.
+- * Call into the existing hooks to get the address translated.
 - */
 -
--#define SCSI_G_NCR5380_MEM
+-static inline u8
+-isa_readb(unsigned long offset)
+-{
+-	void __iomem *addr = ioremap(offset, 1);
+-	u8 ret = readb(addr);
+-	iounmap(addr);
+-	return ret;
+-}
 -
--#include "g_NCR5380.c"
+-static inline u16
+-isa_readw(unsigned long offset)
+-{
+-	void __iomem *addr = ioremap(offset, 2);
+-	u16 ret = readw(addr);
+-	iounmap(addr);
+-	return ret;
+-}
 -
+-static inline u32
+-isa_readl(unsigned long offset)
+-{
+-	void __iomem *addr = ioremap(offset, 2);
+-	u32 ret = readl(addr);
+-	iounmap(addr);
+-	return ret;
+-}
+-
+-static inline void
+-isa_writeb(u8 b, unsigned long offset)
+-{
+-	void __iomem *addr = ioremap(offset, 2);
+-	writeb(b, addr);
+-	iounmap(addr);
+-}
+-
+-static inline void
+-isa_writew(u16 w, unsigned long offset)
+-{
+-	void __iomem *addr = ioremap(offset, 2);
+-	writew(w, addr);
+-	iounmap(addr);
+-}
+-
+-static inline void
+-isa_writel(u32 l, unsigned long offset)
+-{
+-	void __iomem *addr = ioremap(offset, 2);
+-	writel(l, addr);
+-	iounmap(addr);
+-}
+-
+-static inline void
+-isa_memset_io(unsigned long offset, u8 val, long n)
+-{
+-	void __iomem *addr = ioremap(offset, n);
+-	memset_io(addr, val, n);
+-	iounmap(addr);
+-}
+-
+-static inline void
+-isa_memcpy_fromio(void *dest, unsigned long offset, long n)
+-{
+-	void __iomem *addr = ioremap(offset, n);
+-	memcpy_fromio(dest, addr, n);
+-	iounmap(addr);
+-}
+-
+-static inline void
+-isa_memcpy_toio(unsigned long offset, const void *src, long n)
+-{
+-	void __iomem *addr = ioremap(offset, n);
+-	memcpy_toio(addr, src, n);
+-	iounmap(addr);
+-}
+-
+-/*
+  * The Alpha Jensen hardware for some rather strange reason puts
+  * the RTC clock at 0x170 instead of 0x70. Probably due to some
+  * misguided idea about using 0x70 for NMI stuff.
+--- linux-2.6.14-mm2-full/include/asm-arm/io.h.old	2005-11-11 21:40:42.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-arm/io.h	2005-11-11 21:59:36.000000000 +0100
+@@ -215,42 +215,6 @@
+ #endif	/* __mem_pci */
+ 
+ /*
+- * If this architecture has ISA IO, then define the isa_read/isa_write
+- * macros.
+- */
+-#ifdef __mem_isa
+-
+-#define isa_readb(addr)			__raw_readb(__mem_isa(addr))
+-#define isa_readw(addr)			__raw_readw(__mem_isa(addr))
+-#define isa_readl(addr)			__raw_readl(__mem_isa(addr))
+-#define isa_writeb(val,addr)		__raw_writeb(val,__mem_isa(addr))
+-#define isa_writew(val,addr)		__raw_writew(val,__mem_isa(addr))
+-#define isa_writel(val,addr)		__raw_writel(val,__mem_isa(addr))
+-#define isa_memset_io(a,b,c)		_memset_io(__mem_isa(a),(b),(c))
+-#define isa_memcpy_fromio(a,b,c)	_memcpy_fromio((a),__mem_isa(b),(c))
+-#define isa_memcpy_toio(a,b,c)		_memcpy_toio(__mem_isa((a)),(b),(c))
+-
+-#define isa_eth_io_copy_and_sum(a,b,c,d) \
+-				eth_copy_and_sum((a),__mem_isa(b),(c),(d))
+-
+-#else	/* __mem_isa */
+-
+-#define isa_readb(addr)			(__readwrite_bug("isa_readb"),0)
+-#define isa_readw(addr)			(__readwrite_bug("isa_readw"),0)
+-#define isa_readl(addr)			(__readwrite_bug("isa_readl"),0)
+-#define isa_writeb(val,addr)		__readwrite_bug("isa_writeb")
+-#define isa_writew(val,addr)		__readwrite_bug("isa_writew")
+-#define isa_writel(val,addr)		__readwrite_bug("isa_writel")
+-#define isa_memset_io(a,b,c)		__readwrite_bug("isa_memset_io")
+-#define isa_memcpy_fromio(a,b,c)	__readwrite_bug("isa_memcpy_fromio")
+-#define isa_memcpy_toio(a,b,c)		__readwrite_bug("isa_memcpy_toio")
+-
+-#define isa_eth_io_copy_and_sum(a,b,c,d) \
+-				__readwrite_bug("isa_eth_io_copy_and_sum")
+-
+-#endif	/* __mem_isa */
+-
+-/*
+  * ioremap and friends.
+  *
+  * ioremap takes a PCI memory address, as specified in
+--- linux-2.6.14-mm2-full/include/asm-i386/io.h.old	2005-11-11 21:41:07.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-i386/io.h	2005-11-12 00:37:26.000000000 +0100
+@@ -214,23 +214,12 @@
+  */
+ #define __ISA_IO_base ((char __iomem *)(PAGE_OFFSET))
+ 
+-#define isa_readb(a) readb(__ISA_IO_base + (a))
+-#define isa_readw(a) readw(__ISA_IO_base + (a))
+-#define isa_readl(a) readl(__ISA_IO_base + (a))
+-#define isa_writeb(b,a) writeb(b,__ISA_IO_base + (a))
+-#define isa_writew(w,a) writew(w,__ISA_IO_base + (a))
+-#define isa_writel(l,a) writel(l,__ISA_IO_base + (a))
+-#define isa_memset_io(a,b,c)		memset_io(__ISA_IO_base + (a),(b),(c))
+-#define isa_memcpy_fromio(a,b,c)	memcpy_fromio((a),__ISA_IO_base + (b),(c))
+-#define isa_memcpy_toio(a,b,c)		memcpy_toio(__ISA_IO_base + (a),(b),(c))
+-
+ 
+ /*
+  * Again, i386 does not require mem IO specific function.
+  */
+ 
+ #define eth_io_copy_and_sum(a,b,c,d)		eth_copy_and_sum((a),(void __force *)(b),(c),(d))
+-#define isa_eth_io_copy_and_sum(a,b,c,d)	eth_copy_and_sum((a),(void __force *)(__ISA_IO_base + (b)),(c),(d))
+ 
+ /**
+  *	check_signature		-	find BIOS signatures
+--- linux-2.6.14-mm2-full/include/asm-mips/io.h.old	2005-11-11 21:41:23.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-mips/io.h	2005-11-11 22:00:31.000000000 +0100
+@@ -563,33 +563,10 @@
+ extern void pci_iounmap(struct pci_dev *dev, void __iomem *);
+ 
+ /*
+- * ISA space is 'always mapped' on currently supported MIPS systems, no need
+- * to explicitly ioremap() it. The fact that the ISA IO space is mapped
+- * to PAGE_OFFSET is pure coincidence - it does not mean ISA values
+- * are physical addresses. The following constant pointer can be
+- * used as the IO-area pointer (it can be iounmapped as well, so the
+- * analogy with PCI is quite large):
+- */
+-#define __ISA_IO_base ((char *)(isa_slot_offset))
+-
+-#define isa_readb(a)		readb(__ISA_IO_base + (a))
+-#define isa_readw(a)		readw(__ISA_IO_base + (a))
+-#define isa_readl(a)		readl(__ISA_IO_base + (a))
+-#define isa_readq(a)		readq(__ISA_IO_base + (a))
+-#define isa_writeb(b,a)		writeb(b,__ISA_IO_base + (a))
+-#define isa_writew(w,a)		writew(w,__ISA_IO_base + (a))
+-#define isa_writel(l,a)		writel(l,__ISA_IO_base + (a))
+-#define isa_writeq(q,a)		writeq(q,__ISA_IO_base + (a))
+-#define isa_memset_io(a,b,c)	memset_io(__ISA_IO_base + (a),(b),(c))
+-#define isa_memcpy_fromio(a,b,c) memcpy_fromio((a),__ISA_IO_base + (b),(c))
+-#define isa_memcpy_toio(a,b,c)	memcpy_toio(__ISA_IO_base + (a),(b),(c))
+-
+-/*
+  * We don't have csum_partial_copy_fromio() yet, so we cheat here and
+  * just copy it. The net code will then do the checksum later.
+  */
+ #define eth_io_copy_and_sum(skb,src,len,unused) memcpy_fromio((skb)->data,(src),(len))
+-#define isa_eth_io_copy_and_sum(a,b,c,d) eth_copy_and_sum((a),(b),(c),(d))
+ 
+ /*
+  *     check_signature         -       find BIOS signatures
+--- linux-2.6.14-mm2-full/include/asm-parisc/io.h.old	2005-11-11 21:41:44.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-parisc/io.h	2005-11-11 22:01:12.000000000 +0100
+@@ -294,22 +294,6 @@
+ void memcpy_fromio(void *dst, const volatile void __iomem *src, int count);
+ void memcpy_toio(volatile void __iomem *dst, const void *src, int count);
+ 
+-/* Support old drivers which don't ioremap.
+- * NB this interface is scheduled to disappear in 2.5
+- */
+-
+-#define __isa_addr(x) (void __iomem *)(F_EXTEND(0xfc000000) | (x))
+-#define isa_readb(a) readb(__isa_addr(a))
+-#define isa_readw(a) readw(__isa_addr(a))
+-#define isa_readl(a) readl(__isa_addr(a))
+-#define isa_writeb(b,a) writeb((b), __isa_addr(a))
+-#define isa_writew(b,a) writew((b), __isa_addr(a))
+-#define isa_writel(b,a) writel((b), __isa_addr(a))
+-#define isa_memset_io(a,b,c) memset_io(__isa_addr(a), (b), (c))
+-#define isa_memcpy_fromio(a,b,c) memcpy_fromio((a), __isa_addr(b), (c))
+-#define isa_memcpy_toio(a,b,c) memcpy_toio(__isa_addr(a), (b), (c))
+-
+-
+ /*
+  * XXX - We don't have csum_partial_copy_fromio() yet, so we cheat here and 
+  * just copy it. The net code will then do the checksum later. Presently 
+@@ -318,8 +302,6 @@
+ 
+ #define eth_io_copy_and_sum(skb,src,len,unused) \
+   memcpy_fromio((skb)->data,(src),(len))
+-#define isa_eth_io_copy_and_sum(skb,src,len,unused) \
+-  isa_memcpy_fromio((skb)->data,(src),(len))
+ 
+ /* Port-space IO */
+ 
+--- linux-2.6.14-mm2-full/include/asm-x86_64/io.h.old	2005-11-11 21:41:58.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-x86_64/io.h	2005-11-12 00:38:07.000000000 +0100
+@@ -264,23 +264,12 @@
+  */
+ #define __ISA_IO_base ((char __iomem *)(PAGE_OFFSET))
+ 
+-#define isa_readb(a) readb(__ISA_IO_base + (a))
+-#define isa_readw(a) readw(__ISA_IO_base + (a))
+-#define isa_readl(a) readl(__ISA_IO_base + (a))
+-#define isa_writeb(b,a) writeb(b,__ISA_IO_base + (a))
+-#define isa_writew(w,a) writew(w,__ISA_IO_base + (a))
+-#define isa_writel(l,a) writel(l,__ISA_IO_base + (a))
+-#define isa_memset_io(a,b,c)		memset_io(__ISA_IO_base + (a),(b),(c))
+-#define isa_memcpy_fromio(a,b,c)	memcpy_fromio((a),__ISA_IO_base + (b),(c))
+-#define isa_memcpy_toio(a,b,c)		memcpy_toio(__ISA_IO_base + (a),(b),(c))
+-
+ 
+ /*
+  * Again, x86-64 does not require mem IO specific function.
+  */
+ 
+ #define eth_io_copy_and_sum(a,b,c,d)		eth_copy_and_sum((a),(void *)(b),(c),(d))
+-#define isa_eth_io_copy_and_sum(a,b,c,d)	eth_copy_and_sum((a),(void *)(__ISA_IO_base + (b)),(c),(d))
+ 
+ /**
+  *	check_signature		-	find BIOS signatures
+--- linux-2.6.14-mm2-full/include/asm-m68k/io.h.old	2005-11-11 21:49:11.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-m68k/io.h	2005-11-11 21:56:15.000000000 +0100
+@@ -191,15 +191,6 @@
+ #define isa_outb(val,port) out_8(isa_itb(port),(val))
+ #define isa_outw(val,port) (ISA_SEX ? out_be16(isa_itw(port),(val)) : out_le16(isa_itw(port),(val)))
+ 
+-#define isa_readb(p)       in_8(isa_mtb((unsigned long)(p)))
+-#define isa_readw(p)       \
+-	(ISA_SEX ? in_be16(isa_mtw((unsigned long)(p)))	\
+-		 : in_le16(isa_mtw((unsigned long)(p))))
+-#define isa_writeb(val,p)  out_8(isa_mtb((unsigned long)(p)),(val))
+-#define isa_writew(val,p)  \
+-	(ISA_SEX ? out_be16(isa_mtw((unsigned long)(p)),(val))	\
+-		 : out_le16(isa_mtw((unsigned long)(p)),(val)))
+-
+ static inline void isa_delay(void)
+ {
+   switch(ISA_TYPE)
+@@ -254,10 +245,14 @@
+ #define insw    isa_insw
+ #define outsb   isa_outsb
+ #define outsw   isa_outsw
+-#define readb   isa_readb
+-#define readw   isa_readw
+-#define writeb  isa_writeb
+-#define writew  isa_writew
++#define readb(p) in_8(isa_mtb((unsigned long)(p)))
++#define readw(p)       \
++	(ISA_SEX ? in_be16(isa_mtw((unsigned long)(p)))	\
++		 : in_le16(isa_mtw((unsigned long)(p))))
++#define writeb(val,p)  out_8(isa_mtb((unsigned long)(p)),(val))
++#define writew(val,p)  \
++	(ISA_SEX ? out_be16(isa_mtw((unsigned long)(p)),(val))	\
++		 : out_le16(isa_mtw((unsigned long)(p)),(val)))
+ #endif /* CONFIG_ISA */
+ 
+ #if defined(CONFIG_PCI)
+--- linux-2.6.14-mm2-full/include/asm-sh/io.h.old	2005-11-11 21:50:43.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-sh/io.h	2005-11-11 22:01:37.000000000 +0100
+@@ -159,19 +159,6 @@
+ 	generic_io_base = pbase;
+ }
+ 
+-#define isa_readb(a) readb(isa_port2addr(a))
+-#define isa_readw(a) readw(isa_port2addr(a))
+-#define isa_readl(a) readl(isa_port2addr(a))
+-#define isa_writeb(b,a) writeb(b,isa_port2addr(a))
+-#define isa_writew(w,a) writew(w,isa_port2addr(a))
+-#define isa_writel(l,a) writel(l,isa_port2addr(a))
+-#define isa_memset_io(a,b,c) \
+-  memset((void *)(isa_port2addr((unsigned long)a)),(b),(c))
+-#define isa_memcpy_fromio(a,b,c) \
+-  memcpy((a),(void *)(isa_port2addr((unsigned long)(b))),(c))
+-#define isa_memcpy_toio(a,b,c) \
+-  memcpy((void *)(isa_port2addr((unsigned long)(a))),(b),(c))
+-
+ /* We really want to try and get these to memcpy etc */
+ extern void memcpy_fromio(void *, unsigned long, unsigned long);
+ extern void memcpy_toio(unsigned long, const void *, unsigned long);
+--- linux-2.6.14-mm2-full/arch/i386/Kconfig.old	2005-11-11 21:44:56.000000000 +0100
++++ linux-2.6.14-mm2-full/arch/i386/Kconfig	2005-11-11 21:45:09.000000000 +0100
+@@ -307,6 +307,7 @@
+ 
+ config TOSHIBA
+ 	tristate "Toshiba Laptop support"
++	depends on BROKEN
+ 	---help---
+ 	  This adds a driver to safely access the System Management Mode of
+ 	  the CPU on Toshiba portables with a genuine Toshiba BIOS. It does
+--- linux-2.6.14-mm2-full/drivers/net/Kconfig.old	2005-11-11 21:52:55.000000000 +0100
++++ linux-2.6.14-mm2-full/drivers/net/Kconfig	2005-11-11 22:02:32.000000000 +0100
+@@ -726,7 +726,7 @@
+ 
+ config LANCE
+ 	tristate "AMD LANCE and PCnet (AT1500 and NE2100) support"
+-	depends on NET_ETHERNET && ISA && ISA_DMA_API
++	depends on NET_ETHERNET && ISA && ISA_DMA_API && BROKEN
+ 	help
+ 	  If you have a network (Ethernet) card of this type, say Y and read
+ 	  the Ethernet-HOWTO, available from
+@@ -935,7 +935,7 @@
+ 
+ config HP100
+ 	tristate "HP 10/100VG PCLAN (ISA, EISA, PCI) support"
+-	depends on NET_ETHERNET && (ISA || EISA || PCI)
++	depends on NET_ETHERNET && (ISA || EISA || PCI) && BROKEN
+ 	help
+ 	  If you have a network (Ethernet) card of this type, say Y and read
+ 	  the Ethernet-HOWTO, available from
+@@ -1021,7 +1021,7 @@
+ 
+ config HPLAN_PLUS
+ 	tristate "HP PCLAN+ (27247B and 27252A) support"
+-	depends on NET_ISA
++	depends on NET_ISA && BROKEN
+ 	select CRC32
+ 	help
+ 	  If you have a network (Ethernet) card of this type, say Y and read
+--- linux-2.6.14-mm2-full/drivers/net/arcnet/Kconfig.old	2005-11-11 21:45:50.000000000 +0100
++++ linux-2.6.14-mm2-full/drivers/net/arcnet/Kconfig	2005-11-11 21:46:22.000000000 +0100
+@@ -80,7 +80,7 @@
+ 
+ config ARCNET_COM90xx
+ 	tristate "ARCnet COM90xx (normal) chipset driver"
+-	depends on ARCNET
++	depends on ARCNET && BROKEN
+ 	help
+ 	  This is the chipset driver for the standard COM90xx cards. If you
+ 	  have always used the old ARCnet driver without knowing what type of
+@@ -105,7 +105,7 @@
+ 
+ config ARCNET_RIM_I
+ 	tristate "ARCnet COM90xx (RIM I) chipset driver"
+-	depends on ARCNET
++	depends on ARCNET && BROKEN
+ 	---help---
+ 	  This is yet another chipset driver for the COM90xx cards, but this
+ 	  time only using memory-mapped mode, and no IO ports at all. This
+--- linux-2.6.14-mm2-full/drivers/scsi/Kconfig.old	2005-11-11 21:47:56.000000000 +0100
++++ linux-2.6.14-mm2-full/drivers/scsi/Kconfig	2005-11-11 21:48:17.000000000 +0100
+@@ -474,7 +474,7 @@
+ 
+ config SCSI_IN2000
+ 	tristate "Always IN2000 SCSI support"
+-	depends on ISA && SCSI
++	depends on ISA && SCSI && BROKEN
+ 	help
+ 	  This is support for an ISA bus SCSI host adapter.  You'll find more
+ 	  information in <file:Documentation/scsi/in2000.txt>. If it doesn't work
+--- linux-2.6.14-mm2-full/include/asm-arm/arch-aaec2000/io.h.old	2005-11-12 05:46:17.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-arm/arch-aaec2000/io.h	2005-11-12 05:46:35.000000000 +0100
+@@ -16,6 +16,5 @@
+  */
+ #define __io(a)			((void __iomem *)(a))
+ #define __mem_pci(a)		(a)
+-#define __mem_isa(a)		(a)
+ 
+ #endif
+--- linux-2.6.14-mm2-full/include/asm-arm/arch-clps711x/io.h.old	2005-11-12 05:46:40.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-arm/arch-clps711x/io.h	2005-11-12 05:46:47.000000000 +0100
+@@ -26,7 +26,6 @@
+ 
+ #define __io(a)			((void __iomem *)(a))
+ #define __mem_pci(a)		(a)
+-#define __mem_isa(a)		(a)
+ 
+ /*
+  * We don't support ins[lb]/outs[lb].  Make them fault.
+--- linux-2.6.14-mm2-full/include/asm-arm/arch-ebsa285/io.h.old	2005-11-12 05:47:02.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-arm/arch-ebsa285/io.h	2005-11-12 05:47:43.000000000 +0100
+@@ -24,7 +24,6 @@
+ #define __io(a)			((void __iomem *)(PCIO_BASE + (a)))
+ #if 1
+ #define __mem_pci(a)		(a)
+-#define __mem_isa(a)		((a) + PCIMEM_BASE)
+ #else
+ 
+ static inline void __iomem *___mem_pci(void __iomem *p)
+@@ -34,14 +33,7 @@
+ 	return p;
+ }
+ 
+-static inline void __iomem *___mem_isa(void __iomem *p)
+-{
+-	unsigned long a = (unsigned long)p;
+-	BUG_ON(a >= 16*1048576);
+-	return p + PCIMEM_BASE;
+-}
+ #define __mem_pci(a)		___mem_pci(a)
+-#define __mem_isa(a)		___mem_isa(a)
+ #endif
+ 
+ #endif
+--- linux-2.6.14-mm2-full/include/asm-arm/arch-integrator/io.h.old	2005-11-12 05:48:52.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-arm/arch-integrator/io.h	2005-11-12 05:48:56.000000000 +0100
+@@ -32,6 +32,5 @@
+ 
+ #define __io(a)			((void __iomem *)(PCI_IO_VADDR + (a)))
+ #define __mem_pci(a)		(a)
+-#define __mem_isa(a)		((a) + PCI_MEMORY_VADDR)
+ 
+ #endif
+--- linux-2.6.14-mm2-full/include/asm-arm/arch-iop3xx/io.h.old	2005-11-12 05:49:04.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-arm/arch-iop3xx/io.h	2005-11-12 05:49:07.000000000 +0100
+@@ -17,6 +17,5 @@
+ 
+ #define __io(p)			((void __iomem *)(p))
+ #define __mem_pci(a)		(a)
+-#define __mem_isa(a)		(a)
+ 
+ #endif
+--- linux-2.6.14-mm2-full/include/asm-arm/arch-l7200/io.h.old	2005-11-12 05:49:23.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-arm/arch-l7200/io.h	2005-11-12 05:49:28.000000000 +0100
+@@ -19,7 +19,6 @@
+  */
+ #define __io_pci(a)		((void __iomem *)(PCIO_BASE + (a)))
+ #define __mem_pci(a)		(a)
+-#define __mem_isa(a)		(a)
+ 
+ #define __ioaddr(p)             __io_pci(p)
+ 
+--- linux-2.6.14-mm2-full/include/asm-arm/arch-lh7a40x/io.h.old	2005-11-12 05:49:42.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-arm/arch-lh7a40x/io.h	2005-11-12 05:49:47.000000000 +0100
+@@ -18,6 +18,5 @@
+ /* No ISA or PCI bus on this machine. */
+ #define __io(a)			((void __iomem *)(a))
+ #define __mem_pci(a)		(a)
+-#define __mem_isa(a)		(a)
+ 
+ #endif /* __ASM_ARCH_IO_H */
+--- linux-2.6.14-mm2-full/include/asm-arm/arch-omap/io.h.old	2005-11-12 05:49:57.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-arm/arch-omap/io.h	2005-11-12 05:50:01.000000000 +0100
+@@ -44,7 +44,6 @@
+  */
+ #define __io(a)			((void __iomem *)(PCIO_BASE + (a)))
+ #define __mem_pci(a)		(a)
+-#define __mem_isa(a)		(a)
+ 
+ /*
+  * ----------------------------------------------------------------------------
+--- linux-2.6.14-mm2-full/include/asm-arm/arch-pxa/io.h.old	2005-11-12 05:50:11.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-arm/arch-pxa/io.h	2005-11-12 05:50:14.000000000 +0100
+@@ -16,6 +16,5 @@
+  */
+ #define __io(a)			((void __iomem *)(a))
+ #define __mem_pci(a)		(a)
+-#define __mem_isa(a)		(a)
+ 
+ #endif
+--- linux-2.6.14-mm2-full/include/asm-arm/arch-sa1100/io.h.old	2005-11-12 05:50:22.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-arm/arch-sa1100/io.h	2005-11-12 05:50:25.000000000 +0100
+@@ -24,6 +24,5 @@
+ }
+ #define __io(a)			__io(a)
+ #define __mem_pci(a)		(a)
+-#define __mem_isa(a)		(a)
+ 
+ #endif
+--- linux-2.6.14-mm2-full/include/asm-arm/arch-versatile/io.h.old	2005-11-12 05:50:34.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-arm/arch-versatile/io.h	2005-11-12 05:50:37.000000000 +0100
+@@ -28,6 +28,5 @@
+ }
+ #define __io(a)	__io(a)
+ #define __mem_pci(a)		(a)
+-#define __mem_isa(a)		(a)
+ 
+ #endif
+--- linux-2.6.14-mm2-full/include/asm-arm/arch-realview/io.h.old	2005-11-12 05:50:45.000000000 +0100
++++ linux-2.6.14-mm2-full/include/asm-arm/arch-realview/io.h	2005-11-12 05:50:48.000000000 +0100
+@@ -29,6 +29,5 @@
+ 
+ #define __io(a)			__io(a)
+ #define __mem_pci(a)		(a)
+-#define __mem_isa(a)		(a)
+ 
+ #endif
+
