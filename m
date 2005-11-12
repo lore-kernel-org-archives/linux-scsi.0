@@ -1,60 +1,169 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 5/10] convert st to use scsi_execute_async
-Date: Sat, 12 Nov 2005 13:54:09 -0600
-Message-ID: <43764861.6030408@cs.wisc.edu>
-References: <1131444404.23111.66.camel@max> <Pine.LNX.4.63.0511121859070.10335@kai.makisara.local> <43763E94.40406@cs.wisc.edu>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: [PATCH 0/15] Decrapify FlashPoint.c
+Date: Sun, 13 Nov 2005 01:13:08 +0300
+Message-ID: <20051112221308.GE20860@mipter.zuzino.mipt.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:48319 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932485AbVKLTyV (ORCPT
+Received: from xproxy.gmail.com ([66.249.82.201]:64859 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S964817AbVKLV7c (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Nov 2005 14:54:21 -0500
-In-Reply-To: <43763E94.40406@cs.wisc.edu>
+	Sat, 12 Nov 2005 16:59:32 -0500
+Received: by xproxy.gmail.com with SMTP id s6so1261472wxc
+        for <linux-scsi@vger.kernel.org>; Sat, 12 Nov 2005 13:59:32 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, Jens Axboe <axboe@suse.de>, linux-scsi@vger.kernel.org, dougg@torque.net
+To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+Cc: "Leonard N. Zubkoff" <lnz@dandelion.com>
 
-Mike Christie wrote:
-> Kai Makisara wrote:
-> 
->> On Tue, 8 Nov 2005, Mike Christie wrote:
->>
->>
->>> convert st to always send scatterlists and kill scsi_request
->>> usage.
->>>
->>> This is the same as last time as it was posted, but with Kai's patches
->>> merged and we now pass the bytes value to scsi_execute_async.
->>>
->>
->> This does not work "out of the box". The changes in st are almost the 
->> same ones than before but the world around st has changed ;-) This has 
->> revealed at least one bug in st that is fixed by the patch at the end 
->> of this 
-> 
-> 
-> ok thanks.
-> 
->> message. After this patch some simple tests succeed but there seem to 
->> be still problems with larger requests. I don't have time to continue 
->> debugging just now but I should be able to post more results during 
->> this weekend.
->>
-> 
-> Was there a oops or lockup or any debug output you can send me? I will 
-> try some more large request tests with scsi_debug. You also have to 
-> compile your kernel with SCSI_MAX_PHYS_SEGMENTS == 255 to get larger 
-> requests now.
+	Dear SCSI crew,
 
+Please, apply the following patches to drivers/scsi/FlashPoint.c file.
+Due to sizes of some of them, I won't CC linux-scsi. The tarball is
+available at
 
-Oh yeah I put the patches Christoph asked me to make, and changes that 
-Jens and Pat Mansfield asked for, and a patch to increase 
-SCSI_MAX_PHYS_SEGMENTS here 
-http://www.cs.wisc.edu/~michaelc/block/use-sg/v11/
+	http://coderock.org/kj/flashpoint.tar.bz2	(66k)
 
-They were made against a scsi-misc tree I got today. But I was not 
-actually able to test against that tree becuase the current git trees 
-(scsi-misc, linux-2.6.git, etc) do not boot for me.
+or, in splitted form, at
+
+	http://coderock.org/kj/flashpoint/
+
+They were in -kj tree since early July without complaints. All of them
+are compile-tested with CONFIG_SCSI_OMIT_FLASHPOINT=y and =n.
+
+						Sincerely yours,
+								Alexey
+------------------------------------------------------------------------
+001_drivers_scsi_flashpoint_c_remove_unused_things.patch
+002_drivers_scsi_flashpoint_c_remove_trivial_wrappers.patch
+003_drivers_scsi_flashpoint_c_remove_uchar.patch
+004_drivers_scsi_flashpoint_c_remove_ushort.patch
+005_drivers_scsi_flashpoint_c_remove_uint.patch
+006_drivers_scsi_flashpoint_c_remove_ulong.patch
+007_drivers_scsi_flashpoint_c_remove_ushort_ptr.patch
+008_drivers_scsi_flashpoint_c_use_standard_fixed_size_types.patch
+009_drivers_scsi_flashpoint_c_untypedef_struct__sccb.patch
+010_drivers_scsi_flashpoint_c_untypedef_struct_sccbmgr_info.patch
+011_drivers_scsi_flashpoint_c_untypedef_struct_sccbmgr_tar_info.patch
+012_drivers_scsi_flashpoint_c_untypedef_struct_nvraminfo.patch
+013_drivers_scsi_flashpoint_c_untypedef_struct_sccbcard.patch
+014_drivers_scsi_flashpoint_c_lindent.patch
+015_drivers_scsi_flashpoint_c_dont_use_parenthesis_with_return.patch
+------------------------------------------------------------------------
+[PATCH 01/15] drivers/scsi/FlashPoint.c: remove unused things
+
+From: Alexey Dobriyan <adobriyan@gmail.com>
+
+* Remove unused #define's
+* Remove unused typedefs.
+* Remove prototypes for non-existing functions.
+
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+------------------------------------------------------------------------
+[PATCH 02/15] drivers/scsi/FlashPoint.c: remove trivial wrappers
+
+From: Alexey Dobriyan <adobriyan@gmail.com>
+
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+------------------------------------------------------------------------
+[PATCH 03/15] drivers/scsi/FlashPoint.c: remove UCHAR
+
+From: Alexey Dobriyan <adobriyan@gmail.com>
+
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+------------------------------------------------------------------------
+[PATCH 04/15] drivers/scsi/FlashPoint.c: remove USHORT
+
+From: Alexey Dobriyan <adobriyan@gmail.com>
+
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+------------------------------------------------------------------------
+[PATCH 05/15] drivers/scsi/FlashPoint.c: remove UINT
+
+From: Alexey Dobriyan <adobriyan@gmail.com>
+
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+------------------------------------------------------------------------
+[PATCH 06/15] drivers/scsi/FlashPoint.c: remove ULONG
+
+From: Alexey Dobriyan <adobriyan@gmail.com>
+
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+------------------------------------------------------------------------
+[PATCH 07/15] drivers/scsi/FlashPoint.c: remove ushort_ptr
+
+From: Alexey Dobriyan <adobriyan@gmail.com>
+
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+------------------------------------------------------------------------
+[PATCH 08/15] drivers/scsi/FlashPoint.c: use standard fixed size types
+
+From: Alexey Dobriyan <adobriyan@gmail.com>
+
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+------------------------------------------------------------------------
+[PATCH 09/15] drivers/scsi/FlashPoint.c: untypedef struct _SCCB
+
+From: Alexey Dobriyan <adobriyan@gmail.com>
+
+* struct _SCCB => struct sccb
+* PSCCB => struct sccb *
+* SCCB => struct sccb
+
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+------------------------------------------------------------------------
+[PATCH 10/15] drivers/scsi/FlashPoint.c: untypedef struct SCCBMgr_info
+
+From: Alexey Dobriyan <adobriyan@gmail.com>
+
+* struct SCCBMgr_info => struct sccb_mgr_info
+* PSCCBMGR_INFO => struct sccb_mgr_info *
+* SCCBMGR_INFO => struct sccb_mgr_info
+
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+------------------------------------------------------------------------
+[PATCH 11/15] drivers/scsi/FlashPoint.c: untypedef struct SCCBMgr_tar_info
+
+From: Alexey Dobriyan <adobriyan@gmail.com>
+
+* struct SCCBMgr_tar_info => struct sccb_mgr_tar_info
+* PSCCBMgr_tar_info => struct sccb_mgr_tar_info *
+* SCCBMGR_TAR_INFO => struct sccb_mgr_tar_info
+
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+------------------------------------------------------------------------
+[PATCH 12/15] drivers/scsi/FlashPoint.c: untypedef struct NVRAMInfo
+
+From: Alexey Dobriyan <adobriyan@gmail.com>
+
+* struct NVRAMInfo => struct nvram_info
+* PNVRamInfo => struct nvram_info *
+* NVRAMINFO => struct nvram_info
+
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+------------------------------------------------------------------------
+[PATCH 13/15] drivers/scsi/FlashPoint.c: untypedef struct SCCBcard
+
+From: Alexey Dobriyan <adobriyan@gmail.com>
+
+* struct SCCBcard => struct sccb_card
+* PSCCBcard => struct sccb_card *
+* SCCBCARD => struct sccb_card
+
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+------------------------------------------------------------------------
+[PATCH 14/15] drivers/scsi/FlashPoint.c: Lindent
+
+From: Alexey Dobriyan <adobriyan@gmail.com>
+
+It's much, much more readable now.
+
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+------------------------------------------------------------------------
+[PATCH 15/15] drivers/scsi/FlashPoint.c: don't use parenthesis with "return"
+
+From: Alexey Dobriyan <adobriyan@gmail.com>
+
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+
