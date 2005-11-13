@@ -1,59 +1,37 @@
-From: Graham Knap <graham.knap@rogers.com>
-Subject: Re: Bug#338089: New aic7xxx driver fails spectacularly on 2940UW
-Date: Sun, 13 Nov 2005 11:47:32 -0500 (EST)
-Message-ID: <20051113164732.73492.qmail@web88010.mail.re2.yahoo.com>
-References: <1131855418.4179.7.camel@mulgrave>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 2/4] scsi: remove usage of proc_name from scsi_host_alloc
+Date: Sun, 13 Nov 2005 17:49:39 +0100
+Message-ID: <43776EA3.3010607@s5r6.in-berlin.de>
+References: <200511131619.jADGJFwQ032002@einhorn.in-berlin.de> <20051113164222.GA9308@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web88010.mail.re2.yahoo.com ([206.190.37.197]:32598 "HELO
-	web88010.mail.re2.yahoo.com") by vger.kernel.org with SMTP
-	id S964933AbVKMQrd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Nov 2005 11:47:33 -0500
-In-Reply-To: <1131855418.4179.7.camel@mulgrave>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:18906 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S964936AbVKMQwK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 13 Nov 2005 11:52:10 -0500
+In-Reply-To: <20051113164222.GA9308@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Horms <horms@debian.org>, 338089@bugs.debian.org, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> My best guess would be that the bus is slightly marginal.  The
-> aic7xxx drivers are notoriously sensitive to bus problems.  Could you
-> try lowering the bus speed to 10MHz in the aic7xxx bios and see if
-> that helps?
+Christoph Hellwig wrote:
+> On Sun, Nov 13, 2005 at 05:17:03PM +0100, Stefan Richter wrote:
+> 
+>>scsi_host_alloc: use host template's .name instead of .proc_name in order to
+>>restrict usage of .proc_name to procfs and sysfs
+> 
+> 
+> ->name is not mandatory.  You may just implement ->info
 
-Sure. I changed the device to 20MByte/s max. Now the driver shows
-10MHz, 16-bit wide... and DV still fails, with what looks like the same
-messages.
+No, ->info is optional according to a current comment, and according to 
+the implementation as far as I have seen.
 
-As for the bus being marginal, I don't see why it would be, but
-anything is possible.
-
-Host adapter termination is set to "Automatic". If I understand things
-correctly, since there's no cable attached to the internal 50pin
-connector or the external connector, I could try forcing it to "Low ON
-/ High ON"... right?
-
-The cabling looks like this:
-
-[HBA] -- [disk] -- [unused connector] -- [terminator]
-
-I'm pretty sure the cable is U160 rated (it wasn't cheap). The
-terminator isn't integrated into the cable -- it's a plug-in Active SE
-terminator.
-
-The drive is LVD capable, but I've never had trouble running it in SE
-mode. The "Force SE" jumper is not installed, but I suppose I could try
-that too.
-
-http://www.hitachigst.com/tech/techlib.nsf/products/Ultrastar_36LZX
-
-BTW -- Another oddity I should mention is that if I warm-reboot the
-system after DV fails, the drive isn't detected during POST. Power
-cycling fixes it. (In other cases, warm-rebooting works fine.)
-
-Let me know what I should try next.
-
--- graham
-
+Also, ->name is used in a number of places if some other host template 
+members are not provided, i.e. it is practically mandatory.
+-- 
+Stefan Richter
+-=====-=-=-= =-== -==-=
+http://arcgraph.de/sr/
