@@ -1,29 +1,30 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: question on highmem support in lldd
-Date: Sun, 13 Nov 2005 08:51:26 +0100
-Message-ID: <200511130851.27000.oliver@neukum.org>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: question on highmem support in lldd
+Date: Sun, 13 Nov 2005 09:03:31 +0100
+Message-ID: <1131869012.2833.2.camel@laptopd505.fenrus.org>
+References: <200511130851.27000.oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1.kontent.de ([81.88.34.36]:42432 "EHLO Mail1.KONTENT.De")
-	by vger.kernel.org with ESMTP id S964852AbVKMHvU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Nov 2005 02:51:20 -0500
-Received: from p549A0476.dip0.t-ipconnect.de (p549A0476.dip0.t-ipconnect.de [84.154.4.118])
-	by Mail1.KONTENT.De (Postfix) with ESMTP id E0283100F6D0
-	for <linux-scsi@vger.kernel.org>; Sun, 13 Nov 2005 08:51:22 +0100 (CET)
-Content-Disposition: inline
+Received: from pentafluge.infradead.org ([213.146.154.40]:20177 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S964907AbVKMIDj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 13 Nov 2005 03:03:39 -0500
+In-Reply-To: <200511130851.27000.oliver@neukum.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Oliver Neukum <oliver@neukum.org>
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+On Sun, 2005-11-13 at 08:51 +0100, Oliver Neukum wrote:
+> Hi,
+> 
+> could somebody point me to a summary describing how highmem
+> is supported and how to indicate to higher layers which type of memory
+> is supported?
 
-could somebody point me to a summary describing how highmem
-is supported and how to indicate to higher layers which type of memory
-is supported?
+if you set the proper dma mask to what your device is capable of, then
+the kernel takes care of the rest for you.
 
-	TIA
-		Oliver
+
