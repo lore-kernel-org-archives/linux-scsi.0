@@ -1,36 +1,39 @@
-From: <iluminacion@gmail.com>
-Subject: toda clase de iluminacion
-Date: Sun, 13 Nov 2005 00:24:11 +0100
-Message-ID: <155e001c5e7e0$3003e7a0$0600a8c0@hairoffice>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Bug#338089: New aic7xxx driver fails spectacularly on 2940UW
+Date: Sat, 12 Nov 2005 22:16:58 -0600
+Message-ID: <1131855418.4179.7.camel@mulgrave>
+References: <20051109014713.78691.qmail@web88003.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 62-15-156-23.inversas.jazztel.es ([62.15.156.23]:49757 "EHLO
-	correo2.dominiocorreo.com") by vger.kernel.org with ESMTP
-	id S964859AbVKLXY2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Nov 2005 18:24:28 -0500
-Received: from hairoffice ([192.168.0.6])
-	by correo2.dominiocorreo.com (8.13.4/8.13.4/Debian-3) with ESMTP id jABNORZZ022647
-	for <linux-scsi@vger.kernel.org>; Sat, 12 Nov 2005 00:24:28 +0100
-Content-Class: urn:content-classes:message
+Received: from stat9.steeleye.com ([209.192.50.41]:4781 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751327AbVKMERg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Nov 2005 23:17:36 -0500
+In-Reply-To: <20051109014713.78691.qmail@web88003.mail.re2.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Graham Knap <graham.knap@rogers.com>
+Cc: Horms <horms@debian.org>, 338089@bugs.debian.org, linux-scsi@vger.kernel.org
 
-Las ultimas novedades en iluminacin para personas exclusivas.
+On Tue, 2005-11-08 at 20:47 -0500, Graham Knap wrote:
+> Target 0 Negotiation Settings
+>         User: 40.000MB/s transfers (20.000MHz, offset 127, 16bit)
+>         Goal: 40.000MB/s transfers (20.000MHz, offset 8, 16bit)
+>         Curr: 40.000MB/s transfers (20.000MHz, offset 8, 16bit)
 
-Las encontrara en este enlace.
+That's a bit unfortunate ... it shows that the domain validation code
+negotiated identical settings in the old kernel, so it doesn't look like
+that's the problem.
 
-http://www.eltacnet.net/
+My best guess would be that the bus is slightly marginal.  The aic7xxx
+drivers are notoriously sensitive to bus problems.  Could you try
+lowering the bus speed to 10MHz in the aic7xxx bios and see if that
+helps?
 
-Si no desea recibir ms publicidad use el siguiente enlace y anote su direccin de e.mail, es la nica manera para dar de baja su direccin.
+Thanks,
 
-Desea representar nuestros productos?
-
-http://www.eltacnet.net/bajas.asp
-
-Gracias
+James
 
 
