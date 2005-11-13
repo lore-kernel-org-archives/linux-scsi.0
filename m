@@ -1,39 +1,29 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Bug#338089: New aic7xxx driver fails spectacularly on 2940UW
-Date: Sat, 12 Nov 2005 22:16:58 -0600
-Message-ID: <1131855418.4179.7.camel@mulgrave>
-References: <20051109014713.78691.qmail@web88003.mail.re2.yahoo.com>
+From: Oliver Neukum <oliver@neukum.org>
+Subject: question on highmem support in lldd
+Date: Sun, 13 Nov 2005 08:51:26 +0100
+Message-ID: <200511130851.27000.oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:4781 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751327AbVKMERg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Nov 2005 23:17:36 -0500
-In-Reply-To: <20051109014713.78691.qmail@web88003.mail.re2.yahoo.com>
+Received: from mail1.kontent.de ([81.88.34.36]:42432 "EHLO Mail1.KONTENT.De")
+	by vger.kernel.org with ESMTP id S964852AbVKMHvU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 13 Nov 2005 02:51:20 -0500
+Received: from p549A0476.dip0.t-ipconnect.de (p549A0476.dip0.t-ipconnect.de [84.154.4.118])
+	by Mail1.KONTENT.De (Postfix) with ESMTP id E0283100F6D0
+	for <linux-scsi@vger.kernel.org>; Sun, 13 Nov 2005 08:51:22 +0100 (CET)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Graham Knap <graham.knap@rogers.com>
-Cc: Horms <horms@debian.org>, 338089@bugs.debian.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2005-11-08 at 20:47 -0500, Graham Knap wrote:
-> Target 0 Negotiation Settings
->         User: 40.000MB/s transfers (20.000MHz, offset 127, 16bit)
->         Goal: 40.000MB/s transfers (20.000MHz, offset 8, 16bit)
->         Curr: 40.000MB/s transfers (20.000MHz, offset 8, 16bit)
+Hi,
 
-That's a bit unfortunate ... it shows that the domain validation code
-negotiated identical settings in the old kernel, so it doesn't look like
-that's the problem.
+could somebody point me to a summary describing how highmem
+is supported and how to indicate to higher layers which type of memory
+is supported?
 
-My best guess would be that the bus is slightly marginal.  The aic7xxx
-drivers are notoriously sensitive to bus problems.  Could you try
-lowering the bus speed to 10MHz in the aic7xxx bios and see if that
-helps?
-
-Thanks,
-
-James
-
-
+	TIA
+		Oliver
