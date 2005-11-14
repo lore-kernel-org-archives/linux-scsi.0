@@ -1,78 +1,41 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 5/10] convert st to use scsi_execute_async
-Date: Mon, 14 Nov 2005 17:55:06 +1000
-Message-ID: <437842DA.80800@torque.net>
-References: <1131444404.23111.66.camel@max> <Pine.LNX.4.63.0511121859070.10335@kai.makisara.local> <43763E94.40406@cs.wisc.edu> <43764861.6030408@cs.wisc.edu> <Pine.LNX.4.63.0511130938570.15153@kai.makisara.local> <437772EA.7080100@redhat.com>
-Reply-To: dougg@torque.net
+From: "emmanuel\.fuste" <emmanuel.fuste@laposte.net>
+Subject: Re: Bug#338089: New aic7xxx driver fails spectacularly on 2940UW
+Date: Mon, 14 Nov 2005 11:15:34 +0100
+Message-ID: <IPXWHY$DAB69530BAF560952CD66DD5340B48D4@laposte.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:21888 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1750981AbVKNHyG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Nov 2005 02:54:06 -0500
-In-Reply-To: <437772EA.7080100@redhat.com>
+Received: from mx.laposte.net ([81.255.54.11]:55395 "EHLO mx.laposte.net")
+	by vger.kernel.org with ESMTP id S1751059AbVKNKRx convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Nov 2005 05:17:53 -0500
+Received: from smtp.laposte.net (10.150.9.35) by mx.laposte.net (7.2.060.1)
+        id 431C605C043D585B for linux-scsi@vger.kernel.org; Mon, 14 Nov 2005 11:15:35 +0100
+Received: from laposte.net (10.150.9.84) by smtp.laposte.net (7.2.056.5)
+        id 4371FE16003FD114 for linux-scsi@vger.kernel.org; Mon, 14 Nov 2005 11:15:34 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <axboe@suse.de>, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Doug Ledford wrote:
-> Kai Makisara wrote:
-> 
->> On Sat, 12 Nov 2005, Mike Christie wrote:
-> 
-> 
-> I noticed that these patches still have the same bug that the 2.4 kernel
-> st driver has, namely the holding of the st's SCSI request struct until
-> write_behind_check is called.  This behavior is responsible for at least
-> two bugs with tape systems under 2.4 that we've fixed.  The first bug is
-> that if you perform a write to a tape device that involves an async
-> write behind request, then attempt to access the device via the sg
-> mechanism without performing any intervening read or ioctl commands on
-> the st device, the sg access will hang.  This only happens on SCSI
-> controllers that set the cmd_per_lun value == 1 (eg. mptscsih).  In
-> order to replicate this problem you need one application writing to the
-> tape device, then pausing, then something as simple as attempting to do
-> an INQUIRY to the tape while the writer is paused causes the hang.  This
-> happens at least with NetBackup, possibly with others as well.  The
-> second bug is related to multiple tape usage on the same system.  It
-> only happens on x86_64, not i686, but with multiple tapes in use the
-> system eventually attempts to dma map a null pointer resulting in a
-> BUG().  I didn't root cause the dma mapping issue, but I did verify that
-> once the initial bug was fixed, the dma mapping bug went away as well
-> (either because whatever race window existed was reduced to so small
-> that we no longer hit it or the problem was in fact fixed).  The patch
-> we used to solve the problem is attached.  As a side note, holding on to
-> a command without any upper bound on when it will be released is simply
-> a *bad* idea.  Get the information you need from the command and free it.
+Hello,
 
-Doug,
-It might indeed be a bad idea, but there is the odd SCSI
-command that is defined that way. I wonder if any cd/dvd
-drive implements the GET EVENT STATUS NOTIFICATION command
-in asynchronous notification mode (see MMC-4)?
+Any chance that my problem was the same ?
 
-INQUIRY and REPORT LUNS have implicit "head of queue"
-task attribute and should not be blocked by the scsi
-subsystem in response to a TASK SET FULL status. In the
-case of the mptscsih driver, the limit seems to be in
-the HBA.
+http://marc.theaimsgroup.com/?l=3Dlinux-scsi&m=3D113054328331563&w=3D2
 
-OTOH while formatting SCSI disks in foreground
-(immed=0) I noticed that sending an innocent INQUIRY
-or TEST UNIT READY can be fatal (for the format). This
-occurred because the disk being formatted didn't respond
-to the INQUIRY (perhaps it should have returned BUSY),
-the INQUIRY timed out and the disk ended up being reset
-which aborted the format.
+If you think so, I could give it a try (compilation is darm
+slow on my computer, so I will wait your yes/no ...).
 
-In some cases I think a "fire and forget" timeout would
-be useful: when the timeout goes off, just report it
-back to the caller, clean up resources, but do _not_
-start issuing, a command abort escalating to a lu/target/bus
-reset. If the LLD does see a response to that command later,
-then it just consigns it to the bit bucket.
+Emmanuel.
 
-Doug Gilbert
+Acc=E9dez au courrier =E9lectronique de La Poste : www.laposte.net ;=20
+3615 LAPOSTENET (0,34=80/mn) ; t=E9l : 08 92 68 13 50 (0,34=80/mn)
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
