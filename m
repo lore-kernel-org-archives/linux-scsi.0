@@ -1,81 +1,58 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] libata error handling fixes (ATAPI)
-Date: Tue, 15 Nov 2005 19:41:31 +0100
-Message-ID: <20051115184131.GJ7787@suse.de>
-References: <20051114195717.GA24373@havoc.gtf.org> <20051115074148.GA17459@htj.dyndns.org> <4379AA5B.1060900@pobox.com> <4379B28E.9070708@gmail.com> <4379C062.3010302@pobox.com> <20051115120016.GD7787@suse.de> <437A2814.1060308@cs.wisc.edu>
+From: "Jones Joneser" <joneserstein@hotmail.com>
+Subject: PROBLEM: Tyan s2822 and SATA slowness / erratic speeds kernel 2.6
+Date: Tue, 15 Nov 2005 23:43:50 +0000
+Message-ID: <BAY108-F7B49C0F56D3AF2CD03DF4C05D0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:32323 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S964941AbVKOSkb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Nov 2005 13:40:31 -0500
-Content-Disposition: inline
-In-Reply-To: <437A2814.1060308@cs.wisc.edu>
+Received: from bay108-f7.bay108.hotmail.com ([65.54.162.17]:31590 "EHLO
+	hotmail.com") by vger.kernel.org with ESMTP id S965081AbVKOXnu
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Nov 2005 18:43:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Nov 15 2005, Mike Christie wrote:
-> Jens Axboe wrote:
-> >On Tue, Nov 15 2005, Jeff Garzik wrote:
-> >
-> >>>For departure of libata from SCSI, I was thinking more of another more 
-> >>>generic block device framework in which libata can live in.  And I 
-> >>>thought that it was reasonable to assume that the framework would supply 
-> >>>a EH mechanism which supports queue stalling/draining and separate 
-> >>>thread.  So, my EH patches tried to make the same environment for libata 
-> >>
-> >>A big reason why libata uses the SCSI layer is infrastructure like this. 
-> >>It would certainly be nice to see timeouts and EH at the block layer. 
-> >>The block layer itself already supports queue stalling/draining.
-> >
-> >
-> >I have a pretty simple plan for this:
-> >
-> >- Add a timer to struct request. It already has a timeout field for
-> >  SG_IO originated requests, we could easily utilize this in general.
-> >  I'm not sure how the querying of timeout would happen so far, it would
-> >  probably require a q->set_rq_timeout() hook to ask the low level
-> >  driver to set/return rq->timeout for a given request.
-> >
-> >- Add a timeout hook to struct request_queue that would get invoked from
-> >  the timeout handler. Something along the lines of:
-> >
-> >        - Timeout on a request happens. Freeze the queue and use
-> >          kblockd to take the actual timeout into process context, where
-> >          we call the queue ->rq_timeout() hook. Unfreeze/reschedule
-> >          queue operations based on what the ->rq_timeout() hook tells
-> >          us.
-> >
-> >That is generic enough to be able to arm the timeout automatically from
-> >->elevator_activate_req_fn() and dearm it when it completes or gets
-> >deactivated. It should also be possible to implement the SCSI error
-> >handling on top of that.
-> >
-> 
-> To disable the timeout would you then have scsi_done call a block layer 
-> function to disarm it then follow the current flow where or do you think 
-> it would be nice to move the scsi softirq code up to block layer. So 
-> scsi_done would call a block layer function that would disarm the timer, 
-> add the request to a block layer softirq list (a list like scsi-ml's 
-> scsi_done_q), and then in the block layer softirq function it could call 
-> a request_queue callout which for scsi-ml's device queue would call 
-> scsi_decide_disposition and return if it wanted the request requeued or 
-> how many sectors completed or to kick off the eh. I had stated on this 
-> for my block layer multipath driver, but can seperate the patches if 
-> this would be useful.
+Machine:
+Tyan s2822G3NR-D
+Silicon Image, Inc. SiI 3114
+SATA Drives: Western Digital 300gb / seagate 80 gb
 
-Yeah, that was part of my plan as well. I did post such a patch a year
-or so ago, in a thread about decreasing ide completion latencies.
+Initially we thought we had a network issue because we were seeing a 
+slowdown when transferring files > 512Mb in size (by whatever method: rsync, 
+cp, scp, etc.) between two of the Tyan servers, we see the first 512Mb go at 
+a decent rate (tens of megabytes per second) and then the rate plummets to 
+below 500k/sec.   However we reproduce the issue locally on a machine thus 
+eliminating the network card issue. We also had tried with different 
+ethernet cards and x-over cable.
 
-> Would ide benefit from running from a softirq and would it be able to 
-> use such a thing?
 
-It's generally useful as it allows lock free completion from the irq
-path, so that's goodness.
+We are using CentOS 4 and have tried both 4.1 and 4.2 (the latest edition) 
+64 and 32 bit.  We have tried ubuntu, gentoo, and vanilla kernels.  We have 
+upgraded our BIOS to the latest and experimented with different BIOS 
+settings (from 'safe' to 'optimal' with many variants in between.) We have 
+tried it with ACPI switched off, with 4gb of RAM and with 8gb of RAM. We 
+have upgraded the BIOS to 3.04 & then 3.05.  The best we get is that under 
+the ubuntu, gentoo, and a 2.4 kernel we can see stable performance that is 
+well below what we should be getting ~20MiB/s.
 
--- 
-Jens Axboe
+No matter what combination of configuration we try, we consistently see this 
+issue.  We have even tried and LSI SATA controller w/ Tyan motherboard and 
+experienced the same issues.
+
+We moved the SATA controller to a Dell PE 1750 and experience none of the 
+slowdowns, consistent ly 45-50MiB/s performance with no erraticness in speed 
+or drops in performance.
+
+We suspect the issue is related to the combo of the Tyan mobo with the SATA 
+controller subsystem but need some assistance in further nailing down the 
+cause and solution to this issue.
+
+Let me know of any additional information that I can provide to assist with 
+the debugging of this issue.
+
+Thanks,
+-asher
+
 
