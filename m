@@ -1,85 +1,66 @@
-From: Dave C Boutcher <sleddog@us.ibm.com>
-Subject: [PATCH] ibmvscsi kexec fix
-Date: Tue, 15 Nov 2005 09:53:00 -0600
-Message-ID: <20051115155300.GA26724@cs.umn.edu>
-Reply-To: boutcher@cs.umn.edu
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] libata error handling fixes (ATAPI)
+Date: Tue, 15 Nov 2005 12:25:24 -0600
+Message-ID: <437A2814.1060308@cs.wisc.edu>
+References: <20051114195717.GA24373@havoc.gtf.org> <20051115074148.GA17459@htj.dyndns.org> <4379AA5B.1060900@pobox.com> <4379B28E.9070708@gmail.com> <4379C062.3010302@pobox.com> <20051115120016.GD7787@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.cs.umn.edu ([128.101.36.202]:16102 "EHLO mail.cs.umn.edu")
-	by vger.kernel.org with ESMTP id S1751425AbVKOPxF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Nov 2005 10:53:05 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964990AbVKOS0E@vger.kernel.org>
+In-Reply-To: <20051115120016.GD7787@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Michael Ellerman <michael@ellerman.id.au>
 
-James, this is a 2.6.15 candidate...it makes ibmvscsi work
-correctly with the recent set of kexec patches that went in.
-This is based on work by Michael Ellerman, who chased this
-initially.  He validated that it works during kexec.
+Jens Axboe wrote:
+> On Tue, Nov 15 2005, Jeff Garzik wrote:
+> 
+>>>For departure of libata from SCSI, I was thinking more of another more 
+>>>generic block device framework in which libata can live in.  And I 
+>>>thought that it was reasonable to assume that the framework would supply 
+>>>a EH mechanism which supports queue stalling/draining and separate 
+>>>thread.  So, my EH patches tried to make the same environment for libata 
+>>
+>>A big reason why libata uses the SCSI layer is infrastructure like this. 
+>> It would certainly be nice to see timeouts and EH at the block layer. 
+>> The block layer itself already supports queue stalling/draining.
+> 
+> 
+> I have a pretty simple plan for this:
+> 
+> - Add a timer to struct request. It already has a timeout field for
+>   SG_IO originated requests, we could easily utilize this in general.
+>   I'm not sure how the querying of timeout would happen so far, it would
+>   probably require a q->set_rq_timeout() hook to ask the low level
+>   driver to set/return rq->timeout for a given request.
+> 
+> - Add a timeout hook to struct request_queue that would get invoked from
+>   the timeout handler. Something along the lines of:
+> 
+>         - Timeout on a request happens. Freeze the queue and use
+>           kblockd to take the actual timeout into process context, where
+>           we call the queue ->rq_timeout() hook. Unfreeze/reschedule
+>           queue operations based on what the ->rq_timeout() hook tells
+>           us.
+> 
+> That is generic enough to be able to arm the timeout automatically from
+> ->elevator_activate_req_fn() and dearm it when it completes or gets
+> deactivated. It should also be possible to implement the SCSI error
+> handling on top of that.
+> 
 
-Handle kexec correctly in ibmvscsi.   During kexec the adapter
-will not get cleaned up correctly, so we may need to reset it
-to make it sane again.
+To disable the timeout would you then have scsi_done call a block layer 
+function to disarm it then follow the current flow where or do you think 
+it would be nice to move the scsi softirq code up to block layer. So 
+scsi_done would call a block layer function that would disarm the timer, 
+add the request to a block layer softirq list (a list like scsi-ml's 
+scsi_done_q), and then in the block layer softirq function it could call 
+a request_queue callout which for scsi-ml's device queue would call 
+scsi_decide_disposition and return if it wanted the request requeued or 
+how many sectors completed or to kick off the eh. I had stated on this 
+for my block layer multipath driver, but can seperate the patches if 
+this would be useful.
 
-Signed-off-by: Dave Boutcher <sleddog@us.ibm.com>
-
---- linux-2.6.15-rc1-orig/drivers/scsi/ibmvscsi/ibmvscsi.h	2005-11-14 14:55:32.000000000 -0600
-+++ linux-2.6.15-rc1/drivers/scsi/ibmvscsi/ibmvscsi.h	2005-11-14 21:13:52.000000000 -0600
-@@ -100,7 +100,7 @@
- void ibmvscsi_release_crq_queue(struct crq_queue *queue,
- 				struct ibmvscsi_host_data *hostdata,
- 				int max_requests);
--void ibmvscsi_reset_crq_queue(struct crq_queue *queue,
-+int ibmvscsi_reset_crq_queue(struct crq_queue *queue,
- 			      struct ibmvscsi_host_data *hostdata);
- 
- void ibmvscsi_handle_crq(struct viosrp_crq *crq,
---- linux-2.6.15-rc1-orig/drivers/scsi/ibmvscsi/rpa_vscsi.c	2005-11-14 14:55:32.000000000 -0600
-+++ linux-2.6.15-rc1/drivers/scsi/ibmvscsi/rpa_vscsi.c	2005-11-14 21:13:51.000000000 -0600
-@@ -230,6 +230,11 @@
- 	rc = plpar_hcall_norets(H_REG_CRQ,
- 				vdev->unit_address,
- 				queue->msg_token, PAGE_SIZE);
-+	if (rc == H_Resource) 
-+		/* maybe kexecing and resource is busy. try a reset */
-+		rc = ibmvscsi_reset_crq_queue(queue,
-+					      hostdata);
-+
- 	if (rc == 2) {
- 		/* Adapter is good, but other end is not ready */
- 		printk(KERN_WARNING "ibmvscsi: Partner adapter not ready\n");
-@@ -281,7 +286,7 @@
-  * @hostdata:	ibmvscsi_host_data of host
-  *
-  */
--void ibmvscsi_reset_crq_queue(struct crq_queue *queue,
-+int ibmvscsi_reset_crq_queue(struct crq_queue *queue,
- 			      struct ibmvscsi_host_data *hostdata)
- {
- 	int rc;
-@@ -309,4 +314,5 @@
- 		printk(KERN_WARNING
- 		       "ibmvscsi: couldn't register crq--rc 0x%x\n", rc);
- 	}
-+	return rc;
- }
---- linux-2.6.15-rc1-orig/drivers/scsi/ibmvscsi/iseries_vscsi.c	2005-11-14 14:56:47.000000000 -0600
-+++ linux-2.6.15-rc1/drivers/scsi/ibmvscsi/iseries_vscsi.c	2005-11-14 21:13:53.000000000 -0600
-@@ -117,9 +117,10 @@
-  *
-  * no-op for iSeries
-  */
--void ibmvscsi_reset_crq_queue(struct crq_queue *queue,
-+int ibmvscsi_reset_crq_queue(struct crq_queue *queue,
- 			      struct ibmvscsi_host_data *hostdata)
- {
-+	return 0;
- }
- 
- /**
--- 
-Dave Boutcher
+Would ide benefit from running from a softirq and would it be able to 
+use such a thing?
