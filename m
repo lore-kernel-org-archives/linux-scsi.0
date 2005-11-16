@@ -1,94 +1,87 @@
-From: Kilian CAVALOTTI <kilian.cavalotti@lip6.fr>
-Subject: aic7xxx support for >2TB volumes?
-Date: Wed, 16 Nov 2005 12:08:02 +0100
-Message-ID: <200511161208.02374.kilian.cavalotti@lip6.fr>
+From: Steve McIntyre <steve@einval.com>
+Subject: Re: cdrecord and newer Linux kernels
+Date: Wed, 16 Nov 2005 12:30:47 +0000
+Message-ID: <20051116123047.GA4092@einval.com>
+References: <20051111000913.GU4682@einval.com> <20051116033903.07B1234031@koto.vergenet.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="3MwIy2ne0vdjdPXF"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from isis.lip6.fr ([132.227.60.2]:39819 "EHLO isis.lip6.fr")
-	by vger.kernel.org with ESMTP id S1030278AbVKPLIE convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Nov 2005 06:08:04 -0500
-Received: from poleia.lip6.fr (poleia.lip6.fr [132.227.205.24])
-          by isis.lip6.fr (8.13.1/jtpda-5.4+victor) with ESMTP id jAGB82LT006635
-          for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2005 12:08:02 +0100
-Received: from spip.lip6.fr (mailia [127.0.0.1])
-          by poleia.lip6.fr (8.13.3/jtpda-5.4+CB) with ESMTP id jAGB81xv031492
-          for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2005 12:08:01 +0100
+Received: from lump.einval.com ([217.147.81.17]:36110 "EHLO mail.einval.com")
+	by vger.kernel.org with ESMTP id S1030304AbVKPMbl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Nov 2005 07:31:41 -0500
+Received: from bsmtp by mail.einval.com with local-bsmtp (Exim 3.36 #1 (Debian))
+	id 1EcMRc-0002J2-00
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2005 12:31:20 +0000
 Content-Disposition: inline
+In-Reply-To: <20051116033903.07B1234031@koto.vergenet.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Horms <horms@verge.net.au>
+Cc: debian-kernel@lists.debian.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-Hi all,=20
 
-After some searching through newgroups and mailing lists, I haven't rea=
-lly=20
-found an answer to the question: is the aic7xxx driver capable of suppo=
-rting=20
-larger than 2 terabytes volumes? I have read some success reports, but =
-some=20
-failed attempts too...
+--3MwIy2ne0vdjdPXF
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I actually have an external RAID array, hosting a 6TB virtual disk, plu=
-gged on=20
-an Adaptec 39160 SCSI card. I'm using a 2.6.14 kernel, with  CONFIG_LBD=
-=3Dy,=20
-and thus, the aic7xxx (ver 7.0) module.
+On Wed, Nov 16, 2005 at 12:39:03PM +0900, Horms wrote:
+>In article <20051111000913.GU4682@einval.com> you wrote:
+>>=20
+>> That does make it rather difficult to have any safe CD/DVD writing
+>> software - do you think it's a good idea to have end users run apps as
+>> root to burn CDs? I've read too much of the cdrecord source to be
+>> happy running that as root! :-) My thought is that it might be better
+>> to allow specific commands on specific drives, and let the local admin
+>> configure that for themselves...
+>>=20
+>
+>The whole problem is that some IOCTLS are not safe. And there is no
+>definitive list of IOCTLs, so safe ones are added as they are known. And
+>the others are disabled.  If you have discovered ioctls which are indeed
+>safe, then they should be added to the whitelist.
+>
+>As for allowing root to have a mechanism to allow users to access
+>arbitary (unsafe) ioctls, that sounds like a can of worms to me.
+>I have CCed the SCSI maintainers for comment.
+>
+>For their reference, your original post and patch, allong with
+>the rest of this thread is at:
+>
+>http://lists.debian.org/debian-kernel/2005/11/msg00748.html
 
-My dmesg show the following:
+Again, I understand why the checks were added to the kernel. Adding
+access controls to limit the damage that could be caused by non-root
+users is entirely a good plan!
 
-scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 7.0
-        <Adaptec 3960D Ultra160 SCSI adapter>
-        aic7899: Ultra160 Wide Channel A, SCSI Id=3D7, 32/253 SCBs
-  Vendor: transtec  Model: T6100S16R1-D      Rev: 342J
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-scsi1:A:0:0: Tagged Queuing enabled.  Depth 32
- target1:0:0: Beginning Domain Validation
- target1:0:0: wide asynchronous.
- target1:0:0: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 127)
- target1:0:0: Ending Domain Validation
-sdb : very big device. try to use READ CAPACITY(16).
-sdb : READ CAPACITY(16) failed.
-sdb : status=3D0, message=3D00, host=3D5, driver=3D00
-sdb : use 0xffffffff as device size
-SCSI device sdb: 4294967296 512-byte hdwr sectors (2199023 MB)
-SCSI device sdb: drive cache: write back
-sdb : very big device. try to use READ CAPACITY(16).
-sdb : READ CAPACITY(16) failed.
-sdb : status=3D0, message=3D00, host=3D5, driver=3D00
-sdb : use 0xffffffff as device size
-SCSI device sdb: 4294967296 512-byte hdwr sectors (2199023 MB)
-SCSI device sdb: drive cache: write back
- sdb: unknown partition table
-Attached scsi disk sdb at scsi1, channel 0, id 0, lun 0
-Attached scsi generic sg2 at scsi1, channel 0, id 0, lun 0,  type 0
-
-Whatever the real size of the volume, it always give a "4294967296 512-=
-byte=20
-hdwr sectors (2199023 MB)" device...
-
-Is there a way to support a >2TB volume on this SCSI controler? I know =
-I could=20
-split my volume in smaller ones and use LVM to reassemble them, but I'd=
- like=20
-to avoid adding overhead to the storage stack, and keep it the simplest=
-=2E
-
-Thanks in advance for any hint/advice,
-Best regards,
+The reason I'm looking into this is that there are some commands that
+may be dangerous on some devices but on others harmless / useful /
+required (even); several years of writing SCSI-based storage
+management software has show me that. :-) Allowing a mechanism for an
+admin to override the in-kernel policy on a per-device, per-command
+basis could allow us to safely allow non-root CD/DVD burning, I hope.
 
 --=20
-Kilian CAVALOTTI                      Administrateur r=E9seaux et syst=E8=
-mes
-UPMC / CNRS - LIP6 (C870)
-8, rue du Capitaine Scott                          Tel. : 01 44 27 88 5=
-4
-75015 Paris - France                               Fax. : 01 44 27 70 0=
-0
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Steve McIntyre, Cambridge, UK.                                steve@einval.=
+com
+Google-bait:
+  Debian does NOT ship free CDs. Please do NOT contact the mailing
+  lists asking us to send them to you.
+
+--3MwIy2ne0vdjdPXF
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQFDeyZ3fDt5cIjHwfcRAhfuAJ0TtKH4k0Wq0nB89g+1MI0buhpQRwCghizY
+EkmHDqFpoivgEpl0tVIvdrw=
+=5f+C
+-----END PGP SIGNATURE-----
+
+--3MwIy2ne0vdjdPXF--
+
