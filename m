@@ -1,49 +1,35 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata test-unit-ready for ATAPI devices
-Date: Wed, 16 Nov 2005 07:46:28 -0500
-Message-ID: <437B2A24.9050508@pobox.com>
-References: <20051116044841.GA11722@havoc.gtf.org> <20051116100117.GA22225@htj.dyndns.org>
+Subject: Re: [PATCH] libata error handling fixes (ATAPI)
+Date: Wed, 16 Nov 2005 07:56:01 -0500
+Message-ID: <437B2C61.7080605@pobox.com>
+References: <20051114195717.GA24373@havoc.gtf.org> <20051115074148.GA17459@htj.dyndns.org> <4379AA5B.1060900@pobox.com> <4379B28E.9070708@gmail.com> <4379C062.3010302@pobox.com> <20051115120016.GD7787@suse.de> <437A2814.1060308@cs.wisc.edu> <20051115184131.GJ7787@suse.de> <20051116124035.GX7787@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:39091 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S965249AbVKPMqb (ORCPT
+Received: from mail.dvmed.net ([216.237.124.58]:46771 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S965253AbVKPM4O (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Nov 2005 07:46:31 -0500
-In-Reply-To: <20051116100117.GA22225@htj.dyndns.org>
+	Wed, 16 Nov 2005 07:56:14 -0500
+In-Reply-To: <20051116124035.GX7787@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Tejun Heo wrote:
-> On Tue, Nov 15, 2005 at 11:48:41PM -0500, Jeff Garzik wrote:
+Jens Axboe wrote:
+> I updated that patch, and converted IDE and SCSI to use it. See the
+> results here:
 > 
->>The following patch clears the "I was just reset" condition from an
->>ATAPI device, and waits for it to come online, before continuing with
->>the probe.
->>
->>Not checking this into any upstream-bound branch, as I'm not yet
->>convinced of its value.
->>
+> http://brick.kernel.dk/git/?p=linux-2.6-block.git;a=shortlog;h=blk-softirq
 > 
-> 
-> How about the following one?  It doesn't make libata wait for the
-> device to become ready before trying to configure ATA stuff.  It just
-> makes sr wait for the device to become ready before performing SCSI
-> configuration.  Maybe both are needed?
+> The main change from the version posted last october is killing the
+> 'slightly' overdesigned completion queue hashing.
 
-[thinking out loud]  My rationale for doing TUR in libata was to clear 
-the UNIT ATTENTION that libata caused through software/hardware reset. 
-Once the UNIT ATTENTION was cleared, my rationale for waiting for the 
-NOT READY(BECOMING READY) condition was simply symmetry with other 
-libata probe tasks, which similarly wait for device readiness.
+Nifty, I like.  Comments:
 
-However, given that sr is already coded to clear "the initial startup 
-UNIT_ATTENTION", I tend to think your patch is more appropriate, and my 
-patch should not be applied at all.
+* use of spin_lock_irq() in all completion paths now makes me nervous.
 
-	Jeff
-
+* certainly it's what SCSI does now, but is a softirq really necessary? 
+  Using a tasklet would kill all that per-cpu code, and notifier.
 
