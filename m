@@ -1,58 +1,49 @@
-From: "Jones Joneser" <joneserstein@hotmail.com>
-Subject: PROBLEM: Tyan s2822 and SATA slowness / erratic speeds kernel 2.6
-Date: Tue, 15 Nov 2005 23:43:50 +0000
-Message-ID: <BAY108-F7B49C0F56D3AF2CD03DF4C05D0@phx.gbl>
+From: Horms <horms@debian.org>
+Subject: Re: Bug#338089: New aic7xxx driver fails spectacularly on 2940UW
+Date: Wed, 16 Nov 2005 11:37:36 +0900
+Message-ID: <20051116023734.GA1484@verge.net.au>
+References: <1131904005.3291.5.camel@mulgrave> <20051115004520.31814.qmail@web88012.mail.re2.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bay108-f7.bay108.hotmail.com ([65.54.162.17]:31590 "EHLO
-	hotmail.com") by vger.kernel.org with ESMTP id S965081AbVKOXnu
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Nov 2005 18:43:50 -0500
+Received: from koto.vergenet.net ([210.128.90.7]:50091 "EHLO koto.vergenet.net")
+	by vger.kernel.org with ESMTP id S965188AbVKPCm5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Nov 2005 21:42:57 -0500
+Content-Disposition: inline
+In-Reply-To: <20051115004520.31814.qmail@web88012.mail.re2.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Graham Knap <graham.knap@rogers.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Doug Ledford <dledford@redhat.com>, 338089@bugs.debian.org, linux-scsi@vger.kernel.org
 
-Machine:
-Tyan s2822G3NR-D
-Silicon Image, Inc. SiI 3114
-SATA Drives: Western Digital 300gb / seagate 80 gb
+On Mon, Nov 14, 2005 at 07:45:20PM -0500, Graham Knap wrote:
+> James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> > Can you try with the attached patch, which will force DV to ignore
+> > the echo buffer write tests?
+> 
+> I'll certainly try.
+> 
+> The kernel I was using was a prebuilt Debian kernel. I'm not sure how
+> to rebuild it from source. Horms, if you could point me in the right
+> direction, I'll give it a try. 
 
-Initially we thought we had a network issue because we were seeing a 
-slowdown when transferring files > 512Mb in size (by whatever method: rsync, 
-cp, scp, etc.) between two of the Tyan servers, we see the first 512Mb go at 
-a decent rate (tens of megabytes per second) and then the rate plummets to 
-below 500k/sec.   However we reproduce the issue locally on a machine thus 
-eliminating the network card issue. We also had tried with different 
-ethernet cards and x-over cable.
+That depends exactly what you want to build. To just make an image
+for testing, upacking the tarball supplied by linux-source-2.6.14,
+using the config that came with linux-image-XYZ in /boot, and
+optionally using make-kpkg, should work. Though I think you
+have most of that happening.
 
+> 
+> For now, I've built a kernel using the linux-source-2.6.14 package
+> (version 2.6.14-2). It's massively stripped down so that it compiles in
+> a semi-reasonable amount of time on this very slow PC.
 
-We are using CentOS 4 and have tried both 4.1 and 4.2 (the latest edition) 
-64 and 32 bit.  We have tried ubuntu, gentoo, and vanilla kernels.  We have 
-upgraded our BIOS to the latest and experimented with different BIOS 
-settings (from 'safe' to 'optimal' with many variants in between.) We have 
-tried it with ACPI switched off, with 4gb of RAM and with 8gb of RAM. We 
-have upgraded the BIOS to 3.04 & then 3.05.  The best we get is that under 
-the ubuntu, gentoo, and a 2.4 kernel we can see stable performance that is 
-well below what we should be getting ~20MiB/s.
+There isn't a great deal I can suggest in order to speed up builds,
+except perhaps using ccache, or trimming the config as you have done.
 
-No matter what combination of configuration we try, we consistently see this 
-issue.  We have even tried and LSI SATA controller w/ Tyan motherboard and 
-experienced the same issues.
+If you need me to build stuff for you, I'm happy to oblige, 
+though obviously there are extra email round-trips involved.
 
-We moved the SATA controller to a Dell PE 1750 and experience none of the 
-slowdowns, consistent ly 45-50MiB/s performance with no erraticness in speed 
-or drops in performance.
-
-We suspect the issue is related to the combo of the Tyan mobo with the SATA 
-controller subsystem but need some assistance in further nailing down the 
-cause and solution to this issue.
-
-Let me know of any additional information that I can provide to assist with 
-the debugging of this issue.
-
-Thanks,
--asher
-
-
+-- 
+Horms
