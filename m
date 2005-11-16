@@ -1,134 +1,94 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata test-unit-ready for ATAPI devices
-Date: Wed, 16 Nov 2005 19:01:17 +0900
-Message-ID: <20051116100117.GA22225@htj.dyndns.org>
-References: <20051116044841.GA11722@havoc.gtf.org>
+From: Kilian CAVALOTTI <kilian.cavalotti@lip6.fr>
+Subject: aic7xxx support for >2TB volumes?
+Date: Wed, 16 Nov 2005 12:08:02 +0100
+Message-ID: <200511161208.02374.kilian.cavalotti@lip6.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.200]:55691 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030263AbVKPKBY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Nov 2005 05:01:24 -0500
-Received: by zproxy.gmail.com with SMTP id q3so1626090nzb
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2005 02:01:23 -0800 (PST)
+Received: from isis.lip6.fr ([132.227.60.2]:39819 "EHLO isis.lip6.fr")
+	by vger.kernel.org with ESMTP id S1030278AbVKPLIE convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Nov 2005 06:08:04 -0500
+Received: from poleia.lip6.fr (poleia.lip6.fr [132.227.205.24])
+          by isis.lip6.fr (8.13.1/jtpda-5.4+victor) with ESMTP id jAGB82LT006635
+          for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2005 12:08:02 +0100
+Received: from spip.lip6.fr (mailia [127.0.0.1])
+          by poleia.lip6.fr (8.13.3/jtpda-5.4+CB) with ESMTP id jAGB81xv031492
+          for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2005 12:08:01 +0100
 Content-Disposition: inline
-In-Reply-To: <20051116044841.GA11722@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Nov 15, 2005 at 11:48:41PM -0500, Jeff Garzik wrote:
-> 
-> The following patch clears the "I was just reset" condition from an
-> ATAPI device, and waits for it to come online, before continuing with
-> the probe.
-> 
-> Not checking this into any upstream-bound branch, as I'm not yet
-> convinced of its value.
-> 
+Hi all,=20
 
-How about the following one?  It doesn't make libata wait for the
-device to become ready before trying to configure ATA stuff.  It just
-makes sr wait for the device to become ready before performing SCSI
-configuration.  Maybe both are needed?
+After some searching through newgroups and mailing lists, I haven't rea=
+lly=20
+found an answer to the question: is the aic7xxx driver capable of suppo=
+rting=20
+larger than 2 terabytes volumes? I have read some success reports, but =
+some=20
+failed attempts too...
 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index d68cea7..9656421 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -44,6 +44,7 @@
- #include <linux/interrupt.h>
- #include <linux/init.h>
- #include <linux/blkdev.h>
-+#include <linux/delay.h>
- #include <asm/uaccess.h>
- 
- #include <scsi/scsi.h>
-@@ -721,14 +722,53 @@ Enomem:
- 	goto out;
- }
- 
--static void get_capabilities(struct scsi_cd *cd)
-+static int initial_test_unit_ready(struct scsi_cd *cd)
- {
--	unsigned char *buffer;
--	struct scsi_mode_data data;
- 	unsigned char cmd[MAX_COMMAND_SIZE];
- 	struct scsi_sense_hdr sshdr;
- 	unsigned int the_result;
--	int retries, rc, n;
-+	int retries = 5, becoming_ready = 0, first_becoming_ready = 1;
-+
-+	memset((void *)cmd, 0, MAX_COMMAND_SIZE);
-+	cmd[0] = TEST_UNIT_READY;
-+
-+	while (--retries) {
-+		the_result = scsi_execute_req (cd->device, cmd, DMA_NONE, NULL,
-+					       0, &sshdr, SR_TIMEOUT,
-+					       MAX_RETRIES);
-+
-+		if (scsi_status_is_good(the_result))
-+			return 0;
-+
-+		if (!scsi_sense_valid(&sshdr))
-+			continue;
-+
-+		becoming_ready = sshdr.sense_key == NOT_READY &&
-+			sshdr.asc == 0x04 && sshdr.ascq == 0x01;
-+
-+		if (becoming_ready) {
-+			if (first_becoming_ready) {
-+				printk("%s: device is becoming ready, please "
-+				       "be patient\n", cd->cdi.name);
-+				retries = 30;	/* 15secs */
-+				first_becoming_ready = 0;
-+			}
-+			msleep(500);
-+		} else if (sshdr.sense_key != UNIT_ATTENTION)
-+			break;
-+	}
-+
-+	if (becoming_ready)
-+		printk(KERN_WARNING "%s: device failed to become ready\n",
-+		       cd->cdi.name);
-+	return -1;
-+}
-+
-+static void get_capabilities(struct scsi_cd *cd)
-+{
-+	unsigned char *buffer;
-+	struct scsi_mode_data data;
-+	int rc, n;
- 
- 	static char *loadmech[] =
- 	{
-@@ -750,23 +790,8 @@ static void get_capabilities(struct scsi
- 		return;
- 	}
- 
--	/* issue TEST_UNIT_READY until the initial startup UNIT_ATTENTION
--	 * conditions are gone, or a timeout happens
--	 */
--	retries = 0;
--	do {
--		memset((void *)cmd, 0, MAX_COMMAND_SIZE);
--		cmd[0] = TEST_UNIT_READY;
+I actually have an external RAID array, hosting a 6TB virtual disk, plu=
+gged on=20
+an Adaptec 39160 SCSI card. I'm using a 2.6.14 kernel, with  CONFIG_LBD=
+=3Dy,=20
+and thus, the aic7xxx (ver 7.0) module.
+
+My dmesg show the following:
+
+scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 7.0
+        <Adaptec 3960D Ultra160 SCSI adapter>
+        aic7899: Ultra160 Wide Channel A, SCSI Id=3D7, 32/253 SCBs
+  Vendor: transtec  Model: T6100S16R1-D      Rev: 342J
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+scsi1:A:0:0: Tagged Queuing enabled.  Depth 32
+ target1:0:0: Beginning Domain Validation
+ target1:0:0: wide asynchronous.
+ target1:0:0: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 127)
+ target1:0:0: Ending Domain Validation
+sdb : very big device. try to use READ CAPACITY(16).
+sdb : READ CAPACITY(16) failed.
+sdb : status=3D0, message=3D00, host=3D5, driver=3D00
+sdb : use 0xffffffff as device size
+SCSI device sdb: 4294967296 512-byte hdwr sectors (2199023 MB)
+SCSI device sdb: drive cache: write back
+sdb : very big device. try to use READ CAPACITY(16).
+sdb : READ CAPACITY(16) failed.
+sdb : status=3D0, message=3D00, host=3D5, driver=3D00
+sdb : use 0xffffffff as device size
+SCSI device sdb: 4294967296 512-byte hdwr sectors (2199023 MB)
+SCSI device sdb: drive cache: write back
+ sdb: unknown partition table
+Attached scsi disk sdb at scsi1, channel 0, id 0, lun 0
+Attached scsi generic sg2 at scsi1, channel 0, id 0, lun 0,  type 0
+
+Whatever the real size of the volume, it always give a "4294967296 512-=
+byte=20
+hdwr sectors (2199023 MB)" device...
+
+Is there a way to support a >2TB volume on this SCSI controler? I know =
+I could=20
+split my volume in smaller ones and use LVM to reassemble them, but I'd=
+ like=20
+to avoid adding overhead to the storage stack, and keep it the simplest=
+=2E
+
+Thanks in advance for any hint/advice,
+Best regards,
+
+--=20
+Kilian CAVALOTTI                      Administrateur r=E9seaux et syst=E8=
+mes
+UPMC / CNRS - LIP6 (C870)
+8, rue du Capitaine Scott                          Tel. : 01 44 27 88 5=
+4
+75015 Paris - France                               Fax. : 01 44 27 70 0=
+0
 -
--		the_result = scsi_execute_req (cd->device, cmd, DMA_NONE, NULL,
--					       0, &sshdr, SR_TIMEOUT,
--					       MAX_RETRIES);
--
--		retries++;
--	} while (retries < 5 && 
--		 (!scsi_status_is_good(the_result) ||
--		  (scsi_sense_valid(&sshdr) &&
--		   sshdr.sense_key == UNIT_ATTENTION)));
-+	/* test for readiness */
-+	initial_test_unit_ready(cd);
- 
- 	/* ask for mode page 0x2a */
- 	rc = scsi_mode_sense(cd->device, 0, 0x2a, buffer, 128,
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
