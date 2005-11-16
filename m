@@ -1,63 +1,171 @@
-From: Horms <horms@verge.net.au>
-Subject: Re: cdrecord and newer Linux kernels
-Date: Wed, 16 Nov 2005 12:39:03 +0900 (JST)
-Message-ID: <20051116033903.07B1234031@koto.vergenet.net>
-References: <20051111000913.GU4682@einval.com>
-Return-path: <bounce-debian-kernel=glddk-debian-kernel=m.gmane.org@lists.debian.org>
-In-Reply-To: <20051111000913.GU4682@einval.com>
-Resent-Message-ID: <tQYUj.A.CG.ZnqeDB@murphy>
-List-Post: <mailto:debian-kernel@lists.debian.org>
-List-Help: <mailto:debian-kernel-request@lists.debian.org?subject=help>
-List-Subscribe: <mailto:debian-kernel-request@lists.debian.org?subject=subscribe>
-List-Unsubscribe: <mailto:debian-kernel-request@lists.debian.org?subject=unsubscribe>
-To: Steve McIntyre <steve@einval.com>
-Cc: debian-kernel@lists.debian.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+From: Al Viro <viro@ftp.linux.org.uk>
+Subject: [PATCH 3/8] isaectomy: g_NCR5380
+Date: Wed, 16 Nov 2005 03:50:32 +0000
+Message-ID: <E1EcEJc-0007dq-8T@ZenIV.linux.org.uk>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965236AbVKPDvA@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@osdl.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-In article <20051111000913.GU4682@einval.com> you wrote:
-> [-- text/plain, encoding quoted-printable, charset: us-ascii, 33 lines --]
-> 
-> [ Bugger, got the cdrtools-devel address wrong on the first mail. Now
->  fixed. ]
-> 
-> On Fri, Nov 11, 2005 at 12:53:00AM +0100, Christoph Hellwig wrote:
->>On Thu, Nov 10, 2005 at 11:47:29PM +0000, Steve McIntyre wrote:
->>> In kernel 2.6.8 and later, SCSI generic commands are verified for
->>> safety. This may be a reasonable measure in some respects, but it
->>> makes effective non-root CD/DVD burning rather difficult. For best
->>> performance cdrecord, growisofs and friends may often need to send
->>> SCSI commands to drives that the kernel may neither know about nor
->>> understand. And (to add to the pain) these commands are very often
->>> vendor- or device-specific, so simply allowing those commands in the
->>> kernel will defeat the point of the verification in the first place.
->>
->>The whole point of the verification is to allow safe access to a
->>selected set of raw commands for normal users.  root (or rather
->>a process that has CAP_SYS_RAWIO) can send any command.  if you need
->>unknown commands just make sure to burn as root, as everything else
->>would be unsafe anyway.
-> 
-> That does make it rather difficult to have any safe CD/DVD writing
-> software - do you think it's a good idea to have end users run apps as
-> root to burn CDs? I've read too much of the cdrecord source to be
-> happy running that as root! :-) My thought is that it might be better
-> to allow specific commands on specific drives, and let the local admin
-> configure that for themselves...
-> 
+From: Al Viro <viro@zeniv.linux.org.uk>
+Date: 1132110458 -0500
 
-The whole problem is that some IOCTLS are not safe. And there is no
-definitive list of IOCTLs, so safe ones are added as they are known. And
-the others are disabled.  If you have discovered ioctls which are indeed
-safe, then they should be added to the whitelist.
+switched CONFIG_SCSI_G_NCR5380_MEM code in g_NCR5380 to ioremap(); massaged
+g_NCR5380.h accordingly.
 
-As for allowing root to have a mechanism to allow users to access
-arbitary (unsafe) ioctls, that sounds like a can of worms to me.
-I have CCed the SCSI maintainers for comment.
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
 
-For their reference, your original post and patch, allong with
-the rest of this thread is at:
+ drivers/scsi/g_NCR5380.c |   28 +++++++++++++++++++++-------
+ drivers/scsi/g_NCR5380.h |   23 +++++++++++++++++------
+ 2 files changed, 38 insertions(+), 13 deletions(-)
 
-http://lists.debian.org/debian-kernel/2005/11/msg00748.html
-
--- 
-Horms
+6432444077b99d420f973ce8f1e748792f50a161
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -127,7 +127,7 @@ static int ncr_53c400a = NCR_NOT_SET;
+ static int dtc_3181e = NCR_NOT_SET;
+ 
+ static struct override {
+-	NCR5380_implementation_fields;
++	NCR5380_map_type NCR5380_map_name;
+ 	int irq;
+ 	int dma;
+ 	int board;		/* Use NCR53c400, Ricoh, etc. extensions ? */
+@@ -299,6 +299,10 @@ int __init generic_NCR5380_detect(struct
+ 	};
+ 	int flags = 0;
+ 	struct Scsi_Host *instance;
++#ifdef CONFIG_SCSI_G_NCR5380_MEM
++	unsigned long base;
++	void __iomem *iomem;
++#endif
+ 
+ 	if (ncr_irq != NCR_NOT_SET)
+ 		overrides[0].irq = ncr_irq;
+@@ -424,15 +428,22 @@ int __init generic_NCR5380_detect(struct
+ 			region_size = NCR5380_region_size;
+ 		}
+ #else
+-		if(!request_mem_region(overrides[current_override].NCR5380_map_name, NCR5380_region_size, "ncr5380"))
++		base = overrides[current_override].NCR5380_map_name;
++		if (!request_mem_region(base, NCR5380_region_size, "ncr5380"))
++			continue;
++		iomem = ioremap(base, NCR5380_region_size);
++		if (!iomem) {
++			release_mem_region(base, NCR5380_region_size);
+ 			continue;
++		}
+ #endif
+ 		instance = scsi_register(tpnt, sizeof(struct NCR5380_hostdata));
+ 		if (instance == NULL) {
+ #ifndef CONFIG_SCSI_G_NCR5380_MEM
+ 			release_region(overrides[current_override].NCR5380_map_name, region_size);
+ #else
+-			release_mem_region(overrides[current_override].NCR5380_map_name, NCR5380_region_size);
++			iounmap(iomem);
++			release_mem_region(base, NCR5380_region_size);
+ #endif
+ 			continue;
+ 		}
+@@ -440,6 +451,8 @@ int __init generic_NCR5380_detect(struct
+ 		instance->NCR5380_instance_name = overrides[current_override].NCR5380_map_name;
+ #ifndef CONFIG_SCSI_G_NCR5380_MEM
+ 		instance->n_io_port = region_size;
++#else
++		((struct NCR5380_hostdata *)instance->hostdata).iomem = iomem;
+ #endif
+ 
+ 		NCR5380_init(instance, flags);
+@@ -509,6 +522,7 @@ int generic_NCR5380_release_resources(st
+ #ifndef CONFIG_SCSI_G_NCR5380_MEM
+ 	release_region(instance->NCR5380_instance_name, instance->n_io_port);
+ #else
++	iounmap(((struct NCR5380_hostdata *)instance->hostdata).iomem);
+ 	release_mem_region(instance->NCR5380_instance_name, NCR5380_region_size);
+ #endif
+ 
+@@ -586,7 +600,7 @@ static inline int NCR5380_pread(struct S
+ 		}
+ #else
+ 		/* implies CONFIG_SCSI_G_NCR5380_MEM */
+-		isa_memcpy_fromio(dst + start, NCR53C400_host_buffer + NCR5380_map_name, 128);
++		memcpy_fromio(dst + start, iomem + NCR53C400_host_buffer, 128);
+ #endif
+ 		start += 128;
+ 		blocks--;
+@@ -606,7 +620,7 @@ static inline int NCR5380_pread(struct S
+ 		}
+ #else
+ 		/* implies CONFIG_SCSI_G_NCR5380_MEM */
+-		isa_memcpy_fromio(dst + start, NCR53C400_host_buffer + NCR5380_map_name, 128);
++		memcpy_fromio(dst + start, iomem + NCR53C400_host_buffer, 128);
+ #endif
+ 		start += 128;
+ 		blocks--;
+@@ -671,7 +685,7 @@ static inline int NCR5380_pwrite(struct 
+ 		}
+ #else
+ 		/* implies CONFIG_SCSI_G_NCR5380_MEM */
+-		isa_memcpy_toio(NCR53C400_host_buffer + NCR5380_map_name, src + start, 128);
++		memcpy_toio(iomem + NCR53C400_host_buffer, src + start, 128);
+ #endif
+ 		start += 128;
+ 		blocks--;
+@@ -687,7 +701,7 @@ static inline int NCR5380_pwrite(struct 
+ 		}
+ #else
+ 		/* implies CONFIG_SCSI_G_NCR5380_MEM */
+-		isa_memcpy_toio(NCR53C400_host_buffer + NCR5380_map_name, src + start, 128);
++		memcpy_toio(iomem + NCR53C400_host_buffer, src + start, 128);
+ #endif
+ 		start += 128;
+ 		blocks--;
+diff --git a/drivers/scsi/g_NCR5380.h b/drivers/scsi/g_NCR5380.h
+--- a/drivers/scsi/g_NCR5380.h
++++ b/drivers/scsi/g_NCR5380.h
+@@ -82,6 +82,15 @@ static const char* generic_NCR5380_info(
+ #define NCR5380_read(reg) (inb(NCR5380_map_name + (reg)))
+ #define NCR5380_write(reg, value) (outb((value), (NCR5380_map_name + (reg))))
+ 
++#define NCR5380_implementation_fields \
++    NCR5380_map_type NCR5380_map_name
++
++#define NCR5380_local_declare() \
++    register NCR5380_implementation_fields
++
++#define NCR5380_setup(instance) \
++    NCR5380_map_name = (NCR5380_map_type)((instance)->NCR5380_instance_name)
++
+ #else 
+ /* therefore CONFIG_SCSI_G_NCR5380_MEM */
+ 
+@@ -95,18 +104,20 @@ static const char* generic_NCR5380_info(
+ #define NCR53C400_host_buffer 0x3900
+ #define NCR5380_region_size 0x3a00
+ 
+-#define NCR5380_read(reg) isa_readb(NCR5380_map_name + NCR53C400_mem_base + (reg))
+-#define NCR5380_write(reg, value) isa_writeb(value, NCR5380_map_name + NCR53C400_mem_base + (reg))
+-#endif
++#define NCR5380_read(reg) readb(iomem + NCR53C400_mem_base + (reg))
++#define NCR5380_write(reg, value) writeb(value, iomem + NCR53C400_mem_base + (reg))
+ 
+ #define NCR5380_implementation_fields \
+-    NCR5380_map_type NCR5380_map_name
++    NCR5380_map_type NCR5380_map_name; \
++    void __iomem *iomem;
+ 
+ #define NCR5380_local_declare() \
+-    register NCR5380_implementation_fields
++    register void __iomem *iomem
+ 
+ #define NCR5380_setup(instance) \
+-    NCR5380_map_name = (NCR5380_map_type)((instance)->NCR5380_instance_name)
++    iomem = (((struct NCR5380_hostdata *)(instance)->hostdata).iomem)
++
++#endif
+ 
+ #define NCR5380_intr generic_NCR5380_intr
+ #define NCR5380_queue_command generic_NCR5380_queue_command
