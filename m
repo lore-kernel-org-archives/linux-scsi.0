@@ -1,84 +1,32 @@
 From: Al Viro <viro@ftp.linux.org.uk>
-Subject: [PATCH 4/8] isaectomy: in2000
-Date: Wed, 16 Nov 2005 03:50:37 +0000
-Message-ID: <E1EcEJh-0007dw-8i@ZenIV.linux.org.uk>
+Subject: Re: [RFC: 2.6 patch] remove ISA legacy functions
+Date: Wed, 16 Nov 2005 03:56:50 +0000
+Message-ID: <20051116035650.GA27946@ftp.linux.org.uk>
+References: <20051110182443.514622ed.akpm@osdl.org> <20051111201849.GP5376@stusta.de> <20051111202005.GQ5376@stusta.de> <20051111203601.GR5376@stusta.de> <20051112045216.GY5376@stusta.de> <437578CD.1080501@pobox.com> <20051112051102.GF1658@parisc-linux.org> <43757D5C.8030308@pobox.com> <20051112052918.GG1658@parisc-linux.org> <20051112134820.GG7992@ftp.linux.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:28318 "EHLO
-	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S965226AbVKPDuh
+Received: from zeniv.linux.org.uk ([195.92.253.2]:14786 "EHLO
+	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S965237AbVKPEAG
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Nov 2005 22:50:37 -0500
+	Tue, 15 Nov 2005 23:00:06 -0500
+Content-Disposition: inline
+In-Reply-To: <20051112134820.GG7992@ftp.linux.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: torvalds@osdl.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, jonathan@buzzard.org.uk, tlinux-users@tce.toshiba-dme.co.jp, Jaroslav Kysela <perex@suse.cz>
 
-From: Al Viro <viro@zeniv.linux.org.uk>
-Date: 1132110514 -0500
+On Sat, Nov 12, 2005 at 01:48:20PM +0000, Al Viro wrote:
+> On Fri, Nov 11, 2005 at 10:29:18PM -0700, Matthew Wilcox wrote:
+> > I think they work fine everywhere.  Adrian wants to remove the API they
+> > use.
+> > 
+> > I think this is a bad idea.  The drivers should be converted.
+> 
+> They are - I'll send patches later today...
 
-switched to ioremap(), cleaned the probing up a bit.
+NB: never say these words on a Friday night or you'll get a visit from
+Murphy.
 
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
----
-
- drivers/scsi/in2000.c |   24 ++++++++++++++++++------
- 1 files changed, 18 insertions(+), 6 deletions(-)
-
-e44467683e39fd741741d07d49515e3b20e3e104
-diff --git a/drivers/scsi/in2000.c b/drivers/scsi/in2000.c
---- a/drivers/scsi/in2000.c
-+++ b/drivers/scsi/in2000.c
-@@ -1898,6 +1898,21 @@ static int int_tab[] in2000__INITDATA = 
- 	10
- };
- 
-+static int probe_bios(u32 addr, u32 *s1, uchar *switches)
-+{
-+	void __iomem *p = ioremap(addr, 0x34);
-+	if (!p)
-+		return 0;
-+	*s1 = readl(p + 0x10);
-+	if (*s1 == 0x41564f4e || readl(p + 0x30) == 0x61776c41) {
-+		/* Read the switch image that's mapped into EPROM space */
-+		*switches = ~readb(p + 0x20);
-+		iounmap(p);
-+		return 1;
-+	}
-+	iounmap(p);
-+	return 0;
-+}
- 
- static int __init in2000_detect(struct scsi_host_template * tpnt)
- {
-@@ -1930,6 +1945,7 @@ static int __init in2000_detect(struct s
- 
- 	detect_count = 0;
- 	for (bios = 0; bios_tab[bios]; bios++) {
-+		u32 s1 = 0;
- 		if (check_setup_args("ioport", &val, buf)) {
- 			base = val;
- 			switches = ~inb(base + IO_SWITCHES) & 0xff;
-@@ -1941,13 +1957,9 @@ static int __init in2000_detect(struct s
-  * for the obvious ID strings. We look for the 2 most common ones and
-  * hope that they cover all the cases...
-  */
--		else if (isa_readl(bios_tab[bios] + 0x10) == 0x41564f4e || isa_readl(bios_tab[bios] + 0x30) == 0x61776c41) {
-+		else if (probe_bios(bios_tab[bios], &s1, &switches)) {
- 			printk("Found IN2000 BIOS at 0x%x ", (unsigned int) bios_tab[bios]);
- 
--/* Read the switch image that's mapped into EPROM space */
--
--			switches = ~((isa_readb(bios_tab[bios] + 0x20) & 0xff));
--
- /* Find out where the IO space is */
- 
- 			x = switches & (SW_ADDR0 | SW_ADDR1);
-@@ -2037,7 +2049,7 @@ static int __init in2000_detect(struct s
- 
- /* Older BIOS's had a 'sync on/off' switch - use its setting */
- 
--		if (isa_readl(bios_tab[bios] + 0x10) == 0x41564f4e && (switches & SW_SYNC_DOS5))
-+		if (s1 == 0x41564f4e && (switches & SW_SYNC_DOS5))
- 			hostdata->sync_off = 0x00;	/* sync defaults to on */
- 		else
- 			hostdata->sync_off = 0xff;	/* sync defaults to off */
-
+Apologies for delay, patches sent.
