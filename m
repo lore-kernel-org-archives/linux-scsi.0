@@ -1,87 +1,85 @@
-From: Steve McIntyre <steve@einval.com>
-Subject: Re: cdrecord and newer Linux kernels
-Date: Wed, 16 Nov 2005 12:30:47 +0000
-Message-ID: <20051116123047.GA4092@einval.com>
-References: <20051111000913.GU4682@einval.com> <20051116033903.07B1234031@koto.vergenet.net>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] libata error handling fixes (ATAPI)
+Date: Wed, 16 Nov 2005 13:40:36 +0100
+Message-ID: <20051116124035.GX7787@suse.de>
+References: <20051114195717.GA24373@havoc.gtf.org> <20051115074148.GA17459@htj.dyndns.org> <4379AA5B.1060900@pobox.com> <4379B28E.9070708@gmail.com> <4379C062.3010302@pobox.com> <20051115120016.GD7787@suse.de> <437A2814.1060308@cs.wisc.edu> <20051115184131.GJ7787@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="3MwIy2ne0vdjdPXF"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lump.einval.com ([217.147.81.17]:36110 "EHLO mail.einval.com")
-	by vger.kernel.org with ESMTP id S1030304AbVKPMbl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Nov 2005 07:31:41 -0500
-Received: from bsmtp by mail.einval.com with local-bsmtp (Exim 3.36 #1 (Debian))
-	id 1EcMRc-0002J2-00
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Nov 2005 12:31:20 +0000
-Content-Disposition: inline
-In-Reply-To: <20051116033903.07B1234031@koto.vergenet.net>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Horms <horms@verge.net.au>
-Cc: debian-kernel@lists.debian.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
-
-
---3MwIy2ne0vdjdPXF
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750740AbVKPMjj@vger.kernel.org>
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20051115184131.GJ7787@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Nov 16, 2005 at 12:39:03PM +0900, Horms wrote:
->In article <20051111000913.GU4682@einval.com> you wrote:
->>=20
->> That does make it rather difficult to have any safe CD/DVD writing
->> software - do you think it's a good idea to have end users run apps as
->> root to burn CDs? I've read too much of the cdrecord source to be
->> happy running that as root! :-) My thought is that it might be better
->> to allow specific commands on specific drives, and let the local admin
->> configure that for themselves...
->>=20
->
->The whole problem is that some IOCTLS are not safe. And there is no
->definitive list of IOCTLs, so safe ones are added as they are known. And
->the others are disabled.  If you have discovered ioctls which are indeed
->safe, then they should be added to the whitelist.
->
->As for allowing root to have a mechanism to allow users to access
->arbitary (unsafe) ioctls, that sounds like a can of worms to me.
->I have CCed the SCSI maintainers for comment.
->
->For their reference, your original post and patch, allong with
->the rest of this thread is at:
->
->http://lists.debian.org/debian-kernel/2005/11/msg00748.html
+On Tue, Nov 15 2005, Jens Axboe wrote:
+> On Tue, Nov 15 2005, Mike Christie wrote:
+> > Jens Axboe wrote:
+> > >On Tue, Nov 15 2005, Jeff Garzik wrote:
+> > >
+> > >>>For departure of libata from SCSI, I was thinking more of another more 
+> > >>>generic block device framework in which libata can live in.  And I 
+> > >>>thought that it was reasonable to assume that the framework would supply 
+> > >>>a EH mechanism which supports queue stalling/draining and separate 
+> > >>>thread.  So, my EH patches tried to make the same environment for libata 
+> > >>
+> > >>A big reason why libata uses the SCSI layer is infrastructure like this. 
+> > >>It would certainly be nice to see timeouts and EH at the block layer. 
+> > >>The block layer itself already supports queue stalling/draining.
+> > >
+> > >
+> > >I have a pretty simple plan for this:
+> > >
+> > >- Add a timer to struct request. It already has a timeout field for
+> > >  SG_IO originated requests, we could easily utilize this in general.
+> > >  I'm not sure how the querying of timeout would happen so far, it would
+> > >  probably require a q->set_rq_timeout() hook to ask the low level
+> > >  driver to set/return rq->timeout for a given request.
+> > >
+> > >- Add a timeout hook to struct request_queue that would get invoked from
+> > >  the timeout handler. Something along the lines of:
+> > >
+> > >        - Timeout on a request happens. Freeze the queue and use
+> > >          kblockd to take the actual timeout into process context, where
+> > >          we call the queue ->rq_timeout() hook. Unfreeze/reschedule
+> > >          queue operations based on what the ->rq_timeout() hook tells
+> > >          us.
+> > >
+> > >That is generic enough to be able to arm the timeout automatically from
+> > >->elevator_activate_req_fn() and dearm it when it completes or gets
+> > >deactivated. It should also be possible to implement the SCSI error
+> > >handling on top of that.
+> > >
+> > 
+> > To disable the timeout would you then have scsi_done call a block layer 
+> > function to disarm it then follow the current flow where or do you think 
+> > it would be nice to move the scsi softirq code up to block layer. So 
+> > scsi_done would call a block layer function that would disarm the timer, 
+> > add the request to a block layer softirq list (a list like scsi-ml's 
+> > scsi_done_q), and then in the block layer softirq function it could call 
+> > a request_queue callout which for scsi-ml's device queue would call 
+> > scsi_decide_disposition and return if it wanted the request requeued or 
+> > how many sectors completed or to kick off the eh. I had stated on this 
+> > for my block layer multipath driver, but can seperate the patches if 
+> > this would be useful.
+> 
+> Yeah, that was part of my plan as well. I did post such a patch a year
+> or so ago, in a thread about decreasing ide completion latencies.
+> 
+> > Would ide benefit from running from a softirq and would it be able to 
+> > use such a thing?
+> 
+> It's generally useful as it allows lock free completion from the irq
+> path, so that's goodness.
 
-Again, I understand why the checks were added to the kernel. Adding
-access controls to limit the damage that could be caused by non-root
-users is entirely a good plan!
+I updated that patch, and converted IDE and SCSI to use it. See the
+results here:
 
-The reason I'm looking into this is that there are some commands that
-may be dangerous on some devices but on others harmless / useful /
-required (even); several years of writing SCSI-based storage
-management software has show me that. :-) Allowing a mechanism for an
-admin to override the in-kernel policy on a per-device, per-command
-basis could allow us to safely allow non-root CD/DVD burning, I hope.
+http://brick.kernel.dk/git/?p=linux-2.6-block.git;a=shortlog;h=blk-softirq
 
---=20
-Steve McIntyre, Cambridge, UK.                                steve@einval.=
-com
-Google-bait:
-  Debian does NOT ship free CDs. Please do NOT contact the mailing
-  lists asking us to send them to you.
+The main change from the version posted last october is killing the
+'slightly' overdesigned completion queue hashing.
 
---3MwIy2ne0vdjdPXF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-
-iD8DBQFDeyZ3fDt5cIjHwfcRAhfuAJ0TtKH4k0Wq0nB89g+1MI0buhpQRwCghizY
-EkmHDqFpoivgEpl0tVIvdrw=
-=5f+C
------END PGP SIGNATURE-----
-
---3MwIy2ne0vdjdPXF--
-
+-- 
+Jens Axboe
