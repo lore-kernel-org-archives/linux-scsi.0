@@ -1,29 +1,41 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Disabling SCSI parity checking
-Date: Thu, 17 Nov 2005 08:48:56 -0700
-Message-ID: <20051117154856.GB17171@parisc-linux.org>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: Bad SCSI performance with 2.6.14 and Fusion-MPT
+Date: Thu, 17 Nov 2005 09:57:48 -0700
+Message-ID: <91888D455306F94EBD4D168954A9457C04F0AFDA@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:35734 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1750741AbVKQPs5
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Nov 2005 10:48:57 -0500
-Content-Disposition: inline
+Received: from mail0.lsil.com ([147.145.40.20]:10182 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S932404AbVKQQ55 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Nov 2005 11:57:57 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Alan D. Brunelle" <Alan.Brunelle@hp.com>, Michael Renner <michael.renner@geizhals.at>
+Cc: linux-scsi@vger.kernel.org
+
+On Thursday, November 17, 2005 7:53 AM,  Alan D. Brunelle wrote:
+> It doesn't surprise me that a different .config or hardware 
+> change would 
+> affect this. If I understand the problem correctly, then it 
+> depends upon 
+> timing - and changing things (hw or sw) could affect the outcome.
+> 
+> The posting by
+> 
+> The following works for me - but as noted previously, it may 
+> be suspect 
+> in general: I'm concerned about the indefinate delay (theoretical).
+> 
+
+Please use the patch I posted last night, apply to 2.6.15-rc1-git4.
+It addresses this issue.  
+
+Here is the URL to this patch:
+
+http://marc.theaimsgroup.com/?l=linux-scsi&m=113219282408101&w=2
+
+Eric Moore
+LSI Logic
 
 
-In trying to fix bug #2236 I came across this little gem:
-
-        /* If any device does not support parity, we will not use this option */
-        if (!(tn->flags & TEKRAM_PARITY_CHECK))
-                np->rv_scntl0  &= ~0x0a; /* SCSI parity checking disabled */
-
-I'm pretty fundamentally opposed to disabling parity checking, so I'm
-going to delete this code.  However, I've taken flack before (oh yes, in
-bug 2236 ;-) for "not honouring the controller's own setup", so I thought
-I'd let people know in advance that I'm going to take away this option.
-
-It would be possible to put it back if it really hurts people.
