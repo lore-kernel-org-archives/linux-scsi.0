@@ -1,51 +1,104 @@
-From: "Keytech =?ISO-8859-1?Q?=20Yaz=FDl=FDm?= ve Elektronik Sistem Merkezi"
-	<keytechyazilim@hotmail.com>
-Subject: sabitleyin ....
-Date: Thu, 17 Nov 2005 19:53:24 +0200
-Message-ID: <200511171753.jAHHrF3x002347@zeus2.kernel.org>
-Reply-To: elektriktasarruf@gmail.com
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: Bad SCSI performance with 2.6.14 and Fusion-MPT
+Date: Thu, 17 Nov 2005 10:58:15 -0700
+Message-ID: <91888D455306F94EBD4D168954A9457C04F853D8@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1254
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_000_01C5EBA0.7B605930"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:49388 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S932458AbVKQRxU convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Nov 2005 12:53:20 -0500
-Received: from ommo.net ([85.101.25.14])
-	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id jAHHrF3x002347
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2005 09:53:17 -0800
+Received: from mail0.lsil.com ([147.145.40.20]:29902 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S932455AbVKQR6d (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Nov 2005 12:58:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+Cc: Michael Renner <michael.renner@geizhals.at>, linux-scsi@vger.kernel.org
+
+This message is in MIME format. Since your mail reader does not understand
+this format, some or all of this message may not be legible.
+
+------_=_NextPart_000_01C5EBA0.7B605930
+Content-Type: text/plain
+
+On  Thursday, November 17, 2005 10:08 AM, Alan D. Brunelle wrote:
+> >Please use the patch I posted last night, apply to 2.6.15-rc1-git4.
+> >It addresses this issue.  
+> >
+> >Here is the URL to this patch:
+> >
+> >http://marc.theaimsgroup.com/?l=linux-scsi&m=113219282408101&w=2
+> >
+> >Eric Moore
+> >LSI Logic
+> >
+> >
+> >  
+> >
+> FYI - I did try it earlier this morning with 2.6.14.2 and it 
+> did *not* 
+> fix the issue. I will see about updating to 2.6.15-rc1-git4, 
+> and trying 
+> that again...
+> 
+
+Ok, that make sense, I see your patch is handling mpt_config.
+
+So with the patch I provided at the link above, can you apply
+this patch over that. I've added the sync code in mpt_config.
+Please let me know the results.  I also have a tool called 
+getspeed that I can send you. It dump's the programmed
+speed the devices were negotiated at.
+
+Eric Moore
 
 
-Bedava de=F0il sabit =FCcretlerle=20
-Sabit hatt=FD hi=E7 kapatmadan 24 saat boyunca aral=FDks=FDz tam 30 g=FC=
-n boyunca ... konu=FEun...
-b=FCt=FCn tan=FDd=FDklar=FDn=FDzla e=FEinizi dostunuzu..bayilerinizi m=FC=
-=FEterilerinizi .... vs  herkesi herkesi s=FDn=FDr olmadan=20
-hemde 220 ytl' ye ...
-=FEehiri=E7i+=FEehirleraras=FD+uluslararas=FD =3D 220 ytl sabit =FCcret=
-le.....
 
 
+------_=_NextPart_000_01C5EBA0.7B605930
+Content-Type: application/octet-stream;
+	name="1a-perf-fix.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="1a-perf-fix.patch"
 
+diff -uarN b/drivers/message/fusion/mptbase.c =
+a/drivers/message/fusion/mptbase.c=0A=
+--- b/drivers/message/fusion/mptbase.c	2005-11-16 18:19:11.000000000 =
+-0700=0A=
++++ a/drivers/message/fusion/mptbase.c	2005-11-17 10:43:18.000000000 =
+-0700=0A=
+@@ -5053,11 +5053,20 @@=0A=
+ 		return -EPERM;=0A=
+ 	}=0A=
+ =0A=
++	if(mpt_alt_ioc_wait(ioc)!=3D0) {=0A=
++		dcprintk((MYIOC_s_WARN_FMT "alt_ioc busy!\n",=0A=
++		    ioc->name));=0A=
++		return -EBUSY;=0A=
++	}=0A=
++=0A=
+ 	/* Get and Populate a free Frame=0A=
+ 	 */=0A=
+ 	if ((mf =3D mpt_get_msg_frame(mpt_base_index, ioc)) =3D=3D NULL) {=0A=
+ 		dcprintk((MYIOC_s_WARN_FMT "mpt_config: no msg frames!\n",=0A=
+ 				ioc->name));=0A=
++		spin_lock(&ioc->initializing_hba_lock);=0A=
++		ioc->initializing_hba_lock_flag=3D0;=0A=
++		spin_unlock(&ioc->initializing_hba_lock);=0A=
+ 		return -EAGAIN;=0A=
+ 	}=0A=
+ 	pReq =3D (Config_t *)mf;=0A=
+@@ -5139,6 +5148,10 @@=0A=
+ 	mpt_put_msg_frame(mpt_base_index, ioc, mf);=0A=
+ 	wait_event(mpt_waitq, pCfg->wait_done);=0A=
+ =0A=
++	spin_lock(&ioc->initializing_hba_lock);=0A=
++	ioc->initializing_hba_lock_flag=3D0;=0A=
++	spin_unlock(&ioc->initializing_hba_lock);=0A=
++=0A=
+ 	/* mf has been freed - do not access */=0A=
+ =0A=
+ 	rc =3D pCfg->status;=0A=
 
-Hay=FDrl=FD =C7al=FD=FEmalar=85
-
-Kenan Y=FDlmaz
-
-0505 345 85 05
-0416 214 04 44
-
- www.e-keytech.net=20
- m_kenanyilmaz@hotmail.com
- bilgi@e-keytech.net=20
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+------_=_NextPart_000_01C5EBA0.7B605930--
