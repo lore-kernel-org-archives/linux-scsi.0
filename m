@@ -1,278 +1,106 @@
-From: Jim Faulkner <jfaulkne@ccs.neu.edu>
-Subject: AIC-7892P has not worked properly since 2.6.11
-Date: Thu, 17 Nov 2005 10:15:49 -0500 (EST)
-Message-ID: <Pine.GSO.4.58.0511170958110.8131@denali.ccs.neu.edu>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: brking@us.ibm.com
+Subject: [PATCH 1/1] ipr: Driver initialization fix for kexec/kdump
+Date: Thu, 17 Nov 2005 09:35:12 -0600
+Message-ID: <200511171535.jAHFZDeU010560@d01av02.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from amber.ccs.neu.edu ([129.10.116.51]:63660 "EHLO
-	amber.ccs.neu.edu") by vger.kernel.org with ESMTP id S1751007AbVKQPPv
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Nov 2005 10:15:51 -0500
-Received: from denali.ccs.neu.edu ([129.10.116.200])
-	by amber.ccs.neu.edu with esmtps (TLSv1:DHE-RSA-AES256-SHA:256)
-	(Exim 4.50)
-	id 1EclUL-0005UR-GY
-	for linux-scsi@vger.kernel.org; Thu, 17 Nov 2005 10:15:50 -0500
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:15342 "EHLO e6.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1750741AbVKQPfR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Nov 2005 10:35:17 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e6.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id jAHFZERV004050
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2005 10:35:14 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id jAHFZELZ122024
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2005 10:35:14 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id jAHFZDL7010589
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2005 10:35:13 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, haren@us.ibm.com, brking@us.ibm.com
 
 
-Hello,
+When kexec booting a kernel when the previous kernel did not
+call ipr's shutdown method, the ipr adapter does not get
+properly initialized, which can result in the ipr adapter
+completing commands issued by the previous kernel. Fix ipr
+to detect this scenario by reading the adapter's interrupt
+mask register and the microprocessor interrupt register.
+If the interrupt mask register indicates that interrupts
+are enabled or the reset alert bit is set when the card is
+probed, this means the card is in an unknown state and we
+hard reset the card.
 
-I have a Dell Precision Workstation 530, which has an onboard Adaptec
-AIC-7892P U160/m SCSI controller.  I have two 17 GB drives connected to
-it, a SEAGATE ST318203LW and a WDIGTL  WDE18310 ULTRA2.  I use the new
-aic7xxx driver.
+Signed-off-by: Brian King <brking@us.ibm.com>
+---
 
-Since Linux 2.6.12, the WDE18310 has many messages like this at boot time:
-target0:0:2: Domain Validation detected failure, dropping back
+ linux-2.6-bjking1/drivers/scsi/ipr.c |   17 ++++++++++++++++-
+ linux-2.6-bjking1/drivers/scsi/ipr.h |    5 +++--
+ 2 files changed, 19 insertions(+), 3 deletions(-)
 
-and it usually drops back to this speed, reducing performance:
-target0:0:2: FAST-10 WIDE SCSI 16.2 MB/s ST (124 ns, offset 31)
-
-I have absolutely no problems using the drive at 80 MB/s transfer rates on
-the 2.6.11 kernel.  I've tried using the old aic7xxx driver, however when
-I use that driver, the SEAGATE drive is not detected at all.  Using that
-driver the WDE18310 is detected and works at full speed.
-
-Included below is some information that will hopefully help debug this
-problem.  Let me know if there is any other information that I should
-provide.  Please CC my e-mail address in any replies, as I am not
-subscribed to this list.
-
-Relevant part of dmesg from 2.6.12.3:
-Nov 17 05:37:08 michelangelo scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA
-DRIVER, Rev 6.2.36
-Nov 17 05:37:08 michelangelo <Adaptec aic7892 Ultra160 SCSI adapter>
-Nov 17 05:37:08 michelangelo aic7892: Ultra160 Wide Channel A, SCSI Id=7,
-32/253 SCBs
-Nov 17 05:37:08 michelangelo
-Nov 17 05:37:08 michelangelo Vendor: SEAGATE   Model: ST318203LW
-Rev: 0001
-Nov 17 05:37:08 michelangelo Type:   Direct-Access
-ANSI SCSI revision: 02
-Nov 17 05:37:08 michelangelo scsi0:A:0:0: Tagged Queuing enabled.  Depth
-253
-Nov 17 05:37:08 michelangelo target0:0:0: Beginning Domain Validation
-Nov 17 05:37:08 michelangelo WIDTH IS 1
-Nov 17 05:37:08 michelangelo (scsi0:A:0): 6.600MB/s transfers (16bit)
-Nov 17 05:37:08 michelangelo target0:0:0: Domain Validation skipping write
-tests
-Nov 17 05:37:08 michelangelo (scsi0:A:0): 80.000MB/s transfers (40.000MHz,
-offset 15, 16bit)
-Nov 17 05:37:08 michelangelo target0:0:0: Ending Domain Validation
-Nov 17 05:37:08 michelangelo Vendor: WDIGTL    Model: WDE18310 ULTRA2
-Rev: 1.30
-Nov 17 05:37:08 michelangelo Type:   Direct-Access
-ANSI SCSI revision: 02
-Nov 17 05:37:08 michelangelo scsi0:A:2:0: Tagged Queuing enabled.  Depth
-253
-Nov 17 05:37:08 michelangelo target0:0:2: Beginning Domain Validation
-Nov 17 05:37:08 michelangelo WIDTH IS 1
-Nov 17 05:37:08 michelangelo (scsi0:A:2): 6.600MB/s transfers (16bit)
-Nov 17 05:37:08 michelangelo target0:0:2: Domain Validation skipping write
-tests
-Nov 17 05:37:08 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:37:08 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:37:08 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:37:08 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:37:08 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:37:08 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:37:08 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:37:08 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:37:08 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:37:08 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:37:08 michelangelo (scsi0:A:2): 80.000MB/s transfers (40.000MHz,
-offset 31, 16bit)
-Nov 17 05:37:08 michelangelo target0:0:2: Ending Domain Validation
-
-Relevant part of dmesg from 2.6.14.2:
-Nov 15 17:08:44 michelangelo scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA
-DRIVER, Rev 7.0
-Nov 15 17:08:44 michelangelo <Adaptec aic7892 Ultra160 SCSI adapter>
-Nov 15 17:08:44 michelangelo aic7892: Ultra160 Wide Channel A, SCSI Id=7,
-32/253 SCBs
-Nov 15 17:08:44 michelangelo
-Nov 15 17:08:44 michelangelo Vendor: SEAGATE   Model: ST318203LW
-Rev: 0001
-Nov 15 17:08:44 michelangelo Type:   Direct-Access
-ANSI SCSI revision: 02
-Nov 15 17:08:44 michelangelo scsi0:A:0:0: Tagged Queuing enabled.  Depth
-253
-Nov 15 17:08:44 michelangelo target0:0:0: Beginning Domain Validation
-Nov 15 17:08:44 michelangelo target0:0:0: wide asynchronous.
-Nov 15 17:08:44 michelangelo target0:0:0: Domain Validation skipping write
-tests
-Nov 15 17:08:44 michelangelo target0:0:0: FAST-40 WIDE SCSI 80.0 MB/s ST
-(25 ns, offset 15)
-Nov 15 17:08:44 michelangelo target0:0:0: Ending Domain Validation
-Nov 15 17:08:44 michelangelo Vendor: WDIGTL    Model: WDE18310 ULTRA2
-Rev: 1.30
-Nov 15 17:08:44 michelangelo Type:   Direct-Access
-ANSI SCSI revision: 02
-Nov 15 17:08:44 michelangelo scsi0:A:2:0: Tagged Queuing enabled.  Depth
-253
-Nov 15 17:08:44 michelangelo target0:0:2: Beginning Domain Validation
-Nov 15 17:08:44 michelangelo target0:0:2: wide asynchronous.
-Nov 15 17:08:44 michelangelo target0:0:2: Domain Validation skipping write
-tests
-Nov 15 17:08:44 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 15 17:08:44 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 15 17:08:44 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 15 17:08:44 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 15 17:08:44 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 15 17:08:44 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 15 17:08:44 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 15 17:08:44 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 15 17:08:44 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 15 17:08:44 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 15 17:08:44 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 15 17:08:44 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 15 17:08:44 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 15 17:08:44 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 15 17:08:44 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 15 17:08:44 michelangelo target0:0:2: FAST-10 WIDE SCSI 16.2 MB/s ST
-(124 ns, offset 31)
-Nov 15 17:08:44 michelangelo target0:0:2: Ending Domain Validation
-Nov 15 17:08:44 michelangelo target0:0:0: FAST-40 WIDE SCSI 80.0 MB/s ST
-(25 ns, offset 15)
-
-Relevant part of dmesg from 2.6.15-rc1-mm1:
-Nov 17 05:33:43 michelangelo scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA
-DRIVER, Rev 7.0
-Nov 17 05:33:43 michelangelo <Adaptec aic7892 Ultra160 SCSI adapter>
-Nov 17 05:33:43 michelangelo aic7892: Ultra160 Wide Channel A, SCSI Id=7,
-32/253 SCBs
-Nov 17 05:33:43 michelangelo
-Nov 17 05:33:43 michelangelo Vendor: SEAGATE   Model: ST318203LW
-Rev: 0001
-Nov 17 05:33:43 michelangelo Type:   Direct-Access
-ANSI SCSI revision: 02
-Nov 17 05:33:43 michelangelo scsi0:A:0:0: Tagged Queuing enabled.  Depth
-253
-Nov 17 05:33:43 michelangelo target0:0:0: Beginning Domain Validation
-Nov 17 05:33:43 michelangelo target0:0:0: wide asynchronous.
-Nov 17 05:33:43 michelangelo target0:0:0: Domain Validation skipping write
-tests
-Nov 17 05:33:43 michelangelo target0:0:0: FAST-40 WIDE SCSI 80.0 MB/s ST
-(25 ns, offset 15)
-Nov 17 05:33:43 michelangelo target0:0:0: Ending Domain Validation
-Nov 17 05:33:43 michelangelo Vendor: WDIGTL    Model: WDE18310 ULTRA2
-Rev: 1.30
-Nov 17 05:33:43 michelangelo Type:   Direct-Access
-ANSI SCSI revision: 02
-Nov 17 05:33:43 michelangelo scsi0:A:2:0: Tagged Queuing enabled.  Depth
-253
-Nov 17 05:33:43 michelangelo target0:0:2: Beginning Domain Validation
-Nov 17 05:33:43 michelangelo target0:0:2: wide asynchronous.
-Nov 17 05:33:43 michelangelo target0:0:2: Domain Validation skipping write
-tests
-Nov 17 05:33:43 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:33:43 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:33:43 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:33:43 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:33:43 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:33:43 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:33:43 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:33:43 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:33:43 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:33:43 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:33:43 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:33:43 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:33:43 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:33:43 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:33:43 michelangelo target0:0:2: Domain Validation detected
-failure, dropping back
-Nov 17 05:33:43 michelangelo target0:0:2: FAST-10 WIDE SCSI 16.2 MB/s ST
-(124 ns, offset 31)
-Nov 17 05:33:43 michelangelo target0:0:2: Ending Domain Validation
-Nov 17 05:33:43 michelangelo target0:0:0: FAST-40 WIDE SCSI 80.0 MB/s ST
-(25 ns, offset 15)
-
-Relevant part of dmesg from 2.6.11.11 (this kernel works):
-scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
-        <Adaptec aic7892 Ultra160 SCSI adapter>
-        aic7892: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
-
-(scsi0:A:0): 80.000MB/s transfers (40.000MHz, offset 15, 16bit)
-(scsi0:A:2): 80.000MB/s transfers (40.000MHz, offset 31, 16bit)
-  Vendor: SEAGATE   Model: ST318203LW        Rev: 0001
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-scsi0:A:0:0: Tagged Queuing enabled.  Depth 253
-  Vendor: WDIGTL    Model: WDE18310 ULTRA2   Rev: 1.30
-  Type:   Direct-Access                      ANSI SCSI revision: 02
-scsi0:A:2:0: Tagged Queuing enabled.  Depth 253
-SCSI device sda: 35566480 512-byte hdwr sectors (18210 MB)
-SCSI device sda: drive cache: write back
-SCSI device sda: 35566480 512-byte hdwr sectors (18210 MB)
-SCSI device sda: drive cache: write back
- sda: sda1 sda2
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-SCSI device sdb: 35761710 512-byte hdwr sectors (18310 MB)
-SCSI device sdb: drive cache: write back
-SCSI device sdb: 35761710 512-byte hdwr sectors (18310 MB)
-SCSI device sdb: drive cache: write back
- sdb: sdb1 sdb2 sdb3
-
-Relevant part of lspvi -vvv:
-0000:03:0e.0 SCSI storage controller: Adaptec AIC-7892P U160/m (rev 02)
-        Subsystem: Dell: Unknown device 00d8
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop-
-ParErr- Stepping- SERR+ FastB2B-
-        Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
-<TAbort- <MAbort- >SERR- <PERR-
-        Latency: 64 (10000ns min, 6250ns max), cache line size 10
-        Interrupt: pin A routed to IRQ 177
-        BIST result: 00
-        Region 0: I/O ports at ec00 [disabled] [size=256]
-        Region 1: Memory at fe4fe000 (64-bit, non-prefetchable) [size=4K]
-        Expansion ROM at fe500000 [disabled] [size=128K]
-        Capabilities: [dc] Power Management version 2
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
-
-thanks,
-Jim Faulkner
-
+diff -puN drivers/scsi/ipr.c~ipr_kexec_fix drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_kexec_fix	2005-11-17 09:29:23.000000000 -0600
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2005-11-17 09:29:23.000000000 -0600
+@@ -5887,7 +5887,12 @@ static int __devinit ipr_probe_ioa_part2
+ 	ENTER;
+ 	spin_lock_irqsave(ioa_cfg->host->host_lock, host_lock_flags);
+ 	dev_dbg(&ioa_cfg->pdev->dev, "ioa_cfg adx: 0x%p\n", ioa_cfg);
+-	_ipr_initiate_ioa_reset(ioa_cfg, ipr_reset_enable_ioa, IPR_SHUTDOWN_NONE);
++	if (ioa_cfg->needs_hard_reset) {
++		ioa_cfg->needs_hard_reset = 0;
++		ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_NONE);
++	} else
++		_ipr_initiate_ioa_reset(ioa_cfg, ipr_reset_enable_ioa,
++					IPR_SHUTDOWN_NONE);
+ 
+ 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, host_lock_flags);
+ 	wait_event(ioa_cfg->reset_wait_q, !ioa_cfg->in_reset_reload);
+@@ -6264,6 +6269,7 @@ static int __devinit ipr_probe_ioa(struc
+ 	unsigned long ipr_regs_pci;
+ 	void __iomem *ipr_regs;
+ 	u32 rc = PCIBIOS_SUCCESSFUL;
++	volatile u32 mask, uproc;
+ 
+ 	ENTER;
+ 
+@@ -6356,6 +6362,15 @@ static int __devinit ipr_probe_ioa(struc
+ 		goto cleanup_nomem;
+ 	}
+ 
++	/*
++	 * If HRRQ updated interrupt is not masked, or reset alert is set,
++	 * the card is in an unknown state and needs a hard reset
++	 */
++	mask = readl(ioa_cfg->regs.sense_interrupt_mask_reg);
++	uproc = readl(ioa_cfg->regs.sense_uproc_interrupt_reg);
++	if ((mask & IPR_PCII_HRRQ_UPDATED) == 0 || (uproc & IPR_UPROCI_RESET_ALERT))
++		ioa_cfg->needs_hard_reset = 1;
++
+ 	ipr_mask_and_clear_interrupts(ioa_cfg, ~IPR_PCII_IOA_TRANS_TO_OPER);
+ 	rc = request_irq(pdev->irq, ipr_isr, SA_SHIRQ, IPR_NAME, ioa_cfg);
+ 
+diff -puN drivers/scsi/ipr.h~ipr_kexec_fix drivers/scsi/ipr.h
+--- linux-2.6/drivers/scsi/ipr.h~ipr_kexec_fix	2005-11-17 09:29:23.000000000 -0600
++++ linux-2.6-bjking1/drivers/scsi/ipr.h	2005-11-17 09:29:23.000000000 -0600
+@@ -36,8 +36,8 @@
+ /*
+  * Literals
+  */
+-#define IPR_DRIVER_VERSION "2.1.0"
+-#define IPR_DRIVER_DATE "(October 31, 2005)"
++#define IPR_DRIVER_VERSION "2.1.1"
++#define IPR_DRIVER_DATE "(November 15, 2005)"
+ 
+ /*
+  * IPR_MAX_CMD_PER_LUN: This defines the maximum number of outstanding
+@@ -922,6 +922,7 @@ struct ipr_ioa_cfg {
+ 	u8 dump_taken:1;
+ 	u8 allow_cmds:1;
+ 	u8 allow_ml_add_del:1;
++	u8 needs_hard_reset:1;
+ 
+ 	enum ipr_cache_state cache_state;
+ 	u16 type; /* CCIN of the card */
+_
