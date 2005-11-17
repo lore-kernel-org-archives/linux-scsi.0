@@ -1,57 +1,51 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Subject: Re: Bad SCSI performance with 2.6.14 and Fusion-MPT
-Date: Thu, 17 Nov 2005 12:08:16 -0500
-Message-ID: <437CB900.7020102@hp.com>
-References: <91888D455306F94EBD4D168954A9457C04F0AFDA@nacos172.co.lsil.com>
+From: "Keytech =?ISO-8859-1?Q?=20Yaz=FDl=FDm?= ve Elektronik Sistem Merkezi"
+	<keytechyazilim@hotmail.com>
+Subject: sabitleyin ....
+Date: Thu, 17 Nov 2005 19:53:24 +0200
+Message-ID: <200511171753.jAHHrF3x002347@zeus2.kernel.org>
+Reply-To: elektriktasarruf@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1254
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atlrel6.hp.com ([156.153.255.205]:32670 "EHLO atlrel6.hp.com")
-	by vger.kernel.org with ESMTP id S932425AbVKQRBV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Nov 2005 12:01:21 -0500
-In-Reply-To: <91888D455306F94EBD4D168954A9457C04F0AFDA@nacos172.co.lsil.com>
+Received: from zeus2.kernel.org ([204.152.191.36]:49388 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S932458AbVKQRxU convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Nov 2005 12:53:20 -0500
+Received: from ommo.net ([85.101.25.14])
+	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id jAHHrF3x002347
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2005 09:53:17 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: Michael Renner <michael.renner@geizhals.at>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Moore, Eric Dean wrote:
 
->On Thursday, November 17, 2005 7:53 AM,  Alan D. Brunelle wrote:
->  
->
->>It doesn't surprise me that a different .config or hardware 
->>change would 
->>affect this. If I understand the problem correctly, then it 
->>depends upon 
->>timing - and changing things (hw or sw) could affect the outcome.
->>
->>The posting by
->>
->>The following works for me - but as noted previously, it may 
->>be suspect 
->>in general: I'm concerned about the indefinate delay (theoretical).
->>
->>    
->>
->
->Please use the patch I posted last night, apply to 2.6.15-rc1-git4.
->It addresses this issue.  
->
->Here is the URL to this patch:
->
->http://marc.theaimsgroup.com/?l=linux-scsi&m=113219282408101&w=2
->
->Eric Moore
->LSI Logic
->
->
->  
->
-FYI - I did try it earlier this morning with 2.6.14.2 and it did *not* 
-fix the issue. I will see about updating to 2.6.15-rc1-git4, and trying 
-that again...
+Bedava de=F0il sabit =FCcretlerle=20
+Sabit hatt=FD hi=E7 kapatmadan 24 saat boyunca aral=FDks=FDz tam 30 g=FC=
+n boyunca ... konu=FEun...
+b=FCt=FCn tan=FDd=FDklar=FDn=FDzla e=FEinizi dostunuzu..bayilerinizi m=FC=
+=FEterilerinizi .... vs  herkesi herkesi s=FDn=FDr olmadan=20
+hemde 220 ytl' ye ...
+=FEehiri=E7i+=FEehirleraras=FD+uluslararas=FD =3D 220 ytl sabit =FCcret=
+le.....
 
-Alan
+
+
+
+Hay=FDrl=FD =C7al=FD=FEmalar=85
+
+Kenan Y=FDlmaz
+
+0505 345 85 05
+0416 214 04 44
+
+ www.e-keytech.net=20
+ m_kenanyilmaz@hotmail.com
+ bilgi@e-keytech.net=20
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
