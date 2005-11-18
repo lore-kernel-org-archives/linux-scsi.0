@@ -1,28 +1,40 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: RE: Bad SCSI performance with 2.6.14 and Fusion-MPT
-Date: Thu, 17 Nov 2005 14:48:19 -0700
-Message-ID: <91888D455306F94EBD4D168954A9457C04F856C0@nacos172.co.lsil.com>
+From: <barbacoas@uol.com.br>
+Subject: Las mejores barbacoas, garajes, spas.
+Date: Fri, 18 Nov 2005 02:20:54 +0100
+Message-ID: <3235701c5ebde$522e4bc0$41001aac@hiree8dc06e1b5>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:47851 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751492AbVKQVsk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Nov 2005 16:48:40 -0500
+Received: from 62-15-156-16.inversas.jazztel.es ([62.15.156.16]:20339 "EHLO
+	correo2.dominiocorreo.com") by vger.kernel.org with ESMTP
+	id S1751319AbVKRBVL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Nov 2005 20:21:11 -0500
+Received: from hiree8dc06e1b5 ([192.168.0.9])
+	by correo2.dominiocorreo.com (8.13.4/8.13.4/Debian-3) with SMTP id jAH1KN4s031603
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2005 02:20:25 +0100
+Content-Class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Cc: Michael Renner <michael.renner@geizhals.at>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thursday, November 17, 2005 11:24 AM, Alan D. Brunelle wrote:
+Maginificas barbacoas
 
-> Which is *much* better!
-> 
-> Thanks!
-> Alan
+Magnigicos Spas
 
-Thanks so much.  I will repost later today with a patch, that will
-apply over the last patch[7/7] from yesterday.   I'm busy  in the lab
-at the moment. Before I leave the office tonight, I will repost it.
+Magnigicos garajes
 
-Eric
+A unos precios increibles
+
+
+Mediante este enlace tiene toda la informacin.
+
+http://www.bestsevendiamonds.com/trigano/
+
+Si es su deseo darse de baja, para no recibir ms publicidad es necesario lo haga en el siguiente enlace.
+
+http://www.bestsevendiamonds.com/trigano/bajas.asp
+
+Muchas gracias
+
