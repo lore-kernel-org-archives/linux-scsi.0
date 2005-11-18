@@ -1,135 +1,85 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: [PATCH ]  mptfusion - Bad SCSI performance Fix
-Date: Fri, 18 Nov 2005 10:10:28 -0700
-Message-ID: <91888D455306F94EBD4D168954A9457C04F85BDE@nacos172.co.lsil.com>
+From: mikem <mikem@beardog.cca.cpqcorp.net>
+Subject: [PATCH 3/3] cciss: add put_disk into cleanup routines
+Date: Fri, 18 Nov 2005 11:46:55 -0600
+Message-ID: <20051118174655.GA22116@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_000_01C5EC62.F9548580"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:31963 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1030186AbVKRRKe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Nov 2005 12:10:34 -0500
-Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id jAIH5lSW026716
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Nov 2005 09:05:47 -0800 (PST)
-Received: from nacos172.ad.lsil.com (cos1.co.lsil.com [172.21.35.122])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id jAIHATRl021868
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Nov 2005 09:10:29 -0800
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161028AbVKRRrO@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: akpm@osdl.org, axboe@suse.de, jgarzick@pobox.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-This message is in MIME format. Since your mail reader does not understand
-this format, some or all of this message may not be legible.
+Patch 3 of 3
 
-------_=_NextPart_000_01C5EC62.F9548580
-Content-Type: text/plain
+Jeff Garzik pointed me to his code to see how to remove a disk from
+the system _properly_. Well, here it is...
+Every place we remove disks we are now testing before calling del_gendisk
+or blk_cleanup_queue and then call put_disk.
 
-This should solve all the bad perf woes for 
-mptfusion - for U320.  
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+--------------------------------------------------------------------------------
 
-* They syncronization between domain validation
-and bring up of the 2nd channel has moved; around
-mptscsih_doDv().  
+ drivers/block/cciss.c       |   33 ++++++++++++++++++++++++---------
+ include/linux/cciss_ioctl.h |    2 +-
+ 2 files changed, 25 insertions(+), 10 deletions(-)
 
-*The syncronization timeout is increased to 30 seconds, 
-to be in line with the port enble timeout.
-
-This patch is to be applied over the 7 patches I posted
-earlier this weeek; at this URL:
-
-http://marc.theaimsgroup.com/?l=linux-scsi&m=113219282203417&w=2
-
-Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
-
-
-
-
-------_=_NextPart_000_01C5EC62.F9548580
-Content-Type: application/octet-stream;
-	name="8-perf-fix2.patch"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="8-perf-fix2.patch"
-
-diff -uarN b/drivers/message/fusion/mptbase.c =
-a/drivers/message/fusion/mptbase.c=0A=
---- b/drivers/message/fusion/mptbase.c	2005-11-16 18:20:14.000000000 =
--0700=0A=
-+++ a/drivers/message/fusion/mptbase.c	2005-11-18 09:54:27.000000000 =
--0700=0A=
-@@ -1125,7 +1125,7 @@=0A=
- int=0A=
- mpt_alt_ioc_wait(MPT_ADAPTER *ioc)=0A=
- {=0A=
--	int loop_count =3D 15 * 4;  /* Wait 15 seconds */=0A=
-+	int loop_count =3D 30 * 4;  /* Wait 30 seconds */=0A=
- 	int status =3D -1; /* -1 means failed to get board READY */=0A=
- =0A=
- 	do {=0A=
-diff -uarN b/drivers/message/fusion/mptscsih.c =
-a/drivers/message/fusion/mptscsih.c=0A=
---- b/drivers/message/fusion/mptscsih.c	2005-11-16 18:13:35.000000000 =
--0700=0A=
-+++ a/drivers/message/fusion/mptscsih.c	2005-11-18 09:48:15.000000000 =
--0700=0A=
-@@ -3717,20 +3717,11 @@=0A=
- 		return -EFAULT;=0A=
- 	}=0A=
- =0A=
--	if(mpt_alt_ioc_wait(hd->ioc)!=3D0) {=0A=
--		ddvprintk((MYIOC_s_WARN_FMT "alt_ioc busy!\n",=0A=
--		    hd->ioc->name));=0A=
--		return -EBUSY;=0A=
--	}=0A=
--=0A=
- 	/* Get and Populate a free Frame=0A=
- 	 */=0A=
- 	if ((mf =3D mpt_get_msg_frame(hd->ioc->InternalCtx, hd->ioc)) =3D=3D =
-NULL) {=0A=
- 		ddvprintk((MYIOC_s_WARN_FMT "No msg frames!\n",=0A=
- 					hd->ioc->name));=0A=
--		spin_lock(&hd->ioc->initializing_hba_lock);=0A=
--		hd->ioc->initializing_hba_lock_flag=3D0;=0A=
--		spin_unlock(&hd->ioc->initializing_hba_lock);=0A=
- 		return -EBUSY;=0A=
- 	}=0A=
- =0A=
-@@ -3820,9 +3811,6 @@=0A=
- 	add_timer(&hd->timer);=0A=
- 	mpt_put_msg_frame(hd->ioc->InternalCtx, hd->ioc, mf);=0A=
- 	wait_event(hd->scandv_waitq, hd->scandv_wait_done);=0A=
--	spin_lock(&hd->ioc->initializing_hba_lock);=0A=
--	hd->ioc->initializing_hba_lock_flag=3D0;=0A=
--	spin_unlock(&hd->ioc->initializing_hba_lock);=0A=
- =0A=
- 	if (hd->pLocal) {=0A=
- 		rc =3D hd->pLocal->completion;=0A=
-@@ -4094,6 +4082,12 @@=0A=
- 						}=0A=
- 					}=0A=
- =0A=
-+					if(mpt_alt_ioc_wait(hd->ioc)!=3D0) {=0A=
-+						ddvprintk((MYIOC_s_WARN_FMT "alt_ioc busy!\n",=0A=
-+						    hd->ioc->name));=0A=
-+						continue;=0A=
-+					}=0A=
-+=0A=
- 					if (mptscsih_doDv(hd, 0, id) =3D=3D 1) {=0A=
- 						/* Untagged device was busy, try again=0A=
- 						 */=0A=
-@@ -4105,6 +4099,10 @@=0A=
- 						hd->ioc->spi_data.dvStatus[id] &=3D ~(MPT_SCSICFG_DV_NOT_DONE | =
-MPT_SCSICFG_DV_PENDING);=0A=
- 					}=0A=
- =0A=
-+					spin_lock(&hd->ioc->initializing_hba_lock);=0A=
-+					hd->ioc->initializing_hba_lock_flag=3D0;=0A=
-+					spin_unlock(&hd->ioc->initializing_hba_lock);=0A=
-+=0A=
- 					if (isPhysDisk) {=0A=
- 						for (ii=3D0; ii < MPT_MAX_SCSI_DEVICES; ii++) {=0A=
- 							if (hd->ioc->raid_data.isRaid & (1 << ii)) {=0A=
-
-------_=_NextPart_000_01C5EC62.F9548580--
+diff -L cciss.c -puN /dev/null /dev/null
+diff -puN drivers/block/cciss.c~cciss_del_gendisk_fixes drivers/block/cciss.c
+--- linux-2.6.14.2-save/drivers/block/cciss.c~cciss_del_gendisk_fixes	2005-11-15 15:49:39.000000000 -0600
++++ linux-2.6.14.2-save-mikem/drivers/block/cciss.c	2005-11-18 10:54:52.459084088 -0600
+@@ -1138,8 +1138,15 @@ static int revalidate_allvol(ctlr_info_t
+ 
+ 	for(i=0; i< NWD; i++) {
+ 		struct gendisk *disk = host->gendisk[i];
+-		if (disk->flags & GENHD_FL_UP)
+-			del_gendisk(disk);
++		if (disk) {
++			request_queue_t *q = disk->queue;
++
++			if (disk->flags & GENHD_FL_UP)
++				del_gendisk(disk);
++			if (q)
++				blk_cleanup_queue(q);
++			put_disk(disk);
++		}
+ 	}
+ 
+         /*
+@@ -1453,10 +1460,13 @@ static int deregister_disk(struct gendis
+ 	 * allows us to delete disk zero but keep the controller registered.
+ 	*/
+ 	if (h->gendisk[0] != disk){
+-		if (disk->flags & GENHD_FL_UP){
+-			blk_cleanup_queue(disk->queue);
+-		del_gendisk(disk);
+-			drv->queue = NULL;
++		if (disk) {
++			request_queue_t *q = disk->queue;
++			if (disk->flags & GENHD_FL_UP)
++				del_gendisk(disk);
++			if (q)	
++				blk_cleanup_queue(q);
++			put_disk(disk);	
+ 		}
+ 	}
+ 
+@@ -3094,9 +3104,14 @@ static void __devexit cciss_remove_one (
+ 	/* remove it from the disk list */
+ 	for (j = 0; j < NWD; j++) {
+ 		struct gendisk *disk = hba[i]->gendisk[j];
+-		if (disk->flags & GENHD_FL_UP) {
+-			del_gendisk(disk);
+-			blk_cleanup_queue(disk->queue);
++		if (disk) {
++			request_queue_t *q = disk->queue;
++
++			if (disk->flags & GENHD_FL_UP) 
++				del_gendisk(disk);
++			if (q)
++				blk_cleanup_queue(q);
++			put_disk(disk);
+ 		}
+ 	}
+ 
