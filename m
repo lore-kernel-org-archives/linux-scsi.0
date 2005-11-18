@@ -1,32 +1,62 @@
 From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH 1/3] cciss: bug fix for hpacucli
-Date: Fri, 18 Nov 2005 21:49:47 +0100
-Message-ID: <20051118204946.GB25454@suse.de>
-References: <20051118163357.GA10928@beardog.cca.cpqcorp.net>
+Subject: Re: [PATCH 2/3] cciss: bug fix for BIG_PASS_THRU
+Date: Fri, 18 Nov 2005 22:01:24 +0100
+Message-ID: <20051118210123.GC25454@suse.de>
+References: <20051118164112.GA14937@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161200AbVKRUwF@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:38194 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1161203AbVKRVAS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Nov 2005 16:00:18 -0500
 Content-Disposition: inline
-In-Reply-To: <20051118163357.GA10928@beardog.cca.cpqcorp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: mikem <mikem@beardog.cca.cpqcorp.net>
-Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, hpa@zytor.com, sitniko@infonet.ee
+In-Reply-To: <20051118164112.GA14937@beardog.cca.cpqcorp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: mikem <mikem@beardog.cca.cpqcorp.net>
+Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 On Fri, Nov 18 2005, mikem wrote:
-> Patch 1 of 3
+> Patch 2 of 3
 > 
-> This patch fixes a bug that breaks hpacucli, a command line interface
-> for the HP Array Config Utility. Without this fix the utility will
-> not detect any controllers in the system. I thought I had already fixed
-> this, but I guess not.
-> 
-> Thanks to all who reported the issue. Please consider this this inclusion.
+> Applications using CCISS_BIG_PASSTHRU complained that the data written
+> was zeros.  The code looked alright, but it seems that copy_from_user 
+> already does a memset on the buffer. Removing it from the pass-through
+> fixes the apps.
 
-Lovely, hope this makes it able to configure my drives on the tiger now
-:).
+Hmm, I don't like this patch, since you never clear the buffer for reads
+now. If the controller for some reason doesn't overwrite this buffer,
+you could be leaking privileged data! Your bug is because you do:
 
-Applied.
+        if (write && copy_from_user(...))
+                fail
+        else
+                clear
+
+so you end up in the clear case for any case where copy_from_user()
+doesn't fail. I've fixed it up for you, this is what I committed:
+
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index e239a6c..33f8341 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -1017,10 +1017,11 @@ static int cciss_ioctl(struct inode *ino
+ 				status = -ENOMEM;
+ 				goto cleanup1;
+ 			}
+-			if (ioc->Request.Type.Direction == XFER_WRITE &&
+-				copy_from_user(buff[sg_used], data_ptr, sz)) {
++			if (ioc->Request.Type.Direction == XFER_WRITE) {
++				if (copy_from_user(buff[sg_used], data_ptr, sz)) {
+ 					status = -ENOMEM;
+-					goto cleanup1;			
++					goto cleanup1;
++				}
+ 			} else {
+ 				memset(buff[sg_used], 0, sz);
+ 			}
 
 -- 
 Jens Axboe
+
