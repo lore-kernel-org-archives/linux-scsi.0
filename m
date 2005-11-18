@@ -1,61 +1,31 @@
 From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH 2/3] cciss: bug fix for BIG_PASS_THRU
-Date: Fri, 18 Nov 2005 22:01:24 +0100
-Message-ID: <20051118210123.GC25454@suse.de>
-References: <20051118164112.GA14937@beardog.cca.cpqcorp.net>
+Subject: Re: [PATCH 3/3] cciss: add put_disk into cleanup routines
+Date: Fri, 18 Nov 2005 22:03:00 +0100
+Message-ID: <20051118210300.GD25454@suse.de>
+References: <20051118174655.GA22116@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:38194 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1161203AbVKRVAS (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:13107 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1161225AbVKRVCA (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Nov 2005 16:00:18 -0500
+	Fri, 18 Nov 2005 16:02:00 -0500
 Content-Disposition: inline
-In-Reply-To: <20051118164112.GA14937@beardog.cca.cpqcorp.net>
+In-Reply-To: <20051118174655.GA22116@beardog.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: mikem <mikem@beardog.cca.cpqcorp.net>
-Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: akpm@osdl.org, jgarzick@pobox.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 On Fri, Nov 18 2005, mikem wrote:
-> Patch 2 of 3
+> Patch 3 of 3
 > 
-> Applications using CCISS_BIG_PASSTHRU complained that the data written
-> was zeros.  The code looked alright, but it seems that copy_from_user 
-> already does a memset on the buffer. Removing it from the pass-through
-> fixes the apps.
+> Jeff Garzik pointed me to his code to see how to remove a disk from
+> the system _properly_. Well, here it is...
+> Every place we remove disks we are now testing before calling del_gendisk
+> or blk_cleanup_queue and then call put_disk.
 
-Hmm, I don't like this patch, since you never clear the buffer for reads
-now. If the controller for some reason doesn't overwrite this buffer,
-you could be leaking privileged data! Your bug is because you do:
-
-        if (write && copy_from_user(...))
-                fail
-        else
-                clear
-
-so you end up in the clear case for any case where copy_from_user()
-doesn't fail. I've fixed it up for you, this is what I committed:
-
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index e239a6c..33f8341 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -1017,10 +1017,11 @@ static int cciss_ioctl(struct inode *ino
- 				status = -ENOMEM;
- 				goto cleanup1;
- 			}
--			if (ioc->Request.Type.Direction == XFER_WRITE &&
--				copy_from_user(buff[sg_used], data_ptr, sz)) {
-+			if (ioc->Request.Type.Direction == XFER_WRITE) {
-+				if (copy_from_user(buff[sg_used], data_ptr, sz)) {
- 					status = -ENOMEM;
--					goto cleanup1;			
-+					goto cleanup1;
-+				}
- 			} else {
- 				memset(buff[sg_used], 0, sz);
- 			}
+Thanks, applied.
 
 -- 
 Jens Axboe
