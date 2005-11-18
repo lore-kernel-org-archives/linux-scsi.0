@@ -1,40 +1,30 @@
-From: Michele Baldessari <michele-lists@pupazzo.org>
-Subject: Re: 2.6 and DEC HSG80
-Date: Fri, 18 Nov 2005 22:37:48 +0100
-Message-ID: <20051118213748.GA8576@michele.pupazzo.org>
-References: <20051118112540.GB13447@michele.pupazzo.org> <1132335190.27509.5.camel@aptis101.cqtel.com>
+From: Philippe Pegon <Philippe.Pegon@crc.u-strasbg.fr>
+Subject: Re: [PATCH 1/3] cciss: bug fix for hpacucli
+Date: Fri, 18 Nov 2005 22:45:28 +0100
+Message-ID: <437E4B78.80908@crc.u-strasbg.fr>
+References: <20051118163357.GA10928@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mgrava.tizianodinca.com ([195.47.199.19]:58261 "EHLO
-	mail2.rhx.it") by vger.kernel.org with ESMTP id S1751038AbVKRVhu
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Nov 2005 16:37:50 -0500
-Content-Disposition: inline
-In-Reply-To: <1132335190.27509.5.camel@aptis101.cqtel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161260AbVKRVtG@vger.kernel.org>
+In-Reply-To: <20051118163357.GA10928@beardog.cca.cpqcorp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: mikem <mikem@beardog.cca.cpqcorp.net>
+Cc: akpm@osdl.org, axboe@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, hpa@zytor.com, sitniko@infonet.ee
 List-Id: linux-scsi@vger.kernel.org
-To: Steve Wilcox <spwilcox@att.com>
-Cc: linux-scsi mailing list <linux-scsi@vger.kernel.org>
 
-* Steve Wilcox (spwilcox@att.com) wrote:
-> Actually that was my doing, and the below patch is incorrect (thus the
-> 1/2 hour of device type 31 entries).  The correct patch has been merged
-> into the 2.6.14 kernel and can be seen here: http://www.kernel.org/git/?
-> p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=507caac75e86bd041c5462e5e988fb7138e21d79
+mikem wrote:
+> Patch 1 of 3
 > 
-> The original thread that lead to the patch can be found here:
-> http://sourceforge.net/forum/forum.php?thread_id=1270421&forum_id=355154
+> This patch fixes a bug that breaks hpacucli, a command line interface
+> for the HP Array Config Utility. Without this fix the utility will
+> not detect any controllers in the system. I thought I had already fixed
+> this, but I guess not.
 > 
-> Hope that helps - feel free to e-mail me directly if you have any
-> questions about the convoluted mess that led up to this.
+> Thanks to all who reported the issue. Please consider this this inclusion.
 
-Hi Steve,
+reply too fast ;)
+thanks you a lot for that one
 
-thanks a lot for your feedback, that patch fixed all of the issues.
-Funnily enough I probably wouldn't even have noticed this issue, 
-if qla2* didn't oops on me for kernels >= 2.6.14 :)
-
-thanks again for your help,
-Michele
-
+--
+Philippe Pegon
