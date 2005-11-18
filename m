@@ -1,67 +1,102 @@
-From: Michele Baldessari <michele-lists@pupazzo.org>
-Subject: 2.6 and DEC HSG80
-Date: Fri, 18 Nov 2005 12:25:40 +0100
-Message-ID: <20051118112540.GB13447@michele.pupazzo.org>
+From: Kilian CAVALOTTI <kilian.cavalotti@lip6.fr>
+Subject: Re: aic7xxx support for >2TB volumes?
+Date: Fri, 18 Nov 2005 13:55:17 +0100
+Message-ID: <200511181355.17911.kilian.cavalotti@lip6.fr>
+References: <200511161208.02374.kilian.cavalotti@lip6.fr> <437D97E9.8020709@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mgrava.tizianodinca.com ([195.47.199.19]:53892 "EHLO
-	mail2.rhx.it") by vger.kernel.org with ESMTP id S1161044AbVKRLZm
+Received: from isis.lip6.fr ([132.227.60.2]:62088 "EHLO isis.lip6.fr")
+	by vger.kernel.org with ESMTP id S1161099AbVKRMza convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Nov 2005 06:25:42 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by mail2.rhx.it (Postfix) with ESMTP id E8727179B4
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Nov 2005 12:25:38 +0100 (CET)
-Received: from mail2.rhx.it ([127.0.0.1])
- by localhost (mail2.rhx.it [127.0.0.1]) (amavisd-new, port 10024) with ESMTP
- id 28010-03 for <linux-scsi@vger.kernel.org>;
- Fri, 18 Nov 2005 12:25:38 +0100 (CET)
-Received: from laptop (nat.xsec.it [83.103.127.222])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "kantele", Issuer "mail2.rhx.it" (verified OK))
-	by mail2.rhx.it (Postfix) with ESMTP id 9D71D1799B
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Nov 2005 12:25:38 +0100 (CET)
+	Fri, 18 Nov 2005 07:55:30 -0500
+In-Reply-To: <437D97E9.8020709@torque.net>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+=46irst of all, thanks for highlighting this.
 
-While struggling to get a DEC HSG80 working with a qla2312 FC card with a 2.6 kernel, 
-I noticed that the following patch:
+On Friday 18 November 2005 09:59, Douglas Gilbert wrote:
+> From the log output above, /dev/sdb seems to reject
+> the READ CAPACITY (16) command. I think that it is
+> unlikely that the aic7xxx driver is filtering out that
+> particular command (why should it?) and a simple grep
+> in that driver for READ_CAP finds no matches.
+>
+> As an extra check of the linux sd driver you could fetch
+> sg3_utils, build it and try:
+>   sg_readcap -16 /dev/sdb
 
---- linux-2.6.13.4/drivers/scsi/scsi_devinfo.c.orig 2005-11-17 17:52:49.424914776 +0100
-+++ linux-2.6.13.4/drivers/scsi/scsi_devinfo.c  2005-11-17 17:53:12.938400491 +0100
-@@ -135,7 +135,7 @@
-        {"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
-        {"COMPAQ", "HSV110", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
-        {"DDN", "SAN DataDirector", "*", BLIST_SPARSELUN},
--       {"DEC", "HSG80", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
-+       {"DEC", "HSG80", NULL, BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_NOSTARTONADD},
-        {"DELL", "PV660F", NULL, BLIST_SPARSELUN},
-        {"DELL", "PV660F   PSEUDO", NULL, BLIST_SPARSELUN},
-        {"DELL", "PSEUDO DEVICE .", NULL, BLIST_SPARSELUN},     /* Dell PV 530F */
+As expected:
+# sg_readcap -v -16 /dev/sdb
+    read capacity (16) cdb: 9e 10 00 00 00 00 00 00 00 00 00 00 00 20 0=
+0 00
+READ CAPACITY 16 command error: Host_status=3D0x05 [DID_ABORT]
 
-(to be found at http://linux.derkeiler.com/Mailing-Lists/Kernel/2004-04/0511.html)
+Moreover, I omitted to mention that point earlier, but the HBA BIOS doe=
+s not=20
+correctly detect the volume size. It reports a "Capacity: 0MB"
 
-was never applied (probably because the poster didn't follow up on James' question).
+> If that fails than I think you need to speak to the vendor
+> of /dev/sdb . Perhaps there is newer firmware.
 
-Applying this patch, I am able to see the device correctly, although I get a good half an hour
-of messages like:
+Sure, I contacted them, and they told me that currently, the only=20
+known-to-work-over-2TB HBA vendor was LSI Logic.
+So I tried to plug the same external array on a U320 LSI Logic adapter =
+(using=20
+the Fusion MPT kernel module), and it actually worked:=20
 
-scsi: unknown device type 31
-  Vendor: DEC       Model: HSG80             Rev: V86F
-  Type:   Unknown                            ANSI SCSI revision: 02
+ioc0: 53C1030: Capabilities=3D{Initiator,Target}
+scsi1 : ioc0: LSI53C1030, FwRev=3D01032300h, Ports=3D1, MaxQ=3D255, IRQ=
+=3D23
+ACPI: PCI Interrupt 0000:02:05.1[B] -> GSI 33 (level, low) -> IRQ 24
+mptbase: Initiating ioc1 bringup
+ioc1: 53C1030: Capabilities=3D{Initiator,Target}
+scsi2 : ioc1: LSI53C1030, FwRev=3D01032300h, Ports=3D1, MaxQ=3D255, IRQ=
+=3D24
+PCI: Enabling device 0000:06:02.0 (0000 -> 0003)
+ACPI: PCI Interrupt 0000:06:02.0[A] -> GSI 96 (level, low) -> IRQ 25
+mptbase: Initiating ioc2 bringup
+ioc2: 53C1030: Capabilities=3D{Initiator}
+mptbase: Initiating ioc2 recovery
+scsi3 : ioc2: LSI53C1030, FwRev=3D01011800h, Ports=3D1, MaxQ=3D222, IRQ=
+=3D25
+  Vendor: IFT       Model: A16U-G1410        Rev: 342J
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+sdb : very big device. try to use READ CAPACITY(16).
+SCSI device sdb: 12494209024 512-byte hdwr sectors (6397035 MB)
+SCSI device sdb: drive cache: write back
+sdb : very big device. try to use READ CAPACITY(16).
+SCSI device sdb: 12494209024 512-byte hdwr sectors (6397035 MB)
+SCSI device sdb: drive cache: write back
+ sdb: sdb1
+Attached scsi disk sdb at scsi3, channel 0, id 3, lun 0
+Attached scsi generic sg2 at scsi3, channel 0, id 3, lun 0,  type 0
+ACPI: PCI Interrupt 0000:06:02.1[B] -> GSI 97 (level, low) -> IRQ 26
+mptbase: Initiating ioc3 bringup
+ioc3: 53C1030: Capabilities=3D{Initiator}
+mptbase: Initiating ioc3 recovery
 
-on my syslog. But I guess those will be fixable by tweaking the max_report_luns option (Will do 
-on monday once I get a hold of such machine).
+What I can't really understand is how a device could fail on a READ CAP=
+ACITY=20
+16 if plugged on an HBA, but work if plugged on another one...=20
 
-So, to the point, could the above patch be integrated? Any specific
-testing I should be doing to get it integrated?
+Best regards,
 
-thanks,
-Michele
-
-ps. for the record kernels >= 2.6.14 end up in a soft lockup in the qla drivers 
-(see <20051116193608.GA8500@michele.pupazzo.org> for the full report)
+--=20
+Kilian CAVALOTTI                      Administrateur r=E9seaux et syst=E8=
+mes
+UPMC / CNRS - LIP6 (C870)
+8, rue du Capitaine Scott                          Tel. : 01 44 27 88 5=
+4
+75015 Paris - France                               Fax. : 01 44 27 70 0=
+0
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
