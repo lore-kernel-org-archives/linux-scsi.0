@@ -1,102 +1,59 @@
-From: Kilian CAVALOTTI <kilian.cavalotti@lip6.fr>
-Subject: Re: aic7xxx support for >2TB volumes?
-Date: Fri, 18 Nov 2005 13:55:17 +0100
-Message-ID: <200511181355.17911.kilian.cavalotti@lip6.fr>
-References: <200511161208.02374.kilian.cavalotti@lip6.fr> <437D97E9.8020709@torque.net>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] Delete trailing full stop
+Date: Fri, 18 Nov 2005 06:20:48 -0700
+Message-ID: <20051118132048.GI17171@parisc-linux.org>
+References: <20051117181343.GD17171@parisc-linux.org> <437D77C2.3000908@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from isis.lip6.fr ([132.227.60.2]:62088 "EHLO isis.lip6.fr")
-	by vger.kernel.org with ESMTP id S1161099AbVKRMza convert rfc822-to-8bit
+Received: from palinux.external.hp.com ([192.25.206.14]:49040 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S1750892AbVKRNUt
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Nov 2005 07:55:30 -0500
-In-Reply-To: <437D97E9.8020709@torque.net>
+	Fri, 18 Nov 2005 08:20:49 -0500
 Content-Disposition: inline
+In-Reply-To: <437D77C2.3000908@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
+To: Douglas Gilbert <dougg@torque.net>
 Cc: linux-scsi@vger.kernel.org
 
-=46irst of all, thanks for highlighting this.
+On Fri, Nov 18, 2005 at 04:42:10PM +1000, Douglas Gilbert wrote:
+> Matthew Wilcox wrote:
+> > None of the other domain validation messages have a trailing full stop,
+> > so I don't see why this one should.
+> 
+> Speaking of domain validation messages I have noticed
+> that either the sym53c8xx driver or scsi_transport_spi is
+> getting noisier in this area.
 
-On Friday 18 November 2005 09:59, Douglas Gilbert wrote:
-> From the log output above, /dev/sdb seems to reject
-> the READ CAPACITY (16) command. I think that it is
-> unlikely that the aic7xxx driver is filtering out that
-> particular command (why should it?) and a simple grep
-> in that driver for READ_CAP finds no matches.
->
-> As an extra check of the linux sd driver you could fetch
-> sg3_utils, build it and try:
->   sg_readcap -16 /dev/sdb
+Definitely the sym2 driver's fault.
 
-As expected:
-# sg_readcap -v -16 /dev/sdb
-    read capacity (16) cdb: 9e 10 00 00 00 00 00 00 00 00 00 00 00 20 0=
-0 00
-READ CAPACITY 16 command error: Host_status=3D0x05 [DID_ABORT]
+>  target0:0:3: Beginning Domain Validation
+>  target0:0:3: asynchronous.
+>  target0:0:3: wide asynchronous.
+>  target0:0:3: Domain Validation skipping write tests
+>  target0:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 62)
+>  target0:0:3: Ending Domain Validation
+>  target0:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 62)
+>  last message repeated 2 times
+> sdb: Spinning up disk....<6> target0:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 62)
+>  target0:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 62)
+>  last message repeated 7 times
+(etc)
+> 
+> Surely one "FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 62)"
+> message is sufficient?
 
-Moreover, I omitted to mention that point earlier, but the HBA BIOS doe=
-s not=20
-correctly detect the volume size. It reports a "Capacity: 0MB"
+Absolutely.  Let's see why it's happening.  That message is displayed by
+spi_display_xfer_agreement() which is called from three places in sym2.
+However, because DT is set, it must be called from sym_setpprot() [1].
+That's only called in a way which would cause this message from
+sym_ppr_nego_check(), which is only called from sym_ppr_nego(), which is 
+only called when receiving a PPR message.
 
-> If that fails than I think you need to speak to the vendor
-> of /dev/sdb . Perhaps there is newer firmware.
+Now, what I don't know is why the device keeps sending us a PPR message.
+Do we keep sending it a PPR message?  Can you turn on negotiation
+debugging (echo setdebug nego >/proc/scsi/sym53c8xx/0) and send me the
+results?
 
-Sure, I contacted them, and they told me that currently, the only=20
-known-to-work-over-2TB HBA vendor was LSI Logic.
-So I tried to plug the same external array on a U320 LSI Logic adapter =
-(using=20
-the Fusion MPT kernel module), and it actually worked:=20
-
-ioc0: 53C1030: Capabilities=3D{Initiator,Target}
-scsi1 : ioc0: LSI53C1030, FwRev=3D01032300h, Ports=3D1, MaxQ=3D255, IRQ=
-=3D23
-ACPI: PCI Interrupt 0000:02:05.1[B] -> GSI 33 (level, low) -> IRQ 24
-mptbase: Initiating ioc1 bringup
-ioc1: 53C1030: Capabilities=3D{Initiator,Target}
-scsi2 : ioc1: LSI53C1030, FwRev=3D01032300h, Ports=3D1, MaxQ=3D255, IRQ=
-=3D24
-PCI: Enabling device 0000:06:02.0 (0000 -> 0003)
-ACPI: PCI Interrupt 0000:06:02.0[A] -> GSI 96 (level, low) -> IRQ 25
-mptbase: Initiating ioc2 bringup
-ioc2: 53C1030: Capabilities=3D{Initiator}
-mptbase: Initiating ioc2 recovery
-scsi3 : ioc2: LSI53C1030, FwRev=3D01011800h, Ports=3D1, MaxQ=3D222, IRQ=
-=3D25
-  Vendor: IFT       Model: A16U-G1410        Rev: 342J
-  Type:   Direct-Access                      ANSI SCSI revision: 05
-sdb : very big device. try to use READ CAPACITY(16).
-SCSI device sdb: 12494209024 512-byte hdwr sectors (6397035 MB)
-SCSI device sdb: drive cache: write back
-sdb : very big device. try to use READ CAPACITY(16).
-SCSI device sdb: 12494209024 512-byte hdwr sectors (6397035 MB)
-SCSI device sdb: drive cache: write back
- sdb: sdb1
-Attached scsi disk sdb at scsi3, channel 0, id 3, lun 0
-Attached scsi generic sg2 at scsi3, channel 0, id 3, lun 0,  type 0
-ACPI: PCI Interrupt 0000:06:02.1[B] -> GSI 97 (level, low) -> IRQ 26
-mptbase: Initiating ioc3 bringup
-ioc3: 53C1030: Capabilities=3D{Initiator}
-mptbase: Initiating ioc3 recovery
-
-What I can't really understand is how a device could fail on a READ CAP=
-ACITY=20
-16 if plugged on an HBA, but work if plugged on another one...=20
-
-Best regards,
-
---=20
-Kilian CAVALOTTI                      Administrateur r=E9seaux et syst=E8=
-mes
-UPMC / CNRS - LIP6 (C870)
-8, rue du Capitaine Scott                          Tel. : 01 44 27 88 5=
-4
-75015 Paris - France                               Fax. : 01 44 27 70 0=
-0
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[1] SDTR and WDTR clear DT.  So it must be in response to a PPR message.
