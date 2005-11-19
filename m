@@ -1,46 +1,37 @@
-From: Jeff <jeff@kconline.com>
-Subject: HP (AMI) NetRAID-1M support
-Date: Sat, 19 Nov 2005 17:05:50 +0000
-Message-ID: <20051119170550.GB38987@kconline.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] SCSI_AACRAID: add a help text
+Date: Sat, 19 Nov 2005 23:35:19 +0100
+Message-ID: <20051119223519.GT16060@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shell0.kconline.com ([216.241.132.5]:13533 "EHLO
-	shell0.kconline.com") by vger.kernel.org with ESMTP
-	id S1750901AbVKSWDm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Nov 2005 17:03:42 -0500
-Received: from shell0.kconline.com (localhost [127.0.0.1])
-	by shell0.kconline.com (8.13.4/8.13.3) with ESMTP id jAJH5okH039410
-	for <linux-scsi@vger.kernel.org>; Sat, 19 Nov 2005 17:05:50 GMT
-	(envelope-from jeff@kconline.com)
-Received: (from archaic@localhost)
-	by shell0.kconline.com (8.13.4/8.13.3/Submit) id jAJH5oVV039409
-	for linux-scsi@vger.kernel.org; Sat, 19 Nov 2005 17:05:50 GMT
-	(envelope-from jeff@kconline.com)
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:37638 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1750979AbVKSWfW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Nov 2005 17:35:22 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
 
-I'm stuck with this old SCSI RAID card and have been googling around for
-drivers. I found some old ones. The latest is IA64 aware, but still it
-is 4.5 years old:
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 
-http://www.hyper-linux.org/HP-HOWTO/mirror/Software/mega115.tgz
-
-The README for the above tarball says to overwrite the megaraid.{c,h}
-files and to change
-
-#define SD_TIMEOUT              (15 * HZ)
-to
-#define SD_TIMEOUT              (30 * HZ)
-
-which is already the default in 2.6.12.5.
-
-So the question is, will this driver work on 2.6.12, or any 2.6 kernel?
-
-Thanks a bunch!
-
--- 
-Jeff
-
+--- linux-2.6.15-rc1-mm2-full/drivers/scsi/Kconfig.old	2005-11-19 23:33:04.000000000 +0100
++++ linux-2.6.15-rc1-mm2-full/drivers/scsi/Kconfig	2005-11-19 23:33:07.000000000 +0100
+@@ -402,6 +402,14 @@
+ config SCSI_AACRAID
+ 	tristate "Adaptec AACRAID support"
+ 	depends on SCSI && PCI
++	help
++	  This driver supports the Dell PERC2, 2/Si, 3/Si, 3/Di,
++	  CERC, HP NetRAID-4M SCSI, Adaptec Advanced Raid Products
++	  <http://www.adaptec.com/products/solutions/raid.html>
++	  late model IBM ServeRAID and ICP SATA & SAS products.
++
++	  To compile this driver as a module, choose M here: the module
++	  will be called aacraid.
+ 
+ source "drivers/scsi/aic94xx/Kconfig"
+ 
