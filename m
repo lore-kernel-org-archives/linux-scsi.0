@@ -1,103 +1,124 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] Delete trailing full stop
-Date: Sat, 19 Nov 2005 10:48:57 +1000
-Message-ID: <437E7679.2040700@torque.net>
-References: <20051117181343.GD17171@parisc-linux.org> <437D77C2.3000908@torque.net> <20051118132048.GI17171@parisc-linux.org>
+Subject: Re: aic7xxx support for >2TB volumes?
+Date: Sat, 19 Nov 2005 11:32:26 +1000
+Message-ID: <437E80AA.2030400@torque.net>
+References: <200511161208.02374.kilian.cavalotti@lip6.fr> <437D97E9.8020709@torque.net> <200511181355.17911.kilian.cavalotti@lip6.fr> <437DECDB.3070509@us.ibm.com> <437E5E1E.2080902@torque.net>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090100070906070806010601"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:177 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1751242AbVKSArw (ORCPT
+Received: from zorg.st.net.au ([203.16.233.9]:28084 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1030266AbVKSBbM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Nov 2005 19:47:52 -0500
-In-Reply-To: <20051118132048.GI17171@parisc-linux.org>
+	Fri, 18 Nov 2005 20:31:12 -0500
+In-Reply-To: <437E5E1E.2080902@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: brking@us.ibm.com, Kilian CAVALOTTI <kilian.cavalotti@lip6.fr>, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------090100070906070806010601
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Here are the test results for that patch. They indicate
+that the READ_CAPACITY(16) is getting to the disk (which
+doesn't support it since its capacity is 18 GB).
 
-Matthew Wilcox wrote:
-> On Fri, Nov 18, 2005 at 04:42:10PM +1000, Douglas Gilbert wrote:
-> 
->>Matthew Wilcox wrote:
->>
->>>None of the other domain validation messages have a trailing full stop,
->>>so I don't see why this one should.
->>
->>Speaking of domain validation messages I have noticed
->>that either the sym53c8xx driver or scsi_transport_spi is
->>getting noisier in this area.
-> 
-> 
-> Definitely the sym2 driver's fault.
-> 
-> 
->> target0:0:3: Beginning Domain Validation
->> target0:0:3: asynchronous.
->> target0:0:3: wide asynchronous.
->> target0:0:3: Domain Validation skipping write tests
->> target0:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 62)
->> target0:0:3: Ending Domain Validation
->> target0:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 62)
->> last message repeated 2 times
->>sdb: Spinning up disk....<6> target0:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 62)
->> target0:0:3: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 62)
->> last message repeated 7 times
-> 
-> (etc)
-> 
->>Surely one "FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 62)"
->>message is sufficient?
-> 
-> 
-> Absolutely.  Let's see why it's happening.  That message is displayed by
-> spi_display_xfer_agreement() which is called from three places in sym2.
-> However, because DT is set, it must be called from sym_setpprot() [1].
-> That's only called in a way which would cause this message from
-> sym_ppr_nego_check(), which is only called from sym_ppr_nego(), which is 
-> only called when receiving a PPR message.
-> 
-> Now, what I don't know is why the device keeps sending us a PPR message.
-> Do we keep sending it a PPR message?  Can you turn on negotiation
-> debugging (echo setdebug nego >/proc/scsi/sym53c8xx/0) and send me the
-> results?
-> 
-> [1] SDTR and WDTR clear DT.  So it must be in response to a PPR message.
+# sg_readcap -16 -vv /dev/sdb
+    read capacity (16) cdb: 9e 10 00 00 00 00 00 00 00 00 00 00 00 20 00 00
+READ CAPACITY 16 command error: SCSI status: Check Condition
+ Fixed format, current;  Sense key: Illegal Request
+ Additional sense: Invalid command operation code
+  Field replaceable unit code: 2
+  Sense Key Specific: Error in Command byte 0 bit 7
+ Raw sense data (in hex):
+        70 00 05 00 00 00 00 0a  00 00 00 00 20 00 02 cf
+        00 00
+plus...: Driver_status=0x08 [DRIVER_SENSE, SUGGEST_OK]
+READ CAPACITY (16) not supported
 
-I switched disks from a Fujitsu MAM3184 to a Seagate
-ST318451 and it seems just as noisy. See attached.
+# lsscsi
+[0:0:0:0]    disk    SEAGATE  ST318451LW       0003  /dev/sdb
+[3:0:0:0]    disk    ATA      ST380013AS       3.18  /dev/sda
 
-If the disk is spinning when a scan is requested then
-the output is succinct; so all that extra output
-occurs while the disk is in the process of spinning
-up (about a ten second period).
+# lsscsi -H
+[0]    aic7xxx
+[1]    sym53c8xx
+[2]    sym53c8xx
+[3]    sata_sil
+
+
+# lspci
+....
+00:0e.0 RAID bus controller: CMD Technology Inc Silicon Image SiI 3112 SATARaid Controller (rev 02)
+00:0f.0 SCSI storage controller: Adaptec AIC-7892A U160/m (rev 02)
+00:10.0 SCSI storage controller: LSI Logic / Symbios Logic 53c1010 Ultra3 SCSI Adapter (rev 01)
+00:10.1 SCSI storage controller: LSI Logic / Symbios Logic 53c1010 Ultra3 SCSI Adapter (rev 01)
+
+
+BTW That adaptec controller is labelled "APD-29160N MAC".
+My PC BIOS doesn't see it, so I can't boot of it, but
+linux sees it ok. That makes it useful for testing ...
 
 Doug Gilbert
 
 
---------------090100070906070806010601
-Content-Type: application/x-gzip;
- name="sym53c8xx_scan2.txt.gz"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="sym53c8xx_scan2.txt.gz"
+Douglas Gilbert wrote:
+> Brian King wrote:
+> 
+>>Kilian CAVALOTTI wrote:
+>>
+>>
+>>
+>>>What I can't really understand is how a device could fail on a READ CAPACITY 
+>>>16 if plugged on an HBA, but work if plugged on another one... 
+>>
+>>
+>>Looks to me like the aic7xxx driver does not change max_cmd_len from
+>>the default of 12, so any 16 byte cdb gets failed back by scsi core.
+> 
+> 
+> Indeed, the DID_ABORT on the READ CAPACITY(16) suggests
+> that the command is not making it out to the scsi bus.
+> Strange that in lk 2.6 the scsi subsystem still defaults
+> to a maximum of 12 byte scsi commands, unless overridden
+> by the LLD.
+> 
+> Perhaps Kilian could try the following patch (borrowed from
+> scsi_debug). The patch is against lk 2.6.15-rc1 but should
+> by widely applicable (unless the aic7... series really
+> does have a 12 byte limit). I will report back if this
+> patch has any adverse impact on "sg_readcap -16" which
+> should report: "illegal request/invalid command operation
+> code" on my hardware.
+> 
+> Doug Gilbert
+> 
+> 
+> 
+> 
+> ------------------------------------------------------------------------
+> 
+> --- linux/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-11-15 13:15:26.000000000 +1000
+> +++ linux/drivers/scsi/aic7xxx/aic7xxx_osm.c2615rc1big	2005-11-19 08:45:08.000000000 +1000
+> @@ -637,6 +637,9 @@
+>  	if (bootverbose)
+>  		sdev_printk(KERN_INFO, sdev, "Slave Configure\n");
+>  
+> +        if (sdev->host->max_cmd_len < MAX_COMMAND_SIZE)
+> +                sdev->host->max_cmd_len = MAX_COMMAND_SIZE;
+> +
+>  	ahc_linux_device_queue_depth(sdev);
+>  
+>  	/* Initial Domain Validation */
+> --- linux/drivers/scsi/aic7xxx/aic79xx_osm.c	2005-11-15 13:15:26.000000000 +1000
+> +++ linux/drivers/scsi/aic7xxx/aic79xx_osm.c2615rc1big	2005-11-19 08:45:29.000000000 +1000
+> @@ -559,6 +559,9 @@
+>  	if (bootverbose)
+>  		sdev_printk(KERN_INFO, sdev, "Slave Configure\n");
+>  
+> +        if (sdev->host->max_cmd_len < MAX_COMMAND_SIZE)
+> +                sdev->host->max_cmd_len = MAX_COMMAND_SIZE;
+> +
+>  	ahd_linux_device_queue_depth(sdev);
+>  
+>  	/* Initial Domain Validation */
 
-H4sICPF1fkMAA3N5bTUzYzh4eF9zY2FuMi50eHQA7dtPb9owGAbwO5/iPa7SzOwEGIvGpHSw
-qdK6w0DtOdgGLFonsg2Ibz8nsK2Dtuppq6InSJZInrz5OX/em4lutFWly2g6yb/mswkRXZdK
-38Uds1QMe33x7ZaO2w+9zYhznnaIZvtKZ3Hf2DgtA8ul1N7To1v+fXpF089xcHprvCltrBJr
-hMItdRAZjz+61EtjrbFLGpf3hbF0U9wZVYSYPkn6vZV075flJmQkWMoEKxjvPpEy9u/Q4XAd
-UCHOulz4EadKu5HgpMw2/lkU6zjK1XJ0VrSoq65cacuNPz22M0o/YCX1NZ/KHFC/Ir9Ju4ZU
-h0biccB/nHtjf+4GnD038mtTVfUj3TkTNAXtgz85qarcg/kMWI99YJylOpqT0wscs4dZPR/9
-kk9nbMjp9mo8Obx6YsC7nK4v33kaz+iNSLp9sv5tvAkLrwMNkouTEhOrXvI2vt4JQPYSmVfz
-2OqqY+/ZVPFD8Otu3D4OPr1eNWSQQQZZW2TotpBBBhlk6LaQQQYZZG2RodtCBhlkkKHbQgYZ
-ZJC1RYZuCxlkkEGGbgsZZJBB1hYZui1kkEEGGbotZJBBBllbZOi2kEEGGWTotpBBBhlkbZF1
-nS7UvtPEld4aqalZ5Jv2h7108F5QXyRsvg+aVmrnyGsZSudjrWHaT2Lpi/NTlTNbTbKQK50d
-F7PPC7n+J9c4HI2DqIek49Wfdfx5CHVekZfeNCuX60znJ0VMDirVQQAA
---------------090100070906070806010601--
