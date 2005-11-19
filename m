@@ -1,34 +1,46 @@
-From: "David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH] kill qlogicpti inquiry sniffing
-Date: Sat, 19 Nov 2005 13:44:08 -0800 (PST)
-Message-ID: <20051119.134408.127496042.davem@davemloft.net>
-References: <20051017120229.GA5834@lst.de>
-	<20051112091251.GA15402@lst.de>
-	<20051119184447.GA29275@lst.de>
+From: Jeff <jeff@kconline.com>
+Subject: HP (AMI) NetRAID-1M support
+Date: Sat, 19 Nov 2005 17:05:50 +0000
+Message-ID: <20051119170550.GB38987@kconline.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <20051119184447.GA29275@lst.de>
-Sender: sparclinux-owner@vger.kernel.org
-To: hch@lst.de
-Cc: jejb@steeleye.com, tcallawa@redhat.com, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shell0.kconline.com ([216.241.132.5]:13533 "EHLO
+	shell0.kconline.com") by vger.kernel.org with ESMTP
+	id S1750901AbVKSWDm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Nov 2005 17:03:42 -0500
+Received: from shell0.kconline.com (localhost [127.0.0.1])
+	by shell0.kconline.com (8.13.4/8.13.3) with ESMTP id jAJH5okH039410
+	for <linux-scsi@vger.kernel.org>; Sat, 19 Nov 2005 17:05:50 GMT
+	(envelope-from jeff@kconline.com)
+Received: (from archaic@localhost)
+	by shell0.kconline.com (8.13.4/8.13.3/Submit) id jAJH5oVV039409
+	for linux-scsi@vger.kernel.org; Sat, 19 Nov 2005 17:05:50 GMT
+	(envelope-from jeff@kconline.com)
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
-Date: Sat, 19 Nov 2005 19:44:47 +0100
+I'm stuck with this old SCSI RAID card and have been googling around for
+drivers. I found some old ones. The latest is IA64 aware, but still it
+is 4.5 years old:
 
-> ping^2.  Hey, there must be sparc users with this hardware that noticed
-> the initial bug, could you please test this patch?
+http://www.hyper-linux.org/HP-HOWTO/mirror/Software/mega115.tgz
 
-Tom's probably busy with other stuff, I'm sure he can get to
-testing it eventually.
+The README for the above tarball says to overwrite the megaraid.{c,h}
+files and to change
 
-> Dave, could you look at the inquiry sniffing bug atleast?  I'm pretty
-> the driver is doing the wrong thing about wide devices.  In general
-> it might be worth to resync some code with the qla1280 driver which
-> drivers the same chip with a pci bus interface (and more recent
-> versions)
+#define SD_TIMEOUT              (15 * HZ)
+to
+#define SD_TIMEOUT              (30 * HZ)
 
-Yes it would be nice to write a SBUS front end to that driver.
-Testing is always the issue though :-)
+which is already the default in 2.6.12.5.
+
+So the question is, will this driver work on 2.6.12, or any 2.6 kernel?
+
+Thanks a bunch!
+
+-- 
+Jeff
+
