@@ -1,71 +1,82 @@
 From: Kilian CAVALOTTI <kilian.cavalotti@lip6.fr>
 Subject: Re: aic7xxx support for >2TB volumes?
-Date: Sat, 19 Nov 2005 15:37:28 +0100
-Message-ID: <200511191537.28489.kilian.cavalotti@lip6.fr>
-References: <200511161208.02374.kilian.cavalotti@lip6.fr> <437DECDB.3070509@us.ibm.com> <437E5E1E.2080902@torque.net>
+Date: Sat, 19 Nov 2005 15:57:15 +0100
+Message-ID: <200511191557.15533.kilian.cavalotti@lip6.fr>
+References: <200511161208.02374.kilian.cavalotti@lip6.fr> <437E5E1E.2080902@torque.net> <437E80AA.2030400@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2-g19.free.fr ([212.27.42.28]:46995 "EHLO smtp2-g19.free.fr")
-	by vger.kernel.org with ESMTP id S1751126AbVKSOh2 convert rfc822-to-8bit
+Received: from smtp4-g19.free.fr ([212.27.42.30]:60371 "EHLO smtp4-g19.free.fr")
+	by vger.kernel.org with ESMTP id S1751015AbVKSO5Q convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Nov 2005 09:37:28 -0500
-In-Reply-To: <437E5E1E.2080902@torque.net>
+	Sat, 19 Nov 2005 09:57:16 -0500
+In-Reply-To: <437E80AA.2030400@torque.net>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+Cc: brking@us.ibm.com, linux-scsi@vger.kernel.org
 
-On Saturday 19 November 2005 00:05, Douglas Gilbert wrote:
-> Perhaps Kilian could try the following patch (borrowed from
-> scsi_debug). The patch is against lk 2.6.15-rc1 but should
-> by widely applicable (unless the aic7... series really
-> does have a 12 byte limit).=20
+On Saturday 19 November 2005 02:32, Douglas Gilbert wrote:
+> Here are the test results for that patch. They indicate
+> that the READ_CAPACITY(16) is getting to the disk (which
+> doesn't support it since its capacity is 18 GB).
 
-Well, I just downloaded a fresh 2.6.15-rc1 source tree from kernel.org,=
- and,=20
-to my surprise, I can't apply your patch.
+So it seems promising. :)
 
-Talking about linux/drivers/scsi/aic7xxx/aic7xxx_osm.c, the only occurr=
-ence of=20
-	/* Initial Domain Validation */
+=46YI, I had reports from users who said to be able to use a >2TB exter=
+nal=20
+storage array (different vendor) with that same 39160 Adaptec HBA.
 
-is at line 736, and it's preceded by:
-        if (bootverbose)
-                printf("%s: Slave Configure %d\n", ahc_name(ahc), devic=
-e->id);
+Here's part of their dmesg:
+scsi4 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
+=A0 =A0 =A0 =A0 =A0<Adaptec 3960D Ultra160 SCSI adapter>
+=A0 =A0 =A0 =A0 =A0aic7899: Ultra160 Wide Channel A, SCSI Id=3D7, 32/25=
+3 SCBs
+(scsi4:A:0): 160.000MB/s transfers (80.000MHz DT, offset 62, 16bit)
+=A0 =A0Type: =A0 Direct-Access =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0ANSI SCSI revision: 03
+scsi4:A:0:0: Tagged Queuing enabled. =A0Depth 4
+SCSI device sdg: 2686132224 1024-byte hdwr sectors (2750599 MB)
+SCSI device sdg: drive cache: write back
+=A0 sdg: unknown partition table
+Attached scsi disk sdg at scsi4, channel 0, id 0, lun 0
 
-        dev =3D ahc_linux_get_device(ahc, device->channel, device->id,
-                                   device->lun);
-        dev->scsi_device =3D device;
+The weird part is that the driver does not even seem to invoke READ=20
+CAPACITY(16) command, but directly succeed in getting device size.
 
-        ahc_linux_device_queue_depth(ahc, dev);
+To sum up my experiences so far:
+--------------------|----------------|---------------|-----------------=
+---------
+Ext. device (>2TB)  | HBA            | Driver	     | Result		=09
+--------------------|----------------|---------------|-----------------=
+---------
+Infortrend EonStore | Adaptec 39160  | aic7xxx       | READ CAPACITY(16=
+) fails
+A16U-G1410          |		     |               |
+--------------------|----------------|---------------|-----------------=
+---------
+Infortrend EonStore | LSI Logic U320 | mptbase       | READ CAPACITY(16=
+)
+A16U-G1410          |		     |               | success=09
+--------------------|----------------|---------------|-----------------=
+---------
+Proware             | Adaptec 39160  | aic7xxx       | Direct success
+--------------------|----------------|---------------|-----------------=
+---------
 
-instead of:
-	if (bootverbose)
-                sdev_printk(KERN_INFO, sdev, "Slave Configure\n");
+So it seems to come from both the external device and the aic7xxx drive=
+r,since=20
+the EonStore works with another HBA, and the aic7xxx works with another=
 =20
-	ahc_linux_device_queue_depth(sdev);
+device...
 
-in your patch.
-So it seems functions have changed between your 2.6.15-rc1, and my 2.6.=
-15-rc1,=20
-unless I missed something.
+It seems quite strange to me, but I hope gurus here will have a rationa=
+l=20
+explanation. :)
 
-I nevertheless tried to apply your patch, but sdev and dev objects seem=
-s to be=20
-different, so I can't attibute host->max_cmd_len to the dev object. As =
-you=20
-probably already understood, I'm not a kernel developer, and my C knowl=
-edge=20
-is far from being sufficient to handle changes myself. :)
-
-Any hint?
-
-Thanks and regards,
-
+Best regards,
 --=20
 Kilian CAVALOTTI                      Administrateur r=E9seaux et syst=E8=
 mes
