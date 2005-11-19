@@ -1,92 +1,269 @@
-From: Kilian CAVALOTTI <kilian.cavalotti@lip6.fr>
-Subject: Re: aic7xxx support for >2TB volumes?
-Date: Sat, 19 Nov 2005 15:57:15 +0100
-Message-ID: <200511191557.15533.kilian.cavalotti@lip6.fr>
-References: <200511161208.02374.kilian.cavalotti@lip6.fr> <437E5E1E.2080902@torque.net> <437E80AA.2030400@torque.net>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] kill qlogicpti inquiry sniffing
+Date: Sat, 19 Nov 2005 19:44:47 +0100
+Message-ID: <20051119184447.GA29275@lst.de>
+References: <20051017120229.GA5834@lst.de> <20051112091251.GA15402@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp4-g19.free.fr ([212.27.42.30]:60371 "EHLO smtp4-g19.free.fr")
-	by vger.kernel.org with ESMTP id S1751015AbVKSO5Q convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Nov 2005 09:57:16 -0500
-In-Reply-To: <437E80AA.2030400@torque.net>
+Received: from verein.lst.de ([213.95.11.210]:50342 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S1750737AbVKSSpZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Nov 2005 13:45:25 -0500
 Content-Disposition: inline
+In-Reply-To: <20051112091251.GA15402@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: brking@us.ibm.com, linux-scsi@vger.kernel.org
+To: jejb@steeleye.com, davem@davemloft.net, tcallawa@redhat.com
+Cc: linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
 
-On Saturday 19 November 2005 02:32, Douglas Gilbert wrote:
-> Here are the test results for that patch. They indicate
-> that the READ_CAPACITY(16) is getting to the disk (which
-> doesn't support it since its capacity is 18 GB).
+On Sat, Nov 12, 2005 at 10:12:51AM +0100, Christoph Hellwig wrote:
+> On Mon, Oct 17, 2005 at 02:02:29PM +0200, Christoph Hellwig wrote:
+> > Inquiry sniffing is a really bad idea, and sneaking a patch in without
+> > talking to the scsi maintainers doesn't make it any better ;-)
+> > 
+> > Could one of the sparc people please test the patch below to kill it?
+> 
+> ping?
 
-So it seems promising. :)
+ping^2.  Hey, there must be sparc users with this hardware that noticed
+the initial bug, could you please test this patch?
 
-=46YI, I had reports from users who said to be able to use a >2TB exter=
-nal=20
-storage array (different vendor) with that same 39160 Adaptec HBA.
+Dave, could you look at the inquiry sniffing bug atleast?  I'm pretty
+the driver is doing the wrong thing about wide devices.  In general
+it might be worth to resync some code with the qla1280 driver which
+drivers the same chip with a pci bus interface (and more recent
+versions)
 
-Here's part of their dmesg:
-scsi4 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
-=A0 =A0 =A0 =A0 =A0<Adaptec 3960D Ultra160 SCSI adapter>
-=A0 =A0 =A0 =A0 =A0aic7899: Ultra160 Wide Channel A, SCSI Id=3D7, 32/25=
-3 SCBs
-(scsi4:A:0): 160.000MB/s transfers (80.000MHz DT, offset 62, 16bit)
-=A0 =A0Type: =A0 Direct-Access =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0ANSI SCSI revision: 03
-scsi4:A:0:0: Tagged Queuing enabled. =A0Depth 4
-SCSI device sdg: 2686132224 1024-byte hdwr sectors (2750599 MB)
-SCSI device sdg: drive cache: write back
-=A0 sdg: unknown partition table
-Attached scsi disk sdg at scsi4, channel 0, id 0, lun 0
-
-The weird part is that the driver does not even seem to invoke READ=20
-CAPACITY(16) command, but directly succeed in getting device size.
-
-To sum up my experiences so far:
---------------------|----------------|---------------|-----------------=
----------
-Ext. device (>2TB)  | HBA            | Driver	     | Result		=09
---------------------|----------------|---------------|-----------------=
----------
-Infortrend EonStore | Adaptec 39160  | aic7xxx       | READ CAPACITY(16=
-) fails
-A16U-G1410          |		     |               |
---------------------|----------------|---------------|-----------------=
----------
-Infortrend EonStore | LSI Logic U320 | mptbase       | READ CAPACITY(16=
-)
-A16U-G1410          |		     |               | success=09
---------------------|----------------|---------------|-----------------=
----------
-Proware             | Adaptec 39160  | aic7xxx       | Direct success
---------------------|----------------|---------------|-----------------=
----------
-
-So it seems to come from both the external device and the aic7xxx drive=
-r,since=20
-the EonStore works with another HBA, and the aic7xxx works with another=
-=20
-device...
-
-It seems quite strange to me, but I hope gurus here will have a rationa=
-l=20
-explanation. :)
-
-Best regards,
---=20
-Kilian CAVALOTTI                      Administrateur r=E9seaux et syst=E8=
-mes
-UPMC / CNRS - LIP6 (C870)
-8, rue du Capitaine Scott                          Tel. : 01 44 27 88 5=
-4
-75015 Paris - France                               Fax. : 01 44 27 70 0=
-0
+Index: linux-2.6/drivers/scsi/qlogicpti.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/qlogicpti.c	2005-10-17 13:53:19.000000000 +0200
++++ linux-2.6/drivers/scsi/qlogicpti.c	2005-10-17 13:55:07.000000000 +0200
+@@ -312,8 +312,6 @@
+ 		}
+ 		qpti->dev_param[i].device_enable = 1;
+ 	}
+-	/* this is very important to set! */
+-	qpti->sbits = 1 << qpti->scsi_id;
+ }
+ 
+ static int qlogicpti_reset_hardware(struct Scsi_Host *host)
+@@ -1119,155 +1117,6 @@
+ 	host->sg_tablesize = QLOGICPTI_MAX_SG(num_free);
+ }
+ 
+-static unsigned int scsi_rbuf_get(struct scsi_cmnd *cmd, unsigned char **buf_out)
+-{
+-	unsigned char *buf;
+-	unsigned int buflen;
 -
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-	if (cmd->use_sg) {
+-		struct scatterlist *sg;
+-
+-		sg = (struct scatterlist *) cmd->request_buffer;
+-		buf = kmap_atomic(sg->page, KM_IRQ0) + sg->offset;
+-		buflen = sg->length;
+-	} else {
+-		buf = cmd->request_buffer;
+-		buflen = cmd->request_bufflen;
+-	}
+-
+-	*buf_out = buf;
+-	return buflen;
+-}
+-
+-static void scsi_rbuf_put(struct scsi_cmnd *cmd, unsigned char *buf)
+-{
+-	if (cmd->use_sg) {
+-		struct scatterlist *sg;
+-
+-		sg = (struct scatterlist *) cmd->request_buffer;
+-		kunmap_atomic(buf - sg->offset, KM_IRQ0);
+-	}
+-}
+-
+-/*
+- * Until we scan the entire bus with inquiries, go throught this fella...
+- */
+-static void ourdone(struct scsi_cmnd *Cmnd)
+-{
+-	struct qlogicpti *qpti = (struct qlogicpti *) Cmnd->device->host->hostdata;
+-	int tgt = Cmnd->device->id;
+-	void (*done) (struct scsi_cmnd *);
+-
+-	/* This grot added by DaveM, blame him for ugliness.
+-	 * The issue is that in the 2.3.x driver we use the
+-	 * host_scribble portion of the scsi command as a
+-	 * completion linked list at interrupt service time,
+-	 * so we have to store the done function pointer elsewhere.
+-	 */
+-	done = (void (*)(struct scsi_cmnd *))
+-		(((unsigned long) Cmnd->SCp.Message)
+-#ifdef __sparc_v9__
+-		 | ((unsigned long) Cmnd->SCp.Status << 32UL)
+-#endif
+-		 );
+-
+-	if ((qpti->sbits & (1 << tgt)) == 0) {
+-		int ok = host_byte(Cmnd->result) == DID_OK;
+-		if (Cmnd->cmnd[0] == 0x12 && ok) {
+-			unsigned char *iqd;
+-			unsigned int iqd_len;
+-
+-			iqd_len = scsi_rbuf_get(Cmnd, &iqd);
+-
+-			/* tags handled in midlayer */
+-			/* enable sync mode? */
+-			if (iqd[7] & 0x10) {
+-				qpti->dev_param[tgt].device_flags |= 0x10;
+-			} else {
+-				qpti->dev_param[tgt].synchronous_offset = 0;
+-				qpti->dev_param[tgt].synchronous_period = 0;
+-			}
+-			/* are we wide capable? */
+-			if (iqd[7] & 0x20) {
+-				qpti->dev_param[tgt].device_flags |= 0x20;
+-			}
+-
+-			scsi_rbuf_put(Cmnd, iqd);
+-
+-			qpti->sbits |= (1 << tgt);
+-		} else if (!ok) {
+-			qpti->sbits |= (1 << tgt);
+-		}
+-	}
+-	done(Cmnd);
+-}
+-
+-static int qlogicpti_queuecommand(struct scsi_cmnd *Cmnd, void (*done)(struct scsi_cmnd *));
+-
+-static int qlogicpti_queuecommand_slow(struct scsi_cmnd *Cmnd,
+-				       void (*done)(struct scsi_cmnd *))
+-{
+-	struct qlogicpti *qpti = (struct qlogicpti *) Cmnd->device->host->hostdata;
+-
+-	/*
+-	 * done checking this host adapter?
+-	 * If not, then rewrite the command
+-	 * to finish through ourdone so we
+-	 * can peek at Inquiry data results.
+-	 */
+-	if (qpti->sbits && qpti->sbits != 0xffff) {
+-		/* See above about in ourdone this ugliness... */
+-		Cmnd->SCp.Message = ((unsigned long)done) & 0xffffffff;
+-#ifdef CONFIG_SPARC64
+-		Cmnd->SCp.Status = ((unsigned long)done >> 32UL) & 0xffffffff;
+-#endif
+-		return qlogicpti_queuecommand(Cmnd, ourdone);
+-	}
+-
+-	/*
+-	 * We've peeked at all targets for this bus- time
+-	 * to set parameters for devices for real now.
+-	 */
+-	if (qpti->sbits == 0xffff) {
+-		int i;
+-		for(i = 0; i < MAX_TARGETS; i++) {
+-			u_short param[6];
+-			param[0] = MBOX_SET_TARGET_PARAMS;
+-			param[1] = (i << 8);
+-			param[2] = (qpti->dev_param[i].device_flags << 8);
+-			if (qpti->dev_param[i].device_flags & 0x10) {
+-				param[3] = (qpti->dev_param[i].synchronous_offset << 8) |
+-					qpti->dev_param[i].synchronous_period;
+-			} else {
+-				param[3] = 0;
+-			}
+-			(void) qlogicpti_mbox_command(qpti, param, 0);
+-		}
+-		/*
+-		 * set to zero so any traverse through ourdone
+-		 * doesn't start the whole process again,
+-		 */
+-		qpti->sbits = 0;
+-	}
+-
+-	/* check to see if we're done with all adapters... */
+-	for (qpti = qptichain; qpti != NULL; qpti = qpti->next) {
+-		if (qpti->sbits) {
+-			break;
+-		}
+-	}
+-
+-	/*
+-	 * if we hit the end of the chain w/o finding adapters still
+-	 * capability-configuring, then we're done with all adapters
+-	 * and can rock on..
+-	 */
+-	if (qpti == NULL)
+-		Cmnd->device->host->hostt->queuecommand = qlogicpti_queuecommand;
+-
+-	return qlogicpti_queuecommand(Cmnd, done);
+-}
+-
+ /*
+  * The middle SCSI layer ensures that queuecommand never gets invoked
+  * concurrently with itself or the interrupt handler (though the
+@@ -1551,11 +1400,46 @@
+ 	return return_status;
+ }
+ 
++static int qlogicpti_slave_configure(struct scsi_device *sdev)
++{
++	struct qlogicpti *qpti = (struct qlogicpti *) sdev->host->hostdata;
++	int tgt = sdev->id;
++	u_short param[6];
++
++	/* enable sync mode? */
++	if (sdev->sdtr) {
++		qpti->dev_param[tgt].device_flags |= 0x10;
++	} else {
++		qpti->dev_param[tgt].synchronous_offset = 0;
++		qpti->dev_param[tgt].synchronous_period = 0;
++	}
++
++	/* are we wide capable? */
++	/* XXX(hch): 0x60 aka sdev->wdtr means wide capable */
++	if (sdev->inquiry[7] & 0x20)
++		qpti->dev_param[tgt].device_flags |= 0x20;
++
++	param[0] = MBOX_SET_TARGET_PARAMS;
++	param[1] = (tgt << 8);
++	param[2] = (qpti->dev_param[tgt].device_flags << 8);
++
++	if (qpti->dev_param[tgt].device_flags & 0x10) {
++		param[3] = (qpti->dev_param[tgt].synchronous_offset << 8) |
++			    qpti->dev_param[tgt].synchronous_period;
++	} else {
++		param[3] = 0;
++	}
++
++	qlogicpti_mbox_command(qpti, param, 0);
++	return 0;
++}
++
+ static struct scsi_host_template driver_template = {
+ 	.detect			= qlogicpti_detect,
+ 	.release		= qlogicpti_release,
+ 	.info			= qlogicpti_info,
+-	.queuecommand		= qlogicpti_queuecommand_slow,
++	.slave_configure	= qlogicpti_slave_configure,
++	.queuecommand		= qlogicpti_queuecommand,
+ 	.eh_abort_handler	= qlogicpti_abort,
+ 	.eh_bus_reset_handler	= qlogicpti_reset,
+ 	.can_queue		= QLOGICPTI_REQ_QUEUE_LEN,
+Index: linux-2.6/drivers/scsi/qlogicpti.h
+===================================================================
+--- linux-2.6.orig/drivers/scsi/qlogicpti.h	2005-10-17 13:52:34.000000000 +0200
++++ linux-2.6/drivers/scsi/qlogicpti.h	2005-10-17 13:53:43.000000000 +0200
+@@ -379,9 +379,7 @@
+ #define SREG_SPMASK               0x03   /* Mask for switch pack       */
+ 	unsigned char             swsreg;
+ 	unsigned int	
+-		gotirq	:	1,	/* this instance got an irq */
+-		is_pti	: 	1,	/* Non-zero if this is a PTI board. */
+-		sbits	:	16;	/* syncmode known bits */
++		is_pti	: 	1;	/* Non-zero if this is a PTI board. */
+ };
+ 
+ /* How to twiddle them bits... */
