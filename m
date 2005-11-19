@@ -1,30 +1,81 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] libata error handling fixes (ATAPI)
-Date: Sat, 19 Nov 2005 14:27:50 +0100
-Message-ID: <20051119132750.GJ25454@suse.de>
-References: <4379B28E.9070708@gmail.com> <4379C062.3010302@pobox.com> <20051115120016.GD7787@suse.de> <437A2814.1060308@cs.wisc.edu> <20051115184131.GJ7787@suse.de> <20051116124035.GX7787@suse.de> <58cb370e0511160704w4803a085h7bd6ab352d8c94e6@mail.gmail.com> <20051116153119.GN7787@suse.de> <58cb370e0511160806t1defd373w981e213d1cdeb2b3@mail.gmail.com> <20051119105555.GA25402@infradead.org>
+From: Kilian CAVALOTTI <kilian.cavalotti@lip6.fr>
+Subject: Re: aic7xxx support for >2TB volumes?
+Date: Sat, 19 Nov 2005 15:37:28 +0100
+Message-ID: <200511191537.28489.kilian.cavalotti@lip6.fr>
+References: <200511161208.02374.kilian.cavalotti@lip6.fr> <437DECDB.3070509@us.ibm.com> <437E5E1E.2080902@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp2-g19.free.fr ([212.27.42.28]:46995 "EHLO smtp2-g19.free.fr")
+	by vger.kernel.org with ESMTP id S1751126AbVKSOh2 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Nov 2005 09:37:28 -0500
+In-Reply-To: <437E5E1E.2080902@torque.net>
 Content-Disposition: inline
-In-Reply-To: <20051119105555.GA25402@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, Nov 19 2005, Christoph Hellwig wrote:
-> On Wed, Nov 16, 2005 at 05:06:45PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > This will also allow us to remove ide_do_drive_cmd()
-> > and use blk_execute_rq() exclusively.
-> 
-> While we're talking about moving things to generic request-based stuff,
-> any chance one of you could look over to convert ide-cd internal request
-> submissions to BLOCK_PC?  It's the last user of REQ_PC.  After that changing
-> the CD layer to submit BLOCK_PC commands directly instead of the
-> ->packet_command hook would be a logical next step.
+On Saturday 19 November 2005 00:05, Douglas Gilbert wrote:
+> Perhaps Kilian could try the following patch (borrowed from
+> scsi_debug). The patch is against lk 2.6.15-rc1 but should
+> by widely applicable (unless the aic7... series really
+> does have a 12 byte limit).=20
 
-Yup, that's clearly the way to go.
+Well, I just downloaded a fresh 2.6.15-rc1 source tree from kernel.org,=
+ and,=20
+to my surprise, I can't apply your patch.
 
--- 
-Jens Axboe
+Talking about linux/drivers/scsi/aic7xxx/aic7xxx_osm.c, the only occurr=
+ence of=20
+	/* Initial Domain Validation */
 
+is at line 736, and it's preceded by:
+        if (bootverbose)
+                printf("%s: Slave Configure %d\n", ahc_name(ahc), devic=
+e->id);
+
+        dev =3D ahc_linux_get_device(ahc, device->channel, device->id,
+                                   device->lun);
+        dev->scsi_device =3D device;
+
+        ahc_linux_device_queue_depth(ahc, dev);
+
+instead of:
+	if (bootverbose)
+                sdev_printk(KERN_INFO, sdev, "Slave Configure\n");
+=20
+	ahc_linux_device_queue_depth(sdev);
+
+in your patch.
+So it seems functions have changed between your 2.6.15-rc1, and my 2.6.=
+15-rc1,=20
+unless I missed something.
+
+I nevertheless tried to apply your patch, but sdev and dev objects seem=
+s to be=20
+different, so I can't attibute host->max_cmd_len to the dev object. As =
+you=20
+probably already understood, I'm not a kernel developer, and my C knowl=
+edge=20
+is far from being sufficient to handle changes myself. :)
+
+Any hint?
+
+Thanks and regards,
+
+--=20
+Kilian CAVALOTTI                      Administrateur r=E9seaux et syst=E8=
+mes
+UPMC / CNRS - LIP6 (C870)
+8, rue du Capitaine Scott                          Tel. : 01 44 27 88 5=
+4
+75015 Paris - France                               Fax. : 01 44 27 70 0=
+0
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
