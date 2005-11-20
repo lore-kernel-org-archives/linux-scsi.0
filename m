@@ -1,123 +1,82 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: aic7xxx support for >2TB volumes?
-Date: Sun, 20 Nov 2005 11:33:44 +1000
-Message-ID: <437FD278.2080807@torque.net>
-References: <200511161208.02374.kilian.cavalotti@lip6.fr> <437E5E1E.2080902@torque.net> <437E80AA.2030400@torque.net> <200511191557.15533.kilian.cavalotti@lip6.fr>
-Reply-To: dougg@torque.net
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Myson Century USB enclosure problem
+Date: Sat, 19 Nov 2005 20:52:21 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0511192041510.23404-100000@netrider.rowland.org>
+References: <20051119205222.GA3851@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:56223 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1751083AbVKTBcp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Nov 2005 20:32:45 -0500
-In-Reply-To: <200511191557.15533.kilian.cavalotti@lip6.fr>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-users-admin@lists.sourceforge.net>
+In-Reply-To: <20051119205222.GA3851@one-eyed-alien.net>
+Sender: linux-usb-users-admin@lists.sourceforge.net
+Errors-To: linux-usb-users-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
+	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux-usb-users@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-users-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
+	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-users>
+To: Chuan-kai Lin <cklin@cs.pdx.edu>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, USB users list <linux-usb-users@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Kilian CAVALOTTI <kilian.cavalotti@lip6.fr>
-Cc: brking@us.ibm.com, linux-scsi@vger.kernel.org
 
-Kilian CAVALOTTI wrote:
-> On Saturday 19 November 2005 02:32, Douglas Gilbert wrote:
+On Sat, 19 Nov 2005, Matthew Dharm wrote:
+
+> Do you have MD or other advanced partition features turned on?  If so,
+> turning them off might help.
 > 
->>Here are the test results for that patch. They indicate
->>that the READ_CAPACITY(16) is getting to the disk (which
->>doesn't support it since its capacity is 18 GB).
-> 
-> 
-> So it seems promising. :)
-> 
-> FYI, I had reports from users who said to be able to use a >2TB external 
-> storage array (different vendor) with that same 39160 Adaptec HBA.
-> 
-> Here's part of their dmesg:
-> scsi4 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 6.2.36
->          <Adaptec 3960D Ultra160 SCSI adapter>
->          aic7899: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
-> (scsi4:A:0): 160.000MB/s transfers (80.000MHz DT, offset 62, 16bit)
->    Type:   Direct-Access                      ANSI SCSI revision: 03
-> scsi4:A:0:0: Tagged Queuing enabled.  Depth 4
-> SCSI device sdg: 2686132224 1024-byte hdwr sectors (2750599 MB)
+> Matt
 
-The READ CAPACITY (10) command can report a maximum size
-of ((2**32 - 1) * blk_size) bytes. As shown above, /dev/sdg
-is reporting a block (sector) size of 1024 rather than
-the more normal 512 bytes that most production SCSI disks
-use. With a 1024 byte block size, just under 4 TB can be
-represented before READ CAPACITY (16) is needed.
+That could well help, but it doesn't solve the underlying problem.  I've
+thought for a long time that this could bite someone, but it's the first 
+time I've seen an actual example.
 
-> SCSI device sdg: drive cache: write back
->   sdg: unknown partition table
-> Attached scsi disk sdg at scsi4, channel 0, id 0, lun 0
-> 
-> The weird part is that the driver does not even seem to invoke READ 
-> CAPACITY(16) command, but directly succeed in getting device size.
-> 
-> To sum up my experiences so far:
-> --------------------|----------------|---------------|--------------------------
-> Ext. device (>2TB)  | HBA            | Driver	     | Result			
-> --------------------|----------------|---------------|--------------------------
-> Infortrend EonStore | Adaptec 39160  | aic7xxx       | READ CAPACITY(16) fails
-> A16U-G1410          |		     |               |
-> --------------------|----------------|---------------|--------------------------
-> Infortrend EonStore | LSI Logic U320 | mptbase       | READ CAPACITY(16)
-> A16U-G1410          |		     |               | success	
-> --------------------|----------------|---------------|--------------------------
-> Proware             | Adaptec 39160  | aic7xxx       | Direct success
-> --------------------|----------------|---------------|--------------------------
-> 
-> So it seems to come from both the external device and the aic7xxx driver,since 
-> the EonStore works with another HBA, and the aic7xxx works with another 
-> device...
-> 
-> It seems quite strange to me, but I hope gurus here will have a rational 
-> explanation. :)
+When asked to read the last 8 sectors on the disk, your drive returned all
+but the last 64 bytes of data and then for some reason complained that the
+command was invalid (it wasn't).  The SCSI core retried exactly the same
+command, and the second time it succeeded.  But meanwhile the SCSI core
+thought the error message indicated that the drive prefers 6-byte
+READ/WRITE commands instead of the ususal 10-byte form.  So it switched
+over to using 6-byte commands, and from then on the drive didn't work at
+all.
 
-I rechecked my patch and its seems correct for lk 2.6.15-rc1 .
-Does 'head <kernel_src_dir>/Makefile' confirm the kernel
-source version?
+The patch below is a first step toward correcting the problem.  It makes 
+the SCSI core revert back to using the 10-byte commands when the 6-byte 
+version gets an error.  This isn't a final solution, because there's a 
+possibility it could lead to an infinite retry loop if the drive doesn't 
+like either the 6- or 10-byte command form.  But at least it's a start.
 
-It is easy to apply by hand to drivers/scsi/aic7xxx/aic7xxx_osm.c
-and drivers/scsi/aic7xxx/aic79xx_osm.c . Before the patch my
-ahc_linux_slave_configure function starts like this:
-
-static int
-ahc_linux_slave_configure(struct scsi_device *sdev)
-{
-        struct  ahc_softc *ahc;
-
-        ahc = *((struct ahc_softc **)sdev->host->hostdata);
-
-        if (bootverbose)
-                sdev_printk(KERN_INFO, sdev, "Slave Configure\n");
-
-        ahc_linux_device_queue_depth(sdev);
-.......
-
-after the patch it looks like this:
-
-static int
-ahc_linux_slave_configure(struct scsi_device *sdev)
-{
-        struct  ahc_softc *ahc;
-
-        ahc = *((struct ahc_softc **)sdev->host->hostdata);
-
-        if (bootverbose)
-                sdev_printk(KERN_INFO, sdev, "Slave Configure\n");
-
-        if (sdev->host->max_cmd_len < MAX_COMMAND_SIZE)
-                sdev->host->max_cmd_len = MAX_COMMAND_SIZE;
-
-        ahc_linux_device_queue_depth(sdev);
-.....
-
-Those two extra line can probably be added to any
-version of those drivers found in the lk 2.6 series.
-The "sdev" may need to change to the appropriate
-name.
-
-Doug Gilbert
+Alan Stern
 
 
+--- a/drivers/scsi/scsi_lib.c	Mon Nov 14 09:46:18 2005
++++ b/drivers/scsi/scsi_lib.c	Sat Nov 19 20:40:13 2005
+@@ -894,6 +894,16 @@
+ 				 */
+ 				scsi_requeue_command(q, cmd);
+ 				result = 0;
++			} else if (!cmd->device->use_10_for_rw &&
++			    (cmd->cmnd[0] == READ_6 ||
++			     cmd->cmnd[0] == WRITE_6)) {
++				cmd->device->use_10_for_rw = 1;
++				/*
++				 * This will cause a retry with a 10-byte
++				 * command.
++				 */
++				scsi_requeue_command(q, cmd);
++				result = 0;
+ 			} else {
+ 				scsi_end_request(cmd, 0, this_count, 1);
+ 				return;
+
+
+
+-------------------------------------------------------
+This SF.Net email is sponsored by the JBoss Inc.  Get Certified Today
+Register for a JBoss Training Course.  Free Certification Exam
+for All Training Attendees Through End of 2005. For more info visit:
+http://ads.osdn.com/?ad_id=7628&alloc_id=16845&op=click
+_______________________________________________
+Linux-usb-users@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-users
