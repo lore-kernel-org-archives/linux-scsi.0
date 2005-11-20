@@ -1,52 +1,37 @@
-From: Chuan-kai Lin <cklin@cs.pdx.edu>
-Subject: Re: Myson Century USB enclosure problem
-Date: Sun, 20 Nov 2005 08:17:57 +0000 (UTC)
-Message-ID: <dlpbfk$4k5$1@sea.gmane.org>
-References: <20051119205222.GA3851@one-eyed-alien.net> <Pine.LNX.4.44L0.0511192041510.23404-100000@netrider.rowland.org>
-Return-path: <linux-usb-users-admin@lists.sourceforge.net>
-Sender: linux-usb-users-admin@lists.sourceforge.net
-Errors-To: linux-usb-users-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
-	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux-usb-users@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-users-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
-	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-users>
-To: linux-usb-users@lists.sourceforge.net
-Cc: linux-scsi@vger.kernel.org
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [Linux-usb-users] Re: Myson Century USB enclosure problem
+Date: Sun, 20 Nov 2005 10:14:24 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0511201010530.15941-100000@netrider.rowland.org>
+References: <dlpbfk$4k5$1@sea.gmane.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.rowland.org ([192.131.102.7]:44043 "HELO mx1.rowland.org")
+	by vger.kernel.org with SMTP id S1751248AbVKTPO0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Nov 2005 10:14:26 -0500
+In-Reply-To: <dlpbfk$4k5$1@sea.gmane.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chuan-kai Lin <cklin@cs.pdx.edu>
+Cc: linux-usb-users@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-In gmane.linux.usb.user Alan Stern <stern@rowland.harvard.edu> wrote:
-> The patch below is a first step toward correcting the problem.  It makes 
-> the SCSI core revert back to using the 10-byte commands when the 6-byte 
-> version gets an error.  This isn't a final solution, because there's a 
-> possibility it could lead to an infinite retry loop if the drive doesn't 
-> like either the 6- or 10-byte command form.  But at least it's a start.
+On Sun, 20 Nov 2005, Chuan-kai Lin wrote:
 
-Thanks for the patch and the explanation.  I have applied the patch and
-posted the usb-storage debug output in the same directory.
+> Thanks for the patch and the explanation.  I have applied the patch and
+> posted the usb-storage debug output in the same directory.
+> 
+>   http://www.cs.pdx.edu/~cklin/usb-error/
+> 
+> The kernel still failed to read the partition table.  However, to my
+> untrained eyes, the log indicates that the SCSI core did revert back to
+> 10-byte commands, so we are making progress.
 
-  http://www.cs.pdx.edu/~cklin/usb-error/
+It did switch back, and as far as the log shows, everything is now working
+correctly.  That error message about "unable to read partition table" is
+misleading; the kernel _was_ able to read the partition table.  It just
+wasn't able to understand the contents.  You may need to run fdisk to 
+check and reinitialize the partition table.
 
-The kernel still failed to read the partition table.  However, to my
-untrained eyes, the log indicates that the SCSI core did revert back to
-10-byte commands, so we are making progress.
+Alan Stern
 
-Thanks,
-
--- 
-Chuan-kai Lin
-http://www.cs.pdx.edu/~cklin/
-
-
-
--------------------------------------------------------
-This SF.Net email is sponsored by the JBoss Inc.  Get Certified Today
-Register for a JBoss Training Course.  Free Certification Exam
-for All Training Attendees Through End of 2005. For more info visit:
-http://ads.osdn.com/?ad_id=7628&alloc_id=16845&op=click
-_______________________________________________
-Linux-usb-users@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-users
