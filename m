@@ -1,49 +1,80 @@
-From: =?ISO-8859-1?Q?=20=22S=DDSTEM?=
-	  =?ISO-8859-1?Q?=20ORGAN=DDZASYON=22?=
-	 <sistemorganizasyon@ttnet.net>
-Subject: =?ISO-8859-1?Q?=20=C7AMYUVA?= KONUTLARINI  =?ISO-8859-1?Q?=20G=D6RMEDEN?= EV ALMAYIN...
-Date: Sun, 20 Nov 2005 04:47:44 +0200
-Message-ID: <200511200247.jAK2lYiK012211@zeus2.kernel.org>
-Reply-To: sistemorganizasyon@ttnet.net
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/scsi/: small cleanups
+Date: Sun, 20 Nov 2005 03:47:17 +0100
+Message-ID: <20051120024717.GX16060@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1254
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:41364 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S1751169AbVKTCrg convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Nov 2005 21:47:36 -0500
-Received: from ommo.net (dsl.dynamic85994742.ttnet.net.tr [85.99.47.42] (may be forged))
-	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id jAK2lYiK012211
-	for <linux-scsi@vger.kernel.org>; Sat, 19 Nov 2005 18:47:35 -0800
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751161AbVKTCrU@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-mail almak istemeyenler l=FCtfen bilgi@camyuvakonutlari.com adresine bo=
-=FE bir mail g=F6nderiniz.
-
-=DCMRAN=DDYE =C7AMYUVA KONUTLARINDA 40 AYA KADAR SAB=DDT TAKS=DDTLE 122=
- M2 DA=DDRELER..D=DDLERSEN=DDZ BANKA KRED=DDS=DDNE UYGUN M=DCSTAK=DDL T=
-APULU 240 M2 DUBLEXLER,122 M2 3 ODA SALON SIFIR DA=DDRELER..=C7OCUK OYU=
-N ALANLARI,=D6ZEL G=DCVENL=DDK,
-=D6ZEL OTOPARK,SPOR ALANLARI..
-GEN=DD=DE B=DDLG=DD VE FOTO=D0RAFLAR =DD=C7=DDN www.camyuvakonutlari.co=
-m ADRES=DDNE TIKLAYAB=DDL=DDRS=DDN=DDZ..
-HAFTANIN HER G=DCN=DC =DEANT=DDYEM=DDZ=DD VE =D6RNEK DA=DDRELER=DDM=DDZ=
-=DD G=D6REB=DDL=DDRS=DDN=DDZ.
-bilgi@camyuvakonutlari.com
-Merkez Sat=FD=FE  Ofisi
-Eminali Pa=FEa Cd.117/7 Bostanc=FD-=DDSTANBUL
-0216 464 86 40
-gsm.0555 222 88 60
-Mehmet Ba=FEaran
-Sat=FD=FE Koord.
-www.camyuvakonutlari.com
+This patch contains the following cleanups:
+- make needlessly global functions static
+- every file should #include the headers containing the prototypes for
+  it's global functions
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+---
+
+ drivers/scsi/scsi_sysctl.c       |    1 +
+ drivers/scsi/scsi_sysfs.c        |    3 ++-
+ drivers/scsi/scsi_transport_fc.c |    2 +-
+ drivers/scsi/sr.c                |    2 +-
+ 4 files changed, 5 insertions(+), 3 deletions(-)
+
+--- linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_sysfs.c.old	2005-11-20 03:09:18.000000000 +0100
++++ linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_sysfs.c	2005-11-20 03:14:13.000000000 +0100
+@@ -17,6 +17,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsi_transport.h>
++#include <scsi/scsi_driver.h>
+ 
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
+@@ -720,7 +721,7 @@
+ }
+ EXPORT_SYMBOL(scsi_remove_device);
+ 
+-void __scsi_remove_target(struct scsi_target *starget)
++static void __scsi_remove_target(struct scsi_target *starget)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+ 	unsigned long flags;
+--- linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_sysctl.c.old	2005-11-20 03:10:57.000000000 +0100
++++ linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_sysctl.c	2005-11-20 03:11:08.000000000 +0100
+@@ -9,6 +9,7 @@
+ #include <linux/sysctl.h>
+ 
+ #include "scsi_logging.h"
++#include "scsi_priv.h"
+ 
+ 
+ static ctl_table scsi_table[] = {
+--- linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_transport_fc.c.old	2005-11-20 03:11:38.000000000 +0100
++++ linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_transport_fc.c	2005-11-20 03:11:50.000000000 +0100
+@@ -1274,7 +1274,7 @@
+  * Notes:
+  *	This routine assumes no locks are held on entry.
+  **/
+-struct fc_rport *
++static struct fc_rport *
+ fc_rport_create(struct Scsi_Host *shost, int channel,
+ 	struct fc_rport_identifiers  *ids)
+ {
+--- linux-2.6.15-rc1-mm2-full/drivers/scsi/sr.c.old	2005-11-20 03:18:12.000000000 +0100
++++ linux-2.6.15-rc1-mm2-full/drivers/scsi/sr.c	2005-11-20 03:18:21.000000000 +0100
+@@ -170,7 +170,7 @@
+  * an inode for that to work, and we do not always have one.
+  */
+ 
+-int sr_media_change(struct cdrom_device_info *cdi, int slot)
++static int sr_media_change(struct cdrom_device_info *cdi, int slot)
+ {
+ 	struct scsi_cd *cd = cdi->handle;
+ 	int retval;
