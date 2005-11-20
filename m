@@ -1,80 +1,45 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/: small cleanups
-Date: Sun, 20 Nov 2005 03:47:17 +0100
-Message-ID: <20051120024717.GX16060@stusta.de>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [Announce] sg3_utils-1.18 available
+Date: Sun, 20 Nov 2005 16:26:07 +1000
+Message-ID: <438016FF.2070202@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751161AbVKTCrU@vger.kernel.org>
-Content-Disposition: inline
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750746AbVKTGY6@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch contains the following cleanups:
-- make needlessly global functions static
-- every file should #include the headers containing the prototypes for
-  it's global functions
+sg3_utils is a package of command line utilities for sending
+SCSI (and some ATA) commands to devices. This package targets
+the lk 2.6 and lk 2.4 series. In the lk 2.6 series these
+utilities (except sgp_dd) can be used with any devices that
+support the SG_IO ioctl.
 
+This version adds the sg_map26 utility which maps between
+a primary scsi device node (e.g. /dev/hdc) and the
+corresponding scsi generic node (e.g. /dev/sg5) or vice
+versa. Uses major/minor numbers and sysfs (thus only works
+for the lk 2.6 series).
+sg_dd now takes iflag and oflag options similar to those
+found in recent GNU dd versions.
+"sg_inq -rr" outputs an ATA IDENTIFY response in a form
+suitable to be piped to "hdparm --Istdin" for decoding.
+See CHANGELOG for more information.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+A tarball, rpm and deb can be found at (see table 2):
+http://www.torque.net/sg
+For an overview of sg3_utils see this page:
+http://www.torque.net/sg/u_index.html
+The sg_dd utility has its own page at:
+http://www.torque.net/sg/sg_dd.html
+The SG_IO ioctl is discussed at:
+http://www.torque.net/sg/sg_io.html
+A changelog can be found at:
+http://www.torque.net/sg/p/sg3_utils.CHANGELOG
 
----
+A release announcement has been sent to freshmeat.net .
 
- drivers/scsi/scsi_sysctl.c       |    1 +
- drivers/scsi/scsi_sysfs.c        |    3 ++-
- drivers/scsi/scsi_transport_fc.c |    2 +-
- drivers/scsi/sr.c                |    2 +-
- 4 files changed, 5 insertions(+), 3 deletions(-)
-
---- linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_sysfs.c.old	2005-11-20 03:09:18.000000000 +0100
-+++ linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_sysfs.c	2005-11-20 03:14:13.000000000 +0100
-@@ -17,6 +17,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_transport.h>
-+#include <scsi/scsi_driver.h>
- 
- #include "scsi_priv.h"
- #include "scsi_logging.h"
-@@ -720,7 +721,7 @@
- }
- EXPORT_SYMBOL(scsi_remove_device);
- 
--void __scsi_remove_target(struct scsi_target *starget)
-+static void __scsi_remove_target(struct scsi_target *starget)
- {
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
- 	unsigned long flags;
---- linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_sysctl.c.old	2005-11-20 03:10:57.000000000 +0100
-+++ linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_sysctl.c	2005-11-20 03:11:08.000000000 +0100
-@@ -9,6 +9,7 @@
- #include <linux/sysctl.h>
- 
- #include "scsi_logging.h"
-+#include "scsi_priv.h"
- 
- 
- static ctl_table scsi_table[] = {
---- linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_transport_fc.c.old	2005-11-20 03:11:38.000000000 +0100
-+++ linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_transport_fc.c	2005-11-20 03:11:50.000000000 +0100
-@@ -1274,7 +1274,7 @@
-  * Notes:
-  *	This routine assumes no locks are held on entry.
-  **/
--struct fc_rport *
-+static struct fc_rport *
- fc_rport_create(struct Scsi_Host *shost, int channel,
- 	struct fc_rport_identifiers  *ids)
- {
---- linux-2.6.15-rc1-mm2-full/drivers/scsi/sr.c.old	2005-11-20 03:18:12.000000000 +0100
-+++ linux-2.6.15-rc1-mm2-full/drivers/scsi/sr.c	2005-11-20 03:18:21.000000000 +0100
-@@ -170,7 +170,7 @@
-  * an inode for that to work, and we do not always have one.
-  */
- 
--int sr_media_change(struct cdrom_device_info *cdi, int slot)
-+static int sr_media_change(struct cdrom_device_info *cdi, int slot)
- {
- 	struct scsi_cd *cd = cdi->handle;
- 	int retval;
+Doug Gilbert
