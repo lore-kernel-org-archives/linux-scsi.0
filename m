@@ -1,82 +1,49 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Myson Century USB enclosure problem
-Date: Sat, 19 Nov 2005 20:52:21 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0511192041510.23404-100000@netrider.rowland.org>
-References: <20051119205222.GA3851@one-eyed-alien.net>
+From: =?ISO-8859-1?Q?=20=22S=DDSTEM?=
+	  =?ISO-8859-1?Q?=20ORGAN=DDZASYON=22?=
+	 <sistemorganizasyon@ttnet.net>
+Subject: =?ISO-8859-1?Q?=20=C7AMYUVA?= KONUTLARINI  =?ISO-8859-1?Q?=20G=D6RMEDEN?= EV ALMAYIN...
+Date: Sun, 20 Nov 2005 04:47:44 +0200
+Message-ID: <200511200247.jAK2lYiK012211@zeus2.kernel.org>
+Reply-To: sistemorganizasyon@ttnet.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-users-admin@lists.sourceforge.net>
-In-Reply-To: <20051119205222.GA3851@one-eyed-alien.net>
-Sender: linux-usb-users-admin@lists.sourceforge.net
-Errors-To: linux-usb-users-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
-	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux-usb-users@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-users-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
-	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-users>
-To: Chuan-kai Lin <cklin@cs.pdx.edu>
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, USB users list <linux-usb-users@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1254
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zeus2.kernel.org ([204.152.191.36]:41364 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S1751169AbVKTCrg convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Nov 2005 21:47:36 -0500
+Received: from ommo.net (dsl.dynamic85994742.ttnet.net.tr [85.99.47.42] (may be forged))
+	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id jAK2lYiK012211
+	for <linux-scsi@vger.kernel.org>; Sat, 19 Nov 2005 18:47:35 -0800
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, 19 Nov 2005, Matthew Dharm wrote:
+mail almak istemeyenler l=FCtfen bilgi@camyuvakonutlari.com adresine bo=
+=FE bir mail g=F6nderiniz.
 
-> Do you have MD or other advanced partition features turned on?  If so,
-> turning them off might help.
-> 
-> Matt
-
-That could well help, but it doesn't solve the underlying problem.  I've
-thought for a long time that this could bite someone, but it's the first 
-time I've seen an actual example.
-
-When asked to read the last 8 sectors on the disk, your drive returned all
-but the last 64 bytes of data and then for some reason complained that the
-command was invalid (it wasn't).  The SCSI core retried exactly the same
-command, and the second time it succeeded.  But meanwhile the SCSI core
-thought the error message indicated that the drive prefers 6-byte
-READ/WRITE commands instead of the ususal 10-byte form.  So it switched
-over to using 6-byte commands, and from then on the drive didn't work at
-all.
-
-The patch below is a first step toward correcting the problem.  It makes 
-the SCSI core revert back to using the 10-byte commands when the 6-byte 
-version gets an error.  This isn't a final solution, because there's a 
-possibility it could lead to an infinite retry loop if the drive doesn't 
-like either the 6- or 10-byte command form.  But at least it's a start.
-
-Alan Stern
+=DCMRAN=DDYE =C7AMYUVA KONUTLARINDA 40 AYA KADAR SAB=DDT TAKS=DDTLE 122=
+ M2 DA=DDRELER..D=DDLERSEN=DDZ BANKA KRED=DDS=DDNE UYGUN M=DCSTAK=DDL T=
+APULU 240 M2 DUBLEXLER,122 M2 3 ODA SALON SIFIR DA=DDRELER..=C7OCUK OYU=
+N ALANLARI,=D6ZEL G=DCVENL=DDK,
+=D6ZEL OTOPARK,SPOR ALANLARI..
+GEN=DD=DE B=DDLG=DD VE FOTO=D0RAFLAR =DD=C7=DDN www.camyuvakonutlari.co=
+m ADRES=DDNE TIKLAYAB=DDL=DDRS=DDN=DDZ..
+HAFTANIN HER G=DCN=DC =DEANT=DDYEM=DDZ=DD VE =D6RNEK DA=DDRELER=DDM=DDZ=
+=DD G=D6REB=DDL=DDRS=DDN=DDZ.
+bilgi@camyuvakonutlari.com
+Merkez Sat=FD=FE  Ofisi
+Eminali Pa=FEa Cd.117/7 Bostanc=FD-=DDSTANBUL
+0216 464 86 40
+gsm.0555 222 88 60
+Mehmet Ba=FEaran
+Sat=FD=FE Koord.
+www.camyuvakonutlari.com
 
 
---- a/drivers/scsi/scsi_lib.c	Mon Nov 14 09:46:18 2005
-+++ b/drivers/scsi/scsi_lib.c	Sat Nov 19 20:40:13 2005
-@@ -894,6 +894,16 @@
- 				 */
- 				scsi_requeue_command(q, cmd);
- 				result = 0;
-+			} else if (!cmd->device->use_10_for_rw &&
-+			    (cmd->cmnd[0] == READ_6 ||
-+			     cmd->cmnd[0] == WRITE_6)) {
-+				cmd->device->use_10_for_rw = 1;
-+				/*
-+				 * This will cause a retry with a 10-byte
-+				 * command.
-+				 */
-+				scsi_requeue_command(q, cmd);
-+				result = 0;
- 			} else {
- 				scsi_end_request(cmd, 0, this_count, 1);
- 				return;
-
-
-
--------------------------------------------------------
-This SF.Net email is sponsored by the JBoss Inc.  Get Certified Today
-Register for a JBoss Training Course.  Free Certification Exam
-for All Training Attendees Through End of 2005. For more info visit:
-http://ads.osdn.com/?ad_id=7628&alloc_id=16845&op=click
-_______________________________________________
-Linux-usb-users@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-users
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
