@@ -1,22 +1,37 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [stable] [2.6 patch] drivers/infiniband/core/mad.c: fix a NULL pointer dereference
-Date: Sun, 20 Nov 2005 16:24:35 -0800
-Message-ID: <20051121002435.GB9749@kroah.com>
-References: <20051120230050.GB16060@stusta.de> <20051120230826.GD16060@stusta.de> <20051120231411.GF16060@stusta.de>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [ANNOUNCE] sdparm 0.96
+Date: Mon, 21 Nov 2005 11:42:30 +1000
+Message-ID: <43812606.6030803@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932148AbVKUAuH@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20051120230050.GB16060@stusta.de> <20051120230826.GD16060@stusta.de> <20051120231411.GF16060@stusta.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932164AbVKUBlV@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: rolandd@cisco.com, mshefty@ichips.intel.com, halr@voltaire.com, linux-kernel@vger.kernel.org, openib-general@openib.org, stable@kernel.org, markus.lidel@shadowconnect.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, tomfa@debian.org, kumba@gentoo.org
 List-Id: linux-scsi@vger.kernel.org
 
+sdparm is a command line utility designed to get and set
+SCSI device parameters (cf hdparm for ATA disks). Apart
+from SCSI devices (e.g. disks, tapes and enclosures) sdparm
+can be used on any device that uses a SCSI command set.
+Virtually all CD/DVD drives use the SCSI MMC set irrespective
+of the transport. sdparm also can decode VPD pages including
+the device identification page. Commands to start and stop
+the media; load and unload removable media and some other
+housekeeping functions are supported. sdparm can be used in
+both the lk 2.4 and 2.6 series.
 
-Please send these again to the stable@ address when they have been
-accepted into upstream.
+This release adds 'capacity', 'sense' and 'sync' commands.
+Change '-ll' to add explanation of some complex mode page
+field values.
 
-thanks,
+For more information and downloads see:
+http://www.torque.net/sg/sdparm.html
 
-greg k-h
+Changelog:
+http://www.torque.net/sg/p/sdparm.ChangeLog
+
+
+Doug Gilbert
