@@ -1,45 +1,54 @@
-From: Christian Joensson <christian.joensson@gmail.com>
-Subject: Re: [PATCH] kill qlogicpti inquiry sniffing
-Date: Mon, 21 Nov 2005 18:31:42 +0100
-Message-ID: <5460e3330511210931w5b0ff188o56feaeab66e41e22@mail.gmail.com>
-References: <20051017120229.GA5834@lst.de> <20051112091251.GA15402@lst.de>
-	 <20051119184447.GA29275@lst.de>
-	 <20051121080951.zmygxh5miows4wk4@webmail.ele.uri.edu>
+From: James.Smart@Emulex.Com
+Subject: RE: [2.6 patch] drivers/scsi/lpfc/lpfc_scsi.c: make lpfc_sli_get_scsi_buf() static
+Date: Mon, 21 Nov 2005 12:29:50 -0500
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C18@xbl3.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <20051121080951.zmygxh5miows4wk4@webmail.ele.uri.edu>
-Content-Disposition: inline
-Sender: sparclinux-owner@vger.kernel.org
-To: "simoneau@ele.uri.edu" <simoneau@ele.uri.edu>
-Cc: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com, davem@davemloft.net, tcallawa@redhat.com, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:62120 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S932395AbVKURhe convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Nov 2005 12:37:34 -0500
+content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bunk@stusta.de
+Cc: linux-scsi@vger.kernel.org
 
-On 11/21/05, simoneau@ele.uri.edu <simoneau@ele.uri.edu> wrote:
-> Quoting Christoph Hellwig <hch@lst.de>:
->
-> > On Sat, Nov 12, 2005 at 10:12:51AM +0100, Christoph Hellwig wrote:
-> >> On Mon, Oct 17, 2005 at 02:02:29PM +0200, Christoph Hellwig wrote:
-> >> > Inquiry sniffing is a really bad idea, and sneaking a patch in without
-> >> > talking to the scsi maintainers doesn't make it any better ;-)
-> >> >
-> >> > Could one of the sparc people please test the patch below to kill it?
-> >>
-> >> ping?
-> >
-> > ping^2.  Hey, there must be sparc users with this hardware that noticed
-> > the initial bug, could you please test this patch?
-> >
->
-> I have an SBUS qpti card which had some major problem (kernel BUG()
-> during boot
-> in the qlogicpti driver) last time when I tried 2.6.14, I can test the patch.
-> SS20MP 2xSuperSPARC here, just give me a while to compile a kernel.
+looks fine...
 
-what is the status of linux SMP kernel 2.6 and sun4m?
+-- james s
 
---
-Cheers,
-
-/ChJ
+> -----Original Message-----
+> From: Adrian Bunk [mailto:bunk@stusta.de]
+> Sent: Sunday, November 20, 2005 5:51 PM
+> To: Smart, James
+> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: [2.6 patch] drivers/scsi/lpfc/lpfc_scsi.c: make
+> lpfc_sli_get_scsi_buf() static
+> 
+> 
+> This patch makes the needlessly global function 
+> lpfc_sli_get_scsi_buf() 
+> static.
+> 
+> 
+> Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> 
+> --- 
+> linux-2.6.15-rc1-mm2-full/drivers/scsi/lpfc/lpfc_scsi.c.old	
+> 2005-11-20 19:52:28.000000000 +0100
+> +++ linux-2.6.15-rc1-mm2-full/drivers/scsi/lpfc/lpfc_scsi.c	
+> 2005-11-20 19:52:45.000000000 +0100
+> @@ -136,7 +136,7 @@
+>  	return psb;
+>  }
+>  
+> -struct  lpfc_scsi_buf*
+> +static struct lpfc_scsi_buf*
+>  lpfc_sli_get_scsi_buf(struct lpfc_hba * phba)
+>  {
+>  	struct  lpfc_scsi_buf * lpfc_cmd = NULL;
+> 
+> 
