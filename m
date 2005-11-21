@@ -1,97 +1,91 @@
-From: simoneau@ele.uri.edu
-Subject: Re: [PATCH] kill qlogicpti inquiry sniffing
-Date: Mon, 21 Nov 2005 14:21:57 -0500
-Message-ID: <20051121142157.jp5jizqls04og448@webmail.ele.uri.edu>
-References: <20051017120229.GA5834@lst.de> <20051112091251.GA15402@lst.de>
-	<20051119184447.GA29275@lst.de>
-	<20051121080951.zmygxh5miows4wk4@webmail.ele.uri.edu>
-	<5460e3330511210931w5b0ff188o56feaeab66e41e22@mail.gmail.com>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: [PATCH] SCSI tape direct i/o fixes
+Date: Mon, 21 Nov 2005 22:17:42 +0200 (EET)
+Message-ID: <Pine.LNX.4.63.0511212216110.6715@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-	boundary="=_5w5nysjse9c8";
-	protocol="application/pgp-signature";
-	micalg="pgp-sha1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from orca.ele.uri.edu ([131.128.51.63]:41366 "EHLO orca.ele.uri.edu")
-	by vger.kernel.org with ESMTP id S1750986AbVKUTWq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Nov 2005 14:22:46 -0500
-In-Reply-To: <5460e3330511210931w5b0ff188o56feaeab66e41e22@mail.gmail.com>
+Received: from fep02-0.kolumbus.fi ([193.229.0.44]:32973 "EHLO
+	fep02-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S1750777AbVKUUR1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Nov 2005 15:17:27 -0500
+Received: from kai.makisara.local ([193.229.226.47])
+          by fep02-app.kolumbus.fi with ESMTP
+          id <20051121201723.MZYJ1115.fep02-app.kolumbus.fi@kai.makisara.local>
+          for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2005 22:17:23 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christian Joensson <christian.joensson@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com, davem@davemloft.net, tcallawa@redhat.com, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This message is in MIME format and has been PGP signed.
+This patch is against 2.6.15-rc2 and fixes the following two bugs in the SCSI
+tape driver:
+- the pages dirtied by reading data to user space have not been marked dirty
+- the number of s/g segments has not always been zeroed when the page
+  pointers become invalid
 
---=_5w5nysjse9c8
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	format="flowed"
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
-
-Quoting Christian Joensson <christian.joensson@gmail.com>:
-
-> On 11/21/05, simoneau@ele.uri.edu <simoneau@ele.uri.edu> wrote:
->> Quoting Christoph Hellwig <hch@lst.de>:
->>
->> > On Sat, Nov 12, 2005 at 10:12:51AM +0100, Christoph Hellwig wrote:
->> >> On Mon, Oct 17, 2005 at 02:02:29PM +0200, Christoph Hellwig wrote:
->> >> > Inquiry sniffing is a really bad idea, and sneaking a patch in without
->> >> > talking to the scsi maintainers doesn't make it any better ;-)
->> >> >
->> >> > Could one of the sparc people please test the patch below to kill it?
->> >>
->> >> ping?
->> >
->> > ping^2.  Hey, there must be sparc users with this hardware that noticed
->> > the initial bug, could you please test this patch?
->> >
->>
->> I have an SBUS qpti card which had some major problem (kernel BUG()
->> during boot
->> in the qlogicpti driver) last time when I tried 2.6.14, I can test 
->> the patch.
->> SS20MP 2xSuperSPARC here, just give me a while to compile a kernel.
->
-> what is the status of linux SMP kernel 2.6 and sun4m?
->
-> --
-> Cheers,
->
-> /ChJ
->
-
-
-Either I did something wrong or the 2.6+sparc32 build is completely broken...
-lots of this on every module:
-
-WARNING: /lib/modules/2.6.14.2/kernel/drivers/cdrom/cdrom.ko needs unknown
-symbol div
-WARNING: /lib/modules/2.6.14.2/kernel/drivers/cdrom/cdrom.ko needs unknown
-symbol rem
-WARNING: /lib/modules/2.6.14.2/kernel/drivers/cdrom/cdrom.ko needs unknown
-symbol umul
-
-I'm using module-init-tools 3.2_pre7, gcc 3.4.4, and binutils 2.16.1 in 
-case it
-matters.
-
---=_5w5nysjse9c8
-Content-Type: application/pgp-signature
-Content-Description: PGP Digital Signature
-Content-Disposition: inline
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.2.3 (GNU/Linux)
-
-iD4DBQBDgh5VLYBaX8VDLLURAgMTAKC6KlcUHq7vmHYa0MTO/rwF5/jtXgCXf46H
-ZT4c0FkphAygnt7hBlkAYA==
-=JpOz
------END PGP SIGNATURE-----
-
---=_5w5nysjse9c8--
-
+Signed-off-by: Kai Makisara <kai.makisara@kolumbus.fi>
+---
+--- linux-2.6.15-rc2/drivers/scsi/st.c	2005-11-20 22:10:00.000000000 +0200
++++ linux-2.6.15-rc2-k1/drivers/scsi/st.c	2005-11-20 22:33:25.000000000 +0200
+@@ -17,7 +17,7 @@
+    Last modified: 18-JAN-1998 Richard Gooch <rgooch@atnf.csiro.au> Devfs support
+  */
+ 
+-static char *verstr = "20050830";
++static char *verstr = "20051120";
+ 
+ #include <linux/module.h>
+ 
+@@ -1449,14 +1449,15 @@ static int setup_buffering(struct scsi_t
+ 
+ 
+ /* Can be called more than once after each setup_buffer() */
+-static void release_buffering(struct scsi_tape *STp)
++static void release_buffering(struct scsi_tape *STp, int is_read)
+ {
+ 	struct st_buffer *STbp;
+ 
+ 	STbp = STp->buffer;
+ 	if (STbp->do_dio) {
+-		sgl_unmap_user_pages(&(STbp->sg[0]), STbp->do_dio, 0);
++		sgl_unmap_user_pages(&(STbp->sg[0]), STbp->do_dio, is_read);
+ 		STbp->do_dio = 0;
++		STbp->sg_segs = 0;
+ 	}
+ }
+ 
+@@ -1729,7 +1730,7 @@ st_write(struct file *filp, const char _
+  out:
+ 	if (SRpnt != NULL)
+ 		scsi_release_request(SRpnt);
+-	release_buffering(STp);
++	release_buffering(STp, 0);
+ 	up(&STp->lock);
+ 
+ 	return retval;
+@@ -1787,7 +1788,7 @@ static long read_tape(struct scsi_tape *
+ 	SRpnt = *aSRpnt;
+ 	SRpnt = st_do_scsi(SRpnt, STp, cmd, bytes, DMA_FROM_DEVICE,
+ 			   STp->device->timeout, MAX_RETRIES, 1);
+-	release_buffering(STp);
++	release_buffering(STp, 1);
+ 	*aSRpnt = SRpnt;
+ 	if (!SRpnt)
+ 		return STbp->syscall_result;
+@@ -2058,7 +2059,7 @@ st_read(struct file *filp, char __user *
+ 		SRpnt = NULL;
+ 	}
+ 	if (do_dio) {
+-		release_buffering(STp);
++		release_buffering(STp, 1);
+ 		STbp->buffer_bytes = 0;
+ 	}
+ 	up(&STp->lock);
+@@ -3670,6 +3671,7 @@ static void normalize_buffer(struct st_b
+ 	}
+ 	STbuffer->frp_segs = STbuffer->orig_frp_segs;
+ 	STbuffer->frp_sg_current = 0;
++	STbuffer->sg_segs = 0;
+ }
+ 
+ 
