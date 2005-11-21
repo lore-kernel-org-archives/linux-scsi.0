@@ -1,52 +1,22 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/dpt_i2o.c: fix a NULL pointer dereference
-Date: Mon, 21 Nov 2005 00:00:50 +0100
-Message-ID: <20051120230050.GB16060@stusta.de>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [stable] [2.6 patch] drivers/infiniband/core/mad.c: fix a NULL pointer dereference
+Date: Sun, 20 Nov 2005 16:24:35 -0800
+Message-ID: <20051121002435.GB9749@kroah.com>
+References: <20051120230050.GB16060@stusta.de> <20051120230826.GD16060@stusta.de> <20051120231411.GF16060@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932112AbVKTXAw@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932148AbVKUAuH@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20051120230050.GB16060@stusta.de> <20051120230826.GD16060@stusta.de> <20051120231411.GF16060@stusta.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: markus.lidel@shadowconnect.com, James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stable@kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: rolandd@cisco.com, mshefty@ichips.intel.com, halr@voltaire.com, linux-kernel@vger.kernel.org, openib-general@openib.org, stable@kernel.org, markus.lidel@shadowconnect.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The Coverity checker spotted this obvious NULL pointer dereference.
 
+Please send these again to the stable@ address when they have been
+accepted into upstream.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+thanks,
 
----
-
- drivers/scsi/dpt_i2o.c |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
---- linux-2.6.15-rc1-mm2-full/drivers/scsi/dpt_i2o.c.old	2005-11-20 22:13:37.000000000 +0100
-+++ linux-2.6.15-rc1-mm2-full/drivers/scsi/dpt_i2o.c	2005-11-20 22:16:57.000000000 +0100
-@@ -816,7 +816,7 @@
- static void adpt_i2o_sys_shutdown(void)
- {
- 	adpt_hba *pHba, *pNext;
--	struct adpt_i2o_post_wait_data *p1, *p2;
-+	struct adpt_i2o_post_wait_data *p1, *old;
- 
- 	 printk(KERN_INFO"Shutting down Adaptec I2O controllers.\n");
- 	 printk(KERN_INFO"   This could take a few minutes if there are many devices attached\n");
-@@ -830,13 +830,14 @@
- 	}
- 
- 	/* Remove any timedout entries from the wait queue.  */
--	p2 = NULL;
- //	spin_lock_irqsave(&adpt_post_wait_lock, flags);
- 	/* Nothing should be outstanding at this point so just
- 	 * free them 
- 	 */
--	for(p1 = adpt_post_wait_queue; p1; p2 = p1, p1 = p2->next) {
--		kfree(p1);
-+	for(p1 = adpt_post_wait_queue; p1;) {
-+		old = p1;
-+		p1 = p1->next;
-+		kfree(old);
- 	}
- //	spin_unlock_irqrestore(&adpt_post_wait_lock, flags);
- 	adpt_post_wait_queue = NULL;
+greg k-h
