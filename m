@@ -1,91 +1,188 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: [PATCH] SCSI tape direct i/o fixes
-Date: Mon, 21 Nov 2005 22:17:42 +0200 (EET)
-Message-ID: <Pine.LNX.4.63.0511212216110.6715@kai.makisara.local>
+From: James.Smart@Emulex.Com
+Subject: RE: [RFC] fc transport attributes for mpt fusion driver
+Date: Mon, 21 Nov 2005 16:30:24 -0500
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B60@xbl3.emulex.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep02-0.kolumbus.fi ([193.229.0.44]:32973 "EHLO
-	fep02-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S1750777AbVKUUR1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Nov 2005 15:17:27 -0500
-Received: from kai.makisara.local ([193.229.226.47])
-          by fep02-app.kolumbus.fi with ESMTP
-          id <20051121201723.MZYJ1115.fep02-app.kolumbus.fi@kai.makisara.local>
-          for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2005 22:17:23 +0200
+Received: from emulex.emulex.com ([138.239.112.1]:24523 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1750793AbVKUVac convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Nov 2005 16:30:32 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: mdr@hd29.engr.sgi.com, linux-scsi@vger.kernel.org, gwh@hd29.engr.sgi.com, jeremy@hd29.engr.sgi.com
+Cc: James.Smart@Emulex.Com
 
-This patch is against 2.6.15-rc2 and fixes the following two bugs in the SCSI
-tape driver:
-- the pages dirtied by reading data to user space have not been marked dirty
-- the number of s/g segments has not always been zeroed when the page
-  pointers become invalid
+Mike,
 
-Signed-off-by: Kai Makisara <kai.makisara@kolumbus.fi>
----
---- linux-2.6.15-rc2/drivers/scsi/st.c	2005-11-20 22:10:00.000000000 +0200
-+++ linux-2.6.15-rc2-k1/drivers/scsi/st.c	2005-11-20 22:33:25.000000000 +0200
-@@ -17,7 +17,7 @@
-    Last modified: 18-JAN-1998 Richard Gooch <rgooch@atnf.csiro.au> Devfs support
-  */
- 
--static char *verstr = "20050830";
-+static char *verstr = "20051120";
- 
- #include <linux/module.h>
- 
-@@ -1449,14 +1449,15 @@ static int setup_buffering(struct scsi_t
- 
- 
- /* Can be called more than once after each setup_buffer() */
--static void release_buffering(struct scsi_tape *STp)
-+static void release_buffering(struct scsi_tape *STp, int is_read)
- {
- 	struct st_buffer *STbp;
- 
- 	STbp = STp->buffer;
- 	if (STbp->do_dio) {
--		sgl_unmap_user_pages(&(STbp->sg[0]), STbp->do_dio, 0);
-+		sgl_unmap_user_pages(&(STbp->sg[0]), STbp->do_dio, is_read);
- 		STbp->do_dio = 0;
-+		STbp->sg_segs = 0;
- 	}
- }
- 
-@@ -1729,7 +1730,7 @@ st_write(struct file *filp, const char _
-  out:
- 	if (SRpnt != NULL)
- 		scsi_release_request(SRpnt);
--	release_buffering(STp);
-+	release_buffering(STp, 0);
- 	up(&STp->lock);
- 
- 	return retval;
-@@ -1787,7 +1788,7 @@ static long read_tape(struct scsi_tape *
- 	SRpnt = *aSRpnt;
- 	SRpnt = st_do_scsi(SRpnt, STp, cmd, bytes, DMA_FROM_DEVICE,
- 			   STp->device->timeout, MAX_RETRIES, 1);
--	release_buffering(STp);
-+	release_buffering(STp, 1);
- 	*aSRpnt = SRpnt;
- 	if (!SRpnt)
- 		return STbp->syscall_result;
-@@ -2058,7 +2059,7 @@ st_read(struct file *filp, char __user *
- 		SRpnt = NULL;
- 	}
- 	if (do_dio) {
--		release_buffering(STp);
-+		release_buffering(STp, 1);
- 		STbp->buffer_bytes = 0;
- 	}
- 	up(&STp->lock);
-@@ -3670,6 +3671,7 @@ static void normalize_buffer(struct st_b
- 	}
- 	STbuffer->frp_segs = STbuffer->orig_frp_segs;
- 	STbuffer->frp_sg_current = 0;
-+	STbuffer->sg_segs = 0;
- }
- 
- 
+comments on your RFC....
+
+-- james s
+
+
+
+> +static int mptfc_dev_loss_tmo = 60;	/* reasonable default */
+> +module_param(mptfc_dev_loss_tmo, int, 0);
+> +MODULE_PARM_DESC(mptfc_dev_loss_tmo, " Time (in seconds) the 
+> FC transport waits for a target"
+> +				     " to return following a 
+> device loss event.  Default=60.");
+> +
+
+This looks odd. See next statement
+
+> +	.get_rport_dev_loss_tmo = NULL,
+> +	.set_rport_dev_loss_tmo = NULL,
+> +	.show_rport_dev_loss_tmo = 0,
+
+So - what this does is kills the support of the rport's dev_loss_tmo
+in lieu of a load-time-settable-only driver module parameter. This is
+not a good thing from an admin perspective. What we are trying to do 
+here is make a well known transport attribute that admins/multipathing
+software know how to look for and how to change relative to their needs.
+As not all devices are equal (only some devices are multipathed), this
+needs to be settable on a per-target (aka rport) basis.
+
+Recommend:
+- It's ok to have a module parameter - as long as it's recognized as
+  "the default value for a rport at the time it's created".
+
+- You should (must) export the show_rport_dev_loss_tmo attribute.
+
+- You should (must) support the set_rport_dev_loss_tmo function.
+  This at least notifies you when the value changes. Please note that
+  it is expected that users will drop this value to as low as 1 second
+  or 10 seconds when multipath functions are operating.
+
+
+
+> +	rid->node_name = ((u64)pg0->WWNN.High) << 32 | 
+> (u64)pg0->WWNN.Low;
+> +	rid->port_name = ((u64)pg0->WWPN.High) << 32 | 
+> (u64)pg0->WWPN.Low;
+
+You be using Andrew's wwn_to_u64() function that is part of the
+transport. This is true of every case where you are referencing
+WWPN.High/Low   (only if your hardware returns the data in a
+non-line-format(BE per FC spec) layout would you not use it).
+See: http://marc.theaimsgroup.com/?l=linux-scsi&m=112510860102168&w=2
+
+
+
+> +static void
+> +mptfc_register_dev(MPT_ADAPTER *ioc, int channel, 
+> FCDevicePage0_t *pg0)
+> +{
+> +	struct fc_rport_identifiers rport_ids;
+> +	struct fc_rport		*rport;
+> +	struct mptfc_rport_info	*ri;
+> +	int			match=0;
+> +	u64			port_name;
+> +	unsigned long		flags;
+> +
+> +	if (mptfc_generate_rport_identifiers(pg0,&rport_ids) < 0)
+> +		return;
+> +
+> +	/* scan list looking for a match */
+> +	spin_lock_irqsave(&ioc->fc_rport_lock,flags);
+> +	list_for_each_entry(ri, &ioc->l.fc_rports, list) {
+> +		port_name = (u64)ri->pg0.WWPN.High << 32 | 
+> (u64)ri->pg0.WWPN.Low;
+> +		if (port_name == rport_ids.port_name) {	/* match */
+> +			list_move_tail(&ri->list,&ioc->l.fc_rports);
+> +			match = 1;
+> +			break;
+> +		}
+> +	}
+> +	if (!match) {	/* allocate one */
+> +		spin_unlock_irqrestore(&ioc->fc_rport_lock,flags);
+> +		ri = kmalloc(sizeof(struct mptfc_rport_info), 
+> GFP_KERNEL);
+> +		if (!ri)
+> +			return;
+> +		memset(ri, 0, sizeof(struct mptfc_rport_info));
+> +		spin_lock_irqsave(&ioc->fc_rport_lock,flags);
+> +		list_add_tail(&ri->list,&ioc->l.fc_rports);
+> +	}
+> +
+
+If your mptfc_rport_info struct has the same lifetime as the
+registration of the port with the transport, you may want to
+consider using the dd_data (and dd_fcrport_size) fields so that
+you can piggy back on the rport data structure allocation.
+
+> +	ri->pg0 = *pg0;	/* add/update pg0 data */
+> +	ri->flags &= ~MPT_RPORT_INFO_FLAGS_MISSING;
+> +
+> +	if (!(ri->flags & MPT_RPORT_INFO_FLAGS_REGISTERED)) {
+> +		spin_unlock_irqrestore(&ioc->fc_rport_lock,flags);
+> +		rport = fc_remote_port_add(ioc->sh,channel,&rport_ids);
+> +		spin_lock_irqsave(&ioc->fc_rport_lock,flags);
+> +		if (rport) {
+> +			if (ri->rport != rport) {
+> +				ri->flags &= 
+> ~MPT_RPORT_INFO_FLAGS_MAPPED_VDEV;
+> +				ri->vdev = NULL;
+> +				ri->rport = rport;
+> +			}
+> +			rport->dd_data = (void *)ri;
+
+I really dislike this convention, but realize it's a religion issue.
+It has the driver changing a pointer that is actually owned by the
+transport. Folks are setting the dd_fcrport_size field to 0 (meaning,
+I need no transport data on the rport), but then using the field to
+store a pointer to internal data.  However, the transport, which
+officially owns this field, may have code that simply checks for a
+non-null value before freeing it (vs qualifying it as well with the
+dd_fcrport_size field).  So, it's an argument of - if I only need a
+pointer for driver data, do I get to reuse this field, or do I make
+the transport allocate another pointer's worth of data and use the
+more generic form of dd_data being set only by the transport ?
+
+As I've leaned toward avoiding mistakes while coding in the transport,
+by the transport explicitly owning the field, I've pinged Q to use
+the more verbose method of asking for anohter pointer's worth.
+Lpfc originally needed more than a pointer's worth, but has since
+scaled down so even it uses only a pointer's worth.  I recommend you
+stay consistent with these (or let Christoph voice the rebuttle to
+this section and we'll get an official behavior ruling).
+
+
+> +int
+> +mptfc_slave_alloc(struct scsi_device *sdev)
+> +{
+> +	struct Scsi_Host	*host;
+> +	MPT_SCSI_HOST		*hd;
+> +	VirtTarget		*vtarget;
+> +	VirtDevice		*vdev;
+> +	struct scsi_target	*starget;
+> +	uint			target;
+> +	struct fc_rport		*rport;
+> +	struct mptfc_rport_info *ri;
+> +	unsigned long		flags;
+> +
+
+At this point - to be consistent with the rport block behavior,
+please call out to fc_remote_port_chkready().  See:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=112965152011520&w=2
+
+This check also needs to be added to the driver's queuecommand.
+
+> +	if (!sdev
+> +	 || !(host=sdev->host)
+> +	 || !(hd=(MPT_SCSI_HOST *)host->hostdata)
+> +	 || !(hd->ioc)
+> +	) {
+> +
+> +		return -ENODEV;
+> +	}
+
+The odds of any of these failing is near-nill, as the kernel
+leaves things built up. hd->ioc is maybe the only exception.
+
+
+
+
