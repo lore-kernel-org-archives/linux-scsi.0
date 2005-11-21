@@ -1,62 +1,98 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: aic7xxx support for >2TB volumes?
-Date: Mon, 21 Nov 2005 09:27:17 -0600
-Message-ID: <4381E755.5060607@us.ibm.com>
-References: <200511161208.02374.kilian.cavalotti@lip6.fr> <200511211109.19490.kilian.cavalotti@lip6.fr> <4381DE2B.8060509@us.ibm.com> <200511211609.47828.kilian.cavalotti@lip6.fr>
-Reply-To: brking@us.ibm.com
+From: mikem <mikem@beardog.cca.cpqcorp.net>
+Subject: Re: [PATCH 1/3] cciss: bug fix for hpacucli
+Date: Mon, 21 Nov 2005 10:46:48 -0600
+Message-ID: <20051121164648.GA7714@beardog.cca.cpqcorp.net>
+References: <20051118163357.GA10928@beardog.cca.cpqcorp.net> <20051118204946.GB25454@suse.de> <20051121082810.GV25454@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:10950 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1750786AbVKUP1T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Nov 2005 10:27:19 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e3.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id jALFRIMt016967
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2005 10:27:18 -0500
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id jALFRIZ8119432
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2005 10:27:18 -0500
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11/8.13.3) with ESMTP id jALFRHXN021115
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2005 10:27:18 -0500
-In-Reply-To: <200511211609.47828.kilian.cavalotti@lip6.fr>
+Received: from ccerelbas02.cce.hp.com ([161.114.21.105]:17126 "EHLO
+	ccerelbas02.cce.hp.com") by vger.kernel.org with ESMTP
+	id S1751037AbVKUQrC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Nov 2005 11:47:02 -0500
+Content-Disposition: inline
+In-Reply-To: <20051121082810.GV25454@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kilian CAVALOTTI <kilian.cavalotti@lip6.fr>
-Cc: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, hpa@zytor.com, sitniko@infonet.ee
 
-Kilian CAVALOTTI wrote:
-> On Monday 21 November 2005 15:48, Brian King wrote:
+On Mon, Nov 21, 2005 at 09:28:10AM +0100, Jens Axboe wrote:
+> On Fri, Nov 18 2005, Jens Axboe wrote:
+> > On Fri, Nov 18 2005, mikem wrote:
+> > > Patch 1 of 3
+> > > 
+> > > This patch fixes a bug that breaks hpacucli, a command line interface
+> > > for the HP Array Config Utility. Without this fix the utility will
+> > > not detect any controllers in the system. I thought I had already fixed
+> > > this, but I guess not.
+> > > 
+> > > Thanks to all who reported the issue. Please consider this this inclusion.
+> > 
+> > Lovely, hope this makes it able to configure my drives on the tiger now
+> > :).
 > 
->>Quite possibly. Looking at ahc_linux_run_command in aic7xxx_osm.c it
->>appears that commands with a cdb length of > 12 are sent to the adapter in
->>a different way. 
+> This sort-of makes it work. I get some complaints about unaligned access
+> when setting up a test array:
 > 
+> => controller slot=0 create type=logicaldrive drives=all raid=1 drivetype=sas
+> .hpacucli(12458): unaligned access to 0x60000fffffcb370e, ip=0x40000000003c8550
+> => controller slot=0 create type=logicaldrive drives=all raid=1 drivetype=sata
+> .hpacucli(12458): unaligned access to 0x60000fffffcb4aee, ip=0x40000000003c8550
+> .hpacucli(12458): unaligned access to 0x60000fffffcb370e, ip=0x40000000003c8550
+> .hpacucli(12458): unaligned access to 0x60000fffffcb370e, ip=0x40000000003c8550
+
+This seems to be coming out of user space. We'll work with the application
+folks to investigate. There is a library called infomanager that's used
+by the app. There may be an issue there. Call you strace the program and
+send me the results? I haven't seen this in my lab with a vendor kernel.
+
 > 
-> Do you mean: ?
->         hscb->cdb_len = cmd->cmd_len;
->         if (hscb->cdb_len <= 12) {
->                 memcpy(hscb->shared_data.cdb, cmd->cmnd, hscb->cdb_len);
->         } else {
->                 memcpy(hscb->cdb32, cmd->cmnd, hscb->cdb_len);
->                 scb->flags |= SCB_CDB32_PTR;
->         }
-
-Yes.
-
->>Perhaps this method does not work on the card you have. 
+> Invoking hpacucli again later on makes it trigger a kobj warning:
 > 
+> Badness in kref_get at lib/kref.c:32
+
+Hmmm, is this with my put_disk patch installed?
+
+mikem
+
 > 
-> Isn't there a way to determine if the HBA has an hardware limitation, or the 
-> size of the max command length it accepts?
-
-I've never seen a hardware spec for these adapters, so I can't really comment.
-Hopefully someone else on the list can help on this one...
-
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+> Call Trace:
+>  [<a000000100013560>] show_stack+0x80/0xa0
+>                                 sp=e0000001f5547b20 bsp=e0000001f5541250
+>  [<a000000100013e30>] dump_stack+0x30/0x60
+>                                 sp=e0000001f5547cf0 bsp=e0000001f5541238
+>  [<a00000010034fec0>] kref_get+0xa0/0xc0
+>                                 sp=e0000001f5547cf0 bsp=e0000001f5541218
+>  [<a00000010034e470>] kobject_get+0x30/0x60
+>                                 sp=e0000001f5547cf0 bsp=e0000001f55411f0
+>  [<a00000010034eb80>] kobject_add+0x20/0x380
+>                                 sp=e0000001f5547cf0 bsp=e0000001f55411b8
+>  [<a0000001001b7ff0>] register_disk+0x70/0x200
+>                                 sp=e0000001f5547cf0 bsp=e0000001f5541188
+>  [<a0000001003385d0>] add_disk+0x90/0xc0
+>                                 sp=e0000001f5547cf0 bsp=e0000001f5541168
+>  [<a000000202e1aa40>] rebuild_lun_table+0xaa0/0xb20 [cciss]
+>                                 sp=e0000001f5547cf0 bsp=e0000001f55410a8
+>  [<a000000202e1bbc0>] cciss_ioctl+0xa20/0x3be0 [cciss]
+>                                 sp=e0000001f5547d00 bsp=e0000001f5540fc0
+>  [<a0000001003346b0>] blkdev_driver_ioctl+0xd0/0x160
+>                                 sp=e0000001f5547e10 bsp=e0000001f5540f78
+>  [<a000000100335050>] blkdev_ioctl+0x170/0xb40
+>                                 sp=e0000001f5547e10 bsp=e0000001f5540f20
+>  [<a000000100147cc0>] block_ioctl+0x40/0x60
+>                                 sp=e0000001f5547e10 bsp=e0000001f5540ef0
+>  [<a000000100160740>] do_ioctl+0x160/0x1a0
+>                                 sp=e0000001f5547e10 bsp=e0000001f5540eb0
+>  [<a000000100160880>] vfs_ioctl+0x100/0x8e0
+>                                 sp=e0000001f5547e10 bsp=e0000001f5540e68
+>  [<a0000001001610c0>] sys_ioctl+0x60/0xc0
+>                                 sp=e0000001f5547e20 bsp=e0000001f5540de8
+>  [<a00000010000bc80>] ia64_ret_from_syscall+0x0/0x20
+>                                 sp=e0000001f5547e30 bsp=e0000001f5540de8
+>  [<a000000000010640>] __kernel_syscall_via_break+0x0/0x20
+>                                 sp=e0000001f5548000 bsp=e0000001f5540de8
+> 
+> -- 
+> Jens Axboe
+> 
