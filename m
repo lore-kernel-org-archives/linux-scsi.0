@@ -1,86 +1,172 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH 1/3] cciss: bug fix for hpacucli
-Date: Mon, 21 Nov 2005 09:28:10 +0100
-Message-ID: <20051121082810.GV25454@suse.de>
-References: <20051118163357.GA10928@beardog.cca.cpqcorp.net> <20051118204946.GB25454@suse.de>
+From: Kilian CAVALOTTI <kilian.cavalotti@lip6.fr>
+Subject: Re: aic7xxx support for >2TB volumes?
+Date: Mon, 21 Nov 2005 11:09:18 +0100
+Message-ID: <200511211109.19490.kilian.cavalotti@lip6.fr>
+References: <200511161208.02374.kilian.cavalotti@lip6.fr> <437E5E1E.2080902@torque.net> <438152BC.3060505@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:31021 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S932213AbVKUIaV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Nov 2005 03:30:21 -0500
+Received: from isis.lip6.fr ([132.227.60.2]:33765 "EHLO isis.lip6.fr")
+	by vger.kernel.org with ESMTP id S932254AbVKUKJf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Nov 2005 05:09:35 -0500
+In-Reply-To: <438152BC.3060505@us.ibm.com>
 Content-Disposition: inline
-In-Reply-To: <20051118204946.GB25454@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mikem <mikem@beardog.cca.cpqcorp.net>
-Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, hpa@zytor.com, sitniko@infonet.ee
+To: Brian King <brking@us.ibm.com>
+Cc: dougg@torque.net, linux-scsi@vger.kernel.org
 
-On Fri, Nov 18 2005, Jens Axboe wrote:
-> On Fri, Nov 18 2005, mikem wrote:
-> > Patch 1 of 3
-> > 
-> > This patch fixes a bug that breaks hpacucli, a command line interface
-> > for the HP Array Config Utility. Without this fix the utility will
-> > not detect any controllers in the system. I thought I had already fixed
-> > this, but I guess not.
-> > 
-> > Thanks to all who reported the issue. Please consider this this inclusion.
-> 
-> Lovely, hope this makes it able to configure my drives on the tiger now
-> :).
+On Monday 21 November 2005 05:53, you wrote:
+> I don't think slave_configure is the right place to be modifying
+> a scsi_host attribute. How about this patch instead? Only compile
+> tested.
 
-This sort-of makes it work. I get some complaints about unaligned access
-when setting up a test array:
+Patch applied on 2.6.15-rc2, and gives no better result:
 
-=> controller slot=0 create type=logicaldrive drives=all raid=1 drivetype=sas
-.hpacucli(12458): unaligned access to 0x60000fffffcb370e, ip=0x40000000003c8550
-=> controller slot=0 create type=logicaldrive drives=all raid=1 drivetype=sata
-.hpacucli(12458): unaligned access to 0x60000fffffcb4aee, ip=0x40000000003c8550
-.hpacucli(12458): unaligned access to 0x60000fffffcb370e, ip=0x40000000003c8550
-.hpacucli(12458): unaligned access to 0x60000fffffcb370e, ip=0x40000000003c8550
+# sg_readcap -16 -vv /dev/sdb
+    read capacity (16) cdb: 9e 10 00 00 00 00 00 00 00 00 00 00 00 20 0=
+0 00
+READ CAPACITY 16 command error: Host_status=3D0x0b [DID_SOFT_ERROR]
 
-Invoking hpacucli again later on makes it trigger a kobj warning:
+dmesg output:
+-----------------------------------------------------------------------=
+---
+ACPI: PCI Interrupt 0000:05:04.0[A] -> GSI 106 (level, low) -> IRQ 25
+scsi3 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 7.0
+        <Adaptec 3960D Ultra160 SCSI adapter>
+        aic7899: Ultra160 Wide Channel A, SCSI Id=3D7, 32/253 SCBs
 
-Badness in kref_get at lib/kref.c:32
+  Vendor: IFT       Model: A16U-G1410        Rev: 342J
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+scsi3:A:4:0: Tagged Queuing enabled.  Depth 32
+ target3:0:4: Beginning Domain Validation
+ target3:0:4: wide asynchronous.
+ target3:0:4: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 127)
+ target3:0:4: Ending Domain Validation
+sdc : very big device. try to use READ CAPACITY(16).
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 3 - Abort Tag Completed.
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 2 - Abort Tag Completed.
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 3 - Abort Tag Completed.
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 2 - Abort Tag Completed.
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 3 - Abort Tag Completed.
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 2 - Abort Tag Completed.
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 3 - Abort Tag Completed.
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 2 - Abort Tag Completed.
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 3 - Abort Tag Completed.
+sdc : READ CAPACITY(16) failed.
+sdc : status=3D0, message=3D00, host=3D7, driver=3D00
+sdc : use 0xffffffff as device size
+SCSI device sdc: 4294967296 512-byte hdwr sectors (2199023 MB)
+SCSI device sdc: drive cache: write back
+sdc : very big device. try to use READ CAPACITY(16).
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 2 - Abort Tag Completed.
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 3 - Abort Tag Completed.
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 2 - Abort Tag Completed.
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 3 - Abort Tag Completed.
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 2 - Abort Tag Completed.
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 3 - Abort Tag Completed.
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 2 - Abort Tag Completed.
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 3 - Abort Tag Completed.
+(scsi3:A:4:0): No or incomplete CDB sent to device.
+(scsi3:A:4:0): Protocol violation in Message-in phase.  Attempting to a=
+bort.
+(scsi3:A:4:0): Abort Tag Message Sent
+(scsi3:A:4:0): SCB 2 - Abort Tag Completed.
+sdc : READ CAPACITY(16) failed.
+sdc : status=3D0, message=3D00, host=3D7, driver=3D00
+sdc : use 0xffffffff as device size
+SCSI device sdc: 4294967296 512-byte hdwr sectors (2199023 MB)
+SCSI device sdc: drive cache: write back
+ sdc: sdc1
+sd 3:0:4:0: Attached scsi disk sdc
+sd 3:0:4:0: Attached scsi generic sg3 type 0
+-----------------------------------------------------------------------=
+---
 
-Call Trace:
- [<a000000100013560>] show_stack+0x80/0xa0
-                                sp=e0000001f5547b20 bsp=e0000001f5541250
- [<a000000100013e30>] dump_stack+0x30/0x60
-                                sp=e0000001f5547cf0 bsp=e0000001f5541238
- [<a00000010034fec0>] kref_get+0xa0/0xc0
-                                sp=e0000001f5547cf0 bsp=e0000001f5541218
- [<a00000010034e470>] kobject_get+0x30/0x60
-                                sp=e0000001f5547cf0 bsp=e0000001f55411f0
- [<a00000010034eb80>] kobject_add+0x20/0x380
-                                sp=e0000001f5547cf0 bsp=e0000001f55411b8
- [<a0000001001b7ff0>] register_disk+0x70/0x200
-                                sp=e0000001f5547cf0 bsp=e0000001f5541188
- [<a0000001003385d0>] add_disk+0x90/0xc0
-                                sp=e0000001f5547cf0 bsp=e0000001f5541168
- [<a000000202e1aa40>] rebuild_lun_table+0xaa0/0xb20 [cciss]
-                                sp=e0000001f5547cf0 bsp=e0000001f55410a8
- [<a000000202e1bbc0>] cciss_ioctl+0xa20/0x3be0 [cciss]
-                                sp=e0000001f5547d00 bsp=e0000001f5540fc0
- [<a0000001003346b0>] blkdev_driver_ioctl+0xd0/0x160
-                                sp=e0000001f5547e10 bsp=e0000001f5540f78
- [<a000000100335050>] blkdev_ioctl+0x170/0xb40
-                                sp=e0000001f5547e10 bsp=e0000001f5540f20
- [<a000000100147cc0>] block_ioctl+0x40/0x60
-                                sp=e0000001f5547e10 bsp=e0000001f5540ef0
- [<a000000100160740>] do_ioctl+0x160/0x1a0
-                                sp=e0000001f5547e10 bsp=e0000001f5540eb0
- [<a000000100160880>] vfs_ioctl+0x100/0x8e0
-                                sp=e0000001f5547e10 bsp=e0000001f5540e68
- [<a0000001001610c0>] sys_ioctl+0x60/0xc0
-                                sp=e0000001f5547e20 bsp=e0000001f5540de8
- [<a00000010000bc80>] ia64_ret_from_syscall+0x0/0x20
-                                sp=e0000001f5547e30 bsp=e0000001f5540de8
- [<a000000000010640>] __kernel_syscall_via_break+0x0/0x20
-                                sp=e0000001f5548000 bsp=e0000001f5540de8
+Does this mean the HBA has an hardware limit?
 
--- 
-Jens Axboe
+Thanks and regards,
 
+--=20
+Kilian CAVALOTTI                      Administrateur r=E9seaux et syst=E8=
+mes
+UPMC / CNRS - LIP6 (C870)
+8, rue du Capitaine Scott                          Tel. : 01 44 27 88 5=
+4
+75015 Paris - France                               Fax. : 01 44 27 70 0=
+0
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
