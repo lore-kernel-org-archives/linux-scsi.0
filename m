@@ -1,27 +1,60 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [sym2] Re: Problem with 2.6.14 and up...
-Date: Wed, 23 Nov 2005 07:35:08 -0700
-Message-ID: <20051123143508.GT1598@parisc-linux.org>
-References: <20051123134327.GS1598@parisc-linux.org>
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: kobject_register needs return value checks (was: What protection
+	does sysfs_readdir have with SMP/Preemption?)
+Date: Wed, 23 Nov 2005 10:24:32 -0500
+Message-ID: <1132759472.13395.65.camel@localhost.localdomain>
+References: <1132695202.13395.15.camel@localhost.localdomain>
+	 <20051122213947.GB8575@kroah.com> <20051123045049.GA22714@in.ibm.com>
+	 <Pine.LNX.4.58.0511230748000.23751@gandalf.stny.rr.com>
+	 <20051123135847.GF22714@in.ibm.com>
+	 <1132755344.13395.32.camel@localhost.localdomain>
+	 <1132755654.13395.37.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:54926 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1750837AbVKWOfJ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Nov 2005 09:35:09 -0500
-Content-Disposition: inline
-In-Reply-To: <20051123134327.GS1598@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751002AbVKWPY5@vger.kernel.org>
+In-Reply-To: <1132755654.13395.37.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: maneesh@in.ibm.com
+Cc: Thibaut VARENE <varenet@parisc-linux.org>, linux-scsi@vger.kernel.org, linuxraid@amcc.com, Matt Tolentino <matthew.e.tolentino@intel.com>, len.brown@intel.com, Ingo Molnar <mingo@elte.hu>, LKML <linux-kernel@vger.kernel.org>, Greg KH <greg@kroah.com>
 List-Id: linux-scsi@vger.kernel.org
-To: jsanchez@todounix.homeip.net
-Cc: linux-scsi@vger.kernel.org
 
-On Wed, Nov 23, 2005 at 06:43:27AM -0700, Matthew Wilcox wrote:
-> 2. Can you try a later kernel?  If you have git, you can pull from
->    git://git.kernel.org/pub/scm/linux/kernel/git/willy/sym2.git
->    otherwise http://www.parisc-linux.org/~willy/sym2-2.2.2.diff applies
->    to a 2.6.15-rc1 kernel.
+I'm doing some tests to see what happens on a failure of setting up
+something in the sysfs, and I've discovered a few areas that don't test
+the return value of kobject_register. The test was due to a memory
+problem in a custom kernel that showed that sysfs didn't quite handle
+the error cases well.
 
-I also noticed that akpm put out 2.6.15-rc2-mm1 today which includes the
-sym2 patches, so you could try that instead.
+I did the following command:
+
+find .  -name "*.c" ! -type d  | xargs grep  "kobject_register"
+
+I found 27 hits. Of these:
+
+14 - checked the return value.
+1 - reference in .mod.c file /* ignore it */
+3 - in comments /* ignore it */
+1 - declaration of actual function /* ignore it */
+1 - EXPORT_SYMBOL /* ignore it */
+1 - inside a printk quote. /* ignore it */
+
+and ...
+
+6 - calls without checking return values.
+
+Here are the culprits:
+
+./drivers/acpi/scan.c:  kobject_register(&device->kobj);
+./drivers/firmware/efivars.c:   kobject_register(&new_efivar->kobj);
+./drivers/md/md.c:      kobject_register(&mddev->kobj);
+./drivers/parisc/pdc_stable.c:          kobject_register(&entry->kobj);
+./fs/partitions/check.c:        kobject_register(&p->kobj);
+./kernel/params.c:      kobject_register(&mk->kobj);
+
+
+Normally, these would not return errors, but in case they do, the kernel
+should be robust enough to handle it.
+
+I tried to CC all the maintainers of the above files.
+
+-- Steve
