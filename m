@@ -1,69 +1,51 @@
-From: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
-Subject: Optimize scsi_cmnd initialization and bug fix
-Date: Wed, 23 Nov 2005 14:50:00 -0800
-Message-ID: <200511232250.jANMo0g20086@unix-os.sc.intel.com>
+From: =?iso-8859-1?q?Jos=E9_Luis_S=E1nchez?=
+	<jsanchez@todounix.homeip.net>
+Subject: Re: [sym2] Re: Problem with 2.6.14 and up...
+Date: Thu, 24 Nov 2005 00:13:17 +0100
+Message-ID: <200511240013.17352.jsanchez@todounix.homeip.net>
+References: <20051123134327.GS1598@parisc-linux.org> <20051123143508.GT1598@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmr21.intel.com ([143.183.121.13]:20192 "EHLO
-	scsfmr001.sc.intel.com") by vger.kernel.org with ESMTP
-	id S932350AbVKWWuC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Nov 2005 17:50:02 -0500
+Received: from 81-202-88-178.user.ono.com ([81.202.88.178]:14012 "EHLO
+	mafalda.lcv") by vger.kernel.org with ESMTP id S1030495AbVKWXNa convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Nov 2005 18:13:30 -0500
+In-Reply-To: <20051123143508.GT1598@parisc-linux.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: 'James Bottomley' <James.Bottomley@SteelEye.com>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-struct scsi_cmnd is a fairly large data structure and is used
-to construct scsi command.  On x86-64 arch, it is 448 bytes.  
+El Mi=E9rcoles, 23 de Noviembre de 2005 15:35, Matthew Wilcox escribi=F3=
+:
+> On Wed, Nov 23, 2005 at 06:43:27AM -0700, Matthew Wilcox wrote:
+> > 2. Can you try a later kernel?  If you have git, you can pull from
+> >    git://git.kernel.org/pub/scm/linux/kernel/git/willy/sym2.git
+> >    otherwise http://www.parisc-linux.org/~willy/sym2-2.2.2.diff app=
+lies
+> >    to a 2.6.15-rc1 kernel.
+>
+> I also noticed that akpm put out 2.6.15-rc2-mm1 today which includes =
+the
+> sym2 patches, so you could try that instead.
 
-In scsi_get_command(), it is a bit too paranoid in zeroing the
-data structure.  Since most of the member variables will be
-initialized in various stage of I/O submission, i.e., in
-scsi_prep_fn, scsi_init_io, sd_init_command, scsi_init_cmd_errh,
-etc.  So instead of blindly zeroing the whole structure, initialize
-to some other value later on.  All it needs in scsi_get_command
-is to zero out a few member variables that aren't initialized in
-the I/O path.
+Well, I have probed the Linux kernels from 2.6.11 to 2.6.14, without us=
+ing the=20
+NVidia display driver, only DRM and agpgart drivers. The problem appear=
+s at=20
+2.6.14, from 2.6.11 to 2.6.13 all works well. Now, I guess what is a pr=
+oblem=20
+related to the SCSI layer and not to the sym53c8xx_2 driver (2.6.14 don=
+'t=20
+have any patch to the sym2 driver).
 
-I'm proposing the following patch to optimize scsi_cmnd initialization.
-The only part that I'm not 100% sure is struct scsi_pointer SCp and
-eh_eflags.  It appears to be safe, but since I don't have every scsi
-controllers in the world to test, I can't say so for sure.  I'm willing
-to take on the responsibility to fix any hiccup people might have with
-this patch.  Comments?
-
-p.s. de-referencing jiffies_at_alloc ought be in the if(cmd!=NULL) block.
-
-
-Signed-off-by: Ken Chen <kenneth.w.chen@intel.com>
-
---- ./drivers/scsi/scsi.c.orig	2005-11-23 13:04:46.607198199 -0800
-+++ ./drivers/scsi/scsi.c	2005-11-23 13:05:38.154072568 -0800
-@@ -258,17 +258,18 @@ struct scsi_cmnd *scsi_get_command(struc
- 	if (likely(cmd != NULL)) {
- 		unsigned long flags;
- 
--		memset(cmd, 0, sizeof(*cmd));
-+		cmd->cmd_len = 0;
-+		cmd->sc_request = 0;
-+		cmd->retries = 0;
- 		cmd->device = dev;
- 		init_timer(&cmd->eh_timeout);
--		INIT_LIST_HEAD(&cmd->list);
- 		spin_lock_irqsave(&dev->list_lock, flags);
- 		list_add_tail(&cmd->list, &dev->cmd_list);
- 		spin_unlock_irqrestore(&dev->list_lock, flags);
-+		cmd->jiffies_at_alloc = jiffies;
- 	} else
- 		put_device(&dev->sdev_gendev);
- 
--	cmd->jiffies_at_alloc = jiffies;
- 	return cmd;
- }				
- EXPORT_SYMBOL(scsi_get_command);
-
-
-
+Thanks for your help and patience. :)
+Jose Luis
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
