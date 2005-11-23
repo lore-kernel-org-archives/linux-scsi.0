@@ -1,37 +1,56 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [sym2] Re: Problem with 2.6.14 and up...
-Date: Wed, 23 Nov 2005 09:52:43 -0700
-Message-ID: <20051123165243.GW1598@parisc-linux.org>
-References: <20051123134327.GS1598@parisc-linux.org> <200511231656.23288.jsanchez@todounix.homeip.net>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [patch] drivers/scsi/dpt_i2o.c: fix a NULL pointer dereference
+Date: Wed, 23 Nov 2005 23:34:52 +0100
+Message-ID: <20051123223452.GB3963@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:44262 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S932078AbVKWQwo
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Nov 2005 11:52:44 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030433AbVKWWfh@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200511231656.23288.jsanchez@todounix.homeip.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Cc: markus.lidel@shadowconnect.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Salyzyn <mark_salyzyn@adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jos? Luis S?nchez <jsanchez@todounix.homeip.net>
-Cc: linux-scsi@vger.kernel.org
 
-On Wed, Nov 23, 2005 at 04:56:22PM +0100, Jos? Luis S?nchez wrote:
-> > 4. Can you try the sym2 driver in 2.4.32?  You'll have to say Y to
-> >    "SYM53C8XX Version 2 SCSI support".
-> 
-> I'm sorry, but that's my fault. The driver used is SYM53C88XX_2, not the 
-> ncr53C8xx. In 2.6 kernel isn't possible to select the NCR driver from 'make 
-> menuconfig'.
+The Coverity checker spotted this obvious NULL pointer dereference.
 
-Right.  We made the ncr53c8xx driver responsible only for 53c720 chips
-in 2.6.  What I was hoping you could try was the SYM53C88XX_2 driver in
-2.4.
 
-> nvidia: module license 'NVIDIA' taints kernel.
-> NVRM: loading NVIDIA Linux x86 NVIDIA Kernel Module  1.0-7676  Fri Jul 29 12:58:54 PDT 2005
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Acked-by: Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-mmm.  can you try to reproduce the problem without having the Nvidia
-module loaded?
+---
 
+This patch was already sent on:
+- 21 Nov 2005
+
+ drivers/scsi/dpt_i2o.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+--- linux-2.6.15-rc1-mm2-full/drivers/scsi/dpt_i2o.c.old	2005-11-20 22:13:37.000000000 +0100
++++ linux-2.6.15-rc1-mm2-full/drivers/scsi/dpt_i2o.c	2005-11-20 22:16:57.000000000 +0100
+@@ -816,7 +816,7 @@
+ static void adpt_i2o_sys_shutdown(void)
+ {
+ 	adpt_hba *pHba, *pNext;
+-	struct adpt_i2o_post_wait_data *p1, *p2;
++	struct adpt_i2o_post_wait_data *p1, *old;
+ 
+ 	 printk(KERN_INFO"Shutting down Adaptec I2O controllers.\n");
+ 	 printk(KERN_INFO"   This could take a few minutes if there are many devices attached\n");
+@@ -830,13 +830,14 @@
+ 	}
+ 
+ 	/* Remove any timedout entries from the wait queue.  */
+-	p2 = NULL;
+ //	spin_lock_irqsave(&adpt_post_wait_lock, flags);
+ 	/* Nothing should be outstanding at this point so just
+ 	 * free them 
+ 	 */
+-	for(p1 = adpt_post_wait_queue; p1; p2 = p1, p1 = p2->next) {
+-		kfree(p1);
++	for(p1 = adpt_post_wait_queue; p1;) {
++		old = p1;
++		p1 = p1->next;
++		kfree(old);
+ 	}
+ //	spin_unlock_irqrestore(&adpt_post_wait_lock, flags);
+ 	adpt_post_wait_queue = NULL;
