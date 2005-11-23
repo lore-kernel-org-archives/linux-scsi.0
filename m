@@ -1,51 +1,112 @@
-From: =?iso-8859-1?q?Jos=E9_Luis_S=E1nchez?=
-	<jsanchez@todounix.homeip.net>
-Subject: Re: [sym2] Re: Problem with 2.6.14 and up...
-Date: Thu, 24 Nov 2005 00:13:17 +0100
-Message-ID: <200511240013.17352.jsanchez@todounix.homeip.net>
-References: <20051123134327.GS1598@parisc-linux.org> <20051123143508.GT1598@parisc-linux.org>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: Fw: [Bugme-new] [Bug 5566] New: scsi_eh_x/scsi_wq_x "zombie" processes in kernel 2.6.13+
+Date: Wed, 23 Nov 2005 15:47:52 -0800
+Message-ID: <20051123234752.GV2976@andrew-vasquezs-powerbook-g4-15.local>
+References: <20051111020619.5a73ad37.akpm@osdl.org> <20051111164111.GB458@andrew-vasquezs-powerbook-g4-15.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 81-202-88-178.user.ono.com ([81.202.88.178]:14012 "EHLO
-	mafalda.lcv") by vger.kernel.org with ESMTP id S1030495AbVKWXNa convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Nov 2005 18:13:30 -0500
-In-Reply-To: <20051123143508.GT1598@parisc-linux.org>
+Received: from pat.qlogic.com ([198.70.193.2]:1860 "EHLO avexch01.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751337AbVKWXsg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Nov 2005 18:48:36 -0500
 Content-Disposition: inline
+In-Reply-To: <20051111164111.GB458@andrew-vasquezs-powerbook-g4-15.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
+Cc: Andrew Morton <akpm@osdl.org>, James Smart <james.smart@emulex.com>
 
-El Mi=E9rcoles, 23 de Noviembre de 2005 15:35, Matthew Wilcox escribi=F3=
-:
-> On Wed, Nov 23, 2005 at 06:43:27AM -0700, Matthew Wilcox wrote:
-> > 2. Can you try a later kernel?  If you have git, you can pull from
-> >    git://git.kernel.org/pub/scm/linux/kernel/git/willy/sym2.git
-> >    otherwise http://www.parisc-linux.org/~willy/sym2-2.2.2.diff app=
-lies
-> >    to a 2.6.15-rc1 kernel.
->
-> I also noticed that akpm put out 2.6.15-rc2-mm1 today which includes =
-the
-> sym2 patches, so you could try that instead.
+On Fri, 11 Nov 2005, Andrew Vasquez wrote:
 
-Well, I have probed the Linux kernels from 2.6.11 to 2.6.14, without us=
-ing the=20
-NVidia display driver, only DRM and agpgart drivers. The problem appear=
-s at=20
-2.6.14, from 2.6.11 to 2.6.13 all works well. Now, I guess what is a pr=
-oblem=20
-related to the SCSI layer and not to the sym53c8xx_2 driver (2.6.14 don=
-'t=20
-have any patch to the sym2 driver).
+> On Fri, 11 Nov 2005, Andrew Morton wrote:
+> 
+> > Begin forwarded message:
+> > 
+> > Date: Mon, 7 Nov 2005 14:49:17 -0800
+> > From: bugme-daemon@bugzilla.kernel.org
+> > To: bugme-new@lists.osdl.org
+> > Subject: [Bugme-new] [Bug 5566] New: scsi_eh_x/scsi_wq_x "zombie" processes in kernel 2.6.13+
+> > 
+> > 
+> > http://bugzilla.kernel.org/show_bug.cgi?id=5566
+> > 
+> >            Summary: scsi_eh_x/scsi_wq_x "zombie" processes in kernel 2.6.13+
+> >     Kernel Version: 2.6.13+
+> >             Status: NEW
+> >           Severity: normal
+> >              Owner: andrew.vasquez@qlogic.com
+> >          Submitter: gator@cs.tu-berlin.de
+> > 
+> > 
+> > Most recent kernel where this bug did not occur: 2.6.12
+> > Starting around kernel version 2.6.13, the scsi_eh_x and scsi_wq_x
+> > processes that are created per scsi host will not terminate if the
+> > driver for the scsi interface is removed. I don't know whether there
+> > are any serious problems involved with this, but one thing that is
+> > definitely annoying, is that the process list fills very quickly when
+> > modules are loaded/unloaded on demand, because 2 new processes will
+> > be created every time the driver for a scsi adapter gets loaded.
+> > 
+> > (I guess, this happens with all scsi host modules - in my case, the
+> > "culprit" is a qlogic fibre channel driver that gets loaded only when
+> > needed.)
+> 
+> Seems there appear to be some reference-counting problems here, as the
+> task trace:
 
-Thanks for your help and patience. :)
-Jose Luis
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+There's definitely some ref-count problems with all fc_rport aware
+drivers.  Basically, an rport->dev is not being torn-down completely
+during fc_rport_terminate().  Unfortunately though, I'm going
+cross-eyed following the acquisition/release model of the rport->dev
+(so please be patient)...
+
+After adding some (less than impressive) debugging codes to follow the
+rport-dev tear-down process, I note that after the
+transport_destroy_device() call in fc_rport_terminate(), the
+rport->dev still maintains a single ref -- the patch below 'fixes' the
+problem (and tear-down occurs as it should).  But, I'd still like to
+understand 'why' it's needed...
+
+During creation (fc_rport_create()), a reference to rport->dev is
+taken during device_init(), another during transport_setup_device(),
+two addition refs during device_add(), and another during
+transport_add_device(). [side note: refcount is 5].
+
+Several addition refs (4 to be exact) are acquired during
+instantiation of the relevant scsi_target (and support) objects.
+
+Now during teardown, the proper number of refs are released during
+scsi_remove_target() (via fc_rport_tgt_remove()).  Tear-down continues
+with transport_remove_device() [refcount is now 4], then device_del()
+[refcount is now 2], and finally transport_destory_device() [refcount
+is now 1].
+
+At this point the rport is dropped from its peer list, and the
+shost_gendev reference (acquired during fc_rport_create()) is dropped.
+Unfortunately, rport->dev is still left dangling.
+
+I've skimmed through similar transport-class tear-down code for some
+hints, but am still left wondering why...
+
+James B., James S. -- any ideas.  I know I must be missing something
+basic -- please set me straight...
+
+Thanks,
+AV
+
+---
+
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 6cd5931..d9f17fe 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -1570,6 +1570,8 @@ fc_rport_terminate(struct fc_rport  *rpo
+ 	list_del(&rport->peers);
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 	put_device(&shost->shost_gendev);
++
++	put_device(dev);
+ }
+ 
+ /**
