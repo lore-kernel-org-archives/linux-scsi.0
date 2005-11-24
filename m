@@ -1,112 +1,91 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: Fw: [Bugme-new] [Bug 5566] New: scsi_eh_x/scsi_wq_x "zombie" processes in kernel 2.6.13+
-Date: Wed, 23 Nov 2005 15:47:52 -0800
-Message-ID: <20051123234752.GV2976@andrew-vasquezs-powerbook-g4-15.local>
-References: <20051111020619.5a73ad37.akpm@osdl.org> <20051111164111.GB458@andrew-vasquezs-powerbook-g4-15.local>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH 1/2] libata: Remove dependence on host_set->dev for SAS
+Date: Thu, 24 Nov 2005 10:53:33 +1000
+Message-ID: <43850F0D.7040907@torque.net>
+References: <4341A91A.3020000@us.ibm.com> <434251E0.9060000@pobox.com>	 <58cb370e0510040322q1cb7a13bjfc6c7875140d20a9@mail.gmail.com> <58cb370e0510041356h780e7a5aifda0c232f677471e@mail.gmail.com> <43443E99.4090008@pobox.com> <435D5D83.1060201@us.ibm.com> <435D5DE5.7010306@us.ibm.com> <435E7105.4010105@pobox.com> <435E87E8.9010506@us.ibm.com> <435E8AC7.1080407@pobox.com> <435EB656.1040502@adaptec.com> <4360FAC1.8020409@us.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:1860 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751337AbVKWXsg (ORCPT
+Received: from zorg.st.net.au ([203.16.233.9]:50364 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1030550AbVKXAwa (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Nov 2005 18:48:36 -0500
-Content-Disposition: inline
-In-Reply-To: <20051111164111.GB458@andrew-vasquezs-powerbook-g4-15.local>
+	Wed, 23 Nov 2005 19:52:30 -0500
+In-Reply-To: <4360FAC1.8020409@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
-Cc: Andrew Morton <akpm@osdl.org>, James Smart <james.smart@emulex.com>
+To: brking@us.ibm.com
+Cc: Luben Tuikov <luben_tuikov@adaptec.com>, Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, t.schorpp@gmx.de
 
-On Fri, 11 Nov 2005, Andrew Vasquez wrote:
-
-> On Fri, 11 Nov 2005, Andrew Morton wrote:
+Brian King wrote:
+> Luben Tuikov wrote:
 > 
-> > Begin forwarded message:
-> > 
-> > Date: Mon, 7 Nov 2005 14:49:17 -0800
-> > From: bugme-daemon@bugzilla.kernel.org
-> > To: bugme-new@lists.osdl.org
-> > Subject: [Bugme-new] [Bug 5566] New: scsi_eh_x/scsi_wq_x "zombie" processes in kernel 2.6.13+
-> > 
-> > 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=5566
-> > 
-> >            Summary: scsi_eh_x/scsi_wq_x "zombie" processes in kernel 2.6.13+
-> >     Kernel Version: 2.6.13+
-> >             Status: NEW
-> >           Severity: normal
-> >              Owner: andrew.vasquez@qlogic.com
-> >          Submitter: gator@cs.tu-berlin.de
-> > 
-> > 
-> > Most recent kernel where this bug did not occur: 2.6.12
-> > Starting around kernel version 2.6.13, the scsi_eh_x and scsi_wq_x
-> > processes that are created per scsi host will not terminate if the
-> > driver for the scsi interface is removed. I don't know whether there
-> > are any serious problems involved with this, but one thing that is
-> > definitely annoying, is that the process list fills very quickly when
-> > modules are loaded/unloaded on demand, because 2 new processes will
-> > be created every time the driver for a scsi adapter gets loaded.
-> > 
-> > (I guess, this happens with all scsi host modules - in my case, the
-> > "culprit" is a qlogic fibre channel driver that gets loaded only when
-> > needed.)
+>>Would it be a good idea to abstract most of this in
+>>say something like 
+>>
+>>	struct satl_device_struct {
+>>		-- data... ;
+>>		
+>>		/* The registering entity calls this for SATL to translate
+>>		   to an ATA task(s) and execute. Filled in by the SATL Layer. */
+>>		int (*execute_scsi_task)(struct satl_device_struct *, struct scsi_cmnd *);
+>>		
+>>		/* SATL layer calls this to send an ata_task to the device.
+>>		   Filled in by the registering entity. */
+>>		int (*execute_ata_task)(struct satl_device_struct *, struct ata_task *);
+>>
+>>		-- recovery methods common to SATA-over-anything; filled in by registering
+>>			\ entity
+>>	};
+>>
+>>(ata task to be properly constructed: FIS, sg lists, etc.)
+>>
+>>Then libata-scsi would only have to export two (2) functions:
+>>
+>>int  satl_register_device(struct satl_device_struct *);
+>>void satl_unregister_device(struct satl_device_struct *);
+>>
+>>EXPORT_SYMBOL_GPL(satl_register_device);
+>>EXPORT_SYMBOL_GPL(satl_unregister_device);
 > 
-> Seems there appear to be some reference-counting problems here, as the
-> task trace:
+> 
+> Where would you be calling satl_register_device in your SAS class?
+> 
+> It looks like this would force libata to be the one to attach the ULD,
+> which would also force it to create a separate scsi_host for each
+> device, which is something I wanted to avoid. I think you really need a
+> libata API that the LLDD can call from its queuecommand function
+> to translate and send a command, which then calls back into the LLDD
+> to send the FIS to the hardware. This allows for all SAS/SATA devices
+> under the same HBA to show up under the same scsi_host.
 
-There's definitely some ref-count problems with all fc_rport aware
-drivers.  Basically, an rport->dev is not being torn-down completely
-during fc_rport_terminate().  Unfortunately though, I'm going
-cross-eyed following the acquisition/release model of the rport->dev
-(so please be patient)...
+Brian,
+I don't think a SATL is that easy. One SCSI command can
+translate into zero or more ATA commands. If it translates
+to multiple commands, then there is the possibility of an
+error prior to the last in the sequence of ATA commands
+(how to report; rollback needed ?). The SATL needs to hold
+state and needs a service thread if it is to support the
+IMMED bit on some commands (e.g. START STOP UNIT).
 
-After adding some (less than impressive) debugging codes to follow the
-rport-dev tear-down process, I note that after the
-transport_destroy_device() call in fc_rport_terminate(), the
-rport->dev still maintains a single ref -- the patch below 'fixes' the
-problem (and tear-down occurs as it should).  But, I'd still like to
-understand 'why' it's needed...
+libata still has a ways to go to catch up to SAT rev 7
+but has made some good progress lately with the addition
+of the ATA pass through commands (lk 2.6.15-rc1 and onward).
+smartmontools (just prior to 5.34) now works with '-d ata'
+on libata-connected SATA disks. The '-d ata' ** overrides
+the guess of a SCSI disk based on the device node (e.g.
+/dev/sda) and uses the HDIO_DRIVE_CMD and HDIO_DRIVE_TASK
+ioctls. The absence of support for the HDIO_DRIVE_TASKFILE
+ioctl means that "selective" self-test can't be done.
+I'm not sure if moving smartmontools to the ATA PASS THROUGH
+SCSI commands will win back the "selective" self-test
+capability. Anyway, going to those ATA PASS THROUGH SCSI
+commands seems the correct way to go for smartmontools.
 
-During creation (fc_rport_create()), a reference to rport->dev is
-taken during device_init(), another during transport_setup_device(),
-two addition refs during device_add(), and another during
-transport_add_device(). [side note: refcount is 5].
 
-Several addition refs (4 to be exact) are acquired during
-instantiation of the relevant scsi_target (and support) objects.
+** smartmontools has some magic in the device detection
+area for 3ware controllers, which amounts to a proprietary
+ATA command pass through (plus some device addressing).
 
-Now during teardown, the proper number of refs are released during
-scsi_remove_target() (via fc_rport_tgt_remove()).  Tear-down continues
-with transport_remove_device() [refcount is now 4], then device_del()
-[refcount is now 2], and finally transport_destory_device() [refcount
-is now 1].
-
-At this point the rport is dropped from its peer list, and the
-shost_gendev reference (acquired during fc_rport_create()) is dropped.
-Unfortunately, rport->dev is still left dangling.
-
-I've skimmed through similar transport-class tear-down code for some
-hints, but am still left wondering why...
-
-James B., James S. -- any ideas.  I know I must be missing something
-basic -- please set me straight...
-
-Thanks,
-AV
-
----
-
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 6cd5931..d9f17fe 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -1570,6 +1570,8 @@ fc_rport_terminate(struct fc_rport  *rpo
- 	list_del(&rport->peers);
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 	put_device(&shost->shost_gendev);
-+
-+	put_device(dev);
- }
- 
- /**
+Doug Gilbert
