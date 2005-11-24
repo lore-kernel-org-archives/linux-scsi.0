@@ -1,71 +1,29 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/2] libata: Remove dependence on host_set->dev for SAS
-Date: Thu, 24 Nov 2005 09:12:04 +0100
-Message-ID: <58cb370e0511240012r64ad150eo90553b230992424e@mail.gmail.com>
-References: <4341A91A.3020000@us.ibm.com> <435D5D83.1060201@us.ibm.com>
-	 <435D5DE5.7010306@us.ibm.com> <435E7105.4010105@pobox.com>
-	 <435E87E8.9010506@us.ibm.com> <435E8AC7.1080407@pobox.com>
-	 <435EB656.1040502@adaptec.com> <4360FAC1.8020409@us.ibm.com>
-	 <43850F0D.7040907@torque.net> <43851262.7020807@pobox.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [sym2] Re: Problem with 2.6.14 and up...
+Date: Thu, 24 Nov 2005 05:28:03 -0700
+Message-ID: <20051124122803.GZ1598@parisc-linux.org>
+References: <20051123134327.GS1598@parisc-linux.org> <20051123143508.GT1598@parisc-linux.org> <200511240013.17352.jsanchez@todounix.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.196]:44902 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030618AbVKXIMG convert rfc822-to-8bit
+Received: from palinux.external.hp.com ([192.25.206.14]:61062 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S1030383AbVKXM2H
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Nov 2005 03:12:06 -0500
-Received: by nproxy.gmail.com with SMTP id l37so276656nfc
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Nov 2005 00:12:04 -0800 (PST)
-In-Reply-To: <43851262.7020807@pobox.com>
+	Thu, 24 Nov 2005 07:28:07 -0500
 Content-Disposition: inline
+In-Reply-To: <200511240013.17352.jsanchez@todounix.homeip.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: dougg@torque.net, brking@us.ibm.com, Luben Tuikov <luben_tuikov@adaptec.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, t.schorpp@gmx.de
+To: Jos? Luis S?nchez <jsanchez@todounix.homeip.net>
+Cc: linux-scsi@vger.kernel.org
 
-On 11/24/05, Jeff Garzik <jgarzik@pobox.com> wrote:
-> Douglas Gilbert wrote:
-> > I don't think a SATL is that easy. One SCSI command can
-> > translate into zero or more ATA commands. If it translates
-> > to multiple commands, then there is the possibility of an
-> > error prior to the last in the sequence of ATA commands
-> > (how to report; rollback needed ?). The SATL needs to hold
-> > state and needs a service thread if it is to support the
-> > IMMED bit on some commands (e.g. START STOP UNIT).
->
-> It needs a conceptual service thread, not necessarily an explicit one.
->
-> With REQUEST SENSE, I've demonstrated how to report errors with each
-> step in the sequence.  With demo patches I've posted, I've demonstrated
-> (using qc->private_data) how to hold state.
->
->
-> > libata still has a ways to go to catch up to SAT rev 7
-> > but has made some good progress lately with the addition
-> > of the ATA pass through commands (lk 2.6.15-rc1 and onward).
-> > smartmontools (just prior to 5.34) now works with '-d ata'
-> > on libata-connected SATA disks. The '-d ata' ** overrides
-> > the guess of a SCSI disk based on the device node (e.g.
-> > /dev/sda) and uses the HDIO_DRIVE_CMD and HDIO_DRIVE_TASK
-> > ioctls. The absence of support for the HDIO_DRIVE_TASKFILE
-> > ioctl means that "selective" self-test can't be done.
-> > I'm not sure if moving smartmontools to the ATA PASS THROUGH
-> > SCSI commands will win back the "selective" self-test
-> > capability. Anyway, going to those ATA PASS THROUGH SCSI
->
-> ATA passthru can do anything the legacy IDE ioctls can do (and more).
+On Thu, Nov 24, 2005 at 12:13:17AM +0100, Jos? Luis S?nchez wrote:
+> Well, I have probed the Linux kernels from 2.6.11 to 2.6.14, without using the 
+> NVidia display driver, only DRM and agpgart drivers. The problem appears at 
+> 2.6.14, from 2.6.11 to 2.6.13 all works well. Now, I guess what is a problem 
+> related to the SCSI layer and not to the sym53c8xx_2 driver (2.6.14 don't 
+> have any patch to the sym2 driver).
 
-[ definitely ATA passthru is the way to go but... ]
-
-discrete taskfiles?
-multi-PIO?
-setting transfer speed?
-
-and if you are talking about IDE ioctls there is (unfortunately)
-much more than HDIO_DRIVE_[CMD,TASK,TASKFILE]
-
->From extra things that it can do I see support
-for LBA48 transfers, is there anything more?
-
-Bartlomiej
+Hm.  Well, that makes me feel better.  I'd still like to find out why
+your tape drive is only negotiating 20MB/s rather than the 40MB/s it
+negotiates under Solaris though.  Did you try setting it to wide?
