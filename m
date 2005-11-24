@@ -1,43 +1,71 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: Optimize scsi_cmnd initialization and bug fix
-Date: Thu, 24 Nov 2005 09:05:46 +0100
-Message-ID: <1132819546.2832.28.camel@laptopd505.fenrus.org>
-References: <200511232250.jANMo0g20086@unix-os.sc.intel.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 1/2] libata: Remove dependence on host_set->dev for SAS
+Date: Thu, 24 Nov 2005 09:12:04 +0100
+Message-ID: <58cb370e0511240012r64ad150eo90553b230992424e@mail.gmail.com>
+References: <4341A91A.3020000@us.ibm.com> <435D5D83.1060201@us.ibm.com>
+	 <435D5DE5.7010306@us.ibm.com> <435E7105.4010105@pobox.com>
+	 <435E87E8.9010506@us.ibm.com> <435E8AC7.1080407@pobox.com>
+	 <435EB656.1040502@adaptec.com> <4360FAC1.8020409@us.ibm.com>
+	 <43850F0D.7040907@torque.net> <43851262.7020807@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:9614 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1161053AbVKXIFv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Nov 2005 03:05:51 -0500
-In-Reply-To: <200511232250.jANMo0g20086@unix-os.sc.intel.com>
+Received: from nproxy.gmail.com ([64.233.182.196]:44902 "EHLO nproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1030618AbVKXIMG convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Nov 2005 03:12:06 -0500
+Received: by nproxy.gmail.com with SMTP id l37so276656nfc
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Nov 2005 00:12:04 -0800 (PST)
+In-Reply-To: <43851262.7020807@pobox.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
-Cc: 'James Bottomley' <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: dougg@torque.net, brking@us.ibm.com, Luben Tuikov <luben_tuikov@adaptec.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, t.schorpp@gmx.de
 
-On Wed, 2005-11-23 at 14:50 -0800, Chen, Kenneth W wrote:
-> struct scsi_cmnd is a fairly large data structure and is used
-> to construct scsi command.  On x86-64 arch, it is 448 bytes.  
-> 
-> In scsi_get_command(), it is a bit too paranoid in zeroing the
-> data structure.  Since most of the member variables will be
-> initialized in various stage of I/O submission, i.e., in
-> scsi_prep_fn, scsi_init_io, sd_init_command, scsi_init_cmd_errh,
-> etc.  So instead of blindly zeroing the whole structure, initialize
-> to some other value later on.  All it needs in scsi_get_command
-> is to zero out a few member variables that aren't initialized in
-> the I/O path.
+On 11/24/05, Jeff Garzik <jgarzik@pobox.com> wrote:
+> Douglas Gilbert wrote:
+> > I don't think a SATL is that easy. One SCSI command can
+> > translate into zero or more ATA commands. If it translates
+> > to multiple commands, then there is the possibility of an
+> > error prior to the last in the sequence of ATA commands
+> > (how to report; rollback needed ?). The SATL needs to hold
+> > state and needs a service thread if it is to support the
+> > IMMED bit on some commands (e.g. START STOP UNIT).
+>
+> It needs a conceptual service thread, not necessarily an explicit one.
+>
+> With REQUEST SENSE, I've demonstrated how to report errors with each
+> step in the sequence.  With demo patches I've posted, I've demonstrated
+> (using qc->private_data) how to hold state.
+>
+>
+> > libata still has a ways to go to catch up to SAT rev 7
+> > but has made some good progress lately with the addition
+> > of the ATA pass through commands (lk 2.6.15-rc1 and onward).
+> > smartmontools (just prior to 5.34) now works with '-d ata'
+> > on libata-connected SATA disks. The '-d ata' ** overrides
+> > the guess of a SCSI disk based on the device node (e.g.
+> > /dev/sda) and uses the HDIO_DRIVE_CMD and HDIO_DRIVE_TASK
+> > ioctls. The absence of support for the HDIO_DRIVE_TASKFILE
+> > ioctl means that "selective" self-test can't be done.
+> > I'm not sure if moving smartmontools to the ATA PASS THROUGH
+> > SCSI commands will win back the "selective" self-test
+> > capability. Anyway, going to those ATA PASS THROUGH SCSI
+>
+> ATA passthru can do anything the legacy IDE ioctls can do (and more).
 
+[ definitely ATA passthru is the way to go but... ]
 
-actually I question this optimisation. memset uses the rep stosl code
-sequence, which mean that the cpu can avoid write-allocate on the
-cachelines in question, and just plain zero them in cache. If you
-initialize the parts one by one, the cpu will need to do write-allocate
-on the cachelines, and thus has double the memory bandwidth needed than
-the existing case.
+discrete taskfiles?
+multi-PIO?
+setting transfer speed?
 
-(not sure if all cpus are smart enough to avoid write allocate for rep
-stosl, but most of the newer ones are)
+and if you are talking about IDE ioctls there is (unfortunately)
+much more than HDIO_DRIVE_[CMD,TASK,TASKFILE]
 
+>From extra things that it can do I see support
+for LBA48 transfers, is there anything more?
+
+Bartlomiej
