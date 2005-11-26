@@ -1,196 +1,283 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: 2.6.15-rc2: oops after abortion of SCSI inquiry
-Date: Sat, 26 Nov 2005 11:02:08 +0100
-Message-ID: <438832A0.7000309@s5r6.in-berlin.de>
+From: Andreas Haumer <andreas@xss.co.at>
+Subject: Re: [2.4.31 + aic79xx] SCSI error: Infinite interrupt loop, INTSTAT
+ = 0
+Date: Sat, 26 Nov 2005 16:44:06 +0100
+Message-ID: <438882C6.20402@xss.co.at>
+References: <43838ECC.5060204@xss.co.at> <20051124053952.GI11266@alpha.home.local> <4385BA96.1080804@xss.co.at> <20051124232210.GB23855@alpha.home.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:2454 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1750850AbVKZKCU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 26 Nov 2005 05:02:20 -0500
+Received: from bernhard.xss.co.at ([193.80.108.69]:60393 "EHLO
+	bernhard.xss.co.at") by vger.kernel.org with ESMTP id S1422649AbVKZPoJ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 26 Nov 2005 10:44:09 -0500
+In-Reply-To: <20051124232210.GB23855@alpha.home.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+To: Willy Tarreau <willy@w.ods.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I just saw this after an inquiry timed out for an SBP-2 device. (Source 
-of sbp2scsi_abort() is quoted below the syslog.) I repeated this oops 
-also with an untainted kernel.
+Hi!
 
-When I made scsi_print_command() a no-op like this:
-void scsi_print_command(struct scsi_cmnd *cmd)
-{
-	/* Assume appended output (i.e. not at start of line) */
-//	sdev_printk("", cmd->device, "\n");
-//	printk(KERN_INFO "        command: ");
-//	scsi_print_cdb(cmd->cmnd, cmd->cmd_len, 0);
-}
-the oops is still there but with a different call trace. (Log at the end 
-of this message.)
+Yesterday the new LSI Logic hostadapters arrived. I replaced the
+Adaptec 29320 controllers with the new LSI boards and did various
+tests.
 
-The last kernel which I used before 2.6.15-rc2 was 2.6.14-git3, and this 
-did never show such an oops.
+Executive summary: with the LSI controllers everything works fine!
 
-> Nov 26 09:24:59 shuttle kernel: ieee1394: sbp2: Logged into SBP-2 device
-> Nov 26 09:24:59 shuttle kernel: ieee1394: Node 1-01:1023: Max speed [S400] - Max payload [2048]
-> Nov 26 09:25:04 shuttle kernel: ieee1394: sbp2: aborting sbp2 command
-> Nov 26 09:25:04 shuttle kernel:  2:0:0:0: 
-> Nov 26 09:25:04 shuttle kernel:         command: Inquiry: 12 00 00 00 24 00
-> Nov 26 09:25:14 shuttle kernel: ieee1394: sbp2: aborting sbp2 command
-> Nov 26 09:25:14 shuttle kernel:  2:0:0:0: 
-> Nov 26 09:25:14 shuttle kernel:         command: Test Unit Ready: 00 00 00 00 00 00
-> Nov 26 09:25:14 shuttle kernel: Unable to handle kernel NULL pointer dereference at virtual address 00000000
-> Nov 26 09:25:14 shuttle kernel:  printing eip:
-> Nov 26 09:25:14 shuttle kernel: c0110a95
-> Nov 26 09:25:14 shuttle kernel: *pde = 00000000
-> Nov 26 09:25:14 shuttle kernel: Oops: 0002 [#1]
-> Nov 26 09:25:14 shuttle kernel: PREEMPT 
-> Nov 26 09:25:14 shuttle kernel: Modules linked in: sbp2 raw1394 eth1394 ohci1394 ieee1394 sd_mod sr_mod scsi_mod nvidia nfsd exportfs lockd sunrpc snd_via82xx snd_ac97_codec snd_ac97_bus snd_pcm snd_timer snd_page_alloc snd_mpu401_uart snd_rawmidi snd lp af_packet 8139too mii loop via_agp agpgart uhci_hcd
-> Nov 26 09:25:14 shuttle kernel: CPU:    0
-> Nov 26 09:25:14 shuttle kernel: EIP:    0060:[complete+21/96]    Tainted: P      VLI
-> Nov 26 09:25:14 shuttle kernel: EIP:    0060:[<c0110a95>]    Tainted: P      VLI
-> Nov 26 09:25:14 shuttle kernel: EFLAGS: 00010002   (2.6.15-rc2) 
-> Nov 26 09:25:14 shuttle kernel: EIP is at complete+0x15/0x60
-> Nov 26 09:25:14 shuttle kernel: eax: 00000000   ebx: d6a4e000   ecx: 00000000   edx: c69d8000
-> Nov 26 09:25:14 shuttle kernel: esi: 00000296   edi: c460fcc0   ebp: d6a4fec8   esp: d6a4feac
-> Nov 26 09:25:14 shuttle kernel: ds: 007b   es: 007b   ss: 0068
-> Nov 26 09:25:14 shuttle kernel: Process scsi_eh_2 (pid: 13364, threadinfo=d6a4e000 task=d699b050)
-> Nov 26 09:25:14 shuttle kernel: Stack: c01148e7 e0e54d8d 00000286 c69d8000 cdf224a0 cdf224a0 c69d8000 c8bb1000 
-> Nov 26 09:25:14 shuttle kernel:        e0f60bb9 c460fcc0 c69d8000 00000000 00000246 e0e4b256 c460fcc0 00002002 
-> Nov 26 09:25:14 shuttle kernel:        c8bc2000 c8bc2000 00000000 d6a4fef8 d6a4fef8 00000004 00050000 c460fcc0 
-> Nov 26 09:25:14 shuttle kernel: Call Trace:
-> Nov 26 09:25:14 shuttle kernel:  [printk+23/32] printk+0x17/0x20
-> Nov 26 09:25:14 shuttle kernel:  [<c01148e7>] printk+0x17/0x20
-> Nov 26 09:25:14 shuttle kernel:  [pg0+549489593/1070228480] sbp2scsi_abort+0xc9/0xd0 [sbp2]
-> Nov 26 09:25:14 shuttle kernel:  [<e0f60bb9>] sbp2scsi_abort+0xc9/0xd0 [sbp2]
-> Nov 26 09:25:14 shuttle kernel:  [pg0+548352598/1070228480] scsi_send_eh_cmnd+0x106/0x190 [scsi_mod]
-> Nov 26 09:25:14 shuttle kernel:  [<e0e4b256>] scsi_send_eh_cmnd+0x106/0x190 [scsi_mod]
-> Nov 26 09:25:14 shuttle kernel:  [pg0+548353763/1070228480] scsi_eh_tur+0x93/0x100 [scsi_mod]
-> Nov 26 09:25:14 shuttle kernel:  [<e0e4b6e3>] scsi_eh_tur+0x93/0x100 [scsi_mod]
-> Nov 26 09:25:14 shuttle kernel:  [pg0+548354058/1070228480] scsi_eh_abort_cmds+0xba/0x100 [scsi_mod]
-> Nov 26 09:25:14 shuttle kernel:  [<e0e4b80a>] scsi_eh_abort_cmds+0xba/0x100 [scsi_mod]
-> Nov 26 09:25:14 shuttle kernel:  [pg0+548357948/1070228480] scsi_unjam_host+0xac/0x1f0 [scsi_mod]
-> Nov 26 09:25:14 shuttle kernel:  [<e0e4c73c>] scsi_unjam_host+0xac/0x1f0 [scsi_mod]
-> Nov 26 09:25:14 shuttle kernel:  [pg0+548358272/1070228480] scsi_error_handler+0x0/0x130 [scsi_mod]
-> Nov 26 09:25:14 shuttle kernel:  [<e0e4c880>] scsi_error_handler+0x0/0x130 [scsi_mod]
-> Nov 26 09:25:14 shuttle kernel:  [pg0+548358512/1070228480] scsi_error_handler+0xf0/0x130 [scsi_mod]
-> Nov 26 09:25:14 shuttle kernel:  [<e0e4c970>] scsi_error_handler+0xf0/0x130 [scsi_mod]
-> Nov 26 09:25:14 shuttle kernel:  [kthread+182/240] kthread+0xb6/0xf0
-> Nov 26 09:25:14 shuttle kernel:  [<c0129c56>] kthread+0xb6/0xf0
-> Nov 26 09:25:14 shuttle kernel:  [kthread+0/240] kthread+0x0/0xf0
-> Nov 26 09:25:14 shuttle kernel:  [<c0129ba0>] kthread+0x0/0xf0
-> Nov 26 09:25:14 shuttle kernel:  [kernel_thread_helper+5/12] kernel_thread_helper+0x5/0xc
-> Nov 26 09:25:14 shuttle kernel:  [<c0100ff9>] kernel_thread_helper+0x5/0xc
-> Nov 26 09:25:14 shuttle kernel: Code: 8b 5d f4 8b 75 f8 8b 7d fc c9 e9 b7 a9 19 00 8d b4 26 00 00 00 00 55 89 e5 56 53 83 ec 14 9c 5e fa bb 00 e0 ff ff 21 e3 ff 43 14 <ff> 00 83 c0 04 c7 44 24 10 00 00 00 00 89 04 24 c7 44 24 0c 00 
-> Nov 26 09:25:14 shuttle kernel:  <6>note: scsi_eh_2[13364] exited with preempt_count 1
-
-
-
-The abort handler's source for reference:
-
-> static int sbp2scsi_abort(struct scsi_cmnd *SCpnt)
-> {
-> 	struct scsi_id_instance_data *scsi_id =
-> 		(struct scsi_id_instance_data *)SCpnt->device->host->hostdata[0];
-> 	struct sbp2scsi_host_info *hi = scsi_id->hi;
-> 	struct sbp2_command_info *command;
+Willy Tarreau schrieb:
+> Hi Andreas,
 > 
-> 	SBP2_ERR("aborting sbp2 command");
-> 	scsi_print_command(SCpnt);
+> On Thu, Nov 24, 2005 at 02:05:26PM +0100, Andreas Haumer wrote:
 > 
-> 	if (sbp2util_node_is_available(scsi_id)) {
 > 
-> 		/*
-> 		 * Right now, just return any matching command structures
-> 		 * to the free pool.
-> 		 */
-> 		command = sbp2util_find_command_for_SCpnt(scsi_id, SCpnt);
-> 		if (command) {
-> 			SBP2_DEBUG("Found command to abort");
-> 			pci_dma_sync_single_for_cpu(hi->host->pdev,
-> 						    command->command_orb_dma,
-> 						    sizeof(struct sbp2_command_orb),
-> 						    PCI_DMA_BIDIRECTIONAL);
-> 			pci_dma_sync_single_for_cpu(hi->host->pdev,
-> 						    command->sge_dma,
-> 						    sizeof(command->scatter_gather_element),
-> 						    PCI_DMA_BIDIRECTIONAL);
-> 			sbp2util_mark_command_completed(scsi_id, command);
-> 			if (command->Current_SCpnt) {
-> 				command->Current_SCpnt->result = DID_ABORT << 16;
-> 				command->Current_done(command->Current_SCpnt);
-> 			}
-> 		}
+>>>>I've never tried an adaptec U320 yet, only a few 29160 in various servers.
+>>>
+>>I have tried the external RAID with the following controllers now:
+>>
+>>Adaptec 29160 - works fine (with the aic7xxx driver)
+>>Adaptec 29320ALP - does not work (tried with two different cards)
+>>Adaptec 29320A - does not work
 > 
-> 		/*
-> 		 * Initiate a fetch agent reset.
-> 		 */
-> 		sbp2_agent_reset(scsi_id, 0);
-> 		sbp2scsi_complete_all_commands(scsi_id, DID_BUS_BUSY);
-> 	}
 > 
-> 	return SUCCESS;
-> }
+> OK so the problem is only related to 29320 + aic79xx driver.
+> 
+It indeed looks that way.
+
+I just replaced the Adaptec 29320ALP controller with a LSI-22320
+board and all my problems are gone. No SCSI errors, no timeouts.
+
+Here's some information about my current setup:
+
+[lspci]
+00:06.0 PCI bridge: Advanced Micro Devices [AMD] AMD-8111 PCI (rev 07)
+00:07.0 ISA bridge: Advanced Micro Devices [AMD] AMD-8111 LPC (rev 05)
+00:07.1 IDE interface: Advanced Micro Devices [AMD] AMD-8111 IDE (rev 03)
+00:07.2 SMBus: Advanced Micro Devices [AMD] AMD-8111 SMBus 2.0 (rev 02)
+00:07.3 Bridge: Advanced Micro Devices [AMD] AMD-8111 ACPI (rev 05)
+00:0a.0 PCI bridge: Advanced Micro Devices [AMD] AMD-8131 PCI-X Bridge (rev 12)
+00:0a.1 PIC: Advanced Micro Devices [AMD] AMD-8131 PCI-X IOAPIC (rev 01)
+00:0b.0 PCI bridge: Advanced Micro Devices [AMD] AMD-8131 PCI-X Bridge (rev 12)
+00:0b.1 PIC: Advanced Micro Devices [AMD] AMD-8131 PCI-X IOAPIC (rev 01)
+00:18.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] HyperTransport Technology Configuration
+00:18.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Address Map
+00:18.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] DRAM Controller
+00:18.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Miscellaneous Control
+00:19.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] HyperTransport Technology Configuration
+00:19.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Address Map
+00:19.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] DRAM Controller
+00:19.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Miscellaneous Control
+01:03.0 SCSI storage controller: LSI Logic / Symbios Logic 53c1030 PCI-X Fusion-MPT Dual Ultra320 SCSI (rev 08)
+01:03.1 SCSI storage controller: LSI Logic / Symbios Logic 53c1030 PCI-X Fusion-MPT Dual Ultra320 SCSI (rev 08)
+02:06.0 SCSI storage controller: Adaptec AIC-7902B U320 (rev 10)
+02:06.1 SCSI storage controller: Adaptec AIC-7902B U320 (rev 10)
+02:09.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5704 Gigabit Ethernet (rev 03)
+02:09.1 Ethernet controller: Broadcom Corporation NetXtreme BCM5704 Gigabit Ethernet (rev 03)
+03:00.0 USB Controller: Advanced Micro Devices [AMD] AMD-8111 USB (rev 0b)
+03:00.1 USB Controller: Advanced Micro Devices [AMD] AMD-8111 USB (rev 0b)
+03:05.0 Mass storage controller: Silicon Image, Inc. SiI 3114 [SATALink/SATARaid] Serial ATA Controller (rev 02)
+03:06.0 VGA compatible controller: ATI Technologies Inc Rage XL (rev 27)
+03:08.0 Ethernet controller: Intel Corporation 82557/8/9 [Ethernet Pro 100] (rev 10)
+
+[lsmod]
+Module                  Size  Used by    Not tainted
+nfsd                   67824  16  (autoclean)
+nfs                    74072   1  (autoclean)
+lockd                  45616   1  (autoclean) [nfsd nfs]
+sunrpc                 71072   1  (autoclean) [nfsd nfs lockd]
+tg3                    59308   1  (autoclean)
+w83627hf               13144   0  (unused)
+eeprom                  3500   0  (unused)
+lm85                   17064   0  (unused)
+i2c-isa                  808   0  (unused)
+i2c-amd756              3082   0  (unused)
+i2c-proc                6052   0  [w83627hf eeprom lm85]
+i2c-core               15364   0  [w83627hf eeprom lm85 i2c-isa i2c-amd756 i2c-proc]
+processor               8528   0  (unused)
+button                  2572   0  (unused)
+keybdev                 1796   0  (unused)
+mousedev                3960   0  (unused)
+hid                    20356   0  (unused)
+input                   3584   0  [keybdev mousedev hid]
+usb-ohci               19048   0  (unused)
+usbcore                60940   0  [hid usb-ohci]
+xfs                   481764   6  (autoclean)
+ext2                   35424   1  (autoclean)
+unix                   16080  14  (autoclean)
+reiserfs              175312   6  (autoclean)
+lvm-mod                59544  34  (autoclean)
+raid1                  14360   2  (autoclean)
+md                     57856   4  (autoclean) [raid1]
+sd_mod                 11144  12  (autoclean)
+mptscsih               34640   2  (autoclean)
+mptbase                31968   3  (autoclean) [mptscsih]
+aic79xx               164220   4  (autoclean)
+scsi_mod               94932   3  (autoclean) [sd_mod mptscsih aic79xx]
+
+The aic79xx now drives the internal Maxtor SCSI disks, the
+mptscsih driver is used for the external RAID subsystem.
 
 
-Here is the same oops, now with scsi_print_command() commented to a null-op:
-
-> Nov 26 10:48:28 shuttle kernel: ieee1394: sbp2: Logged into SBP-2 device
-> Nov 26 10:48:28 shuttle kernel: ieee1394: Node 1-01:1023: Max speed [S400] - Max payload [2048]
-> Nov 26 10:48:34 shuttle kernel: ieee1394: sbp2: aborting sbp2 command
-> Nov 26 10:48:44 shuttle kernel: ieee1394: sbp2: aborting sbp2 command
-> Nov 26 10:48:44 shuttle kernel: Unable to handle kernel NULL pointer dereference at virtual address 00000000
-> Nov 26 10:48:44 shuttle kernel:  printing eip:
-> Nov 26 10:48:44 shuttle kernel: c0110a95
-> Nov 26 10:48:44 shuttle kernel: *pde = 00000000
-> Nov 26 10:48:44 shuttle kernel: Oops: 0002 [#1]
-> Nov 26 10:48:44 shuttle kernel: PREEMPT 
-> Nov 26 10:48:44 shuttle kernel: Modules linked in: sbp2 scsi_mod nvidia nfsd exportfs lockd sunrpc snd_via82xx snd_ac97_codec snd_ac97_bus snd_pcm snd_timer snd_page_alloc snd_mpu401_uart snd_rawmidi snd lp af_packet eth1394 8139too mii ohci1394 ieee1394 loop via_agp agpgart uhci_hcd
-> Nov 26 10:48:44 shuttle kernel: CPU:    0
-> Nov 26 10:48:44 shuttle kernel: EIP:    0060:[complete+21/96]    Tainted: P      VLI
-> Nov 26 10:48:44 shuttle kernel: EIP:    0060:[<c0110a95>]    Tainted: P      VLI
-> Nov 26 10:48:44 shuttle kernel: EFLAGS: 00010002   (2.6.15-rc2) 
-> Nov 26 10:48:44 shuttle kernel: EIP is at complete+0x15/0x60
-> Nov 26 10:48:44 shuttle kernel: eax: 00000000   ebx: c4382000   ecx: 00000000   edx: d5a69000
-> Nov 26 10:48:44 shuttle kernel: esi: 00000296   edi: cfbebcc0   ebp: c4383ec8   esp: c4383eac
-> Nov 26 10:48:44 shuttle kernel: ds: 007b   es: 007b   ss: 0068
-> Nov 26 10:48:44 shuttle kernel: Process scsi_eh_0 (pid: 5731, threadinfo=c4382000 task=c56a9580)
-> Nov 26 10:48:44 shuttle kernel: Stack: c0103102 cf182e60 00000286 d5a69000 cf182e60 cf182e60 d5a69000 dd3f1000 
-> Nov 26 10:48:44 shuttle kernel:        e0d46959 cfbebcc0 d5a69000 00000000 00000246 e0e651f6 cfbebcc0 00002002 
-> Nov 26 10:48:44 shuttle kernel:        c4dc9000 c4dc9000 00000000 c4383ef8 c4383ef8 00000004 00050000 cfbebcc0 
-> Nov 26 10:48:44 shuttle kernel: Call Trace:
-> Nov 26 10:48:44 shuttle kernel:  [common_interrupt+26/32] common_interrupt+0x1a/0x20
-> Nov 26 10:48:44 shuttle kernel:  [<c0103102>] common_interrupt+0x1a/0x20
-> Nov 26 10:48:44 shuttle kernel:  [pg0+547285337/1070228480] sbp2scsi_abort+0xc9/0xd0 [sbp2]
-> Nov 26 10:48:44 shuttle kernel:  [<e0d46959>] sbp2scsi_abort+0xc9/0xd0 [sbp2]
-> Nov 26 10:48:44 shuttle kernel:  [pg0+548458998/1070228480] scsi_send_eh_cmnd+0x106/0x190 [scsi_mod]
-> Nov 26 10:48:44 shuttle kernel:  [<e0e651f6>] scsi_send_eh_cmnd+0x106/0x190 [scsi_mod]
-> Nov 26 10:48:44 shuttle kernel:  [pg0+548460163/1070228480] scsi_eh_tur+0x93/0x100 [scsi_mod]
-> Nov 26 10:48:44 shuttle kernel:  [<e0e65683>] scsi_eh_tur+0x93/0x100 [scsi_mod]
-> Nov 26 10:48:44 shuttle kernel:  [pg0+548460458/1070228480] scsi_eh_abort_cmds+0xba/0x100 [scsi_mod]
-> Nov 26 10:48:44 shuttle kernel:  [<e0e657aa>] scsi_eh_abort_cmds+0xba/0x100 [scsi_mod]
-> Nov 26 10:48:44 shuttle kernel:  [pg0+548464348/1070228480] scsi_unjam_host+0xac/0x1f0 [scsi_mod]
-> Nov 26 10:48:44 shuttle kernel:  [<e0e666dc>] scsi_unjam_host+0xac/0x1f0 [scsi_mod]
-> Nov 26 10:48:44 shuttle kernel:  [pg0+548464672/1070228480] scsi_error_handler+0x0/0x130 [scsi_mod]
-> Nov 26 10:48:44 shuttle kernel:  [<e0e66820>] scsi_error_handler+0x0/0x130 [scsi_mod]
-> Nov 26 10:48:44 shuttle kernel:  [pg0+548464912/1070228480] scsi_error_handler+0xf0/0x130 [scsi_mod]
-> Nov 26 10:48:44 shuttle kernel:  [<e0e66910>] scsi_error_handler+0xf0/0x130 [scsi_mod]
-> Nov 26 10:48:44 shuttle kernel:  [kthread+182/240] kthread+0xb6/0xf0
-> Nov 26 10:48:44 shuttle kernel:  [<c0129c56>] kthread+0xb6/0xf0
-> Nov 26 10:48:44 shuttle kernel:  [kthread+0/240] kthread+0x0/0xf0
-> Nov 26 10:48:44 shuttle kernel:  [<c0129ba0>] kthread+0x0/0xf0
-> Nov 26 10:48:44 shuttle kernel:  [kernel_thread_helper+5/12] kernel_thread_helper+0x5/0xc
-> Nov 26 10:48:44 shuttle kernel:  [<c0100ff9>] kernel_thread_helper+0x5/0xc
-> Nov 26 10:48:44 shuttle kernel: Code: 8b 5d f4 8b 75 f8 8b 7d fc c9 e9 b7 a9 19 00 8d b4 26 00 00 00 00 55 89 e5 56 53 83 ec 14 9c 5e fa bb 00 e0 ff ff 21 e3 ff 43 14 <ff> 00 83 c0 04 c7 44 24 10 00 00 00 00 89 04 24 c7 44 24 0c 00 
-> Nov 26 10:48:44 shuttle kernel:  <6>note: scsi_eh_0[5731] exited with preempt_count 1
+[cat /proc/scsi/scsi]
+Attached devices:
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+  Vendor: MAXTOR   Model: ATLAS10K5_73SCA  Rev: JNZH
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi1 Channel: 00 Id: 05 Lun: 00
+  Vendor: MAXTOR   Model: ATLAS10K5_73SCA  Rev: JNZH
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi2 Channel: 00 Id: 00 Lun: 00
+  Vendor: IFT      Model: A16U-G2421       Rev: 342A
+  Type:   Direct-Access                    ANSI SCSI revision: 03
+Host: scsi2 Channel: 00 Id: 00 Lun: 01
+  Vendor: IFT      Model: A16U-G2421       Rev: 342A
+  Type:   Direct-Access                    ANSI SCSI revision: 03
 
 
-Any suggestions where I should look next?
--- 
-Stefan Richter
--=====-=-=-= =-== ==-=-
-http://arcgraph.de/sr/
+[dmesg]
+SCSI subsystem driver Revision: 1.00
+scsi0 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 1.3.10
+        <Adaptec AIC7902 Ultra320 SCSI adapter>
+        aic7902: Ultra320 Wide Channel A, SCSI Id=7, PCI-X 67-100Mhz, 512 SCBs
 
+scsi1 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 1.3.10
+        <Adaptec AIC7902 Ultra320 SCSI adapter>
+        aic7902: Ultra320 Wide Channel B, SCSI Id=7, PCI-X 67-100Mhz, 512 SCBs
+
+blk: queue f7ae9a18, I/O limit 4095Mb (mask 0xffffffff)
+(scsi0:A:0): 320.000MB/s transfers (160.000MHz DT|IU|RTI|QAS, 16bit)
+(scsi1:A:5): 320.000MB/s transfers (160.000MHz DT|IU|RTI|QAS, 16bit)
+  Vendor: MAXTOR    Model: ATLAS10K5_73SCA   Rev: JNZH
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+blk: queue f7ae9818, I/O limit 4095Mb (mask 0xffffffff)
+scsi0:A:0:0: Tagged Queuing enabled.  Depth 32
+  Vendor: MAXTOR    Model: ATLAS10K5_73SCA   Rev: JNZH
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+blk: queue f7ae9618, I/O limit 4095Mb (mask 0xffffffff)
+scsi1:A:5:0: Tagged Queuing enabled.  Depth 32
+Fusion MPT base driver 2.05.16
+Copyright (c) 1999-2004 LSI Logic Corporation
+mptbase: Initiating ioc0 bringup
+ioc0: 53C1030: Capabilities={Initiator}
+mptbase: Initiating ioc1 bringup
+ioc1: 53C1030: Capabilities={Initiator}
+mptbase: 2 MPT adapters found, 2 installed.
+Fusion MPT SCSI Host driver 2.05.16
+scsi2 : ioc0: LSI53C1030, FwRev=01030a00h, Ports=1, MaxQ=222, IRQ=28
+scsi3 : ioc1: LSI53C1030, FwRev=01030a00h, Ports=1, MaxQ=222, IRQ=29
+  Vendor: IFT       Model: A16U-G2421        Rev: 342A
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+blk: queue f7ae9018, I/O limit 4294967295Mb (mask 0xffffffffffffffff)
+  Vendor: IFT       Model: A16U-G2421        Rev: 342A
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+blk: queue f723de18, I/O limit 4294967295Mb (mask 0xffffffffffffffff)
+Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+Attached scsi disk sdb at scsi1, channel 0, id 5, lun 0
+Attached scsi disk sdc at scsi2, channel 0, id 0, lun 0
+Attached scsi disk sdd at scsi2, channel 0, id 0, lun 1
+SCSI device sda: 143666192 512-byte hdwr sectors (73557 MB)
+Partition check:
+ /dev/scsi/host0/bus0/target0/lun0: p1 p2
+SCSI device sdb: 143666192 512-byte hdwr sectors (73557 MB)
+ /dev/scsi/host1/bus0/target5/lun0: p1 p2
+SCSI device sdc: 4096000000 512-byte hdwr sectors (2097152 MB)
+ /dev/scsi/host2/bus0/target0/lun0: p1
+SCSI device sdd: 2734071808 512-byte hdwr sectors (1399845 MB)
+ /dev/scsi/host2/bus0/target0/lun1: p1
+
+
+[performance test]
+root@setup:~ {504} $ time dd if=/dev/zero of=/platten/gisdat/bigfile bs=1M count=20000
+20000+0 records in
+20000+0 records out
+
+real    1m27.764s
+user    0m0.080s
+sys     0m32.500s
+root@setup:~ {505} $ umount /platten/gisdat/
+root@setup:~ {506} $ mount /platten/gisdat/
+root@setup:~ {507} $ time dd if=/platten/gisdat/bigfile of=/dev/null bs=1M
+20000+0 records in
+20000+0 records out
+
+real    2m29.681s
+user    0m0.030s
+sys     0m31.510s
+
+This simple performance test gives a rough estimation of
+write throughput at 229MB/s and read throughput at 134MB/s
+
+This is not bad IMHO
+
+(Note: I did the umount/mount in order to clear the OS cache
+before executing the read throughput test)
+
+[...]
+>>
+>>A patch was posted by James Bottomley on October 3rd, 2004
+>>(See http://marc.theaimsgroup.com/?l=linux-scsi&m=112837144508743&w=2)
+> 
+> 
+> Interesting, I've archived it. James presented it as a workaround,
+> waiting for something cleaner, but I've not seen any followup (may
+> be I've not searched well).
+> 
+I haven't found anything, either.
+
+[...]
+>>I also have good experience with LSI Logic cards (Fusion MPT driver).
+>>Yesterday I ordered several of them, I hope I'll get them soon so I
+>>can do further tests.
+> 
+> 
+> OK, it will definitely rule out bad cables and RAID array.
+> 
+Yes, and indeed it does as everything works fine now with just the
+Adaptec controller replaced with the LSI controller. So the problem
+is with almost absolute certainty the Adaptec driver (I don't believe
+that three out of three new Adaptec controller boards show the same
+hardware defect)
+
+[...]
+> 
+> 
+> Often (in my experience), when different versions of a driver find different
+> error conditions, it is caused by timing problems. Perhaps the driver has to
+> respect some pauses on the bus that are not quite correctly respected. Have
+> you tried to lower the speed to 160 MB/s ?
+> 
+No, I haven't.
+
+But I tried to reduce the TCQ queue depth from 32 (default) to 8
+but this did not solve the problem (this was a suggestion by
+ari@www.goron.de. Thanks for your mail, Ari, but your mail address
+bounces so I couldn't send you a reply!)
+
+
+I will have this particular hardware setup available for
+testing for about two or three days (until end of next Tuesday).
+If anyone wants me to try any patches for the aic79xx driver in
+this timeframe I'm willing to do so if time permits.
+But the system will go into production by the end of next
+week and after that there is no way for me to do any further
+tests with this hardware.
+
+- - andreas
+
+- --
+Andreas Haumer                     | mailto:andreas@xss.co.at
+*x Software + Systeme              | http://www.xss.co.at/
+Karmarschgasse 51/2/20             | Tel: +43-1-6060114-0
+A-1100 Vienna, Austria             | Fax: +43-1-6060114-71
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
+
+iD8DBQFDiILCxJmyeGcXPhERAnJ6AJ9368FfWJanLvzU9Wv3Ts8L5BG2NACghI9O
+XYkHANb/iSHAM6Bx6+Oz5Jw=
+=B0RM
+-----END PGP SIGNATURE-----
