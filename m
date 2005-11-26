@@ -1,30 +1,57 @@
-From: Bernard Barnes <penitentiary@dematteo.com>
-Subject: A wide range of software applications, drivers, and more.
-Date: Sat, 26 Nov 2005 09:42:15 -0800
-Message-ID: <1126515686.455625554@DSL-TN-182.19.144.59.touchtelindia.net>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [patch] drivers/scsi/dpt_i2o.c: fix a NULL pointer dereference
+Date: Sun, 27 Nov 2005 00:36:37 +0100
+Message-ID: <20051126233637.GC3988@stusta.de>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:61150 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S932270AbVKZRmV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 26 Nov 2005 12:42:21 -0500
-Received: from DSL-TN-182.19.144.59.touchtelindia.net (DSL-TN-182.19.144.59.touchtelindia.net [59.144.19.182] (may be forged))
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id jAQHgFGe005341
-	for <linux-scsi@vger.kernel.org>; Sat, 26 Nov 2005 09:42:16 -0800
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750789AbVKZXgk@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Cc: markus.lidel@shadowconnect.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Salyzyn <mark_salyzyn@adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Get the Software you need, now!
-http://mpasr.5hbxbcagbntd5n50ann0s555.abelialm.com/?ceo
+The Coverity checker spotted this obvious NULL pointer dereference.
 
 
-Is there life before death?        
-A ruffled mind makes a restless pillow.      
-A man can do all things if he but wills them.  
-If you rest, you rust.        
-He is not great who is not greatly good.    
-Mediocrity is not allowed to poets, either by the gods or man. 
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Acked-by: Mark Salyzyn <mark_salyzyn@adaptec.com>
 
+---
 
+This patch was already sent on:
+- 23 Nov 2005
+- 21 Nov 2005
+
+ drivers/scsi/dpt_i2o.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+--- linux-2.6.15-rc1-mm2-full/drivers/scsi/dpt_i2o.c.old	2005-11-20 22:13:37.000000000 +0100
++++ linux-2.6.15-rc1-mm2-full/drivers/scsi/dpt_i2o.c	2005-11-20 22:16:57.000000000 +0100
+@@ -816,7 +816,7 @@
+ static void adpt_i2o_sys_shutdown(void)
+ {
+ 	adpt_hba *pHba, *pNext;
+-	struct adpt_i2o_post_wait_data *p1, *p2;
++	struct adpt_i2o_post_wait_data *p1, *old;
+ 
+ 	 printk(KERN_INFO"Shutting down Adaptec I2O controllers.\n");
+ 	 printk(KERN_INFO"   This could take a few minutes if there are many devices attached\n");
+@@ -830,13 +830,14 @@
+ 	}
+ 
+ 	/* Remove any timedout entries from the wait queue.  */
+-	p2 = NULL;
+ //	spin_lock_irqsave(&adpt_post_wait_lock, flags);
+ 	/* Nothing should be outstanding at this point so just
+ 	 * free them 
+ 	 */
+-	for(p1 = adpt_post_wait_queue; p1; p2 = p1, p1 = p2->next) {
+-		kfree(p1);
++	for(p1 = adpt_post_wait_queue; p1;) {
++		old = p1;
++		p1 = p1->next;
++		kfree(old);
+ 	}
+ //	spin_unlock_irqrestore(&adpt_post_wait_lock, flags);
+ 	adpt_post_wait_queue = NULL;
