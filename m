@@ -1,57 +1,45 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [patch] drivers/scsi/dpt_i2o.c: fix a NULL pointer dereference
-Date: Sun, 27 Nov 2005 00:36:37 +0100
-Message-ID: <20051126233637.GC3988@stusta.de>
+From: "Ranted O. Massed" <kasal@gerweckrealestate.net>
+Subject: Software
+Date: Sun, 27 Nov 2005 16:53:12 -0600
+Message-ID: <0169360829.20051127165312@gerweckrealestate.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750789AbVKZXgk@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Cc: markus.lidel@shadowconnect.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Salyzyn <mark_salyzyn@adaptec.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zeus2.kernel.org ([204.152.191.36]:47836 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S1750927AbVK0Iso (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 27 Nov 2005 03:48:44 -0500
+Received: from 149561904 (cust-249-195.dsl.versateladsl.be [82.174.195.249])
+	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id jAR8hs3G002651
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Nov 2005 00:48:32 -0800
+Received: from gerweckrealestate.net (150906960 [150753032])
+	by cust-249-195.dsl.versateladsl.be (Qmailv1) with ESMTP id 791F7C3CE3
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Nov 2005 16:53:12 -0600
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linux <linux-scsi@vger.kernel.org>
 
-The Coverity checker spotted this obvious NULL pointer dereference.
+Corel draw! just at best price 
+Understanding 0EM software 
 
+New software on our site:
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-Acked-by: Mark Salyzyn <mark_salyzyn@adaptec.com>
+CorelDraw Graphics Suite 11 - $59.95
+Fireworks MX 2004 - $69.95
+CorelDraw Graphics Suite 11 - $59.95
+Studio MX 2004 with Director MX 2004 - $139.95
+Visual Studio .NET Architect Edition (8CD) - $139.95
+Photoshop CS $99.95
+Visual Studio .NET Architect Edition (8CD) - $139.95
+Visio 2003 Professional - $69.95
+Project 2003 Professional - $69.95
+Works 7 - $69.95
+Illustrator CS - $69.95
+InDesign CS PageMaker Edition (2CD) - $69.95
+InDesign CS - $69.95
+Norton System Works 2003 - $59.95
 
----
+Our site:
+http://mircab929gaz54mh9mmz94m4.mothlessbh.com
 
-This patch was already sent on:
-- 23 Nov 2005
-- 21 Nov 2005
-
- drivers/scsi/dpt_i2o.c |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
---- linux-2.6.15-rc1-mm2-full/drivers/scsi/dpt_i2o.c.old	2005-11-20 22:13:37.000000000 +0100
-+++ linux-2.6.15-rc1-mm2-full/drivers/scsi/dpt_i2o.c	2005-11-20 22:16:57.000000000 +0100
-@@ -816,7 +816,7 @@
- static void adpt_i2o_sys_shutdown(void)
- {
- 	adpt_hba *pHba, *pNext;
--	struct adpt_i2o_post_wait_data *p1, *p2;
-+	struct adpt_i2o_post_wait_data *p1, *old;
- 
- 	 printk(KERN_INFO"Shutting down Adaptec I2O controllers.\n");
- 	 printk(KERN_INFO"   This could take a few minutes if there are many devices attached\n");
-@@ -830,13 +830,14 @@
- 	}
- 
- 	/* Remove any timedout entries from the wait queue.  */
--	p2 = NULL;
- //	spin_lock_irqsave(&adpt_post_wait_lock, flags);
- 	/* Nothing should be outstanding at this point so just
- 	 * free them 
- 	 */
--	for(p1 = adpt_post_wait_queue; p1; p2 = p1, p1 = p2->next) {
--		kfree(p1);
-+	for(p1 = adpt_post_wait_queue; p1;) {
-+		old = p1;
-+		p1 = p1->next;
-+		kfree(old);
- 	}
- //	spin_unlock_irqrestore(&adpt_post_wait_lock, flags);
- 	adpt_post_wait_queue = NULL;
