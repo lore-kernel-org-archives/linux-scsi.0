@@ -1,82 +1,46 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Bug#338089: New aic7xxx driver fails spectacularly on 2940UW
-Date: Mon, 28 Nov 2005 15:41:58 -0600
-Message-ID: <1133214118.3325.59.camel@mulgrave>
-References: <20051121022158.82709.qmail@web88012.mail.re2.yahoo.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Device flags: use_10_for_rw and use_10_for_ms
+Date: Mon, 28 Nov 2005 16:43:16 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0511281626460.4796-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:2517 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751311AbVK1Vmy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Nov 2005 16:42:54 -0500
-In-Reply-To: <20051121022158.82709.qmail@web88012.mail.re2.yahoo.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:37280 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP
+	id S1751311AbVK1VnS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Nov 2005 16:43:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Graham Knap <graham.knap@rogers.com>
-Cc: Horms <horms@debian.org>, Doug Ledford <dledford@redhat.com>, 338089@bugs.debian.org, linux-scsi@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Sun, 2005-11-20 at 21:21 -0500, Graham Knap wrote:
-> Sure enough, the kernel now boots. I'll attach the "dmesg" output here.
-> 
-> Do you guys have a "final" patch in mind?
-> 
-> Let me know if there are other tests you'd like me to run. Now that I
-> know how to do this, I should be able to turn around test results
-> fairly quickly.
+Patrick and James:
 
-OK, try the attached.  If it works out, I'll soak it in -mm for a while
-and then try to put it in as a bug fix for 2.6.15.
+There are a couple of problems with the implementation of the 
+use_10_for_rw and use_10_for_ms flags.
 
-James
+The easy problem is that use_10_for_rw is implemented twice: once in 
+sd.c:sd_rw_intr and once in scsi_lib.c:scsi_io_completion.  The obvious 
+fix is to remove of them.  Since scsi_io_completion is more general, it 
+makes sense to leave the code there and remove it from sd.c.
 
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
---- a/drivers/scsi/scsi_transport_spi.c
-+++ b/drivers/scsi/scsi_transport_spi.c
-@@ -812,12 +812,10 @@ spi_dv_device_internal(struct scsi_devic
- 	if (!scsi_device_sync(sdev) && !scsi_device_dt(sdev))
- 		return;
- 
--	/* see if the device has an echo buffer.  If it does we can
--	 * do the SPI pattern write tests */
--
--	len = 0;
--	if (scsi_device_dt(sdev))
--		len = spi_dv_device_get_echo_buffer(sdev, buffer);
-+	/* len == -1 is the signal that we need to ascertain the
-+	 * presence of an echo buffer before trying to use it.  len ==
-+	 * 0 means we don't have an echo buffer */
-+	len = -1;
- 
-  retry:
- 
-@@ -840,11 +838,23 @@ spi_dv_device_internal(struct scsi_devic
- 		if (spi_min_period(starget) == 8)
- 			DV_SET(pcomp_en, 1);
- 	}
-+	/* Do the read only INQUIRY tests */
-+	spi_dv_retrain(sdev, buffer, buffer + sdev->inquiry_len,
-+		       spi_dv_device_compare_inquiry);
-+	/* See if we actually managed to negotiate and sustain DT */
-+	if (i->f->get_dt)
-+		i->f->get_dt(starget);
-+
-+	/* see if the device has an echo buffer.  If it does we can do
-+	 * the SPI pattern write tests.  Because of some broken
-+	 * devices, we *only* try this on a device that has actually
-+	 * negotiated DT */
-+
-+	if (len == -1 && spi_dt(starget))
-+		len = spi_dv_device_get_echo_buffer(sdev, buffer);
- 
--	if (len == 0) {
-+	if (len <= 0) {
- 		starget_printk(KERN_INFO, starget, "Domain Validation skipping write tests\n");
--		spi_dv_retrain(sdev, buffer, buffer + len,
--			       spi_dv_device_compare_inquiry);
- 		return;
- 	}
- 
+The hard problem is that sometimes devices return an ILLEGAL_REQUEST sense
+key when they shouldn't.  I posted an example a week or two ago; what
+happened was the use_10_for_rw flag got turned off and from then on only
+6-byte commands were used (and of course the device failed to recognize
+them).
 
+Clearly we need a mechanism for going the other way: when a 6-byte command 
+gets ILLEGAL_REQUEST sense, turn the use_10_for_xxx flag back on.  The 
+difficulty is that this will cause an infinite retry loop if the device 
+doesn't like either form of the command.
+
+Is there a standard way to limit the number of retries for these cases in 
+scsi_io_completion?  The code pathway involves getting rid of the 
+scsi_cmnd and keeping only the struct request, so I don't know where an 
+appropriate place would be to store the retry counter.
+
+Any ideas?
+
+Alan Stern
 
