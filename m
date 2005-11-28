@@ -1,36 +1,52 @@
-From: Doug Ledford <dledford@redhat.com>
-Subject: Re: Bug#338089: New aic7xxx driver fails spectacularly on 2940UW
-Date: Mon, 28 Nov 2005 17:26:55 -0500
-Message-ID: <438B842F.4030103@redhat.com>
-References: <20051121022158.82709.qmail@web88012.mail.re2.yahoo.com> <1133214118.3325.59.camel@mulgrave>
+From: Jody McIntyre <scjody@modernduck.com>
+Subject: Re: 2.6.15-rc2: oops after abortion of SCSI inquiry
+Date: Mon, 28 Nov 2005 17:34:11 -0500
+Message-ID: <20051128223411.GP20781@conscoop.ottawa.on.ca>
+References: <438832A0.7000309@s5r6.in-berlin.de> <20051128190457.GH20781@conscoop.ottawa.on.ca> <438B6106.3070709@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:29930 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S932243AbVK1W1L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Nov 2005 17:27:11 -0500
-In-Reply-To: <1133214118.3325.59.camel@mulgrave>
+Received: from [205.233.219.253] ([205.233.219.253]:28346 "EHLO
+	conifer.conscoop.ottawa.on.ca") by vger.kernel.org with ESMTP
+	id S932259AbVK1Wfk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Nov 2005 17:35:40 -0500
+Content-Disposition: inline
+In-Reply-To: <438B6106.3070709@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Graham Knap <graham.knap@rogers.com>, Horms <horms@debian.org>, 338089@bugs.debian.org, linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
 
-James Bottomley wrote:
-> On Sun, 2005-11-20 at 21:21 -0500, Graham Knap wrote:
->> Sure enough, the kernel now boots. I'll attach the "dmesg" output here.
->>
->> Do you guys have a "final" patch in mind?
->>
->> Let me know if there are other tests you'd like me to run. Now that I
->> know how to do this, I should be able to turn around test results
->> fairly quickly.
+On Mon, Nov 28, 2005 at 08:56:54PM +0100, Stefan Richter wrote:
+
+> I am quite certain that when I first saw the oops I had all post-2.6.14 
+> ieee1394 updates applied, i.e. the sbp2_command_orb_lock fix too. It 
+> happened the same way with and without these ieee1394 updates.
+
+Darn.  Well, can you produce a .s file following the steps in
+Documentation/oops-tracing.txt and try to track down exactly what is
+happening?  If not, send me the .s and I'll see if I have time to look
+into it.  Be sure the .s matches your configuration and patches at the
+time of the oops :)
+
+How reproducible is this anyway?
+
+Cheers,
+Jody
+
+> -- 
+> Stefan Richter
+> -=====-=-=-= =-== ===--
+> http://arcgraph.de/sr/
 > 
-> OK, try the attached.  If it works out, I'll soak it in -mm for a while
-> and then try to put it in as a bug fix for 2.6.15.
+> 
+> -------------------------------------------------------
+> This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
+> for problems?  Stop!  Download the new AJAX search engine that makes
+> searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
+> http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
+> _______________________________________________
+> mailing list linux1394-devel@lists.sourceforge.net
+> https://lists.sourceforge.net/lists/listinfo/linux1394-devel
 
-[ snip ]
-
-Nice patch, looks like the correct thing to do to me.
-
+-- 
