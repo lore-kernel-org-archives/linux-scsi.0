@@ -1,32 +1,29 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch] drivers/scsi/dpt_i2o.c: fix a NULL pointer dereference
-Date: Mon, 28 Nov 2005 12:37:11 -0600
-Message-ID: <1133203032.3325.46.camel@mulgrave>
-References: <20051126233637.GC3988@stusta.de>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 6/11]  lpfc 8.1.1 : Fixes to error handlers
+Date: Mon, 28 Nov 2005 20:02:45 +0100
+Message-ID: <438B5455.3050803@s5r6.in-berlin.de>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C4A@xbl3.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:37841 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932130AbVK1Sig (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Nov 2005 13:38:36 -0500
-In-Reply-To: <20051126233637.GC3988@stusta.de>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:32930 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S932177AbVK1TDX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Nov 2005 14:03:23 -0500
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C4A@xbl3.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Marcelo Tosatti <marcelo.tosatti@cyclades.com>, markus.lidel@shadowconnect.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: linux-scsi@vger.kernel.org
+Cc: James.Smart@Emulex.Com
 
-On Sun, 2005-11-27 at 00:36 +0100, Adrian Bunk wrote:
-> The Coverity checker spotted this obvious NULL pointer dereference.
+James Smart wrote:
+> - Serialize EH calls and block requests when EH function is running.
 
-It's a bit late for this one, since Linus already put it in, but for
-future reference, could you please try to use proper descriptions.  This
-isn't an "obvious NULL pointer dereference", it's actually a use after
-free of a data structure.
-
-Thanks,
-
-James
-
-
+Is this necessary? From what I understood from docs or comments, there 
+is nothing enqueued while an EH is run. (Furthermore, EHs are not 
+concurrent per host.) Or am I mistaken?
+-- 
+Stefan Richter
+-=====-=-=-= =-== ===--
+http://arcgraph.de/sr/
