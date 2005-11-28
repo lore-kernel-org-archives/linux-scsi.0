@@ -1,18 +1,18 @@
 From: James.Smart@Emulex.Com
-Subject: [PATCH 4/11]  lpfc 8.1.1 : Adjust use of scsi_block_requests and interaction w/ FC transport
-Date: Mon, 28 Nov 2005 11:41:44 -0500
-Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C48@xbl3.emulex.com>
+Subject: [PATCH 3/11]  lpfc 8.1.1 : Fixes for short cable pulls
+Date: Mon, 28 Nov 2005 11:41:33 -0500
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C47@xbl3.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:33269 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1751290AbVK1Qlq convert rfc822-to-8bit
+Received: from emulex.emulex.com ([138.239.112.1]:31733 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1751290AbVK1Qlf convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Nov 2005 11:41:46 -0500
+	Mon, 28 Nov 2005 11:41:35 -0500
 Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id jASGfjs3014110
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2005 08:41:45 -0800 (PST)
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id jASGfYs3014105
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2005 08:41:34 -0800 (PST)
 content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,59 +20,60 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Smart@Emulex.Com
 
 
-Adjust use of scsi_block_requests and interaction w/ FC transport
+Fixes for short cable pulls.
 
-- Remove unnecessary scsi_block_requests calls on rport deletes.
-  This was deadlocking the sdev removals as they wanted to flush commands.
-- No longer block requests when adding the remote port (to block
-  discovery). Instead, register, then change port role. Maps to Qlogic
-  behavior, and closer to the register-node-upon-first-ELS behavior.
-
+Cause: Link bounces were causing discovery ELS's to be killed.
+  Driver was not properly flushing ELS commands upon the subsequent
+  link bounces. Thus, processing of ELS post link bounce erroneously
+  assumed discovery failure and device loss.
 
 Signed-off-by: James Smart <James.Smart@emulex.com>
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2005-11-24 10:07:36.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2005-11-28 10:21:58.000000000 -0500
-@@ -1017,12 +1017,7 @@ lpfc_register_remote_port(struct lpfc_hb
- 	rport_ids.port_name = wwn_to_u64(ndlp->nlp_portname.u.wwn);
- 	rport_ids.port_id = ndlp->nlp_DID;
- 	rport_ids.roles = FC_RPORT_ROLE_UNKNOWN;
--	if (ndlp->nlp_type & NLP_FCP_TARGET)
--		rport_ids.roles |= FC_RPORT_ROLE_FCP_TARGET;
--	if (ndlp->nlp_type & NLP_FCP_INITIATOR)
--		rport_ids.roles |= FC_RPORT_ROLE_FCP_INITIATOR;
+diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+--- a/drivers/scsi/lpfc/lpfc_els.c	2005-11-24 10:07:36.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_els.c	2005-11-28 10:15:37.000000000 -0500
+@@ -720,6 +720,7 @@ lpfc_cmpl_els_plogi(struct lpfc_hba * ph
+ 		/* Do not call DSM for lpfc_els_abort'ed ELS cmds */
+ 		if ((irsp->ulpStatus == IOSTAT_LOCAL_REJECT) &&
+ 		   ((irsp->un.ulpWord[4] == IOERR_SLI_ABORTED) ||
++		   (irsp->un.ulpWord[4] == IOERR_LINK_DOWN) ||
+ 		   (irsp->un.ulpWord[4] == IOERR_SLI_DOWN))) {
+ 			disc = (ndlp->nlp_flag & NLP_NPR_2B_DISC);
+ 		}
+@@ -869,6 +870,7 @@ lpfc_cmpl_els_prli(struct lpfc_hba * phb
+ 		/* Do not call DSM for lpfc_els_abort'ed ELS cmds */
+ 		if ((irsp->ulpStatus == IOSTAT_LOCAL_REJECT) &&
+ 		   ((irsp->un.ulpWord[4] == IOERR_SLI_ABORTED) ||
++		   (irsp->un.ulpWord[4] == IOERR_LINK_DOWN) ||
+ 		   (irsp->un.ulpWord[4] == IOERR_SLI_DOWN))) {
+ 			goto out;
+ 		}
+@@ -1054,6 +1056,7 @@ lpfc_cmpl_els_adisc(struct lpfc_hba * ph
+ 		/* Do not call DSM for lpfc_els_abort'ed ELS cmds */
+ 		if ((irsp->ulpStatus == IOSTAT_LOCAL_REJECT) &&
+ 		   ((irsp->un.ulpWord[4] == IOERR_SLI_ABORTED) ||
++		   (irsp->un.ulpWord[4] == IOERR_LINK_DOWN) ||
+ 		   (irsp->un.ulpWord[4] == IOERR_SLI_DOWN))) {
+ 			disc = (ndlp->nlp_flag & NLP_NPR_2B_DISC);
+ 		}
+@@ -1205,6 +1208,7 @@ lpfc_cmpl_els_logo(struct lpfc_hba * phb
+ 		/* Do not call DSM for lpfc_els_abort'ed ELS cmds */
+ 		if ((irsp->ulpStatus == IOSTAT_LOCAL_REJECT) &&
+ 		   ((irsp->un.ulpWord[4] == IOERR_SLI_ABORTED) ||
++		   (irsp->un.ulpWord[4] == IOERR_LINK_DOWN) ||
+ 		   (irsp->un.ulpWord[4] == IOERR_SLI_DOWN))) {
+ 			goto out;
+ 		}
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2005-11-28 09:44:43.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_init.c	2005-11-28 10:15:37.000000000 -0500
+@@ -563,6 +563,8 @@ lpfc_handle_latt(struct lpfc_hba * phba)
  
--	scsi_block_requests(phba->host);
- 	ndlp->rport = rport = fc_remote_port_add(phba->host, 0, &rport_ids);
- 	if (!rport) {
- 		dev_printk(KERN_WARNING, &phba->pcidev->dev,
-@@ -1039,7 +1034,16 @@ lpfc_register_remote_port(struct lpfc_hb
- 	}
- 	rdata = rport->dd_data;
- 	rdata->pnode = ndlp;
--	scsi_unblock_requests(phba->host);
-+
-+	if (ndlp->nlp_type & NLP_FCP_TARGET)
-+		rport_ids.roles |= FC_RPORT_ROLE_FCP_TARGET;
-+	if (ndlp->nlp_type & NLP_FCP_INITIATOR)
-+		rport_ids.roles |= FC_RPORT_ROLE_FCP_INITIATOR;
-+
-+
-+	if (rport_ids.roles !=  FC_RPORT_ROLE_UNKNOWN)
-+		fc_remote_port_rolechg(rport, rport_ids.roles);
-+
+ 	rc = -EIO;
  
- 	return;
- }
-@@ -1053,9 +1057,7 @@ lpfc_unregister_remote_port(struct lpfc_
++	/* Cleanup any outstanding ELS commands */
++	lpfc_els_flush_cmd(phba);
  
- 	ndlp->rport = NULL;
- 	rdata->pnode = NULL;
--	scsi_block_requests(phba->host);
- 	fc_remote_port_delete(rport);
--	scsi_unblock_requests(phba->host);
- 
- 	return;
- }
+ 	psli->slistat.link_event++;
+ 	lpfc_read_la(phba, pmb, mp);
