@@ -1,27 +1,37 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH 10/11]  lpfc 8.1.1 : Added code to adjust lun queue
-	depth to avoid target overloading
-Date: Mon, 28 Nov 2005 18:36:03 +0100
-Message-ID: <1133199363.2824.55.camel@laptopd505.fenrus.org>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C4E@xbl3.emulex.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 7/11]  lpfc 8.1.1 : Add support for more members of the Light Pulse 11xxx (4Gb) family
+Date: Mon, 28 Nov 2005 10:49:36 -0700
+Message-ID: <20051128174936.GD13338@parisc-linux.org>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B73@xbl3.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:4331 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1750719AbVK1RgG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Nov 2005 12:36:06 -0500
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C4E@xbl3.emulex.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:20141 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S1751271AbVK1Rtl
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Nov 2005 12:49:41 -0500
+Content-Disposition: inline
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B73@xbl3.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org
+Cc: hch@infradead.org, linux-scsi@vger.kernel.org
 
-On Mon, 2005-11-28 at 11:42 -0500, James.Smart@Emulex.Com wrote:
-> Added code to adjust lun queue depth to avoid target overloading.
-> 
+On Mon, Nov 28, 2005 at 12:08:46PM -0500, James.Smart@Emulex.Com wrote:
+> Please note: there will be 2 other areas where we will still be accessing
+> config space:
+>   - We need the bar value, as the hardware sees it, to program a base
+>     address it can decode to keep ring accesses on-chip. The current pci
+>     infrastructure doesn't provide this. (we've talked about this on this
+>     reflector before).
 
-eh isn't this a midlayer task? eg on queue full... auto shrink the
-queue ? why would a driver need to bother with this?
+sym2 has the same need for pretty much the same reason.  It has a
+private function called pci_get_base_address() right now.  I believe the
+correct thing to do (but haven't got round to trying it yet) is to call
+pcibios_resource_to_bus().
 
+>   - If we reset the card, there were hardware-isms that may erroneously
+>     drive perr/serr. So, we need to temporarily turn them off while we
+>     reset. (I believe we went through this as well on this list early on).
+
+That's certainly a reasonable need.
