@@ -1,18 +1,18 @@
 From: James.Smart@Emulex.Com
-Subject: [PATCH 1/11]  lpfc 8.1.1: Miscellaneous Cleanups
-Date: Mon, 28 Nov 2005 11:41:15 -0500
-Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C45@xbl3.emulex.com>
+Subject: [PATCH 10/11]  lpfc 8.1.1 : Added code to adjust lun queue depth to avoid target overloading
+Date: Mon, 28 Nov 2005 11:42:38 -0500
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C4E@xbl3.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:28405 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1751288AbVK1QlR convert rfc822-to-8bit
+Received: from emulex.emulex.com ([138.239.112.1]:48629 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1751298AbVK1Qmk convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Nov 2005 11:41:17 -0500
+	Mon, 28 Nov 2005 11:42:40 -0500
 Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id jASGfGs3014091
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2005 08:41:16 -0800 (PST)
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id jASGgds3014174
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2005 08:42:39 -0800 (PST)
 content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,117 +20,113 @@ To: linux-scsi@vger.kernel.org
 Cc: James.Smart@Emulex.Com
 
 
-Miscellaneous Cleanups:
-- Remove ProgType READ_REV mailbox command value check in lpfc_config_port_prep.
-- Convert simple printk to an lpfc_printf_log in queuecommand.
-- Modify lpfc_abort_handler message 0749 to display more accurate text and data.
-- Minor style cleanup: fix 3 long lines in lpfc_hw.h
+Added code to adjust lun queue depth to avoid target overloading.
 
 
 Signed-off-by: James Smart <James.Smart@emulex.com>
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
---- a/drivers/scsi/lpfc/lpfc_hw.h	2005-11-24 10:07:36.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_hw.h	2005-11-28 11:14:21.000000000 -0500
-@@ -266,9 +266,11 @@ struct lpfc_name {
- 		struct {
- #ifdef __BIG_ENDIAN_BITFIELD
- 			uint8_t nameType:4;	/* FC Word 0, bit 28:31 */
--			uint8_t IEEEextMsn:4;	/* FC Word 0, bit 24:27, bit 8:11 of IEEE ext */
-+			uint8_t IEEEextMsn:4;	/* FC Word 0, bit 24:27, bit
-+						   8:11 of IEEE ext */
- #else	/*  __LITTLE_ENDIAN_BITFIELD */
--			uint8_t IEEEextMsn:4;	/* FC Word 0, bit 24:27, bit 8:11 of IEEE ext */
-+			uint8_t IEEEextMsn:4;	/* FC Word 0, bit 24:27, bit
-+						   8:11 of IEEE ext */
- 			uint8_t nameType:4;	/* FC Word 0, bit 28:31 */
- #endif
+diff -upNr a/drivers/scsi/lpfc/lpfc_disc.h b/drivers/scsi/lpfc/lpfc_disc.h
+--- a/drivers/scsi/lpfc/lpfc_disc.h	2005-11-28 10:36:16.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_disc.h	2005-11-28 11:08:23.000000000 -0500
+@@ -73,6 +73,8 @@ struct lpfc_nodelist {
+ 	struct lpfc_hba      *nlp_phba;
+ 	struct lpfc_work_evt nodev_timeout_evt;
+ 	struct lpfc_work_evt els_retry_evt;
++	unsigned long last_ramp_up_time;        /* jiffy of last ramp up */
++	unsigned long last_q_full_time;		/* jiffy of last queue full */
+ };
  
-@@ -278,7 +280,8 @@ struct lpfc_name {
- #define NAME_IP_TYPE        0x4	/* IP address */
- #define NAME_CCITT_TYPE     0xC
- #define NAME_CCITT_GR_TYPE  0xE
--			uint8_t IEEEextLsb;	/* FC Word 0, bit 16:23, IEEE extended Lsb */
-+			uint8_t IEEEextLsb;	/* FC Word 0, bit 16:23, IEEE
-+						   extended Lsb */
- 			uint8_t IEEE[6];	/* FC IEEE address */
- 		} s;
- 		uint8_t wwn[8];
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2005-11-24 10:07:36.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2005-11-28 11:13:45.000000000 -0500
-@@ -126,34 +126,26 @@ lpfc_config_port_prep(struct lpfc_hba * 
- 		return -ERESTART;
- 	}
+ /* Defines for nlp_flag (uint32) */
+diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+--- a/drivers/scsi/lpfc/lpfc.h	2005-11-28 11:06:46.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc.h	2005-11-28 11:08:23.000000000 -0500
+@@ -29,9 +29,10 @@ struct lpfc_sli2_slim;
+ #define LPFC_LC_HBA_Q_DEPTH	1024	/* max cmds per low cost hba */
+ #define LPFC_LP101_HBA_Q_DEPTH	128	/* max cmds per low cost hba */
  
--	/* The HBA's current state is provided by the ProgType and rr fields.
--	 * Read and check the value of these fields before continuing to config
--	 * this port.
-+	/*
-+	 * The value of rr must be 1 since the driver set the cv field to 1.
-+	 * This setting requires the FW to set all revision fields.
- 	 */
--	if (mb->un.varRdRev.rr == 0 || mb->un.varRdRev.un.b.ProgType != 2) {
--		/* Old firmware */
-+	if (mb->un.varRdRev.rr == 0) {
- 		vp->rev.rBit = 0;
--		lpfc_printf_log(phba,
--				KERN_ERR,
--				LOG_INIT,
--				"%d:0440 Adapter failed to init, mbxCmd x%x "
--				"READ_REV detected outdated firmware"
--				"Data: x%x\n",
--				phba->brd_no,
--				mb->mbxCommand, 0);
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"%d:0440 Adapter failed to init, READ_REV has "
-+				"missing revision information.\n",
-+				phba->brd_no);
- 		mempool_free(pmb, phba->mbox_mem_pool);
- 		return -ERESTART;
--	} else {
--		vp->rev.rBit = 1;
--		vp->rev.sli1FwRev = mb->un.varRdRev.sli1FwRev;
--		memcpy(vp->rev.sli1FwName,
--			(char*)mb->un.varRdRev.sli1FwName, 16);
--		vp->rev.sli2FwRev = mb->un.varRdRev.sli2FwRev;
--		memcpy(vp->rev.sli2FwName,
--					(char *)mb->un.varRdRev.sli2FwName, 16);
- 	}
+-#define LPFC_CMD_PER_LUN	30	/* max outstanding cmds per lun */
++#define LPFC_CMD_PER_LUN	3	/* max outstanding cmds per lun */
+ #define LPFC_SG_SEG_CNT		64	/* sg element count per scsi cmnd */
+ #define LPFC_IOCB_LIST_CNT	2250	/* list of IOCBs for fast-path usage. */
++#define LPFC_Q_RAMP_UP_INTERVAL 120     /* lun q_depth ramp up interval */
  
- 	/* Save information as VPD data */
-+	vp->rev.rBit = 1;
-+	vp->rev.sli1FwRev = mb->un.varRdRev.sli1FwRev;
-+	memcpy(vp->rev.sli1FwName, (char*) mb->un.varRdRev.sli1FwName, 16);
-+	vp->rev.sli2FwRev = mb->un.varRdRev.sli2FwRev;
-+	memcpy(vp->rev.sli2FwName, (char *) mb->un.varRdRev.sli2FwName, 16);
- 	vp->rev.biuRev = mb->un.varRdRev.biuRev;
- 	vp->rev.smRev = mb->un.varRdRev.smRev;
- 	vp->rev.smFwRev = mb->un.varRdRev.un.smFwRev;
+ /* Define macros for 64 bit support */
+ #define putPaddrLow(addr)    ((uint32_t) (0xffffffff & (u64)(addr)))
 diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2005-11-24 10:07:37.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2005-11-28 11:13:53.000000000 -0500
-@@ -721,8 +721,9 @@ lpfc_queuecommand(struct scsi_cmnd *cmnd
- 	}
- 	lpfc_cmd = lpfc_sli_get_scsi_buf (phba);
- 	if (lpfc_cmd == NULL) {
--		printk(KERN_WARNING "%s: No buffer available - list empty, "
--		       "total count %d\n", __FUNCTION__, phba->total_scsi_bufs);
-+		lpfc_printf_log(phba, KERN_INFO, LOG_FCP,
-+				"%d:0707 driver's buffer pool is empty, "
-+				"IO busied\n", phba->brd_no);
- 		goto out_host_busy;
+--- a/drivers/scsi/lpfc/lpfc_scsi.c	2005-11-28 11:06:46.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_scsi.c	2005-11-28 11:08:23.000000000 -0500
+@@ -409,6 +409,9 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba 
+ 	struct lpfc_rport_data *rdata = lpfc_cmd->rdata;
+ 	struct lpfc_nodelist *pnode = rdata->pnode;
+ 	struct scsi_cmnd *cmd = lpfc_cmd->pCmd;
++	int result;
++	struct scsi_device *sdev, *tmp_sdev;
++	int depth = 0;
+ 
+ 	lpfc_cmd->result = pIocbOut->iocb.un.ulpWord[4];
+ 	lpfc_cmd->status = pIocbOut->iocb.ulpStatus;
+@@ -460,8 +463,63 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba 
+ 				*lp, *(lp + 3), cmd->retries, cmd->resid);
  	}
  
-@@ -844,8 +845,8 @@ __lpfc_abort_handler(struct scsi_cmnd *c
++	result = cmd->result;
++	sdev = cmd->device;
+ 	cmd->scsi_done(cmd);
  
-  out:
- 	lpfc_printf_log(phba, KERN_WARNING, LOG_FCP,
--			"%d:0749 SCSI layer issued abort device: ret %#x, "
--			"ID %d, LUN %d, snum %#lx\n",
-+			"%d:0749 SCSI Layer I/O Abort Request "
-+			"Status x%x ID %d LUN %d snum %#lx\n",
- 			phba->brd_no, ret, cmnd->device->id,
- 			cmnd->device->lun, cmnd->serial_number);
++	if (!result &&
++	   ((jiffies - pnode->last_ramp_up_time) >
++		LPFC_Q_RAMP_UP_INTERVAL * HZ) &&
++	   ((jiffies - pnode->last_q_full_time) >
++		LPFC_Q_RAMP_UP_INTERVAL * HZ) &&
++	   (phba->cfg_lun_queue_depth > sdev->queue_depth)) {
++		shost_for_each_device(tmp_sdev, sdev->host) {
++			if (phba->cfg_lun_queue_depth > tmp_sdev->queue_depth) {
++				if (tmp_sdev->id != sdev->id)
++					continue;
++				if (tmp_sdev->ordered_tags)
++					scsi_adjust_queue_depth(tmp_sdev,
++						MSG_ORDERED_TAG,
++						tmp_sdev->queue_depth+1);
++				else
++					scsi_adjust_queue_depth(tmp_sdev,
++						MSG_SIMPLE_TAG,
++						tmp_sdev->queue_depth+1);
++
++				pnode->last_ramp_up_time = jiffies;
++			}
++		}
++	}
++
++	/*
++	 * Check for queue full.  If the lun is reporting queue full, then
++	 * back off the lun queue depth to prevent target overloads.
++	 */
++	if (result == SAM_STAT_TASK_SET_FULL) {
++		pnode->last_q_full_time = jiffies;
++
++		shost_for_each_device(tmp_sdev, sdev->host) {
++			if (tmp_sdev->id != sdev->id)
++				continue;
++			depth = scsi_track_queue_full(tmp_sdev,
++					tmp_sdev->queue_depth - 1);
++		}
++		/*
++ 		 * The queue depth cannot be lowered any more.
++		 * Modify the returned error code to store
++		 * the final depth value set by
++		 * scsi_track_queue_full.
++		 */
++		if (depth == -1)
++			depth = sdev->host->cmd_per_lun;
++
++		if (depth) {
++			lpfc_printf_log(phba, KERN_WARNING, LOG_FCP,
++				"%d:0711 detected queue full - lun queue depth "
++				" adjusted to %d.\n", phba->brd_no, depth);
++		}
++	}
++
+ 	lpfc_release_scsi_buf(phba, lpfc_cmd);
+ }
  
