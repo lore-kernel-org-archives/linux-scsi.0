@@ -1,30 +1,43 @@
-From: Pol Tanner <Hapsburg@ironmine.radix.net>
-Subject: Software paradise.
-Date: Sun, 27 Nov 2005 16:23:13 -0800
-Message-ID: <39460105381.5100126185@client-201.230.159.85.speedy.net.pe>
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: BiriniBul@gmx.net
+Subject: Yepyeni_arkadasliklar_icin:)
+Date: 28 Nov 2005 09:33:09 +0200
+Message-ID: <20051128093307.4B030CFEB3AB06BB@gmx.net>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:6120 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1751174AbVK1AXW (ORCPT
+Received: from cable66-96.anadolu.kablonet.com.tr ([195.174.66.96]:48145 "EHLO
+	gmx.net") by vger.kernel.org with ESMTP id S1751252AbVK1Hc6 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 27 Nov 2005 19:23:22 -0500
-Received: from client-201.230.159.85.speedy.net.pe (client-201.230.159.85.speedy.net.pe [201.230.159.85] (may be forged))
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id jAS0NDD6030521
-	for <linux-scsi@vger.kernel.org>; Sun, 27 Nov 2005 16:23:15 -0800
+	Mon, 28 Nov 2005 02:32:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Looking for cheap high-quality software? 
-http://jhc.wqk62ljp2wk4eewr1wwrjeww.mothlessbh.com/?wnfwok
+http://www.birinibul.com/?up=3D213  =20
+=20
+Birinibul.com nedir?
+    =C7al=FD=FEan, kariyerine =F6nem veren ve i=FE hayat=FDn=FDn zorluk=
+lar=FD ile=20
+u=F0ra=FE=FDrken bir sevgiliye zaman ay=FDramayan, yeti=FEkin kad=FDnla=
+r=FD ve erkekleri=20
+bulu=FEturmak i=E7in kurulmu=FE bir sitedir.
+    Birinibul.com'da, e=F0iliminize ve isteklerinize uygun =FCyeleri ar=
+ay=FDp=20
+bulabilir ve onlar ile mesajla=FEabilirsiniz.  =DCye olma s=FDras=FDnda=
+,=20
+ad=FDn=FDz, adresiniz, telefonunuz gibi size =F6zel hi=E7bir bilgiyi ve=
+rmeniz=20
+gerekmiyor. Sadece =F6zelliklerinizi ve arad=FD=F0=FDn=FDz =F6zellikler=
+i girerek 1=20
+dakika i=E7inde siz de bize kat=FDlabilirsiniz.=20
+=20
+http://www.birinibul.com/?up=3D213
 
 
-A hobby a day keeps the doldrums away.     
-Egotism -- usually just a case of mistaken nonentity.    
-A sailor without a destination cannot hope for a favorable wind.  
 
-Every big problem was at one time a wee disturbance.   
-Patriotism is the willingness to kill and be killed for trivial reasons. 
-
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
