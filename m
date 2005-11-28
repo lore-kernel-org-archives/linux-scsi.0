@@ -1,36 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: potential initialisation problem in the aic94xx
-Date: Mon, 28 Nov 2005 15:52:48 -0600
-Message-ID: <1133214768.3325.66.camel@mulgrave>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [patch] drivers/scsi/dpt_i2o.c: fix a NULL pointer dereference
+Date: Mon, 28 Nov 2005 22:51:43 +0100
+Message-ID: <20051128215143.GE31395@stusta.de>
+References: <20051126233637.GC3988@stusta.de> <1133203032.3325.46.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:17109 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751325AbVK1Vwu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Nov 2005 16:52:50 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932197AbVK1Vvp@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1133203032.3325.46.camel@mulgrave>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Marcelo Tosatti <marcelo.tosatti@cyclades.com>, markus.lidel@shadowconnect.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Salyzyn <mark_salyzyn@adaptec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-I'm not sure if this is a genuine problem, or I just happen to have a
-broken card:  Since the card is unusual in being keyed 3.3v only, I
-don't actually have any working x86 machine I can try it in.
+On Mon, Nov 28, 2005 at 12:37:11PM -0600, James Bottomley wrote:
+> On Sun, 2005-11-27 at 00:36 +0100, Adrian Bunk wrote:
+> > The Coverity checker spotted this obvious NULL pointer dereference.
+> 
+> It's a bit late for this one, since Linus already put it in, but for
+> future reference, could you please try to use proper descriptions.  This
+> isn't an "obvious NULL pointer dereference", it's actually a use after
+> free of a data structure.
 
-The symptoms I see on my ia64 box are that as soon as the driver tries
-to touch the Region 0 BAR via mmio, the system gives me a MCE.  This is
-probably because the card fails to respond on this address and thus
-gives some type of PCI bus timeout.  My suspicion is that the card
-requires some firmware setup that the on-board BIOS does before the BARs
-respond (and since this is an ia64 box, it doesn't run the BIOS).  Could
-someone (i.e. Jeff) with access to the Docs have a look and see if this
-suspicion can be verified (or someone with a card try it in an ia64 to
-see if the same symptoms are observed)?
+OK sorry, I'll look better at the descriptions for future patches.
 
-Thanks,
+> Thanks,
+> 
+> James
 
-James
+cu
+Adrian
 
+-- 
 
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
