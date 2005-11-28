@@ -1,40 +1,30 @@
-From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
-Subject: Re: [patch] drivers/scsi/dpt_i2o.c: fix a NULL pointer dereference
-Date: Sun, 27 Nov 2005 11:28:25 -0200
-Message-ID: <20051127132825.GB21383@logos.cnet>
-References: <20051126233637.GC3988@stusta.de> <20051127124738.GC13581@logos.cnet> <20051127185252.GG3988@stusta.de>
-Mime-Version: 1.0
+From: Pol Tanner <Hapsburg@ironmine.radix.net>
+Subject: Software paradise.
+Date: Sun, 27 Nov 2005 16:23:13 -0800
+Message-ID: <39460105381.5100126185@client-201.230.159.85.speedy.net.pe>
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750960AbVK0TLz@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20051127185252.GG3988@stusta.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, markus.lidel@shadowconnect.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Salyzyn <mark_salyzyn@adaptec.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zeus1.kernel.org ([204.152.191.4]:6120 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751174AbVK1AXW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 27 Nov 2005 19:23:22 -0500
+Received: from client-201.230.159.85.speedy.net.pe (client-201.230.159.85.speedy.net.pe [201.230.159.85] (may be forged))
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id jAS0NDD6030521
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Nov 2005 16:23:15 -0800
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sun, Nov 27, 2005 at 07:52:52PM +0100, Adrian Bunk wrote:
-> On Sun, Nov 27, 2005 at 10:47:38AM -0200, Marcelo Tosatti wrote:
-> > On Sun, Nov 27, 2005 at 12:36:37AM +0100, Adrian Bunk wrote:
-> > > The Coverity checker spotted this obvious NULL pointer dereference.
-> > 
-> > Hi Adrian,
-> 
-> Hi Marcelo,
-> 
-> > Could you explain why you remove the adpt_post_wait_lock acquision? 
-> > 
-> > And if it does not belong there, why don't you remove it instead of
-> > commeting out?
-> >...
-> 
-> my patch does remove the following not required line:
-> 
-> > > -	p2 = NULL;
-> 
-> It does not touch the following line that was already commented out:
-> 
-> > >  //	spin_lock_irqsave(&adpt_post_wait_lock, flags);
-> >...
+Looking for cheap high-quality software? 
+http://jhc.wqk62ljp2wk4eewr1wwrjeww.mothlessbh.com/?wnfwok
 
-Doh. I should _read_ the patch. 
+
+A hobby a day keeps the doldrums away.     
+Egotism -- usually just a case of mistaken nonentity.    
+A sailor without a destination cannot hope for a favorable wind.  
+
+Every big problem was at one time a wee disturbance.   
+Patriotism is the willingness to kill and be killed for trivial reasons. 
+
+
