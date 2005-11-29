@@ -1,85 +1,40 @@
-From: Jesper Juhl <jesper.juhl@gmail.com>
-Subject: Re: Outlook Sux (Was: [2.6 patch] dpt_i2o fix for deadlock condition)
-Date: Tue, 29 Nov 2005 20:52:54 +0100
-Message-ID: <9a8748490511291152q13db77aaib9a5a3f97934b2bc@mail.gmail.com>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3DE12@otce2k03.adaptec.com>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: crash on x86_64 - mm related?
+Date: Tue, 29 Nov 2005 12:53:35 -0700
+Message-ID: <91888D455306F94EBD4D168954A9457C051773FB@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.204]:14912 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932365AbVK2Twz convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Nov 2005 14:52:55 -0500
-Received: by zproxy.gmail.com with SMTP id 16so1488818nzp
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Nov 2005 11:52:54 -0800 (PST)
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3DE12@otce2k03.adaptec.com>
-Content-Disposition: inline
+Received: from mail0.lsil.com ([147.145.40.20]:2753 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S932368AbVK2Txz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Nov 2005 14:53:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Adrian Bunk <bunk@stusta.de>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, Kai.Makisara@kolumbus.fi
+Cc: linux-scsi@vger.kernel.org, Ryan Richter <ryan@tau.solarneutrino.net>, James.Bottomley@steeleye.com
 
-On 11/29/05, Salyzyn, Mark <mark_salyzyn@adaptec.com> wrote:
-> From: Adrian Bunk [mailto:bunk@stusta.de] writes:
-> >> There must still be a way to tell outlook to make the type something
-> >> useful, rather than application/octet-stream.  maybe if the extension
->
-> >> was .patch.txt it would do something smarter.
-> > Patches in Attachments aren't nice, but better than corrupted patches.
->
-> :-)
->
-> Part of the problem is cut-n-paste engines on M$ and preservation of
-> content, the other part of the problem is the MUA making up it's own
-> rules on what constitutes a text document. It is not the MTA, sendmail
-> is blameless.
->
-> > It's unfortunate, but bitching on the people who are somehow forced to
->
-> > use crappy email clients is IMHO not a good idea.
->
-> We could always require that if a patch is done as an attachment, that
-> if it is smaller than 2K and/or at the submitters option, it also be
-> present as in-line content for code review convenience?
->
-> Thanks for that defense, I appreciate it. I am trapped in corporate
-> policy and MIS monitoring requirements. I have tried to make our MIS
-> department miserable over this issue, the sheer quantity of attempts to
-> mitigate is boggling and is still open. If I was paranoid, I'd almost
-> believe that M$ specifically decided to ignore RFC822 and all it's
-> children just to make it an impossible tool to use for submitting Linux
-> patches.
->
+On Tue, 29 Nov 2005 10:44:09 -0500,  Ryan Richter wrote:
 
-I've myself worked in places that required the use of outlook, but
-luckily I've always been able to persuade those employers to let me
-use other MUA's as long as they were able to work with the MS Exchange
-server. For those situations I've been using pine and kmail with
-success. Would that be an option for you?  pine will even run on
-Windows if that's a corporate requirement as well.
+> 
+> Hi, I booted 2.6.14.2 with the MPT fusion performance fix 
+> patch about a
+> week ago on my file server.  The machine crashed lat night 
+> while it was
+> doing backups.  You can see the voluminous kernel output below.
+> 
 
+I doubt this has anything to do with the fusion performance patches.
 
-> Now, if *someone* had an idea how I could configure Outlook 2002 to
-> properly produce in-line patches *that* would earn my eternal gratitude
-> (or a single stay at Hotel Salyzyn when visiting the Orlando Mouse House
-> ;-> ). Outlook 2003 gets worse still by corrupting attachments (!) and I
-> thus reverted back to 2002.
->
-Since I don't use Outlook myself I don't really know. But I wen't
-googling and found a few links that perhaps can help you.
+Any chance in getting the 8 patch's committed from the November 18th post.  
 
-http://email.about.com/od/outlooktips/qt/et010406.htm
-http://www.expita.com/nomime.html#out2002
-http://support.microsoft.com/default.aspx?scid=kb;EN-US;q278134
-http://www.scheduleworld.com/outlookInteroperability.html
+Here URL:
 
-Please note that I'm not recommending anything mentioned in those
-documents, I've never used those methods and I've barely ever touched
-Outlook, they are just the result of a quick google search.
-
-
---
-Jesper Juhl <jesper.juhl@gmail.com>
-Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please      http://www.expita.com/nomime.html
+http://marc.theaimsgroup.com/?l=linux-scsi&m=113233391112482&w=2
+http://marc.theaimsgroup.com/?l=linux-scsi&m=113219282203417&w=2
+http://marc.theaimsgroup.com/?l=linux-scsi&m=113219282318884&w=2
+http://marc.theaimsgroup.com/?l=linux-scsi&m=113219282223122&w=2
+http://marc.theaimsgroup.com/?l=linux-scsi&m=113219282217557&w=2
+http://marc.theaimsgroup.com/?l=linux-scsi&m=113219282121274&w=2
+http://marc.theaimsgroup.com/?l=linux-scsi&m=113219282329491&w=2
+http://marc.theaimsgroup.com/?l=linux-scsi&m=113219282408101&w=2
