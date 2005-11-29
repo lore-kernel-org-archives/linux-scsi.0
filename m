@@ -1,33 +1,59 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 9/11]  lpfc 8.1.1 : Add polled-mode support
-Date: Mon, 28 Nov 2005 21:02:44 -0700
-Message-ID: <20051129040244.GA28049@parisc-linux.org>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C5F@xbl3.emulex.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH 6/11]  lpfc 8.1.1 : Fixes to error handlers
+Date: Tue, 29 Nov 2005 17:11:42 +1000
+Message-ID: <438BFF2E.20407@torque.net>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B76@xbl3.emulex.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:6040 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1750712AbVK2ECq
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Nov 2005 23:02:46 -0500
-Content-Disposition: inline
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C5F@xbl3.emulex.com>
+Received: from zorg.st.net.au ([203.16.233.9]:61925 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1751338AbVK2HKh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Nov 2005 02:10:37 -0500
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B76@xbl3.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Smart@Emulex.Com
-Cc: hch@infradead.org, linux-scsi@vger.kernel.org
+Cc: hch@infradead.org, stefanr@s5r6.in-berlin.de, linux-scsi@vger.kernel.org
 
-On Mon, Nov 28, 2005 at 04:10:37PM -0500, James.Smart@Emulex.Com wrote:
+James.Smart@Emulex.Com wrote:
+>>So you this storage vendor please provide us this test case 
+>>as a start?
 > 
-> > This needs some documentation for where it is useful.  Do you 
-> > want this
-> > to avoid interrupts under high loads or for something else? 
 > 
-> Yes - we've been asked to support this mode so that a heavily loaded
-> system can claim back some cpu cycles spent on interrupt processing.
-> (SPC benchmarks being a prime example)
+> Basic test case:
+>  - start load on the fc disks
+>  - run sg_reset -b /dev/sgX or sg_reset -d /dev/sgX
+> 
+> 
+>>That beeing said I mentioned that we need to do SG-based 
+>>resets via the
+>>EH thread aswell.  As Emulex apparently cares about the above 
+>>case would
+>>you mind implementing it?
+> 
+> 
+> Well - we would prefer the vendor test the system as it should behave
+> in normal circumstances rather than test-suite-derived conditions.
+> 
+> Yes, we will sign up for this. However, we have several items on our
+> plate so we won't be on this quickly. I would hope there would be no
+> issue with accepting the patch as is and backing out the relatived code
+> as part of the eventual patch.  We'll also be contacting the SG maintainer
+> to get his/her thoughts.
 
-sounds like we need to implement SAPI ;-)
+While on the subject of resets, linux still has a
+fuzziness around a "device" reset. There should be
+two resets around this level:
+  - target reset: reset a target device, its ports and
+    all logical units within it [transport level]
+  - logical unit reset: reset a logical unit only
+    [this is a mandatory SCSI task management function]
 
-[ for those with no clue what i'm talking about, see
-Documentation/networking/NAPI_HOWTO.txt ]
+If changes are being made in this area, then perhaps
+this fuzziness should be addressed.
+
+Doug Gilbert
+
