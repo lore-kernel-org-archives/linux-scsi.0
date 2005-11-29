@@ -1,51 +1,56 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [2.6 patch] dpt_i2o fix for deadlock condition
-Date: Tue, 29 Nov 2005 19:53:36 +0100
-Message-ID: <20051129185336.GJ31395@stusta.de>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3DD6C@otce2k03.adaptec.com> <20051129180437.GB3803@csclub.uwaterloo.ca>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: Outlook Sux (Was: [2.6 patch] dpt_i2o fix for deadlock condition)
+Date: Tue, 29 Nov 2005 14:30:09 -0500
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3DE12@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932347AbVK2Sxi@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20051129180437.GB3803@csclub.uwaterloo.ca>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
-Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from magic.adaptec.com ([216.52.22.17]:28631 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1751351AbVK2TaK convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Nov 2005 14:30:10 -0500
+content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Nov 29, 2005 at 01:04:37PM -0500, Lennart Sorensen wrote:
-> On Tue, Nov 29, 2005 at 11:51:25AM -0500, Salyzyn, Mark wrote:
-> > Miquel van Smoorenburg <miquels@cistron.nl> forwarded me this fix to
-> > resolve a deadlock condition that occurs due to the API change in
-> > 2.6.13+ kernels dropping the host locking when entering the error
-> > handling. They all end up calling adpt_i2o_post_wait(), which if you
-> > call it unlocked, might return with host_lock locked anyway and that
-> > causes a deadlock.
-> > 
-> > Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-> > 
-> >  drivers/scsi/dpt_i2o.c |    25 ++++++++++++++++++++-----
-> >  1 file changed, 20 insertions(+), 5 deletions(-)
-> > 
-> > Patch attached to email due to Outlook corrupting content when inlined.
-> 
-> There must still be a way to tell outlook to make the type something
-> useful, rather than application/octet-stream.  maybe if the extension
-> was .patch.txt it would do something smarter.
+From: Adrian Bunk [mailto:bunk@stusta.de] writes: 
+>> There must still be a way to tell outlook to make the type something 
+>> useful, rather than application/octet-stream.  maybe if the extension
 
-Patches in Attachments aren't nice, but better than corrupted patches.
+>> was .patch.txt it would do something smarter.
+> Patches in Attachments aren't nice, but better than corrupted patches.
 
-It's unfortunate, but bitching on the people who are somehow forced to 
-use crappy email clients is IMHO not a good idea.
+:-)
 
-> Len Sorensen
+Part of the problem is cut-n-paste engines on M$ and preservation of
+content, the other part of the problem is the MUA making up it's own
+rules on what constitutes a text document. It is not the MTA, sendmail
+is blameless.
 
-cu
-Adrian
+> It's unfortunate, but bitching on the people who are somehow forced to
 
--- 
+> use crappy email clients is IMHO not a good idea.
 
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+We could always require that if a patch is done as an attachment, that
+if it is smaller than 2K and/or at the submitters option, it also be
+present as in-line content for code review convenience?
+
+Thanks for that defense, I appreciate it. I am trapped in corporate
+policy and MIS monitoring requirements. I have tried to make our MIS
+department miserable over this issue, the sheer quantity of attempts to
+mitigate is boggling and is still open. If I was paranoid, I'd almost
+believe that M$ specifically decided to ignore RFC822 and all it's
+children just to make it an impossible tool to use for submitting Linux
+patches.
+
+Now, if *someone* had an idea how I could configure Outlook 2002 to
+properly produce in-line patches *that* would earn my eternal gratitude
+(or a single stay at Hotel Salyzyn when visiting the Orlando Mouse House
+;-> ). Outlook 2003 gets worse still by corrupting attachments (!) and I
+thus reverted back to 2002.
+
+Sincerely -- Mark Salyzyn
