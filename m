@@ -1,56 +1,85 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: Outlook Sux (Was: [2.6 patch] dpt_i2o fix for deadlock condition)
-Date: Tue, 29 Nov 2005 14:30:09 -0500
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3DE12@otce2k03.adaptec.com>
+From: Jesper Juhl <jesper.juhl@gmail.com>
+Subject: Re: Outlook Sux (Was: [2.6 patch] dpt_i2o fix for deadlock condition)
+Date: Tue, 29 Nov 2005 20:52:54 +0100
+Message-ID: <9a8748490511291152q13db77aaib9a5a3f97934b2bc@mail.gmail.com>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3DE12@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:28631 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1751351AbVK2TaK convert rfc822-to-8bit
+Received: from zproxy.gmail.com ([64.233.162.204]:14912 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932365AbVK2Twz convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Nov 2005 14:30:10 -0500
-content-class: urn:content-classes:message
+	Tue, 29 Nov 2005 14:52:55 -0500
+Received: by zproxy.gmail.com with SMTP id 16so1488818nzp
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Nov 2005 11:52:54 -0800 (PST)
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3DE12@otce2k03.adaptec.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Adrian Bunk <bunk@stusta.de>, Lennart Sorensen <lsorense@csclub.uwaterloo.ca>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Adrian Bunk [mailto:bunk@stusta.de] writes: 
->> There must still be a way to tell outlook to make the type something 
->> useful, rather than application/octet-stream.  maybe if the extension
+On 11/29/05, Salyzyn, Mark <mark_salyzyn@adaptec.com> wrote:
+> From: Adrian Bunk [mailto:bunk@stusta.de] writes:
+> >> There must still be a way to tell outlook to make the type something
+> >> useful, rather than application/octet-stream.  maybe if the extension
+>
+> >> was .patch.txt it would do something smarter.
+> > Patches in Attachments aren't nice, but better than corrupted patches.
+>
+> :-)
+>
+> Part of the problem is cut-n-paste engines on M$ and preservation of
+> content, the other part of the problem is the MUA making up it's own
+> rules on what constitutes a text document. It is not the MTA, sendmail
+> is blameless.
+>
+> > It's unfortunate, but bitching on the people who are somehow forced to
+>
+> > use crappy email clients is IMHO not a good idea.
+>
+> We could always require that if a patch is done as an attachment, that
+> if it is smaller than 2K and/or at the submitters option, it also be
+> present as in-line content for code review convenience?
+>
+> Thanks for that defense, I appreciate it. I am trapped in corporate
+> policy and MIS monitoring requirements. I have tried to make our MIS
+> department miserable over this issue, the sheer quantity of attempts to
+> mitigate is boggling and is still open. If I was paranoid, I'd almost
+> believe that M$ specifically decided to ignore RFC822 and all it's
+> children just to make it an impossible tool to use for submitting Linux
+> patches.
+>
 
->> was .patch.txt it would do something smarter.
-> Patches in Attachments aren't nice, but better than corrupted patches.
+I've myself worked in places that required the use of outlook, but
+luckily I've always been able to persuade those employers to let me
+use other MUA's as long as they were able to work with the MS Exchange
+server. For those situations I've been using pine and kmail with
+success. Would that be an option for you?  pine will even run on
+Windows if that's a corporate requirement as well.
 
-:-)
 
-Part of the problem is cut-n-paste engines on M$ and preservation of
-content, the other part of the problem is the MUA making up it's own
-rules on what constitutes a text document. It is not the MTA, sendmail
-is blameless.
+> Now, if *someone* had an idea how I could configure Outlook 2002 to
+> properly produce in-line patches *that* would earn my eternal gratitude
+> (or a single stay at Hotel Salyzyn when visiting the Orlando Mouse House
+> ;-> ). Outlook 2003 gets worse still by corrupting attachments (!) and I
+> thus reverted back to 2002.
+>
+Since I don't use Outlook myself I don't really know. But I wen't
+googling and found a few links that perhaps can help you.
 
-> It's unfortunate, but bitching on the people who are somehow forced to
+http://email.about.com/od/outlooktips/qt/et010406.htm
+http://www.expita.com/nomime.html#out2002
+http://support.microsoft.com/default.aspx?scid=kb;EN-US;q278134
+http://www.scheduleworld.com/outlookInteroperability.html
 
-> use crappy email clients is IMHO not a good idea.
+Please note that I'm not recommending anything mentioned in those
+documents, I've never used those methods and I've barely ever touched
+Outlook, they are just the result of a quick google search.
 
-We could always require that if a patch is done as an attachment, that
-if it is smaller than 2K and/or at the submitters option, it also be
-present as in-line content for code review convenience?
 
-Thanks for that defense, I appreciate it. I am trapped in corporate
-policy and MIS monitoring requirements. I have tried to make our MIS
-department miserable over this issue, the sheer quantity of attempts to
-mitigate is boggling and is still open. If I was paranoid, I'd almost
-believe that M$ specifically decided to ignore RFC822 and all it's
-children just to make it an impossible tool to use for submitting Linux
-patches.
-
-Now, if *someone* had an idea how I could configure Outlook 2002 to
-properly produce in-line patches *that* would earn my eternal gratitude
-(or a single stay at Hotel Salyzyn when visiting the Orlando Mouse House
-;-> ). Outlook 2003 gets worse still by corrupting attachments (!) and I
-thus reverted back to 2002.
-
-Sincerely -- Mark Salyzyn
+--
+Jesper Juhl <jesper.juhl@gmail.com>
+Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
+Plain text mails only, please      http://www.expita.com/nomime.html
