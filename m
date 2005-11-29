@@ -1,58 +1,33 @@
-From: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
-Subject: RE: Optimize scsi_cmnd initialization and bug fix
-Date: Mon, 28 Nov 2005 17:22:11 -0800
-Message-ID: <200511290122.jAT1MKg02003@unix-os.sc.intel.com>
-References: <1132819546.2832.28.camel@laptopd505.fenrus.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 9/11]  lpfc 8.1.1 : Add polled-mode support
+Date: Mon, 28 Nov 2005 21:02:44 -0700
+Message-ID: <20051129040244.GA28049@parisc-linux.org>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C5F@xbl3.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmr24.intel.com ([143.183.121.16]:1511 "EHLO
-	scsfmr004.sc.intel.com") by vger.kernel.org with ESMTP
-	id S932321AbVK2BW3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Nov 2005 20:22:29 -0500
-In-Reply-To: <1132819546.2832.28.camel@laptopd505.fenrus.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:6040 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S1750712AbVK2ECq
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Nov 2005 23:02:46 -0500
+Content-Disposition: inline
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C5F@xbl3.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Arjan van de Ven' <arjan@infradead.org>
-Cc: 'James Bottomley' <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: hch@infradead.org, linux-scsi@vger.kernel.org
 
-Arjan van de Ven wrote on Thursday, November 24, 2005 12:06 AM
-> On Wed, 2005-11-23 at 14:50 -0800, Chen, Kenneth W wrote:
-> > struct scsi_cmnd is a fairly large data structure and is used
-> > to construct scsi command.  On x86-64 arch, it is 448 bytes.  
-> > 
-> > In scsi_get_command(), it is a bit too paranoid in zeroing the
-> > data structure.  Since most of the member variables will be
-> > initialized in various stage of I/O submission, i.e., in
-> > scsi_prep_fn, scsi_init_io, sd_init_command, scsi_init_cmd_errh,
-> > etc.  So instead of blindly zeroing the whole structure, initialize
-> > to some other value later on.  All it needs in scsi_get_command
-> > is to zero out a few member variables that aren't initialized in
-> > the I/O path.
+On Mon, Nov 28, 2005 at 04:10:37PM -0500, James.Smart@Emulex.Com wrote:
 > 
-> actually I question this optimisation. memset uses the rep stosl code
-> sequence, which mean that the cpu can avoid write-allocate on the
-> cachelines in question, and just plain zero them in cache. If you
-> initialize the parts one by one, the cpu will need to do write-allocate
-> on the cachelines, and thus has double the memory bandwidth needed than
-> the existing case.
+> > This needs some documentation for where it is useful.  Do you 
+> > want this
+> > to avoid interrupts under high loads or for something else? 
 > 
-> (not sure if all cpus are smart enough to avoid write allocate for rep
-> stosl, but most of the newer ones are)
+> Yes - we've been asked to support this mode so that a heavily loaded
+> system can claim back some cpu cycles spent on interrupt processing.
+> (SPC benchmarks being a prime example)
 
+sounds like we need to implement SAPI ;-)
 
-30 out of 38 member variables are initialized to non-zero value, about 4
-are initialized by the LLDD.  Another 4 got written in the I/O return
-path, though these 4 are sprinkled in the structure.  Even though memset
-doesn't write-allocate, there are enough code which will bring the cache
-line into the cpu anyway.  Since this is arch independent code, I'm also
-trying to optimize not just x86-64, but other arch like ia64 which doesn't
-have the same memset cache behavior.
-
-Our experiments with I/O intensive db workload showed that removing memset
-call has a net performance gain for db workload.
-
-- Ken
-
+[ for those with no clue what i'm talking about, see
+Documentation/networking/NAPI_HOWTO.txt ]
