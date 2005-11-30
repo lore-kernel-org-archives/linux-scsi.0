@@ -1,39 +1,52 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/11]  lpfc 8.1.1 : Fixes to error handlers
-Date: Wed, 30 Nov 2005 19:16:43 +0000
-Message-ID: <20051130191643.GB19164@infradead.org>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B76@xbl3.emulex.com> <438BFF2E.20407@torque.net>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH 3/5] aacraid: update dma mapping
+Date: Wed, 30 Nov 2005 14:23:32 -0500
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3E12D@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:21698 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751505AbVK3TQx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Nov 2005 14:16:53 -0500
-Content-Disposition: inline
-In-Reply-To: <438BFF2E.20407@torque.net>
+Received: from magic.adaptec.com ([216.52.22.17]:64660 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S1751562AbVK3TXe convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Nov 2005 14:23:34 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: James.Smart@Emulex.Com, hch@infradead.org, stefanr@s5r6.in-berlin.de, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Mark Haverkamp <markh@osdl.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, Nov 29, 2005 at 05:11:42PM +1000, Douglas Gilbert wrote:
-> While on the subject of resets, linux still has a
-> fuzziness around a "device" reset. There should be
-> two resets around this level:
->   - target reset: reset a target device, its ports and
->     all logical units within it [transport level]
->   - logical unit reset: reset a logical unit only
->     [this is a mandatory SCSI task management function]
+Cool ... Simpler is *always* better! We got a code inspection that
+indicated that memory above 4G would be accessed inefficiently using
+pci_map_single. Sounds like the IO-Perf howto needs modernization.
 
-Agreed.  In fact the emulex driver has a target reset handler already
-in lower level code, but only loops over it for all found targets in the
-linux bus reset handler.
+Sincerely -- Mark Salyzyn
 
-> If changes are being made in this area, then perhaps
-> this fuzziness should be addressed.
-
-I don't think it's related to the asynchronous reset change.  On the
-other hand it's a pretty simple change, I should have done it long
-ago.
-
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
+> Sent: Wednesday, November 30, 2005 1:45 PM
+> To: Mark Haverkamp
+> Cc: linux-scsi; Salyzyn, Mark
+> Subject: Re: [PATCH 3/5] aacraid: update dma mapping
+> 
+> 
+> On Wed, 2005-11-30 at 10:36 -0800, Mark Haverkamp wrote:
+> > This patch changes map_single to map_page in compliance with
+> > recommendations made in the IO-Perf howto document to prevent bounce
+> > buffering of DMA requests.
+> 
+> Erm, there's a misunderstanding somewhere.  You're replacing correct
+> pci_map_single calls with its more difficult to use 
+> pci_map_page.  This
+> has absolutely zero performance impact and adds the risk that because
+> pci_map_page is more complex to use, someone gets it wrong somewhere.
+> Really, for block devices pci_map_single is the absolutely correct
+> interface.  pci_map_page should really only be used by the 
+> net stack for
+> packet fragment mapping.
+> 
+> James
+> 
+> 
+> 
