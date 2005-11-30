@@ -1,36 +1,43 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/5] aacraid: update dma mapping
-Date: Wed, 30 Nov 2005 18:49:51 +0000
-Message-ID: <20051130184951.GA18583@infradead.org>
-References: <1133375778.2288.23.camel@markh1.pdx.osdl.net> <1133376327.3312.43.camel@mulgrave>
+Subject: Re: [PATCH 9/11][REPOST]  lpfc 8.1.1 : Add polled-mode support
+Date: Wed, 30 Nov 2005 19:19:53 +0000
+Message-ID: <20051130191953.GE19164@infradead.org>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C80@xbl3.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:15013 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:61119 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751456AbVK3Stz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Nov 2005 13:49:55 -0500
+	id S1751546AbVK3TTy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Nov 2005 14:19:54 -0500
 Content-Disposition: inline
-In-Reply-To: <1133376327.3312.43.camel@mulgrave>
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C80@xbl3.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Mark Haverkamp <markh@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Nov 30, 2005 at 12:45:27PM -0600, James Bottomley wrote:
-> On Wed, 2005-11-30 at 10:36 -0800, Mark Haverkamp wrote:
-> > This patch changes map_single to map_page in compliance with
-> > recommendations made in the IO-Perf howto document to prevent bounce
-> > buffering of DMA requests.
+On Tue, Nov 29, 2005 at 04:32:13PM -0500, James.Smart@Emulex.Com wrote:
 > 
-> Erm, there's a misunderstanding somewhere.  You're replacing correct
-> pci_map_single calls with its more difficult to use pci_map_page.  This
-> has absolutely zero performance impact and adds the risk that because
-> pci_map_page is more complex to use, someone gets it wrong somewhere.
-> Really, for block devices pci_map_single is the absolutely correct
-> interface.  pci_map_page should really only be used by the net stack for
-> packet fragment mapping.
+> Add polled-mode support to the driver:
+> - Add functionality to run in polled mode only. Includes run time
+>   attribute to enable mode.
+> - Enable runtime writable hba settings for coallescing and delay parameters
+> 
+> Customers have requested a mode in the driver to run strictly polled.
+> This is generally to support an environment where the server is extremely
+> loaded and is looking to reclaim some cpu cycles from adapter interrupt
+> handling.
+> 
+> This patch adds a new "poll" attribute, and the following behavior:
 
-And the really nice thing is that this whole non-S/G I/O path will go away
-completely for 2.6.16 :)
+Care to put the nice description you wrote up into Documentation/scsi/lpfc.txt
+so people are actually able to find it? No one is going to read through
+changelog entries for module parameter discussion.
+
+> +	if (!(val & DISABLE_FCP_RING_INT) &&
+> +	    (old_val & DISABLE_FCP_RING_INT))
+> +	{
+
+still odd formatting :)
 
