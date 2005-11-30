@@ -1,33 +1,36 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/5] aacraid: Check scsi_bios_ptabe return code
-Date: Wed, 30 Nov 2005 19:14:00 +0000
-Message-ID: <20051130191400.GD19001@infradead.org>
-References: <1133375802.2288.25.camel@markh1.pdx.osdl.net>
+Subject: Re: [PATCH 1/11]  lpfc 8.1.1: Miscellaneous Cleanups
+Date: Wed, 30 Nov 2005 19:15:14 +0000
+Message-ID: <20051130191514.GA19164@infradead.org>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B77@xbl3.emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:15042 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:17346 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751537AbVK3TOB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Nov 2005 14:14:01 -0500
+	id S1751538AbVK3TPP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Nov 2005 14:15:15 -0500
 Content-Disposition: inline
-In-Reply-To: <1133375802.2288.25.camel@markh1.pdx.osdl.net>
+In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B77@xbl3.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@adaptec.com>
+To: James.Smart@Emulex.Com
+Cc: hch@infradead.org, linux-scsi@vger.kernel.org
 
-On Wed, Nov 30, 2005 at 10:36:42AM -0800, Mark Haverkamp wrote:
-> Received from Mark Salyzyn.
+On Mon, Nov 28, 2005 at 04:52:38PM -0500, James.Smart@Emulex.Com wrote:
+> > Once you start touching these could we please get rid of the 
+> > bitfield for
+> > hardware registers abuse?  These should be proper 8/16/32 bit 
+> > members and
+> > then using bitmask as in all proper written drivers.
 > 
-> scsi_bios_ptable return value is not being checked in aac_biosparm.
+> Agreed. A coding style that I've preached as well. But with 
+> existing code, it takes a while to adapt.
 
-should probably go into 2.6.15 after the usual trivial codingstyle fix..
+Sure.  Just a notice while I saw this in a diff context.
 
->  	buf = scsi_bios_ptable(bdev);
-> +	if(buf == NULL)
-> +		return 0;
+> We'll add this to our todo list. Given the volume of the change,
+> don't look for this to be resolved too quickly. 
 
-	if (!buf)
-		return 0;
+Ok.
 
