@@ -1,59 +1,69 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 7/11] [SYM2] Negotiate correctly with async-only devices
-Date: Tue, 29 Nov 2005 23:08:40 -0500 (EST)
-Message-ID: <20051130040840.5FB397626C@gonzo>
+Subject: [PATCH 6/11] [SYM2] Disable IU and QAS negotiation
+Date: Tue, 29 Nov 2005 23:08:38 -0500 (EST)
+Message-ID: <20051130040838.446D27626C@gonzo>
 References: <20051130040537.GC1597@parisc-linux.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.magmacom.com ([206.191.0.217]:55509 "EHLO mx1.magmacom.com")
-	by vger.kernel.org with ESMTP id S1750854AbVK3EIn (ORCPT
+Received: from mx1.magmacom.com ([206.191.0.217]:54741 "EHLO mx1.magmacom.com")
+	by vger.kernel.org with ESMTP id S1750848AbVK3EIl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Nov 2005 23:08:43 -0500
+	Tue, 29 Nov 2005 23:08:41 -0500
 Received: from mail3.magma.ca (mail3.magma.ca [206.191.0.221])
-	by mx1.magmacom.com (8.13.0/8.13.0) with ESMTP id jAU48fOj002590
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Nov 2005 23:08:42 -0500
+	by mx1.magmacom.com (8.13.0/8.13.0) with ESMTP id jAU48d3D002585
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Nov 2005 23:08:40 -0500
 Received: from gonzo (ottawa-hs-209-217-123-220.d-ip.magma.ca [209.217.123.220])
-	by mail3.magma.ca (8.13.0/8.13.0) with ESMTP id jAU48esD005463
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Nov 2005 23:08:41 -0500
+	by mail3.magma.ca (8.13.0/8.13.0) with ESMTP id jAU48c2s005445
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Nov 2005 23:08:39 -0500
 In-Reply-To: <20051130040537.GC1597@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-When we got a device only capable of async, we would zero out goal->period
-which would cause us to try PPR negotiations.  Leave goal->period alone,
-and check goal->offset before doing PPR.  Kudos to Daniel Forsgren for
-figuring this out.
+Enabling these features causes problems with some drives, so disable
+them until they're debugged
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 
 ---
 
- drivers/scsi/sym53c8xx_2/sym_hipd.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/sym53c8xx_2/sym_glue.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-applies-to: 9313e174962281a1344bfe2e43457b1e8d1b6083
-719898c8be5a1acdd48dfaf60a337e1b36c32a59
-diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-index b4f0d9a..aa5404d 100644
---- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-@@ -1405,7 +1405,6 @@ static void sym_check_goals(struct sym_h
- 		goal->iu = 0;
- 		goal->dt = 0;
- 		goal->qas = 0;
--		goal->period = 0;
- 		goal->offset = 0;
- 		return;
- 	}
-@@ -1465,7 +1464,8 @@ static int sym_prepare_nego(struct sym_h
- 	 * Many devices implement PPR in a buggy way, so only use it if we
- 	 * really want to.
- 	 */
--	if (goal->iu || goal->dt || goal->qas || (goal->period < 0xa)) {
-+	if (goal->offset &&
-+	    (goal->iu || goal->dt || goal->qas || (goal->period < 0xa))) {
- 		nego = NS_PPR;
- 	} else if (spi_width(starget) != goal->width) {
- 		nego = NS_WIDE;
+applies-to: 4cb76e47503c6282ad75599ccc17f19d74a8c010
+adf11e5111a559aedf0160ebd56708b625ca38d4
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index 46a132e..bb90ef9 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -2122,6 +2122,7 @@ static void sym2_set_dt(struct scsi_targ
+ 	tp->tgoal.check_nego = 1;
+ }
+ 
++#if 0
+ static void sym2_set_iu(struct scsi_target *starget, int iu)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+@@ -2147,7 +2148,7 @@ static void sym2_set_qas(struct scsi_tar
+ 		tp->tgoal.qas = 0;
+ 	tp->tgoal.check_nego = 1;
+ }
+-
++#endif
+ 
+ static struct spi_function_template sym2_transport_functions = {
+ 	.set_offset	= sym2_set_offset,
+@@ -2158,10 +2159,12 @@ static struct spi_function_template sym2
+ 	.show_width	= 1,
+ 	.set_dt		= sym2_set_dt,
+ 	.show_dt	= 1,
++#if 0
+ 	.set_iu		= sym2_set_iu,
+ 	.show_iu	= 1,
+ 	.set_qas	= sym2_set_qas,
+ 	.show_qas	= 1,
++#endif
+ 	.get_signalling	= sym2_get_signalling,
+ };
+ 
 ---
 0.99.9.GIT
