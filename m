@@ -1,79 +1,63 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: Device flags: use_10_for_rw and use_10_for_ms
-Date: Tue, 29 Nov 2005 14:48:35 -0800
-Message-ID: <20051129224835.GA7505@us.ibm.com>
-References: <20051129200334.GB15804@suse.de> <Pine.LNX.4.44L0.0511291616470.18319-100000@iolanthe.rowland.org>
+From: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
+Subject: RE: Optimize scsi_cmnd initialization and bug fix
+Date: Tue, 29 Nov 2005 18:06:45 -0800
+Message-ID: <200511300206.jAU26tg05889@unix-os.sc.intel.com>
+References: <1133249853.2804.9.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:12439 "EHLO
-	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S964796AbVK2Wsp
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Nov 2005 17:48:45 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e34.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id jATMmjhk004403
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Nov 2005 17:48:45 -0500
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id jATMoCnR098156
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Nov 2005 15:50:12 -0700
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id jATMmiJX014496
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Nov 2005 15:48:44 -0700
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0511291616470.18319-100000@iolanthe.rowland.org>
+Received: from fmr22.intel.com ([143.183.121.14]:2234 "EHLO
+	scsfmr002.sc.intel.com") by vger.kernel.org with ESMTP
+	id S1750812AbVK3CH3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Nov 2005 21:07:29 -0500
+In-Reply-To: <1133249853.2804.9.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: 'Arjan van de Ven' <arjan@infradead.org>
+Cc: 'James Bottomley' <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-On Tue, Nov 29, 2005 at 04:23:16PM -0500, Alan Stern wrote:
+Arjan van de Ven wrote on Thursday, November 24, 2005 12:06 AM
+> actually I question this optimisation. memset uses the rep stosl code
+> sequence, which mean that the cpu can avoid write-allocate on the
+> cachelines in question, and just plain zero them in cache. If you
+> initialize the parts one by one, the cpu will need to do write-allocate
+> on the cachelines, and thus has double the memory bandwidth needed than
+> the existing case.
+> 
+> (not sure if all cpus are smart enough to avoid write allocate for rep
+> stosl, but most of the newer ones are)
 
-Alan -
+Your earlier email prompt me to double check with hardware architects
+whether "rep stosl" has any special cache behavior.  The answer is NO
+(at least on all Intel Pentium 4 processors).  It behaves just like
+stosl as far as the cache behavior is concerned. On write cache misses,
+processor performs a cache line fill, write allocation. Then it writes
+the operand into the cache line.
 
-Looking at the full log (with no patches) and your earlier patch, I'm
-confused by two things.
 
-First, the READ_10 command being sent after we get the ILLEGAL REQUEST.
+Arjan van de Ven wrote on Monday, November 28, 2005 11:38 PM
+> > 30 out of 38 member variables are initialized to non-zero value, about 4
+> > are initialized by the LLDD.  Another 4 got written in the I/O return
+> > path, though these 4 are sprinkled in the structure.  Even though memset
+> > doesn't write-allocate, there are enough code which will bring the cache
+> > line into the cpu anyway.  
+> 
+> but.. it's ALREADY in cache after the memset.... That's the entire point
+> of that. You put zeros in the cache without needing to get the
+> overwritten-in-a-few-cycles data from ram, but make sure the data is in
+> cache so that the next uses of it are really cheap. Eg the only cache
+> traffic is writing the data back to ram eventually, which is
+> asynchronous. By avoiding the write allocate altogether you avoid 1)
+> having to wait for the ram and 2) the memory bandwidth needed for it.
+> Both are important, and both are avoided by a memset..
 
-Do you know how that READ_10 is sent? Is the upper layer add_disk() check
-partition code retrying? Then I'd expect a READ_6. If it were already
-prepped, I guess we can get another READ_10, but I thought that the
-partition read/check code only issued one read at a time.
+The behavior you described here is not what Intel pentium 4 processor
+would do.  So the assumption doesn't apply here.  By removing the memset,
+we don't have to execute extra CPU cycles because at later point, a store
+will effectively does the same thing.  Why spend the extra cycle to store
+two values into the same location?
 
-The scsi_check_sense() should not be allowing the retry, we have a "return
-SUCCESS" there. If we did want to retry via scmd->retries, we might be
-able to add code into scis_check_sense().
+- Ken
 
-And:
-
-How can the current scsi_lib.c scsi_io_completion() *ever* requeue after
-an sd.c read/write has turned off use_10_for_rw in sd_rw_intr()?
-
-That is, sd.c sd_rw_intr() gets ILLEGAL REQUEST, and clears use_10_for_rw,
-this snippet:
-
-		case ILLEGAL_REQUEST:
-			if (SCpnt->device->use_10_for_rw &&
-			    (SCpnt->cmnd[0] == READ_10 ||
-			     SCpnt->cmnd[0] == WRITE_10))
-				SCpnt->device->use_10_for_rw = 0;
-
-Then it calls scsi_io_completion(), where we only requeue if use_10_for_rw
-is still set, so we never requeue via this code path. That is why without
-your patch we get an error output. Correct?!
-
-So with the patch you posted earlier, all it does (in scsi_io_completion())
-is set use_10_for_rw back to 1, and then requeue the IO.
-
-If you remove (or move) that sd.c code, it seems you'll hit this, and
-figure that you do not want to switch from 6 to 10 byte commands (and
-perhaps back) at all.
-
-Then we need a method so we don't switch: another bit or state set after
-a successful read or write command (and I guess one for succesful mode
-sense command). 
-
-We need only check the do-not-switch flag if we get an ILLEGAL REQUEST. We
-already have to check use_10_for_rw before every read or write request.
-
--- Patrick Mansfield
