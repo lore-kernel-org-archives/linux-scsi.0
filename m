@@ -1,99 +1,118 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 9/8] iscsi: check header digests for mgmt tasks
-Date: Wed, 30 Nov 2005 02:27:19 -0600
-Message-ID: <1133339239.4106.2.camel@max>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Device flags: use_10_for_rw and use_10_for_ms
+Date: Wed, 30 Nov 2005 09:08:54 +0100
+Message-ID: <20051130080854.GD15804@suse.de>
+References: <20051129200334.GB15804@suse.de> <Pine.LNX.4.44L0.0511291616470.18319-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:19899 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1751131AbVK3I10 (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:42545 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1751014AbVK3IHr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Nov 2005 03:27:26 -0500
-Received: from [192.168.0.6] (c-69-180-176-191.hsd1.mn.comcast.net [69.180.176.191])
-	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id jAU8RPbK010063
-	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Nov 2005 02:27:26 -0600
+	Wed, 30 Nov 2005 03:07:47 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0511291616470.18319-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Forgot to send this patch. Please merge with this patchset. Thanks.
+On Tue, Nov 29 2005, Alan Stern wrote:
+> On Tue, 29 Nov 2005, Jens Axboe wrote:
+> 
+> > > The hard problem is that sometimes devices return an ILLEGAL_REQUEST sense
+> > > key when they shouldn't.  I posted an example a week or two ago; what
+> > > happened was the use_10_for_rw flag got turned off and from then on only
+> > > 6-byte commands were used (and of course the device failed to recognize
+> > > them).
+> > > 
+> > > Clearly we need a mechanism for going the other way: when a 6-byte command 
+> > > gets ILLEGAL_REQUEST sense, turn the use_10_for_xxx flag back on.  The 
+> > > difficulty is that this will cause an infinite retry loop if the device 
+> > > doesn't like either form of the command.
+> > > 
+> > > Is there a standard way to limit the number of retries for these cases in 
+> > > scsi_io_completion?  The code pathway involves getting rid of the 
+> > > scsi_cmnd and keeping only the struct request, so I don't know where an 
+> > > appropriate place would be to store the retry counter.
+> > > 
+> > > Any ideas?
+> > 
+> > How about just improving the check for correctly failed 10-byte command,
+> > so we only clear the flag for the right reason? I think your problem is
+> > likely due to the check being too relaxed right now.
+> > 
+> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> > index ce9d73a..1f27827 100644
+> > --- a/drivers/scsi/scsi_lib.c
+> > +++ b/drivers/scsi/scsi_lib.c
+> > @@ -884,7 +884,8 @@ void scsi_io_completion(struct scsi_cmnd
+> >  			* system where READ CAPACITY failed, we may have read
+> >  			* past the end of the disk.
+> >  		 	*/
+> > -			if (cmd->device->use_10_for_rw &&
+> > +			if ((cmd->device->use_10_for_rw &&
+> > +			    sshdr.asc == 0x20 && sshdr.ascq == 0x00) &&
+> >  			    (cmd->cmnd[0] == READ_10 ||
+> >  			     cmd->cmnd[0] == WRITE_10)) {
+> >  				cmd->device->use_10_for_rw = 0;
+> 
+> This will not help.  There's a log available at
+> 
+> http://www.cs.pdx.edu/~cklin/usb-error/0-original-kern.log
+> 
+> showing an example.  Here's the relevant part:
+> 
+> Nov 19 00:31:13 rho kernel: usb-storage: Command READ_10 (10 bytes)
+> Nov 19 00:31:13 rho kernel: usb-storage:  28 00 02 54 29 78 00 00 08 00
+> Nov 19 00:31:13 rho kernel: usb-storage: Bulk Command S 0x43425355 T 0x8 L 4096 F 128 Trg 0 LUN 0 CL 12
+> Nov 19 00:31:13 rho kernel: usb-storage: usb_stor_bulk_transfer_buf: xfer 31 bytes
+> Nov 19 00:31:13 rho kernel: usb-storage: Status code 0; transferred 31/31
+> Nov 19 00:31:13 rho kernel: usb-storage: -- transfer complete
+> Nov 19 00:31:13 rho kernel: usb-storage: Bulk command transfer result=0
+> Nov 19 00:31:13 rho kernel: usb-storage: usb_stor_bulk_transfer_sglist: xfer 4096 bytes, 1 entries
+> Nov 19 00:31:13 rho kernel: usb-storage: Status code -32; transferred 4032/4096
+> Nov 19 00:31:13 rho kernel: usb-storage: clearing endpoint halt for pipe 0xc0020380
+> Nov 19 00:31:13 rho kernel: usb-storage: usb_stor_control_msg: rq=01 rqtype=02 value=0000 index=84 len=0
+> Nov 19 00:31:13 rho kernel: usb-storage: usb_stor_clear_halt: result = 0
+> Nov 19 00:31:13 rho kernel: usb-storage: Bulk data transfer result 0x2
+> Nov 19 00:31:13 rho kernel: usb-storage: Attempting to get CSW...
+> Nov 19 00:31:13 rho kernel: usb-storage: usb_stor_bulk_transfer_buf: xfer 13 bytes
+> Nov 19 00:31:13 rho kernel: usb-storage: Status code 0; transferred 13/13
+> Nov 19 00:31:13 rho kernel: usb-storage: -- transfer complete
+> Nov 19 00:31:13 rho kernel: usb-storage: Bulk status result = 0
+> Nov 19 00:31:13 rho kernel: usb-storage: Bulk Status S 0x53425355 T 0x8 R 64 Stat 0x1
+> Nov 19 00:31:13 rho kernel: usb-storage: -- transport indicates command failure
+> Nov 19 00:31:13 rho kernel: usb-storage: -- unexpectedly short transfer
+> Nov 19 00:31:13 rho kernel: usb-storage: Issuing auto-REQUEST_SENSE
+> Nov 19 00:31:13 rho kernel: usb-storage: Bulk Command S 0x43425355 T 0x9 L 18 F 128 Trg 0 LUN 0 CL 12
+> Nov 19 00:31:13 rho kernel: usb-storage: usb_stor_bulk_transfer_buf: xfer 31 bytes
+> Nov 19 00:31:13 rho kernel: usb-storage: Status code 0; transferred 31/31
+> Nov 19 00:31:13 rho kernel: usb-storage: -- transfer complete
+> Nov 19 00:31:13 rho kernel: usb-storage: Bulk command transfer result=0
+> Nov 19 00:31:13 rho kernel: usb-storage: usb_stor_bulk_transfer_buf: xfer 18 bytes
+> Nov 19 00:31:13 rho kernel: usb-storage: Status code 0; transferred 18/18
+> Nov 19 00:31:13 rho kernel: usb-storage: -- transfer complete
+> Nov 19 00:31:13 rho kernel: usb-storage: Bulk data transfer result 0x0
+> Nov 19 00:31:13 rho kernel: usb-storage: Attempting to get CSW...
+> Nov 19 00:31:13 rho kernel: usb-storage: usb_stor_bulk_transfer_buf: xfer 13 bytes
+> Nov 19 00:31:13 rho kernel: usb-storage: Status code 0; transferred 13/13
+> Nov 19 00:31:13 rho kernel: usb-storage: -- transfer complete
+> Nov 19 00:31:13 rho kernel: usb-storage: Bulk status result = 0
+> Nov 19 00:31:13 rho kernel: usb-storage: Bulk Status S 0x53425355 T 0x9 R 0 Stat 0x0
+> Nov 19 00:31:13 rho kernel: usb-storage: -- Result from auto-sense is 0
+> Nov 19 00:31:13 rho kernel: usb-storage: -- code: 0x70, key: 0x5, ASC: 0x20, ASCQ: 0x0
+> 
+> In this case the drive transmitted all but the last 64 bytes of a 
+> 4096-byte READ(10), and the sense data was exactly what you want to test 
+> for.
 
->From Wang Zhenyu:
+Oh well, so much for expecting than even the most basic SCSI behaviour
+is always implemented correctly. A device must only return
+0x05/0x20/0x00 for an illegal opcode. It's a little suspicious I'd say,
+are you sure it isn't something else affecting this? Even though there
+are crappy devices out there, this seems a little too odd to me.
 
-check header digest for cmd and mgmt tasks
-
-Signed-off-by: Wang Zhenyu <zhenyu.z.wang@intel.com>
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-Signed-off-by: Alex Aizman <itn780@yahoo.com>
-Signed-off-by: Dmitry Yusupov <dmitry_yus@yahoo.com>
-
-
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index e6f9542..e3328e7 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -581,6 +581,12 @@ iscsi_hdr_recv(struct iscsi_conn *conn)
- 		crypto_digest_digest(conn->rx_tfm, &sg, 1, (u8 *)&cdgst);
- 		rdgst = *(uint32_t*)((char*)hdr + sizeof(struct iscsi_hdr) +
- 				     conn->in.ahslen);
-+		if (cdgst != rdgst) {
-+			printk(KERN_ERR "iscsi_tcp: itt %x: hdrdgst error "
-+			       "recv 0x%x calc 0x%x\n", conn->in.itt, rdgst,
-+			       cdgst);
-+			return ISCSI_ERR_HDR_DGST;
-+		}
- 	}
- 
- 	/* save opcode for later */
-@@ -610,13 +616,6 @@ iscsi_hdr_recv(struct iscsi_conn *conn)
- 		  conn->in.ahslen, conn->in.datalen);
- 
- 	if (conn->in.itt < session->cmds_max) {
--		if (conn->hdrdgst_en && cdgst != rdgst) {
--			printk(KERN_ERR "iscsi_tcp: itt %x: hdrdgst error "
--			       "recv 0x%x calc 0x%x\n", conn->in.itt, rdgst,
--			       cdgst);
--			return ISCSI_ERR_HDR_DGST;
--		}
--
- 		ctask = (struct iscsi_cmd_task *)session->cmds[conn->in.itt];
- 
- 		if (!ctask->sc) {
-@@ -1128,8 +1127,7 @@ more:
- 		 */
- 		rc = iscsi_hdr_recv(conn);
- 		if (!rc && conn->in.datalen) {
--			if (conn->datadgst_en &&
--				conn->in.opcode != ISCSI_OP_LOGIN_RSP) {
-+			if (conn->datadgst_en) {
- 				BUG_ON(!conn->data_rx_tfm);
- 				crypto_digest_init(conn->data_rx_tfm);
- 			}
-@@ -1179,8 +1177,7 @@ more:
- 		}
- 		conn->in.copy -= conn->in.padding;
- 		conn->in.offset += conn->in.padding;
--		if (conn->datadgst_en &&
--			conn->in.opcode != ISCSI_OP_LOGIN_RSP) {
-+		if (conn->datadgst_en) {
- 			if (conn->in.padding) {
- 				debug_tcp("padding -> %d\n", conn->in.padding);
- 				memset(pad, 0, conn->in.padding);
-@@ -2875,8 +2872,11 @@ iscsi_conn_stop(iscsi_connh_t connh, int
- 		 * in hdr_extract() and will be re-negotiated at
- 		 * set_param() time.
- 		 */
--		if (flag == STOP_CONN_RECOVER)
-+		if (flag == STOP_CONN_RECOVER) {
- 			conn->hdr_size = sizeof(struct iscsi_hdr);
-+			conn->hdrdgst_en = 0;
-+			conn->datadgst_en = 0;
-+		}
- 	}
- 	up(&conn->xmitsema);
- }
-
+-- 
+Jens Axboe
 
