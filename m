@@ -1,54 +1,37 @@
-From: Ingo Juergensmann <ij@2005.bluespice.org>
-Subject: Re: Removing BROKEN scsi drivers
-Date: Wed, 30 Nov 2005 09:45:27 +0100
-Message-ID: <20051130084527.GD3946@2004.bluespice.org>
-References: <20051115095152.GA23470@infradead.org> <20051115101709.GK7031@2004.bluespice.org> <20051115103034.GA24352@infradead.org> <20051115113225.GS5252@levanta.com> <1132056707.6134.11.camel@localhost.localdomain> <20051122083631.GA21523@infradead.org> <1132695837.8928.11.camel@localhost.localdomain> <1133110038.3331.20.camel@mulgrave> <1133303092.3492.58.camel@mulgrave> <1133339483.5221.2.camel@laptop-lcs.localdomain>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Device flags: use_10_for_rw and use_10_for_ms
+Date: Wed, 30 Nov 2005 15:51:35 +0100
+Message-ID: <20051130145134.GP15804@suse.de>
+References: <20051129200334.GB15804@suse.de> <Pine.LNX.4.44L0.0511291616470.18319-100000@iolanthe.rowland.org> <20051130080854.GD15804@suse.de> <1133361995.3312.0.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="a2FkP9tdjPU2nyhF"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from windfluechter.net ([217.160.213.221]:37386 "EHLO
-	windfluechter.net") by vger.kernel.org with ESMTP id S1751137AbVK3Ipe
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Nov 2005 03:45:34 -0500
+Received: from ns.virtualhost.dk ([195.184.98.160]:49739 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1751258AbVK3Oud (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Nov 2005 09:50:33 -0500
 Content-Disposition: inline
-In-Reply-To: <1133339483.5221.2.camel@laptop-lcs.localdomain>
+In-Reply-To: <1133361995.3312.0.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kars de Jong <jongk@linux-m68k.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, Andi Kleen <ak@suse.de>, Matthew Wilcox <matthew@wil.cx>, Richard Hirst <rhirst@levanta.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Patrick Mansfield <patmans@us.ibm.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
+On Wed, Nov 30 2005, James Bottomley wrote:
+> On Wed, 2005-11-30 at 09:08 +0100, Jens Axboe wrote:
+> > Oh well, so much for expecting than even the most basic SCSI behaviour
+> > is always implemented correctly. A device must only return
+> > 0x05/0x20/0x00 for an illegal opcode. It's a little suspicious I'd say,
+> > are you sure it isn't something else affecting this? Even though there
+> > are crappy devices out there, this seems a little too odd to me.
+> 
+> And anyway, just because it doesn't actually work in the failing case
+> doesn't mean this isn't a good patch ... it's certainly unsafe to switch
+> back to 6 byte commands without checking for the correct illegal opcode
+> sense, so we should put it in anyway.
 
---a2FkP9tdjPU2nyhF
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Yup, I think so too.
 
-On Wed, Nov 30, 2005 at 09:31:23AM +0100, Kars de Jong wrote:
+-- 
+Jens Axboe
 
-> Looks fine to me. I'll see if I can try it out on m68k tonight. The
-> driver isn't used on MACs by the way, it's used on Amigas and VME single
-> board computers.
-
-I'll look forward to test it on my machines... :->=20
-
---=20
-Ciao...                //        Fon: 0381-2744150=20
-      Ingo           \X/         SIP: 2744150@sipgate.de
-
-gpg pubkey: http://www.juergensmann.de/ij/public_key.asc
-
---a2FkP9tdjPU2nyhF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-
-iD8DBQFDjWanlCnCZmI+zY0RAv8fAKDZhjvwZbtcFI5bNZusMy6e9d+QfgCfUP28
-u6fFAojUd6ZoHvgP/SgoDkw=
-=KBmB
------END PGP SIGNATURE-----
-
---a2FkP9tdjPU2nyhF--
