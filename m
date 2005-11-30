@@ -1,43 +1,37 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 9/11][REPOST]  lpfc 8.1.1 : Add polled-mode support
-Date: Wed, 30 Nov 2005 19:19:53 +0000
-Message-ID: <20051130191953.GE19164@infradead.org>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C80@xbl3.emulex.com>
+Subject: Re: [PATCH 9/11]  lpfc 8.1.1 : Add polled-mode support
+Date: Wed, 30 Nov 2005 19:18:07 +0000
+Message-ID: <20051130191807.GD19164@infradead.org>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C5F@xbl3.emulex.com> <20051129040244.GA28049@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:61119 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:60095 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751546AbVK3TTy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Nov 2005 14:19:54 -0500
+	id S1751545AbVK3TSJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Nov 2005 14:18:09 -0500
 Content-Disposition: inline
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276C80@xbl3.emulex.com>
+In-Reply-To: <20051129040244.GA28049@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James.Smart@Emulex.Com, hch@infradead.org, linux-scsi@vger.kernel.org
 
-On Tue, Nov 29, 2005 at 04:32:13PM -0500, James.Smart@Emulex.Com wrote:
+On Mon, Nov 28, 2005 at 09:02:44PM -0700, Matthew Wilcox wrote:
+> On Mon, Nov 28, 2005 at 04:10:37PM -0500, James.Smart@Emulex.Com wrote:
+> > 
+> > > This needs some documentation for where it is useful.  Do you 
+> > > want this
+> > > to avoid interrupts under high loads or for something else? 
+> > 
+> > Yes - we've been asked to support this mode so that a heavily loaded
+> > system can claim back some cpu cycles spent on interrupt processing.
+> > (SPC benchmarks being a prime example)
 > 
-> Add polled-mode support to the driver:
-> - Add functionality to run in polled mode only. Includes run time
->   attribute to enable mode.
-> - Enable runtime writable hba settings for coallescing and delay parameters
+> sounds like we need to implement SAPI ;-)
 > 
-> Customers have requested a mode in the driver to run strictly polled.
-> This is generally to support an environment where the server is extremely
-> loaded and is looking to reclaim some cpu cycles from adapter interrupt
-> handling.
-> 
-> This patch adds a new "poll" attribute, and the following behavior:
+> [ for those with no clue what i'm talking about, see
+> Documentation/networking/NAPI_HOWTO.txt ]
 
-Care to put the nice description you wrote up into Documentation/scsi/lpfc.txt
-so people are actually able to find it? No one is going to read through
-changelog entries for module parameter discussion.
-
-> +	if (!(val & DISABLE_FCP_RING_INT) &&
-> +	    (old_val & DISABLE_FCP_RING_INT))
-> +	{
-
-still odd formatting :)
+Exactly what I was thinking when writing this previous mail.
 
