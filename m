@@ -1,68 +1,91 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 2/11] [SYM2] Remove last vestiges of sym_sniff_inquiry
-Date: Tue, 29 Nov 2005 23:08:29 -0500 (EST)
-Message-ID: <20051130040829.A859D7626E@gonzo>
+Subject: [PATCH 1/11] [SYM2] Remove FreeBSD ifdefs
+Date: Tue, 29 Nov 2005 23:08:27 -0500 (EST)
+Message-ID: <20051130040827.924C07626C@gonzo>
 References: <20051130040537.GC1597@parisc-linux.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2-old.magma.ca ([206.191.0.250]:54718 "EHLO mx2.magma.ca")
-	by vger.kernel.org with ESMTP id S1750839AbVK3EIe (ORCPT
+Received: from mx2-old.magma.ca ([206.191.0.250]:54462 "EHLO mx2.magma.ca")
+	by vger.kernel.org with ESMTP id S1750840AbVK3EIe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 29 Nov 2005 23:08:34 -0500
-Received: from mail2.magma.ca (mail2.magma.ca [206.191.0.214])
-	by mx2.magma.ca (8.13.0/8.13.0) with ESMTP id jAU48Xqp014231
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Nov 2005 23:08:34 -0500
-Received: from gonzo (ottawa-hs-209-217-123-220.d-ip.magma.ca [209.217.123.220])
-	by mail2.magma.ca (8.13.0/8.13.0) with ESMTP id jAU48TQV002523
+Received: from mail1.magma.ca (mail1.magma.ca [206.191.0.252])
+	by mx2.magma.ca (8.13.0/8.13.0) with ESMTP id jAU48WtB014230
 	for <linux-scsi@vger.kernel.org>; Tue, 29 Nov 2005 23:08:33 -0500
+Received: from gonzo (ottawa-hs-209-217-123-220.d-ip.magma.ca [209.217.123.220])
+	by mail1.magma.ca (8.13.0/8.13.0) with ESMTP id jAU48RaY000513
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Nov 2005 23:08:32 -0500
 In-Reply-To: <20051130040537.GC1597@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-The SYM_OPT_SNIFF_INQUIRY define is never set any more, and the
-sym_sniff_inquiry() function doesn't exist
+Remove FreeBSD ifdefs from sym2 driver
 
-From: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 
 ---
 
- drivers/scsi/sym53c8xx_2/sym_glue.h |    1 -
- drivers/scsi/sym53c8xx_2/sym_hipd.c |    9 ---------
- 2 files changed, 0 insertions(+), 10 deletions(-)
+ drivers/scsi/sym53c8xx_2/sym_fw.c     |   12 ------------
+ drivers/scsi/sym53c8xx_2/sym_malloc.c |    4 ----
+ 2 files changed, 0 insertions(+), 16 deletions(-)
 
-applies-to: 7657ff9db89cd74775d5b3caf4042076c31480fd
-202ebf1182030b892cfd8ae48389eb4504c0b606
-diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.h b/drivers/scsi/sym53c8xx_2/sym_glue.h
-index d3d52f1..c61c23f 100644
---- a/drivers/scsi/sym53c8xx_2/sym_glue.h
-+++ b/drivers/scsi/sym53c8xx_2/sym_glue.h
-@@ -268,6 +268,5 @@ void sym_xpt_async_bus_reset(struct sym_
- void sym_xpt_async_sent_bdr(struct sym_hcb *np, int target);
- int  sym_setup_data_and_start (struct sym_hcb *np, struct scsi_cmnd *csio, struct sym_ccb *cp);
- void sym_log_bus_error(struct sym_hcb *np);
--void sym_sniff_inquiry(struct sym_hcb *np, struct scsi_cmnd *cmd, int resid);
+applies-to: 980297c1747ca89354bc879cc5d17903eacb19e2
+2af497794dd514ee3ea22fd6de7f62efbdd296b4
+diff --git a/drivers/scsi/sym53c8xx_2/sym_fw.c b/drivers/scsi/sym53c8xx_2/sym_fw.c
+index fd36cf9..a7528a8 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_fw.c
++++ b/drivers/scsi/sym53c8xx_2/sym_fw.c
+@@ -37,11 +37,7 @@
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  */
  
- #endif /* SYM_GLUE_H */
-diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-index a7420ca..113e3b3 100644
---- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
-@@ -5551,15 +5551,6 @@ if (resid)
- 	 */
- 	sym_set_cam_result_ok(cp, cmd, resid);
- 
--#ifdef	SYM_OPT_SNIFF_INQUIRY
--	/*
--	 *  On standard INQUIRY response (EVPD and CmDt 
--	 *  not set), sniff out device capabilities.
--	 */
--	if (cp->cdb_buf[0] == INQUIRY && !(cp->cdb_buf[1] & 0x3))
--		sym_sniff_inquiry(np, cmd, resid);
+-#ifdef __FreeBSD__
+-#include <dev/sym/sym_glue.h>
+-#else
+ #include "sym_glue.h"
 -#endif
--
- #ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
- 	/*
- 	 *  If max number of started ccbs had been reduced,
+ 
+ /*
+  *  Macros used for all firmwares.
+@@ -60,11 +56,7 @@
+ #define	SYM_FWA_SCR		sym_fw1a_scr
+ #define	SYM_FWB_SCR		sym_fw1b_scr
+ #define	SYM_FWZ_SCR		sym_fw1z_scr
+-#ifdef __FreeBSD__
+-#include <dev/sym/sym_fw1.h>
+-#else
+ #include "sym_fw1.h"
+-#endif
+ static struct sym_fwa_ofs sym_fw1a_ofs = {
+ 	SYM_GEN_FW_A(struct SYM_FWA_SCR)
+ };
+@@ -88,11 +80,7 @@ static struct sym_fwz_ofs sym_fw1z_ofs =
+ #define	SYM_FWA_SCR		sym_fw2a_scr
+ #define	SYM_FWB_SCR		sym_fw2b_scr
+ #define	SYM_FWZ_SCR		sym_fw2z_scr
+-#ifdef __FreeBSD__
+-#include <dev/sym/sym_fw2.h>
+-#else
+ #include "sym_fw2.h"
+-#endif
+ static struct sym_fwa_ofs sym_fw2a_ofs = {
+ 	SYM_GEN_FW_A(struct SYM_FWA_SCR)
+ };
+diff --git a/drivers/scsi/sym53c8xx_2/sym_malloc.c b/drivers/scsi/sym53c8xx_2/sym_malloc.c
+index a34d403..92bf9b1 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_malloc.c
++++ b/drivers/scsi/sym53c8xx_2/sym_malloc.c
+@@ -37,11 +37,7 @@
+  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  */
+ 
+-#ifdef __FreeBSD__
+-#include <dev/sym/sym_glue.h>
+-#else
+ #include "sym_glue.h"
+-#endif
+ 
+ /*
+  *  Simple power of two buddy-like generic allocator.
 ---
 0.99.9.GIT
