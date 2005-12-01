@@ -1,38 +1,31 @@
 From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH 1/5] aacraid: simplify non-dasd support
-Date: Thu, 1 Dec 2005 13:32:24 -0500
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E9A871@otce2k03.adaptec.com>
+Subject: RE: [PATCH] aic79xx should be able to ignore HostRAID enabled adapters
+Date: Thu, 1 Dec 2005 13:46:07 -0500
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E9A886@otce2k03.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:43171 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S932404AbVLAScZ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Dec 2005 13:32:25 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751693AbVLASqb@vger.kernel.org>
 content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <djwong@us.ibm.com>, Chris McDermott <lcm@us.ibm.com>, Luvella McFadden <luvella@us.ibm.com>, AJ Johnson <blujuice@us.ibm.com>, Kevin Stansell <kstansel@us.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Mauelshagen@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Mark Haverkamp <markh@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig [mailto:hch@infradead.org] sez:
-> Just checking for channel 0 is fine with me, although a 
-> 
-> #define AAC_RAID_CHANNEL	0
+Jeff Garzik [mailto:jgarzik@pobox.com] sez:
+> All throughout development, before Justin had written a 
+> single line of code, he was told to do things via Device Mapper.
 
-The 'documentation' of this used to be embedded in a Macro that was
-recently removed to prepare for SAS. I'll keep this in mind, I am
-starting to build up a few 'cleanup' items, held back because we still
-have some meaty patches coming up.
+He did not strictly write the emd code, it was written years earlier by
+a team. It's release was the result of it being placed on his lap
+submit.
 
-> Similar issue is the tagged_supported check, it's totally magic to me
-and at 
-> least needs a very good comment.
+As I said, it all ended up being an unfortunate timing of events with
+unexpected side effects. At each instant of time it has always been
+clear what to do ...
 
-Should not be magic, if the device has tagging turned/forced/quirked
-off, then we must ensure that scsi_adjust_queue_depth(sdev,0,1) be the
-only value submitted; certainly not setting a larger queuedepth.
+2005? We tried to set up a case for ROI for the support of a dmraid
+plugin. I am merely a JAFO to that process trying to push it along.
 
 Sincerely -- Mark Salyzyn
