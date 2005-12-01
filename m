@@ -1,67 +1,39 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: cpqfc
-Date: Thu, 1 Dec 2005 16:16:17 +0100
-Message-ID: <200512011616.23078@bilbo.math.uni-mannheim.de>
-References: <1133449397.28116.20.camel@think.jsc.nasa.gov>
+From: James.Smart@Emulex.Com
+Subject: RE: [PATCH 6/11]  lpfc 8.1.1 : Fixes to error handlers
+Date: Thu, 1 Dec 2005 10:37:35 -0500
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B84@xbl3.emulex.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1661301.WIScPfrc9u";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:46812 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S932250AbVLAPQ1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2005 10:16:27 -0500
-In-Reply-To: <1133449397.28116.20.camel@think.jsc.nasa.gov>
+Received: from emulex.emulex.com ([138.239.112.1]:42467 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S932266AbVLAPiC convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Dec 2005 10:38:02 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: lance dillon <ldillon@sk-tech.com>
-Cc: linux-scsi@vger.kernel.org
+To: hch@infradead.org
+Cc: stefanr@s5r6.in-berlin.de, linux-scsi@vger.kernel.org
 
---nextPart1661301.WIScPfrc9u
-Content-Type: text/plain;
-  charset="iso-8859-6"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+> > Yes, we will sign up for this. However, we have several items on our
+> > plate so we won't be on this quickly. I would hope there would be no
+> > issue with accepting the patch as is and backing out the 
+> relatived code
+> > as part of the eventual patch.
+> 
+> No.  As you might have noticed fixing mid-layer bugs in 
+> drivers is generally
+> not okay.
 
-Lance Dillon wrote:
->I have an old compaq proliant server (dual 733) with the Compaq
->FibreChannel HBA Tachyon Chip/Board Ver??: WWN 5002CE4E44556677 (that is
->what the kernel messages say).  This is for my church, which has a very
->limited budget, so they really can't just buy a new machine with regular
->ide drives (this machine was donated to them).  It also has a fibre
->channel array attached to it.
+Bug ?  I thought this was a feature.....  :)
 
-The driver has been removed now. It was broken at many more places. I've=20
-hacked a bit on this beast, you can find several of my patches on=20
-http://opensource.sf-tec.de/kernel/ . After all these it was still not=20
-usable.
+I think it's a little silly to use the strong-arm tactics on this kind of
+patch. I've already committed to fix it. All it does is lessen -rc testing
+on the driver changes, especially if it holds up the whole group of patches
+which includes things (and bug fixes) that are unrelated.
 
-Martin K. Petersen (mkp) is writing a replacement driver for this, but I do=
-n't=20
-know the state of this work. We've tried many things on this beast, but som=
-e=20
-changed got recursive. This is because many of the functions just return vo=
-id=20
-and now have to check about the return codes because of kmalloc() an such=20
-stuff.
+Given your response, you deem this high priority. So, I'll get on the fix
+and try to get it done in time to make 2.6.15.
 
-I wonder where all the users of this thing come from as it went clear that =
-the=20
-driver will die :))
-
-Eike
-
---nextPart1661301.WIScPfrc9u
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.0 (GNU/Linux)
-
-iD8DBQBDjxPGXKSJPmm5/E4RAndnAKCL2TSmgui90LAPeeQlMXp/xlNmAACghhtt
-X90Yrre19lvyqNAKUoWcZ2w=
-=kRc8
------END PGP SIGNATURE-----
-
---nextPart1661301.WIScPfrc9u--
+-- james
