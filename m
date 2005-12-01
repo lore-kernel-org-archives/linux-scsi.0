@@ -1,39 +1,59 @@
-From: Arjan van de Ven <arjan@infradead.org>
+From: Hadmut Danisch <hadmut@danisch.de>
 Subject: Re: aic79xx and RAID ?
-Date: Thu, 01 Dec 2005 11:37:30 +0100
-Message-ID: <1133433450.2853.25.camel@laptopd505.fenrus.org>
-References: <20051201102039.GA23336@danisch.de>
+Date: Thu, 1 Dec 2005 11:48:05 +0100
+Message-ID: <20051201104805.GA3893@danisch.de>
+References: <20051201102039.GA23336@danisch.de> <1133433450.2853.25.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:51684 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932131AbVLAKhd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Dec 2005 05:37:33 -0500
-In-Reply-To: <20051201102039.GA23336@danisch.de>
+Received: from sklave3.rackland.de ([213.133.101.23]:52178 "EHLO
+	sklave3.rackland.de") by vger.kernel.org with ESMTP
+	id S1750754AbVLAKsK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Dec 2005 05:48:10 -0500
+Content-Disposition: inline
+In-Reply-To: <1133433450.2853.25.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hadmut Danisch <hadmut@danisch.de>
+To: Arjan van de Ven <arjan@infradead.org>
 Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2005-12-01 at 11:20 +0100, Hadmut Danisch wrote:
-> Hi,
+Hi,
+
+thanks for the fast reply. :-)
+
+
+On Thu, Dec 01, 2005 at 11:37:30AM +0100, Arjan van de Ven wrote:
+>
+> ah one of the software raid controllers
 > 
-> I have a question about the aic79xx driver and RAID.
-> 
-> A friend of mine tries to install Linux on a IBM rack server machine,
-> which has two hard disks and a aic 7902 SCSI/RAID controller. 
+..
+> this is in principle the right thing for this kind of software raid.
+> the dmraid tool is there to support this type of software raid (bios
+> supported raid) but I don't think it supports adaptec raid yet...
 
-ah one of the software raid controllers
 
-> However, when booting Linux (SuSE or Knoppix), the kernel recognizes
-> the controller and loads the aic79xx driver, but does not recognize
-> the RAID mirror. Instead it presents both disks as separate disks
-> /dev/sda and /dev/sdb. 
 
-this is in principle the right thing for this kind of software raid.
-the dmraid tool is there to support this type of software raid (bios
-supported raid) but I don't think it supports adaptec raid yet...
+A software raid controller?  Never heard of such a beast before. 
+
+
+I always thought that there are exactly two ways to do raid, 
+one way is to have it all hidden in the controller, which makes the
+RAID mirror appear as just a single disk to the kernel, 
+and the other way is to use the kernel software raid (configured with
+mdadm). 
+
+I've never heard of a software raid controller, where the kernel must
+do the work itself. After all, what's the controller's job and
+why is it called a RAID controller then? 
+
+
+But I guess we have to use software (i.e. kernel driven, mdadm) raid
+then?
+
+
+regards
+Hadmut
+
+
 
 
