@@ -1,45 +1,72 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: RE: [PATCH 9/11][REPOST #2]  lpfc 8.1.1 : Add polled-mode support
-Date: Thu, 01 Dec 2005 18:41:54 +0100
-Message-ID: <1133458914.2853.85.camel@laptopd505.fenrus.org>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B87@xbl3.emulex.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] aic79xx should be able to ignore HostRAID enabled adapters
+Date: Thu, 1 Dec 2005 17:44:12 +0000
+Message-ID: <20051201174411.GA13002@infradead.org>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3E318@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:46246 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:30099 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932363AbVLARl5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Dec 2005 12:41:57 -0500
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B87@xbl3.emulex.com>
+	id S932366AbVLARoP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Dec 2005 12:44:15 -0500
+Content-Disposition: inline
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3E318@otce2k03.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: "Darrick J. Wong" <djwong@us.ibm.com>, Chris McDermott <lcm@us.ibm.com>, Luvella McFadden <luvella@us.ibm.com>, AJ Johnson <blujuice@us.ibm.com>, Kevin Stansell <kstansel@us.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Mauelshagen@redhat.com
 
-On Thu, 2005-12-01 at 12:37 -0500, James.Smart@Emulex.Com wrote:
-> > sure.. but if the defaults are 0... why couldn't mode 1 by 
-> > the default..
-> > isn't mode 1 with coalesing value 0 the same as mode 0.. and 
-> > if so.. why
-> > need a mode 0 in the first place ?
+On Thu, Dec 01, 2005 at 08:44:15AM -0500, Salyzyn, Mark wrote:
+> Christoph Hellwig sez:
+> > NACK.  We're not going to support attaching broken propritary drivers.
 > 
-> There's no gain - and in fact there is now a loss. Queuecommand
-> now eats up more cycles attempting to service i/o completions on
-> every invokation. Nothing gets helped on the interrupt side. We
-> would still have interrupts firing, thus the interrupt handler
-> being invoked to clear the interrupt.
+> Understood and expected.
 > 
-> We're going to consume more cycles for a) queuecommand calls that
-> don't have i/o completions available, and b) for handling spurious
-> interrupts.
+> The word 'broken' is hardly chosen for scientific reasons, bespeaks an
+> agenda ;-> Just because you can not see the code, does not mean it is
+> broken.
 
-ok fair enough...  what kind of granularity can this delay be set too?
-It might make sense to default to say 50 usec or 100usec always...
+there's various bugreports all over.  Having no source to disprove that
+it's broken I call it broken for now.
 
-Also, not sure how your hardware works but it would be really sweet if
-the kernel could set "this request should be coalesed" or "this request
-is latency sensitive, gimme immediate", so that we can set async write
-IO's for coalescing while not getting latency on reads...
+> I have on numerous attempts tried to contact Heinz Mauelshagen to
+> fortify dmraid in support of the HostRAID adapters. He has yet to
+> respond to my emails to start a dialogue with Adaptec.
 
+What about just sending him patches?
+
+> Without the timely agenda and cooled temperaments to close the gap, the
+> solution should be temporarily to support the proprietary HostRAID
+> driver when the Adapter is in HostRAID mode and we continue to work to
+> close that gap on dmraid.
+
+No.  we're not going to do anything to make life for binary module easier,
+quite contrary.
+
+> > Sepcially as these "HostRAID" cards are plain SCSI HBAs.
+> 
+> They are plain SCSI HBAs, but are designated as a RAID card rather than
+> a Host Bus Adapter in the PCI config space when in 'HostRAID' mode. The
+> fact that is designated in the PCI space should be enough reason *not*
+> to attach a simplified LLD.
+
+No. 
+
+> 
+> The HostRAID driver has a specialized (ok, yes, also proprietary) CHIM
+> and sequencer where attention can be focused on techniques of
+> performance improvement and OS agnostics. In addition, the RAID code in
+> that driver understands the hardware, CHIM & sequencer and takes
+> advantage of features that just can not be performed by an abstracted dm
+> or an LLD. RAID1 is handled under some conditions, for instance, with
+> one DMA operation over the PCI bus rather than two duplicated for each
+> target, greatly increasing the performance.
+
+If you contributed that sequencer code and sent me a card I'm pretty sure
+I'd love into adding support for this to a special DM module.  In fact we'd
+need somthing similar for Certain SATA boards aswell.
+
+OTOH the raid flag would be useless aswell there, because we'd of course
+support this on identical cards without the raid bios aswell :)
 
