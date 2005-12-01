@@ -1,49 +1,66 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] aic79xx should be able to ignore HostRAID enabledadapters
-Date: Thu, 1 Dec 2005 17:49:28 +0000
-Message-ID: <20051201174928.GA13196@infradead.org>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3E359@otce2k03.adaptec.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] aic79xx should be able to ignore HostRAID enabled adapters
+Date: Thu, 01 Dec 2005 12:49:31 -0500
+Message-ID: <438F37AB.5030800@pobox.com>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3E318@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:23981 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932369AbVLARtb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Dec 2005 12:49:31 -0500
-Content-Disposition: inline
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3E359@otce2k03.adaptec.com>
+Received: from mail.dvmed.net ([216.237.124.58]:6086 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932350AbVLARtq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2005 12:49:46 -0500
+In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3E318@otce2k03.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, "Darrick J. Wong" <djwong@us.ibm.com>, Chris McDermott <lcm@us.ibm.com>, Luvella McFadden <luvella@us.ibm.com>, AJ Johnson <blujuice@us.ibm.com>, Kevin Stansell <kstansel@us.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Mauelshagen@redhat.com
+Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <djwong@us.ibm.com>, Chris McDermott <lcm@us.ibm.com>, Luvella McFadden <luvella@us.ibm.com>, AJ Johnson <blujuice@us.ibm.com>, Kevin Stansell <kstansel@us.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Mauelshagen@redhat.com
 
-On Thu, Dec 01, 2005 at 09:21:43AM -0500, Salyzyn, Mark wrote:
-> Arjan van de Ven [mailto:arjan@infradead.org] writes:
-> > adaptec could just release the source of the enhancement to linux (as
-> > the GPL basically requires anyway :)
-> 
-> Adaptec did, it was called emd! <ouch>
+Salyzyn, Mark wrote:
+> Justin Gibbs had provided the community the emd driver, soundly rejected
+> and never ported to dm because there were features that Justin held dear
+> in md that do not translate to dm. An unfortunate waste of considerable
+> resources.
 
-While the project was a total failure in every respect it at least allows
-us to have an open description of the format.  Thanks to Adaptec that we
-at least have it, although an open spec would have an a lot easier way
-to get that information out :)  But honestly just another raid format
-is not really something you'll get us excited about, there are far too
-many of them already.
+All throughout development, before Justin had written a single line of 
+code, he was told to do things via Device Mapper.  All he had to do was 
+open his ears, and no resource waste would have occurred.
 
-If you actually published the raid sequencer code I'm pretty sure someone
-would have picked up the shards of the emd project and turned it into
-something useful.  I would have loved to play with that kind of thing for
-certain.
 
-> I know, a circular argument ... Regardless this burned out three of the
-> most talented engineers at Adaptec working on that project. None of them
-> will probably ever contribute to Linux again, they are all now
-> Luminaries in the FreeBSD community.
+> Without the timely agenda and cooled temperaments to close the gap, the
+> solution should be temporarily to support the proprietary HostRAID
+> driver when the Adapter is in HostRAID mode and we continue to work to
+> close that gap on dmraid.
+[...]
+> They are plain SCSI HBAs, but are designated as a RAID card rather than
+> a Host Bus Adapter in the PCI config space when in 'HostRAID' mode. The
+> fact that is designated in the PCI space should be enough reason *not*
+> to attach a simplified LLD.
 
-I'm pretty happy that we never have to deal with Justin or Scott again,
-as it saves a considerable amount of my time.
+Strongly disagree.
 
-(and btw, they've been freebsd commiters and core members long before
- adaptec assigned them to do linux work, which probably was a part
- of the cultural problems when dealing with them)
+Linux should export the [non-RAID] hardware capabilities, nothing more.
+
+We don't shim for not-in-tree binary-only drivers.  A user continues to 
+be free to simply -not use- aic79xx, regardless of this design decision. 
+  SATA controllers come with all sorts of class codes:  RAID (host/fake 
+raid), SCSI (fake RAID/fake scsi), IDE, Serial ATA.
+
+We ignore that, and just export the hardware.  The class code is only a 
+hint that dmraid should be loaded on top of the low-level driver.
+
+
+> Linux is not about performance first, it is about doing it the Linux
+> way. I believe we can understand that. And in turn, do not consider it
+> harmful if a group of individuals trying to make a living see a chance
+> to acquire a competitive edge.
+
+We don't do it "the Linux way" just for NIH's sake.  There are strong 
+reasons why we want cross-vendor solutions.  There are strong reasons 
+why we don't want every driver to embed a software RAID engine inside 
+it.  And there are strong reasons (some legal, not technical) why its 
+best to ignore binary-only, out-of-tree drivers.
+
+	Jeff
+
+
