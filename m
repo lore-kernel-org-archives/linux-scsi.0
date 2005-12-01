@@ -1,55 +1,45 @@
-From: Richard Hirst <rhirst@levanta.com>
-Subject: Re: Removing BROKEN scsi drivers
-Date: Thu, 1 Dec 2005 23:29:07 +0000
-Message-ID: <20051201232906.GR5252@levanta.com>
-References: <20051115095152.GA23470@infradead.org> <20051115101709.GK7031@2004.bluespice.org> <20051115103034.GA24352@infradead.org> <20051115113225.GS5252@levanta.com> <1132056707.6134.11.camel@localhost.localdomain> <20051122083631.GA21523@infradead.org> <1132695837.8928.11.camel@localhost.localdomain> <1133110038.3331.20.camel@mulgrave> <1133303092.3492.58.camel@mulgrave> <1133469794.5759.8.camel@kars.perseus.home>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH] pci_ids.h - adding subclass code for SAS Controllers
+Date: Thu, 1 Dec 2005 16:51:02 -0700
+Message-ID: <91888D455306F94EBD4D168954A9457C051F36BF@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_000_01C5F6D2.15D07D60"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sleepie-adsl.demon.co.uk ([83.104.228.241]:4565 "EHLO
-	sleepie.demon.co.uk") by vger.kernel.org with ESMTP id S932549AbVLAX3O
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Dec 2005 18:29:14 -0500
-Content-Disposition: inline
-In-Reply-To: <1133469794.5759.8.camel@kars.perseus.home>
+Received: from mail0.lsil.com ([147.145.40.20]:52719 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S932091AbVLAXvR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2005 18:51:17 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kars de Jong <jongk@linux-m68k.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, Andi Kleen <ak@suse.de>, Matthew Wilcox <matthew@wil.cx>, Ingo Juergensmann <ij@2005.bluespice.org>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Dec 01, 2005 at 09:43:13PM +0100, Kars de Jong wrote:
-> On di, 2005-11-29 at 16:24 -0600, James Bottomley wrote:
-> > How about the attached.  I've tested it out on parisc and it works
-> > fine ... in fact I'm tempted to commit it simply because we now avoid
-> > the double swap for every I/O operation.
-> 
-> I've tested it on my MVME167, using the generic iomap() interface
-> implementation, and it seems to work fine.
+This message is in MIME format. Since your mail reader does not understand
+this format, some or all of this message may not be legible.
 
-Hi Kars, do you have my changes for BMVE6000 too?  It'd be nice to
-submit them all together, when we get to that stage.
+------_=_NextPart_000_01C5F6D2.15D07D60
+Content-Type: text/plain
 
-Cheers,
-  Richard
+Adding new subclass code for SAS controllers.
 
-> 
-> I noticed one thing in the patch:
-> 
-> > +#ifdef CONFIG_53C700_BE_BUS)
->                               ^
-> There's a trailing ) there.
-> 
-> Ingo, can you test the kernel at
-> http://members.home.nl/karsdejong/vmlinuz-2.6.14-amiga-4 on your
-> hardware? It also has NFS client and AFFS support.
-> 
-> 
-> Kind regards,
-> 
-> Kars.
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-m68k" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
+
+
+------_=_NextPart_000_01C5F6D2.15D07D60
+Content-Type: application/octet-stream;
+	name="pci_class_sas.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="pci_class_sas.patch"
+
+--- b/include/linux/pci_ids.h	2005-12-01 09:20:26.000000000 -0700=0A=
++++ a/include/linux/pci_ids.h	2005-12-01 16:41:15.673729728 -0700=0A=
+@@ -15,6 +15,7 @@=0A=
+ #define PCI_CLASS_STORAGE_FLOPPY	0x0102=0A=
+ #define PCI_CLASS_STORAGE_IPI		0x0103=0A=
+ #define PCI_CLASS_STORAGE_RAID		0x0104=0A=
++#define PCI_CLASS_STORAGE_SAS		0x0107=0A=
+ #define PCI_CLASS_STORAGE_OTHER		0x0180=0A=
+ =0A=
+ #define PCI_BASE_CLASS_NETWORK		0x02=0A=
+
+------_=_NextPart_000_01C5F6D2.15D07D60--
