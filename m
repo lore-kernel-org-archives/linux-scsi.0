@@ -1,67 +1,41 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: aic79xx and RAID ?
-Date: Thu, 01 Dec 2005 11:53:10 +0100
-Message-ID: <1133434390.2853.30.camel@laptopd505.fenrus.org>
-References: <20051201102039.GA23336@danisch.de>
-	 <1133433450.2853.25.camel@laptopd505.fenrus.org>
-	 <20051201104805.GA3893@danisch.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] aic79xx should be able to ignore HostRAID enabled adapters
+Date: Thu, 1 Dec 2005 11:26:24 +0000
+Message-ID: <20051201112624.GC3958@infradead.org>
+References: <438E90DD.3010007@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:58015 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932143AbVLAKxM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Dec 2005 05:53:12 -0500
-In-Reply-To: <20051201104805.GA3893@danisch.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932153AbVLAL02@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <438E90DD.3010007@us.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Chris McDermott <lcm@us.ibm.com>, Luvella McFadden <luvella@us.ibm.com>, AJ Johnson <blujuice@us.ibm.com>, Kevin Stansell <kstansel@us.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hadmut Danisch <hadmut@danisch.de>
-Cc: linux-scsi@vger.kernel.org
 
-
-> ..
-> > this is in principle the right thing for this kind of software raid.
-> > the dmraid tool is there to support this type of software raid (bios
-> > supported raid) but I don't think it supports adaptec raid yet...
+On Wed, Nov 30, 2005 at 09:57:49PM -0800, Darrick J. Wong wrote:
+> Hi there,
 > 
+> I have an IBM x346 with some Adaptec 7902 SCSI controllers; one has HostRAID
+> enabled in a RAID array, and the other does not.  Upon bootup, the aic79xx
+> driver will grab both controllers even though I'd prefer that Adaptec's a320raid
+> driver grab the HostRAID controller.  (When attached to the RAID array, the
+> aic79xx driver presents each drive in the array as a separate SCSI device.)  If
+> HostRAID is turned on, the PCI class code is 0x0104 (RAID) and if it's turned
+> off, the class code is 0x0100 (SCSI).
 > 
+> Unfortunately, there currently is no provision in the aic79xx driver to ignore
+> RAID controllers--if the PCI device/vendor IDs match, the driver takes the
+> controller.  The attached patch modifies the PCI probe function to ignore RAID
+> controllers and a module parameter "attach_HostRAID" to toggle this behavior.
+> If one passes "attach_HostRAID=1" to insmod, the driver will take RAID
+> controllers; "attach_HostRAID=0", it won't.  The default is to set it to zero.
 > 
-> A software raid controller?  Never heard of such a beast before. 
+> The patch should apply cleanly against 2.6.14 and I've verified that it works
+> correctly on a x346 and a x226, both of which have a 7902b.  I'd appreciate a
+> few more eyes to look over it, and if there aren't any objections I'd like to
+> submit this for inclusion in mainline.
 
-it's software raid but with support from the cards bios so that you can
-boot from it.
-
-
-> I always thought that there are exactly two ways to do raid, 
-> one way is to have it all hidden in the controller, which makes the
-> RAID mirror appear as just a single disk to the kernel, 
-> and the other way is to use the kernel software raid 
-
-this is basically a correct understanding, and your card is of the
-second type.
-
-> (configured with
-> mdadm). 
-
-there are multiple classes of software raid now; some are driven by
-device mapper.
-
-
-> I've never heard of a software raid controller, where the kernel must
-> do the work itself. After all, what's the controller's job and
-> why is it called a RAID controller then? 
-
-marketing speak... the kernel does all the work. just they sell you a
-driver for windows that hides this, as well as a bios rom that allows
-you to boot from it.... but other than that it's just software raid.
-
-
-> But I guess we have to use software (i.e. kernel driven, mdadm) raid
-> then?
-> 
-
-as I said, dmraid (using device mapper) is designed for this type of
-software raid...
-
-
+NACK.  We're not going to support attaching broken propritary drivers.
+Sepcially as these "HostRAID" cards are plain SCSI HBAs.  If you care about
+botting from the bios softraid port the adaptec raid format support to dmraid.
