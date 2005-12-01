@@ -1,41 +1,126 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] aic79xx should be able to ignore HostRAID enabled adapters
-Date: Thu, 1 Dec 2005 11:26:24 +0000
-Message-ID: <20051201112624.GC3958@infradead.org>
-References: <438E90DD.3010007@us.ibm.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [PATCH] writable scsi_level [was: [Merging ATA passthru] on integrating
+ SMART/ATA-Security in usb-storage driver]
+Date: Thu, 01 Dec 2005 21:35:41 +1000
+Message-ID: <438EE00D.1030108@torque.net>
+References: <Pine.LNX.4.44L0.0511071552360.5165-100000@iolanthe.rowland.org> <1131401153.3333.6.camel@mulgrave>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932153AbVLAL02@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <438E90DD.3010007@us.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: Chris McDermott <lcm@us.ibm.com>, Luvella McFadden <luvella@us.ibm.com>, AJ Johnson <blujuice@us.ibm.com>, Kevin Stansell <kstansel@us.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------010609050604070309020204"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zorg.st.net.au ([203.16.233.9]:51349 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S932159AbVLALef (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2005 06:34:35 -0500
+In-Reply-To: <1131401153.3333.6.camel@mulgrave>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Patrick Mansfield <patmans@us.ibm.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, thomas schorpp <t.schorpp@gmx.de>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, Timothy Thelin <Timothy.Thelin@wdc.com>, Linux SCSI list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Wed, Nov 30, 2005 at 09:57:49PM -0800, Darrick J. Wong wrote:
-> Hi there,
-> 
-> I have an IBM x346 with some Adaptec 7902 SCSI controllers; one has HostRAID
-> enabled in a RAID array, and the other does not.  Upon bootup, the aic79xx
-> driver will grab both controllers even though I'd prefer that Adaptec's a320raid
-> driver grab the HostRAID controller.  (When attached to the RAID array, the
-> aic79xx driver presents each drive in the array as a separate SCSI device.)  If
-> HostRAID is turned on, the PCI class code is 0x0104 (RAID) and if it's turned
-> off, the class code is 0x0100 (SCSI).
-> 
-> Unfortunately, there currently is no provision in the aic79xx driver to ignore
-> RAID controllers--if the PCI device/vendor IDs match, the driver takes the
-> controller.  The attached patch modifies the PCI probe function to ignore RAID
-> controllers and a module parameter "attach_HostRAID" to toggle this behavior.
-> If one passes "attach_HostRAID=1" to insmod, the driver will take RAID
-> controllers; "attach_HostRAID=0", it won't.  The default is to set it to zero.
-> 
-> The patch should apply cleanly against 2.6.14 and I've verified that it works
-> correctly on a x346 and a x226, both of which have a 7902b.  I'd appreciate a
-> few more eyes to look over it, and if there aren't any objections I'd like to
-> submit this for inclusion in mainline.
+This is a multi-part message in MIME format.
+--------------010609050604070309020204
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-NACK.  We're not going to support attaching broken propritary drivers.
-Sepcially as these "HostRAID" cards are plain SCSI HBAs.  If you care about
-botting from the bios softraid port the adaptec raid format support to dmraid.
+James Bottomley wrote:
+> On Mon, 2005-11-07 at 15:59 -0500, Alan Stern wrote:
+> 
+>>>That is, is usb-storage forcing scsi-2 when the device tells us it is
+>>>scsi-3 compliant, or is the hardware reporting devices are scsi-2, yet
+>>>requiring non-LUN value in cdb[1]?
+>>
+>>I think we may have both.  However I don't know how this Cypress chip
+>>reports itself.  A system log showing the INQUIRY data would be very
+>>helpful.
+> 
+> 
+> We were told in prior emails that it actually reports a level of zero
+> (i.e. no compliance with any SCSI standard).  My original proposal was
+> just not to modify the CDB[1] for this case if we could get the INQUIRY
+> passed through unmangled.
+> 
+> 
+>>It's quite possible that usb-storage no longer needs to force the 
+>>scsi-level to 2.  No one has recently tested what would happen without 
+>>it.  Matt probably has the best selection of devices for testing...
+>>
+>>There is one problem we have with devices that report themselves as SCSI-3 
+>>or SCSI-4 but hang when they receive a REPORT LUNS command.  That's easily 
+>>handled by making usb-storage set the NOREPORTLUN flag.  Maybe that's all 
+>>we need to do.
+
+This patch may add some flexibility. It allows
+/sys/class/scsi_device/<hcil>/device/scsi_level
+to be written. It won't help during scanning but
+will indirectly allow people to get the functionality
+of SG_FLAG_LUN_INHIBIT back (via writing a number
+greater than 3 into scsi_level).
+
+The patch is against lk 2.6.15-rc3
+
+Changelog:
+  - make sysfs scsi_level attribute writable
+  - fix bug in sdev_rw_attr macro (but can't
+    use it because scsi_device::scsi_level is
+    a char)
+
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
+
+Doug Gilbert
+
+
+--------------010609050604070309020204
+Content-Type: text/x-patch;
+ name="scsi_level_wr2615rc3.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi_level_wr2615rc3.diff"
+
+--- linux/drivers/scsi/scsi_sysfs.c	2005-11-30 08:43:00.000000000 +1000
++++ linux/drivers/scsi/scsi_sysfs.c2615rc3sl	2005-12-01 21:04:40.000000000 +1000
+@@ -322,7 +322,7 @@
+ {									\
+ 	struct scsi_device *sdev;					\
+ 	sdev = to_scsi_device(dev);					\
+-	snscanf (buf, 20, format_string, &sdev->field);			\
++	sscanf (buf, format_string, &sdev->field);			\
+ 	return count;							\
+ }									\
+ static DEVICE_ATTR(field, S_IRUGO | S_IWUSR, sdev_show_##field, sdev_store_##field);
+@@ -375,12 +375,32 @@
+ sdev_rd_attr (device_blocked, "%d\n");
+ sdev_rd_attr (queue_depth, "%d\n");
+ sdev_rd_attr (type, "%d\n");
+-sdev_rd_attr (scsi_level, "%d\n");
+ sdev_rd_attr (vendor, "%.8s\n");
+ sdev_rd_attr (model, "%.16s\n");
+ sdev_rd_attr (rev, "%.4s\n");
+ 
+ static ssize_t
++sdev_show_scsi_level (struct device *dev, struct device_attribute *attr, char *buf)
++{
++	struct scsi_device *sdev;
++	sdev = to_scsi_device(dev);
++	return snprintf (buf, 20, "%d\n", (int)sdev->scsi_level);
++}
++
++static ssize_t
++sdev_store_scsi_level (struct device *dev, struct device_attribute *attr,
++		       const char *buf, size_t count)
++{
++	struct scsi_device *sdev;
++	int val;
++	sdev = to_scsi_device(dev);
++	sscanf (buf, "%d\n", &val);
++	sdev->scsi_level = val;
++	return count;
++}
++static DEVICE_ATTR(scsi_level, S_IRUGO | S_IWUSR, sdev_show_scsi_level, sdev_store_scsi_level);
++
++static ssize_t
+ sdev_show_timeout (struct device *dev, struct device_attribute *attr, char *buf)
+ {
+ 	struct scsi_device *sdev;
+
+--------------010609050604070309020204--
