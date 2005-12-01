@@ -1,39 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] mptfusion : dv performance fix
-Date: Thu, 01 Dec 2005 12:19:20 -0600
-Message-ID: <1133461161.5232.4.camel@mulgrave>
-References: <91888D455306F94EBD4D168954A9457C051F3253@nacos172.co.lsil.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH 4/5] aacraid: better sysfs adapter information
+Date: Thu, 1 Dec 2005 13:26:22 -0500
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E9A86A@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:20915 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932389AbVLASTa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Dec 2005 13:19:30 -0500
-In-Reply-To: <91888D455306F94EBD4D168954A9457C051F3253@nacos172.co.lsil.com>
+Received: from magic.adaptec.com ([216.52.22.17]:47521 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932393AbVLAS0X convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Dec 2005 13:26:23 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Cc: linux-scsi@vger.kernel.org, hch@infradead.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Mark Haverkamp <markh@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2005-12-01 at 10:50 -0700, Moore, Eric Dean wrote:
-> Syncronization for Domain Validation workqueue and the initiation of the
-> alternate controller.  Its possible that dv could be terminated if the
-> workqueue on the 1st channel doesn complete in time before the 2nd channel
-> begins initialization.
-> 
-> Pls apply for 2.6.15 kernel.
+Christoph Hellwig [mailto:hch@infradead.org] sez:
+> Ok, makes sense.  Can we now get rid of the huge table of 
+> product names in linit.c?
 
-Got it.
+I would have to do an audit on all the cards to discover which ones have
+override information and which do not. As I do not have all cards, all
+firmware, all variants in my hands at all times, I would consider it
+risky at the moment. Quite a few of the '9005 0285' and '9005 0286'
+specific entries could be squashed down to a small handful of more
+generic ones, once that audit has taken place. QUIRK's nothwithstanding.
+All the legacy Dell, HP, Legend & some of the Adaptec cards would
+necessarily remain.
 
-Does this take the place of these two patches in the previous set?
+What can happen, though, is that we can in the future stop making
+changes to linit.c for every new product and continue to focus on
+updating just the pciids.sourceforge.net &
+Documentation/scsi/aacraid.txt (soon to be formerly
+drivers/scsi/aacraid/README) to list the supported products.
 
-[PATCH 1/7]  mptfusion - performance fix for U320
-[PATCH ]  mptfusion - Bad SCSI performance Fix
-
-?
-
-James
-
-
+Sincerely -- Mark Salyzyn
