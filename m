@@ -1,48 +1,66 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/5] aacraid: simplify non-dasd support
-Date: Thu, 1 Dec 2005 17:55:09 +0000
-Message-ID: <20051201175509.GA13470@infradead.org>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3E138@otce2k03.adaptec.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] aic79xx should be able to ignore HostRAID enabled adapters
+Date: Thu, 1 Dec 2005 12:56:34 -0500
+Message-ID: <20051201175634.GA9283@havoc.gtf.org>
+References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3E318@otce2k03.adaptec.com> <20051201174411.GA13002@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:44459 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932374AbVLARzN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Dec 2005 12:55:13 -0500
+Received: from havoc.gtf.org ([69.61.125.42]:34181 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S932370AbVLAR4k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2005 12:56:40 -0500
 Content-Disposition: inline
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3E138@otce2k03.adaptec.com>
+In-Reply-To: <20051201174411.GA13002@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Mark Haverkamp <markh@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, "Darrick J. Wong" <djwong@us.ibm.com>, Chris McDermott <lcm@us.ibm.com>, Luvella McFadden <luvella@us.ibm.com>, AJ Johnson <blujuice@us.ibm.com>, Kevin Stansell <kstansel@us.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Mauelshagen@redhat.com
 
-On Wed, Nov 30, 2005 at 02:29:10PM -0500, Salyzyn, Mark wrote:
-> Christoph Hellwig [mailto:hch@infradead.org] writes:
-> > NACK on the write filter.  If we can agree on it beeing 
-> > useful (and I must
-> > admit I tend to the contrary opinion) it should be done in 
-> > higher layers.
+On Thu, Dec 01, 2005 at 05:44:12PM +0000, Christoph Hellwig wrote:
+> On Thu, Dec 01, 2005 at 08:44:15AM -0500, Salyzyn, Mark wrote:
+> > The HostRAID driver has a specialized (ok, yes, also proprietary) CHIM
+> > and sequencer where attention can be focused on techniques of
+> > performance improvement and OS agnostics. In addition, the RAID code in
+> > that driver understands the hardware, CHIM & sequencer and takes
+> > advantage of features that just can not be performed by an abstracted dm
+> > or an LLD. RAID1 is handled under some conditions, for instance, with
+> > one DMA operation over the PCI bus rather than two duplicated for each
+> > target, greatly increasing the performance.
 > 
-> Our customers won't stand still if we do not write (and read) protect
-> the raid components. So you propose the introduction of an
-> sdev->io_protect flag?
-
-write a patch to do it and argue for it.  in the driver it's in the
-wrong place for certain and not acceptable by any means.
-
-> > Also why do we need the !sdev->no_uld_attach && !sdev->channel checks?
+> If you contributed that sequencer code and sent me a card I'm pretty sure
+> I'd love into adding support for this to a special DM module.  In fact we'd
+> need somthing similar for Certain SATA boards aswell.
 > 
-> This is additional insurance, the fact that channel 0 is the array
-> channel. We do not want the no_uld_attach to be part of the array
-> channel.
+> OTOH the raid flag would be useless aswell there, because we'd of course
+> support this on identical cards without the raid bios aswell :)
 
-But again the invariant is that no_uld_attach is never going to be set
-for channel 0.  Just checking for channel 0 is fine with me, although
-a 
+I'd love to see a hardware-aware DM RAID module, since I want to do the
+same thing for sata_sx4 (Promise SX4).
 
-#define AAC_RAID_CHANNEL	0
+SX4 has four ATA engines, an on-card ECC-capable DIMM, and an on-card
+XOR engine.  The OS driver has complete control over these facilities.
+Unfortunately, driving the card in "dumb mode" means that performance
+takes a major hit, since each transaction looks like:
 
-would be even better to explain what's going on.  Similar issue is
-the tagged_supported check, it's totally magic to me and at least needs
-a very good comment.
+	submit DMA memcpy to HDMA engine
+	get HDMA interrupt
+		# now, the data is on the card
+	submit ATA write command
+	get ATA interrupt
+
+All data must be copied to/from the DIMM, before the ATA engine can do
+anything.  Further, there is only one HDMA engine, but 4 ATA engines.
+
+Ideally, RAID1 would copy the data to the card ONCE, then start 2 ATA
+engines.  Ideally, RAID5 would copy the data to the card ONCE, XOR it,
+then start the ATA engines.  And the rest of the DIMM should be used as
+write-through cache.
+
+I'm sure DM can do that, but I haven't researched how.
+
+I'll supply a card (and engineering help, but no docs, alas) to anyone
+interested in trying out this stuff.
+
+	Jeff
+
+
+
