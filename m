@@ -1,37 +1,50 @@
-From: James.Smart@Emulex.Com
-Subject: RE: [PATCH 9/11][REPOST #2]  lpfc 8.1.1 : Add polled-mode support
-Date: Thu, 1 Dec 2005 13:03:45 -0500
-Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B88@xbl3.emulex.com>
+From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Subject: [PATCH] maintainers
+Date: Thu, 1 Dec 2005 11:06:25 -0700
+Message-ID: <91888D455306F94EBD4D168954A9457C051F32BD@nacos172.co.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:27903 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S932371AbVLASDy convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Dec 2005 13:03:54 -0500
-content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_000_01C5F6A1.F15764F8"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932390AbVLASGu@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@osdl.org
 List-Id: linux-scsi@vger.kernel.org
-To: arjan@infradead.org
-Cc: linux-scsi@vger.kernel.org
 
-> ok fair enough...  what kind of granularity can this delay be set too?
-> It might make sense to default to say 50 usec or 100usec always...
+This message is in MIME format. Since your mail reader does not understand
+this format, some or all of this message may not be legible.
 
-Range is in milliseconds, and capped to a value < 100ms.
+------_=_NextPart_000_01C5F6A1.F15764F8
+Content-Type: text/plain
 
-We had the same thoughts. In general we concluded that the lost cycles in
-queuecommand probably still outweighs the gain. This, coupled with the
-general hesitancy to change the base behavior w/o a compelling reason,
-(and the qual impacts) means we have no desire to change the default.
- 
-> Also, not sure how your hardware works but it would be really sweet if
-> the kernel could set "this request should be coalesed" or 
-> "this request
-> is latency sensitive, gimme immediate", so that we can set async write
-> IO's for coalescing while not getting latency on reads...
 
-Yep. Unfortunately, nothing this granular.
+Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
--- james
+
+
+------_=_NextPart_000_01C5F6A1.F15764F8
+Content-Type: application/octet-stream;
+	name="maintainers.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="maintainers.patch"
+
+--- b/MAINTAINERS	2005-12-01 09:20:14.000000000 -0700=0A=
++++ a/MAINTAINERS	2005-12-01 10:31:43.000000000 -0700=0A=
+@@ -1634,6 +1634,15 @@=0A=
+ W:	http://ldm.sourceforge.net=0A=
+ S:	Maintained=0A=
+ =0A=
++LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)=0A=
++P:	Eric Moore=0A=
++M:	Eric.Moore@lsil.com=0A=
++M:	support@lsil.com=0A=
++L:	mpt_linux_developer@lsil.com=0A=
++L:	linux-scsi@vger.kernel.org=0A=
++W:	http://www.lsilogic.com/support=0A=
++S:	Supported=0A=
++=0A=
+ LSILOGIC/SYMBIOS/NCR 53C8XX and 53C1010 PCI-SCSI drivers=0A=
+ P:	Matthew Wilcox=0A=
+ M:	matthew@wil.cx=0A=
+
+------_=_NextPart_000_01C5F6A1.F15764F8--
