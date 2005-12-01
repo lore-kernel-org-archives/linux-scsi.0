@@ -1,93 +1,104 @@
-From: Heinz Mauelshagen <mauelshagen@redhat.com>
-Subject: Re: [PATCH] aic79xx should be able to ignore HostRAID enabled adapters
-Date: Thu, 1 Dec 2005 15:47:45 +0100
-Message-ID: <20051201144745.GI2782@redhat.com>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3E318@otce2k03.adaptec.com>
-Reply-To: mauelshagen@redhat.com
+From: lance dillon <ldillon@sk-tech.com>
+Subject: cpqfc
+Date: Thu, 01 Dec 2005 09:03:17 -0600
+Message-ID: <1133449397.28116.20.camel@think.jsc.nasa.gov>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:21650 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S932239AbVLAOs2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2005 09:48:28 -0500
-Content-Disposition: inline
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3E318@otce2k03.adaptec.com>
+Received: from joy.jsc.nasa.gov ([139.169.137.12]:31995 "EHLO joy.jsc.nasa.gov")
+	by vger.kernel.org with ESMTP id S932264AbVLAPDS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2005 10:03:18 -0500
+Received: from think.jsc.nasa.gov (think.jsc.nasa.gov [139.169.132.64])
+	by joy.jsc.nasa.gov (8.11.7/8.11.3) with ESMTP id jB1F4kr15122
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Dec 2005 09:04:46 -0600 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <djwong@us.ibm.com>, Chris McDermott <lcm@us.ibm.com>, Luvella McFadden <luvella@us.ibm.com>, AJ Johnson <blujuice@us.ibm.com>, Kevin Stansell <kstansel@us.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Mauelshagen@redhat.com
+To: linux-scsi@vger.kernel.org
 
-On Thu, Dec 01, 2005 at 08:44:15AM -0500, Salyzyn, Mark wrote:
-> Christoph Hellwig sez:
-> > NACK.  We're not going to support attaching broken propritary drivers.
-> 
-> Understood and expected.
-> 
-> The word 'broken' is hardly chosen for scientific reasons, bespeaks an
-> agenda ;-> Just because you can not see the code, does not mean it is
-> broken.
-> 
-> I have on numerous attempts tried to contact Heinz Mauelshagen to
-> fortify dmraid in support of the HostRAID adapters. He has yet to
-> respond to my emails to start a dialogue with Adaptec.
+I have an old compaq proliant server (dual 733) with the Compaq
+FibreChannel HBA Tachyon Chip/Board Ver??: WWN 5002CE4E44556677 (that is
+what the kernel messages say).  This is for my church, which has a very
+limited budget, so they really can't just buy a new machine with regular
+ide drives (this machine was donated to them).  It also has a fibre
+channel array attached to it.
 
-None of those here.
-Please forward.
+kernel 2.6.14.3
 
-> 
-> Justin Gibbs had provided the community the emd driver, soundly rejected
-> and never ported to dm because there were features that Justin held dear
-> in md that do not translate to dm. An unfortunate waste of considerable
-> resources.
-> 
-> Without the timely agenda and cooled temperaments to close the gap, the
-> solution should be temporarily to support the proprietary HostRAID
-> driver when the Adapter is in HostRAID mode and we continue to work to
-> close that gap on dmraid.
-> 
-> Could you agree with that to help the users today?
-> 
-> [ You are on record as not giving a fig for the users, what if I showed
-> them as starving children in a third world nation, would that melt your
-> heart? ;-} ]
-> 
-> > Sepcially as these "HostRAID" cards are plain SCSI HBAs.
-> 
-> They are plain SCSI HBAs, but are designated as a RAID card rather than
-> a Host Bus Adapter in the PCI config space when in 'HostRAID' mode. The
-> fact that is designated in the PCI space should be enough reason *not*
-> to attach a simplified LLD.
-> 
-> The HostRAID driver has a specialized (ok, yes, also proprietary) CHIM
-> and sequencer where attention can be focused on techniques of
-> performance improvement and OS agnostics. In addition, the RAID code in
-> that driver understands the hardware, CHIM & sequencer and takes
-> advantage of features that just can not be performed by an abstracted dm
-> or an LLD. RAID1 is handled under some conditions, for instance, with
-> one DMA operation over the PCI bus rather than two duplicated for each
-> target, greatly increasing the performance.
-> 
-> Linux is not about performance first, it is about doing it the Linux
-> way. I believe we can understand that. And in turn, do not consider it
-> harmful if a group of individuals trying to make a living see a chance
-> to acquire a competitive edge.
-> 
-> Sincerely -- Mark Salyzyn
+Of course the driver is broken, so I'm trying to fix it.
 
--- 
+I changed cpqfcTSworker.c so that it allocates space with kmalloc()
+instead of on the stack (as per the messages seen by google: cpqfc too
+much stack).
 
-Regards,
-Heinz    -- The LVM Guy --
+I modified a few lines that reference struct scsi_cmd member timeout,
+which doesn't seem to exist anymore.  I replaced it with
+timeout_per_command, but I'm not sure if that is correct.  Does anybody
+have any more information on this for me?
 
-*** Software bugs are stupid.
-    Nevertheless it needs not so stupid people to solve them ***
+I also had to modify the driver so it sees a0ec, rather than a0fc.
 
-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+But, I'm getting the problem at all the resources seem to be already
+allocated:
 
-Heinz Mauelshagen                                 Red Hat GmbH
-Consulting Development Engineer                   Am Sonnenhang 11
-Cluster and Storage Development                   56242 Marienrachdorf
-                                                  Germany
-Mauelshagen@RedHat.com                            +49 2626 141200
-                                                       FAX 924446
-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+cat /proc/pci:
+
+Bus  3, device   5, function 00:
+  Class 0280: PCI device 0e11:a0ec (rev 3).
+    IRQ 201.
+    Master Capable.  Latency=64
+    I/O at 0x4000 [0x40ff].
+    I/O at 0x4400 [0x44ff].
+    Non-prefetchable 32 bit memory at 0xc6fffe00 [0xc6ffffff].
+
+in cpqfcTSinit.c, function Cpqfc_initHBAdata(), it sets IOBaseL and
+IOBaseU from PciDev->resource[1].start and PciDev->resource[2].start.
+It almost appears that it should be 0 and 1 instead.
+
+
+I enable DEBUG_PCI in the source...
+
+The kernel messages say that:
+HostAdapter->PciDev->irq = 201
+PciDev->baseaddress[0]= 4000
+PciDev->baseaddress[1]= 4400
+PciDev->baseaddress[2]= c6fffe00
+PciDev->baseaddress[3]= 0
+PciDev->baseaddress[4]= 0
+PciDev->baseaddress[5]= 0
+
+So it appears that Cpqfc_initHBAdata() should call request_region() on
+4000 and 4400 (IOBaseL and IOBaseU), but since IOBaseL gets set to 4400
+and IOBaseU gets set to c6fffe00.
+
+I tried changing the code to set IOBaseL to PciDev->resource[0].start
+and IOBaseU to PciDev->resource[1].start, and MemBase to
+PciDev->resource[2].start, but the entire system froze when I did
+modprobe cpqfc.
+
+This is the error message I get when it is unmodified:
+
+cpqfcHBAdata->fcChip.Registers.:
+  IOBaseL = 4400
+  IOBaseU = c6fffe00
+  SFQconsumerIndex.address = f887e058
+  ERQproducerIndex.address = f887e008
+  TYconfig.address = f887e184
+  FMconfig.address = f887e1c0
+  FMcontrol.address = f887e1c4
+cpqfc: address in use: c6fffe00
+ACPI: PCI interrupt for device 000:03:05.0 disabled
+
+This is when it tries to request_region() IOBaseU, which seems to be
+incorrectly set to c6fffe00
+
+However, when I change it so it request 4400 and 4000, it still says the
+address is in use.
+
+Would anybody have any ideas, or perhaps be able to point me in the
+right direction?
+
+Thanks...
+
+
+
