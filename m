@@ -1,48 +1,35 @@
-From: Arjan van de Ven <arjan@infradead.org>
+From: James.Smart@Emulex.Com
 Subject: RE: [PATCH 9/11][REPOST #2]  lpfc 8.1.1 : Add polled-mode support
-Date: Thu, 01 Dec 2005 18:26:50 +0100
-Message-ID: <1133458010.2853.80.camel@laptopd505.fenrus.org>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B86@xbl3.emulex.com>
+Date: Thu, 1 Dec 2005 12:37:23 -0500
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B87@xbl3.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:15010 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932347AbVLAR0x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Dec 2005 12:26:53 -0500
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B86@xbl3.emulex.com>
+Received: from emulex.emulex.com ([138.239.112.1]:7674 "EHLO emulex.emulex.com")
+	by vger.kernel.org with ESMTP id S932359AbVLARh3 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Dec 2005 12:37:29 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
+To: arjan@infradead.org
 Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2005-12-01 at 11:58 -0500, James.Smart@Emulex.Com wrote:
-> > > if value is 1 :
-> > >   Interrupts are left enabled, expecting that the user has tuned the
-> > >   interrupt coalescing values. When this setting is enabled, the
-> > > driver
-> > >   will attempt to service completed i/o whenever new i/o is 
-> > submitted
-> > >   to the adapter. If the coalescing values are large, and the i/o
-> > >   generation rate steady, an interrupt will be avoided by servicing
-> > >   completed i/o prior to the coalescing thresholds kicking in.
-> > > However,
-> > >   if the i/o completion load is high enough or i/o generation slow,
-> > > the
-> > >   coalescion values will ensure that completed i/o is serviced in a
-> > > timely
-> > >   fashion.
-> > 
-> > this sounds nice.. couldn't this be the default? (even if the delays
-> > aren't set by default).. 
-> 
-> The real issue with changing the default is that the interrupt coalescing
-> values affect things that generate interrupts other than just FCP i/o, like
-> discovery.  Tune too high and you might start seeing erroneous ELS errors,
-> affecting target presentation, recovery after link events, etc.
+> sure.. but if the defaults are 0... why couldn't mode 1 by 
+> the default..
+> isn't mode 1 with coalesing value 0 the same as mode 0.. and 
+> if so.. why
+> need a mode 0 in the first place ?
 
-sure.. but if the defaults are 0... why couldn't mode 1 by the default..
-isn't mode 1 with coalesing value 0 the same as mode 0.. and if so.. why
-need a mode 0 in the first place ?
+There's no gain - and in fact there is now a loss. Queuecommand
+now eats up more cycles attempting to service i/o completions on
+every invokation. Nothing gets helped on the interrupt side. We
+would still have interrupts firing, thus the interrupt handler
+being invoked to clear the interrupt.
 
+We're going to consume more cycles for a) queuecommand calls that
+don't have i/o completions available, and b) for handling spurious
+interrupts.
+
+-- james
