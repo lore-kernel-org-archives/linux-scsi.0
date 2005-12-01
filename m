@@ -1,66 +1,37 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] aic79xx should be able to ignore HostRAID enabled adapters
-Date: Thu, 1 Dec 2005 12:56:34 -0500
-Message-ID: <20051201175634.GA9283@havoc.gtf.org>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01E3E318@otce2k03.adaptec.com> <20051201174411.GA13002@infradead.org>
+From: James.Smart@Emulex.Com
+Subject: RE: [PATCH 9/11][REPOST #2]  lpfc 8.1.1 : Add polled-mode support
+Date: Thu, 1 Dec 2005 13:03:45 -0500
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B88@xbl3.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:34181 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S932370AbVLAR4k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2005 12:56:40 -0500
-Content-Disposition: inline
-In-Reply-To: <20051201174411.GA13002@infradead.org>
+Received: from emulex.emulex.com ([138.239.112.1]:27903 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S932371AbVLASDy convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Dec 2005 13:03:54 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, "Darrick J. Wong" <djwong@us.ibm.com>, Chris McDermott <lcm@us.ibm.com>, Luvella McFadden <luvella@us.ibm.com>, AJ Johnson <blujuice@us.ibm.com>, Kevin Stansell <kstansel@us.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Mauelshagen@redhat.com
+To: arjan@infradead.org
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Dec 01, 2005 at 05:44:12PM +0000, Christoph Hellwig wrote:
-> On Thu, Dec 01, 2005 at 08:44:15AM -0500, Salyzyn, Mark wrote:
-> > The HostRAID driver has a specialized (ok, yes, also proprietary) CHIM
-> > and sequencer where attention can be focused on techniques of
-> > performance improvement and OS agnostics. In addition, the RAID code in
-> > that driver understands the hardware, CHIM & sequencer and takes
-> > advantage of features that just can not be performed by an abstracted dm
-> > or an LLD. RAID1 is handled under some conditions, for instance, with
-> > one DMA operation over the PCI bus rather than two duplicated for each
-> > target, greatly increasing the performance.
-> 
-> If you contributed that sequencer code and sent me a card I'm pretty sure
-> I'd love into adding support for this to a special DM module.  In fact we'd
-> need somthing similar for Certain SATA boards aswell.
-> 
-> OTOH the raid flag would be useless aswell there, because we'd of course
-> support this on identical cards without the raid bios aswell :)
+> ok fair enough...  what kind of granularity can this delay be set too?
+> It might make sense to default to say 50 usec or 100usec always...
 
-I'd love to see a hardware-aware DM RAID module, since I want to do the
-same thing for sata_sx4 (Promise SX4).
+Range is in milliseconds, and capped to a value < 100ms.
 
-SX4 has four ATA engines, an on-card ECC-capable DIMM, and an on-card
-XOR engine.  The OS driver has complete control over these facilities.
-Unfortunately, driving the card in "dumb mode" means that performance
-takes a major hit, since each transaction looks like:
+We had the same thoughts. In general we concluded that the lost cycles in
+queuecommand probably still outweighs the gain. This, coupled with the
+general hesitancy to change the base behavior w/o a compelling reason,
+(and the qual impacts) means we have no desire to change the default.
+ 
+> Also, not sure how your hardware works but it would be really sweet if
+> the kernel could set "this request should be coalesed" or 
+> "this request
+> is latency sensitive, gimme immediate", so that we can set async write
+> IO's for coalescing while not getting latency on reads...
 
-	submit DMA memcpy to HDMA engine
-	get HDMA interrupt
-		# now, the data is on the card
-	submit ATA write command
-	get ATA interrupt
+Yep. Unfortunately, nothing this granular.
 
-All data must be copied to/from the DIMM, before the ATA engine can do
-anything.  Further, there is only one HDMA engine, but 4 ATA engines.
-
-Ideally, RAID1 would copy the data to the card ONCE, then start 2 ATA
-engines.  Ideally, RAID5 would copy the data to the card ONCE, XOR it,
-then start the ATA engines.  And the rest of the DIMM should be used as
-write-through cache.
-
-I'm sure DM can do that, but I haven't researched how.
-
-I'll supply a card (and engineering help, but no docs, alas) to anyone
-interested in trying out this stuff.
-
-	Jeff
-
-
-
+-- james
