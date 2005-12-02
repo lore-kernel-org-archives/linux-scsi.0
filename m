@@ -1,72 +1,97 @@
-From: "Nicholas A. Bellinger" <nab@kernel.org>
-Subject: Followup on open/iscsi+core-iscsi
-Date: Fri, 02 Dec 2005 12:05:50 -0800
-Message-ID: <1133553950.26440.56.camel@haakon>
+From: "goggin, edward" <egoggin@emc.com>
+Subject: RE: [SCSI BUG 2.6.15-rc3-mm1] scheduling while atomic on boot tim
+	e
+Date: Fri, 2 Dec 2005 15:35:41 -0500
+Message-ID: <C2EEB4E538D3DC48BF57F391F422779321AE79@srmanning.eng.emc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <iscsitarget-devel-admin@lists.sourceforge.net>
-Sender: iscsitarget-devel-admin@lists.sourceforge.net
-Errors-To: iscsitarget-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
-List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=iscsitarget-devel>
-To: Open iSCSI <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, iet-dev <iscsitarget-devel@lists.sourceforge.net>
-Cc: LKML <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mexforward.lss.emc.com ([168.159.213.200]:7536 "EHLO
+	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
+	id S1751062AbVLBUgF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Dec 2005 15:36:05 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'Andrew Morton' <akpm@osdl.org>, Wu Fengguang <wfg@mail.ustc.edu.cn>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Greetings All,
+I think this is caused by my patch to scsi_next_command()
+(on or about 11/11) causing it to call put_device() and
+invoke the kobject's release() function while in soft
+interrupt.  My patch should be removed ... although I
+don't have an alternate solution in mind for the original
+problem which was an "oops with USB Storage on 2.6.14".
 
-I just wanted to send a follow up note on the announcement that was made
-yesterday relating to open/iscsi+core-iscsi project, and what it means
-to users of iSCSI on Linux.  People looking for a stable, mature and
-complete implementation of an iSCSI Initiator can deploy core-iscsi
-v1.6.2.0 and core-iscsi-tools v3.0 on Linux 2.6 today.  Developers
-interested in iSCSI should continue to focus their efforts on the
-open/iscsi stack.  In the upcoming weeks, efforts will begin to start
-porting over the core-iscsi-tools management interface and tools to
-open/iscsi.  Keep in mind that core-iscsi-tools allows for many
-different types of functionality that may or may not be currently
-present and/or stable in open/iscsi.  So again, what this means today
-is:
-
-DEVELOPERS == Open/iSCSI
-USERS == Core-iSCSI
-THE FUTURE == Open/iSCSI+Core-iSCSI
-
-The primary reason that active maintainence and development has been
-resurrected on core-iscsi and core-iscsi-tools is to address the fact
-that no iSCSI Initiator implementations existed that where practical for
-the average user that where being actively maintained.  The average user
-should not need to be concerned with the underlying iSCSI stack, but
-only be concerned with the configuration and management side of the
-core-iscsi project.  What this means for users of iSCSI on Linux today
-is they can safely use core-iscsi on both the stack and tools side, and
-know that when open/iscsi is ready to roll, there will be little, if no
-breakage from their perspective during the migration process.
-
-Additionally, a new update (v1.6.2.0-p1) containing a small fix to get
-the core-iscsi stack to compile with GCC v4 (thanks to Lance Dillon on
-this) has been put on kernel.org:
-
-http://www.kernel.org/pub/linux/kernel/people/nab/iscsi-initiator-core/core-iscsi-v1.6.2.0-p1.tar.bz2
-
-I would like to encourage people to give feedback on the Core-iSCSI
-project's management layout, as well as any other comments.
-
-Thanks!
-  
--- 
-Nicholas A. Bellinger <nab@kernel.org>
-
-
-
--------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
-for problems?  Stop!  Download the new AJAX search engine that makes
-searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
-http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org 
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Andrew Morton
+> Sent: Friday, December 02, 2005 2:32 PM
+> To: Wu Fengguang
+> Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
+> Subject: Re: [SCSI BUG 2.6.15-rc3-mm1] scheduling while 
+> atomic on boot time
+> 
+> Wu Fengguang <wfg@mail.ustc.edu.cn> wrote:
+> >
+> > My server occasionally crashes on boot time, this has been 
+> happening in many
+> > recent kernel versions(at least from 2.6.14-rcx). It is 
+> rare enough, I setup
+> > netconsole and rebooted numerous times, but still failed to 
+> catch it. Luckily
+> > it happened again this time, and does not panic. Here is the logs. 
+> > 
+> > Thanks,
+> > Wu
+> > 
+> > Error messages:
+> > [4294676.927000] scheduling while atomic: ksoftirqd/0/0x00000200/3
+> > [4294676.927000]  [dump_stack+21/32] dump_stack+0x15/0x20
+> > [4294676.927000]  [schedule+3563/3584] schedule+0xdeb/0xe00
+> > [4294676.927000]  [__down+138/272] __down+0x8a/0x110
+> > [4294676.927000]  [__sched_text_start+10/16] <6>scsi[0]: 
+> scanning scsi channel 1 [Phy 1] for non-raid devices
+> > [4294676.927000] __down_failed+0xa/0x10
+> > [4294676.927000]  [.text.lock.main+43/71] .text.lock.main+0x2b/0x47
+> > [4294676.928000]  [device_del+62/112] device_del+0x3e/0x70
+> > [4294676.928000]  [scsi_target_reap+137/176] 
+> scsi_target_reap+0x89/0xb0
+> > [4294676.928000]  [scsi_device_dev_release+251/400] 
+> scsi_device_dev_release+0xfb/0x190
+> > [4294676.928000]  [device_release+23/80] device_release+0x17/0x50
+> > [4294676.928000]  [kobject_cleanup+116/128] 
+> kobject_cleanup+0x74/0x80
+> > [4294676.928000]  [kobject_release+11/16] kobject_release+0xb/0x10
+> > [4294676.929000]  [kref_put+52/160] kref_put+0x34/0xa0
+> > [4294676.929000]  [kobject_put+20/32] kobject_put+0x14/0x20
+> > [4294676.929000]  [put_device+17/32] put_device+0x11/0x20
+> > [4294676.929000]  [scsi_next_command+48/64] 
+> scsi_next_command+0x30/0x40
+> > [4294676.929000]  [scsi_end_request+165/192] 
+> scsi_end_request+0xa5/0xc0
+> > [4294676.929000]  [scsi_io_completion+540/1152] 
+> scsi_io_completion+0x21c/0x480
+> > [4294676.929000]  [scsi_generic_done+43/64] 
+> scsi_generic_done+0x2b/0x40
+> > [4294676.930000]  [scsi_finish_command+146/240] 
+> scsi_finish_command+0x92/0xf0
+> > [4294676.930000]  [scsi_softirq+215/320] scsi_softirq+0xd7/0x140
+> > [4294676.930000]  [__do_softirq+216/240] __do_softirq+0xd8/0xf0
+> > [4294676.930000]  [do_softirq+74/96] do_softirq+0x4a/0x60
+> > [4294676.930000]  =======================
+> 
+> Which device driver are you using?
+> 
+> This is just a warning - it won't necessarily cause a crash 
+> and in this
+> case it didn't appear to do so.
+> 
+> I seem to recall diagnosing this exact locking problem a 
+> month or so ago,
+> and cc'ing linux-scsi on that analysis.
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
