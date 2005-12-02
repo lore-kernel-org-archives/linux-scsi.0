@@ -1,68 +1,37 @@
-From: Hugh Dickins <hugh@veritas.com>
-Subject: Re: Fw: crash on x86_64 - mm related?
-Date: Fri, 2 Dec 2005 19:12:19 +0000 (GMT)
-Message-ID: <Pine.LNX.4.61.0512021856170.4940@goblin.wat.veritas.com>
-References: <20051129092432.0f5742f0.akpm@osdl.org>
- <Pine.LNX.4.63.0512012040390.5777@kai.makisara.local>
- <Pine.LNX.4.64.0512011136000.3099@g5.osdl.org> <20051201195657.GB7236@tau.solarneutrino.net>
- <Pine.LNX.4.61.0512012008420.28450@goblin.wat.veritas.com>
- <20051202180326.GB7634@tau.solarneutrino.net>
+From: Dave C Boutcher <sleddog@us.ibm.com>
+Subject: Re: [PATCH] ibmvscsi kexec fix
+Date: Fri, 2 Dec 2005 13:28:20 -0600
+Message-ID: <20051202192820.GA10115@cs.umn.edu>
+References: <20051115155300.GA26724@cs.umn.edu>
+Reply-To: boutcher@cs.umn.edu
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from silver.veritas.com ([143.127.12.111]:48224 "EHLO
-	silver.veritas.com") by vger.kernel.org with ESMTP id S1750781AbVLBTMe
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Dec 2005 14:12:34 -0500
-Received: from linux.wat.veritas.com([10.10.97.50]) (2977 bytes) by megami.veritas.com
-	via sendmail with P:esmtp/R:smart_host/T:smtp
-	(sender: <hugh@veritas.com>)
-	id <m1EiGKS-0001HhC@megami.veritas.com>
-	for <linux-scsi@vger.kernel.org>; Fri, 2 Dec 2005 11:12:20 -0800 (PST)
-	(Smail-3.2.0.101 1997-Dec-17 #15 built 2001-Aug-30)
-In-Reply-To: <20051202180326.GB7634@tau.solarneutrino.net>
+Received: from mail.cs.umn.edu ([128.101.32.202]:33480 "EHLO mail.cs.umn.edu")
+	by vger.kernel.org with ESMTP id S1750777AbVLBT2W (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Dec 2005 14:28:22 -0500
+Content-Disposition: inline
+In-Reply-To: <20051115155300.GA26724@cs.umn.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ryan Richter <ryan@tau.solarneutrino.net>
-Cc: Linus Torvalds <torvalds@osdl.org>, Kai Makisara <Kai.Makisara@kolumbus.fi>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, Michael Ellerman <michael@ellerman.id.au>
 
-On Fri, 2 Dec 2005, Ryan Richter wrote:
-> On Thu, Dec 01, 2005 at 08:21:57PM +0000, Hugh Dickins wrote:
-> > If the problem were easily reproducible, it'd be great if you could
-> > try this patch; but I think you've said it's not :-(
+On Tue, Nov 15, 2005 at 09:53:00AM -0600, Dave C Boutcher wrote:
+> James, this is a 2.6.15 candidate...it makes ibmvscsi work
+> correctly with the recent set of kexec patches that went in.
+> This is based on work by Michael Ellerman, who chased this
+> initially.  He validated that it works during kexec.
 > 
-> I can throw this in and test it for sure.  I'll run the backups every
-> day for a while to speed up the testing also.
+> Handle kexec correctly in ibmvscsi.   During kexec the adapter
+> will not get cleaned up correctly, so we may need to reset it
+> to make it sane again.
+> 
+> Signed-off-by: Dave Boutcher <sleddog@us.ibm.com>
 
-Thanks - though everyone seems to have agreed that the patch is needed
-whatever: so although it would be interesting to know if it has fixed
-your problem, we're not waiting on you to go forward with it (James
-already invited Linus to pull).
+James, if this doesn't make it into 2.6.15 it won't totally break
+my heart, since I'm not sure how many people are using ppc64
+kexec, but was there some reason this patch wasn't included in 
+your 2.6.15 fixes?
 
-> Could someone please tell me exactly which patches I should include in
-> the kernel I will boot tomorrow?
-
-You hit the problem with 2.6.14.2.  My own opinion would be to apply
-just that patch to that release, or to 2.6.14.3 if you prefer.
-
-Linus was suggesting 2.6.15-rc4 because there's some debug there which
-might have helped identify the offending driver: but your backtrace
-had already showed us the offending driver.  Well, not proven: if a
-page is doubly freed, the one that suffers is not necessarily the one
-that's guilty; but it's a reasonable expectation.  I don't think his
-debug would tell us anything more.
-
-> I haven't played with -rc for ages, so
-> I'm no longer sure which kernel I should start with (2.6.14 or
-> 2.6.14.3?).
-
-If you do want 2.6.15-rc4, then it's 2.6.14 + patch-2.6.15-rc4.
-
-> Are the MPT-fusion performance fix patches in -rc4, or if
-> not will they still apply?
-
-I don't know it myself.  Is that the one about the module performing
-much better than the builtin?  I'd expect that to be in.  If you have
-it, suggest you look at your 2.6.15-rc4 source to see if it's there.
-
-Hugh
+-- 
+Dave Boutcher
