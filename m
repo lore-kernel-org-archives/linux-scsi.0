@@ -1,60 +1,72 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: Fw: crash on x86_64 - mm related?
-Date: Fri, 2 Dec 2005 21:46:51 +0200 (EET)
-Message-ID: <Pine.LNX.4.63.0512022131440.4506@kai.makisara.local>
-References: <20051129092432.0f5742f0.akpm@osdl.org>
- <Pine.LNX.4.63.0512012040390.5777@kai.makisara.local>
- <Pine.LNX.4.64.0512011136000.3099@g5.osdl.org> <1133468882.5232.14.camel@mulgrave>
- <Pine.LNX.4.63.0512012304240.5777@kai.makisara.local>
- <Pine.LNX.4.61.0512021325020.1507@goblin.wat.veritas.com>
- <Pine.LNX.4.63.0512021932590.4506@kai.makisara.local>
- <Pine.LNX.4.61.0512021836100.4940@goblin.wat.veritas.com>
+From: "Nicholas A. Bellinger" <nab@kernel.org>
+Subject: Followup on open/iscsi+core-iscsi
+Date: Fri, 02 Dec 2005 12:05:50 -0800
+Message-ID: <1133553950.26440.56.camel@haakon>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep01-0.kolumbus.fi ([193.229.0.41]:63410 "EHLO
-	fep01-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S1750988AbVLBTqm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Dec 2005 14:46:42 -0500
-In-Reply-To: <Pine.LNX.4.61.0512021836100.4940@goblin.wat.veritas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <iscsitarget-devel-admin@lists.sourceforge.net>
+Sender: iscsitarget-devel-admin@lists.sourceforge.net
+Errors-To: iscsitarget-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
+List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=iscsitarget-devel>
+To: Open iSCSI <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, iet-dev <iscsitarget-devel@lists.sourceforge.net>
+Cc: LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hugh Dickins <hugh@veritas.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@osdl.org>, Ryan Richter <ryan@tau.solarneutrino.net>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, 2 Dec 2005, Hugh Dickins wrote:
+Greetings All,
 
-> On Fri, 2 Dec 2005, Kai Makisara wrote:
-> > On Fri, 2 Dec 2005, Hugh Dickins wrote:
-> > I include at the end of this message the patch I sent to linux-scsi 
-> > earlier. It should clarify what are the useful parts of the later patch.
-> 
-> Thanks, yes.  I'll leave out updating the verstr[],
-> I think that should be sent by you alone.
-> 
-> > I think the release_buffering() call at the end of st_read must say 1. All 
-> > returns use the same path (except the one returning -ERESTARTSYS).
-> 
-> Okay, if you insist.  Yes, all those returns pass that way, but if it
-> actually did some reading into the memory, it called read_tape, which
-> did the effective release_buffering immediately after st_do_scsi.
-> 
-> But perhaps I'm misreading it, and even if not, someone will come
-> along and "correct" it later, or change things around and make my
-> not-dirty assumption wrong.
-> 
-Your analysis is correct. It is not necessary or useful to use dirtied = 1 
-at the end of st_read(). It has been a long time since I introduced 
-release_buffering() into st.c and I did not read all of the code now.
+I just wanted to send a follow up note on the announcement that was made
+yesterday relating to open/iscsi+core-iscsi project, and what it means
+to users of iSCSI on Linux.  People looking for a stable, mature and
+complete implementation of an iSCSI Initiator can deploy core-iscsi
+v1.6.2.0 and core-iscsi-tools v3.0 on Linux 2.6 today.  Developers
+interested in iSCSI should continue to focus their efforts on the
+open/iscsi stack.  In the upcoming weeks, efforts will begin to start
+porting over the core-iscsi-tools management interface and tools to
+open/iscsi.  Keep in mind that core-iscsi-tools allows for many
+different types of functionality that may or may not be currently
+present and/or stable in open/iscsi.  So again, what this means today
+is:
 
-> It's just that after seeing how sg.c is claiming to dirty even readonly
-> memory, I'm excessively averse to saying we've dirtied memory we haven't.
-> My hangup, I'll get over it!
-> 
-Please don't. I have a very conservative attitude to these things: my 
-priority is to make sure that the data is correct even if it is not the 
-fastest code. I will happily let others point out when I am too 
-conservative.
+DEVELOPERS == Open/iSCSI
+USERS == Core-iSCSI
+THE FUTURE == Open/iSCSI+Core-iSCSI
 
+The primary reason that active maintainence and development has been
+resurrected on core-iscsi and core-iscsi-tools is to address the fact
+that no iSCSI Initiator implementations existed that where practical for
+the average user that where being actively maintained.  The average user
+should not need to be concerned with the underlying iSCSI stack, but
+only be concerned with the configuration and management side of the
+core-iscsi project.  What this means for users of iSCSI on Linux today
+is they can safely use core-iscsi on both the stack and tools side, and
+know that when open/iscsi is ready to roll, there will be little, if no
+breakage from their perspective during the migration process.
+
+Additionally, a new update (v1.6.2.0-p1) containing a small fix to get
+the core-iscsi stack to compile with GCC v4 (thanks to Lance Dillon on
+this) has been put on kernel.org:
+
+http://www.kernel.org/pub/linux/kernel/people/nab/iscsi-initiator-core/core-iscsi-v1.6.2.0-p1.tar.bz2
+
+I would like to encourage people to give feedback on the Core-iSCSI
+project's management layout, as well as any other comments.
+
+Thanks!
+  
 -- 
-Kai
+Nicholas A. Bellinger <nab@kernel.org>
+
+
+
+-------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
+for problems?  Stop!  Download the new AJAX search engine that makes
+searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
+http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
