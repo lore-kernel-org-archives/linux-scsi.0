@@ -1,45 +1,47 @@
-From: "Moore, Eric Dean" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] pci_ids.h - adding subclass code for SAS Controllers
-Date: Thu, 1 Dec 2005 16:51:02 -0700
-Message-ID: <91888D455306F94EBD4D168954A9457C051F36BF@nacos172.co.lsil.com>
+From: Matthias Andree <matthias.andree@gmx.de>
+Subject: Re: aic79xx and RAID ?
+Date: Fri, 02 Dec 2005 01:32:50 +0100
+Message-ID: <m3fypcuyml.fsf@merlin.emma.line.org>
+References: <20051201102039.GA23336@danisch.de>
+	<1133433450.2853.25.camel@laptopd505.fenrus.org>
+	<20051201104805.GA3893@danisch.de> <438EE0ED.7000605@pobox.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_000_01C5F6D2.15D07D60"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:52719 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932091AbVLAXvR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2005 18:51:17 -0500
+Received: from krusty.dt.E-Technik.uni-dortmund.de ([129.217.163.1]:17552 "EHLO
+	mail.dt.e-technik.uni-dortmund.de") by vger.kernel.org with ESMTP
+	id S932576AbVLBAcz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Dec 2005 19:32:55 -0500
+In-Reply-To: <438EE0ED.7000605@pobox.com> (Jeff Garzik's message of "Thu, 01
+	Dec 2005 06:39:25 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Hadmut Danisch <hadmut@danisch.de>, Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, rick@linuxmafia.com
 
-This message is in MIME format. Since your mail reader does not understand
-this format, some or all of this message may not be legible.
+Jeff Garzik <jgarzik@pobox.com> writes:
 
-------_=_NextPart_000_01C5F6D2.15D07D60
-Content-Type: text/plain
+> Hadmut Danisch wrote:
+>> A software raid controller?  Never heard of such a beast before. I
+>> always thought that there are exactly two ways to do raid, one way is
+>> to have it all hidden in the controller, which makes the
+>> RAID mirror appear as just a single disk to the kernel, and the other
+>> way is to use the kernel software raid (configured with
+>> mdadm). I've never heard of a software raid controller, where the
+>> kernel must
+>> do the work itself. After all, what's the controller's job and
+>> why is it called a RAID controller then?
+>
+> Marketing.
+>
+> Read http://linux.yyz.us/sata/faq-sata-raid.html
 
-Adding new subclass code for SAS controllers.
+Well... your site doesn't list this "HostRAID" euphemism for software
+RAID on SCSI ;-)
 
-Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
+Seriously, could you add ICH7-R to your fakeraid list, too?
+It appears to be software RAID, too.
+And perhaps a link to <http://linuxmafia.com/faq/Hardware/sata.html>.
 
-
-------_=_NextPart_000_01C5F6D2.15D07D60
-Content-Type: application/octet-stream;
-	name="pci_class_sas.patch"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="pci_class_sas.patch"
-
---- b/include/linux/pci_ids.h	2005-12-01 09:20:26.000000000 -0700=0A=
-+++ a/include/linux/pci_ids.h	2005-12-01 16:41:15.673729728 -0700=0A=
-@@ -15,6 +15,7 @@=0A=
- #define PCI_CLASS_STORAGE_FLOPPY	0x0102=0A=
- #define PCI_CLASS_STORAGE_IPI		0x0103=0A=
- #define PCI_CLASS_STORAGE_RAID		0x0104=0A=
-+#define PCI_CLASS_STORAGE_SAS		0x0107=0A=
- #define PCI_CLASS_STORAGE_OTHER		0x0180=0A=
- =0A=
- #define PCI_BASE_CLASS_NETWORK		0x02=0A=
-
-------_=_NextPart_000_01C5F6D2.15D07D60--
+-- 
+Matthias Andree
