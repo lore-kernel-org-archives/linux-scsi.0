@@ -1,59 +1,48 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [SCSI BUG 2.6.15-rc3-mm1] scheduling while atomic on boot time
-Date: Fri, 2 Dec 2005 11:31:47 -0800
-Message-ID: <20051202113147.600b80cd.akpm@osdl.org>
-References: <20051202141455.GA10038@mail.ustc.edu.cn>
+From: Ryan Richter <ryan@tau.solarneutrino.net>
+Subject: Re: Fw: crash on x86_64 - mm related?
+Date: Fri, 2 Dec 2005 14:44:47 -0500
+Message-ID: <20051202194447.GA7679@tau.solarneutrino.net>
+References: <20051129092432.0f5742f0.akpm@osdl.org> <Pine.LNX.4.63.0512012040390.5777@kai.makisara.local> <Pine.LNX.4.64.0512011136000.3099@g5.osdl.org> <20051201195657.GB7236@tau.solarneutrino.net> <Pine.LNX.4.61.0512012008420.28450@goblin.wat.veritas.com> <20051202180326.GB7634@tau.solarneutrino.net> <Pine.LNX.4.61.0512021856170.4940@goblin.wat.veritas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750973AbVLBTcF@vger.kernel.org>
-In-Reply-To: <20051202141455.GA10038@mail.ustc.edu.cn>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750979AbVLBToy@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.61.0512021856170.4940@goblin.wat.veritas.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Wu Fengguang <wfg@mail.ustc.edu.cn>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Hugh Dickins <hugh@veritas.com>
+Cc: Linus Torvalds <torvalds@osdl.org>, Kai Makisara <Kai.Makisara@kolumbus.fi>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, ryan@tau.solarneutrino.net
 List-Id: linux-scsi@vger.kernel.org
 
-Wu Fengguang <wfg@mail.ustc.edu.cn> wrote:
->
-> My server occasionally crashes on boot time, this has been happening in many
-> recent kernel versions(at least from 2.6.14-rcx). It is rare enough, I setup
-> netconsole and rebooted numerous times, but still failed to catch it. Luckily
-> it happened again this time, and does not panic. Here is the logs. 
+On Fri, Dec 02, 2005 at 07:12:19PM +0000, Hugh Dickins wrote:
+> On Fri, 2 Dec 2005, Ryan Richter wrote:
+> > On Thu, Dec 01, 2005 at 08:21:57PM +0000, Hugh Dickins wrote:
+> > > If the problem were easily reproducible, it'd be great if you could
+> > > try this patch; but I think you've said it's not :-(
+> > 
+> > I can throw this in and test it for sure.  I'll run the backups every
+> > day for a while to speed up the testing also.
 > 
-> Thanks,
-> Wu
+> Thanks - though everyone seems to have agreed that the patch is needed
+> whatever: so although it would be interesting to know if it has fixed
+> your problem, we're not waiting on you to go forward with it (James
+> already invited Linus to pull).
 > 
-> Error messages:
-> [4294676.927000] scheduling while atomic: ksoftirqd/0/0x00000200/3
-> [4294676.927000]  [dump_stack+21/32] dump_stack+0x15/0x20
-> [4294676.927000]  [schedule+3563/3584] schedule+0xdeb/0xe00
-> [4294676.927000]  [__down+138/272] __down+0x8a/0x110
-> [4294676.927000]  [__sched_text_start+10/16] <6>scsi[0]: scanning scsi channel 1 [Phy 1] for non-raid devices
-> [4294676.927000] __down_failed+0xa/0x10
-> [4294676.927000]  [.text.lock.main+43/71] .text.lock.main+0x2b/0x47
-> [4294676.928000]  [device_del+62/112] device_del+0x3e/0x70
-> [4294676.928000]  [scsi_target_reap+137/176] scsi_target_reap+0x89/0xb0
-> [4294676.928000]  [scsi_device_dev_release+251/400] scsi_device_dev_release+0xfb/0x190
-> [4294676.928000]  [device_release+23/80] device_release+0x17/0x50
-> [4294676.928000]  [kobject_cleanup+116/128] kobject_cleanup+0x74/0x80
-> [4294676.928000]  [kobject_release+11/16] kobject_release+0xb/0x10
-> [4294676.929000]  [kref_put+52/160] kref_put+0x34/0xa0
-> [4294676.929000]  [kobject_put+20/32] kobject_put+0x14/0x20
-> [4294676.929000]  [put_device+17/32] put_device+0x11/0x20
-> [4294676.929000]  [scsi_next_command+48/64] scsi_next_command+0x30/0x40
-> [4294676.929000]  [scsi_end_request+165/192] scsi_end_request+0xa5/0xc0
-> [4294676.929000]  [scsi_io_completion+540/1152] scsi_io_completion+0x21c/0x480
-> [4294676.929000]  [scsi_generic_done+43/64] scsi_generic_done+0x2b/0x40
-> [4294676.930000]  [scsi_finish_command+146/240] scsi_finish_command+0x92/0xf0
-> [4294676.930000]  [scsi_softirq+215/320] scsi_softirq+0xd7/0x140
-> [4294676.930000]  [__do_softirq+216/240] __do_softirq+0xd8/0xf0
-> [4294676.930000]  [do_softirq+74/96] do_softirq+0x4a/0x60
-> [4294676.930000]  =======================
+> > Could someone please tell me exactly which patches I should include in
+> > the kernel I will boot tomorrow?
+> 
+> You hit the problem with 2.6.14.2.  My own opinion would be to apply
+> just that patch to that release, or to 2.6.14.3 if you prefer.
+> 
+> Linus was suggesting 2.6.15-rc4 because there's some debug there which
+> might have helped identify the offending driver: but your backtrace
+> had already showed us the offending driver.  Well, not proven: if a
+> page is doubly freed, the one that suffers is not necessarily the one
+> that's guilty; but it's a reasonable expectation.  I don't think his
+> debug would tell us anything more.
 
-Which device driver are you using?
+OK, I guess I'll stick with 2.6.14.3 for now, plus your patch.  Should I
+keep Kai's st.c patch?  There was some mention of other patches, are
+those relevant?  Most of that discussion went over my head...
 
-This is just a warning - it won't necessarily cause a crash and in this
-case it didn't appear to do so.
-
-I seem to recall diagnosing this exact locking problem a month or so ago,
-and cc'ing linux-scsi on that analysis.
+Thanks,
+-ryan
