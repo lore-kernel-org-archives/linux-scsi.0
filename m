@@ -1,97 +1,61 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 1/2] libata: Remove dependence on host_set->dev for SAS
-Date: Fri, 2 Dec 2005 09:07:29 +0100
-Message-ID: <58cb370e0512020007n67f7ba30g7cae84c66b18859@mail.gmail.com>
-References: <4341A91A.3020000@us.ibm.com> <435E7105.4010105@pobox.com>
-	 <435E87E8.9010506@us.ibm.com> <435E8AC7.1080407@pobox.com>
-	 <435EB656.1040502@adaptec.com> <4360FAC1.8020409@us.ibm.com>
-	 <43850F0D.7040907@torque.net> <43851262.7020807@pobox.com>
-	 <58cb370e0511240012r64ad150eo90553b230992424e@mail.gmail.com>
-	 <438FABF8.3020802@pobox.com>
+From: "bilgi@yazarcizer.com" <bilgi@yazarcizer.com>
+Subject: =?ISO-8859-1?Q?=20SAH=DDP?=  =?ISO-8859-1?Q?=20=C7IKMAK?=  =?ISO-8859-1?Q?=20G=D6REV=DD?=
+	=?ISO-8859-1?Q?M=DDZ?=
+Date: Fri, 2 Dec 2005 10:53:57 +0200
+Message-ID: <20051202095758.667A627E4F__23333.0081719489$1133514442$gmane$org@diablo.beysis.net>
+Reply-To: <extreay@walla.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nproxy.gmail.com ([64.233.182.196]:52916 "EHLO nproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751754AbVLBIHa convert rfc822-to-8bit
+Received: from [195.142.106.22] ([195.142.106.22]:13969 "EHLO
+	diablo.beysis.net") by vger.kernel.org with ESMTP id S1751762AbVLBJGn
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Dec 2005 03:07:30 -0500
-Received: by nproxy.gmail.com with SMTP id x4so170079nfb
-        for <linux-scsi@vger.kernel.org>; Fri, 02 Dec 2005 00:07:29 -0800 (PST)
-In-Reply-To: <438FABF8.3020802@pobox.com>
-Content-Disposition: inline
+	Fri, 2 Dec 2005 04:06:43 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: dougg@torque.net, brking@us.ibm.com, Luben Tuikov <luben_tuikov@adaptec.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, t.schorpp@gmx.de
 
-On 12/2/05, Jeff Garzik <jgarzik@pobox.com> wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> > On 11/24/05, Jeff Garzik <jgarzik@pobox.com> wrote:
-> >
-> >>Douglas Gilbert wrote:
-> >>
-> >>>I don't think a SATL is that easy. One SCSI command can
-> >>>translate into zero or more ATA commands. If it translates
-> >>>to multiple commands, then there is the possibility of an
-> >>>error prior to the last in the sequence of ATA commands
-> >>>(how to report; rollback needed ?). The SATL needs to hold
-> >>>state and needs a service thread if it is to support the
-> >>>IMMED bit on some commands (e.g. START STOP UNIT).
-> >>
-> >>It needs a conceptual service thread, not necessarily an explicit one.
-> >>
-> >>With REQUEST SENSE, I've demonstrated how to report errors with each
-> >>step in the sequence.  With demo patches I've posted, I've demonstrated
-> >>(using qc->private_data) how to hold state.
-> >>
-> >>
-> >>
-> >>>libata still has a ways to go to catch up to SAT rev 7
-> >>>but has made some good progress lately with the addition
-> >>>of the ATA pass through commands (lk 2.6.15-rc1 and onward).
-> >>>smartmontools (just prior to 5.34) now works with '-d ata'
-> >>>on libata-connected SATA disks. The '-d ata' ** overrides
-> >>>the guess of a SCSI disk based on the device node (e.g.
-> >>>/dev/sda) and uses the HDIO_DRIVE_CMD and HDIO_DRIVE_TASK
-> >>>ioctls. The absence of support for the HDIO_DRIVE_TASKFILE
-> >>>ioctl means that "selective" self-test can't be done.
-> >>>I'm not sure if moving smartmontools to the ATA PASS THROUGH
-> >>>SCSI commands will win back the "selective" self-test
-> >>>capability. Anyway, going to those ATA PASS THROUGH SCSI
-> >>
-> >>ATA passthru can do anything the legacy IDE ioctls can do (and more).
-> >
-> >
-> > [ definitely ATA passthru is the way to go but... ]
-> >
-> > discrete taskfiles?
->
-> what is this?
+Medyanýn ve kamuoyunun gözü önünde 27 Kasým`da Swissotelde bir satýþ gerçekleþti.
 
-flagged taskfiles
+Cumhuriyet kurucumuz Mustafa Kemal Atatürk’e ait belge, bilgi, doküman ve eþyalarý 
+müzayedede satýþa sunulmuþtur.Duyarlýlýk noktalarýný yitirmiþ, skandallarýn olaðanlaþtýðý, 
+bir toplum olduðumuzu gözler önüne seren bu duruma yine de insani ve ülkesini seven 
+insanlar olarak dur demeyi vicdani ahlaki ve düþünsel olarak karþý gelmeyi borç bildik.
 
-yes, this is a low priority but your statement is oversimplification
-and I don't even mentioned other "IDE ioctl", so:
+Cumhuriyetin kurumlarý, cumhuriyet kurucusunun eserlerine sahip çýkmazken, mezatlarda 
+satýlýrken yüreðimizin acýdýðýný bir kez daha ifade etmek istedik.Ülkemi pazarlarým diyen 
+tüccar zihniyetli Baþbakaný,hükümeti,bakanlýklarý ve  adý Atatürk ile baþlayan 
+tüm kurumlarýn buradaki sessizliðini ve suç ortaklýðýný bozmak istiyoruz.
 
-ATA passthru can do anything _important_ that legacy IDE ioctls
-can do (write cache [dis,en]abling?)
+Tarihini parça parça satan bir ülkenin onursuz insaný olmamak için  imzalarýmýzý atýyoruz.
+Baþta hükümet olmak üzere, tüm kurumlarý ve yurttaþlarýmýzý, Atatürk’e ait olan eþya, bilgi, 
+doküman ve belgelerin ülkemize ve tüm cumhuriyet yurttaþlarýna ait olduðu gerçeðinin altýný 
+bir kez daha çiziyoruz.Tarihimize ve hepimize ait olan bu deðerlerin kiþisel mülkiyete geçemeyeceðini 
+ifade ediyoruz.Tarihi eser kaçakçýlýðý içermesi bir yana tarihinin de parça parça satýlmasý anlamýna
+ gelen bu duruma son verilerek, satýlan bu eþyalarýn topluma kazandýrýlarak korunmasýný ve  
+herkesin görebileceði yerde  sergilenmesini istiyoruz.
 
-> > multi-PIO?
->
-> what is this?  multi-sector PIO, such as READ MULTIPLE SECTORS?  ATA
+Ulusal bir önderin hiçbir özel eþyasý kiþiselleþtirilemez.
 
-short for multi sector-sector PIO
+Saygýlarýmla
+Erdoðan Aslanoðlu
+www.yazarcizer.com
+Genel Yayýn Yönetmeni
 
-> passthru can do that.
+www.yazarcizer.com sitesi olarak bu konuda baþta tüm yurttaþlarýmýz ve kuruluþlarýn 
+duyarlýlýk göstererek aþaðýdaki kurumlara e-posta atarak tepkilerini dile getirmelerini ve 
+bu kampanyanýn takipçisi olmalarýný rica ediyoruz.
 
-not in the mainline, I've just checked libata-dev and it is OK
+TBMM : bilgiedinme@tbmm.gov.tr
+Baþbakanlýk : halkilis@basbakanlik.gov.tr
+Ýçiþleri Bakanlýðý : i-basin@icisleri.gov.tr
+Kültür ve Turizm Bakanlýðý : ozelkalem@kulturturizm.gov.tr
+Kültür Varlýklarý ve Müzeler Genel Müdürlüðü : kulturvarlikmuze@kulturturizm.gov.tr
+Genelkurmay Baþkanlýðý : gnkur@tsk.mil.tr
+Türk Tarih Kurumu : ttkinfo@ttk.org.tr
 
-> > setting transfer speed?
->
-> That's not a limitation of passthru, but a limitation of the driver.  I
-> don't yet see the value...
+Kampanyamýza, baþta siz olmak üzere 
+arkadaþlarýnýza sitelere önerebilir ve sesimizi çoðaltabilirsiniz.
 
-Same for me...
-
-Bartlomiej
+ 
