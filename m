@@ -1,33 +1,38 @@
-From: Ryan Richter <ryan@tau.solarneutrino.net>
-Subject: Re: Fw: crash on x86_64 - mm related?
-Date: Sat, 3 Dec 2005 12:29:46 -0500
-Message-ID: <20051203172946.GC7679@tau.solarneutrino.net>
-References: <20051129092432.0f5742f0.akpm@osdl.org> <Pine.LNX.4.63.0512012040390.5777@kai.makisara.local> <Pine.LNX.4.64.0512011136000.3099@g5.osdl.org> <20051201195657.GB7236@tau.solarneutrino.net> <Pine.LNX.4.61.0512012008420.28450@goblin.wat.veritas.com> <20051202180326.GB7634@tau.solarneutrino.net> <Pine.LNX.4.61.0512021856170.4940@goblin.wat.veritas.com> <20051202194447.GA7679@tau.solarneutrino.net> <Pine.LNX.4.61.0512022037230.6058@goblin.wat.veritas.com>
+From: <saludenelsexo@spamis.com>
+Subject: salud en el sexo
+Date: Sat, 3 Dec 2005 19:24:35 +0100
+Message-ID: <14b5d01c5f836$d02cda50$0600a8c0@hairoffice>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932096AbVLCRaF@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.61.0512022037230.6058@goblin.wat.veritas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hugh Dickins <hugh@veritas.com>
-Cc: Linus Torvalds <torvalds@osdl.org>, Kai Makisara <Kai.Makisara@kolumbus.fi>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, ryan@tau.solarneutrino.net
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 62-15-156-26.inversas.jazztel.es ([62.15.156.26]:62017 "EHLO
+	correo2.dominiocorreo.com") by vger.kernel.org with ESMTP
+	id S932121AbVLCSYq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 3 Dec 2005 13:24:46 -0500
+Received: from hairoffice ([192.168.0.6])
+	by correo2.dominiocorreo.com (8.13.4/8.13.4/Debian-3) with ESMTP id jB2ILZj5021357
+	for <linux-scsi@vger.kernel.org>; Fri, 2 Dec 2005 19:21:36 +0100
+Content-Class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Dec 02, 2005 at 08:40:56PM +0000, Hugh Dickins wrote:
-> On Fri, 2 Dec 2005, Ryan Richter wrote:
-> > 
-> > OK, I guess I'll stick with 2.6.14.3 for now, plus your patch.  Should I
-> > keep Kai's st.c patch?  There was some mention of other patches, are
-> > those relevant?  Most of that discussion went over my head...
-> 
-> For the "Bad page state" premature freeing you were seeing, only my
-> patch should be relevant.  There are other patches in the works, yes,
-> and we have good reasons for them; but don't worry about them for this.
+Aqui encontara todo lo relacionado con la salud sexual.
 
-OK, I've booted 2.6.14.3+mpt fusion patch+your patch.  Memtest86 found
-nothing overnight, so it's not that easy.  Also the backups will run
-daily for at least the next week or two, so I'll pipe up if anything
-happens.
+En este sitio podr resolver todos los problemas del sexo, que nunca ms le inquietaran.
 
-Thanks,
--ryan
+No es un sitio de pornografia.
+Si es un sitio para aprender sobre el sexo.
+
+Mediante este enlace tiene toda la informacin:
+
+http://www.bestsevendiamonds.com/health/
+
+Si es su deseo darse de baja, para no recibir ms publicidad es necesario lo haga en el siguiente enlace.
+
+http://www.bestsevendiamonds.com/health/bajas.asp
+
+Muchas gracias
+
