@@ -1,66 +1,53 @@
-From: <canadianfinancing@runbox.com>
-Subject: *Subsidies, Grants and Loans*
-Date: Fri, 02 Dec 2005 22:33:04 +0400
-Message-ID: <723301c5f790$5c0bb6b0$cfb304ac@canadianfinancing>
+From: Denny Page <denny@cococafe.com>
+Subject: Adaptec aix79xx performance
+Date: Fri, 02 Dec 2005 23:35:44 -0800
+Message-ID: <43914AD0.2050007@cococafe.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:49129 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S1751167AbVLCCtT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Dec 2005 21:49:19 -0500
-Received: from runbox.com (t507.ims-firmen.de [213.174.60.197])
-	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id jB32nFSX002377
-	for <linux-scsi@vger.kernel.org>; Fri, 2 Dec 2005 18:49:18 -0800
+Received: from mail.cococafe.com ([64.142.30.235]:8842 "EHLO mail.cococafe.com")
+	by vger.kernel.org with ESMTP id S1751186AbVLCHfp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Dec 2005 02:35:45 -0500
+Received: from marvin.cococafe.com (gw.cococafe.com [64.142.30.237])
+	by mail.cococafe.com (Postfix) with ESMTP id 740B8590
+	for <linux-scsi@vger.kernel.org>; Fri,  2 Dec 2005 23:35:45 -0800 (PST)
+Received: from [192.168.0.2] (marvin.cococafe.com [192.168.0.2])
+	by marvin.cococafe.com (Postfix) with ESMTP id D8AFDB03
+	for <linux-scsi@vger.kernel.org>; Fri,  2 Dec 2005 23:35:44 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-To: linux-scsi@vger.kernel.org
+Hello,
 
-Canadian Business Publications
-4865 Hwy.  138, r.r. 1
-St-Andrews west
-Ontario, Canada
-KOC 2A0
+I have a question regarding the support condition of the aic79xx driver.
 
-Press release
+I am running kernel version 2.6.14 (gentoo) on a dual processor system 
+PCI-X system.  I am using an Adaptec scsi adapter to run an HP Ultrium 
+tape drive.  Nothing else is attached to the controller.
 
-Canadian Grants & Loans directories 2005
+I was previously using an Adaptec 29160N (aic7892), which is a 32 bit, 
+66Mhz controller.  With this controller, the tape was not able to 
+maintain full streaming, or achieve full speed.  Average rate was 
+approximately 27MB per second.  In order to address the performance 
+problem, HP recommended that I change to a 64 bit U160 or U320 controller.
 
-Canadian Business Publications is offering to the public a revised edition 
-of the grants & loans directories, guides containing thousands of direct 
-and indirect financial subsidies, grants and loans offered by government 
-departments and agencies, foundations, associations and organizations.  
-In these new 2005 edition all programs are well described.
+I've put in an Adaptec 29320ALP-R (aic7901), which is a 32 bit, 133Mhz 
+controller.  With this controller, performance has dropped to an abysmal 
+2.7MB per second!
 
-Each directory includes; Federal & provincial programs, associations &
-foundations.
+I am running the controller at 133Mhz, but I have also tried locking it 
+to 66Mhz with no effect.  I am using the same cable with both 
+controllers, and the terminator is built into the cable.  Nothing stands 
+out in /var/log/messages.
 
-               CD-Roms, Acrobat Reader files
-Ontario subsidy directory.......................................$ 49.95
-Quebec subsidy directory (french only).................$ 49.95
-New Brunswick subsidy directory.........................$ 49.95
-PEI subsidy directory............................................$ 49.95
-Nova Scotia subsidy directory..............................$ 49.95
-NL subsidy directory.............................................$ 49.95
-Manitoba subsidy directory...................................$ 49.95
-Saskatchewan subsidy directory..........................$ 49.95
-Alberta subsidy directory.......................................$ 49.95
-British Columbia subsidy directory.........................$ 49.95
+So, can anyone offer ideas as to why the 79xx controller performs at one 
+tenth the rate of the 78xx controller and how to fix it?  Any help 
+appreciated.
 
-Canada (more then 3000 programs listed)........... $ 69.95  or $ 149.95
-Academic (printed) 430 pages)
-To obtain a copy please call toll free: 1/866/322/3376.
+Thanks,
 
+Denny
 
-
-
-
-
-
-
-# M-702016067810880701356762631785444673
-Removal email address: canpub@email.com
 
