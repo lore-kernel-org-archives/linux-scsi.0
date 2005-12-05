@@ -1,42 +1,39 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: 2.6.15-rc4 error messages with multiple qla2300 hba ports on
- fabric
-Date: Mon, 05 Dec 2005 13:06:26 -0600
-Message-ID: <43948FB2.5070902@sgi.com>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B8D@xbl3.emulex.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [SCSI BUG 2.6.15-rc3-mm1] scheduling while atomic on boot tim e
+Date: Mon, 05 Dec 2005 15:31:46 -0500
+Message-ID: <1133814706.3395.5.camel@mulgrave>
+References: <C2EEB4E538D3DC48BF57F391F422779321AE79@srmanning.eng.emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:54678 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1751432AbVLETIz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2005 14:08:55 -0500
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B8D@xbl3.emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751442AbVLEUcQ@vger.kernel.org>
+In-Reply-To: <C2EEB4E538D3DC48BF57F391F422779321AE79@srmanning.eng.emc.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "goggin, edward" <egoggin@emc.com>
+Cc: 'Andrew Morton' <akpm@osdl.org>, Wu Fengguang <wfg@mail.ustc.edu.cn>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, hch@lst.de
 
+On Fri, 2005-12-02 at 15:35 -0500, goggin, edward wrote:
+> I think this is caused by my patch to scsi_next_command()
+> (on or about 11/11) causing it to call put_device() and
+> invoke the kobject's release() function while in soft
+> interrupt.  My patch should be removed ... although I
+> don't have an alternate solution in mind for the original
+> problem which was an "oops with USB Storage on 2.6.14".
 
+Yes and no.
 
-James.Smart@Emulex.Com wrote:
-> We recently saw this as well. It's related to the number of targets
-> that go away simultaneously.
-> 
-> There ends up being many delete rport items on the work queue, and 
-> when the 1st one stalls to flush the work queues, it starts the 2nd,
-> which stops to flush, and so on.
-> 
-> My inclination is to look at what we have on the work queue and see if we can
-> circumvent some of the flush calls.
+Reverting your patch won't fix the problem because scsi_put_command()
+will then relinquish the last reference to the device and trigger the
+same warning.  Additionally, blk_run_queue now stands a good chance of
+running on a freed queue which could trigger a panic.
 
-Snooping the work queue?  That sounds a little, um, like a hack?
-If the code is correct, and the end result is correct, is the
-test for recursion level and the associated dump_stack() necessary?
-(Yeah, I know, newbie questions. :)
+The problem seems to be that device_del() is apparently requiring user
+context, if that's true, this will bite us not only here, but all over
+the place ... in fact the fix might have to be to do the target reap
+through a workqueue.
 
+Regardless, your patch isn't the culprit here, it's just the thing which
+is doing the last put.
 
-Mike
-
-...snip...
-
+James
