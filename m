@@ -1,323 +1,255 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 1/2] seperate max_sectors from max_hw_sectors
-Date: Mon, 05 Dec 2005 02:37:06 -0600
-Message-ID: <1133771827.23619.17.camel@max>
+From: Michael Reed <mdr@sgi.com>
+Subject: qla2x00 driver serialization issue
+Date: Mon, 05 Dec 2005 11:35:30 -0600
+Message-ID: <43947A62.8020107@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------000806070608040805000109"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:3025 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1751355AbVLEIh3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2005 03:37:29 -0500
+Received: from omx2-ext.sgi.com ([192.48.171.19]:51414 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S932475AbVLERhz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2005 12:37:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@suse.de, Linux SCSI list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jeremy Higdon <jeremy@sgi.com>, James.Smart@Emulex.Com
 
-- export __blk_put_request and blk_execute_rq_nowait
-needed for async REQ_BLOCK_PC requests
-- seperate max_hw_sectors and max_sectors for block/scsi_ioctl.c and
-SG_IO bio.c helpers per Jens's last comments. Since block/scsi_ioctl.c SG_IO was
-already testing against max_sectors and SCSI-ml was setting max_sectors and
-max_hw_sectors to the same value this does not change any scsi SG_IO behavior. It only
-prepares ll_rw_blk.c, scsi_ioctl.c and bio.c for when SCSI-ml begins to set
-a valid max_hw_sectors for all LLDs. Today if a LLD does not set it
-SCSI-ml sets it to a safe default and some LLDs set it to a artificial low
-value to overcome memory and feedback issues.
+This is a multi-part message in MIME format.
+--------------000806070608040805000109
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Note: Since we now cap max_sectors to BLK_DEF_MAX_SECTORS, which is 1024,
-drivers that used to call blk_queue_max_sectors with a large value of
-max_sectors will now see the fs requests capped to BLK_DEF_MAX_SECTORS.
+With 2.6.15-rc1-git6 (and later), the qla2xxx driver seems to have
+a serialization issue which can cause rports to be inappropriately
+deleted.
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+When another hba appears on the fabric, the driver calls
+qla2x00_mark_all_devices_lost() which schedules an fc_remote_port_delete()
+for all connected rports.
 
+The driver then appears to rediscover targets and re-add them.
+Meanwhile, the scheduled work comes in and deletes the targets.
+If the scheduled work runs after discovery phase, targets which
+should be present are missing from the config.
 
-diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
-index 5f52e30..d57fed9 100644
---- a/block/ll_rw_blk.c
-+++ b/block/ll_rw_blk.c
-@@ -241,7 +241,7 @@ void blk_queue_make_request(request_queu
- 	q->backing_dev_info.ra_pages = (VM_MAX_READAHEAD * 1024) / PAGE_CACHE_SIZE;
- 	q->backing_dev_info.state = 0;
- 	q->backing_dev_info.capabilities = BDI_CAP_MAP_COPY;
--	blk_queue_max_sectors(q, MAX_SECTORS);
-+	blk_queue_max_sectors(q, SAFE_MAX_SECTORS);
- 	blk_queue_hardsect_size(q, 512);
- 	blk_queue_dma_alignment(q, 511);
- 	blk_queue_congestion_threshold(q);
-@@ -557,7 +557,12 @@ void blk_queue_max_sectors(request_queue
- 		printk("%s: set to minimum %d\n", __FUNCTION__, max_sectors);
- 	}
- 
--	q->max_sectors = q->max_hw_sectors = max_sectors;
-+	if (BLK_DEF_MAX_SECTORS > max_sectors)
-+		q->max_hw_sectors = q->max_sectors = max_sectors;
-+ 	else {
-+		q->max_sectors = BLK_DEF_MAX_SECTORS;
-+		q->max_hw_sectors = max_sectors;
-+	}
- }
- 
- EXPORT_SYMBOL(blk_queue_max_sectors);
-@@ -659,8 +664,8 @@ EXPORT_SYMBOL(blk_queue_hardsect_size);
- void blk_queue_stack_limits(request_queue_t *t, request_queue_t *b)
- {
- 	/* zero is "infinity" */
--	t->max_sectors = t->max_hw_sectors =
--		min_not_zero(t->max_sectors,b->max_sectors);
-+	t->max_sectors = min_not_zero(t->max_sectors,b->max_sectors);
-+	t->max_hw_sectors = min_not_zero(t->max_hw_sectors,b->max_hw_sectors);
- 
- 	t->max_phys_segments = min(t->max_phys_segments,b->max_phys_segments);
- 	t->max_hw_segments = min(t->max_hw_segments,b->max_hw_segments);
-@@ -1295,9 +1300,15 @@ static inline int ll_new_hw_segment(requ
- static int ll_back_merge_fn(request_queue_t *q, struct request *req, 
- 			    struct bio *bio)
- {
-+	unsigned short max_sectors;
- 	int len;
- 
--	if (req->nr_sectors + bio_sectors(bio) > q->max_sectors) {
-+	if (unlikely(blk_pc_request(req)))
-+		max_sectors = q->max_hw_sectors;
-+	else
-+		max_sectors = q->max_sectors;
-+
-+	if (req->nr_sectors + bio_sectors(bio) > max_sectors) {
- 		req->flags |= REQ_NOMERGE;
- 		if (req == q->last_merge)
- 			q->last_merge = NULL;
-@@ -1327,9 +1338,16 @@ static int ll_back_merge_fn(request_queu
- static int ll_front_merge_fn(request_queue_t *q, struct request *req, 
- 			     struct bio *bio)
- {
-+	unsigned short max_sectors;
- 	int len;
- 
--	if (req->nr_sectors + bio_sectors(bio) > q->max_sectors) {
-+	if (unlikely(blk_pc_request(req)))
-+		max_sectors = q->max_hw_sectors;
-+	else
-+		max_sectors = q->max_sectors;
-+
-+
-+	if (req->nr_sectors + bio_sectors(bio) > max_sectors) {
- 		req->flags |= REQ_NOMERGE;
- 		if (req == q->last_merge)
- 			q->last_merge = NULL;
-@@ -2146,7 +2164,7 @@ int blk_rq_map_user(request_queue_t *q, 
- 	struct bio *bio;
- 	int reading;
- 
--	if (len > (q->max_sectors << 9))
-+	if (len > (q->max_hw_sectors << 9))
- 		return -EINVAL;
- 	if (!len || !ubuf)
- 		return -EINVAL;
-@@ -2261,7 +2279,7 @@ int blk_rq_map_kern(request_queue_t *q, 
- {
- 	struct bio *bio;
- 
--	if (len > (q->max_sectors << 9))
-+	if (len > (q->max_hw_sectors << 9))
- 		return -EINVAL;
- 	if (!len || !kbuf)
- 		return -EINVAL;
-@@ -2308,6 +2326,8 @@ void blk_execute_rq_nowait(request_queue
- 	generic_unplug_device(q);
- }
- 
-+EXPORT_SYMBOL_GPL(blk_execute_rq_nowait);
-+
- /**
-  * blk_execute_rq - insert a request into queue for execution
-  * @q:		queue to insert the request in
-@@ -2446,7 +2466,7 @@ void disk_round_stats(struct gendisk *di
- /*
-  * queue lock must be held
-  */
--static void __blk_put_request(request_queue_t *q, struct request *req)
-+void __blk_put_request(request_queue_t *q, struct request *req)
- {
- 	struct request_list *rl = req->rl;
- 
-@@ -2475,6 +2495,8 @@ static void __blk_put_request(request_qu
- 	}
- }
- 
-+EXPORT_SYMBOL_GPL(__blk_put_request);
-+
- void blk_put_request(struct request *req)
- {
- 	unsigned long flags;
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 382dea7..4e390df 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -233,7 +233,7 @@ static int sg_io(struct file *file, requ
- 	if (verify_command(file, cmd))
- 		return -EPERM;
- 
--	if (hdr->dxfer_len > (q->max_sectors << 9))
-+	if (hdr->dxfer_len > (q->max_hw_sectors << 9))
- 		return -EIO;
- 
- 	if (hdr->dxfer_len)
-diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-index a6d3baa..a6f2dc6 100644
---- a/drivers/md/dm-table.c
-+++ b/drivers/md/dm-table.c
-@@ -638,7 +638,7 @@ int dm_split_args(int *argc, char ***arg
- static void check_for_valid_limits(struct io_restrictions *rs)
- {
- 	if (!rs->max_sectors)
--		rs->max_sectors = MAX_SECTORS;
-+		rs->max_sectors = SAFE_MAX_SECTORS;
- 	if (!rs->max_phys_segments)
- 		rs->max_phys_segments = MAX_PHYS_SEGMENTS;
- 	if (!rs->max_hw_segments)
-diff --git a/fs/bio.c b/fs/bio.c
-index 460554b..38d3e80 100644
---- a/fs/bio.c
-+++ b/fs/bio.c
-@@ -313,7 +313,8 @@ int bio_get_nr_vecs(struct block_device 
- }
- 
- static int __bio_add_page(request_queue_t *q, struct bio *bio, struct page
--			  *page, unsigned int len, unsigned int offset)
-+			  *page, unsigned int len, unsigned int offset,
-+			  unsigned short max_sectors)
- {
- 	int retried_segments = 0;
- 	struct bio_vec *bvec;
-@@ -327,7 +328,7 @@ static int __bio_add_page(request_queue_
- 	if (bio->bi_vcnt >= bio->bi_max_vecs)
- 		return 0;
- 
--	if (((bio->bi_size + len) >> 9) > q->max_sectors)
-+	if (((bio->bi_size + len) >> 9) > max_sectors)
- 		return 0;
- 
- 	/*
-@@ -386,6 +387,25 @@ static int __bio_add_page(request_queue_
- }
- 
- /**
-+ *	bio_add_pc_page	-	attempt to add page to bio
-+ *	@bio: destination bio
-+ *	@page: page to add
-+ *	@len: vec entry length
-+ *	@offset: vec entry offset
-+ *
-+ *	Attempt to add a page to the bio_vec maplist. This can fail for a
-+ *	number of reasons, such as the bio being full or target block
-+ *	device limitations. The target block device must allow bio's
-+ *	smaller than PAGE_SIZE, so it is always possible to add a single
-+ *	page to an empty bio. This should only be used by REQ_PC bios.
-+ */
-+int bio_add_pc_page(request_queue_t *q, struct bio *bio, struct page *page,
-+		    unsigned int len, unsigned int offset)
-+{
-+	return __bio_add_page(q, bio, page, len, offset, q->max_hw_sectors);
-+}
-+
-+/**
-  *	bio_add_page	-	attempt to add page to bio
-  *	@bio: destination bio
-  *	@page: page to add
-@@ -401,8 +421,8 @@ static int __bio_add_page(request_queue_
- int bio_add_page(struct bio *bio, struct page *page, unsigned int len,
- 		 unsigned int offset)
- {
--	return __bio_add_page(bdev_get_queue(bio->bi_bdev), bio, page,
--			      len, offset);
-+	struct request_queue *q = bdev_get_queue(bio->bi_bdev);
-+	return __bio_add_page(q, bio, page, len, offset, q->max_sectors);
- }
- 
- struct bio_map_data {
-@@ -514,7 +534,7 @@ struct bio *bio_copy_user(request_queue_
- 			break;
- 		}
- 
--		if (__bio_add_page(q, bio, page, bytes, 0) < bytes) {
-+		if (bio_add_pc_page(q, bio, page, bytes, 0) < bytes) {
- 			ret = -EINVAL;
- 			break;
- 		}
-@@ -628,7 +648,8 @@ static struct bio *__bio_map_user_iov(re
- 			/*
- 			 * sorry...
- 			 */
--			if (__bio_add_page(q, bio, pages[j], bytes, offset) < bytes)
-+			if (bio_add_pc_page(q, bio, pages[j], bytes, offset) <
-+					    bytes)
- 				break;
- 
- 			len -= bytes;
-@@ -801,8 +822,8 @@ static struct bio *__bio_map_kern(reques
- 		if (bytes > len)
- 			bytes = len;
- 
--		if (__bio_add_page(q, bio, virt_to_page(data), bytes,
--				   offset) < bytes)
-+		if (bio_add_pc_page(q, bio, virt_to_page(data), bytes,
-+				    offset) < bytes)
- 			break;
- 
- 		data += bytes;
-@@ -1228,6 +1249,7 @@ EXPORT_SYMBOL(bio_clone);
- EXPORT_SYMBOL(bio_phys_segments);
- EXPORT_SYMBOL(bio_hw_segments);
- EXPORT_SYMBOL(bio_add_page);
-+EXPORT_SYMBOL(bio_add_pc_page);
- EXPORT_SYMBOL(bio_get_nr_vecs);
- EXPORT_SYMBOL(bio_map_user);
- EXPORT_SYMBOL(bio_unmap_user);
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 685fd37..b60ffe3 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -292,6 +292,8 @@ extern struct bio *bio_clone(struct bio 
- extern void bio_init(struct bio *);
- 
- extern int bio_add_page(struct bio *, struct page *, unsigned int,unsigned int);
-+extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
-+			   unsigned int, unsigned int);
- extern int bio_get_nr_vecs(struct block_device *);
- extern struct bio *bio_map_user(struct request_queue *, struct block_device *,
- 				unsigned long, unsigned int, int);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index a33a31e..856e76d 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -558,6 +558,7 @@ extern void blk_unregister_queue(struct 
- extern void register_disk(struct gendisk *dev);
- extern void generic_make_request(struct bio *bio);
- extern void blk_put_request(struct request *);
-+extern void __blk_put_request(request_queue_t *, struct request *);
- extern void blk_end_sync_rq(struct request *rq);
- extern void blk_attempt_remerge(request_queue_t *, struct request *);
- extern struct request *blk_get_request(request_queue_t *, int, gfp_t);
-@@ -579,6 +580,10 @@ extern int blk_rq_map_kern(request_queue
- extern int blk_rq_map_user_iov(request_queue_t *, struct request *, struct sg_iovec *, int);
- extern int blk_execute_rq(request_queue_t *, struct gendisk *,
- 			  struct request *, int);
-+extern void blk_execute_rq_nowait(request_queue_t *, struct gendisk *,
-+				  struct request *, int,
-+				  void (*done)(struct request *));
-+
- static inline request_queue_t *bdev_get_queue(struct block_device *bdev)
- {
- 	return bdev->bd_disk->queue;
-@@ -696,7 +701,8 @@ extern int blkdev_issue_flush(struct blo
- 
- #define MAX_PHYS_SEGMENTS 128
- #define MAX_HW_SEGMENTS 128
--#define MAX_SECTORS 255
-+#define SAFE_MAX_SECTORS 255
-+#define BLK_DEF_MAX_SECTORS 1024
- 
- #define MAX_SEGMENT_SIZE	65536
- 
+Attached is an annotated / printk'd dmesg log attempting to
+show what is happening.  Search for "HERE".
 
+Mike
 
+--------------000806070608040805000109
+Content-Type: application/x-gunzip;
+ name="dmesg-5.gz"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="dmesg-5.gz"
+
+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
+rT+U1x+q1R+q1x9q1B9q49BqF7uBLZwlAZQSUbUNtPY+Uh0iqnY21t4aqUFEZbF+7Wp/HSKq
+6s9rF7DrEFFVUl27JluHiKoq4dplxjqKWVX4WrtyVouI9Ws5SwGYQ8Ta9aClAMwhYu2a0lIA
+5hCxdl1qKQBziFhc21q7OFaPiLWrYksBmEPE4sra2qW5iiwKLHwjrqQKjcc24iwq0agbcQeV
+aPhGDL4SjbYRk65Eo2/EaCvRGBsxy0o09vcwvJVS4ApS8XTbJpLcCjRBTTRVWehiNLLatYlE
+tQKNVxNNVSZZgaambCpzxQo0NWWzSjrJ110o8XUXOXzdBQpf8XBLJagVlgh8s/JYITXn66bV
+fN2UmK+bzvJ1U1G+bhrJ100B+eY2Ro2K7hnG8t0ztPKNUWPZ7hnG9+ieYazQPcOo7p7x8icn
+yvbMjBotPP4Whz22p2u2DN8yfMvwLcP/Mxg+N9gtcQjIWLb1lLF866kXlk7lFnBQ2IBVsw1Y
+PdtDJuWHSoLsxb6tkW+N/Meh3p7D+88+Q1U871TlnV7+Dc9N76pv9P23F5bfBnbi13gx6cUn
+v+7m+zpvjLz05L//uxOve/Kv/bWNl39Zo3y/Ybnk9If2daWL+7pim9RiX1fdDFzZ52leX9f5
+TcAsY9QErH5nVyRiYWfX2V6teWfXQuPUyc6uuhyN/76Kzq6yfdq2s+u4s+tUqxLPoSWdXbPR
+K3R2nbmqlnZ2DVbr7DrL7Lyzaz7K8FXNZBrVyju7stLOrpLA19XZdQajl3d2nZ4lY2WdXVHJ
+FnZ2nW5q6zlTnV0z2Fyn+ot3duWlnU6/b2fX8vaqs02Mvk9n19Lmn7P9sTbc2VUt7XFq/YjO
+rqWoufUjOruWodaD79rZtRSl/SM6u5Zinm0z9306u9ZCPc516uQ028am28am28am28am28am
+28am28am28am28amL9TYtM577FV1OHyPXVvUHNX4gc1RjdnmqFqdN6u1pd6zrwSwwqvZ2rqv
+Zmvrvpqtrftqtrbuq9naJjfvqvV2/tmGStpW2BfUto1Ityc9tgxftI223PaP8vPPPwPcd2en
+Hy7OyB9X17+Rd2fXZwQuV7QZ4JOdUGqNrdVehNdvhcLrt0Lh9Vuh8PqtUPhsK5SqadXqYMHr
+d7Dg9TtY8PodLHj9Dha8fgcLXr+DBZ/sYCE19Oj0lNwcXb89u3lWz+rdz5XC33IAalGx9itb
+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
+i0uYzn239284xVxHTJoBAA==
+--------------000806070608040805000109--
