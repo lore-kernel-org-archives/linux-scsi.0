@@ -1,90 +1,83 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 1/2]  qla2xxx: Correct mis-handling of AENs.
-Date: Tue, 6 Dec 2005 10:57:06 -0800
-Message-ID: <20051206185705.GE997@andrew-vasquezs-powerbook-g4-15.local>
-References: <20051206185521.GD997@andrew-vasquezs-powerbook-g4-15.local>
+From: "Nicholas A. Bellinger" <nab@kernel.org>
+Subject: core-iscsi v1.6.2.1 STABLE
+Date: Tue, 06 Dec 2005 11:33:05 -0800
+Message-ID: <1133897585.32388.5.camel@haakon>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:28227 "EHLO avexch01.qlogic.com")
-	by vger.kernel.org with ESMTP id S965014AbVLFS5H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Dec 2005 13:57:07 -0500
-Content-Disposition: inline
-In-Reply-To: <20051206185521.GD997@andrew-vasquezs-powerbook-g4-15.local>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <iscsitarget-devel-admin@lists.sourceforge.net>
+Sender: iscsitarget-devel-admin@lists.sourceforge.net
+Errors-To: iscsitarget-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
+List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=iscsitarget-devel>
+To: Open iSCSI <open-iscsi@googlegroups.com>, iet-dev <iscsitarget-devel@lists.sourceforge.net>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <james.bottomley@steeleye.com>
-Cc: Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-A regression in a recent change
-33135aa2a568ec1a30e734f18e5315e10516e4f3 caused the driver
-to mistakenly drop handling of AENs.  Due to the incorrect
-handling, ports would not reappear after RSCNs and LIPs.
+Greetings all!
 
-Drops unused/incorrect compound #define from qla_def.h.
+Attached is a new release of the core-iscsi stack that solves one of the
+items from RELEASE_NOTES (Netapp, Wasabi, SANRAD support) as well as a
+additional fix related to iSCSI Underflow handling involving the removal
+of a unnecessary 'return on error' condition.  A big thanks to Dominik
+and Dustin @ VBI for making this release happen! 
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+These are both a single line change, please see the code below:
 
----
+http://www.kernel.org/pub/linux/kernel/people/nab/iscsi-initiator-core/core-iscsi-v1.6.2.1.tar.bz2
 
- drivers/scsi/qla2xxx/qla_def.h  |   10 +---------
- drivers/scsi/qla2xxx/qla_init.c |    6 +++---
- 2 files changed, 4 insertions(+), 12 deletions(-)
+CHANGELOG-1.6.2.1
 
-eb897bf0f1298b29f039010b73c3db6e4e621380
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 7096945..7b3efd5 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2476,17 +2476,9 @@ typedef struct scsi_qla_host {
-  */
- #define LOOP_TRANSITION(ha) \
- 	(test_bit(ISP_ABORT_NEEDED, &ha->dpc_flags) || \
--	 test_bit(LOOP_RESYNC_NEEDED, &ha->dpc_flags))
--
--#define LOOP_NOT_READY(ha) \
--	((test_bit(ISP_ABORT_NEEDED, &ha->dpc_flags) || \
--	  test_bit(ABORT_ISP_ACTIVE, &ha->dpc_flags) || \
--	  test_bit(LOOP_RESYNC_NEEDED, &ha->dpc_flags) || \
--	  test_bit(LOOP_RESYNC_ACTIVE, &ha->dpc_flags)) || \
-+	 test_bit(LOOP_RESYNC_NEEDED, &ha->dpc_flags) || \
- 	 atomic_read(&ha->loop_state) == LOOP_DOWN)
- 
--#define LOOP_RDY(ha)	(!LOOP_NOT_READY(ha))
--
- #define TGT_Q(ha, t) (ha->otgt[t])
- 
- #define to_qla_host(x)		((scsi_qla_host_t *) (x)->hostdata)
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 2d72012..c46d246 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1259,7 +1259,7 @@ qla2x00_configure_hba(scsi_qla_host_t *h
- 	rval = qla2x00_get_adapter_id(ha,
- 	    &loop_id, &al_pa, &area, &domain, &topo);
- 	if (rval != QLA_SUCCESS) {
--		if (LOOP_NOT_READY(ha) || atomic_read(&ha->loop_down_timer) ||
-+		if (LOOP_TRANSITION(ha) || atomic_read(&ha->loop_down_timer) ||
- 		    (rval == QLA_COMMAND_ERROR && loop_id == 0x7)) {
- 			DEBUG2(printk("%s(%ld) Loop is in a transition state\n",
- 			    __func__, ha->host_no));
-@@ -1796,7 +1796,7 @@ qla2x00_configure_loop(scsi_qla_host_t *
- 	}
- 
- 	if (rval == QLA_SUCCESS && test_bit(RSCN_UPDATE, &flags)) {
--		if (LOOP_NOT_READY(ha)) {
-+		if (LOOP_TRANSITION(ha)) {
- 			rval = QLA_FUNCTION_FAILED;
- 		} else {
- 			rval = qla2x00_configure_fabric(ha);
-@@ -2369,7 +2369,7 @@ qla2x00_find_all_fabric_devs(scsi_qla_ho
- 		if (qla2x00_is_reserved_id(ha, loop_id))
- 			continue;
- 
--		if (atomic_read(&ha->loop_down_timer) || LOOP_NOT_READY(ha))
-+		if (atomic_read(&ha->loop_down_timer) || LOOP_TRANSITION(ha))
- 			break;
- 
- 		if (swl != NULL) {
+1) Fixed iscsi_put_lun() to not include 0x4 at start of Flat Space
+64-bit SCSI LUN Addressing (Wasabi+Netapp support added) that was
+causing a 'logical unit not connected' execption in INQUIRY readback
+data.
+2) Only make noise when handling a Underflow mismatching between local
+missing read data value and resid.
+
+Index: iscsi_initiator_util.c
+===================================================================
+--- iscsi_initiator_util.c      (revision 2146)
++++ iscsi_initiator_util.c      (working copy)
+@@ -1691,7 +1691,7 @@
+        u64 ret;
+
+        ret = ((lun & 0xff) << 8);
+-       ret |= 0x40 | ((lun >> 8) & 0x3f);
++       ret |= 0x00 | ((lun >> 8) & 0x3f);
+
+        return(cpu_to_le64(ret));
+}
+Index: iscsi_initiator.c
+===================================================================
+--- iscsi_initiator.c   (revision 2146)
++++ iscsi_initiator.c   (working copy)
+@@ -2499,7 +2499,6 @@
+                                TRACE_ERROR("Underflow Residual count %u
+does"
+                                        " NOT match expected %d\n",
+                                                hdr->res_count,
+missing);
+-                               return(-1);
+                        }
+                        resid = hdr->res_count;
+                } else if (hdr->res_count != 0) {
+
+
+
+
 -- 
-0.99.9.GIT
+Nicholas A. Bellinger <nab@kernel.org>
+
+
+
+-------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
+for problems?  Stop!  Download the new AJAX search engine that makes
+searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
+http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
