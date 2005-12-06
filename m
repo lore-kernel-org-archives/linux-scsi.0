@@ -1,28 +1,34 @@
-From: Btrus <frechett@nicolastse.com>
-Subject: trabajo bien pagado
-Date: Tue, 06 Dec 2005 20:14:38 +0300
-Message-ID: <111001c5fa88$45347871$1bfd7713@nicolastse.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Optimize scsi_cmnd initialization and bug fix
+Date: Tue, 6 Dec 2005 17:22:00 +0000
+Message-ID: <20051206172200.GA24092@infradead.org>
+References: <200511232250.jANMo0g20086@unix-os.sc.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [220.75.185.106] ([220.75.185.106]:20487 "HELO freeproblem.com")
-	by vger.kernel.org with SMTP id S932463AbVLFRO1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Dec 2005 12:14:27 -0500
-Received: from nicolastse.com (nicolastse-com.mr.outblaze.com [205.158.62.181])
-	by freeproblem.com (Postfix) with ESMTP id 963E70D143
-	for <linux-scsi@vger.kernel.org>; Tue, 06 Dec 2005 20:14:38 +0300
+Received: from pentafluge.infradead.org ([213.146.154.40]:61639 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932473AbVLFRWB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Dec 2005 12:22:01 -0500
+Content-Disposition: inline
+In-Reply-To: <200511232250.jANMo0g20086@unix-os.sc.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux <linux-scsi@vger.kernel.org>
+To: "Chen, Kenneth W" <kenneth.w.chen@intel.com>
+Cc: linux-scsi@vger.kernel.org, 'James Bottomley' <James.Bottomley@SteelEye.com>
 
-Buenos dias!
+On Wed, Nov 23, 2005 at 02:50:00PM -0800, Chen, Kenneth W wrote:
+> I'm proposing the following patch to optimize scsi_cmnd initialization.
+> The only part that I'm not 100% sure is struct scsi_pointer SCp and
+> eh_eflags.  It appears to be safe, but since I don't have every scsi
+> controllers in the world to test, I can't say so for sure.  I'm willing
+> to take on the responsibility to fix any hiccup people might have with
+> this patch.  Comments?
 
-Nuestra compania se llama "Btrus" (Business Travel Russia). 
-Nuestra compania busca a personas en Espana para conducir operaciones bancarias. 
-Para colaborar Usted tiene que tener una cuenta en un banco espanol. El pago se comete sin retraso. Le pagamos a Usted 300-700 euro por cada operacion (recepcion y remision del dinero).
-Si esta Usted interesado en nuestra proposicion, puede recibir mas detalles por e-mail:btruss@km.ru
+SCp should be zeroed, it's the scratch area for controllers.  eh_ehflags
+is under midlayer control and should start out as zero.
 
-Hasta la vista! 
+> p.s. de-referencing jiffies_at_alloc ought be in the if(cmd!=NULL) block.
 
+that's fixed already in latest mainline.
 
