@@ -1,83 +1,63 @@
-From: "Nicholas A. Bellinger" <nab@kernel.org>
-Subject: core-iscsi v1.6.2.1 STABLE
-Date: Tue, 06 Dec 2005 11:33:05 -0800
-Message-ID: <1133897585.32388.5.camel@haakon>
+From: Hugh Dickins <hugh@veritas.com>
+Subject: Re: Fw: crash on x86_64 - mm related?
+Date: Tue, 6 Dec 2005 20:31:43 +0000 (GMT)
+Message-ID: <Pine.LNX.4.61.0512062025230.28217@goblin.wat.veritas.com>
+References: <20051129092432.0f5742f0.akpm@osdl.org>
+ <Pine.LNX.4.63.0512012040390.5777@kai.makisara.local>
+ <Pine.LNX.4.64.0512011136000.3099@g5.osdl.org> <20051201195657.GB7236@tau.solarneutrino.net>
+ <Pine.LNX.4.61.0512012008420.28450@goblin.wat.veritas.com>
+ <20051202180326.GB7634@tau.solarneutrino.net>
+ <Pine.LNX.4.61.0512021856170.4940@goblin.wat.veritas.com>
+ <20051202194447.GA7679@tau.solarneutrino.net>
+ <Pine.LNX.4.61.0512022037230.6058@goblin.wat.veritas.com>
+ <20051206160815.GC11560@tau.solarneutrino.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <iscsitarget-devel-admin@lists.sourceforge.net>
-Sender: iscsitarget-devel-admin@lists.sourceforge.net
-Errors-To: iscsitarget-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
-List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=iscsitarget-devel>
-To: Open iSCSI <open-iscsi@googlegroups.com>, iet-dev <iscsitarget-devel@lists.sourceforge.net>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from silver.veritas.com ([143.127.12.111]:59687 "EHLO
+	silver.veritas.com") by vger.kernel.org with ESMTP id S1030210AbVLFUcb
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Dec 2005 15:32:31 -0500
+Received: from linux.wat.veritas.com([10.10.97.50]) (3046 bytes) by megami.veritas.com
+	via sendmail with P:esmtp/R:smart_host/T:smtp
+	(sender: <hugh@veritas.com>)
+	id <m1EjjTP-0001JTC@megami.veritas.com>
+	for <linux-scsi@vger.kernel.org>; Tue, 6 Dec 2005 12:31:39 -0800 (PST)
+	(Smail-3.2.0.101 1997-Dec-17 #15 built 2001-Aug-30)
+In-Reply-To: <20051206160815.GC11560@tau.solarneutrino.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ryan Richter <ryan@tau.solarneutrino.net>
+Cc: Linus Torvalds <torvalds@osdl.org>, Kai Makisara <Kai.Makisara@kolumbus.fi>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Greetings all!
+On Tue, 6 Dec 2005, Ryan Richter wrote:
 
-Attached is a new release of the core-iscsi stack that solves one of the
-items from RELEASE_NOTES (Netapp, Wasabi, SANRAD support) as well as a
-additional fix related to iSCSI Underflow handling involving the removal
-of a unnecessary 'return on error' condition.  A big thanks to Dominik
-and Dustin @ VBI for making this release happen! 
+> Another crash during last night's backup:
+> 
+> Bad page state at free_hot_cold_page (in process 'taper', page ffff810002410cc0)
+> flags:0x010000000000000c mapping:ffff81017d5beb70 mapcount:2 count:0
+> Bad page state at free_hot_cold_page (in process 'taper', page ffff810002410cc0)
+> flags:0x010000000000081c mapping:ffff810064cd6910 mapcount:0 count:0
+> Kernel BUG at include/linux/mm.h:341
+> Pid: 11402, comm: taper Tainted: G    B 2.6.14.3 #1
+> RIP: 0010:[<ffffffff802b904d>] <ffffffff802b904d>{sgl_unmap_user_pages+93}
+> Kernel BUG at mm/rmap.c:487
+> Pid: 11402, comm: taper Tainted: G    B 2.6.14.3 #1
+> RIP: 0010:[<ffffffff8016f437>] <ffffffff8016f437>{page_remove_rmap+39}
+> Bad page state at prep_new_page (in process 'dumper', page ffff810002410cc0)
+> flags:0x010000000000001c mapping:0000000000000000 mapcount:-1 count:0
+> general protection fault: 0000 [3] SMP 
+> Pid: 1303, comm: kjournald Tainted: G    B 2.6.14.3 #1
+> RIP: 0010:[<ffffffff8015fdfa>] <ffffffff8015fdfa>{cache_alloc_refill+330}
+>  NMI Watchdog detected LOCKUP on CPU 1
+> Pid: 918, comm: md0_raid5 Tainted: G    B 2.6.14.3 #1
+> RIP: 0010:[<ffffffff8038385b>] <ffffffff8038385b>{.text.lock.spinlock+116}
 
-These are both a single line change, please see the code below:
+Thanks for the further report.  And you had my st.c patch in along
+with 2.6.14.3, but it still happened, very much like before (except the
+latter errors, general protection fault onwards - but once we get into
+using one page for two uses at the same time, anything can go wrong).
 
-http://www.kernel.org/pub/linux/kernel/people/nab/iscsi-initiator-core/core-iscsi-v1.6.2.1.tar.bz2
+I've been staring and thinking, but no inspiration yet.
 
-CHANGELOG-1.6.2.1
-
-1) Fixed iscsi_put_lun() to not include 0x4 at start of Flat Space
-64-bit SCSI LUN Addressing (Wasabi+Netapp support added) that was
-causing a 'logical unit not connected' execption in INQUIRY readback
-data.
-2) Only make noise when handling a Underflow mismatching between local
-missing read data value and resid.
-
-Index: iscsi_initiator_util.c
-===================================================================
---- iscsi_initiator_util.c      (revision 2146)
-+++ iscsi_initiator_util.c      (working copy)
-@@ -1691,7 +1691,7 @@
-        u64 ret;
-
-        ret = ((lun & 0xff) << 8);
--       ret |= 0x40 | ((lun >> 8) & 0x3f);
-+       ret |= 0x00 | ((lun >> 8) & 0x3f);
-
-        return(cpu_to_le64(ret));
-}
-Index: iscsi_initiator.c
-===================================================================
---- iscsi_initiator.c   (revision 2146)
-+++ iscsi_initiator.c   (working copy)
-@@ -2499,7 +2499,6 @@
-                                TRACE_ERROR("Underflow Residual count %u
-does"
-                                        " NOT match expected %d\n",
-                                                hdr->res_count,
-missing);
--                               return(-1);
-                        }
-                        resid = hdr->res_count;
-                } else if (hdr->res_count != 0) {
-
-
-
-
--- 
-Nicholas A. Bellinger <nab@kernel.org>
-
-
-
--------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
-for problems?  Stop!  Download the new AJAX search engine that makes
-searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
-http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
+Hugh
