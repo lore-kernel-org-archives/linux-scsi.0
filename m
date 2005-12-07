@@ -1,15 +1,19 @@
 From: "goggin, edward" <egoggin@emc.com>
 Subject: RE: [SCSI BUG 2.6.15-rc3-mm1] scheduling while atomic on boot tim
 	 e
-Date: Tue, 6 Dec 2005 22:13:13 -0500
-Message-ID: <C2EEB4E538D3DC48BF57F391F422779321AE8D@srmanning.eng.emc.com>
+Date: Tue, 6 Dec 2005 22:27:49 -0500
+Message-ID: <C2EEB4E538D3DC48BF57F391F422779321AE8E@srmanning.eng.emc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030264AbVLGDNu@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, "goggin, edward" <egoggin@emc.com>
-Cc: 'Andrew Morton' <akpm@osdl.org>, Wu Fengguang <wfg@mail.ustc.edu.cn>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mexforward.lss.emc.com ([168.159.213.200]:25752 "EHLO
+	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
+	id S932144AbVLGD2a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Dec 2005 22:28:30 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'James Bottomley' <James.Bottomley@SteelEye.com>, "goggin, edward" <egoggin@emc.com>
+Cc: 'Andrew Morton' <akpm@osdl.org>, Wu Fengguang <wfg@mail.ustc.edu.cn>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
  
 
@@ -39,15 +43,14 @@ List-Id: linux-scsi@vger.kernel.org
 > 
 > The problem seems to be that device_del() is apparently requiring user
 > context, if that's true, this will bite us not only here, but all over
-> the place ... in fact the fix might have to be to do the target reap
-> through a workqueue.
+> the place
 
-How about extending kobject_cleanup() to queue to a workqueue if
-requested to do so?  Doing so would provide an easy mechanism for
-other cases to utilize and they could all share the same workqueue.
-Scsi would request certainly request this feature for calls to
-scsi_device_dev_release() for its device kobjects.
- 
+like as a result of the call to put_device() at the bottom of
+scsi_request_fn() when called indirectly via scsi_next_command()'s 
+call to scsi_run_queue()
+
+> ... in fact the fix might have to be to do the target reap
+> through a workqueue.
 > 
 > Regardless, your patch isn't the culprit here, it's just the 
 > thing which
