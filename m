@@ -1,43 +1,38 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: [PATCH] Fix incorrect pointer in megaraid.c MODE_SENSE emulation
-Date: Wed, 07 Dec 2005 17:46:57 -0500
-Message-ID: <43976661.1030004@rtr.ca>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] OOPS due to clearing eh_action prior to aborting
+	eh	command
+Date: Wed, 07 Dec 2005 18:34:57 -0500
+Message-ID: <1133998497.3898.4.camel@mulgrave>
+References: <43975A8C.2030208@sgi.com> <1133993204.3303.46.camel@mulgrave>
+	 <43975F24.4040904@sgi.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000708050106030802060008"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750861AbVLGWq7@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:2019 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751812AbVLGXfK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Dec 2005 18:35:10 -0500
+In-Reply-To: <43975F24.4040904@sgi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Michael Reed <mdr@sgi.com>
+Cc: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------000708050106030802060008
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+On Wed, 2005-12-07 at 16:16 -0600, Michael Reed wrote: 
+> FWIW, the situation I'm reporting isn't done after timeout, it's
+> the scsi error handler calling the LLDD abort routine, which actually
+> aborts the command and completes it.  The eh_action is cleared before
+> the abort, violating what appears to be the accepted protocol of having
+> the LLDD complete aborted commands.
+> 
+> Am I missing something in your comment?  (It wouldn't surprise me!)
 
-The SCSI megaraid drive goes to great effort to kmap
-the scatterlist buffer (if used), but then uses the
-wrong pointer when copying to it afterward.
+The timeout race still exists, though.  Both fixes would solve both
+problems. It would just be easier to follow if the logic of the error
+handler done follows that of the normal done function (i.e. don't do
+anything after the command times out).
 
-Signed-off-by:  Mark Lord <lkml@rtr.ca>
+James
 
---------------000708050106030802060008
-Content-Type: text/x-patch;
- name="megaraid.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="megaraid.patch"
 
---- linux-2.6.15-rc5/drivers/scsi/megaraid.c.orig	2005-12-04 00:10:42.000000000 -0500
-+++ linux/drivers/scsi/megaraid.c	2005-12-07 17:41:30.000000000 -0500
-@@ -664,7 +664,7 @@
- 					sg->offset;
- 			} else
- 				buf = cmd->request_buffer;
--			memset(cmd->request_buffer, 0, cmd->cmnd[4]);
-+			memset(buf, 0, cmd->cmnd[4]);
- 			if (cmd->use_sg) {
- 				struct scatterlist *sg;
- 
-
---------------000708050106030802060008--
