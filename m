@@ -1,62 +1,147 @@
 From: "goggin, edward" <egoggin@emc.com>
-Subject: RE: [SCSI BUG 2.6.15-rc3-mm1] scheduling while atomic on boot tim
-	 e
-Date: Tue, 6 Dec 2005 22:27:49 -0500
-Message-ID: <C2EEB4E538D3DC48BF57F391F422779321AE8E@srmanning.eng.emc.com>
+Subject: RE: oops with USB Storage on 2.6.14
+Date: Tue, 6 Dec 2005 22:29:13 -0500
+Message-ID: <C2EEB4E538D3DC48BF57F391F422779321AE8F@srmanning.eng.emc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mexforward.lss.emc.com ([168.159.213.200]:25752 "EHLO
-	mexforward.lss.emc.com") by vger.kernel.org with ESMTP
-	id S932144AbVLGD2a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Dec 2005 22:28:30 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: 'Patrick Mansfield' <patmans@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "goggin, edward" <egoggin@emc.com>, 'Rolf Eike Beer' <eike-kernel@sf-tec.de>, 'Andrew Morton' <akpm@osdl.org>, Masanari Iida <standby24x7@gmail.com>, linux-kernel@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@SteelEye.com>, "goggin, edward" <egoggin@emc.com>
-Cc: 'Andrew Morton' <akpm@osdl.org>, Wu Fengguang <wfg@mail.ustc.edu.cn>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-
- 
 
 > -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
-> Sent: Monday, December 05, 2005 3:32 PM
-> To: goggin, edward
-> Cc: 'Andrew Morton'; Wu Fengguang; 
-> linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
-> Subject: RE: [SCSI BUG 2.6.15-rc3-mm1] scheduling while 
-> atomic on boot tim e
+> From: Patrick Mansfield [mailto:patmans@us.ibm.com] 
+> Sent: Tuesday, November 08, 2005 4:33 PM
+> To: James Bottomley
+> Cc: goggin, edward; 'Rolf Eike Beer'; 'Andrew Morton'; 
+> Masanari Iida; linux-kernel@vger.kernel.org; 
+> linux-usb-devel@lists.sourceforge.net; linux-scsi@vger.kernel.org
+> Subject: Re: oops with USB Storage on 2.6.14
 > 
-> On Fri, 2005-12-02 at 15:35 -0500, goggin, edward wrote:
-> > I think this is caused by my patch to scsi_next_command()
-> > (on or about 11/11) causing it to call put_device() and
-> > invoke the kobject's release() function while in soft
-> > interrupt.  My patch should be removed ... although I
-> > don't have an alternate solution in mind for the original
-> > problem which was an "oops with USB Storage on 2.6.14".
+> On Tue, Nov 08, 2005 at 04:08:43PM -0500, James Bottomley wrote:
+> > On Tue, 2005-11-08 at 15:02 -0500, goggin, edward wrote:
+> > > Thanks!  Here's a better one.
+> > 
+> > It's line wrapped, but I fixed that up.
 > 
-> Yes and no.
-> 
-> Reverting your patch won't fix the problem because scsi_put_command()
-> will then relinquish the last reference to the device and trigger the
-> same warning.  Additionally, blk_run_queue now stands a good chance of
-> running on a freed queue which could trigger a panic.
-> 
-> The problem seems to be that device_del() is apparently requiring user
-> context, if that's true, this will bite us not only here, but all over
-> the place
+> What code path triggered this?
 
-like as a result of the call to put_device() at the bottom of
-scsi_request_fn() when called indirectly via scsi_next_command()'s 
-call to scsi_run_queue()
+I was testing multipath responsiveness to FC transport failures
+by inducing scsi target device removal by writing into the
+delete attribute of the scsi device kobject for scsi target
+devices managed by multipathd.  The test is simple and involves no
+user block read/write IO to the multipath mapped or target devices.
+After initial multipath discovery is complete, the only IO going on
+to target devices is periodic test paths, for my devices this
+amounts to issuing an EVPD page 0xc0 inquiry to each target
+device every 10 seconds.
 
-> ... in fact the fix might have to be to do the target reap
-> through a workqueue.
+My kernel call stack at the time of panic looks very similar to
+the one originally reported by Masanari Iida.  I've shown
+Masanari's kernel stack trace below.
+
+> Call Trace:
+>  [<c0103abf>] show_stack+0x7f/0xa0
+>  [<c0103c72>] show_registers+0x162/0x1d0
+>  [<c0103e90>] die+0x100/0x1a0
+>  [<c039d7ae>] do_page_fault+0x31e/0x640
+>  [<c0103763>] error_code+0x4f/0x54
+>  [<c02b4612>] scsi_next_command+0x22/0x30
+>  [<c02b473f>] scsi_end_request+0xcf/0xf0
+>  [<c02b4b2e>] scsi_io_completion+0x26e/0x470
+>  [<c02b4fc7>] scsi_generic_done+0x37/0x50
+>  [<c02af9e5>] scsi_finish_command+0x85/0xa0
+>  [<c02af89c>] scsi_softirq+0xcc/0x140
+>  [<c0122085>] __do_softirq+0xd5/0xf0
+>  [<c01220d8>] do_softirq+0x38/0x40
+>  [<c0122685>] ksoftirqd+0x95/0xe0
+>  [<c0131cfa>] kthread+0xba/0xc0
+>  [<c0100ecd>] kernel_thread_helper+0x5/0x18
+
+The scsi command being terminated by scsi_end_request is
+an inquiry issued by the multipathd target device testing
+thread.
+
 > 
-> Regardless, your patch isn't the culprit here, it's just the 
-> thing which
-> is doing the last put.
+> I mean we get a ref to the sdev in the upper level driver 
+> opens, scan, and
+> sd flush. So where are we not getting a ref?
+
+Good question.
+
+The ref to the sdev obtained by the device scan has been
+dropped by device_del() called from scsi_remove_device()
+since the scsi_device has been removed via sysfs control.
+
+The ref held by the dm open of the target device has been
+closed when multipathd updates the multipath map to not
+include the target device being removed.
+
+The ref held by the multipathd initiated open of the target
+device for purposes of issuing a test IO gets removed as
+soon as the multipathd test thread is notified of the
+completion of its test SG_IO ioctl via the scsi_end_request()
+call on the inquiry request I mentioned earlier.
+Soon after this point, the target device is closed by
+multipathd since there is no more need for test IOs to
+be issued to that target device.  Note that this is the last
+ref held on the target scsi device by opens or scans and
+that it is highly possible on an SMP host for this ref to be
+released BEFORE the scsi_end_request() actually returns to
+its soft interrupt stack.
+
+At this point, the only refs held on the target scsi device
+are from ones for active scsi commands for that device
+or for an invocation of scsi_request_fn() servicing the
+device's queue.  If the queue is not actively being
+serviced and this is the last active command for the
+device, the call to scsi_put_command() from
+scsi_next_command() will free the memory for both the
+scsi device and its request queue will be freed in
+scsi_release_dev_release() when the device's kobject's
+kref count goes to zero.
+
 > 
-> James
+> Shouldn't the get be done at a higher level?
+
+As you can see, there are plenty of gets being done at
+higher levels.
+
+BTW, I have since reproduced this problem without
+multipath at all, just two simple concurrently executing
+processes -- one issues an ioctl to a scsi device
+although any IO type would likely do) and closes its file
+descriptor while the second one removes the device via sysfs.  
+It seems like the prerequisite sequence of events are
+
+open device
+issue io to device
+device gets reaped
+io completes up to scsi_end_request()
+device is closed
+scsi_put_command() reduces device kref count to zero, device is freed
+scsi_next_command() can reference freed scsi device memory
+
 > 
+> -- Patrick Mansfield
 > 
-> 
+
+
+-------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
+for problems?  Stop!  Download the new AJAX search engine that makes
+searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
+http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
