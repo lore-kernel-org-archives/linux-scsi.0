@@ -1,84 +1,59 @@
-From: Yanggun <yang.geum.seok@gmail.com>
-Subject: Re: [PATCH 0/2] some block and scsi layer additions for ULD scatterlist code
-Date: Wed, 7 Dec 2005 11:12:39 +0900
-Message-ID: <ee0ae26a0512061812s55f9c817h@mail.gmail.com>
-References: <1133771825.23619.16.camel@max>
-	 <ee0ae26a0512061717q49dcb6c3h@mail.gmail.com>
-	 <43963FAF.7090304@cs.wisc.edu> <439642E4.8060508@cs.wisc.edu>
+From: "goggin, edward" <egoggin@emc.com>
+Subject: RE: [SCSI BUG 2.6.15-rc3-mm1] scheduling while atomic on boot tim
+	 e
+Date: Tue, 6 Dec 2005 22:13:13 -0500
+Message-ID: <C2EEB4E538D3DC48BF57F391F422779321AE8D@srmanning.eng.emc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wproxy.gmail.com ([64.233.184.200]:64371 "EHLO wproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S965044AbVLGCMl convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Dec 2005 21:12:41 -0500
-Received: by wproxy.gmail.com with SMTP id i32so220110wra
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Dec 2005 18:12:40 -0800 (PST)
-In-Reply-To: <439642E4.8060508@cs.wisc.edu>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030264AbVLGDNu@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, "goggin, edward" <egoggin@emc.com>
+Cc: 'Andrew Morton' <akpm@osdl.org>, Wu Fengguang <wfg@mail.ustc.edu.cn>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: axboe@suse.de, Linux SCSI list <linux-scsi@vger.kernel.org>
 
-thanks. I am really appreciative for helping.
+ 
 
-2005/12/7, Mike Christie <michaelc@cs.wisc.edu>:
-> Mike Christie wrote:
-> > Yanggun wrote:
-> >
-> >> Hi,
-> >>
-> >> i am currently using linux kernel version 2.6.15-rc5 on x86 with Promise
-> >> SATAII150 TX2Plus(250G SATA HDD Disk x 2).
-> >>
-> >> But, SATA HDD disk does not become. program execute result of "fdisk
-> >> /dev/sda" is  "Unable to read /dev/sda".
-> >>
-> >> Work well in linux kernel version 2.6.13.2.
-> >>
-> >> Do not act below since change as result that do debugging.
-> >>       "[SCSI] use scatter lists for all block pc requests and
-> >> simplify hw handlers"
-> >>       -
-> >> http://kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=392160335c798bbe94ab3aae6ea0c85d32b81bbc
-> >>
-> >>
-> >>
-> >> Test and tried your bug patch,  but, result is same.
-> >
-> >
-> > I do not think my patch was meant to address your issue :(
-> >
-> >>
-> >> By result that I do debugging, if queuecommand () of LLD layer returns
-> >> result properly, but execute scsi_probe_lun () -> scsi_execute_req ()
-> >> -> blk_execute_rq ()  by thing which is not realized to proc/scsi/scsi
-> >> come out . after execute blk_execute_rq(), then cmd->buffer,
-> >> cmd->request_buffer is NULL. so, "Model:"  in scsi_add_lun() ->
-> >> print_inquiry() comes out NULL.
-> >
-> >
-> > I am not sure I understand correctly, but I do not think the analysis
-> > above is completely correct. scsi_execute_req gets a buffer passed to it
-> > so it should not matter if those fields are set to NULL when
-> > scsi_execute_req completes as long as something has been copied to the
-> > buffer passed into scsi_execute_req.
-> >
-> >> --------------
-> >> Kernel version: 2.6.15-rc5
-> >> SATA Controller: Promise SATAII150 TX2Plus
-> >> SATA HDD: Western Digital 250G x 2
-> >> SATA Driver:
-> >> http://www.promise.com/support/download/download2_eng.asp?productID=126&category=all&os=100#
-> >>
-> >>
-> >
-> > I am not too familar with SATA. Is this driver in mainline and does it
-> > use libata? Which module is it?
->
-> I downloaded SATAII150_300_Series_Linux_src of that site and it looks
-> like it should not assume some commands are scatterlist based and some
-> are use_sg=0. The driver needs to be updated.
->
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
+> Sent: Monday, December 05, 2005 3:32 PM
+> To: goggin, edward
+> Cc: 'Andrew Morton'; Wu Fengguang; 
+> linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org
+> Subject: RE: [SCSI BUG 2.6.15-rc3-mm1] scheduling while 
+> atomic on boot tim e
+> 
+> On Fri, 2005-12-02 at 15:35 -0500, goggin, edward wrote:
+> > I think this is caused by my patch to scsi_next_command()
+> > (on or about 11/11) causing it to call put_device() and
+> > invoke the kobject's release() function while in soft
+> > interrupt.  My patch should be removed ... although I
+> > don't have an alternate solution in mind for the original
+> > problem which was an "oops with USB Storage on 2.6.14".
+> 
+> Yes and no.
+> 
+> Reverting your patch won't fix the problem because scsi_put_command()
+> will then relinquish the last reference to the device and trigger the
+> same warning.  Additionally, blk_run_queue now stands a good chance of
+> running on a freed queue which could trigger a panic.
+> 
+> The problem seems to be that device_del() is apparently requiring user
+> context, if that's true, this will bite us not only here, but all over
+> the place ... in fact the fix might have to be to do the target reap
+> through a workqueue.
+
+How about extending kobject_cleanup() to queue to a workqueue if
+requested to do so?  Doing so would provide an easy mechanism for
+other cases to utilize and they could all share the same workqueue.
+Scsi would request certainly request this feature for calls to
+scsi_device_dev_release() for its device kobjects.
+ 
+> 
+> Regardless, your patch isn't the culprit here, it's just the 
+> thing which
+> is doing the last put.
+> 
+> James
+> 
+> 
+> 
