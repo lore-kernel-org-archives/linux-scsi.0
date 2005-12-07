@@ -1,43 +1,54 @@
-From: Ryan Richter <ryan@tau.solarneutrino.net>
-Subject: Re: Fw: crash on x86_64 - mm related?
-Date: Wed, 7 Dec 2005 14:06:58 -0500
-Message-ID: <20051207190658.GB12857@tau.solarneutrino.net>
-References: <20051201195657.GB7236@tau.solarneutrino.net> <Pine.LNX.4.61.0512012008420.28450@goblin.wat.veritas.com> <20051202180326.GB7634@tau.solarneutrino.net> <Pine.LNX.4.61.0512021856170.4940@goblin.wat.veritas.com> <20051202194447.GA7679@tau.solarneutrino.net> <Pine.LNX.4.61.0512022037230.6058@goblin.wat.veritas.com> <20051206160815.GC11560@tau.solarneutrino.net> <Pine.LNX.4.61.0512062025230.28217@goblin.wat.veritas.com> <20051207183047.GA12857@tau.solarneutrino.net> <Pine.LNX.4.61.0512071844560.3335@goblin.wat.veritas.com>
+From: Ingo Juergensmann <ij@2005.bluespice.org>
+Subject: Re: Removing BROKEN scsi drivers
+Date: Wed, 7 Dec 2005 22:25:31 +0100
+Message-ID: <20051207212531.GC7033@2004.bluespice.org>
+References: <20051115095152.GA23470@infradead.org> <20051115101709.GK7031@2004.bluespice.org> <20051115103034.GA24352@infradead.org> <20051115113225.GS5252@levanta.com> <1132056707.6134.11.camel@localhost.localdomain> <20051122083631.GA21523@infradead.org> <1132695837.8928.11.camel@localhost.localdomain> <1133110038.3331.20.camel@mulgrave> <1133303092.3492.58.camel@mulgrave> <1133469794.5759.8.camel@kars.perseus.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Y5rl02BVI9TCfPar"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from solarneutrino.net ([66.199.224.43]:50693 "EHLO
-	tau.solarneutrino.net") by vger.kernel.org with ESMTP
-	id S1751772AbVLGTHD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Dec 2005 14:07:03 -0500
+Received: from windfluechter.net ([217.160.213.221]:59913 "EHLO
+	windfluechter.net") by vger.kernel.org with ESMTP id S1751752AbVLGVZm
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Dec 2005 16:25:42 -0500
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.61.0512071844560.3335@goblin.wat.veritas.com>
+In-Reply-To: <1133469794.5759.8.camel@kars.perseus.home>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hugh Dickins <hugh@veritas.com>
-Cc: Linus Torvalds <torvalds@osdl.org>, Kai Makisara <Kai.Makisara@kolumbus.fi>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, ryan@tau.solarneutrino.net
+To: Kars de Jong <jongk@linux-m68k.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, Andi Kleen <ak@suse.de>, Matthew Wilcox <matthew@wil.cx>, Richard Hirst <rhirst@levanta.com>
 
-On Wed, Dec 07, 2005 at 06:56:04PM +0000, Hugh Dickins wrote:
-> On Wed, 7 Dec 2005, Ryan Richter wrote:
-> 
-> > I don't know if this is related, but in the last couple days I've seen
-> > hundreds of these messages from this machine (and I haven't seen it
-> > before):
-> > 
-> > Hangcheck: hangcheck value past margin!
-> 
-> I'm unclear whether you rebooted after the "general protection fault"
-> and "NMI Watchdog" messages (if you had to, I'm sure you did, but I
-> don't know whether the machine appeared to work on after those).
-> 
-> If you didn't reboot, then discount these "Hangcheck" messages as a
-> consequence of the earlier errors, and reboot as soon as convenient.
-> It's interesting for me to see the Bad page state, Bad page state,
-> BUG in mm.h, BUG in rmap.c; but after those you ought to reboot.
-> 
-> If you did reboot, well, maybe related, but it doesn't tell us much.
 
-Yep, the machine pretty much hung after that and was reset the next
-morning.
+--Y5rl02BVI9TCfPar
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
--ryan
+On Thu, Dec 01, 2005 at 09:43:13PM +0100, Kars de Jong wrote:
+
+> Ingo, can you test the kernel at
+> http://members.home.nl/karsdejong/vmlinuz-2.6.14-amiga-4 on your
+> hardware? It also has NFS client and AFFS support.
+
+It now runs on both of my NCR based Amigas... no problems so far...=20
+
+--=20
+Ciao...                //        Fon: 0381-2744150=20
+      Ingo           \X/         SIP: 2744150@sipgate.de
+
+gpg pubkey: http://www.juergensmann.de/ij/public_key.asc
+
+--Y5rl02BVI9TCfPar
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+
+iD8DBQFDl1NLlCnCZmI+zY0RAtRsAKCTc/msaIHu+g6Kyz336ixR8UrmdQCgkBQj
+MiLJpehcwWAW9FFNkdWQIhk=
+=BOqr
+-----END PGP SIGNATURE-----
+
+--Y5rl02BVI9TCfPar--
