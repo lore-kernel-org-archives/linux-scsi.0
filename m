@@ -1,54 +1,37 @@
-From: Ingo Juergensmann <ij@2005.bluespice.org>
-Subject: Re: Removing BROKEN scsi drivers
-Date: Wed, 7 Dec 2005 22:25:31 +0100
-Message-ID: <20051207212531.GC7033@2004.bluespice.org>
-References: <20051115095152.GA23470@infradead.org> <20051115101709.GK7031@2004.bluespice.org> <20051115103034.GA24352@infradead.org> <20051115113225.GS5252@levanta.com> <1132056707.6134.11.camel@localhost.localdomain> <20051122083631.GA21523@infradead.org> <1132695837.8928.11.camel@localhost.localdomain> <1133110038.3331.20.camel@mulgrave> <1133303092.3492.58.camel@mulgrave> <1133469794.5759.8.camel@kars.perseus.home>
+From: James.Smart@Emulex.Com
+Subject: RE: 2.6.15-rc4 error messages with multiple qla2300 hba ports on fabric
+Date: Wed, 7 Dec 2005 16:41:04 -0500
+Message-ID: <9BB4DECD4CFE6D43AA8EA8D768ED51C2276CEE@xbl3.emulex.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Y5rl02BVI9TCfPar"
+Content-Type: text/plain;
+	charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from windfluechter.net ([217.160.213.221]:59913 "EHLO
-	windfluechter.net") by vger.kernel.org with ESMTP id S1751752AbVLGVZm
+Received: from emulex.emulex.com ([138.239.112.1]:16344 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1030367AbVLGVl1 convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Dec 2005 16:25:42 -0500
-Content-Disposition: inline
-In-Reply-To: <1133469794.5759.8.camel@kars.perseus.home>
+	Wed, 7 Dec 2005 16:41:27 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kars de Jong <jongk@linux-m68k.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org, Andi Kleen <ak@suse.de>, Matthew Wilcox <matthew@wil.cx>, Richard Hirst <rhirst@levanta.com>
+To: mdr@sgi.com
+Cc: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, hch@lst.de
 
+> > My inclination is to look at what we have on the work queue 
+> and see if we can
+> > circumvent some of the flush calls.
+> 
+> Snooping the work queue?  That sounds a little, um, like a hack?
+> If the code is correct, and the end result is correct, is the
+> test for recursion level and the associated dump_stack() necessary?
+> (Yeah, I know, newbie questions. :)
 
---Y5rl02BVI9TCfPar
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Well, my thinking is along the same lines... Also too much other work on
+the sdevs, etc to really get a good feel for things. Plus that should be
+handled by default in the other layers. However, I wouldn't address
+it via eliminating the recursion level check.
 
-On Thu, Dec 01, 2005 at 09:43:13PM +0100, Kars de Jong wrote:
+We're testing a patch that deals with the recursion by not doing it. Oldest
+trick in the book :)   Will keep you posted once we know the results.
 
-> Ingo, can you test the kernel at
-> http://members.home.nl/karsdejong/vmlinuz-2.6.14-amiga-4 on your
-> hardware? It also has NFS client and AFFS support.
-
-It now runs on both of my NCR based Amigas... no problems so far...=20
-
---=20
-Ciao...                //        Fon: 0381-2744150=20
-      Ingo           \X/         SIP: 2744150@sipgate.de
-
-gpg pubkey: http://www.juergensmann.de/ij/public_key.asc
-
---Y5rl02BVI9TCfPar
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-
-iD8DBQFDl1NLlCnCZmI+zY0RAtRsAKCTc/msaIHu+g6Kyz336ixR8UrmdQCgkBQj
-MiLJpehcwWAW9FFNkdWQIhk=
-=BOqr
------END PGP SIGNATURE-----
-
---Y5rl02BVI9TCfPar--
+-- james s
