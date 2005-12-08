@@ -1,26 +1,25 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: potential initialisation problem in the aic94xx
-Date: Thu, 8 Dec 2005 13:22:37 -0700
-Message-ID: <20051208202237.GA9286@parisc-linux.org>
-References: <1133214768.3325.66.camel@mulgrave> <1133842933.3282.7.camel@mulgrave>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
+Date: Thu, 08 Dec 2005 15:43:44 -0500
+Message-ID: <43989B00.5040503@pobox.com>
+References: <20051208030242.GA19923@srcf.ucam.org>	 <20051208091542.GA9538@infradead.org>	 <20051208132657.GA21529@srcf.ucam.org>	 <20051208133308.GA13267@infradead.org>	 <20051208133945.GA21633@srcf.ucam.org>	 <20051208134438.GA13507@infradead.org> <1134062330.1732.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:18606 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S932340AbVLHUWk
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Dec 2005 15:22:40 -0500
-Content-Disposition: inline
-In-Reply-To: <1133842933.3282.7.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932382AbVLHUn7@vger.kernel.org>
+In-Reply-To: <1134062330.1732.9.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Erik Slagter <erik@slagter.name>
+Cc: Christoph Hellwig <hch@infradead.org>, Matthew Garrett <mjg59@srcf.ucam.org>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Mon, Dec 05, 2005 at 11:22:13PM -0500, James Bottomley wrote:
-> Therefore, we have a serious bug in the aic94xx driver init code.  It's
-> clearly relying on something to set it up correctly in the BIOS rather
-> than doing everything in the driver init routine.  This means (unless
-> corrected) that the card will only work on x86 like platforms.
+Erik Slagter wrote:
+> 'guess You're not interested in having suspend/resume actually work on
+> laptops (or other PC's). That's your prerogative but imho it's a bit
+> narrow-minded to withhold this functionality from other people who
+> actually would like to have this working, just because you happen to not
+> like ACPI.
 
-... and it won't work when hotplugged, even on an x86 platform.
+It works just fine on laptops, with Jens' suspend/resume patch.
+
+	Jeff
