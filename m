@@ -1,35 +1,31 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: linux kernel panic when ejecting ieee1394 ipod
-Date: Thu, 08 Dec 2005 08:52:35 +0100
-Message-ID: <4397E643.8040307@s5r6.in-berlin.de>
-References: <200512072358.15398.adq_dvb@lidskialf.net> <200512080209.17757.adq_dvb@lidskialf.net> <43979E1A.30801@s5r6.in-berlin.de> <200512080319.19434.adq_dvb@lidskialf.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
+Date: Thu, 8 Dec 2005 09:15:42 +0000
+Message-ID: <20051208091542.GA9538@infradead.org>
+References: <20051208030242.GA19923@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:50907 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1750725AbVLHHyq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Dec 2005 02:54:46 -0500
-In-Reply-To: <200512080319.19434.adq_dvb@lidskialf.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750859AbVLHJPs@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20051208030242.GA19923@srcf.ucam.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew de Quincey <adq_dvb@lidskialf.net>
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-Andrew de Quincey wrote:
->>What if you replace WRITE by READ in
->>drivers/scsi/scsi_ioctl.c::scsi_cmd_ioctl()::case CDROMEJECT ?
+On Thu, Dec 08, 2005 at 03:02:42AM +0000, Matthew Garrett wrote:
+> Hi!
 > 
-> Yup, using READ there fixes it too (and I did remember to remove my other 
-> patch before testing :)
+> The included patch does three things:
 > 
-> USB storage devices still work with the CDROMEJECT ioctl and this change as 
-> well.
+> 1) It adds basic support for binding SCSI and SATA devices to ACPI 
+> device handles. At the moment this is limited to hosts, and in practice 
+> it's probably limited to SATA ones (ACPI doesn't spec how SCSI devices 
+> should appear in the DSDT, so I'm guessing that in general they don't). 
+> Given a host, you can DEVICE_ACPI_HANDLE(dev) it to get the handle to 
+> the ACPI device - this should be handy for implementing suspend 
+> functions, since the methods should be in a standard location underneath 
+> this.
 
-I'll check if they have a safeguard which sbp2 should have too.
-Thanks a lot.
--- 
-Stefan Richter
--=====-=-=-= ==-- -=---
-http://arcgraph.de/sr/
+
+NACK.  ACPI-specific hacks do not have any business at all in the scsi layer.
