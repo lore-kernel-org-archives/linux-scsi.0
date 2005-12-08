@@ -1,14 +1,14 @@
-From: Andrew de Quincey <adq@lidskialf.net>
+From: Andrew de Quincey <adq_dvb@lidskialf.net>
 Subject: Re: linux kernel panic when ejecting ieee1394 ipod
-Date: Thu, 8 Dec 2005 01:57:29 +0000
-Message-ID: <200512080157.29179.adq@lidskialf.net>
-References: <200512072358.15398.adq_dvb@lidskialf.net>
+Date: Thu, 8 Dec 2005 01:59:10 +0000
+Message-ID: <200512080159.10913.adq_dvb@lidskialf.net>
+References: <200512072358.15398.adq_dvb@lidskialf.net> <200512080119.48740.adq@lidskialf.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux1394-devel-admin@lists.sourceforge.net>
-In-Reply-To: <200512072358.15398.adq_dvb@lidskialf.net>
+In-Reply-To: <200512080119.48740.adq@lidskialf.net>
 Content-Disposition: inline
 Sender: linux1394-devel-admin@lists.sourceforge.net
 Errors-To: linux1394-devel-admin@lists.sourceforge.net
@@ -23,57 +23,50 @@ To: linux1394-devel@lists.sourceforge.net
 Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-(resent to include other lists)
-
-On Wednesday 07 December 2005 23:58, Andrew de Quincey wrote:
-> Reposting to the -devel list since there was no response on -user.
+On Thursday 08 December 2005 01:19, Andrew de Quincey wrote:
+> On Wednesday 07 December 2005 23:58, Andrew de Quincey wrote:
+> > Reposting to the -devel list since there was no response on -user.
+> >
+> > Hi, I'm using linux kernel 2.6.14 with an generation 1 ipod connected via
+> > ieee1394/sbp2.
+> >
+> > I can mount/unmount it and use it fine. It even works with HAL now.
+> >
+> > The problem comes when I want to remove it. If I do:
+> >
+> > eject /dev/sdb
+> >
+> > The kernel panics with the following error:
+> > Kernel panic - not syncing: PCI-DMA: high address but no IOMMU
+> >
+> > I'm using an nforce 4 motherboard (Asus A8N-SLI Deluxe). The ipod is
+> > attached to the ieee1394 port on a creative labs Audigy2 sound card (uses
+> > OHCI-1394).
 >
-> Hi, I'm using linux kernel 2.6.14 with an generation 1 ipod connected via
-> ieee1394/sbp2.
+> More info (I'm on an AMD64 in 64 bit mode BTW):
 >
-> I can mount/unmount it and use it fine. It even works with HAL now.
->
-> The problem comes when I want to remove it. If I do:
->
-> eject /dev/sdb
->
-> The kernel panics with the following error:
-> Kernel panic - not syncing: PCI-DMA: high address but no IOMMU
->
-> I'm using an nforce 4 motherboard (Asus A8N-SLI Deluxe). The ipod is
-> attached to the ieee1394 port on a creative labs Audigy2 sound card (uses
-> OHCI-1394).
+> eject sends a CDROMEJECT ioctl first of all. It is this IOCTL that kills my
+> system. If I hack/tell it to just use a "SCSI eject", it works and actually
+> makes my ipod show that tick thing showing it is safe to remove it.
 
-More info (I'm on an AMD64 in 64 bit mode BTW):
+Yet more info:
 
-eject sends a CDROMEJECT ioctl first of all. It is this IOCTL that kills my 
-system. If I hack/tell it to just use a "SCSI eject", it works and actually 
-makes my ipod show that tick thing showing it is safe to remove it.
+eject -s sends the following SCSI packet command to the sbp/ipod device:
 
+1b 00 00 00 02 00 with a direction of DMA_NONE
 
-Tracing through the kernel for the CDROMEJECT shows:
-drivers/scsi/sd.c/sd_ioctl() 
-	-- calls scsi_cmd_ioctl()
+eject -r results in the same via the CDROMEJECT translator in 
+scsi_cmd_ioctl(), but with a direction of DMA_TO_DEVICE. Thats what crashes 
+it - looks like its trying to set up a DMA transfer for 0 bytes or something. 
+I just added a really horrible hack to the start of sbp2_send_command() to 
+check, as follows:
 
-drivers/block/scsi_ioctl.c/scsi_cmd_ioctl()
-	-- emulates the CDROMEJECT ioctl as a START_STOP unit SCSI packet command
+   if (*cmd == 0x1b) {
+      SCpnt->sc_data_direction = 3;
+   }
 
-... then that passes through the blockdev/scsi layers until:
-
-drivers/ieee1394/sbp2.c/sbp2scsi_queuecommand()
-	-- this function actually works fine - it must be either in the callback 
-handler when the command completes (?) or sometime afterwards.
-
-The last SCSI command received by sbp2 before the crash is:
-
-1b 00 00 02 00
-
-Which is definitely what scsi_cmd_ioctl() is setting up.
-
-
-CDROMEJECT works on other scsi devices - e.g. my USB storage pendrive appears 
-as a SCSI drive, and can be "safely removed" by simply calling a CDROMEJECT 
-ioctl.
+Now, eject -r works perfectly. Though thats obviously not a good way to fix 
+it :)
 
 
 -------------------------------------------------------
