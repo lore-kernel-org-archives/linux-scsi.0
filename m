@@ -1,62 +1,55 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: Ang: Re: [Stgt-devel] Re: [Iscsitarget-devel] stgt a new version
- of iscsi target?
-Date: Thu, 08 Dec 2005 13:10:05 -0600
-Message-ID: <4398850D.8070102@cs.wisc.edu>
-References: <OF6932015B.01CF53D9-ONC12570D0.00462028@capvert.ins> <43972C2D.9060500@cs.wisc.edu> <43987F75.2000301@vlnb.net>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: linux kernel panic when ejecting ieee1394 ipod
+Date: Thu, 08 Dec 2005 20:25:52 +0100
+Message-ID: <439888C0.4060508@s5r6.in-berlin.de>
+References: <200512072358.15398.adq_dvb@lidskialf.net> <200512080119.48740.adq@lidskialf.net> <200512080159.10913.adq_dvb@lidskialf.net> <200512080209.17757.adq_dvb@lidskialf.net> <43979E1A.30801@s5r6.in-berlin.de> <20051208173429.GA2666@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:39653 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932254AbVLHTKc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2005 14:10:32 -0500
-In-Reply-To: <43987F75.2000301@vlnb.net>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:18615 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1750907AbVLHT2p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Dec 2005 14:28:45 -0500
+In-Reply-To: <20051208173429.GA2666@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: johan@capvert.se, iscsitarget-devel@lists.sourceforge.net, mingz@ele.uri.edu, stgt <stgt-devel@lists.berlios.de>, Robert Whitehead <WRWHITEHEAD@novell.com>, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: Andrew de Quincey <adq_dvb@lidskialf.net>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Bryan Olmstead <olmstead@b2mail.net>
 
-Vladislav Bolkhovitin wrote:
->  - Scst has some performance advantages over stgt, at least, on hardware 
-> targets, because it allows internal handling in SIRQ context as well as 
-> doesn't need user space program, so it eliminates additi
-> switches (at least 3 per command for WRITEs and 2 per command for reads 
-> plus switches to user space daemon, probably, 2 per command). 5 context 
-> switches per command looks too much for me, especially considering how 
-> little work is done on each context. It means ~15000 CS/sec on regular 
-> 200Mb/sec link with 64K block size. Additionally, kernel only commands 
-> execution allows direct access to page cache, which is GREAT performance 
-> improvement, because in architecture with user space daemon the data 
-> should be copied several times between kernel and user space. Or, do I 
-> miss anything?
+Patrick Mansfield wrote:
+> On Thu, Dec 08, 2005 at 03:44:42AM +0100, Stefan Richter wrote:
+>>What if you replace WRITE by READ in 
+>>drivers/scsi/scsi_ioctl.c::scsi_cmd_ioctl()::case CDROMEJECT ?
 
-Userspace only occurs for READ/WRITEs. So for REPORT_LUNS, TUR, etc 
-where performance is not a factor.
+(unless blk_get_request() knows another flag which comes closer to 
+DMA_NONE than READ)
 
-Also is the page cache comment in reference to us using the page cache 
-for our reads and writes or I am not sure why you wrote that if you do 
-not do it right now.
+> You must mean block/scsi_ioctl.c? i.e.:
 
-> 
->  From other side, stgt has not too much advantages over scst. 
+Yes, actually. %-)
 
-Hey, we just started and have not had too much time.
+> diff -uprN -X /home/patman/dontdiff linux-2.6.15-rc5-git1/block/scsi_ioctl.c mod- linux-2.6.15-rc5-git1/block/scsi_ioctl.c
+> --- /home/linux/views/linux-2.6.15-rc5-git1/block/scsi_ioctl.c	2005-12-03 22:51:54.000000000 -0800
+> +++ linux-2.6.15-rc5-git1/block/scsi_ioctl.c	2005-12-08 09:31:52.000000000 -0800
+> @@ -566,7 +566,7 @@ int scsi_cmd_ioctl(struct file *file, st
+>  		case CDROMCLOSETRAY:
+>  			close = 1;
+>  		case CDROMEJECT:
+> -			rq = blk_get_request(q, WRITE, __GFP_WAIT);
+> +			rq = blk_get_request(q, READ, __GFP_WAIT);
+>  			rq->flags |= REQ_BLOCK_PC;
+>  			rq->data = NULL;
+>  			rq->data_len = 0;
 
-> Actually, we would greatly appreciate if Mike or Christoph will tell us 
-> what is so wrong in scst on their opinion, so they started they own new 
-> project. (I'm not considering motivation like "I want to make my own in 
-> any case" seriously). Is scst too complicated? Do you think stgt will be 
-> simpler with all those features implemented?
-> 
+This should also go to -stable.
 
-Didn't we go over this? To get SCST ready for mainline we would have had 
-a large cleanup effort. I started this and sent you a patch to begin the 
-cleanup. In the end some of the scsi people liked the idea of throwing 
-the non-read/write command to userspace and to do this we just decided 
-to start over but I have been cutting and pasting your code and cleaning 
-it up as I add more stuff.
-
-Simmer down :) If you had just gotton your code ready when christoph 
-asked a year ago we would never have had this problem and I would be 
-sending you patches to remove the scsi_request usage as we speak.
+BTW, a kernel oops after "eject /mnt/ipod" under 2.6.12 (though no 
+panic) was also reported by Bryan Olmstead on July 16 2005. 
+http://marc.theaimsgroup.com/?l=linux1394-user&m=112152701817435
+ From the multiple problems reported there, everything except the eject 
+issue has been fixed in the meantime.
+-- 
+Stefan Richter
+-=====-=-=-= ==-- -=---
+http://arcgraph.de/sr/
