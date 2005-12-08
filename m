@@ -1,31 +1,39 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Thu, 8 Dec 2005 14:52:57 +0000
-Message-ID: <20051208145257.GB21946@srcf.ucam.org>
-References: <20051208030242.GA19923@srcf.ucam.org> <20051208091542.GA9538@infradead.org> <20051208132657.GA21529@srcf.ucam.org> <20051208133308.GA13267@infradead.org> <20051208133945.GA21633@srcf.ucam.org> <1134050498.17102.2.camel@localhost.localdomain> <20051208141811.GB21715@srcf.ucam.org> <1134052433.17102.17.camel@localhost.localdomain>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [ACPI] Re: RFC: ACPI/scsi/libata integration and hotswap
+Date: Thu, 08 Dec 2005 14:53:17 +0000
+Message-ID: <1134053597.17102.31.camel@localhost.localdomain>
+References: <20051208030242.GA19923@srcf.ucam.org>
+	 <20051208091542.GA9538@infradead.org>
+	 <20051208132657.GA21529@srcf.ucam.org>
+	 <20051208133308.GA13267@infradead.org>
+	 <20051208133945.GA21633@srcf.ucam.org>
+	 <20051208135225.GA13122@havoc.gtf.org>
+	 <1134050863.17102.5.camel@localhost.localdomain>
+	 <43983FC6.6050108@pobox.com>
+	 <1134052257.17102.13.camel@localhost.localdomain>
+	 <20051208144329.GA21946@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1134052433.17102.17.camel@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Christoph Hellwig <hch@infradead.org>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932180AbVLHOyi@vger.kernel.org>
+In-Reply-To: <20051208144329.GA21946@srcf.ucam.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Dec 08, 2005 at 02:33:53PM +0000, Alan Cox wrote:
+On Iau, 2005-12-08 at 14:43 +0000, Matthew Garrett wrote:
+> ACPI methods belong to SATA/PATA targets, not PCI devices. The 
+> notification you get is something of the form
+> 
+> \SB.PCI.IDE0.SEC.MASTER
 
-> I would say your code belongs in the ACPI subtree. At most the core code
-> wants to have the generic supporting functions for 'do a taskfile' and
-> if need be to call an arch/platform resume function that any pm system
-> can sensibly use.
 
-How about the hotplug notification events?
+That is fine. Given struct ata_port * you can get
 
-> SCSI should not know detail about ACPI, APM or anything of that nature.
+channel = ap->hard_port_no
+pci device ptr = to_pci(ap->host_set->dev)
 
-Hrm. I guess this can be implemented pretty much just by cutting and 
-pasting the code into drivers/acpi rather than drivers/scsi. Would that 
-be considered an improvement?
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+And from the struct ata_device *
+
+slave = (adev->devno == 1)
