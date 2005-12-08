@@ -1,25 +1,43 @@
-From: "Shannon Jewell" <HKMOWFWSBM@msn.com>
-Subject: Look...Here q6HtJ
-Date: Thu, 08 Dec 2005 21:56:10 +0200
-Message-ID: <LAW18.OE649yfB4mvo625753d5__33823.0685251348$1134072309$gmane$org@motmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: Ang: Re: [Stgt-devel] Re: [Iscsitarget-devel] stgt a new	version
+ of iscsi target?
+Date: Thu, 08 Dec 2005 14:09:32 -0600
+Message-ID: <439892FC.8040900@cs.wisc.edu>
+References: <OF6932015B.01CF53D9-ONC12570D0.00462028@capvert.ins>	 <43972C2D.9060500@cs.wisc.edu> <43987F75.2000301@vlnb.net>	 <4398850D.8070102@cs.wisc.edu> <1134071290.3259.31.camel@mulgrave>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from c915538b.virtua.com.br ([201.21.83.139]:18694 "HELO
-	c915538b.virtua.com.br") by vger.kernel.org with SMTP
-	id S932326AbVLHUCD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Dec 2005 15:02:03 -0500
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:4326 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S932301AbVLHUJ7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2005 15:09:59 -0500
+In-Reply-To: <1134071290.3259.31.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-ppp@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, johan@capvert.se, iscsitarget-devel@lists.sourceforge.net, mingz@ele.uri.edu, stgt <stgt-devel@lists.berlios.de>, Robert Whitehead <WRWHITEHEAD@novell.com>, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
+James Bottomley wrote:
+> On Thu, 2005-12-08 at 13:10 -0600, Mike Christie wrote:
+> 
+>>cleanup. In the end some of the scsi people liked the idea of throwing 
+>>the non-read/write command to userspace and to do this we just decided 
+>>to start over but I have been cutting and pasting your code and cleaning 
+>>it up as I add more stuff.
+> 
+> 
+> To be honest, I'd like to see all command processing at user level
+> (including read/write ... for block devices, it shouldn't be that
+> inefficient, since you're merely going to say remap an area from one
+> device to another; as long as no data transformation ever occurs, the
+> user never touches the data and it all remains in the kernel page
+> cache).
 
-The most complete Phar macy Online
-We carry all major medds at bargain price
-Viggra, Ci ialis, VaIium, Xa naax
-Phantermiine, Ulltraam and etc...
-SatiisfactIon Gua ranteeed
+Ok, Tomo and I briefly talked about this when we saw Jeff's post about 
+doing block layer drivers in userspace on lkml. I think we were somewhat 
+prepared for this given some of your other replies.
 
-http://midwindow.net
-
-
-gy
-
+So Vlad and other target guys what do you think? Vlad are you going to 
+continue to maintain scst as kernel only, or is there some place we can 
+work together on this on - if your feelings are not hurt too much that 
+is :) ?
