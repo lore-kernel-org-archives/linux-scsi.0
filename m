@@ -1,45 +1,35 @@
-From: "Ian P. Christian" <pookey@pookey.co.uk>
-Subject: Re: Strange problems with a Megaraid RAID array on a Dell Poweredge 1850
-Date: Thu, 8 Dec 2005 13:56:27 +0000
-Message-ID: <200512081356.27583.pookey@pookey.co.uk>
-References: <200512080118.17001.pookey@pookey.co.uk>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: RFC: ACPI/scsi/libata integration and hotswap
+Date: Thu, 8 Dec 2005 08:57:15 -0500
+Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F01EE9D15@otce2k03.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-6
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xian.ncuk.net ([80.249.110.212]:35544 "EHLO xian.ncuk.net")
-	by vger.kernel.org with ESMTP id S1751184AbVLHN4g convert rfc822-to-8bit
+Received: from magic.adaptec.com ([216.52.22.17]:17846 "EHLO magic.adaptec.com")
+	by vger.kernel.org with ESMTP id S932105AbVLHN5Z convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Dec 2005 08:56:36 -0500
-In-Reply-To: <200512080118.17001.pookey@pookey.co.uk>
-Content-Disposition: inline
+	Thu, 8 Dec 2005 08:57:25 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
 
-On Thursday 08 December 2005 01:18, Ian P. Christian wrote:
-> Basically, I can't use fdisk on /dev/sda. =A0I can however boot off t=
-his
-> array, and everything is working fine - I'm having no issues using th=
-is
-> array for anything else. A live, and apparently healthy system is run=
-ning
-> from it.
->
-> # fdisk -l
-> Unable to seek on /dev/sda
+Christoph Hellwig writes:
+> Why oh why do our chipset friends at intel have to fuck up 
+> everything they can?  I wish they'd learn a lesson or two from their
+cpu collegues.
 
-I've just installed parted and tried this - oddly, this works fine.  Wh=
-y might=20
-sfdisk and fdisk fail to read the partition table, but parted work fine=
-?
+The patch doesn't look like too much of a hack, pretty clean
+implementation in support of a hot-swap of an adapter using ACPI hooks.
+It is not specific to x86 platforms. I'd prefer that it looked more like
+a suspend/resume interface rather than a raw ACPI event.
 
-Kind Regards,
+There needs to be a power management interface to SCSI and to the LLD's
+in support of hot-swap of PCI attached devices. Otherwise you are asking
+for the driver to be blindsided on any platform that supports this
+necessary service feature.
 
---=20
-Ian P. Christian ~ http://pookey.co.uk
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Sincerely -- Mark Salyzyn
