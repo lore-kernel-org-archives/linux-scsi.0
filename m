@@ -1,40 +1,72 @@
-From: Andrew de Quincey <adq_dvb@lidskialf.net>
-Subject: Re: linux kernel panic when ejecting ieee1394 ipod
-Date: Thu, 8 Dec 2005 03:19:19 +0000
-Message-ID: <200512080319.19434.adq_dvb@lidskialf.net>
-References: <200512072358.15398.adq_dvb@lidskialf.net> <200512080209.17757.adq_dvb@lidskialf.net> <43979E1A.30801@s5r6.in-berlin.de>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: [PATCH] OOPS due to clearing eh_action prior to aborting eh	command
+Date: Wed, 07 Dec 2005 21:46:27 -0600
+Message-ID: <4397AC93.7050500@sgi.com>
+References: <43975A8C.2030208@sgi.com> <1133993204.3303.46.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------020101060306020108000707"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lidskialf.net ([62.3.233.115]:1968 "EHLO mail.lidskialf.net")
-	by vger.kernel.org with ESMTP id S1030423AbVLHDTV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2005 22:19:21 -0500
-In-Reply-To: <43979E1A.30801@s5r6.in-berlin.de>
-Content-Disposition: inline
+Received: from omx3-ext.sgi.com ([192.48.171.20]:63970 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S1030421AbVLHDqt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2005 22:46:49 -0500
+In-Reply-To: <1133993204.3303.46.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, James.Smart@Emulex.Com, Jeremy Higdon <jeremy@sgi.com>
+
+This is a multi-part message in MIME format.
+--------------020101060306020108000707
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
 
-> [in sbp2_create_command_orb]
->
-> > +	/* check for duff DMA transfer direction with a zero length buffer */
-> > +	if (scsi_request_bufflen == 0)
-> > +		dma_dir = DMA_NONE;
->
-> What if you replace WRITE by READ in
-> drivers/scsi/scsi_ioctl.c::scsi_cmd_ioctl()::case CDROMEJECT ?
 
-Yup, using READ there fixes it too (and I did remember to remove my other 
-patch before testing :)
+James Bottomley wrote:
+> On Wed, 2005-12-07 at 15:56 -0600, Michael Reed wrote:
+>> During my testing of fc transport attributes for the mpt fusion
+>> driver, I came upon this OOPS.  (Actually, I've come upon it
+>> too many times.  :(  )
+>>
+>> Attached is a patch which addresses the issue.  Please give it a look.
+> 
+> Isn't a better patch simply to copy the eh_action and check it for null
+> before completing it?  That will close the done after timeout race.
+> 
+> James
+> 
+> 
 
-USB storage devices still work with the CDROMEJECT ioctl and this change as 
-well.
+OK.  Try this.  (I did!)
 
-> And BTW, can/should this latter case block be converted to use
-> scsi_execute() or scsi_execute_req()?
+Mike
 
-Can't comment - don't know enough about the linux SCSI subsystem.
+--------------020101060306020108000707
+Content-Type: text/x-patch;
+ name="scsi_error.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi_error.patch"
+
+--- a/drivers/scsi/scsi_error.c	2005-12-07 19:14:44.000000000 -0800
++++ b/drivers/scsi/scsi_error.c	2005-12-07 19:13:24.734716721 -0800
+@@ -422,10 +422,15 @@
+  **/
+ static void scsi_eh_done(struct scsi_cmnd *scmd)
+ {
++	struct completion     *eh_action;
++
+ 	SCSI_LOG_ERROR_RECOVERY(3,
+ 		printk("%s scmd: %p result: %x\n",
+ 			__FUNCTION__, scmd, scmd->result));
+-	complete(scmd->device->host->eh_action);
++
++	eh_action = scmd->device->host->eh_action;
++	if (eh_action)
++		complete(eh_action);
+ }
+ 
+ /**
+
+--------------020101060306020108000707--
