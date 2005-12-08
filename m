@@ -1,61 +1,82 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: linux kernel panic when ejecting ieee1394 ipod
-Date: Thu, 08 Dec 2005 02:17:35 +0100
-Message-ID: <439789AF.4070500@s5r6.in-berlin.de>
-References: <200512072358.15398.adq_dvb@lidskialf.net>
+From: "Ian P. Christian" <pookey@pookey.co.uk>
+Subject: Re: Strange problems with a Megaraid RAID array on a Dell Poweredge 1850
+Date: Thu, 8 Dec 2005 01:21:04 +0000
+Message-ID: <200512080121.04953.pookey@pookey.co.uk>
+References: <200512080118.17001.pookey@pookey.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-6"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:1743 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S932157AbVLHBTo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Dec 2005 20:19:44 -0500
-In-Reply-To: <200512072358.15398.adq_dvb@lidskialf.net>
+Received: from xian.ncuk.net ([80.249.110.212]:50656 "EHLO xian.ncuk.net")
+	by vger.kernel.org with ESMTP id S932161AbVLHBVH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2005 20:21:07 -0500
+In-Reply-To: <200512080118.17001.pookey@pookey.co.uk>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew de Quincey <adq_dvb@lidskialf.net>
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Andrew de Quincey wrote to linux1394-devel:
-> Reposting to the -devel list since there was no response on -user.
+On Thursday 08 December 2005 01:18, Ian P. Christian wrote:
+> # fdisk -l
+> Unable to seek on /dev/sda
+strace of the fdisk - not sure if it will help at all, but I thought it was 
+worth posting:
 
-I would have responded eventually... :-)
+# strace fdisk /dev/sda
+execve("/sbin/fdisk", ["fdisk", "/dev/sda"], [/* 25 vars */]) = 0
+uname({sys="Linux", node="bb4", ...})   = 0
+brk(0)                                  = 0x8001eb18
+access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or 
+directory)
+open("/etc/ld.so.cache", O_RDONLY)      = 3
+fstat64(3, {st_mode=S_IFREG|0644, st_size=18962, ...}) = 0
+mmap2(NULL, 18962, PROT_READ, MAP_PRIVATE, 3, 0) = 0xb7fd7000
+close(3)                                = 0
+open("/lib/libc.so.6", O_RDONLY)        = 3
+read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0yQ\1\000"..., 512) = 
+512
+fstat64(3, {st_mode=S_IFREG|0755, st_size=1209032, ...}) = 0
+mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 
+0xb7fd6000
+mmap2(NULL, 1141820, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 
+0xb7ebf000
+mmap2(0xb7fd0000, 16384, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|
+MAP_DENYWRITE, 3, 0x111) = 0xb7fd0000
+mmap2(0xb7fd4000, 7228, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|
+MAP_ANONYMOUS, -1, 0) = 0xb7fd4000
+close(3)                                = 0
+mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 
+0xb7ebe000
+mprotect(0xb7fd0000, 4096, PROT_READ)   = 0
+mprotect(0x8001a000, 4096, PROT_READ)   = 0
+mprotect(0xb7ff2000, 4096, PROT_READ)   = 0
+set_thread_area({entry_number:-1 -> 6, base_addr:0xb7ebe6b0, limit:1048575, 
+seg_32bit:1, contents:0, read_exec_only:0, limit_in_pages:1, 
+seg_not_present:0, useable:1}) = 0
+munmap(0xb7fd7000, 18962)               = 0
+open("/dev/urandom", O_RDONLY)          = 3
+read(3, "\340+\r\304", 4)               = 4
+close(3)                                = 0
+brk(0)                                  = 0x8001eb18
+brk(0x8003fb18)                         = 0x8003fb18
+brk(0x80040000)                         = 0x80040000
+open("/dev/sda", O_RDWR|O_LARGEFILE)    = 3
+read(3, "\353H\220\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 512) = 
+512
+uname({sys="Linux", node="bb4", ...})   = 0
+ioctl(3, BLKSSZGET, 0xbfff39dc)         = 0
+fstat64(3, {st_mode=S_IFBLK|0660, st_rdev=makedev(8, 0), ...}) = 0
+ioctl(3, 0x301, 0xbfff39d8)             = 0
+ioctl(3, BLKGETSIZE, 0xbfff39cc)        = 0
+ioctl(3, BLKGETSIZE64, 0xbfff39c0)      = 0
+_llseek(0, 0, 0xbfff3968, SEEK_SET)     = -1 ESPIPE (Illegal seek)
+write(2, "\n", 1
+)                       = 1
+write(2, "Unable to seek on /dev/sda\n", 27Unable to seek on /dev/sda
+) = 27
+exit_group(1)                           = ?
 
-> Hi, I'm using linux kernel 2.6.14 with an generation 1 ipod connected via 
-> ieee1394/sbp2.
-> 
-> I can mount/unmount it and use it fine. It even works with HAL now.
-> 
-> The problem comes when I want to remove it. If I do:
-> 
-> eject /dev/sdb
-> 
-> The kernel panics with the following error:
-> Kernel panic - not syncing: PCI-DMA: high address but no IOMMU
-
-I think there was another report about "eject" of a FireWire iPod 
-crashing the kernel but I cannot find it in any archive anymore and do 
-not remember which kernel version and machine architecture was affected.
-
-The eject command does work for me with a few different SBP-2 devices, 
-but I do not have an iPod. But more importantly, I have currently only 
-i386 with 512 MB RAM to test. The "high address but no IOMMU" panic 
-message is specific to x86_64.
-
-I had only a superficial look at it so far and did not spot anything 
-obvious. (That's because I do not know anything about Linux' memory 
-management.) My only idea at the moment is to Cc this to linux-scsi 
-since sd_mod does work for you but the one thing you do via the sg 
-driver does not.
-
-> I'm using an nforce 4 motherboard (Asus A8N-SLI Deluxe). The ipod is attached 
-> to the ieee1394 port on a creative labs Audigy2 sound card (uses OHCI-1394).
-> 
-> I do _not_ have "Enable Phys DMA support for SBP2 (Debug)" enabled if thats 
-> any help.
 
 -- 
-Stefan Richter
--=====-=-=-= ==-- -=---
-http://arcgraph.de/sr/
+Ian P. Christian ~ http://pookey.co.uk
