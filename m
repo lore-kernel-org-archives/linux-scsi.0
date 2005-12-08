@@ -1,40 +1,72 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [PATCH] OOPS due to clearing eh_action prior to aborting	eh	command
-Date: Wed, 07 Dec 2005 20:31:56 -0600
-Message-ID: <43979B1C.60400@sgi.com>
-References: <43975A8C.2030208@sgi.com> <1133993204.3303.46.camel@mulgrave>	 <43975F24.4040904@sgi.com> <1133998497.3898.4.camel@mulgrave>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: linux kernel panic when ejecting ieee1394 ipod
+Date: Thu, 08 Dec 2005 03:44:42 +0100
+Message-ID: <43979E1A.30801@s5r6.in-berlin.de>
+References: <200512072358.15398.adq_dvb@lidskialf.net> <200512080119.48740.adq@lidskialf.net> <200512080159.10913.adq_dvb@lidskialf.net> <200512080209.17757.adq_dvb@lidskialf.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:41682 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S932673AbVLHCcA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2005 21:32:00 -0500
-In-Reply-To: <1133998497.3898.4.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-admin@lists.sourceforge.net>
+In-Reply-To: <200512080209.17757.adq_dvb@lidskialf.net>
+Sender: linux1394-devel-admin@lists.sourceforge.net
+Errors-To: linux1394-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
+To: Andrew de Quincey <adq_dvb@lidskialf.net>
+Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
 
-
-
-James Bottomley wrote:
-> On Wed, 2005-12-07 at 16:16 -0600, Michael Reed wrote: 
->> FWIW, the situation I'm reporting isn't done after timeout, it's
->> the scsi error handler calling the LLDD abort routine, which actually
->> aborts the command and completes it.  The eh_action is cleared before
->> the abort, violating what appears to be the accepted protocol of having
->> the LLDD complete aborted commands.
+Andrew de Quincey wrote:
+> On Thursday 08 December 2005 01:59, Andrew de Quincey wrote:
+>>eject -s sends the following SCSI packet command to the sbp/ipod device:
 >>
->> Am I missing something in your comment?  (It wouldn't surprise me!)
+>>1b 00 00 00 02 00 with a direction of DMA_NONE
+>>
+>>eject -r results in the same via the CDROMEJECT translator in
+>>scsi_cmd_ioctl(), but with a direction of DMA_TO_DEVICE. Thats what crashes
+>>it - looks like its trying to set up a DMA transfer for 0 bytes or
+>>something. I just added a really horrible hack to the start of
+>>sbp2_send_command() to check, as follows:
+>>
+>>   if (*cmd == 0x1b) {
+>>      SCpnt->sc_data_direction = 3;
+>>   }
+>>
+>>Now, eject -r works perfectly. Though thats obviously not a good way to fix
+>>it :)
+
+That was a long time ago when sbp2 had to take care of data direction. I 
+think we don't want to go back there. :-)
+
+> Possible "proper" patch attached - no idea if its a good way to do this. 
+> Basically if it gets a command with a scsi_request_bufflen of zero bytes, it 
+> forces dma_dir to DMA_NONE.
 > 
-> The timeout race still exists, though.  Both fixes would solve both
-> problems. It would just be easier to follow if the logic of the error
-> handler done follows that of the normal done function (i.e. don't do
-> anything after the command times out).
+> The ipod works perfectly with this now.
+...
+[in sbp2_create_command_orb]
+> +	/* check for duff DMA transfer direction with a zero length buffer */
+> +	if (scsi_request_bufflen == 0)
+> +		dma_dir = DMA_NONE;
 
-"Ah ha", he said.  Further examination of the code clarifies what you were
-suggesting.  I'll see what I can work up.
+What if you replace WRITE by READ in 
+drivers/scsi/scsi_ioctl.c::scsi_cmd_ioctl()::case CDROMEJECT ?
 
-Thanks,
- Mike
+And BTW, can/should this latter case block be converted to use 
+scsi_execute() or scsi_execute_req()?
+-- 
+Stefan Richter
+-=====-=-=-= ==-- -=---
+http://arcgraph.de/sr/
+
+
+-------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
+for problems?  Stop!  Download the new AJAX search engine that makes
+searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
+http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
