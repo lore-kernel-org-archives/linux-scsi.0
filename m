@@ -1,33 +1,57 @@
-From: "T.Krishnanand" <krishnanand.thommandra@gmail.com>
-Subject: iscsi target - SCSI mid layer
-Date: Thu, 8 Dec 2005 19:46:47 +0530
-Message-ID: <2bd90fb70512080616k1f8c88e4mae7985d2461ccda1@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [ACPI] Re: RFC: ACPI/scsi/libata integration and hotswap
+Date: Thu, 08 Dec 2005 14:30:57 +0000
+Message-ID: <1134052257.17102.13.camel@localhost.localdomain>
+References: <20051208030242.GA19923@srcf.ucam.org>
+	 <20051208091542.GA9538@infradead.org>
+	 <20051208132657.GA21529@srcf.ucam.org>
+	 <20051208133308.GA13267@infradead.org>
+	 <20051208133945.GA21633@srcf.ucam.org>
+	 <20051208135225.GA13122@havoc.gtf.org>
+	 <1134050863.17102.5.camel@localhost.localdomain>
+	 <43983FC6.6050108@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.200]:34263 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932145AbVLHOQs convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Dec 2005 09:16:48 -0500
-Received: by zproxy.gmail.com with SMTP id 14so657937nzn
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Dec 2005 06:16:47 -0800 (PST)
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932087AbVLHOc1@vger.kernel.org>
+In-Reply-To: <43983FC6.6050108@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>, Christoph Hellwig <hch@infradead.org>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-In the case of a  Linux box which is being used as an iSCSI target
-with SCSI disks, what are the demerits in BY-passing the SCSI
-mid-layer so that the iSCSI driver directly talks to the LOW-level
-SCSI drivers for the specific HBAs ? (ignore the HBA vendor lock-in
-issues etc....ANY technical issues ?
+On Iau, 2005-12-08 at 09:14 -0500, Jeff Garzik wrote:
+> These are only for PATA.  We don't care about _GTM/_STM on SATA.
 
-Since the SCSI-midlayer's most important function of error handling
-etc will anyway be performed by the equivalent entitiy on the iSCSI
-initiator side....I dont see any good reason to depend on the SCSI
-mid-layer at the target side.
-But I'm new to this hence ... this post.
+Even your piix driver supports PATA. Put the foaming (justified ;))
+hatred for ACPI aside for a moment and take a look at the real world as
+it unfortunately is right now.
 
-thanks,
--tkrishna
+> Further, SATA completely resets and re-initializes the device as if from 
+> a hardware reset (except on ata_piix, which doesn't support COMRESET, 
+> and PATA).  This makes _GTF uninteresting, as well.
+
+You don't know what the sequences the resume method is concerned about
+actually are.
+
+> suspend/resume works just fine with Jens' out-of-tree patch.
+
+Only on some systems.
+
+> > If you don't run the resume methods your disk subsystem status after a
+> > resume is simply undefined and unsafe.
+> 
+> I initialize the hardware to a defined state.
+
+Sure, but sometimes the *wrong* defined state. The BIOS ACPI methods
+include things like unlocking drive passwords on restore with some
+systems. You don't handle that at all.
+
+Having said that I still think ACPI awareness doesn't belong in libata
+or scsi because we'd then have awareness of every pm scheme in the wrong
+layer and a dozen pm systems all with scsi hooks. Gak...
+
+SCSI/libata can go easily from ata channel to pci device to device. The
+rest of the logic belongs outside of scsi/libata.
+
+Alan
