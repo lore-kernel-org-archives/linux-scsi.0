@@ -1,41 +1,55 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: linux kernel panic when ejecting ieee1394 ipod
-Date: Thu, 08 Dec 2005 20:27:42 +0100
-Message-ID: <4398892E.10403@s5r6.in-berlin.de>
-References: <200512072358.15398.adq_dvb@lidskialf.net> <200512080209.17757.adq_dvb@lidskialf.net> <43979E1A.30801@s5r6.in-berlin.de> <200512080319.19434.adq_dvb@lidskialf.net> <4397E643.8040307@s5r6.in-berlin.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Ang: Re: [Stgt-devel] Re: [Iscsitarget-devel] stgt a new
+	version of iscsi target?
+Date: Thu, 08 Dec 2005 14:47:48 -0500
+Message-ID: <1134071268.3259.29.camel@mulgrave>
+References: <OF6932015B.01CF53D9-ONC12570D0.00462028@capvert.ins>
+	 <43972C2D.9060500@cs.wisc.edu>  <43987F75.2000301@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:21431 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S932276AbVLHTaA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Dec 2005 14:30:00 -0500
-In-Reply-To: <4397E643.8040307@s5r6.in-berlin.de>
+Received: from stat9.steeleye.com ([209.192.50.41]:20360 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932294AbVLHTse (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Dec 2005 14:48:34 -0500
+In-Reply-To: <43987F75.2000301@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew de Quincey <adq_dvb@lidskialf.net>
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, johan@capvert.se, iscsitarget-devel@lists.sourceforge.net, mingz@ele.uri.edu, stgt <stgt-devel@lists.berlios.de>, Robert Whitehead <WRWHITEHEAD@novell.com>, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-I wrote:
-> Andrew de Quincey wrote:
->> USB storage devices still work with the CDROMEJECT ioctl and this 
->> change as well.
-> 
-> I'll check if they have a safeguard which sbp2 should have too.
+On Thu, 2005-12-08 at 21:46 +0300, Vladislav Bolkhovitin wrote:
+>   - Scst has some performance advantages over stgt, at least, on 
+> hardware targets, because it allows internal handling in SIRQ context as 
+> well as doesn't need user space program, so it eliminates additional 
+> context switches (at least 3 per command for WRITEs and 2 per command 
+> for reads plus switches to user space daemon, probably, 2 per command). 
+> 5 context switches per command looks too much for me, especially 
+> considering how little work is done on each context. It means ~15000 
+> CS/sec on regular 200Mb/sec link with 64K block size. Additionally, 
+> kernel only commands execution allows direct access to page cache, which 
+> is GREAT performance improvement, because in architecture with user 
+> space daemon the data should be copied several times between kernel and 
+> user space. Or, do I miimpss anything?
 
-I browsed a bit through usb/storage/ but did not spot an obvious sanity 
-check of this kind. AFAIU, slightly differently arranged case 
-discriminations let usb-storage avoid this pitfall.
+I do have to say that I consider operation in interrupt context (or even
+kernel context) to be a disadvantage.  Compared with the response times
+that most arrays have to SCSI commands, the kernel context switch time
+isn't that significant.
 
-Your patch to sbp2_create_command_orb() is basically the right thing to 
-do --- not as an actual fix of the bogus transfer direction passed to 
-sbp2 but rather as a protection against catastrophic failure. I'd like 
-to integrate your check in marginally different form though. Patch 
-follows shortly.
+Additionally, it's perfectly possible for all of this to be done zero
+copy on the data.  A user space target mmaps the data on its storage
+device and then does a SG_IO type scatter gather user virtual region
+pass to the underlying target infrastructure.  We already have this
+demonstrated in the SG_IO path, someone just needs to come up with the
+correct implementation for a target path.
 
-Thanks again.
--- 
-Stefan Richter
--=====-=-=-= ==-- -=---
-http://arcgraph.de/sr/
+The great advantage of doing SCSI state machines in user space is that
+you can prototype anything you want, and user space has much better
+state machine implementation (and debugging) tools available than the
+kernel does.
+
+James
+
+
