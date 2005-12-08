@@ -1,28 +1,35 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Thu, 8 Dec 2005 13:33:08 +0000
-Message-ID: <20051208133308.GA13267@infradead.org>
-References: <20051208030242.GA19923@srcf.ucam.org> <20051208091542.GA9538@infradead.org> <20051208132657.GA21529@srcf.ucam.org>
+From: "Ju, Seokmann" <Seokmann.Ju@engenio.com>
+Subject: RE: [PATCH] Fix incorrect pointer in megaraid.c MODE_SENSE emulat
+	ion
+Date: Thu, 8 Dec 2005 08:31:50 -0500
+Message-ID: <0E3FA95632D6D047BA649F95DAB60E5703662C86@exa-atlanta>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932078AbVLHNdN@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20051208132657.GA21529@srcf.ucam.org>
+Content-Type: text/plain;
+	charset="iso-8859-1"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751185AbVLHNcE@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Christoph Hellwig <hch@infradead.org>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
+To: 'Mark Lord' <lkml@rtr.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Dec 08, 2005 at 01:26:57PM +0000, Matthew Garrett wrote:
-> On Thu, Dec 08, 2005 at 09:15:42AM +0000, Christoph Hellwig wrote:
-> 
-> > NACK.  ACPI-specific hacks do not have any business at all in the scsi layer.
-> 
-> Ok. What's the right layer to do this? The current ACPI/anything else 
-> glue depends on specific knowledge about the bus concerned, and needs 
-> callbacks registered before devices are added to that bus. Doing it in 
-> the sata layer would have the potential for unhappiness on mixed 
-> sata/scsi machines.
+Hi,
+> The SCSI megaraid drive goes to great effort to kmap
+> the scatterlist buffer (if used), but then uses the
+> wrong pointer when copying to it afterward.
+Thank you for submitting a patch that fixes a real problem.
+The patch looks perfect!
 
-Don't do it at all.  We don't need to fuck up every layer and driver for
-intels braindamage.
+Regards,
+
+> -----Original Message-----
+> From: Mark Lord [mailto:lkml@rtr.ca] 
+> Sent: Wednesday, December 07, 2005 5:47 PM
+> To: Linux Kernel; linux-scsi@vger.kernel.org
+> Subject: [PATCH] Fix incorrect pointer in megaraid.c 
+> MODE_SENSE emulation
+> 
+> The SCSI megaraid drive goes to great effort to kmap
+> the scatterlist buffer (if used), but then uses the
+> wrong pointer when copying to it afterward.
+> 
+> Signed-off-by:  Mark Lord <lkml@rtr.ca>
+> 
