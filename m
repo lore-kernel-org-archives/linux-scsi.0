@@ -1,15 +1,14 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Thu, 8 Dec 2005 13:44:38 +0000
-Message-ID: <20051208134438.GA13507@infradead.org>
+Date: Thu, 8 Dec 2005 08:52:25 -0500
+Message-ID: <20051208135225.GA13122@havoc.gtf.org>
 References: <20051208030242.GA19923@srcf.ucam.org> <20051208091542.GA9538@infradead.org> <20051208132657.GA21529@srcf.ucam.org> <20051208133308.GA13267@infradead.org> <20051208133945.GA21633@srcf.ucam.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:22506 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932092AbVLHNoj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Dec 2005 08:44:39 -0500
+Received: from havoc.gtf.org ([69.61.125.42]:42711 "EHLO havoc.gtf.org")
+	by vger.kernel.org with ESMTP id S1751184AbVLHNwf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2005 08:52:35 -0500
 Content-Disposition: inline
 In-Reply-To: <20051208133945.GA21633@srcf.ucam.org>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -24,13 +23,17 @@ On Thu, Dec 08, 2005 at 01:39:45PM +0000, Matthew Garrett wrote:
 > > intels braindamage.
 > 
 > Doing SATA suspend/resume properly on x86 depends on knowing the ACPI 
-> object that corresponds to a host or target. It's also the only way to 
-> support hotswap on this hardware[1], since there's no way for userspace 
-> to know which device a notification refers to.
+> object that corresponds to a host or target.
 
-Well, bad luck for people buying such broken hardware.  Maybe you can trick
-Jeff into adding junk like that to libata, but it surely doesn't have any
-business in the scsi layer.
+Not true.
 
-Why oh why do our chipset friends at intel have to fuck up everything they
-can?  I wish they'd learn a lesson or two from their cpu collegues.
+
+> It's also the only way to 
+> support hotswap on this hardware[1],
+
+Not true.
+
+	Jeff
+
+
+
