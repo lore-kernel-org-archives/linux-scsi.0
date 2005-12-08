@@ -1,39 +1,45 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Thu, 8 Dec 2005 08:52:25 -0500
-Message-ID: <20051208135225.GA13122@havoc.gtf.org>
-References: <20051208030242.GA19923@srcf.ucam.org> <20051208091542.GA9538@infradead.org> <20051208132657.GA21529@srcf.ucam.org> <20051208133308.GA13267@infradead.org> <20051208133945.GA21633@srcf.ucam.org>
+From: "Ian P. Christian" <pookey@pookey.co.uk>
+Subject: Re: Strange problems with a Megaraid RAID array on a Dell Poweredge 1850
+Date: Thu, 8 Dec 2005 13:56:27 +0000
+Message-ID: <200512081356.27583.pookey@pookey.co.uk>
+References: <200512080118.17001.pookey@pookey.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-6
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:42711 "EHLO havoc.gtf.org")
-	by vger.kernel.org with ESMTP id S1751184AbVLHNwf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2005 08:52:35 -0500
+Received: from xian.ncuk.net ([80.249.110.212]:35544 "EHLO xian.ncuk.net")
+	by vger.kernel.org with ESMTP id S1751184AbVLHN4g convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Dec 2005 08:56:36 -0500
+In-Reply-To: <200512080118.17001.pookey@pookey.co.uk>
 Content-Disposition: inline
-In-Reply-To: <20051208133945.GA21633@srcf.ucam.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Christoph Hellwig <hch@infradead.org>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
+To: linux-scsi@vger.kernel.org
 
-On Thu, Dec 08, 2005 at 01:39:45PM +0000, Matthew Garrett wrote:
-> On Thu, Dec 08, 2005 at 01:33:08PM +0000, Christoph Hellwig wrote:
-> 
-> > Don't do it at all.  We don't need to fuck up every layer and driver for
-> > intels braindamage.
-> 
-> Doing SATA suspend/resume properly on x86 depends on knowing the ACPI 
-> object that corresponds to a host or target.
+On Thursday 08 December 2005 01:18, Ian P. Christian wrote:
+> Basically, I can't use fdisk on /dev/sda. =A0I can however boot off t=
+his
+> array, and everything is working fine - I'm having no issues using th=
+is
+> array for anything else. A live, and apparently healthy system is run=
+ning
+> from it.
+>
+> # fdisk -l
+> Unable to seek on /dev/sda
 
-Not true.
+I've just installed parted and tried this - oddly, this works fine.  Wh=
+y might=20
+sfdisk and fdisk fail to read the partition table, but parted work fine=
+?
 
+Kind Regards,
 
-> It's also the only way to 
-> support hotswap on this hardware[1],
-
-Not true.
-
-	Jeff
-
-
-
+--=20
+Ian P. Christian ~ http://pookey.co.uk
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
