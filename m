@@ -1,49 +1,53 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Thu, 8 Dec 2005 17:19:01 +0000
-Message-ID: <20051208171901.GA22451@srcf.ucam.org>
-References: <20051208030242.GA19923@srcf.ucam.org> <20051208091542.GA9538@infradead.org> <20051208132657.GA21529@srcf.ucam.org> <20051208133308.GA13267@infradead.org> <20051208133945.GA21633@srcf.ucam.org> <1134050498.17102.2.camel@localhost.localdomain> <20051208141811.GB21715@srcf.ucam.org> <1134052433.17102.17.camel@localhost.localdomain> <20051208145257.GB21946@srcf.ucam.org>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: linux kernel panic when ejecting ieee1394 ipod
+Date: Thu, 8 Dec 2005 09:34:29 -0800
+Message-ID: <20051208173429.GA2666@us.ibm.com>
+References: <200512072358.15398.adq_dvb@lidskialf.net> <200512080119.48740.adq@lidskialf.net> <200512080159.10913.adq_dvb@lidskialf.net> <200512080209.17757.adq_dvb@lidskialf.net> <43979E1A.30801@s5r6.in-berlin.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([217.147.92.49]:63213 "EHLO
-	vavatch.codon.org.uk") by vger.kernel.org with ESMTP
-	id S932226AbVLHRTM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Dec 2005 12:19:12 -0500
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:52657 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1750718AbVLHRe5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2005 12:34:57 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e3.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id jB8HYlGC006031
+	for <linux-scsi@vger.kernel.org>; Thu, 8 Dec 2005 12:34:47 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id jB8HYl5W122922
+	for <linux-scsi@vger.kernel.org>; Thu, 8 Dec 2005 12:34:47 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id jB8HYkOI000638
+	for <linux-scsi@vger.kernel.org>; Thu, 8 Dec 2005 12:34:47 -0500
 Content-Disposition: inline
-In-Reply-To: <20051208145257.GB21946@srcf.ucam.org>
+In-Reply-To: <43979E1A.30801@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Christoph Hellwig <hch@infradead.org>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Andrew de Quincey <adq_dvb@lidskialf.net>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-On Thu, Dec 08, 2005 at 02:52:57PM +0000, Matthew Garrett wrote:
+On Thu, Dec 08, 2005 at 03:44:42AM +0100, Stefan Richter wrote:
 
-> Hrm. I guess this can be implemented pretty much just by cutting and 
-> pasting the code into drivers/acpi rather than drivers/scsi. Would that 
-> be considered an improvement?
+> What if you replace WRITE by READ in 
+> drivers/scsi/scsi_ioctl.c::scsi_cmd_ioctl()::case CDROMEJECT ?
 
-This turns out to be quite difficult, and I can't see a clean way of 
-doing it without touching scsi or rewriting chunks of the ACPI glue 
-code.
+You must mean block/scsi_ioctl.c? i.e.:
 
-The basic flow of code required here is:
+diff -uprN -X /home/patman/dontdiff linux-2.6.15-rc5-git1/block/scsi_ioctl.c mod- linux-2.6.15-rc5-git1/block/scsi_ioctl.c
+--- /home/linux/views/linux-2.6.15-rc5-git1/block/scsi_ioctl.c	2005-12-03 22:51:54.000000000 -0800
++++ linux-2.6.15-rc5-git1/block/scsi_ioctl.c	2005-12-08 09:31:52.000000000 -0800
+@@ -566,7 +566,7 @@ int scsi_cmd_ioctl(struct file *file, st
+ 		case CDROMCLOSETRAY:
+ 			close = 1;
+ 		case CDROMEJECT:
+-			rq = blk_get_request(q, WRITE, __GFP_WAIT);
++			rq = blk_get_request(q, READ, __GFP_WAIT);
+ 			rq->flags |= REQ_BLOCK_PC;
+ 			rq->data = NULL;
+ 			rq->data_len = 0;
 
-1) scsi layer registers a new device
-2) platform_notify is called, which is (in this case) 
-acpi_platform_notify
-3) acpi_platform_notify checks whether it knows dev->bus. If so, it 
-calls appropriate callbacks.
+> And BTW, can/should this latter case block be converted to use 
+> scsi_execute() or scsi_execute_req()?
 
-Without touching scsi, there doesn't seem to be any way for (3) to work 
-if scsi is a module. Would a simple
+And then scsi_cmd_ioctl() already uses blk layer REQ_BLOCK_PC.
 
-#ifdef CONFIG_ACPI
-acpi_scsi_init(&scsi_bus_type)
-#endif
-
-in the scsi code be acceptable? If not, then we have some difficulty. 
-The acpi glue code has to be statically linked in, so it can't rely on 
-anything that directly references the scsi code.
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+-- Patrick Mansfield
