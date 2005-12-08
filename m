@@ -1,78 +1,97 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: 2.6.15-rc4 error messages with multiple qla2300 hba ports on fabric
-Date: Wed, 7 Dec 2005 15:54:07 -0800
-Message-ID: <20051207235407.GB3137@andrew-vasquezs-powerbook-g4-15.local>
-References: <B179AE41C1147041AA1121F44614F0B0012AD98D@AVEXCH02.qlogic.org> <43907957.70402@sgi.com>
+From: "Ian P. Christian" <pookey@pookey.co.uk>
+Subject: Strange problems with a Megaraid RAID array on a Dell Poweredge 1850
+Date: Thu, 8 Dec 2005 01:18:11 +0000
+Message-ID: <200512080118.17001.pookey@pookey.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed;
+  boundary="nextPart2885473.HxdF4J0MMU";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:20569 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S964978AbVLGXyJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2005 18:54:09 -0500
-Content-Disposition: inline
-In-Reply-To: <43907957.70402@sgi.com>
+Received: from xian.ncuk.net ([80.249.110.212]:9651 "EHLO xian.ncuk.net")
+	by vger.kernel.org with ESMTP id S932143AbVLHBSV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2005 20:18:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, 02 Dec 2005, Michael Reed wrote:
+--nextPart2885473.HxdF4J0MMU
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> Andrew Vasquez wrote:
-> > 
-> >> From: Michael Reed [mailto:mdr@sgi.com]
-> >>
-> > 
-> > Sidenote:  I'm on the east-coast until hopefully tonight -- won't
-> > have a chance to look at debugging this for a couple of days...
-> > 
-> >> I've been testing with the qla2300 driver with 2.6.14.3 and 2.6.15-rc4.
-> >> I've observed two sets of error messages which are not present with
-> >> 2.6.14.3.
-> >>
-> >> First, the qla2300 driver is generating soft lockups.
-> > 
-> > Have a backtrace?
-> 
-> In the previously attached dmesg file, extracted below.  Is the driver polling
-> for mailbox interrupt?
+I'm having an odd problem with a poweredge 1850, and it's driving me mad -=
+=20
+google's not helped me, I've tried a few mailing lists, and I've run out of=
+=20
+places to look, so any help would be greatly appreciated.
 
-Yes during init-time, the driver polls for mailbox completions, in
-this case it's for a PLOGI completion...
+Basically, I can't use fdisk on /dev/sda.  I can however boot off this arra=
+y,=20
+and everything is working fine - I'm having no issues using this array for=
+=20
+anything else. A live, and apparently healthy system is running from it.
 
-...
-> qla2300 0002:01:04.0: Topology - (F_Port), Host Loop address 0xffff
-> BUG: soft lockup detected on CPU#0!
-> Modules linked in:
-...
->  [<a00000010000bce0>] ia64_leave_kernel+0x0/0x290
->                                 sp=e00000b07bb27920 bsp=e00000b07bb21558
->  [<a000000100580380>] qla2x00_mailbox_command+0x860/0xc40
->                                 sp=e00000b07bb27af0 bsp=e00000b07bb21498
->  [<a000000100581070>] qla2x00_login_fabric+0x150/0x260
->                                 sp=e00000b07bb27b40 bsp=e00000b07bb21440
->  [<a000000100575580>] qla2x00_fabric_login+0xc0/0x3a0
->                                 sp=e00000b07bb27ba0 bsp=e00000b07bb21388
+# fdisk -l
+Unable to seek on /dev/sda
 
-I'm wondering if something like the following is more appropriate.
+# sfdisk /dev/sda --no-reread
+Disk /dev/sda: 35669 cylinders, 255 heads, 63 sectors/track
+llseek: Bad file descriptor
 
----
+sfdisk: seek error on /dev/sda - cannot seek to 0
+ /dev/sda: unrecognized partition table type
+Old situation:
+No partitions found
 
-Slight variant from a patch submitted by Jeff Layton
-<jlayton@redhat.com>.
+The odd thing is, if I boot off a gentoo liveCD, everything's ok. =20
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 9746cd1..3de8fee 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -196,7 +196,9 @@ qla2x00_mailbox_command(scsi_qla_host_t 
- 			/* Check for pending interrupts. */
- 			qla2x00_poll(ha);
- 
--			udelay(10); /* v4.27 */
-+			if (command != MBC_LOAD_RISC_RAM_EXTENDED &&
-+			    !ha->flags.mbox_int)
-+				msleep(10);
- 		} /* while */
- 	}
- 
+I've tried various kernel versions of the 2.6 series.=20
+I've tried using config's found on google.
+I've tried configuing a kernel from scratch countless times.
+I've tried repartitioning and reinstalling from scratch.
+
+last bit of juice out of my CPUs or anything silly like that.
+
+make.conf
+CHOST=3D"i686-pc-linux-gnu"
+CFLAGS=3D"-march=3Dnocona -O2 -fomit-frame-pointer -fforce-addr -ftracer -p=
+ipe"
+
+The array is configured as a single RAID 5 array with 3 disks.
+
+No dell software is installed yet.
+No dell patches (if there are any?) have been applied to the kernel.
+I've tried gentoo-sources, hardened-sources and standard kernel versions.
+
+extra info:
+ # zcat /proc/config.gz  | grep MEG
+CONFIG_MEGARAID_NEWGEN=3Dy
+CONFIG_MEGARAID_MM=3Dy
+CONFIG_MEGARAID_MAILBOX=3Dy
+# CONFIG_MEGARAID_LEGACY is not set
+# CONFIG_MEGARAID_SAS is not set
+
+ # lspci | grep RAID
+02:0e.0 RAID bus controller: Dell PowerEdge Expandable RAID controller 4 (r=
+ev=20
+06)
+
+Kind Regards,
+=2D-=20
+Ian P. Christian ~ http://pookey.co.uk
+
+--nextPart2885473.HxdF4J0MMU
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+
+iD8DBQBDl4nY6jsuvK/fgkoRAgHDAKChJB9z8qt/VFcU+kkLkkCT66zYKgCg3Olv
+omjKArJOoSm55wUR1IWhaSg=
+=tRul
+-----END PGP SIGNATURE-----
+
+--nextPart2885473.HxdF4J0MMU--
