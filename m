@@ -1,72 +1,245 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: linux kernel panic when ejecting ieee1394 ipod
-Date: Thu, 08 Dec 2005 03:44:42 +0100
-Message-ID: <43979E1A.30801@s5r6.in-berlin.de>
-References: <200512072358.15398.adq_dvb@lidskialf.net> <200512080119.48740.adq@lidskialf.net> <200512080159.10913.adq_dvb@lidskialf.net> <200512080209.17757.adq_dvb@lidskialf.net>
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: RFC: ACPI/scsi/libata integration and hotswap
+Date: Thu, 8 Dec 2005 03:02:42 +0000
+Message-ID: <20051208030242.GA19923@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-admin@lists.sourceforge.net>
-In-Reply-To: <200512080209.17757.adq_dvb@lidskialf.net>
-Sender: linux1394-devel-admin@lists.sourceforge.net
-Errors-To: linux1394-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-To: Andrew de Quincey <adq_dvb@lidskialf.net>
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cavan.codon.org.uk ([217.147.92.49]:14056 "EHLO
+	vavatch.codon.org.uk") by vger.kernel.org with ESMTP
+	id S965055AbVLHDCs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Dec 2005 22:02:48 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
 
-Andrew de Quincey wrote:
-> On Thursday 08 December 2005 01:59, Andrew de Quincey wrote:
->>eject -s sends the following SCSI packet command to the sbp/ipod device:
->>
->>1b 00 00 00 02 00 with a direction of DMA_NONE
->>
->>eject -r results in the same via the CDROMEJECT translator in
->>scsi_cmd_ioctl(), but with a direction of DMA_TO_DEVICE. Thats what crashes
->>it - looks like its trying to set up a DMA transfer for 0 bytes or
->>something. I just added a really horrible hack to the start of
->>sbp2_send_command() to check, as follows:
->>
->>   if (*cmd == 0x1b) {
->>      SCpnt->sc_data_direction = 3;
->>   }
->>
->>Now, eject -r works perfectly. Though thats obviously not a good way to fix
->>it :)
+Hi!
 
-That was a long time ago when sbp2 had to take care of data direction. I 
-think we don't want to go back there. :-)
+The included patch does three things:
 
-> Possible "proper" patch attached - no idea if its a good way to do this. 
-> Basically if it gets a command with a scsi_request_bufflen of zero bytes, it 
-> forces dma_dir to DMA_NONE.
-> 
-> The ipod works perfectly with this now.
-...
-[in sbp2_create_command_orb]
-> +	/* check for duff DMA transfer direction with a zero length buffer */
-> +	if (scsi_request_bufflen == 0)
-> +		dma_dir = DMA_NONE;
+1) It adds basic support for binding SCSI and SATA devices to ACPI 
+device handles. At the moment this is limited to hosts, and in practice 
+it's probably limited to SATA ones (ACPI doesn't spec how SCSI devices 
+should appear in the DSDT, so I'm guessing that in general they don't). 
+Given a host, you can DEVICE_ACPI_HANDLE(dev) it to get the handle to 
+the ACPI device - this should be handy for implementing suspend 
+functions, since the methods should be in a standard location underneath 
+this.
 
-What if you replace WRITE by READ in 
-drivers/scsi/scsi_ioctl.c::scsi_cmd_ioctl()::case CDROMEJECT ?
+Support for binding the devices hasn't been implemented yet. I'm not 
+entire sure where they should be bound (the target, presumably?), and I 
+haven't actually got it to work...
 
-And BTW, can/should this latter case block be converted to use 
-scsi_execute() or scsi_execute_req()?
+2) It adds support for attaching notification events to the host. These 
+can be host-driver specific (they're just part of the host template). 
+Whenever the hardware generates an event on that bus, the host will be 
+called. I've added one of these to ata_piix (since that's what I have), 
+which should really be implemented in the host and only call the generic 
+one when appropriate. But still.
+
+3) Adds a generic libata notification handler that currently treats all 
+notifications as drive removal/insertion. It then calls Lukasz 
+Kosewski's hotplug code to remove/add the drive as appropriate.
+
+Most laptops generate ACPI notifications requesting bus rescans whenever 
+a bay drive is inserted or removed. This handles the event 
+appropriately. On my Dell d610, removing or plugging the drive results 
+in it appearing or disappearing from /proc/scsi/scsi as appropriate.
+
+Patch:
+
+diff -u drivers/scsi/ata_piix.c /tmp/drivers/scsi/ata_piix.c
+--- drivers/scsi/ata_piix.c	2005-12-05 14:30:58 +0000
++++ /tmp/drivers/scsi/ata_piix.c	2005-12-08 02:16:59 +0000
+@@ -148,6 +148,7 @@
+ 	.ordered_flush		= 1,
+ 	.resume			= ata_scsi_device_resume,
+ 	.suspend		= ata_scsi_device_suspend,
++	.acpi_notify		= ata_acpi_notify,
+ };
+ 
+ static const struct ata_port_operations piix_pata_ops = {
+diff -u drivers/scsi/libata-core.c /tmp/drivers/scsi/libata-core.c
+--- drivers/scsi/libata-core.c	2005-12-08 02:27:02 +0000
++++ /tmp/drivers/scsi/libata-core.c	2005-12-08 02:16:50 +0000
+@@ -50,6 +50,7 @@
+ #include <linux/workqueue.h>
+ #include <linux/jiffies.h>
+ #include <linux/scatterlist.h>
++#include <linux/acpi.h>
+ #include <scsi/scsi.h>
+ #include "scsi_priv.h"
+ #include <scsi/scsi_cmnd.h>
+@@ -75,9 +76,11 @@
+ 				unsigned int *xfer_shift_out);
+ static void __ata_qc_complete(struct ata_queued_cmd *qc);
+ static void ata_pio_error(struct ata_port *ap);
++static int ata_bus_probe(struct ata_port *ap);
+ 
+ static unsigned int ata_unique_id = 1;
+ static struct workqueue_struct *ata_wq;
++static struct workqueue_struct *ata_hotplug_wq;
+ 
+ int atapi_enabled = 1;
+ module_param(atapi_enabled, int, 0444);
+@@ -88,6 +91,17 @@
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION(DRV_VERSION);
+ 
++void ata_acpi_notify(acpi_handle device, u32 type, void *data) {
++	struct device *dev = acpi_get_physical_device(device);
++	struct Scsi_Host *shost =  dev_to_shost(dev);
++	struct ata_port *ap = (struct ata_port *) &shost->hostdata[0];
++	
++	if (!ata_bus_probe(ap))
++		ata_hotplug_plug(ap);
++	else
++		ata_hotplug_unplug(ap);
++}
++
+ /**
+  *	ata_tf_load_pio - send taskfile registers to host controller
+  *	@ap: Port to which output is sent
+diff -u drivers/scsi/scsi.c /tmp/drivers/scsi/scsi.c
+--- drivers/scsi/scsi.c	2005-12-04 16:48:07 +0000
++++ /tmp/drivers/scsi/scsi.c	2005-12-08 02:16:28 +0000
+@@ -55,6 +55,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/notifier.h>
+ #include <linux/cpu.h>
++#include <linux/acpi.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -1305,6 +1306,48 @@
+ #define unregister_scsi_cpu()
+ #endif /* CONFIG_HOTPLUG_CPU */
+ 
++#ifdef CONFIG_ACPI
++static int scsi_acpi_find_device(struct device *dev, acpi_handle *handle)
++{
++	return -ENODEV;
++}
++
++void ata_acpi_notify(acpi_handle handle, u32 type, void *data);
++
++static int scsi_acpi_find_channel(struct device *dev, acpi_handle *handle)
++{
++	int i;
++	struct Scsi_Host *shost;
++	
++	if (sscanf(dev->bus_id, "host%u", &i) != 1) {
++		return -ENODEV;
++	}
++
++	*handle = acpi_get_child(DEVICE_ACPI_HANDLE(dev->parent), (acpi_integer) i);	
++	if (!*handle)
++		return -ENODEV;
++
++	shost = dev_to_shost(dev);
++	
++	if (shost->hostt->acpi_notify) { 
++		acpi_install_notify_handler(*handle, ACPI_ALL_NOTIFY, &ata_acpi_notify, (void *)i);
++	}
++	
++	return 0;
++}
++
++static struct acpi_bus_type scsi_acpi_bus = {
++	.bus = &scsi_bus_type,
++	.find_bridge = scsi_acpi_find_channel,
++	.find_device = scsi_acpi_find_device,
++};
++
++static __init int scsi_acpi_register(void)
++{
++	return register_acpi_bus_type(&scsi_acpi_bus);
++}
++#endif /* CONFIG_ACPI */
++
+ MODULE_DESCRIPTION("SCSI core");
+ MODULE_LICENSE("GPL");
+ 
+@@ -1333,6 +1376,11 @@
+ 	error = scsi_sysfs_register();
+ 	if (error)
+ 		goto cleanup_sysctl;
++#ifdef CONFIG_ACPI
++	error = scsi_acpi_register();
++	if (error)
++		goto cleanup_sysfs;
++#endif
+ 
+ 	for (i = 0; i < NR_CPUS; i++)
+ 		INIT_LIST_HEAD(&per_cpu(scsi_done_q, i));
+@@ -1343,6 +1391,8 @@
+ 	printk(KERN_NOTICE "SCSI subsystem initialized\n");
+ 	return 0;
+ 
++cleanup_sysfs:
++	scsi_sysfs_unregister();
+ cleanup_sysctl:
+ 	scsi_exit_sysctl();
+ cleanup_hosts:
+--- include/linux/libata.h	2005-12-05 14:32:50 +0000
++++ /tmp/include/linux/libata.h	2005-12-08 02:35:59 +0000
+@@ -453,7 +468,9 @@
+ extern int ata_scsi_device_suspend(struct scsi_device *);
+ extern int ata_device_resume(struct ata_port *, struct ata_device *);
+ extern int ata_device_suspend(struct ata_port *, struct ata_device *);
+-
++#ifdef CONFIG_ACPI
++extern void ata_acpi_notify(acpi_handle device, u32 type, void *data);
++#endif
+ /*
+  * Default driver ops implementations
+  */
+diff -u include/linux/libata.h /tmp/include/linux/libata.h
+--- include/linux/libata.h	2005-12-05 14:32:50 +0000
++++ /tmp/include/linux/libata.h	2005-12-08 02:10:03 +0000
+@@ -448,12 +463,16 @@
+ extern int ata_scsi_error(struct Scsi_Host *host);
+ extern int ata_scsi_release(struct Scsi_Host *host);
+ extern unsigned int ata_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
++extern void ata_hotplug_unplug(struct ata_port *ap);
++extern void ata_hotplug_plug(struct ata_port *ap);
+ extern int ata_ratelimit(void);
+ extern int ata_scsi_device_resume(struct scsi_device *);
+ extern int ata_scsi_device_suspend(struct scsi_device *);
+ extern int ata_device_resume(struct ata_port *, struct ata_device *);
+ extern int ata_device_suspend(struct ata_port *, struct ata_device *);
+-
++#ifdef CONFIG_ACPI
++extern void ata_acpi_notify(acpi_handle device, u32 type, void *data);
++#endif
+ /*
+  * Default driver ops implementations
+  */
+diff -u include/scsi/scsi_host.h /tmp/include/scsi/scsi_host.h
+--- include/scsi/scsi_host.h	2005-11-14 14:57:13 +0000
++++ /tmp/include/scsi/scsi_host.h	2005-12-08 02:12:14 +0000
+@@ -5,6 +5,7 @@
+ #include <linux/list.h>
+ #include <linux/types.h>
+ #include <linux/workqueue.h>
++#include <linux/acpi.h>
+ 
+ struct block_device;
+ struct completion;
+@@ -300,6 +301,13 @@
+ 	 */
+ 	int (*resume)(struct scsi_device *);
+ 	int (*suspend)(struct scsi_device *);
++	
++#ifdef CONFIG_ACPI
++	/*
++	 * ACPI notification handler
++	 */
++	void (*acpi_notify)(acpi_handle device, u32 type, void *data); 
++#endif
+ 
+ 	/*
+ 	 * Name of proc directory
 -- 
-Stefan Richter
--=====-=-=-= ==-- -=---
-http://arcgraph.de/sr/
-
-
--------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
-for problems?  Stop!  Download the new AJAX search engine that makes
-searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
-http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
+Matthew Garrett | mjg59@srcf.ucam.org
