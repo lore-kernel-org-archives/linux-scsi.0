@@ -1,90 +1,123 @@
-From: Michael Joosten <michael.joosten@c-lab.de>
-Subject: qla1280.c broken on SGI visws, PCI coherency problem
-Date: Fri, 09 Dec 2005 20:11:39 +0100
-Message-ID: <4399D6EB.4080603@c-lab.de>
+From: Jody McIntyre <scjody@modernduck.com>
+Subject: Re: [PATCH] sbp2: better check of transfer direction (protects from panic or oops)
+Date: Fri, 9 Dec 2005 14:34:23 -0500
+Message-ID: <20051209193423.GB19441@conscoop.ottawa.on.ca>
+References: <200512082144.jB8Li6Ul022982@einhorn.in-berlin.de> <20051209171922.GW19441@conscoop.ottawa.on.ca> <4399D477.8010504@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000000010102060300080200"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailserver.c-lab.de ([131.234.80.230]:1681 "EHLO
-	mailserver.c-lab.de") by vger.kernel.org with ESMTP id S932414AbVLITR1
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Dec 2005 14:17:27 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux1394-devel-admin@lists.sourceforge.net>
+Content-Disposition: inline
+In-Reply-To: <4399D477.8010504@s5r6.in-berlin.de>
+Sender: linux1394-devel-admin@lists.sourceforge.net
+Errors-To: linux1394-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux1394-devel@lists.sourceforge.net, Ben Collins <bcollins@debian.org>, Andrew de Quincey <adq@lidskialf.net>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------000000010102060300080200
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Fri, Dec 09, 2005 at 08:01:11PM +0100, Stefan Richter wrote:
 
-Hello,
-since last week I'm trying to bring the current version of 2.6.12+ in 
-working order on that almost abandoned SGI 320 Visual Workstation. This
-beastlet also used have a QLA1080 as SCSI controller, which is actually
-the only supported one to boot from.
-I'm not sure if this is just a SGI320 problem (there seems to be two bus
-bridges in use: PCI: Lithium bridge A bus: 1, bridge B (PIIX4) bus: 0)
-or now a general problem for all platforms not implementing a mmiowb()
-write barrier operation, but since 2.6.11 the qla1280.c driver gets
-severly stuck after a few minutes of heavy use:
+> scsi_prep_fn() is not the only path which may set the transfer 
+> direction. Unless *all* paths are guaranteed to send us a proper 
+> direction, we still need the patch for sbp2_create_command_orb().
 
-zapp kernel: qla1280: ISP invalid handle
+I realize that.. The question is "should we rely on the SCSI subsystem
+to set a valid direction, or should we be checking it ourselves?"
 
-and then usually the kernel hangs hard or the SCSI subsystem is
-inoperable.
-Last year Jesse Barnes published a patch introducing I/O space write 
-barrier instructions especially for IA64 and MIPS multiprocessors. In 
-that patch some PCI posted write flushs were replaced by mmiowb() 
-(platform specific write barrier instruction), and at least for
-the SGI VisWS, this was one replacement too much.... I'm aware that the 
-Visws PCI controller (at least the Lithium chip resp. for PCI 64 bus) 
-reused
-parts from the O2 and sufferes the same problem of lacking cache 
-coherency, but
-I wonder now if the qla1280.c is actually stable anymore in kernels 
-after 2.6.10 (last version with the PCI write flushes in 
-qla1280_64/32bit_start_scsi() ) and non-x86 platforms.
+> If all *known* paths are fixed, we could consider to override a bad 
+> transfer direction silently like e.g. usb_storage does. But we should 
+> not leave sbp2_create_command_orb() as fragile as it currently is.
 
-I've just tried qla1280.[ch] from a more recent version than 2.6.12.4,
-namely 2.6.14.3, and have the same problem again (only worse, but there
-has been some patches in qla1280.c regarding error recovery recently,
-and now the kernel just hangs...), unless I add the one/two RD_REG_WORD()
-lines again.
-To repeat: Has there been any notion of problems with qla1280.c recently,
-last known good version in 2.6.10 is from Xmas last year.
+I didn't know USB did this.. the fact that USB checks itself suggests
+that we also need a check, and if we're checking we may as well warn.
 
-I can run tests also on a Intel dual PII server board with that QLA1080 
-HBA, but not now.
+Cheers,
+Jody
 
-Regards, Michael
+> I wonder if I know all paths where the direction could be set.
+> 
+> I also wonder if there could ever be something else execpt DMA_NONE, 
+> DMA_TO_DEVICE, or DMA_FROM_DEVICE being passed to sbp2. If it is 
+> guaranteed that scsi_cmnd.sc_data_direction is one of these three, we 
+> should remove ieee1394/sbp2.h::sbp2scsi_direction_table[].
+> 
+> >
+> >
+> >
+> >>Problem became apparent when iPods were to be ejected:
+> >>http://marc.theaimsgroup.com/?l=linux1394-devel&m=113399994920181
+> >>http://marc.theaimsgroup.com/?l=linux1394-user&m=112152701817435
+> >>
+> >>Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+> >>Cc: Ben Collins <bcollins@debian.org>
+> >>Cc: Andrew de Quincey <adq@lidskialf.net>
+> >>
+> >>---
+> >>drivers/ieee1394/sbp2.c |   24 ++++++++++++++----------
+> >>1 files changed, 14 insertions(+), 10 deletions(-)
+> >>
+> >>--- linux/drivers/ieee1394.orig/sbp2.c	2005-11-24 
+> >>23:10:21.000000000 +0100
+> >>+++ linux/drivers/ieee1394/sbp2.c	2005-12-08 22:06:49.000000000 +0100
+> >>@@ -1785,6 +1785,20 @@ static int sbp2_create_command_orb(struc
+> >>	}
+> >>
+> >>	/*
+> >>+	 * Sanity check, in case we got a bogus direction from upper layers
+> >>+	 * or if sbp2scsi_direction_table is inadequate.
+> >>+	 */
+> >>+	if (orb_direction != ORB_DIRECTION_NO_DATA_TRANSFER &&
+> >>+	    scsi_request_bufflen == 0) {
+> >>+		SBP2_ERR("Transfer direction is \"%s\" but request buffer "
+> >>+			 "length is 0. This is a bug! Enforcing transfer "
+> >>+			 "direction DMA_NONE",
+> >>+			 orb_direction == ORB_DIRECTION_WRITE_TO_MEDIA ?
+> >>+			 "out" : "in");
+> >>+		orb_direction = ORB_DIRECTION_NO_DATA_TRANSFER;
+> >>+	}
+> >>+
+> >>+	/*
+> >>	 * Set-up our pagetable stuff... unfortunately, this has become
+> >>	 * messier than I'd like. Need to clean this up a bit.   ;-)
+> >>	 */
+> >>@@ -1900,16 +1914,6 @@ static int sbp2_create_command_orb(struc
+> >>			command_orb->misc |= 
+> >>			ORB_SET_DATA_SIZE(scsi_request_bufflen);
+> >>			command_orb->misc |= 
+> >>			ORB_SET_DIRECTION(orb_direction);
+> >>
+> >>-			/*
+> >>-			 * Sanity, in case our direction table is not
+> >>-			 * up-to-date
+> >>-			 */
+> >>-			if (!scsi_request_bufflen) {
+> >>-				command_orb->data_descriptor_hi = 0x0;
+> >>-				command_orb->data_descriptor_lo = 0x0;
+> >>-				command_orb->misc |= ORB_SET_DIRECTION(1);
+> >>-			}
+> >>-
+> >>		} else {
+> >>			/*
+> >>			 * Need to turn this into page tables, since the
+> >>
+> 
+> 
+> -- 
+> Stefan Richter
+> -=====-=-=-= ==-- -=--=
+> http://arcgraph.de/sr/
+
+-- 
 
 
---------------000000010102060300080200
-Content-Type: text/plain;
- name="qla1280.c.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="qla1280.c.diff"
-
---- ../linux-2.6.14.3/drivers/scsi/qla1280.c-	2005-11-24 23:10:21.000000000 +0100
-+++ ../linux-2.6.14.3/drivers/scsi/qla1280.c	2005-12-07 21:27:42.000000000 +0100
-@@ -3236,6 +3236,7 @@
- 	WRT_REG_WORD(&reg->mailbox4, ha->req_ring_index);
- 	/* Enforce mmio write ordering; see comment in qla1280_isp_cmd(). */
- 	mmiowb();
-+	RD_REG_WORD(&reg->mailbox4);
- 
-  out:
- 	if (status)
-@@ -3504,6 +3505,7 @@
- 	WRT_REG_WORD(&reg->mailbox4, ha->req_ring_index);
- 	/* Enforce mmio write ordering; see comment in qla1280_isp_cmd(). */
- 	mmiowb();
-+	RD_REG_WORD(&reg->mailbox4);
- 
- out:
- 	if (status)
-
---------------000000010102060300080200--
+-------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
+for problems?  Stop!  Download the new AJAX search engine that makes
+searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
+http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
