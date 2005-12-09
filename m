@@ -1,32 +1,76 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Fri, 9 Dec 2005 12:24:57 +0000
-Message-ID: <20051209122457.GB26070@srcf.ucam.org>
-References: <20051208141811.GB21715@srcf.ucam.org> <1134052433.17102.17.camel@localhost.localdomain> <20051208145257.GB21946@srcf.ucam.org> <20051208171901.GA22451@srcf.ucam.org> <20051209114246.GB16945@infradead.org> <20051209114944.GA1068@havoc.gtf.org> <20051209115235.GB25771@srcf.ucam.org> <43997171.9060105@pobox.com> <20051209121124.GA25974@srcf.ucam.org> <439975AB.5000902@pobox.com>
+Date: Fri, 9 Dec 2005 14:22:31 +0100
+Message-ID: <58cb370e0512090522h1e6a2c94r45ed652fd3a30da3@mail.gmail.com>
+References: <20051208134438.GA13507@infradead.org> <43989B00.5040503@pobox.com>
+	 <20051208133144.0f39cb37.randy_d_dunlap@linux.intel.com>
+	 <1134121522.27633.7.camel@localhost.localdomain>
+	 <20051209103937.GE26185@suse.de>
+	 <1134125145.27633.32.camel@localhost.localdomain>
+	 <43996A26.8060700@pobox.com>
+	 <1134128127.27633.39.camel@localhost.localdomain>
+	 <20051209114641.GH26185@suse.de>
+	 <20051209115511.GA25842@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([217.147.92.49]:52958 "EHLO
-	vavatch.codon.org.uk") by vger.kernel.org with ESMTP
-	id S1751027AbVLIMZH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Dec 2005 07:25:07 -0500
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+Return-path: <acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+In-Reply-To: <20051209115511.GA25842-1xO5oi07KQx4cg9Nei1l7Q@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <439975AB.5000902@pobox.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+Errors-To: acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/acpi-devel>,
+	<mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
+List-Post: <mailto:acpi-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+List-Help: <mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/acpi-devel>,
+	<mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=acpi-devel>
+To: Matthew Garrett <mjg59-1xO5oi07KQx4cg9Nei1l7Q@public.gmane.org>
+Cc: Jens Axboe <axboe-l3A5Bk7waGM@public.gmane.org>, Erik Slagter <erik-KW7PGP3XNp7a5EbDDlwbIw@public.gmane.org>, Jeff Garzik <jgarzik-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>, Randy Dunlap <randy_d_dunlap-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, acpi-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
 
-On Fri, Dec 09, 2005 at 07:16:43AM -0500, Jeff Garzik wrote:
+On 12/9/05, Matthew Garrett <mjg59-1xO5oi07KQx4cg9Nei1l7Q@public.gmane.org> wrote:
+> On Fri, Dec 09, 2005 at 12:46:42PM +0100, Jens Axboe wrote:
+> > On Fri, Dec 09 2005, Erik Slagter wrote:
+> > > I case this (still) isn't clear, I am addressing the attitude of "It'=
+s
+> > > ACPI so it's not going to be used, period".
+> >
+> > The problem seems to be that you are misunderstanding the 'attitude',
+> > which was mainly based on the initial patch sent out which stuffs acpi
+> > directly in everywhere. That seems to be a good trigger for curt/direct
+> > replies.
+>
+> I was just following the example set by the ide acpi suspend/resume
+> patch, which people didn't seem to object to nearly as much. I guess
+> IDE's such a hack anyway that people aren't as worried :) I'll try
+> produce a patch that just inserts platform-independent code into scsi
+> around the start of next week.
 
-> libata will immediately notice the ejection without ACPI's help.
+Sigh, it seems this is what you get for being nice... ;)
 
-http://linux.yyz.us/sata/sata-status.html claims that ICH6 doesn't 
-support hotswap. The Intel docs seem to say the same thing. Pulling the 
-drive out generates an ACPI interrupt but not a PCI one. I'm really 
-happy to be wrong here, it's just that everything I've been able to find 
-so far suggests that ACPI is the only way to get a notification that the 
-drive has gone missing :)
+Don't get it wrong IDE people (at least me) are also worried but
+they know that there are cases in which ACPI support will help
+(even if the main method should be talking to hardware directly)
+NOW not in X years when we will have proper, architecture
+independent suspend/resume handling (we can live with
+"ide_acpi=3Don" kernel parameter before it happens happily).
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+I also pointed out that I would like to have generic code which
+can be shared between libata and IDE drivers (after all both
+can provide you with struct pci_dev * and port/device number).
+
+It would be even better if this code will stay in drivers/acpi/ata.c
+(?) and libata/IDE will just use the same functions (which will turn
+to NOP if CONFIG_ACPI=3Dn) for PATA.
+
+Thanks,
+Bartlomiej
+
+
+-------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
+for problems?  Stop!  Download the new AJAX search engine that makes
+searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
+http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
