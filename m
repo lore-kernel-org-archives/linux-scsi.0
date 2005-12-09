@@ -1,39 +1,53 @@
-From: Mark Lord <liml@rtr.ca>
-Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Thu, 08 Dec 2005 22:28:38 -0500
-Message-ID: <4398F9E6.7000807@rtr.ca>
-References: <20051208030242.GA19923@srcf.ucam.org>	 <20051208091542.GA9538@infradead.org>	 <20051208132657.GA21529@srcf.ucam.org>	 <20051208133308.GA13267@infradead.org>	 <20051208133945.GA21633@srcf.ucam.org>	 <20051208134438.GA13507@infradead.org> <1134062330.1732.9.camel@localhost.localdomain> <43989B00.5040503@pobox.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: Ang: Re: [Stgt-devel] Re: [Iscsitarget-devel] stgt a new	version
+ of iscsi target?
+Date: Thu, 08 Dec 2005 21:57:22 -0600
+Message-ID: <439900A2.4040009@cs.wisc.edu>
+References: <OF6932015B.01CF53D9-ONC12570D0.00462028@capvert.ins>	 <43972C2D.9060500@cs.wisc.edu>  <43987F75.2000301@vlnb.net> <1134071268.3259.29.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <43989B00.5040503@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Erik Slagter <erik@slagter.name>, Christoph Hellwig <hch@infradead.org>, Matthew Garrett <mjg59@srcf.ucam.org>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:38632 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1751261AbVLID5r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2005 22:57:47 -0500
+In-Reply-To: <1134071268.3259.29.camel@mulgrave>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, johan@capvert.se, iscsitarget-devel@lists.sourceforge.net, mingz@ele.uri.edu, stgt <stgt-devel@lists.berlios.de>, Robert Whitehead <WRWHITEHEAD@novell.com>, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-Jeff Garzik wrote:
-> Erik Slagter wrote:
+James Bottomley wrote:
 > 
->> 'guess You're not interested in having suspend/resume actually work on
->> laptops (or other PC's). That's your prerogative but imho it's a bit
->> narrow-minded to withhold this functionality from other people who
->> actually would like to have this working, just because you happen to not
->> like ACPI.
+> Additionally, it's perfectly possible for all of this to be done zero
+> copy on the data.  A user space target mmaps the data on its storage
+> device and then does a SG_IO type scatter gather user virtual region
+> pass to the underlying target infrastructure.  We already have this
+> demonstrated in the SG_IO path, someone just needs to come up with the
+> correct implementation for a target path.
 > 
-> 
-> It works just fine on laptops, with Jens' suspend/resume patch.
-> 
->     Jeff
 
-No.  I use it on my two modern laptops with great success,
-but only with *certain* hard disks.  When I replace the ultra modern
-100GB drive in my machine with a slightly older 30GB drive,
-suspend/resume no longer work.  No other changes.
+I guess I am going to try to do some work in userspace so we can 
+benchmark things and see how much performance drops.
 
-Other users have reported similar experiences to me.
+For your suggestion, are you referring to the sg.c mmap path? I was 
+thinking that maybe we could modify dm so it can do mmap like sg.c does. 
+The dm device would be the target device and would sit above the real 
+device or another MD/DM/Loop/ramdsik device or whatever so when 
+userspace decides to execute the command it would inform the dm device 
+and that kernel driver would just then send down the bios.
 
-We really REALLY need libata to get fixed for this stuff.
+For something like qlogic or mpt would this basically work like the 
+following:
 
-Cheers
+1. dm mmap is called and our dm_target (dm drivers like dm-multipath or 
+dm-raid are called dm_targets) does like sg.c sg_mmap* and sg_vma* ops.
+2. HW interrupt comes in and we allocate a scatterlist with pages from #1.
+3. netlink (or whatever is the favorite interface) a message to 
+userpsace to tell it we have a command ready.
+4. userspace decides if it is a read or write and if it is a read or 
+write then userspace tells the dm device to read/write some pages.
+5. dm's bi_endio is called when io is finished so we netlink to 
+userspace and then userspaces netlinks back to the kernel and tells the 
+LLD like qlogic that some data and/or a responce or sense is ready for 
+it to transfer.
