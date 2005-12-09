@@ -1,53 +1,114 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: Ang: Re: [Stgt-devel] Re: [Iscsitarget-devel] stgt a new	version
- of iscsi target?
-Date: Thu, 08 Dec 2005 21:57:22 -0600
-Message-ID: <439900A2.4040009@cs.wisc.edu>
-References: <OF6932015B.01CF53D9-ONC12570D0.00462028@capvert.ins>	 <43972C2D.9060500@cs.wisc.edu>  <43987F75.2000301@vlnb.net> <1134071268.3259.29.camel@mulgrave>
+From: Michael Reed <mdr@sgi.com>
+Subject: [RFC] Make scsi error recovery play nice with devices blocked by
+ transport
+Date: Thu, 08 Dec 2005 23:03:01 -0600
+Message-ID: <43991005.6070806@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------050106040107020400060300"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:38632 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1751261AbVLID5r (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2005 22:57:47 -0500
-In-Reply-To: <1134071268.3259.29.camel@mulgrave>
+Received: from omx3-ext.sgi.com ([192.48.171.20]:52689 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S1751173AbVLIFDL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Dec 2005 00:03:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, johan@capvert.se, iscsitarget-devel@lists.sourceforge.net, mingz@ele.uri.edu, stgt <stgt-devel@lists.berlios.de>, Robert Whitehead <WRWHITEHEAD@novell.com>, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: linux-scsi@vger.kernel.org
+Cc: James.Smart@Emulex.Com, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, Jeremy Higdon <jeremy@sgi.com>
 
-James Bottomley wrote:
-> 
-> Additionally, it's perfectly possible for all of this to be done zero
-> copy on the data.  A user space target mmaps the data on its storage
-> device and then does a SG_IO type scatter gather user virtual region
-> pass to the underlying target infrastructure.  We already have this
-> demonstrated in the SG_IO path, someone just needs to come up with the
-> correct implementation for a target path.
-> 
+This is a multi-part message in MIME format.
+--------------050106040107020400060300
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-I guess I am going to try to do some work in userspace so we can 
-benchmark things and see how much performance drops.
+Error recovery doesn't interact very well with fc targets which
+have been blocked by the fc transport.  Error recovery continues
+to attempt to recover the target and ends up marking the fc target
+offline.  Once offline, if the target returns before the remote port is
+removed, commands which could have been successfully reissued instead
+are completed with an error status due to the offline status
+of the target.
 
-For your suggestion, are you referring to the sg.c mmap path? I was 
-thinking that maybe we could modify dm so it can do mmap like sg.c does. 
-The dm device would be the target device and would sit above the real 
-device or another MD/DM/Loop/ramdsik device or whatever so when 
-userspace decides to execute the command it would inform the dm device 
-and that kernel driver would just then send down the bios.
+This patch makes a couple of hopefully minor tweaks to the error
+recovery logic to work better with targets which have been blocked
+by the transport.
 
-For something like qlogic or mpt would this basically work like the 
-following:
+First, if the target is blocked and error recovery gives up, don't
+put the device offline.  Either the transport will delete the target
+thus disposing of any queued requests or it will unblock the target and
+requests will be reissued.
 
-1. dm mmap is called and our dm_target (dm drivers like dm-multipath or 
-dm-raid are called dm_targets) does like sg.c sg_mmap* and sg_vma* ops.
-2. HW interrupt comes in and we allocate a scatterlist with pages from #1.
-3. netlink (or whatever is the favorite interface) a message to 
-userpsace to tell it we have a command ready.
-4. userspace decides if it is a read or write and if it is a read or 
-write then userspace tells the dm device to read/write some pages.
-5. dm's bi_endio is called when io is finished so we netlink to 
-userspace and then userspaces netlinks back to the kernel and tells the 
-LLD like qlogic that some data and/or a responce or sense is ready for 
-it to transfer.
+Second, if a device is blocked, queue up commands being flushed from
+the done queue for retry instead of completing them with an error.
+
+Comments?
+
+Thanks,
+ Mike Reed
+
+--------------050106040107020400060300
+Content-Type: text/x-patch;
+ name="scsi_fc_recovery.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi_fc_recovery.patch"
+
+
+===========================================================================
+linux/drivers/scsi/scsi_error.c
+===========================================================================
+
+--- a/drivers/scsi/scsi_error.c	2005-12-08 20:55:52.000000000 -0800
++++ b/drivers/scsi/scsi_error.c	2005-12-08 20:43:25.773184520 -0800
+@@ -1125,10 +1125,14 @@
+ 	struct scsi_cmnd *scmd, *next;
+ 
+ 	list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
+-		sdev_printk(KERN_INFO, scmd->device,
+-			    "scsi: Device offlined - not"
+-			    " ready after error recovery\n");
+-		scsi_device_set_state(scmd->device, SDEV_OFFLINE);
++		/* if blocked, transport will provide final device disposition */
++		if (!scsi_device_blocked(scmd->device)) {
++			sdev_printk(KERN_INFO, scmd->device,
++				    "scsi: Device offlined - not"
++				    " ready after error recovery\n");
++			scsi_device_set_state(scmd->device, SDEV_OFFLINE);
++		}
++
+ 		if (scmd->eh_eflags & SCSI_EH_CANCEL_CMD) {
+ 			/*
+ 			 * FIXME: Handle lost cmds.
+@@ -1455,9 +1459,10 @@
+ 
+ 	list_for_each_entry_safe(scmd, next, done_q, eh_entry) {
+ 		list_del_init(&scmd->eh_entry);
+-		if (scsi_device_online(scmd->device) &&
++		if (scsi_device_blocked(scmd->device) ||
++		    (scsi_device_online(scmd->device) &&
+ 		    !blk_noretry_request(scmd->request) &&
+-		    (++scmd->retries < scmd->allowed)) {
++		    (++scmd->retries < scmd->allowed))) {
+ 			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: flush"
+ 							  " retry cmd: %p\n",
+ 							  current->comm,
+
+===========================================================================
+linux/include/scsi/scsi_device.h
+===========================================================================
+
+--- a/include/scsi/scsi_device.h	2005-12-08 20:55:52.000000000 -0800
++++ b/include/scsi/scsi_device.h	2005-11-17 12:17:38.235614397 -0800
+@@ -275,6 +275,11 @@
+ 			    int data_direction, void *buffer, unsigned bufflen,
+ 			    struct scsi_sense_hdr *, int timeout, int retries);
+ 
++static inline int scsi_device_blocked(struct scsi_device *sdev)
++{
++	return sdev->sdev_state == SDEV_BLOCK;
++}
++
+ static inline unsigned int sdev_channel(struct scsi_device *sdev)
+ {
+ 	return sdev->channel;
+
+--------------050106040107020400060300--
