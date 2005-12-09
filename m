@@ -1,64 +1,128 @@
 From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: linux kernel panic when ejecting ieee1394 ipod
-Date: Fri, 09 Dec 2005 19:39:55 +0100
-Message-ID: <4399CF7B.7060708@s5r6.in-berlin.de>
-References: <200512072358.15398.adq_dvb@lidskialf.net> <200512080119.48740.adq@lidskialf.net> <200512080159.10913.adq_dvb@lidskialf.net> <200512080209.17757.adq_dvb@lidskialf.net> <43979E1A.30801@s5r6.in-berlin.de> <20051208173429.GA2666@us.ibm.com> <20051209133743.GN26185@suse.de> <20051209134216.GO26185@suse.de>
+Subject: Re: [PATCH] sbp2: better check of transfer direction (protects from
+ panic or oops)
+Date: Fri, 09 Dec 2005 20:01:11 +0100
+Message-ID: <4399D477.8010504@s5r6.in-berlin.de>
+References: <200512082144.jB8Li6Ul022982@einhorn.in-berlin.de> <20051209171922.GW19441@conscoop.ottawa.on.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:64963 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S932510AbVLISnO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Dec 2005 13:43:14 -0500
-In-Reply-To: <20051209134216.GO26185@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-admin@lists.sourceforge.net>
+In-Reply-To: <20051209171922.GW19441@conscoop.ottawa.on.ca>
+Sender: linux1394-devel-admin@lists.sourceforge.net
+Errors-To: linux1394-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
+To: Jody McIntyre <scjody@modernduck.com>
+Cc: linux1394-devel@lists.sourceforge.net, Ben Collins <bcollins@debian.org>, Andrew de Quincey <adq@lidskialf.net>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Andrew de Quincey <adq_dvb@lidskialf.net>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-Jens Axboe wrote:
-> This looks like the real bug.
-> 
-> ---
-> 
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 4afef5c..0978887 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1215,12 +1215,12 @@ static int scsi_prep_fn(struct request_q
->  		} else {
->  			memcpy(cmd->cmnd, req->cmd, sizeof(cmd->cmnd));
->  			cmd->cmd_len = req->cmd_len;
-> -			if (rq_data_dir(req) == WRITE)
-> +			if (!req->data_len)
-> +				cmd->sc_data_direction = DMA_NONE;
-> +			else if (rq_data_dir(req) == WRITE)
->  				cmd->sc_data_direction = DMA_TO_DEVICE;
-> -			else if (req->data_len)
-> -				cmd->sc_data_direction = DMA_FROM_DEVICE;
->  			else
-> -				cmd->sc_data_direction = DMA_NONE;
-> +				cmd->sc_data_direction = DMA_FROM_DEVICE;
->  			
->  			cmd->transfersize = req->data_len;
->  			cmd->allowed = 3;
-> 
-> 
+(Adding linux-scsi@vger.kernel.org again since there are more question 
+marks than I thought...)
 
-And then there are also sd_init_command(), sr_init_command(), 
-st_init_command() in s[drt].c. sr_init_command() looks OK to me, the 
-other two feature the same flaw like scsi_prep_fn().
+Jody McIntyre wrote:
+> On Thu, Dec 08, 2005 at 10:42:02PM +0100, Stefan Richter wrote:
+> 
+>>sbp2: better check of transfer direction (protects from panic or oops)
+>>
+>>Move transfer direction check in sbp2_create_command_orb() up a bit to catch
+>>more error cases.  Now we log an error note and proceed happily instead of a
+>>kernel panic or oops.  Debugging and original variant of the patch by Andrew
+>>de Quincey.
+> 
+> 
+> Do you still want this if Jens' patch is applied to the SCSI subsystem?
+> Extra checks are nice, but extra code is not :)  It's up to you...
+> 
+> Cheers,
+> Jody
 
-Or is there any reason why they should set DMA_TO_DEVICE while 
-rq->data_len == 0?
+scsi_prep_fn() is not the only path which may set the transfer 
+direction. Unless *all* paths are guaranteed to send us a proper 
+direction, we still need the patch for sbp2_create_command_orb().
 
-Furthermore, is there any other code path which may set 
-cmd->sc_data_direction, aside from s[drt]_init_command() and 
-scsi_prep_fn()? I was just browsing the code to find out myself but am 
-not 100% sure.
+If all *known* paths are fixed, we could consider to override a bad 
+transfer direction silently like e.g. usb_storage does. But we should 
+not leave sbp2_create_command_orb() as fragile as it currently is.
+
+I wonder if I know all paths where the direction could be set.
+
+I also wonder if there could ever be something else execpt DMA_NONE, 
+DMA_TO_DEVICE, or DMA_FROM_DEVICE being passed to sbp2. If it is 
+guaranteed that scsi_cmnd.sc_data_direction is one of these three, we 
+should remove ieee1394/sbp2.h::sbp2scsi_direction_table[].
+
+> 
+> 
+> 
+>>Problem became apparent when iPods were to be ejected:
+>>http://marc.theaimsgroup.com/?l=linux1394-devel&m=113399994920181
+>>http://marc.theaimsgroup.com/?l=linux1394-user&m=112152701817435
+>>
+>>Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+>>Cc: Ben Collins <bcollins@debian.org>
+>>Cc: Andrew de Quincey <adq@lidskialf.net>
+>>
+>>---
+>> drivers/ieee1394/sbp2.c |   24 ++++++++++++++----------
+>> 1 files changed, 14 insertions(+), 10 deletions(-)
+>>
+>>--- linux/drivers/ieee1394.orig/sbp2.c	2005-11-24 23:10:21.000000000 +0100
+>>+++ linux/drivers/ieee1394/sbp2.c	2005-12-08 22:06:49.000000000 +0100
+>>@@ -1785,6 +1785,20 @@ static int sbp2_create_command_orb(struc
+>> 	}
+>> 
+>> 	/*
+>>+	 * Sanity check, in case we got a bogus direction from upper layers
+>>+	 * or if sbp2scsi_direction_table is inadequate.
+>>+	 */
+>>+	if (orb_direction != ORB_DIRECTION_NO_DATA_TRANSFER &&
+>>+	    scsi_request_bufflen == 0) {
+>>+		SBP2_ERR("Transfer direction is \"%s\" but request buffer "
+>>+			 "length is 0. This is a bug! Enforcing transfer "
+>>+			 "direction DMA_NONE",
+>>+			 orb_direction == ORB_DIRECTION_WRITE_TO_MEDIA ?
+>>+			 "out" : "in");
+>>+		orb_direction = ORB_DIRECTION_NO_DATA_TRANSFER;
+>>+	}
+>>+
+>>+	/*
+>> 	 * Set-up our pagetable stuff... unfortunately, this has become
+>> 	 * messier than I'd like. Need to clean this up a bit.   ;-)
+>> 	 */
+>>@@ -1900,16 +1914,6 @@ static int sbp2_create_command_orb(struc
+>> 			command_orb->misc |= ORB_SET_DATA_SIZE(scsi_request_bufflen);
+>> 			command_orb->misc |= ORB_SET_DIRECTION(orb_direction);
+>> 
+>>-			/*
+>>-			 * Sanity, in case our direction table is not
+>>-			 * up-to-date
+>>-			 */
+>>-			if (!scsi_request_bufflen) {
+>>-				command_orb->data_descriptor_hi = 0x0;
+>>-				command_orb->data_descriptor_lo = 0x0;
+>>-				command_orb->misc |= ORB_SET_DIRECTION(1);
+>>-			}
+>>-
+>> 		} else {
+>> 			/*
+>> 			 * Need to turn this into page tables, since the
+>>
+
+
 -- 
 Stefan Richter
 -=====-=-=-= ==-- -=--=
 http://arcgraph.de/sr/
+
+
+-------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
+for problems?  Stop!  Download the new AJAX search engine that makes
+searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
+http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
