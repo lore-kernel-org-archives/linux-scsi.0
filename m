@@ -1,50 +1,38 @@
-From: Jens Axboe <axboe-l3A5Bk7waGM@public.gmane.org>
+From: Matthew Garrett <mjg59@srcf.ucam.org>
 Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Fri, 9 Dec 2005 13:07:31 +0100
-Message-ID: <20051209120731.GI26185@suse.de>
-References: <1134062330.1732.9.camel@localhost.localdomain> <43989B00.5040503@pobox.com> <20051208133144.0f39cb37.randy_d_dunlap@linux.intel.com> <1134121522.27633.7.camel@localhost.localdomain> <20051209103937.GE26185@suse.de> <1134125145.27633.32.camel@localhost.localdomain> <43996A26.8060700@pobox.com> <1134128127.27633.39.camel@localhost.localdomain> <20051209114641.GH26185@suse.de> <1134129692.27633.58.camel@localhost.localdomain>
+Date: Fri, 9 Dec 2005 12:11:25 +0000
+Message-ID: <20051209121124.GA25974@srcf.ucam.org>
+References: <20051208133945.GA21633@srcf.ucam.org> <1134050498.17102.2.camel@localhost.localdomain> <20051208141811.GB21715@srcf.ucam.org> <1134052433.17102.17.camel@localhost.localdomain> <20051208145257.GB21946@srcf.ucam.org> <20051208171901.GA22451@srcf.ucam.org> <20051209114246.GB16945@infradead.org> <20051209114944.GA1068@havoc.gtf.org> <20051209115235.GB25771@srcf.ucam.org> <43997171.9060105@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1134129692.27633.58.camel-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
-Sender: acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-Errors-To: acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/acpi-devel>,
-	<mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
-List-Post: <mailto:acpi-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-List-Help: <mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/acpi-devel>,
-	<mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=acpi-devel>
-To: Erik Slagter <erik-KW7PGP3XNp7a5EbDDlwbIw@public.gmane.org>
-Cc: Jeff Garzik <jgarzik-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>, Randy Dunlap <randy_d_dunlap-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mjg59-1xO5oi07KQx4cg9Nei1l7Q@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, acpi-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+In-Reply-To: <43997171.9060105@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Dec 09 2005, Erik Slagter wrote:
-> On Fri, 2005-12-09 at 12:46 +0100, Jens Axboe wrote:
-> > On Fri, Dec 09 2005, Erik Slagter wrote:
-> > > I case this (still) isn't clear, I am addressing the attitude of "It's
-> > > ACPI so it's not going to be used, period".
-> > 
-> > The problem seems to be that you are misunderstanding the 'attitude',
-> > which was mainly based on the initial patch sent out which stuffs acpi
-> > directly in everywhere. That seems to be a good trigger for curt/direct
-> > replies.
-> 
-> This is the post I object to:
-> [http://marc.theaimsgroup.com/?l=linux-scsi&m=113404894931377&w=2]
+On Fri, Dec 09, 2005 at 06:58:41AM -0500, Jeff Garzik wrote:
 
-I would imagine, and that is what I'm explaining to you. Can we please
-just let this die? Thanks.
+> If this is for hotswap, as I noted, libata doesn't need this at all.
+> 
+> If the hardware supports it, then libata will support it directly. 
+> There is no ACPI-specific magic, because ACPI does nothing but talk to 
+> the same hardware libata is talking to.
+
+If libata knows how to talk to the random hardware attached to a Dell 
+laptop hotswap bay, I'll be amazed. Ejecting the drive generates a 
+system management interrupt, which then causes the ACPI code to check a 
+register in a block of machine-specific registers and generate an ACPI 
+notification. As far as I can tell, the controller has no say in the 
+matter at all - the Intel specs seem to suggest that ICH6 doesn't 
+generate a hotswap interrupt unless you're using AHCI (which this 
+hardware doesn't).
+
+So, as far as I can tell, there /is/ ACPI-specific magic on 
+current-generation hardware. If we're lucky, they'll move to AHCI in 
+future and implement things properly there - but I wouldn't count on it.
 
 -- 
-Jens Axboe
-
-
-
--------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
-for problems?  Stop!  Download the new AJAX search engine that makes
-searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
-http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
+Matthew Garrett | mjg59@srcf.ucam.org
