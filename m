@@ -1,23 +1,54 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Fri, 9 Dec 2005 11:40:13 +0000
-Message-ID: <20051209114013.GA16945@infradead.org>
-References: <20051208133945.GA21633@srcf.ucam.org> <20051208134438.GA13507@infradead.org> <1134062330.1732.9.camel@localhost.localdomain> <43989B00.5040503@pobox.com> <20051208133144.0f39cb37.randy_d_dunlap@linux.intel.com> <1134121522.27633.7.camel@localhost.localdomain> <20051209103937.GE26185@suse.de> <1134125145.27633.32.camel@localhost.localdomain> <43996A26.8060700@pobox.com> <1134128127.27633.39.camel@localhost.localdomain>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [ACPI] Re: RFC: ACPI/scsi/libata integration and hotswap
+Date: Fri, 09 Dec 2005 06:42:12 -0500
+Message-ID: <43996D94.5080108@pobox.com>
+References: <20051208030242.GA19923@srcf.ucam.org>	 <20051208091542.GA9538@infradead.org>	 <20051208132657.GA21529@srcf.ucam.org>	 <20051208133308.GA13267@infradead.org>	 <20051208133945.GA21633@srcf.ucam.org>	 <20051208135225.GA13122@havoc.gtf.org>	 <1134050863.17102.5.camel@localhost.localdomain>	 <43983FC6.6050108@pobox.com> <1134052257.17102.13.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1134128127.27633.39.camel@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-To: Erik Slagter <erik@slagter.name>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@suse.de>, Randy Dunlap <randy_d_dunlap@linux.intel.com>, hch@infradead.org, mjg59@srcf.ucam.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:22960 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1750970AbVLILmU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Dec 2005 06:42:20 -0500
+In-Reply-To: <1134052257.17102.13.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>, Christoph Hellwig <hch@infradead.org>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
 
-On Fri, Dec 09, 2005 at 12:35:27PM +0100, Erik Slagter wrote:
-> I case this (still) isn't clear, I am addressing the attitude of "It's
-> ACPI so it's not going to be used, period".
+Alan Cox wrote:
+> On Iau, 2005-12-08 at 09:14 -0500, Jeff Garzik wrote:
+> 
+>>These are only for PATA.  We don't care about _GTM/_STM on SATA.
+> 
+> 
+> Even your piix driver supports PATA. Put the foaming (justified ;))
+> hatred for ACPI aside for a moment and take a look at the real world as
+> it unfortunately is right now.
 
-We're not gonna patch support for any braindead firmware interface into
-the scsi midlayer (and trust me, there's a shitload more of them than just
-acpi).  Now please sod off.
+First, I clearly said "except on ata_piix ... or PATA"
+
+Second, don't put words in my mouth.  I don't hate ACPI, and libata's 
+direction for hotswap and suspend/resume has zero to do with "foaming 
+hatred."
+
+Right now, the top priority is getting SATA suspend/resume correct, and 
+_hopefully_ doing it in a way that's friendly to PATA.  And as I said, 
+we don't care about _GTM/_STM on SATA.
+
+Further, all current ACPI proposed code is completely half-assed.  It's 
+"hope and pray", because libata configures the device and does resets -- 
+which is bound to CONFLICT WITH ACPI.
+
+Even further, I want to support both ACPI cases (x86[-64]) and non-ACPI 
+cases (other arches).  Some platforms want ACPI for passwords or other 
+settings.  Some platforms don't have ACPI at all.  Locking libata into 
+ACPI _only_ for suspend/resume is completely unacceptable.
+
+I'm not a hope-n-pray kind of guy.  I want to get it right.  People are 
+more than welcome to use unapplied patches floating around the 'net 
+until we get there.
+
+	Jeff
+
 
