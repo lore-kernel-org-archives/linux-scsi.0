@@ -1,48 +1,33 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] Always do write-protect check
-Date: Fri, 9 Dec 2005 11:34:45 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0512091132050.6477-100000@iolanthe.rowland.org>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F01EE9ECB@otce2k03.adaptec.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] Always do write-protect check
+Date: Fri, 09 Dec 2005 12:51:30 -0500
+Message-ID: <1134150691.3489.1.camel@mulgrave>
+References: <Pine.LNX.4.44L0.0512091132050.6477-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:43175 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S932406AbVLIQet
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Dec 2005 11:34:49 -0500
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F01EE9ECB@otce2k03.adaptec.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:48034 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S964819AbVLIRvi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Dec 2005 12:51:38 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0512091132050.6477-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Alan Stern <stern@rowland.harvard.edu>
 Cc: SCSI development list <linux-scsi@vger.kernel.org>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Dmitry Antipov <antipov@ru.mvista.com>
 
-James:
+On Fri, 2005-12-09 at 11:34 -0500, Alan Stern wrote:
+> Since nobody has offered an explanation for why the sd driver makes a 
+> write-protect check only for devices with removable media, I'm submitting 
+> this patch (as620) to get rid of the removable-media test.
 
-Since nobody has offered an explanation for why the sd driver makes a 
-write-protect check only for devices with removable media, I'm submitting 
-this patch (as620) to get rid of the removable-media test.
+OK ... I'll put this in scsi-misc for post 2.6.15.  I suspect the reason
+is that many devices get confused or lie about it, but there's only one
+sure way to ascertain if this is true or not ...
 
-Alan Stern
+If it turns out to be a problem, I'll back it out before 2.6.16.
 
+James
 
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-
----
-
-Index: usb-2.6/drivers/scsi/sd.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/sd.c
-+++ usb-2.6/drivers/scsi/sd.c
-@@ -1509,9 +1509,7 @@ static int sd_revalidate_disk(struct gen
- 	 */
- 	if (sdkp->media_present) {
- 		sd_read_capacity(sdkp, disk->disk_name, buffer);
--		if (sdp->removable)
--			sd_read_write_protect_flag(sdkp, disk->disk_name,
--						   buffer);
-+		sd_read_write_protect_flag(sdkp, disk->disk_name, buffer);
- 		sd_read_cache_type(sdkp, disk->disk_name, buffer);
- 	}
- 		
 
