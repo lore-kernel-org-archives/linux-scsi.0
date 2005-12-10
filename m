@@ -1,13 +1,14 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: stgt a new version of iscsi target?
-Date: Sat, 10 Dec 2005 18:32:59 +0300
-Message-ID: <439AF52B.7060203@vlnb.net>
-References: <OF6932015B.01CF53D9-ONC12570D0.00462028@capvert.ins>	 <43972C2D.9060500@cs.wisc.edu>  <43987F75.2000301@vlnb.net>	 <1134071268.3259.29.camel@mulgrave>  <4399A2D7.2040402@vlnb.net> <1134143298.3598.21.camel@mulgrave>
+Subject: Re: Ang: Re: [Stgt-devel] Re: stgt a new version
+ of iscsi target?
+Date: Sat, 10 Dec 2005 18:32:46 +0300
+Message-ID: <439AF51E.1080509@vlnb.net>
+References: <43987F75.2000301@vlnb.net>	<4398850D.8070102@cs.wisc.edu>	<4399A2BA.1070505@vlnb.net> <20051210174658I.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <iscsitarget-devel-admin@lists.sourceforge.net>
-In-Reply-To: <1134143298.3598.21.camel@mulgrave>
+In-Reply-To: <20051210174658I.fujita.tomonori@lab.ntt.co.jp>
 Sender: iscsitarget-devel-admin@lists.sourceforge.net
 Errors-To: iscsitarget-devel-admin@lists.sourceforge.net
 List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
@@ -17,57 +18,41 @@ List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
 List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
 	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
 List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=iscsitarget-devel>
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, johan@capvert.se, iscsitarget-devel@lists.sourceforge.net, mingz@ele.uri.edu, stgt <stgt-devel@lists.berlios.de>, Robert Whitehead <WRWHITEHEAD@novell.com>, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: michaelc@cs.wisc.edu, johan@capvert.se, iscsitarget-devel@lists.sourceforge.net, mingz@ele.uri.edu, stgt-devel@lists.berlios.de, WRWHITEHEAD@novell.com, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, hch@infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Fri, 2005-12-09 at 18:29 +0300, Vladislav Bolkhovitin wrote:
+FUJITA Tomonori wrote:
+> From: Vladislav Bolkhovitin <vst@vlnb.net>
+> Subject: Re: Ang: Re: [Stgt-devel] Re: [Iscsitarget-devel] stgt a new version of iscsi target?
+> Date: Fri, 09 Dec 2005 18:28:58 +0300
 > 
->>>Additionally, it's perfectly possible for all of this to be done zero
->>>copy on the data.  A user space target mmaps the data on its storage
->>>device and then does a SG_IO type scatter gather user virtual region
->>>pass to the underlying target infrastructure.  We already have this
->>>demonstrated in the SG_IO path, someone just needs to come up with the
->>>correct implementation for a target path.
+> 
+>>>Also is the page cache comment in reference to us using the page cache 
+>>>for our reads and writes or I am not sure why you wrote that if you do 
+>>>not do it right now.
 >>
->>I'm not completely understand how it will work. Consider, there are 
->>READ/WRITE commands with random data sizes arrive from an initiator. Are 
->>you going to do map/unmap for each command individually or alloc data 
->>buffers for commands from a premapped area and live with possible its 
->>fragmentation? If map/unmap individually, then I should say that those 
->>are very expensive operations.
+>>Hm, at first, the page cache already used somehow in fileio dev handler 
+>>(though, with additional mem copy). At the second, fully utilize the 
+>>page cache is one of two major improvements that are pending in scst, 
+>>because it is required changing the kernel, which until some moment try 
+>>to avoid. Although I prepared what is necessary for that.
+>>
+>>The idea basically is the following. When READ operation arrives, pages 
+>>for all requested blocks are at first searched in the page cache 
+>>(probably, in SIRQ context, because it isn't expensive operation) and if 
+>>all pages are found, they are referenced and the result will be sent to 
+>>the initiator. Then the pages will be dereferenced (so, no pages 
+>>allocation will be done at all). Otherwise, the missed pages will be 
+>>allocated and the command will be rescheduled to the thread, which will 
+>>read them. Then, after the response is sent, the pages will remain in 
+>>the page cache for future accesses. For WRITEs the processing is the 
+>>similar, the pages with the data will be put in the page cache.
 > 
-> You do it the same way an array does:  the model for SPI is read command
-> phase, disconnect, process command (i.e. set up areas) reconnect for
-> data transfer.
-> 
-> map/unmap are really only necessary if you're emulating the data store,
-> but it's a fairly cheap operation on linux: it just causes the creation
-> of a vm_area.  If it's a pass through, you can use SG_IO to pull it in
-> and the SG_IO like output to shoot it out again, effectively using a
-> piece of user memory as a zero copy buffer.
-> 
-> Fragmentation isn't an issue because the I/O goes via sg lists , all
-> that's needed is a bunch of pages.
+> The Ardis iSCSI target code does the same thing.
 
-OK, I see what you meant, thanks.
-
-> I do have to say that I consider operation in interrupt context (or even
-> kernel context) to be a disadvantage.  Compared with the response times
-> that most arrays have to SCSI commands, the kernel context switch time
-> isn't that significant.
-
-Are you sure that there are no now or will be available in the nearest 
-feature such (eg iSCSI) SCSI arrays with response time/latency so small 
-that having 5 (five) context switches or more per command, some of which 
-include map/unmap operations, will not increase the latency too much? I 
-mean, eg NFS server, which originally was user space daemon and many 
-people didn't want it in the kernel. Eventually, it's in. I don't see 
-any fundamental difference between NFS server and SCSI target server, 
-especially considering that SCSI is synchroneous protocol, where the 
-latency matters a lot, and usually there is some FS over exported SCSI 
-device, which not always does bulk data operations.
+Perfectly. So, why don't do it on the mid-layer level where all targets 
+can benefit from it?
 
 Vlad
 
