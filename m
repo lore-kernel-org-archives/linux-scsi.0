@@ -1,54 +1,41 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: Ang: Re: [Stgt-devel] Re: [Iscsitarget-devel] stgt a new	version
- of iscsi target?
-Date: Sat, 10 Dec 2005 12:19:50 -0600
-Message-ID: <439B1C46.2070306@cs.wisc.edu>
-References: <OF6932015B.01CF53D9-ONC12570D0.00462028@capvert.ins> <43972C2D.9060500@cs.wisc.edu> <43987F75.2000301@vlnb.net> <4398850D.8070102@cs.wisc.edu> <1134071290.3259.31.camel@mulgrave> <439892FC.8040900@cs.wisc.edu> <20051208213514.GA23039@cs.umn.edu> <4398ABF9.2030404@cs.wisc.edu> <4399A2F5.1060403@vlnb.net> <439A05AC.7070501@cs.wisc.edu> <439AF4C1.9030800@vlnb.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: linux kernel panic when ejecting ieee1394 ipod
+Date: Sat, 10 Dec 2005 18:20:01 +0000
+Message-ID: <20051210182001.GA19765@infradead.org>
+References: <200512091938.jB9JbnnQ025362@einhorn.in-berlin.de> <1134168322.3491.5.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:1924 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1161018AbVLJSUJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Dec 2005 13:20:09 -0500
-In-Reply-To: <439AF4C1.9030800@vlnb.net>
+Received: from pentafluge.infradead.org ([213.146.154.40]:49573 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1161019AbVLJSUE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Dec 2005 13:20:04 -0500
+Content-Disposition: inline
+In-Reply-To: <1134168322.3491.5.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: boutcher@cs.umn.edu, James Bottomley <James.Bottomley@SteelEye.com>, johan@capvert.se, iscsitarget-devel@lists.sourceforge.net, mingz@ele.uri.edu, stgt <stgt-devel@lists.berlios.de>, Robert Whitehead <WRWHITEHEAD@novell.com>, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, patmans@us.ibm.com, adq_dvb@lidskialf.net, linux1394-devel@lists.sourceforge.net, axboe@suse.de
 
-Vladislav Bolkhovitin wrote:
-> Mike Christie wrote:
+On Fri, Dec 09, 2005 at 05:45:22PM -0500, James Bottomley wrote:
+> On Fri, 2005-12-09 at 20:35 +0100, Stefan Richter wrote:
+> > When preparing a request in scsi_lib or in a SCSI high-level driver,
+> > always set a transfer direction of DMA_NONE if data length is zero,
+> > even for alleged write requests. (Extended patch derived from Jens
+> > Axboe's version.)
+> > 
+> > Write requests with request buffer length == 0 lead to kernel panic
+> > or oops if channeled through sbp2:
+> > http://marc.theaimsgroup.com/?l=linux1394-devel&m=113399994920181
+> > http://marc.theaimsgroup.com/?l=linux1394-user&m=112152701817435
+> > 
+> > Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
 > 
->>>> There is still memory and scatterlist allocations. If we are not 
->>>> going to allocate all the memory for a command buffer and request 
->>>> with GFP_ATOMIC (and can then run from the the HW interrupt or soft 
->>>> irq) we have to pass that on to a thread. I guess there is 
->>>> disagreement whether that part is a feature or bad use of GFP_ATOMIC 
->>>> though so... But I just mean to say there could be a little more to do.
->>>
->>>
->>>
->>>
->>> Actually, there is the way to allocate sg vectors with buffers in 
->>> SIRQ and not with GFP_ATOMIC. This is the second major improvement, 
->>> which is pending in scst. I called it sgv_pool. This is a new 
->>> allocator in the kernel similar to mem_pool, but it contains 
->>> *complete* sg-vectors of some size with data buffers (pages). 
->>> Initiator sends data requests usually with some fixed size, like 
->>> 128K. After a data command completed, its sg vector will not be 
->>> immediately freed, but will be kept in 
->>
->>
->>
->> We considered this, but what did you decide is the upper limit size 
->> for the pool? Is it dynmaic? We also wanted something that the SCSI 
->> ULDs could use for their allocations which could go up to 6 MB.
-> 
-> 
-> Why do you think it needs any upper limit size? Would you like also any 
-> upper limits on sizes of the page or slab caches? I don't see any 
+> The problem is that I already picked up Jens' patch in rc fixes, so this
+> no-longer applies.  However, given that the fix needed to be in four
+> separate places, which looks rather bad, I propose the following
+> consolidation instead.
 
-Considering I have not seen the code and am probably misunderstanding 
-what you wrote above, I will shutup and wait until it is out to see it.
+Please make the export _GPL so people see it's internal and can go away
+real soon.  Hopefull for 2.6.16 already when Mike's patch series is merged.
+
