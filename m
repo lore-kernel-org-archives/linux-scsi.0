@@ -1,45 +1,39 @@
-From: Andrew Grover <andy.grover@gmail.com>
-Subject: Re: [ACPI] Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Fri, 9 Dec 2005 19:47:48 -0800
-Message-ID: <c0a09e5c0512091947o4c3d8fd5y10a6b089655d216e@mail.gmail.com>
-References: <20051209114246.GB16945@infradead.org> <43997171.9060105@pobox.com>
-	 <20051209121124.GA25974@srcf.ucam.org> <439975AB.5000902@pobox.com>
-	 <20051209122457.GB26070@srcf.ucam.org> <439A23E8.3080407@pobox.com>
-	 <20051210023426.GA31220@srcf.ucam.org> <439A4070.2000500@pobox.com>
-	 <20051210025004.GB31328@srcf.ucam.org> <439A4422.3030808@pobox.com>
+From: Mark Lord <liml-gsilrlXbHYg@public.gmane.org>
+Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
+Date: Fri, 09 Dec 2005 23:01:15 -0500
+Message-ID: <439A530B.4090103@rtr.ca>
+References: <20051208030242.GA19923@srcf.ucam.org>	 <20051208091542.GA9538@infradead.org>	 <20051208132657.GA21529@srcf.ucam.org>	 <20051208133308.GA13267@infradead.org>	 <20051208133945.GA21633@srcf.ucam.org>	 <20051208134438.GA13507@infradead.org> <1134062330.1732.9.camel@localhost.localdomain> <43989B00.5040503@pobox.com> <4398F9E6.7000807@rtr.ca> <43996A84.5020307@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <439A4422.3030808@pobox.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>, Christoph Hellwig <hch@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+In-Reply-To: <43996A84.5020307-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>
+Sender: acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+Errors-To: acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/acpi-devel>,
+	<mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
+List-Post: <mailto:acpi-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+List-Help: <mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/acpi-devel>,
+	<mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=acpi-devel>
+To: Jeff Garzik <jgarzik-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>
+Cc: Erik Slagter <erik-KW7PGP3XNp7a5EbDDlwbIw@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Matthew Garrett <mjg59-1xO5oi07KQx4cg9Nei1l7Q@public.gmane.org>, randy_d_dunlap-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, acpi-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/9/05, Jeff Garzik <jgarzik@pobox.com> wrote:
-
-> Yes, I do agree with this WRT PATA.  Randy Dunlap's ACPI stuff is
-> particularly interesting for this, though I haven't had time to review
-> it in depth.
+Jeff Garzik wrote:
 >
-> I'm a bit more reluctant WRT SATA.
+> Patches welcome :)
 
-(side note: Shaohua's patch added ACPI support to PATA. Randy's was
-the SATA ACPI support.)
+That's certainly *not* the impression that one is left with
+after reading the many responses to the patches that started
+this thread.
 
-ACPI 3.0 specifically mentions SATA and the control methods that it
-expects the OS to make use of: _SDD and _GTF. This is needed for
-things like HD password unlocking. So, someone needs to be handling
-this whenever the SATA drive is reinitialized, such as on resume. So
-there's gotta be some SATA ACPI code, somewhere. (And if there is,
-then handling the ICH5 ACPI hotplug interrupt seems like maybe
-something it should handle, too.)
+Cheers
 
-I'm sure it's possible to properly abstract things so that
-arch-neutral code can remain ACPI-unaware -- I just wanted to make it
-clear that even if you don't support ICH5 hotplug there are still ACPI
-requirements for SATA.
 
-Regards -- Andy
+-------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
+for problems?  Stop!  Download the new AJAX search engine that makes
+searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
+http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
