@@ -1,67 +1,62 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] sbp2: better check of transfer direction (protects from
- panic or oops)
-Date: Sat, 10 Dec 2005 15:05:41 +0100
-Message-ID: <439AE0B5.4080808@s5r6.in-berlin.de>
-References: <200512082144.jB8Li6Ul022982@einhorn.in-berlin.de> <20051209171922.GW19441@conscoop.ottawa.on.ca> <4399D477.8010504@s5r6.in-berlin.de>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: Ang: Re: [Stgt-devel] Re: [Iscsitarget-devel] stgt a new	version
+ of iscsi target?
+Date: Sat, 10 Dec 2005 18:31:13 +0300
+Message-ID: <439AF4C1.9030800@vlnb.net>
+References: <OF6932015B.01CF53D9-ONC12570D0.00462028@capvert.ins> <43972C2D.9060500@cs.wisc.edu> <43987F75.2000301@vlnb.net> <4398850D.8070102@cs.wisc.edu> <1134071290.3259.31.camel@mulgrave> <439892FC.8040900@cs.wisc.edu> <20051208213514.GA23039@cs.umn.edu> <4398ABF9.2030404@cs.wisc.edu> <4399A2F5.1060403@vlnb.net> <439A05AC.7070501@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-admin@lists.sourceforge.net>
-In-Reply-To: <4399D477.8010504@s5r6.in-berlin.de>
-Sender: linux1394-devel-admin@lists.sourceforge.net
-Errors-To: linux1394-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-To: Jody McIntyre <scjody@modernduck.com>
-Cc: linux1394-devel@lists.sourceforge.net, Ben Collins <bcollins@debian.org>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay03.infobox.ru ([195.208.235.28]:26300 "EHLO
+	relay03.infobox.ru") by vger.kernel.org with ESMTP id S932518AbVLJPbK
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Dec 2005 10:31:10 -0500
+In-Reply-To: <439A05AC.7070501@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: boutcher@cs.umn.edu, James Bottomley <James.Bottomley@SteelEye.com>, johan@capvert.se, iscsitarget-devel@lists.sourceforge.net, mingz@ele.uri.edu, stgt <stgt-devel@lists.berlios.de>, Robert Whitehead <WRWHITEHEAD@novell.com>, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-I wrote on 2005-12-09:
-> Jody McIntyre wrote:
-...
->> Do you still want this if Jens' patch is applied to the SCSI subsystem?
->> Extra checks are nice, but extra code is not :)  It's up to you...
-...
-> scsi_prep_fn() is not the only path which may set the transfer 
-> direction. Unless *all* paths are guaranteed to send us a proper 
-> direction, we still need the patch for sbp2_create_command_orb().
+Mike Christie wrote:
+>>> There is still memory and scatterlist allocations. If we are not 
+>>> going to allocate all the memory for a command buffer and request 
+>>> with GFP_ATOMIC (and can then run from the the HW interrupt or soft 
+>>> irq) we have to pass that on to a thread. I guess there is 
+>>> disagreement whether that part is a feature or bad use of GFP_ATOMIC 
+>>> though so... But I just mean to say there could be a little more to do.
+>>
+>>
+>>
+>> Actually, there is the way to allocate sg vectors with buffers in SIRQ 
+>> and not with GFP_ATOMIC. This is the second major improvement, which 
+>> is pending in scst. I called it sgv_pool. This is a new allocator in 
+>> the kernel similar to mem_pool, but it contains *complete* sg-vectors 
+>> of some size with data buffers (pages). Initiator sends data requests 
+>> usually with some fixed size, like 128K. After a data command 
+>> completed, its sg vector will not be immediately freed, but will be 
+>> kept in 
 > 
-> If all *known* paths are fixed, we could consider to override a bad 
-> transfer direction silently like e.g. usb_storage does. But we should 
-> not leave sbp2_create_command_orb() as fragile as it currently is.
 > 
-> I wonder if I know all paths where the direction could be set.
+> We considered this, but what did you decide is the upper limit size for 
+> the pool? Is it dynmaic? We also wanted something that the SCSI ULDs 
+> could use for their allocations which could go up to 6 MB.
 
-I learned now of many more points which set the transfer direction. It 
-can apparently even come from userspace.
+Why do you think it needs any upper limit size? Would you like also any 
+upper limits on sizes of the page or slab caches? I don't see any 
+difference between them and sgv_pool. Let it allocate and keep unused as 
+much memory as possible until it would be notified about memory pressure 
+and ask to free some. Similarly as slab does.
 
-> I also wonder if there could ever be something else execpt DMA_NONE, 
-> DMA_TO_DEVICE, or DMA_FROM_DEVICE being passed to sbp2. If it is 
-> guaranteed that scsi_cmnd.sc_data_direction is one of these three, we 
-> should remove ieee1394/sbp2.h::sbp2scsi_direction_table[].
+BTW, from our experience, initiators tend to send commands without limit 
+and in case if actual SCSI device isn't so fast to serve all of them 
+with the rate, which they arrive, incoming queued commands very quickly 
+eat all system memory with obvious consequences. So, there must be some 
+kind of IO-throttling, when after some watermark the initiators start 
+receiving TASK QUEUE FULL, which calm them down. I implemented very 
+stupid one: don't let more than 32 commands per session. This let scst 
+survive under extreme loads. You can think about something smarter  :-)
 
-AFAIU it is still possibly that DMA_BIDIRECTIONAL is passed down. 
-However I think now that we should delete sbp2scsi_direction_table 
-anyway and simply reject DMA_BIDIRECTIONAL. This is what a few other 
-SCSI low-level drivers do, and I think it is appropriate for a low-level 
-driver to fail such commands instead of converting them to a "known" 
-direction.
-
-Or am I missing something?
--- 
-Stefan Richter
--=====-=-=-= ==-- -=-=-
-http://arcgraph.de/sr/
+Vlad
 
 
--------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
-for problems?  Stop!  Download the new AJAX search engine that makes
-searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
-http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
