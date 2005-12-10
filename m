@@ -1,41 +1,48 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: linux kernel panic when ejecting ieee1394 ipod
-Date: Sat, 10 Dec 2005 09:48:33 +0100
-Message-ID: <20051210084832.GS26185@suse.de>
-References: <4399CF7B.7060708@s5r6.in-berlin.de> <200512091938.jB9JbnnQ025362@einhorn.in-berlin.de>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: Ang: Re: [Stgt-devel] Re: [Iscsitarget-devel] stgt a new
+ version of iscsi target?
+Date: Sat, 10 Dec 2005 17:46:58 +0900
+Message-ID: <20051210174658I.fujita.tomonori@lab.ntt.co.jp>
+References: <43987F75.2000301@vlnb.net>
+	<4398850D.8070102@cs.wisc.edu>
+	<4399A2BA.1070505@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:11041 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S965088AbVLJIrX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Dec 2005 03:47:23 -0500
-Content-Disposition: inline
-In-Reply-To: <200512091938.jB9JbnnQ025362@einhorn.in-berlin.de>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:36566 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S965087AbVLJItU
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 10 Dec 2005 03:49:20 -0500
+In-Reply-To: <4399A2BA.1070505@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi@vger.kernel.org, patmans@us.ibm.com, adq_dvb@lidskialf.net, linux1394-devel@lists.sourceforge.net, James.Bottomley@steeleye.com
+To: vst@vlnb.net
+Cc: michaelc@cs.wisc.edu, johan@capvert.se, iscsitarget-devel@lists.sourceforge.net, mingz@ele.uri.edu, stgt-devel@lists.berlios.de, WRWHITEHEAD@novell.com, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, hch@infradead.org
 
-On Fri, Dec 09 2005, Stefan Richter wrote:
-> scsi: dont allow DMA_TO_DEVICE with zero data length
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: Ang: Re: [Stgt-devel] Re: [Iscsitarget-devel] stgt a new version of iscsi target?
+Date: Fri, 09 Dec 2005 18:28:58 +0300
+
+> > Also is the page cache comment in reference to us using the page cache 
+> > for our reads and writes or I am not sure why you wrote that if you do 
+> > not do it right now.
 > 
-> When preparing a request in scsi_lib or in a SCSI high-level driver,
-> always set a transfer direction of DMA_NONE if data length is zero,
-> even for alleged write requests. (Extended patch derived from Jens
-> Axboe's version.)
+> Hm, at first, the page cache already used somehow in fileio dev handler 
+> (though, with additional mem copy). At the second, fully utilize the 
+> page cache is one of two major improvements that are pending in scst, 
+> because it is required changing the kernel, which until some moment try 
+> to avoid. Although I prepared what is necessary for that.
 > 
-> Write requests with request buffer length == 0 lead to kernel panic
-> or oops if channeled through sbp2:
-> http://marc.theaimsgroup.com/?l=linux1394-devel&m=113399994920181
-> http://marc.theaimsgroup.com/?l=linux1394-user&m=112152701817435
-> 
-> Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+> The idea basically is the following. When READ operation arrives, pages 
+> for all requested blocks are at first searched in the page cache 
+> (probably, in SIRQ context, because it isn't expensive operation) and if 
+> all pages are found, they are referenced and the result will be sent to 
+> the initiator. Then the pages will be dereferenced (so, no pages 
+> allocation will be done at all). Otherwise, the missed pages will be 
+> allocated and the command will be rescheduled to the thread, which will 
+> read them. Then, after the response is sent, the pages will remain in 
+> the page cache for future accesses. For WRITEs the processing is the 
+> similar, the pages with the data will be put in the page cache.
 
-My quick grep just showed the one, I'd encourage you to turn this into a
-static inline function instead of duplicating the same code again 3 (or
-more) times.
-
--- 
-Jens Axboe
-
+The Ardis iSCSI target code does the same thing.
