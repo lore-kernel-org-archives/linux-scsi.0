@@ -1,23 +1,41 @@
-From: "Annmarie Conn" <annmarieconnnv@cidr.jhmi.edu>
-Subject: Get cials-tabs - no prior prescription needed
-Date: Sat, 10 Dec 2005 06:25:09 +0100
-Message-ID: <00a501c5fd4a$a047b0f0$8b338c26@cicciolina.it>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: linux kernel panic when ejecting ieee1394 ipod
+Date: Sat, 10 Dec 2005 09:48:33 +0100
+Message-ID: <20051210084832.GS26185@suse.de>
+References: <4399CF7B.7060708@s5r6.in-berlin.de> <200512091938.jB9JbnnQ025362@einhorn.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=iso-8859-1; reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [222.136.102.106] ([222.136.102.106]:27399 "HELO cicciolina.it")
-	by vger.kernel.org with SMTP id S964944AbVLJGnb (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:11041 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S965088AbVLJIrX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Dec 2005 01:43:31 -0500
+	Sat, 10 Dec 2005 03:47:23 -0500
+Content-Disposition: inline
+In-Reply-To: <200512091938.jB9JbnnQ025362@einhorn.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi@vger.kernel.org, patmans@us.ibm.com, adq_dvb@lidskialf.net, linux1394-devel@lists.sourceforge.net, James.Bottomley@steeleye.com
 
+On Fri, Dec 09 2005, Stefan Richter wrote:
+> scsi: dont allow DMA_TO_DEVICE with zero data length
+> 
+> When preparing a request in scsi_lib or in a SCSI high-level driver,
+> always set a transfer direction of DMA_NONE if data length is zero,
+> even for alleged write requests. (Extended patch derived from Jens
+> Axboe's version.)
+> 
+> Write requests with request buffer length == 0 lead to kernel panic
+> or oops if channeled through sbp2:
+> http://marc.theaimsgroup.com/?l=linux1394-devel&m=113399994920181
+> http://marc.theaimsgroup.com/?l=linux1394-user&m=112152701817435
+> 
+> Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
 
-Be ERECT in less than 15 mins
+My quick grep just showed the one, I'd encourage you to turn this into a
+static inline function instead of duplicating the same code again 3 (or
+more) times.
 
-PRlCE: $ 2 / use
-
-visit our website --> juicesign.net
+-- 
+Jens Axboe
 
