@@ -1,144 +1,93 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: Ang: Re: [Stgt-devel] Re: stgt a new version
- of iscsi target?
-Date: Fri, 09 Dec 2005 19:15:53 -0600
-Message-ID: <439A2C49.4010208@cs.wisc.edu>
-References: <OF6932015B.01CF53D9-ONC12570D0.00462028@capvert.ins> <43972C2D.9060500@cs.wisc.edu> <43987F75.2000301@vlnb.net> <4398850D.8070102@cs.wisc.edu> <4399A2BA.1070505@vlnb.net> <439A03E2.7030308@cs.wisc.edu>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
+Date: Sat, 10 Dec 2005 12:19:01 +1000
+Message-ID: <439A3B15.5010608@torque.net>
+References: <20051208030242.GA19923@srcf.ucam.org>	 <20051208091542.GA9538@infradead.org>	 <20051208132657.GA21529@srcf.ucam.org>	 <20051208133308.GA13267@infradead.org>	 <20051208133945.GA21633@srcf.ucam.org>	 <20051208134438.GA13507@infradead.org>	 <1134062330.1732.9.camel@localhost.localdomain>	 <43989B00.5040503@pobox.com>	 <20051208133144.0f39cb37.randy_d_dunlap@linux.intel.com>	 <1134121522.27633.7.camel@localhost.localdomain>	 <20051209103937.GE26185@suse.de> <1134125145.27633.32.camel@localhost.localdomain> <43996A26.8060700@pobox.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <iscsitarget-devel-admin@lists.sourceforge.net>
-In-Reply-To: <439A03E2.7030308@cs.wisc.edu>
-Sender: iscsitarget-devel-admin@lists.sourceforge.net
-Errors-To: iscsitarget-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
-List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=iscsitarget-devel>
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: johan@capvert.se, iscsitarget-devel@lists.sourceforge.net, mingz@ele.uri.edu, stgt <stgt-devel@lists.berlios.de>, Robert Whitehead <WRWHITEHEAD@novell.com>, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <43996A26.8060700@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Erik Slagter <erik@slagter.name>, Jens Axboe <axboe@suse.de>, Randy Dunlap <randy_d_dunlap@linux.intel.com>, hch@infradead.org, mjg59@srcf.ucam.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
 
-Mike Christie wrote:
->>>> Actually, we would greatly appreciate if Mike or Christoph will tell 
->>>> us what is so wrong in scst on their opinion, so they started they 
->>>> own new project. (I'm not considering motivation like "I want to 
->>>> make my own in any case" seriously). Is scst too complicated? Do you 
->>>> think stgt will be simpler with all those features implemented?
->>>>
+Jeff Garzik wrote:
+> Erik Slagter wrote:
+> 
+>> On Fri, 2005-12-09 at 11:39 +0100, Jens Axboe wrote:
+>>
+>>
+>>>> IMHO available infrastructure (and hardware abstraction!) should be
+>>>> used
+>>>> instead of being stubborn and pretend we know everything about any
+>>>> hardware.
 >>>
->>> Didn't we go over this? To get SCST ready for mainline we would have 
->>> had a large cleanup effort. I started this and sent you a patch to 
->>> begin the cleanup. In the end some of the scsi people liked the idea 
->>> of throwing the non-read/write command to userspace and to do this we 
->>> just decided to start over but I have been cutting and pasting your 
->>> code and cleaning it up as I add more stuff.
+>>>
+>>> It's not about being stubborn, it's about maintaining and working on a
+>>> clean design. The developers have to do that, not the users. So forgive
+>>> people for being a little cautious about shuffling all sorts of ACPI
+>>> into the scsi core and/or drivers. We always need to think long term
+>>> here.
+>>>
+>>> Users don't care about the maintainability and cleanliness of the code,
+>>> they really just want it to work. Which is perfectly understandable.
 >>
 >>
 >>
->> The patches that I've seen were just pretty mechanic cleanups and 
->> renames, which could be done in a half of hour time and which I'm going 
+>> I perfectly understand that, what I do object against, is rejecting a
+>> concept (like this) totally because the developers(?) do not like the
+>> mechanism that's used (although ACPI is used everywhere else in the
+>> kernel). At least there might be some discussion where this sort of code
+>> belongs to make the design clean and easily maintainable, instead of
+>> instantly completely rejecting the concept, because OP simply doesn't
+>> like acpi.
 > 
 > 
-> Yeah it was the beginning of the easy work. I did not mean that as an 
-> example of evertthing. I thought you would remember when we discussed 
-> this on linux-scsi before.
+> Framing the discussion in terms of "like" and "dislike" proves you
+> understand nothing about the issues -- and lacking that understanding,
+> you feel its best to insult people.
+
+Jeff,
+Point of order.
+
+My email record of this thread indicates that it was
+Christoph Hellwig:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=113404894931377&w=2
+who initially lowered the tone. Just to prove that was not
+an aberration he followed that up with this email:
+http://marc.theaimsgroup.com/?l=linux-scsi&m=113404957727924&w=2
+and there are several others. Given Christoph's posts I
+find those of Matthew Garrett and Erik Slagter pretty well
+considered and I fail to see what warranted the "you feel its
+best to insult people" line above.
+
+I used to think that SCSI was the most maligned part of the
+linux kernel, but that no longer seems to be the case.
+Can ACPI be really that bad ...
+
+Doug Gilbert
+
+> libata suspend/resume needs to work on platforms without ACPI, such as
+> ppc64.  libata reset needs to work even when BIOS is not present at all.
+>  And by definition, anything that is done in ACPI can be done in the
+> driver.
+> 
+> The only thing libata cannot know is BIOS defaults.  Anything else
+> libata doesn't know is a driver bug.  We already know there are a ton of
+> settings that should be saved/restored, which is not done now.  Until
+> that code is added to libata, talk of ACPI is premature.  Further, even
+> the premature patch was obviously unacceptable, because you don't patch
+> ACPI code directly into libata and SCSI.  That's the wrong approach.
+> 
+>     Jeff
 > 
 > 
->> to do in any case before preparing the patch. So, that reason doesn't 
->> look convincing for me to throw away a big chunk of working code. 
->> Doing so you delayed SCSI targets development for at least to a year-two, 
-> 
-> 
-> Hey, looked how long it took iscsi to get in becuase we wasted so much 
-> time cleaning up iscsi-sfnet :)
-> 
->> because there are too much features for you to implement in stgt, 
->> which are already working and useful in scst.
-> 
-> 
-> Well, there was more when you asked on linux-scsi. You have other things 
-> like refcouting (we only are adding that in today, but we do get 
-> references to the scsi_host when we access the qla2xxx ha at least). If 
-> someone ripps out a qla2xxx card you will oops.
-> 
-> We also did not want to hook in as a SCSI ULD interface becuase we did 
-> not want to worry about what happens when poeple start using 
-> usb-mass-storage for targets and LUNs. Look how many times we see Alan 
-> Stern pop up for just the initiator side :) And to be honest DM would do 
-> a lot of what tgt and scst want as far as giving us a reference to the 
-> devive we want to use as a LUN and handling all the setup work so we 
-> probably both messed up there :(
-> 
->>
->>  From other side, if you look on scst closely you will see that:
->>
->> - The user space gate could be easily and clearly done using existing 
->> dev handler's hooks
-> 
-> 
-> Yeah and the problem is that we just do not believe those are 
-> implemented in the correct place. We do not like class interface SCSI 
-> hook in, when we can do the same thing from userspace.
-> 
->>
->> - There is nothing in current SCST that could be moved in user space 
->> without sacrificing performance. Neither task management, nor UA 
->> processing, nor RESERVE/RELEASE emulation. Otherwise, you will have to 
->> pass *all* the commands to the user space to check allowed this 
->> command for processing or it shall be returned with an error.
-> 
-> 
-> For non READ/WRITE, we are ok with that performance drops. Even for 
-> doing READ/WRITEs in the kernel from interrupt context, we were going to 
-> run from a softirq, but we thought allocating the whole command with 
-> GFP_ATOMIC would not be liked so we pass it to the thread. And for when 
-> we do pass through (using elv_add_request/blk_rq_execute_nowait), we can 
-> do it in just the context swith needed for the memory allocation. But to 
-> do GFP_ATOMOIC softirq or hw irq would not be a problem, although I do 
-> not think we want to submit IO from the hw interrupt incase the queue 
-> gets unplugged at the same time :)
-> 
-> For non READ/WRITEs look how far open-iscsi went. And from James's 
-> reply, you see that he thinks READs and WRITEs can go to userspace too, 
-> so you know this is an uphill battle to get everything in the kernel.
-> 
-> 
->  SCST core is just
-> 
->> about 7500 lines of code. Is it too much?
-> 
-> 
-> Ask the people that have to review the code? :) After sfnet, I learned 
-> that it is sometimes best to get the basics in the kernel first so we do 
-> not burn out the christoph robot :) I think part of this stems from the 
-> fact that I touched pretty much every line in that driver to clean it up 
-> and it took me about a year. And while I was beginning to clean up scst 
-> I began to remember sfnet.
-> 
-> But there are other cleanups like moving some of the state to per 
-> target, cleaningup the scattlist allocation code and moving it to 
-> scsi-ml so the SCSI ULDs can use them and convert them. There is also 
-> thing like converting to the right APIs for 2.6 (rm kernel_thread, rm 
-> scsi_request, rm proc, fixup class interface refcouting problems, fixup 
-> scsi_device lack of refcounting usage, etc).
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 
-Oh yeah I think the other major issue at least I had with scst was that 
-it was scsi specific and we wanted try and seperate things so if drivers 
-like IET and vscsi are allowed then we could also do other drivers like 
-a ATA over ethernet target driver or allow any other target driver that 
-wanted to to hook in. I think you noted that we were spererating some 
-protocol specific things as a distadvantage or mentioned it for some 
-reason but I am not completely sure why and we may not agree on that 
-issue too.
-
-
--------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
-for problems?  Stop!  Download the new AJAX search engine that makes
-searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
-http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
