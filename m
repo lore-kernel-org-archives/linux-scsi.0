@@ -1,67 +1,36 @@
-From: "Nicholas A. Bellinger" <nab@kernel.org>
-Subject: Core-iSCSI v1.6.2.2 (STABLE) + Tools v3.1
-Date: Fri, 09 Dec 2005 15:50:11 -0800
-Message-ID: <1134172211.5350.29.camel@haakon>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
+Date: Fri, 09 Dec 2005 19:40:08 -0500
+Message-ID: <439A23E8.3080407@pobox.com>
+References: <20051208141811.GB21715@srcf.ucam.org> <1134052433.17102.17.camel@localhost.localdomain> <20051208145257.GB21946@srcf.ucam.org> <20051208171901.GA22451@srcf.ucam.org> <20051209114246.GB16945@infradead.org> <20051209114944.GA1068@havoc.gtf.org> <20051209115235.GB25771@srcf.ucam.org> <43997171.9060105@pobox.com> <20051209121124.GA25974@srcf.ucam.org> <439975AB.5000902@pobox.com> <20051209122457.GB26070@srcf.ucam.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp114.sbc.mail.re2.yahoo.com ([68.142.229.91]:46774 "HELO
-	smtp114.sbc.mail.re2.yahoo.com") by vger.kernel.org with SMTP
-	id S932518AbVLIX4T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Dec 2005 18:56:19 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932688AbVLJAkZ@vger.kernel.org>
+In-Reply-To: <20051209122457.GB26070@srcf.ucam.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: Core-iSCSI <Core-iSCSI@googlegroups.com>, Open iSCSI <open-iscsi@googlegroups.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Greetings all,
+Matthew Garrett wrote:
+> On Fri, Dec 09, 2005 at 07:16:43AM -0500, Jeff Garzik wrote:
+> 
+> 
+>>libata will immediately notice the ejection without ACPI's help.
+> 
+> 
+> http://linux.yyz.us/sata/sata-status.html claims that ICH6 doesn't 
+> support hotswap. The Intel docs seem to say the same thing. Pulling the 
+> drive out generates an ACPI interrupt but not a PCI one. I'm really 
+> happy to be wrong here, it's just that everything I've been able to find 
+> so far suggests that ACPI is the only way to get a notification that the 
+> drive has gone missing :)
 
-Core-iSCSI v1.6.2.2 and Core-iSCSI-tools v3.1 will be available shortly
-from:
+ICH6 and ICH7 support it just fine, through the normal SATA PHY 
+registers.  ICH5 only support it if you are clever :)
 
-http://www.kernel.org/pub/linux/kernel/people/nab/iscsi-initiator-core/core-iscsi-v1.6.2.2.tar.bz2
-http://www.kernel.org/pub/linux/utils/storage/iscsi/core-iscsi-tools-v3.1.tar.bz2
+Further, although one can detect hot-unplug on ICH5, hotplug is probably 
+not detectable without polling or SMI.
 
-This release would not have been possible without the help of:
-
-http://www.sbei.com
-Dominik and Dustin @ VBI
-Daniel @ JHAPL
-Bill and Chris @ Wasabi
-Albert Pauw
-Mike Mazarick
-Micky Mazarick
-Mark Tyler
-jonas@wehey.com
-
-This release includes a solution for single portal + multiple IQN names
-that some iSCSI target nodes use as their primary naming scheme.  This
-done via an optional parameter inside of the /etc/sysconfig/initiator
-which does not break backwards comptability with existing installations.
-Additionally a fix has been included for HP iSCSI Target Nodes that
-involves the removal of a 'return on error' condition related to
-Underflow + S_BIT checking.  For the former, manual pages and howto have
-been updated to reflect the change to the /etc/sysconfig/initiator
-configuration file.
-
-Additionally, it was recently brought to my attention that a check
-related to DataSequeceInOrder=Yes located in iscsi_initiator_erl0.c is
-causing a problem with certain vendors iSCSI Target nodes.  I will be
-getting more information on this issue in the next few days,  and will
-release a fix as soon as possible.  I will keep everyone posted.
-
-Also, the Core-iSCSI list has been created.  Everyone is invited to join
-at:  http://groups.google.com/group/Core-iSCSI
-
-And finally, the project's website should be going online sometime in
-the next week.  I will keep everyone posted.  We have definately made an
-amazing amount of progress in the last 8 days, and the Core-iSCSI team
-will keep moving full steam ahead with the project as long as a need
-exists.
-
-Thanks for your support.
-
--- 
-Nicholas A. Bellinger <nab@kernel.org>
-
+	Jeff
