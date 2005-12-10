@@ -1,48 +1,79 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: Ang: Re: [Stgt-devel] Re: [Iscsitarget-devel] stgt a new version
- of iscsi target?
-Date: Sat, 10 Dec 2005 18:30:51 +0300
-Message-ID: <439AF4AB.1040006@vlnb.net>
-References: <OF6932015B.01CF53D9-ONC12570D0.00462028@capvert.ins> <43972C2D.9060500@cs.wisc.edu> <43987F75.2000301@vlnb.net> <4398850D.8070102@cs.wisc.edu> <4399A2BA.1070505@vlnb.net> <439A03E2.7030308@cs.wisc.edu> <439A2C49.4010208@cs.wisc.edu>
+Subject: Re: stgt a new version of iscsi target?
+Date: Sat, 10 Dec 2005 18:32:59 +0300
+Message-ID: <439AF52B.7060203@vlnb.net>
+References: <OF6932015B.01CF53D9-ONC12570D0.00462028@capvert.ins>	 <43972C2D.9060500@cs.wisc.edu>  <43987F75.2000301@vlnb.net>	 <1134071268.3259.29.camel@mulgrave>  <4399A2D7.2040402@vlnb.net> <1134143298.3598.21.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay03.infobox.ru ([195.208.235.28]:21692 "EHLO
-	relay03.infobox.ru") by vger.kernel.org with ESMTP id S932359AbVLJPa4
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 10 Dec 2005 10:30:56 -0500
-In-Reply-To: <439A2C49.4010208@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <iscsitarget-devel-admin@lists.sourceforge.net>
+In-Reply-To: <1134143298.3598.21.camel@mulgrave>
+Sender: iscsitarget-devel-admin@lists.sourceforge.net
+Errors-To: iscsitarget-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
+List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=iscsitarget-devel>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, johan@capvert.se, iscsitarget-devel@lists.sourceforge.net, mingz@ele.uri.edu, stgt <stgt-devel@lists.berlios.de>, Robert Whitehead <WRWHITEHEAD@novell.com>, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: johan@capvert.se, iscsitarget-devel@lists.sourceforge.net, mingz@ele.uri.edu, stgt <stgt-devel@lists.berlios.de>, Robert Whitehead <WRWHITEHEAD@novell.com>, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-Mike Christie wrote:
->> But there are other cleanups like moving some of the state to per 
->> target, cleaningup the scattlist allocation code and moving it to 
->> scsi-ml so the SCSI ULDs can use them and convert them. There is also 
->> thing like converting to the right APIs for 2.6 (rm kernel_thread, rm 
->> scsi_request, rm proc, fixup class interface refcouting problems, 
->> fixup scsi_device lack of refcounting usage, etc).
->>
+James Bottomley wrote:
+> On Fri, 2005-12-09 at 18:29 +0300, Vladislav Bolkhovitin wrote:
 > 
-> Oh yeah I think the other major issue at least I had with scst was that 
-> it was scsi specific and we wanted try and seperate things so if drivers 
-> like IET and vscsi are allowed then we could also do other drivers like 
-> a ATA over ethernet target driver or allow any other target driver that 
-> wanted to to hook in. I think you noted that we were spererating some 
-> protocol specific things as a distadvantage or mentioned it for some 
-> reason but I am not completely sure why and we may not agree on that 
-> issue too.
+>>>Additionally, it's perfectly possible for all of this to be done zero
+>>>copy on the data.  A user space target mmaps the data on its storage
+>>>device and then does a SG_IO type scatter gather user virtual region
+>>>pass to the underlying target infrastructure.  We already have this
+>>>demonstrated in the SG_IO path, someone just needs to come up with the
+>>>correct implementation for a target path.
+>>
+>>I'm not completely understand how it will work. Consider, there are 
+>>READ/WRITE commands with random data sizes arrive from an initiator. Are 
+>>you going to do map/unmap for each command individually or alloc data 
+>>buffers for commands from a premapped area and live with possible its 
+>>fragmentation? If map/unmap individually, then I should say that those 
+>>are very expensive operations.
+> 
+> You do it the same way an array does:  the model for SPI is read command
+> phase, disconnect, process command (i.e. set up areas) reconnect for
+> data transfer.
+> 
+> map/unmap are really only necessary if you're emulating the data store,
+> but it's a fairly cheap operation on linux: it just causes the creation
+> of a vm_area.  If it's a pass through, you can use SG_IO to pull it in
+> and the SG_IO like output to shoot it out again, effectively using a
+> piece of user memory as a zero copy buffer.
+> 
+> Fragmentation isn't an issue because the I/O goes via sg lists , all
+> that's needed is a bunch of pages.
 
-SCSI has a lot of very specific stuff like UA handling and (at least) 
-some parts of task management, especially if we consider honoring NACA, 
-QErr, TST, UA_INTLCK_CTRL bits, therefore I'm not sure that to have 
-common target parts for other protocols worths complicating the 
-mid-layer with code and interfaces that will separate SCSI-specifics 
-from non-SCSI protocols. So, good luck with it :-)
+OK, I see what you meant, thanks.
+
+> I do have to say that I consider operation in interrupt context (or even
+> kernel context) to be a disadvantage.  Compared with the response times
+> that most arrays have to SCSI commands, the kernel context switch time
+> isn't that significant.
+
+Are you sure that there are no now or will be available in the nearest 
+feature such (eg iSCSI) SCSI arrays with response time/latency so small 
+that having 5 (five) context switches or more per command, some of which 
+include map/unmap operations, will not increase the latency too much? I 
+mean, eg NFS server, which originally was user space daemon and many 
+people didn't want it in the kernel. Eventually, it's in. I don't see 
+any fundamental difference between NFS server and SCSI target server, 
+especially considering that SCSI is synchroneous protocol, where the 
+latency matters a lot, and usually there is some FS over exported SCSI 
+device, which not always does bulk data operations.
 
 Vlad
 
 
+-------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
+for problems?  Stop!  Download the new AJAX search engine that makes
+searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
+http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
