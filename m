@@ -1,30 +1,29 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Mon, 12 Dec 2005 00:38:28 +0000
-Message-ID: <1134347909.2737.10.camel@localhost>
-References: <20051208145257.GB21946@srcf.ucam.org>
-	 <20051208171901.GA22451@srcf.ucam.org>
-	 <20051209114246.GB16945@infradead.org>
-	 <20051209114944.GA1068@havoc.gtf.org>
-	 <20051209115235.GB25771@srcf.ucam.org> <43997171.9060105@pobox.com>
-	 <20051209121124.GA25974@srcf.ucam.org> <439975AB.5000902@pobox.com>
-	 <20051209122457.GB26070@srcf.ucam.org> <439A23E8.3080407@pobox.com>
-	 <20051210023426.GA31220@srcf.ucam.org>  <439A4070.2000500@pobox.com>
+From: Pete Zaitcev <zaitcev@redhat.com>
+Subject: put_disk in cciss
+Date: Sun, 11 Dec 2005 15:57:53 -0800
+Message-ID: <20051211155753.1d66b65b.zaitcev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <439A4070.2000500@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>, Christoph Hellwig <hch@infradead.org>, randy_d_dunlap@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:24028 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S1750919AbVLKX7H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 11 Dec 2005 18:59:07 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: mikem <mikem@beardog.cca.cpqcorp.net>
+Cc: coughlan@redhat.com, zaitcev@redhat.com, linux-scsi@vger.kernel.org
 
-On Gwe, 2005-12-09 at 21:41 -0500, Jeff Garzik wrote:
-> Do you even know if this special case is applicable outside of Dell ICH5 
-> boxes?  And I thought your previous messages were referring to ICH6?
+Hi, Mike:
 
-Some older thinkpads seem to support this. Also some laptops generate
-pnpbios changes. The different methods alone argue for a generic
-interface
-h
+Tom pointed me to this:
+ http://marc.theaimsgroup.com/?l=linux-kernel&m=113233643423550&w=2
+
+Which seems to be in effect, in today's git:
+ http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;h=a9e33db46e68b5432627835ea1945f02d40d861c;hb=e4f5c82a92c2a546a16af1614114eec19120e40a;f=drivers/block/cciss.c
+
+I suspect that those put_disk calls have to be dropped, because they
+are done in free_hba(). Right?
+
+-- Pete
