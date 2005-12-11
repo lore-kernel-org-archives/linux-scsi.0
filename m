@@ -1,30 +1,33 @@
-From: Rudolph Kuhn <McMartin@beguin.net>
-Subject: Bigger, harder, and longer - lasting results NOW with a discreet little patch.
-Date: Sun, 11 Dec 2005 02:05:30 -0800
-Message-ID: <8542236409.8139838764@p54A7BDDE.dip0.t-ipconnect.de>
+From: Clement Mercado <planner@faber.net>
+Subject: QuickBooks Pro Edition 2004 - $49.95
+Date: Sun, 11 Dec 2005 08:20:09 -0800
+Message-ID: <9475795708.4474429969@adsl-84-226-111-138.adslplus.ch>
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:25298 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1161114AbVLKKFg (ORCPT
+Received: from zeus1.kernel.org ([204.152.191.4]:23968 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1750744AbVLKQUP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Dec 2005 05:05:36 -0500
-Received: from p54A7BDDE.dip0.t-ipconnect.de (p54A7BDDE.dip0.t-ipconnect.de [84.167.189.222])
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id jBBA5UOo012477
-	for <linux-scsi@vger.kernel.org>; Sun, 11 Dec 2005 02:05:31 -0800
+	Sun, 11 Dec 2005 11:20:15 -0500
+Received: from adsl-84-226-111-138.adslplus.ch (adsl-84-226-111-138.adslplus.ch [84.226.111.138])
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id jBBGK9iG005958
+	for <linux-scsi@vger.kernel.org>; Sun, 11 Dec 2005 08:20:10 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Male sexual enhancement formula
-http://www.kurevalw.net/pt/
+Low price software
+http://slater.oemdg.com/
 
 
 
-Television is a medium because anything well done is rare.   
-Better shun the bait, than struggle in the snare.    
-A stale mind is the devil's breadbox.      
-Sow good services; sweet remembrances will grow them.     
-I know nothing.          
+Self-respect: the secure feeling that no one, as yet, is suspicious.  
+Silence is more musical than any song.      
+Obviously crime pays, or there'd be no crime.     
+
+Good company and good discourse are the very sinews of virtue.  
+Nobody realizes that some people expend tremendous energy merely to be normal. 
+Copy from one, it's plagiarism; copy from two, it's research.   
+
 
 
