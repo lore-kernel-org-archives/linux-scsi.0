@@ -1,83 +1,58 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/: small cleanups
-Date: Mon, 12 Dec 2005 02:35:53 +0100
-Message-ID: <20051212013553.GK23349@stusta.de>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Read-only paranoia during data recovery
+Date: Mon, 12 Dec 2005 11:49:26 +1000
+Message-ID: <439CD726.7000100@torque.net>
+References: <9A6F28681255C988725DE82A@[10.0.0.14]>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751018AbVLLBgZ@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zorg.st.net.au ([203.16.233.9]:58589 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1751029AbVLLBsC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 11 Dec 2005 20:48:02 -0500
+In-Reply-To: <9A6F28681255C988725DE82A@[10.0.0.14]>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kenneth Porter <shiva@sewingwitch.com>
+Cc: linux-scsi@vger.kernel.org
 
-This patch contains the following cleanups:
-- make needlessly global functions static
-- every file should #include the headers containing the prototypes for
-  it's global functions
+Kenneth Porter wrote:
+> I have a friend who needs to recover some data from a SCSI drive from a
+> SCO system, and he wants to make sure nothing writes to the drive if he
+> mounts it on his Linux system. I just want to verify that mounting it
+> read-only is sufficient and won't attempt to write anything to it. (I
+> recall in the old days when HD's had a write-protect jumper to protect
+> it at the firmware level.) Are there other measures he should take?
+
+Kenneth,
+Many SCSI disks still have write protect jumpers, typically
+on the same block that selects the SCSI id of the parallel
+interface. From recent SCSI disk product manuals, I can see
+that Maxtor supports the Software Write Protect (SWP) bit in
+the control mode page.
+A tool like sdparm could be used to set SWP:
+ # sdparm --set=SWP --save /dev/sda
+You need to be careful that the system you do this on
+(or the following dd suggestion) does not automount file
+systems.
+
+To be safe, you could copy the contents of the SCSI disk
+to the same size or larger disk (ATA or SCSI).
+Something like:
+ # dd if=/dev/sda of=/dev/hdb bs=512
+where /dev/sda is your reference disk and /dev/hdb has nothing
+important on it and is the same size or larger than /dev/sda **
+Then power down the system, remove /dev/sda, power up and
+try and mount the SCO partition on /dev/hdb . After getting
+the data from /dev/hdb you may need to use fdisk to repartition
+it (so that its extra size is not wasted).
 
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+** Using a command like 'fdisk -ul', is one way of checking
+   that a disk has been copied. Keeping the first 63 sectors
+   of the original /dev/hdb may also be prudent:
+   "dd if=/dev/hdb of=hdb_0_62.img bs=512 count=63"
 
----
-
-This patch was already sent on:
-- 20 Nov 2005
-
- drivers/scsi/scsi_sysctl.c       |    1 +
- drivers/scsi/scsi_sysfs.c        |    3 ++-
- drivers/scsi/scsi_transport_fc.c |    2 +-
- drivers/scsi/sr.c                |    2 +-
- 4 files changed, 5 insertions(+), 3 deletions(-)
-
---- linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_sysfs.c.old	2005-11-20 03:09:18.000000000 +0100
-+++ linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_sysfs.c	2005-11-20 03:14:13.000000000 +0100
-@@ -17,6 +17,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_transport.h>
-+#include <scsi/scsi_driver.h>
- 
- #include "scsi_priv.h"
- #include "scsi_logging.h"
-@@ -720,7 +721,7 @@
- }
- EXPORT_SYMBOL(scsi_remove_device);
- 
--void __scsi_remove_target(struct scsi_target *starget)
-+static void __scsi_remove_target(struct scsi_target *starget)
- {
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
- 	unsigned long flags;
---- linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_sysctl.c.old	2005-11-20 03:10:57.000000000 +0100
-+++ linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_sysctl.c	2005-11-20 03:11:08.000000000 +0100
-@@ -9,6 +9,7 @@
- #include <linux/sysctl.h>
- 
- #include "scsi_logging.h"
-+#include "scsi_priv.h"
- 
- 
- static ctl_table scsi_table[] = {
---- linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_transport_fc.c.old	2005-11-20 03:11:38.000000000 +0100
-+++ linux-2.6.15-rc1-mm2-full/drivers/scsi/scsi_transport_fc.c	2005-11-20 03:11:50.000000000 +0100
-@@ -1274,7 +1274,7 @@
-  * Notes:
-  *	This routine assumes no locks are held on entry.
-  **/
--struct fc_rport *
-+static struct fc_rport *
- fc_rport_create(struct Scsi_Host *shost, int channel,
- 	struct fc_rport_identifiers  *ids)
- {
---- linux-2.6.15-rc1-mm2-full/drivers/scsi/sr.c.old	2005-11-20 03:18:12.000000000 +0100
-+++ linux-2.6.15-rc1-mm2-full/drivers/scsi/sr.c	2005-11-20 03:18:21.000000000 +0100
-@@ -170,7 +170,7 @@
-  * an inode for that to work, and we do not always have one.
-  */
- 
--int sr_media_change(struct cdrom_device_info *cdi, int slot)
-+static int sr_media_change(struct cdrom_device_info *cdi, int slot)
- {
- 	struct scsi_cd *cd = cdi->handle;
- 	int retval;
+Doug Gilbert
