@@ -1,33 +1,35 @@
-From: Philip Patrick <ratification@chaffin.com>
-Subject: Downloadable software
-Date: Mon, 12 Dec 2005 12:08:55 -0800
-Message-ID: <4175332810.10120329762@cjq131.neoplus.adsl.tpnet.pl>
-Content-Type: text/plain; charset=us-ascii
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Memory corruption & SCSI in 2.6.15
+Date: Mon, 12 Dec 2005 14:13:51 -0600
+Message-ID: <1134418432.9994.32.camel@mulgrave>
+References: <1134371606.6989.95.camel@gaston> <439DC9E4.6030508@us.ibm.com>
+	 <Pine.LNX.4.64.0512121149360.15597@g5.osdl.org>
+Mime-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:64224 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S932200AbVLLUJD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Dec 2005 15:09:03 -0500
-Received: from cjq131.neoplus.adsl.tpnet.pl (cjq131.neoplus.adsl.tpnet.pl [83.31.66.131])
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id jBCK8t7C016759
-	for <linux-scsi@vger.kernel.org>; Mon, 12 Dec 2005 12:08:58 -0800
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932212AbVLLUOZ@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0512121149360.15597@g5.osdl.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>
+Cc: Brian King <brking@us.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel list <linux-kernel@vger.kernel.org>, Paul Mackerras <paulus@samba.org>, Jens Axboe <axboe@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Software sales
-http://archive.oempx.com/
+On Mon, 2005-12-12 at 11:55 -0800, Linus Torvalds wrote:
+> Indeed, that looks pretty subtle. 
+> 
+> James: Brian's patch looks obviously correct to me (scsi_alloc_sdev() will 
+> have called scsi_sysfs_device_initialize() which will set up the release 
+> function to free the queue). 
 
+Yes it does ... I'll put it in the rc-fixes tree.
 
+> This code has been like that forever, though, which makes me wonder. Can 
+> anybody see what has changed to make the bug trigger? Or is there 
+> something I'm missing?
 
-Work is victory.          
-Immature poets imitate; mature poets steal.       
-Creativity is the power to connect the seemingly unconnected.    
-Cynicism is an unpleasant way of saying the truth.    
-If you would persuade, you must appeal to interest rather than intellect. 
-Marriage is like paying an endless visit in your worst clothes.  
-No statue has ever been put up to a critic.   
+The trigger, based on the failure path has to be a slave_alloc failure
+of an underlying driver (which isn't that common).  This may not be
+visible in the dmesg traces if anyone has one, because reporting the
+condition is up to the driver.
 
-
-
+James
