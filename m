@@ -1,42 +1,45 @@
-From: mike.miller@hp.com
-Subject: [PATCH 1/1] cciss: fix for deregister_disk
-Date: Mon, 12 Dec 2005 14:17:03 -0600
-Message-ID: <20051212201703.GA9395@beardog.cca.cpqcorp.net>
-Reply-To: mikem@beardog.cca.cpqcorp.net
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: how to tell a WWN of FC HBA under linux
+Date: Mon, 12 Dec 2005 14:54:44 -0600
+Message-ID: <439DE394.4070505@sgi.com>
+References: <1134413431.10254.91.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932220AbVLLURw@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: axboe@suse.de, akpm@osdl.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from omx3-ext.sgi.com ([192.48.171.20]:58829 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S1751256AbVLLUys (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Dec 2005 15:54:48 -0500
+In-Reply-To: <1134413431.10254.91.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: mingz@ele.uri.edu
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Patch 1/1
-Been doing some cleanup in various parts of the driver (more like adding
-bugs). Got to keep busy!
-This patch adds setting our drv->queue = NULL back in deregister_disk.
-The drv->queue is part of our controller struct. blk_cleanup_queue works
-only on the queue in the gendisk struct. Please apply this patch.
+Look in /sys/class/fc_host/hostX for
+entries port_name and node_name.  Most
+but not all fc drivers implement this.
+Others may export data in /proc or provide
+their own utility to get it.
 
-Signed-off-by: Mike Miller <mike.miller@hp.com.
---------------------------------------------------------------------------------
- cciss.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletion(-)
+Mike
 
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index e34104d..1d56f2a 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -1464,8 +1464,10 @@ static int deregister_disk(struct gendis
- 			request_queue_t *q = disk->queue;
- 			if (disk->flags & GENHD_FL_UP)
- 				del_gendisk(disk);
--			if (q)	
-+			if (q) {	
- 				blk_cleanup_queue(q);
-+				drv->queue = NULL;
-+			}
- 		}
- 	}
- 
+
+Ming Zhang wrote:
+> Hi folks
+> 
+> I know it is possible that tell the WWN during post. But is it possible
+> to tell under linux after system boots?
+> 
+> Thanks!
+> 
+> Ming
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
