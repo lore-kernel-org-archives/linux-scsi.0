@@ -1,46 +1,45 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 7/11]  lpfc 8.1.1 : Add support for more members of the Light Pulse 11xxx (4Gb) family
-Date: Mon, 12 Dec 2005 10:12:44 -0700
-Message-ID: <20051212171244.GE9286@parisc-linux.org>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7B73@xbl3.emulex.com> <20051128174936.GD13338@parisc-linux.org>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: Fw: crash on x86_64 - mm related?
+Date: Mon, 12 Dec 2005 09:40:34 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0512120928110.15597@g5.osdl.org>
+References: <20051201195657.GB7236@tau.solarneutrino.net>
+ <Pine.LNX.4.61.0512012008420.28450@goblin.wat.veritas.com>
+ <20051202180326.GB7634@tau.solarneutrino.net>
+ <Pine.LNX.4.61.0512021856170.4940@goblin.wat.veritas.com>
+ <20051202194447.GA7679@tau.solarneutrino.net>
+ <Pine.LNX.4.61.0512022037230.6058@goblin.wat.veritas.com>
+ <20051206160815.GC11560@tau.solarneutrino.net>
+ <Pine.LNX.4.61.0512062025230.28217@goblin.wat.veritas.com>
+ <20051206204336.GA12248@tau.solarneutrino.net>
+ <Pine.LNX.4.61.0512071803300.2975@goblin.wat.veritas.com>
+ <20051212165443.GD17295@tau.solarneutrino.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:29585 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1751268AbVLLRMr
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Dec 2005 12:12:47 -0500
-Content-Disposition: inline
-In-Reply-To: <20051128174936.GD13338@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750791AbVLLRko@vger.kernel.org>
+In-Reply-To: <20051212165443.GD17295@tau.solarneutrino.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ryan Richter <ryan@tau.solarneutrino.net>
+Cc: Hugh Dickins <hugh@veritas.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, Andrew Morton <akpm@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: hch@infradead.org, linux-scsi@vger.kernel.org
 
-On Mon, Nov 28, 2005 at 10:49:36AM -0700, Matthew Wilcox wrote:
-> On Mon, Nov 28, 2005 at 12:08:46PM -0500, James.Smart@Emulex.Com wrote:
-> > Please note: there will be 2 other areas where we will still be accessing
-> > config space:
-> >   - We need the bar value, as the hardware sees it, to program a base
-> >     address it can decode to keep ring accesses on-chip. The current pci
-> >     infrastructure doesn't provide this. (we've talked about this on this
-> >     reflector before).
-> 
-> sym2 has the same need for pretty much the same reason.  It has a
-> private function called pci_get_base_address() right now.  I believe the
-> correct thing to do (but haven't got round to trying it yet) is to call
-> pcibios_resource_to_bus().
 
-Done, and tested on ia64 and parisc.  Here's the patch that does it for
-sym2, hopefully your code will be similar:
 
-http://hera.kernel.org/git/?p=linux/kernel/git/willy/sym2.git;a=blobdiff;h=e6ff89a8524c74f93971715a762b8c64d18176e1;hp=ec9d93aa160d89a256aee7e92b17493205149fca;hb=b5d641b0098e2ae2263f6fa8f24fa18fcbe831ef;f=drivers/scsi/sym53c8xx_2/sym_glue.c
+On Mon, 12 Dec 2005, Ryan Richter wrote:
+>
+> And yet another crash, this time during boot:
 
-> >   - If we reset the card, there were hardware-isms that may erroneously
-> >     drive perr/serr. So, we need to temporarily turn them off while we
-> >     reset. (I believe we went through this as well on this list early on).
-> 
-> That's certainly a reasonable need.
+The instruction that crashes is
 
-I wonder if it's functionality that should be provided by the PCI layer.
-I don't think yours is the only card with this issue.
+	testb  $0x80,0x1cd(%rdi)
+
+with %rdi being 6b6b6b6b6b6b6b6b, which is the pattern that slab poisoning 
+uses for free areas. 
+
+I think it's the "sdev->single_lun" test at the very top of the function, 
+where "sdev" was initialized with "q->queuedata". So it looks like 
+somebody free'd the request_queue structure before the IO completed.
+
+Definitely sounds like something screwy in SCSI.. I don't think this is VM 
+related.
+
+		Linus
