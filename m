@@ -1,58 +1,58 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Read-only paranoia during data recovery
-Date: Mon, 12 Dec 2005 11:49:26 +1000
-Message-ID: <439CD726.7000100@torque.net>
-References: <9A6F28681255C988725DE82A@[10.0.0.14]>
-Reply-To: dougg@torque.net
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: bug in scsi_setup_command_freelist:  kmem_cache_create: duplicate
+ cache scsi_cmd_cache
+Date: Mon, 12 Dec 2005 07:44:06 +0100
+Message-ID: <439D1C36.7040108@s5r6.in-berlin.de>
+References: <4399FFA1.3050000@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:58589 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1751029AbVLLBsC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 11 Dec 2005 20:48:02 -0500
-In-Reply-To: <9A6F28681255C988725DE82A@[10.0.0.14]>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:2177 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1751161AbVLLGoQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Dec 2005 01:44:16 -0500
+Received: from [192.168.0.41] ([83.221.230.151])
+	(authenticated bits=0)
+	by einhorn.in-berlin.de (8.12.10/8.12.10/Debian-4) with ESMTP id jBC6iBoM009922
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 12 Dec 2005 07:44:12 +0100
+In-Reply-To: <4399FFA1.3050000@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kenneth Porter <shiva@sewingwitch.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Kenneth Porter wrote:
-> I have a friend who needs to recover some data from a SCSI drive from a
-> SCO system, and he wants to make sure nothing writes to the drive if he
-> mounts it on his Linux system. I just want to verify that mounting it
-> read-only is sufficient and won't attempt to write anything to it. (I
-> recall in the old days when HD's had a write-protect jumper to protect
-> it at the firmware level.) Are there other measures he should take?
+I wrote on 2005-12-09:
+> I just saw the following under Linux 2.6.14.3. A web search turns up
+> more reports of this kind, usually with USB devices.
 
-Kenneth,
-Many SCSI disks still have write protect jumpers, typically
-on the same block that selects the SCSI id of the parallel
-interface. From recent SCSI disk product manuals, I can see
-that Maxtor supports the Software Write Protect (SWP) bit in
-the control mode page.
-A tool like sdparm could be used to set SWP:
- # sdparm --set=SWP --save /dev/sda
-You need to be careful that the system you do this on
-(or the following dd suggestion) does not automount file
-systems.
+These are mostly older reports though.
 
-To be safe, you could copy the contents of the SCSI disk
-to the same size or larger disk (ATA or SCSI).
-Something like:
- # dd if=/dev/sda of=/dev/hdb bs=512
-where /dev/sda is your reference disk and /dev/hdb has nothing
-important on it and is the same size or larger than /dev/sda **
-Then power down the system, remove /dev/sda, power up and
-try and mount the SCO partition on /dev/hdb . After getting
-the data from /dev/hdb you may need to use fdisk to repartition
-it (so that its extra size is not wasted).
+> [sbp2 throws transport errors during inquiry]
+> Dec  9 22:09:56 shuttle kernel: scsi: Device offlined - not ready after 
+> error recovery: host 0 channel 0 id 0 lun 0
+> Dec  9 22:09:56 shuttle kernel: ieee1394: sbp2: scsi_add_device failed
+> [I unloaded and reloaded sbp2]
+> Dec  9 22:10:31 shuttle kernel: SCSI subsystem initialized
+> Dec  9 22:10:31 shuttle kernel: ieee1394: sbp2: Driver forced to 
+> serialize I/O (serialize_io=1)
+> Dec  9 22:10:31 shuttle kernel: ieee1394: sbp2: Try serialize_io=0 for 
+> better performance
+> Dec  9 22:10:31 shuttle kernel: kmem_cache_create: duplicate cache 
+> scsi_cmd_cache
+> Dec  9 22:10:31 shuttle kernel: ------------[ cut here ]------------
+> Dec  9 22:10:31 shuttle kernel: kernel BUG at mm/slab.c:1807!
+> Dec  9 22:10:31 shuttle kernel: invalid operand: 0000 [#1]
+...
+> I had a look at how pool->users is refcounted but did not find
+> any obvious mistake.
 
-
-** Using a command like 'fdisk -ul', is one way of checking
-   that a disk has been copied. Keeping the first 63 sectors
-   of the original /dev/hdb may also be prudent:
-   "dd if=/dev/hdb of=hdb_0_62.img bs=512 count=63"
-
-Doug Gilbert
+I found and fixed a bug in sbp2 in the meantime. If the inquiry did not 
+succeed, sbp2 did not release its own data structures and did not remove 
+the Scsi_Host. I don't know though if this was actually the cause for 
+the subsequent failure in kmem_cache_create when the SBP-2 unit was 
+added as a new host.
+-- 
+Stefan Richter
+-=====-=-=-= ==-- -==--
+http://arcgraph.de/sr/
