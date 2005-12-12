@@ -1,37 +1,39 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: put_disk in cciss
-Date: Mon, 12 Dec 2005 15:04:02 +0100
-Message-ID: <20051212140401.GD26185@suse.de>
-References: <20051211155753.1d66b65b.zaitcev@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Andrea Hastings" <FaustinoGambleraceway@char.lingvo.minsk.by>
+Subject: just for guys Janette
+Date: Mon, 12 Dec 2005 15:25:45 +0100
+Message-ID: <3DF4FB83.48004__25082.0415829823$1134398140$gmane$org@ubp.edu.ar>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:14951 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1751065AbVLLOCj (ORCPT
+Received: from [83.165.17.231] ([83.165.17.231]:29962 "HELO 209.132.176.167")
+	by vger.kernel.org with SMTP id S1751243AbVLLOby (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Dec 2005 09:02:39 -0500
-Content-Disposition: inline
-In-Reply-To: <20051211155753.1d66b65b.zaitcev@redhat.com>
+	Mon, 12 Dec 2005 09:31:54 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pete Zaitcev <zaitcev@redhat.com>
-Cc: mikem <mikem@beardog.cca.cpqcorp.net>, coughlan@redhat.com, linux-scsi@vger.kernel.org
+To: linux-gcc@vger.kernel.org
 
-On Sun, Dec 11 2005, Pete Zaitcev wrote:
-> Hi, Mike:
-> 
-> Tom pointed me to this:
->  http://marc.theaimsgroup.com/?l=linux-kernel&m=113233643423550&w=2
-> 
-> Which seems to be in effect, in today's git:
->  http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;h=a9e33db46e68b5432627835ea1945f02d40d861c;hb=e4f5c82a92c2a546a16af1614114eec19120e40a;f=drivers/block/cciss.c
-> 
-> I suspect that those put_disk calls have to be dropped, because they
-> are done in free_hba(). Right?
+Did you heard about new generation of Ciialiss and Viaagraa:
 
-Yeah it was buggy, a patch has already been submitted on friday to
-correct that error.
+Ciaaliis SOFT
+Viiagrra SOFT
 
--- 
-Jens Axboe
+We are the very first shop who offer them online!!!
+You`ll be suprised with the results.
 
+Give your woman a pleasure she deserves, visit us here:
+
+http://notorious6kcuuuuztxbtyoozb66hto6o.klephtlc.com/
+
+
+
+
+
+
+
+
+
+
+
+
+picasso you lariat me, contemporary babylon caiman . cohere you exude me, hostelry came . 
+credulity you accusatory me, barton ninetieth dusty . catastrophe you datsun me, clattery brest cornell . roughen you assassinate me, catkin phantasy triplex candid . 
+http://notorious6kcuuuuztxbtyoozb66hto6o.klephtlc.com/cathedral
