@@ -1,54 +1,76 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: linux kernel panic when ejecting ieee1394 ipod
-Date: Tue, 13 Dec 2005 21:54:27 +0100
-Message-ID: <20051213205426.GV12024@suse.de>
-References: <200512091938.jB9JbnnQ025362@einhorn.in-berlin.de> <1134168322.3491.5.camel@mulgrave> <439F3299.9020804@s5r6.in-berlin.de>
+From: Jesper Juhl <jesper.juhl@gmail.com>
+Subject: [PATCH] fix warning and missing failure handling for scsi_add_host in aic7xxx driver
+Date: Wed, 14 Dec 2005 00:07:19 +0100
+Message-ID: <200512140007.20046.jesper.juhl@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux1394-devel-admin@lists.sourceforge.net>
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932616AbVLMXGd@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <439F3299.9020804@s5r6.in-berlin.de>
-Sender: linux1394-devel-admin@lists.sourceforge.net
-Errors-To: linux1394-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jody McIntyre <scjody@modernduck.com>, linux-scsi@vger.kernel.org, patmans@us.ibm.com, adq_dvb@lidskialf.net, linux1394-devel@lists.sourceforge.net
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@steeleye.com>, "Daniel M. Eischen" <deischen@iworks.interworks.org>, Doug Ledford <dledford@redhat.com>, James.Bottomley@hansenpartnership.com, Jesper Juhl <jesper.juhl@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Dec 13 2005, Stefan Richter wrote:
-> James Bottomley wrote:
-> >On Fri, 2005-12-09 at 20:35 +0100, Stefan Richter wrote:
-> >>When preparing a request in scsi_lib or in a SCSI high-level driver,
-> >>always set a transfer direction of DMA_NONE if data length is zero,
-> >>even for alleged write requests. (Extended patch derived from Jens
-> >>Axboe's version.)
-> [...]
-> >The problem is that I already picked up Jens' patch in rc fixes, so this
-> >no-longer applies.  However, given that the fix needed to be in four
-> >separate places, which looks rather bad, I propose the following
-> >consolidation instead.
-> 
-> Jens' patch alone does not fix the kernel panic AFAICS. "eject /dev/sdX" 
-> goes through sd_init_command. James, could you put your patch into 
-> scsi-rc-fixes too? And what about -stable?
+Hi,
 
-I trust James already included his own updated version, which is
-basically fixing that bug but abstracting the rq_to_scsi_dir() stuff
-into a helper instead. That should fix it for all cases.
+Here's a patch to fix a compiler warning and problem with missing failure 
+handling of scsi_add_host noted in comment in aic7xxx_osm
 
--- 
-Jens Axboe
+The warning I see (with 2.6.15-rc5-git3) is this one:
+drivers/scsi/aic7xxx/aic7xxx_osm.c:1100: warning: ignoring return value of csi_add_host', declared with attribute warn_unused_result
+
+The patch has seen the following testing:
+ - compile tested
+ - boot tested on a machine using the AIC7XXX driver
+
+Please review and consider for inclusion.
 
 
+Signed-off-by: Jesper Juhl <jeser.juhl@gmail.com>
+---
 
--------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
-for problems?  Stop!  Download the new AJAX search engine that makes
-searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
-http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
+ drivers/scsi/aic7xxx/aic7xxx_osm.c |   22 +++++++++++++++++-----
+ 1 files changed, 17 insertions(+), 5 deletions(-)
+
+--- linux-2.6.15-rc5-git3-orig/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-12-04 18:48:12.000000000 +0100
++++ linux-2.6.15-rc5-git3/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-12-13 23:47:45.000000000 +0100
+@@ -1061,10 +1061,11 @@ uint32_t aic7xxx_verbose;
+ int
+ ahc_linux_register_host(struct ahc_softc *ahc, struct scsi_host_template *template)
+ {
+-	char	 buf[80];
+-	struct	 Scsi_Host *host;
++	char	buf[80];
++	struct	Scsi_Host *host;
+ 	char	*new_name;
+-	u_long	 s;
++	u_long	s;
++	int	retval = 0;
+ 
+ 	template->name = ahc->description;
+ 	host = scsi_host_alloc(template, sizeof(struct ahc_softc *));
+@@ -1097,9 +1098,20 @@ ahc_linux_register_host(struct ahc_softc
+ 
+ 	host->transportt = ahc_linux_transport_template;
+ 
+-	scsi_add_host(host, (ahc->dev_softc ? &ahc->dev_softc->dev : NULL)); /* XXX handle failure */
++	retval = scsi_add_host(host,
++			(ahc->dev_softc ? &ahc->dev_softc->dev : NULL));
++	if (retval) {
++		printk(KERN_ERR "aic7xxx: scsi_add_host failed\n");
++		goto free_and_out;
++	}
++
+ 	scsi_scan_host(host);
+-	return (0);
++
++out:
++	return retval;
++free_and_out:
++	scsi_remove_host(host);
++	goto out;
+ }
+ 
+ /*
