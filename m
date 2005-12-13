@@ -1,53 +1,42 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Tue, 13 Dec 2005 18:26:51 +0000
-Message-ID: <20051213182651.GA14645@srcf.ucam.org>
-References: <20051208030242.GA19923@srcf.ucam.org> <20051213101417.13fdb14c.randy_d_dunlap@linux.intel.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] Move scsi_print_msg to SPI code
+Date: Tue, 13 Dec 2005 13:32:45 -0500
+Message-ID: <439F13CD.8040602@pobox.com>
+References: <20051213165342.GM9286@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([217.147.92.49]:51166 "EHLO
-	vavatch.codon.org.uk") by vger.kernel.org with ESMTP
-	id S932574AbVLMS1Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Dec 2005 13:27:16 -0500
-Content-Disposition: inline
-In-Reply-To: <20051213101417.13fdb14c.randy_d_dunlap@linux.intel.com>
+Received: from mail.dvmed.net ([216.237.124.58]:61132 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932325AbVLMScx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Dec 2005 13:32:53 -0500
+In-Reply-To: <20051213165342.GM9286@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Dec 13, 2005 at 10:14:17AM -0800, Randy Dunlap wrote:
+Matthew Wilcox wrote:
+> scsi_print_msg got the transfer period translation to nanoseconds wrong.
+> We have the right code to do this in scsi_transport_spi.c, but we can't
+> guarantee that'll be linked in.  scsi_print_msg is a bit of a misnomer
+> anyway, since these messages are actually SPI messages, not SAM.
+> 
+> So I've moved scsi_print_msg to scsi_transport_spi.c and renamed it to
+> spi_print_msg.  All drivers that use scsi_print_msg() got converted,
+> and the Kconfig was adjusted to link in the SPI transport code for
+> those drivers.  Note that those drivers haven't been converted to use
+> the SPI transport code ... but surely it's just a matter of time.
 
-> 1.  I had problems applying it.  What tree is it against?
->     Say so in the description.
+Strong ACK, though I think your change here should be split up:  the 
+patch to link against SPI should be separated from the scsi_print_msg() 
+change.
 
-It was against 2.6.15-git at the time, but I accidently left a hunk of 
-stuff from the hotplug patch in there which probably confused things. 
-I'll try to rediff it by the end of the week (and do other tidying)
+This change will make it easier to start marginalizing SPI.  Eventually 
+all SPI drivers will link against the SPI transport class, and this is 
+the necessary first step.
 
-> 7.  Most important:  What good does the ACPI interface do/add?
->     What I mean is that acpi_get_child() in scsi_acpi_find_channel()
->     always returns a handle value of 0, so it doesn't get us
->     any closer to determining the ACPI address (_ADR) of the SATA
->     devices.  The acpi_get_devices() technique in my patch (basically
->     walking the ACPI namespace, looking at all "devices") is the
->     only way that I know of doing this, but I would certainly
->     like to find a better way.
+	Jeff
 
-When the PCI bus is registered, acpi walks it and finds the appropriate 
-acpi handle for each PCI device. This is shoved in the 
-firmware_data field of the device structure. Later on, we register the 
-scsi bus. As each item on the bus is added, the acpi callback gets 
-called. If it's not an endpoint, scsi_acpi_find_channel gets called. 
-We're worried about the host case. The host number will correspond to 
-the appropriate _ADR underneath the PCI device that the host is on, so 
-we simply get the handle of the PCI device and then ask for the child 
-with the appropriate _ADR. That gives us the handle for the device, and 
-returning that sticks it back in the child's firmware_data field.
 
-At least, that's how it works here. If acpi_get_child always returns 0 
-for you, then it sounds like something's going horribly wrong. Do you 
-have a copy of the DSDT?
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
