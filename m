@@ -1,52 +1,46 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Tue, 13 Dec 2005 11:07:27 -0800
-Message-ID: <20051213110727.2bef7d80.randy_d_dunlap@linux.intel.com>
-References: <20051208030242.GA19923@srcf.ucam.org>
-	<20051213101417.13fdb14c.randy_d_dunlap@linux.intel.com>
-	<20051213182651.GA14645@srcf.ucam.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: linux kernel panic when ejecting ieee1394 ipod
+Date: Tue, 13 Dec 2005 21:44:09 +0100
+Message-ID: <439F3299.9020804@s5r6.in-berlin.de>
+References: <200512091938.jB9JbnnQ025362@einhorn.in-berlin.de> <1134168322.3491.5.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030191AbVLMTEK@vger.kernel.org>
-In-Reply-To: <20051213182651.GA14645@srcf.ucam.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:25038 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1030192AbVLMUsN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Dec 2005 15:48:13 -0500
+In-Reply-To: <1134168322.3491.5.camel@mulgrave>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jody McIntyre <scjody@modernduck.com>, linux-scsi@vger.kernel.org, patmans@us.ibm.com, adq_dvb@lidskialf.net, linux1394-devel@lists.sourceforge.net, axboe@suse.de
 
-On Tue, 13 Dec 2005 18:26:51 +0000
-Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+James Bottomley wrote:
+> On Fri, 2005-12-09 at 20:35 +0100, Stefan Richter wrote:
+>>When preparing a request in scsi_lib or in a SCSI high-level driver,
+>>always set a transfer direction of DMA_NONE if data length is zero,
+>>even for alleged write requests. (Extended patch derived from Jens
+>>Axboe's version.)
+[...]
+> The problem is that I already picked up Jens' patch in rc fixes, so this
+> no-longer applies.  However, given that the fix needed to be in four
+> separate places, which looks rather bad, I propose the following
+> consolidation instead.
 
-> On Tue, Dec 13, 2005 at 10:14:17AM -0800, Randy Dunlap wrote:
-> 
-> > 7.  Most important:  What good does the ACPI interface do/add?
-> >     What I mean is that acpi_get_child() in scsi_acpi_find_channel()
-> >     always returns a handle value of 0, so it doesn't get us
-> >     any closer to determining the ACPI address (_ADR) of the SATA
-> >     devices.  The acpi_get_devices() technique in my patch (basically
-> >     walking the ACPI namespace, looking at all "devices") is the
-> >     only way that I know of doing this, but I would certainly
-> >     like to find a better way.
-> 
-> When the PCI bus is registered, acpi walks it and finds the appropriate 
-> acpi handle for each PCI device. This is shoved in the 
-> firmware_data field of the device structure. Later on, we register the 
-> scsi bus. As each item on the bus is added, the acpi callback gets 
-> called. If it's not an endpoint, scsi_acpi_find_channel gets called. 
-> We're worried about the host case. The host number will correspond to 
-> the appropriate _ADR underneath the PCI device that the host is on, so 
-> we simply get the handle of the PCI device and then ask for the child 
-> with the appropriate _ADR. That gives us the handle for the device, and 
-> returning that sticks it back in the child's firmware_data field.
-> 
-> At least, that's how it works here. If acpi_get_child always returns 0 
-> for you, then it sounds like something's going horribly wrong. Do you 
-> have a copy of the DSDT?
+Jens' patch alone does not fix the kernel panic AFAICS. "eject /dev/sdX" 
+goes through sd_init_command. James, could you put your patch into 
+scsi-rc-fixes too? And what about -stable?
 
-Thanks for the explanation.
-The 136 KB DSDT is at:
-  http://www.xenotime.net/linux/SATA/acpitbl.out .
+[BTW, some revisions of iPods require to either "eject" them or to 
+unload sbp2 or to disassociate them from sbp2 via an arcane echo to 
+ieee1394's sysfs interface before they can be unplugged. Else their 
+firmware needs to be reset. This is why "eject" is the recommended 
+procedure to disconnect an iPod.]
 
----
-~Randy
+Thanks,
+-- 
+Stefan Richter
+-=====-=-=-= ==-- -==-=
+http://arcgraph.de/sr/
