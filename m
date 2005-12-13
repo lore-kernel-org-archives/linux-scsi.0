@@ -1,76 +1,38 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [PATCH]: Re: qla1280.c broken on SGI visws, PCI coherency	problem
-Date: Mon, 12 Dec 2005 17:00:34 -0600
-Message-ID: <439E0112.1030801@sgi.com>
-References: <4399D6EB.4080603@c-lab.de> <439A17BE.5000904@sgi.com>	 <439DE50B.90007@sgi.com> <1134424057.3713.18.camel@mulgrave>
+From: Wang Zhenyu <zhenyu.z.wang@intel.com>
+Subject: Re: [PATCH 0/8] iscsi update
+Date: Tue, 13 Dec 2005 09:44:10 +0800
+Message-ID: <20051213014409.GA14325@zhen-devel.sh.intel.com>
+References: <1133327553.28356.36.camel@max>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:61409 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S932226AbVLLXAv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Dec 2005 18:00:51 -0500
-In-Reply-To: <1134424057.3713.18.camel@mulgrave>
+Received: from fmr20.intel.com ([134.134.136.19]:24979 "EHLO
+	orsfmr005.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1751224AbVLMBoN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Dec 2005 20:44:13 -0500
+Content-Disposition: inline
+In-Reply-To: <1133327553.28356.36.camel@max>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: pazke@donpac.ru, Michael Joosten <michael.joosten@c-lab.de>, linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org
 
+On 2005.11.30 13:12:33 +0000, Mike Christie wrote:
+> 
+>    I get to be the patch monkey again so here is a iscsi update. The
+>    following patches except 01 and 04 are bug fixes. Patch 01 and 04 begin
+>    to add support for other interconnects like rdma. We are not sending
+>    support for rdma at this time. Those two patches should be netlink and
+>    sysfs values that are some what interesting for the code we have in
+>    mainline. If someone has a problem with those patches the patchset can
+>    live without them though (it will apply at a offset but be ok).
+>    We know we are late for 2.6.15 and that those two patches do not qualify
+>    for rc bugfixes so we understand if this gets queued to 2.6.16-rc1.
+>    Patches were made against scsi-misc but apply to scsi-rc-fixes.
 
+ping for this patchset? These patches except rdma bits are all important fixes
+for iscsi_tcp. James, is there any problem with them to scsi-rc-fixes? 
+I think it's good to be in 2.6.15, and that keeps mainline kernel update with
+our svn version. 
 
-James Bottomley wrote:
-> On Mon, 2005-12-12 at 15:00 -0600, Michael Reed wrote:
->>(The subject of this email isn't quite accurate.  It's not
->>a pci coherency problem, it's a pio write ordering problem.)
->>
->>I've been asked to pass along the suggestion that "mmiowb"
->>should be implemented for the platform.
-> 
->>Given that I've been unable to unearth the chipset documentation
->>for the Vis WS, I can only hope that you've got some good ideas
->>on how this might be accomplished.
-> 
-> Well, the idea was that mmiowb and posting flushes were orthogonal.
-> mmiowb would be used in places where a posted write flush was done but
-> was strictly unnnecessary.  This bug report is implying that the posted
-> write flush was necessary, so it was incorrectly replaced with mmiowb
-> (which is a nop on most platforms).
-
-The mmiowb() is sufficient to assure
-ordering of the write to the board register.
-(Have I incorrectly used the term pio?
-I'm not meaning to imply a particular address space used to
-access a board's registers.)
-
-It's not a timing issue.  The WRT_REG write doesn't have to reach
-the board before the driver can perform another function.  It
-just has to reach the board in the order issued.
-
-> 
->>I agree that replacing the pio read which flushed the preceeding
->>pio write with mmiowb() is what has likely broken the driver.  If you
->>restore them,  please make it either mmiowb or pio read, but not both.
->>
->>Perhaps something like this?  It's not the most elegant solution....
-> 
-> I'm tempted to say I think we need to put the write posting flush back
-> in and dump the mmiowb(), but since the driver is supposedly doing PIO
-> for VISWS, there's something else going on here (PIO writes aren't
-> supposed to post).  I've cc'd the VISWS maintainer in case he can think
-> of anything.
-
-Again, apologies if I've misused the term PIO.
-
-Mike
-
-> 
-> James
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+thanks
