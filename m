@@ -1,51 +1,53 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [PATCH]: Re: qla1280.c broken on SGI visws, PCI	coherency	problem
-Date: Tue, 13 Dec 2005 12:15:50 -0600
-Message-ID: <439F0FD6.30701@sgi.com>
-References: <4399D6EB.4080603@c-lab.de> <439A17BE.5000904@sgi.com>	 <439DE50B.90007@sgi.com> <1134424057.3713.18.camel@mulgrave>	 <439E0112.1030801@sgi.com>  <439ECB2E.7070103@sgi.com> <1134485413.3356.2.camel@mulgrave>
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
+Date: Tue, 13 Dec 2005 18:26:51 +0000
+Message-ID: <20051213182651.GA14645@srcf.ucam.org>
+References: <20051208030242.GA19923@srcf.ucam.org> <20051213101417.13fdb14c.randy_d_dunlap@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:21479 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S932526AbVLMSQH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Dec 2005 13:16:07 -0500
-In-Reply-To: <1134485413.3356.2.camel@mulgrave>
+Received: from cavan.codon.org.uk ([217.147.92.49]:51166 "EHLO
+	vavatch.codon.org.uk") by vger.kernel.org with ESMTP
+	id S932574AbVLMS1Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Dec 2005 13:27:16 -0500
+Content-Disposition: inline
+In-Reply-To: <20051213101417.13fdb14c.randy_d_dunlap@linux.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: pazke@donpac.ru, Michael Joosten <michael.joosten@c-lab.de>, linux-scsi@vger.kernel.org
+To: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
 
+On Tue, Dec 13, 2005 at 10:14:17AM -0800, Randy Dunlap wrote:
 
+> 1.  I had problems applying it.  What tree is it against?
+>     Say so in the description.
 
-James Bottomley wrote:
-> On Tue, 2005-12-13 at 07:22 -0600, Michael Reed wrote:
->> I believe the biggest issue with VISWS is that it appears to need
->> mmiowb() and we likely don't know how to implement it.  Hence, for
->> that platform, it would make sense to replace the mmiowb() with a
->> posting read.
-> 
-> Well, there's an easy way to tell ... the reason for the mmiowb in the
-> qla1280 driver is supposed to be an SMP race, according to the
-> description, so if it fails on UP as well there's something else going
-> on here ...
-> 
-> I'm still suspicious because the mmiowb() in this driver replaced a
-> posted write flush instruction, which altered the behaviour of the
-> driver.  The qla1280 is just rare enough that it might have taken this
-> long to notice ...
+It was against 2.6.15-git at the time, but I accidently left a hunk of 
+stuff from the hotplug patch in there which probably confused things. 
+I'll try to rediff it by the end of the week (and do other tidying)
 
-Yup.  But.... keep in mind that the failing platform is the SGI
-VISWS, the child of a PC and an O2.  I'd be much more suspicious
-if it failed on a generic PC.  (It also works fine on SGI Altix,
-a platform which has implemented mmiowb().)
+> 7.  Most important:  What good does the ACPI interface do/add?
+>     What I mean is that acpi_get_child() in scsi_acpi_find_channel()
+>     always returns a handle value of 0, so it doesn't get us
+>     any closer to determining the ACPI address (_ADR) of the SATA
+>     devices.  The acpi_get_devices() technique in my patch (basically
+>     walking the ACPI namespace, looking at all "devices") is the
+>     only way that I know of doing this, but I would certainly
+>     like to find a better way.
 
-Perhaps Mr. Joosten can confirm his failing case with the UP kernel?
+When the PCI bus is registered, acpi walks it and finds the appropriate 
+acpi handle for each PCI device. This is shoved in the 
+firmware_data field of the device structure. Later on, we register the 
+scsi bus. As each item on the bus is added, the acpi callback gets 
+called. If it's not an endpoint, scsi_acpi_find_channel gets called. 
+We're worried about the host case. The host number will correspond to 
+the appropriate _ADR underneath the PCI device that the host is on, so 
+we simply get the handle of the PCI device and then ask for the child 
+with the appropriate _ADR. That gives us the handle for the device, and 
+returning that sticks it back in the child's firmware_data field.
 
-Mike
-
-> 
-> James
-> 
-> 
+At least, that's how it works here. If acpi_get_child always returns 0 
+for you, then it sounds like something's going horribly wrong. Do you 
+have a copy of the DSDT?
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
