@@ -1,38 +1,139 @@
-From: Wang Zhenyu <zhenyu.z.wang@intel.com>
-Subject: Re: [PATCH 0/8] iscsi update
-Date: Tue, 13 Dec 2005 09:44:10 +0800
-Message-ID: <20051213014409.GA14325@zhen-devel.sh.intel.com>
-References: <1133327553.28356.36.camel@max>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/scsi/qla2xxx/: possible cleanups
+Date: Tue, 13 Dec 2005 03:28:29 +0100
+Message-ID: <20051213022829.GZ23349@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmr20.intel.com ([134.134.136.19]:24979 "EHLO
-	orsfmr005.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1751224AbVLMBoN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Dec 2005 20:44:13 -0500
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:56325 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S932367AbVLMC23 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Dec 2005 21:28:29 -0500
 Content-Disposition: inline
-In-Reply-To: <1133327553.28356.36.camel@max>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 2005.11.30 13:12:33 +0000, Mike Christie wrote:
-> 
->    I get to be the patch monkey again so here is a iscsi update. The
->    following patches except 01 and 04 are bug fixes. Patch 01 and 04 begin
->    to add support for other interconnects like rdma. We are not sending
->    support for rdma at this time. Those two patches should be netlink and
->    sysfs values that are some what interesting for the code we have in
->    mainline. If someone has a problem with those patches the patchset can
->    live without them though (it will apply at a offset but be ok).
->    We know we are late for 2.6.15 and that those two patches do not qualify
->    for rc bugfixes so we understand if this gets queued to 2.6.16-rc1.
->    Patches were made against scsi-misc but apply to scsi-rc-fixes.
+This patch contains the following possible cleanups:
+- make needlessly global code static
+- #if 0 the following unused global functions:
+  - qla_sup.c: qla24xx_get_flash_manufacturer
+  - qla_sup.c: qla24xx_write_flash_data
 
-ping for this patchset? These patches except rdma bits are all important fixes
-for iscsi_tcp. James, is there any problem with them to scsi-rc-fixes? 
-I think it's good to be in 2.6.15, and that keeps mainline kernel update with
-our svn version. 
 
-thanks
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+---
+
+This patch was already sent on:
+- 20 Nov 2005
+
+ drivers/scsi/qla2xxx/qla_os.c  |   14 +++++++-------
+ drivers/scsi/qla2xxx/qla_sup.c |    8 ++++++--
+ 2 files changed, 13 insertions(+), 9 deletions(-)
+
+--- linux-2.6.15-rc1-mm2-full/drivers/scsi/qla2xxx/qla_os.c.old	2005-11-20 19:56:43.000000000 +0100
++++ linux-2.6.15-rc1-mm2-full/drivers/scsi/qla2xxx/qla_os.c	2005-11-20 20:04:14.000000000 +0100
+@@ -54,7 +54,7 @@
+ MODULE_PARM_DESC(ql2xloginretrycount,
+ 		"Specify an alternate value for the NVRAM login retry count.");
+ 
+-int ql2xfwloadbin=1;
++static int ql2xfwloadbin=1;
+ module_param(ql2xfwloadbin, int, S_IRUGO|S_IRUSR);
+ MODULE_PARM_DESC(ql2xfwloadbin,
+ 		"Load ISP2xxx firmware image via hotplug.");
+@@ -266,7 +266,7 @@
+ 	return str;
+ }
+ 
+-char *
++static char *
+ qla2x00_fw_version_str(struct scsi_qla_host *ha, char *str)
+ {
+ 	char un_str[10];
+@@ -304,7 +304,7 @@
+ 	return (str);
+ }
+ 
+-char *
++static char *
+ qla24xx_fw_version_str(struct scsi_qla_host *ha, char *str)
+ {
+ 	sprintf(str, "%d.%02d.%02d ", ha->fw_major_version,
+@@ -580,7 +580,7 @@
+ *
+ * Note:
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -714,7 +714,7 @@
+ *    SUCCESS/FAILURE (defined as macro in scsi.h).
+ *
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_device_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -845,7 +845,7 @@
+ *    SUCCESS/FAILURE (defined as macro in scsi.h).
+ *
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -906,7 +906,7 @@
+ *
+ * Note:
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+--- linux-2.6.15-rc1-mm2-full/drivers/scsi/qla2xxx/qla_sup.c.old	2005-11-20 19:58:00.000000000 +0100
++++ linux-2.6.15-rc1-mm2-full/drivers/scsi/qla2xxx/qla_sup.c	2005-11-20 20:00:10.000000000 +0100
+@@ -428,7 +428,7 @@
+ 	return FARX_ACCESS_NVRAM_DATA | naddr;
+ }
+ 
+-uint32_t
++static uint32_t
+ qla24xx_read_flash_dword(scsi_qla_host_t *ha, uint32_t addr)
+ {
+ 	int rval;
+@@ -469,7 +469,7 @@
+ 	return dwptr;
+ }
+ 
+-int
++static int
+ qla24xx_write_flash_dword(scsi_qla_host_t *ha, uint32_t addr, uint32_t data)
+ {
+ 	int rval;
+@@ -491,6 +491,8 @@
+ 	return rval;
+ }
+ 
++#if 0
++
+ void
+ qla24xx_get_flash_manufacturer(scsi_qla_host_t *ha, uint8_t *man_id,
+     uint8_t *flash_id)
+@@ -581,6 +583,8 @@
+ 	return ret;
+ }
+ 
++#endif  /*  0  */
++
+ uint8_t *
+ qla2x00_read_nvram_data(scsi_qla_host_t *ha, uint8_t *buf, uint32_t naddr,
+     uint32_t bytes)
+
