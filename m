@@ -1,70 +1,51 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: Re: RFC: ACPI/scsi/libata integration and hotswap
-Date: Tue, 13 Dec 2005 10:14:17 -0800
-Message-ID: <20051213101417.13fdb14c.randy_d_dunlap@linux.intel.com>
-References: <20051208030242.GA19923@srcf.ucam.org>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: [PATCH]: Re: qla1280.c broken on SGI visws, PCI	coherency	problem
+Date: Tue, 13 Dec 2005 12:15:50 -0600
+Message-ID: <439F0FD6.30701@sgi.com>
+References: <4399D6EB.4080603@c-lab.de> <439A17BE.5000904@sgi.com>	 <439DE50B.90007@sgi.com> <1134424057.3713.18.camel@mulgrave>	 <439E0112.1030801@sgi.com>  <439ECB2E.7070103@sgi.com> <1134485413.3356.2.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20051208030242.GA19923@srcf.ucam.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, acpi-devel@lists.sourceforge.net
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from omx2-ext.sgi.com ([192.48.171.19]:21479 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S932526AbVLMSQH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Dec 2005 13:16:07 -0500
+In-Reply-To: <1134485413.3356.2.camel@mulgrave>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-Hi Matthew,
-
-I have a few comments and a question on this patch, please.
-(Yes, I know it won't be merged.)
-Most of these are general patch process comments.
-However, the last comment is the important one.
-
-1.  I had problems applying it.  What tree is it against?
-    Say so in the description.
-
-2.  use diff -p (in SubmittingPatches)
-
-3.  use diffstat
-
-4.  Why 2 diffs against include/linux/libata.h ?
-    I was hoping that diffstat would show this, but it just merges
-    the 2 libata.h patches together.  'lsdiff' does show this,
-    however.
-
-5.  #includes in alpha order as much as possible.
-
-6.  Patch had some trailing whitespace (usually tabs).
-    Some tools detect this and warn about it.
-
-7.  Most important:  What good does the ACPI interface do/add?
-    What I mean is that acpi_get_child() in scsi_acpi_find_channel()
-    always returns a handle value of 0, so it doesn't get us
-    any closer to determining the ACPI address (_ADR) of the SATA
-    devices.  The acpi_get_devices() technique in my patch (basically
-    walking the ACPI namespace, looking at all "devices") is the
-    only way that I know of doing this, but I would certainly
-    like to find a better way.
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: pazke@donpac.ru, Michael Joosten <michael.joosten@c-lab.de>, linux-scsi@vger.kernel.org
 
 
-On Thu, 8 Dec 2005 03:02:42 +0000
-Matthew Garrett <mjg59@srcf.ucam.org> wrote:
 
-> Hi!
+James Bottomley wrote:
+> On Tue, 2005-12-13 at 07:22 -0600, Michael Reed wrote:
+>> I believe the biggest issue with VISWS is that it appears to need
+>> mmiowb() and we likely don't know how to implement it.  Hence, for
+>> that platform, it would make sense to replace the mmiowb() with a
+>> posting read.
 > 
-> The included patch does three things:
+> Well, there's an easy way to tell ... the reason for the mmiowb in the
+> qla1280 driver is supposed to be an SMP race, according to the
+> description, so if it fails on UP as well there's something else going
+> on here ...
 > 
-> 1) It adds basic support for binding SCSI and SATA devices to ACPI 
-> device handles. At the moment this is limited to hosts, and in practice 
-> it's probably limited to SATA ones (ACPI doesn't spec how SCSI devices 
-> should appear in the DSDT, so I'm guessing that in general they don't). 
-> Given a host, you can DEVICE_ACPI_HANDLE(dev) it to get the handle to 
-> the ACPI device - this should be handy for implementing suspend 
-> functions, since the methods should be in a standard location underneath 
-> this.
+> I'm still suspicious because the mmiowb() in this driver replaced a
+> posted write flush instruction, which altered the behaviour of the
+> driver.  The qla1280 is just rare enough that it might have taken this
+> long to notice ...
 
-[snip]
+Yup.  But.... keep in mind that the failing platform is the SGI
+VISWS, the child of a PC and an O2.  I'd be much more suspicious
+if it failed on a generic PC.  (It also works fine on SGI Altix,
+a platform which has implemented mmiowb().)
 
-Thanks,
----
-~Randy
+Perhaps Mr. Joosten can confirm his failing case with the UP kernel?
+
+Mike
+
+> 
+> James
+> 
+> 
