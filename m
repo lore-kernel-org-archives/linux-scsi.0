@@ -1,76 +1,72 @@
-From: Jesper Juhl <jesper.juhl@gmail.com>
-Subject: [PATCH] fix warning and missing failure handling for scsi_add_host in aic7xxx driver
-Date: Wed, 14 Dec 2005 00:07:19 +0100
-Message-ID: <200512140007.20046.jesper.juhl@gmail.com>
+From: Jeremy Higdon <jeremy@sgi.com>
+Subject: Re: [PATCH]: Re: qla1280.c broken on SGI visws, PCI coherency problem
+Date: Tue, 13 Dec 2005 17:28:56 -0800
+Message-ID: <20051214012856.GA185272@sgi.com>
+References: <4399D6EB.4080603@c-lab.de> <439A17BE.5000904@sgi.com> <439DE50B.90007@sgi.com> <1134424057.3713.18.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932616AbVLMXGd@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from omx2-ext.sgi.com ([192.48.171.19]:47304 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S1030332AbVLNB3S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Dec 2005 20:29:18 -0500
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@steeleye.com>, "Daniel M. Eischen" <deischen@iworks.interworks.org>, Doug Ledford <dledford@redhat.com>, James.Bottomley@hansenpartnership.com, Jesper Juhl <jesper.juhl@gmail.com>
+In-Reply-To: <1134424057.3713.18.camel@mulgrave>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Michael Reed <mdr@sgi.com>, pazke@donpac.ru, Michael Joosten <michael.joosten@c-lab.de>, linux-scsi@vger.kernel.org
 
-Hi,
+On Mon, Dec 12, 2005 at 03:47:37PM -0600, James Bottomley wrote:
+> > Given that I've been unable to unearth the chipset documentation
+> > for the Vis WS, I can only hope that you've got some good ideas
+> > on how this might be accomplished.
+> 
+> Well, the idea was that mmiowb and posting flushes were orthogonal.
+> mmiowb would be used in places where a posted write flush was done but
+> was strictly unnnecessary.  This bug report is implying that the posted
+> write flush was necessary, so it was incorrectly replaced with mmiowb
+> (which is a nop on most platforms).
 
-Here's a patch to fix a compiler warning and problem with missing failure 
-handling of scsi_add_host noted in comment in aic7xxx_osm
+No, I don't think it was necessary here.  Though if a platform does
+write posting yet has a null mmiowb() implementation, it will have
+trouble.
 
-The warning I see (with 2.6.15-rc5-git3) is this one:
-drivers/scsi/aic7xxx/aic7xxx_osm.c:1100: warning: ignoring return value of csi_add_host', declared with attribute warn_unused_result
+> > I agree that replacing the pio read which flushed the preceeding
+> > pio write with mmiowb() is what has likely broken the driver.  If you
+> > restore them,  please make it either mmiowb or pio read, but not both.
+> > 
+> > Perhaps something like this?  It's not the most elegant solution....
+> 
+> I'm tempted to say I think we need to put the write posting flush back
+> in and dump the mmiowb(), but since the driver is supposedly doing PIO
+> for VISWS, there's something else going on here (PIO writes aren't
+> supposed to post).  I've cc'd the VISWS maintainer in case he can think
+> of anything.
 
-The patch has seen the following testing:
- - compile tested
- - boot tested on a machine using the AIC7XXX driver
+Yes, the posting of PIO writes is the real problem with the VISWS.
+Early ports of Linux for Altix had the same problem.
+The current Altix outw looks like this:
 
-Please review and consider for inclusion.
+static inline void
+___sn_outw (unsigned short val, unsigned long port)                                         
+{
+        volatile unsigned short *addr;
+
+        if ((addr = sn_io_addr(port))) {
+                *addr = val;
+                __sn_mmiowb();
+        }
+}
 
 
-Signed-off-by: Jesper Juhl <jeser.juhl@gmail.com>
----
+There ought to be a similar facility in the VISWS, though finding
+anyone who knows about it might be difficult (the last one was built
+in 1999).
 
- drivers/scsi/aic7xxx/aic7xxx_osm.c |   22 +++++++++++++++++-----
- 1 files changed, 17 insertions(+), 5 deletions(-)
+It sounds as though the VISWS should also implement the mmiowb(),
+since it apparently needs it for write ordering.  Of course, you
+can always do a readX for that, but that's quite a bit heavier weight
+than necessary.
 
---- linux-2.6.15-rc5-git3-orig/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-12-04 18:48:12.000000000 +0100
-+++ linux-2.6.15-rc5-git3/drivers/scsi/aic7xxx/aic7xxx_osm.c	2005-12-13 23:47:45.000000000 +0100
-@@ -1061,10 +1061,11 @@ uint32_t aic7xxx_verbose;
- int
- ahc_linux_register_host(struct ahc_softc *ahc, struct scsi_host_template *template)
- {
--	char	 buf[80];
--	struct	 Scsi_Host *host;
-+	char	buf[80];
-+	struct	Scsi_Host *host;
- 	char	*new_name;
--	u_long	 s;
-+	u_long	s;
-+	int	retval = 0;
- 
- 	template->name = ahc->description;
- 	host = scsi_host_alloc(template, sizeof(struct ahc_softc *));
-@@ -1097,9 +1098,20 @@ ahc_linux_register_host(struct ahc_softc
- 
- 	host->transportt = ahc_linux_transport_template;
- 
--	scsi_add_host(host, (ahc->dev_softc ? &ahc->dev_softc->dev : NULL)); /* XXX handle failure */
-+	retval = scsi_add_host(host,
-+			(ahc->dev_softc ? &ahc->dev_softc->dev : NULL));
-+	if (retval) {
-+		printk(KERN_ERR "aic7xxx: scsi_add_host failed\n");
-+		goto free_and_out;
-+	}
-+
- 	scsi_scan_host(host);
--	return (0);
-+
-+out:
-+	return retval;
-+free_and_out:
-+	scsi_remove_host(host);
-+	goto out;
- }
- 
- /*
+jeremy
