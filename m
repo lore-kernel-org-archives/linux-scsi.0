@@ -1,36 +1,55 @@
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
-Subject: Re: [patch 6/6] statistics infrastructure - exploitation: zfcp
-Date: Wed, 14 Dec 2005 18:17:14 +0100
-Message-ID: <20051214171714.GA11415@osiris.boeblingen.de.ibm.com>
-References: <43A044E6.7060403@de.ibm.com> <20051214162437.GW9286@parisc-linux.org> <43A04E73.2020808@de.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH]: Re: qla1280.c broken on SGI visws,
+	PCI	coherency	problem
+Date: Wed, 14 Dec 2005 09:29:16 -0800
+Message-ID: <1134581356.3278.1.camel@mulgrave>
+References: <4399D6EB.4080603@c-lab.de> <439A17BE.5000904@sgi.com>
+	 <439DE50B.90007@sgi.com> <1134424057.3713.18.camel@mulgrave>
+	 <439E0112.1030801@sgi.com>  <439ECB2E.7070103@sgi.com>
+	 <1134485413.3356.2.camel@mulgrave> <439F0FD6.30701@sgi.com>
+	 <439FA708.9070508@c-lab.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.de.ibm.com ([195.212.29.152]:52923 "EHLO
-	mtagate3.de.ibm.com") by vger.kernel.org with ESMTP
-	id S1750786AbVLNRRY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Dec 2005 12:17:24 -0500
-Content-Disposition: inline
-In-Reply-To: <43A04E73.2020808@de.ibm.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:45994 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932157AbVLNR3l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Dec 2005 12:29:41 -0500
+In-Reply-To: <439FA708.9070508@c-lab.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Peschke <mp3@de.ibm.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Andreas Herrmann <AHERRMAN@de.ibm.com>, linux-kernel@vger.kernel.org, akpm@osdl.org, linux-scsi@vger.kernel.org
+To: Michael Joosten <michael.joosten@c-lab.de>
+Cc: Michael Reed <mdr@sgi.com>, pazke@donpac.ru, linux-scsi@vger.kernel.org
 
-> >>	if (device_register(&unit->sysfs_device)) {
-> >>+		zfcp_unit_statistic_unregister(unit);
-> >>		kfree(unit);
-> >>		return NULL;
-> >>	}
-> >>	if (zfcp_sysfs_unit_create_files(&unit->sysfs_device)) {
-> >>+		zfcp_unit_statistic_unregister(unit);
-> >>		device_unregister(&unit->sysfs_device);
-> >>		return NULL;
-> >>	}
-> >Unrelated, but doesn't that error path forget to release unit?
-> 
-> correct, I guess ... Andreas, could you fix this?
+On Wed, 2005-12-14 at 06:00 +0100, Michael Joosten wrote:
+> >Perhaps Mr. Joosten can confirm his failing case with the UP kernel?
+> >
+> >  
+> >
+> OK, I'm currently doing this, though with a Fedora Core3 kernel 
+> (2.6.12-1.1381-FC3) UP and SMP,  running it with some ooold filesystem 
+> benchmark on a similarly old PIII 500MHz board. What else is possible is 
+> an Intel dual PII (450MHz) server board (N440BX) , a dual PIII(730MHz) 
+> workstation and a very recent one with hyperthreading PIV. I'm currently 
+> using a distributed kernel with modules, because this version still has 
+> the mmiowb() in place (I hope!) .
+> There might be a timing issue (the faults happend somehow earlier once 
+> the board and the VisWS got warmer), but I hope that the other platforms 
+> will show a little difference...
+> Well, the PIII board with both a 550 and a 800 MHz proc showed no 
+> difference, the driver just *works*, no failure in 20 runs.  It looks 
+> like the problem only shows up in the VISWS. Perhaps I try it again 
+> putting the QLA1080 in the 32bit slot, which is apparently not 
+> controlled by the Lithium, but rather a plain PIIX chip. And perhaps 
+> some other platform and chipset.
 
-The release function frees the unit. Nothing to fix here.
+Yes, the PIO posting issue is VISWS only, I think.  Could you confirm
+that your original bug report was on a SMP VISWS, and could you try the
+tests over using a UP kernel on the VISWS?
 
-Heiko
+Thanks,
+
+James
+
+
