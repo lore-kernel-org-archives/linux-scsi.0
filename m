@@ -1,59 +1,32 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: stgt a new version of iscsi target?
-Date: Wed, 14 Dec 2005 13:55:53 -0600
-Message-ID: <43A078C9.1040007@cs.wisc.edu>
-References: <OF6932015B.01CF53D9-ONC12570D0.00462028@capvert.ins>	 <43972C2D.9060500@cs.wisc.edu>  <43987F75.2000301@vlnb.net>	 <1134071268.3259.29.camel@mulgrave>  <4399A2D7.2040402@vlnb.net> <1134143298.3598.21.camel@mulgrave> <439AF52B.7060203@vlnb.net> <439B1965.90603@cs.wisc.edu> <43A03500.1040500@vlnb.net>
+From: Matthew Wilcox <matthew-Ztpu424NOJ8@public.gmane.org>
+Subject: Re: Re: RFC: ACPI/scsi/libata integration and hotswap
+Date: Wed, 14 Dec 2005 13:52:16 -0700
+Message-ID: <20051214205216.GZ9286@parisc-linux.org>
+References: <20051208133945.GA21633@srcf.ucam.org> <20051208134438.GA13507@infradead.org> <1134062330.1732.9.camel@localhost.localdomain> <43989B00.5040503@pobox.com> <20051208133144.0f39cb37.randy_d_dunlap@linux.intel.com> <1134121522.27633.7.camel@localhost.localdomain> <20051209103937.GE26185@suse.de> <1134125145.27633.32.camel@localhost.localdomain> <43996A26.8060700@pobox.com> <439A3B15.5010608@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <iscsitarget-devel-admin@lists.sourceforge.net>
-In-Reply-To: <43A03500.1040500@vlnb.net>
-Sender: iscsitarget-devel-admin@lists.sourceforge.net
-Errors-To: iscsitarget-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
-List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
-	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=iscsitarget-devel>
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, johan@capvert.se, iscsitarget-devel@lists.sourceforge.net, mingz@ele.uri.edu, stgt <stgt-devel@lists.berlios.de>, Robert Whitehead <WRWHITEHEAD@novell.com>, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <439A3B15.5010608-c4O3jRSCrQ+sTnJN9+BGXg@public.gmane.org>
+Sender: acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+Errors-To: acpi-devel-admin-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/acpi-devel>,
+	<mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
+List-Post: <mailto:acpi-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+List-Help: <mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/acpi-devel>,
+	<mailto:acpi-devel-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=acpi-devel>
+To: Douglas Gilbert <dougg-c4O3jRSCrQ+sTnJN9+BGXg@public.gmane.org>
+Cc: Jeff Garzik <jgarzik-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>, Erik Slagter <erik-KW7PGP3XNp7a5EbDDlwbIw@public.gmane.org>, Jens Axboe <axboe-l3A5Bk7waGM@public.gmane.org>, Randy Dunlap <randy_d_dunlap-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mjg59-1xO5oi07KQx4cg9Nei1l7Q@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, acpi-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Vladislav Bolkhovitin wrote:
-> Mike Christie wrote:
-> 
->>>
->>> Are you sure that there are no now or will be available in the 
->>> nearest feature such (eg iSCSI) SCSI arrays with response 
->>> time/latency so small that having 5 (five) context switches or more 
->>> per command, some of which include map/unmap operations, will not 
->>> increase the latency too much? I mean, eg NFS server, which 
->>> originally was user space daemon and many people didn't want it in 
->>> the kernel. Eventually, it's in. I don't see any fundamental 
->>> difference between NFS server and SCSI target server, 
->>
->>
->>
->> Isn't the reason a NFS server is still in the kernel is becuase some 
->> of the locking difficulties?
-> 
-> 
-> Might be. But from what I remember, the major reason was the 
-> performance. After googling a bit I found many acknowledgments of that.
-> 
+On Sat, Dec 10, 2005 at 12:19:01PM +1000, Douglas Gilbert wrote:
+> I used to think that SCSI was the most maligned part of the
+> linux kernel, but that no longer seems to be the case.
+> Can ACPI be really that bad ...
 
-I do not think we are going to get anywhere with this type of thread :(
-
-We should try to compare at least one of the userspace *nbd 
-implementations with the unh target in scst. I see some that just do 
-some basic socket ops (no sendfile type hook in even) for the network 
-part then just async or normal read/writes. I do not want to comapre FC 
-to nbd, but maybe comparing software iscsi to userspace nbd is a little 
-more fair. I think ata over ethernet has a userspace target too. Is the 
-unh target defaults set ok for performance testing, or could you send 
-some off list, so we can at least test those.
+Yes.
 
 
 -------------------------------------------------------
