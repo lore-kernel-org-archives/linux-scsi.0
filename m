@@ -1,55 +1,62 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH]: Re: qla1280.c broken on SGI visws,
-	PCI	coherency	problem
-Date: Wed, 14 Dec 2005 09:29:16 -0800
-Message-ID: <1134581356.3278.1.camel@mulgrave>
-References: <4399D6EB.4080603@c-lab.de> <439A17BE.5000904@sgi.com>
-	 <439DE50B.90007@sgi.com> <1134424057.3713.18.camel@mulgrave>
-	 <439E0112.1030801@sgi.com>  <439ECB2E.7070103@sgi.com>
-	 <1134485413.3356.2.camel@mulgrave> <439F0FD6.30701@sgi.com>
-	 <439FA708.9070508@c-lab.de>
+From: Michael Reed <mdr@sgi.com>
+Subject: Current Issues with 2.6.15-rc5
+Date: Wed, 14 Dec 2005 11:58:44 -0600
+Message-ID: <43A05D54.5070309@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:45994 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932157AbVLNR3l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Dec 2005 12:29:41 -0500
-In-Reply-To: <439FA708.9070508@c-lab.de>
+Received: from omx2-ext.sgi.com ([192.48.171.19]:56230 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S964773AbVLNSBB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Dec 2005 13:01:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Joosten <michael.joosten@c-lab.de>
-Cc: Michael Reed <mdr@sgi.com>, pazke@donpac.ru, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, James.Smart@Emulex.Com
+Cc: Jeremy Higdon <jeremy@sgi.com>, Gary Hagensen <gwh@sgi.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Christoph Hellwig <hch@lst.de>, Michael Reed <mdr@sgi.com>
 
-On Wed, 2005-12-14 at 06:00 +0100, Michael Joosten wrote:
-> >Perhaps Mr. Joosten can confirm his failing case with the UP kernel?
-> >
-> >  
-> >
-> OK, I'm currently doing this, though with a Fedora Core3 kernel 
-> (2.6.12-1.1381-FC3) UP and SMP,  running it with some ooold filesystem 
-> benchmark on a similarly old PIII 500MHz board. What else is possible is 
-> an Intel dual PII (450MHz) server board (N440BX) , a dual PIII(730MHz) 
-> workstation and a very recent one with hyperthreading PIV. I'm currently 
-> using a distributed kernel with modules, because this version still has 
-> the mmiowb() in place (I hope!) .
-> There might be a timing issue (the faults happend somehow earlier once 
-> the board and the VisWS got warmer), but I hope that the other platforms 
-> will show a little difference...
-> Well, the PIII board with both a 550 and a 800 MHz proc showed no 
-> difference, the driver just *works*, no failure in 20 runs.  It looks 
-> like the problem only shows up in the VISWS. Perhaps I try it again 
-> putting the QLA1080 in the 32bit slot, which is apparently not 
-> controlled by the Lithium, but rather a plain PIIX chip. And perhaps 
-> some other platform and chipset.
+Hello Everyone,
 
-Yes, the PIO posting issue is VISWS only, I think.  Could you confirm
-that your original bug report was on a SMP VISWS, and could you try the
-tests over using a UP kernel on the VISWS?
+I'm concerned about the stability of the fibre channel infrastructure
+in 2.6.15-rc.  There are current issues which I see effecting our (SGI's)
+customers' satisfaction.  I feel that these issues must be addressed
+prior to the release of 2.6.15.
 
-Thanks,
+1 - fc transport change gets really noisy if targets disappear from
+    the fabric due to recursion on the workqueue.  I've seen recursion
+    depths > 40 and it's only really limited by the number of targets
+    on a fibre channel fabric.  It's unknown (to me) what side effects
+    this recursion might have if the number of targets is in the
+    hundreds, which is not uncommon for our customers.  James Smart
+    is aware of this and is working on a solution.
+    See my posting of 12/2/2005 and replies.
+    "2.6.15-rc4 error messages with multiple qla2300 hba ports on fabric".
 
-James
+2 - qlogic fibre channel driver no longer properly handles targets coming
+    and going.  There is a race condition within the driver which can
+    result in targets being deleted yet they are present and accounted for.
+    This is a show stopper for SGI's customers.  We have to have reliable
+    target [re-]discovery.  Andrew Vasquez is aware of this issue.
+    See my posting on 12/5/2005.  "qla2x00 driver serialization issue".
+
+In a private email, Andrew wrote:
+> Yes, I was afraid of something like this happening (due to qla2xxx
+> detections of ports being dropped from an interrupt context)...  Codes
+> in qla_rscn.c already queue-up rport_adds() via the standard
+> kernel-workqueue:
+> 
+> 	qla_init.c:     INIT_WORK(&fcport->rport_add_work, qla2x00_rport_add, fcport);
+> 
+> 	qla_rscn.c:     schedule_work(&fcport->rport_add_work);
+> 
+> With the additions though, I'm wondering if adding a special
+> single-cpu qla2xxx-rport workqueue would make sense (at least we could
+> enforce serialization).
 
 
+What can be done to assure fc stability in the 2.6.15 release?  It appears
+that the revision of the fc-transport from 2.6.14 has caused some
+difficulty for a current driver, and potentially the entire system.  Is
+it ready for prime time?
+
+Mike Reed
