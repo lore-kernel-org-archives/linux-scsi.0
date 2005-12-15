@@ -1,30 +1,43 @@
-From: Ronald Brooks <Nicklaus@cogswell.com>
-Subject: Wish you could be better?
-Date: Wed, 14 Dec 2005 16:16:20 -0800
-Message-ID: <8902612915.430498329@88-134-52-255-dynip.superkabel.de>
-Content-Type: text/plain; charset=us-ascii
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: [PATCH]: Re: qla1280.c broken on SGI visws, PCI coherency problem
+Date: Wed, 14 Dec 2005 18:14:33 -0600
+Message-ID: <43A0B569.3080708@sgi.com>
+References: <4399D6EB.4080603@c-lab.de> <439A17BE.5000904@sgi.com> <439DE50B.90007@sgi.com> <1134424057.3713.18.camel@mulgrave> <20051214012856.GA185272@sgi.com> <1134536377.3133.13.camel@mulgrave> <20051214235659.GB44861@sgi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:49388 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S932646AbVLOAQ0 (ORCPT
+Received: from omx3-ext.sgi.com ([192.48.171.25]:23749 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S932532AbVLOAOr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Dec 2005 19:16:26 -0500
-Received: from 88-134-52-255-dynip.superkabel.de (88-134-52-255-dynip.superkabel.de [88.134.52.255] (may be forged))
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id jBF0GKRx010947
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Dec 2005 16:16:21 -0800
+	Wed, 14 Dec 2005 19:14:47 -0500
+In-Reply-To: <20051214235659.GB44861@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-Wanna be more man? Check this dude
-http://www.jeykop.com/pt/
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, pazke@donpac.ru, Michael Joosten <michael.joosten@c-lab.de>, linux-scsi@vger.kernel.org
 
 
 
+Jeremy Higdon wrote:
+...snip...
+>> My primary concern in all of this is that the write posting flush was
+>> incorrectly removed.  In this case, a UP VISWS should still show the
+>> error (now we've established that it's posting even in the PIO case).
+>> If it doesn't, I'll be happy with a VISWS specific fix.
+> 
+> I'm a little surprised that the UP VisWS is showing the problem.  It
+> looks like it might be reordering writes from the same CPU, though that
+> seems really unlikely.  I think more debugging of the VisWS is in order
+> before we can draw any conclustions.
+> 
+...snip...
 
-Success is counted sweetest by those who ne'er succeed.    
-You cannot stand anywhere in the universe that is outside of yourself. 
-Science has proof without any certainty. Creationists have certainty without any proof. 
-If the wind will not serve, take to the oars.   
+I don't think it has yet been determined that UP is exhibiting the
+problem.  I haven't seen a reply after James requested that the
+test be rerun using UP kernel.
 
+(I think it was inferred that the VISWS in question was MP but
+I didn't see it explicitely stated.)
 
+Mike
