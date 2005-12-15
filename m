@@ -1,84 +1,107 @@
 From: Matthew Wilcox <matthew@wil.cx>
 Subject: From: Matthew Wilcox <matthew@wil.cx>
 Date: Thu, 15 Dec 2005 16:07:32 -0500
-Message-ID: <11346808521924-git-send-email-matthew@wil.cx>
-References: <11346808522583-git-send-email-matthew@wil.cx>
+Message-ID: <11346808523044-git-send-email-matthew@wil.cx>
+References: <11346808521924-git-send-email-matthew@wil.cx>
 Reply-To: Matthew Wilcox <matthew@wil.cx>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.magmacom.com ([206.191.0.217]:56472 "EHLO mx1.magmacom.com")
-	by vger.kernel.org with ESMTP id S1750952AbVLOVHv (ORCPT
+Received: from mx2-old.magma.ca ([206.191.0.250]:6060 "EHLO mx2.magma.ca")
+	by vger.kernel.org with ESMTP id S1750978AbVLOVHv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 15 Dec 2005 16:07:51 -0500
-In-Reply-To: <11346808522583-git-send-email-matthew@wil.cx>
+In-Reply-To: <11346808521924-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: "Subject:[PATCH 4/5]"@wil.cx, "[SCSI]"@wil.cx, Use@wil.cx, ARRAY_SIZE@wil.cx, in@wil.cx, spi_print_msg@wil.cx, Matthew Wilcox <matthew@wil.cx>
+Cc: "Subject:[PATCH 5/5]"@wil.cx, "[SCSI]"@wil.cx, Add@wil.cx, PPR@wil.cx, support@wil.cx, to@wil.cx, spi_print_msg@wil.cx, Matthew Wilcox <matthew@wil.cx>
 
-Replace the custom NO_*_MSGS definitions with uses of ARRAY_SIZE.
-This fixes a bug in the definition of NO_EXTENDED_MSGS.
+Introduce a new helper, print_nego() to handle SDTR/WDTR/PPR.
+Split out the guts of show_spi_transport_period_helper() into period_to_str()
+and use it in print_nego to get the period factor conversion right.
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 
 ---
 
- drivers/scsi/scsi_transport_spi.c |    9 +++------
- 1 files changed, 3 insertions(+), 6 deletions(-)
+ drivers/scsi/scsi_transport_spi.c |   36 +++++++++++++++++++++++++++++-------
+ 1 files changed, 29 insertions(+), 7 deletions(-)
 
-a7469c6472f85b42be4953e6b64a5dcb2dd96d6f
+550d3fc8c8d8c8d4f660d95fd480c2ab028138a8
 diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-index 8cc5dff..380e167 100644
+index 380e167..46da6fe 100644
 --- a/drivers/scsi/scsi_transport_spi.c
 +++ b/drivers/scsi/scsi_transport_spi.c
-@@ -1057,19 +1057,16 @@ static const char * const one_byte_msgs[
- /* 0x0c */ "Bus device reset", "Abort Tag", "Clear Queue", 
- /* 0x0f */ "Initiate Recovery", "Release Recovery"
- };
--#define NO_ONE_BYTE_MSGS (sizeof(one_byte_msgs)  / sizeof (const char *))
+@@ -379,9 +379,7 @@ static CLASS_DEVICE_ATTR(revalidate, S_I
  
- static const char * const two_byte_msgs[] = {
- /* 0x20 */ "Simple Queue Tag", "Head of Queue Tag", "Ordered Queue Tag",
- /* 0x23 */ "Ignore Wide Residue"
- };
--#define NO_TWO_BYTE_MSGS (sizeof(two_byte_msgs)  / sizeof (const char *))
+ /* Translate the period into ns according to the current spec
+  * for SDTR/PPR messages */
+-static ssize_t
+-show_spi_transport_period_helper(struct class_device *cdev, char *buf,
+-				 int period)
++static int period_to_str(char *buf, int period)
+ {
+ 	int len, picosec;
+ 
+@@ -399,6 +397,14 @@ show_spi_transport_period_helper(struct 
+ 		len = sprint_frac(buf, picosec, 1000);
+ 	}
+ 
++	return len;
++}
++
++static ssize_t
++show_spi_transport_period_helper(struct class_device *cdev, char *buf,
++				 int period)
++{
++	int len = period_to_str(buf, period);
+ 	buf[len++] = '\n';
+ 	buf[len] = '\0';
+ 	return len;
+@@ -1065,9 +1071,23 @@ static const char * const two_byte_msgs[
  
  static const char * const extended_msgs[] = {
  /* 0x00 */ "Modify Data Pointer", "Synchronous Data Transfer Request",
- /* 0x02 */ "SCSI-I Extended Identify", "Wide Data Transfer Request"
+-/* 0x02 */ "SCSI-I Extended Identify", "Wide Data Transfer Request"
++/* 0x02 */ "SCSI-I Extended Identify", "Wide Data Transfer Request",
++/* 0x04 */ "Parallel Protocol Request"
  };
--#define NO_EXTENDED_MSGS (sizeof(two_byte_msgs)  / sizeof (const char *))
  
++void print_nego(const unsigned char *msg, int per, int off, int width)
++{
++	if (per) {
++		char buf[20];
++		period_to_str(buf, msg[per]);
++		printk("period = %s ns ", buf);
++	}
++
++	if (off)
++		printk("offset = %d ", msg[off]);
++	if (width)
++		printk("width = %d ", 8 << msg[width]);
++}
  
  int spi_print_msg(const unsigned char *msg)
-@@ -1077,7 +1074,7 @@ int spi_print_msg(const unsigned char *m
- 	int len = 0, i;
- 	if (msg[0] == EXTENDED_MESSAGE) {
- 		len = 3 + msg[1];
--		if (msg[2] < NO_EXTENDED_MSGS)
-+		if (msg[2] < ARRAY_SIZE(extended_msgs))
- 			printk ("%s ", extended_msgs[msg[2]]); 
- 		else 
- 			printk ("Extended Message, reserved code (0x%02x) ",
-@@ -1107,14 +1104,14 @@ int spi_print_msg(const unsigned char *m
- 		len = 1;
- 	/* Normal One byte */
- 	} else if (msg[0] < 0x1f) {
--		if (msg[0] < NO_ONE_BYTE_MSGS)
-+		if (msg[0] < ARRAY_SIZE(one_byte_msgs))
- 			printk(one_byte_msgs[msg[0]]);
- 		else
- 			printk("reserved (%02x) ", msg[0]);
- 		len = 1;
- 	/* Two byte */
- 	} else if (msg[0] <= 0x2f) {
--		if ((msg[0] - 0x20) < NO_TWO_BYTE_MSGS)
-+		if ((msg[0] - 0x20) < ARRAY_SIZE(two_byte_msgs))
- 			printk("%s %02x ", two_byte_msgs[msg[0] - 0x20], 
- 				msg[1]);
- 		else 
+ {
+@@ -1085,11 +1105,13 @@ int spi_print_msg(const unsigned char *m
+ 				(msg[4] << 16) | (msg[5] << 8) | msg[6]);
+ 			break;
+ 		case EXTENDED_SDTR:
+-			printk("period = %d ns, offset = %d",
+-				(int) msg[3] * 4, (int) msg[4]);
++			print_nego(msg, 3, 4, 0);
+ 			break;
+ 		case EXTENDED_WDTR:
+-			printk("width = 2^%d bytes", msg[3]);
++			print_nego(msg, 0, 0, 3);
++			break;
++		case EXTENDED_PPR:
++			print_nego(msg, 3, 5, 6);
+ 			break;
+ 		default:
+ 		for (i = 2; i < len; ++i) 
 -- 
 0.99.9.GIT
 
