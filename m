@@ -1,43 +1,138 @@
 From: Michael Reed <mdr@sgi.com>
-Subject: Re: [PATCH]: Re: qla1280.c broken on SGI visws, PCI coherency problem
-Date: Wed, 14 Dec 2005 18:14:33 -0600
-Message-ID: <43A0B569.3080708@sgi.com>
-References: <4399D6EB.4080603@c-lab.de> <439A17BE.5000904@sgi.com> <439DE50B.90007@sgi.com> <1134424057.3713.18.camel@mulgrave> <20051214012856.GA185272@sgi.com> <1134536377.3133.13.camel@mulgrave> <20051214235659.GB44861@sgi.com>
+Subject: Re: [GIT PATCH] final SCSI fixes for 2.6.15-rc5
+Date: Wed, 14 Dec 2005 18:20:26 -0600
+Message-ID: <43A0B6CA.9090200@sgi.com>
+References: <1134604909.11150.2.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx3-ext.sgi.com ([192.48.171.25]:23749 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S932532AbVLOAOr (ORCPT
+Received: from omx3-ext.sgi.com ([192.48.171.25]:7115 "EHLO omx3.sgi.com")
+	by vger.kernel.org with ESMTP id S932656AbVLOAUb (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Dec 2005 19:14:47 -0500
-In-Reply-To: <20051214235659.GB44861@sgi.com>
+	Wed, 14 Dec 2005 19:20:31 -0500
+In-Reply-To: <1134604909.11150.2.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeremy Higdon <jeremy@sgi.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, pazke@donpac.ru, Michael Joosten <michael.joosten@c-lab.de>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+If possible, a comment on my previous email which identified two
+other issues with SCSI would be appreciated before 2.6.15 goes
+final.
+
+Thanks,
+ Mike
 
 
+> "Current Issues with 2.6.15-rc5" sent today:
 
-Jeremy Higdon wrote:
-...snip...
->> My primary concern in all of this is that the write posting flush was
->> incorrectly removed.  In this case, a UP VISWS should still show the
->> error (now we've established that it's posting even in the PIO case).
->> If it doesn't, I'll be happy with a VISWS specific fix.
+> Hello Everyone,
 > 
-> I'm a little surprised that the UP VisWS is showing the problem.  It
-> looks like it might be reordering writes from the same CPU, though that
-> seems really unlikely.  I think more debugging of the VisWS is in order
-> before we can draw any conclustions.
+> I'm concerned about the stability of the fibre channel infrastructure
+> in 2.6.15-rc.  There are current issues which I see effecting our (SGI's)
+> customers' satisfaction.  I feel that these issues must be addressed
+> prior to the release of 2.6.15.
 > 
-...snip...
+> 1 - fc transport change gets really noisy if targets disappear from
+>     the fabric due to recursion on the workqueue.  I've seen recursion
+>     depths > 40 and it's only really limited by the number of targets
+>     on a fibre channel fabric.  It's unknown (to me) what side effects
+>     this recursion might have if the number of targets is in the
+>     hundreds, which is not uncommon for our customers.  James Smart
+>     is aware of this and is working on a solution.
+>     See my posting of 12/2/2005 and replies.
+>     "2.6.15-rc4 error messages with multiple qla2300 hba ports on fabric".
+> 
+> 2 - qlogic fibre channel driver no longer properly handles targets coming
+>     and going.  There is a race condition within the driver which can
+>     result in targets being deleted yet they are present and accounted for.
+>     This is a show stopper for SGI's customers.  We have to have reliable
+>     target [re-]discovery.  Andrew Vasquez is aware of this issue.
+>     See my posting on 12/5/2005.  "qla2x00 driver serialization issue".
+> 
+> In a private email, Andrew wrote:
+>> > Yes, I was afraid of something like this happening (due to qla2xxx
+>> > detections of ports being dropped from an interrupt context)...  Codes
+>> > in qla_rscn.c already queue-up rport_adds() via the standard
+>> > kernel-workqueue:
+>> > 
+>> > 	qla_init.c:     INIT_WORK(&fcport->rport_add_work, qla2x00_rport_add, fcport);
+>> > 
+>> > 	qla_rscn.c:     schedule_work(&fcport->rport_add_work);
+>> > 
+>> > With the additions though, I'm wondering if adding a special
+>> > single-cpu qla2xxx-rport workqueue would make sense (at least we could
+>> > enforce serialization).
+> 
+> 
+> What can be done to assure fc stability in the 2.6.15 release?  It appears
+> that the revision of the fc-transport from 2.6.14 has caused some
+> difficulty for a current driver, and potentially the entire system.  Is
+> it ready for prime time?
+> 
+> Mike Reed
+> 
 
-I don't think it has yet been determined that UP is exhibiting the
-problem.  I haven't seen a reply after James requested that the
-test be rerun using UP kernel.
 
-(I think it was inferred that the VISWS in question was MP but
-I didn't see it explicitely stated.)
-
-Mike
+James Bottomley wrote:
+> These should (hopefully) represent the last few urgent bug fixes that
+> have shown up.  The fixes are available here:
+> 
+> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+> 
+> The short changelog is:
+> 
+> Andrew Vasquez:
+>   o qla2xxx: Correct short-WRITE status handling
+>   o qla2xxx: Correct mis-handling of AENs
+> 
+> Brian King:
+>   o fix double free of scsi request queue
+> 
+> Dave Boutcher:
+>   o ibmvscsi kexec fix
+> 
+> James Bottomley:
+>   o Consolidate REQ_BLOCK_PC handling path (fix ipod panic)
+> 
+> Jens Axboe:
+>   o fix panic when ejecting ieee1394 ipod
+> 
+> Mark Lord:
+>   o Fix incorrect pointer in megaraid.c MODE_SENSE emulation
+> 
+> Matthew Wilcox:
+>   o Negotiate correctly with async-only devices
+> 
+> Michael Reed:
+>   o fix OOPS due to clearing eh_action prior to aborting eh command
+> 
+> And the diffstat:
+> 
+>  drivers/scsi/ibmvscsi/ibmvscsi.h      |    2 +-
+>  drivers/scsi/ibmvscsi/iseries_vscsi.c |    3 ++-
+>  drivers/scsi/ibmvscsi/rpa_vscsi.c     |    8 +++++++-
+>  drivers/scsi/megaraid.c               |    2 +-
+>  drivers/scsi/qla2xxx/qla_def.h        |   10 +---------
+>  drivers/scsi/qla2xxx/qla_init.c       |    6 +++---
+>  drivers/scsi/qla2xxx/qla_isr.c        |   15 +++++++++++++++
+>  drivers/scsi/scsi_error.c             |    7 ++++++-
+>  drivers/scsi/scsi_lib.c               |   33 +++++++++++++++++++++------------
+>  drivers/scsi/scsi_scan.c              |    1 -
+>  drivers/scsi/sd.c                     |   16 +---------------
+>  drivers/scsi/sr.c                     |   20 +++-----------------
+>  drivers/scsi/st.c                     |   19 +------------------
+>  drivers/scsi/sym53c8xx_2/sym_hipd.c   |    4 ++--
+>  include/scsi/scsi_cmnd.h              |    1 +
+>  15 files changed, 65 insertions(+), 82 deletions(-)
+> 
+> James
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
