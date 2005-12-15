@@ -1,27 +1,47 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] Move scsi_print_msg to SPI code
-Date: Thu, 15 Dec 2005 13:58:56 -0700
-Message-ID: <20051215205856.GA2361@parisc-linux.org>
-References: <20051213165342.GM9286@parisc-linux.org> <439F13CD.8040602@pobox.com>
+Subject: From: Matthew Wilcox <matthew@wil.cx>
+Date: Thu, 15 Dec 2005 16:07:32 -0500
+Message-ID: <11346808522583-git-send-email-matthew@wil.cx>
+References: <11346808523659-git-send-email-matthew@wil.cx>
+Reply-To: Matthew Wilcox <matthew@wil.cx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:48859 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1751086AbVLOU66
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Dec 2005 15:58:58 -0500
-Content-Disposition: inline
-In-Reply-To: <439F13CD.8040602@pobox.com>
+Received: from mx1.magmacom.com ([206.191.0.217]:56216 "EHLO mx1.magmacom.com")
+	by vger.kernel.org with ESMTP id S1750946AbVLOVHv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Dec 2005 16:07:51 -0500
+In-Reply-To: <11346808523659-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: "Subject:[PATCH 3/5]"@wil.cx, "[SCSI]"@wil.cx, Fix@wil.cx, printing@wil.cx, of@wil.cx, two-byte@wil.cx, messages@wil.cx, Matthew Wilcox <matthew@wil.cx>
 
-On Tue, Dec 13, 2005 at 01:32:45PM -0500, Jeff Garzik wrote:
-> Strong ACK, though I think your change here should be split up:  the 
-> patch to link against SPI should be separated from the scsi_print_msg() 
-> change.
+A missing comma meant that "Ordered Queue Tag" and "Ignore Wide Residue"
+were being concatenated together.
 
-OK.  Here's a series of 5 patches which do this.  First I move
-scsi_print_msg from constants.c to scsi_transport_spi.c, then I change its
-name and convert all drivers to the new name.  Then I fix all its bugs ;-)
+Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+
+---
+
+ drivers/scsi/scsi_transport_spi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+bf55571883d8fc9e9b1e2fd238d9760dacb4f914
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index 59fb69b..8cc5dff 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -1060,7 +1060,7 @@ static const char * const one_byte_msgs[
+ #define NO_ONE_BYTE_MSGS (sizeof(one_byte_msgs)  / sizeof (const char *))
+ 
+ static const char * const two_byte_msgs[] = {
+-/* 0x20 */ "Simple Queue Tag", "Head of Queue Tag", "Ordered Queue Tag"
++/* 0x20 */ "Simple Queue Tag", "Head of Queue Tag", "Ordered Queue Tag",
+ /* 0x23 */ "Ignore Wide Residue"
+ };
+ #define NO_TWO_BYTE_MSGS (sizeof(two_byte_msgs)  / sizeof (const char *))
+-- 
+0.99.9.GIT
+
