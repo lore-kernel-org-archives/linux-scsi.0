@@ -1,218 +1,59 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [PATCH] fix for fc transport recursion problem.
-Date: Thu, 15 Dec 2005 10:12:14 -0600
-Message-ID: <43A195DE.3010500@sgi.com>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7BA5@xbl3.emulex.com>
+From: Michael Joosten <michael.joosten@c-lab.de>
+Subject: Re: [PATCH]: Re: qla1280.c broken on SGI visws,	PCI	coherency	problem
+Date: Thu, 15 Dec 2005 17:21:24 +0100
+Message-ID: <43A19804.1050100@c-lab.de>
+References: <439A17BE.5000904@sgi.com> <439DE50B.90007@sgi.com> <1134424057.3713.18.camel@mulgrave> <439E0112.1030801@sgi.com> <439ECB2E.7070103@sgi.com> <1134485413.3356.2.camel@mulgrave> <439F0FD6.30701@sgi.com> <439FA708.9070508@c-lab.de> <1134581356.3278.1.camel@mulgrave> <43A0C432.5060109@c-lab.de> <20051215022021.GC192359@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx3-ext.sgi.com ([192.48.171.25]:13293 "EHLO omx3.sgi.com")
-	by vger.kernel.org with ESMTP id S1750787AbVLOQMT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Dec 2005 11:12:19 -0500
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7BA5@xbl3.emulex.com>
+Received: from mailserver.c-lab.de ([131.234.80.230]:61156 "EHLO
+	mailserver.c-lab.de") by vger.kernel.org with ESMTP
+	id S1750780AbVLOQ2D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Dec 2005 11:28:03 -0500
+In-Reply-To: <20051215022021.GC192359@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jeremy Higdon <jeremy@sgi.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Michael Reed <mdr@sgi.com>, pazke@donpac.ru, linux-scsi@vger.kernel.org
 
-I'll give it a go and see if this fixes a possibly related issue I
-was experiencing on my test system.
+Jeremy Higdon wrote:
 
-Thank you for working this up.
+>On Thu, Dec 15, 2005 at 02:17:38AM +0100, Michael Joosten wrote:
+>  
+>
+>>>Btw, the VisWS Linux port apparently uses non-coherent DMA.  Perhaps it
+>>>should be switched to coherent DMA, as there could be bugs in that area
+>>>with qla1280.
+>>>      
+>>>
+>>Aha, so we are back at coherence, but it's not MP, but DMA one...
+>>(I'm not sure what is meant with DMA coherence - make sure that before a 
+>>DMA transfer is started at least the related CPU cache lines (in the DMA 
+>>address range) are written back?)
+>>    
+>>
+>
+>For a start.  You need to invalidate before read into memory and write
+>back before write to disk.  You also need to make sure that the memory
+>stays out of the CPU cache during the DMA (so you need to make sure that
+>when you DMA into memory that nothing is loading or storing to a cacheline
+>that you're DMA'ing into.  On a speculative execution CPU, this is really
+>hard.
+>  
+>
+Aha. Thanks for the info, now I can figure what's going on.
 
-Mike
+>>in qla1280_32/64bit_start_scsi().
+>>    
+>>
+>
+>We're going to work on an API change to mmiowb() instead.
+>
+>  
+>
+OK. From my point, this has been settled and I'll stay tuned to test a 
+patch. It's not urgent.
 
+Thanks for the lively discussion and some insights, Michael
 
-James.Smart@Emulex.Com wrote:
-> In the scenario that a link was broken, the devloss timer for each rport
-> was expire at roughly the same time, causing lots of "delete" workqueue items
-> being queued. Depth is dependent upon the number of rports that were on the link.
-> 
-> The rport target remove calls were calling flush_scheduled_work(), which would
-> interrupt the stream, and start the next workqueue item, which did the same thing,
-> and so on until recursion depth was large.
-> 
-> This fix stops the recursion in the initial delete path, and pushes it off to
-> a host-level work item that reaps the dead rports.
-> 
-> James - this fix should be added to the final list of 2.6.15-rc5 patches you just posted.
-> 
-> -- james s
-> 
-> 
-> 
-> diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-> --- a/drivers/scsi/scsi_transport_fc.c	2005-10-17 12:24:01.000000000 -0400
-> +++ b/drivers/scsi/scsi_transport_fc.c	2005-12-15 09:45:42.000000000 -0500
-> @@ -106,6 +106,7 @@ static struct {
->  	{ FC_PORTSTATE_LINKDOWN,	"Linkdown" },
->  	{ FC_PORTSTATE_ERROR,		"Error" },
->  	{ FC_PORTSTATE_LOOPBACK,	"Loopback" },
-> +	{ FC_PORTSTATE_DELETED,		"Deleted" },
->  };
->  fc_enum_name_search(port_state, fc_port_state, fc_port_state_names)
->  #define FC_PORTSTATE_MAX_NAMELEN	20
-> @@ -212,6 +213,7 @@ fc_bitfield_name_search(remote_port_role
->  #define FC_MGMTSRVR_PORTID		0x00000a
->  
->  
-> +static void fc_shost_remove_rports(void  *data);
->  static void fc_timeout_deleted_rport(void *data);
->  static void fc_scsi_scan_rport(void *data);
->  static void fc_rport_terminate(struct fc_rport  *rport);
-> @@ -319,6 +321,8 @@ static int fc_host_setup(struct transpor
->  	fc_host_next_rport_number(shost) = 0;
->  	fc_host_next_target_id(shost) = 0;
->  
-> +	fc_host_flags(shost) = 0;
-> +	INIT_WORK(&fc_host_rport_del_work(shost), fc_shost_remove_rports, shost);
->  	return 0;
->  }
->  
-> @@ -388,6 +392,7 @@ show_fc_rport_##field (struct class_devi
->  	struct fc_internal *i = to_fc_internal(shost->transportt);	\
->  	if ((i->f->get_rport_##field) &&				\
->  	    !((rport->port_state == FC_PORTSTATE_BLOCKED) ||		\
-> +	      (rport->port_state == FC_PORTSTATE_DELETED) ||		\
->  	      (rport->port_state == FC_PORTSTATE_NOTPRESENT)))		\
->  		i->f->get_rport_##field(rport);				\
->  	return snprintf(buf, sz, format_string, cast rport->field); 	\
-> @@ -403,6 +408,7 @@ store_fc_rport_##field(struct class_devi
->  	struct Scsi_Host *shost = rport_to_shost(rport);		\
->  	struct fc_internal *i = to_fc_internal(shost->transportt);	\
->  	if ((rport->port_state == FC_PORTSTATE_BLOCKED) ||		\
-> +	    (rport->port_state == FC_PORTSTATE_DELETED) ||		\
->  	    (rport->port_state == FC_PORTSTATE_NOTPRESENT))		\
->  		return -EBUSY;						\
->  	val = simple_strtoul(buf, NULL, 0);				\
-> @@ -520,6 +526,7 @@ store_fc_rport_dev_loss_tmo(struct class
->  	struct Scsi_Host *shost = rport_to_shost(rport);
->  	struct fc_internal *i = to_fc_internal(shost->transportt);
->  	if ((rport->port_state == FC_PORTSTATE_BLOCKED) ||
-> +	    (rport->port_state == FC_PORTSTATE_DELETED) ||
->  	    (rport->port_state == FC_PORTSTATE_NOTPRESENT))
->  		return -EBUSY;
->  	val = simple_strtoul(buf, NULL, 0);
-> @@ -1739,7 +1746,7 @@ fc_timeout_deleted_rport(void  *data)
->  	rport->maxframe_size = -1;
->  	rport->supported_classes = FC_COS_UNSPECIFIED;
->  	rport->roles = FC_RPORT_ROLE_UNKNOWN;
-> -	rport->port_state = FC_PORTSTATE_NOTPRESENT;
-> +	rport->port_state = FC_PORTSTATE_DELETED;
->  
->  	/* remove the identifiers that aren't used in the consisting binding */
->  	switch (fc_host_tgtid_bind_type(shost)) {
-> @@ -1759,14 +1766,23 @@ fc_timeout_deleted_rport(void  *data)
->  		break;
->  	}
->  
-> -	spin_unlock_irqrestore(shost->host_lock, flags);
-> -
->  	/*
->  	 * As this only occurs if the remote port (scsi target)
->  	 * went away and didn't come back - we'll remove
->  	 * all attached scsi devices.
-> +	 *
-> +	 * We'll schedule the shost work item to perform the actual removal
-> +	 * to avoid recursion in the different flush calls if we perform
-> +	 * the removal in each target - and there are lots of targets
-> +	 * whose timeouts fire at the same time.
->  	 */
-> -	fc_rport_tgt_remove(rport);
-> +
-> +	if ( !(fc_host_flags(shost) & FC_SHOST_RPORT_DEL_SCHEDULED)) {
-> +		fc_host_flags(shost) |= FC_SHOST_RPORT_DEL_SCHEDULED;
-> +		scsi_queue_work(shost, &fc_host_rport_del_work(shost));
-> +	}
-> +
-> +	spin_unlock_irqrestore(shost->host_lock, flags);
->  }
->  
->  /**
-> @@ -1788,6 +1804,41 @@ fc_scsi_scan_rport(void *data)
->  }
->  
->  
-> +/**
-> + * fc_shost_remove_rports - called to remove all rports that are marked
-> + *                       as in a deleted (not connected) state.
-> + * 
-> + * @data:	shost whose rports are to be looked at
-> + **/
-> +static void
-> +fc_shost_remove_rports(void  *data)
-> +{
-> +	struct Scsi_Host *shost = (struct Scsi_Host *)data;
-> +	struct fc_rport *rport, *next_rport;
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(shost->host_lock, flags);
-> +	while (fc_host_flags(shost) & FC_SHOST_RPORT_DEL_SCHEDULED) {
-> +
-> +		fc_host_flags(shost) &= ~FC_SHOST_RPORT_DEL_SCHEDULED;
-> +
-> +restart_search:
-> +		list_for_each_entry_safe(rport, next_rport,
-> +				&fc_host_rport_bindings(shost), peers) {
-> +			if (rport->port_state == FC_PORTSTATE_DELETED) {
-> +				rport->port_state = FC_PORTSTATE_NOTPRESENT;
-> +				spin_unlock_irqrestore(shost->host_lock, flags);
-> +				fc_rport_tgt_remove(rport);
-> +				spin_lock_irqsave(shost->host_lock, flags);
-> +				goto restart_search;
-> +			}
-> +		}
-> +
-> +	}
-> +	spin_unlock_irqrestore(shost->host_lock, flags);
-> +}
-> +
-> +
->  MODULE_AUTHOR("Martin Hicks");
->  MODULE_DESCRIPTION("FC Transport Attributes");
->  MODULE_LICENSE("GPL");
-> diff -upNr a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-> --- a/include/scsi/scsi_transport_fc.h	2005-10-17 10:03:47.000000000 -0400
-> +++ b/include/scsi/scsi_transport_fc.h	2005-12-07 09:43:30.000000000 -0500
-> @@ -78,6 +78,7 @@ enum fc_port_state {
->  	FC_PORTSTATE_LINKDOWN,
->  	FC_PORTSTATE_ERROR,
->  	FC_PORTSTATE_LOOPBACK,
-> +	FC_PORTSTATE_DELETED,
->  };
->  
->  
-> @@ -324,8 +325,14 @@ struct fc_host_attrs {
->  	struct list_head rport_bindings;
->  	u32 next_rport_number;
->  	u32 next_target_id;
-> +	u8 flags;
-> + 	struct work_struct rport_del_work;
->  };
->  
-> +/* values for struct fc_host_attrs "flags" field: */
-> +#define FC_SHOST_RPORT_DEL_SCHEDULED	0x01
-> +
-> +
->  #define fc_host_node_name(x) \
->  	(((struct fc_host_attrs *)(x)->shost_data)->node_name)
->  #define fc_host_port_name(x)	\
-> @@ -364,6 +371,10 @@ struct fc_host_attrs {
->  	(((struct fc_host_attrs *)(x)->shost_data)->next_rport_number)
->  #define fc_host_next_target_id(x) \
->  	(((struct fc_host_attrs *)(x)->shost_data)->next_target_id)
-> +#define fc_host_flags(x) \
-> +	(((struct fc_host_attrs *)(x)->shost_data)->flags)
-> +#define fc_host_rport_del_work(x) \
-> +	(((struct fc_host_attrs *)(x)->shost_data)->rport_del_work)
->  
->  
->  /* The functions by which the transport class and the driver communicate */
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
