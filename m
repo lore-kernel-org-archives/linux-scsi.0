@@ -1,85 +1,66 @@
-From: Akinobu Mita <mita@miraclelinux.com>
-Subject: [PATCH] fix scsi host_no allocation
-Date: Thu, 15 Dec 2005 13:58:38 +0900
-Message-ID: <20051215045838.GA11403@miraclelinux.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [patch 6/6] statistics infrastructure - exploitation: zfcp
+Date: Thu, 15 Dec 2005 08:37:08 +0100
+Message-ID: <1134632229.16486.3.camel@laptopd505.fenrus.org>
+References: <43A044E6.7060403@de.ibm.com>
+	 <20051214165900.GA26580@infradead.org>  <43A0E8E7.1060706@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.miraclelinux.com ([219.118.163.66]:37677 "EHLO
-	mail01.miraclelinux.com") by vger.kernel.org with ESMTP
-	id S1161053AbVLOE6m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Dec 2005 23:58:42 -0500
-Content-Disposition: inline
+Received: from pentafluge.infradead.org ([213.146.154.40]:59349 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S965162AbVLOHhM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Dec 2005 02:37:12 -0500
+In-Reply-To: <43A0E8E7.1060706@de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Martin Peschke <mp3@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
+On Thu, 2005-12-15 at 04:54 +0100, Martin Peschke wrote:
+> Christoph Hellwig wrote:
+> 
+> >>+	atomic_t		read_num;
+> >>+	atomic_t		write_num;
+> >>+	struct statistic_interface	*stat_if;
+> >>+	struct statistic		*stat_sizes_scsi_write;
+> >>+	struct statistic		*stat_sizes_scsi_read;
+> >>+	struct statistic		*stat_sizes_scsi_nodata;
+> >>+	struct statistic		*stat_sizes_scsi_nofit;
+> >>+	struct statistic		*stat_sizes_scsi_nomem;
+> >>+	struct statistic		*stat_sizes_timedout_write;
+> >>+	struct statistic		*stat_sizes_timedout_read;
+> >>+	struct statistic		*stat_sizes_timedout_nodata;
+> >>+	struct statistic		*stat_latencies_scsi_write;
+> >>+	struct statistic		*stat_latencies_scsi_read;
+> >>+	struct statistic		*stat_latencies_scsi_nodata;
+> >>+	struct statistic		*stat_pending_scsi_write;
+> >>+	struct statistic		*stat_pending_scsi_read;
+> >>+	struct statistic		*stat_erp;
+> >>+	struct statistic		*stat_eh_reset;
+> >>    
+> >>
+> >
+> >NACK.  pretty much all of this is generic and doesn't belong into an LLDD.
+> >We already had this statistics things with emulex and they added various
+> >bits to the core in response.
+> >
+> >
+> >  
+> >
+> Agreed. It's not necessarily up to LLDDs to keep track of request sizes, 
+> request latencies, I/O queue utilization, and error recovery conditions 
+> by means of statistics. This could or maybe should be done in a more 
+> central spot.
+> 
+> With regard to latencies, it might make some difference, though, how 
+> many layers are in between that cause additional delays. Then the 
+> question is which latency one wants to measure.
 
-This patch prevents potential host_no allocation race and
-recycle unused host numbers by using idr.
+even if the LLDD measures these, the stats belong a level up, so that
+all LLDD's export the same. I think you got half of Christophs point,
+but not this last bit: even when it's the LLDD that needs to measure the
+stat, it still shouldn't be LLDD specific, and thus defined one if not
+two layers up. 
 
-Signed-off-by: Akinobu Mita <mita@miraclelinux.com>
-
---- 2.6-rc/drivers/scsi/hosts.c.orig	2005-12-14 15:22:11.000000000 +0900
-+++ 2.6-rc/drivers/scsi/hosts.c	2005-12-14 16:36:15.000000000 +0900
-@@ -31,6 +31,7 @@
- #include <linux/completion.h>
- #include <linux/transport_class.h>
- #include <linux/platform_device.h>
-+#include <linux/idr.h>
- 
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
-@@ -39,9 +40,9 @@
- #include "scsi_priv.h"
- #include "scsi_logging.h"
- 
--
--static int scsi_host_next_hn;		/* host_no for next new host */
--
-+#define MAX_HOST_NO	0xffff
-+static DEFINE_IDR(host_no_idr);
-+static DEFINE_SPINLOCK(host_no_lock);
- 
- static void scsi_host_cls_release(struct class_device *class_dev)
- {
-@@ -259,6 +260,10 @@ static void scsi_host_dev_release(struct
- 	struct Scsi_Host *shost = dev_to_shost(dev);
- 	struct device *parent = dev->parent;
- 
-+	spin_lock(&host_no_lock);
-+	idr_remove(&host_no_idr, shost->host_no);
-+	spin_unlock(&host_no_lock);
-+
- 	if (shost->ehandler)
- 		kthread_stop(shost->ehandler);
- 	if (shost->work_q)
-@@ -290,6 +295,8 @@ struct Scsi_Host *scsi_host_alloc(struct
- 	struct Scsi_Host *shost;
- 	gfp_t gfp_mask = GFP_KERNEL;
- 	int rval;
-+	int index;
-+	int error;
- 
- 	if (sht->unchecked_isa_dma && privsize)
- 		gfp_mask |= __GFP_DMA;
-@@ -322,7 +329,18 @@ struct Scsi_Host *scsi_host_alloc(struct
- 
- 	init_MUTEX(&shost->scan_mutex);
- 
--	shost->host_no = scsi_host_next_hn++; /* XXX(hch): still racy */
-+host_no_retry:
-+	if (!idr_pre_get(&host_no_idr, GFP_KERNEL))
-+		goto fail_kfree;
-+	spin_lock(&host_no_lock);
-+	error = idr_get_new(&host_no_idr, NULL, &index);
-+	spin_unlock(&host_no_lock);
-+	if (error == -EAGAIN)
-+		goto host_no_retry;
-+	if ((index >= MAX_HOST_NO) || error)
-+		goto fail_kfree;
-+
-+	shost->host_no = index;
- 	shost->dma_channel = 0xff;
- 
- 	/* These three are default values which can be overridden */
