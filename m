@@ -1,27 +1,27 @@
-From: Ryan Richter <ryan@tau.solarneutrino.net>
-Subject: Re: Fw: crash on x86_64 - mm related?
-Date: Thu, 15 Dec 2005 14:09:30 -0500
-Message-ID: <20051215190930.GA20156@tau.solarneutrino.net>
-References: <Pine.LNX.4.61.0512022037230.6058@goblin.wat.veritas.com> <20051206160815.GC11560@tau.solarneutrino.net> <Pine.LNX.4.61.0512062025230.28217@goblin.wat.veritas.com> <20051206204336.GA12248@tau.solarneutrino.net> <Pine.LNX.4.61.0512071803300.2975@goblin.wat.veritas.com> <20051212165443.GD17295@tau.solarneutrino.net> <Pine.LNX.4.64.0512120928110.15597@g5.osdl.org> <1134409531.9994.13.camel@mulgrave> <Pine.LNX.4.64.0512121007220.15597@g5.osdl.org> <1134411882.9994.18.camel@mulgrave>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] Move scsi_print_msg to SPI code
+Date: Thu, 15 Dec 2005 13:58:56 -0700
+Message-ID: <20051215205856.GA2361@parisc-linux.org>
+References: <20051213165342.GM9286@parisc-linux.org> <439F13CD.8040602@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from solarneutrino.net ([66.199.224.43]:49670 "EHLO
-	tau.solarneutrino.net") by vger.kernel.org with ESMTP
-	id S1751016AbVLOTJr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Dec 2005 14:09:47 -0500
+Received: from palinux.external.hp.com ([192.25.206.14]:48859 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S1751086AbVLOU66
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Dec 2005 15:58:58 -0500
 Content-Disposition: inline
-In-Reply-To: <1134411882.9994.18.camel@mulgrave>
+In-Reply-To: <439F13CD.8040602@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Linus Torvalds <torvalds@osdl.org>, Hugh Dickins <hugh@veritas.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, ryan@tau.solarneutrino.net
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Dec 12, 2005 at 12:24:42PM -0600, James Bottomley wrote:
-> I'll find a fix for the real problem, but this patch isn't the cause.
+On Tue, Dec 13, 2005 at 01:32:45PM -0500, Jeff Garzik wrote:
+> Strong ACK, though I think your change here should be split up:  the 
+> patch to link against SPI should be separated from the scsi_print_msg() 
+> change.
 
-Is the patch set you posted yesterday supposed to fix this?  If so, is
-it available in patch form anywhere?
-
-Thanks,
--ryan
+OK.  Here's a series of 5 patches which do this.  First I move
+scsi_print_msg from constants.c to scsi_transport_spi.c, then I change its
+name and convert all drivers to the new name.  Then I fix all its bugs ;-)
