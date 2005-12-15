@@ -1,87 +1,165 @@
-From: Jeremy Higdon <jeremy@sgi.com>
-Subject: Re: [PATCH]: Re: qla1280.c broken on SGI visws,	PCI	coherency	problem
-Date: Wed, 14 Dec 2005 18:20:21 -0800
-Message-ID: <20051215022021.GC192359@sgi.com>
-References: <439A17BE.5000904@sgi.com> <439DE50B.90007@sgi.com> <1134424057.3713.18.camel@mulgrave> <439E0112.1030801@sgi.com> <439ECB2E.7070103@sgi.com> <1134485413.3356.2.camel@mulgrave> <439F0FD6.30701@sgi.com> <439FA708.9070508@c-lab.de> <1134581356.3278.1.camel@mulgrave> <43A0C432.5060109@c-lab.de>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] Correct NO_EXTENDED_MSGS definition
+Date: Thu, 15 Dec 2005 13:29:48 +1000
+Message-ID: <43A0E32C.1040301@torque.net>
+References: <20051213133024.GL9286@parisc-linux.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:4292 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1030290AbVLOCUi (ORCPT
+Received: from zorg.st.net.au ([203.16.233.9]:54725 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S1160998AbVLOD2c (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Dec 2005 21:20:38 -0500
-Content-Disposition: inline
-In-Reply-To: <43A0C432.5060109@c-lab.de>
+	Wed, 14 Dec 2005 22:28:32 -0500
+In-Reply-To: <20051213133024.GL9286@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Joosten <michael.joosten@c-lab.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Michael Reed <mdr@sgi.com>, pazke@donpac.ru, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Dec 15, 2005 at 02:17:38AM +0100, Michael Joosten wrote:
-> >Btw, the VisWS Linux port apparently uses non-coherent DMA.  Perhaps it
-> >should be switched to coherent DMA, as there could be bugs in that area
-> >with qla1280.
+Matthew Wilcox wrote:
+> Use the ARRAY_SIZE macro.  Also fixes the definition of NO_EXTENDED_MSGS
+> (I diagnose excessive cut-and-paste-itis).
+
+Guilty as charged.
+
+While you are at it, perhaps you could look at sg_lib.c
+from sg3_utils-1.18 and update the SCSI opcode name and
+asc/ascq tables. I maintain those tables in sg_lib.c
+close to the latest drafts, but it has been over a year
+since since constants.c was updated.
+
+There is one SCSI command not listed in constants.c that
+may become very popular soon (and cause the odd problem):
+ATA COMMAND PASS THROUGH (16).
+
+Also SCSI opcode names should take into account the
+peripheral device type where applicable.
+
+Doug Gilbert
+
+
+> Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 > 
-> Aha, so we are back at coherence, but it's not MP, but DMA one...
-> (I'm not sure what is meant with DMA coherence - make sure that before a 
-> DMA transfer is started at least the related CPU cache lines (in the DMA 
-> address range) are written back?)
-
-For a start.  You need to invalidate before read into memory and write
-back before write to disk.  You also need to make sure that the memory
-stays out of the CPU cache during the DMA (so you need to make sure that
-when you DMA into memory that nothing is loading or storing to a cacheline
-that you're DMA'ing into.  On a speculative execution CPU, this is really
-hard.
-
-> Have I actually mentioned that I already had started a discussion with 
-> Jesse Barnes (SGI) and Jes Sorenson before I posted in linux-scsi? He said 
-> on the topic:
-> >>>>
-> Jesse> Actually implementing them might be as easy as putting PIO reads 
-> from a Jesse> bridge register into the DMA unmap routines--that should 
-> guarantee Jesse> coherence.
-
-That's a different problem.  The interrupt doesn't guarantee a PCI
-DMA completion.  The PIO read will, however (according to Lithium
-spec).
-
-> Me>You probably mean pci_unmap_addr/_len() macros in asm-i386/pci.h, 
-> Me>according to i386/kernel/pci-dma.c ??
-> Me>But there isn't much to be found in asm-i386/mach-visws/lithium.h .
-
-No.  There is a Device Control register for each PCI device.  Bit
-10 controls whether DMA for that device is coherent.  If 0 it's
-not coherent.  If 1, coherent.
-
-> <<<<
+> Index: drivers/scsi/constants.c
+> ===================================================================
+> RCS file: /var/cvs/linux-2.6/drivers/scsi/constants.c,v
+> retrieving revision 1.12
+> retrieving revision 1.13
+> diff -u -p -r1.12 -r1.13
+> --- a/drivers/scsi/constants.c	12 Nov 2005 04:08:09 -0000	1.12
+> +++ b/drivers/scsi/constants.c	13 Dec 2005 00:01:16 -0000	1.13
+> @@ -114,8 +114,7 @@ static const struct value_name_pair main
+>  	{0xd, "Report supported task management functions"},
+>  	{0xe, "Report priority"},
+>  };
+> -#define MAINT_IN_SZ \
+> -        (int)(sizeof(maint_in_arr) / sizeof(maint_in_arr[0]))
+> +#define MAINT_IN_SZ (int)ARRAY_SIZE(maint_in_arr)
+>  
+>  static const struct value_name_pair maint_out_arr[] = {
+>  	{0x6, "Set device identifier"},
+> @@ -123,34 +122,29 @@ static const struct value_name_pair main
+>  	{0xb, "Change aliases"},
+>  	{0xe, "Set priority"},
+>  };
+> -#define MAINT_OUT_SZ \
+> -        (int)(sizeof(maint_out_arr) / sizeof(maint_out_arr[0]))
+> +#define MAINT_OUT_SZ (int)ARRAY_SIZE(maint_out_arr)
+>  
+>  static const struct value_name_pair serv_in12_arr[] = {
+>  	{0x1, "Read media serial number"},
+>  };
+> -#define SERV_IN12_SZ  \
+> -        (int)(sizeof(serv_in12_arr) / sizeof(serv_in12_arr[0]))
+> +#define SERV_IN12_SZ (int)ARRAY_SIZE(serv_in12_arr)
+>  
+>  static const struct value_name_pair serv_out12_arr[] = {
+>  	{-1, "dummy entry"},
+>  };
+> -#define SERV_OUT12_SZ \
+> -        (int)(sizeof(serv_out12_arr) / sizeof(serv_in12_arr[0]))
+> +#define SERV_OUT12_SZ (int)ARRAY_SIZE(serv_out12_arr)
+>  
+>  static const struct value_name_pair serv_in16_arr[] = {
+>  	{0x10, "Read capacity(16)"},
+>  	{0x11, "Read long(16)"},
+>  };
+> -#define SERV_IN16_SZ  \
+> -        (int)(sizeof(serv_in16_arr) / sizeof(serv_in16_arr[0]))
+> +#define SERV_IN16_SZ (int)ARRAY_SIZE(serv_in16_arr)
+>  
+>  static const struct value_name_pair serv_out16_arr[] = {
+>  	{0x11, "Write long(16)"},
+>  	{0x1f, "Notify data transfer device(16)"},
+>  };
+> -#define SERV_OUT16_SZ \
+> -        (int)(sizeof(serv_out16_arr) / sizeof(serv_in16_arr[0]))
+> +#define SERV_OUT16_SZ (int)ARRAY_SIZE(serv_out16_arr)
+>  
+>  static const struct value_name_pair variable_length_arr[] = {
+>  	{0x1, "Rebuild(32)"},
+> @@ -190,8 +184,7 @@ static const struct value_name_pair vari
+>  	{0x8f7e, "Perform SCSI command (osd)"},
+>  	{0x8f7f, "Perform task management function (osd)"},
+>  };
+> -#define VARIABLE_LENGTH_SZ \
+> -        (int)(sizeof(variable_length_arr) / sizeof(variable_length_arr[0]))
+> +#define VARIABLE_LENGTH_SZ (int)ARRAY_SIZE(variable_length_arr)
+>  
+>  static const char * get_sa_name(const struct value_name_pair * arr,
+>  			        int arr_sz, int service_action)
+> @@ -1287,19 +1280,19 @@ static const char *one_byte_msgs[] = {
+>  /* 0x0c */ "Bus device reset", "Abort Tag", "Clear Queue", 
+>  /* 0x0f */ "Initiate Recovery", "Release Recovery"
+>  };
+> -#define NO_ONE_BYTE_MSGS (sizeof(one_byte_msgs)  / sizeof (const char *))
+> +#define NO_ONE_BYTE_MSGS ARRAY_SIZE(one_byte_msgs)
+>  
+>  static const char *two_byte_msgs[] = {
+>  /* 0x20 */ "Simple Queue Tag", "Head of Queue Tag", "Ordered Queue Tag",
+>  /* 0x23 */ "Ignore Wide Residue"
+>  };
+> -#define NO_TWO_BYTE_MSGS (sizeof(two_byte_msgs)  / sizeof (const char *))
+> +#define NO_TWO_BYTE_MSGS ARRAY_SIZE(two_byte_msgs)
+>  
+>  static const char *extended_msgs[] = {
+>  /* 0x00 */ "Modify Data Pointer", "Synchronous Data Transfer Request",
+>  /* 0x02 */ "SCSI-I Extended Identify", "Wide Data Transfer Request"
+>  };
+> -#define NO_EXTENDED_MSGS (sizeof(two_byte_msgs)  / sizeof (const char *))
+> +#define NO_EXTENDED_MSGS ARRAY_SIZE(extended_msgs)
+>  
+>  
+>  int scsi_print_msg (const unsigned char *msg)
+> @@ -1401,7 +1399,7 @@ static const char * hostbyte_table[]={
+>  "DID_OK", "DID_NO_CONNECT", "DID_BUS_BUSY", "DID_TIME_OUT", "DID_BAD_TARGET", 
+>  "DID_ABORT", "DID_PARITY", "DID_ERROR", "DID_RESET", "DID_BAD_INTR",
+>  "DID_PASSTHROUGH", "DID_SOFT_ERROR", "DID_IMM_RETRY"};
+> -#define NUM_HOSTBYTE_STRS (sizeof(hostbyte_table) / sizeof(const char *))
+> +#define NUM_HOSTBYTE_STRS ARRAY_SIZE(hostbyte_table)
+>  
+>  void scsi_print_hostbyte(int scsiresult)
+>  {
+> @@ -1425,12 +1423,12 @@ void scsi_print_hostbyte(int scsiresult)
+>  static const char * driverbyte_table[]={
+>  "DRIVER_OK", "DRIVER_BUSY", "DRIVER_SOFT",  "DRIVER_MEDIA", "DRIVER_ERROR", 
+>  "DRIVER_INVALID", "DRIVER_TIMEOUT", "DRIVER_HARD", "DRIVER_SENSE"};
+> -#define NUM_DRIVERBYTE_STRS (sizeof(driverbyte_table) / sizeof(const char *))
+> +#define NUM_DRIVERBYTE_STRS ARRAY_SIZE(driverbyte_table)
+>  
+>  static const char * driversuggest_table[]={"SUGGEST_OK",
+>  "SUGGEST_RETRY", "SUGGEST_ABORT", "SUGGEST_REMAP", "SUGGEST_DIE",
+>  "SUGGEST_5", "SUGGEST_6", "SUGGEST_7", "SUGGEST_SENSE"};
+> -#define NUM_SUGGEST_STRS (sizeof(driversuggest_table) / sizeof(const char *))
+> +#define NUM_SUGGEST_STRS ARRAY_SIZE(driversuggest_table)
+>  
+>  void scsi_print_driverbyte(int scsiresult)
+>  {
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> Given the situation that the Lithium's chip documentation is lost, its 
-> probably back at introducing a 
-> #ifdef CONFIG_X86_VISWS
-> #define QLA_POSTED_PCI_FLUSH(mbx)  RD_REG_WORD(mbx)
-> #else
-> #define QLA_POSTED_PCI_FLUSH(mbx)
-> endif
-> 
-> and replace the previous 
-> RD_REG_WORD(&reg->mailbox4)
-> or add where's now the mmiowb() with 
-> QLA_POSTED_PCI_FLUSH(&reg->mailbox4)
-> 
-> in qla1280_32/64bit_start_scsi().
 
-We're going to work on an API change to mmiowb() instead.
-
-> Could this chipset deficiency also explain why I had NO luck when trying to 
-> use a PCI graphics card for X11 instead of the frame buffer? The server 
-> either gets stuck in "write recombining range" (ELSA Gloria Synergy, 
-> Permedia) (i.e. the gfx driver module in Xorg/XFree86) or does not 
-> recognize the VBIOS and leaves a Matrox G450 largely uninitialized (X 
-> server runs, but monitor stays black and unsync'ed).
-
-It's possible.
-
-> So long, Michael
-
-jeremy
