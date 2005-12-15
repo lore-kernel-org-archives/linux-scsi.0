@@ -1,157 +1,94 @@
-From: Martin Peschke <mp3@de.ibm.com>
-Subject: Re: [patch 6/6] statistics infrastructure - exploitation: zfcp
-Date: Thu, 15 Dec 2005 18:47:47 +0100
-Message-ID: <43A1AC43.9050005@de.ibm.com>
-References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7BA6@xbl3.emulex.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: stgt a new version of iscsi target?
+Date: Thu, 15 Dec 2005 21:53:48 +0300
+Message-ID: <43A1BBBC.9000105@vlnb.net>
+References: <OF6932015B.01CF53D9-ONC12570D0.00462028@capvert.ins>	 <43972C2D.9060500@cs.wisc.edu>  <43987F75.2000301@vlnb.net>	 <1134071268.3259.29.camel@mulgrave>  <4399A2D7.2040402@vlnb.net> <1134143298.3598.21.camel@mulgrave> <439AF52B.7060203@vlnb.net> <439B1965.90603@cs.wisc.edu> <43A03500.1040500@vlnb.net> <43A078C9.1040007@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.de.ibm.com ([195.212.29.151]:11441 "EHLO
-	mtagate2.de.ibm.com") by vger.kernel.org with ESMTP
-	id S1750854AbVLORr6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Dec 2005 12:47:58 -0500
-In-Reply-To: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7BA6@xbl3.emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <iscsitarget-devel-admin@lists.sourceforge.net>
+In-Reply-To: <43A078C9.1040007@cs.wisc.edu>
+Sender: iscsitarget-devel-admin@lists.sourceforge.net
+Errors-To: iscsitarget-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:iscsitarget-devel@lists.sourceforge.net>
+List-Help: <mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/iscsitarget-devel>,
+	<mailto:iscsitarget-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=iscsitarget-devel>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, iscsitarget-devel@lists.sourceforge.net, mingz@ele.uri.edu, stgt <stgt-devel@lists.berlios.de>, Robert Whitehead <WRWHITEHEAD@novell.com>, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: arjan@infradead.org, linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, hch@infradead.org
 
-James.Smart@Emulex.Com wrote:
-
->This patch is right along the lines of what we did with this earlier patch
->http://marc.theaimsgroup.com/?l=linux-scsi&m=110700743207792&w=2
->which adds, at the sdev level, counters for # of requests performed,
-># of requests completed, # of requests completed in error.
->
->of all the stats you propose:
->  
->
->>>+	struct statistic		*stat_sizes_scsi_write;
->>>+	struct statistic		*stat_sizes_scsi_read;
->>>+	struct statistic		*stat_sizes_scsi_nodata;
->>>+	struct statistic		*stat_sizes_scsi_nofit;
->>>+	struct statistic		*stat_sizes_scsi_nomem;
->>>+	struct statistic		*stat_sizes_timedout_write;
->>>+	struct statistic		*stat_sizes_timedout_read;
->>>+	struct statistic		*stat_sizes_timedout_nodata;
->>>+	struct statistic		*stat_latencies_scsi_write;
->>>+	struct statistic		*stat_latencies_scsi_read;
->>>+	struct statistic		*stat_latencies_scsi_nodata;
->>>+	struct statistic		*stat_pending_scsi_write;
->>>+	struct statistic		*stat_pending_scsi_read;
->>>+	struct statistic		*stat_erp;
->>>+	struct statistic		*stat_eh_reset;
->>>      
+Mike Christie wrote:
+> Vladislav Bolkhovitin wrote:
+> 
+>> Mike Christie wrote:
+>>
+>>>>
+>>>> Are you sure that there are no now or will be available in the 
+>>>> nearest feature such (eg iSCSI) SCSI arrays with response 
+>>>> time/latency so small that having 5 (five) context switches or more 
+>>>> per command, some of which include map/unmap operations, will not 
+>>>> increase the latency too much? I mean, eg NFS server, which 
+>>>> originally was user space daemon and many people didn't want it in 
+>>>> the kernel. Eventually, it's in. I don't see any fundamental 
+>>>> difference between NFS server and SCSI target server, 
 >>>
->
->All of these are best served to be managed by the midlayer at the
->sdev.
->
-Yes.
+>>>
+>>>
+>>>
+>>> Isn't the reason a NFS server is still in the kernel is becuase some 
+>>> of the locking difficulties?
+>>
+>>
+>>
+>> Might be. But from what I remember, the major reason was the 
+>> performance. After googling a bit I found many acknowledgments of that.
+>>
+> 
+> I do not think we are going to get anywhere with this type of thread :(
+> 
+> We should try to compare at least one of the userspace *nbd 
+> implementations with the unh target in scst. I see some that just do 
+> some basic socket ops (no sendfile type hook in even) for the network 
+> part then just async or normal read/writes. I do not want to comapre FC 
+> to nbd, but maybe comparing software iscsi to userspace nbd is a little 
+> more fair. I think ata over ethernet has a userspace target too. Is the 
+> unh target defaults set ok for performance testing, or could you send 
+> some off list, so we can at least test those.
 
->Please don't make the LLDDs do the incrementing, etc
->
-Though this has been my initial (cautious) attempt, I won't object to 
-moving things up one layer or two.
+Agree that we need to have some numbers. But currently it is impossible 
+  to measure them correctly without very considerable effort. For 
+instance, the comparision of nbd with iscsi includes in the measurements 
+not only user space/kernel space differences, but also many additional 
+parts, like different implementation architectures. For the correct 
+comparison we need some target driver (for scst or sgt), which commands 
+would be processed in both user and kernel space. Additionally, because 
+we discuss not only user vs kernel implementations, but also SIRQ vs 
+thread implementations, the target needs to be the hardware one.
 
->- or something
->that is owned by one layer, modified by another, and bounces back and forth.
->  
->
-I try to avoid that.
+Right now without big effort we can only compare SIRQ vs thread 
+implementations over FC, because the QLA target driver and scst support 
+both modes of SCSI commands execution. See DEBUG_WORK_IN_THREAD symbol. 
+We did some comparisons some time ago and, if I recall correctly, on 
+small blocks (especially 16K and smaller) the performance drop was quite 
+visible, because ~40000+ cs/sec are not very good for the system health 
+:). You can easily repeat those experiments using scst, the qlogic 
+driver and disk_perf or tape_perf dev handler.
 
->The only question is the latency fields, as your statement on latency is a
->good one. IMHO, the latency that matters is the latency the midlayer sees
->when it calls queuecommand.  The LLDD interface is designed to not queue in
->the LLDD's, and you really can't peek lower than the LLDD to know when the
->i/o actually hits the wire. So - just measure at the queuecommand/scsidone level
->(or up in the block request queue level).
->  
->
-I agree. For now, I tend to stick to queuecommand/scsi_done.
+But, since FC has quite a big latencies, this comparision will not fully 
+suit our needs. We need some some low latency link. Probably, some of 
+hardware iSCSI cards, like Qlogic 4100. But this is not the nearest future.
 
->And, if we are expanding stats from the earlier 3 things, we ought to follow
->the framework the fc transport used for stats (stolen from the network world)
->and create a subdirectory under the /sys/block/<>/ object that reports
->the stats.
->  
->
-Well, I am not yet convinced that sysfs is necessarily the answer for 
-this, because of the one value per file policy,
-which is fine for some purposes, but not for potentially larger amounts 
-of data, or data where the number of values comprising the statistic is 
-variable.
+Vlad
 
-In general, I see a statistic as something that can be more than a 
-single counter. It can be a histogram, or a counter over time in the 
-form of a history buffer.
-Certainly we could split up every histogram, fill level indicator, 
-megabytes-per-seconds-like statistic and so on. But I think that would 
-result in nasty directory structures which would impose effort to 
-collect the data available for one entitity like.
 
-My output in debugfs currently looks like this:
 
- latencies_scsi_write <=0 0
- latencies_scsi_write <=1 0
- latencies_scsi_write <=2 0
- latencies_scsi_write <=4 174
- latencies_scsi_write <=8 872
- latencies_scsi_write <=16 2555
- latencies_scsi_write <=32 2483
- ...
- latencies_scsi_write <=1024 1872
- latencies_scsi_write >1024 1637
 
- latencies_scsi_read <=0 0
- latencies_scsi_read <=1 0
- latencies_scsi_read <=2 0
- latencies_scsi_read <=4 57265
- latencies_scsi_read <=8 13610
- latencies_scsi_read <=16 1082
- latencies_scsi_read <=32 319
- latencies_scsi_read <=64 63
- ...
- latencies_scsi_read >1024 0
-
- ...
- util_qdio_outb [3097394.211992] 865 1 1.052 5
- util_qdio_outb [3097395.211992] 737 1 4.558 125
- util_qdio_outb [3097396.211992] 396 1 11.765 77
- util_qdio_outb [3097397.211992] 270 1 12.863 128
- util_qdio_outb [3097398.211992] 765 1 7.271 26
- util_qdio_outb [3097399.211992] 577 1 4.036 27
- ...
-
-I like it, because it can be read easily; it can be grep-ed; a simple 
-(generic) script could generate whatever output format is required from 
-whatever statistic is given.
-
-The meaning of a value is not so much determined by its position in the 
-file but by preceding tags. There are a few generic rules on how a 
-histogram or a fill level indicator looks like. That's basically all a 
-user (or a script) needs to know in order to be able to read a 
-networking related histogram, or a disk I/O related histogram, or any 
-other histogram.
-
-Besides, I'd like to allow users to customize statistics to some degree. 
-If a user needs to tune, say, a histogram to provide a better 
-resolution, then the number of buckets might be changed form 5 to 20, 
-resulting in longer output. Then the position of a counter is not 
-sufficient to determine which range of values it stands for. Counter #4 
-out of 5 probably has a different meaning than counter #4 out of 20. 
-That is why I propose to label buckets or counters appropriately (see 
-above). I doubt this can be reflected in sysfs without too much pain.
-
-An then there is relayfs, mentioned by Andy Kleen. I guess, what it is 
-meant to be good at is quite opposite to what sysfs does for us. Still 
-it looks appropriate for some statistics, not necessarily for all forms 
-of output - similar issue as with sysfs.
-So far, neither of them seems to be a perfect fit, and, IMO, debugfs 
-looks like a feasible alternative. But the question of which fs to chose 
-probably depends on how we define a statistic and on which ways of 
-in-kernel data processing and corresponding output formats we agree on.
-
-Martin
-
+-------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
+for problems?  Stop!  Download the new AJAX search engine that makes
+searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
+http://ads.osdn.com/?ad_id=7637&alloc_id=16865&op=click
