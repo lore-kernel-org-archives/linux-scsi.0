@@ -1,105 +1,32 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Fw: crash on x86_64 - mm related?
-Date: Thu, 15 Dec 2005 20:01:43 -0800
-Message-ID: <1134705703.3906.1.camel@mulgrave>
-References: <Pine.LNX.4.61.0512022037230.6058@goblin.wat.veritas.com>
-	 <20051206160815.GC11560@tau.solarneutrino.net>
-	 <Pine.LNX.4.61.0512062025230.28217@goblin.wat.veritas.com>
-	 <20051206204336.GA12248@tau.solarneutrino.net>
-	 <Pine.LNX.4.61.0512071803300.2975@goblin.wat.veritas.com>
-	 <20051212165443.GD17295@tau.solarneutrino.net>
-	 <Pine.LNX.4.64.0512120928110.15597@g5.osdl.org>
-	 <1134409531.9994.13.camel@mulgrave>
-	 <Pine.LNX.4.64.0512121007220.15597@g5.osdl.org>
-	 <1134411882.9994.18.camel@mulgrave>
-	 <20051215190930.GA20156@tau.solarneutrino.net>
+From: "informacoes" <informacoes@grupopaodavida.com.br>
+Subject: campanha de  =?ISO-8859-1?Q?=20ora=E7ao?=
+Date: Fri, 16 Dec 2005 07:26:28 +0000 (UTC)
+Message-ID: <200512160725.jBG7P1of026208@zeus1.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751107AbVLPECf@vger.kernel.org>
-In-Reply-To: <20051215190930.GA20156@tau.solarneutrino.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ryan Richter <ryan@tau.solarneutrino.net>
-Cc: Linus Torvalds <torvalds@osdl.org>, Hugh Dickins <hugh@veritas.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: multipart/mixed;boundary= "----=_NextPart_000_00BB_3229BB5B.35A529DE"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zeus1.kernel.org ([204.152.191.4]:27059 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S932167AbVLPHZN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Dec 2005 02:25:13 -0500
+Received: from CD (200-171-33-25.dsl.telesp.net.br [200.171.33.25])
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id jBG7P1of026208
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Dec 2005 23:25:07 -0800
+Date: Wed, 14 Dec 05 23:04:33 Hora oficial do Brasil
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2005-12-15 at 14:09 -0500, Ryan Richter wrote:
-> On Mon, Dec 12, 2005 at 12:24:42PM -0600, James Bottomley wrote:
-> > I'll find a fix for the real problem, but this patch isn't the cause.
-> 
-> Is the patch set you posted yesterday supposed to fix this?  If so, is
-> it available in patch form anywhere?
+------=_NextPart_000_00BB_3229BB5B.35A529DE
+Content-Type: text/plain
+Content-Transfer-Encoding: base64
 
-No, I've been too busin integrating other people's patches to work on
-ones of my own.  Try this.
-
-James
-
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -400,6 +400,35 @@ static struct scsi_target *scsi_alloc_ta
- 	return found_target;
- }
- 
-+struct work_queue_wrapper {
-+	struct work_struct	work;
-+	struct scsi_target	*starget;
-+};
-+
-+static void scsi_target_reap_work(void *data) {
-+	struct work_queue_wrapper *wqw = (struct work_queue_wrapper *)data;
-+	struct scsi_target *starget = wqw->starget;
-+	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	unsigned long flags;
-+
-+	kfree(wqw);
-+
-+	spin_lock_irqsave(shost->host_lock, flags);
-+
-+	if (--starget->reap_ref == 0 && list_empty(&starget->devices)) {
-+		list_del_init(&starget->siblings);
-+		spin_unlock_irqrestore(shost->host_lock, flags);
-+		device_del(&starget->dev);
-+		transport_unregister_device(&starget->dev);
-+		put_device(&starget->dev);
-+		return;
-+
-+	}
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+	return;
-+}
-+
- /**
-  * scsi_target_reap - check to see if target is in use and destroy if not
-  *
-@@ -411,19 +440,18 @@ static struct scsi_target *scsi_alloc_ta
-  */
- void scsi_target_reap(struct scsi_target *starget)
- {
--	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
--	unsigned long flags;
--	spin_lock_irqsave(shost->host_lock, flags);
-+	struct work_queue_wrapper *wqw = 
-+		kzalloc(sizeof(struct work_queue_wrapper), GFP_ATOMIC);
- 
--	if (--starget->reap_ref == 0 && list_empty(&starget->devices)) {
--		list_del_init(&starget->siblings);
--		spin_unlock_irqrestore(shost->host_lock, flags);
--		device_del(&starget->dev);
--		transport_unregister_device(&starget->dev);
--		put_device(&starget->dev);
-+	if (!wqw) {
-+		starget_printk(KERN_ERR, starget,
-+			       "Failed to allocate memory in scsi_reap_target()\n");
- 		return;
- 	}
--	spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+	INIT_WORK(&wqw->work, scsi_target_reap_work, wqw);
-+	wqw->starget = starget;
-+	schedule_work(&wqw->work);
- }
- 
- /**
+PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDQuMCBUcmFuc2l0aW9u
+YWwvL0VOIj4NCjxIVE1MPjxIRUFEPg0KPE1FVEEgaHR0cC1lcXVpdj1Db250ZW50LVR5cGUg
+Y29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PWlzby04ODU5LTEiPg0KPE1FVEEgY29udGVu
+dD0iTVNIVE1MIDYuMDAuMjgwMC4xMTA2IiBuYW1lPUdFTkVSQVRPUj4NCjxTVFlMRT48L1NU
+WUxFPg0KPC9IRUFEPg0KPEJPRFkgYmdDb2xvcj0jZmZmZmZmPg0KPERJVj48SU1HIGFsdD0i
+IiBoc3BhY2U9MCANCnNyYz0iaHR0cDovL3d3dy5ncnVwb3Bhb2RhdmlkYS5jb20uYnIvZW1h
+aWwvRklMSE9TREVMSURFUkVTLmpwZyIgDQphbGlnbj1iYXNlbGluZSBib3JkZXI9MD48L0RJ
+Vj48L0JPRFk+PC9IVE1MPg0KICAgIA==
+------=_NextPart_000_00BB_3229BB5B.35A529DE--
