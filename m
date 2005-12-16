@@ -1,18 +1,17 @@
 From: Matthew Wilcox <matthew@wil.cx>
 Subject: [PATCH 1/2] [SCSI] Use spi_print_msg in ncr53c8xx driver
 Date: Fri, 16 Dec 2005 12:50:53 -0500
-Message-ID: <1134755453965-git-send-email-matthew@wil.cx>
-References: <11347554533046-git-send-email-matthew@wil.cx>
+Message-ID: <11347554533046-git-send-email-matthew@wil.cx>
 Reply-To: Matthew Wilcox <matthew@wil.cx>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.magmacom.com ([206.191.0.217]:38111 "EHLO mx1.magmacom.com")
-	by vger.kernel.org with ESMTP id S1751318AbVLPRu6 (ORCPT
+Received: from mx2-old.magma.ca ([206.191.0.250]:21689 "EHLO mx2.magma.ca")
+	by vger.kernel.org with ESMTP id S1751322AbVLPRu6 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 16 Dec 2005 12:50:58 -0500
-In-Reply-To: <11347554533046-git-send-email-matthew@wil.cx>
+In-Reply-To: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
