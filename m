@@ -1,93 +1,112 @@
-From: David Caldwell <david@porkrind.org>
-Subject: [PATCH] Reimplement the SG_FLAG_LUN_INHIBIT flag in sg's SG_IOCTL.
-Date: Fri, 16 Dec 2005 13:54:51 -0800
-Message-ID: <20051216215447.GA25090@porkrind.org>
+From: Michael Reed <mdr@sgi.com>
+Subject: [PATCH] Make scsi error recovery play nice with devices blocked by
+ transport
+Date: Fri, 16 Dec 2005 17:58:16 -0600
+Message-ID: <43A35498.6030903@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------010200020207070500080509"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cpe-67-49-70-252.socal.res.rr.com ([67.49.70.252]:33006 "EHLO
-	death.porkrind.org") by vger.kernel.org with ESMTP id S932507AbVLPVyz
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Dec 2005 16:54:55 -0500
-Received: from death.porkrind.org (localhost [127.0.0.1])
-	by death.porkrind.org (8.13.5/8.13.5/Debian-3) with ESMTP id jBGLsps4025250
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Fri, 16 Dec 2005 13:54:51 -0800
-Received: (from david@localhost)
-	by death.porkrind.org (8.13.5/8.13.5/Submit) id jBGLspvg025249
-	for linux-scsi@vger.kernel.org; Fri, 16 Dec 2005 13:54:51 -0800
-Content-Disposition: inline
+Received: from omx2-ext.sgi.com ([192.48.171.19]:53151 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S1751348AbVLPX60 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Dec 2005 18:58:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: James.Smart@Emulex.Com, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, Jeremy Higdon <jeremy@sgi.com>
 
-scsi.c will normally overwrite the second byte of the command with the
-appropriate LUN info if the device is a SCSI 2 device. I have a device
-that uses the second byte of the cdb for something other than the LUN
-(yes, it is a stupid broken device). This flag allows such broken
-devices work.
+This is a multi-part message in MIME format.
+--------------010200020207070500080509
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: David Caldwell <david@porkrind.org>
+As no one has commented, I'm reposting this rfc as a patch.  I've
+been using it for all my testing during development of the LSI MPT Fusion
+fc transport attribute patch and it has shown no ill effect.
 
----
+--
 
- drivers/scsi/scsi.c         |    3 ++-
- drivers/scsi/sg.c           |    1 +
- include/scsi/scsi_request.h |    1 +
- include/scsi/sg.h           |    2 +-
- 4 files changed, 5 insertions(+), 2 deletions(-)
+Error recovery doesn't interact very well with fc targets which
+have been blocked by the fc transport.  Error recovery continues
+to attempt to recover the target and ends up marking the fc target
+offline.  Once offline, if the target returns before the remote port is
+removed, commands which could have been successfully reissued instead
+are completed with an error status due to the offline status
+of the target.
 
-a1c5985460e92ae1262b411b26b095a0af8aa7b7
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 180676d..55506ff 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -567,7 +567,8 @@ int scsi_dispatch_cmd(struct scsi_cmnd *
- 	/* 
- 	 * If SCSI-2 or lower, store the LUN value in cmnd.
- 	 */
--	if (cmd->device->scsi_level <= SCSI_2) {
-+	if (cmd->device->scsi_level <= SCSI_2 &&
-+	    !(cmd->sc_request && cmd->sc_request->sr_dont_stomp_lun)) {
- 		cmd->cmnd[1] = (cmd->cmnd[1] & 0x1f) |
- 			       (cmd->device->lun << 5 & 0xe0);
- 	}
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index b55c2a8..2441630 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -755,6 +755,7 @@ sg_common_write(Sg_fd * sfp, Sg_request 
- 		SRpnt->sr_data_direction = DMA_NONE;
- 		break;
- 	}
-+	SRpnt->sr_dont_stomp_lun = !!(hp->flags & SG_FLAG_LUN_INHIBIT);
- 	SRpnt->upper_private_data = srp;
- 	srp->data.k_use_sg = 0;
- 	srp->data.sglist_len = 0;
-diff --git a/include/scsi/scsi_request.h b/include/scsi/scsi_request.h
-index 98d69fd..f8257f9 100644
---- a/include/scsi/scsi_request.h
-+++ b/include/scsi/scsi_request.h
-@@ -39,6 +39,7 @@ struct scsi_request {
- 	int sr_timeout_per_command;
- 	unsigned short sr_use_sg;	/* Number of pieces of scatter-gather */
- 	unsigned short sr_sglist_len;	/* size of malloc'd scatter-gather list */
-+	int sr_dont_stomp_lun;	/* Set to 1 to leave sr_cmnd[1] unmolested */
- 	unsigned sr_underflow;	/* Return error if less than
- 				   this amount is transferred */
-  	void *upper_private_data;	/* reserved for owner (usually upper
-diff --git a/include/scsi/sg.h b/include/scsi/sg.h
-index 0a487fe..6151e9c 100644
---- a/include/scsi/sg.h
-+++ b/include/scsi/sg.h
-@@ -139,7 +139,7 @@ typedef struct sg_io_hdr
+This patch makes a couple of hopefully minor tweaks to the error
+recovery logic to work better with targets which have been blocked
+by the transport.
+
+First, if the target is blocked and error recovery gives up, don't
+put the device offline.  Either the transport will delete the target
+thus disposing of any queued requests or it will unblock the target and
+requests will be reissued.
+
+Second, if a device is blocked, queue up commands being flushed from
+the done queue for retry instead of completing them with an error.
+
+Thanks,
+ Mike Reed
+
+
+--------------010200020207070500080509
+Content-Type: text/x-patch;
+ name="scsi_fc_recovery.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi_fc_recovery.patch"
+
+diff -ru linux-2.6.15-rc5-git6-patched/drivers/scsi/scsi_error.c linux-2.6.15-rc5-git6-patched-mdr/drivers/scsi/scsi_error.c
+--- linux-2.6.15-rc5-git6-patched/drivers/scsi/scsi_error.c	2005-12-16 16:48:19.000000000 -0600
++++ linux-2.6.15-rc5-git6-patched-mdr/drivers/scsi/scsi_error.c	2005-12-16 17:42:07.000000000 -0600
+@@ -1130,10 +1130,14 @@
+ 	struct scsi_cmnd *scmd, *next;
  
- /* following flag values can be "or"-ed together */
- #define SG_FLAG_DIRECT_IO 1     /* default is indirect IO */
--#define SG_FLAG_UNUSED_LUN_INHIBIT 2   /* default is overwrite lun in SCSI */
-+#define SG_FLAG_LUN_INHIBIT 2   /* default is overwrite lun in SCSI */
- 				/* command block (when <= SCSI_2) */
- #define SG_FLAG_MMAP_IO 4       /* request memory mapped IO */
- #define SG_FLAG_NO_DXFER 0x10000 /* no transfer of kernel buffers to/from */
--- 
-0.99.9l
+ 	list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
+-		sdev_printk(KERN_INFO, scmd->device,
+-			    "scsi: Device offlined - not"
+-			    " ready after error recovery\n");
+-		scsi_device_set_state(scmd->device, SDEV_OFFLINE);
++		/* if blocked, transport will provide final device disposition */
++		if (!scsi_device_blocked(scmd->device)) {
++			sdev_printk(KERN_INFO, scmd->device,
++				    "scsi: Device offlined - not"
++				    " ready after error recovery\n");
++			scsi_device_set_state(scmd->device, SDEV_OFFLINE);
++		}
++
+ 		if (scmd->eh_eflags & SCSI_EH_CANCEL_CMD) {
+ 			/*
+ 			 * FIXME: Handle lost cmds.
+@@ -1460,9 +1464,10 @@
+ 
+ 	list_for_each_entry_safe(scmd, next, done_q, eh_entry) {
+ 		list_del_init(&scmd->eh_entry);
+-		if (scsi_device_online(scmd->device) &&
++		if (scsi_device_blocked(scmd->device) ||
++		    (scsi_device_online(scmd->device) &&
+ 		    !blk_noretry_request(scmd->request) &&
+-		    (++scmd->retries < scmd->allowed)) {
++		    (++scmd->retries < scmd->allowed))) {
+ 			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: flush"
+ 							  " retry cmd: %p\n",
+ 							  current->comm,
+diff -ru linux-2.6.15-rc5-git6-patched/include/scsi/scsi_device.h linux-2.6.15-rc5-git6-patched-mdr/include/scsi/scsi_device.h
+--- linux-2.6.15-rc5-git6-patched/include/scsi/scsi_device.h	2005-12-05 12:39:40.000000000 -0600
++++ linux-2.6.15-rc5-git6-patched-mdr/include/scsi/scsi_device.h	2005-12-16 17:42:07.000000000 -0600
+@@ -275,6 +275,11 @@
+ 			    int data_direction, void *buffer, unsigned bufflen,
+ 			    struct scsi_sense_hdr *, int timeout, int retries);
+ 
++static inline int scsi_device_blocked(struct scsi_device *sdev)
++{
++	return sdev->sdev_state == SDEV_BLOCK;
++}
++
+ static inline unsigned int sdev_channel(struct scsi_device *sdev)
+ {
+ 	return sdev->channel;
+
+--------------010200020207070500080509--
