@@ -1,36 +1,36 @@
-From: Ryan Richter <ryan@tau.solarneutrino.net>
-Subject: Re: Fw: crash on x86_64 - mm related?
-Date: Fri, 16 Dec 2005 22:31:06 -0500
-Message-ID: <20051217033106.GB20539@tau.solarneutrino.net>
-References: <Pine.LNX.4.61.0512062025230.28217@goblin.wat.veritas.com> <20051206204336.GA12248@tau.solarneutrino.net> <Pine.LNX.4.61.0512071803300.2975@goblin.wat.veritas.com> <20051212165443.GD17295@tau.solarneutrino.net> <Pine.LNX.4.64.0512120928110.15597@g5.osdl.org> <1134409531.9994.13.camel@mulgrave> <Pine.LNX.4.64.0512121007220.15597@g5.osdl.org> <1134411882.9994.18.camel@mulgrave> <20051215190930.GA20156@tau.solarneutrino.net> <1134705703.3906.1.camel@mulgrave>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: [PATCH] Missing const in sr_vendor
+Date: Fri, 16 Dec 2005 21:11:37 -0700
+Message-ID: <20051217041137.GG2361@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from solarneutrino.net ([66.199.224.43]:57862 "EHLO
-	tau.solarneutrino.net") by vger.kernel.org with ESMTP
-	id S1751364AbVLQDbO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Dec 2005 22:31:14 -0500
+Received: from palinux.external.hp.com ([192.25.206.14]:56710 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S1751078AbVLQELi
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Dec 2005 23:11:38 -0500
 Content-Disposition: inline
-In-Reply-To: <1134705703.3906.1.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Linus Torvalds <torvalds@osdl.org>, Hugh Dickins <hugh@veritas.com>, Kai Makisara <Kai.Makisara@kolumbus.fi>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, ryan@tau.solarneutrino.net
+To: linux-scsi@vger.kernel.org
 
-On Thu, Dec 15, 2005 at 08:01:43PM -0800, James Bottomley wrote:
-> On Thu, 2005-12-15 at 14:09 -0500, Ryan Richter wrote:
-> > On Mon, Dec 12, 2005 at 12:24:42PM -0600, James Bottomley wrote:
-> > > I'll find a fix for the real problem, but this patch isn't the cause.
-> > 
-> > Is the patch set you posted yesterday supposed to fix this?  If so, is
-> > it available in patch form anywhere?
-> 
-> No, I've been too busin integrating other people's patches to work on
-> ones of my own.  Try this.
 
-Thanks for the patch, I'm testing it now.  If this survives the next few
-days I'll leave it running while I'm away, otherwise testing will have
-to wait until the new year.
+Fix compile warnings with current scsi-misc git tree
 
-Cheers,
--ryan
+Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+
+diff --git a/drivers/scsi/sr_vendor.c b/drivers/scsi/sr_vendor.c
+index 78274dc..9dde8df 100644
+--- a/drivers/scsi/sr_vendor.c
++++ b/drivers/scsi/sr_vendor.c
+@@ -68,8 +68,8 @@ void sr_vendor_init(Scsi_CD *cd)
+ #ifndef CONFIG_BLK_DEV_SR_VENDOR
+ 	cd->vendor = VENDOR_SCSI3;
+ #else
+-	char *vendor = cd->device->vendor;
+-	char *model = cd->device->model;
++	const char *vendor = cd->device->vendor;
++	const char *model = cd->device->model;
+ 	
+ 	/* default */
+ 	cd->vendor = VENDOR_SCSI3;
