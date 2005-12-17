@@ -1,36 +1,29 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH] Missing const in sr_vendor
-Date: Fri, 16 Dec 2005 21:11:37 -0700
-Message-ID: <20051217041137.GG2361@parisc-linux.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Reimplement the SG_FLAG_LUN_INHIBIT flag in sg's SG_IOCTL.
+Date: Sat, 17 Dec 2005 12:28:02 +0000
+Message-ID: <20051217122802.GA12725@infradead.org>
+References: <20051216215447.GA25090@porkrind.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:56710 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1751078AbVLQELi
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Dec 2005 23:11:38 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:61062 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932570AbVLQM2D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Dec 2005 07:28:03 -0500
 Content-Disposition: inline
+In-Reply-To: <20051216215447.GA25090@porkrind.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: David Caldwell <david@porkrind.org>
+Cc: linux-scsi@vger.kernel.org
 
+On Fri, Dec 16, 2005 at 01:54:51PM -0800, David Caldwell wrote:
+> scsi.c will normally overwrite the second byte of the command with the
+> appropriate LUN info if the device is a SCSI 2 device. I have a device
+> that uses the second byte of the cdb for something other than the LUN
+> (yes, it is a stupid broken device). This flag allows such broken
+> devices work.
 
-Fix compile warnings with current scsi-misc git tree
+scsi_request is hopefully not going to survive 2.6.16 so at this point
+this patch is not interesting in this form.
 
-Signed-off-by: Matthew Wilcox <matthew@wil.cx>
-
-diff --git a/drivers/scsi/sr_vendor.c b/drivers/scsi/sr_vendor.c
-index 78274dc..9dde8df 100644
---- a/drivers/scsi/sr_vendor.c
-+++ b/drivers/scsi/sr_vendor.c
-@@ -68,8 +68,8 @@ void sr_vendor_init(Scsi_CD *cd)
- #ifndef CONFIG_BLK_DEV_SR_VENDOR
- 	cd->vendor = VENDOR_SCSI3;
- #else
--	char *vendor = cd->device->vendor;
--	char *model = cd->device->model;
-+	const char *vendor = cd->device->vendor;
-+	const char *model = cd->device->model;
- 	
- 	/* default */
- 	cd->vendor = VENDOR_SCSI3;
