@@ -1,30 +1,38 @@
-From: Nannie Gallegos <substations@glphr.org>
-Subject: LOWEST PRICE GUARANTEED! download and Buy Cds
-Date: Sat, 17 Dec 2005 19:07:40 -0800
-Message-ID: <13043511844.12637361802@ALagny-154-1-36-155.w83-200.abo.wanadoo.fr>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: target_alloc is noisy on failure
+Date: Sun, 18 Dec 2005 12:29:25 -0700
+Message-ID: <20051218192925.GM2361@parisc-linux.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:43743 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S932675AbVLRDHm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Dec 2005 22:07:42 -0500
-Received: from ALagny-154-1-36-155.w83-200.abo.wanadoo.fr (ALagny-154-1-36-155.w83-200.abo.wanadoo.fr [83.200.35.155])
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id jBI37eAh008902
-	for <linux-scsi@vger.kernel.org>; Sat, 17 Dec 2005 19:07:41 -0800
+Received: from palinux.external.hp.com ([192.25.206.14]:9706 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S965248AbVLRT30
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 18 Dec 2005 14:29:26 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Want to learn how to build your own website? 
-http://kmiiwo.3s9vqf9eqsrt333g833yql33.halibiosnn.com/?qsv
 
+I'm looking at moving this code from slave_alloc to target_alloc:
 
-When in doubt, duck.         
-Rock and roll is the hamburger that ate the world.   
-I have always imagined that Paradise will be a kind of library. 
-The higher the buildings, the lower the morals.     
-I am a Marxist--of the Groucho tendency.      
-If you talk enough, you don't feel you have to _do_ anything. 
+        tp->starget = sdev->sdev_target;
+        if (tp->usrflags & SYM_SCAN_BOOT_DISABLED) {
+		tp->usrflags &= ~SYM_SCAN_BOOT_DISABLED;
+		starget_printk(KERN_INFO, tp->starget,
+				"Scan at boot disabled in NVRAM\n");
+		return -ENXIO;
+	}
 
+However, returning an error from target_alloc is noisy:
+
+        int error = shost->hostt->target_alloc(starget);
+
+	if(error) {
+		dev_printk(KERN_ERR, dev,
+			"target allocation failed, error %d\n", error);
+
+so I don't really want to do this.  Any thoughts on defining some
+'quiet' return values from target_alloc?
 
