@@ -1,29 +1,30 @@
-From: "Thad Daley" <vmimru@yahoo.com>
-Subject: We Guuaranteees Bigger Pen-nis Nx
-Date: Sun, 18 Dec 2005 02:37:10 +0600
-Message-ID: <LAW75.OE649yfB4mvo022853d5__7688.13158288157$1134852048$gmane$org@motmail.com>
+From: Nannie Gallegos <substations@glphr.org>
+Subject: LOWEST PRICE GUARANTEED! download and Buy Cds
+Date: Sat, 17 Dec 2005 19:07:40 -0800
+Message-ID: <13043511844.12637361802@ALagny-154-1-36-155.w83-200.abo.wanadoo.fr>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:62615 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S964948AbVLQUiO (ORCPT
+Received: from zeus1.kernel.org ([204.152.191.4]:43743 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S932675AbVLRDHm (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 17 Dec 2005 15:38:14 -0500
+	Sat, 17 Dec 2005 22:07:42 -0500
+Received: from ALagny-154-1-36-155.w83-200.abo.wanadoo.fr (ALagny-154-1-36-155.w83-200.abo.wanadoo.fr [83.200.35.155])
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id jBI37eAh008902
+	for <linux-scsi@vger.kernel.org>; Sat, 17 Dec 2005 19:07:41 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-newbie@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+Want to learn how to build your own website? 
+http://kmiiwo.3s9vqf9eqsrt333g833yql33.halibiosnn.com/?qsv
 
 
-Suffering from short penniss?
-Introduce revolution "Thunder" formula which
-gauranteees sizes increase or moneey baack.
-
-Users reported:
-- 2 inches extra in size
-- 3x pleasurable orgasms
-- 27% thicker
-
-Why waiting?
-
-http://thunder14.erectus.biz
+When in doubt, duck.         
+Rock and roll is the hamburger that ate the world.   
+I have always imagined that Paradise will be a kind of library. 
+The higher the buildings, the lower the morals.     
+I am a Marxist--of the Groucho tendency.      
+If you talk enough, you don't feel you have to _do_ anything. 
 
 
-0Ky
