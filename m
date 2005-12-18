@@ -1,38 +1,37 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: target_alloc is noisy on failure
-Date: Sun, 18 Dec 2005 12:29:25 -0700
-Message-ID: <20051218192925.GM2361@parisc-linux.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: target_alloc is noisy on failure
+Date: Sun, 18 Dec 2005 13:48:12 -0600
+Message-ID: <1134935293.3517.17.camel@mulgrave>
+References: <20051218192925.GM2361@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:9706 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S965248AbVLRT30
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Dec 2005 14:29:26 -0500
-Content-Disposition: inline
+Received: from stat9.steeleye.com ([209.192.50.41]:59046 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S965255AbVLRTsT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 18 Dec 2005 14:48:19 -0500
+In-Reply-To: <20051218192925.GM2361@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
+On Sun, 2005-12-18 at 12:29 -0700, Matthew Wilcox wrote:
+> However, returning an error from target_alloc is noisy:
+> 
+>         int error = shost->hostt->target_alloc(starget);
+> 
+> 	if(error) {
+> 		dev_printk(KERN_ERR, dev,
+> 			"target allocation failed, error %d\n", error);
+> 
+> so I don't really want to do this.  Any thoughts on defining some
+> 'quiet' return values from target_alloc?
 
-I'm looking at moving this code from slave_alloc to target_alloc:
+Well, obviously, for consistency it should be the same quiet return as
+for slave_alloc (i.e. -ENXIO).
 
-        tp->starget = sdev->sdev_target;
-        if (tp->usrflags & SYM_SCAN_BOOT_DISABLED) {
-		tp->usrflags &= ~SYM_SCAN_BOOT_DISABLED;
-		starget_printk(KERN_INFO, tp->starget,
-				"Scan at boot disabled in NVRAM\n");
-		return -ENXIO;
-	}
+James
 
-However, returning an error from target_alloc is noisy:
-
-        int error = shost->hostt->target_alloc(starget);
-
-	if(error) {
-		dev_printk(KERN_ERR, dev,
-			"target allocation failed, error %d\n", error);
-
-so I don't really want to do this.  Any thoughts on defining some
-'quiet' return values from target_alloc?
 
