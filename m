@@ -1,52 +1,29 @@
-From: James Smart <James.Smart@Emulex.Com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH] lpfc:   Timer fix
-Date: Wed, 21 Dec 2005 12:39:29 -0500
-Message-ID: <43A99351.4090100@emulex.com>
+Date: Wed, 21 Dec 2005 12:25:55 -0600
+Message-ID: <1135189555.3533.34.camel@mulgrave>
 References: <1134767813.5539.18.camel@markh1.pdx.osdl.net>
-Reply-To: James.Smart@Emulex.Com
+	 <43A99351.4090100@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:27319 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1751144AbVLURj5
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Dec 2005 12:39:57 -0500
-In-Reply-To: <1134767813.5539.18.camel@markh1.pdx.osdl.net>
+Received: from stat9.steeleye.com ([209.192.50.41]:9355 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932490AbVLUS0W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Dec 2005 13:26:22 -0500
+In-Reply-To: <43A99351.4090100@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Haverkamp <markh@osdl.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: James.Smart@Emulex.Com
+Cc: Mark Haverkamp <markh@osdl.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Agreed.
+On Wed, 2005-12-21 at 12:39 -0500, James Smart wrote:
+> Agreed.
 
--- james s
+Is this critical for 2.6.15 or can it wait until after 2.6.15 is
+released?
 
-Mark Haverkamp wrote:
-> James,
-> 
-> I've been doing some testing with the lpfc driver and started running
-> into some BUG_ON problems using add_timer in lpfc_els_timeout_handler.
-> I'm not certain, but I think that the add_timer call should be a
-> mod_timer.
-> Please take a look.
-> 
-> Signed-of-by: Mark Haverkamp <markh@osdl.org>
-> 
-> ---
-> 
-> Index: scsi-misc-2.6/drivers/scsi/lpfc/lpfc_els.c
-> ===================================================================
-> --- scsi-misc-2.6.orig/drivers/scsi/lpfc/lpfc_els.c	2005-12-16 13:14:37.000000000 -0800
-> +++ scsi-misc-2.6/drivers/scsi/lpfc/lpfc_els.c	2005-12-16 13:14:53.000000000 -0800
-> @@ -2935,8 +2935,7 @@
->  			lpfc_sli_release_iocbq(phba, piocb);
->  	}
->  	if (phba->sli.ring[LPFC_ELS_RING].txcmplq_cnt) {
-> -		phba->els_tmofunc.expires = jiffies + HZ * timeout;
-> -		add_timer(&phba->els_tmofunc);
-> +		mod_timer(&phba->els_tmofunc, jiffies + HZ * timeout);
->  	}
->  	spin_unlock_irq(phba->host->host_lock);
->  }
-> 
+James
+
+
