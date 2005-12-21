@@ -1,42 +1,30 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [GIT PATCH] SCSI bug fixes for 2.6.15-rc6
-Date: Wed, 21 Dec 2005 16:54:26 -0600
-Message-ID: <1135205667.3533.79.camel@mulgrave>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: [GIT PATCH] SCSI bug fixes for 2.6.15-rc6
+Date: Wed, 21 Dec 2005 15:09:51 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0512211508500.4827@g5.osdl.org>
+References: <1135205667.3533.79.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:46991 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S964913AbVLUWyq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Dec 2005 17:54:46 -0500
+Received: from smtp.osdl.org ([65.172.181.4]:64943 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932322AbVLUXJ6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Dec 2005 18:09:58 -0500
+In-Reply-To: <1135205667.3533.79.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
-
-Hopefully these are the final two bug fixes before 2.6.15 (hint, hurry
-up!).
-
-The update is available here:
-
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
-
-The short changelog is:
-
-James Bottomley:
-  o fix scsi_reap_target() device_del from atomic context
-
-James Smart:
-  o fix for fc transport recursion problem
-
-And the diffstat:
-
- drivers/scsi/scsi_scan.c         |   48 +++++++++++++++++++++++++------
- drivers/scsi/scsi_transport_fc.c |   59 ++++++++++++++++++++++++++++++++++++---
- include/scsi/scsi_transport_fc.h |   11 +++++++
- 3 files changed, 104 insertions(+), 14 deletions(-)
-
-James
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@osdl.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
 
+
+On Wed, 21 Dec 2005, James Bottomley wrote:
+>
+> Hopefully these are the final two bug fixes before 2.6.15 (hint, hurry
+> up!).
+
+Heh. That's a new strategy. Not "ok, we're now as bug-clean as we can be", 
+but instead the "please please release soon, so that we won't have time to 
+fix anything else" ;)
+
+		Linus
