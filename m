@@ -1,259 +1,365 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 4/6] aic79xx: Sanitize inb / outb handling
-Date: Thu, 22 Dec 2005 15:22:13 +0100
-Message-ID: <43AAB695.6030808@suse.de>
+Subject: [PATCH 6/6] aic7xxx: Update aicasm
+Date: Thu, 22 Dec 2005 15:25:51 +0100
+Message-ID: <43AAB76F.3000606@suse.de>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------070206000300080406080901"
+ boundary="------------000806030004070604090707"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:36485 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S1030187AbVLVOWO (ORCPT
+Received: from ns.suse.de ([195.135.220.2]:4742 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S1030188AbVLVOZx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Dec 2005 09:22:14 -0500
+	Thu, 22 Dec 2005 09:25:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 This is a multi-part message in MIME format.
---------------070206000300080406080901
+--------------000806030004070604090707
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-This patches coalesces inb/outb calls to the approriate word or long form=
-=2E
+Update aicasm code with fixes from adaptec.
 --=20
 Dr. Hannes Reinecke			hare@suse.de
 SuSE Linux Products GmbH		S390 & zSeries
 Maxfeldstra=DFe 5				+49 911 74053 688
 90409 N=FCrnberg				http://www.suse.de
 
---------------070206000300080406080901
+--------------000806030004070604090707
 Content-Type: text/plain;
- name="0004-aic79xx-Sanitize-inb-outb-handling.txt"
+ name="0006-aic7xxx-Update-aicasm.txt"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="0004-aic79xx-Sanitize-inb-outb-handling.txt"
+ filename="0006-aic7xxx-Update-aicasm.txt"
 
-[PATCH 4/6] aic79xx: Sanitize inb / outb handling
+[PATCH 6/6] aic7xxx: Update aicasm
 
-This patches coalesces inb/outb calls to the approriate word or long form.
+Update aicasm code with fixes from adaptec.
 ---
 
- drivers/scsi/aic7xxx/aic79xx_core.c |   80 +++++++++--------------------------
- 1 files changed, 21 insertions(+), 59 deletions(-)
+ drivers/scsi/aic7xxx/aicasm/aicasm.c           |   23 ++++--
+ drivers/scsi/aic7xxx/aicasm/aicasm_gram.y      |   19 +++++
+ drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h |   88 ++++++++++++++++++++++++
+ drivers/scsi/aic7xxx/aicasm/aicasm_scan.l      |   27 +++++--
+ 4 files changed, 140 insertions(+), 17 deletions(-)
 
-a41a0c3e581feb48d7bacf39cfc047dd6e95f18d
-diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
---- a/drivers/scsi/aic7xxx/aic79xx_core.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_core.c
-@@ -387,8 +387,7 @@ ahd_flush_qoutfifo(struct ahd_softc *ahd
- 		u_int fifo_mode;
- 		u_int i;
- 		
--		scbid = (ahd_inb(ahd, GSFIFO+1) << 8)
--		      | ahd_inb(ahd, GSFIFO);
-+		scbid = ahd_inw(ahd, GSFIFO);
- 		scb = ahd_lookup_scb(ahd, scbid);
- 		if (scb == NULL) {
- 			printf("%s: Warning - GSFIFO SCB %d invalid\n",
-@@ -748,7 +747,7 @@ ahd_run_data_fifo(struct ahd_softc *ahd,
- 			 * Advertise the segment to the hardware.
- 			 */
- 			dfcntrl = ahd_inb(ahd, DFCNTRL)|PRELOADEN|HDMAEN;
--			if ((ahd->features & AHD_NEW_DFCNTRL_OPTS)!=0) {
-+			if ((ahd->features & AHD_NEW_DFCNTRL_OPTS) != 0) {
- 				/*
- 				 * Use SCSIENWRDIS so that SCSIEN
- 				 * is never modified by this
-@@ -1060,7 +1059,7 @@ ahd_handle_seqint(struct ahd_softc *ahd,
- 			ahd_outb(ahd, SAVED_LUN, 0);
- 			ahd_outb(ahd, SEQ_FLAGS, 0);
- 			ahd_assert_atn(ahd);
--			scb->flags &= ~(SCB_PACKETIZED);
-+			scb->flags &= ~SCB_PACKETIZED;
- 			scb->flags |= SCB_ABORT|SCB_CMDPHASE_ABORT;
- 			ahd_freeze_devq(ahd, scb);
- 			ahd_set_transaction_status(scb, CAM_REQUEUE_REQ);
-@@ -2310,8 +2309,7 @@ ahd_handle_nonpkt_busfree(struct ahd_sof
- 		       "PRGMCNT == 0x%x\n",
- 		       ahd_lookup_phase_entry(lastphase)->phasemsg,
- 		       aborted,
--		       ahd_inb(ahd, PRGMCNT)
--			| (ahd_inb(ahd, PRGMCNT+1) << 8));
-+		       ahd_inw(ahd, PRGMCNT));
- 		ahd_dump_card_state(ahd);
+3325dc623b04e10cc3d5219fa1ecb0ce6d779883
+diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm.c b/drivers/scsi/aic7xxx/aicasm/aicasm.c
+--- a/drivers/scsi/aic7xxx/aicasm/aicasm.c
++++ b/drivers/scsi/aic7xxx/aicasm/aicasm.c
+@@ -37,7 +37,7 @@
+  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  * POSSIBILITY OF SUCH DAMAGES.
+  *
+- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm.c#22 $
++ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm.c#23 $
+  *
+  * $FreeBSD$
+  */
+@@ -609,10 +609,10 @@ output_listing(char *ifilename)
+ 
+ 		while (line < cur_instr->srcline) {
+ 			fgets(buf, sizeof(buf), ifile);
+-				fprintf(listfile, "\t\t%s", buf);
++				fprintf(listfile, "             \t%s", buf);
+ 				line++;
+ 		}
+-		fprintf(listfile, "%03x %02x%02x%02x%02x", instrptr,
++		fprintf(listfile, "%04x %02x%02x%02x%02x", instrptr,
+ #ifdef __LITTLE_ENDIAN
+ 			cur_instr->format.bytes[0],
+ 			cur_instr->format.bytes[1],
+@@ -624,14 +624,23 @@ output_listing(char *ifilename)
+ 			cur_instr->format.bytes[1],
+ 			cur_instr->format.bytes[0]);
+ #endif
+-		fgets(buf, sizeof(buf), ifile);
+-		fprintf(listfile, "\t%s", buf);
+-		line++;
++		/*
++		 * Macro expansions can cause several instructions
++		 * to be output for a single source line.  Only
++		 * advance the line once in these cases.
++		 */
++		if (line == cur_instr->srcline) {
++			fgets(buf, sizeof(buf), ifile);
++			fprintf(listfile, "\t%s", buf);
++			line++;
++		} else {
++			fprintf(listfile, "\n");
++		}
+ 		instrptr++;
  	}
- 	/* Always restart the sequencer. */
-@@ -2474,8 +2472,7 @@ ahd_clear_critical_section(struct ahd_so
- 		u_int	i;
+ 	/* Dump the remainder of the file */
+ 	while(fgets(buf, sizeof(buf), ifile) != NULL)
+-		fprintf(listfile, "\t\t%s", buf);
++		fprintf(listfile, "             %s", buf);
  
- 		ahd_set_modes(ahd, AHD_MODE_SCSI, AHD_MODE_SCSI);
--		seqaddr = ahd_inb(ahd, CURADDR)
--			| (ahd_inb(ahd, CURADDR+1) << 8);
-+		seqaddr = ahd_inw(ahd, CURADDR);
+ 	fclose(ifile);
+ }
+diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y b/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
+--- a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
++++ b/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
+@@ -38,7 +38,7 @@
+  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  * POSSIBILITY OF SUCH DAMAGES.
+  *
+- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_gram.y#29 $
++ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_gram.y#30 $
+  *
+  * $FreeBSD$
+  */
+@@ -157,6 +157,8 @@ static int  is_download_const(expression
  
- 		cs = ahd->critical_sections;
- 		for (i = 0; i < ahd->num_critical_sections; i++, cs++) {
-@@ -4909,10 +4906,7 @@ ahd_reinitialize_dataptrs(struct ahd_sof
- 	 * Determine initial values for data_addr and data_cnt
- 	 * for resuming the data phase.
- 	 */
--	sgptr = (ahd_inb_scbram(ahd, SCB_RESIDUAL_SGPTR + 3) << 24)
--	      | (ahd_inb_scbram(ahd, SCB_RESIDUAL_SGPTR + 2) << 16)
--	      | (ahd_inb_scbram(ahd, SCB_RESIDUAL_SGPTR + 1) << 8)
--	      |	ahd_inb_scbram(ahd, SCB_RESIDUAL_SGPTR);
-+	sgptr = ahd_inl_scbram(ahd, SCB_RESIDUAL_SGPTR);
- 	sgptr &= SG_PTR_MASK;
+ %token T_END_CS
  
- 	resid = (ahd_inb_scbram(ahd, SCB_RESIDUAL_DATACNT + 2) << 16)
-@@ -4930,10 +4924,7 @@ ahd_reinitialize_dataptrs(struct ahd_sof
- 		dataptr = ahd_le64toh(sg->addr)
- 			+ (ahd_le32toh(sg->len) & AHD_SG_LEN_MASK)
- 			- resid;
--		ahd_outb(ahd, HADDR + 7, dataptr >> 56);
--		ahd_outb(ahd, HADDR + 6, dataptr >> 48);
--		ahd_outb(ahd, HADDR + 5, dataptr >> 40);
--		ahd_outb(ahd, HADDR + 4, dataptr >> 32);
-+		ahd_outl(ahd, HADDR + 4, dataptr >> 32);
- 	} else {
- 		struct	 ahd_dma_seg *sg;
++%token T_PAD_PAGE
++
+ %token T_FIELD
  
-@@ -4948,10 +4939,7 @@ ahd_reinitialize_dataptrs(struct ahd_sof
- 		ahd_outb(ahd, HADDR + 4,
- 			 (ahd_le32toh(sg->len) & ~AHD_SG_LEN_MASK) >> 24);
- 	}
--	ahd_outb(ahd, HADDR + 3, dataptr >> 24);
--	ahd_outb(ahd, HADDR + 2, dataptr >> 16);
--	ahd_outb(ahd, HADDR + 1, dataptr >> 8);
--	ahd_outb(ahd, HADDR, dataptr);
-+	ahd_outl(ahd, HADDR, dataptr);
- 	ahd_outb(ahd, HCNT + 2, resid >> 16);
- 	ahd_outb(ahd, HCNT + 1, resid >> 8);
- 	ahd_outb(ahd, HCNT, resid);
-@@ -6567,14 +6555,8 @@ ahd_chip_init(struct ahd_softc *ahd)
- 	 * Tell the sequencer where it can find our arrays in memory.
- 	 */
- 	busaddr = ahd->shared_data_map.physaddr;
--	ahd_outb(ahd, SHARED_DATA_ADDR, busaddr & 0xFF);
--	ahd_outb(ahd, SHARED_DATA_ADDR + 1, (busaddr >> 8) & 0xFF);
--	ahd_outb(ahd, SHARED_DATA_ADDR + 2, (busaddr >> 16) & 0xFF);
--	ahd_outb(ahd, SHARED_DATA_ADDR + 3, (busaddr >> 24) & 0xFF);
--	ahd_outb(ahd, QOUTFIFO_NEXT_ADDR, busaddr & 0xFF);
--	ahd_outb(ahd, QOUTFIFO_NEXT_ADDR + 1, (busaddr >> 8) & 0xFF);
--	ahd_outb(ahd, QOUTFIFO_NEXT_ADDR + 2, (busaddr >> 16) & 0xFF);
--	ahd_outb(ahd, QOUTFIFO_NEXT_ADDR + 3, (busaddr >> 24) & 0xFF);
-+	ahd_outl(ahd, SHARED_DATA_ADDR, busaddr);
-+	ahd_outl(ahd, QOUTFIFO_NEXT_ADDR, busaddr);
+ %token T_ENUM
+@@ -189,6 +191,10 @@ static int  is_download_const(expression
  
- 	/*
- 	 * Setup the allowed SCSI Sequences based on operational mode.
-@@ -6623,10 +6605,7 @@ ahd_chip_init(struct ahd_softc *ahd)
- 	 * Tell the sequencer which SCB will be the next one it receives.
- 	 */
- 	busaddr = ahd_le32toh(ahd->next_queued_hscb->hscb_busaddr);
--	ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 0, busaddr & 0xFF);
--	ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 1, (busaddr >> 8) & 0xFF);
--	ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 2, (busaddr >> 16) & 0xFF);
--	ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 3, (busaddr >> 24) & 0xFF);
-+	ahd_outl(ahd, NEXT_QUEUED_SCB_ADDR, busaddr);
+ %token <value> T_OR
  
- 	/*
- 	 * Default to coalescing disabled.
-@@ -7159,10 +7138,7 @@ ahd_qinfifo_requeue(struct ahd_softc *ah
- 		uint32_t busaddr;
++/* 16 bit extensions */
++%token <value> T_OR16 T_AND16 T_XOR16 T_ADD16
++%token <value> T_ADC16 T_MVI16 T_TEST16 T_CMP16 T_CMPXCHG
++
+ %token T_RET
  
- 		busaddr = ahd_le32toh(scb->hscb->hscb_busaddr);
--		ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 0, busaddr & 0xFF);
--		ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 1, (busaddr >> 8) & 0xFF);
--		ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 2, (busaddr >> 16) & 0xFF);
--		ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 3, (busaddr >> 24) & 0xFF);
-+		ahd_outl(ahd, NEXT_QUEUED_SCB_ADDR, busaddr);
- 	} else {
- 		prev_scb->hscb->next_hscb_busaddr = scb->hscb->hscb_busaddr;
- 		ahd_sync_scb(ahd, prev_scb, 
-@@ -7269,10 +7245,7 @@ ahd_search_qinfifo(struct ahd_softc *ahd
- 	 */
- 	ahd->qinfifonext = qinstart;
- 	busaddr = ahd_le32toh(ahd->next_queued_hscb->hscb_busaddr);
--	ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 0, busaddr & 0xFF);
--	ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 1, (busaddr >> 8) & 0xFF);
--	ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 2, (busaddr >> 16) & 0xFF);
--	ahd_outb(ahd, NEXT_QUEUED_SCB_ADDR + 3, (busaddr >> 24) & 0xFF);
-+	ahd_outl(ahd, NEXT_QUEUED_SCB_ADDR, busaddr);
+ %token T_NOP
+@@ -207,7 +213,7 @@ static int  is_download_const(expression
  
- 	while (qinpos != qintail) {
- 		scb = ahd_lookup_scb(ahd, ahd->qinfifo[qinpos]);
-@@ -7743,7 +7716,7 @@ ahd_reset_channel(struct ahd_softc *ahd,
- 	 */
- 	ahd_clear_msg_state(ahd);
- 	ahd_outb(ahd, SIMODE1,
--		 ahd_inb(ahd, SIMODE1) & ~(ENBUSFREE|ENSCSIRST|ENBUSFREE));
-+		 ahd_inb(ahd, SIMODE1) & ~(ENBUSFREE|ENSCSIRST));
+ %type <expression> expression immediate immediate_or_a
  
- 	if (initiate_reset)
- 		ahd_reset_current_bus(ahd);
-@@ -8321,8 +8294,7 @@ ahd_dumpseq(struct ahd_softc* ahd)
- 	max_prog = 2048;
+-%type <value> export ret f1_opcode f2_opcode jmp_jc_jnc_call jz_jnz je_jne
++%type <value> export ret f1_opcode f2_opcode f4_opcode jmp_jc_jnc_call jz_jnz je_jne
  
- 	ahd_outb(ahd, SEQCTL0, PERRORDIS|FAILDIS|FASTMODE|LOADRAM);
--	ahd_outb(ahd, PRGMCNT, 0);
--	ahd_outb(ahd, PRGMCNT+1, 0);
-+	ahd_outw(ahd, PRGMCNT, 0);
- 	for (i = 0; i < max_prog; i++) {
- 		uint8_t ins_bytes[4];
+ %type <value> mode_value mode_list macro_arglist
  
-@@ -8437,8 +8409,7 @@ ahd_loadseq(struct ahd_softc *ahd)
- 	downloaded = 0;
- 	skip_addr = 0;
- 	ahd_outb(ahd, SEQCTL0, PERRORDIS|FAILDIS|FASTMODE|LOADRAM);
--	ahd_outb(ahd, PRGMCNT, 0);
--	ahd_outb(ahd, PRGMCNT+1, 0);
-+	ahd_outw(ahd, PRGMCNT, 0);
+@@ -1304,6 +1310,15 @@ f2_opcode:
+ |	T_ROR { $$ = AIC_OP_ROR; }
+ ;
  
- 	for (i = 0; i < sizeof(seqprog)/4; i++) {
- 		if (ahd_check_patch(ahd, &cur_patch, i, &skip_addr) == 0) {
-@@ -8731,7 +8702,7 @@ ahd_dump_card_state(struct ahd_softc *ah
- 	printf(">>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<\n"
- 	       "%s: Dumping Card State at program address 0x%x Mode 0x%x\n",
- 	       ahd_name(ahd), 
--	       ahd_inb(ahd, CURADDR) | (ahd_inb(ahd, CURADDR+1) << 8),
-+	       ahd_inw(ahd, CURADDR),
- 	       ahd_build_mode_state(ahd, ahd->saved_src_mode,
- 				    ahd->saved_dst_mode));
- 	if (paused)
-@@ -9427,13 +9398,9 @@ ahd_handle_en_lun(struct ahd_softc *ahd,
- 			if ((ahd->features & AHD_MULTI_TID) != 0) {
- 				u_int targid_mask;
++f4_opcode:
++	T_OR16	{ $$ = AIC_OP_OR16; }
++|	T_AND16 { $$ = AIC_OP_AND16; }
++|	T_XOR16 { $$ = AIC_OP_XOR16; }
++|	T_ADD16 { $$ = AIC_OP_ADD16; }
++|	T_ADC16 { $$ = AIC_OP_ADC16; }
++|	T_MVI16 { $$ = AIC_OP_MVI16; }
++;
++
+ code:
+ 	f2_opcode destination ',' expression opt_source ret ';'
+ 	{
+diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h b/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h
+--- a/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h
++++ b/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h
+@@ -37,13 +37,14 @@
+  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  * POSSIBILITY OF SUCH DAMAGES.
+  *
+- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_insformat.h#11 $
++ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_insformat.h#12 $
+  *
+  * $FreeBSD$
+  */
  
--				targid_mask = ahd_inb(ahd, TARGID)
--					    | (ahd_inb(ahd, TARGID + 1) << 8);
--
-+				targid_mask = ahd_inw(ahd, TARGID);
- 				targid_mask |= target_mask;
--				ahd_outb(ahd, TARGID, targid_mask);
--				ahd_outb(ahd, TARGID+1, (targid_mask >> 8));
--				
-+				ahd_outw(ahd, TARGID, targid_mask);
- 				ahd_update_scsiid(ahd, targid_mask);
- 			} else {
- 				u_int our_id;
-@@ -9547,14 +9514,9 @@ ahd_handle_en_lun(struct ahd_softc *ahd,
- 				if (ahd->features & AHD_MULTI_TID) {
- 					u_int targid_mask;
+ #include <asm/byteorder.h>
  
--					targid_mask = ahd_inb(ahd, TARGID)
--						    | (ahd_inb(ahd, TARGID + 1)
--						       << 8);
--
-+					targid_mask = ahd_inw(ahd, TARGID);
- 					targid_mask &= ~target_mask;
--					ahd_outb(ahd, TARGID, targid_mask);
--					ahd_outb(ahd, TARGID+1,
--					 	 (targid_mask >> 8));
-+					ahd_outw(ahd, TARGID, targid_mask);
- 					ahd_update_scsiid(ahd, targid_mask);
++/* 8bit ALU logic operations */
+ struct ins_format1 {
+ #ifdef __LITTLE_ENDIAN
+ 	uint32_t	immediate	: 8,
+@@ -62,6 +63,7 @@ struct ins_format1 {
+ #endif
+ };
+ 
++/* 8bit ALU shift/rotate operations */
+ struct ins_format2 {
+ #ifdef __LITTLE_ENDIAN
+ 	uint32_t	shift_control	: 8,
+@@ -80,6 +82,7 @@ struct ins_format2 {
+ #endif
+ };
+ 
++/* 8bit branch control operations */
+ struct ins_format3 {
+ #ifdef __LITTLE_ENDIAN
+ 	uint32_t	immediate	: 8,
+@@ -96,10 +99,68 @@ struct ins_format3 {
+ #endif
+ };
+ 
++/* 16bit ALU logic operations */
++struct ins_format4 {
++#ifdef __LITTLE_ENDIAN
++	uint32_t	opcode_ext	: 8,
++			source		: 9,
++			destination	: 9,
++			ret		: 1,
++			opcode		: 4,
++			parity		: 1;
++#else
++	uint32_t	parity		: 1,
++			opcode		: 4,
++			ret		: 1,
++			destination	: 9,
++			source		: 9,
++			opcode_ext	: 8;
++#endif
++};
++
++/* 16bit branch control operations */
++struct ins_format5 {
++#ifdef __LITTLE_ENDIAN
++	uint32_t	opcode_ext	: 8,
++			source		: 9,
++			address		: 10,
++			opcode		: 4,
++			parity		: 1;
++#else
++	uint32_t	parity		: 1,
++			opcode		: 4,
++			address		: 10,
++			source		: 9,
++			opcode_ext	: 8;
++#endif
++};
++
++/*  Far branch operations */
++struct ins_format6 {
++#ifdef __LITTLE_ENDIAN
++	uint32_t	page		: 3,
++			opcode_ext	: 5,
++			source		: 9,
++			address		: 10,
++			opcode		: 4,
++			parity		: 1;
++#else
++	uint32_t	parity		: 1,
++			opcode		: 4,
++			address		: 10,
++			source		: 9,
++			opcode_ext	: 5,
++			page		: 3;
++#endif
++};
++
+ union ins_formats {
+ 		struct ins_format1 format1;
+ 		struct ins_format2 format2;
+ 		struct ins_format3 format3;
++		struct ins_format4 format4;
++		struct ins_format5 format5;
++		struct ins_format6 format6;
+ 		uint8_t		   bytes[4];
+ 		uint32_t	   integer;
+ };
+@@ -118,6 +179,8 @@ struct instruction {
+ #define	AIC_OP_ROL	0x5
+ #define	AIC_OP_BMOV	0x6
+ 
++#define	AIC_OP_MVI16	0x7
++
+ #define	AIC_OP_JMP	0x8
+ #define AIC_OP_JC	0x9
+ #define AIC_OP_JNC	0xa
+@@ -131,3 +194,26 @@ struct instruction {
+ #define	AIC_OP_SHL	0x10
+ #define	AIC_OP_SHR	0x20
+ #define	AIC_OP_ROR	0x30
++
++/* 16bit Ops. Low byte main opcode.  High byte extended opcode. */ 
++#define	AIC_OP_OR16	0x8005
++#define	AIC_OP_AND16	0x8105
++#define	AIC_OP_XOR16	0x8205
++#define	AIC_OP_ADD16	0x8305
++#define	AIC_OP_ADC16	0x8405
++#define AIC_OP_JNE16	0x8805
++#define AIC_OP_JNZ16	0x8905
++#define AIC_OP_JE16	0x8C05
++#define AIC_OP_JZ16	0x8B05
++#define AIC_OP_JMP16	0x9005
++#define AIC_OP_JC16	0x9105
++#define AIC_OP_JNC16	0x9205
++#define AIC_OP_CALL16	0x9305
++#define AIC_OP_CALL16	0x9305
++
++/* Page extension is low three bits of second opcode byte. */
++#define AIC_OP_JMPF	0xA005
++#define AIC_OP_CALLF	0xB005
++#define AIC_OP_JCF	0xC005
++#define AIC_OP_JNCF	0xD005
++#define AIC_OP_CMPXCHG	0xE005
+diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l b/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
+--- a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
++++ b/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
+@@ -38,7 +38,7 @@
+  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  * POSSIBILITY OF SUCH DAMAGES.
+  *
+- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_scan.l#19 $
++ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_scan.l#20 $
+  *
+  * $FreeBSD$
+  */
+@@ -132,7 +132,7 @@ if[ \t]*\(		{
+ 						*string_buf_ptr++ = *yptr++;
  				}
  			}
+-
++else			{ return T_ELSE; }
+ VERSION			{ return T_VERSION; }
+ PREFIX			{ return T_PREFIX; }
+ PATCH_ARG_LIST		{ return T_PATCH_ARG_LIST; }
+@@ -173,10 +173,6 @@ RW|RO|WO		{
+ 					yylval.value = WO;
+ 				 return T_MODE;
+ 			}
+-BEGIN_CRITICAL		{ return T_BEGIN_CS; }
+-END_CRITICAL		{ return T_END_CS; }
+-SET_SRC_MODE		{ return T_SET_SRC_MODE; }
+-SET_DST_MODE		{ return T_SET_DST_MODE; }
+ field			{ return T_FIELD; }
+ enum			{ return T_ENUM; }
+ mask			{ return T_MASK; }
+@@ -192,6 +188,13 @@ none			{ return T_NONE; }
+ sindex			{ return T_SINDEX; }
+ A			{ return T_A; }
+ 
++	/* Instruction Formatting */
++PAD_PAGE		{ return T_PAD_PAGE; }
++BEGIN_CRITICAL		{ return T_BEGIN_CS; }
++END_CRITICAL		{ return T_END_CS; }
++SET_SRC_MODE		{ return T_SET_SRC_MODE; }
++SET_DST_MODE		{ return T_SET_DST_MODE; }
++
+ 	/* Opcodes */
+ shl			{ return T_SHL; }
+ shr			{ return T_SHR; }
+@@ -223,7 +226,17 @@ and			{ return T_AND;	}
+ or			{ return T_OR;	}
+ ret			{ return T_RET; }
+ nop			{ return T_NOP; }
+-else			{ return T_ELSE; }
++
++	/* ARP2 16bit extensions */
++or16			{ return T_OR16; }
++and16			{ return T_AND16; }
++xor16			{ return T_XOR16; }
++add16			{ return T_ADD16; }
++adc16			{ return T_ADC16; }
++mvi16			{ return T_MVI16; }
++test16			{ return T_TEST16; }
++cmp16			{ return T_CMP16; }
++cmpxchg			{ return T_CMPXCHG; }
+ 
+ 	/* Allowed Symbols */
+ \<\<			{ return T_EXPR_LSHIFT; }
 
---------------070206000300080406080901--
+--------------000806030004070604090707--
