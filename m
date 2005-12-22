@@ -1,42 +1,46 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: ETA for Areca RAID driver (arcmsr) in mainline?
-Date: Thu, 22 Dec 2005 09:20:00 +0100
-Message-ID: <1135239601.2940.5.camel@laptopd505.fenrus.org>
-References: <1135228831.4122.15.camel@mentorng.gurulabs.com>
-	 <1135229681.439.23.camel@mindpipe>  <200512220917.41494.oliver@neukum.org>
+From: thomas schorpp <t.schorpp@gmx.de>
+Subject: Re: [SCSI] Add support for braindead Cypress USB ATA passthrough
+ CDBs
+Date: Thu, 22 Dec 2005 10:24:04 +0100
+Message-ID: <43AA70B4.2050509@gmx.de>
+References: <20051221122442.GA16571@porkrind.org>
+Reply-To: t.schorpp@gmx.de
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:64456 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S965126AbVLVIUG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Dec 2005 03:20:06 -0500
-In-Reply-To: <200512220917.41494.oliver@neukum.org>
+Received: from mail.gmx.de ([213.165.64.21]:22919 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S965125AbVLVJYJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Dec 2005 04:24:09 -0500
+In-Reply-To: <20051221122442.GA16571@porkrind.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: Lee Revell <rlrevell@joe-job.com>, Dax Kelson <dax@gurulabs.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2005-12-22 at 09:17 +0100, Oliver Neukum wrote:
-> Am Donnerstag, 22. Dezember 2005 06:34 schrieb Lee Revell:
-> > On Wed, 2005-12-21 at 22:20 -0700, Dax Kelson wrote:
-> > > I just got a shiny new (for me at least, the card has been out for
-> > > months) Areca RAID card.
-> > > 
-> > > The driver (arcmsr) is in the -mm kernel, but hasn't yet made it to the
-> > > mainline kernel. I'm curious what remains to be done before this can
-> > > happen?
-> > 
-> > Well, often all that's needed are some user reports that the driver
-> > works for them.
+David Caldwell wrote:
+> This patch does 2 things. It reimplements the SG_FLAG_LUN_INHIBIT flag
+> in the SG_IO ioctl which stops the scsi subsystem from overwriting the
+> 2nd byte of the CDB with the LUN. It also doesn't guess the CDB length
+> when sending the SG_IO ioctl to the sg device (the main scsi_ioctl
+> already did this).
 > 
-> Is that a reasonable strategy? Why is a _new_ driver present only in -mm?
-> It hardly can break anything. It is possible that Andrew is quicker merging
-> but still I can't see the advantage if this persists for any length of time.
+> This is for the Cypress CY7C68310 USB to ATA bridge chip (and most
+> likely other USB to ATA chips from Cypress), which implements an ATA
+> passthrough command that is 16 bytes long and starts with the bytes
+> 0x24 0x24. (Not vendor unique, weird length for opcode 0x24, and
+> misuse of the LUN area all at the same time--Lovely).
 
-afaik that's not the strategy here.
-It's more "we're waiting for the structural issues to be resolved" which
-sounds quite reasonable.
+thx, hm, that chip is that old that datasheet is available no more...
 
+i test it as soon as i get my 68300A changed with the new -B- type back from lab.
+
+anyway, i see the first ATACB enabled (guaranteed) announced chip should be 
+the 683xxB types. maybe they have the correct behaviour (16Bytes, opccode length 
+problem), so maybe the last part of above functionality could interfere.
+
+interesting is the lately errata sheet for -B-:
+
+-some atacb functionality not availlable if in udma mode
+-high order bits of error sector not returned at atacb
 
