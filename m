@@ -1,56 +1,46 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: ETA for Areca RAID driver (arcmsr) in mainline?
-Date: Thu, 22 Dec 2005 05:24:43 -0800
-Message-ID: <20051222052443.57ffe6f9.akpm@osdl.org>
-References: <1135228831.4122.15.camel@mentorng.gurulabs.com>
-	<1135229681.439.23.camel@mindpipe>
-	<200512220917.41494.oliver@neukum.org>
-	<1135239601.2940.5.camel@laptopd505.fenrus.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 0/6] Update aic79xx
+Date: Thu, 22 Dec 2005 15:02:00 +0100
+Message-ID: <43AAB1D8.4010700@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:55427 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S965152AbVLVNZP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Dec 2005 08:25:15 -0500
-In-Reply-To: <1135239601.2940.5.camel@laptopd505.fenrus.org>
+Received: from mx1.suse.de ([195.135.220.2]:1923 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S965032AbVLVOCD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Dec 2005 09:02:03 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: oliver@neukum.org, rlrevell@joe-job.com, dax@gurulabs.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Arjan van de Ven <arjan@infradead.org> wrote:
->
-> On Thu, 2005-12-22 at 09:17 +0100, Oliver Neukum wrote:
-> > Am Donnerstag, 22. Dezember 2005 06:34 schrieb Lee Revell:
-> > > On Wed, 2005-12-21 at 22:20 -0700, Dax Kelson wrote:
-> > > > I just got a shiny new (for me at least, the card has been out for
-> > > > months) Areca RAID card.
-> > > > 
-> > > > The driver (arcmsr) is in the -mm kernel, but hasn't yet made it to the
-> > > > mainline kernel. I'm curious what remains to be done before this can
-> > > > happen?
-> > > 
-> > > Well, often all that's needed are some user reports that the driver
-> > > works for them.
-> > 
-> > Is that a reasonable strategy? Why is a _new_ driver present only in -mm?
-> > It hardly can break anything. It is possible that Andrew is quicker merging
-> > but still I can't see the advantage if this persists for any length of time.
-> 
-> afaik that's not the strategy here.
-> It's more "we're waiting for the structural issues to be resolved" which
-> sounds quite reasonable.
-> 
+Hi James,
 
-Yes, there are lots of stylistic and API-usage issues with the driver and
-it needs someone to fix them all up.  Unfortunately the original
-developer's English is very poor and he's obviously quite unfamiliar with
-how Linux development happens.
+this is a patchset to update aic7xx / aic79xx to the version
+2.0.12-6.3.9 as found on Adaptecs website.
+Most important will be the addition of two new (well, not really new)
+IDs to the driver and some sequencer fixes. Don't ask me about any
+details there, I just took them as is from adaptec.
 
-This is all resolveable - it just needs someone to get down and work with
-Erich on knocking the driver into shape.  But as yet, nobody has stepped up
-to do that work.
+That having said, it omits all Adaptec specifica like installing their
+own workqueue for timeout commands et al.
 
-And yes, the driver does apparently work.
+Tested here on Adaptec 29320 Ultra320.
+
+Please apply.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux Products GmbH		S390 & zSeries
+Maxfeldstra=DFe 5				+49 911 74053 688
+90409 N=FCrnberg				http://www.suse.de
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
