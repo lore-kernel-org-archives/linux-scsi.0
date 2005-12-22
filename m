@@ -1,51 +1,39 @@
-From: Dax Kelson <dax@gurulabs.com>
+From: Oliver Neukum <oliver@neukum.org>
 Subject: Re: ETA for Areca RAID driver (arcmsr) in mainline?
-Date: Thu, 22 Dec 2005 00:24:16 -0700
-Message-ID: <1135236256.4122.24.camel@mentorng.gurulabs.com>
-References: <1135228831.4122.15.camel@mentorng.gurulabs.com>
-	 <1135229681.439.23.camel@mindpipe>
-	 <1135232812.4122.20.camel@mentorng.gurulabs.com>
-	 <1135235065.439.25.camel@mindpipe>
+Date: Thu, 22 Dec 2005 09:17:41 +0100
+Message-ID: <200512220917.41494.oliver@neukum.org>
+References: <1135228831.4122.15.camel@mentorng.gurulabs.com> <1135229681.439.23.camel@mindpipe>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gurulabs.com ([67.137.148.7]:36548 "EHLO mail.gurulabs.com")
-	by vger.kernel.org with ESMTP id S965102AbVLVHXx (ORCPT
+Received: from mail1.kontent.de ([81.88.34.36]:22732 "EHLO Mail1.KONTENT.De")
+	by vger.kernel.org with ESMTP id S965127AbVLVIRz (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Dec 2005 02:23:53 -0500
-In-Reply-To: <1135235065.439.25.camel@mindpipe>
+	Thu, 22 Dec 2005 03:17:55 -0500
+In-Reply-To: <1135229681.439.23.camel@mindpipe>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Lee Revell <rlrevell@joe-job.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Dax Kelson <dax@gurulabs.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, 2005-12-22 at 02:04 -0500, Lee Revell wrote:
-> On Wed, 2005-12-21 at 23:26 -0700, Dax Kelson wrote:
-> > On Thu, 2005-12-22 at 00:34 -0500, Lee Revell wrote:
-> > > On Wed, 2005-12-21 at 22:20 -0700, Dax Kelson wrote:
-> > > > I just got a shiny new (for me at least, the card has been out for
-> > > > months) Areca RAID card.
-> > > > 
-> > > > The driver (arcmsr) is in the -mm kernel, but hasn't yet made it to the
-> > > > mainline kernel. I'm curious what remains to be done before this can
-> > > > happen?
-> > > 
-> > > Well, often all that's needed are some user reports that the driver
-> > > works for them.
-> > > 
-> > > Does it?
+Am Donnerstag, 22. Dezember 2005 06:34 schrieb Lee Revell:
+> On Wed, 2005-12-21 at 22:20 -0700, Dax Kelson wrote:
+> > I just got a shiny new (for me at least, the card has been out for
+> > months) Areca RAID card.
 > > 
-> > According to google searches, yes.
-> > 
-> > At one time there was an issue raised about stack consumption, but that
-> > appears fixed??
+> > The driver (arcmsr) is in the -mm kernel, but hasn't yet made it to the
+> > mainline kernel. I'm curious what remains to be done before this can
+> > happen?
 > 
-> I meant, does it work for *you*?
+> Well, often all that's needed are some user reports that the driver
+> works for them.
 
-Like I said, I just barely got the card. I'm working on getting a custom
-installer built so I get find out the answer. If it was already in
-mainline I'd already have a system installed. :)
+Is that a reasonable strategy? Why is a _new_ driver present only in -mm?
+It hardly can break anything. It is possible that Andrew is quicker merging
+but still I can't see the advantage if this persists for any length of time.
 
-Dax Kelson
-
+	Regards
+		Oliver
