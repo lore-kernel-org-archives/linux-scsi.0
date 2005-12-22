@@ -1,29 +1,41 @@
-From: Lee Revell <rlrevell@joe-job.com>
+From: Dax Kelson <dax@gurulabs.com>
 Subject: Re: ETA for Areca RAID driver (arcmsr) in mainline?
-Date: Thu, 22 Dec 2005 00:34:41 -0500
-Message-ID: <1135229681.439.23.camel@mindpipe>
+Date: Wed, 21 Dec 2005 23:26:52 -0700
+Message-ID: <1135232812.4122.20.camel@mentorng.gurulabs.com>
 References: <1135228831.4122.15.camel@mentorng.gurulabs.com>
+	 <1135229681.439.23.camel@mindpipe>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965066AbVLVFae@vger.kernel.org>
-In-Reply-To: <1135228831.4122.15.camel@mentorng.gurulabs.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dax Kelson <dax@gurulabs.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.gurulabs.com ([67.137.148.7]:7108 "EHLO mail.gurulabs.com")
+	by vger.kernel.org with ESMTP id S932475AbVLVG03 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Dec 2005 01:26:29 -0500
+In-Reply-To: <1135229681.439.23.camel@mindpipe>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lee Revell <rlrevell@joe-job.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 2005-12-21 at 22:20 -0700, Dax Kelson wrote:
-> I just got a shiny new (for me at least, the card has been out for
-> months) Areca RAID card.
+On Thu, 2005-12-22 at 00:34 -0500, Lee Revell wrote:
+> On Wed, 2005-12-21 at 22:20 -0700, Dax Kelson wrote:
+> > I just got a shiny new (for me at least, the card has been out for
+> > months) Areca RAID card.
+> > 
+> > The driver (arcmsr) is in the -mm kernel, but hasn't yet made it to the
+> > mainline kernel. I'm curious what remains to be done before this can
+> > happen?
 > 
-> The driver (arcmsr) is in the -mm kernel, but hasn't yet made it to the
-> mainline kernel. I'm curious what remains to be done before this can
-> happen?
+> Well, often all that's needed are some user reports that the driver
+> works for them.
+> 
+> Does it?
 
-Well, often all that's needed are some user reports that the driver
-works for them.
+According to google searches, yes.
 
-Does it?
+At one time there was an issue raised about stack consumption, but that
+appears fixed??
 
-Lee
+Dax Kelson
+
