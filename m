@@ -1,30 +1,48 @@
-From: Bridget Holman <privation@fransson.nu>
-Subject: more people buy drugs online
-Date: Thu, 22 Dec 2005 10:31:08 -0800
-Message-ID: <9232261768.6650173156@dcz27.neoplus.adsl.tpnet.pl>
-Content-Type: text/plain; charset=us-ascii
+From: Dax Kelson <dax@gurulabs.com>
+Subject: Re: ETA for Areca RAID driver (arcmsr) in mainline?
+Date: Thu, 22 Dec 2005 12:31:34 -0700
+Message-ID: <1135279895.19320.24.camel@mentorng.gurulabs.com>
+References: <1135228831.4122.15.camel@mentorng.gurulabs.com>
+	 <1135229681.439.23.camel@mindpipe> <200512220917.41494.oliver@neukum.org>
+	 <1135239601.2940.5.camel@laptopd505.fenrus.org>
+	 <20051222052443.57ffe6f9.akpm@osdl.org>
+Mime-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:9169 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1030288AbVLVSbN (ORCPT
+Received: from mail.gurulabs.com ([67.137.148.7]:50124 "EHLO mail.gurulabs.com")
+	by vger.kernel.org with ESMTP id S1030261AbVLVTbL (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Dec 2005 13:31:13 -0500
-Received: from dcz27.neoplus.adsl.tpnet.pl (dcz27.neoplus.adsl.tpnet.pl [83.23.77.27])
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id jBMIV8Db021292
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Dec 2005 10:31:09 -0800
+	Thu, 22 Dec 2005 14:31:11 -0500
+In-Reply-To: <20051222052443.57ffe6f9.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Arjan van de Ven <arjan@infradead.org>, oliver@neukum.org, rlrevell@joe-job.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Buy popular drugs online
-http://usicwp.cpz00p060m0kcuc5zuunhccc.anaspidagl.com/?erqnslwxc
+On Thu, 2005-12-22 at 05:24 -0800, Andrew Morton wrote:
 
+> Yes, there are lots of stylistic and API-usage issues with the driver and
+> it needs someone to fix them all up.  Unfortunately the original
+> developer's English is very poor and he's obviously quite unfamiliar with
+> how Linux development happens.
+> 
+> This is all resolveable - it just needs someone to get down and work with
+> Erich on knocking the driver into shape.  But as yet, nobody has stepped up
+> to do that work.
+> 
+> And yes, the driver does apparently work.
 
-By words the mind is winged.       
-The basis for optimism is sheer terror.      
-When the water reaches the upper level, follow the rats.   
+I emailed Areca and got a response that indicated they didn't know about
+the remaining stylistic and API-usage issues with the driver.
 
-The test of any man's character is how he takes praise.  
-Never go to bed mad. Stay up and fight.    
+If someone could spell it out to them what exactly needs to to be fixed
+for it to get merged into the Linus tree, they sound eager to do the
+work.
 
+The current driver does indeed work. Last night I copied several hundred
+gigabytes of data using the driver.
+
+Dax Kelson
+Guru Labs
 
