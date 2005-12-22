@@ -1,46 +1,41 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [Stgt-devel] Re: [Iscsitarget-devel] stgt a new version of iscsi
- target?
-Date: Thu, 22 Dec 2005 13:38:46 +0300
-Message-ID: <43AA8236.0@vlnb.net>
-References: <43987F75.2000301@vlnb.net>	<4398850D.8070102@cs.wisc.edu>	<1134071290.3259.31.camel@mulgrave> <20051222085316J.fujita.tomonori@lab.ntt.co.jp>
+From: Pim Zandbergen <P.Zandbergen@macroscoop.nl>
+Subject: Re: oops reading from Nakamichi SCSI CD changer
+Date: Thu, 22 Dec 2005 13:33:48 +0100
+Message-ID: <43AA9D2C.3060007@macroscoop.nl>
+References: <43A8247C.7000903@macroscoop.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay03.infobox.ru ([195.208.235.28]:63377 "EHLO
-	relay03.infobox.ru") by vger.kernel.org with ESMTP id S1750861AbVLVKjH
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Dec 2005 05:39:07 -0500
-In-Reply-To: <20051222085316J.fujita.tomonori@lab.ntt.co.jp>
+Received: from mondriaan.macroscoop.nl ([82.94.9.2]:3565 "EHLO
+	mondriaan.macroscoop.nl") by vger.kernel.org with ESMTP
+	id S932367AbVLVMdy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Dec 2005 07:33:54 -0500
+Received: from rousseau.macroscoop.nl (rousseau.macroscoop.nl [IPv6:2001:888:1734:0:207:e9ff:fe1a:a80c])
+	by mondriaan.macroscoop.nl (envelope-from P.Zandbergen@macroscoop.nl) (8.13.4/8.13.4) with ESMTP id jBMCXnB3004062
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Dec 2005 13:33:49 +0100
+Received: from [IPv6:2001:888:1734:0:204:acff:fe25:9469] (appel.macroscoop.nl [IPv6:2001:888:1734:0:204:acff:fe25:9469])
+	by rousseau.macroscoop.nl (envelope-from P.Zandbergen@macroscoop.nl) (8.13.4/8.13.4) with ESMTP id jBMCXm7B001032
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Dec 2005 13:33:49 +0100
+In-Reply-To: <43A8247C.7000903@macroscoop.nl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@SteelEye.com, michaelc@cs.wisc.edu, iscsitarget-devel@lists.sourceforge.net, mingz@ele.uri.edu, stgt-devel@lists.berlios.de, WRWHITEHEAD@novell.com, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, hch@infradead.org
+To: linux-scsi@vger.kernel.org
 
-FUJITA,
+A couple of days ago, I mailed a bug report with this subject to this list.
+When it arrived back, it was caught by spamassassin on our mailserver.
+Somehow, the patterns used in the kernel config, dmesg, oops and
+/proc/scsi/scsi output triggered spamassassin.
 
-It would be helpful if you also gather CPU utilization statistics during 
-the tests (user/kernel/idle/iowait time + context switches/sec rate).
+Does that mean that my message does not get to the right people?
+Should I resend it with all the details in an attached zip file?
 
-Vlad
+Thanks,
+Pim
 
-FUJITA Tomonori wrote:
-> I did some initial performance tests with both tgt versions and IET
-> (as you know, another iSCSI software implementation runs in kernel
-> space). All implementations run with write back policy so probably,
-> there should be little real disk I/O effect. I started disktest
-> benchmark software with cold cache state. The machine has 4 GB memory,
-> 1.5K SCSI disk, 4 CPUs (x86_64).
-> 
-> (disktest -PT -T10 -h1 -K8 -B8192 -ID /dev/sdc -w)
-> 
-> o IET
-> | 2005/12/21-18:05:15 | STAT  | 7259 | v1.2.8 | /dev/sdc | Total write throughput: 48195993.6B/s (45.96MB/s), IOPS 5883.3/s.
-> 
-> o tgt (I/O in kernel space)
-> | 2005/12/21-18:03:23 | STAT  | 7013 | v1.2.8 | /dev/sdc | Total write throughput: 45829324.8B/s (43.71MB/s), IOPS 5594.4/s.
-> 
-> o mmap tgt
-> | 2005/12/21-18:22:28 | STAT  | 7990 | v1.2.8 | /dev/sdc | Total write throughput: 25373900.8B/s (24.20MB/s), IOPS 3097.4/s.
+
+> Starting with kernel 2.6.13, my system crashes immediately reading from
+> one of my two Nakamichi MJ-5.16S SCSI CD changers. For info on this
+> device, see http://www.nakamichi.co.jp/download/MJ516S_J.PDF
+
 
