@@ -1,30 +1,30 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/6] aic7xxx: New device ids
-Date: Thu, 22 Dec 2005 18:07:51 +0000
-Message-ID: <20051222180751.GA7417@infradead.org>
-References: <43AAB4B6.3040403@suse.de>
-Mime-Version: 1.0
+From: Bridget Holman <privation@fransson.nu>
+Subject: more people buy drugs online
+Date: Thu, 22 Dec 2005 10:31:08 -0800
+Message-ID: <9232261768.6650173156@dcz27.neoplus.adsl.tpnet.pl>
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:4330 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1030250AbVLVSHy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Dec 2005 13:07:54 -0500
-Content-Disposition: inline
-In-Reply-To: <43AAB4B6.3040403@suse.de>
+Received: from zeus1.kernel.org ([204.152.191.4]:9169 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1030288AbVLVSbN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Dec 2005 13:31:13 -0500
+Received: from dcz27.neoplus.adsl.tpnet.pl (dcz27.neoplus.adsl.tpnet.pl [83.23.77.27])
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id jBMIV8Db021292
+	for <linux-scsi@vger.kernel.org>; Thu, 22 Dec 2005 10:31:09 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-> - * Copyright (c) 1994-2001 Justin T. Gibbs.
-> + * Copyright (c) 1994-2000 Justin T. Gibbs.
+Buy popular drugs online
+http://usicwp.cpz00p060m0kcuc5zuunhccc.anaspidagl.com/?erqnslwxc
 
-reverting copyright years is very unpolite.
 
->  #else
-> +#include <sys/cdefs.h>
-> +__FBSDID("$FreeBSD$");
+By words the mind is winged.       
+The basis for optimism is sheer terror.      
+When the water reaches the upper level, follow the rats.   
 
-please don't put new freebsd gunk in.
+The test of any man's character is how he takes praise.  
+Never go to bed mad. Stay up and fight.    
+
 
