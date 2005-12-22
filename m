@@ -1,41 +1,56 @@
-From: Pim Zandbergen <P.Zandbergen@macroscoop.nl>
-Subject: Re: oops reading from Nakamichi SCSI CD changer
-Date: Thu, 22 Dec 2005 13:33:48 +0100
-Message-ID: <43AA9D2C.3060007@macroscoop.nl>
-References: <43A8247C.7000903@macroscoop.nl>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: ETA for Areca RAID driver (arcmsr) in mainline?
+Date: Thu, 22 Dec 2005 05:24:43 -0800
+Message-ID: <20051222052443.57ffe6f9.akpm@osdl.org>
+References: <1135228831.4122.15.camel@mentorng.gurulabs.com>
+	<1135229681.439.23.camel@mindpipe>
+	<200512220917.41494.oliver@neukum.org>
+	<1135239601.2940.5.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mondriaan.macroscoop.nl ([82.94.9.2]:3565 "EHLO
-	mondriaan.macroscoop.nl") by vger.kernel.org with ESMTP
-	id S932367AbVLVMdy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Dec 2005 07:33:54 -0500
-Received: from rousseau.macroscoop.nl (rousseau.macroscoop.nl [IPv6:2001:888:1734:0:207:e9ff:fe1a:a80c])
-	by mondriaan.macroscoop.nl (envelope-from P.Zandbergen@macroscoop.nl) (8.13.4/8.13.4) with ESMTP id jBMCXnB3004062
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Dec 2005 13:33:49 +0100
-Received: from [IPv6:2001:888:1734:0:204:acff:fe25:9469] (appel.macroscoop.nl [IPv6:2001:888:1734:0:204:acff:fe25:9469])
-	by rousseau.macroscoop.nl (envelope-from P.Zandbergen@macroscoop.nl) (8.13.4/8.13.4) with ESMTP id jBMCXm7B001032
-	for <linux-scsi@vger.kernel.org>; Thu, 22 Dec 2005 13:33:49 +0100
-In-Reply-To: <43A8247C.7000903@macroscoop.nl>
+Received: from smtp.osdl.org ([65.172.181.4]:55427 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S965152AbVLVNZP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Dec 2005 08:25:15 -0500
+In-Reply-To: <1135239601.2940.5.camel@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: oliver@neukum.org, rlrevell@joe-job.com, dax@gurulabs.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-A couple of days ago, I mailed a bug report with this subject to this list.
-When it arrived back, it was caught by spamassassin on our mailserver.
-Somehow, the patterns used in the kernel config, dmesg, oops and
-/proc/scsi/scsi output triggered spamassassin.
+Arjan van de Ven <arjan@infradead.org> wrote:
+>
+> On Thu, 2005-12-22 at 09:17 +0100, Oliver Neukum wrote:
+> > Am Donnerstag, 22. Dezember 2005 06:34 schrieb Lee Revell:
+> > > On Wed, 2005-12-21 at 22:20 -0700, Dax Kelson wrote:
+> > > > I just got a shiny new (for me at least, the card has been out for
+> > > > months) Areca RAID card.
+> > > > 
+> > > > The driver (arcmsr) is in the -mm kernel, but hasn't yet made it to the
+> > > > mainline kernel. I'm curious what remains to be done before this can
+> > > > happen?
+> > > 
+> > > Well, often all that's needed are some user reports that the driver
+> > > works for them.
+> > 
+> > Is that a reasonable strategy? Why is a _new_ driver present only in -mm?
+> > It hardly can break anything. It is possible that Andrew is quicker merging
+> > but still I can't see the advantage if this persists for any length of time.
+> 
+> afaik that's not the strategy here.
+> It's more "we're waiting for the structural issues to be resolved" which
+> sounds quite reasonable.
+> 
 
-Does that mean that my message does not get to the right people?
-Should I resend it with all the details in an attached zip file?
+Yes, there are lots of stylistic and API-usage issues with the driver and
+it needs someone to fix them all up.  Unfortunately the original
+developer's English is very poor and he's obviously quite unfamiliar with
+how Linux development happens.
 
-Thanks,
-Pim
+This is all resolveable - it just needs someone to get down and work with
+Erich on knocking the driver into shape.  But as yet, nobody has stepped up
+to do that work.
 
-
-> Starting with kernel 2.6.13, my system crashes immediately reading from
-> one of my two Nakamichi MJ-5.16S SCSI CD changers. For info on this
-> device, see http://www.nakamichi.co.jp/download/MJ516S_J.PDF
-
-
+And yes, the driver does apparently work.
