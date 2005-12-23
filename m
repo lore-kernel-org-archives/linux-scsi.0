@@ -1,38 +1,51 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: More FC Transport Issues
-Date: Fri, 23 Dec 2005 11:58:49 -0800
-Message-ID: <20051223195849.GH1112@andrew-vasquezs-powerbook-g4-15.local>
-References: <43AB36BC.8000003@sgi.com>
+Subject: Re: [SCSI] fix scsi_reap_target() device_del from atomic context
+Date: Fri, 23 Dec 2005 12:05:32 -0800
+Message-ID: <20051223200532.GI1112@andrew-vasquezs-powerbook-g4-15.local>
+References: <200512212359.jBLNxluV016971@hera.kernel.org> <20051222221329.5f317b8d.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:5267 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S1161015AbVLWT6z (ORCPT
+Received: from pat.qlogic.com ([198.70.193.2]:32934 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S1161030AbVLWUFi (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Dec 2005 14:58:55 -0500
+	Fri, 23 Dec 2005 15:05:38 -0500
 Content-Disposition: inline
-In-Reply-To: <43AB36BC.8000003@sgi.com>
+In-Reply-To: <20051222221329.5f317b8d.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@SGI.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James.Smart@Emulex.Com, James Bottomley <James.Bottomley@SteelEye.com>, Jeremy Higdon <jeremy@SGI.com>
+To: Andrew Morton <akpm@osdl.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Thu, 22 Dec 2005, Michael Reed wrote:
+On Thu, 22 Dec 2005, Andrew Morton wrote:
 
-> I then try rebooting the system again.  Discovery happens as expected
-> at the time the driver initializes each card.  Then the system takes an
-> OOPS.
+> > +	struct work_queue_wrapper *wqw = (struct work_queue_wrapper *)data;
+> > +	struct scsi_target *starget = wqw->starget;
+> > +	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+> > +	unsigned long flags;
+> > +
+> > +	kfree(wqw);
+> > +
+> > +	spin_lock_irqsave(shost->host_lock, flags);
+> > +
+> > +	if (--starget->reap_ref == 0 && list_empty(&starget->devices)) {
+> > +		list_del_init(&starget->siblings);
+> > +		spin_unlock_irqrestore(shost->host_lock, flags);
+> > +		device_del(&starget->dev);
+> > +		transport_unregister_device(&starget->dev);
+> > +		put_device(&starget->dev);
+> > +		return;
+> > +
+> > +	}
+> > +	spin_unlock_irqrestore(shost->host_lock, flags);
+> > +
+> > +	return;
+> > +}
 > 
-> It's possible the OOPS is related to the qla2xxx serialization issue I reported
-> earlier.
-> 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=113380446825841&w=2
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=113458339109319&w=2
-> 
-> I tried a third time and got the same OOPS.  Repeatable.
+> Given that this can run an arbitrary amount of time later on, how do we
+> know that *shost is still live?
 
-It may be related, but, I'm trying to track down a very repepeatable
-OOPS I'm getting during driver-unload time:
+Hmm, I'm getting the following OOPS (consistently):
 
 	Unable to handle kernel paging request at virtual address 6b6b6beb
 	 printing eip:
@@ -75,26 +88,13 @@ OOPS I'm getting during driver-unload time:
 	SysRq : Emergency Sync
 	Emergency Sync complete
 
-git bisect narrowed the bad commit as:
+with this commit applied.
 
-	http://kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=863a930a40eb7f2d18534c2c166b22582f5c6cfd
+See previous post:
 
-	commit 863a930a40eb7f2d18534c2c166b22582f5c6cfd
-	tree d2f74a0351a09e184e124fd6ecf16e02ab768a0b
-	parent 42e33148df38c60b99d984b76b302c64397ebe4c
-	author James Bottomley <James.Bottomley@steeleye.com> 1134705703 -0800
-	committer James Bottomley <jejb@mulgrave.(none)> 1134838088 -0600
+	http://marc.theaimsgroup.com/?l=linux-scsi&m=113536796621377&w=2
 
-	[SCSI] fix scsi_reap_target() device_del from atomic context
-
-	scsi_reap_target() was desgined to be called from any context.
-	However it must do a device_del() of the target device, which may only
-	be called from user context.  Thus we have to reimplement
-	scsi_reap_target() via a workqueue.
-
-	Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
-
-reverting the commit avoided the OOPS, still investigating...
+must be the sixth day...
 
 --
 av
