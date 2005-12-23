@@ -1,48 +1,24 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [SCSI] fix scsi_reap_target() device_del from atomic context
-Date: Fri, 23 Dec 2005 05:15:34 -0700
-Message-ID: <20051223121534.GM2361@parisc-linux.org>
-References: <200512212359.jBLNxluV016971@hera.kernel.org> <20051222221329.5f317b8d.akpm@osdl.org>
+From: "James S. Hayden" <jamesshaydengm@stage-n-light.de>
+Subject: Bujy cials-tabs, 1 day sgale
+Date: Fri, 23 Dec 2005 14:24:44 +0100
+Message-ID: <b78c01c607c4$d92ff09f$c2713909@tw-marketing.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; format=flowed; charset=iso-8859-1; reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:52127 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1030511AbVLWMPf
+Received: from 217-159-151-142-dsl.kvm.estpak.ee ([217.159.151.142]:40464 "HELO
+	tw-marketing.de") by vger.kernel.org with SMTP id S1030547AbVLWPBY
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Dec 2005 07:15:35 -0500
-Content-Disposition: inline
-In-Reply-To: <20051222221329.5f317b8d.akpm@osdl.org>
+	Fri, 23 Dec 2005 10:01:24 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, Dec 22, 2005 at 10:13:29PM -0800, Andrew Morton wrote:
-> > +	struct work_queue_wrapper *wqw = (struct work_queue_wrapper *)data;
-> > +	struct scsi_target *starget = wqw->starget;
-> > +	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-> > +	unsigned long flags;
-> > +
-> > +	kfree(wqw);
-> > +
-> > +	spin_lock_irqsave(shost->host_lock, flags);
-> > +
-> > +	if (--starget->reap_ref == 0 && list_empty(&starget->devices)) {
-> > +		list_del_init(&starget->siblings);
-> > +		spin_unlock_irqrestore(shost->host_lock, flags);
-> > +		device_del(&starget->dev);
-> > +		transport_unregister_device(&starget->dev);
-> > +		put_device(&starget->dev);
-> > +		return;
-> > +
-> > +	}
-> > +	spin_unlock_irqrestore(shost->host_lock, flags);
-> > +
-> > +	return;
-> > +}
-> 
-> Given that this can run an arbitrary amount of time later on, how do we
-> know that *shost is still live?
 
-If there's still an starget, its parent shost must still be around, no?
+Be ERECT in less than 15 mins
+
+PRlCE: $ 2 / use
+
+view our megasite --> onlineclear.com
+
 
