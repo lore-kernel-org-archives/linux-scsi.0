@@ -1,100 +1,80 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [SCSI] fix scsi_reap_target() device_del from atomic context
-Date: Fri, 23 Dec 2005 12:05:32 -0800
-Message-ID: <20051223200532.GI1112@andrew-vasquezs-powerbook-g4-15.local>
-References: <200512212359.jBLNxluV016971@hera.kernel.org> <20051222221329.5f317b8d.akpm@osdl.org>
+From: Dave Jones <davej@redhat.com>
+Subject: scsi_run_queue oops
+Date: Fri, 23 Dec 2005 15:12:27 -0500
+Message-ID: <20051223201227.GA7020@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:32934 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S1161030AbVLWUFi (ORCPT
+Received: from mx1.redhat.com ([66.187.233.31]:50074 "EHLO mx1.redhat.com")
+	by vger.kernel.org with ESMTP id S1161033AbVLWUMg (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Dec 2005 15:05:38 -0500
+	Fri, 23 Dec 2005 15:12:36 -0500
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.12.11/8.12.11) with ESMTP id jBNKCTvL027787
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Dec 2005 15:12:29 -0500
+Received: from devserv.devel.redhat.com (devserv.devel.redhat.com [172.16.58.1])
+	by int-mx1.corp.redhat.com (8.11.6/8.11.6) with ESMTP id jBNKCT121384
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Dec 2005 15:12:29 -0500
+Received: from nwo.kernelslacker.org (vpn83-121.boston.redhat.com [172.16.83.121])
+	by devserv.devel.redhat.com (8.12.11/8.12.11) with ESMTP id jBNKCSfA020813
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Dec 2005 15:12:29 -0500
+Received: from nwo.kernelslacker.org (localhost.localdomain [127.0.0.1])
+	by nwo.kernelslacker.org (8.13.5/8.13.4) with ESMTP id jBNKCSII021276
+	for <linux-scsi@vger.kernel.org>; Fri, 23 Dec 2005 15:12:28 -0500
+Received: (from davej@localhost)
+	by nwo.kernelslacker.org (8.13.5/8.13.5/Submit) id jBNKCRjK021275
+	for linux-scsi@vger.kernel.org; Fri, 23 Dec 2005 15:12:27 -0500
 Content-Disposition: inline
-In-Reply-To: <20051222221329.5f317b8d.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 22 Dec 2005, Andrew Morton wrote:
+I got a report from a user who periodically sees
+an oops in this function in our 2.6.14.3 based update.
 
-> > +	struct work_queue_wrapper *wqw = (struct work_queue_wrapper *)data;
-> > +	struct scsi_target *starget = wqw->starget;
-> > +	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-> > +	unsigned long flags;
-> > +
-> > +	kfree(wqw);
-> > +
-> > +	spin_lock_irqsave(shost->host_lock, flags);
-> > +
-> > +	if (--starget->reap_ref == 0 && list_empty(&starget->devices)) {
-> > +		list_del_init(&starget->siblings);
-> > +		spin_unlock_irqrestore(shost->host_lock, flags);
-> > +		device_del(&starget->dev);
-> > +		transport_unregister_device(&starget->dev);
-> > +		put_device(&starget->dev);
-> > +		return;
-> > +
-> > +	}
-> > +	spin_unlock_irqrestore(shost->host_lock, flags);
-> > +
-> > +	return;
-> > +}
-> 
-> Given that this can run an arbitrary amount of time later on, how do we
-> know that *shost is still live?
+Does this look familiar to anyone?
 
-Hmm, I'm getting the following OOPS (consistently):
+Unable to handle kernel NULL pointer dereference
+  printing eip:
+*pde = 00426001
+Oops: 0000 [#1]
+SMP
+Modules linked in: sata_nv libata scsi_mod e1000 nfs lockd nfs_acl sunrpc
+CPU:    0
+EIP:    0060:[<e09528e6>]    Not tainted VLI
+EFLAGS: 00010286   (2.6.14-1.1644_FC4smp)
+EIP is at scsi_run_queue+0x10/0xaf [scsi_mod]
+eax: 00000000   ebx: dd98007c   ecx: dffef880   edx: 00000001
+esi: ddc99e00   edi: 00000246   ebp: dd9071fc   esp: c042af14
+ds: 007b   es: 007b   ss: 0068
+Process ksoftirqd/0 (pid: 3, threadinfo=c042a000 task=dfc41ab0)
+Stack: dd9071fc dd98007c ddc99e00 00000246 dd9071fc e0952a7d ddc99e00 00000000
+        00000000 dd98007c e0952e88 00000001 e088260b dcd3a570 c15e3380 dcd3a570
+        00000000 00000000 00040000 00000024 dd9071fc 00000000 00000000 00000292
+Call Trace:
+  [<e0952a7d>] scsi_end_request+0x83/0xb0 [scsi_mod]
+  [<e0952e88>] scsi_io_completion+0x29e/0x4d2 [scsi_mod]
+  [<e088260b>] e1000_clean_rx_irq+0x95/0x4f1 [e1000]
+  [<e094dcb2>] scsi_finish_command+0x82/0xb5 [scsi_mod]
+  [<e094db97>] scsi_softirq+0xc0/0x133 [scsi_mod]
+  [<c02bdf4e>] net_rx_action+0xb7/0x1bb
+  [<c01258c2>] __do_softirq+0x72/0xdc
+  [<c0105c43>] do_softirq+0x4b/0x4f
+  =======================
+  [<c0125ec2>] ksoftirqd+0x9c/0xe8
+  [<c0125e26>] ksoftirqd+0x0/0xe8
+  [<c0133d89>] kthread+0x93/0x97
+  [<c0133cf6>] kthread+0x0/0x97
+  [<c0101d5d>] kernel_thread_helper+0x5/0xb
+Code: c5 8f df 8b 14 24 8b 42 44 e8 37 b6 9c df 89 44 24 04 89 d8 e8 2e b6 ff ff
+eb b1 55 57 56 53 83 ec \
+04 89 04 24 8b 80 10 01 00 00 <8b> 38 80 b8 85 01 00 00 00 0f 88 86 00 00 00 8b
+47 44 e8 03 b6
 
-	Unable to handle kernel paging request at virtual address 6b6b6beb
-	 printing eip:
-	c01900c2
-	*pde = 00000000
-	Oops: 0002 [#1]
-	SMP 
-	Modules linked in: qla2xxx scsi_transport_fc
-	CPU:    2
-	EIP:    0060:[<c01900c2>]    Not tainted VLI
-	EFLAGS: 00010282   (2.6.15-rc6) 
-	EIP is at sysfs_hash_and_remove+0x31/0x11f
-	eax: 00000000   ebx: 6b6b6b6b   ecx: 00000000   edx: ee6aac68
-	esi: 6b6b6b6b   edi: f8839d44   ebp: f8839cc0   esp: c1af7e98
-	ds: 007b   es: 007b   ss: 0068
-	Process events/2 (pid: 16, threadinfo=c1af7000 task=c1aef030)
-	Stack: c03998d2 00000063 eb6a0e2c eb6a0e24 f8839d44 f8839cc0 c025877b e640aac0 
-	       ee000f5c ee000f5c 00000000 f8839cc0 f332e178 eb6a0e24 c025ab08 c025ab39 
-	       eb6a0e24 c0370606 eb6a0e00 f332e178 c1af7f00 e5a872dc c025a722 f332e178 
-	Call Trace:
-	 [<c025877b>] class_device_del+0x138/0x163
-	 [<c025ab08>] transport_remove_classdev+0x0/0x68
-	 [<c025ab39>] transport_remove_classdev+0x31/0x68
-	 [<c0370606>] klist_next+0x42/0x5c
-	 [<c025a722>] attribute_container_device_trigger+0xcb/0xe2
-	 [<c020524a>] kobject_put+0x1e/0x22
-	 [<c025ab87>] transport_remove_device+0x17/0x1b
-	 [<c025ab08>] transport_remove_classdev+0x0/0x68
-	 [<c0294874>] scsi_target_reap_work+0xa4/0xbb
-	 [<c012bcca>] worker_thread+0x1bf/0x24a
-	 [<c02947d0>] scsi_target_reap_work+0x0/0xbb
-	 [<c0117960>] default_wake_function+0x0/0x12
-	 [<c0117960>] default_wake_function+0x0/0x12
-	 [<c012bb0b>] worker_thread+0x0/0x24a
-	 [<c0130021>] kthread+0xa3/0xcd
-	 [<c012ff7e>] kthread+0x0/0xcd
-	 [<c0101119>] kernel_thread_helper+0x5/0xb
-	Code: 08 8b 44 24 1c 8b 58 18 8b 70 60 85 db 75 08 83 c4 08 5b 5e 5f 5d c3 c7 44 24 04 63 00 00 00 c7 04 24 d2 98 39 c0 e8 e7 93  
-	 <6>ACPI: PCI interrupt for device 0000:03:01.0 disabled
-	SysRq : Emergency Sync
-	Emergency Sync complete
 
-with this commit applied.
+The user mentions that the workstation is actually diskless, so I'm
+puzzled why we're doing SCSI IO at all, but nevertheless...
+I've asked for more info.
 
-See previous post:
+		Dave
 
-	http://marc.theaimsgroup.com/?l=linux-scsi&m=113536796621377&w=2
-
-must be the sixth day...
-
---
-av
