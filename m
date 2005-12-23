@@ -1,49 +1,53 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [SCSI] Add support for braindead Cypress USB ATA passthrough
-	CDBs
-Date: Fri, 23 Dec 2005 09:52:40 -0600
-Message-ID: <1135353160.3728.10.camel@mulgrave>
-References: <20051221122442.GA16571@porkrind.org>
+Subject: Re: [SCSI] fix scsi_reap_target() device_del from atomic context
+Date: Fri, 23 Dec 2005 09:58:56 -0600
+Message-ID: <1135353536.3728.15.camel@mulgrave>
+References: <200512212359.jBLNxluV016971@hera.kernel.org>
+	 <20051222221329.5f317b8d.akpm@osdl.org>
+	 <20051223121534.GM2361@parisc-linux.org> <1135351652.3728.4.camel@mulgrave>
+	 <20051223073840.7110dbb0.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:16571 "EHLO
+Received: from stat9.steeleye.com ([209.192.50.41]:25275 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932211AbVLWPw4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Dec 2005 10:52:56 -0500
-In-Reply-To: <20051221122442.GA16571@porkrind.org>
+	id S932433AbVLWP7F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Dec 2005 10:59:05 -0500
+In-Reply-To: <20051223073840.7110dbb0.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Caldwell <david@porkrind.org>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: matthew@wil.cx, linux-scsi@vger.kernel.org
 
-On Wed, 2005-12-21 at 04:24 -0800, David Caldwell wrote:
-> This patch does 2 things. It reimplements the SG_FLAG_LUN_INHIBIT flag
-> in the SG_IO ioctl which stops the scsi subsystem from overwriting the
-> 2nd byte of the CDB with the LUN. It also doesn't guess the CDB length
-> when sending the SG_IO ioctl to the sg device (the main scsi_ioctl
-> already did this).
+On Fri, 2005-12-23 at 07:38 -0800, Andrew Morton wrote:
+> James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> > There is a potential improvement, in that could be done which is only to
+> > use the workqueue if we're in atomic context.  However, I elected to
+> > leave playing with that cleanup until after 2.6.15
 > 
-> This is for the Cypress CY7C68310 USB to ATA bridge chip (and most
-> likely other USB to ATA chips from Cypress), which implements an ATA
-> passthrough command that is 16 bytes long and starts with the bytes
-> 0x24 0x24. (Not vendor unique, weird length for opcode 0x24, and
-> misuse of the LUN area all at the same time--Lovely).
+> We don't have a way of determining whether we're in atomic context
+> (in_atomic() only works with CONFIG_PREEMPT).  If scsi internally knows what
+> context things are in then that'll work OK.
 
-I think this approach is too invasive to the stack.  When this was
-discussed in november, there wasn't much enthusiasm for resurrecting the
-long dead LUN_INHIBIT flag.  The two suggested mechanisms are
+Yes, that's what I thought ... and we don't really have a good way of
+identifying this from the reap_target invocations (because of the way
+most in-context paths could come back to us via a softirq).
 
-1) Simply don't mangle the LUN for SCSI_UNKNOWN and then have all the
-subsystems lying about SCSI_2 compliance instead set their mangled level
-to SCSI_UNKNOWN (which seems to be more truthful)
+> > There is also the point that I now have two of these allocations of
+> > structures containing a workqueue and a pointer in separate instances.
+> > It does look like this might be an improvement to the API (i.e. a
+> > workqueue use that manages the allocation of the actual work_struct).
+> 
+> Perhaps you could use work_struct.data for the scsi_target* and get back to
+> the work_struct via container_of().
 
-2) If 1) doesn't work, then use a blacklist entry which the subsystems
-would also have access to.
+Could you elaborate some more on this?  If I simply use the starget
+pointer as my work_struct.data, how do I get back to the actual
+work_struct for me to free it?  It's not passed in to the function as
+far as I can tell.  But even if I do this, I still have to manage the
+allocation and deallocation of the work_struct.
 
 James
-
-
 
 
