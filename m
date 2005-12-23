@@ -1,15 +1,15 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Subject: Re: More FC Transport Issues
-Date: Fri, 23 Dec 2005 11:47:54 -0800
-Message-ID: <20051223194754.GF1112@andrew-vasquezs-powerbook-g4-15.local>
+Date: Fri, 23 Dec 2005 11:50:35 -0800
+Message-ID: <20051223195035.GG1112@andrew-vasquezs-powerbook-g4-15.local>
 References: <43AB36BC.8000003@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:54896 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S1161029AbVLWTsA (ORCPT
+Received: from pat.qlogic.com ([198.70.193.2]:34935 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S1160999AbVLWTul (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Dec 2005 14:48:00 -0500
+	Fri, 23 Dec 2005 14:50:41 -0500
 Content-Disposition: inline
 In-Reply-To: <43AB36BC.8000003@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -19,70 +19,112 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, James.Smart@Emulex.Com, James Botto
 
 On Thu, 22 Dec 2005, Michael Reed wrote:
 
-> I installed 2.6.15-rc6-git3 on my ia64 test system and the system hung during
-> startup.  There were "recursion depth exceeded" messages.
+> It's possible the OOPS is related to the qla2xxx serialization issue I reported
+> earlier.
 > 
-> The fabric was coming online at the time of hba startup and the targets
-> hadn't yet been discovered by the switch.  Consequently, the hbas saw
-> loop up but no targets, then the switch generates a state change notification
-> and the driver for the hbas discovers the targets in parallel.
-> 
-> So, there appears to be another recursion issue with the new fc transport.
-> 
-> I then try rebooting the system again.  Discovery happens as expected
-> at the time the driver initializes each card.  Then the system takes an
-> OOPS.
-> 
-<snip>
-> QLogic Fibre Channel HBA Driver
-> ACPI: PCI Interrupt 0002:01:04.0[A]: no GSI
-> qla2300 0002:01:04.0: Found an ISP2312, irq 74, iobase 0xc00000080fd00000
-> qla2300 0002:01:04.0: Configuring PCI space...
-> PCI: slot 0002:01:04.0 has incorrect PCI cache line size of 0 bytes, correcting to 128
-> qla2300 0002:01:04.0: Configure NVRAM parameters...
-> qla2300 0002:01:04.0: Verifying loaded RISC code...
-> qla2300 0002:01:04.0: LIP reset occured (f7f7).
-> qla2300 0002:01:04.0: Waiting for LIP to complete...
-> qla2300 0002:01:04.0: LOOP UP detected (2 Gbps).
-> qla2300 0002:01:04.0: Topology - (F_Port), Host Loop address 0xffff
-> BUG: soft lockup detected on CPU#0!
-> Modules linked in:
-> 
-> Pid: 1, CPU 0, comm:              swapper
-> psr : 00001210081a6018 ifs : 8000000000000286 ip  : [<a0000001006c77c1>]    Not tainted
-> ip is at _spin_unlock_irqrestore+0x41/0xa0
-> unat: 0000000000000000 pfs : 0000000000000691 rsc : 0000000000000003
-> rnat: 0000000000000286 bsps: 0000000000000003 pr  : 00000001502a9a55
-> ldrs: 0000000000000000 ccv : 0000000000000000 fpsr: 0009804c8a70433f
-> csd : 0000000000000000 ssd : 0000000000000000
-> b0  : a0000001005537f0 b6  : e0000030023e5490 b7  : a000000100553260
-> f6  : 1003e00000000000003e8 f7  : 0ffe4c000000000000000
-> f8  : 1003e0000000000002710 f9  : 1003e000000000000000a
-> f10 : 10000bffffffff4000000 f11 : 1003e0000000000000003
-> r1  : a000000100cc2100 r2  : 0000000000000001 r3  : a000000100ac2850
-> r8  : 0000000000004000 r9  : 0000000000004000 r10 : e000003003104232
-> r11 : 0000000000000000 r12 : e00000b07bb279f0 r13 : e00000b07bb20000
-> r14 : e000003014d48000 r15 : 0000000000000011 r16 : e000003014d49370
-> r17 : 0000000000000000 r18 : e000003014d49378 r19 : 0000000000000000
-> r20 : 0000000000000020 r21 : 0000000000000000 r22 : e000003003104231
-> r23 : ffffffffffff4230 r24 : 0000000000000078 r25 : 0000000000000000
-> r26 : 0000000000000012 r27 : c00000080fe30000 r28 : c00000080fa00200
-> r29 : e000003014d49370 r30 : 0000000000000088 r31 : a0000001007648d8
-> 
-> Call Trace:
->  [<a000000100013260>] show_stack+0x40/0xa0
->                                 sp=e00000b07bb27640 bsp=e00000b07bb21660
->  [<a000000100013a90>] show_regs+0x7d0/0x800
->                                 sp=e00000b07bb27810 bsp=e00000b07bb21610
->  [<a0000001000fa020>] softlockup_tick+0x140/0x180
->                                 sp=e00000b07bb27810 bsp=e00000b07bb215d8
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=113380446825841&w=2
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=113458339109319&w=2
 
-I believe I had posted a patch earlier which attempted to address
-this:
+As far as the synchronization issues, could you try out the following.
 
-	http://marc.theaimsgroup.com/?l=linux-scsi&m=113399970127421&w=2
+---
 
-at least we could get rid of this soft-lockup noise.
-
---
-av
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 7b3efd5..dba240b 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -1664,7 +1664,7 @@ typedef struct fc_port {
+ 	uint8_t mp_byte;		/* multi-path byte (not used) */
+     	uint8_t cur_path;		/* current path id */
+ 
+-	struct fc_rport *rport;
++	struct fc_rport *rport, *drport;
+ 	u32 supported_classes;
+ 	struct work_struct rport_add_work;
+ 	struct work_struct rport_del_work;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index c46d246..b99f547 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1687,10 +1687,16 @@ static void
+ qla2x00_rport_del(void *data)
+ {
+ 	fc_port_t *fcport = data;
++	struct fc_rport *rport;
++	unsigned long flags;
++
++	spin_lock_irqsave(&fcport->ha->hardware_lock, flags);
++	rport = fcport->drport;
++	fcport->drport = NULL;
++	spin_unlock_irqrestore(&fcport->ha->hardware_lock, flags);
++	if (rport)
++		fc_remote_port_delete(rport);
+ 
+-	if (fcport->rport)
+-		fc_remote_port_delete(fcport->rport);
+-	fcport->rport = NULL;
+ }
+ 
+ /**
+@@ -2081,10 +2087,10 @@ qla2x00_reg_remote_port(scsi_qla_host_t 
+ 	struct fc_rport_identifiers rport_ids;
+ 	struct fc_rport *rport;
+ 
+-	if (fcport->rport) {
+-		fc_remote_port_delete(fcport->rport);
+-		fcport->rport = NULL;
+-	}
++	if (fcport->drport)
++		qla2x00_rport_del(fcport);
++	if (fcport->rport)
++		return;
+ 
+ 	rport_ids.node_name = wwn_to_u64(fcport->node_name);
+ 	rport_ids.port_name = wwn_to_u64(fcport->port_name);
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index c58c9d9..9842fb7 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1627,6 +1627,20 @@ qla2x00_free_device(scsi_qla_host_t *ha)
+ 	pci_disable_device(ha->pdev);
+ }
+ 
++static inline void
++qla2x00_schedule_rport_del(struct scsi_qla_host *ha, fc_port_t *fcport)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&ha->hardware_lock, flags);
++	if (fcport->rport) {
++		fcport->drport = fcport->rport;
++		fcport->rport = NULL;
++	}
++	spin_unlock_irqrestore(&ha->hardware_lock, flags);
++	schedule_work(&fcport->rport_del_work);
++}
++
+ /*
+  * qla2x00_mark_device_lost Updates fcport state when device goes offline.
+  *
+@@ -1639,8 +1653,8 @@ qla2x00_free_device(scsi_qla_host_t *ha)
+ void qla2x00_mark_device_lost(scsi_qla_host_t *ha, fc_port_t *fcport,
+     int do_login)
+ {
+-	if (atomic_read(&fcport->state) == FCS_ONLINE && fcport->rport)
+-		schedule_work(&fcport->rport_del_work);
++	if (atomic_read(&fcport->state) == FCS_ONLINE)
++		qla2x00_schedule_rport_del(ha, fcport);
+ 
+ 	/*
+ 	 * We may need to retry the login, so don't change the state of the
+@@ -1701,8 +1715,8 @@ qla2x00_mark_all_devices_lost(scsi_qla_h
+ 		 */
+ 		if (atomic_read(&fcport->state) == FCS_DEVICE_DEAD)
+ 			continue;
+-		if (atomic_read(&fcport->state) == FCS_ONLINE && fcport->rport)
+-			schedule_work(&fcport->rport_del_work);
++		if (atomic_read(&fcport->state) == FCS_ONLINE)
++			qla2x00_schedule_rport_del(ha, fcport);
+ 		atomic_set(&fcport->state, FCS_DEVICE_LOST);
+ 	}
+ }
