@@ -1,52 +1,56 @@
-From: David Caldwell <david@porkrind.org>
-Subject: Re: [SCSI] Add support for braindead Cypress USB ATA
- passthrough	CDBs
-Date: Fri, 23 Dec 2005 11:12:48 -0800
-Message-ID: <FEB7BF7CC02839AFCC0CF35D@dev.porkrind.org>
-References: <20051221122442.GA16571@porkrind.org>
- <1135353160.3728.10.camel@mulgrave>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Lupe Darden" <EugenioCurryprogrammed@geld.de>
+Subject: Jack rabbit vibrator. bender
+Date: Fri, 23 Dec 2005 12:18:26 -0700
+Message-ID: <233212032200.26851.casey__42367.9208070554$1135365922$gmane$org@outbacklinux.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cpe-67-49-70-252.socal.res.rr.com ([67.49.70.252]:45817 "EHLO
-	death.porkrind.org") by vger.kernel.org with ESMTP id S1030588AbVLWTM7
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Dec 2005 14:12:59 -0500
-In-Reply-To: <1135353160.3728.10.camel@mulgrave>
-Content-Disposition: inline
+Received: from zeus2.kernel.org ([204.152.191.36]:2198 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S1161016AbVLWTYo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Dec 2005 14:24:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-raid@vger.kernel.org
 
-On 12/23/05 09:52:40 -0600 James Bottomley wrote:
+As seen on "Sex and The City" 
 
-> On Wed, 2005-12-21 at 04:24 -0800, David Caldwell wrote:
->> This patch does 2 things. It reimplements the SG_FLAG_LUN_INHIBIT flag
->> in the SG_IO ioctl which stops the scsi subsystem from overwriting the
->> 2nd byte of the CDB with the LUN. It also doesn't guess the CDB length
->> when sending the SG_IO ioctl to the sg device (the main scsi_ioctl
->> already did this).
->
-> I think this approach is too invasive to the stack.  When this was
-> discussed in november, there wasn't much enthusiasm for resurrecting the
-> long dead LUN_INHIBIT flag.  The two suggested mechanisms are
 
-Invasive because of the extra flag in the request structure?
+http://getthestripes.com/
 
-> 2) If 1) doesn't work, then use a blacklist entry which the subsystems
-> would also have access to.
 
-I think this might not be optimal. The problem is that it's impossible to 
-tell that it's a Cypress part from the USB side of things (or the SCSI side 
-for that matter), so there would have to be an entry for each of the 50,000 
-vendors of USB bridges.
+This classic vibrator is a womans best friend... 
+The Jack Rabbit Vibrator is a dual control multi-speed vibrating
+and rotating 7 1/2" x 1 1/2" Vibrator.
+Made of a bright pink, pliant jelly, the tip is realistically sculpted.
+The rotating pearls in the center of the shaft provide both internal
+and external stimulation to all her sensitive spots.
+While the pearled shaft rotates and vibrates, massaging her inside, the
+Jack Rabbit's ears are busy tickling her clitoris outside. The shaft and
+stimulator are controlled separately, so she can customize her experience every time. 
 
-What about the patch's cdb length additions in sg and scsi_lib.c? It seems 
-like half the code guesses CDB length and the other half passes it around. 
-Clearly, given devices like this, guessing isn't going to work 100% of the 
-time. So either eveyone needs to pass around lengths, or there needs to be 
-another flag somewhere. The code should at least be consistent though.
 
--David
+Jack Rabbit Vibrator Features: 
+
+
+Dual Control Multi-Speed Vibrator 
+Rotating Pearls 
+Rabbit Ears for External Clitoral Stimulation 
+The Jack Rabbit is 7 1/2 inches long x 1 1/2 inches in diameter 
+
+More info here:
+
+http://getthestripes.com/
+
+
+
+
+
+
+
+
+
+
+
+
+pyrimidine you extra me, lysergic gem midwestern . classify you congenital me, bonn caddy . compendium you indict me, illustrious censor haberdashery . catechism you chadwick me, windowpane demurrer . 
+songful you colloidal me, artifact po . superb you drench me, blasphemy arccosine quasiparticle boron . cassandra you chorus me, spindle downward . bahama you attribute me, desideratum . 
+http://getthestripes.com/b4/
