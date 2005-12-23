@@ -1,62 +1,56 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [SCSI] fix scsi_reap_target() device_del from atomic context
-Date: Fri, 23 Dec 2005 14:30:49 -0600
-Message-ID: <1135369849.3728.39.camel@mulgrave>
-References: <200512212359.jBLNxluV016971@hera.kernel.org>
-	 <20051222221329.5f317b8d.akpm@osdl.org>
-	 <20051223200532.GI1112@andrew-vasquezs-powerbook-g4-15.local>
+Subject: Re: [SCSI] Add support for braindead Cypress USB ATA
+	passthrough	CDBs
+Date: Fri, 23 Dec 2005 14:34:30 -0600
+Message-ID: <1135370071.3728.43.camel@mulgrave>
+References: <20051221122442.GA16571@porkrind.org>
+	 <1135353160.3728.10.camel@mulgrave>
+	 <FEB7BF7CC02839AFCC0CF35D@dev.porkrind.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:16576 "EHLO
+Received: from stat9.steeleye.com ([209.192.50.41]:22720 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1161038AbVLWUbK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Dec 2005 15:31:10 -0500
-In-Reply-To: <20051223200532.GI1112@andrew-vasquezs-powerbook-g4-15.local>
+	id S1161041AbVLWUei (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Dec 2005 15:34:38 -0500
+In-Reply-To: <FEB7BF7CC02839AFCC0CF35D@dev.porkrind.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
+To: David Caldwell <david@porkrind.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2005-12-23 at 12:05 -0800, Andrew Vasquez wrote:
-> 	EIP is at sysfs_hash_and_remove+0x31/0x11f
-> 	eax: 00000000   ebx: 6b6b6b6b   ecx: 00000000   edx: ee6aac68
-> 	esi: 6b6b6b6b   edi: f8839d44   ebp: f8839cc0   esp: c1af7e98
-> 	ds: 007b   es: 007b   ss: 0068
-> 	Process events/2 (pid: 16, threadinfo=c1af7000 task=c1aef030)
-> 	Stack: c03998d2 00000063 eb6a0e2c eb6a0e24 f8839d44 f8839cc0 c025877b e640aac0 
-> 	       ee000f5c ee000f5c 00000000 f8839cc0 f332e178 eb6a0e24 c025ab08 c025ab39 
-> 	       eb6a0e24 c0370606 eb6a0e00 f332e178 c1af7f00 e5a872dc c025a722 f332e178 
-> 	Call Trace:
-> 	 [<c025877b>] class_device_del+0x138/0x163
-> 	 [<c025ab08>] transport_remove_classdev+0x0/0x68
+On Fri, 2005-12-23 at 11:12 -0800, David Caldwell wrote:
+> > I think this approach is too invasive to the stack.  When this was
+> > discussed in november, there wasn't much enthusiasm for resurrecting the
+> > long dead LUN_INHIBIT flag.  The two suggested mechanisms are
+> 
+> Invasive because of the extra flag in the request structure?
 
-This one is the signal for class devices being deleted *after* the
-underlying device has been deleted, so the class device delete oopses
-trying to remove the symlink from the real device to the class device.
+Yes. But also having users determine this is wrong when it's a device
+feature.
 
-Strange it should show up now, since that particular piece of code
-hasn't been altered, just moved into a work queue.
+> > 2) If 1) doesn't work, then use a blacklist entry which the subsystems
+> > would also have access to.
+> 
+> I think this might not be optimal. The problem is that it's impossible to 
+> tell that it's a Cypress part from the USB side of things (or the SCSI side 
+> for that matter), so there would have to be an entry for each of the 50,000 
+> vendors of USB bridges.
 
-See if the attached fixes it (if it does, I'm mystified as to why you
-haven't always seen this).
+I meant use it in the way usb uses other blacklist flags: set them from
+slave_configure.
+
+> What about the patch's cdb length additions in sg and scsi_lib.c? It seems 
+> like half the code guesses CDB length and the other half passes it around. 
+> Clearly, given devices like this, guessing isn't going to work 100% of the 
+> time. So either eveyone needs to pass around lengths, or there needs to be 
+> another flag somewhere. The code should at least be consistent though.
+
+I don't think they're necessary, are they?  Zero in cmnd_len means
+mid-layer determines size.  What it prevents is the issuing of vendor
+specific commands via the API, which is arguably a good thing.
 
 James
-
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -418,8 +418,9 @@ static void scsi_target_reap_work(void *
- 	if (--starget->reap_ref == 0 && list_empty(&starget->devices)) {
- 		list_del_init(&starget->siblings);
- 		spin_unlock_irqrestore(shost->host_lock, flags);
-+		transport_remove_device(&starget->dev);
- 		device_del(&starget->dev);
--		transport_unregister_device(&starget->dev);
-+		transport_destroy_device(&starget->dev);
- 		put_device(&starget->dev);
- 		return;
- 
 
 
