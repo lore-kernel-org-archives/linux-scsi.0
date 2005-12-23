@@ -1,67 +1,53 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [SCSI] fix scsi_reap_target() device_del from atomic context
-Date: Fri, 23 Dec 2005 12:46:14 -0800
-Message-ID: <20051223204614.GJ1112@andrew-vasquezs-powerbook-g4-15.local>
-References: <200512212359.jBLNxluV016971@hera.kernel.org> <20051222221329.5f317b8d.akpm@osdl.org> <20051223200532.GI1112@andrew-vasquezs-powerbook-g4-15.local> <1135369849.3728.39.camel@mulgrave>
+Date: Fri, 23 Dec 2005 14:53:39 -0600
+Message-ID: <1135371219.3728.50.camel@mulgrave>
+References: <200512212359.jBLNxluV016971@hera.kernel.org>
+	 <20051222221329.5f317b8d.akpm@osdl.org>
+	 <20051223234338.798294f9.vsu@altlinux.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:16408 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S1161046AbVLWUqU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Dec 2005 15:46:20 -0500
-Content-Disposition: inline
-In-Reply-To: <1135369849.3728.39.camel@mulgrave>
+Received: from stat9.steeleye.com ([209.192.50.41]:47040 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1161050AbVLWUxo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Dec 2005 15:53:44 -0500
+In-Reply-To: <20051223234338.798294f9.vsu@altlinux.ru>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
+To: Sergey Vlasov <vsu@altlinux.ru>
 Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
 
-On Fri, 23 Dec 2005, James Bottomley wrote:
+On Fri, 2005-12-23 at 23:43 +0300, Sergey Vlasov wrote:
+> So if that GFP_ATOMIC allocation ever fails, the target is leaked
+> forever - does not look nice.
 
-> On Fri, 2005-12-23 at 12:05 -0800, Andrew Vasquez wrote:
-> > 	EIP is at sysfs_hash_and_remove+0x31/0x11f
-> > 	eax: 00000000   ebx: 6b6b6b6b   ecx: 00000000   edx: ee6aac68
-> > 	esi: 6b6b6b6b   edi: f8839d44   ebp: f8839cc0   esp: c1af7e98
-> > 	ds: 007b   es: 007b   ss: 0068
-> > 	Process events/2 (pid: 16, threadinfo=c1af7000 task=c1aef030)
-> > 	Stack: c03998d2 00000063 eb6a0e2c eb6a0e24 f8839d44 f8839cc0 c025877b e640aac0 
-> > 	       ee000f5c ee000f5c 00000000 f8839cc0 f332e178 eb6a0e24 c025ab08 c025ab39 
-> > 	       eb6a0e24 c0370606 eb6a0e00 f332e178 c1af7f00 e5a872dc c025a722 f332e178 
-> > 	Call Trace:
-> > 	 [<c025877b>] class_device_del+0x138/0x163
-> > 	 [<c025ab08>] transport_remove_classdev+0x0/0x68
+Yes, but it will print a warning.
+
+> Does anything depend on starget->siblings being empty after we had
+> removed it from the shost->__targets list it was on?  Seems that all
+> other uses of this field are:
+>
+> drivers/scsi/scsi_scan.c:313:   list_for_each_entry(starget, &shost->__targets, siblings) {
+> drivers/scsi/scsi_scan.c:365:   INIT_LIST_HEAD(&starget->siblings);
+> drivers/scsi/scsi_scan.c:373:   list_add_tail(&starget->siblings, &shost->__targets);
 > 
-> This one is the signal for class devices being deleted *after* the
-> underlying device has been deleted, so the class device delete oopses
-> trying to remove the symlink from the real device to the class device.
-> 
-> Strange it should show up now, since that particular piece of code
-> hasn't been altered, just moved into a work queue.
+> So probably we can reuse this field and do deferred reaping without any
+> memory allocation at all.  The following patch should be applied
+> _instead_ of the James' patch, not on top of it (I can make a combined
+> patch if it is desired).  The difference with the previous patch is that
+> scsi_target_reap() still removes the target from shost->__targets
+> immediately - only device_del() and subsequent actions are deferred to a
+> workqueue.
 
-Yes, that does seem odd..
+No, you can't.
 
-> See if the attached fixes it (if it does, I'm mystified as to why you
-> haven't always seen this).
-> 
-> James
-> 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -418,8 +418,9 @@ static void scsi_target_reap_work(void *
->  	if (--starget->reap_ref == 0 && list_empty(&starget->devices)) {
->  		list_del_init(&starget->siblings);
->  		spin_unlock_irqrestore(shost->host_lock, flags);
-> +		transport_remove_device(&starget->dev);
->  		device_del(&starget->dev);
-> -		transport_unregister_device(&starget->dev);
-> +		transport_destroy_device(&starget->dev);
->  		put_device(&starget->dev);
->  		return;
+If you do this, the target namespace will potentially be in use in sysfs
+after the system thinks the target is gone.  Thus, any reallocation
+fails because you can't add a new target with the same name as an
+existing one.
 
-This fixes the OOPS during unload problem...  Now the interesting
-question... why...
+James
 
---
-av
+
