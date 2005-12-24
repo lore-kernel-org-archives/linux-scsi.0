@@ -1,98 +1,176 @@
-From: David Caldwell <david@porkrind.org>
-Subject: Re: [SCSI] Add support for braindead Cypress USB ATA	passthrough
- CDBs
-Date: Fri, 23 Dec 2005 23:11:29 -0800
-Message-ID: <A0B73F5BB4320BF55FB4615D@dev.porkrind.org>
-References: <20051221122442.GA16571@porkrind.org>	
- <1135353160.3728.10.camel@mulgrave>	
- <FEB7BF7CC02839AFCC0CF35D@dev.porkrind.org>
- <1135370071.3728.43.camel@mulgrave>
- <0C1803A3682E0D951A5A631C@dev.porkrind.org> <43ACC054.6080305@torque.net>
+From: Maxim Vexler <maximvex@gmail.com>
+Subject: Bringing up a LSI 53C1030 scsi controller on 2.6.15-rc6
+Date: Sat, 24 Dec 2005 09:54:59 +0200
+Message-ID: <832d89d20512232354g4162b670g9dc1692eea454fba@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cpe-67-49-70-252.socal.res.rr.com ([67.49.70.252]:41200 "EHLO
-	death.porkrind.org") by vger.kernel.org with ESMTP id S1422626AbVLXHLN
+Received: from wproxy.gmail.com ([64.233.184.195]:6643 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1422632AbVLXHzA convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Dec 2005 02:11:13 -0500
-In-Reply-To: <43ACC054.6080305@torque.net>
+	Sat, 24 Dec 2005 02:55:00 -0500
+Received: by wproxy.gmail.com with SMTP id 57so681148wri
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Dec 2005 23:54:59 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: mpt_linux_developer@lsil.com
 
-On 12/24/05 13:28:20 +1000 Douglas Gilbert wrote:
+Hi,
 
-> David Caldwell wrote:
->> On 12/23/05 14:34:30 -0600 James Bottomley wrote:
->>
->>> On Fri, 2005-12-23 at 11:12 -0800, David Caldwell wrote:
->>>
->>>> What about the patch's cdb length additions in sg and scsi_lib.c? It
->>>> seems  like half the code guesses CDB length and the other half passes
->>>> it around.  Clearly, given devices like this, guessing isn't going to
->>>> work 100% of the  time. So either eveyone needs to pass around lengths,
->>>> or there needs to be  another flag somewhere. The code should at least
->>>> be consistent though.
->>>
->>>
->>> I don't think they're necessary, are they?  Zero in cmnd_len means
->>> mid-layer determines size.
->>
->> I think it's fine for zero length to mean mid_layer figures out the
->> size,
->
-> David,
-> I don't think it is a good idea to ever pass zero command
-> length through a scsi pass through. I'm not even sure the
-> SCSI-2 (1992) standard asserts that the first command byte
-> can be used to determine command length. Definitely nothing
-> since then.
+Kernel : 2.6.14@patch-2.6.15-rc6
+Distro : Mandriva 2006.0
+Machine : HP xw9300 workstation
 
-I only did this because the ST driver happens to call this 
-scsi_execute_async() from a function that itself gets called a bunch of 
-times with no cdb length. So I either had to change even more things, or 
-build in that "zero == guess" backwards compatibility. It wasn't really 
-meant to be used from the SG_IO interface, but it happens to work (unless 
-you call it on an sd device which is a completely different code path).
+Target Device : LSI 53C1030 scsi
 
->>  but right now SG is throwing away the user passed in length (since
->>  scsi_execute_async() doesn't have a cdb_length parameter) and then
->>  guessing at it later regardless of whether it's zero or non-zero.
->
-> I can find no such code. Which kernel version are you
-> describing?
 
-This is in the scsi_misc git tree from kernel.org.
+I'm trying to compile my kernel to support this device, since the
+driver has been accepted into  2.6.15-rc5 I hope to get it working for
+me as well.
 
-> There was a bug in the block layer SG_IO
-> ioctl code in the early lk 2.6 series that caused
-> the user supplied length to be ignored. That has now
-> been fixed. The sg driver from about 1998 has had
-> mechanisms to explicitly supply the command length.
->
->> blkdev/scsi_ioctl.c doesn't do this, but sg.c does which is at least
->> inconsistent.
->
-> do what ??
+I booted the new kernel from an ATA harddrive, and trying to get the
+scsi driver up so that I could talk to the device.
 
-Ignore the user supplied length (from the SG_IO ioctl).
+For some reason - The driver fails to find the controller.
 
-> I supplied a patch to allow the user to write to scsi_level
-> in sysfs, thus overriding any assumptions that scsi_lib
-> made about the device supplied scsi_level:
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=113343693013725&w=2
-> That would solve your command overwrite problem in a less
-> invasive way than the patch you are proposing.
+# uname -a
+Linux localhost 2.6.15-rc6 #1 SMP Tue Dec 20 22:32:06 EST 2005 x86_64
+Dual Core AMD Opteron(tm) Processor 270 unknown GNU/Linux
 
-Sort of. It's kind of an oblique way of stopping it from messing with the 
-LUN though. There seems to be checks all around the scsi code for the scsi 
-level (I saw it in more than one place). So changing the scsi_level so that 
-the LUN wouldn't be overwritten could affect other code paths in unintended 
-ways... I think it would be better to be more granular with these kind of 
-overrides.
+# modprobe -v --show-depends mptspi
+insmod /lib/modules/2.6.15-rc6/kernel/drivers/scsi/scsi_mod.ko
+insmod /lib/modules/2.6.15-rc6/kernel/drivers/message/fusion/mptbase.ko
+insmod
+/lib/modules/2.6.15-rc6/kernel/drivers/message/fusion/mptscsih.ko
+insmod /lib/modules/2.6.15-rc6/kernel/drivers/message/fusion/mptspi.ko
 
--David
+# modprobe -l | grep mpt
+/lib/modules/2.6.15-rc6/kernel/drivers/message/fusion/mptspi.ko
+/lib/modules/2.6.15-rc6/kernel/drivers/message/fusion/mptscsih.ko
+/lib/modules/2.6.15-rc6/kernel/drivers/message/fusion/mptsas.ko
+/lib/modules/2.6.15-rc6/kernel/drivers/message/fusion/mptlan.ko
+/lib/modules/2.6.15-rc6/kernel/drivers/message/fusion/mptfc.ko
+/lib/modules/2.6.15-rc6/kernel/drivers/message/fusion/mptctl.ko
+/lib/modules/2.6.15-rc6/kernel/drivers/message/fusion/mptbase.ko
 
+# modprobe mptspi
+# ls /dev/sd*
+ls: /dev/sd*: No such file or directory
+
+# tail -n 10 /var/log/kernel/*
+==> /var/log/kernel/errors <==
+Dec 20 23:28:43 localhost kernel: PCI: Failed to allocate mem resource
+#6:20000@e0000000 for 0000:0a:00.0
+Dec 20 23:28:43 localhost kernel: ibm_acpi: ec object not found
+Dec 20 23:38:40 localhost kernel: sata_vsc: Unknown parameter
+`sata_via'
+Dec 22 22:57:12 localhost kernel: audit(1135310222.260:0): initialized
+Dec 22 23:20:52 localhost kernel: PCI: Failed to allocate mem resource
+#6:20000@e0000000 for 0000:0a:00.0
+Dec 22 23:20:52 localhost kernel: ibm_acpi: ec object not found
+
+==> /var/log/kernel/info <==
+Dec 22 23:20:52 localhost kernel: GSI 19 sharing vector 0xD9 and IRQ 19
+Dec 22 23:20:52 localhost kernel: ACPI: PCI Interrupt 0000:00:0a.0[A]
+-> Link [LMAC] -> GSI 20 (level, high) -> IRQ 217
+Dec 22 23:20:52 localhost kernel: PCI: Setting latency timer of device
+0000:00:0a.0 to 64
+Dec 22 23:20:52 localhost kernel: eth0: forcedeth.c: subsystem:
+0103c:1500 bound to 0000:00:0a.0
+Dec 22 23:20:53 localhost kernel: eth0: link up.
+Dec 22 23:20:55 localhost kernel: NET: Registered protocol family 10
+Dec 22 23:20:55 localhost kernel: lo: Disabled Privacy Extensions
+Dec 22 23:20:55 localhost kernel: IPv6 over IPv4 tunneling driver
+Dec 22 23:20:59 localhost kernel: Installing knfsd (copyright (C) 1996
+okir@monad.swb.de).
+Dec 22 23:21:05 localhost kernel: eth0: no IPv6 routers present
+
+==> /var/log/kernel/warnings <==
+Dec 22 23:20:52 localhost kernel: nvidia: module license 'NVIDIA'
+taints kernel.
+Dec 22 23:20:52 localhost kernel: ACPI: PCI Interrupt Link [LNKC]
+enabled at IRQ 19
+Dec 22 23:20:52 localhost kernel: NVRM: loading NVIDIA Linux x86_64
+NVIDIA Kernel Module  1.0-7676  Fri Jul 29 13:15:16 PDT 2005
+Dec 22 23:20:52 localhost kernel: ip_conntrack version 2.4 (8192
+buckets, 65536 max) - 312 bytes per conntrack
+Dec 22 23:20:52 localhost kernel: ip_tables: (C) 2000-2002 Netfilter
+core team
+Dec 22 23:20:52 localhost kernel: ACPI: PCI Interrupt Link [LMAC]
+enabled at IRQ 20
+Dec 22 23:20:52 localhost kernel: eth0: no link during initialization.
+Dec 22 23:20:59 localhost kernel: NFSD: Using /var/lib/nfs/v4recovery
+as the NFSv4 state recovery directory
+Dec 22 23:20:59 localhost kernel: NFSD: recovery directory
+/var/lib/nfs/v4recovery doesn't exist
+Dec 22 23:20:59 localhost kernel: NFSD: starting 90-second grace period
+
+# cat /lib/modules/2.6.15-rc6/modules.alias | grep mpt
+alias pci:v00001000d00000032sv*sd*bc*sc*i* mptspi
+alias pci:v00001000d00000030sv*sd*bc*sc*i* mptspi
+alias pci:v00001000d00000058sv*sd*bc*sc*i* mptsas
+alias pci:v00001000d0000005Asv*sd*bc*sc*i* mptsas
+alias pci:v00001000d00000056sv*sd*bc*sc*i* mptsas
+alias pci:v00001000d00000054sv*sd*bc*sc*i* mptsas
+alias pci:v00001000d0000005Esv*sd*bc*sc*i* mptsas
+alias pci:v00001000d00000050sv*sd*bc*sc*i* mptsas
+alias pci:v00001000d00000640sv*sd*bc*sc*i* mptfc
+alias pci:v00001000d00000642sv*sd*bc*sc*i* mptfc
+alias pci:v00001000d00000626sv*sd*bc*sc*i* mptfc
+alias pci:v00001000d00000628sv*sd*bc*sc*i* mptfc
+alias pci:v00001000d00000622sv*sd*bc*sc*i* mptfc
+alias pci:v00001000d00000624sv*sd*bc*sc*i* mptfc
+alias pci:v00001000d00000621sv*sd*bc*sc*i* mptfc
+
+# cat /lib/modules/2.6.15-rc6/modules.pcimap | grep mpt
+mptspi               0x00001000 0x00000030 0xffffffff 0xffffffff
+0x00000000 0x00000000 0x0
+mptspi               0x00001000 0x00000032 0xffffffff 0xffffffff
+0x00000000 0x00000000 0x0
+mptsas               0x00001000 0x00000050 0xffffffff 0xffffffff
+0x00000000 0x00000000 0x0
+mptsas               0x00001000 0x0000005e 0xffffffff 0xffffffff
+0x00000000 0x00000000 0x0
+mptsas               0x00001000 0x00000054 0xffffffff 0xffffffff
+0x00000000 0x00000000 0x0
+mptsas               0x00001000 0x00000056 0xffffffff 0xffffffff
+0x00000000 0x00000000 0x0
+mptsas               0x00001000 0x0000005a 0xffffffff 0xffffffff
+0x00000000 0x00000000 0x0
+mptsas               0x00001000 0x00000058 0xffffffff 0xffffffff
+0x00000000 0x00000000 0x0
+mptfc                0x00001000 0x00000621 0xffffffff 0xffffffff
+0x00000000 0x00000000 0x0
+mptfc                0x00001000 0x00000624 0xffffffff 0xffffffff
+0x00000000 0x00000000 0x0
+mptfc                0x00001000 0x00000622 0xffffffff 0xffffffff
+0x00000000 0x00000000 0x0
+mptfc                0x00001000 0x00000628 0xffffffff 0xffffffff
+0x00000000 0x00000000 0x0
+mptfc                0x00001000 0x00000626 0xffffffff 0xffffffff
+0x00000000 0x00000000 0x0
+mptfc                0x00001000 0x00000642 0xffffffff 0xffffffff
+0x00000000 0x00000000 0x0
+mptfc                0x00001000 0x00000640 0xffffffff 0xffffffff
+0x00000000 0x00000000 0x0
+
+
+What am I doing wrong ?
+
+
+b.t.w
+Can I somehow just "od" from the pci path of the device to see that
+it's working (to rule out a hardware problem) ?
+
+
+Thank you.
+
+
+--
+Cheers,
+Maxim Vexler (hq4ever).
+
+Do u GNU ?
