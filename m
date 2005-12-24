@@ -1,114 +1,50 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [SCSI] Add support for braindead Cypress USB ATA	passthrough
- CDBs
-Date: Sat, 24 Dec 2005 13:28:20 +1000
-Message-ID: <43ACC054.6080305@torque.net>
-References: <20051221122442.GA16571@porkrind.org>	 <1135353160.3728.10.camel@mulgrave>	 <FEB7BF7CC02839AFCC0CF35D@dev.porkrind.org> <1135370071.3728.43.camel@mulgrave> <0C1803A3682E0D951A5A631C@dev.porkrind.org>
-Reply-To: dougg@torque.net
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [SCSI] fix scsi_reap_target() device_del from atomic context
+Date: Fri, 23 Dec 2005 19:54:36 -0800
+Message-ID: <20051223195436.18fd5a1e.akpm@osdl.org>
+References: <200512212359.jBLNxluV016971@hera.kernel.org>
+	<20051222221329.5f317b8d.akpm@osdl.org>
+	<20051223121534.GM2361@parisc-linux.org>
+	<1135351652.3728.4.camel@mulgrave>
+	<20051223073840.7110dbb0.akpm@osdl.org>
+	<1135353536.3728.15.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:19854 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1161161AbVLXD1A (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:8425 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1161167AbVLXDzA (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 23 Dec 2005 22:27:00 -0500
-In-Reply-To: <0C1803A3682E0D951A5A631C@dev.porkrind.org>
+	Fri, 23 Dec 2005 22:55:00 -0500
+In-Reply-To: <1135353536.3728.15.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Caldwell <david@porkrind.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: matthew@wil.cx, linux-scsi@vger.kernel.org
 
-David Caldwell wrote:
-> On 12/23/05 14:34:30 -0600 James Bottomley wrote:
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
+>
+> > Perhaps you could use work_struct.data for the scsi_target* and get back to
+> > the work_struct via container_of().
 > 
->> On Fri, 2005-12-23 at 11:12 -0800, David Caldwell wrote:
->>
->>> > I think this approach is too invasive to the stack.  When this was
->>> > discussed in november, there wasn't much enthusiasm for resurrecting
->>> > the long dead LUN_INHIBIT flag.  The two suggested mechanisms are
->>>
->>> Invasive because of the extra flag in the request structure?
->>
->>
->> Yes. But also having users determine this is wrong when it's a device
->> feature.
+> Could you elaborate some more on this?  If I simply use the starget
+> pointer as my work_struct.data, how do I get back to the actual
+> work_struct for me to free it?  It's not passed in to the function as
+> far as I can tell.  But even if I do this, I still have to manage the
+> allocation and deallocation of the work_struct.
 > 
-> 
-> I see. I can agree with that. It certainly would be better if it was
-> somehow automatic.
-> 
->>> > 2) If 1) doesn't work, then use a blacklist entry which the subsystems
->>> > would also have access to.
->>>
->>> I think this might not be optimal. The problem is that it's impossible
->>> to  tell that it's a Cypress part from the USB side of things (or the
->>> SCSI side  for that matter), so there would have to be an entry for each
->>> of the 50,000  vendors of USB bridges.
->>
->>
->> I meant use it in the way usb uses other blacklist flags: set them from
->> slave_configure.
-> 
-> 
-> Hmm. I don't understand this yet, I'll have to read more, but a cursory
-> glance looks like this is a kernel interface. I'd really like things to
-> flexible enough to be able to do this sort of one off random device
-> stuff from user space. Or is the idea that the [generic] usb_storage
-> driver would set a flag that says "I don't do LUNs"?
-> 
->>> What about the patch's cdb length additions in sg and scsi_lib.c? It
->>> seems  like half the code guesses CDB length and the other half passes
->>> it around.  Clearly, given devices like this, guessing isn't going to
->>> work 100% of the  time. So either eveyone needs to pass around lengths,
->>> or there needs to be  another flag somewhere. The code should at least
->>> be consistent though.
->>
->>
->> I don't think they're necessary, are they?  Zero in cmnd_len means
->> mid-layer determines size.
-> 
-> 
-> I think it's fine for zero length to mean mid_layer figures out the
-> size,
 
-David,
-I don't think it is a good idea to ever pass zero command
-length through a scsi pass through. I'm not even sure the
-SCSI-2 (1992) standard asserts that the first command byte
-can be used to determine command length. Definitely nothing
-since then.
+err, no, I'm full of it.  container_of() does pointer arithmetic to convert
+a pointer to foo.bar into a pointer to foo.  But in this case the callback
+would have the value of work_struct.data, not the address of it, so it
+cannot be done.
 
- but
-> right now SG is throwing away the user passed in length (since
-> scsi_execute_async() doesn't have a cdb_length parameter) and then
-> guessing at it later regardless of whether it's zero or non-zero.
+Most usage in drivers would be something like:
 
-I can find no such code. Which kernel version are you
-describing? There was a bug in the block layer SG_IO
-ioctl code in the early lk 2.6 series that caused
-the user supplied length to be ignored. That has now
-been fixed. The sg driver from about 1998 has had
-mechanisms to explicitly supply the command length.
+struct driver_thing {
+	...
+	struct work_struct work;
+};
 
-> blkdev/scsi_ioctl.c doesn't do this, but sg.c does which is at least
-> inconsistent.
-
-do what ??
-
->> What it prevents is the issuing of vendor specific commands via the API,
->> which is arguably a good thing.
-> 
-> 
-> Hmmm, isn't this the point of the ioctl API? How else do you get vendor
-> unique things to a device?
-
-I supplied a patch to allow the user to write to scsi_level
-in sysfs, thus overriding any assumptions that scsi_lib
-made about the device supplied scsi_level:
-http://marc.theaimsgroup.com/?l=linux-scsi&m=113343693013725&w=2
-That would solve your command overwrite problem in a less
-invasive way than the patch you are proposing.
-
-Doug Gilbert
-
+and driver_thing.work.data gets a driver_thing* put into it.  So the need
+to separately kmalloc the work_struct+data wrapper is relatively unusual.
