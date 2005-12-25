@@ -1,47 +1,101 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: More FC Transport Issues
-Date: Sat, 24 Dec 2005 20:02:31 -0500
-Message-ID: <43ADEFA7.8070204@emulex.com>
-References: <43AB36BC.8000003@sgi.com>
-Reply-To: James.Smart@Emulex.Com
+From: Capacitacion a Distancia <qcgzsd@jal.co.jp>
+Subject: Curso Internacional de Seguridad Informatica a Distancia
+Date: Sat, 24 Dec 2005 22:47:47 -0300
+Message-ID: <EXCHANGEKdrgwupG2yO000002c8@exchange.oac.local>
+Reply-To: qcgzsd@jal.co.jp
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+	charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:41387 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1750769AbVLYBDE
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Dec 2005 20:03:04 -0500
-In-Reply-To: <43AB36BC.8000003@sgi.com>
+Received: from [212.57.188.82] ([212.57.188.82]:34904 "HELO exchange.oac.local")
+	by vger.kernel.org with SMTP id S1750785AbVLYBsK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 24 Dec 2005 20:48:10 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, Jeremy Higdon <jeremy@sgi.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
+CURSO INTERNACIONAL A DISTANCIA
+DE SEGURIDAD INFORMATICA
+----------------------------------------------------------------
+ULTIMOS DIAS DE INSCRIPCION - CUPOS LIMITADOS
+----------------------------------------------------------------
 
-Michael Reed wrote:
-> Hello,
-> 
-> I installed 2.6.15-rc6-git3 on my ia64 test system and the system hung during
-> startup.  There were "recursion depth exceeded" messages.
-> 
-> The fabric was coming online at the time of hba startup and the targets
-> hadn't yet been discovered by the switch.  Consequently, the hbas saw
-> loop up but no targets, then the switch generates a state change notification
-> and the driver for the hbas discovers the targets in parallel.
-> 
-> So, there appears to be another recursion issue with the new fc transport.
+Acceda a la primer y mas importante oportunidad de formacion
+en SEGURIDAD INFORMATICA en America Latina.
 
-FYI - you would not see the recursion issue with the lpfc driver. This is a
-combination of the qla2xxx driver and the fc transport both using work queue
-entries on add/delete.  The lpfc driver uses a background thread rather than
-work queue entries.
+Este area de la informatica ha tomado significativa importancia
+en forma reciente. Desde el ambito corporativo y gubernamental,
+la busqueda de profesionales en Seguridad Informatica
+se ha duplicado y la tendencia sigue en aumento.
 
-I'll see if there's something similar to what I did before that could be
-applied. Otherwise, we'll have to change either the calling rules or the api.
-This is one of those things where the micro view looked simple and
-straight-forward, but the macro view is showing the inefficiencies of
-black-box design.
+Ahora Usted podra pertenecer al selecto grupo de especialistas en
+SEGURIDAD INFORMATICA obteniendo una certificacion de validez
+internacional a traves de:
 
--- james s
+- Universidad Tecnologica Nacional (UTN - FRBA) de Buenos Aires, Argentina
+- Instituto de Formacion Profesional Cbtech, institucion especializada en
+E-Learning.
 
+Con esta certificacion podra potenciar su perfil laboral, obtener nuevos
+horizontes de empleo y posicionarse mejor entre sus pares.
+
+Nuestro curso a distancia se entrega en un CD interactivo con el
+material de estudio, documentacion, software y examenes incluidos.
+
+Con el CD ud. puede estudiar paso a paso, en su tiempo, en su casa u
+oficina con el acompaamiento personal de su tutor. El material de
+estudio esta a su disposicion en todo momento y no solo durante el
+tiempo que dura la formacion.
+
+OBJETIVOS DEL CURSO:
+* Lograr el conocimiento necesario para manejar t cnicas y herramientas
+  orientadas a asegurar y auditar redes corporativas
+* Orientar el perfil laboral del alumno hacia la Seguridad Informtica
+  como auditor o consultor.
+
+Tutores: Especialistas con amplia experiencia via email.
+
+Duracion aproximada: Tres meses. Se realizan tutorias y examenes
+hasta seis meses.
+
+Inscripcion: hasta el 30 de Diciembre de 2005
+
+Costos para Argentina: (en pesos argentinos)
+- Curso Seguridad Informatica: $249
+- Certificacion UTN: $ 64 (opcional)
+- Costos de env o por Correo: $20
+
+Costos para Espa#a y Latinoamerica: (en dolares USA)
+- Curso Seguridad Informatica: $99
+- Certificacion UTN: $20 (opcional)
+- Costos de Envio por Correo: $9
+
+Formas de Pago:
+- Deposito o Transferencia Bancaria (Argentina)
+- Contrareembolso por Correo (Argentina)
+- Tarjeta de Credito HASTA EN 6 PAGOS (Todos los paises) - MasterCard, Visa,
+Am. Express, Diners
+- Transferencia por Western Union (Todos los paises excepto Mexico)
+
+Formas de Contacto alternativas para consultas e inscripcion:
+- Sitio Web 1: http://www.imagenes.de/cursoscbtech
+- Sitio Web 2: http://sapiens.ya.com/cursos2/
+- Mail: infocursos@datafull.com o curswindows2000@jazzfree.com
+
+- Telefono:
+- Oficina Buenos Aires: +54-11-52380702
+- Oficina Cordoba: +54-351-4952091
+
+Ante cualquier duda, consulta o sugerencia estamos a su disposicion.
+
+Instituto de Formacion Profesional CBTech
+
+----------------------------------------------------------------------------
+--
+Se han removido los acentos para asegurar compatibilidad en la lectura.
+
+Para removerse automaticamente, envie un mail con el asunto
+Remover_Cursos a  nomascorreo5@hotpop.com
+ 
+XXKSLHCOCHSKWMTXUVNEMJGPUYZXXLNMWRDCEQ
