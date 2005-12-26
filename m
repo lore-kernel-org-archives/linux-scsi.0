@@ -1,33 +1,49 @@
-From: Jem Mcdaniel <oaten@flagshipselfstorage.com>
-Subject: Adobe Photoshop Elements 3.0 - $19.95
-Date: Sun, 25 Dec 2005 07:19:31 -0800
-Message-ID: <4709099034.4757661219@qu198.internetdsl.tpnet.pl>
-Content-Type: text/plain; charset=us-ascii
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH 1/1] Fix Fibre Channel boot oops
+Date: Mon, 26 Dec 2005 09:58:49 -0600
+Message-ID: <1135612729.3762.3.camel@mulgrave>
+Mime-Version: 1.0
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:56015 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1750843AbVLYPTo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 25 Dec 2005 10:19:44 -0500
-Received: from qu198.internetdsl.tpnet.pl (qu198.internetdsl.tpnet.pl [80.55.46.198])
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id jBPFJV8E001365
-	for <linux-scsi@vger.kernel.org>; Sun, 25 Dec 2005 07:19:38 -0800
+Received: from stat9.steeleye.com ([209.192.50.41]:43922 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750833AbVLZP6d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Dec 2005 10:58:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Adobe Acrobat 7.0 Professional - $44.95
-http://charting.oempr.com/
+The oops is characteristic of the underlying device being removed from
+visibility before the class device, and sure enough we do device_del()
+before transport_unregister() in the scsi_target_reap() routines.  I've
+no idea why this is suddenly showing up, since the code has been in
+there since that function was first invented.  However, I've confirmed
+this fixes Andrew Vasquez's boot oops.
 
+Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
 
+---
 
+P.S. I told you if you waited a while I'd get another bug ...
 
-LOW-BRED, adj. Raised instead of brought up.      
-If there is no struggle, there is no progress.    
-Fashion is something that goes in one year and out the other. 
-Live to live and you will learn to live    
-You can't build a reputation on what you intend to do.  
-America is the greatest of opportunities and the worst of influences.  
+James
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -418,8 +418,9 @@ static void scsi_target_reap_work(void *
+ 	if (--starget->reap_ref == 0 && list_empty(&starget->devices)) {
+ 		list_del_init(&starget->siblings);
+ 		spin_unlock_irqrestore(shost->host_lock, flags);
++		transport_remove_device(&starget->dev);
+ 		device_del(&starget->dev);
+-		transport_unregister_device(&starget->dev);
++		transport_destroy_device(&starget->dev);
+ 		put_device(&starget->dev);
+ 		return;
+ 
 
 
 
