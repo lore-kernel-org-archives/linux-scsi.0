@@ -1,123 +1,74 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] Make scsi error recovery play nice with devices blocked
- by transport
-Date: Wed, 28 Dec 2005 11:04:11 -0500
-Message-ID: <43B2B77B.20602@emulex.com>
-References: <43A35498.6030903@sgi.com>
-Reply-To: James.Smart@Emulex.Com
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Ang: Re: [Stgt-devel] Re: [Iscsitarget-devel] stgt a new
+	version of iscsi target?
+Date: Wed, 28 Dec 2005 10:32:08 -0600
+Message-ID: <1135787528.3854.10.camel@mulgrave>
+References: <43987F75.2000301@vlnb.net> <4398850D.8070102@cs.wisc.edu>
+	 <1134071290.3259.31.camel@mulgrave>
+	 <20051227085340L.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:49543 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S932530AbVL1QEd
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Dec 2005 11:04:33 -0500
-In-Reply-To: <43A35498.6030903@sgi.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:14773 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932536AbVL1QdL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Dec 2005 11:33:11 -0500
+In-Reply-To: <20051227085340L.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, Jeremy Higdon <jeremy@sgi.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: michaelc@cs.wisc.edu, vst@vlnb.net, johan@capvert.se, iscsitarget-devel@lists.sourceforge.net, mingz@ele.uri.edu, stgt-devel@lists.berlios.de, WRWHITEHEAD@novell.com, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, hch@infradead.org
 
-This patch looks ok. It's certainly an issue that we (Emulex) have been
-fighting, with the answer being : always ensure that the device i/o timeout
-is 2x (+ some fudge?) the devloss_tmo. As we recommend setting the i/o
-timeout to 60 seconds for enterprise arrays, and as devloss_tmo defaults
-to 30, this generally worked.
+On Tue, 2005-12-27 at 08:53 +0900, FUJITA Tomonori wrote:
+> Mike and I have worked on the tgt mmap version.
+> 
+> o It does read/write commands like sg by using mmap in user space and
+> get_user_pages in kernel space.
+> 
+> o It does non-read/write commands like direct I/O by allocating
+> aligned buffers in user space and using get_user_pages in kernel space.
+> 
+> It works like the simple tap that you suggested. It does not allocate
+> buffers in kernel space at all and does zero copy on all sorts of
+> commands.
+> 
+> Here are some performance results with open-iscsi (which are better
+> than the previous results that I got with sfnet).
+> 
+> o IET
+> 
+> | 2005/12/27-07:50:59 | STAT  | 6827 | v1.2.8 | /dev/sdc | Total write throughput: 53790310.4B/s (51.30MB/s), IOPS 6566.2/s.
+> 
+> o current tgt (I/O in kernel space)
+> 
+> | 2005/12/27-08:07:50 | STAT  | 7294 | v1.2.8 | /dev/sdc | Total write throughput: 49666457.6B/s (47.37MB/s), IOPS 6062.8/s.
+> 
+> o tgt mmap
+> 
+> | 2005/12/27-08:42:51 | STAT  | 5286 | v1.2.8 | /dev/sdc | Total write
+> throughput: 44701286.4B/s (42.63MB/s), IOPS 5456.7/s.
+> 
+> We can get something like this if we avoid calling mmap/munmap per
+> command (by using some sorts of caching).
+> 
+> o tgt mmap (mmap caching)
+> 
+> | 2005/12/27-07:53:19 | STAT  | 6996 | v1.2.8 | /dev/sdc | Total write throughput: 48253337.6B/s (46.02MB/s), IOPS 5890.3/s.
+> 
+> 
+> James, can we get your approval of the this mmap design?
 
-One other point though that should be addressed. This doesn't affect the
-successive "bigger hammer" recovery steps in scsi_eh_ready_devs().  We
-should have the function recognize that the scsi_eh_stu(),
-scsi_eh_bus_device_reset(), scsi_eh_bus_reset() functions can fail due to
-a cable pull (e.g. devices being blocked), which is ok, and does not
-require the next level of reset. Causing a host reset because of a
-temporary cable pull, or a bus reset (all targets on a bus to be reset)
-because an unrelated one temporarily went away - are not good things.
+Yes, that looks fine ... it runs in user space, which was really all I
+was looking for.
 
--- james s
+There is another half to this, which is that I'd like the tap to come
+via a SCSI API.  This isn't strictly necessary for iSCSI but it would
+allow us to integrate a generic target approach that could work for all
+SCSI HBA's as well as just iSCSI.
+
+Thanks,
+
+James
 
 
-Michael Reed wrote:
-> As no one has commented, I'm reposting this rfc as a patch.  I've
-> been using it for all my testing during development of the LSI MPT Fusion
-> fc transport attribute patch and it has shown no ill effect.
-> 
-> --
-> 
-> Error recovery doesn't interact very well with fc targets which
-> have been blocked by the fc transport.  Error recovery continues
-> to attempt to recover the target and ends up marking the fc target
-> offline.  Once offline, if the target returns before the remote port is
-> removed, commands which could have been successfully reissued instead
-> are completed with an error status due to the offline status
-> of the target.
-> 
-> This patch makes a couple of hopefully minor tweaks to the error
-> recovery logic to work better with targets which have been blocked
-> by the transport.
-> 
-> First, if the target is blocked and error recovery gives up, don't
-> put the device offline.  Either the transport will delete the target
-> thus disposing of any queued requests or it will unblock the target and
-> requests will be reissued.
-> 
-> Second, if a device is blocked, queue up commands being flushed from
-> the done queue for retry instead of completing them with an error.
-> 
-> Thanks,
->  Mike Reed
-> 
-> 
-> 
-> ------------------------------------------------------------------------
-> 
-> diff -ru linux-2.6.15-rc5-git6-patched/drivers/scsi/scsi_error.c linux-2.6.15-rc5-git6-patched-mdr/drivers/scsi/scsi_error.c
-> --- linux-2.6.15-rc5-git6-patched/drivers/scsi/scsi_error.c	2005-12-16 16:48:19.000000000 -0600
-> +++ linux-2.6.15-rc5-git6-patched-mdr/drivers/scsi/scsi_error.c	2005-12-16 17:42:07.000000000 -0600
-> @@ -1130,10 +1130,14 @@
->  	struct scsi_cmnd *scmd, *next;
->  
->  	list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
-> -		sdev_printk(KERN_INFO, scmd->device,
-> -			    "scsi: Device offlined - not"
-> -			    " ready after error recovery\n");
-> -		scsi_device_set_state(scmd->device, SDEV_OFFLINE);
-> +		/* if blocked, transport will provide final device disposition */
-> +		if (!scsi_device_blocked(scmd->device)) {
-> +			sdev_printk(KERN_INFO, scmd->device,
-> +				    "scsi: Device offlined - not"
-> +				    " ready after error recovery\n");
-> +			scsi_device_set_state(scmd->device, SDEV_OFFLINE);
-> +		}
-> +
->  		if (scmd->eh_eflags & SCSI_EH_CANCEL_CMD) {
->  			/*
->  			 * FIXME: Handle lost cmds.
-> @@ -1460,9 +1464,10 @@
->  
->  	list_for_each_entry_safe(scmd, next, done_q, eh_entry) {
->  		list_del_init(&scmd->eh_entry);
-> -		if (scsi_device_online(scmd->device) &&
-> +		if (scsi_device_blocked(scmd->device) ||
-> +		    (scsi_device_online(scmd->device) &&
->  		    !blk_noretry_request(scmd->request) &&
-> -		    (++scmd->retries < scmd->allowed)) {
-> +		    (++scmd->retries < scmd->allowed))) {
->  			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: flush"
->  							  " retry cmd: %p\n",
->  							  current->comm,
-> diff -ru linux-2.6.15-rc5-git6-patched/include/scsi/scsi_device.h linux-2.6.15-rc5-git6-patched-mdr/include/scsi/scsi_device.h
-> --- linux-2.6.15-rc5-git6-patched/include/scsi/scsi_device.h	2005-12-05 12:39:40.000000000 -0600
-> +++ linux-2.6.15-rc5-git6-patched-mdr/include/scsi/scsi_device.h	2005-12-16 17:42:07.000000000 -0600
-> @@ -275,6 +275,11 @@
->  			    int data_direction, void *buffer, unsigned bufflen,
->  			    struct scsi_sense_hdr *, int timeout, int retries);
->  
-> +static inline int scsi_device_blocked(struct scsi_device *sdev)
-> +{
-> +	return sdev->sdev_state == SDEV_BLOCK;
-> +}
-> +
->  static inline unsigned int sdev_channel(struct scsi_device *sdev)
->  {
->  	return sdev->channel;
