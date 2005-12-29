@@ -1,23 +1,34 @@
-From: "Dudley Clay" <dudley_clay_sm@standart.irkutsk.ru>
-Subject: Buhy cials-tabs Online For Less
-Date: Thu, 29 Dec 2005 08:14:01 +0100
-Message-ID: <588601c60c47$e103a2b4$7447b98d@tvk.hu>
+From: "Frank Borich" <Frank_Borich@us.xyratex.com>
+Subject: Qlogic build question
+Date: Thu, 29 Dec 2005 07:48:30 -0800
+Message-ID: <7F012BDECA7C2C46BB3BB0C71B8CE019010C5A@XYUS-EX21.xyus.xyratex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=iso-8859-1; reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [210.17.186.254] ([210.17.186.254]:57614 "HELO tvk.hu")
-	by vger.kernel.org with SMTP id S965097AbVL2I4d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Dec 2005 03:56:33 -0500
+Received: from xyratexus19.xyratex.com ([65.203.33.19]:59460 "EHLO
+	XYUS-EX21.xyus.xyratex.com") by vger.kernel.org with ESMTP
+	id S1750757AbVL2Psj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Dec 2005 10:48:39 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
+Hi,
 
-Be ERECT in less than 15 mins
+According to documentation included with the Qlogic driver source
+you can compile the driver for a SMP system using:
 
-PRlCE: $ 2 / use
+make SMP=1
 
-view our site --> directloqii.com
+Does anybody know if this will happen automtically on multiprocessor
+systems
+during installation of Red Hat AS3 distribution using CDs ?
 
+Does anyone know how I can determine if the driver was built using this
+flag ?
+
+Thanks in advance,
+Frank
