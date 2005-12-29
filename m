@@ -1,99 +1,289 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: Booting from or using a Compaq RA4100 Array
-Date: Thu, 29 Dec 2005 23:02:45 +0100
-Message-ID: <200512292302.50743@bilbo.math.uni-mannheim.de>
-References: <1135801791.9541.12.camel@gateway.markschaefer.org> <200512290845.17192@bilbo.math.uni-mannheim.de> <62187.24.3.12.198.1135893081.squirrel@www.markschaefer.org>
+From: Lukasz Kosewski <lkosewsk@gmail.com>
+Subject: [PATCH 2.6.15-rc7-git3 1/3] sata_promise: add correct read/write of hotplug registers for SATAII devices
+Date: Thu, 29 Dec 2005 18:23:46 -0500
+Message-ID: <355e5e5e0512291523h508fe0c8j459a9377d52d5529@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1988372.NJeC3INGhi";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_Part_7586_23340332.1135898626160"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:37601 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S1751054AbVL2WC6 (ORCPT
+Received: from zproxy.gmail.com ([64.233.162.200]:20544 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751153AbVL2XXq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Dec 2005 17:02:58 -0500
-In-Reply-To: <62187.24.3.12.198.1135893081.squirrel@www.markschaefer.org>
+	Thu, 29 Dec 2005 18:23:46 -0500
+Received: by zproxy.gmail.com with SMTP id 40so1775107nzk
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Dec 2005 15:23:46 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mark@markschaefer.org
-Cc: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
---nextPart1988372.NJeC3INGhi
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+------=_Part_7586_23340332.1135898626160
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 Content-Disposition: inline
 
-Mark Schaefer wrote:
->Eike,
->
->I think I've resigned myself to the fact that it won't boot.  I've done a
->bit of digging by directly sending commands to the unit.  I'm not sure why
->I can't force scsi_scan to do a REPORT_LUN on it through the Black List,
->but what I know is that it reports luns as 0x40...00 - 0x40...MAX_LUNS -
->they are reported as flat addressing, according to the SCSI Architecture
->Manual.
->
->Since TYPE_RAID implements a standard (albeit deprecated), it might
->actually be worth trying to create a driver for it.  The real question I
->have is whether I could get at the drives simply by masking the LUN's like
->the cpqfc driver does, or whether something like BLIST_SPARSE_LUNS would
->do the trick, or maybe even a new blasklist entry like
->BLIST_FLAT_LUN_ADDRESSING.
->
->Here's a quote from cpqfcTSworker.c:
->// e.g., the Compaq RA4x00 f/w Rev 2.54 and above may report
->// LUNs 4001, 4004, etc., because other LUNs are masked from
->// this HBA (owned by someone else).  We'll make those appear as
->// LUN 0, 1... to Linux
+VGhpcyBwYXRjaCBhZGRzIHN1cHBvcnQgZm9yIGNvcnJlY3RseSBtYXNraW5nIG91dCBhbmQga25v
+d2luZyBhYm91dApob3RwbHVnIGV2ZW50cyBvbiBQcm9taXNlIFNBVEFJSTE1MCBUeDQvVHgyIFBs
+dXMgY29udHJvbGxlcnMuCgpTaWduZWQtb2ZmLWJ5OiAgTHVrZSBLb3Nld3NraSA8bGtvc2V3c2tA
+Z21haWwuY29tPgoKTHVrZSBLb3Nld3NraQo=
+------=_Part_7586_23340332.1135898626160
+Content-Type: text/x-patch;
+	name=01-promise_sataII150_support-2.6.15-rc7-git3.diff;
+	charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="01-promise_sataII150_support-2.6.15-rc7-git3.diff"
 
-I've looked around a bit in the LUN code some month ago as I was trying to =
-get=20
-this to a state where it was sort of working. This code is as horrible as t=
-he=20
-rest of this driver, so I didn't really got the point what of this strange=
-=20
-stuff is really needed and what was just caused by code monkeys on drugs.
+29.12.05    Luke Kosewski   <lkosewsk@gmail.com>
 
-I now got a card, but a 5121, so I can't test this stuff. And I don't have=
-=20
-such an array :)
+	* A patch to the sata_promise driver in libata for it to correctly mask
+	  out and understand hotplug interrupts on SATAII150 controllers.
 
->I'm not sure what the direction of Linux is at this point, but there are a
->lot of RA4x00's out there for cheap and they (at least initially) seemed
->like a good entry-level FC RAID system.
+	Signed-off-by:  Luke Kosewski <lkosewsk@gmail.com>
 
-Now the driver is buried and all the people with such hardware come out of=
-=20
-their holes. Fascinating :)) I was thinking about a list related only to=20
-these things and/or writing a FAQ for this. What do the other people around=
-=20
-think about this? MKP?
+--- linux-2.6.15-rc7/drivers/scsi/sata_promise.c.old	2005-12-28 17:11:42.000000000 -0500
++++ linux-2.6.15-rc7/drivers/scsi/sata_promise.c	2005-12-28 17:44:22.000000000 -0500
+@@ -58,6 +58,7 @@ enum {
+ 	PDC_GLOBAL_CTL		= 0x48, /* Global control/status (per port) */
+ 	PDC_CTLSTAT		= 0x60,	/* IDE control and status (per port) */
+ 	PDC_SATA_PLUG_CSR	= 0x6C, /* SATA Plug control/status reg */
++	PDC2_SATA_PLUG_CSR	= 0x60, /* SATAII Plug control/status reg */
+ 	PDC_SLEW_CTL		= 0x470, /* slew rate control reg */
+ 
+ 	PDC_ERR_MASK		= (1<<19) | (1<<20) | (1<<21) | (1<<22) |
+@@ -66,8 +67,10 @@ enum {
+ 	board_2037x		= 0,	/* FastTrak S150 TX2plus */
+ 	board_20319		= 1,	/* FastTrak S150 TX4 */
+ 	board_20619		= 2,	/* FastTrak TX4000 */
++	board_2057x		= 3,	/* SATAII150 Tx2plus */
++	board_40518		= 4,	/* SATAII150 Tx4 */
+ 
+-	PDC_HAS_PATA		= (1 << 1), /* PDC20375 has PATA */
++	PDC_HAS_PATA		= (1 << 1), /* PDC20375/20575 has PATA */
+ 
+ 	PDC_RESET		= (1 << 11), /* HDMA reset */
+ 
+@@ -81,6 +84,10 @@ struct pdc_port_priv {
+ 	dma_addr_t		pkt_dma;
+ };
+ 
++struct pdc_host_priv {
++	int			hotplug_offset;
++};
++
+ static u32 pdc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg);
+ static void pdc_sata_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
+ static int pdc_ata_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
+@@ -95,6 +102,7 @@ static void pdc_tf_load_mmio(struct ata_
+ static void pdc_exec_command_mmio(struct ata_port *ap, const struct ata_taskfile *tf);
+ static void pdc_irq_clear(struct ata_port *ap);
+ static int pdc_qc_issue_prot(struct ata_queued_cmd *qc);
++static void pdc_host_stop(struct ata_host_set *host_set);
+ 
+ 
+ static struct scsi_host_template pdc_ata_sht = {
+@@ -137,7 +145,7 @@ static const struct ata_port_operations 
+ 	.scr_write		= pdc_sata_scr_write,
+ 	.port_start		= pdc_port_start,
+ 	.port_stop		= pdc_port_stop,
+-	.host_stop		= ata_pci_host_stop,
++	.host_stop		= pdc_host_stop,
+ };
+ 
+ static const struct ata_port_operations pdc_pata_ops = {
+@@ -158,7 +166,7 @@ static const struct ata_port_operations 
+ 
+ 	.port_start		= pdc_port_start,
+ 	.port_stop		= pdc_port_stop,
+-	.host_stop		= ata_pci_host_stop,
++	.host_stop		= pdc_host_stop,
+ };
+ 
+ static struct ata_port_info pdc_port_info[] = {
+@@ -191,6 +199,26 @@ static struct ata_port_info pdc_port_inf
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+ 		.port_ops	= &pdc_pata_ops,
+ 	},
++
++	/* board_2057x */
++	{
++		.sht		= &pdc_ata_sht,
++		.host_flags	= PDC_COMMON_FLAGS | ATA_FLAG_SATA,
++		.pio_mask	= 0x1f, /* pio0-4 */
++		.mwdma_mask	= 0x07, /* mwdma0-2 */
++		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
++		.port_ops	= &pdc_sata_ops,
++	},
++
++	/* board_40518 */
++	{
++		.sht		= &pdc_ata_sht,
++		.host_flags	= PDC_COMMON_FLAGS | ATA_FLAG_SATA,
++		.pio_mask	= 0x1f, /* pio0-4 */
++		.mwdma_mask	= 0x07, /* mwdma0-2 */
++		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
++		.port_ops	= &pdc_sata_ops,
++	},
+ };
+ 
+ static const struct pci_device_id pdc_ata_pci_tbl[] = {
+@@ -207,9 +235,9 @@ static const struct pci_device_id pdc_at
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3376, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_2037x },
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3574, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+-	  board_2037x },
++	  board_2057x },
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3d75, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+-	  board_2037x },
++	  board_2057x },
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3d73, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_2037x },
+ 
+@@ -222,7 +250,7 @@ static const struct pci_device_id pdc_at
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3d17, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_20319 },
+ 	{ PCI_VENDOR_ID_PROMISE, 0x3d18, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+-	  board_20319 },
++	  board_40518 },
+ 
+ 	{ PCI_VENDOR_ID_PROMISE, 0x6629, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+ 	  board_20619 },
+@@ -286,6 +314,16 @@ static void pdc_port_stop(struct ata_por
+ }
+ 
+ 
++static void pdc_host_stop(struct ata_host_set *host_set)
++{
++	struct pdc_host_priv *hp = host_set->private_data;
++
++	ata_pci_host_stop(host_set);
++
++	kfree(hp);
++}
++
++
+ static void pdc_reset_port(struct ata_port *ap)
+ {
+ 	void __iomem *mmio = (void __iomem *) ap->ioaddr.cmd_addr + PDC_CTLSTAT;
+@@ -481,14 +519,15 @@ static irqreturn_t pdc_interrupt (int ir
+ 		VPRINTK("QUICK EXIT 2\n");
+ 		return IRQ_NONE;
+ 	}
++
++	spin_lock(&host_set->lock);
++
+ 	mask &= 0xffff;		/* only 16 tags possible */
+ 	if (!mask) {
+ 		VPRINTK("QUICK EXIT 3\n");
+-		return IRQ_NONE;
++		goto done_irq;
+ 	}
+ 
+-	spin_lock(&host_set->lock);
+-
+ 	writel(mask, mmio_base + PDC_INT_SEQMASK);
+ 
+ 	for (i = 0; i < host_set->n_ports; i++) {
+@@ -505,10 +544,10 @@ static irqreturn_t pdc_interrupt (int ir
+ 		}
+ 	}
+ 
+-        spin_unlock(&host_set->lock);
+-
+ 	VPRINTK("EXIT\n");
+ 
++done_irq:
++	spin_unlock(&host_set->lock);
+ 	return IRQ_RETVAL(handled);
+ }
+ 
+@@ -586,6 +625,8 @@ static void pdc_ata_setup_port(struct at
+ static void pdc_host_init(unsigned int chip_id, struct ata_probe_ent *pe)
+ {
+ 	void __iomem *mmio = pe->mmio_base;
++	struct pdc_host_priv *hp = pe->private_data;
++	int hotplug_offset = hp->hotplug_offset;
+ 	u32 tmp;
+ 
+ 	/*
+@@ -600,12 +641,12 @@ static void pdc_host_init(unsigned int c
+ 	writel(tmp, mmio + PDC_FLASH_CTL);
+ 
+ 	/* clear plug/unplug flags for all ports */
+-	tmp = readl(mmio + PDC_SATA_PLUG_CSR);
+-	writel(tmp | 0xff, mmio + PDC_SATA_PLUG_CSR);
++	tmp = readl(mmio + hotplug_offset);
++	writel(tmp | 0xff, mmio + hotplug_offset);
+ 
+ 	/* mask plug/unplug ints */
+-	tmp = readl(mmio + PDC_SATA_PLUG_CSR);
+-	writel(tmp | 0xff0000, mmio + PDC_SATA_PLUG_CSR);
++	tmp = readl(mmio + hotplug_offset);
++	writel(tmp | 0xff0000, mmio + hotplug_offset);
+ 
+ 	/* reduce TBG clock to 133 Mhz. */
+ 	tmp = readl(mmio + PDC_TBG_MODE);
+@@ -627,6 +668,7 @@ static int pdc_ata_init_one (struct pci_
+ {
+ 	static int printed_version;
+ 	struct ata_probe_ent *probe_ent = NULL;
++	struct pdc_host_priv *hp;
+ 	unsigned long base;
+ 	void __iomem *mmio_base;
+ 	unsigned int board_idx = (unsigned int) ent->driver_data;
+@@ -674,6 +716,17 @@ static int pdc_ata_init_one (struct pci_
+ 	}
+ 	base = (unsigned long) mmio_base;
+ 
++	hp = kmalloc(sizeof(*hp), GFP_KERNEL);
++	if (hp == NULL) {
++		rc = -ENOMEM;
++		goto err_out_free_ent;
++	}
++	memset(hp, 0, sizeof(*hp));
++
++	/* Set default hotplug offset */
++	hp->hotplug_offset = PDC_SATA_PLUG_CSR;
++	probe_ent->private_data = hp;
++
+ 	probe_ent->sht		= pdc_port_info[board_idx].sht;
+ 	probe_ent->host_flags	= pdc_port_info[board_idx].host_flags;
+ 	probe_ent->pio_mask	= pdc_port_info[board_idx].pio_mask;
+@@ -693,6 +746,10 @@ static int pdc_ata_init_one (struct pci_
+ 
+ 	/* notice 4-port boards */
+ 	switch (board_idx) {
++	case board_40518:
++		/* Override hotplug offset for SATAII150 */
++		hp->hotplug_offset = PDC2_SATA_PLUG_CSR;
++		/* Fall through */
+ 	case board_20319:
+        		probe_ent->n_ports = 4;
+ 
+@@ -702,6 +759,10 @@ static int pdc_ata_init_one (struct pci_
+ 		probe_ent->port[2].scr_addr = base + 0x600;
+ 		probe_ent->port[3].scr_addr = base + 0x700;
+ 		break;
++	case board_2057x:
++		/* Override hotplug offset for SATAII150 */
++		hp->hotplug_offset = PDC2_SATA_PLUG_CSR;
++		/* Fall through */
+ 	case board_2037x:
+        		probe_ent->n_ports = 2;
+ 		break;
+@@ -724,8 +785,10 @@ static int pdc_ata_init_one (struct pci_
+ 	/* initialize adapter */
+ 	pdc_host_init(board_idx, probe_ent);
+ 
+-	/* FIXME: check ata_device_add return value */
+-	ata_device_add(probe_ent);
++	/* FIXME: Need any other frees than hp? */
++	if (!ata_device_add(probe_ent))
++		kfree(hp);
++
+ 	kfree(probe_ent);
+ 
+ 	return 0;
 
->Also, I'm not sure how strange of=20
->a beast the RA4x00 is.  If it's a one-off, maybe I could create a specific
->driver for it that acts as a LUN masker.  If there are more, it may make
->sense to make the changes necessary to deal with flat addressing.
->
->At this point, I'm convinced that it would be a minor change to at least
->the scsi_scan code to deal with TYPE_RAID.  I'm a bit more concerned about
->how widespread a change like flat addressing would be.
 
-I'm not really familiar with the low level SCSI code. James? Christoph?
 
-Eike
-
---nextPart1988372.NJeC3INGhi
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.0 (GNU/Linux)
-
-iD8DBQBDtF0KXKSJPmm5/E4RAjWZAKCSBKSAF9BPNqD+V6sbWM57ttl5igCfRvq5
-uPxBGlVnGgICkYO6nGvwL84=
-=pxus
------END PGP SIGNATURE-----
-
---nextPart1988372.NJeC3INGhi--
+------=_Part_7586_23340332.1135898626160--
