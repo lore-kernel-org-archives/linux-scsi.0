@@ -1,289 +1,361 @@
 From: Lukasz Kosewski <lkosewsk@gmail.com>
-Subject: [PATCH 2.6.15-rc7-git3 1/3] sata_promise: add correct read/write of hotplug registers for SATAII devices
-Date: Thu, 29 Dec 2005 18:23:46 -0500
-Message-ID: <355e5e5e0512291523h508fe0c8j459a9377d52d5529@mail.gmail.com>
+Subject: [PATCH 2.6.15-rc7-git3 2/3] libata: framework API for hotswapping drives on libata controllers
+Date: Thu, 29 Dec 2005 18:23:55 -0500
+Message-ID: <355e5e5e0512291523u6cc6d7ebr479a973ff1907245@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_Part_7586_23340332.1135898626160"
+	boundary="----=_Part_7590_23772725.1135898635787"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.200]:20544 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1751153AbVL2XXq (ORCPT
+Received: from zproxy.gmail.com ([64.233.162.202]:42557 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751156AbVL2XX4 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Dec 2005 18:23:46 -0500
-Received: by zproxy.gmail.com with SMTP id 40so1775107nzk
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Dec 2005 15:23:46 -0800 (PST)
+	Thu, 29 Dec 2005 18:23:56 -0500
+Received: by zproxy.gmail.com with SMTP id 40so1775109nzk
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Dec 2005 15:23:56 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-------=_Part_7586_23340332.1135898626160
+------=_Part_7590_23772725.1135898635787
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: base64
 Content-Disposition: inline
 
-VGhpcyBwYXRjaCBhZGRzIHN1cHBvcnQgZm9yIGNvcnJlY3RseSBtYXNraW5nIG91dCBhbmQga25v
-d2luZyBhYm91dApob3RwbHVnIGV2ZW50cyBvbiBQcm9taXNlIFNBVEFJSTE1MCBUeDQvVHgyIFBs
-dXMgY29udHJvbGxlcnMuCgpTaWduZWQtb2ZmLWJ5OiAgTHVrZSBLb3Nld3NraSA8bGtvc2V3c2tA
-Z21haWwuY29tPgoKTHVrZSBLb3Nld3NraQo=
-------=_Part_7586_23340332.1135898626160
+VGhpcyBwYXRjaCBhZGRzIGEgZnJhbWV3b3JrIGZvciBob3Qtc3dhcHBpbmcgZHJpdmVzIG9uIGxp
+YmF0YS1ydW4KY29udHJvbGxlcnMuICBUaGUgZnVuY3Rpb25zICdzYXRhX2hvdF9wbHVnJyBhbmQg
+J3NhdGFfaG90X3VucGx1ZycgY2FuCmJlIGNhbGxlZCBieSBsb3cgbGV2ZWwgaG90c3dhcC1jYXBh
+YmxlIFNBVEEgY29udHJvbGxlcnMsIGFuZApzdWJzZXF1ZW50IGZ1bmN0aW9ucyBpbiB0aGUgY2Fs
+bCBjaGFpbiB3aWxsIChpbiB0aGUgZnV0dXJlKSBiZSBlbnRyeQpwb2ludHMgZm9yIFBBVEEgd2Fy
+bS1zd2FwcGluZyBvZiBkcml2ZXMuCgpTaWduZWQtb2ZmLWJ5OiAgTHVrZSBLb3Nld3NraSA8bGtv
+c2V3c2tAZ21haWwuY29tPgoKTHVrZSBLb3Nld3NraQo=
+------=_Part_7590_23772725.1135898635787
 Content-Type: text/x-patch;
-	name=01-promise_sataII150_support-2.6.15-rc7-git3.diff;
+	name=02-libata_hotswap_infrastructure-2.6.15-rc7-git3.diff;
 	charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="01-promise_sataII150_support-2.6.15-rc7-git3.diff"
+Content-Disposition: attachment; filename="02-libata_hotswap_infrastructure-2.6.15-rc7-git3.diff"
 
 29.12.05    Luke Kosewski   <lkosewsk@gmail.com>
 
-	* A patch to the sata_promise driver in libata for it to correctly mask
-	  out and understand hotplug interrupts on SATAII150 controllers.
+	* A patch which adds a framework for drive hotswap in libata drivers.
+	  For hotswap-capable SATA controllers, the functions sata_hot_plug and
+	  sata_hot_unplug will allow handling of new or removed disks in the
+	  system.  Further up the call chain are entry points which (in the
+	  future) will allow for PATA warm-swapping.
 
 	Signed-off-by:  Luke Kosewski <lkosewsk@gmail.com>
 
---- linux-2.6.15-rc7/drivers/scsi/sata_promise.c.old	2005-12-28 17:11:42.000000000 -0500
-+++ linux-2.6.15-rc7/drivers/scsi/sata_promise.c	2005-12-28 17:44:22.000000000 -0500
-@@ -58,6 +58,7 @@ enum {
- 	PDC_GLOBAL_CTL		= 0x48, /* Global control/status (per port) */
- 	PDC_CTLSTAT		= 0x60,	/* IDE control and status (per port) */
- 	PDC_SATA_PLUG_CSR	= 0x6C, /* SATA Plug control/status reg */
-+	PDC2_SATA_PLUG_CSR	= 0x60, /* SATAII Plug control/status reg */
- 	PDC_SLEW_CTL		= 0x470, /* slew rate control reg */
+--- linux-2.6.15-rc7/drivers/scsi/libata-core.c.old	2005-12-28 18:15:53.000000000 -0500
++++ linux-2.6.15-rc7/drivers/scsi/libata-core.c	2005-12-29 15:53:32.000000000 -0500
+@@ -77,6 +77,7 @@ static void __ata_qc_complete(struct ata
  
- 	PDC_ERR_MASK		= (1<<19) | (1<<20) | (1<<21) | (1<<22) |
-@@ -66,8 +67,10 @@ enum {
- 	board_2037x		= 0,	/* FastTrak S150 TX2plus */
- 	board_20319		= 1,	/* FastTrak S150 TX4 */
- 	board_20619		= 2,	/* FastTrak TX4000 */
-+	board_2057x		= 3,	/* SATAII150 Tx2plus */
-+	board_40518		= 4,	/* SATAII150 Tx4 */
+ static unsigned int ata_unique_id = 1;
+ static struct workqueue_struct *ata_wq;
++static struct workqueue_struct *ata_hotplug_wq;
  
--	PDC_HAS_PATA		= (1 << 1), /* PDC20375 has PATA */
-+	PDC_HAS_PATA		= (1 << 1), /* PDC20375/20575 has PATA */
+ int atapi_enabled = 0;
+ module_param(atapi_enabled, int, 0444);
+@@ -1110,6 +1111,9 @@ static void ata_dev_identify(struct ata_
+ 		return;
+ 	}
  
- 	PDC_RESET		= (1 << 11), /* HDMA reset */
- 
-@@ -81,6 +84,10 @@ struct pdc_port_priv {
- 	dma_addr_t		pkt_dma;
- };
- 
-+struct pdc_host_priv {
-+	int			hotplug_offset;
-+};
++	/* wipe all flags; this might be a different drive on hotswap. */
++	dev->flags = 0;
 +
- static u32 pdc_sata_scr_read (struct ata_port *ap, unsigned int sc_reg);
- static void pdc_sata_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
- static int pdc_ata_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
-@@ -95,6 +102,7 @@ static void pdc_tf_load_mmio(struct ata_
- static void pdc_exec_command_mmio(struct ata_port *ap, const struct ata_taskfile *tf);
- static void pdc_irq_clear(struct ata_port *ap);
- static int pdc_qc_issue_prot(struct ata_queued_cmd *qc);
-+static void pdc_host_stop(struct ata_host_set *host_set);
- 
- 
- static struct scsi_host_template pdc_ata_sht = {
-@@ -137,7 +145,7 @@ static const struct ata_port_operations 
- 	.scr_write		= pdc_sata_scr_write,
- 	.port_start		= pdc_port_start,
- 	.port_stop		= pdc_port_stop,
--	.host_stop		= ata_pci_host_stop,
-+	.host_stop		= pdc_host_stop,
- };
- 
- static const struct ata_port_operations pdc_pata_ops = {
-@@ -158,7 +166,7 @@ static const struct ata_port_operations 
- 
- 	.port_start		= pdc_port_start,
- 	.port_stop		= pdc_port_stop,
--	.host_stop		= ata_pci_host_stop,
-+	.host_stop		= pdc_host_stop,
- };
- 
- static struct ata_port_info pdc_port_info[] = {
-@@ -191,6 +199,26 @@ static struct ata_port_info pdc_port_inf
- 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
- 		.port_ops	= &pdc_pata_ops,
- 	},
-+
-+	/* board_2057x */
-+	{
-+		.sht		= &pdc_ata_sht,
-+		.host_flags	= PDC_COMMON_FLAGS | ATA_FLAG_SATA,
-+		.pio_mask	= 0x1f, /* pio0-4 */
-+		.mwdma_mask	= 0x07, /* mwdma0-2 */
-+		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
-+		.port_ops	= &pdc_sata_ops,
-+	},
-+
-+	/* board_40518 */
-+	{
-+		.sht		= &pdc_ata_sht,
-+		.host_flags	= PDC_COMMON_FLAGS | ATA_FLAG_SATA,
-+		.pio_mask	= 0x1f, /* pio0-4 */
-+		.mwdma_mask	= 0x07, /* mwdma0-2 */
-+		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
-+		.port_ops	= &pdc_sata_ops,
-+	},
- };
- 
- static const struct pci_device_id pdc_ata_pci_tbl[] = {
-@@ -207,9 +235,9 @@ static const struct pci_device_id pdc_at
- 	{ PCI_VENDOR_ID_PROMISE, 0x3376, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
- 	  board_2037x },
- 	{ PCI_VENDOR_ID_PROMISE, 0x3574, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
--	  board_2037x },
-+	  board_2057x },
- 	{ PCI_VENDOR_ID_PROMISE, 0x3d75, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
--	  board_2037x },
-+	  board_2057x },
- 	{ PCI_VENDOR_ID_PROMISE, 0x3d73, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
- 	  board_2037x },
- 
-@@ -222,7 +250,7 @@ static const struct pci_device_id pdc_at
- 	{ PCI_VENDOR_ID_PROMISE, 0x3d17, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
- 	  board_20319 },
- 	{ PCI_VENDOR_ID_PROMISE, 0x3d18, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
--	  board_20319 },
-+	  board_40518 },
- 
- 	{ PCI_VENDOR_ID_PROMISE, 0x6629, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
- 	  board_20619 },
-@@ -286,6 +314,16 @@ static void pdc_port_stop(struct ata_por
+ 	if (ap->flags & (ATA_FLAG_SRST | ATA_FLAG_SATA_RESET))
+ 		using_edd = 0;
+ 	else
+@@ -3982,6 +3986,103 @@ idle_irq:
+ 	return 0;	/* irq not handled */
  }
  
- 
-+static void pdc_host_stop(struct ata_host_set *host_set)
++void ata_check_kill_qc(struct ata_port *ap, unsigned int device)
 +{
-+	struct pdc_host_priv *hp = host_set->private_data;
++	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, ap->active_tag);
 +
-+	ata_pci_host_stop(host_set);
-+
-+	kfree(hp);
++	if (unlikely(qc) && device == qc->dev->devno) {
++		/* Kill outstanding qc to device if one exists */
++		ata_qc_complete(qc, ATA_ERR);
++	}
 +}
 +
++static void ata_hotplug_task(void *_data)
++{
++	struct ata_port *ap = (struct ata_port *)_data;
++	enum hotplug_states hotplug_todo[ATA_MAX_DEVICES];
++	unsigned long flags;
++	int i;
 +
- static void pdc_reset_port(struct ata_port *ap)
++	/* This function could have just one loop, but then we'd have to acquire
++	 * the spin_lock multiple times.  Better to just have two loops.
++	 */
++	spin_lock_irqsave(&ap->host_set->lock, flags);
++	for (i = 0; i < ATA_MAX_DEVICES; ++i) {
++		/* Make sure we don't modify while reading! */
++		hotplug_todo[i] = ap->device[i].plug; 
++		ap->device[i].plug = HOT_NOOP;
++	}
++	spin_unlock_irqrestore(&ap->host_set->lock, flags);
++
++	for (i = 0; i < ATA_MAX_DEVICES; ++i) {
++		switch (hotplug_todo[i]) {
++			case HOT_PLUG:
++				DPRINTK("Got a plug request on port %d\n", ap->id);
++
++				/* This might be necessary if we unplug and plug
++				 * in a drive within ATA_TMOUT_HOTPLUG / HZ
++				 * seconds... due to the debounce timer, one
++				 * event is generated.  Since the last event was
++				 * a plug, the unplug routine never gets called,
++				 * so we need to clean up the mess first.  If
++				 * there was never a drive here in the first
++				 * place, this will just do nothing.  Otherwise,
++				 * it basically prevents 'plug' from being
++				 * called twice with no unplug in between.
++				 */
++				ata_scsi_hot_unplug(ap, i);
++
++				/* This is necessary for some Seagate drives. */
++				if (ap->flags & ATA_FLAG_SATA)
++					ap->flags |= ATA_FLAG_SATA_RESET; 
++				ap->udma_mask = ap->orig_udma_mask;
++
++				if (!ata_bus_probe(ap)) /* Success */
++					ata_scsi_hot_plug(ap, i);
++				break;
++			case HOT_UNPLUG:
++				DPRINTK("Got an unplug request on port %d\n", ap->id);
++
++				ata_scsi_hot_unplug(ap, i);
++				/* Fall through */
++			case HOT_NOOP:
++				/* No-op; do nothing */
++				break;
++			default:
++				/* Should never happen */
++				BUG();
++		}
++	}
++}
++
++void sata_hot_plug(struct ata_port *ap)
++{
++	if (ap->ops->hotplug_plug_janitor)
++		ap->ops->hotplug_plug_janitor(ap);
++
++	/* This line should be protected by a host_set->lock.  If we follow the
++	 * call chain up from this function, it's called from within an
++	 * interrupt handler.  Make sure that, when called, this function is
++	 * protected in said handler.
++	 */
++	ap->device[0].plug = HOT_PLUG;
++
++	queue_delayed_work(ata_hotplug_wq, &ap->hotplug_task, ATA_TMOUT_HOTPLUG);
++}
++
++void sata_hot_unplug(struct ata_port *ap)
++{
++	ap->device[0].class = ATA_DEV_NONE;
++	
++	if (ap->ops->hotplug_unplug_janitor)
++		ap->ops->hotplug_unplug_janitor(ap);
++	
++	/* See comment near similar line in sata_hot_plug function. */
++	ap->device[0].plug = HOT_UNPLUG;
++
++	queue_delayed_work(ata_hotplug_wq, &ap->hotplug_task, ATA_TMOUT_HOTPLUG);
++}
++
+ /**
+  *	ata_interrupt - Default ATA host interrupt handler
+  *	@irq: irq line (unused)
+@@ -4224,12 +4325,16 @@ static void ata_host_init(struct ata_por
+ 	ap->cbl = ATA_CBL_NONE;
+ 	ap->active_tag = ATA_TAG_POISON;
+ 	ap->last_ctl = 0xFF;
++	ap->orig_udma_mask = ent->udma_mask;
+ 
++	INIT_WORK(&ap->hotplug_task, ata_hotplug_task, ap);
+ 	INIT_WORK(&ap->packet_task, atapi_packet_task, ap);
+ 	INIT_WORK(&ap->pio_task, ata_pio_task, ap);
+ 
+-	for (i = 0; i < ATA_MAX_DEVICES; i++)
++	for (i = 0; i < ATA_MAX_DEVICES; i++) {
+ 		ap->device[i].devno = i;
++		ap->device[i].plug = HOT_NOOP;
++	}
+ 
+ #ifdef ATA_IRQ_TRAP
+ 	ap->stats.unhandled_irq = 1;
+@@ -4868,6 +4973,11 @@ static int __init ata_init(void)
+ 	ata_wq = create_workqueue("ata");
+ 	if (!ata_wq)
+ 		return -ENOMEM;
++	ata_hotplug_wq = create_workqueue("ata_hotplug");
++	if (!ata_hotplug_wq) {
++		destroy_workqueue(ata_wq);
++		return -ENOMEM;
++	}
+ 
+ 	printk(KERN_DEBUG "libata version " DRV_VERSION " loaded.\n");
+ 	return 0;
+@@ -4876,6 +4986,7 @@ static int __init ata_init(void)
+ static void __exit ata_exit(void)
  {
- 	void __iomem *mmio = (void __iomem *) ap->ioaddr.cmd_addr + PDC_CTLSTAT;
-@@ -481,14 +519,15 @@ static irqreturn_t pdc_interrupt (int ir
- 		VPRINTK("QUICK EXIT 2\n");
- 		return IRQ_NONE;
- 	}
-+
-+	spin_lock(&host_set->lock);
-+
- 	mask &= 0xffff;		/* only 16 tags possible */
- 	if (!mask) {
- 		VPRINTK("QUICK EXIT 3\n");
--		return IRQ_NONE;
-+		goto done_irq;
- 	}
- 
--	spin_lock(&host_set->lock);
--
- 	writel(mask, mmio_base + PDC_INT_SEQMASK);
- 
- 	for (i = 0; i < host_set->n_ports; i++) {
-@@ -505,10 +544,10 @@ static irqreturn_t pdc_interrupt (int ir
- 		}
- 	}
- 
--        spin_unlock(&host_set->lock);
--
- 	VPRINTK("EXIT\n");
- 
-+done_irq:
-+	spin_unlock(&host_set->lock);
- 	return IRQ_RETVAL(handled);
+ 	destroy_workqueue(ata_wq);
++	destroy_workqueue(ata_hotplug_wq);
  }
  
-@@ -586,6 +625,8 @@ static void pdc_ata_setup_port(struct at
- static void pdc_host_init(unsigned int chip_id, struct ata_probe_ent *pe)
- {
- 	void __iomem *mmio = pe->mmio_base;
-+	struct pdc_host_priv *hp = pe->private_data;
-+	int hotplug_offset = hp->hotplug_offset;
- 	u32 tmp;
+ module_init(ata_init);
+@@ -4953,6 +5064,8 @@ EXPORT_SYMBOL_GPL(ata_dev_classify);
+ EXPORT_SYMBOL_GPL(ata_dev_id_string);
+ EXPORT_SYMBOL_GPL(ata_dev_config);
+ EXPORT_SYMBOL_GPL(ata_scsi_simulate);
++EXPORT_SYMBOL_GPL(sata_hot_plug);
++EXPORT_SYMBOL_GPL(sata_hot_unplug);
  
- 	/*
-@@ -600,12 +641,12 @@ static void pdc_host_init(unsigned int c
- 	writel(tmp, mmio + PDC_FLASH_CTL);
+ EXPORT_SYMBOL_GPL(ata_timing_compute);
+ EXPORT_SYMBOL_GPL(ata_timing_merge);
+--- linux-2.6.15-rc7/drivers/scsi/libata-scsi.c.old	2005-12-28 18:16:17.000000000 -0500
++++ linux-2.6.15-rc7/drivers/scsi/libata-scsi.c	2005-12-29 16:11:10.000000000 -0500
+@@ -1210,6 +1210,11 @@ static int ata_scsi_qc_complete(struct a
+ 	u8 *cdb = cmd->cmnd;
+  	int need_sense = (err_mask != 0);
  
- 	/* clear plug/unplug flags for all ports */
--	tmp = readl(mmio + PDC_SATA_PLUG_CSR);
--	writel(tmp | 0xff, mmio + PDC_SATA_PLUG_CSR);
-+	tmp = readl(mmio + hotplug_offset);
-+	writel(tmp | 0xff, mmio + hotplug_offset);
- 
- 	/* mask plug/unplug ints */
--	tmp = readl(mmio + PDC_SATA_PLUG_CSR);
--	writel(tmp | 0xff0000, mmio + PDC_SATA_PLUG_CSR);
-+	tmp = readl(mmio + hotplug_offset);
-+	writel(tmp | 0xff0000, mmio + hotplug_offset);
- 
- 	/* reduce TBG clock to 133 Mhz. */
- 	tmp = readl(mmio + PDC_TBG_MODE);
-@@ -627,6 +668,7 @@ static int pdc_ata_init_one (struct pci_
- {
- 	static int printed_version;
- 	struct ata_probe_ent *probe_ent = NULL;
-+	struct pdc_host_priv *hp;
- 	unsigned long base;
- 	void __iomem *mmio_base;
- 	unsigned int board_idx = (unsigned int) ent->driver_data;
-@@ -674,6 +716,17 @@ static int pdc_ata_init_one (struct pci_
- 	}
- 	base = (unsigned long) mmio_base;
- 
-+	hp = kmalloc(sizeof(*hp), GFP_KERNEL);
-+	if (hp == NULL) {
-+		rc = -ENOMEM;
-+		goto err_out_free_ent;
++	if (unlikely(!ata_scsi_find_dev(qc->ap, cmd->device))) {
++		cmd->result = (DID_BAD_TARGET << 16);
++		goto out_no_dev;
 +	}
-+	memset(hp, 0, sizeof(*hp));
 +
-+	/* Set default hotplug offset */
-+	hp->hotplug_offset = PDC_SATA_PLUG_CSR;
-+	probe_ent->private_data = hp;
-+
- 	probe_ent->sht		= pdc_port_info[board_idx].sht;
- 	probe_ent->host_flags	= pdc_port_info[board_idx].host_flags;
- 	probe_ent->pio_mask	= pdc_port_info[board_idx].pio_mask;
-@@ -693,6 +746,10 @@ static int pdc_ata_init_one (struct pci_
+ 	/* For ATA pass thru (SAT) commands, generate a sense block if
+ 	 * user mandated it or if there's an error.  Note that if we
+ 	 * generate because the user forced us to, a check condition
+@@ -1239,11 +1244,39 @@ static int ata_scsi_qc_complete(struct a
+ 		ata_dump_status(qc->ap->id, &qc->tf);
+ 	}
  
- 	/* notice 4-port boards */
- 	switch (board_idx) {
-+	case board_40518:
-+		/* Override hotplug offset for SATAII150 */
-+		hp->hotplug_offset = PDC2_SATA_PLUG_CSR;
-+		/* Fall through */
- 	case board_20319:
-        		probe_ent->n_ports = 4;
- 
-@@ -702,6 +759,10 @@ static int pdc_ata_init_one (struct pci_
- 		probe_ent->port[2].scr_addr = base + 0x600;
- 		probe_ent->port[3].scr_addr = base + 0x700;
- 		break;
-+	case board_2057x:
-+		/* Override hotplug offset for SATAII150 */
-+		hp->hotplug_offset = PDC2_SATA_PLUG_CSR;
-+		/* Fall through */
- 	case board_2037x:
-        		probe_ent->n_ports = 2;
- 		break;
-@@ -724,8 +785,10 @@ static int pdc_ata_init_one (struct pci_
- 	/* initialize adapter */
- 	pdc_host_init(board_idx, probe_ent);
- 
--	/* FIXME: check ata_device_add return value */
--	ata_device_add(probe_ent);
-+	/* FIXME: Need any other frees than hp? */
-+	if (!ata_device_add(probe_ent))
-+		kfree(hp);
-+
- 	kfree(probe_ent);
++out_no_dev:
+ 	qc->scsidone(cmd);
  
  	return 0;
+ }
+ 
++void ata_scsi_hot_plug(struct ata_port *ap, unsigned int device)
++{
++	/* libata uses the 'id' or 'target' value */
++	scsi_add_device(ap->host, 0, device, 0);
++}
++
++void ata_scsi_hot_unplug(struct ata_port *ap, unsigned int device)
++{
++	/* libata uses the 'id' or 'target' value */
++	struct scsi_device *scd = scsi_device_lookup(ap->host, 0, device, 0);
++
++	/* Make sure that we set this here, in case we aren't called as a
++	 * result of sata_hot_unplug */
++	ap->device[device].class = ATA_DEV_NONE;
++
++	if (scd)  /* Set to cancel state to block further I/O */
++		scsi_device_set_state(scd, SDEV_CANCEL);
++
++	/* We might have a pending qc on I/O to a removed device. */
++	ata_check_kill_qc(ap, device);
++	
++	if (scd) {
++		scsi_remove_device(scd);
++		scsi_device_put(scd);
++	}
++}
++
+ /**
+  *	ata_scsi_translate - Translate then issue SCSI command to ATA device
+  *	@ap: ATA port to which the command is addressed
+--- linux-2.6.15-rc7/drivers/scsi/libata.h.old	2005-12-28 18:16:08.000000000 -0500
++++ linux-2.6.15-rc7/drivers/scsi/libata.h	2005-12-29 13:01:33.000000000 -0500
+@@ -46,6 +46,7 @@ extern void ata_rwcmd_protocol(struct at
+ extern void ata_qc_free(struct ata_queued_cmd *qc);
+ extern int ata_qc_issue(struct ata_queued_cmd *qc);
+ extern int ata_check_atapi_dma(struct ata_queued_cmd *qc);
++extern void ata_check_kill_qc(struct ata_port *ap, unsigned int device);
+ extern void ata_dev_select(struct ata_port *ap, unsigned int device,
+                            unsigned int wait, unsigned int can_sleep);
+ extern void swap_buf_le16(u16 *buf, unsigned int buf_words);
+@@ -84,5 +85,7 @@ extern void ata_scsi_set_sense(struct sc
+ extern void ata_scsi_rbuf_fill(struct ata_scsi_args *args,
+                         unsigned int (*actor) (struct ata_scsi_args *args,
+                                            u8 *rbuf, unsigned int buflen));
++extern void ata_scsi_hot_plug(struct ata_port *ap, unsigned int device);
++extern void ata_scsi_hot_unplug(struct ata_port *ap, unsigned int device);
+ 
+ #endif /* __LIBATA_H__ */
+--- linux-2.6.15-rc7/include/linux/libata.h.old	2005-12-28 18:16:33.000000000 -0500
++++ linux-2.6.15-rc7/include/linux/libata.h	2005-12-29 15:20:49.000000000 -0500
+@@ -136,6 +136,7 @@ enum {
+ 	ATA_TMOUT_BOOT_QUICK	= 7 * HZ,	/* hueristic */
+ 	ATA_TMOUT_CDB		= 30 * HZ,
+ 	ATA_TMOUT_CDB_QUICK	= 5 * HZ,
++	ATA_TMOUT_HOTPLUG	= HZ / 2,	/* FIXME:  Guess value? */
+ 
+ 	/* ATA bus states */
+ 	BUS_UNKNOWN		= 0,
+@@ -188,6 +189,12 @@ enum ata_completion_errors {
+ 	AC_ERR_HOST_BUS		= (1 << 3),
+ };
+ 
++enum hotplug_states {
++	HOT_NOOP,
++	HOT_PLUG,
++	HOT_UNPLUG,
++};
++
+ /* forward declarations */
+ struct scsi_device;
+ struct ata_port_operations;
+@@ -311,6 +318,8 @@ struct ata_device {
+ 	u16			cylinders;	/* Number of cylinders */
+ 	u16			heads;		/* Number of heads */
+ 	u16			sectors;	/* Number of sectors per track */
++	/* For hotplug */
++	enum hotplug_states	plug;
+ };
+ 
+ struct ata_port {
+@@ -348,6 +357,7 @@ struct ata_port {
+ 	struct ata_host_stats	stats;
+ 	struct ata_host_set	*host_set;
+ 
++	struct work_struct	hotplug_task;
+ 	struct work_struct	packet_task;
+ 
+ 	struct work_struct	pio_task;
+@@ -355,6 +365,8 @@ struct ata_port {
+ 	unsigned long		pio_task_timeout;
+ 
+ 	void			*private_data;
++
++	unsigned int		orig_udma_mask;
+ };
+ 
+ struct ata_port_operations {
+@@ -400,6 +412,8 @@ struct ata_port_operations {
+ 
+ 	void (*bmdma_stop) (struct ata_queued_cmd *qc);
+ 	u8   (*bmdma_status) (struct ata_port *ap);
++	void (*hotplug_plug_janitor) (struct ata_port *ap);
++	void (*hotplug_unplug_janitor) (struct ata_port *ap);
+ };
+ 
+ struct ata_port_info {
+@@ -445,6 +459,8 @@ extern int ata_scsi_queuecmd(struct scsi
+ extern int ata_scsi_error(struct Scsi_Host *host);
+ extern int ata_scsi_release(struct Scsi_Host *host);
+ extern unsigned int ata_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
++extern void sata_hot_plug(struct ata_port *ap);
++extern void sata_hot_unplug(struct ata_port *ap);
+ extern int ata_ratelimit(void);
+ 
+ /*
 
 
-
-------=_Part_7586_23340332.1135898626160--
+------=_Part_7590_23772725.1135898635787--
