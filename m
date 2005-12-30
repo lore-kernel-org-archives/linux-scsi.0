@@ -1,20 +1,15 @@
 From: mark@markschaefer.org
 Subject: Re: Booting from or using a Compaq RA4100 Array
-Date: Fri, 30 Dec 2005 09:39:39 -0500 (EST)
-Message-ID: <2633.198.208.159.18.1135953579.squirrel@www.markschaefer.org>
-References: <1135801791.9541.12.camel@gateway.markschaefer.org>
-    <200512290845.17192@bilbo.math.uni-mannheim.de>
-    <62187.24.3.12.198.1135893081.squirrel@www.markschaefer.org>
-    <200512292302.50743@bilbo.math.uni-mannheim.de>
+Date: Fri, 30 Dec 2005 09:40:00 -0500 (EST)
+Message-ID: <2786.198.208.159.18.1135953600.squirrel@www.markschaefer.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host79.host79-server.com ([66.49.184.32]:12186 "EHLO
+Received: from host79.host79-server.com ([66.49.184.32]:15002 "EHLO
 	host79.host79-server.com") by vger.kernel.org with ESMTP
-	id S932131AbVL3Ojm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Dec 2005 09:39:42 -0500
-In-Reply-To: <200512292302.50743@bilbo.math.uni-mannheim.de>
+	id S932161AbVL3OkB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Dec 2005 09:40:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Rolf Eike Beer <eike-kernel@sf-tec.de>
