@@ -1,47 +1,47 @@
-From: jes@trained-monkey.org (Jes Sorensen)
-Subject: [RFC] migrate ch.c away from semaphores
-Date: Fri, 30 Dec 2005 10:26:05 -0500
-Message-ID: <17333.20877.229345.594316@jaguar.mkp.net>
+From: Jes Sorensen <jes@trained-monkey.org>
+Subject: Re: [RFC] migrate ch.c away from semaphores
+Date: 30 Dec 2005 11:00:23 -0500
+Message-ID: <yq0psnebmnc.fsf@jaguar.mkp.net>
+References: <17333.20877.229345.594316@jaguar.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vanessarodrigues.com ([192.139.46.150]:424 "EHLO jaguar.mkp.net")
-	by vger.kernel.org with ESMTP id S932214AbVL3P0K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Dec 2005 10:26:10 -0500
+Received: from vanessarodrigues.com ([192.139.46.150]:14248 "EHLO
+	jaguar.mkp.net") by vger.kernel.org with ESMTP id S932161AbVL3QAZ
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Dec 2005 11:00:25 -0500
+In-Reply-To: <17333.20877.229345.594316@jaguar.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Gerd Knorr <kraxel@bytesex.org>, Ingo Molnar <mingo@elte.hu>
 
-Hi,
+>>>>> "Jes" == Jes Sorensen <jes@trained-monkey.org> writes:
 
-I have been migrating some files away from semaphores to the new mutex
-code and had a go at ch.c as well. I made a few other changes which I
-was hoping someone would comment upon, or at least yell if they
-disagree.
+Jes> Hi, I have been migrating some files away from semaphores to the
+Jes> new mutex code and had a go at ch.c as well. I made a few other
+Jes> changes which I was hoping someone would comment upon, or at
+Jes> least yell if they disagree.
 
-Gerd I am not sure if you still maintain this driver but since you're
-listed as the author you get the first blame or chance to yell ;-)
+Jes> Gerd I am not sure if you still maintain this driver but since
+Jes> you're listed as the author you get the first blame or chance to
+Jes> yell ;-)
 
-If nobody complains then I'll pass it on to Ingo.
+Hmmmm James moaned at me over the GFP_DMA change so I am pulling that
+out for now. Here's the current patch.
 
-Cheers,
 Jes
 
-Migrate drivers/scsi/ch.c to use a mutex rather than a semaphore. Fix
-up allocations to be GFP_KERNEL and not GFP_DMA as it's really the job
-of the device driver to figure out if it can handle the buffer or not,
-not a mid layer protocol driver. Last, fix case where loop would
-continue even though put_user() fails.
+Migrate drivers/scsi/ch.c to use a mutex rather than a
+semaphore. Last, fix case where loop would continue even though
+put_user() fails.
 
 Signed-off-by: Jes Sorensen <jes@sgi.com>
 
 ----
 
- drivers/scsi/ch.c |   51 ++++++++++++++++++++++++++++-----------------------
- 1 files changed, 28 insertions(+), 23 deletions(-)
+ drivers/scsi/ch.c |   47 ++++++++++++++++++++++++++---------------------
+ 1 files changed, 26 insertions(+), 21 deletions(-)
 
 Index: linux-2.6.15-rc7-quilt/drivers/scsi/ch.c
 ===================================================================
@@ -65,24 +65,6 @@ Index: linux-2.6.15-rc7-quilt/drivers/scsi/ch.c
  } scsi_changer;
  
  static LIST_HEAD(ch_devlist);
-@@ -263,7 +263,7 @@
- 	u_char  *buffer;
- 	int     result;
- 	
--	buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
-+	buffer = kmalloc(512, GFP_KERNEL);
- 	if(!buffer)
- 		return -ENOMEM;
- 	
-@@ -320,7 +320,7 @@
- 	int     result,id,lun,i;
- 	u_int   elem;
- 
--	buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
-+	buffer = kmalloc(512, GFP_KERNEL);
- 	if (!buffer)
- 		return -ENOMEM;
- 	memset(buffer,0,512);
 @@ -563,17 +563,21 @@
  static int ch_gstatus(scsi_changer *ch, int type, unsigned char __user *dest)
  {
@@ -105,7 +87,7 @@ Index: linux-2.6.15-rc7-quilt/drivers/scsi/ch.c
 +			retval = -EFAULT;
 +			goto out;
 +		}
-+			
++
  		if (data[2] & CESTATUS_EXCEPT)
  			vprintk("element 0x%x: asc=0x%x, ascq=0x%x\n",
  				ch->firsts[type]+i,
@@ -165,19 +147,17 @@ Index: linux-2.6.15-rc7-quilt/drivers/scsi/ch.c
  		return retval;
  	}
  
-@@ -770,10 +775,10 @@
- 			return -EINVAL;
- 		elem = ch->firsts[cge.cge_type] + cge.cge_unit;
- 		
--		buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
-+		buffer = kmalloc(512, GFP_KERNEL);
+@@ -773,8 +778,8 @@
+ 		buffer = kmalloc(512, GFP_KERNEL | GFP_DMA);
  		if (!buffer)
  			return -ENOMEM;
 -		down(&ch->lock);
+-		
 +		mutex_lock(&ch->lock);
- 		
++
  	voltag_retry:
  		memset(cmd,0,sizeof(cmd));
+ 		cmd[0] = READ_ELEMENT_STATUS;
 @@ -823,8 +828,8 @@
  			vprintk("device has no volume tag support\n");
  			goto voltag_retry;
