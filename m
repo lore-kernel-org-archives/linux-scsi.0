@@ -1,47 +1,43 @@
-From: "Martin K. Petersen" <mkp@mkp.net>
-Subject: Re: Booting from or using a Compaq RA4100 Array
-Date: Fri, 30 Dec 2005 17:18:12 -0500
-Message-ID: <yq1oe2y44bf.fsf@wilson.lab.mkp.net>
-References: <1135801791.9541.12.camel@gateway.markschaefer.org>
-	<200512290845.17192@bilbo.math.uni-mannheim.de>
-	<62187.24.3.12.198.1135893081.squirrel@www.markschaefer.org>
-	<200512292302.50743@bilbo.math.uni-mannheim.de>
+From: Joel Becker <Joel.Becker@oracle.com>
+Subject: qla2300 & mptscsih refcount, or lack thereof
+Date: Fri, 30 Dec 2005 15:50:30 -0800
+Message-ID: <20051230235030.GX18439@ca-server1.us.oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vanessarodrigues.com ([192.139.46.150]:35771 "EHLO
-	jaguar.mkp.net") by vger.kernel.org with ESMTP id S1750929AbVL3WSR
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Dec 2005 17:18:17 -0500
-In-Reply-To: <200512292302.50743@bilbo.math.uni-mannheim.de> (Rolf Eike Beer's message of "Thu, 29 Dec 2005 23:02:45 +0100")
+Received: from rgminet01.oracle.com ([148.87.122.30]:57481 "EHLO
+	rgminet01.oracle.com") by vger.kernel.org with ESMTP
+	id S964970AbVL3Xup (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Dec 2005 18:50:45 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: mark@markschaefer.org, linux-scsi@vger.kernel.org
+To: andrew.vasquez@qlogic.com, Eric.Moore@lsil.com, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
->>>>> "Eike" == Rolf Eike Beer <eike-kernel@sf-tec.de> writes:
+Folks,
+	I've run into an interesting problem.  The qla2300 and
+mptspi drivers don't get refcounted for active users, but they are
+absolutely required.  Thus, you can do, eg, "rmmod qla2300" with mounted
+filesystems, and your system happily removes all child devices.
+Hello, EIO!
+	Now, I know we're well into "Doctor, it hurts when I do this,"
+territory here.  But we generally try not to allow this sort of mistake.
+You can't remove a network card while the interface is up, you can't
+remove sd_mod while a disk is in use, etc.
+	Has this been seen before?  Is there any plan to make qla2300
+and mptspi respect the use count of the objects they present to the
+system?  Thoughts?
 
-[LUN mangling]
-
-Eike> I've looked around a bit in the LUN code some month ago as I was
-Eike> trying to get this to a state where it was sort of working. This
-Eike> code is as horrible as the rest of this driver, so I didn't
-Eike> really got the point what of this strange stuff is really needed
-Eike> and what was just caused by code monkeys on drugs.
-
-Yeah, I talked to James about this a while back and he said the only
-acceptable approach for dealing with deprecated TYPE_RAID devices
-would be to write an upper level driver.  If you'd be interested in
-working on that, that'd be awesome.
-
-
-Eike> Now the driver is buried and all the people with such hardware
-Eike> come out of their holes. Fascinating :)) I was thinking about a
-Eike> list related only to these things and/or writing a FAQ for
-Eike> this. What do the other people around think about this? MKP?
-
-Sure.  I'll try to conjure up a web page about cpqfcTS, RA4x00, and
-the current state of the tachyon nation.
+Joel
 
 -- 
-Martin K. Petersen      http://mkp.net/
+
+Life's Little Instruction Book #222
+
+	"Think twice before burdening a friend with a secret."
+
+Joel Becker
+Principal Software Developer
+Oracle
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
