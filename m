@@ -1,44 +1,29 @@
-From: mark@markschaefer.org
-Subject: Re: Booting from or using a Compaq RA4100 Array
-Date: Fri, 30 Dec 2005 09:40:00 -0500 (EST)
-Message-ID: <2786.198.208.159.18.1135953600.squirrel@www.markschaefer.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 2.6.15-rc7-git3 1/3] sata_promise: add correct
+	read/write of hotplug registers for SATAII devices
+Date: Fri, 30 Dec 2005 15:09:07 +0000
+Message-ID: <1135955347.28365.5.camel@localhost.localdomain>
+References: <355e5e5e0512291523h508fe0c8j459a9377d52d5529@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host79.host79-server.com ([66.49.184.32]:15002 "EHLO
-	host79.host79-server.com") by vger.kernel.org with ESMTP
-	id S932161AbVL3OkB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Dec 2005 09:40:01 -0500
+Received: from [81.2.110.250] ([81.2.110.250]:190 "EHLO lxorguk.ukuu.org.uk")
+	by vger.kernel.org with ESMTP id S1750827AbVL3PHs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Dec 2005 10:07:48 -0500
+In-Reply-To: <355e5e5e0512291523h508fe0c8j459a9377d52d5529@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: linux-scsi@vger.kernel.org
+To: Lukasz Kosewski <lkosewsk@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Eike,
+On Iau, 2005-12-29 at 18:23 -0500, Lukasz Kosewski wrote:
+> This patch adds support for correctly masking out and knowing about
+> hotplug events on Promise SATAII150 Tx4/Tx2 Plus controllers.
 
-     The RA4100 tries to implement a zoning-style partitioning, called
-Selective Storage Presentation (SSP).  Basically, you can create LUNs
-on the RAID and point them to a specific FC cards - although they
-have to be seen by the 4100 when you're configuring it.  That's why
-the REPORT_LUN command can return non-contiguous LUNs (as the comment
-indicates).
+Please call the core API ata_ not sata_. Many PATA controllers support
+device hotplug or warmplug. (warmplug -> tell the OS first then unplug
+then plug then tell the OS)
 
-     So, what the cpqfc driver is doing is reporting the 4100 LUNs to the
-kernel as 0,1,2,... although on the drive, they may physically be the
-first, third and seventh logical drives (in addition to the wacky
-addressing).  It then has to create a mapping array that interprets
-the kernel/drive LUNs.
-
-     If I had my pick on SCSI architecture, I'd prefer to standardize the
-low-level drivers and put all of the hard-drive/raid specific code in
-the mid layer drivers, like what has been done with lpfc.  There is a
-lot of garbage code in drivers like cpqfc doing exactly what
-scsi_scan and other mid-layer drivers are doing.
-
-     I'd volunteer one of the units for testing, but I assume shipping
-would be more than the unit is worth. :(  I'd be happy to test any
-bits you want to send, though.
-
-Mark
-
+Alan
