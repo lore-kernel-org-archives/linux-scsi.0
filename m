@@ -1,45 +1,172 @@
-From: "Fuller T. Confectioner" <Lennestal@gopepsi.com>
-Subject: Software
-Date: Sat, 31 Dec 2005 01:00:00 -0500
-Message-ID: <1140100196.20051231010000@gopepsi.com>
+From: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+Subject: Re: [patch 6/6] statistics infrastructure - exploitation: zfcp
+Date: Sat, 31 Dec 2005 04:55:39 -0200
+Message-ID: <20051231065539.GC11069@dmt.cnet>
+References: <9BB4DECD4CFE6D43AA8EA8D768ED51C21D7BA6@xbl3.emulex.com> <43A1AC43.9050005@de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:18817 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S1751216AbVLaF51 (ORCPT
+Received: from hera.kernel.org ([140.211.167.34]:1726 "EHLO hera.kernel.org")
+	by vger.kernel.org with ESMTP id S1751303AbVLaGzg (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 31 Dec 2005 00:57:27 -0500
-Received: from -1212563568 (i220-99-195-81.s02.a016.ap.plala.or.jp [220.99.195.81])
-	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id jBV5qPFl005085
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Dec 2005 21:57:08 -0800
-Received: from gopepsi.com (-1212554096 [-1212516208])
-	by i220-99-195-81.s02.a016.ap.plala.or.jp (Qmailv1) with ESMTP id 83B97FBCE1
-	for <linux-scsi@vger.kernel.org>; Sat, 31 Dec 2005 01:00:00 -0500
+	Sat, 31 Dec 2005 01:55:36 -0500
+Content-Disposition: inline
+In-Reply-To: <43A1AC43.9050005@de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux <linux-scsi@vger.kernel.org>
+To: Martin Peschke <mp3@de.ibm.com>
+Cc: James.Smart@Emulex.Com, arjan@infradead.org, linux-scsi@vger.kernel.org, akpm@osdl.org, hch@infradead.org
 
-What IS 0EM software and why do you care? 
-What IS 0EM software and why do you care? 
+Guys,
 
-New software on our site:
+Might be a dumb question, but have you considered doing all of this 
+statistical gathering with SystemTap script-fu? 
 
-Norton System Works 2003 - $59.95
-Painter 8 - $59.95
-Office 2000 Premium Edition PE (2CD) - $59.95
-Plus! XP - $59.95
-Illustrator CS CE - $69.95
-Photoshop 7 - $69.95 
-Freehand MX 11 - $69.95
-Norton System Works 2003 - $59.95
-Windows Millenium - $59.95
-CorelDraw Graphics Suite 11 - $59.95
-Works 7 - $69.95
-Photo Painter 8 - $59.95
-Photo Painter 8 - $59.95
-InDesign CS - $69.95
-
-Our site:
-http://xenogamybf.com
-
+On Thu, Dec 15, 2005 at 06:47:47PM +0100, Martin Peschke wrote:
+> James.Smart@Emulex.Com wrote:
+> 
+> >This patch is right along the lines of what we did with this earlier patch
+> >http://marc.theaimsgroup.com/?l=linux-scsi&m=110700743207792&w=2
+> >which adds, at the sdev level, counters for # of requests performed,
+> ># of requests completed, # of requests completed in error.
+> >
+> >of all the stats you propose:
+> > 
+> >
+> >>>+	struct statistic		*stat_sizes_scsi_write;
+> >>>+	struct statistic		*stat_sizes_scsi_read;
+> >>>+	struct statistic		*stat_sizes_scsi_nodata;
+> >>>+	struct statistic		*stat_sizes_scsi_nofit;
+> >>>+	struct statistic		*stat_sizes_scsi_nomem;
+> >>>+	struct statistic		*stat_sizes_timedout_write;
+> >>>+	struct statistic		*stat_sizes_timedout_read;
+> >>>+	struct statistic		*stat_sizes_timedout_nodata;
+> >>>+	struct statistic		*stat_latencies_scsi_write;
+> >>>+	struct statistic		*stat_latencies_scsi_read;
+> >>>+	struct statistic		*stat_latencies_scsi_nodata;
+> >>>+	struct statistic		*stat_pending_scsi_write;
+> >>>+	struct statistic		*stat_pending_scsi_read;
+> >>>+	struct statistic		*stat_erp;
+> >>>+	struct statistic		*stat_eh_reset;
+> >>>     
+> >>>
+> >
+> >All of these are best served to be managed by the midlayer at the
+> >sdev.
+> >
+> Yes.
+> 
+> >Please don't make the LLDDs do the incrementing, etc
+> >
+> Though this has been my initial (cautious) attempt, I won't object to 
+> moving things up one layer or two.
+> 
+> >- or something
+> >that is owned by one layer, modified by another, and bounces back and 
+> >forth.
+> > 
+> >
+> I try to avoid that.
+> 
+> >The only question is the latency fields, as your statement on latency is a
+> >good one. IMHO, the latency that matters is the latency the midlayer sees
+> >when it calls queuecommand.  The LLDD interface is designed to not queue in
+> >the LLDD's, and you really can't peek lower than the LLDD to know when the
+> >i/o actually hits the wire. So - just measure at the queuecommand/scsidone 
+> >level
+> >(or up in the block request queue level).
+> > 
+> >
+> I agree. For now, I tend to stick to queuecommand/scsi_done.
+> 
+> >And, if we are expanding stats from the earlier 3 things, we ought to 
+> >follow
+> >the framework the fc transport used for stats (stolen from the network 
+> >world)
+> >and create a subdirectory under the /sys/block/<>/ object that reports
+> >the stats.
+> > 
+> >
+> Well, I am not yet convinced that sysfs is necessarily the answer for 
+> this, because of the one value per file policy,
+> which is fine for some purposes, but not for potentially larger amounts 
+> of data, or data where the number of values comprising the statistic is 
+> variable.
+> 
+> In general, I see a statistic as something that can be more than a 
+> single counter. It can be a histogram, or a counter over time in the 
+> form of a history buffer.
+> Certainly we could split up every histogram, fill level indicator, 
+> megabytes-per-seconds-like statistic and so on. But I think that would 
+> result in nasty directory structures which would impose effort to 
+> collect the data available for one entitity like.
+> 
+> My output in debugfs currently looks like this:
+> 
+> latencies_scsi_write <=0 0
+> latencies_scsi_write <=1 0
+> latencies_scsi_write <=2 0
+> latencies_scsi_write <=4 174
+> latencies_scsi_write <=8 872
+> latencies_scsi_write <=16 2555
+> latencies_scsi_write <=32 2483
+> ...
+> latencies_scsi_write <=1024 1872
+> latencies_scsi_write >1024 1637
+> 
+> latencies_scsi_read <=0 0
+> latencies_scsi_read <=1 0
+> latencies_scsi_read <=2 0
+> latencies_scsi_read <=4 57265
+> latencies_scsi_read <=8 13610
+> latencies_scsi_read <=16 1082
+> latencies_scsi_read <=32 319
+> latencies_scsi_read <=64 63
+> ...
+> latencies_scsi_read >1024 0
+> 
+> ...
+> util_qdio_outb [3097394.211992] 865 1 1.052 5
+> util_qdio_outb [3097395.211992] 737 1 4.558 125
+> util_qdio_outb [3097396.211992] 396 1 11.765 77
+> util_qdio_outb [3097397.211992] 270 1 12.863 128
+> util_qdio_outb [3097398.211992] 765 1 7.271 26
+> util_qdio_outb [3097399.211992] 577 1 4.036 27
+> ...
+> 
+> I like it, because it can be read easily; it can be grep-ed; a simple 
+> (generic) script could generate whatever output format is required from 
+> whatever statistic is given.
+> 
+> The meaning of a value is not so much determined by its position in the 
+> file but by preceding tags. There are a few generic rules on how a 
+> histogram or a fill level indicator looks like. That's basically all a 
+> user (or a script) needs to know in order to be able to read a 
+> networking related histogram, or a disk I/O related histogram, or any 
+> other histogram.
+> 
+> Besides, I'd like to allow users to customize statistics to some degree. 
+> If a user needs to tune, say, a histogram to provide a better 
+> resolution, then the number of buckets might be changed form 5 to 20, 
+> resulting in longer output. Then the position of a counter is not 
+> sufficient to determine which range of values it stands for. Counter #4 
+> out of 5 probably has a different meaning than counter #4 out of 20. 
+> That is why I propose to label buckets or counters appropriately (see 
+> above). I doubt this can be reflected in sysfs without too much pain.
+> 
+> An then there is relayfs, mentioned by Andy Kleen. I guess, what it is 
+> meant to be good at is quite opposite to what sysfs does for us. Still 
+> it looks appropriate for some statistics, not necessarily for all forms 
+> of output - similar issue as with sysfs.
+> So far, neither of them seems to be a perfect fit, and, IMO, debugfs 
+> looks like a feasible alternative. But the question of which fs to chose 
+> probably depends on how we define a statistic and on which ways of 
+> in-kernel data processing and corresponding output formats we agree on.
+> 
+> Martin
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
