@@ -1,58 +1,47 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: PERC 2/DC for Solaris
-Date: Mon, 2 Jan 2006 18:55:41 +0100
-Message-ID: <200601021855.47167@bilbo.math.uni-mannheim.de>
-References: <s3b94aa9.094@accsabm.arnaldocastro.com.uy>
+From: "Martin K. Petersen" <mkp@mkp.net>
+Subject: Re: Booting from or using a Compaq RA4100 Array
+Date: Mon, 02 Jan 2006 14:43:33 -0500
+Message-ID: <yq1oe2u2z6i.fsf@wilson.lab.mkp.net>
+References: <1135801791.9541.12.camel@gateway.markschaefer.org>
+	<200512290845.17192@bilbo.math.uni-mannheim.de>
+	<62187.24.3.12.198.1135893081.squirrel@www.markschaefer.org>
+	<200512292302.50743@bilbo.math.uni-mannheim.de>
+	<yq1oe2y44bf.fsf@wilson.lab.mkp.net>
+	<1136168563.3768.3.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2087907.jB6JRAoUM2";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:27091 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S1750808AbWABRz7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jan 2006 12:55:59 -0500
-In-Reply-To: <s3b94aa9.094@accsabm.arnaldocastro.com.uy>
+Received: from vanessarodrigues.com ([192.139.46.150]:47817 "EHLO
+	jaguar.mkp.net") by vger.kernel.org with ESMTP id S1750980AbWABTnf
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Jan 2006 14:43:35 -0500
+In-Reply-To: <1136168563.3768.3.camel@localhost.localdomain> (Mark Schaefer's message of "Sun, 01 Jan 2006 21:22:43 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Marcos Orfila <Marcos.Orfila@arnaldocastro.com.uy>
-Cc: linux-scsi@vger.kernel.org
+To: Mark Schaefer <mark@markschaefer.org>
+Cc: Rolf Eike Beer <eike-kernel@sf-tec.de>, linux-scsi@vger.kernel.org
 
---nextPart2087907.jB6JRAoUM2
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+>>>>> "Mark" == Mark Schaefer <mark@markschaefer.org> writes:
 
-Am Montag, 2. Januar 2006 18:44 schrieben Sie:
->Dear all,
->
->   I need to find a driver for the PERC 2/DC (which is in a Dell PowerEdge
-> 2400) for Solaris. I've found a driver for Solaris 7 for other versions of
-> PERC in http://linux.dell.com/files/aacraid/perc2sol.zip In the readme of
-> this driver, it says that "It does not support the AMI based RAID
-> controllers Dell sells", which includes PERC 2/DC, and it also says that it
-> "is supported with the PERCSOL.ZIP file". I couldn't find this file, which
-> I believe contains the necessary drivers to boot Solaris in the PowerEdge
-> 2400 with PERC 2/DC and be able to see the disks.
->
->   Can anybody point me to the drivers? If you know other drivers for PERC
-> 2/DC which work with any other Solaris version, it will work as well. .
+Mark> 	Also, any info on the Tachyon chips would be helpful.  I have
+Mark> a TS and a HPFC-5000C (32-bit old chip).
 
-Ask Sun. As the list name says, this is LINUX-scsi.
+HPFC-5000 is the original HP Tachyon design which my driver won't
+support.  It doesn't have FCP support in hardware or anything.  My
+driver only does TachLite.
 
-Eike
+My aim is to support the following boards:
 
---nextPart2087907.jB6JRAoUM2
-Content-Type: application/pgp-signature
+HP A5156A	HPFC-5100 /2.0	(TL)
+HP A5157A	HPFC-5100B/2.2	(TL) dual port
+HP A5158A	HPFC-5100C/2.3	(TL)
+HP A5158A	HPFC-5100D/3.0	(TL)
+HP A6795A	HPFC-5200C/2.2	(XL2)
+Compaq FC HBA   HPFC-5166A/1.2  (TS)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.0 (GNU/Linux)
+The Compaq FC HBA is the one that the RA-4x00 people have.  I don't
+have this controller yet but there should be one waiting for me at the
+post office once the world goes out of suspend mode tomorrow...
 
-iD8DBQBDuWkjXKSJPmm5/E4RAhKJAKCkzOZzNraZljHNAQU7jpezKX0opwCgg8I6
-J9s2t6TUpEcF9cjc5cR4BOo=
-=lhXe
------END PGP SIGNATURE-----
-
---nextPart2087907.jB6JRAoUM2--
+-- 
+Martin K. Petersen      http://mkp.net/
