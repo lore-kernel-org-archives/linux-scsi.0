@@ -1,45 +1,30 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 2/2] Areca RAID driver (arcmsr) cleanups
-Date: Mon, 2 Jan 2006 10:04:47 -0700
-Message-ID: <20060102170447.GG19769@parisc-linux.org>
-References: <1135228831.4122.15.camel@mentorng.gurulabs.com> <1135229681.439.23.camel@mindpipe> <200512220917.41494.oliver@neukum.org> <1135239601.2940.5.camel@laptopd505.fenrus.org> <20051222052443.57ffe6f9.akpm@osdl.org> <1135279895.19320.24.camel@mentorng.gurulabs.com> <20051230113227.2b787d43.rdunlap@xenotime.net> <20051230212158.4b97edfe.rdunlap@xenotime.net>
+From: "Marcos Orfila" <Marcos.Orfila@arnaldocastro.com.uy>
+Subject: PERC 2/DC for Solaris
+Date: Mon, 02 Jan 2006 15:44:53 -0200
+Message-ID: <s3b94aa9.094@accsabm.arnaldocastro.com.uy>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:5340 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1750894AbWABREr
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Jan 2006 12:04:47 -0500
+Received: from accsabm.arnaldocastro.com.uy ([200.40.203.163]:18496 "EHLO
+	accsabm.arnaldocastro.com.uy") by vger.kernel.org with ESMTP
+	id S1750913AbWABRps convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jan 2006 12:45:48 -0500
 Content-Disposition: inline
-In-Reply-To: <20051230212158.4b97edfe.rdunlap@xenotime.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: dax@gurulabs.com, erich@areca.com.tw, akpm@osdl.org, arjan@infradead.org, oliver@neukum.org, rlrevell@joe-job.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Dec 30, 2005 at 09:21:58PM -0800, Randy.Dunlap wrote:
->  /*
-> -**********************************************************************************
-> -**********************************************************************************
-> +***************************************************************************
-> +***************************************************************************
->  */
+Dear all,
+ 
+   I need to find a driver for the PERC 2/DC (which is in a Dell PowerEdge 2400) for Solaris.
+   I've found a driver for Solaris 7 for other versions of PERC in http://linux.dell.com/files/aacraid/perc2sol.zip
+   In the readme of this driver, it says that "It does not support the AMI based RAID controllers Dell sells", which includes PERC 2/DC, and it also says that it "is supported with the PERCSOL.ZIP file". I couldn't find this file, which I believe contains the necessary drivers to boot Solaris in the PowerEdge 2400 with PERC 2/DC and be able to see the disks.
 
-I'd be inclined to remove these useless comment blocks altogether ...
+   Can anybody point me to the drivers? If you know other drivers for PERC 2/DC which work with any other Solaris version, it will work as well.
+.
+Kind regards,
 
-> -	/* allocate scsi host information (includes out adapter) scsi_host_alloc==scsi_register */
-> +	/* allocate scsi host information (includes our adapter)
-> +	 * scsi_host_alloc==scsi_register */
->  	if ((host =
->  	     scsi_host_alloc(&arcmsr_scsi_host_template,
->  			     sizeof(struct ACB))) == 0) {
+   Marcos
 
-host = scsi_host_alloc(...)
-if (!host) { ...
-
->  	 ************************************************************
-> -	 ** We do not allow muti ioctls to the driver at the same duration.
-> +	 ** We do not allow multi ioctls to the driver at the same duration.
-
-s/duration/time/.  And how do they prevent that?
 
