@@ -1,36 +1,41 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Booting from or using a Compaq RA4100 Array
-Date: Mon, 2 Jan 2006 16:18:44 +0000
-Message-ID: <20060102161844.GA13904@infradead.org>
-References: <1135801791.9541.12.camel@gateway.markschaefer.org> <200512290845.17192@bilbo.math.uni-mannheim.de> <62187.24.3.12.198.1135893081.squirrel@www.markschaefer.org> <200512292302.50743@bilbo.math.uni-mannheim.de> <yq1oe2y44bf.fsf@wilson.lab.mkp.net> <1136168563.3768.3.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Possible performance regression?
+Date: Mon, 02 Jan 2006 10:19:06 -0600
+Message-ID: <1136218746.3531.31.camel@mulgrave>
+References: <43B94DB9.5040505@hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:63915 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1750798AbWABQSt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Jan 2006 11:18:49 -0500
-Content-Disposition: inline
-In-Reply-To: <1136168563.3768.3.camel@localhost.localdomain>
+Received: from stat9.steeleye.com ([209.192.50.41]:44188 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750799AbWABQTN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Jan 2006 11:19:13 -0500
+In-Reply-To: <43B94DB9.5040505@hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Schaefer <mark@markschaefer.org>
-Cc: "Martin K. Petersen" <mkp@mkp.net>, Rolf Eike Beer <eike-kernel@sf-tec.de>, linux-scsi@vger.kernel.org
+To: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, Jan 01, 2006 at 09:22:43PM -0500, Mark Schaefer wrote:
-> Martin,
-> 
-> 	I think I'm the one who would have to sign up for TYPE_RAID driver
-> writing.  I'll probably need some pointers, and it won't be fast, but
-> I've definitely got a carrot.  I think the last scsi-howto for
-> programming was dealing with the 2.4 series.
+On Mon, 2006-01-02 at 10:58 -0500, Alan D. Brunelle wrote:
+> As part of HP's Open Source and Linux Organization's Performance and 
+> Scalability Group, I've noticed what looks to be a regression in U320 
+> SCSI performance coming down the pike. Background: These measurements 
+> were performed on Red Hat RHEL4 update 2 (2.6.9-based) and a "generic" 
+> 2.6.14-based kernel; I used an HP RX4640 with 4 dual-U320 LSI Logic / 
+> Symbios Logic 53c1030 PCI-X Fusion-MPT Dual Ultra320 SCSI (rev 08) 
+> adapters, each with two buses containing 5 72GB/15k U320 drives (for a 
+> total of 40 drives). The runs were done in single-user mode (to minimize 
+> effects from other tasks), and report results in megabytes per second. I 
+> ran tests for various block sized IOs (1KB, 2KB, 4, ...256KB per IO).
 
-I'd suggets copying sd.c and add the command translations the cpqfc driver
-has been doing to sd_init_command.  After that works post the preliminary
-results to this list ;-)
+This data doesn't seem to be mirrored by tiobench tests on other
+drivers, so it's probably fusion specific.
 
-Later lots of unessecary bits can be removed from the driver and the
-init_command can be rewritten to directly issue the proper commands instead
-of crafting SPC command and then translating them.
+When a similar problem was found in the adaptec driver a while back, it
+was due to a bug which set the TCQ depth to 1, which looks very
+consistent with your results, so you might try starting there.
+
+James
 
 
