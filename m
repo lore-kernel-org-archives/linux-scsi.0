@@ -1,19 +1,19 @@
 From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: [PATCH 2.4 1/2] Fix cpqfc::cpqfcTSPutLinkQue()
-Date: Mon, 2 Jan 2006 12:56:07 +0100
-Message-ID: <200601021256.07979@bilbo.math.uni-mannheim.de>
+Subject: [PATCH 2.4 2/2] cpqfc: Reduce stack usage of 2 functions
+Date: Mon, 2 Jan 2006 13:05:37 +0100
+Message-ID: <200601021305.38412@bilbo.math.uni-mannheim.de>
 References: <200601021244.40636@bilbo.math.uni-mannheim.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-6"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:42143 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S1751020AbWABMGx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jan 2006 07:06:53 -0500
+Received: from mail.sf-mail.de ([62.27.20.61]:43167 "EHLO mail.sf-mail.de")
+	by vger.kernel.org with ESMTP id S1750844AbWABMGw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Jan 2006 07:06:52 -0500
 Received: from mp-pc92.informatik.uni-mannheim.de ([::ffff:134.155.64.118]) (auth=eike-kernel@sf-tec.de)
 	by mail.sf-mail.de (Qsmtpd 0.9) with (DHE-RSA-AES256-SHA encrypted) ESMTPSA
-	for <linux-scsi@vger.kernel.org>; Mon, 02 Jan 2006 13:06:51 +0100
+	for <linux-scsi@vger.kernel.org>; Mon, 02 Jan 2006 13:06:52 +0100
 In-Reply-To: <200601021244.40636@bilbo.math.uni-mannheim.de>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
@@ -21,369 +21,163 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
 
-The cpqfcTSPutLinkQue() takes a void* as third argument. Depending on the 
-second argument either a pointer to a struct or to a single integer is passed. 
-In any case 48 DWORDs (192 bytes) of memory are copied. The integer is always 
-located on the stack but nevertheless noone should access memory he doesn't 
-own. The struct copied has a size of only 38 DWORDs, so the copied memory here 
-is also something that does not belong there.
+There are 2 function that do a lookup to the queue and buffer the result. 
+They only care about the first few bytes (to be exactly: 38*sizeof(u32)), 
+but they always pass a buffer of 2kB, which is located on the stack.
 
-This patch changes the type of the third argument to be TachFCHDR_GCMND* and 
-introduces a new, fourth argument of type integer. Now only the really needed 
-memory is copied. The remaining bytes of the destination buffer are left 
-on their previous (random) values, but they are ignored anyway. If not, this 
-would have lead to problems when random values from the stack had been copied 
-there.
+This patch reduces this buffer to the really needed size and changes it's 
+type to the correct target type. The rest of the queue is still looked up 
+but the result is ignored (as it would anyway).
+
+There are also some small cleanups for the other arguments of 
+CpqTsGetSFQEntry(), which is the lookup function.
 
 From: Rolf Eike Beer <eike-kernel@sf-tec.de>
 Signed-off-by: Rolf Eike Beer <eike-kernel@sf-tec.de>
 
-diff -aupr a/drivers/scsi/cpqfcTScontrol.c b/drivers/scsi/cpqfcTScontrol.c
---- a/drivers/scsi/cpqfcTScontrol.c	2005-12-27 16:53:18.000000000 +0100
-+++ b/drivers/scsi/cpqfcTScontrol.c	2005-12-27 17:30:30.000000000 +0100
-@@ -645,8 +645,8 @@ int CpqTsProcessIMQEntry(void *host)
+diff -aup a/drivers/scsi/cpqfcTScontrol.c b/drivers/scsi/cpqfcTScontrol.c
+--- a/drivers/scsi/cpqfcTScontrol.c	2005-12-29 18:11:54.000000000 +0100
++++ b/drivers/scsi/cpqfcTScontrol.c	2005-12-29 17:05:44.000000000 +0100
+@@ -50,7 +50,8 @@
+ //#define IMQ_DEBUG 1
+ 
+ static void fcParseLinkStatusCounters(TACHYON * fcChip);
+-static void CpqTsGetSFQEntry(TACHYON * fcChip, u16 pi, u32 * buffr, u8 UpdateChip);
++static void CpqTsGetSFQEntry(PTACHYON fcChip, u32 producerNdx, TachFCHDR_GCMND *fchs,
++			     int UpdateChip);
+ 
+ static void cpqfc_free_dma_consistent(CPQFCHBA * cpqfcHBAdata)
+ {
+@@ -540,16 +541,13 @@ static int PeekIMQEntry(PTACHYON fcChip,
+ 				// If we find it, check the incoming frame payload (1st word)
+ 				// for LILP frame
+ 				if ((fcChip->IMQ->QEntry[CI].type & 0x1FF) == 0x104) {
+-					TachFCHDR_GCMND *fchs;
+-					u32 ulFibreFrame[2048 / 4];	// max DWORDS in incoming FC Frame
+-					u16 SFQpi = (u16) (fcChip->IMQ->QEntry[CI].word[0] & 0x0fffL);
++					TachFCHDR_GCMND fchs;
++					u32 SFQpi = (u32) (fcChip->IMQ->QEntry[CI].word[0] & 0x0fffL);
+ 
+ 					CpqTsGetSFQEntry(fcChip, SFQpi,	// SFQ producer ndx         
+-							 ulFibreFrame,	// contiguous dest. buffer
+-							 FALSE);	// DON'T update chip--this is a "lookahead"
++							 &fchs, 0);	// DON'T update chip, this is a "lookahead"
+ 
+-					fchs = (TachFCHDR_GCMND *) & ulFibreFrame;
+-					if (fchs->pl[0] == ELS_LILP_FRAME) {
++					if (fchs.pl[0] == ELS_LILP_FRAME) {
+ 						return 1;	// found the LILP frame!
+ 					} else {
+ 						// keep looking...
+@@ -645,8 +643,7 @@ int CpqTsProcessIMQEntry(void *host)
  	u16 i, RPCset, DPCset;
  	u32 x_ID;
  	u32 ulBuff, dwStatus;
--	TachFCHDR_GCMND *fchs;
- 	u32 ulFibreFrame[2048 / 4];	// max number of DWORDS in incoming Fibre Frame
-+	TachFCHDR_GCMND *fchs = (TachFCHDR_GCMND *) ulFibreFrame;	// cast to examine IB frame
+-	u32 ulFibreFrame[2048 / 4];	// max number of DWORDS in incoming Fibre Frame
+-	TachFCHDR_GCMND *fchs = (TachFCHDR_GCMND *) ulFibreFrame;	// cast to examine IB frame
++	TachFCHDR_GCMND fchs;
  	u8 ucInboundMessageType;	// Inbound CM, dword 3 "type" field
  
  	ENTER("ProcessIMQEntry");
-@@ -743,11 +743,11 @@ int CpqTsProcessIMQEntry(void *host)
- 							if (!(Exchanges->fcExchange[x_ID].status & DEVICE_REMOVED)) {
- 								// presumes device is still there: send ABTS.
+@@ -857,8 +854,8 @@ int CpqTsProcessIMQEntry(void *host)
  
--								cpqfcTSPutLinkQue(cpqfcHBAdata, BLS_ABTS, &x_ID);
-+								cpqfcTSPutLinkQue(cpqfcHBAdata, BLS_ABTS, NULL, x_ID);
- 							}
- 						} else	// Abort all other errors
- 						{
--							cpqfcTSPutLinkQue(cpqfcHBAdata, BLS_ABTS, &x_ID);
-+							cpqfcTSPutLinkQue(cpqfcHBAdata, BLS_ABTS, NULL, x_ID);
- 						}
+ 			// clears SFQ entry from Tachyon buffer; copies to contiguous ulBuff
+ 			CpqTsGetSFQEntry(fcChip,	// i.e. this Device Object
+-					 (u16) fcChip->SFQ->producerIndex,	// SFQ producer ndx         
+-					 ulFibreFrame, TRUE);	// contiguous destination buffer, update chip
++					 fcChip->SFQ->producerIndex,	// SFQ producer ndx
++					 &fchs, 1);	// contiguous destination buffer, update chip
  
- 						// if the HPE bit is set, we have to CLose the LOOP
-@@ -864,7 +864,6 @@ int CpqTsProcessIMQEntry(void *host)
+ 			// analyze the incoming frame outside the INT handler...
  			// (i.e., Worker)
- 
+@@ -866,14 +863,14 @@ int CpqTsProcessIMQEntry(void *host)
  			if (ucInboundMessageType == 1) {
--				fchs = (TachFCHDR_GCMND *) ulFibreFrame;	// cast to examine IB frame
  				// don't fill up our Q with garbage - only accept FCP-CMND  
  				// or XRDY frames
- 				if ((fchs->d_id & 0xFF000000) == 0x06000000)	// CMND
-@@ -900,7 +899,7 @@ int CpqTsProcessIMQEntry(void *host)
- 							Exchanges->fcExchange[x_ID].status |= SFQ_FRAME;
+-				if ((fchs->d_id & 0xFF000000) == 0x06000000)	// CMND
++				if ((fchs.d_id & 0xFF000000) == 0x06000000)	// CMND
+ 				{
+ 					// someone sent us a SCSI command
  
- 							// presumes device is still there: send ABTS.
--							cpqfcTSPutLinkQue(cpqfcHBAdata, BLS_ABTS, &x_ID);
-+							cpqfcTSPutLinkQue(cpqfcHBAdata, BLS_ABTS, NULL, x_ID);
- 							break;	// done
- 						}
- 					}
-@@ -910,7 +909,7 @@ int CpqTsProcessIMQEntry(void *host)
+ //          fcPutScsiQue( cpqfcHBAdata, 
+ //                        SFQ_UNASSISTED_FCP, ulFibreFrame); 
+-				} else if (((fchs->d_id & 0xFF000000) == 0x07000000) ||	// RSP (status)
+-					   (fchs->d_id & 0xFF000000) == 0x05000000)	// XRDY  
++				} else if (((fchs.d_id & 0xFF000000) == 0x07000000) ||	// RSP (status)
++					   (fchs.d_id & 0xFF000000) == 0x05000000)	// XRDY  
+ 				{
+ 					u32 x_ID;
+ 					// Unfortunately, ABTS requires a Freeze on the chip so
+@@ -891,8 +888,8 @@ int CpqTsProcessIMQEntry(void *host)
+ 					// Do we have an open exchange that matches this s_id
+ 					// and ox_id?
+ 					for (x_ID = 0; x_ID < TACH_SEST_LEN; x_ID++) {
+-						if ((fchs->s_id & 0xFFFFFF) == (Exchanges->fcExchange[x_ID].fchs.d_id & 0xFFFFFF)
+-						    && (fchs->ox_rx_id & 0xFFFF0000) == (Exchanges->fcExchange[x_ID].fchs.ox_rx_id & 0xFFFF0000)) {
++						if ((fchs.s_id & 0xFFFFFF) == (Exchanges->fcExchange[x_ID].fchs.d_id & 0xFFFFFF)
++						    && (fchs.ox_rx_id & 0xFFFF0000) == (Exchanges->fcExchange[x_ID].fchs.ox_rx_id & 0xFFFF0000)) {
+ 							//          printk(" #R/X frame x_ID %08X# ", fchs->ox_rx_id );
+ 							// simulate the anticipated error - since the
+ 							// SEST was frozen, frames were lost...
+@@ -909,7 +906,7 @@ int CpqTsProcessIMQEntry(void *host)
  
  			else if (ucInboundMessageType == 3) {
  				// FC Link Service frames (e.g. PLOGI, ACC) come in here.  
--				cpqfcTSPutLinkQue(cpqfcHBAdata, SFQ_UNKNOWN, ulFibreFrame);
-+				cpqfcTSPutLinkQue(cpqfcHBAdata, SFQ_UNKNOWN, fchs, 0);
+-				cpqfcTSPutLinkQue(cpqfcHBAdata, SFQ_UNKNOWN, fchs, 0);
++				cpqfcTSPutLinkQue(cpqfcHBAdata, SFQ_UNKNOWN, &fchs, 0);
  
  			}
  
-@@ -1278,7 +1277,7 @@ int CpqTsProcessIMQEntry(void *host)
+@@ -1277,7 +1274,7 @@ int CpqTsProcessIMQEntry(void *host)
  //        printk("skipping LINKACTIVE post\n");
  
  					} else
--						cpqfcTSPutLinkQue(cpqfcHBAdata, LINKACTIVE, ulFibreFrame);
-+						cpqfcTSPutLinkQue(cpqfcHBAdata, LINKACTIVE, fchs, 0);
+-						cpqfcTSPutLinkQue(cpqfcHBAdata, LINKACTIVE, fchs, 0);
++						cpqfcTSPutLinkQue(cpqfcHBAdata, LINKACTIVE, &fchs, 0);
  				}
  
  
-diff -aupr a/drivers/scsi/cpqfcTSinit.c b/drivers/scsi/cpqfcTSinit.c
---- a/drivers/scsi/cpqfcTSinit.c	2005-12-27 16:53:18.000000000 +0100
-+++ b/drivers/scsi/cpqfcTSinit.c	2005-12-27 17:19:46.000000000 +0100
-@@ -1295,7 +1295,7 @@ int cpqfcTS_eh_abort(Scsi_Cmnd * Cmnd)
- 			// upper layers, we can't make future reference to any of it's 
- 			// fields (e.g the Nexus).
+@@ -1410,7 +1407,7 @@ int CpqTsProcessIMQEntry(void *host)
+ 					// to analyze data transfer (successful?), then send a response 
+ 					// frame for this exchange
  
--			cpqfcTSPutLinkQue(cpqfcHBAdata, BLS_ABTS, &i);
-+			cpqfcTSPutLinkQue(cpqfcHBAdata, BLS_ABTS, NULL, i);
+-					ulFibreFrame[0] = x_ID;	// copy for later reference
++					fchs.reserved = x_ID;	// copy for later reference
  
- 			break;
- 		}
-diff -aupr a/drivers/scsi/cpqfcTSstructs.h b/drivers/scsi/cpqfcTSstructs.h
---- a/drivers/scsi/cpqfcTSstructs.h	2005-12-27 16:53:18.000000000 +0100
-+++ b/drivers/scsi/cpqfcTSstructs.h	2005-12-27 17:18:58.000000000 +0100
-@@ -955,7 +955,7 @@ PFC_LOGGEDIN_PORT fcFindLoggedInPort(PTA
- 				     __u8 wwn[8],	// search linked list for WWN, or...
- 				     PFC_LOGGEDIN_PORT * pLastLoggedInPort);
+ 					// if this was a TWE, we have to send satus response
+ 					if (Exchanges->fcExchange[x_ID].type == SCSI_TWE) {
+@@ -1716,8 +1713,8 @@ int CpqTsDestroyTachLiteQues(void *pHBA,
+ //   length from the completion message.  The caller passes a buffer large
+ //   enough for the complete message (max 2k).
  
--void cpqfcTSPutLinkQue(CPQFCHBA * cpqfcHBAdata, int Type, void *QueContent);
-+void cpqfcTSPutLinkQue(CPQFCHBA * dev, int Type, TachFCHDR_GCMND *fchs, u32 errcode);
- 
- void fcPutScsiQue(CPQFCHBA * cpqfcHBAdata, int Type, void *QueContent);
- 
-diff -aupr a/drivers/scsi/cpqfcTSworker.c b/drivers/scsi/cpqfcTSworker.c
---- a/drivers/scsi/cpqfcTSworker.c	2005-12-27 16:53:18.000000000 +0100
-+++ b/drivers/scsi/cpqfcTSworker.c	2005-12-27 17:14:31.000000000 +0100
-@@ -700,7 +700,7 @@ void cpqfcTS_WorkTask(struct Scsi_Host *
- // This circular Q works like Tachyon's que - the producer points to the next
- // (unused) entry.  Called by Interrupt handler, WorkerThread, Timer
- // sputlinkq
--void cpqfcTSPutLinkQue(CPQFCHBA * dev, int Type, void *QueContent)
-+void cpqfcTSPutLinkQue(CPQFCHBA * dev, int Type, TachFCHDR_GCMND *fchs, u32 errcode)
+-static void CpqTsGetSFQEntry(PTACHYON fcChip, u16 producerNdx, u32 * ulDestPtr,	// contiguous destination buffer
+-			     u8 UpdateChip)
++static void CpqTsGetSFQEntry(PTACHYON fcChip, u32 producerNdx, TachFCHDR_GCMND *fchs,
++			     int UpdateChip)
  {
- 	PTACHYON fcChip = &dev->fcChip;
- //	FC_EXCHANGES *Exchanges = fcChip->Exchanges;
-@@ -766,7 +766,11 @@ void cpqfcTSPutLinkQue(CPQFCHBA * dev, i
- 		}
- 		// OK, add the Q'd item...
- 		fcLQ->Qitem[fcLQ->producer].Type = Type;
--		memcpy(fcLQ->Qitem[fcLQ->producer].ulBuff, QueContent, sizeof(fcLQ->Qitem[fcLQ->producer].ulBuff));
-+		if (!fchs) {
-+			fcLQ->Qitem[fcLQ->producer].ulBuff[0] = errcode;
-+		} else {
-+			memcpy(fcLQ->Qitem[fcLQ->producer].ulBuff, fchs, sizeof(fchs));
-+		}
- 		fcLQ->producer = ndx;	// increment Que producer
- 		// set semaphore to wake up Kernel (worker) thread
- 		up(dev->fcQueReady);
-@@ -996,7 +1000,7 @@ void cpqfcTSTerminateExchange(CPQFCHBA *
- 			if (ScsiNexus == NULL)	// our HBA changed - term. all
- 			{
- 				Exchanges->fcExchange[x_ID].status = TerminateStatus;
--				cpqfcTSPutLinkQue(dev, BLS_ABTS, &x_ID);
-+				cpqfcTSPutLinkQue(dev, BLS_ABTS, NULL, x_ID);
- 			} else {
- 				// If a device, according to WWN, has been removed, it's
- 				// port_id may be used by another working device, so we
-@@ -1006,7 +1010,7 @@ void cpqfcTSTerminateExchange(CPQFCHBA *
- 					if ((Exchanges->fcExchange[x_ID].Cmnd->target == ScsiNexus->target)
- 					    && (Exchanges->fcExchange[x_ID].Cmnd->channel == ScsiNexus->channel)) {
- 						Exchanges->fcExchange[x_ID].status = TerminateStatus;
--						cpqfcTSPutLinkQue(dev, BLS_ABTS, &x_ID);	// timed-out
-+						cpqfcTSPutLinkQue(dev, BLS_ABTS, NULL, x_ID);	// timed-out
- 					}
- 				}
- 				// (in case we ever need it...)
-@@ -1061,7 +1065,7 @@ static void ProcessELS_Request(CPQFCHBA 
- 						SetLoginFields(pLoggedInPort, fchs, 1, 0);
- 						// send 'ACC' reply 
- 						cpqfcTSPutLinkQue(dev, ELS_PLOGI_ACC,	// (PDISC same as PLOGI ACC)
--								  fchs);
-+								  fchs, 0);
- 						// OK to resume I/O...
- 					} else {
- 						printk("Not expecting PDISC (pdisc=0)\n");
-@@ -1106,7 +1110,7 @@ static void ProcessELS_Request(CPQFCHBA 
- 				port_id = fchs->s_id & 0xFFFFFF;
- 			}
- 			fchs->reserved = ls_reject_code;	// borrow this (unused) field
--			cpqfcTSPutLinkQue(dev, ELS_RJT, fchs);
-+			cpqfcTSPutLinkQue(dev, ELS_RJT, fchs, 0);
- 		}
- 		break;
+ 	u32 total_bytes = 0;
+ 	u32 consumerIndex = fcChip->SFQ->consumerIndex;
+@@ -1727,17 +1724,14 @@ static void CpqTsGetSFQEntry(PTACHYON fc
+ 	// equal indexes means SFS is copied
  
-@@ -1147,7 +1151,7 @@ static void ProcessELS_Request(CPQFCHBA 
- 				SetLoginFields(pLoggedInPort, fchs, 0, 0);
- 				// send 'ACC' reply 
- 				cpqfcTSPutLinkQue(dev, ELS_PLOGI_ACC,	// (PDISC same as PLOGI ACC)
--						  fchs);
-+						  fchs, 0);
- 			}
+ 	while (producerNdx != consumerIndex) {	// need to process message
+-		total_bytes += 64;	// maintain count to prevent writing past buffer
+-		// don't allow copies over Fibre Channel defined length!
+-		if (total_bytes <= 2048) {
+-			memcpy(ulDestPtr, &fcChip->SFQ->QEntry[consumerIndex], 64);	// each SFQ entry is 64 bytes
+-			ulDestPtr += 16;	// advance pointer to next 64 byte block
++		if (total_bytes <= sizeof(*fchs)) {
++			memcpy(((void *)fchs) + total_bytes,
++				 &fcChip->SFQ->QEntry[consumerIndex],
++				 min(64, (int)(sizeof(*fchs) - total_bytes)));	// each SFQ entry is 64 bytes
  		}
- 		else		// Payload unacceptable
-@@ -1165,7 +1169,7 @@ static void ProcessELS_Request(CPQFCHBA 
- 			fchs->reserved = ls_reject_code;	// borrow this (unused) field
+-		// Tachyon is producing,
+-		// and we are consuming
++		total_bytes += 64;
  
- 			// send 'RJT' reply 
--			cpqfcTSPutLinkQue(dev, ELS_RJT, fchs);
-+			cpqfcTSPutLinkQue(dev, ELS_RJT, fchs, 0);
- 		}
- 		// terminate any exchanges with this device...
- 		if (pLoggedInPort) {
-@@ -1195,7 +1199,7 @@ static void ProcessELS_Request(CPQFCHBA 
- 						// yes, we expected the PRLI ACC  (not PDISC; not Originator)
- 						SetLoginFields(pLoggedInPort, fchs, 0, 0);
- 						// Q an ACCept Reply
--						cpqfcTSPutLinkQue(dev, ELS_PRLI_ACC, fchs);
-+						cpqfcTSPutLinkQue(dev, ELS_PRLI_ACC, fchs, 0);
- 						NeedReject = 0;
- 					} else {
- 						// huh?
-@@ -1215,7 +1219,7 @@ static void ProcessELS_Request(CPQFCHBA 
- 				// Q a ReJecT Reply with reason code
- 				fchs->reserved = ls_reject_code;
- 				cpqfcTSPutLinkQue(dev, ELS_RJT,	// Q Type
--						  fchs);
-+						  fchs, 0);
- 			}
- 		}
- 		break;
-@@ -1241,7 +1245,7 @@ static void ProcessELS_Request(CPQFCHBA 
- 			{
- 				// Q an ACC reply 
- 				cpqfcTSPutLinkQue(dev, ELS_LOGO_ACC,	// Q Type
--						  fchs);	// device to respond to
-+						  fchs, 0);	// device to respond to
- 				// set login struct fields (LOGO_counter increment)
- 				SetLoginFields(pLoggedInPort, fchs, 0, 0);
- 				// are we an Initiator?
-@@ -1256,7 +1260,7 @@ static void ProcessELS_Request(CPQFCHBA 
- 					} else if (pLoggedInPort->LOGO_counter <= 3) {
- 						// try (another) login (PLOGI request)
- 						cpqfcTSPutLinkQue(dev, ELS_PLOGI,	// Q Type
--								  fchs);
-+								  fchs, 0);
- 						// Terminate I/O with "retry" potential
- 						cpqfcTSTerminateExchange(dev, &pLoggedInPort->ScsiNexus, PORTID_CHANGED);
- 					} else {
-@@ -1275,7 +1279,7 @@ static void ProcessELS_Request(CPQFCHBA 
- 				// Q a ReJecT Reply with reason code
- 				fchs->reserved = ls_reject_code;
- 				cpqfcTSPutLinkQue(dev, ELS_RJT,	// Q Type
--						  fchs);
-+						  fchs, 0);
- 			}
- 		}
- 		break;
-@@ -1304,13 +1308,13 @@ static void ProcessELS_Request(CPQFCHBA 
- 				fchs->reserved = LS_RJT_REASON(UNABLE_TO_PERFORM, 0);
- 
- 				cpqfcTSPutLinkQue(dev, ELS_RJT,	// Q Type
--						  fchs);
-+						  fchs, 0);
- 
- 				break;
- 			} else	// Accept the command
- 			{
- 				cpqfcTSPutLinkQue(dev, ELS_ACC,	// Q Type
--						  fchs);
-+						  fchs, 0);
- 			}
- 
- 			// Check the "address format" to determine action.
-@@ -1327,7 +1331,7 @@ static void ProcessELS_Request(CPQFCHBA 
- 					// For example, "port_id" 0x201300 
- 					// OK, let's try a Name Service Request (Query)
- 					fchs->s_id = 0xFFFFFC;	// Name Server Address
--					cpqfcTSPutLinkQue(dev, FCS_NSR, fchs);
-+					cpqfcTSPutLinkQue(dev, FCS_NSR, fchs, 0);
- 					break;
- 				default:	// huh? new value on version change?
- 					break;
-@@ -1339,7 +1343,7 @@ static void ProcessELS_Request(CPQFCHBA 
- 		// don't support this request (yet)
- 		// set reject reason code 
- 		fchs->reserved = LS_RJT_REASON(UNABLE_TO_PERFORM, REQUEST_NOT_SUPPORTED);
--		cpqfcTSPutLinkQue(dev, ELS_RJT,	fchs);	// Q Type
-+		cpqfcTSPutLinkQue(dev, ELS_RJT,	fchs, 0);	// Q Type
- 		break;
+-		if (++consumerIndex >= SFQ_LEN)	// check for rollover
+-			consumerIndex = 0L;	// reset it
++		consumerIndex = (consumerIndex + 1) % SFQ_LEN;
  	}
- }
-@@ -1420,12 +1424,12 @@ static void ProcessELS_Reply(CPQFCHBA * 
- 			if (fchs->s_id == 0xFFFFFC) {
- 				// PLOGI ACC was a Fabric response... issue SCR
- 				fchs->s_id = 0xFFFFFD;	// address for SCR
--				cpqfcTSPutLinkQue(dev, ELS_SCR, fchs);
-+				cpqfcTSPutLinkQue(dev, ELS_SCR, fchs, 0);
- 			}
- 			else {
- 				// Now we need a PRLI to enable FCP-SCSI operation
- 				// set flags and Q up a ELS_PRLI
--				cpqfcTSPutLinkQue(dev, ELS_PRLI, fchs);
-+				cpqfcTSPutLinkQue(dev, ELS_PRLI, fchs, 0);
- 			}
- 		} else {
- 			// login payload unacceptable - reason in ls_reject_code
-@@ -1476,7 +1480,7 @@ static void ProcessELS_Reply(CPQFCHBA * 
- 								fchs->reserved = i;	// copy ExchangeID
- //						                printk(" *Q x_ID %Xh after PDISC* ",i);
  
--								cpqfcTSPutLinkQue(dev, EXCHANGE_QUEUED, fchs);
-+								cpqfcTSPutLinkQue(dev, EXCHANGE_QUEUED, fchs, 0);
- 							}
- 						}
- 						// Complete commands Q'd while we were waiting for Login
-@@ -1499,7 +1503,7 @@ static void ProcessELS_Reply(CPQFCHBA * 
- 				// terminate any I/O to this port, and Q a PLOGI
- 				if (pLoggedInPort)	// FC device previously known?
- 				{
--					cpqfcTSPutLinkQue(dev, ELS_LOGO, fchs);	// Qtype has port_id to send to 
-+					cpqfcTSPutLinkQue(dev, ELS_LOGO, fchs, 0);	// Qtype has port_id to send to 
- 					// There are a variety of error scenarios which can result
- 					// in PDISC failure, so as a catchall, add the check for
- 					// duplicate port_id.
-@@ -1512,7 +1516,7 @@ static void ProcessELS_Reply(CPQFCHBA * 
- 
- 					cpqfcTSTerminateExchange(dev, &pLoggedInPort->ScsiNexus, PORTID_CHANGED);
- 				}
--				cpqfcTSPutLinkQue(dev, ELS_PLOGI, fchs);
-+				cpqfcTSPutLinkQue(dev, ELS_PLOGI, fchs, 0);
- 			}
- 		} else {
- 			// login payload unacceptable - reason in ls_reject_code
-@@ -1542,7 +1546,7 @@ static void ProcessELS_Reply(CPQFCHBA * 
- 				SetLoginFields(pLoggedInPort, fchs, 0, 1);
- 				// OK, let's send a REPORT_LUNS command to determine
- 				// whether VSA or PDA FCP-LUN addressing is used.
--				cpqfcTSPutLinkQue(dev, SCSI_REPORT_LUNS, fchs);
-+				cpqfcTSPutLinkQue(dev, SCSI_REPORT_LUNS, fchs, 0);
- 				// It's possible that a device we were talking to changed 
- 				// port_id, and has logged back in.  This function ensures
- 				// that I/O will resume.
-@@ -1568,7 +1572,7 @@ static void ProcessELS_Reply(CPQFCHBA * 
- 
- 		// now send out a PLOGI to the well known port_id 0xFFFFFC
- 		fchs->s_id = 0xFFFFFC;
--		cpqfcTSPutLinkQue(dev, ELS_PLOGI, fchs);
-+		cpqfcTSPutLinkQue(dev, ELS_PLOGI, fchs, 0);
- 		break;
- 
- 
-@@ -1580,7 +1584,7 @@ static void ProcessELS_Reply(CPQFCHBA * 
- 		// now we can issue Name Service Request to find any
- 		// Fabric-connected devices we might want to login to.
- 		fchs->s_id = 0xFFFFFC;	// Name Server Address
--		cpqfcTSPutLinkQue(dev, FCS_NSR, fchs);
-+		cpqfcTSPutLinkQue(dev, FCS_NSR, fchs, 0);
- 		break;
- 
- 	default:
-@@ -1731,7 +1735,7 @@ static void AnalyzeIncomingFrame(CPQFCHB
- 					memcpy(fcChip->LILPmap, &fchs->pl[1], 32 * 4);	// 32 DWORDs
- 					fcChip->Options.LILPin = 1;	// our LILPmap is valid!
- 					// now post to make Port Discovery happen...
--					cpqfcTSPutLinkQue(dev, LINKACTIVE, fchs);
-+					cpqfcTSPutLinkQue(dev, LINKACTIVE, fchs, 0);
- 				}
- 			}
- 		}
-@@ -1773,7 +1777,7 @@ static void AnalyzeIncomingFrame(CPQFCHB
- 							fchs->ox_rx_id = Exchanges->fcExchange[ExchangeID].fchs.ox_rx_id;
- 
- 							cpqfcTSPutLinkQue(dev, BLS_ABTS_ACC,	// Q Type 
--									  fchs);	// void QueContent
-+									  fchs, 0);	// void QueContent
- 							AbortAccept = 1;
- 							printk("ACCepting ABTS for x_ID %8.8Xh, SEST pair %8.8Xh\n", fchs->ox_rx_id, Exchanges->fcExchange[ExchangeID].fchs.ox_rx_id);
- 							break;	// ABTS can affect only ONE exchange -exit loop
-@@ -2169,7 +2173,7 @@ static void ScsiReportLunsDone(Scsi_Cmnd
- 				// context is "reply to source".
- 
- 				fchs->s_id = fchs->d_id;	// (temporarily re-use the struct)
--				cpqfcTSPutLinkQue(dev, SCSI_REPORT_LUNS, fchs);
-+				cpqfcTSPutLinkQue(dev, SCSI_REPORT_LUNS, fchs, 0);
- 			}
- 		} else		// probably, the device doesn't support Report Luns
- 			pLoggedInPort->ScsiNexus.VolumeSetAddressing = 0;
-@@ -2538,7 +2542,7 @@ void cpqfcTSheartbeat(unsigned long ptr)
- 
- 						// We expect the WorkerThread to change the xchng type to
- 						// abort and set appropriate timeout.
--						cpqfcTSPutLinkQue(dev, BLS_ABTS, &i);	// timed-out
-+						cpqfcTSPutLinkQue(dev, BLS_ABTS, NULL, i);	// timed-out
- 					}
- 				}
- 			} else	// time not expired...
+ 	// if specified, update the Tachlite chip ConsumerIndex...
