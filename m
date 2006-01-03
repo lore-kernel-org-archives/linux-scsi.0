@@ -1,56 +1,81 @@
-From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Subject: Re: Possible performance regression?
-Date: Tue, 03 Jan 2006 09:37:13 -0500
-Message-ID: <43BA8C19.6010706@hp.com>
-References: <43B94DB9.5040505@hp.com> <43BA5384.5070504@ilsb.tuwien.ac.at>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: Booting from or using a Compaq RA4100 Array
+Date: Tue, 3 Jan 2006 17:28:25 +0100
+Message-ID: <200601031728.31886@bilbo.math.uni-mannheim.de>
+References: <1135801791.9541.12.camel@gateway.markschaefer.org> <200601030851.30624@bilbo.math.uni-mannheim.de> <20060103123424.GJ19769@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed;
+  boundary="nextPart1296918.tvhFncRKo8";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atlrel9.hp.com ([156.153.255.214]:12217 "EHLO atlrel9.hp.com")
-	by vger.kernel.org with ESMTP id S1751434AbWACObr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2006 09:31:47 -0500
-In-Reply-To: <43BA5384.5070504@ilsb.tuwien.ac.at>
+Received: from mail.sf-mail.de ([62.27.20.61]:57495 "EHLO mail.sf-mail.de")
+	by vger.kernel.org with ESMTP id S1750795AbWACQ2q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2006 11:28:46 -0500
+In-Reply-To: <20060103123424.GJ19769@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gerhard Schneider <gs@ilsb.tuwien.ac.at>
+To: Matthew Wilcox <matthew@wil.cx>
 Cc: linux-scsi@vger.kernel.org
 
-Gerhard Schneider wrote:
+--nextPart1296918.tvhFncRKo8
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
->Alan D. Brunelle wrote:
->  
->
->>(0,1)         1      2      4      8     16     32     64    128    256
->>RHEL4U2    23.8   46.8   87.8   89.6   89.5   89.6   89.5   89.5   89.5
->>2.6.14      3.9    7.8   15.6   31.2   62.5   89.6   89.5   89.5   89.6
->>Differ    -83.6% -83.3% -82.2% -65.2% -30.2%   0.0%   0.0%   0.0%   0.0%
+Matthew Wilcox:
+>On Tue, Jan 03, 2006 at 08:51:30AM +0100, Rolf Eike Beer wrote:
+>> >HPFC-5000 is the original HP Tachyon design which my driver won't
+>> >support.  It doesn't have FCP support in hardware or anything.  My
+>> >driver only does TachLite.
+>> >
+>> >My aim is to support the following boards:
+>> >
+>> >HP A5156A	HPFC-5100 /2.0	(TL)
+>> >HP A5157A	HPFC-5100B/2.2	(TL) dual port
+>> >HP A5158A	HPFC-5100C/2.3	(TL)
+>> >HP A5158A	HPFC-5100D/3.0	(TL)
+>> >HP A6795A	HPFC-5200C/2.2	(XL2)
+>> >Compaq FC HBA   HPFC-5166A/1.2  (TS)
 >>
->>(0,1) means target 1 on bus 0, and then the columns represent different
->>transfer sizes (1K up to 256K).  I also see some that show little if any
->>difference:
->>
->>(6,4)         1      2      4      8     16     32     64    128    256
->>RHEL4U2    23.9   46.9   88.5   90.0   89.9   89.9   89.9   90.0   89.9
->>2.6.14.2   24.1   47.0   88.5   90.0   89.9   90.0   89.9   89.9   89.9
->>Differ      0.8%   0.2%   0.0%   0.0%   0.0%   0.1%   0.0%  -0.1%   0.0%
->>
->>    
->>
+>> Ok, can you collect such a list of the "other" cards that your driver does
+>> not support? And a list of PCI ids that match both lists?
 >
->Did you apply [PATCH] mptfusion : dv performance fix by
->Eric Dean Moore? (Dec. 1st, 2005) W/o that patch the first four disks of
->an 1030 are performing 3.5 MB/s instead of 70 :-)
->It was funny how slow a RAID 5-0 can be when four of fourteen disks
->are slow...
->
->                                          GS
->
->  
->
-I do not know how to grab that specific patch, but I am just trying a 
-2.6.15-rc6 kernel, and things seem much better. I'm hoping that 
-2.6.15-rc6 contains the patch you mention?
+>You could make an effort here too.
 
-Thanks,
-Alan
+But it sounded like Martin already knows :)
+
+>> These are the devices supported by the original cpqfc driver:
+>>
+>> #define PCI_DEVICE_ID_COMPAQ_TACHYON    0xa0fc
+>> #define PCI_DEVICE_ID_HP_TACHYON        0x1028
+>> #define PCI_DEVICE_ID_HP_TACHLITE       0x1029
+>>
+>> I now own a Agilent HHBA-5121. What's that for a thing?
+>
+>Plugging "Agilent HHBA-5121" into google gets me a PDF with the following
+> text:
+>
+>    At the heart of the HHBA-5121 is the HPFC-5166 Tachyon TS
+>    Fibre Channel Interface Controller IC.
+
+Sounds good :)
+
+PCI id is 103c:102a.
+
+Eike
+
+--nextPart1296918.tvhFncRKo8
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.0 (GNU/Linux)
+
+iD8DBQBDuqYvXKSJPmm5/E4RAtdfAJ9xvCKGVRJp+OB5Hqj5Nyxz4qN2igCfZpoZ
+PUzAt/DiVvopEMxHiaET7hI=
+=Rfee
+-----END PGP SIGNATURE-----
+
+--nextPart1296918.tvhFncRKo8--
