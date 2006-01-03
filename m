@@ -1,26 +1,59 @@
-From: Ryan Richter <ryan@tau.solarneutrino.net>
-Subject: Re: Fw: crash on x86_64 - mm related?
-Date: Tue, 3 Jan 2006 14:03:32 -0500
-Message-ID: <20060103190332.GB6782@tau.solarneutrino.net>
-References: <Pine.LNX.4.61.0512071803300.2975@goblin.wat.veritas.com> <20051212165443.GD17295@tau.solarneutrino.net> <Pine.LNX.4.64.0512120928110.15597@g5.osdl.org> <1134409531.9994.13.camel@mulgrave> <Pine.LNX.4.64.0512121007220.15597@g5.osdl.org> <1134411882.9994.18.camel@mulgrave> <20051215190930.GA20156@tau.solarneutrino.net> <1134705703.3906.1.camel@mulgrave> <20051226234238.GA28037@tau.solarneutrino.net> <Pine.LNX.4.63.0512271807130.4955@kai.makisara.local>
+From: Patrick Mansfield <patmans@us.ibm.com>
+Subject: Re: qla2300 & mptscsih refcount, or lack thereof
+Date: Tue, 3 Jan 2006 11:17:40 -0800
+Message-ID: <20060103191740.GA20527@us.ibm.com>
+References: <20051230235030.GX18439@ca-server1.us.oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from solarneutrino.net ([66.199.224.43]:56583 "EHLO
-	tau.solarneutrino.net") by vger.kernel.org with ESMTP
-	id S1751401AbWACTDq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Jan 2006 14:03:46 -0500
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:33692 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751456AbWACTRu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2006 14:17:50 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e3.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id k03JHnI9025726
+	for <linux-scsi@vger.kernel.org>; Tue, 3 Jan 2006 14:17:49 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k03JHnck103464
+	for <linux-scsi@vger.kernel.org>; Tue, 3 Jan 2006 14:17:49 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k03JHmMQ007708
+	for <linux-scsi@vger.kernel.org>; Tue, 3 Jan 2006 14:17:49 -0500
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.63.0512271807130.4955@kai.makisara.local>
+In-Reply-To: <20051230235030.GX18439@ca-server1.us.oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@osdl.org>, Hugh Dickins <hugh@veritas.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, ryan@tau.solarneutrino.net
+To: andrew.vasquez@qlogic.com, Eric.Moore@lsil.com, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-On Tue, Dec 27, 2005 at 06:21:39PM +0200, Kai Makisara wrote:
-> If nobody has better ideas, you could maybe try this.
+On Fri, Dec 30, 2005 at 03:50:30PM -0800, Joel Becker wrote:
+> Folks,
+> 	I've run into an interesting problem.  The qla2300 and
+> mptspi drivers don't get refcounted for active users, but they are
+> absolutely required.  Thus, you can do, eg, "rmmod qla2300" with mounted
+> filesystems, and your system happily removes all child devices.
+> Hello, EIO!
+> 	Now, I know we're well into "Doctor, it hurts when I do this,"
+> territory here.  But we generally try not to allow this sort of mistake.
+> You can't remove a network card while the interface is up, you can't
+> remove sd_mod while a disk is in use, etc.
+> 	Has this been seen before?  Is there any plan to make qla2300
+> and mptspi respect the use count of the objects they present to the
+> system?  Thoughts?
 
-Thanks, I just got back and I will boot a kernel with this patch tonight
-before the backup run.
+The qla driver increments the underlying qla2xxx module ref count rather
+than the qla2n00 module. Look at qla_os.c setting of .module, and
+scsi_device_get() code, and the complete lsmod output. qla_os.c code is
+included in qla2xxx, so its THIS_MODULE references qla2xxx instead of
+qla2n00.
 
--ryan
+The code would have to change to set the correct THIS_MODULE for use in
+scsi_device_get(), the qla2n00 can't just override the template, else you
+would get bad module ref counts if you had mixed qla hardware in your
+system.
+
+We probably need to duplicate the .module in struct scsi_host, set it
+appropriately (by default copy struct scsi_host_template value), and then
+use it in scsi_device_get().
+
+I haven't looked at mptspi drivers.
+
+-- Patrick Mansfield
