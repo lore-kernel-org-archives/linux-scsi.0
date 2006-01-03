@@ -1,65 +1,61 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: qla2300 & mptscsih refcount, or lack thereof
-Date: Tue, 3 Jan 2006 11:28:57 -0800
-Message-ID: <20060103192857.GD6648@andrew-vasquezs-powerbook-g4-15.local>
-References: <20051230235030.GX18439@ca-server1.us.oracle.com> <20060103191740.GA20527@us.ibm.com>
+From: Steffen Weber <email@steffenweber.net>
+Subject: LSI Logic SAS1064 PCI-X Fusion-MPT SAS
+Date: Tue, 03 Jan 2006 20:30:16 +0100
+Message-ID: <43BAD0C8.4040009@steffenweber.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:58645 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S932496AbWACT27 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2006 14:28:59 -0500
-Content-Disposition: inline
-In-Reply-To: <20060103191740.GA20527@us.ibm.com>
+Received: from wp051.webpack.hosteurope.de ([80.237.132.58]:16512 "EHLO
+	wp051.webpack.hosteurope.de") by vger.kernel.org with ESMTP
+	id S932471AbWACTa0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Jan 2006 14:30:26 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: Eric.Moore@lsil.com, linux-scsi@vger.kernel.org, Joel Becker <Joel.Becker@oracle.com>, James Bottomley <James.Bottomley@steeleye.com>
+To: linux-scsi@vger.kernel.org
 
-On Tue, 03 Jan 2006, Patrick Mansfield wrote:
+I=B4m trying to install Linux 2.6.15 on a Sun Fire X4100, which has a=20
+Serial Attached SCSI (SAS) controller from LSI Logic:
 
-> On Fri, Dec 30, 2005 at 03:50:30PM -0800, Joel Becker wrote:
-> > Folks,
-> > 	I've run into an interesting problem.  The qla2300 and
-> > mptspi drivers don't get refcounted for active users, but they are
-> > absolutely required.  Thus, you can do, eg, "rmmod qla2300" with mounted
-> > filesystems, and your system happily removes all child devices.
-> > Hello, EIO!
-> > 	Now, I know we're well into "Doctor, it hurts when I do this,"
-> > territory here.  But we generally try not to allow this sort of mistake.
-> > You can't remove a network card while the interface is up, you can't
-> > remove sd_mod while a disk is in use, etc.
-> > 	Has this been seen before?  Is there any plan to make qla2300
-> > and mptspi respect the use count of the objects they present to the
-> > system?  Thoughts?
-> 
-> The qla driver increments the underlying qla2xxx module ref count rather
-> than the qla2n00 module. Look at qla_os.c setting of .module, and
-> scsi_device_get() code, and the complete lsmod output. qla_os.c code is
-> included in qla2xxx, so its THIS_MODULE references qla2xxx instead of
-> qla2n00.
-> 
-> The code would have to change to set the correct THIS_MODULE for use in
-> scsi_device_get(), the qla2n00 can't just override the template, else you
-> would get bad module ref counts if you had mixed qla hardware in your
-> system.
-> 
-> We probably need to duplicate the .module in struct scsi_host, set it
-> appropriately (by default copy struct scsi_host_template value), and then
-> use it in scsi_device_get().
+LSI Logic / Symbios Logic SAS1064 PCI-X Fusion-MPT SAS (rev 02)
 
-I had previously posted a patch:
+I have enabled the following kernel config options:
+CONFIG_FUSION=3Dy
+CONFIG_FUSION_SAS=3Dy
+CONFIG_FUSION_MAX_SGE=3D128
+CONFIG_SCSI_SAS_ATTRS=3Dy
 
-[PATCH 10/12] qla2xxx: Correct fw-loader module-use referencing.
-http://marc.theaimsgroup.com/?l=linux-scsi&m=112924546828936&w=2
+When booting the controller is detected, but he does not see the disks:
 
-which corrected this behaviour.  But considering the direction the
-qla2xxx driver was heading with respect to 'firmware-loader modules',
-the patch was back-burnered.
+=2E..
+=46usion MPT base driver 3.03.04
+Copyright (c) 1999 - 2005 LSI Logic Corporation
+=46usion MPT SAS Host driver 3.03.04
+GSI 20 sharing vector 0xC9 and IRQ 20
+ACPI: PCI Interrupt 0000:02:03.0[A] -> GSI 28 (level, low) -> IRQ 16
+mptbase: Initiating ioc0 bringup
+ioc0: SAS1064: Capabilities=3D{Initiator}
+scsi0 : ioc0: LSISAS1064, FwRev=3D01040000h, Ports=3D1, MaxQ=3D511, IRQ=
+=3D16
+=2E..
+[There is nothing releveant to the controller here]
+=2E..
+VFS: Cannot open root device "sda4" or unknown-block(0,0)
+Please append a correct "root=3D" boot option
+Kernel panic - not syncing: VFS: Unable to mount root fs on=20
+unknown-block(0,0)
 
-scsi-misc-2.6.git already has a set of patches which moves the qla2xxx
-driver to a single-module driver where firmware is loaded via the
-request-firmware APIs.
+I=B4ve tried Linux 2.6.14 with no success, too. What could be the cause=
+=20
+that the disks are not detected?
 
---
-av
+Please cc me as I'm not subscribed to linux-scsi.
+
+Thanks,
+Steffen Weber
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
