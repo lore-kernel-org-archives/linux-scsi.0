@@ -1,59 +1,96 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: qla2300 & mptscsih refcount, or lack thereof
-Date: Tue, 3 Jan 2006 11:17:40 -0800
-Message-ID: <20060103191740.GA20527@us.ibm.com>
-References: <20051230235030.GX18439@ca-server1.us.oracle.com>
+From: "Martin K. Petersen" <mkp@mkp.net>
+Subject: Re: Booting from or using a Compaq RA4100 Array
+Date: Tue, 03 Jan 2006 14:20:10 -0500
+Message-ID: <yq1hd8l2k5x.fsf@wilson.lab.mkp.net>
+References: <1135801791.9541.12.camel@gateway.markschaefer.org>
+	<1136168563.3768.3.camel@localhost.localdomain>
+	<yq1oe2u2z6i.fsf@wilson.lab.mkp.net>
+	<200601030851.30624@bilbo.math.uni-mannheim.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:33692 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751456AbWACTRu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2006 14:17:50 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e3.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id k03JHnI9025726
-	for <linux-scsi@vger.kernel.org>; Tue, 3 Jan 2006 14:17:49 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k03JHnck103464
-	for <linux-scsi@vger.kernel.org>; Tue, 3 Jan 2006 14:17:49 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k03JHmMQ007708
-	for <linux-scsi@vger.kernel.org>; Tue, 3 Jan 2006 14:17:49 -0500
-Content-Disposition: inline
-In-Reply-To: <20051230235030.GX18439@ca-server1.us.oracle.com>
+Received: from vanessarodrigues.com ([192.139.46.150]:21397 "EHLO
+	jaguar.mkp.net") by vger.kernel.org with ESMTP id S1751465AbWACTUO
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Jan 2006 14:20:14 -0500
+In-Reply-To: <200601030851.30624@bilbo.math.uni-mannheim.de> (Rolf Eike Beer's message of "Tue, 3 Jan 2006 08:51:30 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andrew.vasquez@qlogic.com, Eric.Moore@lsil.com, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Dec 30, 2005 at 03:50:30PM -0800, Joel Becker wrote:
-> Folks,
-> 	I've run into an interesting problem.  The qla2300 and
-> mptspi drivers don't get refcounted for active users, but they are
-> absolutely required.  Thus, you can do, eg, "rmmod qla2300" with mounted
-> filesystems, and your system happily removes all child devices.
-> Hello, EIO!
-> 	Now, I know we're well into "Doctor, it hurts when I do this,"
-> territory here.  But we generally try not to allow this sort of mistake.
-> You can't remove a network card while the interface is up, you can't
-> remove sd_mod while a disk is in use, etc.
-> 	Has this been seen before?  Is there any plan to make qla2300
-> and mptspi respect the use count of the objects they present to the
-> system?  Thoughts?
+>>>>> "Eike" == Rolf Eike Beer <eike-kernel@sf-tec.de> writes:
 
-The qla driver increments the underlying qla2xxx module ref count rather
-than the qla2n00 module. Look at qla_os.c setting of .module, and
-scsi_device_get() code, and the complete lsmod output. qla_os.c code is
-included in qla2xxx, so its THIS_MODULE references qla2xxx instead of
-qla2n00.
+Eike> Ok, can you collect such a list of the "other" cards that your
+Eike> driver does not support? And a list of PCI ids that match both
+Eike> lists?
 
-The code would have to change to set the correct THIS_MODULE for use in
-scsi_device_get(), the qla2n00 can't just override the template, else you
-would get bad module ref counts if you had mixed qla hardware in your
-system.
+Tachyon chips are all over the place on cards from a multitude of
+vendors.  The list I provided represents the pile of HP cards I have
+in my lab.
 
-We probably need to duplicate the .module in struct scsi_host, set it
-appropriately (by default copy struct scsi_host_template value), and then
-use it in scsi_device_get().
 
-I haven't looked at mptspi drivers.
+Eike> These are the devices supported by the original cpqfc driver:
 
--- Patrick Mansfield
+Eike> #define PCI_DEVICE_ID_COMPAQ_TACHYON 0xa0fc 
+Eike> #define PCI_DEVICE_ID_HP_TACHYON 0x1028 
+Eike> #define PCI_DEVICE_ID_HP_TACHLITE 0x1029
+
+Only the Compaq board is really supported.
+
+The HP TL board happens to work if you don't care about using a valid
+WWN on your SAN.  The XL2 board doesn't actually work at all.
+
+Technically it's not correct to refer to 0x1028 and 0x1029 as TACHYON
+and TACHLITE.  Both of them are TachLite.  To my knowledge Tachyon
+proper doesn't have a PCI interface, so there's probably a glue chip
+on the HPFC-5000 boards out there.
+
+These are the right identifiers:
+
+#define PCI_DEVICE_ID_HP_TACH_TL	0x1028
+#define PCI_DEVICE_ID_HP_TACH_XL2	0x1029
+#define PCI_DEVICE_ID_HP_TACH_TS	0x102a
+#define PCI_DEVICE_ID_COMPAQ_TACHYON	0xa0fc
+
+pciids.sf.net has them right.  It's just the kernel pci_ids.h that's a
+bit out of whack.
+
+Some day I'll insert my cards one by one and get all the subsystem ids
+right.
+
+Unlike most cards the subsystem id matters in this case as each vendor
+may wrap their boards differently in terms of Flash/ROM interface,
+onboard RAM, SERDES, GBIC interface, etc.
+
+HP TL/XL2 HBA:
+
+       I'm currently mucking with extracting WWNs from the HP boards.
+
+Compaq FC HBA: 
+
+       Supporting this board shouldn't be a problem as the I2C NVRAM
+       interface is documented in cpqfcTS.
+
+InterPhase 55x6:
+
+       These boards are documented in the ancient iphase driver.
+
+Agilent:
+
+       My hope is that Agilent's own boards are using the reference
+       designs and consequently should be easy to support.
+
+Adaptec:
+
+       I think Adaptec's boards were OEM'ed from Agilent.  Probably
+       just a different ROM.
+
+These are the board vendors I know off the top of my head.  There may
+well be more.
+
+
+(I'm going to put all this on a webpage later today)
+
+-- 
+Martin K. Petersen      http://mkp.net/
