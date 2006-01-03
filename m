@@ -1,40 +1,26 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: ATA Write Error and Time-out Notification in User Space
-Date: Tue, 03 Jan 2006 18:58:42 +0000
-Message-ID: <1136314722.22598.36.camel@localhost.localdomain>
-References: <BAY101-F1894F0927E1FB790D14772DF2C0@phx.gbl>
+From: Ryan Richter <ryan@tau.solarneutrino.net>
+Subject: Re: Fw: crash on x86_64 - mm related?
+Date: Tue, 3 Jan 2006 14:03:32 -0500
+Message-ID: <20060103190332.GB6782@tau.solarneutrino.net>
+References: <Pine.LNX.4.61.0512071803300.2975@goblin.wat.veritas.com> <20051212165443.GD17295@tau.solarneutrino.net> <Pine.LNX.4.64.0512120928110.15597@g5.osdl.org> <1134409531.9994.13.camel@mulgrave> <Pine.LNX.4.64.0512121007220.15597@g5.osdl.org> <1134411882.9994.18.camel@mulgrave> <20051215190930.GA20156@tau.solarneutrino.net> <1134705703.3906.1.camel@mulgrave> <20051226234238.GA28037@tau.solarneutrino.net> <Pine.LNX.4.63.0512271807130.4955@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <BAY101-F1894F0927E1FB790D14772DF2C0@phx.gbl>
-Sender: linux-ide-owner@vger.kernel.org
-To: John Treubig <jtreubig@hotmail.com>
-Cc: raw@dslr.net, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from solarneutrino.net ([66.199.224.43]:56583 "EHLO
+	tau.solarneutrino.net") by vger.kernel.org with ESMTP
+	id S1751401AbWACTDq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Jan 2006 14:03:46 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.63.0512271807130.4955@kai.makisara.local>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@osdl.org>, Hugh Dickins <hugh@veritas.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, ryan@tau.solarneutrino.net
 
-On Maw, 2006-01-03 at 12:29 -0600, John Treubig wrote:
-> failure point.  I put a drive on the Secondary IDE bus hanging off the 
-> motherboard Nvidia NForce 2 controller, began an access and pulled the plug. 
->   Sure enough the failures occured and were passed back to user level, but 
-> the system did not hang.  I've repeated this a number of times.  I moved the 
-> same drive to the Promise Controller and the hang occurs.  Thus it seems we 
-> have proved the Promise sub-system is my problem.
+On Tue, Dec 27, 2005 at 06:21:39PM +0200, Kai Makisara wrote:
+> If nobody has better ideas, you could maybe try this.
 
+Thanks, I just got back and I will boot a kernel with this patch tonight
+before the backup run.
 
-Bingo. Yes I know why this is occuring now. 
-
-There is a known old bug with error handling in some cases on promise
-chips. The core kernel code tries to clean up any remaining data after
-an error (to handle chip prefetch/postwrite FIFOs) if DRQ_STAT is
-asserted. Its a nice trick, saves on resets and slow recovery but isn't
-compatible with some promise controllers.
-
-The -mm tree has a partial but incomplete fix to this implemented, the
-base kernel does not have this fixed.
-
-Its been known for some time so perhaps the ide maintainers have patches
-waiting for 2.6.16 now its opened ?
-
-Alan
-
+-ryan
