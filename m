@@ -1,81 +1,243 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: Booting from or using a Compaq RA4100 Array
-Date: Tue, 3 Jan 2006 17:28:25 +0100
-Message-ID: <200601031728.31886@bilbo.math.uni-mannheim.de>
-References: <1135801791.9541.12.camel@gateway.markschaefer.org> <200601030851.30624@bilbo.math.uni-mannheim.de> <20060103123424.GJ19769@parisc-linux.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [GIT PATCH] SCSI update for 2.6.15
+Date: Tue, 03 Jan 2006 11:37:15 -0500
+Message-ID: <1136306235.3457.11.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1296918.tvhFncRKo8";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:57495 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S1750795AbWACQ2q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2006 11:28:46 -0500
-In-Reply-To: <20060103123424.GJ19769@parisc-linux.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:11191 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751453AbWACQhP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Jan 2006 11:37:15 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
---nextPart1296918.tvhFncRKo8
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+This is pretty big, since some of these patches have been in scsi-misc
+for several months.  The major update is moving sg and st over to the
+block submission infrastructure.  This basically leaves only osst and a=
+n
+odd call in gdth to be converted before we can eliminate scsi requests
+entirely.
+
+The patch is available from
+
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
+
+The short changelog is:
+
+Alan Stern:
+  o sd: Always do write-protect check
+
+Andrew Vasquez:
+  o qla2xxx: Resync with latest released ISP24xx firmware -- 4.00.16
+  o qla2xxx: Add support for embedded ISP24xx firmware
+  o qla2xxx: Add full firmware(-request) hotplug support for all ISPs
+
+Arjan van de Ven:
+  o Mark some core scsi data structures const
+
+Brian King:
+  o ipr: Driver initialization fix for kexec/kdump
+
+Eric Moore:
+  o pci_ids.h: add subclass code for SAS Controllers
+  o mptfusion - bump version
+  o mptfusion - mapping fixs required support for transport layers
+  o mptfusion - prep for removing domain validation
+  o mptfusion - bus_type, change SCSI to SPI
+  o mptfusion - cleaning up xxx_probe error handling
+  o mptfusion - adding =3D THIS_MODULE
+
+James Bottomley:
+  o 53c700: update endian processing macros
+  o Fix up SCSI mismerge
+  o Merge by hand (conflicts in scsi_lib.c)
+  o qla2xxx: fix compile error caused by pci_dev.owner move
+  o correct some dropped const compiler warnings
+
+James Smart:
+  o lpfc 8.1.1 : Change version number to 8.1.1
+  o lpfc 8.1.1 : kill use of pci_read_config_xxx
+  o lpfc 8.1.1 : Added code to adjust lun queue depth to avoid target o=
+verloading
+  o lpfc 8.1.1 : Add polled-mode support
+  o lpfc 8.1.1 : Bring model descriptions in sync with Emulex standard =
+generic names
+  o lpfc 8.1.1 : Add support for more members of the Light Pulse 11xxx =
+(4Gb) family
+  o lpfc 8.1.1 : Fixes to error handlers
+  o lpfc 8.1.1 : Remove locking wrappers around error handlers
+  o lpfc 8.1.1 : Adjust use of scsi_block_requests and interaction w/ F=
+C transport
+  o lpfc 8.1.1 : Fixes for short cable pulls
+  o lpfc 8.1.1 : Correct some 8bit to 16bit field conversions/compariso=
+ns
+  o lpfc 8.1.1: Miscellaneous Cleanups
+
+Jens Axboe:
+  o scsi_lib: stricter checks for clearing use_10_for_rw
+
+Jesper Juhl:
+  o handle scsi_add_host failure for aic7xxx and fix compiler warning
+  o handle scsi_add_host failure for aic79xx and fix compiler warning
+
+Kai M=E4kisara:
+  o Fix st oops with new scsi_execute infrastructure
 
 Matthew Wilcox:
->On Tue, Jan 03, 2006 at 08:51:30AM +0100, Rolf Eike Beer wrote:
->> >HPFC-5000 is the original HP Tachyon design which my driver won't
->> >support.  It doesn't have FCP support in hardware or anything.  My
->> >driver only does TachLite.
->> >
->> >My aim is to support the following boards:
->> >
->> >HP A5156A	HPFC-5100 /2.0	(TL)
->> >HP A5157A	HPFC-5100B/2.2	(TL) dual port
->> >HP A5158A	HPFC-5100C/2.3	(TL)
->> >HP A5158A	HPFC-5100D/3.0	(TL)
->> >HP A6795A	HPFC-5200C/2.2	(XL2)
->> >Compaq FC HBA   HPFC-5166A/1.2  (TS)
->>
->> Ok, can you collect such a list of the "other" cards that your driver does
->> not support? And a list of PCI ids that match both lists?
->
->You could make an effort here too.
+  o Missing const in sr_vendor
+  o Merge sym53c8xx_comm.h and sym53c8xx_defs.h into ncr driver
+  o Use spi_print_msg in ncr53c8xx driver
+  o Add PPR support to spi_print_msg
+  o Use ARRAY_SIZE in spi_print_msg
+  o Fix printing of two-byte messages
+  o Rename scsi_print_msg to spi_print_msg
+  o Move scsi_print_msg to SPI class
+  o Make scsi_transport_spi.h includable by itself
+  o sym2: Version 2.2.2
+  o sym2: Report disabled devices and LUNs more attractively
+  o sym2: Allow NVRAM settings to limit speed and width
+  o sym2: Use scsi_print_msg
+  o sym2: Use DMA_40BIT_MASK constant
+  o sym2: Remove code to handle DMA_BIDIRECTION requests
+  o sym2: Manage sym_lcb properly
+  o sym2: Remove last vestiges of sym_sniff_inquiry
+  o sym2: Remove FreeBSD ifdefs
+  o Mention scsi_scan_host() in scsi_mid_low_api.txt
+  o Delete trailing full stop
 
-But it sounded like Martin already knows :)
+Mike Christie:
+  o seperate max_sectors from max_hw_sectors
+  o convert st to use scsi_execute_async
+  o convert sg to scsi_execute_async
+  o add kmemcache for scsi_io_context
+  o complete the whole command when it is REQ_BLOCK_PC
+  o add retries field to request for REQ_BLOCK_PC use
+  o Convert SCSI mid-layer to scsi_execute_async
+  o export blk layer functions needed for blk_execute_rq_nowait
+  o iscsi: check header digests for mgmt tasks
+  o iscsi: update version
+  o iscsi: lower queue depth
+  o iscsi: data digest calculation fix
+  o iscsi: iscsi response fix
+  o iscsi: redirect fix
+  o iscsi: opcode check fix
 
->> These are the devices supported by the original cpqfc driver:
->>
->> #define PCI_DEVICE_ID_COMPAQ_TACHYON    0xa0fc
->> #define PCI_DEVICE_ID_HP_TACHYON        0x1028
->> #define PCI_DEVICE_ID_HP_TACHLITE       0x1029
->>
->> I now own a Agilent HHBA-5121. What's that for a thing?
->
->Plugging "Agilent HHBA-5121" into google gets me a PDF with the following
-> text:
->
->    At the heart of the HHBA-5121 is the HPFC-5166 Tachyon TS
->    Fibre Channel Interface Controller IC.
+Seokmann Ju:
+  o megaraid_{mbox,mm} : remove PCI Id overlaping between megaraid_lega=
+cy and megaraid_{mbox,mm}
+  o megaraid_legacy: removed PCI ID overlap from the driv er
 
-Sounds good :)
+and the diffstat:
 
-PCI id is 103c:102a.
+ b/Documentation/scsi/ChangeLog.megaraid   |   35=20
+ b/Documentation/scsi/scsi_mid_low_api.txt |   37=20
+ b/block/ll_rw_blk.c                       |   40=20
+ b/block/scsi_ioctl.c                      |    2=20
+ b/drivers/md/dm-table.c                   |    2=20
+ b/drivers/message/fusion/mptbase.c        |   14=20
+ b/drivers/message/fusion/mptbase.h        |   34=20
+ b/drivers/message/fusion/mptctl.c         |    4=20
+ b/drivers/message/fusion/mptfc.c          |   24=20
+ b/drivers/message/fusion/mptsas.c         |   55=20
+ b/drivers/message/fusion/mptscsih.c       |  968 +-
+ b/drivers/message/fusion/mptscsih.h       |    2=20
+ b/drivers/message/fusion/mptspi.c         |   24=20
+ b/drivers/scsi/53c700.c                   |    6=20
+ b/drivers/scsi/53c700.h                   |   22=20
+ b/drivers/scsi/53c7xx.c                   |    7=20
+ b/drivers/scsi/Kconfig                    |   13=20
+ b/drivers/scsi/NCR5380.c                  |    7=20
+ b/drivers/scsi/aha152x.c                  |    7=20
+ b/drivers/scsi/aic7xxx/aic79xx_osm.c      |   11=20
+ b/drivers/scsi/aic7xxx/aic7xxx_osm.c      |   18=20
+ b/drivers/scsi/arm/Kconfig                |    1=20
+ b/drivers/scsi/arm/acornscsi.c            |    7=20
+ b/drivers/scsi/atari_NCR5380.c            |    7=20
+ b/drivers/scsi/ch.c                       |    4=20
+ b/drivers/scsi/constants.c                |  118=20
+ b/drivers/scsi/ipr.c                      |   17=20
+ b/drivers/scsi/ipr.h                      |    5=20
+ b/drivers/scsi/iscsi_tcp.c                |  121=20
+ b/drivers/scsi/iscsi_tcp.h                |    3=20
+ b/drivers/scsi/lpfc/lpfc.h                |   14=20
+ b/drivers/scsi/lpfc/lpfc_attr.c           |   92=20
+ b/drivers/scsi/lpfc/lpfc_crtn.h           |    3=20
+ b/drivers/scsi/lpfc/lpfc_disc.h           |    2=20
+ b/drivers/scsi/lpfc/lpfc_els.c            |    4=20
+ b/drivers/scsi/lpfc/lpfc_hbadisc.c        |   18=20
+ b/drivers/scsi/lpfc/lpfc_hw.h             |   40=20
+ b/drivers/scsi/lpfc/lpfc_init.c           |  183=20
+ b/drivers/scsi/lpfc/lpfc_nportdisc.c      |   67=20
+ b/drivers/scsi/lpfc/lpfc_scsi.c           |  295=20
+ b/drivers/scsi/lpfc/lpfc_sli.c            |  217=20
+ b/drivers/scsi/lpfc/lpfc_version.h        |    2=20
+ b/drivers/scsi/megaraid.c                 |   27=20
+ b/drivers/scsi/megaraid/Kconfig.megaraid  |    2=20
+ b/drivers/scsi/megaraid/megaraid_mbox.c   |   82=20
+ b/drivers/scsi/megaraid/megaraid_mbox.h   |    4=20
+ b/drivers/scsi/ncr53c8xx.c                |  749 +
+ b/drivers/scsi/ncr53c8xx.h                | 1263 +++
+ b/drivers/scsi/qla2xxx/Kconfig            |   69=20
+ b/drivers/scsi/qla2xxx/Makefile           |    5=20
+ b/drivers/scsi/qla2xxx/ql2400.c           |  111=20
+ b/drivers/scsi/qla2xxx/ql2400_fw.c        |12376 +++++++++++++++++++++=
++++++++++
+ b/drivers/scsi/qla2xxx/qla_attr.c         |    2=20
+ b/drivers/scsi/qla2xxx/qla_def.h          |   24=20
+ b/drivers/scsi/qla2xxx/qla_gbl.h          |    4=20
+ b/drivers/scsi/qla2xxx/qla_init.c         |  248=20
+ b/drivers/scsi/qla2xxx/qla_os.c           |  196=20
+ b/drivers/scsi/raid_class.c               |    2=20
+ b/drivers/scsi/scsi_devinfo.c             |    5=20
+ b/drivers/scsi/scsi_error.c               |   47=20
+ b/drivers/scsi/scsi_lib.c                 |  262=20
+ b/drivers/scsi/scsi_priv.h                |    4=20
+ b/drivers/scsi/scsi_scan.c                |    2=20
+ b/drivers/scsi/scsi_sysfs.c               |    4=20
+ b/drivers/scsi/scsi_transport_fc.c        |    8=20
+ b/drivers/scsi/scsi_transport_spi.c       |  136=20
+ b/drivers/scsi/sd.c                       |    6=20
+ b/drivers/scsi/sg.c                       |  680 -
+ b/drivers/scsi/sr.c                       |    4=20
+ b/drivers/scsi/sr_vendor.c                |    4=20
+ b/drivers/scsi/st.c                       |  279=20
+ b/drivers/scsi/st.h                       |   14=20
+ b/drivers/scsi/sun3_NCR5380.c             |    7=20
+ b/drivers/scsi/sym53c8xx_2/sym_defs.h     |    2=20
+ b/drivers/scsi/sym53c8xx_2/sym_fw.c       |   18=20
+ b/drivers/scsi/sym53c8xx_2/sym_fw.h       |    6=20
+ b/drivers/scsi/sym53c8xx_2/sym_fw1.h      |   48=20
+ b/drivers/scsi/sym53c8xx_2/sym_fw2.h      |   52=20
+ b/drivers/scsi/sym53c8xx_2/sym_glue.c     |  117=20
+ b/drivers/scsi/sym53c8xx_2/sym_glue.h     |    2=20
+ b/drivers/scsi/sym53c8xx_2/sym_hipd.c     |  164=20
+ b/drivers/scsi/sym53c8xx_2/sym_hipd.h     |  104=20
+ b/drivers/scsi/sym53c8xx_2/sym_malloc.c   |    4=20
+ b/drivers/scsi/sym53c8xx_2/sym_nvram.c    |   29=20
+ b/drivers/scsi/sym53c8xx_2/sym_nvram.h    |    4=20
+ b/fs/bio.c                                |   38=20
+ b/include/linux/bio.h                     |    2=20
+ b/include/linux/blkdev.h                  |    9=20
+ b/include/linux/pci_ids.h                 |    1=20
+ b/include/scsi/scsi_cmnd.h                |    2=20
+ b/include/scsi/scsi_dbg.h                 |    1=20
+ b/include/scsi/scsi_device.h              |   12=20
+ b/include/scsi/scsi_transport_spi.h       |    4=20
+ drivers/scsi/sym53c8xx_comm.h             |  792 -
+ drivers/scsi/sym53c8xx_defs.h             | 1320 ---
+ 95 files changed, 17442 insertions(+), 4467 deletions(-)
 
-Eike
+(big qla fw update again ... hopefully for the last time)
 
---nextPart1296918.tvhFncRKo8
-Content-Type: application/pgp-signature
+James
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.0 (GNU/Linux)
 
-iD8DBQBDuqYvXKSJPmm5/E4RAtdfAJ9xvCKGVRJp+OB5Hqj5Nyxz4qN2igCfZpoZ
-PUzAt/DiVvopEMxHiaET7hI=
-=Rfee
------END PGP SIGNATURE-----
-
---nextPart1296918.tvhFncRKo8--
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
