@@ -1,243 +1,219 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [GIT PATCH] SCSI update for 2.6.15
-Date: Tue, 03 Jan 2006 11:37:15 -0500
-Message-ID: <1136306235.3457.11.camel@mulgrave>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: More FC Transport Issues
+Date: Tue, 3 Jan 2006 09:30:57 -0800
+Message-ID: <20060103173057.GA6648@andrew-vasquezs-powerbook-g4-15.local>
+References: <43AB36BC.8000003@sgi.com> <20051223195035.GG1112@andrew-vasquezs-powerbook-g4-15.local> <43AC7DBA.2040408@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:11191 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751453AbWACQhP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Jan 2006 11:37:15 -0500
+Received: from pat.qlogic.com ([198.70.193.2]:1038 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S932427AbWACRa7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2006 12:30:59 -0500
+Content-Disposition: inline
+In-Reply-To: <43AC7DBA.2040408@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: Michael Reed <mdr@sgi.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James.Smart@Emulex.Com, James Bottomley <James.Bottomley@SteelEye.com>, Jeremy Higdon <jeremy@sgi.com>
 
-This is pretty big, since some of these patches have been in scsi-misc
-for several months.  The major update is moving sg and st over to the
-block submission infrastructure.  This basically leaves only osst and a=
-n
-odd call in gdth to be converted before we can eliminate scsi requests
-entirely.
+On Fri, 23 Dec 2005, Michael Reed wrote:
 
-The patch is available from
+> Andrew Vasquez wrote:
+> > On Thu, 22 Dec 2005, Michael Reed wrote:
+> > 
+> >>It's possible the OOPS is related to the qla2xxx serialization issue I reported
+> >>earlier.
+> >>
+> >>http://marc.theaimsgroup.com/?l=linux-scsi&m=113380446825841&w=2
+> >>http://marc.theaimsgroup.com/?l=linux-scsi&m=113458339109319&w=2
+> > 
+> > As far as the synchronization issues, could you try out the following.
+> 
+> As for initial testing w/git3, it's hanging during boot.
+> I'll try and compile KDB into the kernel to get more info.
+> Perhaps I can do some more work on this over the weekend.
+> 
+> It would seem as though the driver is thrashing the add/delete
+> mechanism.  With lots of host ports and lots of targets, every SCN that
+> comes in when another host port joins the fabric causes the others
+> to delete and re-add their targets.
+> 
+> Picture 64 host ports and 128 targets on each.  (I only wish this were
+> my test config.  Maybe Santa will bring me some more fabric!)
+> 
+> Perhaps check to see if target is missing after SCN and just
+> delete it?
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
+There's only one path where the qla2xxx driver adds fcports from an
+interrupt context and subsequently schedules rport additions, the
+RSCN handling in qla_rscn.c.  Typically, additions would occur from a
+process context via the DPC thread.
 
-The short changelog is:
+Mike, here's a slight variant on the previous patch which will
+hopefully handle the locking issues seen above and (temporarily, given
+the semantics of rport additions) disables RSCN handling via the
+driver's state-machine.
 
-Alan Stern:
-  o sd: Always do write-protect check
+--
+av
 
-Andrew Vasquez:
-  o qla2xxx: Resync with latest released ISP24xx firmware -- 4.00.16
-  o qla2xxx: Add support for embedded ISP24xx firmware
-  o qla2xxx: Add full firmware(-request) hotplug support for all ISPs
+---
 
-Arjan van de Ven:
-  o Mark some core scsi data structures const
-
-Brian King:
-  o ipr: Driver initialization fix for kexec/kdump
-
-Eric Moore:
-  o pci_ids.h: add subclass code for SAS Controllers
-  o mptfusion - bump version
-  o mptfusion - mapping fixs required support for transport layers
-  o mptfusion - prep for removing domain validation
-  o mptfusion - bus_type, change SCSI to SPI
-  o mptfusion - cleaning up xxx_probe error handling
-  o mptfusion - adding =3D THIS_MODULE
-
-James Bottomley:
-  o 53c700: update endian processing macros
-  o Fix up SCSI mismerge
-  o Merge by hand (conflicts in scsi_lib.c)
-  o qla2xxx: fix compile error caused by pci_dev.owner move
-  o correct some dropped const compiler warnings
-
-James Smart:
-  o lpfc 8.1.1 : Change version number to 8.1.1
-  o lpfc 8.1.1 : kill use of pci_read_config_xxx
-  o lpfc 8.1.1 : Added code to adjust lun queue depth to avoid target o=
-verloading
-  o lpfc 8.1.1 : Add polled-mode support
-  o lpfc 8.1.1 : Bring model descriptions in sync with Emulex standard =
-generic names
-  o lpfc 8.1.1 : Add support for more members of the Light Pulse 11xxx =
-(4Gb) family
-  o lpfc 8.1.1 : Fixes to error handlers
-  o lpfc 8.1.1 : Remove locking wrappers around error handlers
-  o lpfc 8.1.1 : Adjust use of scsi_block_requests and interaction w/ F=
-C transport
-  o lpfc 8.1.1 : Fixes for short cable pulls
-  o lpfc 8.1.1 : Correct some 8bit to 16bit field conversions/compariso=
-ns
-  o lpfc 8.1.1: Miscellaneous Cleanups
-
-Jens Axboe:
-  o scsi_lib: stricter checks for clearing use_10_for_rw
-
-Jesper Juhl:
-  o handle scsi_add_host failure for aic7xxx and fix compiler warning
-  o handle scsi_add_host failure for aic79xx and fix compiler warning
-
-Kai M=E4kisara:
-  o Fix st oops with new scsi_execute infrastructure
-
-Matthew Wilcox:
-  o Missing const in sr_vendor
-  o Merge sym53c8xx_comm.h and sym53c8xx_defs.h into ncr driver
-  o Use spi_print_msg in ncr53c8xx driver
-  o Add PPR support to spi_print_msg
-  o Use ARRAY_SIZE in spi_print_msg
-  o Fix printing of two-byte messages
-  o Rename scsi_print_msg to spi_print_msg
-  o Move scsi_print_msg to SPI class
-  o Make scsi_transport_spi.h includable by itself
-  o sym2: Version 2.2.2
-  o sym2: Report disabled devices and LUNs more attractively
-  o sym2: Allow NVRAM settings to limit speed and width
-  o sym2: Use scsi_print_msg
-  o sym2: Use DMA_40BIT_MASK constant
-  o sym2: Remove code to handle DMA_BIDIRECTION requests
-  o sym2: Manage sym_lcb properly
-  o sym2: Remove last vestiges of sym_sniff_inquiry
-  o sym2: Remove FreeBSD ifdefs
-  o Mention scsi_scan_host() in scsi_mid_low_api.txt
-  o Delete trailing full stop
-
-Mike Christie:
-  o seperate max_sectors from max_hw_sectors
-  o convert st to use scsi_execute_async
-  o convert sg to scsi_execute_async
-  o add kmemcache for scsi_io_context
-  o complete the whole command when it is REQ_BLOCK_PC
-  o add retries field to request for REQ_BLOCK_PC use
-  o Convert SCSI mid-layer to scsi_execute_async
-  o export blk layer functions needed for blk_execute_rq_nowait
-  o iscsi: check header digests for mgmt tasks
-  o iscsi: update version
-  o iscsi: lower queue depth
-  o iscsi: data digest calculation fix
-  o iscsi: iscsi response fix
-  o iscsi: redirect fix
-  o iscsi: opcode check fix
-
-Seokmann Ju:
-  o megaraid_{mbox,mm} : remove PCI Id overlaping between megaraid_lega=
-cy and megaraid_{mbox,mm}
-  o megaraid_legacy: removed PCI ID overlap from the driv er
-
-and the diffstat:
-
- b/Documentation/scsi/ChangeLog.megaraid   |   35=20
- b/Documentation/scsi/scsi_mid_low_api.txt |   37=20
- b/block/ll_rw_blk.c                       |   40=20
- b/block/scsi_ioctl.c                      |    2=20
- b/drivers/md/dm-table.c                   |    2=20
- b/drivers/message/fusion/mptbase.c        |   14=20
- b/drivers/message/fusion/mptbase.h        |   34=20
- b/drivers/message/fusion/mptctl.c         |    4=20
- b/drivers/message/fusion/mptfc.c          |   24=20
- b/drivers/message/fusion/mptsas.c         |   55=20
- b/drivers/message/fusion/mptscsih.c       |  968 +-
- b/drivers/message/fusion/mptscsih.h       |    2=20
- b/drivers/message/fusion/mptspi.c         |   24=20
- b/drivers/scsi/53c700.c                   |    6=20
- b/drivers/scsi/53c700.h                   |   22=20
- b/drivers/scsi/53c7xx.c                   |    7=20
- b/drivers/scsi/Kconfig                    |   13=20
- b/drivers/scsi/NCR5380.c                  |    7=20
- b/drivers/scsi/aha152x.c                  |    7=20
- b/drivers/scsi/aic7xxx/aic79xx_osm.c      |   11=20
- b/drivers/scsi/aic7xxx/aic7xxx_osm.c      |   18=20
- b/drivers/scsi/arm/Kconfig                |    1=20
- b/drivers/scsi/arm/acornscsi.c            |    7=20
- b/drivers/scsi/atari_NCR5380.c            |    7=20
- b/drivers/scsi/ch.c                       |    4=20
- b/drivers/scsi/constants.c                |  118=20
- b/drivers/scsi/ipr.c                      |   17=20
- b/drivers/scsi/ipr.h                      |    5=20
- b/drivers/scsi/iscsi_tcp.c                |  121=20
- b/drivers/scsi/iscsi_tcp.h                |    3=20
- b/drivers/scsi/lpfc/lpfc.h                |   14=20
- b/drivers/scsi/lpfc/lpfc_attr.c           |   92=20
- b/drivers/scsi/lpfc/lpfc_crtn.h           |    3=20
- b/drivers/scsi/lpfc/lpfc_disc.h           |    2=20
- b/drivers/scsi/lpfc/lpfc_els.c            |    4=20
- b/drivers/scsi/lpfc/lpfc_hbadisc.c        |   18=20
- b/drivers/scsi/lpfc/lpfc_hw.h             |   40=20
- b/drivers/scsi/lpfc/lpfc_init.c           |  183=20
- b/drivers/scsi/lpfc/lpfc_nportdisc.c      |   67=20
- b/drivers/scsi/lpfc/lpfc_scsi.c           |  295=20
- b/drivers/scsi/lpfc/lpfc_sli.c            |  217=20
- b/drivers/scsi/lpfc/lpfc_version.h        |    2=20
- b/drivers/scsi/megaraid.c                 |   27=20
- b/drivers/scsi/megaraid/Kconfig.megaraid  |    2=20
- b/drivers/scsi/megaraid/megaraid_mbox.c   |   82=20
- b/drivers/scsi/megaraid/megaraid_mbox.h   |    4=20
- b/drivers/scsi/ncr53c8xx.c                |  749 +
- b/drivers/scsi/ncr53c8xx.h                | 1263 +++
- b/drivers/scsi/qla2xxx/Kconfig            |   69=20
- b/drivers/scsi/qla2xxx/Makefile           |    5=20
- b/drivers/scsi/qla2xxx/ql2400.c           |  111=20
- b/drivers/scsi/qla2xxx/ql2400_fw.c        |12376 +++++++++++++++++++++=
-+++++++++
- b/drivers/scsi/qla2xxx/qla_attr.c         |    2=20
- b/drivers/scsi/qla2xxx/qla_def.h          |   24=20
- b/drivers/scsi/qla2xxx/qla_gbl.h          |    4=20
- b/drivers/scsi/qla2xxx/qla_init.c         |  248=20
- b/drivers/scsi/qla2xxx/qla_os.c           |  196=20
- b/drivers/scsi/raid_class.c               |    2=20
- b/drivers/scsi/scsi_devinfo.c             |    5=20
- b/drivers/scsi/scsi_error.c               |   47=20
- b/drivers/scsi/scsi_lib.c                 |  262=20
- b/drivers/scsi/scsi_priv.h                |    4=20
- b/drivers/scsi/scsi_scan.c                |    2=20
- b/drivers/scsi/scsi_sysfs.c               |    4=20
- b/drivers/scsi/scsi_transport_fc.c        |    8=20
- b/drivers/scsi/scsi_transport_spi.c       |  136=20
- b/drivers/scsi/sd.c                       |    6=20
- b/drivers/scsi/sg.c                       |  680 -
- b/drivers/scsi/sr.c                       |    4=20
- b/drivers/scsi/sr_vendor.c                |    4=20
- b/drivers/scsi/st.c                       |  279=20
- b/drivers/scsi/st.h                       |   14=20
- b/drivers/scsi/sun3_NCR5380.c             |    7=20
- b/drivers/scsi/sym53c8xx_2/sym_defs.h     |    2=20
- b/drivers/scsi/sym53c8xx_2/sym_fw.c       |   18=20
- b/drivers/scsi/sym53c8xx_2/sym_fw.h       |    6=20
- b/drivers/scsi/sym53c8xx_2/sym_fw1.h      |   48=20
- b/drivers/scsi/sym53c8xx_2/sym_fw2.h      |   52=20
- b/drivers/scsi/sym53c8xx_2/sym_glue.c     |  117=20
- b/drivers/scsi/sym53c8xx_2/sym_glue.h     |    2=20
- b/drivers/scsi/sym53c8xx_2/sym_hipd.c     |  164=20
- b/drivers/scsi/sym53c8xx_2/sym_hipd.h     |  104=20
- b/drivers/scsi/sym53c8xx_2/sym_malloc.c   |    4=20
- b/drivers/scsi/sym53c8xx_2/sym_nvram.c    |   29=20
- b/drivers/scsi/sym53c8xx_2/sym_nvram.h    |    4=20
- b/fs/bio.c                                |   38=20
- b/include/linux/bio.h                     |    2=20
- b/include/linux/blkdev.h                  |    9=20
- b/include/linux/pci_ids.h                 |    1=20
- b/include/scsi/scsi_cmnd.h                |    2=20
- b/include/scsi/scsi_dbg.h                 |    1=20
- b/include/scsi/scsi_device.h              |   12=20
- b/include/scsi/scsi_transport_spi.h       |    4=20
- drivers/scsi/sym53c8xx_comm.h             |  792 -
- drivers/scsi/sym53c8xx_defs.h             | 1320 ---
- 95 files changed, 17442 insertions(+), 4467 deletions(-)
-
-(big qla fw update again ... hopefully for the last time)
-
-James
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 7b3efd5..8a164fb 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -1664,7 +1664,8 @@ typedef struct fc_port {
+ 	uint8_t mp_byte;		/* multi-path byte (not used) */
+     	uint8_t cur_path;		/* current path id */
+ 
+-	struct fc_rport *rport;
++	spinlock_t rport_lock;
++	struct fc_rport *rport, *drport;
+ 	u32 supported_classes;
+ 	struct work_struct rport_add_work;
+ 	struct work_struct rport_del_work;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index c46d246..7d7d39f 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1687,10 +1687,16 @@ static void
+ qla2x00_rport_del(void *data)
+ {
+ 	fc_port_t *fcport = data;
++	struct fc_rport *rport;
++	unsigned long flags;
++
++	spin_lock_irqsave(&fcport->rport_lock, flags);
++	rport = fcport->drport;
++	fcport->drport = NULL;
++	spin_unlock_irqrestore(&fcport->rport_lock, flags);
++	if (rport)
++		fc_remote_port_delete(rport);
+ 
+-	if (fcport->rport)
+-		fc_remote_port_delete(fcport->rport);
+-	fcport->rport = NULL;
+ }
+ 
+ /**
+@@ -1718,6 +1724,7 @@ qla2x00_alloc_fcport(scsi_qla_host_t *ha
+ 	atomic_set(&fcport->state, FCS_UNCONFIGURED);
+ 	fcport->flags = FCF_RLC_SUPPORT;
+ 	fcport->supported_classes = FC_COS_UNSPECIFIED;
++	spin_lock_init(&fcport->rport_lock);
+ 	INIT_WORK(&fcport->rport_add_work, qla2x00_rport_add, fcport);
+ 	INIT_WORK(&fcport->rport_del_work, qla2x00_rport_del, fcport);
+ 
+@@ -2081,10 +2088,10 @@ qla2x00_reg_remote_port(scsi_qla_host_t 
+ 	struct fc_rport_identifiers rport_ids;
+ 	struct fc_rport *rport;
+ 
+-	if (fcport->rport) {
+-		fc_remote_port_delete(fcport->rport);
+-		fcport->rport = NULL;
+-	}
++	if (fcport->drport)
++		qla2x00_rport_del(fcport);
++	if (fcport->rport)
++		return;
+ 
+ 	rport_ids.node_name = wwn_to_u64(fcport->node_name);
+ 	rport_ids.port_name = wwn_to_u64(fcport->port_name);
+@@ -2649,10 +2656,14 @@ qla2x00_device_resync(scsi_qla_host_t *h
+ 
+ 		switch (format) {
+ 		case 0:
++
++			if (0) {
++#if 0
+ 			if (!IS_QLA2100(ha) && !IS_QLA2200(ha) &&
+ 			    !IS_QLA6312(ha) && !IS_QLA6322(ha) &&
+ 			    !IS_QLA24XX(ha) && !IS_QLA25XX(ha) &&
+ 			    ha->flags.init_done) {
++#endif
+ 				/* Handle port RSCN via asyncronous IOCBs */
+ 				rval2 = qla2x00_handle_port_rscn(ha, rscn_entry,
+ 				    NULL, 0);
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 5181d96..df496a4 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -519,12 +519,15 @@ qla2x00_async_event(scsi_qla_host_t *ha,
+ 		 * us, create a new entry in our rscn fcports list and handle
+ 		 * the event like an RSCN.
+ 		 */
++		if (0) {
++#if 0
+ 		if (!IS_QLA2100(ha) && !IS_QLA2200(ha) && !IS_QLA6312(ha) &&
+ 		    !IS_QLA6322(ha) && !IS_QLA24XX(ha) && !IS_QLA25XX(ha) &&
+ 		    ha->flags.init_done && mb[1] != 0xffff &&
+ 		    ((ha->operating_mode == P2P && mb[1] != 0) ||
+ 		    (ha->operating_mode != P2P && mb[1] !=
+ 			SNS_FIRST_LOOP_ID)) && (mb[2] == 6 || mb[2] == 7)) {
++#endif
+ 			int rval;
+ 			fc_port_t *rscn_fcport;
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 9746cd1..3de8fee 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -196,7 +196,9 @@ qla2x00_mailbox_command(scsi_qla_host_t 
+ 			/* Check for pending interrupts. */
+ 			qla2x00_poll(ha);
+ 
+-			udelay(10); /* v4.27 */
++			if (command != MBC_LOAD_RISC_RAM_EXTENDED &&
++			    !ha->flags.mbox_int)
++				msleep(10);
+ 		} /* while */
+ 	}
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index c58c9d9..35a309d 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1627,6 +1627,20 @@ qla2x00_free_device(scsi_qla_host_t *ha)
+ 	pci_disable_device(ha->pdev);
+ }
+ 
++static inline void
++qla2x00_schedule_rport_del(struct scsi_qla_host *ha, fc_port_t *fcport)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&fcport->rport_lock, flags);
++	if (fcport->rport) {
++		fcport->drport = fcport->rport;
++		fcport->rport = NULL;
++	}
++	spin_unlock_irqrestore(&fcport->rport_lock, flags);
++	schedule_work(&fcport->rport_del_work);
++}
++
+ /*
+  * qla2x00_mark_device_lost Updates fcport state when device goes offline.
+  *
+@@ -1639,8 +1653,8 @@ qla2x00_free_device(scsi_qla_host_t *ha)
+ void qla2x00_mark_device_lost(scsi_qla_host_t *ha, fc_port_t *fcport,
+     int do_login)
+ {
+-	if (atomic_read(&fcport->state) == FCS_ONLINE && fcport->rport)
+-		schedule_work(&fcport->rport_del_work);
++	if (atomic_read(&fcport->state) == FCS_ONLINE)
++		qla2x00_schedule_rport_del(ha, fcport);
+ 
+ 	/*
+ 	 * We may need to retry the login, so don't change the state of the
+@@ -1701,8 +1715,8 @@ qla2x00_mark_all_devices_lost(scsi_qla_h
+ 		 */
+ 		if (atomic_read(&fcport->state) == FCS_DEVICE_DEAD)
+ 			continue;
+-		if (atomic_read(&fcport->state) == FCS_ONLINE && fcport->rport)
+-			schedule_work(&fcport->rport_del_work);
++		if (atomic_read(&fcport->state) == FCS_ONLINE)
++			qla2x00_schedule_rport_del(ha, fcport);
+ 		atomic_set(&fcport->state, FCS_DEVICE_LOST);
+ 	}
+ }
