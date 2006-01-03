@@ -1,73 +1,51 @@
-From: Gerhard Schneider <gs@ilsb.tuwien.ac.at>
-Subject: Re: Possible performance regression?
-Date: Tue, 03 Jan 2006 11:35:48 +0100
-Message-ID: <43BA5384.5070504@ilsb.tuwien.ac.at>
-References: <43B94DB9.5040505@hp.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Booting from or using a Compaq RA4100 Array
+Date: Tue, 3 Jan 2006 05:34:24 -0700
+Message-ID: <20060103123424.GJ19769@parisc-linux.org>
+References: <1135801791.9541.12.camel@gateway.markschaefer.org> <1136168563.3768.3.camel@localhost.localdomain> <yq1oe2u2z6i.fsf@wilson.lab.mkp.net> <200601030851.30624@bilbo.math.uni-mannheim.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig1DA1BB44C85D80DB118548FC"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gh-gw1.ilsb.tuwien.ac.at ([128.130.23.14]:55688 "EHLO
-	gh-gw1.ilsb.tuwien.ac.at") by vger.kernel.org with ESMTP
-	id S1751332AbWACKgI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Jan 2006 05:36:08 -0500
-In-Reply-To: <43B94DB9.5040505@hp.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:16805 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S1750893AbWACMeY
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Jan 2006 07:34:24 -0500
+Content-Disposition: inline
+In-Reply-To: <200601030851.30624@bilbo.math.uni-mannheim.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
-Cc: linux-scsi@vger.kernel.org
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: "Martin K. Petersen" <mkp@mkp.net>, linux-scsi@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig1DA1BB44C85D80DB118548FC
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-
-Alan D. Brunelle wrote:
->
+On Tue, Jan 03, 2006 at 08:51:30AM +0100, Rolf Eike Beer wrote:
+> >HPFC-5000 is the original HP Tachyon design which my driver won't
+> >support.  It doesn't have FCP support in hardware or anything.  My
+> >driver only does TachLite.
+> >
+> >My aim is to support the following boards:
+> >
+> >HP A5156A	HPFC-5100 /2.0	(TL)
+> >HP A5157A	HPFC-5100B/2.2	(TL) dual port
+> >HP A5158A	HPFC-5100C/2.3	(TL)
+> >HP A5158A	HPFC-5100D/3.0	(TL)
+> >HP A6795A	HPFC-5200C/2.2	(XL2)
+> >Compaq FC HBA   HPFC-5166A/1.2  (TS)
 > 
-> (0,1)         1      2      4      8     16     32     64    128    256
-> RHEL4U2    23.8   46.8   87.8   89.6   89.5   89.6   89.5   89.5   89.5
-> 2.6.14      3.9    7.8   15.6   31.2   62.5   89.6   89.5   89.5   89.6
-> Differ    -83.6% -83.3% -82.2% -65.2% -30.2%   0.0%   0.0%   0.0%   0.0%
+> Ok, can you collect such a list of the "other" cards that your driver does not 
+> support? And a list of PCI ids that match both lists?
+
+You could make an effort here too.
+
+> These are the devices supported by the original cpqfc driver:
 > 
-> (0,1) means target 1 on bus 0, and then the columns represent different
-> transfer sizes (1K up to 256K).  I also see some that show little if any
-> difference:
+> #define PCI_DEVICE_ID_COMPAQ_TACHYON    0xa0fc
+> #define PCI_DEVICE_ID_HP_TACHYON        0x1028
+> #define PCI_DEVICE_ID_HP_TACHLITE       0x1029
 > 
-> (6,4)         1      2      4      8     16     32     64    128    256
-> RHEL4U2    23.9   46.9   88.5   90.0   89.9   89.9   89.9   90.0   89.9
-> 2.6.14.2   24.1   47.0   88.5   90.0   89.9   90.0   89.9   89.9   89.9
-> Differ      0.8%   0.2%   0.0%   0.0%   0.0%   0.1%   0.0%  -0.1%   0.0%
-> 
+> I now own a Agilent HHBA-5121. What's that for a thing?
 
-Did you apply [PATCH] mptfusion : dv performance fix by
-Eric Dean Moore? (Dec. 1st, 2005) W/o that patch the first four disks of
-an 1030 are performing 3.5 MB/s instead of 70 :-)
-It was funny how slow a RAID 5-0 can be when four of fourteen disks
-are slow...
+Plugging "Agilent HHBA-5121" into google gets me a PDF with the following text:
 
-                                          GS
+    At the heart of the HHBA-5121 is the HPFC-5166 Tachyon TS
+    Fibre Channel Interface Controller IC.
 
--- 
-Gerhard Schneider
-Institute of Lightweight Design and          e-Mail:gs@ilsb.tuwien.ac.at
-Structural Biomechanics (E317)                 Tel.:   +43 1 58801 31716
-Vienna University of Technology / Austria      Fax:    +43 1 58801 31799
-A-1040 Wien, Gusshausstrasse 27-29     http://www.ilsb.tuwien.ac.at/~gs/
-
---------------enig1DA1BB44C85D80DB118548FC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
-
-iD8DBQFDulOIE6e53f4wQG4RAowFAKDbbVKjLiLqHIYNXC1dt6x5n3jjcgCfUN5L
-JI12iuih3fotdshJKg7QdKE=
-=Nwhv
------END PGP SIGNATURE-----
-
---------------enig1DA1BB44C85D80DB118548FC--
