@@ -1,82 +1,56 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 2.4 2/2] cpqfc: Reduce stack usage of 2 functions
-Date: Tue, 3 Jan 2006 15:28:39 +0100
-Message-ID: <200601031528.45529@bilbo.math.uni-mannheim.de>
-References: <200601021244.40636@bilbo.math.uni-mannheim.de> <200601031451.51852@bilbo.math.uni-mannheim.de> <20060103115955.GA5288@dmt.cnet>
+From: "Alan D. Brunelle" <Alan.Brunelle@hp.com>
+Subject: Re: Possible performance regression?
+Date: Tue, 03 Jan 2006 09:37:13 -0500
+Message-ID: <43BA8C19.6010706@hp.com>
+References: <43B94DB9.5040505@hp.com> <43BA5384.5070504@ilsb.tuwien.ac.at>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart5508098.SGPMqCxv0P";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:54229 "EHLO mail.sf-mail.de")
-	by vger.kernel.org with ESMTP id S1751432AbWACO27 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2006 09:28:59 -0500
-In-Reply-To: <20060103115955.GA5288@dmt.cnet>
+Received: from atlrel9.hp.com ([156.153.255.214]:12217 "EHLO atlrel9.hp.com")
+	by vger.kernel.org with ESMTP id S1751434AbWACObr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2006 09:31:47 -0500
+In-Reply-To: <43BA5384.5070504@ilsb.tuwien.ac.at>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Marcelo Tosatti <marcelo.tosatti@cyclades.com>
+To: Gerhard Schneider <gs@ilsb.tuwien.ac.at>
 Cc: linux-scsi@vger.kernel.org
 
---nextPart5508098.SGPMqCxv0P
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Gerhard Schneider wrote:
 
-Am Dienstag, 3. Januar 2006 12:59 schrieben Sie:
->On Tue, Jan 03, 2006 at 02:51:46PM +0100, Rolf Eike Beer wrote:
->> Marcelo Tosatti wrote:
->> >On Mon, Jan 02, 2006 at 01:05:37PM +0100, Rolf Eike Beer wrote:
->> >> There are 2 function that do a lookup to the queue and buffer the
->> >> result. They only care about the first few bytes (to be exactly:
->> >> 38*sizeof(u32)), but they always pass a buffer of 2kB, which is locat=
-ed
->> >> on the stack.
->> >>
->> >> This patch reduces this buffer to the really needed size and changes
->> >> it's type to the correct target type. The rest of the queue is still
->> >> looked up but the result is ignored (as it would anyway).
->> >>
->> >> There are also some small cleanups for the other arguments of
->> >> CpqTsGetSFQEntry(), which is the lookup function.
->> >
->> >Is there an evidence that the gratuitous stack usage is causing problems
->> > with an 8kB stack?
->> >
->> >In other ways, this looks more like an optimization than a serious
->> > bugfix?
->>
->> I have no reports of this, but this proves nothing. But why waste one
->> quarter of the stack for nothing?
+>Alan D. Brunelle wrote:
+>  
 >
->My point is that v2.4 is into deep maintenance mode, which means that only
->critical bug fixes get merged into the tree.
+>>(0,1)         1      2      4      8     16     32     64    128    256
+>>RHEL4U2    23.8   46.8   87.8   89.6   89.5   89.6   89.5   89.5   89.5
+>>2.6.14      3.9    7.8   15.6   31.2   62.5   89.6   89.5   89.5   89.6
+>>Differ    -83.6% -83.3% -82.2% -65.2% -30.2%   0.0%   0.0%   0.0%   0.0%
+>>
+>>(0,1) means target 1 on bus 0, and then the columns represent different
+>>transfer sizes (1K up to 256K).  I also see some that show little if any
+>>difference:
+>>
+>>(6,4)         1      2      4      8     16     32     64    128    256
+>>RHEL4U2    23.9   46.9   88.5   90.0   89.9   89.9   89.9   90.0   89.9
+>>2.6.14.2   24.1   47.0   88.5   90.0   89.9   90.0   89.9   89.9   89.9
+>>Differ      0.8%   0.2%   0.0%   0.0%   0.0%   0.1%   0.0%  -0.1%   0.0%
+>>
+>>    
+>>
+>
+>Did you apply [PATCH] mptfusion : dv performance fix by
+>Eric Dean Moore? (Dec. 1st, 2005) W/o that patch the first four disks of
+>an 1030 are performing 3.5 MB/s instead of 70 :-)
+>It was funny how slow a RAID 5-0 can be when four of fourteen disks
+>are slow...
+>
+>                                          GS
+>
+>  
+>
+I do not know how to grab that specific patch, but I am just trying a 
+2.6.15-rc6 kernel, and things seem much better. I'm hoping that 
+2.6.15-rc6 contains the patch you mention?
 
-Doesn't "ugly like hell" count as critical? *g*
-
->I'm not against the patch per se.
-
-I've looked on it. Both of the functions with the 2k+ stack usage are calle=
-d=20
-from interrupt handler, one directly and one from the other. The stack usag=
-e=20
-at this point is little above 4k plus everything that is needed to call the=
-=20
-interrupt handler. I don't know if this must be considered harmful.
-
-Eike
-
---nextPart5508098.SGPMqCxv0P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.0 (GNU/Linux)
-
-iD8DBQBDuoodXKSJPmm5/E4RAvs+AKCVyL+WOELMtY7f/everbjQAEu0HACeKvcg
-Z8D8nqrZDE7qKnCzZS6Ztp8=
-=nO1U
------END PGP SIGNATURE-----
-
---nextPart5508098.SGPMqCxv0P--
+Thanks,
+Alan
