@@ -1,48 +1,34 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: drivers/scsi/pcmcia/aha152x_stub.c: variable used before set
-Date: Wed, 4 Jan 2006 19:12:30 +0100
-Message-ID: <20060104181230.GR3831@stusta.de>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: [PATCH] sas: fix removal of devices behind expanders
+Date: Wed, 4 Jan 2006 11:24:37 -0700
+Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F153772@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:39177 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1030257AbWADSMc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Jan 2006 13:12:32 -0500
-Content-Disposition: inline
+Received: from mail0.lsil.com ([147.145.40.20]:30968 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S965256AbWADSYw convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Jan 2006 13:24:52 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-This bug is still present in recent kernels.
+On Wednesday, January 04, 2006 5:45 AM, Christoph Hellwig wrote:
 
-cu
-Arian
+> We need to iterate over all children when removing and expander, else
+> stale objects will be around after host removal.  This fixes the oops
+> Eric Moore saw when removing and reloading mptsas.
+> 
+> Also don't try the scsi_remove_target call unless operating on an end
+> device.  The current unconditional call is harmless but confusing.
+> 
+> 
 
-
------ Forwarded message from d binderman <dcb314@hotmail.com> -----
-
-Date: 	Tue, 28 Jun 2005 09:14:28 +0000
-From: d binderman <dcb314@hotmail.com>
-To: linux-kernel@vger.kernel.org
-Subject: variable used before set
-
-Hello there,
-
-I just tried to compile the Linux Kernel version 2.6.11.12
-with the most excellent Intel C compiler. It said
-
-drivers/scsi/pcmcia/aha152x_stub.c(313): remark #592: variable "tmp" is used 
-before its value is set
-       tmp.device->host = info->host;
-       ^
-
-This is clearly broken code, since the field tmp.device has not been
-initialised, and so isn't pointing to anything.
-
-Suggest code rework.
+Thanks, that solves my oops.  Please apply.
 
 
------ End forwarded message -----
-
+Eric Moore
