@@ -1,38 +1,65 @@
-From: Ryan Richter <ryan@tau.solarneutrino.net>
-Subject: Re: Fw: crash on x86_64 - mm related?
-Date: Wed, 4 Jan 2006 13:26:05 -0500
-Message-ID: <20060104182605.GA397@tau.solarneutrino.net>
-References: <Pine.LNX.4.61.0512071803300.2975@goblin.wat.veritas.com> <20051212165443.GD17295@tau.solarneutrino.net> <Pine.LNX.4.64.0512120928110.15597@g5.osdl.org> <1134409531.9994.13.camel@mulgrave> <Pine.LNX.4.64.0512121007220.15597@g5.osdl.org> <1134411882.9994.18.camel@mulgrave> <20051215190930.GA20156@tau.solarneutrino.net> <1134705703.3906.1.camel@mulgrave> <20051226234238.GA28037@tau.solarneutrino.net> <Pine.LNX.4.63.0512271807130.4955@kai.makisara.local>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: scsi scan bug when peripheral qualifier of 3 is returned
+Date: Wed, 04 Jan 2006 12:28:03 -0600
+Message-ID: <43BC13B3.9030604@cs.wisc.edu>
+References: <43BB750A.5050000@cs.wisc.edu> <20060104174019.GA3995@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from solarneutrino.net ([66.199.224.43]:4612 "EHLO
-	tau.solarneutrino.net") by vger.kernel.org with ESMTP
-	id S965257AbWADS0J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Jan 2006 13:26:09 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.63.0512271807130.4955@kai.makisara.local>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:45189 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S965263AbWADS2N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jan 2006 13:28:13 -0500
+In-Reply-To: <20060104174019.GA3995@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@osdl.org>, Hugh Dickins <hugh@veritas.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, ryan@tau.solarneutrino.net
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, Dec 27, 2005 at 06:21:39PM +0200, Kai Makisara wrote:
-> Running dump gave me the following output:
+Patrick Mansfield wrote:
+> On Wed, Jan 04, 2006 at 01:11:06AM -0600, Mike Christie wrote:
+> 
+> 
+>>But for SCSI_SCAN_TARGET_PRESENT bflags is not set. Is the correct fix 
+>>to move where bflagsp gets set in scsi_probe_and_add_lun so that it gets 
+>>set for the SCSI_SCAN_TARGET_PRESENT case, or should __scsi_scan_target 
+>>be passing scsi_sequential_lun_scan and possibly scsi_report_lun_scan 
+>>some default bflags values?
+> 
+> 
+> It looks OK to me as-is, since bflags is also passed to and set in
+> scsi_probe_lun(), right?
+> 
 
-In case it's interesting, here's what I got from flushing the unfinished
-backup to tape:
+A blagfs variable gets set but it is not the same one passed into 
+scsi_probe_and_add_lun.
 
-st: page attributes before page_release 8
- 0: flags:0x010000000000006c mapping:ffff8100f6eb4520 mapcount:2 count:4 pfn:981656
- 1: flags:0x010000000000006c mapping:ffff8100f6eb4520 mapcount:2 count:4 pfn:981657
- 2: flags:0x010000000000006c mapping:ffff8100f6eb4520 mapcount:2 count:4 pfn:981658
- 3: flags:0x010000000000006c mapping:ffff8100f6eb4520 mapcount:2 count:4 pfn:981659
- 4: flags:0x010000000000006c mapping:ffff8100f6eb4520 mapcount:2 count:4 pfn:981660
- 5: flags:0x010000000000006c mapping:ffff8100f6eb4520 mapcount:2 count:4 pfn:981661
- 6: flags:0x010000000000006c mapping:ffff8100f6eb4520 mapcount:2 count:4 pfn:981662
- 7: flags:0x010000000000006c mapping:ffff8100f6eb4520 mapcount:2 count:4 pfn:981663
+static int scsi_probe_and_add_lun(struct scsi_target *starget,
+                                   uint lun, int *bflagsp,
 
-No crash this time.
 
--ryan
+{
+         struct scsi_device *sdev;
+         unsigned char *result;
+         int bflags,
+
+
+scsi_probe_and_add_lun gets a *bflagsp passed to it as a function arg, 
+but then also decalres a bflags variable itself. It then passes 
+scsi_probe_lun() the bflags it declared and does this
+
+         res = scsi_add_lun(sdev, result, &bflags);
+         if (res == SCSI_SCAN_LUN_PRESENT) {
+                 if (bflags & BLIST_KEY) {
+                         sdev->lockable = 0;
+                         scsi_unlock_floptical(sdev, result);
+                 }
+                 if (bflagsp)
+                         *bflagsp = bflags;
+         }
+
+so *bflagsp pointer only gets set if SCSI_SCAN_LUN_PRESENT was returned 
+by scsi_add_lun. For SCSI_SCAN_TARGET_PRESENT we do not even get to 
+scsi_add_lun, so for this case *bflagsp never gets set and 
+__scsi_scan_target gets zero. Previously, __scsi_scan_target would just 
+pass scsi_sequential_lun_scan the sparse blist flag, but now it passes zero.
