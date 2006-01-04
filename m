@@ -1,74 +1,63 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: Fw: crash on x86_64 - mm related?
-Date: Wed, 4 Jan 2006 23:48:52 +0200 (EET)
-Message-ID: <Pine.LNX.4.63.0601042334310.5087@kai.makisara.local>
-References: <Pine.LNX.4.61.0512071803300.2975@goblin.wat.veritas.com>
- <20051212165443.GD17295@tau.solarneutrino.net> <Pine.LNX.4.64.0512120928110.15597@g5.osdl.org>
- <1134409531.9994.13.camel@mulgrave> <Pine.LNX.4.64.0512121007220.15597@g5.osdl.org>
- <1134411882.9994.18.camel@mulgrave> <20051215190930.GA20156@tau.solarneutrino.net>
- <1134705703.3906.1.camel@mulgrave> <20051226234238.GA28037@tau.solarneutrino.net>
- <Pine.LNX.4.63.0512271807130.4955@kai.makisara.local>
- <20060104172727.GA320@tau.solarneutrino.net>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: [PATCH] scsi_transport_sas.c - mapping the rphy channel equal to the port identifier
+Date: Wed, 4 Jan 2006 14:58:40 -0700
+Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F15386F@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C6117A.0612B3A3"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep01-0.kolumbus.fi ([193.229.0.41]:49837 "EHLO
-	fep01-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S1751806AbWADVrs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Jan 2006 16:47:48 -0500
-In-Reply-To: <20060104172727.GA320@tau.solarneutrino.net>
+Received: from mail0.lsil.com ([147.145.40.20]:42909 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1030257AbWADV6s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jan 2006 16:58:48 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ryan Richter <ryan@tau.solarneutrino.net>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@osdl.org>, Hugh Dickins <hugh@veritas.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>
 
-On Wed, 4 Jan 2006, Ryan Richter wrote:
+This is a multi-part message in MIME format.
 
-> On Tue, Dec 27, 2005 at 06:21:39PM +0200, Kai Makisara wrote:
-...
-> > I don't have any new ideas but I will tell you what I have tried. In order 
-> > to get more information about what is happening, I inserted the patch at 
-> > the end of this message to my kernel. The purpose of the patch was to 
-> > print something about the page mappings (prt_pages) and to catch possible 
-> > double freeing from st earlier (clear page pointers).
-> > 
-> > Running dump gave me the following output:
-> 
-> Here's what I got:
-> 
-> 
->  st: page attributes before page_release 8
->  0: flags:0x060000000000006c mapping:ffff810102bba238 mapcount:2 count:4 pfn:1392956
->  1: flags:0x060000000000006c mapping:ffff810102bba238 mapcount:2 count:4 pfn:1397945
->  2: flags:0x060000000000006c mapping:ffff810102bba238 mapcount:2 count:4 pfn:1537473
->  3: flags:0x060000000000006c mapping:ffff810102bba238 mapcount:2 count:4 pfn:1398161
->  4: flags:0x060000000000006c mapping:ffff810102bba238 mapcount:2 count:4 pfn:1398261
->  5: flags:0x060000000000006c mapping:ffff810102bba238 mapcount:2 count:4 pfn:1392778
->  6: flags:0x060000000000006c mapping:ffff810102bba238 mapcount:2 count:4 pfn:1402858
->  7: flags:0x060000000000006c mapping:ffff810102bba238 mapcount:2 count:4 pfn:1396799
+------_=_NextPart_001_01C6117A.0612B3A3
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: quoted-printable
 
-This looks similar to my output except that the page flags are 
-0x060000000000006c in your case whereas I have 0x010000000000006c.
+The sas transport current implementation is mapping
+the channel number for each sas/sata device equal to
+the phy number.  The problem with that is it will be difficult
+to reserve a channel for RAID volumes when hot swap support
+is eventually implemented in the sas transport layer.
+Thus my suggested change is to map the channel to the port=20
+identifier, which effectively maps each channel number to its own
+unique sas domain.  Thus we can map the RAID volumes to a reserved
+channel that
+is one larger than the anticapated number of ports on the direct
+attached host
+adapter.
 
-I have run amanda with a patch modified so that it prints results for 32 
-consecutive writes each 10000 writes (if ((ctr++ % 10000) < 32)). This 
-showed that taper (at least in my case) is actually using a buffer of 20 x 
-32 kB = 640 kB. In all writes the mapping, counts, and flags were the 
-same. Instead of remapping a single 32 kB buffer, st is cyclically mapping 
-20 32 kB buffers.
+Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
-> Bad page state at free_hot_cold_page (in process 'taper', page ffff81000427ff60)
-> flags:0x010000000000000c mapping:ffff810102bbaaf0 mapcount:2 count:0
 
-The mapping and flags have changed. The flags have lost one bit at the 
-high end and the PG_lru and PG_active flags.
+------_=_NextPart_001_01C6117A.0612B3A3
+Content-Type: application/octet-stream;
+	name="scsi_transport_sas.patch"
+Content-Transfer-Encoding: base64
+Content-Description: scsi_transport_sas.patch
+Content-Disposition: attachment;
+	filename="scsi_transport_sas.patch"
 
-The patch sets the page pointer to NULL after page_cache_release() is 
-called in st. This means that st is not calling page_cache_release() more 
-than once for each page returned by get_user_pages(). The page state 
-seems to get corrupted somewhere.
+LS0tIGIvZHJpdmVycy9zY3NpL3Njc2lfdHJhbnNwb3J0X3Nhcy5jCTIwMDYtMDEtMDQgMTE6MTM6
+NDYuMDAwMDAwMDAwIC0wNzAwCisrKyBhL2RyaXZlcnMvc2NzaS9zY3NpX3RyYW5zcG9ydF9zYXMu
+YwkyMDA2LTAxLTA0IDEyOjQxOjEyLjAwMDAwMDAwMCAtMDcwMApAQCAtNjM3LDcgKzYzNyw3IEBA
+CiAJc3Bpbl91bmxvY2soJnNhc19ob3N0LT5sb2NrKTsKIAogCWlmIChycGh5LT5zY3NpX3Rhcmdl
+dF9pZCAhPSAtMSkgewotCQlzY3NpX3NjYW5fdGFyZ2V0KCZycGh5LT5kZXYsIHBhcmVudC0+bnVt
+YmVyLAorCQlzY3NpX3NjYW5fdGFyZ2V0KCZycGh5LT5kZXYsIHBhcmVudC0+cG9ydF9pZGVudGlm
+aWVyLAogCQkJCXJwaHktPnNjc2lfdGFyZ2V0X2lkLCB+MCwgMCk7CiAJfQogCkBAIC03MzksNyAr
+NzM5LDcgQEAKIAlzcGluX2xvY2soJnNhc19ob3N0LT5sb2NrKTsKIAlsaXN0X2Zvcl9lYWNoX2Vu
+dHJ5KHJwaHksICZzYXNfaG9zdC0+cnBoeV9saXN0LCBsaXN0KSB7CiAJCXN0cnVjdCBzYXNfcGh5
+ICpwYXJlbnQgPSBkZXZfdG9fcGh5KHJwaHktPmRldi5wYXJlbnQpOwotCQlpZiAocGFyZW50LT5u
+dW1iZXIgPT0gY2hhbm5lbCAmJgorCQlpZiAocGFyZW50LT5wb3J0X2lkZW50aWZpZXIgPT0gY2hh
+bm5lbCAmJgogCQkgICAgcnBoeS0+c2NzaV90YXJnZXRfaWQgPT0gaWQpCiAJCQlkZXYgPSAmcnBo
+eS0+ZGV2OwogCX0K
 
-I have to continue thinking.
-
--- 
-Kai
+------_=_NextPart_001_01C6117A.0612B3A3--
