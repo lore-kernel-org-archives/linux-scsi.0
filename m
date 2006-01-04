@@ -1,63 +1,37 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: ETA for Areca RAID driver (arcmsr) in mainline?
-Date: Wed, 4 Jan 2006 01:18:41 -0800
-Message-ID: <20060104011841.036ea510.akpm@osdl.org>
-References: <1135228831.4122.15.camel@mentorng.gurulabs.com>
-	<1135229681.439.23.camel@mindpipe>
-	<200512220917.41494.oliver@neukum.org>
-	<1135239601.2940.5.camel@laptopd505.fenrus.org>
-	<20051222052443.57ffe6f9.akpm@osdl.org>
-	<1135279895.19320.24.camel@mentorng.gurulabs.com>
-	<20051230113227.2b787d43.rdunlap@xenotime.net>
+From: Steffen Weber <email@steffenweber.net>
+Subject: Re: LSI Logic SAS1064 PCI-X Fusion-MPT SAS
+Date: Wed, 04 Jan 2006 11:53:29 +0100
+Message-ID: <43BBA929.5010007@steffenweber.net>
+References: <F331B95B72AFFB4B87467BE1C8E9CF5F153491@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:46279 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932495AbWADJTJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jan 2006 04:19:09 -0500
-In-Reply-To: <20051230113227.2b787d43.rdunlap@xenotime.net>
+Received: from wp051.webpack.hosteurope.de ([80.237.132.58]:64729 "EHLO
+	wp051.webpack.hosteurope.de") by vger.kernel.org with ESMTP
+	id S1751245AbWADKxb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Jan 2006 05:53:31 -0500
+In-Reply-To: <F331B95B72AFFB4B87467BE1C8E9CF5F153491@NAMAIL2.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Randy.Dunlap" <rdunlap@xenotime.net>
-Cc: dax@gurulabs.com, erich@areca.com.tw, arjan@infradead.org, oliver@neukum.org, rlrevell@joe-job.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-"Randy.Dunlap" <rdunlap@xenotime.net> wrote:
->
-> Here's a start on some cleanups and a list of general issues.
->  I'm not addressing SCSI or MM/DMA API issues, if there are any.
+Moore, Eric wrote:
+> On Tuesday, January 03, 2006 3:00 PM,  Steffen Weber wrote:
 > 
->  0.  some Kconfig and Makefile cleanups
->  1.  fix arcmsr_device_id_table[] inits;
->  2.  fix return (value); -- don't use parenethese
->  3.  fix one-line-ifs-with-braces -- remove braces
->  4.  struct _XYZ & typedef XYZ, PXYZ -- convert to struct XYZ only
->  5.  check NULL usage
->  6.  no "return;" at end of func; -- removed
->  7.  return -ENXIO instead of ENXIO;
+>> Moore, Eric wrote:
+>>> Are the disks belonging to a RAID volume?
+>> Yes, they do! What does that mean for our situation?  :-)
+>>
 > 
->  Patch for above items is below.
+> The RAID support is not there yet, and I'm working on it. Hopefully
+> in the next week.  I'm in dicussions with Christoph Hellwig on this.
 > 
->  More issues, not yet patched:
-> 
->  8.  check sparse warnings, stack usage, init/exit sections;
->  9.  don't use // comments;
->  10. use printk levels
->  11. pPCI_DEV: bad naming (throughout driver; don't use mixed case)
->  12. some comments are unreadable (non-ASCII ?)
->  13. uintNN_t int types:  use kernel types except for userspace interfaces
->  14. use kernel-doc
->  15. try to fit source files into 80 columns
+> Meanwhile, I suggest that you use the LSI internally supported drivers
+> which has RAID support. I will send that to you in a seperate email.
+I just want to let everybody else who runs into this problem know that 
+this "internally supported driver" works fine! :-)
 
-Unfortunately I've gone and applied a huge driver update from Erich, so
-none of this applies any more.
+Again, thank you very much, Eric!
 
-A recut would be appreciated.  Please include your additional suggestions:
-
-16. Tab size in Linux kernel is 8 (not less).
-17. Don't put changelog comments in source files.  That's what
-     SCMs are for (source code manager tools).
-18. Put arcmsr.txt in Documentation/scsi/, not in scsi/arcmsr/.
-19. Maybe use sysfs (/sys) instead of /proc.
-
-In the updated changelog, thanks.
+Steffen
