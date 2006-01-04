@@ -1,72 +1,53 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH] dont decrement counters from scsi_kill_request
-Date: Wed, 04 Jan 2006 01:44:47 -0600
-Message-ID: <1136360688.9634.2.camel@max>
+From: Rolf Eike Beer <eike@sf-mail.de>
+Subject: Re: [PATCH] dont decrement counters from scsi_kill_request
+Date: Wed, 4 Jan 2006 08:51:57 +0100
+Message-ID: <200601040852.15700@bilbo.math.uni-mannheim.de>
+References: <1136360688.9634.2.camel@max>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed;
+  boundary="nextPart2264506.uLmzPTPvG2";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:61315 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1751195AbWADHoy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jan 2006 02:44:54 -0500
-Received: from [192.168.0.5] (c-69-180-176-191.hsd1.mn.comcast.net [69.180.176.191])
-	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id k047irvg008088
-	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Jan 2006 01:44:54 -0600
+Received: from mail.sf-mail.de ([62.27.20.61]:14024 "EHLO mail.sf-mail.de")
+	by vger.kernel.org with ESMTP id S1751199AbWADHwT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jan 2006 02:52:19 -0500
+In-Reply-To: <1136360688.9634.2.camel@max>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org
 
-This was debugged by zhenyu.z.wang@intel.com on the open-iscsi lists.
+--nextPart2264506.uLmzPTPvG2
+Content-Type: text/plain;
+  charset="iso-8859-6"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-When we call scsi_kill_request() we have not yet incremented the
-device and host busy counters so calling __scsi_done from
-scsi_kill_request ends up doing extra decrements.
+Mike Christie wrote:
 
-This patch has only been compile tested against scsi-misc. I am not
-sure what the correct blk_complete_barrier_rq values should be. For
-failures are we supposed to return zero or what is left in the command
-and what how are we supposed set to indicate a error?
+>+	while (end_that_request_first(req, 0, req->nr_sectors))
+>+		;
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+This should be something like
 
+while (...)
+	{}
 
+so it is absolutely clear that the empty body is intentional.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index a7f3f0c..4b6a9fc 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1514,8 +1514,6 @@ static void scsi_kill_request(struct req
- {
- 	struct scsi_cmnd *cmd = req->special;
- 
--	blkdev_dequeue_request(req);
--
- 	if (unlikely(cmd == NULL)) {
- 		printk(KERN_CRIT "impossible request in %s.\n",
- 				 __FUNCTION__);
-@@ -1523,9 +1521,19 @@ static void scsi_kill_request(struct req
- 	}
- 
- 	scsi_init_cmd_errh(cmd);
--	cmd->result = DID_NO_CONNECT << 16;
- 	atomic_inc(&cmd->device->iorequest_cnt);
--	__scsi_done(cmd);
-+
-+	blkdev_dequeue_request(req);
-+	req->errors = DID_NO_CONNECT << 16;
-+
-+	if (blk_complete_barrier_rq(q, req, cmd->bufflen  >> 9)); 
-+		return;
-+
-+	scsi_release_buffers(cmd);
-+	while (end_that_request_first(req, 0, req->nr_sectors))
-+		;
-+	end_that_request_last(req);
-+	scsi_put_command(cmd);
- }
- 
- /*
+Eike
 
+--nextPart2264506.uLmzPTPvG2
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.0 (GNU/Linux)
+
+iD8DBQBDu36vXKSJPmm5/E4RAveiAJ0VjkdT5QBL1acn1C7C5KKlFFcHqACeMefn
+Y4CcpIwu9zUkr+azBs/tZU0=
+=L9KF
+-----END PGP SIGNATURE-----
+
+--nextPart2264506.uLmzPTPvG2--
