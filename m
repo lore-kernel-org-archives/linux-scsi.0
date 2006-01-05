@@ -1,379 +1,169 @@
 From: Andreas Herrmann <aherrman@de.ibm.com>
-Subject: [PATCH] zfcp: transport class adaptations
-Date: Thu, 5 Jan 2006 09:59:34 +0100
-Message-ID: <20060105085934.GA11197@lion28.ibm.com>
+Subject: [PATCH] fc transport: new attributes for NPIV
+Date: Thu, 5 Jan 2006 10:01:56 +0100
+Message-ID: <20060105090155.GA11208@lion28.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.de.ibm.com ([195.212.29.153]:2442 "EHLO
-	mtagate4.de.ibm.com") by vger.kernel.org with ESMTP
-	id S1752117AbWAEI7l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Jan 2006 03:59:41 -0500
+Received: from mtagate3.de.ibm.com ([195.212.29.152]:39663 "EHLO
+	mtagate3.de.ibm.com") by vger.kernel.org with ESMTP
+	id S1752121AbWAEJCZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Jan 2006 04:02:25 -0500
 Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate4.de.ibm.com (8.12.10/8.12.10) with ESMTP id k058xdln201756
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Jan 2006 08:59:39 GMT
+	by mtagate3.de.ibm.com (8.12.10/8.12.10) with ESMTP id k05920Ws127012
+	for <linux-scsi@vger.kernel.org>; Thu, 5 Jan 2006 09:02:02 GMT
 Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k058xc7M224984
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Jan 2006 09:59:39 +0100
+	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k059207M122854
+	for <linux-scsi@vger.kernel.org>; Thu, 5 Jan 2006 10:02:00 +0100
 Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id k058xc5m011035
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Jan 2006 09:59:38 +0100
+	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id k05920nA015220
+	for <linux-scsi@vger.kernel.org>; Thu, 5 Jan 2006 10:02:00 +0100
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@steeleye.com>
+To: James Smart <james.smart@emulex.com>, James Bottomley <jejb@steeleye.com>
 Cc: Linux SCSI <linux-scsi@vger.kernel.org>
 
 From: Andreas Herrmann <aherrman@de.ibm.com>
 
-[PATCH] zfcp: transport class adaptations
+[PATCH] fc transport: new attributes for NPIV
 
-Added host stats, removed superfluous get_starget_ functions,
-removed some attributes from zfcp specific sysfs tree (e.g.
-scsi_host_no, scsi_lun, wwnn and d_id).
-Host stats are given for the physical adapter port not for the
-virtual adapter. Reset stats is implemented in the device driver.
+With NPort-Id-Virtualization (NPIV) "virtual" ports can be
+registered at an FC switch using one physical FC port.
+Using FDISC an already logged in port can login additional
+ports to the Fabric. Each addtional port gets assigned a
+new destination ID (see FDISC description in FC-FS).
+For problem determination it is useful to know not only the
+virtual port name and its associated port id but also the
+port name and port id of the physical port - the port that
+initially logged into the Fabric.
+
+I suggest to add new attributes (physical_port_name and
+physical_port_id) to scsi_transport_fc.
 
 Signed-off-by: Andreas Herrmann <aherrman@de.ibm.com>
 
 ---
 
- drivers/s390/scsi/zfcp_aux.c           |    2 
- drivers/s390/scsi/zfcp_def.h           |    3 +
- drivers/s390/scsi/zfcp_scsi.c          |  185 +++++++++++++++++++++++---------
- drivers/s390/scsi/zfcp_sysfs_adapter.c |    4 -
- drivers/s390/scsi/zfcp_sysfs_port.c    |    4 -
- drivers/s390/scsi/zfcp_sysfs_unit.c    |    2 
- 6 files changed, 136 insertions(+), 64 deletions(-)
+ drivers/scsi/scsi_transport_fc.c |    7 +++++++
+ include/scsi/scsi_transport_fc.h |    9 +++++++++
+ 2 files changed, 16 insertions(+), 0 deletions(-)
 
-a5740402320b5f6122dd869aab0961f58f6d0abc
-diff --git a/drivers/s390/scsi/zfcp_aux.c b/drivers/s390/scsi/zfcp_aux.c
-index 5e84c5a..167fef3 100644
---- a/drivers/s390/scsi/zfcp_aux.c
-+++ b/drivers/s390/scsi/zfcp_aux.c
-@@ -1125,6 +1125,8 @@ zfcp_adapter_dequeue(struct zfcp_adapter
- 	zfcp_free_low_mem_buffers(adapter);
- 	/* free memory of adapter data structure and queues */
- 	zfcp_qdio_free_queues(adapter);
-+	kfree(adapter->fc_stats);
-+	kfree(adapter->stats_reset_data);
- 	ZFCP_LOG_TRACE("freeing adapter structure\n");
- 	kfree(adapter);
-  out:
-diff --git a/drivers/s390/scsi/zfcp_def.h b/drivers/s390/scsi/zfcp_def.h
-index d81b737..3785b3c 100644
---- a/drivers/s390/scsi/zfcp_def.h
-+++ b/drivers/s390/scsi/zfcp_def.h
-@@ -978,6 +978,9 @@ struct zfcp_adapter {
- 	struct zfcp_adapter_mempool	pool;      /* Adapter memory pools */
- 	struct qdio_initialize  qdio_init_data;    /* for qdio_establish */
- 	struct device           generic_services;  /* directory for WKA ports */
-+	struct fc_host_statistics *fc_stats;
-+	struct fsf_qtcb_bottom_port *stats_reset_data;
-+	unsigned long		stats_reset;
- };
+8f1f64a50977add786fdd14a0cbc13aae4bfa89f
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 685b997..365529a 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -295,6 +295,7 @@ static int fc_host_setup(struct transpor
+ 	 */
+ 	fc_host_node_name(shost) = -1;
+ 	fc_host_port_name(shost) = -1;
++	fc_host_physical_port_name(shost) = -1;
+ 	fc_host_supported_classes(shost) = FC_COS_UNSPECIFIED;
+ 	memset(fc_host_supported_fc4s(shost), 0,
+ 		sizeof(fc_host_supported_fc4s(shost)));
+@@ -306,6 +307,7 @@ static int fc_host_setup(struct transpor
+ 		sizeof(fc_host_serial_number(shost)));
  
- /*
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index 66608d1..5ca0992 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -49,8 +49,6 @@ static int zfcp_task_management_function
+ 	fc_host_port_id(shost) = -1;
++	fc_host_physical_port_id(shost) = -1;
+ 	fc_host_port_type(shost) = FC_PORTTYPE_UNKNOWN;
+ 	fc_host_port_state(shost) = FC_PORTSTATE_UNKNOWN;
+ 	memset(fc_host_active_fc4s(shost), 0,
+@@ -795,6 +797,8 @@ static FC_CLASS_DEVICE_ATTR(host, suppor
  
- static struct zfcp_unit *zfcp_unit_lookup(struct zfcp_adapter *, int, scsi_id_t,
- 					  scsi_lun_t);
--static struct zfcp_port *zfcp_port_lookup(struct zfcp_adapter *, int,
--					  scsi_id_t);
+ fc_private_host_rd_attr_cast(node_name, "0x%llx\n", 20, unsigned long long);
+ fc_private_host_rd_attr_cast(port_name, "0x%llx\n", 20, unsigned long long);
++fc_private_host_rd_attr_cast(physical_port_name, "0x%llx\n", 20,
++			     unsigned long long);
+ fc_private_host_rd_attr(symbolic_name, "%s\n", (FC_SYMBOLIC_NAME_SIZE +1));
+ fc_private_host_rd_attr(maxframe_size, "%u bytes\n", 20);
+ fc_private_host_rd_attr(serial_number, "%s\n", (FC_SERIAL_NUMBER_SIZE +1));
+@@ -835,6 +839,7 @@ static FC_CLASS_DEVICE_ATTR(host, speed,
  
- static struct device_attribute *zfcp_sysfs_sdev_attrs[];
  
-@@ -406,18 +404,6 @@ zfcp_unit_lookup(struct zfcp_adapter *ad
- 	return retval;
- }
+ fc_host_rd_attr(port_id, "0x%06x\n", 20);
++fc_host_rd_attr(physical_port_id, "0x%06x\n", 20);
+ fc_host_rd_enum_attr(port_type, FC_PORTTYPE_MAX_NAMELEN);
+ fc_host_rd_enum_attr(port_state, FC_PORTSTATE_MAX_NAMELEN);
+ fc_host_rd_attr_cast(fabric_name, "0x%llx\n", 20, unsigned long long);
+@@ -1160,6 +1165,7 @@ fc_attach_transport(struct fc_function_t
+ 	count=0;
+ 	SETUP_HOST_ATTRIBUTE_RD(node_name);
+ 	SETUP_HOST_ATTRIBUTE_RD(port_name);
++	SETUP_HOST_ATTRIBUTE_RD(physical_port_name);
+ 	SETUP_HOST_ATTRIBUTE_RD(supported_classes);
+ 	SETUP_HOST_ATTRIBUTE_RD(supported_fc4s);
+ 	SETUP_HOST_ATTRIBUTE_RD(symbolic_name);
+@@ -1168,6 +1174,7 @@ fc_attach_transport(struct fc_function_t
+ 	SETUP_HOST_ATTRIBUTE_RD(serial_number);
  
--static struct zfcp_port *
--zfcp_port_lookup(struct zfcp_adapter *adapter, int channel, scsi_id_t id)
--{
--	struct zfcp_port *port;
--
--	list_for_each_entry(port, &adapter->port_list_head, list) {
--		if (port->rport && (id == port->rport->scsi_target_id))
--			return port;
--	}
--	return (struct zfcp_port *) NULL;
--}
--
- /**
-  * zfcp_scsi_eh_abort_handler - abort the specified SCSI command
-  * @scpnt: pointer to scsi_cmnd to be aborted 
-@@ -731,61 +717,148 @@ zfcp_fsf_start_scsi_er_timer(struct zfcp
- /*
-  * Support functions for FC transport class
-  */
--static void
--zfcp_get_port_id(struct scsi_target *starget)
-+static struct fc_host_statistics*
-+zfcp_init_fc_host_stats(struct zfcp_adapter *adapter)
- {
--	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
--	struct zfcp_adapter *adapter = (struct zfcp_adapter *)shost->hostdata[0];
--	struct zfcp_port *port;
--	unsigned long flags;
-+	struct fc_host_statistics *fc_stats;
+ 	SETUP_HOST_ATTRIBUTE_RD(port_id);
++	SETUP_HOST_ATTRIBUTE_RD(physical_port_id);
+ 	SETUP_HOST_ATTRIBUTE_RD(port_type);
+ 	SETUP_HOST_ATTRIBUTE_RD(port_state);
+ 	SETUP_HOST_ATTRIBUTE_RD(active_fc4s);
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index 394f14a..13a8171 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -303,6 +303,7 @@ struct fc_host_attrs {
+ 	/* Fixed Attributes */
+ 	u64 node_name;
+ 	u64 port_name;
++	u64 physical_port_name;
+ 	u32 supported_classes;
+ 	u8  supported_fc4s[FC_FC4_LIST_SIZE];
+ 	char symbolic_name[FC_SYMBOLIC_NAME_SIZE];
+@@ -312,6 +313,7 @@ struct fc_host_attrs {
  
--	read_lock_irqsave(&zfcp_data.config_lock, flags);
--	port = zfcp_port_lookup(adapter, starget->channel, starget->id);
--	if (port)
--		fc_starget_port_id(starget) = port->d_id;
--	else
--		fc_starget_port_id(starget) = -1;
--	read_unlock_irqrestore(&zfcp_data.config_lock, flags);
-+	if (!adapter->fc_stats) {
-+		fc_stats = kmalloc(sizeof(*fc_stats), GFP_KERNEL);
-+		if (!fc_stats)
-+			return NULL;
-+		adapter->fc_stats = fc_stats; /* freed in adater_dequeue */
-+	}
-+	memset(adapter->fc_stats, 0, sizeof(*adapter->fc_stats));
-+	return adapter->fc_stats;
-+}
-+
-+static void
-+zfcp_adjust_fc_host_stats(struct fc_host_statistics *fc_stats,
-+			  struct fsf_qtcb_bottom_port *data,
-+			  struct fsf_qtcb_bottom_port *old)
-+{
-+	fc_stats->seconds_since_last_reset = data->seconds_since_last_reset -
-+		old->seconds_since_last_reset;
-+	fc_stats->tx_frames = data->tx_frames - old->tx_frames;
-+	fc_stats->tx_words = data->tx_words - old->tx_words;
-+	fc_stats->rx_frames = data->rx_frames - old->rx_frames;
-+	fc_stats->rx_words = data->rx_words - old->rx_words;
-+	fc_stats->lip_count = data->lip - old->lip;
-+	fc_stats->nos_count = data->nos - old->nos;
-+	fc_stats->error_frames = data->error_frames - old->error_frames;
-+	fc_stats->dumped_frames = data->dumped_frames - old->dumped_frames;
-+	fc_stats->link_failure_count = data->link_failure - old->link_failure;
-+	fc_stats->loss_of_sync_count = data->loss_of_sync - old->loss_of_sync;
-+	fc_stats->loss_of_signal_count = data->loss_of_signal -
-+		old->loss_of_signal;
-+	fc_stats->prim_seq_protocol_err_count = data->psp_error_counts -
-+		old->psp_error_counts;
-+	fc_stats->invalid_tx_word_count = data->invalid_tx_words -
-+		old->invalid_tx_words;
-+	fc_stats->invalid_crc_count = data->invalid_crcs - old->invalid_crcs;
-+	fc_stats->fcp_input_requests = data->input_requests -
-+		old->input_requests;
-+	fc_stats->fcp_output_requests = data->output_requests -
-+		old->output_requests;
-+	fc_stats->fcp_control_requests = data->control_requests -
-+		old->control_requests;
-+	fc_stats->fcp_input_megabytes = data->input_mb - old->input_mb;
-+	fc_stats->fcp_output_megabytes = data->output_mb - old->output_mb;
- }
+ 	/* Dynamic Attributes */
+ 	u32 port_id;
++	u32 physical_port_id;
+ 	enum fc_port_type port_type;
+ 	enum fc_port_state port_state;
+ 	u8  active_fc4s[FC_FC4_LIST_SIZE];
+@@ -338,6 +340,8 @@ struct fc_host_attrs {
+ 	(((struct fc_host_attrs *)(x)->shost_data)->node_name)
+ #define fc_host_port_name(x)	\
+ 	(((struct fc_host_attrs *)(x)->shost_data)->port_name)
++#define fc_host_physical_port_name(x)	\
++	(((struct fc_host_attrs *)(x)->shost_data)->physical_port_name)
+ #define fc_host_supported_classes(x)	\
+ 	(((struct fc_host_attrs *)(x)->shost_data)->supported_classes)
+ #define fc_host_supported_fc4s(x)	\
+@@ -352,6 +356,8 @@ struct fc_host_attrs {
+ 	(((struct fc_host_attrs *)(x)->shost_data)->serial_number)
+ #define fc_host_port_id(x)	\
+ 	(((struct fc_host_attrs *)(x)->shost_data)->port_id)
++#define fc_host_physical_port_id(x)	\
++	(((struct fc_host_attrs *)(x)->shost_data)->physical_port_id)
+ #define fc_host_port_type(x)	\
+ 	(((struct fc_host_attrs *)(x)->shost_data)->port_type)
+ #define fc_host_port_state(x)	\
+@@ -388,6 +394,7 @@ struct fc_function_template {
+ 	void 	(*get_starget_port_id)(struct scsi_target *);
  
- static void
--zfcp_get_port_name(struct scsi_target *starget)
-+zfcp_set_fc_host_stats(struct fc_host_statistics *fc_stats,
-+		       struct fsf_qtcb_bottom_port *data)
- {
--	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
--	struct zfcp_adapter *adapter = (struct zfcp_adapter *)shost->hostdata[0];
--	struct zfcp_port *port;
--	unsigned long flags;
-+	fc_stats->seconds_since_last_reset = data->seconds_since_last_reset;
-+	fc_stats->tx_frames = data->tx_frames;
-+	fc_stats->tx_words = data->tx_words;
-+	fc_stats->rx_frames = data->rx_frames;
-+	fc_stats->rx_words = data->rx_words;
-+	fc_stats->lip_count = data->lip;
-+	fc_stats->nos_count = data->nos;
-+	fc_stats->error_frames = data->error_frames;
-+	fc_stats->dumped_frames = data->dumped_frames;
-+	fc_stats->link_failure_count = data->link_failure;
-+	fc_stats->loss_of_sync_count = data->loss_of_sync;
-+	fc_stats->loss_of_signal_count = data->loss_of_signal;
-+	fc_stats->prim_seq_protocol_err_count = data->psp_error_counts;
-+	fc_stats->invalid_tx_word_count = data->invalid_tx_words;
-+	fc_stats->invalid_crc_count = data->invalid_crcs;
-+	fc_stats->fcp_input_requests = data->input_requests;
-+	fc_stats->fcp_output_requests = data->output_requests;
-+	fc_stats->fcp_control_requests = data->control_requests;
-+	fc_stats->fcp_input_megabytes = data->input_mb;
-+	fc_stats->fcp_output_megabytes = data->output_mb;
-+}
- 
--	read_lock_irqsave(&zfcp_data.config_lock, flags);
--	port = zfcp_port_lookup(adapter, starget->channel, starget->id);
--	if (port)
--		fc_starget_port_name(starget) = port->wwpn;
--	else
--		fc_starget_port_name(starget) = -1;
--	read_unlock_irqrestore(&zfcp_data.config_lock, flags);
-+/**
-+ * zfcp_get_fc_host_stats - provide fc_host_statistics for scsi_transport_fc
-+ *
-+ * assumption: scsi_transport_fc synchronizes calls of
-+ *             get_fc_host_stats and reset_fc_host_stats
-+ *             (XXX to be checked otherwise introduce locking)
-+ */
-+static struct fc_host_statistics *
-+zfcp_get_fc_host_stats(struct Scsi_Host *shost)
-+{
-+	struct zfcp_adapter *adapter;
-+	struct fc_host_statistics *fc_stats;
-+	struct fsf_qtcb_bottom_port *data;
-+	int ret;
-+
-+	adapter = (struct zfcp_adapter *)shost->hostdata[0];
-+	fc_stats = zfcp_init_fc_host_stats(adapter);
-+	if (!fc_stats)
-+		return NULL;
-+
-+	data = kmalloc(sizeof(*data), GFP_KERNEL);
-+	if (!data)
-+		return NULL;
-+	memset(data, 0, sizeof(*data));
-+
-+	ret = zfcp_fsf_exchange_port_data(NULL, adapter, data);
-+	if (ret) {
-+		kfree(data);
-+		return NULL; /* XXX return zeroed fc_stats? */
-+	}
-+
-+	if (adapter->stats_reset &&
-+	    ((jiffies/HZ - adapter->stats_reset) <
-+	     data->seconds_since_last_reset)) {
-+		zfcp_adjust_fc_host_stats(fc_stats, data,
-+					  adapter->stats_reset_data);
-+	} else
-+		zfcp_set_fc_host_stats(fc_stats, data);
-+
-+	kfree(data);
-+	return fc_stats;
- }
- 
- static void
--zfcp_get_node_name(struct scsi_target *starget)
-+zfcp_reset_fc_host_stats(struct Scsi_Host *shost)
- {
--	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
--	struct zfcp_adapter *adapter = (struct zfcp_adapter *)shost->hostdata[0];
--	struct zfcp_port *port;
--	unsigned long flags;
-+	struct zfcp_adapter *adapter;
-+	struct fsf_qtcb_bottom_port *data, *old_data;
-+	int ret;
- 
--	read_lock_irqsave(&zfcp_data.config_lock, flags);
--	port = zfcp_port_lookup(adapter, starget->channel, starget->id);
--	if (port)
--		fc_starget_node_name(starget) = port->wwnn;
--	else
--		fc_starget_node_name(starget) = -1;
--	read_unlock_irqrestore(&zfcp_data.config_lock, flags);
-+	adapter = (struct zfcp_adapter *)shost->hostdata[0];
-+	data = kmalloc(sizeof(*data), GFP_KERNEL);
-+	if (!data)
-+		return;
-+	memset(data, 0, sizeof(*data));
-+
-+	ret = zfcp_fsf_exchange_port_data(NULL, adapter, data);
-+	if (ret == 0) {
-+		adapter->stats_reset = jiffies/HZ;
-+		old_data = adapter->stats_reset_data;
-+		adapter->stats_reset_data = data; /* finally freed in
-+						     adater_dequeue */
-+		kfree(old_data);
-+	}
- }
- 
- struct fc_function_template zfcp_transport_functions = {
--	.get_starget_port_id = zfcp_get_port_id,
--	.get_starget_port_name = zfcp_get_port_name,
--	.get_starget_node_name = zfcp_get_node_name,
- 	.show_starget_port_id = 1,
- 	.show_starget_port_name = 1,
- 	.show_starget_node_name = 1,
-@@ -795,6 +868,10 @@ struct fc_function_template zfcp_transpo
- 	.show_host_supported_classes = 1,
- 	.show_host_maxframe_size = 1,
- 	.show_host_serial_number = 1,
-+	.get_fc_host_stats = zfcp_get_fc_host_stats,
-+	.reset_fc_host_stats = zfcp_reset_fc_host_stats,
-+	/* no functions registered for following dynamic attributes but
-+	   directly set by LLDD */
- 	.show_host_speed = 1,
- 	.show_host_port_id = 1,
- };
-diff --git a/drivers/s390/scsi/zfcp_sysfs_adapter.c b/drivers/s390/scsi/zfcp_sysfs_adapter.c
-index 0cd4352..c85df9c 100644
---- a/drivers/s390/scsi/zfcp_sysfs_adapter.c
-+++ b/drivers/s390/scsi/zfcp_sysfs_adapter.c
-@@ -69,12 +69,10 @@ ZFCP_DEFINE_ADAPTER_ATTR(physical_wwpn, 
- ZFCP_DEFINE_ADAPTER_ATTR(physical_s_id, "0x%06x\n", adapter->physical_s_id);
- ZFCP_DEFINE_ADAPTER_ATTR(card_version, "0x%04x\n", adapter->hydra_version);
- ZFCP_DEFINE_ADAPTER_ATTR(lic_version, "0x%08x\n", adapter->fsf_lic_version);
--ZFCP_DEFINE_ADAPTER_ATTR(fc_service_class, "%d\n", adapter->fc_service_class);
- ZFCP_DEFINE_ADAPTER_ATTR(fc_topology, "%s\n",
- 			 fc_topologies[adapter->fc_topology]);
- ZFCP_DEFINE_ADAPTER_ATTR(hardware_version, "0x%08x\n",
- 			 adapter->hardware_version);
--ZFCP_DEFINE_ADAPTER_ATTR(scsi_host_no, "0x%x\n", adapter->scsi_host_no);
- ZFCP_DEFINE_ADAPTER_ATTR(in_recovery, "%d\n", atomic_test_mask
- 			 (ZFCP_STATUS_COMMON_ERP_INUSE, &adapter->status));
- 
-@@ -259,9 +257,7 @@ static struct attribute *zfcp_adapter_at
- 	&dev_attr_physical_s_id.attr,
- 	&dev_attr_card_version.attr,
- 	&dev_attr_lic_version.attr,
--	&dev_attr_fc_service_class.attr,
- 	&dev_attr_fc_topology.attr,
--	&dev_attr_scsi_host_no.attr,
- 	&dev_attr_status.attr,
- 	&dev_attr_hardware_version.attr,
- 	NULL
-diff --git a/drivers/s390/scsi/zfcp_sysfs_port.c b/drivers/s390/scsi/zfcp_sysfs_port.c
-index c55e82d..3924eb3 100644
---- a/drivers/s390/scsi/zfcp_sysfs_port.c
-+++ b/drivers/s390/scsi/zfcp_sysfs_port.c
-@@ -65,8 +65,6 @@ static ssize_t zfcp_sysfs_port_##_name##
- static DEVICE_ATTR(_name, S_IRUGO, zfcp_sysfs_port_##_name##_show, NULL);
- 
- ZFCP_DEFINE_PORT_ATTR(status, "0x%08x\n", atomic_read(&port->status));
--ZFCP_DEFINE_PORT_ATTR(wwnn, "0x%016llx\n", port->wwnn);
--ZFCP_DEFINE_PORT_ATTR(d_id, "0x%06x\n", port->d_id);
- ZFCP_DEFINE_PORT_ATTR(in_recovery, "%d\n", atomic_test_mask
- 		      (ZFCP_STATUS_COMMON_ERP_INUSE, &port->status));
- ZFCP_DEFINE_PORT_ATTR(access_denied, "%d\n", atomic_test_mask
-@@ -245,8 +243,6 @@ static struct attribute *zfcp_port_commo
- 	&dev_attr_failed.attr,
- 	&dev_attr_in_recovery.attr,
- 	&dev_attr_status.attr,
--	&dev_attr_wwnn.attr,
--	&dev_attr_d_id.attr,
- 	&dev_attr_access_denied.attr,
- 	NULL
- };
-diff --git a/drivers/s390/scsi/zfcp_sysfs_unit.c b/drivers/s390/scsi/zfcp_sysfs_unit.c
-index 0556642..2f50815 100644
---- a/drivers/s390/scsi/zfcp_sysfs_unit.c
-+++ b/drivers/s390/scsi/zfcp_sysfs_unit.c
-@@ -65,7 +65,6 @@ static ssize_t zfcp_sysfs_unit_##_name##
- static DEVICE_ATTR(_name, S_IRUGO, zfcp_sysfs_unit_##_name##_show, NULL);
- 
- ZFCP_DEFINE_UNIT_ATTR(status, "0x%08x\n", atomic_read(&unit->status));
--ZFCP_DEFINE_UNIT_ATTR(scsi_lun, "0x%x\n", unit->scsi_lun);
- ZFCP_DEFINE_UNIT_ATTR(in_recovery, "%d\n", atomic_test_mask
- 		      (ZFCP_STATUS_COMMON_ERP_INUSE, &unit->status));
- ZFCP_DEFINE_UNIT_ATTR(access_denied, "%d\n", atomic_test_mask
-@@ -138,7 +137,6 @@ static DEVICE_ATTR(failed, S_IWUSR | S_I
- 		   zfcp_sysfs_unit_failed_store);
- 
- static struct attribute *zfcp_unit_attrs[] = {
--	&dev_attr_scsi_lun.attr,
- 	&dev_attr_failed.attr,
- 	&dev_attr_in_recovery.attr,
- 	&dev_attr_status.attr,
+ 	void 	(*get_host_port_id)(struct Scsi_Host *);
++	void 	(*get_host_physical_port_id)(struct Scsi_Host *);
+ 	void	(*get_host_port_type)(struct Scsi_Host *);
+ 	void	(*get_host_port_state)(struct Scsi_Host *);
+ 	void	(*get_host_active_fc4s)(struct Scsi_Host *);
+@@ -426,6 +433,7 @@ struct fc_function_template {
+ 	/* host fixed attributes */
+ 	unsigned long	show_host_node_name:1;
+ 	unsigned long	show_host_port_name:1;
++	unsigned long	show_host_physical_port_name:1;
+ 	unsigned long	show_host_supported_classes:1;
+ 	unsigned long	show_host_supported_fc4s:1;
+ 	unsigned long	show_host_symbolic_name:1;
+@@ -434,6 +442,7 @@ struct fc_function_template {
+ 	unsigned long	show_host_serial_number:1;
+ 	/* host dynamic attributes */
+ 	unsigned long	show_host_port_id:1;
++	unsigned long	show_host_physical_port_id:1;
+ 	unsigned long	show_host_port_type:1;
+ 	unsigned long	show_host_port_state:1;
+ 	unsigned long	show_host_active_fc4s:1;
 -- 
 0.99.9n-g58e3
