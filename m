@@ -1,75 +1,55 @@
-From: Andreas Herrmann <AHERRMAN@de.ibm.com>
-Subject: Re: [PATCH] fc transport: new attributes for NPIV
-Date: Thu, 5 Jan 2006 16:51:47 +0100
-Message-ID: <OF3AADDAAC.7D3516AC-ON412570ED.00570F79-412570ED.00572278@de.ibm.com>
-References: <43BD285B.9020805@emulex.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: scsi scan bug when peripheral qualifier of 3 is returned
+Date: Thu, 05 Jan 2006 10:56:52 -0600
+Message-ID: <43BD4FD4.8020806@cs.wisc.edu>
+References: <43BB750A.5050000@cs.wisc.edu> <20060104174019.GA3995@us.ibm.com> <43BC13B3.9030604@cs.wisc.edu> <20060104190119.GA4700@us.ibm.com> <43BC30A2.3090403@cs.wisc.edu> <20060104222522.GA5741@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.de.ibm.com ([195.212.29.150]:40179 "EHLO
-	mtagate1.de.ibm.com") by vger.kernel.org with ESMTP
-	id S1751433AbWAEPwI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Jan 2006 10:52:08 -0500
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate1.de.ibm.com (8.12.10/8.12.10) with ESMTP id k05Fprg7042042
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Jan 2006 15:51:53 GMT
-Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k05Fpo7M124970
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Jan 2006 16:51:50 +0100
-Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id k05FpnZi016954
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Jan 2006 16:51:50 +0100
-In-Reply-To: <43BD285B.9020805@emulex.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:6538 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1751841AbWAEQ47 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2006 11:56:59 -0500
+In-Reply-To: <20060104222522.GA5741@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: James Bottomley <jejb@steeleye.com>, Linux SCSI <linux-scsi@vger.kernel.org>
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 05.01.2006 15:08 James Smart <James.Smart@Emulex.Com> wrote:
-> Drop the physical_port_id attribute. I'm assuming that each virtual
-> port shows up as a unique scsi_host, as the FC ports and SCSI views it
-> has is unique to it's FC address (N_Port_ID).  As such, the
-> physical_port_id would be redundant with the port_id on the scsi_host
-> that corresponds to the physical port. Rather than determine the
-> relationship through scsi_host attributes, you would determine the
-> relationship via multiple scsi_host children under the pci adapter under
-> the device tree.  Obviously, if you don't buy into the scsi_host per
-> port_id relationship, things change and we should talk further.
+Patrick Mansfield wrote:
+> Then like this?
 
-This all sounds sensible and I agree.
-Problem is that on the mainframe I don't have access to the primary
-port. Virtualization is done in adapter microcode. I just have
-access to the virtual port. Hence the primary port does not show up
-as a scsi_host. I cannot directly send any commands via the primary
-port. I just can get some information about the primary port
-(i.e. WWPN/N_Port_ID). This information I like to display in sysfs
-for troubleshooting purposes. (E.g. To check whether the primary port
-shows up on the switch.)
+Yep, this works for our setup. Thanks.
 
-Seems that requirements for workstations and mainframes are
-contrary.
+> 
+> --- linux-2.6.15/drivers/scsi/orig-scsi_scan.c	2006-01-02 21:52:12.000000000 -0800
+> +++ linux-2.6.15/drivers/scsi/scsi_scan.c	2006-01-04 13:03:27.000000000 -0800
+> @@ -868,6 +868,8 @@ static int scsi_probe_and_add_lun(struct
+>  
+>  	if (scsi_probe_lun(sdev, result, result_len, &bflags))
+>  		goto out_free_result;
+> +	if (bflagsp)
+> +		*bflagsp = bflags;
+>  
+>  	/*
+>  	 * result contains valid SCSI INQUIRY data.
+> @@ -896,8 +898,6 @@ static int scsi_probe_and_add_lun(struct
+>  			sdev->lockable = 0;
+>  			scsi_unlock_floptical(sdev, result);
+>  		}
+> -		if (bflagsp)
+> -			*bflagsp = bflags;
+>  	}
+>  
+>   out_free_result:
+> 
 
-> As for physical_port_name, minimally, this should be changed to
-> primary_port_name, per the standards terms. However, as this is
-> meaningful only to a FC/NPIV savvy person - it may be better to simply
-> have an attribute such as virtual_port=<true/false>. If false, then PPN
-> is the port_name. If true, then you would use the same device tree
-> relationship pointed out above to find out which of the peers to the
-> scsi_host has virtual_port=true, then you have it's port_name, port_id,
-> etc...  Yes, it feels like a little more work, but I feel it's a better
-> alternative as the spread of object information internally is limited,
-> and the external view, which can be easily managed via scripts/tools has
-> as much or more information available.
+.....
 
-Again, fine with me, but due to the "flat" view of virtual adapters on
-Linux on zSeries I see problems to implement this.
+> 
+> Don't forget you can dynamically add devinfo values via modparam and
+> /proc/scsi.
+> 
 
-Only way to implement an hierarchical view for zfcp is to introduce a
-"dummy" scsi_host for the primary port ... Ouch
-
-Have to think about this for a while.
-
-
-Regards,
-
-Andreas
+I did not know this. I was looking for a writable proc file for some 
+reason. Thanks.
