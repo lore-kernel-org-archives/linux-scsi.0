@@ -1,260 +1,79 @@
-From: "John Treubig" <jtreubig@hotmail.com>
-Subject: Re: ATA Write Error and Time-out Notification in User Space
-Date: Thu, 05 Jan 2006 14:27:03 -0600
-Message-ID: <BAY101-F359229E916F544AB7A726FDF2E0@phx.gbl>
+From: Linus Torvalds <torvalds@osdl.org>
+Subject: Re: Fw: crash on x86_64 - mm related?
+Date: Thu, 5 Jan 2006 13:18:57 -0800 (PST)
+Message-ID: <Pine.LNX.4.64.0601051312380.3169@g5.osdl.org>
+References: <Pine.LNX.4.64.0512120928110.15597@g5.osdl.org>
+ <1134409531.9994.13.camel@mulgrave> <Pine.LNX.4.64.0512121007220.15597@g5.osdl.org>
+ <1134411882.9994.18.camel@mulgrave> <20051215190930.GA20156@tau.solarneutrino.net>
+ <1134705703.3906.1.camel@mulgrave> <20051226234238.GA28037@tau.solarneutrino.net>
+ <Pine.LNX.4.63.0512271807130.4955@kai.makisara.local>
+ <20060104172727.GA320@tau.solarneutrino.net> <Pine.LNX.4.63.0601042334310.5087@kai.makisara.local>
+ <20060105201249.GB1795@tau.solarneutrino.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="----=_NextPart_000_3de6_e7d_1aa9"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk
-Cc: raw@dslr.net, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.osdl.org ([65.172.181.4]:56504 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932136AbWAEVT0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2006 16:19:26 -0500
+In-Reply-To: <20060105201249.GB1795@tau.solarneutrino.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-This is a multi-part message in MIME format.
-
-------=_NextPart_000_3de6_e7d_1aa9
-Content-Type: text/plain; format=flowed
-
-I applied the patch to the mm and yes, we have no more hangs!  The bad news 
-is the application gets no notification that there has been any error in the 
-drive subsystem.  I have only had one instance that I got a notification 
-back, but this was due to me adding a BUG_ON statement prior to the PRINTKs.
-
-Here's the details of what occurs:  With the application running, and I 
-unplug the drive, my app still tries to read and write because it has gotten 
-no error from the SG calls.  Is there a way that we can notify the kernel 
-that this device is dead and cause all future accesses to result in an 
-error?
-
-I have had great difficulty getting the PRINTKs to output anything for this 
-specific error, yet I've been able to get other PRINTKs in the IDE-IO.C to 
-output.  I have attached the messages that do result.
+To: Ryan Richter <ryan@tau.solarneutrino.net>
+Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, James Bottomley <James.Bottomley@SteelEye.com>, Hugh Dickins <hugh@veritas.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
 
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: John Treubig <jtreubig@hotmail.com>
-CC: raw@dslr.net, linux-ide@vger.kernel.org,linux-kernel@vger.kernel.org, 
-linux-scsi@vger.kernel.org
-Subject: Re: ATA Write Error and Time-out Notification in User Space
-Date: Tue, 03 Jan 2006 21:48:04 +0000
+On Thu, 5 Jan 2006, Ryan Richter wrote:
+> 
+> Another one.  I can't keep running this kernel - nearly all of our
+> backup tapes are erased now.  If a drive were to fail today, we would
+> lose hundreds of GB of irreplacible data.  I'm going back to 2.6.11.3
+> until we have a full set of backups again.
 
-On Maw, 2006-01-03 at 13:27 -0600, John Treubig wrote:
- > I receive this as great news, only I don't know where the -mm tree is
- > located to see if I can get the patch or fix!  Can you give me a few
- > pointers?!
+Yeah, don't trash your backups.
 
-The -mm patches live on kernel.org in pub/linux/kernel/people/akpm/
+If/when you try something again, how about these two trivial one-liners?
 
-The patch you want is the one to drivers/ide/ide-io.c although be aware
-it will make non PCI ATA controllers crash on errors if applied. The
-"right" fix for this is probably to have a hwif->flush_data() function
-that defaults to try_to_flush_leftover_data() so that the knowledge
-involved is not hacked into the ide core but kept in the driver.
+I'm not 100% sure the mapcount sanity check is strictly speaking right (no 
+locking between mapcount/pagecount comparison), but the page count really 
+should never fall below the mapcount, so aside from races that I don't 
+think can be triggered in practice, this might be very useful to find 
+where those pesky page counts suddenly disappear..
 
+Right now we get the oops "too late" - something has decremented the page
+count way too far, but we don't know what it was, and the actual function 
+that triggers it _seems_ to be harmless.
 
-Alan
+The other part of the patch is to clear "page" when it's being free'd, in 
+case somebody tries to free the same thing twice. I don't see how that 
+could happen either, but...
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The patch is untested in every way. No guarantees.
 
+		Linus
 
-------=_NextPart_000_3de6_e7d_1aa9
-Content-Type: text/plain; name="junk1.txt"; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Disposition: attachment; filename="junk1.txt"
-
-Jan  5 08:28:26 localhost kernel: [  204.399120] ata_scsi_translate: EXIT
-Jan  5 08:28:26 localhost kernel: [  204.408979] ata_host_intr: ata2: 
-host_stat 0x4
-Jan  5 08:28:26 localhost kernel: [  204.408987] ata_host_intr: ata2: 
-protocol 4 (dev_stat 0x50)
-Jan  5 08:28:26 localhost kernel: [  204.408991] ata_sg_clean: unmapping 1 
-sg elements
-Jan  5 08:28:26 localhost kernel: [  204.408993] ata_qc_complete: EXIT
-Jan  5 08:28:26 localhost kernel: [  204.409010] ata_scsi_dump_cdb: CDB 
-(2:0,0,0) 28 00 01 ca 9f 15 00 00 08
-Jan  5 08:28:26 localhost kernel: [  204.409013] ata_scsi_translate: ENTER
-Jan  5 08:28:26 localhost kernel: [  204.409015] scsi_10_lba_len: ten-byte 
-command
-Jan  5 08:28:26 localhost kernel: [  204.409017] ata_sg_setup_one: mapped 
-buffer of 4096 bytes for read
-Jan  5 08:28:26 localhost kernel: [  204.409020] ata_fill_sg: PRD[0] = 
-(0xD048000, 0x1000)
-Jan  5 08:28:26 localhost kernel: [  204.409022] ata_dev_select: ENTER, 
-ata2: device 0, wait 1
-Jan  5 08:28:26 localhost kernel: [  204.409050] ata_tf_load_mmio: feat 0x0 
-nsect 0x8 lba 0x15 0x9F 0xCA
-Jan  5 08:28:26 localhost kernel: [  204.409052] ata_tf_load_mmio: device 
-0xE1
-Jan  5 08:28:26 localhost kernel: [  204.409067] ata_exec_command_mmio: 
-ata2: cmd 0xC8
-Jan  5 08:28:26 localhost kernel: [  204.409072] ata_scsi_translate: EXIT
-Jan  5 08:28:26 localhost kernel: [  204.409146] ata_host_intr: ata2: 
-host_stat 0x4
-Jan  5 08:28:26 localhost kernel: [  204.409154] ata_host_intr: ata2: 
-protocol 4 (dev_stat 0x50)
-Jan  5 08:28:26 localhost kernel: [  204.409158] ata_sg_clean: unmapping 1 
-sg elements
-Jan  5 08:28:26 localhost kernel: [  204.409160] ata_qc_complete: EXIT
-Jan  5 08:28:26 localhost kernel: [  204.409211] ata_scsi_dump_cdb: CDB 
-(2:0,0,0) 25 00 00 00 00 00 00 00 00
-Jan  5 08:28:26 localhost kernel: [  204.409214] ata_scsiop_read_cap: ENTER
-Jan  5 08:28:26 localhost kernel: [  204.409244] ata_scsi_dump_cdb: CDB 
-(2:0,0,0) 2a 00 00 d9 65 fb 00 00 08
-Jan  5 08:28:26 localhost kernel: [  204.409246] ata_scsi_translate: ENTER
-Jan  5 08:28:26 localhost kernel: [  204.409248] scsi_10_lba_len: ten-byte 
-command
-Jan  5 08:28:26 localhost kernel: [  204.409251] ata_sg_setup_one: mapped 
-buffer of 4096 bytes for write
-Jan  5 08:28:26 localhost kernel: [  204.409253] ata_fill_sg: PRD[0] = 
-(0xD048000, 0x1000)
-Jan  5 08:28:26 localhost kernel: [  204.409256] ata_dev_select: ENTER, 
-ata2: device 0, wait 1
-Jan  5 08:28:26 localhost kernel: [  204.409283] ata_tf_load_mmio: feat 0x0 
-nsect 0x8 lba 0xFB 0x65 0xD9
-Jan  5 08:28:26 localhost kernel: [  204.409285] ata_tf_load_mmio: device 
-0xE0
-Jan  5 08:28:26 localhost kernel: [  204.409300] ata_exec_command_mmio: 
-ata2: cmd 0xCA
-Jan  5 08:28:26 localhost kernel: [  204.409305] ata_scsi_translate: EXIT
-Jan  5 08:28:26 localhost kernel: [  204.462137] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:26 localhost kernel: [  205.135110] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:26 localhost kernel: [  205.211290] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:40 localhost kernel: [  218.368667] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:40 localhost kernel: [  218.449054] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:40 localhost kernel: [  218.691283] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:40 localhost kernel: [  218.946905] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:40 localhost kernel: [  218.948318] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:40 localhost kernel: [  219.194021] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:40 localhost kernel: [  219.214175] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:41 localhost kernel: [  219.696113] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:41 localhost kernel: [  219.697451] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:41 localhost kernel: [  219.742827] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:41 localhost kernel: [  219.937038] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:41 localhost kernel: [  219.985139] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:42 localhost kernel: [  220.445205] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:42 localhost kernel: [  220.797927] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:42 localhost kernel: [  220.816866] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:42 localhost kernel: [  220.907329] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:42 localhost kernel: [  221.089499] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:42 localhost kernel: [  221.090284] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:42 localhost kernel: [  221.238775] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:43 localhost kernel: [  221.267263] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:43 localhost kernel: [  221.536527] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:43 localhost kernel: [  221.611554] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:43 localhost kernel: [  221.938468] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:44 localhost kernel: [  222.373794] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:44 localhost kernel: [  222.374695] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:44 localhost kernel: [  223.162135] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:44 localhost kernel: [  223.163329] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:44 localhost kernel: [  223.164521] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:45 localhost kernel: [  223.813787] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:45 localhost kernel: [  224.140885] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:46 localhost kernel: [  224.353850] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:46 localhost kernel: [  224.379358] ata_scsi_error: ENTER
-Jan  5 08:28:46 localhost kernel: [  224.379361] ata_eng_timeout: ENTER
-Jan  5 08:28:46 localhost kernel: [  224.379363] ata_qc_timeout: ENTER
-Jan  5 08:28:46 localhost kernel: [  224.379374] ata2: command 0xca timeout, 
-stat 0x7f host_stat 0x1
-Jan  5 08:28:46 localhost kernel: [  224.379377] ata_sg_clean: unmapping 1 
-sg elements
-Jan  5 08:28:46 localhost kernel: [  224.379391] ata2: translated ATA 
-stat/err 0x7f/7f to SCSI SK/ASC/ASCQ 0x4/00/00
-Jan  5 08:28:46 localhost kernel: [  224.379394] ata2: status=0x7f { 
-DriveReady DeviceFault SeekComplete DataRequest CorrectedError Index Error }
-Jan  5 08:28:46 localhost kernel: [  224.379399] ata2: error=0x7f { 
-DriveStatusError UncorrectableError SectorIdNotFound TrackZeroNotFound 
-AddrMarkNotFound }
-Jan  5 08:28:46 localhost kernel: [  224.379411] ata_qc_complete: EXIT
-Jan  5 08:28:46 localhost kernel: [  224.379413] ata_qc_timeout: EXIT
-Jan  5 08:28:46 localhost kernel: [  224.379414] ata_eng_timeout: EXIT
-Jan  5 08:28:46 localhost kernel: [  224.379416] ata_scsi_error: EXIT
-Jan  5 08:28:46 localhost kernel: [  224.400243] ata_scsi_dump_cdb: CDB 
-(2:0,0,0) 25 00 00 00 00 00 00 00 00
-Jan  5 08:28:46 localhost kernel: [  224.400249] ata_scsiop_read_cap: ENTER
-Jan  5 08:28:46 localhost kernel: [  224.400423] ata_scsi_dump_cdb: CDB 
-(2:0,0,0) 2a 00 03 af fd 18 00 00 08
-Jan  5 08:28:46 localhost kernel: [  224.400426] ata_scsi_translate: ENTER
-Jan  5 08:28:46 localhost kernel: [  224.400430] scsi_10_lba_len: ten-byte 
-command
-Jan  5 08:28:46 localhost kernel: [  224.400435] ata_sg_setup_one: mapped 
-buffer of 4096 bytes for write
-Jan  5 08:28:46 localhost kernel: [  224.400438] ata_fill_sg: PRD[0] = 
-(0xD048000, 0x1000)
-Jan  5 08:28:46 localhost kernel: [  224.400441] ata_dev_select: ENTER, 
-ata2: device 0, wait 1
-Jan  5 08:28:46 localhost kernel: [  224.410486] ATA: abnormal status 0x7F 
-on port 0xD08195DF
-Jan  5 08:28:46 localhost kernel: [  224.410504] ata_tf_load_mmio: feat 0x0 
-nsect 0x8 lba 0x18 0xFD 0xAF
-Jan  5 08:28:46 localhost kernel: [  224.410506] ata_tf_load_mmio: device 
-0xE3
-Jan  5 08:28:46 localhost kernel: [  224.410522] ata_exec_command_mmio: 
-ata2: cmd 0xCA
-Jan  5 08:28:46 localhost kernel: [  224.410527] ata_scsi_translate: EXIT
-Jan  5 08:28:46 localhost kernel: [  224.658874] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:46 localhost kernel: [  224.753952] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:46 localhost kernel: [  224.874626] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:46 localhost kernel: [  225.186896] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:47 localhost kernel: [  226.040653] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:47 localhost kernel: [  226.191764] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:48 localhost kernel: [  226.348601] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:48 localhost kernel: [  226.415600] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:48 localhost kernel: [  226.878584] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:48 localhost kernel: [  226.909086] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:48 localhost kernel: [  226.933143] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:49 localhost kernel: [  227.240286] ata_host_intr: ata2: 
-host_stat 0x1
-Jan  5 08:28:49 localhost kernel: [  227.458131] ata_host_intr: ata2: 
-host_stat 0x1
-
-
-------=_NextPart_000_3de6_e7d_1aa9--
+---
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index c4aade8..18e60e1 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -4481,6 +4481,7 @@ static int sgl_unmap_user_pages(struct s
+ 	for (i=0; i < nr_pages; i++) {
+ 		struct page *page = sgl[i].page;
+ 
++		sgl[i].page = NULL;
+ 		if (dirtied)
+ 			SetPageDirty(page);
+ 		/* FIXME: cache flush missing for rw==READ
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index a06a84d..daf504d 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -299,6 +299,7 @@ struct page {
+ #define put_page_testzero(p)				\
+ 	({						\
+ 		BUG_ON(page_count(p) == 0);		\
++		BUG_ON(page_count(p) <= page_mapcount(p));	\
+ 		atomic_add_negative(-1, &(p)->_count);	\
+ 	})
+ 
