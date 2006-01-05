@@ -1,214 +1,260 @@
-From: Ryan Richter <ryan@tau.solarneutrino.net>
-Subject: Re: Fw: crash on x86_64 - mm related?
-Date: Thu, 5 Jan 2006 15:12:49 -0500
-Message-ID: <20060105201249.GB1795@tau.solarneutrino.net>
-References: <Pine.LNX.4.64.0512120928110.15597@g5.osdl.org> <1134409531.9994.13.camel@mulgrave> <Pine.LNX.4.64.0512121007220.15597@g5.osdl.org> <1134411882.9994.18.camel@mulgrave> <20051215190930.GA20156@tau.solarneutrino.net> <1134705703.3906.1.camel@mulgrave> <20051226234238.GA28037@tau.solarneutrino.net> <Pine.LNX.4.63.0512271807130.4955@kai.makisara.local> <20060104172727.GA320@tau.solarneutrino.net> <Pine.LNX.4.63.0601042334310.5087@kai.makisara.local>
+From: "John Treubig" <jtreubig@hotmail.com>
+Subject: Re: ATA Write Error and Time-out Notification in User Space
+Date: Thu, 05 Jan 2006 14:27:03 -0600
+Message-ID: <BAY101-F359229E916F544AB7A726FDF2E0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from solarneutrino.net ([66.199.224.43]:12548 "EHLO
-	tau.solarneutrino.net") by vger.kernel.org with ESMTP
-	id S1752199AbWAEUNE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Jan 2006 15:13:04 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.63.0601042334310.5087@kai.makisara.local>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="----=_NextPart_000_3de6_e7d_1aa9"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: alan@lxorguk.ukuu.org.uk
+Cc: raw@dslr.net, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@osdl.org>, Hugh Dickins <hugh@veritas.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, ryan@tau.solarneutrino.net
 
-On Wed, Jan 04, 2006 at 11:48:52PM +0200, Kai Makisara wrote:
-> > Here's what I got:
+This is a multi-part message in MIME format.
 
-Another one.  I can't keep running this kernel - nearly all of our
-backup tapes are erased now.  If a drive were to fail today, we would
-lose hundreds of GB of irreplacible data.  I'm going back to 2.6.11.3
-until we have a full set of backups again.
+------=_NextPart_000_3de6_e7d_1aa9
+Content-Type: text/plain; format=flowed
 
+I applied the patch to the mm and yes, we have no more hangs!  The bad news 
+is the application gets no notification that there has been any error in the 
+drive subsystem.  I have only had one instance that I got a notification 
+back, but this was due to me adding a BUG_ON statement prior to the PRINTKs.
 
- st: page attributes before page_release 8
- 0: flags:0x060000000000006c mapping:ffff810102bbaaf0 mapcount:2 count:4 pfn:1553908
- 1: flags:0x060000000000006c mapping:ffff810102bbaaf0 mapcount:2 count:4 pfn:1553846
- 2: flags:0x060000000000006c mapping:ffff810102bbaaf0 mapcount:2 count:4 pfn:1553907
- 3: flags:0x060000000000006c mapping:ffff810102bbaaf0 mapcount:2 count:4 pfn:1554431
- 4: flags:0x060000000000006c mapping:ffff810102bbaaf0 mapcount:2 count:4 pfn:1553947
- 5: flags:0x060000000000006c mapping:ffff810102bbaaf0 mapcount:2 count:4 pfn:1553919
- 6: flags:0x060000000000006c mapping:ffff810102bbaaf0 mapcount:2 count:4 pfn:1553940
- 7: flags:0x060000000000006c mapping:ffff810102bbaaf0 mapcount:2 count:4 pfn:1553918
-Bad page state at free_hot_cold_page (in process 'taper', page ffff81000455f7b0)
-flags:0x010000000000000c mapping:ffff810102bbaaf0 mapcount:2 count:0
-Backtrace:
+Here's the details of what occurs:  With the application running, and I 
+unplug the drive, my app still tries to read and write because it has gotten 
+no error from the SG calls.  Is there a way that we can notify the kernel 
+that this device is dead and cause all future accesses to result in an 
+error?
 
-Call Trace:<ffffffff80150234>{bad_page+116} <ffffffff80150c3f>{free_hot_cold_page+105}
-       <ffffffff8028c534>{sgl_unmap_user_pages+124} <ffffffff8028826d>{release_buffering+27}
-       <ffffffff802888f9>{st_write+1670} <ffffffff8016d9bc>{vfs_write+173}
-       <ffffffff8016dac8>{sys_write+69} <ffffffff8010d762>{system_call+126}
-
-Trying to fix it up, but a reboot is needed
------------ [cut here ] --------- [please bite here ] ---------
-Kernel BUG at mm/swap.c:49
-invalid operand: 0000 [1] SMP
-CPU 0
-Modules linked in: bonding
-Pid: 2166, comm: taper Tainted: G    B 2.6.15 #1
-RIP: 0010:[<ffffffff8015751c>] <ffffffff8015751c>{put_page+96}
-RSP: 0018:ffff81017b6bfe18  EFLAGS: 00010256
-RAX: 0000000000000000 RBX: 00000000000000e0 RCX: ffff81000455f7b0
-RDX: ffff81000455f7b0 RSI: 0000000000000001 RDI: ffff81000455f7b0
-RBP: 0000000000000007 R08: ffff81017b6be000 R09: 0000000000000001
-R10: ffff810004878aa0 R11: 0000000000000046 R12: 0000000000000008
-R13: ffff8100f6f9e068 R14: 0000000000000000 R15: 0000000000008000
-FS:  00002aaaab53d880(0000) GS:ffffffff804a9800(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: 00002aaaaab5ffff CR3: 000000017b06e000 CR4: 00000000000006e0
-Process taper (pid: 2166, threadinfo ffff81017b6be000, task ffff81017b6b4700)
-Stack: 010000000000000c ffffffff8028c534 0000000000008000 0000000000008000
-       ffff8100f6f9e000 ffff81000c06e200 0000000000008000 0000000000000040
-       0000000000008000 ffffffff8028826d
-Call Trace:<ffffffff8028c534>{sgl_unmap_user_pages+124} <ffffffff8028826d>{release_buffering+27}
-       <ffffffff802888f9>{st_write+1670} <ffffffff8016d9bc>{vfs_write+173}
-       <ffffffff8016dac8>{sys_write+69} <ffffffff8010d762>{system_call+126}
+I have had great difficulty getting the PRINTKs to output anything for this 
+specific error, yet I've been able to get other PRINTKs in the IDE-IO.C to 
+output.  I have attached the messages that do result.
 
 
-Code: 0f 0b 68 ae b1 36 80 c2 31 00 f0 83 42 08 ff 0f 98 c0 84 c0
-RIP <ffffffff8015751c>{put_page+96} RSP <ffff81017b6bfe18>
- ----------- [cut here ] --------- [please bite here ] ---------
-Kernel BUG at mm/swap.c:215
-invalid operand: 0000 [2] SMP
-CPU 0
-Modules linked in: bonding
-Pid: 2166, comm: taper Tainted: G    B 2.6.15 #1
-RIP: 0010:[<ffffffff801578d9>] <ffffffff801578d9>{release_pages+79}
-RSP: 0018:ffff81017b6bfb08  EFLAGS: 00010256
-RAX: 0000000000000000 RBX: ffff81000455f7b0 RCX: ffff81000000f518
-RDX: ffff81000455f7b0 RSI: 0000000000000006 RDI: ffff81000c006dd0
-RBP: 0000000000000000 R08: ffffffff803cfa68 R09: 0000000000000286
-R10: 0000000000000001 R11: 0000000000000001 R12: 0000000000000005
-R13: 0000000000000006 R14: ffff81000c006dd0 R15: 0000000000008000
-FS:  00002aaaab53d880(0000) GS:ffffffff804a9800(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: 00002aaaaab5ffff CR3: 000000017b06e000 CR4: 00000000000006e0
-Process taper (pid: 2166, threadinfo ffff81017b6be000, task ffff81017b6b4700)
-Stack: 0000000000000000 0000000000000000 0000000000008000 ffff81017b6bfd68
-       0000000000000000 0000000000000000 ffffffff80362e14 000000000000000f
-       0000000000000000 0000000000000000
-Call Trace:<ffffffff8012fd66>{printk+141} <ffffffff80157b74>{__pagevec_lru_add+195}
-       <ffffffff801577b9>{lru_add_drain+32} <ffffffff8016162a>{exit_mmap+33}
-       <ffffffff8012d638>{mmput+34} <ffffffff8013214a>{do_exit+489}
-       <ffffffff8010f203>{die_nmi+0} <ffffffff8010f587>{do_invalid_op+145}
-       <ffffffff8015751c>{put_page+96} <ffffffff803448db>{thread_return+0}
-       <ffffffff8010e49d>{error_exit+0} <ffffffff8015751c>{put_page+96}
-       <ffffffff8028c534>{sgl_unmap_user_pages+124} <ffffffff8028826d>{release_buffering+27}
-       <ffffffff802888f9>{st_write+1670} <ffffffff8016d9bc>{vfs_write+173}
-       <ffffffff8016dac8>{sys_write+69} <ffffffff8010d762>{system_call+126}
+
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: John Treubig <jtreubig@hotmail.com>
+CC: raw@dslr.net, linux-ide@vger.kernel.org,linux-kernel@vger.kernel.org, 
+linux-scsi@vger.kernel.org
+Subject: Re: ATA Write Error and Time-out Notification in User Space
+Date: Tue, 03 Jan 2006 21:48:04 +0000
+
+On Maw, 2006-01-03 at 13:27 -0600, John Treubig wrote:
+ > I receive this as great news, only I don't know where the -mm tree is
+ > located to see if I can get the patch or fix!  Can you give me a few
+ > pointers?!
+
+The -mm patches live on kernel.org in pub/linux/kernel/people/akpm/
+
+The patch you want is the one to drivers/ide/ide-io.c although be aware
+it will make non PCI ATA controllers crash on errors if applied. The
+"right" fix for this is probably to have a hwif->flush_data() function
+that defaults to try_to_flush_leftover_data() so that the knowledge
+involved is not hacked into the ide core but kept in the driver.
 
 
-Code: 0f 0b 68 ae b1 36 80 c2 d7 00 f0 83 43 08 ff 0f 98 c0 84 c0
-RIP <ffffffff801578d9>{release_pages+79} RSP <ffff81017b6bfb08>
- <1>Fixing recursive fault but reboot is needed!
-Bad page state at prep_new_page (in process 'nfsd', page ffff81000455f7b0)
-flags:0x010000000000002c mapping:0000000000000000 mapcount:0 count:0
-Backtrace:
+Alan
 
-Call Trace:<ffffffff80150234>{bad_page+116} <ffffffff801506eb>{prep_new_page+70}
-       <ffffffff80150e12>{buffered_rmqueue+311} <ffffffff80150fe3>{get_page_from_freelist+130}
-       <ffffffff80151067>{__alloc_pages+86} <ffffffff801545b1>{kmem_getpages+88}
-       <ffffffff80155789>{cache_grow+195} <ffffffff801559d0>{cache_alloc_refill+408}
-       <ffffffff80155d56>{kmem_cache_alloc+51} <ffffffff80341e2a>{cache_make_upcall+85}
-       <ffffffff80340c99>{cache_check+183} <ffffffff801defc6>{exp_find_key+118}
-       <ffffffff8012ae27>{__wake_up+54} <ffffffff80341f00>{cache_make_upcall+299}
-       <ffffffff801d9d9f>{fh_verify+401} <ffffffff801e224c>{nfsd3_proc_getattr+129}
-       <ffffffff801d844b>{nfsd_dispatch+226} <ffffffff8033be8c>{svc_process+1003}
-       <ffffffff8012ad76>{default_wake_function+0} <ffffffff801d8018>{nfsd+0}
-       <ffffffff801d81e1>{nfsd+457} <ffffffff8010e652>{child_rip+8}
-       <ffffffff801d8018>{nfsd+0} <ffffffff801d8018>{nfsd+0}
-       <ffffffff8010e64a>{child_rip+0}
-Trying to fix it up, but a reboot is needed
-Bad page state at prep_new_page (in process 'nfsd', page ffff81000455b840)
-flags:0x010000000000002c mapping:ffff810102bbaaf0 mapcount:2 count:3
-Backtrace:
-
-Call Trace:<ffffffff80150234>{bad_page+116} <ffffffff801506eb>{prep_new_page+70}
-       <ffffffff80150e12>{buffered_rmqueue+311} <ffffffff80150fe3>{get_page_from_freelist+130}
-       <ffffffff801d8018>{nfsd+0} <ffffffff80151067>{__alloc_pages+86}
-       <ffffffff801d8018>{nfsd+0} <ffffffff8033d9d8>{svc_recv+291}
-       <ffffffff8012ad76>{default_wake_function+0} <ffffffff8012ad76>{default_wake_function+0}
-       <ffffffff801d8018>{nfsd+0} <ffffffff801d8125>{nfsd+269}
-       <ffffffff8010e652>{child_rip+8} <ffffffff801d8018>{nfsd+0}
-       <ffffffff801d8018>{nfsd+0} <ffffffff8010e64a>{child_rip+0}
-
-Trying to fix it up, but a reboot is needed
-Bad page state at prep_new_page (in process 'zsh', page ffff81000455f3c0)
-flags:0x010000000000002c mapping:ffff810102bbaaf0 mapcount:2 count:3
-Backtrace:
-
-Call Trace:<ffffffff80150234>{bad_page+116} <ffffffff801506eb>{prep_new_page+70}
-       <ffffffff80150e12>{buffered_rmqueue+311} <ffffffff80150fe3>{get_page_from_freelist+130}
-       <ffffffff80151067>{__alloc_pages+86} <ffffffff8015d50c>{do_wp_page+400}
-       <ffffffff8015e7df>{__handle_mm_fault+626} <ffffffff8011d10f>{do_page_fault+520}
-       <ffffffff80205410>{__put_user_4+32} <ffffffff8010e49d>{error_exit+0}
-
-Trying to fix it up, but a reboot is needed
------------ [cut here ] --------- [please bite here ] ---------
-Kernel BUG at mm/swap.c:303
-invalid operand: 0000 [3] SMP
-CPU 0
-Modules linked in: bonding
-Pid: 171, comm: pdflush Tainted: G    B 2.6.15 #1
-RIP: 0010:[<ffffffff80157b10>] <ffffffff80157b10>{__pagevec_lru_add+95}
-RSP: 0018:ffff8100f6fbdba8  EFLAGS: 00010086
-RAX: 00000000ffffffff RBX: ffff81000000f300 RCX: 000000000000000f
-RDX: ffffffff804ebe60 RSI: ffff81000000f000 RDI: ffff81000000f500
-RBP: ffff81000c006dc0 R08: 0000000000000000 R09: ffffffff801a4f68
-R10: 0000000000000001 R11: ffff81017fc63c00 R12: ffff810004474798
-R13: 0000000000000000 R14: 0000000000000001 R15: 0000000000000001
-FS:  00002aaaaae00640(0000) GS:ffffffff804a9800(0000) knlGS:0000000000000000
-CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-CR2: 00007fffffd68f60 CR3: 000000017b223000 CR4: 00000000000006e0
-Process pdflush (pid: 171, threadinfo ffff8100f6fbc000, task ffff8100f6fbaf80)
-Stack: ffff81008bb1af60 ffff8100f6fbdc48 ffff8100f6fbde78 ffff81017d204350
-       ffff8100f6f21978 ffffffff801577b9 ffff81017fc63c00 ffffffff80157a00
-       ffff810101b3b930 ffffffff8018e5a1
-Call Trace:<ffffffff801577b9>{lru_add_drain+32} <ffffffff80157a00>{__pagevec_release+9}
-       <ffffffff8018e5a1>{mpage_writepages+663} <ffffffff801a4f81>{ext3_ordered_writepage+0}
-       <ffffffff801534f1>{mapping_tagged+58} <ffffffff8018cd2e>{__sync_single_inode+108}
-       <ffffffff8018d027>{__writeback_single_inode+353} <ffffffff8013817f>{process_timeout+0}
-       <ffffffff802e1a2d>{dm_table_any_congested+18} <ffffffff802e1a2d>{dm_table_any_congested+18}
-       <ffffffff8018d204>{sync_sb_inodes+468} <ffffffff8014280f>{keventd_create_kthread+0}
-       <ffffffff8018d36e>{writeback_inodes+133} <ffffffff801536c8>{pdflush+0}
-       <ffffffff80152ce5>{background_writeout+102} <ffffffff80153621>{__pdflush+289}
-       <ffffffff80153702>{pdflush+58} <ffffffff80152c7f>{background_writeout+0}
-       <ffffffff801427e6>{kthread+129} <ffffffff8010e652>{child_rip+8}
-       <ffffffff8014280f>{keventd_create_kthread+0} <ffffffff80142765>{kthread+0}
-       <ffffffff8010e64a>{child_rip+0}
-
-Code: 0f 0b 68 ae b1 36 80 c2 2f 01 48 8b 93 18 02 00 00 49 8d 44
-RIP <ffffffff80157b10>{__pagevec_lru_add+95} RSP <ffff8100f6fbdba8>
- NMI Watchdog detected LOCKUP on CPU 0
-CPU 0
-Modules linked in: bonding
-Pid: 1619, comm: irqbalance Tainted: G    B 2.6.15 #1
-RIP: 0010:[<ffffffff80345d2f>] <ffffffff80345d2f>{.text.lock.spinlock+32}
-RSP: 0018:ffff8100f648de90  EFLAGS: 00000086
-RAX: ffff81000000f300 RBX: ffff81000000f300 RCX: 00002aaaaaac0000
-RDX: ffffffff804ebe60 RSI: ffff8100f09339e0 RDI: ffff81000000f500
-RBP: ffff81000c006dc0 R08: 00002aaaaaac1000 R09: 00000000ffffffff
-R10: ffff81000c399da8 R11: ffff81000c399088 R12: ffff810004474798
-R13: 0000000000000000 R14: 00002aaaaaac1000 R15: 00002aaaaaac0000
-FS:  00002aaaaae00640(0000) GS:ffffffff804a9800(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: 00002aaaaaac0000 CR3: 00000000f6486000 CR4: 00000000000006e0
-Process irqbalance (pid: 1619, threadinfo ffff8100f648c000, task ffff810004aac340)
-Stack: ffffffff80157b03 ffff81008bb1af60 ffffffff804e7320 ffff8100f65c6580
-       ffff81000c399d78 ffff81000c399088 ffffffff801577b9 ffff81000c399088
-       ffffffff80160eb9 ffff8100f09339e0
-Call Trace:<ffffffff80157b03>{__pagevec_lru_add+82} <ffffffff801577b9>{lru_add_drain+32}
-       <ffffffff80160eb9>{unmap_region+65} <ffffffff801612d9>{do_munmap+387}
-       <ffffffff80161329>{sys_munmap+57} <ffffffff8010d762>{system_call+126}
+-
+To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
-Code: f3 90 83 3f 00 7e f9 e9 66 fe ff ff f3 90 83 3f 00 7e f9 e9
-console shuts up ...
- <0>Kernel panic - not syncing: Aiee, killing interrupt handler!
+------=_NextPart_000_3de6_e7d_1aa9
+Content-Type: text/plain; name="junk1.txt"; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Disposition: attachment; filename="junk1.txt"
 
--ryan
+Jan  5 08:28:26 localhost kernel: [  204.399120] ata_scsi_translate: EXIT
+Jan  5 08:28:26 localhost kernel: [  204.408979] ata_host_intr: ata2: 
+host_stat 0x4
+Jan  5 08:28:26 localhost kernel: [  204.408987] ata_host_intr: ata2: 
+protocol 4 (dev_stat 0x50)
+Jan  5 08:28:26 localhost kernel: [  204.408991] ata_sg_clean: unmapping 1 
+sg elements
+Jan  5 08:28:26 localhost kernel: [  204.408993] ata_qc_complete: EXIT
+Jan  5 08:28:26 localhost kernel: [  204.409010] ata_scsi_dump_cdb: CDB 
+(2:0,0,0) 28 00 01 ca 9f 15 00 00 08
+Jan  5 08:28:26 localhost kernel: [  204.409013] ata_scsi_translate: ENTER
+Jan  5 08:28:26 localhost kernel: [  204.409015] scsi_10_lba_len: ten-byte 
+command
+Jan  5 08:28:26 localhost kernel: [  204.409017] ata_sg_setup_one: mapped 
+buffer of 4096 bytes for read
+Jan  5 08:28:26 localhost kernel: [  204.409020] ata_fill_sg: PRD[0] = 
+(0xD048000, 0x1000)
+Jan  5 08:28:26 localhost kernel: [  204.409022] ata_dev_select: ENTER, 
+ata2: device 0, wait 1
+Jan  5 08:28:26 localhost kernel: [  204.409050] ata_tf_load_mmio: feat 0x0 
+nsect 0x8 lba 0x15 0x9F 0xCA
+Jan  5 08:28:26 localhost kernel: [  204.409052] ata_tf_load_mmio: device 
+0xE1
+Jan  5 08:28:26 localhost kernel: [  204.409067] ata_exec_command_mmio: 
+ata2: cmd 0xC8
+Jan  5 08:28:26 localhost kernel: [  204.409072] ata_scsi_translate: EXIT
+Jan  5 08:28:26 localhost kernel: [  204.409146] ata_host_intr: ata2: 
+host_stat 0x4
+Jan  5 08:28:26 localhost kernel: [  204.409154] ata_host_intr: ata2: 
+protocol 4 (dev_stat 0x50)
+Jan  5 08:28:26 localhost kernel: [  204.409158] ata_sg_clean: unmapping 1 
+sg elements
+Jan  5 08:28:26 localhost kernel: [  204.409160] ata_qc_complete: EXIT
+Jan  5 08:28:26 localhost kernel: [  204.409211] ata_scsi_dump_cdb: CDB 
+(2:0,0,0) 25 00 00 00 00 00 00 00 00
+Jan  5 08:28:26 localhost kernel: [  204.409214] ata_scsiop_read_cap: ENTER
+Jan  5 08:28:26 localhost kernel: [  204.409244] ata_scsi_dump_cdb: CDB 
+(2:0,0,0) 2a 00 00 d9 65 fb 00 00 08
+Jan  5 08:28:26 localhost kernel: [  204.409246] ata_scsi_translate: ENTER
+Jan  5 08:28:26 localhost kernel: [  204.409248] scsi_10_lba_len: ten-byte 
+command
+Jan  5 08:28:26 localhost kernel: [  204.409251] ata_sg_setup_one: mapped 
+buffer of 4096 bytes for write
+Jan  5 08:28:26 localhost kernel: [  204.409253] ata_fill_sg: PRD[0] = 
+(0xD048000, 0x1000)
+Jan  5 08:28:26 localhost kernel: [  204.409256] ata_dev_select: ENTER, 
+ata2: device 0, wait 1
+Jan  5 08:28:26 localhost kernel: [  204.409283] ata_tf_load_mmio: feat 0x0 
+nsect 0x8 lba 0xFB 0x65 0xD9
+Jan  5 08:28:26 localhost kernel: [  204.409285] ata_tf_load_mmio: device 
+0xE0
+Jan  5 08:28:26 localhost kernel: [  204.409300] ata_exec_command_mmio: 
+ata2: cmd 0xCA
+Jan  5 08:28:26 localhost kernel: [  204.409305] ata_scsi_translate: EXIT
+Jan  5 08:28:26 localhost kernel: [  204.462137] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:26 localhost kernel: [  205.135110] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:26 localhost kernel: [  205.211290] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:40 localhost kernel: [  218.368667] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:40 localhost kernel: [  218.449054] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:40 localhost kernel: [  218.691283] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:40 localhost kernel: [  218.946905] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:40 localhost kernel: [  218.948318] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:40 localhost kernel: [  219.194021] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:40 localhost kernel: [  219.214175] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:41 localhost kernel: [  219.696113] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:41 localhost kernel: [  219.697451] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:41 localhost kernel: [  219.742827] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:41 localhost kernel: [  219.937038] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:41 localhost kernel: [  219.985139] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:42 localhost kernel: [  220.445205] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:42 localhost kernel: [  220.797927] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:42 localhost kernel: [  220.816866] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:42 localhost kernel: [  220.907329] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:42 localhost kernel: [  221.089499] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:42 localhost kernel: [  221.090284] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:42 localhost kernel: [  221.238775] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:43 localhost kernel: [  221.267263] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:43 localhost kernel: [  221.536527] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:43 localhost kernel: [  221.611554] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:43 localhost kernel: [  221.938468] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:44 localhost kernel: [  222.373794] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:44 localhost kernel: [  222.374695] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:44 localhost kernel: [  223.162135] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:44 localhost kernel: [  223.163329] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:44 localhost kernel: [  223.164521] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:45 localhost kernel: [  223.813787] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:45 localhost kernel: [  224.140885] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:46 localhost kernel: [  224.353850] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:46 localhost kernel: [  224.379358] ata_scsi_error: ENTER
+Jan  5 08:28:46 localhost kernel: [  224.379361] ata_eng_timeout: ENTER
+Jan  5 08:28:46 localhost kernel: [  224.379363] ata_qc_timeout: ENTER
+Jan  5 08:28:46 localhost kernel: [  224.379374] ata2: command 0xca timeout, 
+stat 0x7f host_stat 0x1
+Jan  5 08:28:46 localhost kernel: [  224.379377] ata_sg_clean: unmapping 1 
+sg elements
+Jan  5 08:28:46 localhost kernel: [  224.379391] ata2: translated ATA 
+stat/err 0x7f/7f to SCSI SK/ASC/ASCQ 0x4/00/00
+Jan  5 08:28:46 localhost kernel: [  224.379394] ata2: status=0x7f { 
+DriveReady DeviceFault SeekComplete DataRequest CorrectedError Index Error }
+Jan  5 08:28:46 localhost kernel: [  224.379399] ata2: error=0x7f { 
+DriveStatusError UncorrectableError SectorIdNotFound TrackZeroNotFound 
+AddrMarkNotFound }
+Jan  5 08:28:46 localhost kernel: [  224.379411] ata_qc_complete: EXIT
+Jan  5 08:28:46 localhost kernel: [  224.379413] ata_qc_timeout: EXIT
+Jan  5 08:28:46 localhost kernel: [  224.379414] ata_eng_timeout: EXIT
+Jan  5 08:28:46 localhost kernel: [  224.379416] ata_scsi_error: EXIT
+Jan  5 08:28:46 localhost kernel: [  224.400243] ata_scsi_dump_cdb: CDB 
+(2:0,0,0) 25 00 00 00 00 00 00 00 00
+Jan  5 08:28:46 localhost kernel: [  224.400249] ata_scsiop_read_cap: ENTER
+Jan  5 08:28:46 localhost kernel: [  224.400423] ata_scsi_dump_cdb: CDB 
+(2:0,0,0) 2a 00 03 af fd 18 00 00 08
+Jan  5 08:28:46 localhost kernel: [  224.400426] ata_scsi_translate: ENTER
+Jan  5 08:28:46 localhost kernel: [  224.400430] scsi_10_lba_len: ten-byte 
+command
+Jan  5 08:28:46 localhost kernel: [  224.400435] ata_sg_setup_one: mapped 
+buffer of 4096 bytes for write
+Jan  5 08:28:46 localhost kernel: [  224.400438] ata_fill_sg: PRD[0] = 
+(0xD048000, 0x1000)
+Jan  5 08:28:46 localhost kernel: [  224.400441] ata_dev_select: ENTER, 
+ata2: device 0, wait 1
+Jan  5 08:28:46 localhost kernel: [  224.410486] ATA: abnormal status 0x7F 
+on port 0xD08195DF
+Jan  5 08:28:46 localhost kernel: [  224.410504] ata_tf_load_mmio: feat 0x0 
+nsect 0x8 lba 0x18 0xFD 0xAF
+Jan  5 08:28:46 localhost kernel: [  224.410506] ata_tf_load_mmio: device 
+0xE3
+Jan  5 08:28:46 localhost kernel: [  224.410522] ata_exec_command_mmio: 
+ata2: cmd 0xCA
+Jan  5 08:28:46 localhost kernel: [  224.410527] ata_scsi_translate: EXIT
+Jan  5 08:28:46 localhost kernel: [  224.658874] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:46 localhost kernel: [  224.753952] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:46 localhost kernel: [  224.874626] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:46 localhost kernel: [  225.186896] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:47 localhost kernel: [  226.040653] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:47 localhost kernel: [  226.191764] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:48 localhost kernel: [  226.348601] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:48 localhost kernel: [  226.415600] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:48 localhost kernel: [  226.878584] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:48 localhost kernel: [  226.909086] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:48 localhost kernel: [  226.933143] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:49 localhost kernel: [  227.240286] ata_host_intr: ata2: 
+host_stat 0x1
+Jan  5 08:28:49 localhost kernel: [  227.458131] ata_host_intr: ata2: 
+host_stat 0x1
+
+
+------=_NextPart_000_3de6_e7d_1aa9--
