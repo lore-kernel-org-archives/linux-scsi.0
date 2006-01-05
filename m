@@ -1,7 +1,7 @@
-From: Linus Torvalds <torvalds@osdl.org>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
 Subject: Re: Fw: crash on x86_64 - mm related?
-Date: Thu, 5 Jan 2006 13:18:57 -0800 (PST)
-Message-ID: <Pine.LNX.4.64.0601051312380.3169@g5.osdl.org>
+Date: Fri, 6 Jan 2006 00:09:01 +0200 (EET)
+Message-ID: <Pine.LNX.4.63.0601052357100.8036@kai.makisara.local>
 References: <Pine.LNX.4.64.0512120928110.15597@g5.osdl.org>
  <1134409531.9994.13.camel@mulgrave> <Pine.LNX.4.64.0512121007220.15597@g5.osdl.org>
  <1134411882.9994.18.camel@mulgrave> <20051215190930.GA20156@tau.solarneutrino.net>
@@ -12,68 +12,37 @@ References: <Pine.LNX.4.64.0512120928110.15597@g5.osdl.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:56504 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932136AbWAEVT0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2006 16:19:26 -0500
+Received: from fep01-0.kolumbus.fi ([193.229.0.41]:5464 "EHLO
+	fep01-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S1751167AbWAEWHz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Jan 2006 17:07:55 -0500
 In-Reply-To: <20060105201249.GB1795@tau.solarneutrino.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Ryan Richter <ryan@tau.solarneutrino.net>
-Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, James Bottomley <James.Bottomley@SteelEye.com>, Hugh Dickins <hugh@veritas.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-
-
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@osdl.org>, Hugh Dickins <hugh@veritas.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 On Thu, 5 Jan 2006, Ryan Richter wrote:
+
+> On Wed, Jan 04, 2006 at 11:48:52PM +0200, Kai Makisara wrote:
+> > > Here's what I got:
 > 
 > Another one.  I can't keep running this kernel - nearly all of our
 > backup tapes are erased now.  If a drive were to fail today, we would
 > lose hundreds of GB of irreplacible data.  I'm going back to 2.6.11.3
 > until we have a full set of backups again.
+> 
+Yes, don't risk the backups. If you don't want to change the kernel, you 
+can load the st module with the option try_direct_io=0. If you do this, st 
+will use the driver's buffer for reading and writing and you don't see 
+this problem.
 
-Yeah, don't trash your backups.
+If you later have an opportunity to try the patch Linus suggested, it 
+might provide interesting information. However, if all goes well, the st 
+driver will not be using these mapping functions in 2.6.16 any more (see 
+Mike Christie's changes in "[GIT PATCH] SCSI update for 2.6.15" sent to 
+linux-scsi by James Bottomley yesterday). I am not sure this fixes your 
+problem but it certainly changes the code that is being debugged.
 
-If/when you try something again, how about these two trivial one-liners?
-
-I'm not 100% sure the mapcount sanity check is strictly speaking right (no 
-locking between mapcount/pagecount comparison), but the page count really 
-should never fall below the mapcount, so aside from races that I don't 
-think can be triggered in practice, this might be very useful to find 
-where those pesky page counts suddenly disappear..
-
-Right now we get the oops "too late" - something has decremented the page
-count way too far, but we don't know what it was, and the actual function 
-that triggers it _seems_ to be harmless.
-
-The other part of the patch is to clear "page" when it's being free'd, in 
-case somebody tries to free the same thing twice. I don't see how that 
-could happen either, but...
-
-The patch is untested in every way. No guarantees.
-
-		Linus
-
----
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index c4aade8..18e60e1 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -4481,6 +4481,7 @@ static int sgl_unmap_user_pages(struct s
- 	for (i=0; i < nr_pages; i++) {
- 		struct page *page = sgl[i].page;
- 
-+		sgl[i].page = NULL;
- 		if (dirtied)
- 			SetPageDirty(page);
- 		/* FIXME: cache flush missing for rw==READ
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index a06a84d..daf504d 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -299,6 +299,7 @@ struct page {
- #define put_page_testzero(p)				\
- 	({						\
- 		BUG_ON(page_count(p) == 0);		\
-+		BUG_ON(page_count(p) <= page_mapcount(p));	\
- 		atomic_add_negative(-1, &(p)->_count);	\
- 	})
- 
+-- 
+Kai
