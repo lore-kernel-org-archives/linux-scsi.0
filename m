@@ -1,135 +1,379 @@
 From: Andreas Herrmann <aherrman@de.ibm.com>
-Subject: [PATCH] zfcp: handle unsolicited status notification lost
-Date: Thu, 5 Jan 2006 09:56:47 +0100
-Message-ID: <20060105085647.GA11165@lion28.ibm.com>
+Subject: [PATCH] zfcp: transport class adaptations
+Date: Thu, 5 Jan 2006 09:59:34 +0100
+Message-ID: <20060105085934.GA11197@lion28.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.de.ibm.com ([195.212.29.152]:49126 "EHLO
-	mtagate3.de.ibm.com") by vger.kernel.org with ESMTP
-	id S1751915AbWAEI4x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Jan 2006 03:56:53 -0500
+Received: from mtagate4.de.ibm.com ([195.212.29.153]:2442 "EHLO
+	mtagate4.de.ibm.com") by vger.kernel.org with ESMTP
+	id S1752117AbWAEI7l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Jan 2006 03:59:41 -0500
 Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate3.de.ibm.com (8.12.10/8.12.10) with ESMTP id k058upWs218964
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Jan 2006 08:56:51 GMT
+	by mtagate4.de.ibm.com (8.12.10/8.12.10) with ESMTP id k058xdln201756
+	for <linux-scsi@vger.kernel.org>; Thu, 5 Jan 2006 08:59:39 GMT
 Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k058up7M179168
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Jan 2006 09:56:51 +0100
+	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k058xc7M224984
+	for <linux-scsi@vger.kernel.org>; Thu, 5 Jan 2006 09:59:39 +0100
 Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id k058upgu007344
-	for <linux-scsi@vger.kernel.org>; Thu, 5 Jan 2006 09:56:51 +0100
+	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id k058xc5m011035
+	for <linux-scsi@vger.kernel.org>; Thu, 5 Jan 2006 09:59:38 +0100
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jejb@steeleye.com>
-Cc: Linux SCSI <linux-scsi@vger.kernel.org>, Maxim Shchetynin <maxim@de.ibm.com>
+Cc: Linux SCSI <linux-scsi@vger.kernel.org>
 
-From: Maxim Shchetynin <maxim@de.ibm.com>
+From: Andreas Herrmann <aherrman@de.ibm.com>
 
-[PATCH] zfcp: handle unsolicited status notification lost
+[PATCH] zfcp: transport class adaptations
 
-Handle unsolicited adapter status that informs about loss of
-previous unsolicited status notification(s).
+Added host stats, removed superfluous get_starget_ functions,
+removed some attributes from zfcp specific sysfs tree (e.g.
+scsi_host_no, scsi_lun, wwnn and d_id).
+Host stats are given for the physical adapter port not for the
+virtual adapter. Reset stats is implemented in the device driver.
 
-Signed-off-by: Maxim Shchetynin <maxim@de.ibm.com>
 Signed-off-by: Andreas Herrmann <aherrman@de.ibm.com>
 
 ---
 
- drivers/s390/scsi/zfcp_fsf.c |   35 +++++++++++++++++++++++++++++++++++
- drivers/s390/scsi/zfcp_fsf.h |   12 ++++++++++++
- 2 files changed, 47 insertions(+), 0 deletions(-)
+ drivers/s390/scsi/zfcp_aux.c           |    2 
+ drivers/s390/scsi/zfcp_def.h           |    3 +
+ drivers/s390/scsi/zfcp_scsi.c          |  185 +++++++++++++++++++++++---------
+ drivers/s390/scsi/zfcp_sysfs_adapter.c |    4 -
+ drivers/s390/scsi/zfcp_sysfs_port.c    |    4 -
+ drivers/s390/scsi/zfcp_sysfs_unit.c    |    2 
+ 6 files changed, 136 insertions(+), 64 deletions(-)
 
-80c65f35dc67575864cc6aae70508575b61a093d
-diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
-index 5958795..bf859c9 100644
---- a/drivers/s390/scsi/zfcp_fsf.c
-+++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -964,6 +964,40 @@ zfcp_fsf_status_read_handler(struct zfcp
- 					| ZFCP_STATUS_COMMON_ERP_FAILED);
- 		break;
+a5740402320b5f6122dd869aab0961f58f6d0abc
+diff --git a/drivers/s390/scsi/zfcp_aux.c b/drivers/s390/scsi/zfcp_aux.c
+index 5e84c5a..167fef3 100644
+--- a/drivers/s390/scsi/zfcp_aux.c
++++ b/drivers/s390/scsi/zfcp_aux.c
+@@ -1125,6 +1125,8 @@ zfcp_adapter_dequeue(struct zfcp_adapter
+ 	zfcp_free_low_mem_buffers(adapter);
+ 	/* free memory of adapter data structure and queues */
+ 	zfcp_qdio_free_queues(adapter);
++	kfree(adapter->fc_stats);
++	kfree(adapter->stats_reset_data);
+ 	ZFCP_LOG_TRACE("freeing adapter structure\n");
+ 	kfree(adapter);
+  out:
+diff --git a/drivers/s390/scsi/zfcp_def.h b/drivers/s390/scsi/zfcp_def.h
+index d81b737..3785b3c 100644
+--- a/drivers/s390/scsi/zfcp_def.h
++++ b/drivers/s390/scsi/zfcp_def.h
+@@ -978,6 +978,9 @@ struct zfcp_adapter {
+ 	struct zfcp_adapter_mempool	pool;      /* Adapter memory pools */
+ 	struct qdio_initialize  qdio_init_data;    /* for qdio_establish */
+ 	struct device           generic_services;  /* directory for WKA ports */
++	struct fc_host_statistics *fc_stats;
++	struct fsf_qtcb_bottom_port *stats_reset_data;
++	unsigned long		stats_reset;
+ };
  
-+	case FSF_STATUS_READ_NOTIFICATION_LOST:
-+		ZFCP_LOG_NORMAL("Unsolicited status notification(s) lost: "
-+				"adapter %s%s%s%s%s%s%s%s%s\n",
-+				zfcp_get_busid_by_adapter(adapter),
-+				(status_buffer->status_subtype &
-+					FSF_STATUS_READ_SUB_INCOMING_ELS) ?
-+					", incoming ELS" : "",
-+				(status_buffer->status_subtype &
-+					FSF_STATUS_READ_SUB_SENSE_DATA) ?
-+					", sense data" : "",
-+				(status_buffer->status_subtype &
-+					FSF_STATUS_READ_SUB_LINK_STATUS) ?
-+					", link status change" : "",
-+				(status_buffer->status_subtype &
-+					FSF_STATUS_READ_SUB_PORT_CLOSED) ?
-+					", port close" : "",
-+				(status_buffer->status_subtype &
-+					FSF_STATUS_READ_SUB_BIT_ERROR_THRESHOLD) ?
-+					", bit error exception" : "",
-+				(status_buffer->status_subtype &
-+					FSF_STATUS_READ_SUB_ACT_UPDATED) ?
-+					", ACT update" : "",
-+				(status_buffer->status_subtype &
-+					FSF_STATUS_READ_SUB_ACT_HARDENED) ?
-+					", ACT hardening" : "",
-+				(status_buffer->status_subtype &
-+					FSF_STATUS_READ_SUB_FEATURE_UPDATE_ALERT) ?
-+					", adapter feature change" : "");
-+
-+		if (status_buffer->status_subtype &
-+		    FSF_STATUS_READ_SUB_ACT_UPDATED)
-+			zfcp_erp_adapter_access_changed(adapter);
-+		break;
-+
- 	case FSF_STATUS_READ_CFDC_UPDATED:
- 		ZFCP_LOG_NORMAL("CFDC has been updated on the adapter %s\n",
- 			      zfcp_get_busid_by_adapter(adapter));
-@@ -1954,6 +1988,7 @@ zfcp_fsf_exchange_config_data(struct zfc
- 	erp_action->fsf_req->qtcb->bottom.config.feature_selection =
- 			FSF_FEATURE_CFDC |
- 			FSF_FEATURE_LUN_SHARING |
-+			FSF_FEATURE_NOTIFICATION_LOST |
- 			FSF_FEATURE_UPDATE_ALERT;
+ /*
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index 66608d1..5ca0992 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -49,8 +49,6 @@ static int zfcp_task_management_function
  
- 	/* start QDIO request for this FSF request */
-diff --git a/drivers/s390/scsi/zfcp_fsf.h b/drivers/s390/scsi/zfcp_fsf.h
-index 48719f0..39475db 100644
---- a/drivers/s390/scsi/zfcp_fsf.h
-+++ b/drivers/s390/scsi/zfcp_fsf.h
-@@ -166,6 +166,7 @@
- #define FSF_STATUS_READ_BIT_ERROR_THRESHOLD	0x00000004
- #define FSF_STATUS_READ_LINK_DOWN		0x00000005
- #define FSF_STATUS_READ_LINK_UP          	0x00000006
-+#define FSF_STATUS_READ_NOTIFICATION_LOST	0x00000009
- #define FSF_STATUS_READ_CFDC_UPDATED		0x0000000A
- #define FSF_STATUS_READ_CFDC_HARDENED		0x0000000B
- #define FSF_STATUS_READ_FEATURE_UPDATE_ALERT	0x0000000C
-@@ -179,6 +180,16 @@
- #define FSF_STATUS_READ_SUB_FDISC_FAILED	0x00000001
- #define FSF_STATUS_READ_SUB_FIRMWARE_UPDATE	0x00000002
+ static struct zfcp_unit *zfcp_unit_lookup(struct zfcp_adapter *, int, scsi_id_t,
+ 					  scsi_lun_t);
+-static struct zfcp_port *zfcp_port_lookup(struct zfcp_adapter *, int,
+-					  scsi_id_t);
  
-+/* status subtypes for unsolicited status notification lost */
-+#define FSF_STATUS_READ_SUB_INCOMING_ELS	0x00000001
-+#define FSF_STATUS_READ_SUB_SENSE_DATA		0x00000002
-+#define FSF_STATUS_READ_SUB_LINK_STATUS		0x00000004
-+#define FSF_STATUS_READ_SUB_PORT_CLOSED		0x00000008
-+#define FSF_STATUS_READ_SUB_BIT_ERROR_THRESHOLD	0x00000010
-+#define FSF_STATUS_READ_SUB_ACT_UPDATED		0x00000020
-+#define FSF_STATUS_READ_SUB_ACT_HARDENED	0x00000040
-+#define FSF_STATUS_READ_SUB_FEATURE_UPDATE_ALERT 0x00000080
+ static struct device_attribute *zfcp_sysfs_sdev_attrs[];
+ 
+@@ -406,18 +404,6 @@ zfcp_unit_lookup(struct zfcp_adapter *ad
+ 	return retval;
+ }
+ 
+-static struct zfcp_port *
+-zfcp_port_lookup(struct zfcp_adapter *adapter, int channel, scsi_id_t id)
+-{
+-	struct zfcp_port *port;
+-
+-	list_for_each_entry(port, &adapter->port_list_head, list) {
+-		if (port->rport && (id == port->rport->scsi_target_id))
+-			return port;
+-	}
+-	return (struct zfcp_port *) NULL;
+-}
+-
+ /**
+  * zfcp_scsi_eh_abort_handler - abort the specified SCSI command
+  * @scpnt: pointer to scsi_cmnd to be aborted 
+@@ -731,61 +717,148 @@ zfcp_fsf_start_scsi_er_timer(struct zfcp
+ /*
+  * Support functions for FC transport class
+  */
+-static void
+-zfcp_get_port_id(struct scsi_target *starget)
++static struct fc_host_statistics*
++zfcp_init_fc_host_stats(struct zfcp_adapter *adapter)
+ {
+-	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+-	struct zfcp_adapter *adapter = (struct zfcp_adapter *)shost->hostdata[0];
+-	struct zfcp_port *port;
+-	unsigned long flags;
++	struct fc_host_statistics *fc_stats;
+ 
+-	read_lock_irqsave(&zfcp_data.config_lock, flags);
+-	port = zfcp_port_lookup(adapter, starget->channel, starget->id);
+-	if (port)
+-		fc_starget_port_id(starget) = port->d_id;
+-	else
+-		fc_starget_port_id(starget) = -1;
+-	read_unlock_irqrestore(&zfcp_data.config_lock, flags);
++	if (!adapter->fc_stats) {
++		fc_stats = kmalloc(sizeof(*fc_stats), GFP_KERNEL);
++		if (!fc_stats)
++			return NULL;
++		adapter->fc_stats = fc_stats; /* freed in adater_dequeue */
++	}
++	memset(adapter->fc_stats, 0, sizeof(*adapter->fc_stats));
++	return adapter->fc_stats;
++}
 +
- /* status subtypes for CFDC */
- #define FSF_STATUS_READ_SUB_CFDC_HARDENED_ON_SE	0x00000002
- #define FSF_STATUS_READ_SUB_CFDC_HARDENED_ON_SE2 0x0000000F
-@@ -211,6 +222,7 @@
- /* channel features */
- #define FSF_FEATURE_CFDC			0x00000002
- #define FSF_FEATURE_LUN_SHARING			0x00000004
-+#define FSF_FEATURE_NOTIFICATION_LOST		0x00000008
- #define FSF_FEATURE_HBAAPI_MANAGEMENT           0x00000010
- #define FSF_FEATURE_ELS_CT_CHAINED_SBALS        0x00000020
- #define FSF_FEATURE_UPDATE_ALERT		0x00000100
++static void
++zfcp_adjust_fc_host_stats(struct fc_host_statistics *fc_stats,
++			  struct fsf_qtcb_bottom_port *data,
++			  struct fsf_qtcb_bottom_port *old)
++{
++	fc_stats->seconds_since_last_reset = data->seconds_since_last_reset -
++		old->seconds_since_last_reset;
++	fc_stats->tx_frames = data->tx_frames - old->tx_frames;
++	fc_stats->tx_words = data->tx_words - old->tx_words;
++	fc_stats->rx_frames = data->rx_frames - old->rx_frames;
++	fc_stats->rx_words = data->rx_words - old->rx_words;
++	fc_stats->lip_count = data->lip - old->lip;
++	fc_stats->nos_count = data->nos - old->nos;
++	fc_stats->error_frames = data->error_frames - old->error_frames;
++	fc_stats->dumped_frames = data->dumped_frames - old->dumped_frames;
++	fc_stats->link_failure_count = data->link_failure - old->link_failure;
++	fc_stats->loss_of_sync_count = data->loss_of_sync - old->loss_of_sync;
++	fc_stats->loss_of_signal_count = data->loss_of_signal -
++		old->loss_of_signal;
++	fc_stats->prim_seq_protocol_err_count = data->psp_error_counts -
++		old->psp_error_counts;
++	fc_stats->invalid_tx_word_count = data->invalid_tx_words -
++		old->invalid_tx_words;
++	fc_stats->invalid_crc_count = data->invalid_crcs - old->invalid_crcs;
++	fc_stats->fcp_input_requests = data->input_requests -
++		old->input_requests;
++	fc_stats->fcp_output_requests = data->output_requests -
++		old->output_requests;
++	fc_stats->fcp_control_requests = data->control_requests -
++		old->control_requests;
++	fc_stats->fcp_input_megabytes = data->input_mb - old->input_mb;
++	fc_stats->fcp_output_megabytes = data->output_mb - old->output_mb;
+ }
+ 
+ static void
+-zfcp_get_port_name(struct scsi_target *starget)
++zfcp_set_fc_host_stats(struct fc_host_statistics *fc_stats,
++		       struct fsf_qtcb_bottom_port *data)
+ {
+-	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+-	struct zfcp_adapter *adapter = (struct zfcp_adapter *)shost->hostdata[0];
+-	struct zfcp_port *port;
+-	unsigned long flags;
++	fc_stats->seconds_since_last_reset = data->seconds_since_last_reset;
++	fc_stats->tx_frames = data->tx_frames;
++	fc_stats->tx_words = data->tx_words;
++	fc_stats->rx_frames = data->rx_frames;
++	fc_stats->rx_words = data->rx_words;
++	fc_stats->lip_count = data->lip;
++	fc_stats->nos_count = data->nos;
++	fc_stats->error_frames = data->error_frames;
++	fc_stats->dumped_frames = data->dumped_frames;
++	fc_stats->link_failure_count = data->link_failure;
++	fc_stats->loss_of_sync_count = data->loss_of_sync;
++	fc_stats->loss_of_signal_count = data->loss_of_signal;
++	fc_stats->prim_seq_protocol_err_count = data->psp_error_counts;
++	fc_stats->invalid_tx_word_count = data->invalid_tx_words;
++	fc_stats->invalid_crc_count = data->invalid_crcs;
++	fc_stats->fcp_input_requests = data->input_requests;
++	fc_stats->fcp_output_requests = data->output_requests;
++	fc_stats->fcp_control_requests = data->control_requests;
++	fc_stats->fcp_input_megabytes = data->input_mb;
++	fc_stats->fcp_output_megabytes = data->output_mb;
++}
+ 
+-	read_lock_irqsave(&zfcp_data.config_lock, flags);
+-	port = zfcp_port_lookup(adapter, starget->channel, starget->id);
+-	if (port)
+-		fc_starget_port_name(starget) = port->wwpn;
+-	else
+-		fc_starget_port_name(starget) = -1;
+-	read_unlock_irqrestore(&zfcp_data.config_lock, flags);
++/**
++ * zfcp_get_fc_host_stats - provide fc_host_statistics for scsi_transport_fc
++ *
++ * assumption: scsi_transport_fc synchronizes calls of
++ *             get_fc_host_stats and reset_fc_host_stats
++ *             (XXX to be checked otherwise introduce locking)
++ */
++static struct fc_host_statistics *
++zfcp_get_fc_host_stats(struct Scsi_Host *shost)
++{
++	struct zfcp_adapter *adapter;
++	struct fc_host_statistics *fc_stats;
++	struct fsf_qtcb_bottom_port *data;
++	int ret;
++
++	adapter = (struct zfcp_adapter *)shost->hostdata[0];
++	fc_stats = zfcp_init_fc_host_stats(adapter);
++	if (!fc_stats)
++		return NULL;
++
++	data = kmalloc(sizeof(*data), GFP_KERNEL);
++	if (!data)
++		return NULL;
++	memset(data, 0, sizeof(*data));
++
++	ret = zfcp_fsf_exchange_port_data(NULL, adapter, data);
++	if (ret) {
++		kfree(data);
++		return NULL; /* XXX return zeroed fc_stats? */
++	}
++
++	if (adapter->stats_reset &&
++	    ((jiffies/HZ - adapter->stats_reset) <
++	     data->seconds_since_last_reset)) {
++		zfcp_adjust_fc_host_stats(fc_stats, data,
++					  adapter->stats_reset_data);
++	} else
++		zfcp_set_fc_host_stats(fc_stats, data);
++
++	kfree(data);
++	return fc_stats;
+ }
+ 
+ static void
+-zfcp_get_node_name(struct scsi_target *starget)
++zfcp_reset_fc_host_stats(struct Scsi_Host *shost)
+ {
+-	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+-	struct zfcp_adapter *adapter = (struct zfcp_adapter *)shost->hostdata[0];
+-	struct zfcp_port *port;
+-	unsigned long flags;
++	struct zfcp_adapter *adapter;
++	struct fsf_qtcb_bottom_port *data, *old_data;
++	int ret;
+ 
+-	read_lock_irqsave(&zfcp_data.config_lock, flags);
+-	port = zfcp_port_lookup(adapter, starget->channel, starget->id);
+-	if (port)
+-		fc_starget_node_name(starget) = port->wwnn;
+-	else
+-		fc_starget_node_name(starget) = -1;
+-	read_unlock_irqrestore(&zfcp_data.config_lock, flags);
++	adapter = (struct zfcp_adapter *)shost->hostdata[0];
++	data = kmalloc(sizeof(*data), GFP_KERNEL);
++	if (!data)
++		return;
++	memset(data, 0, sizeof(*data));
++
++	ret = zfcp_fsf_exchange_port_data(NULL, adapter, data);
++	if (ret == 0) {
++		adapter->stats_reset = jiffies/HZ;
++		old_data = adapter->stats_reset_data;
++		adapter->stats_reset_data = data; /* finally freed in
++						     adater_dequeue */
++		kfree(old_data);
++	}
+ }
+ 
+ struct fc_function_template zfcp_transport_functions = {
+-	.get_starget_port_id = zfcp_get_port_id,
+-	.get_starget_port_name = zfcp_get_port_name,
+-	.get_starget_node_name = zfcp_get_node_name,
+ 	.show_starget_port_id = 1,
+ 	.show_starget_port_name = 1,
+ 	.show_starget_node_name = 1,
+@@ -795,6 +868,10 @@ struct fc_function_template zfcp_transpo
+ 	.show_host_supported_classes = 1,
+ 	.show_host_maxframe_size = 1,
+ 	.show_host_serial_number = 1,
++	.get_fc_host_stats = zfcp_get_fc_host_stats,
++	.reset_fc_host_stats = zfcp_reset_fc_host_stats,
++	/* no functions registered for following dynamic attributes but
++	   directly set by LLDD */
+ 	.show_host_speed = 1,
+ 	.show_host_port_id = 1,
+ };
+diff --git a/drivers/s390/scsi/zfcp_sysfs_adapter.c b/drivers/s390/scsi/zfcp_sysfs_adapter.c
+index 0cd4352..c85df9c 100644
+--- a/drivers/s390/scsi/zfcp_sysfs_adapter.c
++++ b/drivers/s390/scsi/zfcp_sysfs_adapter.c
+@@ -69,12 +69,10 @@ ZFCP_DEFINE_ADAPTER_ATTR(physical_wwpn, 
+ ZFCP_DEFINE_ADAPTER_ATTR(physical_s_id, "0x%06x\n", adapter->physical_s_id);
+ ZFCP_DEFINE_ADAPTER_ATTR(card_version, "0x%04x\n", adapter->hydra_version);
+ ZFCP_DEFINE_ADAPTER_ATTR(lic_version, "0x%08x\n", adapter->fsf_lic_version);
+-ZFCP_DEFINE_ADAPTER_ATTR(fc_service_class, "%d\n", adapter->fc_service_class);
+ ZFCP_DEFINE_ADAPTER_ATTR(fc_topology, "%s\n",
+ 			 fc_topologies[adapter->fc_topology]);
+ ZFCP_DEFINE_ADAPTER_ATTR(hardware_version, "0x%08x\n",
+ 			 adapter->hardware_version);
+-ZFCP_DEFINE_ADAPTER_ATTR(scsi_host_no, "0x%x\n", adapter->scsi_host_no);
+ ZFCP_DEFINE_ADAPTER_ATTR(in_recovery, "%d\n", atomic_test_mask
+ 			 (ZFCP_STATUS_COMMON_ERP_INUSE, &adapter->status));
+ 
+@@ -259,9 +257,7 @@ static struct attribute *zfcp_adapter_at
+ 	&dev_attr_physical_s_id.attr,
+ 	&dev_attr_card_version.attr,
+ 	&dev_attr_lic_version.attr,
+-	&dev_attr_fc_service_class.attr,
+ 	&dev_attr_fc_topology.attr,
+-	&dev_attr_scsi_host_no.attr,
+ 	&dev_attr_status.attr,
+ 	&dev_attr_hardware_version.attr,
+ 	NULL
+diff --git a/drivers/s390/scsi/zfcp_sysfs_port.c b/drivers/s390/scsi/zfcp_sysfs_port.c
+index c55e82d..3924eb3 100644
+--- a/drivers/s390/scsi/zfcp_sysfs_port.c
++++ b/drivers/s390/scsi/zfcp_sysfs_port.c
+@@ -65,8 +65,6 @@ static ssize_t zfcp_sysfs_port_##_name##
+ static DEVICE_ATTR(_name, S_IRUGO, zfcp_sysfs_port_##_name##_show, NULL);
+ 
+ ZFCP_DEFINE_PORT_ATTR(status, "0x%08x\n", atomic_read(&port->status));
+-ZFCP_DEFINE_PORT_ATTR(wwnn, "0x%016llx\n", port->wwnn);
+-ZFCP_DEFINE_PORT_ATTR(d_id, "0x%06x\n", port->d_id);
+ ZFCP_DEFINE_PORT_ATTR(in_recovery, "%d\n", atomic_test_mask
+ 		      (ZFCP_STATUS_COMMON_ERP_INUSE, &port->status));
+ ZFCP_DEFINE_PORT_ATTR(access_denied, "%d\n", atomic_test_mask
+@@ -245,8 +243,6 @@ static struct attribute *zfcp_port_commo
+ 	&dev_attr_failed.attr,
+ 	&dev_attr_in_recovery.attr,
+ 	&dev_attr_status.attr,
+-	&dev_attr_wwnn.attr,
+-	&dev_attr_d_id.attr,
+ 	&dev_attr_access_denied.attr,
+ 	NULL
+ };
+diff --git a/drivers/s390/scsi/zfcp_sysfs_unit.c b/drivers/s390/scsi/zfcp_sysfs_unit.c
+index 0556642..2f50815 100644
+--- a/drivers/s390/scsi/zfcp_sysfs_unit.c
++++ b/drivers/s390/scsi/zfcp_sysfs_unit.c
+@@ -65,7 +65,6 @@ static ssize_t zfcp_sysfs_unit_##_name##
+ static DEVICE_ATTR(_name, S_IRUGO, zfcp_sysfs_unit_##_name##_show, NULL);
+ 
+ ZFCP_DEFINE_UNIT_ATTR(status, "0x%08x\n", atomic_read(&unit->status));
+-ZFCP_DEFINE_UNIT_ATTR(scsi_lun, "0x%x\n", unit->scsi_lun);
+ ZFCP_DEFINE_UNIT_ATTR(in_recovery, "%d\n", atomic_test_mask
+ 		      (ZFCP_STATUS_COMMON_ERP_INUSE, &unit->status));
+ ZFCP_DEFINE_UNIT_ATTR(access_denied, "%d\n", atomic_test_mask
+@@ -138,7 +137,6 @@ static DEVICE_ATTR(failed, S_IWUSR | S_I
+ 		   zfcp_sysfs_unit_failed_store);
+ 
+ static struct attribute *zfcp_unit_attrs[] = {
+-	&dev_attr_scsi_lun.attr,
+ 	&dev_attr_failed.attr,
+ 	&dev_attr_in_recovery.attr,
+ 	&dev_attr_status.attr,
 -- 
 0.99.9n-g58e3
