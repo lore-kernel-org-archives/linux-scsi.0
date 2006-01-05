@@ -1,48 +1,29 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: Fw: crash on x86_64 - mm related?
-Date: Fri, 6 Jan 2006 00:09:01 +0200 (EET)
-Message-ID: <Pine.LNX.4.63.0601052357100.8036@kai.makisara.local>
-References: <Pine.LNX.4.64.0512120928110.15597@g5.osdl.org>
- <1134409531.9994.13.camel@mulgrave> <Pine.LNX.4.64.0512121007220.15597@g5.osdl.org>
- <1134411882.9994.18.camel@mulgrave> <20051215190930.GA20156@tau.solarneutrino.net>
- <1134705703.3906.1.camel@mulgrave> <20051226234238.GA28037@tau.solarneutrino.net>
- <Pine.LNX.4.63.0512271807130.4955@kai.makisara.local>
- <20060104172727.GA320@tau.solarneutrino.net> <Pine.LNX.4.63.0601042334310.5087@kai.makisara.local>
- <20060105201249.GB1795@tau.solarneutrino.net>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] scsi_transport_spi.c: make print_nego() static
+Date: Thu, 5 Jan 2006 23:39:18 +0100
+Message-ID: <20060105223918.GM12313@stusta.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep01-0.kolumbus.fi ([193.229.0.41]:5464 "EHLO
-	fep01-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S1751167AbWAEWHz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Jan 2006 17:07:55 -0500
-In-Reply-To: <20060105201249.GB1795@tau.solarneutrino.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751411AbWAEWkB@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ryan Richter <ryan@tau.solarneutrino.net>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linus Torvalds <torvalds@osdl.org>, Hugh Dickins <hugh@veritas.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, 5 Jan 2006, Ryan Richter wrote:
+This patch makes a needlessly global function static.
 
-> On Wed, Jan 04, 2006 at 11:48:52PM +0200, Kai Makisara wrote:
-> > > Here's what I got:
-> 
-> Another one.  I can't keep running this kernel - nearly all of our
-> backup tapes are erased now.  If a drive were to fail today, we would
-> lose hundreds of GB of irreplacible data.  I'm going back to 2.6.11.3
-> until we have a full set of backups again.
-> 
-Yes, don't risk the backups. If you don't want to change the kernel, you 
-can load the st module with the option try_direct_io=0. If you do this, st 
-will use the driver's buffer for reading and writing and you don't see 
-this problem.
 
-If you later have an opportunity to try the patch Linus suggested, it 
-might provide interesting information. However, if all goes well, the st 
-driver will not be using these mapping functions in 2.6.16 any more (see 
-Mike Christie's changes in "[GIT PATCH] SCSI update for 2.6.15" sent to 
-linux-scsi by James Bottomley yesterday). I am not sure this fixes your 
-problem but it certainly changes the code that is being debugged.
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
--- 
-Kai
+--- linux-2.6.15-mm1-full/drivers/scsi/scsi_transport_spi.c.old	2006-01-05 22:52:19.000000000 +0100
++++ linux-2.6.15-mm1-full/drivers/scsi/scsi_transport_spi.c	2006-01-05 22:52:28.000000000 +0100
+@@ -1075,7 +1075,7 @@
+ /* 0x04 */ "Parallel Protocol Request"
+ };
+ 
+-void print_nego(const unsigned char *msg, int per, int off, int width)
++static void print_nego(const unsigned char *msg, int per, int off, int width)
+ {
+ 	if (per) {
+ 		char buf[20];
