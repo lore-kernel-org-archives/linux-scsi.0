@@ -1,55 +1,39 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: scsi scan bug when peripheral qualifier of 3 is returned
-Date: Thu, 05 Jan 2006 10:56:52 -0600
-Message-ID: <43BD4FD4.8020806@cs.wisc.edu>
-References: <43BB750A.5050000@cs.wisc.edu> <20060104174019.GA3995@us.ibm.com> <43BC13B3.9030604@cs.wisc.edu> <20060104190119.GA4700@us.ibm.com> <43BC30A2.3090403@cs.wisc.edu> <20060104222522.GA5741@us.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Fw: blk_cleanup_queue, sleep in invalid context
+Date: Thu, 05 Jan 2006 12:08:15 -0500
+Message-ID: <1136480895.3288.26.camel@mulgrave>
+References: <20060104165300.23fb4ce8.akpm@osdl.org>
+	 <20060105005609.GA17604@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:6538 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1751841AbWAEQ47 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2006 11:56:59 -0500
-In-Reply-To: <20060104222522.GA5741@us.ibm.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:3971 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1751171AbWAERIa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Jan 2006 12:08:30 -0500
+In-Reply-To: <20060105005609.GA17604@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Patrick Mansfield <patmans@us.ibm.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Greg KH <greg@kroah.com>
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, Olaf Hering <olh@suse.de>
 
-Patrick Mansfield wrote:
-> Then like this?
+On Wed, 2006-01-04 at 16:56 -0800, Greg KH wrote:
+> You mean, put a might_sleep() in put_device()?  Yes, I can do that, as
+> that function might sleep.  SCSI is the culprit here, and I thought that
+> the scsi developers had fixed this up already.
 
-Yep, this works for our setup. Thanks.
+No .. I identified one clear culprit which was fixed, but I also said we
+have exposure to this all over the place.  Our basic problem is that we
+have a complex refcounted model for hosts, devices and commands.  Since
+the I/O paths are all accessible from either user or softirq context,
+most of these puts will be in potentially illegal places.
 
-> 
-> --- linux-2.6.15/drivers/scsi/orig-scsi_scan.c	2006-01-02 21:52:12.000000000 -0800
-> +++ linux-2.6.15/drivers/scsi/scsi_scan.c	2006-01-04 13:03:27.000000000 -0800
-> @@ -868,6 +868,8 @@ static int scsi_probe_and_add_lun(struct
->  
->  	if (scsi_probe_lun(sdev, result, result_len, &bflags))
->  		goto out_free_result;
-> +	if (bflagsp)
-> +		*bflagsp = bflags;
->  
->  	/*
->  	 * result contains valid SCSI INQUIRY data.
-> @@ -896,8 +898,6 @@ static int scsi_probe_and_add_lun(struct
->  			sdev->lockable = 0;
->  			scsi_unlock_floptical(sdev, result);
->  		}
-> -		if (bflagsp)
-> -			*bflagsp = bflags;
->  	}
->  
->   out_free_result:
-> 
+We could get out of this by dumping device refcounting and implementing
+our own instead, but that really doesn't sound to be the right thing to
+do.  Conversely, putting workqueues everywhere to get around this, like
+I did for the target handling, is going to get very messy.
 
-.....
+James
 
-> 
-> Don't forget you can dynamically add devinfo values via modparam and
-> /proc/scsi.
-> 
 
-I did not know this. I was looking for a writable proc file for some 
-reason. Thanks.
