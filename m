@@ -1,35 +1,63 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/lpfc/lpfc_scsi.c: make lpfc_get_scsi_buf() static
-Date: Fri, 6 Jan 2006 20:21:28 +0100
-Message-ID: <20060106192128.GC12131@stusta.de>
+From: =?ISO-8859-1?Q?Miroslav_Zaj=EDc?= <Zajsoft@Zajsoft.NET>
+Subject: Re: [Bug 5808] aic7xxx - half speed/frequency
+Date: Fri, 06 Jan 2006 20:45:58 +0100
+Message-ID: <43BEC8F6.5000003@Zajsoft.NET>
+References: <200601041758.k04Hw8Sf015281@fire-2.osdl.org>	 <43BD2EED.3060404@Zajsoft.NET> <1136565792.3528.31.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:7694 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S932498AbWAFTVd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Jan 2006 14:21:33 -0500
-Content-Disposition: inline
+Received: from andrea.zajsoft.net ([81.31.22.74]:58778 "HELO
+	andrea.zajsoft.net") by vger.kernel.org with SMTP id S1752499AbWAFTqU
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Jan 2006 14:46:20 -0500
+In-Reply-To: <1136565792.3528.31.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: james.smart@emulex.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: bugme-daemon@bugzilla.kernel.org, Zajsoft2@Zajsoft.NET, linux-scsi@vger.kernel.org
 
-This patch makes the needlessly global function lpfc_sli_get_scsi_buf()
-static.
+James Bottomley napsal(a):
 
+>On Thu, 2006-01-05 at 15:36 +0100, Miroslav Zaj=EDc wrote:
+> =20
+>
+>>The please try say me some sysfs settings.
+>>   =20
+>>
+>
+>OK, I think your sda is target0:0:0
+>
+>so
+>
+>cat /sys/class/spi_transport/target0:0:0/period
+>
+>I think that will say 100
+>
+>then echo 50 to the same file and try running an fdisk command to forc=
+e
+>a renegotiation and see what's in the file.  If it still comes back as
+>100 then the problem is in the driver.  If not, it's some generic DV
+>issue.
+>
+>Thanks,
+>
+>James
+>
+>
+> =20
+>
+I try u suggestion, but not success.
+echo 50 > /sys/class/spi_transport/target0:0:0/period
+This dont change content and is still on 100.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Next conception please ;o)
+Thanks you for work on my problem....
 
---- linux-2.6.15-mm1-full/drivers/scsi/lpfc/lpfc_scsi.c.old	2006-01-06 19:50:38.000000000 +0100
-+++ linux-2.6.15-mm1-full/drivers/scsi/lpfc/lpfc_scsi.c	2006-01-06 19:50:46.000000000 +0100
-@@ -150,7 +150,7 @@
- 	return psb;
- }
- 
--struct  lpfc_scsi_buf*
-+static struct lpfc_scsi_buf*
- lpfc_get_scsi_buf(struct lpfc_hba * phba)
- {
- 	struct  lpfc_scsi_buf * lpfc_cmd = NULL;
-
+  Zajsoft
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
