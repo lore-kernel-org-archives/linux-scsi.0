@@ -1,87 +1,33 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/qla2xxx/Kconfig: two fixes
-Date: Fri, 6 Jan 2006 17:34:01 +0100
-Message-ID: <20060106163401.GP12131@stusta.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [CFT 1/29] Add bus_type probe, remove, shutdown methods.
+Date: Fri, 06 Jan 2006 10:34:49 -0600
+Message-ID: <1136565289.3528.26.camel@mulgrave>
+References: <20060105142951.13.01@flint.arm.linux.org.uk>
+	 <20060106114822.GA11071@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:57355 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1752447AbWAFQeH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Jan 2006 11:34:07 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752447AbWAFQgD@vger.kernel.org>
+In-Reply-To: <20060106114822.GA11071@flint.arm.linux.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Russell King <rmk+lkml@arm.linux.org.uk>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, pcihpd-discuss@lists.sourceforge.net, schwidefsky@de.ibm.com, Greg K-H <greg@kroah.com>
 List-Id: linux-scsi@vger.kernel.org
-To: andrew.vasquez@qlogic.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This patch contains the following fixes for 
-drivers/scsi/qla2xxx/Kconfig:
-- add a help text for SCSI_QLA2XXX_EMBEDDED_FIRMWARE
-- the firmware modules must depend on SCSI_QLA2XXX to prevent
-  illegal configurations like SCSI_QLA2XXX=m, SCSI_QLA21XX=y
+On Fri, 2006-01-06 at 11:48 +0000, Russell King wrote:
+> The scsi_driver business looks like being a pig to solve - so can
+> SCSI folk please look at what's required to unuse these fields.
 
+Well, not necessarily pig.  Perhaps piglet.  We definitely need the
+separate probe, shutdown and remove methods for each of our ULDs.
+However, if they moved into the bus, since scsi_driver is always of type
+scsi_bus, we could add separate probe, shutdown and remove fields to
+struct scsi_driver and have the new fields in scsi_bus call those.  I
+have to ask, though; isn't that primarily what most other bus types are
+going to be doing anyway?  So doesn't it make sense to leave the fields
+in the generic driver?  Then the rule becomes that if the bus has the
+field, we call it, and the bus routine *may* call the corresponding
+generic driver field if it feels like it.  Otherwise if the bus has no
+callbacks, just use the generic driver ones?
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
----
-
- drivers/scsi/qla2xxx/Kconfig |   16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
-
---- linux-2.6.15-mm1-full/drivers/scsi/qla2xxx/Kconfig.old	2006-01-06 16:38:09.000000000 +0100
-+++ linux-2.6.15-mm1-full/drivers/scsi/qla2xxx/Kconfig	2006-01-06 16:39:51.000000000 +0100
-@@ -29,42 +29,46 @@
- config SCSI_QLA2XXX_EMBEDDED_FIRMWARE
- 	bool "  Use firmware-loader modules (DEPRECATED)"
- 	depends on SCSI_QLA2XXX
-+	help
-+	  This option offers you the deprecated firmware-loader
-+	  modules that have been obsoleted by the usage of the
-+	  Firmware Loader interface in the qla2xxx driver.
- 
- config SCSI_QLA21XX
- 	tristate "  Build QLogic ISP2100 firmware-module"
--	depends on SCSI_QLA2XXX_EMBEDDED_FIRMWARE
-+	depends on SCSI_QLA2XXX && SCSI_QLA2XXX_EMBEDDED_FIRMWARE
- 	---help---
- 	This driver supports the QLogic 21xx (ISP2100) host adapter family.
- 
- config SCSI_QLA22XX
- 	tristate "  Build QLogic ISP2200 firmware-module"
--	depends on SCSI_QLA2XXX_EMBEDDED_FIRMWARE
-+	depends on SCSI_QLA2XXX && SCSI_QLA2XXX_EMBEDDED_FIRMWARE
- 	---help---
- 	This driver supports the QLogic 22xx (ISP2200) host adapter family.
- 
- config SCSI_QLA2300
- 	tristate "  Build QLogic ISP2300 firmware-module"
--	depends on SCSI_QLA2XXX_EMBEDDED_FIRMWARE
-+	depends on SCSI_QLA2XXX && SCSI_QLA2XXX_EMBEDDED_FIRMWARE
- 	---help---
- 	This driver supports the QLogic 2300 (ISP2300 and ISP2312) host
- 	adapter family.
- 
- config SCSI_QLA2322
- 	tristate "  Build QLogic ISP2322 firmware-module"
--	depends on SCSI_QLA2XXX_EMBEDDED_FIRMWARE
-+	depends on SCSI_QLA2XXX && SCSI_QLA2XXX_EMBEDDED_FIRMWARE
- 	---help---
- 	This driver supports the QLogic 2322 (ISP2322) host adapter family.
- 
- config SCSI_QLA6312
- 	tristate "  Build QLogic ISP63xx firmware-module"
--	depends on SCSI_QLA2XXX_EMBEDDED_FIRMWARE
-+	depends on SCSI_QLA2XXX && SCSI_QLA2XXX_EMBEDDED_FIRMWARE
- 	---help---
- 	This driver supports the QLogic 63xx (ISP6312 and ISP6322) host
- 	adapter family.
- 
- config SCSI_QLA24XX
- 	tristate "  Build QLogic ISP24xx firmware-module"
--	depends on SCSI_QLA2XXX_EMBEDDED_FIRMWARE
-+	depends on SCSI_QLA2XXX && SCSI_QLA2XXX_EMBEDDED_FIRMWARE
- 	---help---
- 	This driver supports the QLogic 24xx (ISP2422 and ISP2432) host
- 	adapter family.
-
+James
