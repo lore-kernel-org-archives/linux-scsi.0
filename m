@@ -1,48 +1,65 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [Bug 5808] aic7xxx - half speed/frequency
-Date: Fri, 06 Jan 2006 15:46:40 -0600
-Message-ID: <1136584000.3528.56.camel@mulgrave>
-References: <200601041758.k04Hw8Sf015281@fire-2.osdl.org>
-	 <43BD2EED.3060404@Zajsoft.NET> <1136565792.3528.31.camel@mulgrave>
-	 <43BEC8F6.5000003@Zajsoft.NET>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: [2.6 patch] drivers/scsi/qla2xxx/Kconfig: two fixes
+Date: Sat, 7 Jan 2006 00:09:35 +0100
+Message-ID: <20060106230935.GC3774@stusta.de>
+References: <20060106163401.GP12131@stusta.de> <20060106211241.GG13844@andrew-vasquezs-powerbook-g4-15.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:25004 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751431AbWAFVrA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Jan 2006 16:47:00 -0500
-In-Reply-To: <43BEC8F6.5000003@Zajsoft.NET>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:39439 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S965345AbWAFXJh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Jan 2006 18:09:37 -0500
+Content-Disposition: inline
+In-Reply-To: <20060106211241.GG13844@andrew-vasquezs-powerbook-g4-15.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Miroslav =?ISO-8859-1?Q?Zaj=EDc?= <Zajsoft@Zajsoft.NET>
-Cc: bugme-daemon@bugzilla.kernel.org, Zajsoft2@Zajsoft.NET, linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 2006-01-06 at 20:45 +0100, Miroslav Zaj=EDc wrote:
-> I try u suggestion, but not success.
-> echo 50 > /sys/class/spi_transport/target0:0:0/period
-> This dont change content and is still on 100.
+On Fri, Jan 06, 2006 at 01:12:41PM -0800, Andrew Vasquez wrote:
+> On Fri, 06 Jan 2006, Adrian Bunk wrote:
+> 
+> > This patch contains the following fixes for 
+> > drivers/scsi/qla2xxx/Kconfig:
+> > - add a help text for SCSI_QLA2XXX_EMBEDDED_FIRMWARE
+> > - the firmware modules must depend on SCSI_QLA2XXX to prevent
+> >   illegal configurations like SCSI_QLA2XXX=m, SCSI_QLA21XX=y
+> > 
+> > 
+> > Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> 
+> Ack.
 
-It's not supposed to.  The content reflects the current rate.  Unless
-you send an I/O to the device to force a negotiation to occur, it won't
-change.
+There's another bug that must be fixed:
 
-So you need to do
+SCSI_QLA2XXX must be renamed.
 
-echo 50 > /sys/class/spi_transport/target0:0:0/period
+The problem is that up to 2.6.15, it was a not user visible variable 
+that was set for _everyone_ with SCSI && PCI and that didn't have any 
+influence on what was built.
 
-fdisk /dev/sda=20
+E.g. it is set in the .config for my computer since my computer has PCI 
+cards and I'm using USB mass storage.
 
-cat /sys/class/spi_transport/target0:0:0/period
+Due to the change of SCSI_QLA2XXX to a user-visible option that builds 
+the driver, this means that suddenly after upgrading the kernel and 
+running "make oldconfig" a SCSI driver gets built the user never 
+selected.
 
-the fdisk will force a partition table read down to the device.
+Do you have any suggestions for a new name?
+We could e.g. name it SCSI_QLAXXXX since the driver also supports 
+6312/6322, or name it simply SCSI_QLA.
 
-James
+> Andrew Vasquez
 
+cu
+Adrian
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
