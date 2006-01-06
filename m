@@ -1,74 +1,46 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: /dev/disk/by-id incomplete and unhelpful for SATA drives
-Date: Fri, 06 Jan 2006 12:57:50 +1000
-Message-ID: <43BDDCAE.7000506@torque.net>
-References: <doc5jl$acv$1@sea.gmane.org> <20051221185518.GA9100@vrfy.org> <43A9CFE0.2070103@edesix.com> <20051222043527.GA13175@vrfy.org> <43AA8D0B.10504@edesix.com> <20051222183525.GA17871@devserv.devel.redhat.com> <43AB40E2.1050009@edesix.com> <20060106013640.GA27841@aracnet.com>
-Reply-To: dougg@torque.net
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: [CFT 1/29] Add bus_type probe, remove, shutdown methods.
+Date: Fri, 6 Jan 2006 11:48:23 +0000
+Message-ID: <20060106114822.GA11071@flint.arm.linux.org.uk>
+References: <20060105142951.13.01@flint.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:5352 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S932610AbWAFC5e (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2006 21:57:34 -0500
-In-Reply-To: <20060106013640.GA27841@aracnet.com>
+Received: from caramon.arm.linux.org.uk ([212.18.232.186]:59913 "EHLO
+	caramon.arm.linux.org.uk") by vger.kernel.org with ESMTP
+	id S964914AbWAFLsa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Jan 2006 06:48:30 -0500
+Content-Disposition: inline
+In-Reply-To: <20060105142951.13.01@flint.arm.linux.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: patman@aracnet.com
-Cc: Chris Paulson-Ellis <chris@edesix.com>, Bill Nottingham <notting@redhat.com>, linux-hotplug-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, pcihpd-discuss@lists.sourceforge.net, schwidefsky@de.ibm.com
+Cc: Greg K-H <greg@kroah.com>
 
-patman@aracnet.com wrote:
-> On Fri, Dec 23, 2005 at 12:12:18AM +0000, Chris Paulson-Ellis wrote:
-> 
-> 
->>>Why not just fix the kernel when it's filling in the page 83
->>>data to pull the serial from page 80 instead of putting *that* there?
->>>
->>>Bill
->>
->>Indeed. Here's the patch. Now I have 3 ways to fix this. Any more anyone?
-> 
-> 
-> This is the best approach, I think you could even remove page 0x83 support
-> and still be SCSI compliant.
+On Thu, Jan 05, 2006 at 02:29:51PM +0000, Russell King wrote:
+> The long-term idea is to remove the device_driver methods entirely.
 
-Pat,
-Not since 2000/2001 ... The VPD device identification page
-(0x83) and the "Supported VPD pages" page (0x0) are
-mandatory in SPC-2 (ANSI INCITS 351-2001), SPC-3 (soon
-to be a standard) and SPC-4. Recent SCSI to ATA
-Translation drafts (e.g. sat-r07a.pdf) define a mapping
-for the naa-5 identifier defined in ATA/ATAPI-7 and
-ATA/ATAPI-8 (IDENTIFY DEVICE response words 108 to 111)
-to VPD page 0x83. There are also moves afoot to get a
-similar wwn identifier into the IDENTIFY PACKET DEVICE
-response.
+With the three additional patches I've just posted, this leaves:
 
-SAT defines two device id descriptors for VPD page 0x83:
-  - based on WWN naa-5 (described above)
-  - based on model number and serial number (IDENTIFY
-    DEVICE response words 27-46 and 10-19)
+	ccw_driver
+	css_driver
+	pcie_port_service_driver
+	scsi_driver
 
-So removing VPD page 0x83 would be a retrograde step
-IMO. The libata implementation should be enhanced to
-support one or both of the above descriptors as they
-have a defined format (unlike serial number VPD page (0x80)).
-libata's current approach to yield "Linux ATA-SCSI simulator"
-for the loosely formatted ASCII identification descriptor
-is just a place holder.
+using the generic device_driver probe/remove/shutdown/suspend/resume
+methods.
 
-libata should do a lot more work in the VPD 0x83 page
-area. For example when SATA disk is connected via SAS
-(behind an expander rather that directly connected)
-then a "device port" association descriptor should have
-the SAS address (also naa-5) of the SATA bridge (in the
-expander).
+I'm not sure what's going on with the PCIE code - my attempts to
+contact the PCIE folk about their suspend/resume implementation has
+been met by silence.
 
-libata is not the only way that the SCSI subsystem
-will be seeing SATA disks. There are FC exclosures
-out there filled with SATA disks that have a SAT
-layer in the enclosure.
+The scsi_driver business looks like being a pig to solve - so can
+SCSI folk please look at what's required to unuse these fields.
 
+Could the s390 folk also look at what's required for ccw_driver and
+css_driver please?
 
-Doug Gilbert
-cc-ed to linux-ide
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 Serial core
