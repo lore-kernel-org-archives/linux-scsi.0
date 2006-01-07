@@ -1,43 +1,116 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] always handle REQ_BLOCK_PC requests in common code
-Date: Sat, 7 Jan 2006 15:13:25 +0100
-Message-ID: <20060107141325.GA9477@lst.de>
-References: <20060106173407.GA23658@lst.de> <43BF5F23.2040804@torque.net>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: Re: 2.6.13.4 aacraid: Partitioning array makes adapter go "dead"
+Date: Sat, 7 Jan 2006 15:19:33 +0100
+Message-ID: <20060107141933.GJ3774@stusta.de>
+References: <435BF66B.7040508@cs.indiana.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:12426 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S1030456AbWAGONi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Jan 2006 09:13:38 -0500
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:28435 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1030459AbWAGOTe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 7 Jan 2006 09:19:34 -0500
 Content-Disposition: inline
-In-Reply-To: <43BF5F23.2040804@torque.net>
+In-Reply-To: <435BF66B.7040508@cs.indiana.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
+To: Robert Jones <rowjones@cs.indiana.edu>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sat, Jan 07, 2006 at 04:26:43PM +1000, Douglas Gilbert wrote:
-> Christoph Hellwig wrote:
-> > LLDDs should never see REQ_BLOCK_PC requests, we can handle them just
-> > fine in the core code.  There is a small behaviour change in that some
-> > check in sr's rw_intr are bypassed, but I consider the old behaviour
-> > a bug.
-> > 
-> > Mike found this cleanup ooportunity and provdided early patches, so all
-> > the credit goes to him, even if I redid the patches from scratch beause
-> > that was easier than forward-porting the old patches.
+On Sun, Oct 23, 2005 at 03:45:31PM -0500, Robert Jones wrote:
+
+>...
+> Here's some information regarding the machine I'm having the problem with:
+> 2-Way Dual-Core AMD Opteron 275's
+> 8GB Reg ECC
+> Tyan 2882-D (K8SD-Pro) motherboard (AMD-8000 series chipset)
+> 2 Seagate ST336754LC's, updated to latest firmware (0004)
+> Adaptec 2230S (updated to latest firmware, 8205)
 > 
-> The point of the hacks in the sd driver was to make
-> sure SG_IO ioctl commands issued via a sd device node
-> would not get caught up in the sd driver's error
-> processing (e.g. retries on MEDIUM ERRORs). Is there
-> a clean path back for such errors to the SG_IO ioctl
-> and hence the user space?
+> The machine boots wonderfully with any kernel I have tried (2.6.9,
+> 2.6.12.9, 2.6.13.4, 2.6.14-rc5; all kernels are vanilla kernels) and
+> binds the array to /dev/sda, so long as the array is unpartitioned.
+> Here's what the kernel reports when booting:
 
-Yeah.  scsi_io_completion deals specially with REQ_BLOCK_PC requests,
-so we don't do these retries on MEDIUM ERRORs.  sg even before my patch
-directly handed off these requests to scsi_io_completion, and didn't do
-any own handling of errors for them.  There's zero change in behaviour
-for sd and st.  Only sr did some error processesing previously which
-was wrong.
+Is this problem still present in kernel 2.6.15?
+
+> SCSI device sda: 71619584 512-byte hdwr sectors (36669 MB)
+> sda: Write Protect is off
+> sda: Mode Sense: 03 00 00 00
+> sda: got wrong page
+> sda: assuming drive cache: write through
+> SCSI device sda: 71619584 512-byte hdwr sectors (36669 MB)
+> sda: Write Protect is off
+> sda: Mode Sense: 03 00 00 00
+> sda: got wrong page
+> sda: assuming drive cache: write through
+>   sda: unknown partition table
+> Attached scsi removable disk sda at scsi0, channel 0, id 0, lun 0
+> Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
+> 
+> -----------
+> 
+> However, once I partition the array things begin to go wrong. While the
+> partitioning succeeds, any point after this aacraid will state the
+> controller is "dead". Here's what the kernel is telling me at this point:
+> 
+> -----------
+> 
+> SCSI device sda: 71619584 512-byte hdwr sectors (36669 MB)
+> sda: Write Protect is off
+> sda: Mode Sense: 03 00 00 00
+> sda: got wrong page
+> sda: assuming drive cache: write through
+>   sda: sda1 sda2 sda3
+> SCSI device sda: 71619584 512-byte hdwr sectors (36669 MB)
+> sda: Write Protect is off
+> sda: Mode Sense: 03 00 00 00
+> sda: got wrong page
+> sda: assuming drive cache: write through
+>   sda: sda1 sda2 sda3
+> 
+> -----------
+> 
+> This looks fine too, however, when I reboot or try to access the array
+> directly such as a mke2fs /dev/sda1, the kernel says this:
+> 
+> -----------
+> 
+> aacraid: Host adapter reset request. SCSI hang ?
+> aacraid: Host adapter appears dead
+> scsi: Device offlined - not ready after error recovery: host 0 channel 0
+> id 0 lun 0
+> sd 0:0:0:0: SCSI error: return code = 0x6000000
+> end_request: I/O error, dev sda, sector 63
+> Buffer I/O error on device sda1, logical block 0
+> scsi0 (0:0): rejecting I/O to offline device
+> Buffer I/O error on device sda1, logical block 0
+> scsi0 (0:0): rejecting I/O to offline device
+> Buffer I/O error on device sda1, logical block 64
+> scsi0 (0:0): rejecting I/O to offline device
+> Buffer I/O error on device sda1, logical block 64
+> 
+> -----------
+> 
+> The same machine will install Win2K w/ Adaptec's driver just fine, so I
+> think the hardware is okay. I went ahead and pulled Adaptec's "official"
+> aacraid implementation and replaced the "vanilla" implementation in
+> 2.6.9 with it. Unfortunately, this did not seem to help.
+> 
+> Also, if I remove the partitions aacraid is happy again and will bind
+> the array into /dev/sda as before. It's only after partitioning do
+> things go bad.
+>...
+> Thanks,
+> Robert
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
