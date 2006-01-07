@@ -1,116 +1,91 @@
-From: Adrian Bunk <bunk@stusta.de>
+From: Martin Drab <drab@kepler.fjfi.cvut.cz>
 Subject: Re: 2.6.13.4 aacraid: Partitioning array makes adapter go "dead"
-Date: Sat, 7 Jan 2006 15:19:33 +0100
-Message-ID: <20060107141933.GJ3774@stusta.de>
-References: <435BF66B.7040508@cs.indiana.edu>
+Date: Sat, 7 Jan 2006 16:44:50 +0100 (CET)
+Message-ID: <Pine.LNX.4.60.0601071622210.18374@kepler.fjfi.cvut.cz>
+References: <435BF66B.7040508@cs.indiana.edu> <20060107141933.GJ3774@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:28435 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1030459AbWAGOTe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 7 Jan 2006 09:19:34 -0500
-Content-Disposition: inline
-In-Reply-To: <435BF66B.7040508@cs.indiana.edu>
+Received: from kepler.fjfi.cvut.cz ([147.32.6.11]:15335 "EHLO
+	kepler.fjfi.cvut.cz") by vger.kernel.org with ESMTP
+	id S1752552AbWAGPq7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 7 Jan 2006 10:46:59 -0500
+In-Reply-To: <20060107141933.GJ3774@stusta.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Jones <rowjones@cs.indiana.edu>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Robert Jones <rowjones@cs.indiana.edu>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Sun, Oct 23, 2005 at 03:45:31PM -0500, Robert Jones wrote:
+On Sat, 7 Jan 2006, Adrian Bunk wrote:
 
->...
-> Here's some information regarding the machine I'm having the problem with:
-> 2-Way Dual-Core AMD Opteron 275's
-> 8GB Reg ECC
-> Tyan 2882-D (K8SD-Pro) motherboard (AMD-8000 series chipset)
-> 2 Seagate ST336754LC's, updated to latest firmware (0004)
-> Adaptec 2230S (updated to latest firmware, 8205)
+> On Sun, Oct 23, 2005 at 03:45:31PM -0500, Robert Jones wrote:
 > 
-> The machine boots wonderfully with any kernel I have tried (2.6.9,
-> 2.6.12.9, 2.6.13.4, 2.6.14-rc5; all kernels are vanilla kernels) and
-> binds the array to /dev/sda, so long as the array is unpartitioned.
-> Here's what the kernel reports when booting:
+> >...
+> > Here's some information regarding the machine I'm having the problem with:
+> > 2-Way Dual-Core AMD Opteron 275's
+> > 8GB Reg ECC
+> > Tyan 2882-D (K8SD-Pro) motherboard (AMD-8000 series chipset)
+> > 2 Seagate ST336754LC's, updated to latest firmware (0004)
+> > Adaptec 2230S (updated to latest firmware, 8205)
+> > 
+> > The machine boots wonderfully with any kernel I have tried (2.6.9,
+> > 2.6.12.9, 2.6.13.4, 2.6.14-rc5; all kernels are vanilla kernels) and
+> > binds the array to /dev/sda, so long as the array is unpartitioned.
+> > Here's what the kernel reports when booting:
+> 
+> Is this problem still present in kernel 2.6.15?
 
-Is this problem still present in kernel 2.6.15?
+Correct me if I'm wrong, but I think this was a problem of setting 
+AAC_MAX_32BIT_SGBCOUNT in aacraid.h low enough, so that the transfer 
+chunks (for big transfers) are small enough for various disks to handle 
+it. For me 512 was low enough to work. I see now it's at 256. But that was 
+just a temporary workaround AFAIK, it should have been solved by the "new 
+comm" technology making it into the mainline. Mark Haverkamp missed the 
+14 day window for new patches for 2.6.14, however it is in the 2.6.15 
+allready, so I guess this may be fixed by
 
-> SCSI device sda: 71619584 512-byte hdwr sectors (36669 MB)
-> sda: Write Protect is off
-> sda: Mode Sense: 03 00 00 00
-> sda: got wrong page
-> sda: assuming drive cache: write through
-> SCSI device sda: 71619584 512-byte hdwr sectors (36669 MB)
-> sda: Write Protect is off
-> sda: Mode Sense: 03 00 00 00
-> sda: got wrong page
-> sda: assuming drive cache: write through
->   sda: unknown partition table
-> Attached scsi removable disk sda at scsi0, channel 0, id 0, lun 0
-> Attached scsi generic sg0 at scsi0, channel 0, id 0, lun 0,  type 0
-> 
-> -----------
-> 
-> However, once I partition the array things begin to go wrong. While the
-> partitioning succeeds, any point after this aacraid will state the
-> controller is "dead". Here's what the kernel is telling me at this point:
-> 
-> -----------
-> 
-> SCSI device sda: 71619584 512-byte hdwr sectors (36669 MB)
-> sda: Write Protect is off
-> sda: Mode Sense: 03 00 00 00
-> sda: got wrong page
-> sda: assuming drive cache: write through
->   sda: sda1 sda2 sda3
-> SCSI device sda: 71619584 512-byte hdwr sectors (36669 MB)
-> sda: Write Protect is off
-> sda: Mode Sense: 03 00 00 00
-> sda: got wrong page
-> sda: assuming drive cache: write through
->   sda: sda1 sda2 sda3
-> 
-> -----------
-> 
-> This looks fine too, however, when I reboot or try to access the array
-> directly such as a mke2fs /dev/sda1, the kernel says this:
-> 
-> -----------
-> 
-> aacraid: Host adapter reset request. SCSI hang ?
-> aacraid: Host adapter appears dead
-> scsi: Device offlined - not ready after error recovery: host 0 channel 0
-> id 0 lun 0
-> sd 0:0:0:0: SCSI error: return code = 0x6000000
-> end_request: I/O error, dev sda, sector 63
-> Buffer I/O error on device sda1, logical block 0
-> scsi0 (0:0): rejecting I/O to offline device
-> Buffer I/O error on device sda1, logical block 0
-> scsi0 (0:0): rejecting I/O to offline device
-> Buffer I/O error on device sda1, logical block 64
-> scsi0 (0:0): rejecting I/O to offline device
-> Buffer I/O error on device sda1, logical block 64
-> 
-> -----------
-> 
-> The same machine will install Win2K w/ Adaptec's driver just fine, so I
-> think the hardware is okay. I went ahead and pulled Adaptec's "official"
-> aacraid implementation and replaced the "vanilla" implementation in
-> 2.6.9 with it. Unfortunately, this did not seem to help.
-> 
-> Also, if I remove the partitions aacraid is happy again and will bind
-> the array into /dev/sda as before. It's only after partitioning do
-> things go bad.
->...
-> Thanks,
-> Robert
+commit 8e0c5ebde82b08f6d996e11983890fc4cc085fab
+Author: Mark Haverkamp <markh@osdl.org>
+Date:   Mon Oct 24 10:52:22 2005 -0700
 
-cu
-Adrian
+    [SCSI] aacraid: Newer adapter communication iterface support
 
--- 
+    Received from Mark Salyzyn.
 
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+    This patch adds the 'new comm' interface, which modern AAC based
+    adapters that are less than a year old support in the name of much
+    improved performance. These modern adapters support both the legacy and
+    the 'new comm' interfaces.
 
+    Signed-off-by: Mark Haverkamp <markh@osdl.org>
+    Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+
+But I may be mistaken, though. (The symptoms are but very simmilar to 
+those I witnessed in the past.)
+
+...
+> > -----------
+> > 
+> > aacraid: Host adapter reset request. SCSI hang ?
+> > aacraid: Host adapter appears dead
+> > scsi: Device offlined - not ready after error recovery: host 0 channel 0
+> > id 0 lun 0
+> > sd 0:0:0:0: SCSI error: return code = 0x6000000
+> > end_request: I/O error, dev sda, sector 63
+> > Buffer I/O error on device sda1, logical block 0
+> > scsi0 (0:0): rejecting I/O to offline device
+> > Buffer I/O error on device sda1, logical block 0
+> > scsi0 (0:0): rejecting I/O to offline device
+> > Buffer I/O error on device sda1, logical block 64
+> > scsi0 (0:0): rejecting I/O to offline device
+> > Buffer I/O error on device sda1, logical block 64
+> > 
+> > -----------
+> >...
+> > Thanks,
+> > Robert
+> 
+> cu
+> Adrian
+
+Martin
