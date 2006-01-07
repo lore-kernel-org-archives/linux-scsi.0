@@ -1,39 +1,32 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: [PATCH] Areca RAID driver (arcmsr) cleanups
-Date: Fri, 6 Jan 2006 21:17:57 -0800
-Message-ID: <20060106211757.20770379.rdunlap@xenotime.net>
-References: <1135228831.4122.15.camel@mentorng.gurulabs.com>
-	<1135229681.439.23.camel@mindpipe>
-	<200512220917.41494.oliver@neukum.org>
-	<1135239601.2940.5.camel@laptopd505.fenrus.org>
-	<20051222052443.57ffe6f9.akpm@osdl.org>
-	<1135279895.19320.24.camel@mentorng.gurulabs.com>
-	<20051230113227.2b787d43.rdunlap@xenotime.net>
-	<20060104011841.036ea510.akpm@osdl.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+From: Hetty Price <parakeet@purepopmagic.com>
+Subject: Microsoft FrontPage 2003 Pro plus 200 Templates - $29.95
+Date: Fri, 6 Jan 2006 21:40:13 -0800
+Message-ID: <9616676603.1073316653@58.74.246.202>
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:64402 "HELO xenotime.net")
-	by vger.kernel.org with SMTP id S1030411AbWAGFSB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Jan 2006 00:18:01 -0500
-Received: from midway ([71.111.157.99]) by xenotime.net for <linux-scsi@vger.kernel.org>; Fri, 6 Jan 2006 21:17:59 -0800
-In-Reply-To: <20060104011841.036ea510.akpm@osdl.org>
+Received: from zeus1.kernel.org ([204.152.191.4]:14495 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1030478AbWAGFkT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Jan 2006 00:40:19 -0500
+Received: from 58.74.246.202 ([58.74.246.202])
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id k075eDrC017085
+	for <linux-scsi@vger.kernel.org>; Fri, 6 Jan 2006 21:40:14 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: dax@gurulabs.com, erich@areca.com.tw, arjan@infradead.org, oliver@neukum.org, rlrevell@joe-job.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+Quicken 2005 Premier Home and Business - $19.95
+http://Christianize.oemzs.com/
 
 
-> Unfortunately I've gone and applied a huge driver update from Erich, so
-> none of this applies any more.
-> 
-> A recut would be appreciated.  Please include your additional suggestions:
-> In the updated changelog, thanks.
 
-The recut is huge -- too large to mail (> 260 KB).
+RASCALITY, n. Stupidity militant. The activity of a clouded intellect.   
+If we don't succeed, we run the risk of failure.   
+Why then the worlds mine oyster, Which I with sword shall open. 
+RECOLLECT, v. To recall with additions something not previously known.   
+Few men have virtue to withstand the highest bidder.    
+A moment's thinking is an hour in words.     
+Opposites are cures for opposites.        
 
-http://www.xenotime.net/linux/patches/arcmsr-rollup.patch
 
----
-~Randy
+
