@@ -1,50 +1,49 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: aic94xx linux driver
-Date: Sat, 07 Jan 2006 12:19:11 +1000
-Message-ID: <43BF251F.3060007@torque.net>
-References: <001501c6114f$7a6c3c00$520c220a@vugd.gov.lv> <C8B2ECEF-34CF-4764-A82C-C3144512F449@mac.com>
-Reply-To: dougg@torque.net
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: "Jarrod Holloway" <PXNERUYK@msn.com>
+Subject: Save 33% on your Monthly Loan 39Ebj
+Date: Sat, 07 Jan 2006 00:29:26 -0400
+Message-ID: <LAW26.OE649yfB4mvo368753d5__1705.77767207778$1136608497$gmane$org@motmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:20460 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1752511AbWAGCSq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jan 2006 21:18:46 -0500
-In-Reply-To: <C8B2ECEF-34CF-4764-A82C-C3144512F449@mac.com>
+Received: from client-201.240.5.188.speedy.net.pe ([201.240.5.188]:23310 "HELO
+	client-201.240.5.188.speedy.net.pe") by vger.kernel.org with SMTP
+	id S1030336AbWAGEe2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Jan 2006 23:34:28 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Rustad <mrustad@mac.com>
-Cc: Deniss <denis@msh.lv>, linux-scsi@vger.kernel.org
+To: linux-net@vger.kernel.org
 
-Mark Rustad wrote:
-> Deniss,
-> 
-> On Jan 4, 2006, at 10:54 AM, Deniss wrote:
-> 
->> Hello !
->>
->> I have Supermicro 6014H-32 server with adaptec 9410w SAS/SATA 
->> controller on board.
->> I have linux kernel compiled with aic94xx driver from http://
->> linux.adaptec.com/sas/
->> I am notice that SAS disks work well with this driver, but SATA  disks
->> are not mapped to /dev by driver.
->> I tried to contact Luben Tuikov without success.
->> Looks like aic94xx driver is not complete or have no SATA support
-> 
-> 
-> I have the same issue. By looking in /sys, you can see that the  driver
-> does see SATA disks, but there is no software connection  between libata
-> in the kernel and the SATA-tunneling protocol  capability of the Adaptec
-> SAS driver yet. I'm sure that there will be  an increasing chorus of
-> folks looking for this missing piece.
 
-If no-one else is looking at solving this problem
-(libata to aic94xx STP connection) then I may have
-time to look at it.
+Dear Home Owner,
 
-I would need (remote) access to a machine with that
-hardware.
+Your credit doesn't matter to us! If you OWN real estate
+and want IMMEDIATE cash to spend ANY way you like, or simply wish
+to LOWER your monthly payments by a third or more, here are the deals
+we have TODAY (hurry, these offers will expire TONIGHT) :
 
-Doug Gilbert
+$450,000.00 at a 3.85% fixed-rate
+$374,000.00 at a 3.54% variable-rate
+$464,000.00 at a 3.77% interest-only
+$214,000.00 at a 3.54% fixed-rate
+$134,000.00 at a 3.75% variable-rate
+
+Hurry, when these deals are gone, they are gone!
+Simply fill out this one-minute form...
+
+http://D7S1Id.washyde.com/af
+
+Don't worry about approval, your credit will not disqualify you!
+
+http://umMn.washyde.com/af
+
+Sincerely,
+Bridget Hurd
+Approval Manager
+
+
+
+
+
+
+stop the current promo
+http://washyde.com/rem
+
+HxJOLv
