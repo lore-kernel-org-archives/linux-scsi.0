@@ -1,32 +1,41 @@
-From: Hetty Price <parakeet@purepopmagic.com>
-Subject: Microsoft FrontPage 2003 Pro plus 200 Templates - $29.95
-Date: Fri, 6 Jan 2006 21:40:13 -0800
-Message-ID: <9616676603.1073316653@58.74.246.202>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] always handle REQ_BLOCK_PC requests in common code
+Date: Sat, 07 Jan 2006 16:26:43 +1000
+Message-ID: <43BF5F23.2040804@torque.net>
+References: <20060106173407.GA23658@lst.de>
+Reply-To: dougg@torque.net
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:14495 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S1030478AbWAGFkT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Jan 2006 00:40:19 -0500
-Received: from 58.74.246.202 ([58.74.246.202])
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id k075eDrC017085
-	for <linux-scsi@vger.kernel.org>; Fri, 6 Jan 2006 21:40:14 -0800
+Received: from zorg.st.net.au ([203.16.233.9]:61586 "EHLO borg.st.net.au")
+	by vger.kernel.org with ESMTP id S932663AbWAGG0U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Jan 2006 01:26:20 -0500
+In-Reply-To: <20060106173407.GA23658@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: jejb@steeleye.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-Quicken 2005 Premier Home and Business - $19.95
-http://Christianize.oemzs.com/
+Christoph Hellwig wrote:
+> LLDDs should never see REQ_BLOCK_PC requests, we can handle them just
+> fine in the core code.  There is a small behaviour change in that some
+> check in sr's rw_intr are bypassed, but I consider the old behaviour
+> a bug.
+> 
+> Mike found this cleanup ooportunity and provdided early patches, so all
+> the credit goes to him, even if I redid the patches from scratch beause
+> that was easier than forward-porting the old patches.
 
+The point of the hacks in the sd driver was to make
+sure SG_IO ioctl commands issued via a sd device node
+would not get caught up in the sd driver's error
+processing (e.g. retries on MEDIUM ERRORs). Is there
+a clean path back for such errors to the SG_IO ioctl
+and hence the user space?
 
+The same applies to most of the error processing done
+in the midlayer, with TASK SET FULL being a bit of a
+grey area.
 
-RASCALITY, n. Stupidity militant. The activity of a clouded intellect.   
-If we don't succeed, we run the risk of failure.   
-Why then the worlds mine oyster, Which I with sword shall open. 
-RECOLLECT, v. To recall with additions something not previously known.   
-Few men have virtue to withstand the highest bidder.    
-A moment's thinking is an hour in words.     
-Opposites are cures for opposites.        
-
-
-
+Doug Gilbert
