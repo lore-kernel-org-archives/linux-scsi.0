@@ -1,27 +1,31 @@
-From: Mark Hounschell <dmarkh@cfl.rr.com>
-Subject: SG_GET_ACCESS_COUNT ioctl problem
-Date: Sun, 08 Jan 2006 08:54:40 -0500
-Message-ID: <43C119A0.8070304@cfl.rr.com>
-Reply-To: dmarkh@cfl.rr.com
+From: Adrian Bunk <bunk@stusta.de>
+Subject: drivers/scsi/megaraid.c: add a dummy mega_create_proc_entry() for PROC_FS=y
+Date: Sun, 8 Jan 2006 15:14:34 +0100
+Message-ID: <20060108141434.GK3774@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-05-smtplb.tampabay.rr.com ([65.32.5.135]:39362 "EHLO
-	ms-smtp-05.tampabay.rr.com") by vger.kernel.org with ESMTP
-	id S1161056AbWAHNym (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 8 Jan 2006 08:54:42 -0500
-Received: from [10.10.10.100] (158.244.118.70.cfl.res.rr.com [70.118.244.158])
-	by ms-smtp-05.tampabay.rr.com (8.12.10/8.12.7) with ESMTP id k08DseeP013297
-	for <linux-scsi@vger.kernel.org>; Sun, 8 Jan 2006 08:54:40 -0500 (EST)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752628AbWAHOOg@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: sju@lsil.com
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-In the 2.4 kernel (not using devfs) the SG_GET_ACCESS_COUNT ioctl to an
-sg device would report the correct/expected usage count when issued to a
-sd disc that was mounted, accounting for the mount by the system. The
-2.6 kernel does not. Is this now the expected behavior or is this a bug?
+This patch adds a dummy mega_create_proc_entry() for CONFIG_PROC_FS=n.
 
-Mark
 
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+--- linux-2.6.15-mm2-full/drivers/scsi/megaraid.c.old	2006-01-08 11:31:28.000000000 +0100
++++ linux-2.6.15-mm2-full/drivers/scsi/megaraid.c	2006-01-08 11:33:43.000000000 +0100
+@@ -3179,6 +3179,10 @@
+ 
+ 	return len;
+ }
++#else  /*  CONFIG_PROC_FS  */
++
++static inline void
++mega_create_proc_entry(int index, struct proc_dir_entry *parent) {}
+ 
+ #endif
+ 
