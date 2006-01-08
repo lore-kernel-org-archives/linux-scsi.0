@@ -1,30 +1,27 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [2.6 patch] drivers/scsi/qla2xxx/Kconfig: two fixes
-Date: Sat, 7 Jan 2006 16:50:09 -0700
-Message-ID: <20060107235009.GH19769@parisc-linux.org>
-References: <20060106163401.GP12131@stusta.de> <20060106211241.GG13844@andrew-vasquezs-powerbook-g4-15.local> <20060106230935.GC3774@stusta.de>
+From: Mark Hounschell <dmarkh@cfl.rr.com>
+Subject: SG_GET_ACCESS_COUNT ioctl problem
+Date: Sun, 08 Jan 2006 08:54:40 -0500
+Message-ID: <43C119A0.8070304@cfl.rr.com>
+Reply-To: dmarkh@cfl.rr.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:20427 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1161071AbWAGXuJ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 7 Jan 2006 18:50:09 -0500
-Content-Disposition: inline
-In-Reply-To: <20060106230935.GC3774@stusta.de>
+Received: from ms-smtp-05-smtplb.tampabay.rr.com ([65.32.5.135]:39362 "EHLO
+	ms-smtp-05.tampabay.rr.com") by vger.kernel.org with ESMTP
+	id S1161056AbWAHNym (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 8 Jan 2006 08:54:42 -0500
+Received: from [10.10.10.100] (158.244.118.70.cfl.res.rr.com [70.118.244.158])
+	by ms-smtp-05.tampabay.rr.com (8.12.10/8.12.7) with ESMTP id k08DseeP013297
+	for <linux-scsi@vger.kernel.org>; Sun, 8 Jan 2006 08:54:40 -0500 (EST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, Jan 07, 2006 at 12:09:35AM +0100, Adrian Bunk wrote:
-> Due to the change of SCSI_QLA2XXX to a user-visible option that builds 
-> the driver, this means that suddenly after upgrading the kernel and 
-> running "make oldconfig" a SCSI driver gets built the user never 
-> selected.
-> 
-> Do you have any suggestions for a new name?
-> We could e.g. name it SCSI_QLAXXXX since the driver also supports 
-> 6312/6322, or name it simply SCSI_QLA.
+In the 2.4 kernel (not using devfs) the SG_GET_ACCESS_COUNT ioctl to an
+sg device would report the correct/expected usage count when issued to a
+sd disc that was mounted, accounting for the mount by the system. The
+2.6 kernel does not. Is this now the expected behavior or is this a bug?
 
-SCSI_QLOGIC_FC?  Or does this driver handle SAS too?
+Mark
+
