@@ -1,47 +1,83 @@
-From: Ryan Richter <ryan@tau.solarneutrino.net>
-Subject: Re: Fw: crash on x86_64 - mm related?
-Date: Mon, 9 Jan 2006 15:05:21 -0500
-Message-ID: <20060109200521.GH283@tau.solarneutrino.net>
-References: <Pine.LNX.4.63.0512271807130.4955@kai.makisara.local> <20060104172727.GA320@tau.solarneutrino.net> <Pine.LNX.4.63.0601042334310.5087@kai.makisara.local> <20060105201249.GB1795@tau.solarneutrino.net> <Pine.LNX.4.64.0601051312380.3169@g5.osdl.org> <20060109033149.GC283@tau.solarneutrino.net> <Pine.LNX.4.64.0601082000450.3169@g5.osdl.org> <Pine.LNX.4.61.0601090933160.7632@goblin.wat.veritas.com> <20060109185350.GG283@tau.solarneutrino.net> <Pine.LNX.4.61.0601091922550.15426@goblin.wat.veritas.com>
+From: Andreas Herrmann <AHERRMAN@de.ibm.com>
+Subject: Re: [PATCH] fc transport: new attributes for NPIV
+Date: Tue, 10 Jan 2006 00:09:52 +0100
+Message-ID: <OF5D4CA422.17C86FB6-ON412570F1.007E97FD-412570F1.007F3BE8@de.ibm.com>
+References: <43C2B3C7.4010506@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from solarneutrino.net ([66.199.224.43]:20740 "EHLO
-	tau.solarneutrino.net") by vger.kernel.org with ESMTP
-	id S1751278AbWAIUF2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Jan 2006 15:05:28 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.61.0601091922550.15426@goblin.wat.veritas.com>
+Received: from mtagate4.de.ibm.com ([195.212.29.153]:53678 "EHLO
+	mtagate4.de.ibm.com") by vger.kernel.org with ESMTP
+	id S1750768AbWAIXJz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Jan 2006 18:09:55 -0500
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate4.de.ibm.com (8.12.10/8.12.10) with ESMTP id k09N9rln168120
+	for <linux-scsi@vger.kernel.org>; Mon, 9 Jan 2006 23:09:53 GMT
+Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
+	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k09N9rtG229614
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Jan 2006 00:09:53 +0100
+Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id k09N9rDa011150
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Jan 2006 00:09:53 +0100
+In-Reply-To: <43C2B3C7.4010506@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hugh Dickins <hugh@veritas.com>
-Cc: Linus Torvalds <torvalds@osdl.org>, Kai Makisara <Kai.Makisara@kolumbus.fi>, James Bottomley <James.Bottomley@SteelEye.com>, Nick Piggin <nickpiggin@yahoo.com.au>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, ryan@tau.solarneutrino.net
+To: James.Smart@Emulex.Com
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jejb@steeleye.com>, Linux SCSI <linux-scsi@vger.kernel.org>
 
-On Mon, Jan 09, 2006 at 07:31:11PM +0000, Hugh Dickins wrote:
-> On Mon, 9 Jan 2006, Ryan Richter wrote:
-> > To get the backups back, I just ran a recent kernel with
-> > try_direct_io=0.  If there's nothing further for me to test at this
-> > time, I guess I'll go back to doing that until there's something to try.
-> > Is that OK?
-> 
-> I think we'll allow you the luxury of making successful backups for now ;)
-> 
-> Thanks for all your work on this, I'm sure it's irritating to you that
-> we haven't found the answer yet.  I'm still clueless about it (despite
-> the excellent clues you've provided).  And personally I don't like
-> asking someone "try this, try that" until I've a pretty good hypothesis
-> to devise a patch to test out.  Still thinking it over.  Someone else
-> may have a better idea of what to try next.
+On 09.01.2006 20:04 James Smart <James.Smart@Emulex.Com> wrote:
+> Christoph Hellwig wrote:
+> > Actually I think even for Xen-like virtualization it makes most sense 
+that
+> > most domains wouldn't see the Scsi_Host for the phyisical port so this 
+solution
+> > looks most sane to me.  The long name for the physical names sounds 
+fine to me
+> > as well, much better than un-understandable three-latter acronyms :)
+[... snip ...]
+> Having made this argument - I then said - why not use the name from the
+> standards, "permanent_port_xxx". But, when I look at this, it's not much 
 
-The episode where I blew through half the tapes was mostly my fault.  I
-can avoid that in the future while still doing destructive testing, so
-you don't have to be too reluctant to give me things to test.  I just
-wanted to make sure there was no further utility in getting oopses from
-Linus's patch.
+> different. Permanent vs Physical ? at least the abbreviation gave it 
+some
+> separation. Bah Humbug. My preference is still "permanent" over 
+"physical"
+> as it tracks the standards name.
 
-And try_direct_io=0 works just fine, and doesn't seem to have any
-performance impact or anything, so at this point I'm not losing any
-sleep.
+I think physical_port_name was not the right choice. Sticking to
+standards the name should be permanent_port_name. So people familiar
+with FC standards have an idea what it is and all others are able to
+find an explanation in FC-GS-4.
 
-Thanks,
--ryan
+But introducing a permanent_port_id will lead to confusion:
+Interpretation as "permanent port_id" is wrong because a port_id is
+anything but "permanent".
+
+In conclusion James' suggestion of attributes ppn and ppn_id has some
+advantage.
+
+And now comes the funny part:
+Question is, do I need the port_id of the physical port at all?  In
+order to determine problems with a virtual port I might have to check
+whether the physical port is properly connected and logged in to the
+fabric. Furthermore configuration of the corresponding switch port
+should be checked. (E.g. switch might allow to set limits for the
+number of NPIV connections for the switch port.)
+I may be wrong but I think the port_id of the physical port is not
+needed for this purpose.
+
+Thus, how about introducing just what is really needed:
+Introduce permanent_port_name attribute (and leave out port_id of the
+physical port).
+
+BTW, the permanent_port_name attribute of the virtual port suffices to
+identify the fc_host of the physical port if there is a
+representation.
+And I think an LLDD should configure this attribute only for virtual
+ports.
+
+
+Regards,
+
+Andreas
+
