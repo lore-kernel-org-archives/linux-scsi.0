@@ -1,49 +1,45 @@
-From: Ryan Richter <ryan@tau.solarneutrino.net>
-Subject: Re: Fw: crash on x86_64 - mm related?
-Date: Mon, 9 Jan 2006 13:53:50 -0500
-Message-ID: <20060109185350.GG283@tau.solarneutrino.net>
-References: <1134705703.3906.1.camel@mulgrave> <20051226234238.GA28037@tau.solarneutrino.net> <Pine.LNX.4.63.0512271807130.4955@kai.makisara.local> <20060104172727.GA320@tau.solarneutrino.net> <Pine.LNX.4.63.0601042334310.5087@kai.makisara.local> <20060105201249.GB1795@tau.solarneutrino.net> <Pine.LNX.4.64.0601051312380.3169@g5.osdl.org> <20060109033149.GC283@tau.solarneutrino.net> <Pine.LNX.4.64.0601082000450.3169@g5.osdl.org> <Pine.LNX.4.61.0601090933160.7632@goblin.wat.veritas.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] fc transport: new attributes for NPIV
+Date: Mon, 09 Jan 2006 14:04:39 -0500
+Message-ID: <43C2B3C7.4010506@emulex.com>
+References: <OFE227A343.800436AC-ON412570ED.0055DD4F-412570ED.00560A75@de.ibm.com> <43BD574D.8040009@emulex.com> <20060109180513.GA4286@infradead.org>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from solarneutrino.net ([66.199.224.43]:18692 "EHLO
-	tau.solarneutrino.net") by vger.kernel.org with ESMTP
-	id S1030251AbWAISyB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Jan 2006 13:54:01 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.61.0601090933160.7632@goblin.wat.veritas.com>
+Received: from emulex.emulex.com ([138.239.112.1]:62923 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1750702AbWAITGB
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Jan 2006 14:06:01 -0500
+In-Reply-To: <20060109180513.GA4286@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hugh Dickins <hugh@veritas.com>
-Cc: Linus Torvalds <torvalds@osdl.org>, Kai Makisara <Kai.Makisara@kolumbus.fi>, James Bottomley <James.Bottomley@SteelEye.com>, Nick Piggin <nickpiggin@yahoo.com.au>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, ryan@tau.solarneutrino.net
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andreas Herrmann <AHERRMAN@de.ibm.com>, James Bottomley <jejb@steeleye.com>, Linux SCSI <linux-scsi@vger.kernel.org>
 
-On Mon, Jan 09, 2006 at 09:44:26AM +0000, Hugh Dickins wrote:
-> On Sun, 8 Jan 2006, Linus Torvalds wrote:
-> > 
-> > Code like that should use "set_page_dirty()", which does the appropriate 
-> > callbacks to the filesystem for that page. I wonder if the bug is simply 
-> > because the ST code just sets the dirty bit without telling anybody else 
-> > about it...
-> 
-> Yes, it should be using set_page_dirty_lock(), and that is already known
-> about (I have patches for this and similar sg.c, but the sg.c case is
-> tougher and not yet finished); but entirely irrelevant to Ryan's case.
-> 
-> Quite apart from the fact that he's doing backups to tape (not dirtying
-> the memory from this driver), you'll find that it even passes dirty 0
-> when reading into the memory (another bug; whereas sg.c conversely says
-> it's always dirtying when it isn't).  So there's no point in Ryan
-> fiddling with the SetPageDirty.
 
-One thing I forgot to mention was that 2.6.11.3 had the problem too when
-I reverted to it.  I remember now that the person who made the debian
-bug report for this said it only happened with a 64-bit userspace - and
-I switched from a 32- to 64-bit userspace when I did 2.6.11 -> 2.6.14
-(and I'm too lazy to switch back).
 
-To get the backups back, I just ran a recent kernel with
-try_direct_io=0.  If there's nothing further for me to test at this
-time, I guess I'll go back to doing that until there's something to try.
-Is that OK?
+Christoph Hellwig wrote:
+> Actually I think even for Xen-like virtualization it makes most sense that
+> most domains wouldn't see the Scsi_Host for the phyisical port so this solution
+> looks most sane to me.  The long name for the physical names sounds fine to me
+> as well, much better than un-understandable three-latter acronyms :)
 
--ryan
+So my grind is just with the "physical_port_xxx" reference. It's too logical
+of a name for someone uninitiated with NPIV. How do they know the difference
+between physical_port_name and port_name, especially where the predominance of
+configs will always have the same values in both attributes ? Choosing
+something "physical" always seem like a better choice.
+
+I should have known better on the abbreviation.... :)
+
+Having made this argument - I then said - why not use the name from the
+standards, "permanent_port_xxx". But, when I look at this, it's not much 
+different. Permanent vs Physical ? at least the abbreviation gave it some
+separation. Bah Humbug. My preference is still "permanent" over "physical"
+as it tracks the standards name.
+
+-- james
+
+
