@@ -1,48 +1,137 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] fc transport: new attributes for NPIV
-Date: Mon, 9 Jan 2006 18:05:13 +0000
-Message-ID: <20060109180513.GA4286@infradead.org>
-References: <OFE227A343.800436AC-ON412570ED.0055DD4F-412570ED.00560A75@de.ibm.com> <43BD574D.8040009@emulex.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [2.6 patch] drivers/scsi/qla2xxx/Kconfig: two fixes
+Date: Mon, 9 Jan 2006 10:17:40 -0800
+Message-ID: <20060109181740.GD545@andrew-vasquezs-powerbook-g4-15.local>
+References: <20060106163401.GP12131@stusta.de> <20060106211241.GG13844@andrew-vasquezs-powerbook-g4-15.local> <20060106230935.GC3774@stusta.de> <20060107235009.GH19769@parisc-linux.org> <20060109175658.GC545@andrew-vasquezs-powerbook-g4-15.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:22440 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S964899AbWAISFT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Jan 2006 13:05:19 -0500
+Received: from pat.qlogic.com ([198.70.193.2]:16 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S964903AbWAISRn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jan 2006 13:17:43 -0500
 Content-Disposition: inline
-In-Reply-To: <43BD574D.8040009@emulex.com>
+In-Reply-To: <20060109175658.GC545@andrew-vasquezs-powerbook-g4-15.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: Andreas Herrmann <AHERRMAN@de.ibm.com>, James Bottomley <jejb@steeleye.com>, Linux SCSI <linux-scsi@vger.kernel.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Adrian Bunk <bunk@stusta.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Jan 05, 2006 at 12:28:45PM -0500, James Smart wrote:
-> 
-> >Problem is that on the mainframe I don't have access to the primary
-> >port. Virtualization is done in adapter microcode. I just have
-> >access to the virtual port.
-> 
-> I was afraid you'd say this... that was the other caveat.
-> 
-> OK - given that the primary port doesn't exist what you have makes
-> a lot of sense. I guess we have the 2 options:
-> - add the 2 attributes per host
-> - create a host and set the attributes  (and this is major overkill)
-> 
-> I have some reservations about the data passing that allows the virtual
-> port to get the physical port data, but it's probably manageable.
-> 
-> With this direction - your patch is fine, with the caveat that I want
-> to explore the most meaningful names for the attributes. Does port_name
-> and physical_port_name become odd to a user ? Is some script writer bound
-> to assume they always wanted the physical name as they would only see a
-> difference if on a mainframe ? What if we change the names to be more
-> npiv-centric.  What about ppn (for physical_port_name) and ppn_id (for
-> physical_port_id) ?
+On Mon, 09 Jan 2006, Andrew Vasquez wrote:
 
-Actually I think even for Xen-like virtualization it makes most sense that
-most domains wouldn't see the Scsi_Host for the phyisical port so this solution
-looks most sane to me.  The long name for the physical names sounds fine to me
-aswell, much better than un-understandable three-latter acronyms :)
+> On Sat, 07 Jan 2006, Matthew Wilcox wrote:
+> 
+> > On Sat, Jan 07, 2006 at 12:09:35AM +0100, Adrian Bunk wrote:
+> > > Due to the change of SCSI_QLA2XXX to a user-visible option that builds 
+> > > the driver, this means that suddenly after upgrading the kernel and 
+> > > running "make oldconfig" a SCSI driver gets built the user never 
+> > > selected.
+> > > 
+> > > Do you have any suggestions for a new name?
+> > > We could e.g. name it SCSI_QLAXXXX since the driver also supports 
+> > > 6312/6322, or name it simply SCSI_QLA.
+> > 
+> > SCSI_QLOGIC_FC?  Or does this driver handle SAS too?
+> 
+> There will be (shortly, I hope) an iSCSI driver for QLogic's qla4xxx
+> boards submitted for review...
+> 
+> Here's a composite patch with Adrian's original additions and
+> help-text with the new Kconfig variable SCSI_QLA_FC.
 
+Sorry, my proficiency in Kconfig is... weak to say the least...
+
+Here's one that should work...
+
+---
+
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index f062ea0..b9d2bb8 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -80,7 +80,7 @@ obj-$(CONFIG_SCSI_QLOGIC_FAS)	+= qlogicf
+ obj-$(CONFIG_PCMCIA_QLOGIC)	+= qlogicfas408.o
+ obj-$(CONFIG_SCSI_QLOGIC_FC)	+= qlogicfc.o 
+ obj-$(CONFIG_SCSI_QLOGIC_1280)	+= qla1280.o 
+-obj-$(CONFIG_SCSI_QLA2XXX)	+= qla2xxx/
++obj-$(CONFIG_SCSI_QLA_FC)	+= qla2xxx/
+ obj-$(CONFIG_SCSI_LPFC)		+= lpfc/
+ obj-$(CONFIG_SCSI_PAS16)	+= pas16.o
+ obj-$(CONFIG_SCSI_SEAGATE)	+= seagate.o
+diff --git a/drivers/scsi/qla2xxx/Kconfig b/drivers/scsi/qla2xxx/Kconfig
+index 5205c4e..02cc794 100644
+--- a/drivers/scsi/qla2xxx/Kconfig
++++ b/drivers/scsi/qla2xxx/Kconfig
+@@ -1,4 +1,4 @@
+-config SCSI_QLA2XXX
++config SCSI_QLA_FC
+ 	tristate "QLogic QLA2XXX Fibre Channel Support"
+ 	depends on PCI && SCSI
+ 	select SCSI_FC_ATTRS
+@@ -28,43 +28,47 @@ config SCSI_QLA2XXX
+ 
+ config SCSI_QLA2XXX_EMBEDDED_FIRMWARE
+ 	bool "  Use firmware-loader modules (DEPRECATED)"
+-	depends on SCSI_QLA2XXX
++	depends on SCSI_QLA_FC
++	help
++	  This option offers you the deprecated firmware-loader
++	  modules that have been obsoleted by the usage of the
++	  Firmware Loader interface in the qla2xxx driver.
+ 
+ config SCSI_QLA21XX
+ 	tristate "  Build QLogic ISP2100 firmware-module"
+-	depends on SCSI_QLA2XXX_EMBEDDED_FIRMWARE
++	depends on SCSI_QLA_FC && SCSI_QLA2XXX_EMBEDDED_FIRMWARE
+ 	---help---
+ 	This driver supports the QLogic 21xx (ISP2100) host adapter family.
+ 
+ config SCSI_QLA22XX
+ 	tristate "  Build QLogic ISP2200 firmware-module"
+-	depends on SCSI_QLA2XXX_EMBEDDED_FIRMWARE
++	depends on SCSI_QLA_FC && SCSI_QLA2XXX_EMBEDDED_FIRMWARE
+ 	---help---
+ 	This driver supports the QLogic 22xx (ISP2200) host adapter family.
+ 
+ config SCSI_QLA2300
+ 	tristate "  Build QLogic ISP2300 firmware-module"
+-	depends on SCSI_QLA2XXX_EMBEDDED_FIRMWARE
++	depends on SCSI_QLA_FC && SCSI_QLA2XXX_EMBEDDED_FIRMWARE
+ 	---help---
+ 	This driver supports the QLogic 2300 (ISP2300 and ISP2312) host
+ 	adapter family.
+ 
+ config SCSI_QLA2322
+ 	tristate "  Build QLogic ISP2322 firmware-module"
+-	depends on SCSI_QLA2XXX_EMBEDDED_FIRMWARE
++	depends on SCSI_QLA_FC && SCSI_QLA2XXX_EMBEDDED_FIRMWARE
+ 	---help---
+ 	This driver supports the QLogic 2322 (ISP2322) host adapter family.
+ 
+ config SCSI_QLA6312
+ 	tristate "  Build QLogic ISP63xx firmware-module"
+-	depends on SCSI_QLA2XXX_EMBEDDED_FIRMWARE
++	depends on SCSI_QLA_FC && SCSI_QLA2XXX_EMBEDDED_FIRMWARE
+ 	---help---
+ 	This driver supports the QLogic 63xx (ISP6312 and ISP6322) host
+ 	adapter family.
+ 
+ config SCSI_QLA24XX
+ 	tristate "  Build QLogic ISP24xx firmware-module"
+-	depends on SCSI_QLA2XXX_EMBEDDED_FIRMWARE
++	depends on SCSI_QLA_FC && SCSI_QLA2XXX_EMBEDDED_FIRMWARE
+ 	---help---
+ 	This driver supports the QLogic 24xx (ISP2422 and ISP2432) host
+ 	adapter family.
+diff --git a/drivers/scsi/qla2xxx/Makefile b/drivers/scsi/qla2xxx/Makefile
+index 40c0de1..d028bc5 100644
+--- a/drivers/scsi/qla2xxx/Makefile
++++ b/drivers/scsi/qla2xxx/Makefile
+@@ -3,7 +3,7 @@ EXTRA_CFLAGS += -DUNIQUE_FW_NAME
+ qla2xxx-y := qla_os.o qla_init.o qla_mbx.o qla_iocb.o qla_isr.o qla_gs.o \
+ 		qla_dbg.o qla_sup.o qla_rscn.o qla_attr.o
+ 
+-obj-$(CONFIG_SCSI_QLA2XXX) += qla2xxx.o
++obj-$(CONFIG_SCSI_QLA_FC) += qla2xxx.o
+ 
+ qla2100-y := ql2100.o ql2100_fw.o
+ qla2200-y := ql2200.o ql2200_fw.o
