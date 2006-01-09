@@ -1,45 +1,47 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] fc transport: new attributes for NPIV
-Date: Mon, 09 Jan 2006 14:04:39 -0500
-Message-ID: <43C2B3C7.4010506@emulex.com>
-References: <OFE227A343.800436AC-ON412570ED.0055DD4F-412570ED.00560A75@de.ibm.com> <43BD574D.8040009@emulex.com> <20060109180513.GA4286@infradead.org>
-Reply-To: James.Smart@Emulex.Com
+From: Ryan Richter <ryan@tau.solarneutrino.net>
+Subject: Re: Fw: crash on x86_64 - mm related?
+Date: Mon, 9 Jan 2006 15:05:21 -0500
+Message-ID: <20060109200521.GH283@tau.solarneutrino.net>
+References: <Pine.LNX.4.63.0512271807130.4955@kai.makisara.local> <20060104172727.GA320@tau.solarneutrino.net> <Pine.LNX.4.63.0601042334310.5087@kai.makisara.local> <20060105201249.GB1795@tau.solarneutrino.net> <Pine.LNX.4.64.0601051312380.3169@g5.osdl.org> <20060109033149.GC283@tau.solarneutrino.net> <Pine.LNX.4.64.0601082000450.3169@g5.osdl.org> <Pine.LNX.4.61.0601090933160.7632@goblin.wat.veritas.com> <20060109185350.GG283@tau.solarneutrino.net> <Pine.LNX.4.61.0601091922550.15426@goblin.wat.veritas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:62923 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1750702AbWAITGB
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Jan 2006 14:06:01 -0500
-In-Reply-To: <20060109180513.GA4286@infradead.org>
+Received: from solarneutrino.net ([66.199.224.43]:20740 "EHLO
+	tau.solarneutrino.net") by vger.kernel.org with ESMTP
+	id S1751278AbWAIUF2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Jan 2006 15:05:28 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.61.0601091922550.15426@goblin.wat.veritas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Andreas Herrmann <AHERRMAN@de.ibm.com>, James Bottomley <jejb@steeleye.com>, Linux SCSI <linux-scsi@vger.kernel.org>
+To: Hugh Dickins <hugh@veritas.com>
+Cc: Linus Torvalds <torvalds@osdl.org>, Kai Makisara <Kai.Makisara@kolumbus.fi>, James Bottomley <James.Bottomley@SteelEye.com>, Nick Piggin <nickpiggin@yahoo.com.au>, Andrew Morton <akpm@osdl.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, ryan@tau.solarneutrino.net
 
+On Mon, Jan 09, 2006 at 07:31:11PM +0000, Hugh Dickins wrote:
+> On Mon, 9 Jan 2006, Ryan Richter wrote:
+> > To get the backups back, I just ran a recent kernel with
+> > try_direct_io=0.  If there's nothing further for me to test at this
+> > time, I guess I'll go back to doing that until there's something to try.
+> > Is that OK?
+> 
+> I think we'll allow you the luxury of making successful backups for now ;)
+> 
+> Thanks for all your work on this, I'm sure it's irritating to you that
+> we haven't found the answer yet.  I'm still clueless about it (despite
+> the excellent clues you've provided).  And personally I don't like
+> asking someone "try this, try that" until I've a pretty good hypothesis
+> to devise a patch to test out.  Still thinking it over.  Someone else
+> may have a better idea of what to try next.
 
+The episode where I blew through half the tapes was mostly my fault.  I
+can avoid that in the future while still doing destructive testing, so
+you don't have to be too reluctant to give me things to test.  I just
+wanted to make sure there was no further utility in getting oopses from
+Linus's patch.
 
-Christoph Hellwig wrote:
-> Actually I think even for Xen-like virtualization it makes most sense that
-> most domains wouldn't see the Scsi_Host for the phyisical port so this solution
-> looks most sane to me.  The long name for the physical names sounds fine to me
-> as well, much better than un-understandable three-latter acronyms :)
+And try_direct_io=0 works just fine, and doesn't seem to have any
+performance impact or anything, so at this point I'm not losing any
+sleep.
 
-So my grind is just with the "physical_port_xxx" reference. It's too logical
-of a name for someone uninitiated with NPIV. How do they know the difference
-between physical_port_name and port_name, especially where the predominance of
-configs will always have the same values in both attributes ? Choosing
-something "physical" always seem like a better choice.
-
-I should have known better on the abbreviation.... :)
-
-Having made this argument - I then said - why not use the name from the
-standards, "permanent_port_xxx". But, when I look at this, it's not much 
-different. Permanent vs Physical ? at least the abbreviation gave it some
-separation. Bah Humbug. My preference is still "permanent" over "physical"
-as it tracks the standards name.
-
--- james
-
-
+Thanks,
+-ryan
