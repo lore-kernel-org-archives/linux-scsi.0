@@ -1,54 +1,61 @@
-From: Mark Hounschell <dmarkh@cfl.rr.com>
-Subject: Re: SG_GET_ACCESS_COUNT ioctl problem
-Date: Tue, 10 Jan 2006 04:50:32 -0500
-Message-ID: <43C38368.5040101@cfl.rr.com>
-References: <43C119A0.8070304@cfl.rr.com> <43C36EFA.1040800@torque.net> <43C37299.6050301@cfl.rr.com> <43C37932.90006@torque.net>
-Reply-To: dmarkh@cfl.rr.com
+From: Ashutosh Naik <ashutosh.naik@gmail.com>
+Subject: [PATCH] scsi/aha1740.c Handle scsi_add_host failure
+Date: Tue, 10 Jan 2006 17:51:15 +0530
+Message-ID: <81083a450601100421t5f8fcc4am2c0ec666feccc4ca@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_Part_92_15703604.1136895675020"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ms-smtp-04-smtplb.tampabay.rr.com ([65.32.5.134]:7918 "EHLO
-	ms-smtp-04.tampabay.rr.com") by vger.kernel.org with ESMTP
-	id S1750736AbWAJJuf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jan 2006 04:50:35 -0500
-Received: from [10.10.10.100] (158.244.118.70.cfl.res.rr.com [70.118.244.158])
-	by ms-smtp-04.tampabay.rr.com (8.12.10/8.12.7) with ESMTP id k0A9oVVq000799
-	for <linux-scsi@vger.kernel.org>; Tue, 10 Jan 2006 04:50:32 -0500 (EST)
-In-Reply-To: <43C37932.90006@torque.net>
+Received: from zproxy.gmail.com ([64.233.162.207]:7144 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750751AbWAJMVP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Jan 2006 07:21:15 -0500
+Received: by zproxy.gmail.com with SMTP id 14so4501169nzn
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Jan 2006 04:21:15 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@steeleye.com, Andrew Morton <akpm@osdl.org>
 
-Douglas Gilbert wrote:
+------=_Part_92_15703604.1136895675020
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> Mark,
-> In the lk 2.6 series you can open a disk directly
-> (e.g. /dev/sda) and send it SCSI commands using the
-> SG_IO ioctl. The situation is the same if you open
-> the corresponding sg device and send SCSI commands.
-> 
-> What is important is which SCSI commands are sent. There
-> is some crude filtering based on file permissions and
-> the SCSI command opcode. Other than that, the onus is
-> on the person sending the SCSI commands. Mounted file
-> systems can be seen in /proc/mounts ** .
-> 
-> The sg driver is a pass through. The SG_GET_ACCESS_COUNT
-> ioctl was a window to a variable which someone else removed
-> around 18 months ago. There is little I can do other
-> than try to explain ...
-> 
+Add scsi_add_host() failure handling for Adaptec aha1740 driver.
 
-Understood and thanks for the info. I know about being having a limited
-set of CDB opcodes available for the sd devices however it is much to
-limited for me. It just doesn't make sense to me that the "window to the
-variable" was closed without offerring a simple alternative.
+Signed-off-by: Ashutosh Naik <ashutosh.naik@gmail.com>
 
-An application that has been in use for years using a documented and
-supported API now eats my root device if I run it???? I think sombody
-wasn't thinking too clearly or took an easy way out to a problem they
-didn't care to address.
+------=_Part_92_15703604.1136895675020
+Content-Type: text/plain; name=aha1740.txt; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="aha1740.txt"
 
-Thanks again
-Mark
+diff -Naurp linux-2.6.15-git5-vanilla/drivers/scsi/aha1740.c linux-2.6.15-git5/drivers/scsi/aha1740.c
+--- linux-2.6.15-git5-vanilla/drivers/scsi/aha1740.c	2006-01-03 08:51:10.000000000 +0530
++++ linux-2.6.15-git5/drivers/scsi/aha1740.c	2006-01-10 16:22:13.000000000 +0530
+@@ -587,7 +587,7 @@ static struct scsi_host_template aha1740
+ 
+ static int aha1740_probe (struct device *dev)
+ {
+-	int slotbase;
++	int slotbase, retval;
+ 	unsigned int irq_level, irq_type, translation;
+ 	struct Scsi_Host *shpnt;
+ 	struct aha1740_hostdata *host;
+@@ -642,7 +642,13 @@ static int aha1740_probe (struct device 
+ 	}
+ 
+ 	eisa_set_drvdata (edev, shpnt);
+-	scsi_add_host (shpnt, dev); /* XXX handle failure */
++	retval = scsi_add_host (shpnt, dev);
++	if (retval) {
++		printk(KERN_WARNING "aha1740: scsi_add_host failed\n");
++		scsi_host_put (shpnt);
++		return retval;
++	}
++		
+ 	scsi_scan_host (shpnt);
+ 	return 0;
+ 
+
+------=_Part_92_15703604.1136895675020--
