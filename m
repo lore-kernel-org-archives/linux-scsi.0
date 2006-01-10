@@ -1,67 +1,52 @@
-From: Ashutosh Naik <ashutosh.naik@gmail.com>
-Subject: Re: [PATCH] scsi/arm/ecoscsi.c Handle scsi_add_host failure
-Date: Tue, 10 Jan 2006 18:35:55 +0530
-Message-ID: <81083a450601100505m73f4580cvb6a4a0c6ceb9791d@mail.gmail.com>
-References: <81083a450601100441s7675d584jd10db5a8e6ccaf58@mail.gmail.com>
+From: Jesper Juhl <jesper.juhl@gmail.com>
+Subject: [PATCH]Add scsi_add_host() failure handling for nsp32
+Date: Tue, 10 Jan 2006 14:11:52 +0100
+Message-ID: <200601101411.52585.jesper.juhl@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_Part_332_8608814.1136898355757"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.199]:23860 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750973AbWAJNF4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jan 2006 08:05:56 -0500
-Received: by zproxy.gmail.com with SMTP id 14so4512096nzn
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Jan 2006 05:05:56 -0800 (PST)
-In-Reply-To: <81083a450601100441s7675d584jd10db5a8e6ccaf58@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org
-
-------=_Part_332_8608814.1136898355757
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
-
-Oops, Missed declaring the variable "retval". This one works for sure.
-Please apply this patch and drop the previous one. Sorry about that.
--Ashutosh
-
-Add scsi_add_host() failure handling for the ecoscsi driver.
-
-Signed-off-by: Ashutosh Naik <ashutosh.naik@gmail.com>
-
-------=_Part_332_8608814.1136898355757
-Content-Type: text/plain; name=ecoscsi.txt; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="ecoscsi.txt"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751000AbWAJNME@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@osdl.org>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, GOTO Masanori <gotom@debian.or.jp>, gotom@debian.org
+List-Id: linux-scsi@vger.kernel.org
 
-diff -Naurp linux-2.6.15-git5-vanilla/drivers/scsi/arm/ecoscsi.c linux-2.6.15-git5/drivers/scsi/arm/ecoscsi.c
---- linux-2.6.15-git5-vanilla/drivers/scsi/arm/ecoscsi.c	2006-01-03 08:51:10.000000000 +0530
-+++ linux-2.6.15-git5/drivers/scsi/arm/ecoscsi.c	2006-01-10 18:23:12.000000000 +0530
-@@ -174,7 +174,7 @@ static struct Scsi_Host *host;
+From: Jesper Juhl <jesper.juhl@gmail.com>
+
+Add scsi_add_host() failure handling for nsp32
+and silence warning.
+  drivers/scsi/nsp32.c:2888: warning: ignoring return value of csi_add_host', declared with attribute warn_unused_result
+
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+---
+
+ drivers/scsi/nsp32.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletion(-)
+
+--- linux-2.6.15-mm2-orig/drivers/scsi/nsp32.c	2006-01-07 14:46:18.000000000 +0100
++++ linux-2.6.15-mm2/drivers/scsi/nsp32.c	2006-01-10 14:07:00.000000000 +0100
+@@ -2885,7 +2885,12 @@ static int nsp32_detect(struct scsi_host
+         }
  
- static int __init ecoscsi_init(void)
- {
--
-+	int retval;
- 	host = scsi_host_alloc(tpnt, sizeof(struct NCR5380_hostdata));
- 	if (!host)
- 		return 0;
-@@ -203,7 +203,13 @@ static int __init ecoscsi_init(void)
- 	NCR5380_print_options(host);
- 	printk("\n");
- 
--	scsi_add_host(host, NULL); /* XXX handle failure */
-+	retval = scsi_add_host(host, NULL);
-+	if (retval) {
-+		printk(KERN_WARNING "ecoscsi: scsi_add_host failed\n");
+ #if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
+-	scsi_add_host (host, &PCIDEV->dev);
++	ret = scsi_add_host (host, &PCIDEV->dev);
++	if (ret) {
++		printk(KERN_WARNING "nsp32: scsi_add_host failed\n");
 +		scsi_host_put(host);
-+		return retval;
++		return ret;
 +	}
-+
  	scsi_scan_host(host);
- 	return 0;
- 
+ #endif
+ 	pci_set_drvdata(PCIDEV, host);
 
-------=_Part_332_8608814.1136898355757--
+
+
+
+
+PS. Please CC me on replies from linux-scsi since I'm not subscribed there.
+
+-- 
+Jesper Juhl
