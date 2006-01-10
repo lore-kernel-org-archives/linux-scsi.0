@@ -1,208 +1,132 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: aic7xxx timer handling bug
-Date: Tue, 10 Jan 2006 12:11:42 -0600
-Message-ID: <1136916702.3509.29.camel@mulgrave>
-References: <20060109040606.118a0d33.akpm@osdl.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: FW drive has incorrect size
+Date: Tue, 10 Jan 2006 20:49:53 +0100
+Message-ID: <43C40FE1.7020401@s5r6.in-berlin.de>
+References: <DC0427D0-BD6B-4E50-B4D0-701A22E5CFD6@n5faz.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:63152 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932414AbWAJSLx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jan 2006 13:11:53 -0500
-In-Reply-To: <20060109040606.118a0d33.akpm@osdl.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:47577 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1751131AbWAJTuf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Jan 2006 14:50:35 -0500
+In-Reply-To: <DC0427D0-BD6B-4E50-B4D0-701A22E5CFD6@n5faz.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org
+To: paul launspach <paul@n5faz.org>
+Cc: linux1394-user@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-On Mon, 2006-01-09 at 04:06 -0800, Andrew Morton wrote:
-> While doing a binary search for a buggy patch (it was
-> gregkh-pci-x86-pci-domain-support-the-meat.patch, reported on
-> linux-kernel), I hit the below.
+(I added the linux-scsi mailinglist as recipient because it is read by 
+people who might know more about the matter.)
 
-OK, try this; it should pull out all of the aic7xxx timer handling and
-replace it with proper mechanisms (I had to rework the locking a bit to
-get this to happen correctly, so caveat emptor).
+paul launspach wrote to linux1394-user:
+> 
+> having problems with an external fw/usb drive. it works fine on usb,  
+> but wont mount on fw.
+> have another fw drive that works fine.
+> 
+> Using Debian Linux 2.6.14-2-686-smp kernel,
+> VIA Mini-ITX CL1000 mainboard,
+> 0000:00:14.0 FireWire (IEEE 1394): Agere Systems FW323 (rev 61) host  
+> adapter,
+> OWC FW400/USB2 enclosure with Oxford WF911PLUS bridge,
+> and Western Digital WD800 drive.
+> 
+> when pluged into usb i get:
+> 
+> usb 4-1: new high speed USB device using ehci_hcd and address 2
+> Initializing USB Mass Storage driver...
+> scsi3 : SCSI emulation for USB Mass Storage devices
+> usb-storage: device found at 2
+> usb-storage: waiting for device to settle before scanning
+> usbcore: registered new driver usb-storage
+> USB Mass Storage support registered.
+>   Vendor: WDC WD80  Model: 0BB-00CAA1        Rev: 17.0
+>   Type:   Direct-Access                      ANSI SCSI revision: 00
+> SCSI device sda: 156301489 512-byte hdwr sectors (80026 MB)
+> sda: assuming drive cache: write through
+> SCSI device sda: 156301489 512-byte hdwr sectors (80026 MB)
+> sda: assuming drive cache: write through
+>  sda: sda1
+> Attached scsi disk sda at scsi3, channel 0, id 0, lun 0
+> usb-storage: device scan complete
+> sda: Current: sense key: No Sense
+>     Additional sense: No additional sense information
+> 
+> and the drive mounts and access with no problems.
+> 
+> but on FW:
+> 
+> ieee1394: Node added: ID:BUS[0-00:1023]  GUID[0001d202e09c0819]
+> ieee1394: Node changed: 0-00:1023 -> 0-01:1023
+> scsi1 : SCSI emulation for IEEE-1394 SBP-2 Devices
+> ieee1394: sbp2: Logged into SBP-2 device
+> ieee1394: Node 0-00:1023: Max speed [S400] - Max payload [2048]
+>   Vendor: WDC WD80  Model: 0BB-00CAA1        Rev: 17.0
+>   Type:   Direct-Access-RBC                  ANSI SCSI revision: 04
+> SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
+> sda: asking for cache data failed
+> sda: assuming drive cache: write through
+> SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
+> sda: asking for cache data failed
+> sda: assuming drive cache: write through
+> sda:<6>sda: Current: sense key: No Sense
+>     Additional sense: No additional sense information
+> sda1
+> Attached scsi disk sda at scsi1, channel 0, id 0, lun 0
+> 
+> EXT2-fs error (device sda1): ext2_check_descriptors: Block bitmap for  
+> group 52 not in group (block 3086152523)!
+> EXT2-fs: group descriptors corrupted!
+> 
+> The "... Current: sense key: No Sense ..." message is repeated about  10 
+> times.
+> 
+> and the drive wont mount and e2fsck reports tons of errors.
+> 
+> on FW the drive is reported as 1 sector smaller.
+> 
+> not sure if this is a drive, bridge, host controller, or kernel issue.
+> can someone point me in the right direction?
 
-Unfortunately, aic79xx also needs something like this ... and the patch
-there will be much larger.
+It looks like a problem at the SCSI command set level, i.e. 
+misinterpretation of commands given to the device or of status returned 
+from the device. (OTOH, problems at the physical level of the FireWire 
+bus could _perhaps_ lead to "Current: sense key: No Sense" messages but 
+I am not sure of that.)
 
-James
-diff --git a/drivers/scsi/aic7xxx/Kconfig.aic7xxx b/drivers/scsi/aic7xxx/Kconfig.aic7xxx
---- a/drivers/scsi/aic7xxx/Kconfig.aic7xxx
-+++ b/drivers/scsi/aic7xxx/Kconfig.aic7xxx
-@@ -42,13 +42,13 @@ config AIC7XXX_CMDS_PER_DEVICE
- config AIC7XXX_RESET_DELAY_MS
- 	int "Initial bus reset delay in milli-seconds"
- 	depends on SCSI_AIC7XXX
--	default "15000"
-+	default "5000"
- 	---help---
- 	The number of milliseconds to delay after an initial bus reset.
- 	The bus settle delay following all error recovery actions is
- 	dictated by the SCSI layer and is not affected by this value.
- 
--	Default: 15000 (15 seconds)
-+	Default: 5000 (5 seconds)
- 
- config AIC7XXX_PROBE_EISA_VL
- 	bool "Probe for EISA and VL AIC7XXX Adapters"
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -375,7 +375,7 @@ static void ahc_linux_queue_cmd_complete
- 					 struct scsi_cmnd *cmd);
- static void ahc_linux_sem_timeout(u_long arg);
- static void ahc_linux_freeze_simq(struct ahc_softc *ahc);
--static void ahc_linux_release_simq(u_long arg);
-+static void ahc_linux_release_simq(struct ahc_softc *ahc);
- static int  ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag);
- static void ahc_linux_initialize_scsi_bus(struct ahc_softc *ahc);
- static u_int ahc_linux_user_tagdepth(struct ahc_softc *ahc,
-@@ -1073,7 +1073,6 @@ ahc_linux_register_host(struct ahc_softc
- 		return (ENOMEM);
- 
- 	*((struct ahc_softc **)host->hostdata) = ahc;
--	ahc_lock(ahc, &s);
- 	ahc->platform_data->host = host;
- 	host->can_queue = AHC_MAX_QUEUE;
- 	host->cmd_per_lun = 2;
-@@ -1084,7 +1083,9 @@ ahc_linux_register_host(struct ahc_softc
- 	host->max_lun = AHC_NUM_LUNS;
- 	host->max_channel = (ahc->features & AHC_TWIN) ? 1 : 0;
- 	host->sg_tablesize = AHC_NSEG;
-+	ahc_lock(ahc, &s);
- 	ahc_set_unit(ahc, ahc_linux_unit++);
-+	ahc_unlock(ahc, &s);
- 	sprintf(buf, "scsi%d", host->host_no);
- 	new_name = malloc(strlen(buf) + 1, M_DEVBUF, M_NOWAIT);
- 	if (new_name != NULL) {
-@@ -1094,7 +1095,6 @@ ahc_linux_register_host(struct ahc_softc
- 	host->unique_id = ahc->unit;
- 	ahc_linux_initialize_scsi_bus(ahc);
- 	ahc_intr_enable(ahc, TRUE);
--	ahc_unlock(ahc, &s);
- 
- 	host->transportt = ahc_linux_transport_template;
- 
-@@ -1120,10 +1120,13 @@ ahc_linux_initialize_scsi_bus(struct ahc
- {
- 	int i;
- 	int numtarg;
-+	unsigned long s;
- 
- 	i = 0;
- 	numtarg = 0;
- 
-+	ahc_lock(ahc, &s);
-+
- 	if (aic7xxx_no_reset != 0)
- 		ahc->flags &= ~(AHC_RESET_BUS_A|AHC_RESET_BUS_B);
- 
-@@ -1170,16 +1173,12 @@ ahc_linux_initialize_scsi_bus(struct ahc
- 		ahc_update_neg_request(ahc, &devinfo, tstate,
- 				       tinfo, AHC_NEG_ALWAYS);
- 	}
-+	ahc_unlock(ahc, &s);
- 	/* Give the bus some time to recover */
- 	if ((ahc->flags & (AHC_RESET_BUS_A|AHC_RESET_BUS_B)) != 0) {
- 		ahc_linux_freeze_simq(ahc);
--		init_timer(&ahc->platform_data->reset_timer);
--		ahc->platform_data->reset_timer.data = (u_long)ahc;
--		ahc->platform_data->reset_timer.expires =
--		    jiffies + (AIC7XXX_RESET_DELAY * HZ)/1000;
--		ahc->platform_data->reset_timer.function =
--		    ahc_linux_release_simq;
--		add_timer(&ahc->platform_data->reset_timer);
-+		msleep(AIC7XXX_RESET_DELAY);
-+		ahc_linux_release_simq(ahc);
- 	}
- }
- 
-@@ -2059,6 +2058,9 @@ ahc_linux_sem_timeout(u_long arg)
- static void
- ahc_linux_freeze_simq(struct ahc_softc *ahc)
- {
-+	unsigned long s;
-+
-+	ahc_lock(ahc, &s);
- 	ahc->platform_data->qfrozen++;
- 	if (ahc->platform_data->qfrozen == 1) {
- 		scsi_block_requests(ahc->platform_data->host);
-@@ -2068,17 +2070,15 @@ ahc_linux_freeze_simq(struct ahc_softc *
- 					CAM_LUN_WILDCARD, SCB_LIST_NULL,
- 					ROLE_INITIATOR, CAM_REQUEUE_REQ);
- 	}
-+	ahc_unlock(ahc, &s);
- }
- 
- static void
--ahc_linux_release_simq(u_long arg)
-+ahc_linux_release_simq(struct ahc_softc *ahc)
- {
--	struct ahc_softc *ahc;
- 	u_long s;
- 	int    unblock_reqs;
- 
--	ahc = (struct ahc_softc *)arg;
--
- 	unblock_reqs = 0;
- 	ahc_lock(ahc, &s);
- 	if (ahc->platform_data->qfrozen > 0)
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.h b/drivers/scsi/aic7xxx/aic7xxx_osm.h
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.h
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.h
-@@ -223,9 +223,6 @@ int	ahc_dmamap_unload(struct ahc_softc *
-  */
- #define ahc_dmamap_sync(ahc, dma_tag, dmamap, offset, len, op)
- 
--/************************** Timer DataStructures ******************************/
--typedef struct timer_list ahc_timer_t;
--
- /********************************** Includes **********************************/
- #ifdef CONFIG_AIC7XXX_REG_PRETTY_PRINT
- #define AIC_DEBUG_REGISTERS 1
-@@ -235,30 +232,9 @@ typedef struct timer_list ahc_timer_t;
- #include "aic7xxx.h"
- 
- /***************************** Timer Facilities *******************************/
--#define ahc_timer_init init_timer
--#define ahc_timer_stop del_timer_sync
--typedef void ahc_linux_callback_t (u_long);  
--static __inline void ahc_timer_reset(ahc_timer_t *timer, int usec,
--				     ahc_callback_t *func, void *arg);
--static __inline void ahc_scb_timer_reset(struct scb *scb, u_int usec);
--
--static __inline void
--ahc_timer_reset(ahc_timer_t *timer, int usec, ahc_callback_t *func, void *arg)
--{
--	struct ahc_softc *ahc;
--
--	ahc = (struct ahc_softc *)arg;
--	del_timer(timer);
--	timer->data = (u_long)arg;
--	timer->expires = jiffies + (usec * HZ)/1000000;
--	timer->function = (ahc_linux_callback_t*)func;
--	add_timer(timer);
--}
--
- static __inline void
- ahc_scb_timer_reset(struct scb *scb, u_int usec)
- {
--	mod_timer(&scb->io_ctx->eh_timeout, jiffies + (usec * HZ)/1000000);
- }
- 
- /***************************** SMP support ************************************/
-@@ -393,7 +369,6 @@ struct ahc_platform_data {
- 
- 	spinlock_t		 spin_lock;
- 	u_int			 qfrozen;
--	struct timer_list	 reset_timer;
- 	struct semaphore	 eh_sem;
- 	struct Scsi_Host        *host;		/* pointer to scsi host */
- #define AHC_LINUX_NOIRQ	((uint32_t)~0)
+See how the device type is reported differently via usb-storage and sbp2 
+("Direct-Access" versus "Direct-Access-RBC", RBC meaning to use a 
+reduced command set). I don't know if this comes from extra conversions 
+done differently in usb-storage and sbp2 or if the device actually 
+represents itself differently at the interfaces.
 
+Sbp2 in Linux 2.6.14 does still a lot of command set conversions, or at 
+least is supposed to do. Needlessly though because there is working RBC 
+support in Linux' SCSI command set drivers, i.e. in sd_mod. Sbp2 has 
+been converted to omit all command set conversions and let sd_mod handle 
+it; alas the according patch was not merged to mainline for some reasons 
+for a long time. It went into Linus' tree just a couple of days ago.
 
+Perhaps you have more luck if you apply the according patch to sbp2 and 
+recompile the kernel modules. You can get the patch from Linus' git tree:
+http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff_plain;h=365c786f0be44ee92e018773cb0bc4b19080b6aa
+or from my site, of which I am sure that the patch can actually be 
+applied to Linux 2.6.14:
+http://me.in-berlin.de/~s5r6/linux1394/merged/available_in_2.6.16/02-ieee1394-remove-sbp2's-TYPE_RBC-and-10byte-handling.patch
 
+I actually used the original 1394 drivers of 2.6.14 only briefly and 
+therefore don't know exactly what the status of these drivers is.
+
+BTW, does your OWC enclosure look like this one? 
+http://macpower.com.tw/products/hdd3/icecube/ic_400plus
+Current revisions of this enclosure are built with Prolific bridge chip, 
+not an Oxford chip. Many Prolific based products come with buggy 
+firmwares. I own a MacPower 5.25" enclosure which uses a Prolific based 
+bridge board. It works very well but I am using it with a DVD-RW, not a 
+HDD, i.e. with a different command set than that for harddisks.
+-- 
+Stefan Richter
+-=====-=-==- ---= -=-=-
+http://arcgraph.de/sr/
