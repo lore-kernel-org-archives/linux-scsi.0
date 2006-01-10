@@ -1,81 +1,88 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: SG_GET_ACCESS_COUNT ioctl problem
-Date: Tue, 10 Jan 2006 19:06:58 +1000
-Message-ID: <43C37932.90006@torque.net>
-References: <43C119A0.8070304@cfl.rr.com> <43C36EFA.1040800@torque.net> <43C37299.6050301@cfl.rr.com>
-Reply-To: dougg@torque.net
+From: "emmanuel\.fuste" <emmanuel.fuste@laposte.net>
+Subject: Re: panic with AIC7xxx
+Date: Tue, 10 Jan 2006 10:33:17 +0100
+Message-ID: <ISVEJH$DEFF7A73BB517DB961D40DE65BBC816F@laposte.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:24200 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1751021AbWAJJGY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jan 2006 04:06:24 -0500
-In-Reply-To: <43C37299.6050301@cfl.rr.com>
+Received: from mx.laposte.net ([81.255.54.11]:26116 "EHLO mx.laposte.net")
+	by vger.kernel.org with ESMTP id S932168AbWAJJfL convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Jan 2006 04:35:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dmarkh@cfl.rr.com
-Cc: linux-scsi@vger.kernel.org
+To: bunk <bunk@stusta.de>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, "James.Bottomley" <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Mark Hounschell wrote:
->>Mark,
->>I think you can consider that ioctl deprecated in the
->>lk 2.6 series. The implementation of that ioctl in
->>lk 2.6.15 is not very encouraging:
->>
->>    case SG_GET_ACCESS_COUNT:
->>        /* faked - we don't have a real access count anymore */
->>        val = (sdp->device ? 1 : 0);
->>        return put_user(val, ip);
->>
->>which will yield 1 in almost all cases. In the lk 2.6 series
->>sysfs ** is meant to take over those sort of functions from
->>the sg driver. However struct scsi_device (one instance per
->>scsi device (normally a logical unit)) no longer seems to
->>maintain an access count.
->>
->>
->>I have written about the SG_IO ioctl and its various
->>implementations in the lk 2.6 series at:
->>http://www.torque.net/sg/sg_io.html
->>
->>However I haven't addressed the status of the lesser used
->>sg ioctls (e.g. SG_GET_ACCESS_COUNT) in the lk 2.6 series.
->>
->>
->>** ..._GET_ACCESS_COUNT is more of a job for procfs than
->>   sysfs.
->>
-> 
-> 
-> So how can one safely open an sg device that happens to be a disk? I can
-> find no combination of open flags that will cause an open to fail if the
-> disk happens to be mounted? You imply this ioctl is a "lesser used"
-> ioctl? What 'was' the prefered method of doing this? It's the only
-> method I found short of writing code to xlate the sg device into an sd
-> device and attempting an open of that first. That's not good???
+Hello,
 
-Mark,
-In the lk 2.6 series you can open a disk directly
-(e.g. /dev/sda) and send it SCSI commands using the
-SG_IO ioctl. The situation is the same if you open
-the corresponding sg device and send SCSI commands.
+> On Sat, Oct 29, 2005 at 01:34:20AM +0200, Emmanuel Fust=E9 wrote:
+>=20
+> > Hello,
+>=20
+> Hi Emmanuel,
+>=20
+> > I recently made the switch from 2.4.26 to 2.6.13 and
+2.6.14rc5 on my old
+> > dual 586mmx 233mhz.
+>=20
+> are your problems still present in 2.6.15?
+>=20
+> > I've got many problems with SMP on 2.6.13 (bad irq
+balancing/routing
+> > very bad performance on IDE and SCSI) but I tried to use
+the long
+> > awaited CDRW support.
+> > I format a disc with cdrwtools -d/dev/cdrw -t4 -q
+> > the initialisation of the disc start and ~5min later I got :
+> >=20
+> > Oct 20 20:44:57 rafale kernel: scsi0:0:3:0: Attempting to
+queue an ABORT message
+> > Oct 20 20:44:57 rafale kernel: CDB: 0x4 0x17 0x0 0x0 0x0 0x0
+> > Oct 20 20:44:57 rafale kernel: scsi0: At time of recovery,
+card was not paused
+=2E.....
+> >=20
+> > Now I use a 2.6.14rc5 kernel with great results from a
+performance stand
+> > point: no longer bad SMP IRQ routing/balancing, good perfs
+for IDE and
+> > SCSI disc but when I try to blank a disc with the same
+command:
+> > cdrwtools -d/dev/cdrw -t4 -q
+> > Nothing append and the cd-writer/scsi bus directly crash:
+> > Oct 26 21:07:57 rafale kernel: scsi0:0:3:0: Attempting to
+queue an ABORT message
+> > Oct 26 21:07:57 rafale kernel: CDB: 0x5c 0x0 0x0 0x0 0x0
+0x0 0x0 0x0 0xc 0x0 0x0 0x0
+> > Oct 26 21:07:57 rafale kernel: scsi0: At time of recovery,
+card was not paused
+=2E......
+>=20
+> cu
+> Adrian
+>=20
+> --=20
 
-What is important is which SCSI commands are sent. There
-is some crude filtering based on file permissions and
-the SCSI command opcode. Other than that, the onus is
-on the person sending the SCSI commands. Mounted file
-systems can be seen in /proc/mounts ** .
+I was waiting the merge of the patch serie from Hannes
+Reinecke <hare () suse ! de>, because of the sequencer fixes.
+I did'nt try this patch serie myself because the sequencer
+fixes one ([PATCH 5/6]] never reach lkml or linux-scsi.
 
-The sg driver is a pass through. The SG_GET_ACCESS_COUNT
-ioctl was a window to a variable which someone else removed
-around 18 months ago. There is little I can do other
-than try to explain ...
+I will compile a clean 2.6.15 today and give it a try this
+evening.
+
+Regards,
+Emmanuel.
+
+Acc=E9dez au courrier =E9lectronique de La Poste : www.laposte.net ;=20
+3615 LAPOSTENET (0,34 =80/mn) ; t=E9l : 08 92 68 13 50 (0,34=80/mn)
 
 
-** the root file system device appears as "/dev/root"
-   in my /proc/mounts . "/dev/root" is a symlink to
-   the real thing.
 
-Doug Gilbert
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
