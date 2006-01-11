@@ -1,290 +1,141 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] sr: split sr_audio_ioctl into specific helpers
-Date: Wed, 11 Jan 2006 14:28:06 +0100
-Message-ID: <20060111132806.GA9690@lst.de>
+From: Jes Sorensen <jes@trained-monkey.org>
+Subject: [patch] sem2mutex 3w-[x9]xxx
+Date: 11 Jan 2006 08:39:45 -0500
+Message-ID: <yq0slru3mu6.fsf@jaguar.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:45786 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S1751535AbWAKN2K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Jan 2006 08:28:10 -0500
-Content-Disposition: inline
+Received: from vanessarodrigues.com ([192.139.46.150]:29326 "EHLO
+	jaguar.mkp.net") by vger.kernel.org with ESMTP id S1751477AbWAKNjt
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Jan 2006 08:39:49 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Adam Radford <linuxraid@amcc.com>
 
-split each ioctl handled in sr_audio_ioctl into a function of it's own.
-This cleans the code up nicely, and allows various places in sr_ioctl
-to call these helpers directly instead of going through the multiplexer.
+Hi,
 
+The following patch converts the two 3W driver to using mutexes
+instead of semaphores.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Cheers,
+Jes
 
-Index: scsi-misc-2.6/drivers/scsi/sr_ioctl.c
+Convert a the 3w-9xxx.c and 3w-xxxx.c drivers to use mutexes instead
+of semaphores. Untested, but compiles and looks obviously correct.
+
+Signed-off-by: Jes Sorensen <jes@sgi.com>
+
+----
+
+ drivers/scsi/3w-9xxx.c |    7 ++++---
+ drivers/scsi/3w-9xxx.h |    2 +-
+ drivers/scsi/3w-xxxx.c |    7 ++++---
+ drivers/scsi/3w-xxxx.h |    2 +-
+ 4 files changed, 10 insertions(+), 8 deletions(-)
+
+Index: linux-2.6/drivers/scsi/3w-9xxx.c
 ===================================================================
---- scsi-misc-2.6.orig/drivers/scsi/sr_ioctl.c	2005-12-15 17:43:41.000000000 +0100
-+++ scsi-misc-2.6/drivers/scsi/sr_ioctl.c	2006-01-11 14:25:47.000000000 +0100
-@@ -31,6 +31,79 @@
+--- linux-2.6.orig/drivers/scsi/3w-9xxx.c
++++ linux-2.6/drivers/scsi/3w-9xxx.c
+@@ -73,6 +73,7 @@
+ #include <linux/delay.h>
+ #include <linux/pci.h>
+ #include <linux/time.h>
++#include <linux/mutex.h>
+ #include <asm/io.h>
+ #include <asm/irq.h>
+ #include <asm/uaccess.h>
+@@ -615,7 +616,7 @@
+ 	void __user *argp = (void __user *)arg;
  
- module_param(xa_test, int, S_IRUGO | S_IWUSR);
- 
-+/* primitive to determine whether we need to have GFP_DMA set based on
-+ * the status of the unchecked_isa_dma flag in the host structure */
-+#define SR_GFP_DMA(cd) (((cd)->device->host->unchecked_isa_dma) ? GFP_DMA : 0)
-+
-+
-+static int sr_read_tochdr(struct cdrom_device_info *cdi,
-+		struct cdrom_tochdr *tochdr)
-+{
-+	struct scsi_cd *cd = cdi->handle;
-+	struct packet_command cgc;
-+	int result;
-+	unsigned char *buffer;
-+
-+	buffer = kmalloc(32, GFP_KERNEL | SR_GFP_DMA(cd));
-+	if (!buffer)
-+		return -ENOMEM;
-+
-+	memset(&cgc, 0, sizeof(struct packet_command));
-+	cgc.timeout = IOCTL_TIMEOUT;
-+	cgc.cmd[0] = GPCMD_READ_TOC_PMA_ATIP;
-+	cgc.cmd[8] = 12;		/* LSB of length */
-+	cgc.buffer = buffer;
-+	cgc.buflen = 12;
-+	cgc.quiet = 1;
-+	cgc.data_direction = DMA_FROM_DEVICE;
-+
-+	result = sr_do_ioctl(cd, &cgc);
-+
-+	tochdr->cdth_trk0 = buffer[2];
-+	tochdr->cdth_trk1 = buffer[3];
-+
-+	kfree(buffer);
-+	return result;
-+}
-+
-+static int sr_read_tocentry(struct cdrom_device_info *cdi,
-+		struct cdrom_tocentry *tocentry)
-+{
-+	struct scsi_cd *cd = cdi->handle;
-+	struct packet_command cgc;
-+	int result;
-+	unsigned char *buffer;
-+
-+	buffer = kmalloc(32, GFP_KERNEL | SR_GFP_DMA(cd));
-+	if (!buffer)
-+		return -ENOMEM;
-+
-+	memset(&cgc, 0, sizeof(struct packet_command));
-+	cgc.timeout = IOCTL_TIMEOUT;
-+	cgc.cmd[0] = GPCMD_READ_TOC_PMA_ATIP;
-+	cgc.cmd[1] |= (tocentry->cdte_format == CDROM_MSF) ? 0x02 : 0;
-+	cgc.cmd[6] = tocentry->cdte_track;
-+	cgc.cmd[8] = 12;		/* LSB of length */
-+	cgc.buffer = buffer;
-+	cgc.buflen = 12;
-+	cgc.data_direction = DMA_FROM_DEVICE;
-+
-+	result = sr_do_ioctl(cd, &cgc);
-+
-+	tocentry->cdte_ctrl = buffer[5] & 0xf;
-+	tocentry->cdte_adr = buffer[5] >> 4;
-+	tocentry->cdte_datamode = (tocentry->cdte_ctrl & 0x04) ? 1 : 0;
-+	if (tocentry->cdte_format == CDROM_MSF) {
-+		tocentry->cdte_addr.msf.minute = buffer[9];
-+		tocentry->cdte_addr.msf.second = buffer[10];
-+		tocentry->cdte_addr.msf.frame = buffer[11];
-+	} else
-+		tocentry->cdte_addr.lba = (((((buffer[8] << 8) + buffer[9]) << 8)
-+			+ buffer[10]) << 8) + buffer[11];
-+
-+	kfree(buffer);
-+	return result;
-+}
- 
- #define IOCTL_RETRIES 3
- 
-@@ -45,7 +118,8 @@
- 	struct packet_command cgc;
- 	int ntracks, ret;
- 
--	if ((ret = sr_audio_ioctl(cdi, CDROMREADTOCHDR, &tochdr)))
-+	ret = sr_read_tochdr(cdi, &tochdr);
-+	if (ret)
- 		return ret;
- 
- 	ntracks = tochdr.cdth_trk1 - tochdr.cdth_trk0 + 1;
-@@ -60,9 +134,11 @@
- 	trk1_te.cdte_track = ti->cdti_trk1;
- 	trk1_te.cdte_format = CDROM_MSF;
- 	
--	if ((ret = sr_audio_ioctl(cdi, CDROMREADTOCENTRY, &trk0_te)))
-+	ret = sr_read_tocentry(cdi, &trk0_te);
-+	if (ret)
- 		return ret;
--	if ((ret = sr_audio_ioctl(cdi, CDROMREADTOCENTRY, &trk1_te)))
-+	ret = sr_read_tocentry(cdi, &trk1_te);
-+	if (ret)
- 		return ret;
- 
- 	memset(&cgc, 0, sizeof(struct packet_command));
-@@ -78,6 +154,30 @@
- 	return sr_do_ioctl(cdi->handle, &cgc);
- }
- 
-+static int sr_play_trkind(struct cdrom_device_info *cdi,
-+		struct cdrom_ti *ti)
-+
-+{
-+	struct scsi_cd *cd = cdi->handle;
-+	struct packet_command cgc;
-+	int result;
-+
-+	memset(&cgc, 0, sizeof(struct packet_command));
-+	cgc.timeout = IOCTL_TIMEOUT;
-+	cgc.cmd[0] = GPCMD_PLAYAUDIO_TI;
-+	cgc.cmd[4] = ti->cdti_trk0;
-+	cgc.cmd[5] = ti->cdti_ind0;
-+	cgc.cmd[7] = ti->cdti_trk1;
-+	cgc.cmd[8] = ti->cdti_ind1;
-+	cgc.data_direction = DMA_NONE;
-+
-+	result = sr_do_ioctl(cd, &cgc);
-+	if (result == -EDRIVE_CANT_DO_THIS)
-+		result = sr_fake_playtrkind(cdi, ti);
-+
-+	return result;
-+}
-+
- /* We do our own retries because we want to know what the specific
-    error code is.  Normally the UNIT_ATTENTION code will automatically
-    clear after one error */
-@@ -229,13 +329,14 @@
- 	int i, rc, have_datatracks = 0;
- 
- 	/* look for data tracks */
--	if (0 != (rc = sr_audio_ioctl(cdi, CDROMREADTOCHDR, &toc_h)))
-+	rc = sr_read_tochdr(cdi, &toc_h);
-+	if (rc)
- 		return (rc == -ENOMEDIUM) ? CDS_NO_DISC : CDS_NO_INFO;
- 
- 	for (i = toc_h.cdth_trk0; i <= toc_h.cdth_trk1; i++) {
- 		toc_e.cdte_track = i;
- 		toc_e.cdte_format = CDROM_LBA;
--		if (sr_audio_ioctl(cdi, CDROMREADTOCENTRY, &toc_e))
-+		if (sr_read_tocentry(cdi, &toc_e))
- 			return CDS_NO_INFO;
- 		if (toc_e.cdte_ctrl & CDROM_DATA_TRACK) {
- 			have_datatracks = 1;
-@@ -262,10 +363,6 @@
- 	return 0;
- }
- 
--/* primitive to determine whether we need to have GFP_DMA set based on
-- * the status of the unchecked_isa_dma flag in the host structure */
--#define SR_GFP_DMA(cd) (((cd)->device->host->unchecked_isa_dma) ? GFP_DMA : 0)
--
- int sr_get_mcn(struct cdrom_device_info *cdi, struct cdrom_mcn *mcn)
- {
- 	Scsi_CD *cd = cdi->handle;
-@@ -329,93 +426,16 @@
- 
- int sr_audio_ioctl(struct cdrom_device_info *cdi, unsigned int cmd, void *arg)
- {
--	Scsi_CD *cd = cdi->handle;
--	struct packet_command cgc;
--	int result;
--	unsigned char *buffer = kmalloc(32, GFP_KERNEL | SR_GFP_DMA(cd));
--
--	if (!buffer)
--		return -ENOMEM;
--
--	memset(&cgc, 0, sizeof(struct packet_command));
--	cgc.timeout = IOCTL_TIMEOUT;
--
- 	switch (cmd) {
- 	case CDROMREADTOCHDR:
--		{
--			struct cdrom_tochdr *tochdr = (struct cdrom_tochdr *) arg;
--
--			cgc.cmd[0] = GPCMD_READ_TOC_PMA_ATIP;
--			cgc.cmd[8] = 12;		/* LSB of length */
--			cgc.buffer = buffer;
--			cgc.buflen = 12;
--			cgc.quiet = 1;
--			cgc.data_direction = DMA_FROM_DEVICE;
--
--			result = sr_do_ioctl(cd, &cgc);
--
--			tochdr->cdth_trk0 = buffer[2];
--			tochdr->cdth_trk1 = buffer[3];
--
--			break;
--		}
--
-+		return sr_read_tochdr(cdi, arg);
- 	case CDROMREADTOCENTRY:
--		{
--			struct cdrom_tocentry *tocentry = (struct cdrom_tocentry *) arg;
--
--			cgc.cmd[0] = GPCMD_READ_TOC_PMA_ATIP;
--			cgc.cmd[1] |= (tocentry->cdte_format == CDROM_MSF) ? 0x02 : 0;
--			cgc.cmd[6] = tocentry->cdte_track;
--			cgc.cmd[8] = 12;		/* LSB of length */
--			cgc.buffer = buffer;
--			cgc.buflen = 12;
--			cgc.data_direction = DMA_FROM_DEVICE;
--
--			result = sr_do_ioctl(cd, &cgc);
--
--			tocentry->cdte_ctrl = buffer[5] & 0xf;
--			tocentry->cdte_adr = buffer[5] >> 4;
--			tocentry->cdte_datamode = (tocentry->cdte_ctrl & 0x04) ? 1 : 0;
--			if (tocentry->cdte_format == CDROM_MSF) {
--				tocentry->cdte_addr.msf.minute = buffer[9];
--				tocentry->cdte_addr.msf.second = buffer[10];
--				tocentry->cdte_addr.msf.frame = buffer[11];
--			} else
--				tocentry->cdte_addr.lba = (((((buffer[8] << 8) + buffer[9]) << 8)
--					+ buffer[10]) << 8) + buffer[11];
--
--			break;
--		}
--
--	case CDROMPLAYTRKIND: {
--		struct cdrom_ti* ti = (struct cdrom_ti*)arg;
--
--		cgc.cmd[0] = GPCMD_PLAYAUDIO_TI;
--		cgc.cmd[4] = ti->cdti_trk0;
--		cgc.cmd[5] = ti->cdti_ind0;
--		cgc.cmd[7] = ti->cdti_trk1;
--		cgc.cmd[8] = ti->cdti_ind1;
--		cgc.data_direction = DMA_NONE;
--
--		result = sr_do_ioctl(cd, &cgc);
--		if (result == -EDRIVE_CANT_DO_THIS)
--			result = sr_fake_playtrkind(cdi, ti);
--
--		break;
--	}
--
-+		return sr_read_tocentry(cdi, arg);
-+	case CDROMPLAYTRKIND:
-+		return sr_play_trkind(cdi, arg);
- 	default:
--		result = -EINVAL;
-+		return -EINVAL;
+ 	/* Only let one of these through at a time */
+-	if (down_interruptible(&tw_dev->ioctl_sem)) {
++	if (mutex_lock_interruptible(&tw_dev->ioctl_lock)) {
+ 		retval = TW_IOCTL_ERROR_OS_EINTR;
+ 		goto out;
  	}
--
--#if 0
--	if (result)
--		printk("DEBUG: sr_audio: result for ioctl %x: %x\n", cmd, result);
--#endif
--
--	kfree(buffer);
--	return result;
- }
+@@ -852,7 +853,7 @@
+ 	/* Now free ioctl buf memory */
+ 	dma_free_coherent(&tw_dev->tw_pci_dev->dev, data_buffer_length_adjusted+sizeof(TW_Ioctl_Buf_Apache) - 1, cpu_addr, dma_handle);
+ out2:
+-	up(&tw_dev->ioctl_sem);
++	mutex_unlock(&tw_dev->ioctl_lock);
+ out:
+ 	return retval;
+ } /* End twa_chrdev_ioctl() */
+@@ -1182,7 +1183,7 @@
+ 	tw_dev->error_sequence_id = 1;
+ 	tw_dev->chrdev_request_id = TW_IOCTL_CHRDEV_FREE;
  
- /* -----------------------------------------------------------------------
+-	init_MUTEX(&tw_dev->ioctl_sem);
++	mutex_init(&tw_dev->ioctl_lock);
+ 	init_waitqueue_head(&tw_dev->ioctl_wqueue);
+ 
+ 	retval = 0;
+Index: linux-2.6/drivers/scsi/3w-9xxx.h
+===================================================================
+--- linux-2.6.orig/drivers/scsi/3w-9xxx.h
++++ linux-2.6/drivers/scsi/3w-9xxx.h
+@@ -672,7 +672,7 @@
+ 	u32                     ioctl_msec;
+ 	int			chrdev_request_id;
+ 	wait_queue_head_t	ioctl_wqueue;
+-	struct semaphore	ioctl_sem;
++	struct mutex		ioctl_lock;
+ 	char			aen_clobber;
+ 	unsigned short		working_srl;
+ 	unsigned short		working_branch;
+Index: linux-2.6/drivers/scsi/3w-xxxx.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/3w-xxxx.c
++++ linux-2.6/drivers/scsi/3w-xxxx.c
+@@ -203,6 +203,7 @@
+ #include <linux/delay.h>
+ #include <linux/pci.h>
+ #include <linux/time.h>
++#include <linux/mutex.h>
+ #include <asm/io.h>
+ #include <asm/irq.h>
+ #include <asm/uaccess.h>
+@@ -888,7 +889,7 @@
+ 	dprintk(KERN_WARNING "3w-xxxx: tw_chrdev_ioctl()\n");
+ 
+ 	/* Only let one of these through at a time */
+-	if (down_interruptible(&tw_dev->ioctl_sem))
++	if (mutex_lock_interruptible(&tw_dev->ioctl_lock))
+ 		return -EINTR;
+ 
+ 	/* First copy down the buffer length */
+@@ -1029,7 +1030,7 @@
+ 	/* Now free ioctl buf memory */
+ 	dma_free_coherent(&tw_dev->tw_pci_dev->dev, data_buffer_length_adjusted+sizeof(TW_New_Ioctl) - 1, cpu_addr, dma_handle);
+ out:
+-	up(&tw_dev->ioctl_sem);
++	mutex_unlock(&tw_dev->ioctl_lock);
+ 	return retval;
+ } /* End tw_chrdev_ioctl() */
+ 
+@@ -1270,7 +1271,7 @@
+ 	tw_dev->pending_tail = TW_Q_START;
+ 	tw_dev->chrdev_request_id = TW_IOCTL_CHRDEV_FREE;
+ 
+-	init_MUTEX(&tw_dev->ioctl_sem);
++	mutex_init(&tw_dev->ioctl_lock);
+ 	init_waitqueue_head(&tw_dev->ioctl_wqueue);
+ 
+ 	return 0;
+Index: linux-2.6/drivers/scsi/3w-xxxx.h
+===================================================================
+--- linux-2.6.orig/drivers/scsi/3w-xxxx.h
++++ linux-2.6/drivers/scsi/3w-xxxx.h
+@@ -420,7 +420,7 @@
+ 	u32			max_sector_count;
+ 	u32			aen_count;
+ 	struct Scsi_Host	*host;
+-	struct semaphore	ioctl_sem;
++	struct mutex		ioctl_lock;
+ 	unsigned short		aen_queue[TW_Q_LENGTH];
+ 	unsigned char		aen_head;
+ 	unsigned char		aen_tail;
