@@ -1,51 +1,48 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Error handling in LibATA
-Date: Wed, 11 Jan 2006 09:22:13 +1000
-Message-ID: <43C441A5.6000205@torque.net>
-References: <BAY101-F102837A76FADACF6F37DBBDF250@phx.gbl>
-Reply-To: dougg@torque.net
+From: Peter Williams <pwil3058@bigpond.net.au>
+Subject: Re: sym53c8xx_2 is flooding my syslog ...
+Date: Wed, 11 Jan 2006 11:40:38 +1100
+Message-ID: <43C45406.3040004@bigpond.net.au>
+References: <430FD71C.6050704@bigpond.net.au> <43632635.7080604@bigpond.net.au> <20060110174904.GS3911@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <BAY101-F102837A76FADACF6F37DBBDF250@phx.gbl>
-Sender: linux-ide-owner@vger.kernel.org
-To: John Treubig <jtreubig@hotmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from omta05ps.mx.bigpond.com ([144.140.83.195]:8916 "EHLO
+	omta05ps.mx.bigpond.com") by vger.kernel.org with ESMTP
+	id S1030183AbWAKAkl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Jan 2006 19:40:41 -0500
+In-Reply-To: <20060110174904.GS3911@stusta.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Matthew Wilcox <matthew@wil.cx>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-John Treubig wrote:
-> I've been working on a problem with Promise 20269 PATA adapter under
-> LibATA that if the drive has a write error or time-out, the application
-> that is accessing the drive using SG should see some sort of error.  My
-> first problem was my system hung.  After patching the IDE-IO.C, with a
-> recognized patch, I have been able to keep my system from hanging.  Now
-> the only problem is the application gets no notification that the drive
-> has been rendered inaccessible.  (Test case is to run a system with my
-> app going, and then pull the power from the drive.  System log shows the
-> errors, but nothing gets back to the app).  The app does get
-> notifications if I perform the same type of test on a drive attached to
-> the motherboard secondary IDE adapter, so we know the app is correctly
-> implemented.
+Adrian Bunk wrote:
+> On Sat, Oct 29, 2005 at 05:35:17PM +1000, Peter Williams wrote:
 > 
-> I've traced the errors down to the fact that the errors are caught in
-> libata-core.c (ata_qc_timeout).  I'd like to put a call in libata-core.c
-> that would cause an error to be reflected back to the application.  Can
-> you suggest the function or method that would do this?
+>>Peter Williams wrote:
+>>
+>>>... with the following message:
+>>>
+>>>Aug 21 04:53:28 mudlark kernel: ..<6>sd 0:0:6:0: phase change 6-7 
+>>>9@01ab97a0 resid=7.
+>>>
+>>>every 2 seconds.  Since the problem being reported seems to have no 
+>>>effect on the operation of the scsi devices is it really necessary to 
+>>>report it so often?
+>>>
+>>
+>>This problem is still occurring on 2.6.14.
+> 
+> 
+> And still in 2.6.15?
 
-John,
-SG_IO ioctl users would normally expect to see DRIVER_TIMEOUT
-(plus a suggest mask) in sg_io_hdr::driver_status when a
-mid level timeout goes off. So that needs to be "wired"
-in libata (along with some other transport errors I suspect).
+No.  It seems to have stopped.
 
-Here is an example of a timeout using the scsi_debug driver:
-# modprobe scsi_debug ptype=9 delay=200000
-# lsscsi -g
-[0:0:0:0]    comms   Linux    scsi_debug       0004  -         /dev/sg0
-# sg_start /dev/sg0
-start stop unit: transport: Driver_status=0x06 [DRIVER_TIMEOUT, SUGGEST_OK]
-START STOP UNIT command failed
+Thanks
+Peter
+-- 
+Peter Williams                                   pwil3058@bigpond.net.au
 
-
-Doug Gilbert
+"Learning, n. The kind of ignorance distinguishing the studious."
+  -- Ambrose Bierce
