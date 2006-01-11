@@ -1,145 +1,61 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: aic7xxx timer handling bug
-Date: Tue, 10 Jan 2006 19:30:25 -0800
-Message-ID: <20060110193025.1e37ad77.akpm@osdl.org>
-References: <20060109040606.118a0d33.akpm@osdl.org>
-	<1136916702.3509.29.camel@mulgrave>
+From: Ashutosh Naik <ashutosh.naik@gmail.com>
+Subject: PATCH [1/2] scsi/BusLogic.c:Handle scsi_add_host failure
+Date: Wed, 11 Jan 2006 15:05:16 +0530
+Message-ID: <81083a450601110135t4f038fbds1bce6d8c9302e89@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_Part_15292_28003396.1136972116981"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:54178 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S932612AbWAKDan (ORCPT
+Received: from zproxy.gmail.com ([64.233.162.206]:21162 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751406AbWAKJfR (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jan 2006 22:30:43 -0500
-In-Reply-To: <1136916702.3509.29.camel@mulgrave>
+	Wed, 11 Jan 2006 04:35:17 -0500
+Received: by zproxy.gmail.com with SMTP id 14so116739nzn
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Jan 2006 01:35:17 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@steeleye.com, lnz@dandelion.com, Andrew Morton <akpm@osdl.org>
 
-James Bottomley <James.Bottomley@SteelEye.com> wrote:
->
-> On Mon, 2006-01-09 at 04:06 -0800, Andrew Morton wrote:
->  > While doing a binary search for a buggy patch (it was
->  > gregkh-pci-x86-pci-domain-support-the-meat.patch, reported on
->  > linux-kernel), I hit the below.
-> 
->  OK, try this; it should pull out all of the aic7xxx timer handling and
->  replace it with proper mechanisms (I had to rework the locking a bit to
->  get this to happen correctly, so caveat emptor).
+------=_Part_15292_28003396.1136972116981
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-It fixes the oops.  With this +
-gregkh-pci-x86-pci-domain-support-the-meat.patch:
+Add scsi_add_host() failure handling for the Linux Driver for BusLogic
+MultiMaster and FlashPoint SCSI Host Adapters
 
+Signed-off-by: Ashutosh Naik <ashutosh.naik@gmail.com>
 
- 26 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID) 
-SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]               
- 27 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID) 
-SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]               
- 28 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID) 
-SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]               
- 29 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID) 
-SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]               
- 30 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID) 
-SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]               
- 31 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID) 
-SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]               
-Pending list:                                     
-  2 SCB_CONTROL[0x0] SCB_SCSIID[0x7] SCB_LUN[0x0] 
-Kernel Free SCB list: 1 0                         
-Untagged Q(0): 2          
-                 
-<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
-scsi0:0:0:0: Cmd aborted from QINFIFO                    
-aic7xxx_abort returns 0x2002         
- 0:0:0:0: scsi: Device offlined - not ready after error recovery
- 0:0:1:0: Attempting to queue an ABORT message                  
-CDB: 0x12 0x0 0x0 0x0 0x24 0x0                
- 0:0:1:0: Command already completed
-aic7xxx_abort returns 0x2002       
- 0:0:1:0: Attempting to queue an ABORT message
-CDB: 0x0 0x0 0x0 0x0 0x0 0x0                  
-scsi0: At time of recovery, card was paused
->>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
-scsi0: Dumping Card State in Message-in phase, at SEQADDR 0x103
-Card was paused                                                
-ACCUM = 0x0, SINDEX = 0x71, DINDEX = 0xe4, ARG_2 = 0x0
-HCNT = 0x0 SCBPTR = 0x0                               
-SCSIPHASE[0x8]:(MSG_IN_PHASE) SCSISIGI[0xe6]:(REQI|BSYI|MSGI|IOI|CDI) 
-ERROR[0x0] SCSIBUSL[0x0] LASTPHASE[0xe0]:(MSGI|IOI|CDI)               
-SCSISEQ[0x12]:(ENAUTOATNP|ENRSELI) SBLKCTL[0xa]:(SELWIDE|SELBUSB) 
-SCSIRATE[0x0] SEQCTL[0x10]:(FASTMODE) SEQ_FLAGS[0x0]              
-SSTAT0[0x2]:(SPIORDY) SSTAT1[0x11]:(REQINIT|PHASEMIS) 
-SSTAT2[0x10]:(EXP_ACTIVE) SSTAT3[0x0] SIMODE0[0x8]:(ENSWRAP) 
-SIMODE1[0xac]:(ENSCSIPERR|ENBUSFREE|ENSCSIRST|ENSELTIMO)     
-SXFRCTL0[0x88]:(SPIOEN|DFON) DFCNTRL[0x0] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD 
-STACK: 0x0 0x164 0x179 0x102                                                   
-SCB count = 4               
-Kernel NEXTQSCB = 3
-Card NEXTQSCB = 2  
-QINFIFO entries: 2 
-Waiting Queue entries: 
-Disconnected Queue entries: 
-QOUTFIFO entries:           
-Sequencer Free SCB List: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 2 
-Sequencer SCB Info:                                                            
-  0 SCB_CONTROL[0xc0]:(DISCENB|TARGET_SCB) SCB_SCSIID[0x17] 
-SCB_LUN[0x0] SCB_TAG[0xff]                                  
-  1 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID) 
-SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]               
-  2 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID) 
-SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]               
-  3 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID) 
-SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]               
-  4 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID) 
-SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]               
+------=_Part_15292_28003396.1136972116981
+Content-Type: text/plain; name=BusLogic.txt; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="BusLogic.txt"
 
+diff -Naurp linux-2.6.15-git6-vanilla/drivers/scsi/BusLogic.c linux-2.6.15-git6/drivers/scsi/BusLogic.c
+--- linux-2.6.15-git6-vanilla/drivers/scsi/BusLogic.c	2005-10-28 05:32:08.000000000 +0530
++++ linux-2.6.15-git6/drivers/scsi/BusLogic.c	2006-01-11 14:12:37.000000000 +0530
+@@ -2173,7 +2173,7 @@ static int BusLogic_SlaveConfigure(struc
+ 
+ static int __init BusLogic_init(void)
+ {
+-	int BusLogicHostAdapterCount = 0, DriverOptionsIndex = 0, ProbeIndex;
++	int BusLogicHostAdapterCount = 0, DriverOptionsIndex = 0, ProbeIndex, retval;
+ 	struct BusLogic_HostAdapter *PrototypeHostAdapter;
+ 
+ #ifdef MODULE
+@@ -2296,7 +2296,12 @@ static int __init BusLogic_init(void)
+ 				scsi_host_put(Host);
+ 			} else {
+ 				BusLogic_InitializeHostStructure(HostAdapter, Host);
+-				scsi_add_host(Host, NULL);
++				retval = scsi_add_host(Host, NULL);
++				if (retval) {
++					printk(KERN_WARNING "BusLogic: scsi_add_host failed\n");
++					scsi_host_put(host);
++					return retval;
++				}
+ 				scsi_scan_host(Host);
+ 				BusLogicHostAdapterCount++;
+ 			}
 
-That all took about one minute per disk.  I have 10 SCSI disks in this
-thing.
-
-Then we get a few minutes of:
-
-scsi0:0:5:0: Cmd aborted from QINFIFO                    
-aic7xxx_abort returns 0x2002         
- 0:0:5:0: scsi: Device offlined - not ready after error recovery
- 0:0:6:0: Attempting to queue an ABORT message                  
-CDB: 0x12 0x0 0x0 0x0 0x24 0x0                
- 0:0:6:0: Command already completed
-aic7xxx_abort returns 0x2002       
- 0:0:6:0: Attempting to queue an ABORT message
-CDB: 0x0 0x0 0x0 0x0 0x0 0x0                  
- 0:0:6:0: Command already completed
-aic7xxx_abort returns 0x2002       
- 0:0:6:0: Attempting to queue a TARGET RESET message
-CDB: 0x12 0x0 0x0 0x0 0x24 0x0                      
- 0:0:6:0: Command not found   
-aic7xxx_dev_reset returns 0x2002
- 0:0:6:0: Attempting to queue an ABORT message
-CDB: 0x0 0x0 0x0 0x0 0x0 0x0                  
- 0:0:6:0: Command already completed
-aic7xxx_abort returns 0x2002       
- 0:0:6:0: Attempting to queue an ABORT message
-CDB: 0x0 0x0 0x0 0x0 0x0 0x0                  
- 0:0:6:0: Command already completed
-aic7xxx_abort returns 0x2002       
- 0:0:6:0: scsi: Device offlined - not ready after error recovery
- 0:0:8:0: Attempting to queue an ABORT message                  
-CDB: 0x12 0x0 0x0 0x0 0x24 0x0                
- 0:0:8:0: Command already completed
-aic7xxx_abort returns 0x2002       
- 0:0:8:0: Attempting to queue an ABORT message
-CDB: 0x0 0x0 0x0 0x0 0x0 0x0                  
- 0:0:8:0: Command already completed
-aic7xxx_abort returns 0x2002       
- 0:0:8:0: Attempting to queue a TARGET RESET message
-CDB: 0x12 0x0 0x0 0x0 0x24 0x0                      
- 0:0:8:0: Command not found   
-
-
-
-After about 20 minutes, initscripts ran and it almost booted.  (This
-machine has everything installed on the IDE disk).
-
-Perhaps those timeouts are a bit too long??
+------=_Part_15292_28003396.1136972116981--
