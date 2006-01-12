@@ -1,52 +1,64 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [PATCH] SYNCHRONIZE_CACHE on umount
-Date: Thu, 12 Jan 2006 12:13:41 +0100
-Message-ID: <20060112111340.GC3945@suse.de>
-References: <6.0.0.20.2.20060112180316.04202110@129.60.53.12>
+From: "emmanuel\.fuste" <emmanuel.fuste@laposte.net>
+Subject: Re:[PATCH 0/4] [Resend] update aic79xx sequencer
+Date: Thu, 12 Jan 2006 12:22:45 +0100
+Message-ID: <ISZ8XX$064AD8CC55B87CA42B64769F9244AE7B@laposte.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:53591 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1030379AbWALLLq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jan 2006 06:11:46 -0500
-Content-Disposition: inline
-In-Reply-To: <6.0.0.20.2.20060112180316.04202110@129.60.53.12>
+Received: from mx.laposte.net ([81.255.54.11]:64458 "EHLO mx.laposte.net")
+	by vger.kernel.org with ESMTP id S964856AbWALLWt convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jan 2006 06:22:49 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hifumi Hisashi <hifumi.hisashi@lab.ntt.co.jp>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: hare <hare@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, mark_salyzyn <mark_salyzyn@adaptec.com>, "James.Bottomley" <James.Bottomley@steeleye.com>
 
-On Thu, Jan 12 2006, Hifumi Hisashi wrote:
-> Hi.
-> When a SCSI HDD(WCE bit is set) is umounted, SYNCHRONIZE_CACHE(35h)
-> command is not issued under current sd driver.
-> 
-> When an IDE HDD is umounted, FLUSH CACHE is issued through
-> idedisk_release().
-> I suppose that the sd driver also needs to flush cache through umount.
-> 
-> Thanks.
-> 
-> Signed-off-by: Hifumi Hisashi <hifumi.hisashi@lab.ntt.co.jp>
-> 
-> --- linux-2.6.15/drivers/scsi/sd.c      2006-01-12 16:23:44.000000000 +0900
-> +++ linux-2.6.15_fix/drivers/scsi/sd.c  2006-01-12 16:43:04.000000000 +0900
-> @@ -503,6 +503,8 @@
-> 
->         SCSI_LOG_HLQUEUE(3, printk("sd_release: disk=%s\n", 
->         disk->disk_name));
-> 
-> +       if (sdkp->WCE)
-> +               sd_sync_cache(sdev);
->         if (!--sdkp->openers && sdev->removable) {
->                 if (scsi_block_when_processing_errors(sdev))
->                         scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
+Hello,
 
-Wrong way to place it, imo. If you are pushing out dirty data on umount,
-the core should make sure to do a blkdev_issue_flush() afterwards. Then
-you don't have to put it in each and every driver.
+Is there any similar updates available for aic7xxx ?
 
--- 
-Jens Axboe
 
+Cheers,
+Emmanuel.
+
+> Hi all,
+>=20
+> this is a resend of the aic79xx update; I've removed the
+offending
+> copyright changes and merged patch 2&3.
+>=20
+> Jeff, the inb/outb changes have been done by adaptec, so I
+really do
+> hope they've done proper testing on them.
+> I certainly haven't seen any untoward effects here locally.
+>=20
+> Mark, were you able to test them? Or can you give some comments?
+> As already noted, I'll probably do another update to the
+latest adaptec
+> sources; wind and weather permitting as usual.
+>=20
+> Please apply.
+>=20
+> Cheers,
+>=20
+> Hannes
+> --=20
+> Dr. Hannes Reinecke			hare@suse.de
+> SuSE Linux Products GmbH		S390 & zSeries
+> Maxfeldstra=DFe 5				+49 911 74053 688
+> 90409 N=FCrnberg				http://www.suse.de
+>=20
+>=20
+
+Acc=E9dez au courrier =E9lectronique de La Poste : www.laposte.net ;=20
+3615 LAPOSTENET (0,34 =80/mn) ; t=E9l : 08 92 68 13 50 (0,34=80/mn)
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
