@@ -1,47 +1,41 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [patch] Mask capabilities for SCSI-1 CD drive
-Date: Thu, 12 Jan 2006 08:41:02 +0100
-Message-ID: <20060112074102.GC17718@suse.de>
-References: <200601112359_MC3-1-B5B7-409F@compuserve.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: Calling scsi_done from queuecommand()
+Date: Thu, 12 Jan 2006 08:59:00 +0100
+Message-ID: <1137052740.2936.7.camel@laptopd505.fenrus.org>
+References: <200601121157417180341@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:52516 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1750824AbWALHjM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jan 2006 02:39:12 -0500
-Content-Disposition: inline
-In-Reply-To: <200601112359_MC3-1-B5B7-409F@compuserve.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:9353 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932121AbWALH7F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jan 2006 02:59:05 -0500
+In-Reply-To: <200601121157417180341@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chuck Ebbert <76306.1226@compuserve.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Zhikun Wang <raidwang@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Jan 11 2006, Chuck Ebbert wrote:
-> SCSI-1 CD drives can't do MRW or be opened for writing, so mask off
-> those capabilities.
-> 
-> Signed-off-by: Chuck Ebbert <76306.1226@compuserve.com>
-> 
-> --- 2.6.15a.orig/drivers/scsi/sr.c
-> +++ 2.6.15a/drivers/scsi/sr.c
-> @@ -762,8 +762,9 @@ static void get_capabilities(struct scsi
->  		/* failed, drive doesn't have capabilities mode page */
->  		cd->cdi.speed = 1;
->  		cd->cdi.mask |= (CDC_CD_R | CDC_CD_RW | CDC_DVD_R |
-> -					 CDC_DVD | CDC_DVD_RAM |
-> -					 CDC_SELECT_DISC | CDC_SELECT_SPEED);
-> +				 CDC_DVD | CDC_DVD_RAM |
-> +				 CDC_SELECT_DISC | CDC_SELECT_SPEED |
-> +				 CDC_MRW | CDC_MRW_W | CDC_RAM);
->  		kfree(buffer);
->  		printk("%s: scsi-1 drive\n", cd->cdi.name);
->  		return;
+On Thu, 2006-01-12 at 11:57 +0800, Zhikun Wang wrote:
+> Hi list, 
+> 	Can we call scsi_done() to complete the I/O from the queuecommand() ? 
 
-Looks fine, thanks.
+yes that should be fine *IF THE COMMAND COMPLETED*. (for example that
+can be done for battery backed ram cards)
 
-Acked-by: Jens Axboe <axboe@suse.de>
+> (e.g. to make queuecommand synchronous). 
+> 	I try this method in my LsiLogic 22320 SCSI card driver 
 
--- 
-Jens Axboe
+but... that sounds unlikely to be right. That is real scsi, which means
+you have to wait a REALLY long time (easily 5 miliseconds) before the
+command completes, and you cannot sleep in queuecommand (it's called
+from interrupt context). So this sounds really fishy
+
+> in Redhat9,
+
+you do realize you're using a truely antique linux kernel/distribution
+there, right? I suggest you go to a far more recent (and an actual
+maintained) distribution
+
 
