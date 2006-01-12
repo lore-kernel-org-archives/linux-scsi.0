@@ -1,41 +1,41 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: Calling scsi_done from queuecommand()
-Date: Thu, 12 Jan 2006 08:59:00 +0100
-Message-ID: <1137052740.2936.7.camel@laptopd505.fenrus.org>
-References: <200601121157417180341@gmail.com>
+From: Hifumi Hisashi <hifumi.hisashi@lab.ntt.co.jp>
+Subject: [PATCH] SYNCHRONIZE_CACHE on umount
+Date: Thu, 12 Jan 2006 18:07:43 +0900
+Message-ID: <6.0.0.20.2.20060112180316.04202110@129.60.53.12>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:9353 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932121AbWALH7F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jan 2006 02:59:05 -0500
-In-Reply-To: <200601121157417180341@gmail.com>
+Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:27590 "EHLO
+	tama55.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
+	id S1030312AbWALJHo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jan 2006 04:07:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Zhikun Wang <raidwang@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2006-01-12 at 11:57 +0800, Zhikun Wang wrote:
-> Hi list, 
-> 	Can we call scsi_done() to complete the I/O from the queuecommand() ? 
+Hi.
+When a SCSI HDD(WCE bit is set) is umounted, SYNCHRONIZE_CACHE(35h)
+command is not issued under current sd driver.
 
-yes that should be fine *IF THE COMMAND COMPLETED*. (for example that
-can be done for battery backed ram cards)
+When an IDE HDD is umounted, FLUSH CACHE is issued through
+idedisk_release().
+I suppose that the sd driver also needs to flush cache through umount.
 
-> (e.g. to make queuecommand synchronous). 
-> 	I try this method in my LsiLogic 22320 SCSI card driver 
+Thanks.
 
-but... that sounds unlikely to be right. That is real scsi, which means
-you have to wait a REALLY long time (easily 5 miliseconds) before the
-command completes, and you cannot sleep in queuecommand (it's called
-from interrupt context). So this sounds really fishy
+Signed-off-by: Hifumi Hisashi <hifumi.hisashi@lab.ntt.co.jp>
 
-> in Redhat9,
+--- linux-2.6.15/drivers/scsi/sd.c      2006-01-12 16:23:44.000000000 +0900
++++ linux-2.6.15_fix/drivers/scsi/sd.c  2006-01-12 16:43:04.000000000 +0900
+@@ -503,6 +503,8 @@
 
-you do realize you're using a truely antique linux kernel/distribution
-there, right? I suggest you go to a far more recent (and an actual
-maintained) distribution
+         SCSI_LOG_HLQUEUE(3, printk("sd_release: disk=%s\n", disk->disk_name));
 
++       if (sdkp->WCE)
++               sd_sync_cache(sdev);
+         if (!--sdkp->openers && sdev->removable) {
+                 if (scsi_block_when_processing_errors(sdev))
+                         scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
 
