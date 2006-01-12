@@ -1,61 +1,48 @@
-From: "Zhikun Wang" <raidwang@gmail.com>
-Subject: Re: Re: Calling scsi_done from queuecommand()
-Date: Thu, 12 Jan 2006 17:47:36 +0800
-Message-ID: <200601121747284849911@gmail.com>
-References: <200601121157417180341@gmail.com> <1137052740.2936.7.camel@laptopd505.fenrus.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 0/4] [Resend] update aic79xx sequencer
+Date: Thu, 12 Jan 2006 12:02:58 +0100
+Message-ID: <43C63762.3000501@suse.de>
+References: <ISX88H$7860D422B0F4A207532BB4F4448FF0FD@laposte.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.200]:56360 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S964793AbWALJpt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jan 2006 04:45:49 -0500
-Received: by zproxy.gmail.com with SMTP id i11so343322nzh
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Jan 2006 01:45:48 -0800 (PST)
+Received: from cantor2.suse.de ([195.135.220.15]:56283 "EHLO mx2.suse.de")
+	by vger.kernel.org with ESMTP id S932169AbWALLDI convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jan 2006 06:03:08 -0500
+In-Reply-To: <ISX88H$7860D422B0F4A207532BB4F4448FF0FD@laposte.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: "emmanuel.fuste" <emmanuel.fuste@laposte.net>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, James Bottomley <James.Bottomley@steeleye.com>
 
->On Thu, 2006-01-12 at 11:57 +0800, Zhikun Wang wrote:
-> Hi list, 
-> 	Can we call scsi_done() to complete the I/O from the queuecommand() ? 
+Hi all,
 
->>yes that should be fine *IF THE COMMAND COMPLETED*. (for example that
->>can be done for battery backed ram cards)
+this is a resend of the aic79xx update; I've removed the offending
+copyright changes and merged patch 2&3.
 
-> (e.g. to make queuecommand synchronous). 
-> 	I try this method in my LsiLogic 22320 SCSI card driver 
+Jeff, the inb/outb changes have been done by adaptec, so I really do
+hope they've done proper testing on them.
+I certainly haven't seen any untoward effects here locally.
 
->>but... that sounds unlikely to be right. That is real scsi, which means
->>you have to wait a REALLY long time (easily 5 miliseconds) before the
->>command completes, and you cannot sleep in queuecommand (it's called
->>from interrupt context). So this sounds really fishy
+Mark, were you able to test them? Or can you give some comments?
+As already noted, I'll probably do another update to the latest adaptec
+sources; wind and weather permitting as usual.
 
-I intend to use a global variable to make queuecommand synchronously. In the <queuecommand function> i set the global variable to 0.
-	......
-	global = 0;
-	......
-	while(!global)
-    	barrier();
-    SCpnt->scsi_done(SCpnt);
-	......
-When the command completes, in the <interrupt routine> i set the global variable to 1.
-	......
-	global = 1;
-    ......
-this method works for read command, but write command will stop at scsi_done routine and then timeout!
-i am very puzzled about this!
+Please apply.
 
-> in Redhat9,
+Cheers,
 
->>you do realize you're using a truely antique linux kernel/distribution
->>there, right? I suggest you go to a far more recent (and an actual
->>maintained) distribution
+Hannes
+--=20
+Dr. Hannes Reinecke			hare@suse.de
+SuSE Linux Products GmbH		S390 & zSeries
+Maxfeldstra=DFe 5				+49 911 74053 688
+90409 N=FCrnberg				http://www.suse.de
 
-i know Redhat9 is out of time, but i must use this kernel/distribution
-in my project!
-
-
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
