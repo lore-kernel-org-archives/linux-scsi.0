@@ -1,112 +1,43 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: Re: [PATCH 2.6.15] I2O: move pci_request_regions() just behind pci_enable_device()
-Date: Thu, 12 Jan 2006 08:31:57 -0500
-Message-ID: <547AF3BD0F3F0B4CBDC379BAC7E4189F0207C3C4@otce2k03.adaptec.com>
+From: "emmanuel\.fuste" <emmanuel.fuste@laposte.net>
+Subject: Re: [PATCH 0/4] [Resend] update aic79xx sequencer
+Date: Thu, 12 Jan 2006 14:53:11 +0100
+Message-ID: <ISZFWN$934A4722B2BE467FD27840A059023B1E@laposte.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from magic.adaptec.com ([216.52.22.17]:3045 "EHLO magic.adaptec.com")
-	by vger.kernel.org with ESMTP id S1751192AbWALNcB convert rfc822-to-8bit
+Received: from mx.laposte.net ([81.255.54.11]:50202 "EHLO mx.laposte.net")
+	by vger.kernel.org with ESMTP id S932220AbWALNxx convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jan 2006 08:32:01 -0500
-content-class: urn:content-classes:message
+	Thu, 12 Jan 2006 08:53:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ryoji Kamei <kamei@miraclelinux.com>, linux-scsi <linux-scsi@vger.kernel.org>, Markus Lidel <Markus.Lidel@shadowconnect.com>
-Cc: akpm@osdl.org
+To: hare <hare@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "James.Bottomley" <James.Bottomley@SteelEye.com>, bunk <bunk@stusta.de>
 
-The problem in dpt_i2o could be the pci config space accesses it
-triggers as it loads, dangerous to do if there is any I/O activity going
-on in the other driver (probable if a boot driver I guess).
+I checked the latest adaptec souces and the aic7xxx part
+seemed to be in sync with the kernel with the big difference
+located in aic7xxx_osm.c.
 
-I approve this patch to dpt_i2o.c, and am applying it to the Adaptec
-branch of the driver.
+I will try James Bottomley "aic7xxx timer handling bug" fix.
 
-Thanks for the investigation Ryoji.
+Emmanuel.
 
-Sincerely -- Mark Salyzyn
+> emmanuel.fuste wrote:
+> > Hello,
+> >=20
+> > Is there any similar updates available for aic7xxx ?
+> >=20
+> I could if James thinks it useful ...
+>
 
------Original Message-----
-From: Ryoji Kamei [mailto:kamei@miraclelinux.com] 
-Sent: Thursday, January 12, 2006 5:34 AM
-To: akpm@osdl.org; AACRAID
-Cc: Ryoji Kamei
-Subject: [PATCH 2.6.15] I2O: move pci_request_regions() just behind
-pci_enable_device()
+Acc=E9dez au courrier =E9lectronique de La Poste : www.laposte.net ;=20
+3615 LAPOSTENET (0,34 =80/mn) ; t=E9l : 08 92 68 13 50 (0,34=80/mn)
 
 
 
-Dear maintainers,
-
-In linux 2.6.15, data transfer does hang when both dpt_i2o
-and i2o_block drivers are loaded.
-It seems that location of pci_request_regions() are wrong.
-I moved it just behind pci_enable_device() like other drivers,
-and it becomes fine.
-
-Signed-off-by: Ryoji Kamei <kamei@miraclelinux.com>
----
---- linux-2.6.15.orig/drivers/message/i2o/pci.c	2006-01-03
-12:21:10.000000000 +0900
-+++ linux-2.6.15/drivers/message/i2o/pci.c	2006-01-12
-16:48:45.456399784
-+0900
-@@ -88,11 +88,6 @@
- 	struct device *dev = &pdev->dev;
- 	int i;
-
--	if (pci_request_regions(pdev, OSM_DESCRIPTION)) {
--		printk(KERN_ERR "%s: device already claimed\n",
-c->name);
--		return -ENODEV;
--	}
 -
- 	for (i = 0; i < 6; i++) {
- 		/* Skip I/O spaces */
- 		if (!(pci_resource_flags(pdev, i) & IORESOURCE_IO)) {
-@@ -319,6 +314,11 @@
- 		return rc;
- 	}
-
-+	if (pci_request_regions(pdev, OSM_DESCRIPTION)) {
-+		printk(KERN_ERR "i2o: device already claimed\n",
-c->name);
-+		return -ENODEV;
-+	}
-+
- 	if (pci_set_dma_mask(pdev, DMA_32BIT_MASK)) {
- 		printk(KERN_WARNING "i2o: no suitable DMA found for
-%s\n",
- 		       pci_name(pdev));
---- linux-2.6.15.orig/drivers/scsi/dpt_i2o.c	2006-01-03
-12:21:10.000000000 +0900
-+++ linux-2.6.15/drivers/scsi/dpt_i2o.c	2006-01-12 16:51:36.842345160
-+0900
-@@ -898,6 +898,12 @@
- 	if(pci_enable_device(pDev)) {
- 		return -EINVAL;
- 	}
-+
-+	if (pci_request_regions(pDev, "dpt_i2o")) {
-+		PERROR("dpti: adpt_config_hba: pci request region
-failed\n");
-+		return -EINVAL;
-+	}
-+
- 	pci_set_master(pDev);
- 	if (pci_set_dma_mask(pDev, 0xffffffffffffffffULL) &&
- 	    pci_set_dma_mask(pDev, 0xffffffffULL))
-@@ -923,10 +929,6 @@
- 		raptorFlag = TRUE;
- 	}
-
--	if (pci_request_regions(pDev, "dpt_i2o")) {
--		PERROR("dpti: adpt_config_hba: pci request region
-failed\n");
--		return -EINVAL;
--	}
- 	base_addr_virt = ioremap(base_addr0_phys,hba_map0_area_size);
- 	if (!base_addr_virt) {
- 		pci_release_regions(pDev);
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
