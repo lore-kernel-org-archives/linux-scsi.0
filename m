@@ -1,38 +1,50 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: [PATCH] Make scsi error recovery play nice with devices	blocked
- by transport
-Date: Fri, 13 Jan 2006 13:50:05 -0600
-Message-ID: <43C8046D.5010804@sgi.com>
-References: <43A35498.6030903@sgi.com> <43B2B77B.20602@emulex.com> <43BEE23E.8040707@sgi.com> <43C27ABC.2020504@emulex.com> <1136821157.3364.11.camel@mulgrave> <43C7FFB4.5000801@sgi.com> <20060113193837.GB5668@lst.de>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH] - pci_ids - adding pci device id support for FC949ES
+Date: Fri, 13 Jan 2006 11:59:39 -0800
+Message-ID: <20060113195939.GB18869@kroah.com>
+References: <F331B95B72AFFB4B87467BE1C8E9CF5F1AA29A@NAMAIL2.ad.lsil.com> <20060113000323.09cbff98.akpm@osdl.org> <20060113181002.GG20718@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:57048 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S1422865AbWAMTuN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2006 14:50:13 -0500
-In-Reply-To: <20060113193837.GB5668@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422899AbWAMUA6@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060113181002.GG20718@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, "Moore, Eric" <Eric.Moore@lsil.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org, Jeremy Higdon <jeremy@sgi.com>, Gary Hagensen <gwh@sgi.com>
 
-
-
-Christoph Hellwig wrote:
-> On Fri, Jan 13, 2006 at 01:29:56PM -0600, Michael Reed wrote:
->>I'm planning on working on this once the fusion fc_transport code finally
->>makes it in.  What do you see as a deadline for code addressing this problem?
->>
->>Perhaps someone else already has something to address this in progress?
->>It's a significant issue with our fibre channel customers.
+On Fri, Jan 13, 2006 at 06:10:02PM +0000, Christoph Hellwig wrote:
+> On Fri, Jan 13, 2006 at 12:03:23AM -0800, Andrew Morton wrote:
+> > >  --- b/include/linux/pci_ids.h	2006-01-11 19:04:18.000000000 -0700
+> > >  +++ a/include/linux/pci_ids.h	2006-01-12 14:19:43.000000000 -0700
+> > >  @@ -181,6 +181,7 @@
+> > >   #define PCI_DEVICE_ID_LSI_FC929X	0x0626
+> > >   #define PCI_DEVICE_ID_LSI_FC939X	0x0642
+> > >   #define PCI_DEVICE_ID_LSI_FC949X	0x0640
+> > >  +#define PCI_DEVICE_ID_LSI_FC949ES	0x0646
+> > >   #define PCI_DEVICE_ID_LSI_FC919X	0x0628
+> > >   #define PCI_DEVICE_ID_NCR_YELLOWFIN	0x0701
+> > >   #define PCI_DEVICE_ID_LSI_61C102	0x0901
+> > 
+> > That doesn't add support - it just adds the ID.  We've apparently decided
+> > not to keep IDs of devices which the kernel doesn't support.
 > 
-> There's not at all.  Sunday is feature deadline for 2.6.16, but we'll
-> happily accept everything good for 2.6.17.  OTOH this probably falls
-> into fixes that can go in after -rc1 anyway.
+> There's a patch on linux-scsi that adds the actual support.
+
+Then include this as part of that patch please.  Or if you are going to
+add ids to this file, at least CC: the PCI kernel maintainer so he knows
+to add them.  And also say that an already submitted patch needs it.
+
+> > Also, there's a plan to stop using pci_ids.h - PCI IDs are supposed to go
+> > into a driver-private header file.  I guess drivers/scsi/megaraid.h is an
+> > example.
 > 
+> That's new to me.  In either case a single driver should do one thing
+> consistantly, and fusion has tons of defines in pci_ids.h already.
 
-I was hoping that was the case.  It's pretty broken as it is today.
+Yeah, for older drivers that already do this, I don't have a problem
+adding it here.  Then we can move all of the ids to the local file at
+once in the future :)
 
-Mike
+thanks,
+
+greg k-h
