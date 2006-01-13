@@ -1,27 +1,111 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] remove target parent limitiation
-Date: Fri, 13 Jan 2006 19:24:01 +0100
-Message-ID: <20060113182401.GA4106@lst.de>
-References: <20060113180400.GA3509@lst.de> <43C7EFCA.4020908@cs.wisc.edu>
+Subject: [PATCH] remove scsi_assign_lock
+Date: Fri, 13 Jan 2006 19:25:43 +0100
+Message-ID: <20060113182543.GA4148@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:23006 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S1422785AbWAMSYR (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:28126 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S1422803AbWAMSZq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2006 13:24:17 -0500
+	Fri, 13 Jan 2006 13:25:46 -0500
 Content-Disposition: inline
-In-Reply-To: <43C7EFCA.4020908@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Christoph Hellwig <hch@lst.de>, James.Bottomley@steeleye.com, Eric.Moore@lsil.com, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+To: jejb@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-> Should we remove the target_parent callout from the trasnport_template 
-> since it is no longer used or does it make sense to keep it as part of 
-> the API?
+We finally fixed all drivers to not require this hack, so let's get rid
+of it before people reintroduce uses (vendor drivers seem to be very
+eager to use it for no obvious reason)
 
-In the patch I have hear I did that:
 
--       struct device *(*target_parent)(struct Scsi_Host *, int, uint);
-+       int (*user_scan)(struct Scsi_Host *, uint, uint, uint);
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: scsi-misc-2.6/Documentation/scsi/scsi_mid_low_api.txt
+===================================================================
+--- scsi-misc-2.6.orig/Documentation/scsi/scsi_mid_low_api.txt	2006-01-13 17:55:51.000000000 +0100
++++ scsi-misc-2.6/Documentation/scsi/scsi_mid_low_api.txt	2006-01-13 18:00:32.000000000 +0100
+@@ -375,7 +375,6 @@
+    scsi_add_device - creates new scsi device (lu) instance
+    scsi_add_host - perform sysfs registration and set up transport class
+    scsi_adjust_queue_depth - change the queue depth on a SCSI device
+-   scsi_assign_lock - replace default host_lock with given lock
+    scsi_bios_ptable - return copy of block device's partition table
+    scsi_block_requests - prevent further commands being queued to given host
+    scsi_deactivate_tcq - turn off tag command queueing
+@@ -489,20 +488,6 @@
+ 
+ 
+ /**
+- * scsi_assign_lock - replace default host_lock with given lock
+- * @shost: a pointer to a scsi host instance
+- * @lock: pointer to lock to replace host_lock for this host
+- *
+- *      Returns nothing
+- *
+- *      Might block: no
+- *
+- *      Defined in: include/scsi/scsi_host.h .
+- **/
+-void scsi_assign_lock(struct Scsi_Host *shost, spinlock_t *lock)
+-
+-
+-/**
+  * scsi_bios_ptable - return copy of block device's partition table
+  * @dev:        pointer to block device
+  *
+@@ -1385,17 +1370,11 @@
+ Each struct Scsi_Host instance has a spin_lock called struct 
+ Scsi_Host::default_lock which is initialized in scsi_host_alloc() [found in 
+ hosts.c]. Within the same function the struct Scsi_Host::host_lock pointer
+-is initialized to point at default_lock with the scsi_assign_lock() function.
+-Thereafter lock and unlock operations performed by the mid level use the
+-struct Scsi_Host::host_lock pointer.
+-
+-LLDs can override the use of struct Scsi_Host::default_lock by
+-using scsi_assign_lock(). The earliest opportunity to do this would
+-be in the detect() function after it has invoked scsi_register(). It
+-could be replaced by a coarser grain lock (e.g. per driver) or a
+-lock of equal granularity (i.e. per host). Using finer grain locks 
+-(e.g. per SCSI device) may be possible by juggling locks in
+-queuecommand().
++is initialized to point at default_lock.  Thereafter lock and unlock
++operations performed by the mid level use the struct Scsi_Host::host_lock
++pointer.  Previously drivers could override the host_lock pointer but
++this is not allowed anymore.
++
+ 
+ Autosense
+ =========
+Index: scsi-misc-2.6/drivers/scsi/hosts.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/scsi/hosts.c	2006-01-13 17:55:57.000000000 +0100
++++ scsi-misc-2.6/drivers/scsi/hosts.c	2006-01-13 18:00:32.000000000 +0100
+@@ -311,8 +311,8 @@
+ 		return NULL;
+ 	memset(shost, 0, sizeof(struct Scsi_Host) + privsize);
+ 
+-	spin_lock_init(&shost->default_lock);
+-	scsi_assign_lock(shost, &shost->default_lock);
++	shost->host_lock = &shost->default_lock;
++	spin_lock_init(shost->host_lock);
+ 	shost->shost_state = SHOST_CREATED;
+ 	INIT_LIST_HEAD(&shost->__devices);
+ 	INIT_LIST_HEAD(&shost->__targets);
+Index: scsi-misc-2.6/include/scsi/scsi_host.h
+===================================================================
+--- scsi-misc-2.6.orig/include/scsi/scsi_host.h	2006-01-13 17:56:02.000000000 +0100
++++ scsi-misc-2.6/include/scsi/scsi_host.h	2006-01-13 18:00:32.000000000 +0100
+@@ -652,11 +652,6 @@
+ 
+ extern u64 scsi_calculate_bounce_limit(struct Scsi_Host *);
+ 
+-static inline void scsi_assign_lock(struct Scsi_Host *shost, spinlock_t *lock)
+-{
+-	shost->host_lock = lock;
+-}
+-
+ static inline struct device *scsi_get_device(struct Scsi_Host *shost)
+ {
+         return shost->shost_gendev.parent;
