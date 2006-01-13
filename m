@@ -1,42 +1,27 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] - pci_ids - adding pci device id support for FC949ES
-Date: Fri, 13 Jan 2006 18:10:02 +0000
-Message-ID: <20060113181002.GG20718@infradead.org>
-References: <F331B95B72AFFB4B87467BE1C8E9CF5F1AA29A@NAMAIL2.ad.lsil.com> <20060113000323.09cbff98.akpm@osdl.org>
+Subject: Re: [PATCH] mpt fusion - add support for fibre channel FC949ES
+Date: Fri, 13 Jan 2006 18:10:49 +0000
+Message-ID: <20060113181049.GH20718@infradead.org>
+References: <43C6DE45.7040609@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:39555 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:42115 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1422785AbWAMSKL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2006 13:10:11 -0500
+	id S1422781AbWAMSKu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jan 2006 13:10:50 -0500
 Content-Disposition: inline
-In-Reply-To: <20060113000323.09cbff98.akpm@osdl.org>
+In-Reply-To: <43C6DE45.7040609@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: "Moore, Eric" <Eric.Moore@lsil.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Michael Reed <mdr@sgi.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Moore, Eric Dean" <Eric.Moore@lsil.com>
 
-On Fri, Jan 13, 2006 at 12:03:23AM -0800, Andrew Morton wrote:
-> >  --- b/include/linux/pci_ids.h	2006-01-11 19:04:18.000000000 -0700
-> >  +++ a/include/linux/pci_ids.h	2006-01-12 14:19:43.000000000 -0700
-> >  @@ -181,6 +181,7 @@
-> >   #define PCI_DEVICE_ID_LSI_FC929X	0x0626
-> >   #define PCI_DEVICE_ID_LSI_FC939X	0x0642
-> >   #define PCI_DEVICE_ID_LSI_FC949X	0x0640
-> >  +#define PCI_DEVICE_ID_LSI_FC949ES	0x0646
-> >   #define PCI_DEVICE_ID_LSI_FC919X	0x0628
-> >   #define PCI_DEVICE_ID_NCR_YELLOWFIN	0x0701
-> >   #define PCI_DEVICE_ID_LSI_61C102	0x0901
-> 
-> That doesn't add support - it just adds the ID.  We've apparently decided
-> not to keep IDs of devices which the kernel doesn't support.
+On Thu, Jan 12, 2006 at 04:55:01PM -0600, Michael Reed wrote:
+> Add software recognition for the new LSI Logic Fibre Channel controller.
+> (Patch originally sent to me by Eric Moore.)
 
-There's a patch on linux-scsi that adds the actual support.
+don't you need to add it to the pci_ids table aswell?
 
-> Also, there's a plan to stop using pci_ids.h - PCI IDs are supposed to go
-> into a driver-private header file.  I guess drivers/scsi/megaraid.h is an
-> example.
-
-That's new to me.  In either case a single driver should do one thing
-consistantly, and fusion has tons of defines in pci_ids.h already.
+also include the previous patch to add the #define to pci_ids.h to this
+patch as akpm apparently doesn't lie that one on it's own.
