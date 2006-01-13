@@ -1,340 +1,594 @@
-From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Subject: RE: Megaraid problems.
-Date: Fri, 13 Jan 2006 09:55:55 -0700
-Message-ID: <9738BCBE884FDB42801FAD8A7769C265142011@NAMAIL1.ad.lsil.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] mptsas: support basic hotplug
+Date: Fri, 13 Jan 2006 18:04:41 +0100
+Message-ID: <20060113170441.GA2288@lst.de>
+References: <20060113100905.GA26592@lst.de> <1137167747.3365.6.camel@mulgrave> <20060113160529.GA813@lst.de> <1137169147.3365.12.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:23427 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1161561AbWAMQz5 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2006 11:55:57 -0500
-Content-class: urn:content-classes:message
+Received: from verein.lst.de ([213.95.11.210]:33243 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S1161559AbWAMREy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jan 2006 12:04:54 -0500
+Content-Disposition: inline
+In-Reply-To: <1137169147.3365.12.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Collins, Kevin" <kCollins@nesbittengineering.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Christoph Hellwig <hch@lst.de>, Eric.Moore@lsil.com, linux-scsi@vger.kernel.org
 
-Hi,
-> Besides the external storage (powered by megaraid, the PERC4 
-> and the PV220s) the machine has two internal SATA drives.  
-> These internal drives house the OS, the web server and the 
-> mail queue.  The only I/O running through megaraid at the 
-> time of the failures has been the creation of the tar files.
-If it is happening during disk I/O, I would like to investigate further.
-It would be greatly helpful if you could provide some detail steps to get the issue including how to create that big size file.
-And also, I'll check with F/W team to see if any updated version of it and will get back to you if so.
+On Fri, Jan 13, 2006 at 10:19:07AM -0600, James Bottomley wrote:
+> On Fri, 2006-01-13 at 17:05 +0100, Christoph Hellwig wrote:
+> > well, the scsi-misc tree doesn't have the mutex code yet, so it wouldn't
+> > compile if I did it that way.  I'll send a followon patch to convert it
+> > to use real mutexes ones scsi-misc has merged the latest linus tree.
+> 
+> Yes it does ... I updated it last night.  Could you pull it down again
+> and reroll this patch based on mutexes.
 
-Thank you, again.
 
-> -----Original Message-----
-> From: Collins, Kevin [mailto:kCollins@nesbittengineering.com] 
-> Sent: Friday, January 13, 2006 11:00 AM
-> To: linux-scsi@vger.kernel.org; Ju, Seokmann
-> Subject: RE: Megaraid problems.
-> 
-> On Friday, January 13, 2006 9:39 AM, Seokmann Ju wrote:
-> 
-> > Hi,
-> Hey, glad to get a response!  :-)
-> 
-> > Thank you for posting details regarding megaraid.
-> > From the log, the messaage are OK except for following.
-> > ---
-> > >  1 Time(s): [5535381.561000] megaraid: reseting the host...
-> > >  1 Time(s): [5535386.566000] megaraid mbox: Wait for 2 
-> commands to 
-> > > complete:175
-> > > 
-> > > [... The above line repeat every 5 seconds, counting down 
-> to 0 ...]
-> > > 
-> > >  1 Time(s): [5535556.736000] megaraid mbox: Wait for 2 
-> commands to 
-> > > complete:5
-> > >  2 Time(s): [5535562.611000] scsi2 (0:0): rejecting I/O 
-> to offline 
-> > > device
-> > ---
-> > > a). Knows about the problem and is working on it.
-> > > 
-> > > - and, more importantly -
-> > It seems like that, for some reason, controller couldn't 
-> > return commands (2 commands for this case) within given 
-> > timeout period.
-> > And because of it, driver decided to reset the controller and 
-> > as part of reset, it triggers the F/W to make the device offline.
-> 
-> And I'm assuming that this is why my data isn't damamged or 
-> otherwise corrupted - which is a good thing! ;-)
-> 
-> > > b). Can lead me to a fix.
-> > Can you clarify what is F/W version on the controller?
-> Firmware on the controller (from /proc/scci/scsi):  351S
-> =================================================================
-> Host: scsi2 Channel: 00 Id: 06 Lun: 00
->   Vendor: DELL     Model: PV22XS           Rev: E.18
->   Type:   Processor                        ANSI SCSI revision: 03
-> Host: scsi2 Channel: 01 Id: 00 Lun: 00
->   Vendor: MegaRAID Model: LD 0 RAID5  858G Rev: 351S
->   Type:   Direct-Access                    ANSI SCSI revision: 02
-> Host: scsi2 Channel: 01 Id: 01 Lun: 00
->   Vendor: MegaRAID Model: LD 1 RAID5  858G Rev: 351S
->   Type:   Direct-Access                    ANSI SCSI revision: 02
-> =================================================================
-> 
-> I have seen reports on Dells mailing list that elude to the 
-> fact the the E18 and 351S firmwares are supposed to help this 
-> situation, but not in my case.  My system shipped with these 
-> firmwares in place.  Dell, to my knowledge, does not offer 
-> any newer versions of either firmware.
-> 
-> > Besides disk I/O, are there other operations involved like, 
-> tape R/W?
-> No tape R/W, but...
-> 
-> > How about application? Any application that is communicating 
-> > with MegaRAID through IOCTL at that time?
-> As for other tasks, the machine also serves as a web server 
-> (Apache, MySQL and PHP) and e-mail relay (Postfix).  The mail 
-> relay does more work than the web server, but even that is light.
-> 
-> Besides the external storage (powered by megaraid, the PERC4 
-> and the PV220s) the machine has two internal SATA drives.  
-> These internal drives house the OS, the web server and the 
-> mail queue.  The only I/O running through megaraid at the 
-> time of the failures has been the creation of the tar files.
-> 
-> > 
-> > Thank you,
-> 
-> You're welcome.  I hope I have helped with the information 
-> and not hindered.  ;-)
-> 
-> Kevin
-> 
-> > 
-> > 
-> > > -----Original Message-----
-> > > From: linux-scsi-owner@vger.kernel.org 
-> > > [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of 
-> > Collins, Kevin
-> > > Sent: Friday, January 13, 2006 9:05 AM
-> > > To: linux-scsi@vger.kernel.org
-> > > Subject: Megaraid problems.
-> > > 
-> > > Hi list,
-> > > 
-> > > I have a Dell PowerEdge 850 with their PERC4sc RAID card 
-> driving a 
-> > > Dell PowerVault 220s external drive enclosure running 
-> Ubuntu 5.10.  
-> > > This machine and all the parts that make it up are less 
-> > than 2 months 
-> > > old.  In that time, I have had both logical drives supplied 
-> > by PV220s 
-> > > taken offline by the megaraid driver twice.  The only 
-> cure for this 
-> > > has been a reboot of the machine.  Luckily, with the 
-> > exception of the 
-> > > process that was running at the time of the problem, 
-> > nothing else was 
-> > > damaged or hurt; no loss of data has been experienced (yet).
-> > > 
-> > > Both times the failure has occurred, it happened while creating a 
-> > > gzipped tarball of some backup data.  The final tarball 
-> created is 
-> > > averaging about 92+ GB in size and the machine is under 
-> > heavy disk I/O 
-> > > for more than 7 hours.  I have been able to grab this 
-> > information from 
-> > > the syslog after the failure (gathered with LogWatch):
-> > > 
-> > >  1 Time(s): [5535381.561000] megaraid abort: 
-> > > 55592075:43[255:128], fw owner
-> > >  1 Time(s): [5535381.561000] megaraid abort: 
-> > > 55592077:62[255:128], fw owner
-> > >  1 Time(s): [5535381.561000] megaraid abort: 
-> > > 55592078[255:128], driver owner
-> > >  1 Time(s): [5535381.561000] megaraid mbox: Wait for 2 
-> commands to 
-> > > complete:180
-> > >  1 Time(s): [5535381.561000] megaraid: 2 outstanding 
-> commands. Max 
-> > > wait 180 sec
-> > >  1 Time(s): [5535381.561000] megaraid: aborting-55592075
-> > > cmd=28 <c=1 t=0 l=0>
-> > >  1 Time(s): [5535381.561000] megaraid: aborting-55592077
-> > > cmd=28 <c=1 t=0 l=0>
-> > >  1 Time(s): [5535381.561000] megaraid: aborting-55592078
-> > > cmd=28 <c=1 t=0 l=0>
-> > >  1 Time(s): [5535381.561000] megaraid: reseting the host...
-> > >  1 Time(s): [5535386.566000] megaraid mbox: Wait for 2 
-> commands to 
-> > > complete:175
-> > > 
-> > > [... The above line repeat every 5 seconds, counting down 
-> to 0 ...]
-> > > 
-> > >  1 Time(s): [5535556.736000] megaraid mbox: Wait for 2 
-> commands to 
-> > > complete:5
-> > >  2 Time(s): [5535562.611000] scsi2 (0:0): rejecting I/O 
-> to offline 
-> > > device
-> > > 
-> > > The only difference in the two instances is the number of 
-> > "commands" 
-> > > that are waiting to complete.  This snippet above is from 
-> the first 
-> > > instance, the second instance had 10 commands waiting.
-> > > 
-> > > The machine is running the default Ubuntu kernel, which is their 
-> > > patched version of 2.6.12.  In addition, both the 
-> megaraid_mbox and 
-> > > megaraid_mm modules are loaded.  Here is an output of 
-> 'modinfo' for 
-> > > both of those modules:
-> > > 
-> > > ==============================================================
-> > > ==========================
-> > > megaraid_mbox
-> > > --------------------------------------------------------------
-> > > --------------------------
-> > > filename:       
-> > > /lib/modules/2.6.12-10-386/kernel/drivers/scsi/megaraid/megara
-> > > id_mbox.ko
-> > > author:         LSI Logic Corporation
-> > > description:    LSI Logic MegaRAID Mailbox Driver
-> > > license:        GPL
-> > > version:        2.20.4.5
-> > > vermagic:       2.6.12-10-386 386 gcc-3.4
-> > > depends:        megaraid_mm,scsi_mod
-> > > alias:          pci:v00001028d0000000Esv00001028sd00000123bc*sc*i*
-> > > alias:          pci:v00001000d00001960sv00001028sd00000520bc*sc*i*
-> > > alias:          pci:v00001000d00001960sv00001028sd00000518bc*sc*i*
-> > > alias:          pci:v00001000d00000407sv00001028sd00000531bc*sc*i*
-> > > alias:          pci:v00001028d0000000Fsv00001028sd0000014Abc*sc*i*
-> > > alias:          pci:v00001028d00000013sv00001028sd0000016Cbc*sc*i*
-> > > alias:          pci:v00001028d00000013sv00001028sd0000016Dbc*sc*i*
-> > > alias:          pci:v00001028d00000013sv00001028sd0000016Ebc*sc*i*
-> > > alias:          pci:v00001028d00000013sv00001028sd0000016Fbc*sc*i*
-> > > alias:          pci:v00001028d00000013sv00001028sd00000170bc*sc*i*
-> > > alias:          pci:v00001000d00000408sv00001028sd00000002bc*sc*i*
-> > > alias:          pci:v00001000d00000408sv00001028sd00000001bc*sc*i*
-> > > alias:          pci:v0000101Ed00001960sv00001028sd00000471bc*sc*i*
-> > > alias:          pci:v0000101Ed00001960sv00001028sd00000493bc*sc*i*
-> > > alias:          pci:v0000101Ed00001960sv00001028sd00000475bc*sc*i*
-> > > alias:          pci:v0000101Ed00001960sv0000101Esd00000475bc*sc*i*
-> > > alias:          pci:v0000101Ed00001960sv0000101Esd00000493bc*sc*i*
-> > > alias:          pci:v00001000d00001960sv00001000sd0000A520bc*sc*i*
-> > > alias:          pci:v00001000d00001960sv00001000sd00000520bc*sc*i*
-> > > alias:          pci:v00001000d00001960sv00001000sd00000518bc*sc*i*
-> > > alias:          pci:v00001000d00000407sv00001000sd00000530bc*sc*i*
-> > > alias:          pci:v00001000d00000407sv00001000sd00000532bc*sc*i*
-> > > alias:          pci:v00001000d00000407sv00001000sd00000531bc*sc*i*
-> > > alias:          pci:v00001000d00000408sv00001000sd00000001bc*sc*i*
-> > > alias:          pci:v00001000d00000408sv00001000sd00000002bc*sc*i*
-> > > alias:          pci:v00001000d00001960sv00001000sd00000522bc*sc*i*
-> > > alias:          pci:v00001000d00001960sv00001000sd00004523bc*sc*i*
-> > > alias:          pci:v00001000d00001960sv00001000sd00000523bc*sc*i*
-> > > alias:          pci:v00001000d00000409sv00001000sd00003004bc*sc*i*
-> > > alias:          pci:v00001000d00000409sv00001000sd00003008bc*sc*i*
-> > > alias:          pci:v00001000d00000407sv00008086sd00000532bc*sc*i*
-> > > alias:          pci:v00001000d00001960sv00008086sd00000523bc*sc*i*
-> > > alias:          pci:v00001000d00000408sv00008086sd00000002bc*sc*i*
-> > > alias:          pci:v00001000d00000407sv00008086sd00000530bc*sc*i*
-> > > alias:          pci:v00001000d00000409sv00008086sd00003008bc*sc*i*
-> > > alias:          pci:v00001000d00000408sv00008086sd00003431bc*sc*i*
-> > > alias:          pci:v00001000d00000408sv00008086sd00003499bc*sc*i*
-> > > alias:          pci:v00001000d00001960sv00008086sd00000520bc*sc*i*
-> > > alias:          pci:v00001000d00000408sv00001734sd00001065bc*sc*i*
-> > > alias:          pci:v00001000d00000408sv00001025sd0000004Dbc*sc*i*
-> > > alias:          pci:v00001000d00000408sv00001033sd00008287bc*sc*i*
-> > > srcversion:     042A4371A952248BEF860F4
-> > > parm:           debug_level:Debug level for driver 
-> (default=0) (int)
-> > > parm:           fast_load:Faster loading of the driver, skips 
-> > > physical devices! (default=0) (int)
-> > > parm:           cmd_per_lun:Maximum number of commands per 
-> > > logical unit (default=64) (int)
-> > > parm:           max_sectors:Maximum number of sectors per IO 
-> > > command (default=128) (int)
-> > > parm:           busy_wait:Max wait for mailbox in 
-> > > microseconds if busy (default=10) (int)
-> > > parm:           unconf_disks:Set to expose unconfigured disks 
-> > > to kernel (default=0) (int)
-> > > 
-> > > --------------------------------------------------------------
-> > > --------------------------
-> > > megaraid_mm:
-> > > --------------------------------------------------------------
-> > > --------------------------
-> > > filename:       
-> > > 
-> > 
-> /lib/modules/2.6.12-10-386/kernel/drivers/scsi/megaraid/megaraid_mm.ko
-> > > author:         LSI Logic Corporation
-> > > description:    LSI Logic Management Module
-> > > license:        GPL
-> > > version:        2.20.2.5
-> > > vermagic:       2.6.12-10-386 386 gcc-3.4
-> > > depends:
-> > > srcversion:     D2DA33EA7F3FEA9EBE4A603
-> > > parm:           dlevel:Debug level (default=0) (int)
-> > > ==============================================================
-> > > ==========================
-> > > 
-> > > I have contacted Dell - via their linux-poweredge mailing 
-> > list - and 
-> > > have discovered that I am not the only one experiencing these 
-> > > problems.  What bothers me is that while this problem, 
-> > apparently, has 
-> > > been around a while and no fix has yet been discovered by Dell or 
-> > > anyone else.
-> > > 
-> > > My research also leads me to believe that this is not just 
-> > an Ubuntu 
-> > > thing either.  I have reports that this happens under 
-> > Redhat, Debian 
-> > > and SuSE.  It also appears as though the problem started 
-> happening 
-> > > around kernel version 2.6.9.
-> > > 
-> > > So, I'm hoping that someone here:
-> > > 
-> > > a). Knows about the problem and is working on it.
-> > > 
-> > > - and, more importantly -
-> > > 
-> > > b). Can lead me to a fix.
-> > > 
-> > > My machine is in production and I do not have any 
-> > additional hardware 
-> > > to test with, but I can do limited testing with it as 
-> long as it is 
-> > > completely functional by 8:00 pm eastern time.  I'm using it as 
-> > > offsite backup machine and that's when my backup processes 
-> > kick in.  
-> > > If more information is needed, let me know how to get it, 
-> and I'll 
-> > > supply it.
-> > > 
-> > > I need to get this solved ASAP.
-> > > 
-> > > Thanks in advance,
-> > > 
-> > > --
-> > > Kevin L. Collins, MCSE
-> > > Systems Manager
-> > > Nesbitt Engineering, Inc. 
-> > > -
-> > > To unsubscribe from this list: send the line "unsubscribe 
-> > linux-scsi" 
-> > > in the body of a message to majordomo@vger.kernel.org More 
-> > majordomo 
-> > > info at  http://vger.kernel.org/majordomo-info.html
-> > > 
-> > 
-> > 
-> 
+Index: scsi-misc-2.6/drivers/message/fusion/mptsas.c
+===================================================================
+--- scsi-misc-2.6.orig/drivers/message/fusion/mptsas.c	2006-01-13 17:55:56.000000000 +0100
++++ scsi-misc-2.6/drivers/message/fusion/mptsas.c	2006-01-13 18:03:15.000000000 +0100
+@@ -5,7 +5,7 @@
+  *
+  *  Copyright (c) 1999-2005 LSI Logic Corporation
+  *  (mailto:mpt_linux_developer@lsil.com)
+- *  Copyright (c) 2005 Dell
++ *  Copyright (c) 2005-2006 Dell
+  */
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ /*
+@@ -86,6 +86,24 @@
+ static int	mptsasMgmtCtx = -1;
+ 
+ 
++enum mptsas_hotplug_action {
++	MPTSAS_ADD_DEVICE,
++	MPTSAS_DEL_DEVICE,
++};
++
++struct mptsas_hotplug_event {
++	struct work_struct	work;
++	MPT_ADAPTER		*ioc;
++	enum mptsas_hotplug_action event_type;
++	u64			sas_address;
++	u32			channel;
++	u32			id;
++	u32			device_info;
++	u16			handle;
++	u16			parent_handle;
++	u8			phy_id;
++};
++
+ /*
+  * SAS topology structures
+  *
+@@ -99,8 +117,8 @@
+ 	u8	phy_id;		/* phy number of parent device */
+ 	u8	port_id;	/* sas physical port this device
+ 				   is assoc'd with */
+-	u8	target;		/* logical target id of this device */
+-	u8	bus;		/* logical bus number of this device */
++	u8	id;		/* logical target id of this device */
++	u8	channel;	/* logical bus number of this device */
+ 	u64	sas_address;    /* WWN of this device,
+ 				   SATA is assigned by HBA,expander */
+ 	u32	device_info;	/* bitfield detailed info about this device */
+@@ -114,6 +132,7 @@
+ 	u8	programmed_link_rate;	/* programmed max/min phy link rate */
+ 	struct mptsas_devinfo identify;	/* point to phy device info */
+ 	struct mptsas_devinfo attached;	/* point to attached device info */
++	struct sas_phy *phy;
+ 	struct sas_rphy *rphy;
+ };
+ 
+@@ -257,24 +276,27 @@
+ 	}
+ 
+ 	rphy = dev_to_rphy(sdev->sdev_target->dev.parent);
++	mutex_lock(&hd->ioc->sas_topology_mutex);
+ 	list_for_each_entry(p, &hd->ioc->sas_topology, list) {
+ 		for (i = 0; i < p->num_phys; i++) {
+ 			if (p->phy_info[i].attached.sas_address ==
+ 					rphy->identify.sas_address) {
+ 				vdev->target_id =
+-					p->phy_info[i].attached.target;
+-				vdev->bus_id = p->phy_info[i].attached.bus;
++					p->phy_info[i].attached.id;
++				vdev->bus_id = p->phy_info[i].attached.channel;
+ 				vdev->lun = sdev->lun;
+ 				goto out;
+ 			}
+ 		}
+ 	}
++	mutex_unlock(&hd->ioc->sas_topology_mutex);
+ 
+ 	printk("No matching SAS device found!!\n");
+ 	kfree(vdev);
+ 	return -ENODEV;
+ 
+  out:
++	mutex_unlock(&hd->ioc->sas_topology_mutex);
+ 	vtarget->ioc_id = vdev->ioc_id;
+ 	vtarget->target_id = vdev->target_id;
+ 	vtarget->bus_id = vdev->bus_id;
+@@ -282,6 +304,42 @@
+ 	return 0;
+ }
+ 
++static void
++mptsas_slave_destroy(struct scsi_device *sdev)
++{
++	struct Scsi_Host *host = sdev->host;
++	MPT_SCSI_HOST *hd = (MPT_SCSI_HOST *)host->hostdata;
++	struct sas_rphy *rphy;
++	struct mptsas_portinfo *p;
++	int i;
++
++	/*
++	 * Handle hotplug removal case.
++	 * We need to clear out attached data structure.
++	 */
++	rphy = dev_to_rphy(sdev->sdev_target->dev.parent);
++
++	mutex_lock(&hd->ioc->sas_topology_mutex);
++	list_for_each_entry(p, &hd->ioc->sas_topology, list) {
++		for (i = 0; i < p->num_phys; i++) {
++			if (p->phy_info[i].attached.sas_address ==
++					rphy->identify.sas_address) {
++				memset(&p->phy_info[i].attached, 0,
++				    sizeof(struct mptsas_devinfo));
++				p->phy_info[i].rphy = NULL;
++				goto out;
++			}
++		}
++	}
++
++ out:
++	mutex_unlock(&hd->ioc->sas_topology_mutex);
++	/*
++	 * TODO: Issue target reset to flush firmware outstanding commands.
++	 */
++	mptscsih_slave_destroy(sdev);
++}
++
+ static struct scsi_host_template mptsas_driver_template = {
+ 	.module				= THIS_MODULE,
+ 	.proc_name			= "mptsas",
+@@ -293,7 +351,7 @@
+ 	.slave_alloc			= mptsas_slave_alloc,
+ 	.slave_configure		= mptscsih_slave_configure,
+ 	.target_destroy			= mptscsih_target_destroy,
+-	.slave_destroy			= mptscsih_slave_destroy,
++	.slave_destroy			= mptsas_slave_destroy,
+ 	.change_queue_depth 		= mptscsih_change_queue_depth,
+ 	.eh_abort_handler		= mptscsih_abort,
+ 	.eh_device_reset_handler	= mptscsih_dev_reset,
+@@ -649,8 +707,8 @@
+ 	device_info->handle = le16_to_cpu(buffer->DevHandle);
+ 	device_info->phy_id = buffer->PhyNum;
+ 	device_info->port_id = buffer->PhysicalPort;
+-	device_info->target = buffer->TargetID;
+-	device_info->bus = buffer->Bus;
++	device_info->id = buffer->TargetID;
++	device_info->channel = buffer->Bus;
+ 	memcpy(&sas_address, &buffer->SASAddress, sizeof(__le64));
+ 	device_info->sas_address = le64_to_cpu(sas_address);
+ 	device_info->device_info =
+@@ -858,36 +916,36 @@
+ static int mptsas_probe_one_phy(struct device *dev,
+ 		struct mptsas_phyinfo *phy_info, int index, int local)
+ {
+-	struct sas_phy *port;
++	struct sas_phy *phy;
+ 	int error;
+ 
+-	port = sas_phy_alloc(dev, index);
+-	if (!port)
++	phy = sas_phy_alloc(dev, index);
++	if (!phy)
+ 		return -ENOMEM;
+ 
+-	port->port_identifier = phy_info->port_id;
+-	mptsas_parse_device_info(&port->identify, &phy_info->identify);
++	phy->port_identifier = phy_info->port_id;
++	mptsas_parse_device_info(&phy->identify, &phy_info->identify);
+ 
+ 	/*
+ 	 * Set Negotiated link rate.
+ 	 */
+ 	switch (phy_info->negotiated_link_rate) {
+ 	case MPI_SAS_IOUNIT0_RATE_PHY_DISABLED:
+-		port->negotiated_linkrate = SAS_PHY_DISABLED;
++		phy->negotiated_linkrate = SAS_PHY_DISABLED;
+ 		break;
+ 	case MPI_SAS_IOUNIT0_RATE_FAILED_SPEED_NEGOTIATION:
+-		port->negotiated_linkrate = SAS_LINK_RATE_FAILED;
++		phy->negotiated_linkrate = SAS_LINK_RATE_FAILED;
+ 		break;
+ 	case MPI_SAS_IOUNIT0_RATE_1_5:
+-		port->negotiated_linkrate = SAS_LINK_RATE_1_5_GBPS;
++		phy->negotiated_linkrate = SAS_LINK_RATE_1_5_GBPS;
+ 		break;
+ 	case MPI_SAS_IOUNIT0_RATE_3_0:
+-		port->negotiated_linkrate = SAS_LINK_RATE_3_0_GBPS;
++		phy->negotiated_linkrate = SAS_LINK_RATE_3_0_GBPS;
+ 		break;
+ 	case MPI_SAS_IOUNIT0_RATE_SATA_OOB_COMPLETE:
+ 	case MPI_SAS_IOUNIT0_RATE_UNKNOWN:
+ 	default:
+-		port->negotiated_linkrate = SAS_LINK_RATE_UNKNOWN;
++		phy->negotiated_linkrate = SAS_LINK_RATE_UNKNOWN;
+ 		break;
+ 	}
+ 
+@@ -896,10 +954,10 @@
+ 	 */
+ 	switch (phy_info->hw_link_rate & MPI_SAS_PHY0_PRATE_MAX_RATE_MASK) {
+ 	case MPI_SAS_PHY0_HWRATE_MAX_RATE_1_5:
+-		port->maximum_linkrate_hw = SAS_LINK_RATE_1_5_GBPS;
++		phy->maximum_linkrate_hw = SAS_LINK_RATE_1_5_GBPS;
+ 		break;
+ 	case MPI_SAS_PHY0_PRATE_MAX_RATE_3_0:
+-		port->maximum_linkrate_hw = SAS_LINK_RATE_3_0_GBPS;
++		phy->maximum_linkrate_hw = SAS_LINK_RATE_3_0_GBPS;
+ 		break;
+ 	default:
+ 		break;
+@@ -911,10 +969,10 @@
+ 	switch (phy_info->programmed_link_rate &
+ 			MPI_SAS_PHY0_PRATE_MAX_RATE_MASK) {
+ 	case MPI_SAS_PHY0_PRATE_MAX_RATE_1_5:
+-		port->maximum_linkrate = SAS_LINK_RATE_1_5_GBPS;
++		phy->maximum_linkrate = SAS_LINK_RATE_1_5_GBPS;
+ 		break;
+ 	case MPI_SAS_PHY0_PRATE_MAX_RATE_3_0:
+-		port->maximum_linkrate = SAS_LINK_RATE_3_0_GBPS;
++		phy->maximum_linkrate = SAS_LINK_RATE_3_0_GBPS;
+ 		break;
+ 	default:
+ 		break;
+@@ -925,10 +983,10 @@
+ 	 */
+ 	switch (phy_info->hw_link_rate & MPI_SAS_PHY0_HWRATE_MIN_RATE_MASK) {
+ 	case MPI_SAS_PHY0_HWRATE_MIN_RATE_1_5:
+-		port->minimum_linkrate_hw = SAS_LINK_RATE_1_5_GBPS;
++		phy->minimum_linkrate_hw = SAS_LINK_RATE_1_5_GBPS;
+ 		break;
+ 	case MPI_SAS_PHY0_PRATE_MIN_RATE_3_0:
+-		port->minimum_linkrate_hw = SAS_LINK_RATE_3_0_GBPS;
++		phy->minimum_linkrate_hw = SAS_LINK_RATE_3_0_GBPS;
+ 		break;
+ 	default:
+ 		break;
+@@ -940,28 +998,29 @@
+ 	switch (phy_info->programmed_link_rate &
+ 			MPI_SAS_PHY0_PRATE_MIN_RATE_MASK) {
+ 	case MPI_SAS_PHY0_PRATE_MIN_RATE_1_5:
+-		port->minimum_linkrate = SAS_LINK_RATE_1_5_GBPS;
++		phy->minimum_linkrate = SAS_LINK_RATE_1_5_GBPS;
+ 		break;
+ 	case MPI_SAS_PHY0_PRATE_MIN_RATE_3_0:
+-		port->minimum_linkrate = SAS_LINK_RATE_3_0_GBPS;
++		phy->minimum_linkrate = SAS_LINK_RATE_3_0_GBPS;
+ 		break;
+ 	default:
+ 		break;
+ 	}
+ 
+ 	if (local)
+-		port->local_attached = 1;
++		phy->local_attached = 1;
+ 
+-	error = sas_phy_add(port);
++	error = sas_phy_add(phy);
+ 	if (error) {
+-		sas_phy_free(port);
++		sas_phy_free(phy);
+ 		return error;
+ 	}
++	phy_info->phy = phy;
+ 
+ 	if (phy_info->attached.handle) {
+ 		struct sas_rphy *rphy;
+ 
+-		rphy = sas_rphy_alloc(port);
++		rphy = sas_rphy_alloc(phy);
+ 		if (!rphy)
+ 			return 0; /* non-fatal: an rphy can be added later */
+ 
+@@ -994,7 +1053,10 @@
+ 	if (error)
+ 		goto out_free_port_info;
+ 
++	mutex_lock(&ioc->sas_topology_mutex);
+ 	list_add_tail(&port_info->list, &ioc->sas_topology);
++	mutex_unlock(&ioc->sas_topology_mutex);
++
+ 	for (i = 0; i < port_info->num_phys; i++) {
+ 		mptsas_sas_phy_pg0(ioc, &port_info->phy_info[i],
+ 			(MPI_SAS_PHY_PGAD_FORM_PHY_NUMBER <<
+@@ -1047,7 +1109,10 @@
+ 
+ 	*handle = port_info->handle;
+ 
++	mutex_lock(&ioc->sas_topology_mutex);
+ 	list_add_tail(&port_info->list, &ioc->sas_topology);
++	mutex_unlock(&ioc->sas_topology_mutex);
++
+ 	for (i = 0; i < port_info->num_phys; i++) {
+ 		struct device *parent;
+ 
+@@ -1079,6 +1144,7 @@
+ 		 * HBA phys.
+ 		 */
+ 		parent = &ioc->sh->shost_gendev;
++		mutex_lock(&ioc->sas_topology_mutex);
+ 		list_for_each_entry(p, &ioc->sas_topology, list) {
+ 			for (j = 0; j < p->num_phys; j++) {
+ 				if (port_info->phy_info[i].identify.handle ==
+@@ -1086,6 +1152,7 @@
+ 					parent = &p->phy_info[j].rphy->dev;
+ 			}
+ 		}
++		mutex_unlock(&ioc->sas_topology_mutex);
+ 
+ 		mptsas_probe_one_phy(parent, &port_info->phy_info[i],
+ 				     *index, 0);
+@@ -1111,6 +1178,211 @@
+ 		;
+ }
+ 
++static struct mptsas_phyinfo *
++mptsas_find_phyinfo_by_parent(MPT_ADAPTER *ioc, u16 parent_handle, u8 phy_id)
++{
++	struct mptsas_portinfo *port_info;
++	struct mptsas_devinfo device_info;
++	struct mptsas_phyinfo *phy_info = NULL;
++	int i, error;
++
++	/*
++	 * Retrieve the parent sas_address
++	 */
++	error = mptsas_sas_device_pg0(ioc, &device_info,
++		(MPI_SAS_DEVICE_PGAD_FORM_HANDLE <<
++		 MPI_SAS_DEVICE_PGAD_FORM_SHIFT),
++		parent_handle);
++	if (error) {
++		printk("mptsas: failed to retrieve device page\n");
++		return NULL;
++	}
++
++	/*
++	 * The phy_info structures are never deallocated during lifetime of
++	 * a host, so the code below is safe without additional refcounting.
++	 */
++	mutex_lock(&ioc->sas_topology_mutex);
++	list_for_each_entry(port_info, &ioc->sas_topology, list) {
++		for (i = 0; i < port_info->num_phys; i++) {
++			if (port_info->phy_info[i].identify.sas_address ==
++			    device_info.sas_address &&
++			    port_info->phy_info[i].phy_id == phy_id) {
++				phy_info = &port_info->phy_info[i];
++				break;
++			}
++		}
++	}
++	mutex_unlock(&ioc->sas_topology_mutex);
++
++	return phy_info;
++}
++
++static struct mptsas_phyinfo *
++mptsas_find_phyinfo_by_handle(MPT_ADAPTER *ioc, u16 handle)
++{
++	struct mptsas_portinfo *port_info;
++	struct mptsas_phyinfo *phy_info = NULL;
++	int i;
++
++	/*
++	 * The phy_info structures are never deallocated during lifetime of
++	 * a host, so the code below is safe without additional refcounting.
++	 */
++	mutex_lock(&ioc->sas_topology_mutex);
++	list_for_each_entry(port_info, &ioc->sas_topology, list) {
++		for (i = 0; i < port_info->num_phys; i++) {
++			if (port_info->phy_info[i].attached.handle == handle) {
++				phy_info = &port_info->phy_info[i];
++				break;
++			}
++		}
++	}
++	mutex_unlock(&ioc->sas_topology_mutex);
++
++	return phy_info;
++}
++
++static void
++mptsas_hotplug_work(void *arg)
++{
++	struct mptsas_hotplug_event *ev = arg;
++	MPT_ADAPTER *ioc = ev->ioc;
++	struct mptsas_phyinfo *phy_info;
++	struct sas_rphy *rphy;
++	char *ds = NULL;
++
++	if (ev->device_info & MPI_SAS_DEVICE_INFO_SSP_TARGET)
++		ds = "ssp";
++	if (ev->device_info & MPI_SAS_DEVICE_INFO_STP_TARGET)
++		ds = "stp";
++	if (ev->device_info & MPI_SAS_DEVICE_INFO_SATA_DEVICE)
++		ds = "sata";
++
++	switch (ev->event_type) {
++	case MPTSAS_DEL_DEVICE:
++		printk(MYIOC_s_INFO_FMT
++		       "removing %s device, channel %d, id %d, phy %d\n",
++		       ioc->name, ds, ev->channel, ev->id, ev->phy_id);
++
++		phy_info = mptsas_find_phyinfo_by_handle(ioc, ev->handle);
++		if (!phy_info) {
++			printk("mptsas: remove event for non-existant PHY.\n");
++			break;
++		}
++
++		if (phy_info->rphy) {
++			sas_rphy_delete(phy_info->rphy);
++			phy_info->rphy = NULL;
++		}
++		break;
++	case MPTSAS_ADD_DEVICE:
++		printk(MYIOC_s_INFO_FMT
++		       "attaching %s device, channel %d, id %d, phy %d\n",
++		       ioc->name, ds, ev->channel, ev->id, ev->phy_id);
++
++		phy_info = mptsas_find_phyinfo_by_parent(ioc,
++				ev->parent_handle, ev->phy_id);
++		if (!phy_info) {
++			printk("mptsas: add event for non-existant PHY.\n");
++			break;
++		}
++
++		if (phy_info->rphy) {
++			printk("mptsas: trying to add existing device.\n");
++			break;
++		}
++
++		/* fill attached info */
++		phy_info->attached.handle = ev->handle;
++		phy_info->attached.phy_id = ev->phy_id;
++		phy_info->attached.port_id = phy_info->identify.port_id;
++		phy_info->attached.id = ev->id;
++		phy_info->attached.channel = ev->channel;
++		phy_info->attached.sas_address = ev->sas_address;
++		phy_info->attached.device_info = ev->device_info;
++
++		rphy = sas_rphy_alloc(phy_info->phy);
++		if (!rphy)
++			break; /* non-fatal: an rphy can be added later */
++
++		mptsas_parse_device_info(&rphy->identify, &phy_info->attached);
++		if (sas_rphy_add(rphy)) {
++			sas_rphy_free(rphy);
++			break;
++		}
++
++		phy_info->rphy = rphy;
++		break;
++	}
++
++	kfree(ev);
++}
++
++static void
++mptscsih_send_sas_event(MPT_ADAPTER *ioc,
++		EVENT_DATA_SAS_DEVICE_STATUS_CHANGE *sas_event_data)
++{
++	struct mptsas_hotplug_event *ev;
++	u32 device_info = le32_to_cpu(sas_event_data->DeviceInfo);
++	__le64 sas_address;
++
++	if ((device_info &
++	     (MPI_SAS_DEVICE_INFO_SSP_TARGET |
++	      MPI_SAS_DEVICE_INFO_STP_TARGET |
++	      MPI_SAS_DEVICE_INFO_SATA_DEVICE )) == 0)
++		return;
++
++	if ((sas_event_data->ReasonCode &
++	     (MPI_EVENT_SAS_DEV_STAT_RC_ADDED |
++	      MPI_EVENT_SAS_DEV_STAT_RC_NOT_RESPONDING)) == 0)
++		return;
++
++	ev = kmalloc(sizeof(*ev), GFP_ATOMIC);
++	if (!ev) {
++		printk(KERN_WARNING "mptsas: lost hotplug event\n");
++		return;
++	}
++
++
++	INIT_WORK(&ev->work, mptsas_hotplug_work, ev);
++	ev->ioc = ioc;
++	ev->handle = le16_to_cpu(sas_event_data->DevHandle);
++	ev->parent_handle = le16_to_cpu(sas_event_data->ParentDevHandle);
++	ev->channel = sas_event_data->Bus;
++	ev->id = sas_event_data->TargetID;
++	ev->phy_id = sas_event_data->PhyNum;
++	memcpy(&sas_address, &sas_event_data->SASAddress, sizeof(__le64));
++	ev->sas_address = le64_to_cpu(sas_address);
++	ev->device_info = device_info;
++
++	if (sas_event_data->ReasonCode & MPI_EVENT_SAS_DEV_STAT_RC_ADDED)
++		ev->event_type = MPTSAS_ADD_DEVICE;
++	else
++		ev->event_type = MPTSAS_DEL_DEVICE;
++
++	schedule_work(&ev->work);
++}
++
++static int
++mptsas_event_process(MPT_ADAPTER *ioc, EventNotificationReply_t *reply)
++{
++	u8 event = le32_to_cpu(reply->Event) & 0xFF;
++
++	if (!ioc->sh)
++		return 1;
++
++	switch (event) {
++	case MPI_EVENT_SAS_DEVICE_STATUS_CHANGE:
++		mptscsih_send_sas_event(ioc,
++			(EVENT_DATA_SAS_DEVICE_STATUS_CHANGE *)reply->Data);
++		return 1;		/* currently means nothing really */
++
++	default:
++		return mptscsih_event_process(ioc, reply);
++	}
++}
++
+ static int
+ mptsas_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+@@ -1203,6 +1475,8 @@
+ 	sh->unique_id = ioc->id;
+ 
+ 	INIT_LIST_HEAD(&ioc->sas_topology);
++	mutex_init(&ioc->sas_topology_mutex);
++
+ 	init_MUTEX(&ioc->sas_mgmt.mutex);
+ 	init_completion(&ioc->sas_mgmt.done);
+ 
+@@ -1339,10 +1613,12 @@
+ 
+ 	sas_remove_host(ioc->sh);
+ 
++	mutex_lock(&ioc->sas_topology_mutex);
+ 	list_for_each_entry_safe(p, n, &ioc->sas_topology, list) {
+ 		list_del(&p->list);
+ 		kfree(p);
+ 	}
++	mutex_unlock(&ioc->sas_topology_mutex);
+ 
+ 	mptscsih_remove(pdev);
+ }
+@@ -1393,7 +1669,7 @@
+ 		mpt_register(mptscsih_scandv_complete, MPTSAS_DRIVER);
+ 	mptsasMgmtCtx = mpt_register(mptsas_mgmt_done, MPTSAS_DRIVER);
+ 
+-	if (mpt_event_register(mptsasDoneCtx, mptscsih_event_process) == 0) {
++	if (mpt_event_register(mptsasDoneCtx, mptsas_event_process) == 0) {
+ 		devtprintk((KERN_INFO MYNAM
+ 		  ": Registered for IOC event notifications\n"));
+ 	}
+Index: scsi-misc-2.6/drivers/message/fusion/mptbase.h
+===================================================================
+--- scsi-misc-2.6.orig/drivers/message/fusion/mptbase.h	2006-01-13 17:55:56.000000000 +0100
++++ scsi-misc-2.6/drivers/message/fusion/mptbase.h	2006-01-13 18:01:07.000000000 +0100
+@@ -612,6 +612,7 @@
+ 	struct list_head	 list;
+ 	struct net_device	*netdev;
+ 	struct list_head	 sas_topology;
++	struct mutex		 sas_topology_mutex;
+ 	MPT_SAS_MGMT		 sas_mgmt;
+ } MPT_ADAPTER;
+ 
