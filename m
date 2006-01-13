@@ -1,110 +1,145 @@
-From: "Hammer, Jack" <Jack_Hammer@adaptec.com>
-Subject: RE: ips - Mode Sense ( Caching Page ) fix
-Date: Fri, 13 Jan 2006 08:49:05 -0500
-Message-ID: <A121ABA5B472B74EB59076B8E3C8F01901CEAC78@rtpe2k01.adaptec.com>
+From: "Collins, Kevin" <kCollins@nesbittengineering.com>
+Subject: Megaraid problems.
+Date: Fri, 13 Jan 2006 09:04:51 -0500
+Message-ID: <H000007300186318.1137161089.concorde.nesbitt.local@MHS>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+	charset="US-ASCII"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:47521 "EHLO
-	mail-gw3.adaptec.com") by vger.kernel.org with ESMTP
-	id S1422669AbWAMNtG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2006 08:49:06 -0500
-Received: from rtpe2k01.adaptec.com (rtpe2k01.adaptec.com [10.110.12.40])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 29F5C3602
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2006 05:49:05 -0800 (PST)
-Content-class: urn:content-classes:message
+Received: from ns.nesbittengineering.com ([64.191.130.42]:48005 "EHLO
+	concorde.nesbitt.local") by vger.kernel.org with ESMTP
+	id S1422675AbWAMOEw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2006 09:04:52 -0500
+Received: from concorde.nesbitt.local (localhost.localdomain [127.0.0.1])
+	by concorde.nesbitt.local (8.13.1/8.13.1) with ESMTP id k0DE4pKk003816
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2006 09:04:52 -0500
+Received: from concorde.nesbitt.local (root@localhost)
+	by concorde.nesbitt.local (8.13.1/8.13.1/Submit) with ESMTP id k0DE4pFI003815
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2006 09:04:51 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
+Hi list,
 
-Mark Salyzyn has pointed out to me that a better way to handle this is
-with the skip_ms_page_8
-flag in the scsi_device structure.
+I have a Dell PowerEdge 850 with their PERC4sc RAID card driving a Dell PowerVault 220s external drive enclosure running Ubuntu 5.10.  This machine and all the parts that make it up are less than 2 months old.  In that time, I have had both logical drives supplied by PV220s taken offline by the megaraid driver twice.  The only cure for this has been a reboot of the machine.  Luckily, with the exception of the process that was running at the time of the problem, nothing else was damaged or hurt; no loss of data has been experienced (yet).
 
-I agree.
+Both times the failure has occurred, it happened while creating a gzipped tarball of some backup data.  The final tarball created is averaging about 92+ GB in size and the machine is under heavy disk I/O for more than 7 hours.  I have been able to grab this information from the syslog after the failure (gathered with LogWatch):
 
-I will cancel this request and create ( a much simpler fix ) using
-skip_ms_page_8.
+ 1 Time(s): [5535381.561000] megaraid abort: 55592075:43[255:128], fw owner
+ 1 Time(s): [5535381.561000] megaraid abort: 55592077:62[255:128], fw owner
+ 1 Time(s): [5535381.561000] megaraid abort: 55592078[255:128], driver owner
+ 1 Time(s): [5535381.561000] megaraid mbox: Wait for 2 commands to complete:180
+ 1 Time(s): [5535381.561000] megaraid: 2 outstanding commands. Max wait 180 sec
+ 1 Time(s): [5535381.561000] megaraid: aborting-55592075 cmd=28 <c=1 t=0 l=0>
+ 1 Time(s): [5535381.561000] megaraid: aborting-55592077 cmd=28 <c=1 t=0 l=0>
+ 1 Time(s): [5535381.561000] megaraid: aborting-55592078 cmd=28 <c=1 t=0 l=0>
+ 1 Time(s): [5535381.561000] megaraid: reseting the host...
+ 1 Time(s): [5535386.566000] megaraid mbox: Wait for 2 commands to complete:175
 
-Thanks, Mark.
+[... The above line repeat every 5 seconds, counting down to 0 ...]
 
-Jack
+ 1 Time(s): [5535556.736000] megaraid mbox: Wait for 2 commands to complete:5
+ 2 Time(s): [5535562.611000] scsi2 (0:0): rejecting I/O to offline device
 
- 
+The only difference in the two instances is the number of "commands" that are waiting to complete.  This snippet above is from the first instance, the second instance had 10 commands waiting.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Hammer, Jack
-Sent: Friday, January 13, 2006 8:31 AM
-To: linux-scsi@vger.kernel.org
-Subject: ips - Mode Sense ( Caching Page ) fix
+The machine is running the default Ubuntu kernel, which is their patched version of 2.6.12.  In addition, both the megaraid_mbox and megaraid_mm modules are loaded.  Here is an output of 'modinfo' for both of those modules:
 
-The ServeRAID driver ( ips ) does not recognize and respond properly to
-a Mode Sense - Caching Page request. This causes sd.c to display the
-message
+========================================================================================
+megaraid_mbox
+----------------------------------------------------------------------------------------
+filename:       /lib/modules/2.6.12-10-386/kernel/drivers/scsi/megaraid/megaraid_mbox.ko
+author:         LSI Logic Corporation
+description:    LSI Logic MegaRAID Mailbox Driver
+license:        GPL
+version:        2.20.4.5
+vermagic:       2.6.12-10-386 386 gcc-3.4
+depends:        megaraid_mm,scsi_mod
+alias:          pci:v00001028d0000000Esv00001028sd00000123bc*sc*i*
+alias:          pci:v00001000d00001960sv00001028sd00000520bc*sc*i*
+alias:          pci:v00001000d00001960sv00001028sd00000518bc*sc*i*
+alias:          pci:v00001000d00000407sv00001028sd00000531bc*sc*i*
+alias:          pci:v00001028d0000000Fsv00001028sd0000014Abc*sc*i*
+alias:          pci:v00001028d00000013sv00001028sd0000016Cbc*sc*i*
+alias:          pci:v00001028d00000013sv00001028sd0000016Dbc*sc*i*
+alias:          pci:v00001028d00000013sv00001028sd0000016Ebc*sc*i*
+alias:          pci:v00001028d00000013sv00001028sd0000016Fbc*sc*i*
+alias:          pci:v00001028d00000013sv00001028sd00000170bc*sc*i*
+alias:          pci:v00001000d00000408sv00001028sd00000002bc*sc*i*
+alias:          pci:v00001000d00000408sv00001028sd00000001bc*sc*i*
+alias:          pci:v0000101Ed00001960sv00001028sd00000471bc*sc*i*
+alias:          pci:v0000101Ed00001960sv00001028sd00000493bc*sc*i*
+alias:          pci:v0000101Ed00001960sv00001028sd00000475bc*sc*i*
+alias:          pci:v0000101Ed00001960sv0000101Esd00000475bc*sc*i*
+alias:          pci:v0000101Ed00001960sv0000101Esd00000493bc*sc*i*
+alias:          pci:v00001000d00001960sv00001000sd0000A520bc*sc*i*
+alias:          pci:v00001000d00001960sv00001000sd00000520bc*sc*i*
+alias:          pci:v00001000d00001960sv00001000sd00000518bc*sc*i*
+alias:          pci:v00001000d00000407sv00001000sd00000530bc*sc*i*
+alias:          pci:v00001000d00000407sv00001000sd00000532bc*sc*i*
+alias:          pci:v00001000d00000407sv00001000sd00000531bc*sc*i*
+alias:          pci:v00001000d00000408sv00001000sd00000001bc*sc*i*
+alias:          pci:v00001000d00000408sv00001000sd00000002bc*sc*i*
+alias:          pci:v00001000d00001960sv00001000sd00000522bc*sc*i*
+alias:          pci:v00001000d00001960sv00001000sd00004523bc*sc*i*
+alias:          pci:v00001000d00001960sv00001000sd00000523bc*sc*i*
+alias:          pci:v00001000d00000409sv00001000sd00003004bc*sc*i*
+alias:          pci:v00001000d00000409sv00001000sd00003008bc*sc*i*
+alias:          pci:v00001000d00000407sv00008086sd00000532bc*sc*i*
+alias:          pci:v00001000d00001960sv00008086sd00000523bc*sc*i*
+alias:          pci:v00001000d00000408sv00008086sd00000002bc*sc*i*
+alias:          pci:v00001000d00000407sv00008086sd00000530bc*sc*i*
+alias:          pci:v00001000d00000409sv00008086sd00003008bc*sc*i*
+alias:          pci:v00001000d00000408sv00008086sd00003431bc*sc*i*
+alias:          pci:v00001000d00000408sv00008086sd00003499bc*sc*i*
+alias:          pci:v00001000d00001960sv00008086sd00000520bc*sc*i*
+alias:          pci:v00001000d00000408sv00001734sd00001065bc*sc*i*
+alias:          pci:v00001000d00000408sv00001025sd0000004Dbc*sc*i*
+alias:          pci:v00001000d00000408sv00001033sd00008287bc*sc*i*
+srcversion:     042A4371A952248BEF860F4
+parm:           debug_level:Debug level for driver (default=0) (int)
+parm:           fast_load:Faster loading of the driver, skips physical devices! (default=0) (int)
+parm:           cmd_per_lun:Maximum number of commands per logical unit (default=64) (int)
+parm:           max_sectors:Maximum number of sectors per IO command (default=128) (int)
+parm:           busy_wait:Max wait for mailbox in microseconds if busy (default=10) (int)
+parm:           unconf_disks:Set to expose unconfigured disks to kernel (default=0) (int)
 
-                   "sda: got wrong page"
+----------------------------------------------------------------------------------------
+megaraid_mm:
+----------------------------------------------------------------------------------------
+filename:       /lib/modules/2.6.12-10-386/kernel/drivers/scsi/megaraid/megaraid_mm.ko
+author:         LSI Logic Corporation
+description:    LSI Logic Management Module
+license:        GPL
+version:        2.20.2.5
+vermagic:       2.6.12-10-386 386 gcc-3.4
+depends:
+srcversion:     D2DA33EA7F3FEA9EBE4A603
+parm:           dlevel:Debug level (default=0) (int)
+========================================================================================
 
-The following patch for creates a valid response to this request.
+I have contacted Dell - via their linux-poweredge mailing list - and have discovered that I am not the only one experiencing these problems.  What bothers me is that while this problem, apparently, has been around a while and no fix has yet been discovered by Dell or anyone else.
 
+My research also leads me to believe that this is not just an Ubuntu thing either.  I have reports that this happens under Redhat, Debian and SuSE.  It also appears as though the problem started happening around kernel version 2.6.9.
 
-Signed-off-by: Jack Hammer <jack_hammer@adaptec.com>
+So, I'm hoping that someone here:
 
+a). Knows about the problem and is working on it.
 
+- and, more importantly - 
 
---- a/drivers/scsi/ips.c	Mon Jan  2 22:21:10 2006
-+++ b/drivers/scsi/ips.c	Thu Jan 12 15:45:42 2006
-@@ -3745,6 +3745,7 @@
- 	int device_error;
- 	IPS_DCDB_TABLE_TAPE *tapeDCDB;
- 	int TimeOut;
-+	uint8_t cachePageResponse[22];
- 
-	METHOD_TRACE("ips_send_cmd", 1);
- 
-@@ -3949,6 +3950,24 @@
- 			break;
- 
- 		case MODE_SENSE:
-+			if ((scb->scsi_cmd->cmnd[2] & 0x3F) == 8) //
-Caching Page Request
-+			{
-+				memset(cachePageResponse, 0, sizeof
-(cachePageResponse));
-+				                              // Bytes
-0-3 are the Mode Parameter Header
-+				cachePageResponse[0] = 0x15;  //
-Mode Data Length
-+ 				cachePageResponse[1] = 0x00;  //
-Medium Type = Default
-+				cachePageResponse[2] = 0x00;  //
-Device Specific Parmeters 
-+				cachePageResponse[3] = 0x00;  //
-No Block Descriptors 
-+				                              // Actual
-Caching Page Data Starts Here
-+				cachePageResponse[4] = 0x08;  //
-Page Code 8 ( Caching Page )
-+				cachePageResponse[5] = 0x12;  //
-Page Length
-+ 				cachePageResponse[6] = 0x00;  //
-WCE is OFF !   
-+
-+				ips_scmd_buf_write(scb->scsi_cmd,
-cachePageResponse, sizeof (cachePageResponse));
-+ 				scb->scsi_cmd->result = DID_OK << 16;
-+				break;
-+			}
-+
- 			scb->cmd.basic_io.op_code = IPS_CMD_ENQUIRY;
- 			scb->cmd.basic_io.command_id =
-IPS_COMMAND_ID(ha, scb);
- 			scb->cmd.basic_io.segment_4G = 0;
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org More majordomo info
-at  http://vger.kernel.org/majordomo-info.html
+b). Can lead me to a fix.
 
+My machine is in production and I do not have any additional hardware to test with, but I can do limited testing with it as long as it is completely functional by 8:00 pm eastern time.  I'm using it as offsite backup machine and that's when my backup processes kick in.  If more information is needed, let me know how to get it, and I'll supply it.
+
+I need to get this solved ASAP.
+
+Thanks in advance,
+
+--
+Kevin L. Collins, MCSE
+Systems Manager
+Nesbitt Engineering, Inc. 
