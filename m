@@ -1,50 +1,50 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] - pci_ids - adding pci device id support for FC949ES
-Date: Fri, 13 Jan 2006 11:59:39 -0800
-Message-ID: <20060113195939.GB18869@kroah.com>
-References: <F331B95B72AFFB4B87467BE1C8E9CF5F1AA29A@NAMAIL2.ad.lsil.com> <20060113000323.09cbff98.akpm@osdl.org> <20060113181002.GG20718@infradead.org>
+From: Volker Kuhlmann <list0570@paradise.net.nz>
+Subject: [PATCH] sym53c8xx phase change log suppression
+Date: Sat, 14 Jan 2006 09:02:00 +1300
+Message-ID: <20060113200200.GB12885@paradise.net.nz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422899AbWAMUA6@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 203-79-122-66.cable.paradise.net.nz ([203.79.122.66]:23900 "EHLO
+	kereru.site") by vger.kernel.org with ESMTP id S1422926AbWAMUCE
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jan 2006 15:02:04 -0500
+Received: from kereru.site (localhost [127.0.0.1])
+	by kereru.site (8.13.4/8.13.4/SuSE Linux 0.7) with ESMTP id k0DK20ZZ020223
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Jan 2006 09:02:02 +1300
+Received: (from volker@localhost)
+	by kereru.site (8.13.4/8.13.4/Submit) id k0DK20aL020222
+	for linux-scsi@vger.kernel.org; Sat, 14 Jan 2006 09:02:00 +1300
 Content-Disposition: inline
-In-Reply-To: <20060113181002.GG20718@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, "Moore, Eric" <Eric.Moore@lsil.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Jan 13, 2006 at 06:10:02PM +0000, Christoph Hellwig wrote:
-> On Fri, Jan 13, 2006 at 12:03:23AM -0800, Andrew Morton wrote:
-> > >  --- b/include/linux/pci_ids.h	2006-01-11 19:04:18.000000000 -0700
-> > >  +++ a/include/linux/pci_ids.h	2006-01-12 14:19:43.000000000 -0700
-> > >  @@ -181,6 +181,7 @@
-> > >   #define PCI_DEVICE_ID_LSI_FC929X	0x0626
-> > >   #define PCI_DEVICE_ID_LSI_FC939X	0x0642
-> > >   #define PCI_DEVICE_ID_LSI_FC949X	0x0640
-> > >  +#define PCI_DEVICE_ID_LSI_FC949ES	0x0646
-> > >   #define PCI_DEVICE_ID_LSI_FC919X	0x0628
-> > >   #define PCI_DEVICE_ID_NCR_YELLOWFIN	0x0701
-> > >   #define PCI_DEVICE_ID_LSI_61C102	0x0901
-> > 
-> > That doesn't add support - it just adds the ID.  We've apparently decided
-> > not to keep IDs of devices which the kernel doesn't support.
-> 
-> There's a patch on linux-scsi that adds the actual support.
+I get a huge number of these phase change entries in syslog, just about
+with ever SCSI transfer. That's with a scanner anyway, on AMD64. As they
+seem to be harmless, this patch allows to prevent syslog being filled
+by using verb=0. Perhaps verb=1 should also suppress it?
 
-Then include this as part of that patch please.  Or if you are going to
-add ids to this file, at least CC: the PCI kernel maintainer so he knows
-to add them.  And also say that an already submitted patch needs it.
+Thanks,
 
-> > Also, there's a plan to stop using pci_ids.h - PCI IDs are supposed to go
-> > into a driver-private header file.  I guess drivers/scsi/megaraid.h is an
-> > example.
-> 
-> That's new to me.  In either case a single driver should do one thing
-> consistantly, and fusion has tons of defines in pci_ids.h already.
+Volker
 
-Yeah, for older drivers that already do this, I don't have a problem
-adding it here.  Then we can move all of the ids to the local file at
-once in the future :)
 
-thanks,
+--- linux-2.6.13-15.7/drivers/scsi/sym53c8xx_2/sym_hipd.c.orig	2005-08-29 11:41:01.000000000 +1200
++++ linux-2.6.13-15.7/drivers/scsi/sym53c8xx_2/sym_hipd.c	2006-01-12 22:46:15.000000000 +1300
+@@ -2556,6 +2556,11 @@ static void sym_int_ma (struct sym_hcb *
+ 	 *  if old phase not dataphase, leave here.
+ 	 */
+ 	if (cmd & 2) {
++		/* Huge number of these phase changes logged in normal use
++		   (at least with a scanner).
++		   Allow to suppress with verb=0.
++		   Volker Kuhlmann, VolkerKuhlmann@gmx.de 12 Jan 2006 */
++		if (sym_verbose >= 1)
+ 		sym_print_addr(cp->cmd,
+ 			"phase change %x-%x %d@%08x resid=%d.\n",
+ 			cmd&7, INB(np, nc_sbcl)&7, (unsigned)olen,
 
-greg k-h
+-- 
+Volker Kuhlmann			is possibly list0570 with the domain in header
+http://volker.dnsalias.net/		Please do not CC list postings to me.
