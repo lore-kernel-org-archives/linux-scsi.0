@@ -1,47 +1,34 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] mptfusion - fc transport attributes - REVISED
-Date: Fri, 13 Jan 2006 14:00:40 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F1AA6D6@NAMAIL2.ad.lsil.com>
+From: Volker Kuhlmann <hidden@paradise.net.nz>
+Subject: Re: [PATCH] sym53c8xx phase change log suppression
+Date: Sat, 14 Jan 2006 10:06:47 +1300
+Message-ID: <20060113210647.GC12885@paradise.net.nz>
+References: <20060113200200.GB12885@paradise.net.nz> <20060113201550.GR19769@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:5795 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1422956AbWAMVAn convert rfc822-to-8bit
+Received: from 203-79-122-66.cable.paradise.net.nz ([203.79.122.66]:5206 "EHLO
+	kereru.site") by vger.kernel.org with ESMTP id S1422969AbWAMVGv
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2006 16:00:43 -0500
-Content-class: urn:content-classes:message
+	Fri, 13 Jan 2006 16:06:51 -0500
+Received: from kereru.site (localhost [127.0.0.1])
+	by kereru.site (8.13.4/8.13.4/SuSE Linux 0.7) with ESMTP id k0DL6lMU026979
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Jan 2006 10:06:49 +1300
+Received: (from volker@localhost)
+	by kereru.site (8.13.4/8.13.4/Submit) id k0DL6laK026978
+	for linux-scsi@vger.kernel.org; Sat, 14 Jan 2006 10:06:47 +1300
+Content-Disposition: inline
+In-Reply-To: <20060113201550.GR19769@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: "Shirron, Stephen" <Stephen.Shirron@lsil.com>, "Hickerson, Roger" <Roger.Hickerson@lsil.com>, Jeremy Higdon <jeremy@sgi.com>, Gary Hagensen <gwh@sgi.com>
+To: linux-scsi@vger.kernel.org
 
-I had steped out for lunch, and just got back.
-I'm in the process of patching, testing this.
+> Did you not read the email I sent to you earlier where I explained
+> why this patch wasn't necessary?
 
-Thankyou,
-Eric
+Hadn't received it when I posted. Thanks!
 
-> -----Original Message-----
-> From: Michael Reed [mailto:mdr@sgi.com] 
-> Sent: Friday, January 13, 2006 1:32 PM
-> To: linux-scsi
-> Cc: Christoph Hellwig; Moore, Eric; Shirron, Stephen; 
-> Hickerson, Roger; Jeremy Higdon; Gary Hagensen; James 
-> Bottomley; James.Smart@Emulex.Com
-> Subject: Re: [PATCH] mptfusion - fc transport attributes - REVISED
-> 
-> OK.  I've re-based the code to work with scsi-misc and Christoph's
-> recent patches.  I've tested it on my ia64 test mule and it appears to
-> function as did the previous patch.
-> 
-> Perhaps the target will now stand still for a while?  :)
-> 
-> Attached is version 1f of the patch.  Previous versions should
-> be disregarded.
-> 
-> Mike
-> 
-> Signed-off-by: Michael Reed <mdr@sgi.com>
-> 
+Volker
+
+-- 
+Volker Kuhlmann			is possibly list0570 with the domain in header
+http://volker.dnsalias.net/		Please do not CC list postings to me.
