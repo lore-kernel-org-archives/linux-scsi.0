@@ -1,42 +1,50 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [PATCH] - pci_ids - adding pci device id support for FC949ES
-Date: Fri, 13 Jan 2006 00:03:23 -0800
-Message-ID: <20060113000323.09cbff98.akpm@osdl.org>
-References: <F331B95B72AFFB4B87467BE1C8E9CF5F1AA29A@NAMAIL2.ad.lsil.com>
+From: Thomas Maguin <T.Maguin@web.de>
+Subject: Re: cdrecord: Cannot allocate memory. Cannot get SCSI I/O buffer.
+Date: Fri, 13 Jan 2006 09:23:35 +0100
+Message-ID: <200601130923.45539.T.Maguin@web.de>
+References: <200601121322.17458.T.Maguin@web.de> <200601121352.16717.T.Maguin@web.de> <m31wzdv4zi.fsf@merlin.emma.line.org>
+Reply-To: T.Maguin@web.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: multipart/signed;
+  boundary="nextPart3030786.FhmWGSxhOP";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:24511 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1161371AbWAMIDq (ORCPT
+Received: from smtp08.web.de ([217.72.192.226]:9411 "EHLO smtp08.web.de")
+	by vger.kernel.org with ESMTP id S1161484AbWAMIXH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2006 03:03:46 -0500
-In-Reply-To: <F331B95B72AFFB4B87467BE1C8E9CF5F1AA29A@NAMAIL2.ad.lsil.com>
+	Fri, 13 Jan 2006 03:23:07 -0500
+Received: from [80.136.218.100] (helo=paris.troja)
+	by smtp08.web.de with asmtp (TLSv1:AES256-SHA:256)
+	(WEB.DE 4.105 #340)
+	id 1ExKDC-0003Gu-00
+	for linux-scsi@vger.kernel.org; Fri, 13 Jan 2006 09:23:06 +0100
+In-Reply-To: <m31wzdv4zi.fsf@merlin.emma.line.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-"Moore, Eric" <Eric.Moore@lsil.com> wrote:
->
-> Adding support for new LSI Logic Fibre Channel controller.
-> 
->  Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
-> 
->  --- b/include/linux/pci_ids.h	2006-01-11 19:04:18.000000000 -0700
->  +++ a/include/linux/pci_ids.h	2006-01-12 14:19:43.000000000 -0700
->  @@ -181,6 +181,7 @@
->   #define PCI_DEVICE_ID_LSI_FC929X	0x0626
->   #define PCI_DEVICE_ID_LSI_FC939X	0x0642
->   #define PCI_DEVICE_ID_LSI_FC949X	0x0640
->  +#define PCI_DEVICE_ID_LSI_FC949ES	0x0646
->   #define PCI_DEVICE_ID_LSI_FC919X	0x0628
->   #define PCI_DEVICE_ID_NCR_YELLOWFIN	0x0701
->   #define PCI_DEVICE_ID_LSI_61C102	0x0901
+--nextPart3030786.FhmWGSxhOP
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-That doesn't add support - it just adds the ID.  We've apparently decided
-not to keep IDs of devices which the kernel doesn't support.
+This patch is working with alpha04 on my mashine:
+http://de.geocities.com/linux_piewie/download/alpha04.txt
 
-Also, there's a plan to stop using pci_ids.h - PCI IDs are supposed to go
-into a driver-private header file.  I guess drivers/scsi/megaraid.h is an
-example.
+
+
+--nextPart3030786.FhmWGSxhOP
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+
+iD8DBQBDx2ORyat6ziqpM7YRApZ8AJ4gjl/C/fpwOy++4+XlNNSzZIp3PgCg5r/u
+0NJ35hGRQuRNdJ3GuL3NzHU=
+=yDVI
+-----END PGP SIGNATURE-----
+
+--nextPart3030786.FhmWGSxhOP--
