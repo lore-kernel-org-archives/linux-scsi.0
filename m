@@ -1,53 +1,29 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] remove target parent limitiation
-Date: Fri, 13 Jan 2006 20:37:42 +0100
-Message-ID: <20060113193742.GA5668@lst.de>
-References: <F331B95B72AFFB4B87467BE1C8E9CF5F1AA5F3@NAMAIL2.ad.lsil.com>
+Subject: Re: [PATCH] Make scsi error recovery play nice with devices	blocked by transport
+Date: Fri, 13 Jan 2006 20:38:37 +0100
+Message-ID: <20060113193837.GB5668@lst.de>
+References: <43A35498.6030903@sgi.com> <43B2B77B.20602@emulex.com> <43BEE23E.8040707@sgi.com> <43C27ABC.2020504@emulex.com> <1136821157.3364.11.camel@mulgrave> <43C7FFB4.5000801@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:28897 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S1422858AbWAMThv (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:31969 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S1422860AbWAMTir (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2006 14:37:51 -0500
+	Fri, 13 Jan 2006 14:38:47 -0500
 Content-Disposition: inline
-In-Reply-To: <F331B95B72AFFB4B87467BE1C8E9CF5F1AA5F3@NAMAIL2.ad.lsil.com>
+In-Reply-To: <43C7FFB4.5000801@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: Christoph Hellwig <hch@lst.de>, James.Bottomley@steeleye.com, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+To: Michael Reed <mdr@sgi.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jeremy Higdon <jeremy@sgi.com>, Gary Hagensen <gwh@sgi.com>
 
-On Fri, Jan 13, 2006 at 12:01:53PM -0700, Moore, Eric wrote:
-> On Friday, January 13, 2006 11:04 AM, Christoph Hellwig wrote:
+On Fri, Jan 13, 2006 at 01:29:56PM -0600, Michael Reed wrote:
+> I'm planning on working on this once the fusion fc_transport code finally
+> makes it in.  What do you see as a deadline for code addressing this problem?
 > 
-> > When James Smart fixed the issue of the userspace scan atributes
-> > crashing the system with the FC transport class he added a patch to
-> > let the transport class check if the parent is valid for a given
-> > transport class.
-> > 
-> > When adding support for the integrated raid of fusion sas devices
-> > we ran into a problem with that, as it didn't allow adding virtual
-> > raid volumes without the transport class knowing about it.
-> > 
-> > So this patch adds a user_scan attribute instead, that takes over from
-> > scsi_scan_host_selected if the transport class sets it and thus lets
-> > the transport class control the user-initiated scanning.  As this
-> > plugs the hole about user-initiated scanning the target_parent hook
-> > goes away and we rely on callers of the scanning routines to do
-> > something sensible.
-> > 
-> > For SAS this meant I had to switch from a spinlock to a mutex to
-> > synchronize the topology linked lists, in FC they were completely
-> > unsynchronized which seems wrong.
-> > 
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > 
-> 
-> I noticed that rebasing the James git tree this morning, and 
-> applying this patch, the following was missing.  This patch
-> submitted earlier by Christoph solves the panic that occurs when
-> unloading the mptsas modules, and reloading.  Please apply.
+> Perhaps someone else already has something to address this in progress?
+> It's a significant issue with our fibre channel customers.
 
-James put this in alraedy.
-
+There's not at all.  Sunday is feature deadline for 2.6.16, but we'll
+happily accept everything good for 2.6.17.  OTOH this probably falls
+into fixes that can go in after -rc1 anyway.
