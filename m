@@ -1,50 +1,28 @@
-From: Thomas Maguin <T.Maguin@web.de>
+From: Jens Axboe <axboe@suse.de>
 Subject: Re: cdrecord: Cannot allocate memory. Cannot get SCSI I/O buffer.
-Date: Fri, 13 Jan 2006 09:23:35 +0100
-Message-ID: <200601130923.45539.T.Maguin@web.de>
-References: <200601121322.17458.T.Maguin@web.de> <200601121352.16717.T.Maguin@web.de> <m31wzdv4zi.fsf@merlin.emma.line.org>
-Reply-To: T.Maguin@web.de
+Date: Fri, 13 Jan 2006 10:02:57 +0100
+Message-ID: <20060113090257.GQ3945@suse.de>
+References: <200601121322.17458.T.Maguin@web.de> <200601121352.16717.T.Maguin@web.de> <m31wzdv4zi.fsf@merlin.emma.line.org> <200601130923.45539.T.Maguin@web.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3030786.FhmWGSxhOP";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp08.web.de ([217.72.192.226]:9411 "EHLO smtp08.web.de")
-	by vger.kernel.org with ESMTP id S1161484AbWAMIXH (ORCPT
+Received: from ns.virtualhost.dk ([195.184.98.160]:41532 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1030319AbWAMJA5 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2006 03:23:07 -0500
-Received: from [80.136.218.100] (helo=paris.troja)
-	by smtp08.web.de with asmtp (TLSv1:AES256-SHA:256)
-	(WEB.DE 4.105 #340)
-	id 1ExKDC-0003Gu-00
-	for linux-scsi@vger.kernel.org; Fri, 13 Jan 2006 09:23:06 +0100
-In-Reply-To: <m31wzdv4zi.fsf@merlin.emma.line.org>
+	Fri, 13 Jan 2006 04:00:57 -0500
+Content-Disposition: inline
+In-Reply-To: <200601130923.45539.T.Maguin@web.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Thomas Maguin <T.Maguin@web.de>
+Cc: linux-scsi@vger.kernel.org
 
---nextPart3030786.FhmWGSxhOP
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Fri, Jan 13 2006, Thomas Maguin wrote:
+> This patch is working with alpha04 on my mashine:
+> http://de.geocities.com/linux_piewie/download/alpha04.txt
 
-This patch is working with alpha04 on my mashine:
-http://de.geocities.com/linux_piewie/download/alpha04.txt
+So any particular reason you think this is a kernel bug??
 
+-- 
+Jens Axboe
 
-
---nextPart3030786.FhmWGSxhOP
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-
-iD8DBQBDx2ORyat6ziqpM7YRApZ8AJ4gjl/C/fpwOy++4+XlNNSzZIp3PgCg5r/u
-0NJ35hGRQuRNdJ3GuL3NzHU=
-=yDVI
------END PGP SIGNATURE-----
-
---nextPart3030786.FhmWGSxhOP--
