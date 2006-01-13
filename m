@@ -1,31 +1,27 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] remove target parent limitiation
-Date: Fri, 13 Jan 2006 12:27:54 -0600
-Message-ID: <43C7F12A.5060501@cs.wisc.edu>
-References: <20060113180400.GA3509@lst.de> <43C7EFCA.4020908@cs.wisc.edu> <20060113182401.GA4106@lst.de>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] remove scsi_assign_lock
+Date: Fri, 13 Jan 2006 11:37:36 -0700
+Message-ID: <20060113183736.GQ19769@parisc-linux.org>
+References: <20060113182543.GA4148@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:37810 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1422806AbWAMS2M (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2006 13:28:12 -0500
-In-Reply-To: <20060113182401.GA4106@lst.de>
+Received: from palinux.external.hp.com ([192.25.206.14]:44524 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S1422817AbWAMShi
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jan 2006 13:37:38 -0500
+Content-Disposition: inline
+In-Reply-To: <20060113182543.GA4148@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
-Cc: James.Bottomley@steeleye.com, Eric.Moore@lsil.com, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-Christoph Hellwig wrote:
->>Should we remove the target_parent callout from the trasnport_template 
->>since it is no longer used or does it make sense to keep it as part of 
->>the API?
-> 
-> 
-> In the patch I have hear I did that:
-> 
-> -       struct device *(*target_parent)(struct Scsi_Host *, int, uint);
-> +       int (*user_scan)(struct Scsi_Host *, uint, uint, uint);
+On Fri, Jan 13, 2006 at 07:25:43PM +0100, Christoph Hellwig wrote:
+> We finally fixed all drivers to not require this hack, so let's get rid
+> of it before people reintroduce uses (vendor drivers seem to be very
+> eager to use it for no obvious reason)
 
-oops sorry.
+Although of course they'll now just assign to host_lock direectly.
+Presumably you intend to remove that in the near future, but didn't do
+that now because it would introduce too much code churn?
