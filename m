@@ -1,40 +1,66 @@
-From: Srdjan Todorovic <todorovic.s@googlemail.com>
-Subject: Re: [Bug] crash with kernel >= 2.6.14 with k3b and scsi driver
-Date: Fri, 13 Jan 2006 13:30:03 +0000 (GMT)
-Message-ID: <Pine.LNX.4.62.0601131327180.5667@tigerclaw.lan>
-References: <Pine.LNX.4.62.0601131215550.5667@tigerclaw.lan>
- <20060113130643.GO19769@parisc-linux.org>
+From: Jack Hammer <jack_hammer@adaptec.com>
+Subject: ips - Mode Sense ( Caching Page ) fix
+Date: Fri, 13 Jan 2006 08:30:38 -0500
+Message-ID: <43C7AB7E.7050400@adaptec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zproxy.gmail.com ([64.233.162.203]:48838 "EHLO zproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932678AbWAMNYy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2006 08:24:54 -0500
-Received: by zproxy.gmail.com with SMTP id z31so637880nzd
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2006 05:24:53 -0800 (PST)
-In-Reply-To: <20060113130643.GO19769@parisc-linux.org>
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:33952 "EHLO
+	mail-gw3.adaptec.com") by vger.kernel.org with ESMTP
+	id S932678AbWAMNap (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jan 2006 08:30:45 -0500
+Received: from rtpe2k01.adaptec.com (rtpe2k01.adaptec.com [10.110.12.40])
+	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 682B73991
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2006 05:30:44 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, 13 Jan 2006, Matthew Wilcox wrote:
+The ServeRAID driver ( ips ) does not recognize and respond properly to a 
+Mode Sense - Caching Page request. This causes sd.c to display the message
 
-> On Fri, Jan 13, 2006 at 12:27:01PM +0000, Srdjan Todorovic wrote:
-> > I created a bug report with more information, but I think I messed
-> > up the bug report procedure (it's my first time, sorry) as linux-scsi
-> > list is not in the CC. This can probably be corrected very easily but
-> > I wasn't sure it was going to spam you all.
-> > 
-> > Bugzilla bug ID: 5776
-> 
-> You don't actually say what happens.  Does the machine hang?
-> Spontaneously reboot?  Do you get a panic?  How about an oops?  Have you
-> tried attaching a serial console?
-The machine hangs.
+                   "sda: got wrong page"
 
-No panic, no OOPS.
-I don't have a serial console at this time.
+The following patch for creates a valid response to this request.
 
- - Srdjan Todorovic
+
+Signed-off-by: Jack Hammer <jack_hammer@adaptec.com>
+
+
+
+--- a/drivers/scsi/ips.c	Mon Jan  2 22:21:10 2006
++++ b/drivers/scsi/ips.c	Thu Jan 12 15:45:42 2006
+@@ -3745,6 +3745,7 @@
+ 	int device_error;
+ 	IPS_DCDB_TABLE_TAPE *tapeDCDB;
+ 	int TimeOut;
++	uint8_t cachePageResponse[22];
+ 
+	METHOD_TRACE("ips_send_cmd", 1);
+ 
+@@ -3949,6 +3950,24 @@
+ 			break;
+ 
+ 		case MODE_SENSE:
++			if ((scb->scsi_cmd->cmnd[2] & 0x3F) == 8) // Caching Page Request
++			{
++				memset(cachePageResponse, 0, sizeof (cachePageResponse));
++				                              // Bytes 0-3 are the Mode Parameter Header
++				cachePageResponse[0] = 0x15;  //       Mode Data Length
++ 				cachePageResponse[1] = 0x00;  //       Medium Type = Default
++				cachePageResponse[2] = 0x00;  //       Device Specific Parmeters 
++				cachePageResponse[3] = 0x00;  //       No Block Descriptors 
++				                              // Actual Caching Page Data Starts Here
++				cachePageResponse[4] = 0x08;  //       Page Code 8 ( Caching Page )
++				cachePageResponse[5] = 0x12;  //       Page Length
++ 				cachePageResponse[6] = 0x00;  //       WCE is OFF !   
++
++				ips_scmd_buf_write(scb->scsi_cmd, cachePageResponse, sizeof (cachePageResponse));
++ 				scb->scsi_cmd->result = DID_OK << 16;
++				break;
++			}
++
+ 			scb->cmd.basic_io.op_code = IPS_CMD_ENQUIRY;
+ 			scb->cmd.basic_io.command_id = IPS_COMMAND_ID(ha, scb);
+ 			scb->cmd.basic_io.segment_4G = 0;
