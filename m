@@ -1,40 +1,26 @@
-From: "Zhikun Wang" <raidwang@gmail.com>
-Subject: Re: RE: Calling scsi_done from queuecommand()
-Date: Fri, 13 Jan 2006 09:44:39 +0800
-Message-ID: <200601130944136568734@gmail.com>
-References: <F331B95B72AFFB4B87467BE1C8E9CF5F18160D@NAMAIL2.ad.lsil.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: [PATCH 0/10] iscsi update
+Date: Thu, 12 Jan 2006 23:00:38 -0600
+Message-ID: <1137128438.9508.15.camel@max>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.194]:21896 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S964933AbWAMBmq (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:60591 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S964890AbWAMFAq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jan 2006 20:42:46 -0500
-Received: by xproxy.gmail.com with SMTP id i30so381947wxd
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Jan 2006 17:42:46 -0800 (PST)
+	Fri, 13 Jan 2006 00:00:46 -0500
+Received: from [192.168.0.6] (c-69-180-176-191.hsd1.mn.comcast.net [69.180.176.191])
+	(authenticated bits=0)
+	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id k0D50im0016387
+	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Jan 2006 23:00:45 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-
-
-> On Wednesday, January 11, 2006 9:21 PM, Zhikun Wang wrote: 
-
-> Mr. Moore:
-> 	Can we call scsi_done() to complete the I/O from the 
-> queuecommand() ? (e.g. to make 
-> queuecommand synchronous).   I try this method in my LsiLogic 
-> 22320 SCSI card driver 
-> inMoore, Eric Redhat9, and i can correctly handle read command. But 
-> Write command is stop when i 
-> call scsi_done() in the queuecommand. I am very puzzled!   
-> Thanks for any answers!
-> 
-
-> I see no problem with that as long as your waiting for the firmware
-
-> to complete the command.
-My problem is write command is completed for the firmware, but call scsi_done() is stopped!
+I am again the iscsi monkey. The patchset was made against scsi-misc and
+fixes xfs and jfs support, xfs or st or sg with 4k stacks, highmem
+support, reworks the transport class to allow HW iscsi to hook in and
+fixes several refcount bugs.
 
