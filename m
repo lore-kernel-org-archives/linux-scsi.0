@@ -1,31 +1,42 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2.6.15] I2O: move pci_request_regions() just behind pci_enable_device()
-Date: Fri, 13 Jan 2006 18:08:59 +0000
-Message-ID: <20060113180859.GF20718@infradead.org>
-References: <547AF3BD0F3F0B4CBDC379BAC7E4189F0207C3C4@otce2k03.adaptec.com>
+Subject: Re: [PATCH] - pci_ids - adding pci device id support for FC949ES
+Date: Fri, 13 Jan 2006 18:10:02 +0000
+Message-ID: <20060113181002.GG20718@infradead.org>
+References: <F331B95B72AFFB4B87467BE1C8E9CF5F1AA29A@NAMAIL2.ad.lsil.com> <20060113000323.09cbff98.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:16529 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:39555 "EHLO
 	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1422774AbWAMSJE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2006 13:09:04 -0500
+	id S1422785AbWAMSKL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jan 2006 13:10:11 -0500
 Content-Disposition: inline
-In-Reply-To: <547AF3BD0F3F0B4CBDC379BAC7E4189F0207C3C4@otce2k03.adaptec.com>
+In-Reply-To: <20060113000323.09cbff98.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Ryoji Kamei <kamei@miraclelinux.com>, linux-scsi <linux-scsi@vger.kernel.org>, Markus Lidel <Markus.Lidel@shadowconnect.com>, akpm@osdl.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: "Moore, Eric" <Eric.Moore@lsil.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, Jan 12, 2006 at 08:31:57AM -0500, Salyzyn, Mark wrote:
-> The problem in dpt_i2o could be the pci config space accesses it
-> triggers as it loads, dangerous to do if there is any I/O activity going
-> on in the other driver (probable if a boot driver I guess).
+On Fri, Jan 13, 2006 at 12:03:23AM -0800, Andrew Morton wrote:
+> >  --- b/include/linux/pci_ids.h	2006-01-11 19:04:18.000000000 -0700
+> >  +++ a/include/linux/pci_ids.h	2006-01-12 14:19:43.000000000 -0700
+> >  @@ -181,6 +181,7 @@
+> >   #define PCI_DEVICE_ID_LSI_FC929X	0x0626
+> >   #define PCI_DEVICE_ID_LSI_FC939X	0x0642
+> >   #define PCI_DEVICE_ID_LSI_FC949X	0x0640
+> >  +#define PCI_DEVICE_ID_LSI_FC949ES	0x0646
+> >   #define PCI_DEVICE_ID_LSI_FC919X	0x0628
+> >   #define PCI_DEVICE_ID_NCR_YELLOWFIN	0x0701
+> >   #define PCI_DEVICE_ID_LSI_61C102	0x0901
 > 
-> I approve this patch to dpt_i2o.c, and am applying it to the Adaptec
-> branch of the driver.
-> 
-> Thanks for the investigation Ryoji.
+> That doesn't add support - it just adds the ID.  We've apparently decided
+> not to keep IDs of devices which the kernel doesn't support.
 
-looks good.
+There's a patch on linux-scsi that adds the actual support.
 
+> Also, there's a plan to stop using pci_ids.h - PCI IDs are supposed to go
+> into a driver-private header file.  I guess drivers/scsi/megaraid.h is an
+> example.
+
+That's new to me.  In either case a single driver should do one thing
+consistantly, and fusion has tons of defines in pci_ids.h already.
