@@ -1,49 +1,47 @@
-From: Thomas Maguin <T.Maguin@web.de>
+From: Matthias Andree <matthias.andree@gmx.de>
 Subject: Re: cdrecord: Cannot allocate memory. Cannot get SCSI I/O buffer.
-Date: Fri, 13 Jan 2006 11:08:54 +0100
-Message-ID: <200601131109.05994.T.Maguin@web.de>
-References: <200601121322.17458.T.Maguin@web.de> <20060113090257.GQ3945@suse.de> <m34q48qxd2.fsf@merlin.emma.line.org>
-Reply-To: T.Maguin@web.de
+Date: Fri, 13 Jan 2006 11:08:16 +0100
+Message-ID: <20060113100816.GA9324@merlin.emma.line.org>
+References: <200601121322.17458.T.Maguin@web.de> <200601121352.16717.T.Maguin@web.de> <m31wzdv4zi.fsf@merlin.emma.line.org> <200601130923.45539.T.Maguin@web.de> <20060113090257.GQ3945@suse.de> <m34q48qxd2.fsf@merlin.emma.line.org> <20060113095221.GT3945@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart12366768.hcJu3qOAsd";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp06.web.de ([217.72.192.224]:9946 "EHLO smtp06.web.de")
-	by vger.kernel.org with ESMTP id S1161528AbWAMKI0 (ORCPT
+Received: from mail.gmx.net ([213.165.64.21]:9344 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1161525AbWAMKIW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2006 05:08:26 -0500
-Received: from [80.136.218.100] (helo=paris.troja)
-	by smtp06.web.de with asmtp (TLSv1:AES256-SHA:256)
-	(WEB.DE 4.105 #340)
-	id 1ExLr7-00013J-00
-	for linux-scsi@vger.kernel.org; Fri, 13 Jan 2006 11:08:25 +0100
-In-Reply-To: <m34q48qxd2.fsf@merlin.emma.line.org>
+	Fri, 13 Jan 2006 05:08:22 -0500
+Content-Disposition: inline
+In-Reply-To: <20060113095221.GT3945@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: Matthias Andree <matthias.andree@gmx.de>, Thomas Maguin <T.Maguin@web.de>, linux-scsi@vger.kernel.org
 
---nextPart12366768.hcJu3qOAsd
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Jens Axboe schrieb am 2006-01-13:
 
-On Friday 13 January 2006 10:40, you wrote:
-> "3. solution for the root problem, not existent for kernel >= 2.6.14-rc2"
-This relies only on q-check functions, like in qpxtool or readcd -cxscan
+> On Fri, Jan 13 2006, Matthias Andree wrote:
 
---nextPart12366768.hcJu3qOAsd
-Content-Type: application/pgp-signature
+> > Perhaps because <http://de.geocities.com/linux_piewie/download/Readme.txt>
+> > 
+> > contains this text:
+> > 
+> > "3. solution for the root problem, not existent for kernel >= 2.6.14-rc2"
+> 
+> Dunno if that is what you meant, but it states that >= 2.6.14-rc2 fixes
+> the root problem - your line states that a solution for kernel >=
+> 2.6.14-rc2 is non-existant.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
+Usually the reference would "root problem": problem fixed as of 2.6.14-rc2.
 
-iD8DBQBDx3xByat6ziqpM7YRAkR0AJ9XeGqnufLyLc5/eRFHXPBAigipOQCZARfS
-skML9IuUdEaR25WjtTN+j1c=
-=CBwR
------END PGP SIGNATURE-----
+I don't know if that's what the original author meant, but chances are
+the problem was fixed in the kernel after being introduced between 2.6.7
+and 2.6.10 somewhen. May have been 2.6.8[.1], but don't anyone quote me
+on that figure.
 
---nextPart12366768.hcJu3qOAsd--
+> Well there's nothing to fix if it works in newer kernels, is there? I
+> can't travel back in time and make sure that eg 2.6.10 works.
+
+Let's not open this can of "stable kernel" worms here in -scsi@.
+
+-- 
+Matthias Andree
