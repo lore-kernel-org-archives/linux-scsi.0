@@ -1,41 +1,45 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/lpfc/lpfc_scsi.c: make lpfc_get_scsi_buf() static
-Date: Sat, 14 Jan 2006 03:09:53 +0100
-Message-ID: <20060114020953.GD29663@stusta.de>
+From: "Infotainment L. Doddering" <rob@grandcentralmusic.com>
+Subject: Software
+Date: Sat, 14 Jan 2006 01:41:18 -0500
+Message-ID: <6518603904.20060114014118@grandcentralmusic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:22034 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1423272AbWANCJx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2006 21:09:53 -0500
-Content-Disposition: inline
+Received: from zeus2.kernel.org ([204.152.191.36]:1680 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S932753AbWANGhc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 Jan 2006 01:37:32 -0500
+Received: from -1213519952 ([221.168.203.173])
+	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id k0E6aYX0003503
+	for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2006 22:37:26 -0800
+Received: from grandcentralmusic.com (-1212605456 [-1212679656])
+	by grassau.net (Qmailv1) with ESMTP id CA1B34654B
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Jan 2006 01:41:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James.Bottomley@SteelEye.com, James Smart <James.Smart@Emulex.Com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linux <linux-scsi@vger.kernel.org>
 
-This patch makes the needlessly global function lpfc_sli_get_scsi_buf()
-static.
+Just click to buy OEM! best worldwide soft at increadeable prices!!! 
+Just click to buy OEM! best worldwide soft at increadeable prices!!! 
 
+New software on our site:
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-Acked-by: James Smart <James.Smart@Emulex.Com>
+Flash MX 2004 - $69.95
+Illustrator CS CE - $69.95
+Photo Painter 8 - $59.95
+InDesign CS - $69.95
+Works 7 - $69.95
+Project 2003 Professional - $69.95
+FileMaker 7.0 Professional - $69.95
+After Effects 6 - $69.95
+Fireworks MX 2004 - $69.95
+Premiere 6.5 - $89.95
+Office 2000 Premium Edition PE (2CD) - $59.95
+InDesign CS PageMaker Edition (2CD) - $69.95
+Windows 2000 Advanced Server - $69.95
+Visio 2003 Professional - $69.95
 
----
-
-This patch was already sent on:
-- 6 Jan 2006
-
---- linux-2.6.15-mm1-full/drivers/scsi/lpfc/lpfc_scsi.c.old	2006-01-06 19:50:38.000000000 +0100
-+++ linux-2.6.15-mm1-full/drivers/scsi/lpfc/lpfc_scsi.c	2006-01-06 19:50:46.000000000 +0100
-@@ -150,7 +150,7 @@
- 	return psb;
- }
- 
--struct  lpfc_scsi_buf*
-+static struct lpfc_scsi_buf*
- lpfc_get_scsi_buf(struct lpfc_hba * phba)
- {
- 	struct  lpfc_scsi_buf * lpfc_cmd = NULL;
+Our site:
+http://riddamna.com
 
