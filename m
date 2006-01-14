@@ -1,286 +1,245 @@
-From: Pekka Enberg <penberg@cs.helsinki.fi>
-Subject: [PATCH] scsi: remove LINUX_VERSION_CODE macro usage from nsp32
-Date: Sat, 14 Jan 2006 18:57:22 +0200
-Message-ID: <1137257843.9318.27.camel@localhost>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [GIT PATCH] SCSI update for 2.6.15
+Date: Sat, 14 Jan 2006 13:46:54 -0600
+Message-ID: <1137268015.3579.14.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from courier.cs.helsinki.fi ([128.214.9.1]:23719 "EHLO
-	mail.cs.helsinki.fi") by vger.kernel.org with ESMTP
-	id S1750940AbWANQ5Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 Jan 2006 11:57:25 -0500
+Received: from stat9.steeleye.com ([209.192.50.41]:36764 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750835AbWANTrG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 Jan 2006 14:47:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-From: Pekka Enberg <penberg@cs.helsinki.fi>
+This should represent the final pieces of SCSI for the merge window.
+After this, I'll divide the tree into the main one for post 2.6.16 and
+the bugfix one.  The main change is that we've finally incorporated the
+Adaptec aic79xx tree into this one.  The good news should be that we
+have all the bug fixes and sequencer updates we can get (conversely, if
+we still find bugs in the sequencer after this, there's nowhere really
+left to go for an update).
 
-This patch removes LINUX_VERSION_CODE macro usage from the nsp32 driver in
-drivers/scsi/.
+The patch is here:
 
-Signed-off-by: Pekka Enberg <penberg@cs.helsinki.fi>
----
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
 
- drivers/scsi/nsp32.c |   72 ---------------------------------------------------
- drivers/scsi/nsp32.h |   42 -----------------------------
- 2 files changed, 114 deletions(-)
+The Short Changelog is:
 
-Index: 2.6/drivers/scsi/nsp32.c
-===================================================================
---- 2.6.orig/drivers/scsi/nsp32.c
-+++ 2.6/drivers/scsi/nsp32.c
-@@ -49,10 +49,6 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_ioctl.h>
- 
--#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
--# include <linux/blk.h>
--#endif
--
- #include "nsp32.h"
- 
- 
-@@ -199,17 +195,9 @@ static int  __init    init_nsp32  (void)
- static void __exit    exit_nsp32  (void);
- 
- /* struct struct scsi_host_template */
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
- static int         nsp32_proc_info   (struct Scsi_Host *, char *, char **, off_t, int, int);
--#else
--static int         nsp32_proc_info   (char *, char **, off_t, int, int, int);
--#endif
- 
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
- static int         nsp32_detect      (struct pci_dev *pdev);
--#else
--static int         nsp32_detect      (struct scsi_host_template *);
--#endif
- static int         nsp32_queuecommand(struct scsi_cmnd *,
- 		void (*done)(struct scsi_cmnd *));
- static const char *nsp32_info        (struct Scsi_Host *);
-@@ -296,15 +284,6 @@ static struct scsi_host_template nsp32_t
- 	.eh_abort_handler       	= nsp32_eh_abort,
- 	.eh_bus_reset_handler		= nsp32_eh_bus_reset,
- 	.eh_host_reset_handler		= nsp32_eh_host_reset,
--#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,5,74))
--	.detect				= nsp32_detect,
--	.release			= nsp32_release,
--#endif
--#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,5,2))
--	.use_new_eh_code        	= 1,
--#else
--/*	.highmem_io			= 1, */
--#endif
- };
- 
- #include "nsp32_io.h"
-@@ -1211,12 +1190,8 @@ static irqreturn_t do_nsp32_isr(int irq,
- 	int ret;
- 	int handled = 0;
- 
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,0))
- 	struct Scsi_Host *host = data->Host;
- 	spin_lock_irqsave(host->host_lock, flags);
--#else
--	spin_lock_irqsave(&io_request_lock, flags);
--#endif
- 
- 	/*
- 	 * IRQ check, then enable IRQ mask
-@@ -1480,11 +1455,7 @@ static irqreturn_t do_nsp32_isr(int irq,
- 	nsp32_write2(base, IRQ_CONTROL, 0);
- 
-  out2:
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,0))
- 	spin_unlock_irqrestore(host->host_lock, flags);
--#else
--	spin_unlock_irqrestore(&io_request_lock, flags);
--#endif
- 
- 	nsp32_dbg(NSP32_DEBUG_INTR, "exit");
- 
-@@ -1500,27 +1471,18 @@ static irqreturn_t do_nsp32_isr(int irq,
- 		} \
- 	} while(0)
- static int nsp32_proc_info(
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73)) 
- 	struct Scsi_Host *host,
--#endif
- 	char             *buffer,
- 	char            **start,
- 	off_t             offset,
- 	int               length,
--#if !(LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73)) 
--	int               hostno,
--#endif
- 	int               inout)
- {
- 	char             *pos = buffer;
- 	int               thislength;
- 	unsigned long     flags;
- 	nsp32_hw_data    *data;
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73)) 
- 	int               hostno;
--#else
--	struct Scsi_Host *host;
--#endif
- 	unsigned int      base;
- 	unsigned char     mode_reg;
- 	int               id, speed;
-@@ -1531,15 +1493,7 @@ static int nsp32_proc_info(
- 		return -EINVAL;
- 	}
- 
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73)) 
- 	hostno = host->host_no;
--#else
--	/* search this HBA host */
--	host = scsi_host_hn_get(hostno);
--	if (host == NULL) {
--		return -ESRCH;
--	}
--#endif
- 	data = (nsp32_hw_data *)host->hostdata;
- 	base = host->io_port;
- 
-@@ -2674,17 +2628,10 @@ static void nsp32_sack_negate(nsp32_hw_d
-  *	0x900-0xbff: (map same 0x800-0x8ff I/O port image repeatedly)
-  *	0xc00-0xfff: CardBus status registers
-  */
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
- #define DETECT_OK 0
- #define DETECT_NG 1
- #define PCIDEV    pdev
- static int nsp32_detect(struct pci_dev *pdev)
--#else
--#define DETECT_OK 1
--#define DETECT_NG 0
--#define PCIDEV    (data->Pci)
--static int nsp32_detect(struct scsi_host_template *sht)
--#endif
- {
- 	struct Scsi_Host *host;	/* registered host structure */
- 	struct resource  *res;
-@@ -2697,11 +2644,7 @@ static int nsp32_detect(struct scsi_host
- 	/*
- 	 * register this HBA as SCSI device
- 	 */
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
- 	host = scsi_host_alloc(&nsp32_template, sizeof(nsp32_hw_data));
--#else
--	host = scsi_register(sht, sizeof(nsp32_hw_data));
--#endif
- 	if (host == NULL) {
- 		nsp32_msg (KERN_ERR, "failed to scsi register");
- 		goto err;
-@@ -2719,9 +2662,6 @@ static int nsp32_detect(struct scsi_host
- 	host->unique_id = data->BaseAddress;
- 	host->n_io_port	= data->NumAddress;
- 	host->base      = (unsigned long)data->MmioAddress;
--#if (LINUX_VERSION_CODE <= KERNEL_VERSION(2,5,63))
--	scsi_set_pci_device(host, PCIDEV);
--#endif
- 
- 	data->Host      = host;
- 	spin_lock_init(&(data->Lock));
-@@ -2884,10 +2824,8 @@ static int nsp32_detect(struct scsi_host
- 		goto free_irq;
-         }
- 
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
- 	scsi_add_host (host, &PCIDEV->dev);
- 	scsi_scan_host(host);
--#endif
- 	pci_set_drvdata(PCIDEV, host);
- 	return DETECT_OK;
- 
-@@ -3519,11 +3457,7 @@ static int __devinit nsp32_probe(struct 
- 
- 	pci_set_master(pdev);
- 
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
- 	ret = nsp32_detect(pdev);
--#else
--	ret = scsi_register_host(&nsp32_template);
--#endif
- 
- 	nsp32_msg(KERN_INFO, "irq: %i mmio: %p+0x%lx slot: %s model: %s",
- 		  pdev->irq,
-@@ -3538,21 +3472,15 @@ static int __devinit nsp32_probe(struct 
- 
- static void __devexit nsp32_remove(struct pci_dev *pdev)
- {
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
- 	struct Scsi_Host *host = pci_get_drvdata(pdev);
--#endif
- 
- 	nsp32_dbg(NSP32_DEBUG_REGISTER, "enter");
- 
--#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,5,73))
-         scsi_remove_host(host);
- 
- 	nsp32_release(host);
- 
- 	scsi_host_put(host);
--#else
--	scsi_unregister_host(&nsp32_template);	
--#endif
- }
- 
- 
-Index: 2.6/drivers/scsi/nsp32.h
-===================================================================
---- 2.6.orig/drivers/scsi/nsp32.h
-+++ 2.6/drivers/scsi/nsp32.h
-@@ -619,47 +619,5 @@ typedef struct _nsp32_hw_data {
- #define REQSACK_TIMEOUT_TIME	10000	/* max wait time for REQ/SACK assertion
- 					   or negation, 10000us == 10ms */
- 
--/**************************************************************************
-- * Compatibility functions
-- */
--
--/* for Kernel 2.4 */
--#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0))
--# define scsi_register_host(template) 	scsi_register_module(MODULE_SCSI_HA, template)
--# define scsi_unregister_host(template) scsi_unregister_module(MODULE_SCSI_HA, template)
--# define scsi_host_put(host)            scsi_unregister(host)
--# define pci_name(pci_dev)              ((pci_dev)->slot_name)
--
--typedef void irqreturn_t;
--# define IRQ_NONE      /* */
--# define IRQ_HANDLED   /* */
--# define IRQ_RETVAL(x) /* */
--
--/* This is ad-hoc version of scsi_host_get_next() */
--static inline struct Scsi_Host *scsi_host_get_next(struct Scsi_Host *host)
--{
--	if (host == NULL) {
--		return scsi_hostlist;
--	} else {
--		return host->next;
--	}
--}
--
--/* This is ad-hoc version of scsi_host_hn_get() */
--static inline struct Scsi_Host *scsi_host_hn_get(unsigned short hostno)
--{
--	struct Scsi_Host *host;
--
--	for (host = scsi_host_get_next(NULL); host != NULL;
--	     host = scsi_host_get_next(host)) {
--		if (host->host_no == hostno) {
--			break;
--		}
--	}
--
--	return host;
--}
--#endif
--
- #endif /* _NSP32_H */
- /* end */
+Adrian Bunk:
+  o lpfc_scsi.c: make lpfc_get_scsi_buf() static
+  o scsi_transport_spi.c: make print_nego() static
+
+Andreas Herrmann:
+  o zfcp: transport class adaptations II
+  o zfcp: transport class adaptations
+  o fc transport: add permanent_port_name fc_host attribute
+
+Andrew Vasquez:
+  o qla2xxx: Update version number to 8.01.04-k
+  o qla2xxx: Disable port-type RSCN handling via driver state-machine
+  o qla2xxx: Kconfig update: Add URL to download firmware images
+  o qla2xxx: Correct setting of FDMI supported/current port speed
+  o qla2xxx: Correct execution-throttle setting for ISP24xx
+  o qla2xxx: Collapse load RISC RAM implementations
+  o qla2xxx: Correct swing/emphasis settings for ISP24XX
+  o qla2xxx: Correct issue where portstate does not transition during loop-resync
+  o qla2xxx: Update firmware-dump procedure for ISP24xx
+  o qla2xxx: Re-enable flash-part write protection on ISP24xx boards
+  o qla2xxx: Correct excessive delay during LOAD-RISC-RAM mailbox command
+  o An OEM noticed that the U6 qla2200 driver would hang for
+  o qla2xxx: Use msleep() as delay during ISP polling
+  o qla2xxx: Drop noisy 'UNDERRUN' status message
+  o qla2xxx: Correct FC4 feature assignment during RFF_ID
+  o qla2xxx: Reference proper node/port names in fc_host class
+  o qla2xxx: Kconfig: two fixes
+
+Arjan van de Ven:
+  o turn most scsi semaphores into mutexes
+
+Christoph Hellwig:
+  o remove target parent limitiation
+  o fusion: kzalloc / kcalloc conversion
+  o fusion: convert semaphores to mutexes
+  o mptsas: support basic hotplug
+  o sr: split sr_audio_ioctl into specific helpers
+  o always handle REQ_BLOCK_PC requests in common code
+  o sas: fix removal of devices behind expanders
+  o sas: clear parent->rphy in sas_rphy_delete
+
+Chuck Ebbert:
+  o Mask capabilities for SCSI-1 CD drive
+
+Eric Moore:
+  o fusion - fix pci express bug
+  o scsi_transport_sas: mapping the rphy channel equal to the port identifier
+  o fusion - mpi header udpate
+  o fusion - adding raid support in mptsas
+  o fusion - adding support for FC949ES
+  o raid_class.c - adding RAID10 and RAID10 defines
+
+Hannes Reinecke:
+  o aic79xx: Sequencer update
+  o aic79xx: Sanitize inb/outb handling
+  o aic79xx: Use struct map_node
+  o aic7xxx/aic79xx: New device ids
+
+Jack Hammer:
+  o ips: Mode Sense (Caching Page ) fix
+
+James Bottomley:
+  o mptfc: need to select transport attrs
+  o fix up message/i2o/pci.c
+  o aic79xx: bump version to 3.0
+  o aic7xxx: fix timer handling bug
+
+Jes Sorensen:
+  o sem2mutex 3w-[x9]xxx
+  o sem2mutex: scsi_transport_spi.c
+
+Mark Haverkamp:
+  o aacraid: README update
+  o aacraid: 17 element sg performance update
+  o aacraid: better sysfs adapter information
+  o aacraid: Fix default FIB size
+
+Mark Salyzyn:
+  o I2O: move pci_request_regions() just behind pci_enable_device()
+
+Maxim Shchetynin:
+  o zfcp: handle unsolicited status notification lost
+
+Michael Reed:
+  o mptfusion - fc transport attributes
+
+Mike Christie:
+  o iscsi: use pageslab
+  o iscsi: fix 4k stack iscsi setups
+  o iscsi: seperate iscsi interface from setup functions
+  o iscsi: add high mem support
+
+Petr Vandrovec:
+  o Pass proper device from BusLogic to SCSI layer
+
+Tomonori FUJITA:
+  o iscsi: data digest page cache usage fix
+  o iscsi: whitespace cleanup
+
+Zhenyu Z. Wang:
+  o iscsi: host locking fix
+  o iscsi: data under/over flow fix
+
+
+And the diffstat:
+
+ b/Documentation/scsi/aacraid.txt                   |  108 +
+ b/drivers/message/fusion/Kconfig                   |    1 
+ b/drivers/message/fusion/lsi/mpi.h                 |   10 
+ b/drivers/message/fusion/lsi/mpi_cnfg.h            |  158 +-
+ b/drivers/message/fusion/lsi/mpi_history.txt       |   77 -
+ b/drivers/message/fusion/lsi/mpi_init.h            |    8 
+ b/drivers/message/fusion/lsi/mpi_ioc.h             |  122 ++
+ b/drivers/message/fusion/lsi/mpi_log_fc.h          |   89 +
+ b/drivers/message/fusion/lsi/mpi_log_sas.h         |  162 ++
+ b/drivers/message/fusion/lsi/mpi_sas.h             |   30 
+ b/drivers/message/fusion/mptbase.c                 |   48 
+ b/drivers/message/fusion/mptbase.h                 |   34 
+ b/drivers/message/fusion/mptctl.c                  |   12 
+ b/drivers/message/fusion/mptfc.c                   |  579 +++++++++
+ b/drivers/message/fusion/mptlan.c                  |   14 
+ b/drivers/message/fusion/mptsas.c                  |  404 +++++-
+ b/drivers/message/fusion/mptscsih.c                |   34 
+ b/drivers/message/fusion/mptspi.c                  |   26 
+ b/drivers/message/i2o/pci.c                        |   10 
+ b/drivers/s390/scsi/zfcp_aux.c                     |    2 
+ b/drivers/s390/scsi/zfcp_def.h                     |    4 
+ b/drivers/s390/scsi/zfcp_erp.c                     |    2 
+ b/drivers/s390/scsi/zfcp_fsf.c                     |   84 +
+ b/drivers/s390/scsi/zfcp_fsf.h                     |   13 
+ b/drivers/s390/scsi/zfcp_scsi.c                    |  188 ++-
+ b/drivers/s390/scsi/zfcp_sysfs_adapter.c           |   15 
+ b/drivers/s390/scsi/zfcp_sysfs_port.c              |    4 
+ b/drivers/s390/scsi/zfcp_sysfs_unit.c              |    2 
+ b/drivers/scsi/3w-9xxx.c                           |    7 
+ b/drivers/scsi/3w-9xxx.h                           |    2 
+ b/drivers/scsi/3w-xxxx.c                           |    7 
+ b/drivers/scsi/3w-xxxx.h                           |    2 
+ b/drivers/scsi/BusLogic.c                          |    3 
+ b/drivers/scsi/Makefile                            |    2 
+ b/drivers/scsi/aacraid/aacraid.h                   |    7 
+ b/drivers/scsi/aacraid/commctrl.c                  |    4 
+ b/drivers/scsi/aacraid/linit.c                     |   35 
+ b/drivers/scsi/aic7xxx/Kconfig.aic7xxx             |    4 
+ b/drivers/scsi/aic7xxx/aic79xx.h                   |   39 
+ b/drivers/scsi/aic7xxx/aic79xx.reg                 |   60 -
+ b/drivers/scsi/aic7xxx/aic79xx.seq                 |  241 +++-
+ b/drivers/scsi/aic7xxx/aic79xx_core.c              |  775 ++++++-------
+ b/drivers/scsi/aic7xxx/aic79xx_inline.h            |   38 
+ b/drivers/scsi/aic7xxx/aic79xx_osm.c               |   62 -
+ b/drivers/scsi/aic7xxx/aic79xx_osm.h               |    2 
+ b/drivers/scsi/aic7xxx/aic79xx_pci.c               |   24 
+ b/drivers/scsi/aic7xxx/aic79xx_pci.h               |    5 
+ b/drivers/scsi/aic7xxx/aic79xx_reg.h_shipped       |  646 +++++-----
+ b/drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped |  507 ++++----
+ b/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped       | 1250 ++++++++++-----------
+ b/drivers/scsi/aic7xxx/aic7xxx_osm.c               |   28 
+ b/drivers/scsi/aic7xxx/aic7xxx_osm.h               |   25 
+ b/drivers/scsi/aic7xxx/aic7xxx_pci.c               |   24 
+ b/drivers/scsi/aic7xxx/aic7xxx_pci.h               |    1 
+ b/drivers/scsi/ch.c                                |   33 
+ b/drivers/scsi/dpt_i2o.c                           |   45 
+ b/drivers/scsi/hosts.c                             |    8 
+ b/drivers/scsi/ips.c                               |    3 
+ b/drivers/scsi/iscsi_tcp.c                         |  303 ++---
+ b/drivers/scsi/iscsi_tcp.h                         |    6 
+ b/drivers/scsi/lpfc/lpfc_scsi.c                    |    2 
+ b/drivers/scsi/megaraid.c                          |    6 
+ b/drivers/scsi/megaraid.h                          |    4 
+ b/drivers/scsi/megaraid/megaraid_sas.c             |    7 
+ b/drivers/scsi/qla2xxx/Kconfig                     |   24 
+ b/drivers/scsi/qla2xxx/Makefile                    |    2 
+ b/drivers/scsi/qla2xxx/qla_attr.c                  |    4 
+ b/drivers/scsi/qla2xxx/qla_dbg.c                   |  105 -
+ b/drivers/scsi/qla2xxx/qla_dbg.h                   |    4 
+ b/drivers/scsi/qla2xxx/qla_gbl.h                   |    6 
+ b/drivers/scsi/qla2xxx/qla_gs.c                    |    8 
+ b/drivers/scsi/qla2xxx/qla_init.c                  |   24 
+ b/drivers/scsi/qla2xxx/qla_isr.c                   |   14 
+ b/drivers/scsi/qla2xxx/qla_mbx.c                   |  107 -
+ b/drivers/scsi/qla2xxx/qla_os.c                    |    6 
+ b/drivers/scsi/qla2xxx/qla_sup.c                   |    3 
+ b/drivers/scsi/qla2xxx/qla_version.h               |    4 
+ b/drivers/scsi/raid_class.c                        |    2 
+ b/drivers/scsi/scsi.c                              |   13 
+ b/drivers/scsi/scsi_lib.c                          |   16 
+ b/drivers/scsi/scsi_priv.h                         |    6 
+ b/drivers/scsi/scsi_proc.c                         |   17 
+ b/drivers/scsi/scsi_scan.c                         |   32 
+ b/drivers/scsi/scsi_sysfs.c                        |    9 
+ b/drivers/scsi/scsi_transport_fc.c                 |   26 
+ b/drivers/scsi/scsi_transport_iscsi.c              |  859 +++++++-------
+ b/drivers/scsi/scsi_transport_sas.c                |   58 
+ b/drivers/scsi/scsi_transport_spi.c                |   12 
+ b/drivers/scsi/sd.c                                |   63 -
+ b/drivers/scsi/sr.c                                |   43 
+ b/drivers/scsi/sr_ioctl.c                          |  202 +--
+ b/drivers/scsi/st.c                                |   42 
+ b/include/linux/pci_ids.h                          |    1 
+ b/include/linux/raid_class.h                       |    2 
+ b/include/scsi/iscsi_if.h                          |    6 
+ b/include/scsi/scsi.h                              |    6 
+ b/include/scsi/scsi_cmnd.h                         |    1 
+ b/include/scsi/scsi_host.h                         |    3 
+ b/include/scsi/scsi_transport.h                    |    7 
+ b/include/scsi/scsi_transport_fc.h                 |    4 
+ b/include/scsi/scsi_transport_iscsi.h              |   75 +
+ b/include/scsi/scsi_transport_spi.h                |    2 
+ drivers/scsi/aacraid/README                        |   74 -
+ 103 files changed, 5111 insertions(+), 3238 deletions(-)
+
+James
 
 
