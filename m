@@ -1,61 +1,57 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [RESEND PATCH 3/8] iscsi: host locking fix
-Date: Fri, 13 Jan 2006 18:05:41 -0600
-Message-ID: <1137197141.2720.33.camel@max>
+From: andrew.vasquez@qlogic.com
+Subject: [PATCH 12/15] qla2xxx: Correct setting of FDMI supported/current port speed.
+Date: Fri, 13 Jan 2006 17:05:48 -0800
+Message-ID: <11372007432052-git-send-email-andrew.vasquez@qlogic.com>
+References: <11372006833162-git-send-email-andrew.vasquez@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:31412 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1423147AbWANAGA (ORCPT
+Received: from pat.qlogic.com ([198.70.193.2]:41509 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S1945937AbWANBFs (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2006 19:06:00 -0500
-Received: from [192.168.0.6] (c-69-180-176-191.hsd1.mn.comcast.net [69.180.176.191])
-	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id k0E05xgl021727
-	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2006 18:05:59 -0600
+	Fri, 13 Jan 2006 20:05:48 -0500
+In-Reply-To: <11372006833162-git-send-email-andrew.vasquez@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+Cc: andrew.vasquez@qlogic.com
 
->From zhenyu.z.wang@intel.com:
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-We should be taking the host_lock instead of the conn lock when
-checking host_busy.
+---
 
-Signed-off-by: Alex Aizman <itn780@yahoo.com>
-Signed-off-by: Dmitry Yusupov <dmitry_yus@yahoo.com>
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+ drivers/scsi/qla2xxx/qla_gs.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
 
-
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 550ff66..cd1491e 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -2559,6 +2559,7 @@ iscsi_conn_destroy(iscsi_connh_t connh)
- {
- 	struct iscsi_conn *conn = iscsi_ptr(connh);
- 	struct iscsi_session *session = conn->session;
-+	unsigned long flags;
- 
- 	mutex_lock(&conn->xmitmutex);
- 	set_bit(SUSPEND_BIT, &conn->suspend_tx);
-@@ -2598,12 +2599,12 @@ iscsi_conn_destroy(iscsi_connh_t connh)
- 	 * time out or fail.
- 	 */
- 	for (;;) {
--		spin_lock_bh(&conn->lock);
-+		spin_lock_irqsave(session->host->host_lock, flags);
- 		if (!session->host->host_busy) { /* OK for ERL == 0 */
--			spin_unlock_bh(&conn->lock);
-+			spin_unlock_irqrestore(session->host->host_lock, flags);
- 			break;
- 		}
--		spin_unlock_bh(&conn->lock);
-+		spin_unlock_irqrestore(session->host->host_lock, flags);
- 		msleep_interruptible(500);
- 		printk("conn_destroy(): host_busy %d host_failed %d\n",
- 			session->host->host_busy, session->host->host_failed);
+898e417ede8209f7f041ffb318d4e4762f153c07
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 0e8ada0..d620a8e 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -1530,9 +1530,9 @@ qla2x00_fdmi_rpa(scsi_qla_host_t *ha)
+ 	eiter->type = __constant_cpu_to_be16(FDMI_PORT_SUPPORT_SPEED);
+ 	eiter->len = __constant_cpu_to_be16(4 + 4);
+ 	if (IS_QLA25XX(ha))
+-		eiter->a.sup_speed = __constant_cpu_to_be32(4);
+-	else if (IS_QLA24XX(ha))
+ 		eiter->a.sup_speed = __constant_cpu_to_be32(8);
++	else if (IS_QLA24XX(ha))
++		eiter->a.sup_speed = __constant_cpu_to_be32(4);
+ 	else if (IS_QLA23XX(ha))
+ 		eiter->a.sup_speed = __constant_cpu_to_be32(2);
+ 	else
+@@ -1554,9 +1554,6 @@ qla2x00_fdmi_rpa(scsi_qla_host_t *ha)
+ 		eiter->a.cur_speed = __constant_cpu_to_be32(2);
+ 		break;
+ 	case 3:
+-		eiter->a.cur_speed = __constant_cpu_to_be32(8);
+-		break;
+-	case 4:
+ 		eiter->a.cur_speed = __constant_cpu_to_be32(4);
+ 		break;
+ 	}
+-- 
+1.1.1-g4c34
 
 
