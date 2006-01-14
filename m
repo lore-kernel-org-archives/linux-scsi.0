@@ -1,27 +1,31 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH 04/15] qla2xxx: Use msleep() as delay during ISP
-	polling.
-Date: Sat, 14 Jan 2006 10:48:03 +0100
-Message-ID: <1137232084.3014.5.camel@laptopd505.fenrus.org>
-References: <11372007004181-git-send-email-andrew.vasquez@qlogic.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] scsi_transport_sas.c - mapping the rphy channel equal to the port identifier
+Date: Sat, 14 Jan 2006 12:30:28 +0100
+Message-ID: <20060114113028.GB19567@lst.de>
+References: <F331B95B72AFFB4B87467BE1C8E9CF5F1AA7E8@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:22693 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751701AbWANJsJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 Jan 2006 04:48:09 -0500
-In-Reply-To: <11372007004181-git-send-email-andrew.vasquez@qlogic.com>
+Received: from verein.lst.de ([213.95.11.210]:13202 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S932221AbWANLam (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 Jan 2006 06:30:42 -0500
+Content-Disposition: inline
+In-Reply-To: <F331B95B72AFFB4B87467BE1C8E9CF5F1AA7E8@NAMAIL2.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andrew.vasquez@qlogic.com
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsil.com>
+Cc: linux-scsi@vger.kernel.org, hch@lst.de, James.Bottomley@steeleye.com
 
+On Fri, Jan 13, 2006 at 04:25:17PM -0700, Moore, Eric wrote:
+> Remapping the channel number to the port identifier.
+> 
+> We will be mapping the RAID volumes in mptsas to a reserved channel that
+> is one larger than the anticapated number of ports on the direct
+> attached host
+> adapter.
+> 
+> Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
-> -			udelay(10); /* v4.27 */
-> +			msleep(10);
-
-this goes from a 10 microsecond delay to a 10 milisecond delay. Was that
-intentional?
+Ack, this makes quite a bit more sense than the previous one.
 
