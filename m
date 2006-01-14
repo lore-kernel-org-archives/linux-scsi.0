@@ -1,29 +1,31 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] - fusion - fix pci express bug
-Date: Sat, 14 Jan 2006 12:32:14 +0100
-Message-ID: <20060114113214.GE19567@lst.de>
-References: <F331B95B72AFFB4B87467BE1C8E9CF5F1AA7ED@NAMAIL2.ad.lsil.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] mptfusion - fc transport attributes - REVISED
+Date: Sat, 14 Jan 2006 11:33:50 +0000
+Message-ID: <20060114113350.GA10384@infradead.org>
+References: <43C6E06D.7090609@sgi.com> <20060113103106.GA11553@infradead.org> <43C7EEDB.3010802@sgi.com> <20060113182220.GA21431@infradead.org> <43C80E3A.1050505@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:20626 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S1751220AbWANLcU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 Jan 2006 06:32:20 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:55198 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751122AbWANLdz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 Jan 2006 06:33:55 -0500
 Content-Disposition: inline
-In-Reply-To: <F331B95B72AFFB4B87467BE1C8E9CF5F1AA7ED@NAMAIL2.ad.lsil.com>
+In-Reply-To: <43C80E3A.1050505@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: linux-scsi@vger.kernel.org, hch@lst.de, James.Bottomley@steeleye.com
+To: Michael Reed <mdr@sgi.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "Moore, Eric Dean" <Eric.Moore@lsil.com>, "Shirron, Stephen" <Stephen.Shirron@lsil.com>, "Hickerson, Roger" <roger.hickerson@lsil.com>, Jeremy Higdon <jeremy@sgi.com>, Gary Hagensen <gwh@sgi.com>, James Bottomley <James.Bottomley@SteelEye.com>, James.Smart@Emulex.Com
 
-On Fri, Jan 13, 2006 at 04:25:29PM -0700, Moore, Eric wrote:
-> The fix is to write  'MPI_HIM_DIM' to the Host Interrupt Mask 
-> register, when enabling interrupts.  Instead of the
-> tilde of MPI_HIM_RIM.
+On Fri, Jan 13, 2006 at 02:31:54PM -0600, Michael Reed wrote:
+> OK.  I've re-based the code to work with scsi-misc and Christoph's
+> recent patches.  I've tested it on my ia64 test mule and it appears to
+> function as did the previous patch.
 > 
-> Apparently writing '1's to some of the reserved bits was causing
-> all the bits to go to `1`, which effectly disabled all interrupts.
+> Perhaps the target will now stand still for a while?  :)
+> 
+> Attached is version 1f of the patch.  Previous versions should
+> be disregarded.
 
 looks good.
 
