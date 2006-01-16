@@ -1,386 +1,1320 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 2/3] aic79xx: Update to adaptec version 2.0.14
-Date: Mon, 16 Jan 2006 11:03:59 +0100
-Message-ID: <43CB6F8F.7040801@suse.de>
+Subject: [PATCH 3/3] aic79xx: Update to adaptec version 2.0.15
+Date: Mon, 16 Jan 2006 11:04:31 +0100
+Message-ID: <43CB6FAF.5080000@suse.de>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------050909060306010905020003"
+ boundary="------------090409020807080505070401"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:47593 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S932314AbWAPKEB (ORCPT
+Received: from ns1.suse.de ([195.135.220.2]:53481 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S932316AbWAPKEe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Jan 2006 05:04:01 -0500
+	Mon, 16 Jan 2006 05:04:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
 Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 This is a multi-part message in MIME format.
---------------050909060306010905020003
+--------------090409020807080505070401
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 
-This patch updates aic79xx to adaptec version 2.0.14.
+This patch updates aic79xx to adaptec version 2.0.15.
 
 
 
 
---------------050909060306010905020003
+
+--------------090409020807080505070401
 Content-Type: text/plain;
- name="0002-aic79xx-Update-to-adaptec-version-2.0.14.txt"
+ name="0003-aic79xx-Update-to-adaptec-version-2.0.15.txt"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="0002-aic79xx-Update-to-adaptec-version-2.0.14.txt"
+ filename="0003-aic79xx-Update-to-adaptec-version-2.0.15.txt"
 
-[PATCH 2/3] aic79xx: Update to adaptec version 2.0.14
+[PATCH 3/3] aic79xx: Update to adaptec version 2.0.15
 
-This patch updates aic79xx to adaptec version 2.0.14.
+This patch updates the aic79xx driver to adaptec version 2.0.15.
 ---
 
- drivers/scsi/aic7xxx/aic79xx.h                   |    3 
- drivers/scsi/aic7xxx/aic79xx.reg                 |   29 +
- drivers/scsi/aic7xxx/aic79xx.seq                 |  143 +++-
- drivers/scsi/aic7xxx/aic79xx_core.c              |  272 +++++--
- drivers/scsi/aic7xxx/aic79xx_inline.h            |    7 
- drivers/scsi/aic7xxx/aic79xx_osm.c               |   24 +
- drivers/scsi/aic7xxx/aic79xx_osm_pci.c           |    8 
- drivers/scsi/aic7xxx/aic79xx_pci.c               |   11 
- drivers/scsi/aic7xxx/aic79xx_reg.h_shipped       |   27 +
- drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped |   21 -
- drivers/scsi/aic7xxx/aic79xx_seq.h_shipped       |  881 +++++++++++-----------
- drivers/scsi/aic7xxx/aicasm/aicasm.c             |   23 -
- drivers/scsi/aic7xxx/aicasm/aicasm_gram.y        |   19 
- drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h   |   88 --
- drivers/scsi/aic7xxx/aicasm/aicasm_scan.l        |   27 -
- 15 files changed, 890 insertions(+), 693 deletions(-)
+ drivers/scsi/aic7xxx/README.aic79xx            |  723 ++++++++++++++++++++++++
+ drivers/scsi/aic7xxx/README.aic7xxx            |  530 ++++++++++++++++++
+ drivers/scsi/aic7xxx/aic79xx_core.c            |   11 
+ drivers/scsi/aic7xxx/aic79xx_osm.h             |    2 
+ drivers/scsi/aic7xxx/aicasm/Makefile           |    6 
+ drivers/scsi/aic7xxx/aicasm/aicasm.c           |   23 +
+ drivers/scsi/aic7xxx/aicasm/aicasm_gram.y      |   19 +
+ drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h |   88 +++
+ drivers/scsi/aic7xxx/aicasm/aicasm_scan.l      |   27 +
+ 9 files changed, 1405 insertions(+), 24 deletions(-)
+ create mode 100644 drivers/scsi/aic7xxx/README.aic79xx
+ create mode 100644 drivers/scsi/aic7xxx/README.aic7xxx
 
-91a3a0550201bbd52b624e79efcfbba60d95269b
-diff --git a/drivers/scsi/aic7xxx/aic79xx.h b/drivers/scsi/aic7xxx/aic79xx.h
---- a/drivers/scsi/aic7xxx/aic79xx.h
-+++ b/drivers/scsi/aic7xxx/aic79xx.h
-@@ -37,7 +37,7 @@
-  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  * POSSIBILITY OF SUCH DAMAGES.
-  *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.h#108 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.h#109 $
-  *
-  * $FreeBSD$
-  */
-@@ -222,6 +222,7 @@ typedef enum {
- typedef enum {
- 	AHD_FENONE		= 0x00000,
- 	AHD_WIDE  		= 0x00001,/* Wide Channel */
-+	AHD_AIC79XXB_SLOWCRC    = 0x00002,/* SLOWCRC bit should be set */
- 	AHD_MULTI_FUNC		= 0x00100,/* Multi-Function/Channel Device */
- 	AHD_TARGETMODE		= 0x01000,/* Has tested target mode support */
- 	AHD_MULTIROLE		= 0x02000,/* Space for two roles at a time */
-diff --git a/drivers/scsi/aic7xxx/aic79xx.reg b/drivers/scsi/aic7xxx/aic79xx.reg
---- a/drivers/scsi/aic7xxx/aic79xx.reg
-+++ b/drivers/scsi/aic7xxx/aic79xx.reg
-@@ -1,7 +1,7 @@
- /*
-  * Aic79xx register and scratch ram definitions.
-  *
-- * Copyright (c) 1994-2001 Justin T. Gibbs.
-+ * Copyright (c) 1994-2001, 2004 Justin T. Gibbs.
-  * Copyright (c) 2000-2002 Adaptec Inc.
-  * All rights reserved.
-  *
-@@ -39,7 +39,7 @@
-  *
-  * $FreeBSD$
-  */
--VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#76 $"
-+VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#77 $"
- 
- /*
-  * This file is processed by the aic7xxx_asm utility for use in assembling
-@@ -3715,8 +3715,9 @@ scratch_ram {
- 
- 	SEQ_FLAGS2 {
- 		size		1
--		field	TARGET_MSG_PENDING	  0x02
--		field	SELECTOUT_QFROZEN	  0x04
-+		field	PENDING_MK_MESSAGE	0x01
-+		field	TARGET_MSG_PENDING	0x02
-+		field	SELECTOUT_QFROZEN	0x04
- 	}
- 
- 	ALLOCFIFO_SCBPTR {
-@@ -3777,6 +3778,26 @@ scratch_ram {
- 	CMDSIZE_TABLE {
- 		size		8
- 	}
-+	/*
-+	 * When an SCB with the MK_MESSAGE flag is
-+	 * queued to the controller, it cannot enter
-+	 * the waiting for selection list until the
-+	 * selections for any previously queued
-+	 * commands to that target complete.  During
-+	 * the wait, the MK_MESSAGE SCB is queued
-+	 * here.
-+	 */
-+	MK_MESSAGE_SCB {
-+		size		2
-+	}
-+	/*
-+	 * Saved SCSIID of MK_MESSAGE_SCB to avoid
-+	 * an extra SCBPTR operation when deciding
-+	 * if the MK_MESSAGE_SCB can be run.
-+	 */
-+	MK_MESSAGE_SCSIID {
-+		size		1
-+	}
- }
- 
- /************************* Hardware SCB Definition ****************************/
-diff --git a/drivers/scsi/aic7xxx/aic79xx.seq b/drivers/scsi/aic7xxx/aic79xx.seq
---- a/drivers/scsi/aic7xxx/aic79xx.seq
-+++ b/drivers/scsi/aic7xxx/aic79xx.seq
-@@ -1,7 +1,7 @@
- /*
-  * Adaptec U320 device driver firmware for Linux and FreeBSD.
-  *
-- * Copyright (c) 1994-2001 Justin T. Gibbs.
-+ * Copyright (c) 1994-2001, 2004 Justin T. Gibbs.
-  * Copyright (c) 2000-2002 Adaptec Inc.
-  * All rights reserved.
-  *
-@@ -40,7 +40,7 @@
-  * $FreeBSD$
-  */
- 
--VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#119 $"
-+VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#120 $"
- PATCH_ARG_LIST = "struct ahd_softc *ahd"
- PREFIX = "ahd_"
- 
-@@ -110,10 +110,8 @@ check_waiting_list:
- 	 * one last time.
- 	 */
- 	test	SSTAT0, SELDO jnz select_out;
--END_CRITICAL;
- 	call	start_selection;
- idle_loop_checkbus:
--BEGIN_CRITICAL;
- 	test	SSTAT0, SELDO jnz select_out;
- END_CRITICAL;
- 	test	SSTAT0, SELDI jnz select_in;
-@@ -294,7 +292,6 @@ fetch_new_scb_inprog:
- 	test	CCSCBCTL, ARRDONE jz return;
- fetch_new_scb_done:
- 	and	CCSCBCTL, ~(CCARREN|CCSCBEN);
--	bmov	REG0, SCBPTR, 2;
- 	clr	A;
- 	add	CMDS_PENDING, 1;
- 	adc	CMDS_PENDING[1], A;
-@@ -316,43 +313,117 @@ fetch_new_scb_done:
- 	clr	SCB_FIFO_USE_COUNT;
- 	/* Update the next SCB address to download. */
- 	bmov	NEXT_QUEUED_SCB_ADDR, SCB_NEXT_SCB_BUSADDR, 4;
-+	/*
-+	 * NULL out the SCB links since these fields
-+	 * occupy the same location as SCB_NEXT_SCB_BUSADDR.
-+	 */
- 	mvi	SCB_NEXT[1], SCB_LIST_NULL;
- 	mvi	SCB_NEXT2[1], SCB_LIST_NULL;
- 	/* Increment our position in the QINFIFO. */
- 	mov	NONE, SNSCB_QOFF;
+9fd618cafc5ee0b0145b9c8a5b5720090a8beff6
+diff --git a/drivers/scsi/aic7xxx/README.aic79xx b/drivers/scsi/aic7xxx/README.aic79xx
+new file mode 100644
+--- /dev/null
++++ b/drivers/scsi/aic7xxx/README.aic79xx
+@@ -0,0 +1,723 @@
++====================================================================
++=             Adaptec Ultra320 Family Manager Set                  =
++=                                                                  =
++=                            README for                            =
++=                    The Linux Operating System                    =
++====================================================================
 +
- 	/*
--	 * SCBs that want to send messages are always
--	 * queued independently.  This ensures that they
--	 * are at the head of the SCB list to select out
--	 * to a target and we will see the MK_MESSAGE flag.
-+	 * Save SCBID of this SCB in REG0 since
-+	 * SCBPTR will be clobbered during target
-+	 * list updates.  We also record the SCB's
-+	 * flags so that we can refer to them even
-+	 * after SCBPTR has been changed.
-+	 */
-+	bmov	REG0, SCBPTR, 2;
-+	mov	A, SCB_CONTROL;
++The following information is available in this file:
 +
-+	/*
-+	 * Find the tail SCB of the execution queue
-+	 * for this target.
- 	 */
--	test	SCB_CONTROL, MK_MESSAGE jnz first_new_target_scb;
- 	shr	SINDEX, 3, SCB_SCSIID;
- 	and	SINDEX, ~0x1;
- 	mvi	SINDEX[1], (WAITING_SCB_TAILS >> 8);
- 	bmov	DINDEX, SINDEX, 2;
- 	bmov	SCBPTR, SINDIR, 2;
++  1. Supported Hardware
++  2. Version History
++  3. Command Line Options
++  4. Additional Notes
++  5. Contacting Adaptec
 +
-+	/*
-+	 * Update the tail to point to the new SCB.
-+	 */
- 	bmov	DINDIR, REG0, 2;
 +
-+	/*
-+	 * If the queue was empty, queue this SCB as
-+	 * the first for this target.
-+	 */
- 	cmp	SCBPTR[1], SCB_LIST_NULL je first_new_target_scb;
++1. Supported Hardware
 +
-+	/*
-+	 * SCBs that want to send messages must always be
-+	 * at the head of their per-target queue so that
-+	 * ATN can be asserted even if the current
-+	 * negotiation agreement is packetized.  If the
-+	 * target queue is empty, the SCB can be queued
-+	 * immediately.  If the queue is not empty, we must
-+	 * wait for it to empty before entering this SCB
-+	 * into the waiting for selection queue.  Otherwise
-+	 * our batching and round-robin selection scheme 
-+	 * could allow commands to be queued out of order.
-+	 * To simplify the implementation, we stop pulling
-+	 * new commands from the host until the MK_MESSAGE
-+	 * SCB can be queued to the waiting for selection
-+	 * list.
-+	 */
-+	test	A, MK_MESSAGE jz batch_scb; 
++   The following Adaptec SCSI Host Adapters are supported by this 
++   driver set. 
 +
-+	/*
-+	 * If the last SCB is also a MK_MESSAGE SCB, then
-+	 * order is preserved even if we batch.
-+	 */
-+	test	SCB_CONTROL, MK_MESSAGE jz batch_scb; 
++   Ultra320 ASIC              Description
++   ----------------------------------------------------------------
++   AIC-7901A                  Single Channel 64-bit PCI-X 133MHz to 
++                              Ultra320 SCSI ASIC
++   AIC-7901B                  Single Channel 64-bit PCI-X 133MHz to 
++                              Ultra320 SCSI ASIC with Retained Training
++   AIC-7902A4                 Dual Channel 64-bit PCI-X 133MHz to 
++                              Ultra320 SCSI ASIC
++   AIC-7902B                  Dual Channel 64-bit PCI-X 133MHz to
++                              Ultra320 SCSI ASIC with Retained Training
 +
-+	/*
-+	 * Defer this SCB and stop fetching new SCBs until
-+	 * it can be queued.  Since the SCB_SCSIID of the
-+	 * tail SCB must be the same as that of the newly
-+	 * queued SCB, there is no need to restore the SCBID
-+	 * here.
-+	 */
-+	or	SEQ_FLAGS2, PENDING_MK_MESSAGE;
-+	bmov	MK_MESSAGE_SCB, REG0, 2;
-+	mov	MK_MESSAGE_SCSIID, SCB_SCSIID ret;
++   Ultra320 Adapters          Description                              ASIC
++   --------------------------------------------------------------------------
++   Adaptec SCSI Card 39320    Dual Channel 64-bit PCI-X 133MHz to   7902A4/7902B
++                              Ultra320 SCSI Card (one external 
++                              68-pin, two internal 68-pin)
++   Adaptec SCSI Card 39320A   Dual Channel 64-bit PCI-X 133MHz to      7902B
++                              Ultra320 SCSI Card (one external 
++                              68-pin, two internal 68-pin)
++   Adaptec SCSI Card 39320D   Dual Channel 64-bit PCI-X 133MHz to      7902A4
++                              Ultra320 SCSI Card (two external VHDC
++                              and one internal 68-pin)
++   Adaptec SCSI Card 39320D   Dual Channel 64-bit PCI-X 133MHz to      7902A4
++                              Ultra320 SCSI Card (two external VHDC
++                              and one internal 68-pin) based on the
++                              AIC-7902B ASIC
++   Adaptec SCSI Card 29320    Single Channel 64-bit PCI-X 133MHz to    7901A
++                              Ultra320 SCSI Card (one external 
++                              68-pin, two internal 68-pin, one
++                              internal 50-pin)
++   Adaptec SCSI Card 29320A   Single Channel 64-bit PCI-X 133MHz to    7901B
++                              Ultra320 SCSI Card (one external 
++                              68-pin, two internal 68-pin, one
++                              internal 50-pin)
++   Adaptec SCSI Card 29320LP  Single Channel 64-bit Low Profile        7901A
++                              PCI-X 133MHz to Ultra320 SCSI Card
++                              (One external VHDC, one internal
++                              68-pin)
++   Adaptec SCSI Card 29320ALP Single Channel 64-bit Low Profile        7901B
++                              PCI-X 133MHz to Ultra320 SCSI Card
++                              (One external VHDC, one internal
++                              68-pin)
++2. Version History
 +
-+batch_scb:
-+	/*
-+	 * Otherwise just update the previous tail SCB to
-+	 * point to the new tail.
-+	 */
- 	bmov	SCB_NEXT, REG0, 2 ret;
++   2.0.15 (September 25, 2005)
++	- Added code to enable slowcrc bit during nego 
++	  table update to slow down CRC interval to be 
++	  compatible with packetized U320 devices that 
++	  can't handle a CRC at full speed.
 +
- first_new_target_scb:
-+	/*
-+	 * Append SCB to the tail of the waiting for
-+	 * selection list.
-+	 */
- 	cmp	WAITING_TID_HEAD[1], SCB_LIST_NULL je first_new_scb;
- 	bmov	SCBPTR, WAITING_TID_TAIL, 2;
- 	bmov	SCB_NEXT2, REG0, 2;
- 	bmov	WAITING_TID_TAIL, REG0, 2 ret;
- first_new_scb:
-+	/*
-+	 * Whole list is empty, so the head of
-+	 * the list must be initialized too.
-+	 */
- 	bmov	WAITING_TID_HEAD, REG0, 2;
- 	bmov	WAITING_TID_TAIL, REG0, 2 ret;
- END_CRITICAL;
- 
- scbdma_idle:
- 	/*
--	 * Give precedence to downloading new SCBs to execute
--	 * unless select-outs are currently frozen.
-+	 * Don't bother downloading new SCBs to execute
-+	 * if select-outs are currently frozen or we have
-+	 * a MK_MESSAGE SCB waiting to enter the queue.
- 	 */
--	test	SEQ_FLAGS2, SELECTOUT_QFROZEN jnz . + 2;
-+	test	SEQ_FLAGS2, SELECTOUT_QFROZEN|PENDING_MK_MESSAGE
-+		jnz scbdma_no_new_scbs;
- BEGIN_CRITICAL;
- 	test	QOFF_CTLSTA, NEW_SCB_AVAIL jnz fetch_new_scb;
-+scbdma_no_new_scbs:
- 	cmp	COMPLETE_DMA_SCB_HEAD[1], SCB_LIST_NULL jne dma_complete_scb;
- 	cmp	COMPLETE_SCB_HEAD[1], SCB_LIST_NULL je return;
- 	/* FALLTHROUGH */
-@@ -671,27 +742,41 @@ curscb_ww_done:
- 	}
- 
- 	/*
--	 * Requeue any SCBs not sent, to the tail of the waiting Q.
-+	 * The whole list made it.  Clear our tail pointer to indicate
-+	 * that the per-target selection queue is now empty.
- 	 */
--	cmp	SCB_NEXT[1], SCB_LIST_NULL je select_out_list_done;
-+	cmp	SCB_NEXT[1], SCB_LIST_NULL je select_out_clear_tail;
- 
- 	/*
-+	 * Requeue any SCBs not sent, to the tail of the waiting Q.
- 	 * We know that neither the per-TID list nor the list of
--	 * TIDs is empty.  Use this knowledge to our advantage.
-+	 * TIDs is empty.  Use this knowledge to our advantage and
-+	 * queue the remainder to the tail of the global execution
-+	 * queue.
- 	 */
- 	bmov	REG0, SCB_NEXT, 2;
-+select_out_queue_remainder:
- 	bmov	SCBPTR, WAITING_TID_TAIL, 2;
- 	bmov	SCB_NEXT2, REG0, 2;
- 	bmov	WAITING_TID_TAIL, REG0, 2;
- 	jmp	select_out_inc_tid_q;
- 
--select_out_list_done:
-+select_out_clear_tail:
- 	/*
--	 * The whole list made it.  Just clear our TID's tail pointer
--	 * unless we were queued independently due to our need to
--	 * send a message.
-+	 * Queue any pending MK_MESSAGE SCB for this target now
-+	 * that the queue is empty.
-+	 */
-+	test	SEQ_FLAGS2, PENDING_MK_MESSAGE jz select_out_no_mk_message_scb;
-+	mov	A, MK_MESSAGE_SCSIID;
-+	cmp	SCB_SCSIID, A jne select_out_no_mk_message_scb;
-+	and	SEQ_FLAGS2, ~PENDING_MK_MESSAGE;
-+	bmov	REG0, MK_MESSAGE_SCB, 2;
-+	jmp select_out_queue_remainder;
++   2.0.14 (December 23, 2004)
++	- PCI memory space is 512 bytes, not 256.
++	- Fix wrongly calling scsi_adjust_queue_depth() when
++	  the scsi device has no request_queue.
++	- Adding module option "slowcrc" to control the
++	  setting of that bit in the NEGODAT3 (NEGCONOPTS)
++	  register. The LSI chip being used in certain
++	  external storage boxes do not allow 320 connection
++	  for Rev B of the aic79xx. Turning on this bit
++	  works around the bug in the LSI chip.  Default is
++	  off.  To turn on, use kernel/module parameter as:
 +
-+select_out_no_mk_message_scb:
-+	/*
-+	 * Clear this target's execution tail and increment the queue.
- 	 */
--	test	SCB_CONTROL, MK_MESSAGE jnz select_out_inc_tid_q;
- 	shr	DINDEX, 3, SCB_SCSIID;
- 	or	DINDEX, 1;	/* Want only the second byte */
- 	mvi	DINDEX[1], ((WAITING_SCB_TAILS) >> 8);
-@@ -703,8 +788,8 @@ select_out_inc_tid_q:
- 	mvi	WAITING_TID_TAIL[1], SCB_LIST_NULL;
- 	bmov	SCBPTR, CURRSCB, 2;
- 	mvi	CLRSINT0, CLRSELDO;
--	test	LQOSTAT2, LQOPHACHGOUTPKT jnz unexpected_nonpkt_phase;
--	test	LQOSTAT1, LQOPHACHGINPKT jnz unexpected_nonpkt_phase;
-+	test	LQOSTAT2, LQOPHACHGOUTPKT jnz unexpected_nonpkt_mode_cleared;
-+	test	LQOSTAT1, LQOPHACHGINPKT jnz unexpected_nonpkt_mode_cleared;
- 
- 	/*
- 	 * If this is a packetized connection, return to our
-@@ -2127,6 +2212,18 @@ SET_DST_MODE	M_DFF0;
- 	mvi	DFFSXFRCTL, CLRCHN;
- unexpected_nonpkt_mode_cleared:
- 	mvi	CLRSINT2, CLRNONPACKREQ;
-+	if ((ahd->bugs & AHD_BUSFREEREV_BUG) != 0) {
-+		/*
-+		 * Test to ensure that the bus has not
-+		 * already gone free prior to clearing
-+		 * any stale busfree status.  This avoids
-+		 * a window whereby a busfree just after
-+		 * a selection could be missed.
-+		 */
-+		test	SCSISIGI, BSYI jz . + 2;
-+		mvi	CLRSINT1,CLRBUSFREE;
-+		or	SIMODE1, ENBUSFREE;
-+	}
- 	test	SCSIPHASE, ~(MSG_IN_PHASE|MSG_OUT_PHASE) jnz illegal_phase;
- 	SET_SEQINTCODE(ENTERING_NONPACK)
- 	jmp	ITloop;
++	  aic79xx=slowcrc:1
++
++	- Adding proper PCI ID tables to support
++          hotplugging.
++	- Fix a compilation issue after scsi_sleep() became
++          obsolete, in stead of the new msleep() and
++          ssleep() functions.
++	- Edit Adaptec Customer Support info.
++	- Fix a bug freeing in reserve_io_regions (wrong pointer
++          to free).
++	- "Warnings are errors" is now selectable by the
++          kbuild system -- make it so here.
++	- Fix undefined symbol when compiling aic79xx for 2.6.
++	  Also regenerate the aic7xxx reg and seq files.
++	- Plug leaks in aic79xx_osm.c::ahd_linux_dev_reset().
++          Convert AIC to ssleep() and msleep() as
++          scsi_sleep() is no longer available in 2.6.
++	- Fix a double free.  If "ahc_alloc()" fails, it
++          frees the "name" argument passed.
++	- Invert the polarity of two tests in the recovery
++          code that could cause the driver to issue a bus
++          reset more quickly than intended. We want to
++          *wait* if we find another SCB that could be the
++          cause of this timeout, not proceed to a bus reset.
++        - As requested by linux-scsi: Add a flag which explicitly
++          forbids/allows the compilation of the firmware across
++          the whole build system.
++	- When doing domain validation, we send commands
++          which do not have a struct request.  In this case
++          we cannot just call scsi_populate_tag_msg(), since
++          it dereferences it blindly and oopses the kernel.
++          Now we call scsi_populate_tag_msg() only if the
++          SCSI command has a struct request associated with
++          it.
++
++   2.0.13 (July 22, 2004)
++        - Fix a compilation issue due to the changed location and name
++          of the "hosts.h" file.  Now it resides as <scsi/scsi_host.h>
++        - Add support for 16 byte CDBs.
++
++   2.0.12 (May 13th, 2004)
++        - Flag driver threads with PF_FREEZE to support software suspend.
++
++   2.0.11 (May 7th, 2004)
++        - Avoid split-completion bugs in certain PCI-X chipsets by
++          breaking up large completion entry DMAs on ADB boundaries.
++
++   2.0.10 (April 9th, 2004)
++        - Return "command timeout" status instead of "selection timeout
++	  status" to the SCSI mid-layer in response to selection timeouts.
++	  While the latter may seem more correct, the mid-layer will not
++	  offline devices suffering from persistent selection timeouts.
++	  This leads to extremely long recovery times for devices that
++	  go missing.  Returning command timeout status causes the mid-layer
++	  to enter recovery and eventually offline persistently missing
++	  devices.
++
++   2.0.9 (March 29th, 2004)
++        - Abort all pending transactions on a target in response to
++          a selection timeout.  This greatly increases the speed with
++          which we recover when a device "goes missing".
++
++   2.0.8 (March 7th, 2004)
++        - Fix PCI device/vendor ID mask for the 7901B probe entry
++          so the driver will successfully attach to 7901B parts
++          down on motherboards.
++
++   2.0.7 (February 24th, 2004)
++        - Implement delay on I/O after delivery of a Target Reset.
++        - Correct deregistration of sysrq handler when multiple
++          controllers are detected.
++
++   2.0.6 (February 6th, 2004)
++        - Force a renegotiation on all inqury commands so that
++          the negotiated transfer parameters are correct even
++          if the device has been externally reset since our last
++          command.  Devices are not allowed to report unit attention
++          conditions in response to inquiry requests otherwise we'd
++          not need to treat inquiry commands specially.
++        - Remove all vestiges of pre-2.4.X support.
++        - Close a very rare race-condition in RevA 790X controllers.
++          If both FIFOs are allocated before the sequencer's idle
++          loop is able to service the FIFO that was allocated first,
++          the sequencer could handle them out of order.  This could
++          lead to a deadlock where the FIFO attached to the SCSI bus
++          is being serviced by the sequencer, but the other FIFO is
++          required to handle a snapshot.  The sequencer now detects
++          this condition and always handles FIFOs that are not currently
++          on the bus first.
++        - Close a few race conditions by adding critical section
++          markers into the firmware.  These windows might have caused
++          issues during error recovery.
++        - Switch the complete DMA SCB list to a tailq so that multiple
++          SCBs completing with non-zero status do not interfere with
++          the state for the SCB currently being uploaded.
++        - Use the comparison of a kernel and a sequencer qfreeze
++          count to control the freezing of outgoing selections.  This
++          allows the kernel to handle non-zero SCB completions without
++          having to clear firmware critical sections.
++        - Change the completion FIFO mechanism so that all completion
++          entries are guaranteed aligned on a 64bit boundary.  This
++          avoids SCB DMA engine bugs that are triggered if the transfer
++          is interrupted (e.g. PCI disconnect) on a non-aligned boundary.
++          In some cases, these bugs would result in duplicate completions.
++        - Use one byte in the new completion entry to indicate if the
++          SCB completed without a residual or non-zero SCSI status.  This
++          avoids an extra memory reference in our interrupt handler.
++
++   2.0.5 (December 22nd, 2003)
++        - Correct a bug preventing the driver from renegotiating
++          during auto-request sense operations when a check
++          condition occurred for a zero length command.
++        - Sniff sense information returned by targets for unit
++          attention errors that may indicate that the device has
++          been changed.  If we see such status for non Domain
++          Validation related commands, start a DV scan for the
++          target.  In the past, DV would only occur for hot-plugged
++          devices if no target had been previously probed for a
++          particular ID.  This change guarantees that the DV process
++          will occur even if the user swaps devices without any
++          interveining I/O to tell us that a device has gone missing.
++          The old behavior, among other things, would fail to spin up
++          drives that were hot-plugged since the Linux mid-layer
++          will only spin-up drives on initial attach.
++        - Correct several issues in the rundown of the good status
++          FIFO during error recovery.  The typical failure scenario
++          evidenced by this defect was the loss of several commands
++          under high load when	 several queue full conditions occured
++          back to back.
++
++   2.0.4 (November 6th, 2003)
++        - Support the 2.6.0-test9 kernel
++        - Fix rare deadlock caused by using del_timer_sync from within
++          a timer handler.
++
++   2.0.3 (October 21st, 2003)
++        - On 7902A4 hardware, use the slow slew rate for transfer
++          rates slower than U320.  This behavior matches the Windows
++          driver.
++        - Fix some issues with the ahd_flush_qoutfifo() routine.
++        - Add a delay in the loop waiting for selection activity
++          to cease.  Otherwise we may exhaust the loop counter too
++          quickly on fast machines.
++        - Return to processing bad status completions through the
++          qoutfifo.  This reduces the amount of time the controller
++          is paused for these kinds of errors.
++        - Move additional common routines to the aiclib OSM library
++          to reduce code duplication.
++        - Leave removal of softcs from the global list of softcs to
++          the OSM.  This allows us to avoid holding the list_lock during
++          device destruction.
++        - Enforce a bus settle delay for bus resets that the
++          driver initiates.
++        - Fall back to basic DV for U160 devices that lack an
++          echo buffer.
++
++   2.0.2 (September 4th, 2003)
++        - Move additional common routines to the aiclib OSM library
++          to reduce code duplication.
++        - Avoid an inadvertant reset of the controller during the
++          memory mapped I/O test should the controller be left in
++          the reset state prior to driver initialization.  On some
++          systems, this extra reset resulted in a system hang due
++          to a chip access that occurred too soon after reset.
++        - Correct an endian bug in ahd_swap_with_next_hscb.  This
++          corrects strong-arm support.
++        - Reset the bus for transactions that timeout waiting for
++          the bus to go free after a disconnect or command complete
++          message.
++
++   2.0.1 (August 26th, 2003)
++        - Add magic sysrq handler that causes a card dump to be output
++          to the console for each controller.
++        - Avoid waking the mid-layer's error recovery handler during
++          timeout recovery by returning DID_ERROR instead of DID_TIMEOUT
++          for timed-out commands that have been aborted.
++        - Move additional common routines to the aiclib OSM library
++          to reduce code duplication.
++
++   2.0.0 (August 20th, 2003)
++        - Remove MMAPIO definition and allow memory mapped
++          I/O for any platform that supports PCI.
++        - Avoid clearing ENBUSFREE during single stepping to avoid
++          spurious "unexpected busfree while idle" messages.
++        - Correct deadlock in ahd_run_qoutfifo() processing.
++        - Optimize support for the 7901B.
++        - Correct a few cases where an explicit flush of pending
++          register writes was required to ensure acuracy in delays.
++        - Correct problems in manually flushing completed commands
++          on the controller.  The FIFOs are now flushed to ensure
++          that completed commands that are still draining to the
++          host are completed correctly.
++        - Correct incomplete CDB delivery detection on the 790XB.
++        - Ignore the cmd->underflow field since userland applications
++          using the legacy command pass-thru interface do not set
++          it correctly.  Honoring this field led to spurious errors
++          when users used the "scsi_unique_id" program.
++        - Perform timeout recovery within the driver instead of relying
++          on the Linux SCSI mid-layer to perform this function.  The
++          mid-layer does not know the full state of the SCSI bus and
++          is therefore prone to looping for several minutes to effect
++          recovery.  The new scheme recovers within 15 seconds of the
++          failure.
++        - Correct support for manual termination settings.
++        - Increase maximum wait time for serial eeprom writes allowing
++          writes to function correctly.
++
++   1.3.12 (August 11, 2003)
++        - Implement new error recovery thread that supercedes the existing
++          Linux SCSI error recovery code.
++        - Fix termination logic for 29320ALP.
++        - Fix SEEPROM delay to compensate for write ops taking longer.
++
++   1.3.11 (July 11, 2003)
++        - Fix several deadlock issues.
++        - Add 29320ALP and 39320B Id's.
++
++   1.3.10 (June 3rd, 2003)
++        - Align the SCB_TAG field on a 16byte boundary.  This avoids
++          SCB corruption on some PCI-33 busses.
++        - Correct non-zero luns on Rev B. hardware.
++        - Update for change in 2.5.X SCSI proc FS interface.
++        - When negotiation async via an 8bit WDTR message, send
++          an SDTR with an offset of 0 to be sure the target
++          knows we are async.  This works around a firmware defect
++          in the Quantum Atlas 10K.
++        - Implement controller susupend and resume.
++        - Clear PCI error state during driver attach so that we
++          don't disable memory mapped I/O due to a stray write
++          by some other driver probe that occurred before we
++          claimed the controller.
++
++   1.3.9 (May 22nd, 2003)
++        - Fix compiler errors.
++        - Remove S/G splitting for segments that cross a 4GB boundary.
++          This is guaranteed not to happen in Linux.
++        - Add support for scsi_report_device_reset() found in
++          2.5.X kernels.
++        - Add 7901B support.
++        - Simplify handling of the packtized lun Rev A workaround.
++        - Correct and simplify handling of the ignore wide residue
++          message.  The previous code would fail to report a residual
++          if the transaction data length was even and we received
++          an IWR message.
++
++   1.3.8 (April 29th, 2003)
++        - Fix types accessed via the command line interface code.
++        - Perform a few firmware optimizations.
++        - Fix "Unexpected PKT busfree" errors.
++        - Use a sequencer interrupt to notify the host of
++          commands with bad status.  We defer the notification
++          until there are no outstanding selections to ensure
++          that the host is interrupted for as short a time as
++          possible.
++        - Remove pre-2.2.X support.
++        - Add support for new 2.5.X interrupt API.
++        - Correct big-endian architecture support.
++
++   1.3.7 (April 16th, 2003)
++        - Use del_timer_sync() to ensure that no timeouts
++          are pending during controller shutdown.
++        - For pre-2.5.X kernels, carefully adjust our segment
++          list size to avoid SCSI malloc pool fragmentation.
++        - Cleanup channel display in our /proc output.
++        - Workaround duplicate device entries in the mid-layer
++          devlice list during add-single-device.
++
++   1.3.6 (March 28th, 2003)
++        - Correct a double free in the Domain Validation code.
++        - Correct a reference to free'ed memory during controller
++          shutdown.
++        - Reset the bus on an SE->LVD change.  This is required
++          to reset our transcievers.
++
++   1.3.5 (March 24th, 2003)
++        - Fix a few register window mode bugs.
++        - Include read streaming in the PPR flags we display in
++          diagnostics as well as /proc.
++        - Add PCI hot plug support for 2.5.X kernels.
++        - Correct default precompensation value for RevA hardware.
++        - Fix Domain Validation thread shutdown.
++        - Add a firmware workaround to make the LED blink
++          brighter during packetized operations on the H2A4.
++        - Correct /proc display of user read streaming settings.
++        - Simplify driver locking by releasing the io_request_lock
++          upon driver entry from the mid-layer.
++        - Cleanup command line parsing and move much of this code
++          to aiclib.
++
++   1.3.4 (February 28th, 2003)
++        - Correct a race condition in our error recovery handler.
++        - Allow Test Unit Ready commands to take a full 5 seconds
++          during Domain Validation.
++
++   1.3.2 (February 19th, 2003)
++        - Correct a Rev B. regression due to the GEM318
++          compatibility fix included in 1.3.1.
++          
++   1.3.1 (February 11th, 2003)
++        - Add support for the 39320A.
++        - Improve recovery for certain PCI-X errors.
++        - Fix handling of LQ/DATA/LQ/DATA for the
++          same write transaction that can occur without
++          interveining training.
++        - Correct compatibility issues with the GEM318
++          enclosure services device.
++        - Correct data corruption issue that occurred under
++          high tag depth write loads.
++        - Adapt to a change in the 2.5.X daemonize() API.
++        - Correct a "Missing case in ahd_handle_scsiint" panic.
++
++   1.3.0 (January 21st, 2003)
++        - Full regression testing for all U320 products completed.
++        - Added abort and target/lun reset error recovery handler and
++          interrupt coalessing.
++
++   1.2.0 (November 14th, 2002)
++        - Added support for Domain Validation
++        - Add support for the Hewlett-Packard version of the 39320D
++          and AIC-7902 adapters.
++        Support for previous adapters has not been fully tested and should
++        only be used at the customer's own risk.
++
++   1.1.1 (September 24th, 2002)
++        - Added support for the Linux 2.5.X kernel series
++
++   1.1.0 (September 17th, 2002)
++        - Added support for four additional SCSI products:
++          ASC-39320, ASC-29320, ASC-29320LP, AIC-7901.
++
++   1.0.0 (May 30th, 2002)
++        - Initial driver release.
++
++   2.1. Software/Hardware Features
++        - Support for the SPI-4 "Ultra320" standard:
++          - 320MB/s transfer rates
++          - Packetized SCSI Protocol at 160MB/s and 320MB/s
++          - Quick Arbitration Selection (QAS)
++          - Retained Training Information (Rev B. ASIC only)
++        - Interrupt Coalessing
++        - Initiator Mode (target mode not currently 
++          supported)
++        - Support for the PCI-X standard up to 133MHz
++        - Support for the PCI v2.2 standard
++        - Domain Validation
++
++   2.2. Operating System Support:
++        - Redhat Linux 7.2, 7.3, 8.0, Advanced Server 2.1
++        - SuSE Linux 7.3, 8.0, 8.1, Enterprise Server 7
++        - only Intel and AMD x86 supported at this time
++        - >4GB memory configurations supported.
++
++     Refer to the User's Guide for more details on this.
++
++3. Command Line Options
++
++        WARNING: ALTERING OR ADDING THESE DRIVER PARAMETERS
++                 INCORRECTLY CAN RENDER YOUR SYSTEM INOPERABLE.
++                 USE THEM WITH CAUTION. 
++
++   Edit the file "modules.conf" in the directory /etc and add/edit a
++   line containing 'options aic79xx aic79xx=[command[,command...]]' where
++   'command' is one or more of the following:
++   -----------------------------------------------------------------
++              Option: verbose
++          Definition: enable additional informative messages during
++                      driver operation.
++     Possible Values: This option is a flag
++       Default Value: disabled
++   -----------------------------------------------------------------
++              Option: debug:[value]
++          Definition: Enables various levels of debugging information
++                      The bit definitions for the debugging mask can
++                      be found in drivers/scsi/aic7xxx/aic79xx.h under
++                      the "Debug" heading.
++     Possible Values: 0x0000 = no debugging, 0xffff = full debugging
++       Default Value: 0x0000
++   -----------------------------------------------------------------
++              Option: no_reset
++          Definition: Do not reset the bus during the initial probe
++                      phase
++     Possible Values: This option is a flag
++       Default Value: disabled
++   -----------------------------------------------------------------
++              Option: extended
++          Definition: Force extended translation on the controller
++     Possible Values: This option is a flag
++       Default Value: disabled
++   -----------------------------------------------------------------
++              Option: periodic_otag
++          Definition: Send an ordered tag periodically to prevent
++                      tag starvation.  Needed for some older devices
++     Possible Values: This option is a flag
++       Default Value: disabled
++   -----------------------------------------------------------------
++              Option: reverse_scan
++          Definition: Probe the scsi bus in reverse order, starting
++                      with target 15
++     Possible Values: This option is a flag
++       Default Value: disabled
++   -----------------------------------------------------------------
++              Option: global_tag_depth
++          Definition: Global tag depth for all targets on all busses.
++                      This option sets the default tag depth which
++                      may be selectively overridden vi the tag_info
++                      option.
++     Possible Values: 1 - 253
++       Default Value: 32
++   -----------------------------------------------------------------
++              Option: tag_info:{{value[,value...]}[,{value[,value...]}...]}
++          Definition: Set the per-target tagged queue depth on a
++                      per controller basis.  Both controllers and targets
++                      may be ommitted indicating that they should retain
++                      the default tag depth.
++            Examples: tag_info:{{16,32,32,64,8,8,,32,32,32,32,32,32,32,32,32}
++                        On Controller 0
++                          specifies a tag depth of 16 for target 0
++                          specifies a tag depth of 64 for target 3
++                          specifies a tag depth of 8 for targets 4 and 5
++                          leaves target 6 at the default
++                          specifies a tag depth of 32 for targets 1,2,7-15
++                        All other targets retain the default depth.
++
++                      tag_info:{{},{32,,32}}
++                        On Controller 1
++                          specifies a tag depth of 32 for targets 0 and 2
++                        All other targets retain the default depth.
++                        
++     Possible Values: 1 - 253
++       Default Value: 32
++   -----------------------------------------------------------------
++              Option: rd_strm: {rd_strm_bitmask[,rd_strm_bitmask...]}
++          Definition: Enable read streaming on a per target basis.
++                      The rd_strm_bitmask is a 16 bit hex value in which
++                      each bit represents a target.  Setting the target's
++                      bit to '1' enables read streaming for that
++                      target.  Controllers may be ommitted indicating that
++                      they should retain the default read streaming setting.
++             Example: rd_strm:{0x0041}
++                        On Controller 0
++                          enables read streaming for targets 0 and 6.
++                          disables read streaming for targets 1-5,7-15.
++                        All other targets retain the default read
++                        streaming setting.
++             Example: rd_strm:{0x0023,,0xFFFF}
++                        On Controller 0
++                          enables read streaming for targets 1,2, and 5.
++                          disables read streaming for targets 3,4,6-15.
++                        On Controller 2
++                          enables read streaming for all targets.
++                        All other targets retain the default read
++                        streaming setting.
++                      
++     Possible Values: 0x0000 - 0xffff
++       Default Value: 0x0000
++   -----------------------------------------------------------------
++              Option: dv: {value[,value...]}
++          Definition: Set Domain Validation Policy on a per-controller basis.
++                      Controllers may be ommitted indicating that
++                      they should retain the default read streaming setting.
++             Example: dv:{-1,0,,1,1,0}
++                        On Controller 0 leave DV at its default setting.
++                        On Controller 1 disable DV.
++                        Skip configuration on Controller 2.
++                        On Controllers 3 and 4 enable DV.
++                        On Controller 5 disable DV.
++
++     Possible Values: < 0 Use setting from serial EEPROM.
++                      0 Disable DV
++                      > 0 Enable DV
++       Default Value: DV Serial EEPROM configuration setting.
++   -----------------------------------------------------------------
++              Option: seltime:[value]
++          Definition: Specifies the selection timeout value
++     Possible Values: 0 = 256ms, 1 = 128ms, 2 = 64ms, 3 = 32ms
++       Default Value: 0
++   -----------------------------------------------------------------
++
++   *** The following three options should only be changed at ***
++   *** the direction of a technical support representative.  ***
++
++   -----------------------------------------------------------------
++              Option: precomp: {value[,value...]}
++          Definition: Set IO Cell precompensation value on a per-controller
++                      basis.
++                      Controllers may be ommitted indicating that
++                      they should retain the default precompensation setting.
++             Example: precomp:{0x1}
++                        On Controller 0 set precompensation to 1.
++             Example: precomp:{1,,7}
++                        On Controller 0 set precompensation to 1.
++                        On Controller 2 set precompensation to 8.
++                      
++     Possible Values: 0 - 7
++       Default Value: Varies based on chip revision
++   -----------------------------------------------------------------
++              Option: slewrate: {value[,value...]}
++          Definition: Set IO Cell slew rate on a per-controller basis.
++                      Controllers may be ommitted indicating that
++                      they should retain the default slew rate setting.
++             Example: slewrate:{0x1}
++                        On Controller 0 set slew rate to 1.
++             Example: slewrate :{1,,8}
++                        On Controller 0 set slew rate to 1.
++                        On Controller 2 set slew rate to 8.
++                      
++     Possible Values: 0 - 15
++       Default Value: Varies based on chip revision
++   -----------------------------------------------------------------
++              Option: amplitude: {value[,value...]}
++          Definition: Set IO Cell signal amplitude on a per-controller basis.
++                      Controllers may be ommitted indicating that
++                      they should retain the default read streaming setting.
++             Example: amplitude:{0x1}
++                        On Controller 0 set amplitude to 1.
++             Example: amplitude :{1,,7}
++                        On Controller 0 set amplitude to 1.
++                        On Controller 2 set amplitude to 7.
++                      
++     Possible Values: 1 - 7
++       Default Value: Varies based on chip revision
++   -----------------------------------------------------------------
++
++   Example: 'options aic79xx aic79xx=verbose,rd_strm:{{0x0041}}'
++        enables verbose output in the driver and turns read streaming on
++        for targets 0 and 6 of Controller 0.
++
++4. Additional Notes
++
++   4.1. Known/Unresolved or FYI Issues
++
++        * Under SuSE Linux Enterprise 7, the driver may fail to operate
++          correctly due to a problem with PCI interrupt routing in the
++          Linux kernel.  Please contact SuSE for an updated Linux
++          kernel.
++
++   4.2. Third-Party Compatibility Issues
++
++        * Adaptec only supports Ultra320 hard drives running
++          the latest firmware available. Please check with
++          your hard drive manufacturer to ensure you have the
++          latest version.
++
++   4.3. Operating System or Technology Limitations
++        
++        * PCI Hot Plug is untested and may cause the operating system 
++          to stop responding.
++        * Luns that are not numbered contiguously starting with 0 might not
++          be automatically probed during system startup.  This is a limitation
++          of the OS.  Please contact your Linux vendor for instructions on
++          manually probing non-contiguous luns.
++        * Using the Driver Update Disk version of this package during OS
++          installation under RedHat might result in two versions of this
++          driver being installed into the system module directory.  This
++          might cause problems with the /sbin/mkinitrd program and/or
++          other RPM packages that try to install system modules.  The best
++          way to correct this once the system is running is to install
++          the latest RPM package version of this driver, available from
++          http://www.adaptec.com.
++
++
++5. Adaptec Customer Support
++
++   A Technical Support Identification (TSID) Number is required for 
++   Adaptec technical support.
++    - The 12-digit TSID can be found on the white barcode-type label
++      included inside the box with your product.  The TSID helps us 
++      provide more efficient service by accurately identifying your 
++      product and support status.
++
++   Support Options
++    - Search the Adaptec Support Knowledgebase (ASK) at
++      http://ask.adaptec.com for articles, troubleshooting tips, and
++      frequently asked questions about your product.
++    - For support via Email, submit your question to Adaptec's 
++      Technical Support Specialists at http://ask.adaptec.com/.
++     
++   North America
++    - Visit our Web site at http://www.adaptec.com/.
++    - For information about Adaptec's support options, call
++      408-957-2550, 24 hours a day, 7 days a week.
++    - To speak with a Technical Support Specialist,
++      * For hardware products, call 408-934-7274,
++        Monday to Friday, 3:00 am to 5:00 pm, PDT.
++      * For RAID and Fibre Channel products, call 321-207-2000,
++        Monday to Friday, 3:00 am to 5:00 pm, PDT.
++      To expedite your service, have your computer with you.
++    - To order Adaptec products, including accessories and cables,
++      call 408-957-7274.  To order cables online go to
++      http://www.adaptec.com/buy-cables/.
++
++   Europe
++    - Visit our Web site at http://www.adaptec-europe.com/.
++    - To speak with a Technical Support Specialist, call, or email,
++      * German:  +49 89 4366 5522, Monday-Friday, 9:00-17:00 CET,
++        http://ask-de.adaptec.com/.
++      * French:  +49 89 4366 5533, Monday-Friday, 9:00-17:00 CET,
++	http://ask-fr.adaptec.com/.
++      * English: +49 89 4366 5544, Monday-Friday, 9:00-17:00 GMT,
++	http://ask.adaptec.com/.
++    - You can order Adaptec cables online at
++      http://www.adaptec.com/buy-cables/.
++
++   Japan
++    - Visit our web site at http://www.adaptec.co.jp/.
++    - To speak with a Technical Support Specialist, call 
++      +81 3 5308 6120, Monday-Friday, 9:00 a.m. to 12:00 p.m.,
++      1:00 p.m. to 6:00 p.m.
++
++-------------------------------------------------------------------
++/*
++ * Copyright (c) 2003 Adaptec Inc. 691 S. Milpitas Blvd., Milpitas CA 95035 USA.
++ * All rights reserved.
++ *
++ * You are permitted to redistribute, use and modify this README file in whole
++ * or in part in conjunction with redistribution of software governed by the
++ * General Public License, provided that the following conditions are met:
++ * 1. Redistributions of README file must retain the above copyright
++ *    notice, this list of conditions, and the following disclaimer,
++ *    without modification.
++ * 2. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ * 3. Modifications or new contributions must be attributed in a copyright
++ *    notice identifying the author ("Contributor") and added below the
++ *    original copyright notice. The copyright notice is for purposes of
++ *    identifying contributors and should not be deemed as permission to alter
++ *    the permissions given by Adaptec.
++ *
++ * THIS README FILE IS PROVIDED BY ADAPTEC AND CONTRIBUTORS ``AS IS'' AND
++ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, ANY
++ * WARRANTIES OF NON-INFRINGEMENT OR THE IMPLIED WARRANTIES OF MERCHANTABILITY
++ * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
++ * ADAPTEC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
++ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS README
++ * FILE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
+diff --git a/drivers/scsi/aic7xxx/README.aic7xxx b/drivers/scsi/aic7xxx/README.aic7xxx
+new file mode 100644
+--- /dev/null
++++ b/drivers/scsi/aic7xxx/README.aic7xxx
+@@ -0,0 +1,530 @@
++====================================================================
++=    Adaptec Aic7xxx Fast -> Ultra160 Family Manager Set v6.3.11   =
++=                            README for                            =
++=                     The Linux Operating System                   =
++====================================================================
++
++The following information is available in this file:
++
++  1. Supported Hardware
++  2. Version History
++  3. Command Line Options
++  4. Contacting Adaptec
++
++1. Supported Hardware
++
++   The following Adaptec SCSI Chips and Host Adapters are supported by
++   the aic7xxx driver. 
++
++   Chip    MIPS  Host Bus  MaxSync  MaxWidth  SCBs  Notes
++   ---------------------------------------------------------------
++   aic7770  10    EISA/VL   10MHz    16Bit      4   1
++   aic7850  10    PCI/32    10MHz    8Bit       3
++   aic7855  10    PCI/32    10MHz    8Bit       3
++   aic7856  10    PCI/32    10MHz    8Bit       3
++   aic7859  10    PCI/32    20MHz    8Bit       3
++   aic7860  10    PCI/32    20MHz    8Bit       3
++   aic7870  10    PCI/32    10MHz    16Bit      16
++   aic7880  10    PCI/32    20MHz    16Bit      16
++   aic7890  20    PCI/32    40MHz    16Bit      16      3 4 5 6 7 8
++   aic7891  20    PCI/64    40MHz    16Bit      16      3 4 5 6 7 8
++   aic7892  20   PCI/64-66  80MHz    16Bit      16      3 4 5 6 7 8
++   aic7895  15    PCI/32    20MHz    16Bit      16    2 3 4 5
++   aic7895C 15    PCI/32    20MHz    16Bit      16    2 3 4 5     8
++   aic7896  20    PCI/32    40MHz    16Bit      16    2 3 4 5 6 7 8
++   aic7897  20    PCI/64    40MHz    16Bit      16    2 3 4 5 6 7 8
++   aic7899  20   PCI/64-66  80MHz    16Bit      16    2 3 4 5 6 7 8
++
++   1.   Multiplexed Twin Channel Device - One controller servicing two
++        busses.
++   2.   Multi-function Twin Channel Device - Two controllers on one chip.
++   3.   Command Channel Secondary DMA Engine - Allows scatter gather list
++        and SCB prefetch.
++   4.   64 Byte SCB Support - Allows disconnected, unttagged request table
++        for all possible target/lun combinations.
++   5.   Block Move Instruction Support - Doubles the speed of certain
++        sequencer operations.
++   6.   `Bayonet' style Scatter Gather Engine - Improves S/G prefetch
++        performance.
++   7.   Queuing Registers - Allows queuing of new transactions without
++        pausing the sequencer.
++   8.   Multiple Target IDs - Allows the controller to respond to selection
++        as a target on multiple SCSI IDs.
++
++   Controller      Chip   Host-Bus    Int-Connectors  Ext-Connectors  Notes
++   --------------------------------------------------------------------------
++   AHA-274X[A]    aic7770   EISA         SE-50M         SE-HD50F
++   AHA-274X[A]W   aic7770   EISA         SE-HD68F       SE-HD68F
++                                         SE-50M
++   AHA-274X[A]T   aic7770   EISA       2 X SE-50M       SE-HD50F
++   AHA-2842       aic7770    VL          SE-50M         SE-HD50F
++   AHA-2940AU     aic7860   PCI/32       SE-50M         SE-HD50F
++   AVA-2902I      aic7860   PCI/32       SE-50M
++   AVA-2902E      aic7860   PCI/32       SE-50M
++   AVA-2906       aic7856   PCI/32       SE-50M         SE-DB25F
++   APC-7850       aic7850   PCI/32       SE-50M                       1
++   AVA-2940       aic7860   PCI/32       SE-50M
++   AHA-2920B      aic7860   PCI/32       SE-50M
++   AHA-2930B      aic7860   PCI/32       SE-50M
++   AHA-2920C      aic7856   PCI/32       SE-50M         SE-HD50F
++   AHA-2930C      aic7860   PCI/32       SE-50M
++   AHA-2930C      aic7860   PCI/32       SE-50M
++   AHA-2910C      aic7860   PCI/32       SE-50M
++   AHA-2915C      aic7860   PCI/32       SE-50M
++   AHA-2940AU/CN  aic7860   PCI/32       SE-50M         SE-HD50F
++   AHA-2944W      aic7870   PCI/32     HVD-HD68F        HVD-HD68F
++                                        HVD-50M
++   AHA-3940W      aic7870   PCI/32     2 X SE-HD68F     SE-HD68F        2
++   AHA-2940UW     aic7880   PCI/32       SE-HD68F
++                                         SE-50M         SE-HD68F
++   AHA-2940U      aic7880   PCI/32       SE-50M         SE-HD50F
++   AHA-2940D      aic7880   PCI/32
++   aHA-2940 A/T   aic7880   PCI/32
++   AHA-2940D A/T  aic7880   PCI/32
++   AHA-3940UW     aic7880   PCI/32     2 X SE-HD68F     SE-HD68F          3
++   AHA-3940UWD    aic7880   PCI/32     2 X SE-HD68F   2 X SE-VHD68F       3
++   AHA-3940U      aic7880   PCI/32     2 X SE-50M       SE-HD50F          3
++   AHA-2944UW     aic7880   PCI/32      HVD-HD68F       HVD-HD68F
++                                         HVD-50M
++   AHA-3944UWD    aic7880   PCI/32     2 X HVD-HD68F  2 X HVD-VHD68F      3
++   AHA-4944UW     aic7880   PCI/32
++   AHA-2930UW     aic7880   PCI/32
++   AHA-2940UW Pro aic7880   PCI/32      SE-HD68F        SE-HD68F            4
++                                         SE-50M
++   AHA-2940UW/CN  aic7880   PCI/32
++   AHA-2940UDual  aic7895   PCI/32
++   AHA-2940UWDual aic7895   PCI/32
++   AHA-3940UWD    aic7895   PCI/32
++   AHA-3940AUW    aic7895   PCI/32
++   AHA-3940AUWD   aic7895   PCI/32
++   AHA-3940AU     aic7895   PCI/32
++   AHA-3944AUWD   aic7895   PCI/32     2 X HVD-HD68F  2 X HVD-VHD68F
++   AHA-2940U2B    aic7890   PCI/32      LVD-HD68F       LVD-HD68F
++   AHA-2940U2 OEM aic7891   PCI/64
++   AHA-2940U2W    aic7890   PCI/32      LVD-HD68F       LVD-HD68F
++                                        SE-HD68F 
++                                         SE-50M
++   AHA-2950U2B    aic7891   PCI/64      LVD-HD68F       LVD-HD68F
++   AHA-2930U2     aic7890   PCI/32      LVD-HD68F       SE-HD50F
++                                         SE-50M 
++   AHA-3950U2B    aic7897   PCI/64
++   AHA-3950U2D    aic7897   PCI/64
++   AHA-29160      aic7892   PCI/64-66
++   AHA-29160 CPQ  aic7892   PCI/64-66
++   AHA-29160N     aic7892   PCI/32      LVD-HD68F       SE-HD50F
++                                         SE-50M
++   AHA-29160LP    aic7892   PCI/64-66
++   AHA-19160      aic7892   PCI/64-66
++   AHA-29150LP    aic7892   PCI/64-66
++   AHA-29130LP    aic7892   PCI/64-66
++   AHA-3960D      aic7899   PCI/64-66  2 X LVD-HD68F  2 X LVD-VHD68F
++                                         LVD-50M
++   AHA-3960D CPQ  aic7899   PCI/64-66  2 X LVD-HD68F  2 X LVD-VHD68F
++                                         LVD-50M
++   AHA-39160      aic7899   PCI/64-66  2 X LVD-HD68F  2 X LVD-VHD68F
++                                         LVD-50M
++
++   1. No BIOS support
++   2. DEC21050 PCI-PCI bridge with multiple controller chips on secondary bus
++   3. DEC2115X PCI-PCI bridge with multiple controller chips on secondary bus
++   4. All three SCSI connectors may be used simultaneously without
++      SCSI "stub" effects.
++
++2. Version History
++
++   6.3.11 (December 23, 2004)
++	- Fix wrongly calling scsi_adjust_queue_depth() when
++	  the scsi device has no request_queue.
++	- Adding proper PCI ID tables to support
++          hotplugging.
++	- Fix a compilation issue after scsi_sleep() became
++          obsolete, in stead of the new msleep() and
++          ssleep() functions.
++	- Edit Adaptec Customer Support info.
++	- "Warnings are errors" is now selectable by the
++          kbuild system -- make it so here.
++	- Fix undefined symbol when compiling aic79xx for 2.6.
++	  Also regenerate the aic7xxx reg and seq files.
++	- Fix a double free.  If "ahc_alloc()" fails, it
++          frees the "name" argument passed.
++        - As requested by linux-scsi: Add a flag which explicitly
++          forbids/allows the compilation of the firmware across
++          the whole build system.
++	- When doing domain validation, we send commands
++          which do not have a struct request.  In this case
++          we cannot just call scsi_populate_tag_msg(), since
++          it dereferences it blindly and oopses the kernel.
++          Now we call scsi_populate_tag_msg() only if the
++          SCSI command has a struct request associated with
++          it.
++
++   6.3.10 (July 22, 2004)
++        - Fix a compilation issue due to the changed location and name
++          of the "hosts.h" file.  Now it resides as <scsi/scsi_host.h>
++        - Add support for 16 byte CDBs.
++
++   6.3.9 (May 13th, 2004)
++        - Flag driver threads with PF_FREEZE to support software suspend.
++
++   6.3.8 (April 9th, 2004)
++        - Return "command timeout" status instead of "selection timeout
++	  status" to the SCSI mid-layer in response to selection timeouts.
++	  While the latter may seem more correct, the mid-layer will not
++	  offline devices suffering from persistent selection timeouts.
++	  This leads to extremely long recovery times for devices that
++	  go missing.  Returning command timeout status causes the mid-layer
++	  to enter recovery and eventually offline persistently missing
++	  devices.
++
++   6.3.7 (March 29th, 2004)
++        - Abort all pending transactions on a target in response to
++          a selection timeout.  This greatly increases the speed with
++          which we recover when a device "goes missing".
++
++   6.3.6 (February 24th, 2004)
++        - Implement delay on I/O after delivery of a Target Reset.
++        - Correct deregistration of sysrq handler when multiple
++          controllers are detected.
++        - Correct timeout recovery issues found while debugging
++          active/active failover on an external RAID controller.
++
++   6.3.5 (February 22nd, 2004)
++        - Force a renegotiation on all inqury commands so that
++          the negotiated transfer parameters are correct even
++          if the device has been externally reset since our last
++          command.  Devices are not allowed to report unit attention
++          conditions in response to inquiry requests otherwise we'd
++          not need to treat inquiry commands specially.
++        - Remove all vestiges of pre-2.4.X support.
++        - Move all lock and DMA API support to the aiclib.
++
++   6.3.4 (December 22nd, 2003)
++        - Provide a better description string for the 2915/30LP.
++        - Sniff sense information returned by targets for unit
++          attention errors that may indicate that the device has
++          been changed.  If we see such status for non Domain
++          Validation related commands, start a DV scan for the
++          target.  In the past, DV would only occur for hot-plugged
++          devices if no target had been previously probed for a
++          particular ID.  This change guarantees that the DV process
++          will occur even if the user swaps devices without any
++          interveining I/O to tell us that a device has gone missing.
++          The old behavior, among other things, would fail to spin up
++          drives that were hot-plugged since the Linux mid-layer
++          will only spin-up drives on initial attach.
++
++   6.3.3 (November 6th, 2003)
++        - Support the 2.6.0-test9 kernel
++        - Fix rare deadlock caused by using del_timer_sync from within
++          a timer handler.
++
++   6.3.2 (October 28th, 2003)
++        - Enforce a bus settle delay for bus resets that the
++          driver initiates.
++        - Fall back to basic DV for U160 devices that lack an
++          echo buffer.
++        - Correctly detect that left over BIOS data has not
++          been initialized when the CHPRST status bit is set
++          during driver initialization.
++
++   6.3.1 (October 21st, 2003)
++        - Fix a compiler error when building with only EISA or PCI
++          support compiled into the kernel.
++        - Add chained dependencies to both the driver and aicasm Makefiles
++          to avoid problems with parallel builds.
++        - Move additional common routines to the aiclib OSM library
++          to reduce code duplication.
++        - Fix a bug in the testing of the AHC_TMODE_WIDEODD_BUG that
++          could cause target mode operations to hang.
++        - Leave removal of softcs from the global list of softcs to
++          the OSM.  This allows us to avoid holding the list_lock during
++          device destruction.
++
++   6.3.0 (September 8th, 2003)
++        - Move additional common routines to the aiclib OSM library
++          to reduce code duplication.
++        - Bump minor number to reflect change in error recovery strategy.
++
++   6.2.38 (August 31st, 2003)
++        - Avoid an inadvertant reset of the controller during the
++          memory mapped I/O test should the controller be left in
++          the reset state prior to driver initialization.  On some
++          systems, this extra reset resulted in a system hang due
++          to a chip access that occurred too soon after reset.
++        - Move additional common routines to the aiclib OSM library
++          to reduce code duplication.
++        - Add magic sysrq handler that causes a card dump to be output
++          to the console for each controller.
++
++   6.2.37 (August 12th, 2003)
++        - Perform timeout recovery within the driver instead of relying
++          on the Linux SCSI mid-layer to perform this function.  The
++          mid-layer does not know the full state of the SCSI bus and
++          is therefore prone to looping for several minutes to effect
++          recovery.  The new scheme recovers within 15 seconds of the
++          failure.
++        - Support writing 93c56/66 SEEPROM on newer cards.
++	- Avoid clearing ENBUSFREE during single stepping to avoid
++          spurious "unexpected busfree while idle" messages.
++        - Enable the use of the "Auto-Access-Pause" feature on the
++          aic7880 and aic7870 chips.  It was disabled due to an
++          oversight.  Using this feature drastically reduces command
++          delivery latency.
++
++   6.2.36 (June 3rd, 2003)
++        - Correct code that disables PCI parity error checking.
++        - Correct and simplify handling of the ignore wide residue
++          message.  The previous code would fail to report a residual
++          if the transaction data length was even and we received
++          an IWR message.
++        - Add support for the 2.5.X EISA framework.
++        - Update for change in 2.5.X SCSI proc FS interface.
++        - Correct Domain Validation command-line option parsing.
++        - When negotiation async via an 8bit WDTR message, send
++          an SDTR with an offset of 0 to be sure the target
++          knows we are async.  This works around a firmware defect
++          in the Quantum Atlas 10K.
++        - Clear PCI error state during driver attach so that we
++          don't disable memory mapped I/O due to a stray write
++          by some other driver probe that occurred before we
++          claimed the controller.
++
++   6.2.35 (May 14th, 2003)
++        - Fix a few GCC 3.3 compiler warnings.
++        - Correct operation on EISA Twin Channel controller.
++        - Add support for 2.5.X's scsi_report_device_reset().
++
++   6.2.34 (May 5th, 2003)
++        - Fix locking regression instroduced in 6.2.29 that
++          could cuase a lock order reversal between the io_request_lock
++          and our per-softc lock.  This was only possible on RH9,
++          SuSE, and kernel.org 2.4.X kernels.
++
++   6.2.33 (April 30th, 2003)
++        - Dynamically disable PCI parity error reporting after
++          10 errors are reported to the user.  These errors are
++          the result of some other device issuing PCI transactions
++          with bad parity.  Once the user has been informed of the
++          problem, continuing to report the errors just degrades
++          our performance.
++
++   6.2.32 (March 28th, 2003)
++        - Dynamically sized S/G lists to avoid SCSI malloc
++          pool fragmentation and SCSI mid-layer deadlock.
++
++   6.2.28 (January 20th, 2003)
++        - Domain Validation Fixes
++        - Add ability to disable PCI parity error checking.
++        - Enhanced Memory Mapped I/O probe
++
++   6.2.20 (November 7th, 2002)
++        - Added Domain Validation.
++
++3. Command Line Options
++
++        WARNING: ALTERING OR ADDING THESE DRIVER PARAMETERS
++                 INCORRECTLY CAN RENDER YOUR SYSTEM INOPERABLE.
++                 USE THEM WITH CAUTION. 
++
++   Edit the file "modules.conf" in the directory /etc and add/edit a
++   line containing 'options aic7xxx aic7xxx=[command[,command...]]' where
++   'command' is one or more of the following:
++   -----------------------------------------------------------------
++              Option: verbose
++          Definition: enable additional informative messages during
++                      driver operation.
++     Possible Values: This option is a flag
++       Default Value: disabled
++   -----------------------------------------------------------------
++              Option: debug:[value]
++          Definition: Enables various levels of debugging information
++     Possible Values: 0x0000 = no debugging, 0xffff = full debugging
++       Default Value: 0x0000
++   -----------------------------------------------------------------
++              Option: no_probe
++              Option: probe_eisa_vl
++          Definition: Do not probe for EISA/VLB controllers.
++                      This is a toggle.  If the driver is compiled
++                      to not probe EISA/VLB controllers by default,
++                      specifying "no_probe" will enable this probing.
++                      If the driver is compiled to probe EISA/VLB
++                      controllers by default, specifying "no_probe"
++                      will disable this probing.
++     Possible Values: This option is a toggle
++       Default Value: EISA/VLB probing is disabled by default.
++   -----------------------------------------------------------------
++              Option: pci_parity
++          Definition: Toggles the detection of PCI parity errors.
++                      On many motherboards with VIA chipsets,
++                      PCI parity is not generated correctly on the
++                      PCI bus.  It is impossible for the hardware to
++                      differentiate between these "spurious" parity
++                      errors and real parity errors.  The symptom of
++                      this problem is a stream of the message:
++    "scsi0: Data Parity Error Detected during address or write data phase"
++                      output by the driver.
++     Possible Values: This option is a toggle
++       Default Value: PCI Parity Error reporting is disabled
++   -----------------------------------------------------------------
++              Option: no_reset
++          Definition: Do not reset the bus during the initial probe
++                      phase
++     Possible Values: This option is a flag
++       Default Value: disabled
++   -----------------------------------------------------------------
++              Option: extended
++          Definition: Force extended translation on the controller
++     Possible Values: This option is a flag
++       Default Value: disabled
++   -----------------------------------------------------------------
++              Option: periodic_otag
++          Definition: Send an ordered tag periodically to prevent
++                      tag starvation.  Needed for some older devices
++     Possible Values: This option is a flag
++       Default Value: disabled
++   -----------------------------------------------------------------
++              Option: reverse_scan
++          Definition: Probe the scsi bus in reverse order, starting
++                      with target 15
++     Possible Values: This option is a flag
++       Default Value: disabled
++   -----------------------------------------------------------------
++              Option: global_tag_depth:[value]
++          Definition: Global tag depth for all targets on all busses.
++                      This option sets the default tag depth which
++                      may be selectively overridden vi the tag_info
++                      option.
++     Possible Values: 1 - 253
++       Default Value: 32
++   -----------------------------------------------------------------
++              Option: tag_info:{{value[,value...]}[,{value[,value...]}...]}
++          Definition: Set the per-target tagged queue depth on a
++                      per controller basis.  Both controllers and targets
++                      may be ommitted indicating that they should retain
++                      the default tag depth.
++            Examples: tag_info:{{16,32,32,64,8,8,,32,32,32,32,32,32,32,32,32}
++                        On Controller 0
++                          specifies a tag depth of 16 for target 0
++                          specifies a tag depth of 64 for target 3
++                          specifies a tag depth of 8 for targets 4 and 5
++                          leaves target 6 at the default
++                          specifies a tag depth of 32 for targets 1,2,7-15
++                        All other targets retain the default depth.
++
++                      tag_info:{{},{32,,32}}
++                        On Controller 1
++                          specifies a tag depth of 32 for targets 0 and 2
++                        All other targets retain the default depth.
++                        
++     Possible Values: 1 - 253
++       Default Value: 32
++   -----------------------------------------------------------------
++              Option: seltime:[value]
++          Definition: Specifies the selection timeout value
++     Possible Values: 0 = 256ms, 1 = 128ms, 2 = 64ms, 3 = 32ms
++       Default Value: 0
++   -----------------------------------------------------------------
++              Option: dv: {value[,value...]} 
++          Definition: Set Domain Validation Policy on a per-controller basis.
++                      Controllers may be ommitted indicating that
++                      they should retain the default read streaming setting.
++             Example: dv:{-1,0,,1,1,0}
++                        On Controller 0 leave DV at its default setting.
++                        On Controller 1 disable DV.
++                        Skip configuration on Controller 2.
++                        On Controllers 3 and 4 enable DV.
++                        On Controller 5 disable DV.
++
++     Possible Values: < 0 Use setting from serial EEPROM.
++                      0 Disable DV
++                      > 0 Enable DV
++
++       Default Value: SCSI-Select setting on controllers with a SCSI Select
++                      option for DV.  Otherwise, on for controllers supporting
++                      U160 speeds and off for all other controller types.
++   -----------------------------------------------------------------
++
++   Example:
++   options aic7xxx aic7xxx=verbose,no_probe,tag_info:{{},{,,10}},seltime:1
++        enables verbose logging, Disable EISA/VLB probing,
++        and set tag depth on Controller 1/Target 2 to 10 tags.
++
++3. Adaptec Customer Support
++
++   A Technical Support Identification (TSID) Number is required for 
++   Adaptec technical support.
++    - The 12-digit TSID can be found on the white barcode-type label
++      included inside the box with your product.  The TSID helps us 
++      provide more efficient service by accurately identifying your 
++      product and support status.
++
++   Support Options
++    - Search the Adaptec Support Knowledgebase (ASK) at
++      http://ask.adaptec.com for articles, troubleshooting tips, and
++      frequently asked questions about your product.
++    - For support via Email, submit your question to Adaptec's 
++      Technical Support Specialists at http://ask.adaptec.com/.
++     
++   North America
++    - Visit our Web site at http://www.adaptec.com/.
++    - For information about Adaptec's support options, call
++      408-957-2550, 24 hours a day, 7 days a week.
++    - To speak with a Technical Support Specialist,
++      * For hardware products, call 408-934-7274,
++        Monday to Friday, 3:00 am to 5:00 pm, PDT.
++      * For RAID and Fibre Channel products, call 321-207-2000,
++        Monday to Friday, 3:00 am to 5:00 pm, PDT.
++      To expedite your service, have your computer with you.
++    - To order Adaptec products, including accessories and cables,
++      call 408-957-7274.  To order cables online go to
++      http://www.adaptec.com/buy-cables/.
++
++   Europe
++    - Visit our Web site at http://www.adaptec-europe.com/.
++    - To speak with a Technical Support Specialist, call, or email,
++      * German:  +49 89 4366 5522, Monday-Friday, 9:00-17:00 CET,
++        http://ask-de.adaptec.com/.
++      * French:  +49 89 4366 5533, Monday-Friday, 9:00-17:00 CET,
++	http://ask-fr.adaptec.com/.
++      * English: +49 89 4366 5544, Monday-Friday, 9:00-17:00 GMT,
++	http://ask.adaptec.com/.
++    - You can order Adaptec cables online at
++      http://www.adaptec.com/buy-cables/.
++
++   Japan
++    - Visit our web site at http://www.adaptec.co.jp/.
++    - To speak with a Technical Support Specialist, call 
++      +81 3 5308 6120, Monday-Friday, 9:00 a.m. to 12:00 p.m.,
++      1:00 p.m. to 6:00 p.m.
++
++-------------------------------------------------------------------
++/*
++ * Copyright (c) 2003 Adaptec Inc. 691 S. Milpitas Blvd., Milpitas CA 95035 USA.
++ * All rights reserved.
++ *
++ * You are permitted to redistribute, use and modify this README file in whole
++ * or in part in conjunction with redistribution of software governed by the
++ * General Public License, provided that the following conditions are met:
++ * 1. Redistributions of README file must retain the above copyright
++ *    notice, this list of conditions, and the following disclaimer,
++ *    without modification.
++ * 2. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ * 3. Modifications or new contributions must be attributed in a copyright
++ *    notice identifying the author ("Contributor") and added below the
++ *    original copyright notice. The copyright notice is for purposes of
++ *    identifying contributors and should not be deemed as permission to alter
++ *    the permissions given by Adaptec.
++ *
++ * THIS README FILE IS PROVIDED BY ADAPTEC AND CONTRIBUTORS ``AS IS'' AND
++ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, ANY
++ * WARRANTIES OF NON-INFRINGEMENT OR THE IMPLIED WARRANTIES OF MERCHANTABILITY
++ * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
++ * ADAPTEC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
++ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS README
++ * FILE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
 diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
 --- a/drivers/scsi/aic7xxx/aic79xx_core.c
 +++ b/drivers/scsi/aic7xxx/aic79xx_core.c
@@ -388,2094 +1322,58 @@ diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_
   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   * POSSIBILITY OF SUCH DAMAGES.
   *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.c#247 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.c#249 $
+- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.c#249 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.c#250 $
   */
  
  #ifdef __linux__
-@@ -197,7 +197,8 @@ static int		ahd_search_scb_list(struct a
- 					    char channel, int lun, u_int tag,
- 					    role_t role, uint32_t status,
- 					    ahd_search_action action,
--					    u_int *list_head, u_int tid);
-+					    u_int *list_head, u_int *list_tail,
-+					    u_int tid);
- static void		ahd_stitch_tid_list(struct ahd_softc *ahd,
- 					    u_int tid_prev, u_int tid_cur,
- 					    u_int tid_next);
-@@ -1660,7 +1661,8 @@ ahd_handle_scsiint(struct ahd_softc *ahd
- 		 * so just clear the error.
- 		 */
- 		ahd_outb(ahd, CLRLQIINT1, CLRLQICRCI_NLQ);
--	} else if ((status & BUSFREE) != 0) {
-+	} else if ((status & BUSFREE) != 0
-+		|| (lqistat1 & LQOBUSFREE) != 0) {
- 		u_int lqostat1;
- 		int   restart;
- 		int   clear_fifo;
-@@ -2025,10 +2027,6 @@ ahd_handle_pkt_busfree(struct ahd_softc 
- 		u_int waiting_t;
- 		u_int next;
- 
--		if ((busfreetime & BUSFREE_LQO) == 0)
--			printf("%s: Warning, BUSFREE time is 0x%x.  "
--			       "Expected BUSFREE_LQO.\n",
--			       ahd_name(ahd), busfreetime);
- 		/*
- 		 * The LQO manager detected an unexpected busfree
- 		 * either:
-@@ -2251,8 +2249,14 @@ ahd_handle_nonpkt_busfree(struct ahd_sof
- 			struct ahd_tmode_tstate *tstate;
- 
- 			/*
--			 * PPR Rejected.  Try non-ppr negotiation
--			 * and retry command.
-+			 * PPR Rejected.
-+			 *
-+			 * If the previous negotiation was packetized,
-+			 * this could be because the device has been
-+			 * reset without our knowledge.  Force our
-+			 * current negotiation to async and retry the
-+			 * negotiation.  Otherwise retry the command
-+			 * with non-ppr negotiation.
- 			 */
- #ifdef AHD_DEBUG
- 			if ((ahd_debug & AHD_SHOW_MESSAGES) != 0)
-@@ -2261,11 +2265,34 @@ ahd_handle_nonpkt_busfree(struct ahd_sof
- 			tinfo = ahd_fetch_transinfo(ahd, devinfo.channel,
- 						    devinfo.our_scsiid,
- 						    devinfo.target, &tstate);
--			tinfo->curr.transport_version = 2;
--			tinfo->goal.transport_version = 2;
--			tinfo->goal.ppr_options = 0;
--			ahd_qinfifo_requeue_tail(ahd, scb);
--			printerror = 0;
-+			if ((tinfo->curr.ppr_options & MSG_EXT_PPR_IU_REQ)!=0) {
-+				ahd_set_width(ahd, &devinfo,
-+					      MSG_EXT_WDTR_BUS_8_BIT,
-+					      AHD_TRANS_CUR,
-+					      /*paused*/TRUE);
-+				ahd_set_syncrate(ahd, &devinfo,
-+						/*period*/0, /*offset*/0,
-+						/*ppr_options*/0,
-+						AHD_TRANS_CUR,
-+						/*paused*/TRUE);
-+				/*
-+				 * The expect PPR busfree handler below
-+				 * will effect the retry and necessary
-+				 * abort.
-+				 */
-+			} else {
-+				tinfo->curr.transport_version = 2;
-+				tinfo->goal.transport_version = 2;
-+				tinfo->goal.ppr_options = 0;
-+				/*
-+				 * Remove any SCBs in the waiting for selection
-+				 * queue that may also be for this target so
-+				 * that command ordering is preserved.
-+				 */
-+				ahd_freeze_devq(ahd, scb);
-+				ahd_qinfifo_requeue_tail(ahd, scb);
-+				printerror = 0;
-+			}
- 		} else if (ahd_sent_msg(ahd, AHDMSG_EXT, MSG_EXT_WDTR, FALSE)
- 			&& ppr_busfree == 0) {
- 			/*
-@@ -2280,6 +2307,12 @@ ahd_handle_nonpkt_busfree(struct ahd_sof
- 				      MSG_EXT_WDTR_BUS_8_BIT,
- 				      AHD_TRANS_CUR|AHD_TRANS_GOAL,
- 				      /*paused*/TRUE);
-+			/*
-+			 * Remove any SCBs in the waiting for selection
-+			 * queue that may also be for this target so that
-+			 * command ordering is preserved.
-+			 */
-+			ahd_freeze_devq(ahd, scb);
- 			ahd_qinfifo_requeue_tail(ahd, scb);
- 			printerror = 0;
- 		} else if (ahd_sent_msg(ahd, AHDMSG_EXT, MSG_EXT_SDTR, FALSE)
-@@ -2297,6 +2330,12 @@ ahd_handle_nonpkt_busfree(struct ahd_sof
- 					/*ppr_options*/0,
- 					AHD_TRANS_CUR|AHD_TRANS_GOAL,
- 					/*paused*/TRUE);
-+			/*
-+			 * Remove any SCBs in the waiting for selection
-+			 * queue that may also be for this target so that
-+			 * command ordering is preserved.
-+			 */
-+			ahd_freeze_devq(ahd, scb);
- 			ahd_qinfifo_requeue_tail(ahd, scb);
- 			printerror = 0;
- 		} else if ((ahd->msg_flags & MSG_FLAG_EXPECT_IDE_BUSFREE) != 0
-@@ -2369,14 +2408,14 @@ ahd_handle_nonpkt_busfree(struct ahd_sof
- 			 */
- 			printf("%s: ", ahd_name(ahd));
- 		}
--		if (lastphase != P_BUSFREE)
--			ahd_force_renegotiation(ahd, &devinfo);
- 		printf("Unexpected busfree %s, %d SCBs aborted, "
- 		       "PRGMCNT == 0x%x\n",
- 		       ahd_lookup_phase_entry(lastphase)->phasemsg,
- 		       aborted,
- 		       ahd_inw(ahd, PRGMCNT));
- 		ahd_dump_card_state(ahd);
-+		if (lastphase != P_BUSFREE)
-+			ahd_force_renegotiation(ahd, &devinfo);
- 	}
- 	/* Always restart the sequencer. */
- 	return (1);
-@@ -3315,7 +3354,6 @@ ahd_update_pending_scbs(struct ahd_softc
- {
- 	struct		scb *pending_scb;
- 	int		pending_scb_count;
--	u_int		scb_tag;
- 	int		paused;
- 	u_int		saved_scbptr;
- 	ahd_mode_state	saved_modes;
-@@ -3333,7 +3371,6 @@ ahd_update_pending_scbs(struct ahd_softc
- 	pending_scb_count = 0;
- 	LIST_FOREACH(pending_scb, &ahd->pending_scbs, pending_links) {
- 		struct ahd_devinfo devinfo;
--		struct hardware_scb *pending_hscb;
- 		struct ahd_initiator_tinfo *tinfo;
- 		struct ahd_tmode_tstate *tstate;
- 
-@@ -3341,11 +3378,10 @@ ahd_update_pending_scbs(struct ahd_softc
- 		tinfo = ahd_fetch_transinfo(ahd, devinfo.channel,
- 					    devinfo.our_scsiid,
- 					    devinfo.target, &tstate);
--		pending_hscb = pending_scb->hscb;
- 		if ((tstate->auto_negotiate & devinfo.target_mask) == 0
- 		 && (pending_scb->flags & SCB_AUTO_NEGOTIATE) != 0) {
- 			pending_scb->flags &= ~SCB_AUTO_NEGOTIATE;
--			pending_hscb->control &= ~MK_MESSAGE;
-+			pending_scb->hscb->control &= ~MK_MESSAGE;
- 		}
- 		ahd_sync_scb(ahd, pending_scb,
- 			     BUS_DMASYNC_PREREAD|BUS_DMASYNC_PREWRITE);
-@@ -3377,18 +3413,15 @@ ahd_update_pending_scbs(struct ahd_softc
- 		ahd_outb(ahd, SCSISEQ0, ahd_inb(ahd, SCSISEQ0) & ~ENSELO);
- 	saved_scbptr = ahd_get_scbptr(ahd);
- 	/* Ensure that the hscbs down on the card match the new information */
--	for (scb_tag = 0; scb_tag < ahd->scb_data.maxhscbs; scb_tag++) {
--		struct	hardware_scb *pending_hscb;
-+	LIST_FOREACH(pending_scb, &ahd->pending_scbs, pending_links) {
-+		u_int	scb_tag;
- 		u_int	control;
- 
--		pending_scb = ahd_lookup_scb(ahd, scb_tag);
--		if (pending_scb == NULL)
--			continue;
-+		scb_tag = SCB_GET_TAG(pending_scb);
- 		ahd_set_scbptr(ahd, scb_tag);
--		pending_hscb = pending_scb->hscb;
- 		control = ahd_inb_scbram(ahd, SCB_CONTROL);
- 		control &= ~MK_MESSAGE;
--		control |= pending_hscb->control & MK_MESSAGE;
-+		control |= pending_scb->hscb->control & MK_MESSAGE;
- 		ahd_outb(ahd, SCB_CONTROL, control);
- 	}
- 	ahd_set_scbptr(ahd, saved_scbptr);
-@@ -6500,13 +6533,14 @@ ahd_chip_init(struct ahd_softc *ahd)
- 			      | ENLQIOVERI_LQ|ENLQIOVERI_NLQ);
- 	ahd_outb(ahd, LQOMODE0, ENLQOATNLQ|ENLQOATNPKT|ENLQOTCRC);
- 	/*
--	 * An interrupt from LQOBUSFREE is made redundant by the
--	 * BUSFREE interrupt.  We choose to have the sequencer catch
--	 * LQOPHCHGINPKT errors manually for the command phase at the
--	 * start of a packetized selection case.
--	ahd_outb(ahd, LQOMODE1, ENLQOBUSFREE|ENLQOPHACHGINPKT);
-+	 * We choose to have the sequencer catch LQOPHCHGINPKT errors
-+	 * manually for the command phase at the start of a packetized
-+	 * selection case.  ENLQOBUSFREE should be made redundant by
-+	 * the BUSFREE interrupt, but it seems that some LQOBUSFREE
-+	 * events fail to assert the BUSFREE interrupt so we must
-+	 * also enable LQOBUSFREE interrupts.
- 	 */
--	ahd_outb(ahd, LQOMODE1, 0);
-+	ahd_outb(ahd, LQOMODE1, ENLQOBUSFREE);
+@@ -3332,6 +3332,15 @@ ahd_update_neg_table(struct ahd_softc *a
+ 		con_opts |= WIDEXFER;
  
  	/*
- 	 * Setup sequencer interrupt handlers.
-@@ -6617,6 +6651,8 @@ ahd_chip_init(struct ahd_softc *ahd)
- 	/* We don't have any waiting selections */
- 	ahd_outw(ahd, WAITING_TID_HEAD, SCB_LIST_NULL);
- 	ahd_outw(ahd, WAITING_TID_TAIL, SCB_LIST_NULL);
-+	ahd_outw(ahd, MK_MESSAGE_SCB, SCB_LIST_NULL);
-+	ahd_outw(ahd, MK_MESSAGE_SCSIID, 0xFF);
- 	for (i = 0; i < AHD_NUM_TARGETS; i++)
- 		ahd_outw(ahd, WAITING_SCB_TAILS + (2 * i), SCB_LIST_NULL);
- 
-@@ -6704,6 +6740,18 @@ ahd_chip_init(struct ahd_softc *ahd)
- 
- 	ahd_loadseq(ahd);
- 	ahd_set_modes(ahd, AHD_MODE_SCSI, AHD_MODE_SCSI);
-+
++	 * Slow down our CRC interval to be
++	 * compatible with packetized U320 devices
++	 * that can't handle a CRC at full speed
++	 */
 +	if (ahd->features & AHD_AIC79XXB_SLOWCRC) {
-+		u_int negodat3 = ahd_inb(ahd, NEGCONOPTS);
-+
-+		negodat3 |= ENSLOWCRC;
-+		ahd_outb(ahd, NEGCONOPTS, negodat3);
-+		negodat3 = ahd_inb(ahd, NEGCONOPTS);
-+		if (!(negodat3 & ENSLOWCRC))
-+			printf("aic79xx: failed to set the SLOWCRC bit\n");
-+		else
-+			printf("aic79xx: SLOWCRC bit set\n");
++		con_opts |= ENSLOWCRC;
 +	}
- }
- 
- /*
-@@ -7260,12 +7308,28 @@ ahd_reset_cmds_pending(struct ahd_softc 
- 	ahd->flags &= ~AHD_UPDATE_PEND_CMDS;
- }
- 
-+void
-+ahd_done_with_status(struct ahd_softc *ahd, struct scb *scb, uint32_t status)
-+{
-+	cam_status ostat;
-+	cam_status cstat;
 +
-+	ostat = ahd_get_transaction_status(scb);
-+	if (ostat == CAM_REQ_INPROG)
-+		ahd_set_transaction_status(scb, status);
-+	cstat = ahd_get_transaction_status(scb);
-+	if (cstat != CAM_REQ_CMP)
-+		ahd_freeze_scb(scb);
-+	ahd_done(ahd, scb);
-+}
-+
- int
- ahd_search_qinfifo(struct ahd_softc *ahd, int target, char channel,
- 		   int lun, u_int tag, role_t role, uint32_t status,
- 		   ahd_search_action action)
- {
- 	struct scb	*scb;
-+	struct scb	*mk_msg_scb;
- 	struct scb	*prev_scb;
- 	ahd_mode_state	 saved_modes;
- 	u_int		 qinstart;
-@@ -7274,6 +7338,7 @@ ahd_search_qinfifo(struct ahd_softc *ahd
- 	u_int		 tid_next;
- 	u_int		 tid_prev;
- 	u_int		 scbid;
-+	u_int		 seq_flags2;
- 	u_int		 savedscbptr;
- 	uint32_t	 busaddr;
- 	int		 found;
-@@ -7329,23 +7394,10 @@ ahd_search_qinfifo(struct ahd_softc *ahd
- 			found++;
- 			switch (action) {
- 			case SEARCH_COMPLETE:
--			{
--				cam_status ostat;
--				cam_status cstat;
--
--				ostat = ahd_get_transaction_status(scb);
--				if (ostat == CAM_REQ_INPROG)
--					ahd_set_transaction_status(scb,
--								   status);
--				cstat = ahd_get_transaction_status(scb);
--				if (cstat != CAM_REQ_CMP)
--					ahd_freeze_scb(scb);
- 				if ((scb->flags & SCB_ACTIVE) == 0)
- 					printf("Inactive SCB in qinfifo\n");
--				ahd_done(ahd, scb);
--
-+				ahd_done_with_status(ahd, scb, status);
- 				/* FALLTHROUGH */
--			}
- 			case SEARCH_REMOVE:
- 				break;
- 			case SEARCH_PRINT:
-@@ -7375,21 +7427,24 @@ ahd_search_qinfifo(struct ahd_softc *ahd
- 	 * looking for matches.
- 	 */
- 	ahd_set_modes(ahd, AHD_MODE_SCSI, AHD_MODE_SCSI);
-+	seq_flags2 = ahd_inb(ahd, SEQ_FLAGS2);
-+	if ((seq_flags2 & PENDING_MK_MESSAGE) != 0) {
-+		scbid = ahd_inw(ahd, MK_MESSAGE_SCB);
-+		mk_msg_scb = ahd_lookup_scb(ahd, scbid);
-+	} else
-+		mk_msg_scb = NULL;
- 	savedscbptr = ahd_get_scbptr(ahd);
- 	tid_next = ahd_inw(ahd, WAITING_TID_HEAD);
- 	tid_prev = SCB_LIST_NULL;
- 	targets = 0;
- 	for (scbid = tid_next; !SCBID_IS_NULL(scbid); scbid = tid_next) {
- 		u_int tid_head;
-+		u_int tid_tail;
- 
--		/*
--		 * We limit based on the number of SCBs since
--		 * MK_MESSAGE SCBs are not in the per-tid lists.
--		 */
- 		targets++;
--		if (targets > AHD_SCB_MAX) {
-+		if (targets > AHD_NUM_TARGETS)
- 			panic("TID LIST LOOP");
--		}
-+
- 		if (scbid >= ahd->scb_data.numscbs) {
- 			printf("%s: Waiting TID List inconsistency. "
- 			       "SCB index == 0x%x, yet numscbs == 0x%x.",
-@@ -7419,8 +7474,71 @@ ahd_search_qinfifo(struct ahd_softc *ahd
- 		tid_head = scbid;
- 		found += ahd_search_scb_list(ahd, target, channel,
- 					     lun, tag, role, status,
--					     action, &tid_head,
-+					     action, &tid_head, &tid_tail,
- 					     SCB_GET_TARGET(ahd, scb));
-+		/*
-+		 * Check any MK_MESSAGE SCB that is still waiting to
-+		 * enter this target's waiting for selection queue.
-+		 */
-+		if (mk_msg_scb != NULL
-+		 && ahd_match_scb(ahd, mk_msg_scb, target, channel,
-+				  lun, tag, role)) {
-+
-+			/*
-+			 * We found an scb that needs to be acted on.
-+			 */
-+			found++;
-+			switch (action) {
-+			case SEARCH_COMPLETE:
-+				if ((mk_msg_scb->flags & SCB_ACTIVE) == 0)
-+					printf("Inactive SCB pending MK_MSG\n");
-+				ahd_done_with_status(ahd, mk_msg_scb, status);
-+				/* FALLTHROUGH */
-+			case SEARCH_REMOVE:
-+			{
-+				u_int tail_offset;
-+
-+				printf("Removing MK_MSG scb\n");
-+
-+				/*
-+				 * Reset our tail to the tail of the
-+				 * main per-target list.
-+				 */
-+				tail_offset = WAITING_SCB_TAILS
-+				    + (2 * SCB_GET_TARGET(ahd, mk_msg_scb));
-+				ahd_outw(ahd, tail_offset, tid_tail);
-+
-+				seq_flags2 &= ~PENDING_MK_MESSAGE;
-+				ahd_outb(ahd, SEQ_FLAGS2, seq_flags2);
-+				ahd_outw(ahd, CMDS_PENDING,
-+					 ahd_inw(ahd, CMDS_PENDING)-1);
-+				mk_msg_scb = NULL;
-+				break;
-+			}
-+			case SEARCH_PRINT:
-+				printf(" 0x%x", SCB_GET_TAG(scb));
-+				/* FALLTHROUGH */
-+			case SEARCH_COUNT:
-+				break;
-+			}
-+		}
-+
-+		if (mk_msg_scb != NULL
-+		 && SCBID_IS_NULL(tid_head)
-+		 && ahd_match_scb(ahd, scb, target, channel, CAM_LUN_WILDCARD,
-+				  SCB_LIST_NULL, ROLE_UNKNOWN)) {
-+
-+			/*
-+			 * When removing the last SCB for a target
-+			 * queue with a pending MK_MESSAGE scb, we
-+			 * must queue the MK_MESSAGE scb.
-+			 */
-+			printf("Queueing mk_msg_scb\n");
-+			tid_head = ahd_inw(ahd, MK_MESSAGE_SCB);
-+			seq_flags2 &= ~PENDING_MK_MESSAGE;
-+			ahd_outb(ahd, SEQ_FLAGS2, seq_flags2);
-+			mk_msg_scb = NULL;
-+		}
- 		if (tid_head != scbid)
- 			ahd_stitch_tid_list(ahd, tid_prev, tid_head, tid_next);
- 		if (!SCBID_IS_NULL(tid_head))
-@@ -7428,6 +7546,8 @@ ahd_search_qinfifo(struct ahd_softc *ahd
- 		if (action == SEARCH_PRINT)
- 			printf(")\n");
- 	}
-+
-+	/* Restore saved state. */
- 	ahd_set_scbptr(ahd, savedscbptr);
- 	ahd_restore_modes(ahd, saved_modes);
- 	return (found);
-@@ -7436,7 +7556,8 @@ ahd_search_qinfifo(struct ahd_softc *ahd
- static int
- ahd_search_scb_list(struct ahd_softc *ahd, int target, char channel,
- 		    int lun, u_int tag, role_t role, uint32_t status,
--		    ahd_search_action action, u_int *list_head, u_int tid)
-+		    ahd_search_action action, u_int *list_head, 
-+		    u_int *list_tail, u_int tid)
- {
- 	struct	scb *scb;
- 	u_int	scbid;
-@@ -7448,6 +7569,7 @@ ahd_search_scb_list(struct ahd_softc *ah
- 	found = 0;
- 	prev = SCB_LIST_NULL;
- 	next = *list_head;
-+	*list_tail = SCB_LIST_NULL;
- 	for (scbid = next; !SCBID_IS_NULL(scbid); scbid = next) {
- 		if (scbid >= ahd->scb_data.numscbs) {
- 			printf("%s:SCB List inconsistency. "
-@@ -7463,6 +7585,7 @@ ahd_search_scb_list(struct ahd_softc *ah
- 			panic("Waiting List traversal\n");
- 		}
- 		ahd_set_scbptr(ahd, scbid);
-+		*list_tail = scbid;
- 		next = ahd_inw_scbram(ahd, SCB_NEXT);
- 		if (ahd_match_scb(ahd, scb, target, channel,
- 				  lun, SCB_LIST_NULL, role) == 0) {
-@@ -7472,24 +7595,14 @@ ahd_search_scb_list(struct ahd_softc *ah
- 		found++;
- 		switch (action) {
- 		case SEARCH_COMPLETE:
--		{
--			cam_status ostat;
--			cam_status cstat;
--
--			ostat = ahd_get_transaction_status(scb);
--			if (ostat == CAM_REQ_INPROG)
--				ahd_set_transaction_status(scb, status);
--			cstat = ahd_get_transaction_status(scb);
--			if (cstat != CAM_REQ_CMP)
--				ahd_freeze_scb(scb);
- 			if ((scb->flags & SCB_ACTIVE) == 0)
- 				printf("Inactive SCB in Waiting List\n");
--			ahd_done(ahd, scb);
-+			ahd_done_with_status(ahd, scb, status);
- 			/* FALLTHROUGH */
--		}
- 		case SEARCH_REMOVE:
- 			ahd_rem_wscb(ahd, scbid, prev, next, tid);
--			if (prev == SCB_LIST_NULL)
-+			*list_tail = prev;
-+			if (SCBID_IS_NULL(prev))
- 				*list_head = next;
- 			break;
- 		case SEARCH_PRINT:
-@@ -7558,14 +7671,17 @@ ahd_rem_wscb(struct ahd_softc *ahd, u_in
- 	}
- 
- 	/*
--	 * SCBs that had MK_MESSAGE set in them will not
--	 * be queued to the per-target lists, so don't
--	 * blindly clear the tail pointer.
-+	 * SCBs that have MK_MESSAGE set in them may
-+	 * cause the tail pointer to be updated without
-+	 * setting the next pointer of the previous tail.
-+	 * Only clear the tail if the removed SCB was
-+	 * the tail.
- 	 */
- 	tail_offset = WAITING_SCB_TAILS + (2 * tid);
- 	if (SCBID_IS_NULL(next)
- 	 && ahd_inw(ahd, tail_offset) == scbid)
- 		ahd_outw(ahd, tail_offset, prev);
-+
- 	ahd_add_scb_to_free_list(ahd, scbid);
- 	return (next);
- }
-@@ -8793,6 +8909,9 @@ ahd_dump_card_state(struct ahd_softc *ah
- 	 * Mode independent registers.
- 	 */
- 	cur_col = 0;
-+	ahd_intstat_print(ahd_inb(ahd, INTSTAT), &cur_col, 50);
-+	ahd_seloid_print(ahd_inb(ahd, SELOID), &cur_col, 50);
-+	ahd_selid_print(ahd_inb(ahd, SELID), &cur_col, 50);
- 	ahd_hs_mailbox_print(ahd_inb(ahd, LOCAL_HS_MAILBOX), &cur_col, 50);
- 	ahd_intctl_print(ahd_inb(ahd, INTCTL), &cur_col, 50);
- 	ahd_seqintstat_print(ahd_inb(ahd, SEQINTSTAT), &cur_col, 50);
-@@ -8808,6 +8927,12 @@ ahd_dump_card_state(struct ahd_softc *ah
- 	ahd_seqintctl_print(ahd_inb(ahd, SEQINTCTL), &cur_col, 50);
- 	ahd_seq_flags_print(ahd_inb(ahd, SEQ_FLAGS), &cur_col, 50);
- 	ahd_seq_flags2_print(ahd_inb(ahd, SEQ_FLAGS2), &cur_col, 50);
-+	ahd_qfreeze_count_print(ahd_inw(ahd, QFREEZE_COUNT), &cur_col, 50);
-+	ahd_kernel_qfreeze_count_print(ahd_inw(ahd, KERNEL_QFREEZE_COUNT),
-+				       &cur_col, 50);
-+	ahd_mk_message_scb_print(ahd_inw(ahd, MK_MESSAGE_SCB), &cur_col, 50);
-+	ahd_mk_message_scsiid_print(ahd_inb(ahd, MK_MESSAGE_SCSIID),
-+				    &cur_col, 50);
- 	ahd_sstat0_print(ahd_inb(ahd, SSTAT0), &cur_col, 50);
- 	ahd_sstat1_print(ahd_inb(ahd, SSTAT1), &cur_col, 50);
- 	ahd_sstat2_print(ahd_inb(ahd, SSTAT2), &cur_col, 50);
-@@ -8915,7 +9040,7 @@ ahd_dump_card_state(struct ahd_softc *ah
- 
- 		ahd_set_modes(ahd, AHD_MODE_DFF0 + i, AHD_MODE_DFF0 + i);
- 		fifo_scbptr = ahd_get_scbptr(ahd);
--		printf("\n%s: FIFO%d %s, LONGJMP == 0x%x, SCB 0x%x\n",
-+		printf("\n\n%s: FIFO%d %s, LONGJMP == 0x%x, SCB 0x%x\n",
- 		       ahd_name(ahd), i,
- 		       (dffstat & (FIFO0FREE << i)) ? "Free" : "Active",
- 		       ahd_inw(ahd, LONGJMP_ADDR), fifo_scbptr);
-@@ -8970,6 +9095,9 @@ ahd_dump_card_state(struct ahd_softc *ah
- 	printf("%s: OS_SPACE_CNT = 0x%x MAXCMDCNT = 0x%x\n",
- 	       ahd_name(ahd), ahd_inb(ahd, OS_SPACE_CNT),
- 	       ahd_inb(ahd, MAXCMDCNT));
-+	printf("%s: SAVED_SCSIID = 0x%x SAVED_LUN = 0x%x\n",
-+	       ahd_name(ahd), ahd_inb(ahd, SAVED_SCSIID),
-+	       ahd_inb(ahd, SAVED_LUN));
- 	ahd_simode0_print(ahd_inb(ahd, SIMODE0), &cur_col, 50);
- 	printf("\n");
- 	ahd_set_modes(ahd, AHD_MODE_CCHAN, AHD_MODE_CCHAN);
-diff --git a/drivers/scsi/aic7xxx/aic79xx_inline.h b/drivers/scsi/aic7xxx/aic79xx_inline.h
---- a/drivers/scsi/aic7xxx/aic79xx_inline.h
-+++ b/drivers/scsi/aic7xxx/aic79xx_inline.h
-@@ -37,7 +37,7 @@
++	/*
+ 	 * During packetized transfers, the target will
+ 	 * give us the oportunity to send command packets
+ 	 * without us asserting attention.
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.h b/drivers/scsi/aic7xxx/aic79xx_osm.h
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.h
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.h
+@@ -36,7 +36,7 @@
   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   * POSSIBILITY OF SUCH DAMAGES.
   *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx_inline.h#58 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx_inline.h#59 $
+- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.h#137 $
++ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.h#166 $
   *
-  * $FreeBSD$
   */
-@@ -804,9 +804,10 @@ ahd_queue_scb(struct ahd_softc *ahd, str
- 		uint64_t host_dataptr;
+ #ifndef _AIC79XX_LINUX_H_
+diff --git a/drivers/scsi/aic7xxx/aicasm/Makefile b/drivers/scsi/aic7xxx/aicasm/Makefile
+--- a/drivers/scsi/aic7xxx/aicasm/Makefile
++++ b/drivers/scsi/aic7xxx/aicasm/Makefile
+@@ -34,14 +34,10 @@ $(PROG):  ${GENHDRS} $(SRCS)
+ 	$(AICASM_CC) $(AICASM_CFLAGS) $(SRCS) -o $(PROG) $(LIBS)
  
- 		host_dataptr = ahd_le64toh(scb->hscb->dataptr);
--		printf("%s: Queueing SCB 0x%x bus addr 0x%x - 0x%x%x/0x%x\n",
-+		printf("%s: Queueing SCB %d:0x%x bus addr 0x%x - 0x%x%x/0x%x\n",
- 		       ahd_name(ahd),
--		       SCB_GET_TAG(scb), ahd_le32toh(scb->hscb->hscb_busaddr),
-+		       SCB_GET_TAG(scb), scb->hscb->scsiid,
-+		       ahd_le32toh(scb->hscb->hscb_busaddr),
- 		       (u_int)((host_dataptr >> 32) & 0xFFFFFFFF),
- 		       (u_int)(host_dataptr & 0xFFFFFFFF),
- 		       ahd_le32toh(scb->hscb->datacnt));
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -314,12 +314,27 @@ static uint32_t aic79xx_seltime;
-  */
- uint32_t aic79xx_periodic_otag;
- 
-+/* Some storage boxes are using an LSI chip which has a bug making it
-+ * impossible to use aic79xx Rev B chip in 320 speeds.  The following
-+ * storage boxes have been reported to be buggy:
-+ * EonStor 3U 16-Bay: U16U-G3A3
-+ * EonStor 2U 12-Bay: U12U-G3A3
-+ * SentinelRAID: 2500F R5 / R6
-+ * SentinelRAID: 2500F R1
-+ * SentinelRAID: 2500F/1500F
-+ * SentinelRAID: 150F
-+ * 
-+ * To get around this LSI bug, you can set your board to 160 mode
-+ * or you can enable the SLOWCRC bit.
-+ */
-+uint32_t aic79xx_slowcrc;
-+
- /*
-  * Module information and settable options.
-  */
- static char *aic79xx = NULL;
- 
--MODULE_AUTHOR("Maintainer: Justin T. Gibbs <gibbs@scsiguy.com>");
-+MODULE_AUTHOR("Maintainer: Luben Tuikov <luben_tuikov@adaptec.com>");
- MODULE_DESCRIPTION("Adaptec Aic790X U320 SCSI Host Bus Adapter driver");
- MODULE_LICENSE("Dual BSD/GPL");
- MODULE_VERSION(AIC79XX_DRIVER_VERSION);
-@@ -343,6 +358,7 @@ MODULE_PARM_DESC(aic79xx,
- "	amplitude:<int>		Set the signal amplitude (0-7).\n"
- "	seltime:<int>		Selection Timeout:\n"
- "				(0/256ms,1/128ms,2/64ms,3/32ms)\n"
-+"	slowcrc			Turn on the SLOWCRC bit (Rev B only)\n"		 
- "\n"
- "	Sample /etc/modprobe.conf line:\n"
- "		Enable verbose logging\n"
-@@ -1003,6 +1019,7 @@ aic79xx_setup(char *s)
- 		{ "slewrate", NULL },
- 		{ "precomp", NULL },
- 		{ "amplitude", NULL },
-+		{ "slowcrc", &aic79xx_slowcrc },
- 	};
- 
- 	end = strchr(s, '\0');
-@@ -1495,10 +1512,11 @@ ahd_linux_run_command(struct ahd_softc *
- 	}
- 
- 	if ((dev->flags & (AHD_DEV_Q_TAGGED|AHD_DEV_Q_BASIC)) != 0) {
--		int	msg_bytes;
-+		int	msg_bytes = 0;
- 		uint8_t tag_msgs[2];
- 
--		msg_bytes = scsi_populate_tag_msg(cmd, tag_msgs);
-+		if (cmd->request)
-+			msg_bytes = scsi_populate_tag_msg(cmd, tag_msgs);
- 		if (msg_bytes && tag_msgs[0] != MSG_SIMPLE_TASK) {
- 			hscb->control |= tag_msgs[0];
- 			if (tag_msgs[0] == MSG_ORDERED_TASK)
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
---- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
-@@ -220,10 +220,10 @@ ahd_linux_pci_reserve_io_regions(struct 
- 	*base2 = pci_resource_start(ahd->dev_softc, 3);
- 	if (*base == 0 || *base2 == 0)
- 		return (ENOMEM);
--	if (request_region(*base, 256, "aic79xx") == 0)
-+	if (request_region(*base, 256, "aic79xx") == NULL)
- 		return (ENOMEM);
--	if (request_region(*base2, 256, "aic79xx") == 0) {
--		release_region(*base2, 256);
-+	if (request_region(*base2, 256, "aic79xx") == NULL) {
-+		release_region(*base, 256);
- 		return (ENOMEM);
- 	}
- 	return (0);
-@@ -254,7 +254,7 @@ ahd_linux_pci_reserve_mem_region(struct 
- 		if (request_mem_region(start, 0x1000, "aic79xx") == 0)
- 			error = ENOMEM;
- 		if (error == 0) {
--			*maddr = ioremap_nocache(base_page, base_offset + 256);
-+			*maddr = ioremap_nocache(base_page, base_offset + 512);
- 			if (*maddr == NULL) {
- 				error = ENOMEM;
- 				release_mem_region(start, 0x1000);
-diff --git a/drivers/scsi/aic7xxx/aic79xx_pci.c b/drivers/scsi/aic7xxx/aic79xx_pci.c
---- a/drivers/scsi/aic7xxx/aic79xx_pci.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_pci.c
-@@ -38,7 +38,7 @@
-  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  * POSSIBILITY OF SUCH DAMAGES.
-  *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx_pci.c#89 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx_pci.c#92 $
-  */
- 
- #ifdef __linux__
-@@ -950,12 +950,19 @@ ahd_aic790X_setup(struct ahd_softc *ahd)
- 		if ((ahd->flags & AHD_HP_BOARD) == 0)
- 			AHD_SET_SLEWRATE(ahd, AHD_SLEWRATE_DEF_REVA);
- 	} else {
-+		/* This is revision B and newer. */
-+		extern uint32_t aic79xx_slowcrc;
- 		u_int devconfig1;
- 
- 		ahd->features |= AHD_RTI|AHD_NEW_IOCELL_OPTS
--			      |  AHD_NEW_DFCNTRL_OPTS|AHD_FAST_CDB_DELIVERY;
-+			      |  AHD_NEW_DFCNTRL_OPTS|AHD_FAST_CDB_DELIVERY
-+			      |  AHD_BUSFREEREV_BUG;
- 		ahd->bugs |= AHD_LQOOVERRUN_BUG|AHD_EARLY_REQ_BUG;
- 
-+		/* If the user requested the the SLOWCRC bit to be set. */
-+		if (aic79xx_slowcrc)
-+			ahd->features |= AHD_AIC79XXB_SLOWCRC;
-+
- 		/*
- 		 * Some issues have been resolved in the 7901B.
- 		 */
-diff --git a/drivers/scsi/aic7xxx/aic79xx_reg.h_shipped b/drivers/scsi/aic7xxx/aic79xx_reg.h_shipped
---- a/drivers/scsi/aic7xxx/aic79xx_reg.h_shipped
-+++ b/drivers/scsi/aic7xxx/aic79xx_reg.h_shipped
-@@ -2,8 +2,8 @@
-  * DO NOT EDIT - This file is automatically generated
-  *		 from the following source files:
-  *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#119 $
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#76 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#120 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#77 $
-  */
- typedef int (ahd_reg_print_t)(u_int, u_int *, u_int);
- typedef struct ahd_reg_parse_entry {
-@@ -2204,6 +2204,20 @@ ahd_reg_print_t ahd_cmdsize_table_print;
- #endif
- 
- #if AIC_DEBUG_REGISTERS
-+ahd_reg_print_t ahd_mk_message_scb_print;
-+#else
-+#define ahd_mk_message_scb_print(regvalue, cur_col, wrap) \
-+    ahd_print_register(NULL, 0, "MK_MESSAGE_SCB", 0x160, regvalue, cur_col, wrap)
-+#endif
-+
-+#if AIC_DEBUG_REGISTERS
-+ahd_reg_print_t ahd_mk_message_scsiid_print;
-+#else
-+#define ahd_mk_message_scsiid_print(regvalue, cur_col, wrap) \
-+    ahd_print_register(NULL, 0, "MK_MESSAGE_SCSIID", 0x162, regvalue, cur_col, wrap)
-+#endif
-+
-+#if AIC_DEBUG_REGISTERS
- ahd_reg_print_t ahd_scb_base_print;
- #else
- #define ahd_scb_base_print(regvalue, cur_col, wrap) \
-@@ -3638,6 +3652,7 @@ ahd_reg_print_t ahd_scb_disconnected_lis
- #define	SEQ_FLAGS2      		0x14d
- #define		SELECTOUT_QFROZEN	0x04
- #define		TARGET_MSG_PENDING	0x02
-+#define		PENDING_MK_MESSAGE	0x01
- 
- #define	ALLOCFIFO_SCBPTR		0x14e
- 
-@@ -3655,6 +3670,10 @@ ahd_reg_print_t ahd_scb_disconnected_lis
- 
- #define	CMDSIZE_TABLE   		0x158
- 
-+#define	MK_MESSAGE_SCB  		0x160
-+
-+#define	MK_MESSAGE_SCSIID		0x162
-+
- #define	SCB_BASE        		0x180
- 
- #define	SCB_RESIDUAL_DATACNT		0x180
-@@ -3800,5 +3819,5 @@ ahd_reg_print_t ahd_scb_disconnected_lis
- 
- 
- /* Exported Labels */
--#define	LABEL_seq_isr 	0x285
--#define	LABEL_timer_isr	0x281
-+#define	LABEL_seq_isr 	0x28f
-+#define	LABEL_timer_isr	0x28b
-diff --git a/drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped b/drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped
---- a/drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped
-+++ b/drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped
-@@ -2,8 +2,8 @@
-  * DO NOT EDIT - This file is automatically generated
-  *		 from the following source files:
-  *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#118 $
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#75 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#120 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#77 $
-  */
- 
- #include "aic79xx_osm.h"
-@@ -3382,6 +3382,7 @@ ahd_initiator_tag_print(u_int regvalue, 
- }
- 
- static ahd_reg_parse_entry_t SEQ_FLAGS2_parse_table[] = {
-+	{ "PENDING_MK_MESSAGE",	0x01, 0x01 },
- 	{ "TARGET_MSG_PENDING",	0x02, 0x02 },
- 	{ "SELECTOUT_QFROZEN",	0x04, 0x04 }
- };
-@@ -3389,7 +3390,7 @@ static ahd_reg_parse_entry_t SEQ_FLAGS2_
- int
- ahd_seq_flags2_print(u_int regvalue, u_int *cur_col, u_int wrap)
- {
--	return (ahd_print_register(SEQ_FLAGS2_parse_table, 2, "SEQ_FLAGS2",
-+	return (ahd_print_register(SEQ_FLAGS2_parse_table, 3, "SEQ_FLAGS2",
- 	    0x14d, regvalue, cur_col, wrap));
- }
- 
-@@ -3450,6 +3451,20 @@ ahd_cmdsize_table_print(u_int regvalue, 
- }
- 
- int
-+ahd_mk_message_scb_print(u_int regvalue, u_int *cur_col, u_int wrap)
-+{
-+	return (ahd_print_register(NULL, 0, "MK_MESSAGE_SCB",
-+	    0x160, regvalue, cur_col, wrap));
-+}
-+
-+int
-+ahd_mk_message_scsiid_print(u_int regvalue, u_int *cur_col, u_int wrap)
-+{
-+	return (ahd_print_register(NULL, 0, "MK_MESSAGE_SCSIID",
-+	    0x162, regvalue, cur_col, wrap));
-+}
-+
-+int
- ahd_scb_base_print(u_int regvalue, u_int *cur_col, u_int wrap)
- {
- 	return (ahd_print_register(NULL, 0, "SCB_BASE",
-diff --git a/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped b/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped
---- a/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped
-+++ b/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped
-@@ -2,17 +2,17 @@
-  * DO NOT EDIT - This file is automatically generated
-  *		 from the following source files:
-  *
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#119 $
-- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#76 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#120 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#77 $
-  */
- static uint8_t seqprog[] = {
- 	0xff, 0x02, 0x06, 0x78,
--	0x00, 0xea, 0x64, 0x59,
-+	0x00, 0xea, 0x6e, 0x59,
- 	0x01, 0xea, 0x04, 0x30,
- 	0xff, 0x04, 0x0c, 0x78,
--	0x19, 0xea, 0x64, 0x59,
-+	0x19, 0xea, 0x6e, 0x59,
- 	0x19, 0xea, 0x04, 0x00,
--	0x33, 0xea, 0x5e, 0x59,
-+	0x33, 0xea, 0x68, 0x59,
- 	0x33, 0xea, 0x00, 0x00,
- 	0x60, 0x3a, 0x3a, 0x68,
- 	0x04, 0x4d, 0x35, 0x78,
-@@ -33,15 +33,15 @@ static uint8_t seqprog[] = {
- 	0xff, 0xea, 0x62, 0x02,
- 	0x00, 0xe2, 0x3a, 0x40,
- 	0xff, 0x21, 0x3b, 0x70,
--	0x40, 0x4b, 0xaa, 0x69,
--	0x00, 0xe2, 0x68, 0x59,
--	0x40, 0x4b, 0xaa, 0x69,
--	0x20, 0x4b, 0x96, 0x69,
-+	0x40, 0x4b, 0xb4, 0x69,
-+	0x00, 0xe2, 0x72, 0x59,
-+	0x40, 0x4b, 0xb4, 0x69,
-+	0x20, 0x4b, 0xa0, 0x69,
- 	0xfc, 0x42, 0x44, 0x78,
- 	0x10, 0x40, 0x44, 0x78,
--	0x00, 0xe2, 0xfc, 0x5d,
-+	0x00, 0xe2, 0x10, 0x5e,
- 	0x20, 0x4d, 0x48, 0x78,
--	0x00, 0xe2, 0xfc, 0x5d,
-+	0x00, 0xe2, 0x10, 0x5e,
- 	0x30, 0x3f, 0xc0, 0x09,
- 	0x30, 0xe0, 0x50, 0x60,
- 	0x7f, 0x4a, 0x94, 0x08,
-@@ -51,7 +51,7 @@ static uint8_t seqprog[] = {
- 	0x00, 0xe2, 0x76, 0x58,
- 	0x00, 0xe2, 0x86, 0x58,
- 	0x00, 0xe2, 0x06, 0x40,
--	0x33, 0xea, 0x5e, 0x59,
-+	0x33, 0xea, 0x68, 0x59,
- 	0x33, 0xea, 0x00, 0x00,
- 	0x01, 0x52, 0x84, 0x78,
- 	0x02, 0x58, 0x50, 0x31,
-@@ -59,26 +59,26 @@ static uint8_t seqprog[] = {
- 	0xff, 0x97, 0x6f, 0x78,
- 	0x50, 0x4b, 0x6a, 0x68,
- 	0xbf, 0x3a, 0x74, 0x08,
--	0x14, 0xea, 0x64, 0x59,
-+	0x14, 0xea, 0x6e, 0x59,
- 	0x14, 0xea, 0x04, 0x00,
- 	0x08, 0x92, 0x25, 0x03,
- 	0xff, 0x90, 0x5f, 0x68,
--	0x00, 0xe2, 0x76, 0x5b,
-+	0x00, 0xe2, 0x8a, 0x5b,
- 	0x00, 0xe2, 0x5e, 0x40,
--	0x00, 0xea, 0x5e, 0x59,
-+	0x00, 0xea, 0x68, 0x59,
- 	0x01, 0xea, 0x00, 0x30,
- 	0x80, 0xf9, 0x7e, 0x68,
--	0x00, 0xe2, 0x5c, 0x59,
--	0x11, 0xea, 0x5e, 0x59,
-+	0x00, 0xe2, 0x66, 0x59,
-+	0x11, 0xea, 0x68, 0x59,
- 	0x11, 0xea, 0x00, 0x00,
--	0x80, 0xf9, 0x5c, 0x79,
-+	0x80, 0xf9, 0x66, 0x79,
- 	0xff, 0xea, 0xd4, 0x0d,
--	0x22, 0xea, 0x5e, 0x59,
-+	0x22, 0xea, 0x68, 0x59,
- 	0x22, 0xea, 0x00, 0x00,
- 	0x10, 0x16, 0x90, 0x78,
- 	0x10, 0x16, 0x2c, 0x00,
- 	0x01, 0x0b, 0xae, 0x32,
--	0x18, 0xad, 0x12, 0x79,
-+	0x18, 0xad, 0x1c, 0x79,
- 	0x04, 0xad, 0xdc, 0x68,
- 	0x80, 0xad, 0x84, 0x78,
- 	0x10, 0xad, 0xaa, 0x78,
-@@ -118,7 +118,6 @@ static uint8_t seqprog[] = {
- 	0x80, 0x18, 0x30, 0x04,
- 	0x40, 0xad, 0x84, 0x78,
- 	0xe7, 0xad, 0x5a, 0x09,
--	0x02, 0xa8, 0x40, 0x31,
- 	0xff, 0xea, 0xc0, 0x09,
- 	0x01, 0x54, 0xa9, 0x1a,
- 	0x00, 0x55, 0xab, 0x22,
-@@ -128,24 +127,30 @@ static uint8_t seqprog[] = {
- 	0xff, 0xea, 0x5a, 0x03,
- 	0xff, 0xea, 0x5e, 0x03,
- 	0x01, 0x10, 0xd4, 0x31,
--	0x10, 0x92, 0x07, 0x69,
-+	0x02, 0xa8, 0x40, 0x31,
-+	0x01, 0x92, 0xc1, 0x31,
- 	0x3d, 0x93, 0xc5, 0x29,
- 	0xfe, 0xe2, 0xc4, 0x09,
- 	0x01, 0xea, 0xc6, 0x01,
- 	0x02, 0xe2, 0xc8, 0x31,
- 	0x02, 0xec, 0x50, 0x31,
- 	0x02, 0xa0, 0xda, 0x31,
--	0xff, 0xa9, 0x06, 0x71,
-+	0xff, 0xa9, 0x10, 0x71,
-+	0x10, 0xe0, 0x0e, 0x79,
-+	0x10, 0x92, 0x0f, 0x79,
-+	0x01, 0x4d, 0x9b, 0x02,
-+	0x02, 0xa0, 0xc0, 0x32,
-+	0x01, 0x93, 0xc5, 0x36,
- 	0x02, 0xa0, 0x58, 0x37,
--	0xff, 0x21, 0x0f, 0x71,
-+	0xff, 0x21, 0x19, 0x71,
- 	0x02, 0x22, 0x51, 0x31,
- 	0x02, 0xa0, 0x5c, 0x33,
- 	0x02, 0xa0, 0x44, 0x36,
- 	0x02, 0xa0, 0x40, 0x32,
- 	0x02, 0xa0, 0x44, 0x36,
--	0x04, 0x4d, 0x17, 0x69,
--	0x40, 0x16, 0x48, 0x69,
--	0xff, 0x2d, 0x4d, 0x61,
-+	0x05, 0x4d, 0x21, 0x69,
-+	0x40, 0x16, 0x52, 0x69,
-+	0xff, 0x2d, 0x57, 0x61,
- 	0xff, 0x29, 0x85, 0x70,
- 	0x02, 0x28, 0x55, 0x32,
- 	0x01, 0xea, 0x5a, 0x01,
-@@ -159,22 +164,22 @@ static uint8_t seqprog[] = {
- 	0x01, 0x56, 0xad, 0x1a,
- 	0xff, 0x54, 0xa9, 0x1a,
- 	0xff, 0x55, 0xab, 0x22,
--	0xff, 0x8d, 0x41, 0x71,
--	0x80, 0xac, 0x40, 0x71,
--	0x20, 0x16, 0x40, 0x69,
-+	0xff, 0x8d, 0x4b, 0x71,
-+	0x80, 0xac, 0x4a, 0x71,
-+	0x20, 0x16, 0x4a, 0x69,
- 	0x00, 0xac, 0xc4, 0x19,
--	0x07, 0xe2, 0x40, 0xf9,
-+	0x07, 0xe2, 0x4a, 0xf9,
- 	0x02, 0x8c, 0x51, 0x31,
--	0x00, 0xe2, 0x24, 0x41,
-+	0x00, 0xe2, 0x2e, 0x41,
- 	0x01, 0xac, 0x08, 0x31,
- 	0x09, 0xea, 0x5a, 0x01,
- 	0x02, 0x8c, 0x51, 0x32,
- 	0xff, 0xea, 0x1a, 0x07,
- 	0x04, 0x24, 0xf9, 0x30,
--	0x1d, 0xea, 0x52, 0x41,
-+	0x1d, 0xea, 0x5c, 0x41,
- 	0x02, 0x2c, 0x51, 0x31,
- 	0x04, 0xa8, 0xf9, 0x30,
--	0x19, 0xea, 0x52, 0x41,
-+	0x19, 0xea, 0x5c, 0x41,
- 	0x06, 0xea, 0x08, 0x81,
- 	0x01, 0xe2, 0x5a, 0x35,
- 	0x02, 0xf2, 0xf0, 0x31,
-@@ -190,27 +195,27 @@ static uint8_t seqprog[] = {
- 	0x02, 0x20, 0xb9, 0x30,
- 	0x02, 0x20, 0x51, 0x31,
- 	0x4c, 0x93, 0xd7, 0x28,
--	0x10, 0x92, 0x77, 0x79,
-+	0x10, 0x92, 0x81, 0x79,
- 	0x01, 0x6b, 0xc0, 0x30,
- 	0x02, 0x64, 0xc8, 0x00,
- 	0x40, 0x3a, 0x74, 0x04,
- 	0x00, 0xe2, 0x76, 0x58,
--	0x33, 0xea, 0x5e, 0x59,
-+	0x33, 0xea, 0x68, 0x59,
- 	0x33, 0xea, 0x00, 0x00,
- 	0x30, 0x3f, 0xc0, 0x09,
--	0x30, 0xe0, 0x78, 0x61,
--	0x20, 0x3f, 0x8e, 0x69,
--	0x10, 0x3f, 0x78, 0x79,
-+	0x30, 0xe0, 0x82, 0x61,
-+	0x20, 0x3f, 0x98, 0x69,
-+	0x10, 0x3f, 0x82, 0x79,
- 	0x02, 0xea, 0x7e, 0x00,
--	0x00, 0xea, 0x5e, 0x59,
-+	0x00, 0xea, 0x68, 0x59,
- 	0x01, 0xea, 0x00, 0x30,
- 	0x02, 0x4e, 0x51, 0x35,
- 	0x01, 0xea, 0x7e, 0x00,
--	0x11, 0xea, 0x5e, 0x59,
-+	0x11, 0xea, 0x68, 0x59,
- 	0x11, 0xea, 0x00, 0x00,
- 	0x02, 0x4e, 0x51, 0x35,
- 	0xc0, 0x4a, 0x94, 0x00,
--	0x04, 0x41, 0x9c, 0x79,
-+	0x04, 0x41, 0xa6, 0x79,
- 	0x08, 0xea, 0x98, 0x00,
- 	0x08, 0x57, 0xae, 0x00,
- 	0x08, 0x3c, 0x78, 0x00,
-@@ -218,12 +223,12 @@ static uint8_t seqprog[] = {
- 	0x0f, 0x67, 0xc0, 0x09,
- 	0x00, 0x3a, 0x75, 0x02,
- 	0x20, 0xea, 0x96, 0x00,
--	0x00, 0xe2, 0x14, 0x42,
-+	0x00, 0xe2, 0x28, 0x42,
- 	0xc0, 0x4a, 0x94, 0x00,
--	0x40, 0x3a, 0xc8, 0x69,
-+	0x40, 0x3a, 0xd2, 0x69,
- 	0x02, 0x55, 0x06, 0x68,
--	0x02, 0x56, 0xc8, 0x69,
--	0xff, 0x5b, 0xc8, 0x61,
-+	0x02, 0x56, 0xd2, 0x69,
-+	0xff, 0x5b, 0xd2, 0x61,
- 	0x02, 0x20, 0x51, 0x31,
- 	0x80, 0xea, 0xb2, 0x01,
- 	0x44, 0xea, 0x00, 0x00,
-@@ -231,40 +236,45 @@ static uint8_t seqprog[] = {
- 	0x33, 0xea, 0x00, 0x00,
- 	0xff, 0xea, 0xb2, 0x09,
- 	0xff, 0xe0, 0xc0, 0x19,
--	0xff, 0xe0, 0xca, 0x79,
-+	0xff, 0xe0, 0xd4, 0x79,
- 	0x02, 0xac, 0x51, 0x31,
--	0x00, 0xe2, 0xc0, 0x41,
-+	0x00, 0xe2, 0xca, 0x41,
- 	0x02, 0x5e, 0x50, 0x31,
- 	0x02, 0xa8, 0xb8, 0x30,
- 	0x02, 0x5c, 0x50, 0x31,
--	0xff, 0xad, 0xdb, 0x71,
-+	0xff, 0xad, 0xe5, 0x71,
- 	0x02, 0xac, 0x41, 0x31,
- 	0x02, 0x22, 0x51, 0x31,
- 	0x02, 0xa0, 0x5c, 0x33,
- 	0x02, 0xa0, 0x44, 0x32,
--	0x00, 0xe2, 0xe4, 0x41,
--	0x10, 0x92, 0xe5, 0x69,
-+	0x00, 0xe2, 0xf8, 0x41,
-+	0x01, 0x4d, 0xf1, 0x79,
-+	0x01, 0x62, 0xc1, 0x31,
-+	0x00, 0x93, 0xf1, 0x61,
-+	0xfe, 0x4d, 0x9b, 0x0a,
-+	0x02, 0x60, 0x41, 0x31,
-+	0x00, 0xe2, 0xdc, 0x41,
- 	0x3d, 0x93, 0xc9, 0x29,
- 	0x01, 0xe4, 0xc8, 0x01,
- 	0x01, 0xea, 0xca, 0x01,
- 	0xff, 0xea, 0xda, 0x01,
- 	0x02, 0x20, 0x51, 0x31,
- 	0x02, 0xae, 0x41, 0x32,
--	0xff, 0x21, 0xed, 0x61,
-+	0xff, 0x21, 0x01, 0x62,
- 	0xff, 0xea, 0x46, 0x02,
- 	0x02, 0x5c, 0x50, 0x31,
- 	0x40, 0xea, 0x96, 0x00,
--	0x02, 0x56, 0x04, 0x6e,
--	0x01, 0x55, 0x04, 0x6e,
--	0x10, 0x92, 0xf9, 0x79,
--	0x10, 0x40, 0x02, 0x6a,
--	0x01, 0x56, 0x02, 0x7a,
-+	0x02, 0x56, 0x20, 0x6e,
-+	0x01, 0x55, 0x20, 0x6e,
-+	0x10, 0x92, 0x0d, 0x7a,
-+	0x10, 0x40, 0x16, 0x6a,
-+	0x01, 0x56, 0x16, 0x7a,
- 	0xff, 0x97, 0x07, 0x78,
--	0x13, 0xea, 0x64, 0x59,
-+	0x13, 0xea, 0x6e, 0x59,
- 	0x13, 0xea, 0x04, 0x00,
- 	0x00, 0xe2, 0x06, 0x40,
- 	0xbf, 0x3a, 0x74, 0x08,
--	0x04, 0x41, 0x08, 0x7a,
-+	0x04, 0x41, 0x1c, 0x7a,
- 	0x08, 0xea, 0x98, 0x00,
- 	0x08, 0x57, 0xae, 0x00,
- 	0x01, 0x93, 0x75, 0x32,
-@@ -272,108 +282,108 @@ static uint8_t seqprog[] = {
- 	0x40, 0xea, 0x72, 0x02,
- 	0x08, 0x3c, 0x78, 0x00,
- 	0x80, 0xea, 0x6e, 0x02,
--	0x00, 0xe2, 0xe2, 0x5b,
-+	0x00, 0xe2, 0xf6, 0x5b,
- 	0x01, 0x3c, 0xc1, 0x31,
--	0x9f, 0xe0, 0x84, 0x7c,
--	0x80, 0xe0, 0x28, 0x72,
--	0xa0, 0xe0, 0x64, 0x72,
--	0xc0, 0xe0, 0x5a, 0x72,
--	0xe0, 0xe0, 0x94, 0x72,
--	0x01, 0xea, 0x64, 0x59,
-+	0x9f, 0xe0, 0x98, 0x7c,
-+	0x80, 0xe0, 0x3c, 0x72,
-+	0xa0, 0xe0, 0x78, 0x72,
-+	0xc0, 0xe0, 0x6e, 0x72,
-+	0xe0, 0xe0, 0xa8, 0x72,
-+	0x01, 0xea, 0x6e, 0x59,
- 	0x01, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x14, 0x42,
--	0x80, 0x39, 0x2f, 0x7a,
--	0x03, 0xea, 0x64, 0x59,
-+	0x00, 0xe2, 0x28, 0x42,
-+	0x80, 0x39, 0x43, 0x7a,
-+	0x03, 0xea, 0x6e, 0x59,
- 	0x03, 0xea, 0x04, 0x00,
--	0xee, 0x00, 0x36, 0x6a,
-+	0xee, 0x00, 0x4a, 0x6a,
- 	0x05, 0xea, 0xb4, 0x00,
--	0x33, 0xea, 0x5e, 0x59,
-+	0x33, 0xea, 0x68, 0x59,
- 	0x33, 0xea, 0x00, 0x00,
- 	0x02, 0xa8, 0x9c, 0x32,
--	0x00, 0xe2, 0x7e, 0x59,
-+	0x00, 0xe2, 0x88, 0x59,
- 	0xef, 0x96, 0xd5, 0x19,
--	0x00, 0xe2, 0x46, 0x52,
-+	0x00, 0xe2, 0x5a, 0x52,
- 	0x09, 0x80, 0xe1, 0x30,
- 	0x02, 0xea, 0x36, 0x00,
- 	0xa8, 0xea, 0x32, 0x00,
--	0x00, 0xe2, 0x4c, 0x42,
-+	0x00, 0xe2, 0x60, 0x42,
- 	0x01, 0x96, 0xd1, 0x30,
- 	0x10, 0x80, 0x89, 0x31,
- 	0x20, 0xea, 0x32, 0x00,
- 	0xbf, 0x39, 0x73, 0x0a,
--	0x10, 0x4c, 0x56, 0x6a,
--	0x20, 0x19, 0x4e, 0x6a,
--	0x20, 0x19, 0x52, 0x6a,
--	0x02, 0x4d, 0x14, 0x6a,
-+	0x10, 0x4c, 0x6a, 0x6a,
-+	0x20, 0x19, 0x62, 0x6a,
-+	0x20, 0x19, 0x66, 0x6a,
-+	0x02, 0x4d, 0x28, 0x6a,
- 	0x40, 0x39, 0x73, 0x02,
--	0x00, 0xe2, 0x14, 0x42,
--	0x80, 0x39, 0xd5, 0x6a,
-+	0x00, 0xe2, 0x28, 0x42,
-+	0x80, 0x39, 0xe9, 0x6a,
- 	0x01, 0x44, 0x10, 0x33,
- 	0x08, 0x92, 0x25, 0x03,
--	0x00, 0xe2, 0x14, 0x42,
-+	0x00, 0xe2, 0x28, 0x42,
- 	0x10, 0xea, 0x80, 0x00,
- 	0x01, 0x37, 0xc5, 0x31,
--	0x80, 0xe2, 0x80, 0x62,
--	0x10, 0x92, 0xa5, 0x6a,
-+	0x80, 0xe2, 0x94, 0x62,
-+	0x10, 0x92, 0xb9, 0x6a,
- 	0xc0, 0x94, 0xc5, 0x01,
--	0x40, 0x92, 0x71, 0x6a,
-+	0x40, 0x92, 0x85, 0x6a,
- 	0xbf, 0xe2, 0xc4, 0x09,
--	0x20, 0x92, 0x85, 0x7a,
-+	0x20, 0x92, 0x99, 0x7a,
- 	0x01, 0xe2, 0x88, 0x30,
--	0x00, 0xe2, 0xe2, 0x5b,
--	0xa0, 0x3c, 0x8d, 0x62,
-+	0x00, 0xe2, 0xf6, 0x5b,
-+	0xa0, 0x3c, 0xa1, 0x62,
- 	0x23, 0x92, 0x89, 0x08,
--	0x00, 0xe2, 0xe2, 0x5b,
--	0xa0, 0x3c, 0x8d, 0x62,
--	0x00, 0xa8, 0x84, 0x42,
--	0xff, 0xe2, 0x84, 0x62,
--	0x00, 0xe2, 0xa4, 0x42,
-+	0x00, 0xe2, 0xf6, 0x5b,
-+	0xa0, 0x3c, 0xa1, 0x62,
-+	0x00, 0xa8, 0x98, 0x42,
-+	0xff, 0xe2, 0x98, 0x62,
-+	0x00, 0xe2, 0xb8, 0x42,
- 	0x40, 0xea, 0x98, 0x00,
- 	0x01, 0xe2, 0x88, 0x30,
--	0x00, 0xe2, 0xe2, 0x5b,
--	0xa0, 0x3c, 0x63, 0x72,
-+	0x00, 0xe2, 0xf6, 0x5b,
-+	0xa0, 0x3c, 0x77, 0x72,
- 	0x40, 0xea, 0x98, 0x00,
- 	0x01, 0x37, 0x95, 0x32,
- 	0x08, 0xea, 0x6e, 0x02,
--	0x00, 0xe2, 0x14, 0x42,
--	0xe0, 0xea, 0xfe, 0x5b,
--	0x80, 0xe0, 0xe0, 0x6a,
--	0x04, 0xe0, 0x92, 0x73,
--	0x02, 0xe0, 0xc4, 0x73,
--	0x00, 0xea, 0x3e, 0x73,
--	0x03, 0xe0, 0xd4, 0x73,
--	0x23, 0xe0, 0xb6, 0x72,
--	0x08, 0xe0, 0xdc, 0x72,
--	0x00, 0xe2, 0xe2, 0x5b,
--	0x07, 0xea, 0x64, 0x59,
-+	0x00, 0xe2, 0x28, 0x42,
-+	0xe0, 0xea, 0x12, 0x5c,
-+	0x80, 0xe0, 0xf4, 0x6a,
-+	0x04, 0xe0, 0xa6, 0x73,
-+	0x02, 0xe0, 0xd8, 0x73,
-+	0x00, 0xea, 0x52, 0x73,
-+	0x03, 0xe0, 0xe8, 0x73,
-+	0x23, 0xe0, 0xca, 0x72,
-+	0x08, 0xe0, 0xf0, 0x72,
-+	0x00, 0xe2, 0xf6, 0x5b,
-+	0x07, 0xea, 0x6e, 0x59,
- 	0x07, 0xea, 0x04, 0x00,
--	0x08, 0x48, 0x15, 0x72,
--	0x04, 0x48, 0xb3, 0x62,
-+	0x08, 0x48, 0x29, 0x72,
-+	0x04, 0x48, 0xc7, 0x62,
- 	0x01, 0x49, 0x89, 0x30,
--	0x00, 0xe2, 0xa4, 0x42,
-+	0x00, 0xe2, 0xb8, 0x42,
- 	0x01, 0x44, 0xd4, 0x31,
--	0x00, 0xe2, 0xa4, 0x42,
-+	0x00, 0xe2, 0xb8, 0x42,
- 	0x01, 0x00, 0x6c, 0x32,
--	0x33, 0xea, 0x5e, 0x59,
-+	0x33, 0xea, 0x68, 0x59,
- 	0x33, 0xea, 0x00, 0x00,
- 	0x4c, 0x3a, 0xc1, 0x28,
- 	0x01, 0x64, 0xc0, 0x31,
--	0x00, 0x36, 0x5f, 0x59,
-+	0x00, 0x36, 0x69, 0x59,
- 	0x01, 0x36, 0x01, 0x30,
--	0x01, 0xe0, 0xda, 0x7a,
--	0xa0, 0xea, 0xf4, 0x5b,
--	0x01, 0xa0, 0xda, 0x62,
--	0x01, 0x84, 0xcf, 0x7a,
--	0x01, 0x95, 0xdd, 0x6a,
--	0x05, 0xea, 0x64, 0x59,
-+	0x01, 0xe0, 0xee, 0x7a,
-+	0xa0, 0xea, 0x08, 0x5c,
-+	0x01, 0xa0, 0xee, 0x62,
-+	0x01, 0x84, 0xe3, 0x7a,
-+	0x01, 0x95, 0xf1, 0x6a,
-+	0x05, 0xea, 0x6e, 0x59,
- 	0x05, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xdc, 0x42,
--	0x03, 0xea, 0x64, 0x59,
-+	0x00, 0xe2, 0xf0, 0x42,
-+	0x03, 0xea, 0x6e, 0x59,
- 	0x03, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xdc, 0x42,
--	0x07, 0xea, 0x06, 0x5c,
-+	0x00, 0xe2, 0xf0, 0x42,
-+	0x07, 0xea, 0x1a, 0x5c,
- 	0x01, 0x44, 0xd4, 0x31,
--	0x00, 0xe2, 0x14, 0x42,
-+	0x00, 0xe2, 0x28, 0x42,
- 	0x3f, 0xe0, 0x76, 0x0a,
- 	0xc0, 0x3a, 0xc1, 0x09,
- 	0x00, 0x3b, 0x51, 0x01,
-@@ -384,54 +394,54 @@ static uint8_t seqprog[] = {
- 	0x01, 0xea, 0xc6, 0x01,
- 	0x02, 0xe2, 0xc8, 0x31,
- 	0x02, 0xec, 0x40, 0x31,
--	0xff, 0xa1, 0xfc, 0x72,
-+	0xff, 0xa1, 0x10, 0x73,
- 	0x02, 0xe8, 0xda, 0x31,
- 	0x02, 0xa0, 0x50, 0x31,
--	0x00, 0xe2, 0x1e, 0x43,
-+	0x00, 0xe2, 0x32, 0x43,
- 	0x80, 0x39, 0x73, 0x02,
- 	0x01, 0x44, 0xd4, 0x31,
--	0x00, 0xe2, 0xe2, 0x5b,
-+	0x00, 0xe2, 0xf6, 0x5b,
- 	0x01, 0x39, 0x73, 0x02,
--	0xe0, 0x3c, 0x39, 0x63,
-+	0xe0, 0x3c, 0x4d, 0x63,
- 	0x02, 0x39, 0x73, 0x02,
--	0x20, 0x46, 0x32, 0x63,
-+	0x20, 0x46, 0x46, 0x63,
- 	0xff, 0xea, 0x52, 0x09,
--	0xa8, 0xea, 0xf4, 0x5b,
--	0x04, 0x92, 0x19, 0x7b,
-+	0xa8, 0xea, 0x08, 0x5c,
-+	0x04, 0x92, 0x2d, 0x7b,
- 	0x01, 0x3a, 0xc1, 0x31,
--	0x00, 0x93, 0x19, 0x63,
-+	0x00, 0x93, 0x2d, 0x63,
- 	0x01, 0x3b, 0xc1, 0x31,
--	0x00, 0x94, 0x23, 0x73,
-+	0x00, 0x94, 0x37, 0x73,
- 	0x01, 0xa9, 0x52, 0x11,
--	0xff, 0xa9, 0x0e, 0x6b,
--	0x00, 0xe2, 0x32, 0x43,
-+	0xff, 0xa9, 0x22, 0x6b,
-+	0x00, 0xe2, 0x46, 0x43,
- 	0x10, 0x39, 0x73, 0x02,
--	0x04, 0x92, 0x33, 0x7b,
-+	0x04, 0x92, 0x47, 0x7b,
- 	0xfb, 0x92, 0x25, 0x0b,
- 	0xff, 0xea, 0x72, 0x0a,
--	0x01, 0xa4, 0x2d, 0x6b,
-+	0x01, 0xa4, 0x41, 0x6b,
- 	0x02, 0xa8, 0x9c, 0x32,
--	0x00, 0xe2, 0x7e, 0x59,
--	0x10, 0x92, 0xdd, 0x7a,
--	0xff, 0xea, 0x06, 0x5c,
--	0x00, 0xe2, 0xdc, 0x42,
--	0x04, 0xea, 0x64, 0x59,
-+	0x00, 0xe2, 0x88, 0x59,
-+	0x10, 0x92, 0xf1, 0x7a,
-+	0xff, 0xea, 0x1a, 0x5c,
-+	0x00, 0xe2, 0xf0, 0x42,
-+	0x04, 0xea, 0x6e, 0x59,
- 	0x04, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xdc, 0x42,
--	0x04, 0xea, 0x64, 0x59,
-+	0x00, 0xe2, 0xf0, 0x42,
-+	0x04, 0xea, 0x6e, 0x59,
- 	0x04, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x14, 0x42,
--	0x08, 0x92, 0xd5, 0x7a,
--	0xc0, 0x39, 0x49, 0x7b,
--	0x80, 0x39, 0xd5, 0x6a,
--	0xff, 0x88, 0x49, 0x6b,
--	0x40, 0x39, 0xd5, 0x6a,
--	0x10, 0x92, 0x4f, 0x7b,
--	0x0a, 0xea, 0x64, 0x59,
-+	0x00, 0xe2, 0x28, 0x42,
-+	0x08, 0x92, 0xe9, 0x7a,
-+	0xc0, 0x39, 0x5d, 0x7b,
-+	0x80, 0x39, 0xe9, 0x6a,
-+	0xff, 0x88, 0x5d, 0x6b,
-+	0x40, 0x39, 0xe9, 0x6a,
-+	0x10, 0x92, 0x63, 0x7b,
-+	0x0a, 0xea, 0x6e, 0x59,
- 	0x0a, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x6e, 0x5b,
--	0x00, 0xe2, 0xae, 0x43,
--	0x50, 0x4b, 0x56, 0x6b,
-+	0x00, 0xe2, 0x82, 0x5b,
-+	0x00, 0xe2, 0xc2, 0x43,
-+	0x50, 0x4b, 0x6a, 0x6b,
- 	0xbf, 0x3a, 0x74, 0x08,
- 	0x01, 0xe0, 0xf4, 0x31,
- 	0xff, 0xea, 0xc0, 0x09,
-@@ -441,31 +451,31 @@ static uint8_t seqprog[] = {
- 	0x01, 0xfa, 0xc0, 0x35,
- 	0x02, 0xa8, 0x90, 0x32,
- 	0x02, 0xea, 0xb4, 0x00,
--	0x33, 0xea, 0x5e, 0x59,
-+	0x33, 0xea, 0x68, 0x59,
- 	0x33, 0xea, 0x00, 0x00,
- 	0x02, 0x48, 0x51, 0x31,
- 	0xff, 0x90, 0x85, 0x68,
--	0xff, 0x88, 0x7b, 0x6b,
--	0x01, 0xa4, 0x77, 0x6b,
--	0x02, 0xa4, 0x7f, 0x6b,
--	0x01, 0x84, 0x7f, 0x7b,
-+	0xff, 0x88, 0x8f, 0x6b,
-+	0x01, 0xa4, 0x8b, 0x6b,
-+	0x02, 0xa4, 0x93, 0x6b,
-+	0x01, 0x84, 0x93, 0x7b,
- 	0x02, 0x28, 0x19, 0x33,
- 	0x02, 0xa8, 0x50, 0x36,
--	0xff, 0x88, 0x7f, 0x73,
--	0x00, 0xe2, 0x52, 0x5b,
-+	0xff, 0x88, 0x93, 0x73,
-+	0x00, 0xe2, 0x66, 0x5b,
- 	0x02, 0xa8, 0x20, 0x33,
- 	0x04, 0xa4, 0x49, 0x03,
- 	0xff, 0xea, 0x1a, 0x03,
--	0xff, 0x2d, 0x8b, 0x63,
-+	0xff, 0x2d, 0x9f, 0x63,
- 	0x02, 0xa8, 0x58, 0x32,
- 	0x02, 0xa8, 0x5c, 0x36,
- 	0x02, 0xa8, 0x40, 0x31,
- 	0x02, 0x2e, 0x51, 0x31,
- 	0x02, 0xa0, 0x18, 0x33,
- 	0x02, 0xa0, 0x5c, 0x36,
--	0xc0, 0x39, 0xd5, 0x6a,
-+	0xc0, 0x39, 0xe9, 0x6a,
- 	0x04, 0x92, 0x25, 0x03,
--	0x20, 0x92, 0xaf, 0x6b,
-+	0x20, 0x92, 0xc3, 0x6b,
- 	0x02, 0xa8, 0x40, 0x31,
- 	0xc0, 0x3a, 0xc1, 0x09,
- 	0x00, 0x3b, 0x51, 0x01,
-@@ -480,60 +490,60 @@ static uint8_t seqprog[] = {
- 	0xf7, 0x57, 0xae, 0x08,
- 	0x08, 0xea, 0x98, 0x00,
- 	0x01, 0x44, 0xd4, 0x31,
--	0xee, 0x00, 0xb8, 0x6b,
-+	0xee, 0x00, 0xcc, 0x6b,
- 	0x02, 0xea, 0xb4, 0x00,
- 	0xc0, 0xea, 0x72, 0x02,
--	0x09, 0x4c, 0xba, 0x7b,
-+	0x09, 0x4c, 0xce, 0x7b,
- 	0x01, 0xea, 0x78, 0x02,
- 	0x08, 0x4c, 0x06, 0x68,
--	0x0b, 0xea, 0x64, 0x59,
-+	0x0b, 0xea, 0x6e, 0x59,
- 	0x0b, 0xea, 0x04, 0x00,
- 	0x01, 0x44, 0xd4, 0x31,
--	0x20, 0x39, 0x15, 0x7a,
--	0x00, 0xe2, 0xcc, 0x5b,
--	0x00, 0xe2, 0x14, 0x42,
--	0x01, 0x84, 0xd1, 0x7b,
-+	0x20, 0x39, 0x29, 0x7a,
-+	0x00, 0xe2, 0xe0, 0x5b,
-+	0x00, 0xe2, 0x28, 0x42,
-+	0x01, 0x84, 0xe5, 0x7b,
- 	0x01, 0xa4, 0x49, 0x07,
- 	0x08, 0x60, 0x30, 0x33,
- 	0x08, 0x80, 0x41, 0x37,
- 	0xdf, 0x39, 0x73, 0x0a,
--	0xee, 0x00, 0xde, 0x6b,
-+	0xee, 0x00, 0xf2, 0x6b,
- 	0x05, 0xea, 0xb4, 0x00,
--	0x33, 0xea, 0x5e, 0x59,
-+	0x33, 0xea, 0x68, 0x59,
- 	0x33, 0xea, 0x00, 0x00,
--	0x00, 0xe2, 0x7e, 0x59,
--	0x00, 0xe2, 0xdc, 0x42,
--	0xff, 0x42, 0xee, 0x6b,
--	0x01, 0x41, 0xe2, 0x6b,
--	0x02, 0x41, 0xe2, 0x7b,
--	0xff, 0x42, 0xee, 0x6b,
--	0x01, 0x41, 0xe2, 0x6b,
--	0x02, 0x41, 0xe2, 0x7b,
--	0xff, 0x42, 0xee, 0x7b,
--	0x04, 0x4c, 0xe2, 0x6b,
-+	0x00, 0xe2, 0x88, 0x59,
-+	0x00, 0xe2, 0xf0, 0x42,
-+	0xff, 0x42, 0x02, 0x6c,
-+	0x01, 0x41, 0xf6, 0x6b,
-+	0x02, 0x41, 0xf6, 0x7b,
-+	0xff, 0x42, 0x02, 0x6c,
-+	0x01, 0x41, 0xf6, 0x6b,
-+	0x02, 0x41, 0xf6, 0x7b,
-+	0xff, 0x42, 0x02, 0x7c,
-+	0x04, 0x4c, 0xf6, 0x6b,
- 	0xe0, 0x41, 0x78, 0x0e,
- 	0x01, 0x44, 0xd4, 0x31,
--	0xff, 0x42, 0xf6, 0x7b,
--	0x04, 0x4c, 0xf6, 0x6b,
-+	0xff, 0x42, 0x0a, 0x7c,
-+	0x04, 0x4c, 0x0a, 0x6c,
- 	0xe0, 0x41, 0x78, 0x0a,
--	0xe0, 0x3c, 0x15, 0x62,
-+	0xe0, 0x3c, 0x29, 0x62,
- 	0xff, 0xea, 0xca, 0x09,
- 	0x01, 0xe2, 0xc8, 0x31,
- 	0x01, 0x46, 0xda, 0x35,
- 	0x01, 0x44, 0xd4, 0x35,
- 	0x10, 0xea, 0x80, 0x00,
- 	0x01, 0xe2, 0x6e, 0x36,
--	0x04, 0xa6, 0x0e, 0x7c,
-+	0x04, 0xa6, 0x22, 0x7c,
- 	0xff, 0xea, 0x5a, 0x09,
- 	0xff, 0xea, 0x4c, 0x0d,
--	0x01, 0xa6, 0x3a, 0x6c,
-+	0x01, 0xa6, 0x4e, 0x6c,
- 	0x10, 0xad, 0x84, 0x78,
--	0x80, 0xad, 0x32, 0x6c,
-+	0x80, 0xad, 0x46, 0x6c,
- 	0x08, 0xad, 0x84, 0x68,
--	0x20, 0x19, 0x26, 0x7c,
-+	0x20, 0x19, 0x3a, 0x7c,
- 	0x80, 0xea, 0xb2, 0x01,
- 	0x11, 0x00, 0x00, 0x10,
--	0x02, 0xa6, 0x22, 0x7c,
-+	0x02, 0xa6, 0x36, 0x7c,
- 	0xff, 0xea, 0xb2, 0x0d,
- 	0x11, 0x00, 0x00, 0x10,
- 	0xff, 0xea, 0xb2, 0x09,
-@@ -561,7 +571,7 @@ static uint8_t seqprog[] = {
- 	0x00, 0x86, 0x0d, 0x23,
- 	0x00, 0x87, 0x0f, 0x23,
- 	0x01, 0x84, 0xc5, 0x31,
--	0x80, 0x83, 0x5d, 0x7c,
-+	0x80, 0x83, 0x71, 0x7c,
- 	0x02, 0xe2, 0xc4, 0x01,
- 	0xff, 0xea, 0x4c, 0x09,
- 	0x01, 0xe2, 0x36, 0x30,
-@@ -572,75 +582,75 @@ static uint8_t seqprog[] = {
- 	0xfe, 0xa6, 0x4c, 0x0d,
- 	0x0b, 0x98, 0xe1, 0x30,
- 	0xfd, 0xa4, 0x49, 0x09,
--	0x80, 0xa3, 0x71, 0x7c,
-+	0x80, 0xa3, 0x85, 0x7c,
- 	0x02, 0xa4, 0x48, 0x01,
- 	0x01, 0xa4, 0x36, 0x30,
- 	0xa8, 0xea, 0x32, 0x00,
- 	0xfd, 0xa4, 0x49, 0x0b,
- 	0x05, 0xa3, 0x07, 0x33,
--	0x80, 0x83, 0x7d, 0x6c,
-+	0x80, 0x83, 0x91, 0x6c,
- 	0x02, 0xea, 0x4c, 0x05,
- 	0xff, 0xea, 0x4c, 0x0d,
--	0x00, 0xe2, 0x56, 0x59,
--	0x02, 0xa6, 0x10, 0x6c,
-+	0x00, 0xe2, 0x60, 0x59,
-+	0x02, 0xa6, 0x24, 0x6c,
- 	0x80, 0xf9, 0xf2, 0x05,
--	0xc0, 0x39, 0x8b, 0x7c,
--	0x03, 0xea, 0x64, 0x59,
-+	0xc0, 0x39, 0x9f, 0x7c,
-+	0x03, 0xea, 0x6e, 0x59,
- 	0x03, 0xea, 0x04, 0x00,
--	0x20, 0x39, 0xaf, 0x7c,
--	0x01, 0x84, 0x95, 0x6c,
--	0x06, 0xea, 0x64, 0x59,
-+	0x20, 0x39, 0xc3, 0x7c,
-+	0x01, 0x84, 0xa9, 0x6c,
-+	0x06, 0xea, 0x6e, 0x59,
- 	0x06, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xb2, 0x44,
-+	0x00, 0xe2, 0xc6, 0x44,
- 	0x01, 0x00, 0x6c, 0x32,
--	0xee, 0x00, 0x9e, 0x6c,
-+	0xee, 0x00, 0xb2, 0x6c,
- 	0x05, 0xea, 0xb4, 0x00,
--	0x33, 0xea, 0x5e, 0x59,
-+	0x33, 0xea, 0x68, 0x59,
- 	0x33, 0xea, 0x00, 0x00,
- 	0x80, 0x3d, 0x7a, 0x00,
--	0xfc, 0x42, 0xa0, 0x7c,
-+	0xfc, 0x42, 0xb4, 0x7c,
- 	0x7f, 0x3d, 0x7a, 0x08,
--	0x00, 0x36, 0x5f, 0x59,
-+	0x00, 0x36, 0x69, 0x59,
- 	0x01, 0x36, 0x01, 0x30,
--	0x09, 0xea, 0x64, 0x59,
-+	0x09, 0xea, 0x6e, 0x59,
- 	0x09, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x14, 0x42,
--	0x01, 0xa4, 0x95, 0x6c,
--	0x00, 0xe2, 0x68, 0x5c,
-+	0x00, 0xe2, 0x28, 0x42,
-+	0x01, 0xa4, 0xa9, 0x6c,
-+	0x00, 0xe2, 0x7c, 0x5c,
- 	0x20, 0x39, 0x73, 0x02,
- 	0x01, 0x00, 0x6c, 0x32,
--	0x02, 0xa6, 0xba, 0x7c,
--	0x00, 0xe2, 0x7e, 0x5c,
-+	0x02, 0xa6, 0xce, 0x7c,
-+	0x00, 0xe2, 0x92, 0x5c,
- 	0x00, 0xe2, 0x76, 0x58,
- 	0x00, 0xe2, 0x86, 0x58,
- 	0x00, 0xe2, 0x5a, 0x58,
--	0x00, 0x36, 0x5f, 0x59,
-+	0x00, 0x36, 0x69, 0x59,
- 	0x01, 0x36, 0x01, 0x30,
--	0x20, 0x19, 0xba, 0x6c,
--	0x00, 0xe2, 0xea, 0x5c,
--	0x04, 0x19, 0xd4, 0x6c,
-+	0x20, 0x19, 0xce, 0x6c,
-+	0x00, 0xe2, 0xfe, 0x5c,
-+	0x04, 0x19, 0xe8, 0x6c,
- 	0x02, 0x19, 0x32, 0x00,
--	0x01, 0x84, 0xd5, 0x7c,
--	0x01, 0x1b, 0xce, 0x7c,
--	0x01, 0x1a, 0xd4, 0x6c,
--	0x00, 0xe2, 0x84, 0x44,
--	0x80, 0x4b, 0xda, 0x6c,
--	0x01, 0x4c, 0xd6, 0x7c,
--	0x03, 0x42, 0x84, 0x6c,
--	0x00, 0xe2, 0x0a, 0x5c,
-+	0x01, 0x84, 0xe9, 0x7c,
-+	0x01, 0x1b, 0xe2, 0x7c,
-+	0x01, 0x1a, 0xe8, 0x6c,
-+	0x00, 0xe2, 0x98, 0x44,
-+	0x80, 0x4b, 0xee, 0x6c,
-+	0x01, 0x4c, 0xea, 0x7c,
-+	0x03, 0x42, 0x98, 0x6c,
-+	0x00, 0xe2, 0x1e, 0x5c,
- 	0x80, 0xf9, 0xf2, 0x01,
--	0x04, 0x39, 0x15, 0x7a,
--	0x00, 0xe2, 0x14, 0x42,
--	0x08, 0x5d, 0xf2, 0x6c,
-+	0x04, 0x39, 0x29, 0x7a,
-+	0x00, 0xe2, 0x28, 0x42,
-+	0x08, 0x5d, 0x06, 0x6d,
- 	0x00, 0xe2, 0x76, 0x58,
--	0x00, 0x36, 0x5f, 0x59,
-+	0x00, 0x36, 0x69, 0x59,
- 	0x01, 0x36, 0x01, 0x30,
--	0x02, 0x1b, 0xe2, 0x7c,
--	0x08, 0x5d, 0xf0, 0x7c,
-+	0x02, 0x1b, 0xf6, 0x7c,
-+	0x08, 0x5d, 0x04, 0x7d,
- 	0x03, 0x68, 0x00, 0x37,
- 	0x01, 0x84, 0x09, 0x07,
--	0x80, 0x1b, 0xfc, 0x7c,
--	0x80, 0x84, 0xfd, 0x6c,
-+	0x80, 0x1b, 0x10, 0x7d,
-+	0x80, 0x84, 0x11, 0x6d,
- 	0xff, 0x85, 0x0b, 0x1b,
- 	0xff, 0x86, 0x0d, 0x23,
- 	0xff, 0x87, 0x0f, 0x23,
-@@ -652,161 +662,164 @@ static uint8_t seqprog[] = {
- 	0xf9, 0xd9, 0xb2, 0x0d,
- 	0x01, 0xd9, 0xb2, 0x05,
- 	0x01, 0x52, 0x48, 0x31,
--	0x20, 0xa4, 0x26, 0x7d,
--	0x20, 0x5b, 0x26, 0x7d,
--	0x80, 0xf9, 0x34, 0x7d,
-+	0x20, 0xa4, 0x3a, 0x7d,
-+	0x20, 0x5b, 0x3a, 0x7d,
-+	0x80, 0xf9, 0x48, 0x7d,
- 	0x02, 0xea, 0xb4, 0x00,
- 	0x11, 0x00, 0x00, 0x10,
--	0x04, 0x19, 0x40, 0x7d,
-+	0x04, 0x19, 0x54, 0x7d,
- 	0xdf, 0x19, 0x32, 0x08,
--	0x60, 0x5b, 0x40, 0x6d,
--	0x01, 0x4c, 0x1a, 0x7d,
-+	0x60, 0x5b, 0x54, 0x6d,
-+	0x01, 0x4c, 0x2e, 0x7d,
- 	0x20, 0x19, 0x32, 0x00,
- 	0x01, 0xd9, 0xb2, 0x05,
- 	0x02, 0xea, 0xb4, 0x00,
- 	0x01, 0xd9, 0xb2, 0x05,
--	0x10, 0x5b, 0x38, 0x6d,
--	0x08, 0x5b, 0x42, 0x6d,
--	0x20, 0x5b, 0x32, 0x6d,
--	0x02, 0x5b, 0x62, 0x6d,
--	0x0e, 0xea, 0x64, 0x59,
-+	0x10, 0x5b, 0x4c, 0x6d,
-+	0x08, 0x5b, 0x56, 0x6d,
-+	0x20, 0x5b, 0x46, 0x6d,
-+	0x02, 0x5b, 0x76, 0x6d,
-+	0x0e, 0xea, 0x6e, 0x59,
- 	0x0e, 0xea, 0x04, 0x00,
--	0x80, 0xf9, 0x22, 0x6d,
-+	0x80, 0xf9, 0x36, 0x6d,
- 	0xdf, 0x5c, 0xb8, 0x08,
- 	0x01, 0xd9, 0xb2, 0x05,
--	0x01, 0xa4, 0x1d, 0x6e,
--	0x00, 0xe2, 0x68, 0x5c,
--	0x00, 0xe2, 0x6c, 0x5d,
-+	0x01, 0xa4, 0x37, 0x6e,
-+	0x00, 0xe2, 0x7c, 0x5c,
-+	0x00, 0xe2, 0x80, 0x5d,
- 	0x01, 0x90, 0x21, 0x1b,
- 	0x01, 0xd9, 0xb2, 0x05,
--	0x00, 0xe2, 0x52, 0x5b,
-+	0x00, 0xe2, 0x66, 0x5b,
- 	0xf3, 0x96, 0xd5, 0x19,
--	0x00, 0xe2, 0x50, 0x55,
--	0x80, 0x96, 0x51, 0x6d,
--	0x0f, 0xea, 0x64, 0x59,
-+	0x00, 0xe2, 0x64, 0x55,
-+	0x80, 0x96, 0x65, 0x6d,
-+	0x0f, 0xea, 0x6e, 0x59,
- 	0x0f, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x58, 0x45,
-+	0x00, 0xe2, 0x6c, 0x45,
- 	0x04, 0x8c, 0xe1, 0x30,
- 	0x01, 0xea, 0xf2, 0x00,
- 	0x02, 0xea, 0x36, 0x00,
- 	0xa8, 0xea, 0x32, 0x00,
--	0xff, 0x97, 0x5f, 0x7d,
--	0x14, 0xea, 0x64, 0x59,
-+	0xff, 0x97, 0x73, 0x7d,
-+	0x14, 0xea, 0x6e, 0x59,
- 	0x14, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0xce, 0x5d,
-+	0x00, 0xe2, 0xe2, 0x5d,
- 	0x01, 0xd9, 0xb2, 0x05,
- 	0x09, 0x80, 0xe1, 0x30,
- 	0x02, 0xea, 0x36, 0x00,
- 	0xa8, 0xea, 0x32, 0x00,
--	0x00, 0xe2, 0xc6, 0x5d,
-+	0x00, 0xe2, 0xda, 0x5d,
- 	0x01, 0xd9, 0xb2, 0x05,
--	0x02, 0xa6, 0x7c, 0x7d,
--	0x00, 0xe2, 0x56, 0x59,
--	0x20, 0x5b, 0x8a, 0x6d,
--	0xfc, 0x42, 0x76, 0x7d,
--	0x10, 0x40, 0x78, 0x6d,
--	0x20, 0x4d, 0x7a, 0x7d,
--	0x08, 0x5d, 0x8a, 0x6d,
--	0x02, 0xa6, 0x10, 0x6c,
--	0x00, 0xe2, 0x56, 0x59,
--	0x20, 0x5b, 0x8a, 0x6d,
--	0x01, 0x1b, 0xaa, 0x6d,
--	0xfc, 0x42, 0x86, 0x7d,
--	0x10, 0x40, 0x88, 0x6d,
-+	0x02, 0xa6, 0x90, 0x7d,
-+	0x00, 0xe2, 0x60, 0x59,
-+	0x20, 0x5b, 0x9e, 0x6d,
-+	0xfc, 0x42, 0x8a, 0x7d,
-+	0x10, 0x40, 0x8c, 0x6d,
-+	0x20, 0x4d, 0x8e, 0x7d,
-+	0x08, 0x5d, 0x9e, 0x6d,
-+	0x02, 0xa6, 0x24, 0x6c,
-+	0x00, 0xe2, 0x60, 0x59,
-+	0x20, 0x5b, 0x9e, 0x6d,
-+	0x01, 0x1b, 0xbe, 0x6d,
-+	0xfc, 0x42, 0x9a, 0x7d,
-+	0x10, 0x40, 0x9c, 0x6d,
- 	0x20, 0x4d, 0x84, 0x78,
- 	0x08, 0x5d, 0x84, 0x78,
- 	0x02, 0x19, 0x32, 0x00,
- 	0x01, 0x5b, 0x40, 0x31,
--	0x00, 0xe2, 0xea, 0x5c,
--	0x00, 0xe2, 0xcc, 0x5b,
-+	0x00, 0xe2, 0xfe, 0x5c,
-+	0x00, 0xe2, 0xe0, 0x5b,
- 	0x20, 0xea, 0xb6, 0x00,
--	0x00, 0xe2, 0x0a, 0x5c,
-+	0x00, 0xe2, 0x1e, 0x5c,
- 	0x20, 0x5c, 0xb8, 0x00,
--	0x04, 0x19, 0xa0, 0x6d,
--	0x01, 0x1a, 0xa0, 0x6d,
--	0x00, 0xe2, 0x56, 0x59,
-+	0x04, 0x19, 0xb4, 0x6d,
-+	0x01, 0x1a, 0xb4, 0x6d,
-+	0x00, 0xe2, 0x60, 0x59,
- 	0x01, 0x1a, 0x84, 0x78,
- 	0x80, 0xf9, 0xf2, 0x01,
--	0x20, 0xa0, 0x04, 0x7e,
-+	0x20, 0xa0, 0x18, 0x7e,
- 	0xff, 0x90, 0x21, 0x1b,
--	0x08, 0x92, 0x63, 0x6b,
-+	0x08, 0x92, 0x77, 0x6b,
- 	0x02, 0xea, 0xb4, 0x04,
- 	0x01, 0xa4, 0x49, 0x03,
--	0x40, 0x5b, 0xba, 0x6d,
--	0x00, 0xe2, 0x56, 0x59,
--	0x40, 0x5b, 0xba, 0x6d,
--	0x04, 0x5d, 0x1e, 0x7e,
--	0x01, 0x1a, 0x1e, 0x7e,
-+	0x40, 0x5b, 0xce, 0x6d,
-+	0x00, 0xe2, 0x60, 0x59,
-+	0x40, 0x5b, 0xce, 0x6d,
-+	0x04, 0x5d, 0x38, 0x7e,
-+	0x01, 0x1a, 0x38, 0x7e,
- 	0x20, 0x4d, 0x84, 0x78,
--	0x40, 0x5b, 0x04, 0x7e,
--	0x04, 0x5d, 0x1e, 0x7e,
--	0x01, 0x1a, 0x1e, 0x7e,
-+	0x40, 0x5b, 0x18, 0x7e,
-+	0x04, 0x5d, 0x38, 0x7e,
-+	0x01, 0x1a, 0x38, 0x7e,
- 	0x80, 0xf9, 0xf2, 0x01,
- 	0xff, 0x90, 0x21, 0x1b,
--	0x08, 0x92, 0x63, 0x6b,
-+	0x08, 0x92, 0x77, 0x6b,
- 	0x02, 0xea, 0xb4, 0x04,
--	0x00, 0xe2, 0x56, 0x59,
-+	0x00, 0xe2, 0x60, 0x59,
- 	0x01, 0x1b, 0x84, 0x78,
- 	0x80, 0xf9, 0xf2, 0x01,
- 	0x02, 0xea, 0xb4, 0x04,
--	0x00, 0xe2, 0x56, 0x59,
--	0x01, 0x1b, 0xe2, 0x6d,
--	0x40, 0x5b, 0xf0, 0x7d,
--	0x01, 0x1b, 0xe2, 0x6d,
-+	0x00, 0xe2, 0x60, 0x59,
-+	0x01, 0x1b, 0xf6, 0x6d,
-+	0x40, 0x5b, 0x04, 0x7e,
-+	0x01, 0x1b, 0xf6, 0x6d,
- 	0x02, 0x19, 0x32, 0x00,
- 	0x01, 0x1a, 0x84, 0x78,
- 	0x80, 0xf9, 0xf2, 0x01,
- 	0xff, 0xea, 0x10, 0x03,
- 	0x08, 0x92, 0x25, 0x03,
--	0x00, 0xe2, 0x62, 0x43,
--	0x01, 0x1a, 0xec, 0x7d,
--	0x40, 0x5b, 0xe8, 0x7d,
--	0x01, 0x1a, 0xd6, 0x6d,
-+	0x00, 0xe2, 0x76, 0x43,
-+	0x01, 0x1a, 0x00, 0x7e,
-+	0x40, 0x5b, 0xfc, 0x7d,
-+	0x01, 0x1a, 0xea, 0x6d,
- 	0xfc, 0x42, 0x84, 0x78,
--	0x01, 0x1a, 0xf0, 0x6d,
--	0x10, 0xea, 0x64, 0x59,
-+	0x01, 0x1a, 0x04, 0x6e,
-+	0x10, 0xea, 0x6e, 0x59,
- 	0x10, 0xea, 0x04, 0x00,
- 	0xfc, 0x42, 0x84, 0x78,
--	0x10, 0x40, 0xf6, 0x6d,
-+	0x10, 0x40, 0x0a, 0x6e,
- 	0x20, 0x4d, 0x84, 0x78,
--	0x40, 0x5b, 0xd6, 0x6d,
-+	0x40, 0x5b, 0xea, 0x6d,
- 	0x01, 0x1a, 0x84, 0x78,
- 	0x01, 0x90, 0x21, 0x1b,
- 	0x30, 0x3f, 0xc0, 0x09,
- 	0x30, 0xe0, 0x84, 0x60,
- 	0x40, 0x4b, 0x84, 0x68,
- 	0xff, 0xea, 0x52, 0x01,
--	0xee, 0x00, 0x0c, 0x6e,
-+	0xee, 0x00, 0x20, 0x6e,
- 	0x80, 0xf9, 0xf2, 0x01,
- 	0xff, 0x90, 0x21, 0x1b,
- 	0x02, 0xea, 0xb4, 0x00,
- 	0x20, 0xea, 0x9a, 0x00,
--	0xf3, 0x42, 0x16, 0x6e,
--	0x12, 0xea, 0x64, 0x59,
-+	0x04, 0x41, 0x26, 0x7e,
-+	0x08, 0xea, 0x98, 0x00,
-+	0x08, 0x57, 0xae, 0x00,
-+	0xf3, 0x42, 0x30, 0x6e,
-+	0x12, 0xea, 0x6e, 0x59,
- 	0x12, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x14, 0x42,
--	0x0d, 0xea, 0x64, 0x59,
-+	0x00, 0xe2, 0x28, 0x42,
-+	0x0d, 0xea, 0x6e, 0x59,
- 	0x0d, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x14, 0x42,
-+	0x00, 0xe2, 0x28, 0x42,
- 	0x01, 0x90, 0x21, 0x1b,
--	0x11, 0xea, 0x64, 0x59,
-+	0x11, 0xea, 0x6e, 0x59,
- 	0x11, 0xea, 0x04, 0x00,
--	0x00, 0xe2, 0x52, 0x5b,
-+	0x00, 0xe2, 0x66, 0x5b,
- 	0x08, 0x5a, 0xb4, 0x00,
--	0x00, 0xe2, 0x44, 0x5e,
-+	0x00, 0xe2, 0x5e, 0x5e,
- 	0xa8, 0xea, 0x32, 0x00,
--	0x00, 0xe2, 0x56, 0x59,
--	0x80, 0x1a, 0x32, 0x7e,
--	0x00, 0xe2, 0x44, 0x5e,
-+	0x00, 0xe2, 0x60, 0x59,
-+	0x80, 0x1a, 0x4c, 0x7e,
-+	0x00, 0xe2, 0x5e, 0x5e,
- 	0x80, 0x19, 0x32, 0x00,
--	0x40, 0x5b, 0x38, 0x6e,
--	0x08, 0x5a, 0x38, 0x7e,
-+	0x40, 0x5b, 0x52, 0x6e,
-+	0x08, 0x5a, 0x52, 0x7e,
- 	0x20, 0x4d, 0x84, 0x78,
- 	0x02, 0x84, 0x09, 0x03,
--	0x40, 0x5b, 0x04, 0x7e,
-+	0x40, 0x5b, 0x18, 0x7e,
- 	0xff, 0x90, 0x21, 0x1b,
- 	0x80, 0xf9, 0xf2, 0x01,
--	0x08, 0x92, 0x63, 0x6b,
-+	0x08, 0x92, 0x77, 0x6b,
- 	0x02, 0xea, 0xb4, 0x04,
- 	0x01, 0x40, 0xe1, 0x30,
- 	0x05, 0x41, 0xe3, 0x98,
-@@ -1039,138 +1052,138 @@ static struct patch {
- 	{ ahd_patch0_func, 64, 1, 1 },
- 	{ ahd_patch2_func, 67, 1, 2 },
- 	{ ahd_patch0_func, 68, 1, 1 },
--	{ ahd_patch4_func, 116, 1, 1 },
--	{ ahd_patch2_func, 175, 3, 1 },
--	{ ahd_patch1_func, 178, 2, 1 },
--	{ ahd_patch5_func, 180, 1, 1 },
--	{ ahd_patch2_func, 189, 1, 2 },
--	{ ahd_patch0_func, 190, 1, 1 },
--	{ ahd_patch6_func, 191, 2, 2 },
--	{ ahd_patch0_func, 193, 6, 3 },
--	{ ahd_patch2_func, 196, 1, 2 },
--	{ ahd_patch0_func, 197, 1, 1 },
--	{ ahd_patch2_func, 200, 1, 2 },
--	{ ahd_patch0_func, 201, 1, 1 },
--	{ ahd_patch3_func, 203, 1, 1 },
--	{ ahd_patch7_func, 204, 3, 1 },
--	{ ahd_patch3_func, 213, 1, 1 },
--	{ ahd_patch5_func, 214, 16, 2 },
--	{ ahd_patch0_func, 230, 1, 1 },
--	{ ahd_patch8_func, 250, 2, 1 },
--	{ ahd_patch1_func, 254, 1, 2 },
--	{ ahd_patch0_func, 255, 1, 1 },
--	{ ahd_patch7_func, 258, 3, 1 },
--	{ ahd_patch1_func, 273, 1, 2 },
--	{ ahd_patch0_func, 274, 1, 1 },
--	{ ahd_patch1_func, 277, 1, 2 },
--	{ ahd_patch0_func, 278, 1, 1 },
--	{ ahd_patch2_func, 281, 1, 2 },
--	{ ahd_patch0_func, 282, 1, 1 },
--	{ ahd_patch9_func, 295, 2, 2 },
--	{ ahd_patch0_func, 297, 1, 1 },
--	{ ahd_patch1_func, 339, 1, 2 },
--	{ ahd_patch0_func, 340, 1, 1 },
--	{ ahd_patch2_func, 348, 1, 2 },
--	{ ahd_patch0_func, 349, 1, 1 },
--	{ ahd_patch2_func, 352, 1, 2 },
--	{ ahd_patch0_func, 353, 1, 1 },
--	{ ahd_patch1_func, 359, 1, 2 },
--	{ ahd_patch0_func, 360, 1, 1 },
--	{ ahd_patch1_func, 362, 1, 2 },
-+	{ ahd_patch4_func, 115, 1, 1 },
-+	{ ahd_patch2_func, 180, 3, 1 },
-+	{ ahd_patch1_func, 183, 2, 1 },
-+	{ ahd_patch5_func, 185, 1, 1 },
-+	{ ahd_patch2_func, 194, 1, 2 },
-+	{ ahd_patch0_func, 195, 1, 1 },
-+	{ ahd_patch6_func, 196, 2, 2 },
-+	{ ahd_patch0_func, 198, 6, 3 },
-+	{ ahd_patch2_func, 201, 1, 2 },
-+	{ ahd_patch0_func, 202, 1, 1 },
-+	{ ahd_patch2_func, 205, 1, 2 },
-+	{ ahd_patch0_func, 206, 1, 1 },
-+	{ ahd_patch3_func, 208, 1, 1 },
-+	{ ahd_patch7_func, 209, 3, 1 },
-+	{ ahd_patch3_func, 218, 1, 1 },
-+	{ ahd_patch5_func, 219, 16, 2 },
-+	{ ahd_patch0_func, 235, 1, 1 },
-+	{ ahd_patch8_func, 260, 2, 1 },
-+	{ ahd_patch1_func, 264, 1, 2 },
-+	{ ahd_patch0_func, 265, 1, 1 },
-+	{ ahd_patch7_func, 268, 3, 1 },
-+	{ ahd_patch1_func, 283, 1, 2 },
-+	{ ahd_patch0_func, 284, 1, 1 },
-+	{ ahd_patch1_func, 287, 1, 2 },
-+	{ ahd_patch0_func, 288, 1, 1 },
-+	{ ahd_patch2_func, 291, 1, 2 },
-+	{ ahd_patch0_func, 292, 1, 1 },
-+	{ ahd_patch9_func, 305, 2, 2 },
-+	{ ahd_patch0_func, 307, 1, 1 },
-+	{ ahd_patch1_func, 349, 1, 2 },
-+	{ ahd_patch0_func, 350, 1, 1 },
-+	{ ahd_patch2_func, 358, 1, 2 },
-+	{ ahd_patch0_func, 359, 1, 1 },
-+	{ ahd_patch2_func, 362, 1, 2 },
- 	{ ahd_patch0_func, 363, 1, 1 },
--	{ ahd_patch10_func, 382, 1, 1 },
--	{ ahd_patch10_func, 385, 1, 1 },
--	{ ahd_patch10_func, 387, 1, 1 },
--	{ ahd_patch10_func, 399, 1, 1 },
--	{ ahd_patch1_func, 409, 1, 2 },
--	{ ahd_patch0_func, 410, 1, 1 },
--	{ ahd_patch1_func, 412, 1, 2 },
--	{ ahd_patch0_func, 413, 1, 1 },
--	{ ahd_patch1_func, 421, 1, 2 },
--	{ ahd_patch0_func, 422, 1, 1 },
--	{ ahd_patch2_func, 435, 1, 2 },
--	{ ahd_patch0_func, 436, 1, 1 },
--	{ ahd_patch11_func, 472, 1, 1 },
--	{ ahd_patch1_func, 480, 1, 2 },
--	{ ahd_patch0_func, 481, 1, 1 },
--	{ ahd_patch2_func, 493, 1, 2 },
--	{ ahd_patch0_func, 494, 1, 1 },
--	{ ahd_patch12_func, 497, 6, 2 },
--	{ ahd_patch0_func, 503, 1, 1 },
--	{ ahd_patch13_func, 524, 7, 1 },
--	{ ahd_patch14_func, 533, 1, 1 },
--	{ ahd_patch15_func, 542, 1, 1 },
--	{ ahd_patch16_func, 543, 1, 2 },
--	{ ahd_patch0_func, 544, 1, 1 },
--	{ ahd_patch17_func, 547, 1, 1 },
--	{ ahd_patch16_func, 548, 1, 1 },
--	{ ahd_patch18_func, 559, 1, 2 },
--	{ ahd_patch0_func, 560, 1, 1 },
--	{ ahd_patch1_func, 579, 1, 2 },
--	{ ahd_patch0_func, 580, 1, 1 },
--	{ ahd_patch1_func, 583, 1, 2 },
--	{ ahd_patch0_func, 584, 1, 1 },
--	{ ahd_patch2_func, 589, 1, 2 },
-+	{ ahd_patch1_func, 369, 1, 2 },
-+	{ ahd_patch0_func, 370, 1, 1 },
-+	{ ahd_patch1_func, 372, 1, 2 },
-+	{ ahd_patch0_func, 373, 1, 1 },
-+	{ ahd_patch10_func, 392, 1, 1 },
-+	{ ahd_patch10_func, 395, 1, 1 },
-+	{ ahd_patch10_func, 397, 1, 1 },
-+	{ ahd_patch10_func, 409, 1, 1 },
-+	{ ahd_patch1_func, 419, 1, 2 },
-+	{ ahd_patch0_func, 420, 1, 1 },
-+	{ ahd_patch1_func, 422, 1, 2 },
-+	{ ahd_patch0_func, 423, 1, 1 },
-+	{ ahd_patch1_func, 431, 1, 2 },
-+	{ ahd_patch0_func, 432, 1, 1 },
-+	{ ahd_patch2_func, 445, 1, 2 },
-+	{ ahd_patch0_func, 446, 1, 1 },
-+	{ ahd_patch11_func, 482, 1, 1 },
-+	{ ahd_patch1_func, 490, 1, 2 },
-+	{ ahd_patch0_func, 491, 1, 1 },
-+	{ ahd_patch2_func, 503, 1, 2 },
-+	{ ahd_patch0_func, 504, 1, 1 },
-+	{ ahd_patch12_func, 507, 6, 2 },
-+	{ ahd_patch0_func, 513, 1, 1 },
-+	{ ahd_patch13_func, 534, 7, 1 },
-+	{ ahd_patch14_func, 543, 1, 1 },
-+	{ ahd_patch15_func, 552, 1, 1 },
-+	{ ahd_patch16_func, 553, 1, 2 },
-+	{ ahd_patch0_func, 554, 1, 1 },
-+	{ ahd_patch17_func, 557, 1, 1 },
-+	{ ahd_patch16_func, 558, 1, 1 },
-+	{ ahd_patch18_func, 569, 1, 2 },
-+	{ ahd_patch0_func, 570, 1, 1 },
-+	{ ahd_patch1_func, 589, 1, 2 },
- 	{ ahd_patch0_func, 590, 1, 1 },
--	{ ahd_patch2_func, 594, 1, 2 },
--	{ ahd_patch0_func, 595, 1, 1 },
--	{ ahd_patch1_func, 596, 1, 2 },
--	{ ahd_patch0_func, 597, 1, 1 },
--	{ ahd_patch2_func, 608, 1, 2 },
--	{ ahd_patch0_func, 609, 1, 1 },
--	{ ahd_patch19_func, 613, 1, 1 },
--	{ ahd_patch20_func, 618, 1, 1 },
--	{ ahd_patch21_func, 619, 2, 1 },
--	{ ahd_patch20_func, 623, 1, 2 },
--	{ ahd_patch0_func, 624, 1, 1 },
--	{ ahd_patch2_func, 627, 1, 2 },
--	{ ahd_patch0_func, 628, 1, 1 },
--	{ ahd_patch2_func, 643, 1, 2 },
--	{ ahd_patch0_func, 644, 1, 1 },
--	{ ahd_patch13_func, 645, 14, 1 },
--	{ ahd_patch1_func, 663, 1, 2 },
--	{ ahd_patch0_func, 664, 1, 1 },
--	{ ahd_patch13_func, 665, 1, 1 },
--	{ ahd_patch1_func, 677, 1, 2 },
--	{ ahd_patch0_func, 678, 1, 1 },
--	{ ahd_patch1_func, 685, 1, 2 },
--	{ ahd_patch0_func, 686, 1, 1 },
--	{ ahd_patch19_func, 709, 1, 1 },
--	{ ahd_patch19_func, 747, 1, 1 },
--	{ ahd_patch1_func, 758, 1, 2 },
--	{ ahd_patch0_func, 759, 1, 1 },
--	{ ahd_patch1_func, 776, 1, 2 },
--	{ ahd_patch0_func, 777, 1, 1 },
--	{ ahd_patch1_func, 779, 1, 2 },
--	{ ahd_patch0_func, 780, 1, 1 },
--	{ ahd_patch1_func, 783, 1, 2 },
--	{ ahd_patch0_func, 784, 1, 1 },
--	{ ahd_patch22_func, 786, 1, 2 },
--	{ ahd_patch0_func, 787, 2, 1 },
--	{ ahd_patch23_func, 790, 4, 2 },
--	{ ahd_patch0_func, 794, 1, 1 },
--	{ ahd_patch23_func, 802, 11, 1 }
-+	{ ahd_patch1_func, 593, 1, 2 },
-+	{ ahd_patch0_func, 594, 1, 1 },
-+	{ ahd_patch2_func, 599, 1, 2 },
-+	{ ahd_patch0_func, 600, 1, 1 },
-+	{ ahd_patch2_func, 604, 1, 2 },
-+	{ ahd_patch0_func, 605, 1, 1 },
-+	{ ahd_patch1_func, 606, 1, 2 },
-+	{ ahd_patch0_func, 607, 1, 1 },
-+	{ ahd_patch2_func, 618, 1, 2 },
-+	{ ahd_patch0_func, 619, 1, 1 },
-+	{ ahd_patch19_func, 623, 1, 1 },
-+	{ ahd_patch20_func, 628, 1, 1 },
-+	{ ahd_patch21_func, 629, 2, 1 },
-+	{ ahd_patch20_func, 633, 1, 2 },
-+	{ ahd_patch0_func, 634, 1, 1 },
-+	{ ahd_patch2_func, 637, 1, 2 },
-+	{ ahd_patch0_func, 638, 1, 1 },
-+	{ ahd_patch2_func, 653, 1, 2 },
-+	{ ahd_patch0_func, 654, 1, 1 },
-+	{ ahd_patch13_func, 655, 14, 1 },
-+	{ ahd_patch1_func, 673, 1, 2 },
-+	{ ahd_patch0_func, 674, 1, 1 },
-+	{ ahd_patch13_func, 675, 1, 1 },
-+	{ ahd_patch1_func, 687, 1, 2 },
-+	{ ahd_patch0_func, 688, 1, 1 },
-+	{ ahd_patch1_func, 695, 1, 2 },
-+	{ ahd_patch0_func, 696, 1, 1 },
-+	{ ahd_patch19_func, 719, 1, 1 },
-+	{ ahd_patch19_func, 757, 1, 1 },
-+	{ ahd_patch1_func, 768, 1, 2 },
-+	{ ahd_patch0_func, 769, 1, 1 },
-+	{ ahd_patch7_func, 785, 3, 1 },
-+	{ ahd_patch1_func, 789, 1, 2 },
-+	{ ahd_patch0_func, 790, 1, 1 },
-+	{ ahd_patch1_func, 792, 1, 2 },
-+	{ ahd_patch0_func, 793, 1, 1 },
-+	{ ahd_patch1_func, 796, 1, 2 },
-+	{ ahd_patch0_func, 797, 1, 1 },
-+	{ ahd_patch22_func, 799, 1, 2 },
-+	{ ahd_patch0_func, 800, 2, 1 },
-+	{ ahd_patch23_func, 803, 4, 2 },
-+	{ ahd_patch0_func, 807, 1, 1 },
-+	{ ahd_patch23_func, 815, 11, 1 }
- };
- 
- static struct cs {
- 	uint16_t	begin;
- 	uint16_t	end;
- } critical_sections[] = {
--	{ 17, 28 },
--	{ 29, 30 },
-+	{ 17, 30 },
- 	{ 47, 58 },
- 	{ 61, 63 },
- 	{ 65, 66 },
- 	{ 72, 92 },
--	{ 110, 137 },
--	{ 138, 175 },
--	{ 180, 188 },
--	{ 213, 264 },
--	{ 425, 433 },
--	{ 443, 445 },
--	{ 448, 457 },
--	{ 709, 739 },
--	{ 749, 753 }
-+	{ 110, 142 },
-+	{ 143, 180 },
-+	{ 185, 193 },
-+	{ 218, 274 },
-+	{ 435, 443 },
-+	{ 453, 455 },
-+	{ 458, 467 },
-+	{ 719, 749 },
-+	{ 759, 763 }
- };
- 
- static const int num_critical_sections = sizeof(critical_sections)
+ aicdb.h:
+-	@if [ -e "/usr/include/db4/db_185.h" ]; then		\
+-		echo "#include <db4/db_185.h>" > aicdb.h;	\
+-	 elif [ -e "/usr/include/db3/db_185.h" ]; then		\
++	@if [ -e "/usr/include/db3/db_185.h" ]; then		\
+ 		echo "#include <db3/db_185.h>" > aicdb.h;	\
+ 	 elif [ -e "/usr/include/db2/db_185.h" ]; then		\
+ 		echo "#include <db2/db_185.h>" > aicdb.h;	\
+-	 elif [ -e "/usr/include/db1/db_185.h" ]; then		\
+-		echo "#include <db1/db_185.h>" > aicdb.h;	\
+ 	 elif [ -e "/usr/include/db/db_185.h" ]; then		\
+ 		echo "#include <db/db_185.h>" > aicdb.h;	\
+ 	 elif [ -e "/usr/include/db_185.h" ]; then		\
 diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm.c b/drivers/scsi/aic7xxx/aicasm/aicasm.c
 --- a/drivers/scsi/aic7xxx/aicasm/aicasm.c
 +++ b/drivers/scsi/aic7xxx/aicasm/aicasm.c
@@ -2483,8 +1381,8 @@ diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm.c b/drivers/scsi/aic7xxx/aicasm/
   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   * POSSIBILITY OF SUCH DAMAGES.
   *
-- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm.c#23 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm.c#22 $
+- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm.c#22 $
++ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm.c#23 $
   *
   * $FreeBSD$
   */
@@ -2492,40 +1390,40 @@ diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm.c b/drivers/scsi/aic7xxx/aicasm/
  
  		while (line < cur_instr->srcline) {
  			fgets(buf, sizeof(buf), ifile);
--				fprintf(listfile, "             \t%s", buf);
-+				fprintf(listfile, "\t\t%s", buf);
+-				fprintf(listfile, "\t\t%s", buf);
++				fprintf(listfile, "             \t%s", buf);
  				line++;
  		}
--		fprintf(listfile, "%04x %02x%02x%02x%02x", instrptr,
-+		fprintf(listfile, "%03x %02x%02x%02x%02x", instrptr,
+-		fprintf(listfile, "%03x %02x%02x%02x%02x", instrptr,
++		fprintf(listfile, "%04x %02x%02x%02x%02x", instrptr,
  #ifdef __LITTLE_ENDIAN
  			cur_instr->format.bytes[0],
  			cur_instr->format.bytes[1],
-@@ -624,23 +624,14 @@ output_listing(char *ifilename)
+@@ -624,14 +624,23 @@ output_listing(char *ifilename)
  			cur_instr->format.bytes[1],
  			cur_instr->format.bytes[0]);
  #endif
--		/*
--		 * Macro expansions can cause several instructions
--		 * to be output for a single source line.  Only
--		 * advance the line once in these cases.
--		 */
--		if (line == cur_instr->srcline) {
--			fgets(buf, sizeof(buf), ifile);
--			fprintf(listfile, "\t%s", buf);
--			line++;
--		} else {
--			fprintf(listfile, "\n");
--		}
-+		fgets(buf, sizeof(buf), ifile);
-+		fprintf(listfile, "\t%s", buf);
-+		line++;
+-		fgets(buf, sizeof(buf), ifile);
+-		fprintf(listfile, "\t%s", buf);
+-		line++;
++		/*
++		 * Macro expansions can cause several instructions
++		 * to be output for a single source line.  Only
++		 * advance the line once in these cases.
++		 */
++		if (line == cur_instr->srcline) {
++			fgets(buf, sizeof(buf), ifile);
++			fprintf(listfile, "\t%s", buf);
++			line++;
++		} else {
++			fprintf(listfile, "\n");
++		}
  		instrptr++;
  	}
  	/* Dump the remainder of the file */
  	while(fgets(buf, sizeof(buf), ifile) != NULL)
--		fprintf(listfile, "             %s", buf);
-+		fprintf(listfile, "\t\t%s", buf);
+-		fprintf(listfile, "\t\t%s", buf);
++		fprintf(listfile, "             %s", buf);
  
  	fclose(ifile);
  }
@@ -2536,196 +1434,196 @@ diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y b/drivers/scsi/aic7xxx/ai
   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   * POSSIBILITY OF SUCH DAMAGES.
   *
-- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_gram.y#30 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_gram.y#29 $
+- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_gram.y#29 $
++ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_gram.y#30 $
   *
   * $FreeBSD$
   */
-@@ -157,8 +157,6 @@ static int  is_download_const(expression
+@@ -157,6 +157,8 @@ static int  is_download_const(expression
  
  %token T_END_CS
  
--%token T_PAD_PAGE
--
++%token T_PAD_PAGE
++
  %token T_FIELD
  
  %token T_ENUM
-@@ -191,10 +189,6 @@ static int  is_download_const(expression
+@@ -189,6 +191,10 @@ static int  is_download_const(expression
  
  %token <value> T_OR
  
--/* 16 bit extensions */
--%token <value> T_OR16 T_AND16 T_XOR16 T_ADD16
--%token <value> T_ADC16 T_MVI16 T_TEST16 T_CMP16 T_CMPXCHG
--
++/* 16 bit extensions */
++%token <value> T_OR16 T_AND16 T_XOR16 T_ADD16
++%token <value> T_ADC16 T_MVI16 T_TEST16 T_CMP16 T_CMPXCHG
++
  %token T_RET
  
  %token T_NOP
-@@ -213,7 +207,7 @@ static int  is_download_const(expression
+@@ -207,7 +213,7 @@ static int  is_download_const(expression
  
  %type <expression> expression immediate immediate_or_a
  
--%type <value> export ret f1_opcode f2_opcode f4_opcode jmp_jc_jnc_call jz_jnz je_jne
-+%type <value> export ret f1_opcode f2_opcode jmp_jc_jnc_call jz_jnz je_jne
+-%type <value> export ret f1_opcode f2_opcode jmp_jc_jnc_call jz_jnz je_jne
++%type <value> export ret f1_opcode f2_opcode f4_opcode jmp_jc_jnc_call jz_jnz je_jne
  
  %type <value> mode_value mode_list macro_arglist
  
-@@ -1310,15 +1304,6 @@ f2_opcode:
+@@ -1304,6 +1310,15 @@ f2_opcode:
  |	T_ROR { $$ = AIC_OP_ROR; }
  ;
  
--f4_opcode:
--	T_OR16	{ $$ = AIC_OP_OR16; }
--|	T_AND16 { $$ = AIC_OP_AND16; }
--|	T_XOR16 { $$ = AIC_OP_XOR16; }
--|	T_ADD16 { $$ = AIC_OP_ADD16; }
--|	T_ADC16 { $$ = AIC_OP_ADC16; }
--|	T_MVI16 { $$ = AIC_OP_MVI16; }
--;
--
++f4_opcode:
++	T_OR16	{ $$ = AIC_OP_OR16; }
++|	T_AND16 { $$ = AIC_OP_AND16; }
++|	T_XOR16 { $$ = AIC_OP_XOR16; }
++|	T_ADD16 { $$ = AIC_OP_ADD16; }
++|	T_ADC16 { $$ = AIC_OP_ADC16; }
++|	T_MVI16 { $$ = AIC_OP_MVI16; }
++;
++
  code:
  	f2_opcode destination ',' expression opt_source ret ';'
  	{
 diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h b/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h
 --- a/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h
 +++ b/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h
-@@ -37,14 +37,13 @@
+@@ -37,13 +37,14 @@
   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   * POSSIBILITY OF SUCH DAMAGES.
   *
-- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_insformat.h#12 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_insformat.h#11 $
+- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_insformat.h#11 $
++ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_insformat.h#12 $
   *
   * $FreeBSD$
   */
  
  #include <asm/byteorder.h>
  
--/* 8bit ALU logic operations */
++/* 8bit ALU logic operations */
  struct ins_format1 {
  #ifdef __LITTLE_ENDIAN
  	uint32_t	immediate	: 8,
-@@ -63,7 +62,6 @@ struct ins_format1 {
+@@ -62,6 +63,7 @@ struct ins_format1 {
  #endif
  };
  
--/* 8bit ALU shift/rotate operations */
++/* 8bit ALU shift/rotate operations */
  struct ins_format2 {
  #ifdef __LITTLE_ENDIAN
  	uint32_t	shift_control	: 8,
-@@ -82,7 +80,6 @@ struct ins_format2 {
+@@ -80,6 +82,7 @@ struct ins_format2 {
  #endif
  };
  
--/* 8bit branch control operations */
++/* 8bit branch control operations */
  struct ins_format3 {
  #ifdef __LITTLE_ENDIAN
  	uint32_t	immediate	: 8,
-@@ -99,68 +96,10 @@ struct ins_format3 {
+@@ -96,10 +99,68 @@ struct ins_format3 {
  #endif
  };
  
--/* 16bit ALU logic operations */
--struct ins_format4 {
--#ifdef __LITTLE_ENDIAN
--	uint32_t	opcode_ext	: 8,
--			source		: 9,
--			destination	: 9,
--			ret		: 1,
--			opcode		: 4,
--			parity		: 1;
--#else
--	uint32_t	parity		: 1,
--			opcode		: 4,
--			ret		: 1,
--			destination	: 9,
--			source		: 9,
--			opcode_ext	: 8;
--#endif
--};
--
--/* 16bit branch control operations */
--struct ins_format5 {
--#ifdef __LITTLE_ENDIAN
--	uint32_t	opcode_ext	: 8,
--			source		: 9,
--			address		: 10,
--			opcode		: 4,
--			parity		: 1;
--#else
--	uint32_t	parity		: 1,
--			opcode		: 4,
--			address		: 10,
--			source		: 9,
--			opcode_ext	: 8;
--#endif
--};
--
--/*  Far branch operations */
--struct ins_format6 {
--#ifdef __LITTLE_ENDIAN
--	uint32_t	page		: 3,
--			opcode_ext	: 5,
--			source		: 9,
--			address		: 10,
--			opcode		: 4,
--			parity		: 1;
--#else
--	uint32_t	parity		: 1,
--			opcode		: 4,
--			address		: 10,
--			source		: 9,
--			opcode_ext	: 5,
--			page		: 3;
--#endif
--};
--
++/* 16bit ALU logic operations */
++struct ins_format4 {
++#ifdef __LITTLE_ENDIAN
++	uint32_t	opcode_ext	: 8,
++			source		: 9,
++			destination	: 9,
++			ret		: 1,
++			opcode		: 4,
++			parity		: 1;
++#else
++	uint32_t	parity		: 1,
++			opcode		: 4,
++			ret		: 1,
++			destination	: 9,
++			source		: 9,
++			opcode_ext	: 8;
++#endif
++};
++
++/* 16bit branch control operations */
++struct ins_format5 {
++#ifdef __LITTLE_ENDIAN
++	uint32_t	opcode_ext	: 8,
++			source		: 9,
++			address		: 10,
++			opcode		: 4,
++			parity		: 1;
++#else
++	uint32_t	parity		: 1,
++			opcode		: 4,
++			address		: 10,
++			source		: 9,
++			opcode_ext	: 8;
++#endif
++};
++
++/*  Far branch operations */
++struct ins_format6 {
++#ifdef __LITTLE_ENDIAN
++	uint32_t	page		: 3,
++			opcode_ext	: 5,
++			source		: 9,
++			address		: 10,
++			opcode		: 4,
++			parity		: 1;
++#else
++	uint32_t	parity		: 1,
++			opcode		: 4,
++			address		: 10,
++			source		: 9,
++			opcode_ext	: 5,
++			page		: 3;
++#endif
++};
++
  union ins_formats {
  		struct ins_format1 format1;
  		struct ins_format2 format2;
  		struct ins_format3 format3;
--		struct ins_format4 format4;
--		struct ins_format5 format5;
--		struct ins_format6 format6;
++		struct ins_format4 format4;
++		struct ins_format5 format5;
++		struct ins_format6 format6;
  		uint8_t		   bytes[4];
  		uint32_t	   integer;
  };
-@@ -179,8 +118,6 @@ struct instruction {
+@@ -118,6 +179,8 @@ struct instruction {
  #define	AIC_OP_ROL	0x5
  #define	AIC_OP_BMOV	0x6
  
--#define	AIC_OP_MVI16	0x7
--
++#define	AIC_OP_MVI16	0x7
++
  #define	AIC_OP_JMP	0x8
  #define AIC_OP_JC	0x9
  #define AIC_OP_JNC	0xa
-@@ -194,26 +131,3 @@ struct instruction {
+@@ -131,3 +194,26 @@ struct instruction {
  #define	AIC_OP_SHL	0x10
  #define	AIC_OP_SHR	0x20
  #define	AIC_OP_ROR	0x30
--
--/* 16bit Ops. Low byte main opcode.  High byte extended opcode. */ 
--#define	AIC_OP_OR16	0x8005
--#define	AIC_OP_AND16	0x8105
--#define	AIC_OP_XOR16	0x8205
--#define	AIC_OP_ADD16	0x8305
--#define	AIC_OP_ADC16	0x8405
--#define AIC_OP_JNE16	0x8805
--#define AIC_OP_JNZ16	0x8905
--#define AIC_OP_JE16	0x8C05
--#define AIC_OP_JZ16	0x8B05
--#define AIC_OP_JMP16	0x9005
--#define AIC_OP_JC16	0x9105
--#define AIC_OP_JNC16	0x9205
--#define AIC_OP_CALL16	0x9305
--#define AIC_OP_CALL16	0x9305
--
--/* Page extension is low three bits of second opcode byte. */
--#define AIC_OP_JMPF	0xA005
--#define AIC_OP_CALLF	0xB005
--#define AIC_OP_JCF	0xC005
--#define AIC_OP_JNCF	0xD005
--#define AIC_OP_CMPXCHG	0xE005
++
++/* 16bit Ops. Low byte main opcode.  High byte extended opcode. */ 
++#define	AIC_OP_OR16	0x8005
++#define	AIC_OP_AND16	0x8105
++#define	AIC_OP_XOR16	0x8205
++#define	AIC_OP_ADD16	0x8305
++#define	AIC_OP_ADC16	0x8405
++#define AIC_OP_JNE16	0x8805
++#define AIC_OP_JNZ16	0x8905
++#define AIC_OP_JE16	0x8C05
++#define AIC_OP_JZ16	0x8B05
++#define AIC_OP_JMP16	0x9005
++#define AIC_OP_JC16	0x9105
++#define AIC_OP_JNC16	0x9205
++#define AIC_OP_CALL16	0x9305
++#define AIC_OP_CALL16	0x9305
++
++/* Page extension is low three bits of second opcode byte. */
++#define AIC_OP_JMPF	0xA005
++#define AIC_OP_CALLF	0xB005
++#define AIC_OP_JCF	0xC005
++#define AIC_OP_JNCF	0xD005
++#define AIC_OP_CMPXCHG	0xE005
 diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l b/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
 --- a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
 +++ b/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
@@ -2733,8 +1631,8 @@ diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l b/drivers/scsi/aic7xxx/ai
   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   * POSSIBILITY OF SUCH DAMAGES.
   *
-- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_scan.l#20 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_scan.l#19 $
+- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_scan.l#19 $
++ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_scan.l#20 $
   *
   * $FreeBSD$
   */
@@ -2742,54 +1640,54 @@ diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l b/drivers/scsi/aic7xxx/ai
  						*string_buf_ptr++ = *yptr++;
  				}
  			}
--else			{ return T_ELSE; }
-+
+-
++else			{ return T_ELSE; }
  VERSION			{ return T_VERSION; }
  PREFIX			{ return T_PREFIX; }
  PATCH_ARG_LIST		{ return T_PATCH_ARG_LIST; }
-@@ -173,6 +173,10 @@ RW|RO|WO		{
+@@ -173,10 +173,6 @@ RW|RO|WO		{
  					yylval.value = WO;
  				 return T_MODE;
  			}
-+BEGIN_CRITICAL		{ return T_BEGIN_CS; }
-+END_CRITICAL		{ return T_END_CS; }
-+SET_SRC_MODE		{ return T_SET_SRC_MODE; }
-+SET_DST_MODE		{ return T_SET_DST_MODE; }
- field			{ return T_FIELD; }
- enum			{ return T_ENUM; }
- mask			{ return T_MASK; }
-@@ -188,13 +192,6 @@ none			{ return T_NONE; }
- sindex			{ return T_SINDEX; }
- A			{ return T_A; }
- 
--	/* Instruction Formatting */
--PAD_PAGE		{ return T_PAD_PAGE; }
 -BEGIN_CRITICAL		{ return T_BEGIN_CS; }
 -END_CRITICAL		{ return T_END_CS; }
 -SET_SRC_MODE		{ return T_SET_SRC_MODE; }
 -SET_DST_MODE		{ return T_SET_DST_MODE; }
--
+ field			{ return T_FIELD; }
+ enum			{ return T_ENUM; }
+ mask			{ return T_MASK; }
+@@ -192,6 +188,13 @@ none			{ return T_NONE; }
+ sindex			{ return T_SINDEX; }
+ A			{ return T_A; }
+ 
++	/* Instruction Formatting */
++PAD_PAGE		{ return T_PAD_PAGE; }
++BEGIN_CRITICAL		{ return T_BEGIN_CS; }
++END_CRITICAL		{ return T_END_CS; }
++SET_SRC_MODE		{ return T_SET_SRC_MODE; }
++SET_DST_MODE		{ return T_SET_DST_MODE; }
++
  	/* Opcodes */
  shl			{ return T_SHL; }
  shr			{ return T_SHR; }
-@@ -226,17 +223,7 @@ and			{ return T_AND;	}
+@@ -223,7 +226,17 @@ and			{ return T_AND;	}
  or			{ return T_OR;	}
  ret			{ return T_RET; }
  nop			{ return T_NOP; }
--
--	/* ARP2 16bit extensions */
--or16			{ return T_OR16; }
--and16			{ return T_AND16; }
--xor16			{ return T_XOR16; }
--add16			{ return T_ADD16; }
--adc16			{ return T_ADC16; }
--mvi16			{ return T_MVI16; }
--test16			{ return T_TEST16; }
--cmp16			{ return T_CMP16; }
--cmpxchg			{ return T_CMPXCHG; }
-+else			{ return T_ELSE; }
+-else			{ return T_ELSE; }
++
++	/* ARP2 16bit extensions */
++or16			{ return T_OR16; }
++and16			{ return T_AND16; }
++xor16			{ return T_XOR16; }
++add16			{ return T_ADD16; }
++adc16			{ return T_ADC16; }
++mvi16			{ return T_MVI16; }
++test16			{ return T_TEST16; }
++cmp16			{ return T_CMP16; }
++cmpxchg			{ return T_CMPXCHG; }
  
  	/* Allowed Symbols */
  \<\<			{ return T_EXPR_LSHIFT; }
 
---------------050909060306010905020003--
+--------------090409020807080505070401--
