@@ -1,68 +1,47 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 1/1] sg: Remove aha1542 hack
-Date: Wed, 18 Jan 2006 09:34:54 +1000
-Message-ID: <43CD7F1E.8010908@torque.net>
-References: <200601172304.k0HN46YN013092@d01av04.pok.ibm.com>
-Reply-To: dougg@torque.net
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Marvell SATA status
+Date: Tue, 17 Jan 2006 18:41:52 -0500
+Message-ID: <87f94c370601171541m316aba65ld90c6f22c784fefd@mail.gmail.com>
+References: <43CD67E1.7080703@int.gl3>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:29157 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S932275AbWAQXeV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jan 2006 18:34:21 -0500
-In-Reply-To: <200601172304.k0HN46YN013092@d01av04.pok.ibm.com>
+Received: from wproxy.gmail.com ([64.233.184.197]:62764 "EHLO wproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S932476AbWAQXlx convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Jan 2006 18:41:53 -0500
+Received: by wproxy.gmail.com with SMTP id 36so37869wra
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2006 15:41:52 -0800 (PST)
+In-Reply-To: <43CD67E1.7080703@int.gl3>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-brking@us.ibm.com wrote:
-> Remove a hack in the sg driver that alters the total buffer
-> length for SG_IO commands to ensure buffers are not odd byte
-> lengths. This breaks on the ipr driver since it requires the
-> request_bufflen to equal the length specified in the cdb.
-> The block layer SG_IO code does not appear to have this hack.
+On 1/17/06, Jan Bakuwel <jan.bakuwel@int.greenpeace.org> wrote:
+> Hi,
+>
+> I need to decide whether to add an additional 3ware SATA RAID adapter to
+> a server or to utilise the onboard Marvell SATA RAID adapter
+> (preferred). The Marvell driver (2.6.15.1) is "highly experimental" and
+> I see no traffic mentioning this driver since Sept last year... I was
+> wondering what the current status is. If it's still alive I'm obviously
+> offering to help debug it...
+>
+> cheers,
+> Jan
+Jan,
 
-Brian,
-Yes, that is ok with me. The aha1542 may not be
-the only adapter sensitive to odd data transfer
-lengths. In the spirit of a pass through we can
-let the user round up to even if it is needed.
+I believe that driver is discussed on the libata (or sata) list
+(linux-ide@vger.kernel.org), not the scsi list.
 
-The _original_ block layer SG_IO code didn't have
-a "hack" called error processing either :-)
+A status message was just posted there saying at least one of the
+Marvell SATA controllers is marked "highly experimental" for a reason,
+but please post feedback as it is still being worked on.
 
-The ipr driver looking inside the cdb to determine
-data transfer length is a dangerous procedure. Does
-the ipr driver support vendor specific commands?
-Even the ubiquitous INQUIRY cdb is tricky since byte 3
-became the upper 8 bits of the allocation length in
-SPC-3 (it was reserved before that). So does the
-driver interpret it as active depending on the age
-of the lu?
-
-Signed-off-by: Douglas Gilbert <dougg@torque.net>
-
-> Signed-off-by: Brian King <brking@us.ibm.com>
-> ---
-> 
->  linux-2.6-bjking1/drivers/scsi/sg.c |    2 +-
->  1 files changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff -puN drivers/scsi/sg.c~sg_remove_aha1542_hack drivers/scsi/sg.c
-> --- linux-2.6/drivers/scsi/sg.c~sg_remove_aha1542_hack	2006-01-17 16:50:16.000000000 -0600
-> +++ linux-2.6-bjking1/drivers/scsi/sg.c	2006-01-17 16:50:29.000000000 -0600
-> @@ -2162,7 +2162,7 @@ sg_link_reserve(Sg_fd * sfp, Sg_request 
->  
->  	srp->res_used = 1;
->  	SCSI_LOG_TIMEOUT(4, printk("sg_link_reserve: size=%d\n", size));
-> -	rem = size = (size + 1) & (~1);	/* round to even for aha1542 */
-> +	rem = size;
->  
->  	for (k = 0; k < rsv_schp->k_use_sg; ++k, ++sg) {
->  		num = sg->length;
-> _
-> 
-
+Greg
+--
+Greg Freemyer
+The Norcross Group
+Forensics for the 21st Century
