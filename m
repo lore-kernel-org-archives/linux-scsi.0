@@ -1,69 +1,62 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH 2/8] fusion - mptsas, increase discovery timout to 300 seconds
-Date: Tue, 17 Jan 2006 09:54:36 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F1AAD58@NAMAIL2.ad.lsil.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: [PATCH] Neaten comments in scsi_cmnd.h
+Date: Tue, 17 Jan 2006 11:54:24 -0700
+Message-ID: <20060117185424.GM19769@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:13995 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932179AbWAQQyq convert rfc822-to-8bit
+Received: from palinux.external.hp.com ([192.25.206.14]:55463 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S932408AbWAQSyY
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jan 2006 11:54:46 -0500
-Content-class: urn:content-classes:message
+	Tue, 17 Jan 2006 13:54:24 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
-
-On Monday, January 16, 2006 8:45 PM, Douglas Gilbert wrote: 
-
-> Moore, Eric wrote:
-> > Increase the port enable timeout only for SAS from 30 to 
-> 300 seconds.
-> > A customer request for the handling large topologies.
-> 
-> Eric,
-> I have seen various reports concerning SAS HBAs taking
-> "forever" to initialize/discover (various HBA manufacturers,
-> various OSes). Perhaps you could enlighten me why these
-> timeouts need to be so large.
-
-The timeout before was already 300 seconds when
-there was Integrated RAID firmware detected.  We are not
-changing that.  My request is for non-raid SAS firmware, 
-which before was 30 seconds.  Some customers having several
-expanders, devices, and external raid boxs, find that 30 
-seconds is not enough time to complete discovery by the firwmare.
-If discovery didn't complete in that small 30 second timeframe, 
-the driver didn't load.
-
-I'm not sure what reports your getting about discovery taking
-forever.  Was that LSI SAS, or someone else's hardware. 
-Please enlighten me on that.
+To: linux-scsi@vger.kernel.org
 
 
-> 
-> Also if a SAS domain does not contain a fanout expander,
-> doesn't that limit the domain to around 128 or 256
-> SCSI devices (sum of scsi initiator and target ports)?
-> If so, perhaps the timeout could be one of two values,
-> a larger value if a fanout expander was found in
-> the most recent discover process.
-> 
+Wrap these two comments at 80 columns
 
-This is firmware assist hardware.  The port enable is
-done only when the driver loads.  From port enable, 
-the discovery is done in the firmware.  From the driver side, 
-we only know about sas topology once the firmware completed 
-their discovery.  So I'm not sure how we would be able to 
-set timeout for port enable before discovery.  Because before
-that point, the device config pages would not be valid.
+Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 
-
-Eric Moore
-
-
-
-
+Index: include/scsi/scsi_cmnd.h
+===================================================================
+RCS file: /var/lib/cvs/linux-2.6/include/scsi/scsi_cmnd.h,v
+retrieving revision 1.12
+diff -u -p -r1.12 scsi_cmnd.h
+--- include/scsi/scsi_cmnd.h	17 Jan 2006 14:52:57 -0000	1.12
++++ include/scsi/scsi_cmnd.h	17 Jan 2006 17:35:04 -0000
+@@ -104,10 +104,10 @@ struct scsi_cmnd {
+ 				   	   working on */
+ 
+ #define SCSI_SENSE_BUFFERSIZE 	96
+-	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];		/* obtained by REQUEST SENSE
+-						 * when CHECK CONDITION is
+-						 * received on original command 
+-						 * (auto-sense) */
++	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];
++				/* obtained by REQUEST SENSE when
++				 * CHECK CONDITION is received on original
++				 * command (auto-sense) */
+ 
+ 	/* Low-level done function - can be used by low-level driver to point
+ 	 *        to completion function.  Not used by mid/upper level code. */
+@@ -120,12 +120,12 @@ struct scsi_cmnd {
+ 	struct scsi_pointer SCp;	/* Scratchpad used by some host adapters */
+ 
+ 	unsigned char *host_scribble;	/* The host adapter is allowed to
+-					   * call scsi_malloc and get some memory
+-					   * and hang it here.     The host adapter
+-					   * is also expected to call scsi_free
+-					   * to release this memory.  (The memory
+-					   * obtained by scsi_malloc is guaranteed
+-					   * to be at an address < 16Mb). */
++					 * call scsi_malloc and get some memory
++					 * and hang it here.  The host adapter
++					 * is also expected to call scsi_free
++					 * to release this memory.  (The memory
++					 * obtained by scsi_malloc is guaranteed
++					 * to be at an address < 16Mb). */
+ 
+ 	int result;		/* Status code from lower level driver */
+ 
