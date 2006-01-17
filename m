@@ -1,59 +1,38 @@
-From: Jesper Juhl <jesper.juhl@gmail.com>
-Subject: [PATCH] add a few missing spaces to MODULE_PARM_DESC() text for qla2xxx
-Date: Tue, 17 Jan 2006 21:06:42 +0100
-Message-ID: <200601172106.42640.jesper.juhl@gmail.com>
+From: Jan Bakuwel <jan.bakuwel@int.greenpeace.org>
+Subject: Marvell SATA status
+Date: Tue, 17 Jan 2006 22:55:45 +0100
+Message-ID: <43CD67E1.7080703@int.gl3>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.202]:49523 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S964791AbWAQUGh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jan 2006 15:06:37 -0500
-Received: by xproxy.gmail.com with SMTP id i30so1105040wxd
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2006 12:06:37 -0800 (PST)
-Content-Disposition: inline
+Received: from fw.greenpeace.org ([212.19.215.77]:64968 "EHLO
+	fw.greenpeace.org") by vger.kernel.org with ESMTP id S932441AbWAQV5L
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Jan 2006 16:57:11 -0500
+Received: (from root@localhost) by fw.greenpeace.org (8.9.3c/8.6.12) id WAA22843 for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2006 22:57:09 +0100 (CET)
+Received: by fw.greenpeace.org (TUNIX/Firewall SMTP Server)
+	for <linux-scsi@vger.kernel.org> id sma022011; Tue, 17 Jan 06 22:56:02 +0100
+Received: from gpclust2.int.gl3 (localhost.localdomain [127.0.0.1])
+	by localhost (Postfix) with SMTP id 25B7C10C004
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2006 22:56:01 +0100 (CET)
+Received: from [192.168.206.251] (unknown [192.168.206.251])
+	by mail.int.gl3 (Postfix) with ESMTP id 6C12F10C002
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2006 22:56:00 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jesper Juhl <jesper.juhl@gmail.com>
+To: linux-scsi@vger.kernel.org
+
+Hi,
+
+I need to decide whether to add an additional 3ware SATA RAID adapter to
+a server or to utilise the onboard Marvell SATA RAID adapter
+(preferred). The Marvell driver (2.6.15.1) is "highly experimental" and
+I see no traffic mentioning this driver since Sept last year... I was
+wondering what the current status is. If it's still alive I'm obviously
+offering to help debug it...
+
+cheers,
+Jan
 
 
-Add a few spaces to MODULE_PARM_DESC() text for qla2xxx. Without these 
-spaces text runs together when modinfo prints the text.
-
-Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
----
-
- drivers/scsi/qla2xxx/qla_os.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
---- linux-2.6.16-rc1-orig/drivers/scsi/qla2xxx/qla_os.c	2006-01-17 19:14:07.000000000 +0100
-+++ linux-2.6.16-rc1/drivers/scsi/qla2xxx/qla_os.c	2006-01-17 21:01:17.000000000 +0100
-@@ -39,14 +39,14 @@
- int qlport_down_retry = 30;
- module_param(qlport_down_retry, int, S_IRUGO|S_IRUSR);
- MODULE_PARM_DESC(qlport_down_retry,
--		"Maximum number of command retries to a port that returns"
-+		"Maximum number of command retries to a port that returns "
- 		"a PORT-DOWN status.");
- 
- int ql2xplogiabsentdevice;
- module_param(ql2xplogiabsentdevice, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(ql2xplogiabsentdevice,
- 		"Option to enable PLOGI to devices that are not present after "
--		"a Fabric scan.  This is needed for several broken switches."
-+		"a Fabric scan.  This is needed for several broken switches. "
- 		"Default is 0 - no PLOGI. 1 - perfom PLOGI.");
- 
- int ql2xloginretrycount = 0;
-@@ -74,7 +74,7 @@
- int ql2xprocessrscn;
- module_param(ql2xprocessrscn, int, S_IRUGO|S_IRUSR);
- MODULE_PARM_DESC(ql2xprocessrscn,
--		"Option to enable port RSCN handling via a series of less"
-+		"Option to enable port RSCN handling via a series of less "
- 		"fabric intrusive ADISCs and PLOGIs.");
- 
- /*
