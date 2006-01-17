@@ -1,62 +1,59 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH] Neaten comments in scsi_cmnd.h
-Date: Tue, 17 Jan 2006 11:54:24 -0700
-Message-ID: <20060117185424.GM19769@parisc-linux.org>
+From: Jesper Juhl <jesper.juhl@gmail.com>
+Subject: [PATCH] add a few missing spaces to MODULE_PARM_DESC() text for qla2xxx
+Date: Tue, 17 Jan 2006 21:06:42 +0100
+Message-ID: <200601172106.42640.jesper.juhl@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:55463 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S932408AbWAQSyY
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jan 2006 13:54:24 -0500
+Received: from xproxy.gmail.com ([66.249.82.202]:49523 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S964791AbWAQUGh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Jan 2006 15:06:37 -0500
+Received: by xproxy.gmail.com with SMTP id i30so1105040wxd
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2006 12:06:37 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jesper Juhl <jesper.juhl@gmail.com>
 
 
-Wrap these two comments at 80 columns
+Add a few spaces to MODULE_PARM_DESC() text for qla2xxx. Without these 
+spaces text runs together when modinfo prints the text.
 
-Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+---
 
-Index: include/scsi/scsi_cmnd.h
-===================================================================
-RCS file: /var/lib/cvs/linux-2.6/include/scsi/scsi_cmnd.h,v
-retrieving revision 1.12
-diff -u -p -r1.12 scsi_cmnd.h
---- include/scsi/scsi_cmnd.h	17 Jan 2006 14:52:57 -0000	1.12
-+++ include/scsi/scsi_cmnd.h	17 Jan 2006 17:35:04 -0000
-@@ -104,10 +104,10 @@ struct scsi_cmnd {
- 				   	   working on */
+ drivers/scsi/qla2xxx/qla_os.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+--- linux-2.6.16-rc1-orig/drivers/scsi/qla2xxx/qla_os.c	2006-01-17 19:14:07.000000000 +0100
++++ linux-2.6.16-rc1/drivers/scsi/qla2xxx/qla_os.c	2006-01-17 21:01:17.000000000 +0100
+@@ -39,14 +39,14 @@
+ int qlport_down_retry = 30;
+ module_param(qlport_down_retry, int, S_IRUGO|S_IRUSR);
+ MODULE_PARM_DESC(qlport_down_retry,
+-		"Maximum number of command retries to a port that returns"
++		"Maximum number of command retries to a port that returns "
+ 		"a PORT-DOWN status.");
  
- #define SCSI_SENSE_BUFFERSIZE 	96
--	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];		/* obtained by REQUEST SENSE
--						 * when CHECK CONDITION is
--						 * received on original command 
--						 * (auto-sense) */
-+	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];
-+				/* obtained by REQUEST SENSE when
-+				 * CHECK CONDITION is received on original
-+				 * command (auto-sense) */
+ int ql2xplogiabsentdevice;
+ module_param(ql2xplogiabsentdevice, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(ql2xplogiabsentdevice,
+ 		"Option to enable PLOGI to devices that are not present after "
+-		"a Fabric scan.  This is needed for several broken switches."
++		"a Fabric scan.  This is needed for several broken switches. "
+ 		"Default is 0 - no PLOGI. 1 - perfom PLOGI.");
  
- 	/* Low-level done function - can be used by low-level driver to point
- 	 *        to completion function.  Not used by mid/upper level code. */
-@@ -120,12 +120,12 @@ struct scsi_cmnd {
- 	struct scsi_pointer SCp;	/* Scratchpad used by some host adapters */
+ int ql2xloginretrycount = 0;
+@@ -74,7 +74,7 @@
+ int ql2xprocessrscn;
+ module_param(ql2xprocessrscn, int, S_IRUGO|S_IRUSR);
+ MODULE_PARM_DESC(ql2xprocessrscn,
+-		"Option to enable port RSCN handling via a series of less"
++		"Option to enable port RSCN handling via a series of less "
+ 		"fabric intrusive ADISCs and PLOGIs.");
  
- 	unsigned char *host_scribble;	/* The host adapter is allowed to
--					   * call scsi_malloc and get some memory
--					   * and hang it here.     The host adapter
--					   * is also expected to call scsi_free
--					   * to release this memory.  (The memory
--					   * obtained by scsi_malloc is guaranteed
--					   * to be at an address < 16Mb). */
-+					 * call scsi_malloc and get some memory
-+					 * and hang it here.  The host adapter
-+					 * is also expected to call scsi_free
-+					 * to release this memory.  (The memory
-+					 * obtained by scsi_malloc is guaranteed
-+					 * to be at an address < 16Mb). */
- 
- 	int result;		/* Status code from lower level driver */
- 
+ /*
