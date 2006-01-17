@@ -1,39 +1,39 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 2/8] fusion - mptsas, increase discovery timout to 300
- seconds
-Date: Tue, 17 Jan 2006 13:45:11 +1000
-Message-ID: <43CC6847.8050708@torque.net>
-References: <F331B95B72AFFB4B87467BE1C8E9CF5F1AAC7E@NAMAIL2.ad.lsil.com>
-Reply-To: dougg@torque.net
+From: Andrew Morton <akpm@osdl.org>
+Subject: scsi calls kobject_put() in atomic context
+Date: Tue, 17 Jan 2006 00:42:17 -0800
+Message-ID: <20060117004217.6329a9a8.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:4556 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1751342AbWAQDoo (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:40141 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932312AbWAQImi (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Jan 2006 22:44:44 -0500
-In-Reply-To: <F331B95B72AFFB4B87467BE1C8E9CF5F1AAC7E@NAMAIL2.ad.lsil.com>
+	Tue, 17 Jan 2006 03:42:38 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
+To: Greg KH <greg@kroah.com>, James Bottomley <James.Bottomley@steeleye.com>
 Cc: linux-scsi@vger.kernel.org
 
-Moore, Eric wrote:
-> Increase the port enable timeout only for SAS from 30 to 300 seconds.
-> A customer request for the handling large topologies.
 
-Eric,
-I have seen various reports concerning SAS HBAs taking
-"forever" to initialize/discover (various HBA manufacturers,
-various OSes). Perhaps you could enlighten me why these
-timeouts need to be so large.
+So Greg added a might_sleep() to kobject_put().  Because on the final put()
+it will indeed do sleepy things.
 
-Also if a SAS domain does not contain a fanout expander,
-doesn't that limit the domain to around 128 or 256
-SCSI devices (sum of scsi initiator and target ports)?
-If so, perhaps the timeout could be one of two values,
-a larger value if a fanout expander was found in
-the most recent discover process.
+Debug: sleeping function called from invalid context at drivers/base/core.c:343
+in_atomic():1, irqs_disabled():0
 
-Doug Gilbert
+Call Trace: <IRQ> <ffffffff80126e07>{__might_sleep+190}
+       <ffffffff802a85ec>{put_device+27} <ffffffff802cd071>{scsi_put_command+186}
+       <ffffffff802d19ca>{scsi_next_command+45} <ffffffff802d1ad7>{scsi_end_request+197}
+       <ffffffff802d1d3b>{scsi_io_completion+447} <ffffffff80308fdf>{sd_rw_intr+559}
+       <ffffffff802cd76a>{scsi_finish_command+148} <ffffffff802d2514>{scsi_softirq_done+220}
+       <ffffffff80228472>{blk_done_softirq+127} <ffffffff8013404b>{__do_softirq+75}
+       <ffffffff8010f13e>{call_softirq+30} <ffffffff80110835>{do_softirq+51}
+       <ffffffff80134188>{irq_exit+63} <ffffffff801107f8>{do_IRQ+55}
+       <ffffffff8010bfb0>{mwait_idle+0} <ffffffff8010e11a>{ret_from_intr+0} <EOI>
+       <ffffffff8010bfb0>{mwait_idle+0} <ffffffff8010bfea>{mwait_idle+58}
+       <ffffffff8010bf7d>{cpu_idle+100} <ffffffff805a6a8b>{start_secondary+1155}
+
+I guess we already knew about that problem.  Greg, I'll need to drop the
+patch to be able to make a halfway releasable kernel.
+
