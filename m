@@ -1,66 +1,83 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] PCI Error Recovery: Symbios SCSI device driver
-Date: Wed, 18 Jan 2006 10:07:16 -0700
-Message-ID: <20060118170716.GA9569@parisc-linux.org>
-References: <20060118165345.GA31920@austin.ibm.com>
+From: Jan Bakuwel <jan.bakuwel@int.greenpeace.org>
+Subject: Re: Marvell SATA status
+Date: Wed, 18 Jan 2006 18:05:28 +0100
+Message-ID: <43CE7558.3060505@int.gl3>
+References: <43CD67E1.7080703@int.gl3> <43CD86C7.80806@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:64713 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1751379AbWARRHR
+Received: from fw.greenpeace.org ([212.19.215.77]:42480 "EHLO
+	fw.greenpeace.org") by vger.kernel.org with ESMTP id S1751375AbWARRHZ
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Jan 2006 12:07:17 -0500
-Content-Disposition: inline
-In-Reply-To: <20060118165345.GA31920@austin.ibm.com>
+	Wed, 18 Jan 2006 12:07:25 -0500
+In-Reply-To: <43CD86C7.80806@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linas <linas@austin.ibm.com>
-Cc: James.Bottomley@steeleye.com, brking@us.ibm.com, gregkh@suse.de, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Jan 18, 2006 at 10:53:45AM -0600, linas wrote:
-> Hi James,
+Hoi Jeff,
 
-Actually, I'm the sym2 maintainer.
+> Note that the Marvell chip is not RAID.  See 
+> http://linux.yyz.us/sata/faq-sata-raid.html
 
-> +static void sym_eeh_timeout(u_long p)
+The Marvell chip isn't listed on that page unless my eye sight is 
+deterioting :-)
 
-Please don't propagate more uses of this u_long crap.  I haven't got
-rid of all of them, but there's no need to add more.
+The BIOS identifies it as an Adaptec HostRAID 6041 controller (?), 
+allows for setting up the arrays etc, however, 'lspci -vv' identifies it 
+as a Marvell Technology  MV88SX6041 RAID controller.
 
-> @@ -1630,6 +1682,8 @@ static struct Scsi_Host * __devinit sym_
->  	np->maxoffs	= dev->chip.offset_max;
->  	np->maxburst	= dev->chip.burst_max;
->  	np->myaddr	= dev->host_id;
-> +	np->s.io_state = pci_channel_io_normal;
-> +	np->s.io_reset_wait = NULL;
+It could indeed be software RAID by controller, but as far as the OS is 
+concerned the controller presents the array to the OS as a single disc...
 
-Is there a good reason to put them in the 's'?  It's really a dirty
-hack.
+> You will have better luck on the linux-ide list, though there admittedly 
+> aren't a lot of sata_mv hackers.
 
-> +/* ------------- PCI Error Recovery infrastructure -------------- */
-> +/** sym2_io_error_detected() is called when PCI error is detected */
-> +static pci_ers_result_t sym2_io_error_detected (struct pci_dev *pdev, pci_channel_state_t state)
-> +{
-> +	struct sym_hcb *np = pci_get_drvdata(pdev);
-> +
-> +	np->s.io_state = state;
-> +	// XXX If slot is permanently frozen, then what?
-> +	// Should we scsi_remove_host() maybe ??
-> +
-> +	/* Request a slot slot reset. */
-> +	return PCI_ERS_RESULT_NEED_RESET;
-> +}
+Will have a look there too, thanks.
 
-Don't use C99 comments, don't put a space between the function name and
-the opening bracket, and don't exceed 80 columns.
+> Patches are certainly welcome.  sata_mv needs some more errata 
+> workarounds before it could be said to be ready for production.
 
-> +/** sym2_io_slot_reset is called when the pci bus has been reset.
-> + *  Restart the card from scratch. */
+The current driver doesn't work:
 
-kerneldoc style comment, but not in kerneldoc format.
+sys1:~# dd if=/dev/zero of=/dev/sdb bs=1 count=1
+1+0 records in
+1+0 records out
+1 bytes transferred in 61.346053 seconds (0 bytes/sec)
+sys1:~#
 
-> +	/* Perform host reset only on one instance of the card */
-> +	if (0 == PCI_FUNC (pdev->devfn))
+So it does recognise the drive but nothing else happens.
 
-I really hate "if (constant == variable)".
+I certainly won't be able to complete the driver by myself... so if 
+there's little interest in it my only option would be to use the 3ware 
+controller...
+
+Thanks for your help,
+
+Jan
+
+
+-- 
+
+A journalist once asked the late Gandhi what he thought of the western
+civilization. Gandhi replied: "Western Civilization? That would be a
+good idea!".
+
+----
+
+Ships Unit
+Information, Communication, Technology
+Greenpeace International
+Ottho Heldringstraat 5
+1066 AZ  AMSTERDAM
+Netherlands (MET)
+
+direct    +31 (0)20 7182084
+fax       +31 (0)20 5148151
+reception +31 (0)20 5148150
+email     jan.bakuwel&int.greenpeace.org
+private   jan.bakuwel&hccnet.nl
+(replace & by @ in the emailaddress)
 
