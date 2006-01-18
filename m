@@ -1,45 +1,56 @@
-From: "Stave T. Delinquency" <frob@gottu.com>
-Subject: Software
-Date: Wed, 18 Jan 2006 15:45:22 -0600
-Message-ID: <7679743492.20060118154522@gottu.com>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: [PATCH] unbreak ecoscsi
+Date: Thu, 19 Jan 2006 00:04:26 +0300
+Message-ID: <20060118210426.GK12771@mipter.zuzino.mipt.ru>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus2.kernel.org ([204.152.191.36]:6032 "EHLO zeus2.kernel.org")
-	by vger.kernel.org with ESMTP id S964928AbWARUAw (ORCPT
+Received: from uproxy.gmail.com ([66.249.92.199]:38997 "EHLO uproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1030433AbWARUrF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Jan 2006 15:00:52 -0500
-Received: from -1217254832 (cp685994-a.venlo1.lb.home.nl [84.29.34.192])
-	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id k0IJxlBE010402
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jan 2006 12:00:37 -0800
-Received: from gottu.com (-1215472696 [-1217221184])
-	by cp685994-a.venlo1.lb.home.nl (Qmailv1) with ESMTP id 608C409F65
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jan 2006 15:45:22 -0600
+	Wed, 18 Jan 2006 15:47:05 -0500
+Received: by uproxy.gmail.com with SMTP id s2so40397uge
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Jan 2006 12:47:04 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>
 
-cheap oem soft shipping worldwide 
-Why pay big bucks? Create your OWN website now! 
+Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+---
 
-New software on our site:
+ drivers/scsi/arm/ecoscsi.c |   11 +++++------
+ 1 files changed, 5 insertions(+), 6 deletions(-)
 
-Visio 2003 Professional - $69.95
-After Effects 6 - $69.95
-Director MX 2004 - $69.95
-Fireworks MX 2004 - $69.95
-FileMaker 7.0 Professional - $69.95
-Windows 2000 Advanced Server - $69.95
-Premiere 6.5 - $89.95
-Dreamweaver MX 2004 $69.95
-InDesign CS PageMaker Edition (2CD) - $69.95
-Windows NT 4.0 Terminal Server - $49.95
-Windows 98 Second Edition - $49.95
-Picture It Premium 9 - $59.95
-Borland Delphi 7 Enterprise Edition (2CD) - $69.95
-SQL Server 2000 Enterprise Edition - $69.95
-
-Our site:
-http://haughtlyam.com
+--- a/drivers/scsi/arm/ecoscsi.c
++++ b/drivers/scsi/arm/ecoscsi.c
+@@ -175,7 +175,7 @@ static struct Scsi_Host *host;
+ static int __init ecoscsi_init(void)
+ {
+ 
+-	host = scsi_host_alloc(tpnt, sizeof(struct NCR5380_hostdata));
++	host = scsi_host_alloc(&ecoscsi_template, sizeof(struct NCR5380_hostdata));
+ 	if (!host)
+ 		return 0;
+ 
+@@ -218,14 +218,13 @@ static void __exit ecoscsi_exit(void)
+ {
+ 	scsi_remove_host(host);
+ 
+-	if (shpnt->irq != IRQ_NONE)
+-		free_irq(shpnt->irq, NULL);
++	if (host->irq != IRQ_NONE)
++		free_irq(host->irq, NULL);
+ 	NCR5380_exit(host);
+-	if (shpnt->io_port)
+-		release_region(shpnt->io_port, shpnt->n_io_port);
++	if (host->io_port)
++		release_region(host->io_port, host->n_io_port);
+ 
+ 	scsi_host_put(host);
+-	return 0;
+ }
+ 
+ module_init(ecoscsi_init);
 
