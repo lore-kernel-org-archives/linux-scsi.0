@@ -1,83 +1,102 @@
-From: Jan Bakuwel <jan.bakuwel@int.greenpeace.org>
-Subject: Re: Marvell SATA status
-Date: Wed, 18 Jan 2006 18:05:28 +0100
-Message-ID: <43CE7558.3060505@int.gl3>
-References: <43CD67E1.7080703@int.gl3> <43CD86C7.80806@pobox.com>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH] PCI Error Recovery: IPR SCSI device driver]
+Date: Wed, 18 Jan 2006 11:14:34 -0600
+Message-ID: <43CE777A.8090308@us.ibm.com>
+References: <20060118165110.GR26221@austin.ibm.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fw.greenpeace.org ([212.19.215.77]:42480 "EHLO
-	fw.greenpeace.org") by vger.kernel.org with ESMTP id S1751375AbWARRHZ
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Jan 2006 12:07:25 -0500
-In-Reply-To: <43CD86C7.80806@pobox.com>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:7575 "EHLO e2.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751386AbWARROp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Jan 2006 12:14:45 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e2.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id k0IHEfHa011185
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Jan 2006 12:14:41 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k0IHEgM9099374
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Jan 2006 12:14:42 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k0IHEf8T024423
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Jan 2006 12:14:41 -0500
+In-Reply-To: <20060118165110.GR26221@austin.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-scsi@vger.kernel.org
+To: linas <linas@austin.ibm.com>
+Cc: James.Bottomley@steeleye.com, gregkh@suse.de, linux-scsi@vger.kernel.org
 
-Hoi Jeff,
+linas wrote:
+> Hi James,
+> Please review the patch below, and forward upstream.  I've been
+> bouncing it to various mailing lists for the last half-year,
+> it has been living in an -mm tree for a while, and was a part of
+> GregKH's patchset for a while. I'd like to get it propely upstream.
 
-> Note that the Marvell chip is not RAID.  See 
-> http://linux.yyz.us/sata/faq-sata-raid.html
+Sorry I didn't notice this before.. Couple minor nits below
 
-The Marvell chip isn't listed on that page unless my eye sight is 
-deterioting :-)
 
-The BIOS identifies it as an Adaptec HostRAID 6041 controller (?), 
-allows for setting up the arrays etc, however, 'lspci -vv' identifies it 
-as a Marvell Technology  MV88SX6041 RAID controller.
+>  
+> +/* --------------- PCI Error Recovery infrastructure ----------- */
 
-It could indeed be software RAID by controller, but as far as the OS is 
-concerned the controller presents the array to the OS as a single disc...
+Kill this comment line.
 
-> You will have better luck on the linux-ide list, though there admittedly 
-> aren't a lot of sata_mv hackers.
+> +/** If the PCI slot is frozen, hold off all i/o
+> + *  activity; then, as soon as the slot is available again,
+> + *  initiate an adapter reset.
+> + */
 
-Will have a look there too, thanks.
+Fix to be proper kerneldoc format. The same applies for all the added
+functions.
 
-> Patches are certainly welcome.  sata_mv needs some more errata 
-> workarounds before it could be said to be ready for production.
+> +static int ipr_reset_freeze(struct ipr_cmnd *ipr_cmd)
+> +{
+> +	/* Disallow new interrupts, avoid loop */
+> +	ipr_cmd->ioa_cfg->allow_interrupts = 0;
+> +	list_add_tail(&ipr_cmd->queue, &ipr_cmd->ioa_cfg->pending_q);
+> +	ipr_cmd->done = ipr_reset_ioa_job;
+> +	return IPR_RC_JOB_RETURN;
+> +}
+> +
+> +/** ipr_eeh_frozen -- called when slot has experience PCI bus error.
+> + *  This routine is called to tell us that the PCI bus is down.
+> + *  Can't do anything here, except put the device driver into a
+> + *  holding pattern, waiting for the PCI bus to come back.
+> + */
 
-The current driver doesn't work:
 
-sys1:~# dd if=/dev/zero of=/dev/sdb bs=1 count=1
-1+0 records in
-1+0 records out
-1 bytes transferred in 61.346053 seconds (0 bytes/sec)
-sys1:~#
 
-So it does recognise the drive but nothing else happens.
+> +static pci_ers_result_t ipr_eeh_error_detected(struct pci_dev *pdev,
+> +                                pci_channel_state_t state)
+> +{
+> +	switch (state) {
+> +		case pci_channel_io_frozen:
+> +			ipr_eeh_frozen (pdev);
+> +			return PCI_ERS_RESULT_NEED_RESET;
+> +
+> +		case pci_channel_io_perm_failure:
+> +			ipr_eeh_perm_failure (pdev);
+> +			return PCI_ERS_RESULT_DISCONNECT;
+> +			break;
+> +		default:
+> +			break;
+> +	}
+> +	return PCI_ERS_RESULT_NEED_RESET;
+> +}
+> +
 
-I certainly won't be able to complete the driver by myself... so if 
-there's little interest in it my only option would be to use the 3ware 
-controller...
 
-Thanks for your help,
+> +/* ------------- end of PCI Error Recovery suport ----------- */
 
-Jan
+Kill this line as well.
+
+Thanks,
+
+Brian
 
 
 -- 
-
-A journalist once asked the late Gandhi what he thought of the western
-civilization. Gandhi replied: "Western Civilization? That would be a
-good idea!".
-
-----
-
-Ships Unit
-Information, Communication, Technology
-Greenpeace International
-Ottho Heldringstraat 5
-1066 AZ  AMSTERDAM
-Netherlands (MET)
-
-direct    +31 (0)20 7182084
-fax       +31 (0)20 5148151
-reception +31 (0)20 5148150
-email     jan.bakuwel&int.greenpeace.org
-private   jan.bakuwel&hccnet.nl
-(replace & by @ in the emailaddress)
-
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
