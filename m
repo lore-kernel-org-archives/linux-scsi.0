@@ -1,21 +1,21 @@
 From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: [PATCH 3/3] fusion - sanity check
-Date: Tue, 17 Jan 2006 17:06:29 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F1AB0B0@NAMAIL2.ad.lsil.com>
+Subject: [PATCH 2/3] fusion - unloading the driver - only set asyn narrow for configured devices
+Date: Tue, 17 Jan 2006 17:06:26 -0700
+Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F1AB0AE@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C61BC3.08079E0B"
+	boundary="----_=_NextPart_001_01C61BC3.069612C3"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:21994 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932548AbWARAGd (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:21482 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S932548AbWARAG2 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jan 2006 19:06:33 -0500
+	Tue, 17 Jan 2006 19:06:28 -0500
 Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id k0I01MNI011591
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2006 16:01:22 -0800 (PST)
+	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id k0I01GNI011585
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2006 16:01:16 -0800 (PST)
 Received: from namail.ad.lsil.com (namail.co.lsil.com [172.21.36.18])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id k0I06Sjj016168
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2006 16:06:32 -0800
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id k0I06RpI016163
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2006 16:06:27 -0800
 Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -23,47 +23,69 @@ To: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
 
-------_=_NextPart_001_01C61BC3.08079E0B
+------_=_NextPart_001_01C61BC3.069612C3
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: quoted-printable
 
-This adds a sanity check in the interrupt routine
-insures incoming message frames are a valid
-message frames.  =20
-
-The code for setting 0xdeadbeaf in the freed message
-frames, apparently was already submitted by Christoph
-in previous patch submission.
+This patch inhibits sending spi negotiation parameters
+for non-configured devices from the slave_destroy function. =20
 
 Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
-------_=_NextPart_001_01C61BC3.08079E0B
+------_=_NextPart_001_01C61BC3.069612C3
 Content-Type: application/octet-stream;
-	name="fusion-3-sanity.patch"
+	name="fusion-2-asyn-narrow.patch"
 Content-Transfer-Encoding: base64
-Content-Description: fusion-3-sanity.patch
+Content-Description: fusion-2-asyn-narrow.patch
 Content-Disposition: attachment;
-	filename="fusion-3-sanity.patch"
+	filename="fusion-2-asyn-narrow.patch"
 
 ZGlmZiAtdWFyTiBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c2NzaWguYyBhL2RyaXZlcnMv
 bWVzc2FnZS9mdXNpb24vbXB0c2NzaWguYwotLS0gYi9kcml2ZXJzL21lc3NhZ2UvZnVzaW9uL21w
-dHNjc2loLmMJMjAwNi0wMS0xNyAxNTo1MToxNS4wMDAwMDAwMDAgLTA3MDAKKysrIGEvZHJpdmVy
-cy9tZXNzYWdlL2Z1c2lvbi9tcHRzY3NpaC5jCTIwMDYtMDEtMTcgMTY6MDI6NDEuMDAwMDAwMDAw
-IC0wNzAwCkBAIC01NjQsMTEgKzU2NCwyNCBAQAogCU1QVF9TQ1NJX0hPU1QJKmhkOwogCVNDU0lJ
-T1JlcXVlc3RfdAkqcFNjc2lSZXE7CiAJU0NTSUlPUmVwbHlfdAkqcFNjc2lSZXBseTsKLQl1MTYJ
-CSByZXFfaWR4OworCXUxNgkJIHJlcV9pZHgsIHJlcV9pZHhfTVI7CiAKIAloZCA9IChNUFRfU0NT
-SV9IT1NUICopIGlvYy0+c2gtPmhvc3RkYXRhOwogCiAJcmVxX2lkeCA9IGxlMTZfdG9fY3B1KG1m
-LT51LmZyYW1lLmh3aGRyLm1zZ2N0eHUuZmxkLnJlcV9pZHgpOworCXJlcV9pZHhfTVIgPSAobXIg
-IT0gTlVMTCkgPworCSAgICBsZTE2X3RvX2NwdShtci0+dS5mcmFtZS5od2hkci5tc2djdHh1LmZs
-ZC5yZXFfaWR4KSA6IHJlcV9pZHg7CisJaWYgKChyZXFfaWR4ICE9IHJlcV9pZHhfTVIpIHx8CisJ
-ICAgIChtZi0+dS5mcmFtZS5saW5rYWdlLmFyZzEgPT0gMHhkZWFkYmVhZikpIHsKKwkJcHJpbnRr
-KE1ZSU9DX3NfRVJSX0ZNVCAiUmVjZWl2ZWQgYSBtZiB0aGF0IHdhcyBhbHJlYWR5IGZyZWVkXG4i
-LAorCQkgICAgaW9jLT5uYW1lKTsKKwkJcHJpbnRrIChNWUlPQ19zX0VSUl9GTVQKKwkJICAgICJy
-ZXFfaWR4PSV4IHJlcV9pZHhfTVI9JXggbWY9JXAgbXI9JXAgc2M9JXBcbiIsCisJCSAgICBpb2Mt
-Pm5hbWUsIHJlcV9pZHgsIHJlcV9pZHhfTVIsIG1mLCBtciwKKwkJICAgIGhkLT5TY3NpTG9va3Vw
-W3JlcV9pZHhfTVJdKTsKKwkJcmV0dXJuIDA7CisJfQorCiAJc2MgPSBoZC0+U2NzaUxvb2t1cFty
-ZXFfaWR4XTsKIAlpZiAoc2MgPT0gTlVMTCkgewogCQlNUElIZWFkZXJfdCAqaGRyID0gKE1QSUhl
-YWRlcl90ICopbWY7Cg==
+dHNjc2loLmMJMjAwNi0wMS0xNyAxMDo0MjozMy4wMDAwMDAwMDAgLTA3MDAKKysrIGEvZHJpdmVy
+cy9tZXNzYWdlL2Z1c2lvbi9tcHRzY3NpaC5jCTIwMDYtMDEtMTcgMTU6NTE6MTUuMDAwMDAwMDAw
+IC0wNzAwCkBAIC0xNjAsNyArMTYwLDcgQEAKIGludAkJbXB0c2NzaWhfc2NhbmR2X2NvbXBsZXRl
+KE1QVF9BREFQVEVSICppb2MsIE1QVF9GUkFNRV9IRFIgKm1mLCBNUFRfRlJBTUVfSERSICpyKTsK
+IHN0YXRpYyBpbnQJbXB0c2NzaWhfZG9fY21kKE1QVF9TQ1NJX0hPU1QgKmhkLCBJTlRFUk5BTF9D
+TUQgKmlvY21kKTsKIHN0YXRpYyB2b2lkCW1wdHNjc2loX3N5bmNocm9uaXplX2NhY2hlKE1QVF9T
+Q1NJX0hPU1QgKmhkLCBWaXJ0RGV2aWNlICp2ZGV2aWNlKTsKLXN0YXRpYyB2b2lkCW1wdHNjc2lo
+X25lZ290aWF0ZV90b19hc3luX25hcnJvdyhNUFRfU0NTSV9IT1NUICpoZCwgVmlydFRhcmdldCAq
+dnRhcmdldCk7CitzdGF0aWMgdm9pZAltcHRzY3NpaF9uZWdvdGlhdGVfdG9fYXN5bl9uYXJyb3co
+TVBUX1NDU0lfSE9TVCAqaGQsIFZpcnREZXZpY2UgKnZkZXZpY2UpOwogc3RhdGljIGludAltcHRz
+Y3NpaF9pc19waHlzX2Rpc2soTVBUX0FEQVBURVIgKmlvYywgaW50IGlkKTsKIAogc3RhdGljIHN0
+cnVjdCB3b3JrX3N0cnVjdCAgIG1wdHNjc2loX3BlcnNpc3RUYXNrOwpAQCAtMjMxMyw3ICsyMzEz
+LDcgQEAKIAl2dGFyZ2V0LT5sdW5zWzBdICY9IH4oMSA8PCB2ZGV2aWNlLT5sdW4pOwogCXZ0YXJn
+ZXQtPm51bV9sdW5zLS07CiAJaWYgKHZ0YXJnZXQtPm51bV9sdW5zID09IDApIHsKLQkJbXB0c2Nz
+aWhfbmVnb3RpYXRlX3RvX2FzeW5fbmFycm93KGhkLCB2dGFyZ2V0KTsKKwkJbXB0c2NzaWhfbmVn
+b3RpYXRlX3RvX2FzeW5fbmFycm93KGhkLCB2ZGV2aWNlKTsKIAkJaWYgKGhkLT5pb2MtPmJ1c190
+eXBlID09IFNQSSkgewogCQkJaWYgKG1wdHNjc2loX2lzX3BoeXNfZGlzayhoZC0+aW9jLCB2dGFy
+Z2V0LT50YXJnZXRfaWQpKSB7CiAJCQkJaGQtPmlvYy0+c3BpX2RhdGEuZm9yY2VEdiB8PSBNUFRf
+U0NTSUNGR19SRUxPQURfSU9DX1BHMzsKQEAgLTM5MjEsOCArMzkyMSw5IEBACiAgKgogICovCiBz
+dGF0aWMgdm9pZAotbXB0c2NzaWhfbmVnb3RpYXRlX3RvX2FzeW5fbmFycm93KE1QVF9TQ1NJX0hP
+U1QgKmhkLCBWaXJ0VGFyZ2V0ICp2dGFyZ2V0KQorbXB0c2NzaWhfbmVnb3RpYXRlX3RvX2FzeW5f
+bmFycm93KE1QVF9TQ1NJX0hPU1QgKmhkLCBWaXJ0RGV2aWNlICp2ZGV2aWNlKQogeworCVZpcnRU
+YXJnZXQJCSp2dGFyZ2V0ID0gdmRldmljZS0+dnRhcmdldDsKIAlNUFRfQURBUFRFUgkJKmlvYz0g
+aGQtPmlvYzsKIAlTQ1NJRGV2aWNlUGFnZTFfdAkqcGNmZzFEYXRhOwogCUNPTkZJR1BBUk1TCQkg
+Y2ZnOwpAQCAtMzkzMiw3ICszOTMzLDggQEAKIAlpbnQJCQkgcmVxdWVzdGVkLCBjb25maWd1cmF0
+aW9uLCBkYXRhLGk7CiAJdTgJCQkgZmxhZ3MsIGZhY3RvcjsKIAotCWlmIChpb2MtPmJ1c190eXBl
+ICE9IFNQSSkKKwlpZiAoKGlvYy0+YnVzX3R5cGUgIT0gU1BJKSB8fAorCQkoIXZkZXZpY2UtPmNv
+bmZpZ3VyZWRfbHVuKSkKIAkJcmV0dXJuOwogCiAJaWYgKCFpb2MtPnNwaV9kYXRhLnNkcDFsZW5n
+dGgpCkBAIC0zOTY4LDcgKzM5NzAsNyBAQAogCQkJfQogCQkJbXB0c2NzaWhfc2V0RGV2aWNlUGFn
+ZTFGbGFncygwLCBNUFRfQVNZTkMsIDAsICZyZXF1ZXN0ZWQsCiAJCQkJJmNvbmZpZ3VyYXRpb24s
+IGZsYWdzKTsKLQkJCWRuZWdvcHJpbnRrKCgic3luY3Jvbml6ZSBjYWNoZTogaWQ9JWQgd2lkdGg9
+MCBmYWN0b3I9TVBUX0FTWU5DICIKKwkJCWRuZWdvcHJpbnRrKCgibmVnbyBhc3luIG5hcnJvdzog
+aWQ9JWQgd2lkdGg9MCBmYWN0b3I9TVBUX0FTWU5DICIKIAkJCQkib2Zmc2V0PTAgbmVnb0ZsYWdz
+PSV4IHJlcXVlc3Q9JXggY29uZmlnPSV4XG4iLAogCQkJCWlkLCBmbGFncywgcmVxdWVzdGVkLCBj
+b25maWd1cmF0aW9uKSk7CiAJCQlwY2ZnMURhdGEtPlJlcXVlc3RlZFBhcmFtZXRlcnMgPSBjcHVf
+dG9fbGUzMihyZXF1ZXN0ZWQpOwpAQCAtMzk4MSw3ICszOTgzLDcgQEAKIAkJZmxhZ3MgPSB2dGFy
+Z2V0LT5uZWdvRmxhZ3M7CiAJCW1wdHNjc2loX3NldERldmljZVBhZ2UxRmxhZ3MoMCwgTVBUX0FT
+WU5DLCAwLCAmcmVxdWVzdGVkLAogCQkJCSZjb25maWd1cmF0aW9uLCBmbGFncyk7Ci0JCWRuZWdv
+cHJpbnRrKCgic3luY3Jvbml6ZSBjYWNoZTogaWQ9JWQgd2lkdGg9MCBmYWN0b3I9TVBUX0FTWU5D
+ICIKKwkJZG5lZ29wcmludGsoKCJuZWdvIGFzeW4gbmFycm93OiBpZD0lZCB3aWR0aD0wIGZhY3Rv
+cj1NUFRfQVNZTkMgIgogCQkJIm9mZnNldD0wIG5lZ29GbGFncz0leCByZXF1ZXN0PSV4IGNvbmZp
+Zz0leFxuIiwKIAkJCXZ0YXJnZXQtPnRhcmdldF9pZCwgZmxhZ3MsIHJlcXVlc3RlZCwgY29uZmln
+dXJhdGlvbikpOwogCQlwY2ZnMURhdGEtPlJlcXVlc3RlZFBhcmFtZXRlcnMgPSBjcHVfdG9fbGUz
+MihyZXF1ZXN0ZWQpOwo=
 
-------_=_NextPart_001_01C61BC3.08079E0B--
+------_=_NextPart_001_01C61BC3.069612C3--
