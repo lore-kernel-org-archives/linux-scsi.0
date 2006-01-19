@@ -1,825 +1,158 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: qla2xxx: Recursion depth exceeded
-Date: Thu, 19 Jan 2006 10:59:09 -0600
-Message-ID: <43CFC55D.9080206@sgi.com>
+From: "scientica (GMail)" <scientica@gmail.com>
+Subject: Re: scsi cmd slab leak? (Was Re: [ck] Anyone been having OOM killer
+ problems lately?)
+Date: Thu, 19 Jan 2006 18:13:42 +0000
+Message-ID: <43CFD6D6.2040700@gmail.com>
+References: <200601181951.16708.chase.venters@clientec.com>	<200601190316.05247.chase.venters@clientec.com>	<200601192018.51972.kernel@kolivas.org> <200601190334.25712.chase.venters@clientec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:56023 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S932285AbWASQ7Z (ORCPT
+Received: from uproxy.gmail.com ([66.249.92.202]:53939 "EHLO uproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1751285AbWASRKT (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Jan 2006 11:59:25 -0500
+	Thu, 19 Jan 2006 12:10:19 -0500
+Received: by uproxy.gmail.com with SMTP id s2so308266uge
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Jan 2006 09:10:18 -0800 (PST)
+In-Reply-To: <200601190334.25712.chase.venters@clientec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: James.Smart@Emulex.Com, linux-scsi <linux-scsi@vger.kernel.org>, Michael Reed <mdr@sgi.com>
+To: Chase Venters <chase.venters@clientec.com>
+Cc: Con Kolivas <kernel@kolivas.org>, ck@vds.kolivas.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-This causes console input to stop being accepted and the inability to shutdown the system.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
+Chase Venters wrote:
 
- QLogic Fibre Channel HBA Driver: 8.01.04-k-fw
-from the sles10-latest kernel received yesterday, which is essentially
-2.6.15-git12.  This has rpfixes_2.diff already applied.
+> On Thursday 19 January 2006 03:18, Con Kolivas wrote:
+>
+>> On Thursday 19 January 2006 20:15, Chase Venters wrote:
+>>
+>>> On Thursday 19 January 2006 01:49, Con Kolivas wrote:
+>>>
+>>>>> Do I have something madly leaking in my kernel?
+>>>>
+>>>> Yes! post /proc/slabinfo
+>>>
+>>> (attached). Looks like quite a few scsi commands! Next steps?
+>>
+>> Inded it does scsi_cmd_cache 1547440 1547440 384 10 1
+>> : tunables 54 27 8 : slabdata 154744 154744 0
+>>
+>> This looks suspiciously large. To be absolutely certain, though,
+>> you have to reproduce the problem with a vanilla kernel, and no
+>> binary drivers anywhere. My patches don't touch the scsi code
+>> directly, but the only way to be certain is to use vanilla.
+>
+>
+> I'll have to try and get around to that soon - I'm currently busy
+> with some various work and can't afford the time just yet :/.
+>
+> Also, I just realized that I copied lkml and scsi without providing
+> any useful context. Kernel is 2.6.15-ck1 with the Marvell sk98lin
+> patch and (barf) nvidia.ko. I noticed after having the OOM killer
+> make its rounds a few times that the slab layer was eating in
+> excess of 600MB.
+>
+> lspci:
+>
+> 00:00.0 Host bridge: Intel Corporation 915G/P/GV/GL/PL/910GL
+> Processor to I/O Controller (rev 04) 00:01.0 PCI bridge: Intel
+> Corporation 915G/P/GV/GL/PL/910GL PCI Express Root Port (rev 04)
+> 00:1b.0 Class 0403: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6
+> Family) High Definition Audio Controller (rev 03) 00:1c.0 PCI
+> bridge: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) PCI
+> Express Port 1 (rev 03) 00:1c.1 PCI bridge: Intel Corporation
+> 82801FB/FBM/FR/FW/FRW (ICH6 Family) PCI Express Port 2 (rev 03)
+> 00:1d.0 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW
+> (ICH6 Family) USB UHCI #1 (rev 03) 00:1d.1 USB Controller: Intel
+> Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) USB UHCI #2 (rev
+> 03) 00:1d.2 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW
+> (ICH6 Family) USB UHCI #3 (rev 03) 00:1d.3 USB Controller: Intel
+> Corporation 82801FB/FBM/FR/FW/FRW (ICH6 Family) USB UHCI #4 (rev
+> 03) 00:1d.7 USB Controller: Intel Corporation 82801FB/FBM/FR/FW/FRW
+> (ICH6 Family) USB2 EHCI Controller (rev 03) 00:1e.0 PCI bridge:
+> Intel Corporation 82801 PCI Bridge (rev d3) 00:1f.0 ISA bridge:
+> Intel Corporation 82801FB/FR (ICH6/ICH6R) LPC Interface Bridge (rev
+> 03) 00:1f.1 IDE interface: Intel Corporation 82801FB/FBM/FR/FW/FRW
+> (ICH6 Family) IDE Controller (rev 03) 00:1f.2 Class 0106: Intel
+> Corporation 82801FR/FRW (ICH6R/ICH6RW) SATA Controller (rev 03)
+> 00:1f.3 SMBus: Intel Corporation 82801FB/FBM/FR/FW/FRW (ICH6
+> Family) SMBus Controller (rev 03) 01:03.0 FireWire (IEEE 1394):
+> Texas Instruments TSB43AB22/A IEEE-1394a-2000 Controller (PHY/Link)
+> 01:04.0 Mass storage controller: <pci_lookup_name: buffer too
+> small> (rev 13) 01:09.0 Multimedia audio controller: Creative Labs
+> SB Audigy (rev 04) 01:09.1 Input device controller: Creative Labs
+> SB Audigy MIDI/Game port (rev 04) 01:09.2 FireWire (IEEE 1394):
+> Creative Labs SB Audigy FireWire Port (rev 04) 01:0a.0 SCSI storage
+> controller: Adaptec AHA-7850 (rev 03) 02:00.0 Ethernet controller:
+> Marvell Technology Group Ltd. 88E8053 Gigabit Ethernet Controller
+> (rev 15) 04:00.0 VGA compatible controller: nVidia Corporation
+> Unknown device 0092 (rev a1)
+>
+> config.gz attached. I'd also like to note that I've been getting
+> this in my ring buffer when attempting to burn CD's on a PX-716A:
+>
+> (scsi0:A:4:0): No or incomplete CDB sent to device. scsi0: Issued
+> Channel A Bus Reset. 1 SCBs aborted (scsi0:A:4:0): Unexpected
+> busfree while idle SEQADDR == 0x16a (scsi0:A:4:0): No or incomplete
+> CDB sent to device. scsi0: Issued Channel A Bus Reset. 1 SCBs
+> aborted sr 0:0:4:0: SCSI error: return code = 0x70000
+> (scsi0:A:4:0): Unexpected busfree while idle SEQADDR == 0x16a
+> (scsi0:A:4:0): No or incomplete CDB sent to device. scsi0: Issued
+> Channel A Bus Reset. 1 SCBs aborted (scsi0:A:4:0): Unexpected
+> busfree while idle SEQADDR == 0x16a (scsi0:A:4:0): No or incomplete
+> CDB sent to device. scsi0: Issued Channel A Bus Reset. 1 SCBs
+> aborted sr 0:0:4:0: SCSI error: return code = 0x70000
+> (scsi0:A:4:0): Unexpected busfree while idle SEQADDR == 0x16a
+> (scsi0:A:4:0): No or incomplete CDB sent to device. scsi0: Issued
+> Channel A Bus Reset. 1 SCBs aborted
+>
+> ...but I don't think this is directly related, because this has
+> been happening since at least 2.6.13 iirc. Just being thorough.
+>
+> Apologies to lkml & scsi for the brief/confusing earlier message.
+>
+>> Cheers, Con
+>
+>
+> Thanks, Chase
+>
+>
+> ----------------------------------------------------------------------
+>
+>
+> _______________________________________________ ck@vds.kolivas.org
+> ck mailing list. If replying to an email please reply-to-all below
+> the original message. http://vds.kolivas.org/mailman/listinfo/ck
 
-I did a switchdisable followed by a switchenable 5 seconds later.
+Just out of curiosity, what's the slab? and what is the expected size
+of it? I just checked mine and it seems to eat some 304596 kB
+(2.6.14-ck4, soon 68d uptime). The only problems I've had recently is
+firefox crashing more than it should (but it could simply be me having
+a billion or so windows and tabs open, and it's the
+mozilla-firefox-bin-1.5-r2 from portage which is masked ~amd64, so
+it's probably just buggy - it dies with a segfault after beeing stuck
+at 100% CPU for a while, cant see any OOM-messages anywhere), other
+than that I've been able to both emerge stuff (nice'd though),
+download stuff and burn backups DVD's with out problems -
+simultaneously - and the system was still responsive :)
 
-Jan 19 10:35:16 duck klogd: qla2300 0012:00:02.1: LOOP DOWN detected (2).
-Jan 19 10:35:16 duck klogd: qla2300 0012:00:02.0: LOOP DOWN detected (2).
-Jan 19 10:35:16 duck klogd: qla2300 0012:00:01.1: LOOP DOWN detected (2).
-Jan 19 10:35:16 duck klogd: qla2300 0012:00:01.0: LOOP DOWN detected (2).
-Jan 19 10:35:16 duck klogd: qla2300 0002:01:06.0: LOOP DOWN detected (2).
-Jan 19 10:35:16 duck klogd: qla2300 0002:01:04.1: LOOP DOWN detected (2).
-Jan 19 10:35:16 duck klogd: qla2300 0002:01:06.1: LOOP DOWN detected (2).
-Jan 19 10:35:16 duck klogd: qla2300 0002:01:04.0: LOOP DOWN detected (2).
+- --
+After all, if you are in school to study computer science, then a
+professor saying:
+ "use this proprietary software to learn computer science" is the
+same as English professor handing you a copy of Shakespeare
+and saying:
+ "use this book to learn Shakespeare without opening the book itself."
+  -- Bradley Kuhn
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
 
-Well, okay, SIX seconds later . :)
-
-Jan 19 10:35:22 duck klogd: qla2300 0012:00:02.1: LIP reset occured (f800).
-Jan 19 10:35:22 duck klogd: qla2300 0012:00:01.1: LIP reset occured (f800).
-Jan 19 10:35:22 duck klogd: qla2300 0012:00:02.0: LIP reset occured (f800).
-Jan 19 10:35:22 duck klogd: qla2300 0012:00:01.0: LIP reset occured (f800).
-Jan 19 10:35:22 duck klogd: qla2300 0002:01:06.0: LIP reset occured (f800).
-Jan 19 10:35:22 duck klogd: qla2300 0002:01:04.1: LIP reset occured (f800).
-Jan 19 10:35:22 duck klogd: qla2300 0002:01:06.1: LIP reset occured (f800).
-Jan 19 10:35:22 duck klogd: qla2300 0002:01:04.0: LIP reset occured (f800).
-Jan 19 10:35:42 duck klogd: qla2300 0002:01:04.1: LIP reset occured (f7f7).
-Jan 19 10:35:42 duck klogd: qla2300 0012:00:02.1: LIP reset occured (f800).
-Jan 19 10:35:42 duck klogd: qla2300 0012:00:01.1: LIP reset occured (f800).
-Jan 19 10:35:42 duck klogd: qla2300 0012:00:02.0: LIP reset occured (f7f7).
-Jan 19 10:35:42 duck klogd: qla2300 0002:01:06.1: LIP reset occured (f7f7).
-Jan 19 10:35:42 duck klogd: qla2300 0012:00:01.0: LIP reset occured (f7f7).
-Jan 19 10:35:42 duck klogd: qla2300 0002:01:04.0: LIP reset occured (f7f7).
-Jan 19 10:35:42 duck klogd: qla2300 0002:01:06.0: LIP reset occured (f7f7).
-Jan 19 10:35:42 duck klogd: qla2300 0012:00:02.0: LOOP UP detected (2 Gbps).
-Jan 19 10:35:42 duck klogd: qla2300 0012:00:01.0: LOOP UP detected (2 Gbps).
-Jan 19 10:35:42 duck klogd: qla2300 0002:01:04.1: LOOP UP detected (2 Gbps).
-Jan 19 10:35:43 duck klogd: qla2300 0002:01:06.1: LOOP UP detected (2 Gbps).
-Jan 19 10:35:43 duck klogd: qla2300 0002:01:06.0: LOOP UP detected (2 Gbps).
-Jan 19 10:35:43 duck klogd: qla2300 0002:01:04.0: LOOP UP detected (2 Gbps).
-Jan 19 10:35:43 duck klogd: qla2300 0012:00:02.1: LOOP UP detected (2 Gbps).
-Jan 19 10:35:43 duck klogd: qla2300 0012:00:01.1: LOOP UP detected (2 Gbps).
-Jan 19 10:35:45 duck klogd: run_workqueue: recursion depth exceeded: 4
-Jan 19 10:35:45 duck klogd:
-Jan 19 10:35:45 duck klogd: Call Trace:
-Jan 19 10:35:45 duck klogd:  [<a000000100012b00>] show_stack+0x40/0xa0
-Jan 19 10:35:45 duck klogd:                                 sp=e00000b07a35f9e0 bsp=e00000b07a3593b0
-Jan 19 10:35:45 duck klogd:  [<a000000100012b90>] dump_stack+0x30/0x60
-Jan 19 10:35:45 duck klogd:                                 sp=e00000b07a35fbb0 bsp=e00000b07a359398
-Jan 19 10:35:45 duck klogd:  [<a0000001000c9d90>] run_workqueue+0x90/0x280
-Jan 19 10:35:45 duck klogd:                                 sp=e00000b07a35fbb0 bsp=e00000b07a359358
-Jan 19 10:35:45 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:45 duck klogd:                                 sp=e00000b07a35fbb0 bsp=e00000b07a359328
-Jan 19 10:35:45 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:45 duck klogd:                                 sp=e00000b07a35fc10 bsp=e00000b07a359300
-Jan 19 10:35:45 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:45 duck klogd:                                 sp=e00000b07a35fc10 bsp=e00000b07a3592e8
-Jan 19 10:35:45 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:45 duck klogd:                                 sp=e00000b07a35fc10 bsp=e00000b07a3592b8
-Jan 19 10:35:45 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:45 duck klogd:                                 sp=e00000b07a35fc10 bsp=e00000b07a359280
-Jan 19 10:35:49 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b07a35fc10 bsp=e00000b07a359258
-Jan 19 10:35:49 duck klogd: run_workqueue: recursion depth exceeded: 4
-Jan 19 10:35:49 duck klogd:
-Jan 19 10:35:49 duck klogd: Call Trace:
-Jan 19 10:35:49 duck klogd:  [<a000000100012b00>] show_stack+0x40/0xa0
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b003f3f9e0 bsp=e00000b003f393b0
-Jan 19 10:35:49 duck klogd:  [<a000000100012b90>] dump_stack+0x30/0x60
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39398
-Jan 19 10:35:49 duck klogd:  [<a0000001000c9d90>] run_workqueue+0x90/0x280
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39358
-Jan 19 10:35:49 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39328
-Jan 19 10:35:49 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f39300
-Jan 19 10:35:49 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f392e8
-Jan 19 10:35:49 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f392b8
-Jan 19 10:35:49 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f39280
-Jan 19 10:35:49 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f39258
-Jan 19 10:35:49 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f39230
-Jan 19 10:35:49 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f391e8
-Jan 19 10:35:49 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f391b8
-Jan 19 10:35:49 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39190
-Jan 19 10:35:49 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39178
-Jan 19 10:35:49 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39148
-Jan 19 10:35:49 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39110
-Jan 19 10:35:49 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:49 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f390e8
-Jan 19 10:35:50 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f390c0
-Jan 19 10:35:50 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39080
-Jan 19 10:35:50 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39050
-Jan 19 10:35:50 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f39028
-Jan 19 10:35:50 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f39010
-Jan 19 10:35:50 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38fd8
-Jan 19 10:35:50 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38fa0
-Jan 19 10:35:50 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38f78
-Jan 19 10:35:50 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38f50
-Jan 19 10:35:50 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38f10
-Jan 19 10:35:50 duck klogd:  [<a0000001000cafb0>] worker_thread+0x1d0/0x260
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38ee0
-Jan 19 10:35:50 duck klogd:  [<a0000001000d36c0>] kthread+0x220/0x2a0
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fd50 bsp=e00000b003f38e98
-Jan 19 10:35:50 duck klogd:  [<a000000100011090>] kernel_thread_helper+0xd0/0x100
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fe30 bsp=e00000b003f38e70
-Jan 19 10:35:50 duck klogd:  [<a000000100009120>] start_kernel_thread+0x20/0x40
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fe30 bsp=e00000b003f38e70
-Jan 19 10:35:50 duck klogd: run_workqueue: recursion depth exceeded: 5
-Jan 19 10:35:50 duck klogd:
-Jan 19 10:35:50 duck klogd: Call Trace:
-Jan 19 10:35:50 duck klogd:  [<a000000100012b00>] show_stack+0x40/0xa0
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3f980 bsp=e00000b003f39520
-Jan 19 10:35:50 duck klogd:  [<a000000100012b90>] dump_stack+0x30/0x60
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f39508
-Jan 19 10:35:50 duck klogd:  [<a0000001000c9d90>] run_workqueue+0x90/0x280
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f394c8
-Jan 19 10:35:50 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f39498
-Jan 19 10:35:50 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39470
-Jan 19 10:35:50 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39458
-Jan 19 10:35:50 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39428
-Jan 19 10:35:50 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f393e8
-Jan 19 10:35:50 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f393c0
-Jan 19 10:35:50 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39398
-Jan 19 10:35:50 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39358
-Jan 19 10:35:50 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39328
-Jan 19 10:35:50 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f39300
-Jan 19 10:35:50 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f392e8
-Jan 19 10:35:50 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f392b8
-Jan 19 10:35:50 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f39280
-Jan 19 10:35:50 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f39258
-Jan 19 10:35:50 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f39230
-Jan 19 10:35:50 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:50 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f391e8
-Jan 19 10:35:50 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f391b8
-Jan 19 10:35:51 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39190
-Jan 19 10:35:51 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39178
-Jan 19 10:35:51 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39148
-Jan 19 10:35:51 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39110
-Jan 19 10:35:51 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f390e8
-Jan 19 10:35:51 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f390c0
-Jan 19 10:35:51 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39080
-Jan 19 10:35:51 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39050
-Jan 19 10:35:51 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f39028
-Jan 19 10:35:51 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f39010
-Jan 19 10:35:51 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38fd8
-Jan 19 10:35:51 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38fa0
-Jan 19 10:35:51 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38f78
-Jan 19 10:35:51 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38f50
-Jan 19 10:35:51 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38f10
-Jan 19 10:35:51 duck klogd:  [<a0000001000cafb0>] worker_thread+0x1d0/0x260
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38ee0
-Jan 19 10:35:51 duck klogd:  [<a0000001000d36c0>] kthread+0x220/0x2a0
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fd50 bsp=e00000b003f38e98
-Jan 19 10:35:51 duck klogd:  [<a000000100011090>] kernel_thread_helper+0xd0/0x100
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fe30 bsp=e00000b003f38e70
-Jan 19 10:35:51 duck klogd:  [<a000000100009120>] start_kernel_thread+0x20/0x40
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fe30 bsp=e00000b003f38e70
-Jan 19 10:35:51 duck klogd: run_workqueue: recursion depth exceeded: 6
-Jan 19 10:35:51 duck klogd:
-Jan 19 10:35:51 duck klogd: Call Trace:
-Jan 19 10:35:51 duck klogd:  [<a000000100012b00>] show_stack+0x40/0xa0
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3f920 bsp=e00000b003f39690
-Jan 19 10:35:51 duck klogd:  [<a000000100012b90>] dump_stack+0x30/0x60
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3faf0 bsp=e00000b003f39678
-Jan 19 10:35:51 duck klogd:  [<a0000001000c9d90>] run_workqueue+0x90/0x280
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3faf0 bsp=e00000b003f39638
-Jan 19 10:35:51 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3faf0 bsp=e00000b003f39608
-Jan 19 10:35:51 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f395d8
-Jan 19 10:35:51 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f395c0
-Jan 19 10:35:51 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f39590
-Jan 19 10:35:51 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f39558
-Jan 19 10:35:51 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f39530
-Jan 19 10:35:51 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f39508
-Jan 19 10:35:51 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f394c8
-Jan 19 10:35:51 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f39498
-Jan 19 10:35:51 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39470
-Jan 19 10:35:51 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39458
-Jan 19 10:35:51 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39428
-Jan 19 10:35:51 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f393e8
-Jan 19 10:35:51 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f393c0
-Jan 19 10:35:51 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39398
-Jan 19 10:35:51 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39358
-Jan 19 10:35:51 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39328
-Jan 19 10:35:51 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:51 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f39300
-Jan 19 10:35:52 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f392e8
-Jan 19 10:35:52 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f392b8
-Jan 19 10:35:52 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f39280
-Jan 19 10:35:52 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f39258
-Jan 19 10:35:52 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f39230
-Jan 19 10:35:52 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f391e8
-Jan 19 10:35:52 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f391b8
-Jan 19 10:35:52 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39190
-Jan 19 10:35:52 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39178
-Jan 19 10:35:52 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39148
-Jan 19 10:35:52 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39110
-Jan 19 10:35:52 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f390e8
-Jan 19 10:35:52 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f390c0
-Jan 19 10:35:52 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39080
-Jan 19 10:35:52 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39050
-Jan 19 10:35:52 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f39028
-Jan 19 10:35:52 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f39010
-Jan 19 10:35:52 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38fd8
-Jan 19 10:35:52 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38fa0
-Jan 19 10:35:52 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38f78
-Jan 19 10:35:52 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38f50
-Jan 19 10:35:52 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38f10
-Jan 19 10:35:52 duck klogd:  [<a0000001000cafb0>] worker_thread+0x1d0/0x260
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38ee0
-Jan 19 10:35:52 duck klogd:  [<a0000001000d36c0>] kthread+0x220/0x2a0
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fd50 bsp=e00000b003f38e98
-Jan 19 10:35:52 duck klogd:  [<a000000100011090>] kernel_thread_helper+0xd0/0x100
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fe30 bsp=e00000b003f38e70
-Jan 19 10:35:52 duck klogd:  [<a000000100009120>] start_kernel_thread+0x20/0x40
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fe30 bsp=e00000b003f38e70
-Jan 19 10:35:52 duck klogd: run_workqueue: recursion depth exceeded: 7
-Jan 19 10:35:52 duck klogd:
-Jan 19 10:35:52 duck klogd: Call Trace:
-Jan 19 10:35:52 duck klogd:  [<a000000100012b00>] show_stack+0x40/0xa0
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3f8c0 bsp=e00000b003f39800
-Jan 19 10:35:52 duck klogd:  [<a000000100012b90>] dump_stack+0x30/0x60
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fa90 bsp=e00000b003f397e0
-Jan 19 10:35:52 duck klogd:  [<a0000001000c9d90>] run_workqueue+0x90/0x280
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fa90 bsp=e00000b003f397a0
-Jan 19 10:35:52 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fa90 bsp=e00000b003f39770
-Jan 19 10:35:52 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3faf0 bsp=e00000b003f39748
-Jan 19 10:35:52 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3faf0 bsp=e00000b003f39730
-Jan 19 10:35:52 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3faf0 bsp=e00000b003f39700
-Jan 19 10:35:52 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3faf0 bsp=e00000b003f396c8
-Jan 19 10:35:52 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3faf0 bsp=e00000b003f396a0
-Jan 19 10:35:52 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3faf0 bsp=e00000b003f39678
-Jan 19 10:35:52 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3faf0 bsp=e00000b003f39638
-Jan 19 10:35:52 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3faf0 bsp=e00000b003f39608
-Jan 19 10:35:52 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f395d8
-Jan 19 10:35:52 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:52 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f395c0
-Jan 19 10:35:53 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f39590
-Jan 19 10:35:53 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f39558
-Jan 19 10:35:53 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f39530
-Jan 19 10:35:53 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f39508
-Jan 19 10:35:53 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f394c8
-Jan 19 10:35:53 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fb50 bsp=e00000b003f39498
-Jan 19 10:35:53 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39470
-Jan 19 10:35:53 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39458
-Jan 19 10:35:53 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39428
-Jan 19 10:35:53 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f393e8
-Jan 19 10:35:53 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f393c0
-Jan 19 10:35:53 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39398
-Jan 19 10:35:53 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39358
-Jan 19 10:35:53 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fbb0 bsp=e00000b003f39328
-Jan 19 10:35:53 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f39300
-Jan 19 10:35:53 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f392e8
-Jan 19 10:35:53 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f392b8
-Jan 19 10:35:53 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f39280
-Jan 19 10:35:53 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f39258
-Jan 19 10:35:53 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f39230
-Jan 19 10:35:53 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f391e8
-Jan 19 10:35:53 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fc10 bsp=e00000b003f391b8
-Jan 19 10:35:53 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39190
-Jan 19 10:35:53 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39178
-Jan 19 10:35:53 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39148
-Jan 19 10:35:53 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39110
-Jan 19 10:35:53 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f390e8
-Jan 19 10:35:53 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f390c0
-Jan 19 10:35:53 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39080
-Jan 19 10:35:53 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fc70 bsp=e00000b003f39050
-Jan 19 10:35:53 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f39028
-Jan 19 10:35:53 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f39010
-Jan 19 10:35:53 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38fd8
-Jan 19 10:35:53 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38fa0
-Jan 19 10:35:53 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38f78
-Jan 19 10:35:53 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38f50
-Jan 19 10:35:53 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38f10
-Jan 19 10:35:53 duck klogd:  [<a0000001000cafb0>] worker_thread+0x1d0/0x260
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fcd0 bsp=e00000b003f38ee0
-Jan 19 10:35:53 duck klogd:  [<a0000001000d36c0>] kthread+0x220/0x2a0
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fd50 bsp=e00000b003f38e98
-Jan 19 10:35:53 duck klogd:  [<a000000100011090>] kernel_thread_helper+0xd0/0x100
-Jan 19 10:35:53 duck klogd:                                 sp=e00000b003f3fe30 bsp=e00000b003f38e70
-Jan 19 10:35:53 duck klogd:  [<a000000100009120>] start_kernel_thread+0x20/0x40
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b003f3fe30 bsp=e00000b003f38e70
-Jan 19 10:35:54 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fc10 bsp=e00000b07a359230
-Jan 19 10:35:54 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fc10 bsp=e00000b07a3591e8
-Jan 19 10:35:54 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fc10 bsp=e00000b07a3591b8
-Jan 19 10:35:54 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fc70 bsp=e00000b07a359190
-Jan 19 10:35:54 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fc70 bsp=e00000b07a359178
-Jan 19 10:35:54 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fc70 bsp=e00000b07a359148
-Jan 19 10:35:54 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fc70 bsp=e00000b07a359110
-Jan 19 10:35:54 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fc70 bsp=e00000b07a3590e8
-Jan 19 10:35:54 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fc70 bsp=e00000b07a3590c0
-Jan 19 10:35:54 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fc70 bsp=e00000b07a359080
-Jan 19 10:35:54 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fc70 bsp=e00000b07a359050
-Jan 19 10:35:54 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fcd0 bsp=e00000b07a359028
-Jan 19 10:35:54 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fcd0 bsp=e00000b07a359010
-Jan 19 10:35:54 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fcd0 bsp=e00000b07a358fd8
-Jan 19 10:35:54 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fcd0 bsp=e00000b07a358fa0
-Jan 19 10:35:54 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fcd0 bsp=e00000b07a358f78
-Jan 19 10:35:54 duck klogd:  [<a00000010056f090>] qla2x00_rport_del+0x70/0xa0
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fcd0 bsp=e00000b07a358f50
-Jan 19 10:35:54 duck klogd:  [<a0000001000c9ec0>] run_workqueue+0x1c0/0x280
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fcd0 bsp=e00000b07a358f10
-Jan 19 10:35:54 duck klogd:  [<a0000001000cafb0>] worker_thread+0x1d0/0x260
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fcd0 bsp=e00000b07a358ee0
-Jan 19 10:35:54 duck klogd:  [<a0000001000d36c0>] kthread+0x220/0x2a0
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fd50 bsp=e00000b07a358e98
-Jan 19 10:35:54 duck klogd:  [<a000000100011090>] kernel_thread_helper+0xd0/0x100
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fe30 bsp=e00000b07a358e70
-Jan 19 10:35:54 duck klogd:  [<a000000100009120>] start_kernel_thread+0x20/0x40
-Jan 19 10:35:54 duck klogd:                                 sp=e00000b07a35fe30 bsp=e00000b07a358e70
-
-
-Broadcast message from root (pts/0) (Thu Jan 19 10:42:15 2006):
-
-The system is going down for reboot NOW!
-INIT: Sending processes the TERM signal
-INIT: Sending processes the KILL signal
-INIT: Pid 10642 [id 1] seems to hang
-INIT: Pid 10643 [id 2] seems to hang
-INIT: Pid 10644 [id 3] seems to hang
-INIT: Pid 10645 [id 4] seems to hang
-INIT: Pid 10646 [id 5] seems to hang
-INIT: Pid 10647 [id 6] seems to hang
-Boot logging started on /dev/ttySG0(/dev/console) at Thu Jan 19 10:42:22 2006
-Master Resource Control: previous runlevel: 3, switching to runlevel: 6
-
-root         1     0  1 10:24 ?        00:00:19 init [6]
-root         2     1  0 10:24 ?        00:00:00 [migration/0]
-root         3     1  0 10:24 ?        00:00:00 [ksoftirqd/0]
-root         4     1  0 10:24 ?        00:00:00 [watchdog/0]
-root         5     1  0 10:24 ?        00:00:00 [migration/1]
-root         6     1  0 10:24 ?        00:00:00 [ksoftirqd/1]
-
-
-0xe0000034f7698000      751        1  0    0   D  0xe0000034f7698380  qla2300_2_dpc
-0xe0000034f7668000      825        1  0    0   D  0xe0000034f7668380  qla2300_3_dpc
-0xe0000034f6300000      903        1  0    0   D  0xe0000034f6300380  qla2300_4_dpc
-0xe0000034f63f8000      977        1  0    0   D  0xe0000034f63f8380  qla2300_5_dpc
-0xe00000b078248000     1054        1  0    2   D  0xe00000b078248380  qla2300_6_dpc
-0xe00000b078270000     1135        1  0    3   D  0xe00000b078270380  qla2300_7_dpc
-0xe00000b078528000     1218        1  0    2   D  0xe00000b078528380  qla2300_8_dpc
-0xe00000b078810000     1304        1  0    3   D  0xe00000b078810380  qla2300_9_dpc
-
-
-[0]kdb> btp 1304
-Stack traceback for pid 1304
-0xe00000b078810000     1304        1  0    3   D  0xe00000b078810380  qla2300_9_dpc
-0xa000000100717990 schedule+0x2290
-        args (0xe00000b00393de00, 0xa0000001000ca0b0, 0x309, 0xa0000001000ca0a0, 0x1)
-0xa0000001000ca0c0 flush_cpu_workqueue+0x140
-        args (0xe00000b00393de00, 0x225, 0xe00000b078810000, 0xa0000001000ca220, 0x288)
-0xa0000001000ca220 flush_workqueue+0xc0
-        args (0xe000003007114700, 0x0, 0xa0000001000ca3e0, 0x184, 0x205)
-0xa0000001000ca3e0 flush_scheduled_work+0x20
-        args (0xa000000100554570, 0x307, 0x307)
-0xa000000100554570 fc_rport_tgt_remove+0xf0
-        args (0xe00000b07a1cb600, 0xe00000b07a1cb878, 0xe00000b07853c000, 0xa000000100554820, 0x389)
-0xa000000100554820 fc_rport_terminate+0xa0
-        args (0xe00000b07a1cb600, 0xe00000b07a1cb650, 0xe00000b07853c058, 0xe00000b07853c000, 0xa000000100554950)
-0xa000000100554950 fc_remote_port_delete+0x50
-        args (0xe00000b07a1cb600, 0x3a98, 0xa00000010056f090, 0x287, 0xe00000b07853c4e8)
-0xa00000010056f090 qla2x00_rport_del+0x70
-        args (0xe00000b07a1c75f0, 0xe00000b07a1cb600, 0xa00000010056f100, 0x48c, 0x48f)
-0xa00000010056f100 qla2x00_reg_remote_port+0x40
-        args (0xe00000b07853c4b8, 0xe00000b07a1c7580, 0x3, 0x3, 0xfffffff0)
-0xa00000010056f6b0 qla2x00_update_fcport+0x1f0
-        args (0xe00000b07853c4b8, 0xe00000b07a1c7580, 0xe00000b07853c4b8, 0xa00000010056f820, 0x30b)
-[0]more>
-0xa00000010056f820 qla2x00_fabric_dev_login+0x140
-        args (0xe00000b07853c4b8, 0xe00000b07a1c7580, 0x0, 0xa000000100571f40, 0x694)
-0xa000000100571f40 qla2x00_configure_loop+0x2320
-        args (0xe00000b07853c4b8, 0xe00000b07a1c7580, 0xe00000b07853e6e8, 0xe00000b07a1c41b4, 0xe00000b07a1c7580)
-0xa000000100574210 qla2x00_loop_resync+0x1b0
-        args (0xff, 0x0, 0xa0000001005692b0, 0x30b, 0x40000a0)
-0xa0000001005692b0 qla2x00_do_dpc+0xb30
-        args (0xe00000b07853c4b8, 0x4000090, 0x4000090, 0xa000000100011090, 0x286)
-0xa000000100011090 kernel_thread_helper+0xd0
-        args (0xa00000010083f8f0, 0xe00000b07853c4b8, 0xa000000100009120, 0x2, 0xa000000100d115c0)
-0xa000000100009120 start_kernel_thread+0x20
-        args (0xa00000010083f8f0, 0xe00000b07853c4b8)
-
-
-
-[0]kdb> btp 1218
-Stack traceback for pid 1218
-0xe00000b078528000     1218        1  0    2   D  0xe00000b078528380  qla2300_8_dpc
-0xa000000100717990 schedule+0x2290
-        args (0xe00000b00393de00, 0xa0000001000ca0b0, 0x309, 0xa0000001000ca0a0, 0x1)
-0xa0000001000ca0c0 flush_cpu_workqueue+0x140
-        args (0xe00000b00393de00, 0x226, 0xe00000b078528000, 0xa0000001000ca220, 0x288)
-0xa0000001000ca220 flush_workqueue+0xc0
-        args (0xe000003007114700, 0x0, 0xa0000001000ca3e0, 0x184, 0x205)
-0xa0000001000ca3e0 flush_scheduled_work+0x20
-        args (0xa000000100554570, 0x307, 0x307)
-0xa000000100554570 fc_rport_tgt_remove+0xf0
-        args (0xe00000b003f52600, 0xe00000b003f52878, 0xe00000b078234000, 0xa000000100554820, 0x389)
-0xa000000100554820 fc_rport_terminate+0xa0
-        args (0xe00000b003f52600, 0xe00000b003f52650, 0xe00000b078234058, 0xe00000b078234000, 0xa000000100554950)
-0xa000000100554950 fc_remote_port_delete+0x50
-        args (0xe00000b003f52600, 0x3a98, 0xa00000010056f090, 0x287, 0xe00000b0782344e8)
-0xa00000010056f090 qla2x00_rport_del+0x70
-        args (0xe00000b07a3897f0, 0xe00000b003f52600, 0xa00000010056f100, 0x48c, 0x48f)
-0xa00000010056f100 qla2x00_reg_remote_port+0x40
-        args (0xe00000b0782344b8, 0xe00000b07a389780, 0x3, 0x3, 0xfffffff0)
-0xa00000010056f6b0 qla2x00_update_fcport+0x1f0
-        args (0xe00000b0782344b8, 0xe00000b07a389780, 0xe00000b0782344b8, 0xa00000010056f820, 0x30b)
-[0]more>
-0xa00000010056f820 qla2x00_fabric_dev_login+0x140
-        args (0xe00000b0782344b8, 0xe00000b07a389780, 0x0, 0xa000000100571f40, 0x694)
-0xa000000100571f40 qla2x00_configure_loop+0x2320
-        args (0xe00000b0782344b8, 0xe00000b07a389780, 0xe00000b0782366e8, 0xe00000b078524734, 0xe00000b07a389780)
-0xa000000100574210 qla2x00_loop_resync+0x1b0
-        args (0xfd, 0x0, 0xa0000001005692b0, 0x30b, 0x40000a0)
-0xa0000001005692b0 qla2x00_do_dpc+0xb30
-        args (0xe00000b0782344b8, 0x4000090, 0x4000090, 0xa000000100011090, 0x286)
-0xa000000100011090 kernel_thread_helper+0xd0
-        args (0xa00000010083f8f0, 0xe00000b0782344b8, 0xa000000100009120, 0x2, 0xa000000100d115c0)
-0xa000000100009120 start_kernel_thread+0x20
-        args (0xa00000010083f8f0, 0xe00000b0782344b8)
-
-
-
-
-[0]kdb> btp 1135
-Stack traceback for pid 1135
-0xe00000b078270000     1135        1  0    3   D  0xe00000b078270380  qla2300_7_dpc
-0xa000000100717990 schedule+0x2290
-        args (0xe00000b00393de80, 0xa0000001000ca0b0, 0x309, 0xa0000001000ca0a0, 0x1)
-0xa0000001000ca0c0 flush_cpu_workqueue+0x140
-        args (0xe00000b00393de80, 0x1f4, 0xe00000b078270000, 0xa0000001000ca220, 0x288)
-0xa0000001000ca220 flush_workqueue+0xc0
-        args (0xe000003007114700, 0x2, 0xa0000001000ca3e0, 0x184, 0x205)
-0xa0000001000ca3e0 flush_scheduled_work+0x20
-        args (0xa000000100554570, 0x307, 0x307)
-0xa000000100554570 fc_rport_tgt_remove+0xf0
-        args (0xe00000b0781ab580, 0xe00000b0781ab7f8, 0xe00000b07a23c000, 0xa000000100554820, 0x389)
-0xa000000100554820 fc_rport_terminate+0xa0
-        args (0xe00000b0781ab580, 0xe00000b0781ab5d0, 0xe00000b07a23c058, 0xe00000b07a23c000, 0xa000000100554950)
-0xa000000100554950 fc_remote_port_delete+0x50
-        args (0xe00000b0781ab580, 0x3a98, 0xa00000010056f090, 0x287, 0xe00000b07a23c4e8)
-0xa00000010056f090 qla2x00_rport_del+0x70
-        args (0xe00000b07a23b970, 0xe00000b0781ab580, 0xa00000010056f100, 0x48c, 0x48f)
-0xa00000010056f100 qla2x00_reg_remote_port+0x40
-        args (0xe00000b07a23c4b8, 0xe00000b07a23b900, 0x3, 0x3, 0xfffffff0)
-0xa00000010056f6b0 qla2x00_update_fcport+0x1f0
-        args (0xe00000b07a23c4b8, 0xe00000b07a23b900, 0xe00000b07a23c4b8, 0xa00000010056f820, 0x30b)
-[0]more>
-0xa00000010056f820 qla2x00_fabric_dev_login+0x140
-        args (0xe00000b07a23c4b8, 0xe00000b07a23b900, 0x0, 0xa000000100571f40, 0x694)
-0xa000000100571f40 qla2x00_configure_loop+0x2320
-        args (0xe00000b07a23c4b8, 0xe00000b07a23b900, 0xe00000b07a23e6e8, 0xe00000b07884f934, 0xe00000b07a23bb00)
-0xa000000100574210 qla2x00_loop_resync+0x1b0
-        args (0xfe, 0x0, 0xa0000001005692b0, 0x30b, 0x40000a0)
-0xa0000001005692b0 qla2x00_do_dpc+0xb30
-        args (0xe00000b07a23c4b8, 0x4000090, 0x4000090, 0xa000000100011090, 0x286)
-0xa000000100011090 kernel_thread_helper+0xd0
-        args (0xa00000010083f8f0, 0xe00000b07a23c4b8, 0xa000000100009120, 0x2, 0xa000000100d115c0)
-0xa000000100009120 start_kernel_thread+0x20
-        args (0xa00000010083f8f0, 0xe00000b07a23c4b8)
-
-
-
-[0]kdb> btp 1054
-Stack traceback for pid 1054
-0xe00000b078248000     1054        1  0    2   D  0xe00000b078248380  qla2300_6_dpc
-0xa000000100717990 schedule+0x2290
-        args (0xe00000b00393de00, 0xa0000001000ca0b0, 0x309, 0xa0000001000ca0a0, 0x1)
-0xa0000001000ca0c0 flush_cpu_workqueue+0x140
-        args (0xe00000b00393de00, 0x226, 0xe00000b078248000, 0xa0000001000ca220, 0x288)
-0xa0000001000ca220 flush_workqueue+0xc0
-        args (0xe000003007114700, 0x0, 0xa0000001000ca3e0, 0x184, 0x205)
-0xa0000001000ca3e0 flush_scheduled_work+0x20
-        args (0xa000000100554570, 0x307, 0x307)
-0xa000000100554570 fc_rport_tgt_remove+0xf0
-        args (0xe00000b00396f880, 0xe00000b00396faf8, 0xe00000b07a0d0000, 0xa000000100554820, 0x389)
-0xa000000100554820 fc_rport_terminate+0xa0
-        args (0xe00000b00396f880, 0xe00000b00396f8d0, 0xe00000b07a0d0058, 0xe00000b07a0d0000, 0xa000000100554950)
-0xa000000100554950 fc_remote_port_delete+0x50
-        args (0xe00000b00396f880, 0x3a98, 0xa00000010056f090, 0x287, 0xe00000b07a0d04e8)
-0xa00000010056f090 qla2x00_rport_del+0x70
-        args (0xe00000b0781d1570, 0xe00000b00396f880, 0xa00000010056f100, 0x48c, 0x48f)
-0xa00000010056f100 qla2x00_reg_remote_port+0x40
-        args (0xe00000b07a0d04b8, 0xe00000b0781d1500, 0x3, 0x3, 0xfffffff0)
-0xa00000010056f6b0 qla2x00_update_fcport+0x1f0
-        args (0xe00000b07a0d04b8, 0xe00000b0781d1500, 0xe00000b07a0d04b8, 0xa00000010056f820, 0x30b)
-[0]more>
-0xa00000010056f820 qla2x00_fabric_dev_login+0x140
-        args (0xe00000b07a0d04b8, 0xe00000b0781d1500, 0x0, 0xa000000100571f40, 0x694)
-0xa000000100571f40 qla2x00_configure_loop+0x2320
-        args (0xe00000b07a0d04b8, 0xe00000b0781d1500, 0xe00000b07a0d26e8, 0xe00000b078524334, 0xe00000b0781d1500)
-0xa000000100574210 qla2x00_loop_resync+0x1b0
-        args (0xfe, 0x0, 0xa0000001005692b0, 0x30b, 0x40000a0)
-0xa0000001005692b0 qla2x00_do_dpc+0xb30
-        args (0xe00000b07a0d04b8, 0x4000090, 0x4000090, 0xa000000100011090, 0x286)
-0xa000000100011090 kernel_thread_helper+0xd0
-        args (0xa00000010083f8f0, 0xe00000b07a0d04b8, 0xa000000100009120, 0x2, 0xa000000100d115c0)
-0xa000000100009120 start_kernel_thread+0x20
-        args (0xa00000010083f8f0, 0xe00000b07a0d04b8)
-
-
-
-[0]kdb> btp 977
-Stack traceback for pid 977
-0xe0000034f63f8000      977        1  0    0   D  0xe0000034f63f8380  qla2300_5_dpc
-0xa000000100717990 schedule+0x2290
-        args (0xe00000b00393de00, 0xa0000001000ca0b0, 0x309, 0xa0000001000ca0a0, 0x1)
-0xa0000001000ca0c0 flush_cpu_workqueue+0x140
-        args (0xe00000b00393de00, 0x222, 0xe0000034f63f8000, 0xa0000001000ca220, 0x288)
-0xa0000001000ca220 flush_workqueue+0xc0
-        args (0xe000003007114700, 0x0, 0xa0000001000ca3e0, 0x184, 0x205)
-0xa0000001000ca3e0 flush_scheduled_work+0x20
-        args (0xa000000100554570, 0x307, 0x307)
-0xa000000100554570 fc_rport_tgt_remove+0xf0
-        args (0xe0000034f668b580, 0xe0000034f668b7f8, 0xe0000034f63f4000, 0xa000000100554820, 0x389)
-0xa000000100554820 fc_rport_terminate+0xa0
-        args (0xe0000034f668b580, 0xe0000034f668b5d0, 0xe0000034f63f4058, 0xe0000034f63f4000, 0xa000000100554950)
-0xa000000100554950 fc_remote_port_delete+0x50
-        args (0xe0000034f668b580, 0x3a98, 0xa00000010056f090, 0x287, 0xe0000034f63f44e8)
-0xa00000010056f090 qla2x00_rport_del+0x70
-        args (0xe0000034f61f5d70, 0xe0000034f668b580, 0xa00000010056f100, 0x48c, 0x48f)
-0xa00000010056f100 qla2x00_reg_remote_port+0x40
-        args (0xe0000034f63f44b8, 0xe0000034f61f5d00, 0x3, 0x3, 0xfffffff0)
-0xa00000010056f6b0 qla2x00_update_fcport+0x1f0
-        args (0xe0000034f63f44b8, 0xe0000034f61f5d00, 0xe0000034f63f44b8, 0xa00000010056f820, 0x30b)
-[0]more>
-0xa00000010056f820 qla2x00_fabric_dev_login+0x140
-        args (0xe0000034f63f44b8, 0xe0000034f61f5d00, 0x0, 0xa000000100571f40, 0x694)
-0xa000000100571f40 qla2x00_configure_loop+0x2320
-        args (0xe0000034f63f44b8, 0xe0000034f61f5d00, 0xe0000034f63f66e8, 0xe0000034f635f1b4, 0xe0000034f61f5d00)
-0xa000000100574210 qla2x00_loop_resync+0x1b0
-        args (0xfe, 0x0, 0xa0000001005692b0, 0x30b, 0x40000a0)
-0xa0000001005692b0 qla2x00_do_dpc+0xb30
-        args (0xe0000034f63f44b8, 0x4000090, 0x4000090, 0xa000000100011090, 0x286)
-0xa000000100011090 kernel_thread_helper+0xd0
-        args (0xa00000010083f8f0, 0xe0000034f63f44b8, 0xa000000100009120, 0x2, 0xa000000100d115c0)
-0xa000000100009120 start_kernel_thread+0x20
-        args (0xa00000010083f8f0, 0xe0000034f63f44b8)
-
-
-
-Stack traceback for pid 751
-0xe0000034f7698000      751        1  0    0   D  0xe0000034f7698380  qla2300_2_dpc
-0xa000000100717990 schedule+0x2290
-        args (0xe00000b00393de00, 0xa0000001000ca0b0, 0x309, 0xa0000001000ca0a0, 0x1)
-0xa0000001000ca0c0 flush_cpu_workqueue+0x140
-        args (0xe00000b00393de00, 0x21f, 0xe0000034f7698000, 0xa0000001000ca220, 0x288)
-0xa0000001000ca220 flush_workqueue+0xc0
-        args (0xe000003007114700, 0x0, 0xa0000001000ca3e0, 0x184, 0x205)
-0xa0000001000ca3e0 flush_scheduled_work+0x20
-        args (0xa000000100554570, 0x307, 0x307)
-0xa000000100554570 fc_rport_tgt_remove+0xf0
-        args (0xe0000034f75b0200, 0xe0000034f75b0478, 0xe0000034f7678000, 0xa000000100554820, 0x389)
-0xa000000100554820 fc_rport_terminate+0xa0
-        args (0xe0000034f75b0200, 0xe0000034f75b0250, 0xe0000034f7678058, 0xe0000034f7678000, 0xa000000100554950)
-0xa000000100554950 fc_remote_port_delete+0x50
-        args (0xe0000034f75b0200, 0x3a98, 0xa00000010056f090, 0x287, 0xe0000034f76784e8)
-0xa00000010056f090 qla2x00_rport_del+0x70
-        args (0xe0000034f6692970, 0xe0000034f75b0200, 0xa00000010056f100, 0x48c, 0x48f)
-0xa00000010056f100 qla2x00_reg_remote_port+0x40
-        args (0xe0000034f76784b8, 0xe0000034f6692900, 0x3, 0x3, 0xfffffff0)
-0xa00000010056f6b0 qla2x00_update_fcport+0x1f0
-        args (0xe0000034f76784b8, 0xe0000034f6692900, 0xe0000034f76784b8, 0xa00000010056f820, 0x30b)
-[0]more>
-0xa00000010056f820 qla2x00_fabric_dev_login+0x140
-        args (0xe0000034f76784b8, 0xe0000034f6692900, 0x0, 0xa000000100571f40, 0x694)
-0xa000000100571f40 qla2x00_configure_loop+0x2320
-        args (0xe0000034f76784b8, 0xe0000034f6692900, 0xe0000034f767a6e8, 0xe0000034f7589db4, 0xe0000034f7556780)
-0xa000000100574210 qla2x00_loop_resync+0x1b0
-        args (0xff, 0x0, 0xa0000001005692b0, 0x30b, 0x40000a0)
-0xa0000001005692b0 qla2x00_do_dpc+0xb30
-        args (0xe0000034f76784b8, 0x4000090, 0x4000090, 0xa000000100011090, 0x286)
-0xa000000100011090 kernel_thread_helper+0xd0
-        args (0xa00000010083f8f0, 0xe0000034f76784b8, 0xa000000100009120, 0x2, 0xa000000100d115c0)
-0xa000000100009120 start_kernel_thread+0x20
-        args (0xa00000010083f8f0, 0xe0000034f76784b8)
-
-
-
-[0]kdb> btp 825
-Stack traceback for pid 825
-0xe0000034f7668000      825        1  0    0   D  0xe0000034f7668380  qla2300_3_dpc
-0xa000000100717990 schedule+0x2290
-        args (0xe00000b00393de00, 0xa0000001000ca0b0, 0x309, 0xa0000001000ca0a0, 0x1)
-0xa0000001000ca0c0 flush_cpu_workqueue+0x140
-        args (0xe00000b00393de00, 0x21f, 0xe0000034f7668000, 0xa0000001000ca220, 0x288)
-0xa0000001000ca220 flush_workqueue+0xc0
-        args (0xe000003007114700, 0x0, 0xa0000001000ca3e0, 0x184, 0x205)
-0xa0000001000ca3e0 flush_scheduled_work+0x20
-        args (0xa000000100554570, 0x307, 0x307)
-0xa000000100554570 fc_rport_tgt_remove+0xf0
-        args (0xe0000034f75b1a00, 0xe0000034f75b1c78, 0xe0000034f63e4000, 0xa000000100554820, 0x389)
-0xa000000100554820 fc_rport_terminate+0xa0
-        args (0xe0000034f75b1a00, 0xe0000034f75b1a50, 0xe0000034f63e4058, 0xe0000034f63e4000, 0xa000000100554950)
-0xa000000100554950 fc_remote_port_delete+0x50
-        args (0xe0000034f75b1a00, 0x3a98, 0xa00000010056f090, 0x287, 0xe0000034f63e44e8)
-0xa00000010056f090 qla2x00_rport_del+0x70
-        args (0xe0000034f63dc5f0, 0xe0000034f75b1a00, 0xa00000010056f100, 0x48c, 0x48f)
-0xa00000010056f100 qla2x00_reg_remote_port+0x40
-        args (0xe0000034f63e44b8, 0xe0000034f63dc580, 0x3, 0x3, 0xfffffff0)
-0xa00000010056f6b0 qla2x00_update_fcport+0x1f0
-        args (0xe0000034f63e44b8, 0xe0000034f63dc580, 0xe0000034f63e44b8, 0xa00000010056f820, 0x30b)
-[0]more>
-0xa00000010056f820 qla2x00_fabric_dev_login+0x140
-        args (0xe0000034f63e44b8, 0xe0000034f63dc580, 0x0, 0xa000000100571f40, 0x694)
-0xa000000100571f40 qla2x00_configure_loop+0x2320
-        args (0xe0000034f63e44b8, 0xe0000034f63dc580, 0xe0000034f63e66e8, 0xe0000034f60dfd34, 0xe0000034f63dc580)
-0xa000000100574210 qla2x00_loop_resync+0x1b0
-        args (0xfe, 0x0, 0xa0000001005692b0, 0x30b, 0x40000a0)
-0xa0000001005692b0 qla2x00_do_dpc+0xb30
-        args (0xe0000034f63e44b8, 0x4000090, 0x4000090, 0xa000000100011090, 0x286)
-0xa000000100011090 kernel_thread_helper+0xd0
-        args (0xa00000010083f8f0, 0xe0000034f63e44b8, 0xa000000100009120, 0x2, 0xa000000100d115c0)
-0xa000000100009120 start_kernel_thread+0x20
-        args (0xa00000010083f8f0, 0xe0000034f63e44b8)
-
-
-[0]kdb> btp 903
-Stack traceback for pid 903
-0xe0000034f6300000      903        1  0    0   D  0xe0000034f6300380  qla2300_4_dpc
-0xa000000100717990 schedule+0x2290
-        args (0xe00000b00393de00, 0xa0000001000ca0b0, 0x309, 0xa0000001000ca0a0, 0x1)
-0xa0000001000ca0c0 flush_cpu_workqueue+0x140
-        args (0xe00000b00393de00, 0x225, 0xe0000034f6300000, 0xa0000001000ca220, 0x288)
-0xa0000001000ca220 flush_workqueue+0xc0
-        args (0xe000003007114700, 0x0, 0xa0000001000ca3e0, 0x184, 0x205)
-0xa0000001000ca3e0 flush_scheduled_work+0x20
-        args (0xa000000100554570, 0x307, 0x307)
-0xa000000100554570 fc_rport_tgt_remove+0xf0
-        args (0xe0000034f6575d80, 0xe0000034f6575ff8, 0xe0000034f6694000, 0xa000000100554820, 0x389)
-0xa000000100554820 fc_rport_terminate+0xa0
-        args (0xe0000034f6575d80, 0xe0000034f6575dd0, 0xe0000034f6694058, 0xe0000034f6694000, 0xa000000100554950)
-0xa000000100554950 fc_remote_port_delete+0x50
-        args (0xe0000034f6575d80, 0x3a98, 0xa00000010056f090, 0x287, 0xe0000034f66944e8)
-0xa00000010056f090 qla2x00_rport_del+0x70
-        args (0xe0000034f6692170, 0xe0000034f6575d80, 0xa00000010056f100, 0x48c, 0x48f)
-0xa00000010056f100 qla2x00_reg_remote_port+0x40
-        args (0xe0000034f66944b8, 0xe0000034f6692100, 0x3, 0x3, 0xfffffff0)
-0xa00000010056f6b0 qla2x00_update_fcport+0x1f0
-        args (0xe0000034f66944b8, 0xe0000034f6692100, 0xe0000034f66944b8, 0xa00000010056f820, 0x30b)
-[0]more>
-0xa00000010056f820 qla2x00_fabric_dev_login+0x140
-        args (0xe0000034f66944b8, 0xe0000034f6692100, 0x0, 0xa000000100571f40, 0x694)
-0xa000000100571f40 qla2x00_configure_loop+0x2320
-        args (0xe0000034f66944b8, 0xe0000034f6692100, 0xe0000034f66966e8, 0xe0000034f657b734, 0xe0000034f6692300)
-0xa000000100574210 qla2x00_loop_resync+0x1b0
-        args (0xff, 0x0, 0xa0000001005692b0, 0x30b, 0x40000a0)
-0xa0000001005692b0 qla2x00_do_dpc+0xb30
-        args (0xe0000034f66944b8, 0x4000090, 0x4000090, 0xa000000100011090, 0x286)
-0xa000000100011090 kernel_thread_helper+0xd0
-        args (0xa00000010083f8f0, 0xe0000034f66944b8, 0xa000000100009120, 0x2, 0xa000000100d115c0)
-0xa000000100009120 start_kernel_thread+0x20
-        args (0xa00000010083f8f0, 0xe0000034f66944b8)
+iD8DBQFDz9bVRbO4Br+gO6YRAoi+AJ474kaoue3QRausPgKKdYJtj1vmrwCdHcoE
+hqxwpAq5Hr2HUlIYmc5fXu0=
+=TgZJ
+-----END PGP SIGNATURE-----
 
