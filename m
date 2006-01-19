@@ -1,56 +1,261 @@
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH] unbreak ecoscsi
-Date: Thu, 19 Jan 2006 00:04:26 +0300
-Message-ID: <20060118210426.GK12771@mipter.zuzino.mipt.ru>
+From: Greg KH <gregkh@suse.de>
+Subject: [PATCH] Remove devfs support from the SCSI subsystem
+Date: Wed, 18 Jan 2006 16:17:46 -0800
+Message-ID: <20060119001746.GA26478@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from uproxy.gmail.com ([66.249.92.199]:38997 "EHLO uproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030433AbWARUrF (ORCPT
+Received: from mail.kroah.org ([69.55.234.183]:63210 "EHLO perch.kroah.org")
+	by vger.kernel.org with ESMTP id S1161064AbWASASD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Jan 2006 15:47:05 -0500
-Received: by uproxy.gmail.com with SMTP id s2so40397uge
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Jan 2006 12:47:04 -0800 (PST)
+	Wed, 18 Jan 2006 19:18:03 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Christoph Hellwig <hch@lst.de>
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org
 
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
+
+As devfs has been disabled from the kernel tree for a number of months
+now (5 to be exact), here's a patch against 2.6.16-rc1-git1 that removes
+support for it from the SCSI subsystem.
+
+The patch also removes the scsi_disk devfs_name field as it's no longer
+needed.
+
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
 ---
+ drivers/scsi/osst.c        |   24 ++----------------------
+ drivers/scsi/scsi.c        |    3 ---
+ drivers/scsi/scsi_scan.c   |    6 +-----
+ drivers/scsi/sd.c          |    2 --
+ drivers/scsi/sg.c          |   10 ++--------
+ drivers/scsi/sr.c          |    2 --
+ drivers/scsi/st.c          |   20 --------------------
+ include/scsi/scsi_device.h |    1 -
+ 8 files changed, 5 insertions(+), 63 deletions(-)
 
- drivers/scsi/arm/ecoscsi.c |   11 +++++------
- 1 files changed, 5 insertions(+), 6 deletions(-)
-
---- a/drivers/scsi/arm/ecoscsi.c
-+++ b/drivers/scsi/arm/ecoscsi.c
-@@ -175,7 +175,7 @@ static struct Scsi_Host *host;
- static int __init ecoscsi_init(void)
- {
+--- gregkh-2.6.orig/drivers/scsi/osst.c
++++ gregkh-2.6/drivers/scsi/osst.c
+@@ -48,7 +48,6 @@ static const char * osst_version = "0.99
+ #include <linux/vmalloc.h>
+ #include <linux/blkdev.h>
+ #include <linux/moduleparam.h>
+-#include <linux/devfs_fs_kernel.h>
+ #include <linux/delay.h>
+ #include <asm/uaccess.h>
+ #include <asm/dma.h>
+@@ -107,8 +106,6 @@ static struct osst_dev_parm {
+ };
+ #endif
  
--	host = scsi_host_alloc(tpnt, sizeof(struct NCR5380_hostdata));
-+	host = scsi_host_alloc(&ecoscsi_template, sizeof(struct NCR5380_hostdata));
- 	if (!host)
+-static char *osst_formats[ST_NBR_MODES] ={"", "l", "m", "a"};
+-
+ /* Some default definitions have been moved to osst_options.h */
+ #define OSST_BUFFER_SIZE (OSST_BUFFER_BLOCKS * ST_KILOBYTE)
+ #define OSST_WRITE_THRESHOLD (OSST_WRITE_THRESHOLD_BLOCKS * ST_KILOBYTE)
+@@ -5667,7 +5664,7 @@ static int osst_probe(struct device *dev
+ 	struct st_partstat * STps;
+ 	struct osst_buffer * buffer;
+ 	struct gendisk	   * drive;
+-	int		     i, mode, dev_num;
++	int		     i, dev_num;
+ 
+ 	if (SDp->type != TYPE_TAPE || !osst_supports(SDp))
+ 		return -ENODEV;
+@@ -5803,18 +5800,6 @@ static int osst_probe(struct device *dev
+ 		snprintf(name, 8, "%s%s", "n", tape_name(tpnt));
+ 		osst_sysfs_add(MKDEV(OSST_MAJOR, dev_num + 128), dev, tpnt, name);
+ 	}
+-	for (mode = 0; mode < ST_NBR_MODES; ++mode) {
+-		/*  Rewind entry  */
+-		devfs_mk_cdev(MKDEV(OSST_MAJOR, dev_num + (mode << 5)),
+-				S_IFCHR | S_IRUGO | S_IWUGO,
+-				"%s/ot%s", SDp->devfs_name, osst_formats[mode]);
+-
+-		/*  No-rewind entry  */
+-		devfs_mk_cdev(MKDEV(OSST_MAJOR, dev_num + (mode << 5) + 128),
+-				S_IFCHR | S_IRUGO | S_IWUGO,
+-				"%s/ot%sn", SDp->devfs_name, osst_formats[mode]);
+-	}
+-	drive->number = devfs_register_tape(SDp->devfs_name);
+ 
+ 	sdev_printk(KERN_INFO, SDp,
+ 		"osst :I: Attached OnStream %.5s tape as %s\n",
+@@ -5831,7 +5816,7 @@ static int osst_remove(struct device *de
+ {
+ 	struct scsi_device * SDp = to_scsi_device(dev);
+ 	struct osst_tape * tpnt;
+-	int i, mode;
++	int i;
+ 
+ 	if ((SDp->type != TYPE_TAPE) || (osst_nr_dev <= 0))
  		return 0;
+@@ -5842,11 +5827,6 @@ static int osst_remove(struct device *de
+ 			osst_sysfs_destroy(MKDEV(OSST_MAJOR, i));
+ 			osst_sysfs_destroy(MKDEV(OSST_MAJOR, i+128));
+ 			tpnt->device = NULL;
+-			for (mode = 0; mode < ST_NBR_MODES; ++mode) {
+-				devfs_remove("%s/ot%s", SDp->devfs_name, osst_formats[mode]);
+-				devfs_remove("%s/ot%sn", SDp->devfs_name, osst_formats[mode]);
+-			}
+-			devfs_unregister_tape(tpnt->drive->number);
+ 			put_disk(tpnt->drive);
+ 			os_scsi_tapes[i] = NULL;
+ 			osst_nr_dev--;
+--- gregkh-2.6.orig/drivers/scsi/scsi.c
++++ gregkh-2.6/drivers/scsi/scsi.c
+@@ -48,7 +48,6 @@
+ #include <linux/delay.h>
+ #include <linux/init.h>
+ #include <linux/completion.h>
+-#include <linux/devfs_fs_kernel.h>
+ #include <linux/unistd.h>
+ #include <linux/spinlock.h>
+ #include <linux/kmod.h>
+@@ -1248,7 +1247,6 @@ static int __init init_scsi(void)
+ 	for (i = 0; i < NR_CPUS; i++)
+ 		INIT_LIST_HEAD(&per_cpu(scsi_done_q, i));
  
-@@ -218,14 +218,13 @@ static void __exit ecoscsi_exit(void)
- {
- 	scsi_remove_host(host);
+-	devfs_mk_dir("scsi");
+ 	printk(KERN_NOTICE "SCSI subsystem initialized\n");
+ 	return 0;
  
--	if (shpnt->irq != IRQ_NONE)
--		free_irq(shpnt->irq, NULL);
-+	if (host->irq != IRQ_NONE)
-+		free_irq(host->irq, NULL);
- 	NCR5380_exit(host);
--	if (shpnt->io_port)
--		release_region(shpnt->io_port, shpnt->n_io_port);
-+	if (host->io_port)
-+		release_region(host->io_port, host->n_io_port);
- 
- 	scsi_host_put(host);
--	return 0;
+@@ -1273,7 +1271,6 @@ static void __exit exit_scsi(void)
+ 	scsi_exit_sysctl();
+ 	scsi_exit_hosts();
+ 	scsi_exit_devinfo();
+-	devfs_remove("scsi");
+ 	scsi_exit_procfs();
+ 	scsi_exit_queue();
  }
+--- gregkh-2.6.orig/drivers/scsi/scsi_scan.c
++++ gregkh-2.6/drivers/scsi/scsi_scan.c
+@@ -707,12 +707,8 @@ static int scsi_add_lun(struct scsi_devi
+ 	if (inq_result[7] & 0x10)
+ 		sdev->sdtr = 1;
  
- module_init(ecoscsi_init);
-
+-	sprintf(sdev->devfs_name, "scsi/host%d/bus%d/target%d/lun%d",
+-				sdev->host->host_no, sdev->channel,
+-				sdev->id, sdev->lun);
+-
+ 	/*
+-	 * End driverfs/devfs code.
++	 * End sysfs code.
+ 	 */
+ 
+ 	if ((sdev->scsi_level >= SCSI_2) && (inq_result[7] & 2) &&
+--- gregkh-2.6.orig/drivers/scsi/sd.c
++++ gregkh-2.6/drivers/scsi/sd.c
+@@ -1558,8 +1558,6 @@ static int sd_probe(struct device *dev)
+ 			'a' + m1, 'a' + m2, 'a' + m3);
+ 	}
+ 
+-	strcpy(gd->devfs_name, sdp->devfs_name);
+-
+ 	gd->private_data = &sdkp->driver;
+ 	gd->queue = sdkp->device->request_queue;
+ 
+--- gregkh-2.6.orig/drivers/scsi/sg.c
++++ gregkh-2.6/drivers/scsi/sg.c
+@@ -44,7 +44,6 @@ static int sg_version_num = 30533;	/* 2 
+ #include <linux/poll.h>
+ #include <linux/smp_lock.h>
+ #include <linux/moduleparam.h>
+-#include <linux/devfs_fs_kernel.h>
+ #include <linux/cdev.h>
+ #include <linux/seq_file.h>
+ #include <linux/blkdev.h>
+@@ -1458,14 +1457,10 @@ sg_add(struct class_device *cl_dev, stru
+ 	k = error;
+ 	sdp = sg_dev_arr[k];
+ 
+-	devfs_mk_cdev(MKDEV(SCSI_GENERIC_MAJOR, k),
+-			S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP,
+-			"%s/generic", scsidp->devfs_name);
+ 	error = cdev_add(cdev, MKDEV(SCSI_GENERIC_MAJOR, k), 1);
+-	if (error) {
+-		devfs_remove("%s/generic", scsidp->devfs_name);
++	if (error)
+ 		goto out;
+-	}
++
+ 	sdp->cdev = cdev;
+ 	if (sg_sysfs_valid) {
+ 		struct class_device * sg_class_member;
+@@ -1555,7 +1550,6 @@ sg_remove(struct class_device *cl_dev, s
+ 		class_device_destroy(sg_sysfs_class, MKDEV(SCSI_GENERIC_MAJOR, k));
+ 		cdev_del(sdp->cdev);
+ 		sdp->cdev = NULL;
+-		devfs_remove("%s/generic", scsidp->devfs_name);
+ 		put_disk(sdp->disk);
+ 		sdp->disk = NULL;
+ 		if (NULL == sdp->headfp)
+--- gregkh-2.6.orig/drivers/scsi/sr.c
++++ gregkh-2.6/drivers/scsi/sr.c
+@@ -574,8 +574,6 @@ static int sr_probe(struct device *dev)
+ 	get_capabilities(cd);
+ 	sr_vendor_init(cd);
+ 
+-	snprintf(disk->devfs_name, sizeof(disk->devfs_name),
+-			"%s/cd", sdev->devfs_name);
+ 	disk->driverfs_dev = &sdev->sdev_gendev;
+ 	set_capacity(disk, cd->capacity);
+ 	disk->private_data = &cd->driver;
+--- gregkh-2.6.orig/drivers/scsi/st.c
++++ gregkh-2.6/drivers/scsi/st.c
+@@ -35,7 +35,6 @@ static const char *verstr = "20050830";
+ #include <linux/spinlock.h>
+ #include <linux/blkdev.h>
+ #include <linux/moduleparam.h>
+-#include <linux/devfs_fs_kernel.h>
+ #include <linux/cdev.h>
+ #include <linux/delay.h>
+ #include <linux/mutex.h>
+@@ -4056,21 +4055,6 @@ static int st_probe(struct device *dev)
+ 		do_create_class_files(tpnt, dev_num, mode);
+ 	}
+ 
+-	for (mode = 0; mode < ST_NBR_MODES; ++mode) {
+-		/* Make sure that the minor numbers corresponding to the four
+-		   first modes always get the same names */
+-		i = mode << (4 - ST_NBR_MODE_BITS);
+-		/*  Rewind entry  */
+-		devfs_mk_cdev(MKDEV(SCSI_TAPE_MAJOR, TAPE_MINOR(dev_num, mode, 0)),
+-			      S_IFCHR | S_IRUGO | S_IWUGO,
+-			      "%s/mt%s", SDp->devfs_name, st_formats[i]);
+-		/*  No-rewind entry  */
+-		devfs_mk_cdev(MKDEV(SCSI_TAPE_MAJOR, TAPE_MINOR(dev_num, mode, 1)),
+-			      S_IFCHR | S_IRUGO | S_IWUGO,
+-			      "%s/mt%sn", SDp->devfs_name, st_formats[i]);
+-	}
+-	disk->number = devfs_register_tape(SDp->devfs_name);
+-
+ 	sdev_printk(KERN_WARNING, SDp,
+ 		    "Attached scsi tape %s", tape_name(tpnt));
+ 	printk(KERN_WARNING "%s: try direct i/o: %s (alignment %d B)\n",
+@@ -4124,13 +4108,9 @@ static int st_remove(struct device *dev)
+ 			scsi_tapes[i] = NULL;
+ 			st_nr_dev--;
+ 			write_unlock(&st_dev_arr_lock);
+-			devfs_unregister_tape(tpnt->disk->number);
+ 			sysfs_remove_link(&tpnt->device->sdev_gendev.kobj,
+ 					  "tape");
+ 			for (mode = 0; mode < ST_NBR_MODES; ++mode) {
+-				j = mode << (4 - ST_NBR_MODE_BITS);
+-				devfs_remove("%s/mt%s", SDp->devfs_name, st_formats[j]);
+-				devfs_remove("%s/mt%sn", SDp->devfs_name, st_formats[j]);
+ 				for (j=0; j < 2; j++) {
+ 					class_device_destroy(st_sysfs_class,
+ 							     MKDEV(SCSI_TAPE_MAJOR,
+--- gregkh-2.6.orig/include/scsi/scsi_device.h
++++ gregkh-2.6/include/scsi/scsi_device.h
+@@ -73,7 +73,6 @@ struct scsi_device {
+ 	unsigned sector_size;	/* size in bytes */
+ 
+ 	void *hostdata;		/* available to low-level driver */
+-	char devfs_name[256];	/* devfs junk */
+ 	char type;
+ 	char scsi_level;
+ 	char inq_periph_qual;	/* PQ from INQUIRY data */	
