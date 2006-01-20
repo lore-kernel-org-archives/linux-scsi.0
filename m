@@ -1,77 +1,79 @@
-From: Hugh Dickins <hugh@veritas.com>
-Subject: Re: [patch] sg: simplify page_count manipulations
-Date: Fri, 20 Jan 2006 16:32:00 +0000 (GMT)
-Message-ID: <Pine.LNX.4.61.0601201623480.6415@goblin.wat.veritas.com>
-References: <20060118155242.GB28418@wotan.suse.de> <20060118195937.3586c94f.akpm@osdl.org>
- <20060119144548.GF958@wotan.suse.de> <20060119140525.223a8ebf.akpm@osdl.org>
- <20060120101815.GD1756@wotan.suse.de> <20060120024702.6f894a13.akpm@osdl.org>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: qla2xxx: Recursion depth exceeded
+Date: Fri, 20 Jan 2006 13:08:57 -0800
+Message-ID: <20060120210857.GH3159@andrew-vasquezs-powerbook-g4-15.local>
+References: <43CFC55D.9080206@sgi.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from silver.veritas.com ([143.127.12.111]:50957 "EHLO
-	silver.veritas.com") by vger.kernel.org with ESMTP id S1751053AbWATQcB
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Jan 2006 11:32:01 -0500
-Received: from goblin.wat.veritas.com([10.10.97.2]) (3119 bytes) by megami.veritas.com
-	via sendmail with P:esmtp/R:smart_host/T:smtp
-	(sender: <hugh@veritas.com>)
-	id <m1EzzAb-0001PkC@megami.veritas.com>
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Jan 2006 08:31:25 -0800 (PST)
-	(Smail-3.2.0.101 1997-Dec-17 #15 built 2001-Aug-30)
-In-Reply-To: <20060120024702.6f894a13.akpm@osdl.org>
+Received: from pat.qlogic.com ([198.70.193.2]:36115 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S932189AbWATVJE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Jan 2006 16:09:04 -0500
+Content-Disposition: inline
+In-Reply-To: <43CFC55D.9080206@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Nick Piggin <npiggin@suse.de>, torvalds@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dougg@torque.net
+To: Michael Reed <mdr@sgi.com>
+Cc: James.Smart@Emulex.Com, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 20 Jan 2006, Andrew Morton wrote:
-> Nick Piggin <npiggin@suse.de> wrote:
-> > On Thu, Jan 19, 2006 at 02:05:25PM -0800, Andrew Morton wrote:
-> > > Nick Piggin <npiggin@suse.de> wrote:
-> > > >
-> > > > On Wed, Jan 18, 2006 at 07:59:37PM -0800, Andrew Morton wrote:
-> > > > > Nick Piggin <npiggin@suse.de> wrote:
-> > > > > > -	/* N.B. correction _not_ applied to base page of each allocation */
-> > > > > > -	for (k = 0; k < rsv_schp->k_use_sg; ++k, ++sg) {
-> > > > > > -		for (m = PAGE_SIZE; m < sg->length; m += PAGE_SIZE) {
-> > > > > > -			page = sg->page;
-> > > > > > -			if (startFinish)
-> > > > > > -				get_page(page);
-> > > > > > -			else {
-> > > > > > -				if (page_count(page) > 0)
-> > > > > > -					__put_page(page);
-> > > > > > -			}
-> > > > > > -		}
-> > > > > > -	}
-> > > > > > -}
-> > > > > 
-> > > > > What on earth is the above trying to do?  The inner loop is a rather
-> > > > > complex way of doing atomic_add(&page->count, sg->length/PAGE_SIZE).  One
-> > > > > suspects there's a missing "[m]" in there.
-> > > > > 
-> > > > 
-> > > > It does this on the first mmap of the device, in the hope that subsequent
-> > > > nopage, unmaps would not free the constituent pages in the scatterlist.
-> > > > 
-> > > 
-> > > But it's doing it wrongly, isn't it?  Or am I completely nuts?
-> > 
-> > No I think you're right. I'm not sure why this doesn't oops but I
-> > thought it was the (main) reason others wanted to get rid of this
-> > convoluted code earlier on. I see nobody else is planning to do anything
-> > about it though, so I figure I must have missed the reason why it isn't
-> > a problem.
-> > 
-> > But either way I don't think the code actually _does_ anything, even if
-> > its bugginess doesn't actually lead to a bug.
-> > 
+On Thu, 19 Jan 2006, Michael Reed wrote:
+
+> This causes console input to stop being accepted and the inability to shutdown the system.
 > 
-> I suspect nobody tried to munmap pages beyond the first one.
 > 
-> Yes, let's use a compound page in there and I expect Doug will be able to
-> test it for us sometime.
+>  QLogic Fibre Channel HBA Driver: 8.01.04-k-fw
+> from the sles10-latest kernel received yesterday, which is essentially
+> 2.6.15-git12.  This has rpfixes_2.diff already applied.
 
-That function did move page along in 2.6.15, but has got screwed up since:
-good reason, I think, to speed Nick's patch through to clean it all away.
+Yes, I've yet to submit that variant...
 
-Hugh
+> I did a switchdisable followed by a switchenable 5 seconds later.
+> 
+> Jan 19 10:35:16 duck klogd: qla2300 0012:00:02.1: LOOP DOWN detected (2).
+> Jan 19 10:35:16 duck klogd: qla2300 0012:00:02.0: LOOP DOWN detected (2).
+> Jan 19 10:35:16 duck klogd: qla2300 0012:00:01.1: LOOP DOWN detected (2).
+> Jan 19 10:35:16 duck klogd: qla2300 0012:00:01.0: LOOP DOWN detected (2).
+> Jan 19 10:35:16 duck klogd: qla2300 0002:01:06.0: LOOP DOWN detected (2).
+> Jan 19 10:35:16 duck klogd: qla2300 0002:01:04.1: LOOP DOWN detected (2).
+> Jan 19 10:35:16 duck klogd: qla2300 0002:01:06.1: LOOP DOWN detected (2).
+> Jan 19 10:35:16 duck klogd: qla2300 0002:01:04.0: LOOP DOWN detected (2).
+> 
+> Well, okay, SIX seconds later . :)
+> 
+> Jan 19 10:35:43 duck klogd: qla2300 0012:00:01.1: LOOP UP detected (2 Gbps).
+> Jan 19 10:35:45 duck klogd: run_workqueue: recursion depth exceeded: 4
+> Jan 19 10:35:45 duck klogd:
+> Jan 19 10:35:45 duck klogd: Call Trace:
+> Jan 19 10:35:45 duck klogd:  [<a000000100012b00>] show_stack+0x40/0xa0
+> Jan 19 10:35:45 duck klogd:                                 sp=e00000b07a35f9e0 bsp=e00000b07a3593b0
+> Jan 19 10:35:45 duck klogd:  [<a000000100012b90>] dump_stack+0x30/0x60
+> Jan 19 10:35:45 duck klogd:                                 sp=e00000b07a35fbb0 bsp=e00000b07a359398
+> Jan 19 10:35:45 duck klogd:  [<a0000001000c9d90>] run_workqueue+0x90/0x280
+> Jan 19 10:35:45 duck klogd:                                 sp=e00000b07a35fbb0 bsp=e00000b07a359358
+> Jan 19 10:35:45 duck klogd:  [<a0000001000c9fd0>] flush_cpu_workqueue+0x50/0x1e0
+> Jan 19 10:35:45 duck klogd:                                 sp=e00000b07a35fbb0 bsp=e00000b07a359328
+> Jan 19 10:35:45 duck klogd:  [<a0000001000ca220>] flush_workqueue+0xc0/0x160
+> Jan 19 10:35:45 duck klogd:                                 sp=e00000b07a35fc10 bsp=e00000b07a359300
+> Jan 19 10:35:45 duck klogd:  [<a0000001000ca3e0>] flush_scheduled_work+0x20/0x40
+> Jan 19 10:35:45 duck klogd:                                 sp=e00000b07a35fc10 bsp=e00000b07a3592e8
+> Jan 19 10:35:45 duck klogd:  [<a000000100554570>] fc_rport_tgt_remove+0xf0/0x140
+> Jan 19 10:35:45 duck klogd:                                 sp=e00000b07a35fc10 bsp=e00000b07a3592b8
+> Jan 19 10:35:45 duck klogd:  [<a000000100554820>] fc_rport_terminate+0xa0/0x180
+> Jan 19 10:35:45 duck klogd:                                 sp=e00000b07a35fc10 bsp=e00000b07a359280
+> Jan 19 10:35:49 duck klogd:  [<a000000100554950>] fc_remote_port_delete+0x50/0xe0
+> Jan 19 10:35:49 duck klogd:                                 sp=e00000b07a35fc10 bsp=e00000b07a359258
+> Jan 19 10:35:49 duck klogd: run_workqueue: recursion depth exceeded: 4
+
+As this pinging of the workqueue during removal has some real awful
+side-effects.  I have a series of patches which attempt to work around
+the semantic requirements.
+
+I'll post them ASAP, in the interim, Mike could you grab the following
+mbox patchset (apply with git-am):
+
+ftp://ftp.qlogic.com/outgoing/linux/patches/8.x/8.01.04k/pr600.diff
+
+Thanks,
+Andrew
+
