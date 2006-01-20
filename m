@@ -1,42 +1,57 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH: dc395x] "fix" virt_addr calculation on AUTO_REQSENSE
-Date: Fri, 20 Jan 2006 22:28:21 +0100 (CET)
-Message-ID: <Pine.LNX.4.60.0601202218060.6227@poirot.grange>
-References: <Pine.LNX.4.60.0601200056360.8099@poirot.grange>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: OOM Killer killing whole system
+Date: Fri, 20 Jan 2006 14:50:06 -0800
+Message-ID: <20060120145006.0a773262.akpm@osdl.org>
+References: <1137337516.11767.50.camel@localhost>
+	<20060120041114.7f06ecd8.akpm@osdl.org>
+	<Pine.LNX.4.64.0601201401500.14198@turbotaz.ourhouse>
+	<1137793685.11771.58.camel@localhost>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.21]:62160 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1751146AbWATV15 (ORCPT
+Received: from smtp.osdl.org ([65.172.181.4]:60577 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932258AbWATWsL (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Jan 2006 16:27:57 -0500
-In-Reply-To: <Pine.LNX.4.60.0601200056360.8099@poirot.grange>
+	Fri, 20 Jan 2006 17:48:11 -0500
+In-Reply-To: <1137793685.11771.58.camel@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jamie Lenehan <lenehan@twibble.org>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: Anton Titov <a.titov@host.bg>
+Cc: chase.venters@clientec.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, 20 Jan 2006, Guennadi Liakhovetski wrote:
+Anton Titov <a.titov@host.bg> wrote:
+>
+> On Fri, 2006-01-20 at 14:04 -0600, Chase Venters wrote:
+> > On Fri, 20 Jan 2006, Andrew Morton wrote:
+> > >> Jan 15 06:05:09 vip 216477 pages slab
+> > >
+> > > It's all in slab.  800MB.
+> > >
+> > > I'd be suspecting a slab memory leak.  If it happens again, please take a
+> > > copy of /proc/slabinfo, send it.
+> > >
+> > 
+> > Andrew & Anton,
+> >  The culprit was 1.5 million SCSI commands in the scsi command cache. 
+> > 
+> > Thanks,
+> > Chase
+> 
+> I currently have this:
+> scsi_cmd_cache    1458778 1458790    384   10    1 : tunables   54 27
+> 8 : slabdata 145879 145879      0
+> 
+> in /proc/slabinfo, which is pretty close to 1.5 million. The system is
+> working fine but it should be not very loaded anyway, so a mem leakage
+> will not show up early. Just checked, that scsi_cmd_cache on other
+> machines of mine is under 100, so it seems like a problem.
 
-> The patch below "fixes" calculation of the virt_addr for the AUTO_REQSENSE 
-> case. I put "fixes" in quotes because the real fix would be to completely 
-> remove it, but that's beyond the scope of this patch.
+That's great, thanks.
 
-Just wanted to comment a bit what the actual problem is. As this bug 
-triggers you get "sg_update_list: sg_to_virt failed" KERN_ERR from the 
-driver. And virt_addr is set to NULL. Which is in most cases not a 
-problem, because it is only used in PIO tranfers. And we currently don't 
-know of any dc395x users triggering PIO. But if there were one, and the 
-very sense request where this bug triggered got transferred in PIO mode, 
-it would Oops. For the rest, you just get your logs filled with the 
-"harmless" message. E.g., I had something like
+This is 2.6.15 and we have a deadly bug in scsi.
 
-dc395x: sg_update_list: sg_to_virt failed
-last message repeated 600 times
+Next time you reboot 2.6.15 on that machine can you please send the output
+of `dmesg -s 1000000'?  You might have to set CONFIG_LOG_BUF_SHIFT=17 to
+prevent it from being truncated.
 
-:-)
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
