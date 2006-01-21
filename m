@@ -1,34 +1,31 @@
-From: Chase Venters <chase.venters@clientec.com>
-Subject: Re: OOM Killer killing whole system
-Date: Fri, 20 Jan 2006 22:35:26 -0600
-Message-ID: <200601202235.48352.chase.venters@clientec.com>
-References: <1137337516.11767.50.camel@localhost> <200601202153.27386.chase.venters@clientec.com> <1137817289.11771.85.camel@localhost>
+From: Nick Piggin <npiggin@suse.de>
+Subject: Re: [patch] sg: simplify page_count manipulations
+Date: Sat, 21 Jan 2006 11:15:43 +0100
+Message-ID: <20060121101543.GB9551@wotan.suse.de>
+References: <20060118155242.GB28418@wotan.suse.de> <20060118195937.3586c94f.akpm@osdl.org> <20060119144548.GF958@wotan.suse.de> <20060119140525.223a8ebf.akpm@osdl.org> <20060120101815.GD1756@wotan.suse.de> <20060120024702.6f894a13.akpm@osdl.org> <Pine.LNX.4.61.0601201623480.6415@goblin.wat.veritas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-6"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay03.pair.com ([209.68.5.17]:65287 "HELO relay03.pair.com")
-	by vger.kernel.org with SMTP id S1161233AbWAUEf5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Jan 2006 23:35:57 -0500
-In-Reply-To: <1137817289.11771.85.camel@localhost>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751104AbWAUKPw@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.61.0601201623480.6415@goblin.wat.veritas.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hugh Dickins <hugh@veritas.com>
+Cc: Andrew Morton <akpm@osdl.org>, Nick Piggin <npiggin@suse.de>, torvalds@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, dougg@torque.net
 List-Id: linux-scsi@vger.kernel.org
-To: Anton Titov <a.titov@host.bg>
-Cc: JamesBottomley <James.Bottomley@steeleye.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Friday 20 January 2006 22:21, Anton Titov wrote:
-> On Fri, 2006-01-20 at 21:53 -0600, Chase Venters wrote:
-> > Random guess... Asus P5GDC-V with Firewire and USB turned off?
->
-> Exactly (Asus P5GDC-V Deluxe actually, with few more things off). So
-> maybe it's ICH6?
+On Fri, Jan 20, 2006 at 04:32:00PM +0000, Hugh Dickins wrote:
+> On Fri, 20 Jan 2006, Andrew Morton wrote:
+> > 
+> > I suspect nobody tried to munmap pages beyond the first one.
+> > 
+> > Yes, let's use a compound page in there and I expect Doug will be able to
+> > test it for us sometime.
+> 
+> That function did move page along in 2.6.15, but has got screwed up since:
+> good reason, I think, to speed Nick's patch through to clean it all away.
+> 
 
-Just a shot in the dark, but in the last few kernel revisions have you 
-experienced any SATA problems with DMA timeouts, in some versions leading to 
-a hang?
+Sorry, I'm wrong then (about the conversation around the initial patch).
 
-Cheers,
-Chase
+Definitely restore 2.6.15 behaviour for 2.6.16 if you are hesitant to
+change it. Doug's call I guess.
