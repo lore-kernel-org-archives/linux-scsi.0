@@ -1,47 +1,41 @@
-From: "Barry K. Nathan" <barryn@pobox.com>
-Subject: Re: 2.6.16-rc1-mm2
-Date: Sat, 21 Jan 2006 10:45:06 -0800
-Message-ID: <986ed62e0601211045p4a61a7c2v91d401af86f50d6@mail.gmail.com>
-References: <20060120031555.7b6d65b7.akpm@osdl.org> <43D170CB.8080802@reub.net>
-	 <200601211014.44041.edt@aei.ca> <200601211139.29019.edt@aei.ca>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: drivers/scsi/megaraid.c: add a dummy mega_create_proc_entry() for PROC_FS=y
+Date: Sat, 21 Jan 2006 20:44:16 +0100
+Message-ID: <20060121194416.GV31803@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.201]:16767 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S932241AbWAUSpH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 21 Jan 2006 13:45:07 -0500
-Received: by xproxy.gmail.com with SMTP id s14so466651wxc
-        for <linux-scsi@vger.kernel.org>; Sat, 21 Jan 2006 10:45:06 -0800 (PST)
-In-Reply-To: <200601211139.29019.edt@aei.ca>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:57609 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S932302AbWAUToR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 21 Jan 2006 14:44:17 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ed Tomlinson <edt@aei.ca>
-Cc: Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, reiserfs-dev@namesys.com, jgarzik@pobox.com, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: sju@lsil.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 1/21/06, Ed Tomlinson <edt@aei.ca> wrote:
-> grover:/var/log# smartctl -i -d ata /dev/sda
-[snip]
-> grover:/var/log# smartctl -H -d ata /dev/sda
-> smartctl version 5.34 [x86_64-unknown-linux-gnu] Copyright (C) 2002-5 Bruce Allen
-> Home page is http://smartmontools.sourceforge.net/
->
-> === START OF READ SMART DATA SECTION ===
-> SMART overall-health self-assessment test result: PASSED
->
-> ---
->
-> Hope this helps and that I found the correct places to copy the info.
+This patch adds a dummy mega_create_proc_entry() for CONFIG_PROC_FS=n.
 
-How about:
-smartctl -a -d ata /dev/sda
-or, if that produces too much output, then at least the following two:
-smartctl -A -d ata /dev/sda
-smartctl -l error -d ata /dev/sda
 
-That way we might be able to figure out whether the disk
-coincidentally started going bad after you updated the kernel.
---
--Barry K. Nathan <barryn@pobox.com>
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+---
+
+This patch was already sent on:
+- 8 Jan 2006
+
+--- linux-2.6.15-mm2-full/drivers/scsi/megaraid.c.old	2006-01-08 11:31:28.000000000 +0100
++++ linux-2.6.15-mm2-full/drivers/scsi/megaraid.c	2006-01-08 11:33:43.000000000 +0100
+@@ -3179,6 +3179,10 @@
+ 
+ 	return len;
+ }
++#else  /*  CONFIG_PROC_FS  */
++
++static inline void
++mega_create_proc_entry(int index, struct proc_dir_entry *parent) {}
+ 
+ #endif
+ 
+
