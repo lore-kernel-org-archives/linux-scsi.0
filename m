@@ -1,76 +1,50 @@
-From: hugang@soulinfo.com
-Subject: Re: Target mode drivers
-Date: Mon, 23 Jan 2006 12:48:25 +0800
-Message-ID: <20060123044825.GA4763@hugang.soulinfo.com>
-References: <43CE2344.2090503@gmail.com> <20060119005753.GB17765@hugang.soulinfo.com> <43D3A64B.9040300@vlnb.net>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: memory leak in scsi_cmd_cache 2.6.15
+Date: Mon, 23 Jan 2006 07:18:18 +0100
+Message-ID: <1137997104.2977.7.camel@laptopd505.fenrus.org>
+References: <Pine.LNX.4.62.0601212105590.22868@pureeloreel.qftzy.pbz>
+	 <1137917798.3328.2.camel@laptopd505.fenrus.org>
+	 <1137918044.3328.6.camel@laptopd505.fenrus.org>
+	 <Pine.LNX.4.62.0601221251340.30208@pureeloreel.qftzy.pbz>
+	 <1137956841.3328.36.camel@laptopd505.fenrus.org>
+	 <Pine.LNX.4.62.0601222045180.12815@pureeloreel.qftzy.pbz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [220.248.27.114] ([220.248.27.114]:5260 "HELO soulinfo.com")
-	by vger.kernel.org with SMTP id S964797AbWAWFgR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Jan 2006 00:36:17 -0500
-Content-Disposition: inline
-In-Reply-To: <43D3A64B.9040300@vlnb.net>
+Received: from pentafluge.infradead.org ([213.146.154.40]:51625 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S964836AbWAWGS0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Jan 2006 01:18:26 -0500
+In-Reply-To: <Pine.LNX.4.62.0601222045180.12815@pureeloreel.qftzy.pbz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: hugang@soulinfo.com, Nagaprabhanjan Bellari <nagp.lists@gmail.com>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net
+To: Ariel <askernel2615@dsgml.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sun, Jan 22, 2006 at 06:35:39PM +0300, Vladislav Bolkhovitin wrote:
-> hugang@soulinfo.com wrote:
-> >On Wed, Jan 18, 2006 at 04:45:16PM +0530, Nagaprabhanjan Bellari wrote:
-> >
-> >>Hi,
-> >>
-> >>Does anybody know of any SCSI target mode drivers (for HBAs) available 
-> >>open source?
-> >>
-> >>Please let me know.
-> >
-> >
-> >SCSI target mode for linux
-> >http://scst.sf.net/
-> >
-> >I has been works on some scsi hba to enable target mode in linux, here
-> >is some source code for it. currently we support 
-> >
-> >QLOGIC ISP base
-> >  1040
-> >  23xx
-> > 
-> >Adaptec 
-> >  160 base card seem work well.
-> >  320 base card can't works right now.
-> >
-> >LSI 
-> >  all MPT base including the FC and SAS, but the SCSI interface has not 
-> >  test
-> >  passed.
-> >
-> >http://bj.soulinfo.com/~hugang/scst/tgt/
+On Sun, 2006-01-22 at 21:14 -0500, Ariel wrote:
+> On Sun, 22 Jan 2006, Arjan van de Ven wrote:
+> >>> On Sun, 2006-01-22 at 09:16 +0100, Arjan van de Ven wrote:
+> >>>> On Sat, 2006-01-21 at 21:13 -0500, Ariel wrote:
 > 
-> Wow, 3 new target drivers at once!
+> >>>>> I have a memory leak in scsi_cmd_cache.
 > 
-> Could you pack the source code in one .tgz per driver and put the 
-> archives somewhere on your server, please? Then I will put a reference 
-> to them on the SCST's page on sf.net and in SCST's README file (if you 
-> don't object, of course).
+> >>>> does this happen without the binary nvidia driver too? (it appears
+> >>>> you're using that). That's a good datapoint to have if so...
+> 
+> > please repeat this without nvidia ever being loaded. Just having a
+> > module loaded before can already cause corruption that ripples through
+> > later, so just unloading is not enough to get a clean result.
+> 
+> I rebooted without nvidia or vmware ever being loaded and got a 
+> leak of 1.12KB/s. So I think we can rule that out.
 
-http://bj.soulinfo.com/~hugang/scst/tgt/
-
-Here is it.
+great
 
 > 
-> Vlad
-> 
-> 
+> A commonality I'm noticing is SATA. SATA had a big update in this 
+> version, so perhaps that's where to start looking.
 
--- 
-   .-.      .-.    _              
-   : :      : :   :_;             
- .-' : .--. : `-. .-. .--.  ,-.,-.
-' .; :' '_.'' .; :: :' .; ; : ,. :
-`.__.'`.__.'`.__.':_;`.__,_;:_;:_;
+I wonder if it can be narrowed even more, like to the exact chipset
+driver?
 
-Hu Gang
