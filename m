@@ -1,42 +1,46 @@
-From: Arjan van de Ven <arjan@infradead.org>
+From: Chase Venters <chase.venters@clientec.com>
 Subject: Re: OOM Killer killing whole system
-Date: Mon, 23 Jan 2006 09:41:58 +0100
-Message-ID: <1138005718.2977.22.camel@laptopd505.fenrus.org>
-References: <1137337516.11767.50.camel@localhost>
-	 <1137793685.11771.58.camel@localhost>
-	 <20060120145006.0a773262.akpm@osdl.org>
-	 <200601201819.58366.chase.venters@clientec.com>
-	 <20060123083939.GB12773@suse.de>
+Date: Mon, 23 Jan 2006 03:10:33 -0600
+Message-ID: <200601230310.56047.chase.venters@clientec.com>
+References: <1137337516.11767.50.camel@localhost> <20060123083939.GB12773@suse.de> <1138005718.2977.22.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-6"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:51077 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751438AbWAWImH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Jan 2006 03:42:07 -0500
-In-Reply-To: <20060123083939.GB12773@suse.de>
+Received: from relay03.pair.com ([209.68.5.17]:46602 "HELO relay03.pair.com")
+	by vger.kernel.org with SMTP id S1751453AbWAWJLB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Jan 2006 04:11:01 -0500
+In-Reply-To: <1138005718.2977.22.camel@laptopd505.fenrus.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Chase Venters <chase.venters@clientec.com>, Andrew Morton <akpm@osdl.org>, Anton Titov <a.titov@host.bg>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Jens Axboe <axboe@suse.de>, Andrew Morton <akpm@osdl.org>, Anton Titov <a.titov@host.bg>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, 2006-01-23 at 09:39 +0100, Jens Axboe wrote:
-> On Fri, Jan 20 2006, Chase Venters wrote:
-> > On Friday 20 January 2006 16:49, Andrew Morton wrote:
-> > > This is 2.6.15 and we have a deadly bug in scsi.
-> > >
-> > > Next time you reboot 2.6.15 on that machine can you please send the output
-> > > of `dmesg -s 1000000'?  You might have to set CONFIG_LOG_BUF_SHIFT=17 to
-> > > prevent it from being truncated.
-> > 
-> > Here's mine (attached). Curious - the -s... were you expecting the
-> > ring buffer to exceed 16384? I don't think my (boot time) buffer does.
-> 
-> Just a note - you seem to have the raid1 in common with the rest of the
-> reporters so far.
+On Monday 23 January 2006 02:41, Arjan van de Ven wrote:
+> > Just a note - you seem to have the raid1 in common with the rest of the
+> > reporters so far.
+>
+> time to get out some of the obvious heavy hitters.. and enable slab
+> debug and CONFIG_DEBUG_PAGEALLOC just with the chance to catch a random
+> scribble of sorts
 
-time to get out some of the obvious heavy hitters.. and enable slab
-debug and CONFIG_DEBUG_PAGEALLOC just with the chance to catch a random
-scribble of sorts
+Will do this tomorrow. Please note that md1 is only used on the 
+unmounted /boot filesystem. mount says:
 
+turbotaz linux # mount
+/dev/md/1 on / type reiserfs (rw,noatime)
+proc on /proc type proc (rw)
+sysfs on /sys type sysfs (rw)
+udev on /dev type tmpfs (rw,nosuid)
+devpts on /dev/pts type devpts (rw)
+shm on /dev/shm type tmpfs (rw,noexec,nosuid,nodev)
+none on /proc/sys/fs/binfmt_misc type binfmt_misc (rw)
+usbfs on /proc/bus/usb type usbfs (rw,devmode=0664,devgid=85)
+
+/dev/md/1 is raid10.
+
+Cheers,
+Chase
