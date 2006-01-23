@@ -1,32 +1,43 @@
-From: Ariel <askernel2615@dsgml.com>
-Subject: Re: memory leak in scsi_cmd_cache 2.6.15
-Date: Sun, 22 Jan 2006 21:19:40 -0500 (EST)
-Message-ID: <Pine.LNX.4.62.0601222115440.12815@pureeloreel.qftzy.pbz>
-References: <Pine.LNX.4.62.0601212105590.22868@pureeloreel.qftzy.pbz>
- <200601221317.17124.chase.venters@clientec.com> <1137957890.3328.41.camel@laptopd505.fenrus.org>
- <200601221346.25154.chase.venters@clientec.com>
+From: Kalin KOZHUHAROV <kalin@thinrope.net>
+Subject: Re: OOM Killer killing whole system
+Date: Mon, 23 Jan 2006 11:56:37 +0900
+Message-ID: <dr1gl8$tec$1@sea.gmane.org>
+References: <1137337516.11767.50.camel@localhost> <200601202153.27386.chase.venters@clientec.com> <1137817289.11771.85.camel@localhost> <200601202235.48352.chase.venters@clientec.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200601221346.25154.chase.venters@clientec.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Chase Venters <chase.venters@clientec.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751237AbWAWC5g@vger.kernel.org>
+In-Reply-To: <200601202235.48352.chase.venters@clientec.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Chase Venters wrote:
+> On Friday 20 January 2006 22:21, Anton Titov wrote:
+>> On Fri, 2006-01-20 at 21:53 -0600, Chase Venters wrote:
+>>> Random guess... Asus P5GDC-V with Firewire and USB turned off?
+>> Exactly (Asus P5GDC-V Deluxe actually, with few more things off). So
+>> maybe it's ICH6?
+> 
+> Just a shot in the dark, but in the last few kernel revisions have you 
+> experienced any SATA problems with DMA timeouts, in some versions leading to 
+> a hang?
 
-On Sun, 22 Jan 2006, Chase Venters wrote:
+I have two of these boards and one of them is constantly hanging, just
+simply dead. With 2.6.15 it reports failed I/O (SATA here) and mounts
+reiserfs root RO. sky2 works for me, but I had another hang, so sk98lin
+might not be the culprit.
 
-> We did determine that Anton and I both use the Marvell sk98lin patch for our
-> Yukon2s. However, Anton reported other servers using this patch with no leak.
->
-> Ariel - are you using sk98lin? The only other modules I'm using are the ALSA
-> modules for snd-hda-intel as of ALSA version 1.0.11-rc2.
+The other box (the difference is the SATA drive and the CD) is working OK,
+almost 4d uptime now.
 
-Not that I know of. I'm using the kernel from debian unstable, so it's 
-whatever patches they use: 
-http://svn.debian.org/wsvn/kernel/releases/linux-2.6/2.6.15-2/debian/patches/?rev=0&sc=0
+Will try to revive the black machine and report more.
+(the bad machine is called black and the good is called white :-)
 
-Are you using SATA?
+Kalin.
 
- 	-Ariel
+-- 
+|[ ~~~~~~~~~~~~~~~~~~~~~~ ]|
++-> http://ThinRope.net/ <-+
+|[ ______________________ ]|
