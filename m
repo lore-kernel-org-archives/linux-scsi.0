@@ -1,38 +1,33 @@
-From: Ariel <askernel2615@dsgml.com>
-Subject: Re: memory leak in scsi_cmd_cache 2.6.15
-Date: Mon, 23 Jan 2006 01:46:13 -0500 (EST)
-Message-ID: <Pine.LNX.4.62.0601230136080.22979@pureeloreel.qftzy.pbz>
-References: <Pine.LNX.4.62.0601212105590.22868@pureeloreel.qftzy.pbz>
- <Pine.LNX.4.62.0601222045180.12815@pureeloreel.qftzy.pbz>
- <1137997104.2977.7.camel@laptopd505.fenrus.org> <200601230029.12674.chase.venters@clientec.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 07/13] SCSI: export scsi_eh_finish_cmd() and scsi_eh_flush_done_q()
+Date: Mon, 23 Jan 2006 02:09:13 -0500
+Message-ID: <20060123070913.GA20822@havoc.gtf.org>
+References: <11379893762140-git-send-email-htejun@gmail.com> <11379893764141-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200601230029.12674.chase.venters@clientec.com>
+Content-Disposition: inline
+In-Reply-To: <11379893764141-git-send-email-htejun@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Chase Venters <chase.venters@clientec.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, Jamie Heilman <jamie@audible.transient.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, albertcc@tw.ibm.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 List-Id: linux-scsi@vger.kernel.org
 
+On Mon, Jan 23, 2006 at 01:09:36PM +0900, Tejun Heo wrote:
+> Export two SCSI EH command handling functions.  To be used by libata EH.
+> 
+> Signed-off-by: Tejun Heo <htejun@gmail.com>
+> 
+> ---
+> 
+> James, this patch is a part of libata-EH related updates.  After the
+> update, libata EH uses functions exported from this patch to retry or
+> complete failed commands.
 
-On Mon, 23 Jan 2006, Chase Venters wrote:
+ACK (obviously).  We'll want to un-export scsi_finish_command() once
+this is all done.
 
-> On Monday 23 January 2006 00:17, Arjan van de Ven wrote:
->>> A commonality I'm noticing is SATA. SATA had a big update in this
->>> version, so perhaps that's where to start looking.
->>
->> I wonder if it can be narrowed even more, like to the exact chipset
->> driver?
->
-> Anton and I use an Intel 82801 (ICH6). Ariel's dmesg doesn't look like an ICH6
-> to me at first glance, but he's also on ata_piix.
+	Jeff
 
-I'm on ICH5, but also Sil3112 and HighPoint 372N.
 
-Jamie has ICH6 and Sil3112.
 
-ata_piix seems like it's in common for all, but this is not a lot of 
-systems, so it could just be a coincidence and the problem caused by 
-something that's not chipset specific.
-
- 	-Ariel
