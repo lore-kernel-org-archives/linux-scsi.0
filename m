@@ -1,28 +1,40 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 07/13] SCSI: export scsi_eh_finish_cmd() and	scsi_eh_flush_done_q()
-Date: Mon, 23 Jan 2006 17:20:42 +0900
-Message-ID: <43D491DA.4020603@gmail.com>
-References: <11379893764141-git-send-email-htejun@gmail.com> <1138001160.2977.14.camel@laptopd505.fenrus.org>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: memory leak in scsi_cmd_cache 2.6.15
+Date: Mon, 23 Jan 2006 09:33:47 +0100
+Message-ID: <20060123083347.GA12773@suse.de>
+References: <Pine.LNX.4.62.0601212105590.22868@pureeloreel.qftzy.pbz> <Pine.LNX.4.62.0601222045180.12815@pureeloreel.qftzy.pbz> <1137997104.2977.7.camel@laptopd505.fenrus.org> <200601230029.12674.chase.venters@clientec.com> <Pine.LNX.4.62.0601230136080.22979@pureeloreel.qftzy.pbz> <20060123072556.GC15490@fifty-fifty.audible.transient.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1138001160.2977.14.camel@laptopd505.fenrus.org>
+Content-Disposition: inline
+In-Reply-To: <20060123072556.GC15490@fifty-fifty.audible.transient.net>
 Sender: linux-ide-owner@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, albertcc@tw.ibm.com, linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Ariel <askernel2615@dsgml.com>, Chase Venters <chase.venters@clientec.com>, Arjan van de Ven <arjan@infradead.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Arjan van de Ven wrote:
-> On Mon, 2006-01-23 at 13:09 +0900, Tejun Heo wrote:
+On Sun, Jan 22 2006, Jamie Heilman wrote:
+> Ariel wrote:
+> > I'm on ICH5, but also Sil3112 and HighPoint 372N.
+> > 
+> > Jamie has ICH6 and Sil3112.
+> > 
+> > ata_piix seems like it's in common for all, but this is not a lot of 
+> > systems, so it could just be a coincidence and the problem caused by 
+> > something that's not chipset specific.
 > 
->>Export two SCSI EH command handling functions.  To be used by libata EH.
+> Hmm.  I just moved my sata_sil stuff out of the way and rebooted:
 > 
-> since these are pretty much internal, can we make these _GPL exports?
+> $ uptime; grep scsi_cmd_cache /proc/slabinfo
+>  23:22:16 up 4 min,  1 user,  load average: 0.00, 0.03, 0.00
+> scsi_cmd_cache      1200   1200    384   10    1 : tunables   54   27   8 : slabdata    120    120      0
 > 
+> My other workstation also runs 2.6.15.1 but uses sata_nv and doesn't
+> exhibit the problem.
 
-It's SCSI developers' decision.  I chose EXPORT_SYMBOL because all other
-exported symbols in scsi_error.c were using it.  James?
+The SATA low level driver is very unlikely to play a role in this. But
+you are both using md (raid1 to be specific) on top of scsi, I'd say
+that's the best clue. I'd very much doubt the nvidia module as well.
 
 -- 
-tejun
+Jens Axboe
+
