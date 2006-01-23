@@ -1,35 +1,26 @@
-From: Jamie Heilman <jamie@audible.transient.net>
-Subject: Re: memory leak in scsi_cmd_cache 2.6.15
-Date: Sun, 22 Jan 2006 23:25:57 -0800
-Message-ID: <20060123072556.GC15490@fifty-fifty.audible.transient.net>
-References: <Pine.LNX.4.62.0601212105590.22868@pureeloreel.qftzy.pbz> <Pine.LNX.4.62.0601222045180.12815@pureeloreel.qftzy.pbz> <1137997104.2977.7.camel@laptopd505.fenrus.org> <200601230029.12674.chase.venters@clientec.com> <Pine.LNX.4.62.0601230136080.22979@pureeloreel.qftzy.pbz>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH 07/13] SCSI: export scsi_eh_finish_cmd() and
+	scsi_eh_flush_done_q()
+Date: Mon, 23 Jan 2006 08:26:00 +0100
+Message-ID: <1138001160.2977.14.camel@laptopd505.fenrus.org>
+References: <11379893764141-git-send-email-htejun@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.62.0601230136080.22979@pureeloreel.qftzy.pbz>
-Sender: linux-ide-owner@vger.kernel.org
-To: Ariel <askernel2615@dsgml.com>
-Cc: Chase Venters <chase.venters@clientec.com>, Arjan van de Ven <arjan@infradead.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:32668 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S964875AbWAWH0G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Jan 2006 02:26:06 -0500
+In-Reply-To: <11379893764141-git-send-email-htejun@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, albertcc@tw.ibm.com, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-Ariel wrote:
-> I'm on ICH5, but also Sil3112 and HighPoint 372N.
-> 
-> Jamie has ICH6 and Sil3112.
-> 
-> ata_piix seems like it's in common for all, but this is not a lot of 
-> systems, so it could just be a coincidence and the problem caused by 
-> something that's not chipset specific.
+On Mon, 2006-01-23 at 13:09 +0900, Tejun Heo wrote:
+> Export two SCSI EH command handling functions.  To be used by libata EH.
 
-Hmm.  I just moved my sata_sil stuff out of the way and rebooted:
 
-$ uptime; grep scsi_cmd_cache /proc/slabinfo
- 23:22:16 up 4 min,  1 user,  load average: 0.00, 0.03, 0.00
-scsi_cmd_cache      1200   1200    384   10    1 : tunables   54   27   8 : slabdata    120    120      0
+since these are pretty much internal, can we make these _GPL exports?
 
-My other workstation also runs 2.6.15.1 but uses sata_nv and doesn't
-exhibit the problem.
-
--- 
-Jamie Heilman                     http://audible.transient.net/~jamie/
