@@ -1,66 +1,77 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH 07/13] SCSI: export scsi_eh_finish_cmd() and scsi_eh_flush_done_q()
-Date: Tue, 24 Jan 2006 10:53:43 -0800 (PST)
-Message-ID: <20060124185343.39546.qmail@web31805.mail.mud.yahoo.com>
-References: <20060124173021.GF23269@havoc.gtf.org>
-Reply-To: ltuikov@yahoo.com
+From: Denny Page <denny@cococafe.com>
+Subject: Re: SCSI tape access on 2.6 kernels?
+Date: Tue, 24 Jan 2006 11:43:37 -0800
+Message-ID: <43D68369.1050307@cococafe.com>
+References: <43D604AD.6050607@ilsb.tuwien.ac.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20060124173021.GF23269@havoc.gtf.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <htejun@gmail.com>, Christoph Hellwig <hch@infradead.org>, Arjan van de Ven <arjan@infradead.org>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, albertcc@tw.ibm.com, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.cococafe.com ([64.142.30.235]:21633 "EHLO
+	mail.cococafe.com") by vger.kernel.org with ESMTP id S965002AbWAXTnl
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jan 2006 14:43:41 -0500
+In-Reply-To: <43D604AD.6050607@ilsb.tuwien.ac.at>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Gerhard Schneider <gs@ilsb.tuwien.ac.at>
+Cc: linux-scsi@vger.kernel.org
 
---- Jeff Garzik <jgarzik@pobox.com> wrote:
-> On Tue, Jan 24, 2006 at 09:11:17AM -0800, Luben Tuikov wrote:
-> > So when scsi_finish_command() is unexported, then _all_ EH strategies
-> > would have to define local done_q, and splice eh_cmd_q into local work_q,
-> > then from local work_q into local done_q and then that is passed
-> > to SCSI Core, via scsi_eh_flush_done_q().
-> > 
-> > Is it possible that this is done asynchrounously?  Since EH recovery is
-> > per host, but you may have only a single device which is misbehaving?
-> 
-> No, because the host is stopped during EH, and only restarted after your
-> EH code completes its run.
+Gerhard,
 
-Look at my sentence above, I just said "Since EH recovery is per host". You're
-repeating  what I had just said.
+You may want to test earlier versions of 2.6.  There have been various 
+reports of problems with scsi tape in later versions of the 2.6 kernel.  
+I have problems beginning with 2.6.14 with U320 with LTO-2, others have 
+reported problems going back to 2.6.12.
 
-Maybe I was too subtle saying "Since EH recovery is per host, but you may
-have only a single device which is misbehaving":  the whole point is not to have
-to stop the "host" in order to do error recovery.  Finer grained recovery would
-be better, obviously for many reasons, both technologically and logistically.
- 
-> > I.e. is it possible, in a such and such EH strategy, not necessarily
-> > SCSI Cores's or libata's, to _not_ have a local done_q?  So that,
-> > we have only local work_q (after splicing eh_cmd_q) and after each
-> > command is looked at, we "return" that command back to SCSI Core, so
-> > that SCSI Core can "finish" it. (In effect "per-command", as opposed to
-> > "per-queue-of-commands".)
-> 
-> done_q is simply a method for returning one or more commands back to the
-> SCSI Core, so that the SCSI Core can finish it.
-
-Thank you for pointing the obvious.
-
-> Per-command is irrelevant during EH, because queue processing is not
-> restarted until your EH handler ends completely.
-
-Which would not be the case if finer grained recovery is to be attained.
-
-> One alternative strategy for EH is to override the ->eh_timed_out()
-> function.  Its ugly, but you may effectively eliminate EH handling via
-> ->eh_strategy_handler(), by moving the error handling completely within
-> (a) the interrupt handler or (b) ->eh_timed_out().
-
-Neither.  There's per protocol recovery EHs which override both
-eh_timed_out() _and_ eh_strategy_handler(), in order to implement
-protocol recovery.
-
-     Luben
+Denny
 
 
+Gerhard Schneider wrote:
+> It's getting me mad..
+>
+> It seems that with 2.6 (compared to 2.4) there has something been
+> changed in the kernel that I'm not aware of so I'm not able to
+> write/read tapes efficiently anymore..
+>
+> LSI1030 SCSI controller
+> Overland tape library
+> Seagate LTO-1 tape drive
+>
+> Kernel 2.4.29:
+>
+> dd if=linux-2.6.16-rc1.tar.gz of=/dev/nst0 bs=64k
+> 776+1 records in
+> 776+1 records out
+> 50918460 bytes transferred in 4.620612 seconds (11019852 bytes/sec)
+>
+> Kernel 2.6.14rc1:
+>
+> dd if=linux-2.6.16-rc1.tar.gz of=/dev/nst0 bs=64k
+> 776+1 records in
+> 776+1 records out
+> 50918460 bytes transferred in 20.395567 seconds (2496545 bytes/sec)
+>
+> Another machine w/
+> LSI1030 SCSI controller
+> Megaraid ZCR controller
+> Overland tape library
+> HP LTO-3 tape drive
+> Kernel 2.6.14rc1:
+>
+> dd if=linux-2.6.16-rc1.tar.gz of=/dev/nst0 bs=64k
+> 776+1 records in
+> 776+1 records out
+> 50918460 bytes transferred in 45.953133 seconds (1108052 bytes/sec)
+>
+> Either there is an initialization problems with tape drives on 2.6.*
+> (I don't think so) or there are tunable kernel parameters that
+> I don't know..
+>
+> CPU load on 2.6 is minimal, tape is waiting for data..
+>
+> Any idea? (I can provide you with any amount of data etc..)
+>
+>                                             GS
+>
+>   
