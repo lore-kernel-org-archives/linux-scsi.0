@@ -1,135 +1,105 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 1/1] scsi: Prevent scsi_execute_async from guessing cdb
- length
-Date: Tue, 24 Jan 2006 11:29:15 +1000
-Message-ID: <43D582EB.4020606@torque.net>
-References: <200601232103.k0NL3PlN012140@d01av04.pok.ibm.com>
-Reply-To: dougg@torque.net
+From: Gerhard Schneider <gs@ilsb.tuwien.ac.at>
+Subject: 2.6.15 and up: LSI1030 boot problems..
+Date: Tue, 24 Jan 2006 08:05:44 +0100
+Message-ID: <43D5D1C8.5060403@ilsb.tuwien.ac.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigC99285222EC2EE9236A802C5"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zorg.st.net.au ([203.16.233.9]:47012 "EHLO borg.st.net.au")
-	by vger.kernel.org with ESMTP id S1030287AbWAXB2v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Jan 2006 20:28:51 -0500
-In-Reply-To: <200601232103.k0NL3PlN012140@d01av04.pok.ibm.com>
+Received: from gh-gw1.ilsb.tuwien.ac.at ([128.130.23.14]:29328 "EHLO
+	gh-gw1.ilsb.tuwien.ac.at") by vger.kernel.org with ESMTP
+	id S964966AbWAXHFx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jan 2006 02:05:53 -0500
+Received: from [128.130.71.3] (ilfb02.ilsb.tuwien.ac.at [128.130.71.3])
+	by gh-gw1.ilsb.tuwien.ac.at (8.13.3/8.13.3/Debian-6) with ESMTP id k0O75o41024340
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2006 08:05:50 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com, James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-brking@us.ibm.com wrote:
-> When the scsi_execute_async interface was added it ended up reducing
-> the flexibility of userspace to send arbitrary scsi commands through
-> sg using SG_IO. The SG_IO interface allows userspace to specify the
-> CDB length. This is now ignored in scsi_execute_async and it is
-> guessed using the COMMAND_SIZE macro, which is not always correct,
-> particularly for vendor specific commands. This patch adds a cmd_len
-> parameter to the scsi_execute_async interface to allow the caller
-> to specify the length of the CDB.
-> 
-> James - I'd really like to get this one into the rc fixes since without it,
-> all of the raid configuration tools for ipr are broken.
-> 
-> 
-> Signed-off-by: Brian King <brking@us.ibm.com>
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigC99285222EC2EE9236A802C5
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-James,
-IMO this fix is very important.
 
-Signed-off-by: Douglas Gilbert <dougg@torque.net>
+Hardware: Dual AthlonMP
+          Onboard LSI 1030 (system running for years w/ various
+          kernels..)
 
-> ---
-> 
->  linux-2.6-bjking1/drivers/scsi/scsi_error.c  |    2 +-
->  linux-2.6-bjking1/drivers/scsi/scsi_lib.c    |    5 +++--
->  linux-2.6-bjking1/drivers/scsi/sg.c          |    2 +-
->  linux-2.6-bjking1/drivers/scsi/st.c          |    2 +-
->  linux-2.6-bjking1/include/scsi/scsi_device.h |    2 +-
->  5 files changed, 7 insertions(+), 6 deletions(-)
-> 
-> diff -puN drivers/scsi/scsi_lib.c~scsi_exec_async_vendor_fix drivers/scsi/scsi_lib.c
-> --- linux-2.6/drivers/scsi/scsi_lib.c~scsi_exec_async_vendor_fix	2006-01-23 14:24:15.000000000 -0600
-> +++ linux-2.6-bjking1/drivers/scsi/scsi_lib.c	2006-01-23 14:33:12.000000000 -0600
-> @@ -436,6 +436,7 @@ free_bios:
->   * scsi_execute_async - insert request
->   * @sdev:	scsi device
->   * @cmd:	scsi command
-> + * @cmd_len:	length of scsi cdb
->   * @data_direction: data direction
->   * @buffer:	data buffer (this can be a kernel buffer or scatterlist)
->   * @bufflen:	len of buffer
-> @@ -445,7 +446,7 @@ free_bios:
->   * @flags:	or into request flags
->   **/
->  int scsi_execute_async(struct scsi_device *sdev, const unsigned char *cmd,
-> -		       int data_direction, void *buffer, unsigned bufflen,
-> +		       int cmd_len, int data_direction, void *buffer, unsigned bufflen,
->  		       int use_sg, int timeout, int retries, void *privdata,
->  		       void (*done)(void *, char *, int, int), gfp_t gfp)
->  {
-> @@ -472,7 +473,7 @@ int scsi_execute_async(struct scsi_devic
->  	if (err)
->  		goto free_req;
->  
-> -	req->cmd_len = COMMAND_SIZE(cmd[0]);
-> +	req->cmd_len = cmd_len;
->  	memcpy(req->cmd, cmd, req->cmd_len);
->  	req->sense = sioc->sense;
->  	req->sense_len = 0;
-> diff -puN include/scsi/scsi_device.h~scsi_exec_async_vendor_fix include/scsi/scsi_device.h
-> --- linux-2.6/include/scsi/scsi_device.h~scsi_exec_async_vendor_fix	2006-01-23 14:25:35.000000000 -0600
-> +++ linux-2.6-bjking1/include/scsi/scsi_device.h	2006-01-23 14:26:47.000000000 -0600
-> @@ -275,7 +275,7 @@ extern int scsi_execute_req(struct scsi_
->  			    int data_direction, void *buffer, unsigned bufflen,
->  			    struct scsi_sense_hdr *, int timeout, int retries);
->  extern int scsi_execute_async(struct scsi_device *sdev,
-> -			      const unsigned char *cmd, int data_direction,
-> +			      const unsigned char *cmd, int cmd_len, int data_direction,
->  			      void *buffer, unsigned bufflen, int use_sg,
->  			      int timeout, int retries, void *privdata,
->  			      void (*done)(void *, char *, int, int),
-> diff -puN drivers/scsi/scsi_error.c~scsi_exec_async_vendor_fix drivers/scsi/scsi_error.c
-> --- linux-2.6/drivers/scsi/scsi_error.c~scsi_exec_async_vendor_fix	2006-01-23 14:28:09.000000000 -0600
-> +++ linux-2.6-bjking1/drivers/scsi/scsi_error.c	2006-01-23 14:28:20.000000000 -0600
-> @@ -1350,7 +1350,7 @@ static void scsi_eh_lock_door(struct scs
->  	cmnd[4] = SCSI_REMOVAL_PREVENT;
->  	cmnd[5] = 0;
->  
-> -	scsi_execute_async(sdev, cmnd, DMA_NONE, NULL, 0, 0, 10 * HZ,
-> +	scsi_execute_async(sdev, cmnd, 6, DMA_NONE, NULL, 0, 0, 10 * HZ,
->  			   5, NULL, NULL, GFP_KERNEL);
->  }
->  
-> diff -puN drivers/scsi/sg.c~scsi_exec_async_vendor_fix drivers/scsi/sg.c
-> --- linux-2.6/drivers/scsi/sg.c~scsi_exec_async_vendor_fix	2006-01-23 14:28:12.000000000 -0600
-> +++ linux-2.6-bjking1/drivers/scsi/sg.c	2006-01-23 14:30:49.000000000 -0600
-> @@ -741,7 +741,7 @@ sg_common_write(Sg_fd * sfp, Sg_request 
->  	hp->duration = jiffies_to_msecs(jiffies);
->  /* Now send everything of to mid-level. The next time we hear about this
->     packet is when sg_cmd_done() is called (i.e. a callback). */
-> -	if (scsi_execute_async(sdp->device, cmnd, data_dir, srp->data.buffer,
-> +	if (scsi_execute_async(sdp->device, cmnd, hp->cmd_len, data_dir, srp->data.buffer,
->  				hp->dxfer_len, srp->data.k_use_sg, timeout,
->  				SG_DEFAULT_RETRIES, srp, sg_cmd_done,
->  				GFP_ATOMIC)) {
-> diff -puN drivers/scsi/st.c~scsi_exec_async_vendor_fix drivers/scsi/st.c
-> --- linux-2.6/drivers/scsi/st.c~scsi_exec_async_vendor_fix	2006-01-23 14:28:15.000000000 -0600
-> +++ linux-2.6-bjking1/drivers/scsi/st.c	2006-01-23 14:32:18.000000000 -0600
-> @@ -508,7 +508,7 @@ st_do_scsi(struct st_request * SRpnt, st
->  	STp->buffer->cmdstat.have_sense = 0;
->  	STp->buffer->syscall_result = 0;
->  
-> -	if (scsi_execute_async(STp->device, cmd, direction,
-> +	if (scsi_execute_async(STp->device, cmd, COMMAND_SIZE(cmd[0]), direction,
->  			&((STp->buffer)->sg[0]), bytes, (STp->buffer)->sg_segs,
->  			       timeout, retries, SRpnt, st_sleep_done, GFP_KERNEL)) {
->  		/* could not allocate the buffer or request was too large */
-> _
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Output from a 2.4.29 kernel:
 
+Fusion MPT base driver 2.05.16
+Copyright (c) 1999-2004 LSI Logic Corporation
+mptbase: Initiating ioc0 bringup
+ioc0: 53C1030: Capabilities={Initiator}
+mptbase: Initiating ioc1 bringup
+ioc1: 53C1030: Capabilities={Initiator}
+mptbase: 2 MPT adapters found, 2 installed.
+Fusion MPT SCSI Host driver 2.05.16
+scsi0 : ioc0: LSI53C1030, FwRev=01000000h, Ports=1, MaxQ=255, IRQ=17
+scsi1 : ioc1: LSI53C1030, FwRev=01000000h, Ports=1, MaxQ=255, IRQ=18
+blk: queue f7bbca18, I/O limit 4294967295Mb (mask 0xffffffffffffffff)
+  Vendor: SEAGATE   Model: ULTRIUM06242-XXX  Rev: 1528
+  Type:   Sequential-Access                  ANSI SCSI revision: 03
+blk: queue f7bbc818, I/O limit 4294967295Mb (mask 0xffffffffffffffff)
+  Vendor: SEAGATE   Model: VIPER 2000        Rev: 0125
+  Type:   Medium Changer                     ANSI SCSI revision: 02
+blk: queue f7bbc618, I/O limit 4294967295Mb (mask 0xffffffffffffffff)
+  Vendor: SEAGATE   Model: ST373207LW        Rev: 0003
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+blk: queue f7bbc218, I/O limit 4294967295Mb (mask 0xffffffffffffffff)
+  Vendor: SEAGATE   Model: ST373207LW        Rev: 0003
+  Type:   Direct-Access                      ANSI SCSI revision: 03
+blk: queue f7b3ee18, I/O limit 4294967295Mb (mask 0xffffffffffffffff)
+st: Version 20040102, bufsize 32768, max init. bufs 4, s/g segs 16
+Attached scsi tape st0 at scsi0, channel 0, id 6, lun 0
+Attached scsi generic sg1 at scsi0, channel 0, id 6, lun 1,  type 8
+Attached scsi disk sda at scsi1, channel 0, id 0, lun 0
+Attached scsi disk sdb at scsi1, channel 0, id 1, lun 0
+SCSI device sda: 143374744 512-byte hdwr sectors (73408 MB)
+Partition check:
+ sda: sda1 sda2 sda3
+SCSI device sdb: 143374744 512-byte hdwr sectors (73408 MB)
+ sdb: sdb1 sdb2
+
+Running up to 2.6.14preXX (didn't test every kernel)
+
+When booting 2.6.15 and 2.6.16pre1 I get: (written down, no logfile)
+
+sd 1:0:0:0
+   command: Write (10): 2a 00 01 f8 11 e7 00 00 08 00
+mptbase: ioc1: IOCStatus(0x0048): SCSI Task Terminated
+mptscsih: ioc1: task abort: SUCCESS (sc=f6c5d8e0)
+mptscsih: ioc: attempting task abort! (sc=f6c5e900)
+
+..many times, till I press the reset button.
+
+Any ideas?
+
+                                          GS
+
+P.S.: More info available on request (what?)
+-- 
+Gerhard Schneider
+Institute of Lightweight Design and          e-Mail:gs@ilsb.tuwien.ac.at
+Structural Biomechanics (E317)                 Tel.:   +43 1 58801 31716
+Vienna University of Technology / Austria      Fax:    +43 1 58801 31799
+A-1040 Wien, Gusshausstrasse 27-29     http://www.ilsb.tuwien.ac.at/~gs/
+
+--------------enigC99285222EC2EE9236A802C5
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.1 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
+
+iD8DBQFD1dHME6e53f4wQG4RAjv4AJ9O0i/Mghzev2uVYh8jnNz8vEKWIgCeKx0m
+5pWv0EzbT0XSguo9MP0+HGE=
+=bFNx
+-----END PGP SIGNATURE-----
+
+--------------enigC99285222EC2EE9236A802C5--
