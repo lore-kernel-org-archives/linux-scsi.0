@@ -1,352 +1,2366 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 1/4] Update aicasm
-Date: Tue, 24 Jan 2006 10:41:45 +0100
-Message-ID: <43D5F659.2080600@suse.de>
+Subject: [PATCH 2/4] aic79xx: sequencer fixes
+Date: Tue, 24 Jan 2006 10:43:26 +0100
+Message-ID: <43D5F6BE.3050407@suse.de>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------010608010004090504080700"
+ boundary="------------010201040405010908010101"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:43967 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S1030397AbWAXJlr (ORCPT
+Received: from mail.suse.de ([195.135.220.2]:50111 "EHLO mx1.suse.de")
+	by vger.kernel.org with ESMTP id S1030424AbWAXJna (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jan 2006 04:41:47 -0500
+	Tue, 24 Jan 2006 04:43:30 -0500
 Received: from Relay2.suse.de (mail2.suse.de [195.135.221.8])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by mx1.suse.de (Postfix) with ESMTP id EEBB2EB42
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2006 10:41:45 +0100 (CET)
+	by mx1.suse.de (Postfix) with ESMTP id 784EAECFF
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2006 10:43:26 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 This is a multi-part message in MIME format.
---------------010608010004090504080700
+--------------010201040405010908010101
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 
-This patchset updates aicasm code with the latest fixes from adaptec.
+This patch updates the aic79xx sequencer with latest fixes from adaptec.
+The sequencer code now corresponds with adaptec version 2.0.15.
 
---------------010608010004090504080700
+--------------010201040405010908010101
 Content-Type: text/plain;
- name="0001-aic7xxx-update-aicasm"
+ name="0002-aic79xx-update-sequencer"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
- filename="0001-aic7xxx-update-aicasm"
+ filename="0002-aic79xx-update-sequencer"
 
-diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm.c b/drivers/scsi/aic7xxx/aicasm/aicasm.c
---- a/drivers/scsi/aic7xxx/aicasm/aicasm.c
-+++ b/drivers/scsi/aic7xxx/aicasm/aicasm.c
+diff --git a/drivers/scsi/aic7xxx/aic79xx.reg b/drivers/scsi/aic7xxx/aic79xx.reg
+--- a/drivers/scsi/aic7xxx/aic79xx.reg
++++ b/drivers/scsi/aic7xxx/aic79xx.reg
+@@ -1,7 +1,7 @@
+ /*
+  * Aic79xx register and scratch ram definitions.
+  *
+- * Copyright (c) 1994-2001 Justin T. Gibbs.
++ * Copyright (c) 1994-2001, 2004 Justin T. Gibbs.
+  * Copyright (c) 2000-2002 Adaptec Inc.
+  * All rights reserved.
+  *
+@@ -39,7 +39,7 @@
+  *
+  * $FreeBSD$
+  */
+-VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#76 $"
++VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#77 $"
+ 
+ /*
+  * This file is processed by the aic7xxx_asm utility for use in assembling
+@@ -3715,8 +3715,9 @@ scratch_ram {
+ 
+ 	SEQ_FLAGS2 {
+ 		size		1
+-		field	TARGET_MSG_PENDING	  0x02
+-		field	SELECTOUT_QFROZEN	  0x04
++		field	PENDING_MK_MESSAGE	0x01
++		field	TARGET_MSG_PENDING	0x02
++		field	SELECTOUT_QFROZEN	0x04
+ 	}
+ 
+ 	ALLOCFIFO_SCBPTR {
+@@ -3777,6 +3778,26 @@ scratch_ram {
+ 	CMDSIZE_TABLE {
+ 		size		8
+ 	}
++	/*
++	 * When an SCB with the MK_MESSAGE flag is
++	 * queued to the controller, it cannot enter
++	 * the waiting for selection list until the
++	 * selections for any previously queued
++	 * commands to that target complete.  During
++	 * the wait, the MK_MESSAGE SCB is queued
++	 * here.
++	 */
++	MK_MESSAGE_SCB {
++		size		2
++	}
++	/*
++	 * Saved SCSIID of MK_MESSAGE_SCB to avoid
++	 * an extra SCBPTR operation when deciding
++	 * if the MK_MESSAGE_SCB can be run.
++	 */
++	MK_MESSAGE_SCSIID {
++		size		1
++	}
+ }
+ 
+ /************************* Hardware SCB Definition ****************************/
+diff --git a/drivers/scsi/aic7xxx/aic79xx.seq b/drivers/scsi/aic7xxx/aic79xx.seq
+--- a/drivers/scsi/aic7xxx/aic79xx.seq
++++ b/drivers/scsi/aic7xxx/aic79xx.seq
+@@ -1,7 +1,7 @@
+ /*
+  * Adaptec U320 device driver firmware for Linux and FreeBSD.
+  *
+- * Copyright (c) 1994-2001 Justin T. Gibbs.
++ * Copyright (c) 1994-2001, 2004 Justin T. Gibbs.
+  * Copyright (c) 2000-2002 Adaptec Inc.
+  * All rights reserved.
+  *
+@@ -40,7 +40,7 @@
+  * $FreeBSD$
+  */
+ 
+-VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#119 $"
++VERSION = "$Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#120 $"
+ PATCH_ARG_LIST = "struct ahd_softc *ahd"
+ PREFIX = "ahd_"
+ 
+@@ -110,10 +110,8 @@ check_waiting_list:
+ 	 * one last time.
+ 	 */
+ 	test	SSTAT0, SELDO jnz select_out;
+-END_CRITICAL;
+ 	call	start_selection;
+ idle_loop_checkbus:
+-BEGIN_CRITICAL;
+ 	test	SSTAT0, SELDO jnz select_out;
+ END_CRITICAL;
+ 	test	SSTAT0, SELDI jnz select_in;
+@@ -294,7 +292,6 @@ fetch_new_scb_inprog:
+ 	test	CCSCBCTL, ARRDONE jz return;
+ fetch_new_scb_done:
+ 	and	CCSCBCTL, ~(CCARREN|CCSCBEN);
+-	bmov	REG0, SCBPTR, 2;
+ 	clr	A;
+ 	add	CMDS_PENDING, 1;
+ 	adc	CMDS_PENDING[1], A;
+@@ -316,43 +313,117 @@ fetch_new_scb_done:
+ 	clr	SCB_FIFO_USE_COUNT;
+ 	/* Update the next SCB address to download. */
+ 	bmov	NEXT_QUEUED_SCB_ADDR, SCB_NEXT_SCB_BUSADDR, 4;
++	/*
++	 * NULL out the SCB links since these fields
++	 * occupy the same location as SCB_NEXT_SCB_BUSADDR.
++	 */
+ 	mvi	SCB_NEXT[1], SCB_LIST_NULL;
+ 	mvi	SCB_NEXT2[1], SCB_LIST_NULL;
+ 	/* Increment our position in the QINFIFO. */
+ 	mov	NONE, SNSCB_QOFF;
++
+ 	/*
+-	 * SCBs that want to send messages are always
+-	 * queued independently.  This ensures that they
+-	 * are at the head of the SCB list to select out
+-	 * to a target and we will see the MK_MESSAGE flag.
++	 * Save SCBID of this SCB in REG0 since
++	 * SCBPTR will be clobbered during target
++	 * list updates.  We also record the SCB's
++	 * flags so that we can refer to them even
++	 * after SCBPTR has been changed.
++	 */
++	bmov	REG0, SCBPTR, 2;
++	mov	A, SCB_CONTROL;
++
++	/*
++	 * Find the tail SCB of the execution queue
++	 * for this target.
+ 	 */
+-	test	SCB_CONTROL, MK_MESSAGE jnz first_new_target_scb;
+ 	shr	SINDEX, 3, SCB_SCSIID;
+ 	and	SINDEX, ~0x1;
+ 	mvi	SINDEX[1], (WAITING_SCB_TAILS >> 8);
+ 	bmov	DINDEX, SINDEX, 2;
+ 	bmov	SCBPTR, SINDIR, 2;
++
++	/*
++	 * Update the tail to point to the new SCB.
++	 */
+ 	bmov	DINDIR, REG0, 2;
++
++	/*
++	 * If the queue was empty, queue this SCB as
++	 * the first for this target.
++	 */
+ 	cmp	SCBPTR[1], SCB_LIST_NULL je first_new_target_scb;
++
++	/*
++	 * SCBs that want to send messages must always be
++	 * at the head of their per-target queue so that
++	 * ATN can be asserted even if the current
++	 * negotiation agreement is packetized.  If the
++	 * target queue is empty, the SCB can be queued
++	 * immediately.  If the queue is not empty, we must
++	 * wait for it to empty before entering this SCB
++	 * into the waiting for selection queue.  Otherwise
++	 * our batching and round-robin selection scheme 
++	 * could allow commands to be queued out of order.
++	 * To simplify the implementation, we stop pulling
++	 * new commands from the host until the MK_MESSAGE
++	 * SCB can be queued to the waiting for selection
++	 * list.
++	 */
++	test	A, MK_MESSAGE jz batch_scb; 
++
++	/*
++	 * If the last SCB is also a MK_MESSAGE SCB, then
++	 * order is preserved even if we batch.
++	 */
++	test	SCB_CONTROL, MK_MESSAGE jz batch_scb; 
++
++	/*
++	 * Defer this SCB and stop fetching new SCBs until
++	 * it can be queued.  Since the SCB_SCSIID of the
++	 * tail SCB must be the same as that of the newly
++	 * queued SCB, there is no need to restore the SCBID
++	 * here.
++	 */
++	or	SEQ_FLAGS2, PENDING_MK_MESSAGE;
++	bmov	MK_MESSAGE_SCB, REG0, 2;
++	mov	MK_MESSAGE_SCSIID, SCB_SCSIID ret;
++
++batch_scb:
++	/*
++	 * Otherwise just update the previous tail SCB to
++	 * point to the new tail.
++	 */
+ 	bmov	SCB_NEXT, REG0, 2 ret;
++
+ first_new_target_scb:
++	/*
++	 * Append SCB to the tail of the waiting for
++	 * selection list.
++	 */
+ 	cmp	WAITING_TID_HEAD[1], SCB_LIST_NULL je first_new_scb;
+ 	bmov	SCBPTR, WAITING_TID_TAIL, 2;
+ 	bmov	SCB_NEXT2, REG0, 2;
+ 	bmov	WAITING_TID_TAIL, REG0, 2 ret;
+ first_new_scb:
++	/*
++	 * Whole list is empty, so the head of
++	 * the list must be initialized too.
++	 */
+ 	bmov	WAITING_TID_HEAD, REG0, 2;
+ 	bmov	WAITING_TID_TAIL, REG0, 2 ret;
+ END_CRITICAL;
+ 
+ scbdma_idle:
+ 	/*
+-	 * Give precedence to downloading new SCBs to execute
+-	 * unless select-outs are currently frozen.
++	 * Don't bother downloading new SCBs to execute
++	 * if select-outs are currently frozen or we have
++	 * a MK_MESSAGE SCB waiting to enter the queue.
+ 	 */
+-	test	SEQ_FLAGS2, SELECTOUT_QFROZEN jnz . + 2;
++	test	SEQ_FLAGS2, SELECTOUT_QFROZEN|PENDING_MK_MESSAGE
++		jnz scbdma_no_new_scbs;
+ BEGIN_CRITICAL;
+ 	test	QOFF_CTLSTA, NEW_SCB_AVAIL jnz fetch_new_scb;
++scbdma_no_new_scbs:
+ 	cmp	COMPLETE_DMA_SCB_HEAD[1], SCB_LIST_NULL jne dma_complete_scb;
+ 	cmp	COMPLETE_SCB_HEAD[1], SCB_LIST_NULL je return;
+ 	/* FALLTHROUGH */
+@@ -671,27 +742,41 @@ curscb_ww_done:
+ 	}
+ 
+ 	/*
+-	 * Requeue any SCBs not sent, to the tail of the waiting Q.
++	 * The whole list made it.  Clear our tail pointer to indicate
++	 * that the per-target selection queue is now empty.
+ 	 */
+-	cmp	SCB_NEXT[1], SCB_LIST_NULL je select_out_list_done;
++	cmp	SCB_NEXT[1], SCB_LIST_NULL je select_out_clear_tail;
+ 
+ 	/*
++	 * Requeue any SCBs not sent, to the tail of the waiting Q.
+ 	 * We know that neither the per-TID list nor the list of
+-	 * TIDs is empty.  Use this knowledge to our advantage.
++	 * TIDs is empty.  Use this knowledge to our advantage and
++	 * queue the remainder to the tail of the global execution
++	 * queue.
+ 	 */
+ 	bmov	REG0, SCB_NEXT, 2;
++select_out_queue_remainder:
+ 	bmov	SCBPTR, WAITING_TID_TAIL, 2;
+ 	bmov	SCB_NEXT2, REG0, 2;
+ 	bmov	WAITING_TID_TAIL, REG0, 2;
+ 	jmp	select_out_inc_tid_q;
+ 
+-select_out_list_done:
++select_out_clear_tail:
+ 	/*
+-	 * The whole list made it.  Just clear our TID's tail pointer
+-	 * unless we were queued independently due to our need to
+-	 * send a message.
++	 * Queue any pending MK_MESSAGE SCB for this target now
++	 * that the queue is empty.
++	 */
++	test	SEQ_FLAGS2, PENDING_MK_MESSAGE jz select_out_no_mk_message_scb;
++	mov	A, MK_MESSAGE_SCSIID;
++	cmp	SCB_SCSIID, A jne select_out_no_mk_message_scb;
++	and	SEQ_FLAGS2, ~PENDING_MK_MESSAGE;
++	bmov	REG0, MK_MESSAGE_SCB, 2;
++	jmp select_out_queue_remainder;
++
++select_out_no_mk_message_scb:
++	/*
++	 * Clear this target's execution tail and increment the queue.
+ 	 */
+-	test	SCB_CONTROL, MK_MESSAGE jnz select_out_inc_tid_q;
+ 	shr	DINDEX, 3, SCB_SCSIID;
+ 	or	DINDEX, 1;	/* Want only the second byte */
+ 	mvi	DINDEX[1], ((WAITING_SCB_TAILS) >> 8);
+@@ -703,8 +788,8 @@ select_out_inc_tid_q:
+ 	mvi	WAITING_TID_TAIL[1], SCB_LIST_NULL;
+ 	bmov	SCBPTR, CURRSCB, 2;
+ 	mvi	CLRSINT0, CLRSELDO;
+-	test	LQOSTAT2, LQOPHACHGOUTPKT jnz unexpected_nonpkt_phase;
+-	test	LQOSTAT1, LQOPHACHGINPKT jnz unexpected_nonpkt_phase;
++	test	LQOSTAT2, LQOPHACHGOUTPKT jnz unexpected_nonpkt_mode_cleared;
++	test	LQOSTAT1, LQOPHACHGINPKT jnz unexpected_nonpkt_mode_cleared;
+ 
+ 	/*
+ 	 * If this is a packetized connection, return to our
+@@ -2127,6 +2212,18 @@ SET_DST_MODE	M_DFF0;
+ 	mvi	DFFSXFRCTL, CLRCHN;
+ unexpected_nonpkt_mode_cleared:
+ 	mvi	CLRSINT2, CLRNONPACKREQ;
++	if ((ahd->bugs & AHD_BUSFREEREV_BUG) != 0) {
++		/*
++		 * Test to ensure that the bus has not
++		 * already gone free prior to clearing
++		 * any stale busfree status.  This avoids
++		 * a window whereby a busfree just after
++		 * a selection could be missed.
++		 */
++		test	SCSISIGI, BSYI jz . + 2;
++		mvi	CLRSINT1,CLRBUSFREE;
++		or	SIMODE1, ENBUSFREE;
++	}
+ 	test	SCSIPHASE, ~(MSG_IN_PHASE|MSG_OUT_PHASE) jnz illegal_phase;
+ 	SET_SEQINTCODE(ENTERING_NONPACK)
+ 	jmp	ITloop;
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
 @@ -37,7 +37,7 @@
   * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   * POSSIBILITY OF SUCH DAMAGES.
   *
-- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm.c#22 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm.c#23 $
-  *
-  * $FreeBSD$
+- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.c#247 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.c#250 $
   */
-@@ -609,10 +609,10 @@ output_listing(char *ifilename)
  
- 		while (line < cur_instr->srcline) {
- 			fgets(buf, sizeof(buf), ifile);
--				fprintf(listfile, "\t\t%s", buf);
-+				fprintf(listfile, "             \t%s", buf);
- 				line++;
+ #ifdef __linux__
+@@ -197,7 +197,8 @@ static int		ahd_search_scb_list(struct a
+ 					    char channel, int lun, u_int tag,
+ 					    role_t role, uint32_t status,
+ 					    ahd_search_action action,
+-					    u_int *list_head, u_int tid);
++					    u_int *list_head, u_int *list_tail,
++					    u_int tid);
+ static void		ahd_stitch_tid_list(struct ahd_softc *ahd,
+ 					    u_int tid_prev, u_int tid_cur,
+ 					    u_int tid_next);
+@@ -1660,7 +1661,8 @@ ahd_handle_scsiint(struct ahd_softc *ahd
+ 		 * so just clear the error.
+ 		 */
+ 		ahd_outb(ahd, CLRLQIINT1, CLRLQICRCI_NLQ);
+-	} else if ((status & BUSFREE) != 0) {
++	} else if ((status & BUSFREE) != 0
++		|| (lqistat1 & LQOBUSFREE) != 0) {
+ 		u_int lqostat1;
+ 		int   restart;
+ 		int   clear_fifo;
+@@ -2025,10 +2027,6 @@ ahd_handle_pkt_busfree(struct ahd_softc 
+ 		u_int waiting_t;
+ 		u_int next;
+ 
+-		if ((busfreetime & BUSFREE_LQO) == 0)
+-			printf("%s: Warning, BUSFREE time is 0x%x.  "
+-			       "Expected BUSFREE_LQO.\n",
+-			       ahd_name(ahd), busfreetime);
+ 		/*
+ 		 * The LQO manager detected an unexpected busfree
+ 		 * either:
+@@ -2251,8 +2249,14 @@ ahd_handle_nonpkt_busfree(struct ahd_sof
+ 			struct ahd_tmode_tstate *tstate;
+ 
+ 			/*
+-			 * PPR Rejected.  Try non-ppr negotiation
+-			 * and retry command.
++			 * PPR Rejected.
++			 *
++			 * If the previous negotiation was packetized,
++			 * this could be because the device has been
++			 * reset without our knowledge.  Force our
++			 * current negotiation to async and retry the
++			 * negotiation.  Otherwise retry the command
++			 * with non-ppr negotiation.
+ 			 */
+ #ifdef AHD_DEBUG
+ 			if ((ahd_debug & AHD_SHOW_MESSAGES) != 0)
+@@ -2261,11 +2265,34 @@ ahd_handle_nonpkt_busfree(struct ahd_sof
+ 			tinfo = ahd_fetch_transinfo(ahd, devinfo.channel,
+ 						    devinfo.our_scsiid,
+ 						    devinfo.target, &tstate);
+-			tinfo->curr.transport_version = 2;
+-			tinfo->goal.transport_version = 2;
+-			tinfo->goal.ppr_options = 0;
+-			ahd_qinfifo_requeue_tail(ahd, scb);
+-			printerror = 0;
++			if ((tinfo->curr.ppr_options & MSG_EXT_PPR_IU_REQ)!=0) {
++				ahd_set_width(ahd, &devinfo,
++					      MSG_EXT_WDTR_BUS_8_BIT,
++					      AHD_TRANS_CUR,
++					      /*paused*/TRUE);
++				ahd_set_syncrate(ahd, &devinfo,
++						/*period*/0, /*offset*/0,
++						/*ppr_options*/0,
++						AHD_TRANS_CUR,
++						/*paused*/TRUE);
++				/*
++				 * The expect PPR busfree handler below
++				 * will effect the retry and necessary
++				 * abort.
++				 */
++			} else {
++				tinfo->curr.transport_version = 2;
++				tinfo->goal.transport_version = 2;
++				tinfo->goal.ppr_options = 0;
++				/*
++				 * Remove any SCBs in the waiting for selection
++				 * queue that may also be for this target so
++				 * that command ordering is preserved.
++				 */
++				ahd_freeze_devq(ahd, scb);
++				ahd_qinfifo_requeue_tail(ahd, scb);
++				printerror = 0;
++			}
+ 		} else if (ahd_sent_msg(ahd, AHDMSG_EXT, MSG_EXT_WDTR, FALSE)
+ 			&& ppr_busfree == 0) {
+ 			/*
+@@ -2280,6 +2307,12 @@ ahd_handle_nonpkt_busfree(struct ahd_sof
+ 				      MSG_EXT_WDTR_BUS_8_BIT,
+ 				      AHD_TRANS_CUR|AHD_TRANS_GOAL,
+ 				      /*paused*/TRUE);
++			/*
++			 * Remove any SCBs in the waiting for selection
++			 * queue that may also be for this target so that
++			 * command ordering is preserved.
++			 */
++			ahd_freeze_devq(ahd, scb);
+ 			ahd_qinfifo_requeue_tail(ahd, scb);
+ 			printerror = 0;
+ 		} else if (ahd_sent_msg(ahd, AHDMSG_EXT, MSG_EXT_SDTR, FALSE)
+@@ -2297,6 +2330,12 @@ ahd_handle_nonpkt_busfree(struct ahd_sof
+ 					/*ppr_options*/0,
+ 					AHD_TRANS_CUR|AHD_TRANS_GOAL,
+ 					/*paused*/TRUE);
++			/*
++			 * Remove any SCBs in the waiting for selection
++			 * queue that may also be for this target so that
++			 * command ordering is preserved.
++			 */
++			ahd_freeze_devq(ahd, scb);
+ 			ahd_qinfifo_requeue_tail(ahd, scb);
+ 			printerror = 0;
+ 		} else if ((ahd->msg_flags & MSG_FLAG_EXPECT_IDE_BUSFREE) != 0
+@@ -2369,14 +2408,14 @@ ahd_handle_nonpkt_busfree(struct ahd_sof
+ 			 */
+ 			printf("%s: ", ahd_name(ahd));
  		}
--		fprintf(listfile, "%03x %02x%02x%02x%02x", instrptr,
-+		fprintf(listfile, "%04x %02x%02x%02x%02x", instrptr,
- #ifdef __LITTLE_ENDIAN
- 			cur_instr->format.bytes[0],
- 			cur_instr->format.bytes[1],
-@@ -624,14 +624,23 @@ output_listing(char *ifilename)
- 			cur_instr->format.bytes[1],
- 			cur_instr->format.bytes[0]);
- #endif
--		fgets(buf, sizeof(buf), ifile);
--		fprintf(listfile, "\t%s", buf);
--		line++;
-+		/*
-+		 * Macro expansions can cause several instructions
-+		 * to be output for a single source line.  Only
-+		 * advance the line once in these cases.
-+		 */
-+		if (line == cur_instr->srcline) {
-+			fgets(buf, sizeof(buf), ifile);
-+			fprintf(listfile, "\t%s", buf);
-+			line++;
-+		} else {
-+			fprintf(listfile, "\n");
-+		}
- 		instrptr++;
+-		if (lastphase != P_BUSFREE)
+-			ahd_force_renegotiation(ahd, &devinfo);
+ 		printf("Unexpected busfree %s, %d SCBs aborted, "
+ 		       "PRGMCNT == 0x%x\n",
+ 		       ahd_lookup_phase_entry(lastphase)->phasemsg,
+ 		       aborted,
+ 		       ahd_inw(ahd, PRGMCNT));
+ 		ahd_dump_card_state(ahd);
++		if (lastphase != P_BUSFREE)
++			ahd_force_renegotiation(ahd, &devinfo);
  	}
- 	/* Dump the remainder of the file */
- 	while(fgets(buf, sizeof(buf), ifile) != NULL)
--		fprintf(listfile, "\t\t%s", buf);
-+		fprintf(listfile, "             %s", buf);
+ 	/* Always restart the sequencer. */
+ 	return (1);
+@@ -3315,7 +3363,6 @@ ahd_update_pending_scbs(struct ahd_softc
+ {
+ 	struct		scb *pending_scb;
+ 	int		pending_scb_count;
+-	u_int		scb_tag;
+ 	int		paused;
+ 	u_int		saved_scbptr;
+ 	ahd_mode_state	saved_modes;
+@@ -3333,7 +3380,6 @@ ahd_update_pending_scbs(struct ahd_softc
+ 	pending_scb_count = 0;
+ 	LIST_FOREACH(pending_scb, &ahd->pending_scbs, pending_links) {
+ 		struct ahd_devinfo devinfo;
+-		struct hardware_scb *pending_hscb;
+ 		struct ahd_initiator_tinfo *tinfo;
+ 		struct ahd_tmode_tstate *tstate;
  
- 	fclose(ifile);
+@@ -3341,11 +3387,10 @@ ahd_update_pending_scbs(struct ahd_softc
+ 		tinfo = ahd_fetch_transinfo(ahd, devinfo.channel,
+ 					    devinfo.our_scsiid,
+ 					    devinfo.target, &tstate);
+-		pending_hscb = pending_scb->hscb;
+ 		if ((tstate->auto_negotiate & devinfo.target_mask) == 0
+ 		 && (pending_scb->flags & SCB_AUTO_NEGOTIATE) != 0) {
+ 			pending_scb->flags &= ~SCB_AUTO_NEGOTIATE;
+-			pending_hscb->control &= ~MK_MESSAGE;
++			pending_scb->hscb->control &= ~MK_MESSAGE;
+ 		}
+ 		ahd_sync_scb(ahd, pending_scb,
+ 			     BUS_DMASYNC_PREREAD|BUS_DMASYNC_PREWRITE);
+@@ -3377,18 +3422,15 @@ ahd_update_pending_scbs(struct ahd_softc
+ 		ahd_outb(ahd, SCSISEQ0, ahd_inb(ahd, SCSISEQ0) & ~ENSELO);
+ 	saved_scbptr = ahd_get_scbptr(ahd);
+ 	/* Ensure that the hscbs down on the card match the new information */
+-	for (scb_tag = 0; scb_tag < ahd->scb_data.maxhscbs; scb_tag++) {
+-		struct	hardware_scb *pending_hscb;
++	LIST_FOREACH(pending_scb, &ahd->pending_scbs, pending_links) {
++		u_int	scb_tag;
+ 		u_int	control;
+ 
+-		pending_scb = ahd_lookup_scb(ahd, scb_tag);
+-		if (pending_scb == NULL)
+-			continue;
++		scb_tag = SCB_GET_TAG(pending_scb);
+ 		ahd_set_scbptr(ahd, scb_tag);
+-		pending_hscb = pending_scb->hscb;
+ 		control = ahd_inb_scbram(ahd, SCB_CONTROL);
+ 		control &= ~MK_MESSAGE;
+-		control |= pending_hscb->control & MK_MESSAGE;
++		control |= pending_scb->hscb->control & MK_MESSAGE;
+ 		ahd_outb(ahd, SCB_CONTROL, control);
+ 	}
+ 	ahd_set_scbptr(ahd, saved_scbptr);
+@@ -6500,13 +6542,14 @@ ahd_chip_init(struct ahd_softc *ahd)
+ 			      | ENLQIOVERI_LQ|ENLQIOVERI_NLQ);
+ 	ahd_outb(ahd, LQOMODE0, ENLQOATNLQ|ENLQOATNPKT|ENLQOTCRC);
+ 	/*
+-	 * An interrupt from LQOBUSFREE is made redundant by the
+-	 * BUSFREE interrupt.  We choose to have the sequencer catch
+-	 * LQOPHCHGINPKT errors manually for the command phase at the
+-	 * start of a packetized selection case.
+-	ahd_outb(ahd, LQOMODE1, ENLQOBUSFREE|ENLQOPHACHGINPKT);
++	 * We choose to have the sequencer catch LQOPHCHGINPKT errors
++	 * manually for the command phase at the start of a packetized
++	 * selection case.  ENLQOBUSFREE should be made redundant by
++	 * the BUSFREE interrupt, but it seems that some LQOBUSFREE
++	 * events fail to assert the BUSFREE interrupt so we must
++	 * also enable LQOBUSFREE interrupts.
+ 	 */
+-	ahd_outb(ahd, LQOMODE1, 0);
++	ahd_outb(ahd, LQOMODE1, ENLQOBUSFREE);
+ 
+ 	/*
+ 	 * Setup sequencer interrupt handlers.
+@@ -6617,6 +6660,8 @@ ahd_chip_init(struct ahd_softc *ahd)
+ 	/* We don't have any waiting selections */
+ 	ahd_outw(ahd, WAITING_TID_HEAD, SCB_LIST_NULL);
+ 	ahd_outw(ahd, WAITING_TID_TAIL, SCB_LIST_NULL);
++	ahd_outw(ahd, MK_MESSAGE_SCB, SCB_LIST_NULL);
++	ahd_outw(ahd, MK_MESSAGE_SCSIID, 0xFF);
+ 	for (i = 0; i < AHD_NUM_TARGETS; i++)
+ 		ahd_outw(ahd, WAITING_SCB_TAILS + (2 * i), SCB_LIST_NULL);
+ 
+@@ -7260,12 +7317,28 @@ ahd_reset_cmds_pending(struct ahd_softc 
+ 	ahd->flags &= ~AHD_UPDATE_PEND_CMDS;
  }
-diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y b/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
---- a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
-+++ b/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
-@@ -38,7 +38,7 @@
-  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  * POSSIBILITY OF SUCH DAMAGES.
-  *
-- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_gram.y#29 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_gram.y#30 $
-  *
-  * $FreeBSD$
-  */
-@@ -157,6 +157,8 @@ static int  is_download_const(expression
  
- %token T_END_CS
- 
-+%token T_PAD_PAGE
++void
++ahd_done_with_status(struct ahd_softc *ahd, struct scb *scb, uint32_t status)
++{
++	cam_status ostat;
++	cam_status cstat;
 +
- %token T_FIELD
- 
- %token T_ENUM
-@@ -189,6 +191,10 @@ static int  is_download_const(expression
- 
- %token <value> T_OR
- 
-+/* 16 bit extensions */
-+%token <value> T_OR16 T_AND16 T_XOR16 T_ADD16
-+%token <value> T_ADC16 T_MVI16 T_TEST16 T_CMP16 T_CMPXCHG
++	ostat = ahd_get_transaction_status(scb);
++	if (ostat == CAM_REQ_INPROG)
++		ahd_set_transaction_status(scb, status);
++	cstat = ahd_get_transaction_status(scb);
++	if (cstat != CAM_REQ_CMP)
++		ahd_freeze_scb(scb);
++	ahd_done(ahd, scb);
++}
 +
- %token T_RET
- 
- %token T_NOP
-@@ -207,7 +213,7 @@ static int  is_download_const(expression
- 
- %type <expression> expression immediate immediate_or_a
- 
--%type <value> export ret f1_opcode f2_opcode jmp_jc_jnc_call jz_jnz je_jne
-+%type <value> export ret f1_opcode f2_opcode f4_opcode jmp_jc_jnc_call jz_jnz je_jne
- 
- %type <value> mode_value mode_list macro_arglist
- 
-@@ -1304,6 +1310,15 @@ f2_opcode:
- |	T_ROR { $$ = AIC_OP_ROR; }
- ;
- 
-+f4_opcode:
-+	T_OR16	{ $$ = AIC_OP_OR16; }
-+|	T_AND16 { $$ = AIC_OP_AND16; }
-+|	T_XOR16 { $$ = AIC_OP_XOR16; }
-+|	T_ADD16 { $$ = AIC_OP_ADD16; }
-+|	T_ADC16 { $$ = AIC_OP_ADC16; }
-+|	T_MVI16 { $$ = AIC_OP_MVI16; }
-+;
-+
- code:
- 	f2_opcode destination ',' expression opt_source ret ';'
- 	{
-diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h b/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h
---- a/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h
-+++ b/drivers/scsi/aic7xxx/aicasm/aicasm_insformat.h
-@@ -37,13 +37,14 @@
-  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  * POSSIBILITY OF SUCH DAMAGES.
-  *
-- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_insformat.h#11 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_insformat.h#12 $
-  *
-  * $FreeBSD$
-  */
- 
- #include <asm/byteorder.h>
- 
-+/* 8bit ALU logic operations */
- struct ins_format1 {
- #ifdef __LITTLE_ENDIAN
- 	uint32_t	immediate	: 8,
-@@ -62,6 +63,7 @@ struct ins_format1 {
- #endif
- };
- 
-+/* 8bit ALU shift/rotate operations */
- struct ins_format2 {
- #ifdef __LITTLE_ENDIAN
- 	uint32_t	shift_control	: 8,
-@@ -80,6 +82,7 @@ struct ins_format2 {
- #endif
- };
- 
-+/* 8bit branch control operations */
- struct ins_format3 {
- #ifdef __LITTLE_ENDIAN
- 	uint32_t	immediate	: 8,
-@@ -96,10 +99,68 @@ struct ins_format3 {
- #endif
- };
- 
-+/* 16bit ALU logic operations */
-+struct ins_format4 {
-+#ifdef __LITTLE_ENDIAN
-+	uint32_t	opcode_ext	: 8,
-+			source		: 9,
-+			destination	: 9,
-+			ret		: 1,
-+			opcode		: 4,
-+			parity		: 1;
-+#else
-+	uint32_t	parity		: 1,
-+			opcode		: 4,
-+			ret		: 1,
-+			destination	: 9,
-+			source		: 9,
-+			opcode_ext	: 8;
-+#endif
-+};
-+
-+/* 16bit branch control operations */
-+struct ins_format5 {
-+#ifdef __LITTLE_ENDIAN
-+	uint32_t	opcode_ext	: 8,
-+			source		: 9,
-+			address		: 10,
-+			opcode		: 4,
-+			parity		: 1;
-+#else
-+	uint32_t	parity		: 1,
-+			opcode		: 4,
-+			address		: 10,
-+			source		: 9,
-+			opcode_ext	: 8;
-+#endif
-+};
-+
-+/*  Far branch operations */
-+struct ins_format6 {
-+#ifdef __LITTLE_ENDIAN
-+	uint32_t	page		: 3,
-+			opcode_ext	: 5,
-+			source		: 9,
-+			address		: 10,
-+			opcode		: 4,
-+			parity		: 1;
-+#else
-+	uint32_t	parity		: 1,
-+			opcode		: 4,
-+			address		: 10,
-+			source		: 9,
-+			opcode_ext	: 5,
-+			page		: 3;
-+#endif
-+};
-+
- union ins_formats {
- 		struct ins_format1 format1;
- 		struct ins_format2 format2;
- 		struct ins_format3 format3;
-+		struct ins_format4 format4;
-+		struct ins_format5 format5;
-+		struct ins_format6 format6;
- 		uint8_t		   bytes[4];
- 		uint32_t	   integer;
- };
-@@ -118,6 +179,8 @@ struct instruction {
- #define	AIC_OP_ROL	0x5
- #define	AIC_OP_BMOV	0x6
- 
-+#define	AIC_OP_MVI16	0x7
-+
- #define	AIC_OP_JMP	0x8
- #define AIC_OP_JC	0x9
- #define AIC_OP_JNC	0xa
-@@ -131,3 +194,26 @@ struct instruction {
- #define	AIC_OP_SHL	0x10
- #define	AIC_OP_SHR	0x20
- #define	AIC_OP_ROR	0x30
-+
-+/* 16bit Ops. Low byte main opcode.  High byte extended opcode. */ 
-+#define	AIC_OP_OR16	0x8005
-+#define	AIC_OP_AND16	0x8105
-+#define	AIC_OP_XOR16	0x8205
-+#define	AIC_OP_ADD16	0x8305
-+#define	AIC_OP_ADC16	0x8405
-+#define AIC_OP_JNE16	0x8805
-+#define AIC_OP_JNZ16	0x8905
-+#define AIC_OP_JE16	0x8C05
-+#define AIC_OP_JZ16	0x8B05
-+#define AIC_OP_JMP16	0x9005
-+#define AIC_OP_JC16	0x9105
-+#define AIC_OP_JNC16	0x9205
-+#define AIC_OP_CALL16	0x9305
-+#define AIC_OP_CALL16	0x9305
-+
-+/* Page extension is low three bits of second opcode byte. */
-+#define AIC_OP_JMPF	0xA005
-+#define AIC_OP_CALLF	0xB005
-+#define AIC_OP_JCF	0xC005
-+#define AIC_OP_JNCF	0xD005
-+#define AIC_OP_CMPXCHG	0xE005
-diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l b/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
---- a/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
-+++ b/drivers/scsi/aic7xxx/aicasm/aicasm_scan.l
-@@ -38,7 +38,7 @@
-  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  * POSSIBILITY OF SUCH DAMAGES.
-  *
-- * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_scan.l#19 $
-+ * $Id: //depot/aic7xxx/aic7xxx/aicasm/aicasm_scan.l#20 $
-  *
-  * $FreeBSD$
-  */
-@@ -132,7 +132,7 @@ if[ \t]*\(		{
- 						*string_buf_ptr++ = *yptr++;
- 				}
- 			}
+ int
+ ahd_search_qinfifo(struct ahd_softc *ahd, int target, char channel,
+ 		   int lun, u_int tag, role_t role, uint32_t status,
+ 		   ahd_search_action action)
+ {
+ 	struct scb	*scb;
++	struct scb	*mk_msg_scb;
+ 	struct scb	*prev_scb;
+ 	ahd_mode_state	 saved_modes;
+ 	u_int		 qinstart;
+@@ -7274,6 +7347,7 @@ ahd_search_qinfifo(struct ahd_softc *ahd
+ 	u_int		 tid_next;
+ 	u_int		 tid_prev;
+ 	u_int		 scbid;
++	u_int		 seq_flags2;
+ 	u_int		 savedscbptr;
+ 	uint32_t	 busaddr;
+ 	int		 found;
+@@ -7329,23 +7403,10 @@ ahd_search_qinfifo(struct ahd_softc *ahd
+ 			found++;
+ 			switch (action) {
+ 			case SEARCH_COMPLETE:
+-			{
+-				cam_status ostat;
+-				cam_status cstat;
 -
-+else			{ return T_ELSE; }
- VERSION			{ return T_VERSION; }
- PREFIX			{ return T_PREFIX; }
- PATCH_ARG_LIST		{ return T_PATCH_ARG_LIST; }
-@@ -173,10 +173,6 @@ RW|RO|WO		{
- 					yylval.value = WO;
- 				 return T_MODE;
- 			}
--BEGIN_CRITICAL		{ return T_BEGIN_CS; }
--END_CRITICAL		{ return T_END_CS; }
--SET_SRC_MODE		{ return T_SET_SRC_MODE; }
--SET_DST_MODE		{ return T_SET_DST_MODE; }
- field			{ return T_FIELD; }
- enum			{ return T_ENUM; }
- mask			{ return T_MASK; }
-@@ -192,6 +188,13 @@ none			{ return T_NONE; }
- sindex			{ return T_SINDEX; }
- A			{ return T_A; }
+-				ostat = ahd_get_transaction_status(scb);
+-				if (ostat == CAM_REQ_INPROG)
+-					ahd_set_transaction_status(scb,
+-								   status);
+-				cstat = ahd_get_transaction_status(scb);
+-				if (cstat != CAM_REQ_CMP)
+-					ahd_freeze_scb(scb);
+ 				if ((scb->flags & SCB_ACTIVE) == 0)
+ 					printf("Inactive SCB in qinfifo\n");
+-				ahd_done(ahd, scb);
+-
++				ahd_done_with_status(ahd, scb, status);
+ 				/* FALLTHROUGH */
+-			}
+ 			case SEARCH_REMOVE:
+ 				break;
+ 			case SEARCH_PRINT:
+@@ -7375,21 +7436,24 @@ ahd_search_qinfifo(struct ahd_softc *ahd
+ 	 * looking for matches.
+ 	 */
+ 	ahd_set_modes(ahd, AHD_MODE_SCSI, AHD_MODE_SCSI);
++	seq_flags2 = ahd_inb(ahd, SEQ_FLAGS2);
++	if ((seq_flags2 & PENDING_MK_MESSAGE) != 0) {
++		scbid = ahd_inw(ahd, MK_MESSAGE_SCB);
++		mk_msg_scb = ahd_lookup_scb(ahd, scbid);
++	} else
++		mk_msg_scb = NULL;
+ 	savedscbptr = ahd_get_scbptr(ahd);
+ 	tid_next = ahd_inw(ahd, WAITING_TID_HEAD);
+ 	tid_prev = SCB_LIST_NULL;
+ 	targets = 0;
+ 	for (scbid = tid_next; !SCBID_IS_NULL(scbid); scbid = tid_next) {
+ 		u_int tid_head;
++		u_int tid_tail;
  
-+	/* Instruction Formatting */
-+PAD_PAGE		{ return T_PAD_PAGE; }
-+BEGIN_CRITICAL		{ return T_BEGIN_CS; }
-+END_CRITICAL		{ return T_END_CS; }
-+SET_SRC_MODE		{ return T_SET_SRC_MODE; }
-+SET_DST_MODE		{ return T_SET_DST_MODE; }
+-		/*
+-		 * We limit based on the number of SCBs since
+-		 * MK_MESSAGE SCBs are not in the per-tid lists.
+-		 */
+ 		targets++;
+-		if (targets > AHD_SCB_MAX) {
++		if (targets > AHD_NUM_TARGETS)
+ 			panic("TID LIST LOOP");
+-		}
 +
- 	/* Opcodes */
- shl			{ return T_SHL; }
- shr			{ return T_SHR; }
-@@ -223,7 +226,17 @@ and			{ return T_AND;	}
- or			{ return T_OR;	}
- ret			{ return T_RET; }
- nop			{ return T_NOP; }
--else			{ return T_ELSE; }
+ 		if (scbid >= ahd->scb_data.numscbs) {
+ 			printf("%s: Waiting TID List inconsistency. "
+ 			       "SCB index == 0x%x, yet numscbs == 0x%x.",
+@@ -7419,8 +7483,71 @@ ahd_search_qinfifo(struct ahd_softc *ahd
+ 		tid_head = scbid;
+ 		found += ahd_search_scb_list(ahd, target, channel,
+ 					     lun, tag, role, status,
+-					     action, &tid_head,
++					     action, &tid_head, &tid_tail,
+ 					     SCB_GET_TARGET(ahd, scb));
++		/*
++		 * Check any MK_MESSAGE SCB that is still waiting to
++		 * enter this target's waiting for selection queue.
++		 */
++		if (mk_msg_scb != NULL
++		 && ahd_match_scb(ahd, mk_msg_scb, target, channel,
++				  lun, tag, role)) {
 +
-+	/* ARP2 16bit extensions */
-+or16			{ return T_OR16; }
-+and16			{ return T_AND16; }
-+xor16			{ return T_XOR16; }
-+add16			{ return T_ADD16; }
-+adc16			{ return T_ADC16; }
-+mvi16			{ return T_MVI16; }
-+test16			{ return T_TEST16; }
-+cmp16			{ return T_CMP16; }
-+cmpxchg			{ return T_CMPXCHG; }
++			/*
++			 * We found an scb that needs to be acted on.
++			 */
++			found++;
++			switch (action) {
++			case SEARCH_COMPLETE:
++				if ((mk_msg_scb->flags & SCB_ACTIVE) == 0)
++					printf("Inactive SCB pending MK_MSG\n");
++				ahd_done_with_status(ahd, mk_msg_scb, status);
++				/* FALLTHROUGH */
++			case SEARCH_REMOVE:
++			{
++				u_int tail_offset;
++
++				printf("Removing MK_MSG scb\n");
++
++				/*
++				 * Reset our tail to the tail of the
++				 * main per-target list.
++				 */
++				tail_offset = WAITING_SCB_TAILS
++				    + (2 * SCB_GET_TARGET(ahd, mk_msg_scb));
++				ahd_outw(ahd, tail_offset, tid_tail);
++
++				seq_flags2 &= ~PENDING_MK_MESSAGE;
++				ahd_outb(ahd, SEQ_FLAGS2, seq_flags2);
++				ahd_outw(ahd, CMDS_PENDING,
++					 ahd_inw(ahd, CMDS_PENDING)-1);
++				mk_msg_scb = NULL;
++				break;
++			}
++			case SEARCH_PRINT:
++				printf(" 0x%x", SCB_GET_TAG(scb));
++				/* FALLTHROUGH */
++			case SEARCH_COUNT:
++				break;
++			}
++		}
++
++		if (mk_msg_scb != NULL
++		 && SCBID_IS_NULL(tid_head)
++		 && ahd_match_scb(ahd, scb, target, channel, CAM_LUN_WILDCARD,
++				  SCB_LIST_NULL, ROLE_UNKNOWN)) {
++
++			/*
++			 * When removing the last SCB for a target
++			 * queue with a pending MK_MESSAGE scb, we
++			 * must queue the MK_MESSAGE scb.
++			 */
++			printf("Queueing mk_msg_scb\n");
++			tid_head = ahd_inw(ahd, MK_MESSAGE_SCB);
++			seq_flags2 &= ~PENDING_MK_MESSAGE;
++			ahd_outb(ahd, SEQ_FLAGS2, seq_flags2);
++			mk_msg_scb = NULL;
++		}
+ 		if (tid_head != scbid)
+ 			ahd_stitch_tid_list(ahd, tid_prev, tid_head, tid_next);
+ 		if (!SCBID_IS_NULL(tid_head))
+@@ -7428,6 +7555,8 @@ ahd_search_qinfifo(struct ahd_softc *ahd
+ 		if (action == SEARCH_PRINT)
+ 			printf(")\n");
+ 	}
++
++	/* Restore saved state. */
+ 	ahd_set_scbptr(ahd, savedscbptr);
+ 	ahd_restore_modes(ahd, saved_modes);
+ 	return (found);
+@@ -7436,7 +7565,8 @@ ahd_search_qinfifo(struct ahd_softc *ahd
+ static int
+ ahd_search_scb_list(struct ahd_softc *ahd, int target, char channel,
+ 		    int lun, u_int tag, role_t role, uint32_t status,
+-		    ahd_search_action action, u_int *list_head, u_int tid)
++		    ahd_search_action action, u_int *list_head, 
++		    u_int *list_tail, u_int tid)
+ {
+ 	struct	scb *scb;
+ 	u_int	scbid;
+@@ -7448,6 +7578,7 @@ ahd_search_scb_list(struct ahd_softc *ah
+ 	found = 0;
+ 	prev = SCB_LIST_NULL;
+ 	next = *list_head;
++	*list_tail = SCB_LIST_NULL;
+ 	for (scbid = next; !SCBID_IS_NULL(scbid); scbid = next) {
+ 		if (scbid >= ahd->scb_data.numscbs) {
+ 			printf("%s:SCB List inconsistency. "
+@@ -7463,6 +7594,7 @@ ahd_search_scb_list(struct ahd_softc *ah
+ 			panic("Waiting List traversal\n");
+ 		}
+ 		ahd_set_scbptr(ahd, scbid);
++		*list_tail = scbid;
+ 		next = ahd_inw_scbram(ahd, SCB_NEXT);
+ 		if (ahd_match_scb(ahd, scb, target, channel,
+ 				  lun, SCB_LIST_NULL, role) == 0) {
+@@ -7472,24 +7604,14 @@ ahd_search_scb_list(struct ahd_softc *ah
+ 		found++;
+ 		switch (action) {
+ 		case SEARCH_COMPLETE:
+-		{
+-			cam_status ostat;
+-			cam_status cstat;
+-
+-			ostat = ahd_get_transaction_status(scb);
+-			if (ostat == CAM_REQ_INPROG)
+-				ahd_set_transaction_status(scb, status);
+-			cstat = ahd_get_transaction_status(scb);
+-			if (cstat != CAM_REQ_CMP)
+-				ahd_freeze_scb(scb);
+ 			if ((scb->flags & SCB_ACTIVE) == 0)
+ 				printf("Inactive SCB in Waiting List\n");
+-			ahd_done(ahd, scb);
++			ahd_done_with_status(ahd, scb, status);
+ 			/* FALLTHROUGH */
+-		}
+ 		case SEARCH_REMOVE:
+ 			ahd_rem_wscb(ahd, scbid, prev, next, tid);
+-			if (prev == SCB_LIST_NULL)
++			*list_tail = prev;
++			if (SCBID_IS_NULL(prev))
+ 				*list_head = next;
+ 			break;
+ 		case SEARCH_PRINT:
+@@ -7558,14 +7680,17 @@ ahd_rem_wscb(struct ahd_softc *ahd, u_in
+ 	}
  
- 	/* Allowed Symbols */
- \<\<			{ return T_EXPR_LSHIFT; }
+ 	/*
+-	 * SCBs that had MK_MESSAGE set in them will not
+-	 * be queued to the per-target lists, so don't
+-	 * blindly clear the tail pointer.
++	 * SCBs that have MK_MESSAGE set in them may
++	 * cause the tail pointer to be updated without
++	 * setting the next pointer of the previous tail.
++	 * Only clear the tail if the removed SCB was
++	 * the tail.
+ 	 */
+ 	tail_offset = WAITING_SCB_TAILS + (2 * tid);
+ 	if (SCBID_IS_NULL(next)
+ 	 && ahd_inw(ahd, tail_offset) == scbid)
+ 		ahd_outw(ahd, tail_offset, prev);
++
+ 	ahd_add_scb_to_free_list(ahd, scbid);
+ 	return (next);
+ }
+@@ -8793,6 +8918,9 @@ ahd_dump_card_state(struct ahd_softc *ah
+ 	 * Mode independent registers.
+ 	 */
+ 	cur_col = 0;
++	ahd_intstat_print(ahd_inb(ahd, INTSTAT), &cur_col, 50);
++	ahd_seloid_print(ahd_inb(ahd, SELOID), &cur_col, 50);
++	ahd_selid_print(ahd_inb(ahd, SELID), &cur_col, 50);
+ 	ahd_hs_mailbox_print(ahd_inb(ahd, LOCAL_HS_MAILBOX), &cur_col, 50);
+ 	ahd_intctl_print(ahd_inb(ahd, INTCTL), &cur_col, 50);
+ 	ahd_seqintstat_print(ahd_inb(ahd, SEQINTSTAT), &cur_col, 50);
+@@ -8808,6 +8936,12 @@ ahd_dump_card_state(struct ahd_softc *ah
+ 	ahd_seqintctl_print(ahd_inb(ahd, SEQINTCTL), &cur_col, 50);
+ 	ahd_seq_flags_print(ahd_inb(ahd, SEQ_FLAGS), &cur_col, 50);
+ 	ahd_seq_flags2_print(ahd_inb(ahd, SEQ_FLAGS2), &cur_col, 50);
++	ahd_qfreeze_count_print(ahd_inw(ahd, QFREEZE_COUNT), &cur_col, 50);
++	ahd_kernel_qfreeze_count_print(ahd_inw(ahd, KERNEL_QFREEZE_COUNT),
++				       &cur_col, 50);
++	ahd_mk_message_scb_print(ahd_inw(ahd, MK_MESSAGE_SCB), &cur_col, 50);
++	ahd_mk_message_scsiid_print(ahd_inb(ahd, MK_MESSAGE_SCSIID),
++				    &cur_col, 50);
+ 	ahd_sstat0_print(ahd_inb(ahd, SSTAT0), &cur_col, 50);
+ 	ahd_sstat1_print(ahd_inb(ahd, SSTAT1), &cur_col, 50);
+ 	ahd_sstat2_print(ahd_inb(ahd, SSTAT2), &cur_col, 50);
+@@ -8915,7 +9049,7 @@ ahd_dump_card_state(struct ahd_softc *ah
+ 
+ 		ahd_set_modes(ahd, AHD_MODE_DFF0 + i, AHD_MODE_DFF0 + i);
+ 		fifo_scbptr = ahd_get_scbptr(ahd);
+-		printf("\n%s: FIFO%d %s, LONGJMP == 0x%x, SCB 0x%x\n",
++		printf("\n\n%s: FIFO%d %s, LONGJMP == 0x%x, SCB 0x%x\n",
+ 		       ahd_name(ahd), i,
+ 		       (dffstat & (FIFO0FREE << i)) ? "Free" : "Active",
+ 		       ahd_inw(ahd, LONGJMP_ADDR), fifo_scbptr);
+@@ -8970,6 +9104,9 @@ ahd_dump_card_state(struct ahd_softc *ah
+ 	printf("%s: OS_SPACE_CNT = 0x%x MAXCMDCNT = 0x%x\n",
+ 	       ahd_name(ahd), ahd_inb(ahd, OS_SPACE_CNT),
+ 	       ahd_inb(ahd, MAXCMDCNT));
++	printf("%s: SAVED_SCSIID = 0x%x SAVED_LUN = 0x%x\n",
++	       ahd_name(ahd), ahd_inb(ahd, SAVED_SCSIID),
++	       ahd_inb(ahd, SAVED_LUN));
+ 	ahd_simode0_print(ahd_inb(ahd, SIMODE0), &cur_col, 50);
+ 	printf("\n");
+ 	ahd_set_modes(ahd, AHD_MODE_CCHAN, AHD_MODE_CCHAN);
+diff --git a/drivers/scsi/aic7xxx/aic79xx_inline.h b/drivers/scsi/aic7xxx/aic79xx_inline.h
+--- a/drivers/scsi/aic7xxx/aic79xx_inline.h
++++ b/drivers/scsi/aic7xxx/aic79xx_inline.h
+@@ -37,7 +37,7 @@
+  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  * POSSIBILITY OF SUCH DAMAGES.
+  *
+- * $Id: //depot/aic7xxx/aic7xxx/aic79xx_inline.h#58 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic79xx_inline.h#59 $
+  *
+  * $FreeBSD$
+  */
+@@ -804,9 +804,10 @@ ahd_queue_scb(struct ahd_softc *ahd, str
+ 		uint64_t host_dataptr;
+ 
+ 		host_dataptr = ahd_le64toh(scb->hscb->dataptr);
+-		printf("%s: Queueing SCB 0x%x bus addr 0x%x - 0x%x%x/0x%x\n",
++		printf("%s: Queueing SCB %d:0x%x bus addr 0x%x - 0x%x%x/0x%x\n",
+ 		       ahd_name(ahd),
+-		       SCB_GET_TAG(scb), ahd_le32toh(scb->hscb->hscb_busaddr),
++		       SCB_GET_TAG(scb), scb->hscb->scsiid,
++		       ahd_le32toh(scb->hscb->hscb_busaddr),
+ 		       (u_int)((host_dataptr >> 32) & 0xFFFFFFFF),
+ 		       (u_int)(host_dataptr & 0xFFFFFFFF),
+ 		       ahd_le32toh(scb->hscb->datacnt));
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.h b/drivers/scsi/aic7xxx/aic79xx_osm.h
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.h
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.h
+@@ -36,7 +36,7 @@
+  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  * POSSIBILITY OF SUCH DAMAGES.
+  *
+- * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.h#137 $
++ * $Id: //depot/aic7xxx/linux/drivers/scsi/aic7xxx/aic79xx_osm.h#166 $
+  *
+  */
+ #ifndef _AIC79XX_LINUX_H_
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+--- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+@@ -220,10 +220,10 @@ ahd_linux_pci_reserve_io_regions(struct 
+ 	*base2 = pci_resource_start(ahd->dev_softc, 3);
+ 	if (*base == 0 || *base2 == 0)
+ 		return (ENOMEM);
+-	if (request_region(*base, 256, "aic79xx") == 0)
++	if (!request_region(*base, 256, "aic79xx"))
+ 		return (ENOMEM);
+-	if (request_region(*base2, 256, "aic79xx") == 0) {
+-		release_region(*base2, 256);
++	if (!request_region(*base2, 256, "aic79xx")) {
++		release_region(*base, 256);
+ 		return (ENOMEM);
+ 	}
+ 	return (0);
+@@ -237,7 +237,7 @@ ahd_linux_pci_reserve_mem_region(struct 
+ 	u_long	start;
+ 	u_long	base_page;
+ 	u_long	base_offset;
+-	int	error;
++	int	error = 0;
+ 
+ 	if (aic79xx_allow_memio == 0)
+ 		return (ENOMEM);
+@@ -245,16 +245,15 @@ ahd_linux_pci_reserve_mem_region(struct 
+ 	if ((ahd->bugs & AHD_PCIX_MMAPIO_BUG) != 0)
+ 		return (ENOMEM);
+ 
+-	error = 0;
+ 	start = pci_resource_start(ahd->dev_softc, 1);
+ 	base_page = start & PAGE_MASK;
+ 	base_offset = start - base_page;
+ 	if (start != 0) {
+ 		*bus_addr = start;
+-		if (request_mem_region(start, 0x1000, "aic79xx") == 0)
++		if (!request_mem_region(start, 0x1000, "aic79xx"))
+ 			error = ENOMEM;
+-		if (error == 0) {
+-			*maddr = ioremap_nocache(base_page, base_offset + 256);
++		if (!error) {
++			*maddr = ioremap_nocache(base_page, base_offset + 512);
+ 			if (*maddr == NULL) {
+ 				error = ENOMEM;
+ 				release_mem_region(start, 0x1000);
+@@ -344,7 +343,7 @@ ahd_pci_map_int(struct ahd_softc *ahd)
+ 
+ 	error = request_irq(ahd->dev_softc->irq, ahd_linux_isr,
+ 			    SA_SHIRQ, "aic79xx", ahd);
+-	if (error == 0)
++	if (!error)
+ 		ahd->platform_data->irq = ahd->dev_softc->irq;
+ 	
+ 	return (-error);
+diff --git a/drivers/scsi/aic7xxx/aic79xx_reg.h_shipped b/drivers/scsi/aic7xxx/aic79xx_reg.h_shipped
+--- a/drivers/scsi/aic7xxx/aic79xx_reg.h_shipped
++++ b/drivers/scsi/aic7xxx/aic79xx_reg.h_shipped
+@@ -2,8 +2,8 @@
+  * DO NOT EDIT - This file is automatically generated
+  *		 from the following source files:
+  *
+- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#119 $
+- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#76 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#120 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#77 $
+  */
+ typedef int (ahd_reg_print_t)(u_int, u_int *, u_int);
+ typedef struct ahd_reg_parse_entry {
+@@ -2204,6 +2204,20 @@ ahd_reg_print_t ahd_cmdsize_table_print;
+ #endif
+ 
+ #if AIC_DEBUG_REGISTERS
++ahd_reg_print_t ahd_mk_message_scb_print;
++#else
++#define ahd_mk_message_scb_print(regvalue, cur_col, wrap) \
++    ahd_print_register(NULL, 0, "MK_MESSAGE_SCB", 0x160, regvalue, cur_col, wrap)
++#endif
++
++#if AIC_DEBUG_REGISTERS
++ahd_reg_print_t ahd_mk_message_scsiid_print;
++#else
++#define ahd_mk_message_scsiid_print(regvalue, cur_col, wrap) \
++    ahd_print_register(NULL, 0, "MK_MESSAGE_SCSIID", 0x162, regvalue, cur_col, wrap)
++#endif
++
++#if AIC_DEBUG_REGISTERS
+ ahd_reg_print_t ahd_scb_base_print;
+ #else
+ #define ahd_scb_base_print(regvalue, cur_col, wrap) \
+@@ -3638,6 +3652,7 @@ ahd_reg_print_t ahd_scb_disconnected_lis
+ #define	SEQ_FLAGS2      		0x14d
+ #define		SELECTOUT_QFROZEN	0x04
+ #define		TARGET_MSG_PENDING	0x02
++#define		PENDING_MK_MESSAGE	0x01
+ 
+ #define	ALLOCFIFO_SCBPTR		0x14e
+ 
+@@ -3655,6 +3670,10 @@ ahd_reg_print_t ahd_scb_disconnected_lis
+ 
+ #define	CMDSIZE_TABLE   		0x158
+ 
++#define	MK_MESSAGE_SCB  		0x160
++
++#define	MK_MESSAGE_SCSIID		0x162
++
+ #define	SCB_BASE        		0x180
+ 
+ #define	SCB_RESIDUAL_DATACNT		0x180
+@@ -3800,5 +3819,5 @@ ahd_reg_print_t ahd_scb_disconnected_lis
+ 
+ 
+ /* Exported Labels */
+-#define	LABEL_seq_isr 	0x285
+-#define	LABEL_timer_isr	0x281
++#define	LABEL_seq_isr 	0x28f
++#define	LABEL_timer_isr	0x28b
+diff --git a/drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped b/drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped
+--- a/drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped
++++ b/drivers/scsi/aic7xxx/aic79xx_reg_print.c_shipped
+@@ -2,8 +2,8 @@
+  * DO NOT EDIT - This file is automatically generated
+  *		 from the following source files:
+  *
+- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#118 $
+- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#75 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#120 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#77 $
+  */
+ 
+ #include "aic79xx_osm.h"
+@@ -3382,6 +3382,7 @@ ahd_initiator_tag_print(u_int regvalue, 
+ }
+ 
+ static ahd_reg_parse_entry_t SEQ_FLAGS2_parse_table[] = {
++	{ "PENDING_MK_MESSAGE",	0x01, 0x01 },
+ 	{ "TARGET_MSG_PENDING",	0x02, 0x02 },
+ 	{ "SELECTOUT_QFROZEN",	0x04, 0x04 }
+ };
+@@ -3389,7 +3390,7 @@ static ahd_reg_parse_entry_t SEQ_FLAGS2_
+ int
+ ahd_seq_flags2_print(u_int regvalue, u_int *cur_col, u_int wrap)
+ {
+-	return (ahd_print_register(SEQ_FLAGS2_parse_table, 2, "SEQ_FLAGS2",
++	return (ahd_print_register(SEQ_FLAGS2_parse_table, 3, "SEQ_FLAGS2",
+ 	    0x14d, regvalue, cur_col, wrap));
+ }
+ 
+@@ -3450,6 +3451,20 @@ ahd_cmdsize_table_print(u_int regvalue, 
+ }
+ 
+ int
++ahd_mk_message_scb_print(u_int regvalue, u_int *cur_col, u_int wrap)
++{
++	return (ahd_print_register(NULL, 0, "MK_MESSAGE_SCB",
++	    0x160, regvalue, cur_col, wrap));
++}
++
++int
++ahd_mk_message_scsiid_print(u_int regvalue, u_int *cur_col, u_int wrap)
++{
++	return (ahd_print_register(NULL, 0, "MK_MESSAGE_SCSIID",
++	    0x162, regvalue, cur_col, wrap));
++}
++
++int
+ ahd_scb_base_print(u_int regvalue, u_int *cur_col, u_int wrap)
+ {
+ 	return (ahd_print_register(NULL, 0, "SCB_BASE",
+diff --git a/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped b/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped
+--- a/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped
++++ b/drivers/scsi/aic7xxx/aic79xx_seq.h_shipped
+@@ -2,17 +2,17 @@
+  * DO NOT EDIT - This file is automatically generated
+  *		 from the following source files:
+  *
+- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#119 $
+- * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#76 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.seq#120 $
++ * $Id: //depot/aic7xxx/aic7xxx/aic79xx.reg#77 $
+  */
+ static uint8_t seqprog[] = {
+ 	0xff, 0x02, 0x06, 0x78,
+-	0x00, 0xea, 0x64, 0x59,
++	0x00, 0xea, 0x6e, 0x59,
+ 	0x01, 0xea, 0x04, 0x30,
+ 	0xff, 0x04, 0x0c, 0x78,
+-	0x19, 0xea, 0x64, 0x59,
++	0x19, 0xea, 0x6e, 0x59,
+ 	0x19, 0xea, 0x04, 0x00,
+-	0x33, 0xea, 0x5e, 0x59,
++	0x33, 0xea, 0x68, 0x59,
+ 	0x33, 0xea, 0x00, 0x00,
+ 	0x60, 0x3a, 0x3a, 0x68,
+ 	0x04, 0x4d, 0x35, 0x78,
+@@ -33,15 +33,15 @@ static uint8_t seqprog[] = {
+ 	0xff, 0xea, 0x62, 0x02,
+ 	0x00, 0xe2, 0x3a, 0x40,
+ 	0xff, 0x21, 0x3b, 0x70,
+-	0x40, 0x4b, 0xaa, 0x69,
+-	0x00, 0xe2, 0x68, 0x59,
+-	0x40, 0x4b, 0xaa, 0x69,
+-	0x20, 0x4b, 0x96, 0x69,
++	0x40, 0x4b, 0xb4, 0x69,
++	0x00, 0xe2, 0x72, 0x59,
++	0x40, 0x4b, 0xb4, 0x69,
++	0x20, 0x4b, 0xa0, 0x69,
+ 	0xfc, 0x42, 0x44, 0x78,
+ 	0x10, 0x40, 0x44, 0x78,
+-	0x00, 0xe2, 0xfc, 0x5d,
++	0x00, 0xe2, 0x10, 0x5e,
+ 	0x20, 0x4d, 0x48, 0x78,
+-	0x00, 0xe2, 0xfc, 0x5d,
++	0x00, 0xe2, 0x10, 0x5e,
+ 	0x30, 0x3f, 0xc0, 0x09,
+ 	0x30, 0xe0, 0x50, 0x60,
+ 	0x7f, 0x4a, 0x94, 0x08,
+@@ -51,7 +51,7 @@ static uint8_t seqprog[] = {
+ 	0x00, 0xe2, 0x76, 0x58,
+ 	0x00, 0xe2, 0x86, 0x58,
+ 	0x00, 0xe2, 0x06, 0x40,
+-	0x33, 0xea, 0x5e, 0x59,
++	0x33, 0xea, 0x68, 0x59,
+ 	0x33, 0xea, 0x00, 0x00,
+ 	0x01, 0x52, 0x84, 0x78,
+ 	0x02, 0x58, 0x50, 0x31,
+@@ -59,26 +59,26 @@ static uint8_t seqprog[] = {
+ 	0xff, 0x97, 0x6f, 0x78,
+ 	0x50, 0x4b, 0x6a, 0x68,
+ 	0xbf, 0x3a, 0x74, 0x08,
+-	0x14, 0xea, 0x64, 0x59,
++	0x14, 0xea, 0x6e, 0x59,
+ 	0x14, 0xea, 0x04, 0x00,
+ 	0x08, 0x92, 0x25, 0x03,
+ 	0xff, 0x90, 0x5f, 0x68,
+-	0x00, 0xe2, 0x76, 0x5b,
++	0x00, 0xe2, 0x8a, 0x5b,
+ 	0x00, 0xe2, 0x5e, 0x40,
+-	0x00, 0xea, 0x5e, 0x59,
++	0x00, 0xea, 0x68, 0x59,
+ 	0x01, 0xea, 0x00, 0x30,
+ 	0x80, 0xf9, 0x7e, 0x68,
+-	0x00, 0xe2, 0x5c, 0x59,
+-	0x11, 0xea, 0x5e, 0x59,
++	0x00, 0xe2, 0x66, 0x59,
++	0x11, 0xea, 0x68, 0x59,
+ 	0x11, 0xea, 0x00, 0x00,
+-	0x80, 0xf9, 0x5c, 0x79,
++	0x80, 0xf9, 0x66, 0x79,
+ 	0xff, 0xea, 0xd4, 0x0d,
+-	0x22, 0xea, 0x5e, 0x59,
++	0x22, 0xea, 0x68, 0x59,
+ 	0x22, 0xea, 0x00, 0x00,
+ 	0x10, 0x16, 0x90, 0x78,
+ 	0x10, 0x16, 0x2c, 0x00,
+ 	0x01, 0x0b, 0xae, 0x32,
+-	0x18, 0xad, 0x12, 0x79,
++	0x18, 0xad, 0x1c, 0x79,
+ 	0x04, 0xad, 0xdc, 0x68,
+ 	0x80, 0xad, 0x84, 0x78,
+ 	0x10, 0xad, 0xaa, 0x78,
+@@ -118,7 +118,6 @@ static uint8_t seqprog[] = {
+ 	0x80, 0x18, 0x30, 0x04,
+ 	0x40, 0xad, 0x84, 0x78,
+ 	0xe7, 0xad, 0x5a, 0x09,
+-	0x02, 0xa8, 0x40, 0x31,
+ 	0xff, 0xea, 0xc0, 0x09,
+ 	0x01, 0x54, 0xa9, 0x1a,
+ 	0x00, 0x55, 0xab, 0x22,
+@@ -128,24 +127,30 @@ static uint8_t seqprog[] = {
+ 	0xff, 0xea, 0x5a, 0x03,
+ 	0xff, 0xea, 0x5e, 0x03,
+ 	0x01, 0x10, 0xd4, 0x31,
+-	0x10, 0x92, 0x07, 0x69,
++	0x02, 0xa8, 0x40, 0x31,
++	0x01, 0x92, 0xc1, 0x31,
+ 	0x3d, 0x93, 0xc5, 0x29,
+ 	0xfe, 0xe2, 0xc4, 0x09,
+ 	0x01, 0xea, 0xc6, 0x01,
+ 	0x02, 0xe2, 0xc8, 0x31,
+ 	0x02, 0xec, 0x50, 0x31,
+ 	0x02, 0xa0, 0xda, 0x31,
+-	0xff, 0xa9, 0x06, 0x71,
++	0xff, 0xa9, 0x10, 0x71,
++	0x10, 0xe0, 0x0e, 0x79,
++	0x10, 0x92, 0x0f, 0x79,
++	0x01, 0x4d, 0x9b, 0x02,
++	0x02, 0xa0, 0xc0, 0x32,
++	0x01, 0x93, 0xc5, 0x36,
+ 	0x02, 0xa0, 0x58, 0x37,
+-	0xff, 0x21, 0x0f, 0x71,
++	0xff, 0x21, 0x19, 0x71,
+ 	0x02, 0x22, 0x51, 0x31,
+ 	0x02, 0xa0, 0x5c, 0x33,
+ 	0x02, 0xa0, 0x44, 0x36,
+ 	0x02, 0xa0, 0x40, 0x32,
+ 	0x02, 0xa0, 0x44, 0x36,
+-	0x04, 0x4d, 0x17, 0x69,
+-	0x40, 0x16, 0x48, 0x69,
+-	0xff, 0x2d, 0x4d, 0x61,
++	0x05, 0x4d, 0x21, 0x69,
++	0x40, 0x16, 0x52, 0x69,
++	0xff, 0x2d, 0x57, 0x61,
+ 	0xff, 0x29, 0x85, 0x70,
+ 	0x02, 0x28, 0x55, 0x32,
+ 	0x01, 0xea, 0x5a, 0x01,
+@@ -159,22 +164,22 @@ static uint8_t seqprog[] = {
+ 	0x01, 0x56, 0xad, 0x1a,
+ 	0xff, 0x54, 0xa9, 0x1a,
+ 	0xff, 0x55, 0xab, 0x22,
+-	0xff, 0x8d, 0x41, 0x71,
+-	0x80, 0xac, 0x40, 0x71,
+-	0x20, 0x16, 0x40, 0x69,
++	0xff, 0x8d, 0x4b, 0x71,
++	0x80, 0xac, 0x4a, 0x71,
++	0x20, 0x16, 0x4a, 0x69,
+ 	0x00, 0xac, 0xc4, 0x19,
+-	0x07, 0xe2, 0x40, 0xf9,
++	0x07, 0xe2, 0x4a, 0xf9,
+ 	0x02, 0x8c, 0x51, 0x31,
+-	0x00, 0xe2, 0x24, 0x41,
++	0x00, 0xe2, 0x2e, 0x41,
+ 	0x01, 0xac, 0x08, 0x31,
+ 	0x09, 0xea, 0x5a, 0x01,
+ 	0x02, 0x8c, 0x51, 0x32,
+ 	0xff, 0xea, 0x1a, 0x07,
+ 	0x04, 0x24, 0xf9, 0x30,
+-	0x1d, 0xea, 0x52, 0x41,
++	0x1d, 0xea, 0x5c, 0x41,
+ 	0x02, 0x2c, 0x51, 0x31,
+ 	0x04, 0xa8, 0xf9, 0x30,
+-	0x19, 0xea, 0x52, 0x41,
++	0x19, 0xea, 0x5c, 0x41,
+ 	0x06, 0xea, 0x08, 0x81,
+ 	0x01, 0xe2, 0x5a, 0x35,
+ 	0x02, 0xf2, 0xf0, 0x31,
+@@ -190,27 +195,27 @@ static uint8_t seqprog[] = {
+ 	0x02, 0x20, 0xb9, 0x30,
+ 	0x02, 0x20, 0x51, 0x31,
+ 	0x4c, 0x93, 0xd7, 0x28,
+-	0x10, 0x92, 0x77, 0x79,
++	0x10, 0x92, 0x81, 0x79,
+ 	0x01, 0x6b, 0xc0, 0x30,
+ 	0x02, 0x64, 0xc8, 0x00,
+ 	0x40, 0x3a, 0x74, 0x04,
+ 	0x00, 0xe2, 0x76, 0x58,
+-	0x33, 0xea, 0x5e, 0x59,
++	0x33, 0xea, 0x68, 0x59,
+ 	0x33, 0xea, 0x00, 0x00,
+ 	0x30, 0x3f, 0xc0, 0x09,
+-	0x30, 0xe0, 0x78, 0x61,
+-	0x20, 0x3f, 0x8e, 0x69,
+-	0x10, 0x3f, 0x78, 0x79,
++	0x30, 0xe0, 0x82, 0x61,
++	0x20, 0x3f, 0x98, 0x69,
++	0x10, 0x3f, 0x82, 0x79,
+ 	0x02, 0xea, 0x7e, 0x00,
+-	0x00, 0xea, 0x5e, 0x59,
++	0x00, 0xea, 0x68, 0x59,
+ 	0x01, 0xea, 0x00, 0x30,
+ 	0x02, 0x4e, 0x51, 0x35,
+ 	0x01, 0xea, 0x7e, 0x00,
+-	0x11, 0xea, 0x5e, 0x59,
++	0x11, 0xea, 0x68, 0x59,
+ 	0x11, 0xea, 0x00, 0x00,
+ 	0x02, 0x4e, 0x51, 0x35,
+ 	0xc0, 0x4a, 0x94, 0x00,
+-	0x04, 0x41, 0x9c, 0x79,
++	0x04, 0x41, 0xa6, 0x79,
+ 	0x08, 0xea, 0x98, 0x00,
+ 	0x08, 0x57, 0xae, 0x00,
+ 	0x08, 0x3c, 0x78, 0x00,
+@@ -218,12 +223,12 @@ static uint8_t seqprog[] = {
+ 	0x0f, 0x67, 0xc0, 0x09,
+ 	0x00, 0x3a, 0x75, 0x02,
+ 	0x20, 0xea, 0x96, 0x00,
+-	0x00, 0xe2, 0x14, 0x42,
++	0x00, 0xe2, 0x28, 0x42,
+ 	0xc0, 0x4a, 0x94, 0x00,
+-	0x40, 0x3a, 0xc8, 0x69,
++	0x40, 0x3a, 0xd2, 0x69,
+ 	0x02, 0x55, 0x06, 0x68,
+-	0x02, 0x56, 0xc8, 0x69,
+-	0xff, 0x5b, 0xc8, 0x61,
++	0x02, 0x56, 0xd2, 0x69,
++	0xff, 0x5b, 0xd2, 0x61,
+ 	0x02, 0x20, 0x51, 0x31,
+ 	0x80, 0xea, 0xb2, 0x01,
+ 	0x44, 0xea, 0x00, 0x00,
+@@ -231,40 +236,45 @@ static uint8_t seqprog[] = {
+ 	0x33, 0xea, 0x00, 0x00,
+ 	0xff, 0xea, 0xb2, 0x09,
+ 	0xff, 0xe0, 0xc0, 0x19,
+-	0xff, 0xe0, 0xca, 0x79,
++	0xff, 0xe0, 0xd4, 0x79,
+ 	0x02, 0xac, 0x51, 0x31,
+-	0x00, 0xe2, 0xc0, 0x41,
++	0x00, 0xe2, 0xca, 0x41,
+ 	0x02, 0x5e, 0x50, 0x31,
+ 	0x02, 0xa8, 0xb8, 0x30,
+ 	0x02, 0x5c, 0x50, 0x31,
+-	0xff, 0xad, 0xdb, 0x71,
++	0xff, 0xad, 0xe5, 0x71,
+ 	0x02, 0xac, 0x41, 0x31,
+ 	0x02, 0x22, 0x51, 0x31,
+ 	0x02, 0xa0, 0x5c, 0x33,
+ 	0x02, 0xa0, 0x44, 0x32,
+-	0x00, 0xe2, 0xe4, 0x41,
+-	0x10, 0x92, 0xe5, 0x69,
++	0x00, 0xe2, 0xf8, 0x41,
++	0x01, 0x4d, 0xf1, 0x79,
++	0x01, 0x62, 0xc1, 0x31,
++	0x00, 0x93, 0xf1, 0x61,
++	0xfe, 0x4d, 0x9b, 0x0a,
++	0x02, 0x60, 0x41, 0x31,
++	0x00, 0xe2, 0xdc, 0x41,
+ 	0x3d, 0x93, 0xc9, 0x29,
+ 	0x01, 0xe4, 0xc8, 0x01,
+ 	0x01, 0xea, 0xca, 0x01,
+ 	0xff, 0xea, 0xda, 0x01,
+ 	0x02, 0x20, 0x51, 0x31,
+ 	0x02, 0xae, 0x41, 0x32,
+-	0xff, 0x21, 0xed, 0x61,
++	0xff, 0x21, 0x01, 0x62,
+ 	0xff, 0xea, 0x46, 0x02,
+ 	0x02, 0x5c, 0x50, 0x31,
+ 	0x40, 0xea, 0x96, 0x00,
+-	0x02, 0x56, 0x04, 0x6e,
+-	0x01, 0x55, 0x04, 0x6e,
+-	0x10, 0x92, 0xf9, 0x79,
+-	0x10, 0x40, 0x02, 0x6a,
+-	0x01, 0x56, 0x02, 0x7a,
++	0x02, 0x56, 0x20, 0x6e,
++	0x01, 0x55, 0x20, 0x6e,
++	0x10, 0x92, 0x0d, 0x7a,
++	0x10, 0x40, 0x16, 0x6a,
++	0x01, 0x56, 0x16, 0x7a,
+ 	0xff, 0x97, 0x07, 0x78,
+-	0x13, 0xea, 0x64, 0x59,
++	0x13, 0xea, 0x6e, 0x59,
+ 	0x13, 0xea, 0x04, 0x00,
+ 	0x00, 0xe2, 0x06, 0x40,
+ 	0xbf, 0x3a, 0x74, 0x08,
+-	0x04, 0x41, 0x08, 0x7a,
++	0x04, 0x41, 0x1c, 0x7a,
+ 	0x08, 0xea, 0x98, 0x00,
+ 	0x08, 0x57, 0xae, 0x00,
+ 	0x01, 0x93, 0x75, 0x32,
+@@ -272,108 +282,108 @@ static uint8_t seqprog[] = {
+ 	0x40, 0xea, 0x72, 0x02,
+ 	0x08, 0x3c, 0x78, 0x00,
+ 	0x80, 0xea, 0x6e, 0x02,
+-	0x00, 0xe2, 0xe2, 0x5b,
++	0x00, 0xe2, 0xf6, 0x5b,
+ 	0x01, 0x3c, 0xc1, 0x31,
+-	0x9f, 0xe0, 0x84, 0x7c,
+-	0x80, 0xe0, 0x28, 0x72,
+-	0xa0, 0xe0, 0x64, 0x72,
+-	0xc0, 0xe0, 0x5a, 0x72,
+-	0xe0, 0xe0, 0x94, 0x72,
+-	0x01, 0xea, 0x64, 0x59,
++	0x9f, 0xe0, 0x98, 0x7c,
++	0x80, 0xe0, 0x3c, 0x72,
++	0xa0, 0xe0, 0x78, 0x72,
++	0xc0, 0xe0, 0x6e, 0x72,
++	0xe0, 0xe0, 0xa8, 0x72,
++	0x01, 0xea, 0x6e, 0x59,
+ 	0x01, 0xea, 0x04, 0x00,
+-	0x00, 0xe2, 0x14, 0x42,
+-	0x80, 0x39, 0x2f, 0x7a,
+-	0x03, 0xea, 0x64, 0x59,
++	0x00, 0xe2, 0x28, 0x42,
++	0x80, 0x39, 0x43, 0x7a,
++	0x03, 0xea, 0x6e, 0x59,
+ 	0x03, 0xea, 0x04, 0x00,
+-	0xee, 0x00, 0x36, 0x6a,
++	0xee, 0x00, 0x4a, 0x6a,
+ 	0x05, 0xea, 0xb4, 0x00,
+-	0x33, 0xea, 0x5e, 0x59,
++	0x33, 0xea, 0x68, 0x59,
+ 	0x33, 0xea, 0x00, 0x00,
+ 	0x02, 0xa8, 0x9c, 0x32,
+-	0x00, 0xe2, 0x7e, 0x59,
++	0x00, 0xe2, 0x88, 0x59,
+ 	0xef, 0x96, 0xd5, 0x19,
+-	0x00, 0xe2, 0x46, 0x52,
++	0x00, 0xe2, 0x5a, 0x52,
+ 	0x09, 0x80, 0xe1, 0x30,
+ 	0x02, 0xea, 0x36, 0x00,
+ 	0xa8, 0xea, 0x32, 0x00,
+-	0x00, 0xe2, 0x4c, 0x42,
++	0x00, 0xe2, 0x60, 0x42,
+ 	0x01, 0x96, 0xd1, 0x30,
+ 	0x10, 0x80, 0x89, 0x31,
+ 	0x20, 0xea, 0x32, 0x00,
+ 	0xbf, 0x39, 0x73, 0x0a,
+-	0x10, 0x4c, 0x56, 0x6a,
+-	0x20, 0x19, 0x4e, 0x6a,
+-	0x20, 0x19, 0x52, 0x6a,
+-	0x02, 0x4d, 0x14, 0x6a,
++	0x10, 0x4c, 0x6a, 0x6a,
++	0x20, 0x19, 0x62, 0x6a,
++	0x20, 0x19, 0x66, 0x6a,
++	0x02, 0x4d, 0x28, 0x6a,
+ 	0x40, 0x39, 0x73, 0x02,
+-	0x00, 0xe2, 0x14, 0x42,
+-	0x80, 0x39, 0xd5, 0x6a,
++	0x00, 0xe2, 0x28, 0x42,
++	0x80, 0x39, 0xe9, 0x6a,
+ 	0x01, 0x44, 0x10, 0x33,
+ 	0x08, 0x92, 0x25, 0x03,
+-	0x00, 0xe2, 0x14, 0x42,
++	0x00, 0xe2, 0x28, 0x42,
+ 	0x10, 0xea, 0x80, 0x00,
+ 	0x01, 0x37, 0xc5, 0x31,
+-	0x80, 0xe2, 0x80, 0x62,
+-	0x10, 0x92, 0xa5, 0x6a,
++	0x80, 0xe2, 0x94, 0x62,
++	0x10, 0x92, 0xb9, 0x6a,
+ 	0xc0, 0x94, 0xc5, 0x01,
+-	0x40, 0x92, 0x71, 0x6a,
++	0x40, 0x92, 0x85, 0x6a,
+ 	0xbf, 0xe2, 0xc4, 0x09,
+-	0x20, 0x92, 0x85, 0x7a,
++	0x20, 0x92, 0x99, 0x7a,
+ 	0x01, 0xe2, 0x88, 0x30,
+-	0x00, 0xe2, 0xe2, 0x5b,
+-	0xa0, 0x3c, 0x8d, 0x62,
++	0x00, 0xe2, 0xf6, 0x5b,
++	0xa0, 0x3c, 0xa1, 0x62,
+ 	0x23, 0x92, 0x89, 0x08,
+-	0x00, 0xe2, 0xe2, 0x5b,
+-	0xa0, 0x3c, 0x8d, 0x62,
+-	0x00, 0xa8, 0x84, 0x42,
+-	0xff, 0xe2, 0x84, 0x62,
+-	0x00, 0xe2, 0xa4, 0x42,
++	0x00, 0xe2, 0xf6, 0x5b,
++	0xa0, 0x3c, 0xa1, 0x62,
++	0x00, 0xa8, 0x98, 0x42,
++	0xff, 0xe2, 0x98, 0x62,
++	0x00, 0xe2, 0xb8, 0x42,
+ 	0x40, 0xea, 0x98, 0x00,
+ 	0x01, 0xe2, 0x88, 0x30,
+-	0x00, 0xe2, 0xe2, 0x5b,
+-	0xa0, 0x3c, 0x63, 0x72,
++	0x00, 0xe2, 0xf6, 0x5b,
++	0xa0, 0x3c, 0x77, 0x72,
+ 	0x40, 0xea, 0x98, 0x00,
+ 	0x01, 0x37, 0x95, 0x32,
+ 	0x08, 0xea, 0x6e, 0x02,
+-	0x00, 0xe2, 0x14, 0x42,
+-	0xe0, 0xea, 0xfe, 0x5b,
+-	0x80, 0xe0, 0xe0, 0x6a,
+-	0x04, 0xe0, 0x92, 0x73,
+-	0x02, 0xe0, 0xc4, 0x73,
+-	0x00, 0xea, 0x3e, 0x73,
+-	0x03, 0xe0, 0xd4, 0x73,
+-	0x23, 0xe0, 0xb6, 0x72,
+-	0x08, 0xe0, 0xdc, 0x72,
+-	0x00, 0xe2, 0xe2, 0x5b,
+-	0x07, 0xea, 0x64, 0x59,
++	0x00, 0xe2, 0x28, 0x42,
++	0xe0, 0xea, 0x12, 0x5c,
++	0x80, 0xe0, 0xf4, 0x6a,
++	0x04, 0xe0, 0xa6, 0x73,
++	0x02, 0xe0, 0xd8, 0x73,
++	0x00, 0xea, 0x52, 0x73,
++	0x03, 0xe0, 0xe8, 0x73,
++	0x23, 0xe0, 0xca, 0x72,
++	0x08, 0xe0, 0xf0, 0x72,
++	0x00, 0xe2, 0xf6, 0x5b,
++	0x07, 0xea, 0x6e, 0x59,
+ 	0x07, 0xea, 0x04, 0x00,
+-	0x08, 0x48, 0x15, 0x72,
+-	0x04, 0x48, 0xb3, 0x62,
++	0x08, 0x48, 0x29, 0x72,
++	0x04, 0x48, 0xc7, 0x62,
+ 	0x01, 0x49, 0x89, 0x30,
+-	0x00, 0xe2, 0xa4, 0x42,
++	0x00, 0xe2, 0xb8, 0x42,
+ 	0x01, 0x44, 0xd4, 0x31,
+-	0x00, 0xe2, 0xa4, 0x42,
++	0x00, 0xe2, 0xb8, 0x42,
+ 	0x01, 0x00, 0x6c, 0x32,
+-	0x33, 0xea, 0x5e, 0x59,
++	0x33, 0xea, 0x68, 0x59,
+ 	0x33, 0xea, 0x00, 0x00,
+ 	0x4c, 0x3a, 0xc1, 0x28,
+ 	0x01, 0x64, 0xc0, 0x31,
+-	0x00, 0x36, 0x5f, 0x59,
++	0x00, 0x36, 0x69, 0x59,
+ 	0x01, 0x36, 0x01, 0x30,
+-	0x01, 0xe0, 0xda, 0x7a,
+-	0xa0, 0xea, 0xf4, 0x5b,
+-	0x01, 0xa0, 0xda, 0x62,
+-	0x01, 0x84, 0xcf, 0x7a,
+-	0x01, 0x95, 0xdd, 0x6a,
+-	0x05, 0xea, 0x64, 0x59,
++	0x01, 0xe0, 0xee, 0x7a,
++	0xa0, 0xea, 0x08, 0x5c,
++	0x01, 0xa0, 0xee, 0x62,
++	0x01, 0x84, 0xe3, 0x7a,
++	0x01, 0x95, 0xf1, 0x6a,
++	0x05, 0xea, 0x6e, 0x59,
+ 	0x05, 0xea, 0x04, 0x00,
+-	0x00, 0xe2, 0xdc, 0x42,
+-	0x03, 0xea, 0x64, 0x59,
++	0x00, 0xe2, 0xf0, 0x42,
++	0x03, 0xea, 0x6e, 0x59,
+ 	0x03, 0xea, 0x04, 0x00,
+-	0x00, 0xe2, 0xdc, 0x42,
+-	0x07, 0xea, 0x06, 0x5c,
++	0x00, 0xe2, 0xf0, 0x42,
++	0x07, 0xea, 0x1a, 0x5c,
+ 	0x01, 0x44, 0xd4, 0x31,
+-	0x00, 0xe2, 0x14, 0x42,
++	0x00, 0xe2, 0x28, 0x42,
+ 	0x3f, 0xe0, 0x76, 0x0a,
+ 	0xc0, 0x3a, 0xc1, 0x09,
+ 	0x00, 0x3b, 0x51, 0x01,
+@@ -384,54 +394,54 @@ static uint8_t seqprog[] = {
+ 	0x01, 0xea, 0xc6, 0x01,
+ 	0x02, 0xe2, 0xc8, 0x31,
+ 	0x02, 0xec, 0x40, 0x31,
+-	0xff, 0xa1, 0xfc, 0x72,
++	0xff, 0xa1, 0x10, 0x73,
+ 	0x02, 0xe8, 0xda, 0x31,
+ 	0x02, 0xa0, 0x50, 0x31,
+-	0x00, 0xe2, 0x1e, 0x43,
++	0x00, 0xe2, 0x32, 0x43,
+ 	0x80, 0x39, 0x73, 0x02,
+ 	0x01, 0x44, 0xd4, 0x31,
+-	0x00, 0xe2, 0xe2, 0x5b,
++	0x00, 0xe2, 0xf6, 0x5b,
+ 	0x01, 0x39, 0x73, 0x02,
+-	0xe0, 0x3c, 0x39, 0x63,
++	0xe0, 0x3c, 0x4d, 0x63,
+ 	0x02, 0x39, 0x73, 0x02,
+-	0x20, 0x46, 0x32, 0x63,
++	0x20, 0x46, 0x46, 0x63,
+ 	0xff, 0xea, 0x52, 0x09,
+-	0xa8, 0xea, 0xf4, 0x5b,
+-	0x04, 0x92, 0x19, 0x7b,
++	0xa8, 0xea, 0x08, 0x5c,
++	0x04, 0x92, 0x2d, 0x7b,
+ 	0x01, 0x3a, 0xc1, 0x31,
+-	0x00, 0x93, 0x19, 0x63,
++	0x00, 0x93, 0x2d, 0x63,
+ 	0x01, 0x3b, 0xc1, 0x31,
+-	0x00, 0x94, 0x23, 0x73,
++	0x00, 0x94, 0x37, 0x73,
+ 	0x01, 0xa9, 0x52, 0x11,
+-	0xff, 0xa9, 0x0e, 0x6b,
+-	0x00, 0xe2, 0x32, 0x43,
++	0xff, 0xa9, 0x22, 0x6b,
++	0x00, 0xe2, 0x46, 0x43,
+ 	0x10, 0x39, 0x73, 0x02,
+-	0x04, 0x92, 0x33, 0x7b,
++	0x04, 0x92, 0x47, 0x7b,
+ 	0xfb, 0x92, 0x25, 0x0b,
+ 	0xff, 0xea, 0x72, 0x0a,
+-	0x01, 0xa4, 0x2d, 0x6b,
++	0x01, 0xa4, 0x41, 0x6b,
+ 	0x02, 0xa8, 0x9c, 0x32,
+-	0x00, 0xe2, 0x7e, 0x59,
+-	0x10, 0x92, 0xdd, 0x7a,
+-	0xff, 0xea, 0x06, 0x5c,
+-	0x00, 0xe2, 0xdc, 0x42,
+-	0x04, 0xea, 0x64, 0x59,
++	0x00, 0xe2, 0x88, 0x59,
++	0x10, 0x92, 0xf1, 0x7a,
++	0xff, 0xea, 0x1a, 0x5c,
++	0x00, 0xe2, 0xf0, 0x42,
++	0x04, 0xea, 0x6e, 0x59,
+ 	0x04, 0xea, 0x04, 0x00,
+-	0x00, 0xe2, 0xdc, 0x42,
+-	0x04, 0xea, 0x64, 0x59,
++	0x00, 0xe2, 0xf0, 0x42,
++	0x04, 0xea, 0x6e, 0x59,
+ 	0x04, 0xea, 0x04, 0x00,
+-	0x00, 0xe2, 0x14, 0x42,
+-	0x08, 0x92, 0xd5, 0x7a,
+-	0xc0, 0x39, 0x49, 0x7b,
+-	0x80, 0x39, 0xd5, 0x6a,
+-	0xff, 0x88, 0x49, 0x6b,
+-	0x40, 0x39, 0xd5, 0x6a,
+-	0x10, 0x92, 0x4f, 0x7b,
+-	0x0a, 0xea, 0x64, 0x59,
++	0x00, 0xe2, 0x28, 0x42,
++	0x08, 0x92, 0xe9, 0x7a,
++	0xc0, 0x39, 0x5d, 0x7b,
++	0x80, 0x39, 0xe9, 0x6a,
++	0xff, 0x88, 0x5d, 0x6b,
++	0x40, 0x39, 0xe9, 0x6a,
++	0x10, 0x92, 0x63, 0x7b,
++	0x0a, 0xea, 0x6e, 0x59,
+ 	0x0a, 0xea, 0x04, 0x00,
+-	0x00, 0xe2, 0x6e, 0x5b,
+-	0x00, 0xe2, 0xae, 0x43,
+-	0x50, 0x4b, 0x56, 0x6b,
++	0x00, 0xe2, 0x82, 0x5b,
++	0x00, 0xe2, 0xc2, 0x43,
++	0x50, 0x4b, 0x6a, 0x6b,
+ 	0xbf, 0x3a, 0x74, 0x08,
+ 	0x01, 0xe0, 0xf4, 0x31,
+ 	0xff, 0xea, 0xc0, 0x09,
+@@ -441,31 +451,31 @@ static uint8_t seqprog[] = {
+ 	0x01, 0xfa, 0xc0, 0x35,
+ 	0x02, 0xa8, 0x90, 0x32,
+ 	0x02, 0xea, 0xb4, 0x00,
+-	0x33, 0xea, 0x5e, 0x59,
++	0x33, 0xea, 0x68, 0x59,
+ 	0x33, 0xea, 0x00, 0x00,
+ 	0x02, 0x48, 0x51, 0x31,
+ 	0xff, 0x90, 0x85, 0x68,
+-	0xff, 0x88, 0x7b, 0x6b,
+-	0x01, 0xa4, 0x77, 0x6b,
+-	0x02, 0xa4, 0x7f, 0x6b,
+-	0x01, 0x84, 0x7f, 0x7b,
++	0xff, 0x88, 0x8f, 0x6b,
++	0x01, 0xa4, 0x8b, 0x6b,
++	0x02, 0xa4, 0x93, 0x6b,
++	0x01, 0x84, 0x93, 0x7b,
+ 	0x02, 0x28, 0x19, 0x33,
+ 	0x02, 0xa8, 0x50, 0x36,
+-	0xff, 0x88, 0x7f, 0x73,
+-	0x00, 0xe2, 0x52, 0x5b,
++	0xff, 0x88, 0x93, 0x73,
++	0x00, 0xe2, 0x66, 0x5b,
+ 	0x02, 0xa8, 0x20, 0x33,
+ 	0x04, 0xa4, 0x49, 0x03,
+ 	0xff, 0xea, 0x1a, 0x03,
+-	0xff, 0x2d, 0x8b, 0x63,
++	0xff, 0x2d, 0x9f, 0x63,
+ 	0x02, 0xa8, 0x58, 0x32,
+ 	0x02, 0xa8, 0x5c, 0x36,
+ 	0x02, 0xa8, 0x40, 0x31,
+ 	0x02, 0x2e, 0x51, 0x31,
+ 	0x02, 0xa0, 0x18, 0x33,
+ 	0x02, 0xa0, 0x5c, 0x36,
+-	0xc0, 0x39, 0xd5, 0x6a,
++	0xc0, 0x39, 0xe9, 0x6a,
+ 	0x04, 0x92, 0x25, 0x03,
+-	0x20, 0x92, 0xaf, 0x6b,
++	0x20, 0x92, 0xc3, 0x6b,
+ 	0x02, 0xa8, 0x40, 0x31,
+ 	0xc0, 0x3a, 0xc1, 0x09,
+ 	0x00, 0x3b, 0x51, 0x01,
+@@ -480,60 +490,60 @@ static uint8_t seqprog[] = {
+ 	0xf7, 0x57, 0xae, 0x08,
+ 	0x08, 0xea, 0x98, 0x00,
+ 	0x01, 0x44, 0xd4, 0x31,
+-	0xee, 0x00, 0xb8, 0x6b,
++	0xee, 0x00, 0xcc, 0x6b,
+ 	0x02, 0xea, 0xb4, 0x00,
+ 	0xc0, 0xea, 0x72, 0x02,
+-	0x09, 0x4c, 0xba, 0x7b,
++	0x09, 0x4c, 0xce, 0x7b,
+ 	0x01, 0xea, 0x78, 0x02,
+ 	0x08, 0x4c, 0x06, 0x68,
+-	0x0b, 0xea, 0x64, 0x59,
++	0x0b, 0xea, 0x6e, 0x59,
+ 	0x0b, 0xea, 0x04, 0x00,
+ 	0x01, 0x44, 0xd4, 0x31,
+-	0x20, 0x39, 0x15, 0x7a,
+-	0x00, 0xe2, 0xcc, 0x5b,
+-	0x00, 0xe2, 0x14, 0x42,
+-	0x01, 0x84, 0xd1, 0x7b,
++	0x20, 0x39, 0x29, 0x7a,
++	0x00, 0xe2, 0xe0, 0x5b,
++	0x00, 0xe2, 0x28, 0x42,
++	0x01, 0x84, 0xe5, 0x7b,
+ 	0x01, 0xa4, 0x49, 0x07,
+ 	0x08, 0x60, 0x30, 0x33,
+ 	0x08, 0x80, 0x41, 0x37,
+ 	0xdf, 0x39, 0x73, 0x0a,
+-	0xee, 0x00, 0xde, 0x6b,
++	0xee, 0x00, 0xf2, 0x6b,
+ 	0x05, 0xea, 0xb4, 0x00,
+-	0x33, 0xea, 0x5e, 0x59,
++	0x33, 0xea, 0x68, 0x59,
+ 	0x33, 0xea, 0x00, 0x00,
+-	0x00, 0xe2, 0x7e, 0x59,
+-	0x00, 0xe2, 0xdc, 0x42,
+-	0xff, 0x42, 0xee, 0x6b,
+-	0x01, 0x41, 0xe2, 0x6b,
+-	0x02, 0x41, 0xe2, 0x7b,
+-	0xff, 0x42, 0xee, 0x6b,
+-	0x01, 0x41, 0xe2, 0x6b,
+-	0x02, 0x41, 0xe2, 0x7b,
+-	0xff, 0x42, 0xee, 0x7b,
+-	0x04, 0x4c, 0xe2, 0x6b,
++	0x00, 0xe2, 0x88, 0x59,
++	0x00, 0xe2, 0xf0, 0x42,
++	0xff, 0x42, 0x02, 0x6c,
++	0x01, 0x41, 0xf6, 0x6b,
++	0x02, 0x41, 0xf6, 0x7b,
++	0xff, 0x42, 0x02, 0x6c,
++	0x01, 0x41, 0xf6, 0x6b,
++	0x02, 0x41, 0xf6, 0x7b,
++	0xff, 0x42, 0x02, 0x7c,
++	0x04, 0x4c, 0xf6, 0x6b,
+ 	0xe0, 0x41, 0x78, 0x0e,
+ 	0x01, 0x44, 0xd4, 0x31,
+-	0xff, 0x42, 0xf6, 0x7b,
+-	0x04, 0x4c, 0xf6, 0x6b,
++	0xff, 0x42, 0x0a, 0x7c,
++	0x04, 0x4c, 0x0a, 0x6c,
+ 	0xe0, 0x41, 0x78, 0x0a,
+-	0xe0, 0x3c, 0x15, 0x62,
++	0xe0, 0x3c, 0x29, 0x62,
+ 	0xff, 0xea, 0xca, 0x09,
+ 	0x01, 0xe2, 0xc8, 0x31,
+ 	0x01, 0x46, 0xda, 0x35,
+ 	0x01, 0x44, 0xd4, 0x35,
+ 	0x10, 0xea, 0x80, 0x00,
+ 	0x01, 0xe2, 0x6e, 0x36,
+-	0x04, 0xa6, 0x0e, 0x7c,
++	0x04, 0xa6, 0x22, 0x7c,
+ 	0xff, 0xea, 0x5a, 0x09,
+ 	0xff, 0xea, 0x4c, 0x0d,
+-	0x01, 0xa6, 0x3a, 0x6c,
++	0x01, 0xa6, 0x4e, 0x6c,
+ 	0x10, 0xad, 0x84, 0x78,
+-	0x80, 0xad, 0x32, 0x6c,
++	0x80, 0xad, 0x46, 0x6c,
+ 	0x08, 0xad, 0x84, 0x68,
+-	0x20, 0x19, 0x26, 0x7c,
++	0x20, 0x19, 0x3a, 0x7c,
+ 	0x80, 0xea, 0xb2, 0x01,
+ 	0x11, 0x00, 0x00, 0x10,
+-	0x02, 0xa6, 0x22, 0x7c,
++	0x02, 0xa6, 0x36, 0x7c,
+ 	0xff, 0xea, 0xb2, 0x0d,
+ 	0x11, 0x00, 0x00, 0x10,
+ 	0xff, 0xea, 0xb2, 0x09,
+@@ -561,7 +571,7 @@ static uint8_t seqprog[] = {
+ 	0x00, 0x86, 0x0d, 0x23,
+ 	0x00, 0x87, 0x0f, 0x23,
+ 	0x01, 0x84, 0xc5, 0x31,
+-	0x80, 0x83, 0x5d, 0x7c,
++	0x80, 0x83, 0x71, 0x7c,
+ 	0x02, 0xe2, 0xc4, 0x01,
+ 	0xff, 0xea, 0x4c, 0x09,
+ 	0x01, 0xe2, 0x36, 0x30,
+@@ -572,75 +582,75 @@ static uint8_t seqprog[] = {
+ 	0xfe, 0xa6, 0x4c, 0x0d,
+ 	0x0b, 0x98, 0xe1, 0x30,
+ 	0xfd, 0xa4, 0x49, 0x09,
+-	0x80, 0xa3, 0x71, 0x7c,
++	0x80, 0xa3, 0x85, 0x7c,
+ 	0x02, 0xa4, 0x48, 0x01,
+ 	0x01, 0xa4, 0x36, 0x30,
+ 	0xa8, 0xea, 0x32, 0x00,
+ 	0xfd, 0xa4, 0x49, 0x0b,
+ 	0x05, 0xa3, 0x07, 0x33,
+-	0x80, 0x83, 0x7d, 0x6c,
++	0x80, 0x83, 0x91, 0x6c,
+ 	0x02, 0xea, 0x4c, 0x05,
+ 	0xff, 0xea, 0x4c, 0x0d,
+-	0x00, 0xe2, 0x56, 0x59,
+-	0x02, 0xa6, 0x10, 0x6c,
++	0x00, 0xe2, 0x60, 0x59,
++	0x02, 0xa6, 0x24, 0x6c,
+ 	0x80, 0xf9, 0xf2, 0x05,
+-	0xc0, 0x39, 0x8b, 0x7c,
+-	0x03, 0xea, 0x64, 0x59,
++	0xc0, 0x39, 0x9f, 0x7c,
++	0x03, 0xea, 0x6e, 0x59,
+ 	0x03, 0xea, 0x04, 0x00,
+-	0x20, 0x39, 0xaf, 0x7c,
+-	0x01, 0x84, 0x95, 0x6c,
+-	0x06, 0xea, 0x64, 0x59,
++	0x20, 0x39, 0xc3, 0x7c,
++	0x01, 0x84, 0xa9, 0x6c,
++	0x06, 0xea, 0x6e, 0x59,
+ 	0x06, 0xea, 0x04, 0x00,
+-	0x00, 0xe2, 0xb2, 0x44,
++	0x00, 0xe2, 0xc6, 0x44,
+ 	0x01, 0x00, 0x6c, 0x32,
+-	0xee, 0x00, 0x9e, 0x6c,
++	0xee, 0x00, 0xb2, 0x6c,
+ 	0x05, 0xea, 0xb4, 0x00,
+-	0x33, 0xea, 0x5e, 0x59,
++	0x33, 0xea, 0x68, 0x59,
+ 	0x33, 0xea, 0x00, 0x00,
+ 	0x80, 0x3d, 0x7a, 0x00,
+-	0xfc, 0x42, 0xa0, 0x7c,
++	0xfc, 0x42, 0xb4, 0x7c,
+ 	0x7f, 0x3d, 0x7a, 0x08,
+-	0x00, 0x36, 0x5f, 0x59,
++	0x00, 0x36, 0x69, 0x59,
+ 	0x01, 0x36, 0x01, 0x30,
+-	0x09, 0xea, 0x64, 0x59,
++	0x09, 0xea, 0x6e, 0x59,
+ 	0x09, 0xea, 0x04, 0x00,
+-	0x00, 0xe2, 0x14, 0x42,
+-	0x01, 0xa4, 0x95, 0x6c,
+-	0x00, 0xe2, 0x68, 0x5c,
++	0x00, 0xe2, 0x28, 0x42,
++	0x01, 0xa4, 0xa9, 0x6c,
++	0x00, 0xe2, 0x7c, 0x5c,
+ 	0x20, 0x39, 0x73, 0x02,
+ 	0x01, 0x00, 0x6c, 0x32,
+-	0x02, 0xa6, 0xba, 0x7c,
+-	0x00, 0xe2, 0x7e, 0x5c,
++	0x02, 0xa6, 0xce, 0x7c,
++	0x00, 0xe2, 0x92, 0x5c,
+ 	0x00, 0xe2, 0x76, 0x58,
+ 	0x00, 0xe2, 0x86, 0x58,
+ 	0x00, 0xe2, 0x5a, 0x58,
+-	0x00, 0x36, 0x5f, 0x59,
++	0x00, 0x36, 0x69, 0x59,
+ 	0x01, 0x36, 0x01, 0x30,
+-	0x20, 0x19, 0xba, 0x6c,
+-	0x00, 0xe2, 0xea, 0x5c,
+-	0x04, 0x19, 0xd4, 0x6c,
++	0x20, 0x19, 0xce, 0x6c,
++	0x00, 0xe2, 0xfe, 0x5c,
++	0x04, 0x19, 0xe8, 0x6c,
+ 	0x02, 0x19, 0x32, 0x00,
+-	0x01, 0x84, 0xd5, 0x7c,
+-	0x01, 0x1b, 0xce, 0x7c,
+-	0x01, 0x1a, 0xd4, 0x6c,
+-	0x00, 0xe2, 0x84, 0x44,
+-	0x80, 0x4b, 0xda, 0x6c,
+-	0x01, 0x4c, 0xd6, 0x7c,
+-	0x03, 0x42, 0x84, 0x6c,
+-	0x00, 0xe2, 0x0a, 0x5c,
++	0x01, 0x84, 0xe9, 0x7c,
++	0x01, 0x1b, 0xe2, 0x7c,
++	0x01, 0x1a, 0xe8, 0x6c,
++	0x00, 0xe2, 0x98, 0x44,
++	0x80, 0x4b, 0xee, 0x6c,
++	0x01, 0x4c, 0xea, 0x7c,
++	0x03, 0x42, 0x98, 0x6c,
++	0x00, 0xe2, 0x1e, 0x5c,
+ 	0x80, 0xf9, 0xf2, 0x01,
+-	0x04, 0x39, 0x15, 0x7a,
+-	0x00, 0xe2, 0x14, 0x42,
+-	0x08, 0x5d, 0xf2, 0x6c,
++	0x04, 0x39, 0x29, 0x7a,
++	0x00, 0xe2, 0x28, 0x42,
++	0x08, 0x5d, 0x06, 0x6d,
+ 	0x00, 0xe2, 0x76, 0x58,
+-	0x00, 0x36, 0x5f, 0x59,
++	0x00, 0x36, 0x69, 0x59,
+ 	0x01, 0x36, 0x01, 0x30,
+-	0x02, 0x1b, 0xe2, 0x7c,
+-	0x08, 0x5d, 0xf0, 0x7c,
++	0x02, 0x1b, 0xf6, 0x7c,
++	0x08, 0x5d, 0x04, 0x7d,
+ 	0x03, 0x68, 0x00, 0x37,
+ 	0x01, 0x84, 0x09, 0x07,
+-	0x80, 0x1b, 0xfc, 0x7c,
+-	0x80, 0x84, 0xfd, 0x6c,
++	0x80, 0x1b, 0x10, 0x7d,
++	0x80, 0x84, 0x11, 0x6d,
+ 	0xff, 0x85, 0x0b, 0x1b,
+ 	0xff, 0x86, 0x0d, 0x23,
+ 	0xff, 0x87, 0x0f, 0x23,
+@@ -652,161 +662,164 @@ static uint8_t seqprog[] = {
+ 	0xf9, 0xd9, 0xb2, 0x0d,
+ 	0x01, 0xd9, 0xb2, 0x05,
+ 	0x01, 0x52, 0x48, 0x31,
+-	0x20, 0xa4, 0x26, 0x7d,
+-	0x20, 0x5b, 0x26, 0x7d,
+-	0x80, 0xf9, 0x34, 0x7d,
++	0x20, 0xa4, 0x3a, 0x7d,
++	0x20, 0x5b, 0x3a, 0x7d,
++	0x80, 0xf9, 0x48, 0x7d,
+ 	0x02, 0xea, 0xb4, 0x00,
+ 	0x11, 0x00, 0x00, 0x10,
+-	0x04, 0x19, 0x40, 0x7d,
++	0x04, 0x19, 0x54, 0x7d,
+ 	0xdf, 0x19, 0x32, 0x08,
+-	0x60, 0x5b, 0x40, 0x6d,
+-	0x01, 0x4c, 0x1a, 0x7d,
++	0x60, 0x5b, 0x54, 0x6d,
++	0x01, 0x4c, 0x2e, 0x7d,
+ 	0x20, 0x19, 0x32, 0x00,
+ 	0x01, 0xd9, 0xb2, 0x05,
+ 	0x02, 0xea, 0xb4, 0x00,
+ 	0x01, 0xd9, 0xb2, 0x05,
+-	0x10, 0x5b, 0x38, 0x6d,
+-	0x08, 0x5b, 0x42, 0x6d,
+-	0x20, 0x5b, 0x32, 0x6d,
+-	0x02, 0x5b, 0x62, 0x6d,
+-	0x0e, 0xea, 0x64, 0x59,
++	0x10, 0x5b, 0x4c, 0x6d,
++	0x08, 0x5b, 0x56, 0x6d,
++	0x20, 0x5b, 0x46, 0x6d,
++	0x02, 0x5b, 0x76, 0x6d,
++	0x0e, 0xea, 0x6e, 0x59,
+ 	0x0e, 0xea, 0x04, 0x00,
+-	0x80, 0xf9, 0x22, 0x6d,
++	0x80, 0xf9, 0x36, 0x6d,
+ 	0xdf, 0x5c, 0xb8, 0x08,
+ 	0x01, 0xd9, 0xb2, 0x05,
+-	0x01, 0xa4, 0x1d, 0x6e,
+-	0x00, 0xe2, 0x68, 0x5c,
+-	0x00, 0xe2, 0x6c, 0x5d,
++	0x01, 0xa4, 0x37, 0x6e,
++	0x00, 0xe2, 0x7c, 0x5c,
++	0x00, 0xe2, 0x80, 0x5d,
+ 	0x01, 0x90, 0x21, 0x1b,
+ 	0x01, 0xd9, 0xb2, 0x05,
+-	0x00, 0xe2, 0x52, 0x5b,
++	0x00, 0xe2, 0x66, 0x5b,
+ 	0xf3, 0x96, 0xd5, 0x19,
+-	0x00, 0xe2, 0x50, 0x55,
+-	0x80, 0x96, 0x51, 0x6d,
+-	0x0f, 0xea, 0x64, 0x59,
++	0x00, 0xe2, 0x64, 0x55,
++	0x80, 0x96, 0x65, 0x6d,
++	0x0f, 0xea, 0x6e, 0x59,
+ 	0x0f, 0xea, 0x04, 0x00,
+-	0x00, 0xe2, 0x58, 0x45,
++	0x00, 0xe2, 0x6c, 0x45,
+ 	0x04, 0x8c, 0xe1, 0x30,
+ 	0x01, 0xea, 0xf2, 0x00,
+ 	0x02, 0xea, 0x36, 0x00,
+ 	0xa8, 0xea, 0x32, 0x00,
+-	0xff, 0x97, 0x5f, 0x7d,
+-	0x14, 0xea, 0x64, 0x59,
++	0xff, 0x97, 0x73, 0x7d,
++	0x14, 0xea, 0x6e, 0x59,
+ 	0x14, 0xea, 0x04, 0x00,
+-	0x00, 0xe2, 0xce, 0x5d,
++	0x00, 0xe2, 0xe2, 0x5d,
+ 	0x01, 0xd9, 0xb2, 0x05,
+ 	0x09, 0x80, 0xe1, 0x30,
+ 	0x02, 0xea, 0x36, 0x00,
+ 	0xa8, 0xea, 0x32, 0x00,
+-	0x00, 0xe2, 0xc6, 0x5d,
++	0x00, 0xe2, 0xda, 0x5d,
+ 	0x01, 0xd9, 0xb2, 0x05,
+-	0x02, 0xa6, 0x7c, 0x7d,
+-	0x00, 0xe2, 0x56, 0x59,
+-	0x20, 0x5b, 0x8a, 0x6d,
+-	0xfc, 0x42, 0x76, 0x7d,
+-	0x10, 0x40, 0x78, 0x6d,
+-	0x20, 0x4d, 0x7a, 0x7d,
+-	0x08, 0x5d, 0x8a, 0x6d,
+-	0x02, 0xa6, 0x10, 0x6c,
+-	0x00, 0xe2, 0x56, 0x59,
+-	0x20, 0x5b, 0x8a, 0x6d,
+-	0x01, 0x1b, 0xaa, 0x6d,
+-	0xfc, 0x42, 0x86, 0x7d,
+-	0x10, 0x40, 0x88, 0x6d,
++	0x02, 0xa6, 0x90, 0x7d,
++	0x00, 0xe2, 0x60, 0x59,
++	0x20, 0x5b, 0x9e, 0x6d,
++	0xfc, 0x42, 0x8a, 0x7d,
++	0x10, 0x40, 0x8c, 0x6d,
++	0x20, 0x4d, 0x8e, 0x7d,
++	0x08, 0x5d, 0x9e, 0x6d,
++	0x02, 0xa6, 0x24, 0x6c,
++	0x00, 0xe2, 0x60, 0x59,
++	0x20, 0x5b, 0x9e, 0x6d,
++	0x01, 0x1b, 0xbe, 0x6d,
++	0xfc, 0x42, 0x9a, 0x7d,
++	0x10, 0x40, 0x9c, 0x6d,
+ 	0x20, 0x4d, 0x84, 0x78,
+ 	0x08, 0x5d, 0x84, 0x78,
+ 	0x02, 0x19, 0x32, 0x00,
+ 	0x01, 0x5b, 0x40, 0x31,
+-	0x00, 0xe2, 0xea, 0x5c,
+-	0x00, 0xe2, 0xcc, 0x5b,
++	0x00, 0xe2, 0xfe, 0x5c,
++	0x00, 0xe2, 0xe0, 0x5b,
+ 	0x20, 0xea, 0xb6, 0x00,
+-	0x00, 0xe2, 0x0a, 0x5c,
++	0x00, 0xe2, 0x1e, 0x5c,
+ 	0x20, 0x5c, 0xb8, 0x00,
+-	0x04, 0x19, 0xa0, 0x6d,
+-	0x01, 0x1a, 0xa0, 0x6d,
+-	0x00, 0xe2, 0x56, 0x59,
++	0x04, 0x19, 0xb4, 0x6d,
++	0x01, 0x1a, 0xb4, 0x6d,
++	0x00, 0xe2, 0x60, 0x59,
+ 	0x01, 0x1a, 0x84, 0x78,
+ 	0x80, 0xf9, 0xf2, 0x01,
+-	0x20, 0xa0, 0x04, 0x7e,
++	0x20, 0xa0, 0x18, 0x7e,
+ 	0xff, 0x90, 0x21, 0x1b,
+-	0x08, 0x92, 0x63, 0x6b,
++	0x08, 0x92, 0x77, 0x6b,
+ 	0x02, 0xea, 0xb4, 0x04,
+ 	0x01, 0xa4, 0x49, 0x03,
+-	0x40, 0x5b, 0xba, 0x6d,
+-	0x00, 0xe2, 0x56, 0x59,
+-	0x40, 0x5b, 0xba, 0x6d,
+-	0x04, 0x5d, 0x1e, 0x7e,
+-	0x01, 0x1a, 0x1e, 0x7e,
++	0x40, 0x5b, 0xce, 0x6d,
++	0x00, 0xe2, 0x60, 0x59,
++	0x40, 0x5b, 0xce, 0x6d,
++	0x04, 0x5d, 0x38, 0x7e,
++	0x01, 0x1a, 0x38, 0x7e,
+ 	0x20, 0x4d, 0x84, 0x78,
+-	0x40, 0x5b, 0x04, 0x7e,
+-	0x04, 0x5d, 0x1e, 0x7e,
+-	0x01, 0x1a, 0x1e, 0x7e,
++	0x40, 0x5b, 0x18, 0x7e,
++	0x04, 0x5d, 0x38, 0x7e,
++	0x01, 0x1a, 0x38, 0x7e,
+ 	0x80, 0xf9, 0xf2, 0x01,
+ 	0xff, 0x90, 0x21, 0x1b,
+-	0x08, 0x92, 0x63, 0x6b,
++	0x08, 0x92, 0x77, 0x6b,
+ 	0x02, 0xea, 0xb4, 0x04,
+-	0x00, 0xe2, 0x56, 0x59,
++	0x00, 0xe2, 0x60, 0x59,
+ 	0x01, 0x1b, 0x84, 0x78,
+ 	0x80, 0xf9, 0xf2, 0x01,
+ 	0x02, 0xea, 0xb4, 0x04,
+-	0x00, 0xe2, 0x56, 0x59,
+-	0x01, 0x1b, 0xe2, 0x6d,
+-	0x40, 0x5b, 0xf0, 0x7d,
+-	0x01, 0x1b, 0xe2, 0x6d,
++	0x00, 0xe2, 0x60, 0x59,
++	0x01, 0x1b, 0xf6, 0x6d,
++	0x40, 0x5b, 0x04, 0x7e,
++	0x01, 0x1b, 0xf6, 0x6d,
+ 	0x02, 0x19, 0x32, 0x00,
+ 	0x01, 0x1a, 0x84, 0x78,
+ 	0x80, 0xf9, 0xf2, 0x01,
+ 	0xff, 0xea, 0x10, 0x03,
+ 	0x08, 0x92, 0x25, 0x03,
+-	0x00, 0xe2, 0x62, 0x43,
+-	0x01, 0x1a, 0xec, 0x7d,
+-	0x40, 0x5b, 0xe8, 0x7d,
+-	0x01, 0x1a, 0xd6, 0x6d,
++	0x00, 0xe2, 0x76, 0x43,
++	0x01, 0x1a, 0x00, 0x7e,
++	0x40, 0x5b, 0xfc, 0x7d,
++	0x01, 0x1a, 0xea, 0x6d,
+ 	0xfc, 0x42, 0x84, 0x78,
+-	0x01, 0x1a, 0xf0, 0x6d,
+-	0x10, 0xea, 0x64, 0x59,
++	0x01, 0x1a, 0x04, 0x6e,
++	0x10, 0xea, 0x6e, 0x59,
+ 	0x10, 0xea, 0x04, 0x00,
+ 	0xfc, 0x42, 0x84, 0x78,
+-	0x10, 0x40, 0xf6, 0x6d,
++	0x10, 0x40, 0x0a, 0x6e,
+ 	0x20, 0x4d, 0x84, 0x78,
+-	0x40, 0x5b, 0xd6, 0x6d,
++	0x40, 0x5b, 0xea, 0x6d,
+ 	0x01, 0x1a, 0x84, 0x78,
+ 	0x01, 0x90, 0x21, 0x1b,
+ 	0x30, 0x3f, 0xc0, 0x09,
+ 	0x30, 0xe0, 0x84, 0x60,
+ 	0x40, 0x4b, 0x84, 0x68,
+ 	0xff, 0xea, 0x52, 0x01,
+-	0xee, 0x00, 0x0c, 0x6e,
++	0xee, 0x00, 0x20, 0x6e,
+ 	0x80, 0xf9, 0xf2, 0x01,
+ 	0xff, 0x90, 0x21, 0x1b,
+ 	0x02, 0xea, 0xb4, 0x00,
+ 	0x20, 0xea, 0x9a, 0x00,
+-	0xf3, 0x42, 0x16, 0x6e,
+-	0x12, 0xea, 0x64, 0x59,
++	0x04, 0x41, 0x26, 0x7e,
++	0x08, 0xea, 0x98, 0x00,
++	0x08, 0x57, 0xae, 0x00,
++	0xf3, 0x42, 0x30, 0x6e,
++	0x12, 0xea, 0x6e, 0x59,
+ 	0x12, 0xea, 0x04, 0x00,
+-	0x00, 0xe2, 0x14, 0x42,
+-	0x0d, 0xea, 0x64, 0x59,
++	0x00, 0xe2, 0x28, 0x42,
++	0x0d, 0xea, 0x6e, 0x59,
+ 	0x0d, 0xea, 0x04, 0x00,
+-	0x00, 0xe2, 0x14, 0x42,
++	0x00, 0xe2, 0x28, 0x42,
+ 	0x01, 0x90, 0x21, 0x1b,
+-	0x11, 0xea, 0x64, 0x59,
++	0x11, 0xea, 0x6e, 0x59,
+ 	0x11, 0xea, 0x04, 0x00,
+-	0x00, 0xe2, 0x52, 0x5b,
++	0x00, 0xe2, 0x66, 0x5b,
+ 	0x08, 0x5a, 0xb4, 0x00,
+-	0x00, 0xe2, 0x44, 0x5e,
++	0x00, 0xe2, 0x5e, 0x5e,
+ 	0xa8, 0xea, 0x32, 0x00,
+-	0x00, 0xe2, 0x56, 0x59,
+-	0x80, 0x1a, 0x32, 0x7e,
+-	0x00, 0xe2, 0x44, 0x5e,
++	0x00, 0xe2, 0x60, 0x59,
++	0x80, 0x1a, 0x4c, 0x7e,
++	0x00, 0xe2, 0x5e, 0x5e,
+ 	0x80, 0x19, 0x32, 0x00,
+-	0x40, 0x5b, 0x38, 0x6e,
+-	0x08, 0x5a, 0x38, 0x7e,
++	0x40, 0x5b, 0x52, 0x6e,
++	0x08, 0x5a, 0x52, 0x7e,
+ 	0x20, 0x4d, 0x84, 0x78,
+ 	0x02, 0x84, 0x09, 0x03,
+-	0x40, 0x5b, 0x04, 0x7e,
++	0x40, 0x5b, 0x18, 0x7e,
+ 	0xff, 0x90, 0x21, 0x1b,
+ 	0x80, 0xf9, 0xf2, 0x01,
+-	0x08, 0x92, 0x63, 0x6b,
++	0x08, 0x92, 0x77, 0x6b,
+ 	0x02, 0xea, 0xb4, 0x04,
+ 	0x01, 0x40, 0xe1, 0x30,
+ 	0x05, 0x41, 0xe3, 0x98,
+@@ -1039,138 +1052,138 @@ static struct patch {
+ 	{ ahd_patch0_func, 64, 1, 1 },
+ 	{ ahd_patch2_func, 67, 1, 2 },
+ 	{ ahd_patch0_func, 68, 1, 1 },
+-	{ ahd_patch4_func, 116, 1, 1 },
+-	{ ahd_patch2_func, 175, 3, 1 },
+-	{ ahd_patch1_func, 178, 2, 1 },
+-	{ ahd_patch5_func, 180, 1, 1 },
+-	{ ahd_patch2_func, 189, 1, 2 },
+-	{ ahd_patch0_func, 190, 1, 1 },
+-	{ ahd_patch6_func, 191, 2, 2 },
+-	{ ahd_patch0_func, 193, 6, 3 },
+-	{ ahd_patch2_func, 196, 1, 2 },
+-	{ ahd_patch0_func, 197, 1, 1 },
+-	{ ahd_patch2_func, 200, 1, 2 },
+-	{ ahd_patch0_func, 201, 1, 1 },
+-	{ ahd_patch3_func, 203, 1, 1 },
+-	{ ahd_patch7_func, 204, 3, 1 },
+-	{ ahd_patch3_func, 213, 1, 1 },
+-	{ ahd_patch5_func, 214, 16, 2 },
+-	{ ahd_patch0_func, 230, 1, 1 },
+-	{ ahd_patch8_func, 250, 2, 1 },
+-	{ ahd_patch1_func, 254, 1, 2 },
+-	{ ahd_patch0_func, 255, 1, 1 },
+-	{ ahd_patch7_func, 258, 3, 1 },
+-	{ ahd_patch1_func, 273, 1, 2 },
+-	{ ahd_patch0_func, 274, 1, 1 },
+-	{ ahd_patch1_func, 277, 1, 2 },
+-	{ ahd_patch0_func, 278, 1, 1 },
+-	{ ahd_patch2_func, 281, 1, 2 },
+-	{ ahd_patch0_func, 282, 1, 1 },
+-	{ ahd_patch9_func, 295, 2, 2 },
+-	{ ahd_patch0_func, 297, 1, 1 },
+-	{ ahd_patch1_func, 339, 1, 2 },
+-	{ ahd_patch0_func, 340, 1, 1 },
+-	{ ahd_patch2_func, 348, 1, 2 },
+-	{ ahd_patch0_func, 349, 1, 1 },
+-	{ ahd_patch2_func, 352, 1, 2 },
+-	{ ahd_patch0_func, 353, 1, 1 },
+-	{ ahd_patch1_func, 359, 1, 2 },
+-	{ ahd_patch0_func, 360, 1, 1 },
+-	{ ahd_patch1_func, 362, 1, 2 },
++	{ ahd_patch4_func, 115, 1, 1 },
++	{ ahd_patch2_func, 180, 3, 1 },
++	{ ahd_patch1_func, 183, 2, 1 },
++	{ ahd_patch5_func, 185, 1, 1 },
++	{ ahd_patch2_func, 194, 1, 2 },
++	{ ahd_patch0_func, 195, 1, 1 },
++	{ ahd_patch6_func, 196, 2, 2 },
++	{ ahd_patch0_func, 198, 6, 3 },
++	{ ahd_patch2_func, 201, 1, 2 },
++	{ ahd_patch0_func, 202, 1, 1 },
++	{ ahd_patch2_func, 205, 1, 2 },
++	{ ahd_patch0_func, 206, 1, 1 },
++	{ ahd_patch3_func, 208, 1, 1 },
++	{ ahd_patch7_func, 209, 3, 1 },
++	{ ahd_patch3_func, 218, 1, 1 },
++	{ ahd_patch5_func, 219, 16, 2 },
++	{ ahd_patch0_func, 235, 1, 1 },
++	{ ahd_patch8_func, 260, 2, 1 },
++	{ ahd_patch1_func, 264, 1, 2 },
++	{ ahd_patch0_func, 265, 1, 1 },
++	{ ahd_patch7_func, 268, 3, 1 },
++	{ ahd_patch1_func, 283, 1, 2 },
++	{ ahd_patch0_func, 284, 1, 1 },
++	{ ahd_patch1_func, 287, 1, 2 },
++	{ ahd_patch0_func, 288, 1, 1 },
++	{ ahd_patch2_func, 291, 1, 2 },
++	{ ahd_patch0_func, 292, 1, 1 },
++	{ ahd_patch9_func, 305, 2, 2 },
++	{ ahd_patch0_func, 307, 1, 1 },
++	{ ahd_patch1_func, 349, 1, 2 },
++	{ ahd_patch0_func, 350, 1, 1 },
++	{ ahd_patch2_func, 358, 1, 2 },
++	{ ahd_patch0_func, 359, 1, 1 },
++	{ ahd_patch2_func, 362, 1, 2 },
+ 	{ ahd_patch0_func, 363, 1, 1 },
+-	{ ahd_patch10_func, 382, 1, 1 },
+-	{ ahd_patch10_func, 385, 1, 1 },
+-	{ ahd_patch10_func, 387, 1, 1 },
+-	{ ahd_patch10_func, 399, 1, 1 },
+-	{ ahd_patch1_func, 409, 1, 2 },
+-	{ ahd_patch0_func, 410, 1, 1 },
+-	{ ahd_patch1_func, 412, 1, 2 },
+-	{ ahd_patch0_func, 413, 1, 1 },
+-	{ ahd_patch1_func, 421, 1, 2 },
+-	{ ahd_patch0_func, 422, 1, 1 },
+-	{ ahd_patch2_func, 435, 1, 2 },
+-	{ ahd_patch0_func, 436, 1, 1 },
+-	{ ahd_patch11_func, 472, 1, 1 },
+-	{ ahd_patch1_func, 480, 1, 2 },
+-	{ ahd_patch0_func, 481, 1, 1 },
+-	{ ahd_patch2_func, 493, 1, 2 },
+-	{ ahd_patch0_func, 494, 1, 1 },
+-	{ ahd_patch12_func, 497, 6, 2 },
+-	{ ahd_patch0_func, 503, 1, 1 },
+-	{ ahd_patch13_func, 524, 7, 1 },
+-	{ ahd_patch14_func, 533, 1, 1 },
+-	{ ahd_patch15_func, 542, 1, 1 },
+-	{ ahd_patch16_func, 543, 1, 2 },
+-	{ ahd_patch0_func, 544, 1, 1 },
+-	{ ahd_patch17_func, 547, 1, 1 },
+-	{ ahd_patch16_func, 548, 1, 1 },
+-	{ ahd_patch18_func, 559, 1, 2 },
+-	{ ahd_patch0_func, 560, 1, 1 },
+-	{ ahd_patch1_func, 579, 1, 2 },
+-	{ ahd_patch0_func, 580, 1, 1 },
+-	{ ahd_patch1_func, 583, 1, 2 },
+-	{ ahd_patch0_func, 584, 1, 1 },
+-	{ ahd_patch2_func, 589, 1, 2 },
++	{ ahd_patch1_func, 369, 1, 2 },
++	{ ahd_patch0_func, 370, 1, 1 },
++	{ ahd_patch1_func, 372, 1, 2 },
++	{ ahd_patch0_func, 373, 1, 1 },
++	{ ahd_patch10_func, 392, 1, 1 },
++	{ ahd_patch10_func, 395, 1, 1 },
++	{ ahd_patch10_func, 397, 1, 1 },
++	{ ahd_patch10_func, 409, 1, 1 },
++	{ ahd_patch1_func, 419, 1, 2 },
++	{ ahd_patch0_func, 420, 1, 1 },
++	{ ahd_patch1_func, 422, 1, 2 },
++	{ ahd_patch0_func, 423, 1, 1 },
++	{ ahd_patch1_func, 431, 1, 2 },
++	{ ahd_patch0_func, 432, 1, 1 },
++	{ ahd_patch2_func, 445, 1, 2 },
++	{ ahd_patch0_func, 446, 1, 1 },
++	{ ahd_patch11_func, 482, 1, 1 },
++	{ ahd_patch1_func, 490, 1, 2 },
++	{ ahd_patch0_func, 491, 1, 1 },
++	{ ahd_patch2_func, 503, 1, 2 },
++	{ ahd_patch0_func, 504, 1, 1 },
++	{ ahd_patch12_func, 507, 6, 2 },
++	{ ahd_patch0_func, 513, 1, 1 },
++	{ ahd_patch13_func, 534, 7, 1 },
++	{ ahd_patch14_func, 543, 1, 1 },
++	{ ahd_patch15_func, 552, 1, 1 },
++	{ ahd_patch16_func, 553, 1, 2 },
++	{ ahd_patch0_func, 554, 1, 1 },
++	{ ahd_patch17_func, 557, 1, 1 },
++	{ ahd_patch16_func, 558, 1, 1 },
++	{ ahd_patch18_func, 569, 1, 2 },
++	{ ahd_patch0_func, 570, 1, 1 },
++	{ ahd_patch1_func, 589, 1, 2 },
+ 	{ ahd_patch0_func, 590, 1, 1 },
+-	{ ahd_patch2_func, 594, 1, 2 },
+-	{ ahd_patch0_func, 595, 1, 1 },
+-	{ ahd_patch1_func, 596, 1, 2 },
+-	{ ahd_patch0_func, 597, 1, 1 },
+-	{ ahd_patch2_func, 608, 1, 2 },
+-	{ ahd_patch0_func, 609, 1, 1 },
+-	{ ahd_patch19_func, 613, 1, 1 },
+-	{ ahd_patch20_func, 618, 1, 1 },
+-	{ ahd_patch21_func, 619, 2, 1 },
+-	{ ahd_patch20_func, 623, 1, 2 },
+-	{ ahd_patch0_func, 624, 1, 1 },
+-	{ ahd_patch2_func, 627, 1, 2 },
+-	{ ahd_patch0_func, 628, 1, 1 },
+-	{ ahd_patch2_func, 643, 1, 2 },
+-	{ ahd_patch0_func, 644, 1, 1 },
+-	{ ahd_patch13_func, 645, 14, 1 },
+-	{ ahd_patch1_func, 663, 1, 2 },
+-	{ ahd_patch0_func, 664, 1, 1 },
+-	{ ahd_patch13_func, 665, 1, 1 },
+-	{ ahd_patch1_func, 677, 1, 2 },
+-	{ ahd_patch0_func, 678, 1, 1 },
+-	{ ahd_patch1_func, 685, 1, 2 },
+-	{ ahd_patch0_func, 686, 1, 1 },
+-	{ ahd_patch19_func, 709, 1, 1 },
+-	{ ahd_patch19_func, 747, 1, 1 },
+-	{ ahd_patch1_func, 758, 1, 2 },
+-	{ ahd_patch0_func, 759, 1, 1 },
+-	{ ahd_patch1_func, 776, 1, 2 },
+-	{ ahd_patch0_func, 777, 1, 1 },
+-	{ ahd_patch1_func, 779, 1, 2 },
+-	{ ahd_patch0_func, 780, 1, 1 },
+-	{ ahd_patch1_func, 783, 1, 2 },
+-	{ ahd_patch0_func, 784, 1, 1 },
+-	{ ahd_patch22_func, 786, 1, 2 },
+-	{ ahd_patch0_func, 787, 2, 1 },
+-	{ ahd_patch23_func, 790, 4, 2 },
+-	{ ahd_patch0_func, 794, 1, 1 },
+-	{ ahd_patch23_func, 802, 11, 1 }
++	{ ahd_patch1_func, 593, 1, 2 },
++	{ ahd_patch0_func, 594, 1, 1 },
++	{ ahd_patch2_func, 599, 1, 2 },
++	{ ahd_patch0_func, 600, 1, 1 },
++	{ ahd_patch2_func, 604, 1, 2 },
++	{ ahd_patch0_func, 605, 1, 1 },
++	{ ahd_patch1_func, 606, 1, 2 },
++	{ ahd_patch0_func, 607, 1, 1 },
++	{ ahd_patch2_func, 618, 1, 2 },
++	{ ahd_patch0_func, 619, 1, 1 },
++	{ ahd_patch19_func, 623, 1, 1 },
++	{ ahd_patch20_func, 628, 1, 1 },
++	{ ahd_patch21_func, 629, 2, 1 },
++	{ ahd_patch20_func, 633, 1, 2 },
++	{ ahd_patch0_func, 634, 1, 1 },
++	{ ahd_patch2_func, 637, 1, 2 },
++	{ ahd_patch0_func, 638, 1, 1 },
++	{ ahd_patch2_func, 653, 1, 2 },
++	{ ahd_patch0_func, 654, 1, 1 },
++	{ ahd_patch13_func, 655, 14, 1 },
++	{ ahd_patch1_func, 673, 1, 2 },
++	{ ahd_patch0_func, 674, 1, 1 },
++	{ ahd_patch13_func, 675, 1, 1 },
++	{ ahd_patch1_func, 687, 1, 2 },
++	{ ahd_patch0_func, 688, 1, 1 },
++	{ ahd_patch1_func, 695, 1, 2 },
++	{ ahd_patch0_func, 696, 1, 1 },
++	{ ahd_patch19_func, 719, 1, 1 },
++	{ ahd_patch19_func, 757, 1, 1 },
++	{ ahd_patch1_func, 768, 1, 2 },
++	{ ahd_patch0_func, 769, 1, 1 },
++	{ ahd_patch7_func, 785, 3, 1 },
++	{ ahd_patch1_func, 789, 1, 2 },
++	{ ahd_patch0_func, 790, 1, 1 },
++	{ ahd_patch1_func, 792, 1, 2 },
++	{ ahd_patch0_func, 793, 1, 1 },
++	{ ahd_patch1_func, 796, 1, 2 },
++	{ ahd_patch0_func, 797, 1, 1 },
++	{ ahd_patch22_func, 799, 1, 2 },
++	{ ahd_patch0_func, 800, 2, 1 },
++	{ ahd_patch23_func, 803, 4, 2 },
++	{ ahd_patch0_func, 807, 1, 1 },
++	{ ahd_patch23_func, 815, 11, 1 }
+ };
+ 
+ static struct cs {
+ 	uint16_t	begin;
+ 	uint16_t	end;
+ } critical_sections[] = {
+-	{ 17, 28 },
+-	{ 29, 30 },
++	{ 17, 30 },
+ 	{ 47, 58 },
+ 	{ 61, 63 },
+ 	{ 65, 66 },
+ 	{ 72, 92 },
+-	{ 110, 137 },
+-	{ 138, 175 },
+-	{ 180, 188 },
+-	{ 213, 264 },
+-	{ 425, 433 },
+-	{ 443, 445 },
+-	{ 448, 457 },
+-	{ 709, 739 },
+-	{ 749, 753 }
++	{ 110, 142 },
++	{ 143, 180 },
++	{ 185, 193 },
++	{ 218, 274 },
++	{ 435, 443 },
++	{ 453, 455 },
++	{ 458, 467 },
++	{ 719, 749 },
++	{ 759, 763 }
+ };
+ 
+ static const int num_critical_sections = sizeof(critical_sections)
 
---------------010608010004090504080700--
+--------------010201040405010908010101--
