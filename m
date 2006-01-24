@@ -1,94 +1,48 @@
-From: Gerhard Schneider <gs@ilsb.tuwien.ac.at>
-Subject: SCSI tape access on 2.6 kernels?
-Date: Tue, 24 Jan 2006 11:42:53 +0100
-Message-ID: <43D604AD.6050607@ilsb.tuwien.ac.at>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH 3/4] aic79xx: SLOWCRC fix
+Date: Tue, 24 Jan 2006 11:51:16 +0100
+Message-ID: <1138099877.2977.38.camel@laptopd505.fenrus.org>
+References: <43D5F706.30009@suse.de>
+	 <1138096403.2977.36.camel@laptopd505.fenrus.org> <43D5FA0F.6040901@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigDDAE9EDE64AD17232D4F54B2"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gh-gw1.ilsb.tuwien.ac.at ([128.130.23.14]:18835 "EHLO
-	gh-gw1.ilsb.tuwien.ac.at") by vger.kernel.org with ESMTP
-	id S1030441AbWAXKnC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jan 2006 05:43:02 -0500
-Received: from [128.130.71.3] (ilfb02.ilsb.tuwien.ac.at [128.130.71.3])
-	by gh-gw1.ilsb.tuwien.ac.at (8.13.3/8.13.3/Debian-6) with ESMTP id k0OAgxd5028981
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2006 11:42:59 +0100
+Received: from pentafluge.infradead.org ([213.146.154.40]:38107 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1030444AbWAXKvT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jan 2006 05:51:19 -0500
+In-Reply-To: <43D5FA0F.6040901@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigDDAE9EDE64AD17232D4F54B2
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+On Tue, 2006-01-24 at 10:57 +0100, Hannes Reinecke wrote:
+> Arjan van de Ven wrote:
+> > On Tue, 2006-01-24 at 10:44 +0100, Hannes Reinecke wrote:
+> >>  	/*
+> >> +	 * Slow down our CRC interval to be
+> >> +	 * compatible with packetized U320 devices
+> >> +	 * that can't handle a CRC at full speed
+> >> +	 */
+> >> +	if (ahd->features & AHD_AIC79XXB_SLOWCRC) {
+> >> +		con_opts |= ENSLOWCRC;
+> >> +	}
+> > 
+> > since this seems to be a device quirk, shouldn't this just be part of
+> > the scsi blacklist and have a quirk there? Maybe with a generic option
+> > to trigger that quirk as well rather than a per driver module one...
+> > 
+> Errm.
+> 
+> blacklisting is for device only, not for HBAs, or?
+
+yup
+
+> This slowcrc is a fix for buggy adaptec hardware. Nothing to do with the
+> devices connected to it...
+
+ok I read the comments as applying to disks rather than hbas..
 
 
-It's getting me mad..
-
-It seems that with 2.6 (compared to 2.4) there has something been
-changed in the kernel that I'm not aware of so I'm not able to
-write/read tapes efficiently anymore..
-
-LSI1030 SCSI controller
-Overland tape library
-Seagate LTO-1 tape drive
-
-Kernel 2.4.29:
-
-dd if=linux-2.6.16-rc1.tar.gz of=/dev/nst0 bs=64k
-776+1 records in
-776+1 records out
-50918460 bytes transferred in 4.620612 seconds (11019852 bytes/sec)
-
-Kernel 2.6.14rc1:
-
-dd if=linux-2.6.16-rc1.tar.gz of=/dev/nst0 bs=64k
-776+1 records in
-776+1 records out
-50918460 bytes transferred in 20.395567 seconds (2496545 bytes/sec)
-
-Another machine w/
-LSI1030 SCSI controller
-Megaraid ZCR controller
-Overland tape library
-HP LTO-3 tape drive
-Kernel 2.6.14rc1:
-
-dd if=linux-2.6.16-rc1.tar.gz of=/dev/nst0 bs=64k
-776+1 records in
-776+1 records out
-50918460 bytes transferred in 45.953133 seconds (1108052 bytes/sec)
-
-Either there is an initialization problems with tape drives on 2.6.*
-(I don't think so) or there are tunable kernel parameters that
-I don't know..
-
-CPU load on 2.6 is minimal, tape is waiting for data..
-
-Any idea? (I can provide you with any amount of data etc..)
-
-                                            GS
-
--- 
-Gerhard Schneider
-Institute of Lightweight Design and          e-Mail:gs@ilsb.tuwien.ac.at
-Structural Biomechanics (E317)                 Tel.:   +43 1 58801 31716
-Vienna University of Technology / Austria      Fax:    +43 1 58801 31799
-A-1040 Wien, Gusshausstrasse 27-29     http://www.ilsb.tuwien.ac.at/~gs/
-
---------------enigDDAE9EDE64AD17232D4F54B2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://enigmail.mozdev.org
-
-iD8DBQFD1gSxE6e53f4wQG4RArgJAKD3T1HlVQPL21Dw7l5yUkTjQdMsMACg8VDP
-9AiXRlys6+nC0OuemNh/YGk=
-=WE5i
------END PGP SIGNATURE-----
-
---------------enigDDAE9EDE64AD17232D4F54B2--
