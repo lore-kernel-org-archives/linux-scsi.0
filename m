@@ -1,67 +1,28 @@
 From: Matthias Urlichs <smurf@smurf.noris.de>
-Subject: divide by zero error in initio driver
-Date: Wed, 25 Jan 2006 22:28:06 +0100
-Message-ID: <20060125212806.GA19590@kiste.smurf.noris.de>
+Subject: Re: OOM Killer killing whole system
+Date: Wed, 25 Jan 2006 23:20:42 +0100
+Message-ID: <pan.2006.01.25.22.20.40.283831@smurf.noris.de>
+References: <1137337516.11767.50.camel@localhost> <1137793685.11771.58.camel@localhost> <20060120145006.0a773262.akpm@osdl.org> <200601201819.58366.chase.venters@clientec.com> <20060120165031.7773d9c4.akpm@osdl.org> <1137806248.4122.11.camel@mulgrave> <1137814181.11771.70.camel@localhost>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="LZvS9be/3tNcYl/X"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from run.smurf.noris.de ([192.109.102.41]:38829 "EHLO
-	server.smurf.noris.de") by vger.kernel.org with ESMTP
-	id S932120AbWAYV22 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jan 2006 16:28:28 -0500
-Received: from kiste.smurf.noris.de ([192.109.102.35] ident=mail)
-	by server.smurf.noris.de with smtp (Exim 4.50)
-	id 1F1sBT-0006Jt-4J
-	for linux-scsi@vger.kernel.org; Wed, 25 Jan 2006 22:28:16 +0100
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932171AbWAYWVL@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
+Hi, Anton Titov wrote:
 
---LZvS9be/3tNcYl/X
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> Just to mention, that 2.6.14.2 does not have this problem:
 
-Hi,
+That's good, in that a couple of iterations with "git bisect" should
+be able to pinpoint the bug.
 
-the initio driver says in *_biosparam:
-        info_array[0] =3D pTcb->TCS_DrvHead;
-        info_array[1] =3D pTcb->TCS_DrvSector;
-        info_array[2] =3D (unsigned long)capacity / pTcb->TCS_DrvHead / pTc=
-b- + >TCS_DrvSector;
-
-That causes a nice divide-by-zero error when one of these
-happens to contain the right values of garbage -- I just connected
-a few disks to my SCSI card, fired it up, and got a segfault fdisk'ing
-two of my four new shiny SCA drives. :-/
-
-What should happen in this case?
-Fall back to fake 32/16 values?
-Return an error?
-
---=20
+-- 
 Matthias Urlichs   |   {M:U} IT Design @ m-u-it.de   |  smurf@smurf.noris.de
 Disclaimer: The quote was selected randomly. Really. | http://smurf.noris.de
  - -
-:red wire: n. [IBM] Patch wires installed by programmers who have no
-   business mucking with the hardware. It is said that the only thing more
-   dangerous than a hardware guy with a code patch is a {softy} with a
-   soldering iron.... Compare {blue wire}, {yellow wire}, {purple wire}.
-
---LZvS9be/3tNcYl/X
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-
-iD8DBQFD1+1m8+hUANcKr/kRAnFgAJ0RSM2iuxM470eOvyOvw7uQdUOc3QCggz4S
-z9RscxDbmc2lhcKy7lgR0y0=
-=XYxD
------END PGP SIGNATURE-----
-
---LZvS9be/3tNcYl/X--
+:hack on: vt. [very common] To {hack}; implies that the subject is some
+   pre-existing hunk of code that one is evolving, as opposed to something
+   one might {hack up}.
