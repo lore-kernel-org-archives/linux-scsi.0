@@ -1,1981 +1,795 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH RFC 3/3] SCSI Userspace Target: example target driver
-Date: Tue, 24 Jan 2006 20:58:10 -0600
-Message-ID: <1138157890.11692.35.camel@max>
+Subject: [PATCH RFC 2/3] SCSI Userspace Target: scsi tgt core functions
+Date: Tue, 24 Jan 2006 20:58:07 -0600
+Message-ID: <1138157887.11692.34.camel@max>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:6017 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1750982AbWAYC6l (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:5505 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1750979AbWAYC6d (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jan 2006 21:58:41 -0500
+	Tue, 24 Jan 2006 21:58:33 -0500
 Received: from max (c-69-180-176-191.hsd1.mn.comcast.net [69.180.176.191])
 	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id k0P2wdw9023605
+	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id k0P2wWPK023602
 	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2006 20:58:39 -0600
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2006 20:58:32 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-This is the core iscsi tcp target coide. It demonstates how a target LLD
-can reuse a existing transport class (in this case we use the iscsi transport
-class's interface) and hook into scsi-tgt. The interesting parts are the
-scsi_host_template and iscsi_tranpsort templates.
+SCSI Userspace Target code.
 
-This patch alone does not compile. I am just sending it as a way to show
-how it all works. There is tons of cleanup needed before this is ready
-for a review and the goal is to kill most of this code and either merge
-the target PDU handling with iscsi_tcp.c in mainline already or move
-parts of iscsi_tcp.c to the transport class where it can be shared.
-Most likely a lot of both will happen.
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-
-diff -Naurp linux-2.6.16-rc1/drivers/scsi/iscsi_tcp_tgt.c linux-2.6.16-rc1.tmp/drivers/scsi/iscsi_tcp_tgt.c
---- linux-2.6.16-rc1/drivers/scsi/iscsi_tcp_tgt.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.16-rc1.tmp/drivers/scsi/iscsi_tcp_tgt.c	2006-01-24 20:25:06.000000000 -0600
-@@ -0,0 +1,1941 @@
-+/*
-+ * (C) 2004 - 2005 FUJITA Tomonori <tomof@acm.org>
-+ * Copyright (C) 2002 - 2003 Ardis Technolgies <roman@ardistech.com>
-+ * Copyright (C) 2005 - 2006 Mike Christie
-+ *
-+ * Released under the terms of the GNU GPL v2.0.
-+ */
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 3c606cf..d09c792 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -27,6 +27,13 @@ config SCSI
+ 	  However, do not compile this as a module if your root file system
+ 	  (the one containing the directory /) is located on a SCSI device.
+ 
++config SCSI_TGT
++	tristate "SCSI target support"
++	depends on SCSI && EXPERIMENTAL
++	---help---
++	  If you want to use SCSI target mode drivers enable this option.
++	  If you choose M, the module will be called scsi_tgt.
 +
+ config SCSI_PROC_FS
+ 	bool "legacy /proc/scsi/ support"
+ 	depends on SCSI && PROC_FS
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index b9d2bb8..75cd7fc 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -21,6 +21,7 @@ CFLAGS_seagate.o =   -DARBITRATE -DPARIT
+ subdir-$(CONFIG_PCMCIA)		+= pcmcia
+ 
+ obj-$(CONFIG_SCSI)		+= scsi_mod.o
++obj-$(CONFIG_SCSI_TGT)		+= scsi_tgt.o
+ 
+ obj-$(CONFIG_RAID_ATTRS)	+= raid_class.o
+ 
+@@ -155,6 +156,8 @@ scsi_mod-y			+= scsi.o hosts.o scsi_ioct
+ scsi_mod-$(CONFIG_SYSCTL)	+= scsi_sysctl.o
+ scsi_mod-$(CONFIG_SCSI_PROC_FS)	+= scsi_proc.o
+ 
++scsi_tgt-y			+= scsi_tgt_lib.o scsi_tgt_nl.o
++
+ sd_mod-objs	:= sd.o
+ sr_mod-objs	:= sr.o sr_ioctl.o sr_vendor.o
+ ncr53c8xx-flags-$(CONFIG_SCSI_ZALON) \
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+new file mode 100644
+index 0000000..9bc67f3
+--- /dev/null
++++ b/drivers/scsi/scsi_tgt_lib.c
+@@ -0,0 +1,396 @@
++/*
++ * SCSI target lib functions
++ *
++ * Copyright 2005 Mike Christie
++ * Copyright 2005 FUJITA Tomonori
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; see the file COPYING.  If not, write to
++ * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
 +#include <linux/module.h>
-+#include <linux/hash.h>
-+#include <linux/mempool.h>
-+#include <net/tcp.h>
++#include <linux/pagemap.h>
++#include <linux/blkdev.h>
++#include <linux/elevator.h>
 +#include <scsi/scsi.h>
-+#include <scsi/scsi_tgt.h>
-+#include <scsi/scsi_tcq.h>
-+#include <scsi/scsi_transport.h>
-+#include <scsi/scsi_transport_iscsi.h>
-+#include <iscsi.h>
++#include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_host.h>
 +
-+static kmem_cache_t *istgt_cmd_cache;
-+static char dummy_data[1024];
++#include "scsi_tgt_priv.h"
 +
-+static uint32_t cmnd_write_size(struct istgt_cmd *cmnd)
++static struct workqueue_struct *scsi_tgtd;
++
++/* set by interface */
++struct task_struct *tgtd_tsk;
++
++static void scsi_uspace_request_fn(struct request_queue *q)
 +{
-+	struct iscsi_cmd *hdr = cmd_hdr(cmnd);
-+
-+	if (hdr->flags & ISCSI_FLAG_CMD_WRITE)
-+		return be32_to_cpu(hdr->data_length);
-+	return 0;
-+}
-+
-+static uint32_t cmnd_read_size(struct istgt_cmd *cmnd)
-+{
-+	struct iscsi_cmd *hdr = cmd_hdr(cmnd);
-+
-+	if (hdr->flags & ISCSI_FLAG_CMD_READ) {
-+		if (!(hdr->flags & ISCSI_FLAG_CMD_WRITE))
-+			return be32_to_cpu(hdr->data_length);
-+		if (hdr->flags & ISCSI_FLAG_CMD_READ) {
-+			struct iscsi_rlength_ahdr *ahdr =
-+				(struct iscsi_rlength_ahdr *)cmnd->pdu.ahs;
-+			if (ahdr && ahdr->ahstype == ISCSI_AHSTYPE_RLENGTH)
-+				return be32_to_cpu(ahdr->read_length);
-+		}
-+	}
-+	return 0;
-+}
-+
-+/*
-+ * create a new command.
-+ *
-+ * iscsi_cmnd_create - 
-+ * @conn: ptr to connection (for i/o)
-+ *
-+ * @return    ptr to command or NULL
-+ */
-+
-+struct istgt_cmd *cmnd_alloc(struct iscsi_conn *conn, int req)
-+{
-+	struct istgt_cmd *cmnd;
-+
-+	/* TODO: async interface is necessary ? */
-+	cmnd = kmem_cache_alloc(istgt_cmd_cache, GFP_KERNEL | __GFP_NOFAIL);
-+
-+	memset(cmnd, 0, sizeof(*cmnd));
-+	INIT_LIST_HEAD(&cmnd->list);
-+	INIT_LIST_HEAD(&cmnd->pdu_list);
-+	INIT_LIST_HEAD(&cmnd->conn_list);
-+	INIT_LIST_HEAD(&cmnd->hash_list);
-+	cmnd->conn = conn;
-+	spin_lock(&conn->list_lock);
-+	atomic_inc(&conn->nr_cmnds);
-+	init_completion(&cmnd->event);
-+	if (req)
-+		list_add_tail(&cmnd->conn_list, &conn->pdu_list);
-+	spin_unlock(&conn->list_lock);
-+	cmnd->sg = NULL;
-+
-+	if (req)
-+		BUG_ON(!conn->session);
-+
-+	dprintk("%p:%p\n", conn, cmnd);
-+
-+	return cmnd;
-+}
-+
-+/**
-+ * create a new command used as response.
-+ *
-+ * iscsi_cmnd_create_rsp_cmnd - 
-+ * @cmnd: ptr to request command
-+ *
-+ * @return    ptr to response command or NULL
-+ */
-+
-+static struct istgt_cmd *iscsi_cmnd_create_rsp_cmnd(struct istgt_cmd *cmnd, int final)
-+{
-+	struct istgt_cmd *rsp = cmnd_alloc(cmnd->conn, 0);
-+
-+	if (final)
-+		set_cmd_final(rsp);
-+	list_add_tail(&rsp->pdu_list, &cmnd->pdu_list);
-+	rsp->req = cmnd;
-+	return rsp;
-+}
-+
-+static struct istgt_cmd *get_rsp_cmnd(struct istgt_cmd *req)
-+{
-+	return list_entry(req->pdu_list.prev, struct istgt_cmd, pdu_list);
-+}
-+
-+static void iscsi_cmnds_init_write(struct list_head *send)
-+{
-+	struct istgt_cmd *cmnd = list_entry(send->next, struct istgt_cmd, list);
-+	struct iscsi_conn *conn = cmnd->conn;
-+	struct list_head *pos, *next;
-+
-+	spin_lock(&conn->list_lock);
-+
-+	list_for_each_safe(pos, next, send) {
-+		cmnd = list_entry(pos, struct istgt_cmd, list);
-+
-+		dprintk("%p:%x\n", cmnd, cmd_opcode(cmnd));
-+
-+		list_del_init(&cmnd->list);
-+		BUG_ON(conn != cmnd->conn);
-+		list_add_tail(&cmnd->list, &conn->write_list);
-+	}
-+
-+	spin_unlock(&conn->list_lock);
-+
-+	nthread_wakeup(conn->session);
-+}
-+
-+static void iscsi_cmnd_init_write(struct istgt_cmd *cmnd)
-+{
-+	LIST_HEAD(head);
-+
-+	if (!list_empty(&cmnd->list)) {
-+		eprintk("%x %x %x %x %lx %u %u %u %u %u %u %u %d %d\n",
-+			cmd_itt(cmnd), cmd_ttt(cmnd), cmd_opcode(cmnd),
-+			cmd_scsicode(cmnd), cmnd->flags,
-+			cmnd->r2t_sn, cmnd->r2t_length, cmnd->is_unsolicited_data,
-+			cmnd->target_task_tag, cmnd->outstanding_r2t,
-+			cmnd->hdigest, cmnd->ddigest,
-+			list_empty(&cmnd->pdu_list), list_empty(&cmnd->hash_list));
-+
-+		BUG_ON(!list_empty(&cmnd->list));
-+	}
-+	list_add(&cmnd->list, &head);
-+	iscsi_cmnds_init_write(&head);
-+}
-+
-+static void do_send_data_rsp(struct istgt_cmd *cmnd)
-+{
-+	struct iscsi_conn *conn = cmnd->conn;
-+	struct istgt_cmd *data_cmnd;
-+	struct scatterlist *sg = cmnd->scmd->request_buffer;
-+	struct iscsi_cmd *req = cmd_hdr(cmnd);
-+	struct iscsi_data_rsp *rsp;
-+	uint32_t pdusize, expsize, scsisize, size, offset, sn;
-+	LIST_HEAD(send);
-+
-+	dprintk("%p\n", cmnd);
-+	pdusize = conn->session->param.max_xmit_data_length;
-+	expsize = cmnd_read_size(cmnd);
-+	size = min(expsize, cmnd->scmd->request_bufflen);
-+	dprintk("%u %u\n", expsize, cmnd->scmd->request_bufflen);
-+	offset = 0;
-+	sn = 0;
-+
-+	BUG_ON(!sg);
-+
-+	while (1) {
-+		data_cmnd = iscsi_cmnd_create_rsp_cmnd(cmnd, size <= pdusize);
-+		data_cmnd->sg = sg;
-+		rsp = (struct iscsi_data_rsp *)&data_cmnd->pdu.bhs;
-+
-+		rsp->opcode = ISCSI_OP_SCSI_DATA_IN;
-+		rsp->itt = req->itt;
-+		rsp->ttt = cpu_to_be32(ISCSI_RESERVED_TAG);
-+		rsp->offset = offset;
-+		rsp->datasn = cpu_to_be32(sn);
-+
-+		if (size <= pdusize) {
-+			data_cmnd->pdu.datasize = size;
-+			rsp->flags = ISCSI_FLAG_CMD_FINAL |
-+				     ISCSI_FLAG_DATA_STATUS;
-+
-+			scsisize = cmnd->scmd->request_bufflen;
-+			if (scsisize < expsize) {
-+				rsp->flags |= ISCSI_FLAG_CMD_UNDERFLOW;
-+				size = expsize - scsisize;
-+			} else if (scsisize > expsize) {
-+				rsp->flags |= ISCSI_FLAG_CMD_OVERFLOW;
-+				size = scsisize - expsize;
-+			} else
-+				size = 0;
-+			rsp->residual_count = cpu_to_be32(size);
-+			list_add_tail(&data_cmnd->list, &send);
-+
-+			break;
-+		}
-+
-+		data_cmnd->pdu.datasize = pdusize;
-+
-+		size -= pdusize;
-+		offset += pdusize;
-+		sn++;
-+
-+		list_add_tail(&data_cmnd->list, &send);
-+	}
-+
-+	iscsi_cmnds_init_write(&send);
-+}
-+
-+static struct istgt_cmd *create_scsi_rsp(struct istgt_cmd *req)
-+{
-+	struct istgt_cmd *rsp;
-+	struct iscsi_cmd *req_hdr = cmd_hdr(req);
-+	struct iscsi_cmd_rsp *rsp_hdr;
-+
-+	rsp = iscsi_cmnd_create_rsp_cmnd(req, 1);
-+
-+	rsp_hdr = (struct iscsi_cmd_rsp *)&rsp->pdu.bhs;
-+	rsp_hdr->opcode = ISCSI_OP_SCSI_CMD_RSP;
-+	rsp_hdr->flags = ISCSI_FLAG_CMD_FINAL;
-+	rsp_hdr->response = ISCSI_STATUS_CMD_COMPLETED;
-+	rsp_hdr->cmd_status = SAM_STAT_GOOD;
-+	rsp_hdr->itt = req_hdr->itt;
-+
-+	return rsp;
-+}
-+
-+static void send_scsi_rsp(struct istgt_cmd *req)
-+{
-+	struct istgt_cmd *rsp;
-+	struct iscsi_cmd_rsp *rsp_hdr;
-+	uint32_t size;
-+
-+	rsp = create_scsi_rsp(req);
-+	rsp_hdr = (struct iscsi_cmd_rsp *) &rsp->pdu.bhs;
-+	if ((size = cmnd_read_size(req)) != 0) {
-+		rsp_hdr->flags |= ISCSI_FLAG_CMD_UNDERFLOW;
-+		rsp_hdr->residual_count = cpu_to_be32(size);
-+	}
-+
-+	iscsi_cmnd_init_write(rsp);
-+}
-+
-+static struct istgt_cmd *do_create_sense_rsp(struct istgt_cmd *req)
-+{
-+	struct istgt_cmd *rsp;
-+	struct iscsi_cmd_rsp *rsp_hdr;
-+	struct iscsi_sense_data *sense = &req->sense;
-+	struct scatterlist *sg = &req->sense_sg;
-+	struct scatterlist *sg_data = req->scmd->request_buffer;
-+	struct page *page;
-+
-+	page = sg_data[0].page;
-+	rsp = iscsi_cmnd_create_rsp_cmnd(req, 1);
-+
-+	rsp_hdr = (struct iscsi_cmd_rsp *)&rsp->pdu.bhs;
-+	rsp_hdr->opcode = ISCSI_OP_SCSI_CMD_RSP;
-+	rsp_hdr->flags = ISCSI_FLAG_CMD_FINAL;
-+	rsp_hdr->response = ISCSI_STATUS_CMD_COMPLETED;
-+	rsp_hdr->cmd_status = SAM_STAT_CHECK_CONDITION;
-+	rsp_hdr->itt = cmd_hdr(req)->itt;
-+
-+	memcpy(sense->sense_buff, req->scmd->sense_buffer,
-+		sizeof(sense->sense_buff));
-+	/*
-+	 * this looks broken for ppc
-+	 */
-+	sense->length = cpu_to_be16(req->scmd->request_bufflen);
-+
-+	sg->page = virt_to_page(sense);
-+	sg->offset = offset_in_page(sense);
-+	sg->length = req->scmd->request_bufflen + sizeof(uint16_t);
-+	rsp->pdu.datasize = sg->length;
-+	rsp->sg = sg;
-+
-+	return rsp;
-+}
-+
-+static struct istgt_cmd *create_sense_rsp(struct istgt_cmd *req,
-+					   uint8_t sense_key, uint8_t asc, uint8_t ascq)
-+{
-+	struct istgt_cmd *rsp;
-+	struct iscsi_cmd_rsp *rsp_hdr;
-+	struct scatterlist *sg = &req->sense_sg;
-+	struct iscsi_sense_data *sense = &req->sense;
-+	uint8_t *data = sense->sense_buff;
-+
-+	rsp = iscsi_cmnd_create_rsp_cmnd(req, 1);
-+
-+	rsp_hdr = (struct iscsi_cmd_rsp *)&rsp->pdu.bhs;
-+	rsp_hdr->opcode = ISCSI_OP_SCSI_CMD_RSP;
-+	rsp_hdr->flags = ISCSI_FLAG_CMD_FINAL;
-+	rsp_hdr->response = ISCSI_STATUS_CMD_COMPLETED;
-+	rsp_hdr->cmd_status = SAM_STAT_CHECK_CONDITION;
-+	rsp_hdr->itt = cmd_hdr(req)->itt;
-+
-+	sg->page = virt_to_page(sense);
-+	sg->offset = offset_in_page(sense);
-+
-+	sense->length = cpu_to_be16(14);
-+	data[0] = 0xf0;
-+	data[2] = sense_key;
-+	data[7] = 6;	// Additional sense length
-+	data[12] = asc;
-+	data[13] = ascq;
-+
-+	rsp->pdu.datasize = sizeof(uint16_t) + 14;
-+	rsp->sg = sg;
-+
-+	sg->length = (rsp->pdu.datasize + 3) & -4;
-+
-+	return rsp;
-+}
-+
-+/**
-+ * Free a command.
-+ * Also frees the additional header.
-+ *
-+ * iscsi_cmnd_remove - 
-+ * @cmnd: ptr to command
-+ */
-+
-+void iscsi_cmnd_remove(struct istgt_cmd *cmnd)
-+{
-+	struct iscsi_conn *conn;
-+
-+	if (!cmnd)
-+		return;
-+	dprintk("%p\n", cmnd);
-+	conn = cmnd->conn;
-+	kfree(cmnd->pdu.ahs);
-+
-+	if (!list_empty(&cmnd->list)) {
-+		struct iscsi_cmd *req = cmd_hdr(cmnd);
-+
-+		eprintk("cmnd %p still on some list?, %x %x %x %x %x %x %x %lx\n",
-+			cmnd, req->opcode, req->cdb[0], req->flags, req->itt,
-+			be32_to_cpu(req->data_length), req->cmdsn,
-+			be32_to_cpu(cmnd->pdu.datasize), conn->state);
-+
-+		if (cmnd->req) {
-+			struct iscsi_cmd *req = cmd_hdr(cmnd->req);
-+			eprintk("%p %x %u\n", req, req->opcode, req->cdb[0]);
-+		}
-+		BUG();
-+	}
-+	list_del(&cmnd->list);
-+	spin_lock(&conn->list_lock);
-+	atomic_dec(&conn->nr_cmnds);
-+	list_del(&cmnd->conn_list);
-+	spin_unlock(&conn->list_lock);
-+
-+	if (cmnd->scmd)
-+		cmnd->done(cmnd->scmd);
-+	kmem_cache_free(istgt_cmd_cache, cmnd);
-+}
-+
-+static void cmnd_skip_pdu(struct istgt_cmd *cmnd)
-+{
-+/* 	struct iscsi_conn *conn = cmnd->conn; */
-+/* 	struct tio *tio = cmnd->tio; */
-+/* 	char *addr; */
-+/* 	u32 size; */
-+/* 	int i; */
-+
-+	BUG_ON(1);
-+
-+/* 	eprintk("%x %x %x %u\n", cmd_itt(cmnd), cmd_opcode(cmnd), */
-+/* 		cmd_hdr(cmnd)->cdb[0], cmnd->pdu.datasize); */
-+
-+/* 	if (!(size = cmnd->pdu.datasize)) */
-+/* 		return; */
-+
-+/* 	if (tio) */
-+/* 		assert(tio->pg_cnt > 0); */
-+/* 	else */
-+/* 		tio = cmnd->tio = tio_alloc(1); */
-+
-+/* 	addr = page_address(tio->pvec[0]); */
-+/* 	assert(addr); */
-+/* 	size = (size + 3) & -4; */
-+/* 	conn->read_size = size; */
-+/* 	for (i = 0; size > PAGE_CACHE_SIZE; i++, size -= PAGE_CACHE_SIZE) { */
-+/* 		assert(i < ISCSI_CONN_IOV_MAX); */
-+/* 		conn->read_iov[i].iov_base = addr; */
-+/* 		conn->read_iov[i].iov_len = PAGE_CACHE_SIZE; */
-+/* 	} */
-+/* 	conn->read_iov[i].iov_base = addr; */
-+/* 	conn->read_iov[i].iov_len = size; */
-+/* 	conn->read_msg.msg_iov = conn->read_iov; */
-+/* 	conn->read_msg.msg_iovlen = ++i; */
-+}
-+
-+static void iscsi_cmnd_reject(struct istgt_cmd *req, int reason)
-+{
-+/* 	struct istgt_cmd *rsp; */
-+/* 	struct iscsi_reject_hdr *rsp_hdr; */
-+/* 	struct tio *tio; */
-+/* 	char *addr; */
-+
-+	BUG_ON(1);
-+
-+/* 	rsp = iscsi_cmnd_create_rsp_cmnd(req, 1); */
-+/* 	rsp_hdr = (struct iscsi_reject_hdr *)&rsp->pdu.bhs; */
-+
-+/* 	rsp_hdr->opcode = ISCSI_OP_REJECT; */
-+/* 	rsp_hdr->ffffffff = ISCSI_RESERVED_TAG; */
-+/* 	rsp_hdr->reason = reason; */
-+
-+/* 	rsp->tio = tio = tio_alloc(1); */
-+/* 	addr = page_address(tio->pvec[0]); */
-+/* 	clear_page(addr); */
-+/* 	memcpy(addr, &req->pdu.bhs, sizeof(struct iscsi_hdr)); */
-+/* 	tio->size = rsp->pdu.datasize = sizeof(struct iscsi_hdr); */
-+/* 	cmnd_skip_pdu(req); */
-+
-+/* 	req->pdu.bhs.opcode = ISCSI_OP_PDU_REJECT; */
-+}
-+
-+static void cmnd_set_sn(struct istgt_cmd *cmnd, int set_stat_sn)
-+{
-+	struct iscsi_conn *conn = cmnd->conn;
-+	struct iscsi_session *sess = conn->session;
-+
-+	if (set_stat_sn)
-+		cmnd->pdu.bhs.statsn = cpu_to_be32(conn->stat_sn++);
-+	cmnd->pdu.bhs.exp_statsn = cpu_to_be32(sess->exp_cmd_sn);
-+	cmnd->pdu.bhs.max_statsn = cpu_to_be32(sess->exp_cmd_sn +
-+						sess->max_queued_cmnds);
-+}
-+
-+static void update_stat_sn(struct istgt_cmd *cmnd)
-+{
-+	struct iscsi_conn *conn = cmnd->conn;
-+	uint32_t exp_stat_sn;
-+
-+	cmnd->pdu.bhs.exp_statsn = exp_stat_sn = be32_to_cpu(cmnd->pdu.bhs.exp_statsn);
-+	dprintk("%x,%x\n", cmd_opcode(cmnd), exp_stat_sn);
-+	if ((int32_t) (exp_stat_sn - conn->exp_stat_sn) > 0 &&
-+	    (int32_t) (exp_stat_sn - conn->stat_sn) <= 0) {
-+		// free pdu resources
-+		cmnd->conn->exp_stat_sn = exp_stat_sn;
-+	}
-+}
-+
-+static int check_cmd_sn(struct istgt_cmd *cmnd)
-+{
-+	struct iscsi_session *session = cmnd->conn->session;
-+	uint32_t cmd_sn;
-+
-+	cmnd->pdu.bhs.statsn = cmd_sn = be32_to_cpu(cmnd->pdu.bhs.statsn);
-+	dprintk("%d(%d)\n", cmd_sn, session->exp_cmd_sn);
-+	if ((int32_t) (cmd_sn - session->exp_cmd_sn) >= 0)
-+		return 0;
-+	eprintk("sequence error (%x,%x)\n", cmd_sn, session->exp_cmd_sn);
-+	return -ISCSI_REASON_PROTOCOL_ERROR;
-+}
-+
-+static struct istgt_cmd *__cmnd_find_hash(struct iscsi_session *session,
-+					   uint32_t itt, uint32_t ttt)
-+{
-+	struct list_head *head;
-+	struct istgt_cmd *cmnd;
-+
-+	head = &session->cmnd_hash[cmnd_hashfn(itt)];
-+
-+	list_for_each_entry(cmnd, head, hash_list) {
-+		if (cmnd->pdu.bhs.itt == itt) {
-+			if ((ttt != ISCSI_RESERVED_TAG) && (ttt != cmnd->target_task_tag))
-+				continue;
-+			return cmnd;
-+		}
-+	}
-+
-+	return NULL;
-+}
-+
-+static struct istgt_cmd *cmnd_find_hash(struct iscsi_session *session,
-+					 uint32_t itt, uint32_t ttt)
-+{
-+	struct istgt_cmd *cmnd;
-+
-+	spin_lock(&session->cmnd_hash_lock);
-+
-+	cmnd = __cmnd_find_hash(session, itt, ttt);
-+
-+	spin_unlock(&session->cmnd_hash_lock);
-+
-+	return cmnd;
-+}
-+
-+static int cmnd_insert_hash(struct istgt_cmd *cmnd)
-+{
-+	struct iscsi_session *session = cmnd->conn->session;
-+	struct istgt_cmd *tmp;
-+	struct list_head *head;
-+	int err = 0;
-+	uint32_t itt = cmnd->pdu.bhs.itt;
-+
-+	dprintk("%p:%x\n", cmnd, itt);
-+	if (itt == ISCSI_RESERVED_TAG) {
-+		err = -ISCSI_REASON_PROTOCOL_ERROR;
-+		goto out;
-+	}
-+
-+	head = &session->cmnd_hash[cmnd_hashfn(cmnd->pdu.bhs.itt)];
-+
-+	spin_lock(&session->cmnd_hash_lock);
-+
-+	tmp = __cmnd_find_hash(session, itt, ISCSI_RESERVED_TAG);
-+	if (!tmp) {
-+		list_add_tail(&cmnd->hash_list, head);
-+		set_cmd_hashed(cmnd);
-+	} else
-+		err = -ISCSI_REASON_TASK_IN_PROGRESS;
-+
-+	spin_unlock(&session->cmnd_hash_lock);
-+
-+	if (!err) {
-+		update_stat_sn(cmnd);
-+		err = check_cmd_sn(cmnd);
-+	}
-+
-+out:
-+	return err;
-+}
-+
-+static void __cmnd_remove_hash(struct istgt_cmd *cmnd)
-+{
-+	list_del(&cmnd->hash_list);
-+}
-+
-+static void cmnd_remove_hash(struct istgt_cmd *cmnd)
-+{
-+	struct iscsi_session *session = cmnd->conn->session;
-+	struct istgt_cmd *tmp;
-+
-+	spin_lock(&session->cmnd_hash_lock);
-+
-+	tmp = __cmnd_find_hash(session, cmnd->pdu.bhs.itt, ISCSI_RESERVED_TAG);
-+
-+	if (tmp && tmp == cmnd)
-+		__cmnd_remove_hash(tmp);
-+	else
-+		eprintk("%p:%x not found\n", cmnd, cmd_itt(cmnd));
-+
-+	spin_unlock(&session->cmnd_hash_lock);
-+}
-+
-+static void cmnd_skip_data(struct istgt_cmd *req)
-+{
-+	struct istgt_cmd *rsp;
-+	struct iscsi_cmd_rsp *rsp_hdr;
-+	uint32_t size;
-+
-+	rsp = get_rsp_cmnd(req);
-+	rsp_hdr = (struct iscsi_cmd_rsp *)&rsp->pdu.bhs;
-+	if (cmd_opcode(rsp) != ISCSI_OP_SCSI_CMD_RSP) {
-+		eprintk("unexpected response command %u\n", cmd_opcode(rsp));
-+		return;
-+	}
-+
-+	size = cmnd_write_size(req);
-+	if (size) {
-+		rsp_hdr->flags |= ISCSI_FLAG_CMD_UNDERFLOW;
-+		rsp_hdr->residual_count = cpu_to_be32(size);
-+	}
-+	size = cmnd_read_size(req);
-+	if (size) {
-+		if (cmd_hdr(req)->flags & ISCSI_FLAG_CMD_WRITE) {
-+			rsp_hdr->flags |= ISCSI_FLAG_CMD_BIDI_UNDERFLOW;
-+			rsp_hdr->bi_residual_count = cpu_to_be32(size);
-+		} else {
-+			rsp_hdr->flags |= ISCSI_FLAG_CMD_BIDI_OVERFLOW;
-+			rsp_hdr->residual_count = cpu_to_be32(size);
-+		}
-+	}
-+	req->pdu.bhs.opcode =
-+		(req->pdu.bhs.opcode & ~ISCSI_OPCODE_MASK) | ISCSI_OP_SCSI_REJECT;
-+
-+	cmnd_skip_pdu(req);
-+}
-+
-+static int cmnd_recv_pdu(struct iscsi_conn *conn, struct scsi_cmnd *scmd,
-+			 uint32_t offset, uint32_t size)
-+{
-+	int idx, i;
-+	char *addr;
-+	struct scatterlist *sg;
-+
-+	dprintk("%u,%u\n", offset, size);
-+
-+	BUG_ON(!scmd);
-+	BUG_ON(!scmd->request_buffer);
-+	sg = scmd->request_buffer;
-+	offset += sg->offset;
-+
-+	if (!(offset < sg->offset + scmd->request_bufflen) ||
-+	    !(offset + size <= sg->offset + scmd->request_bufflen)) {
-+		eprintk("%u %u %u %u", offset, size, sg->offset,
-+			scmd->request_bufflen);
-+		return -EIO;
-+	}
-+	BUG_ON(!(offset < sg->offset + scmd->request_bufflen));
-+	BUG_ON(!(offset + size <= sg->offset + scmd->request_bufflen));
-+
-+	idx = offset >> PAGE_CACHE_SHIFT;
-+	offset &= ~PAGE_CACHE_MASK;
-+
-+	conn->read_msg.msg_iov = conn->read_iov;
-+	conn->read_size = (size + 3) & -4;
-+	conn->read_overflow = 0;
-+
-+	i = 0;
-+	while (1) {
-+		sg = scmd->request_buffer + idx;
-+		BUG_ON(!sg);
-+		BUG_ON(!sg->page);
-+		addr = page_address(sg->page);
-+		BUG_ON(!addr);
-+
-+		conn->read_iov[i].iov_base =  addr + offset;
-+		if (offset + size <= PAGE_CACHE_SIZE) {
-+			conn->read_iov[i].iov_len = size;
-+			conn->read_msg.msg_iovlen = ++i;
-+			break;
-+		}
-+		conn->read_iov[i].iov_len = PAGE_CACHE_SIZE - offset;
-+		size -= conn->read_iov[i].iov_len;
-+		offset = 0;
-+		if (++i >= ISCSI_CONN_IOV_MAX) {
-+			conn->read_msg.msg_iovlen = i;
-+			conn->read_overflow = size;
-+			conn->read_size -= size;
-+			break;
-+		}
-+
-+		idx++;
-+	}
-+
-+	return 0;
-+}
-+
-+static void send_r2t(struct istgt_cmd *req)
-+{
-+	struct istgt_cmd *rsp;
-+	struct iscsi_r2t_rsp *rsp_hdr;
-+	uint32_t length, offset, burst;
-+	LIST_HEAD(send);
-+
-+	length = req->r2t_length;
-+	burst = req->conn->session->param.max_burst_length;
-+	offset = be32_to_cpu(cmd_hdr(req)->data_length) - length;
-+
-+	do {
-+		rsp = iscsi_cmnd_create_rsp_cmnd(req, 0);
-+		rsp->pdu.bhs.ttt = req->target_task_tag;
-+
-+		rsp_hdr = (struct iscsi_r2t_rsp *)&rsp->pdu.bhs;
-+		rsp_hdr->opcode = ISCSI_OP_R2T;
-+		rsp_hdr->flags = ISCSI_FLAG_CMD_FINAL;
-+		memcpy(rsp_hdr->lun, cmd_hdr(req)->lun, 8);
-+		rsp_hdr->itt = cmd_hdr(req)->itt;
-+		rsp_hdr->r2tsn = cpu_to_be32(req->r2t_sn++);
-+		rsp_hdr->data_offset = cpu_to_be32(offset);
-+		if (length > burst) {
-+			rsp_hdr->data_length = cpu_to_be32(burst);
-+			length -= burst;
-+			offset += burst;
-+		} else {
-+			rsp_hdr->data_length = cpu_to_be32(length);
-+			length = 0;
-+		}
-+
-+		dprintk("%x %u %u %u %u\n", cmd_itt(req),
-+			be32_to_cpu(rsp_hdr->data_length),
-+			be32_to_cpu(rsp_hdr->data_offset),
-+			be32_to_cpu(rsp_hdr->r2tsn), req->outstanding_r2t);
-+
-+		list_add_tail(&rsp->list, &send);
-+
-+		if (++req->outstanding_r2t >= req->conn->session->param.max_outstanding_r2t)
-+			break;
-+
-+	} while (length);
-+
-+	iscsi_cmnds_init_write(&send);
-+}
-+
-+static void __scsi_cmnd_done(void *data)
-+{
-+	struct scsi_cmnd *scmd = data;
-+	struct istgt_cmd *cmnd = (struct istgt_cmd *) scmd->SCp.ptr;
-+	struct iscsi_cmd *req = cmd_hdr(cmnd);
-+
-+	if (scmd->result) {
-+		struct istgt_cmd *rsp;
-+
-+		rsp = do_create_sense_rsp(cmnd);
-+		iscsi_cmnd_init_write(rsp);
-+		return;
-+	}
-+
-+	switch (req->cdb[0]) {
-+	case INQUIRY:
-+	case REPORT_LUNS:
-+	case READ_CAPACITY:
-+	case MODE_SENSE:
-+	case REQUEST_SENSE:
-+	case SERVICE_ACTION_IN:
-+	case READ_6:
-+	case READ_10:
-+	case READ_16:
-+		do_send_data_rsp(cmnd);
-+		break;
-+	case WRITE_6:
-+	case WRITE_10:
-+	case WRITE_16:
-+	case WRITE_VERIFY:
-+	case START_STOP:
-+	case TEST_UNIT_READY:
-+	case SYNCHRONIZE_CACHE:
-+	case VERIFY:
-+	case VERIFY_16:
-+	case RESERVE:
-+	case RELEASE:
-+	case RESERVE_10:
-+	case RELEASE_10:
-+		send_scsi_rsp(cmnd);
-+		break;
-+	default:
-+		BUG_ON(1);
-+		break;
-+	}
-+}
-+
-+/* TODO : merge this with nthread. */
-+static int scsi_cmnd_done(struct scsi_cmnd *scmd,
-+			  void (*done)(struct scsi_cmnd *))
-+{
-+	struct istgt_cmd *cmnd = (struct istgt_cmd *) scmd->SCp.ptr;
-+	int err;
-+
-+	cmnd->done = done;
-+	INIT_WORK(&cmnd->work, __scsi_cmnd_done, scmd);
-+	err = schedule_work(&cmnd->work);
-+	BUG_ON(!err);
-+
-+	return TGT_CMD_XMIT_OK;
-+}
-+
-+static void tgt_scsi_cmd_create(struct istgt_cmd *req)
-+{
-+	struct iscsi_cmd *req_hdr = cmd_hdr(req);
-+	struct scsi_cmnd *scmd;
-+	enum dma_data_direction data_dir;
++	struct request *rq;
++	struct scsi_cmnd *cmd;
 +
 +	/*
-+	 * handle bidi later
++	 * TODO: just send everthing in the queue to userspace in
++	 * one vector instead of multiple calls
 +	 */
-+	if (req_hdr->flags & ISCSI_FLAG_CMD_WRITE)
-+		data_dir = DMA_TO_DEVICE;
-+	else if (req_hdr->flags & ISCSI_FLAG_CMD_READ)
-+		data_dir = DMA_FROM_DEVICE;
-+	else
-+		data_dir = DMA_NONE;
++	while ((rq = elv_next_request(q)) != NULL) {
++		cmd = rq->special;
 +
-+
-+	scmd = scsi_host_get_command(req->conn->session->shost, data_dir,
-+				     GFP_KERNEL);
-+	BUG_ON(!scmd);
-+	req->scmd = scmd;
-+
-+	memcpy(scmd->data_cmnd, req_hdr->cdb, MAX_COMMAND_SIZE);
-+	scmd->request_bufflen = be32_to_cpu(req_hdr->data_length);
-+	scmd->SCp.ptr = (char *) req;
-+
-+	switch (req->pdu.bhs.flags & ISCSI_FLAG_CMD_ATTR_MASK) {
-+	case ISCSI_ATTR_UNTAGGED:
-+	case ISCSI_ATTR_SIMPLE:
-+		scmd->tag = MSG_SIMPLE_TAG;
-+		break;
-+	case ISCSI_ATTR_ORDERED:
-+		scmd->tag = MSG_ORDERED_TAG;
-+		break;
-+	case ISCSI_ATTR_HEAD_OF_QUEUE:
-+		scmd->tag = MSG_HEAD_TAG;
-+		break;
-+	case ISCSI_ATTR_ACA:
-+		scmd->tag = MSG_SIMPLE_TAG;
-+		break;
-+	default:
-+		scmd->tag = MSG_SIMPLE_TAG;
-+	}
-+
-+	if (scmd->sc_data_direction == DMA_TO_DEVICE &&
-+	    be32_to_cpu(req_hdr->data_length)) {
-+		switch (req_hdr->cdb[0]) {
-+		case WRITE_6:
-+		case WRITE_10:
-+		case WRITE_16:
-+		case WRITE_VERIFY:
++		/* the completion code kicks us in case we hit this */
++		if (blk_queue_start_tag(q, rq))
 +			break;
-+		default:
-+			eprintk("%x\n", req_hdr->cdb[0]);
-+			break;
-+		}
-+	}
 +
-+	scsi_tgt_queue_command(scmd, (struct scsi_lun *)req_hdr->lun, 0);
-+}
-+
-+static void scsi_cmnd_exec(struct istgt_cmd *cmnd)
-+{
-+	struct scsi_cmnd *scmd = cmnd->scmd;
-+
-+	if (cmnd->r2t_length) {
-+		if (!cmnd->is_unsolicited_data)
-+			send_r2t(cmnd);
-+	} else {
-+		set_cmd_waitio(cmnd);
-+		if (scmd) {
-+			if (!cmnd->done)
-+				BUG();
-+			else
-+				cmnd->done(scmd);
-+		} else
-+			tgt_scsi_cmd_create(cmnd);
-+	}
-+}
-+
-+static int noop_out_start(struct iscsi_conn *conn, struct istgt_cmd *cmnd)
-+{
-+	uint32_t size, tmp;
-+	int i = 0, err = 0;
-+
-+	if (cmd_ttt(cmnd) != cpu_to_be32(ISCSI_RESERVED_TAG)) {
-+		/*
-+		 * We don't request a NOP-Out by sending a NOP-In.
-+		 * See 10.18.2 in the draft 20.
-+		 */
-+		eprintk("initiator bug %x\n", cmd_itt(cmnd));
-+		err = -ISCSI_REASON_PROTOCOL_ERROR;
-+		goto out;
-+	}
-+
-+	if (cmd_itt(cmnd) == cpu_to_be32(ISCSI_RESERVED_TAG)) {
-+		if (!(cmnd->pdu.bhs.opcode & ISCSI_OP_IMMEDIATE))
-+			eprintk("%s\n","initiator bug!");
-+		update_stat_sn(cmnd);
-+		err = check_cmd_sn(cmnd);
-+		goto out;
-+	} else if ((err = cmnd_insert_hash(cmnd)) < 0) {
-+		eprintk("ignore this request %x\n", cmd_itt(cmnd));
-+		goto out;
-+	}
-+
-+	if ((size = cmnd->pdu.datasize)) {
-+		size = (size + 3) & -4;
-+		conn->read_msg.msg_iov = conn->read_iov;
-+		if (cmnd->pdu.bhs.itt != cpu_to_be32(ISCSI_RESERVED_TAG)) {
-+/* 			struct tio *tio; */
-+			int pg_cnt = get_pgcnt(size, 0);
-+
-+			BUG_ON(pg_cnt >= ISCSI_CONN_IOV_MAX);
-+			BUG_ON(1);
-+/* 			cmnd->tio = tio = tio_alloc(pg_cnt); */
-+/* 			tio_set(tio, size, 0); */
-+
-+/* 			for (i = 0; i < pg_cnt; i++) { */
-+/* 				conn->read_iov[i].iov_base */
-+/* 					= page_address(tio->pvec[i]); */
-+/* 				tmp = min_t(u32, size, PAGE_CACHE_SIZE); */
-+/* 				conn->read_iov[i].iov_len = tmp; */
-+/* 				conn->read_size += tmp; */
-+/* 				size -= tmp; */
-+/* 			} */
-+		} else {
-+			for (i = 0; i < ISCSI_CONN_IOV_MAX; i++) {
-+				conn->read_iov[i].iov_base = dummy_data;
-+				tmp = min_t(uint32_t, size, sizeof(dummy_data));
-+				conn->read_iov[i].iov_len = tmp;
-+				conn->read_size += tmp;
-+				size -= tmp;
-+			}
-+		}
-+		BUG_ON(size);
-+		conn->read_overflow = size;
-+		conn->read_msg.msg_iovlen = i;
-+	}
-+
-+out:
-+	return err;
-+}
-+
-+static uint32_t get_next_ttt(struct iscsi_session *session)
-+{
-+	uint32_t ttt;
-+
-+	if (session->next_ttt == ISCSI_RESERVED_TAG)
-+		session->next_ttt++;
-+	ttt = session->next_ttt++;
-+
-+	return cpu_to_be32(ttt);
-+}
-+
-+static void scsi_cmnd_start(struct iscsi_conn *conn, struct istgt_cmd *req)
-+{
-+	struct iscsi_cmd *req_hdr = cmd_hdr(req);
-+
-+	dprintk("scsi command: %02x\n", req_hdr->cdb[0]);
-+
-+	switch (req_hdr->cdb[0]) {
-+	case SERVICE_ACTION_IN:
-+		if ((req_hdr->cdb[1] & 0x1f) != 0x10)
-+			goto error;
-+
-+	case INQUIRY:
-+	case REPORT_LUNS:
-+	case TEST_UNIT_READY:
-+	case SYNCHRONIZE_CACHE:
-+	case VERIFY:
-+	case VERIFY_16:
-+	case START_STOP:
-+	case READ_CAPACITY:
-+	case MODE_SENSE:
-+	case REQUEST_SENSE:
-+	case RESERVE:
-+	case RELEASE:
-+	case RESERVE_10:
-+	case RELEASE_10:
-+	case READ_6:
-+	case READ_10:
-+	case READ_16:
-+	{
-+		if (!(req_hdr->flags & ISCSI_FLAG_CMD_FINAL) ||
-+		      req->pdu.datasize) {
-+			/* unexpected unsolicited data */
-+			eprintk("%x %x\n", cmd_itt(req), req_hdr->cdb[0]);
-+			create_sense_rsp(req, ABORTED_COMMAND, 0xc, 0xc);
-+			cmnd_skip_data(req);
-+		}
-+		break;
-+	}
-+	case WRITE_6:
-+	case WRITE_10:
-+	case WRITE_16:
-+	case WRITE_VERIFY:
-+	{
-+		struct iscsi_sess_param *param = &conn->session->param;
-+
-+		/*
-+		 * We don't know this command arrives in order,
-+		 * however we need to allocate buffer for immediate
-+		 * and unsolicited data. tgt will not start to perform
-+		 * this command until we call cmd->done so we don't
-+		 * need to worry about the order of the command.
-+		 */
-+		tgt_scsi_cmd_create(req);
-+		wait_for_completion(&req->event);
-+
-+		req->r2t_length = be32_to_cpu(req_hdr->data_length) - req->pdu.datasize;
-+		req->is_unsolicited_data = !(req_hdr->flags &
-+						ISCSI_FLAG_CMD_FINAL);
-+		req->target_task_tag = get_next_ttt(conn->session);
-+
-+		if (!param->immediate_data && req->pdu.datasize)
-+			eprintk("%x %x\n", cmd_itt(req), req_hdr->cdb[0]);
-+
-+		if (param->initial_r2t &&
-+		    !(req_hdr->flags & ISCSI_FLAG_CMD_FINAL))
-+			eprintk("%x %x\n", cmd_itt(req), req_hdr->cdb[0]);
-+
-+		if (req_hdr->cdb[0] == WRITE_VERIFY && req_hdr->cdb[1] & 0x02)
-+			eprintk("Verification is ignored %x\n", cmd_itt(req));
-+
-+		if (req->pdu.datasize) {
-+			if (cmnd_recv_pdu(conn, req->scmd, 0,
-+					  req->pdu.datasize) < 0)
-+				BUG_ON(1);
-+		}
-+		break;
-+	}
-+	error:
-+	default:
-+		eprintk("Unsupported %x\n", req_hdr->cdb[0]);
-+		create_sense_rsp(req, ILLEGAL_REQUEST, 0x20, 0x0);
-+		cmnd_skip_data(req);
-+		break;
++		spin_unlock_irq(q->queue_lock);
++		if (scsi_tgt_uspace_send(cmd, scsilun_to_int(rq->end_io_data),
++					 GFP_ATOMIC) < 0)
++			goto requeue;
++		spin_lock_irq(q->queue_lock);
 +	}
 +
 +	return;
-+}
-+
-+static void data_out_start(struct iscsi_conn *conn, struct istgt_cmd *cmnd)
-+{
-+	struct iscsi_data *req = (struct iscsi_data *)&cmnd->pdu.bhs;
-+	struct istgt_cmd *scsi_cmnd = NULL;
-+	uint32_t offset = be32_to_cpu(req->offset);
-+
-+	update_stat_sn(cmnd);
-+
-+	cmnd->req = scsi_cmnd = cmnd_find_hash(conn->session, req->itt, req->ttt);
-+	if (!scsi_cmnd) {
-+		eprintk("unable to find scsi task %x %x\n",
-+			cmd_itt(cmnd), cmd_ttt(cmnd));
-+		goto skip_data;
-+	}
-+
-+	if (scsi_cmnd->r2t_length < cmnd->pdu.datasize) {
-+		eprintk("invalid data len %x %u %u\n",
-+			cmd_itt(scsi_cmnd), cmnd->pdu.datasize, scsi_cmnd->r2t_length);
-+		goto skip_data;
-+	}
-+
-+	if (scsi_cmnd->r2t_length + offset != cmnd_write_size(scsi_cmnd)) {
-+		eprintk("%x %u %u %u\n", cmd_itt(scsi_cmnd), scsi_cmnd->r2t_length,
-+			offset,	cmnd_write_size(scsi_cmnd));
-+		goto skip_data;
-+	}
-+
-+	scsi_cmnd->r2t_length -= cmnd->pdu.datasize;
-+
-+	if (req->ttt == cpu_to_be32(ISCSI_RESERVED_TAG)) {
-+		/* unsolicited burst data */
-+		if (scsi_cmnd->pdu.bhs.flags & ISCSI_FLAG_CMD_FINAL) {
-+			eprintk("unexpected data from %x %x\n",
-+				cmd_itt(cmnd), cmd_ttt(cmnd));
-+			goto skip_data;
-+		}
-+	}
-+
-+	dprintk("%u %p %p %u %u\n", req->ttt, cmnd, scsi_cmnd,
-+		offset, cmnd->pdu.datasize);
-+
-+	if (cmnd_recv_pdu(conn, scsi_cmnd->scmd, offset, cmnd->pdu.datasize) < 0)
-+		goto skip_data;
-+	return;
-+
-+skip_data:
-+	cmnd->pdu.bhs.opcode = ISCSI_OP_DATA_REJECT;
-+	cmnd_skip_pdu(cmnd);
-+	return;
-+}
-+
-+static void data_out_end(struct iscsi_conn *conn, struct istgt_cmd *cmnd)
-+{
-+	struct iscsi_data *req = (struct iscsi_data *) &cmnd->pdu.bhs;
-+	struct istgt_cmd *scsi_cmnd;
-+	uint32_t offset;
-+
-+	BUG_ON(!cmnd);
-+	scsi_cmnd = cmnd->req;
-+	BUG_ON(!scsi_cmnd);
-+
-+	if (conn->read_overflow) {
-+		eprintk("%x %u\n", cmd_itt(cmnd), conn->read_overflow);
-+		offset = be32_to_cpu(req->offset);
-+		offset += cmnd->pdu.datasize - conn->read_overflow;
-+		if (cmnd_recv_pdu(conn, scsi_cmnd->scmd, offset,
-+				  conn->read_overflow) < 0)
-+			BUG_ON(1);
-+		return;
-+	}
-+
-+	if (req->ttt == cpu_to_be32(ISCSI_RESERVED_TAG)) {
-+		if (req->flags & ISCSI_FLAG_CMD_FINAL) {
-+			scsi_cmnd->is_unsolicited_data = 0;
-+			if (!cmd_pending(scsi_cmnd))
-+				scsi_cmnd_exec(scsi_cmnd);
-+		}
-+	} else {
-+		/* TODO : proper error handling */
-+		if (!(req->flags & ISCSI_FLAG_CMD_FINAL) &&
-+		    scsi_cmnd->r2t_length == 0)
-+			eprintk("initiator error %x\n", cmd_itt(scsi_cmnd));
-+
-+		if (!(req->flags & ISCSI_FLAG_CMD_FINAL))
-+			goto out;
-+
-+		scsi_cmnd->outstanding_r2t--;
-+
-+		if (scsi_cmnd->r2t_length == 0)
-+			BUG_ON(!list_empty(&scsi_cmnd->pdu_list));
-+
-+		scsi_cmnd_exec(scsi_cmnd);
-+	}
-+
-+out:
-+	iscsi_cmnd_remove(cmnd);
-+	return;
-+}
-+
-+/* static int __cmnd_abort(struct istgt_cmd *cmnd) */
-+/* { */
-+/* 	if (!cmnd_waitio(cmnd)) { */
-+/* 		cmnd_release(cmnd, 1); */
-+/* 		return 0; */
-+/* 	} else */
-+/* 		return -ISCSI_RESPONSE_UNKNOWN_TASK; */
-+/* } */
-+
-+/* static int cmnd_abort(struct iscsi_session *session, u32 itt) */
-+/* { */
-+/* 	struct istgt_cmd *cmnd; */
-+/* 	int err =  -ISCSI_RESPONSE_UNKNOWN_TASK; */
-+
-+/* 	if ((cmnd = cmnd_find_hash(session, itt, ISCSI_RESERVED_TAG))) { */
-+/* 		eprintk("%x %x %x %u %u %u %u\n", cmd_itt(cmnd), cmd_opcode(cmnd), */
-+/* 			cmnd->r2t_length, cmnd_scsicode(cmnd), */
-+/* 			cmnd_write_size(cmnd), cmnd->is_unsolicited_data, */
-+/* 			cmnd->outstanding_r2t); */
-+/* 		err = __cmnd_abort(cmnd); */
-+/* 	} */
-+
-+/* 	return err; */
-+/* } */
-+
-+/* static int target_reset(struct istgt_cmd *req, u32 lun, int all) */
-+/* { */
-+/* 	struct iscsi_target *target = req->conn->session->target; */
-+/* 	struct iscsi_session *session; */
-+/* 	struct iscsi_conn *conn; */
-+/* 	struct istgt_cmd *cmnd, *tmp; */
-+
-+/* 	list_for_each_entry(session, &target->session_list, list) { */
-+/* 		list_for_each_entry(conn, &session->conn_list, list) { */
-+/* 			list_for_each_entry_safe(cmnd, tmp, &conn->pdu_list, conn_list) { */
-+/* 				if (cmnd == req) */
-+/* 					continue; */
-+
-+/* 				if (all) */
-+/* 					__cmnd_abort(cmnd); */
-+/* 				else if (translate_lun(cmd_hdr(cmnd)->lun) == lun) */
-+/* 					__cmnd_abort(cmnd); */
-+/* 			} */
-+/* 		} */
-+/* 	} */
-+
-+/* 	return 0; */
-+/* } */
-+
-+/* static void task_set_abort(struct istgt_cmd *req) */
-+/* { */
-+/* 	struct iscsi_session *session = req->conn->session; */
-+/* 	struct iscsi_conn *conn; */
-+/* 	struct istgt_cmd *cmnd, *tmp; */
-+
-+/* 	list_for_each_entry(conn, &session->conn_list, list) { */
-+/* 		list_for_each_entry_safe(cmnd, tmp, &conn->pdu_list, conn_list) { */
-+/* 			if (cmnd != req) */
-+/* 				__cmnd_abort(cmnd); */
-+/* 		} */
-+/* 	} */
-+/* } */
-+
-+static void execute_task_management(struct istgt_cmd *req)
-+{
-+/* 	struct iscsi_conn *conn = req->conn; */
-+/* 	struct iscsi_target *target = conn->session->target; */
-+	struct istgt_cmd *rsp;
-+	struct iscsi_tm *req_hdr = (struct iscsi_tm *)&req->pdu.bhs;
-+	struct iscsi_tm_rsp *rsp_hdr;
-+	int function = req_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK;
-+
-+	rsp = iscsi_cmnd_create_rsp_cmnd(req, 1);
-+	rsp_hdr = (struct iscsi_tm_rsp *)&rsp->pdu.bhs;
-+
-+	rsp_hdr->opcode = ISCSI_OP_SCSI_TMFUNC_RSP;
-+	rsp_hdr->flags = ISCSI_FLAG_CMD_FINAL;
-+	rsp_hdr->itt = req_hdr->itt;
-+/* 	rsp_hdr->response = ISCSI_TMF_RSP_COMPLETE; */
-+	rsp_hdr->response = ISCSI_TMF_RSP_REJECTED;
-+
-+	eprintk("%x %d %x\n", cmd_itt(req), function, req_hdr->rtt);
-+
-+/* 	switch (function) { */
-+/* 	case ISCSI_FUNCTION_ABORT_TASK: */
-+/* 	case ISCSI_FUNCTION_ABORT_TASK_SET: */
-+/* 	case ISCSI_FUNCTION_CLEAR_ACA: */
-+/* 	case ISCSI_FUNCTION_CLEAR_TASK_SET: */
-+/* 	case ISCSI_FUNCTION_LOGICAL_UNIT_RESET: */
-+/* 		lun = translate_lun(req_hdr->lun); */
-+/* 		if (!volume_lookup(target, lun)) { */
-+/* 			rsp_hdr->response = ISCSI_RESPONSE_UNKNOWN_LUN; */
-+/* 			goto out; */
-+/* 		} */
-+/* 	} */
-+
-+/* 	switch (function) { */
-+/* 	case ISCSI_FUNCTION_ABORT_TASK: */
-+/* 		if ((err = cmnd_abort(conn->session, req_hdr->rtt)) < 0) */
-+/* 			rsp_hdr->response = -err; */
-+/* 		break; */
-+/* 	case ISCSI_FUNCTION_ABORT_TASK_SET: */
-+/* 		task_set_abort(req); */
-+/* 		break; */
-+/* 	case ISCSI_FUNCTION_CLEAR_ACA: */
-+/* 		rsp_hdr->response = ISCSI_RESPONSE_FUNCTION_UNSUPPORTED; */
-+/* 		break; */
-+/* 	case ISCSI_FUNCTION_CLEAR_TASK_SET: */
-+/* 		rsp_hdr->response = ISCSI_RESPONSE_FUNCTION_UNSUPPORTED; */
-+/* 		break; */
-+/* 	case ISCSI_FUNCTION_LOGICAL_UNIT_RESET: */
-+/* 		target_reset(req, translate_lun(req_hdr->lun), 0); */
-+/* 		break; */
-+/* 	case ISCSI_FUNCTION_TARGET_WARM_RESET: */
-+/* 	case ISCSI_FUNCTION_TARGET_COLD_RESET: */
-+/* 		target_reset(req, 0, 1); */
-+/* 		if (function == ISCSI_FUNCTION_TARGET_COLD_RESET) */
-+/* 			set_cmnd_close(rsp); */
-+/* 		break; */
-+/* 	case ISCSI_FUNCTION_TASK_REASSIGN: */
-+/* 		rsp_hdr->response = ISCSI_RESPONSE_FUNCTION_UNSUPPORTED; */
-+/* 		break; */
-+/* 	default: */
-+/* 		rsp_hdr->response = ISCSI_RESPONSE_FUNCTION_REJECTED; */
-+/* 		break; */
-+/* 	} */
-+/* out: */
-+	iscsi_cmnd_init_write(rsp);
-+}
-+
-+static void noop_out_exec(struct istgt_cmd *req)
-+{
-+	struct istgt_cmd *rsp;
-+	struct iscsi_nopin *rsp_hdr;
-+
-+	if (cmd_itt(req) != cpu_to_be32(ISCSI_RESERVED_TAG)) {
-+		rsp = iscsi_cmnd_create_rsp_cmnd(req, 1);
-+
-+		rsp_hdr = (struct iscsi_nopin *)&rsp->pdu.bhs;
-+		rsp_hdr->opcode = ISCSI_OP_NOOP_IN;
-+		rsp_hdr->flags = ISCSI_FLAG_CMD_FINAL;
-+		rsp_hdr->itt = req->pdu.bhs.itt;
-+		rsp_hdr->ttt = cpu_to_be32(ISCSI_RESERVED_TAG);
-+
-+/* 		if (req->pdu.datasize) */
-+/* 			assert(req->tio); */
-+/* 		else */
-+/* 			assert(!req->tio); */
-+
-+/* 		if (req->tio) { */
-+/* 			tio_get(req->tio); */
-+/* 			rsp->tio = req->tio; */
-+/* 		} */
-+
-+		BUG_ON(get_pgcnt(req->pdu.datasize, 0) >= ISCSI_CONN_IOV_MAX);
-+		rsp->pdu.datasize = req->pdu.datasize;
-+		iscsi_cmnd_init_write(rsp);
-+	} else
-+		iscsi_cmnd_remove(req);
-+}
-+
-+static void logout_exec(struct istgt_cmd *req)
-+{
-+	struct iscsi_logout *req_hdr;
-+	struct istgt_cmd *rsp;
-+	struct iscsi_logout_rsp *rsp_hdr;
-+
-+	req_hdr = (struct iscsi_logout *)&req->pdu.bhs;
-+	rsp = iscsi_cmnd_create_rsp_cmnd(req, 1);
-+	rsp_hdr = (struct iscsi_logout_rsp *)&rsp->pdu.bhs;
-+	rsp_hdr->opcode = ISCSI_OP_LOGOUT_RSP;
-+	rsp_hdr->flags = ISCSI_FLAG_CMD_FINAL;
-+	rsp_hdr->itt = req_hdr->itt;
-+	set_cmd_close(rsp);
-+	iscsi_cmnd_init_write(rsp);
-+}
-+
-+static void iscsi_cmnd_exec(struct istgt_cmd *cmnd)
-+{
-+	dprintk("%p,%x,%u\n", cmnd, cmd_opcode(cmnd),
-+		cmnd->pdu.bhs.statsn);
-+
-+	switch (cmd_opcode(cmnd)) {
-+	case ISCSI_OP_NOOP_OUT:
-+		noop_out_exec(cmnd);
-+		break;
-+	case ISCSI_OP_SCSI_CMD:
-+		scsi_cmnd_exec(cmnd);
-+		break;
-+	case ISCSI_OP_SCSI_TMFUNC:
-+		execute_task_management(cmnd);
-+		break;
-+	case ISCSI_OP_LOGOUT:
-+		logout_exec(cmnd);
-+		break;
-+	case ISCSI_OP_SCSI_REJECT:
-+		iscsi_cmnd_init_write(get_rsp_cmnd(cmnd));
-+		break;
-+	case ISCSI_OP_TEXT:
-+	case ISCSI_OP_SNACK:
-+		break;
-+	default:
-+		eprintk("unexpected cmnd op %x\n", cmd_opcode(cmnd));
-+		break;
-+	}
-+}
-+
-+static void __cmnd_send_pdu(struct iscsi_conn *conn, struct scatterlist *sg,
-+			    uint32_t offset, uint32_t size)
-+{
-+/* 	dprintk(D_GENERIC, "%p %u,%u\n", tio, offset, size); */
-+	offset += sg->offset;
-+
-+/* 	assert(offset <= sg->offset + tio->size); */
-+/* 	assert(offset + size <= tio->offset + tio->size); */
-+
-+	conn->write_sg = sg;
-+	conn->write_offset = offset;
-+	conn->write_size += size;
-+}
-+
-+static void cmnd_send_pdu(struct iscsi_conn *conn, struct istgt_cmd *cmnd)
-+{
-+	uint32_t size;
-+
-+	if (!cmnd->pdu.datasize)
-+		return;
-+
-+	size = (cmnd->pdu.datasize + 3) & -4;
-+	BUG_ON(!cmnd->sg);
-+	__cmnd_send_pdu(conn, cmnd->sg, 0, size);
-+}
-+
-+static void set_cork(struct socket *sock, int on)
-+{
-+	int opt = on;
-+	mm_segment_t oldfs;
-+
-+	oldfs = get_fs();
-+	set_fs(get_ds());
-+	sock->ops->setsockopt(sock, SOL_TCP, TCP_CORK, (void *)&opt, sizeof(opt));
-+	set_fs(oldfs);
-+}
-+
-+void cmnd_release(struct istgt_cmd *cmnd, int force)
-+{
-+	struct istgt_cmd *req, *rsp;
-+	int is_last = 0;
-+
-+	if (!cmnd)
-+		return;
-+
-+	req = cmnd->req;
-+	is_last = cmd_final(cmnd);
-+
-+	if (force) {
-+		while (!list_empty(&cmnd->pdu_list)) {
-+			rsp = list_entry(cmnd->pdu_list.next, struct istgt_cmd, pdu_list);
-+			list_del_init(&rsp->list);
-+			list_del(&rsp->pdu_list);
-+			iscsi_cmnd_remove(rsp);
-+		}
-+		list_del_init(&cmnd->list);
-+	}
-+
-+	if (cmd_hashed(cmnd))
-+		cmnd_remove_hash(cmnd);
-+
-+	list_del_init(&cmnd->pdu_list);
-+	iscsi_cmnd_remove(cmnd);
-+
-+	if (is_last) {
-+		BUG_ON(force);
-+		BUG_ON(!req);
-+		cmnd_release(req, 0);
-+	}
-+
-+	return;
-+}
-+
-+void cmnd_tx_start(struct istgt_cmd *cmnd)
-+{
-+	struct iscsi_conn *conn = cmnd->conn;
-+	struct iovec *iop;
-+
-+	dprintk("%p:%x\n", cmnd, cmd_opcode(cmnd));
-+	BUG_ON(!cmnd);
-+	iscsi_cmnd_set_length(&cmnd->pdu);
-+
-+	set_cork(conn->sock, 1);
-+
-+	conn->write_iop = iop = conn->write_iov;
-+	iop->iov_base = &cmnd->pdu.bhs;
-+	iop->iov_len = sizeof(cmnd->pdu.bhs);
-+	iop++;
-+	conn->write_size = sizeof(cmnd->pdu.bhs);
-+
-+	switch (cmd_opcode(cmnd)) {
-+	case ISCSI_OP_NOOP_IN:
-+		cmnd_set_sn(cmnd, 1);
-+		cmnd_send_pdu(conn, cmnd);
-+		break;
-+	case ISCSI_OP_SCSI_CMD_RSP:
-+		cmnd_set_sn(cmnd, 1);
-+		cmnd_send_pdu(conn, cmnd);
-+		break;
-+	case ISCSI_OP_SCSI_TMFUNC_RSP:
-+		cmnd_set_sn(cmnd, 1);
-+		break;
-+	case ISCSI_OP_TEXT_RSP:
-+		cmnd_set_sn(cmnd, 1);
-+		break;
-+	case ISCSI_OP_SCSI_DATA_IN:
-+	{
-+		struct iscsi_data_rsp *rsp = (struct iscsi_data_rsp *)&cmnd->pdu.bhs;
-+		uint32_t offset;
-+
-+		cmnd_set_sn(cmnd, (rsp->flags & ISCSI_FLAG_CMD_FINAL) ? 1 : 0);
-+		offset = rsp->offset;
-+		rsp->offset = cpu_to_be32(offset);
-+		BUG_ON(!cmnd->sg);
-+		__cmnd_send_pdu(conn, cmnd->sg, offset, cmnd->pdu.datasize);
-+		break;
-+	}
-+	case ISCSI_OP_LOGOUT_RSP:
-+		cmnd_set_sn(cmnd, 1);
-+		break;
-+	case ISCSI_OP_R2T:
-+		cmnd_set_sn(cmnd, 0);
-+		cmnd->pdu.bhs.statsn = cpu_to_be32(conn->stat_sn);
-+		break;
-+	case ISCSI_OP_ASYNC_EVENT:
-+		cmnd_set_sn(cmnd, 1);
-+		break;
-+	case ISCSI_OP_REJECT:
-+		cmnd_set_sn(cmnd, 1);
-+		cmnd_send_pdu(conn, cmnd);
-+		break;
-+	default:
-+		eprintk("unexpected cmnd op %x\n", cmd_opcode(cmnd));
-+		break;
-+	}
-+
-+	iop->iov_len = 0;
-+	// move this?
-+	conn->write_size = (conn->write_size + 3) & -4;
-+}
-+
-+void cmnd_tx_end(struct istgt_cmd *cmnd)
-+{
-+	struct iscsi_conn *conn = cmnd->conn;
-+
-+	dprintk("%p:%x\n", cmnd, cmd_opcode(cmnd));
-+	switch (cmd_opcode(cmnd)) {
-+	case ISCSI_OP_NOOP_IN:
-+	case ISCSI_OP_SCSI_CMD_RSP:
-+	case ISCSI_OP_SCSI_TMFUNC_RSP:
-+	case ISCSI_OP_TEXT_RSP:
-+	case ISCSI_OP_R2T:
-+	case ISCSI_OP_ASYNC_EVENT:
-+	case ISCSI_OP_REJECT:
-+	case ISCSI_OP_SCSI_DATA_IN:
-+	case ISCSI_OP_LOGOUT_RSP:
-+		break;
-+	default:
-+		eprintk("unexpected cmnd op %x\n", cmd_opcode(cmnd));
-+		BUG_ON(1);
-+		break;
-+	}
-+
-+	if (cmd_close(cmnd))
-+		conn_close(conn);
-+
-+	list_del_init(&cmnd->list);
-+	set_cork(cmnd->conn->sock, 0);
++requeue:
++	spin_lock_irq(q->queue_lock);
++	/* need to track cnts and plug */
++	blk_requeue_request(q, rq);
++	spin_lock_irq(q->queue_lock);
 +}
 +
 +/**
-+ * Push the command for execution.
-+ * This functions reorders the commands.
-+ * Called from the read thread.
++ * scsi_tgt_alloc_queue - setup queue used for message passing
++ * shost: scsi host
 + *
-+ * iscsi_session_push_cmnd - 
-+ * @cmnd: ptr to command
-+ */
-+
-+static void iscsi_session_push_cmnd(struct istgt_cmd *cmnd)
++ * This should be called by the LLD after host allocation
++ **/
++int scsi_tgt_alloc_queue(struct Scsi_Host *shost)
 +{
-+	struct iscsi_session *session = cmnd->conn->session;
-+	struct list_head *entry;
-+	uint32_t cmd_sn;
++	struct request_queue *q;
 +
-+	dprintk("%p:%x %u,%u\n",
-+		cmnd, cmd_opcode(cmnd), cmnd->pdu.bhs.statsn,
-+		session->exp_cmd_sn);
-+
-+	if (cmnd->pdu.bhs.opcode & ISCSI_OP_IMMEDIATE) {
-+		iscsi_cmnd_exec(cmnd);
-+		return;
-+	}
-+
-+	cmd_sn = cmnd->pdu.bhs.statsn;
-+	if (cmd_sn == session->exp_cmd_sn) {
-+		while (1) {
-+			session->exp_cmd_sn = ++cmd_sn;
-+			iscsi_cmnd_exec(cmnd);
-+
-+			if (list_empty(&session->pending_list))
-+				break;
-+			cmnd = list_entry(session->pending_list.next, struct istgt_cmd, list);
-+			if (cmnd->pdu.bhs.statsn != cmd_sn)
-+				break;
-+/* 			eprintk("find out-of-order %x %u %u\n", */
-+/* 				cmd_itt(cmnd), cmd_sn, cmnd->pdu.bhs.statsn); */
-+			list_del_init(&cmnd->list);
-+			clear_cmd_pending(cmnd);
-+		}
-+	} else {
-+/* 		eprintk("out-of-order %x %u %u\n", */
-+/* 			cmd_itt(cmnd), cmd_sn, session->exp_cmd_sn); */
-+
-+		set_cmd_pending(cmnd);
-+		if (before(cmd_sn, session->exp_cmd_sn)) /* close the conn */
-+			eprintk("unexpected cmd_sn (%u,%u)\n", cmd_sn, session->exp_cmd_sn);
-+
-+		if (after(cmd_sn, session->exp_cmd_sn + session->max_queued_cmnds))
-+			eprintk("too large cmd_sn (%u,%u)\n", cmd_sn, session->exp_cmd_sn);
-+
-+		list_for_each(entry, &session->pending_list) {
-+			struct istgt_cmd *tmp = list_entry(entry, struct istgt_cmd, list);
-+			if (before(cmd_sn, tmp->pdu.bhs.statsn))
-+				break;
-+		}
-+
-+		BUG_ON(!list_empty(&cmnd->list));
-+
-+		list_add_tail(&cmnd->list, entry);
-+	}
-+}
-+
-+static int check_segment_length(struct istgt_cmd *cmnd)
-+{
-+	struct iscsi_conn *conn = cmnd->conn;
-+	struct iscsi_sess_param *param = &conn->session->param;
-+
-+	if (cmnd->pdu.datasize > param->max_recv_data_length) {
-+		eprintk("too lond data %x %u %u\n", cmd_itt(cmnd),
-+			cmnd->pdu.datasize, param->max_recv_data_length);
-+
-+		if (get_pgcnt(cmnd->pdu.datasize, 0) > ISCSI_CONN_IOV_MAX) {
-+			conn_close(conn);
-+			return -EINVAL;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+void cmnd_rx_start(struct istgt_cmd *cmnd)
-+{
-+	struct iscsi_conn *conn = cmnd->conn;
-+	int err = 0;
-+
-+	if (check_segment_length(cmnd) < 0)
-+		return;
-+
-+	switch (cmd_opcode(cmnd)) {
-+	case ISCSI_OP_NOOP_OUT:
-+		err = noop_out_start(conn, cmnd);
-+		break;
-+	case ISCSI_OP_SCSI_CMD:
-+		if (!(err = cmnd_insert_hash(cmnd)))
-+			scsi_cmnd_start(conn, cmnd);
-+		break;
-+	case ISCSI_OP_SCSI_TMFUNC:
-+		err = cmnd_insert_hash(cmnd);
-+		break;
-+	case ISCSI_OP_SCSI_DATA_OUT:
-+		data_out_start(conn, cmnd);
-+		break;
-+	case ISCSI_OP_LOGOUT:
-+		err = cmnd_insert_hash(cmnd);
-+		break;
-+	case ISCSI_OP_TEXT:
-+	case ISCSI_OP_SNACK:
-+		err = -ISCSI_REASON_CMD_NOT_SUPPORTED;
-+		break;
-+	default:
-+		err = -ISCSI_REASON_CMD_NOT_SUPPORTED;
-+		break;
-+	}
-+
-+	if (err < 0) {
-+		eprintk("%x %x %d\n", cmd_opcode(cmnd), cmd_itt(cmnd), err);
-+		iscsi_cmnd_reject(cmnd, -err);
-+	}
-+}
-+
-+void cmnd_rx_end(struct istgt_cmd *cmnd)
-+{
-+	struct iscsi_conn *conn = cmnd->conn;
-+
-+	dprintk("%p:%x\n", cmnd, cmd_opcode(cmnd));
-+	switch (cmd_opcode(cmnd)) {
-+	case ISCSI_OP_SCSI_REJECT:
-+	case ISCSI_OP_NOOP_OUT:
-+	case ISCSI_OP_SCSI_CMD:
-+	case ISCSI_OP_SCSI_TMFUNC:
-+	case ISCSI_OP_TEXT:
-+	case ISCSI_OP_LOGOUT:
-+		iscsi_session_push_cmnd(cmnd);
-+		break;
-+	case ISCSI_OP_SCSI_DATA_OUT:
-+		data_out_end(conn, cmnd);
-+		break;
-+	case ISCSI_OP_SNACK:
-+		break;
-+	case ISCSI_OP_PDU_REJECT:
-+		iscsi_cmnd_init_write(get_rsp_cmnd(cmnd));
-+		break;
-+	case ISCSI_OP_DATA_REJECT:
-+		cmnd_release(cmnd, 0);
-+		break;
-+	default:
-+		eprintk("unexpected cmnd op %x\n", cmd_opcode(cmnd));
-+		BUG();
-+		break;
-+	}
-+}
-+
-+static int buffer_ready(struct scsi_cmnd *scmd,
-+			void (*done)(struct scsi_cmnd *))
-+{
-+	struct istgt_cmd *cmnd = (struct istgt_cmd *) scmd->SCp.ptr;
-+
-+	cmnd->done = done;
-+	complete(&cmnd->event);
-+	return 0;
-+}
-+
-+
-+static struct iscsi_sess_param default_session_param = {
-+	.initial_r2t = 1,
-+	.immediate_data = 1,
-+	.max_connections = 1,
-+	.max_recv_data_length = 8192,
-+	.max_xmit_data_length = 8192,
-+	.max_burst_length = 262144,
-+	.first_burst_length = 65536,
-+	.default_wait_time = 2,
-+	.default_retain_time = 20,
-+	.max_outstanding_r2t = 1,
-+	.data_pdu_inorder = 1,
-+	.data_sequence_inorder = 1,
-+	.error_recovery_level = 0,
-+	.header_digest = DIGEST_NONE,
-+	.data_digest = DIGEST_NONE,
-+	.ofmarker = 0,
-+	.ifmarker = 0,
-+	.ofmarkint = 2048,
-+	.ifmarkint = 2048,
-+};
-+
-+static struct iscsi_trgt_param default_target_param = {
-+	.queued_cmnds = DEFAULT_NR_QUEUED_CMNDS,
-+};
-+
-+static struct iscsi_transport istgt_transport;
-+
-+static struct iscsi_cls_session *
-+istgt_session_create(struct scsi_transport_template *scsit,
-+		     uint32_t initial_cmdsn, uint32_t *sid)
-+{
-+	struct Scsi_Host *shost;
-+	struct iscsi_session *session;
-+	int err, i;
-+
-+	shost = iscsi_transport_create_session(scsit, &istgt_transport);
-+	if (!shost)
-+		return NULL;
-+
-+	if (scsi_tgt_alloc_queue(shost))
-+		goto destroy_session;
-+
-+	session = iscsi_hostdata(shost->hostdata);
-+	memset(session, 0, sizeof(*session));
-+
-+	dprintk("%p %u %" PRIx64 "\n", session, session->shost->host_no);
-+
-+	session->shost = shost;
-+	*sid = session->sid = shost->host_no;
-+	memcpy(&session->param, &default_session_param,
-+	       sizeof(default_session_param));
-+	memcpy(&session->trgt_param, &default_target_param,
-+	       sizeof(default_target_param));
-+	init_MUTEX(&session->target_sem);
-+	INIT_LIST_HEAD(&session->session_list);
-+
-+	session->max_queued_cmnds = session->trgt_param.queued_cmnds;
-+	session->exp_cmd_sn = initial_cmdsn + 1;
-+	session->max_cmd_sn = initial_cmdsn + 1;
-+
-+	INIT_LIST_HEAD(&session->conn_list);
-+	INIT_LIST_HEAD(&session->pending_list);
-+
-+	spin_lock_init(&session->cmnd_hash_lock);
-+	for (i = 0; i < ARRAY_SIZE(session->cmnd_hash); i++)
-+		INIT_LIST_HEAD(&session->cmnd_hash[i]);
-+
-+	session->next_ttt = 1;
-+
-+	nthread_init(session);
-+	err = nthread_start(session);
-+	if (err)
-+		goto destroy_session;
-+
-+	return hostdata_session(shost->hostdata);
-+
-+destroy_session:
-+	iscsi_transport_destroy_session(shost);
-+	return NULL;
-+}
-+
-+static void istgt_session_destroy(struct iscsi_cls_session *cls_session)
-+{
-+	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
-+	struct iscsi_session *session = iscsi_hostdata(shost->hostdata);
-+	int i;
-+
-+	dprintk("%" PRIx64 "\n", session->sid);
-+
-+	if (!list_empty(&session->conn_list)) {
-+		eprintk("%" PRIx64 " still have connections\n", session->sid);
-+		BUG();
-+	}
-+
-+	BUG_ON(!list_empty(&session->conn_list));
-+
-+	for (i = 0; i < ARRAY_SIZE(session->cmnd_hash); i++)
-+		BUG_ON(!list_empty(&session->cmnd_hash[i]));
-+
-+	down(&session->target_sem);
-+	up(&session->target_sem);
-+
-+	nthread_stop(session);
-+	iscsi_transport_destroy_session(shost);
-+}
-+
-+static int
-+istgt_conn_get_param(struct iscsi_cls_conn *cls_conn,
-+		     enum iscsi_param key, uint32_t *value)
-+{
-+	struct iscsi_conn *conn = cls_conn->dd_data;
-+	struct iscsi_sess_param *param = &conn->session->param;
-+
-+	switch(key) {
-+	case ISCSI_PARAM_MAX_RECV_DLENGTH:
-+		*value = param->max_recv_data_length;
-+		break;
-+	case ISCSI_PARAM_MAX_XMIT_DLENGTH:
-+		*value = param->max_xmit_data_length;
-+		break;
-+	case ISCSI_PARAM_HDRDGST_EN:
-+		*value = param->header_digest;
-+		break;
-+	case ISCSI_PARAM_DATADGST_EN:
-+		*value = param->data_digest;
-+		break;
-+	default:
-+		return ISCSI_ERR_PARAM_NOT_FOUND;
-+	}
-+
-+	return 0;
-+}
-+
-+static int
-+istgt_session_get_param(struct iscsi_cls_session *cls_session,
-+			enum iscsi_param key, uint32_t *value)
-+{
-+	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
-+	struct iscsi_session *session = iscsi_hostdata(shost->hostdata);
-+	struct iscsi_sess_param *param = &session->param;
-+
-+	switch(key) {
-+	case ISCSI_PARAM_INITIAL_R2T_EN:
-+		*value = param->initial_r2t;
-+		break;
-+	case ISCSI_PARAM_MAX_R2T:
-+		*value = param->max_outstanding_r2t;
-+		break;
-+	case ISCSI_PARAM_IMM_DATA_EN:
-+		*value = param->immediate_data;
-+		break;
-+	case ISCSI_PARAM_FIRST_BURST:
-+		*value = param->first_burst_length;
-+		break;
-+	case ISCSI_PARAM_MAX_BURST:
-+		*value = param->max_burst_length;
-+		break;
-+	case ISCSI_PARAM_PDU_INORDER_EN:
-+		*value = param->data_pdu_inorder;
-+		break;
-+	case ISCSI_PARAM_DATASEQ_INORDER_EN:
-+		*value = param->data_sequence_inorder;
-+		break;
-+	case ISCSI_PARAM_ERL:
-+		*value = param->error_recovery_level;
-+		break;
-+	case ISCSI_PARAM_IFMARKER_EN:
-+		*value = param->ifmarker;
-+		break;
-+	case ISCSI_PARAM_OFMARKER_EN:
-+		*value = param->ofmarker;
-+		break;
-+	default:
-+		return ISCSI_ERR_PARAM_NOT_FOUND;
-+	}
-+
-+	return 0;
-+}
-+
-+static int
-+istgt_set_param(struct iscsi_cls_conn *cls_conn, enum iscsi_param key,
-+		uint32_t value)
-+{
-+	struct iscsi_conn *conn = cls_conn->dd_data;
-+	struct iscsi_session *session = conn->session;
-+	struct iscsi_sess_param *param = &session->param;
-+
-+	switch(key) {
-+	case ISCSI_PARAM_MAX_RECV_DLENGTH:
-+		param->max_recv_data_length = value;
-+		break;
-+	case ISCSI_PARAM_MAX_XMIT_DLENGTH:
-+		param->max_xmit_data_length = value;
-+		break;
-+	case ISCSI_PARAM_HDRDGST_EN:
-+		param->header_digest = value;
-+		break;
-+	case ISCSI_PARAM_DATADGST_EN:
-+		param->data_digest = value;
-+		break;
-+	case ISCSI_PARAM_INITIAL_R2T_EN:
-+		param->initial_r2t = value;
-+		break;
-+	case ISCSI_PARAM_MAX_R2T:
-+		param->max_outstanding_r2t = value;
-+		break;
-+	case ISCSI_PARAM_IMM_DATA_EN:
-+		param->immediate_data = value;
-+		break;
-+	case ISCSI_PARAM_FIRST_BURST:
-+		param->first_burst_length = value;
-+		break;
-+	case ISCSI_PARAM_MAX_BURST:
-+		param->max_burst_length = value;
-+		break;
-+	case ISCSI_PARAM_PDU_INORDER_EN:
-+		param->data_pdu_inorder = value;
-+		break;
-+	case ISCSI_PARAM_DATASEQ_INORDER_EN:
-+		param->data_sequence_inorder = value;
-+		break;
-+	case ISCSI_PARAM_ERL:
-+		param->error_recovery_level = value;
-+		break;
-+	case ISCSI_PARAM_IFMARKER_EN:
-+		param->ifmarker = value;
-+		break;
-+	case ISCSI_PARAM_OFMARKER_EN:
-+		param->ofmarker = value;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return 0;
-+}
-+
-+static struct scsi_host_template istgt_sht = {
-+	.name			= THIS_NAME,
-+	.module			= THIS_MODULE,
-+	.can_queue		= DEFAULT_NR_QUEUED_CMNDS,
-+	.sg_tablesize		= SG_ALL,
-+	.use_clustering		= DISABLE_CLUSTERING,
-+	.max_sectors		= 65536,
-+	.transfer_response	= scsi_cmnd_done,
-+	.transfer_data		= buffer_ready,
-+};
-+
-+static struct iscsi_transport istgt_transport = {
-+	.owner			= THIS_MODULE,
-+	.name			= "tcp_tgt",
-+	.host_template		= &istgt_sht,
-+	.hostdata_size		= sizeof(struct iscsi_session),
-+	.max_conn		= 1,
-+	.max_cmd_len		= 16,
-+	.create_session		= istgt_session_create,
-+	.destroy_session	= istgt_session_destroy, 
-+	.create_conn		= istgt_conn_create,
-+	.destroy_conn		= istgt_conn_destroy,
-+	.bind_conn		= istgt_conn_bind,
-+	.start_conn		= istgt_conn_start,
-+	.set_param		= istgt_set_param,
-+	.get_session_param	= istgt_session_get_param,
-+	.get_conn_param		= istgt_conn_get_param,
-+
-+};
-+
-+static void istgt_exit(void)
-+{
-+	kmem_cache_destroy(istgt_cmd_cache);
-+	iscsi_unregister_transport(&istgt_transport);
-+}
-+
-+static int istgt_init(void)
-+{
-+	printk("iSCSI Target Software for Linux Target Framework %s\n",
-+	       VERSION_STRING);
-+
-+	istgt_cmd_cache = kmem_cache_create("istgt_cmd",
-+					    sizeof(struct istgt_cmd),
-+					    0, 0, NULL, NULL);
-+	if (!istgt_cmd_cache)
++	/*
++	 * uspace sets the noop scheduler for us since the others
++	 * are overkill
++	 *
++	 * Do we need to send a netlink event or should uspace
++	 * just respond to the hotplug event?
++	 */
++	q = __scsi_alloc_queue(shost, scsi_uspace_request_fn);
++	if (!q)
 +		return -ENOMEM;
 +
-+	if (!iscsi_register_transport(&istgt_transport))
-+		goto free_cmd_cache;
++	q->nr_requests = shost->hostt->can_queue;
++	blk_queue_init_tags(q, shost->hostt->can_queue, NULL);
++	shost->uspace_req_q = q;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(scsi_tgt_alloc_queue);
++
++/**
++ * scsi_tgt_queue_command - queue command for userspace processing
++ * @cmd:	scsi command
++ * @scsilun:	scsi lun
++ * @noblock:	set to nonzero if the command should be queued
++ **/
++void scsi_tgt_queue_command(struct scsi_cmnd *cmd, struct scsi_lun *scsilun,
++			    int noblock)
++{
++	/*
++	 * For now this just calls the request_fn from this context.
++	 * For HW llds though we do not want to execute from here so
++	 * the elevator code needs something like a REQ_TGT_CMD or
++	 * REQ_MSG_DONT_UNPLUG_IMMED_BECUASE_WE_WILL_HANDLE_IT
++	 */
++	cmd->request->end_io_data = scsilun;
++	elv_add_request(cmd->shost->uspace_req_q, cmd->request,
++			ELEVATOR_INSERT_BACK, 1);
++}
++EXPORT_SYMBOL_GPL(scsi_tgt_queue_command);
++
++/*
++ * We do not do clustering yet. We will when we convert to block layer fns
++ */
++static void scsi_unmap_user_pages(struct scsi_cmnd *cmd)
++{
++	struct scatterlist *sg = cmd->request_buffer;
++	struct page *page;
++	int i;
++
++	for (i = 0; i < cmd->use_sg; i++) {
++		page = sg[i].page;
++		if (!page)
++			break;
++		if (cmd->sc_data_direction == DMA_TO_DEVICE)
++			set_page_dirty_lock(page);
++		page_cache_release(page);
++	}
++}
++
++static void scsi_tgt_cmd_destroy(void *data)
++{
++	struct scsi_cmnd *cmd = data;
++
++	dprintk("cmd %p\n", cmd);
++
++	scsi_unmap_user_pages(cmd);
++	kfree(cmd->request_buffer);
++	scsi_tgt_uspace_send_status(cmd, GFP_KERNEL);
++	scsi_host_put_command(cmd);
++}
++
++/*
++ * This is run from a interrpt handler normally and the unmap
++ * needs process context so we must queue
++ */
++static void scsi_tgt_cmd_done(struct scsi_cmnd *cmd)
++{
++	dprintk("cmd %p\n", cmd);
++
++	INIT_WORK(&cmd->work, scsi_tgt_cmd_destroy, cmd);
++	queue_work(scsi_tgtd, &cmd->work);
++}
++
++static int __scsi_tgt_transfer_response(struct scsi_cmnd *cmd)
++{
++	struct Scsi_Host *shost = cmd->shost;
++	int err;
++
++	dprintk("cmd %p\n", cmd);
++
++	err = shost->hostt->transfer_response(cmd, scsi_tgt_cmd_done);
++	switch (err) {
++	case SCSI_MLQUEUE_HOST_BUSY:
++	case SCSI_MLQUEUE_DEVICE_BUSY:
++		return -EAGAIN;
++	}
++
++	return 0;
++}
++
++static void scsi_tgt_transfer_response(struct scsi_cmnd *cmd)
++{
++	int err;
++
++	err = __scsi_tgt_transfer_response(cmd);
++	if (!err)
++		return;
++
++	cmd->result = DID_BUS_BUSY << 16;
++	if (scsi_tgt_uspace_send_status(cmd, GFP_ATOMIC) <= 0)
++		/* the eh will have to pick this up */
++		printk(KERN_ERR "Could not send cmd %p status\n", cmd);
++}
++
++#define pgcnt(size, offset) \
++	((((size) + ((offset) & ~PAGE_CACHE_MASK)) + PAGE_CACHE_SIZE - 1) >> PAGE_CACHE_SHIFT)
++
++/*
++ * TODO: replace with block layer function or modify so it honors the LLD
++ * limits and can then be used by the ULDs. Or could we also have a
++ * get_user_pages() that takes a scatterlist.
++ *
++ * Instead we could create a fake /dev/sd entry for this target, and
++ * userspace could write a SG_IO command to it. The LLD queuecommand
++ * would either need to be able to handle this target command
++ * and initiator commands at the same time though (this would take some
++ * extra code).
++ */
++static int scsi_map_user_pages(struct scsi_cmnd *cmd, u64 offset, int rw)
++{
++	int i, err = -EIO, cnt;
++	struct page *page, **pages;
++	u64 poffset = offset & ~PAGE_MASK;
++	unsigned size, rest = cmd->request_bufflen;
++	struct scatterlist *sg;
++
++	cnt = pgcnt(cmd->request_bufflen, offset);
++	pages = kzalloc(cnt * sizeof(struct page *), GFP_KERNEL);
++	if (!pages)
++		return -ENOMEM;
++
++	cmd->request_buffer = kmalloc(cnt * sizeof(struct scatterlist),
++				      GFP_KERNEL);
++	if (!cmd->request_buffer)
++		goto release_pages;
++	cmd->use_sg = cnt;
++
++	dprintk("cmd %p addr %p cnt %d\n", cmd, cmd->buffer, cnt);
++
++	down_read(&tgtd_tsk->mm->mmap_sem);
++	err = get_user_pages(tgtd_tsk, tgtd_tsk->mm, (unsigned long)cmd->buffer,
++			     cnt, rw == WRITE, 0, pages, NULL);
++	up_read(&tgtd_tsk->mm->mmap_sem);
++
++	if (err < cnt) {
++		printk(KERN_ERR "cannot get user pages %d %d\n", err, cnt);
++		err = -EIO;
++		goto free_sg;
++	}
++
++	/*
++	 * need to fix this for HW LLDs. We could do
++	 *
++	 * scsi_req_map_sg(cmd->request, tmp_sg, cnt, len, GFP_KERNEL);
++	 * blk_rq_map_sg(shost->uspace_req_q, rq, final_sg);
++	 *
++	 * but that seems like such a waste. We need to merge the rest of
++	 * SCSI ULD and blk layer scatterlist code into one nice api.
++	 * Also need to handle if we cannot get enough clustered pages
++	 * to do this in one call (need dma the command in mutliple
++	 * calls maybe??).
++	 */
++	sg = cmd->request_buffer;
++	for (i = 0; i < cnt; i++) {
++		size = min_t(u32, rest, PAGE_SIZE - poffset);
++
++		sg[i].page = pages[i];
++		sg[i].offset = poffset;
++		sg[i].length = size;
++
++		poffset = 0;
++		rest -= size;
++	}
 +
 +	return 0;
 +
-+free_cmd_cache:
-+	kmem_cache_destroy(istgt_cmd_cache);
-+	return -ENOMEM;
++free_sg:
++	kfree(cmd->request_buffer);
++release_pages:
++	for (i = 0; i < cnt; i++) {
++		page = pages[i];
++		if(!page)
++			break;
++		if (!err && rw == WRITE)
++			set_page_dirty_lock(page);
++		page_cache_release(page);
++	}
++	kfree(pages);
 +
++	return err;
 +}
 +
-+module_init(istgt_init);
-+module_exit(istgt_exit);
++static void scsi_tgt_data_transfer_done(struct scsi_cmnd *cmd)
++{
++	if (!cmd->result) {
++		scsi_tgt_transfer_response(cmd);
++		return;
++	}
 +
++	if (scsi_tgt_uspace_send_status(cmd, GFP_ATOMIC) <= 0)
++		/* the tgt uspace eh will have to pick this up */
++		printk(KERN_ERR "Could not send cmd %p status\n", cmd);
++}
++
++static int scsi_tgt_transfer_data(struct scsi_cmnd *cmd)
++{
++	int err;
++
++	err = cmd->shost->hostt->transfer_data(cmd, scsi_tgt_data_transfer_done);
++	switch (err) {
++		case SCSI_MLQUEUE_HOST_BUSY:
++		case SCSI_MLQUEUE_DEVICE_BUSY:
++			return -EAGAIN;
++	default:
++		return 0;
++	}
++}
++
++static int scsi_tgt_copy_sense(struct scsi_cmnd *cmd, unsigned long uaddr,
++				unsigned len)
++{
++	char __user *p = (char __user *) uaddr;
++
++	if (copy_from_user(cmd->sense_buffer, p,
++			   min_t(unsigned, SCSI_SENSE_BUFFERSIZE, len))) {
++		printk(KERN_ERR "Could not copy the sense buffer\n");
++		return -EIO;
++	}
++	return 0;
++}
++
++int scsi_tgt_kspace_exec(int host_no, u32 cid, int result, u32 len, u64 offset,
++			 unsigned long uaddr, u8 rw, u8 try_map)
++{
++	struct Scsi_Host *shost;
++	struct scsi_cmnd *cmd;
++	struct request *rq;
++	int err;
++
++	/* TODO: replace with a O(1) alg */
++	shost = scsi_host_lookup(host_no);
++	if (IS_ERR(shost)) {
++		printk(KERN_ERR "Could not find host no %d\n", host_no);
++		return -EINVAL;
++	}
++
++	rq = blk_queue_find_tag(shost->uspace_req_q, cid);
++	if (!rq) {
++		printk(KERN_ERR "Could not find cid %u\n", cid);
++		return -EINVAL;
++	}
++	cmd = rq->special;
++
++	dprintk("cmd %p result %d len %d bufflen %u\n", cmd,
++		result, len, cmd->request_bufflen);
++
++	cmd->buffer = (void *)uaddr;
++	cmd->result = result;
++	if (len)
++		cmd->request_bufflen = len;
++
++	if (!cmd->request_bufflen)
++		return __scsi_tgt_transfer_response(cmd);
++
++	/*
++	 * TODO: Do we need to handle case where request does not
++	 * align with LLD.
++	 */
++	err = scsi_map_user_pages(cmd, offset, rw);
++	if (err) {
++		eprintk("%p %d\n", cmd, err);
++		return -EAGAIN;
++	}
++
++	/* userspace failure */
++	if (cmd->result) {
++		if (status_byte(cmd->result) == CHECK_CONDITION)
++			scsi_tgt_copy_sense(cmd, uaddr, len);
++		return __scsi_tgt_transfer_response(cmd);
++	}
++	/* ask the target LLD to transfer the data to the buffer */
++	return scsi_tgt_transfer_data(cmd);
++}
++
++static int __init scsi_tgt_init(void)
++{
++	int err;
++
++	scsi_tgtd = create_workqueue("scsi_tgtd");
++	if (!scsi_tgtd)
++		return -ENOMEM;
++
++	err = scsi_tgt_nl_init();
++	if (err)
++		destroy_workqueue(scsi_tgtd);
++	return err;
++}
++
++static void __exit scsi_tgt_exit(void)
++{
++	destroy_workqueue(scsi_tgtd);
++	scsi_tgt_nl_exit();
++}
++
++module_init(scsi_tgt_init);
++module_exit(scsi_tgt_exit);
++
++MODULE_DESCRIPTION("SCSI target core");
 +MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/scsi_tgt_nl.c b/drivers/scsi/scsi_tgt_nl.c
+new file mode 100644
+index 0000000..1bb308c
+--- /dev/null
++++ b/drivers/scsi/scsi_tgt_nl.c
+@@ -0,0 +1,188 @@
++/*
++ * Target Netlink Framework code
++ *
++ * (C) 2005 FUJITA Tomonori <tomof@acm.org>
++ * (C) 2005 Mike Christie <michaelc@cs.wisc.edu>
++ * This code is licenced under the GPL.
++ */
++
++#include <linux/netlink.h>
++#include <linux/blkdev.h>
++#include <net/tcp.h>
++#include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_host.h>
++#include <scsi/scsi_tgt_if.h>
++
++#include "scsi_tgt_priv.h"
++
++static int tgtd_pid;
++static struct sock *nls;
++
++int scsi_tgt_uspace_send(struct scsi_cmnd *cmd, u64 lun, gfp_t gfp_mask)
++{
++	struct sk_buff *skb;
++	struct nlmsghdr *nlh;
++	struct tgt_event *ev;
++	char *pdu;
++	int len, err;
++
++	len = NLMSG_SPACE(sizeof(*ev) + MAX_COMMAND_SIZE);
++	/*
++	 * TODO: add MAX_COMMAND_SIZE to ev and add mempool
++	 */
++	skb = alloc_skb(NLMSG_SPACE(len), gfp_mask);
++	if (!skb)
++		return -ENOMEM;
++
++	dprintk("%p %d %Zd %d\n", cmd, len, sizeof(*ev), MAX_COMMAND_SIZE);
++	nlh = __nlmsg_put(skb, tgtd_pid, 0, TGT_KEVENT_CMD_REQ,
++			  len - sizeof(*nlh), 0);
++	ev = NLMSG_DATA(nlh);
++	memset(ev, 0, sizeof(*ev));
++
++	pdu = (char *) ev->data;
++	ev->k.cmd_req.host_no = cmd->shost->host_no;
++	ev->k.cmd_req.dev_id = lun;
++	ev->k.cmd_req.cid = cmd->request->tag;
++	ev->k.cmd_req.data_len = cmd->request_bufflen;
++	memcpy(ev->data, cmd->cmnd, MAX_COMMAND_SIZE);
++
++	err = netlink_unicast(nls, skb, tgtd_pid, 0);
++	if (err < 0)
++		printk(KERN_ERR "scsi_tgt_uspace_send: could not send skb "
++		      "to pid %d err %d\n", tgtd_pid, err);
++	return err;
++}
++
++static int send_event_res(uint16_t type, struct tgt_event *p,
++			  void *data, int dlen, gfp_t flags)
++{
++	struct tgt_event *ev;
++	struct nlmsghdr *nlh;
++	struct sk_buff *skb;
++	uint32_t len;
++
++	len = NLMSG_SPACE(sizeof(*ev) + dlen);
++	skb = alloc_skb(len, flags);
++	if (!skb)
++		return -ENOMEM;
++
++	nlh = __nlmsg_put(skb, tgtd_pid, 0, type, len - sizeof(*nlh), 0);
++
++	ev = NLMSG_DATA(nlh);
++	memcpy(ev, p, sizeof(*ev));
++	if (dlen)
++		memcpy(ev->data, data, dlen);
++
++	return netlink_unicast(nls, skb, tgtd_pid, 0);
++}
++
++int scsi_tgt_uspace_send_status(struct scsi_cmnd *cmd, gfp_t gfp_mask)
++{
++	struct tgt_event ev;
++
++	memset(&ev, 0, sizeof(ev));
++	ev.k.cmd_done.host_no = cmd->shost->host_no;
++	ev.k.cmd_done.cid = (unsigned long)cmd;
++	ev.k.cmd_done.result = cmd->result;
++
++	return send_event_res(TGT_KEVENT_CMD_DONE, &ev, NULL, 0, gfp_mask);
++}
++
++static int event_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh)
++{
++	struct tgt_event *ev = NLMSG_DATA(nlh);
++	int err = 0;
++
++	dprintk("%d %d %d\n", nlh->nlmsg_type,
++		nlh->nlmsg_pid, current->pid);
++
++	switch (nlh->nlmsg_type) {
++	case TGT_UEVENT_START:
++		tgtd_pid = NETLINK_CREDS(skb)->pid;
++		tgtd_tsk = current;
++		break;
++	case TGT_UEVENT_CMD_RES:
++		/* TODO: handle multiple cmds in one event */
++		err = scsi_tgt_kspace_exec(ev->u.cmd_res.host_no,
++					   ev->u.cmd_res.cid,
++					   ev->u.cmd_res.result,
++					   ev->u.cmd_res.len,
++					   ev->u.cmd_res.offset,
++					   ev->u.cmd_res.uaddr,
++					   ev->u.cmd_res.rw,
++					   ev->u.cmd_res.try_map);
++		break;
++	default:
++		eprintk("unknown type %d\n", nlh->nlmsg_type);
++		err = -EINVAL;
++	}
++
++	return err;
++}
++
++static int event_recv_skb(struct sk_buff *skb)
++{
++	int err;
++	uint32_t rlen;
++	struct nlmsghdr	*nlh;
++
++	while (skb->len >= NLMSG_SPACE(0)) {
++		nlh = (struct nlmsghdr *) skb->data;
++		if (nlh->nlmsg_len < sizeof(*nlh) || skb->len < nlh->nlmsg_len)
++			return 0;
++		rlen = NLMSG_ALIGN(nlh->nlmsg_len);
++		if (rlen > skb->len)
++			rlen = skb->len;
++		err = event_recv_msg(skb, nlh);
++
++		dprintk("%d %d\n", nlh->nlmsg_type, err);
++		/*
++		 * TODO for passthru commands the lower level should
++		 * probably handle the result or we should modify this
++		 */
++		if (nlh->nlmsg_type != TGT_UEVENT_CMD_RES) {
++			struct tgt_event ev;
++
++			memset(&ev, 0, sizeof(ev));
++			ev.k.event_res.err = err;
++			send_event_res(TGT_KEVENT_RESPONSE, &ev, NULL, 0,
++				       GFP_KERNEL | __GFP_NOFAIL);
++		}
++		skb_pull(skb, rlen);
++	}
++	return 0;
++}
++
++static void event_recv(struct sock *sk, int length)
++{
++	struct sk_buff *skb;
++
++	while ((skb = skb_dequeue(&sk->sk_receive_queue))) {
++		if (NETLINK_CREDS(skb)->uid) {
++			skb_pull(skb, skb->len);
++			kfree_skb(skb);
++			continue;
++		}
++
++		if (event_recv_skb(skb) && skb->len)
++			skb_queue_head(&sk->sk_receive_queue, skb);
++		else
++			kfree_skb(skb);
++	}
++}
++
++void __exit scsi_tgt_nl_exit(void)
++{
++	sock_release(nls->sk_socket);
++}
++
++int __init scsi_tgt_nl_init(void)
++{
++	nls = netlink_kernel_create(NETLINK_TGT, 1, event_recv,
++				    THIS_MODULE);
++	if (!nls)
++		return -ENOMEM;
++
++	return 0;
++}
+diff --git a/drivers/scsi/scsi_tgt_priv.h b/drivers/scsi/scsi_tgt_priv.h
+new file mode 100644
+index 0000000..23aba10
+--- /dev/null
++++ b/drivers/scsi/scsi_tgt_priv.h
+@@ -0,0 +1,22 @@
++struct scsi_cmnd;
++struct task_struct;
++
++/* tmp - will replace with SCSI logging stuff */
++#define dprintk(fmt, args...)					\
++do {								\
++	printk("%s(%d) " fmt, __FUNCTION__, __LINE__, ##args);	\
++} while (0)
++
++#define eprintk dprintk
++
++
++extern struct task_struct *tgtd_tsk;
++
++extern void scsi_tgt_nl_exit(void);
++extern int scsi_tgt_nl_init(void);
++
++extern int scsi_tgt_uspace_send(struct scsi_cmnd *cmd, u64 lun, gfp_t gfp_mask);
++extern int scsi_tgt_uspace_send_status(struct scsi_cmnd *cmd, gfp_t flags);
++extern int scsi_tgt_kspace_exec(int host_no, u32 cid, int result, u32 len,
++				u64 offset, unsigned long uaddr, u8 rw,
++				u8 try_map);
+diff --git a/include/linux/netlink.h b/include/linux/netlink.h
+index 6a2ccf7..580fb42 100644
+--- a/include/linux/netlink.h
++++ b/include/linux/netlink.h
+@@ -21,6 +21,7 @@
+ #define NETLINK_DNRTMSG		14	/* DECnet routing messages */
+ #define NETLINK_KOBJECT_UEVENT	15	/* Kernel messages to userspace */
+ #define NETLINK_GENERIC		16
++#define NETLINK_TGT		17	/* SCSI target */
+ 
+ #define MAX_LINKS 32		
+ 
+diff --git a/include/scsi/scsi_tgt.h b/include/scsi/scsi_tgt.h
+new file mode 100644
+index 0000000..c1dc0d2
+--- /dev/null
++++ b/include/scsi/scsi_tgt.h
+@@ -0,0 +1,10 @@
++/*
++ * SCSI target definitions
++ */
++
++struct Scsi_Host;
++struct scsi_cmnd;
++struct scsi_lun;
++
++extern int scsi_tgt_alloc_queue(struct Scsi_Host *);
++extern void scsi_tgt_queue_command(struct scsi_cmnd *, struct scsi_lun *, int);
+diff --git a/include/scsi/scsi_tgt_if.h b/include/scsi/scsi_tgt_if.h
+new file mode 100644
+index 0000000..fe5f0f9
+--- /dev/null
++++ b/include/scsi/scsi_tgt_if.h
+@@ -0,0 +1,70 @@
++/*
++ * SCSI target netlink interface
++ *
++ * (C) 2005 FUJITA Tomonori <tomof@acm.org>
++ * (C) 2005 Mike Christie <michaelc@cs.wisc.edu>
++ * This code is licenced under the GPL.
++ */
++
++#ifndef SCSI_TARGET_FRAMEWORK_IF_H
++#define SCSI_TARGET_FRAMEWORK_IF_H
++
++enum tgt_event_type {
++	/* user -> kernel */
++	TGT_UEVENT_START,
++	TGT_UEVENT_TARGET_SETUP,
++	TGT_UEVENT_CMD_RES,
++
++	/* kernel -> user */
++	TGT_KEVENT_RESPONSE,
++	TGT_KEVENT_CMD_REQ,
++	TGT_KEVENT_CMD_DONE,
++};
++
++struct tgt_event {
++	/* user-> kernel */
++	union {
++		struct {
++			int host_no;
++			int pid;
++		} setup_target;
++		struct {
++			int host_no;
++			uint32_t cid;
++			uint32_t len;
++			int result;
++			uint64_t uaddr;
++			uint64_t offset;
++			uint8_t rw;
++			uint8_t try_map;
++		} cmd_res;
++	} u;
++
++	/* kernel -> user */
++	union {
++		struct {
++			int err;
++		} event_res;
++		struct {
++			int host_no;
++			uint32_t cid;
++			uint32_t data_len;
++			uint64_t dev_id;
++		} cmd_req;
++		struct {
++			int host_no;
++			uint32_t cid;
++			int result;
++		} cmd_done;
++	} k;
++
++	/*
++	 * I think a pointer is a unsigned long but this struct
++	 * gets passed around from the kernel to userspace and
++	 * back again so to handle some ppc64 setups where userspace is
++	 * 32 bits but the kernel is 64 we do this odd thing
++	 */
++	uint64_t data[0];
++} __attribute__ ((aligned (sizeof(uint64_t))));
++
++#endif
 
 
