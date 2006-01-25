@@ -1,60 +1,65 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/message/fusion/mptfc.c: make 2 functions static
-Date: Wed, 25 Jan 2006 02:00:52 +0100
-Message-ID: <20060125010052.GO3590@stusta.de>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: [PATCH RFC 0/3] SCSI Userspace Target
+Date: Tue, 24 Jan 2006 20:58:02 -0600
+Message-ID: <1138157882.11692.31.camel@max>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:17675 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1750930AbWAYBAx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jan 2006 20:00:53 -0500
-Content-Disposition: inline
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:4481 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1750974AbWAYC6J (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jan 2006 21:58:09 -0500
+Received: from max (c-69-180-176-191.hsd1.mn.comcast.net [69.180.176.191])
+	(authenticated bits=0)
+	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id k0P2w8pb023596
+	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2006 20:58:08 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: support@lsil.com, mpt_linux_developer@lsil.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This patch makes two needlessly global functions static.
+The following patches begin to add the infrastructure for the SCSI
+Userspace target framework. We were not sure about what James meant by
+some of his comments, so rather than getting to far we want to post a
+early.
 
+As the email subject hints, the goal of the project is to push most of
+the target code to userspace. The only parts we kept in the kernel were
+for transferring data between the LLD and userpsace and the netlink
+interface. We included the relevant parts of a software iscsi target as
+an example.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+We also just based ourselves off the scsi_host. This has the benefit of
+being able to reuse the scsi-ml host code and for HBAs that have a
+initiator and target mode, they only need to allocate a single scsi_host
+that corresponds to the PCI device, iscsi session, or whatever your LLD
+allocates it for. In theory, a single scsi_host can be used by the LLD
+for running both the target and initiator at the same time. The drawback
+is it prevents us from doing a more generic target framework that works
+for any block device (well, someone could do a libata type of target for
+any transport).
 
----
+Just to be clear, so people do not pee their pants :) These patches are
+not ready for prime time. We feel we are at a good point, where we think
+we can continue building and allow others to help in the development if
+this basic infrastructure is ok.
 
-This patch was already sent on:
-- 19 Jan 2006
+There is no error handling yet (since we push so much to userspace it
+will not be much kernel code), the userspce code is still being reworked
+to tweak performance (the kernel code is too), we still need build
+proper scatterlists for HW LLDs (although we can do this with the scsi
+stuff that was just merged it is not very efficient (see commented code
+in scsi_tgt_lib.c)). We just want to make sure we are heading in the
+right direction. For example, should we be using the scsi_host or should
+we add our own data structure, is the perfomance drop Tomo reported
+earlier (he has new numbers and has more tweaks up his sleeve) really
+that acceptable or should we go to scst.
 
- drivers/message/fusion/mptfc.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+We are also up for discussing making the interface more generic, so we
+can one day do the scsi scanning and async event handling through it.
 
---- linux-2.6.16-rc1-mm1-full/drivers/message/fusion/mptfc.c.old	2006-01-18 23:16:09.000000000 +0100
-+++ linux-2.6.16-rc1-mm1-full/drivers/message/fusion/mptfc.c	2006-01-18 23:16:34.000000000 +0100
-@@ -93,7 +93,7 @@
- static int	mptfcTaskCtx = -1;
- static int	mptfcInternalCtx = -1; /* Used only for internal commands */
- 
--int mptfc_slave_alloc(struct scsi_device *device);
-+static int mptfc_slave_alloc(struct scsi_device *device);
- static int mptfc_qcmd(struct scsi_cmnd *SCpnt,
-     void (*done)(struct scsi_cmnd *));
- 
-@@ -153,7 +153,7 @@
- 
- static struct scsi_transport_template *mptfc_transport_template = NULL;
- 
--struct fc_function_template mptfc_transport_functions = {
-+static struct fc_function_template mptfc_transport_functions = {
- 	.dd_fcrport_size = 8,
- 	.show_host_node_name = 1,
- 	.show_host_port_name = 1,
-@@ -432,7 +432,7 @@
-  *	Return non-zero if allocation fails.
-  *	Init memory once per LUN.
-  */
--int
-+static int
- mptfc_slave_alloc(struct scsi_device *sdev)
- {
- 	MPT_SCSI_HOST		*hd;
+Thanks
+
+Mike and Tomo
 
