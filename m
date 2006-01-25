@@ -1,35 +1,39 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [2.6 patch] drivers/message/fusion/mptfc.c: make 2 functions static
-Date: Wed, 25 Jan 2006 09:26:48 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F1FE9E0@NAMAIL2.ad.lsil.com>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Fw: [Bugme-new] [Bug 5953] New: easyRAID F8 IDE2SCSI adaptor
+ problems with reporting too many luns
+Date: Wed, 25 Jan 2006 09:24:52 -0800
+Message-ID: <20060125092452.42eb744b.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1750930AbWAYQeo@vger.kernel.org>
-Content-class: urn:content-classes:message
-Sender: linux-kernel-owner@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>, Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.osdl.org ([65.172.181.4]:25999 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S932068AbWAYRZN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 Jan 2006 12:25:13 -0500
+Received: from shell0.pdx.osdl.net (fw.osdl.org [65.172.181.6])
+	by smtp.osdl.org (8.12.8/8.12.8) with ESMTP id k0PHP6DZ028393
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Jan 2006 09:25:12 -0800
+Received: from bix (shell0.pdx.osdl.net [10.9.0.31])
+	by shell0.pdx.osdl.net (8.13.1/8.11.6) with SMTP id k0PHP6FV026192
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Jan 2006 09:25:06 -0800
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-On Tuesday, January 24, 2006 6:01 PM, Adrian Bunk wrote:
-
-> This patch makes two needlessly global functions static.
-> 
-> 
-> Signed-off-by: Adrian Bunk <bunk@stusta.de>
-> 
-> ---
-> 
-> This patch was already sent on:
-> - 19 Jan 2006
-> 
->  drivers/message/fusion/mptfc.c |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
+To: linux-scsi@vger.kernel.org
 
 
-ACK
+Looks like an aic79xx problem.  Relatively recently-occurring, too.
 
-Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
+Begin forwarded message:
+
+Date: Wed, 25 Jan 2006 06:17:59 -0800
+From: bugme-daemon@bugzilla.kernel.org
+To: bugme-new@lists.osdl.org
+Subject: [Bugme-new] [Bug 5953] New: easyRAID F8 IDE2SCSI adaptor problems with reporting too many luns
+
+
+http://bugzilla.kernel.org/show_bug.cgi?id=5953
+
+            Summary: easyRAID F8 IDE2SCSI adaptor problems with reporting too
+                     many luns
