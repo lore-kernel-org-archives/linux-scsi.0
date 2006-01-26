@@ -1,32 +1,32 @@
-From: Dave C Boutcher <sleddog@us.ibm.com>
-Subject: Re: [PATCH RFC 0/3] SCSI Userspace Target
-Date: Wed, 25 Jan 2006 21:28:44 -0600
-Message-ID: <20060126032844.GA16123@cs.umn.edu>
-References: <1138157882.11692.31.camel@max>
+From: Marko Levis <5gene@aagi.com>
+Subject: =?iso-8859-1?B?V2FudCBuZXcgZmVycmFyaSBvciBtZXJlZGVzPw==?=
+Date: Thu, 26 Jan 2006 05:10:29 +0000
+Message-ID: <d1cf01c62236$5b7d8788$cf52dfb2@aagi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+    format=flowed;
+    charset="iso-8859-1";
+    reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.cs.umn.edu ([128.101.32.202]:42409 "EHLO mail.cs.umn.edu")
-	by vger.kernel.org with ESMTP id S1751293AbWAZD2r (ORCPT
+Received: from zeus2.kernel.org ([204.152.191.36]:4288 "EHLO zeus2.kernel.org")
+	by vger.kernel.org with ESMTP id S1751310AbWAZFXh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jan 2006 22:28:47 -0500
-Content-Disposition: inline
-In-Reply-To: <1138157882.11692.31.camel@max>
+	Thu, 26 Jan 2006 00:23:37 -0500
+Received: from pool-70-110-146-102.phil.east.verizon.net (pool-70-110-146-102.phil.east.verizon.net [70.110.146.102])
+	by zeus2.kernel.org (8.13.1/8.13.1) with SMTP id k0Q5NMXS008222
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Jan 2006 21:23:28 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Jan 24, 2006 at 08:58:02PM -0600, Mike Christie wrote:
-> The following patches begin to add the infrastructure for the SCSI
-> Userspace target framework. We were not sure about what James meant by
-> some of his comments, so rather than getting to far we want to post a
-> for any block device (well, someone could do a libata type of target for
-> any transport).
+Hello. 
 
-Nit question...I notice those patches are from git. Do you have a git
-tree for stgt?  I was about to start figuring out subversion based on
-the berlios page.
 
--- 
-Dave Boutcher
+Our company suggests you to take part in our new project! We offer to you work in our company with the opportunity of the further independent development of your business. Employment 3-4 hours per day. You will start to earn real money from the first week! 
+
+You can receive the additional information on e-mail: worldtrancavinc@aol.com
+ 
+Regards,
+Lorenzo Valetti 
+
