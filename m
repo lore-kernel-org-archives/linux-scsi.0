@@ -1,25 +1,69 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/5] - fusion - move sas persistent event handling over to the mptsas module
-Date: Thu, 26 Jan 2006 19:37:10 +0000
-Message-ID: <20060126193710.GC5702@infradead.org>
-References: <F331B95B72AFFB4B87467BE1C8E9CF5F1FED51@NAMAIL2.ad.lsil.com>
+From: Grant Grundler <iod00d@hp.com>
+Subject: Re: Problems with MSI-X on ia64
+Date: Thu, 26 Jan 2006 12:24:47 -0800
+Message-ID: <20060126202447.GB15440@esmail.cup.hp.com>
+References: <D4CFB69C345C394284E4B78B876C1CF10B848090@cceexc23.americas.cpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:49593 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1751376AbWAZThL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jan 2006 14:37:11 -0500
+Return-path: <linux-ia64-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <F331B95B72AFFB4B87467BE1C8E9CF5F1FED51@NAMAIL2.ad.lsil.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <D4CFB69C345C394284E4B78B876C1CF10B848090@cceexc23.americas.cpqcorp.net>
+Sender: linux-ia64-owner@vger.kernel.org
+To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ia64@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, James.Bottomley@SteelEye.com, hch@infradead.org
 
-On Wed, Jan 25, 2006 at 06:05:15PM -0700, Moore, Eric wrote:
-> This moves code intented for SAS from 
-> the generic mptscsih module over to the 
-> mptsas module.
+On Thu, Jan 26, 2006 at 11:14:22AM -0600, Miller, Mike (OS Dev) wrote:
+> Hello,
+> Has anyone tested MSI-X on ia64 based platforms?
 
-ok
+IIRC, Martine Silberman did some of the developement for
+ia64 support. At least she provided the original documentation
+for 2.6.4 kernel. So this is mostly not new code.
+	http://www.ussg.iu.edu/hypermail/linux/kernel/0402.2/1543.html
+
+I've also posted 2.6.10 tg3 patch to enable MSI:
+        http://www.gelato.unsw.edu.au/archives/linux-ia64/0503/13332.html
+
+I've been using MSI-X on ia64 with OpenIB for over a year.
+My guess is that was also starting with 2.6.10.
+Here's current output with 2.6.15:
+grundler@gsyprf3:/usr/src/linux-2.6.15$ fgrep MSI /proc/interrupts 
+ 70: 1067582561          0       PCI-MSI-X  ib_mthca (comp)
+ 71:         10          0       PCI-MSI-X  ib_mthca (async)
+ 72:      41279          0       PCI-MSI-X  ib_mthca (cmd)
+
+
+> We're using a 2.6.9 variant and a cciss driver with MSI/MSI-X support.
+> The kernel has MSI enabled. On ia64 the MSI-X table is all zeroes.
+
+Could you post the debug output you've collected so far?
+
+> On Intel x86_64 platforms the table contains valid data and
+> everything works as expected.
+
+It should look similar for ia64 since both use 0xfeeXXXXX
+Processor Interrupt Block address and similar intr vectors.
+
+> If I understand how this works the Linux kernel is supposed to program
+> up the table based on the HW platform. I can't find anything in the ia64
+> code that does this. For x86_64 and i386 it looks like the magic address
+> is 
+> 
+> 	#define APIC_DEFAULT_BASE	0xfee00000
+> 
+> Anybody know why this isn't defined for ia64? Any answers, input, or
+> flames are appreciated.
+
+APIC_DEAFULT_BASE isn't used.  See 
+
+fgrep MSI_ADDRESS_HEADER drivers/pci/*
+drivers/pci/msi.c:      dest_id = (MSI_ADDRESS_HEADER << MSI_ADDRESS_HEADER_SHIFT);
+drivers/pci/msi.h:#define MSI_ADDRESS_HEADER            0xfee
+drivers/pci/msi.h:#define MSI_ADDRESS_HEADER_SHIFT      12
+drivers/pci/msi.h:#define MSI_ADDRESS_HEADER_MASK       0xfff000
+
+This is one of the things that Mark Maule/SGI needs to change
+to support MSI on SN2.
+
+grant
