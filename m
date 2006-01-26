@@ -1,15 +1,15 @@
 From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: [PATCH] - scsi_transport_sas.c - display port identifier
-Date: Wed, 25 Jan 2006 18:05:07 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F1FED4E@NAMAIL2.ad.lsil.com>
+Subject: [PATCH 5/5] - fusion -  bump version
+Date: Wed, 25 Jan 2006 18:05:21 -0700
+Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F1FED53@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C62214.8CB5F66B"
+	boundary="----_=_NextPart_001_01C62214.9517B3CB"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:14077 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932248AbWAZBFl (ORCPT
+Received: from mail0.lsil.com ([147.145.40.20]:12029 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S932251AbWAZBFm (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jan 2006 20:05:41 -0500
+	Wed, 25 Jan 2006 20:05:42 -0500
 Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,67 +18,33 @@ Cc: akpm@osdl.org, James.Bottomley@SteelEye.com, hch@infradead.org
 
 This is a multi-part message in MIME format.
 
-------_=_NextPart_001_01C62214.8CB5F66B
+------_=_NextPart_001_01C62214.9517B3CB
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: quoted-printable
 
-This patch displays the port identifier on
-the folder attributes; located in the middle digit.
-
-/sys/class/sas_phy/phy-%x:%x:%x
-/sys/class/sas_rphy/rphy-%x:%x:%x
-
-The port identifier is basically the unique identifier
-for each sas domain.
+bump version
 
 Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
-------_=_NextPart_001_01C62214.8CB5F66B
+------_=_NextPart_001_01C62214.9517B3CB
 Content-Type: application/octet-stream;
-	name="1-sas-transport.patch"
+	name="6-bump-ver.patch"
 Content-Transfer-Encoding: base64
-Content-Description: 1-sas-transport.patch
+Content-Description: 6-bump-ver.patch
 Content-Disposition: attachment;
-	filename="1-sas-transport.patch"
+	filename="6-bump-ver.patch"
 
-LS0tIGIvaW5jbHVkZS9zY3NpL3Njc2lfdHJhbnNwb3J0X3Nhcy5oCTIwMDYtMDEtMTggMTk6MDY6
-MzYuMDAwMDAwMDAwIC0wNzAwCisrKyBhL2luY2x1ZGUvc2NzaS9zY3NpX3RyYW5zcG9ydF9zYXMu
-aAkyMDA2LTAxLTE4IDE3OjQ5OjMyLjAwMDAwMDAwMCAtMDcwMApAQCAtMTAwLDcgKzEwMCw3IEBA
-CiAKIGV4dGVybiB2b2lkIHNhc19yZW1vdmVfaG9zdChzdHJ1Y3QgU2NzaV9Ib3N0ICopOwogCi1l
-eHRlcm4gc3RydWN0IHNhc19waHkgKnNhc19waHlfYWxsb2Moc3RydWN0IGRldmljZSAqLCBpbnQp
-OworZXh0ZXJuIHN0cnVjdCBzYXNfcGh5ICpzYXNfcGh5X2FsbG9jKHN0cnVjdCBkZXZpY2UgKiwg
-dTgsIGludCk7CiBleHRlcm4gdm9pZCBzYXNfcGh5X2ZyZWUoc3RydWN0IHNhc19waHkgKik7CiBl
-eHRlcm4gaW50IHNhc19waHlfYWRkKHN0cnVjdCBzYXNfcGh5ICopOwogZXh0ZXJuIHZvaWQgc2Fz
-X3BoeV9kZWxldGUoc3RydWN0IHNhc19waHkgKik7Ci0tLSBiL2RyaXZlcnMvc2NzaS9zY3NpX3Ry
-YW5zcG9ydF9zYXMuYwkyMDA2LTAxLTE4IDEwOjA3OjA1LjAwMDAwMDAwMCAtMDcwMAorKysgYS9k
-cml2ZXJzL3Njc2kvc2NzaV90cmFuc3BvcnRfc2FzLmMJMjAwNi0wMS0yNSAxNjo0NToxMC4wMDAw
-MDAwMDAgLTA3MDAKQEAgLTM3Nyw3ICszNzcsOCBAQAogLyoqCiAgKiBzYXNfcGh5X2FsbG9jICAt
-LSAgYWxsb2NhdGVzIGFuZCBpbml0aWFsaXplIGEgU0FTIFBIWSBzdHJ1Y3R1cmUKICAqIEBwYXJl
-bnQ6CVBhcmVudCBkZXZpY2UKLSAqIEBudW1iZXI6CVBvcnQgbnVtYmVyCisgKiBAcG9ydF9pZGVu
-dGlmaWVyOiBQb3J0IG51bWJlcgorICogQG51bWJlcjoJUGh5IGluZGV4CiAgKgogICogQWxsb2Nh
-dGVzIGFuIFNBUyBQSFkgc3RydWN0dXJlLiAgSXQgd2lsbCBiZSBhZGRlZCBpbiB0aGUgZGV2aWNl
-IHRyZWUKICAqIGJlbG93IHRoZSBkZXZpY2Ugc3BlY2lmaWVkIGJ5IEBwYXJlbnQsIHdoaWNoIGhh
-cyB0byBiZSBlaXRoZXIgYSBTY3NpX0hvc3QKQEAgLTM4Niw3ICszODcsNyBAQAogICogUmV0dXJu
-czoKICAqCVNBUyBQSFkgYWxsb2NhdGVkIG9yICVOVUxMIGlmIHRoZSBhbGxvY2F0aW9uIGZhaWxl
-ZC4KICAqLwotc3RydWN0IHNhc19waHkgKnNhc19waHlfYWxsb2Moc3RydWN0IGRldmljZSAqcGFy
-ZW50LCBpbnQgbnVtYmVyKQorc3RydWN0IHNhc19waHkgKnNhc19waHlfYWxsb2Moc3RydWN0IGRl
-dmljZSAqcGFyZW50LCB1OCBwb3J0X2lkZW50aWZpZXIsIGludCBudW1iZXIpCiB7CiAJc3RydWN0
-IFNjc2lfSG9zdCAqc2hvc3QgPSBkZXZfdG9fc2hvc3QocGFyZW50KTsKIAlzdHJ1Y3Qgc2FzX3Bo
-eSAqcGh5OwpAQCAtMzk5LDExICs0MDAsMTMgQEAKIAlnZXRfZGV2aWNlKHBhcmVudCk7CiAKIAlw
-aHktPm51bWJlciA9IG51bWJlcjsKKwlwaHktPnBvcnRfaWRlbnRpZmllciA9IHBvcnRfaWRlbnRp
-ZmllcjsKIAogCWRldmljZV9pbml0aWFsaXplKCZwaHktPmRldik7CiAJcGh5LT5kZXYucGFyZW50
-ID0gZ2V0X2RldmljZShwYXJlbnQpOwogCXBoeS0+ZGV2LnJlbGVhc2UgPSBzYXNfcGh5X3JlbGVh
-c2U7Ci0Jc3ByaW50ZihwaHktPmRldi5idXNfaWQsICJwaHktJWQ6JWQiLCBzaG9zdC0+aG9zdF9u
-bywgbnVtYmVyKTsKKwlzcHJpbnRmKHBoeS0+ZGV2LmJ1c19pZCwgInBoeS0lZDolZC0lZCIsCisJ
-CXNob3N0LT5ob3N0X25vLCBwb3J0X2lkZW50aWZpZXIsIG51bWJlcik7CiAKIAl0cmFuc3BvcnRf
-c2V0dXBfZGV2aWNlKCZwaHktPmRldik7CiAKQEAgLTU5NSw4ICs1OTgsOCBAQAogCWRldmljZV9p
-bml0aWFsaXplKCZycGh5LT5kZXYpOwogCXJwaHktPmRldi5wYXJlbnQgPSBnZXRfZGV2aWNlKCZw
-YXJlbnQtPmRldik7CiAJcnBoeS0+ZGV2LnJlbGVhc2UgPSBzYXNfcnBoeV9yZWxlYXNlOwotCXNw
-cmludGYocnBoeS0+ZGV2LmJ1c19pZCwgInJwaHktJWQ6JWQiLAotCQlzaG9zdC0+aG9zdF9ubywg
-cGFyZW50LT5udW1iZXIpOworCXNwcmludGYocnBoeS0+ZGV2LmJ1c19pZCwgInJwaHktJWQ6JWQt
-JWQiLAorCQlzaG9zdC0+aG9zdF9ubywgcGFyZW50LT5wb3J0X2lkZW50aWZpZXIsIHBhcmVudC0+
-bnVtYmVyKTsKIAl0cmFuc3BvcnRfc2V0dXBfZGV2aWNlKCZycGh5LT5kZXYpOwogCiAJcmV0dXJu
-IHJwaHk7Cg==
+ZGlmZiAtdWFyTiBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0YmFzZS5oIGEvZHJpdmVycy9t
+ZXNzYWdlL2Z1c2lvbi9tcHRiYXNlLmgKLS0tIGIvZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9tcHRi
+YXNlLmgJMjAwNi0wMS0yNSAxNzoxODo0NS4wMDAwMDAwMDAgLTA3MDAKKysrIGEvZHJpdmVycy9t
+ZXNzYWdlL2Z1c2lvbi9tcHRiYXNlLmgJMjAwNi0wMS0yNSAxNzozNzo1Mi4wMDAwMDAwMDAgLTA3
+MDAKQEAgLTc2LDggKzc2LDggQEAKICNkZWZpbmUgQ09QWVJJR0hUCSJDb3B5cmlnaHQgKGMpIDE5
+OTktMjAwNSAiIE1PRFVMRUFVVEhPUgogI2VuZGlmCiAKLSNkZWZpbmUgTVBUX0xJTlVYX1ZFUlNJ
+T05fQ09NTU9OCSIzLjAzLjA2IgotI2RlZmluZSBNUFRfTElOVVhfUEFDS0FHRV9OQU1FCQkiQCgj
+KW1wdGxpbnV4LTMuMDMuMDYiCisjZGVmaW5lIE1QVF9MSU5VWF9WRVJTSU9OX0NPTU1PTgkiMy4w
+My4wNyIKKyNkZWZpbmUgTVBUX0xJTlVYX1BBQ0tBR0VfTkFNRQkJIkAoIyltcHRsaW51eC0zLjAz
+LjA3IgogI2RlZmluZSBXSEFUX01BR0lDX1NUUklORwkJIkAiICIoIiAiIyIgIikiCiAKICNkZWZp
+bmUgc2hvd19tcHRtb2RfdmVyKHMsdmVyKSAgXAo=
 
-------_=_NextPart_001_01C62214.8CB5F66B--
+------_=_NextPart_001_01C62214.9517B3CB--
