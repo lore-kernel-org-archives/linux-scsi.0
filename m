@@ -1,95 +1,32 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: [PATCH 3/5] - fusion - move sas persistent event handling over to the mptsas module
-Date: Wed, 25 Jan 2006 18:05:15 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F1FED51@NAMAIL2.ad.lsil.com>
+From: Dave C Boutcher <sleddog@us.ibm.com>
+Subject: Re: [PATCH RFC 0/3] SCSI Userspace Target
+Date: Wed, 25 Jan 2006 21:28:44 -0600
+Message-ID: <20060126032844.GA16123@cs.umn.edu>
+References: <1138157882.11692.31.camel@max>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C62214.91C22CBB"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:13565 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S932247AbWAZBFk (ORCPT
+Received: from mail.cs.umn.edu ([128.101.32.202]:42409 "EHLO mail.cs.umn.edu")
+	by vger.kernel.org with ESMTP id S1751293AbWAZD2r (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 Jan 2006 20:05:40 -0500
-Content-class: urn:content-classes:message
+	Wed, 25 Jan 2006 22:28:47 -0500
+Content-Disposition: inline
+In-Reply-To: <1138157882.11692.31.camel@max>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: akpm@osdl.org, James.Bottomley@SteelEye.com, hch@infradead.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+On Tue, Jan 24, 2006 at 08:58:02PM -0600, Mike Christie wrote:
+> The following patches begin to add the infrastructure for the SCSI
+> Userspace target framework. We were not sure about what James meant by
+> some of his comments, so rather than getting to far we want to post a
+> for any block device (well, someone could do a libata type of target for
+> any transport).
 
-------_=_NextPart_001_01C62214.91C22CBB
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: quoted-printable
+Nit question...I notice those patches are from git. Do you have a git
+tree for stgt?  I was about to start figuring out subversion based on
+the berlios page.
 
-This moves code intented for SAS from=20
-the generic mptscsih module over to the=20
-mptsas module.
-
-Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
-
-------_=_NextPart_001_01C62214.91C22CBB
-Content-Type: application/octet-stream;
-	name="4-persist.patch"
-Content-Transfer-Encoding: base64
-Content-Description: 4-persist.patch
-Content-Disposition: attachment;
-	filename="4-persist.patch"
-
-ZGlmZiAtdWFyTiBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0YmFzZS5oIGEvZHJpdmVycy9t
-ZXNzYWdlL2Z1c2lvbi9tcHRiYXNlLmgKLS0tIGIvZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9tcHRi
-YXNlLmgJMjAwNi0wMS0xNiAxNjo0NzoxMi4wMDAwMDAwMDAgLTA3MDAKKysrIGEvZHJpdmVycy9t
-ZXNzYWdlL2Z1c2lvbi9tcHRiYXNlLmgJMjAwNi0wMS0yNSAxNjozOTowNi4wMDAwMDAwMDAgLTA3
-MDAKQEAgLTYzMSw2ICs2MzEsNyBAQAogCXN0cnVjdCBtdXRleAkJIHNhc190b3BvbG9neV9tdXRl
-eDsKIAlNUFRfU0FTX01HTVQJCSBzYXNfbWdtdDsKIAlpbnQJCQkgbnVtX3BvcnRzOworCXN0cnVj
-dCB3b3JrX3N0cnVjdAkgbXB0c2NzaWhfcGVyc2lzdFRhc2s7CiAKIAlzdHJ1Y3QgbGlzdF9oZWFk
-CSBmY19ycG9ydHM7CiAJc3BpbmxvY2tfdAkJIGZjX3Jwb3J0X2xvY2s7IC8qIGxpc3QgYW5kIHJp
-IGZsYWdzICovCmRpZmYgLXVhck4gYi9kcml2ZXJzL21lc3NhZ2UvZnVzaW9uL21wdHNhcy5jIGEv
-ZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9tcHRzYXMuYwotLS0gYi9kcml2ZXJzL21lc3NhZ2UvZnVz
-aW9uL21wdHNhcy5jCTIwMDYtMDEtMjUgMTY6MzY6MzAuMDAwMDAwMDAwIC0wNzAwCisrKyBhL2Ry
-aXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c2FzLmMJMjAwNi0wMS0yNSAxNjozODoyOS4wMDAwMDAw
-MDAgLTA3MDAKQEAgLTE1MzQsNiArMTUzNCwxNiBAQAogCXNjaGVkdWxlX3dvcmsoJmV2LT53b3Jr
-KTsKIH0KIAorLyo9LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0t
-PS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0qLworLyogd29yayBxdWV1ZSB0aHJlYWQgdG8g
-Y2xlYXIgdGhlIHBlcnNpdGVuY3kgdGFibGUgKi8KK3N0YXRpYyB2b2lkCittcHRzY3NpaF9zYXNf
-cGVyc2lzdF9jbGVhcl90YWJsZSh2b2lkICogYXJnKQoreworCU1QVF9BREFQVEVSICppb2MgPSAo
-TVBUX0FEQVBURVIgKilhcmc7CisKKwltcHRiYXNlX3Nhc19wZXJzaXN0X29wZXJhdGlvbihpb2Ms
-IE1QSV9TQVNfT1BfQ0xFQVJfTk9UX1BSRVNFTlQpOworfQorCiBzdGF0aWMgaW50CiBtcHRzYXNf
-ZXZlbnRfcHJvY2VzcyhNUFRfQURBUFRFUiAqaW9jLCBFdmVudE5vdGlmaWNhdGlvblJlcGx5X3Qg
-KnJlcGx5KQogewpAQCAtMTU1Miw2ICsxNTYyLDEyIEBACiAJCW1wdHNjc2loX3NlbmRfcmFpZF9l
-dmVudChpb2MsCiAJCQkoRVZFTlRfREFUQV9SQUlEICopcmVwbHktPkRhdGEpOwogCQlicmVhazsK
-KwljYXNlIE1QSV9FVkVOVF9QRVJTSVNURU5UX1RBQkxFX0ZVTEw6CisJCUlOSVRfV09SSygmaW9j
-LT5tcHRzY3NpaF9wZXJzaXN0VGFzaywKKwkJICAgIG1wdHNjc2loX3Nhc19wZXJzaXN0X2NsZWFy
-X3RhYmxlLAorCQkgICAgKHZvaWQgKilpb2MpOworCQlzY2hlZHVsZV93b3JrKCZpb2MtPm1wdHNj
-c2loX3BlcnNpc3RUYXNrKTsKKwkJYnJlYWs7CiAJZGVmYXVsdDoKIAkJcmMgPSBtcHRzY3NpaF9l
-dmVudF9wcm9jZXNzKGlvYywgcmVwbHkpOwogCQlicmVhazsKZGlmZiAtdWFyTiBiL2RyaXZlcnMv
-bWVzc2FnZS9mdXNpb24vbXB0c2NzaWguYyBhL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c2Nz
-aWguYwotLS0gYi9kcml2ZXJzL21lc3NhZ2UvZnVzaW9uL21wdHNjc2loLmMJMjAwNi0wMS0xNyAx
-NjowMjo0MS4wMDAwMDAwMDAgLTA3MDAKKysrIGEvZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9tcHRz
-Y3NpaC5jCTIwMDYtMDEtMjUgMTY6NDA6MDQuMDAwMDAwMDAwIC0wNzAwCkBAIC0xNjMsOCArMTYz
-LDYgQEAKIHN0YXRpYyB2b2lkCW1wdHNjc2loX25lZ290aWF0ZV90b19hc3luX25hcnJvdyhNUFRf
-U0NTSV9IT1NUICpoZCwgVmlydERldmljZSAqdmRldmljZSk7CiBzdGF0aWMgaW50CW1wdHNjc2lo
-X2lzX3BoeXNfZGlzayhNUFRfQURBUFRFUiAqaW9jLCBpbnQgaWQpOwogCi1zdGF0aWMgc3RydWN0
-IHdvcmtfc3RydWN0ICAgbXB0c2NzaWhfcGVyc2lzdFRhc2s7Ci0KICNpZmRlZiBNUFRTQ1NJSF9F
-TkFCTEVfRE9NQUlOX1ZBTElEQVRJT04KIHN0YXRpYyBpbnQJbXB0c2NzaWhfZG9fcmFpZChNUFRf
-U0NTSV9IT1NUICpoZCwgdTggYWN0aW9uLCBJTlRFUk5BTF9DTUQgKmlvKTsKIHN0YXRpYyB2b2lk
-CW1wdHNjc2loX2RvbWFpblZhbGlkYXRpb24odm9pZCAqaGQpOwpAQCAtMjY1NiwxNiArMjY1NCw2
-IEBACiB9CiAKIC8qPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09
-LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09Ki8KLS8qIHdvcmsgcXVldWUgdGhyZWFkIHRv
-IGNsZWFyIHRoZSBwZXJzaXRlbmN5IHRhYmxlICovCi1zdGF0aWMgdm9pZAotbXB0c2NzaWhfc2Fz
-X3BlcnNpc3RfY2xlYXJfdGFibGUodm9pZCAqIGFyZykKLXsKLQlNUFRfQURBUFRFUiAqaW9jID0g
-KE1QVF9BREFQVEVSICopYXJnOwotCi0JbXB0YmFzZV9zYXNfcGVyc2lzdF9vcGVyYXRpb24oaW9j
-LCBNUElfU0FTX09QX0NMRUFSX05PVF9QUkVTRU5UKTsKLX0KLQotLyo9LT0tPS09LT0tPS09LT0t
-PS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09LT0tPS09
-LT0qLwogaW50CiBtcHRzY3NpaF9ldmVudF9wcm9jZXNzKE1QVF9BREFQVEVSICppb2MsIEV2ZW50
-Tm90aWZpY2F0aW9uUmVwbHlfdCAqcEV2UmVwbHkpCiB7CkBAIC0yNzI3LDEzICsyNzE1LDYgQEAK
-IAkJYnJlYWs7CiAJfQogCi0JLyogUGVyc2lzdGVudCB0YWJsZSBpcyBmdWxsLiAqLwotCWNhc2Ug
-TVBJX0VWRU5UX1BFUlNJU1RFTlRfVEFCTEVfRlVMTDoKLQkJSU5JVF9XT1JLKCZtcHRzY3NpaF9w
-ZXJzaXN0VGFzaywKLQkJICAgIG1wdHNjc2loX3Nhc19wZXJzaXN0X2NsZWFyX3RhYmxlLCh2b2lk
-ICopaW9jKTsKLQkJc2NoZWR1bGVfd29yaygmbXB0c2NzaWhfcGVyc2lzdFRhc2spOwotCQlicmVh
-azsKLQogCWNhc2UgTVBJX0VWRU5UX05PTkU6CQkJCS8qIDAwICovCiAJY2FzZSBNUElfRVZFTlRf
-TE9HX0RBVEE6CQkJLyogMDEgKi8KIAljYXNlIE1QSV9FVkVOVF9TVEFURV9DSEFOR0U6CQkJLyog
-MDIgKi8K
-
-------_=_NextPart_001_01C62214.91C22CBB--
+-- 
+Dave Boutcher
