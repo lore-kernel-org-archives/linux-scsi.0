@@ -1,175 +1,182 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: SCSI tape access on 2.6 kernels?
-Date: Thu, 26 Jan 2006 23:54:30 +0200 (EET)
-Message-ID: <Pine.LNX.4.63.0601261839440.6109@kai.makisara.local>
-References: <43D604AD.6050607@ilsb.tuwien.ac.at>
- <Pine.LNX.4.64.0601241251460.23364@localhost.localdomain>
- <20060124202306.GA8422@us.ibm.com> <Pine.LNX.4.64.0601241535290.23364@localhost.localdomain>
- <Pine.LNX.4.63.0601252306270.5794@kai.makisara.local>
- <Pine.LNX.4.64.0601261033010.23310@localhost.localdomain>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [3/10] remove ISA legacy functions: drivers/scsi/g_NCR5380.c
+Date: Thu, 26 Jan 2006 23:48:05 +0100
+Message-ID: <20060126224805.GG3668@stusta.de>
+References: <20060126223126.GD3668@stusta.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fep32-0.kolumbus.fi ([193.229.0.63]:46919 "EHLO
-	fep32-app.kolumbus.fi") by vger.kernel.org with ESMTP
-	id S1751421AbWAZVwe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jan 2006 16:52:34 -0500
-In-Reply-To: <Pine.LNX.4.64.0601261033010.23310@localhost.localdomain>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:59142 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S964965AbWAZWsH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Jan 2006 17:48:07 -0500
+Content-Disposition: inline
+In-Reply-To: <20060126223126.GD3668@stusta.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chip Coldwell <coldwell@redhat.com>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Gerhard Schneider <gs@ilsb.tuwien.ac.at>, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Al Viro <viro@ftp.linux.org.uk>, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-On Thu, 26 Jan 2006, Chip Coldwell wrote:
+From: Al Viro <viro@zeniv.linux.org.uk>
 
-> On Wed, 25 Jan 2006, Kai Makisara wrote:
-> 
-> > On Tue, 24 Jan 2006, Chip Coldwell wrote:
-> >
-> > > On Tue, 24 Jan 2006, Patrick Mansfield wrote:
-> > >
-> > > > On Tue, Jan 24, 2006 at 12:52:36PM -0500, Chip Coldwell wrote:
-> > > >
-> > > > > Put
-> > > > >
-> > > > > options st try_direct_io=0
-> > > >
-> > > > >
-> > > > > in /etc/modprobe.conf.  Direct I/O defeats read-ahead, and
-> > > > > significantly (factor of >5) degrates read performance.  I don't know
-> > > > > about writes.
-> > > >
-> > > > For tape???
-> > >
-> > > Yes, for tape.  We verified this with a DAT72 DDS drive.
-> > >
-> > How did you do the tests? I would like to be able to reproduce this
-> > finding because there is something wrong somewhere. With any decent read()
-> > and write() byte counts (the 64 kB you mention in another message is
-> > decent) you should not find direct i/o slower than using the driver
-> > buffer. I have not seen anything like this with my DDS-4 drive (same
-> > speed as DAT72).
-> 
-> We used an Adaptec HBA connected to a DAT72 drive with nothing else on
-> the bus:
-> 
-> scsi1 : Adaptec AIC79XX PCI-X SCSI HBA DRIVER, Rev 1.3.10-RH1
-> 
-> Host: scsi1 Channel: 00 Id: 06 Lun: 00
->   Vendor: SEAGATE  Model: DAT    DAT72-000 Rev: A060
->   Type:   Sequential-Access                ANSI SCSI revision: 03
-> 
-> Target 6 Negotiation Settings
->         User: 320.000MB/s transfers (160.000MHz DT|IU|QAS, 16bit)
->         Goal: 80.000MB/s transfers (40.000MHz, 16bit)
->         Curr: 80.000MB/s transfers (40.000MHz, 16bit)
->         Transmission Errors 0
->         Channel A Target 6 Lun 0 Settings
->                 Commands Queued 6
->                 Commands Active 0
->                 Command Openings 1
->                 Max Tagged Openings 0
->                 Device Queue Frozen Count 0
-> 
-You did not say whether the drive was in fixed block mode ('mt status' 
-tell nonzero block size) of variable block mode. The Seagate (now Quantum) 
-drives usually wake up in fixed block mode with 1024 byte block size. I am 
-assuming this is the case here.
+switched CONFIG_SCSI_G_NCR5380_MEM code in g_NCR5380 to ioremap(); massaged
+g_NCR5380.h accordingly.
 
-Compression seems to be enabled because you get speeds that exceed the 3.5 
-MB/s native speed of the drive. You are measuring here more the speed of 
-the drive's processor than the tape reading performance. However, this 
-does not invalidate the results of these tests.
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-> This is using the Red Hat Enterprise Linux v4 kernel (2.6.9-27.ELsmp),
-> which differs from the latest 2.6, in particular in the st driver.  (I
-> could test the latest 2.6 and will do so if you think it could make a
-> difference).
-> 
-The version does not matter. The basic st behaviour is similar in all 2.6 
-kernels.
+---
 
-> I put some zeros on the tape
-> 
-> RHEL4# dd if=/dev/zero of=/dev/st0 bs=1k count=1000000
-> 
-> and test read performance, first without direct I/O
-> 
-> RHEL4# cat /sys/bus/scsi/drivers/st/try_direct_io 0
+ drivers/scsi/g_NCR5380.c |   28 +++++++++++++++++++++-------
+ drivers/scsi/g_NCR5380.h |   23 +++++++++++++++++------
+ 2 files changed, 38 insertions(+), 13 deletions(-)
 
-This command tells the current settings (and probably says that the file 0 
-does not exist). With the stock kernel you have to rmmod and modprobe the 
-st module. But I think we know what you mean to say here.
+6432444077b99d420f973ce8f1e748792f50a161
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -127,7 +127,7 @@ static int ncr_53c400a = NCR_NOT_SET;
+ static int dtc_3181e = NCR_NOT_SET;
+ 
+ static struct override {
+-	NCR5380_implementation_fields;
++	NCR5380_map_type NCR5380_map_name;
+ 	int irq;
+ 	int dma;
+ 	int board;		/* Use NCR53c400, Ricoh, etc. extensions ? */
+@@ -299,6 +299,10 @@ int __init generic_NCR5380_detect(struct
+ 	};
+ 	int flags = 0;
+ 	struct Scsi_Host *instance;
++#ifdef CONFIG_SCSI_G_NCR5380_MEM
++	unsigned long base;
++	void __iomem *iomem;
++#endif
+ 
+ 	if (ncr_irq != NCR_NOT_SET)
+ 		overrides[0].irq = ncr_irq;
+@@ -424,15 +428,22 @@ int __init generic_NCR5380_detect(struct
+ 			region_size = NCR5380_region_size;
+ 		}
+ #else
+-		if(!request_mem_region(overrides[current_override].NCR5380_map_name, NCR5380_region_size, "ncr5380"))
++		base = overrides[current_override].NCR5380_map_name;
++		if (!request_mem_region(base, NCR5380_region_size, "ncr5380"))
++			continue;
++		iomem = ioremap(base, NCR5380_region_size);
++		if (!iomem) {
++			release_mem_region(base, NCR5380_region_size);
+ 			continue;
++		}
+ #endif
+ 		instance = scsi_register(tpnt, sizeof(struct NCR5380_hostdata));
+ 		if (instance == NULL) {
+ #ifndef CONFIG_SCSI_G_NCR5380_MEM
+ 			release_region(overrides[current_override].NCR5380_map_name, region_size);
+ #else
+-			release_mem_region(overrides[current_override].NCR5380_map_name, NCR5380_region_size);
++			iounmap(iomem);
++			release_mem_region(base, NCR5380_region_size);
+ #endif
+ 			continue;
+ 		}
+@@ -440,6 +451,8 @@ int __init generic_NCR5380_detect(struct
+ 		instance->NCR5380_instance_name = overrides[current_override].NCR5380_map_name;
+ #ifndef CONFIG_SCSI_G_NCR5380_MEM
+ 		instance->n_io_port = region_size;
++#else
++		((struct NCR5380_hostdata *)instance->hostdata).iomem = iomem;
+ #endif
+ 
+ 		NCR5380_init(instance, flags);
+@@ -509,6 +522,7 @@ int generic_NCR5380_release_resources(st
+ #ifndef CONFIG_SCSI_G_NCR5380_MEM
+ 	release_region(instance->NCR5380_instance_name, instance->n_io_port);
+ #else
++	iounmap(((struct NCR5380_hostdata *)instance->hostdata).iomem);
+ 	release_mem_region(instance->NCR5380_instance_name, NCR5380_region_size);
+ #endif
+ 
+@@ -586,7 +600,7 @@ static inline int NCR5380_pread(struct S
+ 		}
+ #else
+ 		/* implies CONFIG_SCSI_G_NCR5380_MEM */
+-		isa_memcpy_fromio(dst + start, NCR53C400_host_buffer + NCR5380_map_name, 128);
++		memcpy_fromio(dst + start, iomem + NCR53C400_host_buffer, 128);
+ #endif
+ 		start += 128;
+ 		blocks--;
+@@ -606,7 +620,7 @@ static inline int NCR5380_pread(struct S
+ 		}
+ #else
+ 		/* implies CONFIG_SCSI_G_NCR5380_MEM */
+-		isa_memcpy_fromio(dst + start, NCR53C400_host_buffer + NCR5380_map_name, 128);
++		memcpy_fromio(dst + start, iomem + NCR53C400_host_buffer, 128);
+ #endif
+ 		start += 128;
+ 		blocks--;
+@@ -671,7 +685,7 @@ static inline int NCR5380_pwrite(struct 
+ 		}
+ #else
+ 		/* implies CONFIG_SCSI_G_NCR5380_MEM */
+-		isa_memcpy_toio(NCR53C400_host_buffer + NCR5380_map_name, src + start, 128);
++		memcpy_toio(iomem + NCR53C400_host_buffer, src + start, 128);
+ #endif
+ 		start += 128;
+ 		blocks--;
+@@ -687,7 +701,7 @@ static inline int NCR5380_pwrite(struct 
+ 		}
+ #else
+ 		/* implies CONFIG_SCSI_G_NCR5380_MEM */
+-		isa_memcpy_toio(NCR53C400_host_buffer + NCR5380_map_name, src + start, 128);
++		memcpy_toio(iomem + NCR53C400_host_buffer, src + start, 128);
+ #endif
+ 		start += 128;
+ 		blocks--;
+diff --git a/drivers/scsi/g_NCR5380.h b/drivers/scsi/g_NCR5380.h
+--- a/drivers/scsi/g_NCR5380.h
++++ b/drivers/scsi/g_NCR5380.h
+@@ -82,6 +82,15 @@ static const char* generic_NCR5380_info(
+ #define NCR5380_read(reg) (inb(NCR5380_map_name + (reg)))
+ #define NCR5380_write(reg, value) (outb((value), (NCR5380_map_name + (reg))))
+ 
++#define NCR5380_implementation_fields \
++    NCR5380_map_type NCR5380_map_name
++
++#define NCR5380_local_declare() \
++    register NCR5380_implementation_fields
++
++#define NCR5380_setup(instance) \
++    NCR5380_map_name = (NCR5380_map_type)((instance)->NCR5380_instance_name)
++
+ #else 
+ /* therefore CONFIG_SCSI_G_NCR5380_MEM */
+ 
+@@ -95,18 +104,20 @@ static const char* generic_NCR5380_info(
+ #define NCR53C400_host_buffer 0x3900
+ #define NCR5380_region_size 0x3a00
+ 
+-#define NCR5380_read(reg) isa_readb(NCR5380_map_name + NCR53C400_mem_base + (reg))
+-#define NCR5380_write(reg, value) isa_writeb(value, NCR5380_map_name + NCR53C400_mem_base + (reg))
+-#endif
++#define NCR5380_read(reg) readb(iomem + NCR53C400_mem_base + (reg))
++#define NCR5380_write(reg, value) writeb(value, iomem + NCR53C400_mem_base + (reg))
+ 
+ #define NCR5380_implementation_fields \
+-    NCR5380_map_type NCR5380_map_name
++    NCR5380_map_type NCR5380_map_name; \
++    void __iomem *iomem;
+ 
+ #define NCR5380_local_declare() \
+-    register NCR5380_implementation_fields
++    register void __iomem *iomem
+ 
+ #define NCR5380_setup(instance) \
+-    NCR5380_map_name = (NCR5380_map_type)((instance)->NCR5380_instance_name)
++    iomem = (((struct NCR5380_hostdata *)(instance)->hostdata).iomem)
++
++#endif
+ 
+ #define NCR5380_intr generic_NCR5380_intr
+ #define NCR5380_queue_command generic_NCR5380_queue_command
 
-> RHEL4# time dd if=/dev/nst0 of=/dev/null bs=1k
-> 1000000+0 records in
-> 1000000+0 records out
-> 
-> real    2m35.418s
-> user    0m0.639s
-> sys     0m5.804s
-> 
-> and then with direct I/O
-> 
-> RHEL4# cat /sys/bus/scsi/drivers/st/try_direct_io 1
-> RHEL4# time dd if=/dev/nst0 of=/dev/null bs=1k
-> 1000000+0 records in
-> 1000000+0 records out
-> 
-> real    5m1.899s
-> user    0m1.224s
-> sys     0m16.456s
-> 
-> so with direct I/O, read performance is about a factor of two slower.
-> I believe this is because the driver doesn't do read-ahead when doing
-> direct I/O (after all, how could it?).
-> 
-I repeated these tests with a HP DAT40 connected to a LSI Logic 53c1010 
-HBA. The kernel was 2.6.16-rc1-git4.
-
-The tests in fixed block mode showed similar behaviour with slightly 
-different times (6m10 vs 1m6). (In variable block mode the time was 6m10 
-with both try_direct_io=1 and try_direct_io=0).
-
-Your analysis here is correct. This is also the case I mentioned in 
-another message where I said that disabling direct i/o increases speed in 
-fixed block mode: the read() and write() byte counts are very small.
-
-The problem is that this case is testing something that you should never 
-do with a tape. No even half-decent tape application does this. The 
-nearest I know is tar with the default 10 kB block size.
-
-You should _not draw any practical conclusions on this test_!
-
-> I did the test again with larger blocks (the buffer in the tape drive
-> is 32K), first without direct I/O
-> 
-> RHEL4# cat /sys/bus/scsi/drivers/st/try_direct_io 0
-> RHEL4# time dd if=/dev/nst0 of=/dev/null bs=32k
-> 31250+0 records in
-> 31250+0 records out
-> 
-> real    2m30.688s
-> user    0m0.028s
-> sys     0m2.871s
-> 
-> then again with direct I/O
-> 
-> RHEL4# time dd if=/dev/nst0 of=/dev/null bs=32k
-> 31250+0 records in
-> 31250+0 records out
-> 
-> real    2m30.687s
-> user    0m0.063s
-> sys     0m0.677s
-> 
-> So in this case, performance is no worse or better with direct I/O
-> than without.
-> 
-This is a more realistic test. The 32 kB i/o size is large enough for many 
-drives. In another message you prove this for the DAT72 because you did 
-not get better speed with 64 kB i/o size. (The drive manufacturers usually 
-provide a suggestion for the optimal i/o size.)
-
--- 
-Kai
