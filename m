@@ -1,55 +1,37 @@
-From: Chip Coldwell <coldwell@redhat.com>
-Subject: Re: SCSI tape access on 2.6 kernels?
-Date: Thu, 26 Jan 2006 11:39:54 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0601261138500.23310@localhost.localdomain>
-References: <43D604AD.6050607@ilsb.tuwien.ac.at>
- <Pine.LNX.4.64.0601241251460.23364@localhost.localdomain>
- <20060124202306.GA8422@us.ibm.com> <Pine.LNX.4.64.0601241535290.23364@localhost.localdomain>
- <Pine.LNX.4.63.0601252306270.5794@kai.makisara.local>
- <Pine.LNX.4.64.0601261033010.23310@localhost.localdomain>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: Problems with MSI-X on ia64
+Date: Thu, 26 Jan 2006 11:14:22 -0600
+Message-ID: <D4CFB69C345C394284E4B78B876C1CF10B848090@cceexc23.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:28892 "EHLO mx1.redhat.com")
-	by vger.kernel.org with ESMTP id S964792AbWAZQkV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jan 2006 11:40:21 -0500
-In-Reply-To: <Pine.LNX.4.64.0601261033010.23310@localhost.localdomain>
+Received: from ccerelbas04.cce.hp.com ([161.114.21.107]:61084 "EHLO
+	ccerelbas04.cce.hp.com") by vger.kernel.org with ESMTP
+	id S932271AbWAZRPA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jan 2006 12:15:00 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: Patrick Mansfield <patmans@us.ibm.com>, Gerhard Schneider <gs@ilsb.tuwien.ac.at>, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ia64@vger.kernel.org
 
-On Thu, 26 Jan 2006, Chip Coldwell wrote:
->
-> then again with direct I/O
->
-> RHEL4# time dd if=/dev/nst0 of=/dev/null bs=32k
-> 31250+0 records in
-> 31250+0 records out
->
-> real    2m30.687s
-> user    0m0.063s
-> sys     0m0.677s
->
-> So in this case, performance is no worse or better with direct I/O
-> than without.
+Hello,
+Has anyone tested MSI-X on ia64 based platforms? We're using a 2.6.9
+variant and a cciss driver with MSI/MSI-X support. The kernel has MSI
+enabled. On ia64 the MSI-X table is all zeroes. On Intel x86_64
+platforms the table contains valid data and everything works as
+expected.
 
-I tried it again with direct I/O and an even larger block size, but
-the time is the same:
+If I understand how this works the Linux kernel is supposed to program
+up the table based on the HW platform. I can't find anything in the ia64
+code that does this. For x86_64 and i386 it looks like the magic address
+is 
 
-RHEL4# time dd if=/dev/nst0 of=/dev/null bs=64k
-15625+0 records in
-15625+0 records out
+	#define APIC_DEFAULT_BASE	0xfee00000
 
-real    2m30.153s
-user    0m0.025s
-sys     0m0.452s
+Anybody know why this isn't defined for ia64? Any answers, input, or
+flames are appreciated.
 
-Chip
-
--- 
-Charles M. "Chip" Coldwell
-Senior Software Engineer
-Red Hat, Inc
-
+Thanks,
+mikem
