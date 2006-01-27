@@ -1,47 +1,46 @@
-From: Neil Brown <neilb@suse.de>
+From: Tim Morley <tim@chaos.org.uk>
 Subject: Re: More information on scsi_cmd_cache leak... (bisect)
-Date: Sat, 28 Jan 2006 08:07:12 +1100
-Message-ID: <17370.35712.629959.808446@cse.unsw.edu.au>
+Date: Fri, 27 Jan 2006 22:50:18 +0000
+Message-ID: <17370.41898.363131.594754@utter.chaos.org.uk>
 References: <200601270410.06762.chase.venters@clientec.com>
-	<Pine.LNX.4.62.0601271335470.8977@pureeloreel.qftzy.pbz>
+	<17369.65530.747867.844964@cse.unsw.edu.au>
+	<20060127112352.GF4311@suse.de>
+	<20060127112837.GG4311@suse.de>
+	<43DA6F33.3070101@cs.wisc.edu>
+	<1138389616.3293.13.camel@mulgrave>
+	<43DA787F.4080406@cs.wisc.edu>
+	<20060127194927.GB9068@suse.de>
+	<Pine.LNX.4.64.0601271351070.9232@turbotaz.ourhouse>
+	<Pine.LNX.4.62.0601271501300.8977@pureeloreel.qftzy.pbz>
+	<20060127200635.GE9068@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:22940 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S1161022AbWA0VHh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jan 2006 16:07:37 -0500
-In-Reply-To: message from Ariel on Friday January 27
+Received: from utter.chaos.org.uk ([193.201.201.153]:64193 "EHLO
+	utter.chaos.org.uk") by vger.kernel.org with ESMTP id S1422637AbWA0Wun
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jan 2006 17:50:43 -0500
+In-Reply-To: <20060127200635.GE9068@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ariel <askernel2615@dsgml.com>
-Cc: Chase Venters <chase.venters@clientec.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@osdl.org, a.titov@host.bg, axboe@suse.de, jamie@audible.transient.net, arjan@infradead.org
+To: Jens Axboe <axboe@suse.de>
+Cc: askernel2615@dsgml.com, Chase Venters <chase.venters@clientec.com>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@SteelEye.com>, Neil Brown <neilb@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@osdl.org, a.titov@host.bg, jamie@audible.transient.net
 
-On Friday January 27, askernel2615@dsgml.com wrote:
+Jens Axboe writes ("Re: More information on scsi_cmd_cache leak... (bisect)"):
+> On Fri, Jan 27 2006, askernel2615@dsgml.com wrote:
+> > Mine is also 2.6.15. Stock with debian patches.
+> > 
+> > In fact I believe ALL the reports are from 2.6.15.
 > 
-> On Fri, 27 Jan 2006, Chase Venters wrote:
-> 
-> > 	After dealing with this leak for a while, I decided to do some dancing around
-> > with git bisect. I've landed on a possible point of regression:
-> >
-> > commit: a9701a30470856408d08657eb1bd7ae29a146190
-> > [PATCH] md: support BIO_RW_BARRIER for md/raid1
-> 
-> I can confirm that it only leaks with raid!
-> 
-> I rebooted with my raid5 root, read only, and it didn't leak. As soon as I 
-> remount,rw it started leaking. Go back to ro and it stopped (although it 
-> didn't clean up the old leaks). Tried my raid1 /boot and same thing - rw 
-> leaks, ro doesn't. But, it only leaks on activity.
-> 
-> I then tried a regular lvm mount (with root ro), and no leaks!
+> Hmm so does it happen in 2.6.16-rc1 or not? And try the suggestion I
+> made in the other, edit the sata driver for your device and set
+> ordered_flush to 0 instead of 1.
 
-It might be interesting, but probably not particularly helpful, to
-create an ext3 filesystem on this device and mount it with the
-  barrier=1
-mount option.
-That should send BIO_RW_BARRIER requests to the device just line md
-does.
+FYI I've had the problem with 2.6.15 and 2.6.15.1. I'm using raid1 and
+raid5 on 4 sata drives with an ICH7 controller on an ASUS P5LD2-VM.
 
-NeilBrown
+I've just got a 2.6.16-rc1 built and it seems that it fixes it! My
+scsi_cmd_cache is setting happily at 10 allocations and not moving.
+
+Tim Morley
