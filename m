@@ -1,60 +1,76 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: Problems with MSI-X on ia64
-Date: Thu, 26 Jan 2006 20:37:34 -0800
-Message-ID: <20060127043734.GA32009@kroah.com>
-References: <D4CFB69C345C394284E4B78B876C1CF10B8481F1@cceexc23.americas.cpqcorp.net>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: [PATCH] SCSI: Introduce scsi_req_abort_cmd
+Date: Thu, 26 Jan 2006 21:22:26 -0800 (PST)
+Message-ID: <20060127052226.39927.qmail@web31808.mail.mud.yahoo.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl093-040-174.pdx1.dsl.speakeasy.net ([66.93.40.174]:50664
-	"EHLO aria.kroah.org") by vger.kernel.org with ESMTP
-	id S932289AbWA0Ehd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jan 2006 23:37:33 -0500
-Content-Disposition: inline
-In-Reply-To: <D4CFB69C345C394284E4B78B876C1CF10B8481F1@cceexc23.americas.cpqcorp.net>
+Received: from web31808.mail.mud.yahoo.com ([68.142.207.71]:49784 "HELO
+	web31808.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S932423AbWA0FW3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jan 2006 00:22:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Cc: "Grundler, Grant G" <grant.grundler@hp.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ia64@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Jan 26, 2006 at 02:37:14PM -0600, Miller, Mike (OS Dev) wrote:
-> > -----Original Message-----
-> > From: Grundler, Grant G 
-> > > We're using a 2.6.9 variant and a cciss driver with 
-> > MSI/MSI-X support.
-> > > The kernel has MSI enabled. On ia64 the MSI-X table is all zeroes.
-> > 
-> > Could you post the debug output you've collected so far?
-> 
-> There are 2 MSI-X capable controllers in the system. On IPF this is what
-> the tables look like:
-> 
-> cciss: offset = 0xfe000 table offset = 0xfe000 BIR = 0x0
-> cciss: 0: vector = 0,msg data = 0, msg upper addr = 0,msg addr = 0
-> cciss: 1: vector = 0,msg data = 0, msg upper addr = 0,msg addr = 0
-> cciss: 2: vector = 0,msg data = 0, msg upper addr = 0,msg addr = 0
-> cciss: 3: vector = 0,msg data = 0, msg upper addr = 0,msg addr = 0
-> cciss: using DAC cycles
-> ACPI: PCI interrupt 0000:88:00.0[A] -> GSI 71 (level, low) -> IRQ 61
-> cciss: MSI-X enabled
-> cciss: offset = 0xfe000 table offset = 0xfe000 BIR = 0x0
-> cciss: 0: vector = 0,msg data = 0, msg upper addr = 0,msg addr = 0
-> cciss: 1: vector = 0,msg data = 0, msg upper addr = 0,msg addr = 0
-> cciss: 2: vector = 0,msg data = 0, msg upper addr = 0,msg addr = 0
-> cciss: 3: vector = 0,msg data = 0, msg upper addr = 0,msg addr = 0
-> cciss: using DAC cycles
-> blocks= 143305920 block_size= 512
-> heads= 255, sectors= 32, cylinders= 17562
->  
-> blocks= 142130880 block_size= 512
-> heads= 255, sectors= 32, cylinders= 17418
->  
-> cciss/c2d0:
-> 
-> And this is where we hang, when enabling interrupts in the driver.
+Introduce scsi_req_abort_cmd(struct scsi_cmnd *).
+This function requests that SCSI Core start recovery for the
+command by deleting the timer and adding the command to the eh
+queue.  It can be called by either LLDDs or SCSI Core.  LLDDs who
+implement their own error recovery MAY ignore the timeout event if
+they generated scsi_req_abort_cmd.
 
-Can you try 2.6.15, or possibly 2.6.16-rc1-mm3?
+Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
 
-thanks,
+---
 
-greg k-h
+ drivers/scsi/scsi.c      |   18 ++++++++++++++++++
+ include/scsi/scsi_cmnd.h |    1 +
+ 2 files changed, 19 insertions(+), 0 deletions(-)
+
+51df19a1669bd502b536178d6c294e68be25ce79
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 245ca99..1af9795 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -721,6 +721,24 @@ void scsi_init_cmd_from_req(struct scsi_
+ static DEFINE_PER_CPU(struct list_head, scsi_done_q);
+ 
+ /**
++ * scsi_req_abort_cmd -- Request command recovery for the specified command
++ * cmd: pointer to the SCSI command of interest
++ *
++ * This function requests that SCSI Core start recovery for the
++ * command by deleting the timer and adding the command to the eh
++ * queue.  It can be called by either LLDDs or SCSI Core.  LLDDs who
++ * implement their own error recovery MAY ignore the timeout event if
++ * they generated scsi_req_abort_cmd.
++ */
++void scsi_req_abort_cmd(struct scsi_cmnd *cmd)
++{
++	if (!scsi_delete_timer(cmd))
++		return;
++	scsi_times_out(cmd);
++}
++EXPORT_SYMBOL(scsi_req_abort_cmd);
++
++/**
+  * scsi_done - Enqueue the finished SCSI command into the done queue.
+  * @cmd: The SCSI Command for which a low-level device driver (LLDD) gives
+  * ownership back to SCSI Core -- i.e. the LLDD has finished with it.
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 7529f43..8b9ad8c 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -151,5 +151,6 @@ extern struct scsi_cmnd *scsi_get_comman
+ extern void scsi_put_command(struct scsi_cmnd *);
+ extern void scsi_io_completion(struct scsi_cmnd *, unsigned int, unsigned int);
+ extern void scsi_finish_command(struct scsi_cmnd *cmd);
++extern void scsi_req_abort_cmd(struct scsi_cmnd *cmd);
+ 
+ #endif /* _SCSI_SCSI_CMND_H */
+-- 
+1.1.4.gb737
+
