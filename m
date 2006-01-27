@@ -1,81 +1,60 @@
-From: "emmanuel\.fuste" <emmanuel.fuste@laposte.net>
-Subject: Re: Dead Adaptec AHA-2940U2/U2W while ripping a CD
-Date: Fri, 27 Jan 2006 12:28:44 +0100
-Message-ID: <ITR17W$2B8A7E1A2CD50327367252872E28FBDC@laposte.net>
+From: "Marcus Franke" <MFranke@evendi.de>
+Subject: SCSI disk error // meaning of return code
+Date: Fri, 27 Jan 2006 13:25:10 +0100
+Message-ID: <AE41C3C123D61B45B457F3037275842F23030D@DC-EX-001.evendi.local>
+Reply-To: <linux-scsi@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx.laposte.net ([81.255.54.11]:1863 "EHLO mx.laposte.net")
-	by vger.kernel.org with ESMTP id S964995AbWA0L30 convert rfc822-to-8bit
+Received: from smtp.kliff.de ([80.239.136.89]:1158 "EHLO smtp.kliff.de")
+	by vger.kernel.org with ESMTP id S964816AbWA0MZN convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jan 2006 06:29:26 -0500
+	Fri, 27 Jan 2006 07:25:13 -0500
+Received: from DC-EX-001.evendi.local ([85.183.128.34])
+	by smtp.kliff.de (8.11.6/8.11.6) with ESMTP id k0RCP9711566
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Jan 2006 13:25:09 +0100
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mathieu Chouquet-Stringer <ml2news@free.fr>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Hello,
+Hello everyone,
 
-See http://bugzilla.kernel.org/show_bug.cgi?id=3D5921
+I found this error in my kernel log:
 
-Regards,
-Emmanuel.
+Jan 26 19:48:31 master kernel: SCSI disk error : host 0 channel 0 id 0
+lun 0 return code = 40001
+Jan 26 19:48:31 master kernel:  I/O error: dev 08:03, sector 68797224
 
->        Hello,
->
->I was ripping a (copy protected) cd on my alpha and got the
-following
->stuff (see below). At that point, the box failed to respond
-and because I
->don't have a console, I rebooted it.
->
->Kernel version is (vanilla 2.6.15):
->Linux alpha 2.6.15 #1 Sat Jan 7 16:32:48 CET 2006 alpha EV56
-EB164 GNU/Linux
->
->Here's the lspci entry for the card:
->01:01.0 SCSI storage controller: Adaptec AHA-2940U2/U2W
->        Subsystem: Adaptec AHA-2940U2 SCSI Controller
->        Flags: bus master, medium devsel, latency 32, IRQ 26
->        BIST result: 00
->        I/O ports at 9000 [disabled] [size=3D256]
->        Memory at 09200000 (64-bit, non-prefetchable) [size=3D4K]
->        [virtual] Expansion ROM at 09640000 [disabled]
-[size=3D128K]
->        Capabilities: [dc] Power Management version 1
->
->If you want me to test anything let me know.
->
->Cheers,
->
->Jan 26 18:23:06 alpha sr 1:0:6:0: Attempting to queue an
-ABORT message
->Jan 26 18:23:06 alpha CDB: 0xbe 0x4 0x0 0x2 0x78 0x11 0x0 0x0
-0x5 0xf8 0x0 0x0
->Jan 26 18:23:06 alpha scsi1: At time of recovery, card was
-not paused
->Jan 26 18:23:06 alpha >>>>>>>>>>>>>>>>>> Dump Card State
-Begins <<<<<<<<<<<<<<<<<
->Jan 26 18:23:06 alpha scsi1: Dumping Card State while idle,
-at SEQADDR 0x9
->Jan 26 18:23:06 alpha Card was paused
->Jan 26 18:23:06 alpha ACCUM =3D 0x0, SINDEX =3D 0x0, DINDEX =3D
-0xe4, ARG_2 =3D 0x0
->Jan 26 18:23:06 alpha HCNT =3D 0x0 SCBPTR =3D 0x1d
->Jan 26 18:23:06 alpha SCSISIGI[0x0] ERROR[0x0] SCSIBUSL[0x0] \
->                LASTPHASE[0x1]:(P_BUSFREE)=20
->Jan 26 18:23:06 alpha SCSISEQ[0x12]:(ENAUTOATNP|ENRSELI) \
->                SBLKCTL[0xa]:(SELWIDE|SELBUSB)=20
-=2E.....
+Ok, so my first disk (id 0) at the first channel of my controller lost a
+sector and hopefully replaced it with some spare sector.
 
-Acc=E9dez au courrier =E9lectronique de La Poste : www.laposte.net ;=20
-3615 LAPOSTENET (0,34 =80/mn) ; t=E9l : 08 92 68 13 50 (0,34=80/mn)
+But I did not find any information about the return code of 40001 on the
+web or in the kernel code (drivers/scsi/**/*). Tried decimal, hex and
+octal
+versions of the code, but nothing.
+
+Could someone please point me to some document where I can inform me 
+about the meaning of this return code?
+
+Second question is about this "dev 08:03" information in the second
+string.
+Will this point me to the particular disk, which "failed"? 
+
+As the "disc" is a hardware raid of four discs exported to the operating
+system as /dev/sda.
+
+System is RHEL WS3 on a Dell PowerEdge 2850 using the 
+Dell PowerEdge Expandable RAID controller 4 (rev 06).
+
+When I have a look in the dellmgr application watching the discs I see
+zero errors being logged there. No media errors or "other errors" and no
+predictive failures.
 
 
+Any hints or suggestions?
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Marcus
