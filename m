@@ -1,99 +1,41 @@
-From: Jens Axboe <axboe@suse.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: More information on scsi_cmd_cache leak... (bisect)
-Date: Fri, 27 Jan 2006 20:16:37 +0100
-Message-ID: <20060127191637.GD6928@suse.de>
-References: <200601270410.06762.chase.venters@clientec.com> <17369.65530.747867.844964@cse.unsw.edu.au> <20060127112352.GF4311@suse.de> <20060127112837.GG4311@suse.de> <43DA6F33.3070101@cs.wisc.edu>
+Date: Fri, 27 Jan 2006 13:20:16 -0600
+Message-ID: <1138389616.3293.13.camel@mulgrave>
+References: <200601270410.06762.chase.venters@clientec.com>
+	 <17369.65530.747867.844964@cse.unsw.edu.au> <20060127112352.GF4311@suse.de>
+	 <20060127112837.GG4311@suse.de>  <43DA6F33.3070101@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:2613 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1751514AbWA0TQE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jan 2006 14:16:04 -0500
-Content-Disposition: inline
+Received: from stat9.steeleye.com ([209.192.50.41]:26305 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932436AbWA0TVD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jan 2006 14:21:03 -0500
 In-Reply-To: <43DA6F33.3070101@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Neil Brown <neilb@suse.de>, Chase Venters <chase.venters@clientec.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@osdl.org, a.titov@host.bg, askernel2615@dsgml.com, jamie@audible.transient.net
+Cc: Jens Axboe <axboe@suse.de>, Neil Brown <neilb@suse.de>, Chase Venters <chase.venters@clientec.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@osdl.org, a.titov@host.bg, askernel2615@dsgml.com, jamie@audible.transient.net
 
-On Fri, Jan 27 2006, Mike Christie wrote:
-> Jens Axboe wrote:
-> >On Fri, Jan 27 2006, Jens Axboe wrote:
-> >
-> >>On Fri, Jan 27 2006, Neil Brown wrote:
-> >>
-> >>>On Friday January 27, chase.venters@clientec.com wrote:
-> >>>
-> >>>>Greetings,
-> >>>>	Just a quick recap - there are at least 4 reports of 2.6.15 users 
-> >>>>experiencing severe slab leaks with scsi_cmd_cache. It seems that a few 
-> >>>>of us have a board (Asus P5GDC-V Deluxe) in common. We seem to have 
-> >>>>raid in common. After dealing with this leak for a while, I decided 
-> >>>>	to do some dancing around with git bisect. I've landed on a possible 
-> >>>>point of regression:
-> >>>>
-> >>>>commit: a9701a30470856408d08657eb1bd7ae29a146190
-> >>>>[PATCH] md: support BIO_RW_BARRIER for md/raid1
-> >>>>
-> >>>>	I spent about an hour and a half reading through the patch, trying 
-> >>>>	to see if I could make sense of what might be wrong. The result (after 
-> >>>>I dug into the code to make a change I foolishly thought made sense) 
-> >>>>was a hung kernel.
-> >>>>	This is important because when I rebooted into the kernel that had 
-> >>>>	been giving me trouble, it started an md resync and I'm now watching 
-> >>>>(at least during this resync) the slab usage for scsi_cmd_cache stay 
-> >>>>sane:
-> >>>>
-> >>>>turbotaz ~ # cat /proc/slabinfo | grep scsi_cmd_cache
-> >>>>scsi_cmd_cache        30     30    384   10    1 : tunables   54   27   
-> >>>>8 : slabdata      3      3      0
-> >>>>
-> >>>
-> >>>This suggests that the problem happens when a BIO_RW_BARRIER write is
-> >>>sent to the device.  With this patch, md flags all superblock writes
-> >>>as BIO_RW_BARRIER However md is not so likely to update the superblock 
-> >>>often
-> >>>during a resync.
-> >>>
-> >>>There is a (rough) count of the number of superblock writes in the
-> >>>"Events" counter which "mdadm -D" will display.
-> >>>You could try collecting 'Events' counter together with the
-> >>>'active_objs' count from /proc/slabinfo and graph the pairs - see if
-> >>>they are linear.
-> >>>
-> >>>I believe a BIO_RW_BARRIER is likely to send some sort of 'flush'
-> >>>command to the device, and the driver for your particular device may
-> >>>well be losing scsi_cmd_cache allocation when doing that, but I leave
-> >>>that to someone how knows more about that code.
-> >>
-> >>I already checked up on that since I suspected barriers initially. The
-> >>path there for scsi is sd.c:sd_issue_flush() which looks pretty straight
-> >>forward. In the end it goes through the block layer and gets back to the
-> >>SCSI layer as a regular REQ_BLOCK_PC request.
-> >
-> >
-> >Sorry, that was for the ->issue_flush() that md also does but did before
-> >the barrier addition as well. Most of the barrier handling is done in
-> >the block layer, but it could show leaks in SCSI of course. FWIW, I
-> >tested barriers with and without md on SCSI here a few days ago and
-> >didn't see any leaks at all.
-> >
-> 
+On Fri, 2006-01-27 at 13:06 -0600, Mike Christie wrote:
 > It does not have anything to do with this in scsi_io_completion does it?
 > 
->         if (blk_complete_barrier_rq(q, req, good_bytes >> 9))
->                 return;
+>          if (blk_complete_barrier_rq(q, req, good_bytes >> 9))
+>                  return;
 > 
 > For that case the scsi_cmnd does not get freed. Does it come back around 
 > again and get released from a different path?
 
-Certainly smells fishy. Unfortunately I cannot take a look at this until
-monday :/
+It looks such a likely candidate, doesn't it.  Unfortunately, Tejun Heo
+removed that code around 6 Jan (in [BLOCK] update SCSI to use new
+blk_ordered for barriers), so if it is that, then the latest kernels
+should now not be leaking.
 
-But adding some tracing there might be really interesting. Since we are
-not seeing bio and/or req leaks, this does look very promising.
+However, all the avaliable evidence does seem to point to the write
+barrier enforcement.  I'll take another look over those code paths.
 
--- 
-Jens Axboe
+James
+
 
