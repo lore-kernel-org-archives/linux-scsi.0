@@ -1,335 +1,126 @@
-From: Nix <nix@esperi.org.uk>
-Subject: Re: memory leak in scsi_cmd_cache 2.6.15
-Date: Fri, 27 Jan 2006 16:23:10 +0000
-Message-ID: <87ek2td4i9.fsf@amaterasu.srvr.nix>
-References: <Pine.LNX.4.62.0601212105590.22868@pureeloreel.qftzy.pbz>
-	<Pine.LNX.4.62.0601222045180.12815@pureeloreel.qftzy.pbz>
-	<1137997104.2977.7.camel@laptopd505.fenrus.org>
-	<200601230029.12674.chase.venters@clientec.com>
-	<Pine.LNX.4.62.0601230136080.22979@pureeloreel.qftzy.pbz>
-	<20060123072556.GC15490@fifty-fifty.audible.transient.net>
-	<Pine.LNX.4.62.0601261312160.1174@pureeloreel.qftzy.pbz>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: SCSI tape access on 2.6 kernels?
+Date: Fri, 27 Jan 2006 19:56:31 +0200 (EET)
+Message-ID: <Pine.LNX.4.63.0601271937540.6234@kai.makisara.local>
+References: <43D604AD.6050607@ilsb.tuwien.ac.at>
+ <Pine.LNX.4.64.0601241251460.23364@localhost.localdomain>
+ <20060124202306.GA8422@us.ibm.com> <Pine.LNX.4.64.0601241535290.23364@localhost.localdomain>
+ <Pine.LNX.4.63.0601252306270.5794@kai.makisara.local>
+ <Pine.LNX.4.64.0601261033010.23310@localhost.localdomain>
+ <Pine.LNX.4.63.0601261839440.6109@kai.makisara.local>
+ <Pine.LNX.4.64.0601270958470.24983@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.62.0601261312160.1174@pureeloreel.qftzy.pbz> (Ariel's
- message of "26 Jan 2006 18:13:31 -0000")
-Sender: linux-ide-owner@vger.kernel.org
-To: Ariel <askernel2615@dsgml.com>
-Cc: Jamie Heilman <jamie@audible.transient.net>, Chase Venters <chase.venters@clientec.com>, Arjan van de Ven <arjan@infradead.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fep30-0.kolumbus.fi ([193.229.0.32]:59471 "EHLO
+	fep30-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S1751129AbWA0Ryb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Jan 2006 12:54:31 -0500
+In-Reply-To: <Pine.LNX.4.64.0601270958470.24983@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chip Coldwell <coldwell@redhat.com>
+Cc: Patrick Mansfield <patmans@us.ibm.com>, Gerhard Schneider <gs@ilsb.tuwien.ac.at>, linux-scsi@vger.kernel.org
 
-On 26 Jan 2006, Ariel noted:
-> Is this good or bad? I'm guessing it means it's still leaking. So it's
-> really starting to look like ata_piix is the problem. But we need someone
-> who has the leak to remove that and see if it helps. I can't, since my
-> drives are connected to it.
+On Fri, 27 Jan 2006, Chip Coldwell wrote:
 
-FWIW, a bit of negative-confirmatory evidence: I have a sym53c875
-and non-SATA IDE drive on this 2.6.15.1, and there is no leak,
-nor was there in 2.6.15:
+...
+> > Compression seems to be enabled because you get speeds that exceed the 3.5
+> > MB/s native speed of the drive. You are measuring here more the speed of
+> > the drive's processor than the tape reading performance. However, this
+> > does not invalidate the results of these tests.
+> 
+> Good point; a file entirely comprised of zeros should compress very
+> well.  So I repeated the experiments with compression off.  First,
+> with direct I/O
+> 
+> RHEL4# time dd if=/dev/nst0 of=/dev/null bs=1k
+> 1000000+0 records in
+> 1000000+0 records out
+> 
+> real    10m34.332s
+> user    0m1.136s
+> sys     0m16.209s
+> 
+> then again without it
+> 
+> RHEL4# time dd if=/dev/nst0 of=/dev/null bs=1k
+> 1000000+0 records in
+> 1000000+0 records out
+> 
+> real    4m47.364s
+> user    0m0.655s
+> sys     0m5.780s
+> 
+The raw speed of the drive is 3.5 MB/s. Reading 1 GB should take 4m45.6. 
+Your result with read-ahead matches this. Doing 1 kB SCSI transfers slows 
+down things (and causes "shoeshining" that further decreases speed).
 
-    11     11 100%    0.34K      1       11         4K scsi_cmd_cache
+> > I repeated these tests with a HP DAT40 connected to a LSI Logic 53c1010
+> > HBA. The kernel was 2.6.16-rc1-git4.
+> >
+> > The tests in fixed block mode showed similar behaviour with slightly
+> > different times (6m10 vs 1m6). (In variable block mode the time was 6m10
+> > with both try_direct_io=1 and try_direct_io=0).
+> 
+> So are you saying that the best time in the experiments you did (1m6)
+> is without direct I/O using fixed blocks?  This is nearly six times
+> faster than fixed blocks with direct I/O, or variable blocks in either
+> case.
+> 
+Yes, in a meaningless test.
 
-Loaded modules:
+> > Your analysis here is correct. This is also the case I mentioned in
+> > another message where I said that disabling direct i/o increases speed in
+> > fixed block mode: the read() and write() byte counts are very small.
+> >
+> > The problem is that this case is testing something that you should never
+> > do with a tape. No even half-decent tape application does this. The
+> > nearest I know is tar with the default 10 kB block size.
+> 
+> Well, the default mode of the tape drive when it comes up is a 512
+> byte fixed block size.  tar, cpio and dump all use fixed block sizes
+> by default.  So it seems that the default behavior is "something that
+> you should never do with a tape".  I would argue that this is a
+> problem.
+> 
+The programs don't use fixed or variable block size. They just read and 
+write using a fixed byte count. If the tape drive is in fixed block mode, 
+the application read/write byte count must be divisible by the block size. 
+In variable block mode there are no limitations.
 
-Module                  Size  Used by
-loop                   11304  0
+The tar default is 10 kB transfers. This causes slowdown without 
+read-ahead in some systems (probably not with your test system). The users 
+should use at least 'tar b 64'. cpio default is 5120 and it is really too 
+low for tapes.
 
-.config attached.
+Most current tape drives come up in variable block mode. Fixed block mode 
+is an exception. In an ideal world the user chooses the mode and block 
+size that fits the application :-)
 
-CONFIG_X86_32=y
-CONFIG_SEMAPHORE_SLEEPERS=y
-CONFIG_X86=y
-CONFIG_MMU=y
-CONFIG_UID16=y
-CONFIG_GENERIC_ISA_DMA=y
-CONFIG_GENERIC_IOMAP=y
-CONFIG_ARCH_MAY_HAVE_PC_FDC=y
-CONFIG_EXPERIMENTAL=y
-CONFIG_CLEAN_COMPILE=y
-CONFIG_BROKEN_ON_SMP=y
-CONFIG_INIT_ENV_ARG_LIMIT=32
-CONFIG_LOCALVERSION=""
-CONFIG_SWAP=y
-CONFIG_SYSVIPC=y
-CONFIG_POSIX_MQUEUE=y
-CONFIG_BSD_PROCESS_ACCT=y
-CONFIG_SYSCTL=y
-CONFIG_SYSCTL_URANDOM=y
-CONFIG_HOTPLUG=y
-CONFIG_KOBJECT_UEVENT=y
-CONFIG_INITRAMFS_SOURCE=""
-CONFIG_CC_OPTIMIZE_FOR_SIZE=y
-CONFIG_KALLSYMS=y
-CONFIG_PRINTK=y
-CONFIG_BUG=y
-CONFIG_BASE_FULL=y
-CONFIG_FUTEX=y
-CONFIG_EPOLL=y
-CONFIG_SHMEM=y
-CONFIG_CC_ALIGN_FUNCTIONS=0
-CONFIG_CC_ALIGN_LABELS=0
-CONFIG_CC_ALIGN_LOOPS=0
-CONFIG_CC_ALIGN_JUMPS=0
-CONFIG_BASE_SMALL=0
-CONFIG_MODULES=y
-CONFIG_MODULE_UNLOAD=y
-CONFIG_OBSOLETE_MODPARM=y
-CONFIG_KMOD=y
-CONFIG_IOSCHED_NOOP=y
-CONFIG_IOSCHED_AS=m
-CONFIG_IOSCHED_DEADLINE=y
-CONFIG_IOSCHED_CFQ=m
-CONFIG_DEFAULT_DEADLINE=y
-CONFIG_DEFAULT_IOSCHED="deadline"
-CONFIG_X86_PC=y
-CONFIG_M586MMX=y
-CONFIG_X86_CMPXCHG=y
-CONFIG_X86_XADD=y
-CONFIG_X86_L1_CACHE_SHIFT=5
-CONFIG_RWSEM_XCHGADD_ALGORITHM=y
-CONFIG_GENERIC_CALIBRATE_DELAY=y
-CONFIG_X86_PPRO_FENCE=y
-CONFIG_X86_F00F_BUG=y
-CONFIG_X86_WP_WORKS_OK=y
-CONFIG_X86_INVLPG=y
-CONFIG_X86_BSWAP=y
-CONFIG_X86_POPAD_OK=y
-CONFIG_X86_CMPXCHG64=y
-CONFIG_X86_ALIGNMENT_16=y
-CONFIG_X86_GOOD_APIC=y
-CONFIG_X86_INTEL_USERCOPY=y
-CONFIG_X86_TSC=y
-CONFIG_PREEMPT_NONE=y
-CONFIG_X86_MCE=y
-CONFIG_X86_MSR=m
-CONFIG_X86_CPUID=m
-CONFIG_NOHIGHMEM=y
-CONFIG_PROC_MM=y
-CONFIG_SELECT_MEMORY_MODEL=y
-CONFIG_FLATMEM_MANUAL=y
-CONFIG_FLATMEM=y
-CONFIG_FLAT_NODE_MEM_MAP=y
-CONFIG_SPLIT_PTLOCK_CPUS=4
-CONFIG_REGPARM=y
-CONFIG_SECCOMP=y
-CONFIG_HZ_100=y
-CONFIG_HZ=100
-CONFIG_PHYSICAL_START=0x100000
-CONFIG_PM=y
-CONFIG_PM_LEGACY=y
-CONFIG_PCI=y
-CONFIG_PCI_GOANY=y
-CONFIG_PCI_BIOS=y
-CONFIG_PCI_DIRECT=y
-CONFIG_ISA_DMA_API=y
-CONFIG_ISA=y
-CONFIG_BINFMT_ELF=y
-CONFIG_BINFMT_MISC=y
-CONFIG_NET=y
-CONFIG_PACKET=y
-CONFIG_PACKET_MMAP=y
-CONFIG_UNIX=y
-CONFIG_INET=y
-CONFIG_IP_MULTICAST=y
-CONFIG_IP_FIB_HASH=y
-CONFIG_NET_IPGRE=m
-CONFIG_INET_DIAG=y
-CONFIG_INET_TCP_DIAG=y
-CONFIG_TCP_CONG_BIC=y
-CONFIG_BRIDGE=y
-CONFIG_STANDALONE=y
-CONFIG_PREVENT_FIRMWARE_BUILD=y
-CONFIG_PARPORT=m
-CONFIG_PARPORT_PC=m
-CONFIG_PARPORT_PC_FIFO=y
-CONFIG_PNP=y
-CONFIG_ISAPNP=y
-CONFIG_BLK_DEV_FD=y
-CONFIG_BLK_DEV_LOOP=m
-CONFIG_BLK_DEV_CRYPTOLOOP=m
-CONFIG_BLK_DEV_RAM_COUNT=16
-CONFIG_IDE=y
-CONFIG_BLK_DEV_IDE=y
-CONFIG_BLK_DEV_IDEDISK=y
-CONFIG_IDEDISK_MULTI_MODE=y
-CONFIG_IDE_GENERIC=y
-CONFIG_BLK_DEV_IDEPCI=y
-CONFIG_IDEPCI_SHARE_IRQ=y
-CONFIG_BLK_DEV_IDEDMA_PCI=y
-CONFIG_IDEDMA_PCI_AUTO=y
-CONFIG_BLK_DEV_PIIX=y
-CONFIG_BLK_DEV_IDEDMA=y
-CONFIG_IDEDMA_AUTO=y
-CONFIG_SCSI=y
-CONFIG_BLK_DEV_SD=y
-CONFIG_BLK_DEV_SR=y
-CONFIG_CHR_DEV_SG=y
-CONFIG_SCSI_CONSTANTS=y
-CONFIG_SCSI_SPI_ATTRS=y
-CONFIG_SCSI_SYM53C8XX_2=y
-CONFIG_SCSI_SYM53C8XX_DMA_ADDRESSING_MODE=0
-CONFIG_SCSI_SYM53C8XX_DEFAULT_TAGS=16
-CONFIG_SCSI_SYM53C8XX_MAX_TAGS=64
-CONFIG_SCSI_QLA2XXX=y
-CONFIG_MD=y
-CONFIG_BLK_DEV_DM=y
-CONFIG_DM_CRYPT=y
-CONFIG_DM_SNAPSHOT=y
-CONFIG_DM_MIRROR=y
-CONFIG_DM_ZERO=y
-CONFIG_NETDEVICES=y
-CONFIG_DUMMY=m
-CONFIG_TUN=y
-CONFIG_NET_ETHERNET=y
-CONFIG_MII=y
-CONFIG_NET_VENDOR_3COM=y
-CONFIG_VORTEX=y
-CONFIG_NET_PCI=y
-CONFIG_EEPRO100=y
-CONFIG_NATSEMI=y
-CONFIG_PLIP=m
-CONFIG_INPUT=y
-CONFIG_INPUT_MOUSEDEV=y
-CONFIG_INPUT_MOUSEDEV_PSAUX=y
-CONFIG_INPUT_MOUSEDEV_SCREEN_X=1024
-CONFIG_INPUT_MOUSEDEV_SCREEN_Y=768
-CONFIG_INPUT_KEYBOARD=y
-CONFIG_KEYBOARD_ATKBD=y
-CONFIG_INPUT_MOUSE=y
-CONFIG_MOUSE_PS2=y
-CONFIG_SERIO=y
-CONFIG_SERIO_I8042=y
-CONFIG_SERIO_SERPORT=y
-CONFIG_SERIO_LIBPS2=y
-CONFIG_VT=y
-CONFIG_VT_CONSOLE=y
-CONFIG_FRANDOM=y
-CONFIG_HW_CONSOLE=y
-CONFIG_SERIAL_8250=y
-CONFIG_SERIAL_8250_NR_UARTS=4
-CONFIG_SERIAL_CORE=y
-CONFIG_UNIX98_PTYS=y
-CONFIG_RTC=y
-CONFIG_I2C=y
-CONFIG_I2C_CHARDEV=y
-CONFIG_I2C_ISA=y
-CONFIG_HWMON=y
-CONFIG_HWMON_VID=y
-CONFIG_SENSORS_LM78=y
-CONFIG_VIDEO_SELECT=y
-CONFIG_VGA_CONSOLE=y
-CONFIG_DUMMY_CONSOLE=y
-CONFIG_SOUND=m
-CONFIG_SND=m
-CONFIG_SND_TIMER=m
-CONFIG_SND_PCM=m
-CONFIG_SND_HWDEP=m
-CONFIG_SND_RAWMIDI=m
-CONFIG_SND_SEQUENCER=m
-CONFIG_SND_SEQ_DUMMY=m
-CONFIG_SND_OSSEMUL=y
-CONFIG_SND_MIXER_OSS=m
-CONFIG_SND_PCM_OSS=m
-CONFIG_SND_SEQUENCER_OSS=y
-CONFIG_SND_RTCTIMER=m
-CONFIG_SND_SEQ_RTCTIMER_DEFAULT=y
-CONFIG_SND_GENERIC_DRIVER=y
-CONFIG_SND_MPU401_UART=m
-CONFIG_SND_OPL3_LIB=m
-CONFIG_SND_MPU401=m
-CONFIG_SND_SBAWE=m
-CONFIG_SND_SB16_CSP=y
-CONFIG_USB_ARCH_HAS_HCD=y
-CONFIG_USB_ARCH_HAS_OHCI=y
-CONFIG_USB=y
-CONFIG_USB_DEVICEFS=y
-CONFIG_USB_DYNAMIC_MINORS=y
-CONFIG_USB_UHCI_HCD=y
-CONFIG_USB_STORAGE=y
-CONFIG_USB_STORAGE_ISD200=y
-CONFIG_EXT2_FS=y
-CONFIG_EXT2_FS_XATTR=y
-CONFIG_EXT2_FS_POSIX_ACL=y
-CONFIG_EXT3_FS=y
-CONFIG_EXT3_FS_XATTR=y
-CONFIG_EXT3_FS_POSIX_ACL=y
-CONFIG_JBD=y
-CONFIG_FS_MBCACHE=y
-CONFIG_REISERFS_FS=y
-CONFIG_REISERFS_FS_XATTR=y
-CONFIG_REISERFS_FS_POSIX_ACL=y
-CONFIG_FS_POSIX_ACL=y
-CONFIG_MINIX_FS=m
-CONFIG_INOTIFY=y
-CONFIG_QUOTA=y
-CONFIG_QFMT_V2=y
-CONFIG_QUOTACTL=y
-CONFIG_DNOTIFY=y
-CONFIG_FUSE_FS=y
-CONFIG_ISO9660_FS=y
-CONFIG_JOLIET=y
-CONFIG_ZISOFS=y
-CONFIG_ZISOFS_FS=y
-CONFIG_FAT_FS=y
-CONFIG_MSDOS_FS=y
-CONFIG_VFAT_FS=m
-CONFIG_FAT_DEFAULT_CODEPAGE=437
-CONFIG_FAT_DEFAULT_IOCHARSET="iso8859-1"
-CONFIG_PROC_FS=y
-CONFIG_SYSFS=y
-CONFIG_TMPFS=y
-CONFIG_HUGETLBFS=y
-CONFIG_HUGETLB_PAGE=y
-CONFIG_RAMFS=y
-CONFIG_RELAYFS_FS=m
-CONFIG_NFS_FS=y
-CONFIG_NFS_V3=y
-CONFIG_NFS_V3_ACL=y
-CONFIG_NFSD=y
-CONFIG_NFSD_V2_ACL=y
-CONFIG_NFSD_V3=y
-CONFIG_NFSD_V3_ACL=y
-CONFIG_LOCKD=y
-CONFIG_LOCKD_V4=y
-CONFIG_EXPORTFS=y
-CONFIG_NFS_ACL_SUPPORT=y
-CONFIG_NFS_COMMON=y
-CONFIG_SUNRPC=y
-CONFIG_PARTITION_ADVANCED=y
-CONFIG_MSDOS_PARTITION=y
-CONFIG_NLS=y
-CONFIG_NLS_DEFAULT="iso8859-1"
-CONFIG_NLS_CODEPAGE_437=m
-CONFIG_NLS_CODEPAGE_850=m
-CONFIG_NLS_CODEPAGE_852=m
-CONFIG_NLS_ASCII=m
-CONFIG_NLS_ISO8859_1=m
-CONFIG_NLS_ISO8859_2=m
-CONFIG_NLS_ISO8859_15=m
-CONFIG_LOG_BUF_SHIFT=14
-CONFIG_DEBUG_BUGVERBOSE=y
-CONFIG_EARLY_PRINTK=y
-CONFIG_CRYPTO=y
-CONFIG_CRYPTO_HMAC=y
-CONFIG_CRYPTO_MD4=m
-CONFIG_CRYPTO_MD5=m
-CONFIG_CRYPTO_SHA1=m
-CONFIG_CRYPTO_SHA256=m
-CONFIG_CRYPTO_SHA512=m
-CONFIG_CRYPTO_DES=m
-CONFIG_CRYPTO_BLOWFISH=m
-CONFIG_CRYPTO_TWOFISH=m
-CONFIG_CRYPTO_SERPENT=m
-CONFIG_CRYPTO_CAST5=m
-CONFIG_CRYPTO_CAST6=m
-CONFIG_CRC32=y
-CONFIG_ZLIB_INFLATE=y
-CONFIG_GENERIC_HARDIRQS=y
-CONFIG_GENERIC_IRQ_PROBE=y
-CONFIG_X86_BIOS_REBOOT=y
+...
+> > This is a more realistic test. The 32 kB i/o size is large enough for many
+> > drives. In another message you prove this for the DAT72 because you did
+> > not get better speed with 64 kB i/o size. (The drive manufacturers usually
+> > provide a suggestion for the optimal i/o size.)
+> 
+> Granted, but in the best possible case, using direct I/O gives the
+> same performance as not using it; and in all other cases it is much
+> worse.  Can you describe a configuration I can test where direct I/O
+> makes the performance better?
+> 
+Direct i/o saves bus cycles by eliminating copy from user space to kernel 
+space. It is useful when there are not spare cycles to waste. The typical 
+combination, relatively speaking, where this matters is a fast drive (or 
+more than one drive) and a not so fast system. The first example that 
+comes into my mind is an LTO-3 drive connected to a Celeron system with 
+32-bit PCI bus. With this combination yous should see well noticeable 
+difference is system time. If you add an application into this system, the 
+throughput may not match the tape streaming speed and that is very bad.
+
+I think that direct i/o is the correct default, but I admit that other 
+opinions can exist if different weights are given to the different 
+situations.
 
 -- 
-`I won't make a secret of the fact that your statement/question
- sent a wave of shock and horror through us.' --- David Anderson
+Kai
