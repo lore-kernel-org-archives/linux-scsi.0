@@ -1,26 +1,29 @@
-From: "Rosario Lovell" <KTADCRYRL@hotmail.com>
-Subject: Qualities Pharrmacy dCuWF
-Date: Sat, 28 Jan 2006 01:43:14 +0100
-Message-ID: <68HY87FE.0S24.KTADCRYRL__2523.39817020602$1138409190$gmane$org@hotmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2.6.15-rc7-git3 1/3] sata_promise: add correct read/write
+ of hotplug registers for SATAII devices
+Date: Sat, 28 Jan 2006 12:39:48 -0500
+Message-ID: <43DBAC64.1070902@pobox.com>
+References: <355e5e5e0512291523h508fe0c8j459a9377d52d5529@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [61.52.113.126] ([61.52.113.126]:14606 "HELO 209.132.176.167")
-	by vger.kernel.org with SMTP id S1751454AbWA1AqQ (ORCPT
+Received: from mail.dvmed.net ([216.237.124.58]:36041 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1751489AbWA1RkA (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jan 2006 19:46:16 -0500
+	Sat, 28 Jan 2006 12:40:00 -0500
+In-Reply-To: <355e5e5e0512291523h508fe0c8j459a9377d52d5529@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-net@vger.kernel.org
+To: Lukasz Kosewski <lkosewsk@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
+Lukasz Kosewski wrote:
+> This patch adds support for correctly masking out and knowing about
+> hotplug events on Promise SATAII150 Tx4/Tx2 Plus controllers.
+> 
+> Signed-off-by:  Luke Kosewski <lkosewsk@gmail.com>
 
+applied
 
-The most complete Phar macy Online
-We carry all major medds at bargain price
-Coodeinne, Viggra, Ci ialis, VaIium, Xa naax
-Phantermiine, Ulltraam and etc...
-SatiisfactIon Gua ranteeed
-
-http://ca.geocities.com/johanna66987randie71996/
-
-
-fDje
 
