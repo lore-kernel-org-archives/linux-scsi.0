@@ -1,41 +1,31 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Large Sequential Reads Being Broken Up. Why?
-Date: Mon, 30 Jan 2006 10:58:29 -0600
-Message-ID: <1138640309.3283.9.camel@mulgrave>
-References: <43DE2EB0.2040700@datadirectnet.com>
-	 <43DE3BFD.3090902@emulex.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: FW: MSI-X on 2.6.15
+Date: Mon, 30 Jan 2006 09:38:52 -0800
+Message-ID: <20060130173852.GA16259@kroah.com>
+References: <D4CFB69C345C394284E4B78B876C1CF10B8AC113@cceexc23.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:39846 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S964780AbWA3Q6k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Jan 2006 11:58:40 -0500
-In-Reply-To: <43DE3BFD.3090902@emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S964844AbWA3RjU@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <D4CFB69C345C394284E4B78B876C1CF10B8AC113@cceexc23.americas.cpqcorp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Cc: Mark Maule <maule@sgi.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Patterson, Andrew D (Linux R&D)" <andrew.patterson@hp.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: "Martin W. Schlining III" <mschlining@datadirectnet.com>, linux-scsi@vger.kernel.org
 
-On Mon, 2006-01-30 at 11:17 -0500, James Smart wrote:
-> As of 2.6.10, the kernel started paying attention to this field, which the
-> emulex driver, as of that time, didn't set. The result was the kernel
-> dropped back to a default max_sectors of 1024 - which results in a 512k max.
-> The lpfc driver was updated in rev 8.0.29 with this change.
-> 
-> Caveat is : Even with this change, you must be using O_DIRECT to get high
-> bandwidth. Otherwise, the upper layers will segment the requests (if I
-> remember right, we had a hard time making a "normal" config exceed 256k).
+On Mon, Jan 30, 2006 at 10:33:50AM -0600, Miller, Mike (OS Dev) wrote:
+> Greg KH,
+> We have the same results on 2.6.15, the MSI-X table is all zeroes. See
+> below. Any ideas of what to do do next? The driver works on x86_64. Is
+> there any thing extra I need to do on ia64?
 
-Actually, please also remember that the maximum SG element list size is
-128 in a normal kernel (depending on the driver ... some drivers set
-lower limits as well), so on a very fragmented 4k page machine, you're
-unlikely to get above 512k just because you run out of SG table entries
-(obviously on 16k page machines, this goes up to 2MB, and if you're
-lucky enough to have a fully functional IOMMU, this limitation won't
-affect you at all).
+ia64 didn't really have msi support before the latest -mm kernel, right
+Mark?
 
-James
+> Andrew, can you try 2.6.16-rc1 and/or the rc1-git4 kernels?
 
+How about the -mm kernel?
 
+thanks,
+
+greg k-h
