@@ -1,29 +1,38 @@
-From: Roland Dreier <rdreier@cisco.com>
-Subject: Re: FW: MSI-X on 2.6.15
-Date: Mon, 30 Jan 2006 13:33:49 -0800
-Message-ID: <adafyn59z9e.fsf@cisco.com>
-References: <D4CFB69C345C394284E4B78B876C1CF10B8AC113@cceexc23.americas.cpqcorp.net>
-	<20060130173852.GA16259@kroah.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH, RFC] st: start using scsi_execute
+Date: Mon, 30 Jan 2006 15:36:31 -0600
+Message-ID: <43DE86DF.5070901@cs.wisc.edu>
+References: <20060130182324.GA6253@lst.de> <Pine.LNX.4.63.0601302308001.4212@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-4.cisco.com ([171.68.10.86]:64923 "EHLO
-	sj-iport-4.cisco.com") by vger.kernel.org with ESMTP
-	id S1030188AbWA3VeH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Jan 2006 16:34:07 -0500
-In-Reply-To: <20060130173852.GA16259@kroah.com> (Greg KH's message of "Mon,
- 30 Jan 2006 09:38:52 -0800")
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:64162 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1030191AbWA3Vgm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Jan 2006 16:36:42 -0500
+In-Reply-To: <Pine.LNX.4.63.0601302308001.4212@kai.makisara.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, Mark Maule <maule@sgi.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Patterson, Andrew D (Linux R&D)" <andrew.patterson@hp.com>
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-    Greg> ia64 didn't really have msi support before the latest -mm
-    Greg> kernel, right Mark?
+Kai Makisara wrote:
+> On Mon, 30 Jan 2006, Christoph Hellwig wrote:
+> 
+> 
+>>This patch updates st to use scsi_execute instead of scsi_execute_async
+>>for all scsi commands except the main I/O path.  The advantage is that
+>>these helpers do all the request tracking for these synchronous I/Os so
+>>that there is no need for st_request structures.  It also decouples
+>>these helper scsi commands from the main tape buffer, allowing for an
+>>easier switchover to the generic block request mapping routines for the
+>>main I/O path later on.
+>>
+> 
+> I think the main tape buffer will stay for quite a long time. Using it has 
+> the advantage that it is allocated using GFP_DMA if necessary. This is not 
+> a problem if scsi_execute does bouncing somewhere if it needs to be done.
+> 
 
-No, I know Grant Grundler has been using MSI-X on ia64 with a PCI-X
-InfiniBand HCA and the ib_mthca driver for quite a while, at least
-since 2.6.11 or so.  ib_mthca uses 3 separate interrupts in MSI-X
-mode, so even multiple messages from a single device are fine.
-
- - R.
+scsi_execute needs a blk_queue_bounce call.
