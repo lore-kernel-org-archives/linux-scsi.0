@@ -1,74 +1,72 @@
-From: "Kolli, Neela" <Neela.Kolli@lsil.com>
-Subject: RE: [PATCH 3/3] megaraid_sas: support for 1078 type controller added
-Date: Mon, 30 Jan 2006 15:35:58 -0700
-Message-ID: <9738BCBE884FDB42801FAD8A7769C265539345@NAMAIL1.ad.lsil.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: IPSI Conferences <ipsi2006@3dnet.co.yu>
+Subject: Invitation to subscribe to 2006 IPSI/IPS-USA conference calls; c/ba
+Date: Tue, 31 Jan 2006 00:22:49 +0100 (CET)
+Message-ID: <20060130232249.A762F278C@mail1.3dnet.co.yu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:63637 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1030195AbWA3WgK convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Jan 2006 17:36:10 -0500
-Content-class: urn:content-classes:message
+Received: from [195.252.72.46] ([195.252.72.46]:45320 "EHLO mail1.3dnet.co.yu")
+	by vger.kernel.org with ESMTP id S1030213AbWA3XMA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Jan 2006 18:12:00 -0500
+Received: from voip (unknown [195.252.72.37])
+	by mail1.3dnet.co.yu (Postfix) with SMTP id A762F278C
+	for <linux-scsi@vger.kernel.org>; Tue, 31 Jan 2006 00:22:49 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>, "Patro, Sumant" <Sumant.Patro@engenio.com>, hch@lst.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
-Cc: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>, "Yang, Bo" <Bo.Yang@engenio.com>, "Doelfel, Hardy" <Hardy.Doelfel@engenio.com>
+To: linux-scsi@vger.kernel.org
 
-We will be sending a new patch that takes care of this problem.
+Dear potential speaker:
 
-Thanks,
-Neela Syam Kolli.
+Please, read carefully and respond with "SUBSCRIBE."  We will be informing you about our future conferences 4 to 6 times per year, only if you subscribe now! If you do not respond to this email, we will NEVER send you an email invitation again.
 
+The list of our 2006 conferences is given below. If you like to check details, just go to Google and type the conference name given below!
 
------Original Message-----
-From: Moore, Eric 
-Sent: Monday, January 30, 2006 4:29 PM
-To: Patro, Sumant; hch@lst.de; linux-kernel@vger.kernel.org;
-linux-scsi@vger.kernel.org; James.Bottomley@SteelEye.com
-Cc: Bagalkote, Sreenivas; Kolli, Neela; Yang, Bo; Doelfel, Hardy
-Subject: RE: [PATCH 3/3] megaraid_sas: support for 1078 type controller
-added
+IPS-USA-2006 NEW YORK
+New York, USA, January 5-8, 2006
 
-On Wednesday, January 25, 2006 1:06 PM, Sumant Patro wrote:
+IPS-USA-2006 SAN FRANCISCO
+San Francisco (Stanford Terrace in Palo Alto), USA, Jan 8-11, 2006
 
-> 
-> Hello All,
-> 
-> 	This patch adds support for 1078 type controller 
-> (device id : 0x62).
-> Patch is made against the latest git snapshot of scsi-misc-2.6 tree.
-> 
-> 	Please review it and all comments are appreciated.
-> 
-> Thanks,
-> 
+IPSI-2006 MARBELLA
+Marbella, Costa del Sol, Spain, February 10-13, 2006
 
-James - NACK this patch.
-I noticed you have picked up this patch in your scsi-rc-fixes stream.
-http://www.kernel.org/pub/linux/kernel/people/jejb/scsi-rc-fixes-2.6.cha
-ngelog
+IPSI-2006 AMALFI
+Amalfi, Italy (near Naples, Capri, and Pompei), March 23-26, 2006
 
-There is a mistake with this patch.  This SAS1078 device id (0x62) is
-the same
-id we are claiming for our fusion drivers. Our device ID is 0x62.  You
-can see
-that at this link: http://pci-ids.ucw.cz/iii/?i=10000062.  I haven't got
-around
-to it, but I plan to post support for that soon.
+IPSI-2006 FRANCE
+Carcassonne, France, April 27-30, 2006
 
-A different version of SAS1078 is being manufactured by the megaraid
-group.  
-Neela Syam Kolli is aware of this issue, and I believe they are working
-out the details, 
-and will be posting a patch to solve this.
+IPSI-2006 SPAIN
+S'Agaro, Costa Brava, Spain, May 4-7, 2006
 
-Can this patch be backed out if its not fixed before 2.6.16 kernel is
-released.
+IPSI-2006 MONTREAL
+Montreal, Canada, June 30 - July 3, 2006
 
-Eric Moore
+IPS-USA-2006 NEW YORK
+New York, USA, July 3-6, 2006
 
+IPS-USA-2006 BOSTON
+Boston (Hotel@MIT, Cambridge), USA, July 6-9, 2006
 
+IPSI-2006 ITALY
+Castello Chiola (Loreto, near Pescara + Rome), Italy, Aug 19-26, 2006
+
+IPSI-2006 LONDON
+London, England, UK, August 31 - September 3, 2006
+
+IPSI-2006 MONTENEGRO
+Sveti Stefan, Montenegro, September 23-30, 2006
+
+IPSI-2006 VENICE
+Venice, Italy, October 12-15, 2006
+
+IPSI-2006 SLOVENIA
+Lake Bled, Slovenia, November 30 - December 3, 2006
+
+All our conferences are non-profit. They bring together the elite of the world science; so far, we have had 7 times 7 different Nobel Laureates speaking at opening ceremonies!
+
+Sincerely Yours,
+
+Prof. Veljko Milutinovic, Chairman
+IPSI Conferences, Journals, Tutorials,
+Consulting, Research, and Development
 
