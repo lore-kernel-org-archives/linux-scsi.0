@@ -1,71 +1,86 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: Large Sequential Reads Being Broken Up. Why?
-Date: Mon, 30 Jan 2006 11:17:01 -0500
-Message-ID: <43DE3BFD.3090902@emulex.com>
-References: <43DE2EB0.2040700@datadirectnet.com>
-Reply-To: James.Smart@Emulex.Com
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: FW: MSI-X on 2.6.15
+Date: Mon, 30 Jan 2006 10:33:50 -0600
+Message-ID: <D4CFB69C345C394284E4B78B876C1CF10B8AC113@cceexc23.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:17907 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S932350AbWA3QRP
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Jan 2006 11:17:15 -0500
-In-Reply-To: <43DE2EB0.2040700@datadirectnet.com>
+Received: from ccerelbas04.cce.hp.com ([161.114.21.107]:32410 "EHLO
+	ccerelbas04.cce.hp.com") by vger.kernel.org with ESMTP
+	id S932369AbWA3Qdz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2006 11:33:55 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin W. Schlining III" <mschlining@datadirectnet.com>
-Cc: linux-scsi@vger.kernel.org
+To: Greg KH <greg@kroah.com>, Mark Maule <maule@sgi.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Patterson, Andrew D (Linux R&D)" <andrew.patterson@hp.com>
 
-Here's one thing that will help you....
-   in the lpfc driver (in rev 8.0.13 - the file is lpfc_fcp.c), in the
-   scsi_driver_template structure - add the field:
-       .max_sectors = 0xFFFF,
+Greg KH,
+We have the same results on 2.6.15, the MSI-X table is all zeroes. See
+below. Any ideas of what to do do next? The driver works on x86_64. Is
+there any thing extra I need to do on ia64?
 
-As of 2.6.10, the kernel started paying attention to this field, which the
-emulex driver, as of that time, didn't set. The result was the kernel
-dropped back to a default max_sectors of 1024 - which results in a 512k max.
-The lpfc driver was updated in rev 8.0.29 with this change.
+Andrew, can you try 2.6.16-rc1 and/or the rc1-git4 kernels?
 
-Caveat is : Even with this change, you must be using O_DIRECT to get high
-bandwidth. Otherwise, the upper layers will segment the requests (if I
-remember right, we had a hard time making a "normal" config exceed 256k).
+Thanks,
+mikem
 
--- james s
-
-Martin W. Schlining III wrote:
-> I am running a program on my Linux box which is asking for 2M IO (reads 
-> and writes) with the file handle being opened with the O_DIRECT flag. 
-> However, the IO being put out on the wire is no larger than 512K.  My 
-> target device is the SCSI block device (/dev/sdb in this case). What is 
-> preventing me from getting large IO through the SCSI block layer? How 
-> can I fix it?
+> -----Original Message-----
+> From: Patterson, Andrew D (Linux R&D) 
+> Sent: Friday, January 27, 2006 6:13 PM
+> To: Miller, Mike (OS Dev)
+> Subject: MSI-X on 2.6.15
 > 
-> The sg device can achieve the 2M IO size, so I know its at least 
-> possible. How can I improve the IO size for the SCSI block layer?
+> Mike,
 > 
-> Details:
+> Here is what I get on 2.6.15.  I may look familiar.
 > 
-> Dell 2850 server with dual Xeons, 1G RAM
-> OS: Linux racerx 2.6.11.4-21.10-smp #1 SMP Tue Nov 29 14:32:49 UTC 2005 
-> x86_64 x86_64 x86_64 GNU/Linux
-> Emulex LP11000 Fibre Channel HBA using driver version 8.0.13 (changing 
-> the driver hasn't helped, so far)
-> I set the lookahead value pretty large to improve read performance 
-> (hdparm -a)
-> The scheduler for this device is anticipatory.
+> Andrew
 > 
-> Any ideas?
+> HP CISS Driver (v 2.6.8)
+> GSI 45 (level, low) -> CPU 0 (0x0000) vector 52
+> ACPI: PCI Interrupt 0000:46:01.0[A] -> GSI 45 (level, low) -> IRQ 52
+> cciss: using DAC cycles
+>       blocks= 143305920 block_size= 512
+>       heads= 255, sectors= 32, cylinders= 17562
 > 
-> Thanks,
-> Martin Schlining
+>       blocks= 143305920 block_size= 512
+>       heads= 255, sectors= 32, cylinders= 17562
 > 
+>       blocks= 71065440 block_size= 512
+>       heads= 255, sectors= 32, cylinders= 8709
 > 
+>       blocks= 143305920 block_size= 512
+>       heads= 255, sectors= 32, cylinders= 17562
 > 
+>  cciss/c0d0: p1 p2 p3
+>       blocks= 143305920 block_size= 512
+>       heads= 255, sectors= 32, cylinders= 17562
 > 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  cciss/c0d1: p1 p2 p3
+>       blocks= 71065440 block_size= 512
+>       heads= 255, sectors= 32, cylinders= 8709
+> 
+>  cciss/c0d2: p1 p2 p3
+> GSI 63 (level, low) -> CPU 1 (0x0100) vector 53
+> ACPI: PCI Interrupt 0000:4a:00.0[A] -> GSI 63 (level, low) -> IRQ 53
+> cciss: offset = 0xfe000 table offset = 0xfe000 BIR = 0x0
+> cciss: 0: vector = 0,msg data = 0, msg upper addr = 0,msg addr = 0
+> cciss: 1: vector = 0,msg data = 0, msg upper addr = 0,msg addr = 0
+> cciss: 2: vector = 0,msg data = 0, msg upper addr = 0,msg addr = 0
+> cciss: 3: vector = 0,msg data = 0, msg upper addr = 0,msg addr = 0
+> cciss: using DAC cycles
+> GSI 71 (level, low) -> CPU 2 (0x0200) vector 59
+> ACPI: PCI Interrupt 0000:88:00.0[A] -> GSI 71 (level, low) -> IRQ 59
+> cciss: offset = 0xfe000 table offset = 0xfe000 BIR = 0x0
+> cciss: 0: vector = 0,msg data = 0, msg upper addr = 0,msg addr = 0
+> cciss: 1: vector = 0,msg data = 0, msg upper addr = 0,msg addr = 0
+> cciss: 2: vector = 0,msg data = 0, msg upper addr = 0,msg addr = 0
+> cciss: 3: vector = 0,msg data = 0, msg upper addr = 0,msg addr = 0
+> cciss: using DAC cycles
+>       blocks= 143305920 block_size= 512
+>       heads= 255, sectors= 32, cylinders= 17562
+> 
 > 
