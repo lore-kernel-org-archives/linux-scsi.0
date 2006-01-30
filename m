@@ -1,40 +1,74 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH, RFC] st: start using scsi_execute
-Date: Mon, 30 Jan 2006 15:45:35 -0600
-Message-ID: <43DE88FF.60102@cs.wisc.edu>
-References: <20060130182324.GA6253@lst.de>
+From: "Kolli, Neela" <Neela.Kolli@lsil.com>
+Subject: RE: [PATCH 3/3] megaraid_sas: support for 1078 type controller added
+Date: Mon, 30 Jan 2006 15:35:58 -0700
+Message-ID: <9738BCBE884FDB42801FAD8A7769C265539345@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:7843 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932302AbWA3Vpp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Jan 2006 16:45:45 -0500
-In-Reply-To: <20060130182324.GA6253@lst.de>
+Received: from mail0.lsil.com ([147.145.40.20]:63637 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1030195AbWA3WgK convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Jan 2006 17:36:10 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Kai.Makisara@kolumbus.fi, linux-scsi@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsil.com>, "Patro, Sumant" <Sumant.Patro@engenio.com>, hch@lst.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+Cc: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>, "Yang, Bo" <Bo.Yang@engenio.com>, "Doelfel, Hardy" <Hardy.Doelfel@engenio.com>
 
-Christoph Hellwig wrote:
-> This patch updates st to use scsi_execute instead of scsi_execute_async
-> for all scsi commands except the main I/O path.  The advantage is that
-> these helpers do all the request tracking for these synchronous I/Os so
-> that there is no need for st_request structures.  It also decouples
-> these helper scsi commands from the main tape buffer, allowing for an
-> easier switchover to the generic block request mapping routines for the
-> main I/O path later on.
+We will be sending a new patch that takes care of this problem.
+
+Thanks,
+Neela Syam Kolli.
+
+
+-----Original Message-----
+From: Moore, Eric 
+Sent: Monday, January 30, 2006 4:29 PM
+To: Patro, Sumant; hch@lst.de; linux-kernel@vger.kernel.org;
+linux-scsi@vger.kernel.org; James.Bottomley@SteelEye.com
+Cc: Bagalkote, Sreenivas; Kolli, Neela; Yang, Bo; Doelfel, Hardy
+Subject: RE: [PATCH 3/3] megaraid_sas: support for 1078 type controller
+added
+
+On Wednesday, January 25, 2006 1:06 PM, Sumant Patro wrote:
+
+> 
+> Hello All,
+> 
+> 	This patch adds support for 1078 type controller 
+> (device id : 0x62).
+> Patch is made against the latest git snapshot of scsi-misc-2.6 tree.
+> 
+> 	Please review it and all comments are appreciated.
+> 
+> Thanks,
 > 
 
-I guess I messed that up. I am not sure why I went with 
-scsi_execute_async for st.
+James - NACK this patch.
+I noticed you have picked up this patch in your scsi-rc-fixes stream.
+http://www.kernel.org/pub/linux/kernel/people/jejb/scsi-rc-fixes-2.6.cha
+ngelog
 
-But in my past attempts to convert these drivers to the block layer I 
-was trying to make some nice function like scsi_execute and friends 
-where the ULD does not have to worry about setting up any structure. 
-Instead, we could have st and sg use the block layer functions directly 
-like how block/scsi_ioct.c does. So the ULD would get a request, fill 
-out the necessary fields, call blk_rq_map_user and call blk_execute*. Is 
-is better to have a scsi API that sets things up for the ULDs or is the 
-abstraction not worth it?
+There is a mistake with this patch.  This SAS1078 device id (0x62) is
+the same
+id we are claiming for our fusion drivers. Our device ID is 0x62.  You
+can see
+that at this link: http://pci-ids.ucw.cz/iii/?i=10000062.  I haven't got
+around
+to it, but I plan to post support for that soon.
+
+A different version of SAS1078 is being manufactured by the megaraid
+group.  
+Neela Syam Kolli is aware of this issue, and I believe they are working
+out the details, 
+and will be posting a patch to solve this.
+
+Can this patch be backed out if its not fixed before 2.6.16 kernel is
+released.
+
+Eric Moore
+
+
+
