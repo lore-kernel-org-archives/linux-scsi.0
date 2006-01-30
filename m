@@ -1,59 +1,29 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH 3/3] megaraid_sas: support for 1078 type controller added
-Date: Mon, 30 Jan 2006 14:28:41 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F221260@NAMAIL2.ad.lsil.com>
+From: Roland Dreier <rdreier@cisco.com>
+Subject: Re: FW: MSI-X on 2.6.15
+Date: Mon, 30 Jan 2006 13:33:49 -0800
+Message-ID: <adafyn59z9e.fsf@cisco.com>
+References: <D4CFB69C345C394284E4B78B876C1CF10B8AC113@cceexc23.americas.cpqcorp.net>
+	<20060130173852.GA16259@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:29323 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1030182AbWA3V24 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Jan 2006 16:28:56 -0500
-Content-class: urn:content-classes:message
+Received: from sj-iport-4.cisco.com ([171.68.10.86]:64923 "EHLO
+	sj-iport-4.cisco.com") by vger.kernel.org with ESMTP
+	id S1030188AbWA3VeH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Jan 2006 16:34:07 -0500
+In-Reply-To: <20060130173852.GA16259@kroah.com> (Greg KH's message of "Mon,
+ 30 Jan 2006 09:38:52 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumant Patro <sumantp@lsil.com>, hch@lst.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
-Cc: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>, "Kolli, Neela" <Neela.Kolli@engenio.com>, "Yang, Bo" <Bo.Yang@engenio.com>, "Doelfel, Hardy" <Hardy.Doelfel@engenio.com>
+To: Greg KH <greg@kroah.com>
+Cc: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, Mark Maule <maule@sgi.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Patterson, Andrew D (Linux R&D)" <andrew.patterson@hp.com>
 
-On Wednesday, January 25, 2006 1:06 PM, Sumant Patro wrote:
+    Greg> ia64 didn't really have msi support before the latest -mm
+    Greg> kernel, right Mark?
 
-> 
-> Hello All,
-> 
-> 	This patch adds support for 1078 type controller 
-> (device id : 0x62).
-> Patch is made against the latest git snapshot of scsi-misc-2.6 tree.
-> 
-> 	Please review it and all comments are appreciated.
-> 
-> Thanks,
-> 
+No, I know Grant Grundler has been using MSI-X on ia64 with a PCI-X
+InfiniBand HCA and the ib_mthca driver for quite a while, at least
+since 2.6.11 or so.  ib_mthca uses 3 separate interrupts in MSI-X
+mode, so even multiple messages from a single device are fine.
 
-James - NACK this patch.
-I noticed you have picked up this patch in your scsi-rc-fixes stream.
-http://www.kernel.org/pub/linux/kernel/people/jejb/scsi-rc-fixes-2.6.cha
-ngelog
-
-There is a mistake with this patch.  This SAS1078 device id (0x62) is
-the same
-id we are claiming for our fusion drivers. Our device ID is 0x62.  You
-can see
-that at this link: http://pci-ids.ucw.cz/iii/?i=10000062.  I haven't got
-around
-to it, but I plan to post support for that soon.
-
-A different version of SAS1078 is being manufactured by the megaraid
-group.  
-Neela Syam Kolli is aware of this issue, and I believe they are working
-out the details, 
-and will be posting a patch to solve this.
-
-Can this patch be backed out if its not fixed before 2.6.16 kernel is
-released.
-
-Eric Moore
-
-
-
+ - R.
