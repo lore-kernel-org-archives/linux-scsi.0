@@ -1,72 +1,38 @@
-From: IPSI Conferences <ipsi2006@3dnet.co.yu>
-Subject: Invitation to subscribe to 2006 IPSI/IPS-USA conference calls; c/ba
-Date: Tue, 31 Jan 2006 00:22:49 +0100 (CET)
-Message-ID: <20060130232249.A762F278C@mail1.3dnet.co.yu>
+From: <Joshua_Giles@Dell.com>
+Subject: [PATCH] megaraid_sas: Support 16 byte CDB's or > 2.2 Terabyte Volumes
+Date: Mon, 30 Jan 2006 17:23:29 -0600
+Message-ID: <22EC09E0B6C7614E90055362D384B16AA7DB2A@ausx3mps308.aus.amer.dell.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [195.252.72.46] ([195.252.72.46]:45320 "EHLO mail1.3dnet.co.yu")
-	by vger.kernel.org with ESMTP id S1030213AbWA3XMA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Jan 2006 18:12:00 -0500
-Received: from voip (unknown [195.252.72.37])
-	by mail1.3dnet.co.yu (Postfix) with SMTP id A762F278C
-	for <linux-scsi@vger.kernel.org>; Tue, 31 Jan 2006 00:22:49 +0100 (CET)
+Received: from ausc60pc101.us.dell.com ([143.166.85.206]:4988 "EHLO
+	ausc60pc101.us.dell.com") by vger.kernel.org with ESMTP
+	id S965037AbWA3XXb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2006 18:23:31 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, hch@lst.de
+Cc: Neela.Kolli@engenio.com
 
-Dear potential speaker:
 
-Please, read carefully and respond with "SUBSCRIBE."  We will be informing you about our future conferences 4 to 6 times per year, only if you subscribe now! If you do not respond to this email, we will NEVER send you an email invitation again.
+This patch properly registers the 16 byte command length capability of
+the megaraid_sas controlled hardware with the scsi midlayer.  All
+megaraid_sas hardware supports 16 byte CDB's.
 
-The list of our 2006 conferences is given below. If you like to check details, just go to Google and type the conference name given below!
+Signed-off-by: Joshua Giles <joshua_giles@dell.com>
 
-IPS-USA-2006 NEW YORK
-New York, USA, January 5-8, 2006
+--- linux-2.6.15.1.orig/drivers/scsi/megaraid/megaraid_sas.c
+2006-01-30 17:15:49.000000000 -0500
++++ linux-2.6.15.1/drivers/scsi/megaraid/megaraid_sas.c 2006-01-30
+17:15:30.000000000 -0500
+@@ -1990,6 +1990,7 @@
+        host->max_channel = MEGASAS_MAX_CHANNELS - 1;
+        host->max_id = MEGASAS_MAX_DEV_PER_CHANNEL;
+        host->max_lun = MEGASAS_MAX_LUN;
++       host->max_cmd_len = 16;
 
-IPS-USA-2006 SAN FRANCISCO
-San Francisco (Stanford Terrace in Palo Alto), USA, Jan 8-11, 2006
-
-IPSI-2006 MARBELLA
-Marbella, Costa del Sol, Spain, February 10-13, 2006
-
-IPSI-2006 AMALFI
-Amalfi, Italy (near Naples, Capri, and Pompei), March 23-26, 2006
-
-IPSI-2006 FRANCE
-Carcassonne, France, April 27-30, 2006
-
-IPSI-2006 SPAIN
-S'Agaro, Costa Brava, Spain, May 4-7, 2006
-
-IPSI-2006 MONTREAL
-Montreal, Canada, June 30 - July 3, 2006
-
-IPS-USA-2006 NEW YORK
-New York, USA, July 3-6, 2006
-
-IPS-USA-2006 BOSTON
-Boston (Hotel@MIT, Cambridge), USA, July 6-9, 2006
-
-IPSI-2006 ITALY
-Castello Chiola (Loreto, near Pescara + Rome), Italy, Aug 19-26, 2006
-
-IPSI-2006 LONDON
-London, England, UK, August 31 - September 3, 2006
-
-IPSI-2006 MONTENEGRO
-Sveti Stefan, Montenegro, September 23-30, 2006
-
-IPSI-2006 VENICE
-Venice, Italy, October 12-15, 2006
-
-IPSI-2006 SLOVENIA
-Lake Bled, Slovenia, November 30 - December 3, 2006
-
-All our conferences are non-profit. They bring together the elite of the world science; so far, we have had 7 times 7 different Nobel Laureates speaking at opening ceremonies!
-
-Sincerely Yours,
-
-Prof. Veljko Milutinovic, Chairman
-IPSI Conferences, Journals, Tutorials,
-Consulting, Research, and Development
-
+        /*
+         * Notify the mid-layer about the new controller
