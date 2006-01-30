@@ -1,39 +1,45 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] mptsas: don't complain on bogus slave_alloc calls
-Date: Mon, 30 Jan 2006 19:00:43 +0100
-Message-ID: <20060130180043.GA5827@lst.de>
+From: Olaf Hering <olh@suse.de>
+Subject: Re: 2.6.15-git12, slab corruption in ipr
+Date: Mon, 30 Jan 2006 19:07:11 +0100
+Message-ID: <20060130180711.GA8106@suse.de>
+References: <20060117000533.GA27473@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:37866 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S964858AbWA3SBF (ORCPT
+Received: from ns2.suse.de ([195.135.220.15]:13224 "EHLO mx2.suse.de")
+	by vger.kernel.org with ESMTP id S964860AbWA3SHN (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Jan 2006 13:01:05 -0500
+	Mon, 30 Jan 2006 13:07:13 -0500
 Content-Disposition: inline
+In-Reply-To: <20060117000533.GA27473@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@steeleye.com, Eric.Moore@lsil.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, Brian J King <bjking1@us.ibm.com>
 
-When people use the userspace scanning facilities on SAS hardware the
-LLDD gets bogus slave_alloc calls.  Just fail those gracefully instead
-of printing a warning in mptsas and another one in the midlayer.
+ On Tue, Jan 17, Olaf Hering wrote:
 
+> I tested the current Linus tree + a few SuSE patches on a p710. There is
+> some slab corruption.  Will check if plain Linus tree gives the same...
+> 
+> dmesg | grep -wiC9 slab
+> sda: Write Protect is off
+> sda: Mode Sense: cb 00 00 08
+> SCSI device sda: drive cache: write through
+> SCSI device sda: 71096640 512-byte hdwr sectors (36401 MB)
+> sda: Write Protect is off
+> sda: Mode Sense: cb 00 00 08
+> SCSI device sda: drive cache: write through
+>  sda: sda1 sda2 sda3 sda4
+> sd 0:0:3:0: Attached scsi disk sda
+> Slab corruption: start=c000000000431000, len=4096
+> d80: c0 00 00 00 00 43 1d 80 c0 00 00 00 00 43 1d 80
+>   Vendor: IBM       Model: IC35L036UCDY10-0  Rev: S28G
+>   Type:   Direct-Access                      ANSI SCSI revision: 03
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+I made https://bugzilla.novell.com/show_bug.cgi?id=145459 public.
+No idea if this is one bug (mem corruption on ppc64), or if there are
+plenty of them.
 
-Index: linux-2.6/drivers/message/fusion/mptsas.c
-===================================================================
---- linux-2.6.orig/drivers/message/fusion/mptsas.c	2006-01-15 21:45:28.000000000 +0100
-+++ linux-2.6/drivers/message/fusion/mptsas.c	2006-01-30 18:52:58.000000000 +0100
-@@ -301,9 +301,8 @@
- 	}
- 	mutex_unlock(&hd->ioc->sas_topology_mutex);
- 
--	printk("No matching SAS device found!!\n");
- 	kfree(vdev);
--	return -ENODEV;
-+	return -ENXIO;
- 
-  out:
- 	vtarget->ioc_id = vdev->ioc_id;
+-- 
+short story of a lazy sysadmin:
+ alias appserv=wotan
