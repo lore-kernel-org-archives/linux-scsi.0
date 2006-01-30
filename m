@@ -1,49 +1,68 @@
-From: Mark Maule <maule@sgi.com>
-Subject: Re: FW: MSI-X on 2.6.15
-Date: Mon, 30 Jan 2006 13:09:37 -0600
-Message-ID: <20060130190937.GB31945@sgi.com>
-References: <D4CFB69C345C394284E4B78B876C1CF10B8AC113@cceexc23.americas.cpqcorp.net> <20060130173852.GA16259@kroah.com>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCH] st: cleanup new_tape_buffer
+Date: Mon, 30 Jan 2006 21:14:19 +0200 (EET)
+Message-ID: <Pine.LNX.4.63.0601302056060.6463@kai.makisara.local>
+References: <20060130181941.GA6185@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from omx2-ext.sgi.com ([192.48.171.19]:33481 "EHLO omx2.sgi.com")
-	by vger.kernel.org with ESMTP id S964884AbWA3TKD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Jan 2006 14:10:03 -0500
-Content-Disposition: inline
-In-Reply-To: <20060130173852.GA16259@kroah.com>
+Received: from fep02-0.kolumbus.fi ([193.229.0.44]:45422 "EHLO
+	fep02-app.kolumbus.fi") by vger.kernel.org with ESMTP
+	id S964892AbWA3TMP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Jan 2006 14:12:15 -0500
+In-Reply-To: <20060130181941.GA6185@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Patterson, Andrew D (Linux R&D)" <andrew.patterson@hp.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-As Ashok Raj has already responded, there was support for APIC-based MSI[-X]
-on ia64 before my patches.  I personally do not know if it worked or not, my
-suspicion is that it didn't get much airtime due to MSI being off by default
-until somewhat recently.
+On Mon, 30 Jan 2006, Christoph Hellwig wrote:
 
-I believe MSI was working on zx1 after my patch, so I suspect it worked there
-before my patch as well.  I can't speak to MSI-X.
+>  - remove superflous forward prototype
+>  - remove whitespace before function name
+>  - update header comment
+>  - remove from_initialization parametes.  It was always 1, but should
+>    always be 0 because all callers can sleep
 
-Mike, is your driver capable of MSI (vs. MSI-X)?  As a datapoint, could you
-try that?
+True in 2.6. The other allocations in the only caller (st_probe) could 
+also be changed to use GFP_KERNEL.
 
-Mark
+>  - use kzalloc
+>  - remove variable 'got', it was always 0
+> 
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: scsi-misc-2.6/drivers/scsi/st.c
+> ===================================================================
+> --- scsi-misc-2.6.orig/drivers/scsi/st.c	2006-01-30 19:14:29.000000000 +0100
+> +++ scsi-misc-2.6/drivers/scsi/st.c	2006-01-30 19:15:13.000000000 +0100
+> @@ -180,7 +180,6 @@
+>  
+>  static int modes_defined;
+>  
+> -static struct st_buffer *new_tape_buffer(int, int, int);
+>  static int enlarge_buffer(struct st_buffer *, int, int);
+>  static void normalize_buffer(struct st_buffer *);
+>  static int append_to_buffer(const char __user *, struct st_buffer *, int);
+> @@ -3574,35 +3573,27 @@
+>  
+>  
 
-On Mon, Jan 30, 2006 at 09:38:52AM -0800, Greg KH wrote:
-> On Mon, Jan 30, 2006 at 10:33:50AM -0600, Miller, Mike (OS Dev) wrote:
-> > Greg KH,
-> > We have the same results on 2.6.15, the MSI-X table is all zeroes. See
-> > below. Any ideas of what to do do next? The driver works on x86_64. Is
-> > there any thing extra I need to do on ia64?
-> 
-> ia64 didn't really have msi support before the latest -mm kernel, right
-> Mark?
-> 
-> > Andrew, can you try 2.6.16-rc1 and/or the rc1-git4 kernels?
-> 
-> How about the -mm kernel?
-> 
-> thanks,
-> 
-> greg k-h
+>  
+> -/* Try to allocate a new tape buffer. Calling function must not hold
+> -   dev_arr_lock. */
+> +/* Allocate a new tape buffer. */
+>  static struct st_buffer *
+> - new_tape_buffer(int from_initialization, int need_dma, int max_sg)
+> +new_tape_buffer(int need_dma, int max_sg)
+
+You could remove the newline instead of the blank to put the function 
+type and rest of declaration to the same line.
+
+Thanks for the cleanup.
+
+Acked-by: Kai Makisara <Kai.Makisara@kolumbus.fi>
+
+-- 
+Kai
