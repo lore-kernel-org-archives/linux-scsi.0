@@ -1,52 +1,45 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [GIT PATCH] SCSI bug fixes for 2.6.16-rc1
-Date: Tue, 31 Jan 2006 15:13:58 -0600
-Message-ID: <43DFD316.3080100@us.ibm.com>
-References: <1138741016.3307.20.camel@mulgrave>
-Reply-To: brking@us.ibm.com
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] SCSI_AACRAID: add a help text
+Date: Tue, 31 Jan 2006 22:32:57 +0100
+Message-ID: <20060131213257.GE3986@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:7648 "EHLO e3.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751493AbWAaVOB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Jan 2006 16:14:01 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e3.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id k0VLE0ma013443
-	for <linux-scsi@vger.kernel.org>; Tue, 31 Jan 2006 16:14:00 -0500
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k0VLE0YB179772
-	for <linux-scsi@vger.kernel.org>; Tue, 31 Jan 2006 16:14:00 -0500
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k0VLDxME025666
-	for <linux-scsi@vger.kernel.org>; Tue, 31 Jan 2006 16:14:00 -0500
-In-Reply-To: <1138741016.3307.20.camel@mulgrave>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:19471 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1751511AbWAaVdB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 Jan 2006 16:33:01 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-James Bottomley wrote:
-> These are mainly driver bug fixes and updates.
+Most of the text by Mark Salyzyn <mark_salyzyn@adaptec.com>.
 
-> Brian King:
->   o Prevent scsi_execute_async from guessing cdb length
 
-James,
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-Any reason the other sg patch I submitted didn't get pushed?
+---
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=113753907627483&w=2
+ drivers/scsi/Kconfig |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-I was hoping to see this one go into the rc fixes, since without
-it ipr's RAID configuration tools do not work.
+--- linux-2.6.16-rc1-mm4-full/drivers/scsi/Kconfig.old	2006-01-31 21:18:27.000000000 +0100
++++ linux-2.6.16-rc1-mm4-full/drivers/scsi/Kconfig	2006-01-31 21:19:48.000000000 +0100
+@@ -381,6 +381,14 @@
+ config SCSI_AACRAID
+ 	tristate "Adaptec AACRAID support"
+ 	depends on SCSI && PCI
++	help
++	  This driver supports a variety of Dell, HP, Adaptec, IBM and
++	  ICP storage products. For a list of supported products, refer
++	  to <file:Documentation/scsi/aacraid.txt>.
++
++	  To compile this driver as a module, choose M here: the module
++	  will be called aacraid.
++
+ 
+ source "drivers/scsi/aic7xxx/Kconfig.aic7xxx"
+ 
 
-Thanks,
-
-Brian
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
