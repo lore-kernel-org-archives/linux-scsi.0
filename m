@@ -1,74 +1,49 @@
-From: Mark Haverkamp <markh@osdl.org>
-Subject: Re: iommu_alloc failure and panic
-Date: Tue, 31 Jan 2006 13:33:00 -0800
-Message-ID: <1138743180.15732.15.camel@markh3.pdx.osdl.net>
-References: <200601310118.k0V1Il7Z018408@falcon30.maxeymade.com>
-	<43DF691E.1020008@emulex.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: RFC: SCSI-0 test for no LUN
+Date: Tue, 31 Jan 2006 16:53:59 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0601311650430.994-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc64-dev-bounces@ozlabs.org>
-In-Reply-To: <43DF691E.1020008@emulex.com>
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc64-dev>,
-	<mailto:linuxppc64-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc64-dev>
-List-Post: <mailto:linuxppc64-dev@ozlabs.org>
-List-Help: <mailto:linuxppc64-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc64-dev>,
-	<mailto:linuxppc64-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc64-dev-bounces@ozlabs.org
-Errors-To: linuxppc64-dev-bounces@ozlabs.org
-To: James.Smart@Emulex.Com
-Cc: "linuxppc64-dev@ozlabs.org" <linuxppc64-dev@ozlabs.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:32233 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP
+	id S1751550AbWAaVyI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 Jan 2006 16:54:08 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-On Tue, 2006-01-31 at 08:41 -0500, James Smart wrote:
-> >> 2) The emulex driver has been prone to problems in the past where it's
-> >> been very aggressive at starting DMA operations, and I think it can
-> >> be avoided with tuning. What I don't know is if it's because of this,
-> >> or simply because of the large number of targets you have. Cc:ing James
-> >> Smart.
-> 
-> I don't have data points for the 2.6 kernel, but I can comment on what I
-> have seen on the 2.4 kernel.
-> 
-> The issue that I saw on the 2.4 kernel was that the pci dma alloc routine
-> was inappropriately allocating from the dma s/g maps. On systems with less
-> than 4Gig of memory, or on those with no iommmu (emt64), the checks around
-> adapter-supported dma masks were off (I'm going to be loose in terms to not
-> describe it in detail). The result was, although the adapter could support
-> a fully 64bit address and/or although the physical dma address would be under
-> 32-bits, the logic forced allocation from the mapped dma pool. On some
-> systems, this pool was originally only 16MB. Around 2.4.30, the swiotlb was
-> introduced, which reduced issue, but unfortunately, still never solved the
-> allocation logic. It fails less as the swiotlb simply had more space.
-> As far as I know, this problem doesn't exist in the 2.6 kernel. I'd have to
-> go look at the dma map functions to make sure.
-> 
-> Why was the lpfc driver prone to the dma map exhaustion failures ? Due to the
-> default # of commands per lun and max sg segments reported by the driver to
-> the scsi midlayer, the scsi mid-layer's preallocation of dma maps for commands
-> for each lun, and the fact that our FC configs were usually large, had lots
-> of luns, and replicated the resources for each path to the same storage.
-> 
-> Ultimately, what I think is the real issue here is the way the scsi mid-layer
-> is preallocating dma maps for the luns. 16000 luns is a huge number.
-> Multiply this by a max sg segment count of 64 by the driver, and a number
-> between 3 and 30 commands per lun, and you can see the numbers. Scsi does do
-> some interesting allocation algorithms once it hits an allocation failure.
-> One side effect of this is that it is fairly efficient at allocating the
-> bulk of the dma pool.
+Does anyone object to the patch below?  The only way it could cause
+trouble would be if someone had a SCSI-0 device that reported a PDT of 31,
+which normally would indicate no LUN present.
 
-James,
-
-Thanks for the information.  I tried loading the lpfc driver with
-lpfc_lun_queue_depth=1 and haven't seen iommu_alloc failures.  I'm still
-curious why the alloc failures lead to a panic though.
-
-Mark.
+Alan Stern
 
 
-> 
-> -- james s
--- 
-Mark Haverkamp <markh@osdl.org>
+
+Index: l2616/drivers/scsi/scsi_scan.c
+===================================================================
+--- l2616.orig/drivers/scsi/scsi_scan.c
++++ l2616/drivers/scsi/scsi_scan.c
+@@ -877,6 +877,19 @@ static int scsi_probe_and_add_lun(struct
+ 		goto out_free_result;
+ 	}
+ 
++	/*
++	 * Non-standard SCSI devices may set the PDT to 0x1f (unknown or
++	 * no device type) instead of using the peripheral qualifier to
++	 * indicate that no LUN is present.  For example, USB UFI does this.
++	 */
++	if (sdev->scsi_level == 0 && (result[0] & 0x1f) == 0x1f) {
++		SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
++					"scsi scan: peripheral device type"
++					" of 31, no device added\n"));
++		res = SCSI_SCAN_TARGET_PRESENT;
++		goto out_free_result;
++	}
++
+ 	res = scsi_add_lun(sdev, result, &bflags);
+ 	if (res == SCSI_SCAN_LUN_PRESENT) {
+ 		if (bflags & BLIST_KEY) {
+
