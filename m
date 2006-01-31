@@ -1,112 +1,59 @@
-From: <notificationofficenl_office@virgilio.it>
-Subject: MAURILY LOTTERIES!!!
-Date: Tue, 31 Jan 2006 11:16:10 +0100 (GMT+01:00)
-Message-ID: <15890030.1138702570085.JavaMail.root@pswm12.cp.tin.it>
-Reply-To: <notificationofficenl_office@virgilio.it>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: iommu_alloc failure and panic
+Date: Tue, 31 Jan 2006 08:41:50 -0500
+Message-ID: <43DF691E.1020008@emulex.com>
+References: <200601310118.k0V1Il7Z018408@falcon30.maxeymade.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain;charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vsmtp4.tin.it ([212.216.176.224]:64961 "EHLO vsmtp4.tin.it")
-	by vger.kernel.org with ESMTP id S1750700AbWAaKQm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Jan 2006 05:16:42 -0500
+Received: from emulex.emulex.com ([138.239.112.1]:44164 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1750837AbWAaNmh
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 Jan 2006 08:42:37 -0500
+In-Reply-To: <200601310118.k0V1Il7Z018408@falcon30.maxeymade.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-MAURILY LOTTERIES!!!
-GreenCasinos & Maurilyn Lotteries,
-HOLLAND HEAD 
-OFFICE
-SNELLERWAARDGRACHT 12, 
-1107 EJ GAASPERDAM, AMSTERDAM, 
+To: Doug Maxey <dwm@maxeymade.com>
+Cc: Olof Johansson <olof@lixom.net>, Mark Haverkamp <markh@osdl.org>, "linuxppc64-dev@ozlabs.org" <linuxppc64-dev@ozlabs.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
 
-Dear 
-Sir/Madam,
+>> 2) The emulex driver has been prone to problems in the past where it's
+>> been very aggressive at starting DMA operations, and I think it can
+>> be avoided with tuning. What I don't know is if it's because of this,
+>> or simply because of the large number of targets you have. Cc:ing James
+>> Smart.
 
-                            Congratulations!
+I don't have data points for the 2.6 kernel, but I can comment on what I
+have seen on the 2.4 kernel.
 
-With utmost 
-joy, we are pleased to inform you of the result of the
+The issue that I saw on the 2.4 kernel was that the pci dma alloc routine
+was inappropriately allocating from the dma s/g maps. On systems with less
+than 4Gig of memory, or on those with no iommmu (emt64), the checks around
+adapter-supported dma masks were off (I'm going to be loose in terms to not
+describe it in detail). The result was, although the adapter could support
+a fully 64bit address and/or although the physical dma address would be under
+32-bits, the logic forced allocation from the mapped dma pool. On some
+systems, this pool was originally only 16MB. Around 2.4.30, the swiotlb was
+introduced, which reduced issue, but unfortunately, still never solved the
+allocation logic. It fails less as the swiotlb simply had more space.
+As far as I know, this problem doesn't exist in the 2.6 kernel. I'd have to
+go look at the dma map functions to make sure.
 
-Green Casinos & 
-Maurilyn Lotteries Inc. programs, held on the 30th of January 2006, 
-which drew a cash prize of $1,000,000.00, covered with high insurance 
-policy. Your e-mail address attached to Ticket/Code number 
-0087411652337 with claim/reference number 
+Why was the lpfc driver prone to the dma map exhaustion failures ? Due to the
+default # of commands per lun and max sg segments reported by the driver to
+the scsi midlayer, the scsi mid-layer's preallocation of dma maps for commands
+for each lun, and the fact that our FC configs were usually large, had lots
+of luns, and replicated the resources for each path to the same storage.
 
-085093785/92 drew these 
-lucky numbers 007-49746-041-764-64-2091, which consequently won in the 
-1st category. You have been approved to receive a cash prize of 
-$1,000,000.00 (One Million USD).
+Ultimately, what I think is the real issue here is the way the scsi mid-layer
+is preallocating dma maps for the luns. 16000 luns is a huge number.
+Multiply this by a max sg segment count of 64 by the driver, and a number
+between 3 and 30 commands per lun, and you can see the numbers. Scsi does do
+some interesting allocation algorithms once it hits an allocation failure.
+One side effect of this is that it is fairly efficient at allocating the
+bulk of the dma pool.
 
-Be advised that due to incessant mix 
-up in cash prize transfer to previous winners, we advise that you keep 
-your winning information confidential until your claim has been 
-processed and released to you. This security measure is critical; its a 
-measure put in place to avoid double claims, transfer and unwarranted 
-abuse of this program by other participants. 
-
-METHOD OF SELECTING 
-WINNERS:
-
-participants were selected anonymously through a private 
-ballot system (computer ballot) from over 35,000 companies and 70,000 
-individual e-mail addresses all over the world. At the final draw your 
-e-mail address emerged as the winner of our last jackpot.
-
-This is 
-promotional program takes place bi-annually, and it is promoted and 
-sponsored Orient software corporation (Orient Networks). It is met to 
-reward some individuals and corporations who have devoted their time 
-and resources surfing the world wide web (www) with their email 
-addresses. 
-
-Remember, all winning must be claimed not later than 20 
-days of this notification, after the expiration of that time frame, if 
-your funds are unclaimed, it will be refunded to us and included in our 
-next draws.
-
-We hope you will use part of your cash prize to 
-participate in our next $18million draws in June 2006. 
-
-Lastly, in 
-order to avoid unnecessary delays/complications with the transfer of 
-your funds to you, please always remember to quote your Code number in 
-all correspondence with our legal adviser.To begin your claim and how 
-to obtain your winning ticket number from the Game Board, please 
-contact our Director, Claims and legal adviser:
-
-SMITH LAW FIRM NL
-[IMPERIAL CHAMBER]
-Advocate Mr. Van Der Gooi
-Advocate Mrs. G.F Saskia
-Dr. Edward Makad 
-Email: smithfirmll@netscape.net
-Tel: +31-613-795-051 
-Fax: +31-847-556-223
- 
- 
- 
- Furthermore, should there be any change of 
-your present address, please notify us immediately so to make the 
-appropriate adjustment.
-
-
-
-Congratulations from the management and 
-staffs of GreenCasinos & Maurilyn Lotteries. 
- 
-Yours faithfully, 
-
-Mrs. Ruth Peterson
-The Promotions Manager.
-
-
-
-
-
-
-
+-- james s
 
