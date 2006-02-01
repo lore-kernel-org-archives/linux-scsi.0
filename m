@@ -1,16 +1,16 @@
 From: andrew.vasquez@qlogic.com
-Subject: [PATCH 3/6] qla2xxx: Add host-statistics FC transport attributes.
-Date: Tue, 31 Jan 2006 16:05:02 -0800
-Message-ID: <11387522973679-git-send-email-andrew.vasquez@qlogic.com>
+Subject: [PATCH 1/6] qla2xxx: Add port-speed FC transport attribute.
+Date: Tue, 31 Jan 2006 16:04:51 -0800
+Message-ID: <11387522913491-git-send-email-andrew.vasquez@qlogic.com>
 References: <20060201000146.GA4456@andrew-vasquezs-powerbook-g4-15.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:57794 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S1751136AbWBAAFC (ORCPT
+Received: from pat.qlogic.com ([198.70.193.2]:23490 "EHLO avexch02.qlogic.com")
+	by vger.kernel.org with ESMTP id S1751128AbWBAAEw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Jan 2006 19:05:02 -0500
+	Tue, 31 Jan 2006 19:04:52 -0500
 In-Reply-To: <20060201000146.GA4456@andrew-vasquezs-powerbook-g4-15.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,271 +21,104 @@ Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
 ---
 
- drivers/scsi/qla2xxx/qla_attr.c |   37 +++++++++++++-
- drivers/scsi/qla2xxx/qla_def.h  |    2 +
- drivers/scsi/qla2xxx/qla_gbl.h  |    7 +++
- drivers/scsi/qla2xxx/qla_init.c |    1 
- drivers/scsi/qla2xxx/qla_mbx.c  |  105 ++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/qla2xxx/qla_rscn.c |    2 -
- 6 files changed, 147 insertions(+), 7 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |   22 ++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_def.h  |    4 ++++
+ drivers/scsi/qla2xxx/qla_isr.c  |    4 ++--
+ drivers/scsi/qla2xxx/qla_os.c   |    1 +
+ 4 files changed, 29 insertions(+), 2 deletions(-)
 
-a9babe2c72214112061c87e14fabd38f8b2e3164
+55ed898e5d42cc3b42e701cffdc78d3a4b12130b
 diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 5501632..5a8d5c4 100644
+index b17ee62..e03140f 100644
 --- a/drivers/scsi/qla2xxx/qla_attr.c
 +++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -7,7 +7,6 @@
- #include "qla_def.h"
- 
- #include <linux/vmalloc.h>
--#include <scsi/scsi_transport_fc.h>
- 
- /* SYSFS attributes --------------------------------------------------------- */
- 
-@@ -555,6 +554,41 @@ qla2x00_issue_lip(struct Scsi_Host *shos
- 	return 0;
+@@ -426,6 +426,26 @@ qla2x00_get_host_port_id(struct Scsi_Hos
  }
- 
-+static struct fc_host_statistics *
-+qla2x00_get_fc_host_stats(struct Scsi_Host *shost)
-+{
-+	scsi_qla_host_t *ha = to_qla_host(shost);
-+	int rval;
-+	uint16_t mb_stat[1];
-+	link_stat_t stat_buf;
-+	struct fc_host_statistics *pfc_host_stat;
-+
-+	pfc_host_stat = &ha->fc_host_stat;
-+	memset(pfc_host_stat, -1, sizeof(struct fc_host_statistics));
-+
-+	if (IS_QLA24XX(ha) || IS_QLA25XX(ha)) {
-+		rval = qla24xx_get_isp_stats(ha, (uint32_t *)&stat_buf,
-+		    sizeof(stat_buf) / 4, mb_stat);
-+	} else {
-+		rval = qla2x00_get_link_status(ha, ha->loop_id, &stat_buf,
-+		    mb_stat);
-+	}
-+	if (rval != 0) {
-+		qla_printk(KERN_WARNING, ha,
-+		    "Unable to retrieve host statistics (%d).\n", mb_stat[0]);
-+		return pfc_host_stat;
-+	}
-+
-+	pfc_host_stat->link_failure_count = stat_buf.link_fail_cnt;
-+	pfc_host_stat->loss_of_sync_count = stat_buf.loss_sync_cnt;
-+	pfc_host_stat->loss_of_signal_count = stat_buf.loss_sig_cnt;
-+	pfc_host_stat->prim_seq_protocol_err_count = stat_buf.prim_seq_err_cnt;
-+	pfc_host_stat->invalid_tx_word_count = stat_buf.inval_xmit_word_cnt;
-+	pfc_host_stat->invalid_crc_count = stat_buf.inval_crc_cnt;
-+
-+	return pfc_host_stat;
-+}
-+
- struct fc_function_template qla2xxx_transport_functions = {
- 
- 	.show_host_node_name = 1,
-@@ -583,6 +617,7 @@ struct fc_function_template qla2xxx_tran
- 	.show_rport_dev_loss_tmo = 1,
- 
- 	.issue_fc_host_lip = qla2x00_issue_lip,
-+	.get_fc_host_stats = qla2x00_get_fc_host_stats,
- };
- 
- void
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 26af531..4145808 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -29,6 +29,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_transport_fc.h>
- 
- #if defined(CONFIG_SCSI_QLA2XXX_EMBEDDED_FIRMWARE)
- #if defined(CONFIG_SCSI_QLA21XX) || defined(CONFIG_SCSI_QLA21XX_MODULE)
-@@ -2496,6 +2497,7 @@ typedef struct scsi_qla_host {
- 
- 	uint16_t	zio_mode;
- 	uint16_t	zio_timer;
-+	struct fc_host_statistics fc_host_stat;
- } scsi_qla_host_t;
- 
- 
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 35266bd..f2f5454 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -185,6 +185,13 @@ qla2x00_get_resource_cnts(scsi_qla_host_
- extern int
- qla2x00_get_fcal_position_map(scsi_qla_host_t *ha, char *pos_map);
- 
-+extern int
-+qla2x00_get_link_status(scsi_qla_host_t *, uint16_t, link_stat_t *,
-+    uint16_t *);
-+
-+extern int
-+qla24xx_get_isp_stats(scsi_qla_host_t *, uint32_t *, uint32_t, uint16_t *);
-+
- extern int qla24xx_abort_command(scsi_qla_host_t *, srb_t *);
- extern int qla24xx_abort_target(fc_port_t *);
- 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index e67bb09..634ee17 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -8,7 +8,6 @@
- 
- #include <linux/delay.h>
- #include <linux/vmalloc.h>
--#include <scsi/scsi_transport_fc.h>
- 
- #include "qla_devtbl.h"
- 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 3099b37..49ce197 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -7,7 +7,6 @@
- #include "qla_def.h"
- 
- #include <linux/delay.h>
--#include <scsi/scsi_transport_fc.h>
  
  static void
- qla2x00_mbx_sem_timeout(unsigned long data)
-@@ -2017,8 +2016,109 @@ qla2x00_get_fcal_position_map(scsi_qla_h
- 
- 	return rval;
- }
-+#endif
-+
-+/*
-+ * qla2x00_get_link_status
-+ *
-+ * Input:
-+ *	ha = adapter block pointer.
-+ *	loop_id = device loop ID.
-+ *	ret_buf = pointer to link status return buffer.
-+ *
-+ * Returns:
-+ *	0 = success.
-+ *	BIT_0 = mem alloc error.
-+ *	BIT_1 = mailbox error.
-+ */
-+int
-+qla2x00_get_link_status(scsi_qla_host_t *ha, uint16_t loop_id,
-+    link_stat_t *ret_buf, uint16_t *status)
++qla2x00_get_host_speed(struct Scsi_Host *shost)
 +{
-+	int rval;
-+	mbx_cmd_t mc;
-+	mbx_cmd_t *mcp = &mc;
-+	link_stat_t *stat_buf;
-+	dma_addr_t stat_buf_dma;
++	scsi_qla_host_t *ha = to_qla_host(shost);
++	uint32_t speed = 0;
 +
-+	DEBUG11(printk("%s(%ld): entered.\n", __func__, ha->host_no);)
-+
-+	stat_buf = dma_pool_alloc(ha->s_dma_pool, GFP_ATOMIC, &stat_buf_dma);
-+	if (stat_buf == NULL) {
-+		DEBUG2_3_11(printk("%s(%ld): Failed to allocate memory.\n",
-+		    __func__, ha->host_no));
-+		return BIT_0;
++	switch (ha->link_data_rate) {
++	case LDR_1GB:
++		speed = 1;
++		break;
++	case LDR_2GB:
++		speed = 2;
++		break;
++	case LDR_4GB:
++		speed = 4;
++		break;
 +	}
-+	memset(stat_buf, 0, sizeof(link_stat_t));
-+
-+	mcp->mb[0] = MBC_GET_LINK_STATUS;
-+	mcp->mb[2] = MSW(stat_buf_dma);
-+	mcp->mb[3] = LSW(stat_buf_dma);
-+	mcp->mb[6] = MSW(MSD(stat_buf_dma));
-+	mcp->mb[7] = LSW(MSD(stat_buf_dma));
-+	mcp->out_mb = MBX_7|MBX_6|MBX_3|MBX_2|MBX_0;
-+	mcp->in_mb = MBX_0;
-+	if (IS_QLA24XX(ha) || IS_QLA25XX(ha)) {
-+		mcp->mb[1] = loop_id;
-+		mcp->mb[4] = 0;
-+		mcp->mb[10] = 0;
-+		mcp->out_mb |= MBX_10|MBX_4|MBX_1;
-+		mcp->in_mb |= MBX_1;
-+	} else if (HAS_EXTENDED_IDS(ha)) {
-+		mcp->mb[1] = loop_id;
-+		mcp->mb[10] = 0;
-+		mcp->out_mb |= MBX_10|MBX_1;
-+	} else {
-+		mcp->mb[1] = loop_id << 8;
-+		mcp->out_mb |= MBX_1;
-+	}
-+	mcp->tov = 30;
-+	mcp->flags = IOCTL_CMD;
-+	rval = qla2x00_mailbox_command(ha, mcp);
-+
-+	if (rval == QLA_SUCCESS) {
-+		if (mcp->mb[0] != MBS_COMMAND_COMPLETE) {
-+			DEBUG2_3_11(printk("%s(%ld): cmd failed. mbx0=%x.\n",
-+			    __func__, ha->host_no, mcp->mb[0]);)
-+			status[0] = mcp->mb[0];
-+			rval = BIT_1;
-+		} else {
-+			/* copy over data -- firmware data is LE. */
-+			ret_buf->link_fail_cnt =
-+			    le32_to_cpu(stat_buf->link_fail_cnt);
-+			ret_buf->loss_sync_cnt =
-+			    le32_to_cpu(stat_buf->loss_sync_cnt);
-+			ret_buf->loss_sig_cnt =
-+			    le32_to_cpu(stat_buf->loss_sig_cnt);
-+			ret_buf->prim_seq_err_cnt =
-+			    le32_to_cpu(stat_buf->prim_seq_err_cnt);
-+			ret_buf->inval_xmit_word_cnt =
-+			    le32_to_cpu(stat_buf->inval_xmit_word_cnt);
-+			ret_buf->inval_crc_cnt =
-+			    le32_to_cpu(stat_buf->inval_crc_cnt);
-+
-+			DEBUG11(printk("%s(%ld): stat dump: fail_cnt=%d "
-+			    "loss_sync=%d loss_sig=%d seq_err=%d "
-+			    "inval_xmt_word=%d inval_crc=%d.\n", __func__,
-+			    ha->host_no, stat_buf->link_fail_cnt,
-+			    stat_buf->loss_sync_cnt, stat_buf->loss_sig_cnt,
-+			    stat_buf->prim_seq_err_cnt,
-+			    stat_buf->inval_xmit_word_cnt,
-+			    stat_buf->inval_crc_cnt);)
-+		}
-+	} else {
-+		/* Failed. */
-+		DEBUG2_3_11(printk("%s(%ld): failed=%x.\n", __func__,
-+		    ha->host_no, rval);)
-+		rval = BIT_1;
-+	}
-+
-+	dma_pool_free(ha->s_dma_pool, stat_buf, stat_buf_dma);
- 
--uint8_t
-+	return rval;
++	fc_host_speed(shost) = speed;
 +}
 +
-+int
- qla24xx_get_isp_stats(scsi_qla_host_t *ha, uint32_t *dwbuf, uint32_t dwords,
-     uint16_t *status)
++static void
+ qla2x00_get_starget_node_name(struct scsi_target *starget)
  {
-@@ -2080,7 +2180,6 @@ qla24xx_get_isp_stats(scsi_qla_host_t *h
+ 	struct Scsi_Host *host = dev_to_shost(starget->dev.parent);
+@@ -520,6 +540,8 @@ struct fc_function_template qla2xxx_tran
  
- 	return rval;
- }
--#endif
+ 	.get_host_port_id = qla2x00_get_host_port_id,
+ 	.show_host_port_id = 1,
++	.get_host_speed = qla2x00_get_host_speed,
++	.show_host_speed = 1,
  
- int
- qla24xx_abort_command(scsi_qla_host_t *ha, srb_t *sp)
-diff --git a/drivers/scsi/qla2xxx/qla_rscn.c b/drivers/scsi/qla2xxx/qla_rscn.c
-index 2c33421..b70bebe 100644
---- a/drivers/scsi/qla2xxx/qla_rscn.c
-+++ b/drivers/scsi/qla2xxx/qla_rscn.c
-@@ -6,8 +6,6 @@
-  */
- #include "qla_def.h"
+ 	.dd_fcrport_size = sizeof(struct fc_port *),
+ 	.show_rport_supported_classes = 1,
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index bad066e..26af531 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2331,6 +2331,10 @@ typedef struct scsi_qla_host {
+ 	uint16_t	min_external_loopid;	/* First external loop Id */
  
--#include <scsi/scsi_transport_fc.h>
--
- /**
-  * IO descriptor handle definitions.
-  *
+ 	uint16_t	link_data_rate;		/* F/W operating speed */
++#define LDR_1GB		0
++#define LDR_2GB		1
++#define LDR_4GB		3
++#define LDR_UNKNOWN	0xFFFF
+ 
+ 	uint8_t		current_topology;
+ 	uint8_t		prev_topology;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 71a46fc..42aa7a7 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -402,9 +402,9 @@ qla2x00_async_event(scsi_qla_host_t *ha,
+ 		break;
+ 
+ 	case MBA_LOOP_UP:		/* Loop Up Event */
+-		ha->link_data_rate = 0;
+ 		if (IS_QLA2100(ha) || IS_QLA2200(ha)) {
+ 			link_speed = link_speeds[0];
++			ha->link_data_rate = LDR_1GB;
+ 		} else {
+ 			link_speed = link_speeds[LS_UNKNOWN];
+ 			if (mb[1] < 5)
+@@ -436,7 +436,7 @@ qla2x00_async_event(scsi_qla_host_t *ha,
+ 		}
+ 
+ 		ha->flags.management_server_logged_in = 0;
+-		ha->link_data_rate = 0;
++		ha->link_data_rate = LDR_UNKNOWN;
+ 		if (ql2xfdmienable)
+ 			set_bit(REGISTER_FDMI_NEEDED, &ha->dpc_flags);
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 5866a7c..6e133ed 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1312,6 +1312,7 @@ int qla2x00_probe_one(struct pci_dev *pd
+ 	ha->ports = MAX_BUSES;
+ 	ha->init_cb_size = sizeof(init_cb_t);
+ 	ha->mgmt_svr_loop_id = MANAGEMENT_SERVER;
++	ha->link_data_rate = LDR_UNKNOWN;
+ 
+ 	/* Assign ISP specific operations. */
+ 	ha->isp_ops.pci_config		= qla2100_pci_config;
 -- 
 1.1.6.g1506
 
