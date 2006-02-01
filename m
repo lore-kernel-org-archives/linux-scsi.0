@@ -1,35 +1,45 @@
-From: Pim Zandbergen <P.Zandbergen@macroscoop.nl>
-Subject: Re: oops reading from Nakamichi SCSI CD changer
-Date: Wed, 01 Feb 2006 01:30:33 +0100
-Message-ID: <43E00129.4050507@macroscoop.nl>
-References: <43A8247C.7000903@macroscoop.nl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Recruitment" <recruitment@wapost.org>
+Subject: Job Offer: Financial Manager. High Salary
+Date: Wed, 01 Feb 2006 01:33:32 +0100
+Message-ID: <bieuedxqvjxjqtsvrap@vger.kernel.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pimzand.xs4all.nl ([80.126.240.234]:10927 "EHLO
-	rubens.pim.zandbergen.org") by vger.kernel.org with ESMTP
-	id S932281AbWBAAak (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Jan 2006 19:30:40 -0500
-Received: from [192.168.101.1] (rubens.pim.zandbergen.org [192.168.101.1])
-	by rubens.pim.zandbergen.org (envelope-from P.Zandbergen@macroscoop.nl) (8.13.4/8.13.4) with ESMTP id k110UX2E005539
-	for <linux-scsi@vger.kernel.org>; Wed, 1 Feb 2006 01:30:33 +0100
-In-Reply-To: <43A8247C.7000903@macroscoop.nl>
+Received: from user18.77.udn.pl ([82.139.18.77]:33033 "HELO natalia.com")
+	by vger.kernel.org with SMTP id S932314AbWBAAd2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 Jan 2006 19:33:28 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Linux-scsi <linux-scsi@vger.kernel.org>
 
-I wrote:
+Hello, we have a job offer for you
 
-> Starting with kernel 2.6.13, my system crashes immediately reading from
-> one of my two Nakamichi MJ-5.16S SCSI CD changers. 
+We are looking for hard working, dedicated people with the drive and discipline needed to work from home in their home office. Our representatives have the opportunity to set their hours and, essentially, set their own incomes. Our job is a flextime, flex-place opportunity designed to fit around your family's income and time needs. 
 
-It appears this bug is related to the Adaptec AHA-3960D HBA. I temporarily
-replaced it with an LSI Logic 53C875E based card using the sym53c8xx
-driver and all was fine.
+NO INVENTORY, START IMMEDIATELY, GUARANTEED SATISFACTION. 
 
-Unfortunately, this did not help me, as I need the Adaptec's dual channels.
+If you don't have experience - we will train. 
 
-Pim
+To qualify, you MUST: 
+
+1. Be at least 21. 
+2. Be able to repeatedly lift 5-20 pound boxes. 
+3. Check your email several times a day (each hour if possible). 
+4. You need to respond immediately to emails. 
+5. Be responsible, hard working and communicable. 
+6. Be able to answer phone calls. 
+
+We offer competitive compensation, including base salary, commission, and expense reimbursement. Approximate quantity of packages/letters per week depends ONLY on your skills. 
+
+You can earn up to Earn from $35000 to $70000 a year or more. 
+Spaces are limited so act now for this great intuitive job offer. 
+Only US resumes will be accepted. We don't accept e-mails from aol dot com
+
+If you would like to join our team please contact Michael Cross e-mail: recruitment@wapost.org
+--
+Michael Cross
+Staff Manager. Recruitment Group
+World Access Company
+http://www.wapost.org
+
 
 
