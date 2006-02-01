@@ -1,23 +1,41 @@
 From: Mark Haverkamp <markh@osdl.org>
-Subject: [PATCH 0/3] aacraid: driver updates
-Date: Wed, 01 Feb 2006 09:30:02 -0800
-Message-ID: <1138815002.27662.11.camel@markh3.pdx.osdl.net>
+Subject: [PATCH 1/3] aacraid: reduce device probe warnings
+Date: Wed, 01 Feb 2006 09:30:31 -0800
+Message-ID: <1138815031.27662.13.camel@markh3.pdx.osdl.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:1167 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1422675AbWBARaH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Feb 2006 12:30:07 -0500
+Received: from smtp.osdl.org ([65.172.181.4]:16527 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1422654AbWBARae (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Feb 2006 12:30:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
 Cc: Mark Salyzyn <mark_salyzyn@adaptec.com>
 
-The following 3 patches contain various aacraid driver updates described
-in each mail.
+Received from Mark Salyzyn.
 
-Patches apply to the scsi-misc-2.6 git tree.
+This patch sets up some device quirks surrounding arrays to inform the
+scsi layer that various mode pages are not supported. This reduces the
+severity of the complaints that show up in the logs as the array devices
+are enumerated.
+
+Signed-off-by: Mark Haverkamp <markh@osdl.org>
+--- scsi-misc-aac.orig/drivers/scsi/aacraid/linit.c	2006-01-31 09:35:32.000000000 -0800
++++ scsi-misc-aac/drivers/scsi/aacraid/linit.c	2006-01-31 09:35:42.000000000 -0800
+@@ -386,6 +386,10 @@
+ static int aac_slave_configure(struct scsi_device *sdev)
+ {
+ 	struct Scsi_Host *host = sdev->host;
++	if (sdev_channel(sdev) == CONTAINER_CHANNEL) {
++		sdev->skip_ms_page_8 = 1;
++		sdev->skip_ms_page_3f = 1;
++	}
+ 
+ 	if (sdev->tagged_supported)
+ 		scsi_adjust_queue_depth(sdev, MSG_ORDERED_TAG, 128);
+
 -- 
 Mark Haverkamp <markh@osdl.org>
 
