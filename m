@@ -1,41 +1,48 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Overlapped command error handling
-Date: Thu, 02 Feb 2006 09:12:27 -0600
-Message-ID: <1138893147.3363.3.camel@mulgrave>
-References: <43E20272.5000506@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH 1/1] blk: Fix SG_IO ioctl failure retry looping
+Date: Thu, 02 Feb 2006 11:29:44 -0600
+Message-ID: <200602021729.k12HTtmg018944@d03av02.boulder.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:19606 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751124AbWBBPMb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Feb 2006 10:12:31 -0500
-In-Reply-To: <43E20272.5000506@suse.de>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:64204 "EHLO
+	e34.co.us.ibm.com") by vger.kernel.org with ESMTP id S932187AbWBBR37
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Feb 2006 12:29:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
-
-On Thu, 2006-02-02 at 14:00 +0100, Hannes Reinecke wrote:
-> It looks to me as if the device has aborted _both_ commands when
-> returning the 'overlapped commands attempted' sense.
-> Is that conformant behaviour?
-> 
-> SCSI-2 states in section 7.5.2:
-> A target that detects an incorrect initiator connection shall abort all
-> I/O processes for the initiator on the logical unit or target routine
-> and shall return CHECK CONDITION status. The sense key shall be set to
-> ABORTED COMMAND and the additional sense code shall be set to OVERLAPPED
-> COMMANDS ATTEMPTED.
-
-Actually, I think it's probably complaining about tag reuse in the sense
-of SAM-3 section 5.9.3.  You return this sense if an initiator attempts
-to use a duplicate tag.  Since the aic79xx manges its own tags, then
-it's probably a driver error.  You could verify this by having the
-aic79xx print out the tag as it sends the command out on the wire.  (The
-device does support TCQ, doesn't it?)
-
-James
+To: axboe@suse.de
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
 
 
+When issuing an SG_IO ioctl through sd that resulted
+in an unrecoverable error, a nearly infinite retry loop
+was discovered. This is due to the fact that the block
+layer SG_IO code is not setting up rq->retries. This
+patch also fixes up the sg_scsi_ioctl path.
+
+
+Signed-off-by: Brian King <brking@us.ibm.com>
+---
+
+ linux-2.6-bjking1/block/scsi_ioctl.c |    2 ++
+ 1 files changed, 2 insertions(+)
+
+diff -puN block/scsi_ioctl.c~scsi_ioctl_retries block/scsi_ioctl.c
+--- linux-2.6/block/scsi_ioctl.c~scsi_ioctl_retries	2006-02-02 11:07:50.000000000 -0600
++++ linux-2.6-bjking1/block/scsi_ioctl.c	2006-02-02 11:09:11.000000000 -0600
+@@ -309,6 +309,7 @@ static int sg_io(struct file *file, requ
+ 		rq->timeout = q->sg_timeout;
+ 	if (!rq->timeout)
+ 		rq->timeout = BLK_DEFAULT_TIMEOUT;
++	rq->retries = 0;
+ 
+ 	start_time = jiffies;
+ 
+@@ -427,6 +428,7 @@ static int sg_scsi_ioctl(struct file *fi
+ 	rq->data = buffer;
+ 	rq->data_len = bytes;
+ 	rq->flags |= REQ_BLOCK_PC;
++	rq->retries = 0;
+ 
+ 	blk_execute_rq(q, bd_disk, rq, 0);
+ 	err = rq->errors & 0xff;	/* only 8 bit SCSI status */
+_
