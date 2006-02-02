@@ -1,52 +1,60 @@
-From: =?iso-8859-1?b?RW1tYW51ZWwgRnVzdMOp?= <emmanuel.fuste@laposte.net>
-Subject: Re:[PATCH, RFC] aic7xxx: semaphore to completion conversion
-Date: Wed,  1 Feb 2006 23:23:02 +0100
-Message-ID: <IU14UE$B54E7A6B1CA1787FCF410BBB75E09FBA@laposte.net>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: [PATCH 3/9] iscsi update: setup pool before using
+Date: Wed, 01 Feb 2006 21:06:58 -0600
+Message-ID: <1138849618.3456.36.camel@max>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx.laposte.net ([81.255.54.11]:11876 "EHLO mx.laposte.net")
-	by vger.kernel.org with ESMTP id S1422981AbWBAWXT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Feb 2006 17:23:19 -0500
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:29876 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1423069AbWBBDHQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Feb 2006 22:07:16 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Luben Tuikov <ltuikov@yahoo.com>
+To: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
 
-Hello,
+>From andmike@us.ibm.com:
 
-Tested on 2.6.15 + James Bottomley "aic7xxx timer handling
-bug" fix + "Turn off ordered flush barriers for SCSI driver"
-from Jens Axboe.
+ Ensure that pool data is setup prior to calling mempool_create as it will
+ call the the alloc function during create.
 
-Seems to work as expected.
-I stressed the recovery code a lot with my magic command
-(cdrwtool -d /dev/sr0 -q).
-The card never recover but was not completely dead.
-I was able to issue a reboot command and it complete correctly
-(way sloooooww but complete).
-The kernel trace are very clean and repetitive now.
-I attach the complete log to
-http://bugzilla.kernel.org/show_bug.cgi?id=3D5921
-
-Luben, I know that you're not the aic maintainer but
-pleeeaaasse, could you have a look at the kernel log attached
-to this bugzilla bug ? Your Adaptec expertise is precious.
-
-Regards,
-Emmanuel.
----
-
-
-Acc=E9dez au courrier =E9lectronique de La Poste : www.laposte.net ;=20
-3615 LAPOSTENET (0,34 =80/mn) ; t=E9l : 08 92 68 13 50 (0,34=80/mn)
+Signed-off-by: Mike Anderson <andmike@us.ibm.com>
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Signed-off-by: Alex Aizman <itn780@yahoo.com>
+Signed-off-by: Dmitry Yusupov <dmitry_yus@yahoo.com>
 
 
 
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 79ca29e..448fd78 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -530,6 +530,12 @@ mempool_zone_init(unsigned max, unsigned
+ 	if (!zp)
+ 		return NULL;
+ 
++	zp->size = size;
++	zp->hiwat = hiwat;
++	INIT_LIST_HEAD(&zp->freequeue);
++	spin_lock_init(&zp->freelock);
++	atomic_set(&zp->allocated, 0);
++
+ 	zp->pool = mempool_create(max, mempool_zone_alloc_skb,
+ 				  mempool_zone_free_skb, zp);
+ 	if (!zp->pool) {
+@@ -537,13 +543,6 @@ mempool_zone_init(unsigned max, unsigned
+ 		return NULL;
+ 	}
+ 
+-	zp->size = size;
+-	zp->hiwat = hiwat;
 -
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-	INIT_LIST_HEAD(&zp->freequeue);
+-	spin_lock_init(&zp->freelock);
+-	atomic_set(&zp->allocated, 0);
+-
+ 	return zp;
+ }
+ 
+
+
