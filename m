@@ -1,7 +1,7 @@
 From: Hugh Dickins <hugh@veritas.com>
-Subject: [PATCH] st: don't doublefree pages from scatterlist
-Date: Fri, 3 Feb 2006 19:53:34 +0000 (GMT)
-Message-ID: <Pine.LNX.4.61.0602031951280.14829@goblin.wat.veritas.com>
+Subject: [PATCH] ipr: don't doublefree pages from scatterlist
+Date: Fri, 3 Feb 2006 19:55:17 +0000 (GMT)
+Message-ID: <Pine.LNX.4.61.0602031953400.14829@goblin.wat.veritas.com>
 References: <Pine.LNX.4.63.0512271807130.4955@kai.makisara.local>
  <20060104172727.GA320@tau.solarneutrino.net> <Pine.LNX.4.63.0601042334310.5087@kai.makisara.local>
  <20060105201249.GB1795@tau.solarneutrino.net> <Pine.LNX.4.64.0601051312380.3169@g5.osdl.org>
@@ -12,127 +12,85 @@ References: <Pine.LNX.4.63.0512271807130.4955@kai.makisara.local>
  <Pine.LNX.4.61.0602031842290.14065@goblin.wat.veritas.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422888AbWBCTw6@vger.kernel.org>
-Received: from goblin.wat.veritas.com([10.10.97.2]) (5703 bytes) by megami.veritas.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gold.veritas.com ([143.127.12.110]:41578 "EHLO gold.veritas.com")
+	by vger.kernel.org with ESMTP id S1422899AbWBCTyk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2006 14:54:40 -0500
+Received: from goblin.wat.veritas.com([10.10.97.2]) (3661 bytes) by megami.veritas.com
 	via sendmail with P:esmtp/R:smart_host/T:smtp
 	(sender: <hugh@veritas.com>)
-	id <m1F56zG-0001TtC@megami.veritas.com>
-	for <linux-scsi@vger.kernel.org>; Fri, 3 Feb 2006 11:52:54 -0800 (PST)
+	id <m1F570w-0001TeC@megami.veritas.com>
+	for <linux-scsi@vger.kernel.org>; Fri, 3 Feb 2006 11:54:38 -0800 (PST)
 	(Smail-3.2.0.101 1997-Dec-17 #15 built 2001-Aug-30)
 In-Reply-To: <Pine.LNX.4.61.0602031842290.14065@goblin.wat.veritas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Brian King <brking@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 On some architectures, mapping the scatterlist may coalesce entries:
 if that coalesced list is then used for freeing the pages afterwards,
 there's a danger that pages may be doubly freed (and others leaked).
 
-Fix SCSI Tape's sgl_unmap_user_pages by freeing from the pagelist used
-in sgl_map_user_pages.  Fixes Ryan Richter's crash on x86_64, with Bad
-page state mapcount 2 from sgl_unmap_user_pages, and consequent mayhem.
-
-But it's quite confusing for st's (un)map_user_pages to be named sgl_,
-with sg's named st_: while we're changing its arg, rename st's to
-st_map_user_pages and st_unmap_user_pages (and do sg's separately).
+Fix Power RAID's ipr_free_ucode_buffer by freeing from a separate array
+beyond the scatterlist.
 
 Signed-off-by: Hugh Dickins <hugh@veritas.com>
 ---
+Warning: untested!
 
- drivers/scsi/st.c |   20 ++++++++++++--------
- drivers/scsi/st.h |    1 +
- 2 files changed, 13 insertions(+), 8 deletions(-)
+ drivers/scsi/ipr.c |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
 
---- 2.6.16-rc2/drivers/scsi/st.c	2006-02-03 09:32:25.000000000 +0000
-+++ linux/drivers/scsi/st.c	2006-02-03 09:59:37.000000000 +0000
-@@ -188,9 +188,9 @@ static int from_buffer(struct st_buffer 
- static void move_buffer_data(struct st_buffer *, int);
- static void buf_to_sg(struct st_buffer *, unsigned int);
+--- 2.6.16-rc2/drivers/scsi/ipr.c	2006-02-03 09:32:24.000000000 +0000
++++ linux/drivers/scsi/ipr.c	2006-02-03 09:59:37.000000000 +0000
+@@ -2538,6 +2538,7 @@ static struct ipr_sglist *ipr_alloc_ucod
+ 	int sg_size, order, bsize_elem, num_elem, i, j;
+ 	struct ipr_sglist *sglist;
+ 	struct scatterlist *scatterlist;
++	struct page **sg_pages;
+ 	struct page *page;
  
--static int sgl_map_user_pages(struct scatterlist *, const unsigned int, 
-+static int st_map_user_pages(struct st_buffer *, const unsigned int, 
- 			      unsigned long, size_t, int);
--static int sgl_unmap_user_pages(struct scatterlist *, const unsigned int, int);
-+static int st_unmap_user_pages(struct st_buffer *, const unsigned int, int);
+ 	/* Get the minimum size per scatter/gather element */
+@@ -2557,7 +2558,8 @@ static struct ipr_sglist *ipr_alloc_ucod
  
- static int st_probe(struct device *);
- static int st_remove(struct device *);
-@@ -1404,7 +1404,7 @@ static int setup_buffering(struct scsi_t
+ 	/* Allocate a scatter/gather list for the DMA */
+ 	sglist = kzalloc(sizeof(struct ipr_sglist) +
+-			 (sizeof(struct scatterlist) * (num_elem - 1)),
++			 (sizeof(struct scatterlist) * (num_elem - 1)) +
++			 (sizeof(struct page *) * num_elem),
+ 			 GFP_KERNEL);
  
- 	if (i && ((unsigned long)buf & queue_dma_alignment(
- 					STp->device->request_queue)) == 0) {
--		i = sgl_map_user_pages(&(STbp->sg[0]), STbp->use_sg,
-+		i = st_map_user_pages(STbp, STbp->use_sg,
- 				      (unsigned long)buf, count, (is_read ? READ : WRITE));
- 		if (i > 0) {
- 			STbp->do_dio = i;
-@@ -1456,7 +1456,7 @@ static void release_buffering(struct scs
- 
- 	STbp = STp->buffer;
- 	if (STbp->do_dio) {
--		sgl_unmap_user_pages(&(STbp->sg[0]), STbp->do_dio, is_read);
-+		st_unmap_user_pages(STbp, STbp->do_dio, is_read);
- 		STbp->do_dio = 0;
- 		STbp->sg_segs = 0;
- 	}
-@@ -4368,13 +4368,14 @@ static void do_create_class_files(struct
- }
- 
- /* The following functions may be useful for a larger audience. */
--static int sgl_map_user_pages(struct scatterlist *sgl, const unsigned int max_pages, 
-+static int st_map_user_pages(struct st_buffer *STbp, const unsigned int max_pages, 
- 			      unsigned long uaddr, size_t count, int rw)
- {
- 	unsigned long end = (uaddr + count + PAGE_SIZE - 1) >> PAGE_SHIFT;
- 	unsigned long start = uaddr >> PAGE_SHIFT;
- 	const int nr_pages = end - start;
- 	int res, i, j;
-+	struct scatterlist *sgl = STbp->sg;
- 	struct page **pages;
- 
- 	/* User attempted Overflow! */
-@@ -4434,7 +4435,7 @@ static int sgl_map_user_pages(struct sca
- 		sgl[0].length = count;
+ 	if (sglist == NULL) {
+@@ -2566,6 +2568,8 @@ static struct ipr_sglist *ipr_alloc_ucod
  	}
  
--	kfree(pages);
-+	STbp->sg_pages = pages;
- 	return nr_pages;
+ 	scatterlist = sglist->scatterlist;
++	/* Save pages to be freed in array beyond scatterlist */
++	sg_pages = (struct page **) (scatterlist + num_elem);
  
-  out_unmap:
-@@ -4449,13 +4450,14 @@ static int sgl_map_user_pages(struct sca
+ 	sglist->order = order;
+ 	sglist->num_sg = num_elem;
+@@ -2584,6 +2588,7 @@ static struct ipr_sglist *ipr_alloc_ucod
+ 		}
  
+ 		scatterlist[i].page = page;
++		sg_pages[i] = page;
+ 	}
  
- /* And unmap them... */
--static int sgl_unmap_user_pages(struct scatterlist *sgl, const unsigned int nr_pages,
-+static int st_unmap_user_pages(struct st_buffer *STbp, const unsigned int nr_pages,
- 				int dirtied)
+ 	return sglist;
+@@ -2601,10 +2606,13 @@ static struct ipr_sglist *ipr_alloc_ucod
+  **/
+ static void ipr_free_ucode_buffer(struct ipr_sglist *sglist)
  {
++	struct page **sg_pages;
  	int i;
  
 +	/* Scatterlist entries may have been coalesced: free saved pagelist */
- 	for (i=0; i < nr_pages; i++) {
--		struct page *page = sgl[i].page;
-+		struct page *page = STbp->sg_pages[i];
++	sg_pages = (struct page **) (sglist->scatterlist + sglist->num_sg);
+ 	for (i = 0; i < sglist->num_sg; i++)
+-		__free_pages(sglist->scatterlist[i].page, sglist->order);
++		__free_pages(sg_pages[i], sglist->order);
  
- 		if (dirtied)
- 			SetPageDirty(page);
-@@ -4465,5 +4467,7 @@ static int sgl_unmap_user_pages(struct s
- 		page_cache_release(page);
- 	}
- 
-+	kfree(STbp->sg_pages);
-+	STbp->sg_pages = NULL;
- 	return 0;
+ 	kfree(sglist);
  }
---- 2.6.16-rc2/drivers/scsi/st.h	2006-02-03 09:32:25.000000000 +0000
-+++ linux/drivers/scsi/st.h	2006-02-03 09:59:37.000000000 +0000
-@@ -49,6 +49,7 @@ struct st_buffer {
- 	unsigned short frp_segs;	/* number of buffer segments */
- 	unsigned int frp_sg_current;	/* driver buffer length currently in s/g list */
- 	struct st_buf_fragment *frp;	/* the allocated buffer fragment list */
-+	struct page **sg_pages;		/* pages to be freed from s/g list */
- 	struct scatterlist sg[1];	/* MUST BE last item */
- };
- 
