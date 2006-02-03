@@ -1,89 +1,149 @@
-From: john stultz <johnstul@us.ibm.com>
-Subject: Re: Fw: [Bugme-new] [Bug 5998] New: oops on mount "kernel access
-	of bad area, sig: 11 [#1]"
-Date: Fri, 03 Feb 2006 11:00:49 -0800
-Message-ID: <1138993250.10057.125.camel@cog.beaverton.ibm.com>
-References: <20060202150719.0dafc8ae.akpm@osdl.org>
-	 <43E306AC.60004@s5r6.in-berlin.de>
+From: "Ranjeet Shetye" <rshetye@hotmail.com>
+Subject: [REPOST #1] Regression in 2.6.15 w.r.t Promise SATA 300 TX2Plus support
+Date: Fri, 03 Feb 2006 19:06:56 +0000
+Message-ID: <BAY103-F103F1EE10E26F5825B0763AB0D0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:35998 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1945895AbWBCTAx
+Received: from bay103-f10.bay103.hotmail.com ([65.54.174.20]:38498 "EHLO
+	hotmail.com") by vger.kernel.org with ESMTP id S1422677AbWBCTG4
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Feb 2006 14:00:53 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e35.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k13J0qfZ007248
-	for <linux-scsi@vger.kernel.org>; Fri, 3 Feb 2006 14:00:52 -0500
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k13IwscY214288
-	for <linux-scsi@vger.kernel.org>; Fri, 3 Feb 2006 11:58:54 -0700
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k13J0pn6001271
-	for <linux-scsi@vger.kernel.org>; Fri, 3 Feb 2006 12:00:52 -0700
-In-Reply-To: <43E306AC.60004@s5r6.in-berlin.de>
+	Fri, 3 Feb 2006 14:06:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Andrew Morton <akpm@osdl.org>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2006-02-03 at 08:30 +0100, Stefan Richter wrote:
-> > ieee1394: sbp2: aborting sbp2 command
-> > sd 0:0:0:0: 
-> >         command: cdb[0]=0x28: 28 00 09 27 c0 03 00 00 02 00
-> > ieee1394: sbp2: aborting sbp2 command
-> > sd 0:0:0:0: 
-> >         command: cdb[0]=0x0: 00 00 00 00 00 00
-> > Oops: kernel access of bad area, sig: 11 [#1]
-> > PREEMPT 
-> > NIP: C0023FF8 LR: C0023FF8 SP: EFC0FEB0 REGS: efc0fe00 TRAP: 0300    Not tainted
-> > MSR: 00001032 EE: 0 PR: 0 FP: 0 ME: 1 IR/DR: 11
-> > DAR: 00000000, DSISR: 40000000
-> > TASK = c134b230[317] 'scsi_eh_0' THREAD: efc0e000
-> > Last syscall: -1 
-> > GPR00: 00000000 EFC0FEB0 C134B230 00000001 C05BDE28 FFFFFFFF C0650000 C0664E84 
-> > GPR08: 00040000 00000001 C13DF400 EFC0E000 C0650000 00000000 00000000 00000000 
-> > GPR16: 00000000 C02EF5A0 C06070EC C0586F7C C06070EC C0586F7C C06070EC C0650000 
-> > GPR24: 00000003 C13EE204 C13EE268 00000001 00009032 00000000 C13EE1C0 C02EF440 
-> > NIP [c0023ff8] complete+0x28/0x90
-> > LR [c0023ff8] complete+0x28/0x90
-> > Call trace:
-> >  [c02ef45c] scsi_eh_done+0x1c/0x30
-> >  [c03248b8] sbp2scsi_abort+0x158/0x170
-> >  [c02efbcc] scsi_send_eh_cmnd+0x10c/0x1a0
-> >  [c02efce8] scsi_eh_tur+0x88/0xe0
-> >  [c02f0930] scsi_error_handler+0x450/0xa10
-> >  [c00437e8] kthread+0x108/0x110
-> >  [c0007534] kernel_thread+0x44/0x60
-> > note: scsi_eh_0[317] exited with preempt_count 1
-> > 
-> > 
-> > Steps to reproduce: Not easily reproduced.
-> 
-> It looks actually different from what I described above. Perhaps 
-> scsi_eh_done was called on a command which was already completed shortly 
-> before. sbp2scsi_abort calls the "done" handler for the command to be 
-> aborted and for all other pending commands (for the latter to be 
-> enqueued again). Sbp2 also calls the done handler right after a SBP-2 
-> reconnect in sbp2_update, i.e. after the FireWire bus was reset. Perhaps 
-> one or the other or both places in sbp2 need to take the Scsi_Host's 
-> host_lock.
-> 
-> John, do you have the syslog still available from when the oops 
-> occurred? Was there a reconnect logged?
+hi,
 
-I don't believe so. When I got home and unplugged the disk, all I got
-was:
+I have a Promise SATA 300 TX2plus card in my linux server (2 SATA ports, 1 
+PATA port).
 
-ieee1394: Node changed: 0-01:1023 -> 0-00:1023
-ieee1394: Node suspended: ID:BUS[0-00:1023]  GUID[0001a35000048584]
+The 2.6.14 (archck7) kernel would not recognize the card, so I used lspci to 
+find the device ID and I made the following change to sata_promise.c
 
-However the /dev/ nodes were still present, so I rebooted the box,
-instead of confusing udev by trying to plug it back in.
+--- drivers/scsi/sata_promise.c.ORIG    2005-12-28 22:38:27.000000000 -0800
++++ drivers/scsi/sata_promise.c 2005-12-28 22:33:24.000000000 -0800
+@@ -209,6 +209,8 @@
+          board_2037x },
+        { PCI_VENDOR_ID_PROMISE, 0x3574, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+          board_2037x },
++       { PCI_VENDOR_ID_PROMISE, 0x3d73, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
++         board_2037x },
+        { PCI_VENDOR_ID_PROMISE, 0x3d75, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
+          board_2037x },
 
-Let me know if there's anything else you need.
+After this change, the kernel started recognizing the card, and I could 
+access the drives that I had attached to this machine viz. one SATA hard 
+disk (sda) and one PATA hard disk (sdb).
 
-thanks
--john
+# fdisk -l
+
+Disk /dev/sda: 320.0 GB, 320072933376 bytes
+255 heads, 63 sectors/track, 38913 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1               1       38913   312568641   83  Linux
+
+Disk /dev/sdb: 200.0 GB, 200049647616 bytes
+255 heads, 63 sectors/track, 24321 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1               1       24321   195358401   83  Linux
+
+
+With the 2.6.15 kernel (archck2, vanilla), I don't need to add the device ID 
+to the file
+sata_promise.c cos it already contains it. The kernel still locates the card 
+correctly,
+but I have access only to the SATA disk. I don't have access to the PATA 
+disk. I looked
+at the newer sata_promise.c and I could see that some PATA functionality has 
+been removed so I thought it best to post a message. I googled for answers 
+but didn't find any. If this issue has already been resolved, or PATA on 
+TX2plus should be accesssed using some other config option, a link would be 
+appreciated. I am not on the mailing list, so please include my email in 
+your replies.
+
+Let me know if you need any other information.
+
+thanks,
+Ranjeet.
+
+PS: I've attached the grepped output from the dmesgs for the 2 kernel 
+versions.
+
+# cat dmesg.2.6.14.txt | grep -i -e sda -e sdb -e scsi -e sata
+SCSI subsystem initialized
+scsi: <fdomain> Detection failed (no card)
+Emulex LightPulse Fibre Channel SCSI driver 8.0.30
+Failed initialization of WD-7000 SCSI card!
+ipr: IBM Power RAID SCSI Device Driver version: 2.0.14 (May 2, 2005)
+sata_promise version 1.02
+sata_promise PATA port found
+ata1: SATA max UDMA/133 cmd 0xE081A200 ctl 0xE081A238 bmdma 0x0 irq 11
+ata2: SATA max UDMA/133 cmd 0xE081A280 ctl 0xE081A2B8 bmdma 0x0 irq 11
+scsi2 : sata_promise
+scsi3 : sata_promise
+scsi4 : sata_promise
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sda: 625142448 512-byte hdwr sectors (320073 MB)
+SCSI device sda: drive cache: write back
+SCSI device sda: 625142448 512-byte hdwr sectors (320073 MB)
+SCSI device sda: drive cache: write back
+sda: sda1
+Attached scsi disk sda at scsi3, channel 0, id 0, lun 0
+SCSI device sdb: 390721968 512-byte hdwr sectors (200050 MB)
+SCSI device sdb: drive cache: write back
+SCSI device sdb: 390721968 512-byte hdwr sectors (200050 MB)
+SCSI device sdb: drive cache: write back
+sdb: sdb1
+Attached scsi disk sdb at scsi4, channel 0, id 0, lun 0
+Attached scsi generic sg0 at scsi3, channel 0, id 0, lun 0,  type 0
+Attached scsi generic sg1 at scsi4, channel 0, id 0, lun 0,  type 0
+SCSI Media Changer driver v0.25
+I2O SCSI Peripheral OSM v1.282
+ReiserFS: sdb1: found reiserfs format "3.6" with standard journal
+ReiserFS: sdb1: using ordered data mode
+ReiserFS: sdb1: journal params: device sdb1, size 8192, journal first block 
+18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
+ReiserFS: sdb1: checking transaction log (sdb1)
+ReiserFS: sdb1: Using r5 hash to sort names
+ReiserFS: sda1: found reiserfs format "3.6" with standard journal
+ReiserFS: sda1: using ordered data mode
+ReiserFS: sda1: journal params: device sda1, size 8192, journal first block 
+18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
+ReiserFS: sda1: checking transaction log (sda1)
+ReiserFS: sda1: Using r5 hash to sort names
+
+# cat dmesg.2.6.15.txt | grep -i -e sda -e sdb -e scsi -e sata
+SCSI subsystem initialized
+scsi: <fdomain> Detection failed (no card)
+Emulex LightPulse Fibre Channel SCSI driver 8.1.0
+Failed initialization of WD-7000 SCSI card!
+ipr: IBM Power RAID SCSI Device Driver version: 2.1.0 (October 31, 2005)
+sata_promise 0000:00:10.0: version 1.03
+ata1: SATA max UDMA/133 cmd 0xE081A200 ctl 0xE081A238 bmdma 0x0 irq 11
+ata2: SATA max UDMA/133 cmd 0xE081A280 ctl 0xE081A2B8 bmdma 0x0 irq 11
+scsi2 : sata_promise
+scsi3 : sata_promise
+  Type:   Direct-Access                      ANSI SCSI revision: 05
+SCSI device sda: 625142448 512-byte hdwr sectors (320073 MB)
+SCSI device sda: drive cache: write back
+SCSI device sda: 625142448 512-byte hdwr sectors (320073 MB)
+SCSI device sda: drive cache: write back
+sda: sda1
+sd 3:0:0:0: Attached scsi disk sda
+sd 3:0:0:0: Attached scsi generic sg0 type 0
+SCSI Media Changer driver v0.25
+I2O SCSI Peripheral OSM v1.282
+ReiserFS: sda1: found reiserfs format "3.6" with standard journal
+ReiserFS: sda1: using ordered data mode
+ReiserFS: sda1: journal params: device sda1, size 8192, journal first block 
+18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
+ReiserFS: sda1: checking transaction log (sda1)
+ReiserFS: sda1: Using r5 hash to sort names
+
 
