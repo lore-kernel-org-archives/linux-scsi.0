@@ -1,20 +1,20 @@
 From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: [PATCH 4/8]  fusion - mptctl - Event Log Fix
-Date: Thu, 2 Feb 2006 17:19:40 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F243698@NAMAIL2.ad.lsil.com>
+Subject: [PATCH 7/8]  fusion - mptctl -firmware download fix
+Date: Thu, 2 Feb 2006 17:19:50 -0700
+Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F24369B@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C62857.865B71FB"
+	boundary="----_=_NextPart_001_01C62857.8C72AECB"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:7832 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1751197AbWBCATq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2006 19:19:46 -0500
+Received: from mail0.lsil.com ([147.145.40.20]:11160 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S964815AbWBCATx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2006 19:19:53 -0500
 Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id k130ERNI021738
-	for <linux-scsi@vger.kernel.org>; Thu, 2 Feb 2006 16:14:27 -0800 (PST)
+	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id k130EYNI021757
+	for <linux-scsi@vger.kernel.org>; Thu, 2 Feb 2006 16:14:34 -0800 (PST)
 Received: from namail.ad.lsil.com (namail.co.lsil.com [172.21.36.18])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id k130JeQQ026640
-	for <linux-scsi@vger.kernel.org>; Thu, 2 Feb 2006 16:19:45 -0800
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id k130JqP2026683
+	for <linux-scsi@vger.kernel.org>; Thu, 2 Feb 2006 16:19:52 -0800
 Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,60 +22,65 @@ To: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
 
-------_=_NextPart_001_01C62857.865B71FB
+------_=_NextPart_001_01C62857.8C72AECB
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: quoted-printable
 
-Use the hard coded value MPTCTL_EVENT_LOG_SIZE to fix
-bug where in certain cases, the ioc->eventLogSize was=20
-initialized.
+Fix's firmware download ioctl to work with SAS.
 
 Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
-
-------_=_NextPart_001_01C62857.865B71FB
+------_=_NextPart_001_01C62857.8C72AECB
 Content-Type: application/octet-stream;
-	name="4-event_log.patch"
+	name="7-fwdownload.patch"
 Content-Transfer-Encoding: base64
-Content-Description: 4-event_log.patch
+Content-Description: 7-fwdownload.patch
 Content-Disposition: attachment;
-	filename="4-event_log.patch"
+	filename="7-fwdownload.patch"
 
-ZGlmZiAtdWFyTiBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0YmFzZS5jIGEvZHJpdmVycy9t
-ZXNzYWdlL2Z1c2lvbi9tcHRiYXNlLmMKLS0tIGIvZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9tcHRi
-YXNlLmMJMjAwNi0wMi0wMiAxNToxNjo0Ny4wMDAwMDAwMDAgLTA3MDAKKysrIGEvZHJpdmVycy9t
-ZXNzYWdlL2Z1c2lvbi9tcHRiYXNlLmMJMjAwNi0wMi0wMiAxNToxODo1Ny4wMDAwMDAwMDAgLTA3
-MDAKQEAgLTYxNDIsNyArNjE0Miw3IEBACiAJaWYgKGlvYy0+ZXZlbnRzICYmIChpb2MtPmV2ZW50
-VHlwZXMgJiAoIDEgPDwgZXZlbnQpKSkgewogCQlpbnQgaWR4OwogCi0JCWlkeCA9IGlvYy0+ZXZl
-bnRDb250ZXh0ICUgaW9jLT5ldmVudExvZ1NpemU7CisJCWlkeCA9IGlvYy0+ZXZlbnRDb250ZXh0
-ICUgTVBUQ1RMX0VWRU5UX0xPR19TSVpFOwogCiAJCWlvYy0+ZXZlbnRzW2lkeF0uZXZlbnQgPSBl
-dmVudDsKIAkJaW9jLT5ldmVudHNbaWR4XS5ldmVudENvbnRleHQgPSBpb2MtPmV2ZW50Q29udGV4
-dDsKZGlmZiAtdWFyTiBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0Y3RsLmMgYS9kcml2ZXJz
-L21lc3NhZ2UvZnVzaW9uL21wdGN0bC5jCi0tLSBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0
-Y3RsLmMJMjAwNi0wMi0wMiAxNTo0NDo0NC4wMDAwMDAwMDAgLTA3MDAKKysrIGEvZHJpdmVycy9t
-ZXNzYWdlL2Z1c2lvbi9tcHRjdGwuYwkyMDA2LTAyLTAyIDE1OjQ5OjUxLjAwMDAwMDAwMCAtMDcw
-MApAQCAtMTUwMSw3ICsxNTAxLDcgQEAKIAkJcmV0dXJuIC1FTk9ERVY7CiAJfQogCi0Ja2FyZy5l
-dmVudEVudHJpZXMgPSBpb2MtPmV2ZW50TG9nU2l6ZTsKKwlrYXJnLmV2ZW50RW50cmllcyA9IE1Q
-VENUTF9FVkVOVF9MT0dfU0laRTsKIAlrYXJnLmV2ZW50VHlwZXMgPSBpb2MtPmV2ZW50VHlwZXM7
-CiAKIAkvKiBDb3B5IHRoZSBkYXRhIGZyb20ga2VybmVsIG1lbW9yeSB0byB1c2VyIG1lbW9yeQpA
-QCAtMTU1MSw3ICsxNTUxLDYgQEAKIAkJbWVtc2V0KGlvYy0+ZXZlbnRzLCAwLCBzeik7CiAJCWlv
-Yy0+YWxsb2NfdG90YWwgKz0gc3o7CiAKLQkJaW9jLT5ldmVudExvZ1NpemUgPSBNUFRDVExfRVZF
-TlRfTE9HX1NJWkU7CiAJCWlvYy0+ZXZlbnRDb250ZXh0ID0gMDsKICAgICAgICAgfQogCkBAIC0x
-NTkxLDcgKzE1OTAsNyBAQAogCW1heEV2ZW50cyA9IG51bUJ5dGVzL3NpemVvZihNUFRfSU9DVExf
-RVZFTlRTKTsKIAogCi0JbWF4ID0gaW9jLT5ldmVudExvZ1NpemUgPCBtYXhFdmVudHMgPyBpb2Mt
-PmV2ZW50TG9nU2l6ZSA6IG1heEV2ZW50czsKKwltYXggPSBNUFRDVExfRVZFTlRfTE9HX1NJWkUg
-PCBtYXhFdmVudHMgPyBNUFRDVExfRVZFTlRfTE9HX1NJWkUgOiBtYXhFdmVudHM7CiAKIAkvKiBJ
-ZiBmZXdlciB0aGFuIDEgZXZlbnQgaXMgcmVxdWVzdGVkLCB0aGVyZSBtdXN0IGhhdmUKIAkgKiBi
-ZWVuIHNvbWUgdHlwZSBvZiBlcnJvci4KZGlmZiAtdWFyTiBiL2RyaXZlcnMvbWVzc2FnZS9mdXNp
-b24vbXB0c2NzaWguYyBhL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c2NzaWguYwotLS0gYi9k
-cml2ZXJzL21lc3NhZ2UvZnVzaW9uL21wdHNjc2loLmMJMjAwNi0wMi0wMiAxNDo1MjoyMi4wMDAw
-MDAwMDAgLTA3MDAKKysrIGEvZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9tcHRzY3NpaC5jCTIwMDYt
-MDItMDIgMTU6MjE6MDMuMDAwMDAwMDAwIC0wNzAwCkBAIC0yNDg5LDcgKzI0ODksNyBAQAogCQkJ
-CWludCBpZHg7CiAJCQkJTVBUX0FEQVBURVIgKmlvYyA9IGhkLT5pb2M7CiAKLQkJCQlpZHggPSBp
-b2MtPmV2ZW50Q29udGV4dCAlIGlvYy0+ZXZlbnRMb2dTaXplOworCQkJCWlkeCA9IGlvYy0+ZXZl
-bnRDb250ZXh0ICUgTVBUQ1RMX0VWRU5UX0xPR19TSVpFOwogCQkJCWlvYy0+ZXZlbnRzW2lkeF0u
-ZXZlbnQgPSBNUElfRVZFTlRfU0NTSV9ERVZJQ0VfU1RBVFVTX0NIQU5HRTsKIAkJCQlpb2MtPmV2
-ZW50c1tpZHhdLmV2ZW50Q29udGV4dCA9IGlvYy0+ZXZlbnRDb250ZXh0OwogCg==
+ZGlmZiAtdWFyTiBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0Y3RsLmMgYS9kcml2ZXJzL21l
+c3NhZ2UvZnVzaW9uL21wdGN0bC5jCi0tLSBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0Y3Rs
+LmMJMjAwNi0wMi0wMiAxNjoyMzoxMi4wMDAwMDAwMDAgLTA3MDAKKysrIGEvZHJpdmVycy9tZXNz
+YWdlL2Z1c2lvbi9tcHRjdGwuYwkyMDA2LTAyLTAyIDE2OjI4OjMwLjAwMDAwMDAwMCAtMDcwMApA
+QCAtNjc0LDIyICs2NzQsMjMgQEAKIAl1MTYJCQkgaW9jc3RhdDsKIAlwRldEb3dubG9hZFJlcGx5
+X3QJIFJlcGx5TXNnID0gTlVMTDsKIAotCWRjdGxwcmludGsoKEtFUk5fSU5GTyAibXB0Y3RsX2Rv
+X2Z3ZGwgY2FsbGVkLiBtcHRjdGxfaWQgPSAleGguXG4iLCBtcHRjdGxfaWQpKTsKKwlkY3RscHJp
+bnRrKCgibXB0Y3RsX2RvX2Z3ZGwgY2FsbGVkLiBtcHRjdGxfaWQgPSAleGguXG4iLCBtcHRjdGxf
+aWQpKTsKIAotCWRjdGxwcmludGsoKEtFUk5fSU5GTyAiRGJHOiBrZndkbC5idWZwICA9ICVwXG4i
+LCB1ZndidWYpKTsKLQlkY3RscHJpbnRrKChLRVJOX0lORk8gIkRiRzoga2Z3ZGwuZndsZW4gPSAl
+ZFxuIiwgKGludClmd2xlbikpOwotCWRjdGxwcmludGsoKEtFUk5fSU5GTyAiRGJHOiBrZndkbC5p
+b2MgICA9ICUwNHhoXG4iLCBpb2MpKTsKLQotCWlmICgoaW9jID0gbXB0X3ZlcmlmeV9hZGFwdGVy
+KGlvYywgJmlvY3ApKSA8IDApIHsKLQkJZGN0bHByaW50aygoIiVzQCVkOjpfaW9jdGxfZndkbCAt
+IGlvYyVkIG5vdCBmb3VuZCFcbiIsCi0JCQkJX19GSUxFX18sIF9fTElORV9fLCBpb2MpKTsKKwlk
+Y3RscHJpbnRrKCgiRGJHOiBrZndkbC5idWZwICA9ICVwXG4iLCB1ZndidWYpKTsKKwlkY3RscHJp
+bnRrKCgiRGJHOiBrZndkbC5md2xlbiA9ICVkXG4iLCAoaW50KWZ3bGVuKSk7CisJZGN0bHByaW50
+aygoIkRiRzoga2Z3ZGwuaW9jICAgPSAlMDR4aFxuIiwgaW9jKSk7CisKKwlpZiAobXB0X3Zlcmlm
+eV9hZGFwdGVyKGlvYywgJmlvY3ApIDwgMCkgeworCQlkY3RscHJpbnRrKCgiaW9jdGxfZndkbCAt
+IGlvYyVkIG5vdCBmb3VuZCFcbiIsCisJCQkJIGlvYykpOwogCQlyZXR1cm4gLUVOT0RFVjsgLyog
+KC02KSBObyBzdWNoIGRldmljZSBvciBhZGRyZXNzICovCi0JfQorCX0gZWxzZSB7CiAKLQkvKiAg
+VmFsaWQgZGV2aWNlLiBHZXQgYSBtZXNzYWdlIGZyYW1lIGFuZCBjb25zdHJ1Y3QgdGhlIEZXIGRv
+d25sb2FkIG1lc3NhZ2UuCi0JICovCi0JaWYgKChtZiA9IG1wdF9nZXRfbXNnX2ZyYW1lKG1wdGN0
+bF9pZCwgaW9jcCkpID09IE5VTEwpCi0JCXJldHVybiAtRUFHQUlOOworCQkvKiAgVmFsaWQgZGV2
+aWNlLiBHZXQgYSBtZXNzYWdlIGZyYW1lIGFuZCBjb25zdHJ1Y3QgdGhlIEZXIGRvd25sb2FkIG1l
+c3NhZ2UuCisJIAkqLworCQlpZiAoKG1mID0gbXB0X2dldF9tc2dfZnJhbWUobXB0Y3RsX2lkLCBp
+b2NwKSkgPT0gTlVMTCkKKwkJCXJldHVybiAtRUFHQUlOOworCX0KIAlkbG1zZyA9IChGV0Rvd25s
+b2FkX3QqKSBtZjsKIAlwdHNnZSA9IChGV0Rvd25sb2FkVENTR0VfdCAqKSAmZGxtc2ctPlNHTDsK
+IAlzZ091dCA9IChjaGFyICopIChwdHNnZSArIDEpOwpAQCAtNzAyLDcgKzcwMywxMSBAQAogCWRs
+bXNnLT5DaGFpbk9mZnNldCA9IDA7CiAJZGxtc2ctPkZ1bmN0aW9uID0gTVBJX0ZVTkNUSU9OX0ZX
+X0RPV05MT0FEOwogCWRsbXNnLT5SZXNlcnZlZDFbMF0gPSBkbG1zZy0+UmVzZXJ2ZWQxWzFdID0g
+ZGxtc2ctPlJlc2VydmVkMVsyXSA9IDA7Ci0JZGxtc2ctPk1zZ0ZsYWdzID0gMDsKKwlpZiAoaW9j
+cC0+ZmFjdHMuTXNnVmVyc2lvbiA+PSBNUElfVkVSU0lPTl8wMV8wNSkKKwkJZGxtc2ctPk1zZ0Zs
+YWdzID0gTVBJX0ZXX0RPV05MT0FEX01TR0ZMR1NfTEFTVF9TRUdNRU5UOworCWVsc2UKKwkJZGxt
+c2ctPk1zZ0ZsYWdzID0gMDsKKwogCiAJLyogU2V0IHVwIHRoZSBUcmFuc2FjdGlvbiBTR0UuCiAJ
+ICovCkBAIC03NTQsNyArNzU5LDcgQEAKIAkJZ290byBmd2RsX291dDsKIAl9CiAKLQlkY3RscHJp
+bnRrKChLRVJOX0lORk8gIkRiRzogc2dsIGJ1ZmZlciAgPSAlcCwgc2dmcmFncyA9ICVkXG4iLCBz
+Z2wsIG51bWZyYWdzKSk7CisJZGN0bHByaW50aygoIkRiRzogc2dsIGJ1ZmZlciAgPSAlcCwgc2dm
+cmFncyA9ICVkXG4iLCBzZ2wsIG51bWZyYWdzKSk7CiAKIAkvKgogCSAqIFBhcnNlIFNHIGxpc3Qs
+IGNvcHlpbmcgc2dsIGl0c2VsZiwKQEAgLTgwMyw3ICs4MDgsNyBAQAogCS8qCiAJICogRmluYWxs
+eSwgcGVyZm9ybSBmaXJtd2FyZSBkb3dubG9hZC4KIAkgKi8KLQlpb2NwLT5pb2N0bC0+d2FpdF9k
+b25lID0gMDsKKwlSZXBseU1zZyA9IE5VTEw7CiAJbXB0X3B1dF9tc2dfZnJhbWUobXB0Y3RsX2lk
+LCBpb2NwLCBtZik7CiAKIAkvKiBOb3cgd2FpdCBmb3IgdGhlIGNvbW1hbmQgdG8gY29tcGxldGUg
+Ki8K
 
-------_=_NextPart_001_01C62857.865B71FB--
+------_=_NextPart_001_01C62857.8C72AECB--
