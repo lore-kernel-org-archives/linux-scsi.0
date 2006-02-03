@@ -1,20 +1,20 @@
 From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: [PATCH 7/8]  fusion - mptctl -firmware download fix
-Date: Thu, 2 Feb 2006 17:19:50 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F24369B@NAMAIL2.ad.lsil.com>
+Subject: [PATCH 5/8]  fusion - mptctl -sense width fix
+Date: Thu, 2 Feb 2006 17:19:44 -0700
+Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F243699@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C62857.8C72AECB"
+	boundary="----_=_NextPart_001_01C62857.889ECB83"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:11160 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S964815AbWBCATx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2006 19:19:53 -0500
+Received: from mail0.lsil.com ([147.145.40.20]:8088 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751199AbWBCATq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2006 19:19:46 -0500
 Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id k130EYNI021757
-	for <linux-scsi@vger.kernel.org>; Thu, 2 Feb 2006 16:14:34 -0800 (PST)
+	by mail0.lsil.com (8.12.8/8.12.8) with ESMTP id k130ERNI021741
+	for <linux-scsi@vger.kernel.org>; Thu, 2 Feb 2006 16:14:27 -0800 (PST)
 Received: from namail.ad.lsil.com (namail.co.lsil.com [172.21.36.18])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id k130JqP2026683
-	for <linux-scsi@vger.kernel.org>; Thu, 2 Feb 2006 16:19:52 -0800
+	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id k130JeQS026640
+	for <linux-scsi@vger.kernel.org>; Thu, 2 Feb 2006 16:19:45 -0800
 Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,65 +22,38 @@ To: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
 
-------_=_NextPart_001_01C62857.8C72AECB
+------_=_NextPart_001_01C62857.889ECB83
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: quoted-printable
 
-Fix's firmware download ioctl to work with SAS.
+Bug fix for correctly setting sense width
+for the MPTCOMMAND ioctl.
 
 Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
 
-------_=_NextPart_001_01C62857.8C72AECB
+------_=_NextPart_001_01C62857.889ECB83
 Content-Type: application/octet-stream;
-	name="7-fwdownload.patch"
+	name="5-sense-width.patch"
 Content-Transfer-Encoding: base64
-Content-Description: 7-fwdownload.patch
+Content-Description: 5-sense-width.patch
 Content-Disposition: attachment;
-	filename="7-fwdownload.patch"
+	filename="5-sense-width.patch"
 
 ZGlmZiAtdWFyTiBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0Y3RsLmMgYS9kcml2ZXJzL21l
 c3NhZ2UvZnVzaW9uL21wdGN0bC5jCi0tLSBiL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0Y3Rs
-LmMJMjAwNi0wMi0wMiAxNjoyMzoxMi4wMDAwMDAwMDAgLTA3MDAKKysrIGEvZHJpdmVycy9tZXNz
-YWdlL2Z1c2lvbi9tcHRjdGwuYwkyMDA2LTAyLTAyIDE2OjI4OjMwLjAwMDAwMDAwMCAtMDcwMApA
-QCAtNjc0LDIyICs2NzQsMjMgQEAKIAl1MTYJCQkgaW9jc3RhdDsKIAlwRldEb3dubG9hZFJlcGx5
-X3QJIFJlcGx5TXNnID0gTlVMTDsKIAotCWRjdGxwcmludGsoKEtFUk5fSU5GTyAibXB0Y3RsX2Rv
-X2Z3ZGwgY2FsbGVkLiBtcHRjdGxfaWQgPSAleGguXG4iLCBtcHRjdGxfaWQpKTsKKwlkY3RscHJp
-bnRrKCgibXB0Y3RsX2RvX2Z3ZGwgY2FsbGVkLiBtcHRjdGxfaWQgPSAleGguXG4iLCBtcHRjdGxf
-aWQpKTsKIAotCWRjdGxwcmludGsoKEtFUk5fSU5GTyAiRGJHOiBrZndkbC5idWZwICA9ICVwXG4i
-LCB1ZndidWYpKTsKLQlkY3RscHJpbnRrKChLRVJOX0lORk8gIkRiRzoga2Z3ZGwuZndsZW4gPSAl
-ZFxuIiwgKGludClmd2xlbikpOwotCWRjdGxwcmludGsoKEtFUk5fSU5GTyAiRGJHOiBrZndkbC5p
-b2MgICA9ICUwNHhoXG4iLCBpb2MpKTsKLQotCWlmICgoaW9jID0gbXB0X3ZlcmlmeV9hZGFwdGVy
-KGlvYywgJmlvY3ApKSA8IDApIHsKLQkJZGN0bHByaW50aygoIiVzQCVkOjpfaW9jdGxfZndkbCAt
-IGlvYyVkIG5vdCBmb3VuZCFcbiIsCi0JCQkJX19GSUxFX18sIF9fTElORV9fLCBpb2MpKTsKKwlk
-Y3RscHJpbnRrKCgiRGJHOiBrZndkbC5idWZwICA9ICVwXG4iLCB1ZndidWYpKTsKKwlkY3RscHJp
-bnRrKCgiRGJHOiBrZndkbC5md2xlbiA9ICVkXG4iLCAoaW50KWZ3bGVuKSk7CisJZGN0bHByaW50
-aygoIkRiRzoga2Z3ZGwuaW9jICAgPSAlMDR4aFxuIiwgaW9jKSk7CisKKwlpZiAobXB0X3Zlcmlm
-eV9hZGFwdGVyKGlvYywgJmlvY3ApIDwgMCkgeworCQlkY3RscHJpbnRrKCgiaW9jdGxfZndkbCAt
-IGlvYyVkIG5vdCBmb3VuZCFcbiIsCisJCQkJIGlvYykpOwogCQlyZXR1cm4gLUVOT0RFVjsgLyog
-KC02KSBObyBzdWNoIGRldmljZSBvciBhZGRyZXNzICovCi0JfQorCX0gZWxzZSB7CiAKLQkvKiAg
-VmFsaWQgZGV2aWNlLiBHZXQgYSBtZXNzYWdlIGZyYW1lIGFuZCBjb25zdHJ1Y3QgdGhlIEZXIGRv
-d25sb2FkIG1lc3NhZ2UuCi0JICovCi0JaWYgKChtZiA9IG1wdF9nZXRfbXNnX2ZyYW1lKG1wdGN0
-bF9pZCwgaW9jcCkpID09IE5VTEwpCi0JCXJldHVybiAtRUFHQUlOOworCQkvKiAgVmFsaWQgZGV2
-aWNlLiBHZXQgYSBtZXNzYWdlIGZyYW1lIGFuZCBjb25zdHJ1Y3QgdGhlIEZXIGRvd25sb2FkIG1l
-c3NhZ2UuCisJIAkqLworCQlpZiAoKG1mID0gbXB0X2dldF9tc2dfZnJhbWUobXB0Y3RsX2lkLCBp
-b2NwKSkgPT0gTlVMTCkKKwkJCXJldHVybiAtRUFHQUlOOworCX0KIAlkbG1zZyA9IChGV0Rvd25s
-b2FkX3QqKSBtZjsKIAlwdHNnZSA9IChGV0Rvd25sb2FkVENTR0VfdCAqKSAmZGxtc2ctPlNHTDsK
-IAlzZ091dCA9IChjaGFyICopIChwdHNnZSArIDEpOwpAQCAtNzAyLDcgKzcwMywxMSBAQAogCWRs
-bXNnLT5DaGFpbk9mZnNldCA9IDA7CiAJZGxtc2ctPkZ1bmN0aW9uID0gTVBJX0ZVTkNUSU9OX0ZX
-X0RPV05MT0FEOwogCWRsbXNnLT5SZXNlcnZlZDFbMF0gPSBkbG1zZy0+UmVzZXJ2ZWQxWzFdID0g
-ZGxtc2ctPlJlc2VydmVkMVsyXSA9IDA7Ci0JZGxtc2ctPk1zZ0ZsYWdzID0gMDsKKwlpZiAoaW9j
-cC0+ZmFjdHMuTXNnVmVyc2lvbiA+PSBNUElfVkVSU0lPTl8wMV8wNSkKKwkJZGxtc2ctPk1zZ0Zs
-YWdzID0gTVBJX0ZXX0RPV05MT0FEX01TR0ZMR1NfTEFTVF9TRUdNRU5UOworCWVsc2UKKwkJZGxt
-c2ctPk1zZ0ZsYWdzID0gMDsKKwogCiAJLyogU2V0IHVwIHRoZSBUcmFuc2FjdGlvbiBTR0UuCiAJ
-ICovCkBAIC03NTQsNyArNzU5LDcgQEAKIAkJZ290byBmd2RsX291dDsKIAl9CiAKLQlkY3RscHJp
-bnRrKChLRVJOX0lORk8gIkRiRzogc2dsIGJ1ZmZlciAgPSAlcCwgc2dmcmFncyA9ICVkXG4iLCBz
-Z2wsIG51bWZyYWdzKSk7CisJZGN0bHByaW50aygoIkRiRzogc2dsIGJ1ZmZlciAgPSAlcCwgc2dm
-cmFncyA9ICVkXG4iLCBzZ2wsIG51bWZyYWdzKSk7CiAKIAkvKgogCSAqIFBhcnNlIFNHIGxpc3Qs
-IGNvcHlpbmcgc2dsIGl0c2VsZiwKQEAgLTgwMyw3ICs4MDgsNyBAQAogCS8qCiAJICogRmluYWxs
-eSwgcGVyZm9ybSBmaXJtd2FyZSBkb3dubG9hZC4KIAkgKi8KLQlpb2NwLT5pb2N0bC0+d2FpdF9k
-b25lID0gMDsKKwlSZXBseU1zZyA9IE5VTEw7CiAJbXB0X3B1dF9tc2dfZnJhbWUobXB0Y3RsX2lk
-LCBpb2NwLCBtZik7CiAKIAkvKiBOb3cgd2FpdCBmb3IgdGhlIGNvbW1hbmQgdG8gY29tcGxldGUg
-Ki8K
+LmMJMjAwNi0wMi0wMiAxNTo0OTo1MS4wMDAwMDAwMDAgLTA3MDAKKysrIGEvZHJpdmVycy9tZXNz
+YWdlL2Z1c2lvbi9tcHRjdGwuYwkyMDA2LTAyLTAyIDE1OjU0OjA4LjAwMDAwMDAwMCAtMDcwMApA
+QCAtMTgzOSw3ICsxODM5LDkgQEAKIAkJCQlnb3RvIGRvbmVfZnJlZV9tZW07CiAJCQl9CiAKLQkJ
+CXBTY3NpUmVxLT5Nc2dGbGFncyA9IG1wdF9tc2dfZmxhZ3MoKTsKKwkJCXBTY3NpUmVxLT5Nc2dG
+bGFncyAmPSB+TVBJX1NDU0lJT19NU0dGTEdTX1NFTlNFX1dJRFRIOworCQkJcFNjc2lSZXEtPk1z
+Z0ZsYWdzIHw9IG1wdF9tc2dfZmxhZ3MoKTsKKwogCiAJCQkvKiB2ZXJpZnkgdGhhdCBhcHAgaGFz
+IG5vdCByZXF1ZXN0ZWQKIAkJCSAqCW1vcmUgc2Vuc2UgZGF0YSB0aGFuIGRyaXZlcgpAQCAtMTky
+MSw3ICsxOTIzLDkgQEAKIAkJCWludCBzY3NpZGlyID0gTVBJX1NDU0lJT19DT05UUk9MX1JFQUQ7
+CiAJCQlpbnQgZGF0YVNpemU7CiAKLQkJCXBTY3NpUmVxLT5Nc2dGbGFncyA9IG1wdF9tc2dfZmxh
+Z3MoKTsKKwkJCXBTY3NpUmVxLT5Nc2dGbGFncyAmPSB+TVBJX1NDU0lJT19NU0dGTEdTX1NFTlNF
+X1dJRFRIOworCQkJcFNjc2lSZXEtPk1zZ0ZsYWdzIHw9IG1wdF9tc2dfZmxhZ3MoKTsKKwogCiAJ
+CQkvKiB2ZXJpZnkgdGhhdCBhcHAgaGFzIG5vdCByZXF1ZXN0ZWQKIAkJCSAqCW1vcmUgc2Vuc2Ug
+ZGF0YSB0aGFuIGRyaXZlcgo=
 
-------_=_NextPart_001_01C62857.8C72AECB--
+------_=_NextPart_001_01C62857.889ECB83--
