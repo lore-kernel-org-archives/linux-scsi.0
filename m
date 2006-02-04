@@ -1,48 +1,23 @@
-From: "Consuelo Kraft" <SZINXMU@yahoo.com>
-Subject: Refinance at 3.5% DIV1
-Date: Sat, 04 Feb 2006 12:58:13 +0200
-Message-ID: <LAW83.OE649yfB4mvo300053d5__2937.4162004844$1139050714$gmane$org@motmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/8]  fusion - mptctl - adding support for bus_type=SAS
+Date: Sat, 4 Feb 2006 11:02:11 +0000
+Message-ID: <20060204110211.GA27621@infradead.org>
+References: <F331B95B72AFFB4B87467BE1C8E9CF5F243696@NAMAIL2.ad.lsil.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [221.193.152.70] ([221.193.152.70]:46094 "HELO 209.132.176.167")
-	by vger.kernel.org with SMTP id S1946144AbWBDK6R (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Feb 2006 05:58:17 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:7137 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1946152AbWBDLCR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 4 Feb 2006 06:02:17 -0500
+Content-Disposition: inline
+In-Reply-To: <F331B95B72AFFB4B87467BE1C8E9CF5F243696@NAMAIL2.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-net@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsil.com>
+Cc: linux-scsi@vger.kernel.org
 
+On Thu, Feb 02, 2006 at 05:19:33PM -0700, Moore, Eric wrote:
+> Add bus_type recognization in ioctl path for SAS.
 
-Dear Home Owner,
-
-Your credit doesn't matter to us! If you OWN real estate
-and want IMMEDIATE cash to spend ANY way you like, or simply wish
-to LOWER your monthly payments by a third or more, here are the deals
-we have TODAY (hurry, these offers will expire TONIGHT) :
-
-$450,000.00 at a 3.85% fixed-rate
-$374,000.00 at a 3.54% variable-rate
-$464,000.00 at a 3.77% interest-only
-$214,000.00 at a 3.54% fixed-rate
-$134,000.00 at a 3.75% variable-rate
-
-Hurry, when these deals are gone, they are gone!
-Simply fill out this one-minute form...
-
-http://3rhzW.l1fed33r.com/af
-
-Don't worry about approval, your credit will not disqualify you!
-
-http://ZiL.l1fed33r.com/af
-
-Sincerely,
-Marcelo Richey
-Approval Manager
-
-
-
-
-
-
-stop the current promo
-http://TQj.l1fed33r.com/rem
-
-UA7b
+ok.
