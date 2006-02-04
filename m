@@ -1,35 +1,44 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Fw: [Bugme-new] [Bug 5998] New: oops on mount "kernel access
- of bad area, sig: 11 [#1]"
-Date: Sat, 04 Feb 2006 12:34:07 +0100
-Message-ID: <43E4912F.6090908@s5r6.in-berlin.de>
-References: <20060202150719.0dafc8ae.akpm@osdl.org>	 <43E306AC.60004@s5r6.in-berlin.de> <1138993250.10057.125.camel@cog.beaverton.ibm.com>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: Fw: crash on x86_64 - mm related?
+Date: Sat, 4 Feb 2006 13:58:18 +0200 (EET)
+Message-ID: <Pine.LNX.4.63.0602041347320.3923@kai.makisara.local>
+References: <Pine.LNX.4.63.0512271807130.4955@kai.makisara.local>
+ <20060104172727.GA320@tau.solarneutrino.net> <Pine.LNX.4.63.0601042334310.5087@kai.makisara.local>
+ <20060105201249.GB1795@tau.solarneutrino.net> <Pine.LNX.4.64.0601051312380.3169@g5.osdl.org>
+ <20060109033149.GC283@tau.solarneutrino.net> <Pine.LNX.4.64.0601082000450.3169@g5.osdl.org>
+ <Pine.LNX.4.61.0601090933160.7632@goblin.wat.veritas.com>
+ <20060109185350.GG283@tau.solarneutrino.net> <Pine.LNX.4.61.0601091922550.15426@goblin.wat.veritas.com>
+ <20060118001252.GB821@tau.solarneutrino.net> <Pine.LNX.4.61.0601181556050.9110@goblin.wat.veritas.com>
+ <Pine.LNX.4.61.0602031842290.14065@goblin.wat.veritas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:10391 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S932222AbWBDLhp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 4 Feb 2006 06:37:45 -0500
-In-Reply-To: <1138993250.10057.125.camel@cog.beaverton.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1945957AbWBDL4t@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.61.0602031842290.14065@goblin.wat.veritas.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hugh Dickins <hugh@veritas.com>
+Cc: Ryan Richter <ryan@tau.solarneutrino.net>, Linus Torvalds <torvalds@osdl.org>, James Bottomley <James.Bottomley@SteelEye.com>, Nick Piggin <nickpiggin@yahoo.com.au>, Andrew Morton <akpm@osdl.org>, Roland Dreier <rdreier@cisco.com>, Brian King <brking@us.ibm.com>, Willem Riede <osst@riede.org>, Doug Gilbert <dougg@torque.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: john stultz <johnstul@us.ibm.com>
-Cc: Andrew Morton <akpm@osdl.org>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-john stultz wrote:
-> Let me know if there's anything else you need.
+On Fri, 3 Feb 2006, Hugh Dickins wrote:
 
-Please check if your kernel (2.6.15-rc5) contains Jody's patch 
-"sbp2_command_orb_lock must be held when accessing the _orb_inuse 
-list.": 
-http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=963f48a116bf3b797fe184e74c79c50de1da70bb
-I.e. check if drivers/ieee1394/sbp2.c::sbp2scsi_complete_all_commands() 
-contains a pair of spin_lock_irqsave/ spin_unlock_irqrestore.
+> On Wed, 18 Jan 2006, Hugh Dickins wrote:
+> > On Tue, 17 Jan 2006, Ryan Richter wrote:
+> > 
+...
+> > The st problem (Bad page state,
+> > mapcount 2 while count 0, from sgl_unmap_user_pages) ought to be a lot
+> > easier to debug than a random reboot: but I've still no suggestion.
+> 
+> I guessed it last week, Ryan verified that booting with "iommu=nomerge"
+> worked around it, and then that the 2.6.15 patch below fixes it.
+> 
 
-Linux 2.6.15 contains it, but I don't know into which -rc it went.
+I have tested the patch and did not find any problems. I suppose you will 
+send this to the stable team for inclusion into 2.6.15.x? You can add
+
+Signed-off-by: Kai Makisara <Kai.Makisara@kolumbus.fi>
+
+Thanks for fixing this problem.
+
 -- 
-Stefan Richter
--=====-=-==- --=- --=--
-http://arcgraph.de/sr/
+Kai
