@@ -1,66 +1,57 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Fw: [Bugme-new] [Bug 6007] New: oops inside scsi_target_reap_work
- on x86_64
-Date: Sat, 4 Feb 2006 00:38:05 -0800
-Message-ID: <20060204003805.13cf711a.akpm@osdl.org>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: open bugzilla reports
+Date: Sat, 4 Feb 2006 09:50:23 +0000
+Message-ID: <20060204095023.GA11140@flint.arm.linux.org.uk>
+References: <20060203151150.3d9aa8b3.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:24274 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1946171AbWBDIi3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Feb 2006 03:38:29 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1945987AbWBDJun@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060203151150.3d9aa8b3.akpm@osdl.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-kernel@vger.kernel.org, video4linux-list@redhat.com, linux-fbdev-devel@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, netdev@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: linux-usb-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
+On Fri, Feb 03, 2006 at 03:11:50PM -0800, Andrew Morton wrote:
+> serial
+> ======
+> 
+> [Bug 5832] Enabling ACPI Plug and Play in kernels
+> 	http://bugzilla.kernel.org/show_bug.cgi?id=5832
 
+This seems to be misfiled.  Why do you think this is a serial bug?
+It seems to be talking about parallel ports.
 
-Begin forwarded message:
+> [Bug 5875] quad RS232 port card detected as 8,
+> 	http://bugzilla.kernel.org/show_bug.cgi?id=5875
 
-Date: Sat, 4 Feb 2006 00:29:40 -0800
-From: bugme-daemon@bugzilla.kernel.org
-To: bugme-new@lists.osdl.org
-Subject: [Bugme-new] [Bug 6007] New: oops inside scsi_target_reap_work on x86_64
+This seems to be because we have an explicit vendor/device ID listed
+in 8250_pci for (according to this bug report) something which isn't
+a serial device.  What I don't know is if these vendor/device IDs
+also exist for something which is a serial device.  Hence, removing
+them could cause more problems than keeping them.  Since it has no
+effect other than causing extra ports to appear, this is low priority.
 
+> [Bug 5942] serial driver gives up and we get IRQ3
+> 	http://bugzilla.kernel.org/show_bug.cgi?id=5942
 
-http://bugzilla.kernel.org/show_bug.cgi?id=6007
+No idea what's happening here.  No one else seems to be using IRQ3,
+we've disabled the interrupt at the UART, yet we get a stuck IRQ3.
+Don't think it's serial related, it just happens that closing the
+serial port shows it.
 
-           Summary: oops inside scsi_target_reap_work on x86_64
-    Kernel Version: 2.6.16-rc2
-            Status: NEW
-          Severity: high
-             Owner: andmike@us.ibm.com
-         Submitter: bug-track@fisher-privat.net
+> [Bug 5958] CF bluetooth card oopses machine when
+> 	http://bugzilla.kernel.org/show_bug.cgi?id=5958
 
+This isn't a serial bug - it's a bluetooth ldisc bug.  I reported it
+to the bluetooth folk back when it first got raised by Pavel.  However,
+they seem to be completely disinterested in fixing it.
 
-Most recent kernel where this bug did not occur:2.6.16-rc1 - 2.6.16-rc2
-Distribution: Ubuntu Breezy x86_64
-Hardware Environment: usb-storage deivce.
-Software Environment:
-Problem Description:
-after usb-storage is attached (dasn't metter wat kind of usb-storage) come
-fallowing message:
-[ 8023.490364] sd 2:0:0:0: Attached scsi removable disk sdb
-[ 8023.490376] kobject 2:0:0:0: registering. parent: scsi_device, set: class_obj
-[ 8023.490385] kobject_uevent
-[ 8023.490391] fill_kobj_path: path = '/class/scsi_device/2:0:0:0'
-[ 8023.490398] fill_kobj_path: path =
-'/devices/pci0000:00/0000:00:1d.0/usb2/2-2/2-2:1.0/host2/target2:0:0/2:0:0:0'
-[ 8023.490632] kobject target2:0:1: registering. parent: host2, set: devices
-[ 8023.490643] kobject_uevent
-[ 8023.490983] kobject <NULL>: cleaning up
-[ 8023.490996] kobject target2:0:2: registering. parent: host2, set: devices
-[ 8023.491014] kobject_uevent
-[ 8023.491066] general protection fault: 0000 [1] 
-[ 8023.491072] CPU 0 
-[ 8023.491074] Modules linked in: usb_storage binfmt_misc fan container
-af_packet piix snd_hda_intel snd_hda_codec snd_pcm_oss snd_mixer_oss snd_pcm
-snd_timer snd snd_page_alloc nls_cp437 vfat fat nls_utf8 ntfs unix
-[ 8023.491089] Pid: 4, comm: events/0 Not tainted 2.6.16-rc1-debug #1
-[ 8023.491093] RIP: 0010:[<ffffffff8025c3c7>] <ffffffff8025c3c7>{device_del+61}
+Unfortunately, there isn't a category for bt crap in bugzilla, otherwise
+I'd reassign it.  Please kick the bt folk.
 
-After this keyboard is dead.
-
-------- You are receiving this mail because: -------
-You are on the CC list for the bug, or are watching someone who is.
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:  2.6 Serial core
