@@ -1,22 +1,42 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 2/2] megaraid_sas: support for 1078 type controller
-	added
-Date: Fri, 03 Feb 2006 17:54:49 -0600
-Message-ID: <1139010889.9267.14.camel@localhost.localdomain>
-References: <1139009675.602.15.camel@dhcp80-31.lsil.com>
+From: "Patro, Sumant" <Sumant.Patro@lsil.com>
+Subject: RE: [PATCH 2/2] megaraid_sas: support for 1078 type controlleradded
+Date: Fri, 3 Feb 2006 17:03:00 -0700
+Message-ID: <0631C836DBF79F42B5A60C8C8D4E82292C6937@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:16571 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1030249AbWBCXzC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Feb 2006 18:55:02 -0500
-In-Reply-To: <1139009675.602.15.camel@dhcp80-31.lsil.com>
+Received: from mail0.lsil.com ([147.145.40.20]:29634 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1751503AbWBDADK convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Feb 2006 19:03:10 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsil.com>, Sumant Patro <sumantp@lsil.com>
-Cc: hch@lst.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, sreenib@lsil.com, Neela.kolli@lsil.com, Bo.Yang@lsil.com, hdoelfel@lsil.com
+To: James Bottomley <James.Bottomley@SteelEye.com>, "Moore, Eric" <Eric.Moore@lsil.com>
+Cc: hch@lst.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@engenio.com>, "Kolli, Neela" <Neela.Kolli@engenio.com>, "Yang, Bo" <Bo.Yang@engenio.com>, "Doelfel, Hardy" <Hardy.Doelfel@engenio.com>
+
+Yes the device id issue has been resolved.
+
+The device id has been changed for 1078 controllers for megaraid_sas to
+60 
+from 62.
+
+Thanks,
+
+Sumant
+
+
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
+Sent: Friday, February 03, 2006 3:55 PM
+To: Moore, Eric; Patro, Sumant
+Cc: hch@lst.de; linux-kernel@vger.kernel.org;
+linux-scsi@vger.kernel.org; Bagalkote, Sreenivas; Kolli, Neela; Yang,
+Bo; Doelfel, Hardy
+Subject: Re: [PATCH 2/2] megaraid_sas: support for 1078 type
+controlleradded
 
 On Fri, 2006-02-03 at 15:34 -0800, Sumant Patro wrote:
 >         {
