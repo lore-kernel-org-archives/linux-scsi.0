@@ -1,30 +1,42 @@
-From: "Martin J. Bligh" <mbligh@mbligh.org>
-Subject: Re: open bugzilla reports
-Date: Sat, 4 Feb 2006 08:47:29 -0800
-Message-ID: <20060204084729.defc7c19.mbligh@mbligh.org>
-References: <20060203151150.3d9aa8b3.akpm@osdl.org>
-	<20060204095023.GA11140@flint.arm.linux.org.uk>
+From: =?iso-8859-1?b?RW1tYW51ZWwgRnVzdMOp?= <emmanuel.fuste@laposte.net>
+Subject: Re: Overlapped command error handling
+Date: Sat,  4 Feb 2006 18:01:15 +0100
+Message-ID: <IU69Y3$517F8D35A9CE9DEA507345F80BF13142@laposte.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20060204095023.GA11140@flint.arm.linux.org.uk>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Russell King <rmk+lkml@arm.linux.org.uk>
-Cc: akpm@osdl.org, linux-kernel@vger.kernel.org, video4linux-list@redhat.com, linux-fbdev-devel@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, netdev@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx.laposte.net ([81.255.54.11]:27186 "EHLO mx.laposte.net")
+	by vger.kernel.org with ESMTP id S932369AbWBDRBW convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 4 Feb 2006 12:01:22 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "emmanuel.fuste" <emmanuel.fuste@laposte.net>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, hare <hare@suse.de>, "James.Bottomley" <James.Bottomley@SteelEye.com>
+
+> Hello,
+>=20
+> Now compiling, results this evening.
+> The patch for aic7xxx :
+=2E..
+> ---
+
+Work, but cdrwtool -d /dev/sr0 -q completely freeze the
+machine, no recovery possible this time, only the power button.
+Will retry later...
+
+Cheers,
+Emmanuel.
+---
+
+Acc=E9dez au courrier =E9lectronique de La Poste : www.laposte.net ;=20
+3615 LAPOSTENET (0,34 =80/mn) ; t=E9l : 08 92 68 13 50 (0,34=80/mn)
 
 
-> > [Bug 5958] CF bluetooth card oopses machine when
-> > 	http://bugzilla.kernel.org/show_bug.cgi?id=5958
-> 
-> This isn't a serial bug - it's a bluetooth ldisc bug.  I reported it
-> to the bluetooth folk back when it first got raised by Pavel.  However,
-> they seem to be completely disinterested in fixing it.
-> 
-> Unfortunately, there isn't a category for bt crap in bugzilla, otherwise
-> I'd reassign it.  Please kick the bt folk.
 
-Stick it under Drivers/Other if you want ...
-
-M.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
