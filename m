@@ -1,42 +1,57 @@
-From: =?iso-8859-1?b?RW1tYW51ZWwgRnVzdMOp?= <emmanuel.fuste@laposte.net>
-Subject: Re: Overlapped command error handling
-Date: Sat,  4 Feb 2006 18:01:15 +0100
-Message-ID: <IU69Y3$517F8D35A9CE9DEA507345F80BF13142@laposte.net>
+From: ajit k jena <ajit@iitb.ac.in>
+Subject: INTEL SRCS16 (SATA) reliability+performance issues
+Date: Sat, 4 Feb 2006 22:40:41 +0530 (IST)
+Message-ID: <Pine.LNX.4.44.0602042237570.1163-100000@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx.laposte.net ([81.255.54.11]:27186 "EHLO mx.laposte.net")
-	by vger.kernel.org with ESMTP id S932369AbWBDRBW convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 4 Feb 2006 12:01:22 -0500
+Received: from smtp1.iitb.ac.in ([202.68.145.249]:33473 "HELO smtp1.iitb.ac.in")
+	by vger.kernel.org with SMTP id S932530AbWBDRKq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Feb 2006 12:10:46 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "emmanuel.fuste" <emmanuel.fuste@laposte.net>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, hare <hare@suse.de>, "James.Bottomley" <James.Bottomley@SteelEye.com>
-
-> Hello,
->=20
-> Now compiling, results this evening.
-> The patch for aic7xxx :
-=2E..
-> ---
-
-Work, but cdrwtool -d /dev/sr0 -q completely freeze the
-machine, no recovery possible this time, only the power button.
-Will retry later...
-
-Cheers,
-Emmanuel.
----
-
-Acc=E9dez au courrier =E9lectronique de La Poste : www.laposte.net ;=20
-3615 LAPOSTENET (0,34 =80/mn) ; t=E9l : 08 92 68 13 50 (0,34=80/mn)
+To: linux-scsi@vger.kernel.org
 
 
+Hi All,
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hope this is the correct forum for asking my questions. Pl forgive
+me if it is otherwise.
+
+I am facing severe reliability issues with the following environment:
+
+OS: MANDRIVA 2006
+
+KERNEL : 2.6.12-12mdksmp
+
+RAID CARD: INTEL SRCS16
+
+KERNEL MODULE: megaraid_mbox
+
+DISKS (these are 400 GB units) I am using: 
+	HITACHI ATA HDS724040KLSA80
+	SEAGATE ATA ST3400832AS
+
+After I setup the hardware RAID, it seems to work ok (the read/write
+performance is very poor though) but after a few days, the RAID disk
+collapses with the following errors in /var/log/messages:
+
+   Feb  4 05:49:58 archive kernel: scsi2 (0:0): rejecting I/O to offline device
+   Feb  4 05:49:58 archive kernel: EXT3-fs error (device sdc1): ext3_readdir: directory #1464833 contains a hole at offset 4096
+
+My questions:
+
+   a) Has anyone in this list tried this CARD+DISK combination and if so what
+      are the experiences ?
+
+   b) What am I possibly doing wrong ? I am using the same disks on a different
+      system which has onboard SATA support. I have 8 such ports and I have
+      configured a software RAID5 on that one. It seems to be quite stable and
+      also the I/O thruput seems to be at least twice that of the hardware
+      RAID5 configuration.
+
+Pl try and share any information/suggestion you may have on this.
+
+--ajit
+
+
