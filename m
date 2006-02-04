@@ -1,57 +1,51 @@
-From: ajit k jena <ajit@iitb.ac.in>
-Subject: INTEL SRCS16 (SATA) reliability+performance issues
-Date: Sat, 4 Feb 2006 22:40:41 +0530 (IST)
-Message-ID: <Pine.LNX.4.44.0602042237570.1163-100000@localhost.localdomain>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [Bug 6009] tcpdump causes kernel panic
+Date: Sat, 4 Feb 2006 10:54:50 -0800
+Message-ID: <20060204105450.0c4d7e24.akpm@osdl.org>
+References: <200602041838.k14Ic4Pi028741@fire-2.osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.iitb.ac.in ([202.68.145.249]:33473 "HELO smtp1.iitb.ac.in")
-	by vger.kernel.org with SMTP id S932530AbWBDRKq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Feb 2006 12:10:46 -0500
+Received: from smtp.osdl.org ([65.172.181.4]:55764 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751520AbWBDSzX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Feb 2006 13:55:23 -0500
+In-Reply-To: <200602041838.k14Ic4Pi028741@fire-2.osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org, Adam Radford <linuxraid@amcc.com>
+
+bugme-daemon@bugzilla.kernel.org wrote:
+>
+> http://bugzilla.kernel.org/show_bug.cgi?id=6009
+
+This 2.6.15 kernel has some 3ware problems:
+
+messages.4:Jan  6 12:15:41 chilsp010 kernel: 3w-9xxx: scsi0: AEN: INFO (0x04:0x0053): Battery capacity test is overdue:.
+messages.4:Jan  6 12:15:41 chilsp010 kernel: scsi0 : 3ware 9000 Storage Controller
+messages.4:Jan  6 12:15:41 chilsp010 kernel: 3w-9xxx: scsi0: Found a 3ware 9000 Storage Controller at 0xfeaffc00, IRQ: 217.
+messages.4:Jan  6 12:15:41 chilsp010 kernel: 3w-9xxx: scsi0: Firmware FE9X 2.06.00.009, BIOS BE9X 2.03.01.051, Ports: 8.
+messages.4:Jan  6 12:15:41 chilsp010 kernel:   Vendor: AMCC      Model: 9500S-8    DISK   Rev: 2.06
+messages.4:Jan  6 12:15:41 chilsp010 kernel:   Type:   Direct-Access                      ANSI SCSI revision: 03
+messages.4:Jan  6 12:15:41 chilsp010 kernel: SCSI device sda: 390602752 512-byte hdwr sectors (199989 MB)
+messages.4:Jan  6 12:15:41 chilsp010 kernel: SCSI device sda: drive cache: write back, no read (daft)
+messages.4:Jan  6 12:15:41 chilsp010 kernel:  sda: sda1 sda2
+messages.4:Jan  6 12:15:41 chilsp010 kernel: Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
+messages.4:Jan  6 12:15:41 chilsp010 kernel: scsi: On host 0 channel 0 id 0 only 511 (max_scsi_report_luns) of 493425154 luns reported, try increasing max_scsi_report_luns.
+messages.4:Jan  6 12:15:41 chilsp010 kernel: scsi: host 0 channel 0 id 0 lun 0xb0b800008ed88ec0 has a LUN larger than currently supported.
+messages.4:Jan  6 12:15:41 chilsp010 kernel: scsi: host 0 channel 0 id 0 lun 0xfbbe007cbf0006b9 has a LUN larger than currently supported.
+messages.4:Jan  6 12:15:41 chilsp010 kernel: scsi: host 0 channel 0 id 0 lun 0x0002f3a4ea210600 has a LUN larger than currently supported.
+messages.4:Jan  6 12:15:41 chilsp010 kernel: scsi: host 0 channel 0 id 0 lun 0x00bebe073804750b has a LUN larger than currently supported.
+messages.4:Jan  6 12:15:41 chilsp010 kernel: scsi: host 0 channel 0 id 0 lun 0x83c61081fefe0775 has a LUN larger than currently supported.
+messages.4:Jan  6 12:15:41 chilsp010 kernel: scsi: host 0 channel 0 id 0 lun 0xf3eb16b402b001bb has a LUN larger than currently supported.
+messages.4:Jan  6 12:15:41 chilsp010 kernel: scsi: host 0 channel 0 id 0 lun 0x007cb2808a740302 has a LUN larger than currently supported.
+messages.4:Jan  6 12:15:41 chilsp010 kernel: scsi: host 0 channel 0 id 0 lun 0x8000008041c80100 has a LUN larger than currently supported.
+messages.4:Jan  6 12:15:41 chilsp010 kernel: scsi: host 0 channel 0 id 0 lun 0x0008fa80ca80ea53 has a LUN larger than currently supported.
+messages.4:Jan  6 12:15:41 chilsp010 kernel: scsi: host 0 channel 0 id 0 lun 0x7c000031c08ed88e has a LUN larger than currently supported.
+messages.4:Jan  6 12:15:41 chilsp010 kernel: scsi: host 0 channel 0 id 0 lun 0xd0bc0020fba0407c has a LUN larger than currently supported.
 
 
-Hi All,
-
-Hope this is the correct forum for asking my questions. Pl forgive
-me if it is otherwise.
-
-I am facing severe reliability issues with the following environment:
-
-OS: MANDRIVA 2006
-
-KERNEL : 2.6.12-12mdksmp
-
-RAID CARD: INTEL SRCS16
-
-KERNEL MODULE: megaraid_mbox
-
-DISKS (these are 400 GB units) I am using: 
-	HITACHI ATA HDS724040KLSA80
-	SEAGATE ATA ST3400832AS
-
-After I setup the hardware RAID, it seems to work ok (the read/write
-performance is very poor though) but after a few days, the RAID disk
-collapses with the following errors in /var/log/messages:
-
-   Feb  4 05:49:58 archive kernel: scsi2 (0:0): rejecting I/O to offline device
-   Feb  4 05:49:58 archive kernel: EXT3-fs error (device sdc1): ext3_readdir: directory #1464833 contains a hole at offset 4096
-
-My questions:
-
-   a) Has anyone in this list tried this CARD+DISK combination and if so what
-      are the experiences ?
-
-   b) What am I possibly doing wrong ? I am using the same disks on a different
-      system which has onboard SATA support. I have 8 such ports and I have
-      configured a software RAID5 on that one. It seems to be quite stable and
-      also the I/O thruput seems to be at least twice that of the hardware
-      RAID5 configuration.
-
-Pl try and share any information/suggestion you may have on this.
-
---ajit
-
+Donny, I think we have two separate bugs here, but we won't be able tell
+until you've been able to get us a copy of the oops output.
 
