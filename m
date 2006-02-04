@@ -1,94 +1,37 @@
-From: Hugh Dickins <hugh@veritas.com>
-Subject: Re: [PATCH] ipr: don't doublefree pages from scatterlist
-Date: Sat, 4 Feb 2006 00:26:37 +0000 (GMT)
-Message-ID: <Pine.LNX.4.61.0602040004020.5406@goblin.wat.veritas.com>
-References: <Pine.LNX.4.63.0512271807130.4955@kai.makisara.local>
- <20060104172727.GA320@tau.solarneutrino.net> <Pine.LNX.4.63.0601042334310.5087@kai.makisara.local>
- <20060105201249.GB1795@tau.solarneutrino.net> <Pine.LNX.4.64.0601051312380.3169@g5.osdl.org>
- <20060109033149.GC283@tau.solarneutrino.net> <Pine.LNX.4.64.0601082000450.3169@g5.osdl.org>
- <Pine.LNX.4.61.0601090933160.7632@goblin.wat.veritas.com>
- <20060109185350.GG283@tau.solarneutrino.net> <Pine.LNX.4.61.0601091922550.15426@goblin.wat.veritas.com>
- <20060118001252.GB821@tau.solarneutrino.net> <Pine.LNX.4.61.0601181556050.9110@goblin.wat.veritas.com>
- <Pine.LNX.4.61.0602031842290.14065@goblin.wat.veritas.com>
- <Pine.LNX.4.61.0602031953400.14829@goblin.wat.veritas.com> <43E3D3EC.3040006@us.ibm.com>
+From: Gorazd Golob <gorazd.golob@noviforum.si>
+Subject: megaraid SATA-150-4,6 on x86_64
+Date: Sat, 04 Feb 2006 01:45:13 +0100
+Message-ID: <1139013913.27445.40.camel@dacun.noviforum.si>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from silver.veritas.com ([143.127.12.111]:4966 "EHLO
-	silver.veritas.com") by vger.kernel.org with ESMTP id S1946007AbWBDAZz
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Feb 2006 19:25:55 -0500
-Received: from [172.21.56.3]([172.21.56.3]) (4129 bytes) by megami.veritas.com
-	via sendmail with P:esmtp/R:smart_host/T:smtp
-	(sender: <hugh@veritas.com>)
-	id <m1F5BFS-0001SsC@megami.veritas.com>
-	for <linux-scsi@vger.kernel.org>; Fri, 3 Feb 2006 16:25:54 -0800 (PST)
-	(Smail-3.2.0.101 1997-Dec-17 #15 built 2001-Aug-30)
-In-Reply-To: <43E3D3EC.3040006@us.ibm.com>
+Received: from elfstone.noviforum.si ([193.189.169.107]:59072 "EHLO
+	elfstone.noviforum.si") by vger.kernel.org with ESMTP
+	id S1946164AbWBDApP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Feb 2006 19:45:15 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by elfstone.noviforum.si (ESMTP) with ESMTP id 0A5821B920
+	for <linux-scsi@vger.kernel.org>; Sat,  4 Feb 2006 01:44:19 +0100 (CET)
+Received: from dacun.noviforum.si (dacun.noviforum.si [192.168.2.26])
+	by elfstone.noviforum.si (ESMTP) with ESMTP id D18071B912
+	for <linux-scsi@vger.kernel.org>; Sat,  4 Feb 2006 01:44:18 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, 3 Feb 2006, Brian King wrote:
-> Hugh Dickins wrote:
-> > On some architectures, mapping the scatterlist may coalesce entries:
-> > if that coalesced list is then used for freeing the pages afterwards,
-> > there's a danger that pages may be doubly freed (and others leaked).
-> 
-> I don't understand why this is necessary... Comparing the bug you fixed
-> in st with ipr's usage of scatterlists, there is a bit of a difference.
-> st is dealing with user pages and calling page_cache_release to release
-> the pages, and I can begin to understand why there might be a problem
-> in that code.
+Hello!
 
-Yes, certainly the st and ipr cases seem different, and originally
-I was thinking it was only an issue in connection with get_user_pages.
+I'm looking for an answer or solution regarding lsi's megaraid sata-150
+working with >=2.6.11 kernel on x86_64. I've tried a few of those cards
+and have a very good experience with those on Linux kernels from 2.4.x
+to latests 2.6 on x86 platform. Suddenly I come into trouble on x86_64
+platform with 2.6 kernels - those cards are working with about 512kbytes
+per second (write) - which is strange. If I boot 32bit kernel on same
+hardware the throput is about 50mbytes/s - which is showing  that
+megaraid driver in >2.6.11 x86_64 kernels is not working properly with
+megaraid SATA-150 raid cards. Newer megaraids SATA 300-8 are working
+perfect on x86_64. Does anybody found same problem? 
 
-> page_cache_release looks at the pages themselves to figure
-> out how many compound pages there are. This could certainly result in
-> double free's occurring.
+Thanks, Gorazd 
 
-I don't follow you there, but better if I try to explain how I see it.
-
-> Looking at ipr, however, it is simply doing alloc_pages
-> and __free_pages. __free_pages passes in the page allocation order, so
-> I don't think I would have the double free problem.
-> 
-> As I understand it, pci_map_sg only modifies the dma_address and dma_length
-> fields when things get coalesced. If it were to coalese pages by
-> turning them into compound pages then I would agree that ipr might have
-> a problem, but I don't think this to be the case...
-
-It's not fully defined what it does (intentionally: internal detail).
-But as I understand it, what it's likely to do is coalesce entries as
-far as it can (causes no problem in itself) then shift down and attempt
-to coalesce the entries above.  It's the shifting down that gives the
-problem.
-
-Imagine we start with sglist
-
-struct page *a, length A
-struct page *b, length B
-struct page *c, length C
-
-and pci_map_sg finds a+A brings it to b (I'm writing loosely, mixing
-the page pointers and their corresponding virtual addresses), but b+B
-does not match c.  Then it'll coalesce the first two entries, and
-shift down the third to second place, turning sglist into
-
-struct page *a, length A+B
-struct page *c, length C
-struct page *c, length C
-
-So (again writing loosely, mixing up lengths and orders) on return the
-caller will __free_pages(a, A+B) (itself probably wrong since a and b
-were likely not buddies to start out with), __free_pages(c, C),
-__free_pages(c, C) - doubly freeing c, ensuing mayhem.
-
-Maybe it doesn't change length A to A+B, just doing that in dma_length;
-but caller is still going to free c twice.
-
-Agree?
-
-Hugh
