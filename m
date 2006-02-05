@@ -1,38 +1,47 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] gdth: don't map zero-length requests
-Date: Sun, 5 Feb 2006 16:36:23 +0100
-Message-ID: <20060205153623.GA14143@lst.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] scsi core: fix uninitialized variable error
+Date: Sun, 5 Feb 2006 11:11:24 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0602051107120.16521-100000@netrider.rowland.org>
+References: <20060205150133.GC16090@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:15261 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S1751765AbWBEPgd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Feb 2006 10:36:33 -0500
-Content-Disposition: inline
+Received: from mx1.rowland.org ([192.131.102.7]:13828 "HELO mx1.rowland.org")
+	by vger.kernel.org with SMTP id S1750887AbWBEQL0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Feb 2006 11:11:26 -0500
+In-Reply-To: <20060205150133.GC16090@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@steeleye.com
-Cc: linux-scsi@vger.kernel.org, axboe@suse.de
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-From: Jenx Axboe <axboe@suse.de>
+On Sun, 5 Feb 2006, Matthew Wilcox wrote:
 
-Don't map zero-length requests in gdth, zome architectures don't like
-that in their dma mapping routines.
+> Seems to me it'd be much easier just  to initialise sdev to
+> ERR_PTR(-ENODEV) at the top of the function.  That way, __scsi_add_device
+> doesn't need to know what the return codes from scsi_probe_and_add_lun
+> mean.  Something like this (untested):
 
-[ I'm pretty sure Jens posted this before, but for some reason it got
-  forgotten  --hch ]
+> @@ -1278,12 +1277,8 @@ struct scsi_device *__scsi_add_device(st
+>  
+>  	get_device(&starget->dev);
+>  	mutex_lock(&shost->scan_mutex);
+> -	if (scsi_host_scan_allowed(shost)) {
+> -		res = scsi_probe_and_add_lun(starget, lun, NULL, &sdev, 1,
+> -					     hostdata);
+> -		if (res != SCSI_SCAN_LUN_PRESENT)
+> -			sdev = ERR_PTR(-ENODEV);
+> -	}
+> +	if (scsi_host_scan_allowed(shost))
+> +		scsi_probe_and_add_lun(starget, lun, NULL, &sdev, 1, hostdata);
+>  	mutex_unlock(&shost->scan_mutex);
+>  	scsi_target_reap(starget);
+>  	put_device(&starget->dev);
 
+This assumes that scsi_probe_and_add_lun doesn't assign anything to the 
+&sdev pointer if it returns anything other than SCSI_SCAN_LUN_PRESENT.  
+Since that assumption is true for the current code, this version of the 
+patch will work as well as mine.
 
-Index: linux-2.6/drivers/scsi/gdth.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/gdth.c	2006-01-16 16:19:38.000000000 +0100
-+++ linux-2.6/drivers/scsi/gdth.c	2006-02-05 16:34:12.000000000 +0100
-@@ -2816,7 +2816,7 @@
-             }
- #endif
- 
--        } else {
-+        } else if (scp->request_bufflen) {
-             scp->SCp.Status = GDTH_MAP_SINGLE;
-             scp->SCp.Message = (read_write == 1 ? 
-                 PCI_DMA_TODEVICE : PCI_DMA_FROMDEVICE);
+Alan Stern
+
