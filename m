@@ -1,50 +1,48 @@
-From: Andrew Morton <akpm@osdl.org>
-Subject: Re: [Bug 6009] tcpdump causes kernel panic
-Date: Sat, 4 Feb 2006 16:51:56 -0800
-Message-ID: <20060204165156.6024702b.akpm@osdl.org>
-References: <200602042315.k14NFwuS006966@fire-2.osdl.org>
-	<20060204153118.4b0270b4.akpm@osdl.org>
-	<1139098731.2957.2.camel@mulgrave.il.steeleye.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: "Kevin Johnson" <bfxvpvmmzhxo@kellychen.com>
+Subject: RE[5]: HI . Sun, 05 Feb 2006 06:36:25 +0300 linux-scsi@vger.kernel.org
+Date: Sun, 05 Feb 2006 06:36:25 +0300
+Message-ID: <115601076.20060205063625@2006-dehs3gmbs1.elkotek>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.4]:57511 "EHLO smtp.osdl.org")
-	by vger.kernel.org with ESMTP id S1751272AbWBEAwd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Feb 2006 19:52:33 -0500
-In-Reply-To: <1139098731.2957.2.camel@mulgrave.il.steeleye.com>
+Received: from dsl85-104-64527.ttnet.net.tr ([85.104.252.15]:965 "HELO
+	2006-dehs3gmbs1.elkotek") by vger.kernel.org with SMTP
+	id S932596AbWBEEgY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 4 Feb 2006 23:36:24 -0500
+Received: from 118.242.137.213 ([1] helo=229.235.119.132)
+	by 119.248.238.125 with esmtp ( 3.35 #1 ())
+	id 233Aqm-7841YF-70
+	for <linux-scsi@vger.kernel.org>; Sun, 05 Feb 2006 06:36:25 +0300
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org, greg@kroah.com
+To: linux-scsi@vger.kernel.org
 
-James Bottomley <James.Bottomley@SteelEye.com> wrote:
->
-> On Sat, 2006-02-04 at 15:31 -0800, Andrew Morton wrote:
-> > James, I don't recall whether we've fixed this or not?  It was non-trivial,
-> > wasn't it?
-> 
-> It's not fixed, and pretty non-trivial.  Basically we'd have to redo
-> most of our generic device (or kobject) handling through workqueues.
-> 
-> What I'd like for this is a way to tell context.  We know the locking
-> context and can cope with that, but it would be nice to tell if we have
-> user context or not and then only go through the workqueue for the
-> softirq or hardirq contexts.
-> 
-> If we can get the check, it would probably make sense to do the actual
-> manipulation in put_device().
-> 
+Do You have enough pwoer to provide your patrner high
 
-in_interrupt() will return true in hard- or soft-irq context on all
-architectures and all .configs - you can certainly use that.
+quality S-EX on St.Valentine day? 
 
-What we cannot use is in_atomic() to detect whether we're inside spinlock -
-that only works if CONFIG_PREEMPT.
+Get a MONSTTER pwoer, nothing can bring your ererction down!
+
+Show your partner the PWOER of your LOEV and she will always remember You. 
+
+Loev will ALWAYS be associated with YOU!  
+
+Your order will be PRIVATE, nobody will know what You use. 
+
+Follow this link and get SSPECIAL DISSCOOUNT for that period:
+ http://AIo7u3betzudc906o47rozb6oo.ottomankd.com/
+
+Ntbxwr Mohggptifumv
+
+Sun, 05 Feb 2006 06:36:25 +0300
 
 
 
-Regarding this bug, Donny: are you saying that the 3ware failure is caused
-by putting the NIC into promiscuous mode (or something related)?  That it
-is caused by running tcpdump?
+
+
+
+
+
+
+
+
+
 
