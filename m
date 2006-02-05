@@ -1,37 +1,33 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH RFC 1/3] SCSI Userspace Target: scsi-ml changes
-Date: Sun, 05 Feb 2006 12:30:28 -0600
-Message-ID: <1139164228.3017.14.camel@mulgrave.il.steeleye.com>
-References: <1138157885.11692.32.camel@max>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH] gdth: don't map zero-length requests
+Date: Sun, 5 Feb 2006 19:43:39 +0100
+Message-ID: <20060205184338.GB5124@suse.de>
+References: <20060205153623.GA14143@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:17378 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751160AbWBESav (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 5 Feb 2006 13:30:51 -0500
-In-Reply-To: <1138157885.11692.32.camel@max>
+Received: from ns.virtualhost.dk ([195.184.98.160]:55391 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1751207AbWBESmv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Feb 2006 13:42:51 -0500
+Content-Disposition: inline
+In-Reply-To: <20060205153623.GA14143@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: jejb@steeleye.com, linux-scsi@vger.kernel.org
 
-OK ... I think this looks good enough to fix up in tree.  I just have
-one minor quibble, so could you fix that and I'll put it in.
+On Sun, Feb 05 2006, Christoph Hellwig wrote:
+> From: Jenx Axboe <axboe@suse.de>
+> 
+> Don't map zero-length requests in gdth, zome architectures don't like
+> that in their dma mapping routines.
+> 
+> [ I'm pretty sure Jens posted this before, but for some reason it got
+>   forgotten  --hch ]
 
-On Tue, 2006-01-24 at 20:58 -0600, Mike Christie wrote:
-> @@ -31,6 +32,7 @@ struct scsi_pointer {
->  struct scsi_cmnd {
->         int     sc_magic;
->  
-> +       struct Scsi_Host *shost;
->         struct scsi_device *device;
+Thanks for reposting Christoph, James can you please pick this up?
 
-This is an unnecessary addition; you can get this from device->host.
 
-Do you have a pointer for the userspace side of this yet?
-
-James
-
+-- 
+Jens Axboe
 
