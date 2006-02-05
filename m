@@ -1,47 +1,51 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] scsi core: fix uninitialized variable error
-Date: Sun, 5 Feb 2006 11:11:24 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0602051107120.16521-100000@netrider.rowland.org>
-References: <20060205150133.GC16090@parisc-linux.org>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: "David Jackson" <xmikpnztj@pacific.net.hk>
+Subject: Fw[87]: Hello ! Sun, 05 Feb 2006 11:29:17 -0400 linux-scsi@vger.kernel.org
+Date: Sun, 05 Feb 2006 11:29:17 -0400
+Message-ID: <705141959497062.20060205112917@noob.Belkin>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.rowland.org ([192.131.102.7]:13828 "HELO mx1.rowland.org")
-	by vger.kernel.org with SMTP id S1750887AbWBEQL0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Feb 2006 11:11:26 -0500
-In-Reply-To: <20060205150133.GC16090@parisc-linux.org>
+Received: from c-71-192-130-118.hsd1.ma.comcast.net ([71.192.130.118]:56334
+	"HELO noob.Belkin") by vger.kernel.org with SMTP id S1751099AbWBEQ3R
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 5 Feb 2006 11:29:17 -0500
+Received: from 216.133.134.235 ([1] helo=112.124.238.246)
+	by 235.238.118.134 with esmtp ( 3.35 #1 ())
+	id 291NHv-2958XE-19
+	for <linux-scsi@vger.kernel.org>; Sun, 05 Feb 2006 11:29:17 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Sun, 5 Feb 2006, Matthew Wilcox wrote:
+ Do You have enough pwoer to provide your patrner high
 
-> Seems to me it'd be much easier just  to initialise sdev to
-> ERR_PTR(-ENODEV) at the top of the function.  That way, __scsi_add_device
-> doesn't need to know what the return codes from scsi_probe_and_add_lun
-> mean.  Something like this (untested):
+ quality S-EX on St.Valentine day? 
 
-> @@ -1278,12 +1277,8 @@ struct scsi_device *__scsi_add_device(st
->  
->  	get_device(&starget->dev);
->  	mutex_lock(&shost->scan_mutex);
-> -	if (scsi_host_scan_allowed(shost)) {
-> -		res = scsi_probe_and_add_lun(starget, lun, NULL, &sdev, 1,
-> -					     hostdata);
-> -		if (res != SCSI_SCAN_LUN_PRESENT)
-> -			sdev = ERR_PTR(-ENODEV);
-> -	}
-> +	if (scsi_host_scan_allowed(shost))
-> +		scsi_probe_and_add_lun(starget, lun, NULL, &sdev, 1, hostdata);
->  	mutex_unlock(&shost->scan_mutex);
->  	scsi_target_reap(starget);
->  	put_device(&starget->dev);
+ Get a MOONSTER pwoer, nothing can bring your ererction down!
 
-This assumes that scsi_probe_and_add_lun doesn't assign anything to the 
-&sdev pointer if it returns anything other than SCSI_SCAN_LUN_PRESENT.  
-Since that assumption is true for the current code, this version of the 
-patch will work as well as mine.
+ Show your partner the PWOER of your LOEV and she will always remember You. 
 
-Alan Stern
+ Loev will ALWAYS be associated with YOU!  
+
+ Your order will be PRIVATE, nobody will know what You use. 
+
+ Follow this link and get SSPECIAL DISSCOOUNT for that period:
+
+ http://Coyjwf2t1m17232z8eecfhw7jwwe.feisgc.com/
+
+
+
+ Jsthcaljqcw Utkfsu
+
+ Sun, 05 Feb 2006 11:29:17 -0400
+
+
+
+
+
+
+
+
+
+
+
+
 
