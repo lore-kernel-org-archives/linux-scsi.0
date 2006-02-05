@@ -1,80 +1,132 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] scsi core: fix uninitialized variable error
-Date: Sun, 5 Feb 2006 16:45:17 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0602051634200.5858-100000@netrider.rowland.org>
-References: <20060205213049.GG16090@parisc-linux.org>
+From: adam radford <aradford@gmail.com>
+Subject: [PATCH 1/1] 3ware 9000 driver fix for 2.6.16-rc3
+Date: Sun, 5 Feb 2006 14:51:43 -0800
+Message-ID: <b1bc6a000602051451i15be56c0k5bb7928cb81077f3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: multipart/mixed;
+	boundary="----=_Part_21154_5619979.1139179903508"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.rowland.org ([192.131.102.7]:42501 "HELO mx1.rowland.org")
-	by vger.kernel.org with SMTP id S1750745AbWBEVpS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Feb 2006 16:45:18 -0500
-In-Reply-To: <20060205213049.GG16090@parisc-linux.org>
+Received: from uproxy.gmail.com ([66.249.92.200]:63828 "EHLO uproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750770AbWBEWvp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Feb 2006 17:51:45 -0500
+Received: by uproxy.gmail.com with SMTP id h2so556511ugf
+        for <linux-scsi@vger.kernel.org>; Sun, 05 Feb 2006 14:51:43 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>, akpm@osdl.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Sun, 5 Feb 2006, Matthew Wilcox wrote:
+------=_Part_21154_5619979.1139179903508
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-> Perhaps the better way to think about this usage of
-> scsi_probe_and_add_lun() is "If it finds an sdev, then we should return
-> it".  Right now, we're assuming that returning SCSI_SCAN_LUN_PRESENT is
-> equivalent to having found an sdev.
-> 
-> The real problem is that scsi_probe_and_add_lun() has an enormously
-> complicated interface.  The good news is that it's static, so we can see
-> all its callers.  The bad news is that the kernel-doc comment is out of
-> date and not terribly helpful.
-> 
-> Its callers are:
-> 
-> scsi_sequential_lun_scan()
-> 	scsi_probe_and_add_lun(starget, lun, NULL, NULL, rescan, NULL)
-> 		(!= SCSI_SCAN_LUN_PRESENT)
-> scsi_report_lun_scan()
-> 	scsi_probe_and_add_lun(starget, lun, NULL, NULL, rescan, NULL)
-> 		(== SCSI_SCAN_NO_RESPONSE)
-> __scsi_add_device()
-> 	scsi_probe_and_add_lun(starget, lun, NULL, &sdev, 1, hostdata)
-> 		(== SCSI_SCAN_LUN_PRESENT in current, unused in my patch)
-> __scsi_scan_target()
-> 	scsi_probe_and_add_lun(starget, lun, NULL, NULL, rescan, NULL)
-> 		(unused)
-> 	scsi_probe_and_add_lun(starget, 0, &bflags, NULL, rescan, NULL)
-> 		(== SCSI_SCAN_LUN_PRESENT or SCSI_SCAN_TARGET_PRESENT)
-> 
-> I can see some ways to simplify this interface.  As noted in a comment:
-> 
->                  * XXX add a bflags to scsi_device, and replace the
->                  * corresponding bit fields in scsi_device, so bflags
->                  * need not be passed as an argument.
-> 
-> I *think* we can get rid of the hostdata parameter.  The only non-NULL
-> caller is __scsi_add_device().  The only caller of __scsi_add_device()
-> which specifies hostdata is i2o_scsi.  I don't see why it can't use a
-> ->slave_alloc in the host template to set hostdata rather than passing
-> it in.
-> 
-> That'd get us down from a 6-argument function to a 4-argument one.  We
-> still have the problem of wanting to return multiple things (a SCSI_SCAN
-> constant in most cases and an sdev in another).  Maybe we could do something
-> like ERR_PTR/IS_ERR ...
+The attached patch fixes a bug in the 3ware 9000 series driver:
 
-That sounds good to me.  It looks like the possible responses fall into 
-three classes: LUN present (and return the sdev pointer), LUN not present 
-but target present (needs an ERR_PTR value), and no response (simply 
-return NULL).  If you want to write those changes, I'll endorse it.
+- Fix use_sg =3D=3D 0 mapping on systems with 4GB or higher.
 
-The whole bflags thing is badly in need of updating.  There really should
-be a bflags field in the sdev structure, so that the flags can be tailored
-for individual devices instead of using a common blacklist entry.  There
-already _is_ a similar field in the target structure, although it's not
-used for much.  And there already are a number of bitfields in the sdev
-structure to hold information which should exist in a single bflags field
--- in effect, people have already started moving the flags into the sdev
-but have done it piecemeal.  Of course, this is a separate issue from
-scsi_probe_and_add_lun.
+  This fixes REPORT_LUNS (0xa0) failing with 3ware 9000 controllers on syst=
+ems
+  with lots of ram, mentioned in bugzilla # 6009:
 
-Alan Stern
+      http://bugzilla.kernel.org/show_bug.cgi?id=3D6009
 
+Signed-off-by: Adam Radford <linuxraid@amcc.com>
+
+James, Please apply
+
+Thanks!
+
+Note: The patch is attached as an attachment, and also included
+in-line below.   The below may have line-wrap issues since I'm pasting
+into gmail.
+
+diff -Naur linux-2.6.16-rc2/drivers/scsi/3w-9xxx.c
+linux-2.6.16-rc3/drivers/scsi/3w-9xxx.c
+--- linux-2.6.16-rc2/drivers/scsi/3w-9xxx.c=092006-02-05 14:30:13.000000000=
+ -0800
++++ linux-2.6.16-rc3/drivers/scsi/3w-9xxx.c=092006-02-05 14:36:40.000000000=
+ -0800
+@@ -61,6 +61,7 @@
+                  Add support for embedded firmware error strings.
+    2.26.02.003 - Correctly handle single sgl's with use_sg=3D1.
+    2.26.02.004 - Add support for 9550SX controllers.
++   2.26.02.005 - Fix use_sg =3D=3D 0 mapping on systems with 4GB or higher=
+.
+ */
+
+ #include <linux/module.h>
+@@ -84,7 +85,7 @@
+ #include "3w-9xxx.h"
+
+ /* Globals */
+-#define TW_DRIVER_VERSION "2.26.02.004"
++#define TW_DRIVER_VERSION "2.26.02.005"
+ static TW_Device_Extension *twa_device_extension_list[TW_MAX_SLOT];
+ static unsigned int twa_device_extension_count;
+ static int twa_major =3D -1;
+@@ -1408,7 +1409,7 @@
+ =09dma_addr_t mapping;
+ =09struct scsi_cmnd *cmd =3D tw_dev->srb[request_id];
+ =09struct pci_dev *pdev =3D tw_dev->tw_pci_dev;
+-=09int retval =3D 0;
++=09dma_addr_t retval =3D 0;
+
+ =09if (cmd->request_bufflen =3D=3D 0) {
+ =09=09retval =3D 0;
+@@ -1798,7 +1799,7 @@
+ =09int i, sg_count;
+ =09struct scsi_cmnd *srb =3D NULL;
+ =09struct scatterlist *sglist =3D NULL;
+-=09u32 buffaddr =3D 0x0;
++=09dma_addr_t buffaddr =3D 0x0;
+ =09int retval =3D 1;
+
+ =09if (tw_dev->srb[request_id]) {
+
+------=_Part_21154_5619979.1139179903508
+Content-Type: text/x-patch; name=3ware_fix_2.6.16-rc3.patch;
+	charset=us-ascii
+Content-Transfer-Encoding: 7bit
+X-Attachment-Id: f_ejby7y1p
+Content-Disposition: attachment; filename="3ware_fix_2.6.16-rc3.patch"
+
+diff -Naur linux-2.6.16-rc2/drivers/scsi/3w-9xxx.c linux-2.6.16-rc3/drivers/scsi/3w-9xxx.c
+--- linux-2.6.16-rc2/drivers/scsi/3w-9xxx.c	2006-02-05 14:30:13.000000000 -0800
++++ linux-2.6.16-rc3/drivers/scsi/3w-9xxx.c	2006-02-05 14:36:40.000000000 -0800
+@@ -61,6 +61,7 @@
+                  Add support for embedded firmware error strings.
+    2.26.02.003 - Correctly handle single sgl's with use_sg=1.
+    2.26.02.004 - Add support for 9550SX controllers.
++   2.26.02.005 - Fix use_sg == 0 mapping on systems with 4GB or higher.
+ */
+ 
+ #include <linux/module.h>
+@@ -84,7 +85,7 @@
+ #include "3w-9xxx.h"
+ 
+ /* Globals */
+-#define TW_DRIVER_VERSION "2.26.02.004"
++#define TW_DRIVER_VERSION "2.26.02.005"
+ static TW_Device_Extension *twa_device_extension_list[TW_MAX_SLOT];
+ static unsigned int twa_device_extension_count;
+ static int twa_major = -1;
+@@ -1408,7 +1409,7 @@
+ 	dma_addr_t mapping;
+ 	struct scsi_cmnd *cmd = tw_dev->srb[request_id];
+ 	struct pci_dev *pdev = tw_dev->tw_pci_dev;
+-	int retval = 0;
++	dma_addr_t retval = 0;
+ 
+ 	if (cmd->request_bufflen == 0) {
+ 		retval = 0;
+@@ -1798,7 +1799,7 @@
+ 	int i, sg_count;
+ 	struct scsi_cmnd *srb = NULL;
+ 	struct scatterlist *sglist = NULL;
+-	u32 buffaddr = 0x0;
++	dma_addr_t buffaddr = 0x0;
+ 	int retval = 1;
+ 
+ 	if (tw_dev->srb[request_id]) {
+
+------=_Part_21154_5619979.1139179903508--
