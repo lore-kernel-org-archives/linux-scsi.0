@@ -1,27 +1,40 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] gdth: don't map zero-length requests
-Date: Sun, 05 Feb 2006 14:08:07 -0600
-Message-ID: <1139170088.3017.18.camel@mulgrave.il.steeleye.com>
-References: <20060205153623.GA14143@lst.de>  <20060205184338.GB5124@suse.de>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: open bugzilla reports
+Date: Sun, 5 Feb 2006 22:09:12 +0100
+Message-ID: <20060205210912.GA3509@elf.ucw.cz>
+References: <20060203151150.3d9aa8b3.akpm@osdl.org> <20060204095023.GA11140@flint.arm.linux.org.uk> <20060204084729.defc7c19.mbligh@mbligh.org> <20060204231425.GA24887@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:58595 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1750721AbWBEUI1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 5 Feb 2006 15:08:27 -0500
-In-Reply-To: <20060205184338.GB5124@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060204231425.GA24887@flint.arm.linux.org.uk>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "Martin J. Bligh" <mbligh@mbligh.org>, akpm@osdl.org, linux-kernel@vger.kernel.org, video4linux-list@redhat.com, linux-fbdev-devel@lists.sourceforge.net, linux-fsdevel@vger.kernel.org, linux1394-devel@lists.sourceforge.net, netdev@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, jejb@SteelEye.com, linux-scsi@vger.kernel.org
 
-On Sun, 2006-02-05 at 19:43 +0100, Jens Axboe wrote:
-> Thanks for reposting Christoph, James can you please pick this up?
+On So 04-02-06 23:14:26, Russell King wrote:
+> On Sat, Feb 04, 2006 at 08:47:29AM -0800, Martin J. Bligh wrote:
+> > 
+> > > > [Bug 5958] CF bluetooth card oopses machine when
+> > > > 	http://bugzilla.kernel.org/show_bug.cgi?id=5958
+> > > 
+> > > This isn't a serial bug - it's a bluetooth ldisc bug.  I reported it
+> > > to the bluetooth folk back when it first got raised by Pavel.  However,
+> > > they seem to be completely disinterested in fixing it.
+> > > 
+> > > Unfortunately, there isn't a category for bt crap in bugzilla, otherwise
+> > > I'd reassign it.  Please kick the bt folk.
+> > 
+> > Stick it under Drivers/Other if you want ...
+> 
+> It _is_ under Networking/Other, yet akpm still thinks it's a serial
+> bug.  I'm not sure why though, I've fully explained why it isn't
+> a serial problem in the bug comments.
+> 
+> akpm is buggy and needs fixing.  Where do I file this bug? 8)
 
-Got it in scsi-rc-fixes-2.6
-
-James
-
-
+It would be nice to create Networking/Bluetooth category, so there's
+logical place to file such bugs under...
+								Pavel
+-- 
+Thanks, Sharp!
