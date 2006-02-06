@@ -1,132 +1,119 @@
-From: Ingo Flaschberger <if@xip.at>
-Subject: Re: cpqfc gone - all compay RA4X00 Array now useless in linux?
-Date: Mon, 6 Feb 2006 19:38:33 +0100 (CET)
-Message-ID: <Pine.GSO.4.64.0602061921160.94@filebunker.xip.at>
-References: <Pine.GSO.4.64.0602061840520.24390@filebunker.xip.at>
- <200602061923.31944@bilbo.math.uni-mannheim.de>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH] FC transport & lpfc : Avoid device offline cases by stalling aborts until device unblocked
+Date: Mon, 6 Feb 2006 11:11:01 -0800 (PST)
+Message-ID: <20060206191101.77227.qmail@web31809.mail.mud.yahoo.com>
+References: <43E77970.1030500@emulex.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.xip.at ([193.239.188.99]:5310 "EHLO chile.gbit.at")
-	by vger.kernel.org with ESMTP id S932188AbWBFTHB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 14:07:01 -0500
-In-Reply-To: <200602061923.31944@bilbo.math.uni-mannheim.de>
+Received: from web31809.mail.mud.yahoo.com ([68.142.207.72]:20336 "HELO
+	web31809.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S932157AbWBFTLB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Feb 2006 14:11:01 -0500
+In-Reply-To: <43E77970.1030500@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: linux-scsi@vger.kernel.org
+To: James.Smart@Emulex.Com, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hello Rolf,
+--- James Smart <James.Smart@Emulex.Com> wrote:
+> The attached patch creates a FC transport service routine, which can
+> be specified in the LLDD's scsi_host_template. This allows the transport
+> to intercept io timeouts, check the state of rport, and if blocked,
+> request the midlayer to reschedule the timeout. This patch also patches
+> the lpfc driver to make use of this interface.
 
->> _only_ one which supported the now very cheap Compaq FiberChannel Array
->> RA4X00.
->>
->> With all other FC HBA's the logical volumes (LUN's) are not visible.
->> ---snip---
->> 5. Compaq RA4x00 firmware version 2.54 and later supports SSP (Selective
->> Storage Presentation), which maps LUNs to a WWN.  If RA4x00 firmware prior
->> 2.54 (e.g. older controller) is used, or the FC HBA is replaced (another WWN
->> is used), logical volumes on the RA4x00 will no longer be visible.
->> ---snap---
->>
->> So... there are 3 possibilities:
->> 1. Repair the cpqfc driver and but it again into linux?
->
-> The driver is a horrible hack lacking too many of really needed error
-> handling.
->
->> 2. Find out, how to get the RA4x00 arrays with othet HBA's running; I
->> 	searched about 1 week in Google, no way..
->
-> We're working on it. The RA4x00 do things normal arrays don't or so.
+Yes, this is the intended purpose of this interface.
 
-What means, "We're working on it"?
+> What we are trying to avoid is to have the abort handler kick in while the
+> rport is blocked. The rport is blocked because we have lost connectivity.
+> As we have no connectivity, the LLDD either fails it (most common) or busy
+> stalls (yech!) until rport state is resolved.  If the abort is failed, the
+> error handler escalates, and eventually attempts to send a TUR to the
+> device, which fails as we have no connectivity. As the TUR fails, the device
+> gets taken offline, requiring manual interaction to restore use.
 
-> I'm not
-> yet familiar enough with this to know exactly what is needed to beat this to
-> work again.
+Is it possible that you add dev_loss_tmo to the scsi_dev timeout?
+Say scsi_dev->timeout = dev_loss_tmo + X seconds?
 
-The only thing I have found, why the RA4X00 arrays are different:
-http://mail-index.netbsd.org/tech-kern/2005/01/06/0013.html
----sip---
-Its been years time since I checked the T10/T11 drafts, but as best I
-recall, there's some SCSI level (SCSI-3? The last ANSI level?)  where
-any device claiming that level is required(?) to implement
-REPORT_LUNS.
+This would mean that SCSI Core's command timer would fire X seconds _after_
+the transport event, and presumably you've dealt with this issue
+X seconds before (when the transport event fired).
 
-I've also seen devices just below that level which just won't talk
-happily to an initiator unless the initiator sends them a REPORT_LUNS.
-(The Compaq RA4000 RAID array was infamous for that. IIRC, the Linux
-driver for the recommended Compaq/Aglient controller sent a REPORT
-LUNs from inside the driver, then remapped the native LUNs to 8-bit
-LUNS for upper layers; or something equally distaseful.)
----snap---
+> The original suggestion was from James Bottomley:
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=113682123403609&w=2
+> based on the thread started by Michael Reed:
+> http://marc.theaimsgroup.com/?l=linux-scsi&m=113477788309880&w=2
+> 
+> Please note:
+>    This does not resolve the cases where the error handlers are engaged when
+>    the rport is blocked.
 
-and the work around seems to be hardcoded in the cpqfc driver.
+Indeed, it doesn't.
 
+>    The need of the transport conflicted with the initial eh_timed_out design,
+>    which limited the rescheduling of the timeout to the number of retries
+>    allowed on the command plus 1.  In the case of the FC transport, we already
 
-cpqfcTSworker.c
----snip---
-     // e.g., the Compaq RA4x00 f/w Rev 2.54 and above may report
-     // LUNs 4001, 4004, etc., because other LUNs are masked from
-     // this HBA (owned by someone else).  We'll make those appear as
-     // LUN 0, 1... to Linux
-     {
-       int j;
-       int AppendLunList = 0;
-       // Walk through the LUN list.  The 'j' array number is
-       // Linux's lun #, while the value of .lun[j] is the target's
-       // lun #.
-       // Once we build a LUN list, it's possible for a known device
-       // to go offline while volumes (LUNs) are added.  Later,
-       // the device will do another PLOGI ... Report Luns command,
-       // and we must not alter the existing Linux Lun map.
-       // (This will be very rare).
----snap---
+Initially, returning EH_RESET_TIMER, did just what you want: reset the timer,
+no questions asked.
 
-perhaps its that part of code....
+>    have the dev_loss_tmo running to guarantee that this will not be an
+>    infinite stall, so penalizing the i/o (especially be incrementing the retry
+>    count) should be avoided.
 
-when my server boots with 2.4.20:
-dmesg:
----snip---
-   HBA Tachyon RevId 3.0
-Allocating 119808 for 576 Exchanges @ 057e0000
-Allocating 112904 for LinkQ @ 057c0000 (576 elements)
-Allocating 104456 for TachSEST for 512 Exchanges
-   cpqfcTS: writing IMQ BASE 37B0000h    PI 37B4000h
-   cpqfcTS: SEST 05780000(virt): Wrote base 3780000h @ c2a02140
-cpqfcTS: NVRAM read failed
-  WARNING! HBA NVRAM WWN read failed - make alias
-cpqfcTS: New FC port 000001h WWN: 500508B100092C20 SCSI Chan/Trgt 0/0
-scsi1 : Compaq FibreChannel HBA Tachyon Chip/Board Ver??: WWN 
-5000061144556677
-  on PCI bus 3 device 0x1028 irq 24 IObaseL 0x2000, MEMBASE 0xfe7f0000
-PCI bus width 64 bits, bus speed 66 MHz
-FCP-SCSI Driver v2.1.1
-GBIC detected: NONE!  LPSM 0h Monitor
-   Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.40
-   Type:   Direct-Access                      ANSI SCSI revision: 02
-   Vendor: COMPAQ    Model: LOGICAL VOLUME    Rev: 2.40
-   Type:   Direct-Access                      ANSI SCSI revision: 02
-libata version 1.10 loaded.
-Attached scsi disk sda at scsi0, channel 0, id 0, lun 0
-Attached scsi disk sdb at scsi1, channel 0, id 0, lun 0
-Attached scsi disk sdc at scsi1, channel 0, id 0, lun 1
----snap---
+So you can prove that it is bounded in time.  But this is very good!
 
->> 3. Aeh.. use... 2.4, use... other OS?
->
-> The 2.4 might work. And I might have some patches for you to make it a bit
-> less broken. But don't expect too much from it.
->
->> Hope to find a way... and not only kicking a working driver because of not
->> as nice code and to much stack memory.
->
-> It was not really working, at least not when I (remotely via IRC) tested it
-> last time (some month ago).
+So if you defined eh_strategy_handler() (in conjunction with setting the device
+timeout to X seconds + dev_loss_tmo) you'll end up in your own eh_strategy_handler()
+IFF the rport timeout fired and nothing could be done, then the SCSI Command
+timeout fired (X seconds after) and nothing could be done, and you ended up
+in your eh_strategy_handler().
 
-I would like to give it a try.
-What have been the latest parts of code?
+Note: Defining eh_timed_out() doesn't imply that you should define
+eh_strategy_handler(), but the opposite is not true.
 
-Kind regards,
- 	Ingo Flaschberger
+>    Also, as Christoph just recently removed the eh_timed_out use in the
+>    megaraid driver - he eliminated the only other (in-kernel) user of this
+>    interface. Perhaps we should consider changing the design and realign
+>    the EH_RESET_TIMER functionality to what EH_TRANSPORT_BLOCKED does.
+>    Thoughts ?
+
+Well, it only makes sense to return to the original meaning of EH_RESET_HANDLER,
+i.e. that SCSI Core should just reset the timer and no questions asked.
+
+Since, of course, EH_TRANSPORT_BLOCKED,
+  1. Is equivalent to EH_RESET_TIMER, but circumvents SCSI Core's command retry
+     attempts (as the diff patch shows below).
+  2. Has no meaning to a timer timeout handler, i.e. what you really want is
+     EH_RESET_TIMER.
+
+So, since you need it, I'd say removing command retry counting in SCSI Core
+for EH_RESET_TIMER can be removed to suit your needs.
+
+> + *  EH_TRANSPORT_BLOCKED;
+> + *    The transport is reporting that the device is in a "blocked"
+> + *    state wherein it cannot be contacted (typically due to a temporary
+> + *    loss of connectivity). The transport ensures that this is not an
+> + *    infinite condition. The timeout is rescheduled until the transport
+> + *    state changes.
+
+Indeed, and as shown in your patch below this is just EH_RESET_TIMER sans
+the retry counting.
+
+> @@ -173,6 +192,8 @@ void scsi_times_out(struct scsi_cmnd *sc
+>   			 * with allowed == 0 */
+>   			if (scmd->retries++ > scmd->allowed)
+>   				break;
+> +			/* FALL THRU */
+> +		case EH_TRANSPORT_BLOCKED:
+>   			scsi_add_timer(scmd, scmd->timeout_per_command,
+>   				       scsi_times_out);
+>   			return;
+
+Submit a patch which removes the retries counting from EH_RESET_TIMER
+and let's see what happens.
+
+    Luben
+
