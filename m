@@ -1,50 +1,26 @@
-From: Brian King <brking@us.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH] ipr: don't doublefree pages from scatterlist
-Date: Mon, 06 Feb 2006 08:46:19 -0600
-Message-ID: <43E7613B.5060706@us.ibm.com>
-References: <Pine.LNX.4.61.0602040004020.5406@goblin.wat.veritas.com>	<43E66FB6.6070303@us.ibm.com>	<Pine.LNX.4.61.0602060909180.6827@goblin.wat.veritas.com> <20060206.014608.22328385.davem@davemloft.net>
-Reply-To: brking@us.ibm.com
+Date: Mon, 06 Feb 2006 09:02:59 -0600
+Message-ID: <1139238179.3022.2.camel@mulgrave.il.steeleye.com>
+References: <Pine.LNX.4.61.0602040004020.5406@goblin.wat.veritas.com>
+	 <43E66FB6.6070303@us.ibm.com>
+	 <Pine.LNX.4.61.0602060909180.6827@goblin.wat.veritas.com>
+	 <20060206.014608.22328385.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040008040005060309090303"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:64137 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932130AbWBFOqY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 09:46:24 -0500
+Received: from stat9.steeleye.com ([209.192.50.41]:11404 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932132AbWBFPD5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Feb 2006 10:03:57 -0500
 In-Reply-To: <20060206.014608.22328385.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "David S. Miller" <davem@davemloft.net>
-Cc: hugh@veritas.com, James.Bottomley@SteelEye.com, akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: hugh@veritas.com, brking@us.ibm.com, akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------040008040005060309090303
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-
-David S. Miller wrote:
-> From: Hugh Dickins <hugh@veritas.com>
-> Date: Mon, 6 Feb 2006 09:32:54 +0000 (GMT)
-> 
->> From looking at the source, the architectures I found to be doing
->> scatterlist coalescing in some cases were alpha, ia64, parisc (some
->> code under drivers), powerpc, sparc64 and x86_64.
->>
->> I agree with you that it would be possible for them to do the coalescing
->> by just adjusting dma_address and dma_length (though it's architecture-
->> dependent whether there are such fields at all), not interfering with
->> the input page and length; and maybe some of them do proceed that way.
->> I didn't find the coalescing code in any of them very easy to follow.
->>
->> So please examine arch/x86_64/kernel/pci_gart.c gart_map_sg (and
->> dma_map_cont which it calls): x86_64 was the architecture on which
->> the problem was really found with drivers/scsi/st.c, and avoided
->> by that boot option iommu=nomerge.
->>
->> Lines like "*sout = *s;" and "*sout = sg[start];" are structure-
->> copying whole scallerlist entries from one position in the list
->> to another, without explicit mention of the page and length fields.
-> 
+On Mon, 2006-02-06 at 01:46 -0800, David S. Miller wrote:
 > That's a bug, frankly.  Sparc64 doesn't need to do anything like
 > that.  Spamming the page pointers is really really bogus and I'm
 > surprised this doesn't make more stuff explode.
@@ -55,49 +31,18 @@ David S. Miller wrote:
 > 
 > I'd really prefer that those assignments get fixed and an explicit
 > note added to Documentation/DMA-mapping.txt about this.
+> 
+> It's rediculious that these generic subsystem drivers need to
+> know about this. :)
 
-How about this for a documentation fix?
+I complained about this x86_64 behaviour ages ago.  Andi claimed it was
+the only way they could get there merging algorithm to work.  It
+actually triggered a bug in SCSI because in-flight I/O that was rejected
+gets unmapped and then remapped (which was, originally, not working).
+They finally fixed it by making the unmap put back the original
+scatterlist.  Perhaps this should go to linux-arch just in case anyone
+else copied x86_64?
 
-Brian
+James
 
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
-
---------------040008040005060309090303
-Content-Type: text/x-patch;
- name="dma_mapping_clarification.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="dma_mapping_clarification.patch"
-
-ClRoZSBjdXJyZW50IHBjaV9tYXBfc2cgQVBJIGlzIGEgYml0IHVuY2xlYXIgd2hhdCBpdCBp
-cyBhbGxvd2VkCnRvIG1vZGlmeSBpbiB0aGUgcGFzc2VkIHNjYXR0ZXJsaXN0IHdoZW4gY29h
-bGVzY2luZyBlbnRyaWVzLgpDbGFyaWZ5IHRoZSBwY2lfbWFwX3NnIEFQSSB0byBwcmV2ZW50
-IGl0IGZyb20gbW9kaWZ5aW5nCnRoZSBwYWdlLCBvZmZzZXQsIGFuZCBsZW5ndGggZmllbGRz
-IGluIHRoZSBzY2F0dGVybGlzdC4KClNpZ25lZC1vZmYtYnk6IEJyaWFuIEtpbmcgPGJya2lu
-Z0B1cy5pYm0uY29tPgotLS0KCiBsaW51eC0yLjYtYmpraW5nMS9Eb2N1bWVudGF0aW9uL0RN
-QS1tYXBwaW5nLnR4dCB8ICAgIDUgKysrKy0KIDEgZmlsZXMgY2hhbmdlZCwgNCBpbnNlcnRp
-b25zKCspLCAxIGRlbGV0aW9uKC0pCgpkaWZmIC1wdU4gRG9jdW1lbnRhdGlvbi9ETUEtbWFw
-cGluZy50eHR+ZG1hX21hcHBpbmdfY2xhcmlmaWNhdGlvbiBEb2N1bWVudGF0aW9uL0RNQS1t
-YXBwaW5nLnR4dAotLS0gbGludXgtMi42L0RvY3VtZW50YXRpb24vRE1BLW1hcHBpbmcudHh0
-fmRtYV9tYXBwaW5nX2NsYXJpZmljYXRpb24JMjAwNi0wMi0wNiAwODoyMzoxMC4wMDAwMDAw
-MDAgLTA2MDAKKysrIGxpbnV4LTIuNi1iamtpbmcxL0RvY3VtZW50YXRpb24vRE1BLW1hcHBp
-bmcudHh0CTIwMDYtMDItMDYgMDg6Mzg6NDMuMDAwMDAwMDAwIC0wNjAwCkBAIC01MTMsNyAr
-NTEzLDEwIEBAIGNvbnNlY3V0aXZlIHNnbGlzdCBlbnRyaWVzIGNhbiBiZSBtZXJnZWQKIGVu
-ZHMgYW5kIHRoZSBzZWNvbmQgb25lIHN0YXJ0cyBvbiBhIHBhZ2UgYm91bmRhcnkgLSBpbiBm
-YWN0IHRoaXMgaXMgYSBodWdlCiBhZHZhbnRhZ2UgZm9yIGNhcmRzIHdoaWNoIGVpdGhlciBj
-YW5ub3QgZG8gc2NhdHRlci1nYXRoZXIgb3IgaGF2ZSB2ZXJ5CiBsaW1pdGVkIG51bWJlciBv
-ZiBzY2F0dGVyLWdhdGhlciBlbnRyaWVzKSBhbmQgcmV0dXJucyB0aGUgYWN0dWFsIG51bWJl
-cgotb2Ygc2cgZW50cmllcyBpdCBtYXBwZWQgdGhlbSB0by4gT24gZmFpbHVyZSAwIGlzIHJl
-dHVybmVkLgorb2Ygc2cgZW50cmllcyBpdCBtYXBwZWQgdGhlbSB0by4gVGhlIGltcGxlbWVu
-dGF0aW9uIGlzIGZyZWUgdG8gZG8gdGhpcworYnkgbW9kaWZ5aW5nIHRoZSBzY2F0dGVybGlz
-dCBmaWVsZHMgc3BlY2lmaWVkIGZvciBETUEuIFRoZSBzY2F0dGVybGlzdAorZmllbGRzIHVz
-ZWQgYXMgYW4gaW5wdXQgdG8gdGhpcyBmdW5jdGlvbiAoaS5lLiBwYWdlLCBvZmZzZXQsIGFu
-ZCBsZW5ndGgpCit3aWxsIE5PVCBiZSBtb2RpZmllZC4gT24gZmFpbHVyZSAwIGlzIHJldHVy
-bmVkLgogCiBUaGVuIHlvdSBzaG91bGQgbG9vcCBjb3VudCB0aW1lcyAobm90ZTogdGhpcyBj
-YW4gYmUgbGVzcyB0aGFuIG5lbnRzIHRpbWVzKQogYW5kIHVzZSBzZ19kbWFfYWRkcmVzcygp
-IGFuZCBzZ19kbWFfbGVuKCkgbWFjcm9zIHdoZXJlIHlvdSBwcmV2aW91c2x5Cl8K
---------------040008040005060309090303--
