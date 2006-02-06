@@ -1,52 +1,30 @@
 From: Hugh Dickins <hugh@veritas.com>
 Subject: Re: [PATCH] ipr: don't doublefree pages from scatterlist
-Date: Mon, 6 Feb 2006 16:45:58 +0000 (GMT)
-Message-ID: <Pine.LNX.4.61.0602061621450.3560@goblin.wat.veritas.com>
+Date: Mon, 6 Feb 2006 17:01:53 +0000 (GMT)
+Message-ID: <Pine.LNX.4.61.0602061646230.3560@goblin.wat.veritas.com>
 References: <Pine.LNX.4.61.0602040004020.5406@goblin.wat.veritas.com>
- <43E66FB6.6070303@us.ibm.com> <Pine.LNX.4.61.0602060909180.6827@goblin.wat.veritas.com>
- <20060206.014608.22328385.davem@davemloft.net> <43E7613B.5060706@us.ibm.com>
+ <43E66FB6.6070303@us.ibm.com>  <Pine.LNX.4.61.0602060909180.6827@goblin.wat.veritas.com>
+  <20060206.014608.22328385.davem@davemloft.net> <1139238179.3022.2.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gold.veritas.com ([143.127.12.110]:27810 "EHLO gold.veritas.com")
-	by vger.kernel.org with ESMTP id S932209AbWBFQpP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 11:45:15 -0500
-Received: from [172.21.56.196]([172.21.56.196]) (5828 bytes) by megami.veritas.com
+Received: from gold.veritas.com ([143.127.12.110]:60563 "EHLO gold.veritas.com")
+	by vger.kernel.org with ESMTP id S932230AbWBFRBK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 12:01:10 -0500
+Received: from [172.21.56.196]([172.21.56.196]) (3321 bytes) by megami.veritas.com
 	via sendmail with P:esmtp/R:smart_host/T:smtp
 	(sender: <hugh@veritas.com>)
-	id <m1F69UH-0001VJC@megami.veritas.com>
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Feb 2006 08:45:13 -0800 (PST)
+	id <m1F69jg-0001U6C@megami.veritas.com>
+	for <linux-scsi@vger.kernel.org>; Mon, 6 Feb 2006 09:01:08 -0800 (PST)
 	(Smail-3.2.0.101 1997-Dec-17 #15 built 2001-Aug-30)
-In-Reply-To: <43E7613B.5060706@us.ibm.com>
+In-Reply-To: <1139238179.3022.2.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: "David S. Miller" <davem@davemloft.net>, James.Bottomley@SteelEye.com, Andi Kleen <ak@suse.de>, akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "David S. Miller" <davem@davemloft.net>, brking@us.ibm.com, akpm@osdl.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, 6 Feb 2006, Brian King wrote:
-> David S. Miller wrote:
-> > From: Hugh Dickins <hugh@veritas.com>
-> > Date: Mon, 6 Feb 2006 09:32:54 +0000 (GMT)
-> > 
-> >> From looking at the source, the architectures I found to be doing
-> >> scatterlist coalescing in some cases were alpha, ia64, parisc (some
-> >> code under drivers), powerpc, sparc64 and x86_64.
-> >>
-> >> I agree with you that it would be possible for them to do the coalescing
-> >> by just adjusting dma_address and dma_length (though it's architecture-
-> >> dependent whether there are such fields at all), not interfering with
-> >> the input page and length; and maybe some of them do proceed that way.
-> >> I didn't find the coalescing code in any of them very easy to follow.
-> >>
-> >> So please examine arch/x86_64/kernel/pci_gart.c gart_map_sg (and
-> >> dma_map_cont which it calls): x86_64 was the architecture on which
-> >> the problem was really found with drivers/scsi/st.c, and avoided
-> >> by that boot option iommu=nomerge.
-> >>
-> >> Lines like "*sout = *s;" and "*sout = sg[start];" are structure-
-> >> copying whole scallerlist entries from one position in the list
-> >> to another, without explicit mention of the page and length fields.
-> > 
+On Mon, 6 Feb 2006, James Bottomley wrote:
+> On Mon, 2006-02-06 at 01:46 -0800, David S. Miller wrote:
 > > That's a bug, frankly.  Sparc64 doesn't need to do anything like
 > > that.  Spamming the page pointers is really really bogus and I'm
 > > surprised this doesn't make more stuff explode.
@@ -57,61 +35,39 @@ On Mon, 6 Feb 2006, Brian King wrote:
 > > 
 > > I'd really prefer that those assignments get fixed and an explicit
 > > note added to Documentation/DMA-mapping.txt about this.
+> > 
+> > It's rediculious that these generic subsystem drivers need to
+> > know about this. :)
 > 
-> How about this for a documentation fix?
+> I complained about this x86_64 behaviour ages ago.
 
-Now that David and (to my surprise) James have come out clearly in
-favour of your interpretation, yes, this would certainly be an
-improvement.
+While I agree with you, David and Brian that this would be much nicer
+for driver writers to know that the page,offset,length in the sg list
+would not be touched by map_sg, I am surprised that you didn't say so
+in DMA-API.txt, and said only that map_sg would destroy information
+there.  x86_64 seems to conform to that destruction!
 
-But I'd also want James or someone to clarify the paragraph
-"Please note that the sg cannot be mapped again if it has been mapped once.
- The mapping process is allowed to destroy information in the sg."
-which I took as explicitly allowing what x86_64 does in gart_map_sg.
-I thought James had a scenario in mind which demands this wholesale
-destruction, but it seems not; and I now read that first sentence as
-saying the sg must be unmapped before it can be mapped a second time,
-not that it can only be mapped once.
+> Andi claimed it was
+> the only way they could get there merging algorithm to work.  It
+> actually triggered a bug in SCSI because in-flight I/O that was rejected
+> gets unmapped and then remapped (which was, originally, not working).
+> They finally fixed it by making the unmap put back the original
+> scatterlist.
 
-And add a paragraph explaining that really the one array of scatterlist
-entries should be regarded as two arrays of possibly different lengths,
-the page,offset,length array and the dma_address,dma_length array:
-because entries of the latter may be coalesced, so that in the end
-the dma_address in a scatterlength entry may bear no relation to the
-page pointer in that same entry, but to the page pointer in a later entry.
-Though it gets hard to explain given that not all architectures coalesce,
-so may not even have a separate dma_length field; or use different naming.
-If you can express this better than I, please do!
+I don't quite get that, but whatever, it would be a good idea to cc Andi.
 
-But all this presupposes that someone is suddenly going to change the
-x86_64 gart_map_sg (and subfunctions), or else force its iommu=nomerge:
-that won't be me.
+> Perhaps this should go to linux-arch just in case anyone
+> else copied x86_64?
+
+Okay, cc'd to linux-arch also.  The one thing I have checked is that the
+coalescing architectures (if I actually got them right) do all declare
+a dma_length (perhaps differently named) distinct from input length,
+so wouldn't need that added.  Although I can see that x86_64 does
+modify the page,offset,length fields we'd prefer it not to, I didn't
+find any of the architecture's coalescing routines easy to follow,
+and would hesitate to declare any of them safe in this regard.
+
+I'd better also forward my original mail on the fix to Ryan's bug
+to Andi and linux-arch also.
 
 Hugh
-
-> The current pci_map_sg API is a bit unclear what it is allowed
-> to modify in the passed scatterlist when coalescing entries.
-> Clarify the pci_map_sg API to prevent it from modifying
-> the page, offset, and length fields in the scatterlist.
-> 
-> Signed-off-by: Brian King <brking@us.ibm.com>
-> ---
-> 
->  linux-2.6-bjking1/Documentation/DMA-mapping.txt |    5 ++++-
->  1 files changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff -puN Documentation/DMA-mapping.txt~dma_mapping_clarification Documentation/DMA-mapping.txt
-> --- linux-2.6/Documentation/DMA-mapping.txt~dma_mapping_clarification	2006-02-06 08:23:10.000000000 -0600
-> +++ linux-2.6-bjking1/Documentation/DMA-mapping.txt	2006-02-06 08:38:43.000000000 -0600
-> @@ -513,7 +513,10 @@ consecutive sglist entries can be merged
->  ends and the second one starts on a page boundary - in fact this is a huge
->  advantage for cards which either cannot do scatter-gather or have very
->  limited number of scatter-gather entries) and returns the actual number
-> -of sg entries it mapped them to. On failure 0 is returned.
-> +of sg entries it mapped them to. The implementation is free to do this
-> +by modifying the scatterlist fields specified for DMA. The scatterlist
-> +fields used as an input to this function (i.e. page, offset, and length)
-> +will NOT be modified. On failure 0 is returned.
->  
->  Then you should loop count times (note: this can be less than nents times)
->  and use sg_dma_address() and sg_dma_len() macros where you previously
