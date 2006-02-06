@@ -1,56 +1,53 @@
-From: =?iso-8859-1?b?RW1tYW51ZWwgRnVzdMOp?= <emmanuel.fuste@laposte.net>
-Subject: Re: [PATCH, RFC] aic7xxx: semaphore to completion conversion
-Date: Mon,  6 Feb 2006 19:54:18 +0100
-Message-ID: <IUA4II$3F4AAED9C5EA841518A976F4A94EBADF@laposte.net>
+From: "Joe Wilhelmi" <joe@rtlogic.com>
+Subject: Hang problem on Dell 1850 and 2850 using  Perc megaraid controller
+Date: Mon, 6 Feb 2006 11:57:19 -0700
+Message-ID: <00bc01c62b4f$2acebb40$2301a8c0@whitney>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx.laposte.net ([81.255.54.11]:20106 "EHLO mx.laposte.net")
-	by vger.kernel.org with ESMTP id S932183AbWBFSze convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Feb 2006 13:55:34 -0500
+Received: from eagle.rtlogic.com ([216.87.68.236]:62856 "EHLO rtlogic.com")
+	by vger.kernel.org with ESMTP id S932185AbWBFS53 (ORCPT
+	<rfc822;Linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 13:57:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hch <hch@lst.de>
-Cc: jejb <jejb@steeleye.com>, hare <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, "emmanuel.fuste" <emmanuel.fuste@laposte.net>
+To: Linux-scsi@vger.kernel.org
 
-> On Tue, Jan 31, 2006 at 06:20:18PM +0100, Christoph Hellwig
-wrote:
-> > switch eh_sem to a completion.  due to
-wait_for_completion_timeout this
-> > also nicely simplifies the code.  Unfortunately it's
-untested, so if
-> > someone with the hardware could give it a try that would
-be nice.  Once
-> > it works the same thing can be applied to aic79xx.
->=20
-> New version that switches to the common onstack completion
-and just a
-> pointer in the platform_data struct idiom.  This gets rid of
-all the
-> flags fiddling.
->=20
->=20
-Tested and work.
-But now (with this patch or the previous one) if I apply the
-'Overlapped command error handling' fix, the kernel never
-recover and a few second later completely freeze (keyboard
-led, network activity ...).
-It's like that with a queue depth of 2, one slot is stuck and
-the driver continue to work with the second one (with big
-delays like timeouts).
-Will retry in console mode to try to catch somme messages.
+Friends of MegaRAID,
 
-Emmanuel.
+I have been noticing a hang problem on my 1850 and 2850 systems when
+using the Perc4 controllers in a RAID 1 configuration using
+LSI_COMMON_MOD_VERSION 2.20.2.6 on the linux 2.6.14 kernel.  I can
+repeatedly reproduce the problem by copying about 580MB of data to the
+disk from an NFS share. 
 
-Acc=E9dez au courrier =E9lectronique de La Poste : www.laposte.net ;=20
-3615 LAPOSTENET (0,34 =80/mn) ; t=E9l : 08 92 68 13 50 (0,34=80/mn)
+If I install my system in bios SCSI mode, which uses the LSI scsi
+controller and fusion driver instead of MegaRAID, this issue goes away:
+I can copy the 580MB of data without the hang.
+
+Also, I attempted to produce the problem using a MegaRAID SCSI-320-2x
+card with the same RAID 1 configuration with the same OS and version of
+the driver.  The hang did not occur.
+
+It seems that the issue is in some part of the MegaRAID driver that
+deals specifically with the Perc cards in the 2850 and the 1850 and not
+with the LSI MegaRAID cards.
+
+I need to mention that the kernel has been built with MSI and ACPI
+disabled because of issues with our e1000 ethernet adapter.  Because
+ACPI was disabled, we also disabled hw_random.  Snare is also built in.
 
 
+The following are the relevant firmware versions:
+Dell 1850 Perc Controller: H418
+Dell 2850 Perc Controller: H430
+Lsi Ultra-320-2X:          H409
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I appreciate any help or thoughts,
+
+Regards,
+Joe Wilhelmi
+RTLogic
+
+
