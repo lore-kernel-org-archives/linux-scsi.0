@@ -1,48 +1,56 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH RFC 1/3] SCSI Userspace Target: scsi-ml changes
-Date: Mon, 06 Feb 2006 12:45:28 -0600
-Message-ID: <43E79948.2090004@cs.wisc.edu>
-References: <1138157885.11692.32.camel@max>	 <1139164228.3017.14.camel@mulgrave.il.steeleye.com>	 <20060206113356T.fujita.tomonori@lab.ntt.co.jp>	 <43E78D68.7010301@cs.wisc.edu>	 <1139248965.3022.11.camel@mulgrave.il.steeleye.com>	 <43E793F2.6070703@cs.wisc.edu> <1139250832.3022.26.camel@mulgrave.il.steeleye.com>
+From: =?iso-8859-1?b?RW1tYW51ZWwgRnVzdMOp?= <emmanuel.fuste@laposte.net>
+Subject: Re: [PATCH, RFC] aic7xxx: semaphore to completion conversion
+Date: Mon,  6 Feb 2006 19:54:18 +0100
+Message-ID: <IUA4II$3F4AAED9C5EA841518A976F4A94EBADF@laposte.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:17356 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S932151AbWBFSph (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 13:45:37 -0500
-In-Reply-To: <1139250832.3022.26.camel@mulgrave.il.steeleye.com>
+Received: from mx.laposte.net ([81.255.54.11]:20106 "EHLO mx.laposte.net")
+	by vger.kernel.org with ESMTP id S932183AbWBFSze convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Feb 2006 13:55:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org
+To: hch <hch@lst.de>
+Cc: jejb <jejb@steeleye.com>, hare <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, "emmanuel.fuste" <emmanuel.fuste@laposte.net>
 
-James Bottomley wrote:
-> On Mon, 2006-02-06 at 12:22 -0600, Mike Christie wrote:
-> 
->>I understand. To make this worse, for the target code since we are 
->>mapping data like SG_IO block layer code (we used their functions) we 
->>need process context for the unmap. To handle this we added a work 
->>struct on the scsi_cmnd and the work struct is pretty large and only 
->>used for targets. We can move all the target specific to a:
->>
->>scsi_tgt_cmnd {
->>	work;
->>	host;
->>};
->>
->>And store out scsi_tgt_cmnd in the scsi_cmnd->host_scribble or somewhere 
->>on the SCp. Is that too hacky?
-> 
-> 
-> Could you take a look at the execute_in_user_context() function I'm
-> hatching to add to the workqueue here:
-> 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=113916262109180&w=2
-> 
-> And see if that would suit your purpose without any additions to
-> scsi_command (probably the data carried would have to be the actual
-> command).
-> 
+> On Tue, Jan 31, 2006 at 06:20:18PM +0100, Christoph Hellwig
+wrote:
+> > switch eh_sem to a completion.  due to
+wait_for_completion_timeout this
+> > also nicely simplifies the code.  Unfortunately it's
+untested, so if
+> > someone with the hardware could give it a try that would
+be nice.  Once
+> > it works the same thing can be applied to aic79xx.
+>=20
+> New version that switches to the common onstack completion
+and just a
+> pointer in the platform_data struct idiom.  This gets rid of
+all the
+> flags fiddling.
+>=20
+>=20
+Tested and work.
+But now (with this patch or the previous one) if I apply the
+'Overlapped command error handling' fix, the kernel never
+recover and a few second later completely freeze (keyboard
+led, network activity ...).
+It's like that with a queue depth of 2, one slot is stuck and
+the driver continue to work with the second one (with big
+delays like timeouts).
+Will retry in console mode to try to catch somme messages.
 
-Yeah it looks that will work for the work struct and scsi_host pointer 
-we were adding. Thanks. Will convert our code.
+Emmanuel.
+
+Acc=E9dez au courrier =E9lectronique de La Poste : www.laposte.net ;=20
+3615 LAPOSTENET (0,34 =80/mn) ; t=E9l : 08 92 68 13 50 (0,34=80/mn)
+
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
