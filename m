@@ -1,129 +1,143 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] megaraid_sas: switch fw_outstanding to an atomic_t
-Date: Mon, 6 Feb 2006 15:21:53 +0100
-Message-ID: <20060206142153.GA2773@lst.de>
+Subject: Re: [PATCH, RFC] aic7xxx: semaphore to completion conversion
+Date: Mon, 6 Feb 2006 15:40:45 +0100
+Message-ID: <20060206144045.GA2992@lst.de>
+References: <20060131172018.GD28889@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:17117 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S932124AbWBFOV5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 09:21:57 -0500
+Received: from verein.lst.de ([213.95.11.210]:24542 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S932127AbWBFOkw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 09:40:52 -0500
 Content-Disposition: inline
+In-Reply-To: <20060131172018.GD28889@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sreenivas.Bagalkote@lsil.com, Sumant.Patro@lsil.com
+To: jejb@steeleye.com, hare@suse.de, emmanuel.fuste@laposte.net
 Cc: linux-scsi@vger.kernel.org
 
-gets rid of the otherwise superflous instance_lock and avoids an unsave
-unsynchronized access in the error handler.
+On Tue, Jan 31, 2006 at 06:20:18PM +0100, Christoph Hellwig wrote:
+> switch eh_sem to a completion.  due to wait_for_completion_timeout this
+> also nicely simplifies the code.  Unfortunately it's untested, so if
+> someone with the hardware could give it a try that would be nice.  Once
+> it works the same thing can be applied to aic79xx.
+
+New version that switches to the common onstack completion and just a
+pointer in the platform_data struct idiom.  This gets rid of all the
+flags fiddling.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/drivers/scsi/megaraid/megaraid_sas.c
+Index: linux-2.6/drivers/scsi/aic7xxx/aic7xxx_osm.c
 ===================================================================
---- linux-2.6.orig/drivers/scsi/megaraid/megaraid_sas.c	2006-02-06 15:11:43.000000000 +0100
-+++ linux-2.6/drivers/scsi/megaraid/megaraid_sas.c	2006-02-06 15:20:19.000000000 +0100
-@@ -655,7 +655,6 @@
- megasas_queue_command(struct scsi_cmnd *scmd, void (*done) (struct scsi_cmnd *))
- {
- 	u32 frame_count;
--	unsigned long flags;
- 	struct megasas_cmd *cmd;
- 	struct megasas_instance *instance;
- 
-@@ -690,9 +689,7 @@
- 	/*
- 	 * Issue the command to the FW
- 	 */
--	spin_lock_irqsave(&instance->instance_lock, flags);
--	instance->fw_outstanding++;
--	spin_unlock_irqrestore(&instance->instance_lock, flags);
-+	atomic_inc(&instance->fw_outstanding);
- 
- 	instance->instancet->fire_cmd(cmd->frame_phys_addr ,cmd->frame_count-1,instance->reg_set);
- 
-@@ -735,20 +732,20 @@
- 	u32 wait_time = MEGASAS_RESET_WAIT_TIME;
- 
- 	for (i = 0; i < wait_time; i++) {
-+		int outstanding = atomic_read(&instance->fw_outstanding);
- 
--		if (!instance->fw_outstanding)
-+		if (!outstanding)
- 			break;
- 
- 		if (!(i % MEGASAS_RESET_NOTICE_INTERVAL)) {
- 			printk(KERN_NOTICE "megasas: [%2d]waiting for %d "
--			       "commands to complete\n", i,
--			       instance->fw_outstanding);
-+			       "commands to complete\n", i, outstanding);
- 		}
- 
- 		msleep(1000);
+--- linux-2.6.orig/drivers/scsi/aic7xxx/aic7xxx_osm.c	2006-01-15 21:45:28.000000000 +0100
++++ linux-2.6/drivers/scsi/aic7xxx/aic7xxx_osm.c	2006-02-06 15:27:21.000000000 +0100
+@@ -373,7 +373,6 @@
+ 					 struct scb *);
+ static void ahc_linux_queue_cmd_complete(struct ahc_softc *ahc,
+ 					 struct scsi_cmnd *cmd);
+-static void ahc_linux_sem_timeout(u_long arg);
+ static void ahc_linux_freeze_simq(struct ahc_softc *ahc);
+ static void ahc_linux_release_simq(struct ahc_softc *ahc);
+ static int  ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag);
+@@ -1193,7 +1192,6 @@
+ 	memset(ahc->platform_data, 0, sizeof(struct ahc_platform_data));
+ 	ahc->platform_data->irq = AHC_LINUX_NOIRQ;
+ 	ahc_lockinit(ahc);
+-	init_MUTEX_LOCKED(&ahc->platform_data->eh_sem);
+ 	ahc->seltime = (aic7xxx_seltime & 0x3) << 4;
+ 	ahc->seltime_b = (aic7xxx_seltime & 0x3) << 4;
+ 	if (aic7xxx_pci_parity == 0)
+@@ -1830,10 +1828,9 @@
+ 		if (ahc_get_transaction_status(scb) == CAM_BDR_SENT
+ 		 || ahc_get_transaction_status(scb) == CAM_REQ_ABORTED)
+ 			ahc_set_transaction_status(scb, CAM_CMD_TIMEOUT);
+-		if ((ahc->platform_data->flags & AHC_UP_EH_SEMAPHORE) != 0) {
+-			ahc->platform_data->flags &= ~AHC_UP_EH_SEMAPHORE;
+-			up(&ahc->platform_data->eh_sem);
+-		}
++
++		if (ahc->platform_data->eh_done)
++			complete(ahc->platform_data->eh_done);
  	}
  
--	if (instance->fw_outstanding) {
-+	if (atomic_read(&instance->fw_outstanding)) {
- 		instance->hw_crit_error = 1;
- 		return FAILED;
- 	}
-@@ -960,7 +957,6 @@
- {
- 	int exception = 0;
- 	struct megasas_header *hdr = &cmd->frame->hdr;
--	unsigned long flags;
+ 	ahc_free_scb(ahc, scb);
+@@ -2040,22 +2037,6 @@
+ }
  
- 	switch (hdr->cmd) {
- 
-@@ -987,10 +983,7 @@
- 		}
- 
- 		if (exception) {
+ static void
+-ahc_linux_sem_timeout(u_long arg)
+-{
+-	struct	ahc_softc *ahc;
+-	u_long	s;
 -
--			spin_lock_irqsave(&instance->instance_lock, flags);
--			instance->fw_outstanding--;
--			spin_unlock_irqrestore(&instance->instance_lock, flags);
-+			atomic_dec(&instance->fw_outstanding);
+-	ahc = (struct ahc_softc *)arg;
+-
+-	ahc_lock(ahc, &s);
+-	if ((ahc->platform_data->flags & AHC_UP_EH_SEMAPHORE) != 0) {
+-		ahc->platform_data->flags &= ~AHC_UP_EH_SEMAPHORE;
+-		up(&ahc->platform_data->eh_sem);
+-	}
+-	ahc_unlock(ahc, &s);
+-}
+-
+-static void
+ ahc_linux_freeze_simq(struct ahc_softc *ahc)
+ {
+ 	unsigned long s;
+@@ -2355,25 +2336,21 @@
+ 	if (paused)
+ 		ahc_unpause(ahc);
+ 	if (wait) {
+-		struct timer_list timer;
+-		int ret;
++		DECLARE_COMPLETION(done);
  
- 			megasas_unmap_sgbuf(instance, cmd);
- 			cmd->scmd->scsi_done(cmd->scmd);
-@@ -1038,9 +1031,7 @@
- 			break;
+-		ahc->platform_data->flags |= AHC_UP_EH_SEMAPHORE;
++		ahc->platform_data->eh_done = &done;
+ 		ahc_unlock(ahc, &flags);
+ 
+-		init_timer(&timer);
+-		timer.data = (u_long)ahc;
+-		timer.expires = jiffies + (5 * HZ);
+-		timer.function = ahc_linux_sem_timeout;
+-		add_timer(&timer);
+ 		printf("Recovery code sleeping\n");
+-		down(&ahc->platform_data->eh_sem);
+-		printf("Recovery code awake\n");
+-        	ret = del_timer_sync(&timer);
+-		if (ret == 0) {
++		if (!wait_for_completion_timeout(&done, 5 * HZ)) {
++			ahc_lock(ahc, &flags);
++			ahc->platform_data->eh_done = NULL;
++			ahc_unlock(ahc, &flags);
++
+ 			printf("Timer Expired\n");
+ 			retval = FAILED;
  		}
- 
--		spin_lock_irqsave(&instance->instance_lock, flags);
--		instance->fw_outstanding--;
--		spin_unlock_irqrestore(&instance->instance_lock, flags);
-+		atomic_dec(&instance->fw_outstanding);
- 
- 		megasas_unmap_sgbuf(instance, cmd);
- 		cmd->scmd->scsi_done(cmd->scmd);
-@@ -2066,11 +2057,11 @@
- 	 */
- 	INIT_LIST_HEAD(&instance->cmd_pool);
- 
-+	atomic_set(&instance->fw_outstanding, 0);
- 	init_waitqueue_head(&instance->int_cmd_wait_q);
- 	init_waitqueue_head(&instance->abort_cmd_wait_q);
- 
- 	spin_lock_init(&instance->cmd_pool_lock);
--	spin_lock_init(&instance->instance_lock);
- 
- 	sema_init(&instance->aen_mutex, 1);
- 	sema_init(&instance->ioctl_sem, MEGASAS_INT_CMDS);
-Index: linux-2.6/drivers/scsi/megaraid/megaraid_sas.h
++		printf("Recovery code awake\n");
+ 	} else
+ 		ahc_unlock(ahc, &flags);
+ 	return (retval);
+Index: linux-2.6/drivers/scsi/aic7xxx/aic7xxx_osm.h
 ===================================================================
---- linux-2.6.orig/drivers/scsi/megaraid/megaraid_sas.h	2006-02-04 13:35:00.000000000 +0100
-+++ linux-2.6/drivers/scsi/megaraid/megaraid_sas.h	2006-02-06 15:19:52.000000000 +0100
-@@ -1062,9 +1062,8 @@
- 	struct pci_dev *pdev;
- 	u32 unique_id;
+--- linux-2.6.orig/drivers/scsi/aic7xxx/aic7xxx_osm.h	2006-01-15 21:45:28.000000000 +0100
++++ linux-2.6/drivers/scsi/aic7xxx/aic7xxx_osm.h	2006-02-06 15:32:22.000000000 +0100
+@@ -369,15 +369,12 @@
  
--	u32 fw_outstanding;
-+	atomic_t fw_outstanding;
- 	u32 hw_crit_error;
--	spinlock_t instance_lock;
- 
- 	struct megasas_instance_template *instancet;
+ 	spinlock_t		 spin_lock;
+ 	u_int			 qfrozen;
+-	struct semaphore	 eh_sem;
++	struct completion	*eh_done;
+ 	struct Scsi_Host        *host;		/* pointer to scsi host */
+ #define AHC_LINUX_NOIRQ	((uint32_t)~0)
+ 	uint32_t		 irq;		/* IRQ for this adapter */
+ 	uint32_t		 bios_address;
+ 	uint32_t		 mem_busaddr;	/* Mem Base Addr */
+-
+-#define	AHC_UP_EH_SEMAPHORE	 0x1
+-	uint32_t		 flags;
  };
+ 
+ /************************** OS Utility Wrappers *******************************/
