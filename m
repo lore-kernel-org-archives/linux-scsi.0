@@ -1,49 +1,118 @@
-From: john stultz <johnstul@us.ibm.com>
-Subject: Re: Fw: [Bugme-new] [Bug 5998] New: oops on mount "kernel access
-	of bad area, sig: 11 [#1]"
-Date: Mon, 06 Feb 2006 11:54:13 -0800
-Message-ID: <1139255653.10057.166.camel@cog.beaverton.ibm.com>
-References: <20060202150719.0dafc8ae.akpm@osdl.org>
-	 <43E306AC.60004@s5r6.in-berlin.de>
-	 <1138993250.10057.125.camel@cog.beaverton.ibm.com>
-	 <43E4912F.6090908@s5r6.in-berlin.de>
-	 <20060205212809.GJ22002@conscoop.ottawa.on.ca>
-	 <43E68511.2030908@s5r6.in-berlin.de>
+From: "Joe Wilhelmi" <joe@rtlogic.com>
+Subject: RE: Hang problem on Dell 1850 and 2850 using  Perc megaraid controller
+Date: Mon, 6 Feb 2006 13:27:45 -0700
+Message-ID: <00c601c62b5b$ce1133d0$2301a8c0@whitney>
+References: <9738BCBE884FDB42801FAD8A7769C265142053@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:56033 "EHLO
-	e32.co.us.ibm.com") by vger.kernel.org with ESMTP id S932337AbWBFTyR
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Feb 2006 14:54:17 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e32.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k16JsGAa001248
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Feb 2006 14:54:16 -0500
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay04.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k16Jufuj074004
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Feb 2006 12:56:41 -0700
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k16JsEsD028244
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Feb 2006 12:54:15 -0700
-In-Reply-To: <43E68511.2030908@s5r6.in-berlin.de>
+Received: from eagle.rtlogic.com ([216.87.68.236]:29323 "EHLO rtlogic.com")
+	by vger.kernel.org with ESMTP id S964780AbWBFU2F (ORCPT
+	<rfc822;Linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 15:28:05 -0500
+In-Reply-To: <9738BCBE884FDB42801FAD8A7769C265142053@NAMAIL1.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Jody McIntyre <scjody@modernduck.com>, Andrew Morton <akpm@osdl.org>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: "'Ju, Seokmann'" <Seokmann.Ju@lsil.com>, Linux-scsi@vger.kernel.org
 
-On Mon, 2006-02-06 at 00:06 +0100, Stefan Richter wrote:
-> Jody McIntyre wrote:
-> > On Sat, Feb 04, 2006 at 12:34:07PM +0100, Stefan Richter wrote:
-> >>Linux 2.6.15 contains it, but I don't know into which -rc it went.
-> > 
-> > -rc3.  John, don't bother checking.  It's in there :)
+Hello,
+
+The controllers in the 2850 and the 1850 are perc4/ei.  However I do not
+know if they have the same PCI bridge chip as the Ultra-320-2X.  The
+SCSI chip is an LSI 1030 which I believe is a pciX connection.  There is
+also a Dobson on the motherboard that I believe connects over the PCIeX
+interface.  I think the Dobson is related to the romb dimm.
+
+Thanks for the help,
+Joe
+
+-----Original Message-----
+From: Ju, Seokmann [mailto:Seokmann.Ju@lsil.com] 
+Sent: Monday, February 06, 2006 12:19 PM
+To: Joe Wilhelmi; Linux-scsi@vger.kernel.org
+Subject: RE: Hang problem on Dell 1850 and 2850 using Perc megaraid
+controller
+
+
+Hi,
+
+> Also, I attempted to produce the problem using a MegaRAID SCSI-320-2x 
+> card with the same RAID 1 configuration with the same OS and version 
+> of the driver.  The hang did not occur.
+Can you elaborate which PERC4 controller are on both 1850 and 2850? Do
+both PERC4 controllers have PCI-X interface as MegaRAID SCSI-320-2X?
+ 
+> It seems that the issue is in some part of the MegaRAID driver that 
+> deals specifically with the Perc cards in the 2850 and the 1850 and 
+> not with the LSI MegaRAID cards.
 > 
-> Yes, indeed. _If_ we are all talking about Linus' tree here. Are we? :-)
+> I need to mention that the kernel has been built with MSI and ACPI 
+> disabled because of issues with our e1000 ethernet adapter.  Because 
+> ACPI was disabled, we also disabled hw_random.  Snare is also built 
+> in.
+>
+> The following are the relevant firmware versions:
+> Dell 1850 Perc Controller: H418
+> Dell 2850 Perc Controller: H430
+> Lsi Ultra-320-2X:          H409
+Thank you for detail descriptin on the issue.
+It will be duplicated and will update you as soon as possible.
 
-Yes, it was Linus' tree. Although I was pulling w/ git, so it was from
-somewhere between 2.6.15-rc5 and 2.6.15.
+Thank you,
 
-thanks
--john
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Joe Wilhelmi
+> Sent: Monday, February 06, 2006 1:57 PM
+> To: Linux-scsi@vger.kernel.org
+> Subject: Hang problem on Dell 1850 and 2850 using Perc 
+> megaraid controller
+> 
+> Friends of MegaRAID,
+> 
+> I have been noticing a hang problem on my 1850 and 2850 systems when 
+> using the Perc4 controllers in a RAID 1 configuration using 
+> LSI_COMMON_MOD_VERSION 2.20.2.6 on the linux 2.6.14 kernel.  I can 
+> repeatedly reproduce the problem by copying about 580MB of data to the
+
+> disk from an NFS share.
+> 
+> If I install my system in bios SCSI mode, which uses the LSI scsi 
+> controller and fusion driver instead of MegaRAID, this issue goes 
+> away: I can copy the 580MB of data without the hang.
+> 
+> Also, I attempted to produce the problem using a MegaRAID SCSI-320-2x 
+> card with the same RAID 1 configuration with the same OS and version 
+> of the driver.  The hang did not occur.
+> 
+> It seems that the issue is in some part of the MegaRAID driver that 
+> deals specifically with the Perc cards in the 2850 and the 1850 and 
+> not with the LSI MegaRAID cards.
+> 
+> I need to mention that the kernel has been built with MSI and ACPI 
+> disabled because of issues with our e1000 ethernet adapter.  Because 
+> ACPI was disabled, we also disabled hw_random.  Snare is also built 
+> in.
+> 
+> 
+> The following are the relevant firmware versions:
+> Dell 1850 Perc Controller: H418
+> Dell 2850 Perc Controller: H430
+> Lsi Ultra-320-2X:          H409
+> 
+> I appreciate any help or thoughts,
+> 
+> Regards,
+> Joe Wilhelmi
+> RTLogic
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 
