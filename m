@@ -1,95 +1,129 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] megaraid_sas: fix extended timeout handling
-Date: Mon, 6 Feb 2006 15:14:52 +0100
-Message-ID: <20060206141452.GA2681@lst.de>
+Subject: [PATCH] megaraid_sas: switch fw_outstanding to an atomic_t
+Date: Mon, 6 Feb 2006 15:21:53 +0100
+Message-ID: <20060206142153.GA2773@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:64220 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S932120AbWBFOO7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 09:14:59 -0500
+Received: from verein.lst.de ([213.95.11.210]:17117 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S932124AbWBFOV5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 09:21:57 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Sreenivas.Bagalkote@lsil.com, Sumant.Patro@lsil.com
 Cc: linux-scsi@vger.kernel.org
 
-Replace the eh_timed_out method usage with setting sdev->timeout in
-slave_configure.  Also only use the extended timeout for raid volumes,
-physical devices shouldn't need it.
-
-Applies ontop of the previous physical device attachment fix which
-introduces megasas_slave_configure.
+gets rid of the otherwise superflous instance_lock and avoids an unsave
+unsynchronized access in the error handler.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Index: linux-2.6/drivers/scsi/megaraid/megaraid_sas.c
 ===================================================================
---- linux-2.6.orig/drivers/scsi/megaraid/megaraid_sas.c	2006-02-06 14:59:13.000000000 +0100
-+++ linux-2.6/drivers/scsi/megaraid/megaraid_sas.c	2006-02-06 15:11:43.000000000 +0100
-@@ -686,8 +686,6 @@
- 		goto out_return_cmd;
+--- linux-2.6.orig/drivers/scsi/megaraid/megaraid_sas.c	2006-02-06 15:11:43.000000000 +0100
++++ linux-2.6/drivers/scsi/megaraid/megaraid_sas.c	2006-02-06 15:20:19.000000000 +0100
+@@ -655,7 +655,6 @@
+ megasas_queue_command(struct scsi_cmnd *scmd, void (*done) (struct scsi_cmnd *))
+ {
+ 	u32 frame_count;
+-	unsigned long flags;
+ 	struct megasas_cmd *cmd;
+ 	struct megasas_instance *instance;
  
- 	cmd->scmd = scmd;
--	scmd->SCp.ptr = (char *)cmd;
--	scmd->SCp.sent_command = jiffies;
- 
+@@ -690,9 +689,7 @@
  	/*
  	 * Issue the command to the FW
-@@ -714,6 +712,12 @@
  	 */
- 	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS && sdev->type == TYPE_DISK)
- 		sdev->no_uld_attach = 1;
-+
-+	/*
-+	 * The RAID firmware may require extended timeouts.
-+	 */
-+	if (sdev->channel >= MEGASAS_MAX_PD_CHANNELS)
-+		sdev->timeout = 90 * HZ;
- 	return 0;
- }
+-	spin_lock_irqsave(&instance->instance_lock, flags);
+-	instance->fw_outstanding++;
+-	spin_unlock_irqrestore(&instance->instance_lock, flags);
++	atomic_inc(&instance->fw_outstanding);
  
-@@ -785,23 +789,6 @@
- 	return ret_val;
- }
+ 	instance->instancet->fire_cmd(cmd->frame_phys_addr ,cmd->frame_count-1,instance->reg_set);
  
--static enum scsi_eh_timer_return megasas_reset_timer(struct scsi_cmnd *scmd)
--{
--	unsigned long seconds;
--
--	if (scmd->SCp.ptr) {
--		seconds = (jiffies - scmd->SCp.sent_command) / HZ;
--
--		if (seconds < 90) {
--			return EH_RESET_TIMER;
--		} else {
--			return EH_NOT_HANDLED;
--		}
--	}
--
--	return EH_HANDLED;
--}
--
- /**
-  * megasas_reset_device -	Device reset handler entry point
-  */
-@@ -872,7 +859,6 @@
- 	.eh_device_reset_handler = megasas_reset_device,
- 	.eh_bus_reset_handler = megasas_reset_bus_host,
- 	.eh_host_reset_handler = megasas_reset_bus_host,
--	.eh_timed_out = megasas_reset_timer,
- 	.use_clustering = ENABLE_CLUSTERING,
- };
+@@ -735,20 +732,20 @@
+ 	u32 wait_time = MEGASAS_RESET_WAIT_TIME;
  
-@@ -976,10 +962,6 @@
+ 	for (i = 0; i < wait_time; i++) {
++		int outstanding = atomic_read(&instance->fw_outstanding);
+ 
+-		if (!instance->fw_outstanding)
++		if (!outstanding)
+ 			break;
+ 
+ 		if (!(i % MEGASAS_RESET_NOTICE_INTERVAL)) {
+ 			printk(KERN_NOTICE "megasas: [%2d]waiting for %d "
+-			       "commands to complete\n", i,
+-			       instance->fw_outstanding);
++			       "commands to complete\n", i, outstanding);
+ 		}
+ 
+ 		msleep(1000);
+ 	}
+ 
+-	if (instance->fw_outstanding) {
++	if (atomic_read(&instance->fw_outstanding)) {
+ 		instance->hw_crit_error = 1;
+ 		return FAILED;
+ 	}
+@@ -960,7 +957,6 @@
+ {
+ 	int exception = 0;
  	struct megasas_header *hdr = &cmd->frame->hdr;
- 	unsigned long flags;
+-	unsigned long flags;
  
--	if (cmd->scmd) {
--		cmd->scmd->SCp.ptr = (char *)0;
--	}
--
  	switch (hdr->cmd) {
  
- 	case MFI_CMD_PD_SCSI_IO:
+@@ -987,10 +983,7 @@
+ 		}
+ 
+ 		if (exception) {
+-
+-			spin_lock_irqsave(&instance->instance_lock, flags);
+-			instance->fw_outstanding--;
+-			spin_unlock_irqrestore(&instance->instance_lock, flags);
++			atomic_dec(&instance->fw_outstanding);
+ 
+ 			megasas_unmap_sgbuf(instance, cmd);
+ 			cmd->scmd->scsi_done(cmd->scmd);
+@@ -1038,9 +1031,7 @@
+ 			break;
+ 		}
+ 
+-		spin_lock_irqsave(&instance->instance_lock, flags);
+-		instance->fw_outstanding--;
+-		spin_unlock_irqrestore(&instance->instance_lock, flags);
++		atomic_dec(&instance->fw_outstanding);
+ 
+ 		megasas_unmap_sgbuf(instance, cmd);
+ 		cmd->scmd->scsi_done(cmd->scmd);
+@@ -2066,11 +2057,11 @@
+ 	 */
+ 	INIT_LIST_HEAD(&instance->cmd_pool);
+ 
++	atomic_set(&instance->fw_outstanding, 0);
+ 	init_waitqueue_head(&instance->int_cmd_wait_q);
+ 	init_waitqueue_head(&instance->abort_cmd_wait_q);
+ 
+ 	spin_lock_init(&instance->cmd_pool_lock);
+-	spin_lock_init(&instance->instance_lock);
+ 
+ 	sema_init(&instance->aen_mutex, 1);
+ 	sema_init(&instance->ioctl_sem, MEGASAS_INT_CMDS);
+Index: linux-2.6/drivers/scsi/megaraid/megaraid_sas.h
+===================================================================
+--- linux-2.6.orig/drivers/scsi/megaraid/megaraid_sas.h	2006-02-04 13:35:00.000000000 +0100
++++ linux-2.6/drivers/scsi/megaraid/megaraid_sas.h	2006-02-06 15:19:52.000000000 +0100
+@@ -1062,9 +1062,8 @@
+ 	struct pci_dev *pdev;
+ 	u32 unique_id;
+ 
+-	u32 fw_outstanding;
++	atomic_t fw_outstanding;
+ 	u32 hw_crit_error;
+-	spinlock_t instance_lock;
+ 
+ 	struct megasas_instance_template *instancet;
+ };
