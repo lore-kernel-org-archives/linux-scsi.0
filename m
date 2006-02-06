@@ -1,50 +1,52 @@
-From: Ingo Flaschberger <if@xip.at>
-Subject: cpqfc gone - all compay RA4X00 Array now useless in linux?
-Date: Mon, 6 Feb 2006 18:46:29 +0100 (CET)
-Message-ID: <Pine.GSO.4.64.0602061840520.24390@filebunker.xip.at>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH RFC 1/3] SCSI Userspace Target: scsi-ml changes
+Date: Mon, 06 Feb 2006 12:22:42 -0600
+Message-ID: <43E793F2.6070703@cs.wisc.edu>
+References: <1138157885.11692.32.camel@max>	 <1139164228.3017.14.camel@mulgrave.il.steeleye.com>	 <20060206113356T.fujita.tomonori@lab.ntt.co.jp>	 <43E78D68.7010301@cs.wisc.edu> <1139248965.3022.11.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.xip.at ([193.239.188.99]:59069 "EHLO chile.gbit.at")
-	by vger.kernel.org with ESMTP id S932229AbWBFSOr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 13:14:47 -0500
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:52939 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S932271AbWBFSWv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 13:22:51 -0500
+In-Reply-To: <1139248965.3022.11.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org
 
-Hey,
+James Bottomley wrote:
+> On Mon, 2006-02-06 at 11:54 -0600, Mike Christie wrote:
+> 
+>>We actually need ths shost pointer becuase we do not represent the LU in 
+>>the kernel. So we go from:
+>>
+>>scsi_host -> host's uspace request_queue (used to pass commands and 
+>>messages from the target LLD interrup handler to our netlink 
+>>code/userspace -> in userspace we represent the target, device/LU, and host.
+>>
+>>Tomo did you add a virtual scsi_device somewhere?
+> 
+> 
+> OK, well, the problem is that struct scsi_cmnd is allocated in the
+> critical I/O path.  The more elements it has, the more time it takes to
+> set up and tear down.  Kenneth Chen of intel has already produced
+> figures showing that you can get measurable I/O improvement simply by
+> dropping fields from it, so I'm very, very reluctant to increase its
+> size.
+> 
 
-I'm very very sorry that the cpqfc driver is gone because it was the 
-_only_ one which supported the now very cheap Compaq FiberChannel Array 
-RA4X00.
+I understand. To make this worse, for the target code since we are 
+mapping data like SG_IO block layer code (we used their functions) we 
+need process context for the unmap. To handle this we added a work 
+struct on the scsi_cmnd and the work struct is pretty large and only 
+used for targets. We can move all the target specific to a:
 
-With all other FC HBA's the logical volumes (LUN's) are not visible.
----snip---
-5. Compaq RA4x00 firmware version 2.54 and later supports SSP (Selective
-Storage Presentation), which maps LUNs to a WWN.  If RA4x00 firmware prior
-2.54 (e.g. older controller) is used, or the FC HBA is replaced (another WWN
-is used), logical volumes on the RA4x00 will no longer be visible.
----snap---
+scsi_tgt_cmnd {
+	work;
+	host;
+};
 
-So... there are 3 possibilities:
-1. Repair the cpqfc driver and but it again into linux?
-2. Find out, how to get the RA4x00 arrays with othet HBA's running; I
- 	searched about 1 week in Google, no way..
-3. Aeh.. use... 2.4, use... other OS?
-
-Hope to find a way... and not only kicking a working driver because of not 
-as nice code and to much stack memory.
-
-bye,
- 	ingo flaschberger
-
-geschaeftsleitung
-crossip communications gmbH
-------------------------------
-sebastian kneipp gasse 1
-a-1020 wien
-fix: +43-1-726 15 22-217
-fax: +43-1-726 15 22-111
-mob: +43-699-105 86 719
-www.xip.at
-------------------------------
+And store out scsi_tgt_cmnd in the scsi_cmnd->host_scribble or somewhere 
+on the SCp. Is that too hacky?
