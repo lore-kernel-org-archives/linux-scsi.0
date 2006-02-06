@@ -1,53 +1,87 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH RFC 1/3] SCSI Userspace Target: scsi-ml changes
-Date: Mon, 06 Feb 2006 11:33:56 +0900
-Message-ID: <20060206113356T.fujita.tomonori@lab.ntt.co.jp>
-References: <1138157885.11692.32.camel@max>
-	<1139164228.3017.14.camel@mulgrave.il.steeleye.com>
+Subject: Re: [PATCH RFC 0/3] SCSI Userspace Target
+Date: Mon, 06 Feb 2006 11:54:39 +0900
+Message-ID: <20060206115439G.fujita.tomonori@lab.ntt.co.jp>
+References: <1138157882.11692.31.camel@max>
+	<20060125174649.GH14225@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:59264 "EHLO
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:56213 "EHLO
 	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
-	id S1750891AbWBFCeL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 5 Feb 2006 21:34:11 -0500
-In-Reply-To: <1139164228.3017.14.camel@mulgrave.il.steeleye.com>
+	id S1750832AbWBFCzC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 5 Feb 2006 21:55:02 -0500
+In-Reply-To: <20060125174649.GH14225@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
+To: jgarzik@pobox.com
 Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH RFC 1/3] SCSI Userspace Target: scsi-ml changes
-Date: Sun, 05 Feb 2006 12:30:28 -0600
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH RFC 0/3] SCSI Userspace Target
+Date: Wed, 25 Jan 2006 12:46:49 -0500
 
-> OK ... I think this looks good enough to fix up in tree.  I just have
-> one minor quibble, so could you fix that and I'll put it in.
-> 
-> On Tue, 2006-01-24 at 20:58 -0600, Mike Christie wrote:
-> > @@ -31,6 +32,7 @@ struct scsi_pointer {
-> >  struct scsi_cmnd {
-> >         int     sc_magic;
-> >  
-> > +       struct Scsi_Host *shost;
-> >         struct scsi_device *device;
-> 
-> This is an unnecessary addition; you can get this from device->host.
+> > As the email subject hints, the goal of the project is to push most of
+> > the target code to userspace. The only parts we kept in the kernel were
+> > for transferring data between the LLD and userpsace and the netlink
+> > interface. We included the relevant parts of a software iscsi target as
+> > an example.
 
-Thanks a lot. I've just fixed this.
+(snip)
 
-As Mike said, we replaced our mapping code with the standard helper
-functions (such as bio_map_user) and some netlink code with the packet
-socket interface. We've been preparing for the second submission. We
-will do that in a couple of days.
+> One random comment:  Take a look at the mmap'd ring buffer interface
+> provided by mmap'ing the packet socket.  That's the ideal async
+> interface, since that's fully async, very close to hardware reality.
+
+Thanks a lot. Yes, that's really nice. We've replaced some of our
+netlink code with the packet socket interface.
+
+We just access the ring buffer directly with the following changes to
+the packet socket code. Is it OK?
+
+One more question. Is there any interface like mmap'ing the packet
+socket that can be used for user -> kernel communication?
 
 
-> Do you have a pointer for the userspace side of this yet?
-
-Yes, we have though it's really messy.
-
-http://svn.berlios.de/svnroot/repos/stgt/branches/use-scsi-ml/usr
-
-The current code doesn't catch up with the changes that I've
-discribed. We'll update it until the seccond submission.
+diff --git a/include/net/af_packet.h b/include/net/af_packet.h
+new file mode 100644
+index 0000000..e280e7c
+--- /dev/null
++++ b/include/net/af_packet.h
+@@ -0,0 +1,6 @@
++#ifndef __LINUX_NET_AFPACKET_H
++#define __LINUX_NET_AFPACKET_H
++
++extern void *packet_frame(struct sock *sk);
++
++#endif
+diff --git a/net/packet/af_packet.c b/net/packet/af_packet.c
+index 9db7dbd..aee86cd 100644
+--- a/net/packet/af_packet.c
++++ b/net/packet/af_packet.c
+@@ -562,6 +562,24 @@ drop:
+ }
+ 
+ #ifdef CONFIG_PACKET_MMAP
++void *packet_frame(struct sock *sk)
++{
++	struct packet_sock *po;
++	struct tpacket_hdr *h;
++	int err;
++
++	po = pkt_sk(sk);
++	spin_lock(&sk->sk_receive_queue.lock);
++	h = (struct tpacket_hdr *) packet_lookup_frame(po, po->head);
++	if (h->tp_status)
++		h = ERR_PTR(-ENOBUFS);
++	else
++		po->head = po->head != po->frame_max ? po->head+1 : 0;
++	spin_unlock(&sk->sk_receive_queue.lock);
++	return h;
++}
++EXPORT_SYMBOL_GPL(packet_frame);
++
+ static int tpacket_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt, struct net_device *orig_dev)
+ {
+ 	struct sock *sk;
