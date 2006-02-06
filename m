@@ -1,143 +1,31 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [patch 14/15] ipr: printk macro cleanup/removal
-Date: Mon, 06 Feb 2006 10:06:04 -0600
-Message-ID: <43E773EC.2090109@us.ibm.com>
-References: <200602061542.k16FgdZM002580@d01av01.pok.ibm.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] FC transport & lpfc : Avoid device offline cases by stalling aborts until device unblocked
+Date: Mon, 6 Feb 2006 16:33:36 +0000
+Message-ID: <20060206163336.GA23967@infradead.org>
+References: <43E77970.1030500@emulex.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060504040706000404040903"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:24517 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S932192AbWBFQGO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 11:06:14 -0500
-In-Reply-To: <200602061542.k16FgdZM002580@d01av01.pok.ibm.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:44689 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S932199AbWBFQdm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Feb 2006 11:33:42 -0500
+Content-Disposition: inline
+In-Reply-To: <43E77970.1030500@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Smart <James.Smart@Emulex.Com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------060504040706000404040903
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Mon, Feb 06, 2006 at 11:29:36AM -0500, James Smart wrote:
+>   Also, as Christoph just recently removed the eh_timed_out use in the
+>   megaraid driver - he eliminated the only other (in-kernel) user of this
+>   interface. Perhaps we should consider changing the design and realign
+>   the EH_RESET_TIMER functionality to what EH_TRANSPORT_BLOCKED does.
+>   Thoughts ?
 
-Missed a backslash...
+I'd rather kill it completely and make eh_times out a transport callout,
+instead of the host template.  Right now every FC driver would need an
+update to call your routine, and this should really be handled transparently
+by the transport class.
 
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
-
---------------060504040706000404040903
-Content-Type: text/x-patch;
- name="ipr_printk_fixes.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="ipr_printk_fixes.patch"
-
-
-Remove some unused printk macros, make some more robust, and
-convert some to use standard printk macros when possible.
-
-Signed-off-by: Brian King <brking@us.ibm.com>
----
-
- linux-2.6-bjking1/drivers/scsi/ipr.c |   13 +++++++------
- linux-2.6-bjking1/drivers/scsi/ipr.h |   25 ++++++-------------------
- 2 files changed, 13 insertions(+), 25 deletions(-)
-
-diff -puN drivers/scsi/ipr.h~ipr_printk_fixes drivers/scsi/ipr.h
---- linux-2.6/drivers/scsi/ipr.h~ipr_printk_fixes	2006-01-31 16:53:45.000000000 -0600
-+++ linux-2.6-bjking1/drivers/scsi/ipr.h	2006-01-31 17:35:20.000000000 -0600
-@@ -1193,30 +1193,17 @@ struct ipr_ucode_image_header {
-  */
- #define ipr_err(...) printk(KERN_ERR IPR_NAME ": "__VA_ARGS__)
- #define ipr_info(...) printk(KERN_INFO IPR_NAME ": "__VA_ARGS__)
--#define ipr_crit(...) printk(KERN_CRIT IPR_NAME ": "__VA_ARGS__)
--#define ipr_warn(...) printk(KERN_WARNING IPR_NAME": "__VA_ARGS__)
- #define ipr_dbg(...) IPR_DBG_CMD(printk(KERN_INFO IPR_NAME ": "__VA_ARGS__))
- 
--#define ipr_sdev_printk(level, sdev, fmt, args...) \
--	sdev_printk(level, sdev, fmt, ## args)
-+#define ipr_ra_printk(level, ioa_cfg, ra, fmt, ...) \
-+	printk(level IPR_NAME ": %d:%d:%d:%d: " fmt, (ioa_cfg)->host->host_no, \
-+		(ra).bus, (ra).target, (ra).lun, ##__VA_ARGS__)
- 
--#define ipr_sdev_err(sdev, fmt, ...) \
--	ipr_sdev_printk(KERN_ERR, sdev, fmt, ##__VA_ARGS__)
--
--#define ipr_sdev_info(sdev, fmt, ...) \
--	ipr_sdev_printk(KERN_INFO, sdev, fmt, ##__VA_ARGS__)
--
--#define ipr_sdev_dbg(sdev, fmt, ...) \
--	IPR_DBG_CMD(ipr_sdev_printk(KERN_INFO, sdev, fmt, ##__VA_ARGS__))
--
--#define ipr_res_printk(level, ioa_cfg, res, fmt, ...) \
--	printk(level IPR_NAME ": %d:%d:%d:%d: " fmt, ioa_cfg->host->host_no, \
--		res.bus, res.target, res.lun, ##__VA_ARGS__)
-+#define ipr_ra_err(ioa_cfg, ra, fmt, ...) \
-+	ipr_ra_printk(KERN_ERR, ioa_cfg, ra, fmt, ##__VA_ARGS__)
- 
- #define ipr_res_err(ioa_cfg, res, fmt, ...) \
--	ipr_res_printk(KERN_ERR, ioa_cfg, res, fmt, ##__VA_ARGS__)
--#define ipr_res_dbg(ioa_cfg, res, fmt, ...) \
--	IPR_DBG_CMD(ipr_res_printk(KERN_INFO, ioa_cfg, res, fmt, ##__VA_ARGS__))
-+	ipr_ra_err(ioa_cfg, (res)->cfgte.res_addr, fmt, ##__VA_ARGS__)
- 
- #define ipr_phys_res_err(ioa_cfg, res, fmt, ...)			\
- {									\
-diff -puN drivers/scsi/ipr.c~ipr_printk_fixes drivers/scsi/ipr.c
---- linux-2.6/drivers/scsi/ipr.c~ipr_printk_fixes	2006-01-31 16:53:45.000000000 -0600
-+++ linux-2.6-bjking1/drivers/scsi/ipr.c	2006-01-31 17:35:45.000000000 -0600
-@@ -1333,8 +1333,8 @@ static void ipr_handle_log_data(struct i
- 		return;
- 
- 	if (ipr_is_device(&hostrcb->hcam.u.error.failing_dev_res_addr)) {
--		ipr_res_err(ioa_cfg, hostrcb->hcam.u.error.failing_dev_res_addr,
--			    "%s\n", ipr_error_table[error_index].error);
-+		ipr_ra_err(ioa_cfg, hostrcb->hcam.u.error.failing_dev_res_addr,
-+			   "%s\n", ipr_error_table[error_index].error);
- 	} else {
- 		dev_err(&ioa_cfg->pdev->dev, "%s\n",
- 			ipr_error_table[error_index].error);
-@@ -3332,7 +3332,7 @@ static int __ipr_eh_dev_reset(struct scs
- 	cmd_pkt->request_type = IPR_RQTYPE_IOACMD;
- 	cmd_pkt->cdb[0] = IPR_RESET_DEVICE;
- 
--	ipr_sdev_err(scsi_cmd->device, "Resetting device\n");
-+	sdev_printk(KERN_ERR, scsi_cmd->device, "Resetting device\n");
- 	ipr_send_blocking_cmd(ipr_cmd, ipr_timeout, IPR_DEVICE_RESET_TIMEOUT);
- 
- 	ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
-@@ -3417,7 +3417,7 @@ static void ipr_abort_timeout(struct ipr
- 		return;
- 	}
- 
--	ipr_sdev_err(ipr_cmd->u.sdev, "Abort timed out. Resetting bus\n");
-+	sdev_printk(KERN_ERR, ipr_cmd->u.sdev, "Abort timed out. Resetting bus.n");
- 	reset_cmd = ipr_get_free_ipr_cmnd(ioa_cfg);
- 	ipr_cmd->sibling = reset_cmd;
- 	reset_cmd->sibling = ipr_cmd;
-@@ -3481,7 +3481,8 @@ static int ipr_cancel_op(struct scsi_cmn
- 	cmd_pkt->cdb[0] = IPR_CANCEL_ALL_REQUESTS;
- 	ipr_cmd->u.sdev = scsi_cmd->device;
- 
--	ipr_sdev_err(scsi_cmd->device, "Aborting command: %02X\n", scsi_cmd->cmnd[0]);
-+	sdev_printk(KERN_ERR, scsi_cmd->device, "Aborting command: %02X\n",
-+		    scsi_cmd->cmnd[0]);
- 	ipr_send_blocking_cmd(ipr_cmd, ipr_abort_timeout, IPR_CANCEL_ALL_TIMEOUT);
- 	ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
- 
-@@ -3792,7 +3793,7 @@ static void ipr_erp_done(struct ipr_cmnd
- 
- 	if (IPR_IOASC_SENSE_KEY(ioasc) > 0) {
- 		scsi_cmd->result |= (DID_ERROR << 16);
--		ipr_sdev_err(scsi_cmd->device,
-+		sdev_printk(KERN_ERR, scsi_cmd->device,
- 			     "Request Sense failed with IOASC: 0x%08X\n", ioasc);
- 	} else {
- 		memcpy(scsi_cmd->sense_buffer, ipr_cmd->sense_buffer,
-_
-
---------------060504040706000404040903--
