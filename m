@@ -1,75 +1,74 @@
 From: brking@us.ibm.com
-Subject: [patch 11/15] ipr: Disk remove path cleanup
-Date: Mon, 06 Feb 2006 09:42:30 -0600
-Message-ID: <200602061542.k16Fgaf6015347@d01av03.pok.ibm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Subject: [patch 12/15] ipr: Fixup device type check
+Date: Mon, 06 Feb 2006 09:42:31 -0600
+Message-ID: <200602061542.k16FgbJp003451@d03av02.boulder.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:15585 "EHLO
+	e33.co.us.ibm.com") by vger.kernel.org with ESMTP id S932176AbWBFPmj
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Feb 2006 10:42:39 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jgarzik@pobox.com
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
-List-Id: linux-scsi@vger.kernel.org
 
 
-Instead of NULLing the resource entry pointer when a disk
-goes away to prevent any new commands being sent to it,
-set the adapter resource handle to an invalid value so
-new ops getting sent to it will fail with a selection timeout
-response. This patch is needed for future SATA patches.
-
+Fixup a check used by the ipr driver to determine if a given
+device is a SCSI disk. Due to the addition of support for
+attaching SATA devices, this check needs to be more robust.
 
 Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- linux-2.6-bjking1/drivers/scsi/ipr.c |    6 +++---
- linux-2.6-bjking1/drivers/scsi/ipr.h |    1 +
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ linux-2.6-bjking1/drivers/scsi/ipr.c |    4 ++--
+ linux-2.6-bjking1/drivers/scsi/ipr.h |   16 ++++++++++++++++
+ 2 files changed, 18 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/ipr.c~ipr_disk_remove_cleanup drivers/scsi/ipr.c
---- linux-2.6/drivers/scsi/ipr.c~ipr_disk_remove_cleanup	2006-01-23 15:11:19.000000000 -0600
-+++ linux-2.6-bjking1/drivers/scsi/ipr.c	2006-01-23 15:11:19.000000000 -0600
-@@ -869,8 +869,8 @@ static void ipr_handle_config_change(str
+diff -puN drivers/scsi/ipr.h~ipr_fixup_is_dasd_check drivers/scsi/ipr.h
+--- linux-2.6/drivers/scsi/ipr.h~ipr_fixup_is_dasd_check	2006-01-23 15:11:22.000000000 -0600
++++ linux-2.6-bjking1/drivers/scsi/ipr.h	2006-01-23 15:11:22.000000000 -0600
+@@ -1306,6 +1306,22 @@ static inline int ipr_is_gscsi(struct ip
+ }
  
- 	if (hostrcb->hcam.notify_type == IPR_HOST_RCB_NOTIF_TYPE_REM_ENTRY) {
- 		if (res->sdev) {
--			res->sdev->hostdata = NULL;
- 			res->del_from_ml = 1;
-+			res->cfgte.res_handle = IPR_INVALID_RES_HANDLE;
- 			if (ioa_cfg->allow_ml_add_del)
- 				schedule_work(&ioa_cfg->work_q);
- 		} else
-@@ -2107,7 +2107,6 @@ restart:
- 				did_work = 1;
- 				sdev = res->sdev;
- 				if (!scsi_device_get(sdev)) {
--					res->sdev = NULL;
- 					list_move_tail(&res->queue, &ioa_cfg->free_res_q);
- 					spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
- 					scsi_remove_device(sdev);
-@@ -2124,6 +2123,7 @@ restart:
- 			bus = res->cfgte.res_addr.bus;
- 			target = res->cfgte.res_addr.target;
- 			lun = res->cfgte.res_addr.lun;
-+			res->add_to_ml = 0;
- 			spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
- 			scsi_add_device(ioa_cfg->host, bus, target, lun);
- 			spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
-@@ -5018,7 +5018,7 @@ static int ipr_init_res_table(struct ipr
- 	list_for_each_entry_safe(res, temp, &old_res, queue) {
- 		if (res->sdev) {
- 			res->del_from_ml = 1;
--			res->sdev->hostdata = NULL;
-+			res->cfgte.res_handle = IPR_INVALID_RES_HANDLE;
- 			list_move_tail(&res->queue, &ioa_cfg->used_res_q);
- 		} else {
- 			list_move_tail(&res->queue, &ioa_cfg->free_res_q);
-diff -puN drivers/scsi/ipr.h~ipr_disk_remove_cleanup drivers/scsi/ipr.h
---- linux-2.6/drivers/scsi/ipr.h~ipr_disk_remove_cleanup	2006-01-23 15:11:19.000000000 -0600
-+++ linux-2.6-bjking1/drivers/scsi/ipr.h	2006-01-23 15:11:19.000000000 -0600
-@@ -133,6 +133,7 @@
- #define IPR_MAX_SCSI_RATE(width) ((320 * 10) / ((width) / 8))
+ /**
++ * ipr_is_scsi_disk - Determine if a resource is a SCSI disk
++ * @res:	resource entry struct
++ *
++ * Return value:
++ * 	1 if SCSI disk / 0 if not SCSI disk
++ **/
++static inline int ipr_is_scsi_disk(struct ipr_resource_entry *res)
++{
++	if (ipr_is_af_dasd_device(res) ||
++	    (ipr_is_gscsi(res) && IPR_IS_DASD_DEVICE(res->cfgte.std_inq_data)))
++		return 1;
++	else
++		return 0;
++}
++
++/**
+  * ipr_is_naca_model - Determine if a resource is using NACA queueing model
+  * @res:	resource entry struct
+  *
+diff -puN drivers/scsi/ipr.c~ipr_fixup_is_dasd_check drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_fixup_is_dasd_check	2006-01-23 15:11:22.000000000 -0600
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2006-01-23 15:11:22.000000000 -0600
+@@ -3214,7 +3214,7 @@ static int ipr_slave_configure(struct sc
+ 			sdev->timeout = IPR_VSET_RW_TIMEOUT;
+ 			blk_queue_max_sectors(sdev->request_queue, IPR_VSET_MAX_SECTORS);
+ 		}
+-		if (IPR_IS_DASD_DEVICE(res->cfgte.std_inq_data))
++		if (ipr_is_scsi_disk(res))
+ 			sdev->allow_restart = 1;
+ 		scsi_adjust_queue_depth(sdev, 0, sdev->host->cmd_per_lun);
+ 	}
+@@ -4572,7 +4572,7 @@ static int ipr_set_supported_devs(struct
+ 	ipr_cmd->job_step = ipr_ioa_reset_done;
  
- #define IPR_IOA_RES_HANDLE				0xffffffff
-+#define IPR_INVALID_RES_HANDLE			0
- #define IPR_IOA_RES_ADDR				0x00ffffff
+ 	list_for_each_entry_continue(res, &ioa_cfg->used_res_q, queue) {
+-		if (!IPR_IS_DASD_DEVICE(res->cfgte.std_inq_data))
++		if (!ipr_is_scsi_disk(res))
+ 			continue;
  
- /*
+ 		ipr_cmd->u.res = res;
 _
