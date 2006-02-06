@@ -1,76 +1,102 @@
 From: brking@us.ibm.com
-Subject: [patch 04/15] libata: Allow for ata_port without a libata owned scsi_host
-Date: Mon, 06 Feb 2006 09:42:23 -0600
-Message-ID: <200602061542.k16FgTlj015607@d03av03.boulder.ibm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Subject: [patch 13/15] ipr: Simplify status area dumping
+Date: Mon, 06 Feb 2006 09:42:32 -0600
+Message-ID: <200602061542.k16FgcLH009673@d01av02.pok.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:7043 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932166AbWBFPmk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 10:42:40 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jgarzik@pobox.com
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
-List-Id: linux-scsi@vger.kernel.org
 
 
-Prepare for future SAS changes where libata will have ata_ports
-with no libata owned scsi_host.
+Simplify the dumping of the command status area by
+removing some device specific information that has proven
+to not be worthwhile.
 
 Signed-off-by: Brian King <brking@us.ibm.com>
 ---
 
- drivers/scsi/libata-core.c |   24 +++++++++++++++++++-----
- 1 files changed, 19 insertions(+), 5 deletions(-)
+ linux-2.6-bjking1/drivers/scsi/ipr.c |   39 +++--------------------------------
+ 1 files changed, 4 insertions(+), 35 deletions(-)
 
-diff -puN drivers/scsi/libata-core.c~libata_scsi_host_owner drivers/scsi/libata-core.c
---- libata-dev/drivers/scsi/libata-core.c~libata_scsi_host_owner	2006-02-03 12:37:11.000000000 -0600
-+++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-02-03 12:37:11.000000000 -0600
-@@ -1208,6 +1208,21 @@ unsigned int ata_pio_need_iordy(const st
- 	return 0;
- }
+diff -puN drivers/scsi/ipr.c~ipr_dump_ioasa_simplify drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_dump_ioasa_simplify	2006-01-31 16:53:22.000000000 -0600
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2006-01-31 16:53:22.000000000 -0600
+@@ -164,29 +164,6 @@ MODULE_PARM_DESC(auto_create, "Auto-crea
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION(IPR_DRIVER_VERSION);
  
-+static void ata_set_cdb_len(struct ata_port *ap, unsigned int cdb_len)
-+{
-+	ap->cdb_len = cdb_len;
-+	if (ap->host)
-+		ap->host->max_cmd_len = cdb_len;
-+}
-+
-+static void ata_set_max_sectors(struct ata_port *ap, unsigned int max_sectors)
-+{
-+	if (ap->host) {
-+		ap->host->max_sectors = ATA_MAX_SECTORS;
-+		ap->host->hostt->max_sectors = ATA_MAX_SECTORS;
-+	}
-+}
-+
- /**
-  *	ata_dev_identify - obtain IDENTIFY x DEVICE page
-  *	@ap: port on which device we wish to probe resides
-@@ -1402,7 +1417,7 @@ retry:
- 
- 		}
- 
--		ap->host->max_cmd_len = 16;
-+		ata_set_cdb_len(ap, 16);
+-static const char *ipr_gpdd_dev_end_states[] = {
+-	"Command complete",
+-	"Terminated by host",
+-	"Terminated by device reset",
+-	"Terminated by bus reset",
+-	"Unknown",
+-	"Command not started"
+-};
+-
+-static const char *ipr_gpdd_dev_bus_phases[] = {
+-	"Bus free",
+-	"Arbitration",
+-	"Selection",
+-	"Message out",
+-	"Command",
+-	"Message in",
+-	"Data out",
+-	"Data in",
+-	"Status",
+-	"Reselection",
+-	"Unknown"
+-};
+-
+ /*  A constant array of IOASCs/URCs/Error Messages */
+ static const
+ struct ipr_error_table_t ipr_error_table[] = {
+@@ -3938,6 +3915,7 @@ static void ipr_erp_cancel_all(struct ip
+  * ipr_dump_ioasa - Dump contents of IOASA
+  * @ioa_cfg:	ioa config struct
+  * @ipr_cmd:	ipr command struct
++ * @res:		resource entry struct
+  *
+  * This function is invoked by the interrupt handler when ops
+  * fail. It will log the IOASA if appropriate. Only called
+@@ -3947,7 +3925,7 @@ static void ipr_erp_cancel_all(struct ip
+  * 	none
+  **/
+ static void ipr_dump_ioasa(struct ipr_ioa_cfg *ioa_cfg,
+-			   struct ipr_cmnd *ipr_cmd)
++			   struct ipr_cmnd *ipr_cmd, struct ipr_resource_entry *res)
+ {
+ 	int i;
+ 	u16 data_len;
+@@ -3975,16 +3953,7 @@ static void ipr_dump_ioasa(struct ipr_io
+ 			return;
  	}
  
- 	/* ATAPI-specific feature tests */
-@@ -1415,8 +1430,8 @@ retry:
- 			printk(KERN_WARNING "ata%u: unsupported CDB len\n", ap->id);
- 			goto err_out_nosup;
- 		}
--		ap->cdb_len = (unsigned int) rc;
--		ap->host->max_cmd_len = (unsigned char) ap->cdb_len;
-+
-+		ata_set_cdb_len(ap, rc);
+-	ipr_sdev_err(ipr_cmd->scsi_cmd->device, "%s\n",
+-		     ipr_error_table[error_index].error);
+-
+-	if ((ioasa->u.gpdd.end_state <= ARRAY_SIZE(ipr_gpdd_dev_end_states)) &&
+-	    (ioasa->u.gpdd.bus_phase <=  ARRAY_SIZE(ipr_gpdd_dev_bus_phases))) {
+-		ipr_sdev_err(ipr_cmd->scsi_cmd->device,
+-			     "Device End state: %s Phase: %s\n",
+-			     ipr_gpdd_dev_end_states[ioasa->u.gpdd.end_state],
+-			     ipr_gpdd_dev_bus_phases[ioasa->u.gpdd.bus_phase]);
+-	}
++	ipr_res_err(ioa_cfg, res, "%s\n", ipr_error_table[error_index].error);
  
- 		/* print device info to dmesg */
- 		printk(KERN_INFO "ata%u: dev %u ATAPI, max %s\n",
-@@ -1456,8 +1471,7 @@ void ata_dev_config(struct ata_port *ap,
- 		printk(KERN_INFO "ata%u(%u): applying bridge limits\n",
- 			ap->id, ap->device->devno);
- 		ap->udma_mask &= ATA_UDMA5;
--		ap->host->max_sectors = ATA_MAX_SECTORS;
--		ap->host->hostt->max_sectors = ATA_MAX_SECTORS;
-+		ata_set_max_sectors(ap, ATA_MAX_SECTORS);
- 		ap->device[i].flags |= ATA_DFLAG_LOCK_SECTORS;
+ 	if (sizeof(struct ipr_ioasa) < be16_to_cpu(ioasa->ret_stat_len))
+ 		data_len = sizeof(struct ipr_ioasa);
+@@ -4141,7 +4110,7 @@ static void ipr_erp_start(struct ipr_ioa
  	}
+ 
+ 	if (ipr_is_gscsi(res))
+-		ipr_dump_ioasa(ioa_cfg, ipr_cmd);
++		ipr_dump_ioasa(ioa_cfg, ipr_cmd, res);
+ 	else
+ 		ipr_gen_sense(ipr_cmd);
  
 _
