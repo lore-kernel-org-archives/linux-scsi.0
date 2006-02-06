@@ -1,42 +1,53 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Fw: [Bugme-new] [Bug 5998] New: oops on mount "kernel access
- of bad area, sig: 11 [#1]"
-Date: Mon, 06 Feb 2006 00:06:57 +0100
-Message-ID: <43E68511.2030908@s5r6.in-berlin.de>
-References: <20060202150719.0dafc8ae.akpm@osdl.org> <43E306AC.60004@s5r6.in-berlin.de> <1138993250.10057.125.camel@cog.beaverton.ibm.com> <43E4912F.6090908@s5r6.in-berlin.de> <20060205212809.GJ22002@conscoop.ottawa.on.ca>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH RFC 1/3] SCSI Userspace Target: scsi-ml changes
+Date: Mon, 06 Feb 2006 11:33:56 +0900
+Message-ID: <20060206113356T.fujita.tomonori@lab.ntt.co.jp>
+References: <1138157885.11692.32.camel@max>
+	<1139164228.3017.14.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-admin@lists.sourceforge.net>
-In-Reply-To: <20060205212809.GJ22002@conscoop.ottawa.on.ca>
-Sender: linux1394-devel-admin@lists.sourceforge.net
-Errors-To: linux1394-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-To: Jody McIntyre <scjody@modernduck.com>
-Cc: john stultz <johnstul@us.ibm.com>, Andrew Morton <akpm@osdl.org>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:59264 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP
+	id S1750891AbWBFCeL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 5 Feb 2006 21:34:11 -0500
+In-Reply-To: <1139164228.3017.14.camel@mulgrave.il.steeleye.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-Jody McIntyre wrote:
-> On Sat, Feb 04, 2006 at 12:34:07PM +0100, Stefan Richter wrote:
->>Linux 2.6.15 contains it, but I don't know into which -rc it went.
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH RFC 1/3] SCSI Userspace Target: scsi-ml changes
+Date: Sun, 05 Feb 2006 12:30:28 -0600
+
+> OK ... I think this looks good enough to fix up in tree.  I just have
+> one minor quibble, so could you fix that and I'll put it in.
 > 
-> -rc3.  John, don't bother checking.  It's in there :)
+> On Tue, 2006-01-24 at 20:58 -0600, Mike Christie wrote:
+> > @@ -31,6 +32,7 @@ struct scsi_pointer {
+> >  struct scsi_cmnd {
+> >         int     sc_magic;
+> >  
+> > +       struct Scsi_Host *shost;
+> >         struct scsi_device *device;
+> 
+> This is an unnecessary addition; you can get this from device->host.
 
-Yes, indeed. _If_ we are all talking about Linus' tree here. Are we? :-)
--- 
-Stefan Richter
--=====-=-==- --=- --==-
-http://arcgraph.de/sr/
+Thanks a lot. I've just fixed this.
+
+As Mike said, we replaced our mapping code with the standard helper
+functions (such as bio_map_user) and some netlink code with the packet
+socket interface. We've been preparing for the second submission. We
+will do that in a couple of days.
 
 
--------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
-for problems?  Stop!  Download the new AJAX search engine that makes
-searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
-http://sel.as-us.falkag.net/sel?cmd=lnk&kid=103432&bid=230486&dat=121642
+> Do you have a pointer for the userspace side of this yet?
+
+Yes, we have though it's really messy.
+
+http://svn.berlios.de/svnroot/repos/stgt/branches/use-scsi-ml/usr
+
+The current code doesn't catch up with the changes that I've
+discribed. We'll update it until the seccond submission.
