@@ -1,143 +1,103 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH, RFC] aic7xxx: semaphore to completion conversion
-Date: Mon, 6 Feb 2006 15:40:45 +0100
-Message-ID: <20060206144045.GA2992@lst.de>
-References: <20060131172018.GD28889@lst.de>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH] ipr: don't doublefree pages from scatterlist
+Date: Mon, 06 Feb 2006 08:46:19 -0600
+Message-ID: <43E7613B.5060706@us.ibm.com>
+References: <Pine.LNX.4.61.0602040004020.5406@goblin.wat.veritas.com>	<43E66FB6.6070303@us.ibm.com>	<Pine.LNX.4.61.0602060909180.6827@goblin.wat.veritas.com> <20060206.014608.22328385.davem@davemloft.net>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------040008040005060309090303"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:24542 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S932127AbWBFOkw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 09:40:52 -0500
-Content-Disposition: inline
-In-Reply-To: <20060131172018.GD28889@lst.de>
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:64137 "EHLO e1.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932130AbWBFOqY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 09:46:24 -0500
+In-Reply-To: <20060206.014608.22328385.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@steeleye.com, hare@suse.de, emmanuel.fuste@laposte.net
-Cc: linux-scsi@vger.kernel.org
+To: "David S. Miller" <davem@davemloft.net>
+Cc: hugh@veritas.com, James.Bottomley@SteelEye.com, akpm@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Jan 31, 2006 at 06:20:18PM +0100, Christoph Hellwig wrote:
-> switch eh_sem to a completion.  due to wait_for_completion_timeout this
-> also nicely simplifies the code.  Unfortunately it's untested, so if
-> someone with the hardware could give it a try that would be nice.  Once
-> it works the same thing can be applied to aic79xx.
+This is a multi-part message in MIME format.
+--------------040008040005060309090303
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-New version that switches to the common onstack completion and just a
-pointer in the platform_data struct idiom.  This gets rid of all the
-flags fiddling.
+David S. Miller wrote:
+> From: Hugh Dickins <hugh@veritas.com>
+> Date: Mon, 6 Feb 2006 09:32:54 +0000 (GMT)
+> 
+>> From looking at the source, the architectures I found to be doing
+>> scatterlist coalescing in some cases were alpha, ia64, parisc (some
+>> code under drivers), powerpc, sparc64 and x86_64.
+>>
+>> I agree with you that it would be possible for them to do the coalescing
+>> by just adjusting dma_address and dma_length (though it's architecture-
+>> dependent whether there are such fields at all), not interfering with
+>> the input page and length; and maybe some of them do proceed that way.
+>> I didn't find the coalescing code in any of them very easy to follow.
+>>
+>> So please examine arch/x86_64/kernel/pci_gart.c gart_map_sg (and
+>> dma_map_cont which it calls): x86_64 was the architecture on which
+>> the problem was really found with drivers/scsi/st.c, and avoided
+>> by that boot option iommu=nomerge.
+>>
+>> Lines like "*sout = *s;" and "*sout = sg[start];" are structure-
+>> copying whole scallerlist entries from one position in the list
+>> to another, without explicit mention of the page and length fields.
+> 
+> That's a bug, frankly.  Sparc64 doesn't need to do anything like
+> that.  Spamming the page pointers is really really bogus and I'm
+> surprised this doesn't make more stuff explode.
+> 
+> It was never the intention to allow the DMA mapping support code
+> to modify the page, offset, and length members of the scatterlist.
+> Only the DMA components.
+> 
+> I'd really prefer that those assignments get fixed and an explicit
+> note added to Documentation/DMA-mapping.txt about this.
+
+How about this for a documentation fix?
+
+Brian
 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
 
-Index: linux-2.6/drivers/scsi/aic7xxx/aic7xxx_osm.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/aic7xxx/aic7xxx_osm.c	2006-01-15 21:45:28.000000000 +0100
-+++ linux-2.6/drivers/scsi/aic7xxx/aic7xxx_osm.c	2006-02-06 15:27:21.000000000 +0100
-@@ -373,7 +373,6 @@
- 					 struct scb *);
- static void ahc_linux_queue_cmd_complete(struct ahc_softc *ahc,
- 					 struct scsi_cmnd *cmd);
--static void ahc_linux_sem_timeout(u_long arg);
- static void ahc_linux_freeze_simq(struct ahc_softc *ahc);
- static void ahc_linux_release_simq(struct ahc_softc *ahc);
- static int  ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag);
-@@ -1193,7 +1192,6 @@
- 	memset(ahc->platform_data, 0, sizeof(struct ahc_platform_data));
- 	ahc->platform_data->irq = AHC_LINUX_NOIRQ;
- 	ahc_lockinit(ahc);
--	init_MUTEX_LOCKED(&ahc->platform_data->eh_sem);
- 	ahc->seltime = (aic7xxx_seltime & 0x3) << 4;
- 	ahc->seltime_b = (aic7xxx_seltime & 0x3) << 4;
- 	if (aic7xxx_pci_parity == 0)
-@@ -1830,10 +1828,9 @@
- 		if (ahc_get_transaction_status(scb) == CAM_BDR_SENT
- 		 || ahc_get_transaction_status(scb) == CAM_REQ_ABORTED)
- 			ahc_set_transaction_status(scb, CAM_CMD_TIMEOUT);
--		if ((ahc->platform_data->flags & AHC_UP_EH_SEMAPHORE) != 0) {
--			ahc->platform_data->flags &= ~AHC_UP_EH_SEMAPHORE;
--			up(&ahc->platform_data->eh_sem);
--		}
-+
-+		if (ahc->platform_data->eh_done)
-+			complete(ahc->platform_data->eh_done);
- 	}
- 
- 	ahc_free_scb(ahc, scb);
-@@ -2040,22 +2037,6 @@
- }
- 
- static void
--ahc_linux_sem_timeout(u_long arg)
--{
--	struct	ahc_softc *ahc;
--	u_long	s;
--
--	ahc = (struct ahc_softc *)arg;
--
--	ahc_lock(ahc, &s);
--	if ((ahc->platform_data->flags & AHC_UP_EH_SEMAPHORE) != 0) {
--		ahc->platform_data->flags &= ~AHC_UP_EH_SEMAPHORE;
--		up(&ahc->platform_data->eh_sem);
--	}
--	ahc_unlock(ahc, &s);
--}
--
--static void
- ahc_linux_freeze_simq(struct ahc_softc *ahc)
- {
- 	unsigned long s;
-@@ -2355,25 +2336,21 @@
- 	if (paused)
- 		ahc_unpause(ahc);
- 	if (wait) {
--		struct timer_list timer;
--		int ret;
-+		DECLARE_COMPLETION(done);
- 
--		ahc->platform_data->flags |= AHC_UP_EH_SEMAPHORE;
-+		ahc->platform_data->eh_done = &done;
- 		ahc_unlock(ahc, &flags);
- 
--		init_timer(&timer);
--		timer.data = (u_long)ahc;
--		timer.expires = jiffies + (5 * HZ);
--		timer.function = ahc_linux_sem_timeout;
--		add_timer(&timer);
- 		printf("Recovery code sleeping\n");
--		down(&ahc->platform_data->eh_sem);
--		printf("Recovery code awake\n");
--        	ret = del_timer_sync(&timer);
--		if (ret == 0) {
-+		if (!wait_for_completion_timeout(&done, 5 * HZ)) {
-+			ahc_lock(ahc, &flags);
-+			ahc->platform_data->eh_done = NULL;
-+			ahc_unlock(ahc, &flags);
-+
- 			printf("Timer Expired\n");
- 			retval = FAILED;
- 		}
-+		printf("Recovery code awake\n");
- 	} else
- 		ahc_unlock(ahc, &flags);
- 	return (retval);
-Index: linux-2.6/drivers/scsi/aic7xxx/aic7xxx_osm.h
-===================================================================
---- linux-2.6.orig/drivers/scsi/aic7xxx/aic7xxx_osm.h	2006-01-15 21:45:28.000000000 +0100
-+++ linux-2.6/drivers/scsi/aic7xxx/aic7xxx_osm.h	2006-02-06 15:32:22.000000000 +0100
-@@ -369,15 +369,12 @@
- 
- 	spinlock_t		 spin_lock;
- 	u_int			 qfrozen;
--	struct semaphore	 eh_sem;
-+	struct completion	*eh_done;
- 	struct Scsi_Host        *host;		/* pointer to scsi host */
- #define AHC_LINUX_NOIRQ	((uint32_t)~0)
- 	uint32_t		 irq;		/* IRQ for this adapter */
- 	uint32_t		 bios_address;
- 	uint32_t		 mem_busaddr;	/* Mem Base Addr */
--
--#define	AHC_UP_EH_SEMAPHORE	 0x1
--	uint32_t		 flags;
- };
- 
- /************************** OS Utility Wrappers *******************************/
+--------------040008040005060309090303
+Content-Type: text/x-patch;
+ name="dma_mapping_clarification.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="dma_mapping_clarification.patch"
+
+ClRoZSBjdXJyZW50IHBjaV9tYXBfc2cgQVBJIGlzIGEgYml0IHVuY2xlYXIgd2hhdCBpdCBp
+cyBhbGxvd2VkCnRvIG1vZGlmeSBpbiB0aGUgcGFzc2VkIHNjYXR0ZXJsaXN0IHdoZW4gY29h
+bGVzY2luZyBlbnRyaWVzLgpDbGFyaWZ5IHRoZSBwY2lfbWFwX3NnIEFQSSB0byBwcmV2ZW50
+IGl0IGZyb20gbW9kaWZ5aW5nCnRoZSBwYWdlLCBvZmZzZXQsIGFuZCBsZW5ndGggZmllbGRz
+IGluIHRoZSBzY2F0dGVybGlzdC4KClNpZ25lZC1vZmYtYnk6IEJyaWFuIEtpbmcgPGJya2lu
+Z0B1cy5pYm0uY29tPgotLS0KCiBsaW51eC0yLjYtYmpraW5nMS9Eb2N1bWVudGF0aW9uL0RN
+QS1tYXBwaW5nLnR4dCB8ICAgIDUgKysrKy0KIDEgZmlsZXMgY2hhbmdlZCwgNCBpbnNlcnRp
+b25zKCspLCAxIGRlbGV0aW9uKC0pCgpkaWZmIC1wdU4gRG9jdW1lbnRhdGlvbi9ETUEtbWFw
+cGluZy50eHR+ZG1hX21hcHBpbmdfY2xhcmlmaWNhdGlvbiBEb2N1bWVudGF0aW9uL0RNQS1t
+YXBwaW5nLnR4dAotLS0gbGludXgtMi42L0RvY3VtZW50YXRpb24vRE1BLW1hcHBpbmcudHh0
+fmRtYV9tYXBwaW5nX2NsYXJpZmljYXRpb24JMjAwNi0wMi0wNiAwODoyMzoxMC4wMDAwMDAw
+MDAgLTA2MDAKKysrIGxpbnV4LTIuNi1iamtpbmcxL0RvY3VtZW50YXRpb24vRE1BLW1hcHBp
+bmcudHh0CTIwMDYtMDItMDYgMDg6Mzg6NDMuMDAwMDAwMDAwIC0wNjAwCkBAIC01MTMsNyAr
+NTEzLDEwIEBAIGNvbnNlY3V0aXZlIHNnbGlzdCBlbnRyaWVzIGNhbiBiZSBtZXJnZWQKIGVu
+ZHMgYW5kIHRoZSBzZWNvbmQgb25lIHN0YXJ0cyBvbiBhIHBhZ2UgYm91bmRhcnkgLSBpbiBm
+YWN0IHRoaXMgaXMgYSBodWdlCiBhZHZhbnRhZ2UgZm9yIGNhcmRzIHdoaWNoIGVpdGhlciBj
+YW5ub3QgZG8gc2NhdHRlci1nYXRoZXIgb3IgaGF2ZSB2ZXJ5CiBsaW1pdGVkIG51bWJlciBv
+ZiBzY2F0dGVyLWdhdGhlciBlbnRyaWVzKSBhbmQgcmV0dXJucyB0aGUgYWN0dWFsIG51bWJl
+cgotb2Ygc2cgZW50cmllcyBpdCBtYXBwZWQgdGhlbSB0by4gT24gZmFpbHVyZSAwIGlzIHJl
+dHVybmVkLgorb2Ygc2cgZW50cmllcyBpdCBtYXBwZWQgdGhlbSB0by4gVGhlIGltcGxlbWVu
+dGF0aW9uIGlzIGZyZWUgdG8gZG8gdGhpcworYnkgbW9kaWZ5aW5nIHRoZSBzY2F0dGVybGlz
+dCBmaWVsZHMgc3BlY2lmaWVkIGZvciBETUEuIFRoZSBzY2F0dGVybGlzdAorZmllbGRzIHVz
+ZWQgYXMgYW4gaW5wdXQgdG8gdGhpcyBmdW5jdGlvbiAoaS5lLiBwYWdlLCBvZmZzZXQsIGFu
+ZCBsZW5ndGgpCit3aWxsIE5PVCBiZSBtb2RpZmllZC4gT24gZmFpbHVyZSAwIGlzIHJldHVy
+bmVkLgogCiBUaGVuIHlvdSBzaG91bGQgbG9vcCBjb3VudCB0aW1lcyAobm90ZTogdGhpcyBj
+YW4gYmUgbGVzcyB0aGFuIG5lbnRzIHRpbWVzKQogYW5kIHVzZSBzZ19kbWFfYWRkcmVzcygp
+IGFuZCBzZ19kbWFfbGVuKCkgbWFjcm9zIHdoZXJlIHlvdSBwcmV2aW91c2x5Cl8K
+--------------040008040005060309090303--
