@@ -1,96 +1,132 @@
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: [PATCH 00/15] drivers/scsi/FlashPoint.c cleanups
-Date: Mon, 6 Feb 2006 23:52:04 +0300
-Message-ID: <20060206205204.GA7819@mipter.zuzino.mipt.ru>
+From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Subject: RE: [Bugme-new] [Bug 6020] New: Intel Corporation 80960RP [i960RP Microprocessor] (rev 03) not detected
+Date: Mon, 6 Feb 2006 13:35:25 -0700
+Message-ID: <9738BCBE884FDB42801FAD8A7769C265142055@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from uproxy.gmail.com ([66.249.92.195]:37021 "EHLO uproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S964793AbWBFUdv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 15:33:51 -0500
-Received: by uproxy.gmail.com with SMTP id h2so19524ugf
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Feb 2006 12:33:49 -0800 (PST)
-Content-Disposition: inline
+Received: from mail0.lsil.com ([147.145.40.20]:59555 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S964800AbWBFUff convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Feb 2006 15:35:35 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org
+Cc: "Kolli, Neela" <Neela.Kolli@engenio.com>
 
-The following patches will be sent to Andrew off-list due to sizes of some of
-them. They can be found at http://coderock.org/kj/flashpoint/
+Hi,
 
-	001-flashpoint-remove-unused-things.patch
-	002-flashpoint-remove-trivial-wrappers.patch
-	003-flashpoint-remove-uchar.patch
-	004-flashpoint-remove-ushort.patch
-	005-flashpoint-remove-uint.patch
-	006-flashpoint-remove-ulong.patch
-	007-flashpoint-remove-ushort-ptr.patch
-	008-flashpoint-use-standard-fixed-size-types.patch
-	009-flashpoint-untypedef-struct-sccb.patch
-	010-flashpoint-untypedef-struct-sccbmgr-info.patch
-	011-flashpoint-untypedef-struct-sccbmgr-tar-info.patch
-	012-flashpoint-untypedef-struct-nvraminfo.patch
-	013-flashpoint-untypedef-struct-sccbcard.patch
-	014-flashpoint-lindent.patch
-	015-flashpoint-dont-use-parenthesis-with-return.patch
+On Monday, February 06, 2006 2:33 PM Andrew Morton wrote:
+> I have an ooold HP Netserver LH3 with this raid controller:
+> Intel Corporation 80960RP [i960RP Microprocessor] (rev 03)
+> 0000:00:07.1 0100: 8086:1960 (rev 03)
+>         Subsystem: 103c:10c7
+> 
+> 
+> It was working well with the megaraid driver of kernel 2.4.26. 
+> But now I wanted to bring the machine to a recent 2.6 kernel. 
+> I have set
+> 
+> CONFIG_MEGARAID_NEWGEN=y
+> CONFIG_MEGARAID_MM=y
+> CONFIG_MEGARAID_MAILBOX=y
+> CONFIG_MEGARAID_SAS=y
+> 
+> At boottime the megaraid driver reports its existence, but in 
+> contrast to the
+> 2.4 kernel, it doesn't say that it had detected disks. And 
+> then the kernel stops
+> with panic, claiming that it can't find its root device (/dev/sda1)
+This is an issue related to PCI ID overlap in between legacy and new megaraid drivers. 
+I had taken care of the issue long time back but, for some reason, 2.6.15.2 kernel still has following conditional statement in the Kconfig.megaraid.
+---
+if MEGARAID_NEWGEN=n
+config MEGARAID_LEGACY
+	...
+	...
+endif
+---
+This condition prevents 'LSI Logic Legacy MegaRAID driver' to be available as an option.
+So, it has to be as follows,
+---
+config MEGARAID_LEGACY
+	...
+	...
+---
+If you use the kernel available on git and do 'make menuconfig', you will see this option available and you will be able to load megaraid driver v2.00.3 for the HP controllers.
 
-They were sitting in -kj quite long, reviewed by at least Randy Dunlap and
-Domen Puncer, compile-tested with CONFIG_SCSI_OMIT_FLASHPOINT=y and =n.
-------------------------------------------------------------------------
-[PATCH 01/15] drivers/scsi/FlashPoint.c: remove unused things
+Thank you,
 
-* Remove unused #define's
-* Remove unused typedefs.
-* Remove prototypes for non-existing functions.
 
-[PATCH 02/15] drivers/scsi/FlashPoint.c: remove trivial wrappers
 
-[PATCH 03/15] drivers/scsi/FlashPoint.c: remove UCHAR
-
-[PATCH 04/15] drivers/scsi/FlashPoint.c: remove USHORT
-
-[PATCH 05/15] drivers/scsi/FlashPoint.c: remove UINT
-
-[PATCH 06/15] drivers/scsi/FlashPoint.c: remove ULONG
-
-[PATCH 07/15] drivers/scsi/FlashPoint.c: remove ushort_ptr
-
-[PATCH 08/15] drivers/scsi/FlashPoint.c: use standard fixed size types
-
-[PATCH 09/15] drivers/scsi/FlashPoint.c: untypedef struct _SCCB
-
-* struct _SCCB => struct sccb
-* PSCCB => struct sccb *
-* SCCB => struct sccb
-
-[PATCH 10/15] drivers/scsi/FlashPoint.c: untypedef struct SCCBMgr_info
-
-* struct SCCBMgr_info => struct sccb_mgr_info
-* PSCCBMGR_INFO => struct sccb_mgr_info *
-* SCCBMGR_INFO => struct sccb_mgr_info
-
-[PATCH 11/15] drivers/scsi/FlashPoint.c: untypedef struct SCCBMgr_tar_info
-
-* struct SCCBMgr_tar_info => struct sccb_mgr_tar_info
-* PSCCBMgr_tar_info => struct sccb_mgr_tar_info *
-* SCCBMGR_TAR_INFO => struct sccb_mgr_tar_info
-
-[PATCH 12/15] drivers/scsi/FlashPoint.c: untypedef struct NVRAMInfo
-
-* struct NVRAMInfo => struct nvram_info
-* PNVRamInfo => struct nvram_info *
-* NVRAMINFO => struct nvram_info
-
-[PATCH 13/15] drivers/scsi/FlashPoint.c: untypedef struct SCCBcard
-
-* struct SCCBcard => struct sccb_card
-* PSCCBcard => struct sccb_card *
-* SCCBCARD => struct sccb_card
-
-[PATCH 14/15] drivers/scsi/FlashPoint.c: Lindent
-
-It's much, much more readable now.
-
-[PATCH 15/15] drivers/scsi/FlashPoint.c: don't use parenthesis with "return"
-
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org 
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Andrew Morton
+> Sent: Monday, February 06, 2006 2:33 PM
+> To: linux-scsi@vger.kernel.org
+> Cc: Kolli, Neela
+> Subject: Fw: [Bugme-new] [Bug 6020] New: Intel Corporation 
+> 80960RP [i960RP Microprocessor] (rev 03) not detected
+> 
+> 
+> 
+> Begin forwarded message:
+> 
+> Date: Mon, 6 Feb 2006 04:38:03 -0800
+> From: bugme-daemon@bugzilla.kernel.org
+> To: bugme-new@lists.osdl.org
+> Subject: [Bugme-new] [Bug 6020] New: Intel Corporation 
+> 80960RP [i960RP Microprocessor] (rev 03) not detected
+> 
+> 
+> http://bugzilla.kernel.org/show_bug.cgi?id=6020
+> 
+>            Summary: Intel Corporation 80960RP [i960RP 
+> Microprocessor] (rev
+>                     03) not detected
+>     Kernel Version: 2.6.15.2
+>             Status: NEW
+>           Severity: normal
+>              Owner: andmike@us.ibm.com
+>          Submitter: hadmut@danisch.de
+> 
+> 
+> Most recent kernel where this bug did not occur:
+> Distribution: Debian
+> Hardware Environment: HP Netserver LH3
+> Software Environment:
+> Problem Description:
+> 
+> Hi,
+> 
+> I have an ooold HP Netserver LH3 with this raid controller:
+> Intel Corporation 80960RP [i960RP Microprocessor] (rev 03)
+> 0000:00:07.1 0100: 8086:1960 (rev 03)
+>         Subsystem: 103c:10c7
+> 
+> 
+> It was working well with the megaraid driver of kernel 2.4.26. 
+> But now I wanted to bring the machine to a recent 2.6 kernel. 
+> I have set
+> 
+> CONFIG_MEGARAID_NEWGEN=y
+> CONFIG_MEGARAID_MM=y
+> CONFIG_MEGARAID_MAILBOX=y
+> CONFIG_MEGARAID_SAS=y
+> 
+> At boottime the megaraid driver reports its existence, but in 
+> contrast to the
+> 2.4 kernel, it doesn't say that it had detected disks. And 
+> then the kernel stops
+> with panic, claiming that it can't find its root device (/dev/sda1)
+> 
+> ------- You are receiving this mail because: -------
+> You are on the CC list for the bug, or are watching someone who is.
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
