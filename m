@@ -1,118 +1,96 @@
-From: "Joe Wilhelmi" <joe@rtlogic.com>
-Subject: RE: Hang problem on Dell 1850 and 2850 using  Perc megaraid controller
-Date: Mon, 6 Feb 2006 13:27:45 -0700
-Message-ID: <00c601c62b5b$ce1133d0$2301a8c0@whitney>
-References: <9738BCBE884FDB42801FAD8A7769C265142053@NAMAIL1.ad.lsil.com>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: [PATCH 00/15] drivers/scsi/FlashPoint.c cleanups
+Date: Mon, 6 Feb 2006 23:52:04 +0300
+Message-ID: <20060206205204.GA7819@mipter.zuzino.mipt.ru>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eagle.rtlogic.com ([216.87.68.236]:29323 "EHLO rtlogic.com")
-	by vger.kernel.org with ESMTP id S964780AbWBFU2F (ORCPT
-	<rfc822;Linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 15:28:05 -0500
-In-Reply-To: <9738BCBE884FDB42801FAD8A7769C265142053@NAMAIL1.ad.lsil.com>
+Received: from uproxy.gmail.com ([66.249.92.195]:37021 "EHLO uproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S964793AbWBFUdv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 15:33:51 -0500
+Received: by uproxy.gmail.com with SMTP id h2so19524ugf
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Feb 2006 12:33:49 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'Ju, Seokmann'" <Seokmann.Ju@lsil.com>, Linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hello,
+The following patches will be sent to Andrew off-list due to sizes of some of
+them. They can be found at http://coderock.org/kj/flashpoint/
 
-The controllers in the 2850 and the 1850 are perc4/ei.  However I do not
-know if they have the same PCI bridge chip as the Ultra-320-2X.  The
-SCSI chip is an LSI 1030 which I believe is a pciX connection.  There is
-also a Dobson on the motherboard that I believe connects over the PCIeX
-interface.  I think the Dobson is related to the romb dimm.
+	001-flashpoint-remove-unused-things.patch
+	002-flashpoint-remove-trivial-wrappers.patch
+	003-flashpoint-remove-uchar.patch
+	004-flashpoint-remove-ushort.patch
+	005-flashpoint-remove-uint.patch
+	006-flashpoint-remove-ulong.patch
+	007-flashpoint-remove-ushort-ptr.patch
+	008-flashpoint-use-standard-fixed-size-types.patch
+	009-flashpoint-untypedef-struct-sccb.patch
+	010-flashpoint-untypedef-struct-sccbmgr-info.patch
+	011-flashpoint-untypedef-struct-sccbmgr-tar-info.patch
+	012-flashpoint-untypedef-struct-nvraminfo.patch
+	013-flashpoint-untypedef-struct-sccbcard.patch
+	014-flashpoint-lindent.patch
+	015-flashpoint-dont-use-parenthesis-with-return.patch
 
-Thanks for the help,
-Joe
+They were sitting in -kj quite long, reviewed by at least Randy Dunlap and
+Domen Puncer, compile-tested with CONFIG_SCSI_OMIT_FLASHPOINT=y and =n.
+------------------------------------------------------------------------
+[PATCH 01/15] drivers/scsi/FlashPoint.c: remove unused things
 
------Original Message-----
-From: Ju, Seokmann [mailto:Seokmann.Ju@lsil.com] 
-Sent: Monday, February 06, 2006 12:19 PM
-To: Joe Wilhelmi; Linux-scsi@vger.kernel.org
-Subject: RE: Hang problem on Dell 1850 and 2850 using Perc megaraid
-controller
+* Remove unused #define's
+* Remove unused typedefs.
+* Remove prototypes for non-existing functions.
 
+[PATCH 02/15] drivers/scsi/FlashPoint.c: remove trivial wrappers
 
-Hi,
+[PATCH 03/15] drivers/scsi/FlashPoint.c: remove UCHAR
 
-> Also, I attempted to produce the problem using a MegaRAID SCSI-320-2x 
-> card with the same RAID 1 configuration with the same OS and version 
-> of the driver.  The hang did not occur.
-Can you elaborate which PERC4 controller are on both 1850 and 2850? Do
-both PERC4 controllers have PCI-X interface as MegaRAID SCSI-320-2X?
- 
-> It seems that the issue is in some part of the MegaRAID driver that 
-> deals specifically with the Perc cards in the 2850 and the 1850 and 
-> not with the LSI MegaRAID cards.
-> 
-> I need to mention that the kernel has been built with MSI and ACPI 
-> disabled because of issues with our e1000 ethernet adapter.  Because 
-> ACPI was disabled, we also disabled hw_random.  Snare is also built 
-> in.
->
-> The following are the relevant firmware versions:
-> Dell 1850 Perc Controller: H418
-> Dell 2850 Perc Controller: H430
-> Lsi Ultra-320-2X:          H409
-Thank you for detail descriptin on the issue.
-It will be duplicated and will update you as soon as possible.
+[PATCH 04/15] drivers/scsi/FlashPoint.c: remove USHORT
 
-Thank you,
+[PATCH 05/15] drivers/scsi/FlashPoint.c: remove UINT
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Joe Wilhelmi
-> Sent: Monday, February 06, 2006 1:57 PM
-> To: Linux-scsi@vger.kernel.org
-> Subject: Hang problem on Dell 1850 and 2850 using Perc 
-> megaraid controller
-> 
-> Friends of MegaRAID,
-> 
-> I have been noticing a hang problem on my 1850 and 2850 systems when 
-> using the Perc4 controllers in a RAID 1 configuration using 
-> LSI_COMMON_MOD_VERSION 2.20.2.6 on the linux 2.6.14 kernel.  I can 
-> repeatedly reproduce the problem by copying about 580MB of data to the
+[PATCH 06/15] drivers/scsi/FlashPoint.c: remove ULONG
 
-> disk from an NFS share.
-> 
-> If I install my system in bios SCSI mode, which uses the LSI scsi 
-> controller and fusion driver instead of MegaRAID, this issue goes 
-> away: I can copy the 580MB of data without the hang.
-> 
-> Also, I attempted to produce the problem using a MegaRAID SCSI-320-2x 
-> card with the same RAID 1 configuration with the same OS and version 
-> of the driver.  The hang did not occur.
-> 
-> It seems that the issue is in some part of the MegaRAID driver that 
-> deals specifically with the Perc cards in the 2850 and the 1850 and 
-> not with the LSI MegaRAID cards.
-> 
-> I need to mention that the kernel has been built with MSI and ACPI 
-> disabled because of issues with our e1000 ethernet adapter.  Because 
-> ACPI was disabled, we also disabled hw_random.  Snare is also built 
-> in.
-> 
-> 
-> The following are the relevant firmware versions:
-> Dell 1850 Perc Controller: H418
-> Dell 2850 Perc Controller: H430
-> Lsi Ultra-320-2X:          H409
-> 
-> I appreciate any help or thoughts,
-> 
-> Regards,
-> Joe Wilhelmi
-> RTLogic
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+[PATCH 07/15] drivers/scsi/FlashPoint.c: remove ushort_ptr
 
+[PATCH 08/15] drivers/scsi/FlashPoint.c: use standard fixed size types
+
+[PATCH 09/15] drivers/scsi/FlashPoint.c: untypedef struct _SCCB
+
+* struct _SCCB => struct sccb
+* PSCCB => struct sccb *
+* SCCB => struct sccb
+
+[PATCH 10/15] drivers/scsi/FlashPoint.c: untypedef struct SCCBMgr_info
+
+* struct SCCBMgr_info => struct sccb_mgr_info
+* PSCCBMGR_INFO => struct sccb_mgr_info *
+* SCCBMGR_INFO => struct sccb_mgr_info
+
+[PATCH 11/15] drivers/scsi/FlashPoint.c: untypedef struct SCCBMgr_tar_info
+
+* struct SCCBMgr_tar_info => struct sccb_mgr_tar_info
+* PSCCBMgr_tar_info => struct sccb_mgr_tar_info *
+* SCCBMGR_TAR_INFO => struct sccb_mgr_tar_info
+
+[PATCH 12/15] drivers/scsi/FlashPoint.c: untypedef struct NVRAMInfo
+
+* struct NVRAMInfo => struct nvram_info
+* PNVRamInfo => struct nvram_info *
+* NVRAMINFO => struct nvram_info
+
+[PATCH 13/15] drivers/scsi/FlashPoint.c: untypedef struct SCCBcard
+
+* struct SCCBcard => struct sccb_card
+* PSCCBcard => struct sccb_card *
+* SCCBCARD => struct sccb_card
+
+[PATCH 14/15] drivers/scsi/FlashPoint.c: Lindent
+
+It's much, much more readable now.
+
+[PATCH 15/15] drivers/scsi/FlashPoint.c: don't use parenthesis with "return"
 
