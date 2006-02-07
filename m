@@ -1,30 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: In-kernel QLE2462 driver LU enumeration bug?
-Date: Tue, 7 Feb 2006 09:17:16 +0000
-Message-ID: <20060207091716.GB11691@infradead.org>
-References: <1138279741.1318.76.camel@echo.e.linpro.no> <20060206231150.GG9044@andrew-vasquezs-powerbook-g4-15.local>
+From: Ingo Flaschberger <if@xip.at>
+Subject: Re: Booting from or using a Compaq RA4100 Array
+Date: Tue, 7 Feb 2006 11:05:41 +0100 (CET)
+Message-ID: <Pine.GSO.4.64.0602071058530.26505@filebunker.xip.at>
+References: <Pine.GSO.4.64.0602061840520.24390@filebunker.xip.at>
+ <200602061923.31944@bilbo.math.uni-mannheim.de> <Pine.GSO.4.64.0602061921160.94@filebunker.xip.at>
+ <200602070855.34920@bilbo.math.uni-mannheim.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:19945 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S932187AbWBGJRZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Feb 2006 04:17:25 -0500
-Content-Disposition: inline
-In-Reply-To: <20060206231150.GG9044@andrew-vasquezs-powerbook-g4-15.local>
+Received: from ns1.xip.at ([193.239.188.99]:41407 "EHLO chile.gbit.at")
+	by vger.kernel.org with ESMTP id S964862AbWBGKeJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2006 05:34:09 -0500
+In-Reply-To: <200602070855.34920@bilbo.math.uni-mannheim.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Tore Anderson <tore@linpro.no>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
->  
->  	int_to_scsilun(sp->cmd->device->lun, &cmd_pkt->lun);
-> +	host_to_fcp_swap((uint8_t *)&cmd_pkt->lun, sizeof(cmd_pkt->lun));
+Hello,
 
-this looks rather odd to me.  first and minor cmd_pkt->lun now gets
-values in different endianesses asigned, which doesn't help static
-typechecking, aka getting the qla2xxx driver sparse clean.  Second the
-host_to_fcp_swap function looks more than fishy to me.  It's doing a loop
-of unconditional byteswaps.  that can't be right on BE hardware, can it?
+first: I would really appreciate the creation of a own devel list for 
+that.
 
+second: I would like to help with coding and testing and could provide 
+test hardware and remote hands at my location:
+ 	1x HHBA-5101C Tachyon Fibre Channel Host Bus Adapater, Chipset HPFC-5100
+ 		with fiber gbic
+ 	1x HHBA-5101C Tachyon Fibre Channel Host Bus Adapater, Chipset HPFC-5100
+ 		with copper gbic
+ 	1x qlogic ISP2200A with copper gbic (wit 2.4 RA4000 does not work with
+ 		this card)
+ 	1x Compaq RA4000 with fiber or copper gbic
+ 	1x test-server, 256mb ram, ~500mhz cp with inet connectivity
 
+Kind regards,
+ 	ingo flaschberger
+
+geschaeftsleitung
+crossip communications gmbH
+------------------------------
+sebastian kneipp gasse 1
+a-1020 wien
+fix: +43-1-726 15 22-217
+fax: +43-1-726 15 22-111
+mob: +43-699-105 86 719
+www.xip.at
+------------------------------
