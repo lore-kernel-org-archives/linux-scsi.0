@@ -1,30 +1,40 @@
-From: Tore Anderson <tore@linpro.no>
-Subject: Re: [patch 15/15] ipr: Support attaching SATA devices
-Date: Tue, 07 Feb 2006 15:51:20 +0100
-Message-ID: <1139323880.20401.73.camel@echo.e.linpro.no>
-References: <200602061542.k16FgdNU025771@d03av04.boulder.ibm.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] Recognize missing LUNs for non-standard devices
+Date: Tue, 7 Feb 2006 09:53:51 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0602070952410.5164-100000@iolanthe.rowland.org>
+References: <43E7D3DB.8060303@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from head.linpro.no ([80.232.36.1]:22424 "EHLO head.linpro.no")
-	by vger.kernel.org with ESMTP id S965103AbWBGOv1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2006 09:51:27 -0500
-In-Reply-To: <200602061542.k16FgdNU025771@d03av04.boulder.ibm.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:14041 "HELO
+	iolanthe.rowland.org") by vger.kernel.org with SMTP id S965113AbWBGOxw
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Feb 2006 09:53:52 -0500
+In-Reply-To: <43E7D3DB.8060303@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Brian King <brking@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-* brking@us.ibm.com
+On Mon, 6 Feb 2006, Brian King wrote:
 
-> -#define IPR_DRIVER_VERSION "2.1.1"
-> -#define IPR_DRIVER_DATE "(November 15, 2005)"
-> +#define IPR_DRIVER_VERSION "2.2.0"
-> +#define IPR_DRIVER_DATE "(February 6, 2005)"
-                                         ^^^^  You mean 2006, yes?
+> Alan Stern wrote:
+> > Some protocols (like USB UFI) or devices that don't adhere to the SCSI
+> > standard may indicate a nonexistent LUN by returning INQUIRY information
+> > with Peripheral Device Type set to 0x1f (unknown or none) and Peripheral
+> > Qualifier set to 0 instead of 3 as the spec requires.  This patch (as650)
+> > causes PDT = 0x1f to be recognized as no LUN present regardless of the
+> > qualifier value, if the SCSI level is equal to 0.
+> 
+> This patch will break the ipr driver. The ipr adapter firmware reports a
+> logical scsi device which is used for RAID configuration. It reports
+> a Peripheral Device Type of 0x1f and a scsi level of 0, since it does
+> not claim compliance with any scsi level. 
 
-Regards
--- 
-Tore Anderson
+I was afraid that might happen.  Okay, forget the patch.
+
+How come you didn't mention the ipr driver before when I first raised the 
+possibility of making this change?
+
+Alan Stern
 
