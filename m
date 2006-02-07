@@ -1,56 +1,57 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH] Make spi_print_msg more consistent
-Date: Tue, 7 Feb 2006 08:05:26 -0700
-Message-ID: <20060207150526.GC1601@parisc-linux.org>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH] Recognize missing LUNs for non-standard devices
+Date: Tue, 07 Feb 2006 09:16:58 -0600
+Message-ID: <43E8B9EA.7050707@us.ibm.com>
+References: <Pine.LNX.4.44L0.0602070952410.5164-100000@iolanthe.rowland.org>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:57283 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S965122AbWBGPF1
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Feb 2006 10:05:27 -0500
-Content-Disposition: inline
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:19157 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1750765AbWBGPRE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2006 10:17:04 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id k17FH3Gt026995
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Feb 2006 10:17:03 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k17FH3Ii226660
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Feb 2006 10:17:03 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k17FH3FI012983
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Feb 2006 10:17:03 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0602070952410.5164-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
+Alan Stern wrote:
+> On Mon, 6 Feb 2006, Brian King wrote:
+> 
+>> Alan Stern wrote:
+>>> Some protocols (like USB UFI) or devices that don't adhere to the SCSI
+>>> standard may indicate a nonexistent LUN by returning INQUIRY information
+>>> with Peripheral Device Type set to 0x1f (unknown or none) and Peripheral
+>>> Qualifier set to 0 instead of 3 as the spec requires.  This patch (as650)
+>>> causes PDT = 0x1f to be recognized as no LUN present regardless of the
+>>> qualifier value, if the SCSI level is equal to 0.
+>> This patch will break the ipr driver. The ipr adapter firmware reports a
+>> logical scsi device which is used for RAID configuration. It reports
+>> a Peripheral Device Type of 0x1f and a scsi level of 0, since it does
+>> not claim compliance with any scsi level. 
+> 
+> I was afraid that might happen.  Okay, forget the patch.
+> 
+> How come you didn't mention the ipr driver before when I first raised the 
+> possibility of making this change?
 
-Almost all the output from spi_print_msg() has a trailing space.
-This patch fixes up the three cases that don't.
+Sorry about that... I wanted to verify on my end that the scsi level getting
+returned was 0 before doing so. Your repost was a reminder...
 
-Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+Brian
 
-Index: ./drivers/scsi/scsi_transport_spi.c
-===================================================================
-RCS file: /var/cvs/linux-2.6/drivers/scsi/scsi_transport_spi.c,v
-retrieving revision 1.24
-diff -u -p -r1.24 scsi_transport_spi.c
---- ./drivers/scsi/scsi_transport_spi.c	17 Jan 2006 14:51:49 -0000	1.24
-+++ ./drivers/scsi/scsi_transport_spi.c	7 Feb 2006 13:11:26 -0000
-@@ -1101,7 +1133,7 @@ int spi_print_msg(const unsigned char *m
- 				(int) msg[2]);
- 		switch (msg[2]) {
- 		case EXTENDED_MODIFY_DATA_POINTER:
--			printk("pointer = %d", (int) (msg[3] << 24) |
-+			printk("pointer = %d ", (msg[3] << 24) |
- 				(msg[4] << 16) | (msg[5] << 8) | msg[6]);
- 			break;
- 		case EXTENDED_SDTR:
-@@ -1127,7 +1159,7 @@ int spi_print_msg(const unsigned char *m
- 	/* Normal One byte */
- 	} else if (msg[0] < 0x1f) {
- 		if (msg[0] < ARRAY_SIZE(one_byte_msgs))
--			printk(one_byte_msgs[msg[0]]);
-+			printk("%s ", one_byte_msgs[msg[0]]);
- 		else
- 			printk("reserved (%02x) ", msg[0]);
- 		len = 1;
-@@ -1141,7 +1173,7 @@ int spi_print_msg(const unsigned char *m
- 				msg[0], msg[1]);
- 		len = 2;
- 	} else 
--		printk("reserved");
-+		printk("reserved ");
- 	return len;
- }
- EXPORT_SYMBOL(spi_print_msg);
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
