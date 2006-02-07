@@ -1,68 +1,138 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH RFC 0/6] SCSI Userspace Target
-Date: Tue, 07 Feb 2006 21:10:42 +0900
-Message-ID: <20060207211042W.fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 3/6] SCSI Userspace Target: the block layer changes
+Date: Tue, 07 Feb 2006 21:10:53 +0900
+Message-ID: <20060207211053B.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:47824 "EHLO
-	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S965037AbWBGMKo
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:55248 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S964943AbWBGMK4
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Feb 2006 07:10:44 -0500
+	Tue, 7 Feb 2006 07:10:56 -0500
 Received: from vcs3.rdh.ecl.ntt.co.jp (vcs3.rdh.ecl.ntt.co.jp [129.60.39.110])
-	by tama5.ecl.ntt.co.jp (8.12.11/8.12.11) with ESMTP id k17CAgim021074
-	for <linux-scsi@vger.kernel.org>; Tue, 7 Feb 2006 21:10:42 +0900 (JST)
+	by tama5.ecl.ntt.co.jp (8.12.11/8.12.11) with ESMTP id k17CArTX021131
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Feb 2006 21:10:53 +0900 (JST)
 Received: from mfs3.rdh.ecl.ntt.co.jp (mfs3.rdh.ecl.ntt.co.jp [129.60.39.112])
-	by vcs3.rdh.ecl.ntt.co.jp (8.12.11/8.12.11) with ESMTP id k17CAfTh029519
-	for <linux-scsi@vger.kernel.org>; Tue, 7 Feb 2006 21:10:41 +0900 (JST)
+	by vcs3.rdh.ecl.ntt.co.jp (8.12.11/8.12.11) with ESMTP id k17CAr9O029667
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Feb 2006 21:10:53 +0900 (JST)
 Received: from nttmail3.ecl.ntt.co.jp ([129.60.39.100])
-	by mfs3.rdh.ecl.ntt.co.jp (8.12.11/8.12.11) with ESMTP id k17CAfLY007240
-	for <linux-scsi@vger.kernel.org>; Tue, 7 Feb 2006 21:10:41 +0900 (JST)
+	by mfs3.rdh.ecl.ntt.co.jp (8.12.11/8.12.11) with ESMTP id k17CAqaB007350
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Feb 2006 21:10:52 +0900 (JST)
 Received: from dmailsv1.y.ecl.ntt.co.jp (dmailsv1.y.ecl.ntt.co.jp [129.60.53.14])
-	by nttmail3.ecl.ntt.co.jp (8.12.11/8.12.11) with ESMTP id k17CAeEM014371
-	for <linux-scsi@vger.kernel.org>; Tue, 7 Feb 2006 21:10:40 +0900 (JST)
+	by nttmail3.ecl.ntt.co.jp (8.12.11/8.12.11) with ESMTP id k17CAqjX014403
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Feb 2006 21:10:52 +0900 (JST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-This is the second version of the SCSI Userspace target framework.
-The goal of the project is to push most of the target code to
-userspace. The only parts we kept in the kernel were for transferring
-data between the LLD and userpsace by using the packet socket mmapped
-IO interface.
+Add partial mappings support to bio_map_user.
 
-Please refer to the first submission in last month for further
-details.
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=113815791805410&w=2
+ block/ll_rw_blk.c   |    5 +++--
+ fs/bio.c            |   11 +++++++----
+ include/linux/bio.h |    5 +++--
+ 3 files changed, 13 insertions(+), 8 deletions(-)
 
-
-Thanks to everyone who provided comments on the first round. We have
-incorporated all comments.
-
-New in this submission:
-
-o Replace our mapping code with the helper functions (such as
-bio_map_user)
-o Use the struct requests end_io_data instead of adding something new
-to scsi_cmnd
-o Replace netlink code with the packet socket mmapped IO interface
-o Add another target LLD example, IBM Virtual SCSI target LLD.
-
-
-You need the 3rd, 4th, and 5th patches to compile the code though they
-are outside scsi-ml. We submit them to other places later too.
-
-This time we included IBM Virtual SCSI target LLD based on ibmvscsis
-LLD. We have not changed the software iscsi target LLD since the first
-submission.
-
-We updated the corresponding user-space tools:
-
-http://svn.berlios.de/svnroot/repos/stgt/branches/use-scsi-ml
-
-
-Thanks,
-
-Mike Christie and FUJITA Tomonori
+cb01cdddfbed14cd32941b34fbbad5b92714eec6
+diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
+index f9fc07e..65c56b6 100644
+--- a/block/ll_rw_blk.c
++++ b/block/ll_rw_blk.c
+@@ -2293,7 +2293,7 @@ int blk_rq_map_user(request_queue_t *q, 
+ 	 */
+ 	uaddr = (unsigned long) ubuf;
+ 	if (!(uaddr & queue_dma_alignment(q)) && !(len & queue_dma_alignment(q)))
+-		bio = bio_map_user(q, NULL, uaddr, len, reading);
++		bio = bio_map_user(q, NULL, uaddr, len, reading, 0);
+ 	else
+ 		bio = bio_copy_user(q, uaddr, len, reading);
+ 
+@@ -2345,7 +2345,8 @@ int blk_rq_map_user_iov(request_queue_t 
+ 	/* we don't allow misaligned data like bio_map_user() does.  If the
+ 	 * user is using sg, they're expected to know the alignment constraints
+ 	 * and respect them accordingly */
+-	bio = bio_map_user_iov(q, NULL, iov, iov_count, rq_data_dir(rq)== READ);
++	bio = bio_map_user_iov(q, NULL, iov, iov_count, rq_data_dir(rq)== READ,
++				0);
+ 	if (IS_ERR(bio))
+ 		return PTR_ERR(bio);
+ 
+diff --git a/fs/bio.c b/fs/bio.c
+index 1f3bb50..fd1e419 100644
+--- a/fs/bio.c
++++ b/fs/bio.c
+@@ -719,19 +719,21 @@ static struct bio *__bio_map_user_iov(re
+  *	@uaddr: start of user address
+  *	@len: length in bytes
+  *	@write_to_vm: bool indicating writing to pages or not
++ *	@support_partial: support partial mappings
+  *
+  *	Map the user space address into a bio suitable for io to a block
+  *	device. Returns an error pointer in case of error.
+  */
+ struct bio *bio_map_user(request_queue_t *q, struct block_device *bdev,
+-			 unsigned long uaddr, unsigned int len, int write_to_vm)
++			 unsigned long uaddr, unsigned int len, int write_to_vm,
++			 int support_partial)
+ {
+ 	struct sg_iovec iov;
+ 
+ 	iov.iov_base = (void __user *)uaddr;
+ 	iov.iov_len = len;
+ 
+-	return bio_map_user_iov(q, bdev, &iov, 1, write_to_vm);
++	return bio_map_user_iov(q, bdev, &iov, 1, write_to_vm, support_partial);
+ }
+ 
+ /**
+@@ -741,13 +743,14 @@ struct bio *bio_map_user(request_queue_t
+  *	@iov:	the iovec.
+  *	@iov_count: number of elements in the iovec
+  *	@write_to_vm: bool indicating writing to pages or not
++ *	@support_partial: support partial mappings
+  *
+  *	Map the user space address into a bio suitable for io to a block
+  *	device. Returns an error pointer in case of error.
+  */
+ struct bio *bio_map_user_iov(request_queue_t *q, struct block_device *bdev,
+ 			     struct sg_iovec *iov, int iov_count,
+-			     int write_to_vm)
++			     int write_to_vm, int support_partial)
+ {
+ 	struct bio *bio;
+ 	int len = 0, i;
+@@ -768,7 +771,7 @@ struct bio *bio_map_user_iov(request_que
+ 	for (i = 0; i < iov_count; i++)
+ 		len += iov[i].iov_len;
+ 
+-	if (bio->bi_size == len)
++	if (bio->bi_size == len || support_partial)
+ 		return bio;
+ 
+ 	/*
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index b60ffe3..fc0906c 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -295,12 +295,13 @@ extern int bio_add_page(struct bio *, st
+ extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
+ 			   unsigned int, unsigned int);
+ extern int bio_get_nr_vecs(struct block_device *);
++extern int __bio_get_nr_vecs(struct request_queue *);
+ extern struct bio *bio_map_user(struct request_queue *, struct block_device *,
+-				unsigned long, unsigned int, int);
++				unsigned long, unsigned int, int, int);
+ struct sg_iovec;
+ extern struct bio *bio_map_user_iov(struct request_queue *,
+ 				    struct block_device *,
+-				    struct sg_iovec *, int, int);
++				    struct sg_iovec *, int, int, int);
+ extern void bio_unmap_user(struct bio *);
+ extern struct bio *bio_map_kern(struct request_queue *, void *, unsigned int,
+ 				gfp_t);
+-- 
+1.1.3
