@@ -1,49 +1,67 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/3] aic79xx: convert qfrozen to atomic_t
-Date: Tue, 07 Feb 2006 12:30:55 +0100
-Message-ID: <43E884EF.5040704@suse.de>
-References: <43E851D2.1060306@suse.de> <20060207110055.GA13539@infradead.org>
+Subject: spi_dv_device_compare_inquiry() oddity
+Date: Tue, 07 Feb 2006 12:45:27 +0100
+Message-ID: <43E88857.60605@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39342 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S964835AbWBGLbI convert rfc822-to-8bit
+Received: from cantor2.suse.de ([195.135.220.15]:55728 "EHLO mx2.suse.de")
+	by vger.kernel.org with ESMTP id S965030AbWBGLp2 convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Feb 2006 06:31:08 -0500
-In-Reply-To: <20060207110055.GA13539@infradead.org>
+	Tue, 7 Feb 2006 06:45:28 -0500
+Received: from Relay2.suse.de (mail2.suse.de [195.135.221.8])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx2.suse.de (Postfix) with ESMTP id 19E4F1D5CA
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Feb 2006 12:45:27 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "emmanuel.fuste" <emmanuel.fuste@laposte.net>
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Christoph Hellwig wrote:
-> On Tue, Feb 07, 2006 at 08:52:50AM +0100, Hannes Reinecke wrote:
->> This patch converts platform_data->qfrozen to atomic_t.
->> This way we can get rid of ahd_lock / ahd_unlock for the
->> accessor functions; it also fixes some deadlocks in the
->> recovery code (again).
->=20
-> Is ahd_freeze_simq called recursively at all?  If not it would be muc=
-h
-> better to just kill it completely and just rely on the block layer, a=
-s
-> we do in all the other drivers.
->=20
+Hi all,
 
-As in
+trying to get my CD-ROM to behave I stumbled across the following:
 
-void
-ahd_freeze_simq(struct ahd_softc *ahd)
+drivers/scsi/scsi_transport_spi.c:spi_dv_device_compare_inquiry()
+
+spi_dv_device_compare_inquiry(struct scsi_device *sdev, u8 *buffer,
+			      u8 *ptr, const int retries)
 {
-	scsi_block_requests(ahd->platform_data->host);
+	int r, result;
+	const int len =3D sdev->inquiry_len;
+	const char spi_inquiry[] =3D {
+		INQUIRY, 0, 0, 0, len, 0
+	};
+
+	for (r =3D 0; r < retries; r++) {
+		memset(ptr, 0, len);
+
+		result =3D spi_execute(sdev, spi_inquiry, DMA_FROM_DEVICE,
+				     ptr, len, NULL);
+	=09
+		if(result || !scsi_device_online(sdev)) {
+			scsi_device_set_state(sdev, SDEV_QUIESCE);
+			return SPI_COMPARE_FAILURE;
+		}
+
+		/* If we don't have the inquiry data already, the
+		 * first read gets it */
+		if (ptr =3D=3D buffer) {
+			ptr +=3D len;
+			--r;
+			continue;
+		}
+
+		if (memcmp(buffer, ptr, len) !=3D 0)
+			/* failure */
+			return SPI_COMPARE_FAILURE;
+	}
+	return SPI_COMPARE_SUCCESS;
 }
 
-?
-
-Hmm. Looks as if this could work ...
-
-Lemme check.
+So if the inquiry succeeds we have to retry to check that the inquiry
+_really_ succeded? Am I missing some subleties here?
 
 Cheers,
 
