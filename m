@@ -1,79 +1,362 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: spi_dv_device_compare_inquiry() oddity
-Date: Tue, 07 Feb 2006 12:45:27 +0100
-Message-ID: <43E88857.60605@suse.de>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 1/6] SCSI Userspace Target: scsi-ml changes
+Date: Tue, 07 Feb 2006 21:10:46 +0900
+Message-ID: <20060207211046F.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:55728 "EHLO mx2.suse.de")
-	by vger.kernel.org with ESMTP id S965030AbWBGLp2 convert rfc822-to-8bit
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:50384 "EHLO
+	tama5.ecl.ntt.co.jp") by vger.kernel.org with ESMTP id S965039AbWBGMKr
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Feb 2006 06:45:28 -0500
-Received: from Relay2.suse.de (mail2.suse.de [195.135.221.8])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx2.suse.de (Postfix) with ESMTP id 19E4F1D5CA
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Feb 2006 12:45:27 +0100 (CET)
+	Tue, 7 Feb 2006 07:10:47 -0500
+Received: from vcs3.rdh.ecl.ntt.co.jp (vcs3.rdh.ecl.ntt.co.jp [129.60.39.110])
+	by tama5.ecl.ntt.co.jp (8.12.11/8.12.11) with ESMTP id k17CAkPE021092
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Feb 2006 21:10:46 +0900 (JST)
+Received: from mfs3.rdh.ecl.ntt.co.jp (mfs3.rdh.ecl.ntt.co.jp [129.60.39.112])
+	by vcs3.rdh.ecl.ntt.co.jp (8.12.11/8.12.11) with ESMTP id k17CAjB9029596
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Feb 2006 21:10:45 +0900 (JST)
+Received: from nttmail3.ecl.ntt.co.jp ([129.60.39.100])
+	by mfs3.rdh.ecl.ntt.co.jp (8.12.11/8.12.11) with ESMTP id k17CAi7D007272
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Feb 2006 21:10:44 +0900 (JST)
+Received: from dmailsv1.y.ecl.ntt.co.jp (dmailsv1.y.ecl.ntt.co.jp [129.60.53.14])
+	by nttmail3.ecl.ntt.co.jp (8.12.11/8.12.11) with ESMTP id k17CAi4B014394
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Feb 2006 21:10:44 +0900 (JST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Hi all,
+Export scsi-ml functions needed by tgt_scsi_lib and its LLDs.
 
-trying to get my CD-ROM to behave I stumbled across the following:
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
 
-drivers/scsi/scsi_transport_spi.c:spi_dv_device_compare_inquiry()
+ drivers/scsi/hosts.c     |    5 +++
+ drivers/scsi/scsi.c      |   91 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_lib.c  |   33 ++++++++++++-----
+ include/scsi/scsi_cmnd.h |    9 +++++
+ include/scsi/scsi_host.h |   40 ++++++++++++++++++++
+ 5 files changed, 169 insertions(+), 9 deletions(-)
 
-spi_dv_device_compare_inquiry(struct scsi_device *sdev, u8 *buffer,
-			      u8 *ptr, const int retries)
-{
-	int r, result;
-	const int len =3D sdev->inquiry_len;
-	const char spi_inquiry[] =3D {
-		INQUIRY, 0, 0, 0, len, 0
-	};
-
-	for (r =3D 0; r < retries; r++) {
-		memset(ptr, 0, len);
-
-		result =3D spi_execute(sdev, spi_inquiry, DMA_FROM_DEVICE,
-				     ptr, len, NULL);
-	=09
-		if(result || !scsi_device_online(sdev)) {
-			scsi_device_set_state(sdev, SDEV_QUIESCE);
-			return SPI_COMPARE_FAILURE;
-		}
-
-		/* If we don't have the inquiry data already, the
-		 * first read gets it */
-		if (ptr =3D=3D buffer) {
-			ptr +=3D len;
-			--r;
-			continue;
-		}
-
-		if (memcmp(buffer, ptr, len) !=3D 0)
-			/* failure */
-			return SPI_COMPARE_FAILURE;
-	}
-	return SPI_COMPARE_SUCCESS;
-}
-
-So if the inquiry succeeds we have to retry to check that the inquiry
-_really_ succeded? Am I missing some subleties here?
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke			hare@suse.de
-SuSE Linux Products GmbH		S390 & zSeries
-Maxfeldstra=DFe 5				+49 911 74053 688
-90409 N=FCrnberg				http://www.suse.de
-
+0148c5181259739d06b18e2405b8199576577bb6
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index ef57f25..a122624 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -264,6 +264,11 @@ static void scsi_host_dev_release(struct
+ 	if (shost->work_q)
+ 		destroy_workqueue(shost->work_q);
+ 
++	if (shost->uspace_req_q) {
++		kfree(shost->uspace_req_q->queuedata);
++		scsi_free_queue(shost->uspace_req_q);
++	}
++
+ 	scsi_destroy_command_freelist(shost);
+ 	kfree(shost->shost_data);
+ 
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index d182bad..701973e 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -234,6 +234,58 @@ static struct scsi_cmnd *__scsi_get_comm
+ }
+ 
+ /*
++ * Function:	scsi_host_get_command()
++ *
++ * Purpose:	Allocate and setup a scsi command block and blk request
++ *
++ * Arguments:	shost	- scsi host
++ *		data_dir - dma data dir
++ *		gfp_mask- allocator flags
++ *
++ * Returns:	The allocated scsi command structure.
++ *
++ * This should be called by target LLDs to get a command.
++ */
++struct scsi_cmnd *scsi_host_get_command(struct Scsi_Host *shost,
++					enum dma_data_direction data_dir,
++					gfp_t gfp_mask)
++{
++	int write = (data_dir == DMA_TO_DEVICE);
++	struct request *rq;
++	struct scsi_cmnd *cmd;
++
++	/* Bail if we can't get a reference to the device */
++	if (!get_device(&shost->shost_gendev))
++		return NULL;
++
++	rq = blk_get_request(shost->uspace_req_q, write, gfp_mask);
++	if (!rq)
++		goto put_dev;
++
++	cmd = __scsi_get_command(shost, gfp_mask);
++	if (!cmd)
++		goto release_rq;
++
++	memset(cmd, 0, sizeof(*cmd));
++	cmd->sc_data_direction = data_dir;
++	cmd->jiffies_at_alloc = jiffies;
++	cmd->request = rq;
++
++	rq->special = cmd;
++	rq->flags |= REQ_SPECIAL | REQ_BLOCK_PC;
++
++	return cmd;
++
++release_rq:
++	blk_put_request(rq);
++put_dev:
++	put_device(&shost->shost_gendev);
++	return NULL;
++
++}
++EXPORT_SYMBOL_GPL(scsi_host_get_command);
++
++/*
+  * Function:	scsi_get_command()
+  *
+  * Purpose:	Allocate and setup a scsi command block
+@@ -272,6 +324,45 @@ struct scsi_cmnd *scsi_get_command(struc
+ EXPORT_SYMBOL(scsi_get_command);
+ 
+ /*
++ * Function:	scsi_host_put_command()
++ *
++ * Purpose:	Free a scsi command block
++ *
++ * Arguments:	shost	- scsi host
++ * 		cmd	- command block to free
++ *
++ * Returns:	Nothing.
++ *
++ * Notes:	The command must not belong to any lists.
++ */
++void scsi_host_put_command(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
++{
++	struct request_queue *q = shost->uspace_req_q;
++	struct request *rq = cmd->request;
++	unsigned long flags;
++
++	/* changing locks here, don't need to restore the irq state */
++	spin_lock_irqsave(&shost->free_list_lock, flags);
++	if (unlikely(list_empty(&shost->free_list))) {
++		list_add(&cmd->list, &shost->free_list);
++		cmd = NULL;
++	}
++	spin_unlock(&shost->free_list_lock);
++
++	spin_lock(q->queue_lock);
++	if (blk_rq_tagged(rq))
++		blk_queue_end_tag(q, rq);
++	__blk_put_request(q, rq);
++	spin_unlock_irqrestore(q->queue_lock, flags);
++
++	if (likely(cmd != NULL))
++		kmem_cache_free(shost->cmd_pool->slab, cmd);
++
++	put_device(&shost->shost_gendev);
++}
++EXPORT_SYMBOL_GPL(scsi_host_put_command);
++
++/*
+  * Function:	scsi_put_command()
+  *
+  * Purpose:	Free a scsi command block
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 5ac8749..2dcc500 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -802,7 +802,7 @@ static struct scsi_cmnd *scsi_end_reques
+ 	return NULL;
+ }
+ 
+-static struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
++struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+ {
+ 	struct scsi_host_sg_pool *sgp;
+ 	struct scatterlist *sgl;
+@@ -843,7 +843,9 @@ static struct scatterlist *scsi_alloc_sg
+ 	return sgl;
+ }
+ 
+-static void scsi_free_sgtable(struct scatterlist *sgl, int index)
++EXPORT_SYMBOL(scsi_alloc_sgtable);
++
++void scsi_free_sgtable(struct scatterlist *sgl, int index)
+ {
+ 	struct scsi_host_sg_pool *sgp;
+ 
+@@ -853,6 +855,8 @@ static void scsi_free_sgtable(struct sca
+ 	mempool_free(sgl, sgp->pool);
+ }
+ 
++EXPORT_SYMBOL(scsi_free_sgtable);
++
+ /*
+  * Function:    scsi_release_buffers()
+  *
+@@ -1685,29 +1689,40 @@ u64 scsi_calculate_bounce_limit(struct S
+ }
+ EXPORT_SYMBOL(scsi_calculate_bounce_limit);
+ 
+-struct request_queue *scsi_alloc_queue(struct scsi_device *sdev)
++struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
++					 request_fn_proc *request_fn)
+ {
+-	struct Scsi_Host *shost = sdev->host;
+ 	struct request_queue *q;
+ 
+-	q = blk_init_queue(scsi_request_fn, NULL);
++	q = blk_init_queue(request_fn, NULL);
+ 	if (!q)
+ 		return NULL;
+ 
+-	blk_queue_prep_rq(q, scsi_prep_fn);
 -
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ 	blk_queue_max_hw_segments(q, shost->sg_tablesize);
+ 	blk_queue_max_phys_segments(q, SCSI_MAX_PHYS_SEGMENTS);
+ 	blk_queue_max_sectors(q, shost->max_sectors);
+ 	blk_queue_bounce_limit(q, scsi_calculate_bounce_limit(shost));
+ 	blk_queue_segment_boundary(q, shost->dma_boundary);
+-	blk_queue_issue_flush_fn(q, scsi_issue_flush_fn);
+-	blk_queue_softirq_done(q, scsi_softirq_done);
+ 
+ 	if (!shost->use_clustering)
+ 		clear_bit(QUEUE_FLAG_CLUSTER, &q->queue_flags);
+ 	return q;
+ }
++EXPORT_SYMBOL(__scsi_alloc_queue);
++
++struct request_queue *scsi_alloc_queue(struct scsi_device *sdev)
++{
++	struct request_queue *q;
++
++	q = __scsi_alloc_queue(sdev->host, scsi_request_fn);
++	if (!q)
++		return NULL;
++
++	blk_queue_prep_rq(q, scsi_prep_fn);
++	blk_queue_issue_flush_fn(q, scsi_issue_flush_fn);
++	blk_queue_softirq_done(q, scsi_softirq_done);
++	return q;
++}
+ 
+ void scsi_free_queue(struct request_queue *q)
+ {
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 1ace1b9..59f0981 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -5,9 +5,11 @@
+ #include <linux/list.h>
+ #include <linux/types.h>
+ #include <linux/timer.h>
++#include <linux/bio-list.h>
+ 
+ struct request;
+ struct scatterlist;
++struct Scsi_Host;
+ struct scsi_device;
+ struct scsi_request;
+ 
+@@ -84,6 +86,8 @@ struct scsi_cmnd {
+ 	unsigned short sglist_len;	/* size of malloc'd scatter-gather list */
+ 	unsigned bufflen;	/* Size of data buffer */
+ 	void *buffer;		/* Data buffer */
++	/* offset in cmd we are at (for multi-transfer tgt cmds) */
++	unsigned offset;
+ 
+ 	unsigned underflow;	/* Return error if less than
+ 				   this amount is transferred */
+@@ -147,9 +151,14 @@ struct scsi_cmnd {
+ #define SCSI_STATE_MLQUEUE         0x100b
+ 
+ 
++extern struct scsi_cmnd *scsi_host_get_command(struct Scsi_Host *,
++					       enum dma_data_direction, gfp_t);
+ extern struct scsi_cmnd *scsi_get_command(struct scsi_device *, gfp_t);
++extern void scsi_host_put_command(struct Scsi_Host *, struct scsi_cmnd *);
+ extern void scsi_put_command(struct scsi_cmnd *);
+ extern void scsi_io_completion(struct scsi_cmnd *, unsigned int, unsigned int);
+ extern void scsi_finish_command(struct scsi_cmnd *cmd);
++extern struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *, gfp_t);
++extern void scsi_free_sgtable(struct scatterlist *, int);
+ 
+ #endif /* _SCSI_SCSI_CMND_H */
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 8279929..8b799db 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -7,6 +7,7 @@
+ #include <linux/workqueue.h>
+ #include <linux/mutex.h>
+ 
++struct request_queue;
+ struct block_device;
+ struct completion;
+ struct module;
+@@ -123,6 +124,36 @@ struct scsi_host_template {
+ 			     void (*done)(struct scsi_cmnd *));
+ 
+ 	/*
++	 * The transfer functions are used to queue a scsi command to
++	 * the LLD. When the driver is finished processing the command
++	 * the done callback is invoked.
++	 *
++	 * return values: see queuecommand
++	 *
++	 * If the LLD accepts the cmd, it should set the result to an
++	 * appropriate value when completed before calling the done function.
++	 *
++	 * STATUS: REQUIRED FOR TARGET DRIVERS
++	 */
++	/* TODO: rename */
++	int (* transfer_response)(struct scsi_cmnd *,
++				  void (*done)(struct scsi_cmnd *));
++	/*
++	 * This is called to inform the LLD to transfer cmd->request_bufflen
++	 * bytes of the cmd at cmd->offset in the cmd. The cmd->use_sg
++	 * speciefies the number of scatterlist entried in the command
++	 * and cmd->request_buffer contains the scatterlist.
++	 *
++	 * If the command cannot be processed in one transfer_data call
++	 * becuase a scatterlist within the LLD's limits cannot be
++	 * created then transfer_data will be called multiple times.
++	 * It is initially called from process context, and later
++	 * calls are from the interrup context.
++	 */
++	int (* transfer_data)(struct scsi_cmnd *,
++			      void (*done)(struct scsi_cmnd *));
++
++	/*
+ 	 * This is an error handling strategy routine.  You don't need to
+ 	 * define one of these if you don't want to - there is a default
+ 	 * routine that is present that should work in most cases.  For those
+@@ -572,6 +603,12 @@ struct Scsi_Host {
+ 	 */
+ 	unsigned int max_host_blocked;
+ 
++	/*
++	 * q used for scsi_tgt msgs, async events or any other requests that
++	 * need to be processed in userspace
++ 	 */
++	struct request_queue *uspace_req_q;
++
+ 	/* legacy crap */
+ 	unsigned long base;
+ 	unsigned long io_port;
+@@ -674,6 +711,9 @@ extern void scsi_unblock_requests(struct
+ extern void scsi_block_requests(struct Scsi_Host *);
+ 
+ struct class_container;
++
++extern struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
++					     void (*) (struct request_queue *));
+ /*
+  * These two functions are used to allocate and free a pseudo device
+  * which will connect to the host adapter itself rather than any
+-- 
+1.1.3
