@@ -1,45 +1,65 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: In-kernel QLE2462 driver LU enumeration bug?
-Date: Mon, 6 Feb 2006 15:11:50 -0800
-Message-ID: <20060206231150.GG9044@andrew-vasquezs-powerbook-g4-15.local>
-References: <1138279741.1318.76.camel@echo.e.linpro.no>
+From: Willem Riede <osst@riede.org>
+Subject: Re: osst changes required to move forward to block request
+Date: Mon, 06 Feb 2006 20:02:21 -0500
+Message-ID: <1139274141l.7464l.1l@athena.riede.org>
+References: <20060206131944.GA1769@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; DelSp=Yes; Format=Flowed
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pat.qlogic.com ([198.70.193.2]:35838 "EHLO avexch02.qlogic.com")
-	by vger.kernel.org with ESMTP id S932363AbWBFXLw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 18:11:52 -0500
+Received: from rwcrmhc14.comcast.net ([204.127.192.84]:12477 "EHLO
+	rwcrmhc14.comcast.net") by vger.kernel.org with ESMTP
+	id S964921AbWBGBCj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2006 20:02:39 -0500
+In-Reply-To: <20060206131944.GA1769@lst.de> (from hch@lst.de on Mon Feb  6
+	08:19:44 2006)
 Content-Disposition: inline
-In-Reply-To: <1138279741.1318.76.camel@echo.e.linpro.no>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tore Anderson <tore@linpro.no>
+To: Christoph Hellwig <hch@lst.de>
 Cc: linux-scsi@vger.kernel.org
 
-On Thu, 26 Jan 2006, Tore Anderson wrote:
+On 02/06/2006 08:19:44 AM, Christoph Hellwig wrote:
+> Hi Willem,
+> 
+> do you still maintain the osst driver?  We're moving forward to
+> completly get rid of the scsi_request structure in the scsi midlayer,
+> and osst is the only upper level driver still using it.  I've tried to
+> convert it similar to st, but gave up.  The biggest problem for me is
+> the scsi_request reuse over the driver where a pointer to a pointer to
+> a scsi_request is passed along all the callchain, and I have a really
+> hard time to find out whether the functions actually looks it, or only
 
->   Hi.  I've had large problems making a setup where I'm using a QLE2462
->  card in order to connect to an EMC CLARiiON AX100.  Port 1 of the HBA
->  is connected to Storage Processor A ("SPA") of the AX100, while port 2
->  is connected to SPB.
+"looks it"?? don't understand :-(
 
-Please try the attached patch -- not sure how this was missed as it's
-been in my patch-queue for some time.
+> reuse it.  The latter isn't nessecary these days that the slab allocator
+> behind struct scsi_request does a very good job, and definitly not
+> needed after converting away from it.
+> 
+> If you're still interested in the driver it would be very nice if you
+> could untangle it so that the scsi_request is only passed along in
+> places where subroutines need to look at it - after that converting
+> the driver should be more along the lines of st so a lot easier.  I'd
+> be more than happy to lend a helping hand or to in the conversion once
+> I actually understand what I'm doing :)  It would be a pity to either
+> stop the scsi subsystem from moving forward because of osst or breaking
+> the driver.
+> 
+> 
+> p.s. there's quite a few other changes in st that osst hasn't caught up
+> on, maybe it's time for a big resync?
 
-Thanks,
-Andrew Vasquez
+Yes, I'm still maintaining the driver, but since it does what it needs to, and  
+there have not been any bug reports lately, things have been quiet on the osst  
+front.
 
----
+I have noticed some of the st changes, but things like the direct user space  
+wouldn't have made much gain for osst, dues to the relatively low speed of the  
+drives, compared to latest generation tape drives that st deals with.
 
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 7ec0b8d..6544b6d 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -814,6 +814,7 @@ qla24xx_start_scsi(srb_t *sp)
- 	cmd_pkt->port_id[2] = sp->fcport->d_id.b.domain;
- 
- 	int_to_scsilun(sp->cmd->device->lun, &cmd_pkt->lun);
-+	host_to_fcp_swap((uint8_t *)&cmd_pkt->lun, sizeof(cmd_pkt->lun));
- 
- 	/* Load SCSI command packet. */
- 	memcpy(cmd_pkt->fcp_cdb, cmd->cmnd, cmd->cmd_len);
+But I will certainly help retire scsi_request. And anything else that is  
+needed to keep up with proper kernel style. Let me know what those are, if you  
+would? I'll start looking at how st has changed, and will be back with any  
+questions I may have.
+
+Regards, Willem Riede.
