@@ -1,47 +1,58 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [patch 09/15] libata: Improved ata_exec_internal timeout handling
-Date: Wed, 08 Feb 2006 11:07:55 -0600
-Message-ID: <43EA256B.5050000@us.ibm.com>
-References: <200602061542.k16FgYf0002182@d01av01.pok.ibm.com> <43E9D328.7020109@gmail.com>
-Reply-To: brking@us.ibm.com
+From: Tejun <htejun@gmail.com>
+Subject: Re: Regarding ordered-tag support.
+Date: Thu, 09 Feb 2006 02:18:28 +0900
+Message-ID: <43EA27E4.9080105@gmail.com>
+References: <43E99248.7090505@gmail.com>	 <1139413766.3003.19.camel@mulgrave.il.steeleye.com>	 <43EA17E6.4000800@gmail.com> <43EA1B75.40008@emulex.com>	 <43EA2313.9030506@gmail.com> <1139418451.3003.37.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=EUC-KR
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <43E9D328.7020109@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zproxy.gmail.com ([64.233.162.206]:32478 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1030338AbWBHRSe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2006 12:18:34 -0500
+Received: by zproxy.gmail.com with SMTP id 14so1728789nzn
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2006 09:18:33 -0800 (PST)
+In-Reply-To: <1139418451.3003.37.camel@mulgrave.il.steeleye.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: James.Smart@Emulex.Com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Tejun Heo wrote:
-> brking@us.ibm.com wrote:
->> Currently ata_exec_internal does very minimal cleanup if
->> the executing command times out. This works for most usage
->> scenarios, but can cause problems for hosts that set
->> ATA_FLAG_PIO_DMA. For these users, the DMA buffer gets unmapped
->> while the timed out out command is still active, which has
->> the potential to cause PCI DMA errors if the command is
->> still in progress. The following patch modifies ata_exec_internal
->> to invoke eng_timeout on a timeout to allow for the timed out
->> command to be cleaned up better before proceeding further.
->> This patch is also in preparation for SAS attached SATA devices.
+James Bottomley wrote:
+> On Thu, 2006-02-09 at 01:57 +0900, Tejun wrote:
+> 
+>>I intentionally wrote 'driver' because if a SCSI device determines that 
+>>it's busy, it would report via CHECK CONDITION.  Depending on QErr, the 
+>>whole task set will be terminated, and such case falls into EH 
+>>requeueing case (would require changes in scsi_softirq though).
+> 
+> No, it wouldn't.  BUSY is a SPI Message (deprecated on non-SPI
+> transports) and QUEUE_FULL is a status return.  The device is entitled
+> to think of the transaction as logically complete (and not impacting
+> error recovery) after either of these returns.
+
+I see.  I'll dig docs.
+
+>>>You're making the assumption that you can set QErr... It's under device control. 
 >>
+>>Was it ro field?  Didn't know that.  I will check it tomorrow.  If a 
+>>device doesn't abort whole taskset, we just can't use ordered-tag for 
+>>barriers.
 > 
-> Hello, again.
 > 
-> ata_exec_internal() will be used during EH, so if you call error handler
-> from ata_exec_internal()....  In my pending EH patchset, there's a patch
-> to implement ->post_internal() callback which cleans up after an
-> internal command (successful or not).  Hopefully, it will be merged in
-> not too distant future.  Can ata_exec_internal() timeout handling wait
-> till then?
+> His point is that it's a field in the mode page of a device.  Some
+> devices only have read only mode pages ... still more may not act on
+> this field correctly even if set.  Basically it's opening a can of
+> worms.
 
-Do you have a pointer to this patchset? I did a quick search for
-post_internal on the archive and didn't find anything.
+Yeah, I kind of doubt whether hardware vendors would implement and test
+all the options and features whene I read SCSI specs.  Considering how
+many ATA drives have faulty firmware...
 
+Anyways, it seems ordered-tag support should be left alone for the time
+being.  Sad.  :-(
+
+Thanks a lot.
 
 -- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+tejun
