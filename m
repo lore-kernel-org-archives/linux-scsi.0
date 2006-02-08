@@ -1,43 +1,37 @@
-From: Chris Wright <chrisw@sous-sol.org>
-Subject: [PATCH 01/23] SCSI: turn off ordered flush barriers
-Date: Tue, 07 Feb 2006 22:45:04 -0800
-Message-ID: <20060208064843.927207000@sorel.sous-sol.org>
-References: <20060208064503.924238000@sorel.sous-sol.org>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline; filename=scsi-turn-off-ordered-flush-barriers.patch
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, torvalds@osdl.org, akpm@osdl.org, alan@lxorguk.ukuu.org.uk, Jens Axboe <axboe@suse.de>, Pasi <pasik@iki.fi>, Nix <nix@esperi.org.uk>, Ariel <askernel2615@dsgml.com>, Jamie Heilman <jamie@audible.transient.net>, Chase Venters <chase.venters@clientec.com>, Arjan van de Ven <arjan@infradead.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [SCSI] fix wrong context bugs in SCSI
+Date: Wed, 8 Feb 2006 09:56:29 +0100
+Message-ID: <20060208085629.GE4338@suse.de>
+References: <1139342419.6065.8.camel@mulgrave.il.steeleye.com> <1139342922.6065.12.camel@mulgrave.il.steeleye.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.virtualhost.dk ([195.184.98.160]:13151 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S1030585AbWBHIyF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2006 03:54:05 -0500
+Content-Disposition: inline
+In-Reply-To: <1139342922.6065.12.camel@mulgrave.il.steeleye.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
--stable review patch.  If anyone has any objections, please let us know.
-------------------
+On Tue, Feb 07 2006, James Bottomley wrote:
+> +static void scsi_device_dev_release(struct device *dev)
+> +{
+> +	execute_in_process_context(scsi_device_dev_release_usercontext,	dev);
+> +}
+> +
 
-Turn off ordered flush barriers for SCSI driver, since the SCSI barrier
-code has a command leak.
+Hmm, this (and further up) could fail, yet you don't check.
 
-Signed-off-by: Jens Axboe <axboe@suse.de>
-Signed-off-by: Chris Wright <chrisw@sous-sol.org>
----
+I don't think this API is very nice to be honest, there's no good way to
+handle failures - you can't just sleep and loop retry the execute if you
+are in_interrupt(). I'd prefer passing in a work_queue_work (with a
+better name :-) that has been allocated at a reliable time during
+initialization.
 
- drivers/scsi/scsi_lib.c |    5 -----
- 1 files changed, 5 deletions(-)
 
-Index: linux-2.6.15.3/drivers/scsi/scsi_lib.c
-===================================================================
---- linux-2.6.15.3.orig/drivers/scsi/scsi_lib.c
-+++ linux-2.6.15.3/drivers/scsi/scsi_lib.c
-@@ -1534,11 +1534,6 @@ struct request_queue *scsi_alloc_queue(s
- 	 */
- 	if (shost->ordered_tag)
- 		blk_queue_ordered(q, QUEUE_ORDERED_TAG);
--	else if (shost->ordered_flush) {
--		blk_queue_ordered(q, QUEUE_ORDERED_FLUSH);
--		q->prepare_flush_fn = scsi_prepare_flush_fn;
--		q->end_flush_fn = scsi_end_flush_fn;
--	}
- 
- 	if (!shost->use_clustering)
- 		clear_bit(QUEUE_FLAG_CLUSTER, &q->queue_flags);
+-- 
+Jens Axboe
 
---
