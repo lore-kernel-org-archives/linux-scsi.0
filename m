@@ -1,34 +1,47 @@
-From: "Charlotte Clifton" <jackseon@ksjs.org>
-Subject: feeling fati gued
-Date: Tue, 07 Feb 2006 20:48:13 -0800
-Message-ID: <AD6287A5.46779F5__21863.8333645233$1139371157$gmane$org@ksjs.org>
-Reply-To: "Carrie Ervin" <jackseon@ksjs.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 20/29] scsi_transport_iscsi gfp_t annotations
+Date: Tue, 07 Feb 2006 22:58:28 -0600
+Message-ID: <43E97A74.8000006@cs.wisc.edu>
+References: <E1F6frg-0006DY-4T@ZenIV.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [222.65.245.56] ([222.65.245.56]:30214 "HELO ksjs.org")
-	by vger.kernel.org with SMTP id S932391AbWBHD7D (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2006 22:59:03 -0500
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:50647 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1030338AbWBHE6r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2006 23:58:47 -0500
+In-Reply-To: <E1F6frg-0006DY-4T@ZenIV.linux.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-ide <linux-ide@vger.kernel.org>
-Cc: linux-ppp@vger.kernel.org, linux-sound@vger.kernel.org, majordomo@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-serial@vger.kernel.org, linux-scsi@vger.kernel.org, linux-gcc@vger.kernel.org
+To: Al Viro <viro@ftp.linux.org.uk>
+Cc: torvalds@osdl.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hey linux-ide
+Al Viro wrote:
+> Date: 1138793445 -0500
+> 
+> Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+> 
+> ---
+> 
+>  drivers/scsi/scsi_transport_iscsi.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> e5fb81bd895041230dfaeb8f8f498b85b4705988
+> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+> index 59a1c9d..723f7ac 100644
+> --- a/drivers/scsi/scsi_transport_iscsi.c
+> +++ b/drivers/scsi/scsi_transport_iscsi.c
+> @@ -463,7 +463,7 @@ static inline struct list_head *skb_to_l
+>  }
+>  
+>  static void*
+> -mempool_zone_alloc_skb(unsigned int gfp_mask, void *pool_data)
+> +mempool_zone_alloc_skb(gfp_t gfp_mask, void *pool_data)
+>  {
+>  	struct mempool_zone *zone = pool_data;
+>  
 
-Did you know over 70 per-cent of am ericans are battling OB esity.
+Thanks. I also sent a patch to do this a couple days ago. It is in one 
+of James's trees here:
 
-I dont' know about you but I'm sick of being over we! ght and I just wanna
-get back into sh ape. 
-
-Luckly I came across this site, www.ymom.tYA.gfgrd.org/n2/?id=havoc that
-helped me with all my problems. 
-
-"The extent of their relationship I don't know," he said, adding that
-investigators also didn't yet know how they met.
-
-No point wasting any more time reading this email
-Monica Ritter
-
+http://kernel.org/git/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=28e5554df63085be3b8bd2aee6ddbc479f0d136e
