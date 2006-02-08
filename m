@@ -1,44 +1,54 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [SCSI] fix wrong context bugs in SCSI
-Date: Wed, 8 Feb 2006 16:52:43 +0100
-Message-ID: <20060208155242.GO4338@suse.de>
-References: <1139342419.6065.8.camel@mulgrave.il.steeleye.com> <1139342922.6065.12.camel@mulgrave.il.steeleye.com> <20060208085629.GE4338@suse.de> <1139412662.3003.5.camel@mulgrave.il.steeleye.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Regarding ordered-tag support.
+Date: Wed, 08 Feb 2006 09:49:25 -0600
+Message-ID: <1139413766.3003.19.camel@mulgrave.il.steeleye.com>
+References: <43E99248.7090505@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030357AbWBHPuW@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1139412662.3003.5.camel@mulgrave.il.steeleye.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:29397 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1030350AbWBHPt3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Feb 2006 10:49:29 -0500
+In-Reply-To: <43E99248.7090505@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Feb 08 2006, James Bottomley wrote:
-> On Wed, 2006-02-08 at 09:56 +0100, Jens Axboe wrote:
-> > Hmm, this (and further up) could fail, yet you don't check.
-> 
-> By and large, you have process context, so this isn't going to be a
-> problem.
-> 
-> > I don't think this API is very nice to be honest, there's no good way to
-> > handle failures - you can't just sleep and loop retry the execute if you
-> > are in_interrupt(). I'd prefer passing in a work_queue_work (with a
-> > better name :-) that has been allocated at a reliable time during
-> > initialization.
-> 
-> Yes, I agree ... however, the failure is less prevalent in the new code
-> than the old.  The problem is that we may need to execute multiple puts
-> for a single target from irq contex, so under this scheme you need a wqw
-> (potentially) for every get.
-> 
-> I could solve this by binding the API more tightly into the device
-> model, so the generic device contains the wqw and it is told that the
-> release function of the final put must be called in process context, but
-> that's an awful lot of code changes.
+On Wed, 2006-02-08 at 15:40 +0900, Tejun Heo wrote:
+> Now that new ordered implementation is in the mainline, we can properly 
+> use ordered-tag during barrier sequence.  As noted in the barrier doc, 
+> the problem with the current SCSI midlayer is that scsi_request_fn() is 
+> not atomic w.r.t. q->queuelock, so even if ordered-tag requests leave 
+> request queue in the correct order, they can be reordered while they are 
+> being issued by SCSI midlayer.
 
-Yeah it does get a lot more complicated. I guess I'm fine with the
-current change, but please just keep it in SCSI then. It's not the sort
-of thing you'd want to advertise as an exported API.
+Unfortunately, though, this is only half the problem.
 
--- 
-Jens Axboe
+The other half is busy/queue_full processing and error recovery
+
+For the first: busy/queue_full processing, the issue is that when we
+send out a command, we could get a BUSY or QUEUE_FULL return which comes
+back to us via IRQ context.  Unfortunately, we could have multiple
+commands that do this and a command will be accepted as soon as the busy
+condition alleviates, so we could see say two commands go down in order,
+the first one will get BUSY, the second is accepted and only then do we
+get the IRQ that says BUSY to the first ... now we have out of order
+execution.
+
+For the second:  Depending on the mode page (the QErr bit of the
+queueing page), most devices fail only a single command.  We can set the
+QErr bit to return every command after the failing one (thus ensuring
+execution order), but the error handler would have to take them all back
+and resort them for submission.
+
+I think the first problem has to be solved before we can turn on ordered
+tag based barriers.  I'm ambivalent on the second; we could probably
+mark ordered tag based barriers as "caveat emptor" while we work on the
+EH problem in parallel.
+
+James
+
+
