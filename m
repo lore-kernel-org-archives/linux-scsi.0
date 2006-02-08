@@ -1,59 +1,46 @@
-From: Tejun <htejun@gmail.com>
-Subject: Re: [patch 09/15] libata: Improved ata_exec_internal timeout handling
-Date: Thu, 09 Feb 2006 02:21:41 +0900
-Message-ID: <43EA28A5.5020803@gmail.com>
-References: <200602061542.k16FgYf0002182@d01av01.pok.ibm.com> <43E9D328.7020109@gmail.com> <43EA256B.5050000@us.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Regarding ordered-tag support.
+Date: Wed, 08 Feb 2006 11:27:17 -0600
+Message-ID: <1139419637.3003.43.camel@mulgrave.il.steeleye.com>
+References: <43E99248.7090505@gmail.com>
+	 <1139413766.3003.19.camel@mulgrave.il.steeleye.com>
+	 <43EA17E6.4000800@gmail.com> <43EA1B75.40008@emulex.com>
+	 <43EA2313.9030506@gmail.com>
+	 <1139418451.3003.37.camel@mulgrave.il.steeleye.com>
+	 <43EA27E4.9080105@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.182]:57589 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030350AbWBHRVr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2006 12:21:47 -0500
-Received: by pproxy.gmail.com with SMTP id x31so431697pye
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2006 09:21:46 -0800 (PST)
-In-Reply-To: <43EA256B.5050000@us.ibm.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:63192 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1030367AbWBHR1X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Feb 2006 12:27:23 -0500
+In-Reply-To: <43EA27E4.9080105@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@us.ibm.com
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Tejun <htejun@gmail.com>
+Cc: James.Smart@Emulex.Com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Brian King wrote:
-> Tejun Heo wrote:
+On Thu, 2006-02-09 at 02:18 +0900, Tejun wrote:
+> Yeah, I kind of doubt whether hardware vendors would implement and test
+> all the options and features whene I read SCSI specs.  Considering how
+> many ATA drives have faulty firmware...
 > 
->>brking@us.ibm.com wrote:
->>
->>>Currently ata_exec_internal does very minimal cleanup if
->>>the executing command times out. This works for most usage
->>>scenarios, but can cause problems for hosts that set
->>>ATA_FLAG_PIO_DMA. For these users, the DMA buffer gets unmapped
->>>while the timed out out command is still active, which has
->>>the potential to cause PCI DMA errors if the command is
->>>still in progress. The following patch modifies ata_exec_internal
->>>to invoke eng_timeout on a timeout to allow for the timed out
->>>command to be cleaned up better before proceeding further.
->>>This patch is also in preparation for SAS attached SATA devices.
->>>
->>
->>Hello, again.
->>
->>ata_exec_internal() will be used during EH, so if you call error handler
->>from ata_exec_internal()....  In my pending EH patchset, there's a patch
->>to implement ->post_internal() callback which cleans up after an
->>internal command (successful or not).  Hopefully, it will be merged in
->>not too distant future.  Can ata_exec_internal() timeout handling wait
->>till then?
-> 
-> 
-> Do you have a pointer to this patchset? I did a quick search for
-> post_internal on the archive and didn't find anything.
-> 
+> Anyways, it seems ordered-tag support should be left alone for the time
+> being.  Sad.  :-(
 
-Hi,
+Well ... I've always maintained that ordered queueing is not really a
+good method of implementing barriers in TCQ environments ... primarily
+because no-one else really does it, so we'd be uncovering all of the
+bugs.
 
-No, not posted yet.  It's pretty simple though.  Hmmm... I'll post the
-patch against the current upstream tomorrow.  It's pretty much
-independent from other changes anyway.
+I suppose I'm a broken record, but I really think linked tasks are the
+better way to enforce the required ordering guarantees for SCSI TCQ.
+The problem being that this would present a slightly different API at
+the block level (you have individual writes that are now ordered, not
+wholesale barriers).
 
--- 
-tejun
+James
+
+
