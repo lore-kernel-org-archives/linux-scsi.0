@@ -1,52 +1,34 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/3] aic79xx: convert qfrozen to atomic_t
-Date: Wed, 08 Feb 2006 11:52:32 +0100
-Message-ID: <43E9CD70.8010408@suse.de>
-References: <IUD5WB$FD60BECFC5D6F5FC6C05445B9285B6E2@laposte.net>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [patch 08/15] libata: Add ability to prevent PRD from being allocated
+Date: Wed, 08 Feb 2006 20:12:54 +0900
+Message-ID: <43E9D236.2080207@gmail.com>
+References: <200602061542.k16FgXXX015889@d03av03.boulder.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=EUC-KR
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:64980 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S1030354AbWBHKwu convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Feb 2006 05:52:50 -0500
-In-Reply-To: <IUD5WB$FD60BECFC5D6F5FC6C05445B9285B6E2@laposte.net>
+Received: from pproxy.gmail.com ([64.233.166.182]:7766 "EHLO pproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S964922AbWBHLNc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2006 06:13:32 -0500
+Received: by pproxy.gmail.com with SMTP id x31so361597pye
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2006 03:12:59 -0800 (PST)
+In-Reply-To: <200602061542.k16FgXXX015889@d03av03.boulder.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?ISO-8859-1?Q?Emmanuel_Fust=E9?= <emmanuel.fuste@laposte.net>
-Cc: hch <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: brking@us.ibm.com
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Emmanuel Fust=E9 wrote:
->> On Tue, Feb 07, 2006 at 12:30:55PM +0100, Hannes Reinecke wrote:
->>> As in
->>>
->>> void
->>> ahd_freeze_simq(struct ahd_softc *ahd)
->>> {
->>> 	scsi_block_requests(ahd->platform_data->host);
->>> }
->>>
->>> ?
->> Yes.
->>
-> Does it mean we could simply remove the platform_data->qfrozen
-> flag/counter ?
->=20
->=20
-Yes. I'll send an updated patchset around.
+Hello, Brian.
 
-Cheers,
+brking@us.ibm.com wrote:
+> For some HBAs, particularly SAS HBAs, there is no reason to
+> allocate a PRD buffer, since it is not used. Add a flag
+> to prevent its allocation.
+> 
 
-Hannes
---=20
-Dr. Hannes Reinecke			hare@suse.de
-SuSE Linux Products GmbH		S390 & zSeries
-Maxfeldstra=DFe 5				+49 911 74053 688
-90409 N=FCrnberg				http://www.suse.de
+I think it's better done with ata_sas_port_start/stop rather than with
+ATA_FLAG_NO_PRD.  All sata low level drivers which don't use PRD table
+implement their own port_start/stop (ahci.c, sata_sil24.c for example).
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+tejun
