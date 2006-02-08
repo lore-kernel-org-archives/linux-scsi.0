@@ -1,42 +1,43 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Regarding ordered-tag support.
-Date: Wed, 08 Feb 2006 15:40:08 +0900
-Message-ID: <43E99248.7090505@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from uproxy.gmail.com ([66.249.92.194]:4534 "EHLO uproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030573AbWBHGkR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2006 01:40:17 -0500
-Received: by uproxy.gmail.com with SMTP id s2so172955uge
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Feb 2006 22:40:15 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Chris Wright <chrisw@sous-sol.org>
+Subject: [PATCH 01/23] SCSI: turn off ordered flush barriers
+Date: Tue, 07 Feb 2006 22:45:04 -0800
+Message-ID: <20060208064843.927207000@sorel.sous-sol.org>
+References: <20060208064503.924238000@sorel.sous-sol.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline; filename=scsi-turn-off-ordered-flush-barriers.patch
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, torvalds@osdl.org, akpm@osdl.org, alan@lxorguk.ukuu.org.uk, Jens Axboe <axboe@suse.de>, Pasi <pasik@iki.fi>, Nix <nix@esperi.org.uk>, Ariel <askernel2615@dsgml.com>, Jamie Heilman <jamie@audible.transient.net>, Chase Venters <chase.venters@clientec.com>, Arjan van de Ven <arjan@infradead.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Hello, James.
+-stable review patch.  If anyone has any objections, please let us know.
+------------------
 
-Now that new ordered implementation is in the mainline, we can properly 
-use ordered-tag during barrier sequence.  As noted in the barrier doc, 
-the problem with the current SCSI midlayer is that scsi_request_fn() is 
-not atomic w.r.t. q->queuelock, so even if ordered-tag requests leave 
-request queue in the correct order, they can be reordered while they are 
-being issued by SCSI midlayer.
+Turn off ordered flush barriers for SCSI driver, since the SCSI barrier
+code has a command leak.
 
-There can be two solutions to this problem.
+Signed-off-by: Jens Axboe <axboe@suse.de>
+Signed-off-by: Chris Wright <chrisw@sous-sol.org>
+---
 
-1. Rewrite scsi_request_fn() and scsi_dispatch_cmd() such that 
-q->queuelock is not released during command issue.  This implies 
-grabbing shost->host_lock while holding q->queuelock.
+ drivers/scsi/scsi_lib.c |    5 -----
+ 1 files changed, 5 deletions(-)
 
-2. Don't allow concurrent command issuing by marking SCSI device during 
-command issuing (e.g. sdev->issue_in_progress)
+Index: linux-2.6.15.3/drivers/scsi/scsi_lib.c
+===================================================================
+--- linux-2.6.15.3.orig/drivers/scsi/scsi_lib.c
++++ linux-2.6.15.3/drivers/scsi/scsi_lib.c
+@@ -1534,11 +1534,6 @@ struct request_queue *scsi_alloc_queue(s
+ 	 */
+ 	if (shost->ordered_tag)
+ 		blk_queue_ordered(q, QUEUE_ORDERED_TAG);
+-	else if (shost->ordered_flush) {
+-		blk_queue_ordered(q, QUEUE_ORDERED_FLUSH);
+-		q->prepare_flush_fn = scsi_prepare_flush_fn;
+-		q->end_flush_fn = scsi_end_flush_fn;
+-	}
+ 
+ 	if (!shost->use_clustering)
+ 		clear_bit(QUEUE_FLAG_CLUSTER, &q->queue_flags);
 
-I prefer #1 as it's more straight-forward.  To implement #1, 
-scsi_request_fn() should be reorganized quite a bit, but, if you 
-remember, the scsi_reqfn reimplementation patch I wrote quite a while 
-ago suites this pretty well.  What do you think?
-
--- 
-tejun
+--
