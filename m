@@ -1,37 +1,192 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: [SCSI] fix wrong context bugs in SCSI
-Date: Wed, 8 Feb 2006 09:56:29 +0100
-Message-ID: <20060208085629.GE4338@suse.de>
-References: <1139342419.6065.8.camel@mulgrave.il.steeleye.com> <1139342922.6065.12.camel@mulgrave.il.steeleye.com>
+From: "Serge Noiraud" <serge.noiraud@bull.net>
+Subject: PREEMPT_RT and mptbase, mptscsih : I loose my file systems ( 2.6.15-rt16 )
+Date: Wed, 8 Feb 2006 10:48:14 +0100
+Message-ID: <200602081048.15418.Serge.Noiraud@bull.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.virtualhost.dk ([195.184.98.160]:13151 "EHLO virtualhost.dk")
-	by vger.kernel.org with ESMTP id S1030585AbWBHIyF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2006 03:54:05 -0500
+Received: from odin2.bull.net ([192.90.70.84]:7086 "EHLO odin2.bull.net")
+	by vger.kernel.org with ESMTP id S932435AbWBHJlQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2006 04:41:16 -0500
 Content-Disposition: inline
-In-Reply-To: <1139342922.6065.12.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
+Cc: Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@elte.hu>
 
-On Tue, Feb 07 2006, James Bottomley wrote:
-> +static void scsi_device_dev_release(struct device *dev)
-> +{
-> +	execute_in_process_context(scsi_device_dev_release_usercontext,	dev);
-> +}
-> +
+Hi,
 
-Hmm, this (and further up) could fail, yet you don't check.
+	I have some problems with 2.6.15 and rt16 patch from ingo.
+I have the following problems :
 
-I don't think this API is very nice to be honest, there's no good way to
-handle failures - you can't just sleep and loop retry the execute if you
-are in_interrupt(). I'd prefer passing in a work_queue_work (with a
-better name :-) that has been allocated at a reliable time during
-initialization.
+I can reproduce the problem easily after each reboot at any realtime priority with only one program.
+The problem occurs if all the IRQ's are affected to CPU 0 ( smp_affinity ) and the test run on CPU 0.
+Only one program which makes 60000000000ULL  loops.
+Before I run this program, I type the command script to keep the results.
+When the test stop, I quit the script command <ctrl>d.
+I am in the standard shell.
+The result file from the script command is empty. This is how I find the problem :
 
+I have no more access to the file system. I can only do less and some other command.
+I get Input/Output error for all new command not in memory.
+If I try to ssh from another machine, I obtain the following messages :
+[root@dist2 root]# ssh dist1
+root@dist1's password: 
+Last login: Mon Jan 16 11:13:49 2006 from dist2.btsn.xxxxxxxxxx
+/usr/X11R6/bin/xauth:  error in locking authority file /root/.Xauthority
+I can't access .Xauthority file which exists. I could access it before the test.
+
+At this point, If I try to reboot, I get the following messages.
+<CTRL><ALT><DEL> => INIT: cannot execute "/sbin/shutdown"
+/sbin/reboot   => Input/Output error
+
+Before launching the script and the test, the system works correctly.
+
+If you need more infos, I can  try some commands, debug options ...
+Do I need to use a special CONFIG option ?
+
+With more debug infos, I get the following messages :
+...
+mptscsih: ioc0: attempting task abort! (sc=f67e1680)
+sd 0:0:0:0:
+        command: Write (10): 2a 00 01 c3 db 1a 00 00 10 00
+mptbase: Initiating ioc0 recovery
+mptscsih: ioc0: task abort: SUCCESS (sc=f67e1680)
+mptscsih: ioc0: attempting task abort! (sc=f67e1680)
+sd 0:0:0:0:
+        command: Test Unit Ready: 00 00 00 00 00 00
+mptbase: Initiating ioc0 recovery
+mptscsih: ioc0: task abort: SUCCESS (sc=f67e1680)
+mptscsih: ioc0: attempting task abort! (sc=f67e1800)
+sd 0:0:0:0:
+        command: Test Unit Ready: 00 00 00 00 00 00
+mptbase: Initiating ioc1 recovery
+mptscsih: ioc0: task abort: SUCCESS (sc=f67e1800)
+mptscsih: ioc0: attempting task abort! (sc=f668c680)
+sd 0:0:0:0:
+        command: Test Unit Ready: 00 00 00 00 00 00
+mptbase: Initiating ioc0 recovery
+mptscsih: ioc0: task abort: SUCCESS (sc=f668c680)
+mptscsih: ioc0: attempting task abort! (sc=f668c500)
+sd 0:0:0:0:
+        command: Test Unit Ready: 00 00 00 00 00 00
+mptbase: Initiating ioc1 recovery
+mptscsih: ioc0: task abort: SUCCESS (sc=f668c500)
+mptscsih: ioc0: attempting target reset! (sc=f67e1680)
+sd 0:0:0:0:
+        command: Write (10): 2a 00 01 c3 db 1a 00 00 10 00
+mptscsih: ioc0: Issue of TaskMgmt failed!
+mptscsih: ioc0: target reset: FAILED (sc=f67e1680)
+mptscsih: ioc0: attempting bus reset! (sc=f67e1680)
+sd 0:0:0:0:
+        command: Write (10): 2a 00 01 c3 db 1a 00 00 10 00
+mptbase: Initiating ioc0 recovery
+mptscsih: ioc0: bus reset: SUCCESS (sc=f67e1680)
+mptscsih: ioc0: Attempting host reset! (sc=f67e1680)
+mptbase: Initiating ioc0 recovery
+sd 0:0:0:0: scsi: Device offlined - not ready after error recovery
+sd 0:0:0:0: scsi: Device offlined - not ready after error recovery
+sd 0:0:0:0: scsi: Device offlined - not ready after error recovery
+sd 0:0:0:0: scsi: Device offlined - not ready after error recovery
+sd 0:0:0:0: scsi: Device offlined - not ready after error recovery
+sd 0:0:0:0: scsi: Device offlined - not ready after error recovery
+sd 0:0:0:0: scsi: Device offlined - not ready after error recovery
+sd 0:0:0:0: scsi: Device offlined - not ready after error recovery
+sd 0:0:0:0: scsi: Device offlined - not ready after error recovery
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+Buffer I/O error on device sda6, logical block 1619926
+lost page write due to I/O error on sda6
+Buffer I/O error on device sda6, logical block 1619927
+lost page write due to I/O error on sda6
+sd 0:0:0:0: rejecting I/O to offline device
+Buffer I/O error on device sda6, logical block 1619948
+lost page write due to I/O error on sda6
+Buffer I/O error on device sda6, logical block 1619949
+lost page write due to I/O error on sda6
+sd 0:0:0:0: rejecting I/O to offline device
+Buffer I/O error on device sda6, logical block 1619908
+lost page write due to I/O error on sda6
+Buffer I/O error on device sda6, logical block 1619909
+lost page write due to I/O error on sda6
+sd 0:0:0:0: rejecting I/O to offline device
+Buffer I/O error on device sda6, logical block 1635317
+lost page write due to I/O error on sda6
+sd 0:0:0:0: rejecting I/O to offline device
+Buffer I/O error on device sda6, logical block 1637550
+lost page write due to I/O error on sda6
+sd 0:0:0:0: rejecting I/O to offline device
+Buffer I/O error on device sda6, logical block 8763
+lost page write due to I/O error on sda6
+sd 0:0:0:0: SCSI error: return code = 0x10000
+end_request: I/O error, dev sda, sector 17350666
+Buffer I/O error on device sda6, logical block 1616591
+lost page write due to I/O error on sda6
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+Aborting journal on device sda6.
+Aborting journal on device sda8.
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+__journal_remove_journal_head: freeing b_committed_data
+journal commit I/O error
+ext3_abort called.
+EXT3-fs error (device sda6): ext3_journal_start_sb: Detected aborted journal
+Remounting filesystem read-only
+sd 0:0:0:0: rejecting I/O to offline device
+printk: 26 messages suppressed.
+Buffer I/O error on device sda6, logical block 1605634
+lost page write due to I/O error on sda6
+sd 0:0:0:0: rejecting I/O to offline device
+Buffer I/O error on device sda8, logical block 6225925
+lost page write due to I/O error on sda8
+sd 0:0:0:0: rejecting I/O to offline device
+Buffer I/O error on device sda6, logical block 0
+lost page write due to I/O error on sda6
+Buffer I/O error on device sda6, logical block 1
+lost page write due to I/O error on sda6
+sd 0:0:0:0: rejecting I/O to offline device
+Buffer I/O error on device sda6, logical block 1245272
+lost page write due to I/O error on sda6
+sd 0:0:0:0: rejecting I/O to offline device
+Buffer I/O error on device sda6, logical block 1605635
+lost page write due to I/O error on sda6
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
+EXT3-fs error (device sda6): ext3_find_entry: reading directory #793762 offset 0
+sd 0:0:0:0: rejecting I/O to offline device
+sd 0:0:0:0: rejecting I/O to offline device
 
 -- 
-Jens Axboe
-
+Serge Noiraud
