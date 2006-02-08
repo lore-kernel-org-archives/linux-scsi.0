@@ -1,40 +1,34 @@
-From: Al Viro <viro@ftp.linux.org.uk>
-Subject: [PATCH 20/29] scsi_transport_iscsi gfp_t annotations
-Date: Wed, 08 Feb 2006 03:19:32 +0000
-Message-ID: <E1F6frg-0006DY-4T@ZenIV.linux.org.uk>
+From: "Charlotte Clifton" <jackseon@ksjs.org>
+Subject: feeling fati gued
+Date: Tue, 07 Feb 2006 20:48:13 -0800
+Message-ID: <AD6287A5.46779F5__21863.8333645233$1139371157$gmane$org@ksjs.org>
+Reply-To: "Carrie Ervin" <jackseon@ksjs.org>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:1153 "EHLO
-	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S1030477AbWBHDTc
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Feb 2006 22:19:32 -0500
+Received: from [222.65.245.56] ([222.65.245.56]:30214 "HELO ksjs.org")
+	by vger.kernel.org with SMTP id S932391AbWBHD7D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2006 22:59:03 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: torvalds@osdl.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-ide <linux-ide@vger.kernel.org>
+Cc: linux-ppp@vger.kernel.org, linux-sound@vger.kernel.org, majordomo@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-serial@vger.kernel.org, linux-scsi@vger.kernel.org, linux-gcc@vger.kernel.org
 
-Date: 1138793445 -0500
+Hey linux-ide
 
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+Did you know over 70 per-cent of am ericans are battling OB esity.
 
----
+I dont' know about you but I'm sick of being over we! ght and I just wanna
+get back into sh ape. 
 
- drivers/scsi/scsi_transport_iscsi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Luckly I came across this site, www.ymom.tYA.gfgrd.org/n2/?id=havoc that
+helped me with all my problems. 
 
-e5fb81bd895041230dfaeb8f8f498b85b4705988
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 59a1c9d..723f7ac 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -463,7 +463,7 @@ static inline struct list_head *skb_to_l
- }
- 
- static void*
--mempool_zone_alloc_skb(unsigned int gfp_mask, void *pool_data)
-+mempool_zone_alloc_skb(gfp_t gfp_mask, void *pool_data)
- {
- 	struct mempool_zone *zone = pool_data;
- 
--- 
-0.99.9.GIT
+"The extent of their relationship I don't know," he said, adding that
+investigators also didn't yet know how they met.
+
+No point wasting any more time reading this email
+Monica Ritter
 
