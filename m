@@ -1,57 +1,50 @@
-From: James Smart <James.Smart@Emulex.Com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: Regarding ordered-tag support.
-Date: Wed, 08 Feb 2006 11:22:44 -0500
-Message-ID: <43EA1AD4.8010402@emulex.com>
-References: <43E99248.7090505@gmail.com> <1139413766.3003.19.camel@mulgrave.il.steeleye.com>
-Reply-To: James.Smart@Emulex.Com
+Date: Wed, 08 Feb 2006 10:26:26 -0600
+Message-ID: <1139415986.3003.29.camel@mulgrave.il.steeleye.com>
+References: <43E99248.7090505@gmail.com>
+	 <1139413766.3003.19.camel@mulgrave.il.steeleye.com>
+	 <43EA17E6.4000800@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:57748 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1161098AbWBHQW4
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Feb 2006 11:22:56 -0500
-In-Reply-To: <1139413766.3003.19.camel@mulgrave.il.steeleye.com>
+Received: from stat9.steeleye.com ([209.192.50.41]:52438 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1161101AbWBHQ0a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Feb 2006 11:26:30 -0500
+In-Reply-To: <43EA17E6.4000800@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Tejun Heo <htejun@gmail.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Tejun <htejun@gmail.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+On Thu, 2006-02-09 at 01:10 +0900, Tejun wrote:
+> Oh... I see.  How many drivers do that?  I can't think of good reasons
+> to report BUSY via IRQ for simpler transports (SATA/SPI).  Maybe enable
+> ordered-tag selectively?
 
+All of them.  These are scsi *device* returns.  The problem is that even
+if the driver is careful about this, we queue any status done for
+softirq processing ...
 
-James Bottomley wrote:
-> On Wed, 2006-02-08 at 15:40 +0900, Tejun Heo wrote:
-> ...<snip>...
-> Unfortunately, though, this is only half the problem.
+> > 
+> > For the second:  Depending on the mode page (the QErr bit of the
+> > queueing page), most devices fail only a single command.  We can set the
+> > QErr bit to return every command after the failing one (thus ensuring
+> > execution order), but the error handler would have to take them all back
+> > and resort them for submission.
 > 
-> The other half is busy/queue_full processing and error recovery
-> 
-> For the first: busy/queue_full processing, the issue is that when we
-> send out a command, we could get a BUSY or QUEUE_FULL return which comes
-> back to us via IRQ context.  Unfortunately, we could have multiple
-> commands that do this and a command will be accepted as soon as the busy
-> condition alleviates, so we could see say two commands go down in order,
-> the first one will get BUSY, the second is accepted and only then do we
-> get the IRQ that says BUSY to the first ... now we have out of order
-> execution.
+> Actually blk layer will do the sorting part (this is what req->ordcolor
+> is for).  Block drivers are only required to not successfully complete
+> later requests while retrying earlier ones, so setting QErr and retrying
+> all on-the-fly requests should do it (no EH code change).
 
-James is also not disclosing other areas that may fail...
+Right ... but at the moment, we don't do that.  The eh would have to be
+changed to gather all the commands for the device (we do it per host)
+and resubmit them in such a way that the block layer resorts them,
+wouldn't we ... at the moment we queue each one as they're processed.
 
-- How does multipathing affect this (maybe not dm, but others that exist).
-- The implicit expectation of the LLDD and the hardware is that commands are
-   placed on the wire in the same order given to queuecommand. However, no
-   where is this mandated. In general, they do keep order. However, I've seen
-   driver implementations that don't dispatch directly to hardware in
-   queuecommand, allowing the intermediate steps to fail and perhaps disrupt
-   ordering.
-- Some adapters may actually be multipath/raid cards, thus affecting command
-   delivery.
-- SCSI Transports are not 100% reliable, affecting ordering. For FC,
-   a single Frame corruption could cause a command frame to be dropped thus
-   the next command received and executed out of order. You would not notice
-   an issue until the scsi i/o timeout fires and aborts the i/o. The subsequent
-   i/o may have already completed by that time. Some transports due have
-   command sequence numbering to avoid this, but it's an optional feature.
+James
 
--- james s
+
