@@ -1,35 +1,40 @@
 From: Al Viro <viro@ftp.linux.org.uk>
-Subject: [PATCH 21/29] sg gfp_t annotations
-Date: Wed, 08 Feb 2006 03:19:37 +0000
-Message-ID: <E1F6frl-0006De-4p@ZenIV.linux.org.uk>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030480AbWBHDWs@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 20/29] scsi_transport_iscsi gfp_t annotations
+Date: Wed, 08 Feb 2006 03:19:32 +0000
+Message-ID: <E1F6frg-0006DY-4T@ZenIV.linux.org.uk>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:1153 "EHLO
+	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S1030477AbWBHDTc
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Feb 2006 22:19:32 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: torvalds@osdl.org
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-Date: 1138793500 -0500
+Date: 1138793445 -0500
 
 Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
 
 ---
 
- drivers/scsi/sg.c |    2 +-
+ drivers/scsi/scsi_transport_iscsi.c |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-2d20eaf9426598ef156b941bcfa44e867452b770
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 7d07000..2a54753 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1679,7 +1679,7 @@ static int
- sg_build_sgat(Sg_scatter_hold * schp, const Sg_fd * sfp, int tablesize)
- {
- 	int sg_bufflen = tablesize * sizeof(struct scatterlist);
--	unsigned int gfp_flags = GFP_ATOMIC | __GFP_NOWARN;
-+	gfp_t gfp_flags = GFP_ATOMIC | __GFP_NOWARN;
+e5fb81bd895041230dfaeb8f8f498b85b4705988
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 59a1c9d..723f7ac 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -463,7 +463,7 @@ static inline struct list_head *skb_to_l
+ }
  
- 	/*
- 	 * TODO: test without low_dma, we should not need it since
+ static void*
+-mempool_zone_alloc_skb(unsigned int gfp_mask, void *pool_data)
++mempool_zone_alloc_skb(gfp_t gfp_mask, void *pool_data)
+ {
+ 	struct mempool_zone *zone = pool_data;
+ 
 -- 
 0.99.9.GIT
+
