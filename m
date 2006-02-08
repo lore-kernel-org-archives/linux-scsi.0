@@ -1,39 +1,40 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [patch 08/15] libata: Add ability to prevent PRD from being allocated
-Date: Wed, 08 Feb 2006 08:28:41 -0600
-Message-ID: <43EA0019.9020806@us.ibm.com>
-References: <200602061542.k16FgXXX015889@d03av03.boulder.ibm.com> <43E9D236.2080207@gmail.com>
-Reply-To: brking@us.ibm.com
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [SCSI] fix wrong context bugs in SCSI
+Date: Wed, 08 Feb 2006 09:31:02 -0600
+Message-ID: <1139412662.3003.5.camel@mulgrave.il.steeleye.com>
+References: <1139342419.6065.8.camel@mulgrave.il.steeleye.com>
+	 <1139342922.6065.12.camel@mulgrave.il.steeleye.com>
+	 <20060208085629.GE4338@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:128 "EHLO e4.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S964916AbWBHO2o (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2006 09:28:44 -0500
-In-Reply-To: <43E9D236.2080207@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030347AbWBHPbO@vger.kernel.org>
+In-Reply-To: <20060208085629.GE4338@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Tejun Heo wrote:
-> Hello, Brian.
-> 
-> brking@us.ibm.com wrote:
->> For some HBAs, particularly SAS HBAs, there is no reason to
->> allocate a PRD buffer, since it is not used. Add a flag
->> to prevent its allocation.
->>
-> 
-> I think it's better done with ata_sas_port_start/stop rather than with
-> ATA_FLAG_NO_PRD.  All sata low level drivers which don't use PRD table
-> implement their own port_start/stop (ahci.c, sata_sil24.c for example).
+On Wed, 2006-02-08 at 09:56 +0100, Jens Axboe wrote:
+> Hmm, this (and further up) could fail, yet you don't check.
 
-Sounds good to me. I'll go ahead and drop this patch and add
-ata_sas_port_start/stop.
+By and large, you have process context, so this isn't going to be a
+problem.
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+> I don't think this API is very nice to be honest, there's no good way to
+> handle failures - you can't just sleep and loop retry the execute if you
+> are in_interrupt(). I'd prefer passing in a work_queue_work (with a
+> better name :-) that has been allocated at a reliable time during
+> initialization.
+
+Yes, I agree ... however, the failure is less prevalent in the new code
+than the old.  The problem is that we may need to execute multiple puts
+for a single target from irq contex, so under this scheme you need a wqw
+(potentially) for every get.
+
+I could solve this by binding the API more tightly into the device
+model, so the generic device contains the wqw and it is told that the
+release function of the final put must be called in process context, but
+that's an awful lot of code changes.
+
+James
