@@ -1,34 +1,39 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch 08/15] libata: Add ability to prevent PRD from being allocated
-Date: Wed, 08 Feb 2006 20:12:54 +0900
-Message-ID: <43E9D236.2080207@gmail.com>
-References: <200602061542.k16FgXXX015889@d03av03.boulder.ibm.com>
+Subject: Re: [patch 09/15] libata: Improved ata_exec_internal timeout handling
+Date: Wed, 08 Feb 2006 20:16:56 +0900
+Message-ID: <43E9D328.7020109@gmail.com>
+References: <200602061542.k16FgYf0002182@d01av01.pok.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=EUC-KR
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.182]:7766 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S964922AbWBHLNc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2006 06:13:32 -0500
-Received: by pproxy.gmail.com with SMTP id x31so361597pye
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2006 03:12:59 -0800 (PST)
-In-Reply-To: <200602061542.k16FgXXX015889@d03av03.boulder.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <200602061542.k16FgYf0002182@d01av01.pok.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
 To: brking@us.ibm.com
 Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-
-Hello, Brian.
+List-Id: linux-scsi@vger.kernel.org
 
 brking@us.ibm.com wrote:
-> For some HBAs, particularly SAS HBAs, there is no reason to
-> allocate a PRD buffer, since it is not used. Add a flag
-> to prevent its allocation.
+> Currently ata_exec_internal does very minimal cleanup if
+> the executing command times out. This works for most usage
+> scenarios, but can cause problems for hosts that set
+> ATA_FLAG_PIO_DMA. For these users, the DMA buffer gets unmapped
+> while the timed out out command is still active, which has
+> the potential to cause PCI DMA errors if the command is
+> still in progress. The following patch modifies ata_exec_internal
+> to invoke eng_timeout on a timeout to allow for the timed out
+> command to be cleaned up better before proceeding further.
+> This patch is also in preparation for SAS attached SATA devices.
 > 
 
-I think it's better done with ata_sas_port_start/stop rather than with
-ATA_FLAG_NO_PRD.  All sata low level drivers which don't use PRD table
-implement their own port_start/stop (ahci.c, sata_sil24.c for example).
+Hello, again.
+
+ata_exec_internal() will be used during EH, so if you call error handler
+from ata_exec_internal()....  In my pending EH patchset, there's a patch
+to implement ->post_internal() callback which cleans up after an
+internal command (successful or not).  Hopefully, it will be merged in
+not too distant future.  Can ata_exec_internal() timeout handling wait
+till then?
 
 -- 
 tejun
