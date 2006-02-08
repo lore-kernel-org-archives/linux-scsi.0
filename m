@@ -1,39 +1,34 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch 09/15] libata: Improved ata_exec_internal timeout handling
-Date: Wed, 08 Feb 2006 20:16:56 +0900
-Message-ID: <43E9D328.7020109@gmail.com>
-References: <200602061542.k16FgYf0002182@d01av01.pok.ibm.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] add execute_in_process_context() API
+Date: Wed, 08 Feb 2006 13:51:50 +0100
+Message-ID: <43E9E966.9060003@s5r6.in-berlin.de>
+References: <1139342419.6065.8.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200602061542.k16FgYf0002182@d01av01.pok.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: brking@us.ibm.com
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:40163 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1161082AbWBHMqy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Feb 2006 07:46:54 -0500
+In-Reply-To: <1139342419.6065.8.camel@mulgrave.il.steeleye.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@osdl.org>
 
-brking@us.ibm.com wrote:
-> Currently ata_exec_internal does very minimal cleanup if
-> the executing command times out. This works for most usage
-> scenarios, but can cause problems for hosts that set
-> ATA_FLAG_PIO_DMA. For these users, the DMA buffer gets unmapped
-> while the timed out out command is still active, which has
-> the potential to cause PCI DMA errors if the command is
-> still in progress. The following patch modifies ata_exec_internal
-> to invoke eng_timeout on a timeout to allow for the timed out
-> command to be cleaned up better before proceeding further.
-> This patch is also in preparation for SAS attached SATA devices.
-> 
+James Bottomley wrote:
+> SCSI needs this for our scheme to avoid executing generic device release
+> calls from interrupt context (SCSI patch using this to follow).
 
-Hello, again.
+Shouldn't we rather fix the SCSI low level drivers or SCSI transport 
+layers to trigger device releases only from process context? (Instead of 
+SCSI core transparently falling back to a workqueue, that is.)
 
-ata_exec_internal() will be used during EH, so if you call error handler
-from ata_exec_internal()....  In my pending EH patchset, there's a patch
-to implement ->post_internal() callback which cleans up after an
-internal command (successful or not).  Hopefully, it will be merged in
-not too distant future.  Can ata_exec_internal() timeout handling wait
-till then?
-
+I know only one of these drivers, hence I don't know which are actually 
+affected and how much work that would be.
 -- 
-tejun
+Stefan Richter
+-=====-=-==- --=- -=---
+http://arcgraph.de/sr/
+
