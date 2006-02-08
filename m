@@ -1,41 +1,43 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Regarding ordered-tag support.
-Date: Wed, 08 Feb 2006 14:59:28 -0600
-Message-ID: <1139432368.2979.13.camel@mulgrave.il.steeleye.com>
-References: <43E99248.7090505@gmail.com>
-	 <1139413766.3003.19.camel@mulgrave.il.steeleye.com>
-	 <43EA1AD4.8010402@emulex.com>
-	 <1139431826.2979.8.camel@mulgrave.il.steeleye.com>
+From: "Todd Reichert" <Todd.Reichert@dothill.com>
+Subject: Add/Remove single device
+Date: Wed, 8 Feb 2006 13:24:01 -0800
+Message-ID: <55E9A7FDB6C7B540930C9426790BBC4E09068B@earthex3.power.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:4832 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932098AbWBHU7h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Feb 2006 15:59:37 -0500
-In-Reply-To: <1139431826.2979.8.camel@mulgrave.il.steeleye.com>
+Received: from 17.129.dothill.com ([155.254.129.17]:49430 "EHLO
+	earthex1.power.com") by vger.kernel.org with ESMTP id S965023AbWBHVYD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Feb 2006 16:24:03 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: Tejun Heo <htejun@gmail.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Wed, 2006-02-08 at 14:50 -0600, James Bottomley wrote:
-> > - How does multipathing affect this (maybe not dm, but others that exist).
-> 
-> Hey, with block level multi-path that's now officially Someone Else's
-> Problem. (And it's also a problem for software RAID as well).
+It appears that the operations of 'add single device' and 'remove single
+device' via the procfs are no longer available/provided by some HBA
+drivers in the 2. 6 kernel.  Is there some equivalent function to cause
+re-instancaion of devices for a specific bus and or HBA?
 
-And actually (in the time honoured tradition of telling someone else
-what they should be doing while blowing your own trumpet) could I just
-point out that I think that it's impossible to enforce barriers in the
-face of multi-path (because of the cross path synchronisation
-requirements).  However, it should be quite easy to enforce linked
-command ordering in these environments by the simple expedient of
-tagging a link to a single path.  Even on path failure for partial link
-completion, you simply resend the entire segment of link command set
-that you don't know completed (because writes are idempotent).
+ 
 
-James
+I work on a unit test program wherein a RAID controller appears on a bus
+as target 0, lun 0, device type 3 or 13 with an sg path, but when a
+logical drive is created it is now target 0, lun 0 with a logical drive
+ID.  In most cases, a 2.6 kernel does not seem to see this target lun
+with an appropriate '/dev/sdX' path and device type 0.
 
+ 
 
+Should I expect that issuing an ioctl SG_SCSI_RESET for the host, bus or
+device to the initial sg path accomplish what I need?
+
+ 
+
+Thanks in advance for any input.
+
+ 
+
+Todd Reichert
