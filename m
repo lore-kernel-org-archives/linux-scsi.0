@@ -1,45 +1,67 @@
-From: amrut h <h.amrut@gmail.com>
-Subject: Regarding scsi_request
-Date: Thu, 9 Feb 2006 18:23:34 +0900
-Message-ID: <702b51100602090123n1534a775ia33d876f0abae88@mail.gmail.com>
+From: =?iso-8859-1?b?RW1tYW51ZWwgRnVzdMOp?= <emmanuel.fuste@laposte.net>
+Subject: Re:[RFC][PATCH 1/1] aic7xxx: Remove the platform_data->qfrozen logic
+Date: Thu,  9 Feb 2006 11:09:04 +0100
+Message-ID: <IUF074$61354B6993A3C8337BCD6420985787FB@laposte.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xproxy.gmail.com ([66.249.82.200]:9033 "EHLO xproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1030305AbWBIJXf convert rfc822-to-8bit
+Received: from mx.laposte.net ([81.255.54.11]:26182 "EHLO mx.laposte.net")
+	by vger.kernel.org with ESMTP id S1422747AbWBIKKL convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Feb 2006 04:23:35 -0500
-Received: by xproxy.gmail.com with SMTP id i30so84405wxd
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Feb 2006 01:23:34 -0800 (PST)
-Content-Disposition: inline
+	Thu, 9 Feb 2006 05:10:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: hare <hare@suse.de>, hch <hch@infradead.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi All,
+> hello,
+>=20
+> Since we no longuer do internal queuing, we push the lock
+> inside ahc_linux_run_command and completly remove the bursted
+> internal queue freezing machinery.
+> Based on Hannes Reinecke patch for aic79xxx and Christoph
+> Hellwig comments.
+>=20
+> Signed-off-by: Emmanuel Fuste <emmanuel.fuste@laposte.net>
+>=20
+> ---=20
+>=20
+>  aic7xxx_osm.c |   82
+> ++++++++++++----------------------------------------------
+>  aic7xxx_osm.h |    1
+>  2 files changed, 17 insertions(+), 66 deletions(-)
+>=20
+Ok,
 
-I have a query regarding the "scsi_request" data structure in linux kernel.
-There is a comment on the top of definition of "scsi_request"
-(linux/scsi/scsi_request.h) which reads:
+Kernel booted and works.
+cdrwtool -d /dev/sr0 -q still freeze the kernel after some time.
+Will try with "scsi_deactivate_tcq(sdev, 2);".
+It seems that there is some adherence between this and the
+recovery code.
+The recovery code success, but nothing was recovered in
+reality -> freeze.
+With a queue depth of 2, my hard disk continue to be serviced.
+It only my view of the pblm, and I could be (surely) wrong.
+It is only part of the problem since the driver receive a
+command that crash the driver/the sequencer but one thing at
+time... it coild be view as a good stress test for the
+recovery code ;-).
 
-http://lxr.linux.no/source/include/scsi/scsi_request.h#L19
+If you want traces/logs/etc... tell me.
 
-13  * This is essentially a slimmed down version of Scsi_Cmnd.  The point of
-14  * having this is that requests that are injected into the queue as result
-15  * of things like ioctls and character devices shouldn't be using a
-16  * Scsi_Cmnd until such a time that the command is actually at the head
-17  * of the queue and being sent to the driver.
-18  */
+Regards,
+Emmanuel.
+
+---
+
+Acc=E9dez au courrier =E9lectronique de La Poste : www.laposte.net ;=20
+3615 LAPOSTENET (0,34 =80/mn) ; t=E9l : 08 92 68 13 50 (0,34=80/mn)
 
 
-Please help me understand (or give me some pointer) why requests
-issued through "scsi_request" only needs to go at the head of the
-queue? Is it not possible to insert it in between queue (like after
-sorting).
 
-Kinldy let me know if i am missing something. I will appreciate if
-somebody can give me some pointers to understand the above point
-
-Thanks
-~Amrut
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
