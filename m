@@ -1,47 +1,59 @@
-From: Ming Zhang <mingz@ele.uri.edu>
-Subject: Re: read only scsi disk
-Date: Thu, 09 Feb 2006 16:11:18 -0500
-Message-ID: <1139519478.9367.124.camel@localhost.localdomain>
-References: <1139504647.9367.57.camel@localhost.localdomain>
-	 <43EB99B3.3020206@s5r6.in-berlin.de>
-	 <1139514073.9367.105.camel@localhost.localdomain>
-	 <43EBACD2.50005@s5r6.in-berlin.de>
-Reply-To: mingz@ele.uri.edu
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [patch 03/15] libata: Remove dependence on host_set->dev for
+ SAS
+Date: Thu, 09 Feb 2006 16:21:22 -0600
+Message-ID: <43EBC062.3040304@us.ibm.com>
+References: <200602061542.k16FgSYn009049@d01av02.pok.ibm.com> <43EAECD3.30505@pobox.com>
+Reply-To: brking@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from orca.ele.uri.edu ([131.128.51.63]:16349 "EHLO orca.ele.uri.edu")
-	by vger.kernel.org with ESMTP id S1750796AbWBIVLg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2006 16:11:36 -0500
-In-Reply-To: <43EBACD2.50005@s5r6.in-berlin.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <43EAECD3.30505@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Damian Pietras <daper@daper.net>
 
-thanks!
-
-ming
-
-On Thu, 2006-02-09 at 21:57 +0100, Stefan Richter wrote:
-> Ming Zhang wrote:
-> > thx, i found this was changed in at least 2.6.16-rc2.
+Jeff Garzik wrote:
+> brking@us.ibm.com wrote:
+>> Remove some of the dependence on the host_set struct
+>> in preparation for supporting SAS HBAs. Adds a struct device
+>> pointer to the ata_port struct.
+>>
+>> Signed-off-by: Brian King <brking@us.ibm.com>
 > 
-> > On Thu, 2006-02-09 at 20:36 +0100, Stefan Richter wrote:
-> >>Ming Zhang wrote:
-> >>>from sd.c, it looks like removable is judged first.
-> >>>
-> >>>             if (sdp->removable)
-> >>>                   sd_read_write_protect_flag(sdkp, disk->disk_name,
-> >>>                                                   buffer);
-> >>
-> >>This has been changed in the meantime. Check the current sources.
-> 
-> PS: It was discussed and changed in December.
-> http://marc.theaimsgroup.com/?t=113406630600001
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=113414617020021
-> http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=38d76df2f5483478dee803cb6e39da5e506a6643
-> (Note: Commit date refers to James' tree. It went into Linus' tree later 
-> after release of 2.6.15 but before 2.6.16-rc1.)
+> Seems like a good idea independent of SAS.  My only "objection" is 
+> wondering about struct device reference counts, and wondering if we need 
+> to worry about that.  Did you look over the object lifetimes, to make 
+> sure nothing overlaps?
+
+I don't see any object lifetime problems being introduced as a result of
+this patchset. I did spend some time looking through object lifetimes for
+SAS users (existing users should be unaffected by these changes)
+and I did have some problems in this regard in previous iterations
+of this patchset. (I did some SATA device hotplug testing with this
+patchset)
+
+The two rules that need to be followed by any new users of this patchset
+in order to not run into object lifetime problems are:
+
+1. Prior to calling ata_sas_port_destroy, caller must guarantee that
+   there are no outstanding references to the scsi_device. I accomplished
+   this by calling ata_sas_port_destroy in target_destroy.
+2. Before the pci_dev struct goes away (e.g. pci hotplug remove), all
+   oustanding commands must be returned to libata and any new requests
+   that come in through qc_issue should fail. This solves any lifetime
+   issues that could have resulted from having the dev pointer for the
+   PCI device in ata_port.
+
+I was thinking at one point that I would need to add reference counting
+to the ata_port, but was able to avoid that complexity with the solution
+above.
+
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
 
