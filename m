@@ -1,33 +1,33 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [patch 02/15] libata: Add host lock to struct ata_port
-Date: Thu, 09 Feb 2006 02:17:31 -0500
-Message-ID: <43EAEC8B.2060003@pobox.com>
-References: <200602061542.k16FgROF014749@d01av03.pok.ibm.com>
+Subject: Re: [patch 03/15] libata: Remove dependence on host_set->dev for
+ SAS
+Date: Thu, 09 Feb 2006 02:18:43 -0500
+Message-ID: <43EAECD3.30505@pobox.com>
+References: <200602061542.k16FgSYn009049@d01av02.pok.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200602061542.k16FgROF014749@d01av03.pok.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:59289 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S1422858AbWBIHSp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2006 02:18:45 -0500
+In-Reply-To: <200602061542.k16FgSYn009049@d01av02.pok.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: brking@us.ibm.com
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
 brking@us.ibm.com wrote:
-> Prepare for changes required to support SATA devices
-> attached to SAS HBAs. For these devices we don't want to
-> use host_set at all, since libata will not be the owner
-> of struct scsi_host.
+> Remove some of the dependence on the host_set struct
+> in preparation for supporting SAS HBAs. Adds a struct device
+> pointer to the ata_port struct.
 > 
 > Signed-off-by: Brian King <brking@us.ibm.com>
 
-Please move this as far back in the patch series as possible.  The 
-simple stuff -- moving code into static functions for later use, for 
-example -- should come first.
-
-While you're ginning up the resend, I'll be pondering this and the 
-latter portion of your patch series.  This seems like a sane way to go, 
-but I want to think a bit more on the overall direction.
+Seems like a good idea independent of SAS.  My only "objection" is 
+wondering about struct device reference counts, and wondering if we need 
+to worry about that.  Did you look over the object lifetimes, to make 
+sure nothing overlaps?
 
 	Jeff
 
