@@ -1,32 +1,62 @@
-From: Meelis Roos <mroos@linux.ee>
-Subject: megaraid bug in kobject_register when no device is present
-Date: Thu, 9 Feb 2006 16:47:49 +0200 (EET)
-Message-ID: <Pine.SOC.4.61.0602091646050.19027@math.ut.ee>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [Fwd: [SCSI] Delete duplicate driver template.]
+Date: Thu, 09 Feb 2006 11:16:38 -0500
+Message-ID: <1139501798.3275.25.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from math.ut.ee ([193.40.36.2]:63183 "EHLO math.ut.ee")
-	by vger.kernel.org with ESMTP id S932494AbWBIOrv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2006 09:47:51 -0500
+Received: from stat9.steeleye.com ([209.192.50.41]:52884 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932580AbWBIQQk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Feb 2006 11:16:40 -0500
+Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k19GGd222334
+	for <linux-scsi@vger.kernel.org>; Thu, 9 Feb 2006 11:16:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel list <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Loading megaraid modules when no actual cards are present yields this in 
-dmesg. 2.6.16-rc2+git.
+-------- Forwarded Message --------
+From: Ralf Baechle <ralf@linux-mips.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [SCSI] Delete duplicate driver template.
+Date: Wed, 8 Feb 2006 22:22:57 +0000
 
-megasas: 00.00.02.02 Mon Jan 23 14:09:01 PST 2006
-megaraid cmm: 2.20.2.6 (Release Date: Mon Mar 7 00:01:03 EST 2005)
-megaraid: 2.20.4.7 (Release Date: Mon Nov 14 12:27:22 EST 2005)
-kobject_register failed for megaraid (-17)
-  [<b01b0fa1>] kobject_register+0x43/0x5f
-  [<b020b5ad>] bus_add_driver+0x51/0xa8
-  [<b01bc812>] __pci_register_driver+0x5e/0x89
-  [<b011ca7c>] printk+0x17/0x1b
-  [<f0e89070>] megaraid_init+0x70/0x98 [megaraid_mbox]
-  [<b0136759>] sys_init_module+0x128/0x1bd
-  [<b01029a7>] sysenter_past_esp+0x54/0x75
-megaraid: could not register hotplug support.
+Resending yet again.
 
--- 
-Meelis Roos (mroos@linux.ee)
+Stuborn as compilers are they don't like duplicate definitions.
+
+Signed-off-by: Ralf Baechle <ralf@linux-mips.org>
+
+--- a/drivers/scsi/jazz_esp.c
++++ b/drivers/scsi/jazz_esp.c
+@@ -65,27 +65,6 @@ static int jazz_esp_release(struct Scsi_
+ 	return 0;
+ }
+ 
+-static struct scsi_host_template driver_template = {
+-	.proc_name		= "jazz_esp",
+-	.proc_info		= &esp_proc_info,
+-	.name			= "ESP 100/100a/200",
+-	.detect			= jazz_esp_detect,
+-	.slave_alloc		= esp_slave_alloc,
+-	.slave_destroy		= esp_slave_destroy,
+-	.release		= jazz_esp_release,
+-	.info			= esp_info,
+-	.queuecommand		= esp_queue,
+-	.eh_abort_handler	= esp_abort,
+-	.eh_bus_reset_handler	= esp_reset,
+-	.can_queue		= 7,
+-	.this_id		= 7,
+-	.sg_tablesize		= SG_ALL,
+-	.cmd_per_lun		= 1,
+-	.use_clustering		= DISABLE_CLUSTERING,
+-};
+-
+-#include "scsi_module.c"
+-
+ /***************************************************************** Detection */
+ static int jazz_esp_detect(struct scsi_host_template *tpnt)
+ {
+
