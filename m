@@ -1,67 +1,32 @@
-From: =?iso-8859-1?b?RW1tYW51ZWwgRnVzdMOp?= <emmanuel.fuste@laposte.net>
-Subject: Re:[RFC][PATCH 1/1] aic7xxx: Remove the platform_data->qfrozen logic
-Date: Thu,  9 Feb 2006 11:09:04 +0100
-Message-ID: <IUF074$61354B6993A3C8337BCD6420985787FB@laposte.net>
+From: Meelis Roos <mroos@linux.ee>
+Subject: megaraid bug in kobject_register when no device is present
+Date: Thu, 9 Feb 2006 16:47:49 +0200 (EET)
+Message-ID: <Pine.SOC.4.61.0602091646050.19027@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx.laposte.net ([81.255.54.11]:26182 "EHLO mx.laposte.net")
-	by vger.kernel.org with ESMTP id S1422747AbWBIKKL convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Feb 2006 05:10:11 -0500
+Received: from math.ut.ee ([193.40.36.2]:63183 "EHLO math.ut.ee")
+	by vger.kernel.org with ESMTP id S932494AbWBIOrv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2006 09:47:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hare <hare@suse.de>, hch <hch@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Linux Kernel list <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-> hello,
->=20
-> Since we no longuer do internal queuing, we push the lock
-> inside ahc_linux_run_command and completly remove the bursted
-> internal queue freezing machinery.
-> Based on Hannes Reinecke patch for aic79xxx and Christoph
-> Hellwig comments.
->=20
-> Signed-off-by: Emmanuel Fuste <emmanuel.fuste@laposte.net>
->=20
-> ---=20
->=20
->  aic7xxx_osm.c |   82
-> ++++++++++++----------------------------------------------
->  aic7xxx_osm.h |    1
->  2 files changed, 17 insertions(+), 66 deletions(-)
->=20
-Ok,
+Loading megaraid modules when no actual cards are present yields this in 
+dmesg. 2.6.16-rc2+git.
 
-Kernel booted and works.
-cdrwtool -d /dev/sr0 -q still freeze the kernel after some time.
-Will try with "scsi_deactivate_tcq(sdev, 2);".
-It seems that there is some adherence between this and the
-recovery code.
-The recovery code success, but nothing was recovered in
-reality -> freeze.
-With a queue depth of 2, my hard disk continue to be serviced.
-It only my view of the pblm, and I could be (surely) wrong.
-It is only part of the problem since the driver receive a
-command that crash the driver/the sequencer but one thing at
-time... it coild be view as a good stress test for the
-recovery code ;-).
+megasas: 00.00.02.02 Mon Jan 23 14:09:01 PST 2006
+megaraid cmm: 2.20.2.6 (Release Date: Mon Mar 7 00:01:03 EST 2005)
+megaraid: 2.20.4.7 (Release Date: Mon Nov 14 12:27:22 EST 2005)
+kobject_register failed for megaraid (-17)
+  [<b01b0fa1>] kobject_register+0x43/0x5f
+  [<b020b5ad>] bus_add_driver+0x51/0xa8
+  [<b01bc812>] __pci_register_driver+0x5e/0x89
+  [<b011ca7c>] printk+0x17/0x1b
+  [<f0e89070>] megaraid_init+0x70/0x98 [megaraid_mbox]
+  [<b0136759>] sys_init_module+0x128/0x1bd
+  [<b01029a7>] sysenter_past_esp+0x54/0x75
+megaraid: could not register hotplug support.
 
-If you want traces/logs/etc... tell me.
-
-Regards,
-Emmanuel.
-
----
-
-Acc=E9dez au courrier =E9lectronique de La Poste : www.laposte.net ;=20
-3615 LAPOSTENET (0,34 =80/mn) ; t=E9l : 08 92 68 13 50 (0,34=80/mn)
-
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Meelis Roos (mroos@linux.ee)
