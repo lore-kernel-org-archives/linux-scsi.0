@@ -1,77 +1,36 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [Fwd: [SCSI] jazz_esp: Fix sparse warnings.]
-Date: Thu, 09 Feb 2006 11:16:27 -0500
-Message-ID: <1139501787.3275.23.camel@mulgrave.il.steeleye.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: megaraid bug in kobject_register when no device is present
+Date: Thu, 9 Feb 2006 08:25:34 -0800
+Message-ID: <20060209162534.GA8572@kroah.com>
+References: <Pine.SOC.4.61.0602091646050.19027@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:52628 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932580AbWBIQQ3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Feb 2006 11:16:29 -0500
-Received: from midgard.sc.steeleye.com (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k19GGS222326
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Feb 2006 11:16:28 -0500
+Received: from dsl093-040-174.pdx1.dsl.speakeasy.net ([66.93.40.174]:50328
+	"EHLO aria.kroah.org") by vger.kernel.org with ESMTP
+	id S932579AbWBIQZn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Feb 2006 11:25:43 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.SOC.4.61.0602091646050.19027@math.ut.ee>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Meelis Roos <mroos@linux.ee>
+Cc: Linux Kernel list <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
--------- Forwarded Message --------
-From: Ralf Baechle <ralf@linux-mips.org>
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [SCSI] jazz_esp: Fix sparse warnings.
-Date: Wed, 8 Feb 2006 22:40:57 +0000
+On Thu, Feb 09, 2006 at 04:47:49PM +0200, Meelis Roos wrote:
+> Loading megaraid modules when no actual cards are present yields this in 
+> dmesg. 2.6.16-rc2+git.
+> 
+> megasas: 00.00.02.02 Mon Jan 23 14:09:01 PST 2006
+> megaraid cmm: 2.20.2.6 (Release Date: Mon Mar 7 00:01:03 EST 2005)
+> megaraid: 2.20.4.7 (Release Date: Mon Nov 14 12:27:22 EST 2005)
+> kobject_register failed for megaraid (-17)
 
-"Using plain integer as NULL pointer".
-    
-Signed-off-by: Ralf Baechle <ralf@linux-mips.org>
+This means that the driver is trying to register with the same name as
+another driver on the same bus.
 
----
- drivers/scsi/jazz_esp.c |   18 +++++++++---------
- 1 files changed, 9 insertions(+), 9 deletions(-)
+Nice to see we at least recover from it and don't kill the kernel :)
 
-Index: upstream-linus.git/drivers/scsi/jazz_esp.c
-===================================================================
---- upstream-linus.git.orig/drivers/scsi/jazz_esp.c
-+++ upstream-linus.git/drivers/scsi/jazz_esp.c
-@@ -75,7 +75,7 @@ static int jazz_esp_detect(struct scsi_h
-      * first assumption it is there:-)
-      */
-     if (1) {
--	esp_dev = 0;
-+	esp_dev = NULL;
- 	esp = esp_allocate(tpnt, (void *) esp_dev);
- 	
- 	/* Do command transfer with programmed I/O */
-@@ -94,13 +94,13 @@ static int jazz_esp_detect(struct scsi_h
- 	esp->dma_setup = &dma_setup;
- 
- 	/* Optional functions */
--	esp->dma_barrier = 0;
--	esp->dma_drain = 0;
--	esp->dma_invalidate = 0;
--	esp->dma_irq_entry = 0;
--	esp->dma_irq_exit = 0;
--	esp->dma_poll = 0;
--	esp->dma_reset = 0;
-+	esp->dma_barrier = NULL;
-+	esp->dma_drain = NULL;
-+	esp->dma_invalidate = NULL;
-+	esp->dma_irq_entry = NULL;
-+	esp->dma_irq_exit = NULL;
-+	esp->dma_poll = NULL;
-+	esp->dma_reset = NULL;
- 	esp->dma_led_off = &dma_led_off;
- 	esp->dma_led_on = &dma_led_on;
- 	
-@@ -120,7 +120,7 @@ static int jazz_esp_detect(struct scsi_h
- 	 * of DMA channel, so we can use the jazz DMA functions
- 	 * 
- 	 */
--	esp->dregs = JAZZ_SCSI_DMA;
-+	esp->dregs = (void *) JAZZ_SCSI_DMA;
- 	
- 	/* ESP register base */
- 	esp->eregs = (struct ESP_regs *)(JAZZ_SCSI_BASE);
+thanks,
 
+greg k-h
