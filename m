@@ -1,39 +1,45 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [patch 08/15] libata: Add ability to prevent PRD from being allocated
-Date: Thu, 09 Feb 2006 04:22:10 -0500
-Message-ID: <43EB09C2.6080000@pobox.com>
-References: <200602061542.k16FgXXX015889@d03av03.boulder.ibm.com> <43E9D236.2080207@gmail.com>
+From: amrut h <h.amrut@gmail.com>
+Subject: Regarding scsi_request
+Date: Thu, 9 Feb 2006 18:23:34 +0900
+Message-ID: <702b51100602090123n1534a775ia33d876f0abae88@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dvmed.net ([216.237.124.58]:14750 "EHLO mail.dvmed.net")
-	by vger.kernel.org with ESMTP id S1030274AbWBIJWT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2006 04:22:19 -0500
-In-Reply-To: <43E9D236.2080207@gmail.com>
+Received: from xproxy.gmail.com ([66.249.82.200]:9033 "EHLO xproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1030305AbWBIJXf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Feb 2006 04:23:35 -0500
+Received: by xproxy.gmail.com with SMTP id i30so84405wxd
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Feb 2006 01:23:34 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: brking@us.ibm.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Tejun Heo wrote:
-> Hello, Brian.
-> 
-> brking@us.ibm.com wrote:
-> 
->>For some HBAs, particularly SAS HBAs, there is no reason to
->>allocate a PRD buffer, since it is not used. Add a flag
->>to prevent its allocation.
->>
-> 
-> 
-> I think it's better done with ata_sas_port_start/stop rather than with
-> ATA_FLAG_NO_PRD.  All sata low level drivers which don't use PRD table
-> implement their own port_start/stop (ahci.c, sata_sil24.c for example).
+Hi All,
 
-Good point.
+I have a query regarding the "scsi_request" data structure in linux kernel.
+There is a comment on the top of definition of "scsi_request"
+(linux/scsi/scsi_request.h) which reads:
 
-	Jeff
+http://lxr.linux.no/source/include/scsi/scsi_request.h#L19
+
+13  * This is essentially a slimmed down version of Scsi_Cmnd.  The point of
+14  * having this is that requests that are injected into the queue as result
+15  * of things like ioctls and character devices shouldn't be using a
+16  * Scsi_Cmnd until such a time that the command is actually at the head
+17  * of the queue and being sent to the driver.
+18  */
 
 
+Please help me understand (or give me some pointer) why requests
+issued through "scsi_request" only needs to go at the head of the
+queue? Is it not possible to insert it in between queue (like after
+sorting).
 
+Kinldy let me know if i am missing something. I will appreciate if
+somebody can give me some pointers to understand the above point
+
+Thanks
+~Amrut
