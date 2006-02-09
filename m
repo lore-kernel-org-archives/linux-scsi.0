@@ -1,42 +1,50 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: read only scsi disk
-Date: Thu, 09 Feb 2006 21:57:54 +0100
-Message-ID: <43EBACD2.50005@s5r6.in-berlin.de>
-References: <1139504647.9367.57.camel@localhost.localdomain>	 <43EB99B3.3020206@s5r6.in-berlin.de> <1139514073.9367.105.camel@localhost.localdomain>
+From: Jesper Juhl <jesper.juhl@gmail.com>
+Subject: Re: [PATCH] Megaraid cleanup
+Date: Thu, 9 Feb 2006 22:06:33 +0100
+Message-ID: <9a8748490602091306x1773a438p94cbc50f004a5b8f@mail.gmail.com>
+References: <9738BCBE884FDB42801FAD8A7769C265142031@NAMAIL1.ad.lsil.com>
+	 <9a8748490601240741x5a54db53o37dcf46cf25d5420@mail.gmail.com>
+	 <1138122353.3662.7.camel@mulgrave>
+	 <9a8748490601251322nc1f1b7di3c02444f66fbe625@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:27806 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1750725AbWBIU6Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Feb 2006 15:58:25 -0500
-In-Reply-To: <1139514073.9367.105.camel@localhost.localdomain>
+Received: from zproxy.gmail.com ([64.233.162.197]:54758 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1750788AbWBIVGe convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Feb 2006 16:06:34 -0500
+Received: by zproxy.gmail.com with SMTP id o1so285010nzf
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Feb 2006 13:06:33 -0800 (PST)
+In-Reply-To: <9a8748490601251322nc1f1b7di3c02444f66fbe625@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mingz@ele.uri.edu
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Damian Pietras <daper@daper.net>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: "Ju, Seokmann" <Seokmann.Ju@lsil.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Kolli, Neela" <Neela.Kolli@engenio.com>, linux-scsi@vger.kernel.org
 
-Ming Zhang wrote:
-> thx, i found this was changed in at least 2.6.16-rc2.
+On 1/25/06, Jesper Juhl <jesper.juhl@gmail.com> wrote:
+> On 1/24/06, James Bottomley <James.Bottomley@steeleye.com> wrote:
+> > On Tue, 2006-01-24 at 16:41 +0100, Jesper Juhl wrote:
+> > > I assume you'll take care of pushing it forward or should I do that?
+> >
+> > I can't actually find this patch on the SCSI list, so resending it would
+> > be a good start.
+> >
+> Hmm, I guess it never made it due to size.
+>
+> Below is the description I initially wrote for the patch and the patch
+> itself is attached as a bzip2 archive so it will hopefully make it to
+> you.
+>
 
-> On Thu, 2006-02-09 at 20:36 +0100, Stefan Richter wrote:
->>Ming Zhang wrote:
->>>from sd.c, it looks like removable is judged first.
->>>
->>>             if (sdp->removable)
->>>                   sd_read_write_protect_flag(sdkp, disk->disk_name,
->>>                                                   buffer);
->>
->>This has been changed in the meantime. Check the current sources.
+James: any comments on the patch?
+Any chance it'll be applied to mainline?
+If there's anything you want/need me to redo then please just let me
+know and I'll be happy to work out any issues there might be.
 
-PS: It was discussed and changed in December.
-http://marc.theaimsgroup.com/?t=113406630600001
-http://marc.theaimsgroup.com/?l=linux-scsi&m=113414617020021
-http://www.kernel.org/git/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=38d76df2f5483478dee803cb6e39da5e506a6643
-(Note: Commit date refers to James' tree. It went into Linus' tree later 
-after release of 2.6.15 but before 2.6.16-rc1.)
--- 
-Stefan Richter
--=====-=-==- --=- -=--=
-http://arcgraph.de/sr/
+
+--
+Jesper Juhl <jesper.juhl@gmail.com>
+Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
+Plain text mails only, please      http://www.expita.com/nomime.html
