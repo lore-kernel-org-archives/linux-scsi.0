@@ -1,123 +1,100 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/qla2xxx/: make some functions static
-Date: Fri, 10 Feb 2006 01:45:37 +0100
-Message-ID: <20060210004537.GK3524@stusta.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: SCSI BLIST_*, sdev_bflags, and scsi_device flags
+Date: Thu, 9 Feb 2006 22:00:52 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0602092150430.24417-100000@netrider.rowland.org>
+References: <20060210001730.GA4865@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:57093 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1750897AbWBJApi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Feb 2006 19:45:38 -0500
-Content-Disposition: inline
+Received: from mx1.rowland.org ([192.131.102.7]:5390 "HELO mx1.rowland.org")
+	by vger.kernel.org with SMTP id S1751023AbWBJDAx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2006 22:00:53 -0500
+In-Reply-To: <20060210001730.GA4865@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, andrew.vasquez@qlogic.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Patrick Mansfield <patmans@us.ibm.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-This patch makes some needlessly global functions static.
+On Thu, 9 Feb 2006, Patrick Mansfield wrote:
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> On Thu, Feb 09, 2006 at 02:55:15PM -0500, Alan Stern wrote:
+> > A fair number of SCSI BLIST bits have duplicate entries in the scsi_device 
+> > structure (in one instance the meaning is inverted):
+> > 
+> > BLIST_BORKEN			borken
+> > BLIST_SINGLELUN			single_lun
+> > BLIST_USE_10_BYTE_MS		use_10_for_ms
+> > BLIST_MS_SKIP_PAGE_08		skip_ms_page_8
+> > BLIST_MS_SKIP_PAGE_3F		skip_ms_page_3f
+> > BLIST_MS_192_BYTES_FOR_3F	use_192_bytes_for_3f
+> > BLIST_RETRY_HWERROR		retry_hwerror
+> > BLIST_NOT_LOCKABLE		lockable
+> > BLIST_NOSTARTONADD		no_start_on_add
+> > 
+> > There's no good reason for this duplication.  It's largely historical; at 
+> > the time the device flags were added there was no way to alter the bflags 
+> > value.  Now there is, since sdev_bflags is stored in the scsi_device.
+> > 
+> > Should we keep this duplication?  Should we remove the device bits and use
+> > the sdev_bflags bitmasks instead?  I presume we don't want to remove the
+> > BLIST entries because they are visible to userspace.  (Although probably
+> > some of them are not used anywhere at all.)
+> 
+> I'd like to see the bit fields replaced by sdev_flags masks. Best with a
+> macro or macros. I don't see why you would get rid of the BLIST_NNN fields
+> even ignoring user space and devinfo, as you can use them as the mask
+> values.
+> 
+> Higher level macros would be easier to replace if we ever move the flags
+> into the starget or such.
+> 
+> I mean if we have:
+> 
+> #define scsi_nostartonadd(sdev)	(sdev->sdev_bflags & BLIST_NOSTARTONADD)
+> 
+> Used as:
+> 
+> 	if (scsi_nostartonadd(sdev))
+> 		...
+> 
+> It can easily be changed in the future to:
+> 
+> #define scsi_nostartonadd(sdev)	\
+> 	(sdev->sdev_target->starget_bflags & BLIST_NOSTARTONADD)
 
----
+Makes sense.
 
- drivers/scsi/qla2xxx/qla_os.c  |   12 ++++++------
- drivers/scsi/qla2xxx/qla_sup.c |    8 ++++----
- 2 files changed, 10 insertions(+), 10 deletions(-)
+> > What about things like BLIST_REPORTLUN2 and BLIST_NOREPORTLUN?  They don't
+> > mean anything for scsi_devices, only for scsi_targets.  Nevertheless they
+> > are part of the same BLIST entries.  Again, I don't see any way around
+> > that without affecting userspace.
+> 
+> A lot of the values are really per target, maybe all of them, plus we
+> have those bit fields that are set by the host driver (or transport).
+> And the devinfo code treats them as per vendor + product.
 
---- 25/drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-possible-cleanups	Fri Jan 13 17:55:05 2006
-+++ 25-akpm/drivers/scsi/qla2xxx/qla_os.c	Fri Jan 13 17:55:05 2006
-@@ -268,7 +268,7 @@ qla24xx_pci_info_str(struct scsi_qla_hos
- 	return str;
- }
- 
--char *
-+static char *
- qla2x00_fw_version_str(struct scsi_qla_host *ha, char *str)
- {
- 	char un_str[10];
-@@ -306,7 +306,7 @@ qla2x00_fw_version_str(struct scsi_qla_h
- 	return (str);
- }
- 
--char *
-+static char *
- qla24xx_fw_version_str(struct scsi_qla_host *ha, char *str)
- {
- 	sprintf(str, "%d.%02d.%02d ", ha->fw_major_version,
-@@ -582,7 +582,7 @@ qla2x00_wait_for_loop_ready(scsi_qla_hos
- *
- * Note:
- **************************************************************************/
--int
-+static int
- qla2xxx_eh_abort(struct scsi_cmnd *cmd)
- {
- 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
-@@ -716,7 +716,7 @@ qla2x00_eh_wait_for_pending_target_comma
- *    SUCCESS/FAILURE (defined as macro in scsi.h).
- *
- **************************************************************************/
--int
-+static int
- qla2xxx_eh_device_reset(struct scsi_cmnd *cmd)
- {
- 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
-@@ -847,7 +847,7 @@ qla2x00_eh_wait_for_pending_commands(scs
- *    SUCCESS/FAILURE (defined as macro in scsi.h).
- *
- **************************************************************************/
--int
-+static int
- qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
- {
- 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
-@@ -908,7 +908,7 @@ eh_bus_reset_done:
- *
- * Note:
- **************************************************************************/
--int
-+static int
- qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
- {
- 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+Which BLIST bits exactly are per-target?  Obviously everything with LUN in
+the name and probably the two INQUIRY flags.  Anything else?
 
---- linux-2.6.16-rc2-mm1-full/drivers/scsi/qla2xxx/qla_sup.c.old	2006-02-10 01:10:06.000000000 +0100
-+++ linux-2.6.16-rc2-mm1-full/drivers/scsi/qla2xxx/qla_sup.c	2006-02-10 01:10:20.000000000 +0100
-@@ -428,7 +428,7 @@
- 	return FARX_ACCESS_NVRAM_DATA | naddr;
- }
- 
--uint32_t
-+static uint32_t
- qla24xx_read_flash_dword(scsi_qla_host_t *ha, uint32_t addr)
- {
- 	int rval;
-@@ -469,7 +469,7 @@
- 	return dwptr;
- }
- 
--int
-+static int
- qla24xx_write_flash_dword(scsi_qla_host_t *ha, uint32_t addr, uint32_t data)
- {
- 	int rval;
-@@ -491,7 +491,7 @@
- 	return rval;
- }
- 
--void
-+static void
- qla24xx_get_flash_manufacturer(scsi_qla_host_t *ha, uint8_t *man_id,
-     uint8_t *flash_id)
- {
-@@ -502,7 +502,7 @@
- 	*flash_id = MSB(ids);
- }
- 
--int
-+static int
- qla24xx_write_flash_data(scsi_qla_host_t *ha, uint32_t *dwptr, uint32_t faddr,
-     uint32_t dwords)
- {
+> IMO store them all in sdev_bflags for now.
+
+In fact, the sdev_bflags and the starget_bflags can be copies of each
+other (subject to modification by the host adapter driver, of course).  I
+think the accessors should be inline routines, so they can do
+type-checking on the argument (scsi_device vs. scsi_target).
+
+Do you mind if I don't bother to write setter routines?
+
+> For a given target is it allowed per standard, or does hardware exist that
+> returns a different vendor and product for different LU's?
+> 
+> I don't see anything looking at the SPC 3 for INQUIRY.
+> 
+> It doesn't make much sense to me, but then there are some crazy devices
+> out there.
+
+I don't know -- I've never heard of such a thing, but that doesn't mean 
+much.
+
+Alan Stern
 
