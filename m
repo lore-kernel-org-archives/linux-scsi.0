@@ -1,98 +1,56 @@
-From: Gorazd Golob <gorazd.golob@noviforum.si>
-Subject: Re: Fw: [Bugme-new] [Bug 6052] New: Megaraid file corruption and
-	performance degradation on x86_64 with 8G RAM
-Date: Fri, 10 Feb 2006 21:04:36 +0100
-Message-ID: <1139601876.10214.14.camel@dacun.noviforum.si>
-References: <20060210112640.4637dfdb.akpm@osdl.org>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: 2.6.16-rc1 crash in scsi_target_reap_work
+Date: Fri, 10 Feb 2006 15:28:58 -0600
+Message-ID: <43ED059A.1080509@us.ibm.com>
+References: <20060117000533.GA27473@suse.de> <43CE8C26.4000202@us.ibm.com>	 <20060119210514.GA7118@suse.de> <20060130104613.GA26551@suse.de>	 <20060130164954.GA4711@suse.de> <20060206220434.GA11732@suse.de>	 <1139265890.3022.63.camel@mulgrave.il.steeleye.com>	 <20060209200529.GA8968@suse.de>  <20060210101124.GA6253@suse.de> <1139580295.3084.3.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from elfstone.noviforum.si ([193.189.169.107]:36744 "EHLO
-	elfstone.noviforum.si") by vger.kernel.org with ESMTP
-	id S1751365AbWBJUEi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Feb 2006 15:04:38 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by elfstone.noviforum.si (ESMTP) with ESMTP id CFAED1B913
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2006 21:02:33 +0100 (CET)
-Received: from dacun.noviforum.si (dacun.noviforum.si [192.168.2.26])
-	by elfstone.noviforum.si (ESMTP) with ESMTP id AA43D1B912
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2006 21:02:33 +0100 (CET)
-In-Reply-To: <20060210112640.4637dfdb.akpm@osdl.org>
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:17066 "EHLO e5.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932199AbWBJV3W (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Feb 2006 16:29:22 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e5.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id k1ALTKK3003907
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2006 16:29:20 -0500
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k1ALTK4C245684
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2006 16:29:20 -0500
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k1ALTJFG004725
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2006 16:29:20 -0500
+In-Reply-To: <1139580295.3084.3.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Olaf Hering <olh@suse.de>, linux-scsi@vger.kernel.org
+
+James Bottomley wrote:
+> On Fri, 2006-02-10 at 11:11 +0100, Olaf Hering wrote:
+>>550 reboots without crash, with this patch reverted.
+>>Will try the execute_in_process_context thing now.
+> 
+> I wouldn't bother ... because of the structure, the
+> execute_in_process_context() patch must have the same bug, but the
+> context check will make it much more difficult to hit.
+> 
+> Go back to the original and see if you can diagnose what is NULL and
+> why.  The target is supposed to have a reference on the parent, so what
+> was the parent in this case?  If it's a host, there's nothing I can
+> think of that can produce the behaviour you see; if it's something else,
+> like an rport or phy then we may have a transport class issue.
+
+Taking a quick look at the scsi_target_reap_work patch that went in,
+one of the things it changed in this regard was the fact that the
+caller of scsi_target_reap always has a ref to the starget->dev, which
+would have protected scsi_target_reap from ever releasing the
+starget->dev. Since the actual remove work was moved to a workqueue,
+the get and put that the callers of scsi_target_reap are doing is no longer
+adding the same protection it was before.
 
 
-Switching off the directio in megaraid's setup to cacheio should help.
-It's controller's (32bit) problem not drivers.
-
-
-On Fri, 2006-02-10 at 11:26 -0800, Andrew Morton wrote:
-> 
-> Begin forwarded message:
-> 
-> Date: Fri, 10 Feb 2006 10:19:45 -0800
-> From: bugme-daemon@bugzilla.kernel.org
-> To: bugme-new@lists.osdl.org
-> Subject: [Bugme-new] [Bug 6052] New: Megaraid file corruption and performance degradation on x86_64 with 8G RAM
-> 
-> 
-> http://bugzilla.kernel.org/show_bug.cgi?id=6052
-> 
->            Summary: Megaraid file corruption and performance degradation on
->                     x86_64 with 8G RAM
->     Kernel Version: 2.6.15-1.2005_FC4smp
->             Status: NEW
->           Severity: normal
->              Owner: andmike@us.ibm.com
->          Submitter: bloch@verdurin.com
-> 
-> 
-> Most recent kernel where this bug did not occur:
-> Distribution: 
-> Fedora Core 4
-> 
-> Hardware Environment: 
-> 
-> Tyan S2882
-> 2 x Opteron 252
-> 8G RAM
-> LSI MegaRAID SATA 150-4
-> 
-> Software Environment:
-> 
-> Problem Description:
-> 
-> A RAID1 mirror was setup using the MegaRAID card and 2 x 250 GB drives.
-> After only a day or so of use, there was severe filesystem corruption (using
-> ext3) and the user complained that even before the corruption it was incredibly
-> slow (the mirror is used to house $HOME).
-> 
-> We have other machines here with only 4G RAM using the same card and setup. 
-> Performance there is fine and there's been no filesystem corruption.
-> 
-> In one case I removed the drives from the card and connected them to the SATA
-> ports on the motherboard, using software RAID.  That machine is working fine.
-> 
-> In the other case I have tried using a Fedora test kernel, equivalent to
-> 2.6.16-rc2, which has the latest version of the MegaRAID driver (2.20.4.7).
-> I was unable to recover the filesystem on the original partition when running
-> fsck using the new kernel.  However, at least on this occasion fsck kept running
-> (for two days...) instead of crashing.
-> 
-> When running mkfs on the hardware RAID1 mirror, performance still seems to be
-> very slow.
-> 
-> Hence it appears there is a specific problem with the LSI megaraid driver on
-> x86_64 machines with more than 4G RAM.
-> 
-> Steps to reproduce:
-> 
-> ------- You are receiving this mail because: -------
-> You are on the CC list for the bug, or are watching someone who is.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
