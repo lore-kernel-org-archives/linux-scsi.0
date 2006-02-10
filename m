@@ -1,25 +1,40 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [-mm patch] drivers/scsi/gdth.c: make __gdth_execute() static
-Date: Fri, 10 Feb 2006 14:11:11 +0100
-Message-ID: <20060210131111.GB9733@lst.de>
-References: <20060207220627.345107c3.akpm@osdl.org> <20060210003737.GH3524@stusta.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: 2.6.16-rc1 crash in scsi_target_reap_work
+Date: Fri, 10 Feb 2006 09:04:55 -0500
+Message-ID: <1139580295.3084.3.camel@mulgrave.il.steeleye.com>
+References: <20060117000533.GA27473@suse.de> <43CE8C26.4000202@us.ibm.com>
+	 <20060119210514.GA7118@suse.de> <20060130104613.GA26551@suse.de>
+	 <20060130164954.GA4711@suse.de> <20060206220434.GA11732@suse.de>
+	 <1139265890.3022.63.camel@mulgrave.il.steeleye.com>
+	 <20060209200529.GA8968@suse.de>  <20060210101124.GA6253@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:41960 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S932075AbWBJNLX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Feb 2006 08:11:23 -0500
-Content-Disposition: inline
-In-Reply-To: <20060210003737.GH3524@stusta.de>
+Received: from stat9.steeleye.com ([209.192.50.41]:61882 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932090AbWBJOFH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Feb 2006 09:05:07 -0500
+In-Reply-To: <20060210101124.GA6253@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Andrew Morton <akpm@osdl.org>, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, achim_leubner@adaptec.com, linux-scsi@vger.kernel.org
+To: Olaf Hering <olh@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Feb 10, 2006 at 01:37:37AM +0100, Adrian Bunk wrote:
-> I don't see any reason for __gdth_execute() being global.
+On Fri, 2006-02-10 at 11:11 +0100, Olaf Hering wrote:
+> 550 reboots without crash, with this patch reverted.
+> Will try the execute_in_process_context thing now.
 
-Thanks, I've updated my patch locally and once I've gotten positive
-testing feedback I'll send along the updated variant.
+I wouldn't bother ... because of the structure, the
+execute_in_process_context() patch must have the same bug, but the
+context check will make it much more difficult to hit.
+
+Go back to the original and see if you can diagnose what is NULL and
+why.  The target is supposed to have a reference on the parent, so what
+was the parent in this case?  If it's a host, there's nothing I can
+think of that can produce the behaviour you see; if it's something else,
+like an rport or phy then we may have a transport class issue.
+
+James
+
 
