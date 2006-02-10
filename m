@@ -1,51 +1,123 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Regarding ordered-tag support.
-Date: Fri, 10 Feb 2006 09:45:16 +0900
-Message-ID: <43EBE21C.2020803@gmail.com>
-References: <43E99248.7090505@gmail.com>	 <1139413766.3003.19.camel@mulgrave.il.steeleye.com>	 <43EA17E6.4000800@gmail.com> <43EA1B75.40008@emulex.com>	 <43EA2313.9030506@gmail.com>	 <1139418451.3003.37.camel@mulgrave.il.steeleye.com>	 <43EA27E4.9080105@gmail.com>	 <1139419637.3003.43.camel@mulgrave.il.steeleye.com>	 <43EA329F.2000906@pobox.com>  <43EAC110.5030700@gmail.com> <1139505635.3275.43.camel@mulgrave.il.steeleye.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2.6 patch] drivers/scsi/qla2xxx/: make some functions static
+Date: Fri, 10 Feb 2006 01:45:37 +0100
+Message-ID: <20060210004537.GK3524@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=EUC-KR
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pproxy.gmail.com ([64.233.166.176]:12989 "EHLO pproxy.gmail.com")
-	by vger.kernel.org with ESMTP id S1750894AbWBJApV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2006 19:45:21 -0500
-Received: by pproxy.gmail.com with SMTP id 57so130388pya
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Feb 2006 16:45:20 -0800 (PST)
-In-Reply-To: <1139505635.3275.43.camel@mulgrave.il.steeleye.com>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:57093 "HELO
+	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
+	id S1750897AbWBJApi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Feb 2006 19:45:38 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James.Smart@Emulex.Com, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>, andrew.vasquez@qlogic.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, James.
+This patch makes some needlessly global functions static.
 
-James Bottomley wrote:
-> 
-> The fact that tasks can proceed in parallel, only the command components
-> individual linked tasks must be serialised. so it supports the TCQ
-> paradigm.
-> 
-> Really, also, linked tasks is exactly what a JFS wants because most of
-> the updates that would be linked are something like update log entry;
-> modify metadata (or data); remove log entry.
-> 
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-I see your point, so it's not really a barrier anymore, but a sequence
-of ordered writes with an intervening flush independent of other
-unrelated writes.  Some random thoughts...
+---
 
-* All writes in the ordered sequence will have to be done sequentially,
-but unrelated writes are not affected.  This can be overall gain.
+ drivers/scsi/qla2xxx/qla_os.c  |   12 ++++++------
+ drivers/scsi/qla2xxx/qla_sup.c |    8 ++++----
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
-* Can be implemented in block layer proper without using SCSI linked
-task (probably with separate ->ordered_requests queue).  What would be
-the advantage of SCSI linked task?
+--- 25/drivers/scsi/qla2xxx/qla_os.c~drivers-scsi-qla2xxx-possible-cleanups	Fri Jan 13 17:55:05 2006
++++ 25-akpm/drivers/scsi/qla2xxx/qla_os.c	Fri Jan 13 17:55:05 2006
+@@ -268,7 +268,7 @@ qla24xx_pci_info_str(struct scsi_qla_hos
+ 	return str;
+ }
+ 
+-char *
++static char *
+ qla2x00_fw_version_str(struct scsi_qla_host *ha, char *str)
+ {
+ 	char un_str[10];
+@@ -306,7 +306,7 @@ qla2x00_fw_version_str(struct scsi_qla_h
+ 	return (str);
+ }
+ 
+-char *
++static char *
+ qla24xx_fw_version_str(struct scsi_qla_host *ha, char *str)
+ {
+ 	sprintf(str, "%d.%02d.%02d ", ha->fw_major_version,
+@@ -582,7 +582,7 @@ qla2x00_wait_for_loop_ready(scsi_qla_hos
+ *
+ * Note:
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -716,7 +716,7 @@ qla2x00_eh_wait_for_pending_target_comma
+ *    SUCCESS/FAILURE (defined as macro in scsi.h).
+ *
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_device_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -847,7 +847,7 @@ qla2x00_eh_wait_for_pending_commands(scs
+ *    SUCCESS/FAILURE (defined as macro in scsi.h).
+ *
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
+@@ -908,7 +908,7 @@ eh_bus_reset_done:
+ *
+ * Note:
+ **************************************************************************/
+-int
++static int
+ qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
+ {
+ 	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
 
-* As it's finer grained than wholesale barrier, FS layer will need to
-pay more attention.
+--- linux-2.6.16-rc2-mm1-full/drivers/scsi/qla2xxx/qla_sup.c.old	2006-02-10 01:10:06.000000000 +0100
++++ linux-2.6.16-rc2-mm1-full/drivers/scsi/qla2xxx/qla_sup.c	2006-02-10 01:10:20.000000000 +0100
+@@ -428,7 +428,7 @@
+ 	return FARX_ACCESS_NVRAM_DATA | naddr;
+ }
+ 
+-uint32_t
++static uint32_t
+ qla24xx_read_flash_dword(scsi_qla_host_t *ha, uint32_t addr)
+ {
+ 	int rval;
+@@ -469,7 +469,7 @@
+ 	return dwptr;
+ }
+ 
+-int
++static int
+ qla24xx_write_flash_dword(scsi_qla_host_t *ha, uint32_t addr, uint32_t data)
+ {
+ 	int rval;
+@@ -491,7 +491,7 @@
+ 	return rval;
+ }
+ 
+-void
++static void
+ qla24xx_get_flash_manufacturer(scsi_qla_host_t *ha, uint8_t *man_id,
+     uint8_t *flash_id)
+ {
+@@ -502,7 +502,7 @@
+ 	*flash_id = MSB(ids);
+ }
+ 
+-int
++static int
+ qla24xx_write_flash_data(scsi_qla_host_t *ha, uint32_t *dwptr, uint32_t faddr,
+     uint32_t dwords)
+ {
 
-Thanks for the explanation.  :-)
-
--- 
-tejun
