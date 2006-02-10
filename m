@@ -1,49 +1,81 @@
-From: "Martin K. Petersen" <mkp@mkp.net>
-Subject: Re: cpqfc
-Date: Fri, 10 Feb 2006 14:04:14 -0500
-Message-ID: <yq1u0b79gsx.fsf@wilson.lab.mkp.net>
-References: <Pine.GSO.4.64.0602061840520.24390@filebunker.xip.at>
-	<200602061923.31944@bilbo.math.uni-mannheim.de>
-	<Pine.GSO.4.64.0602061921160.94@filebunker.xip.at>
-	<200602070855.34920@bilbo.math.uni-mannheim.de>
-	<Pine.GSO.4.64.0602071058530.26505@filebunker.xip.at>
-	<Pine.GSO.4.64.0602101220450.2743@filebunker.xip.at>
+From: Andrew Morton <akpm@osdl.org>
+Subject: Fw: [Bugme-new] [Bug 6052] New: Megaraid file corruption and
+ performance degradation on x86_64 with 8G RAM
+Date: Fri, 10 Feb 2006 11:26:40 -0800
+Message-ID: <20060210112640.4637dfdb.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vanessarodrigues.com ([192.139.46.150]:61858 "EHLO
-	jaguar.mkp.net") by vger.kernel.org with ESMTP id S1750872AbWBJTES
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Feb 2006 14:04:18 -0500
-In-Reply-To: <Pine.GSO.4.64.0602101220450.2743@filebunker.xip.at> (Ingo Flaschberger's message of "Fri, 10 Feb 2006 12:26:27 +0100 (CET)")
+Received: from smtp.osdl.org ([65.172.181.4]:46487 "EHLO smtp.osdl.org")
+	by vger.kernel.org with ESMTP id S1751314AbWBJT13 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Feb 2006 14:27:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Flaschberger <if@xip.at>
-Cc: linux-scsi@vger.kernel.org
-
->>>>> "Ingo" == Ingo Flaschberger <if@xip.at> writes:
-
-Ingo> I have not received any answer regarding implementation of a new
-Ingo> driver for the cpqfc adapter.
-
-I've been away for a couple of days and I'm still catching up on mail.
-
-It is correct that I've been working on a generic tachyon driver for a
-while.  It is, however, still at the "poke this register and see what
-happens" stage.  As soon as I get the driver to a point where it makes
-sense to have other people pick at it I'll submit it here.
+To: linux-scsi@vger.kernel.org
+Cc: Neela.Kolli@engenio.com, Andi Kleen <ak@muc.de>, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, bloch@verdurin.com
 
 
-Ingo> In one week I will start to port the old 2.4 driver to 2.6; with
-Ingo> all its "not nice" code, because it works!
 
-No it doesn't.  It has data corruption issues.
+Begin forwarded message:
 
-If you really want to help there's still the issue of RA4100 and other
-(if there are any?) TYPE_RAID devices not working.  That should be a
-really quick hack and would make a lot of people happy.
+Date: Fri, 10 Feb 2006 10:19:45 -0800
+From: bugme-daemon@bugzilla.kernel.org
+To: bugme-new@lists.osdl.org
+Subject: [Bugme-new] [Bug 6052] New: Megaraid file corruption and performance degradation on x86_64 with 8G RAM
 
-Check the archives for info...
 
--- 
-Martin K. Petersen      http://mkp.net/
+http://bugzilla.kernel.org/show_bug.cgi?id=6052
+
+           Summary: Megaraid file corruption and performance degradation on
+                    x86_64 with 8G RAM
+    Kernel Version: 2.6.15-1.2005_FC4smp
+            Status: NEW
+          Severity: normal
+             Owner: andmike@us.ibm.com
+         Submitter: bloch@verdurin.com
+
+
+Most recent kernel where this bug did not occur:
+Distribution: 
+Fedora Core 4
+
+Hardware Environment: 
+
+Tyan S2882
+2 x Opteron 252
+8G RAM
+LSI MegaRAID SATA 150-4
+
+Software Environment:
+
+Problem Description:
+
+A RAID1 mirror was setup using the MegaRAID card and 2 x 250 GB drives.
+After only a day or so of use, there was severe filesystem corruption (using
+ext3) and the user complained that even before the corruption it was incredibly
+slow (the mirror is used to house $HOME).
+
+We have other machines here with only 4G RAM using the same card and setup. 
+Performance there is fine and there's been no filesystem corruption.
+
+In one case I removed the drives from the card and connected them to the SATA
+ports on the motherboard, using software RAID.  That machine is working fine.
+
+In the other case I have tried using a Fedora test kernel, equivalent to
+2.6.16-rc2, which has the latest version of the MegaRAID driver (2.20.4.7).
+I was unable to recover the filesystem on the original partition when running
+fsck using the new kernel.  However, at least on this occasion fsck kept running
+(for two days...) instead of crashing.
+
+When running mkfs on the hardware RAID1 mirror, performance still seems to be
+very slow.
+
+Hence it appears there is a specific problem with the LSI megaraid driver on
+x86_64 machines with more than 4G RAM.
+
+Steps to reproduce:
+
+------- You are receiving this mail because: -------
+You are on the CC list for the bug, or are watching someone who is.
