@@ -1,42 +1,33 @@
-From: Olaf Hering <olh@suse.de>
-Subject: Re: 2.6.16-rc1 crash in scsi_target_reap_work
-Date: Fri, 10 Feb 2006 11:11:24 +0100
-Message-ID: <20060210101124.GA6253@suse.de>
-References: <20060117000533.GA27473@suse.de> <43CE8C26.4000202@us.ibm.com> <20060119210514.GA7118@suse.de> <20060130104613.GA26551@suse.de> <20060130164954.GA4711@suse.de> <20060206220434.GA11732@suse.de> <1139265890.3022.63.camel@mulgrave.il.steeleye.com> <20060209200529.GA8968@suse.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: read only scsi disk
+Date: Fri, 10 Feb 2006 10:35:37 +0000
+Message-ID: <20060210103537.GA27401@infradead.org>
+References: <1139504647.9367.57.camel@localhost.localdomain> <20060209190225.GI1593@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.suse.de ([195.135.220.2]:64903 "EHLO mx1.suse.de")
-	by vger.kernel.org with ESMTP id S1751219AbWBJKLa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Feb 2006 05:11:30 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:64426 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751307AbWBJKfj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Feb 2006 05:35:39 -0500
 Content-Disposition: inline
-In-Reply-To: <20060209200529.GA8968@suse.de>
+In-Reply-To: <20060209190225.GI1593@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Ming Zhang <mingz@ele.uri.edu>, linux-scsi <linux-scsi@vger.kernel.org>, Damian Pietras <daper@daper.net>
 
- On Thu, Feb 09, Olaf Hering wrote:
-
->  On Mon, Feb 06, James Bottomley wrote:
+On Thu, Feb 09, 2006 at 12:02:25PM -0700, Matthew Wilcox wrote:
+> On Thu, Feb 09, 2006 at 12:04:07PM -0500, Ming Zhang wrote:
+> > We are adding the support for an OSS iscsi target to support export an
+> > iscsi disk as readonly. We set correct read only bit in sense dbd. But
+> > we found that only when we set the removable bit, the linux will
+> > actually check the ro bit. more detail information can be found from
 > 
-> > On Mon, 2006-02-06 at 23:04 +0100, Olaf Hering wrote:
-> > > I need help on this one.
-> > > What I have so far (via git-bisect) is:
-> > 
-> > My guess would be this patch:
-> > 
-> > 
-> > commit
-> > 863a930a40eb7f2d18534c2c166b22582f5c6cfd
-> > [SCSI] fix scsi_reap_target() device_del from atomic context
-> 
-> I'm testing this patch now.
+> Surely all iSCSI discs are removable, since anyone could unplug the
+> network cable at any time ...
 
-550 reboots without crash, with this patch reverted.
-Will try the execute_in_process_context thing now.
+The removable flags means a removeable medium.  All devices are treated as
+beeing able to just go away when the transport is disconnected or the HBA
+removed.
 
--- 
-short story of a lazy sysadmin:
- alias appserv=wotan
