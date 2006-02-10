@@ -1,93 +1,100 @@
-From: Patrick Mansfield <patmans@us.ibm.com>
-Subject: Re: SCSI BLIST_*, sdev_bflags, and scsi_device flags
-Date: Thu, 9 Feb 2006 16:17:30 -0800
-Message-ID: <20060210001730.GA4865@us.ibm.com>
-References: <Pine.LNX.4.44L0.0602091438550.5532-100000@iolanthe.rowland.org>
+From: Bernd Schubert <bernd-schubert@gmx.de>
+Subject: Re: a couple of oopses with 2.6.14
+Date: Fri, 10 Feb 2006 01:32:11 +0100
+Message-ID: <200602100132.12120.bernd-schubert@gmx.de>
+References: <200602091934.20732.bernd.schubert@pci.uni-heidelberg.de> <20060209152744.00de43f6.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:48793 "EHLO
-	e35.co.us.ibm.com") by vger.kernel.org with ESMTP id S1750860AbWBJARh
+Received: from mail.gmx.de ([213.165.64.21]:21211 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1750870AbWBJAcP convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Feb 2006 19:17:37 -0500
-Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
-	by e35.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k1A0Hbgi010416
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Feb 2006 19:17:37 -0500
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by westrelay02.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k1A0FU47272200
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Feb 2006 17:15:30 -0700
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k1A0HaqD012330
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Feb 2006 17:17:36 -0700
+	Thu, 9 Feb 2006 19:32:15 -0500
+In-Reply-To: <20060209152744.00de43f6.akpm@osdl.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0602091438550.5532-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Thu, Feb 09, 2006 at 02:55:15PM -0500, Alan Stern wrote:
-> A fair number of SCSI BLIST bits have duplicate entries in the scsi_device 
-> structure (in one instance the meaning is inverted):
-> 
-> BLIST_BORKEN			borken
-> BLIST_SINGLELUN			single_lun
-> BLIST_USE_10_BYTE_MS		use_10_for_ms
-> BLIST_MS_SKIP_PAGE_08		skip_ms_page_8
-> BLIST_MS_SKIP_PAGE_3F		skip_ms_page_3f
-> BLIST_MS_192_BYTES_FOR_3F	use_192_bytes_for_3f
-> BLIST_RETRY_HWERROR		retry_hwerror
-> BLIST_NOT_LOCKABLE		lockable
-> BLIST_NOSTARTONADD		no_start_on_add
-> 
-> There's no good reason for this duplication.  It's largely historical; at 
-> the time the device flags were added there was no way to alter the bflags 
-> value.  Now there is, since sdev_bflags is stored in the scsi_device.
-> 
-> Should we keep this duplication?  Should we remove the device bits and use
-> the sdev_bflags bitmasks instead?  I presume we don't want to remove the
-> BLIST entries because they are visible to userspace.  (Although probably
-> some of them are not used anywhere at all.)
+Hello Andrew and James,
 
-I'd like to see the bit fields replaced by sdev_flags masks. Best with a
-macro or macros. I don't see why you would get rid of the BLIST_NNN fields
-even ignoring user space and devinfo, as you can use them as the mask
-values.
+thanks for your help.
 
-Higher level macros would be easier to replace if we ever move the flags
-into the starget or such.
 
-I mean if we have:
+On Friday 10 February 2006 00:27, Andrew Morton wrote:
+> Bernd Schubert <bernd.schubert@pci.uni-heidelberg.de> wrote:
+> > Hi,
+> >
+> > here's a machine that works perfectly with 2.6.11, but gives oopes =
+during
+> > the boot process with 2.6.14. Unfortunately its everytime another o=
+ops.
+> > Usually I would assume its a memory issue, but the machine really w=
+orks
+> > perfectly with 2.6.11.
+>
+> scsi has had a few problems with error recovery lately.
+>
+> > We will run a memory test over the weekend, but so far I don't beli=
+eve it
+> > will find anything.
+>
+> No, I wouldn't bother doing that.
 
-#define scsi_nostartonadd(sdev)	(sdev->sdev_bflags & BLIST_NOSTARTONADD)
+Ok.
 
-Used as:
+>
+> > ------------- example 1
+> > ------------------------------------------------------
+> >
+> > [4294676.669000] scsi0 : ata_piix
+> > [4294676.831000] ATA: abnormal status 0x7F on port 0xE407
+>
+> So we have a sata problem.  It triggered two scsi bugs.  The first (a
+> warning) is being fixed.  I don't know if the second has been fixed.
 
-	if (scsi_nostartonadd(sdev))
-		...
+I'm not sure if its only a sata problem, I saw several of other oopses,=
+ one=20
+was related to Firewire/scsi (ok, could be a consequence of the previou=
+s sata=20
+problem), one came from bluesmoke (external patch) and some of them I=20
+couldn't associate to anything (but those I couldn't also capture via=20
+netconsole).
 
-It can easily be changed in the future to:
 
-#define scsi_nostartonadd(sdev)	\
-	(sdev->sdev_target->starget_bflags & BLIST_NOSTARTONADD)
+>
+> Can you test 2.6.15?
+>
 
-> What about things like BLIST_REPORTLUN2 and BLIST_NOREPORTLUN?  They don't
-> mean anything for scsi_devices, only for scsi_targets.  Nevertheless they
-> are part of the same BLIST entries.  Again, I don't see any way around
-> that without affecting userspace.
+Sure, I will test 2.6.15 this evening. I will also enable most debuggin=
+g=20
+information for this testkernel, ok?
 
-A lot of the values are really per target, maybe all of them, plus we
-have those bit fields that are set by the host driver (or transport).
-And the devinfo code treats them as per vendor + product.
 
-IMO store them all in sdev_bflags for now.
+Thanks,
+	Bernd
 
-For a given target is it allowed per standard, or does hardware exist that
-returns a different vendor and product for different LU's?
 
-I don't see anything looking at the SPC 3 for INQUIRY.
+PS: For production we unfortunately can't use 2.6.15 - reiserfs trouble=
+ (well,=20
+I could try to revert commit 5fa8ad644faa114c4190484ac50e15236fc7cdd9, =
+but=20
+I'm still waiting for an offical statement of the reiserfs poeple) and=20
+Win4Lin patches are available up to 2.6.14 only (its the PC of our secr=
+etary=20
+and she really wouldn't like that ;) ).
 
-It doesn't make much sense to me, but then there are some crazy devices
-out there.
+--=20
+Bernd Schubert
+PCI / Theoretische Chemie
+Universit=E4t Heidelberg
+INF 229
+69120 Heidelberg
 
--- Patrick Mansfield
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
