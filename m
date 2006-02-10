@@ -1,84 +1,98 @@
-From: Bernd Schubert <bernd.schubert@pci.uni-heidelberg.de>
-Subject: Re: a couple of oopses with 2.6.14
-Date: Fri, 10 Feb 2006 20:51:49 +0100
-Message-ID: <200602102051.50886.bernd.schubert@pci.uni-heidelberg.de>
-References: <200602091934.20732.bernd.schubert@pci.uni-heidelberg.de> <200602101924.45467.bernd.schubert@pci.uni-heidelberg.de> <20060210112958.025a7bfb.akpm@osdl.org>
-Reply-To: bernd-schubert@gmx.de
+From: Gorazd Golob <gorazd.golob@noviforum.si>
+Subject: Re: Fw: [Bugme-new] [Bug 6052] New: Megaraid file corruption and
+	performance degradation on x86_64 with 8G RAM
+Date: Fri, 10 Feb 2006 21:04:36 +0100
+Message-ID: <1139601876.10214.14.camel@dacun.noviforum.si>
+References: <20060210112640.4637dfdb.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay.uni-heidelberg.de ([129.206.100.212]:37045 "EHLO
-	relay.uni-heidelberg.de") by vger.kernel.org with ESMTP
-	id S1751360AbWBJTwE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2006 14:52:04 -0500
-In-Reply-To: <20060210112958.025a7bfb.akpm@osdl.org>
-Content-Disposition: inline
+Received: from elfstone.noviforum.si ([193.189.169.107]:36744 "EHLO
+	elfstone.noviforum.si") by vger.kernel.org with ESMTP
+	id S1751365AbWBJUEi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Feb 2006 15:04:38 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by elfstone.noviforum.si (ESMTP) with ESMTP id CFAED1B913
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2006 21:02:33 +0100 (CET)
+Received: from dacun.noviforum.si (dacun.noviforum.si [192.168.2.26])
+	by elfstone.noviforum.si (ESMTP) with ESMTP id AA43D1B912
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2006 21:02:33 +0100 (CET)
+In-Reply-To: <20060210112640.4637dfdb.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: James.Bottomley@steeleye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
-
-On Friday 10 February 2006 20:29, Andrew Morton wrote:
-> Bernd Schubert <bernd.schubert@pci.uni-heidelberg.de> wrote:
-> > > Can you test 2.6.15?
-> >
-> > Yes, 2.6.15.3 works, no oopses.
->
-> Some progress.
->
-> > Only this information
-> >
-> > [4294743.341000] scsi0 : ata_piix
-> > [4294743.514000] ATA: abnormal status 0x7F on port 0xE407
-> >
-> > I can't test if sata works, there's just nothing connected.
->
-> Has this machine's sata support ever worked?  If so, in which kernel?
-> (Apologies if you've already described this).
-
-Don't know, there was never anything connected to the sata ports. It wa=
-s also=20
-just an accident that sata was compiled statically into the kernel.
-Though, with 2.6.11 we don't get the warnings:
-
-libata version 1.10 loaded.
-ata_piix version 1.03
-PCI: Setting latency timer of device 0000:00:1f.2 to 64
-ata1: SATA max UDMA/133 cmd 0xEC00 ctl 0xE802 bmdma 0xDC00 irq 18
-ata2: SATA max UDMA/133 cmd 0xE400 ctl 0xE002 bmdma 0xDC08 irq 18
-ata1: SATA port has no device.
-scsi0 : ata_piix
-ata2: SATA port has no device.
-scsi1 : ata_piix
-ieee1394: Initialized config rom entry `ip1394'
+To: linux-scsi@vger.kernel.org
 
 
->
-> > Btw, the printk timing information seem to be uninitalized, is this=
- by
-> > intentention or is it a bug?
->
-> It's expected.  We use a very raw, low-level funtion for the printk
-> timestamping because we don't want to be taking locks from within pri=
-ntk.
-> The timestamping is mainly for working out the time duration between
-> printk's, rather than for absolute time.
+Switching off the directio in megaraid's setup to cacheio should help.
+It's controller's (32bit) problem not drivers.
 
-Ah, I see.
 
-Thanks,
-	Bernd
+On Fri, 2006-02-10 at 11:26 -0800, Andrew Morton wrote:
+> 
+> Begin forwarded message:
+> 
+> Date: Fri, 10 Feb 2006 10:19:45 -0800
+> From: bugme-daemon@bugzilla.kernel.org
+> To: bugme-new@lists.osdl.org
+> Subject: [Bugme-new] [Bug 6052] New: Megaraid file corruption and performance degradation on x86_64 with 8G RAM
+> 
+> 
+> http://bugzilla.kernel.org/show_bug.cgi?id=6052
+> 
+>            Summary: Megaraid file corruption and performance degradation on
+>                     x86_64 with 8G RAM
+>     Kernel Version: 2.6.15-1.2005_FC4smp
+>             Status: NEW
+>           Severity: normal
+>              Owner: andmike@us.ibm.com
+>          Submitter: bloch@verdurin.com
+> 
+> 
+> Most recent kernel where this bug did not occur:
+> Distribution: 
+> Fedora Core 4
+> 
+> Hardware Environment: 
+> 
+> Tyan S2882
+> 2 x Opteron 252
+> 8G RAM
+> LSI MegaRAID SATA 150-4
+> 
+> Software Environment:
+> 
+> Problem Description:
+> 
+> A RAID1 mirror was setup using the MegaRAID card and 2 x 250 GB drives.
+> After only a day or so of use, there was severe filesystem corruption (using
+> ext3) and the user complained that even before the corruption it was incredibly
+> slow (the mirror is used to house $HOME).
+> 
+> We have other machines here with only 4G RAM using the same card and setup. 
+> Performance there is fine and there's been no filesystem corruption.
+> 
+> In one case I removed the drives from the card and connected them to the SATA
+> ports on the motherboard, using software RAID.  That machine is working fine.
+> 
+> In the other case I have tried using a Fedora test kernel, equivalent to
+> 2.6.16-rc2, which has the latest version of the MegaRAID driver (2.20.4.7).
+> I was unable to recover the filesystem on the original partition when running
+> fsck using the new kernel.  However, at least on this occasion fsck kept running
+> (for two days...) instead of crashing.
+> 
+> When running mkfs on the hardware RAID1 mirror, performance still seems to be
+> very slow.
+> 
+> Hence it appears there is a specific problem with the LSI megaraid driver on
+> x86_64 machines with more than 4G RAM.
+> 
+> Steps to reproduce:
+> 
+> ------- You are receiving this mail because: -------
+> You are on the CC list for the bug, or are watching someone who is.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
---=20
-Bernd Schubert
-Physikalisch Chemisches Institut / Theoretische Chemie
-Universit=E4t Heidelberg
-INF 229
-69120 Heidelberg
-e-mail: bernd.schubert@pci.uni-heidelberg.de
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
