@@ -1,294 +1,287 @@
 From: Andreas Herrmann <aherrman@de.ibm.com>
-Subject: [PATCH 2/4] zfcp: fix adapter erp when link is unplugged
-Date: Sat, 11 Feb 2006 01:41:50 +0100
-Message-ID: <20060211004150.GA17341@lion28.ibm.com>
+Subject: [PATCH 3/4] zfcp: fix logging during device reset
+Date: Sat, 11 Feb 2006 01:42:58 +0100
+Message-ID: <20060211004258.GA17348@lion28.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.de.ibm.com ([195.212.29.151]:57583 "EHLO
-	mtagate2.de.ibm.com") by vger.kernel.org with ESMTP id S932283AbWBKAmf
+Received: from mtagate3.de.ibm.com ([195.212.29.152]:63285 "EHLO
+	mtagate3.de.ibm.com") by vger.kernel.org with ESMTP id S932283AbWBKAnn
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Feb 2006 19:42:35 -0500
+	Fri, 10 Feb 2006 19:43:43 -0500
 Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate2.de.ibm.com (8.12.10/8.12.10) with ESMTP id k1B0gYHm239930
-	for <linux-scsi@vger.kernel.org>; Sat, 11 Feb 2006 00:42:34 GMT
+	by mtagate3.de.ibm.com (8.12.10/8.12.10) with ESMTP id k1B0hgQk200310
+	for <linux-scsi@vger.kernel.org>; Sat, 11 Feb 2006 00:43:42 GMT
 Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k1B0gYC3238900
-	for <linux-scsi@vger.kernel.org>; Sat, 11 Feb 2006 01:42:34 +0100
+	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k1B0hhC3239020
+	for <linux-scsi@vger.kernel.org>; Sat, 11 Feb 2006 01:43:43 +0100
 Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id k1B0gXUt018682
-	for <linux-scsi@vger.kernel.org>; Sat, 11 Feb 2006 01:42:33 +0100
+	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id k1B0hg1S019285
+	for <linux-scsi@vger.kernel.org>; Sat, 11 Feb 2006 01:43:42 +0100
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jejb@steeleye.com>
-Cc: Linux SCSI <linux-scsi@vger.kernel.org>
+Cc: Maxim Shchetynin <maxim@de.ibm.com>, Linux SCSI <linux-scsi@vger.kernel.org>
 
-Remove endless polling for replug of the local link. Just wait for
-link up notification.
+From: Maxim Shchetynin <maxim@de.ibm.com>
 
+Avoid access to old fsf_requests if device reset is logged.
+
+Signed-off-by: Maxim Shchetynin <maxim@de.ibm.com>
 Signed-off-by: Andreas Herrmann <aherrman@de.ibm.com>
 
 ---
 
- drivers/s390/scsi/zfcp_def.h |    5 ---
- drivers/s390/scsi/zfcp_erp.c |   80 +++++++++++++++---------------------------
- drivers/s390/scsi/zfcp_fsf.c |   74 ++++++++++++++++++++++-----------------
- 3 files changed, 69 insertions(+), 90 deletions(-)
+ drivers/s390/scsi/zfcp_dbf.c  |   76 ++++++++++++++++-------------------------
+ drivers/s390/scsi/zfcp_def.h  |    6 +--
+ drivers/s390/scsi/zfcp_ext.h  |    5 ++-
+ drivers/s390/scsi/zfcp_fsf.c  |    6 ++-
+ drivers/s390/scsi/zfcp_scsi.c |   15 +++++---
+ 5 files changed, 47 insertions(+), 61 deletions(-)
 
-41d46dbc33d5020cd3434b496eb204de0e8a2ed2
+00e2067be332ce201736a95512883396db5bed6c
+diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
+index 4d7d47c..a5f2ba9 100644
+--- a/drivers/s390/scsi/zfcp_dbf.c
++++ b/drivers/s390/scsi/zfcp_dbf.c
+@@ -710,10 +710,9 @@ static inline void
+ _zfcp_scsi_dbf_event_common(const char *tag, const char *tag2, int level,
+ 			    struct zfcp_adapter *adapter,
+ 			    struct scsi_cmnd *scsi_cmnd,
+-			    struct zfcp_fsf_req *new_fsf_req)
++			    struct zfcp_fsf_req *fsf_req,
++			    struct zfcp_fsf_req *old_fsf_req)
+ {
+-	struct zfcp_fsf_req *fsf_req =
+-	    (struct zfcp_fsf_req *)scsi_cmnd->host_scribble;
+ 	struct zfcp_scsi_dbf_record *rec = &adapter->scsi_dbf_buf;
+ 	struct zfcp_dbf_dump *dump = (struct zfcp_dbf_dump *)rec;
+ 	unsigned long flags;
+@@ -727,19 +726,20 @@ _zfcp_scsi_dbf_event_common(const char *
+ 		if (offset == 0) {
+ 			strncpy(rec->tag, tag, ZFCP_DBF_TAG_SIZE);
+ 			strncpy(rec->tag2, tag2, ZFCP_DBF_TAG_SIZE);
+-			if (scsi_cmnd->device) {
+-				rec->scsi_id = scsi_cmnd->device->id;
+-				rec->scsi_lun = scsi_cmnd->device->lun;
++			if (scsi_cmnd != NULL) {
++				if (scsi_cmnd->device) {
++					rec->scsi_id = scsi_cmnd->device->id;
++					rec->scsi_lun = scsi_cmnd->device->lun;
++				}
++				rec->scsi_result = scsi_cmnd->result;
++				rec->scsi_cmnd = (unsigned long)scsi_cmnd;
++				rec->scsi_serial = scsi_cmnd->serial_number;
++				memcpy(rec->scsi_opcode, &scsi_cmnd->cmnd,
++					min((int)scsi_cmnd->cmd_len,
++						ZFCP_DBF_SCSI_OPCODE));
++				rec->scsi_retries = scsi_cmnd->retries;
++				rec->scsi_allowed = scsi_cmnd->allowed;
+ 			}
+-			rec->scsi_result = scsi_cmnd->result;
+-			rec->scsi_cmnd = (unsigned long)scsi_cmnd;
+-			rec->scsi_serial = scsi_cmnd->serial_number;
+-			memcpy(rec->scsi_opcode,
+-			       &scsi_cmnd->cmnd,
+-			       min((int)scsi_cmnd->cmd_len,
+-				   ZFCP_DBF_SCSI_OPCODE));
+-			rec->scsi_retries = scsi_cmnd->retries;
+-			rec->scsi_allowed = scsi_cmnd->allowed;
+ 			if (fsf_req != NULL) {
+ 				fcp_rsp = (struct fcp_rsp_iu *)
+ 				    &(fsf_req->qtcb->bottom.io.fcp_rsp);
+@@ -772,15 +772,8 @@ _zfcp_scsi_dbf_event_common(const char *
+ 				rec->fsf_seqno = fsf_req->seq_no;
+ 				rec->fsf_issued = fsf_req->issued;
+ 			}
+-			if (new_fsf_req != NULL) {
+-				rec->type.new_fsf_req.fsf_reqid =
+-				    (unsigned long)
+-				    new_fsf_req;
+-				rec->type.new_fsf_req.fsf_seqno =
+-				    new_fsf_req->seq_no;
+-				rec->type.new_fsf_req.fsf_issued =
+-				    new_fsf_req->issued;
+-			}
++			rec->type.old_fsf_reqid =
++				    (unsigned long) old_fsf_req;
+ 		} else {
+ 			strncpy(dump->tag, "dump", ZFCP_DBF_TAG_SIZE);
+ 			dump->total_size = buflen;
+@@ -801,19 +794,21 @@ _zfcp_scsi_dbf_event_common(const char *
+ inline void
+ zfcp_scsi_dbf_event_result(const char *tag, int level,
+ 			   struct zfcp_adapter *adapter,
+-			   struct scsi_cmnd *scsi_cmnd)
++			   struct scsi_cmnd *scsi_cmnd,
++			   struct zfcp_fsf_req *fsf_req)
+ {
+-	_zfcp_scsi_dbf_event_common("rslt",
+-				    tag, level, adapter, scsi_cmnd, NULL);
++	_zfcp_scsi_dbf_event_common("rslt", tag, level,
++			adapter, scsi_cmnd, fsf_req, NULL);
+ }
+ 
+ inline void
+ zfcp_scsi_dbf_event_abort(const char *tag, struct zfcp_adapter *adapter,
+ 			  struct scsi_cmnd *scsi_cmnd,
+-			  struct zfcp_fsf_req *new_fsf_req)
++			  struct zfcp_fsf_req *new_fsf_req,
++			  struct zfcp_fsf_req *old_fsf_req)
+ {
+-	_zfcp_scsi_dbf_event_common("abrt",
+-				    tag, 1, adapter, scsi_cmnd, new_fsf_req);
++	_zfcp_scsi_dbf_event_common("abrt", tag, 1,
++			adapter, scsi_cmnd, new_fsf_req, old_fsf_req);
+ }
+ 
+ inline void
+@@ -823,7 +818,7 @@ zfcp_scsi_dbf_event_devreset(const char 
+ 	struct zfcp_adapter *adapter = unit->port->adapter;
+ 
+ 	_zfcp_scsi_dbf_event_common(flag == FCP_TARGET_RESET ? "trst" : "lrst",
+-				    tag, 1, adapter, scsi_cmnd, NULL);
++			tag, 1, adapter, scsi_cmnd, NULL, NULL);
+ }
+ 
+ static int
+@@ -856,6 +851,10 @@ zfcp_scsi_dbf_view_format(debug_info_t *
+ 			     rec->scsi_retries);
+ 	len += zfcp_dbf_view(out_buf + len, "scsi_allowed", "0x%02x",
+ 			     rec->scsi_allowed);
++	if (strncmp(rec->tag, "abrt", ZFCP_DBF_TAG_SIZE) == 0) {
++		len += zfcp_dbf_view(out_buf + len, "old_fsf_reqid", "0x%0Lx",
++				     rec->type.old_fsf_reqid);
++	}
+ 	len += zfcp_dbf_view(out_buf + len, "fsf_reqid", "0x%0Lx",
+ 			     rec->fsf_reqid);
+ 	len += zfcp_dbf_view(out_buf + len, "fsf_seqno", "0x%08x",
+@@ -883,21 +882,6 @@ zfcp_scsi_dbf_view_format(debug_info_t *
+ 				       min((int)rec->type.fcp.sns_info_len,
+ 					   ZFCP_DBF_SCSI_FCP_SNS_INFO), 0,
+ 				       rec->type.fcp.sns_info_len);
+-	} else if (strncmp(rec->tag, "abrt", ZFCP_DBF_TAG_SIZE) == 0) {
+-		len += zfcp_dbf_view(out_buf + len, "fsf_reqid_abort", "0x%0Lx",
+-				     rec->type.new_fsf_req.fsf_reqid);
+-		len += zfcp_dbf_view(out_buf + len, "fsf_seqno_abort", "0x%08x",
+-				     rec->type.new_fsf_req.fsf_seqno);
+-		len += zfcp_dbf_stck(out_buf + len, "fsf_issued",
+-				     rec->type.new_fsf_req.fsf_issued);
+-	} else if ((strncmp(rec->tag, "trst", ZFCP_DBF_TAG_SIZE) == 0) ||
+-		   (strncmp(rec->tag, "lrst", ZFCP_DBF_TAG_SIZE) == 0)) {
+-		len += zfcp_dbf_view(out_buf + len, "fsf_reqid_reset", "0x%0Lx",
+-				     rec->type.new_fsf_req.fsf_reqid);
+-		len += zfcp_dbf_view(out_buf + len, "fsf_seqno_reset", "0x%08x",
+-				     rec->type.new_fsf_req.fsf_seqno);
+-		len += zfcp_dbf_stck(out_buf + len, "fsf_issued",
+-				     rec->type.new_fsf_req.fsf_issued);
+ 	}
+ 
+ 	len += sprintf(out_buf + len, "\n");
 diff --git a/drivers/s390/scsi/zfcp_def.h b/drivers/s390/scsi/zfcp_def.h
-index 7dac56c..f031199 100644
+index f031199..7f551d6 100644
 --- a/drivers/s390/scsi/zfcp_def.h
 +++ b/drivers/s390/scsi/zfcp_def.h
-@@ -152,11 +152,6 @@ typedef u32 scsi_lun_t;
- #define ZFCP_EXCHANGE_CONFIG_DATA_FIRST_SLEEP	100
- #define ZFCP_EXCHANGE_CONFIG_DATA_RETRIES	7
+@@ -424,11 +424,7 @@ struct zfcp_scsi_dbf_record {
+ 	u32 fsf_seqno;
+ 	u64 fsf_issued;
+ 	union {
+-		struct {
+-			u64 fsf_reqid;
+-			u32 fsf_seqno;
+-			u64 fsf_issued;
+-		} new_fsf_req;
++		u64 old_fsf_reqid;
+ 		struct {
+ 			u8 rsp_validity;
+ 			u8 rsp_scsi_status;
+diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
+index c1ba7cf..700f540 100644
+--- a/drivers/s390/scsi/zfcp_ext.h
++++ b/drivers/s390/scsi/zfcp_ext.h
+@@ -194,9 +194,10 @@ extern void zfcp_san_dbf_event_els_respo
+ extern void zfcp_san_dbf_event_incoming_els(struct zfcp_fsf_req *);
  
--/* Retry 5 times every 2 second, then every minute */
--#define ZFCP_EXCHANGE_PORT_DATA_SHORT_RETRIES	5
--#define ZFCP_EXCHANGE_PORT_DATA_SHORT_SLEEP	200
--#define ZFCP_EXCHANGE_PORT_DATA_LONG_SLEEP	6000
--
- /* timeout value for "default timer" for fsf requests */
- #define ZFCP_FSF_REQUEST_TIMEOUT (60*HZ);
- 
-diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
-index da947e6..8ed6fcb 100644
---- a/drivers/s390/scsi/zfcp_erp.c
-+++ b/drivers/s390/scsi/zfcp_erp.c
-@@ -2246,15 +2246,6 @@ zfcp_erp_adapter_strategy_open_fsf(struc
- {
- 	int retval;
- 
--	if ((atomic_test_mask(ZFCP_STATUS_ADAPTER_LINK_UNPLUGGED,
--			      &erp_action->adapter->status)) &&
--	    (erp_action->adapter->adapter_features &
--	     FSF_FEATURE_HBAAPI_MANAGEMENT)) {
--		zfcp_erp_adapter_strategy_open_fsf_xport(erp_action);
--		atomic_set(&erp_action->adapter->erp_counter, 0);
--		return ZFCP_ERP_FAILED;
--	}
--
- 	retval = zfcp_erp_adapter_strategy_open_fsf_xconfig(erp_action);
- 	if (retval == ZFCP_ERP_FAILED)
- 		return ZFCP_ERP_FAILED;
-@@ -2266,13 +2257,6 @@ zfcp_erp_adapter_strategy_open_fsf(struc
- 	return zfcp_erp_adapter_strategy_open_fsf_statusread(erp_action);
- }
- 
--/*
-- * function:	
-- *
-- * purpose:	
-- *
-- * returns:
-- */
- static int
- zfcp_erp_adapter_strategy_open_fsf_xconfig(struct zfcp_erp_action *erp_action)
- {
-@@ -2350,48 +2334,40 @@ static int
- zfcp_erp_adapter_strategy_open_fsf_xport(struct zfcp_erp_action *erp_action)
- {
- 	int ret;
--	int retries;
--	int sleep;
--	struct zfcp_adapter *adapter = erp_action->adapter;
-+	struct zfcp_adapter *adapter;
- 
-+	adapter = erp_action->adapter;
- 	atomic_clear_mask(ZFCP_STATUS_ADAPTER_XPORT_OK, &adapter->status);
- 
--	retries = 0;
--	do {
--		write_lock(&adapter->erp_lock);
--		zfcp_erp_action_to_running(erp_action);
--		write_unlock(&adapter->erp_lock);
--		zfcp_erp_timeout_init(erp_action);
--		ret = zfcp_fsf_exchange_port_data(erp_action, adapter, NULL);
--		if (ret == -EOPNOTSUPP) {
--			debug_text_event(adapter->erp_dbf, 3, "a_xport_notsupp");
--			return ZFCP_ERP_SUCCEEDED;
--		} else if (ret) {
--			debug_text_event(adapter->erp_dbf, 3, "a_xport_failed");
--			return ZFCP_ERP_FAILED;
--		}
--		debug_text_event(adapter->erp_dbf, 6, "a_xport_ok");
-+	write_lock(&adapter->erp_lock);
-+	zfcp_erp_action_to_running(erp_action);
-+	write_unlock(&adapter->erp_lock);
- 
--		down(&adapter->erp_ready_sem);
--		if (erp_action->status & ZFCP_STATUS_ERP_TIMEDOUT) {
--			ZFCP_LOG_INFO("error: exchange of port data "
--				      "for adapter %s timed out\n",
--				      zfcp_get_busid_by_adapter(adapter));
--			break;
--		}
--		if (!atomic_test_mask(ZFCP_STATUS_ADAPTER_LINK_UNPLUGGED,
--				      &adapter->status))
--			break;
-+	zfcp_erp_timeout_init(erp_action);
-+	ret = zfcp_fsf_exchange_port_data(erp_action, adapter, NULL);
-+	if (ret == -EOPNOTSUPP) {
-+		debug_text_event(adapter->erp_dbf, 3, "a_xport_notsupp");
-+		return ZFCP_ERP_SUCCEEDED;
-+	} else if (ret) {
-+		debug_text_event(adapter->erp_dbf, 3, "a_xport_failed");
-+		return ZFCP_ERP_FAILED;
-+	}
-+	debug_text_event(adapter->erp_dbf, 6, "a_xport_ok");
- 
--		if (retries < ZFCP_EXCHANGE_PORT_DATA_SHORT_RETRIES) {
--			sleep = ZFCP_EXCHANGE_PORT_DATA_SHORT_SLEEP;
--			retries++;
--		} else
--			sleep = ZFCP_EXCHANGE_PORT_DATA_LONG_SLEEP;
--		schedule_timeout(sleep);
--	} while (1);
-+	ret = ZFCP_ERP_SUCCEEDED;
-+	down(&adapter->erp_ready_sem);
-+	if (erp_action->status & ZFCP_STATUS_ERP_TIMEDOUT) {
-+		ZFCP_LOG_INFO("error: exchange port data timed out (adapter "
-+			      "%s)\n", zfcp_get_busid_by_adapter(adapter));
-+		ret = ZFCP_ERP_FAILED;
-+	}
-+	if (!atomic_test_mask(ZFCP_STATUS_ADAPTER_XPORT_OK, &adapter->status)) {
-+		ZFCP_LOG_INFO("error: exchange port data failed (adapter "
-+			      "%s\n", zfcp_get_busid_by_adapter(adapter));
-+		ret = ZFCP_ERP_FAILED;
-+	}
- 
--	return ZFCP_ERP_SUCCEEDED;
-+	return ret;
- }
- 
- /*
+ extern void zfcp_scsi_dbf_event_result(const char *, int, struct zfcp_adapter *,
+-				       struct scsi_cmnd *);
++				       struct scsi_cmnd *,
++				       struct zfcp_fsf_req *);
+ extern void zfcp_scsi_dbf_event_abort(const char *, struct zfcp_adapter *,
+-				      struct scsi_cmnd *,
++				      struct scsi_cmnd *, struct zfcp_fsf_req *,
+ 				      struct zfcp_fsf_req *);
+ extern void zfcp_scsi_dbf_event_devreset(const char *, u8, struct zfcp_unit *,
+ 					 struct scsi_cmnd *);
 diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
-index 9f0cb3d..bd8cd4d 100644
+index bd8cd4d..662ec57 100644
 --- a/drivers/s390/scsi/zfcp_fsf.c
 +++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -388,6 +388,7 @@ zfcp_fsf_protstatus_eval(struct zfcp_fsf
- 	case FSF_PROT_LINK_DOWN:
- 		zfcp_fsf_link_down_info_eval(adapter,
- 					     &prot_status_qual->link_down_info);
-+		zfcp_erp_adapter_reopen(adapter, 0);
- 		fsf_req->status |= ZFCP_STATUS_FSFREQ_ERROR;
- 		break;
+@@ -4211,11 +4211,11 @@ zfcp_fsf_send_fcp_command_task_handler(s
+ 	ZFCP_LOG_DEBUG("scpnt->result =0x%x\n", scpnt->result);
  
-@@ -558,10 +559,8 @@ zfcp_fsf_link_down_info_eval(struct zfcp
+ 	if (scpnt->result != 0)
+-		zfcp_scsi_dbf_event_result("erro", 3, fsf_req->adapter, scpnt);
++		zfcp_scsi_dbf_event_result("erro", 3, fsf_req->adapter, scpnt, fsf_req);
+ 	else if (scpnt->retries > 0)
+-		zfcp_scsi_dbf_event_result("retr", 4, fsf_req->adapter, scpnt);
++		zfcp_scsi_dbf_event_result("retr", 4, fsf_req->adapter, scpnt, fsf_req);
+ 	else
+-		zfcp_scsi_dbf_event_result("norm", 6, fsf_req->adapter, scpnt);
++		zfcp_scsi_dbf_event_result("norm", 6, fsf_req->adapter, scpnt, fsf_req);
  
- 	atomic_set_mask(ZFCP_STATUS_ADAPTER_LINK_UNPLUGGED, &adapter->status);
- 
--	if (link_down == NULL) {
--		zfcp_erp_adapter_reopen(adapter, 0);
--		return;
--	}
-+	if (link_down == NULL)
-+		goto out;
- 
- 	switch (link_down->error_code) {
- 	case FSF_PSQ_LINK_NO_LIGHT:
-@@ -643,16 +642,8 @@ zfcp_fsf_link_down_info_eval(struct zfcp
- 				link_down->explanation_code,
- 				link_down->vendor_specific_code);
- 
--	switch (link_down->error_code) {
--	case FSF_PSQ_LINK_NO_LIGHT:
--	case FSF_PSQ_LINK_WRAP_PLUG:
--	case FSF_PSQ_LINK_NO_FCP:
--	case FSF_PSQ_LINK_FIRMWARE_UPDATE:
--		zfcp_erp_adapter_reopen(adapter, 0);
--		break;
--	default:
--		zfcp_erp_adapter_failed(adapter);
--	}
-+ out:
-+	zfcp_erp_adapter_failed(adapter);
+ 	/* cleanup pointer (need this especially for abort) */
+ 	scpnt->host_scribble = NULL;
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index e080375..9f6b4d7 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -242,7 +242,7 @@ zfcp_scsi_command_fail(struct scsi_cmnd 
+ 	if ((scpnt->device != NULL) && (scpnt->device->host != NULL))
+ 		zfcp_scsi_dbf_event_result("fail", 4,
+ 			(struct zfcp_adapter*) scpnt->device->host->hostdata[0],
+-			scpnt);
++			scpnt, NULL);
+ 	/* return directly */
+ 	scpnt->scsi_done(scpnt);
  }
+@@ -446,7 +446,7 @@ zfcp_scsi_eh_abort_handler(struct scsi_c
+ 	old_fsf_req = (struct zfcp_fsf_req *) scpnt->host_scribble;
+ 	if (!old_fsf_req) {
+ 		write_unlock_irqrestore(&adapter->abort_lock, flags);
+-		zfcp_scsi_dbf_event_abort("lte1", adapter, scpnt, new_fsf_req);
++		zfcp_scsi_dbf_event_abort("lte1", adapter, scpnt, NULL, NULL);
+ 		retval = SUCCESS;
+ 		goto out;
+ 	}
+@@ -460,6 +460,8 @@ zfcp_scsi_eh_abort_handler(struct scsi_c
+ 						 adapter, unit, 0);
+ 	if (!new_fsf_req) {
+ 		ZFCP_LOG_INFO("error: initiation of Abort FCP Cmnd failed\n");
++		zfcp_scsi_dbf_event_abort("nres", adapter, scpnt, NULL,
++					  old_fsf_req);
+ 		retval = FAILED;
+ 		goto out;
+ 	}
+@@ -470,13 +472,16 @@ zfcp_scsi_eh_abort_handler(struct scsi_c
  
- /*
-@@ -2304,6 +2295,35 @@ zfcp_fsf_exchange_port_data(struct zfcp_
- 	return retval;
- }
- 
-+/**
-+ * zfcp_fsf_exchange_port_evaluate
-+ * @fsf_req: fsf_req which belongs to xchg port data request
-+ * @xchg_ok: specifies if xchg port data was incomplete or complete (0/1)
-+ */
-+static void
-+zfcp_fsf_exchange_port_evaluate(struct zfcp_fsf_req *fsf_req, int xchg_ok)
-+{
-+	struct zfcp_adapter *adapter;
-+	struct fsf_qtcb *qtcb;
-+	struct fsf_qtcb_bottom_port *bottom, *data;
-+	struct Scsi_Host *shost;
-+
-+	adapter = fsf_req->adapter;
-+	qtcb = fsf_req->qtcb;
-+	bottom = &qtcb->bottom.port;
-+	shost = adapter->scsi_host;
-+
-+	data = (struct fsf_qtcb_bottom_port*) fsf_req->data;
-+	if (data)
-+		memcpy(data, bottom, sizeof(struct fsf_qtcb_bottom_port));
-+
-+	if (adapter->connection_features & FSF_FEATURE_NPIV_MODE)
-+		fc_host_permanent_port_name(shost) = bottom->wwpn;
-+	else
-+		fc_host_permanent_port_name(shost) = fc_host_port_name(shost);
-+	fc_host_maxframe_size(shost) = bottom->maximum_frame_size;
-+	fc_host_supported_speeds(shost) = bottom->supported_speed;
-+}
- 
- /**
-  * zfcp_fsf_exchange_port_data_handler - handler for exchange_port_data request
-@@ -2312,38 +2332,26 @@ zfcp_fsf_exchange_port_data(struct zfcp_
- static void
- zfcp_fsf_exchange_port_data_handler(struct zfcp_fsf_req *fsf_req)
- {
--	struct zfcp_adapter *adapter = fsf_req->adapter;
--	struct Scsi_Host *shost = adapter->scsi_host;
--	struct fsf_qtcb *qtcb = fsf_req->qtcb;
--	struct fsf_qtcb_bottom_port *bottom, *data;
-+	struct zfcp_adapter *adapter;
-+	struct fsf_qtcb *qtcb;
-+
-+	adapter = fsf_req->adapter;
-+	qtcb = fsf_req->qtcb;
- 
- 	if (fsf_req->status & ZFCP_STATUS_FSFREQ_ERROR)
- 		return;
- 
- 	switch (qtcb->header.fsf_status) {
-         case FSF_GOOD:
-+		zfcp_fsf_exchange_port_evaluate(fsf_req, 1);
- 		atomic_set_mask(ZFCP_STATUS_ADAPTER_XPORT_OK, &adapter->status);
--
--		bottom = &qtcb->bottom.port;
--		data = (struct fsf_qtcb_bottom_port*) fsf_req->data;
--		if (data)
--			memcpy(data, bottom, sizeof(struct fsf_qtcb_bottom_port));
--		if (adapter->connection_features & FSF_FEATURE_NPIV_MODE)
--			fc_host_permanent_port_name(shost) = bottom->wwpn;
--		else
--			fc_host_permanent_port_name(shost) =
--				fc_host_port_name(shost);
--		fc_host_maxframe_size(shost) = bottom->maximum_frame_size;
--		fc_host_supported_speeds(shost) = bottom->supported_speed;
- 		break;
--
- 	case FSF_EXCHANGE_CONFIG_DATA_INCOMPLETE:
-+		zfcp_fsf_exchange_port_evaluate(fsf_req, 0);
- 		atomic_set_mask(ZFCP_STATUS_ADAPTER_XPORT_OK, &adapter->status);
--
- 		zfcp_fsf_link_down_info_eval(adapter,
- 			&qtcb->header.fsf_status_qual.link_down_info);
-                 break;
--
-         default:
- 		debug_text_event(adapter->erp_dbf, 0, "xchg-port-ng");
- 		debug_event(adapter->erp_dbf, 0,
+ 	/* status should be valid since signals were not permitted */
+ 	if (new_fsf_req->status & ZFCP_STATUS_FSFREQ_ABORTSUCCEEDED) {
+-		zfcp_scsi_dbf_event_abort("okay", adapter, scpnt, new_fsf_req);
++		zfcp_scsi_dbf_event_abort("okay", adapter, scpnt, new_fsf_req,
++					  NULL);
+ 		retval = SUCCESS;
+ 	} else if (new_fsf_req->status & ZFCP_STATUS_FSFREQ_ABORTNOTNEEDED) {
+-		zfcp_scsi_dbf_event_abort("lte2", adapter, scpnt, new_fsf_req);
++		zfcp_scsi_dbf_event_abort("lte2", adapter, scpnt, new_fsf_req,
++					  NULL);
+ 		retval = SUCCESS;
+ 	} else {
+-		zfcp_scsi_dbf_event_abort("fail", adapter, scpnt, new_fsf_req);
++		zfcp_scsi_dbf_event_abort("fail", adapter, scpnt, new_fsf_req,
++					  NULL);
+ 		retval = FAILED;
+ 	}
+ 	zfcp_fsf_req_free(new_fsf_req);
 -- 
 0.99.9n-g5a22
