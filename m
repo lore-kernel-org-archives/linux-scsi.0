@@ -1,36 +1,35 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: SCSI BLIST_*, sdev_bflags, and scsi_device flags
-Date: Fri, 10 Feb 2006 10:27:21 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0602101023390.5093-100000@iolanthe.rowland.org>
-References: <20060210103634.GB27401@infradead.org>
+From: Andi Kleen <ak@muc.de>
+Subject: Re: Fw: [Bugme-new] [Bug 6052] New: Megaraid file corruption and performance degradation on x86_64 with 8G RAM
+Date: 11 Feb 2006 10:37:52 +0100
+Message-ID: <20060211093752.GB50528@muc.de>
+References: <20060210112640.4637dfdb.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:14261 "HELO
-	iolanthe.rowland.org") by vger.kernel.org with SMTP id S932137AbWBJP10
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Feb 2006 10:27:26 -0500
-In-Reply-To: <20060210103634.GB27401@infradead.org>
+Received: from colin.muc.de ([193.149.48.1]:30736 "EHLO mail.muc.de")
+	by vger.kernel.org with ESMTP id S1750788AbWBKJh7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 11 Feb 2006 04:37:59 -0500
+Date: Sat, 11 Feb 2006 10:37:52 +0100
+Content-Disposition: inline
+In-Reply-To: <20060210112640.4637dfdb.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@osdl.org>
+Cc: linux-scsi@vger.kernel.org, Neela.Kolli@engenio.com, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, bloch@verdurin.com
 
-On Fri, 10 Feb 2006, Christoph Hellwig wrote:
-
-> > What about things like BLIST_REPORTLUN2 and BLIST_NOREPORTLUN?  They don't
-> > mean anything for scsi_devices, only for scsi_targets.  Nevertheless they
-> > are part of the same BLIST entries.  Again, I don't see any way around
-> > that without affecting userspace.
+On Fri, Feb 10, 2006 at 11:26:40AM -0800, Andrew Morton wrote:
 > 
-> Do we need per-device blist flags at all?  I suspect just having them in
-> the target should be enough.
+> 
+> Begin forwarded message:
 
-Some of the blist flags clearly are per-device: BLIST_KEY, BLIST_ISROM,
-BLIST_NOSTARTONADD, BLIST_MS_SKIP_PAGE_08, BLIST_MS_SKIP_PAGE_3F,
-BLIST_USE_10_BYTE_MS, BLIST_MS_192_BYTES_FOR_3F, BLIST_NOT_LOCKABLE,
-BLIST_NO_ULD_ATTACH, BLIST_RETRY_HWERROR.  There are a few others I'm not
-certain about.
+Hmm, could be the merging issue too? Does megaraid do anything
+funny with sg lists? Does iommu=nomerge help?
 
-Alan Stern
+If yes apply
 
+ftp://ftp.firstfloor.org/pub/ak/x86_64/quilt/patches/gart-dma-merge
+
+and report back.
+
+-Andi
