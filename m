@@ -1,48 +1,67 @@
-From: Andreas Kirchhofer <akirchhofer@acm.org>
-Subject: Problems with aic7xxx - starting with Kernel 2.6.13
-Date: Sat, 11 Feb 2006 22:04:09 +0100
-Message-ID: <1139691849.3048.12.camel@idefix.kirchhofers-home.de>
-Reply-To: andreas@kirchhofers-home.de
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: Error using DC315U to drive ScanJet 4c
+Date: Sat, 11 Feb 2006 22:06:54 +0100 (CET)
+Message-ID: <Pine.LNX.4.60.0602112153320.3570@poirot.grange>
+References: <20060211011457.GA1839@igloo.df.lth.se>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.183]:58083 "EHLO
-	moutng.kundenserver.de") by vger.kernel.org with ESMTP
-	id S932354AbWBKVEM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 11 Feb 2006 16:04:12 -0500
+Received: from mail.gmx.de ([213.165.64.21]:19654 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S932354AbWBKVGo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 11 Feb 2006 16:06:44 -0500
+In-Reply-To: <20060211011457.GA1839@igloo.df.lth.se>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Fredrik Roubert <roubert@df.lth.se>
+Cc: linux-scsi@vger.kernel.org
 
-Hello,
+On Sat, 11 Feb 2006, Fredrik Roubert wrote:
 
-hope I'm in the right list...
+> Hi!
+> 
+> I just connected my old HP ScanJet 4c to my new DC315U SCSI adapter
+> (connected to an ASRock 939Dual-SATA2 motherboard with AMD Athlon 64 X2)
+> and tried using the dc395x kernel module with Linux 2.6.15 and scan an
+> image using xscanimage.
+> 
+> Sometimes it works, but sometimes xscanimage hangs for a long time and
+> then aborts with a message about I/O error. When that happends, the
+> following is printed in the dmesg output:
+> 
+> drivers/scsi/dc395x.c: Please, contact <linux-scsi@vger.kernel.org> to help improve support for your system.
+> dc395x: reselect: w/o disconnected cmds <02-0>
+> dc395x: disconnect: Unexpected reselection <02-0>
 
-I've a Asus P2B-DS with 2 PIII and an on-board aic7xxx SCSI controller
-chip. I use KDE and k3b for burning CDs and DVDs... the distribution I
-use is an up-to-date Fedora Core 4.
+Wow! Youppy-yey! It worked!!:-)) Oh, how I waited for this email!:-)
 
-Starting k3b on a 2.6.15 kernel it starts to search for CD devices and
-than I get some kernel-smp-aipc and so on messages in my console, load
-increases to 20 and 30 and than - kernel panic!
+Ok, making a long story short - you run into a VERY (I think) rare 
+situation when you controller doesn't transfer all the data per DMA and 
+the driver tries to transfer the rest in PIO mode. And this mode is 
+currently broken. We know that, but because noone could reproduce such a 
+situation, we couldn't test any fixes. So, I just suggested to put this 
+request in the driver and hope that the person with such a setup will 
+indeed notice it and write to the list and will also help debug possible 
+fixes for this situation.
 
-The same is with any kernel I tried starting from 2.6.13... I used other
-distribs like Knoppix and Kanotix too... it was the same with kernels
-greater than 2.6.12.
+...and your 64-bit dual-core CPU makes it even more fun. On the other 
+hand, it means we won't be able to test it on highmem... Unless you agree 
+to swap it to a 32-bit machine for a test:-)
 
-If I boot my system with a 2.6.12 kernel (the remaining software the
-same) k3b works without any kind of trouble...
+Now, I hada patch for this. I just have to dig it out, re-diff it against 
+2.6.15 and send to you. One warning - while debugging we might crash your 
+machine a couple of times, perhaps corrupt some data... Do you have, 
+maybe, a test machine without important data on it for first tests, or at 
+least, backup all your valuables. You've been warned:-)
 
-So I'm quite lost at the moment - it seems to be a problem with the
-newer 2.6 kernels and aic7xxx...
+> So, what can I do to help you resolve this? (I'm familiar with kernel
+> programming, in case you need me to check something "complicated".)
 
-Does anybody in this list might have a glue of what's going on and how
-to patch it?
+Unless you want to dig out my patch from list-archives and start testing 
+it yourself, please wait until I send you an updated patch. Don't worry, 
+it will be "complicated" enough:-)
 
-Thanks a lot in advance,
-
-cheers,
-
-Andreas
-
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
