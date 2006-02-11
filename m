@@ -1,53 +1,54 @@
-From: Andreas Herrmann <aherrman@de.ibm.com>
-Subject: [PATCH 4/4] zfcp: fix: avoid race between fc_remote_port_add and scsi_add_device
-Date: Sat, 11 Feb 2006 01:43:55 +0100
-Message-ID: <20060211004355.GA17355@lion28.ibm.com>
+From: Fredrik Roubert <roubert@df.lth.se>
+Subject: Error using DC315U to drive ScanJet 4c
+Date: Sat, 11 Feb 2006 02:14:57 +0100
+Message-ID: <20060211011457.GA1839@igloo.df.lth.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate4.de.ibm.com ([195.212.29.153]:52248 "EHLO
-	mtagate4.de.ibm.com") by vger.kernel.org with ESMTP id S932286AbWBKAok
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Feb 2006 19:44:40 -0500
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate4.de.ibm.com (8.12.10/8.12.10) with ESMTP id k1B0idVV154758
-	for <linux-scsi@vger.kernel.org>; Sat, 11 Feb 2006 00:44:39 GMT
-Received: from d12av02.megacenter.de.ibm.com (d12av02.megacenter.de.ibm.com [9.149.165.228])
-	by d12nrmr1607.megacenter.de.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k1B0ieC3214574
-	for <linux-scsi@vger.kernel.org>; Sat, 11 Feb 2006 01:44:40 +0100
-Received: from d12av02.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av02.megacenter.de.ibm.com (8.12.11/8.13.3) with ESMTP id k1B0ic4H019589
-	for <linux-scsi@vger.kernel.org>; Sat, 11 Feb 2006 01:44:38 +0100
+Received: from igloo.df.lth.se ([194.47.250.47]:30197 "EHLO df.lth.se")
+	by vger.kernel.org with ESMTP id S932290AbWBKBPD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Feb 2006 20:15:03 -0500
+Received: from igloo.df.lth.se (localhost [127.0.0.1])
+	by df.lth.se (8.13.1/8.13.1) with ESMTP id k1B1EvNo002228
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sat, 11 Feb 2006 02:14:58 +0100 (CET)
+Received: (from roubert@localhost)
+	by igloo.df.lth.se (8.13.1/8.13.1/Submit) id k1B1EvIL002225
+	for linux-scsi@vger.kernel.org; Sat, 11 Feb 2006 02:14:57 +0100 (CET)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@steeleye.com>
-Cc: Linux SCSI <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Flush workqueue of a scsi host after a remote port for that host
-is registered at the fc transport class. Otherwise immediate
-registration of a scsi device on that host is racy.
+Hi!
 
-Signed-off-by: Andreas Herrmann <aherrman@de.ibm.com>
+I just connected my old HP ScanJet 4c to my new DC315U SCSI adapter
+(connected to an ASRock 939Dual-SATA2 motherboard with AMD Athlon 64 X2=
+)
+and tried using the dc395x kernel module with Linux 2.6.15 and scan an
+image using xscanimage.
 
----
+Sometimes it works, but sometimes xscanimage hangs for a long time and
+then aborts with a message about I/O error. When that happends, the
+following is printed in the dmesg output:
 
- drivers/s390/scsi/zfcp_erp.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+drivers/scsi/dc395x.c: Please, contact <linux-scsi@vger.kernel.org> to =
+help improve support for your system.
+dc395x: reselect: w/o disconnected cmds <02-0>
+dc395x: disconnect: Unexpected reselection <02-0>
 
-8ef4d7bd844a9ed4806bbfc18313c56045486608
-diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
-index 8ed6fcb..e3c4bdd 100644
---- a/drivers/s390/scsi/zfcp_erp.c
-+++ b/drivers/s390/scsi/zfcp_erp.c
-@@ -3415,6 +3415,8 @@ zfcp_erp_action_cleanup(int action, stru
- 						"(adapter %s, wwpn=0x%016Lx)\n",
- 						zfcp_get_busid_by_port(port),
- 						port->wwpn);
-+			else
-+				scsi_flush_work(adapter->scsi_host);
- 		}
- 		zfcp_port_put(port);
- 		break;
--- 
-0.99.9n-g5a22
+So, what can I do to help you resolve this? (I'm familiar with kernel
+programming, in case you need me to check something "complicated".)
+
+Cheers // Fredrik Roubert
+
+--=20
+S=F6rbyplan 5       |  +46 8 7609169 / +46 708 776974
+SE-163 71 Sp=E5nga  |  http://www.df.lth.se/~roubert/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
