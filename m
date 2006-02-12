@@ -1,64 +1,44 @@
-From: Thomas Maguin <T.Maguin@web.de>
-Subject: Plextor PowerRec for users
-Date: Sun, 12 Feb 2006 16:13:17 +0100
-Message-ID: <200602121613.27504.T.Maguin@web.de>
-Reply-To: T.Maguin@web.de
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 0/22] lpfc 8.1.2 driver update, crash in lpfc_worker_0
+Date: Sun, 12 Feb 2006 09:20:15 -0600
+Message-ID: <1139757616.3808.4.camel@mulgrave.il.steeleye.com>
+References: <43EA10FC.3030008@emulex.com>  <20060212145736.GA23765@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2561932.VlAsV8juVi";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp05.web.de ([217.72.192.209]:19085 "EHLO smtp05.web.de")
-	by vger.kernel.org with ESMTP id S1750786AbWBLPNI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 12 Feb 2006 10:13:08 -0500
-Received: from [80.136.201.153] (helo=paris.troja)
-	by smtp05.web.de with asmtp (TLSv1:AES256-SHA:256)
-	(WEB.DE 4.105 #340)
-	id 1F8IuR-0000n2-00
-	for linux-scsi@vger.kernel.org; Sun, 12 Feb 2006 16:13:07 +0100
+Received: from stat9.steeleye.com ([209.192.50.41]:48545 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750792AbWBLPU2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 12 Feb 2006 10:20:28 -0500
+In-Reply-To: <20060212145736.GA23765@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Olaf Hering <olh@suse.de>
+Cc: James Smart <James.Smart@Emulex.Com>, linux-scsi <linux-scsi@vger.kernel.org>
 
---nextPart2561932.VlAsV8juVi
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+On Sun, 2006-02-12 at 15:57 +0100, Olaf Hering wrote:
+> Decbpuug: 0x3 :s Velecteorpi: 30n0 (gD afutanc Atcicesos)n  acat l[cl0e00d 00fr00o3fm bib2envba0]
+> id   c o pnct: ecx0t0 a00t0 i00n00c052lu22dce/: l.inreusxc/hpaedg_etmaaps.k+0hx:314/06xc08       l
+> 
+>     lr: c000000000053adc: .try_to_wake_up+0x4a8/0x51c
+>     sp: c00000003fbb3130
+>    msr: a000000000001032
+>    dar: c00001800048acb0
+>  dsisr: 40000000
+>   current = 0xc0000000034d07f0
+>   paca    = 0xc00000000048b280
+>     pid   = 1167, comm = lpfc_worker_0
 
-Please add the following entries to allow :
-command opcodes for PoweRec, VariRec (0xED & 0xEB)
-and further settings opcodes  0xE9 on Plextor devices
-as normal user.
+This is IBM pSeries, isn't it?  That crash is very characteristic of one
+we at SteelEye have been trying to track down with the help of IBM ...
+my suspicion is that there's a bug in the pSeries process handling code
+which manifests around wake up under stress.
 
-/usr/src/linux/scsi/scsi.h
-+#define PLEXTOR_MODE =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A00x39
-+#define PLEXTOR_PREC_SPEEDS =C2=A0 0x3B
-+#define PLEXTOR_MODE2 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A00x3D
+Could you try to produce this on a non-ppc machine?
 
-/usr/src/linux/block/scsi/scsi_ioctl.c
-+safe_for_read(PLEXTOR_MODE)
-+safe_for_read(PLEXTOR_PREC_SPEEDS)
-+safe_for_read(PLEXTOR_MODE2)
+Thanks,
+
+James
 
 
-
-Thomas Maguin
-
---nextPart2561932.VlAsV8juVi
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-
-iD8DBQBD71CXyat6ziqpM7YRAre4AJ9YWU/cf+kWCtjE9eOzdHlvuW4vGACgg23h
-/nda1rh4Uq82xUdLyUMg41Q=
-=uk2C
------END PGP SIGNATURE-----
-
---nextPart2561932.VlAsV8juVi--
