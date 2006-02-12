@@ -1,657 +1,262 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: [RFC] FC Transport - adding hbaapi event support
-Date: Sun, 12 Feb 2006 18:06:19 -0500
-Message-ID: <43EFBF6B.9030108@emulex.com>
-Reply-To: James.Smart@Emulex.Com
+From: Andrew Morton <akpm@osdl.org>
+Subject: Re: [Bug 6061] scsi unknown opcode message
+Date: Sun, 12 Feb 2006 15:43:05 -0800
+Message-ID: <20060212154305.455feca6.akpm@osdl.org>
+References: <200602122300.k1CN0E9K027290@fire-2.osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:57474 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S1751060AbWBLXG3
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 12 Feb 2006 18:06:29 -0500
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id k1CN6Lrf018740
-	for <linux-scsi@vger.kernel.org>; Sun, 12 Feb 2006 15:06:22 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <200602122300.k1CN0E9K027290@fire-2.osdl.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-The following patch adds support for hbaapi events within the FC transport.
-It adds the following attributes to the fc_host:
-   max_events  : sizes the internal array for the number of events that are
-                 buffered in the transport. This value can be tuned by a
-                 module parameter.
-   event_cnt   : number of events pending in the buffer
-   event       : reads an event from the buffer
+bugme-daemon@bugzilla.kernel.org wrote:
+>
+> http://bugzilla.kernel.org/show_bug.cgi?id=6061
+> 
+> 
+> 
+> 
+> 
+> ------- Additional Comments From collinm@laboiteaprog.com  2006-02-12 15:00 -------
+> ok it's the info
 
-It adds the following routine for LLDD's to post events:
-   void fc_host_event_post(struct Scsi_Host *shost, struct fc_host_event *evt);
+Thanks.
 
-Not all hbaapi events are contained within the transport. Many events
-correspond to elements outside the fc_host, and can be serviced by normal
-hot-plug events, either on the fc_host, or rport. I believe I've included
-those events that could be posted. I've also punted on anything that has more
-than 1 32-bit word of data - which should only affect RLIR payloads, and
-vendor-unique payloads. We will address these items once we figure out how
-to deal with large payloads in the transport.
+scsi problem: this aic79xx machine emits "scsi: unknown opcode 0xfa"
+sometimes.
 
-In conjunction with the event infrastructure, the module uses hot plug events
-to notify user entities about changes. For the fc_host, the only event posted
-is a KOBJ_CHANGE event. For the rport, ONLINE/OFFLINE is posted whenever the
-rport goes through a block, then unblock. To get to the class_device for the
-rport, a new attribute_container function is added locate the class_device for
-the device.
+There's an unpleasant-looking ACPI warning in there as well.
 
-This implementation does not deal with multiple-user-space-readers (as do few
-library implementations).
+Kernel is 2.6.13++.
 
-Comments appreciated - especially on the kobject_uevent() use.
-
--- james s
-
-
-diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
---- a/drivers/scsi/scsi_transport_fc.c	2006-02-06 12:00:11.000000000 -0500
-+++ b/drivers/scsi/scsi_transport_fc.c	2006-02-12 17:17:35.000000000 -0500
-@@ -34,6 +34,41 @@
-  #include "scsi_priv.h"
-
-  /*
-+ * Module Parameters
-+ */
-+
-+/*
-+ * dev_loss_tmo: the default number of seconds that the FC transport
-+ *   should insulate the loss of a remote port.
-+ *   The maximum will be capped by the value of SCSI_DEVICE_BLOCK_MAX_TIMEOUT.
-+ */
-+static unsigned int fc_modp_dev_loss_tmo = SCSI_DEVICE_BLOCK_MAX_TIMEOUT;
-+
-+module_param_named(dev_loss_tmo, fc_modp_dev_loss_tmo, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(dev_loss_tmo,
-+		 "Maximum number of seconds that the FC transport should"
-+		 " insulate the loss of a remote port. Once this value is"
-+		 " exceeded, the scsi target is removed. Value should be"
-+		 " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT.");
-+
-+/*
-+ * host_max_events: the default number of host events that the FC transport
-+ *   will buffer internally.
-+ *   The minimum will be capped by the value of FC_HOST_MIN_EVENTLIST_SZ.
-+ *   The maximum will be capped by the value of FC_HOST_MAX_EVENTLIST_SZ.
-+ */
-+static unsigned int fc_modp_host_max_events = FC_HOST_MIN_EVENTLIST_SZ;
-+
-+module_param_named(host_max_events, fc_modp_host_max_events, int,
-+			S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(host_max_events,
-+		 "Maximum number of FC Host events that will be buffered"
-+		 " internally. If this maximum is exceeded, new events"
-+		 " will over-write the oldest events. Value should be"
-+		 " between FC_HOST_MIN_EVENTLIST_SZ (128) and"
-+		 " FC_HOST_MAX_EVENTLIST_SZ (2048).");
-+
-+/*
-   * Redefine so that we can have same named attributes in the
-   * sdev/starget/host objects.
-   */
-@@ -128,6 +163,28 @@ fc_enum_name_match(tgtid_bind_type, fc_t
-  		fc_tgtid_binding_type_names)
-  #define FC_BINDTYPE_MAX_NAMELEN	30
-
-+/* Convert fc_host_event_code values to ascii string name */
-+static const struct {
-+	enum fc_host_event_code		value;
-+	char				*name;
-+} fc_host_event_code_names[] = {
-+	{ FCH_EVT_LIP,			"lip" },
-+	{ FCH_EVT_LINKUP,		"link_up" },
-+	{ FCH_EVT_LINKDOWN,		"link_down" },
-+	{ FCH_EVT_LIPRESET,		"lip_reset" },
-+	{ FCH_EVT_RSCN,			"rscn" },
-+	{ FCH_EVT_ADAPTER_CHANGE,	"adapter_chg" },
-+	{ FCH_EVT_PORT_UNKNOWN,		"port_unknown" },
-+	{ FCH_EVT_PORT_ONLINE,		"port_online" },
-+	{ FCH_EVT_PORT_OFFLINE,		"port_offline" },
-+	{ FCH_EVT_PORT_FABRIC,		"port_fabric" },
-+	{ FCH_EVT_LINK_UNKNOWN,		"link_unknown" },
-+	{ FCH_EVT_VENDOR_UNIQUE,	"vendor_unique" },
-+};
-+fc_enum_name_search(host_event_code, fc_host_event_code,
-+		fc_host_event_code_names)
-+#define FC_HOST_EVENT_CODE_MAX_NAMELEN	30
-+
-
-  #define fc_bitfield_name_search(title, table)			\
-  static ssize_t							\
-@@ -223,7 +280,7 @@ static void fc_rport_terminate(struct fc
-   */
-  #define FC_STARGET_NUM_ATTRS 	3
-  #define FC_RPORT_NUM_ATTRS	9
--#define FC_HOST_NUM_ATTRS	16
-+#define FC_HOST_NUM_ATTRS	19
-
-  struct fc_internal {
-  	struct scsi_transport_template t;
-@@ -315,6 +372,8 @@ static int fc_host_setup(struct transpor
-  	fc_host_fabric_name(shost) = -1;
-
-  	fc_host_tgtid_bind_type(shost) = FC_TGTID_BIND_BY_WWPN;
-+	fc_host_event_cnt(shost) = 0;
-+	fc_host_max_events(shost) = fc_modp_host_max_events;
-
-  	INIT_LIST_HEAD(&fc_host_rports(shost));
-  	INIT_LIST_HEAD(&fc_host_rport_bindings(shost));
-@@ -323,6 +382,19 @@ static int fc_host_setup(struct transpor
-
-  	fc_host_flags(shost) = 0;
-  	INIT_WORK(&fc_host_rport_del_work(shost), fc_shost_remove_rports, shost);
-+
-+	fc_host_event_seq(shost) = 0;
-+	fc_host_event_get(shost) = 0;
-+	fc_host_event_put(shost) = 0;
-+	fc_host_eventlist(shost) = kzalloc((fc_host_max_events(shost) *
-+						sizeof(struct fc_host_event)),
-+						GFP_KERNEL);
-+	if (fc_host_eventlist(shost) == NULL) {
-+		printk(KERN_ERR "%s: eventlist allocation failure\n",
-+			__FUNCTION__);
-+		return 1; /* fail */
-+	}
-+
-  	return 0;
-  }
-
-@@ -342,24 +414,6 @@ static DECLARE_TRANSPORT_CLASS(fc_rport_
-  			       NULL,
-  			       NULL);
-
--/*
-- * Module Parameters
-- */
--
--/*
-- * dev_loss_tmo: the default number of seconds that the FC transport
-- *   should insulate the loss of a remote port.
-- *   The maximum will be capped by the value of SCSI_DEVICE_BLOCK_MAX_TIMEOUT.
-- */
--static unsigned int fc_dev_loss_tmo = SCSI_DEVICE_BLOCK_MAX_TIMEOUT;
--
--module_param_named(dev_loss_tmo, fc_dev_loss_tmo, int, S_IRUGO|S_IWUSR);
--MODULE_PARM_DESC(dev_loss_tmo,
--		 "Maximum number of seconds that the FC transport should"
--		 " insulate the loss of a remote port. Once this value is"
--		 " exceeded, the scsi target is removed. Value should be"
--		 " between 1 and SCSI_DEVICE_BLOCK_MAX_TIMEOUT.");
--
-
-  static __init int fc_transport_init(void)
-  {
-@@ -369,7 +423,33 @@ static __init int fc_transport_init(void
-  	error = transport_class_register(&fc_rport_class);
-  	if (error)
-  		return error;
--	return transport_class_register(&fc_transport_class);
-+	error = transport_class_register(&fc_transport_class);
-+	if (error)
-+		return error;
-+
-+	/* fix any module parameters */
-+
-+	if ((fc_modp_dev_loss_tmo < 1) ||
-+	    (fc_modp_dev_loss_tmo > SCSI_DEVICE_BLOCK_MAX_TIMEOUT)) {
-+		printk(KERN_WARNING "%s: dev_loss_tmo out of range, setting "
-+				 "to maximum (%d)\n", __FUNCTION__,
-+				 SCSI_DEVICE_BLOCK_MAX_TIMEOUT);
-+		fc_modp_dev_loss_tmo = SCSI_DEVICE_BLOCK_MAX_TIMEOUT;
-+	}
-+
-+	if (fc_modp_host_max_events < FC_HOST_MIN_EVENTLIST_SZ) {
-+		printk(KERN_WARNING "%s: host_max_events too small, setting "
-+				 "to minimum (%d)\n", __FUNCTION__,
-+				 FC_HOST_MIN_EVENTLIST_SZ);
-+		fc_modp_host_max_events = FC_HOST_MIN_EVENTLIST_SZ;
-+	} else if (fc_modp_host_max_events > FC_HOST_MAX_EVENTLIST_SZ) {
-+		printk(KERN_WARNING "%s: host_max_events too large, setting "
-+				 "to maximum (%d)\n", __FUNCTION__,
-+				 FC_HOST_MAX_EVENTLIST_SZ);
-+		fc_modp_host_max_events = FC_HOST_MAX_EVENTLIST_SZ;
-+	}
-+
-+	return 0;
-  }
-
-  static void __exit fc_transport_exit(void)
-@@ -914,6 +994,131 @@ static FC_CLASS_DEVICE_ATTR(host, issue_
-  			store_fc_private_host_issue_lip);
-
-  /*
-+ * fc_host_event_cnt attribute
-+ */
-+fc_private_host_rd_attr(event_cnt, "%d\n", 20);
-+
-+/*
-+ * fc_host_max_events attribute
-+ */
-+fc_private_host_show_function(max_events, "%d\n", 20, );
-+
-+static ssize_t
-+store_fc_host_max_events(struct class_device *cdev, const char *buf,
-+			   size_t count)
-+{
-+	struct Scsi_Host *shost = transport_class_to_shost(cdev);
-+	struct fc_host_event *newlist, *oldlist;
-+	unsigned long flags;
-+	int get, put, max, cnt, n_put = 0;
-+	int val;
-+
-+	val = simple_strtoul(buf, NULL, 0);
-+
-+	if ((val < FC_HOST_MIN_EVENTLIST_SZ) ||
-+	    (val > FC_HOST_MAX_EVENTLIST_SZ))
-+		return -EINVAL;
-+
-+	newlist= kzalloc((val * sizeof(struct fc_host_event)), GFP_KERNEL);
-+	if (newlist == NULL)
-+		return -ENOMEM;
-+
-+	spin_lock_irqsave(shost->host_lock, flags);
-+
-+	oldlist = fc_host_eventlist(shost);
-+	get = fc_host_event_get(shost);
-+	put = fc_host_event_put(shost);
-+	cnt = fc_host_event_cnt(shost);
-+	max = fc_host_max_events(shost);
-+
-+	/* if we're not empty, copy events */
-+	if (cnt) {
-+
-+		/*
-+		 * if buffer list is smaller, and we have more events than
-+		 * will fit in the new buffer list, truncate the existing
-+		 * list before moving it.
-+		 */
-+		if ((val < max) && (cnt > (val - 1))) {
-+			cnt = (val - 1);
-+			if ((put > get) || (put >= cnt))
-+				get = (put - cnt);
-+			else
-+				get = (max - (cnt - put));
-+		}
-+
-+		/* copy old events to new event array */
-+		if (put > get) {
-+			memcpy(&newlist[0], &oldlist[get],
-+				(cnt * sizeof(struct fc_host_event)));
-+		} else {
-+			memcpy(&newlist[0], &oldlist[get],
-+				((max - get) * sizeof(struct fc_host_event)));
-+			n_put = max - get;
-+			memcpy(&newlist[n_put], &oldlist[0],
-+				((cnt - n_put) * sizeof(struct fc_host_event)));
-+		}
-+		n_put = cnt;
-+	}
-+
-+	fc_host_eventlist(shost) = newlist;
-+	fc_host_max_events(shost) = val;
-+	fc_host_event_get(shost) = 0;
-+	fc_host_event_put(shost) = n_put;
-+	fc_host_event_cnt(shost) = cnt;
-+
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+	kfree(oldlist);
-+
-+	return count;
-+}
-+
-+static FC_CLASS_DEVICE_ATTR(host, max_events, S_IRUGO | S_IWUSR,
-+			show_fc_host_max_events, store_fc_host_max_events);
-+
-+/*
-+ * fc_host_event attribute
-+ */
-+static const char *unknown = "<unknown>";
-+
-+static ssize_t
-+show_fc_private_host_event(struct class_device *cdev, char *buf)
-+{
-+	struct Scsi_Host *shost = transport_class_to_shost(cdev);
-+	const char *code;
-+	struct fc_host_event event;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(shost->host_lock, flags);
-+
-+	if (!fc_host_event_cnt(shost)) {
-+		spin_unlock_irqrestore(shost->host_lock, flags);
-+		return -ENXIO;
-+	}
-+
-+	event = fc_host_eventlist(shost)[fc_host_event_get(shost)];
-+
-+	if ((fc_host_event_get(shost)++) == fc_host_max_events(shost))
-+		fc_host_event_get(shost) = 0;
-+	fc_host_event_cnt(shost)--;
-+
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+	code = get_fc_host_event_code_name(event.event_code);
-+	if (!code)
-+		code = unknown;
-+
-+	return snprintf(buf, 32 + FC_HOST_EVENT_CODE_MAX_NAMELEN,
-+		"0x%08x:%s:0x%08x\n", event.seq_num, code,
-+		event.event_data.word0);
-+}
-+
-+
-+static FC_CLASS_DEVICE_ATTR(host, event, S_IRUGO,
-+			show_fc_private_host_event, NULL);
-+
-+/*
-   * Host Statistics Management
-   */
-
-@@ -1186,6 +1391,9 @@ fc_attach_transport(struct fc_function_t
-  	SETUP_PRIVATE_HOST_ATTRIBUTE_RW(tgtid_bind_type);
-  	if (ft->issue_fc_host_lip)
-  		SETUP_PRIVATE_HOST_ATTRIBUTE_RW(issue_lip);
-+	SETUP_PRIVATE_HOST_ATTRIBUTE_RD(event_cnt);
-+	SETUP_PRIVATE_HOST_ATTRIBUTE_RW(max_events);
-+	SETUP_PRIVATE_HOST_ATTRIBUTE_RD(event);
-
-  	BUG_ON(count > FC_HOST_NUM_ATTRS);
-
-@@ -1227,6 +1435,53 @@ EXPORT_SYMBOL(fc_release_transport);
-
-
-  /**
-+ * fc_host_event_post - called to post an even on an fc_host.
-+ *
-+ * @shost:	host the event occurred on
-+ * @event:	event being posted
-+ *
-+ * Notes:
-+ *	This routine assumes no locks are held on entry.
-+ *
-+ *      We always reserve one element in the event list so that the
-+ *      ring logic is easier (e.g. empty is get=put, full is put+1=get)
-+ **/
-+void
-+fc_host_event_post(struct Scsi_Host *shost, struct fc_host_event *evt)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(shost->host_lock, flags);
-+
-+	if (!fc_host_eventlist(shost)) {
-+		spin_unlock_irqrestore(shost->host_lock, flags);
-+		return;
-+	}
-+
-+	/* if we're full - drop the oldest entry */
-+	if (fc_host_event_cnt(shost) == (fc_host_max_events(shost) - 1)) {
-+		if ((fc_host_event_get(shost)++) == fc_host_max_events(shost))
-+			fc_host_event_get(shost) = 0;
-+		fc_host_event_cnt(shost)--;
-+	}
-+
-+	evt->seq_num = fc_host_event_seq(shost)++;
-+
-+	fc_host_eventlist(shost)[fc_host_event_put(shost)] = *evt;
-+
-+	if ((fc_host_event_put(shost)++) == fc_host_max_events(shost))
-+		fc_host_event_put(shost) = 0;
-+	fc_host_event_cnt(shost)++;
-+
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+	kobject_uevent(&shost->shost_classdev.kobj, KOBJ_CHANGE);
-+
-+	return;
-+}
-+EXPORT_SYMBOL(fc_host_event_post);
-+
-+/**
-   * fc_remove_host - called to terminate any fc_transport-related elements
-   *                  for a scsi host.
-   * @rport:	remote port to be unblocked.
-@@ -1254,6 +1509,8 @@ fc_remove_host(struct Scsi_Host *shost)
-  	list_for_each_entry_safe(rport, next_rport,
-  			&fc_host_rport_bindings(shost), peers)
-  		fc_rport_terminate(rport);
-+
-+	kfree(fc_host_eventlist(shost));
-  }
-  EXPORT_SYMBOL(fc_remove_host);
-
-@@ -1311,7 +1568,7 @@ fc_rport_create(struct Scsi_Host *shost,
-
-  	rport->maxframe_size = -1;
-  	rport->supported_classes = FC_COS_UNSPECIFIED;
--	rport->dev_loss_tmo = fc_dev_loss_tmo;
-+	rport->dev_loss_tmo = fc_modp_dev_loss_tmo;
-  	memcpy(&rport->node_name, &ids->node_name, sizeof(rport->node_name));
-  	memcpy(&rport->port_name, &ids->port_name, sizeof(rport->port_name));
-  	rport->port_id = ids->port_id;
-@@ -1489,6 +1746,8 @@ fc_remote_port_add(struct Scsi_Host *sho
-  				/* initiate a scan of the target */
-  				scsi_queue_work(shost, &rport->scan_work);
-
-+				kobject_uevent(&rport_to_classdev(rport)->kobj,
-+						KOBJ_ONLINE);
-  				return rport;
-  			}
-  		}
-@@ -1548,6 +1807,8 @@ fc_remote_port_add(struct Scsi_Host *sho
-  				/* initiate a scan of the target */
-  				scsi_queue_work(shost, &rport->scan_work);
-
-+			kobject_uevent(&rport_to_classdev(rport)->kobj,
-+					KOBJ_ONLINE);
-  			return rport;
-  		}
-  	}
-@@ -1653,6 +1914,8 @@ fc_remote_port_delete(struct fc_rport  *
-  	schedule_delayed_work(&rport->dev_loss_work, timeout * HZ);
-
-  	rport->port_state = FC_PORTSTATE_BLOCKED;
-+
-+	kobject_uevent(&rport_to_classdev(rport)->kobj, KOBJ_OFFLINE);
-  }
-  EXPORT_SYMBOL(fc_remote_port_delete);
-
-diff -upNr a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
---- a/include/scsi/scsi_transport_fc.h	2006-02-06 12:00:33.000000000 -0500
-+++ b/include/scsi/scsi_transport_fc.h	2006-02-12 17:08:03.000000000 -0500
-@@ -29,6 +29,8 @@
-
-  #include <linux/config.h>
-  #include <linux/sched.h>
-+#include <linux/kobject.h>
-+#include <linux/attribute_container.h>
-  #include <scsi/scsi.h>
-
-  struct scsi_transport_template;
-@@ -214,6 +216,8 @@ struct fc_rport {	/* aka fc_starget_attr
-  	dev_to_rport(classdev->dev)
-  #define rport_to_shost(r)			\
-  	dev_to_shost(r->dev.parent)
-+#define rport_to_classdev(r)			\
-+	attribute_container_dev_to_classdev(&(r)->dev)
-
-  /*
-   * FC SCSI Target Attributes
-@@ -278,6 +282,41 @@ struct fc_host_statistics {
-
-
-  /*
-+ * FC Event Codes - Polled and Async, following FC HBAAPI v2.0 guidelines
-+ */
-+
-+/*
-+ * fc_host_event_code: If you alter this, you also need to alter
-+ * scsi_transport_fc.c (for the ascii descriptions).
-+ */
-+enum fc_host_event_code  {
-+	FCH_EVT_LIP			= 0x1,
-+	FCH_EVT_LINKUP			= 0x2,
-+	FCH_EVT_LINKDOWN		= 0x3,
-+	FCH_EVT_LIPRESET		= 0x4,
-+	FCH_EVT_RSCN			= 0x5,
-+	FCH_EVT_ADAPTER_CHANGE		= 0x103,
-+	FCH_EVT_PORT_UNKNOWN		= 0x200,
-+	FCH_EVT_PORT_OFFLINE		= 0x201,
-+	FCH_EVT_PORT_ONLINE		= 0x202,
-+	FCH_EVT_PORT_FABRIC		= 0x204,
-+	FCH_EVT_LINK_UNKNOWN		= 0x500,
-+	FCH_EVT_VENDOR_UNIQUE		= 0xffff,
-+};
-+
-+struct fc_host_event {
-+	u32 seq_num;
-+	enum fc_host_event_code event_code;
-+	union {
-+		struct {
-+			u32 port_id_page;
-+		} rscn_data;
-+		u32 word0;
-+	} event_data;
-+};
-+
-+
-+/*
-   * FC Local Port (Host) Attributes
-   *
-   * Attributes are based on HBAAPI V2.0 definitions.
-@@ -321,6 +360,8 @@ struct fc_host_attrs {
-
-  	/* Private (Transport-managed) Attributes */
-  	enum fc_tgtid_binding_type  tgtid_bind_type;
-+	u32 event_cnt;
-+	u16 max_events;
-
-  	/* internal data */
-  	struct list_head rports;
-@@ -328,9 +369,17 @@ struct fc_host_attrs {
-  	u32 next_rport_number;
-  	u32 next_target_id;
-  	u8 flags;
-+	u32 event_seq;
-+	u16 event_get;
-+	u16 event_put;
-+	struct fc_host_event *eventlist;
-   	struct work_struct rport_del_work;
-  };
-
-+
-+#define FC_HOST_MIN_EVENTLIST_SZ	128
-+#define FC_HOST_MAX_EVENTLIST_SZ	2048
-+
-  /* values for struct fc_host_attrs "flags" field: */
-  #define FC_SHOST_RPORT_DEL_SCHEDULED	0x01
-
-@@ -367,6 +416,10 @@ struct fc_host_attrs {
-  	(((struct fc_host_attrs *)(x)->shost_data)->fabric_name)
-  #define fc_host_tgtid_bind_type(x) \
-  	(((struct fc_host_attrs *)(x)->shost_data)->tgtid_bind_type)
-+#define fc_host_event_cnt(x) \
-+	(((struct fc_host_attrs *)(x)->shost_data)->event_cnt)
-+#define fc_host_max_events(x) \
-+	(((struct fc_host_attrs *)(x)->shost_data)->max_events)
-  #define fc_host_rports(x) \
-  	(((struct fc_host_attrs *)(x)->shost_data)->rports)
-  #define fc_host_rport_bindings(x) \
-@@ -377,6 +430,14 @@ struct fc_host_attrs {
-  	(((struct fc_host_attrs *)(x)->shost_data)->next_target_id)
-  #define fc_host_flags(x) \
-  	(((struct fc_host_attrs *)(x)->shost_data)->flags)
-+#define fc_host_event_seq(x) \
-+	(((struct fc_host_attrs *)(x)->shost_data)->event_seq)
-+#define fc_host_event_get(x) \
-+	(((struct fc_host_attrs *)(x)->shost_data)->event_get)
-+#define fc_host_event_put(x) \
-+	(((struct fc_host_attrs *)(x)->shost_data)->event_put)
-+#define fc_host_eventlist(x) \
-+	(((struct fc_host_attrs *)(x)->shost_data)->eventlist)
-  #define fc_host_rport_del_work(x) \
-  	(((struct fc_host_attrs *)(x)->shost_data)->rport_del_work)
-
-@@ -483,6 +544,7 @@ struct fc_rport *fc_remote_port_add(stru
-  void fc_remote_port_delete(struct fc_rport  *rport);
-  void fc_remote_port_rolechg(struct fc_rport  *rport, u32 roles);
-  int scsi_is_fc_rport(const struct device *);
-+void fc_host_event_post(struct Scsi_Host *shost, struct fc_host_event *evt);
-
-  static inline u64 wwn_to_u64(u8 *wwn)
-  {
-diff -upNr a/drivers/base/attribute_container.c 
-b/drivers/base/attribute_container.c
---- a/drivers/base/attribute_container.c	2006-02-12 16:34:08.000000000 -0500
-+++ b/drivers/base/attribute_container.c	2006-02-12 17:16:12.000000000 -0500
-@@ -239,6 +239,48 @@ attribute_container_remove_device(struct
-  EXPORT_SYMBOL_GPL(attribute_container_remove_device);
-
-  /**
-+ * attribute_container_dev_to_classdev - see if any container is interested
-+ *       in dev
-+ *
-+ * @dev: device match on
-+ * @fn:	 function to trigger addition of class device.
-+ *
-+ * This function searches the attribute containers to find the indicated
-+ * device, and returns the classdevice associated with it.
-+ */
-+struct class_device *
-+attribute_container_dev_to_classdev(struct device *dev)
-+{
-+	struct attribute_container *cont;
-+	struct class_device *cdev = NULL;
-+
-+	down(&attribute_container_mutex);
-+	list_for_each_entry(cont, &attribute_container_list, node) {
-+		struct internal_container *ic;
-+		struct klist_iter iter;
-+
-+		if (!cont->match(cont, dev))
-+			continue;
-+
-+		if (attribute_container_no_classdevs(cont))
-+			continue;
-+
-+		klist_for_each_entry(ic, &cont->containers, node, &iter) {
-+			if (dev == ic->classdev.dev) {
-+				cdev = &ic->classdev;
-+				break;
-+			}
-+		}
-+		if (cdev)
-+			break;
-+	}
-+	up(&attribute_container_mutex);
-+	
-+	return cdev;
-+}
-+EXPORT_SYMBOL_GPL(attribute_container_dev_to_classdev);
-+
-+/**
-   * attribute_container_device_trigger - execute a trigger for each matching 
-classdev
-   *
-   * @dev:  The generic device to run the trigger for
-diff -upNr a/include/linux/attribute_container.h 
-b/include/linux/attribute_container.h
---- a/include/linux/attribute_container.h	2006-02-12 16:34:45.000000000 -0500
-+++ b/include/linux/attribute_container.h	2006-02-12 16:50:06.000000000 -0500
-@@ -50,6 +50,7 @@ void attribute_container_remove_device(s
-  				       void (*fn)(struct attribute_container *,
-  						  struct device *,
-  						  struct class_device *));
-+struct class_device *attribute_container_dev_to_classdev(struct device *dev);
-  void attribute_container_device_trigger(struct device *dev,
-  					int (*fn)(struct attribute_container *,
-  						  struct device *,
+> BIOS-provided physical RAM map:
+>  BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
+>  BIOS-e820: 000000000009fc00 - 00000000000a0000 (reserved)
+>  BIOS-e820: 00000000000f0000 - 0000000000100000 (reserved)
+>  BIOS-e820: 0000000000100000 - 0000000020000000 (usable)
+>  BIOS-e820: 00000000fec00000 - 00000000fec01000 (reserved)
+>  BIOS-e820: 00000000fee00000 - 00000000fee01000 (reserved)
+>  BIOS-e820: 00000000fff80000 - 0000000100000000 (reserved)
+> 512MB LOWMEM available.
+> On node 0 totalpages: 131072
+>   DMA zone: 4096 pages, LIFO batch:1
+>   Normal zone: 126976 pages, LIFO batch:31
+>   HighMem zone: 0 pages, LIFO batch:1
+> DMI 2.3 present.
+> ACPI: Unable to locate RSDP
+> Allocating PCI resources starting at 20000000 (gap: 20000000:dec00000)
+> Built 1 zonelists
+> Kernel command line: root=/dev/sda6 vga=0x317 selinux=0    resume=/dev/sda9  
+> splash=silent
+> bootsplash: silent mode.
+> Initializing CPU#0
+> CPU 0 irqstacks, hard=c03f3000 soft=c03f2000
+> PID hash table entries: 4096 (order: 12, 65536 bytes)
+> Detected 1534.121 MHz processor.
+> Using tsc for high-res timesource
+> Console: colour dummy device 80x25
+> Dentry cache hash table entries: 131072 (order: 7, 524288 bytes)
+> Inode-cache hash table entries: 65536 (order: 6, 262144 bytes)
+> Memory: 513580k/524288k available (2113k kernel code, 10156k reserved, 675k 
+> data, 200k init, 0k highmem)
+> Checking if this processor honours the WP bit even in supervisor mode... Ok.
+> Calibrating delay using timer specific routine.. 3070.54 BogoMIPS (lpj=1535271)
+> Security Framework v1.0.0 initialized
+> SELinux:  Disabled at boot.
+> Mount-cache hash table entries: 512
+> CPU: After generic identify, caps: 0383f9ff c1c3f9ff 00000000 00000000 00000000 
+> 00000000 00000000
+> CPU: After vendor identify, caps: 0383f9ff c1c3f9ff 00000000 00000000 00000000 
+> 00000000 00000000
+> CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
+> CPU: L2 Cache: 256K (64 bytes/line)
+> CPU: After all inits, caps: 0383f9ff c1c3f9ff 00000000 00000020 00000000 
+> 00000000 00000000
+> Intel machine check architecture supported.
+> Intel machine check reporting enabled on CPU#0.
+> mtrr: v2.0 (20020519)
+> CPU: AMD Athlon(tm) XP 1800+ stepping 02
+> Enabling fast FPU save and restore... done.
+> Enabling unmasked SIMD FPU exception support... done.
+> Checking 'hlt' instruction... OK.
+> checking if image is initramfs... it is
+> Freeing initrd memory: 1819k freed
+> NET: Registered protocol family 16
+> PCI: PCI BIOS revision 2.10 entry at 0xfdaf1, last bus=1
+> PCI: Using configuration type 1
+> ACPI: Subsystem revision 20050408
+> ACPI: Interpreter disabled.
+> Linux Plug and Play Support v0.97 (c) Adam Belay
+> pnp: PnP ACPI: disabled
+> PCI: Probing PCI hardware
+> PCI: Probing PCI hardware (bus 00)
+> Boot video device is 0000:01:00.0
+> PCI: Using IRQ router default [1106/3074] at 0000:00:11.0
+> PCI: IRQ 0 for device 0000:00:11.1 doesn't match PIRQ mask - try 
+> pci=usepirqmask
+> PCI: Hardcoded IRQ 14 for device 0000:00:11.1
+> TC classifier action (bugs to netdev@vger.kernel.org cc hadi@cyberus.ca)
+> PCI: Bridge: 0000:00:01.0
+>   IO window: disabled.
+>   MEM window: dde00000-dfefffff
+>   PREFETCH window: cdb00000-ddcfffff
+> PCI: Setting latency timer of device 0000:00:01.0 to 64
+> apm: BIOS version 1.2 Flags 0x03 (Driver version 1.16ac)
+> audit: initializing netlink socket (disabled)
+> audit(1139755236.579:1): initialized
+> Total HugeTLB memory allocated, 0
+> VFS: Disk quotas dquot_6.5.1
+> Dquot-cache hash table entries: 1024 (order 0, 4096 bytes)
+> Initializing Cryptographic API
+> vesafb: framebuffer at 0xd0000000, mapped to 0xe0880000, using 6144k, total 
+> 131072k
+> vesafb: mode is 1024x768x16, linelength=2048, pages=1
+> vesafb: protected mode interface info at c000:e910
+> vesafb: scrolling: redraw
+> vesafb: Truecolor: size=0:5:6:5, shift=0:11:5:0
+> bootsplash 3.1.6-2004/03/31: looking for picture...<6> silentjpeg size 76011 
+> bytes,<6>...found (1024x768, 12703 bytes, v3).
+> Console: switching to colour frame buffer device 127x44
+> fb0: VESA VGA frame buffer device
+> Real Time Clock Driver v1.12
+> PNP: No PS/2 controller found. Probing ports directly.
+> serio: i8042 AUX port at 0x60,0x64 irq 12
+> serio: i8042 KBD port at 0x60,0x64 irq 1
+> Serial: 8250/16550 driver $Revision: 1.90 $ 8 ports, IRQ sharing enabled
+> ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
+> io scheduler noop registered
+> io scheduler anticipatory registered
+> io scheduler deadline registered
+> io scheduler cfq registered
+> Floppy drive(s): fd0 is 1.44M
+> FDC 0 is a post-1991 82077
+> RAMDISK driver initialized: 16 RAM disks of 64000K size 1024 blocksize
+> loop: loaded (max 8 devices)
+> mice: PS/2 mouse device common for all mice
+> input: PC Speaker
+> NET: Registered protocol family 2
+> IP route cache hash table entries: 32768 (order: 5, 131072 bytes)
+> TCP established hash table entries: 131072 (order: 8, 1048576 bytes)
+> TCP bind hash table entries: 65536 (order: 6, 262144 bytes)
+> TCP: Hash tables configured (established 131072 bind 65536)
+> TCP reno registered
+> NET: Registered protocol family 1
+> Using IPI Shortcut mode
+> Freeing unused kernel memory: 200k freed
+> input: AT Translated Set 2 keyboard on isa0060/serio0
+> Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
+> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
+> SCSI subsystem initialized
+> scsi0 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 7.0
+>         <Adaptec 3960D Ultra160 SCSI adapter>
+>         aic7899: Ultra160 Wide Channel A, SCSI Id=7, 32/253 SCBs
+> 
+> input: ImExPS/2 Generic Explorer Mouse on isa0060/serio1
+> scsi1 : Adaptec AIC7XXX EISA/VLB/PCI SCSI HBA DRIVER, Rev 7.0
+>         <Adaptec 3960D Ultra160 SCSI adapter>
+>         aic7899: Ultra160 Wide Channel B, SCSI Id=7, 32/253 SCBs
+> 
+>   Vendor: IBM-ESXS  Model: MAP3367NP     FN  Rev: B109
+>   Type:   Direct-Access                      ANSI SCSI revision: 03
+> scsi1:A:2:0: Tagged Queuing enabled.  Depth 32
+>  target1:0:2: Beginning Domain Validation
+>  target1:0:2: wide asynchronous.
+>  target1:0:2: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 ns, offset 127)
+>  target1:0:2: Ending Domain Validation
+> SCSI device sda: 71096640 512-byte hdwr sectors (36401 MB)
+> SCSI device sda: drive cache: write back
+> SCSI device sda: 71096640 512-byte hdwr sectors (36401 MB)
+> SCSI device sda: drive cache: write back
+>  sda: sda1 < sda5 sda6 sda7 sda8 sda9 >
+> Attached scsi disk sda at scsi1, channel 0, id 2, lun 0
+> Attached scsi generic sg0 at scsi1, channel 0, id 2, lun 0,  type 0
+> VP_IDE: IDE controller at PCI slot 0000:00:11.1
+> PCI: Hardcoded IRQ 14 for device 0000:00:11.1
+> PCI: Via IRQ fixup for 0000:00:11.1, from 255 to 14
+> VP_IDE: chipset revision 6
+> VP_IDE: not 100% native mode: will probe irqs later
+> VP_IDE: VIA vt8233 (rev 00) IDE UDMA100 controller on pci0000:00:11.1
+>     ide0: BM-DMA at 0xfc00-0xfc07, BIOS settings: hda:pio, hdb:pio
+>     ide1: BM-DMA at 0xfc08-0xfc0f, BIOS settings: hdc:DMA, hdd:pio
+> Probing IDE interface ide0...
+> Probing IDE interface ide1...
+> hdc: HL-DT-ST DVDRAM GSA-4167B, ATAPI CD/DVD-ROM drive
+> ide1 at 0x170-0x177,0x376 on irq 15
+> hdc: ATAPI 48X DVD-ROM DVD-R-RAM CD-R/RW drive, 2048kB Cache, UDMA(33)
+> Uniform CD-ROM driver Revision: 3.20
+> Attempting manual resume
+> swsusp: Suspend partition has wrong signature?
+> ReiserFS: sda6: found reiserfs format "3.6" with standard journal
+> ReiserFS: sda6: using ordered data mode
+> ReiserFS: sda6: journal params: device sda6, size 8192, journal first block 18, 
+> max trans len 1024, max batch 900, max commit age 30, max trans age 30
+> ReiserFS: sda6: checking transaction log (sda6)
+> ReiserFS: sda6: Using r5 hash to sort names
+> bootsplash: status on console 0 changed to on
+> spurious 8259A interrupt: IRQ7.
+> Adding 891568k swap on /dev/sda9.  Priority:-1 extents:1
+> kjournald starting.  Commit interval 5 seconds
+> EXT3 FS on sda5, internal journal
+> EXT3-fs: mounted filesystem with ordered data mode.
+> ReiserFS: sda7: found reiserfs format "3.6" with standard journal
+> ReiserFS: sda7: using ordered data mode
+> ReiserFS: sda7: journal params: device sda7, size 8192, journal first block 18, 
+> max trans len 1024, max batch 900, max commit age 30, max trans age 30
+> ReiserFS: sda7: checking transaction log (sda7)
+> ReiserFS: sda7: Using r5 hash to sort names
+> ReiserFS: sda8: found reiserfs format "3.6" with standard journal
+> ReiserFS: sda8: using ordered data mode
+> ReiserFS: sda8: journal params: device sda8, size 8192, journal first block 18, 
+> max trans len 1024, max batch 900, max commit age 30, max trans age 30
+> ReiserFS: sda8: checking transaction log (sda8)
+> ReiserFS: sda8: Using r5 hash to sort names
+> parport0: PC-style at 0x378 (0x778) [PCSPP,TRISTATE]
+> parport0: irq 7 detected
+> lp0: using parport0 (polling).
+> ip_tables: (C) 2000-2002 Netfilter core team
+> ip_conntrack version 2.1 (4096 buckets, 32768 max) - 248 bytes per conntrack
+> bootsplash: status on console 0 changed to on
+> NET: Registered protocol family 23
+> pci_hotplug: PCI Hot Plug PCI Core version: 0.5
+>     ACPI-0768: *** Warning: Thread 9F6 could not acquire Mutex [<NULL>] 
+> AE_BAD_PARAMETER
+> shpchp: acpi_shpchprm:get_device PCI ROOT HID fail=0x1001
+> usbcore: registered new driver usbfs
+> usbcore: registered new driver hub
+> USB Universal Host Controller Interface driver v2.3
+> uhci_hcd 0000:00:11.2: UHCI Host Controller
+> uhci_hcd 0000:00:11.2: new USB bus registered, assigned bus number 1
+> uhci_hcd 0000:00:11.2: irq 11, io base 0x0000d400
+> hub 1-0:1.0: USB hub found
+> hub 1-0:1.0: 2 ports detected
+> uhci_hcd 0000:00:11.3: UHCI Host Controller
+> uhci_hcd 0000:00:11.3: new USB bus registered, assigned bus number 2
+> uhci_hcd 0000:00:11.3: irq 11, io base 0x0000d800
+> hub 2-0:1.0: USB hub found
+> hub 2-0:1.0: 2 ports detected
+> uhci_hcd 0000:00:11.4: UHCI Host Controller
+> uhci_hcd 0000:00:11.4: new USB bus registered, assigned bus number 3
+> uhci_hcd 0000:00:11.4: irq 11, io base 0x0000dc00
+> hub 3-0:1.0: USB hub found
+> hub 3-0:1.0: 2 ports detected
+> Linux agpgart interface v0.101 (c) Dave Jones
+> agpgart: Detected VIA PM266/KM266 chipset
+> agpgart: AGP aperture is 64M @ 0xe0000000
+> via-rhine.c:v1.10-LK1.2.0-2.6 June-10-2004 Written by Donald Becker
+> eth0: VIA Rhine II at 0x1d000, 00:07:95:46:91:f3, IRQ 9.
+> eth0: MII PHY found at address 1, status 0x786d advertising 05e1 Link 41e1.
+> usb 3-1: new full speed USB device using uhci_hcd and address 2
+> PCI: Setting latency timer of device 0000:00:11.5 to 64
+> BIOS EDD facility v0.16 2004-Jun-25, 1 devices found
+> eth0: link up, 100Mbps, full-duplex, lpa 0x41E1
+> IA-32 Microcode Update Driver: v1.14 <tigran@veritas.com>
+> IA-32 Microcode Update Driver v1.14 unregistered
+> bootsplash: status on console 0 changed to on
+> bootsplash: status on console 0 changed to on
+> 
+> ------- You are receiving this mail because: -------
+> You are on the CC list for the bug, or are watching someone who is.
