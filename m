@@ -1,29 +1,45 @@
-From: Ryan Richter <ryan@tau.solarneutrino.net>
-Subject: Re: [PATCH] ipr: don't doublefree pages from scatterlist
-Date: Sat, 11 Feb 2006 17:38:10 -0500
-Message-ID: <20060211223810.GA12064@tau.solarneutrino.net>
-References: <Pine.LNX.4.61.0602040004020.5406@goblin.wat.veritas.com> <43E7613B.5060706@us.ibm.com> <Pine.LNX.4.61.0602061621450.3560@goblin.wat.veritas.com> <200602062211.29993.ak@suse.de> <Pine.LNX.4.61.0602062154430.3652@goblin.wat.veritas.com>
+From: "Lava V. Cur" <lookup@gfrcpa.org>
+Subject: Software
+Date: Sun, 12 Feb 2006 09:26:33 -0500
+Message-ID: <2949168612.20060212092633@gfrcpa.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from solarneutrino.net ([66.199.224.43]:36616 "EHLO
-	tau.solarneutrino.net") by vger.kernel.org with ESMTP
-	id S1750770AbWBKWia (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 11 Feb 2006 17:38:30 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.61.0602062154430.3652@goblin.wat.veritas.com>
+Received: from zeus1.kernel.org ([204.152.191.4]:47828 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1751064AbWBLO0E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 12 Feb 2006 09:26:04 -0500
+Received: from -1215924304 ([222.84.2.207])
+	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id k1CEOtwT031469
+	for <linux-scsi@vger.kernel.org>; Sun, 12 Feb 2006 14:25:55 GMT
+Received: from gfrcpa.org (-1211607800 [-1211645624])
+	by govd.com (Qmailv1) with ESMTP id 5981A6F37D
+	for <linux-scsi@vger.kernel.org>; Sun, 12 Feb 2006 09:26:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hugh Dickins <hugh@veritas.com>
-Cc: Andi Kleen <ak@suse.de>, Brian King <brking@us.ibm.com>, "David S. Miller" <davem@davemloft.net>, James.Bottomley@steeleye.com, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Linux <linux-scsi@vger.kernel.org>
 
-On Mon, Feb 06, 2006 at 10:11:09PM +0000, Hugh Dickins wrote:
-> Below is, I think, the 2.6.15 equivalent of the patch Andi posted.
-> Ryan cannot effectively test Andi's patch on 2.6.16-rc because Mike
-> Christie's scsi_execute_async changes have serendipitously fixed
-> the st instance.  Ryan, would you be able to test the patch below
-> on 2.6.15 without my st.c,st.h patch?
+Corel draw! just at best price 
+OEM cd`s download and by post.
 
-This patch survived 6 runs, and I'll keep running it.
+New software on our site:
 
--ryan
+Actobat 6.0 Pro - $79.95
+Money 2004 - $69.95
+Plus! XP - $59.95
+Borland Delphi 7 Enterprise Edition (2CD) - $69.95
+Windows 2000 Advanced Server - $69.95
+WordPerfect Office 10 - $69.95
+CorelDraw Graphics Suite 11 - $59.95
+Premiere 6.5 - $89.95
+Visual Studio .NET Architect Edition (8CD) - $139.95
+Painter 8 - $59.95
+Dreamweaver MX 2004 $69.95
+Picture It Premium 9 - $59.95
+Illustrator CS CE - $69.95
+Office XP Professional - $79.95
+
+Our site:
+http://paulinusag.com
+
