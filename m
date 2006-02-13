@@ -1,47 +1,29 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: Linux 2.6.16-rc3
-Date: Mon, 13 Feb 2006 20:33:24 +0100
-Message-ID: <200602132033.26881.rjw@sisk.pl>
-References: <Pine.LNX.4.64.0602121709240.3691@g5.osdl.org> <200602131409.54300.rjw@sisk.pl> <s5hfymn4bav.wl%tiwai@suse.de>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] sym2: Use ORDERED_QUEUE_TAG when barrier request is issued
+Date: Mon, 13 Feb 2006 13:29:45 -0700
+Message-ID: <20060213202945.GL12822@parisc-linux.org>
+References: <6.0.0.20.2.20060214004351.0424e5a0@129.60.53.12>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <s5hfymn4bav.wl%tiwai@suse.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:39599 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S964862AbWBMU3r
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Feb 2006 15:29:47 -0500
 Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
-To: Takashi Iwai <tiwai@suse.de>
-Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@steeleye.com>, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, Greg KH <greg@kroah.com>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, Gerrit =?iso-8859-1?q?Bruchh=E4user?= <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@laposte.net, Jaroslav Kysela <perex@suse.cz>, Patrizio Bassi <patrizio.bassi@gmail.com>, =?iso-8859-1?q?Bj=F6rn_Nilsson?= <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>Andrew
+In-Reply-To: <6.0.0.20.2.20060214004351.0424e5a0@129.60.53.12>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hifumi Hisashi <hifumi.hisashi@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org
 
-On Monday 13 February 2006 14:51, Takashi Iwai wrote:
-> At Mon, 13 Feb 2006 14:09:51 +0100,
-> Rafael J. Wysocki wrote:
-> > 
-> > On Monday 13 February 2006 13:02, Takashi Iwai wrote:
-> > > At Sun, 12 Feb 2006 19:05:20 -0800,
-> > > Andrew Morton wrote:
-> > > > 
-> > > > - Patrizio Bassi <patrizio.bassi@gmail.com> has an alsa suspend
-> > > >   regression ("alsa suspend/resume continues to fail for ens1370")
-> > > 
-> > > It's not a "regression".  PM didn't work with ens1370 at all in the
-> > > eralier version.
-> > > 
-> > > About the problem there, I have no idea now what's wrong.  The
-> > > suspend-to-disk works fine if the driver is built as module but not as
-> > > built-in kernel.
-> > 
-> > That may be related to the fact that modular drivers are not present in
-> > memory during resume (just a thought).
-> 
-> I think the modular drivers are on memory but the order of
-> re-initialization is different.
+On Tue, Feb 14, 2006 at 01:10:54AM +0900, Hifumi Hisashi wrote:
+> I think using ORDERED_QUEUE_TAG is preferable instead of
+> SIMPLE_QUEUE_TAG when a request with barrier flag is
+> issued.
 
-No, they are not (this is the part I'm sure of).  software_resume() is called
-before any modules have a chance to be loaded unless you boot with
-noresume, load them from an initrd and start the resume manually.
-
-Greetings,
-Rafael
+This isn't enough; we don't know if the target device supports ordered
+tags or not.  The right way to do this is to convert sym2 to use the
+midlayer tag code.  I think it's nearly at a point where the conversion
+is feasible.  I'm going to push out the current set of cleanups next
+week and then look at the problem again.
