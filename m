@@ -1,29 +1,28 @@
-From: "Brown, Len" <len.brown@intel.com>
-Subject: RE: Linux 2.6.16-rc3
-Date: Mon, 13 Feb 2006 02:07:50 -0500
-Message-ID: <F7DC2337C7631D4386A2DF6E8FB22B30060BD1D1@hdsmsx401.amr.corp.intel.com>
+From: "David S. Miller" <davem@davemloft.net>
+Subject: Re: Linux 2.6.16-rc3
+Date: Sun, 12 Feb 2006 23:13:05 -0800 (PST)
+Message-ID: <20060212.231305.38639889.davem@davemloft.net>
+References: <F7DC2337C7631D4386A2DF6E8FB22B30060BD1D1@hdsmsx401.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
+In-Reply-To: <F7DC2337C7631D4386A2DF6E8FB22B30060BD1D1@hdsmsx401.amr.corp.intel.com>
 Sender: linux-acpi-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@steeleye.com>, "David S. Miller" <davem@davemloft.net>, Greg KH <greg@kroah.com>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>linux-usb-devel@lists.sourceforge.net, =?iso-8859-1?Q?Gerrit_Bruchh=E4user?= <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@LaPoste.net, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>, Patrizio Bassi <patrizio.bassi@gmail.com>, =?iso-8859-1?Q?Bj=F6rn_Nilsson?= <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>, Andrew
+To: len.brown@intel.com
+Cc: akpm@osdl.org, torvalds@osdl.org, linux-kernel@vger.kernel.org, axboe@suse.de, James.Bottomley@steeleye.com, greg@kroah.com, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, luming.yu@intel.com, lk@bencastricum.nl, sanjoy@mrao.cam.ac.uk, helgehaf@aitel.hist.no, fluido@fluido.as, gbruchhaeuser@gmx.de, Nicolas.Mailhot@LaPoste.net, perex@suse.cz, tiwai@suse.de, patrizio.bassi@gmail.com, bni.swe@gmail.com, arvidjaar@mail.ru, p_christ@hol.gr, ghrt@dial.kappa.ro, jinhong.hu@gmail.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, bcrl@kvack.org
 List-Id: linux-scsi@vger.kernel.org
 
- 
->- In http://bugzilla.kernel.org/show_bug.cgi?id=5989, Sanjoy 
->Mahajan has  another regression, but he's off collecting more info.
+From: "Brown, Len" <len.brown@intel.com>
+Date: Mon, 13 Feb 2006 02:07:50 -0500
 
-We're talking here about a system from 1999 where Windows 98
-refuses to run in ACPI mode and instead runs in APM mode.
-So I don't consider a regression on this box as "serious" --
-I consider that it works in ACPI mode at all as "miraculous":-)
+> >- In http://bugzilla.kernel.org/show_bug.cgi?id=5989, Sanjoy 
+> >Mahajan has  another regression, but he's off collecting more info.
+> 
+> We're talking here about a system from 1999 where Windows 98
+> refuses to run in ACPI mode and instead runs in APM mode.
 
-However, I do think the issue merits investigation in the event
-that it has an effect on systems newer than 6 years old.
-
-thanks,
--Len
-
+If it worked before a change which was installed, it's a regression
+regardless of whether another OS tries to use ACPI on that system or
+not.  I don't understand how one can use that fact to label this as
+not a regression from Linux's perspective.
