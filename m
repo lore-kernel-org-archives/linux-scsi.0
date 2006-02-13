@@ -1,47 +1,47 @@
-From: Hugh Dickins <hugh@veritas.com>
-Subject: Re: [PATCH] ipr: don't doublefree pages from scatterlist
-Date: Mon, 13 Feb 2006 17:21:52 +0000 (GMT)
-Message-ID: <Pine.LNX.4.61.0602131713160.8102@goblin.wat.veritas.com>
-References: <Pine.LNX.4.61.0602040004020.5406@goblin.wat.veritas.com>
- <20060211223810.GA12064@tau.solarneutrino.net>
- <Pine.LNX.4.61.0602121838050.15101@goblin.wat.veritas.com>
- <200602122229.33244.ak@suse.de>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: Linux 2.6.16-rc3
+Date: Mon, 13 Feb 2006 20:33:24 +0100
+Message-ID: <200602132033.26881.rjw@sisk.pl>
+References: <Pine.LNX.4.64.0602121709240.3691@g5.osdl.org> <200602131409.54300.rjw@sisk.pl> <s5hfymn4bav.wl%tiwai@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from silver.veritas.com ([143.127.12.111]:19062 "EHLO
-	silver.veritas.com") by vger.kernel.org with ESMTP id S932127AbWBMRV3
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Feb 2006 12:21:29 -0500
-Received: from goblin.wat.veritas.com([10.10.97.2]) (2130 bytes) by megami.veritas.com
-	via sendmail with P:esmtp/R:smart_host/T:smtp
-	(sender: <hugh@veritas.com>)
-	id <m1F8hNt-0001VJC@megami.veritas.com>
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Feb 2006 09:21:09 -0800 (PST)
-	(Smail-3.2.0.101 1997-Dec-17 #15 built 2001-Aug-30)
-In-Reply-To: <200602122229.33244.ak@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <s5hfymn4bav.wl%tiwai@suse.de>
+Content-Disposition: inline
+Sender: linux-acpi-owner@vger.kernel.org
+To: Takashi Iwai <tiwai@suse.de>
+Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@steeleye.com>, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, Greg KH <greg@kroah.com>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, Gerrit =?iso-8859-1?q?Bruchh=E4user?= <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@laposte.net, Jaroslav Kysela <perex@suse.cz>, Patrizio Bassi <patrizio.bassi@gmail.com>, =?iso-8859-1?q?Bj=F6rn_Nilsson?= <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>Andrew
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <ak@suse.de>, Andrew Morton <akpm@osdl.org>
-Cc: Ryan Richter <ryan@tau.solarneutrino.net>, Brian King <brking@us.ibm.com>, "David S. Miller" <davem@davemloft.net>, James.Bottomley@steeleye.com, rolandd@cisco.com, Kai.Makisara@kolumbus.fi, dougg@torque.net, osst@riede.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sun, 12 Feb 2006, Andi Kleen wrote:
-> On Sunday 12 February 2006 19:57, Hugh Dickins wrote:
+On Monday 13 February 2006 14:51, Takashi Iwai wrote:
+> At Mon, 13 Feb 2006 14:09:51 +0100,
+> Rafael J. Wysocki wrote:
+> > 
+> > On Monday 13 February 2006 13:02, Takashi Iwai wrote:
+> > > At Sun, 12 Feb 2006 19:05:20 -0800,
+> > > Andrew Morton wrote:
+> > > > 
+> > > > - Patrizio Bassi <patrizio.bassi@gmail.com> has an alsa suspend
+> > > >   regression ("alsa suspend/resume continues to fail for ens1370")
+> > > 
+> > > It's not a "regression".  PM didn't work with ens1370 at all in the
+> > > eralier version.
+> > > 
+> > > About the problem there, I have no idea now what's wrong.  The
+> > > suspend-to-disk works fine if the driver is built as module but not as
+> > > built-in kernel.
+> > 
+> > That may be related to the fact that modular drivers are not present in
+> > memory during resume (just a thought).
 > 
-> > So I'd like to believe that your x86_64-gart-dma-merge.patch is the
-> > final answer to this issue, and see it go forward into 2.6.16-rc -
-> > if you feel it's ready now.  Then we can just throw away those driver
-> > patches I posted a week ago (including the "ipr" one of this thread).
-> 
-> Yes, it's probably ready to go. I will submit it later if Andrew doesn't
-> beat me.
+> I think the modular drivers are on memory but the order of
+> re-initialization is different.
 
-And you got the fix into 2.6.16-rc3, last on the train: many thanks.
-Andrew, please now drop from -mm my unnecessary, driver-complicating
+No, they are not (this is the part I'm sure of).  software_resume() is called
+before any modules have a chance to be loaded unless you boot with
+noresume, load them from an initrd and start the resume manually.
 
-ib-dont-doublefree-pages-from-scatterlist.patch
-ipr-dont-doublefree-pages-from-scatterlist.patch
-osst-dont-doublefree-pages-from-scatterlist.patch
-
-Thanks,
-Hugh
+Greetings,
+Rafael
