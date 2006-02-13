@@ -1,120 +1,62 @@
-From: Patrizio Bassi <patrizio.bassi@gmail.com>
-Subject: Re: Linux 2.6.16-rc3
-Date: Mon, 13 Feb 2006 10:22:22 +0100
-Message-ID: <43F04FCE.9030309@gmail.com>
-References: <Pine.LNX.4.64.0602121709240.3691@g5.osdl.org> <20060212190520.244fcaec.akpm@osdl.org>
-Reply-To: patrizio.bassi@gmail.com
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: cpqfc
+Date: Mon, 13 Feb 2006 10:45:28 +0100
+Message-ID: <200602131045.34949@bilbo.math.uni-mannheim.de>
+References: <Pine.GSO.4.64.0602061840520.24390@filebunker.xip.at> <Pine.GSO.4.64.0602071058530.26505@filebunker.xip.at> <Pine.GSO.4.64.0602101220450.2743@filebunker.xip.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed;
+  boundary="nextPart5303806.FufZk5WcZA";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20060212190520.244fcaec.akpm@osdl.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@steeleye.com>, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, Greg KH <greg@kroah.com>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, =?ISO-8859-1?Q?Gerrit_Bruchh=E4us?= =?ISO-8859-1?Q?er?= <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@LaPoste.net, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>, =?ISO-8859-1?Q?Bj=F6rn_Nilsson?= <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>, Andrew Vasquez <andrew.vasquez@qlo>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.sf-mail.de ([62.27.20.61]:41125 "EHLO mail.sf-mail.de")
+	by vger.kernel.org with ESMTP id S1751204AbWBMJpj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Feb 2006 04:45:39 -0500
+In-Reply-To: <Pine.GSO.4.64.0602101220450.2743@filebunker.xip.at>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ingo Flaschberger <if@xip.at>
+Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>
 
-Andrew Morton ha scritto:
-> We still have some serious bugs, several of which are in 2.6.15 as well:
->
-> - The scsi_cmd leak, which I don't think is fixed.
->
-> - The some-x86_64-boxes-use-GFP_DMA-from-bio-layer bug, which causes
->   oom-killings.
->
-> - The skbuff_head_cache leak, which has been around since at least
->   2.6.11.  Another box-killer, but is seems very hard to hit. 
->   (mki@mozone.net, "the dreaded oom-killer (reproducable in 2.6.11 -
->   2.6.16-rc1) :(")
->
-> - http://bugzilla.kernel.org/show_bug.cgi?id=6060: an apparent ACPI
->   regression.
->
-> - Nathan's "sysfs-related oops during module unload", which Greg seems to
->   have under control.
->
-> - http://bugzilla.kernel.org/show_bug.cgi?id=6049 - another acpi
->   regression.  We have the actual offending commit here.
->
-> - A couple of random tty-related oopses reported by Jesper Juhl.  We
->   don't know why these happened - they appear to not be related to the tty
->   buffering changes.
->
-> - http://bugzilla.kernel.org/show_bug.cgi?id=6038, another box-killing
->   acpi regression.
->
-> - Various reports similar to
->   http://bugzilla.kernel.org/show_bug.cgi?id=6011, seemingly related to USB
->   PCI quirk handling.
->
-> - "Ben Castricum" <lk@bencastricum.nl> reports that ppp has started
->   exhibiting mysterious failures (again).
->
-> - Nasty warnings from scsi about kobject-layer things being called from
->   irq context.  James has a push-it-to-process-context patch which sadly
->   assumes kmalloc() is immortal, but no other fix seems to have offered
->   itself.
->
-> - In http://bugzilla.kernel.org/show_bug.cgi?id=5989, Sanjoy Mahajan has
->   another regression, but he's off collecting more info.
->
-> - Helge Hafting reports a usb printer regression - I don't know if that's
->   still live?
->
-> - "Carlo E.  Prelz" <fluido@fluido.as> has another USB/ehci regression
->   ("ATI RS480-based motherboard: stuck while booting with kernel >= 2.6.15
->   rc1").
->
-> - Gerrit Bruchhuser <gbruchhaeuser@gmx.de> seems to have an aic7xxx
->   regression ("AHA-7850 doesn't detect scanner anymore") but he doesn't say
->   which kernel got it right.
->
-> - http://bugzilla.kernel.org/show_bug.cgi?id=5914 - a sata bug (which is
->   quite unremarkable :(), but this one is reported to eat filesystems.
->
-> - Patrizio Bassi <patrizio.bassi@gmail.com> has an alsa suspend
->   regression ("alsa suspend/resume continues to fail for ens1370")
->
-> - Bjorn Nilsson <bni.swe@gmail.com> has an sk99lin regression ("3COM
->   3C940, does not work anymore after upgrade to 2.6.15")
->
-> - Andrey Borzenkov <arvidjaar@mail.ru> has an acpi-cpufreq regression
->   ("cannot unload acpi-cpufreq")
->
-> - "P.  Christeas" <p_christ@hol.gr> had an autofs regression ("Regression
->   in Autofs, 2.6.15-git"), whic might be fixed now?
->
-> - ghrt <ghrt@dial.kappa.ro> reports an alsa regression ("PROBLEM: SB
->   Live!  5.1 (emu10k1, rev.  0a) doesn't work with 2.6.15")
->
-> - jinhong hu <jinhong.hu@gmail.com> reports what appears to be a qlogic
->   regression ("kernel 2.6.15 scsi problem")
->
-> - Benjamin LaHaise <bcrl@kvack.org> had an NFS problem ("NFS processes
->   gettting stuck in D with currrent git").
->
->
->
-> These are clear regressions, reported in the last month by people who are
-> willing to test patches.  They're almost all in subsystems which have
-> active and professional maintainers.
->
->   
-Really sad to say, but my Alsa ens1370 regression due to suspend problem
-is still there.
-Only fix is reboot actually. Ready to patch :)
+--nextPart5303806.FufZk5WcZA
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-PS.
+Am Freitag, 10. Februar 2006 12:26 schrieben Sie:
+>Hello again,
+>
+>I have not received any answer regarding implementation of a new driver
+>for the cpqfc adapter.
+>
+>In one week I will start to port the old 2.4 driver to 2.6; with all its
+>"not nice" code, because it works!
 
-i have a bug similar to:
-http://bugzilla.kernel.org/show_bug.cgi?id=6038 (marked as blocking by
-Andrew)
-on my laptop.
+It will not (really). cpqfc uses many functions not longer available in 2.6=
+ so=20
+you will not even get it compile for a long time.
 
-but my dma expiry problem only happens during suspend.
-I have a Sis 630 chipset with a 2.5" hitachi drive.
-Been there...for ages..i can say: always...never got a working 2.6 kernel.
-However in my poor opinion it's not blocking on my system, just boring.
+If you still want to do something like that you might want to have a look o=
+n=20
+http://opensource.sf-tec.de/repos/cpqfc/ where I put my changes to this=20
+driver online. The 2.6-branch will not compile by now but it is much cleane=
+r=20
+than the code that was in 2.6.
 
+Eike
 
-Patrizio
+--nextPart5303806.FufZk5WcZA
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.0 (GNU/Linux)
+
+iD8DBQBD8FU+XKSJPmm5/E4RAj7HAJ0dgliYl2WwJjOuJ8SimHQP7vZ9pgCdGbMt
+J4IjQCahchEYafsaiB7Xxk8=
+=Q+mu
+-----END PGP SIGNATURE-----
+
+--nextPart5303806.FufZk5WcZA--
