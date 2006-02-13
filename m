@@ -1,37 +1,31 @@
-From: "Brown, Len" <len.brown@intel.com>
-Subject: RE: Linux 2.6.16-rc3
-Date: Mon, 13 Feb 2006 03:02:46 -0500
-Message-ID: <F7DC2337C7631D4386A2DF6E8FB22B30060BD1D9@hdsmsx401.amr.corp.intel.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Linux 2.6.16-rc3
+Date: Mon, 13 Feb 2006 09:11:43 +0100
+Message-ID: <20060213081142.GA4203@suse.de>
+References: <Pine.LNX.4.64.0602121709240.3691@g5.osdl.org> <20060212190520.244fcaec.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmr18.intel.com ([134.134.136.17]:28820 "EHLO
-	orsfmr003.jf.intel.com") by vger.kernel.org with ESMTP
-	id S1751196AbWBMIFd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Feb 2006 03:05:33 -0500
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060212190520.244fcaec.akpm@osdl.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, Greg KH <greg@kroah.com>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, Gerrit =?iso-8859-1?Q?Bruchh=E4user?= <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@LaPoste.net, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>, Patrizio Bassi <patrizio.bassi@gmail.com>, =?iso-8859-1?Q?Bj=F6rn?= Nilsson <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>, Andrew Vasquez <andrew.vasquez@qlogic.>
 List-Id: linux-scsi@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>
-Cc: akpm@osdl.org, torvalds@osdl.org, linux-kernel@vger.kernel.org, axboe@suse.de, James.Bottomley@steeleye.com, greg@kroah.com, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, lk@bencastricum.nl, sanjoy@mrao.cam.ac.uk, helgehaf@aitel.hist.no, fluido@fluido.as, gbruchhaeuser@gmx.de, Nicolas.Mailhot@LaPoste.net, perex@suse.cz, tiwai@suse.de, patrizio.bassi@gmail.com, bni.swe@gmail.com, arvidjaar@mail.ru, p_christ@hol.gr, ghrt@dial.kappa.ro, jinhong.hu@gmail.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, bcrl@kvack.org
 
->> >- In http://bugzilla.kernel.org/show_bug.cgi?id=5989, Sanjoy 
->> >Mahajan has  another regression, but he's off collecting more info.
->> 
->> We're talking here about a system from 1999 where Windows 98
->> refuses to run in ACPI mode and instead runs in APM mode.
->
->If it worked before a change which was installed, it's a regression
->regardless of whether another OS tries to use ACPI on that system or
->not.  I don't understand how one can use that fact to label this as
->not a regression from Linux's perspective.
+On Sun, Feb 12 2006, Andrew Morton wrote:
+> 
+> We still have some serious bugs, several of which are in 2.6.15 as well:
+> 
+> - The scsi_cmd leak, which I don't think is fixed.
 
-I don't think anybody claimed this isn't a regression for the 600X.
-Sanjoy has done a wonderful job documenting that.
+It is fixed in 2.6.16-rcX.
 
-My point is that it that on the grand scale of bugs serious enough
-to have an effect on the course of 2.6.16, this one doesn't qualify
-unless the same issue is seen on other systems.
+> - The some-x86_64-boxes-use-GFP_DMA-from-bio-layer bug, which causes
+>   oom-killings.
 
--Len
+Still pending.
+
+-- 
+Jens Axboe
+
