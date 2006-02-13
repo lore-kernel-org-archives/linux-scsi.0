@@ -1,29 +1,120 @@
-From: Arjan van de Ven <arjan@infradead.org>
+From: Patrizio Bassi <patrizio.bassi@gmail.com>
 Subject: Re: Linux 2.6.16-rc3
-Date: Mon, 13 Feb 2006 09:57:48 +0100
-Message-ID: <1139821068.2997.22.camel@laptopd505.fenrus.org>
-References: <F7DC2337C7631D4386A2DF6E8FB22B30060BD1D9@hdsmsx401.amr.corp.intel.com>
-	 <20060213001240.05e57d42.akpm@osdl.org>
+Date: Mon, 13 Feb 2006 10:22:22 +0100
+Message-ID: <43F04FCE.9030309@gmail.com>
+References: <Pine.LNX.4.64.0602121709240.3691@g5.osdl.org> <20060212190520.244fcaec.akpm@osdl.org>
+Reply-To: patrizio.bassi@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20060213001240.05e57d42.akpm@osdl.org>
+In-Reply-To: <20060212190520.244fcaec.akpm@osdl.org>
 Sender: linux-acpi-owner@vger.kernel.org
 To: Andrew Morton <akpm@osdl.org>
-Cc: "Brown, Len" <len.brown@intel.com>, davem@davemloft.net, torvalds@osdl.org, linux-kernel@vger.kernel.org, axboe@suse.de, James.Bottomley@steeleye.com, greg@kroah.com, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, luming.yu@intel.com, lk@bencastricum.nl, sanjoy@mrao.cam.ac.uk, helgehaf@aitel.hist.no, fluido@fluido.as, gbruchhaeuser@gmx.de, Nicolas.Mailhot@LaPoste.net, perex@suse.cz, tiwai@suse.de, patrizio.bassi@gmail.com, bni.swe@gmail.com, arvidjaar@mail.ru, p_christ@hol.gr, ghrt@dial.kappa.ro, jinhong.hu@gmail.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, bcrl@kvack.org
+Cc: Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, James Bottomley <James.Bottomley@steeleye.com>, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, Greg KH <greg@kroah.com>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, =?ISO-8859-1?Q?Gerrit_Bruchh=E4us?= =?ISO-8859-1?Q?er?= <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@LaPoste.net, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>, =?ISO-8859-1?Q?Bj=F6rn_Nilsson?= <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>, Andrew Vasquez <andrew.vasquez@qlo>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2006-02-13 at 00:12 -0800, Andrew Morton wrote:
-> "Brown, Len" <len.brown@intel.com> wrote:
-> >
-> > My point is that it that on the grand scale of bugs serious enough
-> >  to have an effect on the course of 2.6.16, this one doesn't qualify
-> >  unless the same issue is seen on other systems.
-> 
-> I think we can assume that it will be seen there.  2.6.16 is going into
-> distros and will have more exposure than 2.6.15, 
+Andrew Morton ha scritto:
+> We still have some serious bugs, several of which are in 2.6.15 as well:
+>
+> - The scsi_cmd leak, which I don't think is fixed.
+>
+> - The some-x86_64-boxes-use-GFP_DMA-from-bio-layer bug, which causes
+>   oom-killings.
+>
+> - The skbuff_head_cache leak, which has been around since at least
+>   2.6.11.  Another box-killer, but is seems very hard to hit. 
+>   (mki@mozone.net, "the dreaded oom-killer (reproducable in 2.6.11 -
+>   2.6.16-rc1) :(")
+>
+> - http://bugzilla.kernel.org/show_bug.cgi?id=6060: an apparent ACPI
+>   regression.
+>
+> - Nathan's "sysfs-related oops during module unload", which Greg seems to
+>   have under control.
+>
+> - http://bugzilla.kernel.org/show_bug.cgi?id=6049 - another acpi
+>   regression.  We have the actual offending commit here.
+>
+> - A couple of random tty-related oopses reported by Jesper Juhl.  We
+>   don't know why these happened - they appear to not be related to the tty
+>   buffering changes.
+>
+> - http://bugzilla.kernel.org/show_bug.cgi?id=6038, another box-killing
+>   acpi regression.
+>
+> - Various reports similar to
+>   http://bugzilla.kernel.org/show_bug.cgi?id=6011, seemingly related to USB
+>   PCI quirk handling.
+>
+> - "Ben Castricum" <lk@bencastricum.nl> reports that ppp has started
+>   exhibiting mysterious failures (again).
+>
+> - Nasty warnings from scsi about kobject-layer things being called from
+>   irq context.  James has a push-it-to-process-context patch which sadly
+>   assumes kmalloc() is immortal, but no other fix seems to have offered
+>   itself.
+>
+> - In http://bugzilla.kernel.org/show_bug.cgi?id=5989, Sanjoy Mahajan has
+>   another regression, but he's off collecting more info.
+>
+> - Helge Hafting reports a usb printer regression - I don't know if that's
+>   still live?
+>
+> - "Carlo E.  Prelz" <fluido@fluido.as> has another USB/ehci regression
+>   ("ATI RS480-based motherboard: stuck while booting with kernel >= 2.6.15
+>   rc1").
+>
+> - Gerrit Bruchhuser <gbruchhaeuser@gmx.de> seems to have an aic7xxx
+>   regression ("AHA-7850 doesn't detect scanner anymore") but he doesn't say
+>   which kernel got it right.
+>
+> - http://bugzilla.kernel.org/show_bug.cgi?id=5914 - a sata bug (which is
+>   quite unremarkable :(), but this one is reported to eat filesystems.
+>
+> - Patrizio Bassi <patrizio.bassi@gmail.com> has an alsa suspend
+>   regression ("alsa suspend/resume continues to fail for ens1370")
+>
+> - Bjorn Nilsson <bni.swe@gmail.com> has an sk99lin regression ("3COM
+>   3C940, does not work anymore after upgrade to 2.6.15")
+>
+> - Andrey Borzenkov <arvidjaar@mail.ru> has an acpi-cpufreq regression
+>   ("cannot unload acpi-cpufreq")
+>
+> - "P.  Christeas" <p_christ@hol.gr> had an autofs regression ("Regression
+>   in Autofs, 2.6.15-git"), whic might be fixed now?
+>
+> - ghrt <ghrt@dial.kappa.ro> reports an alsa regression ("PROBLEM: SB
+>   Live!  5.1 (emu10k1, rev.  0a) doesn't work with 2.6.15")
+>
+> - jinhong hu <jinhong.hu@gmail.com> reports what appears to be a qlogic
+>   regression ("kernel 2.6.15 scsi problem")
+>
+> - Benjamin LaHaise <bcrl@kvack.org> had an NFS problem ("NFS processes
+>   gettting stuck in D with currrent git").
+>
+>
+>
+> These are clear regressions, reported in the last month by people who are
+> willing to test patches.  They're almost all in subsystems which have
+> active and professional maintainers.
+>
+>   
+Really sad to say, but my Alsa ens1370 regression due to suspend problem
+is still there.
+Only fix is reboot actually. Ready to patch :)
 
-2.6.15 went into distros as well, such as Fedora Core 4 ;)
+PS.
+
+i have a bug similar to:
+http://bugzilla.kernel.org/show_bug.cgi?id=6038 (marked as blocking by
+Andrew)
+on my laptop.
+
+but my dma expiry problem only happens during suspend.
+I have a Sis 630 chipset with a 2.5" hitachi drive.
+Been there...for ages..i can say: always...never got a working 2.6 kernel.
+However in my poor opinion it's not blocking on my system, just boring.
 
 
+Patrizio
