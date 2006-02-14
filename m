@@ -1,55 +1,27 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] schedule the SCSI qlogicfc driver for removal
-Date: Tue, 14 Feb 2006 01:14:09 +0100
-Message-ID: <20060214001409.GA17604@stusta.de>
-References: <20051024014838.0dd491bb.akpm@osdl.org> <1130186927.6831.23.camel@localhost.localdomain> <20051024141646.6265c0da.akpm@osdl.org> <20051027152637.GC7889@plap.qlogic.org> <20051027190227.GA16211@infradead.org> <20051027215313.GB7889@plap.qlogic.org> <20051028225155.GA13958@infradead.org> <20051028230303.GI15018@plap.qlogic.org> <1130542543.23729.160.camel@localhost.localdomain> <20060204225801.GD4528@stusta.de>
+From: Michal Jaegermann <michal@harddata.com>
+Subject: Re: Linux 2.6.16-rc3
+Date: Mon, 13 Feb 2006 20:08:21 -0700
+Message-ID: <20060214030821.GA23031@mail.harddata.com>
+References: <F7DC2337C7631D4386A2DF6E8FB22B30060BD1D9@hdsmsx401.amr.corp.intel.com> <20060213001240.05e57d42.akpm@osdl.org> <1139821068.2997.22.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:62218 "HELO
-	mailout.stusta.mhn.de") by vger.kernel.org with SMTP
-	id S1030328AbWBNAOL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Feb 2006 19:14:11 -0500
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20060204225801.GD4528@stusta.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1139821068.2997.22.camel@laptopd505.fenrus.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Andrew Morton <akpm@osdl.org>, "Brown, Len" <len.brown@intel.com>, davem@davemloft.net, torvalds@osdl.org, linux-kernel@vger.kernel.org, axboe@suse.de, James.Bottomley@steeleye.com, greg@kroah.com, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, luming.yu@intel.com, lk@bencastricum.nl, sanjoy@mrao.cam.ac.uk, helgehaf@aitel.hist.no, fluido@fluido.as, gbruchhaeuser@gmx.de, Nicolas.Mailhot@LaPoste.net, perex@suse.cz, tiwai@suse.de, patrizio.bassi@gmail.com, bni.swe@gmail.com, arvidjaar@mail.ru, p_christ@hol.gr, ghrt@dial.kappa.ro, jinhong.hu@gmail.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, bcrl@kvack.org
 List-Id: linux-scsi@vger.kernel.org
-To: Badari Pulavarty <pbadari@gmail.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Christoph Hellwig <hch@infradead.org>, Andrew Morton <akpm@osdl.org>, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-As usual, there isn't much feedback regarding problems with one driver 
-from people using an obsolete driver for the same hardware.
+On Mon, Feb 13, 2006 at 09:57:48AM +0100, Arjan van de Ven wrote:
+> On Mon, 2006-02-13 at 00:12 -0800, Andrew Morton wrote:
+> > 
+> > I think we can assume that it will be seen there.  2.6.16 is going into
+> > distros and will have more exposure than 2.6.15, 
+> 
+> 2.6.15 went into distros as well, such as Fedora Core 4 ;)
 
-So schedule the SCSI qlogicfc driver for removal and let the 
-flames^Wfeedback begin...
+And promptly broke laptop suspension.  See, for example:
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=180998
 
-
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
----
-
- Documentation/feature-removal-schedule.txt |    7 +++++++
- drivers/scsi/qlogicfc.c                    |    1 +
- 2 files changed, 8 insertions(+)
-
---- linux-2.6.16-rc2-mm1-full/Documentation/feature-removal-schedule.txt.old	2006-02-14 00:26:21.000000000 +0100
-+++ linux-2.6.16-rc2-mm1-full/Documentation/feature-removal-schedule.txt	2006-02-14 00:28:12.000000000 +0100
-@@ -153,0 +154,7 @@
-+What:   SCSI qlogicfc driver
-+When:   August 2006
-+Why:    replaced by the qla2xxx driver
-+Who:    Adrian Bunk <bunk@stusta.de>
-+
-+---------------------------
-+
---- linux-2.6.16-rc2-mm1-full/drivers/scsi/qlogicfc.c.old	2006-02-14 00:29:41.000000000 +0100
-+++ linux-2.6.16-rc2-mm1-full/drivers/scsi/qlogicfc.c	2006-02-14 00:34:43.000000000 +0100
-@@ -724,6 +724,7 @@
- 	dma_addr_t busaddr;
- 	int i;
- 
-+	printk(KERN_WARNING "qlogicfc will be removed soon, please use the qla2xxx driver\n");
- 
- 	ENTER("isp2x00_detect");
- 
-
+   Michal
