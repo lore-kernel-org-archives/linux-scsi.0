@@ -1,55 +1,47 @@
-From: Michal Jaegermann <michal@harddata.com>
-Subject: Re: Linux 2.6.16-rc3
-Date: Mon, 13 Feb 2006 23:55:50 -0700
-Message-ID: <20060214065550.GA27216@mail.harddata.com>
-References: <F7DC2337C7631D4386A2DF6E8FB22B30060BD1D9@hdsmsx401.amr.corp.intel.com> <20060213001240.05e57d42.akpm@osdl.org> <1139821068.2997.22.camel@laptopd505.fenrus.org> <20060214030821.GA23031@mail.harddata.com> <1139887857.11659.28.camel@mindpipe>
+From: "T.Krishnanand" <krishnanand.thommandra@gmail.com>
+Subject: question on TMF for ISP2432 (linux 2.6.x driver ver 8.01.01)
+Date: Tue, 14 Feb 2006 15:05:11 +0530
+Message-ID: <2bd90fb70602140135t572cfcd5x51b0c250af50bca1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from harddata.com ([216.123.194.198]:5819 "EHLO mail.harddata.com")
-	by vger.kernel.org with ESMTP id S1030367AbWBNG5G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Feb 2006 01:57:06 -0500
+Received: from zproxy.gmail.com ([64.233.162.203]:52979 "EHLO zproxy.gmail.com")
+	by vger.kernel.org with ESMTP id S1030529AbWBNJfN convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Feb 2006 04:35:13 -0500
+Received: by zproxy.gmail.com with SMTP id r28so1241270nza
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Feb 2006 01:35:12 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <1139887857.11659.28.camel@mindpipe>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Revell <rlrevell@joe-job.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, Andrew Morton <akpm@osdl.org>, "Brown, Len" <len.brown@intel.com>, davem@davemloft.net, torvalds@osdl.org, linux-kernel@vger.kernel.org, axboe@suse.de, James.Bottomley@steeleye.com, greg@kroah.com, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, luming.yu@intel.com, lk@bencastricum.nl, sanjoy@mrao.cam.ac.uk, helgehaf@aitel.hist.no, fluido@fluido.as, gbruchhaeuser@gmx.de, Nicolas.Mailhot@LaPoste.net, perex@suse.cz, tiwai@suse.de, patrizio.bassi@gmail.com, bni.swe@gmail.com, arvidjaar@mail.ru, p_christ@hol.gr, ghrt@dial.kappa.ro, jinhong.hu@gmail.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, bcrl@kvack.org
+To: andrew.vasquez@qlogic.com
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Feb 13, 2006 at 10:30:56PM -0500, Lee Revell wrote:
-> On Mon, 2006-02-13 at 20:08 -0700, Michal Jaegermann wrote:
-> > On Mon, Feb 13, 2006 at 09:57:48AM +0100, Arjan van de Ven wrote:
-> > > 
-> > > 2.6.15 went into distros as well, such as Fedora Core 4 ;)
-> > 
-> > And promptly broke laptop suspension.  See, for example:
-> > https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=180998
-> 
-> It broke suspension on YOUR laptop - the bug report does not give a make
-> and model.
+Andrew,
 
-Yes, indeed.  It is Acer Travelmate 230 and it is using
-'acpi_sleep=s3_bios'.  The bug report noted though that the
-following showed up:
+Does ISP2432 support ABORT_TASK_SET and CLEAR_TASK_SET TMFs ?
 
-Yenta O2: res at 0x94/0xD4: 00/ca
-Yenta O2: enabling read prefetch/write burst
-    ACPI-0265: *** Error: No installed handler for fixed event [00000002]
+I understand that Linux SCSI EH strategy doesnt make use of these TMFs
+so QLA2xxx driver doesn't have code related to these.
 
-which was not something which I have seen before and indeed on
-another laptop with the same kernel is absent.  But it was also not
-there on 230 with earlier kernels.
+But If I want to extend the QLA driver to support these TMFs using
+following mailbox commands:
 
-BTW - this another laptop mentioned above, which happens to be Acer
-Travelmate 740, is doing suspend/resume with 2.6.15 kernel, and no
-'acpi_sleep=s3_bios' is needed,  but shortly after such cycle both
-an external mouse and a touchpad go crazy and a mouse pointer
-refuses to move in X from the left screen edge.  Not very useful and
-so far I did not found a way to reset rodents.  No problems of that
-sort before I will try to suspend.  Always something "interesting".
-It is actually possible that in this case this is a problem with
-"ATI Radeon Mobility M6" video driver which gets upset by suspend
-(or some other pieces driving display) but I do not really know.
+MBC_ABORT_TASK_SET
+MBC_CLEAR_TASK_SET
 
-   Michal
+so that I can invoke them thru some IOCTL based appln...
+
+a) would ISP 2432 firmware/asic support these TMFs ? Are there any
+known gotchas that one should be careful about while implementing
+these?
+
+b) While coding the handler for these TMFs which existing EH routine
+would u recommend to be used as template/reference ?
+
+c) Since current/latest driver doesnt have any code for these TMFs,
+what is the exact mailbox command format for these TMFs ?
+
+thanks,
+tkrishna
