@@ -1,48 +1,36 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] megaraid_sas : block physical disk access
-Date: Tue, 14 Feb 2006 12:52:56 -0600
-Message-ID: <1139943176.14115.22.camel@mulgrave.il.steeleye.com>
-References: <1139528847.4628.26.camel@dhcp80-31.lsil.com>
-	 <20060210131021.GA9733@lst.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: osst changes required to move forward to block request
+Date: Tue, 14 Feb 2006 20:24:47 +0100
+Message-ID: <20060214192447.GA20864@lst.de>
+References: <20060206131944.GA1769@lst.de> <1139274141l.7464l.1l@athena.riede.org> <20060207091254.GA11691@infradead.org> <1139687216l.24984l.0l@athena.riede.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:60805 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1030517AbWBNSxY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Feb 2006 13:53:24 -0500
-In-Reply-To: <20060210131021.GA9733@lst.de>
+Received: from verein.lst.de ([213.95.11.210]:41425 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S1422672AbWBNTYw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Feb 2006 14:24:52 -0500
+Content-Disposition: inline
+In-Reply-To: <1139687216l.24984l.0l@athena.riede.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Sumant Patro <sumantp@lsil.com>, mark_salyzyn@adaptec.com, sreenib@lsil.com, Neela.kolli@lsil.com, Bo.Yang@lsil.com, linux-scsi@vger.kernel.org, Chandra_Nelogal@Dell.com
+To: Willem Riede <osst@riede.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On Fri, 2006-02-10 at 14:10 +0100, Christoph Hellwig wrote:
-> > Here is the patch for review that implements slave_alloc to block direct 
-> > access to the Physical Disks.
-> > By using no_uld_attach and clearing the scsi device writeable flag the disks will be 
-> > still accessible even if it belongs to a RAID volume.
-> > I would prefer to hide the Physical Disks to block any kind of access.
-> > 
-> > I will send a separate patch to monitor drive insertion/removal to update internally 
-> > the physical disk list.
+On Sat, Feb 11, 2006 at 02:46:56PM -0500, Willem Riede wrote:
+> Ok, so here is my first take at satisfying this request.
+> Be warned, that beyond compiling, and checking that the new module
+> doesn't immediately blow up, there hasn't yet been a lot of testing.
 > 
-> Far too much bloat for what you're trying to do.  If you want the same
-> behaviour as the initial megaraid_sas patch just take my patch and
-> replace the setting of no_uld_attach with return -ENXIO in
-> megasas_slave_alloc or move all that to slave_alloc if you you really
-> care.
-> 
-> But I'm strongly against even that, physical disks should be available
-> through /dev/sg.
+> But this should allow you to comment on the changes, and move forward
+> with dropping scsi_request from the kernel code.
 
-I'd prefer to expose the underlying disks but refuse ULD binding so they
-only show up in /dev/sg.  I have to say that this is extremely useful
-for external applications (like clustered ones) who want to be able to
-identify shared resources.  Since only root has access to /dev/sg, using
-it wrongly is strongly caveat emptor.
+Looks good.  I didn't think about keeping the reuse and dealing with it
+in osst_do_scsi, but this obviously works.  Please tell if you're
+confident enough with it so we can put it in the for-2.6.17 tree.
 
-James
+Long-term we should probably get rid of the request reuse anyway,
+because it's not nessecary anymore and would make the code more
+readable.
 
-
+Thanks a lot for the quick patch Willem!
