@@ -1,27 +1,32 @@
-From: "Dustin Thomason" <pfbdpu@yahoo.com>
-Subject: Small Pen is? t5zJYp
-Date: Tue, 14 Feb 2006 00:13:57 -0500
-Message-ID: <68OL87FE.0B24.pfbdpu__18655.3060928874$1139894274$gmane$org@yahoo.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: Linux 2.6.16-rc3
+Date: Tue, 14 Feb 2006 06:29:42 +0100
+Message-ID: <1139894982.4117.5.camel@laptopd505.fenrus.org>
+References: <F7DC2337C7631D4386A2DF6E8FB22B30060BD1D9@hdsmsx401.amr.corp.intel.com>
+	 <20060213001240.05e57d42.akpm@osdl.org>
+	 <1139821068.2997.22.camel@laptopd505.fenrus.org>
+	 <20060214030821.GA23031@mail.harddata.com>
+	 <20060213192838.64013c6c.akpm@osdl.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [220.76.124.100] ([220.76.124.100]:43538 "HELO 209.132.176.167")
-	by vger.kernel.org with SMTP id S1030374AbWBNFNx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Feb 2006 00:13:53 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:35521 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1030449AbWBNF36 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Feb 2006 00:29:58 -0500
+In-Reply-To: <20060213192838.64013c6c.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-net@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Michal Jaegermann <michal@harddata.com>, Dave Jones <davej@codemonkey.org.uk>, len.brown@intel.com, davem@davemloft.net, torvalds@osdl.org, linux-kernel@vger.kernel.org, axboe@suse.de, James.Bottomley@steeleye.com, greg@kroah.com, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, luming.yu@intel.com, lk@bencastricum.nl, sanjoy@mrao.cam.ac.uk, helgehaf@aitel.hist.no, fluido@fluido.as, gbruchhaeuser@gmx.de, Nicolas.Mailhot@LaPoste.net, perex@suse.cz, tiwai@suse.de, patrizio.bassi@gmail.com, bni.swe@gmail.com, arvidjaar@mail.ru, p_christ@hol.gr, ghrt@dial.kappa.ro, jinhong.hu@gmail.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, bcrl@kvack.org
 
 
+> <I have this vaguely unsettled feeling that distros must get more bug
+> reports than the usptream developers, yet we hear so little about it>
 
-Here's latest "Thunder" formula has been proven
-to add inches to the sizes while multiplying
-orgasms like never had before. 
-Our products is light years ahead of our competitors
-which has millions of happy users.
-
-Check us out..You won't regret.
-
-http://thunder14.stronglength.biz
+the number of quality reports (eg enough information to do anything)
+isn't that high; Dave is pretty good in sending the good ones on, it
+often takes time though to get all the basic info..
 
 
-YEG
