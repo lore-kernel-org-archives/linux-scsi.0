@@ -1,51 +1,45 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: Error using DC315U to drive ScanJet 4c
-Date: Tue, 14 Feb 2006 06:59:45 +0100 (CET)
-Message-ID: <Pine.LNX.4.60.0602140656430.30136@poirot.grange>
-References: <20060211011457.GA1839@igloo.df.lth.se>
- <Pine.LNX.4.60.0602112153320.3570@poirot.grange> <Pine.LNX.4.60.0602130043540.19775@poirot.grange>
- <20060211011457.GA1839@igloo.df.lth.se> <Pine.LNX.4.60.0602112153320.3570@poirot.grange>
- <20060213171052.GI18853@igloo.df.lth.se> <Pine.LNX.4.60.0602140000160.18538@poirot.grange>
- <20060214010138.GJ18853@igloo.df.lth.se>
+From: Michal Jaegermann <michal@harddata.com>
+Subject: Re: Linux 2.6.16-rc3
+Date: Mon, 13 Feb 2006 23:22:25 -0700
+Message-ID: <20060214062225.GA26827@mail.harddata.com>
+References: <F7DC2337C7631D4386A2DF6E8FB22B30060BD1D9@hdsmsx401.amr.corp.intel.com> <20060213001240.05e57d42.akpm@osdl.org> <1139821068.2997.22.camel@laptopd505.fenrus.org> <20060214030821.GA23031@mail.harddata.com> <20060213192838.64013c6c.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.21]:60550 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1030428AbWBNF7h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Feb 2006 00:59:37 -0500
-In-Reply-To: <20060214010138.GJ18853@igloo.df.lth.se>
+Received: from mail.harddata.com ([216.123.194.198]:48058 "EHLO
+	mail.harddata.com") by vger.kernel.org with ESMTP id S1030353AbWBNGXp
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Feb 2006 01:23:45 -0500
+Content-Disposition: inline
+In-Reply-To: <20060213192838.64013c6c.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fredrik Roubert <roubert@df.lth.se>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Dave Jones <davej@codemonkey.org.uk>, arjan@infradead.org, len.brown@intel.com, davem@davemloft.net, torvalds@osdl.org, linux-kernel@vger.kernel.org, axboe@suse.de, James.Bottomley@steeleye.com, greg@kroah.com, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, luming.yu@intel.com, lk@bencastricum.nl, sanjoy@mrao.cam.ac.uk, helgehaf@aitel.hist.no, fluido@fluido.as, gbruchhaeuser@gmx.de, Nicolas.Mailhot@LaPoste.net, perex@suse.cz, tiwai@suse.de, patrizio.bassi@gmail.com, bni.swe@gmail.com, arvidjaar@mail.ru, p_christ@hol.gr, ghrt@dial.kappa.ro, jinhong.hu@gmail.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, bcrl@kvack.org
 
-I think, it is better to keep linux-scsi in CC, if you don't mind.
+On Mon, Feb 13, 2006 at 07:28:38PM -0800, Andrew Morton wrote:
+> Michal Jaegermann <michal@harddata.com> wrote:
+> >
+> > On Mon, Feb 13, 2006 at 09:57:48AM +0100, Arjan van de Ven wrote:
+> > > On Mon, 2006-02-13 at 00:12 -0800, Andrew Morton wrote:
+> > > > 
+> > > > I think we can assume that it will be seen there.  2.6.16 is going into
+> > > > distros and will have more exposure than 2.6.15, 
+> > > 
+> > > 2.6.15 went into distros as well, such as Fedora Core 4 ;)
+> > 
+> > And promptly broke laptop suspension.  See, for example:
+> > https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=180998
+> > 
+> 
+> That's suspend-to-disk, yes?
 
-On Tue, 14 Feb 2006, Fredrik Roubert wrote:
+No.  That is an S3 suspension to RAM.  On the box in question it
+generally worked for quite a long while now provided
+'acpi_sleep=s3_bios' was passed to a kernel or video would be
+unrestorable.  It is Acer Travelmate 230 with i845G video.
 
-> Feb 14 01:55:12 skalman kernel: dc395x: Tekram DC395(U/UW/F), DC315(U) - ASIC TRM-S1040 v2.05, 2004/03/08
-> Feb 14 01:55:12 skalman kernel: ACPI: PCI Interrupt 0000:04:05.0[A] -> GSI 20 (level, low) -> IRQ 19
-> Feb 14 01:55:12 skalman kernel: dc395x: Used settings: AdapterID=07, Speed=0(20.0MHz), dev_mode=0x57
-> Feb 14 01:55:12 skalman kernel: dc395x:                AdaptMode=0x0f, Tags=4(16), DelayReset=1s
-> Feb 14 01:55:12 skalman kernel: dc395x: Connectors:  Termination: Auto Low High
-> Feb 14 01:55:12 skalman kernel: dc395x: Performing initial SCSI bus reset
-> Feb 14 01:55:12 skalman kernel: scsi4 : Tekram DC395(U/UW/F), DC315(U) - ASIC TRM-S1040 v2.05, 2004/03/08
-> Feb 14 01:55:13 skalman kernel:   Vendor: HP        Model: C2520A            Rev: 3503
-> Feb 14 01:55:13 skalman kernel:   Type:   Processor                          ANSI SCSI revision: 02
-> Feb 14 01:55:13 skalman kernel:  4:0:2:0: Attached scsi generic sg2 type 3
-> Feb 14 01:56:11 skalman kernel: dc395x: reselect: w/o disconnected cmds <02-0>
-> Feb 14 01:56:11 skalman kernel: dc395x: disconnect: Unexpected reselection <02-0>
-> Feb 14 01:58:11 skalman kernel: dc395x: eh_abort: (pid#669) target=<02-0> cmd=ffff810009067cc0
-> Feb 14 01:58:11 skalman kernel: dc395x: eh_abort: Command in progress<6>dc395x: eh_bus_reset: (pid#669) target=<02-0> cmd=ffff810009067cc0
-> Feb 14 01:58:11 skalman kernel: dc395x: doing_srb_done: pids G:669(02-0)
+I did not try on that laptop suspend-to-disk so far (and in this
+moment the damn thing is just plain broken).
 
-Hm, is it from /var/log/messages? Looks like your KERN_DEBUG messages do 
-not come there. Perhaps in /var/log/kern.log or similar? Please have a 
-look if you find them. Alternatively, I think, dmesg should also output 
-them.
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+   Michal
