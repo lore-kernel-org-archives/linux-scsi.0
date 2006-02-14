@@ -1,104 +1,104 @@
-From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Subject: RE: New Mega Raid Modules Problem
-Date: Tue, 14 Feb 2006 06:38:10 -0700
-Message-ID: <9738BCBE884FDB42801FAD8A7769C265142084@NAMAIL1.ad.lsil.com>
+From: =?iso-8859-1?b?RW1tYW51ZWwgRnVzdOk=?= <emmanuel.fuste@laposte.net>
+Subject: Re:[RFC][PATCH 1/1] aic7xxx: Remove the platform_data->qfrozen logic
+Date: Tue, 14 Feb 2006 15:58:54 +0100
+Message-ID: <IUOMY6$38372F5111B96E9307ECB34C0FC854E8@laposte.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:7105 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1161046AbWBNNiZ convert rfc822-to-8bit
+Received: from mx.laposte.net ([81.255.54.11]:1298 "EHLO mx.laposte.net")
+	by vger.kernel.org with ESMTP id S1161062AbWBNPAW convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Feb 2006 08:38:25 -0500
-Content-class: urn:content-classes:message
+	Tue, 14 Feb 2006 10:00:22 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fatih TURKMEN <fatih.turkmen@izmirekonomi.edu.tr>, "Kolli, Neela" <Neela.Kolli@engenio.com>
-Cc: linux-scsi@vger.kernel.org
+To: hch <hch@infradead.org>
+Cc: hare <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi,
+> > > hello,
+> > >=20
+> > > Since we no longuer do internal queuing, we push the lock
+> > > inside ahc_linux_run_command and completly remove the
+bursted
+> > > internal queue freezing machinery.
+> > > Based on Hannes Reinecke patch for aic79xxx and Christoph
+> > > Hellwig comments.
+> > >=20
+> > > Signed-off-by: Emmanuel Fuste <emmanuel.fuste@laposte.net>
+> > >=20
+> > > ---=20
+> > >=20
+> > >  aic7xxx_osm.c |   82
+> > > ++++++++++++----------------------------------------------
+> > >  aic7xxx_osm.h |    1
+> > >  2 files changed, 17 insertions(+), 66 deletions(-)
+> > >=20
+> > Ok,
+> >=20
+> > Kernel booted and works.
+> > cdrwtool -d /dev/sr0 -q still freeze the kernel after some
+time.
+> > Will try with "scsi_deactivate_tcq(sdev, 2);".
+> > It seems that there is some adherence between this and the
+> > recovery code.
+> > The recovery code success, but nothing was recovered in
+> > reality -> freeze.
+> > With a queue depth of 2, my hard disk continue to be serviced.
+> > It only my view of the pblm, and I could be (surely) wrong.
+> > It is only part of the problem since the driver receive a
+> > command that crash the driver/the sequencer but one thing at
+> > time... it could be view as a good stress test for the
+> > recovery code ;-).
+> >=20
+> > If you want traces/logs/etc... tell me.
+> Ok, more on this:
+>=20
+> I was wrong, the freeze is not caused by
+> "scsi_deactivate_tcq(sdev, 1);".
+> In fact, I've got the freeze since the second version of your
+> "semaphore to completion conversion" patch. I should not do
+> more than one thing at time ggrrrrrrhhhh.
+>=20
+> I will retry with your previous patch.
+>=20
+> It will be:
+> 2.6.15=20
+> + James Bottomley "aic7xxx timer handling bug" fix=20
+> + "Turn off ordered flush barriers for SCSI driver"=20
+> + "semaphore to completion conversion V1" from your
+> + "scsi_deactivate_tcq(sdev, 1);"
+> + "Remove the platform_data->qfrozen logic"
+>=20
+> Results monday evening.
+Hello,
+Same result. First card dump, second card dump (aic7xxx_abort
+return 0x2002), freeze.
+So, the best result was my last try loggued on buzilla:
+http://bugzilla.kernel.org/show_bug.cgi?id=3D5921
 
-Can you please specify what type of MegaRAID controllers in the system?
-If you send me dmesg, it would help.
+It was:
+2.6.15=20
++ James Bottomley "aic7xxx timer handling bug" fix=20
++ "Turn off ordered flush barriers for SCSI driver"=20
++ "semaphore to completion conversion V1" from your
+There is some underlying assumptions which invalidate the
+result of additional obvious cleanups.
+I give up, it is out of my competence.
+It's a a pity that one of the most sell scsi chipset in the
+world (part of, because of good linux support) is in such a
+bad state.
 
-Thank you,=20
+=46eel free to send me any aic patch for debug/alpha/beta tests.
+It is the only way I could help for now.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org=20
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Fatih TURKMEN
-> Sent: Tuesday, February 14, 2006 5:03 AM
-> To: Kolli, Neela
-> Cc: linux-scsi@vger.kernel.org
-> Subject: New Mega Raid Modules Problem
->=20
-> Dear Sir/Madam,
-> I got your e-mail address from module maintainers list. I have 3 HP L=
-H
-> 6000 machines and want to install Linux on them. Everytime the instal=
-l
-> hangs on searching for info file phase (during the "megaraid:
-> aborting-227170 cmd=3D28  megaraid abort: 227170:57[255:0], fw owner"=
-).
->=20
-> As I searched through the Internet, the old megaraid modules=20
-> (in kernel
-> 2.4) work fine with these devices. I could successfully=20
-> install SUSE 8.0.
-> But I tried SUSE 10, Mandriva 2006, Fedora 2.0  (kernel 2.6.*) and it
-> hanged on at exactly the same phase.
->=20
-> A quick advise to my problem was installing SUSE 8.0 and=20
-> update everthing
-> except megaraid modules. However I couldn't find an update=20
-> for SUSE. Any
-> advice about this appreciated.
->=20
-> The questions are;
-> 1) Is it a known issue?
-> 2) What causes the new megaraid modules not to function on=20
-> these machines?
-> 3) Is there a tricky solution to this problem?
->=20
->=20
-> Thanks in advance.
->=20
->=20
-> --=20
-> Fatih TURKMEN
-> IUE Faculty of Computer Sciences
-> --------------------------------------------------------------
-> ---------
->=20
-> Uyar=FD
-> Bu e-posta sadece yukar=FDda isimleri belirtilen ki=FEiler aras=FDnda=
- =F6zel=20
-> haberle=FEme amac=FDn=FD ta=FE=FDmaktad=FDr. Size yanl=FD=FEl=FDkla u=
-la=FEm=FD=FEsa l=FCtfen=20
-> g=F6nderen ki=FEiyi bilgilendiriniz ve mesaj=FD sisteminizden siliniz=
-=2E=20
-> =DDzmir Ekonomi =DCniversitesi bu mesaj=FDn i=E7eri=F0i ile ilgili=20
-> olarak hi=E7bir=20
-> hukuksal sorumlulu=F0u kabul etmez.=20
->=20
-> Disclaimer
-> This e-mail communication is intended for the private use of=20
-> the sender=20
-> and the recepients named above. If you received this message=20
-> in error,=20
-> please immediately notify the sender and delete it from your system. =
-=20
-> Izmir University of Economics does not accept legal=20
-> responsibility for=20
-> the contents of this message=20
->=20
-> --------------------------------------------------------------
-> ---------
-> -
-> To unsubscribe from this list: send the line "unsubscribe=20
-> linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
+Regards,
+Emmanuel.
+
+Acc=E9dez au courrier =E9lectronique de La Poste : www.laposte.net ;=20
+3615 LAPOSTENET (0,34 =80/mn) ; t=E9l : 08 92 68 13 50 (0,34=80/mn)
+
+
+
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
