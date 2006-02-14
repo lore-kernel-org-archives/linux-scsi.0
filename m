@@ -1,32 +1,34 @@
 From: Arjan van de Ven <arjan@infradead.org>
 Subject: Re: Linux 2.6.16-rc3
-Date: Tue, 14 Feb 2006 06:29:42 +0100
-Message-ID: <1139894982.4117.5.camel@laptopd505.fenrus.org>
+Date: Tue, 14 Feb 2006 06:31:01 +0100
+Message-ID: <1139895061.4117.7.camel@laptopd505.fenrus.org>
 References: <F7DC2337C7631D4386A2DF6E8FB22B30060BD1D9@hdsmsx401.amr.corp.intel.com>
 	 <20060213001240.05e57d42.akpm@osdl.org>
 	 <1139821068.2997.22.camel@laptopd505.fenrus.org>
 	 <20060214030821.GA23031@mail.harddata.com>
-	 <20060213192838.64013c6c.akpm@osdl.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:35521 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1030449AbWBNF36 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Feb 2006 00:29:58 -0500
-In-Reply-To: <20060213192838.64013c6c.akpm@osdl.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20060214030821.GA23031@mail.harddata.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Michal Jaegermann <michal@harddata.com>
+Cc: Andrew Morton <akpm@osdl.org>, "Brown, Len" <len.brown@intel.com>, davem@davemloft.net, torvalds@osdl.org, linux-kernel@vger.kernel.org, axboe@suse.de, James.Bottomley@steeleye.com, greg@kroah.com, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, luming.yu@intel.com, lk@bencastricum.nl, sanjoy@mrao.cam.ac.uk, helgehaf@aitel.hist.no, fluido@fluido.as, gbruchhaeuser@gmx.de, Nicolas.Mailhot@LaPoste.net, perex@suse.cz, tiwai@suse.de, patrizio.bassi@gmail.com, bni.swe@gmail.com, arvidjaar@mail.ru, p_christ@hol.gr, ghrt@dial.kappa.ro, jinhong.hu@gmail.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, bcrl@kvack.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Michal Jaegermann <michal@harddata.com>, Dave Jones <davej@codemonkey.org.uk>, len.brown@intel.com, davem@davemloft.net, torvalds@osdl.org, linux-kernel@vger.kernel.org, axboe@suse.de, James.Bottomley@steeleye.com, greg@kroah.com, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, luming.yu@intel.com, lk@bencastricum.nl, sanjoy@mrao.cam.ac.uk, helgehaf@aitel.hist.no, fluido@fluido.as, gbruchhaeuser@gmx.de, Nicolas.Mailhot@LaPoste.net, perex@suse.cz, tiwai@suse.de, patrizio.bassi@gmail.com, bni.swe@gmail.com, arvidjaar@mail.ru, p_christ@hol.gr, ghrt@dial.kappa.ro, jinhong.hu@gmail.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, bcrl@kvack.org
+
+On Mon, 2006-02-13 at 20:08 -0700, Michal Jaegermann wrote:
+> On Mon, Feb 13, 2006 at 09:57:48AM +0100, Arjan van de Ven wrote:
+> > On Mon, 2006-02-13 at 00:12 -0800, Andrew Morton wrote:
+> > > 
+> > > I think we can assume that it will be seen there.  2.6.16 is going into
+> > > distros and will have more exposure than 2.6.15, 
+> > 
+> > 2.6.15 went into distros as well, such as Fedora Core 4 ;)
+> 
+> And promptly broke laptop suspension.  See, for example:
+> https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=180998
 
 
-> <I have this vaguely unsettled feeling that distros must get more bug
-> reports than the usptream developers, yet we hear so little about it>
-
-the number of quality reports (eg enough information to do anything)
-isn't that high; Dave is pretty good in sending the good ones on, it
-often takes time though to get all the basic info..
+fedora core 4 never really supported suspend in the first place tho..
 
 
