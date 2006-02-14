@@ -1,34 +1,52 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/aic7xxx/aic79xx_core.c: make ahd_done_with_status() static
-Date: Tue, 14 Feb 2006 16:22:12 +0100
-Message-ID: <20060214152212.GH10701@stusta.de>
+From: "Moore, Eric" <Eric.Moore@lsil.com>
+Subject: RE: SATA on mptsas performance
+Date: Tue, 14 Feb 2006 09:02:22 -0700
+Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F28A5FF@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161076AbWBNPWV@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Hannes Reinecke <hare@suse.de>, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:979 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1161090AbWBNQCY convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Feb 2006 11:02:24 -0500
+Content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mirko Benz <mirko.benz@web.de>, linux-scsi@vger.kernel.org
 
-This patch makes a needlessly global function static.
+On Monday, February 13, 2006 7:02 AM, Mirko Benz wrote:  
+> 
+> Hello,
+> 
+> We are testing the following setup:
+> - LSI SAS3442X controller
+> - Promise J300S SAS JBOD connected via the external port of the SAS 
+> controller
+> - 10 SATA disks (Seagate) in the JBOD
+> - Linux kernel 2.6.16RC2 on a INTEL Dual Xeon Server, 2.8 
+> Ghz, 64 bit mode
+> 
+> LSI SAS driver provided by the kernel finds the JBOD and the disks.
 
+How many links are connected between your controller and the JBOD?
+With that many drives, I suggest you connect four cables to create
+a wide port.   There is a expander in your JBOD, right?  Meaning its
+not a SATA port mulitplier?
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> Single disk performance is like attaching via a SATA 
+> controller from the 
+> chipset.
 
----
+Are your disks SATA-II, and do they support NCQ?  If so, I suggest
+we enable that.   That is can be done in the NVDATA.
 
-This patch was already sent on:
-- 3 Feb 2006
+> Testing with multiple parallel drive accesses gives very poor results 
+> and high system utilisation.
+> Tests performed with parallel invocations of dd with bs=32k. 
+> Values in MB/s.
+> 
 
---- linux-2.6.16-rc1-mm5-full/drivers/scsi/aic7xxx/aic79xx_core.c.old	2006-02-03 16:41:13.000000000 +0100
-+++ linux-2.6.16-rc1-mm5-full/drivers/scsi/aic7xxx/aic79xx_core.c	2006-02-03 16:41:28.000000000 +0100
-@@ -7382,7 +7382,7 @@
- 	ahd->flags &= ~AHD_UPDATE_PEND_CMDS;
- }
- 
--void
-+static void
- ahd_done_with_status(struct ahd_softc *ahd, struct scb *scb, uint32_t status)
- {
- 	cam_status ostat;
+Which benchmarking tool are you using?
+
