@@ -1,164 +1,295 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] aacraid: use kthread_ API
-Date: Tue, 14 Feb 2006 18:45:06 +0100
-Message-ID: <20060214174506.GA18919@lst.de>
+Subject: [PATCH] qla2xxx: use kthread_ API
+Date: Tue, 14 Feb 2006 18:46:22 +0100
+Message-ID: <20060214174622.GB18919@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:32460 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S1422707AbWBNRpk (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:37068 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S1422710AbWBNRqf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Feb 2006 12:45:40 -0500
+	Tue, 14 Feb 2006 12:46:35 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Salyzyn <Mark_Salyzyn@adaptec.com>, jejb@steeleye.com
+To: andrew.vasquez@qlogic.com, jejb@steeleye.com
 Cc: linux-scsi@vger.kernel.org
 
 Use the kthread_ API instead of opencoding lots of hairy code for kernel
 thread creation and teardown.
 
+Also switch from semaphore-based thread wakeup to wake_up_process.
+
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/drivers/scsi/aacraid/aacraid.h
+Index: linux-2.6/drivers/scsi/qla2xxx/qla_def.h
 ===================================================================
---- linux-2.6.orig/drivers/scsi/aacraid/aacraid.h	2006-01-15 21:45:28.000000000 +0100
-+++ linux-2.6/drivers/scsi/aacraid/aacraid.h	2006-02-12 18:48:48.000000000 +0100
-@@ -997,7 +997,7 @@
- 	int			maximum_num_physicals;
- 	int			maximum_num_channels;
- 	struct fsa_dev_info	*fsa_dev;
--	pid_t			thread_pid;
-+	struct task_struct	*thread;
- 	int			cardtype;
- 	
- 	/*
-@@ -1017,7 +1017,6 @@
- 	 *	AIF thread states
- 	 */
- 	u32			aif_thread;
--	struct completion	aif_completion;
- 	struct aac_adapter_info adapter_info;
- 	struct aac_supplement_adapter_info supplement_adapter_info;
- 	/* These are in adapter info but they are in the io flow so
-@@ -1797,7 +1796,7 @@
- unsigned int aac_response_normal(struct aac_queue * q);
- unsigned int aac_command_normal(struct aac_queue * q);
- unsigned int aac_intr_normal(struct aac_dev * dev, u32 Index);
--int aac_command_thread(struct aac_dev * dev);
-+int aac_command_thread(void *data);
- int aac_close_fib_context(struct aac_dev * dev, struct aac_fib_context *fibctx);
- int fib_adapter_complete(struct fib * fibptr, unsigned short size);
- struct aac_driver_ident* aac_get_driver_ident(int devtype);
-Index: linux-2.6/drivers/scsi/aacraid/comminit.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/aacraid/comminit.c	2005-12-27 18:30:30.000000000 +0100
-+++ linux-2.6/drivers/scsi/aacraid/comminit.c	2006-02-12 18:48:55.000000000 +0100
-@@ -433,7 +433,6 @@
- 	}
- 		
- 	INIT_LIST_HEAD(&dev->fib_list);
--	init_completion(&dev->aif_completion);
+--- linux-2.6.orig/drivers/scsi/qla2xxx/qla_def.h	2006-02-04 13:35:00.000000000 +0100
++++ linux-2.6/drivers/scsi/qla2xxx/qla_def.h	2006-02-14 16:04:40.000000000 +0100
+@@ -2390,11 +2390,7 @@
+ 	struct sns_cmd_pkt	*sns_cmd;
+ 	dma_addr_t		sns_cmd_dma;
  
- 	return dev;
- }
-Index: linux-2.6/drivers/scsi/aacraid/commsup.c
+-	pid_t			dpc_pid;
+-	int			dpc_should_die;
+-	struct completion	dpc_inited;
+-	struct completion	dpc_exited;
+-	struct semaphore	*dpc_wait;
++	struct task_struct	*dpc_thread;
+ 	uint8_t dpc_active;                  /* DPC routine is active */
+ 
+ 	/* Timeout timers. */
+Index: linux-2.6/drivers/scsi/qla2xxx/qla_gbl.h
 ===================================================================
---- linux-2.6.orig/drivers/scsi/aacraid/commsup.c	2006-02-10 19:45:43.000000000 +0100
-+++ linux-2.6/drivers/scsi/aacraid/commsup.c	2006-02-14 15:49:44.000000000 +0100
-@@ -39,6 +39,7 @@
- #include <linux/completion.h>
- #include <linux/blkdev.h>
- #include <linux/delay.h>
-+#include <linux/kthread.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_device.h>
- #include <asm/semaphore.h>
-@@ -1043,8 +1044,9 @@
-  *	more FIBs.
-  */
-  
--int aac_command_thread(struct aac_dev * dev)
-+int aac_command_thread(void *data)
- {
-+	struct aac_dev *dev = data;
- 	struct hw_fib *hw_fib, *hw_newfib;
- 	struct fib *fib, *newfib;
- 	struct aac_fib_context *fibctx;
-@@ -1056,12 +1058,7 @@
- 	 */
- 	if (dev->aif_thread)
- 		return -EINVAL;
--	/*
--	 *	Set up the name that will appear in 'ps'
--	 *	stored in  task_struct.comm[16].
--	 */
--	daemonize("aacraid");
--	allow_signal(SIGKILL);
+--- linux-2.6.orig/drivers/scsi/qla2xxx/qla_gbl.h	2006-02-04 13:35:00.000000000 +0100
++++ linux-2.6/drivers/scsi/qla2xxx/qla_gbl.h	2006-02-14 16:11:22.000000000 +0100
+@@ -81,6 +81,8 @@
+ 
+ extern struct fw_blob *qla2x00_request_firmware(scsi_qla_host_t *);
+ 
++extern void qla2xxx_wake_dpc(scsi_qla_host_t *);
 +
- 	/*
- 	 *	Let the DPC know it has a place to send the AIF's to.
- 	 */
-@@ -1264,13 +1261,12 @@
- 		spin_unlock_irqrestore(dev->queues->queue[HostNormCmdQueue].lock, flags);
- 		schedule();
- 
--		if(signal_pending(current))
-+		if (kthread_should_stop())
- 			break;
- 		set_current_state(TASK_INTERRUPTIBLE);
- 	}
- 	if (dev->queues)
- 		remove_wait_queue(&dev->queues->queue[HostNormCmdQueue].cmdready, &wait);
- 	dev->aif_thread = 0;
--	complete_and_exit(&dev->aif_completion, 0);
- 	return 0;
- }
-Index: linux-2.6/drivers/scsi/aacraid/linit.c
+ /*
+  * Global Function Prototypes in qla_iocb.c source file.
+  */
+Index: linux-2.6/drivers/scsi/qla2xxx/qla_isr.c
 ===================================================================
---- linux-2.6.orig/drivers/scsi/aacraid/linit.c	2006-01-15 21:45:28.000000000 +0100
-+++ linux-2.6/drivers/scsi/aacraid/linit.c	2006-02-14 15:49:59.000000000 +0100
-@@ -48,6 +48,7 @@
- #include <linux/syscalls.h>
- #include <linux/delay.h>
- #include <linux/smp_lock.h>
-+#include <linux/kthread.h>
- #include <asm/semaphore.h>
+--- linux-2.6.orig/drivers/scsi/qla2xxx/qla_isr.c	2006-02-04 13:35:00.000000000 +0100
++++ linux-2.6/drivers/scsi/qla2xxx/qla_isr.c	2006-02-14 16:01:10.000000000 +0100
+@@ -838,9 +838,7 @@
+ 		qla_printk(KERN_WARNING, ha, "Status Entry invalid handle.\n");
  
- #include <scsi/scsi.h>
-@@ -822,10 +823,10 @@
- 	/*
- 	 *	Start any kernel threads needed
+ 		set_bit(ISP_ABORT_NEEDED, &ha->dpc_flags);
+-		if (ha->dpc_wait && !ha->dpc_active)
+-			up(ha->dpc_wait);
+-
++		qla2xxx_wake_dpc(ha);
+ 		return;
+ 	}
+ 	cp = sp->cmd;
+@@ -1271,8 +1269,7 @@
+ 		    "Error entry - invalid handle\n");
+ 
+ 		set_bit(ISP_ABORT_NEEDED, &ha->dpc_flags);
+-		if (ha->dpc_wait && !ha->dpc_active)
+-			up(ha->dpc_wait);
++		qla2xxx_wake_dpc(ha);
+ 	}
+ }
+ 
+Index: linux-2.6/drivers/scsi/qla2xxx/qla_mbx.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/qla2xxx/qla_mbx.c	2006-01-15 21:45:28.000000000 +0100
++++ linux-2.6/drivers/scsi/qla2xxx/qla_mbx.c	2006-02-14 16:01:22.000000000 +0100
+@@ -285,9 +285,7 @@
+ 			    "Mailbox command timeout occured. Scheduling ISP "
+ 			    "abort.\n");
+ 			set_bit(ISP_ABORT_NEEDED, &ha->dpc_flags);
+-			if (ha->dpc_wait && !ha->dpc_active)
+-				up(ha->dpc_wait);
+-
++			qla2xxx_wake_dpc(ha);
+ 		} else if (!abort_active) {
+ 			/* call abort directly since we are in the DPC thread */
+ 			DEBUG(printk("%s(%ld): timeout calling abort_isp\n",
+Index: linux-2.6/drivers/scsi/qla2xxx/qla_os.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/qla2xxx/qla_os.c	2006-02-04 13:35:00.000000000 +0100
++++ linux-2.6/drivers/scsi/qla2xxx/qla_os.c	2006-02-14 16:12:00.000000000 +0100
+@@ -8,8 +8,8 @@
+ 
+ #include <linux/moduleparam.h>
+ #include <linux/vmalloc.h>
+-#include <linux/smp_lock.h>
+ #include <linux/delay.h>
++#include <linux/kthread.h>
+ 
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsicam.h>
+@@ -1295,8 +1295,6 @@
+ 	ha->brd_info = brd_info;
+ 	sprintf(ha->host_str, "%s_%ld", ha->brd_info->drv_name, ha->host_no);
+ 
+-	ha->dpc_pid = -1;
+-
+ 	/* Configure PCI I/O space */
+ 	ret = qla2x00_iospace_config(ha);
+ 	if (ret)
+@@ -1422,9 +1420,6 @@
  	 */
--	aac->thread_pid = kernel_thread((int (*)(void *))aac_command_thread,
--	  aac, 0);
--	if (aac->thread_pid < 0) {
-+	aac->thread = kthread_run(aac_command_thread, aac, "aacraid");
-+	if (IS_ERR(aac->thread)) {
- 		printk(KERN_ERR "aacraid: Unable to create command thread.\n");
-+		error = PTR_ERR(aac->thread);
- 		goto out_deinit;
+ 	spin_lock_init(&ha->mbx_reg_lock);
+ 
+-	init_completion(&ha->dpc_inited);
+-	init_completion(&ha->dpc_exited);
+-
+ 	qla2x00_config_dma_addressing(ha);
+ 	if (qla2x00_mem_alloc(ha)) {
+ 		qla_printk(KERN_WARNING, ha,
+@@ -1451,16 +1446,14 @@
+ 	/*
+ 	 * Startup the kernel thread for this host adapter
+ 	 */
+-	ha->dpc_should_die = 0;
+-	ha->dpc_pid = kernel_thread(qla2x00_do_dpc, ha, 0);
+-	if (ha->dpc_pid < 0) {
++	ha->dpc_thread = kthread_create(qla2x00_do_dpc, ha,
++			"%s_dpc", ha->host_str);
++	if (IS_ERR(ha->dpc_thread)) {
+ 		qla_printk(KERN_WARNING, ha,
+ 		    "Unable to start DPC thread!\n");
+-
+-		ret = -ENODEV;
++		ret = PTR_ERR(ha->dpc_thread);
+ 		goto probe_failed;
+ 	}
+-	wait_for_completion(&ha->dpc_inited);
+ 
+ 	host->this_id = 255;
+ 	host->cmd_per_lun = 3;
+@@ -1594,8 +1587,6 @@
+ static void
+ qla2x00_free_device(scsi_qla_host_t *ha)
+ {
+-	int ret;
+-
+ 	/* Abort any outstanding IO descriptors. */
+ 	if (!IS_QLA2100(ha) && !IS_QLA2200(ha))
+ 		qla2x00_cancel_io_descriptors(ha);
+@@ -1605,18 +1596,15 @@
+ 		qla2x00_stop_timer(ha);
+ 
+ 	/* Kill the kernel thread for this host */
+-	if (ha->dpc_pid >= 0) {
+-		ha->dpc_should_die = 1;
+-		wmb();
+-		ret = kill_proc(ha->dpc_pid, SIGHUP, 1);
+-		if (ret) {
+-			qla_printk(KERN_ERR, ha,
+-			    "Unable to signal DPC thread -- (%d)\n", ret);
++	if (ha->dpc_thread) {
++		struct task_struct *t = ha->dpc_thread;
+ 
+-			/* TODO: SOMETHING MORE??? */
+-		} else {
+-			wait_for_completion(&ha->dpc_exited);
+-		}
++		/*
++		 * qla2xxx_wake_dpc checks for ->dpc_thread
++		 * so we need to zero it out.
++		 */
++		ha->dpc_thread = NULL;
++		kthread_stop(t);
  	}
  
-@@ -906,9 +907,7 @@
- 	return 0;
+ 	/* Stop currently executing firmware. */
+@@ -1746,8 +1734,8 @@
+ 		atomic_set(&fcport->state, FCS_DEVICE_LOST);
+ 	}
  
-  out_deinit:
--	kill_proc(aac->thread_pid, SIGKILL, 0);
--	wait_for_completion(&aac->aif_completion);
+-	if (defer && ha->dpc_wait && !ha->dpc_active)
+-		up(ha->dpc_wait);
++	if (defer)
++		qla2xxx_wake_dpc(ha);
+ }
+ 
+ /*
+@@ -1964,7 +1952,6 @@
+ {
+ 	struct list_head	*fcpl, *fcptemp;
+ 	fc_port_t	*fcport;
+-	unsigned int	wtime;/* max wait time if mbx cmd is busy. */
+ 
+ 	if (ha == NULL) {
+ 		/* error */
+@@ -1972,11 +1959,6 @@
+ 		return;
+ 	}
+ 
+-	/* Make sure all other threads are stopped. */
+-	wtime = 60 * 1000;
+-	while (ha->dpc_wait && wtime)
+-		wtime = msleep_interruptible(wtime);
 -
-+	kthread_stop(aac->thread);
- 	aac_send_shutdown(aac);
- 	aac_adapter_disable_int(aac);
- 	free_irq(pdev->irq, aac);
-@@ -942,8 +941,7 @@
+ 	/* free ioctl memory */
+ 	qla2x00_free_ioctl_mem(ha);
  
- 	scsi_remove_host(shost);
+@@ -2125,7 +2107,6 @@
+ static int
+ qla2x00_do_dpc(void *data)
+ {
+-	DECLARE_MUTEX_LOCKED(sem);
+ 	scsi_qla_host_t *ha;
+ 	fc_port_t	*fcport;
+ 	uint8_t		status;
+@@ -2133,32 +2114,19 @@
  
--	kill_proc(aac->thread_pid, SIGKILL, 0);
--	wait_for_completion(&aac->aif_completion);
-+	kthread_stop(aac->thread);
+ 	ha = (scsi_qla_host_t *)data;
  
- 	aac_send_shutdown(aac);
- 	aac_adapter_disable_int(aac);
+-	lock_kernel();
+-
+-	daemonize("%s_dpc", ha->host_str);
+-	allow_signal(SIGHUP);
+-
+-	ha->dpc_wait = &sem;
+-
+ 	set_user_nice(current, -20);
+ 
+-	unlock_kernel();
+-
+-	complete(&ha->dpc_inited);
+-
+-	while (1) {
++	while (!kthread_should_stop()) {
+ 		DEBUG3(printk("qla2x00: DPC handler sleeping\n"));
+ 
+-		if (down_interruptible(&sem))
+-			break;
+-
+-		if (ha->dpc_should_die)
+-			break;
++		set_current_state(TASK_INTERRUPTIBLE);
++		schedule();
++		__set_current_state(TASK_RUNNING);
+ 
+ 		DEBUG3(printk("qla2x00: DPC handler waking up\n"));
+ 
+ 		/* Initialization not yet finished. Don't do anything yet. */
+-		if (!ha->flags.init_done || ha->dpc_active)
++		if (!ha->flags.init_done)
+ 			continue;
+ 
+ 		DEBUG3(printk("scsi(%ld): DPC handler\n", ha->host_no));
+@@ -2322,10 +2290,16 @@
+ 	/*
+ 	 * Make sure that nobody tries to wake us up again.
+ 	 */
+-	ha->dpc_wait = NULL;
+ 	ha->dpc_active = 0;
+ 
+-	complete_and_exit(&ha->dpc_exited, 0);
++	return 0;
++}
++
++void
++qla2xxx_wake_dpc(scsi_qla_host_t *ha)
++{
++	if (ha->dpc_thread)
++		wake_up_process(ha->dpc_thread);
+ }
+ 
+ /*
+@@ -2499,11 +2473,8 @@
+ 	    start_dpc ||
+ 	    test_bit(LOGIN_RETRY_NEEDED, &ha->dpc_flags) ||
+ 	    test_bit(RESET_MARKER_NEEDED, &ha->dpc_flags) ||
+-	    test_bit(RELOGIN_NEEDED, &ha->dpc_flags)) &&
+-	    ha->dpc_wait && !ha->dpc_active) {
+-
+-		up(ha->dpc_wait);
+-	}
++	    test_bit(RELOGIN_NEEDED, &ha->dpc_flags)))
++		qla2xxx_wake_dpc(ha);
+ 
+ 	qla2x00_restart_timer(ha, WATCH_INTERVAL);
+ }
