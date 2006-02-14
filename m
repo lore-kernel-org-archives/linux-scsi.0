@@ -1,27 +1,40 @@
-From: Michal Jaegermann <michal@harddata.com>
+From: Lee Revell <rlrevell@joe-job.com>
 Subject: Re: Linux 2.6.16-rc3
-Date: Mon, 13 Feb 2006 20:08:21 -0700
-Message-ID: <20060214030821.GA23031@mail.harddata.com>
-References: <F7DC2337C7631D4386A2DF6E8FB22B30060BD1D9@hdsmsx401.amr.corp.intel.com> <20060213001240.05e57d42.akpm@osdl.org> <1139821068.2997.22.camel@laptopd505.fenrus.org>
+Date: Mon, 13 Feb 2006 22:30:56 -0500
+Message-ID: <1139887857.11659.28.camel@mindpipe>
+References: <F7DC2337C7631D4386A2DF6E8FB22B30060BD1D9@hdsmsx401.amr.corp.intel.com>
+	 <20060213001240.05e57d42.akpm@osdl.org>
+	 <1139821068.2997.22.camel@laptopd505.fenrus.org>
+	 <20060214030821.GA23031@mail.harddata.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1139821068.2997.22.camel@laptopd505.fenrus.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Andrew Morton <akpm@osdl.org>, "Brown, Len" <len.brown@intel.com>, davem@davemloft.net, torvalds@osdl.org, linux-kernel@vger.kernel.org, axboe@suse.de, James.Bottomley@steeleye.com, greg@kroah.com, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, luming.yu@intel.com, lk@bencastricum.nl, sanjoy@mrao.cam.ac.uk, helgehaf@aitel.hist.no, fluido@fluido.as, gbruchhaeuser@gmx.de, Nicolas.Mailhot@LaPoste.net, perex@suse.cz, tiwai@suse.de, patrizio.bassi@gmail.com, bni.swe@gmail.com, arvidjaar@mail.ru, p_christ@hol.gr, ghrt@dial.kappa.ro, jinhong.hu@gmail.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, bcrl@kvack.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from viper.oldcity.dca.net ([216.158.38.4]:41875 "HELO
+	viper.oldcity.dca.net") by vger.kernel.org with SMTP
+	id S1030286AbWBNDbE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Feb 2006 22:31:04 -0500
+In-Reply-To: <20060214030821.GA23031@mail.harddata.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Michal Jaegermann <michal@harddata.com>
+Cc: Arjan van de Ven <arjan@infradead.org>, Andrew Morton <akpm@osdl.org>, "Brown, Len" <len.brown@intel.com>, davem@davemloft.net, torvalds@osdl.org, linux-kernel@vger.kernel.org, axboe@suse.de, James.Bottomley@steeleye.com, greg@kroah.com, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, luming.yu@intel.com, lk@bencastricum.nl, sanjoy@mrao.cam.ac.uk, helgehaf@aitel.hist.no, fluido@fluido.as, gbruchhaeuser@gmx.de, Nicolas.Mailhot@LaPoste.net, perex@suse.cz, tiwai@suse.de, patrizio.bassi@gmail.com, bni.swe@gmail.com, arvidjaar@mail.ru, p_christ@hol.gr, ghrt@dial.kappa.ro, jinhong.hu@gmail.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, bcrl@kvack.org
 
-On Mon, Feb 13, 2006 at 09:57:48AM +0100, Arjan van de Ven wrote:
-> On Mon, 2006-02-13 at 00:12 -0800, Andrew Morton wrote:
+On Mon, 2006-02-13 at 20:08 -0700, Michal Jaegermann wrote:
+> On Mon, Feb 13, 2006 at 09:57:48AM +0100, Arjan van de Ven wrote:
+> > On Mon, 2006-02-13 at 00:12 -0800, Andrew Morton wrote:
+> > > 
+> > > I think we can assume that it will be seen there.  2.6.16 is going into
+> > > distros and will have more exposure than 2.6.15, 
 > > 
-> > I think we can assume that it will be seen there.  2.6.16 is going into
-> > distros and will have more exposure than 2.6.15, 
+> > 2.6.15 went into distros as well, such as Fedora Core 4 ;)
 > 
-> 2.6.15 went into distros as well, such as Fedora Core 4 ;)
+> And promptly broke laptop suspension.  See, for example:
+> https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=180998
 
-And promptly broke laptop suspension.  See, for example:
-https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=180998
+It broke suspension on YOUR laptop - the bug report does not give a make
+and model.  2.6.15 would not have shipped if it broke suspend on the
+developers' laptops.
 
-   Michal
+Lee
+
