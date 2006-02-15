@@ -1,32 +1,45 @@
-From: "Yu, Luming" <luming.yu@intel.com>
-Subject: RE: [linux-usb-devel] Re: Linux 2.6.16-rc3
-Date: Wed, 15 Feb 2006 13:58:51 +0800
-Message-ID: <3ACA40606221794F80A5670F0AF15F840AF2824B@pdsmsx403>
+From: Mirko Benz <mirko.benz@web.de>
+Subject: Re: SATA on mptsas performance
+Date: Wed, 15 Feb 2006 08:52:07 +0100
+Message-ID: <43F2DDA7.7050700@web.de>
+References: <F331B95B72AFFB4B87467BE1C8E9CF5F28A5FF@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-Sender: linux-acpi-owner@vger.kernel.org
-To: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>, "Brown, Len" <len.brown@intel.com>
-Cc: "David S. Miller" <davem@davemloft.net>, akpm@osdl.org, torvalds@osdl.org, linux-kernel@vger.kernel.org, axboe@suse.de, James.Bottomley@steeleye.com, greg@kroah.com, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, lk@bencastricum.nl, helgehaf@aitel.hist.no, fluido@fluido.as, gbruchhaeuser@gmx.de, Nicolas.Mailhot@LaPoste.net, perex@suse.cz, tiwai@suse.de, patrizio.bassi@gmail.com, bni.swe@gmail.com, arvidjaar@mail.ru, p_christ@hol.gr, ghrt@dial.kappa.ro, jinhong.hu@gmail.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, bcrl@kvack.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 162.237.ddkom.net ([212.80.237.162]:44216 "EHLO
+	cheetah.dd.xiranet.com") by vger.kernel.org with ESMTP
+	id S1422666AbWBOHwk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Feb 2006 02:52:40 -0500
+In-Reply-To: <F331B95B72AFFB4B87467BE1C8E9CF5F28A5FF@NAMAIL2.ad.lsil.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsil.com>
+Cc: linux-scsi@vger.kernel.org
 
->> I don't think anybody claimed this isn't a regression for the 600X.
->
->I narrowed it further.  The short story is that this commit (diff below
->sig) makes the second S3 sleep go into the endless loop, if the loaded
->modules are exactly thermal, processor, intel_agp, and agpgart:
+Hello,
 
-If you believe this patch is the root cause of the regression you have
-been seeing. Then, I would say the thing is a little bit different with
-ec_intr=0 and ec_intr=1. Basically, ec_intr=0 will disable EC related
-ACPI interrupt before finishing _Qxx method execution , but ec_intr=1
-always enable EC interrupt.  This could cause some hardware/BIOS
-events get lost under ec_intr=0, which shouldn't lost.
+The SAS3442X is connected to the JBOD via a x4 SAS cable.
+The JBOD has an LSI SAS Expander chip - no port multiplier.
+Disks are Seagate ST3300831AS (300 GB, SATA-I, NCQ)
 
-We need to figure out what's going on here rather than falling back to
-ec_intr=0 behavior.
+Does the SAS controller and the SAS expander communicate at 3 Gb when 
+accessing SATA disks?
+If not it should give 4 * 150 MB/s r/w throughput for this configuration.
 
---Luming
+I am testing with parallel dd invocations on the raw device e.g.:
+dd if=/dev/sdb of=/dev/null bs=32k count=10000 &
+...
+dd if=/dev/sdl of=/dev/null bs=32k count=10000 &
+
+I have tested with IOMETER but the results are worse.
+
+I will test SATA II disks later. But I assume there is a scheduling 
+problem (mapping 10 disks to 4 channels). The CPU load is also very high.
+
+Disks support NCQ but it should have no effect due to sequential access 
+of a single application per disk. How to switch on/off NCQ?
+
+Regards,
+Mirko
+
