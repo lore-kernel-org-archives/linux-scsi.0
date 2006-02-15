@@ -1,161 +1,64 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: [PATCH] shutdown processing
-Date: Wed, 15 Feb 2006 11:46:05 -0800
-Message-ID: <20060215114605.1568c8cc.randy_d_dunlap@linux.intel.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: Error using DC315U to drive ScanJet 4c
+Date: Wed, 15 Feb 2006 21:15:56 +0100 (CET)
+Message-ID: <Pine.LNX.4.60.0602152056530.5682@poirot.grange>
+References: <20060211011457.GA1839@igloo.df.lth.se>
+ <Pine.LNX.4.60.0602112153320.3570@poirot.grange> <Pine.LNX.4.60.0602130043540.19775@poirot.grange>
+ <20060211011457.GA1839@igloo.df.lth.se> <Pine.LNX.4.60.0602112153320.3570@poirot.grange>
+ <20060213171052.GI18853@igloo.df.lth.se> <Pine.LNX.4.60.0602140000160.18538@poirot.grange>
+ <20060214010138.GJ18853@igloo.df.lth.se> <Pine.LNX.4.60.0602140656430.30136@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: ide <linux-ide@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.gmx.net ([213.165.64.21]:30856 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1751279AbWBOUPk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Feb 2006 15:15:40 -0500
+In-Reply-To: <Pine.LNX.4.60.0602140656430.30136@poirot.grange>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Fredrik Roubert <roubert@df.lth.se>
+Cc: linux-scsi@vger.kernel.org
 
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+On Tue, 14 Feb 2006, Guennadi Liakhovetski wrote:
 
-Add ability for SCSI drivers to invoke a shutdown method.
-This allows drivers to make drives safe for shutdown/poweroff,
-for example.  Some drives need this to prevent possible problems.
+> On Tue, 14 Feb 2006, Fredrik Roubert wrote:
+> 
+> > Feb 14 01:55:12 skalman kernel: dc395x: Tekram DC395(U/UW/F), DC315(U) - ASIC TRM-S1040 v2.05, 2004/03/08
+> > Feb 14 01:55:12 skalman kernel: ACPI: PCI Interrupt 0000:04:05.0[A] -> GSI 20 (level, low) -> IRQ 19
+> > Feb 14 01:55:12 skalman kernel: dc395x: Used settings: AdapterID=07, Speed=0(20.0MHz), dev_mode=0x57
+> > Feb 14 01:55:12 skalman kernel: dc395x:                AdaptMode=0x0f, Tags=4(16), DelayReset=1s
+> > Feb 14 01:55:12 skalman kernel: dc395x: Connectors:  Termination: Auto Low High
+> > Feb 14 01:55:12 skalman kernel: dc395x: Performing initial SCSI bus reset
+> > Feb 14 01:55:12 skalman kernel: scsi4 : Tekram DC395(U/UW/F), DC315(U) - ASIC TRM-S1040 v2.05, 2004/03/08
+> > Feb 14 01:55:13 skalman kernel:   Vendor: HP        Model: C2520A            Rev: 3503
+> > Feb 14 01:55:13 skalman kernel:   Type:   Processor                          ANSI SCSI revision: 02
+> > Feb 14 01:55:13 skalman kernel:  4:0:2:0: Attached scsi generic sg2 type 3
+> > Feb 14 01:56:11 skalman kernel: dc395x: reselect: w/o disconnected cmds <02-0>
+> > Feb 14 01:56:11 skalman kernel: dc395x: disconnect: Unexpected reselection <02-0>
+> > Feb 14 01:58:11 skalman kernel: dc395x: eh_abort: (pid#669) target=<02-0> cmd=ffff810009067cc0
+> > Feb 14 01:58:11 skalman kernel: dc395x: eh_abort: Command in progress<6>dc395x: eh_bus_reset: (pid#669) target=<02-0> cmd=ffff810009067cc0
+> > Feb 14 01:58:11 skalman kernel: dc395x: doing_srb_done: pids G:669(02-0)
+> 
+> Hm, is it from /var/log/messages? Looks like your KERN_DEBUG messages do 
+> not come there. Perhaps in /var/log/kern.log or similar? Please have a 
+> look if you find them. Alternatively, I think, dmesg should also output 
+> them.
 
-Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Fredrik, do you still have the detailed kernel-log from that test? It 
+really might give a hint. If not - you could additionally turn 
+SCSI-logging on and send that.
+
+Here I also have an old AGFA scanner connected to a dc315(U) card in an 
+SMP - works without a glitch. Well, it is 32bit though. But my scanner 
+reports itself properly as a scanner, not as a processor. Is the problem 
+100% reproducible? What settings do you use for your scanning program? 
+What program?
+
+Interesting also - my scanner is only supposed to work with the supplied 
+Adaptec ISA SCSI card - works with dc315 here...
+
+Thanks
+Guennadi
 ---
- drivers/scsi/ahci.c        |    1 +
- drivers/scsi/ata_piix.c    |    1 +
- drivers/scsi/libata-core.c |   23 +++++++++++++++++++++++
- drivers/scsi/libata-scsi.c |    8 ++++++++
- drivers/scsi/scsi_sysfs.c  |   16 ++++++++++++++++
- include/linux/libata.h     |    2 ++
- include/scsi/scsi_host.h   |    1 +
- 7 files changed, 52 insertions(+)
-
---- linux-2616-rc3-standby.orig/drivers/scsi/libata-scsi.c
-+++ linux-2616-rc3-standby/drivers/scsi/libata-scsi.c
-@@ -412,6 +412,14 @@ int ata_scsi_device_suspend(struct scsi_
- 	return ata_device_suspend(ap, dev);
- }
- 
-+int ata_scsi_device_shutdown(struct scsi_device *sdev)
-+{
-+	struct ata_port *ap = (struct ata_port *) &sdev->host->hostdata[0];
-+	struct ata_device *dev = &ap->device[sdev->id];
-+
-+	return ata_device_shutdown(ap, dev);
-+}
-+
- /**
-  *	ata_to_sense_error - convert ATA error to SCSI error
-  *	@id: ATA device number
---- linux-2616-rc3-standby.orig/drivers/scsi/libata-core.c
-+++ linux-2616-rc3-standby/drivers/scsi/libata-core.c
-@@ -4315,6 +4315,27 @@ int ata_device_suspend(struct ata_port *
- 	return 0;
- }
- 
-+/**
-+ *	ata_device_shutdown - send Standby Immediate command to drive
-+ *	@ap: target ata_port
-+ *	@dev: target device on the ata_port
-+ *
-+ *	This command makes it safe to power-off a drive.
-+ *	Otherwise the heads may be flying at the wrong place
-+ *	when the power is removed.
-+ */
-+int ata_device_shutdown(struct ata_port *ap, struct ata_device *dev)
-+{
-+
-+	if (!ata_dev_present(dev))
-+		return 0;
-+
-+	ata_standby_drive(ap, dev);
-+	ap->flags |= ATA_FLAG_SUSPENDED;
-+
-+	return 0;
-+}
-+
- int ata_port_start (struct ata_port *ap)
- {
- 	struct device *dev = ap->host_set->dev;
-@@ -5190,5 +5211,7 @@ EXPORT_SYMBOL_GPL(ata_pci_device_resume)
- 
- EXPORT_SYMBOL_GPL(ata_device_suspend);
- EXPORT_SYMBOL_GPL(ata_device_resume);
-+EXPORT_SYMBOL_GPL(ata_device_shutdown);
- EXPORT_SYMBOL_GPL(ata_scsi_device_suspend);
- EXPORT_SYMBOL_GPL(ata_scsi_device_resume);
-+EXPORT_SYMBOL_GPL(ata_scsi_device_shutdown);
---- linux-2616-rc3-standby.orig/include/linux/libata.h
-+++ linux-2616-rc3-standby/include/linux/libata.h
-@@ -454,8 +454,10 @@ extern int ata_scsi_release(struct Scsi_
- extern unsigned int ata_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc);
- extern int ata_scsi_device_resume(struct scsi_device *);
- extern int ata_scsi_device_suspend(struct scsi_device *);
-+extern int ata_scsi_device_shutdown(struct scsi_device *);
- extern int ata_device_resume(struct ata_port *, struct ata_device *);
- extern int ata_device_suspend(struct ata_port *, struct ata_device *);
-+extern int ata_device_shutdown(struct ata_port *, struct ata_device *);
- extern int ata_ratelimit(void);
- 
- /*
---- linux-2616-rc3-standby.orig/drivers/scsi/scsi_sysfs.c
-+++ linux-2616-rc3-standby/drivers/scsi/scsi_sysfs.c
-@@ -295,11 +295,27 @@ static int scsi_bus_resume(struct device
- 	return err;
- }
- 
-+static void scsi_bus_shutdown(struct device * dev)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct scsi_host_template *sht = sdev->host->hostt;
-+	int err;
-+
-+	err = scsi_device_quiesce(sdev);
-+	if (err)
-+		printk(KERN_DEBUG "%s: error (0x%x) during shutdown\n",
-+			__FUNCTION__, err);
-+
-+	if (sht->shutdown)
-+		sht->shutdown(sdev);
-+}
-+
- struct bus_type scsi_bus_type = {
-         .name		= "scsi",
-         .match		= scsi_bus_match,
- 	.suspend	= scsi_bus_suspend,
- 	.resume		= scsi_bus_resume,
-+	.shutdown	= scsi_bus_shutdown,
- };
- 
- int scsi_sysfs_register(void)
---- linux-2616-rc3-standby.orig/include/scsi/scsi_host.h
-+++ linux-2616-rc3-standby/include/scsi/scsi_host.h
-@@ -301,6 +301,7 @@ struct scsi_host_template {
- 	 */
- 	int (*resume)(struct scsi_device *);
- 	int (*suspend)(struct scsi_device *);
-+	int (*shutdown)(struct scsi_device *);
- 
- 	/*
- 	 * Name of proc directory
---- linux-2616-rc3-standby.orig/drivers/scsi/ahci.c
-+++ linux-2616-rc3-standby/drivers/scsi/ahci.c
-@@ -214,6 +214,7 @@ static struct scsi_host_template ahci_sh
- 	.dma_boundary		= AHCI_DMA_BOUNDARY,
- 	.slave_configure	= ata_scsi_slave_config,
- 	.bios_param		= ata_std_bios_param,
-+	.shutdown		= ata_scsi_device_shutdown,
- };
- 
- static const struct ata_port_operations ahci_ops = {
---- linux-2616-rc3-standby.orig/drivers/scsi/ata_piix.c
-+++ linux-2616-rc3-standby/drivers/scsi/ata_piix.c
-@@ -192,6 +192,7 @@ static struct scsi_host_template piix_sh
- 	.bios_param		= ata_std_bios_param,
- 	.resume			= ata_scsi_device_resume,
- 	.suspend		= ata_scsi_device_suspend,
-+	.shutdown		= ata_scsi_device_shutdown,
- };
- 
- static const struct ata_port_operations piix_pata_ops = {
-
-
----
+Guennadi Liakhovetski
