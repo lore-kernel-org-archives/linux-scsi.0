@@ -1,52 +1,47 @@
-From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
-Subject: Re: [PATCH] shutdown processing
-Date: Thu, 16 Feb 2006 11:12:08 -0800
-Message-ID: <20060216111208.2367829b.randy_d_dunlap@linux.intel.com>
-References: <20060215114605.1568c8cc.randy_d_dunlap@linux.intel.com>
-	<43F43EB9.40406@s5r6.in-berlin.de>
-	<20060216104007.67cf613f.randy_d_dunlap@linux.intel.com>
-	<43F4CAF4.1070004@s5r6.in-berlin.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Linux 2.6.16-rc3
+Date: Thu, 16 Feb 2006 11:09:29 -0800
+Message-ID: <1140116969.3178.24.camel@mulgrave.il.steeleye.com>
+References: <Pine.LNX.4.64.0602121709240.3691@g5.osdl.org>
+	 <20060212190520.244fcaec.akpm@osdl.org> <20060213203800.GC22441@kroah.com>
+	 <1139934883.14115.4.camel@mulgrave.il.steeleye.com>
+	 <1140054960.3037.5.camel@mulgrave.il.steeleye.com>
+	 <20060216171200.GD29443@flint.arm.linux.org.uk>
+	 <1140112653.3178.9.camel@mulgrave.il.steeleye.com>
+	 <20060216180939.GF29443@flint.arm.linux.org.uk>
+	 <1140113671.3178.16.camel@mulgrave.il.steeleye.com>
+	 <20060216181803.GG29443@flint.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <43F4CAF4.1070004@s5r6.in-berlin.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stat9.steeleye.com ([209.192.50.41]:24265 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1030628AbWBPTJ6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Feb 2006 14:09:58 -0500
+In-Reply-To: <20060216181803.GG29443@flint.arm.linux.org.uk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Russell King <rmk+lkml@arm.linux.org.uk>
+Cc: Greg KH <greg@kroah.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, Gerrit Bruchh?user <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@LaPoste.net, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>, Patrizio Bassi <patrizio.bassi@gmail.com>, Bj?rn Nilsson <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi@vger.ker
 
-On Thu, 16 Feb 2006 19:56:52 +0100
-Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
-
-> Randy Dunlap wrote:
-> > On Thu, 16 Feb 2006 09:58:33 +0100
-> > Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
-> >>Why are you calling these from SCSI? Wouldn't ahci_pci_driver.remove() 
-> >>and piix_pci_driver.remove() be a proper place to perform what you are 
-> >>doing in ata_device_shutdown?
-> > 
-> > Mostly to have the scsi_device pointers available.
+On Thu, 2006-02-16 at 18:18 +0000, Russell King wrote:
+> Maybe implementing it as a helper function would be the best and
+> simplest solution?
 > 
-> Note that roughly as long a scsi_device exists, SCSI high-level drivers 
-> expect to be able to send commands to them. In particular, when 
-> scsi_remove_device is called, (or scsi_remove_host, which calls 
-> scsi_remove_device for all still existing devices of a host), the SCSI 
-> high-level drivers' shutdwon methods get executed. Some of them send 
-> SCSI commands. The upshot is, a SCSI low-level driver has to be able to 
-> handle newly enqueued command while it is calling 
-> scsi_remove_{device,host}. Moreover it must not block a SCSI host at 
-> this moment.
+> static void scsi_release(struct device *dev)
+> {
+> 	schedule_release_process(dev, scsi_release_process);
+> }
 > 
-> IOW the most natural order for layers to shut down would be first SCSI, 
-> then ATA. (But then, I don't really comprehend whether your shutdown 
-> code would actually collide with that of the SCSI subsystem at all.)
+> where schedule_release_process() contains more or less what I posted
+> in the previous mailing.
 
-OK, now it seems like you just told me why I shouldn't use
-the pci_driver.remove() interface.  But thanks for your comments,
-I do appreciate them and will dig deeper [into a twisty maze :].
+That's almost exactly the execute_in_process_context() API that began
+this discussion (and which Andi NAK'd).  However, it could possibly be
+resurrected with the proviso that the caller has to feed in the
+workqueue memory.  How would people feel about that?
 
-anyone else care to comment on this?
+James
 
----
-~Randy
+
