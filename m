@@ -1,61 +1,61 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 5/6] scsi tgt: scsi target netlink interface
-Date: Thu, 16 Feb 2006 13:53:44 -0600
-Message-ID: <1140119624.20193.54.camel@max>
+Subject: [PATCH 4/6] scsi tgt: scsi target lib functionality
+Date: Thu, 16 Feb 2006 13:53:42 -0600
+Message-ID: <1140119622.20193.53.camel@max>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:49824 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1030628AbWBPTyV (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:49312 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1030625AbWBPTyO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Feb 2006 14:54:21 -0500
+	Thu, 16 Feb 2006 14:54:14 -0500
+Received: from [192.168.0.3] (c-69-180-176-191.hsd1.mn.comcast.net [69.180.176.191])
+	(authenticated bits=0)
+	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id k1GJsCXU019501
+	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2006 13:54:13 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This patch implments a netlink interface for the scsi tgt framework.
-I was not sure if code using the netlink interface had to get reviewed
-by the netdev guys. I am ccing them on this patch and providing
-a basic review of why/how we want to use netlink.
+The core scsi target lib functions.
 
-I did not think the netdev people wanted to see the scsi and
-block layer code, so I am just sending the netlink interface part
-of this patchset to netdev. I can resend the other parts if
-needed.
-
-The scsi tgt framework, adds support for scsi target mode
-cards. So instead of using the scsi card in your box as a initiator/host
-you can use it as a target/server.
-
-The reason for the netlink use is becuase the target normally
-receives a interrupt indicating that a command or event is
-ready to be processed. The scsi card's driver will then call
-a scsi lib function which eventually calls scsi_tgt_uspace_send (in
-this patch below) to tell userspace to begin to process the request
-(userspace contains the state model). Later userspace will call back
-into the kernel by sending a netlink msg, and instruct the scsi driver
-what to do next. When the scsi driver is done executing the
-operation, it will send a netlink message back to userspace
-to indicate the success or failure of the operation (using 
-scsi_tgt_uspace_send_status in the patch below).
+TODO:
+- mv md/dm-bio-list.h to linux/bio-list.h so md and us do not have to
+do that weird include.
+- convert scsi_tgt_cmd's work struct to James's execute code. And try
+to kill our scsi_tgt_cmd.
+- add host state checking. We do refcouting so hotplug is partially
+supported, but we need to add state checking to make it easier on
+the LLD.
+- make it so the request_queue can be used to pass around these target
+messages better (see todo in code), or maybe just remove request_queue
+usage all together and use our own linked_list or something else.
+We currently use the queue for tag numbers so if we remove the request_queue
+we will have to add some sort of host tag list like was suggested for iscsi.
+We also use the queue to store the HBA limits and build proper sized bios
+and reqeusts so we would need a shell queue like what dm uses.
+- eh handling (still in the process of working on proper state
+model in userspace).
+- must remove our request->flags hack
 
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
 
-diff --git a/drivers/scsi/scsi_tgt_if.c b/drivers/scsi/scsi_tgt_if.c
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
 new file mode 100644
-index 0000000..38b35da
+index 0000000..8746236
 --- /dev/null
-+++ b/drivers/scsi/scsi_tgt_if.c
-@@ -0,0 +1,214 @@
++++ b/drivers/scsi/scsi_tgt_lib.c
+@@ -0,0 +1,550 @@
 +/*
-+ * SCSI target kernel/user interface functions
++ * SCSI target lib functions
 + *
-+ * Copyright (C) 2005 FUJITA Tomonori <tomof@acm.org>
 + * Copyright (C) 2005 Mike Christie <michaelc@cs.wisc.edu>
++ * Copyright (C) 2005 FUJITA Tomonori <tomof@acm.org>
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License as
@@ -73,303 +73,581 @@ index 0000000..38b35da
 + * 02110-1301 USA
 + */
 +#include <linux/blkdev.h>
-+#include <linux/file.h>
-+#include <linux/netlink.h>
-+#include <net/tcp.h>
++#include <linux/elevator.h>
++#include <linux/module.h>
++#include <linux/pagemap.h>
 +#include <scsi/scsi.h>
 +#include <scsi/scsi_cmnd.h>
 +#include <scsi/scsi_device.h>
 +#include <scsi/scsi_host.h>
 +#include <scsi/scsi_tgt.h>
-+#include <scsi/scsi_tgt_if.h>
++#include <../drivers/md/dm-bio-list.h>
 +
 +#include "scsi_tgt_priv.h"
 +
-+static int tgtd_pid;
-+static struct sock *nl_sk;
++static struct workqueue_struct *scsi_tgtd;
++static kmem_cache_t *scsi_tgt_cmd_cache;
 +
-+static int send_event_res(uint16_t type, struct tgt_event *p,
-+			  void *data, int dlen, gfp_t flags, pid_t pid)
-+{
-+	struct tgt_event *ev;
-+	struct nlmsghdr *nlh;
-+	struct sk_buff *skb;
-+	uint32_t len;
-+
-+	len = NLMSG_SPACE(sizeof(*ev) + dlen);
-+	skb = alloc_skb(len, flags);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	nlh = __nlmsg_put(skb, pid, 0, type, len - sizeof(*nlh), 0);
-+
-+	ev = NLMSG_DATA(nlh);
-+	memcpy(ev, p, sizeof(*ev));
-+	if (dlen)
-+		memcpy(ev->data, data, dlen);
-+
-+	return netlink_unicast(nl_sk, skb, pid, 0);
-+}
-+
-+int scsi_tgt_uspace_send(struct scsi_cmnd *cmd, struct scsi_lun *lun, gfp_t gfp_mask)
-+{
-+	struct Scsi_Host *shost = scsi_tgt_cmd_to_host(cmd);
-+	struct sk_buff *skb;
-+	struct nlmsghdr *nlh;
-+	struct tgt_event *ev;
-+	struct tgt_cmd *tcmd;
-+	int err, len;
-+
-+	len = NLMSG_SPACE(sizeof(*ev) + sizeof(struct tgt_cmd));
-+	/*
-+	 * TODO: add MAX_COMMAND_SIZE to ev and add mempool
-+	 */
-+	skb = alloc_skb(NLMSG_SPACE(len), gfp_mask);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	nlh = __nlmsg_put(skb, tgtd_pid, 0, TGT_KEVENT_CMD_REQ,
-+			  len - sizeof(*nlh), 0);
-+
-+	ev = NLMSG_DATA(nlh);
-+	ev->k.cmd_req.host_no = shost->host_no;
-+	ev->k.cmd_req.cid = cmd->request->tag;
-+	ev->k.cmd_req.data_len = cmd->request_bufflen;
-+
-+	dprintk("%d %u %u\n", ev->k.cmd_req.host_no, ev->k.cmd_req.cid,
-+		ev->k.cmd_req.data_len);
-+
-+	/* FIXME: we need scsi core to do that. */
-+	memcpy(cmd->cmnd, cmd->data_cmnd, MAX_COMMAND_SIZE);
-+
-+	tcmd = (struct tgt_cmd *) ev->data;
-+	memcpy(tcmd->scb, cmd->cmnd, sizeof(tcmd->scb));
-+	memcpy(tcmd->lun, lun, sizeof(struct scsi_lun));
-+
-+	err = netlink_unicast(nl_sk, skb, tgtd_pid, 0);
-+	if (err < 0)
-+		printk(KERN_ERR "scsi_tgt_uspace_send: could not send skb %d\n",
-+		       err);
-+	return err;
-+}
-+
-+int scsi_tgt_uspace_send_status(struct scsi_cmnd *cmd, gfp_t gfp_mask)
-+{
-+	struct Scsi_Host *shost = scsi_tgt_cmd_to_host(cmd);
-+	struct tgt_event ev;
-+	char dummy[sizeof(struct tgt_cmd)];
-+
-+	memset(&ev, 0, sizeof(ev));
-+	ev.k.cmd_done.host_no = shost->host_no;
-+	ev.k.cmd_done.cid = cmd->request->tag;
-+	ev.k.cmd_done.result = cmd->result;
-+
-+	return send_event_res(TGT_KEVENT_CMD_DONE, &ev, dummy, sizeof(dummy),
-+			      gfp_mask, tgtd_pid);
-+}
-+
-+static int event_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh)
-+{
-+	struct tgt_event *ev = NLMSG_DATA(nlh);
-+	int err = 0;
-+
-+	dprintk("%d %d %d\n", nlh->nlmsg_type,
-+		nlh->nlmsg_pid, current->pid);
-+
-+	switch (nlh->nlmsg_type) {
-+	case TGT_UEVENT_TGTD_BIND:
-+		tgtd_pid = NETLINK_CREDS(skb)->pid;
-+		break;
-+	case TGT_UEVENT_CMD_RES:
-+		/* TODO: handle multiple cmds in one event */
-+		err = scsi_tgt_kspace_exec(ev->u.cmd_res.host_no,
-+					   ev->u.cmd_res.cid,
-+					   ev->u.cmd_res.result,
-+					   ev->u.cmd_res.len,
-+					   ev->u.cmd_res.offset,
-+					   ev->u.cmd_res.uaddr,
-+					   ev->u.cmd_res.rw,
-+					   ev->u.cmd_res.try_map);
-+		break;
-+	default:
-+		eprintk("unknown type %d\n", nlh->nlmsg_type);
-+		err = -EINVAL;
-+	}
-+
-+	return err;
-+}
-+
-+static int event_recv_skb(struct sk_buff *skb)
-+{
-+	int err;
-+	uint32_t rlen;
-+	struct nlmsghdr	*nlh;
-+
-+	while (skb->len >= NLMSG_SPACE(0)) {
-+		nlh = (struct nlmsghdr *) skb->data;
-+		if (nlh->nlmsg_len < sizeof(*nlh) || skb->len < nlh->nlmsg_len)
-+			return 0;
-+		rlen = NLMSG_ALIGN(nlh->nlmsg_len);
-+		if (rlen > skb->len)
-+			rlen = skb->len;
-+		err = event_recv_msg(skb, nlh);
-+
-+		dprintk("%d %d\n", nlh->nlmsg_type, err);
-+		/*
-+		 * TODO for passthru commands the lower level should
-+		 * probably handle the result or we should modify this
-+		 */
-+		if (nlh->nlmsg_type != TGT_UEVENT_CMD_RES) {
-+			struct tgt_event ev;
-+
-+			memset(&ev, 0, sizeof(ev));
-+			ev.k.event_res.err = err;
-+			send_event_res(TGT_KEVENT_RESPONSE, &ev, NULL, 0,
-+				       GFP_KERNEL | __GFP_NOFAIL,
-+					nlh->nlmsg_pid);
-+		}
-+		skb_pull(skb, rlen);
-+	}
-+	return 0;
-+}
-+
-+static void event_recv(struct sock *sk, int length)
-+{
-+	struct sk_buff *skb;
-+
-+	while ((skb = skb_dequeue(&sk->sk_receive_queue))) {
-+		if (NETLINK_CREDS(skb)->uid) {
-+			skb_pull(skb, skb->len);
-+			kfree_skb(skb);
-+			continue;
-+		}
-+
-+		if (event_recv_skb(skb) && skb->len)
-+			skb_queue_head(&sk->sk_receive_queue, skb);
-+		else
-+			kfree_skb(skb);
-+	}
-+}
-+
-+void __exit scsi_tgt_if_exit(void)
-+{
-+	sock_release(nl_sk->sk_socket);
-+}
-+
-+int __init scsi_tgt_if_init(void)
-+{
-+	nl_sk = netlink_kernel_create(NETLINK_TGT, 1, event_recv,
-+				    THIS_MODULE);
-+	if (!nl_sk)
-+		return -ENOMEM;
-+
-+	return 0;
-+}
-diff --git a/include/linux/netlink.h b/include/linux/netlink.h
-index 6a2ccf7..580fb42 100644
---- a/include/linux/netlink.h
-+++ b/include/linux/netlink.h
-@@ -21,6 +21,7 @@
- #define NETLINK_DNRTMSG		14	/* DECnet routing messages */
- #define NETLINK_KOBJECT_UEVENT	15	/* Kernel messages to userspace */
- #define NETLINK_GENERIC		16
-+#define NETLINK_TGT		17	/* SCSI target */
- 
- #define MAX_LINKS 32		
- 
-diff --git a/include/scsi/scsi_tgt_if.h b/include/scsi/scsi_tgt_if.h
-new file mode 100644
-index 0000000..da3a808
---- /dev/null
-+++ b/include/scsi/scsi_tgt_if.h
-@@ -0,0 +1,88 @@
 +/*
-+ * SCSI target kernel/user interface
-+ *
-+ * Copyright (C) 2005 FUJITA Tomonori <tomof@acm.org>
-+ * Copyright (C) 2005 Mike Christie <michaelc@cs.wisc.edu>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation; either version 2 of the
-+ * License, or (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-+ * 02110-1301 USA
++ * TODO: this struct will be killed when the block layer supports large bios
++ * and James's work struct code is in
 + */
-+#ifndef __SCSI_TARGET_IF_H
-+#define __SCSI_TARGET_IF_H
-+
-+enum tgt_event_type {
-+	/* user -> kernel */
-+	TGT_UEVENT_TGTD_BIND,
-+	TGT_UEVENT_TARGET_SETUP,
-+	TGT_UEVENT_CMD_RES,
-+
-+	/* kernel -> user */
-+	TGT_KEVENT_RESPONSE,
-+	TGT_KEVENT_CMD_REQ,
-+	TGT_KEVENT_CMD_DONE,
++struct scsi_tgt_cmd {
++	/* TODO replace work with James b's code */
++	struct work_struct work;
++	/* TODO replace the lists with a large bio */
++	struct bio_list xfer_done_list;
++	struct bio_list xfer_list;
++	struct scsi_lun *lun;
 +};
 +
-+struct tgt_event {
-+	/* user-> kernel */
-+	union {
-+		struct {
-+			int pk_fd;
-+		} tgtd_bind;
-+		struct {
-+			int host_no;
-+			uint32_t cid;
-+			uint32_t len;
-+			int result;
-+			uint64_t uaddr;
-+			uint64_t offset;
-+			uint8_t rw;
-+			uint8_t try_map;
-+		} cmd_res;
-+	} u;
++static void scsi_unmap_user_pages(struct scsi_tgt_cmd *tcmd)
++{
++	struct bio *bio;
 +
-+	/* kernel -> user */
-+	union {
-+		struct {
-+			int err;
-+		} event_res;
-+		struct {
-+			int host_no;
-+			uint32_t cid;
-+			uint32_t data_len;
-+			uint64_t dev_id;
-+		} cmd_req;
-+		struct {
-+			int host_no;
-+			uint32_t cid;
-+			int result;
-+		} cmd_done;
-+	} k;
++	/* must call bio_endio in case bio was bounced */
++	while ((bio = bio_list_pop(&tcmd->xfer_done_list))) {
++		bio_endio(bio, bio->bi_size, 0);
++		bio_unmap_user(bio);
++	}
++
++	while ((bio = bio_list_pop(&tcmd->xfer_list))) {
++		bio_endio(bio, bio->bi_size, 0);
++		bio_unmap_user(bio);
++	}
++}
++
++static void scsi_tgt_cmd_destroy(void *data)
++{
++	struct scsi_cmnd *cmd = data;
++	struct scsi_tgt_cmd *tcmd = cmd->request->end_io_data;
++
++	dprintk("cmd %p %d %lu\n", cmd, cmd->sc_data_direction,
++		rq_data_dir(cmd->request));
++	/*
++	 * We must set rq->flags here because bio_map_user and
++	 * blk_rq_bio_prep ruined ti.
++	 */
++	if (cmd->sc_data_direction == DMA_TO_DEVICE)
++		cmd->request->flags |= 1;
++	else
++		cmd->request->flags &= ~1UL;
++
++	scsi_unmap_user_pages(tcmd);
++	scsi_tgt_uspace_send_status(cmd, GFP_KERNEL);
++	kmem_cache_free(scsi_tgt_cmd_cache, tcmd);
++	scsi_host_put_command(scsi_tgt_cmd_to_host(cmd), cmd);
++}
++
++static void init_scsi_tgt_cmd(struct request *rq, struct scsi_tgt_cmd *tcmd)
++{
++	tcmd->lun = rq->end_io_data;
++	bio_list_init(&tcmd->xfer_list);
++	bio_list_init(&tcmd->xfer_done_list);
++}
++
++static int scsi_uspace_prep_fn(struct request_queue *q, struct request *rq)
++{
++	struct scsi_tgt_cmd *tcmd;
++
++	tcmd = kmem_cache_alloc(scsi_tgt_cmd_cache, GFP_ATOMIC);
++	if (!tcmd)
++		return BLKPREP_DEFER;
++
++	init_scsi_tgt_cmd(rq, tcmd);
++	rq->end_io_data = tcmd;
++	rq->flags |= REQ_DONTPREP;
++	return BLKPREP_OK;
++}
++
++static void scsi_uspace_request_fn(struct request_queue *q)
++{
++	struct request *rq;
++	struct scsi_cmnd *cmd;
++	struct scsi_tgt_cmd *tcmd;
 +
 +	/*
-+	 * I think a pointer is a unsigned long but this struct
-+	 * gets passed around from the kernel to userspace and
-+	 * back again so to handle some ppc64 setups where userspace is
-+	 * 32 bits but the kernel is 64 we do this odd thing
++	 * TODO: just send everthing in the queue to userspace in
++	 * one vector instead of multiple calls
 +	 */
-+	uint64_t data[0];
-+} __attribute__ ((aligned (sizeof(uint64_t))));
++	while ((rq = elv_next_request(q)) != NULL) {
++		cmd = rq->special;
++		tcmd = rq->end_io_data;
 +
-+struct tgt_cmd {
-+	uint8_t scb[16];
-+	uint8_t lun[8];
-+	int tags;
-+} __attribute__ ((aligned (sizeof(uint64_t))));
++		/* the completion code kicks us in case we hit this */
++		if (blk_queue_start_tag(q, rq))
++			break;
 +
-+#endif
++		spin_unlock_irq(q->queue_lock);
++		if (scsi_tgt_uspace_send(cmd, tcmd->lun, GFP_ATOMIC) < 0)
++			goto requeue;
++		spin_lock_irq(q->queue_lock);
++	}
++
++	return;
++requeue:
++	spin_lock_irq(q->queue_lock);
++	/* need to track cnts and plug */
++	blk_requeue_request(q, rq);
++	spin_lock_irq(q->queue_lock);
++}
++
++/**
++ * scsi_tgt_alloc_queue - setup queue used for message passing
++ * shost: scsi host
++ *
++ * This should be called by the LLD after host allocation.
++ * And will be released when the host is released.
++ **/
++int scsi_tgt_alloc_queue(struct Scsi_Host *shost)
++{
++	struct scsi_tgt_queuedata *queuedata;
++	struct request_queue *q;
++	int err;
++
++	/*
++	 * Do we need to send a netlink event or should uspace
++	 * just respond to the hotplug event?
++	 */
++	q = __scsi_alloc_queue(shost, scsi_uspace_request_fn);
++	if (!q)
++		return -ENOMEM;
++
++	queuedata = kzalloc(sizeof(*queuedata), GFP_KERNEL);
++	if (!queuedata) {
++		err = -ENOMEM;
++		goto cleanup_queue;
++	}
++	queuedata->shost = shost;
++	q->queuedata = queuedata;
++
++	elevator_exit(q->elevator);
++	err = elevator_init(q, "noop");
++	if (err)
++		goto free_data;
++
++	blk_queue_prep_rq(q, scsi_uspace_prep_fn);
++	/*
++	 * this is a silly hack. We should probably just queue as many
++	 * command as is recvd to userspace. uspace can then make
++	 * sure we do not overload the HBA
++	 */
++	q->nr_requests = shost->hostt->can_queue;
++	blk_queue_init_tags(q, shost->hostt->can_queue, NULL);
++	/*
++	 * We currently only support software LLDs so this does
++	 * not matter for now. Do we need this for the cards we support?
++	 * If so we should make it a host template value.
++	 */
++	blk_queue_dma_alignment(q, 0);
++	shost->uspace_req_q = q;
++
++	return 0;
++
++free_data:
++	kfree(queuedata);
++cleanup_queue:
++	blk_cleanup_queue(q);
++	return err;
++}
++EXPORT_SYMBOL_GPL(scsi_tgt_alloc_queue);
++
++struct Scsi_Host *scsi_tgt_cmd_to_host(struct scsi_cmnd *cmd)
++{
++	struct scsi_tgt_queuedata *queue = cmd->request->q->queuedata;
++	return queue->shost;
++}
++EXPORT_SYMBOL_GPL(scsi_tgt_cmd_to_host);
++
++/**
++ * scsi_tgt_queue_command - queue command for userspace processing
++ * @cmd:	scsi command
++ * @scsilun:	scsi lun
++ * @noblock:	set to nonzero if the command should be queued
++ **/
++void scsi_tgt_queue_command(struct scsi_cmnd *cmd, struct scsi_lun *scsilun,
++			    int noblock)
++{
++	/*
++	 * For now this just calls the request_fn from this context.
++	 * For HW llds though we do not want to execute from here so
++	 * the elevator code needs something like a REQ_TGT_CMD or
++	 * REQ_MSG_DONT_UNPLUG_IMMED_BECUASE_WE_WILL_HANDLE_IT
++	 */
++	cmd->request->end_io_data = scsilun;
++	elv_add_request(cmd->request->q, cmd->request, ELEVATOR_INSERT_BACK, 1);
++}
++EXPORT_SYMBOL_GPL(scsi_tgt_queue_command);
++
++/*
++ * This is run from a interrpt handler normally and the unmap
++ * needs process context so we must queue
++ */
++static void scsi_tgt_cmd_done(struct scsi_cmnd *cmd)
++{
++	struct scsi_tgt_cmd *tcmd = cmd->request->end_io_data;
++
++	dprintk("cmd %p %lu\n", cmd, rq_data_dir(cmd->request));
++
++	/* don't we have to call this if result is set or not */
++	if (cmd->result) {
++		scsi_tgt_uspace_send_status(cmd, GFP_ATOMIC);
++		return;
++	}
++
++	INIT_WORK(&tcmd->work, scsi_tgt_cmd_destroy, cmd);
++	queue_work(scsi_tgtd, &tcmd->work);
++}
++
++static int __scsi_tgt_transfer_response(struct scsi_cmnd *cmd)
++{
++	struct Scsi_Host *shost = scsi_tgt_cmd_to_host(cmd);
++	int err;
++
++	dprintk("cmd %p %lu\n", cmd, rq_data_dir(cmd->request));
++
++	err = shost->hostt->transfer_response(cmd, scsi_tgt_cmd_done);
++	switch (err) {
++	case SCSI_MLQUEUE_HOST_BUSY:
++	case SCSI_MLQUEUE_DEVICE_BUSY:
++		return -EAGAIN;
++	}
++
++	return 0;
++}
++
++static void scsi_tgt_transfer_response(struct scsi_cmnd *cmd)
++{
++	int err;
++
++	err = __scsi_tgt_transfer_response(cmd);
++	if (!err)
++		return;
++
++	cmd->result = DID_BUS_BUSY << 16;
++	if (scsi_tgt_uspace_send_status(cmd, GFP_ATOMIC) <= 0)
++		/* the eh will have to pick this up */
++		printk(KERN_ERR "Could not send cmd %p status\n", cmd);
++}
++
++static int scsi_tgt_init_cmd(struct scsi_cmnd *cmd, gfp_t gfp_mask)
++{
++	struct request *rq = cmd->request;
++	int count;
++
++	cmd->use_sg = rq->nr_phys_segments;
++	cmd->request_buffer = scsi_alloc_sgtable(cmd, gfp_mask);
++	if (!cmd->request_buffer)
++		return -ENOMEM;
++
++	cmd->request_bufflen = rq->data_len;
++
++	dprintk("cmd %p addr %p cnt %d %lu\n", cmd, cmd->buffer, cmd->use_sg,
++		rq_data_dir(rq));
++	count = blk_rq_map_sg(rq->q, rq, cmd->request_buffer);
++	if (likely(count <= cmd->use_sg)) {
++		cmd->use_sg = count;
++		return 0;
++	}
++
++	eprintk("cmd %p addr %p cnt %d\n", cmd, cmd->buffer, cmd->use_sg);
++	scsi_free_sgtable(cmd->request_buffer, cmd->sglist_len);
++	return -EINVAL;
++}
++
++/* TODO: test this crap and replace bio_map_user with new interface maybe */
++static int scsi_map_user_pages(struct scsi_tgt_cmd *tcmd, struct scsi_cmnd *cmd,
++			       int rw)
++{
++	struct request_queue *q = cmd->request->q;
++	struct request *rq = cmd->request;
++	void *uaddr = cmd->buffer;
++	unsigned int len = cmd->bufflen;
++	struct bio *bio;
++	int err;
++
++	while (len > 0) {
++		dprintk("%lx %u\n", (unsigned long) uaddr, len);
++		bio = bio_map_user(q, NULL, (unsigned long) uaddr, len, rw, 1);
++		if (IS_ERR(bio)) {
++			err = PTR_ERR(bio);
++			dprintk("fail to map %lx %u %d %x\n",
++				(unsigned long) uaddr, len, err, cmd->cmnd[0]);
++			goto unmap_bios;
++		}
++
++		uaddr += bio->bi_size;
++		len -= bio->bi_size;
++
++		/*
++		 * The first bio is added and merged. We could probably
++		 * try to add others using scsi_merge_bio() but for now
++		 * we keep it simple. The first bio should be pretty large
++		 * (either hitting the 1 MB bio pages limit or a queue limit)
++		 * already but for really large IO we may want to try and
++		 * merge these.
++		 */
++		if (!rq->bio) {
++			blk_rq_bio_prep(q, rq, bio);
++			rq->data_len = bio->bi_size;
++		} else
++			/* put list of bios to transfer in next go around */
++			bio_list_add(&tcmd->xfer_list, bio);
++	}
++
++	cmd->offset = 0;
++	err = scsi_tgt_init_cmd(cmd, GFP_KERNEL);
++	if (err)
++		goto unmap_bios;
++
++	return 0;
++
++unmap_bios:
++	if (rq->bio) {
++		bio_unmap_user(rq->bio);
++		while ((bio = bio_list_pop(&tcmd->xfer_list)))
++			bio_unmap_user(bio);
++	}
++
++	return err;
++}
++
++static int scsi_tgt_transfer_data(struct scsi_cmnd *);
++
++static void scsi_tgt_data_transfer_done(struct scsi_cmnd *cmd)
++{
++	struct scsi_tgt_cmd *tcmd = cmd->request->end_io_data;
++	struct bio *bio;
++	int err;
++
++	/* should we free resources here on error ? */
++	if (cmd->result) {
++send_uspace_err:
++		if (scsi_tgt_uspace_send_status(cmd, GFP_ATOMIC) <= 0)
++			/* the tgt uspace eh will have to pick this up */
++			printk(KERN_ERR "Could not send cmd %p status\n", cmd);
++		return;
++	}
++
++	dprintk("cmd %p request_bufflen %u bufflen %u\n",
++		cmd, cmd->request_bufflen, cmd->bufflen);
++
++	scsi_free_sgtable(cmd->request_buffer, cmd->sglist_len);
++	bio_list_add(&tcmd->xfer_done_list, cmd->request->bio);
++
++	cmd->buffer += cmd->request_bufflen;
++	cmd->offset += cmd->request_bufflen;
++
++	if (!tcmd->xfer_list.head) {
++		scsi_tgt_transfer_response(cmd);
++		return;
++	}
++
++	dprintk("cmd2 %p request_bufflen %u bufflen %u\n",
++		cmd, cmd->request_bufflen, cmd->bufflen);
++
++	bio = bio_list_pop(&tcmd->xfer_list);
++	BUG_ON(!bio);
++
++	blk_rq_bio_prep(cmd->request->q, cmd->request, bio);
++	cmd->request->data_len = bio->bi_size;
++	err = scsi_tgt_init_cmd(cmd, GFP_ATOMIC);
++	if (err) {
++		cmd->result = DID_ERROR << 16;
++		goto send_uspace_err;
++	}
++
++	if (scsi_tgt_transfer_data(cmd)) {
++		cmd->result = DID_NO_CONNECT << 16;
++		goto send_uspace_err;
++	}
++}
++
++static int scsi_tgt_transfer_data(struct scsi_cmnd *cmd)
++{
++	int err;
++	struct Scsi_Host *host = scsi_tgt_cmd_to_host(cmd);
++
++	err = host->hostt->transfer_data(cmd, scsi_tgt_data_transfer_done);
++	switch (err) {
++		case SCSI_MLQUEUE_HOST_BUSY:
++		case SCSI_MLQUEUE_DEVICE_BUSY:
++			return -EAGAIN;
++	default:
++		return 0;
++	}
++}
++
++static int scsi_tgt_copy_sense(struct scsi_cmnd *cmd, unsigned long uaddr,
++				unsigned len)
++{
++	char __user *p = (char __user *) uaddr;
++
++	if (copy_from_user(cmd->sense_buffer, p,
++			   min_t(unsigned, SCSI_SENSE_BUFFERSIZE, len))) {
++		printk(KERN_ERR "Could not copy the sense buffer\n");
++		return -EIO;
++	}
++	return 0;
++}
++
++int scsi_tgt_kspace_exec(int host_no, u32 cid, int result, u32 len, u64 offset,
++			 unsigned long uaddr, u8 rw, u8 try_map)
++{
++	struct Scsi_Host *shost;
++	struct scsi_cmnd *cmd;
++	struct request *rq;
++	int err = 0;
++
++	dprintk("%d %u %d %u %llu %lx %u %u\n", host_no, cid, result,
++		len, (unsigned long long) offset, uaddr, rw, try_map);
++
++	/* TODO: replace with a O(1) alg */
++	shost = scsi_host_lookup(host_no);
++	if (IS_ERR(shost)) {
++		printk(KERN_ERR "Could not find host no %d\n", host_no);
++		return -EINVAL;
++	}
++
++	rq = blk_queue_find_tag(shost->uspace_req_q, cid);
++	if (!rq) {
++		printk(KERN_ERR "Could not find cid %u\n", cid);
++		err = -EINVAL;
++		goto done;
++	}
++	cmd = rq->special;
++
++	dprintk("cmd %p result %d len %d bufflen %u %lu %x\n", cmd,
++		result, len, cmd->request_bufflen, rq_data_dir(rq), cmd->cmnd[0]);
++
++	/*
++	 * store the userspace values here, the working values are
++	 * in the request_* values
++	 */
++	cmd->buffer = (void *)uaddr;
++	if (len)
++		cmd->bufflen = len;
++	cmd->result = result;
++
++	if (!cmd->bufflen) {
++		err = __scsi_tgt_transfer_response(cmd);
++		goto done;
++	}
++
++	/*
++	 * TODO: Do we need to handle case where request does not
++	 * align with LLD.
++	 */
++	err = scsi_map_user_pages(rq->end_io_data, cmd, rw);
++	if (err) {
++		eprintk("%p %d\n", cmd, err);
++		err = -EAGAIN;
++		goto done;
++	}
++
++	/* userspace failure */
++	if (cmd->result) {
++		if (status_byte(cmd->result) == CHECK_CONDITION)
++			scsi_tgt_copy_sense(cmd, uaddr, len);
++		err = __scsi_tgt_transfer_response(cmd);
++		goto done;
++	}
++	/* ask the target LLD to transfer the data to the buffer */
++	err = scsi_tgt_transfer_data(cmd);
++
++done:
++	scsi_host_put(shost);
++	return err;
++}
++
++static int __init scsi_tgt_init(void)
++{
++	int err;
++
++	scsi_tgt_cmd_cache = kmem_cache_create("scsi_tgt_cmd",
++					       sizeof(struct scsi_tgt_cmd),
++					       0, 0, NULL, NULL);
++	if (!scsi_tgt_cmd_cache)
++		return -ENOMEM;
++
++	scsi_tgtd = create_workqueue("scsi_tgtd");
++	if (!scsi_tgtd) {
++		err = -ENOMEM;
++		goto free_kmemcache;
++	}
++
++	err = scsi_tgt_if_init();
++	if (err)
++		goto destroy_wq;
++
++	return 0;
++
++destroy_wq:
++	destroy_workqueue(scsi_tgtd);
++free_kmemcache:
++	kmem_cache_destroy(scsi_tgt_cmd_cache);
++	return err;
++}
++
++static void __exit scsi_tgt_exit(void)
++{
++	destroy_workqueue(scsi_tgtd);
++	scsi_tgt_if_exit();
++	kmem_cache_destroy(scsi_tgt_cmd_cache);
++}
++
++module_init(scsi_tgt_init);
++module_exit(scsi_tgt_exit);
++
++MODULE_DESCRIPTION("SCSI target core");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/scsi_tgt_priv.h b/drivers/scsi/scsi_tgt_priv.h
+new file mode 100644
+index 0000000..4236e50
+--- /dev/null
++++ b/drivers/scsi/scsi_tgt_priv.h
+@@ -0,0 +1,25 @@
++struct scsi_cmnd;
++struct scsi_lun;
++struct Scsi_Host;
++struct task_struct;
++
++/* tmp - will replace with SCSI logging stuff */
++#define dprintk(fmt, args...)					\
++do {								\
++	printk("%s(%d) " fmt, __FUNCTION__, __LINE__, ##args);	\
++} while (0)
++
++#define eprintk dprintk
++
++struct scsi_tgt_queuedata {
++	struct Scsi_Host *shost;
++};
++
++extern void scsi_tgt_if_exit(void);
++extern int scsi_tgt_if_init(void);
++
++extern int scsi_tgt_uspace_send(struct scsi_cmnd *cmd, struct scsi_lun *lun, gfp_t flags);
++extern int scsi_tgt_uspace_send_status(struct scsi_cmnd *cmd, gfp_t flags);
++extern int scsi_tgt_kspace_exec(int host_no, u32 cid, int result, u32 len,
++				u64 offset, unsigned long uaddr, u8 rw,
++				u8 try_map);
+diff --git a/include/scsi/scsi_tgt.h b/include/scsi/scsi_tgt.h
+new file mode 100644
+index 0000000..91ad6bc
+--- /dev/null
++++ b/include/scsi/scsi_tgt.h
+@@ -0,0 +1,11 @@
++/*
++ * SCSI target definitions
++ */
++
++struct Scsi_Host;
++struct scsi_cmnd;
++struct scsi_lun;
++
++extern struct Scsi_Host *scsi_tgt_cmd_to_host(struct scsi_cmnd *cmd);
++extern int scsi_tgt_alloc_queue(struct Scsi_Host *);
++extern void scsi_tgt_queue_command(struct scsi_cmnd *, struct scsi_lun *, int);
 
 
