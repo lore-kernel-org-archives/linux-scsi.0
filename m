@@ -1,372 +1,65 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 1/6] scsi tgt: export scsi-ml functions needed by
-	tgt_scsi_lib and its LLDs
-Date: Thu, 16 Feb 2006 13:53:35 -0600
-Message-ID: <1140119615.20193.48.camel@max>
+Subject: [PATCH 2/6] scsi tgt: kill length alignment test in bin_map_user
+Date: Thu, 16 Feb 2006 13:53:37 -0600
+Message-ID: <1140119617.20193.49.camel@max>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:46752 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S964884AbWBPTxx (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:47776 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1030474AbWBPTyF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Feb 2006 14:53:53 -0500
-Received: from [192.168.0.3] (c-69-180-176-191.hsd1.mn.comcast.net [69.180.176.191])
-	(authenticated bits=0)
-	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id k1GJrqCp019491
-	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2006 13:53:53 -0600
+	Thu, 16 Feb 2006 14:54:05 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@suse.de>, linux-scsi@vger.kernel.org
 
-Subject: [PATCH] scsi-ml: export scsi-ml functions needed by tgt_scsi_lib and its LLDs
+Subject: [PATCH] block layer: kill length alignment test in bin_map_user
 
-This patch contains the needed changes to the scsi-ml to support targets.
+The tgt project is mapping in bios using bio_map_user. The current targets
+do not need their len to be aligned with a queue limit so this check is
+causing some problems. Note: pointers passed into the kernel are properly
+aligned by usersapace tgt code so the uaddr check in bio_map_user is ok.
 
-Note, per the last review we moved almost all the fields we added
-to the scsi_cmnd to our internal data structure which we are going
-to try and kill off when we can replace it with support from other
-parts of the kernel.
 
-The one field we left on was the offset variable. This is needed to handle
-the case where the target gets request that is so large that it cannot
-execute it in one dma operation. So max_secotors or a segment limit may
-limit the size of the transfer. In this case our tgt core code will
-break up the command into managable transfers and send them to the
-LLD one at a time. The offset is then used to tell the LLD where in
-the command we are at. Is there another field on the scsi_cmd for
-that?
+The major user, blk_bio_map_user checks for the len before mapping
+so it is not affected by this patch.
+
+And the semi-newly added user blk_rq_map_user_iov has been failing
+out when the len is not aligned properly so maybe people have been
+good and not sending misaligned lens or that path is not used very
+often and this change will not be very dangerous. st and sg do not
+check the length and we have not seen any problem reports from those
+wider used paths so this patch should be fairly safe - for mm 
+and wider testing at least.
 
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-
 ---
 
- drivers/scsi/hosts.c     |    5 +++
- drivers/scsi/scsi.c      |   91 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/scsi_lib.c  |   33 ++++++++++++-----
- include/scsi/scsi_cmnd.h |    8 ++++
- include/scsi/scsi_host.h |   40 ++++++++++++++++++++
- 5 files changed, 168 insertions(+), 9 deletions(-)
+ fs/bio.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-4ab7d1a25185748e2aaf86b30784c280bbf5de2b
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index ef57f25..a122624 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -264,6 +264,11 @@ static void scsi_host_dev_release(struct
- 	if (shost->work_q)
- 		destroy_workqueue(shost->work_q);
+8e515bd33c31c8dc5e9727792d2c3cbe08bc28e1
+diff --git a/fs/bio.c b/fs/bio.c
+index 1f3bb50..d8259d9 100644
+--- a/fs/bio.c
++++ b/fs/bio.c
+@@ -620,10 +620,9 @@ static struct bio *__bio_map_user_iov(re
  
-+	if (shost->uspace_req_q) {
-+		kfree(shost->uspace_req_q->queuedata);
-+		scsi_free_queue(shost->uspace_req_q);
-+	}
-+
- 	scsi_destroy_command_freelist(shost);
- 	kfree(shost->shost_data);
+ 		nr_pages += end - start;
+ 		/*
+-		 * transfer and buffer must be aligned to at least hardsector
+-		 * size for now, in the future we can relax this restriction
++		 * buffer must be aligned to at least hardsector size for now
+ 		 */
+-		if ((uaddr & queue_dma_alignment(q)) || (len & queue_dma_alignment(q)))
++		if (uaddr & queue_dma_alignment(q))
+ 			return ERR_PTR(-EINVAL);
+ 	}
  
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index d182bad..701973e 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -234,6 +234,58 @@ static struct scsi_cmnd *__scsi_get_comm
- }
- 
- /*
-+ * Function:	scsi_host_get_command()
-+ *
-+ * Purpose:	Allocate and setup a scsi command block and blk request
-+ *
-+ * Arguments:	shost	- scsi host
-+ *		data_dir - dma data dir
-+ *		gfp_mask- allocator flags
-+ *
-+ * Returns:	The allocated scsi command structure.
-+ *
-+ * This should be called by target LLDs to get a command.
-+ */
-+struct scsi_cmnd *scsi_host_get_command(struct Scsi_Host *shost,
-+					enum dma_data_direction data_dir,
-+					gfp_t gfp_mask)
-+{
-+	int write = (data_dir == DMA_TO_DEVICE);
-+	struct request *rq;
-+	struct scsi_cmnd *cmd;
-+
-+	/* Bail if we can't get a reference to the device */
-+	if (!get_device(&shost->shost_gendev))
-+		return NULL;
-+
-+	rq = blk_get_request(shost->uspace_req_q, write, gfp_mask);
-+	if (!rq)
-+		goto put_dev;
-+
-+	cmd = __scsi_get_command(shost, gfp_mask);
-+	if (!cmd)
-+		goto release_rq;
-+
-+	memset(cmd, 0, sizeof(*cmd));
-+	cmd->sc_data_direction = data_dir;
-+	cmd->jiffies_at_alloc = jiffies;
-+	cmd->request = rq;
-+
-+	rq->special = cmd;
-+	rq->flags |= REQ_SPECIAL | REQ_BLOCK_PC;
-+
-+	return cmd;
-+
-+release_rq:
-+	blk_put_request(rq);
-+put_dev:
-+	put_device(&shost->shost_gendev);
-+	return NULL;
-+
-+}
-+EXPORT_SYMBOL_GPL(scsi_host_get_command);
-+
-+/*
-  * Function:	scsi_get_command()
-  *
-  * Purpose:	Allocate and setup a scsi command block
-@@ -272,6 +324,45 @@ struct scsi_cmnd *scsi_get_command(struc
- EXPORT_SYMBOL(scsi_get_command);
- 
- /*
-+ * Function:	scsi_host_put_command()
-+ *
-+ * Purpose:	Free a scsi command block
-+ *
-+ * Arguments:	shost	- scsi host
-+ * 		cmd	- command block to free
-+ *
-+ * Returns:	Nothing.
-+ *
-+ * Notes:	The command must not belong to any lists.
-+ */
-+void scsi_host_put_command(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
-+{
-+	struct request_queue *q = shost->uspace_req_q;
-+	struct request *rq = cmd->request;
-+	unsigned long flags;
-+
-+	/* changing locks here, don't need to restore the irq state */
-+	spin_lock_irqsave(&shost->free_list_lock, flags);
-+	if (unlikely(list_empty(&shost->free_list))) {
-+		list_add(&cmd->list, &shost->free_list);
-+		cmd = NULL;
-+	}
-+	spin_unlock(&shost->free_list_lock);
-+
-+	spin_lock(q->queue_lock);
-+	if (blk_rq_tagged(rq))
-+		blk_queue_end_tag(q, rq);
-+	__blk_put_request(q, rq);
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+
-+	if (likely(cmd != NULL))
-+		kmem_cache_free(shost->cmd_pool->slab, cmd);
-+
-+	put_device(&shost->shost_gendev);
-+}
-+EXPORT_SYMBOL_GPL(scsi_host_put_command);
-+
-+/*
-  * Function:	scsi_put_command()
-  *
-  * Purpose:	Free a scsi command block
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 5ac8749..2dcc500 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -802,7 +802,7 @@ static struct scsi_cmnd *scsi_end_reques
- 	return NULL;
- }
- 
--static struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
-+struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
- {
- 	struct scsi_host_sg_pool *sgp;
- 	struct scatterlist *sgl;
-@@ -843,7 +843,9 @@ static struct scatterlist *scsi_alloc_sg
- 	return sgl;
- }
- 
--static void scsi_free_sgtable(struct scatterlist *sgl, int index)
-+EXPORT_SYMBOL(scsi_alloc_sgtable);
-+
-+void scsi_free_sgtable(struct scatterlist *sgl, int index)
- {
- 	struct scsi_host_sg_pool *sgp;
- 
-@@ -853,6 +855,8 @@ static void scsi_free_sgtable(struct sca
- 	mempool_free(sgl, sgp->pool);
- }
- 
-+EXPORT_SYMBOL(scsi_free_sgtable);
-+
- /*
-  * Function:    scsi_release_buffers()
-  *
-@@ -1685,29 +1689,40 @@ u64 scsi_calculate_bounce_limit(struct S
- }
- EXPORT_SYMBOL(scsi_calculate_bounce_limit);
- 
--struct request_queue *scsi_alloc_queue(struct scsi_device *sdev)
-+struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
-+					 request_fn_proc *request_fn)
- {
--	struct Scsi_Host *shost = sdev->host;
- 	struct request_queue *q;
- 
--	q = blk_init_queue(scsi_request_fn, NULL);
-+	q = blk_init_queue(request_fn, NULL);
- 	if (!q)
- 		return NULL;
- 
--	blk_queue_prep_rq(q, scsi_prep_fn);
--
- 	blk_queue_max_hw_segments(q, shost->sg_tablesize);
- 	blk_queue_max_phys_segments(q, SCSI_MAX_PHYS_SEGMENTS);
- 	blk_queue_max_sectors(q, shost->max_sectors);
- 	blk_queue_bounce_limit(q, scsi_calculate_bounce_limit(shost));
- 	blk_queue_segment_boundary(q, shost->dma_boundary);
--	blk_queue_issue_flush_fn(q, scsi_issue_flush_fn);
--	blk_queue_softirq_done(q, scsi_softirq_done);
- 
- 	if (!shost->use_clustering)
- 		clear_bit(QUEUE_FLAG_CLUSTER, &q->queue_flags);
- 	return q;
- }
-+EXPORT_SYMBOL(__scsi_alloc_queue);
-+
-+struct request_queue *scsi_alloc_queue(struct scsi_device *sdev)
-+{
-+	struct request_queue *q;
-+
-+	q = __scsi_alloc_queue(sdev->host, scsi_request_fn);
-+	if (!q)
-+		return NULL;
-+
-+	blk_queue_prep_rq(q, scsi_prep_fn);
-+	blk_queue_issue_flush_fn(q, scsi_issue_flush_fn);
-+	blk_queue_softirq_done(q, scsi_softirq_done);
-+	return q;
-+}
- 
- void scsi_free_queue(struct request_queue *q)
- {
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 1ace1b9..8f64515 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -8,6 +8,7 @@
- 
- struct request;
- struct scatterlist;
-+struct Scsi_Host;
- struct scsi_device;
- struct scsi_request;
- 
-@@ -84,6 +85,8 @@ struct scsi_cmnd {
- 	unsigned short sglist_len;	/* size of malloc'd scatter-gather list */
- 	unsigned bufflen;	/* Size of data buffer */
- 	void *buffer;		/* Data buffer */
-+	/* offset in cmd we are at (for multi-transfer tgt cmds) */
-+	unsigned offset;
- 
- 	unsigned underflow;	/* Return error if less than
- 				   this amount is transferred */
-@@ -147,9 +150,14 @@ struct scsi_cmnd {
- #define SCSI_STATE_MLQUEUE         0x100b
- 
- 
-+extern struct scsi_cmnd *scsi_host_get_command(struct Scsi_Host *,
-+					       enum dma_data_direction, gfp_t);
- extern struct scsi_cmnd *scsi_get_command(struct scsi_device *, gfp_t);
-+extern void scsi_host_put_command(struct Scsi_Host *, struct scsi_cmnd *);
- extern void scsi_put_command(struct scsi_cmnd *);
- extern void scsi_io_completion(struct scsi_cmnd *, unsigned int, unsigned int);
- extern void scsi_finish_command(struct scsi_cmnd *cmd);
-+extern struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *, gfp_t);
-+extern void scsi_free_sgtable(struct scatterlist *, int);
- 
- #endif /* _SCSI_SCSI_CMND_H */
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 8279929..8b799db 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -7,6 +7,7 @@
- #include <linux/workqueue.h>
- #include <linux/mutex.h>
- 
-+struct request_queue;
- struct block_device;
- struct completion;
- struct module;
-@@ -123,6 +124,36 @@ struct scsi_host_template {
- 			     void (*done)(struct scsi_cmnd *));
- 
- 	/*
-+	 * The transfer functions are used to queue a scsi command to
-+	 * the LLD. When the driver is finished processing the command
-+	 * the done callback is invoked.
-+	 *
-+	 * return values: see queuecommand
-+	 *
-+	 * If the LLD accepts the cmd, it should set the result to an
-+	 * appropriate value when completed before calling the done function.
-+	 *
-+	 * STATUS: REQUIRED FOR TARGET DRIVERS
-+	 */
-+	/* TODO: rename */
-+	int (* transfer_response)(struct scsi_cmnd *,
-+				  void (*done)(struct scsi_cmnd *));
-+	/*
-+	 * This is called to inform the LLD to transfer cmd->request_bufflen
-+	 * bytes of the cmd at cmd->offset in the cmd. The cmd->use_sg
-+	 * speciefies the number of scatterlist entried in the command
-+	 * and cmd->request_buffer contains the scatterlist.
-+	 *
-+	 * If the command cannot be processed in one transfer_data call
-+	 * becuase a scatterlist within the LLD's limits cannot be
-+	 * created then transfer_data will be called multiple times.
-+	 * It is initially called from process context, and later
-+	 * calls are from the interrup context.
-+	 */
-+	int (* transfer_data)(struct scsi_cmnd *,
-+			      void (*done)(struct scsi_cmnd *));
-+
-+	/*
- 	 * This is an error handling strategy routine.  You don't need to
- 	 * define one of these if you don't want to - there is a default
- 	 * routine that is present that should work in most cases.  For those
-@@ -572,6 +603,12 @@ struct Scsi_Host {
- 	 */
- 	unsigned int max_host_blocked;
- 
-+	/*
-+	 * q used for scsi_tgt msgs, async events or any other requests that
-+	 * need to be processed in userspace
-+ 	 */
-+	struct request_queue *uspace_req_q;
-+
- 	/* legacy crap */
- 	unsigned long base;
- 	unsigned long io_port;
-@@ -674,6 +711,9 @@ extern void scsi_unblock_requests(struct
- extern void scsi_block_requests(struct Scsi_Host *);
- 
- struct class_container;
-+
-+extern struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
-+					     void (*) (struct request_queue *));
- /*
-  * These two functions are used to allocate and free a pseudo device
-  * which will connect to the host adapter itself rather than any
 -- 
 1.1.3
 
