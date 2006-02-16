@@ -1,37 +1,33 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 2/6] scsi tgt: kill length alignment test in bin_map_user
-Date: Thu, 16 Feb 2006 13:53:37 -0600
-Message-ID: <1140119617.20193.49.camel@max>
+Subject: [PATCH 3/6] scsi tgt: add partial mappings support to bio_map_user
+Date: Thu, 16 Feb 2006 13:53:40 -0600
+Message-ID: <1140119620.20193.51.camel@max>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:47776 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1030474AbWBPTyF (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:48800 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1030619AbWBPTyJ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Feb 2006 14:54:05 -0500
+	Thu, 16 Feb 2006 14:54:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@suse.de>, linux-scsi@vger.kernel.org
 
-Subject: [PATCH] block layer: kill length alignment test in bin_map_user
+Subject: [PATCH] block layer: add partial mappings support to bio_map_user
 
-The tgt project is mapping in bios using bio_map_user. The current targets
-do not need their len to be aligned with a queue limit so this check is
-causing some problems. Note: pointers passed into the kernel are properly
-aligned by usersapace tgt code so the uaddr check in bio_map_user is ok.
+For target mode we could end up with the case where we get very large
+request from the initiator. The request could be so large that we
+cannot transfer all the data in one operation. For example the
+HBA's segment or max_sector limits might limit us to a 1 MB transfer.
+To send a 5 MB command then we need to transfer the command chunk by chunk.
 
-
-The major user, blk_bio_map_user checks for the len before mapping
-so it is not affected by this patch.
-
-And the semi-newly added user blk_rq_map_user_iov has been failing
-out when the len is not aligned properly so maybe people have been
-good and not sending misaligned lens or that path is not used very
-often and this change will not be very dangerous. st and sg do not
-check the length and we have not seen any problem reports from those
-wider used paths so this patch should be fairly safe - for mm 
-and wider testing at least.
+To do this, tgt core will map in as much data as possible into a bio,
+send this off, then when that transfer is completed we send off another
+request/bio. To be able to pack as much data into a bio as possible
+we need bio_map_user to support partially mapped bios. The attached patch
+just adds a new argument to the those functions and if set will not
+return a failure if the bio is partially mapped.
 
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
@@ -39,27 +35,108 @@ Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
 ---
 
- fs/bio.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+ block/ll_rw_blk.c   |    5 +++--
+ fs/bio.c            |   11 +++++++----
+ include/linux/bio.h |    5 +++--
+ 3 files changed, 13 insertions(+), 8 deletions(-)
 
-8e515bd33c31c8dc5e9727792d2c3cbe08bc28e1
+97fbe8e42375284c82814b95cde3bc18c00721cd
+diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
+index f9fc07e..65c56b6 100644
+--- a/block/ll_rw_blk.c
++++ b/block/ll_rw_blk.c
+@@ -2293,7 +2293,7 @@ int blk_rq_map_user(request_queue_t *q, 
+ 	 */
+ 	uaddr = (unsigned long) ubuf;
+ 	if (!(uaddr & queue_dma_alignment(q)) && !(len & queue_dma_alignment(q)))
+-		bio = bio_map_user(q, NULL, uaddr, len, reading);
++		bio = bio_map_user(q, NULL, uaddr, len, reading, 0);
+ 	else
+ 		bio = bio_copy_user(q, uaddr, len, reading);
+ 
+@@ -2345,7 +2345,8 @@ int blk_rq_map_user_iov(request_queue_t 
+ 	/* we don't allow misaligned data like bio_map_user() does.  If the
+ 	 * user is using sg, they're expected to know the alignment constraints
+ 	 * and respect them accordingly */
+-	bio = bio_map_user_iov(q, NULL, iov, iov_count, rq_data_dir(rq)== READ);
++	bio = bio_map_user_iov(q, NULL, iov, iov_count, rq_data_dir(rq)== READ,
++				0);
+ 	if (IS_ERR(bio))
+ 		return PTR_ERR(bio);
+ 
 diff --git a/fs/bio.c b/fs/bio.c
-index 1f3bb50..d8259d9 100644
+index 1f3bb50..fd1e419 100644
 --- a/fs/bio.c
 +++ b/fs/bio.c
-@@ -620,10 +620,9 @@ static struct bio *__bio_map_user_iov(re
+@@ -719,19 +719,21 @@ static struct bio *__bio_map_user_iov(re
+  *	@uaddr: start of user address
+  *	@len: length in bytes
+  *	@write_to_vm: bool indicating writing to pages or not
++ *	@support_partial: support partial mappings
+  *
+  *	Map the user space address into a bio suitable for io to a block
+  *	device. Returns an error pointer in case of error.
+  */
+ struct bio *bio_map_user(request_queue_t *q, struct block_device *bdev,
+-			 unsigned long uaddr, unsigned int len, int write_to_vm)
++			 unsigned long uaddr, unsigned int len, int write_to_vm,
++			 int support_partial)
+ {
+ 	struct sg_iovec iov;
  
- 		nr_pages += end - start;
- 		/*
--		 * transfer and buffer must be aligned to at least hardsector
--		 * size for now, in the future we can relax this restriction
-+		 * buffer must be aligned to at least hardsector size for now
- 		 */
--		if ((uaddr & queue_dma_alignment(q)) || (len & queue_dma_alignment(q)))
-+		if (uaddr & queue_dma_alignment(q))
- 			return ERR_PTR(-EINVAL);
- 	}
+ 	iov.iov_base = (void __user *)uaddr;
+ 	iov.iov_len = len;
  
+-	return bio_map_user_iov(q, bdev, &iov, 1, write_to_vm);
++	return bio_map_user_iov(q, bdev, &iov, 1, write_to_vm, support_partial);
+ }
+ 
+ /**
+@@ -741,13 +743,14 @@ struct bio *bio_map_user(request_queue_t
+  *	@iov:	the iovec.
+  *	@iov_count: number of elements in the iovec
+  *	@write_to_vm: bool indicating writing to pages or not
++ *	@support_partial: support partial mappings
+  *
+  *	Map the user space address into a bio suitable for io to a block
+  *	device. Returns an error pointer in case of error.
+  */
+ struct bio *bio_map_user_iov(request_queue_t *q, struct block_device *bdev,
+ 			     struct sg_iovec *iov, int iov_count,
+-			     int write_to_vm)
++			     int write_to_vm, int support_partial)
+ {
+ 	struct bio *bio;
+ 	int len = 0, i;
+@@ -768,7 +771,7 @@ struct bio *bio_map_user_iov(request_que
+ 	for (i = 0; i < iov_count; i++)
+ 		len += iov[i].iov_len;
+ 
+-	if (bio->bi_size == len)
++	if (bio->bi_size == len || support_partial)
+ 		return bio;
+ 
+ 	/*
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index b60ffe3..fc0906c 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -295,12 +295,13 @@ extern int bio_add_page(struct bio *, st
+ extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
+ 			   unsigned int, unsigned int);
+ extern int bio_get_nr_vecs(struct block_device *);
++extern int __bio_get_nr_vecs(struct request_queue *);
+ extern struct bio *bio_map_user(struct request_queue *, struct block_device *,
+-				unsigned long, unsigned int, int);
++				unsigned long, unsigned int, int, int);
+ struct sg_iovec;
+ extern struct bio *bio_map_user_iov(struct request_queue *,
+ 				    struct block_device *,
+-				    struct sg_iovec *, int, int);
++				    struct sg_iovec *, int, int, int);
+ extern void bio_unmap_user(struct bio *);
+ extern struct bio *bio_map_kern(struct request_queue *, void *, unsigned int,
+ 				gfp_t);
 -- 
 1.1.3
 
