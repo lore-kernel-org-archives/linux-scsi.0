@@ -1,143 +1,375 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: [PATCH 3/6] scsi tgt: add partial mappings support to bio_map_user
-Date: Thu, 16 Feb 2006 13:53:40 -0600
-Message-ID: <1140119620.20193.51.camel@max>
+Subject: [PATCH 5/6] scsi tgt: scsi target netlink interface
+Date: Thu, 16 Feb 2006 13:53:44 -0600
+Message-ID: <1140119624.20193.54.camel@max>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:48800 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S1030619AbWBPTyJ (ORCPT
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:49824 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S1030628AbWBPTyV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Feb 2006 14:54:09 -0500
+	Thu, 16 Feb 2006 14:54:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>, linux-scsi@vger.kernel.org
+To: netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Subject: [PATCH] block layer: add partial mappings support to bio_map_user
+This patch implments a netlink interface for the scsi tgt framework.
+I was not sure if code using the netlink interface had to get reviewed
+by the netdev guys. I am ccing them on this patch and providing
+a basic review of why/how we want to use netlink.
 
-For target mode we could end up with the case where we get very large
-request from the initiator. The request could be so large that we
-cannot transfer all the data in one operation. For example the
-HBA's segment or max_sector limits might limit us to a 1 MB transfer.
-To send a 5 MB command then we need to transfer the command chunk by chunk.
+I did not think the netdev people wanted to see the scsi and
+block layer code, so I am just sending the netlink interface part
+of this patchset to netdev. I can resend the other parts if
+needed.
 
-To do this, tgt core will map in as much data as possible into a bio,
-send this off, then when that transfer is completed we send off another
-request/bio. To be able to pack as much data into a bio as possible
-we need bio_map_user to support partially mapped bios. The attached patch
-just adds a new argument to the those functions and if set will not
-return a failure if the bio is partially mapped.
+The scsi tgt framework, adds support for scsi target mode
+cards. So instead of using the scsi card in your box as a initiator/host
+you can use it as a target/server.
+
+The reason for the netlink use is becuase the target normally
+receives a interrupt indicating that a command or event is
+ready to be processed. The scsi card's driver will then call
+a scsi lib function which eventually calls scsi_tgt_uspace_send (in
+this patch below) to tell userspace to begin to process the request
+(userspace contains the state model). Later userspace will call back
+into the kernel by sending a netlink msg, and instruct the scsi driver
+what to do next. When the scsi driver is done executing the
+operation, it will send a netlink message back to userspace
+to indicate the success or failure of the operation (using 
+scsi_tgt_uspace_send_status in the patch below).
 
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
----
 
- block/ll_rw_blk.c   |    5 +++--
- fs/bio.c            |   11 +++++++----
- include/linux/bio.h |    5 +++--
- 3 files changed, 13 insertions(+), 8 deletions(-)
-
-97fbe8e42375284c82814b95cde3bc18c00721cd
-diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
-index f9fc07e..65c56b6 100644
---- a/block/ll_rw_blk.c
-+++ b/block/ll_rw_blk.c
-@@ -2293,7 +2293,7 @@ int blk_rq_map_user(request_queue_t *q, 
- 	 */
- 	uaddr = (unsigned long) ubuf;
- 	if (!(uaddr & queue_dma_alignment(q)) && !(len & queue_dma_alignment(q)))
--		bio = bio_map_user(q, NULL, uaddr, len, reading);
-+		bio = bio_map_user(q, NULL, uaddr, len, reading, 0);
- 	else
- 		bio = bio_copy_user(q, uaddr, len, reading);
+diff --git a/drivers/scsi/scsi_tgt_if.c b/drivers/scsi/scsi_tgt_if.c
+new file mode 100644
+index 0000000..38b35da
+--- /dev/null
++++ b/drivers/scsi/scsi_tgt_if.c
+@@ -0,0 +1,214 @@
++/*
++ * SCSI target kernel/user interface functions
++ *
++ * Copyright (C) 2005 FUJITA Tomonori <tomof@acm.org>
++ * Copyright (C) 2005 Mike Christie <michaelc@cs.wisc.edu>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation; either version 2 of the
++ * License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
++ * 02110-1301 USA
++ */
++#include <linux/blkdev.h>
++#include <linux/file.h>
++#include <linux/netlink.h>
++#include <net/tcp.h>
++#include <scsi/scsi.h>
++#include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_host.h>
++#include <scsi/scsi_tgt.h>
++#include <scsi/scsi_tgt_if.h>
++
++#include "scsi_tgt_priv.h"
++
++static int tgtd_pid;
++static struct sock *nl_sk;
++
++static int send_event_res(uint16_t type, struct tgt_event *p,
++			  void *data, int dlen, gfp_t flags, pid_t pid)
++{
++	struct tgt_event *ev;
++	struct nlmsghdr *nlh;
++	struct sk_buff *skb;
++	uint32_t len;
++
++	len = NLMSG_SPACE(sizeof(*ev) + dlen);
++	skb = alloc_skb(len, flags);
++	if (!skb)
++		return -ENOMEM;
++
++	nlh = __nlmsg_put(skb, pid, 0, type, len - sizeof(*nlh), 0);
++
++	ev = NLMSG_DATA(nlh);
++	memcpy(ev, p, sizeof(*ev));
++	if (dlen)
++		memcpy(ev->data, data, dlen);
++
++	return netlink_unicast(nl_sk, skb, pid, 0);
++}
++
++int scsi_tgt_uspace_send(struct scsi_cmnd *cmd, struct scsi_lun *lun, gfp_t gfp_mask)
++{
++	struct Scsi_Host *shost = scsi_tgt_cmd_to_host(cmd);
++	struct sk_buff *skb;
++	struct nlmsghdr *nlh;
++	struct tgt_event *ev;
++	struct tgt_cmd *tcmd;
++	int err, len;
++
++	len = NLMSG_SPACE(sizeof(*ev) + sizeof(struct tgt_cmd));
++	/*
++	 * TODO: add MAX_COMMAND_SIZE to ev and add mempool
++	 */
++	skb = alloc_skb(NLMSG_SPACE(len), gfp_mask);
++	if (!skb)
++		return -ENOMEM;
++
++	nlh = __nlmsg_put(skb, tgtd_pid, 0, TGT_KEVENT_CMD_REQ,
++			  len - sizeof(*nlh), 0);
++
++	ev = NLMSG_DATA(nlh);
++	ev->k.cmd_req.host_no = shost->host_no;
++	ev->k.cmd_req.cid = cmd->request->tag;
++	ev->k.cmd_req.data_len = cmd->request_bufflen;
++
++	dprintk("%d %u %u\n", ev->k.cmd_req.host_no, ev->k.cmd_req.cid,
++		ev->k.cmd_req.data_len);
++
++	/* FIXME: we need scsi core to do that. */
++	memcpy(cmd->cmnd, cmd->data_cmnd, MAX_COMMAND_SIZE);
++
++	tcmd = (struct tgt_cmd *) ev->data;
++	memcpy(tcmd->scb, cmd->cmnd, sizeof(tcmd->scb));
++	memcpy(tcmd->lun, lun, sizeof(struct scsi_lun));
++
++	err = netlink_unicast(nl_sk, skb, tgtd_pid, 0);
++	if (err < 0)
++		printk(KERN_ERR "scsi_tgt_uspace_send: could not send skb %d\n",
++		       err);
++	return err;
++}
++
++int scsi_tgt_uspace_send_status(struct scsi_cmnd *cmd, gfp_t gfp_mask)
++{
++	struct Scsi_Host *shost = scsi_tgt_cmd_to_host(cmd);
++	struct tgt_event ev;
++	char dummy[sizeof(struct tgt_cmd)];
++
++	memset(&ev, 0, sizeof(ev));
++	ev.k.cmd_done.host_no = shost->host_no;
++	ev.k.cmd_done.cid = cmd->request->tag;
++	ev.k.cmd_done.result = cmd->result;
++
++	return send_event_res(TGT_KEVENT_CMD_DONE, &ev, dummy, sizeof(dummy),
++			      gfp_mask, tgtd_pid);
++}
++
++static int event_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh)
++{
++	struct tgt_event *ev = NLMSG_DATA(nlh);
++	int err = 0;
++
++	dprintk("%d %d %d\n", nlh->nlmsg_type,
++		nlh->nlmsg_pid, current->pid);
++
++	switch (nlh->nlmsg_type) {
++	case TGT_UEVENT_TGTD_BIND:
++		tgtd_pid = NETLINK_CREDS(skb)->pid;
++		break;
++	case TGT_UEVENT_CMD_RES:
++		/* TODO: handle multiple cmds in one event */
++		err = scsi_tgt_kspace_exec(ev->u.cmd_res.host_no,
++					   ev->u.cmd_res.cid,
++					   ev->u.cmd_res.result,
++					   ev->u.cmd_res.len,
++					   ev->u.cmd_res.offset,
++					   ev->u.cmd_res.uaddr,
++					   ev->u.cmd_res.rw,
++					   ev->u.cmd_res.try_map);
++		break;
++	default:
++		eprintk("unknown type %d\n", nlh->nlmsg_type);
++		err = -EINVAL;
++	}
++
++	return err;
++}
++
++static int event_recv_skb(struct sk_buff *skb)
++{
++	int err;
++	uint32_t rlen;
++	struct nlmsghdr	*nlh;
++
++	while (skb->len >= NLMSG_SPACE(0)) {
++		nlh = (struct nlmsghdr *) skb->data;
++		if (nlh->nlmsg_len < sizeof(*nlh) || skb->len < nlh->nlmsg_len)
++			return 0;
++		rlen = NLMSG_ALIGN(nlh->nlmsg_len);
++		if (rlen > skb->len)
++			rlen = skb->len;
++		err = event_recv_msg(skb, nlh);
++
++		dprintk("%d %d\n", nlh->nlmsg_type, err);
++		/*
++		 * TODO for passthru commands the lower level should
++		 * probably handle the result or we should modify this
++		 */
++		if (nlh->nlmsg_type != TGT_UEVENT_CMD_RES) {
++			struct tgt_event ev;
++
++			memset(&ev, 0, sizeof(ev));
++			ev.k.event_res.err = err;
++			send_event_res(TGT_KEVENT_RESPONSE, &ev, NULL, 0,
++				       GFP_KERNEL | __GFP_NOFAIL,
++					nlh->nlmsg_pid);
++		}
++		skb_pull(skb, rlen);
++	}
++	return 0;
++}
++
++static void event_recv(struct sock *sk, int length)
++{
++	struct sk_buff *skb;
++
++	while ((skb = skb_dequeue(&sk->sk_receive_queue))) {
++		if (NETLINK_CREDS(skb)->uid) {
++			skb_pull(skb, skb->len);
++			kfree_skb(skb);
++			continue;
++		}
++
++		if (event_recv_skb(skb) && skb->len)
++			skb_queue_head(&sk->sk_receive_queue, skb);
++		else
++			kfree_skb(skb);
++	}
++}
++
++void __exit scsi_tgt_if_exit(void)
++{
++	sock_release(nl_sk->sk_socket);
++}
++
++int __init scsi_tgt_if_init(void)
++{
++	nl_sk = netlink_kernel_create(NETLINK_TGT, 1, event_recv,
++				    THIS_MODULE);
++	if (!nl_sk)
++		return -ENOMEM;
++
++	return 0;
++}
+diff --git a/include/linux/netlink.h b/include/linux/netlink.h
+index 6a2ccf7..580fb42 100644
+--- a/include/linux/netlink.h
++++ b/include/linux/netlink.h
+@@ -21,6 +21,7 @@
+ #define NETLINK_DNRTMSG		14	/* DECnet routing messages */
+ #define NETLINK_KOBJECT_UEVENT	15	/* Kernel messages to userspace */
+ #define NETLINK_GENERIC		16
++#define NETLINK_TGT		17	/* SCSI target */
  
-@@ -2345,7 +2345,8 @@ int blk_rq_map_user_iov(request_queue_t 
- 	/* we don't allow misaligned data like bio_map_user() does.  If the
- 	 * user is using sg, they're expected to know the alignment constraints
- 	 * and respect them accordingly */
--	bio = bio_map_user_iov(q, NULL, iov, iov_count, rq_data_dir(rq)== READ);
-+	bio = bio_map_user_iov(q, NULL, iov, iov_count, rq_data_dir(rq)== READ,
-+				0);
- 	if (IS_ERR(bio))
- 		return PTR_ERR(bio);
+ #define MAX_LINKS 32		
  
-diff --git a/fs/bio.c b/fs/bio.c
-index 1f3bb50..fd1e419 100644
---- a/fs/bio.c
-+++ b/fs/bio.c
-@@ -719,19 +719,21 @@ static struct bio *__bio_map_user_iov(re
-  *	@uaddr: start of user address
-  *	@len: length in bytes
-  *	@write_to_vm: bool indicating writing to pages or not
-+ *	@support_partial: support partial mappings
-  *
-  *	Map the user space address into a bio suitable for io to a block
-  *	device. Returns an error pointer in case of error.
-  */
- struct bio *bio_map_user(request_queue_t *q, struct block_device *bdev,
--			 unsigned long uaddr, unsigned int len, int write_to_vm)
-+			 unsigned long uaddr, unsigned int len, int write_to_vm,
-+			 int support_partial)
- {
- 	struct sg_iovec iov;
- 
- 	iov.iov_base = (void __user *)uaddr;
- 	iov.iov_len = len;
- 
--	return bio_map_user_iov(q, bdev, &iov, 1, write_to_vm);
-+	return bio_map_user_iov(q, bdev, &iov, 1, write_to_vm, support_partial);
- }
- 
- /**
-@@ -741,13 +743,14 @@ struct bio *bio_map_user(request_queue_t
-  *	@iov:	the iovec.
-  *	@iov_count: number of elements in the iovec
-  *	@write_to_vm: bool indicating writing to pages or not
-+ *	@support_partial: support partial mappings
-  *
-  *	Map the user space address into a bio suitable for io to a block
-  *	device. Returns an error pointer in case of error.
-  */
- struct bio *bio_map_user_iov(request_queue_t *q, struct block_device *bdev,
- 			     struct sg_iovec *iov, int iov_count,
--			     int write_to_vm)
-+			     int write_to_vm, int support_partial)
- {
- 	struct bio *bio;
- 	int len = 0, i;
-@@ -768,7 +771,7 @@ struct bio *bio_map_user_iov(request_que
- 	for (i = 0; i < iov_count; i++)
- 		len += iov[i].iov_len;
- 
--	if (bio->bi_size == len)
-+	if (bio->bi_size == len || support_partial)
- 		return bio;
- 
- 	/*
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index b60ffe3..fc0906c 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -295,12 +295,13 @@ extern int bio_add_page(struct bio *, st
- extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
- 			   unsigned int, unsigned int);
- extern int bio_get_nr_vecs(struct block_device *);
-+extern int __bio_get_nr_vecs(struct request_queue *);
- extern struct bio *bio_map_user(struct request_queue *, struct block_device *,
--				unsigned long, unsigned int, int);
-+				unsigned long, unsigned int, int, int);
- struct sg_iovec;
- extern struct bio *bio_map_user_iov(struct request_queue *,
- 				    struct block_device *,
--				    struct sg_iovec *, int, int);
-+				    struct sg_iovec *, int, int, int);
- extern void bio_unmap_user(struct bio *);
- extern struct bio *bio_map_kern(struct request_queue *, void *, unsigned int,
- 				gfp_t);
--- 
-1.1.3
+diff --git a/include/scsi/scsi_tgt_if.h b/include/scsi/scsi_tgt_if.h
+new file mode 100644
+index 0000000..da3a808
+--- /dev/null
++++ b/include/scsi/scsi_tgt_if.h
+@@ -0,0 +1,88 @@
++/*
++ * SCSI target kernel/user interface
++ *
++ * Copyright (C) 2005 FUJITA Tomonori <tomof@acm.org>
++ * Copyright (C) 2005 Mike Christie <michaelc@cs.wisc.edu>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation; either version 2 of the
++ * License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
++ * 02110-1301 USA
++ */
++#ifndef __SCSI_TARGET_IF_H
++#define __SCSI_TARGET_IF_H
++
++enum tgt_event_type {
++	/* user -> kernel */
++	TGT_UEVENT_TGTD_BIND,
++	TGT_UEVENT_TARGET_SETUP,
++	TGT_UEVENT_CMD_RES,
++
++	/* kernel -> user */
++	TGT_KEVENT_RESPONSE,
++	TGT_KEVENT_CMD_REQ,
++	TGT_KEVENT_CMD_DONE,
++};
++
++struct tgt_event {
++	/* user-> kernel */
++	union {
++		struct {
++			int pk_fd;
++		} tgtd_bind;
++		struct {
++			int host_no;
++			uint32_t cid;
++			uint32_t len;
++			int result;
++			uint64_t uaddr;
++			uint64_t offset;
++			uint8_t rw;
++			uint8_t try_map;
++		} cmd_res;
++	} u;
++
++	/* kernel -> user */
++	union {
++		struct {
++			int err;
++		} event_res;
++		struct {
++			int host_no;
++			uint32_t cid;
++			uint32_t data_len;
++			uint64_t dev_id;
++		} cmd_req;
++		struct {
++			int host_no;
++			uint32_t cid;
++			int result;
++		} cmd_done;
++	} k;
++
++	/*
++	 * I think a pointer is a unsigned long but this struct
++	 * gets passed around from the kernel to userspace and
++	 * back again so to handle some ppc64 setups where userspace is
++	 * 32 bits but the kernel is 64 we do this odd thing
++	 */
++	uint64_t data[0];
++} __attribute__ ((aligned (sizeof(uint64_t))));
++
++struct tgt_cmd {
++	uint8_t scb[16];
++	uint8_t lun[8];
++	int tags;
++} __attribute__ ((aligned (sizeof(uint64_t))));
++
++#endif
 
 
