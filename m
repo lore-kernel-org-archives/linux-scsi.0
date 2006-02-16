@@ -1,116 +1,83 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] sas: add support for enclosure and bad ID rphy attributes
-Date: Thu, 16 Feb 2006 13:31:47 +0100
-Message-ID: <20060216123147.GA1637@lst.de>
+From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Subject: RE: [Bugme-new] [Bug 6080] New: New Megaraid Module Problem
+Date: Thu, 16 Feb 2006 07:36:20 -0700
+Message-ID: <9738BCBE884FDB42801FAD8A7769C26514208E@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:20363 "EHLO mail.lst.de")
-	by vger.kernel.org with ESMTP id S1030584AbWBPMbu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Feb 2006 07:31:50 -0500
-Content-Disposition: inline
+Received: from mail0.lsil.com ([147.145.40.20]:16364 "EHLO mail0.lsil.com")
+	by vger.kernel.org with ESMTP id S1161122AbWBPOgY convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Feb 2006 09:36:24 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@steeleye.com
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>, "Kolli, Neela" <Neela.Kolli@engenio.com>
+Cc: linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>
+
+Hi,
+> > But I tried SUSE 10, Mandriva 2006, Fedora 2.0  (kernel 
+> 2.6.*) and the
+> > installation hanged on at exactly the same phase.
+I've verified the 'megaraid' driver that is available on GIT kernel (2.6.16-rc2).
+The driver 'megaraid.ko' is working fine on the kernel.
+However, I'm working on another issue related to this driver. On SuSE SLES 10 (kernel 2.6.16-rc1-git3-7), the kernel claims that the driver has loaded, but it won't detect the controller nor scan the drives.
+Both kernel (GIT kernel and SLES10) have same 'megaraid' driver.
+I'll update here for any progress on it. 
 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Index: linux-2.6/drivers/scsi/scsi_transport_sas.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/scsi_transport_sas.c	2006-02-14 16:23:30.000000000 +0100
-+++ linux-2.6/drivers/scsi/scsi_transport_sas.c	2006-02-16 13:22:32.000000000 +0100
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (C) 2005 Dell Inc.
-+ * Copyright (C) 2005-2006 Dell Inc.
-  *	Released under GPL v2.
-  *
-  * Serial Attached SCSI (SAS) transport class.
-@@ -38,7 +38,7 @@
- 
- #define SAS_HOST_ATTRS		0
- #define SAS_PORT_ATTRS		17
--#define SAS_RPORT_ATTRS		5
-+#define SAS_RPORT_ATTRS		7
- 
- struct sas_internal {
- 	struct scsi_transport_template t;
-@@ -534,6 +534,53 @@
- static SAS_CLASS_DEVICE_ATTR(rphy, device_type, S_IRUGO,
- 		show_sas_rphy_device_type, NULL);
- 
-+static ssize_t
-+show_sas_rphy_enclosure_identifier(struct class_device *cdev, char *buf)
-+{
-+	struct sas_rphy *rphy = transport_class_to_rphy(cdev);
-+	struct sas_phy *phy = dev_to_phy(rphy->dev.parent);
-+	struct Scsi_Host *shost = dev_to_shost(phy->dev.parent);
-+	struct sas_internal *i = to_sas_internal(shost->transportt);
-+	u64 identifier;
-+	int error;
-+
-+	/*
-+	 * Only devices behind an expander are supported, because the
-+	 * enclosure identifier is a SMP feature.
-+	 */
-+	if (phy->local_attached)
-+		return -EINVAL;
-+
-+	error = i->f->get_enclosure_identifier(rphy, &identifier);
-+	if (error)
-+		return error;
-+	return sprintf(buf, "0x%llx\n", (unsigned long long)identifier);
-+}
-+
-+static SAS_CLASS_DEVICE_ATTR(rphy, enclosure_identifier, S_IRUGO,
-+		show_sas_rphy_enclosure_identifier, NULL);
-+
-+static ssize_t
-+show_sas_rphy_bay_identifier(struct class_device *cdev, char *buf)
-+{
-+	struct sas_rphy *rphy = transport_class_to_rphy(cdev);
-+	struct sas_phy *phy = dev_to_phy(rphy->dev.parent);
-+	struct Scsi_Host *shost = dev_to_shost(phy->dev.parent);
-+	struct sas_internal *i = to_sas_internal(shost->transportt);
-+	int val;
-+
-+	if (phy->local_attached)
-+		return -EINVAL;
-+
-+	val = i->f->get_bay_identifier(rphy);
-+	if (val < 0)
-+		return val;
-+	return sprintf(buf, "%d\n", val);
-+}
-+
-+static SAS_CLASS_DEVICE_ATTR(rphy, bay_identifier, S_IRUGO,
-+		show_sas_rphy_bay_identifier, NULL);
-+
- sas_rphy_protocol_attr(identify.initiator_port_protocols,
- 		initiator_port_protocols);
- sas_rphy_protocol_attr(identify.target_port_protocols, target_port_protocols);
-@@ -848,6 +895,8 @@
- 	SETUP_RPORT_ATTRIBUTE(rphy_device_type);
- 	SETUP_RPORT_ATTRIBUTE(rphy_sas_address);
- 	SETUP_RPORT_ATTRIBUTE(rphy_phy_identifier);
-+	SETUP_RPORT_ATTRIBUTE(rphy_enclosure_identifier);
-+	SETUP_RPORT_ATTRIBUTE(rphy_bay_identifier);
- 	i->rphy_attrs[count] = NULL;
- 
- 	return &i->t;
-Index: linux-2.6/include/scsi/scsi_transport_sas.h
-===================================================================
---- linux-2.6.orig/include/scsi/scsi_transport_sas.h	2006-02-14 16:23:30.000000000 +0100
-+++ linux-2.6/include/scsi/scsi_transport_sas.h	2006-02-16 12:58:19.000000000 +0100
-@@ -94,6 +94,8 @@
- /* The functions by which the transport class and the driver communicate */
- struct sas_function_template {
- 	int (*get_linkerrors)(struct sas_phy *);
-+	int (*get_enclosure_identifier)(struct sas_rphy *, u64 *);
-+	int (*get_bay_identifier)(struct sas_rphy *);
- 	int (*phy_reset)(struct sas_phy *, int);
- };
- 
+> -----Original Message-----
+> From: Andrew Morton [mailto:akpm@osdl.org] 
+> Sent: Wednesday, February 15, 2006 5:33 PM
+> To: Kolli, Neela
+> Cc: linux-scsi@vger.kernel.org; 
+> bugme-daemon@kernel-bugs.osdl.org; Ju, Seokmann
+> Subject: Re: [Bugme-new] [Bug 6080] New: New Megaraid Module Problem
+> 
+> bugme-daemon@bugzilla.kernel.org wrote:
+> >
+> > http://bugzilla.kernel.org/show_bug.cgi?id=6080
+> > 
+> >            Summary: New Megaraid Module Problem
+> >     Kernel Version: 2.6.*
+> >             Status: NEW
+> >           Severity: blocking
+> >              Owner: andmike@us.ibm.com
+> >          Submitter: fturkmen@gmail.com
+> > 
+> > 
+> > Most recent kernel where this bug did not occur: 2.4.18
+> > Distribution: SUSE 9.2, 10, Mandriva 2006, Fedora 2.0
+> > 
+> > Hardware Environment: HP LH 6000, LSILogic controllers 
+> > 
+> > Software Environment: Megaraid modules
+> > 
+> > Problem Description:
+> > I have 3 HP LH 6000 machines and wanted to install Linux on them.
+> > Everytime the install
+> > hangs on "searching for info file" phase.
+> > 
+> > The following messages are given:
+> >  megaraid: ABORTING-1 cmd=12 <c=0 t=0 l=0>
+> >  megaraid: ABORTING-1[7d], fw owner.
+> > 
+> > when installing megaraid modules ("insmod /modules/megaraid.ko").
+> > 
+> > 
+> > As I searched through the Internet, the old megaraid 
+> modules (in kernel
+> > 2.4) work fine with these devices. I could successfully 
+> install SUSE 8.0.
+> > But I tried SUSE 10, Mandriva 2006, Fedora 2.0  (kernel 
+> 2.6.*) and the
+> > installation hanged on at exactly the same phase.
+> > 
+> > 
+> > 
+> > Ps: Reported to the maintainer (Ju, Seokmann)
+> > 
+> > ------- You are receiving this mail because: -------
+> > You are on the CC list for the bug, or are watching someone who is.
+> 
