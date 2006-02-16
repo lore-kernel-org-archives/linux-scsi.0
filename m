@@ -1,32 +1,41 @@
-From: "Moore, Eric" <Eric.Moore@lsil.com>
-Subject: RE: [PATCH] mptsas: add support for enclosure and bay identifier attributes
-Date: Thu, 16 Feb 2006 12:57:38 -0700
-Message-ID: <F331B95B72AFFB4B87467BE1C8E9CF5F2B3A69@NAMAIL2.ad.lsil.com>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: [PATCH 3/6] scsi tgt: add partial mappings support to bio_map_user
+Date: Thu, 16 Feb 2006 20:59:17 +0100
+Message-ID: <20060216195917.GY4203@suse.de>
+References: <1140119620.20193.51.camel@max>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:29592 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S964888AbWBPT5x convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Feb 2006 14:57:53 -0500
-Content-class: urn:content-classes:message
+Received: from ns.virtualhost.dk ([195.184.98.160]:28187 "EHLO virtualhost.dk")
+	by vger.kernel.org with ESMTP id S964888AbWBPT7U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Feb 2006 14:59:20 -0500
+Content-Disposition: inline
+In-Reply-To: <1140119620.20193.51.camel@max>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, jejb@steeleye.com
+To: Mike Christie <michaelc@cs.wisc.edu>
 Cc: linux-scsi@vger.kernel.org
 
-On Thursday, February 16, 2006 5:26 AM, Christoph Hellwig wrote:
-> Adds support to retrieve the enclosure and bay identifiers.  
-> This patch
-> is from Eric with minor modifications from me, rewritten from a buggy
-> patch of mine, based on the earlier CSMI implementation from Eric..
+On Thu, Feb 16 2006, Mike Christie wrote:
+> Subject: [PATCH] block layer: add partial mappings support to bio_map_user
 > 
+> For target mode we could end up with the case where we get very large
+> request from the initiator. The request could be so large that we
+> cannot transfer all the data in one operation. For example the
+> HBA's segment or max_sector limits might limit us to a 1 MB transfer.
+> To send a 5 MB command then we need to transfer the command chunk by chunk.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
+> To do this, tgt core will map in as much data as possible into a bio,
+> send this off, then when that transfer is completed we send off another
+> request/bio. To be able to pack as much data into a bio as possible
+> we need bio_map_user to support partially mapped bios. The attached patch
+> just adds a new argument to the those functions and if set will not
+> return a failure if the bio is partially mapped.
 
-Ack
+Drop the partial flag and just always allow it, fixing up the few
+in-kernel users we have.
 
-Signed-off-by: Eric Moore <Eric.Moore@lsil.com>
+-- 
+Jens Axboe
+
