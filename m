@@ -1,117 +1,254 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: Error using DC315U to drive ScanJet 4c
-Date: Thu, 16 Feb 2006 21:33:33 +0100 (CET)
-Message-ID: <Pine.LNX.4.60.0602162121020.4944@poirot.grange>
-References: <Pine.LNX.4.60.0602130043540.19775@poirot.grange>
- <20060211011457.GA1839@igloo.df.lth.se> <Pine.LNX.4.60.0602112153320.3570@poirot.grange>
- <20060213171052.GI18853@igloo.df.lth.se> <Pine.LNX.4.60.0602140000160.18538@poirot.grange>
- <20060214010138.GJ18853@igloo.df.lth.se> <Pine.LNX.4.60.0602140656430.30136@poirot.grange>
- <Pine.LNX.4.60.0602152056530.5682@poirot.grange> <20060215214349.GA7947@igloo.df.lth.se>
- <Pine.LNX.4.60.0602152322190.5682@poirot.grange> <20060216113027.GA3412@igloo.df.lth.se>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH 2.6.15.4 rel.2 1/1] libata: add hotswap to sata_svw
+Date: Fri, 17 Feb 2006 09:41:00 +1100
+Message-ID: <1140129661.10065.6.camel@localhost.localdomain>
+References: <E1F9klH-0004Fg-00@devix>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:48562 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S932353AbWBPUdQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Feb 2006 15:33:16 -0500
-In-Reply-To: <20060216113027.GA3412@igloo.df.lth.se>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <E1F9klH-0004Fg-00@devix>
+Sender: linux-ide-owner@vger.kernel.org
+To: Martin Devera <devik@cdi.cz>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, lkosewsk@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: Fredrik Roubert <roubert@df.lth.se>
-Cc: linux-scsi@vger.kernel.org
 
-Hi Fredrik
-
-Thanks for your help so far, and, please, don't give up - I know it's, 
-probably, much easier for you to just through away the damn thing (dc315) 
-and get something modern, but - what about the fun?:-)
-
-On Thu, 16 Feb 2006, Fredrik Roubert wrote:
-
-> On Wed 15 Feb 23:33 CET 2006, Guennadi Liakhovetski wrote:
-
-...
-
-> > Could you, please, remove / comment out these 2 lines and try again?
+On Thu, 2006-02-16 at 16:09 +0100, Martin Devera wrote:
+> From: Martin Devera <devik@cdi.cz>
 > 
-> OK, this is the log from loading the new module until the second failed
-> scan:
+> Add hotswap capability to Serverworks/BroadCom SATA controlers. The
+> controler has SIM register and it selects which bits in SATA_ERROR
+> register fires interrupt.
+> The solution hooks on COMWAKE (plug), PHYRDY change and 10B8B decode 
+> error (unplug) and calls into Lukasz's hotswap framework.
+> The code got one day testing on dual core Athlon64 H8SSL Supermicro 
+> MoBo with HT-1000 SATA, SMP kernel and two CaviarRE SATA HDDs in
+> hotswap bays.
+> 
+> Signed-off-by: Martin Devera <devik@cdi.cz>
+> ---
+> This patch depends on Lukasz Kosewski's:
+> [PATCH 2.6.15-rc7-git3 2/3] libata: framework API for hotswapping drives on libata
+> and its intent is mainly wider testing and review
 
-Looks like all those lengths / counters are somewhat less consistent than 
-what I'd hoped for. Please, try the patch below on the top of your 
-current version - it MUST trigger. With the vanilla 2.6.15 the first 
-"reselect w/o disconnect" message, after each boot / insmod dc395x, was 
-_always_ accompanied by requests to contact linux-scsi, right?
+Nice ! I'll review and test it asap. Just give me a few days as I'm
+fairly busy lately.
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+Ben.
 
-diff -u a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
---- a/drivers/scsi/dc395x.c	14 Feb 2006 06:25:54 -0000	1.1.1.9.4.2
-+++ b/drivers/scsi/dc395x.c	16 Feb 2006 20:18:05 -0000
-@@ -2269,7 +2269,7 @@
- 	 * seem to be a bad idea, actually.
- 	 */
- 	if (!(srb->state & SRB_XFERPAD)) {
--		unsigned int d_left_counter;
-+		unsigned int d_left_counter, sc, fc;
- 		if (scsi_status & PARITYERROR) {
- 			dprintkl(KERN_INFO, "data_in_phase0: (pid#%li) "
- 				"Parity Error\n", srb->cmd->pid);
-@@ -2306,18 +2306,18 @@
- 				DC395x_read8(acb, TRM_S1040_DMA_FIFOSTAT));
- 		}
- 		/* Now: Check remainig data: The SCSI counters should tell us ... */
--		d_left_counter = DC395x_read32(acb, TRM_S1040_SCSI_COUNTER)
--		    + ((DC395x_read8(acb, TRM_S1040_SCSI_FIFOCNT) & 0x1f)
--		       << ((srb->dcb->sync_period & WIDE_SYNC) ? 1 :
--			   0));
-+		sc = DC395x_read32(acb, TRM_S1040_SCSI_COUNTER);
-+		fc = DC395x_read8(acb, TRM_S1040_SCSI_FIFOCNT);
-+		d_left_counter = sc + ((fc & 0x1f) <<
-+				       ((srb->dcb->sync_period & WIDE_SYNC) ? 1 : 0));
- 		dprintkdbg(DBG_KG, "data_in_phase0: "
- 			"SCSI{fifocnt=0x%02x%s ctr=0x%08x} "
- 			"DMA{fifocnt=0x%02x fifostat=0x%02x ctr=0x%08x} "
- 			"Remain{totxfer=%i scsi_fifo+ctr=%i}\n",
--			DC395x_read8(acb, TRM_S1040_SCSI_FIFOCNT),
-+			fc,
- 			(srb->dcb->sync_period & WIDE_SYNC) ? "words" : "bytes",
- 			DC395x_read32(acb, TRM_S1040_SCSI_COUNTER),
--			DC395x_read8(acb, TRM_S1040_DMA_FIFOCNT),
-+			fc,
- 			DC395x_read8(acb, TRM_S1040_DMA_FIFOSTAT),
- 			DC395x_read32(acb, TRM_S1040_DMA_CXCNT),
- 			srb->total_xfer_length, d_left_counter);
-@@ -2331,7 +2331,7 @@
- 			/*sg_update_list (srb, d_left_counter); */
- 			dprintkdbg(DBG_PIO, "data_in_phase0: PIO (%i %s) "
- 				"for remaining %i bytes:",
--				DC395x_read8(acb, TRM_S1040_SCSI_FIFOCNT) & 0x1f,
-+				fc & 0x1f,
- 				(srb->dcb->sync_period & WIDE_SYNC) ?
- 				    "words" : "bytes",
- 				srb->total_xfer_length);
-@@ -2339,6 +2339,9 @@
- 				DC395x_write8(acb, TRM_S1040_SCSI_CONFIG2,
- 					      CFG2_WIDEFIFO);
- 
-+			printk(KERN_INFO "%s[%d]: %u, %u, %u, %u, %x, %d\n", __FILE__, __LINE__,
-+			       left_io, d_left_counter, sc, fc, srb->dcb->sync_period & WIDE_SYNC, srb->cmd->use_sg);
-+
- 			while (left_io) {
- 				unsigned char *virt, *base = NULL;
- 				unsigned long flags = 0;
-@@ -2566,6 +2569,9 @@
- 				DC395x_write8(acb, TRM_S1040_SCSI_CONFIG2,
- 				     CFG2_WIDEFIFO);
- 
-+			printk(KERN_INFO "%s[%d]: %u, %x, %d\n", __FILE__, __LINE__,
-+			       left_io, srb->dcb->sync_period & WIDE_SYNC, srb->cmd->use_sg);
-+
- 			while (left_io) {
- 				unsigned char *virt, *base = NULL;
- 				unsigned long flags = 0;
+> --- a/drivers/scsi/sata_svw.c	Wed Feb 15 11:20:22 2006
+> +++ b/drivers/scsi/sata_svw.c	Thu Feb 16 15:49:31 2006
+> @@ -9,6 +9,7 @@
+>   *  Copyright 2003 Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>   *
+>   *  Bits from Jeff Garzik, Copyright RedHat, Inc.
+> + *  Hotplug code by Martin Devera <devik@cdi.cz>
+>   *
+>   *  This driver probably works with non-Apple versions of the
+>   *  Broadcom chipset...
+> @@ -54,7 +55,7 @@
+>  #endif /* CONFIG_PPC_OF */
+>  
+>  #define DRV_NAME	"sata_svw"
+> -#define DRV_VERSION	"1.07"
+> +#define DRV_VERSION	"1.08"
+>  
+>  /* Taskfile registers offsets */
+>  #define K2_SATA_TF_CMD_OFFSET		0x00
+> @@ -81,9 +82,18 @@
+>  #define K2_SATA_SICR2_OFFSET		0x84
+>  #define K2_SATA_SIM_OFFSET		0x88
+>  
+> +/* Hotplug interrupt masks */
+> +#define K2_SIM_REMOVE_MASK		0x90000
+> +#define K2_SIM_INSERT_MASK		0x40000
+> +
+>  /* Port stride */
+>  #define K2_SATA_PORT_OFFSET		0x100
+>  
+> +struct svw_host 
+> +{
+> +	unsigned long not_in_reset_bitmap; /* see k2_hotplug_irq for explanation */
+> +};
+> +
+>  static u8 k2_stat_check_status(struct ata_port *ap);
+>  
+> 
+> @@ -282,6 +292,118 @@ static int k2_sata_proc_info(struct Scsi
+>  }
+>  #endif /* CONFIG_PPC_OF */
+>  
+> +/* This shall run every time for all ports when interrupt fires. It
+> +   returns 1 if hotplug related event was handled. */
+> +static int k2_hotplug_irq(struct ata_port *ap,struct svw_host *host)
+> +{
+> +	u32 error = scr_read(ap, SCR_ERROR);
+> +	error &= K2_SIM_REMOVE_MASK | K2_SIM_INSERT_MASK;
+> +	if (!error)
+> +		return 0;
+> +	
+> +	/* clear error bits, this must be done in any case or we get
+> +	   unhandled IRQ BUG */
+> +	scr_write(ap, SCR_ERROR, error);
+> +
+> +	DPRINTK("K2 Got (un)plug event %X (status %X) on dev %d\n",
+> +			error,scr_read(ap, SCR_STATUS),ap->port_no+1);
+> +
+> +	/* not_in_reset_bitmap has a bit set for each port when the port is
+> +	   outside of reset routine. Because reset generates spurious events
+> +	   we ignore them here. Because not_in_reset_bitmap is zero at init
+> +	   time we also ignore these events until the port is first reset.
+> +	   It is not possible simply to set SIM register to zero because
+> +	   interrupt comming from other port still causes this routine run
+> +	   for all ports and the event will be discovered. */
+> +	if (!test_bit(ap->port_no,&host->not_in_reset_bitmap)) {
+> +		DPRINTK("K2 ignoring the event\n");
+> +		return 1;
+> +	}
+> +	
+> +	if (error & K2_SIM_INSERT_MASK)
+> +		sata_hot_plug(ap);
+> +	else	/* make sure that the drive is really gone */
+> +		if (!sata_dev_present(ap)) 
+> +			sata_hot_unplug(ap);
+> +	return 1;
+> +}
+> +
+> +/* Essencialy the same as in libata, we only needed to hook hotplug events. */
+> +static irqreturn_t k2_interrupt (int irq, void *dev_instance, struct pt_regs *regs)
+> +{
+> +	struct ata_host_set *host_set = dev_instance;
+> +	struct svw_host *host = (struct svw_host *)host_set->private_data;
+> +	unsigned int i;
+> +	unsigned int handled = 0;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&host_set->lock, flags);
+> +
+> +	for (i = 0; i < host_set->n_ports; i++) {
+> +		struct ata_port *ap;
+> +
+> +		ap = host_set->ports[i];
+> +		if (!ap) 
+> +			continue;
+> +		
+> +		if (!(ap->flags & (ATA_FLAG_PORT_DISABLED | ATA_FLAG_NOINTR))) {
+> +			struct ata_queued_cmd *qc;
+> +
+> +			qc = ata_qc_from_tag(ap, ap->active_tag);
+> +			if (qc && (!(qc->tf.ctl & ATA_NIEN)) &&
+> +			    (qc->flags & ATA_QCFLAG_ACTIVE))
+> +				handled |= ata_host_intr(ap, qc);
+> +		}
+> +		handled |= k2_hotplug_irq(ap,host);
+> +	}
+> +	
+> +	spin_unlock_irqrestore(&host_set->lock, flags);
+> +
+> +	return IRQ_RETVAL(handled);
+> +}
+> +
+> +/* Override phy_reset to setup SIM register. It must be done here because it
+> +   can trigger IRQ and we must be sure that a handler is installed. And it is
+> +   at the time when reset is called. */
+> +static void k2_phy_reset(struct ata_port *ap)
+> +{
+> +	/* HACK: there is no standard place in port structure to record
+> +	   base pointer - incidentaly cmd_addr is at offset zero ... */
+> +	void *base = (void*)ap->ioaddr.cmd_addr;
+> +	
+> +	struct svw_host *host = (struct svw_host *)ap->host_set->private_data;
+> +
+> +	DPRINTK("K2 reset %d start\n",ap->port_no+1);
+> +
+> +	clear_bit(ap->port_no,&host->not_in_reset_bitmap);
+> +	
+> +	/* Not strictly neccessary but why to fire spurious interrupts
+> +	   and then ignore them anyway */
+> +	writel(0, base + K2_SATA_SIM_OFFSET);
+> +	sata_phy_reset(ap);
+> +
+> +	/* Clear a magic bit in SCR1 according to Darwin, those help
+> +	 * some funky seagate drives (though so far, those were already
+> +	 * set by the firmware on the machines I had access to)
+> +	 */
+> +	writel(readl(base + K2_SATA_SICR1_OFFSET) & ~0x00040000,
+> +	       base + K2_SATA_SICR1_OFFSET);
+> +
+> +	/* Make sure that interrupt is triggered when these XXX_MASK bits
+> +	   in SCR_ERROR are set */
+> +	scr_write(ap, SCR_ERROR, K2_SIM_INSERT_MASK | K2_SIM_REMOVE_MASK);
+> +	writel(K2_SIM_INSERT_MASK | K2_SIM_REMOVE_MASK, base + K2_SATA_SIM_OFFSET);
+> +
+> +	set_bit(ap->port_no,&host->not_in_reset_bitmap);
+> +
+> +	DPRINTK("K2 reset done\n");
+> +}
+> +
+> +static void k2_host_stop (struct ata_host_set *host_set)
+> +{
+> +	kfree(host_set->private_data);
+> +	ata_pci_host_stop(host_set);
+> +}
+>  
+>  static struct scsi_host_template k2_sata_sht = {
+>  	.module			= THIS_MODULE,
+> @@ -314,7 +436,7 @@ static const struct ata_port_operations 
+>  	.check_status		= k2_stat_check_status,
+>  	.exec_command		= ata_exec_command,
+>  	.dev_select		= ata_std_dev_select,
+> -	.phy_reset		= sata_phy_reset,
+> +	.phy_reset		= k2_phy_reset,
+>  	.bmdma_setup		= k2_bmdma_setup_mmio,
+>  	.bmdma_start		= k2_bmdma_start_mmio,
+>  	.bmdma_stop		= ata_bmdma_stop,
+> @@ -322,13 +444,13 @@ static const struct ata_port_operations 
+>  	.qc_prep		= ata_qc_prep,
+>  	.qc_issue		= ata_qc_issue_prot,
+>  	.eng_timeout		= ata_eng_timeout,
+> -	.irq_handler		= ata_interrupt,
+> +	.irq_handler		= k2_interrupt,
+>  	.irq_clear		= ata_bmdma_irq_clear,
+>  	.scr_read		= k2_sata_scr_read,
+>  	.scr_write		= k2_sata_scr_write,
+>  	.port_start		= ata_port_start,
+>  	.port_stop		= ata_port_stop,
+> -	.host_stop		= ata_pci_host_stop,
+> +	.host_stop		= k2_host_stop,
+>  };
+>  
+>  static void k2_sata_setup_port(struct ata_ioports *port, unsigned long base)
+> @@ -354,6 +476,7 @@ static void k2_sata_setup_port(struct at
+>  static int k2_sata_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+>  {
+>  	static int printed_version;
+> +	struct svw_host *host;
+>  	struct ata_probe_ent *probe_ent = NULL;
+>  	unsigned long base;
+>  	void __iomem *mmio_base;
+> @@ -408,17 +531,13 @@ static int k2_sata_init_one (struct pci_
+>  		goto err_out_free_ent;
+>  	}
+>  	base = (unsigned long) mmio_base;
+> -
+> -	/* Clear a magic bit in SCR1 according to Darwin, those help
+> -	 * some funky seagate drives (though so far, those were already
+> -	 * set by the firmware on the machines I had access to)
+> -	 */
+> -	writel(readl(mmio_base + K2_SATA_SICR1_OFFSET) & ~0x00040000,
+> -	       mmio_base + K2_SATA_SICR1_OFFSET);
+> -
+> -	/* Clear SATA error & interrupts we don't use */
+> -	writel(0xffffffff, mmio_base + K2_SATA_SCR_ERROR_OFFSET);
+> -	writel(0x0, mmio_base + K2_SATA_SIM_OFFSET);
+> +	
+> +	host = kmalloc(sizeof(struct svw_host), GFP_KERNEL);
+> +	if (!host)
+> +		goto err_out_free_ent;
+> +	
+> +	memset(host, 0, sizeof(struct svw_host));
+> +	probe_ent->private_data = host;
+>  
+>  	probe_ent->sht = &k2_sata_sht;
+>  	probe_ent->host_flags = ATA_FLAG_SATA | ATA_FLAG_SATA_RESET |
+
