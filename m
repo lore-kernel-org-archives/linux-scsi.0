@@ -1,42 +1,57 @@
-From: Russell King <rmk+lkml@arm.linux.org.uk>
-Subject: Re: Linux 2.6.16-rc3
-Date: Thu, 16 Feb 2006 18:18:03 +0000
-Message-ID: <20060216181803.GG29443@flint.arm.linux.org.uk>
-References: <Pine.LNX.4.64.0602121709240.3691@g5.osdl.org> <20060212190520.244fcaec.akpm@osdl.org> <20060213203800.GC22441@kroah.com> <1139934883.14115.4.camel@mulgrave.il.steeleye.com> <1140054960.3037.5.camel@mulgrave.il.steeleye.com> <20060216171200.GD29443@flint.arm.linux.org.uk> <1140112653.3178.9.camel@mulgrave.il.steeleye.com> <20060216180939.GF29443@flint.arm.linux.org.uk> <1140113671.3178.16.camel@mulgrave.il.steeleye.com>
+From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
+Subject: Re: [PATCH] shutdown processing
+Date: Thu, 16 Feb 2006 10:40:07 -0800
+Message-ID: <20060216104007.67cf613f.randy_d_dunlap@linux.intel.com>
+References: <20060215114605.1568c8cc.randy_d_dunlap@linux.intel.com>
+	<43F43EB9.40406@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1140113671.3178.16.camel@mulgrave.il.steeleye.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Greg KH <greg@kroah.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, Gerrit Bruchh?user <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@LaPoste.net, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>, Patrizio Bassi <patrizio.bassi@gmail.com>, Bj?rn Nilsson <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi@vger.ker
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fmr17.intel.com ([134.134.136.16]:63623 "EHLO
+	orsfmr002.jf.intel.com") by vger.kernel.org with ESMTP
+	id S1030359AbWBPSiD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Feb 2006 13:38:03 -0500
+In-Reply-To: <43F43EB9.40406@s5r6.in-berlin.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, Feb 16, 2006 at 10:14:31AM -0800, James Bottomley wrote:
-> On Thu, 2006-02-16 at 18:09 +0000, Russell King wrote:
-> > where scsi_release() is the function called by the device model on the
-> > last put of a scsi device.
+On Thu, 16 Feb 2006 09:58:33 +0100
+Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+
+> Randy Dunlap wrote:
+> > From: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 > > 
-> > I guess is more or less what you're trying to do invasively via the
-> > driver model.
+> > Add ability for SCSI drivers to invoke a shutdown method.
+> > This allows drivers to make drives safe for shutdown/poweroff,
+> > for example.  Some drives need this to prevent possible problems.
+> > 
+> > Signed-off-by: Randy Dunlap <randy_d_dunlap@linux.intel.com>
 > 
-> Yes ... except I think more than just SCSI has the problem (and we
-> actually have it in more than one release function) so it seems like a
-> good candidate for a general abstraction.
+> Why are you calling these from SCSI? Wouldn't ahci_pci_driver.remove() 
+> and piix_pci_driver.remove() be a proper place to perform what you are 
+> doing in ata_device_shutdown?
 
-Maybe implementing it as a helper function would be the best and
-simplest solution?
+Mostly to have the scsi_device pointers available.
+I'll try your suggestion.
 
-static void scsi_release(struct device *dev)
-{
-	schedule_release_process(dev, scsi_release_process);
-}
+> [...]
+> >  EXPORT_SYMBOL_GPL(ata_device_suspend);
+> >  EXPORT_SYMBOL_GPL(ata_device_resume);
+> > +EXPORT_SYMBOL_GPL(ata_device_shutdown);
+> >  EXPORT_SYMBOL_GPL(ata_scsi_device_suspend);
+> >  EXPORT_SYMBOL_GPL(ata_scsi_device_resume);
+> > +EXPORT_SYMBOL_GPL(ata_scsi_device_shutdown);
+> [...]
+> 
+> Side note: If you would prepare the host template in libata, you 
+> wouldn't need to export these and other symbols. As was AFAIR discussed 
+> by other people before, libata could certainly hide scsi_host_template 
+> from ATA drivers entirely.
 
-where schedule_release_process() contains more or less what I posted
-in the previous mailing.
+OK.  Thanks for your review and comments.
 
--- 
-Russell King
- Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
- maintainer of:  2.6 Serial core
+---
+~Randy
