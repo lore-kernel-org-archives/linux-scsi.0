@@ -1,99 +1,32 @@
-From: Sergey Vlasov <vsu@altlinux.ru>
-Subject: Re: [linux-usb-devel] Re: Linux 2.6.16-rc3
-Date: Sat, 18 Feb 2006 13:03:44 +0300
-Message-ID: <20060218100344.GA8532@procyon.home>
-References: <1139934883.14115.4.camel@mulgrave.il.steeleye.com> <1140054960.3037.5.camel@mulgrave.il.steeleye.com> <20060216171200.GD29443@flint.arm.linux.org.uk> <1140112653.3178.9.camel@mulgrave.il.steeleye.com> <20060216180939.GF29443@flint.arm.linux.org.uk> <1140113671.3178.16.camel@mulgrave.il.steeleye.com> <20060216181803.GG29443@flint.arm.linux.org.uk> <1140116969.3178.24.camel@mulgrave.il.steeleye.com> <20060216200138.GA4203@suse.de> <1140223363.3231.9.camel@mulgrave.il.steeleye.com>
+From: Pavel Machek <pavel@suse.cz>
+Subject: Re: Linux 2.6.16-rc3
+Date: Fri, 17 Feb 2006 00:04:18 +0100
+Message-ID: <20060216230418.GN3490@openzaurus.ucw.cz>
+References: <F7DC2337C7631D4386A2DF6E8FB22B30060BD1D9@hdsmsx401.amr.corp.intel.com> <20060213001240.05e57d42.akpm@osdl.org> <1139821068.2997.22.camel@laptopd505.fenrus.org> <20060214030821.GA23031@mail.harddata.com> <20060213192838.64013c6c.akpm@osdl.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="opJtzjQTFsWo+cga"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from master.altlinux.org ([62.118.250.235]:19731 "EHLO
-	master.altlinux.org") by vger.kernel.org with ESMTP
-	id S1751125AbWBRKDx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 18 Feb 2006 05:03:53 -0500
-Content-Disposition: inline
-In-Reply-To: <1140223363.3231.9.camel@mulgrave.il.steeleye.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jens Axboe <axboe@suse.de>, Russell King <rmk+lkml@arm.linux.org.uk>, Greg KH <greg@kroah.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, Gerrit Bruchh?user <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@LaPoste.net, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>, Patrizio Bassi <patrizio.bassi@gmail.com>, Bj?rn Nilsson <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>, Andrew Vasquez <andre>
-
-
---opJtzjQTFsWo+cga
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751236AbWBRMzn@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20060213192838.64013c6c.akpm@osdl.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: Michal Jaegermann <michal@harddata.com>, Dave Jones <davej@codemonkey.org.uk>, arjan@infradead.org, len.brown@intel.com, davem@davemloft.net, torvalds@osdl.org, linux-kernel@vger.kernel.org, axboe@suse.de, James.Bottomley@steeleye.com, greg@kroah.com, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, luming.yu@intel.com, lk@bencastricum.nl, sanjoy@mrao.cam.ac.uk, helgehaf@aitel.hist.no, fluido@fluido.as, gbruchhaeuser@gmx.de, Nicolas.Mailhot@LaPoste.net, perex@suse.cz, tiwai@suse.de, patrizio.bassi@gmail.com, bni.swe@gmail.com, arvidjaar@mail.ru, p_christ@hol.gr, ghrt@dial.kappa.ro, jinhong.hu@gmail.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, bcrl@kvack.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Feb 17, 2006 at 04:42:43PM -0800, James Bottomley wrote:
-> +static void execute_in_process_context_work(void *data)
-> +{
-> +	void (*fn)(void *data);
-> +	struct execute_work *ew = data;
-> +
-> +	fn = ew->fn;
-> +	data = ew->data;
-> +
-> +	fn(data);
-> +}
+Hi!
 
-After removing kfree(), which was here in the initial implementation,
-this function became a thunk which does nothing useful - we can just
-stick fn and data directly into work_struct.
+> That's suspend-to-disk, yes?
+> 
+> Dave, would you have the 2.6.15-1.1830_FC4 -> 2.6.15-1.1831_FC4 details
+> handy?  There surely can't be much difference?
+> 
+> There seem to be several ACPI problems there.  Do we have a reliable means
+> of feeding such reports up into the (for example) acpi developers?
+> 
+> <I have this vaguely unsettled feeling that distros must get more bug
+> reports than the usptream developers, yet we hear so little about it>
 
-> +
-> +/**
-> + * execute_in_process_context - reliably execute the routine with user context
-> + * @fn:		the function to execute
-> + * @data:	data to pass to the function
-> + *
-> + * Executes the function immediately if process context is available,
-> + * otherwise schedules the function for delayed execution.
-> + *
-> + * Returns:	0 - function was executed
-> + *		1 - function was scheduled for execution
-> + */
-> +int execute_in_process_context(void (*fn)(void *data), void *data,
-> +			       struct execute_work *ew)
-> +{
-> +	if (!in_interrupt()) {
-> +		fn(data);
-> +		return 0;
-> +	}
-> +
-> +	INIT_WORK(&ew->work, execute_in_process_context_work, ew);
-> +	ew->fn = fn;
-> +	ew->data = data;
-> +	schedule_work(&ew->work);
-> +
-> +	return 1;
-> +}
-
-Then this becomes:
-
-int execute_in_process_context(void (*fn)(void *data), void *data,
-			       struct work_struct *work)
-{
-	if (!in_interrupt()) {
-		fn(data);
-		return 0;
-	}
-
-	INIT_WORK(work, fn, data);
-	schedule_work(work);
-	return 1;
-}
-
-(and struct execute_work is no longer needed).
-
---opJtzjQTFsWo+cga
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.2 (GNU/Linux)
-
-iD8DBQFD9vEAW82GfkQfsqIRAhsQAKCLA744b1fcsveBRiqrCGBfZz5e5ACgglBh
-aztogAZPXOqeAynnILwmbZU=
-=eoPh
------END PGP SIGNATURE-----
-
---opJtzjQTFsWo+cga--
+Its about 1:1 upstream:suse bugs for me... Unfortunately
+suse bugs are often for old kernel...
+-- 
+64 bytes from 195.113.31.123: icmp_seq=28 ttl=51 time=448769.1 ms         
