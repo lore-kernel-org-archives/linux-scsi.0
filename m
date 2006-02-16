@@ -1,43 +1,39 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 3/6] scsi tgt: add partial mappings support to bio_map_user
-Date: Thu, 16 Feb 2006 14:00:34 -0600
-Message-ID: <43F4D9E2.5030703@cs.wisc.edu>
-References: <1140119620.20193.51.camel@max> <20060216195917.GY4203@suse.de>
+From: Jens Axboe <axboe@suse.de>
+Subject: Re: Linux 2.6.16-rc3
+Date: Thu, 16 Feb 2006 21:01:39 +0100
+Message-ID: <20060216200138.GA4203@suse.de>
+References: <20060212190520.244fcaec.akpm@osdl.org> <20060213203800.GC22441@kroah.com> <1139934883.14115.4.camel@mulgrave.il.steeleye.com> <1140054960.3037.5.camel@mulgrave.il.steeleye.com> <20060216171200.GD29443@flint.arm.linux.org.uk> <1140112653.3178.9.camel@mulgrave.il.steeleye.com> <20060216180939.GF29443@flint.arm.linux.org.uk> <1140113671.3178.16.camel@mulgrave.il.steeleye.com> <20060216181803.GG29443@flint.arm.linux.org.uk> <1140116969.3178.24.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:54688 "EHLO sabe.cs.wisc.edu")
-	by vger.kernel.org with ESMTP id S964889AbWBPUAl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Feb 2006 15:00:41 -0500
-In-Reply-To: <20060216195917.GY4203@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1140116969.3178.24.camel@mulgrave.il.steeleye.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Russell King <rmk+lkml@arm.linux.org.uk>, Greg KH <greg@kroah.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, Gerrit Bruchh?user <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@LaPoste.net, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>, Patrizio Bassi <patrizio.bassi@gmail.com>, Bj?rn Nilsson <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>linux
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>
-Cc: linux-scsi@vger.kernel.org
 
-Jens Axboe wrote:
-> On Thu, Feb 16 2006, Mike Christie wrote:
+On Thu, Feb 16 2006, James Bottomley wrote:
+> On Thu, 2006-02-16 at 18:18 +0000, Russell King wrote:
+> > Maybe implementing it as a helper function would be the best and
+> > simplest solution?
+> > 
+> > static void scsi_release(struct device *dev)
+> > {
+> > 	schedule_release_process(dev, scsi_release_process);
+> > }
+> > 
+> > where schedule_release_process() contains more or less what I posted
+> > in the previous mailing.
 > 
->>Subject: [PATCH] block layer: add partial mappings support to bio_map_user
->>
->>For target mode we could end up with the case where we get very large
->>request from the initiator. The request could be so large that we
->>cannot transfer all the data in one operation. For example the
->>HBA's segment or max_sector limits might limit us to a 1 MB transfer.
->>To send a 5 MB command then we need to transfer the command chunk by chunk.
->>
->>To do this, tgt core will map in as much data as possible into a bio,
->>send this off, then when that transfer is completed we send off another
->>request/bio. To be able to pack as much data into a bio as possible
->>we need bio_map_user to support partially mapped bios. The attached patch
->>just adds a new argument to the those functions and if set will not
->>return a failure if the bio is partially mapped.
-> 
-> 
-> Drop the partial flag and just always allow it, fixing up the few
-> in-kernel users we have.
-> 
+> That's almost exactly the execute_in_process_context() API that began
+> this discussion (and which Andi NAK'd).  However, it could possibly be
+> resurrected with the proviso that the caller has to feed in the
+> workqueue memory.  How would people feel about that?
 
-ok will do.
+That's what I suggested in the first place as well. I still think it's a
+good idea, fwiw :)
+
+-- 
+Jens Axboe
+
