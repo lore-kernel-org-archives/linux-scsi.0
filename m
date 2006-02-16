@@ -1,80 +1,299 @@
-From: Fredrik Roubert <roubert@df.lth.se>
-Subject: Re: Error using DC315U to drive ScanJet 4c
-Date: Thu, 16 Feb 2006 12:30:27 +0100
-Message-ID: <20060216113027.GA3412@igloo.df.lth.se>
-References: <Pine.LNX.4.60.0602130043540.19775@poirot.grange> <20060211011457.GA1839@igloo.df.lth.se> <Pine.LNX.4.60.0602112153320.3570@poirot.grange> <20060213171052.GI18853@igloo.df.lth.se> <Pine.LNX.4.60.0602140000160.18538@poirot.grange> <20060214010138.GJ18853@igloo.df.lth.se> <Pine.LNX.4.60.0602140656430.30136@poirot.grange> <Pine.LNX.4.60.0602152056530.5682@poirot.grange> <20060215214349.GA7947@igloo.df.lth.se> <Pine.LNX.4.60.0602152322190.5682@poirot.grange>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] mptsas: add support for enclosure and bay identifier attributes
+Date: Thu, 16 Feb 2006 13:25:36 +0100
+Message-ID: <20060216122536.GA1484@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from igloo.df.lth.se ([194.47.250.47]:46250 "EHLO df.lth.se")
-	by vger.kernel.org with ESMTP id S1751356AbWBPLaf (ORCPT
+Received: from verein.lst.de ([213.95.11.210]:63114 "EHLO mail.lst.de")
+	by vger.kernel.org with ESMTP id S1030580AbWBPMZ4 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Feb 2006 06:30:35 -0500
+	Thu, 16 Feb 2006 07:25:56 -0500
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.60.0602152322190.5682@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+To: jejb@steeleye.com, Eric.Moore@lsil.com
 Cc: linux-scsi@vger.kernel.org
 
-On Wed 15 Feb 23:33 CET 2006, Guennadi Liakhovetski wrote:
+Adds support to retrieve the enclosure and bay identifiers.  This patch
+is from Eric with minor modifications from me, rewritten from a buggy
+patch of mine, based on the earlier CSMI implementation from Eric..
 
-> Ok, I will assume that this dump includes the KERN_DEBUG messages too=
- now.
 
-So would I, or else the "reselect: w/o disconnected cmds" wouldn't be
-there.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-> Still, could you, please, just verify that you don't have anything el=
-se
-> from dc395x in your /var/log/kern.log (if you have one)?
-
-There is nothing else there, or in /var/log/debug.
-
-> Could you, please, remove / comment out these 2 lines and try again?
-
-OK, this is the log from loading the new module until the second failed
-scan:
-
-[49712.862170] dc395x: Tekram DC395(U/UW/F), DC315(U) - ASIC TRM-S1040 =
-v2.05, 2004/03/08
-[49712.862190] ACPI: PCI Interrupt 0000:04:05.0[A] -> GSI 20 (level, lo=
-w) -> IRQ 19
-[49713.104766] dc395x: Used settings: AdapterID=3D07, Speed=3D0(20.0MHz=
-), dev_mode=3D0x57
-[49713.104772] dc395x:                AdaptMode=3D0x0f, Tags=3D4(16), D=
-elayReset=3D1s
-[49713.104778] dc395x: Connectors:  Termination: Auto Low High
-[49713.080481] dc395x: Performing initial SCSI bus reset
-[49713.081006] scsi3 : Tekram DC395(U/UW/F), DC315(U) - ASIC TRM-S1040 =
-v2.05, 2004/03/08
-[49714.608526]   Vendor: HP        Model: C2520A            Rev: 3503
-[49714.608566]   Type:   Processor                          ANSI SCSI r=
-evision: 02
-[49714.608654]  3:0:2:0: Attached scsi generic sg2 type 3
-[49787.196864] dc395x: reselect: w/o disconnected cmds <02-0>
-[49787.196886] dc395x: disconnect: Unexpected reselection <02-0>
-[49906.975135] dc395x: eh_abort: (pid#899) target=3D<02-0> cmd=3Dffff81=
-006cbd6d40
-[49906.975148] dc395x: eh_abort: Command in progress<6>dc395x: eh_bus_r=
-eset: (pid#899) target=3D<02-0> cmd=3Dffff81006cbd6d40
-[49906.975675] dc395x: doing_srb_done: pids G:899(02-0)
-[50083.137467] dc395x: reselect: w/o disconnected cmds <02-0>
-[50083.137487] dc395x: disconnect: Unexpected reselection <02-0>
-[50202.914281] dc395x: eh_abort: (pid#3210) target=3D<02-0> cmd=3Dffff8=
-1006cbd6640
-[50202.914288] dc395x: eh_abort: Command in progress<6>dc395x: eh_bus_r=
-eset: (pid#3210) target=3D<02-0> cmd=3Dffff81006cbd6640
-[50202.914816] dc395x: doing_srb_done: pids G:3210(02-0)
-
-Cheers // Fredrik Roubert
-
---=20
-S=F6rbyplan 5       |  +46 8 7609169 / +46 708 776974
-SE-163 71 Sp=E5nga  |  http://www.df.lth.se/~roubert/
+Index: linux-2.6/drivers/message/fusion/mptsas.c
+===================================================================
+--- linux-2.6.orig/drivers/message/fusion/mptsas.c	2006-02-16 12:56:55.000000000 +0100
++++ linux-2.6/drivers/message/fusion/mptsas.c	2006-02-16 13:01:38.000000000 +0100
+@@ -117,6 +117,8 @@
+ struct mptsas_devinfo {
+ 	u16	handle;		/* unique id to address this device */
+ 	u16	handle_parent;	/* unique id to address parent device */
++	u16	handle_enclosure; /* enclosure identifier of the enclosure */
++	u16	slot;		/* physical slot in enclosure */
+ 	u8	phy_id;		/* phy number of parent device */
+ 	u8	port_id;	/* sas physical port this device
+ 				   is assoc'd with */
+@@ -146,6 +148,18 @@
+ 	struct mptsas_phyinfo *phy_info;
+ };
+ 
++struct mptsas_enclosure {
++	u64	enclosure_logical_id;	/* The WWN for the enclosure */
++	u16	enclosure_handle;	/* unique id to address this */
++	u16	flags;			/* details enclosure management */
++	u16	num_slot;		/* num slots */
++	u16	start_slot;		/* first slot */
++	u8	start_id;		/* starting logical target id */
++	u8	start_channel;		/* starting logical channel id */
++	u8	sep_id;			/* SEP device logical target id */
++	u8	sep_channel;		/* SEP channel logical channel id */
++};
++
+ 
+ #ifdef SASDEBUG
+ static void mptsas_print_phy_data(MPI_SAS_IO_UNIT0_PHY_DATA *phy_data)
+@@ -205,6 +219,7 @@
+ 
+ 	printk("---- SAS DEVICE PAGE 0 ---------\n");
+ 	printk("Handle=0x%X\n" ,le16_to_cpu(pg0->DevHandle));
++	printk("Parent Handle=0x%X\n" ,le16_to_cpu(pg0->ParentDevHandle));
+ 	printk("Enclosure Handle=0x%X\n", le16_to_cpu(pg0->EnclosureHandle));
+ 	printk("Slot=0x%X\n", le16_to_cpu(pg0->Slot));
+ 	printk("SAS Address=0x%llX\n", le64_to_cpu(sas_address));
+@@ -243,6 +258,82 @@
+ #define mptsas_print_expander_pg1(pg1)		do { } while (0)
+ #endif
+ 
++static inline MPT_ADAPTER *phy_to_ioc(struct sas_phy *phy)
++{
++	struct Scsi_Host *shost = dev_to_shost(phy->dev.parent);
++	return ((MPT_SCSI_HOST *)shost->hostdata)->ioc;
++}
++
++static inline MPT_ADAPTER *rphy_to_ioc(struct sas_rphy *rphy)
++{
++	struct Scsi_Host *shost = dev_to_shost(rphy->dev.parent->parent);
++	return ((MPT_SCSI_HOST *)shost->hostdata)->ioc;
++}
++
++static int
++mptsas_sas_exclosure_pg0(MPT_ADAPTER *ioc, struct mptsas_enclosure *enclosure,
++		u32 form, u32 form_specific)
++{
++	ConfigExtendedPageHeader_t hdr;
++	CONFIGPARMS cfg;
++	SasEnclosurePage0_t *buffer;
++	dma_addr_t dma_handle;
++	int error;
++	__le64 le_identifier;
++
++	memset(&hdr, 0, sizeof(hdr));
++	hdr.PageVersion = MPI_SASENCLOSURE0_PAGEVERSION;
++	hdr.PageNumber = 0;
++	hdr.PageType = MPI_CONFIG_PAGETYPE_EXTENDED;
++	hdr.ExtPageType = MPI_CONFIG_EXTPAGETYPE_ENCLOSURE;
++
++	cfg.cfghdr.ehdr = &hdr;
++	cfg.physAddr = -1;
++	cfg.pageAddr = form + form_specific;
++	cfg.action = MPI_CONFIG_ACTION_PAGE_HEADER;
++	cfg.dir = 0;	/* read */
++	cfg.timeout = 10;
++
++	error = mpt_config(ioc, &cfg);
++	if (error)
++		goto out;
++	if (!hdr.ExtPageLength) {
++		error = -ENXIO;
++		goto out;
++	}
++
++	buffer = pci_alloc_consistent(ioc->pcidev, hdr.ExtPageLength * 4,
++			&dma_handle);
++	if (!buffer) {
++		error = -ENOMEM;
++		goto out;
++	}
++
++	cfg.physAddr = dma_handle;
++	cfg.action = MPI_CONFIG_ACTION_PAGE_READ_CURRENT;
++
++	error = mpt_config(ioc, &cfg);
++	if (error)
++		goto out_free_consistent;
++
++	/* save config data */
++	memcpy(&le_identifier, &buffer->EnclosureLogicalID, sizeof(__le64));
++	enclosure->enclosure_logical_id = le64_to_cpu(le_identifier);
++	enclosure->enclosure_handle = le16_to_cpu(buffer->EnclosureHandle);
++	enclosure->flags = le16_to_cpu(buffer->Flags);
++	enclosure->num_slot = le16_to_cpu(buffer->NumSlots);
++	enclosure->start_slot = le16_to_cpu(buffer->StartSlot);
++	enclosure->start_id = buffer->StartTargetID;
++	enclosure->start_channel = buffer->StartBus;
++	enclosure->sep_id = buffer->SEPTargetID;
++	enclosure->sep_channel = buffer->SEPBus;
++
++ out_free_consistent:
++	pci_free_consistent(ioc->pcidev, hdr.ExtPageLength * 4,
++			    buffer, dma_handle);
++ out:
++	return error;
++}
+ 
+ /*
+  * This is pretty ugly.  We will be able to seriously clean it up
+@@ -399,12 +490,6 @@
+ 	.use_clustering			= ENABLE_CLUSTERING,
+ };
+ 
+-static inline MPT_ADAPTER *phy_to_ioc(struct sas_phy *phy)
+-{
+-	struct Scsi_Host *shost = dev_to_shost(phy->dev.parent);
+-	return ((MPT_SCSI_HOST *)shost->hostdata)->ioc;
+-}
 -
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ static int mptsas_get_linkerrors(struct sas_phy *phy)
+ {
+ 	MPT_ADAPTER *ioc = phy_to_ioc(phy);
+@@ -546,8 +631,67 @@
+ 	return error;
+ }
+ 
++static int
++mptsas_get_enclosure_identifier(struct sas_rphy *rphy, u64 *identifier)
++{
++	MPT_ADAPTER *ioc = rphy_to_ioc(rphy);
++	int i, error;
++	struct mptsas_portinfo *p;
++	struct mptsas_enclosure enclosure_info;
++	u64 enclosure_handle;
++
++	mutex_lock(&ioc->sas_topology_mutex);
++	list_for_each_entry(p, &ioc->sas_topology, list) {
++		for (i = 0; i < p->num_phys; i++) {
++			if (p->phy_info[i].attached.sas_address ==
++			    rphy->identify.sas_address) {
++				enclosure_handle = p->phy_info[i].
++					attached.handle_enclosure;
++				goto found_info;
++			}
++		}
++	}
++	mutex_unlock(&ioc->sas_topology_mutex);
++	return -ENXIO;
++
++ found_info:
++	mutex_unlock(&ioc->sas_topology_mutex);
++	memset(&enclosure_info, 0, sizeof(struct mptsas_enclosure));
++	error = mptsas_sas_exclosure_pg0(ioc, &enclosure_info,
++			(MPI_SAS_ENCLOS_PGAD_FORM_HANDLE <<
++			 MPI_SAS_ENCLOS_PGAD_FORM_SHIFT), enclosure_handle);
++	if (!error)
++		*identifier = enclosure_info.enclosure_logical_id;
++	return error;
++}
++
++static int
++mptsas_get_bay_identifier(struct sas_rphy *rphy)
++{
++	MPT_ADAPTER *ioc = rphy_to_ioc(rphy);
++	struct mptsas_portinfo *p;
++	int i, rc;
++
++	mutex_lock(&ioc->sas_topology_mutex);
++	list_for_each_entry(p, &ioc->sas_topology, list) {
++		for (i = 0; i < p->num_phys; i++) {
++			if (p->phy_info[i].attached.sas_address ==
++			    rphy->identify.sas_address) {
++				rc = p->phy_info[i].attached.slot;
++				goto out;
++			}
++		}
++	}
++	rc = -ENXIO;
++ out:
++	mutex_unlock(&ioc->sas_topology_mutex);
++	return rc;
++}
++
+ static struct sas_function_template mptsas_transport_functions = {
+ 	.get_linkerrors		= mptsas_get_linkerrors,
++	.get_enclosure_identifier = mptsas_get_enclosure_identifier,
++	.get_bay_identifier	= mptsas_get_bay_identifier,
+ 	.phy_reset		= mptsas_phy_reset,
+ };
+ 
+@@ -739,6 +883,9 @@
+ 
+ 	device_info->handle = le16_to_cpu(buffer->DevHandle);
+ 	device_info->handle_parent = le16_to_cpu(buffer->ParentDevHandle);
++	device_info->handle_enclosure =
++	    le16_to_cpu(buffer->EnclosureHandle);
++	device_info->slot = le16_to_cpu(buffer->Slot);
+ 	device_info->phy_id = buffer->PhyNum;
+ 	device_info->port_id = buffer->PhysicalPort;
+ 	device_info->id = buffer->TargetID;
+@@ -1335,29 +1482,15 @@
+ 	case MPTSAS_ADD_DEVICE:
+ 
+ 		/*
+-		 * When there is no sas address,
+-		 * RAID volumes are being deleted,
+-		 * and hidden phy disk are being added.
+-		 * We don't know the SAS data yet,
+-		 * so lookup sas device page to get
+-		 * pertaining info
++		 * Refresh sas device pg0 data
+ 		 */
+-		if (!ev->sas_address) {
+-			if (mptsas_sas_device_pg0(ioc,
+-			    &sas_device, ev->id,
+-			    (MPI_SAS_DEVICE_PGAD_FORM_BUS_TARGET_ID <<
+-			     MPI_SAS_DEVICE_PGAD_FORM_SHIFT)))
+-				break;
+-			ev->handle = sas_device.handle;
+-			ev->parent_handle = sas_device.handle_parent;
+-			ev->channel = sas_device.channel;
+-			ev->phy_id = sas_device.phy_id;
+-			ev->sas_address = sas_device.sas_address;
+-			ev->device_info = sas_device.device_info;
+-		}
++		if (mptsas_sas_device_pg0(ioc, &sas_device,
++		    (MPI_SAS_DEVICE_PGAD_FORM_BUS_TARGET_ID <<
++		     MPI_SAS_DEVICE_PGAD_FORM_SHIFT), ev->id))
++			break;
+ 
+ 		phy_info = mptsas_find_phyinfo_by_parent(ioc,
+-				ev->parent_handle, ev->phy_id);
++				sas_device.handle_parent, sas_device.phy_id);
+ 		if (!phy_info) {
+ 			printk("mptsas: add event for non-existant PHY.\n");
+ 			break;
+@@ -1368,14 +1501,8 @@
+ 			break;
+ 		}
+ 
+-		/* fill attached info */
+-		phy_info->attached.handle = ev->handle;
+-		phy_info->attached.phy_id = ev->phy_id;
+-		phy_info->attached.port_id = phy_info->identify.port_id;
+-		phy_info->attached.id = ev->id;
+-		phy_info->attached.channel = ev->channel;
+-		phy_info->attached.sas_address = ev->sas_address;
+-		phy_info->attached.device_info = ev->device_info;
++		memcpy(&phy_info->attached, &sas_device,
++		    sizeof(struct mptsas_devinfo));
+ 
+ 		if (phy_info->attached.device_info & MPI_SAS_DEVICE_INFO_SSP_TARGET)
+ 			ds = "ssp";
+@@ -1393,7 +1520,6 @@
+ 		if (!rphy)
+ 			break; /* non-fatal: an rphy can be added later */
+ 
+-		rphy->scsi_target_id = phy_info->attached.id;
+ 		mptsas_parse_device_info(&rphy->identify, &phy_info->attached);
+ 		if (sas_rphy_add(rphy)) {
+ 			sas_rphy_free(rphy);
