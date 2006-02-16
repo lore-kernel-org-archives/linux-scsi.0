@@ -1,39 +1,117 @@
-From: Jens Axboe <axboe@suse.de>
-Subject: Re: Linux 2.6.16-rc3
-Date: Thu, 16 Feb 2006 21:01:39 +0100
-Message-ID: <20060216200138.GA4203@suse.de>
-References: <20060212190520.244fcaec.akpm@osdl.org> <20060213203800.GC22441@kroah.com> <1139934883.14115.4.camel@mulgrave.il.steeleye.com> <1140054960.3037.5.camel@mulgrave.il.steeleye.com> <20060216171200.GD29443@flint.arm.linux.org.uk> <1140112653.3178.9.camel@mulgrave.il.steeleye.com> <20060216180939.GF29443@flint.arm.linux.org.uk> <1140113671.3178.16.camel@mulgrave.il.steeleye.com> <20060216181803.GG29443@flint.arm.linux.org.uk> <1140116969.3178.24.camel@mulgrave.il.steeleye.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: Error using DC315U to drive ScanJet 4c
+Date: Thu, 16 Feb 2006 21:33:33 +0100 (CET)
+Message-ID: <Pine.LNX.4.60.0602162121020.4944@poirot.grange>
+References: <Pine.LNX.4.60.0602130043540.19775@poirot.grange>
+ <20060211011457.GA1839@igloo.df.lth.se> <Pine.LNX.4.60.0602112153320.3570@poirot.grange>
+ <20060213171052.GI18853@igloo.df.lth.se> <Pine.LNX.4.60.0602140000160.18538@poirot.grange>
+ <20060214010138.GJ18853@igloo.df.lth.se> <Pine.LNX.4.60.0602140656430.30136@poirot.grange>
+ <Pine.LNX.4.60.0602152056530.5682@poirot.grange> <20060215214349.GA7947@igloo.df.lth.se>
+ <Pine.LNX.4.60.0602152322190.5682@poirot.grange> <20060216113027.GA3412@igloo.df.lth.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1140116969.3178.24.camel@mulgrave.il.steeleye.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Russell King <rmk+lkml@arm.linux.org.uk>, Greg KH <greg@kroah.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, Gerrit Bruchh?user <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@LaPoste.net, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>, Patrizio Bassi <patrizio.bassi@gmail.com>, Bj?rn Nilsson <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>linux
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.gmx.de ([213.165.64.20]:48562 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S932353AbWBPUdQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Feb 2006 15:33:16 -0500
+In-Reply-To: <20060216113027.GA3412@igloo.df.lth.se>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Fredrik Roubert <roubert@df.lth.se>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Feb 16 2006, James Bottomley wrote:
-> On Thu, 2006-02-16 at 18:18 +0000, Russell King wrote:
-> > Maybe implementing it as a helper function would be the best and
-> > simplest solution?
-> > 
-> > static void scsi_release(struct device *dev)
-> > {
-> > 	schedule_release_process(dev, scsi_release_process);
-> > }
-> > 
-> > where schedule_release_process() contains more or less what I posted
-> > in the previous mailing.
+Hi Fredrik
+
+Thanks for your help so far, and, please, don't give up - I know it's, 
+probably, much easier for you to just through away the damn thing (dc315) 
+and get something modern, but - what about the fun?:-)
+
+On Thu, 16 Feb 2006, Fredrik Roubert wrote:
+
+> On Wed 15 Feb 23:33 CET 2006, Guennadi Liakhovetski wrote:
+
+...
+
+> > Could you, please, remove / comment out these 2 lines and try again?
 > 
-> That's almost exactly the execute_in_process_context() API that began
-> this discussion (and which Andi NAK'd).  However, it could possibly be
-> resurrected with the proviso that the caller has to feed in the
-> workqueue memory.  How would people feel about that?
+> OK, this is the log from loading the new module until the second failed
+> scan:
 
-That's what I suggested in the first place as well. I still think it's a
-good idea, fwiw :)
+Looks like all those lengths / counters are somewhat less consistent than 
+what I'd hoped for. Please, try the patch below on the top of your 
+current version - it MUST trigger. With the vanilla 2.6.15 the first 
+"reselect w/o disconnect" message, after each boot / insmod dc395x, was 
+_always_ accompanied by requests to contact linux-scsi, right?
 
--- 
-Jens Axboe
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
 
+diff -u a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+--- a/drivers/scsi/dc395x.c	14 Feb 2006 06:25:54 -0000	1.1.1.9.4.2
++++ b/drivers/scsi/dc395x.c	16 Feb 2006 20:18:05 -0000
+@@ -2269,7 +2269,7 @@
+ 	 * seem to be a bad idea, actually.
+ 	 */
+ 	if (!(srb->state & SRB_XFERPAD)) {
+-		unsigned int d_left_counter;
++		unsigned int d_left_counter, sc, fc;
+ 		if (scsi_status & PARITYERROR) {
+ 			dprintkl(KERN_INFO, "data_in_phase0: (pid#%li) "
+ 				"Parity Error\n", srb->cmd->pid);
+@@ -2306,18 +2306,18 @@
+ 				DC395x_read8(acb, TRM_S1040_DMA_FIFOSTAT));
+ 		}
+ 		/* Now: Check remainig data: The SCSI counters should tell us ... */
+-		d_left_counter = DC395x_read32(acb, TRM_S1040_SCSI_COUNTER)
+-		    + ((DC395x_read8(acb, TRM_S1040_SCSI_FIFOCNT) & 0x1f)
+-		       << ((srb->dcb->sync_period & WIDE_SYNC) ? 1 :
+-			   0));
++		sc = DC395x_read32(acb, TRM_S1040_SCSI_COUNTER);
++		fc = DC395x_read8(acb, TRM_S1040_SCSI_FIFOCNT);
++		d_left_counter = sc + ((fc & 0x1f) <<
++				       ((srb->dcb->sync_period & WIDE_SYNC) ? 1 : 0));
+ 		dprintkdbg(DBG_KG, "data_in_phase0: "
+ 			"SCSI{fifocnt=0x%02x%s ctr=0x%08x} "
+ 			"DMA{fifocnt=0x%02x fifostat=0x%02x ctr=0x%08x} "
+ 			"Remain{totxfer=%i scsi_fifo+ctr=%i}\n",
+-			DC395x_read8(acb, TRM_S1040_SCSI_FIFOCNT),
++			fc,
+ 			(srb->dcb->sync_period & WIDE_SYNC) ? "words" : "bytes",
+ 			DC395x_read32(acb, TRM_S1040_SCSI_COUNTER),
+-			DC395x_read8(acb, TRM_S1040_DMA_FIFOCNT),
++			fc,
+ 			DC395x_read8(acb, TRM_S1040_DMA_FIFOSTAT),
+ 			DC395x_read32(acb, TRM_S1040_DMA_CXCNT),
+ 			srb->total_xfer_length, d_left_counter);
+@@ -2331,7 +2331,7 @@
+ 			/*sg_update_list (srb, d_left_counter); */
+ 			dprintkdbg(DBG_PIO, "data_in_phase0: PIO (%i %s) "
+ 				"for remaining %i bytes:",
+-				DC395x_read8(acb, TRM_S1040_SCSI_FIFOCNT) & 0x1f,
++				fc & 0x1f,
+ 				(srb->dcb->sync_period & WIDE_SYNC) ?
+ 				    "words" : "bytes",
+ 				srb->total_xfer_length);
+@@ -2339,6 +2339,9 @@
+ 				DC395x_write8(acb, TRM_S1040_SCSI_CONFIG2,
+ 					      CFG2_WIDEFIFO);
+ 
++			printk(KERN_INFO "%s[%d]: %u, %u, %u, %u, %x, %d\n", __FILE__, __LINE__,
++			       left_io, d_left_counter, sc, fc, srb->dcb->sync_period & WIDE_SYNC, srb->cmd->use_sg);
++
+ 			while (left_io) {
+ 				unsigned char *virt, *base = NULL;
+ 				unsigned long flags = 0;
+@@ -2566,6 +2569,9 @@
+ 				DC395x_write8(acb, TRM_S1040_SCSI_CONFIG2,
+ 				     CFG2_WIDEFIFO);
+ 
++			printk(KERN_INFO "%s[%d]: %u, %x, %d\n", __FILE__, __LINE__,
++			       left_io, srb->dcb->sync_period & WIDE_SYNC, srb->cmd->use_sg);
++
+ 			while (left_io) {
+ 				unsigned char *virt, *base = NULL;
+ 				unsigned long flags = 0;
