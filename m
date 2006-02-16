@@ -1,109 +1,36 @@
-From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Subject: RE: [Bugme-new] [Bug 6080] New: New Megaraid Module Problem
-Date: Thu, 16 Feb 2006 12:50:41 -0700
-Message-ID: <9738BCBE884FDB42801FAD8A7769C265142091@NAMAIL1.ad.lsil.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: [PATCH 0/6] scsi tgt
+Date: Thu, 16 Feb 2006 13:53:32 -0600
+Message-ID: <1140119612.20193.46.camel@max>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:29591 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1030462AbWBPTur convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Feb 2006 14:50:47 -0500
-Content-class: urn:content-classes:message
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:45728 "EHLO sabe.cs.wisc.edu")
+	by vger.kernel.org with ESMTP id S964888AbWBPTxk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Feb 2006 14:53:40 -0500
+Received: from [192.168.0.3] (c-69-180-176-191.hsd1.mn.comcast.net [69.180.176.191])
+	(authenticated bits=0)
+	by sabe.cs.wisc.edu (8.13.1/8.13.1) with ESMTP id k1GJrcdF019485
+	(version=TLSv1/SSLv3 cipher=RC4-MD5 bits=128 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2006 13:53:39 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ju, Seokmann" <Seokmann.Ju@engenio.com>, Andrew Morton <akpm@osdl.org>, "Kolli, Neela" <Neela.Kolli@engenio.com>
-Cc: linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Hi,
-On Thursday, February 16, 2006 9:36 AM Seokmann Ju wrote:
-> I've verified the 'megaraid' driver that is available on GIT 
-> kernel (2.6.16-rc2).
-> The driver 'megaraid.ko' is working fine on the kernel.
-> However, I'm working on another issue related to this driver. 
-> On SuSE SLES 10 (kernel 2.6.16-rc1-git3-7), the kernel claims 
-> that the driver has loaded, but it won't detect the 
-> controller nor scan the drives.
-> Both kernel (GIT kernel and SLES10) have same 'megaraid' driver.
-> I'll update here for any progress on it.
-I've also test 'megaraid.ko' driver on latest GIT kernel 2.6.16-rc3.
-The driver works fine as expected. I've ran the basic I/O test after file system created on the device.
+The following patchset adds the basic infrastructure to support target
+mode in userspace. There are sevreral todo's left. They mostly require
+changes around us like to the packet layer, request queue etc. For
+Jeff's suggestion we are working on the packet layer suggestion, but are
+also looking into relayfs as a possibility.
 
-> -----Original Message-----
-> From: Ju, Seokmann 
-> Sent: Thursday, February 16, 2006 9:36 AM
-> To: 'Andrew Morton'; Kolli, Neela
-> Cc: linux-scsi@vger.kernel.org; bugme-daemon@kernel-bugs.osdl.org
-> Subject: RE: [Bugme-new] [Bug 6080] New: New Megaraid Module Problem
-> 
-> Hi,
-> > > But I tried SUSE 10, Mandriva 2006, Fedora 2.0  (kernel 
-> > 2.6.*) and the
-> > > installation hanged on at exactly the same phase.
-> I've verified the 'megaraid' driver that is available on GIT 
-> kernel (2.6.16-rc2).
-> The driver 'megaraid.ko' is working fine on the kernel.
-> However, I'm working on another issue related to this driver. 
-> On SuSE SLES 10 (kernel 2.6.16-rc1-git3-7), the kernel claims 
-> that the driver has loaded, but it won't detect the 
-> controller nor scan the drives.
-> Both kernel (GIT kernel and SLES10) have same 'megaraid' driver.
-> I'll update here for any progress on it. 
-> 
-> 
-> > -----Original Message-----
-> > From: Andrew Morton [mailto:akpm@osdl.org] 
-> > Sent: Wednesday, February 15, 2006 5:33 PM
-> > To: Kolli, Neela
-> > Cc: linux-scsi@vger.kernel.org; 
-> > bugme-daemon@kernel-bugs.osdl.org; Ju, Seokmann
-> > Subject: Re: [Bugme-new] [Bug 6080] New: New Megaraid Module Problem
-> > 
-> > bugme-daemon@bugzilla.kernel.org wrote:
-> > >
-> > > http://bugzilla.kernel.org/show_bug.cgi?id=6080
-> > > 
-> > >            Summary: New Megaraid Module Problem
-> > >     Kernel Version: 2.6.*
-> > >             Status: NEW
-> > >           Severity: blocking
-> > >              Owner: andmike@us.ibm.com
-> > >          Submitter: fturkmen@gmail.com
-> > > 
-> > > 
-> > > Most recent kernel where this bug did not occur: 2.4.18
-> > > Distribution: SUSE 9.2, 10, Mandriva 2006, Fedora 2.0
-> > > 
-> > > Hardware Environment: HP LH 6000, LSILogic controllers 
-> > > 
-> > > Software Environment: Megaraid modules
-> > > 
-> > > Problem Description:
-> > > I have 3 HP LH 6000 machines and wanted to install Linux on them.
-> > > Everytime the install
-> > > hangs on "searching for info file" phase.
-> > > 
-> > > The following messages are given:
-> > >  megaraid: ABORTING-1 cmd=12 <c=0 t=0 l=0>
-> > >  megaraid: ABORTING-1[7d], fw owner.
-> > > 
-> > > when installing megaraid modules ("insmod /modules/megaraid.ko").
-> > > 
-> > > 
-> > > As I searched through the Internet, the old megaraid 
-> > modules (in kernel
-> > > 2.4) work fine with these devices. I could successfully 
-> > install SUSE 8.0.
-> > > But I tried SUSE 10, Mandriva 2006, Fedora 2.0  (kernel 
-> > 2.6.*) and the
-> > > installation hanged on at exactly the same phase.
-> > > 
-> > > 
-> > > 
-> > > Ps: Reported to the maintainer (Ju, Seokmann)
-> > > 
-> > > ------- You are receiving this mail because: -------
-> > > You are on the CC list for the bug, or are watching 
-> someone who is.
-> > 
+This is not ready for mainline. Maybe ready for James to manage it in a
+tree, but not ready for heavy use. With some outstanding patches Tomo
+can install SLES to a scsi tgt LU. But we still need to add a lot of
+functionality to userspace. We basically need to add the state model
+code we just ripped out of the kernel to userspace becuase the current
+code is geared tword working on trying to maintain performance with a
+kernel implementation not add features/requirements like task management
+functions, support for tape and cd, etc.
+
