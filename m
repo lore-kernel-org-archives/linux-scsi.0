@@ -1,246 +1,238 @@
-From: Martin Devera <devik@cdi.cz>
-Subject: [PATCH 2.6.15.4 rel.2 1/1] libata: add hotswap to sata_svw
-Date: Thu, 16 Feb 2006 16:09:39 +0100
-Message-ID: <E1F9klH-0004Fg-00@devix>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Linux 2.6.16-rc3
+Date: Wed, 15 Feb 2006 20:56:00 -0500
+Message-ID: <1140054960.3037.5.camel@mulgrave.il.steeleye.com>
+References: <Pine.LNX.4.64.0602121709240.3691@g5.osdl.org>
+	 <20060212190520.244fcaec.akpm@osdl.org>  <20060213203800.GC22441@kroah.com>
+	 <1139934883.14115.4.camel@mulgrave.il.steeleye.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www1.cdi.cz ([194.213.194.49]:61124 "EHLO www1.cdi.cz")
-	by vger.kernel.org with ESMTP id S932540AbWBPPKY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Feb 2006 10:10:24 -0500
+Received: from stat9.steeleye.com ([209.192.50.41]:19653 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932310AbWBPQPf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Feb 2006 11:15:35 -0500
+In-Reply-To: <1139934883.14115.4.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, lkosewsk@gmail.com
+To: Greg KH <greg@kroah.com>
+Cc: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, Jens Axboe <axboe@suse.de>, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, Gerrit Bruchh?user <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@LaPoste.net, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>, Patrizio Bassi <patrizio.bassi@gmail.com>, Bj?rn Nilsson <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi@vger.kernel.org
 
-From: Martin Devera <devik@cdi.cz>
+On Tue, 2006-02-14 at 10:34 -0600, James Bottomley wrote:
+> Well, I can't solve the problem that it requires memory allocation from
+> IRQ context to operate.  Based on that, it's an unsafe interface.  I'm
+> going to put it inside SCSI for 2.6.16, since it's better than what we
+> have now, but I don't think we can export it globally.
 
-Add hotswap capability to Serverworks/BroadCom SATA controlers. The
-controler has SIM register and it selects which bits in SATA_ERROR
-register fires interrupt.
-The solution hooks on COMWAKE (plug), PHYRDY change and 10B8B decode 
-error (unplug) and calls into Lukasz's hotswap framework.
-The code got one day testing on dual core Athlon64 H8SSL Supermicro 
-MoBo with HT-1000 SATA, SMP kernel and two CaviarRE SATA HDDs in
-hotswap bays.
+OK, this is what I'm proposing as the device model fix.  What it does is
+thread context checking APIs throughout the device subsystem.  SCSI can
+then use it simply via device_put_process_context().  Since we have to
+supply the kref_work; I'd plan to do that as an additional element in
+struct scsi_device.
 
-Signed-off-by: Martin Devera <devik@cdi.cz>
----
-This patch depends on Lukasz Kosewski's:
-[PATCH 2.6.15-rc7-git3 2/3] libata: framework API for hotswapping drives on libata
-and its intent is mainly wider testing and review
+This, by itself, won't solve the SCSI target problem, but I plan to fix
+that via a device model addition which would have target alloc waiting
+around for any deleted targets to disappear.
 
---- a/drivers/scsi/sata_svw.c	Wed Feb 15 11:20:22 2006
-+++ b/drivers/scsi/sata_svw.c	Thu Feb 16 15:49:31 2006
-@@ -9,6 +9,7 @@
-  *  Copyright 2003 Benjamin Herrenschmidt <benh@kernel.crashing.org>
-  *
-  *  Bits from Jeff Garzik, Copyright RedHat, Inc.
-+ *  Hotplug code by Martin Devera <devik@cdi.cz>
-  *
-  *  This driver probably works with non-Apple versions of the
-  *  Broadcom chipset...
-@@ -54,7 +55,7 @@
- #endif /* CONFIG_PPC_OF */
- 
- #define DRV_NAME	"sata_svw"
--#define DRV_VERSION	"1.07"
-+#define DRV_VERSION	"1.08"
- 
- /* Taskfile registers offsets */
- #define K2_SATA_TF_CMD_OFFSET		0x00
-@@ -81,9 +82,18 @@
- #define K2_SATA_SICR2_OFFSET		0x84
- #define K2_SATA_SIM_OFFSET		0x88
- 
-+/* Hotplug interrupt masks */
-+#define K2_SIM_REMOVE_MASK		0x90000
-+#define K2_SIM_INSERT_MASK		0x40000
-+
- /* Port stride */
- #define K2_SATA_PORT_OFFSET		0x100
- 
-+struct svw_host 
-+{
-+	unsigned long not_in_reset_bitmap; /* see k2_hotplug_irq for explanation */
-+};
-+
- static u8 k2_stat_check_status(struct ata_port *ap);
- 
- 
-@@ -282,6 +292,118 @@ static int k2_sata_proc_info(struct Scsi
+Since this is planned for post 2.6.16, we have plenty of time to argue
+about it.
+
+James
+
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 6b355bd..4ae42de 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -338,10 +338,10 @@ struct device * get_device(struct device
+  *	put_device - decrement reference count.
+  *	@dev:	device in question.
+  */
+-void put_device(struct device * dev)
++void put_device_process_context(struct device * dev, struct kref_work *work)
+ {
+ 	if (dev)
+-		kobject_put(&dev->kobj);
++	  kobject_put_process_context(&dev->kobj, work);
  }
- #endif /* CONFIG_PPC_OF */
  
-+/* This shall run every time for all ports when interrupt fires. It
-+   returns 1 if hotplug related event was handled. */
-+static int k2_hotplug_irq(struct ata_port *ap,struct svw_host *host)
+ 
+@@ -445,7 +445,7 @@ EXPORT_SYMBOL_GPL(device_register);
+ EXPORT_SYMBOL_GPL(device_del);
+ EXPORT_SYMBOL_GPL(device_unregister);
+ EXPORT_SYMBOL_GPL(get_device);
+-EXPORT_SYMBOL_GPL(put_device);
++EXPORT_SYMBOL_GPL(put_device_process_context);
+ 
+ EXPORT_SYMBOL_GPL(device_create_file);
+ EXPORT_SYMBOL_GPL(device_remove_file);
+diff --git a/include/linux/device.h b/include/linux/device.h
+index 58df18d..ac9d457 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -396,7 +396,13 @@ extern int (*platform_notify_remove)(str
+  *
+  */
+ extern struct device * get_device(struct device * dev);
+-extern void put_device(struct device * dev);
++extern void put_device_process_context(struct device * dev,
++				       struct kref_work *work);
++static inline void put_device(struct device *dev)
 +{
-+	u32 error = scr_read(ap, SCR_ERROR);
-+	error &= K2_SIM_REMOVE_MASK | K2_SIM_INSERT_MASK;
-+	if (!error)
-+		return 0;
-+	
-+	/* clear error bits, this must be done in any case or we get
-+	   unhandled IRQ BUG */
-+	scr_write(ap, SCR_ERROR, error);
-+
-+	DPRINTK("K2 Got (un)plug event %X (status %X) on dev %d\n",
-+			error,scr_read(ap, SCR_STATUS),ap->port_no+1);
-+
-+	/* not_in_reset_bitmap has a bit set for each port when the port is
-+	   outside of reset routine. Because reset generates spurious events
-+	   we ignore them here. Because not_in_reset_bitmap is zero at init
-+	   time we also ignore these events until the port is first reset.
-+	   It is not possible simply to set SIM register to zero because
-+	   interrupt comming from other port still causes this routine run
-+	   for all ports and the event will be discovered. */
-+	if (!test_bit(ap->port_no,&host->not_in_reset_bitmap)) {
-+		DPRINTK("K2 ignoring the event\n");
-+		return 1;
-+	}
-+	
-+	if (error & K2_SIM_INSERT_MASK)
-+		sata_hot_plug(ap);
-+	else	/* make sure that the drive is really gone */
-+		if (!sata_dev_present(ap)) 
-+			sata_hot_unplug(ap);
-+	return 1;
++	put_device_process_context(dev, NULL);
 +}
++						  
+ 
+ 
+ /* drivers/base/power.c */
+diff --git a/include/linux/kobject.h b/include/linux/kobject.h
+index 2a8d8da..d079fea 100644
+--- a/include/linux/kobject.h
++++ b/include/linux/kobject.h
+@@ -76,7 +76,12 @@ extern int kobject_register(struct kobje
+ extern void kobject_unregister(struct kobject *);
+ 
+ extern struct kobject * kobject_get(struct kobject *);
+-extern void kobject_put(struct kobject *);
++extern void kobject_put_process_context(struct kobject *, struct kref_work *);
 +
-+/* Essencialy the same as in libata, we only needed to hook hotplug events. */
-+static irqreturn_t k2_interrupt (int irq, void *dev_instance, struct pt_regs *regs)
++static inline void kobject_put(struct kobject *kobj)
 +{
-+	struct ata_host_set *host_set = dev_instance;
-+	struct svw_host *host = (struct svw_host *)host_set->private_data;
-+	unsigned int i;
-+	unsigned int handled = 0;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&host_set->lock, flags);
-+
-+	for (i = 0; i < host_set->n_ports; i++) {
-+		struct ata_port *ap;
-+
-+		ap = host_set->ports[i];
-+		if (!ap) 
-+			continue;
-+		
-+		if (!(ap->flags & (ATA_FLAG_PORT_DISABLED | ATA_FLAG_NOINTR))) {
-+			struct ata_queued_cmd *qc;
-+
-+			qc = ata_qc_from_tag(ap, ap->active_tag);
-+			if (qc && (!(qc->tf.ctl & ATA_NIEN)) &&
-+			    (qc->flags & ATA_QCFLAG_ACTIVE))
-+				handled |= ata_host_intr(ap, qc);
-+		}
-+		handled |= k2_hotplug_irq(ap,host);
-+	}
-+	
-+	spin_unlock_irqrestore(&host_set->lock, flags);
-+
-+	return IRQ_RETVAL(handled);
-+}
-+
-+/* Override phy_reset to setup SIM register. It must be done here because it
-+   can trigger IRQ and we must be sure that a handler is installed. And it is
-+   at the time when reset is called. */
-+static void k2_phy_reset(struct ata_port *ap)
-+{
-+	/* HACK: there is no standard place in port structure to record
-+	   base pointer - incidentaly cmd_addr is at offset zero ... */
-+	void *base = (void*)ap->ioaddr.cmd_addr;
-+	
-+	struct svw_host *host = (struct svw_host *)ap->host_set->private_data;
-+
-+	DPRINTK("K2 reset %d start\n",ap->port_no+1);
-+
-+	clear_bit(ap->port_no,&host->not_in_reset_bitmap);
-+	
-+	/* Not strictly neccessary but why to fire spurious interrupts
-+	   and then ignore them anyway */
-+	writel(0, base + K2_SATA_SIM_OFFSET);
-+	sata_phy_reset(ap);
-+
-+	/* Clear a magic bit in SCR1 according to Darwin, those help
-+	 * some funky seagate drives (though so far, those were already
-+	 * set by the firmware on the machines I had access to)
-+	 */
-+	writel(readl(base + K2_SATA_SICR1_OFFSET) & ~0x00040000,
-+	       base + K2_SATA_SICR1_OFFSET);
-+
-+	/* Make sure that interrupt is triggered when these XXX_MASK bits
-+	   in SCR_ERROR are set */
-+	scr_write(ap, SCR_ERROR, K2_SIM_INSERT_MASK | K2_SIM_REMOVE_MASK);
-+	writel(K2_SIM_INSERT_MASK | K2_SIM_REMOVE_MASK, base + K2_SATA_SIM_OFFSET);
-+
-+	set_bit(ap->port_no,&host->not_in_reset_bitmap);
-+
-+	DPRINTK("K2 reset done\n");
-+}
-+
-+static void k2_host_stop (struct ata_host_set *host_set)
-+{
-+	kfree(host_set->private_data);
-+	ata_pci_host_stop(host_set);
++	kobject_put_process_context(kobj, NULL);
 +}
  
- static struct scsi_host_template k2_sata_sht = {
- 	.module			= THIS_MODULE,
-@@ -314,7 +436,7 @@ static const struct ata_port_operations 
- 	.check_status		= k2_stat_check_status,
- 	.exec_command		= ata_exec_command,
- 	.dev_select		= ata_std_dev_select,
--	.phy_reset		= sata_phy_reset,
-+	.phy_reset		= k2_phy_reset,
- 	.bmdma_setup		= k2_bmdma_setup_mmio,
- 	.bmdma_start		= k2_bmdma_start_mmio,
- 	.bmdma_stop		= ata_bmdma_stop,
-@@ -322,13 +444,13 @@ static const struct ata_port_operations 
- 	.qc_prep		= ata_qc_prep,
- 	.qc_issue		= ata_qc_issue_prot,
- 	.eng_timeout		= ata_eng_timeout,
--	.irq_handler		= ata_interrupt,
-+	.irq_handler		= k2_interrupt,
- 	.irq_clear		= ata_bmdma_irq_clear,
- 	.scr_read		= k2_sata_scr_read,
- 	.scr_write		= k2_sata_scr_write,
- 	.port_start		= ata_port_start,
- 	.port_stop		= ata_port_stop,
--	.host_stop		= ata_pci_host_stop,
-+	.host_stop		= k2_host_stop,
+ extern char * kobject_get_path(struct kobject *, gfp_t);
+ 
+diff --git a/include/linux/kref.h b/include/linux/kref.h
+index 6fee353..16b15db 100644
+--- a/include/linux/kref.h
++++ b/include/linux/kref.h
+@@ -18,15 +18,29 @@
+ #ifdef __KERNEL__
+ 
+ #include <linux/types.h>
++#include <linux/workqueue.h>
+ #include <asm/atomic.h>
+ 
+ struct kref {
+ 	atomic_t refcount;
  };
  
- static void k2_sata_setup_port(struct ata_ioports *port, unsigned long base)
-@@ -354,6 +476,7 @@ static void k2_sata_setup_port(struct at
- static int k2_sata_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	static int printed_version;
-+	struct svw_host *host;
- 	struct ata_probe_ent *probe_ent = NULL;
- 	unsigned long base;
- 	void __iomem *mmio_base;
-@@ -408,17 +531,13 @@ static int k2_sata_init_one (struct pci_
- 		goto err_out_free_ent;
- 	}
- 	base = (unsigned long) mmio_base;
--
--	/* Clear a magic bit in SCR1 according to Darwin, those help
--	 * some funky seagate drives (though so far, those were already
--	 * set by the firmware on the machines I had access to)
--	 */
--	writel(readl(mmio_base + K2_SATA_SICR1_OFFSET) & ~0x00040000,
--	       mmio_base + K2_SATA_SICR1_OFFSET);
--
--	/* Clear SATA error & interrupts we don't use */
--	writel(0xffffffff, mmio_base + K2_SATA_SCR_ERROR_OFFSET);
--	writel(0x0, mmio_base + K2_SATA_SIM_OFFSET);
-+	
-+	host = kmalloc(sizeof(struct svw_host), GFP_KERNEL);
-+	if (!host)
-+		goto err_out_free_ent;
-+	
-+	memset(host, 0, sizeof(struct svw_host));
-+	probe_ent->private_data = host;
++struct kref_work {
++	struct work_struct work;
++	struct kref *kref;
++	void (*release)(struct kref *kref);
++};
++
+ void kref_init(struct kref *kref);
+ void kref_get(struct kref *kref);
+-int kref_put(struct kref *kref, void (*release) (struct kref *kref));
++int kref_put_process_context(struct kref *kref,
++			     void (*release) (struct kref *kref),
++			     struct kref_work *work);
++static inline int kref_put(struct kref *kref,
++			   void (*release) (struct kref *kref))
++{
++	return kref_put_process_context(kref, release, NULL);
++}
  
- 	probe_ent->sht = &k2_sata_sht;
- 	probe_ent->host_flags = ATA_FLAG_SATA | ATA_FLAG_SATA_RESET |
+ #endif /* __KERNEL__ */
+ #endif /* _KREF_H_ */
+diff --git a/lib/kobject.c b/lib/kobject.c
+index efe67fa..6b80c54 100644
+--- a/lib/kobject.c
++++ b/lib/kobject.c
+@@ -372,10 +372,10 @@ static void kobject_release(struct kref 
+  *
+  *	Decrement the refcount, and if 0, call kobject_cleanup().
+  */
+-void kobject_put(struct kobject * kobj)
++void kobject_put_process_context(struct kobject * kobj, struct kref_work *work)
+ {
+ 	if (kobj)
+-		kref_put(&kobj->kref, kobject_release);
++		kref_put_process_context(&kobj->kref, kobject_release, work);
+ }
+ 
+ 
+@@ -537,7 +537,7 @@ EXPORT_SYMBOL(kobject_init);
+ EXPORT_SYMBOL(kobject_register);
+ EXPORT_SYMBOL(kobject_unregister);
+ EXPORT_SYMBOL(kobject_get);
+-EXPORT_SYMBOL(kobject_put);
++EXPORT_SYMBOL(kobject_put_process_context);
+ EXPORT_SYMBOL(kobject_add);
+ EXPORT_SYMBOL(kobject_del);
+ 
+diff --git a/lib/kref.c b/lib/kref.c
+index 0d07cc3..66231cf 100644
+--- a/lib/kref.c
++++ b/lib/kref.c
+@@ -13,6 +13,7 @@
+ 
+ #include <linux/kref.h>
+ #include <linux/module.h>
++#include <linux/hardirq.h>
+ 
+ /**
+  * kref_init - initialize object.
+@@ -33,27 +34,47 @@ void kref_get(struct kref *kref)
+ 	atomic_inc(&kref->refcount);
+ }
+ 
++static void kref_release_process_context(void *data)
++{
++	struct kref_work *work = data;
++
++	work->release(work->kref);
++}
++
+ /**
+- * kref_put - decrement refcount for object.
++ * kref_put_user - decrement refcount for object and put in user context
+  * @kref: object.
+  * @release: pointer to the function that will clean up the object when the
+  *	     last reference to the object is released.
+  *	     This pointer is required, and it is not acceptable to pass kfree
+  *	     in as this function.
++ * @work:    pointer to a kref_work used to take the release through user
++ *	     context (may be null)
+  *
+- * Decrement the refcount, and if 0, call release().
++ * Decrement the refcount, and if 0, call release().  If work is not null
++ * execute release via schedule_work if not in process context.
+  * Return 1 if the object was removed, otherwise return 0.  Beware, if this
+  * function returns 0, you still can not count on the kref from remaining in
+  * memory.  Only use the return value if you want to see if the kref is now
+  * gone, not present.
+  */
+-int kref_put(struct kref *kref, void (*release)(struct kref *kref))
++int kref_put_process_context(struct kref *kref,
++			     void (*release)(struct kref *kref),
++			     struct kref_work *work)
+ {
+ 	WARN_ON(release == NULL);
+ 	WARN_ON(release == (void (*)(struct kref *))kfree);
+ 
+ 	if (atomic_dec_and_test(&kref->refcount)) {
+-		release(kref);
++		if (!work || !in_interrupt())
++			release(kref);
++		else {
++			INIT_WORK(&work->work, kref_release_process_context,
++				  work);
++			schedule_work(&work->work);
++		}
++			
++			
+ 		return 1;
+ 	}
+ 	return 0;
+@@ -61,4 +82,4 @@ int kref_put(struct kref *kref, void (*r
+ 
+ EXPORT_SYMBOL(kref_init);
+ EXPORT_SYMBOL(kref_get);
+-EXPORT_SYMBOL(kref_put);
++EXPORT_SYMBOL(kref_put_process_context);
+
+
