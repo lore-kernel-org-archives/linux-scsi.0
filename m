@@ -1,154 +1,34 @@
-From: Grant Grundler <iod00d@hp.com>
+From: Chris Wedgwood <cw@f00f.org>
 Subject: Re: Problems with MSI-X on ia64
-Date: Thu, 16 Feb 2006 23:58:29 -0800
-Message-ID: <20060217075829.GB22451@esmail.cup.hp.com>
-References: <D4CFB69C345C394284E4B78B876C1CF10B848090@cceexc23.americas.cpqcorp.net>
+Date: Fri, 17 Feb 2006 00:46:05 -0800
+Message-ID: <20060217084605.GG4523@taniwha.stupidest.org>
+References: <D4CFB69C345C394284E4B78B876C1CF10B848090@cceexc23.americas.cpqcorp.net> <20060217075829.GB22451@esmail.cup.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ia64-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp103.sbc.mail.mud.yahoo.com ([68.142.198.202]:54447 "HELO
+	smtp103.sbc.mail.mud.yahoo.com") by vger.kernel.org with SMTP
+	id S932576AbWBQIqH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Feb 2006 03:46:07 -0500
 Content-Disposition: inline
-In-Reply-To: <D4CFB69C345C394284E4B78B876C1CF10B848090@cceexc23.americas.cpqcorp.net>
-Sender: linux-ia64-owner@vger.kernel.org
-To: Greg KH <gregkh@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ia64@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+In-Reply-To: <20060217075829.GB22451@esmail.cup.hp.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Grant Grundler <iod00d@hp.com>
+Cc: Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ia64@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, Jesse Barnes <jbarnes@virtuousgeek.org>
 
-On Thu, Jan 26, 2006 at 11:14:22AM -0600, Miller, Mike (OS Dev) wrote:
-> Hello,
-> Has anyone tested MSI-X on ia64 based platforms? We're using a 2.6.9
-> variant and a cciss driver with MSI/MSI-X support. The kernel has MSI
-> enabled. On ia64 the MSI-X table is all zeroes. On Intel x86_64
-> platforms the table contains valid data and everything works as
-> expected.
+On Thu, Feb 16, 2006 at 11:58:29PM -0800, Grant Grundler wrote:
 
-Greg,
-The root cause is the use of u32 to describe a PCI resource "start".
-phys_addr needs to be "unsigned long". More details in Log entry below.
-Patch applies to 2.6.16-rc3 and should apply to 2.6.15 as well.
+> The root cause is the use of u32 to describe a PCI resource "start".
+> phys_addr needs to be "unsigned long". More details in Log entry
+> below.
 
-I tested this with 2.6.15 on the same HW Mike Miller was having problems.
+That won't always suffice.
 
-
-My clue from the PCI 3.0 spec:
-| 6.8.2. MSI-X Capability and Table Structures
-| ...
-| Each structure is mapped by a Base Address register (BAR) belonging
-| to the function,located beginning at 10h in Configuration Space.
-| A BAR Indicator register (BIR) indicates which BAR, and a
-| QWORD-aligned Offset indicates where the structure begins
-| relative to the base address associated with the BAR. The BAR is
-| permitted to be either 32-bit or 64-bit, but must map Memory Space.
-| A function is permitted to map both structures with the same BAR,
-| or to map each structure with a different BAR.
-
-
-"or 64-bit".  This is also relevant to boxen which do not
-equivalently map 32-bit PCI MMIO and Host physical address space.
-
-thanks,
-grant
-
-
-Log Entry:
-
-	Use "unsigned long" when dealing with PCI resources.
-	The BAR Indicator Register (BIR) can be a 64-bit value
-	or the resource could be a 64-bit host physical address.
-
-	Enables ib_mthca and cciss drivers to use MSI-X on ia64 HW.
-	Problem showed up now because of new system firmware on one platform.
-	Symptom will either be memory corruption or MCA.
-
-	Second part of this patch deals with "useless" code.
-	We walk through the steps to find the phys_addr and then
-	don't use the result. I suspect the intent was to zero
-	out the respective MSI-X entry but I'm not sure at the moment.
-	Delete the code inside the #if 0/#endif if it's really
-	not needed.
-
-Signed-off-by: Grant Grundler <iod00d@hp.com>
-
-
---- linux-2.6.16-rc3/drivers/pci/msi.c	4 Feb 2006 04:51:55 -0000	1.17
-+++ linux-ggg/drivers/pci/msi.c	17 Feb 2006 07:04:41 -0000
-@@ -597,7 +597,8 @@ static int msix_capability_init(struct p
- 	struct msg_address address;
- 	struct msg_data data;
- 	int vector, pos, i, j, nr_entries, temp = 0;
--	u32 phys_addr, table_offset;
-+	unsigned long phys_addr;
-+	u32 table_offset;
-  	u16 control;
- 	u8 bir;
- 	void __iomem *base;
-@@ -606,11 +607,11 @@ static int msix_capability_init(struct p
- 	/* Request & Map MSI-X table region */
-  	pci_read_config_word(dev, msi_control_reg(pos), &control);
- 	nr_entries = multi_msix_capable(control);
-- 	pci_read_config_dword(dev, msix_table_offset_reg(pos),
-- 		&table_offset);
-+
-+ 	pci_read_config_dword(dev, msix_table_offset_reg(pos), &table_offset);
- 	bir = (u8)(table_offset & PCI_MSIX_FLAGS_BIRMASK);
--	phys_addr = pci_resource_start (dev, bir);
--	phys_addr += (u32)(table_offset & ~PCI_MSIX_FLAGS_BIRMASK);
-+	table_offset &= ~PCI_MSIX_FLAGS_BIRMASK;
-+	phys_addr = pci_resource_start (dev, bir) + table_offset;
- 	base = ioremap_nocache(phys_addr, nr_entries * PCI_MSIX_ENTRY_SIZE);
- 	if (base == NULL)
- 		return -ENOMEM;
-@@ -826,8 +827,10 @@ static int msi_free_vector(struct pci_de
- 			 * Detect last MSI-X vector to be released.
- 			 * Release the MSI-X memory-mapped table.
- 			 */
-+#if 0
- 			int pos, nr_entries;
--			u32 phys_addr, table_offset;
-+			unsigned long phys_addr;
-+			u32 table_offset;
- 			u16 control;
- 			u8 bir;
- 
-@@ -838,9 +841,12 @@ static int msi_free_vector(struct pci_de
- 			pci_read_config_dword(dev, msix_table_offset_reg(pos),
- 				&table_offset);
- 			bir = (u8)(table_offset & PCI_MSIX_FLAGS_BIRMASK);
--			phys_addr = pci_resource_start (dev, bir);
--			phys_addr += (u32)(table_offset &
--				~PCI_MSIX_FLAGS_BIRMASK);
-+			table_offset &= ~PCI_MSIX_FLAGS_BIRMASK;
-+			phys_addr = pci_resource_start(dev, bir) + table_offset;
-+/*
-+ * FIXME!  and what did you want to do with phys_addr?
-+ */
-+#endif
- 			iounmap(base);
- 		}
- 	}
-@@ -1101,7 +1107,9 @@ void msi_remove_pci_irq_vectors(struct p
- 		msi_free_vector(dev, vector, 0);
- 		if (warning) {
- 			/* Force to release the MSI-X memory-mapped table */
--			u32 phys_addr, table_offset;
-+#if 0
-+			unsigned long phys_addr;
-+			u32 table_offset;
- 			u16 control;
- 			u8 bir;
- 
-@@ -1110,9 +1118,12 @@ void msi_remove_pci_irq_vectors(struct p
- 			pci_read_config_dword(dev, msix_table_offset_reg(pos),
- 				&table_offset);
- 			bir = (u8)(table_offset & PCI_MSIX_FLAGS_BIRMASK);
--			phys_addr = pci_resource_start (dev, bir);
--			phys_addr += (u32)(table_offset &
--				~PCI_MSIX_FLAGS_BIRMASK);
-+			table_offset &= ~PCI_MSIX_FLAGS_BIRMASK;
-+			phys_addr = pci_resource_start(dev, bir) + table_offset;
-+/*
-+ * FIXME! and what did you want to do with phys_addr?
-+ */
-+#endif
- 			iounmap(base);
- 			printk(KERN_WARNING "PCI: %s: msi_remove_pci_irq_vectors() "
- 			       "called without free_irq() on all MSI-X vectors\n",
+I have machines at work that will place some PCI resources above the
+4GB boundary even when booting in '32-bit OS' mode (there is a BIOS
+option for this but no matter the setting some resources always end up
+above 4GB).  I've heard from others they've also been hit by this
+(with 64-bit kernels it's fine).  I guess it could be argued that it's
+a BIOS bug, I'm not entirely sure what to thing,  Windows seems to
+deal with it.
