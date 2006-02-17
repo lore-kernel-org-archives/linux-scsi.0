@@ -1,79 +1,33 @@
-From: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
-Subject: RE: [Bugme-new] [Bug 6080] New: New Megaraid Module Problem
-Date: Fri, 17 Feb 2006 10:24:44 -0700
-Message-ID: <9738BCBE884FDB42801FAD8A7769C265142096@NAMAIL1.ad.lsil.com>
+From: Chris Wedgwood <cw@f00f.org>
+Subject: Re: Problems with MSI-X on ia64
+Date: Fri, 17 Feb 2006 11:10:26 -0800
+Message-ID: <20060217191026.GA3136@taniwha.stupidest.org>
+References: <D4CFB69C345C394284E4B78B876C1CF10B848090@cceexc23.americas.cpqcorp.net> <20060217075829.GB22451@esmail.cup.hp.com> <20060217084605.GG4523@taniwha.stupidest.org> <20060217163605.GA26660@colo.lackof.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:56209 "EHLO mail0.lsil.com")
-	by vger.kernel.org with ESMTP id S1750836AbWBQRYv convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Feb 2006 12:24:51 -0500
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ia64-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20060217163605.GA26660@colo.lackof.org>
+Sender: linux-ia64-owner@vger.kernel.org
+To: Grant Grundler <grundler@parisc-linux.org>
+Cc: Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ia64@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, Jesse Barnes <jbarnes@virtuousgeek.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Andrew Morton <akpm@osdl.org>, "Kolli, Neela" <Neela.Kolli@engenio.com>, linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>
 
-Hi,
-On Friday, February 17, 2006 4:22 AM Hannes Reinecke wrote:
-> Isn't the megaraid i960 based? Then it might well be that it collides
-> with the generic i2o modules which are loaded previously by default.
->=20
-> So check whether any of those i2o modules are loaded and unload them
-> before continuing.
-Just to make sure.
-Is 'generic I2O module' I2O OSM?
-If so, I2O OSM should not claim the controller.
-The controller has I2O mode flag turned off by default.
-Please add comment for anything missing, here.
+On Fri, Feb 17, 2006 at 09:36:05AM -0700, Grant Grundler wrote:
 
+> If the machine is suppose to support a 32-bit OS, then yeah, it's a
+> BIOS bug. It all depends on who defines the support matrix.
 
+Well, maybe.  I mean, the CPUs all have PAE (in 32-bit mode) and thus
+can use 36-bit physical addressing these days (or more in the case of
+amd chips).
 
-> -----Original Message-----
-> From: Hannes Reinecke [mailto:hare@suse.de]=20
-> Sent: Friday, February 17, 2006 4:22 AM
-> To: Ju, Seokmann
-> Cc: Ju, Seokmann; Andrew Morton; Kolli, Neela;=20
-> linux-scsi@vger.kernel.org; bugme-daemon@kernel-bugs.osdl.org
-> Subject: Re: [Bugme-new] [Bug 6080] New: New Megaraid Module Problem
->=20
-> Ju, Seokmann wrote:
-> > Hi,
-> > On Thursday, February 16, 2006 9:36 AM Seokmann Ju wrote:
-> >> I've verified the 'megaraid' driver that is available on GIT=20
-> >> kernel (2.6.16-rc2).
-> >> The driver 'megaraid.ko' is working fine on the kernel.
-> >> However, I'm working on another issue related to this driver.=20
-> >> On SuSE SLES 10 (kernel 2.6.16-rc1-git3-7), the kernel claims=20
-> >> that the driver has loaded, but it won't detect the=20
-> >> controller nor scan the drives.
-> >> Both kernel (GIT kernel and SLES10) have same 'megaraid' driver.
-> >> I'll update here for any progress on it.
-> > I've also test 'megaraid.ko' driver on latest GIT kernel 2.6.16-rc3=
-=2E
-> > The driver works fine as expected. I've ran the basic I/O=20
-> test after file system created on the device.
-> >=20
-> Isn't the megaraid i960 based? Then it might well be that it collides
-> with the generic i2o modules which are loaded previously by default.
->=20
-> So check whether any of those i2o modules are loaded and unload them
-> before continuing.
->=20
-> Cheers,
->=20
-> Hannes
-> --=20
-> Dr. Hannes Reinecke			hare@suse.de
-> SuSE Linux Products GmbH		S390 & zSeries
-> Maxfeldstra=DFe 5				+49 911 74053 688
-> 90409 N=FCrnberg				http://www.suse.de
->=20
->=20
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The other way is to reassign "invalid" resources (above 4GB) with
+> "valid" ones (below 4GB).  I suspect windows is doing this and I'd
+> rather see linux take this route as well if possible.
+
+Hrm, it may be doing this.  I wonder how that works though with 4GB's
+of RAM installed?
+
+I originally thought Windows probably allowed the larger addresses
+and use PAE but that might not be the case at all.
