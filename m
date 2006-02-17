@@ -1,33 +1,30 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Problems with MSI-X on ia64
-Date: Fri, 17 Feb 2006 07:11:00 -0700
-Message-ID: <20060217141100.GR12822@parisc-linux.org>
-References: <D4CFB69C345C394284E4B78B876C1CF10B848090@cceexc23.americas.cpqcorp.net> <20060217075829.GB22451@esmail.cup.hp.com> <20060217084605.GG4523@taniwha.stupidest.org>
+Subject: Re: [PATCH] sym53c8xx_2: Add bios_param to sym_glue.c
+Date: Fri, 17 Feb 2006 07:37:18 -0700
+Message-ID: <20060217143718.GS12822@parisc-linux.org>
+References: <43F5D963.9080009@bfh.ch>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ia64-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:43197 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S1751453AbWBQOhU
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Feb 2006 09:37:20 -0500
 Content-Disposition: inline
-In-Reply-To: <20060217084605.GG4523@taniwha.stupidest.org>
-Sender: linux-ia64-owner@vger.kernel.org
-To: Chris Wedgwood <cw@f00f.org>
-Cc: Grant Grundler <iod00d@hp.com>, Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ia64@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, Jesse Barnes <jbarnes@virtuousgeek.org>
+In-Reply-To: <43F5D963.9080009@bfh.ch>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Seewer Philippe <philippe.seewer@bfh.ch>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, Feb 17, 2006 at 12:46:05AM -0800, Chris Wedgwood wrote:
-> On Thu, Feb 16, 2006 at 11:58:29PM -0800, Grant Grundler wrote:
-> 
-> > The root cause is the use of u32 to describe a PCI resource "start".
-> > phys_addr needs to be "unsigned long". More details in Log entry
-> > below.
-> 
-> That won't always suffice.
-> 
-> I have machines at work that will place some PCI resources above the
-> 4GB boundary even when booting in '32-bit OS' mode (there is a BIOS
-> option for this but no matter the setting some resources always end up
-> above 4GB).  I've heard from others they've also been hit by this
-> (with 64-bit kernels it's fine).  I guess it could be argued that it's
-> a BIOS bug, I'm not entirely sure what to thing,  Windows seems to
-> deal with it.
+On Fri, Feb 17, 2006 at 03:10:43PM +0100, Seewer Philippe wrote:
+> This patch adds the scsi common function bios_param to the sym53c8xx
+> driver. For simplicity i just copied the code from the sym53c416 driver.
 
-So we need to use dma_addr_t here, I guess.
+If the driver doesn't define bios_param, the scsi core calls
+scsicam_bios_param, which seems to do everything this patch does,
+and more.
+
+A quick survey suggests that most drivers should have their bios_param
+methods deleted.  Was there a particular problem you found with the
+default scsicam_bios_param implementation?
