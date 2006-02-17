@@ -1,254 +1,425 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 2.6.15.4 rel.2 1/1] libata: add hotswap to sata_svw
-Date: Fri, 17 Feb 2006 09:41:00 +1100
-Message-ID: <1140129661.10065.6.camel@localhost.localdomain>
-References: <E1F9klH-0004Fg-00@devix>
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: [PATCH] aic94xx: driver assertion in non-x86 BIOS env
+Date: Thu, 16 Feb 2006 18:36:13 -0800
+Message-ID: <20060217023613.GA30583@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <E1F9klH-0004Fg-00@devix>
-Sender: linux-ide-owner@vger.kernel.org
-To: Martin Devera <devik@cdi.cz>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, lkosewsk@gmail.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:4587 "EHLO e36.co.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751263AbWBQCgQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Feb 2006 21:36:16 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e36.co.us.ibm.com (8.12.11/8.12.11) with ESMTP id k1H2aF2S024465
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2006 21:36:15 -0500
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay04.boulder.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k1H2cnM7191748
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2006 19:38:49 -0700
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11/8.13.3) with ESMTP id k1H2aEDo025712
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2006 19:36:15 -0700
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Tarte@us.ibm.com, Robert <Robert_Tarte@adaptec.com>, Jeff Garzik <jgarzik@redhat.com>
 
-On Thu, 2006-02-16 at 16:09 +0100, Martin Devera wrote:
-> From: Martin Devera <devik@cdi.cz>
-> 
-> Add hotswap capability to Serverworks/BroadCom SATA controlers. The
-> controler has SIM register and it selects which bits in SATA_ERROR
-> register fires interrupt.
-> The solution hooks on COMWAKE (plug), PHYRDY change and 10B8B decode 
-> error (unplug) and calls into Lukasz's hotswap framework.
-> The code got one day testing on dual core Athlon64 H8SSL Supermicro 
-> MoBo with HT-1000 SATA, SMP kernel and two CaviarRE SATA HDDs in
-> hotswap bays.
-> 
-> Signed-off-by: Martin Devera <devik@cdi.cz>
-> ---
-> This patch depends on Lukasz Kosewski's:
-> [PATCH 2.6.15-rc7-git3 2/3] libata: framework API for hotswapping drives on libata
-> and its intent is mainly wider testing and review
+This patch addresses the issue of the aic94xx driver not working on
+non-x86 or on systems where the card bios had been disabled.
+http://bugzilla.kernel.org/show_bug.cgi?id=6042
 
-Nice ! I'll review and test it asap. Just give me a few days as I'm
-fairly busy lately.
+Rob Tarte, Jeff Ding, and I coordinated on the fix for the OCM issue.
 
-Ben.
+The patch has been run on a Powermac G5, a PPC64, and IA64 based system.
 
-> --- a/drivers/scsi/sata_svw.c	Wed Feb 15 11:20:22 2006
-> +++ b/drivers/scsi/sata_svw.c	Thu Feb 16 15:49:31 2006
-> @@ -9,6 +9,7 @@
->   *  Copyright 2003 Benjamin Herrenschmidt <benh@kernel.crashing.org>
->   *
->   *  Bits from Jeff Garzik, Copyright RedHat, Inc.
-> + *  Hotplug code by Martin Devera <devik@cdi.cz>
->   *
->   *  This driver probably works with non-Apple versions of the
->   *  Broadcom chipset...
-> @@ -54,7 +55,7 @@
->  #endif /* CONFIG_PPC_OF */
->  
->  #define DRV_NAME	"sata_svw"
-> -#define DRV_VERSION	"1.07"
-> +#define DRV_VERSION	"1.08"
->  
->  /* Taskfile registers offsets */
->  #define K2_SATA_TF_CMD_OFFSET		0x00
-> @@ -81,9 +82,18 @@
->  #define K2_SATA_SICR2_OFFSET		0x84
->  #define K2_SATA_SIM_OFFSET		0x88
->  
-> +/* Hotplug interrupt masks */
-> +#define K2_SIM_REMOVE_MASK		0x90000
-> +#define K2_SIM_INSERT_MASK		0x40000
-> +
->  /* Port stride */
->  #define K2_SATA_PORT_OFFSET		0x100
->  
-> +struct svw_host 
-> +{
-> +	unsigned long not_in_reset_bitmap; /* see k2_hotplug_irq for explanation */
-> +};
-> +
->  static u8 k2_stat_check_status(struct ata_port *ap);
->  
-> 
-> @@ -282,6 +292,118 @@ static int k2_sata_proc_info(struct Scsi
->  }
->  #endif /* CONFIG_PPC_OF */
->  
-> +/* This shall run every time for all ports when interrupt fires. It
-> +   returns 1 if hotplug related event was handled. */
-> +static int k2_hotplug_irq(struct ata_port *ap,struct svw_host *host)
-> +{
-> +	u32 error = scr_read(ap, SCR_ERROR);
-> +	error &= K2_SIM_REMOVE_MASK | K2_SIM_INSERT_MASK;
-> +	if (!error)
-> +		return 0;
-> +	
-> +	/* clear error bits, this must be done in any case or we get
-> +	   unhandled IRQ BUG */
-> +	scr_write(ap, SCR_ERROR, error);
-> +
-> +	DPRINTK("K2 Got (un)plug event %X (status %X) on dev %d\n",
-> +			error,scr_read(ap, SCR_STATUS),ap->port_no+1);
-> +
-> +	/* not_in_reset_bitmap has a bit set for each port when the port is
-> +	   outside of reset routine. Because reset generates spurious events
-> +	   we ignore them here. Because not_in_reset_bitmap is zero at init
-> +	   time we also ignore these events until the port is first reset.
-> +	   It is not possible simply to set SIM register to zero because
-> +	   interrupt comming from other port still causes this routine run
-> +	   for all ports and the event will be discovered. */
-> +	if (!test_bit(ap->port_no,&host->not_in_reset_bitmap)) {
-> +		DPRINTK("K2 ignoring the event\n");
-> +		return 1;
-> +	}
-> +	
-> +	if (error & K2_SIM_INSERT_MASK)
-> +		sata_hot_plug(ap);
-> +	else	/* make sure that the drive is really gone */
-> +		if (!sata_dev_present(ap)) 
-> +			sata_hot_unplug(ap);
-> +	return 1;
-> +}
-> +
-> +/* Essencialy the same as in libata, we only needed to hook hotplug events. */
-> +static irqreturn_t k2_interrupt (int irq, void *dev_instance, struct pt_regs *regs)
-> +{
-> +	struct ata_host_set *host_set = dev_instance;
-> +	struct svw_host *host = (struct svw_host *)host_set->private_data;
-> +	unsigned int i;
-> +	unsigned int handled = 0;
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(&host_set->lock, flags);
-> +
-> +	for (i = 0; i < host_set->n_ports; i++) {
-> +		struct ata_port *ap;
-> +
-> +		ap = host_set->ports[i];
-> +		if (!ap) 
-> +			continue;
-> +		
-> +		if (!(ap->flags & (ATA_FLAG_PORT_DISABLED | ATA_FLAG_NOINTR))) {
-> +			struct ata_queued_cmd *qc;
-> +
-> +			qc = ata_qc_from_tag(ap, ap->active_tag);
-> +			if (qc && (!(qc->tf.ctl & ATA_NIEN)) &&
-> +			    (qc->flags & ATA_QCFLAG_ACTIVE))
-> +				handled |= ata_host_intr(ap, qc);
-> +		}
-> +		handled |= k2_hotplug_irq(ap,host);
-> +	}
-> +	
-> +	spin_unlock_irqrestore(&host_set->lock, flags);
-> +
-> +	return IRQ_RETVAL(handled);
-> +}
-> +
-> +/* Override phy_reset to setup SIM register. It must be done here because it
-> +   can trigger IRQ and we must be sure that a handler is installed. And it is
-> +   at the time when reset is called. */
-> +static void k2_phy_reset(struct ata_port *ap)
-> +{
-> +	/* HACK: there is no standard place in port structure to record
-> +	   base pointer - incidentaly cmd_addr is at offset zero ... */
-> +	void *base = (void*)ap->ioaddr.cmd_addr;
-> +	
-> +	struct svw_host *host = (struct svw_host *)ap->host_set->private_data;
-> +
-> +	DPRINTK("K2 reset %d start\n",ap->port_no+1);
-> +
-> +	clear_bit(ap->port_no,&host->not_in_reset_bitmap);
-> +	
-> +	/* Not strictly neccessary but why to fire spurious interrupts
-> +	   and then ignore them anyway */
-> +	writel(0, base + K2_SATA_SIM_OFFSET);
-> +	sata_phy_reset(ap);
-> +
-> +	/* Clear a magic bit in SCR1 according to Darwin, those help
-> +	 * some funky seagate drives (though so far, those were already
-> +	 * set by the firmware on the machines I had access to)
-> +	 */
-> +	writel(readl(base + K2_SATA_SICR1_OFFSET) & ~0x00040000,
-> +	       base + K2_SATA_SICR1_OFFSET);
-> +
-> +	/* Make sure that interrupt is triggered when these XXX_MASK bits
-> +	   in SCR_ERROR are set */
-> +	scr_write(ap, SCR_ERROR, K2_SIM_INSERT_MASK | K2_SIM_REMOVE_MASK);
-> +	writel(K2_SIM_INSERT_MASK | K2_SIM_REMOVE_MASK, base + K2_SATA_SIM_OFFSET);
-> +
-> +	set_bit(ap->port_no,&host->not_in_reset_bitmap);
-> +
-> +	DPRINTK("K2 reset done\n");
-> +}
-> +
-> +static void k2_host_stop (struct ata_host_set *host_set)
-> +{
-> +	kfree(host_set->private_data);
-> +	ata_pci_host_stop(host_set);
-> +}
->  
->  static struct scsi_host_template k2_sata_sht = {
->  	.module			= THIS_MODULE,
-> @@ -314,7 +436,7 @@ static const struct ata_port_operations 
->  	.check_status		= k2_stat_check_status,
->  	.exec_command		= ata_exec_command,
->  	.dev_select		= ata_std_dev_select,
-> -	.phy_reset		= sata_phy_reset,
-> +	.phy_reset		= k2_phy_reset,
->  	.bmdma_setup		= k2_bmdma_setup_mmio,
->  	.bmdma_start		= k2_bmdma_start_mmio,
->  	.bmdma_stop		= ata_bmdma_stop,
-> @@ -322,13 +444,13 @@ static const struct ata_port_operations 
->  	.qc_prep		= ata_qc_prep,
->  	.qc_issue		= ata_qc_issue_prot,
->  	.eng_timeout		= ata_eng_timeout,
-> -	.irq_handler		= ata_interrupt,
-> +	.irq_handler		= k2_interrupt,
->  	.irq_clear		= ata_bmdma_irq_clear,
->  	.scr_read		= k2_sata_scr_read,
->  	.scr_write		= k2_sata_scr_write,
->  	.port_start		= ata_port_start,
->  	.port_stop		= ata_port_stop,
-> -	.host_stop		= ata_pci_host_stop,
-> +	.host_stop		= k2_host_stop,
->  };
->  
->  static void k2_sata_setup_port(struct ata_ioports *port, unsigned long base)
-> @@ -354,6 +476,7 @@ static void k2_sata_setup_port(struct at
->  static int k2_sata_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
->  {
->  	static int printed_version;
-> +	struct svw_host *host;
->  	struct ata_probe_ent *probe_ent = NULL;
->  	unsigned long base;
->  	void __iomem *mmio_base;
-> @@ -408,17 +531,13 @@ static int k2_sata_init_one (struct pci_
->  		goto err_out_free_ent;
->  	}
->  	base = (unsigned long) mmio_base;
-> -
-> -	/* Clear a magic bit in SCR1 according to Darwin, those help
-> -	 * some funky seagate drives (though so far, those were already
-> -	 * set by the firmware on the machines I had access to)
-> -	 */
-> -	writel(readl(mmio_base + K2_SATA_SICR1_OFFSET) & ~0x00040000,
-> -	       mmio_base + K2_SATA_SICR1_OFFSET);
-> -
-> -	/* Clear SATA error & interrupts we don't use */
-> -	writel(0xffffffff, mmio_base + K2_SATA_SCR_ERROR_OFFSET);
-> -	writel(0x0, mmio_base + K2_SATA_SIM_OFFSET);
-> +	
-> +	host = kmalloc(sizeof(struct svw_host), GFP_KERNEL);
-> +	if (!host)
-> +		goto err_out_free_ent;
-> +	
-> +	memset(host, 0, sizeof(struct svw_host));
-> +	probe_ent->private_data = host;
->  
->  	probe_ent->sht = &k2_sata_sht;
->  	probe_ent->host_flags = ATA_FLAG_SATA | ATA_FLAG_SATA_RESET |
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
+
+ This purpose of this patch is to allow the aic94xx driver to load and
+ function on archs that do not allow the cards bios to run. This patch
+ contains a forward port of code changes made to the adp94xx driver
+ that inits the ocm if the bios did not. The patch also provides default
+ parameters for flash values if the flash data cannot be read.
+
+ Signed-off-by: Mike Anderson <andmike@us.ibm.com>
+
+ drivers/scsi/aic94xx/aic94xx_hwi.c     |    6 -
+ drivers/scsi/aic94xx/aic94xx_reg.h     |   13 ++
+ drivers/scsi/aic94xx/aic94xx_reg_def.h |   13 ++
+ drivers/scsi/aic94xx/aic94xx_sds.c     |  187 +++++++++++++++++++++++++++++++--
+ drivers/scsi/aic94xx/aic94xx_seq.c     |    6 -
+ 5 files changed, 215 insertions(+), 10 deletions(-)
+
+Index: sas-2.6-patched/drivers/scsi/aic94xx/aic94xx_hwi.c
+===================================================================
+--- sas-2.6-patched.orig/drivers/scsi/aic94xx/aic94xx_hwi.c	2006-02-11 00:51:10.000000000 -0800
++++ sas-2.6-patched/drivers/scsi/aic94xx/aic94xx_hwi.c	2006-02-16 09:54:38.000000000 -0800
+@@ -413,10 +413,14 @@ static int asd_init_escbs(struct asd_ha_
+  */
+ int asd_chip_hardrst(struct asd_ha_struct *asd_ha)
+ {
++	int i;
+ 	int count = 100;
+ 	u32 reg;
+ 
+-	asd_write_reg_dword(asd_ha, COMBIST, HARDRST);
++	for (i = 0 ; i < 4 ; i++) {
++		asd_write_reg_dword(asd_ha, COMBIST, HARDRST);
++	}
++
+ 	do {
+ 		udelay(1);
+ 		reg = asd_read_reg_dword(asd_ha, CHIMINT);
+Index: sas-2.6-patched/drivers/scsi/aic94xx/aic94xx_reg.h
+===================================================================
+--- sas-2.6-patched.orig/drivers/scsi/aic94xx/aic94xx_reg.h	2006-02-11 00:51:10.000000000 -0800
++++ sas-2.6-patched/drivers/scsi/aic94xx/aic94xx_reg.h	2006-02-11 00:57:45.000000000 -0800
+@@ -89,6 +89,19 @@ ASD_READ_OCM(u8, byte, b);
+ ASD_READ_OCM(u16,word, w);
+ ASD_READ_OCM(u32,dword,l);
+ 
++#define ASD_WRITE_OCM(type, ord, S)                                    \
++static inline void asd_write_ocm_##ord (struct asd_ha_struct *asd_ha,  \
++					 u32 offs, type val)          \
++{                                                                     \
++	struct asd_ha_addrspace *io_handle = &asd_ha->io_handle[1];   \
++	write##S (val, io_handle->addr + (unsigned long) offs);       \
++	return;                                                       \
++}
++
++ASD_WRITE_OCM(u8, byte, b);
++ASD_WRITE_OCM(u16,word, w);
++ASD_WRITE_OCM(u32,dword,l);
++
+ #define ASD_DDBSITE_READ(type, ord)                                        \
+ static inline type asd_ddbsite_read_##ord (struct asd_ha_struct *asd_ha,   \
+ 					   u16 ddb_site_no,                \
+Index: sas-2.6-patched/drivers/scsi/aic94xx/aic94xx_reg_def.h
+===================================================================
+--- sas-2.6-patched.orig/drivers/scsi/aic94xx/aic94xx_reg_def.h	2006-02-11 00:51:10.000000000 -0800
++++ sas-2.6-patched/drivers/scsi/aic94xx/aic94xx_reg_def.h	2006-02-11 00:57:45.000000000 -0800
+@@ -1796,6 +1796,8 @@
+ 
+ #define PCIC_FLASH_MBAR	0xB8
+ 
++#define PCIC_INTRPT_STAT 0xD4
++
+ #define PCIC_TP_CTRL	0xFC
+ 
+ /*
+@@ -1805,6 +1807,7 @@
+ 
+ #define	EXSICNFGR	(EXSI_REG_BASE_ADR + 0x00)
+ 
++#define		OCMINITIALIZED		0x80000000
+ #define		ASIEN			0x00400000
+ #define		HCMODE			0x00200000
+ #define		PCIDEF			0x00100000
+@@ -1959,6 +1962,16 @@
+ #define XSRAM_SIZE                        0x100000
+ 
+ /*
++ * NVRAM Registers, Address Range: (0x00000 - 0x3FFFF).
++ */
++#define		NVRAM_REG_BASE_ADR	0xBF800000
++#define		NVRAM_MAX_BASE_ADR	0x003FFFFF
++
++/* OCM base address */
++#define		OCM_BASE_ADDR		0xA0000000
++#define		OCM_MAX_SIZE		0x20000
++
++/*
+  * Sequencers (Central and Link) Scratch RAM page definitions.
+  */
+ 
+Index: sas-2.6-patched/drivers/scsi/aic94xx/aic94xx_sds.c
+===================================================================
+--- sas-2.6-patched.orig/drivers/scsi/aic94xx/aic94xx_sds.c	2006-02-11 00:21:30.000000000 -0800
++++ sas-2.6-patched/drivers/scsi/aic94xx/aic94xx_sds.c	2006-02-16 10:07:03.000000000 -0800
+@@ -51,6 +51,60 @@ struct asd_ocm_dir {
+ 	struct asd_ocm_dir_ent entry[15];
+ } __attribute__ ((packed));
+ 
++#define	OCM_DE_OCM_DIR			0x00
++#define	OCM_DE_WIN_DRVR			0x01
++#define	OCM_DE_BIOS_CHIM		0x02
++#define	OCM_DE_RAID_ENGN		0x03
++#define	OCM_DE_BIOS_INTL		0x04
++#define	OCM_DE_BIOS_CHIM_OSM		0x05
++#define	OCM_DE_BIOS_CHIM_DYNAMIC	0x06
++#define	OCM_DE_ADDC2C_RES0		0x07
++#define	OCM_DE_ADDC2C_RES1		0x08
++#define	OCM_DE_ADDC2C_RES2		0x09
++#define	OCM_DE_ADDC2C_RES3		0x0A
++
++#define OCM_INIT_DIR_ENTRIES	5
++/***************************************************************************
++*  OCM dircetory default
++***************************************************************************/
++static struct asd_ocm_dir OCMDirInit =
++{
++	.sig = {0x4D, 0x4F},	/* signature */
++	.num_de = OCM_INIT_DIR_ENTRIES,	/* no. of directory entries */
++};
++
++/***************************************************************************
++*  OCM dircetory Entries default
++***************************************************************************/
++static struct asd_ocm_dir_ent OCMDirEntriesInit[OCM_INIT_DIR_ENTRIES] =
++{
++	{
++		.type = (OCM_DE_ADDC2C_RES0),	/* Entry type  */
++		.offs = {128},			/* Offset */
++		.size = {0, 4},			/* size */
++	},
++	{
++		.type = (OCM_DE_ADDC2C_RES1),	/* Entry type  */
++		.offs = {128, 4},		/* Offset */
++		.size = {0, 4},			/* size */
++	},
++	{
++		.type = (OCM_DE_ADDC2C_RES2),	/* Entry type  */
++		.offs = {128, 8},		/* Offset */
++		.size = {0, 4},			/* size */
++	},
++	{
++		.type = (OCM_DE_ADDC2C_RES3),	/* Entry type  */
++		.offs = {128, 12},		/* Offset */
++		.size = {0, 4},			/* size */
++	},
++	{
++		.type = (OCM_DE_WIN_DRVR),	/* Entry type  */
++		.offs = {128, 16},		/* Offset */
++		.size = {128, 235, 1},		/* size */
++	},
++};
++
+ struct asd_bios_chim_struct {
+ 	char sig[4];
+ 	u8   major;          /* 1 */
+@@ -92,11 +146,12 @@ static int asd_read_ocm_seg(struct asd_h
+ static int asd_read_ocm_dir(struct asd_ha_struct *asd_ha,
+ 			    struct asd_ocm_dir *dir, u32 offs)
+ {
+-	int err = asd_read_ocm_seg(asd_ha, (void *)dir, offs, sizeof(*dir));
++	int err = asd_read_ocm_seg(asd_ha, dir, offs, sizeof(*dir));
+ 	if (err) {
+ 		ASD_DPRINTK("couldn't read ocm segment\n");
+ 		return err;
+ 	}
++
+ 	if (dir->sig[0] != 'M' || dir->sig[1] != 'O') {
+ 		ASD_DPRINTK("no valid dir signature(%c%c) at start of OCM\n",
+ 			    dir->sig[0], dir->sig[1]);
+@@ -111,6 +166,28 @@ static int asd_read_ocm_dir(struct asd_h
+ 	return 0;
+ }
+ 
++/**
++ * asd_write_ocm_seg - write an on chip memory (OCM) segment
++ * @asd_ha: pointer to the host adapter structure
++ * @buffer: where to read the write data
++ * @offs: offset into OCM to write to
++ * @size: how many bytes to write
++ *
++ * Return the number of bytes not written. Return 0 on success.
++ */
++static void asd_write_ocm_seg(struct asd_ha_struct *asd_ha, void *buffer,
++			    u32 offs, int size)
++{
++	u8 *p = buffer;
++	if (unlikely(asd_ha->iospace))
++		asd_write_reg_string(asd_ha, buffer, offs+OCM_BASE_ADDR, size);
++	else {
++		for ( ; size > 0; size--, offs++, p++)
++			asd_write_ocm_byte(asd_ha, offs, *p);
++	}
++	return;
++}
++
+ #define THREE_TO_NUM(X) ((X)[0] | ((X)[1] << 8) | ((X)[2] << 16))
+ 
+ static int asd_find_dir_entry(struct asd_ocm_dir *dir, u8 type,
+@@ -208,6 +285,67 @@ out:
+ 	return err;
+ }
+ 
++static void
++asd_hwi_initialize_ocm_dir (struct asd_ha_struct *asd_ha)
++{
++	int i;
++
++	/* Zero OCM */
++	for (i = 0; i < OCM_MAX_SIZE; i += 4)
++		asd_write_ocm_dword(asd_ha, i, 0);
++
++	/* Write Dir */
++	asd_write_ocm_seg(asd_ha, &OCMDirInit, 0,
++			  sizeof(struct asd_ocm_dir));
++
++	/* Write Dir Entries */
++	for (i = 0; i < OCM_INIT_DIR_ENTRIES; i++)
++		asd_write_ocm_seg(asd_ha, &OCMDirEntriesInit[i],
++				  sizeof(struct asd_ocm_dir) +
++				  (i * sizeof(struct asd_ocm_dir_ent))
++				  , sizeof(struct asd_ocm_dir_ent));
++
++}
++
++static int
++asd_hwi_check_ocm_access (struct asd_ha_struct *asd_ha)
++{
++	struct pci_dev *pcidev = asd_ha->pcidev;
++	u32 reg;
++	int err = 0;
++	u32 v;
++
++	/* check if OCM has been initialized by BIOS */
++	reg = asd_read_reg_dword(asd_ha, EXSICNFGR);
++
++	if (!(reg & OCMINITIALIZED)) {
++		err = pci_read_config_dword(pcidev, PCIC_INTRPT_STAT, &v);
++		if (err) {
++			asd_printk("couldn't access PCIC_INTRPT_STAT of %s\n",
++					pci_name(pcidev));
++			goto out;
++		}
++
++		printk(KERN_INFO "OCM is not initialized by BIOS,"
++		       "reinitialize it and ignore it, current IntrptStatus"
++		       "is 0x%x\n", v);
++
++		if (v)
++			err = pci_write_config_dword(pcidev,
++						     PCIC_INTRPT_STAT, v);
++		if (err) {
++			asd_printk("couldn't write PCIC_INTRPT_STAT of %s\n",
++					pci_name(pcidev));
++			goto out;
++		}
++
++		asd_hwi_initialize_ocm_dir(asd_ha);
++
++	}
++out:
++	return err;
++}
++
+ /**
+  * asd_read_ocm - read on chip memory (OCM)
+  * @asd_ha: pointer to the host adapter structure
+@@ -217,6 +355,9 @@ int asd_read_ocm(struct asd_ha_struct *a
+ 	int err;
+ 	struct asd_ocm_dir *dir;
+ 
++	if (asd_hwi_check_ocm_access(asd_ha))
++		return -1;
++
+ 	dir = kmalloc(sizeof(*dir), GFP_KERNEL);
+ 	if (!dir) {
+ 		asd_printk("no memory for ocm dir\n");
+@@ -606,9 +747,9 @@ static int asd_validate_ms(struct asd_ma
+ 	ms->size = le16_to_cpu((__force __le16) ms->size);
+ 
+ 	if (asd_calc_flash_chksum((u16 *)ms, ms->size/2)) {
+-		ASD_DPRINTK("failed manuf sector checksum\n");
+-		return -EINVAL;
++		asd_printk("failed manuf sector checksum\n");
+ 	}
++
+ 	return 0;
+ }
+ 
+@@ -683,11 +824,29 @@ static int asd_ms_get_phy_params(struct 
+ 	int en_phys = 0;
+ 	int rep_phys = 0;
+ 	struct asd_manuf_phy_param *phy_param;
++	struct asd_manuf_phy_param dflt_phy_param;
+ 
+ 	phy_param = asd_find_ll_by_id(manuf_sec, 'P', 'M');
+ 	if (!phy_param) {
+ 		ASD_DPRINTK("ms: no phy parameters found\n");
+-		return -ENOENT;
++		ASD_DPRINTK("ms: Creating default phy parameters\n");
++		dflt_phy_param.sig[0] = 'P';
++		dflt_phy_param.sig[1] = 'M';
++		dflt_phy_param.maj = 0;
++		dflt_phy_param.min = 2;
++		dflt_phy_param.num_phy_desc = 8;
++		dflt_phy_param.phy_desc_size = sizeof(struct asd_manuf_phy_desc);
++		for (i =0; i < ASD_MAX_PHYS; i++) {
++			dflt_phy_param.phy_desc[i].state = 0;
++			dflt_phy_param.phy_desc[i].phy_id = i;
++			dflt_phy_param.phy_desc[i].phy_control_0 = 0xf6;
++			dflt_phy_param.phy_desc[i].phy_control_1 = 0x10;
++			dflt_phy_param.phy_desc[i].phy_control_2 = 0x43;
++			dflt_phy_param.phy_desc[i].phy_control_3 = 0xeb;
++		}
++
++		phy_param = &dflt_phy_param;
++
+ 	}
+ 
+ 	if (phy_param->maj != 0) {
+@@ -736,7 +895,7 @@ static int asd_ms_get_connector_map(stru
+ 	cm = asd_find_ll_by_id(manuf_sec, 'M', 'C');
+ 	if (!cm) {
+ 		ASD_DPRINTK("ms: no connector map found\n");
+-		return -ENOENT;
++		return 0;
+ 	}
+ 
+ 	if (cm->maj != 0) {
+@@ -872,15 +1031,29 @@ static int asd_process_ctrla_phy_setting
+ static int asd_process_ctrl_a_user(struct asd_ha_struct *asd_ha,
+ 				   struct asd_flash_dir *flash_dir)
+ {
+-	int err;
++	int err, i;
+ 	u32 offs, size;
+ 	struct asd_ll_el *el;
+ 	struct asd_ctrla_phy_settings *ps;
++	struct asd_ctrla_phy_settings dflt_ps;
+ 
+ 	err = asd_find_flash_de(flash_dir, FLASH_DE_CTRL_A_USER, &offs, &size);
+ 	if (err) {
+ 		ASD_DPRINTK("couldn't find CTRL-A user settings section\n");
+-		goto out;
++		ASD_DPRINTK("Creating default CTRL-A user settings section\n");
++
++		dflt_ps.id0 = 'h';
++		dflt_ps.num_phys = 8;
++		for (i =0; i < ASD_MAX_PHYS; i++) {
++			memcpy(dflt_ps.phy_ent[i].sas_addr,
++			       asd_ha->hw_prof.sas_addr, SAS_ADDR_SIZE);
++			dflt_ps.phy_ent[i].sas_link_rates = 0x98;
++			dflt_ps.phy_ent[i].flags = 0x0;
++			dflt_ps.phy_ent[i].sata_link_rates = 0x0;
++		}
++
++		size = sizeof(struct asd_ctrla_phy_settings);
++		ps = &dflt_ps;
+ 	}
+ 
+ 	if (size == 0)
+Index: sas-2.6-patched/drivers/scsi/aic94xx/aic94xx_seq.c
+===================================================================
+--- sas-2.6-patched.orig/drivers/scsi/aic94xx/aic94xx_seq.c	2006-02-11 00:21:30.000000000 -0800
++++ sas-2.6-patched/drivers/scsi/aic94xx/aic94xx_seq.c	2006-02-16 09:54:38.000000000 -0800
+@@ -757,8 +757,10 @@ static void asd_init_lseq_mdp(struct asd
+ 	asd_write_reg_word(asd_ha, LmSEQ_RESP_LEN(lseq), 0);
+ 	asd_write_reg_word(asd_ha, LmSEQ_FIRST_INV_SCB_SITE(lseq),
+ 			   (u16)last_scb_site_no+1);
+-	asd_write_reg_dword(asd_ha, LmSEQ_INTEN_SAVE(lseq),
+-			    (u32) LmM0INTEN_MASK);
++	asd_write_reg_word(asd_ha, LmSEQ_INTEN_SAVE(lseq),
++			    (u16) LmM0INTEN_MASK & 0xFFFF0000 >> 16);
++	asd_write_reg_word(asd_ha, LmSEQ_INTEN_SAVE(lseq) + 2,
++			    (u16) LmM0INTEN_MASK & 0xFFFF);
+ 	asd_write_reg_byte(asd_ha, LmSEQ_LINK_RST_FRM_LEN(lseq), 0);
+ 	asd_write_reg_byte(asd_ha, LmSEQ_LINK_RST_PROTOCOL(lseq), 0);
+ 	asd_write_reg_byte(asd_ha, LmSEQ_RESP_STATUS(lseq), 0);
+
 
