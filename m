@@ -1,52 +1,47 @@
-From: <ikvxtyymexfzfnhj@libero.it>
-Subject: Fw: tsddub wsjxmehpjv nwpnbuedi waaz . Why seek? Fri, 17 Feb 2006 17:06:20 +0200 linux-scsi@vger.kernel.org
-Date: Fri, 17 Feb 2006 17:06:20 +0200
-Message-ID: <5001401562297.20060217170620@asia>
+From: Grant Grundler <grundler@parisc-linux.org>
+Subject: Re: Problems with MSI-X on ia64
+Date: Fri, 17 Feb 2006 09:36:05 -0700
+Message-ID: <20060217163605.GA26660@colo.lackof.org>
+References: <D4CFB69C345C394284E4B78B876C1CF10B848090@cceexc23.americas.cpqcorp.net> <20060217075829.GB22451@esmail.cup.hp.com> <20060217084605.GG4523@taniwha.stupidest.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acra161.neoplus.adsl.tpnet.pl ([83.11.2.161]:48658 "HELO asia")
-	by vger.kernel.org with SMTP id S932385AbWBQQGT (ORCPT
+Received: from colo.lackof.org ([198.49.126.79]:21481 "EHLO colo.lackof.org")
+	by vger.kernel.org with ESMTP id S1030639AbWBQQ0A (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Feb 2006 11:06:19 -0500
-Received: from 136.130.143.138 ([1] helo=248.243.232.110)
-	by 220.223.129.130 with esmtp ( 3.35 #1 ())
-	id 884PIf-2325rz-74
-	for linux-scsi@vger.kernel.org; Fri, 17 Feb 2006 17:06:20 +0200
+	Fri, 17 Feb 2006 11:26:00 -0500
+Content-Disposition: inline
+In-Reply-To: <20060217084605.GG4523@taniwha.stupidest.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Chris Wedgwood <cw@f00f.org>
+Cc: Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ia64@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, Jesse Barnes <jbarnes@virtuousgeek.org>
 
+On Fri, Feb 17, 2006 at 12:46:05AM -0800, Chris Wedgwood wrote:
+> On Thu, Feb 16, 2006 at 11:58:29PM -0800, Grant Grundler wrote:
+> 
+> > The root cause is the use of u32 to describe a PCI resource "start".
+> > phys_addr needs to be "unsigned long". More details in Log entry
+> > below.
+> 
+> That won't always suffice.
+> 
+> I have machines at work that will place some PCI resources above the
+> 4GB boundary even when booting in '32-bit OS' mode (there is a BIOS
+> option for this but no matter the setting some resources always end up
+> above 4GB).  I've heard from others they've also been hit by this
+> (with 64-bit kernels it's fine).  I guess it could be argued that it's
+> a BIOS bug, I'm not entirely sure what to thing,  Windows seems to
+> deal with it.
 
-No need to look for ch$ap and effective love pi11s! Everything you need 
-is now ALL on ONE portal!
+If the machine is suppose to support a 32-bit OS, then yeah, it's
+a BIOS bug. It all depends on who defines the support matrix.
 
-Make a single click and choose whatever you want to turn your sexual 
-life into a constant paradise!
+One way to support that behavior is use u64 in struct resource (ioport.h)
+(NOT dma_addr_t) instead of "unsigned long".
 
+The other way is to reassign "invalid" resources (above 4GB) with 
+"valid" ones (below 4GB).  I suspect windows is doing this and
+I'd rather see linux take this route as well if possible.
 
-We offer any pi11 you may need. Today - for a special pri$e!
-
-
-Our LICENSED store is VERIFIED BY BBB and APPROVED BY VISA!
-
-
-http://jkfews.supallina.net/?67072816&men
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+grant
