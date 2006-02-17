@@ -1,31 +1,54 @@
-From: Roland Dreier <rdreier@cisco.com>
-Subject: Re: Problems with MSI-X on ia64
-Date: Fri, 17 Feb 2006 12:21:37 -0800
-Message-ID: <aday809d9da.fsf@cisco.com>
-References: <B8E391BBE9FE384DAA4C5C003888BE6F05BF610F@scsmsx401.amr.corp.intel.com>
-	<20060217200454.GA24942@esmail.cup.hp.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-1-in.cisco.com ([171.71.176.70]:44084 "EHLO
-	sj-iport-1.cisco.com") by vger.kernel.org with ESMTP
-	id S1750904AbWBQUVx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Feb 2006 15:21:53 -0500
-In-Reply-To: <20060217200454.GA24942@esmail.cup.hp.com> (Grant Grundler's
- message of "Fri, 17 Feb 2006 12:04:54 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+From: Brian King <brking@us.ibm.com>
+Subject: [PATCH 02/16] libata: Add some dummy noop functions
+Date: Fri, 17 Feb 2006 16:19:49 -0600
+Message-ID: <200602172219.k1HMJnv6013331@d01av02.pok.ibm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
 List-Id: linux-scsi@vger.kernel.org
-To: Grant Grundler <iod00d@hp.com>
-Cc: "Luck, Tony" <tony.luck@intel.com>, Chris Wedgwood <cw@f00f.org>, Grant Grundler <grundler@parisc-linux.org>, Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ia64@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, Jesse Barnes <jbarnes@virtuousgeek.org>
 
-BARs above 4G on i386 raise all sorts of issues.  I think Grant's
-original patch (which changes phys_addr in drivers/pci/msi.c to
-unsigned long) is correct as it stands, because the MSI code is going
-to use that address to ioremap() the MSI-X table.  And the address
-passed to ioremap is unsigned long anyway.
 
-Some extension like ioremap_pfn() or something like that is going to
-needed to handling giving the kernel access to BARs above 4G on 32-bit
-archs.
+Add some dummy noop functions for use by libata clients
+that do not need to do anything. Future SAS patches will
+utilize these functions.
 
- - R.
+Signed-off-by: Brian King <brking@us.ibm.com>
+---
+
+ libata-dev-bjking1/drivers/scsi/libata-core.c |    3 +++
+ libata-dev-bjking1/include/linux/libata.h     |    1 +
+ 2 files changed, 4 insertions(+)
+
+diff -puN drivers/scsi/libata-core.c~libata_noop_funcs drivers/scsi/libata-core.c
+--- libata-dev/drivers/scsi/libata-core.c~libata_noop_funcs	2006-02-14 09:27:38.000000000 -0600
++++ libata-dev-bjking1/drivers/scsi/libata-core.c	2006-02-14 09:27:38.000000000 -0600
+@@ -2713,6 +2713,8 @@ void ata_qc_prep(struct ata_queued_cmd *
+ 	ata_fill_sg(qc);
+ }
+ 
++void ata_noop_qc_prep(struct ata_queued_cmd *qc) { }
++
+ /**
+  *	ata_sg_init_one - Associate command with memory buffer
+  *	@qc: Command to be associated
+@@ -4908,6 +4910,7 @@ EXPORT_SYMBOL_GPL(ata_port_stop);
+ EXPORT_SYMBOL_GPL(ata_host_stop);
+ EXPORT_SYMBOL_GPL(ata_interrupt);
+ EXPORT_SYMBOL_GPL(ata_qc_prep);
++EXPORT_SYMBOL_GPL(ata_noop_qc_prep);
+ EXPORT_SYMBOL_GPL(ata_bmdma_setup);
+ EXPORT_SYMBOL_GPL(ata_bmdma_start);
+ EXPORT_SYMBOL_GPL(ata_bmdma_irq_clear);
+diff -puN include/linux/libata.h~libata_noop_funcs include/linux/libata.h
+--- libata-dev/include/linux/libata.h~libata_noop_funcs	2006-02-14 09:27:38.000000000 -0600
++++ libata-dev-bjking1/include/linux/libata.h	2006-02-14 09:27:38.000000000 -0600
+@@ -532,6 +532,7 @@ extern void ata_port_stop (struct ata_po
+ extern void ata_host_stop (struct ata_host_set *host_set);
+ extern irqreturn_t ata_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
+ extern void ata_qc_prep(struct ata_queued_cmd *qc);
++extern void ata_noop_qc_prep(struct ata_queued_cmd *qc);
+ extern unsigned int ata_qc_issue_prot(struct ata_queued_cmd *qc);
+ extern void ata_sg_init_one(struct ata_queued_cmd *qc, void *buf,
+ 		unsigned int buflen);
+_
