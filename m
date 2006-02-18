@@ -1,94 +1,54 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH] Improve message printing code
-Date: Sat, 18 Feb 2006 20:52:31 -0700
-Message-ID: <20060219035231.GW12822@parisc-linux.org>
+Subject: Re: Linux 2.6.16-rc3
+Date: Fri, 17 Feb 2006 22:30:32 -0700
+Message-ID: <20060218053032.GU12822@parisc-linux.org>
+References: <1140054960.3037.5.camel@mulgrave.il.steeleye.com> <20060216171200.GD29443@flint.arm.linux.org.uk> <1140112653.3178.9.camel@mulgrave.il.steeleye.com> <20060216180939.GF29443@flint.arm.linux.org.uk> <1140113671.3178.16.camel@mulgrave.il.steeleye.com> <20060216181803.GG29443@flint.arm.linux.org.uk> <1140116969.3178.24.camel@mulgrave.il.steeleye.com> <20060216200138.GA4203@suse.de> <1140223363.3231.9.camel@mulgrave.il.steeleye.com> <adaaccpbekr.fsf@cisco.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:41866 "EHLO
-	palinux.hppa") by vger.kernel.org with ESMTP id S1750756AbWBSDwe
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 18 Feb 2006 22:52:34 -0500
+Return-path: <linux-usb-devel-admin@lists.sourceforge.net>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <adaaccpbekr.fsf@cisco.com>
+Sender: linux-usb-devel-admin@lists.sourceforge.net
+Errors-To: linux-usb-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux-usb-devel>
+To: Roland Dreier <rdreier@cisco.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <axboe@suse.de>, Russell King <rmk+lkml@arm.linux.org.uk>, Greg KH <greg@kroah.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, Gerrit Bruchh?user <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@LaPoste.net, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>, Patrizio Bassi <patrizio.bassi@gmail.com>, Bj?rn Nilsson <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+
+On Fri, Feb 17, 2006 at 06:12:04PM -0800, Roland Dreier wrote:
+>  > +int execute_in_process_context(void (*fn)(void *data), void *data,
+>  > +			       struct execute_work *ew)
+>  > +{
+>  > +	if (!in_interrupt()) {
+>  > +		fn(data);
+>  > +		return 0;
+>  > +	}
+> 
+> Is testing in_interrupt() really sufficient to make this work?  I seem
+> to remember that (at least) with CONFIG_PREEMPT disabled, there are
+> contexts where it is not safe to sleep but where both in_interrupt()
+> and in_atomic() still return 0.
+
+That's correct -- in process context, with PREEMPT disabled and a spinlock
+held, it's unsafe to call this function.  It works well for the SCSI
+usage (where it's called either in interrupt context or in user
+context with no spinlocks held), but it's not *always* safe.
+
+I think this needs to be documented in the kerneldoc.
 
 
-Fix a bug where we would consume one byte too many in the message
-printing code.
-Add support for 256-byte long messages.
-Add support for the Modify Bidirectional Data Pointer message.
-
-Signed-off-by: Matthew Wilcox <matthew@wil.cx>
-
-Index: drivers/scsi/scsi_transport_spi.c
-===================================================================
-RCS file: /var/cvs/linux-2.6/drivers/scsi/scsi_transport_spi.c,v
-retrieving revision 1.24
-diff -u -p -r1.24 scsi_transport_spi.c
---- a/drivers/scsi/scsi_transport_spi.c	17 Jan 2006 14:51:49 -0000	1.24
-+++ b/drivers/scsi/scsi_transport_spi.c	19 Feb 2006 03:42:18 -0000
-@@ -1072,7 +1072,7 @@ static const char * const two_byte_msgs[
- static const char * const extended_msgs[] = {
- /* 0x00 */ "Modify Data Pointer", "Synchronous Data Transfer Request",
- /* 0x02 */ "SCSI-I Extended Identify", "Wide Data Transfer Request",
--/* 0x04 */ "Parallel Protocol Request"
-+/* 0x04 */ "Parallel Protocol Request", "Modify Bidirectional Data Pointer"
- };
- 
- static void print_nego(const unsigned char *msg, int per, int off, int width)
-@@ -1089,11 +1089,20 @@ static void print_nego(const unsigned ch
- 		printk("width = %d ", 8 << msg[width]);
- }
- 
-+static void print_ptr(const unsigned char *msg, int msb, const char *desc)
-+{
-+	int ptr = (msg[msb] << 24) | (msg[msb+1] << 16) | (msg[msb+2] << 8) |
-+			msg[msb+3];
-+	printk("%s = %d ", desc, ptr);
-+}
-+
- int spi_print_msg(const unsigned char *msg)
- {
- 	int len = 0, i;
- 	if (msg[0] == EXTENDED_MESSAGE) {
--		len = 3 + msg[1];
-+		len = 2 + msg[1];
-+		if (len == 2)
-+			len += 256;
- 		if (msg[2] < ARRAY_SIZE(extended_msgs))
- 			printk ("%s ", extended_msgs[msg[2]]); 
- 		else 
-@@ -1101,8 +1110,7 @@ int spi_print_msg(const unsigned char *m
- 				(int) msg[2]);
- 		switch (msg[2]) {
- 		case EXTENDED_MODIFY_DATA_POINTER:
--			printk("pointer = %d", (int) (msg[3] << 24) |
--				(msg[4] << 16) | (msg[5] << 8) | msg[6]);
-+			print_ptr(msg, 3, "pointer");
- 			break;
- 		case EXTENDED_SDTR:
- 			print_nego(msg, 3, 4, 0);
-@@ -1113,6 +1121,10 @@ int spi_print_msg(const unsigned char *m
- 		case EXTENDED_PPR:
- 			print_nego(msg, 3, 5, 6);
- 			break;
-+		case EXTENDED_MODIFY_BIDI_DATA_PTR:
-+			print_ptr(msg, 3, "out");
-+			print_ptr(msg, 7, "in");
-+			break;
- 		default:
- 		for (i = 2; i < len; ++i) 
- 			printk("%02x ", msg[i]);
-@@ -1153,7 +1165,9 @@ int spi_print_msg(const unsigned char *m
- 	int len = 0, i;
- 
- 	if (msg[0] == EXTENDED_MESSAGE) {
--		len = 3 + msg[1];
-+		len = 2 + msg[1];
-+		if (len == 2)
-+			len += 256;
- 		for (i = 0; i < len; ++i)
- 			printk("%02x ", msg[i]);
- 	/* Identify */
+-------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
+for problems?  Stop!  Download the new AJAX search engine that makes
+searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
+http://sel.as-us.falkag.net/sel?cmd=lnk&kid=103432&bid=230486&dat=121642
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
