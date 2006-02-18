@@ -1,35 +1,60 @@
-From: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
-Subject: Re: [linux-usb-devel] Re: Linux 2.6.16-rc3
-Date: Sat, 18 Feb 2006 23:20:15 +0000
-Message-ID: <E1FAbN9-0003T2-00@skye.ra.phy.cam.ac.uk>
-References: <3ACA40606221794F80A5670F0AF15F840AF2824B@pdsmsx403>
+From: =?iso-8859-1?B?SvxyZ2VuIEUu?= Fischer <fischer@linux-buechse.de>
+Subject: Re: [Bugme-new] [Bug 6092] New: drivers/scsi/pcmcia/aha152x_stub.c: aha152x_resume(): variable used before set
+Date: Sun, 19 Feb 2006 00:31:51 +0100
+Message-ID: <20060218233151.GA1985@linux-buechse.de>
+References: <200602180209.k1I29meW030162@fire-2.osdl.org> <20060217211049.4368ff20.akpm@osdl.org> <20060218221039.GA3912@linux-buechse.de> <20060218141423.7d741859.akpm@osdl.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mraos.ra.phy.cam.ac.uk ([131.111.48.8]:46977 "EHLO
-	mraos.ra.phy.cam.ac.uk") by vger.kernel.org with ESMTP
-	id S932274AbWBRXUc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 18 Feb 2006 18:20:32 -0500
-In-Reply-To: Your message of "Wed, 15 Feb 2006 13:58:51 +0800."
-             <3ACA40606221794F80A5670F0AF15F840AF2824B@pdsmsx403>
+Received: from moutng.kundenserver.de ([212.227.126.186]:13510 "EHLO
+	moutng.kundenserver.de") by vger.kernel.org with ESMTP
+	id S932282AbWBRXdC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 18 Feb 2006 18:33:02 -0500
+Content-Disposition: inline
+In-Reply-To: <20060218141423.7d741859.akpm@osdl.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yu, Luming" <luming.yu@intel.com>
-Cc: "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, akpm@osdl.org, torvalds@osdl.org, linux-kernel@vger.kernel.org, axboe@suse.de, James.Bottomley@steeleye.com, greg@kroah.com, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, lk@bencastricum.nl, helgehaf@aitel.hist.no, fluido@fluido.as, gbruchhaeuser@gmx.de, Nicolas.Mailhot@LaPoste.net, perex@suse.cz, tiwai@suse.de, patrizio.bassi@gmail.com, bni.swe@gmail.com, arvidjaar@mail.ru, p_christ@hol.gr, ghrt@dial.kappa.ro, jinhong.hu@gmail.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, bcrl@kvack.org
+To: Andrew Morton <akpm@osdl.org>
+Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
->>> I don't think anybody claimed this isn't a regression for the 600X.
+Hi Andrew,
 
->> I narrowed it further.  The short story is that this commit (diff
->> below sig) makes the second S3 sleep go into the endless loop, if
->> the loaded modules are exactly thermal, processor, intel_agp, and
->> agpgart:
+On Sat, Feb 18, 2006 at 14:14:23 -0800, Andrew Morton wrote:
+> >  Fix below.
+=20
+> Thanks.
+=20
+> Could we please have a more complete description of this change?  It'=
+s
+> obviosly doing more than fixing a used-uninitialised bug..
 
-> If you believe this patch is the root cause of the regression you
-> have been seeing.
+After fixing the problem in question, I discoved that the driver still
+didn't work with the pcmcia card I picked up.  run/is_complete was
+sometimes not called at all or called multiple times on one interrupt.
 
-Not sure if you were waiting for me to say something, but I do believe
-the change of default from ec_intr=0 to ec_intr=1 causes the problem
-for me.
+I'm not really sure why (or why that worked before).  It's now ensured
+that run() is only added to the task queue once per interrupt (by
+protecting 'service' with spinlocks).
 
--Sanjoy
+Additionally interrupt sharing didn't seem to work as the interrupt
+handler didn't check if a interrupt condition was at all pending.
 
-`Never underestimate the evil of which men of power are capable.'
-         --Bertrand Russell, _War Crimes in Vietnam_, chapter 1.
+
+In short:
+- change interface of the reset functions from Scsi_Cmnd to Scsi_Host. =
+=20
+- add functions with the original interface and rename the new
+  functions to reflect the new interface.
+- call these from the pcmcia driver, thereby avoiding the need to
+  construct a (broken) Scsi_Cmnd from a Scsi_Host.
+- just run the bh if the interrupt is from the controller and if so
+  ensure that it's only called once per interrupt.
+
+
+J=FCrgen
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
