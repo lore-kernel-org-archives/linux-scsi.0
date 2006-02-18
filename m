@@ -1,35 +1,29 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: Linux 2.6.16-rc3
-Date: Fri, 17 Feb 2006 17:00:54 -0800
-Message-ID: <20060218010054.GA15980@kroah.com>
-References: <1139934883.14115.4.camel@mulgrave.il.steeleye.com> <1140054960.3037.5.camel@mulgrave.il.steeleye.com> <20060216171200.GD29443@flint.arm.linux.org.uk> <1140112653.3178.9.camel@mulgrave.il.steeleye.com> <20060216180939.GF29443@flint.arm.linux.org.uk> <1140113671.3178.16.camel@mulgrave.il.steeleye.com> <20060216181803.GG29443@flint.arm.linux.org.uk> <1140116969.3178.24.camel@mulgrave.il.steeleye.com> <20060216200138.GA4203@suse.de> <1140223363.3231.9.camel@mulgrave.il.steeleye.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1140223363.3231.9.camel@mulgrave.il.steeleye.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jens Axboe <axboe@suse.de>, Russell King <rmk+lkml@arm.linux.org.uk>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, Gerrit Bruchh?user <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@LaPoste.net, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>, Patrizio Bassi <patrizio.bassi@gmail.com>, Bj?rn Nilsson <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>li
+From: "Stanley Maynard" <mkoyw@yahoo.com>
+Subject: Ladies n Mens Love This i8Dp7j
+Date: Sat, 18 Feb 2006 05:04:14 +0300
+Message-ID: <LAW54.OE649yfB4mvo513053d5__21821.2647749626$1140228507$gmane$org@motmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zeus1.kernel.org ([204.152.191.4]:27800 "EHLO zeus1.kernel.org")
+	by vger.kernel.org with ESMTP id S1750727AbWBRCIK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Feb 2006 21:08:10 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-net@vger.kernel.org
 
-On Fri, Feb 17, 2006 at 04:42:43PM -0800, James Bottomley wrote:
-> On Thu, 2006-02-16 at 21:01 +0100, Jens Axboe wrote:
-> > That's what I suggested in the first place as well. I still think it's a
-> > good idea, fwiw :)
-> 
-> OK smarty pants ... some of us are a bit slower on the uptake.  How
-> about this then.  It won't solve the target problem, but it will solve
-> the device put.
-> 
-> James
-> 
-> [PATCH] add execute_in_process_context() API
 
-I like it, nice job.
+Suffering from short penniss?
+Introduce revolution "Longz" formula which
+gauranteees sizes increase or moneey baack.
 
-Acked-by: Greg Kroah-Hartma <gregkh@suse.de>
+Users reported:
+- 2 inches extra in size
+- 3x pleasurable orgasms
+- 27% thicker
 
-thanks,
+Why waiting?
 
-greg k-h
+http://wallofmyrooms.com
+
+
+94
