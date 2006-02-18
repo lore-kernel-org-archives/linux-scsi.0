@@ -1,119 +1,137 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 14/16] ipr: printk macro cleanup/removal
-Date: Fri, 17 Feb 2006 16:21:11 -0600
-Message-ID: <200602172221.k1HMLCHU017455@d01av02.pok.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Linux 2.6.16-rc3
+Date: Fri, 17 Feb 2006 16:42:43 -0800
+Message-ID: <1140223363.3231.9.camel@mulgrave.il.steeleye.com>
+References: <20060212190520.244fcaec.akpm@osdl.org>
+	 <20060213203800.GC22441@kroah.com>
+	 <1139934883.14115.4.camel@mulgrave.il.steeleye.com>
+	 <1140054960.3037.5.camel@mulgrave.il.steeleye.com>
+	 <20060216171200.GD29443@flint.arm.linux.org.uk>
+	 <1140112653.3178.9.camel@mulgrave.il.steeleye.com>
+	 <20060216180939.GF29443@flint.arm.linux.org.uk>
+	 <1140113671.3178.16.camel@mulgrave.il.steeleye.com>
+	 <20060216181803.GG29443@flint.arm.linux.org.uk>
+	 <1140116969.3178.24.camel@mulgrave.il.steeleye.com>
+	 <20060216200138.GA4203@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:34985 "EHLO e5.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751849AbWBQWVN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Feb 2006 17:21:13 -0500
+Received: from stat9.steeleye.com ([209.192.50.41]:26601 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S1750860AbWBRAoJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Feb 2006 19:44:09 -0500
+In-Reply-To: <20060216200138.GA4203@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, brking@us.ibm.com
+To: Jens Axboe <axboe@suse.de>
+Cc: Russell King <rmk+lkml@arm.linux.org.uk>, Greg KH <greg@kroah.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, Gerrit Bruchh?user <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@LaPoste.net, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>, Patrizio Bassi <patrizio.bassi@gmail.com>, Bj?rn Nilsson <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>linux
+
+On Thu, 2006-02-16 at 21:01 +0100, Jens Axboe wrote:
+> That's what I suggested in the first place as well. I still think it's a
+> good idea, fwiw :)
+
+OK smarty pants ... some of us are a bit slower on the uptake.  How
+about this then.  It won't solve the target problem, but it will solve
+the device put.
+
+James
+
+[PATCH] add execute_in_process_context() API
+
+We have several points in the SCSI stack (primarily for our device
+functions) where we need to guarantee process context, but (given the
+place where the last reference was released) we cannot guarantee this.
+
+This API gets around the issue by executing the function directly if
+the caller has process context, but scheduling a workqueue to execute
+in process context if the caller doesn't have it.
+
+Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+
+Index: BUILD-2.6/include/linux/workqueue.h
+===================================================================
+--- BUILD-2.6.orig/include/linux/workqueue.h	2006-02-17 13:02:00.000000000 -0600
++++ BUILD-2.6/include/linux/workqueue.h	2006-02-17 17:57:52.000000000 -0600
+@@ -20,6 +20,12 @@
+ 	struct timer_list timer;
+ };
+ 
++struct execute_work {
++	struct work_struct work;
++	void (*fn)(void *);
++	void *data;
++};
++
+ #define __WORK_INITIALIZER(n, f, d) {				\
+         .entry	= { &(n).entry, &(n).entry },			\
+ 	.func = (f),						\
+@@ -74,6 +80,8 @@
+ void cancel_rearming_delayed_work(struct work_struct *work);
+ void cancel_rearming_delayed_workqueue(struct workqueue_struct *,
+ 				       struct work_struct *);
++int execute_in_process_context(void (*fn)(void *), void *,
++			       struct execute_work *);
+ 
+ /*
+  * Kill off a pending schedule_delayed_work().  Note that the work callback
+Index: BUILD-2.6/kernel/workqueue.c
+===================================================================
+--- BUILD-2.6.orig/kernel/workqueue.c	2006-02-17 13:02:01.000000000 -0600
++++ BUILD-2.6/kernel/workqueue.c	2006-02-17 18:00:15.000000000 -0600
+@@ -27,6 +27,7 @@
+ #include <linux/cpu.h>
+ #include <linux/notifier.h>
+ #include <linux/kthread.h>
++#include <linux/hardirq.h>
+ 
+ /*
+  * The per-CPU workqueue (if single thread, we always use the first
+@@ -476,6 +477,45 @@
+ }
+ EXPORT_SYMBOL(cancel_rearming_delayed_work);
+ 
++static void execute_in_process_context_work(void *data)
++{
++	void (*fn)(void *data);
++	struct execute_work *ew = data;
++
++	fn = ew->fn;
++	data = ew->data;
++
++	fn(data);
++}
++
++/**
++ * execute_in_process_context - reliably execute the routine with user context
++ * @fn:		the function to execute
++ * @data:	data to pass to the function
++ *
++ * Executes the function immediately if process context is available,
++ * otherwise schedules the function for delayed execution.
++ *
++ * Returns:	0 - function was executed
++ *		1 - function was scheduled for execution
++ */
++int execute_in_process_context(void (*fn)(void *data), void *data,
++			       struct execute_work *ew)
++{
++	if (!in_interrupt()) {
++		fn(data);
++		return 0;
++	}
++
++	INIT_WORK(&ew->work, execute_in_process_context_work, ew);
++	ew->fn = fn;
++	ew->data = data;
++	schedule_work(&ew->work);
++
++	return 1;
++}
++EXPORT_SYMBOL_GPL(execute_in_process_context);
++
+ int keventd_up(void)
+ {
+ 	return keventd_wq != NULL;
 
 
-Remove some unused printk macros, make some more robust, and
-convert some to use standard printk macros when possible.
-
-Signed-off-by: Brian King <brking@us.ibm.com>
----
-
- libata-dev-bjking1/drivers/scsi/ipr.c |   15 ++++++++-------
- libata-dev-bjking1/drivers/scsi/ipr.h |   25 ++++++-------------------
- 2 files changed, 14 insertions(+), 26 deletions(-)
-
-diff -puN drivers/scsi/ipr.h~ipr_printk_fixes drivers/scsi/ipr.h
---- libata-dev/drivers/scsi/ipr.h~ipr_printk_fixes	2006-02-14 13:12:20.000000000 -0600
-+++ libata-dev-bjking1/drivers/scsi/ipr.h	2006-02-14 13:16:29.000000000 -0600
-@@ -1192,30 +1192,17 @@ struct ipr_ucode_image_header {
-  */
- #define ipr_err(...) printk(KERN_ERR IPR_NAME ": "__VA_ARGS__)
- #define ipr_info(...) printk(KERN_INFO IPR_NAME ": "__VA_ARGS__)
--#define ipr_crit(...) printk(KERN_CRIT IPR_NAME ": "__VA_ARGS__)
--#define ipr_warn(...) printk(KERN_WARNING IPR_NAME": "__VA_ARGS__)
- #define ipr_dbg(...) IPR_DBG_CMD(printk(KERN_INFO IPR_NAME ": "__VA_ARGS__))
- 
--#define ipr_sdev_printk(level, sdev, fmt, args...) \
--	sdev_printk(level, sdev, fmt, ## args)
-+#define ipr_ra_printk(level, ioa_cfg, ra, fmt, ...) \
-+	printk(level IPR_NAME ": %d:%d:%d:%d: " fmt, (ioa_cfg)->host->host_no, \
-+		(ra).bus, (ra).target, (ra).lun, ##__VA_ARGS__)
- 
--#define ipr_sdev_err(sdev, fmt, ...) \
--	ipr_sdev_printk(KERN_ERR, sdev, fmt, ##__VA_ARGS__)
--
--#define ipr_sdev_info(sdev, fmt, ...) \
--	ipr_sdev_printk(KERN_INFO, sdev, fmt, ##__VA_ARGS__)
--
--#define ipr_sdev_dbg(sdev, fmt, ...) \
--	IPR_DBG_CMD(ipr_sdev_printk(KERN_INFO, sdev, fmt, ##__VA_ARGS__))
--
--#define ipr_res_printk(level, ioa_cfg, res, fmt, ...) \
--	printk(level IPR_NAME ": %d:%d:%d:%d: " fmt, ioa_cfg->host->host_no, \
--		res.bus, res.target, res.lun, ##__VA_ARGS__)
-+#define ipr_ra_err(ioa_cfg, ra, fmt, ...) \
-+	ipr_ra_printk(KERN_ERR, ioa_cfg, ra, fmt, ##__VA_ARGS__)
- 
- #define ipr_res_err(ioa_cfg, res, fmt, ...) \
--	ipr_res_printk(KERN_ERR, ioa_cfg, res, fmt, ##__VA_ARGS__)
--#define ipr_res_dbg(ioa_cfg, res, fmt, ...) \
--	IPR_DBG_CMD(ipr_res_printk(KERN_INFO, ioa_cfg, res, fmt, ##__VA_ARGS__))
-+	ipr_ra_err(ioa_cfg, (res)->cfgte.res_addr, fmt, ##__VA_ARGS__)
- 
- #define ipr_phys_res_err(ioa_cfg, res, fmt, ...)			\
- {									\
-diff -puN drivers/scsi/ipr.c~ipr_printk_fixes drivers/scsi/ipr.c
---- libata-dev/drivers/scsi/ipr.c~ipr_printk_fixes	2006-02-14 13:12:20.000000000 -0600
-+++ libata-dev-bjking1/drivers/scsi/ipr.c	2006-02-14 13:17:10.000000000 -0600
-@@ -1333,8 +1333,8 @@ static void ipr_handle_log_data(struct i
- 		return;
- 
- 	if (ipr_is_device(&hostrcb->hcam.u.error.failing_dev_res_addr)) {
--		ipr_res_err(ioa_cfg, hostrcb->hcam.u.error.failing_dev_res_addr,
--			    "%s\n", ipr_error_table[error_index].error);
-+		ipr_ra_err(ioa_cfg, hostrcb->hcam.u.error.failing_dev_res_addr,
-+			   "%s\n", ipr_error_table[error_index].error);
- 	} else {
- 		dev_err(&ioa_cfg->pdev->dev, "%s\n",
- 			ipr_error_table[error_index].error);
-@@ -3332,7 +3332,7 @@ static int __ipr_eh_dev_reset(struct scs
- 	cmd_pkt->request_type = IPR_RQTYPE_IOACMD;
- 	cmd_pkt->cdb[0] = IPR_RESET_DEVICE;
- 
--	ipr_sdev_err(scsi_cmd->device, "Resetting device\n");
-+	scmd_printk(KERN_ERR, scsi_cmd, "Resetting device\n");
- 	ipr_send_blocking_cmd(ipr_cmd, ipr_timeout, IPR_DEVICE_RESET_TIMEOUT);
- 
- 	ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
-@@ -3417,7 +3417,7 @@ static void ipr_abort_timeout(struct ipr
- 		return;
- 	}
- 
--	ipr_sdev_err(ipr_cmd->u.sdev, "Abort timed out. Resetting bus\n");
-+	sdev_printk(KERN_ERR, ipr_cmd->u.sdev, "Abort timed out. Resetting bus.n");
- 	reset_cmd = ipr_get_free_ipr_cmnd(ioa_cfg);
- 	ipr_cmd->sibling = reset_cmd;
- 	reset_cmd->sibling = ipr_cmd;
-@@ -3481,7 +3481,8 @@ static int ipr_cancel_op(struct scsi_cmn
- 	cmd_pkt->cdb[0] = IPR_CANCEL_ALL_REQUESTS;
- 	ipr_cmd->u.sdev = scsi_cmd->device;
- 
--	ipr_sdev_err(scsi_cmd->device, "Aborting command: %02X\n", scsi_cmd->cmnd[0]);
-+	scmd_printk(KERN_ERR, scsi_cmd, "Aborting command: %02X\n",
-+		    scsi_cmd->cmnd[0]);
- 	ipr_send_blocking_cmd(ipr_cmd, ipr_abort_timeout, IPR_CANCEL_ALL_TIMEOUT);
- 	ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
- 
-@@ -3792,8 +3793,8 @@ static void ipr_erp_done(struct ipr_cmnd
- 
- 	if (IPR_IOASC_SENSE_KEY(ioasc) > 0) {
- 		scsi_cmd->result |= (DID_ERROR << 16);
--		ipr_sdev_err(scsi_cmd->device,
--			     "Request Sense failed with IOASC: 0x%08X\n", ioasc);
-+		scmd_printk(KERN_ERR, scsi_cmd,
-+			    "Request Sense failed with IOASC: 0x%08X\n", ioasc);
- 	} else {
- 		memcpy(scsi_cmd->sense_buffer, ipr_cmd->sense_buffer,
- 		       SCSI_SENSE_BUFFERSIZE);
-_
