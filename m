@@ -1,32 +1,39 @@
-From: Pavel Machek <pavel@suse.cz>
-Subject: Re: Linux 2.6.16-rc3
-Date: Fri, 17 Feb 2006 00:04:18 +0100
-Message-ID: <20060216230418.GN3490@openzaurus.ucw.cz>
-References: <F7DC2337C7631D4386A2DF6E8FB22B30060BD1D9@hdsmsx401.amr.corp.intel.com> <20060213001240.05e57d42.akpm@osdl.org> <1139821068.2997.22.camel@laptopd505.fenrus.org> <20060214030821.GA23031@mail.harddata.com> <20060213192838.64013c6c.akpm@osdl.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] Re: Linux 2.6.16-rc3
+Date: Sat, 18 Feb 2006 15:16:29 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0602181515350.4115-100000@netrider.rowland.org>
+References: <1140223363.3231.9.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751236AbWBRMzn@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20060213192838.64013c6c.akpm@osdl.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: Michal Jaegermann <michal@harddata.com>, Dave Jones <davej@codemonkey.org.uk>, arjan@infradead.org, len.brown@intel.com, davem@davemloft.net, torvalds@osdl.org, linux-kernel@vger.kernel.org, axboe@suse.de, James.Bottomley@steeleye.com, greg@kroah.com, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, luming.yu@intel.com, lk@bencastricum.nl, sanjoy@mrao.cam.ac.uk, helgehaf@aitel.hist.no, fluido@fluido.as, gbruchhaeuser@gmx.de, Nicolas.Mailhot@LaPoste.net, perex@suse.cz, tiwai@suse.de, patrizio.bassi@gmail.com, bni.swe@gmail.com, arvidjaar@mail.ru, p_christ@hol.gr, ghrt@dial.kappa.ro, jinhong.hu@gmail.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, bcrl@kvack.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1140223363.3231.9.camel@mulgrave.il.steeleye.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jens Axboe <axboe@suse.de>, Russell King <rmk+lkml@arm.linux.org.uk>, Greg KH <greg@kroah.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, Gerrit Bruchh?user <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@LaPoste.net, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>, Patrizio Bassi <patrizio.bassi@gmail.com>, Bj?rn Nilsson <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>Andrew
 List-Id: linux-scsi@vger.kernel.org
 
-Hi!
+On Fri, 17 Feb 2006, James Bottomley wrote:
 
-> That's suspend-to-disk, yes?
-> 
-> Dave, would you have the 2.6.15-1.1830_FC4 -> 2.6.15-1.1831_FC4 details
-> handy?  There surely can't be much difference?
-> 
-> There seem to be several ACPI problems there.  Do we have a reliable means
-> of feeding such reports up into the (for example) acpi developers?
-> 
-> <I have this vaguely unsettled feeling that distros must get more bug
-> reports than the usptream developers, yet we hear so little about it>
+> +/**
+> + * execute_in_process_context - reliably execute the routine with user context
+> + * @fn:		the function to execute
+> + * @data:	data to pass to the function
+> + *
+> + * Executes the function immediately if process context is available,
+> + * otherwise schedules the function for delayed execution.
+> + *
+> + * Returns:	0 - function was executed
+> + *		1 - function was scheduled for execution
+> + */
+> +int execute_in_process_context(void (*fn)(void *data), void *data,
+> +			       struct execute_work *ew)
+> +{
+> +	if (!in_interrupt()) {
+> +		fn(data);
+> +		return 0;
+> +	}
 
-Its about 1:1 upstream:suse bugs for me... Unfortunately
-suse bugs are often for old kernel...
--- 
-64 bytes from 195.113.31.123: icmp_seq=28 ttl=51 time=448769.1 ms         
+The test should be in_atomic(), not in_interrupt().
+
+Alan Stern
+
