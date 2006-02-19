@@ -1,33 +1,39 @@
-From: =?iso-8859-1?B?SvxyZ2VuIEUu?= Fischer <fischer@linux-buechse.de>
-Subject: Re: [Bugme-new] [Bug 6092] New: drivers/scsi/pcmcia/aha152x_stub.c: aha152x_resume(): variable used before set
-Date: Sun, 19 Feb 2006 00:58:18 +0100
-Message-ID: <20060218235818.GA7529@linux-buechse.de>
-References: <200602180209.k1I29meW030162@fire-2.osdl.org> <20060217211049.4368ff20.akpm@osdl.org> <20060218221039.GA3912@linux-buechse.de> <20060218141423.7d741859.akpm@osdl.org> <20060218233151.GA1985@linux-buechse.de> <20060218154614.1d017fdb.akpm@osdl.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] ncr53c8xx: implement full slave_alloc and slave_destroy methods
+Date: Sat, 18 Feb 2006 17:58:57 -0700
+Message-ID: <20060219005857.GV12822@parisc-linux.org>
+References: <20060208161841.GA19199@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.188]:30672 "EHLO
-	moutng.kundenserver.de") by vger.kernel.org with ESMTP
-	id S932361AbWBSAHN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 18 Feb 2006 19:07:13 -0500
+Received: from palinux.external.hp.com ([192.25.206.14]:14053 "EHLO
+	palinux.hppa") by vger.kernel.org with ESMTP id S964796AbWBSA66
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 18 Feb 2006 19:58:58 -0500
 Content-Disposition: inline
-In-Reply-To: <20060218154614.1d017fdb.akpm@osdl.org>
+In-Reply-To: <20060208161841.GA19199@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org
 
-Hi Andrew,
+On Wed, Feb 08, 2006 at 05:18:41PM +0100, Christoph Hellwig wrote:
+>  - allocate all per-lun data in slave alloc and free it in slave_destroy.
+>  - move the bios first boot lun scanning disable flag to slave_alloc.
+>  - remove lots now superflous checks
 
-On Sat, Feb 18, 2006 at 15:46:14 -0800, Andrew Morton wrote:
-> So are you saying that with this patch, the driver works OK?
+Sorry for taking so long to get to this.  Unfortunately it blows up
+during boot:
 
-Exactly.  I tested using a scanner and a tape drive.
+zalon_probe: Zalon version 1, IRQ 67
+ncr53c720-0: rev 0xf irq 67
+ncr53c720-0: ID 7, Fast-10, Parity Checking, Differential
+scsi0 : ncr53c8xx-3.4.3g
+ 0:0:0:0: scsi: Device offlined - not ready after error recovery
+BUG: soft lockup detected on CPU#0!
+[skipped register dump, not interesting] 
+ IAOQ[0]: del_timer+0x60/0x74
+ IAOQ[1]: del_timer+0x64/0x74
+ RP(r2): scsi_delete_timer+0x14/0x28
 
-
-J=FCrgen
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+FWIW, there is no target 0 on this bus; the only device is ID 6.
