@@ -1,60 +1,36 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [Bugme-new] [Bug 6092] New:
-	drivers/scsi/pcmcia/aha152x_stub.c: aha152x_resume(): variable used before
-	set
-Date: Sun, 19 Feb 2006 08:27:17 -0600
-Message-ID: <1140359237.3103.9.camel@mulgrave.il.steeleye.com>
-References: <200602180209.k1I29meW030162@fire-2.osdl.org>
-	 <20060217211049.4368ff20.akpm@osdl.org>
-	 <20060218221039.GA3912@linux-buechse.de>
-	 <20060218141423.7d741859.akpm@osdl.org>
-	 <20060218233151.GA1985@linux-buechse.de>
+Subject: Re: [linux-usb-devel] Re: Linux 2.6.16-rc3
+Date: Sun, 19 Feb 2006 08:30:58 -0600
+Message-ID: <1140359458.3103.11.camel@mulgrave.il.steeleye.com>
+References: <1139934883.14115.4.camel@mulgrave.il.steeleye.com>
+	 <1140054960.3037.5.camel@mulgrave.il.steeleye.com>
+	 <20060216171200.GD29443@flint.arm.linux.org.uk>
+	 <1140112653.3178.9.camel@mulgrave.il.steeleye.com>
+	 <20060216180939.GF29443@flint.arm.linux.org.uk>
+	 <1140113671.3178.16.camel@mulgrave.il.steeleye.com>
+	 <20060216181803.GG29443@flint.arm.linux.org.uk>
+	 <1140116969.3178.24.camel@mulgrave.il.steeleye.com>
+	 <20060216200138.GA4203@suse.de>
+	 <1140223363.3231.9.camel@mulgrave.il.steeleye.com>
+	 <20060218100344.GA8532@procyon.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:31131 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932564AbWBSO1W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 19 Feb 2006 09:27:22 -0500
-In-Reply-To: <20060218233151.GA1985@linux-buechse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20060218100344.GA8532@procyon.home>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Sergey Vlasov <vsu@altlinux.ru>
+Cc: Jens Axboe <axboe@suse.de>, Russell King <rmk+lkml@arm.linux.org.uk>, Greg KH <greg@kroah.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, Gerrit Bruchh?user <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@LaPoste.net, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>, Patrizio Bassi <patrizio.bassi@gmail.com>, Bj?rn Nilsson <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>, Andrew Vasquez <andre>
 List-Id: linux-scsi@vger.kernel.org
-To: "=?ISO-8859-1?Q?J=FCrgen?= E. Fischer" <fischer@linux-buechse.de>
-Cc: Andrew Morton <akpm@osdl.org>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-On Sun, 2006-02-19 at 00:31 +0100, J=C3=BCrgen E. Fischer wrote:
-> - just run the bh if the interrupt is from the controller and if so
->   ensure that it's only called once per interrupt.
+On Sat, 2006-02-18 at 13:03 +0300, Sergey Vlasov wrote:
+> After removing kfree(), which was here in the initial implementation,
+> this function became a thunk which does nothing useful - we can just
+> stick fn and data directly into work_struct.
 
-This is the bit that looks like the actual fix.  It basically uses
-service as a flag to debounce the interrupt.
-
-This:
-
->         HOSTDATA(shpnt)->in_intr++;
-> =20
-> +       if( HOSTDATA(shpnt)->service=3D=3D0 )  {
-> +               DO_UNLOCK(flags);
-> +               return;
-> +       }
-
-Looks a bit wrong.  If that ever triggered, you'd exit your task handle=
-r
-with in_intr raised, which would cause a panic the next time
-is_complete() was called.
-
-The driver still seems to have an awful lot of locking confusion betwee=
-n
-the host lock and its own internal lock (stored in the host structure).
-I think there are several races and other nasties that could be cleaned
-up simply by moving to using the host lock everywhere.
+Yes, thanks ... although I think there's still value to wrappering
+work_struct (a bit like kref wrappers atomic_t).
 
 James
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
