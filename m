@@ -1,27 +1,60 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [linux-usb-devel] Re: Linux 2.6.16-rc3
-Date: Sun, 19 Feb 2006 07:51:17 -0600
-Message-ID: <1140357077.3103.0.camel@mulgrave.il.steeleye.com>
-References: <Pine.LNX.4.44L0.0602181515350.4115-100000@netrider.rowland.org>
+Subject: Re: [Bugme-new] [Bug 6092] New:
+	drivers/scsi/pcmcia/aha152x_stub.c: aha152x_resume(): variable used before
+	set
+Date: Sun, 19 Feb 2006 08:27:17 -0600
+Message-ID: <1140359237.3103.9.camel@mulgrave.il.steeleye.com>
+References: <200602180209.k1I29meW030162@fire-2.osdl.org>
+	 <20060217211049.4368ff20.akpm@osdl.org>
+	 <20060218221039.GA3912@linux-buechse.de>
+	 <20060218141423.7d741859.akpm@osdl.org>
+	 <20060218233151.GA1985@linux-buechse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:63130 "EHLO
+Received: from stat9.steeleye.com ([209.192.50.41]:31131 "EHLO
 	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932442AbWBSNwP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 19 Feb 2006 08:52:15 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0602181515350.4115-100000@netrider.rowland.org>
+	id S932564AbWBSO1W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 19 Feb 2006 09:27:22 -0500
+In-Reply-To: <20060218233151.GA1985@linux-buechse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jens Axboe <axboe@suse.de>, Russell King <rmk+lkml@arm.linux.org.uk>, Greg KH <greg@kroah.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, Gerrit Bruchh?user <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@LaPoste.net, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>, Patrizio Bassi <patrizio.bassi@gmail.com>, Bj?rn Nilsson <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>, Andrew Vasquez <andre>
+To: "=?ISO-8859-1?Q?J=FCrgen?= E. Fischer" <fischer@linux-buechse.de>
+Cc: Andrew Morton <akpm@osdl.org>, bugme-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-On Sat, 2006-02-18 at 15:16 -0500, Alan Stern wrote:
-> The test should be in_atomic(), not in_interrupt().
+On Sun, 2006-02-19 at 00:31 +0100, J=C3=BCrgen E. Fischer wrote:
+> - just run the bh if the interrupt is from the controller and if so
+>   ensure that it's only called once per interrupt.
 
-There's a long prior discussion of why it has to be in_interrupt()
+This is the bit that looks like the actual fix.  It basically uses
+service as a flag to debounce the interrupt.
+
+This:
+
+>         HOSTDATA(shpnt)->in_intr++;
+> =20
+> +       if( HOSTDATA(shpnt)->service=3D=3D0 )  {
+> +               DO_UNLOCK(flags);
+> +               return;
+> +       }
+
+Looks a bit wrong.  If that ever triggered, you'd exit your task handle=
+r
+with in_intr raised, which would cause a panic the next time
+is_complete() was called.
+
+The driver still seems to have an awful lot of locking confusion betwee=
+n
+the host lock and its own internal lock (stored in the host structure).
+I think there are several races and other nasties that could be cleaned
+up simply by moving to using the host lock everywhere.
 
 James
 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
