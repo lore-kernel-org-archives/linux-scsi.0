@@ -1,80 +1,111 @@
-From: Dave Jones <davej@redhat.com>
-Subject: sgpool-8 double free
-Date: Sun, 19 Feb 2006 15:29:23 -0500
-Message-ID: <20060219202923.GF32492@redhat.com>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: Error using DC315U to drive ScanJet 4c
+Date: Sun, 19 Feb 2006 21:54:22 +0100 (CET)
+Message-ID: <Pine.LNX.4.60.0602191740070.3542@poirot.grange>
+References: <Pine.LNX.4.60.0602112153320.3570@poirot.grange>
+ <20060213171052.GI18853@igloo.df.lth.se> <Pine.LNX.4.60.0602140000160.18538@poirot.grange>
+ <20060214010138.GJ18853@igloo.df.lth.se> <Pine.LNX.4.60.0602140656430.30136@poirot.grange>
+ <Pine.LNX.4.60.0602152056530.5682@poirot.grange> <20060215214349.GA7947@igloo.df.lth.se>
+ <Pine.LNX.4.60.0602152322190.5682@poirot.grange> <20060216113027.GA3412@igloo.df.lth.se>
+ <Pine.LNX.4.60.0602162121020.4944@poirot.grange> <20060218224121.GA21399@igloo.df.lth.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from c-66-31-106-233.hsd1.ma.comcast.net ([66.31.106.233]:37571 "EHLO
-	nwo.kernelslacker.org") by vger.kernel.org with ESMTP
-	id S1751030AbWBSU3z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 19 Feb 2006 15:29:55 -0500
-Content-Disposition: inline
+Received: from mail.gmx.de ([213.165.64.20]:48777 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S932243AbWBSUx7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 19 Feb 2006 15:53:59 -0500
+In-Reply-To: <20060218224121.GA21399@igloo.df.lth.se>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: bcollins@debian.org
+To: Fredrik Roubert <roubert@df.lth.se>
+Cc: linux-scsi@vger.kernel.org
 
-We had a user report the following trace to us running
-a 2.6.16rc4 kernel. (It's actually been there since at least 2.6.15)
+On Sat, 18 Feb 2006, Fredrik Roubert wrote:
 
-He can trigger it easily with just a 'modprobe sbp2'
-Whilst it sounds firewire specific, the trace doesn't finger
-sbp2 at all, but points to scsi_mod.
+> Here is the dmesg output from that test run:
+> 
+> [262653.162293] dc395x: Tekram DC395(U/UW/F), DC315(U) - ASIC TRM-S1040 v2.05, 2004/03/08
+> [262653.162314] ACPI: PCI Interrupt 0000:04:05.0[A] -> GSI 20 (level, low) -> IRQ 19
+> [262653.404392] dc395x: Used settings: AdapterID=07, Speed=0(20.0MHz), dev_mode=0x57
+> [262653.404398] dc395x:                AdaptMode=0x0f, Tags=4(16), DelayReset=1s
+> [262653.404403] dc395x: Connectors:  Termination: Auto Low High
+> [262653.404466] dc395x: Performing initial SCSI bus reset
+> [262653.404985] scsi4 : Tekram DC395(U/UW/F), DC315(U) - ASIC TRM-S1040 v2.05, 2004/03/08
+> [262655.033158]   Vendor: HP        Model: C2520A            Rev: 3503
+> [262655.033171]   Type:   Processor                          ANSI SCSI revision: 02
+> [262655.034138]  4:0:2:0: Attached scsi generic sg2 type 3
+> [262675.061545] drivers/scsi/dc395x.c[2572]: 2, 0, 0
+> [262676.044080] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.073044] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.102258] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.131515] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.353526] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.402529] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.418709] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.434949] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.451199] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.467416] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.483808] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.500094] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.520097] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.536219] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.599101] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.615137] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.631210] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.647318] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.663580] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.683896] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.747918] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.774339] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.810508] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.813529] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.838307] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.864369] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.936742] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.952765] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.968897] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262676.985074] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262677.001171] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262683.504018] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262683.530334] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262683.566400] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262683.569421] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262683.594330] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262683.620404] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262687.173095] drivers/scsi/dc395x.c[2572]: 2, 0, 0
+> [262687.198697] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262713.038424] drivers/scsi/dc395x.c[2572]: 2, 0, 0
+> [262713.064027] drivers/scsi/dc395x.c[2572]: 4, 0, 0
+> [262725.911499] dc395x: reselect: w/o disconnected cmds <02-0>
+> [262725.911521] dc395x: disconnect: Unexpected reselection <02-0>
+> [262845.687267] dc395x: eh_abort: (pid#1007) target=<02-0> cmd=ffff810075fe3dc0
+> [262845.687274] dc395x: eh_abort: Command in progress<6>dc395x: eh_abort: (pid#1008) target=<02-0> cmd=ffff810075fe3880
+> [262845.687280] dc395x: eh_abort: Command was waiting
+> [262855.668103] dc395x: eh_abort: (pid#1008) target=<02-0> cmd=ffff810075fe3880
+> [262855.668111] dc395x: eh_abort: Command was waiting
+> [262855.668119] dc395x: eh_bus_reset: (pid#1007) target=<02-0> cmd=ffff810075fe3dc0
+> [262855.668640] dc395x: doing_srb_done: pids G:1007(02-0)
+> [262865.663561] drivers/scsi/dc395x.c[2572]: 2, 0, 0
 
-More info at https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=182005
+Ok, this tells us, that on your system PIO is triggered only on the 
+"write" path and when scattergather are not used. This means that, 1) we 
+won't be able to test the most interesting part of the proposed PIO fix - 
+scattergather remapping, and 2) your problem might be in hardware rather 
+than in software. For the latter I have to ask you if your cables are ok? 
+Termination? Maybe replace the cable? Do you have any other SCSI card 
+where you also could test your scanner? If you don't think it's a hardware 
+problem, we might try to look more exactly how this error (unexpected 
+reselect) occurs, how it is related to failing DMA (that's when PIO is 
+invoked), and verify if the PIO code is correct / fix it.
 
-		Dave
+After you confirm that your cables and termination are fine, I would ask 
+you to do a few more tests to look more exactly at what's happening, and 
+to verify at least the non-sg path of my patch. So, would you agree to 
+help me further with the tests or would you rather or would you prefer to 
+stop now?
 
-
-Feb 18 22:30:17 fgrbhw01 kernel: sbp2: $Rev: 1306 $ Ben Collins <bcollins@debian.org>
-Feb 18 22:30:17 fgrbhw01 kernel: ieee1394: sbp2: Driver forced to serialize I/O (serialize_io=1)
-Feb 18 22:30:17 fgrbhw01 kernel: ieee1394: sbp2: Try serialize_io=0 for better performance
-Feb 18 22:30:17 fgrbhw01 kernel: scsi2 : SCSI emulation for IEEE-1394 SBP-2 Devices
-Feb 18 22:30:17 fgrbhw01 kernel: ieee1394: sbp2: Node 0-00:1023: Using 36byte inquiry workaround
-Feb 18 22:30:18 fgrbhw01 kernel: ieee1394: sbp2: Logged into SBP-2 device
-Feb 18 22:30:18 fgrbhw01 kernel:   Vendor: Initio    Model: 0KLAT80          Rev: 2.05
-Feb 18 22:30:18 fgrbhw01 kernel:   Type:   Direct-Access                     ANSI SCSI revision: 00
-Feb 18 22:30:18 fgrbhw01 kernel: SCSI device sdb: 781422768 512-byte hdwr sectors (400088 MB)
-Feb 18 22:30:18 fgrbhw01 kernel: slab error in cache_free_debugcheck(): cache `sgpool-8': double free, or memory outside object was overwritten
-Feb 18 22:30:18 fgrbhw01 kernel:  [<c014d8bf>] cache_free_debugcheck+0xce/0x1b9
-    [<c01486cb>] mempool_free+0x5f/0x63
-Feb 18 22:30:18 fgrbhw01 kernel:  [<c014e230>] kmem_cache_free+0x2a/0x5c    
-[<c01486cb>] mempool_free+0x5f/0x63
-Feb 18 22:30:18 fgrbhw01 kernel:  [<f8864f65>] scsi_io_completion+0x65/0x3ce
-[scsi_mod]     [<f8860bb3>] scsi_finish_command+0xb8/0xbd [scsi_mod]
-Feb 18 22:30:18 fgrbhw01 kernel:  [<f8860ab6>] scsi_softirq+0x109/0x128
-[scsi_mod]     [<c0127098>] __do_softirq+0x58/0xc2
-Feb 18 22:30:18 fgrbhw01 kernel:  [<c0105f75>] do_softirq+0x46/0x4e
-Feb 18 22:30:18 fgrbhw01 kernel:  =======================
-Feb 18 22:30:18 fgrbhw01 kernel:  [<c0105e9a>] do_IRQ+0x72/0x7b     [<c01048fe>]
-common_interrupt+0x1a/0x20
-Feb 18 22:30:18 fgrbhw01 kernel:  [<f88c940b>] ext3_get_block_handle+0x0/0x2a5
-[ext3]     [<f88c9714>] ext3_get_block+0x64/0x6c [ext3]
-Feb 18 22:30:18 fgrbhw01 kernel:  [<f88c9f0f>] ext3_bmap+0x0/0x6d [ext3]    
-[<c0165dec>] generic_block_bmap+0x28/0x35
-Feb 18 22:30:18 fgrbhw01 kernel:  [<c02f599a>] io_schedule+0x26/0x30    
-[<c02f5cd3>] out_of_line_wait_on_bit_lock+0x75/0x7d
-Feb 18 22:30:18 fgrbhw01 kernel:  [<c01631d3>] sync_buffer+0x0/0x33    
-[<f88c9f75>] ext3_bmap+0x66/0x6d [ext3]
-Feb 18 22:30:18 fgrbhw01 kernel:  [<f88c96b0>] ext3_get_block+0x0/0x6c [ext3]  
-  [<f88c9f0f>] ext3_bmap+0x0/0x6d [ext3]
-Feb 18 22:30:18 fgrbhw01 kernel:  [<c0178e14>] bmap+0x23/0x27     [<f88961e9>]
-journal_bmap+0x1d/0x64 [jbd]
-Feb 18 22:30:18 fgrbhw01 kernel:  [<c01347cd>] wake_bit_function+0x0/0x3c    
-[<c014d9a2>] cache_free_debugcheck+0x1b1/0x1b9
-Feb 18 22:30:18 fgrbhw01 kernel:  [<f88961bd>] journal_next_log_block+0x74/0x83
-[jbd]     [<f889623f>] journal_get_descriptor_buffer+0xf/0x8d [jbd]
-Feb 18 22:30:19 fgrbhw01 kernel:  [<f8893709>]
-journal_commit_transaction+0x61c/0xdbf [jbd]     [<c02f6269>]
-_spin_lock_irqsave+0x9/0xd
-Feb 18 22:30:19 fgrbhw01 kernel:  [<c012a32b>] try_to_del_timer_sync+0x44/0x4a 
-   [<f88959aa>] kjournald+0xbd/0x20e [jbd]
-Feb 18 22:30:19 fgrbhw01 kernel:  [<c011d4c9>] schedule_tail+0x36/0x8b    
-[<f88958e8>] commit_timeout+0x0/0x5 [jbd]
-Feb 18 22:30:19 fgrbhw01 kernel:  [<c01347a0>] autoremove_wake_function+0x0/0x2d
-    [<f88958ed>] kjournald+0x0/0x20e [jbd]
-Feb 18 22:30:19 fgrbhw01 kernel:  [<c01023a9>] kernel_thread_helper+0x5/0xb
-Feb 18 22:30:19 fgrbhw01 kernel: f3fa3888: redzone 1: 0x170fc2a5, redzone 2:
-0xc01485d0.
-
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
