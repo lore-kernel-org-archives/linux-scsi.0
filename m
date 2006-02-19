@@ -1,45 +1,27 @@
-From: "Prefix P. Susanna" <jrey@greenwood.lib.ms.us>
-Subject: Software
-Date: Sun, 19 Feb 2006 02:20:20 -0500
-Message-ID: <8232649528.20060219022020@greenwood.lib.ms.us>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [linux-usb-devel] Re: Linux 2.6.16-rc3
+Date: Sun, 19 Feb 2006 07:51:17 -0600
+Message-ID: <1140357077.3103.0.camel@mulgrave.il.steeleye.com>
+References: <Pine.LNX.4.44L0.0602181515350.4115-100000@netrider.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeus1.kernel.org ([204.152.191.4]:56977 "EHLO zeus1.kernel.org")
-	by vger.kernel.org with ESMTP id S932088AbWBSHTa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 19 Feb 2006 02:19:30 -0500
-Received: from 170051416 ([219.134.216.120])
-	by zeus1.kernel.org (8.13.1/8.13.1) with SMTP id k1J7ILBC002044
-	for <linux-scsi@vger.kernel.org>; Sun, 19 Feb 2006 07:19:27 GMT
-Received: from greenwood.lib.ms.us (-1213725784 [-1214006112])
-	by gettoefl.com (Qmailv1) with ESMTP id 5CAA2EB1F1
-	for <linux-scsi@vger.kernel.org>; Sun, 19 Feb 2006 02:20:20 -0500
+Received: from stat9.steeleye.com ([209.192.50.41]:63130 "EHLO
+	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
+	id S932442AbWBSNwP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 19 Feb 2006 08:52:15 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0602181515350.4115-100000@netrider.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Jens Axboe <axboe@suse.de>, Russell King <rmk+lkml@arm.linux.org.uk>, Greg KH <greg@kroah.com>, Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>, linux-kernel@vger.kernel.org, "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, "Yu, Luming" <luming.yu@intel.com>, Ben Castricum <lk@bencastricum.nl>, sanjoy@mrao.cam.ac.uk, Helge Hafting <helgehaf@aitel.hist.no>, "Carlo E. Prelz" <fluido@fluido.as>, Gerrit Bruchh?user <gbruchhaeuser@gmx.de>, Nicolas.Mailhot@LaPoste.net, Jaroslav Kysela <perex@suse.cz>, Takashi Iwai <tiwai@suse.de>, Patrizio Bassi <patrizio.bassi@gmail.com>, Bj?rn Nilsson <bni.swe@gmail.com>, Andrey Borzenkov <arvidjaar@mail.ru>, "P. Christeas" <p_christ@hol.gr>, ghrt <ghrt@dial.kappa.ro>, jinhong hu <jinhong.hu@gmail.com>, Andrew Vasquez <andre>
 
-cheap oem soft shipping worldwide 
-Learn to build simple and clean websites that can bring in the dough... 
+On Sat, 2006-02-18 at 15:16 -0500, Alan Stern wrote:
+> The test should be in_atomic(), not in_interrupt().
 
-New software on our site:
+There's a long prior discussion of why it has to be in_interrupt()
 
-Extensis Portfolio 7.0 - $59.95
-Photoshop 7 - $69.95 
-Exchange 2003 Enterprise Server - $69.95
-Exchange 2003 Enterprise Server - $69.95
-Office XP Professional - $79.95
-InDesign CS PageMaker Edition (2CD) - $69.95
-Freehand MX 11 - $69.95
-Windows 98 Second Edition - $49.95
-Creative Suite Standard (3 CD) - $129.95
-Visio 2003 Professional - $69.95
-Studio MX 2004 with Director MX 2004 - $139.95
-Streets and Trips 2004 North America (2CD) - $69.95
-Photoshop CS $99.95
-Photoshop 7 - $69.95 
+James
 
-Our site:
-http://labiumjg.com
 
