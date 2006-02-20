@@ -1,80 +1,70 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Fw: slab error in cache_free_debugcheck(): cache `sgpool-8':
-Date: Mon, 20 Feb 2006 00:39:08 +0100
-Message-ID: <43F9019C.3010505@s5r6.in-berlin.de>
-References: <20051017002339.5156d7f4.akpm@osdl.org> <4353754B.1040500@s5r6.in-berlin.de> <4353FDAD.1010204@chello.be>
+From: Tom Scanlan <tscanlan@sosaith.org>
+Subject: sd/usb deadlock
+Date: Sun, 19 Feb 2006 22:14:26 -0500
+Message-ID: <43F93412.6070700@sosaith.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------090608090705000507010903"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:20668 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S932424AbWBSXjk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 19 Feb 2006 18:39:40 -0500
-In-Reply-To: <4353FDAD.1010204@chello.be>
+Received: from smtp01.mrf.mail.rcn.net ([207.172.4.61]:30106 "EHLO
+	smtp01.mrf.mail.rcn.net") by vger.kernel.org with ESMTP
+	id S932598AbWBTDO3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 19 Feb 2006 22:14:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "F. Poncin" <cr27587@chello.be>
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, Andrew Morton <akpm@osdl.org>
+To: linux-scsi@vger.kernel.org
 
-F. Poncin wrote on 2005-10-17:
-> Stefan Richter wrote:
->> Andrew Morton wrote:
->>> THis is rather deadly. Is it likely to be a 1394 bug, or scsi?
->>
->> I am not sure.
-> 
-> No impact on disk access.
-> 
->>> Begin forwarded message:
->> ...
->>> Summary: slab error in cache_free_debugcheck(): cache `sgpool-8': 
->>> double free, or memory outside object was overwritten
->>> Kernel version: 2.6.14-rc4-g9149ccfa
->>> Steps to reproduce: on boot
->>> Hardware: Dell 8300 + External USB disk enclosures
-...
-> Brand new Seagate USB/FireWire External Hard Drive - 
-> http://www.seagate.com/products/personal/external.html
-> Connected through FireWire to PCI card: FireWire (IEEE 1394): Agere 
-> Systems (former Lucent Microelectronics) FW323 (rev 61)
-> 
-> The older Seagate model (same size) is not affected.
-> Vendor: ST340083 Model: 2A Rev:
-> Type: Direct-Access-RBC ANSI SCSI revision: 04
-...
->>> scsi2 : SCSI emulation for IEEE-1394 SBP-2 Devices
->>> ieee1394: sbp2: Logged into SBP-2 device
->>> ieee1394: Node 0-00:1023: Max speed [S400] - Max payload [2048]
->>> Vendor: Initio Model: ST3400832A Rev: 4.07
->>> Type: Direct-Access ANSI SCSI revision: 00
->>> SCSI device sdc: 781422768 512-byte hdwr sectors (400088 MB)
->>> slab error in cache_free_debugcheck(): cache `sgpool-8': double free, 
->>> or memory outside object was overwritten
-...
->>> c233b7a8: redzone 1: 0x170fc2a5, redzone 2: 0xc0144b47.
->>> sdc: asking for cache data failed
->>> sdc: assuming drive cache: write through
->>> SCSI device sdc: 781422768 512-byte hdwr sectors (400088 MB)
->>> slab error in cache_free_debugcheck(): cache `sgpool-8': double free, 
->>> or memory outside object was overwritten
-...
+This is a multi-part message in MIME format.
+--------------090608090705000507010903
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Finally there is news for Initio SBP-2 bridges.
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114038995826749
+Not sure if I should report this or ask around elsewhere... This was
+also sent to drew@colorado.edu, as he was first in sd.c.
 
-Could you try the scsi_mod parameters mentioned there?
 
-Alternatively, update to the latest 1394 drivers (soon to be in -mm, 
-curently only at 
-http://www.kernel.org/git/?p=linux/kernel/git/scjody/ieee1394.git or 
-http://me.in-berlin.de/~s5r6/linux1394/updates/ ) and load sbp2 with 
-"modprobe sbp2 force_inquiry_hack=1" before connecting the disk.
+sd_open in drivers/scsi/sd.c  seems to have a deadlock.  It was noticed
+when plugging and unplugging lots of usb disks in random order on a slow
+machine.  The hotplug scripts were running fdisk -l on the devices and
+trying to mount the disks as they were getting (un)plugged.  I saw this
+in version 2.4.21, but the code is the same at least up to 2.4.30.
 
-If either one of these workarounds helps I would be interested in the 
-firmware revision which is logged by sbp2 with force_inquiry_hack=1. You 
-can get this value with unpatched drivers too.
--- 
-Stefan Richter
--=====-=-==- --=- =-=--
-http://arcgraph.de/sr/
+revalidate_scsidisk marks the disk as busy, then we hit an sd_open and
+got stuck in a loop waiting for the disk to become not busy.  The change
+is to fail on open if the disk is busy.  Requiring a mount retry is
+better behavior than hanging the kernel.
+
+The diff is attached... I'm not sure the process to getting it in a
+release... pointers would be helpful.  If there is a reason this
+shouldn't be used let me know, as I'm not much of a kernel hacker.
+
+
+--------------090608090705000507010903
+Content-Type: text/plain;
+ name="sd.c.diff"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="sd.c.diff"
+
+--- sd.c	2006-02-10 12:22:41.000000000 -0500
++++ sd.c~	2006-02-08 16:27:31.000000000 -0500
+@@ -466,10 +466,15 @@
+ 	 * is being re-read.
+ 	 */
+ 
+- 	if  (rscsi_disks[target].device->busy) {
+-		printk("device %d was busy, can't open it, try again soon.\n", target);
+- 		return -ENXIO;
+- 	}
++
++	while (rscsi_disks[target].device->busy) {
++		barrier();
++		cpu_relax();
++	}
++
+ 	/*
+ 	 * The following code can sleep.
+ 	 * Module unloading must be prevented
+
+
+--------------090608090705000507010903--
