@@ -1,58 +1,44 @@
-From: Al Viro <viro@ftp.linux.org.uk>
-Subject: Re: TYPE_RBC cache fixes (sbp2.c affected)
-Date: Mon, 20 Feb 2006 06:08:45 +0000
-Message-ID: <20060220060845.GS27946@ftp.linux.org.uk>
-References: <20050516015955.GL1150@parcelfarce.linux.theplanet.co.uk> <43EA8128.9000205@s5r6.in-berlin.de> <20060208235415.GL27946@ftp.linux.org.uk> <43EDB35F.40709@s5r6.in-berlin.de>
+From: "Yu, Luming" <luming.yu@intel.com>
+Subject: RE: [linux-usb-devel] Re: Linux 2.6.16-rc3
+Date: Mon, 20 Feb 2006 16:07:23 +0800
+Message-ID: <3ACA40606221794F80A5670F0AF15F840AFD4371@pdsmsx403>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux1394-devel-admin@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <43EDB35F.40709@s5r6.in-berlin.de>
-Sender: linux1394-devel-admin@lists.sourceforge.net
-Errors-To: linux1394-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fmr18.intel.com ([134.134.136.17]:47835 "EHLO
+	orsfmr003.jf.intel.com") by vger.kernel.org with ESMTP
+	id S932694AbWBTIJ5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2006 03:09:57 -0500
+Content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
+Cc: "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, akpm@osdl.org, torvalds@osdl.org, linux-kernel@vger.kernel.org, axboe@suse.de, James.Bottomley@steeleye.com, greg@kroah.com, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, lk@bencastricum.nl, helgehaf@aitel.hist.no, fluido@fluido.as, gbruchhaeuser@gmx.de, Nicolas.Mailhot@LaPoste.net, perex@suse.cz, tiwai@suse.de, patrizio.bassi@gmail.com, bni.swe@gmail.com, arvidjaar@mail.ru, p_christ@hol.gr, ghrt@dial.kappa.ro, jinhong.hu@gmail.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, bcrl@kvack.org
 
-On Sat, Feb 11, 2006 at 10:50:23AM +0100, Stefan Richter wrote:
-> Yes, I will do so as soon I got spare time.
-> MODE_SENSE_10 seemed to be the trigger, as mentioned in 
-> http://marc.theaimsgroup.com/?l=linux-scsi&m=112128914912105 . Also note 
-> that this device reports to implement Direct-Access, unlike most other 
-> SBP-2 HDDs which pose as Direct-Access-RBC.
+>>>> I don't think anybody claimed this isn't a regression for the 600X.
+>
+>>> I narrowed it further.  The short story is that this commit (diff
+>>> below sig) makes the second S3 sleep go into the endless loop, if
+>>> the loaded modules are exactly thermal, processor, intel_agp, and
+>>> agpgart:
+>
+>> If you believe this patch is the root cause of the regression you
+>> have been seeing.
+>
+>Not sure if you were waiting for me to say something, but I do believe
+>the change of default from ec_intr=0 to ec_intr=1 causes the problem
+>for me.
+>
 
-OK, I think I've seen one that does it.  Behold the lossage:
+I'm fine if you call this regression. :-) 
+The real problem is there could be some bugs hidden by ec_intr=0.
+I'm pretty sure your 600X box has thermal related issue that is breaking
+2nd S3 suspend. But I don't know how.
 
-	* bugger does, indeed, report itself to be type 0
-	* OK, says sd_read_cache_type().  Page 8 for you, then.
-	* so called "SCSI device" spits out...
-<drumroll> RBC page 6.  Sans mode page headers.
+ec_intr=1 just get these bug  just exposed on your box, 
+and we need to work together to fix them. 
 
-So we see 0x86 0x0b where the data length should've been.  And bytes 3 and 2
-of device size where the block descriptors size should've been.  Since sd.c
-doesn't expect that level of idiocy (it should, but...) we adjust length
-down from ~34000 to 20 _and_ blindly add block descriptors size.  Or what
-we assume to be one.
-
-Then we proceed to call scsi_mode_sense() with buffer created by kmalloc(512,
-GFP_DMA) and len... well, anywhere up to 64Kb.   One of the first things it
-does is memset(buffer, 0, len).
-
-
-That's an Initio bridge, BTW.  I suspect that the best we can do is to
-blacklist the little shit with "don't trust that one, it's really type 14".
-If it reacts to request for page 6 in a saner fashion, that is...
-
-
--------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
-for problems?  Stop!  Download the new AJAX search engine that makes
-searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
-http://sel.as-us.falkag.net/sel?cmd=lnk&kid=103432&bid=230486&dat=121642
+Thanks,
+Luming
