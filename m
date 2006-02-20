@@ -1,45 +1,31 @@
-From: Dax Kelson <dax@gurulabs.com>
-Subject: Areca RAID driver remaining items?
-Date: Mon, 20 Feb 2006 11:02:32 -0700
-Message-ID: <1140458552.3495.26.camel@mentorng.gurulabs.com>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: Areca RAID driver remaining items?
+Date: Mon, 20 Feb 2006 19:11:19 +0100
+Message-ID: <1140459079.2979.70.camel@laptopd505.fenrus.org>
+References: <1140458552.3495.26.camel@mentorng.gurulabs.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gurulabs.com ([67.137.148.7]:38817 "EHLO mail.gurulabs.com")
-	by vger.kernel.org with ESMTP id S932241AbWBTSCL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Feb 2006 13:02:11 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:150 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1161100AbWBTSLY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Feb 2006 13:11:24 -0500
+In-Reply-To: <1140458552.3495.26.camel@mentorng.gurulabs.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: billion.wu@areca.com.tw, alan@lxorguk.ukuu.org.uk, akpm@osdl.org, erich@areca.com.tw, arjan@infradead.org, oliver@neukum.org
+To: Dax Kelson <dax@gurulabs.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, billion.wu@areca.com.tw, alan@lxorguk.ukuu.org.uk, akpm@osdl.org, erich@areca.com.tw, oliver@neukum.org
 
-This appears to be the most current version of the driver:
 
-ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.16-rc4/2.6.16-rc4-mm1/broken-out/areca-raid-linux-scsi-driver.patch
+> "There's lots of architectural problems.  It's doing it's own queueing,
+> it's stuffing kernel structures into memory on the hardware and so on.
+> Basically someone knowledgeable about the hardware needs to start from
+> scratch on it."
+> 
+> What are the show stoppers that prevents a merge into the Linus tree?
 
-Is this the current TODO list?
+own queueing for sure is a show stopper; 
+stuffing kernel structures into the hw is also very much evil
 
-=================
-Issues not yet patched:
-
-13. uintNN_t int types:  use kernel types except for userspace
-interfaces
-14. use kernel-doc
-18. Put arcmsr.txt in Documentation/scsi/, not in scsi/arcmsr/.
-19. Maybe use sysfs (/sys) instead of /proc.
-20. check stack usage, init/exit sections;
-=================
-   
-At one point this comment was made:
-
-"There's lots of architectural problems.  It's doing it's own queueing,
-it's stuffing kernel structures into memory on the hardware and so on.
-Basically someone knowledgeable about the hardware needs to start from
-scratch on it."
-
-What are the show stoppers that prevents a merge into the Linus tree?
-
-Dax Kelson
 
