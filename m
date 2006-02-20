@@ -1,44 +1,47 @@
-From: "Yu, Luming" <luming.yu@intel.com>
-Subject: RE: [linux-usb-devel] Re: Linux 2.6.16-rc3
-Date: Mon, 20 Feb 2006 16:07:23 +0800
-Message-ID: <3ACA40606221794F80A5670F0AF15F840AFD4371@pdsmsx403>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] aic94xx: driver assertion in non-x86 BIOS env
+Date: Mon, 20 Feb 2006 06:11:59 -0500
+Message-ID: <43F9A3FF.308@pobox.com>
+References: <20060217023613.GA30583@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmr18.intel.com ([134.134.136.17]:47835 "EHLO
-	orsfmr003.jf.intel.com") by vger.kernel.org with ESMTP
-	id S932694AbWBTIJ5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2006 03:09:57 -0500
-Content-class: urn:content-classes:message
+Received: from mail.dvmed.net ([216.237.124.58]:27347 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S932447AbWBTLMD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Feb 2006 06:12:03 -0500
+In-Reply-To: <20060217023613.GA30583@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sanjoy Mahajan <sanjoy@mrao.cam.ac.uk>
-Cc: "Brown, Len" <len.brown@intel.com>, "David S. Miller" <davem@davemloft.net>, akpm@osdl.org, torvalds@osdl.org, linux-kernel@vger.kernel.org, axboe@suse.de, James.Bottomley@steeleye.com, greg@kroah.com, linux-acpi@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, lk@bencastricum.nl, helgehaf@aitel.hist.no, fluido@fluido.as, gbruchhaeuser@gmx.de, Nicolas.Mailhot@LaPoste.net, perex@suse.cz, tiwai@suse.de, patrizio.bassi@gmail.com, bni.swe@gmail.com, arvidjaar@mail.ru, p_christ@hol.gr, ghrt@dial.kappa.ro, jinhong.hu@gmail.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, bcrl@kvack.org
+To: Mike Anderson <andmike@us.ibm.com>
+Cc: linux-scsi@vger.kernel.org, Tarte@us.ibm.com, Robert <Robert_Tarte@adaptec.com>, Jeff Garzik <jgarzik@redhat.com>
 
->>>> I don't think anybody claimed this isn't a regression for the 600X.
->
->>> I narrowed it further.  The short story is that this commit (diff
->>> below sig) makes the second S3 sleep go into the endless loop, if
->>> the loaded modules are exactly thermal, processor, intel_agp, and
->>> agpgart:
->
->> If you believe this patch is the root cause of the regression you
->> have been seeing.
->
->Not sure if you were waiting for me to say something, but I do believe
->the change of default from ec_intr=0 to ec_intr=1 causes the problem
->for me.
->
+Mike Anderson wrote:
+> This patch addresses the issue of the aic94xx driver not working on
+> non-x86 or on systems where the card bios had been disabled.
+> http://bugzilla.kernel.org/show_bug.cgi?id=6042
+> 
+> Rob Tarte, Jeff Ding, and I coordinated on the fix for the OCM issue.
+> 
+> The patch has been run on a Powermac G5, a PPC64, and IA64 based system.
+> 
+> -andmike
+> --
+> Michael Anderson
+> andmike@us.ibm.com
+> 
+>  This purpose of this patch is to allow the aic94xx driver to load and
+>  function on archs that do not allow the cards bios to run. This patch
+>  contains a forward port of code changes made to the adp94xx driver
+>  that inits the ocm if the bios did not. The patch also provides default
+>  parameters for flash values if the flash data cannot be read.
+> 
+>  Signed-off-by: Mike Anderson <andmike@us.ibm.com>
 
-I'm fine if you call this regression. :-) 
-The real problem is there could be some bugs hidden by ec_intr=0.
-I'm pretty sure your 600X box has thermal related issue that is breaking
-2nd S3 suspend. But I don't know how.
+applied to sas-2.6.git#upstream (and #ALL, and thus to Andrew's -mm)
 
-ec_intr=1 just get these bug  just exposed on your box, 
-and we need to work together to fix them. 
+	Jeff
 
-Thanks,
-Luming
+
+
