@@ -1,67 +1,35 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: TYPE_RBC cache fixes (sbp2.c affected)
-Date: Tue, 21 Feb 2006 20:56:08 +0100
-Message-ID: <43FB7058.4040008@s5r6.in-berlin.de>
-References: <20050516015955.GL1150@parcelfarce.linux.theplanet.co.uk> <43EA8128.9000205@s5r6.in-berlin.de> <20060208235415.GL27946@ftp.linux.org.uk> <43EDB35F.40709@s5r6.in-berlin.de> <20060220060845.GS27946@ftp.linux.org.uk>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: Problems with MSI-X on ia64
+Date: Tue, 21 Feb 2006 14:21:42 -0600
+Message-ID: <D4CFB69C345C394284E4B78B876C1CF10BAD8CA9@cceexc23.americas.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-admin@lists.sourceforge.net>
-In-Reply-To: <20060220060845.GS27946@ftp.linux.org.uk>
-Sender: linux1394-devel-admin@lists.sourceforge.net
-Errors-To: linux1394-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-To: Al Viro <viro@ftp.linux.org.uk>
-Cc: linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ia64-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+Sender: linux-ia64-owner@vger.kernel.org
+To: "Grundler, Grant G" <grant.grundler@hp.com>, "Luck, Tony" <tony.luck@intel.com>
+Cc: Chris Wedgwood <cw@f00f.org>, Grant Grundler <grundler@parisc-linux.org>, Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ia64@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, Jesse Barnes <jbarnes@virtuousgeek.org>, "Patterson, Andrew D (Linux R&D)" <andrew.patterson@hp.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Al Viro wrote:
-> OK, I think I've seen one that does it.  Behold the lossage:
+> -----Original Message-----
+> From: Grundler, Grant G 
 > 
-> 	* bugger does, indeed, report itself to be type 0
-> 	* OK, says sd_read_cache_type().  Page 8 for you, then.
-> 	* so called "SCSI device" spits out...
-> <drumroll> RBC page 6.  Sans mode page headers.
+> On Fri, Feb 17, 2006 at 11:52:45AM -0800, Luck, Tony wrote:
+> > > Hrm, it may be doing this.  I wonder how that works though with 
+> > > 4GB's of RAM installed?
+> > 
+> > Systems with 4G of RAM usually map part of the RAM above 4G 
+> so as to 
+> > leave a hole for i/o mapping etc.
 > 
-> So we see 0x86 0x0b where the data length should've been.  And bytes 3 and 2
-> of device size where the block descriptors size should've been.  Since sd.c
-> doesn't expect that level of idiocy (it should, but...) we adjust length
-> down from ~34000 to 20 _and_ blindly add block descriptors size.  Or what
-> we assume to be one.
-> 
-> Then we proceed to call scsi_mode_sense() with buffer created by kmalloc(512,
-> GFP_DMA) and len... well, anywhere up to 64Kb.   One of the first things it
-> does is memset(buffer, 0, len).
+> exactly.
+> rx2600 physical memory map only has 1GB of RAM below 4GB 
+> address space.
 
-Thanks a lot for the investigation & explanation.
+So I looked at 2.6.16-rc3 which works in my lab, but phys_addr is still
+an int. How can that work? I believe Andrew saw the same thing in
+2.6.15.
 
-> That's an Initio bridge, BTW.  I suspect that the best we can do is to
-> blacklist the little shit with "don't trust that one, it's really type 14".
-> If it reacts to request for page 6 in a saner fashion, that is...
-
-2.6.16-rc4-mm1's sbp2 already detects most of the Initio bridges and 
-flags them with skip_ms_page_8. It does so based on the 
-firmware_revision config ROM entry. This seems to catch most Initio 
-bridges but there was at least one report of a different 
-firmware_revision key value. However all of them feature "Initio" as 
-vendor string. I suppose I should let sbp2_slave_configure check for 
-this string in sdev->vendor and for sdev->type == TYPE_DISK, then bend 
-sdev->type to TYPE_RBC. (Or set skip_ms_page_8; I will check how my disk 
-behaves when forced to TYPE_RBC...)
--- 
-Stefan Richter
--=====-=-==- --=- =-=-=
-http://arcgraph.de/sr/
-
-
--------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
-for problems?  Stop!  Download the new AJAX search engine that makes
-searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
-http://sel.as-us.falkag.net/sel?cmd=lnk&kid=103432&bid=230486&dat=121642
+mikem
