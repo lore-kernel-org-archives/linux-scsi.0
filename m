@@ -1,36 +1,55 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: lsscsi-0.17 released
-Date: Tue, 21 Feb 2006 18:39:57 -0500
-Message-ID: <43FBA4CD.6000505@torque.net>
-Reply-To: dougg@torque.net
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [Cancel][PATCH] Close list corruption window in __scsi_iterate_devices
+Date: Tue, 21 Feb 2006 18:51:57 -0500
+Message-ID: <43FBA79D.2060302@emulex.com>
+References: <43FB9407.7010102@emulex.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tomts36.bellnexxia.net ([209.226.175.93]:17897 "EHLO
-	tomts36-srv.bellnexxia.net") by vger.kernel.org with ESMTP
-	id S932175AbWBUXlA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Feb 2006 18:41:00 -0500
+Received: from emulex.emulex.com ([138.239.112.1]:9689 "EHLO emulex.emulex.com")
+	by vger.kernel.org with ESMTP id S1161237AbWBUXwV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Feb 2006 18:52:21 -0500
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id k1LNqJrf029549
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Feb 2006 15:52:20 -0800 (PST)
+In-Reply-To: <43FB9407.7010102@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, taggart@debian.org
+To: James.Smart@Emulex.Com
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-lsscsi is a utility that uses sysfs in linux 2.6 series kernels
-to list information about SCSI devices and SCSI hosts. Both a
-compact format (default) which is one line per device and a
-"classic" format (like the output of 'cat /proc/scsi/scsi') are
-supported.
+Sorry folks - cold medicine had me seeing things.  Ignore this.
 
-Version 0.17 is available at
-http://www.torque.net/scsi/lsscsi.html
-More information can be found on that page including examples
-and a Download section for tarballs and rpms.
-This version will be required for lsscsi to work properly
-when lk 2.6.16 is released.
+-- james s
 
-ChangeLog:
-Version 0.17 2006/2/6
-  - fix disappearance of block device names in lk 2.6.16-rc1
-
-Doug Gilbert
+James Smart wrote:
+> The existing code could allow the use of a list pointer that is
+> grabbed prior to the lock, changes while waiting for the lock, thus
+> is no longer valid while the lock is held.
+> 
+> -- james s
+> 
+> --- a/drivers/scsi/scsi.c    2006-02-06 06:01:12.000000000 -0500
+> +++ b/drivers/scsi/scsi.c.NEW    2006-02-21 17:30:31.000000000 -0500
+> @@ -1015,11 +1015,12 @@ EXPORT_SYMBOL(scsi_device_put);
+>  struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *shost,
+>                         struct scsi_device *prev)
+>  {
+> -    struct list_head *list = (prev ? &prev->siblings : &shost->__devices);
+> +    struct list_head *list;
+>      struct scsi_device *next = NULL;
+>      unsigned long flags;
+> 
+>      spin_lock_irqsave(shost->host_lock, flags);
+> +    list = (prev ? &prev->siblings : &shost->__devices);
+>      while (list->next != &shost->__devices) {
+>          next = list_entry(list->next, struct scsi_device, siblings);
+>          /* skip devices that we can't get a reference to */
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
