@@ -1,35 +1,49 @@
-From: Al Viro <viro@ftp.linux.org.uk>
-Subject: Re: Fw: [Bugme-new] [Bug 6114] New: Initio sbp2 causes: "slab error in cache_free_debugcheck(): cache `size-512(DMA)': double free, or memory outside" object was overwritten
-Date: Wed, 22 Feb 2006 01:29:42 +0000
-Message-ID: <20060222012942.GY27946@ftp.linux.org.uk>
-References: <20060221040511.35b69d26.akpm@osdl.org> <43FB6545.8080103@s5r6.in-berlin.de> <43FB67BD.7030101@s5r6.in-berlin.de> <20060221134543.5f844d7c.akpm@osdl.org> <43FB9FE5.8070309@s5r6.in-berlin.de> <Pine.LNX.4.64.0602220041070.21474@jbgna.fhfr.qr> <43FBB1A2.9030009@s5r6.in-berlin.de>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Fw: [Bugme-new] [Bug 6114] New: Initio sbp2 causes: "slab error
+ in cache_free_debugcheck(): cache `size-512(DMA)': double free, or memory
+ outside" object was overwritten
+Date: Tue, 21 Feb 2006 21:39:44 -0500
+Message-ID: <43FBCEF0.4090208@torque.net>
+References: <43FBB608.5060202@torque.net> <20060222012057.GX27946@ftp.linux.org.uk>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:12713 "EHLO
-	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S1161143AbWBVB3v
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Feb 2006 20:29:51 -0500
-Content-Disposition: inline
-In-Reply-To: <43FBB1A2.9030009@s5r6.in-berlin.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux1394-devel-admin@lists.sourceforge.net>
+In-Reply-To: <20060222012057.GX27946@ftp.linux.org.uk>
+Sender: linux1394-devel-admin@lists.sourceforge.net
+Errors-To: linux1394-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
+To: Al Viro <viro@ftp.linux.org.uk>
+Cc: linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Bernhard Kaindl <bk@suse.de>, Andrew Morton <akpm@osdl.org>, bcollins@debian.org, scjody@modernduck.com, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
 
-On Wed, Feb 22, 2006 at 01:34:42AM +0100, Stefan Richter wrote:
-> Al's patch is certainly better since it adds checks to the actual 
-> affected code region, i.e. mode_sense handling in the SCSI layers. 
-> James, would you integrate this patch?
-> 
-> However sbp2 will keep some sort of skip_ms_page_8 blacklisting anyway 
-> because of different issues with other bridges.
+>>Stefan Richter wrote:
+>>>What I don't understand is why mode page 8 is still accessed in your
+>>>log: http://bugzilla.kernel.org/attachment.cgi?id=7432&action=view
+>>>(Log lines "command: Mode Sense (10): 5a 00 08 00 00 00 00 00 d9 00",
 
-Sure, but for this bridge it's not needed - with that fix we get the
-right data out of bridge response.  Note
-+sda: missing header in MODE_SENSE response
-and
-+SCSI device sda: drive cache: write back
-in that diff.  The former is exactly what we get when we detect that
-sort of breakage (bare page 6 without header) and the latter is where
-we manage to get the cache type.
+Also apart from being a MODE SENSE (10) rather than the
+required MODE SENSE (6), the DBD bit is not set as
+required by: www.t10.org/ftp/t10/drafts/rbc/rbc-r10a.pdf
+section 6.3 .
+
+Perhaps someone could try setting DBD and see if
+the bridge is any better behaved. The cdb would be:
+  5a 08 08 00 ....   or
+  1a 08 08 00 ....
+
+Doug Gilbert
+
+
+-------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
+for problems?  Stop!  Download the new AJAX search engine that makes
+searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
+http://sel.as-us.falkag.net/sel?cmd=lnk&kid=103432&bid=230486&dat=121642
