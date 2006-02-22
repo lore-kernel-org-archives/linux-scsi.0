@@ -1,114 +1,122 @@
-From: "erich" <erich@areca.com.tw>
-Subject: Re: Areca RAID driver remaining items?
-Date: Wed, 22 Feb 2006 14:27:32 +0800
-Message-ID: <001401c63779$12e49aa0$b100a8c0@erich2003>
-References: <1140458552.3495.26.camel@mentorng.gurulabs.com> <20060220182045.GA1634@infradead.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: TYPE_RBC cache fixes (sbp2.c affected)
+Date: Wed, 22 Feb 2006 08:08:14 +0100
+Message-ID: <43FC0DDE.1050805@s5r6.in-berlin.de>
+References: <20050516015955.GL1150@parcelfarce.linux.theplanet.co.uk> <43EA8128.9000205@s5r6.in-berlin.de> <20060208235415.GL27946@ftp.linux.org.uk> <43EDB35F.40709@s5r6.in-berlin.de> <20060220060845.GS27946@ftp.linux.org.uk> <43FB7058.4040008@s5r6.in-berlin.de> <20060221215144.GW27946@ftp.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=original
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 220-130-178-143.HINET-IP.hinet.net ([220.130.178.143]:26595
-	"EHLO areca.com.tw") by vger.kernel.org with ESMTP id S1751341AbWBVG3R
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Feb 2006 01:29:17 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-admin@lists.sourceforge.net>
+In-Reply-To: <20060221215144.GW27946@ftp.linux.org.uk>
+Sender: linux1394-devel-admin@lists.sourceforge.net
+Errors-To: linux1394-devel-admin@lists.sourceforge.net
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
+To: Al Viro <viro@ftp.linux.org.uk>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, billion.wu@areca.com.tw, alan@lxorguk.ukuu.org.uk, akpm@osdl.org, erich@areca.com.tw, arjan@infradead.org, oliver@neukum.org
 
-Hi Christoph Hellwig,
+Al Viro wrote:
+...
 
-Thanks for your comment with "arcmsr".
-I will follow your comment to redo this driver.
-But I am confuse with your mention about some items.
-Hope you can tell me more detail and let me realy know your comment.
+Al, James,
 
-  1- remove internal queueing:
+what if we downsize this patch to...
 
-      Does the "internal queueing" is mention with arcmsr of ccb_free_list ?
+> --- a/drivers/scsi/scsi_lib.c	2006-02-20 10:02:58.000000000 -0600
+> +++ b/drivers/scsi/scsi_lib.c	2006-02-21 01:47:18.000000000 -0600
+> @@ -1892,8 +1892,16 @@
+>  	}
+>  
+>  	if(scsi_status_is_good(result)) {
+> -		data->header_length = header_length;
+> -		if(use_10_for_ms) {
+> +		if (unlikely(buffer[0] == 0x86 && buffer[1] == 0x0b &&
+> +			     (modepage == 6 || modepage == 8))) {
+> +			/* Initio breakage? */
+> +			header_length = 0;
+> +			data->length = 13;
+> +			data->medium_type = 0;
+> +			data->device_specific = 0;
+> +			data->longlba = 0;
+> +			data->block_descriptor_length = 0;
+> +		} else if(use_10_for_ms) {
+>  			data->length = buffer[0]*256 + buffer[1] + 2;
+>  			data->medium_type = buffer[2];
+>  			data->device_specific = buffer[3];
+> @@ -1906,6 +1914,7 @@
+>  			data->device_specific = buffer[2];
+>  			data->block_descriptor_length = buffer[3];
+>  		}
+> +		data->header_length = header_length;
+>  	}
+>  
+>  	return result;
+> --- a/drivers/scsi/sd.c	2006-02-17 16:26:52.000000000 -0600
+> +++ b/drivers/scsi/sd.c	2006-02-20 18:15:44.000000000 -0600
+> @@ -1328,6 +1328,12 @@
+>  	if (!scsi_status_is_good(res))
+>  		goto bad_sense;
+>  
+> +	if (!data.header_length) {
+> +		modepage = 6;
+> +		printk(KERN_ERR "%s: missing header in MODE_SENSE response\n",
+> +		       diskname);
+> +	}
+> +
+>  	/* that went OK, now ask for the proper length */
+>  	len = data.length;
+>  
+> @@ -1342,6 +1348,8 @@
+>  
+>  	/* Take headers and block descriptors into account */
+>  	len += data.header_length + data.block_descriptor_length;
+> +	if (len > 512)
+> +		goto bad_sense;
 
-  2- fix hardware datastructures:
+...only these two lines and...
 
-      Does the "fix hardware datastructures" is to fix struct ARCMSR_CDB?
-      Is it illeagal in linux?
+>  	/* Get the data */
+>  	res = sd_do_mode_sense(sdp, dbd, modepage, buffer, len, &data, &sshdr);
+> @@ -1354,8 +1362,15 @@
+>  		int ct = 0;
+>  		int offset = data.header_length + data.block_descriptor_length;
+>  
+> +		if (offset >= 512 - 2) {
+> +			printk(KERN_ERR "%s: malformed MODE SENSE response",
+> +				diskname);
+> +			goto defaults;
+> +		}
+> +
 
-  3- remove odd ioctls:
+...these 6 lines here? We would miss what can be extracted from these 
+buggy devices but (a) sd_read_cache_type::bad_sense's defaults work IMO 
+well enough for the so far reported devices and (b) these are the 
+particular checks which protect sd from out-of-bound memory access not 
+only in case of the Initio-specific breakage.
 
-      How about remove odd ioctl?
+>  		if ((buffer[offset] & 0x3f) != modepage) {
+> -			printk(KERN_ERR "%s: got wrong page\n", diskname);
+> +			printk(KERN_ERR "%s: got wrong page (%d -> %d)\n",
+> +				 diskname, modepage, buffer[offset] & 0x3f);
+>  			goto defaults;
+>  		}
+>  
+> 
 
-Best Regards
-Erich Chen
-
------ Original Message ----- 
-From: "Christoph Hellwig" <hch@infradead.org>
-To: "Dax Kelson" <dax@gurulabs.com>
-Cc: <linux-scsi@vger.kernel.org>; <linux-kernel@vger.kernel.org>; 
-<billion.wu@areca.com.tw>; <alan@lxorguk.ukuu.org.uk>; <akpm@osdl.org>; 
-<erich@areca.com.tw>; <arjan@infradead.org>; <oliver@neukum.org>
-Sent: Tuesday, February 21, 2006 2:20 AM
-Subject: Re: Areca RAID driver remaining items?
+-- 
+Stefan Richter
+-=====-=-==- --=- =-==-
+http://arcgraph.de/sr/
 
 
-> On Mon, Feb 20, 2006 at 11:02:32AM -0700, Dax Kelson wrote:
->> This appears to be the most current version of the driver:
->>
->> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.16-rc4/2.6.16-rc4-mm1/broken-out/areca-raid-linux-scsi-driver.patch
->>
->> Is this the current TODO list?
->>
->> =================
->> Issues not yet patched:
->>
->> 13. uintNN_t int types:  use kernel types except for userspace
->> interfaces
->> 14. use kernel-doc
->> 18. Put arcmsr.txt in Documentation/scsi/, not in scsi/arcmsr/.
->> 19. Maybe use sysfs (/sys) instead of /proc.
->> 20. check stack usage, init/exit sections;
->
->
-> - remove internal queueing
-> - fix hardware datastructures
-> - remove odd ioctls
-> - remove useless forward prototypes
-> - give types like ACB useful names
-> - give variable useful names, especially follow kernel conventions,
->   e.g. a struct pci_dev is usually named pdev
-> - kill ->proc_info method
-> - use normal comment style even for comments not fitting into the
->   kernel-doc item above.  kill useless separator comments without
->   text
-> - convert arcmsr_show_firmware_info to useful one value per
->   file attributes.  best follow the schemes used in aacraid or
->   lpfc
-> - convert arcmsr_show_driver_state to useful one value per
->   file attributes.
-> - remove never called release method in the host template
-> - audit whether setting unchecked_isa_dma to false really makes
->   sense (I strongly doubt it)
-> - remove shutdown notifier, add pci_driver ->shutdown method instead
-> - remove CameCase PCI Ids.  The vendor Id should go into pci_ids.h,
->   the device ids either removed or spelled the normal linux way
-> - arcmsr_do_interrupt should stop walking the global host list
->   and use the private data passed to request_irq
-> - the global host list should go away completely
-> - arcmsr_bios_param looks like duplicating the generic CAM version?
-> - locking needs to be redone.  If the driver really needs more than
->   one per-host lock we'll want a very good explanation
-> - arcmsr_device_probe needs to be rewritten to do goto-based
->   error unwinding.
-> - msi should be a module options if at all, but defintitly not
->   a config options
-> - arcmsr_scsi_host_template_init should go away.  the host template
->   must be initialized statically with no run-time writes to it
-> - the hardware documentation should be split out of arcmsr.h
->   into a separate file (btw, thanks a lot to areca to provide such
->   detailed hardware informations, it's just the wrong format..)
-> - remove the SCSISTAT_* defines, and use the generic ones from
->   <scsi/scsi.h> instead.  Dito for various other SAM defines.
-> - the driver has just two files and should go directly into
->   drivers/scsi instead of a subdirectory 
-
+-------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
+for problems?  Stop!  Download the new AJAX search engine that makes
+searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
+http://sel.as-us.falkag.net/sel?cmd=lnk&kid=103432&bid=230486&dat=121642
