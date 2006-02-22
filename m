@@ -1,60 +1,54 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: aic79xx
-Date: Wed, 22 Feb 2006 11:14:12 -0600
-Message-ID: <1140628452.3227.25.camel@mulgrave.il.steeleye.com>
-References: <200602221618.58553.srattai@zmnh.uni-hamburg.de>
+From: Greg KH <greg@kroah.com>
+Subject: Re: lsscsi-0.17 released
+Date: Wed, 22 Feb 2006 09:14:39 -0800
+Message-ID: <20060222171438.GA20272@kroah.com>
+References: <43FBA4CD.6000505@torque.net> <m34q2r93q2.fsf@merlin.emma.line.org> <43FC7CCB.4090508@torque.net> <20060222160602.GB17473@merlin.emma.line.org> <43FC90E4.10805@torque.net> <20060222163426.GG28587@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:21398 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S1751373AbWBVROY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Feb 2006 12:14:24 -0500
-In-Reply-To: <200602221618.58553.srattai@zmnh.uni-hamburg.de>
+Received: from dsl093-040-174.pdx1.dsl.speakeasy.net ([66.93.40.174]:18321
+	"EHLO aria.kroah.org") by vger.kernel.org with ESMTP
+	id S1751140AbWBVROm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Feb 2006 12:14:42 -0500
+Content-Disposition: inline
+In-Reply-To: <20060222163426.GG28587@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stephan Rattai <srattai@zmnh.uni-hamburg.de>
-Cc: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Douglas Gilbert <dougg@torque.net>, Matthias Andree <matthias.andree@gmx.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 2006-02-22 at 16:18 +0100, Stephan Rattai wrote:
-> Hi list,
+On Wed, Feb 22, 2006 at 09:34:26AM -0700, Matthew Wilcox wrote:
+> On Wed, Feb 22, 2006 at 11:27:16AM -0500, Douglas Gilbert wrote:
+> > Matthias Andree wrote:
+> > > On Wed, 22 Feb 2006, Douglas Gilbert wrote: 
+> > >>Matthias Andree wrote:
+> > >>>Does this work around new incompatibilities in the kernel
+> > >>>or does this fix lsscsi bugs?
+> > >>
+> > >>The former. In lk 2.6.16-rc1 the
+> > >>/sys/class/scsi_device/<hcil>/device/block symlink
+> > >>changed to ".../block:sd<x>" breaking lsscsi 0.16 (and
+> > >>earlier) and sg_map26 (in sg3_utils).
+> > > 
+> > > Heck, what was the reason for breaking userspace again?
+> > 
+> > Maybe the person responsible can answer. I'm only reacting
+> > to a change that broke two of my utilities.
 > 
-> I would like to bother you with a problem that might be a little discrepancy 
-> in the aic79xx driver. I'm not quite sure if this is a aic79xx problem at 
-> all. I have an Adaptec 29320 controller with a LTO (U320) drive connected. I 
-> needed to turn down the speed to 160 which I did via the adapter bios. After 
-> having booted I found the following output in /proc/scsi/aic79xx/1:
-> 
-> Target 1 Negotiation Settings
->         User: 160.000MB/s transfers (80.000MHz DT, 16bit)
->         Goal: 320.000MB/s transfers (160.000MHz DT|IU|RTI, 16bit)
->         Curr: 320.000MB/s transfers (160.000MHz DT|IU|RTI, 16bit)
->      
-> So the speed for the device is set to 320 despite my bios setting (at least 
-> that's what I'm being told through the proc interface). 
-> 
-> With kernel 2.6.13 I get:
-> 
-> Target 1 Negotiation Settings
->         User: 160.000MB/s transfers (80.000MHz RDSTRM|DT, 16bit)
->         Goal: 160.000MB/s transfers (80.000MHz DT, 16bit)
->         Curr: 160.000MB/s transfers (80.000MHz DT, 16bit)
-> 
-> Is this a bug or a feature ? 
+> Probably better to cc the person responsible if you want an answer.
 
-It's definitely a bug.  What's supposed to happen in 2.6.16-rc3 is that
-aic79xx picks the parameters out of the bios and places them into the
-min_period/max_offset variables.
+It was changed as there would be more than one "block" symlink in a
+device's directory if more than one block device was attached to a
+single struct device.  For example, ub and multi-lun devices (there were
+other reports of this happening for scsi devices too at the time from
+what I remember.)
 
-could you look at
+So, in that case, your tool would have been broken anyway, so this fix
+was required to make it correct :)
 
-cat /sys/class/spi_transport/target<whatever>/min_period
+The fix was to make block devices work the same way as all other class
+devices, which had this fix a while ago.
 
-and tell me what it says.
+thanks,
 
-Thanks,
-
-James
- 
-
+greg k-h
