@@ -1,54 +1,66 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: lsscsi-0.17 released
-Date: Wed, 22 Feb 2006 09:14:39 -0800
-Message-ID: <20060222171438.GA20272@kroah.com>
-References: <43FBA4CD.6000505@torque.net> <m34q2r93q2.fsf@merlin.emma.line.org> <43FC7CCB.4090508@torque.net> <20060222160602.GB17473@merlin.emma.line.org> <43FC90E4.10805@torque.net> <20060222163426.GG28587@parisc-linux.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] fc transport: Add support for events
+Date: Wed, 22 Feb 2006 17:21:27 +0000
+Message-ID: <20060222172127.GA20137@infradead.org>
+References: <43FC8CB4.2000507@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl093-040-174.pdx1.dsl.speakeasy.net ([66.93.40.174]:18321
-	"EHLO aria.kroah.org") by vger.kernel.org with ESMTP
-	id S1751140AbWBVROm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Feb 2006 12:14:42 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:3762 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1030313AbWBVRV2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Feb 2006 12:21:28 -0500
 Content-Disposition: inline
-In-Reply-To: <20060222163426.GG28587@parisc-linux.org>
+In-Reply-To: <43FC8CB4.2000507@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Douglas Gilbert <dougg@torque.net>, Matthias Andree <matthias.andree@gmx.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Smart <James.Smart@Emulex.Com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Feb 22, 2006 at 09:34:26AM -0700, Matthew Wilcox wrote:
-> On Wed, Feb 22, 2006 at 11:27:16AM -0500, Douglas Gilbert wrote:
-> > Matthias Andree wrote:
-> > > On Wed, 22 Feb 2006, Douglas Gilbert wrote: 
-> > >>Matthias Andree wrote:
-> > >>>Does this work around new incompatibilities in the kernel
-> > >>>or does this fix lsscsi bugs?
-> > >>
-> > >>The former. In lk 2.6.16-rc1 the
-> > >>/sys/class/scsi_device/<hcil>/device/block symlink
-> > >>changed to ".../block:sd<x>" breaking lsscsi 0.16 (and
-> > >>earlier) and sg_map26 (in sg3_utils).
-> > > 
-> > > Heck, what was the reason for breaking userspace again?
-> > 
-> > Maybe the person responsible can answer. I'm only reacting
-> > to a change that broke two of my utilities.
+On Wed, Feb 22, 2006 at 11:09:24AM -0500, James Smart wrote:
 > 
-> Probably better to cc the person responsible if you want an answer.
+> The following patch adds support for hbaapi events within the FC transport.
+> It adds the following attributes to the fc_host:
+>   max_events  : sizes the internal array for the number of events that are
+>                 buffered in the transport. This value can be tuned by a
+>                 module parameter.
+>   event_cnt   : number of events pending in the buffer
+>   event       : reads an event from the buffer
+> 
+> It adds the following routine for LLDD's to post events:
+>    void fc_host_event_post(struct Scsi_Host *shost,
+> 		enum fc_host_event_code event_code, u32 event_data);
+> 
+> Not all hbaapi events are contained within the transport. Many events
+> correspond to elements outside the fc_host, and can be serviced by normal
+> hot-plug events, either on the fc_host, or rport. I believe I've included
+> those events that could be posted. I've also punted on anything that has 
+> more
+> than 1 32-bit word of data - which should only affect RLIR payloads, and
+> vendor-unique payloads. We will address these items once we figure out how
+> to deal with large payloads in the transport.
+> 
+> In conjunction with the event infrastructure, the module uses hot plug 
+> events
+> to notify user entities about changes. For the fc_host, the only event 
+> posted
+> is a KOBJ_CHANGE event. For the rport, ONLINE/OFFLINE is posted whenever 
+> the
+> rport goes through a block, then unblock. To get to the class_device for 
+> the
+> rport, a new attribute_container function is added locate the class_device 
+> for
+> the device.
+> 
+> This implementation expects the user-space hbaapi provider to deal with
+> multiple user-space readers.
+> 
+> I've coordinated with Andrew Vasquez, who has sent his approval.
+> 
+> The lpfc driver will be posted shortly to utilize this infrastructure.
 
-It was changed as there would be more than one "block" symlink in a
-device's directory if more than one block device was attached to a
-single struct device.  For example, ub and multi-lun devices (there were
-other reports of this happening for scsi devices too at the time from
-what I remember.)
+I must admit I don't like this too much.  The natural way to send events
+to userspace would be a netlink socket, but integrating this with the
+transport class might be a bit hard.  Having named netlink sockets
+similar to named unix sockets would be nice for this..
 
-So, in that case, your tool would have been broken anyway, so this fix
-was required to make it correct :)
-
-The fix was to make block devices work the same way as all other class
-devices, which had this fix a while ago.
-
-thanks,
-
-greg k-h
