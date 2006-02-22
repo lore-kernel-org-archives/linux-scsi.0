@@ -1,40 +1,35 @@
 From: Al Viro <viro@ftp.linux.org.uk>
 Subject: Re: Fw: [Bugme-new] [Bug 6114] New: Initio sbp2 causes: "slab error in cache_free_debugcheck(): cache `size-512(DMA)': double free, or memory outside" object was overwritten
-Date: Wed, 22 Feb 2006 01:20:58 +0000
-Message-ID: <20060222012057.GX27946@ftp.linux.org.uk>
-References: <43FBB608.5060202@torque.net>
+Date: Wed, 22 Feb 2006 01:29:42 +0000
+Message-ID: <20060222012942.GY27946@ftp.linux.org.uk>
+References: <20060221040511.35b69d26.akpm@osdl.org> <43FB6545.8080103@s5r6.in-berlin.de> <43FB67BD.7030101@s5r6.in-berlin.de> <20060221134543.5f844d7c.akpm@osdl.org> <43FB9FE5.8070309@s5r6.in-berlin.de> <Pine.LNX.4.64.0602220041070.21474@jbgna.fhfr.qr> <43FBB1A2.9030009@s5r6.in-berlin.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:43228 "EHLO
-	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S932324AbWBVBVC
+Received: from zeniv.linux.org.uk ([195.92.253.2]:12713 "EHLO
+	ZenIV.linux.org.uk") by vger.kernel.org with ESMTP id S1161143AbWBVB3v
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Feb 2006 20:21:02 -0500
+	Tue, 21 Feb 2006 20:29:51 -0500
 Content-Disposition: inline
-In-Reply-To: <43FBB608.5060202@torque.net>
+In-Reply-To: <43FBB1A2.9030009@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Bernhard Kaindl <bk@suse.de>, Andrew Morton <akpm@osdl.org>, bcollins@debian.org, scjody@modernduck.com, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
 
-On Tue, Feb 21, 2006 at 07:53:28PM -0500, Douglas Gilbert wrote:
-> Stefan Richter wrote:
+On Wed, Feb 22, 2006 at 01:34:42AM +0100, Stefan Richter wrote:
+> Al's patch is certainly better since it adds checks to the actual 
+> affected code region, i.e. mode_sense handling in the SCSI layers. 
+> James, would you integrate this patch?
 > 
-> > What I don't understand is why mode page 8 is still accessed in your
-> > log: http://bugzilla.kernel.org/attachment.cgi?id=7432&action=view
-> > (Log lines "command: Mode Sense (10): 5a 00 08 00 00 00 00 00 d9 00",
-> > "SCSI transfer size = 17d9" --- yeah, into a 512 Bytes big buffer, "sda:
-> > got wrong page".)
-> 
-> Stefan,
-> That sounds familiar. My guess is that a MODE SENSE (6)
-> response is being returned for a MODE SENSE (10) cdb.
-> "sdparm -f" can decode that in some contexts.
+> However sbp2 will keep some sort of skip_ms_page_8 blacklisting anyway 
+> because of different issues with other bridges.
 
-No.  It's a broken bridge that replies to _everything_ with page 6 and
-doesn't return a header at all - not 4 bytes for MODE SENSE(6), not
-8 bytes for MODE SENSE(10), *zero* bytes.  Just the page 6 contents.
-
-So in place of block descriptor length (offsets 6 and 7) you get the
-part of page 6 body.  Which is going to be bits 31..16 of size in blocks.
-And that's going to be 0x17bd in his case (203928MB/0.5KB/65536).
+Sure, but for this bridge it's not needed - with that fix we get the
+right data out of bridge response.  Note
++sda: missing header in MODE_SENSE response
+and
++SCSI device sda: drive cache: write back
+in that diff.  The former is exactly what we get when we detect that
+sort of breakage (bare page 6 without header) and the latter is where
+we manage to get the cache type.
