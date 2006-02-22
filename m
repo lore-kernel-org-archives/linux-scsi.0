@@ -1,66 +1,37 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] fc transport: Add support for events
-Date: Wed, 22 Feb 2006 17:21:27 +0000
-Message-ID: <20060222172127.GA20137@infradead.org>
-References: <43FC8CB4.2000507@emulex.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH 0/9] lpfc 8.1.3 driver update
+Date: Wed, 22 Feb 2006 12:33:00 -0500
+Message-ID: <43FCA04C.2020100@emulex.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:3762 "EHLO
-	pentafluge.infradead.org") by vger.kernel.org with ESMTP
-	id S1030313AbWBVRV2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Feb 2006 12:21:28 -0500
-Content-Disposition: inline
-In-Reply-To: <43FC8CB4.2000507@emulex.com>
+Received: from emulex.emulex.com ([138.239.112.1]:47065 "EHLO
+	emulex.emulex.com") by vger.kernel.org with ESMTP id S1030321AbWBVRdD
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Feb 2006 12:33:03 -0500
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id k1MHX1rf029873
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2006 09:33:02 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Feb 22, 2006 at 11:09:24AM -0500, James Smart wrote:
-> 
-> The following patch adds support for hbaapi events within the FC transport.
-> It adds the following attributes to the fc_host:
->   max_events  : sizes the internal array for the number of events that are
->                 buffered in the transport. This value can be tuned by a
->                 module parameter.
->   event_cnt   : number of events pending in the buffer
->   event       : reads an event from the buffer
-> 
-> It adds the following routine for LLDD's to post events:
->    void fc_host_event_post(struct Scsi_Host *shost,
-> 		enum fc_host_event_code event_code, u32 event_data);
-> 
-> Not all hbaapi events are contained within the transport. Many events
-> correspond to elements outside the fc_host, and can be serviced by normal
-> hot-plug events, either on the fc_host, or rport. I believe I've included
-> those events that could be posted. I've also punted on anything that has 
-> more
-> than 1 32-bit word of data - which should only affect RLIR payloads, and
-> vendor-unique payloads. We will address these items once we figure out how
-> to deal with large payloads in the transport.
-> 
-> In conjunction with the event infrastructure, the module uses hot plug 
-> events
-> to notify user entities about changes. For the fc_host, the only event 
-> posted
-> is a KOBJ_CHANGE event. For the rport, ONLINE/OFFLINE is posted whenever 
-> the
-> rport goes through a block, then unblock. To get to the class_device for 
-> the
-> rport, a new attribute_container function is added locate the class_device 
-> for
-> the device.
-> 
-> This implementation expects the user-space hbaapi provider to deal with
-> multiple user-space readers.
-> 
-> I've coordinated with Andrew Vasquez, who has sent his approval.
-> 
-> The lpfc driver will be posted shortly to utilize this infrastructure.
 
-I must admit I don't like this too much.  The natural way to send events
-to userspace would be a netlink socket, but integrating this with the
-transport class might be a bit hard.  Having named netlink sockets
-similar to named unix sockets would be nice for this..
+This patch set updates the lpfc driver to revision 8.1.3, which includes
+the following changes:
+
+   - Derive supported speeds from LMT field in the READ_CONFIG
+   - PCI hrd_type should be obtained with pci_read_config_byte() macro
+   - Remove unused MBhostaddr from lpfc_sli structure
+   - Fix performance when using multiple SLI rings
+   - Fix deadlock in lpfc_fdmi_tmo_handler
+   - Protect NPL lists with host lock
+   - Fix polling mode panic
+   - Adding hbaapi event support
+   - Change version number to 8.1.3
+
+-- james s
+
 
