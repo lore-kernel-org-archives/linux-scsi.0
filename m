@@ -1,69 +1,71 @@
-From: "Hammer, Jack" <Jack_Hammer@adaptec.com>
-Subject: RE: [PATCH] don't call ips_eh_reset in ips_queue to avoid deadlock
-Date: Wed, 22 Feb 2006 09:41:08 -0500
-Message-ID: <A121ABA5B472B74EB59076B8E3C8F01901E521B8@rtpe2k01.adaptec.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Areca RAID driver remaining items?
+Date: Wed, 22 Feb 2006 14:57:33 +0000
+Message-ID: <20060222145733.GC16269@infradead.org>
+References: <1140458552.3495.26.camel@mentorng.gurulabs.com> <20060220182045.GA1634@infradead.org> <001401c63779$12e49aa0$b100a8c0@erich2003>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:6819 "EHLO
-	mail-gw3.adaptec.com") by vger.kernel.org with ESMTP
-	id S1751295AbWBVOlJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2006 09:41:09 -0500
-content-class: urn:content-classes:message
+Received: from pentafluge.infradead.org ([213.146.154.40]:42125 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1751304AbWBVO5g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Feb 2006 09:57:36 -0500
+Content-Disposition: inline
+In-Reply-To: <001401c63779$12e49aa0$b100a8c0@erich2003>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
+To: erich <erich@areca.com.tw>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, billion.wu@areca.com.tw, alan@lxorguk.ukuu.org.uk, akpm@osdl.org, arjan@infradead.org, oliver@neukum.org
+
+On Wed, Feb 22, 2006 at 02:27:32PM +0800, erich wrote:
+> Hi Christoph Hellwig,
+> 
+> Thanks for your comment with "arcmsr".
+> I will follow your comment to redo this driver.
+> But I am confuse with your mention about some items.
+> Hope you can tell me more detail and let me realy know your comment.
+> 
+>  1- remove internal queueing:
+> 
+>      Does the "internal queueing" is mention with arcmsr of ccb_free_list ?
+
+Currently the drivers queuecommand routine works the following:
+
+ 1) perform some checks
+ 2) try to post outstanding ccbs
+ 3) grab new ccb from freelist and set it up
+ 4) try to post new ccb, else enqueue it
+
+there is not poin in having such a pending queue in the driver because
+the midlayer does that work for you.  If ->queuecommand can't immediately
+post a ccb you should return
+
+ SCSI_MLQUEUE_HOST_BUSY   if there is a resource shortage at the hba level
+ SCSI_MLQUEUE_DEVICE_BUSY if there is a resource shortage at the device level
+
+and the scsi midlayer will try to send the command again once a command
+has been completed on the hba/device.
+
+>  2- fix hardware datastructures:
+> 
+>      Does the "fix hardware datastructures" is to fix struct ARCMSR_CDB?
+>      Is it illeagal in linux?
+
+struct CCB is a structure that is passed to the hardware but contains
+pointers which have different sized on different architectures.  This
+is generally very dangerous.  If this is just a cookie that the hardware
+doesn't interpret at all it needs more documentation.  Also the way
+you try to convert from bus to virtual addresses with pACB->vir2phy_offset
+can't work on many linux platforms because the virtual to bus address
+mapping isn't contingous.  you need a separate dma mapping for each ccb,
+a good way to archive that is the dma_pool_ * API.
 
 
-The only place this can occur ( an ioctl reset ) is from the ServeRAID
-bootable CD, which is a 2.4 kernel, which explains why this has not been
-a problem and would be impossible for you to test, even if you had
-hardware.
+>  3- remove odd ioctls:
+> 
+>      How about remove odd ioctl?
 
-It appears to be a technically correct patch. I concur - please apply
-this patch.
-
-Thanks Mike.
-
-Jack Hammer
-Adaptec
-
-
-
------Original Message-----
-From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
-Sent: Wednesday, February 22, 2006 3:12 AM
-To: linux-scsi@vger.kernel.org; Hammer, Jack
-Subject: [PATCH] don't call ips_eh_reset in ips_queue to avoid deadlock
-
-When the locking was changed in the eh code ips_eh_reset was changed so
-that it was a wraper around __ips_eh_reset and all ips_eh_reset does is
-grab the host lock and then calls __ips_eh_reset.
-
-In the queuecommand, ips_queue is called with the host_lock held so if
-it calls ips_eh_reset we will have a problem. This patch just has
-ips_queue call __ips_eh_reset.
-
-Patch is only compile tested. I do not have the HW.
-
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-
---- linux-2.6.16-rc4/drivers/scsi/ips.c	2006-02-17 16:23:45.000000000
--0600
-+++ linux-2.6.16-rc4.work/drivers/scsi/ips.c	2006-02-22
-01:51:39.000000000 -0600
-@@ -1146,7 +1146,7 @@ ips_queue(Scsi_Cmnd * SC, void (*done) (
- 				return (0);
- 			}
- 			ha->ioctl_reset = 1;	/* This reset request is
-from an IOCTL */
--			ips_eh_reset(SC);
-+			__ips_eh_reset(SC);
- 			SC->result = DID_OK << 16;
- 			SC->scsi_done(SC);
- 			return (0);
-
-
-
+generally we don't want to add new ioctls.  For scsi/raid drivers there's
+been an exception where we allow a pass-through to the firmware which
+the managment applications need.  the driver has various ioctls that
+don't seem to fall into that category.
