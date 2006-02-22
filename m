@@ -1,45 +1,42 @@
-From: Greg KH <greg@kroah.com>
+From: Matthias Andree <matthias.andree@gmx.de>
 Subject: Re: lsscsi-0.17 released
-Date: Wed, 22 Feb 2006 10:37:31 -0800
-Message-ID: <20060222183731.GB12542@kroah.com>
-References: <43FCA686.5020508@torque.net>
+Date: Wed, 22 Feb 2006 21:22:19 +0100
+Message-ID: <20060222202219.GA25121@merlin.emma.line.org>
+References: <43FBA4CD.6000505@torque.net> <m34q2r93q2.fsf@merlin.emma.line.org> <43FC7CCB.4090508@torque.net> <20060222160602.GB17473@merlin.emma.line.org> <43FC90E4.10805@torque.net> <20060222163426.GG28587@parisc-linux.org> <20060222171438.GA20272@kroah.com> <20060222180015.GB20880@merlin.emma.line.org> <20060222183226.GA12542@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl093-040-174.pdx1.dsl.speakeasy.net ([66.93.40.174]:41926
-	"EHLO aria.kroah.org") by vger.kernel.org with ESMTP
-	id S1751386AbWBVShX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Feb 2006 13:37:23 -0500
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1422664AbWBVUXF@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <43FCA686.5020508@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20060222183226.GA12542@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Douglas Gilbert <dougg@torque.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Feb 22, 2006 at 12:59:34PM -0500, Douglas Gilbert wrote:
-> Greg KH wrote:
-> >>/sys/class/scsi_device/<hcil>/device/block symlink
-> >>changed to ".../block:sd<x>" breaking lsscsi 0.16 (and
-> >>earlier) and sg_map26 (in sg3_utils).
+On Wed, 22 Feb 2006, Greg KH wrote:
+
+> On Wed, Feb 22, 2006 at 07:00:15PM +0100, Matthias Andree wrote:
+
+> > OK, just post an announcement to l-k when sysfs has stabilized enough to
+> > be worth bothering.
 > 
-> > It was changed as there would be more than one "block" symlink in a
-> > device's directory if more than one block device was attached to a
-> > single struct device.  For example, ub and multi-lun devices (there were
-> > other reports of this happening for scsi devices too at the time from
-> > what I remember.)
+> Um, this was a "bugfix".
+
+Granted.
+
+> The kernel was creating multiple symlinks with
+> the same name, in the same directory, pointing to different locations.
+> How do you expect us to fix that in a format that does not change the
+> name of the symlink?
 > 
-> A "scsi_device" is a logical unit, hence the "l" at
-> the end of the "<hcil>" acronym in the above path.
-> So it wasn't broken. However there is some fuzziness
-> in this area, for example the term "scsi_device".
+> People sure are grumpy this morning...
 
-Yes, but the block layer was not creating the proper symlink name, and
-it would create multiple symlinks with the same name, in the same
-directory, pointing to different places.  That had to be fixed, as it
-was broken.  The block layer itself, has no way to determine if it is
-using a scsi device, or another type of device, nor should it care.
+If you say so. I'd call it pure pragmatism: if the sysfs interface
+still changes every other week or so, it's just annoying to chase these
+changes in applications, so it seems just practical to wait until all
+the bug fixes that require interface changes are in and the rate of
+incompatible changes is well below 2/year -- and all the interesting
+stuff is there.
 
-thanks,
-
-greg k-h
+-- 
+Matthias Andree
