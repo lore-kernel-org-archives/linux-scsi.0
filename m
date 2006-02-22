@@ -1,84 +1,69 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: 2.6.16-rc1 crash in scsi_target_reap_work
-Date: Wed, 22 Feb 2006 08:38:03 -0600
-Message-ID: <43FC774B.8050301@us.ibm.com>
-References: <20060206220434.GA11732@suse.de> <1139265890.3022.63.camel@mulgrave.il.steeleye.com> <20060209200529.GA8968@suse.de> <20060210101124.GA6253@suse.de> <1139580295.3084.3.camel@mulgrave.il.steeleye.com> <20060210141012.GA12147@suse.de> <20060210230140.GA26423@suse.de> <43ED1FE0.1000805@us.ibm.com> <20060210232935.GA27760@suse.de> <43FA49F9.4020309@us.ibm.com> <20060222083657.GA24802@suse.de>
-Reply-To: brking@us.ibm.com
+From: "Hammer, Jack" <Jack_Hammer@adaptec.com>
+Subject: RE: [PATCH] don't call ips_eh_reset in ips_queue to avoid deadlock
+Date: Wed, 22 Feb 2006 09:41:08 -0500
+Message-ID: <A121ABA5B472B74EB59076B8E3C8F01901E521B8@rtpe2k01.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:14048 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S1751290AbWBVOiF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Feb 2006 09:38:05 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e1.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id k1MEc5X0008169
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2006 09:38:05 -0500
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k1MEc57X233718
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2006 09:38:05 -0500
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k1MEc4cJ006697
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2006 09:38:05 -0500
-In-Reply-To: <20060222083657.GA24802@suse.de>
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:6819 "EHLO
+	mail-gw3.adaptec.com") by vger.kernel.org with ESMTP
+	id S1751295AbWBVOlJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Feb 2006 09:41:09 -0500
+content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Olaf Hering <olh@suse.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
-
-Olaf Hering wrote:
->  On Mon, Feb 20, Brian King wrote:
-> 
->> Olaf Hering wrote:
->>> 1:mon> d c0000000024cacc8
->>> c0000000024cacc8 00000000dead4ead ffffffff00000000  |......N.........|
->>> c0000000024cacd8 ffffffffffffffff c0000000024cace0  |.............L..|
->>> c0000000024cace8 c0000000024cace0 c000000000614f68  |.....L.......aOh|
->>> c0000000024cacf8 c000000000614f38 0000000000000000  |.....aO8........|
->>> c0000000024cad08 0000000000000000 0000000000000000  |................|
->>> c0000000024cad18 0000000000000000 0000000000000000  |................|
->>> c0000000024cad28 0000000000000000 0000000000000000  |................|
->>> c0000000024cad38 0000000000000000 0000000000000000  |................|
->>> c0000000024cad48 0000000000000000 0000000000000000  |................|
->>> c0000000024cad58 0000000000000000 0000000000000000  |................|
->>> c0000000024cad68 0000000000000000 0000000000000000  |................|
->>> c0000000024cad78 0000000000000000 0000000000000000  |................|
->>> c0000000024cad88 0000000000000000 0000000000000000  |................|
->>> c0000000024cad98 0000000000000000 0000000000000000  |................|
->>> c0000000024cada8 0000000000000000 0000000000000000  |................|
->>> c0000000024cadb8 0000000000000000 0000000000000000  |................|
->>> c0000000024cadc8 0000000000000000 0000000000000000  |................|
->>> c0000000024cadd8 0000000000000000 0000000000000000  |................|
->> I've now seen a couple recreates of this problem on various systems in
->> our labs, and there are always a bunch of zeroes in the struct device
->> in the same place as above. I wonder if perhaps the call to device_add
->> is failing in scsi_alloc_target. Failure of this call is not being handled
->> today. Can you give the attached patch a try? 
-> 
-> This fixes it, tested with plain rc3. Lots of -EEXIST, I wonder if the real bug is elsewhere.
-
-I would guess that the -EEXIST is coming from:
-
-create_dir
-sysfs_create_dir
-create_dir
-kobject_add
-device_add
-
-Looking at the scsi_target reap code, it looks like there is a race condition. The
-target is removed from the hosts list of targets under the host lock, then the host
-lock is released. If another thread tries to add the same target that is being
-tore down at this point (before device_del), the device_add will fail with EEXIST
-since the sysfs directory for the device still exists.
-
-Any reason we can't protect the target reaping code from this by grabbing the 
-scan_mutex?
+To: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
 
 
-Brian
+The only place this can occur ( an ioctl reset ) is from the ServeRAID
+bootable CD, which is a 2.4 kernel, which explains why this has not been
+a problem and would be impossible for you to test, even if you had
+hardware.
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+It appears to be a technically correct patch. I concur - please apply
+this patch.
+
+Thanks Mike.
+
+Jack Hammer
+Adaptec
+
+
+
+-----Original Message-----
+From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
+Sent: Wednesday, February 22, 2006 3:12 AM
+To: linux-scsi@vger.kernel.org; Hammer, Jack
+Subject: [PATCH] don't call ips_eh_reset in ips_queue to avoid deadlock
+
+When the locking was changed in the eh code ips_eh_reset was changed so
+that it was a wraper around __ips_eh_reset and all ips_eh_reset does is
+grab the host lock and then calls __ips_eh_reset.
+
+In the queuecommand, ips_queue is called with the host_lock held so if
+it calls ips_eh_reset we will have a problem. This patch just has
+ips_queue call __ips_eh_reset.
+
+Patch is only compile tested. I do not have the HW.
+
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+
+--- linux-2.6.16-rc4/drivers/scsi/ips.c	2006-02-17 16:23:45.000000000
+-0600
++++ linux-2.6.16-rc4.work/drivers/scsi/ips.c	2006-02-22
+01:51:39.000000000 -0600
+@@ -1146,7 +1146,7 @@ ips_queue(Scsi_Cmnd * SC, void (*done) (
+ 				return (0);
+ 			}
+ 			ha->ioctl_reset = 1;	/* This reset request is
+from an IOCTL */
+-			ips_eh_reset(SC);
++			__ips_eh_reset(SC);
+ 			SC->result = DID_OK << 16;
+ 			SC->scsi_done(SC);
+ 			return (0);
+
+
+
