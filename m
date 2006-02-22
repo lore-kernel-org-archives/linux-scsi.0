@@ -1,85 +1,77 @@
-From: Stephan Rattai <srattai@zmnh.uni-hamburg.de>
-Subject: Re: aic79xx
-Date: Wed, 22 Feb 2006 18:39:08 +0100
-Message-ID: <200602221839.09470.srattai@zmnh.uni-hamburg.de>
-References: <200602221618.58553.srattai@zmnh.uni-hamburg.de> <1140628452.3227.25.camel@mulgrave.il.steeleye.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] fc transport: Add support for events
+Date: Wed, 22 Feb 2006 12:43:43 -0500
+Message-ID: <43FCA2CF.6080903@emulex.com>
+References: <43FC8CB4.2000507@emulex.com> <20060222172127.GA20137@infradead.org>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-6"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rzaixsrv2.rrz.uni-hamburg.de ([134.100.32.71]:59025 "EHLO
-	rzaixsrv2.rrz.uni-hamburg.de") by vger.kernel.org with ESMTP
-	id S1161142AbWBVRjS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Feb 2006 12:39:18 -0500
-Received: from mail.zmnh.uni-hamburg.de (mail.zmnh.uni-hamburg.de [134.100.101.11])
-	by rzaixsrv2.rrz.uni-hamburg.de (8.12.10/8.12.9) with ESMTP id k1MHdGh6167918
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2006 18:39:16 +0100
-Received: from snoopy.zmnh.uni-hamburg.de (snoopy.zmnh.uni-hamburg.de [192.168.100.1])
-	by mail.zmnh.uni-hamburg.de (8.13.3/8.13.3) with ESMTP id k1MHdBVJ007966
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2006 18:39:11 +0100
-Received: from konfuzius.zmnh.uni-hamburg.de (localhost [127.0.0.1])
-	by snoopy.zmnh.uni-hamburg.de (8.13.4/8.13.4) with ESMTP id k1MHdB8k015196
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2006 18:39:11 +0100
-In-Reply-To: <1140628452.3227.25.camel@mulgrave.il.steeleye.com>
-Content-Disposition: inline
+Received: from emulex.emulex.com ([138.239.112.1]:2012 "EHLO emulex.emulex.com")
+	by vger.kernel.org with ESMTP id S1422644AbWBVRnz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Feb 2006 12:43:55 -0500
+In-Reply-To: <20060222172127.GA20137@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Am Mittwoch, 22. Februar 2006 18:14 schrieben Sie:
-> On Wed, 2006-02-22 at 16:18 +0100, Stephan Rattai wrote:
-> > Hi list,
-> >
-> > I would like to bother you with a problem that might be a little
-> > discrepancy in the aic79xx driver. I'm not quite sure if this is a
-> > aic79xx problem at all. I have an Adaptec 29320 controller with a LTO
-> > (U320) drive connected. I needed to turn down the speed to 160 which I
-> > did via the adapter bios. After having booted I found the following
-> > output in /proc/scsi/aic79xx/1:
-> >
-> > Target 1 Negotiation Settings
-> >         User: 160.000MB/s transfers (80.000MHz DT, 16bit)
-> >         Goal: 320.000MB/s transfers (160.000MHz DT|IU|RTI, 16bit)
-> >         Curr: 320.000MB/s transfers (160.000MHz DT|IU|RTI, 16bit)
-> >
-> > So the speed for the device is set to 320 despite my bios setting (at
-> > least that's what I'm being told through the proc interface).
-> >
-> > With kernel 2.6.13 I get:
-> >
-> > Target 1 Negotiation Settings
-> >         User: 160.000MB/s transfers (80.000MHz RDSTRM|DT, 16bit)
-> >         Goal: 160.000MB/s transfers (80.000MHz DT, 16bit)
-> >         Curr: 160.000MB/s transfers (80.000MHz DT, 16bit)
-> >
-> > Is this a bug or a feature ?
->
-> It's definitely a bug.  What's supposed to happen in 2.6.16-rc3 is that
-> aic79xx picks the parameters out of the bios and places them into the
-> min_period/max_offset variables.
->
-> could you look at
->
-> cat /sys/class/spi_transport/target<whatever>/min_period
->
-> and tell me what it says.
->
-> Thanks,
->
-> James
+It would have been nice to have had this response on the RFC.
 
-Ok, 
+I'm actually looking into netlink for the CT pass thru, ELS and rnid
+functions.
 
-cat /sys/class/spi_transport/target1\:0\:1/min_period
-6.25
+Does it make sense to move forward with some event support - namely
+the events attributes minus the kobject_uevent() stuff ?
 
-2.6.16-rc3 ? Whatever causes this behaviour must have been introduced in 
-2.6.14. The cat above is taken from 2.6.15.4. The output from 2.6.14 is the 
-same (as is the output from /proc/scsi/aic79xx/1), 2.6.16-rc4 dito. 2.6.13 
-was working as expected.
+-- james
 
-Thanks
-Stephan
+Christoph Hellwig wrote:
+> On Wed, Feb 22, 2006 at 11:09:24AM -0500, James Smart wrote:
+>> The following patch adds support for hbaapi events within the FC transport.
+>> It adds the following attributes to the fc_host:
+>>   max_events  : sizes the internal array for the number of events that are
+>>                 buffered in the transport. This value can be tuned by a
+>>                 module parameter.
+>>   event_cnt   : number of events pending in the buffer
+>>   event       : reads an event from the buffer
+>>
+>> It adds the following routine for LLDD's to post events:
+>>    void fc_host_event_post(struct Scsi_Host *shost,
+>> 		enum fc_host_event_code event_code, u32 event_data);
+>>
+>> Not all hbaapi events are contained within the transport. Many events
+>> correspond to elements outside the fc_host, and can be serviced by normal
+>> hot-plug events, either on the fc_host, or rport. I believe I've included
+>> those events that could be posted. I've also punted on anything that has 
+>> more
+>> than 1 32-bit word of data - which should only affect RLIR payloads, and
+>> vendor-unique payloads. We will address these items once we figure out how
+>> to deal with large payloads in the transport.
+>>
+>> In conjunction with the event infrastructure, the module uses hot plug 
+>> events
+>> to notify user entities about changes. For the fc_host, the only event 
+>> posted
+>> is a KOBJ_CHANGE event. For the rport, ONLINE/OFFLINE is posted whenever 
+>> the
+>> rport goes through a block, then unblock. To get to the class_device for 
+>> the
+>> rport, a new attribute_container function is added locate the class_device 
+>> for
+>> the device.
+>>
+>> This implementation expects the user-space hbaapi provider to deal with
+>> multiple user-space readers.
+>>
+>> I've coordinated with Andrew Vasquez, who has sent his approval.
+>>
+>> The lpfc driver will be posted shortly to utilize this infrastructure.
+> 
+> I must admit I don't like this too much.  The natural way to send events
+> to userspace would be a netlink socket, but integrating this with the
+> transport class might be a bit hard.  Having named netlink sockets
+> similar to named unix sockets would be nice for this..
+
