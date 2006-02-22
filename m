@@ -1,121 +1,87 @@
-From: "erich" <erich@areca.com.tw>
-Subject: Fw: Areca RAID driver remaining items?
-Date: Wed, 22 Feb 2006 11:37:04 +0800
-Message-ID: <009101c63761$412bc220$b100a8c0@erich2003>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="iso-8859-1";
-	reply-type=response
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: Blacklist flags for SCSI target vs. SCSI LUN
+Date: Tue, 21 Feb 2006 21:24:23 -0800
+Message-ID: <046011E8-9BAF-465F-A90B-45569AB5477A@ieee.org>
+References: <Pine.LNX.4.44L0.0602201445371.28136-100000@netrider.rowland.org>
+Mime-Version: 1.0 (Apple Message framework v746.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 220-130-178-142.HINET-IP.hinet.net ([220.130.178.142]:34766
-	"EHLO areca.com.tw") by vger.kernel.org with ESMTP id S1751322AbWBVDhT
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Feb 2006 22:37:19 -0500
+Received: from sccrmhc13.comcast.net ([204.127.200.83]:1248 "EHLO
+	sccrmhc13.comcast.net") by vger.kernel.org with ESMTP
+	id S932085AbWBVFYc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Feb 2006 00:24:32 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0602201445371.28136-100000@netrider.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux oliver <oliver@neukum.org>, Linux Arjan van de Ven <arjan@infradead.org>, linux alan <alan@lxorguk.ukuu.org.uk>, linux akpm <akpm@osdl.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
+Alan,
 
------ Original Message ----- 
-From: "erich" <erich@areca.com.tw>
-To: "Christoph Hellwig" <hch@infradead.org>
-Sent: Tuesday, February 21, 2006 5:23 PM
-Subject: Re: Areca RAID driver remaining items?
+> If you look in the Linux source file include/scsi/scsi_devinfo.h,  
+> you'll
+> see a bunch of blacklist flags for coping with various sorts of device
+> behaviors ...
 
+http://lxr.linux.no/source/include/scsi/scsi_devinfo.h
+shows we had named 22 device-side distortions of Scsi already by  
+2.6.11 ... fun, thank you.
 
-> Hi Christoph Hellwig,
+> ... In the past these flags have been stored per-LUN, but it's  
+> obvious that some of them should apply to entire targets.  For  
+> example, any flag that influences how LUN detection should be  
+> performed is like this.
 >
-> Thanks for your comment with "arcmsr".
-> I will follow your comment to redo this driver.
-> But I am confuse with your mention about some items.
-> Hope you can tell me more detail and let me realy know your comment.
->
->  1- remove internal queueing:
->
->      Does the "internal queueing" is mention with arcmsr of ccb_free_list 
-> ?
->
->  2- fix hardware datastructures:
->
->      Does the "fix hardware datastructures" is to fix struct ARCMSR_CDB?
->      Is it illeagal in linux?
->
->  3- remove odd ioctls:
->
->      How about remove odd ioctl?
->
-> Best Regards
-> Erich Chen
-> ----- Original Message ----- 
-> From: "Christoph Hellwig" <hch@infradead.org>
-> To: "Dax Kelson" <dax@gurulabs.com>
-> Cc: <linux-scsi@vger.kernel.org>; <linux-kernel@vger.kernel.org>; 
-> <billion.wu@areca.com.tw>; <alan@lxorguk.ukuu.org.uk>; <akpm@osdl.org>; 
-> <erich@areca.com.tw>; <arjan@infradead.org>; <oliver@neukum.org>
-> Sent: Tuesday, February 21, 2006 2:20 AM
-> Subject: Re: Areca RAID driver remaining items?
->
->
->> On Mon, Feb 20, 2006 at 11:02:32AM -0700, Dax Kelson wrote:
->>> This appears to be the most current version of the driver:
->>>
->>> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.16-rc4/2.6.16-rc4-mm1/broken-out/areca-raid-linux-scsi-driver.patch
->>>
->>> Is this the current TODO list?
->>>
->>> =================
->>> Issues not yet patched:
->>>
->>> 13. uintNN_t int types:  use kernel types except for userspace
->>> interfaces
->>> 14. use kernel-doc
->>> 18. Put arcmsr.txt in Documentation/scsi/, not in scsi/arcmsr/.
->>> 19. Maybe use sysfs (/sys) instead of /proc.
->>> 20. check stack usage, init/exit sections;
->>
->>
->> - remove internal queueing
->> - fix hardware datastructures
->> - remove odd ioctls
->> - remove useless forward prototypes
->> - give types like ACB useful names
->> - give variable useful names, especially follow kernel conventions,
->>   e.g. a struct pci_dev is usually named pdev
->> - kill ->proc_info method
->> - use normal comment style even for comments not fitting into the
->>   kernel-doc item above.  kill useless separator comments without
->>   text
->> - convert arcmsr_show_firmware_info to useful one value per
->>   file attributes.  best follow the schemes used in aacraid or
->>   lpfc
->> - convert arcmsr_show_driver_state to useful one value per
->>   file attributes.
->> - remove never called release method in the host template
->> - audit whether setting unchecked_isa_dma to false really makes
->>   sense (I strongly doubt it)
->> - remove shutdown notifier, add pci_driver ->shutdown method instead
->> - remove CameCase PCI Ids.  The vendor Id should go into pci_ids.h,
->>   the device ids either removed or spelled the normal linux way
->> - arcmsr_do_interrupt should stop walking the global host list
->>   and use the private data passed to request_irq
->> - the global host list should go away completely
->> - arcmsr_bios_param looks like duplicating the generic CAM version?
->> - locking needs to be redone.  If the driver really needs more than
->>   one per-host lock we'll want a very good explanation
->> - arcmsr_device_probe needs to be rewritten to do goto-based
->>   error unwinding.
->> - msi should be a module options if at all, but defintitly not
->>   a config options
->> - arcmsr_scsi_host_template_init should go away.  the host template
->>   must be initialized statically with no run-time writes to it
->> - the hardware documentation should be split out of arcmsr.h
->>   into a separate file (btw, thanks a lot to areca to provide such
->>   detailed hardware informations, it's just the wrong format..)
->> - remove the SCSISTAT_* defines, and use the generic ones from
->>   <scsi/scsi.h> instead.  Dito for various other SAM defines.
->> - the driver has just two files and should go directly into
->>   drivers/scsi instead of a subdirectory
-> 
+> I'd like to straighten this out, but I don't know which items  
+> should be per-target and which should be per-LUN.  For that matter,  
+> blacklist entries are accessed based on Vendor and Product  
+> identification strings from INQUIRY data -- and I don't even know  
+> whether different LUNs in the same target are allowed to supply  
+> different Vendor/Product strings.
 
+Yes we the host must decide how to count Lun's before we can address  
+the first Lun we've counted ... but to connect arbitrarily I think we  
+must distinguish the device from all its Lun's, and every Lun from  
+one another.
+
+If our goal is to stop revving this code frequently, I think we must  
+change to store more bits, not less.  Yes we can exploit common  
+patterns to allocate less bits in all normal cases, but we have no  
+foundation for saying we'll never need the rarely useful bits.
+
+I argue as follows ...
+
+I think of the Scsi device as if it were a Usb hub, upstream from a  
+set of ports that connect with slots that connect with memory cards.   
+The hub services some requests itself, passes others transparently  
+thru to a port or onto a slot, translates and more arbitrarily  
+distributes others.
+
+Now let's suppose we see the hub service all the Scsi op x12 Inquiry  
+requests received while negotiating how many ports existed at first.   
+That doesn't tell us anything about who will service the next Scsi op  
+x12 request.  We're faced with all the same maybe's: maybe the hub,  
+maybe a port, maybe a slot, maybe a card, maybe a combination.
+
+Get it?
+
+The device, distinguished from all its Lun's, is the hub.  Each Lun  
+is a port.  Some hubs promise all their Lun's will always be there  
+(e.g., Usb Get Max Lun), some don't (e.g., dynamic sparse Lun's in  
+Scsi 3).  Some slots promise that their memory cards will always be  
+there (e.g., via Scsi Rmb 0), some slots don't (e.g., via Scsi Rmb 1).
+
+Another view with the same answer is to notice that, inside the  
+device, each Scsi request carries a wide address.  For example, in  
+BBB Scsi, the address bits look something like: { deviceAddress :  
+selectedConfiguration : selectedInterface :  
+interfaceAlternateSetting : selectedPipe : Lun }.  For the device,  
+the bits of the Lun are first class address bits: an address bit is  
+an address bit is an address bit.  We the host have no reason to  
+believe that we'll see common Scsi behaviour when we hold some bits  
+constant and not others.
+
+So far so good?
+
+In parallel now, I'll follow up with some concrete examples.
