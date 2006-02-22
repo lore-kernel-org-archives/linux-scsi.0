@@ -1,57 +1,43 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Fw: [Bugme-new] [Bug 6114] New: Initio sbp2 causes: "slab error
- in cache_free_debugcheck(): cache `size-512(DMA)': double free, or memory
- outside" object was overwritten
-Date: Wed, 22 Feb 2006 07:05:40 +0100
-Message-ID: <43FBFF34.9080909@s5r6.in-berlin.de>
-References: <20060221040511.35b69d26.akpm@osdl.org> <43FB6545.8080103@s5r6.in-berlin.de> <43FB67BD.7030101@s5r6.in-berlin.de> <20060221134543.5f844d7c.akpm@osdl.org> <43FB9FE5.8070309@s5r6.in-berlin.de> <Pine.LNX.4.64.0602220041070.21474@jbgna.fhfr.qr> <43FBB1A2.9030009@s5r6.in-berlin.de> <20060222012942.GY27946@ftp.linux.org.uk>
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH] aic94xx: driver assertion in non-x86 BIOS env
+Date: Tue, 21 Feb 2006 22:26:02 -0800
+Message-ID: <20060222062602.GA30870@us.ibm.com>
+References: <20060217023613.GA30583@us.ibm.com> <1140549399.3215.20.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-admin@lists.sourceforge.net>
-In-Reply-To: <20060222012942.GY27946@ftp.linux.org.uk>
-Sender: linux1394-devel-admin@lists.sourceforge.net
-Errors-To: linux1394-devel-admin@lists.sourceforge.net
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-To: Al Viro <viro@ftp.linux.org.uk>
-Cc: Bernhard Kaindl <bk@suse.de>, Andrew Morton <akpm@osdl.org>, bcollins@debian.org, scjody@modernduck.com, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:17311 "EHLO e4.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S1751342AbWBVG3H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Feb 2006 01:29:07 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e4.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id k1M6T6Ot016070
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2006 01:29:06 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k1M6T6Ll219778
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2006 01:29:06 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k1M6T6hF017273
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Feb 2006 01:29:06 -0500
+Content-Disposition: inline
+In-Reply-To: <1140549399.3215.20.camel@mulgrave.il.steeleye.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org, Tarte@us.ibm.com, Robert <Robert_Tarte@adaptec.com>, Jeff Garzik <jgarzik@redhat.com>
 
-Al Viro wrote:
-> On Wed, Feb 22, 2006 at 01:34:42AM +0100, Stefan Richter wrote:
-> 
->>Al's patch is certainly better since it adds checks to the actual 
->>affected code region, i.e. mode_sense handling in the SCSI layers. 
->>James, would you integrate this patch?
->>
->>However sbp2 will keep some sort of skip_ms_page_8 blacklisting anyway 
->>because of different issues with other bridges.
-> 
-> 
-> Sure, but for this bridge it's not needed - with that fix we get the
-> right data out of bridge response.  Note
-> +sda: missing header in MODE_SENSE response
-> and
-> +SCSI device sda: drive cache: write back
-> in that diff.  The former is exactly what we get when we detect that
-> sort of breakage (bare page 6 without header) and the latter is where
-> we manage to get the cache type.
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> Actually, it's still not quite working for me.  This is what I get from
+> 2.6.16-rc4 with the Jeff Garzik SAS tree (which has this fix applied).
+> The soft lockup basically means it was hung in asd_read_ocm():
 
-Yes, you are definitly right about it.
--- 
-Stefan Richter
--=====-=-==- --=- =-==-
-http://arcgraph.de/sr/
+ok, looking into this. Is the soft lockup detect in the same
+(asd_read_ocm+0x120) function and offset. I did a resync with Jeff's tree
+and ran the code on a ppc64 system. This ran ok. I will move my card to an
+IA64 tomorrow to see if I can recreate (which may be unlikely as it ran a
+number of loads before) and also generate a .lst file.
 
-
--------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc. Do you grep through log files
-for problems?  Stop!  Download the new AJAX search engine that makes
-searching your log files as easy as surfing the  web.  DOWNLOAD SPLUNK!
-http://sel.as-us.falkag.net/sel?cmd=lnk&kid=103432&bid=230486&dat=121642
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
