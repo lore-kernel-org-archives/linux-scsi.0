@@ -1,101 +1,91 @@
 From: Pat LaVarre <p.lavarre@ieee.org>
 Subject: Re: Blacklist flags for SCSI target vs. SCSI LUN
-Date: Tue, 21 Feb 2006 21:43:12 -0800
-Message-ID: <4AC284B3-8587-4B44-AA79-A222C77643E0@ieee.org>
-References: <Pine.LNX.4.44L0.0602201445371.28136-100000@netrider.rowland.org> <046011E8-9BAF-465F-A90B-45569AB5477A@ieee.org>
+Date: Tue, 21 Feb 2006 21:54:59 -0800
+Message-ID: <788A4342-D93E-4252-B19E-CA554596897A@ieee.org>
+References: <Pine.LNX.4.44L0.0602201445371.28136-100000@netrider.rowland.org> <046011E8-9BAF-465F-A90B-45569AB5477A@ieee.org> <4AC284B3-8587-4B44-AA79-A222C77643E0@ieee.org>
 Mime-Version: 1.0 (Apple Message framework v746.2)
 Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sccrmhc12.comcast.net ([204.127.200.82]:33235 "EHLO
-	sccrmhc12.comcast.net") by vger.kernel.org with ESMTP
-	id S1751338AbWBVFnQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Feb 2006 00:43:16 -0500
-In-Reply-To: <046011E8-9BAF-465F-A90B-45569AB5477A@ieee.org>
+Received: from rwcrmhc13.comcast.net ([204.127.192.83]:20975 "EHLO
+	rwcrmhc13.comcast.net") by vger.kernel.org with ESMTP
+	id S1751341AbWBVFzD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Feb 2006 00:55:03 -0500
+In-Reply-To: <4AC284B3-8587-4B44-AA79-A222C77643E0@ieee.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>
 Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
->> http://lxr.linux.no/source/include/scsi/scsi_devinfo.h
->>
->> ... Yes we the host must decide how to count Lun's before we can  
->> address the first Lun we've counted ... but to connect arbitrarily  
->> I think we must distinguish the device from all its Lun's, and  
->> every Lun from one another.
+>>> http://lxr.linux.no/source/include/scsi/scsi_devinfo.h
+>>>
+>>> ... Yes we the host must decide how to count Lun's before we can  
+>>> address the first Lun we've counted ... but to connect  
+>>> arbitrarily I think we must distinguish the device from all its  
+>>> Lun's, and every Lun from one another.
 
-Let's focus a moment on:
+Working from comments, not yet grep, I see only three distinct Groups  
+of flags:
 
-15 #define BLIST_ISROM             0x100   /* Treat as (removable) CD- 
-ROM */
+a) Mysteries:
 
-And let's drill down further to discuss only Scsi thru Usb devices,  
-not Scsi generally.
+>> 19 #define BLIST_NOSTARTONADD      0x1000  /* do not do automatic  
+>> start on add */
+>> 9 #define BLIST_BORKEN            0x004   /* Flag for broken  
+>> handshaking */
+>> 10 #define BLIST_KEY               0x008   /* unlock by special  
+>> command */
+>> 28 #define BLIST_NO_ULD_ATTACH     0x100000 /* device is actually  
+>> for RAID config */
+>> 29 #define BLIST_SELECT_NO_ATN     0x200000 /* select without ATN */
+>
+The jargon in BLIST_SELECT_NO_ATN is specific to Spi transport of Scsi.
 
-The relevant theory published at T10.org and Usb.org includes:
+b) Scsi Simplifications:
 
-/// http://t10.org/scsi-3.htm [paraphrased]
+>> 12 #define BLIST_NOTQ              0x020   /* Buggy Tagged Command  
+>> Queuing */
+>> 15 #define BLIST_ISROM             0x100   /* Treat as (removable)  
+>> CD-ROM */
+>> 17 #define BLIST_INQUIRY_36        0x400   /* override additional  
+>> length field */
+>> 18 #define BLIST_INQUIRY_58        0x800   /* ... for broken  
+>> inquiry responses */
+>> 20 #define BLIST_MS_SKIP_PAGE_08   0x2000  /* do not send ms page  
+>> 0x08 */
+>> 21 #define BLIST_MS_SKIP_PAGE_3F   0x4000  /* do not send ms page  
+>> 0x3f */
+>> 22 #define BLIST_USE_10_BYTE_MS    0x8000  /* use 10 byte ms  
+>> before 6 byte ms */
+>> 23 #define BLIST_MS_192_BYTES_FOR_3F       0x10000 /*  192 byte ms  
+>> page 0x3f request */
+>> 27 #define BLIST_NOT_LOCKABLE      0x80000 /* don't use PREVENT- 
+>> ALLOW commands */
 
-Scsi Peripheral Device Type = Pdt = mask x1F of byte 0 of data in of  
-Scsi op x12 Inquiry.
+NOTQ is for all requests
+ISROM and _INQUIRY redefine Scsi op x12 Inquiry
+_MS redefine Scsi op x1A Mode Sense 6 and op x5A Mode Sense 10
+NOT_LOCKABLE redefine op x1E Prevent/ Allow Medium Removal.
 
-Pdt in x 0E 07 04 00 = like Hdd of T10 tradition
-Pdt = x05 = like Dvd/Cd of Sff tradition
-Pdt = x01= like Tape of T10 tradition
+All these I imagine we might have to store per Lun.
 
-/// Usb.org usbmassbulk_10.pdf
+c) Lun Counting Techniques:
 
-3.2 Get Max LUN (class-specific request)
+>> 6 #define BLIST_NOLUN             0x001   /* Only scan LUN 0 */
+>> 7 #define BLIST_FORCELUN          0x002   /* Known to have LUNs,  
+>> force scanning, deprecated: Use max_luns=N */
+>> 11 #define BLIST_SINGLELUN         0x010   /* Do not use LUNs in  
+>> parallel */
+>> 13 #define BLIST_SPARSELUN         0x040   /* Non consecutive LUN  
+>> numbering */
+>> 14 #define BLIST_MAX5LUN           0x080   /* Avoid LUNS >= 5 */
+>> 16 #define BLIST_LARGELUN          0x200   /* LUNs past 7 on a  
+>> SCSI-2 device */
+>> 24 #define BLIST_REPORTLUN2        0x20000 /* try REPORT_LUNS even  
+>> for SCSI-2 devs (if HBA supports more than 8 LUNs) */
+>> 26 #define BLIST_NOREPORTLUN       0x40000 /* don't try  
+>> REPORT_LUNS scan (SCSI-3 devs) */
 
-The device may implement several logical units that share common  
-device characteristics
-...
-The Get Max LUN device request is used to determine the number of  
-logical units supported by the device. Logical Unit Numbers on the  
-device shall be numbered contiguously starting from LUN 0 to a  
-maximum LUN of 15 (Fh).
-
-///
-
-That "common device characteristics" English from Usb.org is trying  
-to say that all Lun's hold in common a single Pdt code.  That is, the  
-host should only have to store the Pdt once per device, not once per  
-Lun.
-
-Exactly the kind of simplification we're hoping to find, yes?
-
-Trouble is, back in the horrifyingly real world, suppose I combine a  
-3.5" Fdd slot with a 5" Dvd slot and connect via BBB Scsi-thru-Usb.   
-To split the Scsi requests between Fdd and Dvd, I've then got to feed  
-a mux with one or more bits from the list: { deviceAddress :  
-selectedConfiguration : selectedInterface :  
-interfaceAlternateSetting : selectedPipe : Lun }.
-
-Q: Which are the cheapest bits for me to connect to my mux?
-
-A: The Lun bits, by far.
-
-Those connect from the Cbw parse - often changing nothing but  
-firmware, rather than also the (long lead time) controller hardware.   
-Usb is more theory than practice in letting me vary  
-{ selectedConfiguration : selectedInterface :  
-interfaceAlternateSetting : selectedPipe }.  Variations in  
-{ deviceAddress } get me into expensive custom hub hardware, kicking  
-me out of commodity mass storage.  Of all the address bits, only the  
-Lun bits are cheap.
-
-So by claiming that Scsi alone counts as my "common device  
-characteristics", without bothering to hold my Pdt in common across  
-the Lun's, I save money, on every device manufactured.  And my  
-Windows market device works in Windows, when last I checked with a  
-simulation like drivers/usb/gadget/file_storage.c.
-
-Rumour, be it truth or slander, tells me Ppc Mac's take the stricter  
-view, and see only my first Lun.  Ouch, that's a cost.  But is that  
-cost greater than what I saved?  Maybe not, depending on how I'm  
-going to market my device.
-
-Bottom line, to talk to that Windows market device, Linux has to  
-store as many per-Lun bits as Windows does.
-
-Get it?
+All those I imagine we can store per device, not per Lun, by your  
+original logic: "any flag that influences how LUN detection should be  
+performed" "should apply to entire targets".
