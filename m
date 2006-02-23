@@ -1,84 +1,79 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [PATCH 2/2] sd, scsi_lib: fix recognition of cache type of Initio
- SBP-2 bridges
-Date: Thu, 23 Feb 2006 02:03:16 +0100 (CET)
-Message-ID: <tkrat.3b935cb9beaadbb7@s5r6.in-berlin.de>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=us-ascii
+From: Pat LaVarre <p.lavarre@ieee.org>
+Subject: Re: Blacklist flags for SCSI target vs. SCSI LUN
+Date: Wed, 22 Feb 2006 20:52:01 -0800
+Message-ID: <06D63F45-3FD0-4871-BA3F-D5867A6D2FDA@ieee.org>
+References: <Pine.LNX.4.44L0.0602221609580.9277-100000@iolanthe.rowland.org>
+Mime-Version: 1.0 (Apple Message framework v746.2)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:18860 "EHLO
-	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
-	id S1750983AbWBWBD6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Feb 2006 20:03:58 -0500
-Content-Disposition: INLINE
+Received: from rwcrmhc11.comcast.net ([216.148.227.151]:53153 "EHLO
+	rwcrmhc11.comcast.net") by vger.kernel.org with ESMTP
+	id S1751032AbWBWEwG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Feb 2006 23:52:06 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0602221609580.9277-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stable@kernel.org, Linus Torvalds <torvalds@osdl.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Al Viro <viro@ftp.linux.org.uk>, Jody McIntyre <scjody@modernduck.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-sd, scsi_lib: fix recognition of cache type of Initio SBP-2 bridges
+>> Working from comments, not yet grep, ...
+>> ...
+>> a) Mysteries: ... BLIST_NOSTARTONADD ... BLIST_BORKEN ...  
+>> BLIST_KEY ... BLIST_NO_ULD_ATTACH ... BLIST_SELECT_NO_ATN ...
+>> ...
+>> b) Scsi Simplifications:
+>>
+>>>> 12 #define BLIST_NOTQ              0x020   /* Buggy Tagged  
+>>>> Command  Queuing */
+>>>> ...
+>>
+>> NOTQ is for all requests
+>
+> All requests to the LUN or to the target?
 
-Regardless what mode page was asked for, Initio INIC-14x0 and INIC-2430
-always return page 6 without mode page headers. Check for this breakage in
-scsi_mode_sense().
+All requests to the target was my guess, though clicking thru  
+BLIST_NOTQ might tell us more ...
 
-Taken from a patch by Al Viro <viro@ftp.linux.org.uk>.
-http://marc.theaimsgroup.com/?l=linux-scsi&m=114055884611429
+> Are tagged requests for different LUNs on the same target handled  
+> separately?
 
-Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
----
-Depends on patch "sd: fix memory corruption by sd_read_cache_type".
+Suppose instead we ask, are requests for different Lba's on the same  
+memory card handled separately?
 
-This cache type fix is applicable to 2.6.14, 2.6.15, and 2.6.16 as well
-but is definitely of less importance than the memory corruption patch.
+We'd give the same answer: usually not, but in general it depends.   
+Yes the device may choose to react arbitrarily to any bits that  
+distinguish one request from another.
 
-Index: linux-2.6.16-rc4/drivers/scsi/scsi_lib.c
-===================================================================
---- linux-2.6.16-rc4.orig/drivers/scsi/scsi_lib.c	2006-02-22 22:27:42.000000000 +0100
-+++ linux-2.6.16-rc4/drivers/scsi/scsi_lib.c	2006-02-22 22:40:50.000000000 +0100
-@@ -1893,8 +1893,16 @@ scsi_mode_sense(struct scsi_device *sdev
- 	}
- 
- 	if(scsi_status_is_good(result)) {
--		data->header_length = header_length;
--		if(use_10_for_ms) {
-+		if (unlikely(buffer[0] == 0x86 && buffer[1] == 0x0b &&
-+			     (modepage == 6 || modepage == 8))) {
-+			/* Initio breakage? */
-+			header_length = 0;
-+			data->length = 13;
-+			data->medium_type = 0;
-+			data->device_specific = 0;
-+			data->longlba = 0;
-+			data->block_descriptor_length = 0;
-+		} else if(use_10_for_ms) {
- 			data->length = buffer[0]*256 + buffer[1] + 2;
- 			data->medium_type = buffer[2];
- 			data->device_specific = buffer[3];
-@@ -1907,6 +1915,7 @@ scsi_mode_sense(struct scsi_device *sdev
- 			data->device_specific = buffer[2];
- 			data->block_descriptor_length = buffer[3];
- 		}
-+		data->header_length = header_length;
- 	}
- 
- 	return result;
-Index: linux-2.6.16-rc4/drivers/scsi/sd.c
-===================================================================
---- linux-2.6.16-rc4.orig/drivers/scsi/sd.c	2006-02-22 22:29:10.000000000 +0100
-+++ linux-2.6.16-rc4/drivers/scsi/sd.c	2006-02-22 22:40:50.000000000 +0100
-@@ -1328,6 +1328,12 @@ sd_read_cache_type(struct scsi_disk *sdk
- 	if (!scsi_status_is_good(res))
- 		goto bad_sense;
- 
-+	if (!data.header_length) {
-+		modepage = 6;
-+		printk(KERN_ERR "%s: missing header in MODE_SENSE response\n",
-+		       diskname);
-+	}
-+
- 	/* that went OK, now ask for the proper length */
- 	len = data.length;
- 
+Only some devices accept multiple tagged requests simultaneously,  
+only some devices have multiple Lun's, only some devices service  
+different Lun's independently.  Combine all those only's, and we  
+don't visit this corner often.  But on visiting this corner might we  
+then find that a device handled tags differently for one Lun than for  
+another?  Yes, we might, because "an address bit is an address bit is  
+an address bit"
 
+> ... could there be simultaneous outstanding requests having the  
+> same tag value because they are for separate LUNs?
 
+That answer varies by transport ... and varies by host for most  
+transports?
+
+Usually the host does the work of acquiring a distinct tag to  
+construct each request and releasing the tag for reuse only after  
+completing a request.  If the host acquires tags from a pool per  
+device, then each incomplete request has a distinct tag.  If the host  
+acquires tags from a pool per Lun, then each incomplete request of  
+the Lun has a distinct tag, but requests of the device may collide.
+
+The merely standard definition of BBB transport of Scsi in Usb, for  
+example, runs only one request at a time thru the wire, so colliding  
+tags hurt only the host, never the device.  Vendor-specific  
+definitions then vary over whether the bits of the Lun do or do not  
+extend the tag to avoid collision.
+
+The T10.org Sam (Scsi Architectural Model) probably has opinions,  
+while the other Scsi definitions are incomplete, in disagreement, or  
+unstated.
+
+Am I making much sense yet?  Does logic not force these answers on us?
