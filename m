@@ -1,251 +1,71 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] fix scsi process problems and clean up the target reap
-	issues
-Date: Thu, 23 Feb 2006 14:27:18 -0600
-Message-ID: <1140726438.2809.18.camel@localhost.localdomain>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: Error using DC315U to drive ScanJet 4c
+Date: Thu, 23 Feb 2006 23:25:35 +0100 (CET)
+Message-ID: <Pine.LNX.4.60.0602232311520.5883@poirot.grange>
+References: <Pine.LNX.4.60.0602140000160.18538@poirot.grange>
+ <20060214010138.GJ18853@igloo.df.lth.se> <Pine.LNX.4.60.0602140656430.30136@poirot.grange>
+ <Pine.LNX.4.60.0602152056530.5682@poirot.grange> <20060215214349.GA7947@igloo.df.lth.se>
+ <Pine.LNX.4.60.0602152322190.5682@poirot.grange> <20060216113027.GA3412@igloo.df.lth.se>
+ <Pine.LNX.4.60.0602162121020.4944@poirot.grange> <20060218224121.GA21399@igloo.df.lth.se>
+ <Pine.LNX.4.60.0602191740070.3542@poirot.grange> <20060223153745.GB8644@igloo.df.lth.se>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stat9.steeleye.com ([209.192.50.41]:42956 "EHLO
-	hancock.sc.steeleye.com") by vger.kernel.org with ESMTP
-	id S932106AbWBWU1a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Feb 2006 15:27:30 -0500
-Received: from jet.il.steeleye.com (il-ppp.sc.steeleye.com [172.17.6.240])
-	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id k1NKRI208133
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Feb 2006 15:27:19 -0500
+Received: from mail.gmx.de ([213.165.64.20]:56194 "HELO mail.gmx.net")
+	by vger.kernel.org with SMTP id S1751304AbWBWWZg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Feb 2006 17:25:36 -0500
+In-Reply-To: <20060223153745.GB8644@igloo.df.lth.se>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Fredrik Roubert <roubert@df.lth.se>
+Cc: linux-scsi@vger.kernel.org
 
-In order to use the new execute_in_process_context() API, you have to
-provide it with the work storage, which I do in SCSI in scsi_device and
-scsi_target, but which also means that we can no longer queue up the
-target reaps, so instead I moved the target to a state model which
-allows target_alloc to detect if we've received a dying target and wait
-for it to be gone.  Hopefully, this should also solve the target
-namespace race.
+On Thu, 23 Feb 2006, Fredrik Roubert wrote:
 
-James
+> On Sun 19 Feb 21:54 CET 2006, Guennadi Liakhovetski wrote:
+> 
+> > 2) your problem might be in hardware rather than in software. For the
+> > latter I have to ask you if your cables are ok? Termination? Maybe
+> > replace the cable? Do you have any other SCSI card where you also could
+> > test your scanner?
+> 
+> The scanner works OK when connected to my old AHA1542 controller in my
+> old computer. The two SCSI controllers have different connectors, so the
+> cable I'm using now is also new, and untested. It could, no doubt, be a
+> problem with either the cable or the SCSI controller hardware.
 
+Ok, if you could connect the scanner to the same PC but to a different 
+SCSI card, that would with a good probability confirm that the scanner is 
+ok. Still, it is at least theoretically possible, that a bug in the 
+scanner's firmware is triggered by some, e.g., timing pattern specific to 
+the dc315u, though within specs. Just to say I don't see a good way to 
+exclude the scanner as the cause of the problem with 100% probability.
+
+> > After you confirm that your cables and termination are fine,
+> 
+> It's fine, as far as I know. It's a brand new cable and I just plugged
+> it in replacing the old cable. Do you have any suggestions as to how I
+> could test cable and termination?
+
+Not really. You have the same problem with the old and the new cable? 
+Then, most probably, it's not the cause of the problem. Termination is 
+switched on on the scanner or is it a passive terminator on the cable? 
+E.g., on my scanner there's no active termination (I think).
+
+> > I would ask you to do a few more tests to look more exactly at what's
+> > happening, and to verify at least the non-sg path of my patch. So, would
+> > you agree to help me further with the tests or would you rather or would
+> > you prefer to stop now?
+> 
+> Of course I'd like to help out. (How else would Linux continue to
+> improve?) Just tell me what you want me to do.
+
+Great! While I am preparing a new debugging patch, could you, perhaps, 
+test your scanner + dc315u + pc with some live Linux CDs? Some 32-bit i386 
+like Knoppix, also interesting with 2.6 and 2.4 kernel?
+
+Thanks
+Guennadi
 ---
-
-Index: BUILD-2.6/drivers/scsi/scsi_lib.c
-===================================================================
---- BUILD-2.6.orig/drivers/scsi/scsi_lib.c	2006-02-20 08:57:40.000000000 -0600
-+++ BUILD-2.6/drivers/scsi/scsi_lib.c	2006-02-23 12:37:21.000000000 -0600
-@@ -2248,61 +2248,3 @@
- 		device_for_each_child(dev, NULL, target_unblock);
- }
- EXPORT_SYMBOL_GPL(scsi_target_unblock);
--
--
--struct work_queue_work {
--	struct work_struct	work;
--	void			(*fn)(void *);
--	void			*data;
--};
--
--static void execute_in_process_context_work(void *data)
--{
--	void (*fn)(void *data);
--	struct work_queue_work *wqw = data;
--
--	fn = wqw->fn;
--	data = wqw->data;
--
--	kfree(wqw);
--
--	fn(data);
--}
--
--/**
-- * scsi_execute_in_process_context - reliably execute the routine with user context
-- * @fn:		the function to execute
-- * @data:	data to pass to the function
-- *
-- * Executes the function immediately if process context is available,
-- * otherwise schedules the function for delayed execution.
-- *
-- * Returns:	0 - function was executed
-- *		1 - function was scheduled for execution
-- *		<0 - error
-- */
--int scsi_execute_in_process_context(void (*fn)(void *data), void *data)
--{
--	struct work_queue_work *wqw;
--
--	if (!in_interrupt()) {
--		fn(data);
--		return 0;
--	}
--
--	wqw = kmalloc(sizeof(struct work_queue_work), GFP_ATOMIC);
--
--	if (unlikely(!wqw)) {
--		printk(KERN_ERR "Failed to allocate memory\n");
--		WARN_ON(1);
--		return -ENOMEM;
--	}
--
--	INIT_WORK(&wqw->work, execute_in_process_context_work, wqw);
--	wqw->fn = fn;
--	wqw->data = data;
--	schedule_work(&wqw->work);
--
--	return 1;
--}
--EXPORT_SYMBOL_GPL(scsi_execute_in_process_context);
-Index: BUILD-2.6/drivers/scsi/scsi_scan.c
-===================================================================
---- BUILD-2.6.orig/drivers/scsi/scsi_scan.c	2006-02-20 08:57:40.000000000 -0600
-+++ BUILD-2.6/drivers/scsi/scsi_scan.c	2006-02-23 14:18:20.000000000 -0600
-@@ -349,6 +349,8 @@
- 	starget->channel = channel;
- 	INIT_LIST_HEAD(&starget->siblings);
- 	INIT_LIST_HEAD(&starget->devices);
-+	starget->state = STARGET_RUNNING;
-+ retry:
- 	spin_lock_irqsave(shost->host_lock, flags);
- 
- 	found_target = __scsi_find_target(parent, channel, id);
-@@ -381,8 +383,15 @@
- 	found_target->reap_ref++;
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 	put_device(parent);
--	kfree(starget);
--	return found_target;
-+	if (found_target->state != STARGET_DEL) {
-+		kfree(starget);
-+		return found_target;
-+	}
-+	/* Unfortunately, we found a dying target; need to
-+	 * wait until it's dead before we can get a new one */
-+	put_device(&found_target->dev);
-+	flush_scheduled_work();
-+	goto retry;
- }
- 
- static void scsi_target_reap_usercontext(void *data)
-@@ -391,21 +400,13 @@
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
- 	unsigned long flags;
- 
-+	transport_remove_device(&starget->dev);
-+	device_del(&starget->dev);
-+	transport_destroy_device(&starget->dev);
- 	spin_lock_irqsave(shost->host_lock, flags);
--
--	if (--starget->reap_ref == 0 && list_empty(&starget->devices)) {
--		list_del_init(&starget->siblings);
--		spin_unlock_irqrestore(shost->host_lock, flags);
--		transport_remove_device(&starget->dev);
--		device_del(&starget->dev);
--		transport_destroy_device(&starget->dev);
--		put_device(&starget->dev);
--		return;
--
--	}
-+	list_del_init(&starget->siblings);
- 	spin_unlock_irqrestore(shost->host_lock, flags);
--
--	return;
-+	put_device(&starget->dev);
- }
- 
- /**
-@@ -419,7 +420,23 @@
-  */
- void scsi_target_reap(struct scsi_target *starget)
- {
--	scsi_execute_in_process_context(scsi_target_reap_usercontext, starget);
-+	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(shost->host_lock, flags);
-+
-+	if (--starget->reap_ref == 0 && list_empty(&starget->devices)) {
-+		BUG_ON(starget->state == STARGET_DEL);
-+		starget->state = STARGET_DEL;
-+		spin_unlock_irqrestore(shost->host_lock, flags);
-+		execute_in_process_context(scsi_target_reap_usercontext,
-+					   starget, &starget->ew);
-+		return;
-+
-+	}
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+	return;
- }
- 
- /**
-Index: BUILD-2.6/drivers/scsi/scsi_sysfs.c
-===================================================================
---- BUILD-2.6.orig/drivers/scsi/scsi_sysfs.c	2006-02-20 08:57:40.000000000 -0600
-+++ BUILD-2.6/drivers/scsi/scsi_sysfs.c	2006-02-20 10:02:58.000000000 -0600
-@@ -256,7 +256,9 @@
- 
- static void scsi_device_dev_release(struct device *dev)
- {
--	scsi_execute_in_process_context(scsi_device_dev_release_usercontext,	dev);
-+	struct scsi_device *sdp = to_scsi_device(dev);
-+	execute_in_process_context(scsi_device_dev_release_usercontext, dev,
-+				   &sdp->ew);
- }
- 
- static struct class sdev_class = {
-Index: BUILD-2.6/include/scsi/scsi.h
-===================================================================
---- BUILD-2.6.orig/include/scsi/scsi.h	2006-02-20 08:57:40.000000000 -0600
-+++ BUILD-2.6/include/scsi/scsi.h	2006-02-20 10:02:58.000000000 -0600
-@@ -433,6 +433,4 @@
- /* Used to obtain the PCI location of a device */
- #define SCSI_IOCTL_GET_PCI		0x5387
- 
--int scsi_execute_in_process_context(void (*fn)(void *data), void *data);
--
- #endif /* _SCSI_SCSI_H */
-Index: BUILD-2.6/include/scsi/scsi_device.h
-===================================================================
---- BUILD-2.6.orig/include/scsi/scsi_device.h	2006-02-20 08:57:40.000000000 -0600
-+++ BUILD-2.6/include/scsi/scsi_device.h	2006-02-20 10:02:58.000000000 -0600
-@@ -4,6 +4,7 @@
- #include <linux/device.h>
- #include <linux/list.h>
- #include <linux/spinlock.h>
-+#include <linux/workqueue.h>
- #include <asm/atomic.h>
- 
- struct request_queue;
-@@ -137,6 +138,8 @@
- 	struct device		sdev_gendev;
- 	struct class_device	sdev_classdev;
- 
-+	struct execute_work	ew; /* used to get process context on put */
-+
- 	enum scsi_device_state sdev_state;
- 	unsigned long		sdev_data[0];
- } __attribute__((aligned(sizeof(unsigned long))));
-@@ -153,6 +156,11 @@
- #define scmd_printk(prefix, scmd, fmt, a...)	\
- 	dev_printk(prefix, &(scmd)->device->sdev_gendev, fmt, ##a)
- 
-+enum scsi_target_state {
-+	STARGET_RUNNING = 1,
-+	STARGET_DEL,
-+};
-+
- /*
-  * scsi_target: representation of a scsi target, for now, this is only
-  * used for single_lun devices. If no one has active IO to the target,
-@@ -169,6 +177,8 @@
- 				     * scsi_device.id eventually */
- 	unsigned long		create:1; /* signal that it needs to be added */
- 	char			scsi_level;
-+	struct execute_work	ew;
-+	enum scsi_target_state	state;
- 	void 			*hostdata; /* available to low-level driver */
- 	unsigned long		starget_data[0]; /* for the transport */
- 	/* starget_data must be the last element!!!! */
-
-
+Guennadi Liakhovetski
