@@ -1,25 +1,61 @@
-From: "David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH] esp: fix eh locking
-Date: Wed, 22 Feb 2006 14:31:41 -0800 (PST)
-Message-ID: <20060222.143141.104559322.davem@davemloft.net>
-References: <20060222153615.GA23488@lst.de>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: [PATCH 1/2] sd: fix memory corruption by sd_read_cache_type
+Date: Thu, 23 Feb 2006 02:02:57 +0100 (CET)
+Message-ID: <tkrat.014f03dc41356221@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <20060222153615.GA23488@lst.de>
-Sender: sparclinux-owner@vger.kernel.org
-To: hch@lst.de
-Cc: weeve@gentoo.org, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
+Content-Type: TEXT/PLAIN; CHARSET=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:19116 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1751481AbWBWBD6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Feb 2006 20:03:58 -0500
+Content-Disposition: INLINE
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: stable@kernel.org, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Al Viro <viro@ftp.linux.org.uk>, Jody McIntyre <scjody@modernduck.com>
 
-From: Christoph Hellwig <hch@lst.de>
-Date: Wed, 22 Feb 2006 16:36:15 +0100
+sd: fix memory corruption by sd_read_cache_type
 
-> esp_reset didn't get fixed when the EH locking changed.
-> ->eh_bus_reset_handler is now called without the host lock held.
-> 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Let sd check more thoroughly before using mode_sense responses for data
+length calculation. Fixes memory corruption ("slab error in
+cache_free_debugcheck") or kernel panic when buggy disks are connected,
+notably Initio SBP-2 bridges.
+http://bugzilla.kernel.org/show_bug.cgi?id=6114
+http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=182005
 
-Thanks Christoph, I'll push this fix to Linus.
+Taken from a patch by Al Viro <viro@ftp.linux.org.uk>.
+http://marc.theaimsgroup.com/?l=linux-scsi&m=114055884611429
+
+Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+---
+Patch is applicable to 2.6.14, 2.6.15, 2.6.16.
+
+Index: linux-2.6.16-rc4/drivers/scsi/sd.c
+===================================================================
+--- linux-2.6.16-rc4.orig/drivers/scsi/sd.c	2006-02-22 22:27:42.000000000 +0100
++++ linux-2.6.16-rc4/drivers/scsi/sd.c	2006-02-22 22:29:10.000000000 +0100
+@@ -1342,6 +1342,8 @@ sd_read_cache_type(struct scsi_disk *sdk
+ 
+ 	/* Take headers and block descriptors into account */
+ 	len += data.header_length + data.block_descriptor_length;
++	if (len > 512)
++		goto bad_sense;
+ 
+ 	/* Get the data */
+ 	res = sd_do_mode_sense(sdp, dbd, modepage, buffer, len, &data, &sshdr);
+@@ -1354,6 +1356,12 @@ sd_read_cache_type(struct scsi_disk *sdk
+ 		int ct = 0;
+ 		int offset = data.header_length + data.block_descriptor_length;
+ 
++		if (offset >= 512 - 2) {
++			printk(KERN_ERR "%s: malformed MODE SENSE response",
++				diskname);
++			goto defaults;
++		}
++
+ 		if ((buffer[offset] & 0x3f) != modepage) {
+ 			printk(KERN_ERR "%s: got wrong page\n", diskname);
+ 			goto defaults;
+
+
