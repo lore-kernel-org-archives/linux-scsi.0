@@ -1,58 +1,47 @@
-From: "Randy.Dunlap" <rdunlap@xenotime.net>
-Subject: Re: Areca RAID driver remaining items?
-Date: Fri, 24 Feb 2006 12:14:57 -0800 (PST)
-Message-ID: <Pine.LNX.4.58.0602241214320.7894@shark.he.net>
-References: <1140458552.3495.26.camel@mentorng.gurulabs.com>
- <20060220182045.GA1634@infradead.org> <001401c63779$12e49aa0$b100a8c0@erich2003>
- <20060222145733.GC16269@infradead.org> <00dc01c63842$381f9a30$b100a8c0@erich2003>
- <1140683157.2972.6.camel@laptopd505.fenrus.org> <001901c6385e$9aee7d40$b100a8c0@erich2003>
- <1140695990.19361.8.camel@localhost.localdomain> <20060224165647.GA4176@infradead.org>
- <Pine.LNX.4.58.0602240858180.7894@shark.he.net> <20060224193830.GR28587@parisc-linux.org>
+From: Mike Anderson <andmike@us.ibm.com>
+Subject: Re: [PATCH 1/2] Block I/O while SG reset operation in progress - midlayer portion
+Date: Fri, 24 Feb 2006 12:11:51 -0800
+Message-ID: <20060224201151.GA30144@us.ibm.com>
+References: <43FF39C0.7080509@emulex.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932456AbWBXUPG@vger.kernel.org>
-In-Reply-To: <20060224193830.GR28587@parisc-linux.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: "Randy.Dunlap" <rdunlap@xenotime.net>, Christoph Hellwig <hch@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, erich <erich@areca.com.tw>, Arjan van de Ven <arjan@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, billion.wu@areca.com.tw, akpm@osdl.org, oliver@neukum.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:63383 "EHLO e3.ny.us.ibm.com")
+	by vger.kernel.org with ESMTP id S932464AbWBXUTr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Feb 2006 15:19:47 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e3.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id k1OKJkNF013255
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2006 15:19:46 -0500
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k1OKJkAf228784
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2006 15:19:46 -0500
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k1OKJfHq024539
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2006 15:19:41 -0500
+Content-Disposition: inline
+In-Reply-To: <43FF39C0.7080509@emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <James.Smart@Emulex.Com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 24 Feb 2006, Matthew Wilcox wrote:
+James Smart <James.Smart@Emulex.Com> wrote:
+> This is the midlayer portion of the patch
+> 
+> This patch ensures that i/o is stopped while an eh handler is being
+> processed. It adds a new flag, set by the async reset callers, which
+> augments the host-in-reset checks and stops i/o.  The async reset
+> callers are already synchronized to hold off until the error thread is
+> no longer running.
 
-> On Fri, Feb 24, 2006 at 09:03:47AM -0800, Randy.Dunlap wrote:
-> > On Fri, 24 Feb 2006, Christoph Hellwig wrote:
-> > > Please avoid that unless really nessecary.  I doubt there's boards where
-> > > MSI would only be broken with the areca card but not with other MSI-capable
-> > > ones.  If a board or chipset is generally broken vs MSI it should be
-> > > added to the global MSI blacklist.  It's probably be nice to have a global
-> > > nomsi boot option instead of one in every driver aswell..
-> >
-> > http://www.xenotime.net/linux/patches/pci_nomsi.patch adds a
-> > global boot option to disable MSI interrupt assignments.
->
-> I like it.  How about adding pci=nomsi instead of pci_nomsi?
+Why the new flag instead of calling scsi_host_set_state(shost,
+SHOST_RECOVERY) or a new state if you want different behavior?
 
-Yes, that's probably better.  Thanks for the change.
+Not using the state model but still doing recovery actions may run into
+issues if these happen while someone tries to remove a host.
 
-> --- drivers/pci/pci.c   4 Feb 2006 04:51:55 -0000       1.28
-> +++ drivers/pci/pci.c   24 Feb 2006 19:33:25 -0000
-> @@ -900,8 +900,12 @@ static int __devinit pci_setup(char *str
->                 if (k)
->                         *k++ = 0;
->                 if (*str && (str = pcibios_setup(str)) && *str) {
-> -                       /* PCI layer options should be handled here */
-> -                       printk(KERN_ERR "PCI: Unknown option `%s'\n", str);
-> +                       if (!strcmp(str, "nomsi")) {
-> +                               pci_msi_enable = 0;
-> +                       } else {
-> +                               printk(KERN_ERR "PCI: Unknown option `%s'\n",
-> +                                               str);
-> +                       }
->                 }
->                 str = k;
->         }
->
->
-
--- 
-~Randy
+-andmike
+--
+Michael Anderson
+andmike@us.ibm.com
