@@ -1,70 +1,102 @@
-From: Brian King <brking@us.ibm.com>
-Subject: [PATCH 1/1] scsi: scsi command retries off by one fix
-Date: Fri, 24 Feb 2006 17:10:04 -0600
-Message-ID: <200602242310.k1ONA5HM019918@d01av03.pok.ibm.com>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: [PATCH] fc_transport: stop creating duplicate rport entries.
+Date: Fri, 24 Feb 2006 17:37:36 -0600
+Message-ID: <43FF98C0.5000209@sgi.com>
+References: <20060214222214.GJ2051@andrew-vasquezs-powerbook-g4-15.local> <43F332B2.4000901@emulex.com> <43FB8B89.3090702@sgi.com> <43FB902C.6060205@emulex.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:38348 "EHLO e1.ny.us.ibm.com")
-	by vger.kernel.org with ESMTP id S964780AbWBXXKH (ORCPT
+Received: from omx2-ext.sgi.com ([192.48.171.19]:14545 "EHLO omx2.sgi.com")
+	by vger.kernel.org with ESMTP id S964785AbWBXXhv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Feb 2006 18:10:07 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e1.ny.us.ibm.com (8.12.11/8.12.11) with ESMTP id k1ONA5o2020783
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2006 18:10:05 -0500
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay02.pok.ibm.com (8.12.10/NCO/VERS6.8) with ESMTP id k1ONA6Af228838
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2006 18:10:06 -0500
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11/8.13.3) with ESMTP id k1ONA583020019
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2006 18:10:06 -0500
+	Fri, 24 Feb 2006 18:37:51 -0500
+In-Reply-To: <43FB902C.6060205@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, brking@us.ibm.com
+To: James.Smart@Emulex.Com
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux-SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+James Smart wrote:
+> Is it necessary - e.g. register w/o role, then update it ? No, if
+> the lldd wants to plogi then wait for prli to occur before registering
+> the rport - that's fine.
+> 
+> However, I've found it easier, especially for non-FCP entities, to
+> register the rport as soon as it was detected (works for anything, non-FCP
+> included), then when prli completes update the role (works only w/ FCP).
+> 
+> mptfc is fine to register once with the roles already known.
 
-Fix up an off by one error in calculating retries for scsi
-commands. This bug was discovered when an SG_IO request
-was sent to scsi core with retries = 0, causing the overall
-timeout check to go off in scsi_softirq_done.
+I have figured out a significant difference between these two sequences
 
-Signed-off-by: Brian King <brking@us.ibm.com>
----
+	rid->roles = FC_RPORT_ROLE_UNKNOWN | FC_RPORT_ROLE_FCP_TARGET;
+	rport = fc_remote_port_add(host,channel,rid);
 
- linux-2.6-bjking1/drivers/scsi/scsi_error.c |    4 ++--
- linux-2.6-bjking1/drivers/scsi/scsi_lib.c   |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+-and-
 
-diff -puN drivers/scsi/scsi_lib.c~scsi_fixup_retries drivers/scsi/scsi_lib.c
---- linux-2.6/drivers/scsi/scsi_lib.c~scsi_fixup_retries	2006-02-24 13:53:28.000000000 -0600
-+++ linux-2.6-bjking1/drivers/scsi/scsi_lib.c	2006-02-24 13:53:47.000000000 -0600
-@@ -1498,7 +1498,7 @@ static void scsi_kill_request(struct req
- static void scsi_softirq_done(struct request *rq)
- {
- 	struct scsi_cmnd *cmd = rq->completion_data;
--	unsigned long wait_for = cmd->allowed * cmd->timeout_per_command;
-+	unsigned long wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
- 	int disposition;
- 
- 	INIT_LIST_HEAD(&cmd->eh_entry);
-diff -puN drivers/scsi/scsi_error.c~scsi_fixup_retries drivers/scsi/scsi_error.c
---- linux-2.6/drivers/scsi/scsi_error.c~scsi_fixup_retries	2006-02-24 13:53:51.000000000 -0600
-+++ linux-2.6-bjking1/drivers/scsi/scsi_error.c	2006-02-24 14:50:34.000000000 -0600
-@@ -1308,7 +1308,7 @@ int scsi_decide_disposition(struct scsi_
- 	 * the request was not marked fast fail.  Note that above,
- 	 * even if the request is marked fast fail, we still requeue
- 	 * for queue congestion conditions (QUEUE_FULL or BUSY) */
--	if ((++scmd->retries) < scmd->allowed 
-+	if ((++scmd->retries) <= scmd->allowed
- 	    && !blk_noretry_request(scmd->request)) {
- 		return NEEDS_RETRY;
- 	} else {
-@@ -1433,7 +1433,7 @@ static void scsi_eh_flush_done_q(struct 
- 		list_del_init(&scmd->eh_entry);
- 		if (scsi_device_online(scmd->device) &&
- 		    !blk_noretry_request(scmd->request) &&
--		    (++scmd->retries < scmd->allowed)) {
-+		    (++scmd->retries <= scmd->allowed)) {
- 			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: flush"
- 							  " retry cmd: %p\n",
- 							  current->comm,
-_
+	rid->roles = FC_RPORT_ROLE_UNKNOWN;
+	rport = fc_remote_port_add(host,channel,rid);
+	rid->roles |= FC_RPORT_ROLE_FCP_TARGET;
+	fc_remote_port_rolechg(rport,rid->roles);
+
+The difference is that the former case will schedule rport->scan_work
+IMMEDIATELY after the fc_remote_port_add() and the latter will wait
+until the fc_remote_port_rolechg().
+
+Why is this significant?  Because the fc_remote_port_add() clears the
+dd_data.  In the first case it is possible for the scan_work to begin
+prior to the driver filling in the dd_data and possibly causing a panic.
+The second case allows for this sequence:
+
+	rid->roles = FC_RPORT_ROLE_UNKNOWN;
+	rport = fc_remote_port_add(host,channel,rid);
+
+	rport->dd_data = some_important_data_item;
+
+	rid->roles |= FC_RPORT_ROLE_FCP_TARGET;
+	fc_remote_port_rolechg(rport,rid->roles);
+
+It seems wrong, somehow, for the scan to be kicked off by the add.
+Perhaps the driver should be responsible for kicking off the scan
+after it knows its infrastructure is fully in place.
+
+	fc_remote_port_initiate_target_scan(rport);
+
+The proposed function would kick off a scan if the rport's role
+include FCP_TARGET.  Otherwise, NOP.
+
+Alternately, I suppose fc_remote_port_add() could be modified
+to accept an argument pointing to the data to be placed in
+dd_data (presuming dd_fcrport_size is non-zero).
+
+	fc_remote_port_add(host,channel,rid,dd_data);
+
+Thanks for thinking about this.
+
+Mike
+
+> 
+> -- james
+> 
+> 
+> Michael Reed wrote:
+>>
+>> James Smart wrote:
+>>> Good Catch!
+>>>
+>>> -- james s
+>>>
+>>> Andrew Vasquez wrote:
+>>>> Current fc_transport consumers initially register rports
+>>>> with an UNKNOWN role-state and follow-up with a call to
+>>>> fc_remote_port_rolechg(). 
+>>
+>> So, is the above sequence necessary?  Why not just register
+>> the rport with appropriate role and state?  This is what
+>> LSI fusion driver (mptfc) does.  "roles" has target and
+>> initiator set.  (Is fusion broken?)
+>>
+>> (Not saying the fix shouldn't be there.)
+>>
+>> Mike
