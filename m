@@ -1,124 +1,40 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH 2/2] Block I/O while SG reset operation in progress - the
- lpfc driver portion
-Date: Fri, 24 Feb 2006 11:52:28 -0500
-Message-ID: <43FF39CC.4070800@emulex.com>
-Reply-To: James.Smart@Emulex.Com
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Areca RAID driver remaining items?
+Date: Fri, 24 Feb 2006 16:56:47 +0000
+Message-ID: <20060224165647.GA4176@infradead.org>
+References: <1140458552.3495.26.camel@mentorng.gurulabs.com> <20060220182045.GA1634@infradead.org> <001401c63779$12e49aa0$b100a8c0@erich2003> <20060222145733.GC16269@infradead.org> <00dc01c63842$381f9a30$b100a8c0@erich2003> <1140683157.2972.6.camel@laptopd505.fenrus.org> <001901c6385e$9aee7d40$b100a8c0@erich2003> <1140695990.19361.8.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:54987 "EHLO
-	emulex.emulex.com") by vger.kernel.org with ESMTP id S932383AbWBXQwi
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Feb 2006 11:52:38 -0500
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.12.10/8.12.10) with ESMTP id k1OGqbrf026323
-	for <linux-scsi@vger.kernel.org>; Fri, 24 Feb 2006 08:52:37 -0800 (PST)
+Received: from pentafluge.infradead.org ([213.146.154.40]:63155 "EHLO
+	pentafluge.infradead.org") by vger.kernel.org with ESMTP
+	id S1750912AbWBXQ4x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Feb 2006 11:56:53 -0500
+Content-Disposition: inline
+In-Reply-To: <1140695990.19361.8.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: erich <erich@areca.com.tw>, Arjan van de Ven <arjan@infradead.org>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, billion.wu@areca.com.tw, akpm@osdl.org, oliver@neukum.org
 
-This removes the duplicate functionality which had been added
-to the lpfc driver.
+On Thu, Feb 23, 2006 at 11:59:50AM +0000, Alan Cox wrote:
+> On Iau, 2006-02-23 at 17:50 +0800, erich wrote:
+> > But unfortunately I found some mainboards will hang up if I always enable 
+> > this function in my lab.
+> > To avoid this issue, I do an option for this case.
+> > 
+> > But  Christoph Hellwig give me comment with it.
+> 
+> 
+> Another thing you can also do for many of these cases is to use either
+> the PCI or DMI interfaces to identify the problem board and
+> automatically set the option as well.
+> 
+> There are two ways to do this. One is 
 
--- james s
-
-Signed-off-by: James Smart <James.Smart@emulex.com>
-
-diff -upNr a/lpfc.h b/lpfc.h
---- a/lpfc.h	2006-02-23 09:43:02.000000000 -0500
-+++ b/lpfc.h	2006-02-23 09:58:23.000000000 -0500
-@@ -176,7 +176,6 @@ struct lpfc_hba {
-  	dma_addr_t slim2p_mapping;
-  	uint16_t pci_cfg_value;
-
--	struct semaphore hba_can_block;
-  	int32_t hba_state;
-
-  #define LPFC_STATE_UNKNOWN        0    /* HBA state is unknown */
-diff -upNr a/lpfc_init.c b/lpfc_init.c
---- a/lpfc_init.c	2006-02-23 09:43:02.000000000 -0500
-+++ b/lpfc_init.c	2006-02-23 09:58:31.000000000 -0500
-@@ -1463,7 +1463,6 @@ lpfc_pci_probe_one(struct pci_dev *pdev,
-  		goto out_put_host;
-
-  	host->unique_id = phba->brd_no;
--	init_MUTEX(&phba->hba_can_block);
-  	INIT_LIST_HEAD(&phba->ctrspbuflist);
-  	INIT_LIST_HEAD(&phba->rnidrspbuflist);
-  	INIT_LIST_HEAD(&phba->freebufList);
-diff -upNr a/lpfc_scsi.c b/lpfc_scsi.c
---- a/lpfc_scsi.c	2006-02-23 09:43:02.000000000 -0500
-+++ b/lpfc_scsi.c	2006-02-23 09:58:41.000000000 -0500
-@@ -41,20 +41,6 @@
-  #define LPFC_ABORT_WAIT  2
-
-
--static inline void
--lpfc_block_requests(struct lpfc_hba * phba)
--{
--	down(&phba->hba_can_block);
--	scsi_block_requests(phba->host);
--}
--
--static inline void
--lpfc_unblock_requests(struct lpfc_hba * phba)
--{
--	scsi_unblock_requests(phba->host);
--	up(&phba->hba_can_block);
--}
--
-  /*
-   * This routine allocates a scsi buffer, which contains all the necessary
-   * information needed to initiate a SCSI I/O.  The non-DMAable buffer region
-@@ -891,7 +877,6 @@ lpfc_abort_handler(struct scsi_cmnd *cmn
-  	unsigned int loop_count = 0;
-  	int ret = SUCCESS;
-
--	lpfc_block_requests(phba);
-  	spin_lock_irq(shost->host_lock);
-
-  	lpfc_cmd = (struct lpfc_scsi_buf *)cmnd->host_scribble;
-@@ -977,7 +962,6 @@ lpfc_abort_handler(struct scsi_cmnd *cmn
-  			cmnd->device->lun, cmnd->serial_number);
-
-  	spin_unlock_irq(shost->host_lock);
--	lpfc_unblock_requests(phba);
-
-  	return ret;
-  }
-@@ -995,7 +979,6 @@ lpfc_reset_lun_handler(struct scsi_cmnd
-  	int ret = FAILED;
-  	int cnt, loopcnt;
-
--	lpfc_block_requests(phba);
-  	spin_lock_irq(shost->host_lock);
-  	/*
-  	 * If target is not in a MAPPED state, delay the reset until
-@@ -1091,7 +1074,6 @@ out_free_scsi_buf:
-
-  out:
-  	spin_unlock_irq(shost->host_lock);
--	lpfc_unblock_requests(phba);
-  	return ret;
-  }
-
-@@ -1107,7 +1089,6 @@ lpfc_reset_bus_handler(struct scsi_cmnd
-  	unsigned int midlayer_id = 0;
-  	struct lpfc_scsi_buf * lpfc_cmd;
-
--	lpfc_block_requests(phba);
-  	spin_lock_irq(shost->host_lock);
-
-  	lpfc_cmd = lpfc_get_scsi_buf(phba);
-@@ -1193,7 +1174,6 @@ lpfc_reset_bus_handler(struct scsi_cmnd
-  			phba->brd_no, ret);
-  out:
-  	spin_unlock_irq(shost->host_lock);
--	lpfc_unblock_requests(phba);
-  	return ret;
-  }
-
-
+Please avoid that unless really nessecary.  I doubt there's boards where
+MSI would only be broken with the areca card but not with other MSI-capable
+ones.  If a board or chipset is generally broken vs MSI it should be
+added to the global MSI blacklist.  It's probably be nice to have a global
+nomsi boot option instead of one in every driver aswell..
 
