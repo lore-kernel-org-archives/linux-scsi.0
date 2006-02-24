@@ -1,91 +1,66 @@
-From: Ed Tomlinson <edt@aei.ca>
-Subject: 2.6.16-rc4-mm1 & 2.6.16-rc1-mm2 (mm5 too) panics
-Date: Thu, 23 Feb 2006 20:57:59 -0500
-Message-ID: <200602232058.00130.edt@aei.ca>
-References: <20060120031555.7b6d65b7.akpm@osdl.org> <200601280846.23279.edt@aei.ca> <200602041843.28214.edt@aei.ca>
+From: "erich" <erich@areca.com.tw>
+Subject: Re: Areca RAID driver remaining items?
+Date: Fri, 24 Feb 2006 10:08:22 +0800
+Message-ID: <004701c638e7$31d9dc80$b100a8c0@erich2003>
+References: <1140458552.3495.26.camel@mentorng.gurulabs.com> <20060220182045.GA1634@infradead.org> <001401c63779$12e49aa0$b100a8c0@erich2003> <20060222145733.GC16269@infradead.org> <00dc01c63842$381f9a30$b100a8c0@erich2003> <1140683157.2972.6.camel@laptopd505.fenrus.org> <001901c6385e$9aee7d40$b100a8c0@erich2003> <1140688569.4672.24.camel@laptopd505.fenrus.org> <005a01c6386f$84b30d50$b100a8c0@erich2003> <1140696452.4672.43.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+	format=flowed;
+	charset="big5";
+	reply-type=original
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aeimail.aei.ca ([206.123.6.84]:54259 "EHLO aeimail.aei.ca")
-	by vger.kernel.org with ESMTP id S932350AbWBXB6R (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Feb 2006 20:58:17 -0500
-In-Reply-To: <200602041843.28214.edt@aei.ca>
-Content-Disposition: inline
+Received: from 220-130-178-143.HINET-IP.hinet.net ([220.130.178.143]:58345
+	"EHLO areca.com.tw") by vger.kernel.org with ESMTP id S932392AbWBXCIW
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Feb 2006 21:08:22 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Andrew Morton <akpm@osdl.org>, reiserfs-dev@namesys.com, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Hans Reiser <reiser@namesys.com>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: "\"\"\"Christoph Hellwig\"\"\"" <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, billion.wu@areca.com.tw, alan@lxorguk.ukuu.org.uk, akpm@osdl.org, oliver@neukum.org
 
-Hi,
+Dear Arjan van de Ven,
 
-2.6.16-rc4-mm1 panics with a zam-597 (fs/reiser4/txnmgr.c) with an rc=-5 
+I would keep dma_alloc_coherent usage.
 
-This has been happening since 2.6.16-rc1-mm2.  It makes testing with reiserfs4 impossible here.
+> [Exception is that you can say that you are ok with a bigger mask for
+> this type of memory, but just don't do that if you're not]
 
-I have not been able to figure out how to use bisect etc to find out what is triggering this.  I had
-hoped that reversing  "jbd: split checkpoint lists" as per the fix for ocfs2 might help (its in rc4-mm1)
-but no such luck.
+Should I remove "pci_set_dma_mask(pci_device, DMA_64BIT_MASK)" for this 
+case?
 
-Does anyone have a suggestion on how I can help find what is broken here?
+Best Regards
+Erich Chen
 
-TIA,
-Ed Tomlinson
+----- Original Message ----- 
+From: "Arjan van de Ven" <arjan@infradead.org>
+To: "erich" <erich@areca.com.tw>
+Cc: """Christoph Hellwig""" <hch@infradead.org>; 
+<linux-scsi@vger.kernel.org>; <linux-kernel@vger.kernel.org>; 
+<billion.wu@areca.com.tw>; <alan@lxorguk.ukuu.org.uk>; <akpm@osdl.org>; 
+<oliver@neukum.org>
+Sent: Thursday, February 23, 2006 8:07 PM
+Subject: Re: Areca RAID driver remaining items?
 
-On Saturday 04 February 2006 18:43, Ed Tomlinson wrote:
 
-> I need some help figuring this one out.  I cannot use git bisect and applying the 2.6.15-1 reiserfs4
-> patch does not work with newer 2.6.16 levels - looks like the mutex conversion hits it hard.  Looking
-> in mm there are about 50 reiser4 patches...  
+> On Thu, 2006-02-23 at 19:51 +0800, erich wrote:
+>> If Linux can not assurent the contingous memory space allocating of
+>> "dma_alloc_coherent" .
+>
+> coherent memory is guaranteed to be in the "lower" 32 bit of memory!
+> So that is good news, I think you are just fine.
+>
+> [Exception is that you can say that you are ok with a bigger mask for
+> this type of memory, but just don't do that if you're not]
+>
+>
+>> When arcmsr get a physical ccb address from areca's firmware.
+>> Does linux has any functions for converting of  "bus to virtual" ?
+>
+> not without using pools. You would have to search the list of memory you
+> gave it to find that out.
+>
+> (USB has a similar problem, afaik they solved it with pools)
+>
 > 
-> To reproduce this problem I need reiser4 though the issue maybe in libata or scsi.  Does anyone
-> have an idea how I can proceed to find what makes newer kernels get io errors which trigger a reiser4
-> panic?   The panic is a zam-597 (fs/reiser4/txnmgr.c) with an rc=-5 
-> 
-> Anyone have a git tree tracking linus with reiser4 patches applied staring before 2.6.15 - if so git 
-> bisect could be used to find the change causing the problem.
-> 
-> One datapoint.  In 2.6.15 + reiser4 2.6.15-1 works fine - the resiser4 filesystem is heavily used with
-> no errors.  Smart report no problems with the drive being used.  The libata driver used is sata_nv.
-> 
-> Please reply to my email - I am only subscribed to lkml.
-> 
-> Help!
-> Ed Tomlinson
-> 
-> ret = reiser4_write_logs(nr_submitted);
-> if (ret < 0)
->     reiser4_panic("zam-597", "write log failed (%ld)\n", ret);
-> 
-> On Saturday 28 January 2006 08:46, Ed Tomlinson wrote:
-> > On Friday 27 January 2006 09:53, you wrote:
-> > > Ed Tomlinson wrote:
-> > > > Summarizing all this.  There are two problems here.
-> > > > 
-> > > > 1. reserifs4 panics when it gets io errors - I remember this was an issue that
-> > > > needed to be fixed in the R4 code before it moves to mainline...
-> > > > 
-> > > > 2. Why does a drive which is fine with 2.6.15-rc5-mm3, return a -5 with 2.6.16-mm3
-> > > > and above?  Smart reports no problems with the drive hardware.  What has changed 
-> > > > in the libata/scsi stacks?
-> > > 
-> > > That's a long answer.  Could you assist in narrowing down the versions 
-> > > which are affected?
-> > > 
-> > > It would also be useful if you could try vanilla kernels, and help us 
-> > > discover whether problems surfaces in 2.6.15, 2.6.15-git[1234], 
-> > > 2.6.16-rc1, etc.
-> > 
-> > Jeff,
-> > 
-> > I'll see what I can do with git bisect.  Given that reserifs4 is in the picture this may be
-> > fun...   I expect it will be a slow process (kernels take 40min to build here).
-> > 
-> > Thanks
-> > Ed Tomlinson
-> > 
-> > 
-> 
-> 
+
