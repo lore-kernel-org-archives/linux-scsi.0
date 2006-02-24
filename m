@@ -1,71 +1,91 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: Error using DC315U to drive ScanJet 4c
-Date: Thu, 23 Feb 2006 23:25:35 +0100 (CET)
-Message-ID: <Pine.LNX.4.60.0602232311520.5883@poirot.grange>
-References: <Pine.LNX.4.60.0602140000160.18538@poirot.grange>
- <20060214010138.GJ18853@igloo.df.lth.se> <Pine.LNX.4.60.0602140656430.30136@poirot.grange>
- <Pine.LNX.4.60.0602152056530.5682@poirot.grange> <20060215214349.GA7947@igloo.df.lth.se>
- <Pine.LNX.4.60.0602152322190.5682@poirot.grange> <20060216113027.GA3412@igloo.df.lth.se>
- <Pine.LNX.4.60.0602162121020.4944@poirot.grange> <20060218224121.GA21399@igloo.df.lth.se>
- <Pine.LNX.4.60.0602191740070.3542@poirot.grange> <20060223153745.GB8644@igloo.df.lth.se>
+From: Ed Tomlinson <edt@aei.ca>
+Subject: 2.6.16-rc4-mm1 & 2.6.16-rc1-mm2 (mm5 too) panics
+Date: Thu, 23 Feb 2006 20:57:59 -0500
+Message-ID: <200602232058.00130.edt@aei.ca>
+References: <20060120031555.7b6d65b7.akpm@osdl.org> <200601280846.23279.edt@aei.ca> <200602041843.28214.edt@aei.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.de ([213.165.64.20]:56194 "HELO mail.gmx.net")
-	by vger.kernel.org with SMTP id S1751304AbWBWWZg (ORCPT
+Received: from aeimail.aei.ca ([206.123.6.84]:54259 "EHLO aeimail.aei.ca")
+	by vger.kernel.org with ESMTP id S932350AbWBXB6R (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Feb 2006 17:25:36 -0500
-In-Reply-To: <20060223153745.GB8644@igloo.df.lth.se>
+	Thu, 23 Feb 2006 20:58:17 -0500
+In-Reply-To: <200602041843.28214.edt@aei.ca>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fredrik Roubert <roubert@df.lth.se>
-Cc: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Andrew Morton <akpm@osdl.org>, reiserfs-dev@namesys.com, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Hans Reiser <reiser@namesys.com>
 
-On Thu, 23 Feb 2006, Fredrik Roubert wrote:
+Hi,
 
-> On Sun 19 Feb 21:54 CET 2006, Guennadi Liakhovetski wrote:
+2.6.16-rc4-mm1 panics with a zam-597 (fs/reiser4/txnmgr.c) with an rc=-5 
+
+This has been happening since 2.6.16-rc1-mm2.  It makes testing with reiserfs4 impossible here.
+
+I have not been able to figure out how to use bisect etc to find out what is triggering this.  I had
+hoped that reversing  "jbd: split checkpoint lists" as per the fix for ocfs2 might help (its in rc4-mm1)
+but no such luck.
+
+Does anyone have a suggestion on how I can help find what is broken here?
+
+TIA,
+Ed Tomlinson
+
+On Saturday 04 February 2006 18:43, Ed Tomlinson wrote:
+
+> I need some help figuring this one out.  I cannot use git bisect and applying the 2.6.15-1 reiserfs4
+> patch does not work with newer 2.6.16 levels - looks like the mutex conversion hits it hard.  Looking
+> in mm there are about 50 reiser4 patches...  
 > 
-> > 2) your problem might be in hardware rather than in software. For the
-> > latter I have to ask you if your cables are ok? Termination? Maybe
-> > replace the cable? Do you have any other SCSI card where you also could
-> > test your scanner?
+> To reproduce this problem I need reiser4 though the issue maybe in libata or scsi.  Does anyone
+> have an idea how I can proceed to find what makes newer kernels get io errors which trigger a reiser4
+> panic?   The panic is a zam-597 (fs/reiser4/txnmgr.c) with an rc=-5 
 > 
-> The scanner works OK when connected to my old AHA1542 controller in my
-> old computer. The two SCSI controllers have different connectors, so the
-> cable I'm using now is also new, and untested. It could, no doubt, be a
-> problem with either the cable or the SCSI controller hardware.
-
-Ok, if you could connect the scanner to the same PC but to a different 
-SCSI card, that would with a good probability confirm that the scanner is 
-ok. Still, it is at least theoretically possible, that a bug in the 
-scanner's firmware is triggered by some, e.g., timing pattern specific to 
-the dc315u, though within specs. Just to say I don't see a good way to 
-exclude the scanner as the cause of the problem with 100% probability.
-
-> > After you confirm that your cables and termination are fine,
+> Anyone have a git tree tracking linus with reiser4 patches applied staring before 2.6.15 - if so git 
+> bisect could be used to find the change causing the problem.
 > 
-> It's fine, as far as I know. It's a brand new cable and I just plugged
-> it in replacing the old cable. Do you have any suggestions as to how I
-> could test cable and termination?
-
-Not really. You have the same problem with the old and the new cable? 
-Then, most probably, it's not the cause of the problem. Termination is 
-switched on on the scanner or is it a passive terminator on the cable? 
-E.g., on my scanner there's no active termination (I think).
-
-> > I would ask you to do a few more tests to look more exactly at what's
-> > happening, and to verify at least the non-sg path of my patch. So, would
-> > you agree to help me further with the tests or would you rather or would
-> > you prefer to stop now?
+> One datapoint.  In 2.6.15 + reiser4 2.6.15-1 works fine - the resiser4 filesystem is heavily used with
+> no errors.  Smart report no problems with the drive being used.  The libata driver used is sata_nv.
 > 
-> Of course I'd like to help out. (How else would Linux continue to
-> improve?) Just tell me what you want me to do.
-
-Great! While I am preparing a new debugging patch, could you, perhaps, 
-test your scanner + dc315u + pc with some live Linux CDs? Some 32-bit i386 
-like Knoppix, also interesting with 2.6 and 2.4 kernel?
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+> Please reply to my email - I am only subscribed to lkml.
+> 
+> Help!
+> Ed Tomlinson
+> 
+> ret = reiser4_write_logs(nr_submitted);
+> if (ret < 0)
+>     reiser4_panic("zam-597", "write log failed (%ld)\n", ret);
+> 
+> On Saturday 28 January 2006 08:46, Ed Tomlinson wrote:
+> > On Friday 27 January 2006 09:53, you wrote:
+> > > Ed Tomlinson wrote:
+> > > > Summarizing all this.  There are two problems here.
+> > > > 
+> > > > 1. reserifs4 panics when it gets io errors - I remember this was an issue that
+> > > > needed to be fixed in the R4 code before it moves to mainline...
+> > > > 
+> > > > 2. Why does a drive which is fine with 2.6.15-rc5-mm3, return a -5 with 2.6.16-mm3
+> > > > and above?  Smart reports no problems with the drive hardware.  What has changed 
+> > > > in the libata/scsi stacks?
+> > > 
+> > > That's a long answer.  Could you assist in narrowing down the versions 
+> > > which are affected?
+> > > 
+> > > It would also be useful if you could try vanilla kernels, and help us 
+> > > discover whether problems surfaces in 2.6.15, 2.6.15-git[1234], 
+> > > 2.6.16-rc1, etc.
+> > 
+> > Jeff,
+> > 
+> > I'll see what I can do with git bisect.  Given that reserifs4 is in the picture this may be
+> > fun...   I expect it will be a slow process (kernels take 40min to build here).
+> > 
+> > Thanks
+> > Ed Tomlinson
+> > 
+> > 
+> 
+> 
