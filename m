@@ -1,75 +1,47 @@
-From: Milan Kupcevic <milan@physics.harvard.edu>
-Subject: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4, SATA
- 300 TX4
-Date: Fri, 24 Feb 2006 20:09:17 -0500
-Message-ID: <43FFAE3D.7010002@physics.harvard.edu>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4,
+ SATA 300 TX4
+Date: Fri, 24 Feb 2006 20:16:57 -0500
+Message-ID: <43FFB009.6070403@pobox.com>
+References: <43FFAE3D.7010002@physics.harvard.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@rustcorp.com.au, torvalds@osdl.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.dvmed.net ([216.237.124.58]:64991 "EHLO mail.dvmed.net")
+	by vger.kernel.org with ESMTP id S964834AbWBYBRB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Feb 2006 20:17:01 -0500
+In-Reply-To: <43FFAE3D.7010002@physics.harvard.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Milan Kupcevic <milan@physics.harvard.edu>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@rustcorp.com.au, torvalds@osdl.org
 
-From: Milan Kupcevic <milan@physics.harvard.edu>
+Milan Kupcevic wrote:
+> From: Milan Kupcevic <milan@physics.harvard.edu>
+> 
+> Fix Promise SATAII 150 TX4 (PDC40518) and Promise SATA 300 TX4 
+> (PDC40718-GP) wrong port enumeration order that makes it (nearly) 
+> impossible to deal with boot problems using two or more drives.
+> 
+> Signed-off-by: Milan Kupcevic <milan@physics.harvard.edu>
+> ---
+> 
+> The current kernel driver assumes:
+> 
+> port 1 - scsi3
+> port 2 - scsi1
+> port 3 - scsi0
+> port 4 - scsi2
 
-Fix Promise SATAII 150 TX4 (PDC40518) and Promise SATA 300 TX4 
-(PDC40718-GP) wrong port enumeration order that makes it (nearly) 
-impossible to deal with boot problems using two or more drives.
+The current kernel driver assumes nothing, but simply exports what the 
+hardware gives us.
 
-Signed-off-by: Milan Kupcevic <milan@physics.harvard.edu>
----
+It sounds like you are trying to patch the kernel because you received 
+an incorrectly-wired board.  NAK.
 
-The current kernel driver assumes:
+	Jeff
 
-port 1 - scsi3
-port 2 - scsi1
-port 3 - scsi0
-port 4 - scsi2
 
-Having 4 hard drives connected to the controller grub recognizes the 
-port 1 connected drive as "(hd0)" but kernel recognizes the port 3 
-connected drive as scsi0:0:0:0 (/dev/sda). There is no clean way to make 
-it boot correctly.
-
- sata_promise.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
-
-diff -uprN ./drivers/scsi/sata_promise.c 
-../linux/drivers/scsi/sata_promise.c
---- ./drivers/scsi/sata_promise.c       2006-02-17 17:23:45.000000000 -0500
-+++ ../linux/drivers/scsi/sata_promise.c        2006-02-24 
-19:35:16.000000000 -0500
-@@ -707,14 +707,18 @@ static int pdc_ata_init_one (struct pci_
- 
-        /* notice 4-port boards */
-        switch (board_idx) {
--       case board_20319:
-+       case board_20319: /* tx4  */
-                        probe_ent->n_ports = 4;
- 
--               pdc_ata_setup_port(&probe_ent->port[2], base + 0x300);
--               pdc_ata_setup_port(&probe_ent->port[3], base + 0x380);
--
--               probe_ent->port[2].scr_addr = base + 0x600;
--               probe_ent->port[3].scr_addr = base + 0x700;
-+               pdc_ata_setup_port(&probe_ent->port[0], base + 0x380);
-+               pdc_ata_setup_port(&probe_ent->port[1], base + 0x280);
-+               pdc_ata_setup_port(&probe_ent->port[2], base + 0x200);
-+               pdc_ata_setup_port(&probe_ent->port[3], base + 0x300);
-+
-+               probe_ent->port[0].scr_addr = base + 0x700;
-+               probe_ent->port[1].scr_addr = base + 0x500;
-+               probe_ent->port[2].scr_addr = base + 0x400;
-+               probe_ent->port[3].scr_addr = base + 0x600;
-                break;
-        case board_2037x:
-                probe_ent->n_ports = 2;
-
--- 
-Milan Kupcevic
-System Administrator
-Harvard University
-Department of Physics
 
