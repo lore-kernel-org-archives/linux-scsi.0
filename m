@@ -1,31 +1,31 @@
-From: Grant Grundler <grundler@parisc-linux.org>
-Subject: Re: Problems with MSI-X on ia64
-Date: Sat, 25 Feb 2006 09:23:46 -0700
-Message-ID: <20060225162346.GA15372@colo.lackof.org>
-References: <D4CFB69C345C394284E4B78B876C1CF10BAD8CA9@cceexc23.americas.cpqcorp.net>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [stable] [PATCH 1/2] sd: fix memory corruption by sd_read_cache_type
+Date: Sun, 26 Feb 2006 00:07:55 +0100
+Message-ID: <4400E34B.1000400@s5r6.in-berlin.de>
+References: <tkrat.014f03dc41356221@s5r6.in-berlin.de> <20060225021009.GV3883@sorel.sous-sol.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ia64-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <D4CFB69C345C394284E4B78B876C1CF10BAD8CA9@cceexc23.americas.cpqcorp.net>
-Sender: linux-ia64-owner@vger.kernel.org
-To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Cc: "Grundler, Grant G" <grant.grundler@hp.com>, "Luck, Tony" <tony.luck@intel.com>, Chris Wedgwood <cw@f00f.org>, Grant Grundler <grundler@parisc-linux.org>, Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ia64@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, Jesse Barnes <jbarnes@virtuousgeek.org>, "Patterson, Andrew D (Linux R&D)" <andrew.patterson@hp.com>
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:58295 "EHLO
+	einhorn.in-berlin.de") by vger.kernel.org with ESMTP
+	id S1750710AbWBYXKO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 25 Feb 2006 18:10:14 -0500
+In-Reply-To: <20060225021009.GV3883@sorel.sous-sol.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chris Wright <chrisw@sous-sol.org>
+Cc: stable@kernel.org, Linus Torvalds <torvalds@osdl.org>, Jody McIntyre <scjody@modernduck.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Al Viro <viro@ftp.linux.org.uk>
 
-On Tue, Feb 21, 2006 at 02:21:42PM -0600, Miller, Mike (OS Dev) wrote:
-> So I looked at 2.6.16-rc3 which works in my lab, but phys_addr is still
-> an int. How can that work?
+Chris Wright wrote:
+> * Stefan Richter (stefanr@s5r6.in-berlin.de) wrote:
+>>sd: fix memory corruption by sd_read_cache_type
+> 
+> Looks like these still aren't upstream.  Can you please resend to -stable
+> once they've been picked up by Linus?
 
-"int" (u32) will work if the top bits are zero or alias to the
-same thing as the full 64-bit address.
-Can you apply the patch and add printk's to dump the
-pci_resource_start(dev,bir) in msix_capability_init()?
-
-
-> I believe Andrew saw the same thing in 2.6.15.
-
-Yes, AFIACT 2.6.15 has the same code.
-
-thanks,
-grant
+Yes, I will do so.
+-- 
+Stefan Richter
+-=====-=-==- --=- ==-=-
+http://arcgraph.de/sr/
